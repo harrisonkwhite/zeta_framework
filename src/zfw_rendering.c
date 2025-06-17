@@ -1,9 +1,9 @@
-#include "gce_utils.h"
 #include <stdlib.h>
 #include <math.h>
 #include <stb_image.h>
 #include <stb_truetype.h>
-#include <gce_rendering.h>
+#include "zfw_rendering.h"
+#include "zfw_utils.h"
 
 static t_gl_id CreateShaderFromSrc(const char* const src, const bool frag) {
     assert(src);

@@ -4,9 +4,9 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <GLFW/glfw3.h>
-#include "gce_math.h"
-#include "gce_rendering.h"
-#include "gce_utils.h"
+#include "zfw_math.h"
+#include "zfw_rendering.h"
+#include "zfw_utils.h"
 
 typedef uint64_t t_keys_down_bits;
 typedef uint8_t t_mouse_buttons_down_bits;

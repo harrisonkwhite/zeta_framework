@@ -1,7 +1,7 @@
 #include <assert.h>
 #include <float.h>
-#include <gce_math.h>
-#include <gce_utils.h>
+#include "zfw_math.h"
+#include "zfw_utils.h"
 
 s_rect GenSpanningRect(const s_rect* const rects, const int cnt) {
     assert(rects && cnt > 0);

@@ -5,8 +5,8 @@
 #include <stdbool.h>
 #include <glad/glad.h>
 #include <assert.h>
-#include "gce_math.h"
-#include "gce_utils.h"
+#include "zfw_math.h"
+#include "zfw_utils.h"
 
 #define TEXTURE_CHANNEL_CNT 4
 

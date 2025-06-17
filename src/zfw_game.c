@@ -2,10 +2,10 @@
 #include <assert.h>
 #include <stdio.h>
 #include <stdbool.h>
-#include "gce_game.h"
-#include "gce_rendering.h"
-#include "gce_utils.h"
-#include "gce_random.h"
+#include "zfw_game.h"
+#include "zfw_rendering.h"
+#include "zfw_utils.h"
+#include "zfw_random.h"
 
 #define PERM_MEM_ARENA_SIZE ((1 << 20) * 80)
 #define TEMP_MEM_ARENA_SIZE ((1 << 20) * 40)

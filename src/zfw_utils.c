@@ -1,6 +1,6 @@
 #include <stdlib.h>
 #include <stdio.h>
-#include <gce_utils.h>
+#include "zfw_utils.h"
 
 bool IsZero(const void* const mem, const int size) {
     assert(mem);
