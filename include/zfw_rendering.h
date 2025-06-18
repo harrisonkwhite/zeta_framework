@@ -166,7 +166,7 @@ typedef struct {
     float a;
 } s_color;
 
-inline bool IsColorValid(const s_color col) {
+static inline bool IsColorValid(const s_color col) {
     return col.r >= 0.0 && col.r <= 1.0
         && col.g >= 0.0 && col.g <= 1.0
         && col.b >= 0.0 && col.b <= 1.0
@@ -179,13 +179,13 @@ typedef struct {
     float b;
 } s_color_rgb;
 
-inline bool IsColorRGBValid(const s_color_rgb col) {
+static inline bool IsColorRGBValid(const s_color_rgb col) {
     return col.r >= 0.0 && col.r <= 1.0
         && col.g >= 0.0 && col.g <= 1.0
         && col.b >= 0.0 && col.b <= 1.0;
 }
 
-inline s_color_rgb ToColorRGB(const s_color col) {
+static inline s_color_rgb ToColorRGB(const s_color col) {
     return (s_color_rgb){col.r, col.g, col.b};
 }
 
@@ -252,7 +252,7 @@ bool LoadStrCollider(
     s_mem_arena* const temp_mem_arena
 ); 
 
-inline bool IsOriginValid(const s_vec_2d origin) {
+static inline bool IsOriginValid(const s_vec_2d origin) {
     return origin.x >= 0.0f && origin.y >= 0.0f && origin.x <= 1.0f && origin.y <= 1.0f;
 }
 

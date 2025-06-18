@@ -14,8 +14,8 @@
 
 #define CLAMP(x, min, max) (((x) < (min)) ? (min) : ((x) > (max) ? (max) : (x)))
 
-#define VEC_2D_ZERO (s_vec_2d) {0}
-#define VEC_2D_I_ZERO (s_vec_2d_i) {0}
+#define VEC_2D_ZERO (s_vec_2d){0}
+#define VEC_2D_I_ZERO (s_vec_2d_i){0}
 
 typedef float t_matrix_4x4[4][4];
 
@@ -90,58 +90,58 @@ bool DoPolysInters(const s_poly a, const s_poly b);
 bool DoesPolyIntersWithRect(const s_poly poly, const s_rect rect);
 s_rect_edges PolySpan(const s_poly poly);
 
-inline int IndexFrom2D(const int x, const int y, const int width) {
+static inline int IndexFrom2D(const int x, const int y, const int width) {
     assert(x >= 0 && x < width && y >= 0);
     return (width * y) + x;
 }
 
-inline float Lerp(const float a, const float b, const float t) {
+static inline float Lerp(const float a, const float b, const float t) {
     assert(t >= 0.0f && t <= 1.0f);
     return a + ((b - a) * t);
 }
 
-inline s_vec_2d LerpVec2D(const s_vec_2d a, const s_vec_2d b, const float t) {
+static inline s_vec_2d LerpVec2D(const s_vec_2d a, const s_vec_2d b, const float t) {
     assert(t >= 0.0f && t <= 1.0f);
     return (s_vec_2d){Lerp(a.x, b.x, t), Lerp(a.y, b.y, t)};
 }
 
-inline s_vec_2d Vec2DSum(const s_vec_2d a, const s_vec_2d b) {
+static inline s_vec_2d Vec2DSum(const s_vec_2d a, const s_vec_2d b) {
     return (s_vec_2d){a.x + b.x, a.y + b.y};
 }
 
-inline s_vec_2d_i Vec2DISum(const s_vec_2d_i a, const s_vec_2d_i b) {
+static inline s_vec_2d_i Vec2DISum(const s_vec_2d_i a, const s_vec_2d_i b) {
     return (s_vec_2d_i){a.x + b.x, a.y + b.y};
 }
 
-inline s_vec_2d Vec2DDiff(const s_vec_2d a, const s_vec_2d b) {
+static inline s_vec_2d Vec2DDiff(const s_vec_2d a, const s_vec_2d b) {
     return (s_vec_2d){a.x - b.x, a.y - b.y};
 }
 
-inline s_vec_2d_i Vec2DIDiff(const s_vec_2d_i a, const s_vec_2d_i b) {
+static inline s_vec_2d_i Vec2DIDiff(const s_vec_2d_i a, const s_vec_2d_i b) {
     return (s_vec_2d_i){a.x - b.x, a.y - b.y};
 }
 
-inline s_vec_2d Vec2DScale(const s_vec_2d a, const float scalar) {
+static inline s_vec_2d Vec2DScale(const s_vec_2d a, const float scalar) {
     return (s_vec_2d){a.x* scalar, a.y* scalar};
 }
 
-inline bool Vec2DsEqual(const s_vec_2d a, const s_vec_2d b) {
+static inline bool Vec2DsEqual(const s_vec_2d a, const s_vec_2d b) {
     return a.x == b.x && a.y == b.y;
 }
 
-inline bool Vec2DIsEqual(const s_vec_2d_i a, const s_vec_2d_i b) {
+static inline bool Vec2DIsEqual(const s_vec_2d_i a, const s_vec_2d_i b) {
     return a.x == b.x && a.y == b.y;
 }
 
-inline float Mag(const s_vec_2d vec) {
+static inline float Mag(const s_vec_2d vec) {
     return sqrtf(vec.x * vec.x + vec.y * vec.y);
 }
 
-inline float Dot(const s_vec_2d a, const s_vec_2d b) {
+static inline float Dot(const s_vec_2d a, const s_vec_2d b) {
     return a.x * b.x + a.y * b.y;
 }
 
-inline s_vec_2d NormalOrZero(const s_vec_2d vec) {
+static inline s_vec_2d NormalOrZero(const s_vec_2d vec) {
     const float mag = Mag(vec);
 
     if (mag == 0.0f) {
@@ -151,124 +151,124 @@ inline s_vec_2d NormalOrZero(const s_vec_2d vec) {
     return (s_vec_2d){vec.x / mag, vec.y / mag};
 }
 
-inline float Dist(const s_vec_2d a, const s_vec_2d b) {
+static inline float Dist(const s_vec_2d a, const s_vec_2d b) {
     s_vec_2d d = {a.x - b.x, a.y - b.y};
     return Mag(d);
 }
 
-inline float Dir(const s_vec_2d vec) {
+static inline float Dir(const s_vec_2d vec) {
     return atan2f(-vec.y, vec.x);
 }
 
-inline float DirFrom(const s_vec_2d src, const s_vec_2d dest) {
+static inline float DirFrom(const s_vec_2d src, const s_vec_2d dest) {
     return Dir(Vec2DDiff(dest, src));
 }
 
-inline s_vec_2d LenDir(float len, float dir) {
+static inline s_vec_2d LenDir(float len, float dir) {
     return (s_vec_2d){cosf(dir)* len, -sinf(dir) * len};
 }
 
-inline s_vec_2d RectPos(const s_rect rect) {
+static inline s_vec_2d RectPos(const s_rect rect) {
     return (s_vec_2d){rect.x, rect.y};
 }
 
-inline s_vec_2d_i RectIPos(const s_rect_i rect) {
+static inline s_vec_2d_i RectIPos(const s_rect_i rect) {
     return (s_vec_2d_i){rect.x, rect.y};
 }
 
-inline s_vec_2d RectSize(const s_rect rect) {
+static inline s_vec_2d RectSize(const s_rect rect) {
     return (s_vec_2d){rect.width, rect.height};
 }
 
-inline s_vec_2d_i RectISize(const s_rect_i rect) {
+static inline s_vec_2d_i RectISize(const s_rect_i rect) {
     return (s_vec_2d_i){rect.width, rect.height};
 }
 
-inline float RectRight(const s_rect rect) {
+static inline float RectRight(const s_rect rect) {
     return rect.x + rect.width;
 }
 
-inline int RectIRight(const s_rect_i rect) {
+static inline int RectIRight(const s_rect_i rect) {
     return rect.x + rect.width;
 }
 
-inline float RectBottom(const s_rect rect) {
+static inline float RectBottom(const s_rect rect) {
     return rect.y + rect.height;
 }
 
-inline int RectIBottom(const s_rect_i rect) {
+static inline int RectIBottom(const s_rect_i rect) {
     return rect.y + rect.height;
 }
 
-inline s_vec_2d RectTopCenter(const s_rect rect) {
+static inline s_vec_2d RectTopCenter(const s_rect rect) {
     return (s_vec_2d){rect.x + rect.width * 0.5f, rect.y};
 }
 
-inline s_vec_2d_i RectITopCenter(const s_rect_i rect) {
+static inline s_vec_2d_i RectITopCenter(const s_rect_i rect) {
     return (s_vec_2d_i){rect.x + rect.width / 2, rect.y};
 }
 
-inline s_vec_2d RectTopRight(const s_rect rect) {
+static inline s_vec_2d RectTopRight(const s_rect rect) {
     return (s_vec_2d){rect.x + rect.width, rect.y};
 }
 
-inline s_vec_2d_i RectITopRight(const s_rect_i rect) {
+static inline s_vec_2d_i RectITopRight(const s_rect_i rect) {
     return (s_vec_2d_i){rect.x + rect.width, rect.y};
 }
 
-inline s_vec_2d RectCenterLeft(const s_rect rect) {
+static inline s_vec_2d RectCenterLeft(const s_rect rect) {
     return (s_vec_2d){rect.x, rect.y + rect.height * 0.5f};
 }
 
-inline s_vec_2d_i RectICenterLeft(const s_rect_i rect) {
+static inline s_vec_2d_i RectICenterLeft(const s_rect_i rect) {
     return (s_vec_2d_i){rect.x, rect.y + rect.height / 2};
 }
 
-inline s_vec_2d RectCenter(const s_rect rect) {
+static inline s_vec_2d RectCenter(const s_rect rect) {
     return (s_vec_2d){rect.x + rect.width * 0.5f, rect.y + rect.height * 0.5f};
 }
 
-inline s_vec_2d_i RectICenter(const s_rect_i rect) {
+static inline s_vec_2d_i RectICenter(const s_rect_i rect) {
     return (s_vec_2d_i){rect.x + rect.width / 2, rect.y + rect.height / 2};
 }
 
-inline s_vec_2d RectCenterRight(const s_rect rect) {
+static inline s_vec_2d RectCenterRight(const s_rect rect) {
     return (s_vec_2d){rect.x + rect.width, rect.y + rect.height * 0.5f};
 }
 
-inline s_vec_2d_i RectICenterRight(const s_rect_i rect) {
+static inline s_vec_2d_i RectICenterRight(const s_rect_i rect) {
     return (s_vec_2d_i){rect.x + rect.width, rect.y + rect.height / 2};
 }
 
-inline s_vec_2d RectBottomLeft(const s_rect rect) {
+static inline s_vec_2d RectBottomLeft(const s_rect rect) {
     return (s_vec_2d){rect.x, rect.y + rect.height};
 }
 
-inline s_vec_2d_i RectIBottomLeft(const s_rect_i rect) {
+static inline s_vec_2d_i RectIBottomLeft(const s_rect_i rect) {
     return (s_vec_2d_i){rect.x, rect.y + rect.height};
 }
 
-inline s_vec_2d RectBottomCenter(const s_rect rect) {
+static inline s_vec_2d RectBottomCenter(const s_rect rect) {
     return (s_vec_2d){rect.x + rect.width * 0.5f, rect.y + rect.height};
 }
 
-inline s_vec_2d_i RectIBottomCenter(const s_rect_i rect) {
+static inline s_vec_2d_i RectIBottomCenter(const s_rect_i rect) {
     return (s_vec_2d_i){rect.x + rect.width / 2, rect.y + rect.height};
 }
 
-inline s_vec_2d RectBottomRight(const s_rect rect) {
+static inline s_vec_2d RectBottomRight(const s_rect rect) {
     return (s_vec_2d){rect.x + rect.width, rect.y + rect.height};
 }
 
-inline s_vec_2d_i RectIBottomRight(const s_rect_i rect) {
+static inline s_vec_2d_i RectIBottomRight(const s_rect_i rect) {
     return (s_vec_2d_i){rect.x + rect.width, rect.y + rect.height};
 }
 
-inline s_rect RectTranslated(const s_rect rect, const s_vec_2d trans) {
+static inline s_rect RectTranslated(const s_rect rect, const s_vec_2d trans) {
     return (s_rect){rect.x + trans.x, rect.y + trans.y, rect.width, rect.height};
 }
 
-inline s_rect_edges RectEdgesClamped(const s_rect_edges edges, const s_rect_edges clamp_edges) {
+static inline s_rect_edges RectEdgesClamped(const s_rect_edges edges, const s_rect_edges clamp_edges) {
     return (s_rect_edges){
         MAX(edges.left, clamp_edges.left),
         MAX(edges.top, clamp_edges.top),
@@ -277,7 +277,7 @@ inline s_rect_edges RectEdgesClamped(const s_rect_edges edges, const s_rect_edge
     };
 }
 
-inline s_rect_edges_i RectEdgesIClamped(const s_rect_edges_i edges, const s_rect_edges_i clamp_edges) {
+static inline s_rect_edges_i RectEdgesIClamped(const s_rect_edges_i edges, const s_rect_edges_i clamp_edges) {
     return (s_rect_edges_i){
         MAX(edges.left, clamp_edges.left),
         MAX(edges.top, clamp_edges.top),
@@ -286,7 +286,7 @@ inline s_rect_edges_i RectEdgesIClamped(const s_rect_edges_i edges, const s_rect
     };
 }
 
-inline s_rect_i RectIClamped(const s_rect_i rect, const s_vec_2d_i span) {
+static inline s_rect_i RectIClamped(const s_rect_i rect, const s_vec_2d_i span) {
     assert(span.x >= 0 && span.y >= 0);
 
     const s_vec_2d_i rect_clamped_tl = {MAX(rect.x, 0), MAX(rect.y, 0)};
@@ -304,15 +304,15 @@ inline s_rect_i RectIClamped(const s_rect_i rect, const s_vec_2d_i span) {
     };
 }
 
-inline bool IsPointInRect(const s_vec_2d pt, const s_rect rect) {
+static inline bool IsPointInRect(const s_vec_2d pt, const s_rect rect) {
     return pt.x >= rect.x && pt.y >= rect.y && pt.x < RectRight(rect) && pt.y < RectBottom(rect);
 }
 
-inline bool DoRectsInters(const s_rect a, const s_rect b) {
+static inline bool DoRectsInters(const s_rect a, const s_rect b) {
     return a.x < b.x + b.width && a.y < b.y + b.height && a.x + a.width > b.x && a.y + a.height > b.y;
 }
 
-inline bool IsPolySet(const s_poly poly) {
+static inline bool IsPolySet(const s_poly poly) {
     return poly.pts && poly.cnt > 0;
 }
 
