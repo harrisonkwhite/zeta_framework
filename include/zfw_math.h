@@ -90,9 +90,9 @@ bool DoPolysInters(const s_poly a, const s_poly b);
 bool DoesPolyIntersWithRect(const s_poly poly, const s_rect rect);
 s_rect_edges PolySpan(const s_poly poly);
 
-static inline int IndexFrom2D(const int x, const int y, const int width) {
-    assert(x >= 0 && x < width && y >= 0);
-    return (width * y) + x;
+static inline int IndexFrom2D(const s_vec_2d_i pos, const int width) {
+    assert(pos.x >= 0 && pos.x < width && pos.y >= 0);
+    return (width * pos.y) + pos.x;
 }
 
 static inline float Lerp(const float a, const float b, const float t) {
