@@ -46,6 +46,21 @@ void InitIdenMatrix4x4(t_matrix_4x4* const mat) {
     (*mat)[3][3] = 1.0f;
 }
 
+void TranslateMatrix4x4(t_matrix_4x4* const mat, const s_vec_2d trans) {
+    assert(mat);
+
+    (*mat)[3][0] += trans.x;
+    (*mat)[3][1] += trans.y;
+}
+
+void ScaleMatrix4x4(t_matrix_4x4* const mat, const float scalar) {
+    assert(mat);
+
+    (*mat)[0][0] *= scalar;
+    (*mat)[1][1] *= scalar;
+    (*mat)[2][2] *= scalar;
+}
+
 void InitOrthoMatrix4x4(t_matrix_4x4* const mat, const float left, const float right, const float bottom, const float top, const float near, const float far) {
     assert(mat);
     assert(IsZero(mat, sizeof(*mat)));

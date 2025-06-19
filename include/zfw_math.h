@@ -81,7 +81,10 @@ typedef struct {
 } s_poly;
 
 s_rect GenSpanningRect(const s_rect* const rects, const int cnt);
+
 void InitIdenMatrix4x4(t_matrix_4x4* const mat);
+void TranslateMatrix4x4(t_matrix_4x4* const mat, const s_vec_2d trans);
+void ScaleMatrix4x4(t_matrix_4x4* const mat, const float scalar);
 void InitOrthoMatrix4x4(t_matrix_4x4* const mat, const float left, const float right, const float bottom, const float top, const float near, const float far);
 
 bool PushQuadPoly(s_poly* const poly, s_mem_arena* const mem_arena, const s_vec_2d pos, const s_vec_2d size, const s_vec_2d origin);

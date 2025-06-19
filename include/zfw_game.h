@@ -128,6 +128,7 @@ typedef struct s_game_render_func_data {
     s_mem_arena* temp_mem_arena;
     s_rendering_context rendering_context;
     const s_input_state* input_state;
+    const s_input_state* input_state_last;
 } s_game_render_func_data;
 
 typedef struct {

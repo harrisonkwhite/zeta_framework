@@ -346,7 +346,8 @@ bool RunGame(const s_game_info* const info) {
                         .state = rendering_state,
                         .display_size = window_state_at_frame_begin.size
                     },
-                    .input_state = &input_state
+                    .input_state = &input_state,
+                    .input_state_last = &input_state_last
                 };
 
                 if (!info->render_func(&func_data)) {
