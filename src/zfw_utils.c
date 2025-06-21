@@ -86,18 +86,33 @@ void AssertMemArenaValidity(const s_mem_arena* const arena) {
     }
 }
 
-int FirstActiveBitIndex(const t_byte* const bytes, const int byte_cnt) {
+int FirstActiveBitIndex(const t_byte* const bytes, const int bit_cnt) {
     assert(bytes);
-    assert(byte_cnt > 0);
+    assert(bit_cnt > 0);
 
-    for (int i = 0; i < byte_cnt; i++) {
-        if (bytes[i] == 0xFF) {
+    for (int i = 0; i < (bit_cnt / 8); i++) {
+        if (bytes[i] == 0x00) {
             continue;
         }
-        
+
         for (int j = 0; j < 8; j++) {
             if (bytes[i] & (1 << j)) {
                 return (i * 8) + j;
+            }
+        }
+    }
+
+    const int excess_bits = bit_cnt % 8;
+
+    if (excess_bits > 0) {
+        // Get the last byte, masking out any bits we don't care about.
+        const t_byte last_byte = KeepFirstNBitsOfByte(bytes[bit_cnt / 8], excess_bits);
+
+        if (last_byte != 0x00) {
+            for (int i = 0; i < 8; i++) {
+                if (last_byte & (1 << i)) {
+                    return bit_cnt - excess_bits + i;
+                }
             }
         }
     }
@@ -105,18 +120,33 @@ int FirstActiveBitIndex(const t_byte* const bytes, const int byte_cnt) {
     return -1;
 }
 
-int FirstInactiveBitIndex(const t_byte* const bytes, const int byte_cnt) {
+int FirstInactiveBitIndex(const t_byte* const bytes, const int bit_cnt) {
     assert(bytes);
-    assert(byte_cnt > 0);
+    assert(bit_cnt > 0);
 
-    for (int i = 0; i < byte_cnt; i++) {
+    for (int i = 0; i < (bit_cnt / 8); i++) {
         if (bytes[i] == 0xFF) {
             continue;
         }
-        
+
         for (int j = 0; j < 8; j++) {
             if (!(bytes[i] & (1 << j))) {
                 return (i * 8) + j;
+            }
+        }
+    }
+
+    const int excess_bits = bit_cnt % 8;
+
+    if (excess_bits > 0) {
+        // Get the last byte, masking out any bits we don't care about.
+        const t_byte last_byte = KeepFirstNBitsOfByte(bytes[bit_cnt / 8], excess_bits);
+
+        if (last_byte != 0xFF) {
+            for (int i = 0; i < 8; i++) {
+                if (!(last_byte & (1 << i))) {
+                    return bit_cnt - excess_bits + i;
+                }
             }
         }
     }

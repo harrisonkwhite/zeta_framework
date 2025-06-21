@@ -56,8 +56,8 @@ void AssertMemArenaValidity(const s_mem_arena* const arena);
 #define MEM_ARENA_PUSH_TYPE(arena, type) (type*)PushToMemArena(arena, sizeof(type), alignof(type))
 #define MEM_ARENA_PUSH_TYPE_MANY(arena, type, cnt) (type*)PushToMemArena(arena, sizeof(type) * (cnt), alignof(type))
 
-int FirstActiveBitIndex(const t_byte* const bytes, const int byte_cnt); // Returns -1 if an active bit is not found.
-int FirstInactiveBitIndex(const t_byte* const bytes, const int byte_cnt); // Returns -1 if an inactive bit is not found.
+int FirstActiveBitIndex(const t_byte* const bytes, const int bit_cnt); // Returns -1 if an active bit is not found.
+int FirstInactiveBitIndex(const t_byte* const bytes, const int bit_cnt); // Returns -1 if an inactive bit is not found.
 
 static inline void ActivateBit(const int bit_index, t_byte* const bytes, const int bit_cnt) {
     assert(bit_index >= 0 && bit_index < bit_cnt);
@@ -81,6 +81,11 @@ static inline bool IsBitActive(const int bit_index, const t_byte* const bytes, c
     assert(bit_cnt > 0);
 
     return bytes[bit_index / 8] & (1 << (bit_index % 8));
+}
+
+static inline t_byte KeepFirstNBitsOfByte(const t_byte byte, const int n) {
+    assert(n >= 0 && n <= 8);
+    return byte & ((1 << n) - 1);
 }
 
 t_byte* PushEntireFileContents(const char* const file_path, s_mem_arena* const mem_arena, const bool incl_term_byte);
