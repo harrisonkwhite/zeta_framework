@@ -124,8 +124,8 @@ static inline s_vec_2d_i Vec2DIDiff(const s_vec_2d_i a, const s_vec_2d_i b) {
     return (s_vec_2d_i){a.x - b.x, a.y - b.y};
 }
 
-static inline s_vec_2d Vec2DScale(const s_vec_2d a, const float scalar) {
-    return (s_vec_2d){a.x* scalar, a.y* scalar};
+static inline s_vec_2d Vec2DScalar(const s_vec_2d a, const float scalar) {
+    return (s_vec_2d){a.x * scalar, a.y * scalar};
 }
 
 static inline bool Vec2DsEqual(const s_vec_2d a, const s_vec_2d b) {
