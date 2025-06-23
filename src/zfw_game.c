@@ -16,6 +16,77 @@
 #define GL_VERSION_MAJOR 4
 #define GL_VERSION_MINOR 3
 
+static const int g_glfw_keys[eks_key_code_cnt] = {
+    [ek_key_code_space] = GLFW_KEY_SPACE,
+    [ek_key_code_0] = GLFW_KEY_0,
+    [ek_key_code_1] = GLFW_KEY_1,
+    [ek_key_code_2] = GLFW_KEY_2,
+    [ek_key_code_3] = GLFW_KEY_3,
+    [ek_key_code_4] = GLFW_KEY_4,
+    [ek_key_code_5] = GLFW_KEY_5,
+    [ek_key_code_6] = GLFW_KEY_6,
+    [ek_key_code_7] = GLFW_KEY_7,
+    [ek_key_code_8] = GLFW_KEY_8,
+    [ek_key_code_9] = GLFW_KEY_9,
+    [ek_key_code_a] = GLFW_KEY_A,
+    [ek_key_code_b] = GLFW_KEY_B,
+    [ek_key_code_c] = GLFW_KEY_C,
+    [ek_key_code_d] = GLFW_KEY_D,
+    [ek_key_code_e] = GLFW_KEY_E,
+    [ek_key_code_f] = GLFW_KEY_F,
+    [ek_key_code_g] = GLFW_KEY_G,
+    [ek_key_code_h] = GLFW_KEY_H,
+    [ek_key_code_i] = GLFW_KEY_I,
+    [ek_key_code_j] = GLFW_KEY_J,
+    [ek_key_code_k] = GLFW_KEY_K,
+    [ek_key_code_l] = GLFW_KEY_L,
+    [ek_key_code_m] = GLFW_KEY_M,
+    [ek_key_code_n] = GLFW_KEY_N,
+    [ek_key_code_o] = GLFW_KEY_O,
+    [ek_key_code_p] = GLFW_KEY_P,
+    [ek_key_code_q] = GLFW_KEY_Q,
+    [ek_key_code_r] = GLFW_KEY_R,
+    [ek_key_code_s] = GLFW_KEY_S,
+    [ek_key_code_t] = GLFW_KEY_T,
+    [ek_key_code_u] = GLFW_KEY_U,
+    [ek_key_code_v] = GLFW_KEY_V,
+    [ek_key_code_w] = GLFW_KEY_W,
+    [ek_key_code_x] = GLFW_KEY_X,
+    [ek_key_code_y] = GLFW_KEY_Y,
+    [ek_key_code_z] = GLFW_KEY_Z,
+    [ek_key_code_escape] = GLFW_KEY_ESCAPE,
+    [ek_key_code_enter] = GLFW_KEY_ENTER,
+    [ek_key_code_tab] = GLFW_KEY_TAB,
+    [ek_key_code_right] = GLFW_KEY_RIGHT,
+    [ek_key_code_left] = GLFW_KEY_LEFT,
+    [ek_key_code_down] = GLFW_KEY_DOWN,
+    [ek_key_code_up] = GLFW_KEY_UP,
+    [ek_key_code_f1] = GLFW_KEY_F1,
+    [ek_key_code_f2] = GLFW_KEY_F2,
+    [ek_key_code_f3] = GLFW_KEY_F3,
+    [ek_key_code_f4] = GLFW_KEY_F4,
+    [ek_key_code_f5] = GLFW_KEY_F5,
+    [ek_key_code_f6] = GLFW_KEY_F6,
+    [ek_key_code_f7] = GLFW_KEY_F7,
+    [ek_key_code_f8] = GLFW_KEY_F8,
+    [ek_key_code_f9] = GLFW_KEY_F9,
+    [ek_key_code_f10] = GLFW_KEY_F10,
+    [ek_key_code_f11] = GLFW_KEY_F11,
+    [ek_key_code_f12] = GLFW_KEY_F12,
+    [ek_key_code_left_shift] = GLFW_KEY_LEFT_SHIFT,
+    [ek_key_code_left_control] = GLFW_KEY_LEFT_CONTROL,
+    [ek_key_code_left_alt] = GLFW_KEY_LEFT_ALT,
+    [ek_key_code_right_shift] = GLFW_KEY_RIGHT_SHIFT,
+    [ek_key_code_right_control] = GLFW_KEY_RIGHT_CONTROL,
+    [ek_key_code_right_alt] = GLFW_KEY_RIGHT_ALT
+};
+
+static const int g_glfw_mouse_buttons[eks_mouse_button_code_cnt] = {
+    [ek_mouse_button_code_left] = GLFW_MOUSE_BUTTON_LEFT,
+    [ek_mouse_button_code_right] = GLFW_MOUSE_BUTTON_RIGHT,
+    [ek_mouse_button_code_middle] = GLFW_MOUSE_BUTTON_MIDDLE
+};
+
 typedef struct {
     s_mem_arena* perm_mem_arena;
     s_mem_arena* temp_mem_arena;
@@ -58,124 +129,40 @@ static s_window_state GetWindowState(GLFWwindow* const glfw_window) {
     return state;
 }
 
-static void GLFWKeyCallback(GLFWwindow* const window, const int key, const int scancode, const int action, const int mods) {
-    s_input_state* const input_state = glfwGetWindowUserPointer(window);
+static void RefreshInputState(s_input_state* const state, GLFWwindow* const glfw_window, const e_mouse_scroll_state mouse_scroll_state) {
+    assert(state);
+    assert(glfw_window);
 
-    e_key_code code;
+    ZeroOut(state, sizeof(*state));
 
-    switch (key) {
-        case GLFW_KEY_SPACE: code = ek_key_code_space; break;
-        case GLFW_KEY_0: code = ek_key_code_0; break;
-        case GLFW_KEY_1: code = ek_key_code_1; break;
-        case GLFW_KEY_2: code = ek_key_code_2; break;
-        case GLFW_KEY_3: code = ek_key_code_3; break;
-        case GLFW_KEY_4: code = ek_key_code_4; break;
-        case GLFW_KEY_5: code = ek_key_code_5; break;
-        case GLFW_KEY_6: code = ek_key_code_6; break;
-        case GLFW_KEY_7: code = ek_key_code_7; break;
-        case GLFW_KEY_8: code = ek_key_code_8; break;
-        case GLFW_KEY_9: code = ek_key_code_9; break;
-        case GLFW_KEY_A: code = ek_key_code_a; break;
-        case GLFW_KEY_B: code = ek_key_code_b; break;
-        case GLFW_KEY_C: code = ek_key_code_c; break;
-        case GLFW_KEY_D: code = ek_key_code_d; break;
-        case GLFW_KEY_E: code = ek_key_code_e; break;
-        case GLFW_KEY_F: code = ek_key_code_f; break;
-        case GLFW_KEY_G: code = ek_key_code_g; break;
-        case GLFW_KEY_H: code = ek_key_code_h; break;
-        case GLFW_KEY_I: code = ek_key_code_i; break;
-        case GLFW_KEY_J: code = ek_key_code_j; break;
-        case GLFW_KEY_K: code = ek_key_code_k; break;
-        case GLFW_KEY_L: code = ek_key_code_l; break;
-        case GLFW_KEY_M: code = ek_key_code_m; break;
-        case GLFW_KEY_N: code = ek_key_code_n; break;
-        case GLFW_KEY_O: code = ek_key_code_o; break;
-        case GLFW_KEY_P: code = ek_key_code_p; break;
-        case GLFW_KEY_Q: code = ek_key_code_q; break;
-        case GLFW_KEY_R: code = ek_key_code_r; break;
-        case GLFW_KEY_S: code = ek_key_code_s; break;
-        case GLFW_KEY_T: code = ek_key_code_t; break;
-        case GLFW_KEY_U: code = ek_key_code_u; break;
-        case GLFW_KEY_V: code = ek_key_code_v; break;
-        case GLFW_KEY_W: code = ek_key_code_w; break;
-        case GLFW_KEY_X: code = ek_key_code_x; break;
-        case GLFW_KEY_Y: code = ek_key_code_y; break;
-        case GLFW_KEY_Z: code = ek_key_code_z; break;
-        case GLFW_KEY_ESCAPE: code = ek_key_code_escape; break;
-        case GLFW_KEY_ENTER: code = ek_key_code_enter; break;
-        case GLFW_KEY_TAB: code = ek_key_code_tab; break;
-        case GLFW_KEY_RIGHT: code = ek_key_code_right; break;
-        case GLFW_KEY_LEFT: code = ek_key_code_left; break;
-        case GLFW_KEY_DOWN: code = ek_key_code_down; break;
-        case GLFW_KEY_UP: code = ek_key_code_up; break;
-        case GLFW_KEY_F1: code = ek_key_code_f1; break;
-        case GLFW_KEY_F2: code = ek_key_code_f2; break;
-        case GLFW_KEY_F3: code = ek_key_code_f3; break;
-        case GLFW_KEY_F4: code = ek_key_code_f4; break;
-        case GLFW_KEY_F5: code = ek_key_code_f5; break;
-        case GLFW_KEY_F6: code = ek_key_code_f6; break;
-        case GLFW_KEY_F7: code = ek_key_code_f7; break;
-        case GLFW_KEY_F8: code = ek_key_code_f8; break;
-        case GLFW_KEY_F9: code = ek_key_code_f9; break;
-        case GLFW_KEY_F10: code = ek_key_code_f10; break;
-        case GLFW_KEY_F11: code = ek_key_code_f11; break;
-        case GLFW_KEY_F12: code = ek_key_code_f12; break;
-        case GLFW_KEY_LEFT_SHIFT: code = ek_key_code_left_shift; break;
-        case GLFW_KEY_LEFT_CONTROL: code = ek_key_code_left_control; break;
-        case GLFW_KEY_LEFT_ALT: code = ek_key_code_left_alt; break;
-        case GLFW_KEY_RIGHT_SHIFT: code = ek_key_code_right_shift; break;
-        case GLFW_KEY_RIGHT_CONTROL: code = ek_key_code_right_control; break;
-        case GLFW_KEY_RIGHT_ALT: code = ek_key_code_right_alt; break;
-
-        default: return;
+    for (int i = 0; i < eks_key_code_cnt; i++) {
+        if (glfwGetKey(glfw_window, g_glfw_keys[i])) {
+            state->keys_down |= (t_keys_down_bits)1 << i;
+        }
     }
 
-    const t_keys_down_bits key_bit = (t_keys_down_bits)1 << code;
-
-    if (action == GLFW_PRESS) {
-        input_state->keys_down |= key_bit;
-    } else if (action == GLFW_RELEASE) {
-        input_state->keys_down &= ~key_bit;
-    }
-}
-
-static void GLFWMouseButtonCallback(GLFWwindow* const window, const int button, const int action, const int mods) {
-    s_input_state* const input_state = glfwGetWindowUserPointer(window);
-
-    e_mouse_button_code code;
-
-    switch (button) {
-        case GLFW_MOUSE_BUTTON_LEFT: code = ek_mouse_button_code_left; break;
-        case GLFW_MOUSE_BUTTON_RIGHT: code = ek_mouse_button_code_right; break;
-        case GLFW_MOUSE_BUTTON_MIDDLE: code = ek_mouse_button_code_middle; break;
-
-        default: return;
+    for (int i = 0; i < eks_mouse_button_code_cnt; i++) {
+        if (glfwGetMouseButton(glfw_window, g_glfw_mouse_buttons[i])) {
+            state->mouse_buttons_down |= (t_mouse_buttons_down_bits)1 << i;
+        }
     }
 
-    const t_mouse_buttons_down_bits button_down_bit = (t_mouse_buttons_down_bits)1 << code;
+    double mouse_x_dbl, mouse_y_dbl;
+    glfwGetCursorPos(glfw_window, &mouse_x_dbl, &mouse_y_dbl);
+    state->mouse_pos = (s_vec_2d){mouse_x_dbl, mouse_y_dbl};
 
-    if (action == GLFW_PRESS) {
-        input_state->mouse_buttons_down |= button_down_bit;
-    } else if (action == GLFW_RELEASE) {
-        input_state->mouse_buttons_down &= ~button_down_bit;
-    }
-}
-
-static void GLFWCursorPosCallback(GLFWwindow* const window, const double x, const double y) {
-    s_input_state* const input_state = glfwGetWindowUserPointer(window);
-    input_state->mouse_pos.x = x;
-    input_state->mouse_pos.y = y;
+    state->mouse_scroll = mouse_scroll_state;
 }
 
 static void GLFWScrollCallback(GLFWwindow* const window, const double offs_x, const double offs_y) {
-    s_input_state* const input_state = glfwGetWindowUserPointer(window);
+    e_mouse_scroll_state* const scroll_state = glfwGetWindowUserPointer(window);
 
     if (offs_y > 0.0) {
-        input_state->mouse_scroll = ek_mouse_scroll_state_up;
+        *scroll_state = ek_mouse_scroll_state_up;
     } else if (offs_y < 0.0) {
-        input_state->mouse_scroll = ek_mouse_scroll_state_down;
+        *scroll_state = ek_mouse_scroll_state_down;
     } else {
-        input_state->mouse_scroll = ek_mouse_scroll_state_none;
+        *scroll_state = ek_mouse_scroll_state_none;
     }
 }
 
@@ -247,11 +234,8 @@ bool RunGame(const s_game_info* const info) {
     glfwSetInputMode(glfw_window, GLFW_CURSOR, info->window_flags & ek_window_flag_hide_cursor ? GLFW_CURSOR_HIDDEN : GLFW_CURSOR_NORMAL);
 
     s_input_state input_state = {0};
-
-    glfwSetWindowUserPointer(glfw_window, &input_state);
-    glfwSetKeyCallback(glfw_window, GLFWKeyCallback);
-    glfwSetMouseButtonCallback(glfw_window, GLFWMouseButtonCallback);
-    glfwSetCursorPosCallback(glfw_window, GLFWCursorPosCallback);
+    e_mouse_scroll_state mouse_scroll_state = ek_mouse_scroll_state_none;
+    glfwSetWindowUserPointer(glfw_window, &mouse_scroll_state);
     glfwSetScrollCallback(glfw_window, GLFWScrollCallback);
 
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
@@ -301,8 +285,6 @@ bool RunGame(const s_game_info* const info) {
     double frame_time_last = glfwGetTime();
     double frame_dur_accum = 0.0;
 
-    s_input_state input_state_last = input_state;
-
     printf("Entering the main loop...\n");
 
     while (!glfwWindowShouldClose(glfw_window)) {
@@ -313,7 +295,10 @@ bool RunGame(const s_game_info* const info) {
         frame_time_last = frame_time;
 
         if (frame_dur_accum >= TARG_TICK_INTERVAL) {
-            while (frame_dur_accum >= TARG_TICK_INTERVAL) {
+            const s_input_state input_state_last = input_state;
+            RefreshInputState(&input_state, glfw_window, mouse_scroll_state);
+
+            {
                 const s_game_tick_func_data func_data = {
                     .user_mem = user_mem,
                     .perm_mem_arena = &perm_mem_arena,
@@ -327,12 +312,7 @@ bool RunGame(const s_game_info* const info) {
                     CleanGame(&cleanup_info);
                     return false;
                 }
-
-                frame_dur_accum -= TARG_TICK_INTERVAL;
             }
-
-            input_state_last = input_state;
-            input_state.mouse_scroll = ek_mouse_scroll_state_none;
 
             BeginRendering(rendering_state);
 
@@ -361,9 +341,11 @@ bool RunGame(const s_game_info* const info) {
             assert(rendering_state->batch_slots_used_cnt == 0); // Make sure that we flushed.
 
             glfwSwapBuffers(glfw_window);
+
+            frame_dur_accum = 0;
         }
 
-        glfwPollEvents(); // NOTE: Move up, so that input state is updated prior to first tick?
+        glfwPollEvents();
 
         // Handle any window state changes.
         const s_window_state window_state_after_poll_events = GetWindowState(glfw_window);

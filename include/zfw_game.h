@@ -85,12 +85,16 @@ typedef enum {
     ek_key_code_right_shift,
     ek_key_code_right_control,
     ek_key_code_right_alt,
+
+    eks_key_code_cnt
 } e_key_code;
 
 typedef enum {
     ek_mouse_button_code_left,
     ek_mouse_button_code_right,
-    ek_mouse_button_code_middle
+    ek_mouse_button_code_middle,
+
+    eks_mouse_button_code_cnt
 } e_mouse_button_code;
 
 typedef struct {
