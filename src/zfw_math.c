@@ -38,7 +38,7 @@ s_rect GenSpanningRect(const s_rect* const rects, const int cnt) {
 
 void InitIdenMatrix4x4(t_matrix_4x4* const mat) {
     assert(mat);
-    assert(IsZero(mat, sizeof(*mat)));
+    assert(IS_ZERO(*mat));
 
     (*mat)[0][0] = 1.0f;
     (*mat)[1][1] = 1.0f;
@@ -63,7 +63,7 @@ void ScaleMatrix4x4(t_matrix_4x4* const mat, const float scalar) {
 
 void InitOrthoMatrix4x4(t_matrix_4x4* const mat, const float left, const float right, const float bottom, const float top, const float near, const float far) {
     assert(mat);
-    assert(IsZero(mat, sizeof(*mat)));
+    assert(IS_ZERO(*mat));
     assert(right > left);
     assert(top < bottom);
     assert(far > near);
@@ -122,7 +122,7 @@ static bool CheckPolySep(const s_poly poly, const s_poly other) {
 
 bool PushQuadPoly(s_poly* const poly, s_mem_arena* const mem_arena, const s_vec_2d pos, const s_vec_2d size, const s_vec_2d origin) {
     assert(poly);
-    assert(IsZero(poly, sizeof(*poly)));
+    assert(IS_ZERO(*poly));
     assert(size.x > 0.0f && size.y > 0.0f);
     assert(origin.x >= 0.0f && origin.y >= 0.0f && origin.x <= 1.0f && origin.y <= 1.0f);
     
@@ -145,7 +145,7 @@ bool PushQuadPoly(s_poly* const poly, s_mem_arena* const mem_arena, const s_vec_
 
 bool PushQuadPolyRotated(s_poly* const poly, s_mem_arena* const mem_arena, const s_vec_2d pos, const s_vec_2d size, const s_vec_2d origin, const float rot) {
     assert(poly);
-    assert(IsZero(poly, sizeof(*poly)));
+    assert(IS_ZERO(*poly));
     assert(size.x > 0.0f && size.y > 0.0f);
     assert(origin.x >= 0.0f && origin.y >= 0.0f && origin.x <= 1.0f && origin.y <= 1.0f);
     

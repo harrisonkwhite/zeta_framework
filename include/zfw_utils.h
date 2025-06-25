@@ -21,6 +21,9 @@ static inline void ZeroOut(void* const mem, const int size) {
     memset(mem, 0, size);
 }
 
+#define IS_ZERO(x) IsZero(&x, sizeof(x))
+#define ZERO_OUT(x) ZeroOut(&x, sizeof(x))
+
 static inline bool IsPowerOfTwo(const int n) {
     return n > 0 && (n & (n - 1)) == 0;
 }

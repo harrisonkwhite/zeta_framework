@@ -133,7 +133,7 @@ static void RefreshInputState(s_input_state* const state, GLFWwindow* const glfw
     assert(state);
     assert(glfw_window);
 
-    ZeroOut(state, sizeof(*state));
+    ZERO_OUT(*state);
 
     for (int i = 0; i < eks_key_code_cnt; i++) {
         if (glfwGetKey(glfw_window, g_glfw_keys[i])) {

@@ -72,7 +72,7 @@ static t_gl_id CreateShaderProgFromFiles(const s_shader_prog_file_paths fps, s_m
 
 bool InitPersRenderData(s_pers_render_data* const render_data, const s_vec_2d_i display_size) {
     assert(render_data);
-    assert(IsZero(render_data, sizeof(*render_data)));
+    assert(IS_ZERO(*render_data));
     assert(display_size.x > 0 && display_size.y > 0);
 
     render_data->batch_shader_prog = LoadRenderBatchShaderProg();
@@ -144,7 +144,7 @@ void CleanPersRenderData(s_pers_render_data* const render_data) {
 
     glDeleteProgram(render_data->batch_shader_prog.gl_id);
 
-    ZeroOut(render_data, sizeof(*render_data));
+    ZERO_OUT(*render_data);
 }
 
 s_render_batch_shader_prog LoadRenderBatchShaderProg() {
@@ -245,7 +245,7 @@ s_render_batch_gl_ids GenRenderBatch() {
 
 bool LoadTexturesFromFiles(s_textures* const textures, s_mem_arena* const mem_arena, const int tex_cnt, const t_texture_index_to_file_path tex_index_to_fp) {
     assert(textures);
-    assert(IsZero(textures, sizeof(*textures)));
+    assert(IS_ZERO(*textures));
     assert(mem_arena);
     assert(tex_cnt > 0);
     assert(tex_index_to_fp);
@@ -295,12 +295,12 @@ void UnloadTextures(s_textures* const textures) {
         glDeleteTextures(textures->cnt, textures->gl_ids);
     }
 
-    ZeroOut(textures, sizeof(*textures));
+    ZERO_OUT(*textures);
 }
 
 bool LoadFontsFromFiles(s_fonts* const fonts, s_mem_arena* const mem_arena, const int font_cnt, const t_font_index_to_load_info font_index_to_load_info, s_mem_arena* const temp_mem_arena) {
     assert(fonts);
-    assert(IsZero(fonts, sizeof(*fonts)));
+    assert(IS_ZERO(*fonts));
     assert(mem_arena);
     assert(font_cnt > 0);
     assert(font_index_to_load_info);
@@ -463,12 +463,12 @@ void UnloadFonts(s_fonts* const fonts) {
         glDeleteTextures(fonts->cnt, fonts->tex_gl_ids);
     }
 
-    ZeroOut(fonts, sizeof(*fonts));
+    ZERO_OUT(*fonts);
 }
 
 bool LoadShaderProgsFromFiles(s_shader_progs* const progs, s_mem_arena* const mem_arena, const int prog_cnt, const t_shader_prog_index_to_file_paths prog_index_to_fps, s_mem_arena* const temp_mem_arena) {
     assert(progs);
-    assert(IsZero(progs, sizeof(*progs)));
+    assert(IS_ZERO(*progs));
     assert(mem_arena);
     assert(prog_cnt > 0);
     assert(prog_index_to_fps);
@@ -502,12 +502,12 @@ void UnloadShaderProgs(s_shader_progs* const progs) {
         glDeleteProgram(progs->gl_ids[i]);
     }
 
-    ZeroOut(progs, sizeof(*progs));
+    ZERO_OUT(*progs);
 }
 
 void BeginRendering(s_rendering_state* const state) {
     assert(state);
-    ZeroOut(state, sizeof(*state));
+    ZERO_OUT(*state);
     InitIdenMatrix4x4(&state->view_mat);
 }
 
@@ -888,7 +888,7 @@ static bool AttachFramebufferTexture(const t_gl_id fb_gl_id, const t_gl_id tex_g
 }
 
 bool InitRenderSurfaces(s_render_surfaces* const surfs, const s_vec_2d_i size) {
-    assert(surfs && IsZero(surfs, sizeof(*surfs)));
+    assert(surfs && IS_ZERO(*surfs));
     assert(size.x > 0 && size.y > 0);
 
     glGenFramebuffers(RENDER_SURFACE_LIMIT, &surfs->framebuffer_gl_ids[0]);

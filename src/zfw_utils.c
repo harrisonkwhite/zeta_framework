@@ -19,7 +19,7 @@ bool IsZero(const void* const mem, const int size) {
 
 bool InitMemArena(s_mem_arena* const arena, const int size) {
     assert(arena);
-    assert(IsZero(arena, sizeof(*arena)));
+    assert(IS_ZERO(*arena));
     assert(size > 0);
 
     arena->buf = malloc(size);
@@ -43,7 +43,7 @@ void CleanMemArena(s_mem_arena* const arena) {
         free(arena->buf);
     }
 
-    ZeroOut(arena, sizeof(*arena));
+    ZERO_OUT(*arena);
 }
 
 void* PushToMemArena(s_mem_arena* const arena, const int size, const int alignment) {
@@ -68,7 +68,7 @@ void* PushToMemArena(s_mem_arena* const arena, const int size, const int alignme
 void ResetMemArena(s_mem_arena* const arena) {
     assert(arena);
     AssertMemArenaValidity(arena);
-    assert(!IsZero(arena, sizeof(*arena)));
+    assert(!IS_ZERO(*arena));
 
     if (arena->offs > 0) {
         ZeroOut(arena->buf, arena->offs);
@@ -79,7 +79,7 @@ void ResetMemArena(s_mem_arena* const arena) {
 void AssertMemArenaValidity(const s_mem_arena* const arena) {
     assert(arena);
 
-    if (!IsZero(arena, sizeof(*arena))) {
+    if (!IS_ZERO(*arena)) {
         assert(arena->buf);
         assert(arena->size > 0);
         assert(arena->offs >= 0 && arena->offs <= arena->size);
