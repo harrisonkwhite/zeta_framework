@@ -158,6 +158,10 @@ static inline s_vec_2d NormalOrZero(const s_vec_2d vec) {
     return (s_vec_2d){vec.x / mag, vec.y / mag};
 }
 
+static inline s_vec_2d Vec2DDir(const s_vec_2d a, const s_vec_2d b) {
+    return NormalOrZero(Vec2DDiff(b, a));
+}
+
 static inline float Dist(const s_vec_2d a, const s_vec_2d b) {
     s_vec_2d d = {a.x - b.x, a.y - b.y};
     return Mag(d);
