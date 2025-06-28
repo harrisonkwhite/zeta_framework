@@ -1,5 +1,5 @@
-#ifndef GCE_GAME_H
-#define GCE_GAME_H
+#ifndef ZFW_GAME_H
+#define ZFW_GAME_H
 
 #include <stdbool.h>
 #include <stdint.h>

@@ -1,5 +1,5 @@
-#ifndef GCE_MATH_H
-#define GCE_MATH_H
+#ifndef ZFW_MATH_H
+#define ZFW_MATH_H
 
 #include <stdbool.h>
 #include <stdint.h>

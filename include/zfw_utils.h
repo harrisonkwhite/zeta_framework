@@ -1,5 +1,5 @@
-#ifndef GCE_UTILS_H
-#define GCE_UTILS_H
+#ifndef ZFW_UTILS_H
+#define ZFW_UTILS_H
 
 #include <string.h>
 #include <stdint.h>

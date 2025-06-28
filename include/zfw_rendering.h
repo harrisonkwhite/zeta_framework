@@ -1,5 +1,5 @@
-#ifndef GCE_RENDERING_H
-#define GCE_RENDERING_H
+#ifndef ZFW_RENDERING_H
+#define ZFW_RENDERING_H
 
 #include <stdint.h>
 #include <stdbool.h>
