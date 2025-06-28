@@ -17,6 +17,16 @@ bool IsZero(const void* const mem, const int size) {
     return true;
 }
 
+bool IsNullTerminated(const char* const buf, const int buf_size) {
+    for (int i = 0; i < buf_size; i++) {
+        if (buf[i] == '\0') {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 bool InitMemArena(s_mem_arena* const arena, const int size) {
     assert(arena);
     assert(IS_ZERO(*arena));

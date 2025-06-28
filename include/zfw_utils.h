@@ -13,6 +13,7 @@
 typedef uint8_t t_byte;
 
 bool IsZero(const void* const mem, const int size);
+bool IsNullTerminated(const char* const buf, const int buf_size);
 
 static inline void ZeroOut(void* const mem, const int size) {
     assert(mem);
