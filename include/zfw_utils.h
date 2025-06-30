@@ -7,6 +7,8 @@
 #include <stdalign.h>
 #include <assert.h>
 
+#define STATIC_ARRAY_LEN(x) (sizeof(x) / sizeof((x)[0]))
+
 #define BITS_TO_BYTES(x) ((x + 7) & ~7)
 #define BYTES_TO_BITS(x) (x * 8)
 
