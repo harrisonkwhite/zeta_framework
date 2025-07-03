@@ -13,6 +13,7 @@
 #define MAX(x, y) ((x) >= (y) ? (x) : (y))
 
 #define CLAMP(x, min, max) (((x) < (min)) ? (min) : ((x) > (max) ? (max) : (x)))
+#define SIGN(x) ((x) == 0 ? (x) : ((x) > 0 ? 1 : -1));
 
 #define VEC_2D_ZERO (s_vec_2d){0}
 #define VEC_2D_I_ZERO (s_vec_2d_i){0}
