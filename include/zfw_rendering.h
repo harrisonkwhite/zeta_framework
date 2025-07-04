@@ -231,26 +231,9 @@ bool ResizeRenderSurfaces(s_render_surfaces* const surfs, const s_vec_2d_i size)
 
 s_rect_edges CalcTextureCoords(const s_rect_i src_rect, const s_vec_2d_i tex_size);
 
-const s_vec_2d* PushStrChrPositions(
-    const char* const str,
-    s_mem_arena* const mem_arena,
-    const int font_index,
-    const s_fonts* const fonts,
-    const s_vec_2d pos,
-    const e_str_hor_align hor_align,
-    const e_str_ver_align ver_align
-);
+const s_vec_2d* PushStrChrPositions(const char* const str, s_mem_arena* const mem_arena, const int font_index, const s_fonts* const fonts, const s_vec_2d pos, const e_str_hor_align hor_align, const e_str_ver_align ver_align);
 
-bool LoadStrCollider(
-    s_rect* const rect,
-    const char* const str,
-    const int font_index,
-    const s_fonts* const fonts,
-    const s_vec_2d pos,
-    const e_str_hor_align hor_align,
-    const e_str_ver_align ver_align,
-    s_mem_arena* const temp_mem_arena
-); 
+bool LoadStrCollider(s_rect* const rect, const char* const str, const int font_index, const s_fonts* const fonts, const s_vec_2d pos, const e_str_hor_align hor_align, const e_str_ver_align ver_align, s_mem_arena* const temp_mem_arena);
 
 static inline bool IsOriginValid(const s_vec_2d origin) {
     return origin.x >= 0.0f && origin.y >= 0.0f && origin.x <= 1.0f && origin.y <= 1.0f;

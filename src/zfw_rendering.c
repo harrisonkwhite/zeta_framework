@@ -922,32 +922,19 @@ bool ResizeRenderSurfaces(s_render_surfaces* const surfs, const s_vec_2d_i size)
     return true;
 }
 
-static void ApplyHorAlignOffsToLine(
-    s_vec_2d* const line_chr_positions,
-    const int count,
-    const e_str_hor_align hor_align,
-    const float line_end_x
-) {
+static void ApplyHorAlignOffsToLine(s_vec_2d* const line_chr_positions, const int cnt, const e_str_hor_align hor_align, const float line_end_x) {
     assert(line_chr_positions);
-    assert(count > 0);
+    assert(cnt > 0);
 
     const float line_width = line_end_x - line_chr_positions[0].x;
     const float align_offs = -(line_width * (float)hor_align * 0.5f);
 
-    for (int i = 0; i < count; ++i) {
+    for (int i = 0; i < cnt; ++i) {
         line_chr_positions[i].x += align_offs;
     }
 }
 
-const s_vec_2d* PushStrChrPositions(
-    const char* const str,
-    s_mem_arena* const mem_arena,
-    const int font_index,
-    const s_fonts* const fonts,
-    const s_vec_2d pos,
-    const e_str_hor_align hor_align,
-    const e_str_ver_align ver_align
-) {
+const s_vec_2d* PushStrChrPositions(const char* const str, s_mem_arena* const mem_arena, const int font_index, const s_fonts* const fonts, const s_vec_2d pos, const e_str_hor_align hor_align, const e_str_ver_align ver_align) {
     assert(str);
     assert(mem_arena);
     assert(font_index >= 0 && font_index < fonts->cnt);
@@ -975,10 +962,10 @@ const s_vec_2d* PushStrChrPositions(
         }
 
         if (chr == '\n') {
-            const int line_count = i - cur_line_begin_chr_index;
+            const int line_cnt = i - cur_line_begin_chr_index;
             ApplyHorAlignOffsToLine(
                 &chr_positions[cur_line_begin_chr_index],
-                line_count,
+                line_cnt,
                 hor_align,
                 chr_base_pos_pen.x + pos.x
             );
@@ -997,11 +984,11 @@ const s_vec_2d* PushStrChrPositions(
         chr_base_pos_pen.x += font_ai->chr_hor_advances[chr_index];
     }
 
-    const int remaining_count = str_len - cur_line_begin_chr_index;
+    const int remaining_cnt = str_len - cur_line_begin_chr_index;
 
     ApplyHorAlignOffsToLine(
         &chr_positions[cur_line_begin_chr_index],
-        remaining_count,
+        remaining_cnt,
         hor_align,
         chr_base_pos_pen.x + pos.x
     );
@@ -1016,16 +1003,7 @@ const s_vec_2d* PushStrChrPositions(
     return chr_positions;
 }
 
-bool LoadStrCollider(
-    s_rect* const rect,
-    const char* const str,
-    const int font_index,
-    const s_fonts* const fonts,
-    const s_vec_2d pos,
-    const e_str_hor_align hor_align,
-    const e_str_ver_align ver_align,
-    s_mem_arena* const temp_mem_arena
-) {
+bool LoadStrCollider(s_rect* const rect, const char* const str, const int font_index, const s_fonts* const fonts, const s_vec_2d pos, const e_str_hor_align hor_align, const e_str_ver_align ver_align, s_mem_arena* const temp_mem_arena) {
     assert(rect);
     assert(str);
     assert(fonts);
@@ -1033,7 +1011,7 @@ bool LoadStrCollider(
     const int str_len = strlen(str);
     assert(str_len > 0);
 
-    const s_vec_2d* const chr_positions = MEM_ARENA_PUSH_TYPE_MANY(temp_mem_arena, s_vec_2d, str_len);
+    const s_vec_2d* const chr_positions = PushStrChrPositions(str, temp_mem_arena, font_index, fonts, pos, hor_align, ver_align);
 
     if (!chr_positions) {
         return NULL;
@@ -1062,12 +1040,13 @@ bool LoadStrCollider(
             collider_edges.top = top;
             collider_edges.right = right;
             collider_edges.bottom = bottom;
+
             initted = true;
         } else {
-            collider_edges.left = fminf(collider_edges.left, left);
-            collider_edges.top = fminf(collider_edges.top, top);
-            collider_edges.right = fmaxf(collider_edges.right, right);
-            collider_edges.bottom = fmaxf(collider_edges.bottom, bottom);
+            collider_edges.left = MIN(collider_edges.left, left);
+            collider_edges.top = MIN(collider_edges.top, top);
+            collider_edges.right = MAX(collider_edges.right, right);
+            collider_edges.bottom = MAX(collider_edges.bottom, bottom);
         }
     }
 
