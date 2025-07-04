@@ -164,6 +164,19 @@ int FirstInactiveBitIndex(const t_byte* const bytes, const int bit_cnt) {
     return -1;
 }
 
+bool DoesFilenameHaveExt(const char* const filename, const char* const ext) {
+    assert(filename);
+    assert(ext);
+
+    const char* const ext_actual = strrchr(filename, '.');
+
+    if (!ext_actual) {
+        return false;
+    }
+
+    return strcmp(ext_actual, ext) == 0;
+}
+
 t_byte* PushEntireFileContents(const char* const file_path, s_mem_arena* const mem_arena, const bool incl_term_byte) {
     assert(file_path);
     assert(mem_arena);

@@ -94,6 +94,7 @@ static inline t_byte KeepFirstNBitsOfByte(const t_byte byte, const int n) {
     return byte & ((1 << n) - 1);
 }
 
+bool DoesFilenameHaveExt(const char* const filename, const char* const ext);
 t_byte* PushEntireFileContents(const char* const file_path, s_mem_arena* const mem_arena, const bool incl_term_byte);
 
 #endif
