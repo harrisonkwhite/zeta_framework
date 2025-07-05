@@ -111,20 +111,26 @@ typedef struct {
     e_mouse_scroll_state mouse_scroll_state;
 } s_input_state;
 
-typedef struct s_window_state {
+typedef struct {
     s_vec_2d_i pos;
     s_vec_2d_i size;
     bool fullscreen;
 } s_window_state;
 
-typedef struct s_game_init_func_data {
+typedef struct {
     void* user_mem;
     s_mem_arena* perm_mem_arena;
     s_mem_arena* temp_mem_arena;
     s_window_state window_state;
 } s_game_init_func_data;
 
-typedef struct s_game_tick_func_data {
+typedef enum {
+    ek_game_tick_func_result_default,
+    ek_game_tick_func_result_exit,
+    ek_game_tick_func_result_error
+} e_game_tick_func_result;
+
+typedef struct {
     void* user_mem;
     s_mem_arena* perm_mem_arena;
     s_mem_arena* temp_mem_arena;
@@ -134,7 +140,7 @@ typedef struct s_game_tick_func_data {
     const t_unicode_buf* unicode_buf;
 } s_game_tick_func_data;
 
-typedef struct s_game_render_func_data {
+typedef struct {
     void* user_mem;
     s_mem_arena* perm_mem_arena;
     s_mem_arena* temp_mem_arena;
@@ -152,7 +158,7 @@ typedef struct {
     e_window_flags window_flags;
 
     bool (*init_func)(const s_game_init_func_data* const func_data);
-    bool (*tick_func)(const s_game_tick_func_data* const func_data);
+    e_game_tick_func_result (*tick_func)(const s_game_tick_func_data* const func_data);
     bool (*render_func)(const s_game_render_func_data* const func_data);
     void (*clean_func)(void* const user_mem);
 } s_game_info;

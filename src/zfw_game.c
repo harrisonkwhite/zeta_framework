@@ -346,7 +346,14 @@ bool RunGame(const s_game_info* const info) {
                     .unicode_buf = &glfw_user_data.unicode_buf
                 };
 
-                if (!info->tick_func(&func_data)) {
+                const e_game_tick_func_result res = info->tick_func(&func_data);
+
+                if (res == ek_game_tick_func_result_exit) {
+                    CleanGame(&cleanup_info);
+                    return true;
+                }
+
+                if (res == ek_game_tick_func_result_error) {
                     CleanGame(&cleanup_info);
                     return false;
                 }
@@ -386,24 +393,6 @@ bool RunGame(const s_game_info* const info) {
         }
 
         glfwPollEvents();
-
-#if 0
-        // Handle any window state changes.
-        const s_window_state window_state_after_poll_events = GetWindowState(glfw_window);
-
-        printf("(%d, %d)\n", window_state_after_poll_events.size.x, window_state_after_poll_events.size.y);
-
-        if (!Vec2DIsEqual(window_state_after_poll_events.size, VEC_2D_I_ZERO)
-            && !Vec2DIsEqual(window_state_after_poll_events.size, window_state_at_frame_begin.size)) {
-            glViewport(0, 0, window_state_after_poll_events.size.x, window_state_after_poll_events.size.y);
-
-            if (!ResizeRenderSurfaces(&pers_render_data.surfs, window_state_after_poll_events.size)) {
-                fprintf(stderr, "Failed to resize render surfaces!\n");
-                CleanGame(&cleanup_info);
-                return false;
-            }
-        }
-#endif
     }
 
     CleanGame(&cleanup_info);
