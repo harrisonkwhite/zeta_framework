@@ -175,8 +175,8 @@ static void GLFWScrollCallback(GLFWwindow* const window, const double offs_x, co
 static void GLFWCharCallback(GLFWwindow* const window, const unsigned int codepoint) {
     s_glfw_user_data* const user_data = glfwGetWindowUserPointer(window);
 
-    for (int i = 0; i < sizeof(*user_data->unicode_buf); i++) {
-        if (!user_data->unicode_buf[0]) {
+    for (int i = 0; i < sizeof(user_data->unicode_buf); i++) {
+        if (!user_data->unicode_buf[i]) {
             user_data->unicode_buf[i] = (char)codepoint;
             return;
         }

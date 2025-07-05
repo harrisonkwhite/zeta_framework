@@ -8,7 +8,7 @@
 #include "zfw_rendering.h"
 #include "zfw_utils.h"
 
-typedef char t_unicode_buf[256];
+typedef char t_unicode_buf[32];
 
 typedef uint64_t t_keys_down_bits;
 typedef uint8_t t_mouse_buttons_down_bits;
