@@ -92,6 +92,8 @@ typedef enum {
     eks_key_code_cnt
 } e_key_code;
 
+static_assert(eks_key_code_cnt < BYTES_TO_BITS(sizeof(t_keys_down_bits)), "Too many key codes!");
+
 typedef enum {
     ek_mouse_button_code_left,
     ek_mouse_button_code_right,
@@ -99,6 +101,8 @@ typedef enum {
 
     eks_mouse_button_code_cnt
 } e_mouse_button_code;
+
+static_assert(eks_mouse_button_code_cnt < BYTES_TO_BITS(sizeof(t_mouse_buttons_down_bits)), "Too many mouse button codes!");
 
 typedef struct {
     t_keys_down_bits keys_down;
