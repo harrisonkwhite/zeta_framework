@@ -307,7 +307,25 @@ bool RunGame(const s_game_info* const info) {
     printf("Entering the main loop...\n");
 
     while (!glfwWindowShouldClose(glfw_window)) {
-        const s_window_state window_state_at_frame_begin = GetWindowState(glfw_window);
+        const s_window_state window_state = GetWindowState(glfw_window);
+
+        {
+            // TODO: Clean this up! Extract out somewhere.
+            GLint viewport[4];
+            glGetIntegerv(GL_VIEWPORT, viewport);
+
+            if (viewport[0] != 0 || viewport[1] != 0 || viewport[2] != window_state.size.x || viewport[3] != window_state.size.y) {
+                glViewport(0, 0, window_state.size.x, window_state.size.y);
+            }
+        }
+
+        if (!Vec2DIsEqual(pers_render_data.surfs.size, window_state.size)) {
+            if (!ResizeRenderSurfaces(&pers_render_data.surfs, window_state.size)) {
+                fprintf(stderr, "Failed to resize render surfaces!\n");
+                CleanGame(&cleanup_info);
+                return false;
+            }
+        }
 
         const double frame_time = glfwGetTime();
         frame_dur_accum += frame_time - frame_time_last;
@@ -322,7 +340,7 @@ bool RunGame(const s_game_info* const info) {
                     .user_mem = user_mem,
                     .perm_mem_arena = &perm_mem_arena,
                     .temp_mem_arena = &temp_mem_arena,
-                    .window_state = window_state_at_frame_begin,
+                    .window_state = window_state,
                     .input_state = &input_state,
                     .input_state_last = &input_state_last,
                     .unicode_buf = &glfw_user_data.unicode_buf
@@ -346,7 +364,7 @@ bool RunGame(const s_game_info* const info) {
                     .rendering_context = {
                         .pers = &pers_render_data,
                         .state = rendering_state,
-                        .display_size = window_state_at_frame_begin.size
+                        .display_size = window_state.size
                     },
                     .input_state = &input_state,
                     .input_state_last = &input_state_last
@@ -369,8 +387,11 @@ bool RunGame(const s_game_info* const info) {
 
         glfwPollEvents();
 
+#if 0
         // Handle any window state changes.
         const s_window_state window_state_after_poll_events = GetWindowState(glfw_window);
+
+        printf("(%d, %d)\n", window_state_after_poll_events.size.x, window_state_after_poll_events.size.y);
 
         if (!Vec2DIsEqual(window_state_after_poll_events.size, VEC_2D_I_ZERO)
             && !Vec2DIsEqual(window_state_after_poll_events.size, window_state_at_frame_begin.size)) {
@@ -382,6 +403,7 @@ bool RunGame(const s_game_info* const info) {
                 return false;
             }
         }
+#endif
     }
 
     CleanGame(&cleanup_info);

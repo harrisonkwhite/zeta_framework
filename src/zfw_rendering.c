@@ -891,6 +891,8 @@ bool InitRenderSurfaces(s_render_surfaces* const surfs, const s_vec_2d_i size) {
     assert(surfs && IS_ZERO(*surfs));
     assert(size.x > 0 && size.y > 0);
 
+    surfs->size = size;
+
     glGenFramebuffers(RENDER_SURFACE_LIMIT, &surfs->framebuffer_gl_ids[0]);
     glGenTextures(RENDER_SURFACE_LIMIT, &surfs->framebuffer_tex_gl_ids[0]);
 
@@ -906,6 +908,9 @@ bool InitRenderSurfaces(s_render_surfaces* const surfs, const s_vec_2d_i size) {
 bool ResizeRenderSurfaces(s_render_surfaces* const surfs, const s_vec_2d_i size) {
     assert(surfs);
     assert(size.x > 0 && size.y > 0);
+    assert(!Vec2DIsEqual(size, surfs->size));
+
+    surfs->size = size;
 
     // Delete old textures.
     glDeleteTextures(RENDER_SURFACE_LIMIT, surfs->framebuffer_tex_gl_ids);

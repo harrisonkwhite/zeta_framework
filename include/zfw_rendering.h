@@ -49,6 +49,7 @@ typedef struct {
 } s_render_batch_shader_prog;
 
 typedef struct {
+    s_vec_2d_i size;
     t_gl_id framebuffer_gl_ids[RENDER_SURFACE_LIMIT];
     t_gl_id framebuffer_tex_gl_ids[RENDER_SURFACE_LIMIT];
 } s_render_surfaces;
