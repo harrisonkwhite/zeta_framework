@@ -61,6 +61,7 @@ static const int g_glfw_keys[eks_key_code_cnt] = {
     [ek_key_code_z] = GLFW_KEY_Z,
     [ek_key_code_escape] = GLFW_KEY_ESCAPE,
     [ek_key_code_enter] = GLFW_KEY_ENTER,
+    [ek_key_code_backspace] = GLFW_KEY_BACKSPACE,
     [ek_key_code_tab] = GLFW_KEY_TAB,
     [ek_key_code_right] = GLFW_KEY_RIGHT,
     [ek_key_code_left] = GLFW_KEY_LEFT,

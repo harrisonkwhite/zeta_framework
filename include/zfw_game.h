@@ -64,6 +64,7 @@ typedef enum {
     ek_key_code_z,
     ek_key_code_escape,
     ek_key_code_enter,
+    ek_key_code_backspace,
     ek_key_code_tab,
     ek_key_code_right,
     ek_key_code_left,
