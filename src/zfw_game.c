@@ -16,6 +16,11 @@
 #define GL_VERSION_MAJOR 4
 #define GL_VERSION_MINOR 3
 
+typedef struct {
+    e_mouse_scroll_state mouse_scroll_state;
+    t_unicode_buf unicode_buf;
+} s_glfw_user_data;
+
 static const int g_glfw_keys[eks_key_code_cnt] = {
     [ek_key_code_space] = GLFW_KEY_SPACE,
     [ek_key_code_0] = GLFW_KEY_0,
@@ -151,19 +156,32 @@ static void RefreshInputState(s_input_state* const state, GLFWwindow* const glfw
     glfwGetCursorPos(glfw_window, &mouse_x_dbl, &mouse_y_dbl);
     state->mouse_pos = (s_vec_2d){mouse_x_dbl, mouse_y_dbl};
 
-    state->mouse_scroll = mouse_scroll_state;
+    state->mouse_scroll_state = mouse_scroll_state;
 }
 
 static void GLFWScrollCallback(GLFWwindow* const window, const double offs_x, const double offs_y) {
-    e_mouse_scroll_state* const scroll_state = glfwGetWindowUserPointer(window);
+    s_glfw_user_data* const user_data = glfwGetWindowUserPointer(window);
 
     if (offs_y > 0.0) {
-        *scroll_state = ek_mouse_scroll_state_up;
+        user_data->mouse_scroll_state = ek_mouse_scroll_state_up;
     } else if (offs_y < 0.0) {
-        *scroll_state = ek_mouse_scroll_state_down;
+        user_data->mouse_scroll_state = ek_mouse_scroll_state_down;
     } else {
-        *scroll_state = ek_mouse_scroll_state_none;
+        user_data->mouse_scroll_state = ek_mouse_scroll_state_none;
     }
+}
+
+static void GLFWCharCallback(GLFWwindow* const window, const unsigned int codepoint) {
+    s_glfw_user_data* const user_data = glfwGetWindowUserPointer(window);
+
+    for (int i = 0; i < sizeof(*user_data->unicode_buf); i++) {
+        if (!user_data->unicode_buf[0]) {
+            user_data->unicode_buf[i] = (char)codepoint;
+            return;
+        }
+    }
+
+    fprintf(stderr, "Unicode buffer is full!");
 }
 
 bool RunGame(const s_game_info* const info) {
@@ -210,13 +228,7 @@ bool RunGame(const s_game_info* const info) {
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
 
-    GLFWwindow* const glfw_window = glfwCreateWindow(
-        info->window_init_size.x,
-        info->window_init_size.y,
-        info->window_title,
-        NULL,
-        NULL
-    );
+    GLFWwindow* const glfw_window = glfwCreateWindow(info->window_init_size.x, info->window_init_size.y, info->window_title, NULL, NULL);
 
     if (!glfw_window) {
         fprintf(stderr, "Failed to create a GLFW window!\n");
@@ -233,13 +245,15 @@ bool RunGame(const s_game_info* const info) {
     glfwSetWindowAttrib(glfw_window, GLFW_RESIZABLE, info->window_flags & ek_window_flag_resizable ? GLFW_TRUE : GLFW_FALSE);
     glfwSetInputMode(glfw_window, GLFW_CURSOR, info->window_flags & ek_window_flag_hide_cursor ? GLFW_CURSOR_HIDDEN : GLFW_CURSOR_NORMAL);
 
-    s_input_state input_state = {0};
-    e_mouse_scroll_state mouse_scroll_state = ek_mouse_scroll_state_none;
-    glfwSetWindowUserPointer(glfw_window, &mouse_scroll_state);
+    s_glfw_user_data glfw_user_data = {0};
+    glfwSetWindowUserPointer(glfw_window, &glfw_user_data);
+
     glfwSetScrollCallback(glfw_window, GLFWScrollCallback);
+    glfwSetCharCallback(glfw_window, GLFWCharCallback);
 
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
         fprintf(stderr, "Failed to load OpenGL function pointers!\n");
+        CleanGame(&cleanup_info);
         return false;
     }
 
@@ -252,6 +266,7 @@ bool RunGame(const s_game_info* const info) {
     s_rendering_state* const rendering_state = MEM_ARENA_PUSH_TYPE(&perm_mem_arena, s_rendering_state);
 
     if (!rendering_state) {
+        CleanGame(&cleanup_info);
         return false;
     }
 
@@ -259,6 +274,7 @@ bool RunGame(const s_game_info* const info) {
 
     if (!user_mem) {
         fprintf(stderr, "Failed to allocate user memory!\n");
+        CleanGame(&cleanup_info);
         return false;
     }
 
@@ -282,6 +298,8 @@ bool RunGame(const s_game_info* const info) {
     //
     // Main Loop
     //
+    s_input_state input_state = {0};
+
     double frame_time_last = glfwGetTime();
     double frame_dur_accum = 0.0;
 
@@ -296,7 +314,7 @@ bool RunGame(const s_game_info* const info) {
 
         if (frame_dur_accum >= TARG_TICK_INTERVAL) {
             const s_input_state input_state_last = input_state;
-            RefreshInputState(&input_state, glfw_window, mouse_scroll_state);
+            RefreshInputState(&input_state, glfw_window, glfw_user_data.mouse_scroll_state);
 
             {
                 const s_game_tick_func_data func_data = {
@@ -305,7 +323,8 @@ bool RunGame(const s_game_info* const info) {
                     .temp_mem_arena = &temp_mem_arena,
                     .window_state = window_state_at_frame_begin,
                     .input_state = &input_state,
-                    .input_state_last = &input_state_last
+                    .input_state_last = &input_state_last,
+                    .unicode_buf = &glfw_user_data.unicode_buf
                 };
 
                 if (!info->tick_func(&func_data)) {
@@ -313,6 +332,8 @@ bool RunGame(const s_game_info* const info) {
                     return false;
                 }
             }
+
+            ZERO_OUT(glfw_user_data);
 
             BeginRendering(rendering_state);
 
@@ -356,6 +377,7 @@ bool RunGame(const s_game_info* const info) {
 
             if (!ResizeRenderSurfaces(&pers_render_data.surfs, window_state_after_poll_events.size)) {
                 fprintf(stderr, "Failed to resize render surfaces!\n");
+                CleanGame(&cleanup_info);
                 return false;
             }
         }

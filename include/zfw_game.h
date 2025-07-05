@@ -8,6 +8,8 @@
 #include "zfw_rendering.h"
 #include "zfw_utils.h"
 
+typedef char t_unicode_buf[256];
+
 typedef uint64_t t_keys_down_bits;
 typedef uint8_t t_mouse_buttons_down_bits;
 
@@ -101,7 +103,7 @@ typedef struct {
     t_keys_down_bits keys_down;
     t_mouse_buttons_down_bits mouse_buttons_down;
     s_vec_2d mouse_pos;
-    e_mouse_scroll_state mouse_scroll;
+    e_mouse_scroll_state mouse_scroll_state;
 } s_input_state;
 
 typedef struct s_window_state {
@@ -124,6 +126,7 @@ typedef struct s_game_tick_func_data {
     s_window_state window_state;
     const s_input_state* input_state;
     const s_input_state* input_state_last;
+    const t_unicode_buf* unicode_buf;
 } s_game_tick_func_data;
 
 typedef struct s_game_render_func_data {
