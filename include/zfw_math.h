@@ -20,6 +20,13 @@
 #define VEC_2D_ZERO (s_vec_2d){0}
 #define VEC_2D_I_ZERO (s_vec_2d_i){0}
 
+typedef enum {
+    ek_cardinal_dir_right,
+    ek_cardinal_dir_left,
+    ek_cardinal_dir_down,
+    ek_cardinal_dir_up
+} e_cardinal_dir;
+
 typedef float t_matrix_4x4[4][4];
 
 typedef struct {
@@ -82,6 +89,8 @@ typedef struct {
     s_vec_2d* pts;
     int cnt;
 } s_poly;
+
+extern const s_vec_2d g_cardinal_dir_vecs[];
 
 s_rect GenSpanningRect(const s_rect* const rects, const int cnt);
 

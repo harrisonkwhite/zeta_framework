@@ -3,6 +3,13 @@
 #include "zfw_math.h"
 #include "zfw_utils.h"
 
+const s_vec_2d g_cardinal_dir_vecs[] = {
+    [ek_cardinal_dir_right] = {1.0f, 0.0f},
+    [ek_cardinal_dir_left] = {-1.0f, 0.0f},
+    [ek_cardinal_dir_down] = {0.0f, 1.0f},
+    [ek_cardinal_dir_up] = {0.0f, -1.0f}
+};
+
 s_rect GenSpanningRect(const s_rect* const rects, const int cnt) {
     assert(rects && cnt > 0);
 
