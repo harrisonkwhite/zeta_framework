@@ -7,5 +7,10 @@ void InitRNG() {
 }
 
 float RandPerc() {
-    return (float)rand() / RAND_MAX;
+    return (float)rand() / (RAND_MAX + 1.0f);
+}
+
+int RandRangeI(const int beg, const int end) {
+    assert(beg <= end);
+    return beg + (rand() % (end - beg));
 }
