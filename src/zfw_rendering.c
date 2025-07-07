@@ -76,7 +76,12 @@ bool InitPersRenderData(s_pers_render_data* const render_data, const s_vec_2d_i 
     assert(display_size.x > 0 && display_size.y > 0);
 
     render_data->batch_shader_prog = LoadRenderBatchShaderProg();
+
     render_data->batch_gl_ids = GenRenderBatch();
+
+    if (IS_ZERO(render_data->batch_gl_ids)) {
+        return false;
+    }
 
     // Generate the pixel texture.
     {
@@ -207,6 +212,10 @@ s_render_batch_gl_ids GenRenderBatch() {
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, gl_ids.elem_buf_gl_id);
 
     uint16_t* const indices = malloc(sizeof(uint16_t) * RENDER_BATCH_SLOT_ELEM_CNT * RENDER_BATCH_SLOT_CNT);
+
+    if (!indices) {
+        return (s_render_batch_gl_ids){0};
+    }
 
     for (int i = 0; i < RENDER_BATCH_SLOT_CNT; ++i) {
         indices[(i * 6) + 0] = (uint16_t)((i * 4) + 0);
@@ -1019,7 +1028,7 @@ bool LoadStrCollider(s_rect* const rect, const char* const str, const int font_i
     const s_vec_2d* const chr_positions = PushStrChrPositions(str, temp_mem_arena, font_index, fonts, pos, hor_align, ver_align);
 
     if (!chr_positions) {
-        return NULL;
+        return false;
     }
 
     s_rect_edges collider_edges;

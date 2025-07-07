@@ -4,8 +4,14 @@
 #include <string.h>
 #include <stdint.h>
 #include <stdbool.h>
-#include <stdalign.h>
 #include <assert.h>
+
+#ifdef _MSC_VER
+#define ALIGN_OF(x) __alignof(x)
+#else
+#include <stdalign.h>
+#define ALIGN_OF(x) alignof(x)
+#endif
 
 #define STATIC_ARRAY_LEN(x) (sizeof(x) / sizeof((x)[0]))
 
@@ -59,8 +65,8 @@ void* PushToMemArena(s_mem_arena* const arena, const int size, const int alignme
 void ResetMemArena(s_mem_arena* const arena);
 void AssertMemArenaValidity(const s_mem_arena* const arena);
 
-#define MEM_ARENA_PUSH_TYPE(arena, type) (type*)PushToMemArena(arena, sizeof(type), alignof(type))
-#define MEM_ARENA_PUSH_TYPE_MANY(arena, type, cnt) (type*)PushToMemArena(arena, sizeof(type) * (cnt), alignof(type))
+#define MEM_ARENA_PUSH_TYPE(arena, type) (type*)PushToMemArena(arena, sizeof(type), ALIGN_OF(type))
+#define MEM_ARENA_PUSH_TYPE_MANY(arena, type, cnt) (type*)PushToMemArena(arena, sizeof(type) * (cnt), ALIGN_OF(type))
 
 int FirstActiveBitIndex(const t_byte* const bytes, const int bit_cnt); // Returns -1 if an active bit is not found.
 int FirstInactiveBitIndex(const t_byte* const bytes, const int bit_cnt); // Returns -1 if an inactive bit is not found.

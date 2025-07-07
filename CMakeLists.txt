@@ -3,8 +3,7 @@ project(zeta_framework C)
 
 set(CMAKE_C_STANDARD 11)
 
-find_package(PkgConfig REQUIRED)
-pkg_check_modules(GLFW REQUIRED glfw3)
+find_package(glfw3 CONFIG REQUIRED)
 find_package(OpenGL REQUIRED)
 
 add_library(zeta_framework STATIC
@@ -25,15 +24,14 @@ add_library(zeta_framework STATIC
 )
 
 target_include_directories(zeta_framework PUBLIC
-  include
-  external/stb/include
-  external/glad/include
-  ${GLFW_INCLUDE_DIRS}
+    include
+    external/stb/include
+    external/glad/include
 )
 
 target_link_libraries(zeta_framework PUBLIC
-  ${GLFW_LIBRARIES}
-  OpenGL::GL
+    glfw
+    OpenGL::GL
 )
 
 target_compile_definitions(zeta_framework PUBLIC GLFW_INCLUDE_NONE)
