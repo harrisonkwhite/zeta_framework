@@ -3,7 +3,15 @@ project(zeta_framework C)
 
 set(CMAKE_C_STANDARD 11)
 
-find_package(glfw3 CONFIG REQUIRED)
+include(FetchContent)
+
+FetchContent_Declare(
+    glfw
+    GIT_REPOSITORY https://github.com/glfw/glfw.git
+    GIT_TAG 3.4
+)
+FetchContent_MakeAvailable(glfw)
+
 find_package(OpenGL REQUIRED)
 
 add_library(zeta_framework STATIC
@@ -34,5 +42,10 @@ target_link_libraries(zeta_framework PUBLIC
     OpenGL::GL
 )
 
-target_compile_definitions(zeta_framework PUBLIC GLFW_INCLUDE_NONE)
-target_compile_definitions(zeta_framework PRIVATE _CRT_SECURE_NO_WARNINGS)
+target_compile_definitions(zeta_framework PUBLIC
+    GLFW_INCLUDE_NONE
+)
+
+target_compile_definitions(zeta_framework PRIVATE
+    _CRT_SECURE_NO_WARNINGS
+)
