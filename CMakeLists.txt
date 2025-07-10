@@ -18,23 +18,30 @@ add_library(zeta_framework STATIC
     src/zfw_game.c
     src/zfw_math.c
     src/zfw_rendering.c
+    src/zfw_audio.c
     src/zfw_random.c
     src/zfw_utils.c
+    external/glad/src/glad.c
+    external/stb/src/stb.c
+    external/miniaudio/src/miniaudio.c
 
     include/zfw_game.h
     include/zfw_math.h
     include/zfw_rendering.h
+    include/zfw_audio.h
     include/zfw_random.h
     include/zfw_utils.h
-
-    external/glad/src/glad.c
-    external/stb/src/stb.c
+    external/glad/include/glad/glad.h
+    external/stb/include/stb_image.h
+    external/stb/include/stb_truetype.h
+    external/miniaudio/include/miniaudio.h
 )
 
 target_include_directories(zeta_framework PUBLIC
     include
     external/stb/include
     external/glad/include
+    external/miniaudio/include
 )
 
 target_link_libraries(zeta_framework PUBLIC
