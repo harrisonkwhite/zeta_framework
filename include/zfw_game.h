@@ -6,6 +6,7 @@
 #include <GLFW/glfw3.h>
 #include "zfw_math.h"
 #include "zfw_rendering.h"
+#include "zfw_audio.h"
 #include "zfw_utils.h"
 
 typedef char t_unicode_buf[32];
@@ -122,6 +123,7 @@ typedef struct {
     s_mem_arena* perm_mem_arena;
     s_mem_arena* temp_mem_arena;
     s_window_state window_state;
+    s_audio_sys* audio_sys;
 } s_game_init_func_data;
 
 typedef enum {
@@ -138,6 +140,7 @@ typedef struct {
     const s_input_state* input_state;
     const s_input_state* input_state_last;
     const t_unicode_buf* unicode_buf;
+    s_audio_sys* audio_sys;
 } s_game_tick_func_data;
 
 typedef struct {

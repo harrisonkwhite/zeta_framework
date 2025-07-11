@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include "zfw_game.h"
+#include "zfw_audio.h"
 #include "zfw_rendering.h"
 #include "zfw_utils.h"
 #include "zfw_random.h"
@@ -98,6 +99,7 @@ typedef struct {
     s_mem_arena* temp_mem_arena;
     GLFWwindow* glfw_window;
     s_pers_render_data* pers_render_data;
+    s_audio_sys* audio_sys;
 } s_game_cleanup_info;
 
 static void AssertGameInfoValidity(const s_game_info* const info) {
@@ -113,6 +115,14 @@ static void AssertGameInfoValidity(const s_game_info* const info) {
 }
 
 static void CleanGame(const s_game_cleanup_info* const cleanup_info) {
+    if (cleanup_info->audio_sys) {
+        CleanAudioSys(cleanup_info->audio_sys);
+    }
+
+    if (cleanup_info->pers_render_data) {
+        CleanPersRenderData(cleanup_info->pers_render_data);
+    }
+
     if (cleanup_info->glfw_window) {
         glfwDestroyWindow(cleanup_info->glfw_window);
     }
@@ -262,7 +272,12 @@ bool RunGame(const s_game_info* const info) {
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     s_pers_render_data pers_render_data = {0};
-    InitPersRenderData(&pers_render_data, info->window_init_size);
+
+    if (!InitPersRenderData(&pers_render_data, info->window_init_size)) {
+        return false;
+    }
+
+    cleanup_info.pers_render_data = &pers_render_data;
 
     s_rendering_state* const rendering_state = MEM_ARENA_PUSH_TYPE(&perm_mem_arena, s_rendering_state);
 
@@ -270,6 +285,14 @@ bool RunGame(const s_game_info* const info) {
         CleanGame(&cleanup_info);
         return false;
     }
+
+    s_audio_sys audio_sys = {0};
+
+    if (!InitAudioSys(&audio_sys)) {
+        return false;
+    }
+
+    cleanup_info.audio_sys = &audio_sys;
 
     void* const user_mem = PushToMemArena(&perm_mem_arena, info->user_mem_size, info->user_mem_alignment);
 
@@ -284,7 +307,8 @@ bool RunGame(const s_game_info* const info) {
             .user_mem = user_mem,
             .perm_mem_arena = &perm_mem_arena,
             .temp_mem_arena = &temp_mem_arena,
-            .window_state = GetWindowState(glfw_window)
+            .window_state = GetWindowState(glfw_window),
+            .audio_sys = &audio_sys
         };
 
         if (!info->init_func(&func_data)) {
@@ -335,6 +359,8 @@ bool RunGame(const s_game_info* const info) {
             const s_input_state input_state_last = input_state;
             RefreshInputState(&input_state, glfw_window, glfw_user_data.mouse_scroll_state);
 
+            UpdateAudioSys(&audio_sys);
+
             {
                 const s_game_tick_func_data func_data = {
                     .user_mem = user_mem,
@@ -343,7 +369,8 @@ bool RunGame(const s_game_info* const info) {
                     .window_state = window_state,
                     .input_state = &input_state,
                     .input_state_last = &input_state_last,
-                    .unicode_buf = &glfw_user_data.unicode_buf
+                    .unicode_buf = &glfw_user_data.unicode_buf,
+                    .audio_sys = &audio_sys
                 };
 
                 const e_game_tick_func_result res = info->tick_func(&func_data);
