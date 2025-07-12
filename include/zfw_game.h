@@ -15,8 +15,8 @@ typedef uint64_t t_keys_down_bits;
 typedef uint8_t t_mouse_buttons_down_bits;
 
 typedef enum {
-    ek_window_flag_resizable = 1 << 0,
-    ek_window_flag_hide_cursor = 1 << 1
+    ek_window_flags_resizable = 1 << 0,
+    ek_window_flags_hide_cursor = 1 << 1
 } e_window_flags;
 
 typedef enum {
@@ -167,13 +167,29 @@ typedef struct {
 } s_game_info;
 
 bool RunGame(const s_game_info* info);
-const char* KeyCodeName(e_key_code kc);
-const char* MouseButtonCodeName(e_mouse_button_code mbc);
-bool IsKeyDown(e_key_code key_code, const s_input_state* st);
-bool IsKeyPressed(e_key_code key_code, const s_input_state* st, const s_input_state* last);
-bool IsKeyReleased(e_key_code key_code, const s_input_state* st, const s_input_state* last);
-bool IsMouseButtonDown(e_mouse_button_code mbc, const s_input_state* st);
-bool IsMouseButtonPressed(e_mouse_button_code mbc, const s_input_state* st, const s_input_state* last);
-bool IsMouseButtonReleased(e_mouse_button_code mbc, const s_input_state* st, const s_input_state* last);
+
+static inline bool IsKeyDown(const e_key_code kc, const s_input_state* const input_state) {
+    return (input_state->keys_down & (1ULL << kc)) != 0;
+}
+
+static inline bool IsKeyPressed(const e_key_code kc, const s_input_state* const input_state, const s_input_state* const input_state_last) {
+    return IsKeyDown(kc, input_state) && !IsKeyDown(kc, input_state_last);
+}
+
+static inline bool IsKeyReleased(const e_key_code kc, const s_input_state* const input_state, const s_input_state* const input_state_last) {
+    return !IsKeyDown(kc, input_state) && IsKeyDown(kc, input_state_last);
+}
+
+static inline bool IsMouseButtonDown(const e_mouse_button_code mbc, const s_input_state* const input_state) {
+    return (input_state->mouse_buttons_down & (1U << mbc)) != 0;
+}
+
+static inline bool IsMouseButtonPressed(const e_mouse_button_code mbc, const s_input_state* const input_state, const s_input_state* const input_state_last) {
+    return IsMouseButtonDown(mbc, input_state) && !IsMouseButtonDown(mbc, input_state_last);
+}
+
+static inline bool IsMouseButtonReleased(const e_mouse_button_code mbc, const s_input_state* const input_state, const s_input_state* const input_state_last) {
+    return !IsMouseButtonDown(mbc, input_state) && IsMouseButtonDown(mbc, input_state_last);
+}
 
 #endif
