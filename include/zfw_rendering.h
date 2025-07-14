@@ -1,3 +1,17 @@
+/*
+
+I designed this rendering system aiming for the simplest solution possible.
+
+A render slot is effectively the vertex data for a single textured quad (i.e. a sprite). The render batch, as part of the rendering state, is a set of slots of a fixed limit. There is a counter indicating how many of this limit have been used. The idea is that when you perform a "render texture" operation, what is really happening is the counter is being incremented, and the vertex data for the topmost slot is being updated with the texture position, rotation, etc. A true render operation doesn't occur until a "flush", where all the slots in the batch (up to the counter) get rendered at once. A flush can be done manually be the user, or it might occur as a side effect of the "render texture" operation under certain circumstances (e.g. if you switch textures or if all batch slots have been used up).
+
+In an old version of this framework from 2024, there was a system where you actually had to manually reserve and release slots (e.g. if your game had an enemy limit of 128, you might reserve 128 render slots). You would also explicitly indicate how many batches you would be using at the start of the program, and the vertex data for them would all be allocated up front. The thought process was that if you've got a lot of static textures (e.g. tiles), it would be wasteful to have to rewrite their vertex data every single tick - surely you can just reserve a slot for each, write ther vertex data when they are first created, and not touch it again until they get destroyed. Ultimately, though, I was overestimating how much of a performance impact this would have, and the complexity cost of the developer needing to manually manage render slots was not worth a trivial increase in efficiency. Therefore, for this iteration of ZFW I decided to go with this simpler approach, where there is only ever one batch and all vertex data has to be rewritten every tick.
+
+TODO: Finish notes on surface system.
+
+The render surface system is inspired by the surface system in GameMaker: Studio 2, where surfaces are effectively blank canvases that you can render onto, and can be rendered as though they were normal textures. My motivation for implementing such a system was that I wanted to be able to apply post-processing effects via shaders only to specific sprites or groups of sprites, without affecting layering. For example, if the player gets damaged I might want to have the player texture flash white for a few ticks.
+
+*/
+
 #ifndef ZFW_RENDERING_H
 #define ZFW_RENDERING_H
 
@@ -77,7 +91,7 @@ typedef struct {
 } s_shader_prog_uniform_value;
 
 typedef struct {
-    s_render_batch_shader_prog batch_shader_prog;
+    s_render_batch_shader_prog batch_shader_prog; // The program to use for rendering the batch.
     s_render_batch_gl_ids batch_gl_ids;
 
     s_render_surfaces surfs;
@@ -85,21 +99,22 @@ typedef struct {
     t_gl_id surf_vert_buf_gl_id;
     t_gl_id surf_elem_buf_gl_id;
 
-    t_gl_id px_tex_gl_id;
+    t_gl_id px_tex_gl_id; // Scaled and used for rectangles, lines, etc.
 } s_pers_render_data;
 
 typedef struct {
-    int batch_slots_used_cnt;
-    float batch_slot_verts[RENDER_BATCH_SLOT_CNT][RENDER_BATCH_SLOT_VERT_CNT];
-    t_gl_id batch_tex_gl_id;
+    int batch_slots_used_cnt; // The number of used render slots. This is reset on flush.
+    float batch_slot_verts[RENDER_BATCH_SLOT_CNT][RENDER_BATCH_SLOT_VERT_CNT]; // Slot vertices accumulate in this buffer.
+    t_gl_id batch_tex_gl_id; // The GL ID of the texture that will be drawn on flush.
 
     t_gl_id surf_shader_prog_gl_id; // When a surface is rendered, this shader program is used.
     int surf_index_stack[RENDER_SURFACE_LIMIT];
     int surf_index_stack_height;
 
-    t_matrix_4x4 view_mat;
+    t_matrix_4x4 view_mat; // The view matrix that's provided as shader uniform on flush.
 } s_rendering_state;
 
+// Textures can be manually loaded by the user. Multiple of these might be defined by the user in case they want a texture group system for example.
 typedef struct {
     t_gl_id* gl_ids;
     s_vec_2d_i* sizes;
@@ -123,6 +138,7 @@ typedef struct {
 
 typedef s_font_load_info (*t_font_index_to_load_info)(const int index);
 
+// Fonts can be manually loaded by the user. Multiple of these might be defined by the user in case they want a font group system for example.
 typedef struct {
     s_font_arrangement_info* arrangement_infos;
     t_gl_id* tex_gl_ids;
@@ -130,6 +146,7 @@ typedef struct {
     int cnt;
 } s_fonts;
 
+// Shader programs can be manually loaded by the user. Their main purpose in this system is with surfaces and surface rendering, when you want to render a surface with a particular effect. Multiple of these might be defined by the user in case they want a shader program group system for example.
 typedef struct {
     t_gl_id* gl_ids;
     int cnt;
@@ -168,10 +185,10 @@ typedef struct {
 } s_color;
 
 static inline bool IsColorValid(const s_color col) {
-    return col.r >= 0.0 && col.r <= 1.0
-        && col.g >= 0.0 && col.g <= 1.0
-        && col.b >= 0.0 && col.b <= 1.0
-        && col.a >= 0.0 && col.a <= 1.0;
+    return col.r >= 0.0f && col.r <= 1.0f
+        && col.g >= 0.0f && col.g <= 1.0f
+        && col.b >= 0.0f && col.b <= 1.0f
+        && col.a >= 0.0f && col.a <= 1.0f;
 }
 
 typedef struct {
@@ -181,9 +198,9 @@ typedef struct {
 } s_color_rgb;
 
 static inline bool IsColorRGBValid(const s_color_rgb col) {
-    return col.r >= 0.0 && col.r <= 1.0
-        && col.g >= 0.0 && col.g <= 1.0
-        && col.b >= 0.0 && col.b <= 1.0;
+    return col.r >= 0.0f && col.r <= 1.0f
+        && col.g >= 0.0f && col.g <= 1.0f
+        && col.b >= 0.0f && col.b <= 1.0f;
 }
 
 static inline s_color_rgb ToColorRGB(const s_color col) {
@@ -196,7 +213,6 @@ void CleanPersRenderData(s_pers_render_data* const render_data);
 s_render_batch_shader_prog LoadRenderBatchShaderProg();
 s_render_batch_gl_ids GenRenderBatch();
 
-// NOTE: Might be better if this takes in a pointer to allocated memory instead of doing the allocation/push itself.
 bool LoadTexturesFromFiles(s_textures* const textures, s_mem_arena* const mem_arena, const int tex_cnt, const t_texture_index_to_file_path tex_index_to_fp);
 void UnloadTextures(s_textures* const textures);
 
@@ -238,6 +254,10 @@ bool LoadStrCollider(s_rect* const rect, const char* const str, const int font_i
 
 static inline bool IsOriginValid(const s_vec_2d origin) {
     return origin.x >= 0.0f && origin.y >= 0.0f && origin.x <= 1.0f && origin.y <= 1.0f;
+}
+
+static inline bool HasFlushed(const s_rendering_state* const rs) {
+    return rs->batch_slots_used_cnt == 0;
 }
 
 #endif

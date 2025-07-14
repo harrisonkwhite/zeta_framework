@@ -211,22 +211,22 @@ s_render_batch_gl_ids GenRenderBatch() {
     glGenBuffers(1, &gl_ids.elem_buf_gl_id);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, gl_ids.elem_buf_gl_id);
 
-    uint16_t* const indices = malloc(sizeof(uint16_t) * RENDER_BATCH_SLOT_ELEM_CNT * RENDER_BATCH_SLOT_CNT);
+    unsigned short* const indices = malloc(sizeof(unsigned short) * RENDER_BATCH_SLOT_ELEM_CNT * RENDER_BATCH_SLOT_CNT);
 
     if (!indices) {
         return (s_render_batch_gl_ids){0};
     }
 
     for (int i = 0; i < RENDER_BATCH_SLOT_CNT; ++i) {
-        indices[(i * 6) + 0] = (uint16_t)((i * 4) + 0);
-        indices[(i * 6) + 1] = (uint16_t)((i * 4) + 1);
-        indices[(i * 6) + 2] = (uint16_t)((i * 4) + 2);
-        indices[(i * 6) + 3] = (uint16_t)((i * 4) + 2);
-        indices[(i * 6) + 4] = (uint16_t)((i * 4) + 3);
-        indices[(i * 6) + 5] = (uint16_t)((i * 4) + 0);
+        indices[(i * 6) + 0] = (unsigned short)((i * 4) + 0);
+        indices[(i * 6) + 1] = (unsigned short)((i * 4) + 1);
+        indices[(i * 6) + 2] = (unsigned short)((i * 4) + 2);
+        indices[(i * 6) + 3] = (unsigned short)((i * 4) + 2);
+        indices[(i * 6) + 4] = (unsigned short)((i * 4) + 3);
+        indices[(i * 6) + 5] = (unsigned short)((i * 4) + 0);
     }
 
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(uint16_t) * RENDER_BATCH_SLOT_ELEM_CNT * RENDER_BATCH_SLOT_CNT, indices, GL_STATIC_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned short) * RENDER_BATCH_SLOT_ELEM_CNT * RENDER_BATCH_SLOT_CNT, indices, GL_STATIC_DRAW);
     free(indices);
 
     const GLsizei stride = sizeof(float) * RENDER_BATCH_SHADER_PROG_VERT_CNT;
@@ -616,17 +616,7 @@ void RenderTexture(const s_rendering_context* const context, const int tex_index
     Render(context, textures->gl_ids[tex_index], tex_coords, pos, size_scaled, origin, rot, blend);
 }
 
-bool RenderStr(
-    const s_rendering_context* const context,
-    const char* const str,
-    const int font_index,
-    const s_fonts* const fonts,
-    const s_vec_2d pos,
-    const e_str_hor_align hor_align,
-    const e_str_ver_align ver_align,
-    const s_color blend,
-    s_mem_arena* const temp_mem_arena
-) {
+bool RenderStr(const s_rendering_context* const context, const char* const str, const int font_index, const s_fonts* const fonts, const s_vec_2d pos, const e_str_hor_align hor_align, const e_str_ver_align ver_align, const s_color blend, s_mem_arena* const temp_mem_arena) {
     assert(context);
     assert(str);
     assert(fonts);
@@ -661,16 +651,7 @@ bool RenderStr(
         const s_rect_i chr_src_rect = fonts->arrangement_infos[font_index].chr_src_rects[chr_index];
         const s_rect_edges chr_tex_coords = CalcTextureCoords(chr_src_rect, font_tex_size);
 
-        Render(
-            context,
-            font_tex_gl_id,
-            chr_tex_coords,
-            str_chr_positions[i],
-            (s_vec_2d){chr_src_rect.width, chr_src_rect.height},
-            VEC_2D_ZERO,
-            0.0f,
-            blend
-        );
+        Render(context, font_tex_gl_id, chr_tex_coords, str_chr_positions[i], (s_vec_2d){chr_src_rect.width, chr_src_rect.height}, VEC_2D_ZERO, 0.0f, blend);
     }
 
     return true;
@@ -753,9 +734,8 @@ void RenderBarHor(const s_rendering_context* const context, const s_rect rect, c
 }
 
 void SetSurface(const s_rendering_context* const rendering_context, const int surf_index) {
-    // NOTE: Should flushing be a prerequisite to this?
-
     assert(rendering_context);
+    assert(HasFlushed(rendering_context->state));
 
     s_rendering_state* const rs = rendering_context->state;
 
@@ -775,7 +755,7 @@ void UnsetSurface(const s_rendering_context* const rendering_context) {
 
     s_rendering_state* const rs = rendering_context->state;
 
-    assert(rs->batch_slots_used_cnt == 0);
+    assert(HasFlushed(rs));
     assert(rs->surf_index_stack_height > 0);
 
     rs->surf_index_stack_height--;
@@ -791,10 +771,12 @@ void UnsetSurface(const s_rendering_context* const rendering_context) {
 
 void SetSurfaceShaderProg(const s_rendering_context* const rendering_context, const t_gl_id gl_id) {
     assert(gl_id != 0);
-    // NOTE: Should we also trip an assert if current shader program GL ID is not 0?
 
-    rendering_context->state->surf_shader_prog_gl_id = gl_id;
-    glUseProgram(rendering_context->state->surf_shader_prog_gl_id);
+    s_rendering_state* const rs = rendering_context->state;
+    assert(rs->surf_shader_prog_gl_id == 0); // Prevent accidental double assignments.
+
+    rs->surf_shader_prog_gl_id = gl_id;
+    glUseProgram(rs->surf_shader_prog_gl_id);
 }
 
 void SetSurfaceShaderProgUniform(const s_rendering_context* const rendering_context, const char* const name, const s_shader_prog_uniform_value val) {
@@ -845,7 +827,7 @@ void RenderSurface(const s_rendering_context* const rendering_context, const int
 void Flush(const s_rendering_context* const context) {
     assert(context);
 
-    if (context->state->batch_slots_used_cnt == 0) {
+    if (HasFlushed(context->state)) {
         return;
     }
 
@@ -853,6 +835,7 @@ void Flush(const s_rendering_context* const context) {
     glBindBuffer(GL_ARRAY_BUFFER, context->pers->batch_gl_ids.vert_buf_gl_id);
 
     // TODO: There's something wrong with the below? Try a high slot limit.
+    assert(false);
     const GLsizeiptr write_size = RENDER_BATCH_SLOT_VERTS_SIZE * context->state->batch_slots_used_cnt;
     glBufferSubData(GL_ARRAY_BUFFER, 0, write_size, &context->state->batch_slot_verts[0][0]);
 

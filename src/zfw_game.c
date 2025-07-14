@@ -432,9 +432,9 @@ bool RunGame(const s_game_info* const info) {
                     CleanGame(&cleanup_info);
                     return false;
                 }
-            }
 
-            assert(rendering_state->batch_slots_used_cnt == 0); // Make sure there is nothing left to flush.
+                assert(HasFlushed(rendering_state) && "User-defined rendering function completed, but not everything has been flushed!");
+            }
 
             glfwSwapBuffers(glfw_window);
 
