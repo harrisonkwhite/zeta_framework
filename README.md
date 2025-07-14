@@ -29,3 +29,4 @@ For Linux, there are a number of dependencies you might need to manually install
 - [GLFW](https://github.com/glfw/glfw)
 - [glad](https://github.com/Dav1dde/glad)
 - [stb](https://github.com/nothings/stb)
+- [miniaudio](https://github.com/mackron/miniaudio)

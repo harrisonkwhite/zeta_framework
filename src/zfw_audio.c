@@ -5,6 +5,7 @@ static bool LoadSoundTypeFromFile(s_sound_type* const type, const char* const fp
     assert(type && IS_ZERO(*type));
     assert(fp);
 
+    // Decode the audio file, store properties (e.g. sample rate, channel count).
     ma_decoder decoder;
 
     if (ma_decoder_init_file(fp, NULL, &decoder) != MA_SUCCESS) {
@@ -23,6 +24,7 @@ static bool LoadSoundTypeFromFile(s_sound_type* const type, const char* const fp
 
     type->frame_cnt = frame_cnt;
 
+    // Allocate memory for the audio sample buffer.
     const int sample_buf_size = frame_size * frame_cnt;
 
     type->sample_buf = MEM_ARENA_PUSH_TYPE_MANY(mem_arena, t_byte, sample_buf_size);
@@ -32,6 +34,7 @@ static bool LoadSoundTypeFromFile(s_sound_type* const type, const char* const fp
         return false;
     }
 
+    // Populate the buffer, also get the number of frames read for error checking.
     ma_uint64 frames_read;
     const ma_result res = ma_decoder_read_pcm_frames(&decoder, type->sample_buf, frame_cnt, &frames_read);
 
@@ -70,6 +73,7 @@ void CleanAudioSys(s_audio_sys* const audio_sys) {
 }
 
 void UpdateAudioSys(s_audio_sys* const audio_sys) {
+    // Find any active sound slots where the sound has finished playing and deactivate them.
     for (int i = 0; i < SND_LIMIT; i++) {
         if (!IsBitActive(i, audio_sys->snd_activity, SND_LIMIT)) {
             continue;
@@ -117,6 +121,7 @@ bool PlaySound(s_audio_sys* const audio_sys, const s_sound_types* const snd_type
     assert(pan >= -1.0f && pan <= 1.0f);
     assert(pitch > 0.0f);
 
+    // Get the index of the first inactive sound slot.
     const int index = FirstInactiveBitIndex(audio_sys->snd_activity, SND_LIMIT);
 
     if (index == -1) {
@@ -124,20 +129,25 @@ bool PlaySound(s_audio_sys* const audio_sys, const s_sound_types* const snd_type
         return false;
     }
 
+    // Activate the sound slot.
     ActivateBit(index, audio_sys->snd_activity, SND_LIMIT);
 
     const s_sound_type* const type = &snd_types->buf[type_index];
     ma_sound* const snd = &audio_sys->snds[index];
 
+    // Set up a new audio buffer using the sound type sample buffer.
     const ma_audio_buffer_config buf_config = ma_audio_buffer_config_init(type->format, type->channel_cnt, type->frame_cnt, type->sample_buf, NULL);
 
     ma_audio_buffer_init_copy(&buf_config, &audio_sys->audio_bufs[index]);
 
+    // Bind the buffer to the sound.
     ma_sound_init_from_data_source(&audio_sys->eng, &audio_sys->audio_bufs[index], 0, NULL, snd);
 
+    // Set properties and play.
     ma_sound_set_volume(snd, vol);
     ma_sound_set_pan(snd, pan);
     ma_sound_set_pitch(snd, pitch);
+
     ma_sound_start(snd);
 
     return true;
