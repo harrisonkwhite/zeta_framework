@@ -835,7 +835,6 @@ void Flush(const s_rendering_context* const context) {
     glBindBuffer(GL_ARRAY_BUFFER, context->pers->batch_gl_ids.vert_buf_gl_id);
 
     // TODO: There's something wrong with the below? Try a high slot limit.
-    assert(false);
     const GLsizeiptr write_size = RENDER_BATCH_SLOT_VERTS_SIZE * context->state->batch_slots_used_cnt;
     glBufferSubData(GL_ARRAY_BUFFER, 0, write_size, &context->state->batch_slot_verts[0][0]);
 

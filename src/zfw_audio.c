@@ -23,11 +23,12 @@ static bool LoadSoundTypeFromFile(s_sound_type* const type, const char* const fp
 
     type->frame_cnt = frame_cnt;
 
-    const int sample_cnt = frame_size * frame_cnt;
+    const int sample_buf_size = frame_size * frame_cnt;
 
-    type->sample_buf = MEM_ARENA_PUSH_TYPE_MANY(mem_arena, t_byte, sample_cnt);
+    type->sample_buf = MEM_ARENA_PUSH_TYPE_MANY(mem_arena, t_byte, sample_buf_size);
 
     if (!type->sample_buf) {
+        ma_decoder_uninit(&decoder);
         return false;
     }
 
@@ -125,7 +126,7 @@ bool PlaySound(s_audio_sys* const audio_sys, const s_sound_types* const snd_type
 
     ActivateBit(index, audio_sys->snd_activity, SND_LIMIT);
 
-    const s_sound_type* const type = &snd_types->buf[index];
+    const s_sound_type* const type = &snd_types->buf[type_index];
     ma_sound* const snd = &audio_sys->snds[index];
 
     const ma_audio_buffer_config buf_config = ma_audio_buffer_config_init(type->format, type->channel_cnt, type->frame_cnt, type->sample_buf, NULL);
