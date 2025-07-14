@@ -153,17 +153,18 @@ typedef struct {
 } s_game_render_func_data;
 
 typedef struct {
-    int user_mem_size;
-    int user_mem_alignment;
+    int user_mem_size; // How much memory should be allocated in the permanent arena for your use? This might be the size of a specific struct, for example.
+    int user_mem_alignment; // The alignment of the above memory.
 
     s_vec_2d_i window_init_size;
     const char* window_title;
     e_window_flags window_flags;
 
-    bool (*init_func)(const s_game_init_func_data* const func_data);
-    e_game_tick_func_result (*tick_func)(const s_game_tick_func_data* const func_data);
-    bool (*render_func)(const s_game_render_func_data* const func_data);
-    void (*clean_func)(void* const user_mem);
+    // Below are pointers to functions that the framework will call for you. The provided struct pointers expose parts of the framework state for you to work with.
+    bool (*init_func)(const s_game_init_func_data* const func_data); // Called as one of the last steps of the game initialisation phase.
+    e_game_tick_func_result (*tick_func)(const s_game_tick_func_data* const func_data); // Called once every tick.
+    bool (*render_func)(const s_game_render_func_data* const func_data); // Called after a tick.
+    void (*clean_func)(void* const user_mem); // Called when the game ends (including if it ends in error). This is not called if the initialisation function failed or was not yet called.
 } s_game_info;
 
 bool RunGame(const s_game_info* info);

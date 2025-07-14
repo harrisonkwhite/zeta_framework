@@ -4,6 +4,7 @@
 #include <stdbool.h>
 #include "zfw_game.h"
 #include "zfw_random.h"
+#include "zfw_utils.h"
 
 #define PERM_MEM_ARENA_SIZE ((1 << 20) * 80)
 #define TEMP_MEM_ARENA_SIZE ((1 << 20) * 40)
@@ -101,7 +102,7 @@ typedef struct {
 
 static void AssertGameInfoValidity(const s_game_info* const info) {
     assert(info->user_mem_size >= 0);
-    assert(info->user_mem_alignment >= 0);
+    assert(info->user_mem_size == 0 || IsValidAlignment(info->user_mem_alignment));
 
     assert(info->window_title);
     assert(info->window_init_size.x > 0 && info->window_init_size.y > 0);
@@ -234,7 +235,7 @@ bool RunGame(const s_game_info* const info) {
     assert(info);
     AssertGameInfoValidity(info);
 
-    s_game_cleanup_info cleanup_info = {0};
+    s_game_cleanup_info cleanup_info = {0}; // When something needs to be cleaned up after the game ends, the corresponding pointer here can be assigned.
 
     //
     // Initialisation
@@ -244,7 +245,7 @@ bool RunGame(const s_game_info* const info) {
     InitRNG();
 
     // Initialise memory arenas.
-    s_mem_arena perm_mem_arena = {0};
+    s_mem_arena perm_mem_arena = {0}; // The memory in here exists for the lifetime of the program, it does not get reset.
 
     if (!InitMemArena(&perm_mem_arena, PERM_MEM_ARENA_SIZE)) {
         fprintf(stderr, "Failed to initialise the permanent memory arena!\n");
@@ -254,7 +255,7 @@ bool RunGame(const s_game_info* const info) {
 
     cleanup_info.perm_mem_arena = &perm_mem_arena;
 
-    s_mem_arena temp_mem_arena = {0};
+    s_mem_arena temp_mem_arena = {0}; // While the memory here also exists for the program lifetime, it gets reset after game initialisation and after every frame. Useful if you just need some temporary working space.
 
     if (!InitMemArena(&temp_mem_arena, TEMP_MEM_ARENA_SIZE)) {
         fprintf(stderr, "Failed to initialise the temporary memory arena!\n");
@@ -271,10 +272,11 @@ bool RunGame(const s_game_info* const info) {
         return false;
     }
 
-    s_glfw_user_data glfw_user_data = {0};
+    s_glfw_user_data glfw_user_data = {0}; // This is accessible from the GLFW callbacks.
     GLFWwindow* const glfw_window = CreateGLFWWindow(info->window_init_size, info->window_title, info->window_flags, &glfw_user_data);
 
     if (!glfw_window) {
+        CleanGame(&cleanup_info);
         return false;
     }
 
@@ -293,6 +295,7 @@ bool RunGame(const s_game_info* const info) {
     s_pers_render_data pers_render_data = {0};
 
     if (!InitPersRenderData(&pers_render_data, info->window_init_size)) {
+        CleanGame(&cleanup_info);
         return false;
     }
 
@@ -309,6 +312,7 @@ bool RunGame(const s_game_info* const info) {
     s_audio_sys audio_sys = {0};
 
     if (!InitAudioSys(&audio_sys)) {
+        CleanGame(&cleanup_info);
         return false;
     }
 
@@ -344,12 +348,13 @@ bool RunGame(const s_game_info* const info) {
         }
     }
 
-    // Now that everything is initialised, show the window.
-    glfwShowWindow(glfw_window);
-
     //
     // Main Loop
     //
+    glfwShowWindow(glfw_window);
+
+    ResetMemArena(&temp_mem_arena);
+
     s_input_state input_state = {0};
 
     double frame_time_last = glfwGetTime();
@@ -365,6 +370,7 @@ bool RunGame(const s_game_info* const info) {
         if (!Vec2DIsEqual(pers_render_data.surfs.size, window_state.size)) {
             if (!ResizeRenderSurfaces(&pers_render_data.surfs, window_state.size)) {
                 fprintf(stderr, "Failed to resize render surfaces!\n");
+                info->clean_func(user_mem);
                 CleanGame(&cleanup_info);
                 return false;
             }
@@ -400,11 +406,13 @@ bool RunGame(const s_game_info* const info) {
                 glfw_user_data.mouse_scroll_state = ek_mouse_scroll_state_none;
 
                 if (res == ek_game_tick_func_result_exit) {
+                    info->clean_func(user_mem);
                     CleanGame(&cleanup_info);
                     return true;
                 }
 
                 if (res == ek_game_tick_func_result_error) {
+                    info->clean_func(user_mem);
                     CleanGame(&cleanup_info);
                     return false;
                 }
@@ -429,6 +437,7 @@ bool RunGame(const s_game_info* const info) {
                 };
 
                 if (!info->render_func(&func_data)) {
+                    info->clean_func(user_mem);
                     CleanGame(&cleanup_info);
                     return false;
                 }
@@ -447,6 +456,7 @@ bool RunGame(const s_game_info* const info) {
         ResetMemArena(&temp_mem_arena);
     }
 
+    info->clean_func(user_mem);
     CleanGame(&cleanup_info);
 
     return true;
