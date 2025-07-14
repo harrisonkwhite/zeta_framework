@@ -47,6 +47,12 @@ static inline int AlignForward(const int n, const int alignment) {
     return (n + alignment - 1) & ~(alignment - 1);
 }
 
+/*
+
+A memory arena in this context is effectively just a single buffer that is allocated upfront of an arbitrary size. It has an offset indicating how many bytes in the arena have been used. When you "push" to the memory arena, you are effectively just increasing this offset and retrieving a pointer to the buffer but from the original offset. You cannot free any specific thing from a memory arena, you can only reset it (i.e. reset the offset) or clean it (i.e. free the allocated memory) in its entirety. Therefore, if you have a number of things with a shared lifetime, it would be reasonable to put them in the same arena, as opposed to having to manually deallocate them each (and risk forgetting to deallocate one of them).
+
+*/
+
 typedef struct {
     t_byte* buf;
     int size;
@@ -55,8 +61,7 @@ typedef struct {
 
 static inline bool IsMemArenaValid(const s_mem_arena* const arena) {
     assert(arena);
-    return IsZero(arena, sizeof(*arena))
-        || (arena->buf && arena->size > 0 && arena->offs >= 0 && arena->offs <= arena->size);
+    return IsZero(arena, sizeof(*arena)) || (arena->buf && arena->size > 0 && arena->offs >= 0 && arena->offs <= arena->size);
 }
 
 bool InitMemArena(s_mem_arena* const arena, const int size);
