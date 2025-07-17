@@ -291,6 +291,17 @@ static inline s_rect RectTranslated(const s_rect rect, const s_vec_2d trans) {
     return (s_rect){rect.x + trans.x, rect.y + trans.y, rect.width, rect.height};
 }
 
+static inline bool IsRangeValid(const s_rect_edges_i range, const s_vec_2d_i size) {
+    assert(size.x > 0 && size.y > 0);
+
+    return range.left >= 0 && range.left < size.x
+        && range.right >= 0 && range.right <= size.x
+        && range.top >= 0 && range.top < size.y
+        && range.bottom >= 0 && range.bottom <= size.y
+        && range.left <= range.right
+        && range.top <= range.bottom;
+}
+
 static inline s_rect_edges RectEdgesClamped(const s_rect_edges edges, const s_rect_edges clamp_edges) {
     return (s_rect_edges){
         MAX(edges.left, clamp_edges.left),
