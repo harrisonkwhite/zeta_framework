@@ -10,6 +10,10 @@ float RandPerc() {
     return (float)rand() / (RAND_MAX + 1.0f);
 }
 
+float RandPercIncl() {
+    return (float)rand() / RAND_MAX;
+}
+
 int RandRangeI(const int beg, const int end) {
     assert(beg <= end);
     return beg + (rand() % (end - beg));
