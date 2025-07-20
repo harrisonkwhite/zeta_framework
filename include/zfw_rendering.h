@@ -17,6 +17,7 @@ The render surface system is inspired by the surface system in GameMaker: Studio
 
 #include <stdint.h>
 #include <stdbool.h>
+#include <limits.h>
 #include <glad/glad.h>
 #include <assert.h>
 #include "zfw_math.h"
@@ -30,10 +31,13 @@ The render surface system is inspired by the surface system in GameMaker: Studio
 #define ZFW_FONT_TEXTURE_HEIGHT_LIMIT 2048
  
 #define ZFW_RENDER_BATCH_SHADER_PROG_VERT_CNT 13
-#define ZFW_RENDER_BATCH_SLOT_CNT 256 // TODO: There seems to be an issue here. Seems to crash when this is high (e.g. at 2048).
+#define ZFW_RENDER_BATCH_SLOT_CNT 8192
+
 #define ZFW_RENDER_BATCH_SLOT_VERT_CNT (ZFW_RENDER_BATCH_SHADER_PROG_VERT_CNT * 4)
-#define ZFW_RENDER_BATCH_SLOT_VERTS_SIZE (ZFW_RENDER_BATCH_SLOT_VERT_CNT * ZFW_RENDER_BATCH_SLOT_CNT * sizeof(float))
+#define ZFW_RENDER_BATCH_SLOT_VERTS_SIZE (ZFW_RENDER_BATCH_SLOT_VERT_CNT * sizeof(float))
 #define ZFW_RENDER_BATCH_SLOT_ELEM_CNT 6
+
+static_assert(ZFW_RENDER_BATCH_SLOT_ELEM_CNT * ZFW_RENDER_BATCH_SLOT_CNT <= USHRT_MAX, "Render batch slot count is too high!");
 
 #define ZFW_RENDER_SURFACE_LIMIT 8
 

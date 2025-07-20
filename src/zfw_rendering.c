@@ -824,7 +824,6 @@ void ZFWFlush(const zfw_s_rendering_context* const context) {
     glBindVertexArray(context->pers->batch_gl_ids.vert_array_gl_id);
     glBindBuffer(GL_ARRAY_BUFFER, context->pers->batch_gl_ids.vert_buf_gl_id);
 
-    // TODO: There's something wrong with the below? Try a high slot limit.
     const GLsizeiptr write_size = ZFW_RENDER_BATCH_SLOT_VERTS_SIZE * context->state->batch_slots_used_cnt;
     glBufferSubData(GL_ARRAY_BUFFER, 0, write_size, &context->state->batch_slot_verts[0][0]);
 
@@ -833,7 +832,7 @@ void ZFWFlush(const zfw_s_rendering_context* const context) {
     glUseProgram(prog->gl_id);
 
     zfw_t_matrix_4x4 proj_mat = {0};
-    ZFWInitOrthoMatrix4x4(&proj_mat, 0.0f, (float)context->display_size.x, (float)context->display_size.y, 0.0f, -1.0f, 1.0f);
+    ZFWInitOrthoMatrix4x4(&proj_mat, 0.0f, context->display_size.x, context->display_size.y, 0.0f, -1.0f, 1.0f);
 
     glUniformMatrix4fv(prog->proj_uniform_loc, 1, GL_FALSE, &proj_mat[0][0]);
     glUniformMatrix4fv(prog->view_uniform_loc, 1, GL_FALSE, &context->state->view_mat[0][0]);
