@@ -6,6 +6,7 @@
 #include <assert.h>
 #include <math.h>
 #include "zfw_utils.h"
+#include "zfw_random.h"
 
 #define PI 3.14159265358979323846f
 
@@ -348,6 +349,10 @@ static inline bool DoRectsInters(const s_rect a, const s_rect b) {
 
 static inline bool IsPolySet(const s_poly poly) {
     return poly.pts && poly.cnt > 0;
+}
+
+static inline float RandRot() {
+    return RandPerc() * 2.0f * PI;
 }
 
 #endif
