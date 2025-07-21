@@ -22,169 +22,169 @@ The render surface system is inspired by the surface system in GameMaker: Studio
 #include "zfw_math.h"
 #include "zfw_utils.h"
 
-#define TEXTURE_CHANNEL_CNT 4
+#define ZFW_TEXTURE_CHANNEL_CNT 4
 
-#define FONT_CHR_RANGE_BEGIN 32
-#define FONT_CHR_RANGE_LEN 95
-#define FONT_TEXTURE_WIDTH 2048
-#define FONT_TEXTURE_HEIGHT_LIMIT 2048
+#define ZFW_FONT_CHR_RANGE_BEGIN 32
+#define ZFW_FONT_CHR_RANGE_LEN 95
+#define ZFW_FONT_TEXTURE_WIDTH 2048
+#define ZFW_FONT_TEXTURE_HEIGHT_LIMIT 2048
  
-#define RENDER_BATCH_SHADER_PROG_VERT_CNT 13
-#define RENDER_BATCH_SLOT_CNT 256 // TODO: There seems to be an issue here. Seems to crash when this is high (e.g. at 2048).
-#define RENDER_BATCH_SLOT_VERT_CNT (RENDER_BATCH_SHADER_PROG_VERT_CNT * 4)
-#define RENDER_BATCH_SLOT_VERTS_SIZE (RENDER_BATCH_SLOT_VERT_CNT * RENDER_BATCH_SLOT_CNT * sizeof(float))
-#define RENDER_BATCH_SLOT_ELEM_CNT 6
+#define ZFW_RENDER_BATCH_SHADER_PROG_VERT_CNT 13
+#define ZFW_RENDER_BATCH_SLOT_CNT 256 // TODO: There seems to be an issue here. Seems to crash when this is high (e.g. at 2048).
+#define ZFW_RENDER_BATCH_SLOT_VERT_CNT (ZFW_RENDER_BATCH_SHADER_PROG_VERT_CNT * 4)
+#define ZFW_RENDER_BATCH_SLOT_VERTS_SIZE (ZFW_RENDER_BATCH_SLOT_VERT_CNT * ZFW_RENDER_BATCH_SLOT_CNT * sizeof(float))
+#define ZFW_RENDER_BATCH_SLOT_ELEM_CNT 6
 
-#define RENDER_SURFACE_LIMIT 8
+#define ZFW_RENDER_SURFACE_LIMIT 8
 
-#define WHITE (s_color){1.0f, 1.0f, 1.0f, 1.0f}
-#define RED (s_color){1.0f, 0.0f, 0.0f, 1.0f}
-#define GREEN (s_color){0.0f, 1.0f, 0.0f, 1.0f}
-#define BLUE (s_color){0.0f, 0.0f, 1.0f, 1.0f}
-#define BLACK (s_color){0.0f, 0.0f, 0.0f, 1.0f}
-#define YELLOW (s_color){1.0f, 1.0f, 0.0f, 1.0f}
-#define CYAN (s_color){0.0f, 1.0f, 1.0f, 1.0f}
-#define MAGENTA (s_color){1.0f, 0.0f, 1.0f, 1.0f}
-#define GRAY (s_color){0.5f, 0.5f, 0.5f, 1.0f}
+#define ZFW_WHITE (zfw_s_color){1.0f, 1.0f, 1.0f, 1.0f}
+#define ZFW_RED (zfw_s_color){1.0f, 0.0f, 0.0f, 1.0f}
+#define ZFW_GREEN (zfw_s_color){0.0f, 1.0f, 0.0f, 1.0f}
+#define ZFW_BLUE (zfw_s_color){0.0f, 0.0f, 1.0f, 1.0f}
+#define ZFW_BLACK (zfw_s_color){0.0f, 0.0f, 0.0f, 1.0f}
+#define ZFW_YELLOW (zfw_s_color){1.0f, 1.0f, 0.0f, 1.0f}
+#define ZFW_CYAN (zfw_s_color){0.0f, 1.0f, 1.0f, 1.0f}
+#define ZFW_MAGENTA (zfw_s_color){1.0f, 0.0f, 1.0f, 1.0f}
+#define ZFW_GRAY (zfw_s_color){0.5f, 0.5f, 0.5f, 1.0f}
 
-typedef GLuint t_gl_id;
-
-typedef struct {
-    t_gl_id vert_array_gl_id;
-    t_gl_id vert_buf_gl_id;
-    t_gl_id elem_buf_gl_id;
-} s_render_batch_gl_ids;
+typedef GLuint zfw_t_gl_id;
 
 typedef struct {
-    t_gl_id gl_id;
+    zfw_t_gl_id vert_array_gl_id;
+    zfw_t_gl_id vert_buf_gl_id;
+    zfw_t_gl_id elem_buf_gl_id;
+} zfw_s_render_batch_gl_ids;
+
+typedef struct {
+    zfw_t_gl_id gl_id;
     int proj_uniform_loc;
     int view_uniform_loc;
     int textures_uniform_loc;
-} s_render_batch_shader_prog;
+} zfw_s_render_batch_shader_prog;
 
 typedef struct {
-    s_vec_2d_i size;
-    t_gl_id framebuffer_gl_ids[RENDER_SURFACE_LIMIT];
-    t_gl_id framebuffer_tex_gl_ids[RENDER_SURFACE_LIMIT];
-} s_render_surfaces;
+    zfw_s_vec_2d_i size;
+    zfw_t_gl_id framebuffer_gl_ids[ZFW_RENDER_SURFACE_LIMIT];
+    zfw_t_gl_id framebuffer_tex_gl_ids[ZFW_RENDER_SURFACE_LIMIT];
+} zfw_s_render_surfaces;
 
 typedef enum {
-    ek_shader_prog_uniform_value_type_int,
-    ek_shader_prog_uniform_value_type_float,
-    ek_shader_prog_uniform_value_type_v2,
-    ek_shader_prog_uniform_value_type_v3,
-    ek_shader_prog_uniform_value_type_v4,
-    ek_shader_prog_uniform_value_type_mat4x4,
-} e_shader_prog_uniform_value_type;
+    zfw_ek_shader_prog_uniform_value_type_int,
+    zfw_ek_shader_prog_uniform_value_type_float,
+    zfw_ek_shader_prog_uniform_value_type_v2,
+    zfw_ek_shader_prog_uniform_value_type_v3,
+    zfw_ek_shader_prog_uniform_value_type_v4,
+    zfw_ek_shader_prog_uniform_value_type_mat4x4,
+} zfw_e_shader_prog_uniform_value_type;
 
 typedef struct {
-    e_shader_prog_uniform_value_type type;
+    zfw_e_shader_prog_uniform_value_type type;
 
     union {
         int as_int;
         float as_float;
-        s_vec_2d as_v2;
-        s_vec_3d as_v3;
-        s_vec_4d as_v4;
-        t_matrix_4x4 as_mat4x4;
+        zfw_s_vec_2d as_v2;
+        zfw_s_vec_3d as_v3;
+        zfw_s_vec_4d as_v4;
+        zfw_t_matrix_4x4 as_mat4x4;
     };
-} s_shader_prog_uniform_value;
+} zfw_s_shader_prog_uniform_value;
 
 typedef struct {
-    s_render_batch_shader_prog batch_shader_prog; // The program to use for rendering the batch.
-    s_render_batch_gl_ids batch_gl_ids;
+    zfw_s_render_batch_shader_prog batch_shader_prog; // The program to use for rendering the batch.
+    zfw_s_render_batch_gl_ids batch_gl_ids;
 
-    s_render_surfaces surfs;
-    t_gl_id surf_vert_array_gl_id;
-    t_gl_id surf_vert_buf_gl_id;
-    t_gl_id surf_elem_buf_gl_id;
+    zfw_s_render_surfaces surfs;
+    zfw_t_gl_id surf_vert_array_gl_id;
+    zfw_t_gl_id surf_vert_buf_gl_id;
+    zfw_t_gl_id surf_elem_buf_gl_id;
 
-    t_gl_id px_tex_gl_id; // Scaled and used for rectangles, lines, etc.
-} s_pers_render_data;
+    zfw_t_gl_id px_tex_gl_id; // Scaled and used for rectangles, lines, etc.
+} zfw_s_pers_render_data;
 
 typedef struct {
     int batch_slots_used_cnt; // The number of used render slots. This is reset on flush.
-    float batch_slot_verts[RENDER_BATCH_SLOT_CNT][RENDER_BATCH_SLOT_VERT_CNT]; // Slot vertices accumulate in this buffer.
-    t_gl_id batch_tex_gl_id; // The GL ID of the texture that will be drawn on flush.
+    float batch_slot_verts[ZFW_RENDER_BATCH_SLOT_CNT][ZFW_RENDER_BATCH_SLOT_VERT_CNT]; // Slot vertices accumulate in this buffer.
+    zfw_t_gl_id batch_tex_gl_id; // The GL ID of the texture that will be drawn on flush.
 
-    t_gl_id surf_shader_prog_gl_id; // When a surface is rendered, this shader program is used.
-    int surf_index_stack[RENDER_SURFACE_LIMIT];
+    zfw_t_gl_id surf_shader_prog_gl_id; // When a surface is rendered, this shader program is used.
+    int surf_index_stack[ZFW_RENDER_SURFACE_LIMIT];
     int surf_index_stack_height;
 
-    t_matrix_4x4 view_mat; // The view matrix that's provided as shader uniform on flush.
-} s_rendering_state;
+    zfw_t_matrix_4x4 view_mat; // The view matrix that's provided as shader uniform on flush.
+} zfw_s_rendering_state;
 
 // Textures can be manually loaded by the user. Multiple of these might be defined by the user in case they want a texture group system for example.
 typedef struct {
-    t_gl_id* gl_ids;
-    s_vec_2d_i* sizes;
+    zfw_t_gl_id* gl_ids;
+    zfw_s_vec_2d_i* sizes;
     int cnt;
-} s_textures;
+} zfw_s_textures;
 
-typedef const char* (*t_texture_index_to_file_path)(const int index);
+typedef const char* (*zfw_t_texture_index_to_file_path)(const int index);
 
 typedef struct {
-    int chr_hor_offsets[FONT_CHR_RANGE_LEN];
-    int chr_ver_offsets[FONT_CHR_RANGE_LEN];
-    int chr_hor_advances[FONT_CHR_RANGE_LEN];
-    s_rect_i chr_src_rects[FONT_CHR_RANGE_LEN];
+    int chr_hor_offsets[ZFW_FONT_CHR_RANGE_LEN];
+    int chr_ver_offsets[ZFW_FONT_CHR_RANGE_LEN];
+    int chr_hor_advances[ZFW_FONT_CHR_RANGE_LEN];
+    zfw_s_rect_i chr_src_rects[ZFW_FONT_CHR_RANGE_LEN];
     int line_height;
-} s_font_arrangement_info;
+} zfw_s_font_arrangement_info;
 
 typedef struct {
     const char* file_path;
     int height;
-} s_font_load_info;
+} zfw_s_font_load_info;
 
-typedef s_font_load_info (*t_font_index_to_load_info)(const int index);
+typedef zfw_s_font_load_info (*t_font_index_to_load_info)(const int index);
 
 // Fonts can be manually loaded by the user. Multiple of these might be defined by the user in case they want a font group system for example.
 typedef struct {
-    s_font_arrangement_info* arrangement_infos;
-    t_gl_id* tex_gl_ids;
+    zfw_s_font_arrangement_info* arrangement_infos;
+    zfw_t_gl_id* tex_gl_ids;
     int* tex_heights;
     int cnt;
-} s_fonts;
+} zfw_s_fonts;
 
 // Shader programs can be manually loaded by the user. Their main purpose in this system is with surfaces and surface rendering, when you want to render a surface with a particular effect. Multiple of these might be defined by the user in case they want a shader program group system for example.
 typedef struct {
-    t_gl_id* gl_ids;
+    zfw_t_gl_id* gl_ids;
     int cnt;
-} s_shader_progs;
+} zfw_s_shader_progs;
 
 typedef struct {
     const char* vs_fp;
     const char* fs_fp;
-} s_shader_prog_file_paths;
+} zfw_s_shader_prog_file_paths;
 
-typedef s_shader_prog_file_paths (*t_shader_prog_index_to_file_paths)(const int index);
-
-typedef enum {
-    ek_str_hor_align_left,
-    ek_str_hor_align_center,
-    ek_str_hor_align_right
-} e_str_hor_align;
+typedef zfw_s_shader_prog_file_paths (*zfw_t_shader_prog_index_to_file_paths)(const int index);
 
 typedef enum {
-    ek_str_ver_align_top,
-    ek_str_ver_align_center,
-    ek_str_ver_align_bottom
-} e_str_ver_align;
+    zfw_ek_str_hor_align_left,
+    zfw_ek_str_hor_align_center,
+    zfw_ek_str_hor_align_right
+} zfw_e_str_hor_align;
+
+typedef enum {
+    zfw_ek_str_ver_align_top,
+    zfw_ek_str_ver_align_center,
+    zfw_ek_str_ver_align_bottom
+} zfw_e_str_ver_align;
 
 typedef struct {
-    s_pers_render_data* pers;
-    s_rendering_state* state;
-    s_vec_2d_i display_size;
-} s_rendering_context;
+    zfw_s_pers_render_data* pers;
+    zfw_s_rendering_state* state;
+    zfw_s_vec_2d_i display_size;
+} zfw_s_rendering_context;
 
 typedef struct {
     float r;
     float g;
     float b;
     float a;
-} s_color;
+} zfw_s_color;
 
-static inline bool IsColorValid(const s_color col) {
+static inline bool ZFWIsColorValid(const zfw_s_color col) {
     return col.r >= 0.0f && col.r <= 1.0f
         && col.g >= 0.0f && col.g <= 1.0f
         && col.b >= 0.0f && col.b <= 1.0f
@@ -195,68 +195,68 @@ typedef struct {
     float r;
     float g;
     float b;
-} s_color_rgb;
+} zfw_s_color_rgb;
 
-static inline bool IsColorRGBValid(const s_color_rgb col) {
+static inline bool ZFWIsColorRGBValid(const zfw_s_color_rgb col) {
     return col.r >= 0.0f && col.r <= 1.0f
         && col.g >= 0.0f && col.g <= 1.0f
         && col.b >= 0.0f && col.b <= 1.0f;
 }
 
-static inline s_color_rgb ToColorRGB(const s_color col) {
-    return (s_color_rgb){col.r, col.g, col.b};
+static inline zfw_s_color_rgb ZFWToColorRGB(const zfw_s_color col) {
+    return (zfw_s_color_rgb){col.r, col.g, col.b};
 }
 
-bool InitPersRenderData(s_pers_render_data* const render_data, const s_vec_2d_i display_size);
-void CleanPersRenderData(s_pers_render_data* const render_data);
+bool ZFWInitPersRenderData(zfw_s_pers_render_data* const render_data, const zfw_s_vec_2d_i display_size);
+void ZFWCleanPersRenderData(zfw_s_pers_render_data* const render_data);
 
-s_render_batch_shader_prog LoadRenderBatchShaderProg();
-s_render_batch_gl_ids GenRenderBatch();
+zfw_s_render_batch_shader_prog ZFWLoadRenderBatchShaderProg();
+zfw_s_render_batch_gl_ids ZFWGenRenderBatch();
 
-bool LoadTexturesFromFiles(s_textures* const textures, s_mem_arena* const mem_arena, const int tex_cnt, const t_texture_index_to_file_path tex_index_to_fp);
-void UnloadTextures(s_textures* const textures);
+bool ZFWLoadTexturesFromFiles(zfw_s_textures* const textures, zfw_s_mem_arena* const mem_arena, const int tex_cnt, const zfw_t_texture_index_to_file_path tex_index_to_fp);
+void ZFWUnloadTextures(zfw_s_textures* const textures);
 
-bool LoadFontsFromFiles(s_fonts* const fonts, s_mem_arena* const mem_arena, const int font_cnt, const t_font_index_to_load_info font_index_to_load_info, s_mem_arena* const temp_mem_arena);
-void UnloadFonts(s_fonts* const fonts);
+bool ZFWLoadFontsFromFiles(zfw_s_fonts* const fonts, zfw_s_mem_arena* const mem_arena, const int font_cnt, const t_font_index_to_load_info font_index_to_load_info, zfw_s_mem_arena* const temp_mem_arena);
+void ZFWUnloadFonts(zfw_s_fonts* const fonts);
 
-bool LoadShaderProgsFromFiles(s_shader_progs* const progs, s_mem_arena* const mem_arena, const int prog_cnt, const t_shader_prog_index_to_file_paths prog_index_to_fps, s_mem_arena* const temp_mem_arena);
-void UnloadShaderProgs(s_shader_progs* const progs);
+bool ZFWLoadShaderProgsFromFiles(zfw_s_shader_progs* const progs, zfw_s_mem_arena* const mem_arena, const int prog_cnt, const zfw_t_shader_prog_index_to_file_paths prog_index_to_fps, zfw_s_mem_arena* const temp_mem_arena);
+void ZFWUnloadShaderProgs(zfw_s_shader_progs* const progs);
 
-void BeginRendering(s_rendering_state* const state);
+void ZFWBeginRendering(zfw_s_rendering_state* const state);
 
-void RenderClear(const s_color col);
+void ZFWRenderClear(const zfw_s_color col);
 
-void Render(const s_rendering_context* const context, const t_gl_id tex_gl_id, const s_rect_edges tex_coords, const s_vec_2d pos, const s_vec_2d size, const s_vec_2d origin, const float rot, const s_color blend);
-void RenderTexture(const s_rendering_context* const context, const int tex_index, const s_textures* const textures, const s_rect_i src_rect, const s_vec_2d pos, const s_vec_2d origin, const s_vec_2d scale, const float rot, const s_color blend);
-bool RenderStr(const s_rendering_context* const context, const char* const str, const int font_index, const s_fonts* const fonts, const s_vec_2d pos, const e_str_hor_align hor_align, const e_str_ver_align ver_align, const s_color blend, s_mem_arena* const temp_mem_arena);
-void RenderRect(const s_rendering_context* const context, const s_rect rect, const s_color blend);
-void RenderRectOutline(const s_rendering_context* const context, const s_rect rect, const s_color blend, const float thickness);
-void RenderLine(const s_rendering_context* const context, const s_vec_2d a, const s_vec_2d b, const s_color blend, const float width);
-void RenderPolyOutline(const s_rendering_context* const context, const s_poly poly, const s_color blend, const float width);
-void RenderBarHor(const s_rendering_context* const context, const s_rect rect, const float perc, const s_color_rgb col_front, const s_color_rgb col_back);
+void ZFWRender(const zfw_s_rendering_context* const context, const zfw_t_gl_id tex_gl_id, const zfw_s_rect_edges tex_coords, const zfw_s_vec_2d pos, const zfw_s_vec_2d size, const zfw_s_vec_2d origin, const float rot, const zfw_s_color blend);
+void ZFWRenderTexture(const zfw_s_rendering_context* const context, const int tex_index, const zfw_s_textures* const textures, const zfw_s_rect_i src_rect, const zfw_s_vec_2d pos, const zfw_s_vec_2d origin, const zfw_s_vec_2d scale, const float rot, const zfw_s_color blend);
+bool ZFWRenderStr(const zfw_s_rendering_context* const context, const char* const str, const int font_index, const zfw_s_fonts* const fonts, const zfw_s_vec_2d pos, const zfw_e_str_hor_align hor_align, const zfw_e_str_ver_align ver_align, const zfw_s_color blend, zfw_s_mem_arena* const temp_mem_arena);
+void ZFWRenderRect(const zfw_s_rendering_context* const context, const zfw_s_rect rect, const zfw_s_color blend);
+void ZFWRenderRectOutline(const zfw_s_rendering_context* const context, const zfw_s_rect rect, const zfw_s_color blend, const float thickness);
+void ZFWRenderLine(const zfw_s_rendering_context* const context, const zfw_s_vec_2d a, const zfw_s_vec_2d b, const zfw_s_color blend, const float width);
+void ZFWRenderPolyOutline(const zfw_s_rendering_context* const context, const zfw_s_poly poly, const zfw_s_color blend, const float width);
+void ZFWRenderBarHor(const zfw_s_rendering_context* const context, const zfw_s_rect rect, const float perc, const zfw_s_color_rgb col_front, const zfw_s_color_rgb col_back);
 
-void SetSurface(const s_rendering_context* const rendering_context, const int surf_index);
-void UnsetSurface(const s_rendering_context* const rendering_context);
-void SetSurfaceShaderProg(const s_rendering_context* const rendering_context, const t_gl_id gl_id);
-void SetSurfaceShaderProgUniform(const s_rendering_context* const rendering_context, const char* const name, const s_shader_prog_uniform_value val);
-void RenderSurface(const s_rendering_context* const rendering_context, const int surf_index);
+void ZFWSetSurface(const zfw_s_rendering_context* const rendering_context, const int surf_index);
+void ZFWUnsetSurface(const zfw_s_rendering_context* const rendering_context);
+void ZFWSetSurfaceShaderProg(const zfw_s_rendering_context* const rendering_context, const zfw_t_gl_id gl_id);
+void ZFWSetSurfaceShaderProgUniform(const zfw_s_rendering_context* const rendering_context, const char* const name, const zfw_s_shader_prog_uniform_value val);
+void ZFWRenderSurface(const zfw_s_rendering_context* const rendering_context, const int surf_index);
 
-void Flush(const s_rendering_context* const context);
+void ZFWFlush(const zfw_s_rendering_context* const context);
 
-bool InitRenderSurfaces(s_render_surfaces* const surfs, const s_vec_2d_i size);
-bool ResizeRenderSurfaces(s_render_surfaces* const surfs, const s_vec_2d_i size);
+bool ZFWInitRenderSurfaces(zfw_s_render_surfaces* const surfs, const zfw_s_vec_2d_i size);
+bool ZFWResizeRenderSurfaces(zfw_s_render_surfaces* const surfs, const zfw_s_vec_2d_i size);
 
-s_rect_edges CalcTextureCoords(const s_rect_i src_rect, const s_vec_2d_i tex_size);
+zfw_s_rect_edges ZFWCalcTextureCoords(const zfw_s_rect_i src_rect, const zfw_s_vec_2d_i tex_size);
 
-const s_vec_2d* PushStrChrPositions(const char* const str, s_mem_arena* const mem_arena, const int font_index, const s_fonts* const fonts, const s_vec_2d pos, const e_str_hor_align hor_align, const e_str_ver_align ver_align);
+const zfw_s_vec_2d* ZFWPushStrChrPositions(const char* const str, zfw_s_mem_arena* const mem_arena, const int font_index, const zfw_s_fonts* const fonts, const zfw_s_vec_2d pos, const zfw_e_str_hor_align hor_align, const zfw_e_str_ver_align ver_align);
 
-bool LoadStrCollider(s_rect* const rect, const char* const str, const int font_index, const s_fonts* const fonts, const s_vec_2d pos, const e_str_hor_align hor_align, const e_str_ver_align ver_align, s_mem_arena* const temp_mem_arena);
+bool ZFWLoadStrCollider(zfw_s_rect* const rect, const char* const str, const int font_index, const zfw_s_fonts* const fonts, const zfw_s_vec_2d pos, const zfw_e_str_hor_align hor_align, const zfw_e_str_ver_align ver_align, zfw_s_mem_arena* const temp_mem_arena);
 
-static inline bool IsOriginValid(const s_vec_2d origin) {
+static inline bool ZFWIsOriginValid(const zfw_s_vec_2d origin) {
     return origin.x >= 0.0f && origin.y >= 0.0f && origin.x <= 1.0f && origin.y <= 1.0f;
 }
 
-static inline bool HasFlushed(const s_rendering_state* const rs) {
+static inline bool ZFWHasFlushed(const zfw_s_rendering_state* const rs) {
     return rs->batch_slots_used_cnt == 0;
 }
 

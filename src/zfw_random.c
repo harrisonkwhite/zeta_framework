@@ -2,19 +2,19 @@
 #include <stdlib.h>
 #include "zfw_random.h"
 
-void InitRNG() {
+void ZFWInitRNG() {
     srand(time(NULL));
 }
 
-float RandPerc() {
+float ZFWRandPerc() {
     return (float)rand() / (RAND_MAX + 1.0f);
 }
 
-float RandPercIncl() {
+float ZFWRandPercIncl() {
     return (float)rand() / RAND_MAX;
 }
 
-int RandRangeI(const int beg, const int end) {
+int ZFWRandRangeI(const int beg, const int end) {
     assert(beg <= end);
     return beg + (rand() % (end - beg));
 }

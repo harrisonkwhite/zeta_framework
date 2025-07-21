@@ -15,94 +15,94 @@
 #define GL_VERSION_MAJOR 4
 #define GL_VERSION_MINOR 3
 
-static const int g_glfw_keys[eks_key_code_cnt] = {
-    [ek_key_code_space] = GLFW_KEY_SPACE,
-    [ek_key_code_0] = GLFW_KEY_0,
-    [ek_key_code_1] = GLFW_KEY_1,
-    [ek_key_code_2] = GLFW_KEY_2,
-    [ek_key_code_3] = GLFW_KEY_3,
-    [ek_key_code_4] = GLFW_KEY_4,
-    [ek_key_code_5] = GLFW_KEY_5,
-    [ek_key_code_6] = GLFW_KEY_6,
-    [ek_key_code_7] = GLFW_KEY_7,
-    [ek_key_code_8] = GLFW_KEY_8,
-    [ek_key_code_9] = GLFW_KEY_9,
-    [ek_key_code_a] = GLFW_KEY_A,
-    [ek_key_code_b] = GLFW_KEY_B,
-    [ek_key_code_c] = GLFW_KEY_C,
-    [ek_key_code_d] = GLFW_KEY_D,
-    [ek_key_code_e] = GLFW_KEY_E,
-    [ek_key_code_f] = GLFW_KEY_F,
-    [ek_key_code_g] = GLFW_KEY_G,
-    [ek_key_code_h] = GLFW_KEY_H,
-    [ek_key_code_i] = GLFW_KEY_I,
-    [ek_key_code_j] = GLFW_KEY_J,
-    [ek_key_code_k] = GLFW_KEY_K,
-    [ek_key_code_l] = GLFW_KEY_L,
-    [ek_key_code_m] = GLFW_KEY_M,
-    [ek_key_code_n] = GLFW_KEY_N,
-    [ek_key_code_o] = GLFW_KEY_O,
-    [ek_key_code_p] = GLFW_KEY_P,
-    [ek_key_code_q] = GLFW_KEY_Q,
-    [ek_key_code_r] = GLFW_KEY_R,
-    [ek_key_code_s] = GLFW_KEY_S,
-    [ek_key_code_t] = GLFW_KEY_T,
-    [ek_key_code_u] = GLFW_KEY_U,
-    [ek_key_code_v] = GLFW_KEY_V,
-    [ek_key_code_w] = GLFW_KEY_W,
-    [ek_key_code_x] = GLFW_KEY_X,
-    [ek_key_code_y] = GLFW_KEY_Y,
-    [ek_key_code_z] = GLFW_KEY_Z,
-    [ek_key_code_escape] = GLFW_KEY_ESCAPE,
-    [ek_key_code_enter] = GLFW_KEY_ENTER,
-    [ek_key_code_backspace] = GLFW_KEY_BACKSPACE,
-    [ek_key_code_tab] = GLFW_KEY_TAB,
-    [ek_key_code_right] = GLFW_KEY_RIGHT,
-    [ek_key_code_left] = GLFW_KEY_LEFT,
-    [ek_key_code_down] = GLFW_KEY_DOWN,
-    [ek_key_code_up] = GLFW_KEY_UP,
-    [ek_key_code_f1] = GLFW_KEY_F1,
-    [ek_key_code_f2] = GLFW_KEY_F2,
-    [ek_key_code_f3] = GLFW_KEY_F3,
-    [ek_key_code_f4] = GLFW_KEY_F4,
-    [ek_key_code_f5] = GLFW_KEY_F5,
-    [ek_key_code_f6] = GLFW_KEY_F6,
-    [ek_key_code_f7] = GLFW_KEY_F7,
-    [ek_key_code_f8] = GLFW_KEY_F8,
-    [ek_key_code_f9] = GLFW_KEY_F9,
-    [ek_key_code_f10] = GLFW_KEY_F10,
-    [ek_key_code_f11] = GLFW_KEY_F11,
-    [ek_key_code_f12] = GLFW_KEY_F12,
-    [ek_key_code_left_shift] = GLFW_KEY_LEFT_SHIFT,
-    [ek_key_code_left_control] = GLFW_KEY_LEFT_CONTROL,
-    [ek_key_code_left_alt] = GLFW_KEY_LEFT_ALT,
-    [ek_key_code_right_shift] = GLFW_KEY_RIGHT_SHIFT,
-    [ek_key_code_right_control] = GLFW_KEY_RIGHT_CONTROL,
-    [ek_key_code_right_alt] = GLFW_KEY_RIGHT_ALT
+static const int g_glfw_keys[zfw_eks_key_code_cnt] = {
+    [zfw_ek_key_code_space] = GLFW_KEY_SPACE,
+    [zfw_ek_key_code_0] = GLFW_KEY_0,
+    [zfw_ek_key_code_1] = GLFW_KEY_1,
+    [zfw_ek_key_code_2] = GLFW_KEY_2,
+    [zfw_ek_key_code_3] = GLFW_KEY_3,
+    [zfw_ek_key_code_4] = GLFW_KEY_4,
+    [zfw_ek_key_code_5] = GLFW_KEY_5,
+    [zfw_ek_key_code_6] = GLFW_KEY_6,
+    [zfw_ek_key_code_7] = GLFW_KEY_7,
+    [zfw_ek_key_code_8] = GLFW_KEY_8,
+    [zfw_ek_key_code_9] = GLFW_KEY_9,
+    [zfw_ek_key_code_a] = GLFW_KEY_A,
+    [zfw_ek_key_code_b] = GLFW_KEY_B,
+    [zfw_ek_key_code_c] = GLFW_KEY_C,
+    [zfw_ek_key_code_d] = GLFW_KEY_D,
+    [zfw_ek_key_code_e] = GLFW_KEY_E,
+    [zfw_ek_key_code_f] = GLFW_KEY_F,
+    [zfw_ek_key_code_g] = GLFW_KEY_G,
+    [zfw_ek_key_code_h] = GLFW_KEY_H,
+    [zfw_ek_key_code_i] = GLFW_KEY_I,
+    [zfw_ek_key_code_j] = GLFW_KEY_J,
+    [zfw_ek_key_code_k] = GLFW_KEY_K,
+    [zfw_ek_key_code_l] = GLFW_KEY_L,
+    [zfw_ek_key_code_m] = GLFW_KEY_M,
+    [zfw_ek_key_code_n] = GLFW_KEY_N,
+    [zfw_ek_key_code_o] = GLFW_KEY_O,
+    [zfw_ek_key_code_p] = GLFW_KEY_P,
+    [zfw_ek_key_code_q] = GLFW_KEY_Q,
+    [zfw_ek_key_code_r] = GLFW_KEY_R,
+    [zfw_ek_key_code_s] = GLFW_KEY_S,
+    [zfw_ek_key_code_t] = GLFW_KEY_T,
+    [zfw_ek_key_code_u] = GLFW_KEY_U,
+    [zfw_ek_key_code_v] = GLFW_KEY_V,
+    [zfw_ek_key_code_w] = GLFW_KEY_W,
+    [zfw_ek_key_code_x] = GLFW_KEY_X,
+    [zfw_ek_key_code_y] = GLFW_KEY_Y,
+    [zfw_ek_key_code_z] = GLFW_KEY_Z,
+    [zfw_ek_key_code_escape] = GLFW_KEY_ESCAPE,
+    [zfw_ek_key_code_enter] = GLFW_KEY_ENTER,
+    [zfw_ek_key_code_backspace] = GLFW_KEY_BACKSPACE,
+    [zfw_ek_key_code_tab] = GLFW_KEY_TAB,
+    [zfw_ek_key_code_right] = GLFW_KEY_RIGHT,
+    [zfw_ek_key_code_left] = GLFW_KEY_LEFT,
+    [zfw_ek_key_code_down] = GLFW_KEY_DOWN,
+    [zfw_ek_key_code_up] = GLFW_KEY_UP,
+    [zfw_ek_key_code_f1] = GLFW_KEY_F1,
+    [zfw_ek_key_code_f2] = GLFW_KEY_F2,
+    [zfw_ek_key_code_f3] = GLFW_KEY_F3,
+    [zfw_ek_key_code_f4] = GLFW_KEY_F4,
+    [zfw_ek_key_code_f5] = GLFW_KEY_F5,
+    [zfw_ek_key_code_f6] = GLFW_KEY_F6,
+    [zfw_ek_key_code_f7] = GLFW_KEY_F7,
+    [zfw_ek_key_code_f8] = GLFW_KEY_F8,
+    [zfw_ek_key_code_f9] = GLFW_KEY_F9,
+    [zfw_ek_key_code_f10] = GLFW_KEY_F10,
+    [zfw_ek_key_code_f11] = GLFW_KEY_F11,
+    [zfw_ek_key_code_f12] = GLFW_KEY_F12,
+    [zfw_ek_key_code_left_shift] = GLFW_KEY_LEFT_SHIFT,
+    [zfw_ek_key_code_left_control] = GLFW_KEY_LEFT_CONTROL,
+    [zfw_ek_key_code_left_alt] = GLFW_KEY_LEFT_ALT,
+    [zfw_ek_key_code_right_shift] = GLFW_KEY_RIGHT_SHIFT,
+    [zfw_ek_key_code_right_control] = GLFW_KEY_RIGHT_CONTROL,
+    [zfw_ek_key_code_right_alt] = GLFW_KEY_RIGHT_ALT
 };
 
-static const int g_glfw_mouse_buttons[eks_mouse_button_code_cnt] = {
-    [ek_mouse_button_code_left] = GLFW_MOUSE_BUTTON_LEFT,
-    [ek_mouse_button_code_right] = GLFW_MOUSE_BUTTON_RIGHT,
-    [ek_mouse_button_code_middle] = GLFW_MOUSE_BUTTON_MIDDLE
+static const int g_glfw_mouse_buttons[zfw_eks_mouse_button_code_cnt] = {
+    [zfw_ek_mouse_button_code_left] = GLFW_MOUSE_BUTTON_LEFT,
+    [zfw_ek_mouse_button_code_right] = GLFW_MOUSE_BUTTON_RIGHT,
+    [zfw_ek_mouse_button_code_middle] = GLFW_MOUSE_BUTTON_MIDDLE
 };
 
 typedef struct {
-    e_mouse_scroll_state mouse_scroll_state; // When mouse scroll is detected, this can be updated via callback. It can be reset after the next tick (so there is a chance for the ZFW user to detect the scroll).
-    t_unicode_buf unicode_buf; // This is filled up as characters are typed, and zeroed out after the next tick. This way, the ZFW user can see everything that has been typed since the last tick.
+    zfw_e_mouse_scroll_state mouse_scroll_state; // When mouse scroll is detected, this can be updated via callback. It can be reset after the next tick (so there is a chance for the ZFW user to detect the scroll).
+    zfw_t_unicode_buf unicode_buf; // This is filled up as characters are typed, and zeroed out after the next tick. This way, the ZFW user can see everything that has been typed since the last tick.
 } s_glfw_user_data;
 
 typedef struct {
-    s_mem_arena* perm_mem_arena;
-    s_mem_arena* temp_mem_arena;
+    zfw_s_mem_arena* perm_mem_arena;
+    zfw_s_mem_arena* temp_mem_arena;
     GLFWwindow* glfw_window;
-    s_pers_render_data* pers_render_data;
-    s_audio_sys* audio_sys;
+    zfw_s_pers_render_data* pers_render_data;
+    zfw_s_audio_sys* audio_sys;
 } s_game_cleanup_info;
 
-static void AssertGameInfoValidity(const s_game_info* const info) {
+static void AssertGameInfoValidity(const zfw_s_game_info* const info) {
     assert(info->user_mem_size >= 0);
-    assert(info->user_mem_size == 0 || IsValidAlignment(info->user_mem_alignment));
+    assert(info->user_mem_size == 0 || ZFWIsValidAlignment(info->user_mem_alignment));
 
     assert(info->window_title);
     assert(info->window_init_size.x > 0 && info->window_init_size.y > 0);
@@ -114,11 +114,11 @@ static void AssertGameInfoValidity(const s_game_info* const info) {
 
 static void CleanGame(const s_game_cleanup_info* const cleanup_info) {
     if (cleanup_info->audio_sys) {
-        CleanAudioSys(cleanup_info->audio_sys);
+        ZFWCleanAudioSys(cleanup_info->audio_sys);
     }
 
     if (cleanup_info->pers_render_data) {
-        CleanPersRenderData(cleanup_info->pers_render_data);
+        ZFWCleanPersRenderData(cleanup_info->pers_render_data);
     }
 
     if (cleanup_info->glfw_window) {
@@ -127,14 +127,14 @@ static void CleanGame(const s_game_cleanup_info* const cleanup_info) {
 
     glfwTerminate();
 
-    CleanMemArena(cleanup_info->temp_mem_arena);
-    CleanMemArena(cleanup_info->perm_mem_arena);
+    ZFWCleanMemArena(cleanup_info->temp_mem_arena);
+    ZFWCleanMemArena(cleanup_info->perm_mem_arena);
 }
 
-static s_window_state WindowState(GLFWwindow* const glfw_window) {
+static zfw_s_window_state WindowState(GLFWwindow* const glfw_window) {
     assert(glfw_window);
 
-    s_window_state state = {
+    zfw_s_window_state state = {
         .fullscreen = glfwGetWindowMonitor(glfw_window) != NULL
     };
     glfwGetWindowPos(glfw_window, &state.pos.x, &state.pos.y);
@@ -143,27 +143,27 @@ static s_window_state WindowState(GLFWwindow* const glfw_window) {
     return state;
 }
 
-static void RefreshInputState(s_input_state* const state, GLFWwindow* const glfw_window, const e_mouse_scroll_state mouse_scroll_state) {
+static void RefreshInputState(zfw_s_input_state* const state, GLFWwindow* const glfw_window, const zfw_e_mouse_scroll_state mouse_scroll_state) {
     assert(state);
     assert(glfw_window);
 
-    ZERO_OUT(*state);
+    ZFW_ZERO_OUT(*state);
 
-    for (int i = 0; i < eks_key_code_cnt; i++) {
+    for (int i = 0; i < zfw_eks_key_code_cnt; i++) {
         if (glfwGetKey(glfw_window, g_glfw_keys[i])) {
-            state->keys_down |= (t_keys_down_bits)1 << i;
+            state->keys_down |= (zfw_t_keys_down_bits)1 << i;
         }
     }
 
-    for (int i = 0; i < eks_mouse_button_code_cnt; i++) {
+    for (int i = 0; i < zfw_eks_mouse_button_code_cnt; i++) {
         if (glfwGetMouseButton(glfw_window, g_glfw_mouse_buttons[i])) {
-            state->mouse_buttons_down |= (t_mouse_buttons_down_bits)1 << i;
+            state->mouse_buttons_down |= (zfw_t_mouse_buttons_down_bits)1 << i;
         }
     }
 
     double mouse_x_dbl, mouse_y_dbl;
     glfwGetCursorPos(glfw_window, &mouse_x_dbl, &mouse_y_dbl);
-    state->mouse_pos = (s_vec_2d){mouse_x_dbl, mouse_y_dbl};
+    state->mouse_pos = (zfw_s_vec_2d){mouse_x_dbl, mouse_y_dbl};
 
     state->mouse_scroll_state = mouse_scroll_state;
 }
@@ -172,11 +172,11 @@ static void GLFWScrollCallback(GLFWwindow* const window, const double offs_x, co
     s_glfw_user_data* const user_data = glfwGetWindowUserPointer(window);
 
     if (offs_y > 0.0) {
-        user_data->mouse_scroll_state = ek_mouse_scroll_state_up;
+        user_data->mouse_scroll_state = zfw_ek_mouse_scroll_state_up;
     } else if (offs_y < 0.0) {
-        user_data->mouse_scroll_state = ek_mouse_scroll_state_down;
+        user_data->mouse_scroll_state = zfw_ek_mouse_scroll_state_down;
     } else {
-        user_data->mouse_scroll_state = ek_mouse_scroll_state_none;
+        user_data->mouse_scroll_state = zfw_ek_mouse_scroll_state_none;
     }
 }
 
@@ -193,7 +193,7 @@ static void GLFWCharCallback(GLFWwindow* const window, const unsigned int codepo
     fprintf(stderr, "Unicode buffer is full!");
 }
 
-static GLFWwindow* CreateGLFWWindow(const s_vec_2d_i size, const char* const title, const e_window_flags flags, s_glfw_user_data* const user_data) {
+static GLFWwindow* CreateGLFWWindow(const zfw_s_vec_2d_i size, const char* const title, const zfw_e_window_flags flags, s_glfw_user_data* const user_data) {
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, GL_VERSION_MAJOR);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, GL_VERSION_MINOR);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
@@ -202,8 +202,8 @@ static GLFWwindow* CreateGLFWWindow(const s_vec_2d_i size, const char* const tit
     GLFWwindow* const glfw_window = glfwCreateWindow(size.x, size.y, title, NULL, NULL);
 
     if (glfw_window) {
-        glfwSetWindowAttrib(glfw_window, GLFW_RESIZABLE, flags & ek_window_flags_resizable ? GLFW_TRUE : GLFW_FALSE);
-        glfwSetInputMode(glfw_window, GLFW_CURSOR, flags & ek_window_flags_hide_cursor ? GLFW_CURSOR_HIDDEN : GLFW_CURSOR_NORMAL);
+        glfwSetWindowAttrib(glfw_window, GLFW_RESIZABLE, flags & zfw_ek_window_flags_resizable ? GLFW_TRUE : GLFW_FALSE);
+        glfwSetInputMode(glfw_window, GLFW_CURSOR, flags & zfw_ek_window_flags_hide_cursor ? GLFW_CURSOR_HIDDEN : GLFW_CURSOR_NORMAL);
 
         glfwMakeContextCurrent(glfw_window);
 
@@ -220,7 +220,7 @@ static GLFWwindow* CreateGLFWWindow(const s_vec_2d_i size, const char* const tit
     return glfw_window;
 }
 
-static void ResizeGLViewportIfDiff(const s_vec_2d_i size) {
+static void ResizeGLViewportIfDiff(const zfw_s_vec_2d_i size) {
     assert(size.x > 0 && size.y > 0);
 
     GLint viewport[4];
@@ -231,7 +231,7 @@ static void ResizeGLViewportIfDiff(const s_vec_2d_i size) {
     }
 }
 
-bool RunGame(const s_game_info* const info) {
+bool ZFWRunGame(const zfw_s_game_info* const info) {
     assert(info);
     AssertGameInfoValidity(info);
 
@@ -242,12 +242,12 @@ bool RunGame(const s_game_info* const info) {
     //
     printf("Initialising...\n");
 
-    InitRNG();
+    ZFWInitRNG();
 
     // Initialise memory arenas.
-    s_mem_arena perm_mem_arena = {0}; // The memory in here exists for the lifetime of the program, it does not get reset.
+    zfw_s_mem_arena perm_mem_arena = {0}; // The memory in here exists for the lifetime of the program, it does not get reset.
 
-    if (!InitMemArena(&perm_mem_arena, PERM_MEM_ARENA_SIZE)) {
+    if (!ZFWInitMemArena(&perm_mem_arena, PERM_MEM_ARENA_SIZE)) {
         fprintf(stderr, "Failed to initialise the permanent memory arena!\n");
         CleanGame(&cleanup_info);
         return false;
@@ -255,9 +255,9 @@ bool RunGame(const s_game_info* const info) {
 
     cleanup_info.perm_mem_arena = &perm_mem_arena;
 
-    s_mem_arena temp_mem_arena = {0}; // While the memory here also exists for the program lifetime, it gets reset after game initialisation and after every frame. Useful if you just need some temporary working space.
+    zfw_s_mem_arena temp_mem_arena = {0}; // While the memory here also exists for the program lifetime, it gets reset after game initialisation and after every frame. Useful if you just need some temporary working space.
 
-    if (!InitMemArena(&temp_mem_arena, TEMP_MEM_ARENA_SIZE)) {
+    if (!ZFWInitMemArena(&temp_mem_arena, TEMP_MEM_ARENA_SIZE)) {
         fprintf(stderr, "Failed to initialise the temporary memory arena!\n");
         CleanGame(&cleanup_info);
         return false;
@@ -292,16 +292,16 @@ bool RunGame(const s_game_info* const info) {
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    s_pers_render_data pers_render_data = {0};
+    zfw_s_pers_render_data pers_render_data = {0};
 
-    if (!InitPersRenderData(&pers_render_data, info->window_init_size)) {
+    if (!ZFWInitPersRenderData(&pers_render_data, info->window_init_size)) {
         CleanGame(&cleanup_info);
         return false;
     }
 
     cleanup_info.pers_render_data = &pers_render_data;
 
-    s_rendering_state* const rendering_state = MEM_ARENA_PUSH_TYPE(&perm_mem_arena, s_rendering_state);
+    zfw_s_rendering_state* const rendering_state = ZFW_MEM_ARENA_PUSH_TYPE(&perm_mem_arena, zfw_s_rendering_state);
 
     if (!rendering_state) {
         CleanGame(&cleanup_info);
@@ -309,9 +309,9 @@ bool RunGame(const s_game_info* const info) {
     }
 
     // Initialise audio system.
-    s_audio_sys audio_sys = {0};
+    zfw_s_audio_sys audio_sys = {0};
 
-    if (!InitAudioSys(&audio_sys)) {
+    if (!ZFWInitAudioSys(&audio_sys)) {
         CleanGame(&cleanup_info);
         return false;
     }
@@ -322,7 +322,7 @@ bool RunGame(const s_game_info* const info) {
     void* user_mem = NULL;
 
     if (info->user_mem_size > 0) {
-        user_mem = PushToMemArena(&perm_mem_arena, info->user_mem_size, info->user_mem_alignment);
+        user_mem = ZFWPushToMemArena(&perm_mem_arena, info->user_mem_size, info->user_mem_alignment);
 
         if (!user_mem) {
             fprintf(stderr, "Failed to allocate user memory!\n");
@@ -333,7 +333,7 @@ bool RunGame(const s_game_info* const info) {
 
     // Run the user-defined game initialisation function.
     {
-        const s_game_init_func_data func_data = {
+        const zfw_s_game_init_func_data func_data = {
             .user_mem = user_mem,
             .perm_mem_arena = &perm_mem_arena,
             .temp_mem_arena = &temp_mem_arena,
@@ -353,9 +353,9 @@ bool RunGame(const s_game_info* const info) {
     //
     glfwShowWindow(glfw_window);
 
-    ResetMemArena(&temp_mem_arena);
+    ZFWResetMemArena(&temp_mem_arena);
 
-    s_input_state input_state = {0};
+    zfw_s_input_state input_state = {0};
 
     double frame_time_last = glfwGetTime();
     double frame_dur_accum = 0.0;
@@ -363,12 +363,12 @@ bool RunGame(const s_game_info* const info) {
     printf("Entering the main loop...\n");
 
     while (!glfwWindowShouldClose(glfw_window)) {
-        const s_window_state window_state = WindowState(glfw_window);
+        const zfw_s_window_state window_state = WindowState(glfw_window);
 
         ResizeGLViewportIfDiff(window_state.size);
 
-        if (!Vec2DIsEqual(pers_render_data.surfs.size, window_state.size)) {
-            if (!ResizeRenderSurfaces(&pers_render_data.surfs, window_state.size)) {
+        if (!ZFWVec2DIsEqual(pers_render_data.surfs.size, window_state.size)) {
+            if (!ZFWResizeRenderSurfaces(&pers_render_data.surfs, window_state.size)) {
                 fprintf(stderr, "Failed to resize render surfaces!\n");
                 info->clean_func(user_mem);
                 CleanGame(&cleanup_info);
@@ -382,14 +382,14 @@ bool RunGame(const s_game_info* const info) {
 
         // Once enough time has passed (i.e. the time accumulator has reached the tick interval), run a tick.
         if (frame_dur_accum >= TARG_TICK_INTERVAL) {
-            const s_input_state input_state_last = input_state;
+            const zfw_s_input_state input_state_last = input_state;
             RefreshInputState(&input_state, glfw_window, glfw_user_data.mouse_scroll_state);
 
-            UpdateAudioSys(&audio_sys);
+            ZFWUpdateAudioSys(&audio_sys);
 
             {
                 // Execute the user-defined tick function.
-                const s_game_tick_func_data func_data = {
+                const zfw_s_game_tick_func_data func_data = {
                     .user_mem = user_mem,
                     .perm_mem_arena = &perm_mem_arena,
                     .temp_mem_arena = &temp_mem_arena,
@@ -400,10 +400,10 @@ bool RunGame(const s_game_info* const info) {
                     .audio_sys = &audio_sys
                 };
 
-                const e_game_tick_func_result res = info->tick_func(&func_data);
+                const zfw_e_game_tick_func_result res = info->tick_func(&func_data);
 
-                ZERO_OUT(glfw_user_data.unicode_buf);
-                glfw_user_data.mouse_scroll_state = ek_mouse_scroll_state_none;
+                ZFW_ZERO_OUT(glfw_user_data.unicode_buf);
+                glfw_user_data.mouse_scroll_state = zfw_ek_mouse_scroll_state_none;
 
                 if (res == ek_game_tick_func_result_exit) {
                     info->clean_func(user_mem);
@@ -419,11 +419,11 @@ bool RunGame(const s_game_info* const info) {
             }
 
             // Execute rendering step.
-            BeginRendering(rendering_state);
+            ZFWBeginRendering(rendering_state);
 
             {
                 // Execute the user-defined render function.
-                const s_game_render_func_data func_data = {
+                const zfw_s_game_render_func_data func_data = {
                     .user_mem = user_mem,
                     .perm_mem_arena = &perm_mem_arena,
                     .temp_mem_arena = &temp_mem_arena,
@@ -442,7 +442,7 @@ bool RunGame(const s_game_info* const info) {
                     return false;
                 }
 
-                assert(HasFlushed(rendering_state) && "User-defined rendering function completed, but not everything has been flushed!");
+                assert(ZFWHasFlushed(rendering_state) && "User-defined rendering function completed, but not everything has been flushed!");
             }
 
             glfwSwapBuffers(glfw_window);
@@ -453,7 +453,7 @@ bool RunGame(const s_game_info* const info) {
 
         glfwPollEvents();
 
-        ResetMemArena(&temp_mem_arena);
+        ZFWResetMemArena(&temp_mem_arena);
     }
 
     info->clean_func(user_mem);

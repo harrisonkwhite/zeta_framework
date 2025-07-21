@@ -3,19 +3,19 @@
 
 #include <assert.h>
 
-void InitRNG();
-float RandPerc();
-float RandPercIncl();
-int RandRangeI(const int beg, const int end);
+void ZFWInitRNG();
+float ZFWRandPerc();
+float ZFWRandPercIncl();
+int ZFWRandRangeI(const int beg, const int end);
 
-static inline float RandRange(const float beg, const float end) {
+static inline float ZFWRandRange(const float beg, const float end) {
     assert(beg <= end);
-    return beg + ((end - beg) * RandPerc());
+    return beg + ((end - beg) * ZFWRandPerc());
 }
 
-static inline float RandRangeIncl(const float beg, const float end_incl) {
+static inline float ZFWRandRangeIncl(const float beg, const float end_incl) {
     assert(beg <= end_incl);
-    return beg + ((end_incl - beg) * RandPercIncl());
+    return beg + ((end_incl - beg) * ZFWRandPercIncl());
 }
 
 #endif
