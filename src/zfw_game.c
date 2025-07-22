@@ -1,10 +1,7 @@
 #include <GLFW/glfw3.h>
-#include <assert.h>
 #include <stdio.h>
-#include <stdbool.h>
 #include "zfw_game.h"
 #include "zfw_random.h"
-#include "zfw_utils.h"
 
 #define PERM_MEM_ARENA_SIZE ((1 << 20) * 80)
 #define TEMP_MEM_ARENA_SIZE ((1 << 20) * 40)
@@ -15,7 +12,7 @@
 #define GL_VERSION_MAJOR 4
 #define GL_VERSION_MINOR 3
 
-static const int g_glfw_keys[zfw_eks_key_code_cnt] = {
+static const int g_glfw_keys[] = {
     [zfw_ek_key_code_space] = GLFW_KEY_SPACE,
     [zfw_ek_key_code_0] = GLFW_KEY_0,
     [zfw_ek_key_code_1] = GLFW_KEY_1,
@@ -81,12 +78,17 @@ static const int g_glfw_keys[zfw_eks_key_code_cnt] = {
     [zfw_ek_key_code_right_alt] = GLFW_KEY_RIGHT_ALT
 };
 
-static const int g_glfw_mouse_buttons[zfw_eks_mouse_button_code_cnt] = {
+ZFW_CHECK_STATIC_ARRAY_LEN(g_glfw_keys, zfw_eks_key_code_cnt);
+
+static const int g_glfw_mouse_buttons[] = {
     [zfw_ek_mouse_button_code_left] = GLFW_MOUSE_BUTTON_LEFT,
     [zfw_ek_mouse_button_code_right] = GLFW_MOUSE_BUTTON_RIGHT,
     [zfw_ek_mouse_button_code_middle] = GLFW_MOUSE_BUTTON_MIDDLE
 };
 
+ZFW_CHECK_STATIC_ARRAY_LEN(g_glfw_mouse_buttons, zfw_eks_mouse_button_code_cnt);
+
+// Data to be accessed in GLFW callbacks.
 typedef struct {
     zfw_e_mouse_scroll_state mouse_scroll_state; // When mouse scroll is detected, this can be updated via callback. It can be reset after the next tick (so there is a chance for the ZFW user to detect the scroll).
     zfw_t_unicode_buf unicode_buf; // This is filled up as characters are typed, and zeroed out after the next tick. This way, the ZFW user can see everything that has been typed since the last tick.
@@ -132,8 +134,6 @@ static void CleanGame(const s_game_cleanup_info* const cleanup_info) {
 }
 
 static zfw_s_window_state WindowState(GLFWwindow* const glfw_window) {
-    assert(glfw_window);
-
     zfw_s_window_state state = {
         .fullscreen = glfwGetWindowMonitor(glfw_window) != NULL
     };
@@ -144,9 +144,6 @@ static zfw_s_window_state WindowState(GLFWwindow* const glfw_window) {
 }
 
 static void RefreshInputState(zfw_s_input_state* const state, GLFWwindow* const glfw_window, const zfw_e_mouse_scroll_state mouse_scroll_state) {
-    assert(state);
-    assert(glfw_window);
-
     ZFW_ZERO_OUT(*state);
 
     for (int i = 0; i < zfw_eks_key_code_cnt; i++) {
@@ -220,7 +217,7 @@ static GLFWwindow* CreateGLFWWindow(const zfw_s_vec_2d_i size, const char* const
     return glfw_window;
 }
 
-static void ResizeGLViewportIfDiff(const zfw_s_vec_2d_i size) {
+static void ResizeGLViewportIfDifferent(const zfw_s_vec_2d_i size) {
     assert(size.x > 0 && size.y > 0);
 
     GLint viewport[4];
@@ -232,7 +229,6 @@ static void ResizeGLViewportIfDiff(const zfw_s_vec_2d_i size) {
 }
 
 bool ZFWRunGame(const zfw_s_game_info* const info) {
-    assert(info);
     AssertGameInfoValidity(info);
 
     s_game_cleanup_info cleanup_info = {0}; // When something needs to be cleaned up after the game ends, the corresponding pointer here can be assigned.
@@ -294,7 +290,7 @@ bool ZFWRunGame(const zfw_s_game_info* const info) {
 
     zfw_s_pers_render_data pers_render_data = {0};
 
-    if (!ZFWInitPersRenderData(&pers_render_data, info->window_init_size)) {
+    if (!ZFWInitPersRenderData(&pers_render_data, info->window_init_size, &temp_mem_arena)) {
         CleanGame(&cleanup_info);
         return false;
     }
@@ -365,7 +361,7 @@ bool ZFWRunGame(const zfw_s_game_info* const info) {
     while (!glfwWindowShouldClose(glfw_window)) {
         const zfw_s_window_state window_state = WindowState(glfw_window);
 
-        ResizeGLViewportIfDiff(window_state.size);
+        ResizeGLViewportIfDifferent(window_state.size);
 
         if (!ZFWVec2DIsEqual(pers_render_data.surfs.size, window_state.size)) {
             if (!ZFWResizeRenderSurfaces(&pers_render_data.surfs, window_state.size)) {
@@ -427,13 +423,12 @@ bool ZFWRunGame(const zfw_s_game_info* const info) {
                     .user_mem = user_mem,
                     .perm_mem_arena = &perm_mem_arena,
                     .temp_mem_arena = &temp_mem_arena,
+                    .mouse_pos = input_state.mouse_pos,
                     .rendering_context = {
                         .pers = &pers_render_data,
                         .state = rendering_state,
                         .display_size = window_state.size
-                    },
-                    .input_state = &input_state,
-                    .input_state_last = &input_state_last
+                    }
                 };
 
                 if (!info->render_func(&func_data)) {

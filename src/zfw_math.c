@@ -11,7 +11,7 @@ const zfw_s_vec_2d zfw_g_cardinal_dir_vecs[] = {
 };
 
 zfw_s_rect ZFWGenSpanningRect(const zfw_s_rect* const rects, const int cnt) {
-    assert(rects && cnt > 0);
+    assert(cnt > 0);
 
     zfw_s_rect_edges span = {
         rects[0].x,
@@ -44,7 +44,6 @@ zfw_s_rect ZFWGenSpanningRect(const zfw_s_rect* const rects, const int cnt) {
 }
 
 void ZFWInitIdenMatrix4x4(zfw_t_matrix_4x4* const mat) {
-    assert(mat);
     assert(ZFW_IS_ZERO(*mat));
 
     (*mat)[0][0] = 1.0f;
@@ -54,22 +53,17 @@ void ZFWInitIdenMatrix4x4(zfw_t_matrix_4x4* const mat) {
 }
 
 void ZFWTranslateMatrix4x4(zfw_t_matrix_4x4* const mat, const zfw_s_vec_2d trans) {
-    assert(mat);
-
     (*mat)[3][0] += trans.x;
     (*mat)[3][1] += trans.y;
 }
 
 void ZFWScaleMatrix4x4(zfw_t_matrix_4x4* const mat, const float scalar) {
-    assert(mat);
-
     (*mat)[0][0] *= scalar;
     (*mat)[1][1] *= scalar;
     (*mat)[2][2] *= scalar;
 }
 
 void ZFWInitOrthoMatrix4x4(zfw_t_matrix_4x4* const mat, const float left, const float right, const float bottom, const float top, const float near, const float far) {
-    assert(mat);
     assert(ZFW_IS_ZERO(*mat));
     assert(right > left);
     assert(top < bottom);
@@ -128,7 +122,6 @@ static bool CheckPolySep(const zfw_s_poly poly, const zfw_s_poly other) {
 }
 
 bool ZFWPushQuadPoly(zfw_s_poly* const poly, zfw_s_mem_arena* const mem_arena, const zfw_s_vec_2d pos, const zfw_s_vec_2d size, const zfw_s_vec_2d origin) {
-    assert(poly);
     assert(ZFW_IS_ZERO(*poly));
     assert(size.x > 0.0f && size.y > 0.0f);
     assert(origin.x >= 0.0f && origin.y >= 0.0f && origin.x <= 1.0f && origin.y <= 1.0f);
@@ -151,7 +144,6 @@ bool ZFWPushQuadPoly(zfw_s_poly* const poly, zfw_s_mem_arena* const mem_arena, c
 }
 
 bool ZFWPushQuadPolyRotated(zfw_s_poly* const poly, zfw_s_mem_arena* const mem_arena, const zfw_s_vec_2d pos, const zfw_s_vec_2d size, const zfw_s_vec_2d origin, const float rot) {
-    assert(poly);
     assert(ZFW_IS_ZERO(*poly));
     assert(size.x > 0.0f && size.y > 0.0f);
     assert(origin.x >= 0.0f && origin.y >= 0.0f && origin.x <= 1.0f && origin.y <= 1.0f);

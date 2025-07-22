@@ -2,8 +2,7 @@
 #include "zfw_audio.h"
 
 static bool LoadSoundTypeFromFile(zfw_s_sound_type* const type, const char* const fp, zfw_s_mem_arena* const mem_arena) {
-    assert(type && ZFW_IS_ZERO(*type));
-    assert(fp);
+    assert(ZFW_IS_ZERO(*type));
 
     // Decode the audio file, store properties (e.g. sample rate, channel count).
     ma_decoder decoder;
@@ -49,7 +48,7 @@ static bool LoadSoundTypeFromFile(zfw_s_sound_type* const type, const char* cons
 }
 
 bool ZFWInitAudioSys(zfw_s_audio_sys* const audio_sys) {
-    assert(audio_sys && ZFW_IS_ZERO(*audio_sys));
+    assert(ZFW_IS_ZERO(*audio_sys));
 
     if (ma_engine_init(NULL, &audio_sys->eng) != MA_SUCCESS) {
         fprintf(stderr, "Failed to initialise miniaudio engine!\n");
@@ -90,9 +89,8 @@ void ZFWUpdateAudioSys(zfw_s_audio_sys* const audio_sys) {
 }
 
 bool ZFWLoadSoundTypesFromFiles(zfw_s_sound_types* const types, zfw_s_mem_arena* const mem_arena, const int cnt, const zfw_t_sound_type_index_to_file_path index_to_fp) {
-    assert(types && ZFW_IS_ZERO(*types));
+    assert(ZFW_IS_ZERO(*types));
     assert(cnt > 0);
-    assert(index_to_fp);
 
     *types = (zfw_s_sound_types){
         .buf = ZFW_MEM_ARENA_PUSH_TYPE_MANY(mem_arena, zfw_s_sound_type, cnt),
@@ -115,7 +113,6 @@ bool ZFWLoadSoundTypesFromFiles(zfw_s_sound_types* const types, zfw_s_mem_arena*
 }
 
 bool ZFWPlaySound(zfw_s_audio_sys* const audio_sys, const zfw_s_sound_types* const snd_types, const int type_index, const float vol, const float pan, const float pitch) {
-    assert(audio_sys);
     assert(type_index >= 0 && type_index < snd_types->cnt);
     assert(vol >= 0.0f && vol <= 1.0f);
     assert(pan >= -1.0f && pan <= 1.0f);

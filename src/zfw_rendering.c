@@ -6,8 +6,6 @@
 #include "zfw_utils.h"
 
 static zfw_t_gl_id CreateShaderFromSrc(const char* const src, const bool frag) {
-    assert(src);
-
     const GLenum shader_type = frag ? GL_FRAGMENT_SHADER : GL_VERTEX_SHADER;
     const zfw_t_gl_id shader_gl_id = glCreateShader(shader_type);
     glShaderSource(shader_gl_id, 1, &src, NULL);
@@ -25,9 +23,6 @@ static zfw_t_gl_id CreateShaderFromSrc(const char* const src, const bool frag) {
 }
 
 static zfw_t_gl_id CreateShaderProgFromSrcs(const char* const vert_src, const char* const frag_src) {
-    assert(vert_src);
-    assert(frag_src);
-
     const zfw_t_gl_id vert_shader_gl_id = CreateShaderFromSrc(vert_src, false);
 
     if (!vert_shader_gl_id) {
@@ -53,8 +48,6 @@ static zfw_t_gl_id CreateShaderProgFromSrcs(const char* const vert_src, const ch
 }
 
 static zfw_t_gl_id CreateShaderProgFromFiles(const zfw_s_shader_prog_file_paths fps, zfw_s_mem_arena* const temp_mem_arena) {
-    assert(temp_mem_arena);
-
     const char* const vs_src = (const char*)ZFWPushEntireFileContents(fps.vs_fp, temp_mem_arena, true);
 
     if (!vs_src) {
@@ -70,16 +63,120 @@ static zfw_t_gl_id CreateShaderProgFromFiles(const zfw_s_shader_prog_file_paths 
     return CreateShaderProgFromSrcs(vs_src, fs_src);
 }
 
-bool ZFWInitPersRenderData(zfw_s_pers_render_data* const render_data, const zfw_s_vec_2d_i display_size) {
-    assert(render_data);
+static unsigned short* PushRenderBatchElems(zfw_s_mem_arena* const mem_arena) {
+    unsigned short* const indices = ZFW_MEM_ARENA_PUSH_TYPE_MANY(mem_arena, unsigned short, ZFW_RENDER_BATCH_SLOT_ELEM_CNT * ZFW_RENDER_BATCH_SLOT_CNT);
+
+    if (indices) {
+        for (int i = 0; i < ZFW_RENDER_BATCH_SLOT_CNT; ++i) {
+            indices[(i * 6) + 0] = (i * 4) + 0;
+            indices[(i * 6) + 1] = (i * 4) + 1;
+            indices[(i * 6) + 2] = (i * 4) + 2;
+            indices[(i * 6) + 3] = (i * 4) + 2;
+            indices[(i * 6) + 4] = (i * 4) + 3;
+            indices[(i * 6) + 5] = (i * 4) + 0;
+        }
+    }
+
+    return indices;
+}
+
+static bool InitRenderBatch(zfw_s_render_batch_gl_ids* const gl_ids, zfw_s_mem_arena* const temp_mem_arena) {
+    assert(ZFW_IS_ZERO(*gl_ids));
+
+    glGenVertexArrays(1, &gl_ids->vert_array_gl_id);
+    glBindVertexArray(gl_ids->vert_array_gl_id);
+
+    glGenBuffers(1, &gl_ids->vert_buf_gl_id);
+    glBindBuffer(GL_ARRAY_BUFFER, gl_ids->vert_buf_gl_id);
+    glBufferData(GL_ARRAY_BUFFER, ZFW_RENDER_BATCH_SLOT_VERTS_SIZE * ZFW_RENDER_BATCH_SLOT_CNT, NULL, GL_DYNAMIC_DRAW);
+
+    glGenBuffers(1, &gl_ids->elem_buf_gl_id);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, gl_ids->elem_buf_gl_id);
+
+    const unsigned short* const elems = PushRenderBatchElems(temp_mem_arena);
+
+    if (!elems) {
+        return false;
+    }
+
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned short) * ZFW_RENDER_BATCH_SLOT_ELEM_CNT * ZFW_RENDER_BATCH_SLOT_CNT, elems, GL_STATIC_DRAW);
+
+    const GLsizei stride = sizeof(float) * ZFW_RENDER_BATCH_SHADER_PROG_VERT_CNT;
+
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(float) * 0));
+    glEnableVertexAttribArray(0);
+
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(float) * 2));
+    glEnableVertexAttribArray(1);
+
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(float) * 4));
+    glEnableVertexAttribArray(2);
+
+    glVertexAttribPointer(3, 1, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(float) * 6));
+    glEnableVertexAttribArray(3);
+
+    glVertexAttribPointer(4, 2, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(float) * 7));
+    glEnableVertexAttribArray(4);
+
+    glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(float) * 9));
+    glEnableVertexAttribArray(5);
+
+    return true;
+}
+
+static zfw_s_render_batch_shader_prog LoadRenderBatchShaderProg() {
+    const char* const vert_shader_src = "#version 430 core\n"
+        "layout (location = 0) in vec2 a_vert;\n"
+        "layout (location = 1) in vec2 a_pos;\n"
+        "layout (location = 2) in vec2 a_size;\n"
+        "layout (location = 3) in float a_rot;\n"
+        "layout (location = 4) in vec2 a_tex_coord;\n"
+        "layout (location = 5) in vec4 a_blend;\n"
+        "out vec2 v_tex_coord;\n"
+        "out vec4 v_blend;\n"
+        "uniform mat4 u_view;\n"
+        "uniform mat4 u_proj;\n"
+        "void main() {\n"
+        "    float rot_cos = cos(a_rot);\n"
+        "    float rot_sin = -sin(a_rot);\n"
+        "    mat4 model = mat4(\n"
+        "        vec4(a_size.x * rot_cos, a_size.x * rot_sin, 0.0, 0.0),\n"
+        "        vec4(a_size.y * -rot_sin, a_size.y * rot_cos, 0.0, 0.0),\n"
+        "        vec4(0.0, 0.0, 1.0, 0.0),\n"
+        "        vec4(a_pos.x, a_pos.y, 0.0, 1.0));\n"
+        "    gl_Position = u_proj * u_view * model * vec4(a_vert, 0.0, 1.0);\n"
+        "    v_tex_coord = a_tex_coord;\n"
+        "    v_blend = a_blend;\n"
+        "}";
+
+    const char* const frag_shader_src = "#version 430 core\n"
+        "in vec2 v_tex_coord;\n"
+        "in vec4 v_blend;\n"
+        "out vec4 o_frag_color;\n"
+        "uniform sampler2D u_tex;\n"
+        "void main() {\n"
+        "    vec4 tex_color = texture(u_tex, v_tex_coord);\n"
+        "    o_frag_color = tex_color * v_blend;\n"
+        "}";
+
+    zfw_s_render_batch_shader_prog prog = {0};
+    prog.gl_id = CreateShaderProgFromSrcs(vert_shader_src, frag_shader_src);
+    assert(prog.gl_id != 0);
+
+    prog.proj_uniform_loc = glGetUniformLocation(prog.gl_id, "u_proj");
+    prog.view_uniform_loc = glGetUniformLocation(prog.gl_id, "u_view");
+    prog.textures_uniform_loc = glGetUniformLocation(prog.gl_id, "u_textures");
+
+    return prog;
+}
+
+bool ZFWInitPersRenderData(zfw_s_pers_render_data* const render_data, const zfw_s_vec_2d_i display_size, zfw_s_mem_arena* const temp_mem_arena) {
     assert(ZFW_IS_ZERO(*render_data));
     assert(display_size.x > 0 && display_size.y > 0);
 
-    render_data->batch_shader_prog = ZFWLoadRenderBatchShaderProg();
+    render_data->batch_shader_prog = LoadRenderBatchShaderProg();
 
-    render_data->batch_gl_ids = ZFWGenRenderBatch();
-
-    if (ZFW_IS_ZERO(render_data->batch_gl_ids)) {
+    if (!InitRenderBatch(&render_data->batch_gl_ids, temp_mem_arena)) {
         return false;
     }
 
@@ -139,8 +236,6 @@ bool ZFWInitPersRenderData(zfw_s_pers_render_data* const render_data, const zfw_
 }
 
 void ZFWCleanPersRenderData(zfw_s_pers_render_data* const render_data) {
-    assert(render_data);
-
     glDeleteTextures(1, &render_data->px_tex_gl_id);
 
     glDeleteVertexArrays(1, &render_data->batch_gl_ids.vert_array_gl_id);
@@ -152,112 +247,9 @@ void ZFWCleanPersRenderData(zfw_s_pers_render_data* const render_data) {
     ZFW_ZERO_OUT(*render_data);
 }
 
-zfw_s_render_batch_shader_prog ZFWLoadRenderBatchShaderProg() {
-    const char* const vert_shader_src = "#version 430 core\n"
-        "layout (location = 0) in vec2 a_vert;\n"
-        "layout (location = 1) in vec2 a_pos;\n"
-        "layout (location = 2) in vec2 a_size;\n"
-        "layout (location = 3) in float a_rot;\n"
-        "layout (location = 4) in vec2 a_tex_coord;\n"
-        "layout (location = 5) in vec4 a_blend;\n"
-        "out vec2 v_tex_coord;\n"
-        "out vec4 v_blend;\n"
-        "uniform mat4 u_view;\n"
-        "uniform mat4 u_proj;\n"
-        "void main() {\n"
-        "    float rot_cos = cos(a_rot);\n"
-        "    float rot_sin = -sin(a_rot);\n"
-        "    mat4 model = mat4(\n"
-        "        vec4(a_size.x * rot_cos, a_size.x * rot_sin, 0.0, 0.0),\n"
-        "        vec4(a_size.y * -rot_sin, a_size.y * rot_cos, 0.0, 0.0),\n"
-        "        vec4(0.0, 0.0, 1.0, 0.0),\n"
-        "        vec4(a_pos.x, a_pos.y, 0.0, 1.0));\n"
-        "    gl_Position = u_proj * u_view * model * vec4(a_vert, 0.0, 1.0);\n"
-        "    v_tex_coord = a_tex_coord;\n"
-        "    v_blend = a_blend;\n"
-        "}";
-
-    const char* const frag_shader_src = "#version 430 core\n"
-        "in vec2 v_tex_coord;\n"
-        "in vec4 v_blend;\n"
-        "out vec4 o_frag_color;\n"
-        "uniform sampler2D u_tex;\n"
-        "void main() {\n"
-        "    vec4 tex_color = texture(u_tex, v_tex_coord);\n"
-        "    o_frag_color = tex_color * v_blend;\n"
-        "}";
-
-    zfw_s_render_batch_shader_prog prog = {0};
-    prog.gl_id = CreateShaderProgFromSrcs(vert_shader_src, frag_shader_src);
-    assert(prog.gl_id != 0);
-
-    prog.proj_uniform_loc = glGetUniformLocation(prog.gl_id, "u_proj");
-    prog.view_uniform_loc = glGetUniformLocation(prog.gl_id, "u_view");
-    prog.textures_uniform_loc = glGetUniformLocation(prog.gl_id, "u_textures");
-
-    return prog;
-}
-
-zfw_s_render_batch_gl_ids ZFWGenRenderBatch() {
-    zfw_s_render_batch_gl_ids gl_ids = {0};
-
-    glGenVertexArrays(1, &gl_ids.vert_array_gl_id);
-    glBindVertexArray(gl_ids.vert_array_gl_id);
-
-    glGenBuffers(1, &gl_ids.vert_buf_gl_id);
-    glBindBuffer(GL_ARRAY_BUFFER, gl_ids.vert_buf_gl_id);
-    glBufferData(GL_ARRAY_BUFFER, ZFW_RENDER_BATCH_SLOT_VERTS_SIZE * ZFW_RENDER_BATCH_SLOT_CNT, NULL, GL_DYNAMIC_DRAW);
-
-    glGenBuffers(1, &gl_ids.elem_buf_gl_id);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, gl_ids.elem_buf_gl_id);
-
-    unsigned short* const indices = malloc(sizeof(unsigned short) * ZFW_RENDER_BATCH_SLOT_ELEM_CNT * ZFW_RENDER_BATCH_SLOT_CNT);
-
-    if (!indices) {
-        return (zfw_s_render_batch_gl_ids){0};
-    }
-
-    for (int i = 0; i < ZFW_RENDER_BATCH_SLOT_CNT; ++i) {
-        indices[(i * 6) + 0] = (unsigned short)((i * 4) + 0);
-        indices[(i * 6) + 1] = (unsigned short)((i * 4) + 1);
-        indices[(i * 6) + 2] = (unsigned short)((i * 4) + 2);
-        indices[(i * 6) + 3] = (unsigned short)((i * 4) + 2);
-        indices[(i * 6) + 4] = (unsigned short)((i * 4) + 3);
-        indices[(i * 6) + 5] = (unsigned short)((i * 4) + 0);
-    }
-
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned short) * ZFW_RENDER_BATCH_SLOT_ELEM_CNT * ZFW_RENDER_BATCH_SLOT_CNT, indices, GL_STATIC_DRAW);
-    free(indices);
-
-    const GLsizei stride = sizeof(float) * ZFW_RENDER_BATCH_SHADER_PROG_VERT_CNT;
-
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(float) * 0));
-    glEnableVertexAttribArray(0);
-
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(float) * 2));
-    glEnableVertexAttribArray(1);
-
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(float) * 4));
-    glEnableVertexAttribArray(2);
-
-    glVertexAttribPointer(3, 1, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(float) * 6));
-    glEnableVertexAttribArray(3);
-
-    glVertexAttribPointer(4, 2, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(float) * 7));
-    glEnableVertexAttribArray(4);
-
-    glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(float) * 9));
-    glEnableVertexAttribArray(5);
-
-    return gl_ids;
-}
-
 bool ZFWLoadTexturesFromFiles(zfw_s_textures* const textures, zfw_s_mem_arena* const mem_arena, const int tex_cnt, const zfw_t_texture_index_to_file_path tex_index_to_fp) {
-    assert(textures);
     assert(ZFW_IS_ZERO(*textures));
-    assert(mem_arena);
     assert(tex_cnt > 0);
-    assert(tex_index_to_fp);
 
     textures->gl_ids = ZFW_MEM_ARENA_PUSH_TYPE_MANY(mem_arena, zfw_t_gl_id, tex_cnt);
 
@@ -308,11 +300,8 @@ void ZFWUnloadTextures(zfw_s_textures* const textures) {
 }
 
 bool ZFWLoadFontsFromFiles(zfw_s_fonts* const fonts, zfw_s_mem_arena* const mem_arena, const int font_cnt, const t_font_index_to_load_info font_index_to_load_info, zfw_s_mem_arena* const temp_mem_arena) {
-    assert(fonts);
     assert(ZFW_IS_ZERO(*fonts));
-    assert(mem_arena);
     assert(font_cnt > 0);
-    assert(font_index_to_load_info);
 
     fonts->arrangement_infos = ZFW_MEM_ARENA_PUSH_TYPE_MANY(mem_arena, zfw_s_font_arrangement_info, font_cnt);
 
@@ -456,8 +445,6 @@ bool ZFWLoadFontsFromFiles(zfw_s_fonts* const fonts, zfw_s_mem_arena* const mem_
 }
 
 void ZFWUnloadFonts(zfw_s_fonts* const fonts) {
-    assert(fonts);
-
     if (fonts->cnt > 0 && fonts->tex_gl_ids) {
         glDeleteTextures(fonts->cnt, fonts->tex_gl_ids);
     }
@@ -466,12 +453,8 @@ void ZFWUnloadFonts(zfw_s_fonts* const fonts) {
 }
 
 bool ZFWLoadShaderProgsFromFiles(zfw_s_shader_progs* const progs, zfw_s_mem_arena* const mem_arena, const int prog_cnt, const zfw_t_shader_prog_index_to_file_paths prog_index_to_fps, zfw_s_mem_arena* const temp_mem_arena) {
-    assert(progs);
     assert(ZFW_IS_ZERO(*progs));
-    assert(mem_arena);
     assert(prog_cnt > 0);
-    assert(prog_index_to_fps);
-    assert(temp_mem_arena);
 
     progs->gl_ids = ZFW_MEM_ARENA_PUSH_TYPE_MANY(mem_arena, zfw_t_gl_id, prog_cnt);
 
@@ -495,8 +478,6 @@ bool ZFWLoadShaderProgsFromFiles(zfw_s_shader_progs* const progs, zfw_s_mem_aren
 }
 
 void ZFWUnloadShaderProgs(zfw_s_shader_progs* const progs) {
-    assert(progs);
-
     for (int i = 0; i < progs->cnt; i++) {
         glDeleteProgram(progs->gl_ids[i]);
     }
@@ -505,7 +486,6 @@ void ZFWUnloadShaderProgs(zfw_s_shader_progs* const progs) {
 }
 
 void ZFWBeginRendering(zfw_s_rendering_state* const state) {
-    assert(state);
     ZFW_ZERO_OUT(*state);
     ZFWInitIdenMatrix4x4(&state->view_mat);
 }
@@ -607,9 +587,6 @@ void ZFWRenderTexture(const zfw_s_rendering_context* const context, const int te
 }
 
 bool ZFWRenderStr(const zfw_s_rendering_context* const context, const char* const str, const int font_index, const zfw_s_fonts* const fonts, const zfw_s_vec_2d pos, const zfw_e_str_hor_align hor_align, const zfw_e_str_ver_align ver_align, const zfw_s_color blend, zfw_s_mem_arena* const temp_mem_arena) {
-    assert(context);
-    assert(str);
-    assert(fonts);
     assert(ZFWIsColorValid(blend));
 
     if (!str[0]) {
@@ -724,7 +701,6 @@ void ZFWRenderBarHor(const zfw_s_rendering_context* const context, const zfw_s_r
 }
 
 void ZFWSetSurface(const zfw_s_rendering_context* const rendering_context, const int surf_index) {
-    assert(rendering_context);
     assert(ZFWHasFlushed(rendering_context->state));
 
     zfw_s_rendering_state* const rs = rendering_context->state;
@@ -741,8 +717,6 @@ void ZFWSetSurface(const zfw_s_rendering_context* const rendering_context, const
 }
 
 void ZFWUnsetSurface(const zfw_s_rendering_context* const rendering_context) {
-    assert(rendering_context);
-
     zfw_s_rendering_state* const rs = rendering_context->state;
 
     assert(ZFWHasFlushed(rs));
@@ -815,8 +789,6 @@ void ZFWRenderSurface(const zfw_s_rendering_context* const rendering_context, co
 }
 
 void ZFWFlush(const zfw_s_rendering_context* const context) {
-    assert(context);
-
     if (ZFWHasFlushed(context->state)) {
         return;
     }
@@ -868,7 +840,7 @@ static bool AttachFramebufferTexture(const zfw_t_gl_id fb_gl_id, const zfw_t_gl_
 }
 
 bool ZFWInitRenderSurfaces(zfw_s_render_surfaces* const surfs, const zfw_s_vec_2d_i size) {
-    assert(surfs && ZFW_IS_ZERO(*surfs));
+    assert(ZFW_IS_ZERO(*surfs));
     assert(size.x > 0 && size.y > 0);
 
     surfs->size = size;
@@ -908,7 +880,6 @@ bool ZFWResizeRenderSurfaces(zfw_s_render_surfaces* const surfs, const zfw_s_vec
 }
 
 static void ApplyHorAlignOffsToLine(zfw_s_vec_2d* const line_chr_positions, const int cnt, const zfw_e_str_hor_align hor_align, const float line_end_x) {
-    assert(line_chr_positions);
     assert(cnt > 0);
 
     const float line_width = line_end_x - line_chr_positions[0].x;
@@ -920,10 +891,7 @@ static void ApplyHorAlignOffsToLine(zfw_s_vec_2d* const line_chr_positions, cons
 }
 
 const zfw_s_vec_2d* ZFWPushStrChrPositions(const char* const str, zfw_s_mem_arena* const mem_arena, const int font_index, const zfw_s_fonts* const fonts, const zfw_s_vec_2d pos, const zfw_e_str_hor_align hor_align, const zfw_e_str_ver_align ver_align) {
-    assert(str);
-    assert(mem_arena);
     assert(font_index >= 0 && font_index < fonts->cnt);
-    assert(fonts);
 
     const int str_len = (int)strlen(str);
     assert(str_len > 0);
@@ -989,9 +957,7 @@ const zfw_s_vec_2d* ZFWPushStrChrPositions(const char* const str, zfw_s_mem_aren
 }
 
 bool ZFWLoadStrCollider(zfw_s_rect* const rect, const char* const str, const int font_index, const zfw_s_fonts* const fonts, const zfw_s_vec_2d pos, const zfw_e_str_hor_align hor_align, const zfw_e_str_ver_align ver_align, zfw_s_mem_arena* const temp_mem_arena) {
-    assert(rect);
-    assert(str);
-    assert(fonts);
+    assert(ZFW_IS_ZERO(*rect));
 
     const int str_len = strlen(str);
     assert(str_len > 0);

@@ -211,11 +211,8 @@ static inline zfw_s_color_rgb ZFWToColorRGB(const zfw_s_color col) {
     return (zfw_s_color_rgb){col.r, col.g, col.b};
 }
 
-bool ZFWInitPersRenderData(zfw_s_pers_render_data* const render_data, const zfw_s_vec_2d_i display_size);
+bool ZFWInitPersRenderData(zfw_s_pers_render_data* const render_data, const zfw_s_vec_2d_i display_size, zfw_s_mem_arena* const temp_mem_arena);
 void ZFWCleanPersRenderData(zfw_s_pers_render_data* const render_data);
-
-zfw_s_render_batch_shader_prog ZFWLoadRenderBatchShaderProg();
-zfw_s_render_batch_gl_ids ZFWGenRenderBatch();
 
 bool ZFWLoadTexturesFromFiles(zfw_s_textures* const textures, zfw_s_mem_arena* const mem_arena, const int tex_cnt, const zfw_t_texture_index_to_file_path tex_index_to_fp);
 void ZFWUnloadTextures(zfw_s_textures* const textures);

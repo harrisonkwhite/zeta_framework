@@ -15,8 +15,12 @@
 
 #define ZFW_STATIC_ARRAY_LEN(x) (sizeof(x) / sizeof((x)[0]))
 
-#define ZFW_BITS_TO_BYTES(x) ((x + 7) & ~7)
+#define ZFW_CHECK_STATIC_ARRAY_LEN(a, l) static_assert(ZFW_STATIC_ARRAY_LEN(a) == (l), "Invalid array length!")
+
+#define ZFW_BITS_TO_BYTES(x) (((x) + 7) / 8)
 #define ZFW_BYTES_TO_BITS(x) (x * 8)
+
+#define ZFW_SIZE_IN_BITS(x) ZFW_BYTES_TO_BITS(sizeof(x))
 
 typedef uint8_t zfw_t_byte;
 

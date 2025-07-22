@@ -93,7 +93,7 @@ typedef enum {
     zfw_eks_key_code_cnt
 } zfw_e_key_code;
 
-static_assert(zfw_eks_key_code_cnt < ZFW_BYTES_TO_BITS(sizeof(zfw_t_keys_down_bits)), "Too many key codes!");
+static_assert(zfw_eks_key_code_cnt < ZFW_SIZE_IN_BITS(zfw_t_keys_down_bits), "Too many key codes!");
 
 typedef enum {
     zfw_ek_mouse_button_code_left,
@@ -103,7 +103,7 @@ typedef enum {
     zfw_eks_mouse_button_code_cnt
 } zfw_e_mouse_button_code;
 
-static_assert(zfw_eks_mouse_button_code_cnt < ZFW_BYTES_TO_BITS(sizeof(zfw_t_mouse_buttons_down_bits)), "Too many mouse button codes!");
+static_assert(zfw_eks_mouse_button_code_cnt < ZFW_SIZE_IN_BITS(zfw_t_mouse_buttons_down_bits), "Too many mouse button codes!");
 
 typedef struct {
     zfw_t_keys_down_bits keys_down;
@@ -127,7 +127,7 @@ typedef struct {
 } zfw_s_game_init_func_data;
 
 typedef enum {
-    ek_game_tick_func_result_default,
+    ek_game_tick_func_result_default, // Continue running the game as normal.
     ek_game_tick_func_result_exit,
     ek_game_tick_func_result_error
 } zfw_e_game_tick_func_result;
@@ -147,9 +147,8 @@ typedef struct {
     void* user_mem;
     zfw_s_mem_arena* perm_mem_arena;
     zfw_s_mem_arena* temp_mem_arena;
+    zfw_s_vec_2d mouse_pos;
     zfw_s_rendering_context rendering_context;
-    const zfw_s_input_state* input_state;
-    const zfw_s_input_state* input_state_last;
 } zfw_s_game_render_func_data;
 
 typedef struct {
@@ -167,7 +166,7 @@ typedef struct {
     void (*clean_func)(void* const user_mem); // Called when the game ends (including if it ends in error). This is not called if the initialisation function failed or was not yet called.
 } zfw_s_game_info;
 
-bool ZFWRunGame(const zfw_s_game_info* info);
+bool ZFWRunGame(const zfw_s_game_info* const info);
 
 static inline bool ZFWIsKeyDown(const zfw_e_key_code kc, const zfw_s_input_state* const input_state) {
     return (input_state->keys_down & (1ULL << kc)) != 0;
