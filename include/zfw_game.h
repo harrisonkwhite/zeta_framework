@@ -152,8 +152,8 @@ typedef struct {
 } zfw_s_game_render_func_data;
 
 typedef struct {
-    int user_mem_size; // How much memory should be allocated in the permanent arena for your use? This might be the size of a specific struct, for example.
-    int user_mem_alignment; // The alignment of the above memory.
+    size_t user_mem_size; // How much memory should be allocated in the permanent arena for your use? This might be the size of a specific struct, for example.
+    size_t user_mem_alignment; // The alignment of the above memory.
 
     zfw_s_vec_2d_i window_init_size;
     const char* window_title;
@@ -169,7 +169,7 @@ typedef struct {
 bool ZFWRunGame(const zfw_s_game_info* const info);
 
 static inline bool ZFWIsKeyDown(const zfw_e_key_code kc, const zfw_s_input_state* const input_state) {
-    return (input_state->keys_down & (1ULL << kc)) != 0;
+    return (input_state->keys_down & ((zfw_t_keys_down_bits)1 << kc)) != 0;
 }
 
 static inline bool ZFWIsKeyPressed(const zfw_e_key_code kc, const zfw_s_input_state* const input_state, const zfw_s_input_state* const input_state_last) {
@@ -181,7 +181,7 @@ static inline bool ZFWIsKeyReleased(const zfw_e_key_code kc, const zfw_s_input_s
 }
 
 static inline bool ZFWIsMouseButtonDown(const zfw_e_mouse_button_code mbc, const zfw_s_input_state* const input_state) {
-    return (input_state->mouse_buttons_down & (1U << mbc)) != 0;
+    return (input_state->mouse_buttons_down & ((zfw_t_mouse_buttons_down_bits)1 << mbc)) != 0;
 }
 
 static inline bool ZFWIsMouseButtonPressed(const zfw_e_mouse_button_code mbc, const zfw_s_input_state* const input_state, const zfw_s_input_state* const input_state_last) {

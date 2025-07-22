@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include "zfw_utils.h"
 
-bool ZFWIsZero(const void* const mem, const int size) {
+bool ZFWIsZero(const void* const mem, const size_t size) {
     assert(mem);
     assert(size > 0);
 
@@ -17,7 +17,10 @@ bool ZFWIsZero(const void* const mem, const int size) {
     return true;
 }
 
-bool ZFWIsNullTerminated(const char* const buf, const int buf_size) {
+bool ZFWIsNullTerminated(const char* const buf, const size_t buf_size) {
+    assert(buf);
+    assert(buf_size > 0);
+
     for (int i = 0; i < buf_size; i++) {
         if (buf[i] == '\0') {
             return true;
@@ -27,9 +30,8 @@ bool ZFWIsNullTerminated(const char* const buf, const int buf_size) {
     return false;
 }
 
-bool ZFWInitMemArena(zfw_s_mem_arena* const arena, const int size) {
-    assert(arena);
-    assert(ZFW_IS_ZERO(*arena));
+bool ZFWInitMemArena(zfw_s_mem_arena* const arena, const size_t size) {
+    assert(arena && ZFW_IS_ZERO(*arena));
     assert(size > 0);
 
     arena->buf = malloc(size);
@@ -46,24 +48,18 @@ bool ZFWInitMemArena(zfw_s_mem_arena* const arena, const int size) {
 }
 
 void ZFWCleanMemArena(zfw_s_mem_arena* const arena) {
-    assert(arena);
-    ZFWAssertMemArenaValidity(arena);
-
-    if (arena->buf) {
-        free(arena->buf);
-    }
-
+    assert(arena && ZFWIsMemArenaValid(arena));
+    free(arena->buf);
     ZFW_ZERO_OUT(*arena);
 }
 
-void* ZFWPushToMemArena(zfw_s_mem_arena* const arena, const int size, const int alignment) {
-    assert(arena);
-    assert(ZFWIsMemArenaValid(arena));
+void* ZFWPushToMemArena(zfw_s_mem_arena* const arena, const size_t size, const size_t alignment) {
+    assert(arena && ZFWIsMemArenaValid(arena));
     assert(size > 0);
     assert(ZFWIsValidAlignment(alignment));
 
-    const int offs_aligned = ZFWAlignForward(arena->offs, alignment);
-    const int offs_next = offs_aligned + size;
+    const size_t offs_aligned = ZFWAlignForward(arena->offs, alignment);
+    const size_t offs_next = offs_aligned + size;
 
     if (offs_next > arena->size) {
         fprintf(stderr, "Failed to push to memory arena!");
@@ -75,24 +71,13 @@ void* ZFWPushToMemArena(zfw_s_mem_arena* const arena, const int size, const int 
     return arena->buf + offs_aligned;
 }
 
-void ZFWResetMemArena(zfw_s_mem_arena* const arena) {
-    assert(arena);
-    ZFWAssertMemArenaValidity(arena);
-    assert(!ZFW_IS_ZERO(*arena));
+void ZFWRewindMemArena(zfw_s_mem_arena* const arena, const size_t rewind_offs) {
+    assert(arena && ZFWIsMemArenaValid(arena));
+    assert(rewind_offs <= arena->offs);
 
-    if (arena->offs > 0) {
-        ZFWZeroOut(arena->buf, arena->offs);
-        arena->offs = 0;
-    }
-}
-
-void ZFWAssertMemArenaValidity(const zfw_s_mem_arena* const arena) {
-    assert(arena);
-
-    if (!ZFW_IS_ZERO(*arena)) {
-        assert(arena->buf);
-        assert(arena->size > 0);
-        assert(arena->offs >= 0 && arena->offs <= arena->size);
+    if (rewind_offs != arena->offs) {
+        ZFWZeroOut(arena->buf + rewind_offs, arena->offs - rewind_offs);
+        arena->offs = rewind_offs;
     }
 }
 
@@ -177,7 +162,7 @@ bool ZFWDoesFilenameHaveExt(const char* const filename, const char* const ext) {
     return strcmp(ext_actual, ext) == 0;
 }
 
-zfw_t_byte* ZFWPushEntireFileContents(const char* const file_path, zfw_s_mem_arena* const mem_arena, const bool incl_term_byte) {
+zfw_t_byte* ZFWPushEntireFileContents(const char* const file_path, zfw_s_mem_arena* const mem_arena, const bool incl_terminating_byte) {
     assert(file_path);
     assert(mem_arena);
     assert(ZFWIsMemArenaValid(mem_arena));
@@ -190,16 +175,16 @@ zfw_t_byte* ZFWPushEntireFileContents(const char* const file_path, zfw_s_mem_are
     }
 
     fseek(fs, 0, SEEK_END);
-    const int file_size = ftell(fs);
+    const size_t file_size = ftell(fs);
     fseek(fs, 0, SEEK_SET);
 
-    zfw_t_byte* const contents = ZFW_MEM_ARENA_PUSH_TYPE_MANY(mem_arena, zfw_t_byte, incl_term_byte ? (file_size + 1) : file_size);
+    zfw_t_byte* const contents = ZFW_MEM_ARENA_PUSH_TYPE_MANY(mem_arena, zfw_t_byte, incl_terminating_byte ? (file_size + 1) : file_size);
 
     if (!contents) {
         return NULL;
     }
 
-    const int read_cnt = fread(contents, 1, file_size, fs);
+    const size_t read_cnt = fread(contents, 1, file_size, fs);
     
     if (read_cnt != file_size) {
         fprintf(stderr, "Failed to read the contents of \"%s\"!\n", file_path);

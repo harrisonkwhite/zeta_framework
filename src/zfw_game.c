@@ -3,11 +3,11 @@
 #include "zfw_game.h"
 #include "zfw_random.h"
 
-#define PERM_MEM_ARENA_SIZE ((1 << 20) * 80)
-#define TEMP_MEM_ARENA_SIZE ((1 << 20) * 40)
+#define PERM_MEM_ARENA_SIZE ZFW_MEGABYTES(80)
+#define TEMP_MEM_ARENA_SIZE ZFW_MEGABYTES(40)
 
 #define TARG_TICKS_PER_SEC 60
-#define TARG_TICK_INTERVAL (1.0 / TARG_TICKS_PER_SEC)
+#define TARG_TICK_INTERVAL (1.0 / (TARG_TICKS_PER_SEC))
 
 #define GL_VERSION_MAJOR 4
 #define GL_VERSION_MINOR 3
@@ -349,8 +349,6 @@ bool ZFWRunGame(const zfw_s_game_info* const info) {
     //
     glfwShowWindow(glfw_window);
 
-    ZFWResetMemArena(&temp_mem_arena);
-
     zfw_s_input_state input_state = {0};
 
     double frame_time_last = glfwGetTime();
@@ -359,6 +357,8 @@ bool ZFWRunGame(const zfw_s_game_info* const info) {
     printf("Entering the main loop...\n");
 
     while (!glfwWindowShouldClose(glfw_window)) {
+        ZFWRewindMemArena(&temp_mem_arena, 0);
+
         const zfw_s_window_state window_state = WindowState(glfw_window);
 
         ResizeGLViewportIfDifferent(window_state.size);
@@ -447,8 +447,6 @@ bool ZFWRunGame(const zfw_s_game_info* const info) {
         }
 
         glfwPollEvents();
-
-        ZFWResetMemArena(&temp_mem_arena);
     }
 
     info->clean_func(user_mem);
