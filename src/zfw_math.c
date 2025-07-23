@@ -10,7 +10,7 @@ const zfw_s_vec_2d zfw_g_cardinal_dir_vecs[] = {
     [zfw_ek_cardinal_dir_up] = {0.0f, -1.0f}
 };
 
-zfw_s_rect ZFWGenSpanningRect(const zfw_s_rect* const rects, const int cnt) {
+zfw_s_rect ZFW_GenSpanningRect(const zfw_s_rect* const rects, const int cnt) {
     assert(cnt > 0);
 
     zfw_s_rect_edges span = {
@@ -43,7 +43,7 @@ zfw_s_rect ZFWGenSpanningRect(const zfw_s_rect* const rects, const int cnt) {
     return (zfw_s_rect){span.left, span.top, span.right - span.left, span.bottom - span.top};
 }
 
-void ZFWInitIdenMatrix4x4(zfw_t_matrix_4x4* const mat) {
+void ZFW_InitIdenMatrix4x4(zfw_t_matrix_4x4* const mat) {
     assert(ZFW_IS_ZERO(*mat));
 
     (*mat)[0][0] = 1.0f;
@@ -52,18 +52,18 @@ void ZFWInitIdenMatrix4x4(zfw_t_matrix_4x4* const mat) {
     (*mat)[3][3] = 1.0f;
 }
 
-void ZFWTranslateMatrix4x4(zfw_t_matrix_4x4* const mat, const zfw_s_vec_2d trans) {
+void ZFW_TranslateMatrix4x4(zfw_t_matrix_4x4* const mat, const zfw_s_vec_2d trans) {
     (*mat)[3][0] += trans.x;
     (*mat)[3][1] += trans.y;
 }
 
-void ZFWScaleMatrix4x4(zfw_t_matrix_4x4* const mat, const float scalar) {
+void ZFW_ScaleMatrix4x4(zfw_t_matrix_4x4* const mat, const float scalar) {
     (*mat)[0][0] *= scalar;
     (*mat)[1][1] *= scalar;
     (*mat)[2][2] *= scalar;
 }
 
-void ZFWInitOrthoMatrix4x4(zfw_t_matrix_4x4* const mat, const float left, const float right, const float bottom, const float top, const float near, const float far) {
+void ZFW_InitOrthoMatrix4x4(zfw_t_matrix_4x4* const mat, const float left, const float right, const float bottom, const float top, const float near, const float far) {
     assert(ZFW_IS_ZERO(*mat));
     assert(right > left);
     assert(top < bottom);
@@ -86,7 +86,7 @@ static zfw_s_range_f ProjectPts(const zfw_s_vec_2d* const pts, const int cnt, co
     };
     
     for (int i = 0; i < cnt; ++i) {
-        const float dot = ZFWDot(pts[i], edge);
+        const float dot = ZFW_Dot(pts[i], edge);
         
         if (dot < range.min) {
             range.min = dot;
@@ -101,8 +101,8 @@ static zfw_s_range_f ProjectPts(const zfw_s_vec_2d* const pts, const int cnt, co
 }
 
 static bool CheckPolySep(const zfw_s_poly poly, const zfw_s_poly other) {
-    assert(ZFWIsPolySet(poly));
-    assert(ZFWIsPolySet(other));
+    assert(ZFW_IsPolySet(poly));
+    assert(ZFW_IsPolySet(other));
 
     for (int i = 0; i < poly.cnt; ++i) {
         const zfw_s_vec_2d a = poly.pts[i];
@@ -121,7 +121,7 @@ static bool CheckPolySep(const zfw_s_poly poly, const zfw_s_poly other) {
     return true;
 }
 
-bool ZFWPushQuadPoly(zfw_s_poly* const poly, zfw_s_mem_arena* const mem_arena, const zfw_s_vec_2d pos, const zfw_s_vec_2d size, const zfw_s_vec_2d origin) {
+bool ZFW_PushQuadPoly(zfw_s_poly* const poly, zfw_s_mem_arena* const mem_arena, const zfw_s_vec_2d pos, const zfw_s_vec_2d size, const zfw_s_vec_2d origin) {
     assert(ZFW_IS_ZERO(*poly));
     assert(size.x > 0.0f && size.y > 0.0f);
     assert(origin.x >= 0.0f && origin.y >= 0.0f && origin.x <= 1.0f && origin.y <= 1.0f);
@@ -143,7 +143,7 @@ bool ZFWPushQuadPoly(zfw_s_poly* const poly, zfw_s_mem_arena* const mem_arena, c
     return true;
 }
 
-bool ZFWPushQuadPolyRotated(zfw_s_poly* const poly, zfw_s_mem_arena* const mem_arena, const zfw_s_vec_2d pos, const zfw_s_vec_2d size, const zfw_s_vec_2d origin, const float rot) {
+bool ZFW_PushQuadPolyRotated(zfw_s_poly* const poly, zfw_s_mem_arena* const mem_arena, const zfw_s_vec_2d pos, const zfw_s_vec_2d size, const zfw_s_vec_2d origin, const float rot) {
     assert(ZFW_IS_ZERO(*poly));
     assert(size.x > 0.0f && size.y > 0.0f);
     assert(origin.x >= 0.0f && origin.y >= 0.0f && origin.x <= 1.0f && origin.y <= 1.0f);
@@ -156,10 +156,10 @@ bool ZFWPushQuadPolyRotated(zfw_s_poly* const poly, zfw_s_mem_arena* const mem_a
 
     poly->cnt = 4;
 
-    const zfw_s_vec_2d left_offs  = ZFWLenDir(size.x * origin.x, rot + ZFW_PI);
-    const zfw_s_vec_2d up_offs = ZFWLenDir(size.y * origin.y, rot + ZFW_PI * 0.5f);
-    const zfw_s_vec_2d right_offs = ZFWLenDir(size.x * (1.0f - origin.x), rot);
-    const zfw_s_vec_2d down_offs = ZFWLenDir(size.y * (1.0f - origin.y), rot - ZFW_PI * 0.5f);
+    const zfw_s_vec_2d left_offs  = ZFW_LenDir(size.x * origin.x, rot + ZFW_PI);
+    const zfw_s_vec_2d up_offs = ZFW_LenDir(size.y * origin.y, rot + ZFW_PI * 0.5f);
+    const zfw_s_vec_2d right_offs = ZFW_LenDir(size.x * (1.0f - origin.x), rot);
+    const zfw_s_vec_2d down_offs = ZFW_LenDir(size.y * (1.0f - origin.y), rot - ZFW_PI * 0.5f);
 
     poly->pts[0] = (zfw_s_vec_2d){pos.x + left_offs.x + up_offs.x, pos.y + left_offs.y + up_offs.y};
     poly->pts[1] = (zfw_s_vec_2d){pos.x + right_offs.x + up_offs.x, pos.y + right_offs.y + up_offs.y};
@@ -169,14 +169,14 @@ bool ZFWPushQuadPolyRotated(zfw_s_poly* const poly, zfw_s_mem_arena* const mem_a
     return true;
 }
 
-bool ZFWDoPolysInters(const zfw_s_poly a, const zfw_s_poly b) {
-    assert(ZFWIsPolySet(a));
-    assert(ZFWIsPolySet(b));
+bool ZFW_DoPolysInters(const zfw_s_poly a, const zfw_s_poly b) {
+    assert(ZFW_IsPolySet(a));
+    assert(ZFW_IsPolySet(b));
 
     return CheckPolySep(a, b) && CheckPolySep(b, a);
 }
 
-bool ZFWDoesPolyIntersWithRect(const zfw_s_poly poly, const zfw_s_rect rect) {
+bool ZFW_DoesPolyIntersWithRect(const zfw_s_poly poly, const zfw_s_rect rect) {
     const zfw_s_vec_2d pts[4] = {
         {rect.x, rect.y},
         {rect.x + rect.width, rect.y},
@@ -189,11 +189,11 @@ bool ZFWDoesPolyIntersWithRect(const zfw_s_poly poly, const zfw_s_rect rect) {
         .cnt = 4
     };
 
-    return ZFWDoPolysInters(poly, rect_poly);
+    return ZFW_DoPolysInters(poly, rect_poly);
 }
 
 zfw_s_rect_edges PolySpan(const zfw_s_poly poly) {
-    assert(ZFWIsPolySet(poly));
+    assert(ZFW_IsPolySet(poly));
 
     zfw_s_rect_edges span = {
         .left = FLT_MAX,

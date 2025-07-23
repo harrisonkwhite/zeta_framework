@@ -3,19 +3,19 @@
 
 #include <assert.h>
 
-void ZFWInitRNG();
-float ZFWRandPerc();
-float ZFWRandPercIncl();
-int ZFWRandRangeI(const int beg, const int end);
+void ZFW_InitRNG();
+float ZFW_RandPerc();
+float ZFW_RandPercIncl();
+int ZFW_RandRangeI(const int beg, const int end);
 
-static inline float ZFWRandRange(const float beg, const float end) {
+static inline float ZFW_RandRange(const float beg, const float end) {
     assert(beg <= end);
-    return beg + ((end - beg) * ZFWRandPerc());
+    return beg + ((end - beg) * ZFW_RandPerc());
 }
 
-static inline float ZFWRandRangeIncl(const float beg, const float end_incl) {
+static inline float ZFW_RandRangeIncl(const float beg, const float end_incl) {
     assert(beg <= end_incl);
-    return beg + ((end_incl - beg) * ZFWRandPercIncl());
+    return beg + ((end_incl - beg) * ZFW_RandPercIncl());
 }
 
 #endif

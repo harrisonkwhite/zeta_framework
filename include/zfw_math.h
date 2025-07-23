@@ -90,76 +90,76 @@ typedef struct {
 
 extern const zfw_s_vec_2d zfw_g_cardinal_dir_vecs[];
 
-zfw_s_rect ZFWGenSpanningRect(const zfw_s_rect* const rects, const int cnt);
+zfw_s_rect ZFW_GenSpanningRect(const zfw_s_rect* const rects, const int cnt);
 
-void ZFWInitIdenMatrix4x4(zfw_t_matrix_4x4* const mat);
-void ZFWTranslateMatrix4x4(zfw_t_matrix_4x4* const mat, const zfw_s_vec_2d trans);
-void ZFWScaleMatrix4x4(zfw_t_matrix_4x4* const mat, const float scalar);
-void ZFWInitOrthoMatrix4x4(zfw_t_matrix_4x4* const mat, const float left, const float right, const float bottom, const float top, const float near, const float far);
+void ZFW_InitIdenMatrix4x4(zfw_t_matrix_4x4* const mat);
+void ZFW_TranslateMatrix4x4(zfw_t_matrix_4x4* const mat, const zfw_s_vec_2d trans);
+void ZFW_ScaleMatrix4x4(zfw_t_matrix_4x4* const mat, const float scalar);
+void ZFW_InitOrthoMatrix4x4(zfw_t_matrix_4x4* const mat, const float left, const float right, const float bottom, const float top, const float near, const float far);
 
-bool ZFWPushQuadPoly(zfw_s_poly* const poly, zfw_s_mem_arena* const mem_arena, const zfw_s_vec_2d pos, const zfw_s_vec_2d size, const zfw_s_vec_2d origin);
-bool ZFWPushQuadPolyRotated(zfw_s_poly* const poly, zfw_s_mem_arena* const mem_arena, const zfw_s_vec_2d pos, const zfw_s_vec_2d size, const zfw_s_vec_2d origin, const float rot);
-bool ZFWDoPolysInters(const zfw_s_poly a, const zfw_s_poly b);
-bool ZFWDoesPolyIntersWithRect(const zfw_s_poly poly, const zfw_s_rect rect);
+bool ZFW_PushQuadPoly(zfw_s_poly* const poly, zfw_s_mem_arena* const mem_arena, const zfw_s_vec_2d pos, const zfw_s_vec_2d size, const zfw_s_vec_2d origin);
+bool ZFW_PushQuadPolyRotated(zfw_s_poly* const poly, zfw_s_mem_arena* const mem_arena, const zfw_s_vec_2d pos, const zfw_s_vec_2d size, const zfw_s_vec_2d origin, const float rot);
+bool ZFW_DoPolysInters(const zfw_s_poly a, const zfw_s_poly b);
+bool ZFW_DoesPolyIntersWithRect(const zfw_s_poly poly, const zfw_s_rect rect);
 zfw_s_rect_edges PolySpan(const zfw_s_poly poly);
 
-static inline int ZFWIndexFrom2D(const zfw_s_vec_2d_i pos, const int width) {
+static inline int ZFW_IndexFrom2D(const zfw_s_vec_2d_i pos, const int width) {
     assert(pos.x >= 0 && pos.x < width && pos.y >= 0);
     return (width * pos.y) + pos.x;
 }
 
-static inline float ZFWLerp(const float a, const float b, const float t) {
+static inline float ZFW_Lerp(const float a, const float b, const float t) {
     assert(t >= 0.0f && t <= 1.0f);
     return a + ((b - a) * t);
 }
 
-static inline zfw_s_vec_2d ZFWLerpVec2D(const zfw_s_vec_2d a, const zfw_s_vec_2d b, const float t) {
+static inline zfw_s_vec_2d ZFW_LerpVec2D(const zfw_s_vec_2d a, const zfw_s_vec_2d b, const float t) {
     assert(t >= 0.0f && t <= 1.0f);
-    return (zfw_s_vec_2d){ZFWLerp(a.x, b.x, t), ZFWLerp(a.y, b.y, t)};
+    return (zfw_s_vec_2d){ZFW_Lerp(a.x, b.x, t), ZFW_Lerp(a.y, b.y, t)};
 }
 
-static inline zfw_s_vec_2d ZFWVec2DSum(const zfw_s_vec_2d a, const zfw_s_vec_2d b) {
+static inline zfw_s_vec_2d ZFW_Vec2DSum(const zfw_s_vec_2d a, const zfw_s_vec_2d b) {
     return (zfw_s_vec_2d){a.x + b.x, a.y + b.y};
 }
 
-static inline zfw_s_vec_2d_i ZFWVec2DISum(const zfw_s_vec_2d_i a, const zfw_s_vec_2d_i b) {
+static inline zfw_s_vec_2d_i ZFW_Vec2DISum(const zfw_s_vec_2d_i a, const zfw_s_vec_2d_i b) {
     return (zfw_s_vec_2d_i){a.x + b.x, a.y + b.y};
 }
 
-static inline zfw_s_vec_2d ZFWVec2DDiff(const zfw_s_vec_2d a, const zfw_s_vec_2d b) {
+static inline zfw_s_vec_2d ZFW_Vec2DDiff(const zfw_s_vec_2d a, const zfw_s_vec_2d b) {
     return (zfw_s_vec_2d){a.x - b.x, a.y - b.y};
 }
 
-static inline zfw_s_vec_2d_i ZFWVec2DIDiff(const zfw_s_vec_2d_i a, const zfw_s_vec_2d_i b) {
+static inline zfw_s_vec_2d_i ZFW_Vec2DIDiff(const zfw_s_vec_2d_i a, const zfw_s_vec_2d_i b) {
     return (zfw_s_vec_2d_i){a.x - b.x, a.y - b.y};
 }
 
-static inline zfw_s_vec_2d ZFWVec2DScaled(const zfw_s_vec_2d vec, const float scalar) {
+static inline zfw_s_vec_2d ZFW_Vec2DScaled(const zfw_s_vec_2d vec, const float scalar) {
     return (zfw_s_vec_2d){vec.x * scalar, vec.y * scalar};
 }
 
-static inline zfw_s_vec_2d_i ZFWVec2DIScaled(const zfw_s_vec_2d_i vec, const float scalar) {
+static inline zfw_s_vec_2d_i ZFW_Vec2DIScaled(const zfw_s_vec_2d_i vec, const float scalar) {
     return (zfw_s_vec_2d_i){vec.x * scalar, vec.y * scalar};
 }
 
-static inline bool ZFWVec2DsEqual(const zfw_s_vec_2d a, const zfw_s_vec_2d b) {
+static inline bool ZFW_Vec2DsEqual(const zfw_s_vec_2d a, const zfw_s_vec_2d b) {
     return a.x == b.x && a.y == b.y;
 }
 
-static inline bool ZFWVec2DIsEqual(const zfw_s_vec_2d_i a, const zfw_s_vec_2d_i b) {
+static inline bool ZFW_Vec2DIsEqual(const zfw_s_vec_2d_i a, const zfw_s_vec_2d_i b) {
     return a.x == b.x && a.y == b.y;
 }
 
-static inline float ZFWMag(const zfw_s_vec_2d vec) {
+static inline float ZFW_Mag(const zfw_s_vec_2d vec) {
     return sqrtf(vec.x * vec.x + vec.y * vec.y);
 }
 
-static inline float ZFWDot(const zfw_s_vec_2d a, const zfw_s_vec_2d b) {
+static inline float ZFW_Dot(const zfw_s_vec_2d a, const zfw_s_vec_2d b) {
     return a.x * b.x + a.y * b.y;
 }
 
-static inline zfw_s_vec_2d ZFWNormalOrZero(const zfw_s_vec_2d vec) {
-    const float mag = ZFWMag(vec);
+static inline zfw_s_vec_2d ZFW_NormalOrZero(const zfw_s_vec_2d vec) {
+    const float mag = ZFW_Mag(vec);
 
     if (mag == 0.0f) {
         return (zfw_s_vec_2d){0};
@@ -168,128 +168,128 @@ static inline zfw_s_vec_2d ZFWNormalOrZero(const zfw_s_vec_2d vec) {
     return (zfw_s_vec_2d){vec.x / mag, vec.y / mag};
 }
 
-static inline zfw_s_vec_2d ZFWVec2DDir(const zfw_s_vec_2d a, const zfw_s_vec_2d b) {
-    return ZFWNormalOrZero(ZFWVec2DDiff(b, a));
+static inline zfw_s_vec_2d ZFW_Vec2DDir(const zfw_s_vec_2d a, const zfw_s_vec_2d b) {
+    return ZFW_NormalOrZero(ZFW_Vec2DDiff(b, a));
 }
 
-static inline float ZFWDist(const zfw_s_vec_2d a, const zfw_s_vec_2d b) {
+static inline float ZFW_Dist(const zfw_s_vec_2d a, const zfw_s_vec_2d b) {
     zfw_s_vec_2d d = {a.x - b.x, a.y - b.y};
-    return ZFWMag(d);
+    return ZFW_Mag(d);
 }
 
-static inline float ZFWDir(const zfw_s_vec_2d vec) {
+static inline float ZFW_Dir(const zfw_s_vec_2d vec) {
     return atan2f(-vec.y, vec.x);
 }
 
-static inline float ZFWDirFrom(const zfw_s_vec_2d src, const zfw_s_vec_2d dest) {
-    return ZFWDir(ZFWVec2DDiff(dest, src));
+static inline float ZFW_DirFrom(const zfw_s_vec_2d src, const zfw_s_vec_2d dest) {
+    return ZFW_Dir(ZFW_Vec2DDiff(dest, src));
 }
 
-static inline zfw_s_vec_2d ZFWLenDir(float len, float dir) {
+static inline zfw_s_vec_2d ZFW_LenDir(float len, float dir) {
     return (zfw_s_vec_2d){cosf(dir)* len, -sinf(dir) * len};
 }
 
-static inline zfw_s_vec_2d ZFWRectPos(const zfw_s_rect rect) {
+static inline zfw_s_vec_2d ZFW_RectPos(const zfw_s_rect rect) {
     return (zfw_s_vec_2d){rect.x, rect.y};
 }
 
-static inline zfw_s_vec_2d_i ZFWRectIPos(const zfw_s_rect_i rect) {
+static inline zfw_s_vec_2d_i ZFW_RectIPos(const zfw_s_rect_i rect) {
     return (zfw_s_vec_2d_i){rect.x, rect.y};
 }
 
-static inline zfw_s_vec_2d ZFWRectSize(const zfw_s_rect rect) {
+static inline zfw_s_vec_2d ZFW_RectSize(const zfw_s_rect rect) {
     return (zfw_s_vec_2d){rect.width, rect.height};
 }
 
-static inline zfw_s_vec_2d_i ZFWRectISize(const zfw_s_rect_i rect) {
+static inline zfw_s_vec_2d_i ZFW_RectISize(const zfw_s_rect_i rect) {
     return (zfw_s_vec_2d_i){rect.width, rect.height};
 }
 
-static inline float ZFWRectRight(const zfw_s_rect rect) {
+static inline float ZFW_RectRight(const zfw_s_rect rect) {
     return rect.x + rect.width;
 }
 
-static inline int ZFWRectIRight(const zfw_s_rect_i rect) {
+static inline int ZFW_RectIRight(const zfw_s_rect_i rect) {
     return rect.x + rect.width;
 }
 
-static inline float ZFWRectBottom(const zfw_s_rect rect) {
+static inline float ZFW_RectBottom(const zfw_s_rect rect) {
     return rect.y + rect.height;
 }
 
-static inline int ZFWRectIBottom(const zfw_s_rect_i rect) {
+static inline int ZFW_RectIBottom(const zfw_s_rect_i rect) {
     return rect.y + rect.height;
 }
 
-static inline zfw_s_vec_2d ZFWRectTopCenter(const zfw_s_rect rect) {
+static inline zfw_s_vec_2d ZFW_RectTopCenter(const zfw_s_rect rect) {
     return (zfw_s_vec_2d){rect.x + rect.width * 0.5f, rect.y};
 }
 
-static inline zfw_s_vec_2d_i ZFWRectITopCenter(const zfw_s_rect_i rect) {
+static inline zfw_s_vec_2d_i ZFW_RectITopCenter(const zfw_s_rect_i rect) {
     return (zfw_s_vec_2d_i){rect.x + rect.width / 2, rect.y};
 }
 
-static inline zfw_s_vec_2d ZFWRectTopRight(const zfw_s_rect rect) {
+static inline zfw_s_vec_2d ZFW_RectTopRight(const zfw_s_rect rect) {
     return (zfw_s_vec_2d){rect.x + rect.width, rect.y};
 }
 
-static inline zfw_s_vec_2d_i ZFWRectITopRight(const zfw_s_rect_i rect) {
+static inline zfw_s_vec_2d_i ZFW_RectITopRight(const zfw_s_rect_i rect) {
     return (zfw_s_vec_2d_i){rect.x + rect.width, rect.y};
 }
 
-static inline zfw_s_vec_2d ZFWRectCenterLeft(const zfw_s_rect rect) {
+static inline zfw_s_vec_2d ZFW_RectCenterLeft(const zfw_s_rect rect) {
     return (zfw_s_vec_2d){rect.x, rect.y + rect.height * 0.5f};
 }
 
-static inline zfw_s_vec_2d_i ZFWRectICenterLeft(const zfw_s_rect_i rect) {
+static inline zfw_s_vec_2d_i ZFW_RectICenterLeft(const zfw_s_rect_i rect) {
     return (zfw_s_vec_2d_i){rect.x, rect.y + rect.height / 2};
 }
 
-static inline zfw_s_vec_2d ZFWRectCenter(const zfw_s_rect rect) {
+static inline zfw_s_vec_2d ZFW_RectCenter(const zfw_s_rect rect) {
     return (zfw_s_vec_2d){rect.x + rect.width * 0.5f, rect.y + rect.height * 0.5f};
 }
 
-static inline zfw_s_vec_2d_i ZFWRectICenter(const zfw_s_rect_i rect) {
+static inline zfw_s_vec_2d_i ZFW_RectICenter(const zfw_s_rect_i rect) {
     return (zfw_s_vec_2d_i){rect.x + rect.width / 2, rect.y + rect.height / 2};
 }
 
-static inline zfw_s_vec_2d ZFWRectCenterRight(const zfw_s_rect rect) {
+static inline zfw_s_vec_2d ZFW_RectCenterRight(const zfw_s_rect rect) {
     return (zfw_s_vec_2d){rect.x + rect.width, rect.y + rect.height * 0.5f};
 }
 
-static inline zfw_s_vec_2d_i ZFWRectICenterRight(const zfw_s_rect_i rect) {
+static inline zfw_s_vec_2d_i ZFW_RectICenterRight(const zfw_s_rect_i rect) {
     return (zfw_s_vec_2d_i){rect.x + rect.width, rect.y + rect.height / 2};
 }
 
-static inline zfw_s_vec_2d ZFWRectBottomLeft(const zfw_s_rect rect) {
+static inline zfw_s_vec_2d ZFW_RectBottomLeft(const zfw_s_rect rect) {
     return (zfw_s_vec_2d){rect.x, rect.y + rect.height};
 }
 
-static inline zfw_s_vec_2d_i ZFWRectIBottomLeft(const zfw_s_rect_i rect) {
+static inline zfw_s_vec_2d_i ZFW_RectIBottomLeft(const zfw_s_rect_i rect) {
     return (zfw_s_vec_2d_i){rect.x, rect.y + rect.height};
 }
 
-static inline zfw_s_vec_2d ZFWRectBottomCenter(const zfw_s_rect rect) {
+static inline zfw_s_vec_2d ZFW_RectBottomCenter(const zfw_s_rect rect) {
     return (zfw_s_vec_2d){rect.x + rect.width * 0.5f, rect.y + rect.height};
 }
 
-static inline zfw_s_vec_2d_i ZFWRectIBottomCenter(const zfw_s_rect_i rect) {
+static inline zfw_s_vec_2d_i ZFW_RectIBottomCenter(const zfw_s_rect_i rect) {
     return (zfw_s_vec_2d_i){rect.x + rect.width / 2, rect.y + rect.height};
 }
 
-static inline zfw_s_vec_2d ZFWRectBottomRight(const zfw_s_rect rect) {
+static inline zfw_s_vec_2d ZFW_RectBottomRight(const zfw_s_rect rect) {
     return (zfw_s_vec_2d){rect.x + rect.width, rect.y + rect.height};
 }
 
-static inline zfw_s_vec_2d_i ZFWRectIBottomRight(const zfw_s_rect_i rect) {
+static inline zfw_s_vec_2d_i ZFW_RectIBottomRight(const zfw_s_rect_i rect) {
     return (zfw_s_vec_2d_i){rect.x + rect.width, rect.y + rect.height};
 }
 
-static inline zfw_s_rect ZFWRectTranslated(const zfw_s_rect rect, const zfw_s_vec_2d trans) {
+static inline zfw_s_rect ZFW_RectTranslated(const zfw_s_rect rect, const zfw_s_vec_2d trans) {
     return (zfw_s_rect){rect.x + trans.x, rect.y + trans.y, rect.width, rect.height};
 }
 
-static inline bool ZFWIsRangeValid(const zfw_s_rect_edges_i range, const zfw_s_vec_2d_i size) {
+static inline bool ZFW_IsRangeValid(const zfw_s_rect_edges_i range, const zfw_s_vec_2d_i size) {
     assert(size.x > 0 && size.y > 0);
 
     return range.left >= 0 && range.left < size.x
@@ -300,7 +300,7 @@ static inline bool ZFWIsRangeValid(const zfw_s_rect_edges_i range, const zfw_s_v
         && range.top <= range.bottom;
 }
 
-static inline zfw_s_rect_edges ZFWRectEdgesClamped(const zfw_s_rect_edges edges, const zfw_s_rect_edges clamp_edges) {
+static inline zfw_s_rect_edges ZFW_RectEdgesClamped(const zfw_s_rect_edges edges, const zfw_s_rect_edges clamp_edges) {
     return (zfw_s_rect_edges){
         ZFW_MAX(edges.left, clamp_edges.left),
         ZFW_MAX(edges.top, clamp_edges.top),
@@ -309,7 +309,7 @@ static inline zfw_s_rect_edges ZFWRectEdgesClamped(const zfw_s_rect_edges edges,
     };
 }
 
-static inline zfw_s_rect_edges_i ZFWRectEdgesIClamped(const zfw_s_rect_edges_i edges, const zfw_s_rect_edges_i clamp_edges) {
+static inline zfw_s_rect_edges_i ZFW_RectEdgesIClamped(const zfw_s_rect_edges_i edges, const zfw_s_rect_edges_i clamp_edges) {
     return (zfw_s_rect_edges_i){
         ZFW_MAX(edges.left, clamp_edges.left),
         ZFW_MAX(edges.top, clamp_edges.top),
@@ -318,7 +318,7 @@ static inline zfw_s_rect_edges_i ZFWRectEdgesIClamped(const zfw_s_rect_edges_i e
     };
 }
 
-static inline zfw_s_rect_i ZFWRectIClamped(const zfw_s_rect_i rect, const zfw_s_vec_2d_i span) {
+static inline zfw_s_rect_i ZFW_RectIClamped(const zfw_s_rect_i rect, const zfw_s_vec_2d_i span) {
     assert(span.x >= 0 && span.y >= 0);
 
     const zfw_s_vec_2d_i rect_clamped_tl = {ZFW_MAX(rect.x, 0), ZFW_MAX(rect.y, 0)};
@@ -336,20 +336,20 @@ static inline zfw_s_rect_i ZFWRectIClamped(const zfw_s_rect_i rect, const zfw_s_
     };
 }
 
-static inline bool ZFWIsPointInRect(const zfw_s_vec_2d pt, const zfw_s_rect rect) {
-    return pt.x >= rect.x && pt.y >= rect.y && pt.x < ZFWRectRight(rect) && pt.y < ZFWRectBottom(rect);
+static inline bool ZFW_IsPointInRect(const zfw_s_vec_2d pt, const zfw_s_rect rect) {
+    return pt.x >= rect.x && pt.y >= rect.y && pt.x < ZFW_RectRight(rect) && pt.y < ZFW_RectBottom(rect);
 }
 
-static inline bool ZFWDoRectsInters(const zfw_s_rect a, const zfw_s_rect b) {
+static inline bool ZFW_DoRectsInters(const zfw_s_rect a, const zfw_s_rect b) {
     return a.x < b.x + b.width && a.y < b.y + b.height && a.x + a.width > b.x && a.y + a.height > b.y;
 }
 
-static inline bool ZFWIsPolySet(const zfw_s_poly poly) {
+static inline bool ZFW_IsPolySet(const zfw_s_poly poly) {
     return poly.pts && poly.cnt > 0;
 }
 
-static inline float ZFWRandRot() {
-    return ZFWRandPerc() * 2.0f * ZFW_PI;
+static inline float ZFW_RandRot() {
+    return ZFW_RandPerc() * 2.0f * ZFW_PI;
 }
 
 #endif

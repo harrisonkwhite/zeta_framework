@@ -78,8 +78,8 @@ static inline bool ZFW_IsTextureCoordsValid(const zfw_s_rect_edges coords) {
 
 static bool ZFW_IsSrcRectValid(const zfw_s_rect_i src_rect, const zfw_s_vec_2d_i tex_size) {
     assert(tex_size.x > 0 && tex_size.y > 0);
-    return src_rect.x >= 0 && src_rect.width > 0 && ZFWRectIRight(src_rect) <= tex_size.x
-        && src_rect.y >= 0 && src_rect.height > 0 && ZFWRectIBottom(src_rect) <= tex_size.y;
+    return src_rect.x >= 0 && src_rect.width > 0 && ZFW_RectIRight(src_rect) <= tex_size.x
+        && src_rect.y >= 0 && src_rect.height > 0 && ZFW_RectIBottom(src_rect) <= tex_size.y;
 }
 
 static inline bool ZFW_IsColorValid(const zfw_s_vec_4d col) {

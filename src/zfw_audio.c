@@ -47,7 +47,7 @@ static bool LoadSoundTypeFromFile(zfw_s_sound_type* const type, const char* cons
     return true;
 }
 
-bool ZFWInitAudioSys(zfw_s_audio_sys* const audio_sys) {
+bool ZFW_InitAudioSys(zfw_s_audio_sys* const audio_sys) {
     assert(ZFW_IS_ZERO(*audio_sys));
 
     if (ma_engine_init(NULL, &audio_sys->eng) != MA_SUCCESS) {
@@ -58,9 +58,9 @@ bool ZFWInitAudioSys(zfw_s_audio_sys* const audio_sys) {
     return true;
 }
 
-void ZFWCleanAudioSys(zfw_s_audio_sys* const audio_sys) {
+void ZFW_CleanAudioSys(zfw_s_audio_sys* const audio_sys) {
     for (int i = 0; i < ZFW_SND_LIMIT; i++) {
-        if (ZFWIsBitActive(i, audio_sys->snd_activity, ZFW_SND_LIMIT)) {
+        if (ZFW_IsBitActive(i, audio_sys->snd_activity, ZFW_SND_LIMIT)) {
             ma_sound_uninit(&audio_sys->snds[i]);
             ma_audio_buffer_uninit(&audio_sys->audio_bufs[i]);
         }
@@ -71,10 +71,10 @@ void ZFWCleanAudioSys(zfw_s_audio_sys* const audio_sys) {
     ZFW_ZERO_OUT(*audio_sys);
 }
 
-void ZFWUpdateAudioSys(zfw_s_audio_sys* const audio_sys) {
+void ZFW_UpdateAudioSys(zfw_s_audio_sys* const audio_sys) {
     // Find any active sound slots where the sound has finished playing and deactivate them.
     for (int i = 0; i < ZFW_SND_LIMIT; i++) {
-        if (!ZFWIsBitActive(i, audio_sys->snd_activity, ZFW_SND_LIMIT)) {
+        if (!ZFW_IsBitActive(i, audio_sys->snd_activity, ZFW_SND_LIMIT)) {
             continue;
         }
 
@@ -83,12 +83,12 @@ void ZFWUpdateAudioSys(zfw_s_audio_sys* const audio_sys) {
         if (!ma_sound_is_playing(snd)) {
             ma_sound_uninit(snd);
             ma_audio_buffer_uninit(&audio_sys->audio_bufs[i]);
-            ZFWDeactivateBit(i, audio_sys->snd_activity, ZFW_SND_LIMIT);
+            ZFW_DeactivateBit(i, audio_sys->snd_activity, ZFW_SND_LIMIT);
         }
     }
 }
 
-bool ZFWLoadSoundTypesFromFiles(zfw_s_sound_types* const types, zfw_s_mem_arena* const mem_arena, const int cnt, const zfw_t_sound_type_index_to_file_path index_to_fp) {
+bool ZFW_LoadSoundTypesFromFiles(zfw_s_sound_types* const types, zfw_s_mem_arena* const mem_arena, const int cnt, const zfw_t_sound_type_index_to_file_path index_to_fp) {
     assert(ZFW_IS_ZERO(*types));
     assert(cnt > 0);
 
@@ -112,14 +112,14 @@ bool ZFWLoadSoundTypesFromFiles(zfw_s_sound_types* const types, zfw_s_mem_arena*
     return true;
 }
 
-bool ZFWPlaySound(zfw_s_audio_sys* const audio_sys, const zfw_s_sound_types* const snd_types, const int type_index, const float vol, const float pan, const float pitch) {
+bool ZFW_PlaySound(zfw_s_audio_sys* const audio_sys, const zfw_s_sound_types* const snd_types, const int type_index, const float vol, const float pan, const float pitch) {
     assert(type_index >= 0 && type_index < snd_types->cnt);
     assert(vol >= 0.0f && vol <= 1.0f);
     assert(pan >= -1.0f && pan <= 1.0f);
     assert(pitch > 0.0f);
 
     // Get the index of the first inactive sound slot.
-    const int index = ZFWFirstInactiveBitIndex(audio_sys->snd_activity, ZFW_SND_LIMIT);
+    const int index = ZFW_FirstInactiveBitIndex(audio_sys->snd_activity, ZFW_SND_LIMIT);
 
     if (index == -1) {
         fprintf(stderr, "Failed to play sound due to insufficient space!\n");
@@ -127,7 +127,7 @@ bool ZFWPlaySound(zfw_s_audio_sys* const audio_sys, const zfw_s_sound_types* con
     }
 
     // Activate the sound slot.
-    ZFWActivateBit(index, audio_sys->snd_activity, ZFW_SND_LIMIT);
+    ZFW_ActivateBit(index, audio_sys->snd_activity, ZFW_SND_LIMIT);
 
     const zfw_s_sound_type* const type = &snd_types->buf[type_index];
     ma_sound* const snd = &audio_sys->snds[index];

@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include "zfw_utils.h"
 
-bool ZFWIsZero(const void* const mem, const size_t size) {
+bool ZFW_IsZero(const void* const mem, const size_t size) {
     assert(mem);
     assert(size > 0);
 
@@ -17,7 +17,7 @@ bool ZFWIsZero(const void* const mem, const size_t size) {
     return true;
 }
 
-bool ZFWIsNullTerminated(const char* const buf, const size_t buf_size) {
+bool ZFW_IsNullTerminated(const char* const buf, const size_t buf_size) {
     assert(buf);
     assert(buf_size > 0);
 
@@ -30,7 +30,7 @@ bool ZFWIsNullTerminated(const char* const buf, const size_t buf_size) {
     return false;
 }
 
-bool ZFWInitMemArena(zfw_s_mem_arena* const arena, const size_t size) {
+bool ZFW_InitMemArena(zfw_s_mem_arena* const arena, const size_t size) {
     assert(arena && ZFW_IS_ZERO(*arena));
     assert(size > 0);
 
@@ -40,25 +40,25 @@ bool ZFWInitMemArena(zfw_s_mem_arena* const arena, const size_t size) {
         return false;
     }
 
-    ZFWZeroOut(arena->buf, size);
+    ZFW_ZeroOut(arena->buf, size);
 
     arena->size = size;
 
     return true;
 }
 
-void ZFWCleanMemArena(zfw_s_mem_arena* const arena) {
-    assert(arena && ZFWIsMemArenaValid(arena));
+void ZFW_CleanMemArena(zfw_s_mem_arena* const arena) {
+    assert(arena && ZFW_IsMemArenaValid(arena));
     free(arena->buf);
     ZFW_ZERO_OUT(*arena);
 }
 
-void* ZFWPushToMemArena(zfw_s_mem_arena* const arena, const size_t size, const size_t alignment) {
-    assert(arena && ZFWIsMemArenaValid(arena));
+void* ZFW_PushToMemArena(zfw_s_mem_arena* const arena, const size_t size, const size_t alignment) {
+    assert(arena && ZFW_IsMemArenaValid(arena));
     assert(size > 0);
-    assert(ZFWIsValidAlignment(alignment));
+    assert(ZFW_IsValidAlignment(alignment));
 
-    const size_t offs_aligned = ZFWAlignForward(arena->offs, alignment);
+    const size_t offs_aligned = ZFW_AlignForward(arena->offs, alignment);
     const size_t offs_next = offs_aligned + size;
 
     if (offs_next > arena->size) {
@@ -71,17 +71,17 @@ void* ZFWPushToMemArena(zfw_s_mem_arena* const arena, const size_t size, const s
     return arena->buf + offs_aligned;
 }
 
-void ZFWRewindMemArena(zfw_s_mem_arena* const arena, const size_t rewind_offs) {
-    assert(arena && ZFWIsMemArenaValid(arena));
+void ZFW_RewindMemArena(zfw_s_mem_arena* const arena, const size_t rewind_offs) {
+    assert(arena && ZFW_IsMemArenaValid(arena));
     assert(rewind_offs <= arena->offs);
 
     if (rewind_offs != arena->offs) {
-        ZFWZeroOut(arena->buf + rewind_offs, arena->offs - rewind_offs);
+        ZFW_ZeroOut(arena->buf + rewind_offs, arena->offs - rewind_offs);
         arena->offs = rewind_offs;
     }
 }
 
-int ZFWFirstActiveBitIndex(const zfw_t_byte* const bytes, const int bit_cnt) {
+int ZFW_FirstActiveBitIndex(const zfw_t_byte* const bytes, const int bit_cnt) {
     assert(bytes);
     assert(bit_cnt > 0);
 
@@ -101,7 +101,7 @@ int ZFWFirstActiveBitIndex(const zfw_t_byte* const bytes, const int bit_cnt) {
 
     if (excess_bits > 0) {
         // Get the last byte, masking out any bits we don't care about.
-        const zfw_t_byte last_byte = ZFWKeepFirstNBitsOfByte(bytes[bit_cnt / 8], excess_bits);
+        const zfw_t_byte last_byte = ZFW_KeepFirstNBitsOfByte(bytes[bit_cnt / 8], excess_bits);
 
         if (last_byte != 0x00) {
             for (int i = 0; i < 8; i++) {
@@ -115,7 +115,7 @@ int ZFWFirstActiveBitIndex(const zfw_t_byte* const bytes, const int bit_cnt) {
     return -1;
 }
 
-int ZFWFirstInactiveBitIndex(const zfw_t_byte* const bytes, const int bit_cnt) {
+int ZFW_FirstInactiveBitIndex(const zfw_t_byte* const bytes, const int bit_cnt) {
     assert(bytes);
     assert(bit_cnt > 0);
 
@@ -135,7 +135,7 @@ int ZFWFirstInactiveBitIndex(const zfw_t_byte* const bytes, const int bit_cnt) {
 
     if (excess_bits > 0) {
         // Get the last byte, masking out any bits we don't care about.
-        const zfw_t_byte last_byte = ZFWKeepFirstNBitsOfByte(bytes[bit_cnt / 8], excess_bits);
+        const zfw_t_byte last_byte = ZFW_KeepFirstNBitsOfByte(bytes[bit_cnt / 8], excess_bits);
 
         if (last_byte != 0xFF) {
             for (int i = 0; i < 8; i++) {
@@ -149,7 +149,7 @@ int ZFWFirstInactiveBitIndex(const zfw_t_byte* const bytes, const int bit_cnt) {
     return -1;
 }
 
-bool ZFWDoesFilenameHaveExt(const char* const filename, const char* const ext) {
+bool ZFW_DoesFilenameHaveExt(const char* const filename, const char* const ext) {
     assert(filename);
     assert(ext);
 
@@ -162,10 +162,10 @@ bool ZFWDoesFilenameHaveExt(const char* const filename, const char* const ext) {
     return strcmp(ext_actual, ext) == 0;
 }
 
-zfw_t_byte* ZFWPushEntireFileContents(const char* const file_path, zfw_s_mem_arena* const mem_arena, const bool incl_terminating_byte) {
+zfw_t_byte* ZFW_PushEntireFileContents(const char* const file_path, zfw_s_mem_arena* const mem_arena, const bool incl_terminating_byte) {
     assert(file_path);
     assert(mem_arena);
-    assert(ZFWIsMemArenaValid(mem_arena));
+    assert(ZFW_IsMemArenaValid(mem_arena));
 
     FILE* const fs = fopen(file_path, "rb");
 

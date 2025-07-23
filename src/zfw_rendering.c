@@ -6,7 +6,7 @@
 
 bool ZFW_LoadTexturesFromFiles(zfw_s_textures* const textures, zfw_s_mem_arena* const mem_arena, const int tex_cnt, const zfw_t_texture_index_to_file_path tex_index_to_fp) {
     assert(textures && ZFW_IS_ZERO(*textures));
-    assert(mem_arena && ZFWIsMemArenaValid(mem_arena));
+    assert(mem_arena && ZFW_IsMemArenaValid(mem_arena));
     assert(tex_cnt > 0);
     assert(tex_index_to_fp);
 
@@ -165,8 +165,8 @@ static zfw_s_rect_edges TextureCoords(const zfw_s_rect_i src_rect, const zfw_s_v
     return (zfw_s_rect_edges){
         .left = (float)src_rect.x / tex_size.x,
         .top = (float)src_rect.y / tex_size.y,
-        .right = (float)ZFWRectIRight(src_rect) / tex_size.x,
-        .bottom = (float)ZFWRectIBottom(src_rect) / tex_size.y
+        .right = (float)ZFW_RectIRight(src_rect) / tex_size.x,
+        .bottom = (float)ZFW_RectIBottom(src_rect) / tex_size.y
     };
 }
 
@@ -260,7 +260,7 @@ static void CleanGLIDs(zfw_s_gl_ids* const gl_ids) {
 }
 
 static unsigned short* PushBatchElems(zfw_s_mem_arena* const mem_arena) {
-    assert(mem_arena && ZFWIsMemArenaValid(mem_arena));
+    assert(mem_arena && ZFW_IsMemArenaValid(mem_arena));
 
     unsigned short* const elems = ZFW_MEM_ARENA_PUSH_TYPE_MANY(mem_arena, unsigned short, ZFW_BATCH_SLOT_ELEM_CNT * ZFW_BATCH_SLOT_CNT);
 
@@ -280,7 +280,7 @@ static unsigned short* PushBatchElems(zfw_s_mem_arena* const mem_arena) {
 
 bool ZFW_InitRenderingBasis(zfw_s_rendering_basis* const basis, zfw_s_mem_arena* const temp_mem_arena) {
     assert(basis && ZFW_IS_ZERO(*basis));
-    assert(temp_mem_arena && ZFWIsMemArenaValid(temp_mem_arena));
+    assert(temp_mem_arena && ZFW_IsMemArenaValid(temp_mem_arena));
 
     {
         const unsigned short* const batch_elems = PushBatchElems(temp_mem_arena);
@@ -307,7 +307,7 @@ void ZFW_CleanRenderingBasis(zfw_s_rendering_basis* const basis) {
 
 void ZFW_InitRenderingState(zfw_s_rendering_state* const state) {
     assert(state && ZFW_IS_ZERO(*state));
-    ZFWInitIdenMatrix4x4(&state->view_mat);
+    ZFW_InitIdenMatrix4x4(&state->view_mat);
 }
 
 void ZFW_RenderClear(const zfw_s_vec_4d col) {
@@ -376,7 +376,7 @@ void ZFW_SubmitBatch(const zfw_s_rendering_context* const context) {
     glUniformMatrix4fv(prog->view_uniform_loc, 1, GL_FALSE, &context->state->view_mat[0][0]);
 
     zfw_t_matrix_4x4 proj_mat = {0};
-    ZFWInitOrthoMatrix4x4(&proj_mat, 0.0f, context->window_size.x, context->window_size.y, 0.0f, -1.0f, 1.0f);
+    ZFW_InitOrthoMatrix4x4(&proj_mat, 0.0f, context->window_size.x, context->window_size.y, 0.0f, -1.0f, 1.0f);
     glUniformMatrix4fv(prog->proj_uniform_loc, 1, GL_FALSE, &proj_mat[0][0]);
 
     glActiveTexture(GL_TEXTURE0);

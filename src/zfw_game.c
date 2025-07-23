@@ -102,7 +102,7 @@ typedef struct {
 
 static void AssertGameInfoValidity(const zfw_s_game_info* const info) {
     assert(info->user_mem_size >= 0);
-    assert(info->user_mem_size == 0 || ZFWIsValidAlignment(info->user_mem_alignment));
+    assert(info->user_mem_size == 0 || ZFW_IsValidAlignment(info->user_mem_alignment));
 
     assert(info->window_title);
     assert(info->window_init_size.x > 0 && info->window_init_size.y > 0);
@@ -114,7 +114,7 @@ static void AssertGameInfoValidity(const zfw_s_game_info* const info) {
 
 static void CleanGame(const s_game_cleanup_info* const cleanup_info) {
     if (cleanup_info->audio_sys) {
-        ZFWCleanAudioSys(cleanup_info->audio_sys);
+        ZFW_CleanAudioSys(cleanup_info->audio_sys);
     }
 
     if (cleanup_info->rendering_basis) {
@@ -127,8 +127,8 @@ static void CleanGame(const s_game_cleanup_info* const cleanup_info) {
 
     glfwTerminate();
 
-    ZFWCleanMemArena(cleanup_info->temp_mem_arena);
-    ZFWCleanMemArena(cleanup_info->perm_mem_arena);
+    ZFW_CleanMemArena(cleanup_info->temp_mem_arena);
+    ZFW_CleanMemArena(cleanup_info->perm_mem_arena);
 }
 
 static zfw_s_window_state WindowState(GLFWwindow* const glfw_window) {
@@ -226,7 +226,7 @@ static void ResizeGLViewportIfDifferent(const zfw_s_vec_2d_i size) {
     }
 }
 
-bool ZFWRunGame(const zfw_s_game_info* const info) {
+bool ZFW_RunGame(const zfw_s_game_info* const info) {
     AssertGameInfoValidity(info);
 
     s_game_cleanup_info cleanup_info = {0}; // When something needs to be cleaned up after the game ends, the corresponding pointer here can be assigned.
@@ -236,12 +236,12 @@ bool ZFWRunGame(const zfw_s_game_info* const info) {
     //
     printf("Initialising...\n");
 
-    ZFWInitRNG();
+    ZFW_InitRNG();
 
     // Initialise memory arenas.
     zfw_s_mem_arena perm_mem_arena = {0}; // The memory in here exists for the lifetime of the program, it does not get reset.
 
-    if (!ZFWInitMemArena(&perm_mem_arena, PERM_MEM_ARENA_SIZE)) {
+    if (!ZFW_InitMemArena(&perm_mem_arena, PERM_MEM_ARENA_SIZE)) {
         fprintf(stderr, "Failed to initialise the permanent memory arena!\n");
         CleanGame(&cleanup_info);
         return false;
@@ -251,7 +251,7 @@ bool ZFWRunGame(const zfw_s_game_info* const info) {
 
     zfw_s_mem_arena temp_mem_arena = {0}; // While the memory here also exists for the program lifetime, it gets reset after game initialisation and after every frame. Useful if you just need some temporary working space.
 
-    if (!ZFWInitMemArena(&temp_mem_arena, TEMP_MEM_ARENA_SIZE)) {
+    if (!ZFW_InitMemArena(&temp_mem_arena, TEMP_MEM_ARENA_SIZE)) {
         fprintf(stderr, "Failed to initialise the temporary memory arena!\n");
         CleanGame(&cleanup_info);
         return false;
@@ -305,7 +305,7 @@ bool ZFWRunGame(const zfw_s_game_info* const info) {
     // Initialise audio system.
     zfw_s_audio_sys audio_sys = {0};
 
-    if (!ZFWInitAudioSys(&audio_sys)) {
+    if (!ZFW_InitAudioSys(&audio_sys)) {
         CleanGame(&cleanup_info);
         return false;
     }
@@ -316,7 +316,7 @@ bool ZFWRunGame(const zfw_s_game_info* const info) {
     void* user_mem = NULL;
 
     if (info->user_mem_size > 0) {
-        user_mem = ZFWPushToMemArena(&perm_mem_arena, info->user_mem_size, info->user_mem_alignment);
+        user_mem = ZFW_PushToMemArena(&perm_mem_arena, info->user_mem_size, info->user_mem_alignment);
 
         if (!user_mem) {
             fprintf(stderr, "Failed to allocate user memory!\n");
@@ -355,7 +355,7 @@ bool ZFWRunGame(const zfw_s_game_info* const info) {
     printf("Entering the main loop...\n");
 
     while (!glfwWindowShouldClose(glfw_window)) {
-        ZFWRewindMemArena(&temp_mem_arena, 0);
+        ZFW_RewindMemArena(&temp_mem_arena, 0);
 
         const zfw_s_window_state window_state = WindowState(glfw_window);
 
@@ -370,7 +370,7 @@ bool ZFWRunGame(const zfw_s_game_info* const info) {
             const zfw_s_input_state input_state_last = input_state;
             RefreshInputState(&input_state, glfw_window, glfw_user_data.mouse_scroll_state);
 
-            ZFWUpdateAudioSys(&audio_sys);
+            ZFW_UpdateAudioSys(&audio_sys);
 
             {
                 // Execute the user-defined tick function.

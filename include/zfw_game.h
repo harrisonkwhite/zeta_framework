@@ -169,30 +169,30 @@ typedef struct {
     void (*clean_func)(void* const user_mem); // Called when the game ends (including if it ends in error). This is not called if the initialisation function failed or was not yet called.
 } zfw_s_game_info;
 
-bool ZFWRunGame(const zfw_s_game_info* const info);
+bool ZFW_RunGame(const zfw_s_game_info* const info);
 
-static inline bool ZFWIsKeyDown(const zfw_e_key_code kc, const zfw_s_input_state* const input_state) {
+static inline bool ZFW_IsKeyDown(const zfw_e_key_code kc, const zfw_s_input_state* const input_state) {
     return (input_state->keys_down & ((zfw_t_keys_down_bits)1 << kc)) != 0;
 }
 
-static inline bool ZFWIsKeyPressed(const zfw_e_key_code kc, const zfw_s_input_state* const input_state, const zfw_s_input_state* const input_state_last) {
-    return ZFWIsKeyDown(kc, input_state) && !ZFWIsKeyDown(kc, input_state_last);
+static inline bool ZFW_IsKeyPressed(const zfw_e_key_code kc, const zfw_s_input_state* const input_state, const zfw_s_input_state* const input_state_last) {
+    return ZFW_IsKeyDown(kc, input_state) && !ZFW_IsKeyDown(kc, input_state_last);
 }
 
-static inline bool ZFWIsKeyReleased(const zfw_e_key_code kc, const zfw_s_input_state* const input_state, const zfw_s_input_state* const input_state_last) {
-    return !ZFWIsKeyDown(kc, input_state) && ZFWIsKeyDown(kc, input_state_last);
+static inline bool ZFW_IsKeyReleased(const zfw_e_key_code kc, const zfw_s_input_state* const input_state, const zfw_s_input_state* const input_state_last) {
+    return !ZFW_IsKeyDown(kc, input_state) && ZFW_IsKeyDown(kc, input_state_last);
 }
 
-static inline bool ZFWIsMouseButtonDown(const zfw_e_mouse_button_code mbc, const zfw_s_input_state* const input_state) {
+static inline bool ZFW_IsMouseButtonDown(const zfw_e_mouse_button_code mbc, const zfw_s_input_state* const input_state) {
     return (input_state->mouse_buttons_down & ((zfw_t_mouse_buttons_down_bits)1 << mbc)) != 0;
 }
 
-static inline bool ZFWIsMouseButtonPressed(const zfw_e_mouse_button_code mbc, const zfw_s_input_state* const input_state, const zfw_s_input_state* const input_state_last) {
-    return ZFWIsMouseButtonDown(mbc, input_state) && !ZFWIsMouseButtonDown(mbc, input_state_last);
+static inline bool ZFW_IsMouseButtonPressed(const zfw_e_mouse_button_code mbc, const zfw_s_input_state* const input_state, const zfw_s_input_state* const input_state_last) {
+    return ZFW_IsMouseButtonDown(mbc, input_state) && !ZFW_IsMouseButtonDown(mbc, input_state_last);
 }
 
-static inline bool ZFWIsMouseButtonReleased(const zfw_e_mouse_button_code mbc, const zfw_s_input_state* const input_state, const zfw_s_input_state* const input_state_last) {
-    return !ZFWIsMouseButtonDown(mbc, input_state) && ZFWIsMouseButtonDown(mbc, input_state_last);
+static inline bool ZFW_IsMouseButtonReleased(const zfw_e_mouse_button_code mbc, const zfw_s_input_state* const input_state, const zfw_s_input_state* const input_state_last) {
+    return !ZFW_IsMouseButtonDown(mbc, input_state) && ZFW_IsMouseButtonDown(mbc, input_state_last);
 }
 
 #endif
