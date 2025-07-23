@@ -20,7 +20,8 @@ add_library(zeta_framework STATIC
     src/zfw_rendering.c
     src/zfw_audio.c
     src/zfw_random.c
-    src/zfw_utils.c
+    src/zfw_mem.c
+    src/zfw_io.c
     external/glad/src/glad.c
     external/stb/src/stb.c
     external/miniaudio/src/miniaudio.c
@@ -30,7 +31,8 @@ add_library(zeta_framework STATIC
     include/zfw_rendering.h
     include/zfw_audio.h
     include/zfw_random.h
-    include/zfw_utils.h
+    include/zfw_mem.h
+    include/zfw_io.h
     external/glad/include/glad/glad.h
     external/stb/include/stb_image.h
     external/stb/include/stb_truetype.h

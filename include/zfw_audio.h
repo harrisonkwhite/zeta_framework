@@ -2,7 +2,7 @@
 #define ZFW_AUDIO_H
 
 #include <miniaudio.h>
-#include "zfw_utils.h"
+#include "zfw_mem.h"
 
 #define ZFW_SND_LIMIT 32
 

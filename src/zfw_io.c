@@ -1,6 +1,7 @@
+#include "zfw_io.h"
+
 #include <stdlib.h>
 #include <stdio.h>
-#include "zfw_utils.h"
 
 bool ZFW_IsZero(const void* const mem, const size_t size) {
     assert(mem);

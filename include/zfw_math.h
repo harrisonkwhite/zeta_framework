@@ -5,7 +5,7 @@
 #include <stdint.h>
 #include <assert.h>
 #include <math.h>
-#include "zfw_utils.h"
+#include "zfw_mem.h"
 #include "zfw_random.h"
 
 #define ZFW_PI 3.14159265358979323846f

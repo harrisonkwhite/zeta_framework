@@ -2,7 +2,6 @@
 #include <stb_image.h>
 #include "zfw_rendering.h"
 #include "zfw_game.h"
-#include "zfw_utils.h"
 
 bool ZFW_LoadTexturesFromFiles(zfw_s_textures* const textures, zfw_s_mem_arena* const mem_arena, const int tex_cnt, const zfw_t_texture_index_to_file_path tex_index_to_fp) {
     assert(textures && ZFW_IS_ZERO(*textures));

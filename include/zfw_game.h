@@ -7,7 +7,7 @@
 #include "zfw_math.h"
 #include "zfw_rendering.h"
 #include "zfw_audio.h"
-#include "zfw_utils.h"
+#include "zfw_mem.h"
 
 #define ZFW_GL_VERSION_MAJOR 4
 #define ZFW_GL_VERSION_MINOR 3

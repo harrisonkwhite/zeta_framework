@@ -1,5 +1,5 @@
-#ifndef ZFW_UTILS_H
-#define ZFW_UTILS_H
+#ifndef ZFW_MEM_H
+#define ZFW_MEM_H
 
 #include <string.h>
 #include <stdint.h>
@@ -109,8 +109,5 @@ static inline zfw_t_byte ZFW_KeepFirstNBitsOfByte(const zfw_t_byte byte, const s
     assert(n <= 8);
     return byte & ((1 << n) - 1);
 }
-
-bool ZFW_DoesFilenameHaveExt(const char* const filename, const char* const ext);
-zfw_t_byte* ZFW_PushEntireFileContents(const char* const file_path, zfw_s_mem_arena* const mem_arena, const bool incl_terminating_byte);
 
 #endif
