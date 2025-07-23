@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include "zfw_game.h"
 #include "zfw_random.h"
+#include "zfw_rendering.h"
 
 #define PERM_MEM_ARENA_SIZE ZFW_MEGABYTES(80)
 #define TEMP_MEM_ARENA_SIZE ZFW_MEGABYTES(40)
@@ -98,7 +99,7 @@ typedef struct {
     zfw_s_mem_arena* perm_mem_arena;
     zfw_s_mem_arena* temp_mem_arena;
     GLFWwindow* glfw_window;
-    zfw_s_pers_render_data* pers_render_data;
+    zfw_s_rendering_basis* rendering_basis;
     zfw_s_audio_sys* audio_sys;
 } s_game_cleanup_info;
 
@@ -119,8 +120,8 @@ static void CleanGame(const s_game_cleanup_info* const cleanup_info) {
         ZFWCleanAudioSys(cleanup_info->audio_sys);
     }
 
-    if (cleanup_info->pers_render_data) {
-        ZFWCleanPersRenderData(cleanup_info->pers_render_data);
+    if (cleanup_info->rendering_basis) {
+        ZFW_CleanRenderingBasis(cleanup_info->rendering_basis);
     }
 
     if (cleanup_info->glfw_window) {
@@ -288,14 +289,14 @@ bool ZFWRunGame(const zfw_s_game_info* const info) {
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    zfw_s_pers_render_data pers_render_data = {0};
+    zfw_s_rendering_basis rendering_basis = {0};
 
-    if (!ZFWInitPersRenderData(&pers_render_data, info->window_init_size, &temp_mem_arena)) {
+    if (!ZFW_InitRenderingBasis(&rendering_basis, &temp_mem_arena)) {
         CleanGame(&cleanup_info);
         return false;
     }
 
-    cleanup_info.pers_render_data = &pers_render_data;
+    cleanup_info.rendering_basis = &rendering_basis;
 
     zfw_s_rendering_state* const rendering_state = ZFW_MEM_ARENA_PUSH_TYPE(&perm_mem_arena, zfw_s_rendering_state);
 
@@ -363,15 +364,6 @@ bool ZFWRunGame(const zfw_s_game_info* const info) {
 
         ResizeGLViewportIfDifferent(window_state.size);
 
-        if (!ZFWVec2DIsEqual(pers_render_data.surfs.size, window_state.size)) {
-            if (!ZFWResizeRenderSurfaces(&pers_render_data.surfs, window_state.size)) {
-                fprintf(stderr, "Failed to resize render surfaces!\n");
-                info->clean_func(user_mem);
-                CleanGame(&cleanup_info);
-                return false;
-            }
-        }
-
         const double frame_time = glfwGetTime();
         frame_dur_accum += frame_time - frame_time_last; // Update accumulator with delta time.
         frame_time_last = frame_time;
@@ -415,7 +407,8 @@ bool ZFWRunGame(const zfw_s_game_info* const info) {
             }
 
             // Execute rendering step.
-            ZFWBeginRendering(rendering_state);
+            ZFW_ZERO_OUT(*rendering_state);
+            ZFW_InitRenderingState(rendering_state);
 
             {
                 // Execute the user-defined render function.
@@ -425,9 +418,9 @@ bool ZFWRunGame(const zfw_s_game_info* const info) {
                     .temp_mem_arena = &temp_mem_arena,
                     .mouse_pos = input_state.mouse_pos,
                     .rendering_context = {
-                        .pers = &pers_render_data,
+                        .basis = &rendering_basis,
                         .state = rendering_state,
-                        .display_size = window_state.size
+                        .window_size = window_state.size
                     }
                 };
 
@@ -437,7 +430,7 @@ bool ZFWRunGame(const zfw_s_game_info* const info) {
                     return false;
                 }
 
-                assert(ZFWHasFlushed(rendering_state) && "User-defined rendering function completed, but not everything has been flushed!");
+                assert(rendering_state->batch.num_slots_used == 0 && "User-defined rendering function completed, but not everything has been flushed!");
             }
 
             glfwSwapBuffers(glfw_window);
