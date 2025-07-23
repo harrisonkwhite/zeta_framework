@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <stdarg.h>
 #include <stdio.h>
 #if defined(_WIN32)
 #include <windows.h>
@@ -7,6 +8,28 @@
 #endif
 #include "zfw_io.h"
 #include "zfw_mem.h"
+
+void ZFW_Log(const char* const format, ...) {
+    va_list args;
+    va_start(args, format);
+
+    printf("ZFW: ");
+    vprintf(format, args);
+    printf("\n");
+
+    va_end(args);
+}
+
+void ZFW_LogError(const char* const format, ...) {
+    va_list args;
+    va_start(args, format);
+
+    fprintf(stderr, "ZFW Error: ");
+    vfprintf(stderr, format, args);
+    fprintf(stderr, "\n");
+
+    va_end(args);
+}
 
 bool ZFW_DoesFilenameHaveExt(const char* const filename, const char* const ext) {
     assert(filename);
