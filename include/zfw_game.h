@@ -9,6 +9,9 @@
 #include "zfw_audio.h"
 #include "zfw_utils.h"
 
+#define ZFW_GL_VERSION_MAJOR 4
+#define ZFW_GL_VERSION_MINOR 3
+
 typedef char zfw_t_unicode_buf[32];
 
 typedef uint64_t zfw_t_keys_down_bits;

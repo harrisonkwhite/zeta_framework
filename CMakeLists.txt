@@ -18,7 +18,6 @@ add_library(zeta_framework STATIC
     src/zfw_game.c
     src/zfw_math.c
     src/zfw_rendering.c
-    src/zfw_assets.c
     src/zfw_audio.c
     src/zfw_random.c
     src/zfw_utils.c

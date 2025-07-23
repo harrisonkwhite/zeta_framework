@@ -10,9 +10,6 @@
 #define TARG_TICKS_PER_SEC 60
 #define TARG_TICK_INTERVAL (1.0 / (TARG_TICKS_PER_SEC))
 
-#define GL_VERSION_MAJOR 4
-#define GL_VERSION_MINOR 3
-
 static const int g_glfw_keys[] = {
     [zfw_ek_key_code_space] = GLFW_KEY_SPACE,
     [zfw_ek_key_code_0] = GLFW_KEY_0,
@@ -192,8 +189,8 @@ static void GLFWCharCallback(GLFWwindow* const window, const unsigned int codepo
 }
 
 static GLFWwindow* CreateGLFWWindow(const zfw_s_vec_2d_i size, const char* const title, const zfw_e_window_flags flags, s_glfw_user_data* const user_data) {
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, GL_VERSION_MAJOR);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, GL_VERSION_MINOR);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, ZFW_GL_VERSION_MAJOR);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, ZFW_GL_VERSION_MINOR);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
 
