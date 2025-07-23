@@ -1,154 +1,12 @@
-#include "zfw_io.h"
-
 #include <stdlib.h>
 #include <stdio.h>
-
-bool ZFW_IsZero(const void* const mem, const size_t size) {
-    assert(mem);
-    assert(size > 0);
-
-    const zfw_t_byte* const mem_bytes = mem;
-
-    for (int i = 0; i < size; i++) {
-        if (mem_bytes[i]) {
-            return false;
-        }
-    }
-
-    return true;
-}
-
-bool ZFW_IsNullTerminated(const char* const buf, const size_t buf_size) {
-    assert(buf);
-    assert(buf_size > 0);
-
-    for (int i = 0; i < buf_size; i++) {
-        if (buf[i] == '\0') {
-            return true;
-        }
-    }
-
-    return false;
-}
-
-bool ZFW_InitMemArena(zfw_s_mem_arena* const arena, const size_t size) {
-    assert(arena && ZFW_IS_ZERO(*arena));
-    assert(size > 0);
-
-    arena->buf = malloc(size);
-
-    if (!arena->buf) {
-        return false;
-    }
-
-    ZFW_ZeroOut(arena->buf, size);
-
-    arena->size = size;
-
-    return true;
-}
-
-void ZFW_CleanMemArena(zfw_s_mem_arena* const arena) {
-    assert(arena && ZFW_IsMemArenaValid(arena));
-    free(arena->buf);
-    ZFW_ZERO_OUT(*arena);
-}
-
-void* ZFW_PushToMemArena(zfw_s_mem_arena* const arena, const size_t size, const size_t alignment) {
-    assert(arena && ZFW_IsMemArenaValid(arena));
-    assert(size > 0);
-    assert(ZFW_IsValidAlignment(alignment));
-
-    const size_t offs_aligned = ZFW_AlignForward(arena->offs, alignment);
-    const size_t offs_next = offs_aligned + size;
-
-    if (offs_next > arena->size) {
-        fprintf(stderr, "Failed to push to memory arena!");
-        return NULL;
-    }
-
-    arena->offs = offs_next;
-
-    return arena->buf + offs_aligned;
-}
-
-void ZFW_RewindMemArena(zfw_s_mem_arena* const arena, const size_t rewind_offs) {
-    assert(arena && ZFW_IsMemArenaValid(arena));
-    assert(rewind_offs <= arena->offs);
-
-    if (rewind_offs != arena->offs) {
-        ZFW_ZeroOut(arena->buf + rewind_offs, arena->offs - rewind_offs);
-        arena->offs = rewind_offs;
-    }
-}
-
-int ZFW_FirstActiveBitIndex(const zfw_t_byte* const bytes, const int bit_cnt) {
-    assert(bytes);
-    assert(bit_cnt > 0);
-
-    for (int i = 0; i < (bit_cnt / 8); i++) {
-        if (bytes[i] == 0x00) {
-            continue;
-        }
-
-        for (int j = 0; j < 8; j++) {
-            if (bytes[i] & (1 << j)) {
-                return (i * 8) + j;
-            }
-        }
-    }
-
-    const int excess_bits = bit_cnt % 8;
-
-    if (excess_bits > 0) {
-        // Get the last byte, masking out any bits we don't care about.
-        const zfw_t_byte last_byte = ZFW_KeepFirstNBitsOfByte(bytes[bit_cnt / 8], excess_bits);
-
-        if (last_byte != 0x00) {
-            for (int i = 0; i < 8; i++) {
-                if (last_byte & (1 << i)) {
-                    return bit_cnt - excess_bits + i;
-                }
-            }
-        }
-    }
-    
-    return -1;
-}
-
-int ZFW_FirstInactiveBitIndex(const zfw_t_byte* const bytes, const int bit_cnt) {
-    assert(bytes);
-    assert(bit_cnt > 0);
-
-    for (int i = 0; i < (bit_cnt / 8); i++) {
-        if (bytes[i] == 0xFF) {
-            continue;
-        }
-
-        for (int j = 0; j < 8; j++) {
-            if (!(bytes[i] & (1 << j))) {
-                return (i * 8) + j;
-            }
-        }
-    }
-
-    const int excess_bits = bit_cnt % 8;
-
-    if (excess_bits > 0) {
-        // Get the last byte, masking out any bits we don't care about.
-        const zfw_t_byte last_byte = ZFW_KeepFirstNBitsOfByte(bytes[bit_cnt / 8], excess_bits);
-
-        if (last_byte != 0xFF) {
-            for (int i = 0; i < 8; i++) {
-                if (!(last_byte & (1 << i))) {
-                    return bit_cnt - excess_bits + i;
-                }
-            }
-        }
-    }
-    
-    return -1;
-}
+#if defined(_WIN32)
+#include <windows.h>
+#else
+#include <dirent.h>
+#endif
+#include "zfw_io.h"
+#include "zfw_mem.h"
 
 bool ZFW_DoesFilenameHaveExt(const char* const filename, const char* const ext) {
     assert(filename);
@@ -165,8 +23,7 @@ bool ZFW_DoesFilenameHaveExt(const char* const filename, const char* const ext) 
 
 zfw_t_byte* ZFW_PushEntireFileContents(const char* const file_path, zfw_s_mem_arena* const mem_arena, const bool incl_terminating_byte) {
     assert(file_path);
-    assert(mem_arena);
-    assert(ZFW_IsMemArenaValid(mem_arena));
+    assert(mem_arena && ZFW_IsMemArenaValid(mem_arena));
 
     FILE* const fs = fopen(file_path, "rb");
 
@@ -193,4 +50,75 @@ zfw_t_byte* ZFW_PushEntireFileContents(const char* const file_path, zfw_s_mem_ar
     }
 
     return contents;
+}
+
+bool ZFW_LoadDirectoryFilenames(zfw_s_filenames* const filenames, zfw_s_mem_arena* const mem_arena, const char* const dir_param) {
+    assert(filenames && ZFW_IS_ZERO(*filenames));
+    assert(mem_arena && ZFW_IsMemArenaValid(mem_arena));
+    assert(dir_param);
+
+    const size_t mem_arena_init_offs = mem_arena->offs;
+
+#if defined(_WIN32)
+    char search_path[MAX_PATH];
+    snprintf(search_path, MAX_PATH, "%s\\*", dir_param);
+
+    WIN32_FIND_DATAA find_data;
+    HANDLE find = FindFirstFileA(search_path, &find_data);
+
+    if (find == INVALID_HANDLE_VALUE) {
+        return false;
+    }
+
+    do {
+        zfw_t_filename_buf* const buf = ZFW_MEM_ARENA_PUSH_TYPE(mem_arena, zfw_t_filename_buf);
+
+        if (!buf) {
+            FindClose(ha);
+            ZFW_ZERO_OUT(*filenames);
+            ZFW_RewindMemArena(mem_arena, mem_arena_init_offs);
+            return false;
+        }
+
+        strncpy((char*)buf, find_data.cFileName, sizeof(*buf));
+
+        if (!filenames->buf) {
+            filenames->buf = buf;
+        }
+
+        filenames->cnt++;
+    } while (FindNextFileA(find, &find_data));
+
+    FindClose(find);
+#else
+    DIR* const dir = opendir(dir_param);
+
+    if (!dir) {
+        return false;
+    }
+
+    const struct dirent* dir_entry;
+
+    while ((dir_entry = readdir(dir)) != NULL) {
+        zfw_t_filename_buf* const buf = ZFW_MEM_ARENA_PUSH_TYPE(mem_arena, zfw_t_filename_buf);
+
+        if (!buf) {
+            closedir(dir);
+            ZFW_ZERO_OUT(*filenames);
+            ZFW_RewindMemArena(mem_arena, mem_arena_init_offs);
+            return false;
+        }
+
+        strncpy((char*)buf, dir_entry->d_name, sizeof(*buf));
+
+        if (!filenames->buf)
+            filenames->buf = buf;
+
+        filenames->cnt++;
+    }
+
+    closedir(dir);
+#endif
+
+    return true;
 }
