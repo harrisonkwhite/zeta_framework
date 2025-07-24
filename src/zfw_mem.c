@@ -1,6 +1,7 @@
-#include <stdlib.h>
-#include <stdio.h>
 #include "zfw_mem.h"
+
+#include <stdlib.h>
+#include "zfw_io.h"
 
 bool ZFW_IsZero(const void* const mem, const size_t size) {
     assert(mem);
@@ -37,6 +38,7 @@ bool ZFW_InitMemArena(zfw_s_mem_arena* const arena, const size_t size) {
     arena->buf = malloc(size);
 
     if (!arena->buf) {
+        ZFW_LogError("Failed to initialise memory arena of size %zu bytes!", size);
         return false;
     }
 
@@ -62,7 +64,7 @@ void* ZFW_PushToMemArena(zfw_s_mem_arena* const arena, const size_t size, const 
     const size_t offs_next = offs_aligned + size;
 
     if (offs_next > arena->size) {
-        fprintf(stderr, "Failed to push to memory arena!");
+        ZFW_LogError("Failed to push %zu bytes to memory arena!", size);
         return NULL;
     }
 

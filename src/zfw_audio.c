@@ -1,5 +1,7 @@
-#include <stdio.h>
 #include "zfw_audio.h"
+
+#include <stdio.h>
+#include "zfw_io.h"
 
 static bool LoadSoundTypeFromFile(zfw_s_sound_type* const type, const char* const fp, zfw_s_mem_arena* const mem_arena) {
     assert(ZFW_IS_ZERO(*type));
@@ -8,7 +10,7 @@ static bool LoadSoundTypeFromFile(zfw_s_sound_type* const type, const char* cons
     ma_decoder decoder;
 
     if (ma_decoder_init_file(fp, NULL, &decoder) != MA_SUCCESS) {
-        fprintf(stderr, "Failed to open audio file \"%s\".\n", fp);
+        ZFW_LogError("Failed to open audio file \"%s\".", fp);
         return false;
     }
 
@@ -40,7 +42,7 @@ static bool LoadSoundTypeFromFile(zfw_s_sound_type* const type, const char* cons
     ma_decoder_uninit(&decoder);
 
     if (frames_read < frame_cnt) {
-        fprintf(stderr, "Only read %llu of %llu frames for audio file \"%s\"!\n", frames_read, frame_cnt, fp);
+        ZFW_LogError("Only read %llu of %llu frames for audio file \"%s\"!", frames_read, frame_cnt, fp);
         return false;
     }
 
@@ -51,7 +53,7 @@ bool ZFW_InitAudioSys(zfw_s_audio_sys* const audio_sys) {
     assert(ZFW_IS_ZERO(*audio_sys));
 
     if (ma_engine_init(NULL, &audio_sys->eng) != MA_SUCCESS) {
-        fprintf(stderr, "Failed to initialise miniaudio engine!\n");
+        ZFW_LogError("Failed to initialise miniaudio engine!");
         return false;
     }
 
@@ -122,7 +124,7 @@ bool ZFW_PlaySound(zfw_s_audio_sys* const audio_sys, const zfw_s_sound_types* co
     const int index = ZFW_FirstInactiveBitIndex(audio_sys->snd_activity, ZFW_SND_LIMIT);
 
     if (index == -1) {
-        fprintf(stderr, "Failed to play sound due to insufficient space!\n");
+        ZFW_LogError("Failed to play sound due to insufficient space!");
         return false;
     }
 

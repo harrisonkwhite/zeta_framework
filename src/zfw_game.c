@@ -1,8 +1,9 @@
 #include "zfw_game.h"
 
-#include <GLFW/glfw3.h>
 #include <stdio.h>
+#include <GLFW/glfw3.h>
 #include "zfw_random.h"
+#include "zfw_io.h"
 
 #define PERM_MEM_ARENA_SIZE ZFW_MEGABYTES(80)
 #define TEMP_MEM_ARENA_SIZE ZFW_MEGABYTES(40)
@@ -185,7 +186,7 @@ static void GLFWCharCallback(GLFWwindow* const window, const unsigned int codepo
         }
     }
 
-    fprintf(stderr, "Unicode buffer is full!");
+    ZFW_LogError("Unicode buffer is full!");
 }
 
 static GLFWwindow* CreateGLFWWindow(const zfw_s_vec_2d_i size, const char* const title, const zfw_e_window_flags flags, s_glfw_user_data* const user_data) {
@@ -209,7 +210,7 @@ static GLFWwindow* CreateGLFWWindow(const zfw_s_vec_2d_i size, const char* const
         glfwSetScrollCallback(glfw_window, GLFWScrollCallback);
         glfwSetCharCallback(glfw_window, GLFWCharCallback);
     } else {
-        fprintf(stderr, "Failed to create a GLFW window!\n");
+        ZFW_LogError("Failed to create a GLFW window!");
     }
 
     return glfw_window;
@@ -234,7 +235,7 @@ bool ZFW_RunGame(const zfw_s_game_info* const info) {
     //
     // Initialisation
     //
-    printf("Initialising...\n");
+    ZFW_Log("Initialising...");
 
     ZFW_InitRNG();
 
@@ -242,7 +243,7 @@ bool ZFW_RunGame(const zfw_s_game_info* const info) {
     zfw_s_mem_arena perm_mem_arena = {0}; // The memory in here exists for the lifetime of the program, it does not get reset.
 
     if (!ZFW_InitMemArena(&perm_mem_arena, PERM_MEM_ARENA_SIZE)) {
-        fprintf(stderr, "Failed to initialise the permanent memory arena!\n");
+        ZFW_LogError("Failed to initialise the permanent memory arena!");
         CleanGame(&cleanup_info);
         return false;
     }
@@ -252,7 +253,7 @@ bool ZFW_RunGame(const zfw_s_game_info* const info) {
     zfw_s_mem_arena temp_mem_arena = {0}; // While the memory here also exists for the program lifetime, it gets reset after game initialisation and after every frame. Useful if you just need some temporary working space.
 
     if (!ZFW_InitMemArena(&temp_mem_arena, TEMP_MEM_ARENA_SIZE)) {
-        fprintf(stderr, "Failed to initialise the temporary memory arena!\n");
+        ZFW_LogError("Failed to initialise the temporary memory arena!");
         CleanGame(&cleanup_info);
         return false;
     }
@@ -261,7 +262,7 @@ bool ZFW_RunGame(const zfw_s_game_info* const info) {
 
     // Initialise GLFW.
     if (!glfwInit()) {
-        fprintf(stderr, "Failed to initialise GLFW!\n");
+        ZFW_LogError("Failed to initialise GLFW!");
         CleanGame(&cleanup_info);
         return false;
     }
@@ -278,7 +279,7 @@ bool ZFW_RunGame(const zfw_s_game_info* const info) {
 
     // Initialise OpenGL rendering.
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
-        fprintf(stderr, "Failed to load OpenGL function pointers!\n");
+        ZFW_LogError("Failed to load OpenGL function pointers!");
         CleanGame(&cleanup_info);
         return false;
     }
@@ -319,7 +320,7 @@ bool ZFW_RunGame(const zfw_s_game_info* const info) {
         user_mem = ZFW_PushToMemArena(&perm_mem_arena, info->user_mem_size, info->user_mem_alignment);
 
         if (!user_mem) {
-            fprintf(stderr, "Failed to allocate user memory!\n");
+            ZFW_LogError("Failed to allocate user memory!");
             CleanGame(&cleanup_info);
             return false;
         }
@@ -336,7 +337,7 @@ bool ZFW_RunGame(const zfw_s_game_info* const info) {
         };
 
         if (!info->init_func(&func_data)) {
-            fprintf(stderr, "Provided game initialisation function failed!\n");
+            ZFW_LogError("Provided game initialisation function failed!");
             CleanGame(&cleanup_info);
             return false;
         }
@@ -352,7 +353,7 @@ bool ZFW_RunGame(const zfw_s_game_info* const info) {
     double frame_time_last = glfwGetTime();
     double frame_dur_accum = 0.0;
 
-    printf("Entering the main loop...\n");
+    ZFW_Log("Entering the main loop...");
 
     while (!glfwWindowShouldClose(glfw_window)) {
         ZFW_RewindMemArena(&temp_mem_arena, 0);

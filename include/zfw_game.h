@@ -3,7 +3,6 @@
 
 #include <stdbool.h>
 #include <stdint.h>
-#include <GLFW/glfw3.h>
 #include "zfw_graphics.h"
 #include "zfw_math.h"
 #include "zfw_audio.h"

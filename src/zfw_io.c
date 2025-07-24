@@ -1,3 +1,5 @@
+#include "zfw_io.h"
+
 #include <stdlib.h>
 #include <stdarg.h>
 #include <stdio.h>
@@ -6,8 +8,6 @@
 #else
 #include <dirent.h>
 #endif
-#include "zfw_io.h"
-#include "zfw_mem.h"
 
 void ZFW_Log(const char* const format, ...) {
     va_list args;

@@ -1,6 +1,6 @@
-#include <assert.h>
-#include <float.h>
 #include "zfw_math.h"
+
+#include <float.h>
 
 const zfw_s_vec_2d zfw_g_cardinal_dir_vecs[] = {
     [zfw_ek_cardinal_dir_right] = {1.0f, 0.0f},
