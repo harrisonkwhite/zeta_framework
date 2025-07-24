@@ -18,6 +18,7 @@ add_library(zeta_framework STATIC
     src/zfw_game.c
     src/zfw_math.c
     src/graphics/zfw_rendering.c
+    src/graphics/zfw_surfaces.c
     src/graphics/zfw_textures.c
     src/graphics/zfw_fonts.c
     src/graphics/zfw_shaders.c

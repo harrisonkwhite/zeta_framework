@@ -356,6 +356,8 @@ bool ZFW_RunGame(const zfw_s_game_info* const info) {
     ZFW_Log("Entering the main loop...");
 
     while (!glfwWindowShouldClose(glfw_window)) {
+        glfwPollEvents();
+
         ZFW_RewindMemArena(&temp_mem_arena, 0);
 
         const zfw_s_window_state window_state = WindowState(glfw_window);
@@ -436,8 +438,6 @@ bool ZFW_RunGame(const zfw_s_game_info* const info) {
 
             glfwSwapBuffers(glfw_window);
         }
-
-        glfwPollEvents();
     }
 
     info->clean_func(user_mem);

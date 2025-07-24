@@ -257,7 +257,6 @@ static inline bool ZFW_IsRenderingContextValid(const zfw_s_rendering_context* co
     return ZFW_IsRenderingBasisValid(context->basis) && ZFW_IsRenderingStateValid(context->state) && context->window_size.x > 0 && context->window_size.y > 0;
 }
 
-
 //
 // zfw_rendering.c
 //
@@ -275,6 +274,37 @@ void ZFW_RenderPolyOutline(const zfw_s_rendering_context* const context, const z
 void ZFW_RenderBarHor(const zfw_s_rendering_context* const context, const zfw_s_rect rect, const float perc, const zfw_s_vec_3d col_front, const zfw_s_vec_3d col_back);
 
 void ZFW_SubmitBatch(const zfw_s_rendering_context* const context);
+
+//
+// zfw_surfaces.c
+//
+typedef struct {
+    zfw_t_gl_id* fb_gl_ids;
+    zfw_t_gl_id* fb_tex_gl_ids;
+    int cnt;
+
+    zfw_s_vec_2d_i size;
+} zfw_s_render_surfaces;
+
+static inline bool ZFW_IsRenderSurfacesValid(const zfw_s_render_surfaces* const surfs) {
+    assert(surfs);
+
+    if (!surfs->fb_gl_ids || !surfs->fb_tex_gl_ids || surfs->cnt <= 0 || surfs->size.x <= 0 || surfs->size.y <= 0) {
+        return false;
+    }
+    
+    for (int i = 0; i < surfs->cnt; i++) {
+        if (!glIsFramebuffer(surfs->fb_gl_ids[i]) || !glIsTexture(surfs->fb_tex_gl_ids[i])) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+bool ZFW_InitRenderSurfaces(zfw_s_render_surfaces* const surfs, zfw_s_mem_arena* const mem_arena, const int cnt, const zfw_s_vec_2d_i size);
+void ZFW_CleanRenderSurfaces(zfw_s_render_surfaces* const surfs);
+bool ZFW_ResizeRenderSurfaces(zfw_s_render_surfaces* const surfs, const zfw_s_vec_2d_i size);
 
 //
 // zfw_textures.c
