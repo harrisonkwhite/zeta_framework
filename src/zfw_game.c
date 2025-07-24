@@ -1,9 +1,8 @@
+#include "zfw_game.h"
+
 #include <GLFW/glfw3.h>
 #include <stdio.h>
-#include "zfw_game.h"
 #include "zfw_random.h"
-#include "zfw_rendering.h"
-#include "zfw_io.h"
 
 #define PERM_MEM_ARENA_SIZE ZFW_MEGABYTES(80)
 #define TEMP_MEM_ARENA_SIZE ZFW_MEGABYTES(40)

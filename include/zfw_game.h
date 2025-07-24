@@ -4,13 +4,10 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <GLFW/glfw3.h>
+#include "zfw_graphics.h"
 #include "zfw_math.h"
-#include "zfw_rendering.h"
 #include "zfw_audio.h"
 #include "zfw_mem.h"
-
-#define ZFW_GL_VERSION_MAJOR 4
-#define ZFW_GL_VERSION_MINOR 3
 
 typedef char zfw_t_unicode_buf[32];
 
