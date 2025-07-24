@@ -368,8 +368,8 @@ bool ZFW_RunGame(const zfw_s_game_info* const info) {
                 }
 
                 if (res == ek_game_tick_func_result_error) {
-                    running = false;
                     error = true;
+                    goto clean_user_game;
                 }
 
                 frame_dur_accum -= TARG_TICK_INTERVAL;
@@ -394,8 +394,8 @@ bool ZFW_RunGame(const zfw_s_game_info* const info) {
                 };
 
                 if (!info->render_func(&func_data)) {
-                    running = false;
                     error = true;
+                    goto clean_user_game;
                 }
 
                 assert(rendering_state->batch.num_slots_used == 0 && "User-defined rendering function completed, but not everything has been flushed!");
@@ -405,6 +405,10 @@ bool ZFW_RunGame(const zfw_s_game_info* const info) {
         }
     }
 
+    //
+    // Cleanup
+    //
+clean_user_game:
     if (info->clean_func) {
         info->clean_func(user_mem);
     }
