@@ -366,14 +366,15 @@ bool ZFW_RunGame(const zfw_s_game_info* const info) {
         frame_dur_accum += frame_time - frame_time_last; // Update accumulator with delta time.
         frame_time_last = frame_time;
 
-        // Once enough time has passed (i.e. the time accumulator has reached the tick interval), run a tick.
+        // Once enough time has passed (i.e. the time accumulator has reached the tick interval), run at least a single tick and update the display.
         if (frame_dur_accum >= TARG_TICK_INTERVAL) {
             const zfw_s_input_state input_state_last = input_state;
             RefreshInputState(&input_state, glfw_window, glfw_user_data.mouse_scroll_state);
 
             ZFW_UpdateAudioSys(&audio_sys);
 
-            {
+            // Run ticks.
+            do {
                 // Execute the user-defined tick function.
                 const zfw_s_game_tick_func_data func_data = {
                     .user_mem = user_mem,
@@ -402,9 +403,11 @@ bool ZFW_RunGame(const zfw_s_game_info* const info) {
                     CleanGame(&cleanup_info);
                     return false;
                 }
-            }
 
-            // Execute rendering step.
+                frame_dur_accum -= TARG_TICK_INTERVAL;
+            } while (frame_dur_accum >= TARG_TICK_INTERVAL);
+
+            // Update the display.
             ZFW_ZERO_OUT(*rendering_state);
             ZFW_InitRenderingState(rendering_state);
 
@@ -432,9 +435,6 @@ bool ZFW_RunGame(const zfw_s_game_info* const info) {
             }
 
             glfwSwapBuffers(glfw_window);
-
-            // Reset the accumulator so there is a delay until the next tick.
-            frame_dur_accum = 0;
         }
 
         glfwPollEvents();
