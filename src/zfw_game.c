@@ -2,6 +2,9 @@
 
 #include <stdio.h>
 #include <GLFW/glfw3.h>
+#include "zfw_audio.h"
+#include "zfw_graphics.h"
+#include "zfw_mem.h"
 #include "zfw_random.h"
 #include "zfw_io.h"
 
@@ -93,14 +96,6 @@ typedef struct {
     zfw_t_unicode_buf unicode_buf; // This is filled up as characters are typed, and zeroed out after the next tick. This way, the ZFW user can see everything that has been typed since the last tick.
 } s_glfw_user_data;
 
-typedef struct {
-    zfw_s_mem_arena* perm_mem_arena;
-    zfw_s_mem_arena* temp_mem_arena;
-    GLFWwindow* glfw_window;
-    zfw_s_rendering_basis* rendering_basis;
-    zfw_s_audio_sys* audio_sys;
-} s_game_cleanup_info;
-
 static void AssertGameInfoValidity(const zfw_s_game_info* const info) {
     assert(info->user_mem_size >= 0);
     assert(info->user_mem_size == 0 || ZFW_IsValidAlignment(info->user_mem_alignment));
@@ -111,25 +106,6 @@ static void AssertGameInfoValidity(const zfw_s_game_info* const info) {
     assert(info->init_func);
     assert(info->tick_func);
     assert(info->render_func);
-}
-
-static void CleanGame(const s_game_cleanup_info* const cleanup_info) {
-    if (cleanup_info->audio_sys) {
-        ZFW_CleanAudioSys(cleanup_info->audio_sys);
-    }
-
-    if (cleanup_info->rendering_basis) {
-        ZFW_CleanRenderingBasis(cleanup_info->rendering_basis);
-    }
-
-    if (cleanup_info->glfw_window) {
-        glfwDestroyWindow(cleanup_info->glfw_window);
-    }
-
-    glfwTerminate();
-
-    ZFW_CleanMemArena(cleanup_info->temp_mem_arena);
-    ZFW_CleanMemArena(cleanup_info->perm_mem_arena);
 }
 
 static zfw_s_window_state WindowState(GLFWwindow* const glfw_window) {
@@ -228,9 +204,10 @@ static void ResizeGLViewportIfDifferent(const zfw_s_vec_2d_i size) {
 }
 
 bool ZFW_RunGame(const zfw_s_game_info* const info) {
+    assert(info);
     AssertGameInfoValidity(info);
 
-    s_game_cleanup_info cleanup_info = {0}; // When something needs to be cleaned up after the game ends, the corresponding pointer here can be assigned.
+    bool error = false;
 
     //
     // Initialisation
@@ -244,44 +221,38 @@ bool ZFW_RunGame(const zfw_s_game_info* const info) {
 
     if (!ZFW_InitMemArena(&perm_mem_arena, PERM_MEM_ARENA_SIZE)) {
         ZFW_LogError("Failed to initialise the permanent memory arena!");
-        CleanGame(&cleanup_info);
-        return false;
+        error = true;
+        goto clean_nothing;
     }
-
-    cleanup_info.perm_mem_arena = &perm_mem_arena;
 
     zfw_s_mem_arena temp_mem_arena = {0}; // While the memory here also exists for the program lifetime, it gets reset after game initialisation and after every frame. Useful if you just need some temporary working space.
 
     if (!ZFW_InitMemArena(&temp_mem_arena, TEMP_MEM_ARENA_SIZE)) {
         ZFW_LogError("Failed to initialise the temporary memory arena!");
-        CleanGame(&cleanup_info);
-        return false;
+        error = true;
+        goto clean_perm_mem_arena;
     }
-
-    cleanup_info.temp_mem_arena = &temp_mem_arena;
 
     // Initialise GLFW.
     if (!glfwInit()) {
         ZFW_LogError("Failed to initialise GLFW!");
-        CleanGame(&cleanup_info);
-        return false;
+        error = true;
+        goto clean_temp_mem_arena;
     }
 
     s_glfw_user_data glfw_user_data = {0}; // This is accessible from the GLFW callbacks.
     GLFWwindow* const glfw_window = CreateGLFWWindow(info->window_init_size, info->window_title, info->window_flags, &glfw_user_data);
 
     if (!glfw_window) {
-        CleanGame(&cleanup_info);
-        return false;
+        error = true;
+        goto clean_glfw;
     }
-
-    cleanup_info.glfw_window = glfw_window;
 
     // Initialise OpenGL rendering.
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
         ZFW_LogError("Failed to load OpenGL function pointers!");
-        CleanGame(&cleanup_info);
-        return false;
+        error = true;
+        goto clean_glfw_window;
     }
 
     glEnable(GL_BLEND);
@@ -290,28 +261,24 @@ bool ZFW_RunGame(const zfw_s_game_info* const info) {
     zfw_s_rendering_basis rendering_basis = {0};
 
     if (!ZFW_InitRenderingBasis(&rendering_basis, &temp_mem_arena)) {
-        CleanGame(&cleanup_info);
-        return false;
+        error = true;
+        goto clean_glfw_window;
     }
-
-    cleanup_info.rendering_basis = &rendering_basis;
 
     zfw_s_rendering_state* const rendering_state = ZFW_MEM_ARENA_PUSH_TYPE(&perm_mem_arena, zfw_s_rendering_state);
 
     if (!rendering_state) {
-        CleanGame(&cleanup_info);
-        return false;
+        error = true;
+        goto clean_rendering_basis;
     }
 
     // Initialise audio system.
     zfw_s_audio_sys audio_sys = {0};
 
     if (!ZFW_InitAudioSys(&audio_sys)) {
-        CleanGame(&cleanup_info);
-        return false;
+        error = true;
+        goto clean_rendering_basis;
     }
-
-    cleanup_info.audio_sys = &audio_sys;
 
     // Initialise user memory.
     void* user_mem = NULL;
@@ -321,8 +288,8 @@ bool ZFW_RunGame(const zfw_s_game_info* const info) {
 
         if (!user_mem) {
             ZFW_LogError("Failed to allocate user memory!");
-            CleanGame(&cleanup_info);
-            return false;
+            error = true;
+            goto clean_audio_sys;
         }
     }
 
@@ -338,8 +305,8 @@ bool ZFW_RunGame(const zfw_s_game_info* const info) {
 
         if (!info->init_func(&func_data)) {
             ZFW_LogError("Provided game initialisation function failed!");
-            CleanGame(&cleanup_info);
-            return false;
+            error = true;
+            goto clean_audio_sys;
         }
     }
 
@@ -353,9 +320,11 @@ bool ZFW_RunGame(const zfw_s_game_info* const info) {
     double frame_time_last = glfwGetTime();
     double frame_dur_accum = 0.0;
 
+    bool running = true;
+
     ZFW_Log("Entering the main loop...");
 
-    while (!glfwWindowShouldClose(glfw_window)) {
+    while (!glfwWindowShouldClose(glfw_window) && running) {
         glfwPollEvents();
 
         ZFW_RewindMemArena(&temp_mem_arena, 0);
@@ -395,15 +364,12 @@ bool ZFW_RunGame(const zfw_s_game_info* const info) {
                 glfw_user_data.mouse_scroll_state = zfw_ek_mouse_scroll_state_none;
 
                 if (res == ek_game_tick_func_result_exit) {
-                    info->clean_func(user_mem);
-                    CleanGame(&cleanup_info);
-                    return true;
+                    running = false;
                 }
 
                 if (res == ek_game_tick_func_result_error) {
-                    info->clean_func(user_mem);
-                    CleanGame(&cleanup_info);
-                    return false;
+                    running = false;
+                    error = true;
                 }
 
                 frame_dur_accum -= TARG_TICK_INTERVAL;
@@ -428,9 +394,8 @@ bool ZFW_RunGame(const zfw_s_game_info* const info) {
                 };
 
                 if (!info->render_func(&func_data)) {
-                    info->clean_func(user_mem);
-                    CleanGame(&cleanup_info);
-                    return false;
+                    running = false;
+                    error = true;
                 }
 
                 assert(rendering_state->batch.num_slots_used == 0 && "User-defined rendering function completed, but not everything has been flushed!");
@@ -440,8 +405,29 @@ bool ZFW_RunGame(const zfw_s_game_info* const info) {
         }
     }
 
-    info->clean_func(user_mem);
-    CleanGame(&cleanup_info);
+    if (info->clean_func) {
+        info->clean_func(user_mem);
+    }
 
-    return true;
+clean_audio_sys:
+    ZFW_CleanAudioSys(&audio_sys);
+
+clean_rendering_basis:
+    ZFW_CleanRenderingBasis(&rendering_basis);
+
+clean_glfw_window:
+    glfwDestroyWindow(glfw_window);
+
+clean_glfw:
+    glfwTerminate();
+
+clean_temp_mem_arena:
+    ZFW_CleanMemArena(&temp_mem_arena);
+
+clean_perm_mem_arena:
+    ZFW_CleanMemArena(&perm_mem_arena);
+
+clean_nothing:
+
+    return !error;
 }

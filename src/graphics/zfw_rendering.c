@@ -157,7 +157,7 @@ static unsigned short* PushBatchElems(zfw_s_mem_arena* const mem_arena) {
 
 bool ZFW_InitRenderingBasis(zfw_s_rendering_basis* const basis, zfw_s_mem_arena* const temp_mem_arena) {
     assert(basis && ZFW_IS_ZERO(*basis));
-    assert(temp_mem_arena && ZFW_IsMemArenaValid(temp_mem_arena));
+    assert(temp_mem_arena && ZFW_IsMemArenaValid(temp_mem_arena) && temp_mem_arena->buf);
 
     {
         const unsigned short* const batch_elems = PushBatchElems(temp_mem_arena);

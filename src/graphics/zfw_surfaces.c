@@ -63,8 +63,6 @@ error:
         glDeleteFramebuffers(cnt, surfs->fb_gl_ids);
     }
 
-    ZFW_RewindMemArena(mem_arena, mem_arena_init_offs);
-
     ZFW_ZERO_OUT(*surfs);
 
     return false;
@@ -79,11 +77,9 @@ void ZFW_CleanRenderSurfaces(zfw_s_render_surfaces* const surfs) {
     ZFW_ZERO_OUT(*surfs);
 }
 
-bool ZFWResizeRenderSurfaces(zfw_s_render_surfaces* const surfs, const zfw_s_vec_2d_i size) {
+bool ZFW_ResizeRenderSurfaces(zfw_s_render_surfaces* const surfs, const zfw_s_vec_2d_i size) {
     assert(surfs && ZFW_IsRenderSurfacesValid(surfs));
     assert(size.x > 0 && size.y > 0);
-
-    // TODO: I don't like the error handling in this function.
 
     surfs->size = size;
 

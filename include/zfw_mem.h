@@ -67,7 +67,8 @@ typedef struct {
 } zfw_s_mem_arena;
 
 static inline bool ZFW_IsMemArenaValid(const zfw_s_mem_arena* const arena) {
-    return arena->buf && arena->size > 0 && arena->offs <= arena->size;
+    assert(arena);
+    return ZFW_IS_ZERO(*arena) || (arena->buf && arena->size > 0 && arena->offs <= arena->size);
 }
 
 bool ZFW_InitMemArena(zfw_s_mem_arena* const arena, const size_t size);
@@ -78,7 +79,6 @@ void ZFW_RewindMemArena(zfw_s_mem_arena* const arena, const size_t rewind_offs);
 #define ZFW_MEM_ARENA_PUSH_TYPE(arena, type) (type*)ZFW_PushToMemArena(arena, sizeof(type), ZFW_ALIGN_OF(type))
 #define ZFW_MEM_ARENA_PUSH_TYPE_MANY(arena, type, cnt) (type*)ZFW_PushToMemArena(arena, sizeof(type) * (cnt), ZFW_ALIGN_OF(type))
 
-int ZFW_FirstActiveBitIndex(const zfw_t_byte* const bytes, const int bit_cnt); // Returns -1 if an active bit is not found.
 int ZFW_FirstInactiveBitIndex(const zfw_t_byte* const bytes, const int bit_cnt); // Returns -1 if an inactive bit is not found.
 
 static inline void ZFW_ActivateBit(const size_t bit_index, zfw_t_byte* const bytes, const size_t bit_cnt) {
