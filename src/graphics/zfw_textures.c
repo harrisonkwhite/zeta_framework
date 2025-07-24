@@ -1,6 +1,18 @@
 #include "zfw_graphics.h"
 
 #include <stb_image.h>
+#include "zfw_io.h"
+
+void ZFW_SetUpTexture(const zfw_t_gl_id tex_gl_id, const zfw_s_vec_2d_i tex_size, const zfw_t_byte* const rgba_px_data) {
+    assert(tex_gl_id != 0);
+    assert(tex_size.x > 0 && tex_size.y > 0);
+    assert(rgba_px_data);
+
+    glBindTexture(GL_TEXTURE_2D, tex_gl_id);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, tex_size.x, tex_size.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, rgba_px_data);
+}
 
 bool ZFW_LoadTexturesFromFiles(zfw_s_textures* const textures, zfw_s_mem_arena* const mem_arena, const int tex_cnt, const zfw_t_texture_index_to_file_path tex_index_to_fp) {
     assert(textures && ZFW_IS_ZERO(*textures));
@@ -26,19 +38,16 @@ bool ZFW_LoadTexturesFromFiles(zfw_s_textures* const textures, zfw_s_mem_arena* 
 
     for (int i = 0; i < tex_cnt; ++i) {
         const char* const fp = tex_index_to_fp(i); // Using a function pointer instead of an array of strings for safety.
+        assert(fp);
 
         unsigned char* const px_data = stbi_load(fp, &sizes[i].x, &sizes[i].y, NULL, ZFW_TEXTURE_CHANNEL_CNT);
 
         if (!px_data) {
-            fprintf(stderr, "Failed to load image \"%s\"! STB Error: %s\n", fp, stbi_failure_reason());
+            ZFW_LogError("Failed to load image \"%s\"!", fp);
             return false;
         }
 
-        // TODO: Extract into helper function.
-        glBindTexture(GL_TEXTURE_2D, gl_ids[i]);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, sizes[i].x, sizes[i].y, 0, GL_RGBA, GL_UNSIGNED_BYTE, px_data);
+        ZFW_SetUpTexture(gl_ids[i], sizes[i], px_data);
 
         stbi_image_free(px_data);
     }

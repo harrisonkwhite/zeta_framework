@@ -227,10 +227,13 @@ static inline bool ZFW_IsBatchStateValid(const zfw_s_batch_state* const state) {
 typedef struct {
     zfw_s_gl_ids batch_gl_ids;
     zfw_s_batch_shader_prog batch_shader_prog;
+    zfw_t_gl_id px_tex_gl_id;
 } zfw_s_rendering_basis;
 
 static inline bool ZFW_IsRenderingBasisValid(const zfw_s_rendering_basis* const basis) {
-    return ZFW_IsGLIDsValid(&basis->batch_gl_ids) && ZFW_IsBatchShaderProgValid(&basis->batch_shader_prog);
+    return ZFW_IsGLIDsValid(&basis->batch_gl_ids)
+        && ZFW_IsBatchShaderProgValid(&basis->batch_shader_prog)
+        && glIsTexture(basis->px_tex_gl_id);
 }
 
 typedef struct {
@@ -265,12 +268,29 @@ void ZFW_InitRenderingState(zfw_s_rendering_state* const state);
 
 void ZFW_RenderClear(const zfw_s_vec_4d col);
 void ZFW_Render(const zfw_s_rendering_context* const context, const zfw_s_batch_slot_write_info* const write_info);
+void ZFW_RenderRect(const zfw_s_rendering_context* const context, const zfw_s_rect rect, const zfw_s_vec_4d blend);
+void ZFW_RenderRectOutline(const zfw_s_rendering_context* const context, const zfw_s_rect rect, const zfw_s_vec_4d blend, const float thickness);
+void ZFW_RenderLine(const zfw_s_rendering_context* const context, const zfw_s_vec_2d a, const zfw_s_vec_2d b, const zfw_s_vec_4d blend, const float width);
+void ZFW_RenderPolyOutline(const zfw_s_rendering_context* const context, const zfw_s_poly poly, const zfw_s_vec_4d blend, const float width);
+void ZFW_RenderBarHor(const zfw_s_rendering_context* const context, const zfw_s_rect rect, const float perc, const zfw_s_vec_3d col_front, const zfw_s_vec_3d col_back);
 
 void ZFW_SubmitBatch(const zfw_s_rendering_context* const context);
 
 //
 // zfw_textures.c
 //
+void ZFW_SetUpTexture(const zfw_t_gl_id tex_gl_id, const zfw_s_vec_2d_i tex_size, const zfw_t_byte* const rgba_px_data);
+
+static inline zfw_t_gl_id ZFW_GenTexture(const zfw_s_vec_2d_i tex_size, const zfw_t_byte* const rgba_px_data) {
+    assert(tex_size.x > 0 && tex_size.y > 0);
+    assert(rgba_px_data);
+
+    zfw_t_gl_id gl_id;
+    glGenTextures(1, &gl_id);
+    ZFW_SetUpTexture(gl_id, tex_size, rgba_px_data);
+    return gl_id;
+}
+
 bool ZFW_LoadTexturesFromFiles(zfw_s_textures* const textures, zfw_s_mem_arena* const mem_arena, const int tex_cnt, const zfw_t_texture_index_to_file_path tex_index_to_fp);
 void ZFW_UnloadTextures(zfw_s_textures* const textures);
 
