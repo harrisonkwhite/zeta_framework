@@ -1,5 +1,24 @@
 #include "zfw_graphics.h"
 
+#include "zfw_io.h"
+#include "zfw_mem.h"
+
+static zfw_t_gl_id CreateShaderProgFromFiles(const zfw_s_shader_prog_file_paths fps, zfw_s_mem_arena* const temp_mem_arena) {
+    const char* const vs_src = (const char*)ZFW_PushEntireFileContents(fps.vs_fp, temp_mem_arena, true);
+
+    if (!vs_src) {
+        return 0;
+    }
+
+    const char* const fs_src = (const char*)ZFW_PushEntireFileContents(fps.fs_fp, temp_mem_arena, true);
+
+    if (!fs_src) {
+        return 0;
+    }
+
+    return ZFW_CreateShaderProgFromSrcs(vs_src, fs_src);
+}
+
 zfw_t_gl_id ZFW_CreateShaderFromSrc(const char* const src, const bool frag) {
     assert(src);
 
@@ -45,4 +64,45 @@ zfw_t_gl_id ZFW_CreateShaderProgFromSrcs(const char* const vert_src, const char*
     glDeleteShader(frag_shader_gl_id);
 
     return prog_gl_id;
+}
+
+zfw_s_shader_progs ZFW_LoadShaderProgsFromFiles(zfw_s_mem_arena* const mem_arena, const int prog_cnt, const zfw_t_shader_prog_index_to_file_paths prog_index_to_fps, zfw_s_mem_arena* const temp_mem_arena) {
+    assert(mem_arena && ZFW_IsMemArenaValid(mem_arena));
+    assert(prog_cnt > 0);
+    assert(prog_index_to_fps);
+    assert(temp_mem_arena && ZFW_IsMemArenaValid(temp_mem_arena));
+
+    zfw_t_gl_id* const gl_ids = ZFW_MEM_ARENA_PUSH_TYPE_MANY(mem_arena, zfw_t_gl_id, prog_cnt);
+
+    if (!gl_ids) {
+        return (zfw_s_shader_progs){0};
+    }
+
+    for (int i = 0; i < prog_cnt; i++) {
+        const zfw_s_shader_prog_file_paths fps = prog_index_to_fps(i);
+
+        gl_ids[i] = CreateShaderProgFromFiles(fps, temp_mem_arena);
+
+        if (!gl_ids[i]) {
+            // Delete all former shader programs.
+            for (int j = 0; j < i; j++) {
+                glDeleteProgram(gl_ids[j]);
+            }
+
+            return (zfw_s_shader_progs){0};
+        }
+    }
+
+    return (zfw_s_shader_progs){
+        .gl_ids = gl_ids,
+        .cnt = prog_cnt
+    };
+}
+
+void ZFW_UnloadShaderProgs(zfw_s_shader_progs* const progs) {
+    for (int i = 0; i < progs->cnt; i++) {
+        glDeleteProgram(progs->gl_ids[i]);
+    }
+
+    ZFW_ZERO_OUT(*progs);
 }

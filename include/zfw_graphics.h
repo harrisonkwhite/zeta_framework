@@ -79,10 +79,6 @@ typedef struct {
 } zfw_s_textures;
 
 static inline bool ZFW_IsTexturesValid(const zfw_s_textures* const textures) {
-    if (ZFW_IS_ZERO(*textures)) {
-        return true;
-    }
-
     if (textures->cnt <= 0 || !textures->gl_ids || !textures->sizes) {
         return false;
     }
@@ -110,18 +106,14 @@ typedef struct {
 
 // Fonts can be manually loaded by the user. Multiple of these might be defined by the user in case they want a font group system for example.
 typedef struct {
-    zfw_s_font_arrangement_info* arrangement_infos;
-    zfw_t_gl_id* tex_gl_ids;
-    int* tex_heights;
+    const zfw_s_font_arrangement_info* arrangement_infos;
+    const zfw_t_gl_id* tex_gl_ids;
+    const int* tex_heights;
     int cnt;
 } zfw_s_fonts;
 
 static inline bool ZFW_IsFontsValid(const zfw_s_fonts* const fonts) {
     // TODO: Check validity of arrangement information!
-    
-    if (ZFW_IS_ZERO(*fonts)) {
-        return true;
-    }
 
     if (!fonts->arrangement_infos || !fonts->tex_gl_ids || !fonts->tex_heights || fonts->cnt <= 0) {
         return false;
@@ -142,6 +134,55 @@ typedef struct {
 } zfw_s_font_load_info;
 
 typedef zfw_s_font_load_info (*t_font_index_to_load_info)(const int index);
+
+// Shader programs can be manually loaded by the user. Their main purpose in this system is with surfaces and surface rendering, when you want to render a surface with a particular effect. Multiple of these might be defined by the user in case they want a shader program group system for example.
+typedef struct {
+    const zfw_t_gl_id* gl_ids;
+    int cnt;
+} zfw_s_shader_progs;
+
+static inline bool ZFW_IsShaderProgsValid(const zfw_s_shader_progs* const progs) {
+    if (progs->cnt <= 0 || !progs->gl_ids) {
+        return false;
+    }
+
+    for (int i = 0; i < progs->cnt; i++) {
+        if (!glIsProgram(progs->gl_ids[i])) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+typedef struct {
+    const char* vs_fp;
+    const char* fs_fp;
+} zfw_s_shader_prog_file_paths;
+
+typedef zfw_s_shader_prog_file_paths (*zfw_t_shader_prog_index_to_file_paths)(const int index);
+
+typedef enum {
+    zfw_ek_shader_prog_uniform_value_type_int,
+    zfw_ek_shader_prog_uniform_value_type_float,
+    zfw_ek_shader_prog_uniform_value_type_v2,
+    zfw_ek_shader_prog_uniform_value_type_v3,
+    zfw_ek_shader_prog_uniform_value_type_v4,
+    zfw_ek_shader_prog_uniform_value_type_mat4x4,
+} zfw_e_shader_prog_uniform_value_type;
+
+typedef struct {
+    zfw_e_shader_prog_uniform_value_type type;
+
+    union {
+        int as_int;
+        float as_float;
+        zfw_s_vec_2d as_v2;
+        zfw_s_vec_3d as_v3;
+        zfw_s_vec_4d as_v4;
+        zfw_t_matrix_4x4 as_mat4x4;
+    };
+} zfw_s_shader_prog_uniform_value;
 
 #define ZFW_BATCH_SLOT_CNT 8192
 #define ZFW_BATCH_SLOT_VERT_CNT 4
@@ -192,9 +233,9 @@ typedef struct {
     zfw_t_gl_id vert_array_gl_id;
     zfw_t_gl_id vert_buf_gl_id;
     zfw_t_gl_id elem_buf_gl_id;
-} zfw_s_gl_ids;
+} zfw_s_renderable;
 
-static bool ZFW_IsGLIDsValid(const zfw_s_gl_ids* const gl_ids) {
+static bool ZFW_IsRenderableValid(const zfw_s_renderable* const gl_ids) {
     return glIsVertexArray(gl_ids->vert_array_gl_id) && glIsBuffer(gl_ids->vert_buf_gl_id) && glIsBuffer(gl_ids->elem_buf_gl_id);
 }
 
@@ -224,25 +265,96 @@ static inline bool ZFW_IsBatchStateValid(const zfw_s_batch_state* const state) {
     return state->num_slots_used > 0 && glIsTexture(state->tex_gl_id);
 }
 
+#define ZFW_SURFACE_LIMIT 32
+
 typedef struct {
-    zfw_s_gl_ids batch_gl_ids;
+    zfw_t_gl_id fb_gl_ids[ZFW_SURFACE_LIMIT];
+    zfw_t_gl_id fb_tex_gl_ids[ZFW_SURFACE_LIMIT];
+    int cnt;
+
+    zfw_s_vec_2d_i size;
+} zfw_s_surfaces;
+
+static inline bool ZFW_IsSurfacesValid(const zfw_s_surfaces* const surfs) {
+    assert(surfs);
+
+    if (ZFW_IS_ZERO(*surfs)) {
+        return true;
+    }
+
+    if (surfs->cnt <= 0 || surfs->cnt > ZFW_SURFACE_LIMIT || surfs->size.x <= 0 || surfs->size.y <= 0) {
+        return false;
+    }
+    
+    for (int i = 0; i < surfs->cnt; i++) {
+        if (!glIsFramebuffer(surfs->fb_gl_ids[i]) || !glIsTexture(surfs->fb_tex_gl_ids[i])) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+typedef struct {
+    zfw_s_renderable batch_renderable;
     zfw_s_batch_shader_prog batch_shader_prog;
     zfw_t_gl_id px_tex_gl_id;
+    zfw_s_surfaces surfs;
+    zfw_s_renderable surf_renderable;
 } zfw_s_rendering_basis;
 
 static inline bool ZFW_IsRenderingBasisValid(const zfw_s_rendering_basis* const basis) {
-    return ZFW_IsGLIDsValid(&basis->batch_gl_ids)
+    return ZFW_IsRenderableValid(&basis->batch_renderable)
         && ZFW_IsBatchShaderProgValid(&basis->batch_shader_prog)
-        && glIsTexture(basis->px_tex_gl_id);
+        && glIsTexture(basis->px_tex_gl_id)
+        && ZFW_IsSurfacesValid(&basis->surfs)
+        && ZFW_IsRenderableValid(&basis->surf_renderable);
+}
+
+typedef struct {
+    int buf[ZFW_SURFACE_LIMIT];
+    int height;
+} zfw_s_surface_index_stack;
+
+static inline bool ZFW_IsSurfaceIndexStackValid(const zfw_s_surface_index_stack* const stack, const int surf_cnt) {
+    assert(stack);
+    assert(surf_cnt >= 0 && surf_cnt <= ZFW_SURFACE_LIMIT);
+
+    if (stack->height < 0 || stack->height > surf_cnt) {
+        return false;
+    }
+
+    for (int i = 0; i < stack->height; i++) {
+        if (stack->buf[i] < 0 || stack->buf[i] > surf_cnt) {
+            return false;
+        }
+
+        // Check there are no duplicates.
+        for (int j = 0; j < i; j++) {
+            if (stack->buf[i] == stack->buf[j]) {
+                return false;
+            }
+        }
+    }
+
+    return true;
 }
 
 typedef struct {
     zfw_s_batch_state batch;
     zfw_t_matrix_4x4 view_mat;
+
+    zfw_t_gl_id surf_shader_prog_gl_id; // When a surface is rendered, this shader program is used.
+    zfw_s_surface_index_stack surf_index_stack;
 } zfw_s_rendering_state;
 
-static inline bool ZFW_IsRenderingStateValid(const zfw_s_rendering_state* const state) {
-    return ZFW_IsBatchStateValid(&state->batch);
+static inline bool ZFW_IsRenderingStateValid(const zfw_s_rendering_state* const state, const int surf_cnt) {
+    assert(state);
+    assert(surf_cnt >= 0 && surf_cnt <= ZFW_SURFACE_LIMIT);
+
+    return ZFW_IsBatchStateValid(&state->batch)
+        && (state->surf_shader_prog_gl_id == 0 || glIsProgram(state->surf_shader_prog_gl_id))
+        && ZFW_IsSurfaceIndexStackValid(&state->surf_index_stack, surf_cnt);
 }
 
 // This is passed into various render functions, and provides simple access into everything that might be needed.
@@ -254,13 +366,16 @@ typedef struct {
 } zfw_s_rendering_context;
 
 static inline bool ZFW_IsRenderingContextValid(const zfw_s_rendering_context* const context) {
-    return ZFW_IsRenderingBasisValid(context->basis) && ZFW_IsRenderingStateValid(context->state) && context->window_size.x > 0 && context->window_size.y > 0;
+    return ZFW_IsRenderingBasisValid(context->basis) && ZFW_IsRenderingStateValid(context->state, context->basis->surfs.cnt) && context->window_size.x > 0 && context->window_size.y > 0;
 }
 
 //
 // zfw_rendering.c
 //
-bool ZFW_InitRenderingBasis(zfw_s_rendering_basis* const basis, zfw_s_mem_arena* const temp_mem_arena);
+zfw_s_renderable ZFW_GenRenderable(const float* const vert_buf, const size_t vert_buf_size, const unsigned short* const elem_buf, const size_t elem_buf_size, const int* const vert_attr_lens, const int vert_attr_cnt);
+void ZFW_CleanRenderable(zfw_s_renderable* const renderable);
+
+bool ZFW_InitRenderingBasis(zfw_s_rendering_basis* const basis, zfw_s_mem_arena* const mem_arena, const int surf_cnt, const zfw_s_vec_2d_i window_size, zfw_s_mem_arena* const temp_mem_arena);
 void ZFW_CleanRenderingBasis(zfw_s_rendering_basis* const basis);
 
 void ZFW_InitRenderingState(zfw_s_rendering_state* const state);
@@ -278,33 +393,17 @@ void ZFW_SubmitBatch(const zfw_s_rendering_context* const context);
 //
 // zfw_surfaces.c
 //
-typedef struct {
-    zfw_t_gl_id* fb_gl_ids;
-    zfw_t_gl_id* fb_tex_gl_ids;
-    int cnt;
+bool ZFW_InitSurfaces(zfw_s_surfaces* const surfs, zfw_s_mem_arena* const mem_arena, const int cnt, const zfw_s_vec_2d_i size);
+void ZFW_CleanSurfaces(zfw_s_surfaces* const surfs);
+bool ZFW_ResizeSurfaces(zfw_s_surfaces* const surfs, const zfw_s_vec_2d_i size);
 
-    zfw_s_vec_2d_i size;
-} zfw_s_render_surfaces;
+zfw_s_renderable ZFW_GenSurfaceRenderable();
 
-static inline bool ZFW_IsRenderSurfacesValid(const zfw_s_render_surfaces* const surfs) {
-    assert(surfs);
-
-    if (!surfs->fb_gl_ids || !surfs->fb_tex_gl_ids || surfs->cnt <= 0 || surfs->size.x <= 0 || surfs->size.y <= 0) {
-        return false;
-    }
-    
-    for (int i = 0; i < surfs->cnt; i++) {
-        if (!glIsFramebuffer(surfs->fb_gl_ids[i]) || !glIsTexture(surfs->fb_tex_gl_ids[i])) {
-            return false;
-        }
-    }
-
-    return true;
-}
-
-bool ZFW_InitRenderSurfaces(zfw_s_render_surfaces* const surfs, zfw_s_mem_arena* const mem_arena, const int cnt, const zfw_s_vec_2d_i size);
-void ZFW_CleanRenderSurfaces(zfw_s_render_surfaces* const surfs);
-bool ZFW_ResizeRenderSurfaces(zfw_s_render_surfaces* const surfs, const zfw_s_vec_2d_i size);
+bool ZFW_SetSurface(const zfw_s_rendering_context* const rendering_context, const int surf_index);
+void ZFW_UnsetSurface(const zfw_s_rendering_context* const rendering_context);
+void ZFW_SetSurfaceShaderProg(const zfw_s_rendering_context* const rendering_context, const int prog_index, const zfw_s_shader_progs* const progs);
+void ZFW_SetSurfaceShaderProgUniform(const zfw_s_rendering_context* const rendering_context, const char* const name, const zfw_s_shader_prog_uniform_value val);
+void ZFW_RenderSurface(const zfw_s_rendering_context* const rendering_context, const int surf_index);
 
 //
 // zfw_textures.c
@@ -321,7 +420,7 @@ static inline zfw_t_gl_id ZFW_GenTexture(const zfw_s_vec_2d_i tex_size, const zf
     return gl_id;
 }
 
-bool ZFW_LoadTexturesFromFiles(zfw_s_textures* const textures, zfw_s_mem_arena* const mem_arena, const int tex_cnt, const zfw_t_texture_index_to_file_path tex_index_to_fp);
+zfw_s_textures ZFW_LoadTexturesFromFiles(zfw_s_mem_arena* const mem_arena, const int tex_cnt, const zfw_t_texture_index_to_file_path tex_index_to_fp);
 void ZFW_UnloadTextures(zfw_s_textures* const textures);
 
 void ZFW_RenderTexture(const zfw_s_rendering_context* const context, const int tex_index, const zfw_s_textures* const textures, const zfw_s_rect_i src_rect, const zfw_s_vec_2d pos, const zfw_s_vec_2d origin, const zfw_s_vec_2d scale, const float rot, const zfw_s_vec_4d blend);
@@ -331,7 +430,7 @@ zfw_s_rect_edges ZFW_TextureCoords(const zfw_s_rect_i src_rect, const zfw_s_vec_
 //
 // zfw_fonts.c
 //
-bool ZFW_LoadFontsFromFiles(zfw_s_fonts* const fonts, zfw_s_mem_arena* const mem_arena, const int font_cnt, const t_font_index_to_load_info font_index_to_load_info, zfw_s_mem_arena* const temp_mem_arena);
+zfw_s_fonts ZFW_LoadFontsFromFiles(zfw_s_mem_arena* const mem_arena, const int font_cnt, const t_font_index_to_load_info font_index_to_load_info, zfw_s_mem_arena* const temp_mem_arena);
 void ZFW_UnloadFonts(zfw_s_fonts* const fonts);
 
 const zfw_s_vec_2d* ZFW_PushStrChrPositions(const char* const str, zfw_s_mem_arena* const mem_arena, const int font_index, const zfw_s_fonts* const fonts, const zfw_s_vec_2d pos, const zfw_e_str_hor_align hor_align, const zfw_e_str_ver_align ver_align);
@@ -344,5 +443,7 @@ bool ZFW_RenderStr(const zfw_s_rendering_context* const context, const char* con
 //
 zfw_t_gl_id ZFW_CreateShaderFromSrc(const char* const src, const bool frag);
 zfw_t_gl_id ZFW_CreateShaderProgFromSrcs(const char* const vert_src, const char* const frag_src);
+zfw_s_shader_progs ZFW_LoadShaderProgsFromFiles(zfw_s_mem_arena* const mem_arena, const int prog_cnt, const zfw_t_shader_prog_index_to_file_paths prog_index_to_fps, zfw_s_mem_arena* const temp_mem_arena);
+void ZFW_UnloadShaderProgs(zfw_s_shader_progs* const progs);
 
 #endif

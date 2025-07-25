@@ -14,8 +14,7 @@ void ZFW_SetUpTexture(const zfw_t_gl_id tex_gl_id, const zfw_s_vec_2d_i tex_size
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, tex_size.x, tex_size.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, rgba_px_data);
 }
 
-bool ZFW_LoadTexturesFromFiles(zfw_s_textures* const textures, zfw_s_mem_arena* const mem_arena, const int tex_cnt, const zfw_t_texture_index_to_file_path tex_index_to_fp) {
-    assert(textures && ZFW_IS_ZERO(*textures));
+zfw_s_textures ZFW_LoadTexturesFromFiles(zfw_s_mem_arena* const mem_arena, const int tex_cnt, const zfw_t_texture_index_to_file_path tex_index_to_fp) {
     assert(mem_arena && ZFW_IsMemArenaValid(mem_arena));
     assert(tex_cnt > 0);
     assert(tex_index_to_fp);
@@ -24,13 +23,13 @@ bool ZFW_LoadTexturesFromFiles(zfw_s_textures* const textures, zfw_s_mem_arena* 
     zfw_t_gl_id* const gl_ids = ZFW_MEM_ARENA_PUSH_TYPE_MANY(mem_arena, zfw_t_gl_id, tex_cnt);
 
     if (!gl_ids) {
-        return false;
+        return (zfw_s_textures){0};
     }
 
     zfw_s_vec_2d_i* const sizes = ZFW_MEM_ARENA_PUSH_TYPE_MANY(mem_arena, zfw_s_vec_2d_i, tex_cnt);
 
     if (!sizes) {
-        return false;
+        return (zfw_s_textures){0};
     }
 
     // Generate each texture using the pixel data of the file mapped to with the given function pointer.
@@ -44,7 +43,8 @@ bool ZFW_LoadTexturesFromFiles(zfw_s_textures* const textures, zfw_s_mem_arena* 
 
         if (!px_data) {
             ZFW_LogError("Failed to load image \"%s\"!", fp);
-            return false;
+            glDeleteTextures(tex_cnt, gl_ids);
+            return (zfw_s_textures){0};
         }
 
         ZFW_SetUpTexture(gl_ids[i], sizes[i], px_data);
@@ -52,22 +52,16 @@ bool ZFW_LoadTexturesFromFiles(zfw_s_textures* const textures, zfw_s_mem_arena* 
         stbi_image_free(px_data);
     }
 
-    *textures = (zfw_s_textures){
+    return (zfw_s_textures){
         .gl_ids = gl_ids,
         .sizes = sizes,
         .cnt = tex_cnt
     };
-
-    return true;
 }
 
 void ZFW_UnloadTextures(zfw_s_textures* const textures) {
     assert(textures && ZFW_IsTexturesValid(textures));
-
-    if (textures->cnt > 0) {
-        glDeleteTextures(textures->cnt, textures->gl_ids);
-    }
-
+    glDeleteTextures(textures->cnt, textures->gl_ids);
     ZFW_ZERO_OUT(*textures);
 }
 

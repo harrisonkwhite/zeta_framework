@@ -15,38 +15,39 @@ static void ApplyHorAlignOffsToLine(zfw_s_vec_2d* const line_chr_positions, cons
     }
 } 
 
-bool ZFW_LoadFontsFromFiles(zfw_s_fonts* const fonts, zfw_s_mem_arena* const mem_arena, const int font_cnt, const t_font_index_to_load_info font_index_to_load_info, zfw_s_mem_arena* const temp_mem_arena) {
-    assert(fonts && ZFW_IS_ZERO(*fonts));
+zfw_s_fonts ZFW_LoadFontsFromFiles(zfw_s_mem_arena* const mem_arena, const int font_cnt, const t_font_index_to_load_info font_index_to_load_info, zfw_s_mem_arena* const temp_mem_arena) {
+    // TODO: Clean up this catastrophe. GL textures are leaking in the case of error. Function is too big and incomprehensible.
+
     assert(mem_arena && ZFW_IsMemArenaValid(mem_arena));
     assert(font_cnt > 0);
     assert(font_index_to_load_info);
     assert(temp_mem_arena && ZFW_IsMemArenaValid(temp_mem_arena));
 
-    fonts->arrangement_infos = ZFW_MEM_ARENA_PUSH_TYPE_MANY(mem_arena, zfw_s_font_arrangement_info, font_cnt);
+    zfw_s_font_arrangement_info* const arrangement_infos = ZFW_MEM_ARENA_PUSH_TYPE_MANY(mem_arena, zfw_s_font_arrangement_info, font_cnt);
 
-    if (!fonts->arrangement_infos) {
-        return false;
+    if (!arrangement_infos) {
+        return (zfw_s_fonts){0};
     }
 
-    fonts->tex_gl_ids = ZFW_MEM_ARENA_PUSH_TYPE_MANY(mem_arena, zfw_t_gl_id, font_cnt);
+    zfw_t_gl_id* const tex_gl_ids = ZFW_MEM_ARENA_PUSH_TYPE_MANY(mem_arena, zfw_t_gl_id, font_cnt);
 
-    if (!fonts->tex_gl_ids) {
-        return false;
+    if (!tex_gl_ids) {
+        return (zfw_s_fonts){0};
     }
 
-    fonts->tex_heights = ZFW_MEM_ARENA_PUSH_TYPE_MANY(mem_arena, int, font_cnt);
+    int* const tex_heights = ZFW_MEM_ARENA_PUSH_TYPE_MANY(mem_arena, int, font_cnt);
 
-    if (!fonts->tex_heights) {
-        return false;
+    if (!tex_heights) {
+        return (zfw_s_fonts){0};
     }
 
-    zfw_t_byte* const px_data_scratch_space = ZFW_MEM_ARENA_PUSH_TYPE_MANY(temp_mem_arena, zfw_t_byte, ZFW_TEXTURE_CHANNEL_CNT * ZFW_FONT_TEXTURE_WIDTH * ZFW_FONT_TEXTURE_HEIGHT_LIMIT);
+    zfw_t_byte* const rgba_px_data_scratch_space = ZFW_MEM_ARENA_PUSH_TYPE_MANY(temp_mem_arena, zfw_t_byte, ZFW_TEXTURE_CHANNEL_CNT * ZFW_FONT_TEXTURE_WIDTH * ZFW_FONT_TEXTURE_HEIGHT_LIMIT);
 
-    if (!px_data_scratch_space) {
-        return false;
+    if (!rgba_px_data_scratch_space) {
+        return (zfw_s_fonts){0};
     }
 
-    glGenTextures(font_cnt, fonts->tex_gl_ids);
+    glGenTextures(font_cnt, tex_gl_ids);
 
     for (int i = 0; i < font_cnt; ++i) {
         const zfw_s_font_load_info load_info = font_index_to_load_info(i);
@@ -57,7 +58,7 @@ bool ZFW_LoadFontsFromFiles(zfw_s_fonts* const fonts, zfw_s_mem_arena* const mem
         const zfw_t_byte* const font_file_data = (const zfw_t_byte*)ZFW_PushEntireFileContents(load_info.file_path, temp_mem_arena, false);
 
         if (!font_file_data) {
-            return false;
+            return (zfw_s_fonts){0};
         }
 
         stbtt_fontinfo font_info;
@@ -66,12 +67,12 @@ bool ZFW_LoadFontsFromFiles(zfw_s_fonts* const fonts, zfw_s_mem_arena* const mem
 
         if (offs == -1) {
             ZFW_LogError("Failed to get font offset for font \"%s\"!", load_info.file_path);
-            return false;
+            return (zfw_s_fonts){0};
         }
 
         if (!stbtt_InitFont(&font_info, font_file_data, offs)) {
             ZFW_LogError("Failed to initialise font \"%s\"!", load_info.file_path);
-            return false;
+            return (zfw_s_fonts){0};
         }
 
         const float scale = stbtt_ScaleForPixelHeight(&font_info, load_info.height);
@@ -79,16 +80,16 @@ bool ZFW_LoadFontsFromFiles(zfw_s_fonts* const fonts, zfw_s_mem_arena* const mem
         int ascent, descent, line_gap;
         stbtt_GetFontVMetrics(&font_info, &ascent, &descent, &line_gap);
 
-        fonts->arrangement_infos[i].line_height = (ascent - descent + line_gap) * scale;
+        arrangement_infos[i].line_height = (ascent - descent + line_gap) * scale;
 
         for (int y = 0; y < ZFW_FONT_TEXTURE_HEIGHT_LIMIT; ++y) {
             for (int x = 0; x < ZFW_FONT_TEXTURE_WIDTH; ++x) {
                 const int px_index = ((y * ZFW_FONT_TEXTURE_WIDTH) + x) * ZFW_TEXTURE_CHANNEL_CNT;
 
-                px_data_scratch_space[px_index + 0] = 255;
-                px_data_scratch_space[px_index + 1] = 255;
-                px_data_scratch_space[px_index + 2] = 255;
-                px_data_scratch_space[px_index + 3] = 0;
+                rgba_px_data_scratch_space[px_index + 0] = 255;
+                rgba_px_data_scratch_space[px_index + 1] = 255;
+                rgba_px_data_scratch_space[px_index + 2] = 255;
+                rgba_px_data_scratch_space[px_index + 3] = 0;
             }
         }
 
@@ -100,7 +101,7 @@ bool ZFW_LoadFontsFromFiles(zfw_s_fonts* const fonts, zfw_s_mem_arena* const mem
             int advance;
             stbtt_GetCodepointHMetrics(&font_info, chr, &advance, NULL);
 
-            fonts->arrangement_infos[i].chr_hor_advances[j] = (int)(advance * scale);
+            arrangement_infos[i].chr_hor_advances[j] = (int)(advance * scale);
 
             if (chr == ' ') {
                 continue;
@@ -110,26 +111,26 @@ bool ZFW_LoadFontsFromFiles(zfw_s_fonts* const fonts, zfw_s_mem_arena* const mem
             zfw_t_byte* const bitmap = stbtt_GetCodepointBitmap(&font_info, 0.0f, scale, chr, &bitmap_size.x, &bitmap_size.y, &bitmap_offs.x, &bitmap_offs.y);
 
             if (!bitmap) {
-                return false;
+                return (zfw_s_fonts){0};
             }
 
-            fonts->arrangement_infos[i].chr_hor_offsets[j] = bitmap_offs.x;
-            fonts->arrangement_infos[i].chr_ver_offsets[j] = bitmap_offs.y + (int)(ascent * scale);
+            arrangement_infos[i].chr_hor_offsets[j] = bitmap_offs.x;
+            arrangement_infos[i].chr_ver_offsets[j] = bitmap_offs.y + (int)(ascent * scale);
 
             if (chr_render_pos.x + bitmap_size.x > ZFW_FONT_TEXTURE_WIDTH) {
                 chr_render_pos.x = 0;
-                chr_render_pos.y += fonts->arrangement_infos[i].line_height;
+                chr_render_pos.y += arrangement_infos[i].line_height;
             }
 
             const int chr_tex_height = chr_render_pos.y + bitmap_size.y;
             if (chr_tex_height > ZFW_FONT_TEXTURE_HEIGHT_LIMIT) {
                 stbtt_FreeBitmap(bitmap, NULL);
-                return false;
+                return (zfw_s_fonts){0};
             }
 
-            fonts->tex_heights[i] = ZFW_MAX(fonts->tex_heights[i], chr_tex_height);
+            tex_heights[i] = ZFW_MAX(tex_heights[i], chr_tex_height);
 
-            fonts->arrangement_infos[i].chr_src_rects[j] = (zfw_s_rect_i){
+            arrangement_infos[i].chr_src_rects[j] = (zfw_s_rect_i){
                 .x = chr_render_pos.x,
                 .y = chr_render_pos.y,
                 .width = bitmap_size.x,
@@ -143,7 +144,7 @@ bool ZFW_LoadFontsFromFiles(zfw_s_fonts* const fonts, zfw_s_mem_arena* const mem
                     const int px_index = (py * ZFW_FONT_TEXTURE_WIDTH + px) * ZFW_TEXTURE_CHANNEL_CNT;
                     const int bitmap_index = y * bitmap_size.x + x;
 
-                    px_data_scratch_space[px_index + 3] = bitmap[bitmap_index];
+                    rgba_px_data_scratch_space[px_index + 3] = bitmap[bitmap_index];
                 }
             }
 
@@ -152,24 +153,20 @@ bool ZFW_LoadFontsFromFiles(zfw_s_fonts* const fonts, zfw_s_mem_arena* const mem
             stbtt_FreeBitmap(bitmap, NULL);
         }
 
-        glBindTexture(GL_TEXTURE_2D, fonts->tex_gl_ids[i]);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, ZFW_FONT_TEXTURE_WIDTH, fonts->tex_heights[i], 0, GL_RGBA, GL_UNSIGNED_BYTE, px_data_scratch_space);
+        ZFW_SetUpTexture(tex_gl_ids[i], (zfw_s_vec_2d_i){ZFW_FONT_TEXTURE_WIDTH, tex_heights[i]}, rgba_px_data_scratch_space);
     }
 
-    fonts->cnt = font_cnt;
-
-    return true;
+    return (zfw_s_fonts){
+        .arrangement_infos = arrangement_infos,
+        .tex_gl_ids = tex_gl_ids,
+        .tex_heights = tex_heights,
+        .cnt = font_cnt
+    };
 }
 
 void ZFW_UnloadFonts(zfw_s_fonts* const fonts) {
     assert(fonts && ZFW_IsFontsValid(fonts));
-
-    if (fonts->cnt > 0 && fonts->tex_gl_ids) {
-        glDeleteTextures(fonts->cnt, fonts->tex_gl_ids);
-    }
-
+    glDeleteTextures(fonts->cnt, fonts->tex_gl_ids);
     ZFW_ZERO_OUT(*fonts);
 }
 

@@ -106,6 +106,8 @@ static void AssertGameInfoValidity(const zfw_s_game_info* const info) {
     assert(info->init_func);
     assert(info->tick_func);
     assert(info->render_func);
+
+    assert(info->surf_cnt >= 0 && info->surf_cnt <= ZFW_SURFACE_LIMIT);
 }
 
 static zfw_s_window_state WindowState(GLFWwindow* const glfw_window) {
@@ -260,7 +262,7 @@ bool ZFW_RunGame(const zfw_s_game_info* const info) {
 
     zfw_s_rendering_basis rendering_basis = {0};
 
-    if (!ZFW_InitRenderingBasis(&rendering_basis, &temp_mem_arena)) {
+    if (!ZFW_InitRenderingBasis(&rendering_basis, &perm_mem_arena, info->surf_cnt, WindowState(glfw_window).size, &temp_mem_arena)) {
         error = true;
         goto clean_glfw_window;
     }
