@@ -39,7 +39,7 @@ zfw_s_textures ZFW_LoadTexturesFromFiles(zfw_s_mem_arena* const mem_arena, const
         const char* const fp = tex_index_to_fp(i); // Using a function pointer instead of an array of strings for safety.
         assert(fp);
 
-        unsigned char* const px_data = stbi_load(fp, &sizes[i].x, &sizes[i].y, NULL, ZFW_TEXTURE_CHANNEL_CNT);
+        unsigned char* const px_data = stbi_load(fp, &sizes[i].x, &sizes[i].y, NULL, ZFW_RGBA_CHANNEL_CNT);
 
         if (!px_data) {
             ZFW_LogError("Failed to load image \"%s\"!", fp);

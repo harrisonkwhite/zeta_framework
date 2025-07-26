@@ -182,7 +182,7 @@ bool ZFW_InitRenderingBasis(zfw_s_rendering_basis* const basis, zfw_s_mem_arena*
 
     basis->batch_shader_prog = LoadBatchShaderProg();
 
-    const zfw_t_byte px_tex_rgba_data[ZFW_TEXTURE_CHANNEL_CNT] = {255, 255, 255, 255};
+    const zfw_t_byte px_tex_rgba_data[ZFW_RGBA_CHANNEL_CNT] = {255, 255, 255, 255};
     basis->px_tex_gl_id = ZFW_GenTexture((zfw_s_vec_2d_i){1, 1}, px_tex_rgba_data);
 
     basis->surf_renderable = ZFW_GenSurfaceRenderable();

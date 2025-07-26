@@ -6,6 +6,12 @@
 #include <glad/glad.h>
 #include "zfw_math.h"
 
+#define ZFW_RGBA_CHANNEL_CNT 4
+
+#define ZFW_ASCII_PRINTABLE_MIN ' '
+#define ZFW_ASCII_PRINTABLE_MAX '~'
+#define ZFW_ASCII_PRINTABLE_RANGE_LEN (ZFW_ASCII_PRINTABLE_MAX - ZFW_ASCII_PRINTABLE_MIN + 1)
+
 #define ZFW_GL_VERSION_MAJOR 4
 #define ZFW_GL_VERSION_MINOR 3
 
@@ -64,13 +70,6 @@ static inline bool ZFW_IsColorRGBValid(const zfw_s_vec_3d col) {
         && col.z >= 0.0f && col.z <= 1.0f;
 }
 
-#define ZFW_TEXTURE_CHANNEL_CNT 4
-
-#define ZFW_FONT_CHR_RANGE_BEGIN 32
-#define ZFW_FONT_CHR_RANGE_LEN 95
-#define ZFW_FONT_TEXTURE_WIDTH 2048
-#define ZFW_FONT_TEXTURE_HEIGHT_LIMIT 2048
-
 typedef struct {
     const zfw_t_gl_id* gl_ids;
     const zfw_s_vec_2d_i* sizes;
@@ -97,30 +96,34 @@ static inline bool ZFW_IsTexturesValid(const zfw_s_textures* const textures) {
 typedef const char* (*zfw_t_texture_index_to_file_path)(const int index);
 
 typedef struct {
-    int chr_hor_offsets[ZFW_FONT_CHR_RANGE_LEN];
-    int chr_ver_offsets[ZFW_FONT_CHR_RANGE_LEN];
-    int chr_hor_advances[ZFW_FONT_CHR_RANGE_LEN];
-    zfw_s_rect_i chr_src_rects[ZFW_FONT_CHR_RANGE_LEN];
     int line_height;
+
+    zfw_s_vec_2d_i chr_offsets[ZFW_ASCII_PRINTABLE_RANGE_LEN];
+    zfw_s_vec_2d_i chr_sizes[ZFW_ASCII_PRINTABLE_RANGE_LEN];
+    int chr_advances[ZFW_ASCII_PRINTABLE_RANGE_LEN];
 } zfw_s_font_arrangement_info;
+
+typedef zfw_s_vec_2d_i zfw_t_tex_chr_positions[ZFW_ASCII_PRINTABLE_RANGE_LEN];
 
 // Fonts can be manually loaded by the user. Multiple of these might be defined by the user in case they want a font group system for example.
 typedef struct {
     const zfw_s_font_arrangement_info* arrangement_infos;
     const zfw_t_gl_id* tex_gl_ids;
-    const int* tex_heights;
+    const zfw_s_vec_2d_i* tex_sizes;
+    const zfw_t_tex_chr_positions* tex_chr_positions;
+
     int cnt;
 } zfw_s_fonts;
 
 static inline bool ZFW_IsFontsValid(const zfw_s_fonts* const fonts) {
     // TODO: Check validity of arrangement information!
 
-    if (!fonts->arrangement_infos || !fonts->tex_gl_ids || !fonts->tex_heights || fonts->cnt <= 0) {
+    if (!fonts->arrangement_infos || !fonts->tex_gl_ids || !fonts->tex_sizes || !fonts->tex_chr_positions || fonts->cnt <= 0) {
         return false;
     }
 
     for (int i = 0; i < fonts->cnt; i++) {
-        if (!glIsTexture(fonts->tex_gl_ids[i]) || fonts->tex_heights[i] <= 0) {
+        if (!glIsTexture(fonts->tex_gl_ids[i]) || fonts->tex_sizes[i].x <= 0 || fonts->tex_sizes[i].y <= 0) {
             return false;
         }
     }
@@ -433,9 +436,7 @@ zfw_s_rect_edges ZFW_TextureCoords(const zfw_s_rect_i src_rect, const zfw_s_vec_
 zfw_s_fonts ZFW_LoadFontsFromFiles(zfw_s_mem_arena* const mem_arena, const int font_cnt, const t_font_index_to_load_info font_index_to_load_info, zfw_s_mem_arena* const temp_mem_arena);
 void ZFW_UnloadFonts(zfw_s_fonts* const fonts);
 
-const zfw_s_vec_2d* ZFW_PushStrChrPositions(const char* const str, zfw_s_mem_arena* const mem_arena, const int font_index, const zfw_s_fonts* const fonts, const zfw_s_vec_2d pos, const zfw_e_str_hor_align hor_align, const zfw_e_str_ver_align ver_align);
 bool ZFW_LoadStrCollider(zfw_s_rect* const rect, const char* const str, const int font_index, const zfw_s_fonts* const fonts, const zfw_s_vec_2d pos, const zfw_e_str_hor_align hor_align, const zfw_e_str_ver_align ver_align, zfw_s_mem_arena* const temp_mem_arena);
-
 bool ZFW_RenderStr(const zfw_s_rendering_context* const context, const char* const str, const int font_index, const zfw_s_fonts* const fonts, const zfw_s_vec_2d pos, const zfw_e_str_hor_align hor_align, const zfw_e_str_ver_align ver_align, const zfw_s_vec_4d blend, zfw_s_mem_arena* const temp_mem_arena);
 
 //
