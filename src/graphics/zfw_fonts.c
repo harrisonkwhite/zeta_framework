@@ -1,23 +1,22 @@
 #include "zfw_graphics.h"
 
 #include <ctype.h>
+#include <memory>
 #include <stb_truetype.h>
 #include "zfw_io.h"
+#include "zfw_mem.h"
 
-#define FONT_CHR_MARGIN (zfw_s_vec_2d_i){4, 4}
+#define FONT_TEX_CHR_MARGIN (zfw_s_vec_2d_i){4, 4}
 
-// TODO: Move this elsewhere. Also check ordinary textures with this before generating.
-static inline zfw_s_vec_2d_i GLTextureSizeLimit() {
-    GLint size;
-    glGetIntegerv(GL_MAX_TEXTURE_SIZE, &size);
-    return (zfw_s_vec_2d_i){size, size};
-}
+static void LoadFontArrangementInfo(zfw_s_font_arrangement_info* const arrangement_info, const stbtt_fontinfo* const stb_font_info, const int height) {
+    assert(arrangement_info);
+    assert(stb_font_info);
+    assert(height > 0);
 
-static void LoadFontArrangementInfo(zfw_s_font_arrangement_info* const arrangement_info, const stbtt_fontinfo* const font_info, const int height) {
-    const float scale = stbtt_ScaleForPixelHeight(font_info, height);
+    const float scale = stbtt_ScaleForPixelHeight(stb_font_info, height);
 
     int vm_ascent, vm_descent, vm_line_gap;
-    stbtt_GetFontVMetrics(font_info, &vm_ascent, &vm_descent, &vm_line_gap);
+    stbtt_GetFontVMetrics(stb_font_info, &vm_ascent, &vm_descent, &vm_line_gap);
 
     arrangement_info->line_height = (vm_ascent - vm_descent + vm_line_gap) * scale;
 
@@ -25,13 +24,13 @@ static void LoadFontArrangementInfo(zfw_s_font_arrangement_info* const arrangeme
         const char chr = ZFW_ASCII_PRINTABLE_MIN + i;
 
         zfw_s_rect_edges_i bitmap_box;
-        stbtt_GetCodepointBitmapBox(font_info, chr, scale, scale, &bitmap_box.left, &bitmap_box.top, &bitmap_box.right, &bitmap_box.bottom);
+        stbtt_GetCodepointBitmapBox(stb_font_info, chr, scale, scale, &bitmap_box.left, &bitmap_box.top, &bitmap_box.right, &bitmap_box.bottom);
 
         arrangement_info->chr_offsets[i] = (zfw_s_vec_2d_i){bitmap_box.left, bitmap_box.top + (vm_ascent * scale)};
         arrangement_info->chr_sizes[i] = (zfw_s_vec_2d_i){bitmap_box.right - bitmap_box.left, bitmap_box.bottom - bitmap_box.top};
 
         int hm_advance;
-        stbtt_GetCodepointHMetrics(font_info, chr, &hm_advance, NULL);
+        stbtt_GetCodepointHMetrics(stb_font_info, chr, &hm_advance, NULL);
         arrangement_info->chr_advances[i] = hm_advance * scale;
     }
 }
@@ -39,22 +38,24 @@ static void LoadFontArrangementInfo(zfw_s_font_arrangement_info* const arrangeme
 static void LoadFontTextureInfo(zfw_s_vec_2d_i* const tex_size, zfw_t_tex_chr_positions* const tex_chr_positions, const zfw_s_font_arrangement_info* const arrangement_info, const int tex_width_limit) {
     assert(tex_size && ZFW_IS_ZERO(*tex_size));
     assert(tex_chr_positions && ZFW_IS_ZERO(*tex_chr_positions));
+    assert(arrangement_info);
+    assert(tex_width_limit > 0);
 
     zfw_s_vec_2d_i chr_pos = {0};
 
     // Each character can be conceptualised as existing within its own container, and that container has margins on all sides.
-    const int chr_container_height = FONT_CHR_MARGIN.y + arrangement_info->line_height + FONT_CHR_MARGIN.y;
+    const int chr_container_height = FONT_TEX_CHR_MARGIN.y + arrangement_info->line_height + FONT_TEX_CHR_MARGIN.y;
 
     for (int i = 0; i < ZFW_ASCII_PRINTABLE_RANGE_LEN; i++) {
         const zfw_s_vec_2d_i chr_size = arrangement_info->chr_sizes[i];
-        const int chr_container_width = FONT_CHR_MARGIN.x + chr_size.x + FONT_CHR_MARGIN.x;
+        const int chr_container_width = FONT_TEX_CHR_MARGIN.x + chr_size.x + FONT_TEX_CHR_MARGIN.x;
 
         if (chr_pos.x + chr_container_width > tex_width_limit) {
             chr_pos.x = 0;
             chr_pos.y += chr_container_height;
         }
 
-        (*tex_chr_positions)[i] = ZFW_Vec2DISum(chr_pos, FONT_CHR_MARGIN);
+        (*tex_chr_positions)[i] = ZFW_Vec2DISum(chr_pos, FONT_TEX_CHR_MARGIN);
 
         tex_size->x = ZFW_MAX(chr_pos.x + chr_container_width, tex_size->x);
         tex_size->y = ZFW_MAX(chr_pos.y + chr_container_height, tex_size->y);
@@ -63,16 +64,24 @@ static void LoadFontTextureInfo(zfw_s_vec_2d_i* const tex_size, zfw_t_tex_chr_po
     }
 }
 
-static zfw_t_gl_id GenFontTexture(const stbtt_fontinfo* const font_info, const int font_height, const zfw_s_vec_2d_i tex_size, const zfw_t_tex_chr_positions* const tex_chr_positions, const zfw_s_font_arrangement_info* const font_arrangement_info, zfw_s_mem_arena* const temp_mem_arena) {
-    const float scale = stbtt_ScaleForPixelHeight(font_info, font_height);
+static zfw_t_gl_id GenFontTexture(const stbtt_fontinfo* const stb_font_info, const int font_height, const zfw_s_vec_2d_i tex_size, const zfw_t_tex_chr_positions* const tex_chr_positions, const zfw_s_font_arrangement_info* const font_arrangement_info, zfw_s_mem_arena* const temp_mem_arena) {
+    assert(stb_font_info);
+    assert(font_height > 0);
+    assert(tex_size.x > 0 && tex_size.y > 0);
+    assert(tex_chr_positions);
+    assert(font_arrangement_info);
+    assert(temp_mem_arena && ZFW_IsMemArenaValid(temp_mem_arena));
 
-    const size_t font_tex_rgba_px_data_size = ZFW_RGBA_CHANNEL_CNT * tex_size.x * tex_size.y;
+    const float scale = stbtt_ScaleForPixelHeight(stb_font_info, font_height);
+
+    const size_t font_tex_rgba_px_data_size = 4 * tex_size.x * tex_size.y;
     zfw_t_byte* const font_tex_rgba_px_data = ZFW_MEM_ARENA_PUSH_TYPE_MANY(temp_mem_arena, zfw_t_byte, font_tex_rgba_px_data_size);
 
     if (!font_tex_rgba_px_data) {
         return 0;
     }
 
+    // Clear the pixel data to transparent white.
     for (int i = 0; i < font_tex_rgba_px_data_size; i += 4) {
         font_tex_rgba_px_data[i + 0] = 255;
         font_tex_rgba_px_data[i + 1] = 255;
@@ -80,14 +89,16 @@ static zfw_t_gl_id GenFontTexture(const stbtt_fontinfo* const font_info, const i
         font_tex_rgba_px_data[i + 3] = 0;
     }
 
+    // Write the pixel data of each character.
     for (int i = 0; i < ZFW_ASCII_PRINTABLE_RANGE_LEN; i++) {
         const char chr = ZFW_ASCII_PRINTABLE_MIN + i;
 
         if (chr == ' ') {
+            // No bitmap for the space character.
             continue;
         }
 
-        zfw_t_byte* const bitmap = stbtt_GetCodepointBitmap(font_info, scale, scale, chr, NULL, NULL, NULL, NULL);
+        zfw_t_byte* const bitmap = stbtt_GetCodepointBitmap(stb_font_info, scale, scale, chr, NULL, NULL, NULL, NULL);
 
         if (!bitmap) {
             return 0;
@@ -116,12 +127,20 @@ static zfw_t_gl_id GenFontTexture(const stbtt_fontinfo* const font_info, const i
     return ZFW_GenTexture(tex_size, font_tex_rgba_px_data);
 }
 
+// TODO: Move this elsewhere. Also check ordinary textures with this before generating.
+static inline zfw_s_vec_2d_i GLTextureSizeLimit() {
+    GLint size;
+    glGetIntegerv(GL_MAX_TEXTURE_SIZE, &size);
+    return (zfw_s_vec_2d_i){size, size};
+}
+
 zfw_s_fonts ZFW_LoadFontsFromFiles(zfw_s_mem_arena* const mem_arena, const int font_cnt, const t_font_index_to_load_info font_index_to_load_info, zfw_s_mem_arena* const temp_mem_arena) {
     assert(mem_arena && ZFW_IsMemArenaValid(mem_arena));
     assert(font_cnt > 0);
     assert(font_index_to_load_info);
     assert(temp_mem_arena && ZFW_IsMemArenaValid(temp_mem_arena));
 
+    // Reserve memory for font data.
     zfw_s_font_arrangement_info* const arrangement_infos = ZFW_MEM_ARENA_PUSH_TYPE_MANY(mem_arena, zfw_s_font_arrangement_info, font_cnt);
 
     if (!arrangement_infos) {
@@ -146,21 +165,22 @@ zfw_s_fonts ZFW_LoadFontsFromFiles(zfw_s_mem_arena* const mem_arena, const int f
         return (zfw_s_fonts){0};
     }
 
+    // Load each font.
     bool err = false;
 
     for (int i = 0; i < font_cnt; i++) {
         const zfw_s_font_load_info load_info = font_index_to_load_info(i);
-        assert(load_info.height > 0);
         assert(load_info.file_path);
+        assert(load_info.height > 0);
 
-        const zfw_t_byte* const font_file_data = (const zfw_t_byte*)ZFW_PushEntireFileContents(load_info.file_path, temp_mem_arena, false);
+        const zfw_t_byte* const font_file_data = ZFW_PushEntireFileContents(load_info.file_path, temp_mem_arena, false);
 
         if (!font_file_data) {
             err = true;
             break;
         }
 
-        stbtt_fontinfo font_info;
+        stbtt_fontinfo stb_font_info;
 
         const int offs = stbtt_GetFontOffsetForIndex(font_file_data, 0);
 
@@ -170,13 +190,13 @@ zfw_s_fonts ZFW_LoadFontsFromFiles(zfw_s_mem_arena* const mem_arena, const int f
             break;
         }
 
-        if (!stbtt_InitFont(&font_info, font_file_data, offs)) {
+        if (!stbtt_InitFont(&stb_font_info, font_file_data, offs)) {
             ZFW_LogError("Failed to initialise font \"%s\"!", load_info.file_path);
             err = true;
             break;
         }
 
-        LoadFontArrangementInfo(&arrangement_infos[i], &font_info, load_info.height);
+        LoadFontArrangementInfo(&arrangement_infos[i], &stb_font_info, load_info.height);
 
         const zfw_s_vec_2d_i font_tex_size_limit = GLTextureSizeLimit();
 
@@ -188,7 +208,7 @@ zfw_s_fonts ZFW_LoadFontsFromFiles(zfw_s_mem_arena* const mem_arena, const int f
             break;
         }
 
-        tex_gl_ids[i] = GenFontTexture(&font_info, load_info.height, tex_sizes[i], &tex_chr_positions[i], &arrangement_infos[i], temp_mem_arena);
+        tex_gl_ids[i] = GenFontTexture(&stb_font_info, load_info.height, tex_sizes[i], &tex_chr_positions[i], &arrangement_infos[i], temp_mem_arena);
     }
 
     if (err) {
@@ -211,52 +231,103 @@ void ZFW_UnloadFonts(zfw_s_fonts* const fonts) {
     ZFW_ZERO_OUT(*fonts);
 }
 
-static zfw_s_vec_2d* PushStrChrRenderPositions(zfw_s_mem_arena* const mem_arena, const char* const str, const int font_index, const zfw_s_fonts* const fonts, const zfw_s_vec_2d pos) {
-    assert(font_index >= 0 && font_index < fonts->cnt);
+typedef struct {
+    int len;
+    int line_cnt;
+} s_str_len_and_line_cnt;
 
-    const int str_len = strlen(str);
-    zfw_s_vec_2d* const chr_render_positions = ZFW_MEM_ARENA_PUSH_TYPE_MANY(mem_arena, zfw_s_vec_2d, str_len);
+static s_str_len_and_line_cnt StrLenAndLineCnt(const char* const str) {
+    int len = 0;
+    int line_cnt = 1;
+
+    while (str[len]) {
+        if (str[len] == '\n') {
+            line_cnt++;
+        }
+
+        len++;
+    }
+
+    return (s_str_len_and_line_cnt){
+        .len = len,
+        .line_cnt = line_cnt
+    };
+}
+
+static zfw_s_vec_2d* PushStrChrRenderPositions(zfw_s_mem_arena* const mem_arena, const char* const str, const int font_index, const zfw_s_fonts* const fonts, const zfw_s_vec_2d pos, const zfw_s_vec_2d alignment) {
+    assert(mem_arena && ZFW_IsMemArenaValid(mem_arena));
+    assert(str && str[0]);
+    assert(font_index >= 0 && font_index < fonts->cnt);
+    assert(fonts && ZFW_IsFontsValid(fonts));
+    assert(ZFW_IsStrAlignmentValid(alignment));
+
+    const zfw_s_font_arrangement_info* const arrangement_info = &fonts->arrangement_infos[font_index];
+
+    const s_str_len_and_line_cnt str_len_and_line_cnt = StrLenAndLineCnt(str);
+
+    // From just the string line count we can determine the vertical alignment offset to apply to all characters.
+    const float alignment_offs_y = -(str_len_and_line_cnt.line_cnt * arrangement_info->line_height) * alignment.y;
+
+    // Reserve memory for the character render positions.
+    zfw_s_vec_2d* const chr_render_positions = ZFW_MEM_ARENA_PUSH_TYPE_MANY(mem_arena, zfw_s_vec_2d, str_len_and_line_cnt.len);
 
     if (!chr_render_positions) {
         return NULL;
     }
 
-    const zfw_s_font_arrangement_info* const font_arrangement_info = &fonts->arrangement_infos[font_index];
+    // Calculate the render position for each character.
+    zfw_s_vec_2d chr_pos_pen = {0}; // The position of the current character.
+    int line_starting_chr_index = 0; // The index of the first character in the current line.
 
-    zfw_s_vec_2d chr_pos = {0};
-
-    for (int i = 0; i < str_len; i++) {
+    for (int i = 0; i <= str_len_and_line_cnt.len; i++) {
         const char chr = str[i];
 
-        if (chr == '\n') {
-            // Move to the next line.
-            chr_pos.x = 0.0f;
-            chr_pos.y += font_arrangement_info->line_height;
+        if (chr == '\n' || !chr) {
+            // Apply horizontal alignment offset to all the characters of the line we just finished, only if the line was not empty.
+            const int line_len = i - line_starting_chr_index;
+
+            if (line_len > 0) {
+                const float line_width = chr_pos_pen.x;
+
+                for (int j = line_starting_chr_index; j < i; j++) {
+                    chr_render_positions[j].x -= line_width * alignment.x;
+                }
+            }
+
+            // If '\n', move to the next line.
+            if (chr == '\n') {
+                chr_pos_pen.x = 0.0f;
+                chr_pos_pen.y += arrangement_info->line_height;
+
+                line_starting_chr_index = i + 1;
+            }
 
             continue;
         }
 
         assert(isprint(chr));
 
-        const int chr_index = chr - ZFW_ASCII_PRINTABLE_MIN;
+        const int chr_ascii_printable_index = chr - ZFW_ASCII_PRINTABLE_MIN;
 
         chr_render_positions[i] = (zfw_s_vec_2d){
-            pos.x + chr_pos.x + font_arrangement_info->chr_offsets[chr_index].x,
-            pos.y + chr_pos.y + font_arrangement_info->chr_offsets[chr_index].y
+            pos.x + chr_pos_pen.x + arrangement_info->chr_offsets[chr_ascii_printable_index].x,
+            pos.y + chr_pos_pen.y + arrangement_info->chr_offsets[chr_ascii_printable_index].y + alignment_offs_y
         };
 
-        chr_pos.x += font_arrangement_info->chr_advances[chr_index];
+        chr_pos_pen.x += arrangement_info->chr_advances[chr_ascii_printable_index];
     }
 
     return chr_render_positions;
 }
 
-bool ZFW_LoadStrCollider(zfw_s_rect* const rect, const char* const str, const int font_index, const zfw_s_fonts* const fonts, const zfw_s_vec_2d pos, const zfw_e_str_hor_align hor_align, const zfw_e_str_ver_align ver_align, zfw_s_mem_arena* const temp_mem_arena) {
-    assert(ZFW_IS_ZERO(*rect));
+bool ZFW_LoadStrCollider(zfw_s_rect* const rect, const char* const str, const int font_index, const zfw_s_fonts* const fonts, const zfw_s_vec_2d pos, const zfw_s_vec_2d alignment, zfw_s_mem_arena* const temp_mem_arena) {
+    assert(rect && ZFW_IS_ZERO(*rect));
+    assert(str && str[0]);
+    assert(font_index >= 0 && font_index < fonts->cnt);
+    assert(ZFW_IsStrAlignmentValid(alignment));
+    assert(temp_mem_arena && ZFW_IsMemArenaValid(temp_mem_arena));
 
-    assert(str[0]);
-
-    const zfw_s_vec_2d* const chr_render_positions = PushStrChrRenderPositions(temp_mem_arena, str, font_index, fonts, pos);
+    const zfw_s_vec_2d* const chr_render_positions = PushStrChrRenderPositions(temp_mem_arena, str, font_index, fonts, pos, alignment);
 
     if (!chr_render_positions) {
         return false;
@@ -274,9 +345,9 @@ bool ZFW_LoadStrCollider(zfw_s_rect* const rect, const char* const str, const in
 
         assert(isprint(chr));
 
-        const int chr_index = chr - ZFW_ASCII_PRINTABLE_MIN;
+        const int chr_ascii_printable_index = chr - ZFW_ASCII_PRINTABLE_MIN;
 
-        const zfw_s_vec_2d_i chr_size = fonts->arrangement_infos[font_index].chr_sizes[chr_index];
+        const zfw_s_vec_2d_i chr_size = fonts->arrangement_infos[font_index].chr_sizes[chr_ascii_printable_index];
 
         const zfw_s_rect_edges chr_rect_edges = {
             .left = chr_render_positions[i].x,
@@ -308,15 +379,16 @@ bool ZFW_LoadStrCollider(zfw_s_rect* const rect, const char* const str, const in
     return true;
 }
 
-bool ZFW_RenderStr(const zfw_s_rendering_context* const context, const char* const str, const int font_index, const zfw_s_fonts* const fonts, const zfw_s_vec_2d pos, const zfw_e_str_hor_align hor_align, const zfw_e_str_ver_align ver_align, const zfw_s_vec_4d blend, zfw_s_mem_arena* const temp_mem_arena) {
+bool ZFW_RenderStr(const zfw_s_rendering_context* const context, const char* const str, const int font_index, const zfw_s_fonts* const fonts, const zfw_s_vec_2d pos, const zfw_s_vec_2d alignment, const zfw_s_vec_4d blend, zfw_s_mem_arena* const temp_mem_arena) {
     assert(context && ZFW_IsRenderingContextValid(context));
     assert(str && str[0]);
     assert(font_index >= 0 && font_index < fonts->cnt);
     assert(fonts && ZFW_IsFontsValid(fonts));
+    assert(ZFW_IsStrAlignmentValid(alignment));
     assert(ZFW_IsColorValid(blend));
     assert(temp_mem_arena && ZFW_IsMemArenaValid(temp_mem_arena));
 
-    const zfw_s_vec_2d* const chr_render_positions = PushStrChrRenderPositions(temp_mem_arena, str, font_index, fonts, pos);
+    const zfw_s_vec_2d* const chr_render_positions = PushStrChrRenderPositions(temp_mem_arena, str, font_index, fonts, pos, alignment);
 
     if (!chr_render_positions) {
         return false;
@@ -331,13 +403,13 @@ bool ZFW_RenderStr(const zfw_s_rendering_context* const context, const char* con
 
         assert(isprint(chr));
 
-        const int chr_index = chr - ZFW_ASCII_PRINTABLE_MIN;
+        const int chr_ascii_printable_index = chr - ZFW_ASCII_PRINTABLE_MIN;
 
         const zfw_s_rect_i chr_src_rect = {
-            .x = fonts->tex_chr_positions[font_index][chr_index].x,
-            .y = fonts->tex_chr_positions[font_index][chr_index].y,
-            .width = fonts->arrangement_infos[font_index].chr_sizes[chr_index].x,
-            .height = fonts->arrangement_infos[font_index].chr_sizes[chr_index].y
+            .x = fonts->tex_chr_positions[font_index][chr_ascii_printable_index].x,
+            .y = fonts->tex_chr_positions[font_index][chr_ascii_printable_index].y,
+            .width = fonts->arrangement_infos[font_index].chr_sizes[chr_ascii_printable_index].x,
+            .height = fonts->arrangement_infos[font_index].chr_sizes[chr_ascii_printable_index].y
         };
 
         const zfw_s_rect_edges chr_tex_coords = ZFW_TextureCoords(chr_src_rect, fonts->tex_sizes[font_index]);

@@ -25,19 +25,17 @@
 #define ZFW_MAGENTA (zfw_s_vec_4d){1.0f, 0.0f, 1.0f, 1.0f}
 #define ZFW_GRAY (zfw_s_vec_4d){0.5f, 0.5f, 0.5f, 1.0f}
 
+#define ZFW_ALIGNMENT_TOP_LEFT (zfw_s_vec_2d){0.0f, 0.0f}
+#define ZFW_ALIGNMENT_TOP_CENTER (zfw_s_vec_2d){0.5f, 0.0f}
+#define ZFW_ALIGNMENT_TOP_RIGHT (zfw_s_vec_2d){1.0f, 0.0f}
+#define ZFW_ALIGNMENT_CENTER_LEFT (zfw_s_vec_2d){0.0f, 0.5f}
+#define ZFW_ALIGNMENT_CENTER (zfw_s_vec_2d){0.5f, 0.5f}
+#define ZFW_ALIGNMENT_CENTER_RIGHT (zfw_s_vec_2d){1.0f, 0.5f}
+#define ZFW_ALIGNMENT_BOTTOM_LEFT (zfw_s_vec_2d){0.0f, 1.0f}
+#define ZFW_ALIGNMENT_BOTTOM_CENTER (zfw_s_vec_2d){0.5f, 1.0f}
+#define ZFW_ALIGNMENT_BOTTOM_RIGHT (zfw_s_vec_2d){1.0f, 1.0f}
+
 typedef GLuint zfw_t_gl_id;
-
-typedef enum {
-    zfw_ek_str_hor_align_left,
-    zfw_ek_str_hor_align_center,
-    zfw_ek_str_hor_align_right
-} zfw_e_str_hor_align;
-
-typedef enum {
-    zfw_ek_str_ver_align_top,
-    zfw_ek_str_ver_align_center,
-    zfw_ek_str_ver_align_bottom
-} zfw_e_str_ver_align;
 
 static inline bool ZFW_IsOriginValid(const zfw_s_vec_2d orig) {
     return orig.x >= 0.0f && orig.x <= 1.0f && orig.y >= 0.0f && orig.y <= 1.0f;
@@ -68,6 +66,11 @@ static inline bool ZFW_IsColorRGBValid(const zfw_s_vec_3d col) {
     return col.x >= 0.0f && col.x <= 1.0f
         && col.y >= 0.0f && col.y <= 1.0f
         && col.z >= 0.0f && col.z <= 1.0f;
+}
+
+static inline bool ZFW_IsStrAlignmentValid(const zfw_s_vec_2d alignment) {
+    return alignment.x >= 0.0f && alignment.x <= 1.0f
+        && alignment.y >= 0.0f && alignment.y <= 1.0f;
 }
 
 typedef struct {
@@ -436,8 +439,8 @@ zfw_s_rect_edges ZFW_TextureCoords(const zfw_s_rect_i src_rect, const zfw_s_vec_
 zfw_s_fonts ZFW_LoadFontsFromFiles(zfw_s_mem_arena* const mem_arena, const int font_cnt, const t_font_index_to_load_info font_index_to_load_info, zfw_s_mem_arena* const temp_mem_arena);
 void ZFW_UnloadFonts(zfw_s_fonts* const fonts);
 
-bool ZFW_LoadStrCollider(zfw_s_rect* const rect, const char* const str, const int font_index, const zfw_s_fonts* const fonts, const zfw_s_vec_2d pos, const zfw_e_str_hor_align hor_align, const zfw_e_str_ver_align ver_align, zfw_s_mem_arena* const temp_mem_arena);
-bool ZFW_RenderStr(const zfw_s_rendering_context* const context, const char* const str, const int font_index, const zfw_s_fonts* const fonts, const zfw_s_vec_2d pos, const zfw_e_str_hor_align hor_align, const zfw_e_str_ver_align ver_align, const zfw_s_vec_4d blend, zfw_s_mem_arena* const temp_mem_arena);
+bool ZFW_LoadStrCollider(zfw_s_rect* const rect, const char* const str, const int font_index, const zfw_s_fonts* const fonts, const zfw_s_vec_2d pos, const zfw_s_vec_2d alignment, zfw_s_mem_arena* const temp_mem_arena);
+bool ZFW_RenderStr(const zfw_s_rendering_context* const context, const char* const str, const int font_index, const zfw_s_fonts* const fonts, const zfw_s_vec_2d pos, const zfw_s_vec_2d alignment, const zfw_s_vec_4d blend, zfw_s_mem_arena* const temp_mem_arena);
 
 //
 // zfw_shaders.c
