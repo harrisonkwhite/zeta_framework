@@ -3,7 +3,7 @@
 #include <ctype.h>
 #include <stb_truetype.h>
 
-#define FONT_TEX_CHR_MARGIN (zfw_s_vec_2d_i){4, 4}
+#define FONT_TEX_CHR_MARGIN (zfw_s_vec_2d_s32){4, 4}
 
 static void LoadFontArrangementInfo(zfw_s_font_arrangement_info* const arrangement_info, const stbtt_fontinfo* const stb_font_info, const int height) {
     assert(arrangement_info);
@@ -20,11 +20,11 @@ static void LoadFontArrangementInfo(zfw_s_font_arrangement_info* const arrangeme
     for (int i = 0; i < ZFW_ASCII_PRINTABLE_RANGE_LEN; i++) {
         const char chr = ZFW_ASCII_PRINTABLE_MIN + i;
 
-        zfw_s_rect_edges_i bitmap_box;
+        zfw_s_rect_edges_s32 bitmap_box;
         stbtt_GetCodepointBitmapBox(stb_font_info, chr, scale, scale, &bitmap_box.left, &bitmap_box.top, &bitmap_box.right, &bitmap_box.bottom);
 
-        arrangement_info->chr_offsets[i] = (zfw_s_vec_2d_i){bitmap_box.left, bitmap_box.top + (vm_ascent * scale)};
-        arrangement_info->chr_sizes[i] = (zfw_s_vec_2d_i){bitmap_box.right - bitmap_box.left, bitmap_box.bottom - bitmap_box.top};
+        arrangement_info->chr_offsets[i] = (zfw_s_vec_2d_s32){bitmap_box.left, bitmap_box.top + (vm_ascent * scale)};
+        arrangement_info->chr_sizes[i] = (zfw_s_vec_2d_s32){bitmap_box.right - bitmap_box.left, bitmap_box.bottom - bitmap_box.top};
 
         int hm_advance;
         stbtt_GetCodepointHMetrics(stb_font_info, chr, &hm_advance, NULL);
@@ -32,19 +32,19 @@ static void LoadFontArrangementInfo(zfw_s_font_arrangement_info* const arrangeme
     }
 }
 
-static void LoadFontTextureInfo(zfw_s_vec_2d_i* const tex_size, zfw_t_tex_chr_positions* const tex_chr_positions, const zfw_s_font_arrangement_info* const arrangement_info, const int tex_width_limit) {
+static void LoadFontTextureInfo(zfw_s_vec_2d_s32* const tex_size, zfw_t_tex_chr_positions* const tex_chr_positions, const zfw_s_font_arrangement_info* const arrangement_info, const int tex_width_limit) {
     assert(tex_size && IS_ZERO(*tex_size));
     assert(tex_chr_positions && IS_ZERO(*tex_chr_positions));
     assert(arrangement_info);
     assert(tex_width_limit > 0);
 
-    zfw_s_vec_2d_i chr_pos = {0};
+    zfw_s_vec_2d_s32 chr_pos = {0};
 
     // Each character can be conceptualised as existing within its own container, and that container has margins on all sides.
     const int chr_container_height = FONT_TEX_CHR_MARGIN.y + arrangement_info->line_height + FONT_TEX_CHR_MARGIN.y;
 
     for (int i = 0; i < ZFW_ASCII_PRINTABLE_RANGE_LEN; i++) {
-        const zfw_s_vec_2d_i chr_size = arrangement_info->chr_sizes[i];
+        const zfw_s_vec_2d_s32 chr_size = arrangement_info->chr_sizes[i];
         const int chr_container_width = FONT_TEX_CHR_MARGIN.x + chr_size.x + FONT_TEX_CHR_MARGIN.x;
 
         if (chr_pos.x + chr_container_width > tex_width_limit) {
@@ -52,7 +52,10 @@ static void LoadFontTextureInfo(zfw_s_vec_2d_i* const tex_size, zfw_t_tex_chr_po
             chr_pos.y += chr_container_height;
         }
 
-        (*tex_chr_positions)[i] = ZFW_Vec2DISum(chr_pos, FONT_TEX_CHR_MARGIN);
+        (*tex_chr_positions)[i] = (zfw_s_vec_2d_s32){
+            chr_pos.x + FONT_TEX_CHR_MARGIN.x,
+            chr_pos.y + FONT_TEX_CHR_MARGIN.y
+        };
 
         tex_size->x = ZFW_MAX(chr_pos.x + chr_container_width, tex_size->x);
         tex_size->y = ZFW_MAX(chr_pos.y + chr_container_height, tex_size->y);
@@ -61,7 +64,7 @@ static void LoadFontTextureInfo(zfw_s_vec_2d_i* const tex_size, zfw_t_tex_chr_po
     }
 }
 
-static zfw_t_gl_id GenFontTexture(const stbtt_fontinfo* const stb_font_info, const int font_height, const zfw_s_vec_2d_i tex_size, const zfw_t_tex_chr_positions* const tex_chr_positions, const zfw_s_font_arrangement_info* const font_arrangement_info, s_mem_arena* const temp_mem_arena) {
+static zfw_t_gl_id GenFontTexture(const stbtt_fontinfo* const stb_font_info, const int font_height, const zfw_s_vec_2d_s32 tex_size, const zfw_t_tex_chr_positions* const tex_chr_positions, const zfw_s_font_arrangement_info* const font_arrangement_info, s_mem_arena* const temp_mem_arena) {
     assert(stb_font_info);
     assert(font_height > 0);
     assert(tex_size.x > 0 && tex_size.y > 0);
@@ -101,7 +104,7 @@ static zfw_t_gl_id GenFontTexture(const stbtt_fontinfo* const stb_font_info, con
             return 0;
         }
 
-        const zfw_s_rect_i src_rect = {
+        const zfw_s_rect_s32 src_rect = {
             (*tex_chr_positions)[i].x,
             (*tex_chr_positions)[i].y,
             font_arrangement_info->chr_sizes[i].x,
@@ -110,10 +113,10 @@ static zfw_t_gl_id GenFontTexture(const stbtt_fontinfo* const stb_font_info, con
 
         for (int yo = 0; yo < src_rect.height; yo++) {
             for (int xo = 0; xo < src_rect.width; xo++) {
-                const zfw_s_vec_2d_i px_pos = {src_rect.x + xo, src_rect.y + yo};
+                const zfw_s_vec_2d_s32 px_pos = {src_rect.x + xo, src_rect.y + yo};
                 const int px_index = ((px_pos.y * tex_size.x) + px_pos.x) * ZFW_RGBA_CHANNEL_CNT;
 
-                const int bitmap_index = ZFW_IndexFrom2D((zfw_s_vec_2d_i){xo, yo}, src_rect.width);
+                const int bitmap_index = IndexFrom2D(xo, yo, src_rect.width);
                 font_tex_rgba_px_data[px_index + 3] = bitmap[bitmap_index];
             }
         }
@@ -125,10 +128,10 @@ static zfw_t_gl_id GenFontTexture(const stbtt_fontinfo* const stb_font_info, con
 }
 
 // TODO: Move this elsewhere. Also check ordinary textures with this before generating.
-static inline zfw_s_vec_2d_i GLTextureSizeLimit() {
+static inline zfw_s_vec_2d_s32 GLTextureSizeLimit() {
     GLint size;
     glGetIntegerv(GL_MAX_TEXTURE_SIZE, &size);
-    return (zfw_s_vec_2d_i){size, size};
+    return (zfw_s_vec_2d_s32){size, size};
 }
 
 zfw_s_fonts ZFW_LoadFontsFromFiles(s_mem_arena* const mem_arena, const int font_cnt, const t_font_index_to_load_info font_index_to_load_info, s_mem_arena* const temp_mem_arena) {
@@ -150,7 +153,7 @@ zfw_s_fonts ZFW_LoadFontsFromFiles(s_mem_arena* const mem_arena, const int font_
         return (zfw_s_fonts){0};
     }
 
-    zfw_s_vec_2d_i* const tex_sizes = MEM_ARENA_PUSH_TYPE_CNT(mem_arena, zfw_s_vec_2d_i, font_cnt);
+    zfw_s_vec_2d_s32* const tex_sizes = MEM_ARENA_PUSH_TYPE_CNT(mem_arena, zfw_s_vec_2d_s32, font_cnt);
 
     if (!tex_sizes) {
         return (zfw_s_fonts){0};
@@ -195,7 +198,7 @@ zfw_s_fonts ZFW_LoadFontsFromFiles(s_mem_arena* const mem_arena, const int font_
 
         LoadFontArrangementInfo(&arrangement_infos[i], &stb_font_info, load_info.height);
 
-        const zfw_s_vec_2d_i font_tex_size_limit = GLTextureSizeLimit();
+        const zfw_s_vec_2d_s32 font_tex_size_limit = GLTextureSizeLimit();
 
         LoadFontTextureInfo(&tex_sizes[i], &tex_chr_positions[i], &arrangement_infos[i], font_tex_size_limit.x);
 
@@ -344,7 +347,7 @@ bool ZFW_LoadStrCollider(zfw_s_rect* const rect, const char* const str, const in
 
         const int chr_ascii_printable_index = chr - ZFW_ASCII_PRINTABLE_MIN;
 
-        const zfw_s_vec_2d_i chr_size = fonts->arrangement_infos[font_index].chr_sizes[chr_ascii_printable_index];
+        const zfw_s_vec_2d_s32 chr_size = fonts->arrangement_infos[font_index].chr_sizes[chr_ascii_printable_index];
 
         const zfw_s_rect_edges chr_rect_edges = {
             .left = chr_render_positions[i].x,
@@ -376,7 +379,7 @@ bool ZFW_LoadStrCollider(zfw_s_rect* const rect, const char* const str, const in
     return true;
 }
 
-bool ZFW_RenderStr(const zfw_s_rendering_context* const context, const char* const str, const int font_index, const zfw_s_fonts* const fonts, const zfw_s_vec_2d pos, const zfw_s_vec_2d alignment, const zfw_s_vec_4d blend, s_mem_arena* const temp_mem_arena) {
+bool ZFW_RenderStr(const zfw_s_rendering_context* const context, const char* const str, const int font_index, const zfw_s_fonts* const fonts, const zfw_s_vec_2d pos, const zfw_s_vec_2d alignment, const zfw_u_vec_4d blend, s_mem_arena* const temp_mem_arena) {
     assert(context && ZFW_IsRenderingContextValid(context));
     assert(str && str[0]);
     assert(font_index >= 0 && font_index < fonts->cnt);
@@ -402,7 +405,7 @@ bool ZFW_RenderStr(const zfw_s_rendering_context* const context, const char* con
 
         const int chr_ascii_printable_index = chr - ZFW_ASCII_PRINTABLE_MIN;
 
-        const zfw_s_rect_i chr_src_rect = {
+        const zfw_s_rect_s32 chr_src_rect = {
             .x = fonts->tex_chr_positions[font_index][chr_ascii_printable_index].x,
             .y = fonts->tex_chr_positions[font_index][chr_ascii_printable_index].y,
             .width = fonts->arrangement_infos[font_index].chr_sizes[chr_ascii_printable_index].x,

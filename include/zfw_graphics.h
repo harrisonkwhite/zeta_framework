@@ -16,15 +16,15 @@
 #define ZFW_GL_VERSION_MAJOR 4
 #define ZFW_GL_VERSION_MINOR 3
 
-#define ZFW_WHITE (zfw_s_vec_4d){1.0f, 1.0f, 1.0f, 1.0f}
-#define ZFW_RED (zfw_s_vec_4d){1.0f, 0.0f, 0.0f, 1.0f}
-#define ZFW_GREEN (zfw_s_vec_4d){0.0f, 1.0f, 0.0f, 1.0f}
-#define ZFW_BLUE (zfw_s_vec_4d){0.0f, 0.0f, 1.0f, 1.0f}
-#define ZFW_BLACK (zfw_s_vec_4d){0.0f, 0.0f, 0.0f, 1.0f}
-#define ZFW_YELLOW (zfw_s_vec_4d){1.0f, 1.0f, 0.0f, 1.0f}
-#define ZFW_CYAN (zfw_s_vec_4d){0.0f, 1.0f, 1.0f, 1.0f}
-#define ZFW_MAGENTA (zfw_s_vec_4d){1.0f, 0.0f, 1.0f, 1.0f}
-#define ZFW_GRAY (zfw_s_vec_4d){0.5f, 0.5f, 0.5f, 1.0f}
+#define ZFW_WHITE (zfw_u_vec_4d){1.0f, 1.0f, 1.0f, 1.0f}
+#define ZFW_RED (zfw_u_vec_4d){1.0f, 0.0f, 0.0f, 1.0f}
+#define ZFW_GREEN (zfw_u_vec_4d){0.0f, 1.0f, 0.0f, 1.0f}
+#define ZFW_BLUE (zfw_u_vec_4d){0.0f, 0.0f, 1.0f, 1.0f}
+#define ZFW_BLACK (zfw_u_vec_4d){0.0f, 0.0f, 0.0f, 1.0f}
+#define ZFW_YELLOW (zfw_u_vec_4d){1.0f, 1.0f, 0.0f, 1.0f}
+#define ZFW_CYAN (zfw_u_vec_4d){0.0f, 1.0f, 1.0f, 1.0f}
+#define ZFW_MAGENTA (zfw_u_vec_4d){1.0f, 0.0f, 1.0f, 1.0f}
+#define ZFW_GRAY (zfw_u_vec_4d){0.5f, 0.5f, 0.5f, 1.0f}
 
 #define ZFW_ALIGNMENT_TOP_LEFT (zfw_s_vec_2d){0.0f, 0.0f}
 #define ZFW_ALIGNMENT_TOP_CENTER (zfw_s_vec_2d){0.5f, 0.0f}
@@ -42,31 +42,27 @@ static inline bool ZFW_IsOriginValid(const zfw_s_vec_2d orig) {
     return orig.x >= 0.0f && orig.x <= 1.0f && orig.y >= 0.0f && orig.y <= 1.0f;
 }
 
-static inline bool ZFW_IsRotationValid(const float rot) {
-    return isfinite(rot);
-}
-
 static inline bool ZFW_IsTextureCoordsValid(const zfw_s_rect_edges coords) {
     return coords.left >= 0.0f && coords.top >= 0.0f && coords.right <= 1.0f && coords.bottom <= 1.0f;
 }
 
-static bool ZFW_IsSrcRectValid(const zfw_s_rect_i src_rect, const zfw_s_vec_2d_i tex_size) {
+static bool ZFW_IsSrcRectValid(const zfw_s_rect_s32 src_rect, const zfw_s_vec_2d_s32 tex_size) {
     assert(tex_size.x > 0 && tex_size.y > 0);
-    return src_rect.x >= 0 && src_rect.width > 0 && ZFW_RectIRight(src_rect) <= tex_size.x
-        && src_rect.y >= 0 && src_rect.height > 0 && ZFW_RectIBottom(src_rect) <= tex_size.y;
+    return src_rect.x >= 0 && src_rect.width > 0 && src_rect.x + src_rect.width <= tex_size.x
+        && src_rect.y >= 0 && src_rect.height > 0 && src_rect.y + src_rect.height <= tex_size.y;
 }
 
-static inline bool ZFW_IsColorValid(const zfw_s_vec_4d col) {
-    return col.x >= 0.0f && col.x <= 1.0f
-        && col.y >= 0.0f && col.y <= 1.0f
-        && col.z >= 0.0f && col.z <= 1.0f
-        && col.w >= 0.0f && col.w <= 1.0f;
+static inline bool ZFW_IsColorValid(const zfw_u_vec_4d col) {
+    return col.r >= 0.0f && col.r <= 1.0f
+        && col.g >= 0.0f && col.g <= 1.0f
+        && col.b >= 0.0f && col.b <= 1.0f
+        && col.a >= 0.0f && col.a <= 1.0f;
 }
 
-static inline bool ZFW_IsColorRGBValid(const zfw_s_vec_3d col) {
-    return col.x >= 0.0f && col.x <= 1.0f
-        && col.y >= 0.0f && col.y <= 1.0f
-        && col.z >= 0.0f && col.z <= 1.0f;
+static inline bool ZFW_IsColorRGBValid(const zfw_u_vec_3d col) {
+    return col.r >= 0.0f && col.r <= 1.0f
+        && col.g >= 0.0f && col.g <= 1.0f
+        && col.b >= 0.0f && col.b <= 1.0f;
 }
 
 static inline bool ZFW_IsStrAlignmentValid(const zfw_s_vec_2d alignment) {
@@ -76,7 +72,7 @@ static inline bool ZFW_IsStrAlignmentValid(const zfw_s_vec_2d alignment) {
 
 typedef struct {
     const zfw_t_gl_id* gl_ids;
-    const zfw_s_vec_2d_i* sizes;
+    const zfw_s_vec_2d_s32* sizes;
 
     int cnt;
 } zfw_s_textures;
@@ -87,7 +83,7 @@ static inline bool ZFW_IsTexturesValid(const zfw_s_textures* const textures) {
     }
 
     for (int i = 0; i < textures->cnt; i++) {
-        const zfw_s_vec_2d_i tex_size = textures->sizes[i];
+        const zfw_s_vec_2d_s32 tex_size = textures->sizes[i];
 
         if (!glIsTexture(textures->gl_ids[i]) || tex_size.x <= 0 || tex_size.y <= 0) {
             return false;
@@ -102,18 +98,18 @@ typedef const char* (*zfw_t_texture_index_to_file_path)(const int index);
 typedef struct {
     int line_height;
 
-    zfw_s_vec_2d_i chr_offsets[ZFW_ASCII_PRINTABLE_RANGE_LEN];
-    zfw_s_vec_2d_i chr_sizes[ZFW_ASCII_PRINTABLE_RANGE_LEN];
+    zfw_s_vec_2d_s32 chr_offsets[ZFW_ASCII_PRINTABLE_RANGE_LEN];
+    zfw_s_vec_2d_s32 chr_sizes[ZFW_ASCII_PRINTABLE_RANGE_LEN];
     int chr_advances[ZFW_ASCII_PRINTABLE_RANGE_LEN];
 } zfw_s_font_arrangement_info;
 
-typedef zfw_s_vec_2d_i zfw_t_tex_chr_positions[ZFW_ASCII_PRINTABLE_RANGE_LEN];
+typedef zfw_s_vec_2d_s32 zfw_t_tex_chr_positions[ZFW_ASCII_PRINTABLE_RANGE_LEN];
 
 // Fonts can be manually loaded by the user. Multiple of these might be defined by the user in case they want a font group system for example.
 typedef struct {
     const zfw_s_font_arrangement_info* arrangement_infos;
     const zfw_t_gl_id* tex_gl_ids;
-    const zfw_s_vec_2d_i* tex_sizes;
+    const zfw_s_vec_2d_s32* tex_sizes;
     const zfw_t_tex_chr_positions* tex_chr_positions;
 
     int cnt;
@@ -185,8 +181,8 @@ typedef struct {
         int as_int;
         float as_float;
         zfw_s_vec_2d as_v2;
-        zfw_s_vec_3d as_v3;
-        zfw_s_vec_4d as_v4;
+        zfw_u_vec_3d as_v3;
+        zfw_u_vec_4d as_v4;
         zfw_t_matrix_4x4 as_mat4x4;
     };
 } zfw_s_shader_prog_uniform_value;
@@ -202,7 +198,7 @@ typedef struct {
     zfw_s_vec_2d size;
     float rot;
     zfw_s_vec_2d tex_coord;
-    zfw_s_vec_4d blend;
+    zfw_u_vec_4d blend;
 } zfw_s_batch_vertex;
 
 typedef zfw_s_batch_vertex zfw_t_batch_slot[ZFW_BATCH_SLOT_VERT_CNT];
@@ -223,7 +219,7 @@ typedef struct {
     zfw_s_vec_2d size;
     zfw_s_vec_2d origin;
     float rot;
-    zfw_s_vec_4d blend;
+    zfw_u_vec_4d blend;
 } zfw_s_batch_slot_write_info;
 
 static inline bool ZFW_IsBatchSlotWriteInfoValid(const zfw_s_batch_slot_write_info* const write_info) {
@@ -232,7 +228,6 @@ static inline bool ZFW_IsBatchSlotWriteInfoValid(const zfw_s_batch_slot_write_in
         && ZFW_IsTextureCoordsValid(write_info->tex_coords)
         && write_info->size.x > 0.0f && write_info->size.y > 0.0f
         && ZFW_IsOriginValid(write_info->origin)
-        && ZFW_IsRotationValid(write_info->rot)
         && ZFW_IsColorValid(write_info->blend);
 }
 
@@ -279,7 +274,7 @@ typedef struct {
     zfw_t_gl_id fb_tex_gl_ids[ZFW_SURFACE_LIMIT];
     int cnt;
 
-    zfw_s_vec_2d_i size;
+    zfw_s_vec_2d_s32 size;
 } zfw_s_surfaces;
 
 static inline bool ZFW_IsSurfacesValid(const zfw_s_surfaces* const surfs) {
@@ -369,7 +364,7 @@ typedef struct {
     zfw_s_rendering_basis* basis;
     zfw_s_rendering_state* state;
 
-    zfw_s_vec_2d_i window_size;
+    zfw_s_vec_2d_s32 window_size;
 } zfw_s_rendering_context;
 
 static inline bool ZFW_IsRenderingContextValid(const zfw_s_rendering_context* const context) {
@@ -382,27 +377,27 @@ static inline bool ZFW_IsRenderingContextValid(const zfw_s_rendering_context* co
 zfw_s_renderable ZFW_GenRenderable(const float* const vert_buf, const size_t vert_buf_size, const unsigned short* const elem_buf, const size_t elem_buf_size, const int* const vert_attr_lens, const int vert_attr_cnt);
 void ZFW_CleanRenderable(zfw_s_renderable* const renderable);
 
-bool ZFW_InitRenderingBasis(zfw_s_rendering_basis* const basis, s_mem_arena* const mem_arena, const int surf_cnt, const zfw_s_vec_2d_i window_size, s_mem_arena* const temp_mem_arena);
+bool ZFW_InitRenderingBasis(zfw_s_rendering_basis* const basis, s_mem_arena* const mem_arena, const int surf_cnt, const zfw_s_vec_2d_s32 window_size, s_mem_arena* const temp_mem_arena);
 void ZFW_CleanRenderingBasis(zfw_s_rendering_basis* const basis);
 
 void ZFW_InitRenderingState(zfw_s_rendering_state* const state);
 
-void ZFW_RenderClear(const zfw_s_vec_4d col);
+void ZFW_RenderClear(const zfw_u_vec_4d col);
 void ZFW_Render(const zfw_s_rendering_context* const context, const zfw_s_batch_slot_write_info* const write_info);
-void ZFW_RenderRect(const zfw_s_rendering_context* const context, const zfw_s_rect rect, const zfw_s_vec_4d blend);
-void ZFW_RenderRectOutline(const zfw_s_rendering_context* const context, const zfw_s_rect rect, const zfw_s_vec_4d blend, const float thickness);
-void ZFW_RenderLine(const zfw_s_rendering_context* const context, const zfw_s_vec_2d a, const zfw_s_vec_2d b, const zfw_s_vec_4d blend, const float width);
-void ZFW_RenderPolyOutline(const zfw_s_rendering_context* const context, const zfw_s_poly poly, const zfw_s_vec_4d blend, const float width);
-void ZFW_RenderBarHor(const zfw_s_rendering_context* const context, const zfw_s_rect rect, const float perc, const zfw_s_vec_3d col_front, const zfw_s_vec_3d col_back);
+void ZFW_RenderRect(const zfw_s_rendering_context* const context, const zfw_s_rect rect, const zfw_u_vec_4d blend);
+void ZFW_RenderRectOutline(const zfw_s_rendering_context* const context, const zfw_s_rect rect, const zfw_u_vec_4d blend, const float thickness);
+void ZFW_RenderLine(const zfw_s_rendering_context* const context, const zfw_s_vec_2d a, const zfw_s_vec_2d b, const zfw_u_vec_4d blend, const float width);
+void ZFW_RenderPolyOutline(const zfw_s_rendering_context* const context, const zfw_s_poly poly, const zfw_u_vec_4d blend, const float width);
+void ZFW_RenderBarHor(const zfw_s_rendering_context* const context, const zfw_s_rect rect, const float perc, const zfw_u_vec_3d col_front, const zfw_u_vec_3d col_back);
 
 void ZFW_SubmitBatch(const zfw_s_rendering_context* const context);
 
 //
 // zfw_surfaces.c
 //
-bool ZFW_InitSurfaces(zfw_s_surfaces* const surfs, s_mem_arena* const mem_arena, const int cnt, const zfw_s_vec_2d_i size);
+bool ZFW_InitSurfaces(zfw_s_surfaces* const surfs, s_mem_arena* const mem_arena, const int cnt, const zfw_s_vec_2d_s32 size);
 void ZFW_CleanSurfaces(zfw_s_surfaces* const surfs);
-bool ZFW_ResizeSurfaces(zfw_s_surfaces* const surfs, const zfw_s_vec_2d_i size);
+bool ZFW_ResizeSurfaces(zfw_s_surfaces* const surfs, const zfw_s_vec_2d_s32 size);
 
 zfw_s_renderable ZFW_GenSurfaceRenderable();
 
@@ -415,9 +410,9 @@ void ZFW_RenderSurface(const zfw_s_rendering_context* const rendering_context, c
 //
 // zfw_textures.c
 //
-void ZFW_SetUpTexture(const zfw_t_gl_id tex_gl_id, const zfw_s_vec_2d_i tex_size, const t_u8* const rgba_px_data);
+void ZFW_SetUpTexture(const zfw_t_gl_id tex_gl_id, const zfw_s_vec_2d_s32 tex_size, const t_u8* const rgba_px_data);
 
-static inline zfw_t_gl_id ZFW_GenTexture(const zfw_s_vec_2d_i tex_size, const t_u8* const rgba_px_data) {
+static inline zfw_t_gl_id ZFW_GenTexture(const zfw_s_vec_2d_s32 tex_size, const t_u8* const rgba_px_data) {
     assert(tex_size.x > 0 && tex_size.y > 0);
     assert(rgba_px_data);
 
@@ -430,9 +425,9 @@ static inline zfw_t_gl_id ZFW_GenTexture(const zfw_s_vec_2d_i tex_size, const t_
 zfw_s_textures ZFW_LoadTexturesFromFiles(s_mem_arena* const mem_arena, const int tex_cnt, const zfw_t_texture_index_to_file_path tex_index_to_fp);
 void ZFW_UnloadTextures(zfw_s_textures* const textures);
 
-void ZFW_RenderTexture(const zfw_s_rendering_context* const context, const int tex_index, const zfw_s_textures* const textures, const zfw_s_rect_i src_rect, const zfw_s_vec_2d pos, const zfw_s_vec_2d origin, const zfw_s_vec_2d scale, const float rot, const zfw_s_vec_4d blend);
+void ZFW_RenderTexture(const zfw_s_rendering_context* const context, const int tex_index, const zfw_s_textures* const textures, const zfw_s_rect_s32 src_rect, const zfw_s_vec_2d pos, const zfw_s_vec_2d origin, const zfw_s_vec_2d scale, const float rot, const zfw_u_vec_4d blend);
 
-zfw_s_rect_edges ZFW_TextureCoords(const zfw_s_rect_i src_rect, const zfw_s_vec_2d_i tex_size);
+zfw_s_rect_edges ZFW_TextureCoords(const zfw_s_rect_s32 src_rect, const zfw_s_vec_2d_s32 tex_size);
 
 //
 // zfw_fonts.c
@@ -441,7 +436,7 @@ zfw_s_fonts ZFW_LoadFontsFromFiles(s_mem_arena* const mem_arena, const int font_
 void ZFW_UnloadFonts(zfw_s_fonts* const fonts);
 
 bool ZFW_LoadStrCollider(zfw_s_rect* const rect, const char* const str, const int font_index, const zfw_s_fonts* const fonts, const zfw_s_vec_2d pos, const zfw_s_vec_2d alignment, s_mem_arena* const temp_mem_arena);
-bool ZFW_RenderStr(const zfw_s_rendering_context* const context, const char* const str, const int font_index, const zfw_s_fonts* const fonts, const zfw_s_vec_2d pos, const zfw_s_vec_2d alignment, const zfw_s_vec_4d blend, s_mem_arena* const temp_mem_arena);
+bool ZFW_RenderStr(const zfw_s_rendering_context* const context, const char* const str, const int font_index, const zfw_s_fonts* const fonts, const zfw_s_vec_2d pos, const zfw_s_vec_2d alignment, const zfw_u_vec_4d blend, s_mem_arena* const temp_mem_arena);
 
 //
 // zfw_shaders.c

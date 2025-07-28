@@ -157,7 +157,7 @@ void ZFW_CleanRenderable(zfw_s_renderable* const gl_ids) {
     glDeleteBuffers(1, &gl_ids->elem_buf_gl_id);
 }
 
-bool ZFW_InitRenderingBasis(zfw_s_rendering_basis* const basis, s_mem_arena* const mem_arena, const int surf_cnt, const zfw_s_vec_2d_i window_size, s_mem_arena* const temp_mem_arena) {
+bool ZFW_InitRenderingBasis(zfw_s_rendering_basis* const basis, s_mem_arena* const mem_arena, const int surf_cnt, const zfw_s_vec_2d_s32 window_size, s_mem_arena* const temp_mem_arena) {
     assert(basis && IS_ZERO(*basis));
     assert(mem_arena && IsMemArenaValid(mem_arena));
     assert(surf_cnt >= 0 && surf_cnt <= ZFW_SURFACE_LIMIT);
@@ -183,7 +183,7 @@ bool ZFW_InitRenderingBasis(zfw_s_rendering_basis* const basis, s_mem_arena* con
     basis->batch_shader_prog = LoadBatchShaderProg();
 
     const t_u8 px_tex_rgba_data[ZFW_RGBA_CHANNEL_CNT] = {255, 255, 255, 255};
-    basis->px_tex_gl_id = ZFW_GenTexture((zfw_s_vec_2d_i){1, 1}, px_tex_rgba_data);
+    basis->px_tex_gl_id = ZFW_GenTexture((zfw_s_vec_2d_s32){1, 1}, px_tex_rgba_data);
 
     basis->surf_renderable = ZFW_GenSurfaceRenderable();
 
@@ -207,10 +207,10 @@ void ZFW_InitRenderingState(zfw_s_rendering_state* const state) {
     ZFW_InitIdenMatrix4x4(&state->view_mat);
 }
 
-void ZFW_RenderClear(const zfw_s_vec_4d col) {
+void ZFW_RenderClear(const zfw_u_vec_4d col) {
     assert(ZFW_IsColorValid(col));
 
-    glClearColor(col.x, col.y, col.z, col.w);
+    glClearColor(col.r, col.g, col.b, col.a);
     glClear(GL_COLOR_BUFFER_BIT);
 }
 
@@ -237,7 +237,7 @@ void ZFW_Render(const zfw_s_rendering_context* const context, const zfw_s_batch_
     batch_state->num_slots_used++;
 }
 
-void ZFW_RenderRect(const zfw_s_rendering_context* const context, const zfw_s_rect rect, const zfw_s_vec_4d blend) {
+void ZFW_RenderRect(const zfw_s_rendering_context* const context, const zfw_s_rect rect, const zfw_u_vec_4d blend) {
     assert(context && ZFW_IsRenderingContextValid(context));
     assert(rect.width > 0.0f && rect.height > 0.0f);
     assert(ZFW_IsColorValid(blend));
@@ -253,7 +253,7 @@ void ZFW_RenderRect(const zfw_s_rendering_context* const context, const zfw_s_re
     ZFW_Render(context, &write_info);
 }
 
-void ZFW_RenderRectOutline(const zfw_s_rendering_context* const context, const zfw_s_rect rect, const zfw_s_vec_4d blend, const float thickness) {
+void ZFW_RenderRectOutline(const zfw_s_rendering_context* const context, const zfw_s_rect rect, const zfw_u_vec_4d blend, const float thickness) {
     assert(context && ZFW_IsRenderingContextValid(context));
     assert(rect.width > 0.0f && rect.height > 0.0f);
     assert(ZFW_IsColorValid(blend));
@@ -270,7 +270,7 @@ void ZFW_RenderRectOutline(const zfw_s_rendering_context* const context, const z
     ZFW_RenderRect(context, left, blend);
 }
 
-void ZFW_RenderLine(const zfw_s_rendering_context* const context, const zfw_s_vec_2d a, const zfw_s_vec_2d b, const zfw_s_vec_4d blend, const float width) {
+void ZFW_RenderLine(const zfw_s_rendering_context* const context, const zfw_s_vec_2d a, const zfw_s_vec_2d b, const zfw_u_vec_4d blend, const float width) {
     assert(context && ZFW_IsRenderingContextValid(context));
     assert(ZFW_IsColorValid(blend));
     assert(width > 0.0f);
@@ -292,7 +292,7 @@ void ZFW_RenderLine(const zfw_s_rendering_context* const context, const zfw_s_ve
     ZFW_Render(context, &write_info);
 }
 
-void ZFW_RenderPolyOutline(const zfw_s_rendering_context* const context, const zfw_s_poly poly, const zfw_s_vec_4d blend, const float width) {
+void ZFW_RenderPolyOutline(const zfw_s_rendering_context* const context, const zfw_s_poly poly, const zfw_u_vec_4d blend, const float width) {
     assert(context && ZFW_IsRenderingContextValid(context));
     // TODO: Check polygon validity.
     assert(ZFW_IsColorValid(blend));
@@ -305,7 +305,7 @@ void ZFW_RenderPolyOutline(const zfw_s_rendering_context* const context, const z
     }
 }
 
-void ZFW_RenderBarHor(const zfw_s_rendering_context* const context, const zfw_s_rect rect, const float perc, const zfw_s_vec_3d col_front, const zfw_s_vec_3d col_back) {
+void ZFW_RenderBarHor(const zfw_s_rendering_context* const context, const zfw_s_rect rect, const float perc, const zfw_u_vec_3d col_front, const zfw_u_vec_3d col_back) {
     assert(context && ZFW_IsRenderingContextValid(context));
     assert(rect.width > 0.0f && rect.height > 0.0f);
     assert(perc >= 0.0f && perc <= 1.0f);
@@ -317,14 +317,14 @@ void ZFW_RenderBarHor(const zfw_s_rendering_context* const context, const zfw_s_
     // Only render the left rectangle if percentage is not 0.
     if (perc > 0.0f) {
         left_rect.width = rect.width * perc;
-        const zfw_s_vec_4d col = {col_front.x, col_front.y, col_front.z, 1.0f};
+        const zfw_u_vec_4d col = {col_front.r, col_front.g, col_front.b, 1.0f};
         ZFW_RenderRect(context, left_rect, col);
     }
 
     // Only render right rectangle if percentage is not 100.
     if (perc < 1.0f) {
         const zfw_s_rect right_rect = {rect.x + left_rect.width, rect.y, rect.width - left_rect.width, rect.height};
-        const zfw_s_vec_4d col = {col_back.x, col_back.y, col_back.z, 1.0f};
+        const zfw_u_vec_4d col = {col_back.r, col_back.g, col_back.b, 1.0f};
         ZFW_RenderRect(context, right_rect, col);
     }
 }

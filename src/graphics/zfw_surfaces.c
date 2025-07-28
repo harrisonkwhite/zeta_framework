@@ -1,6 +1,6 @@
 #include "zfw_graphics.h"
 
-static bool AttachFramebufferTexture(const zfw_t_gl_id fb_gl_id, const zfw_t_gl_id tex_gl_id, const zfw_s_vec_2d_i tex_size) {
+static bool AttachFramebufferTexture(const zfw_t_gl_id fb_gl_id, const zfw_t_gl_id tex_gl_id, const zfw_s_vec_2d_s32 tex_size) {
     assert(fb_gl_id != 0);
     assert(tex_gl_id != 0);
     assert(tex_size.x > 0 && tex_size.y > 0);
@@ -44,7 +44,7 @@ static int PopSurfaceIndex(zfw_s_surface_index_stack* const stack, const int sur
     return stack->buf[stack->height];
 }
 
-bool ZFW_InitSurfaces(zfw_s_surfaces* const surfs, s_mem_arena* const mem_arena, const int cnt, const zfw_s_vec_2d_i size) {
+bool ZFW_InitSurfaces(zfw_s_surfaces* const surfs, s_mem_arena* const mem_arena, const int cnt, const zfw_s_vec_2d_s32 size) {
     assert(surfs && IS_ZERO(*surfs));
     assert(cnt > 0);
     assert(size.x > 0 && size.y > 0);
@@ -82,7 +82,7 @@ void ZFW_CleanSurfaces(zfw_s_surfaces* const surfs) {
     ZERO_OUT(*surfs);
 }
 
-bool ZFW_ResizeSurfaces(zfw_s_surfaces* const surfs, const zfw_s_vec_2d_i size) {
+bool ZFW_ResizeSurfaces(zfw_s_surfaces* const surfs, const zfw_s_vec_2d_s32 size) {
     assert(surfs && ZFW_IsSurfacesValid(surfs));
     assert(size.x > 0 && size.y > 0);
 

@@ -163,7 +163,7 @@ static void GLFWCharCallback(GLFWwindow* const window, const unsigned int codepo
     LogError("Unicode buffer is full!");
 }
 
-static GLFWwindow* CreateGLFWWindow(const zfw_s_vec_2d_i size, const char* const title, const zfw_e_window_flags flags, s_glfw_user_data* const user_data) {
+static GLFWwindow* CreateGLFWWindow(const zfw_s_vec_2d_s32 size, const char* const title, const zfw_e_window_flags flags, s_glfw_user_data* const user_data) {
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, ZFW_GL_VERSION_MAJOR);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, ZFW_GL_VERSION_MINOR);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
@@ -190,7 +190,7 @@ static GLFWwindow* CreateGLFWWindow(const zfw_s_vec_2d_i size, const char* const
     return glfw_window;
 }
 
-static void ResizeGLViewportIfDifferent(const zfw_s_vec_2d_i size) {
+static void ResizeGLViewportIfDifferent(const zfw_s_vec_2d_s32 size) {
     assert(size.x > 0 && size.y > 0);
 
     GLint viewport[4];

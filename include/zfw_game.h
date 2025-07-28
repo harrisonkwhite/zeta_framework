@@ -112,8 +112,8 @@ typedef struct {
 } zfw_s_input_state;
 
 typedef struct {
-    zfw_s_vec_2d_i pos;
-    zfw_s_vec_2d_i size;
+    zfw_s_vec_2d_s32 pos;
+    zfw_s_vec_2d_s32 size;
     bool fullscreen;
 } zfw_s_window_state;
 
@@ -154,7 +154,7 @@ typedef struct {
     size_t user_mem_size; // How much memory should be allocated in the permanent arena for your use? This might be the size of a specific struct, for example.
     size_t user_mem_alignment; // The alignment of the above memory.
 
-    zfw_s_vec_2d_i window_init_size;
+    zfw_s_vec_2d_s32 window_init_size;
     const char* window_title;
     zfw_e_window_flags window_flags;
 
