@@ -2,14 +2,10 @@
 
 #include <stdio.h>
 #include <GLFW/glfw3.h>
-#include "zfw_audio.h"
-#include "zfw_graphics.h"
-#include "zfw_mem.h"
 #include "zfw_random.h"
-#include "zfw_io.h"
 
-#define PERM_MEM_ARENA_SIZE ZFW_MEGABYTES(80)
-#define TEMP_MEM_ARENA_SIZE ZFW_MEGABYTES(40)
+#define PERM_MEM_ARENA_SIZE MEGABYTES(80)
+#define TEMP_MEM_ARENA_SIZE MEGABYTES(40)
 
 #define TARG_TICKS_PER_SEC 60
 #define TARG_TICK_INTERVAL (1.0 / (TARG_TICKS_PER_SEC))
@@ -80,7 +76,7 @@ static const int g_glfw_keys[] = {
     [zfw_ek_key_code_right_alt] = GLFW_KEY_RIGHT_ALT
 };
 
-ZFW_CHECK_STATIC_ARRAY_LEN(g_glfw_keys, zfw_eks_key_code_cnt);
+STATIC_ARRAY_LEN_CHECK(g_glfw_keys, zfw_eks_key_code_cnt);
 
 static const int g_glfw_mouse_buttons[] = {
     [zfw_ek_mouse_button_code_left] = GLFW_MOUSE_BUTTON_LEFT,
@@ -88,7 +84,7 @@ static const int g_glfw_mouse_buttons[] = {
     [zfw_ek_mouse_button_code_middle] = GLFW_MOUSE_BUTTON_MIDDLE
 };
 
-ZFW_CHECK_STATIC_ARRAY_LEN(g_glfw_mouse_buttons, zfw_eks_mouse_button_code_cnt);
+STATIC_ARRAY_LEN_CHECK(g_glfw_mouse_buttons, zfw_eks_mouse_button_code_cnt);
 
 // Data to be accessed in GLFW callbacks.
 typedef struct {
@@ -98,7 +94,7 @@ typedef struct {
 
 static void AssertGameInfoValidity(const zfw_s_game_info* const info) {
     assert(info->user_mem_size >= 0);
-    assert(info->user_mem_size == 0 || ZFW_IsValidAlignment(info->user_mem_alignment));
+    assert(info->user_mem_size == 0 || IsAlignmentValid(info->user_mem_alignment));
 
     assert(info->window_title);
     assert(info->window_init_size.x > 0 && info->window_init_size.y > 0);
@@ -121,7 +117,7 @@ static zfw_s_window_state WindowState(GLFWwindow* const glfw_window) {
 }
 
 static void RefreshInputState(zfw_s_input_state* const state, GLFWwindow* const glfw_window, const zfw_e_mouse_scroll_state mouse_scroll_state) {
-    ZFW_ZERO_OUT(*state);
+    ZERO_OUT(*state);
 
     for (int i = 0; i < zfw_eks_key_code_cnt; i++) {
         if (glfwGetKey(glfw_window, g_glfw_keys[i])) {
@@ -164,7 +160,7 @@ static void GLFWCharCallback(GLFWwindow* const window, const unsigned int codepo
         }
     }
 
-    ZFW_LogError("Unicode buffer is full!");
+    LogError("Unicode buffer is full!");
 }
 
 static GLFWwindow* CreateGLFWWindow(const zfw_s_vec_2d_i size, const char* const title, const zfw_e_window_flags flags, s_glfw_user_data* const user_data) {
@@ -188,7 +184,7 @@ static GLFWwindow* CreateGLFWWindow(const zfw_s_vec_2d_i size, const char* const
         glfwSetScrollCallback(glfw_window, GLFWScrollCallback);
         glfwSetCharCallback(glfw_window, GLFWCharCallback);
     } else {
-        ZFW_LogError("Failed to create a GLFW window!");
+        LogError("Failed to create a GLFW window!");
     }
 
     return glfw_window;
@@ -214,30 +210,30 @@ bool ZFW_RunGame(const zfw_s_game_info* const info) {
     //
     // Initialisation
     //
-    ZFW_Log("Initialising...");
+    Log("Initialising...");
 
     ZFW_InitRNG();
 
     // Initialise memory arenas.
-    zfw_s_mem_arena perm_mem_arena = {0}; // The memory in here exists for the lifetime of the program, it does not get reset.
+    s_mem_arena perm_mem_arena = {0}; // The memory in here exists for the lifetime of the program, it does not get reset.
 
-    if (!ZFW_InitMemArena(&perm_mem_arena, PERM_MEM_ARENA_SIZE)) {
-        ZFW_LogError("Failed to initialise the permanent memory arena!");
+    if (!InitMemArena(&perm_mem_arena, PERM_MEM_ARENA_SIZE)) {
+        LogError("Failed to initialise the permanent memory arena!");
         error = true;
         goto clean_nothing;
     }
 
-    zfw_s_mem_arena temp_mem_arena = {0}; // While the memory here also exists for the program lifetime, it gets reset after game initialisation and after every frame. Useful if you just need some temporary working space.
+    s_mem_arena temp_mem_arena = {0}; // While the memory here also exists for the program lifetime, it gets reset after game initialisation and after every frame. Useful if you just need some temporary working space.
 
-    if (!ZFW_InitMemArena(&temp_mem_arena, TEMP_MEM_ARENA_SIZE)) {
-        ZFW_LogError("Failed to initialise the temporary memory arena!");
+    if (!InitMemArena(&temp_mem_arena, TEMP_MEM_ARENA_SIZE)) {
+        LogError("Failed to initialise the temporary memory arena!");
         error = true;
         goto clean_perm_mem_arena;
     }
 
     // Initialise GLFW.
     if (!glfwInit()) {
-        ZFW_LogError("Failed to initialise GLFW!");
+        LogError("Failed to initialise GLFW!");
         error = true;
         goto clean_temp_mem_arena;
     }
@@ -252,7 +248,7 @@ bool ZFW_RunGame(const zfw_s_game_info* const info) {
 
     // Initialise OpenGL rendering.
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
-        ZFW_LogError("Failed to load OpenGL function pointers!");
+        LogError("Failed to load OpenGL function pointers!");
         error = true;
         goto clean_glfw_window;
     }
@@ -267,7 +263,7 @@ bool ZFW_RunGame(const zfw_s_game_info* const info) {
         goto clean_glfw_window;
     }
 
-    zfw_s_rendering_state* const rendering_state = ZFW_MEM_ARENA_PUSH_TYPE(&perm_mem_arena, zfw_s_rendering_state);
+    zfw_s_rendering_state* const rendering_state = MEM_ARENA_PUSH_TYPE(&perm_mem_arena, zfw_s_rendering_state);
 
     if (!rendering_state) {
         error = true;
@@ -286,10 +282,10 @@ bool ZFW_RunGame(const zfw_s_game_info* const info) {
     void* user_mem = NULL;
 
     if (info->user_mem_size > 0) {
-        user_mem = ZFW_PushToMemArena(&perm_mem_arena, info->user_mem_size, info->user_mem_alignment);
+        user_mem = PushToMemArena(&perm_mem_arena, info->user_mem_size, info->user_mem_alignment);
 
         if (!user_mem) {
-            ZFW_LogError("Failed to allocate user memory!");
+            LogError("Failed to allocate user memory!");
             error = true;
             goto clean_audio_sys;
         }
@@ -306,7 +302,7 @@ bool ZFW_RunGame(const zfw_s_game_info* const info) {
         };
 
         if (!info->init_func(&func_data)) {
-            ZFW_LogError("Provided game initialisation function failed!");
+            LogError("Provided game initialisation function failed!");
             error = true;
             goto clean_audio_sys;
         }
@@ -324,12 +320,12 @@ bool ZFW_RunGame(const zfw_s_game_info* const info) {
 
     bool running = true;
 
-    ZFW_Log("Entering the main loop...");
+    Log("Entering the main loop...");
 
     while (!glfwWindowShouldClose(glfw_window) && running) {
         glfwPollEvents();
 
-        ZFW_RewindMemArena(&temp_mem_arena, 0);
+        RewindMemArena(&temp_mem_arena, 0);
 
         const zfw_s_window_state window_state = WindowState(glfw_window);
 
@@ -362,7 +358,7 @@ bool ZFW_RunGame(const zfw_s_game_info* const info) {
 
                 const zfw_e_game_tick_func_result res = info->tick_func(&func_data);
 
-                ZFW_ZERO_OUT(glfw_user_data.unicode_buf);
+                ZERO_OUT(glfw_user_data.unicode_buf);
                 glfw_user_data.mouse_scroll_state = zfw_ek_mouse_scroll_state_none;
 
                 if (res == ek_game_tick_func_result_exit) {
@@ -378,7 +374,7 @@ bool ZFW_RunGame(const zfw_s_game_info* const info) {
             } while (frame_dur_accum >= TARG_TICK_INTERVAL);
 
             // Update the display.
-            ZFW_ZERO_OUT(*rendering_state);
+            ZERO_OUT(*rendering_state);
             ZFW_InitRenderingState(rendering_state);
 
             {
@@ -428,10 +424,10 @@ clean_glfw:
     glfwTerminate();
 
 clean_temp_mem_arena:
-    ZFW_CleanMemArena(&temp_mem_arena);
+    CleanMemArena(&temp_mem_arena);
 
 clean_perm_mem_arena:
-    ZFW_CleanMemArena(&perm_mem_arena);
+    CleanMemArena(&perm_mem_arena);
 
 clean_nothing:
 

@@ -3,10 +3,10 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include <cu.h>
 #include "zfw_graphics.h"
 #include "zfw_math.h"
 #include "zfw_audio.h"
-#include "zfw_mem.h"
 
 typedef char zfw_t_unicode_buf[32];
 
@@ -92,7 +92,7 @@ typedef enum {
     zfw_eks_key_code_cnt
 } zfw_e_key_code;
 
-static_assert(zfw_eks_key_code_cnt < ZFW_SIZE_IN_BITS(zfw_t_keys_down_bits), "Too many key codes!");
+static_assert(zfw_eks_key_code_cnt < SIZE_IN_BITS(zfw_t_keys_down_bits), "Too many key codes!");
 
 typedef enum {
     zfw_ek_mouse_button_code_left,
@@ -102,7 +102,7 @@ typedef enum {
     zfw_eks_mouse_button_code_cnt
 } zfw_e_mouse_button_code;
 
-static_assert(zfw_eks_mouse_button_code_cnt < ZFW_SIZE_IN_BITS(zfw_t_mouse_buttons_down_bits), "Too many mouse button codes!");
+static_assert(zfw_eks_mouse_button_code_cnt < SIZE_IN_BITS(zfw_t_mouse_buttons_down_bits), "Too many mouse button codes!");
 
 typedef struct {
     zfw_t_keys_down_bits keys_down;
@@ -119,8 +119,8 @@ typedef struct {
 
 typedef struct {
     void* user_mem;
-    zfw_s_mem_arena* perm_mem_arena;
-    zfw_s_mem_arena* temp_mem_arena;
+    s_mem_arena* perm_mem_arena;
+    s_mem_arena* temp_mem_arena;
     zfw_s_window_state window_state;
     zfw_s_audio_sys* audio_sys;
 } zfw_s_game_init_func_data;
@@ -133,8 +133,8 @@ typedef enum {
 
 typedef struct {
     void* user_mem;
-    zfw_s_mem_arena* perm_mem_arena;
-    zfw_s_mem_arena* temp_mem_arena;
+    s_mem_arena* perm_mem_arena;
+    s_mem_arena* temp_mem_arena;
     zfw_s_window_state window_state;
     const zfw_s_input_state* input_state;
     const zfw_s_input_state* input_state_last;
@@ -144,8 +144,8 @@ typedef struct {
 
 typedef struct {
     void* user_mem;
-    zfw_s_mem_arena* perm_mem_arena;
-    zfw_s_mem_arena* temp_mem_arena;
+    s_mem_arena* perm_mem_arena;
+    s_mem_arena* temp_mem_arena;
     zfw_s_vec_2d mouse_pos;
     zfw_s_rendering_context rendering_context;
 } zfw_s_game_render_func_data;

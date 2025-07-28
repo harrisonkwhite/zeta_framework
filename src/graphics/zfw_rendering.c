@@ -62,7 +62,7 @@ static size_t Stride(const int* const vert_attr_lens, const int vert_attr_cnt) {
 }
 
 static void WriteBatchSlot(zfw_t_batch_slot* const slot, const zfw_s_batch_slot_write_info* const write_info) {
-    assert(slot && ZFW_IS_ZERO(*slot));
+    assert(slot && IS_ZERO(*slot));
     assert(write_info && ZFW_IsBatchSlotWriteInfoValid(write_info));
 
     const zfw_s_vec_2d vert_coords[] = {
@@ -72,7 +72,7 @@ static void WriteBatchSlot(zfw_t_batch_slot* const slot, const zfw_s_batch_slot_
         {0.0f - write_info->origin.x, 1.0f - write_info->origin.y}
     };
 
-    ZFW_CHECK_STATIC_ARRAY_LEN(vert_coords, ZFW_STATIC_ARRAY_LEN(*slot));
+    STATIC_ARRAY_LEN_CHECK(vert_coords, STATIC_ARRAY_LEN(*slot));
 
     const zfw_s_vec_2d tex_coords[] = {
         {write_info->tex_coords.left, write_info->tex_coords.top},
@@ -81,9 +81,9 @@ static void WriteBatchSlot(zfw_t_batch_slot* const slot, const zfw_s_batch_slot_
         {write_info->tex_coords.left, write_info->tex_coords.bottom}
     };
 
-    ZFW_CHECK_STATIC_ARRAY_LEN(tex_coords, ZFW_STATIC_ARRAY_LEN(*slot));
+    STATIC_ARRAY_LEN_CHECK(tex_coords, STATIC_ARRAY_LEN(*slot));
 
-    for (int i = 0; i < ZFW_STATIC_ARRAY_LEN(*slot); i++) {
+    for (int i = 0; i < STATIC_ARRAY_LEN(*slot); i++) {
         (*slot)[i] = (zfw_s_batch_vertex){
             .vert_coord = vert_coords[i],
             .pos = write_info->pos,
@@ -95,10 +95,10 @@ static void WriteBatchSlot(zfw_t_batch_slot* const slot, const zfw_s_batch_slot_
     }
 }
 
-static unsigned short* PushBatchElems(zfw_s_mem_arena* const mem_arena) {
-    assert(mem_arena && ZFW_IsMemArenaValid(mem_arena));
+static unsigned short* PushBatchElems(s_mem_arena* const mem_arena) {
+    assert(mem_arena && IsMemArenaValid(mem_arena));
 
-    unsigned short* const elems = ZFW_MEM_ARENA_PUSH_TYPE_MANY(mem_arena, unsigned short, ZFW_BATCH_SLOT_ELEM_CNT * ZFW_BATCH_SLOT_CNT);
+    unsigned short* const elems = MEM_ARENA_PUSH_TYPE_CNT(mem_arena, unsigned short, ZFW_BATCH_SLOT_ELEM_CNT * ZFW_BATCH_SLOT_CNT);
 
     if (elems) {
         for (int i = 0; i < ZFW_BATCH_SLOT_CNT; i++) {
@@ -157,12 +157,12 @@ void ZFW_CleanRenderable(zfw_s_renderable* const gl_ids) {
     glDeleteBuffers(1, &gl_ids->elem_buf_gl_id);
 }
 
-bool ZFW_InitRenderingBasis(zfw_s_rendering_basis* const basis, zfw_s_mem_arena* const mem_arena, const int surf_cnt, const zfw_s_vec_2d_i window_size, zfw_s_mem_arena* const temp_mem_arena) {
-    assert(basis && ZFW_IS_ZERO(*basis));
-    assert(mem_arena && ZFW_IsMemArenaValid(mem_arena));
+bool ZFW_InitRenderingBasis(zfw_s_rendering_basis* const basis, s_mem_arena* const mem_arena, const int surf_cnt, const zfw_s_vec_2d_i window_size, s_mem_arena* const temp_mem_arena) {
+    assert(basis && IS_ZERO(*basis));
+    assert(mem_arena && IsMemArenaValid(mem_arena));
     assert(surf_cnt >= 0 && surf_cnt <= ZFW_SURFACE_LIMIT);
     assert(window_size.x > 0 && window_size.y > 0);
-    assert(temp_mem_arena && ZFW_IsMemArenaValid(temp_mem_arena));
+    assert(temp_mem_arena && IsMemArenaValid(temp_mem_arena));
 
     // NOTE: Doing things in an odd order here to minimise cleanup work.
 
@@ -178,11 +178,11 @@ bool ZFW_InitRenderingBasis(zfw_s_rendering_basis* const basis, zfw_s_mem_arena*
         }
     }
 
-    basis->batch_renderable = ZFW_GenRenderable(NULL, sizeof(zfw_s_batch_vertex) * ZFW_BATCH_SLOT_VERT_CNT * ZFW_BATCH_SLOT_CNT, batch_elems, sizeof(unsigned short) * ZFW_BATCH_SLOT_ELEM_CNT * ZFW_BATCH_SLOT_CNT, zfw_g_batch_vertex_attrib_lens, ZFW_STATIC_ARRAY_LEN(zfw_g_batch_vertex_attrib_lens));
+    basis->batch_renderable = ZFW_GenRenderable(NULL, sizeof(zfw_s_batch_vertex) * ZFW_BATCH_SLOT_VERT_CNT * ZFW_BATCH_SLOT_CNT, batch_elems, sizeof(unsigned short) * ZFW_BATCH_SLOT_ELEM_CNT * ZFW_BATCH_SLOT_CNT, zfw_g_batch_vertex_attrib_lens, STATIC_ARRAY_LEN(zfw_g_batch_vertex_attrib_lens));
 
     basis->batch_shader_prog = LoadBatchShaderProg();
 
-    const zfw_t_byte px_tex_rgba_data[ZFW_RGBA_CHANNEL_CNT] = {255, 255, 255, 255};
+    const t_u8 px_tex_rgba_data[ZFW_RGBA_CHANNEL_CNT] = {255, 255, 255, 255};
     basis->px_tex_gl_id = ZFW_GenTexture((zfw_s_vec_2d_i){1, 1}, px_tex_rgba_data);
 
     basis->surf_renderable = ZFW_GenSurfaceRenderable();
@@ -199,11 +199,11 @@ void ZFW_CleanRenderingBasis(zfw_s_rendering_basis* const basis) {
     ZFW_CleanRenderable(&basis->batch_renderable);
     ZFW_CleanSurfaces(&basis->surfs);
 
-    ZFW_ZERO_OUT(*basis);
+    ZERO_OUT(*basis);
 }
 
 void ZFW_InitRenderingState(zfw_s_rendering_state* const state) {
-    assert(state && ZFW_IS_ZERO(*state));
+    assert(state && IS_ZERO(*state));
     ZFW_InitIdenMatrix4x4(&state->view_mat);
 }
 
@@ -232,7 +232,7 @@ void ZFW_Render(const zfw_s_rendering_context* const context, const zfw_s_batch_
 
     // Write the vertex data to the topmost slot, then update used slot count.
     const int slot_index = batch_state->num_slots_used;
-    ZFW_ZERO_OUT(batch_state->slots[slot_index]);
+    ZERO_OUT(batch_state->slots[slot_index]);
     WriteBatchSlot(&batch_state->slots[slot_index], write_info);
     batch_state->num_slots_used++;
 }

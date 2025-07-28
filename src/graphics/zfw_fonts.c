@@ -1,10 +1,7 @@
 #include "zfw_graphics.h"
 
 #include <ctype.h>
-#include <memory>
 #include <stb_truetype.h>
-#include "zfw_io.h"
-#include "zfw_mem.h"
 
 #define FONT_TEX_CHR_MARGIN (zfw_s_vec_2d_i){4, 4}
 
@@ -36,8 +33,8 @@ static void LoadFontArrangementInfo(zfw_s_font_arrangement_info* const arrangeme
 }
 
 static void LoadFontTextureInfo(zfw_s_vec_2d_i* const tex_size, zfw_t_tex_chr_positions* const tex_chr_positions, const zfw_s_font_arrangement_info* const arrangement_info, const int tex_width_limit) {
-    assert(tex_size && ZFW_IS_ZERO(*tex_size));
-    assert(tex_chr_positions && ZFW_IS_ZERO(*tex_chr_positions));
+    assert(tex_size && IS_ZERO(*tex_size));
+    assert(tex_chr_positions && IS_ZERO(*tex_chr_positions));
     assert(arrangement_info);
     assert(tex_width_limit > 0);
 
@@ -64,18 +61,18 @@ static void LoadFontTextureInfo(zfw_s_vec_2d_i* const tex_size, zfw_t_tex_chr_po
     }
 }
 
-static zfw_t_gl_id GenFontTexture(const stbtt_fontinfo* const stb_font_info, const int font_height, const zfw_s_vec_2d_i tex_size, const zfw_t_tex_chr_positions* const tex_chr_positions, const zfw_s_font_arrangement_info* const font_arrangement_info, zfw_s_mem_arena* const temp_mem_arena) {
+static zfw_t_gl_id GenFontTexture(const stbtt_fontinfo* const stb_font_info, const int font_height, const zfw_s_vec_2d_i tex_size, const zfw_t_tex_chr_positions* const tex_chr_positions, const zfw_s_font_arrangement_info* const font_arrangement_info, s_mem_arena* const temp_mem_arena) {
     assert(stb_font_info);
     assert(font_height > 0);
     assert(tex_size.x > 0 && tex_size.y > 0);
     assert(tex_chr_positions);
     assert(font_arrangement_info);
-    assert(temp_mem_arena && ZFW_IsMemArenaValid(temp_mem_arena));
+    assert(temp_mem_arena && IsMemArenaValid(temp_mem_arena));
 
     const float scale = stbtt_ScaleForPixelHeight(stb_font_info, font_height);
 
     const size_t font_tex_rgba_px_data_size = 4 * tex_size.x * tex_size.y;
-    zfw_t_byte* const font_tex_rgba_px_data = ZFW_MEM_ARENA_PUSH_TYPE_MANY(temp_mem_arena, zfw_t_byte, font_tex_rgba_px_data_size);
+    t_u8* const font_tex_rgba_px_data = MEM_ARENA_PUSH_TYPE_CNT(temp_mem_arena, t_u8, font_tex_rgba_px_data_size);
 
     if (!font_tex_rgba_px_data) {
         return 0;
@@ -98,7 +95,7 @@ static zfw_t_gl_id GenFontTexture(const stbtt_fontinfo* const stb_font_info, con
             continue;
         }
 
-        zfw_t_byte* const bitmap = stbtt_GetCodepointBitmap(stb_font_info, scale, scale, chr, NULL, NULL, NULL, NULL);
+        t_u8* const bitmap = stbtt_GetCodepointBitmap(stb_font_info, scale, scale, chr, NULL, NULL, NULL, NULL);
 
         if (!bitmap) {
             return 0;
@@ -134,32 +131,32 @@ static inline zfw_s_vec_2d_i GLTextureSizeLimit() {
     return (zfw_s_vec_2d_i){size, size};
 }
 
-zfw_s_fonts ZFW_LoadFontsFromFiles(zfw_s_mem_arena* const mem_arena, const int font_cnt, const t_font_index_to_load_info font_index_to_load_info, zfw_s_mem_arena* const temp_mem_arena) {
-    assert(mem_arena && ZFW_IsMemArenaValid(mem_arena));
+zfw_s_fonts ZFW_LoadFontsFromFiles(s_mem_arena* const mem_arena, const int font_cnt, const t_font_index_to_load_info font_index_to_load_info, s_mem_arena* const temp_mem_arena) {
+    assert(mem_arena && IsMemArenaValid(mem_arena));
     assert(font_cnt > 0);
     assert(font_index_to_load_info);
-    assert(temp_mem_arena && ZFW_IsMemArenaValid(temp_mem_arena));
+    assert(temp_mem_arena && IsMemArenaValid(temp_mem_arena));
 
     // Reserve memory for font data.
-    zfw_s_font_arrangement_info* const arrangement_infos = ZFW_MEM_ARENA_PUSH_TYPE_MANY(mem_arena, zfw_s_font_arrangement_info, font_cnt);
+    zfw_s_font_arrangement_info* const arrangement_infos = MEM_ARENA_PUSH_TYPE_CNT(mem_arena, zfw_s_font_arrangement_info, font_cnt);
 
     if (!arrangement_infos) {
         return (zfw_s_fonts){0};
     }
 
-    zfw_t_gl_id* const tex_gl_ids = ZFW_MEM_ARENA_PUSH_TYPE_MANY(mem_arena, zfw_t_gl_id, font_cnt);
+    zfw_t_gl_id* const tex_gl_ids = MEM_ARENA_PUSH_TYPE_CNT(mem_arena, zfw_t_gl_id, font_cnt);
 
     if (!tex_gl_ids) {
         return (zfw_s_fonts){0};
     }
 
-    zfw_s_vec_2d_i* const tex_sizes = ZFW_MEM_ARENA_PUSH_TYPE_MANY(mem_arena, zfw_s_vec_2d_i, font_cnt);
+    zfw_s_vec_2d_i* const tex_sizes = MEM_ARENA_PUSH_TYPE_CNT(mem_arena, zfw_s_vec_2d_i, font_cnt);
 
     if (!tex_sizes) {
         return (zfw_s_fonts){0};
     }
 
-    zfw_t_tex_chr_positions* const tex_chr_positions = ZFW_MEM_ARENA_PUSH_TYPE_MANY(mem_arena, zfw_t_tex_chr_positions, font_cnt);
+    zfw_t_tex_chr_positions* const tex_chr_positions = MEM_ARENA_PUSH_TYPE_CNT(mem_arena, zfw_t_tex_chr_positions, font_cnt);
 
     if (!tex_chr_positions) {
         return (zfw_s_fonts){0};
@@ -173,7 +170,7 @@ zfw_s_fonts ZFW_LoadFontsFromFiles(zfw_s_mem_arena* const mem_arena, const int f
         assert(load_info.file_path);
         assert(load_info.height > 0);
 
-        const zfw_t_byte* const font_file_data = ZFW_PushEntireFileContents(load_info.file_path, temp_mem_arena, false);
+        const t_u8* const font_file_data = PushEntireFileContents(load_info.file_path, temp_mem_arena, false);
 
         if (!font_file_data) {
             err = true;
@@ -185,13 +182,13 @@ zfw_s_fonts ZFW_LoadFontsFromFiles(zfw_s_mem_arena* const mem_arena, const int f
         const int offs = stbtt_GetFontOffsetForIndex(font_file_data, 0);
 
         if (offs == -1) {
-            ZFW_LogError("Failed to get font offset for font \"%s\"!", load_info.file_path);
+            LogError("Failed to get font offset for font \"%s\"!", load_info.file_path);
             err = true;
             break;
         }
 
         if (!stbtt_InitFont(&stb_font_info, font_file_data, offs)) {
-            ZFW_LogError("Failed to initialise font \"%s\"!", load_info.file_path);
+            LogError("Failed to initialise font \"%s\"!", load_info.file_path);
             err = true;
             break;
         }
@@ -203,7 +200,7 @@ zfw_s_fonts ZFW_LoadFontsFromFiles(zfw_s_mem_arena* const mem_arena, const int f
         LoadFontTextureInfo(&tex_sizes[i], &tex_chr_positions[i], &arrangement_infos[i], font_tex_size_limit.x);
 
         if (tex_sizes[i].y > font_tex_size_limit.y) {
-            ZFW_LogError("Prospective font texture size is too large!");
+            LogError("Prospective font texture size is too large!");
             err = true;
             break;
         }
@@ -228,7 +225,7 @@ zfw_s_fonts ZFW_LoadFontsFromFiles(zfw_s_mem_arena* const mem_arena, const int f
 void ZFW_UnloadFonts(zfw_s_fonts* const fonts) {
     assert(fonts && ZFW_IsFontsValid(fonts));
     glDeleteTextures(fonts->cnt, fonts->tex_gl_ids);
-    ZFW_ZERO_OUT(*fonts);
+    ZERO_OUT(*fonts);
 }
 
 typedef struct {
@@ -254,8 +251,8 @@ static s_str_len_and_line_cnt StrLenAndLineCnt(const char* const str) {
     };
 }
 
-static zfw_s_vec_2d* PushStrChrRenderPositions(zfw_s_mem_arena* const mem_arena, const char* const str, const int font_index, const zfw_s_fonts* const fonts, const zfw_s_vec_2d pos, const zfw_s_vec_2d alignment) {
-    assert(mem_arena && ZFW_IsMemArenaValid(mem_arena));
+static zfw_s_vec_2d* PushStrChrRenderPositions(s_mem_arena* const mem_arena, const char* const str, const int font_index, const zfw_s_fonts* const fonts, const zfw_s_vec_2d pos, const zfw_s_vec_2d alignment) {
+    assert(mem_arena && IsMemArenaValid(mem_arena));
     assert(str && str[0]);
     assert(font_index >= 0 && font_index < fonts->cnt);
     assert(fonts && ZFW_IsFontsValid(fonts));
@@ -269,7 +266,7 @@ static zfw_s_vec_2d* PushStrChrRenderPositions(zfw_s_mem_arena* const mem_arena,
     const float alignment_offs_y = -(str_len_and_line_cnt.line_cnt * arrangement_info->line_height) * alignment.y;
 
     // Reserve memory for the character render positions.
-    zfw_s_vec_2d* const chr_render_positions = ZFW_MEM_ARENA_PUSH_TYPE_MANY(mem_arena, zfw_s_vec_2d, str_len_and_line_cnt.len);
+    zfw_s_vec_2d* const chr_render_positions = MEM_ARENA_PUSH_TYPE_CNT(mem_arena, zfw_s_vec_2d, str_len_and_line_cnt.len);
 
     if (!chr_render_positions) {
         return NULL;
@@ -320,12 +317,12 @@ static zfw_s_vec_2d* PushStrChrRenderPositions(zfw_s_mem_arena* const mem_arena,
     return chr_render_positions;
 }
 
-bool ZFW_LoadStrCollider(zfw_s_rect* const rect, const char* const str, const int font_index, const zfw_s_fonts* const fonts, const zfw_s_vec_2d pos, const zfw_s_vec_2d alignment, zfw_s_mem_arena* const temp_mem_arena) {
-    assert(rect && ZFW_IS_ZERO(*rect));
+bool ZFW_LoadStrCollider(zfw_s_rect* const rect, const char* const str, const int font_index, const zfw_s_fonts* const fonts, const zfw_s_vec_2d pos, const zfw_s_vec_2d alignment, s_mem_arena* const temp_mem_arena) {
+    assert(rect && IS_ZERO(*rect));
     assert(str && str[0]);
     assert(font_index >= 0 && font_index < fonts->cnt);
     assert(ZFW_IsStrAlignmentValid(alignment));
-    assert(temp_mem_arena && ZFW_IsMemArenaValid(temp_mem_arena));
+    assert(temp_mem_arena && IsMemArenaValid(temp_mem_arena));
 
     const zfw_s_vec_2d* const chr_render_positions = PushStrChrRenderPositions(temp_mem_arena, str, font_index, fonts, pos, alignment);
 
@@ -379,14 +376,14 @@ bool ZFW_LoadStrCollider(zfw_s_rect* const rect, const char* const str, const in
     return true;
 }
 
-bool ZFW_RenderStr(const zfw_s_rendering_context* const context, const char* const str, const int font_index, const zfw_s_fonts* const fonts, const zfw_s_vec_2d pos, const zfw_s_vec_2d alignment, const zfw_s_vec_4d blend, zfw_s_mem_arena* const temp_mem_arena) {
+bool ZFW_RenderStr(const zfw_s_rendering_context* const context, const char* const str, const int font_index, const zfw_s_fonts* const fonts, const zfw_s_vec_2d pos, const zfw_s_vec_2d alignment, const zfw_s_vec_4d blend, s_mem_arena* const temp_mem_arena) {
     assert(context && ZFW_IsRenderingContextValid(context));
     assert(str && str[0]);
     assert(font_index >= 0 && font_index < fonts->cnt);
     assert(fonts && ZFW_IsFontsValid(fonts));
     assert(ZFW_IsStrAlignmentValid(alignment));
     assert(ZFW_IsColorValid(blend));
-    assert(temp_mem_arena && ZFW_IsMemArenaValid(temp_mem_arena));
+    assert(temp_mem_arena && IsMemArenaValid(temp_mem_arena));
 
     const zfw_s_vec_2d* const chr_render_positions = PushStrChrRenderPositions(temp_mem_arena, str, font_index, fonts, pos, alignment);
 

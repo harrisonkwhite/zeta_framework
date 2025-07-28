@@ -1,5 +1,4 @@
 #include "zfw_graphics.h"
-#include "zfw_mem.h"
 
 static bool AttachFramebufferTexture(const zfw_t_gl_id fb_gl_id, const zfw_t_gl_id tex_gl_id, const zfw_s_vec_2d_i tex_size) {
     assert(fb_gl_id != 0);
@@ -45,8 +44,8 @@ static int PopSurfaceIndex(zfw_s_surface_index_stack* const stack, const int sur
     return stack->buf[stack->height];
 }
 
-bool ZFW_InitSurfaces(zfw_s_surfaces* const surfs, zfw_s_mem_arena* const mem_arena, const int cnt, const zfw_s_vec_2d_i size) {
-    assert(surfs && ZFW_IS_ZERO(*surfs));
+bool ZFW_InitSurfaces(zfw_s_surfaces* const surfs, s_mem_arena* const mem_arena, const int cnt, const zfw_s_vec_2d_i size) {
+    assert(surfs && IS_ZERO(*surfs));
     assert(cnt > 0);
     assert(size.x > 0 && size.y > 0);
 
@@ -60,7 +59,7 @@ bool ZFW_InitSurfaces(zfw_s_surfaces* const surfs, zfw_s_mem_arena* const mem_ar
             glDeleteTextures(cnt, surfs->fb_tex_gl_ids);
             glDeleteFramebuffers(cnt, surfs->fb_gl_ids);
 
-            ZFW_ZERO_OUT(*surfs);
+            ZERO_OUT(*surfs);
 
             return false;
         }
@@ -80,7 +79,7 @@ void ZFW_CleanSurfaces(zfw_s_surfaces* const surfs) {
         glDeleteFramebuffers(surfs->cnt, surfs->fb_gl_ids);
     }
 
-    ZFW_ZERO_OUT(*surfs);
+    ZERO_OUT(*surfs);
 }
 
 bool ZFW_ResizeSurfaces(zfw_s_surfaces* const surfs, const zfw_s_vec_2d_i size) {
@@ -122,7 +121,7 @@ zfw_s_renderable ZFW_GenSurfaceRenderable() {
         2
     };
 
-    return ZFW_GenRenderable(verts, sizeof(verts), elems, sizeof(elems), vert_attr_lens, ZFW_STATIC_ARRAY_LEN(vert_attr_lens));
+    return ZFW_GenRenderable(verts, sizeof(verts), elems, sizeof(elems), vert_attr_lens, STATIC_ARRAY_LEN(vert_attr_lens));
 }
 
 bool ZFW_SetSurface(const zfw_s_rendering_context* const rendering_context, const int surf_index) {

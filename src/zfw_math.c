@@ -43,7 +43,7 @@ zfw_s_rect ZFW_GenSpanningRect(const zfw_s_rect* const rects, const int cnt) {
 }
 
 void ZFW_InitIdenMatrix4x4(zfw_t_matrix_4x4* const mat) {
-    assert(ZFW_IS_ZERO(*mat));
+    assert(IS_ZERO(*mat));
 
     (*mat)[0][0] = 1.0f;
     (*mat)[1][1] = 1.0f;
@@ -63,7 +63,7 @@ void ZFW_ScaleMatrix4x4(zfw_t_matrix_4x4* const mat, const float scalar) {
 }
 
 void ZFW_InitOrthoMatrix4x4(zfw_t_matrix_4x4* const mat, const float left, const float right, const float bottom, const float top, const float near, const float far) {
-    assert(ZFW_IS_ZERO(*mat));
+    assert(IS_ZERO(*mat));
     assert(right > left);
     assert(top < bottom);
     assert(far > near);
@@ -120,12 +120,12 @@ static bool CheckPolySep(const zfw_s_poly poly, const zfw_s_poly other) {
     return true;
 }
 
-bool ZFW_PushQuadPoly(zfw_s_poly* const poly, zfw_s_mem_arena* const mem_arena, const zfw_s_vec_2d pos, const zfw_s_vec_2d size, const zfw_s_vec_2d origin) {
-    assert(ZFW_IS_ZERO(*poly));
+bool ZFW_PushQuadPoly(zfw_s_poly* const poly, s_mem_arena* const mem_arena, const zfw_s_vec_2d pos, const zfw_s_vec_2d size, const zfw_s_vec_2d origin) {
+    assert(IS_ZERO(*poly));
     assert(size.x > 0.0f && size.y > 0.0f);
     assert(origin.x >= 0.0f && origin.y >= 0.0f && origin.x <= 1.0f && origin.y <= 1.0f);
     
-    poly->pts = ZFW_MEM_ARENA_PUSH_TYPE_MANY(mem_arena, zfw_s_vec_2d, 4);
+    poly->pts = MEM_ARENA_PUSH_TYPE_CNT(mem_arena, zfw_s_vec_2d, 4);
 
     if (!poly->pts) {
         return false;
@@ -142,12 +142,12 @@ bool ZFW_PushQuadPoly(zfw_s_poly* const poly, zfw_s_mem_arena* const mem_arena, 
     return true;
 }
 
-bool ZFW_PushQuadPolyRotated(zfw_s_poly* const poly, zfw_s_mem_arena* const mem_arena, const zfw_s_vec_2d pos, const zfw_s_vec_2d size, const zfw_s_vec_2d origin, const float rot) {
-    assert(ZFW_IS_ZERO(*poly));
+bool ZFW_PushQuadPolyRotated(zfw_s_poly* const poly, s_mem_arena* const mem_arena, const zfw_s_vec_2d pos, const zfw_s_vec_2d size, const zfw_s_vec_2d origin, const float rot) {
+    assert(IS_ZERO(*poly));
     assert(size.x > 0.0f && size.y > 0.0f);
     assert(origin.x >= 0.0f && origin.y >= 0.0f && origin.x <= 1.0f && origin.y <= 1.0f);
     
-    poly->pts = ZFW_MEM_ARENA_PUSH_TYPE_MANY(mem_arena, zfw_s_vec_2d, 4);
+    poly->pts = MEM_ARENA_PUSH_TYPE_CNT(mem_arena, zfw_s_vec_2d, 4);
 
     if (!poly->pts) {
         return false;

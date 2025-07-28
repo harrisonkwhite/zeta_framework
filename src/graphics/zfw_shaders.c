@@ -1,16 +1,13 @@
 #include "zfw_graphics.h"
 
-#include "zfw_io.h"
-#include "zfw_mem.h"
-
-static zfw_t_gl_id CreateShaderProgFromFiles(const zfw_s_shader_prog_file_paths fps, zfw_s_mem_arena* const temp_mem_arena) {
-    const char* const vs_src = (const char*)ZFW_PushEntireFileContents(fps.vs_fp, temp_mem_arena, true);
+static zfw_t_gl_id CreateShaderProgFromFiles(const zfw_s_shader_prog_file_paths fps, s_mem_arena* const temp_mem_arena) {
+    const char* const vs_src = (const char*)PushEntireFileContents(fps.vs_fp, temp_mem_arena, true);
 
     if (!vs_src) {
         return 0;
     }
 
-    const char* const fs_src = (const char*)ZFW_PushEntireFileContents(fps.fs_fp, temp_mem_arena, true);
+    const char* const fs_src = (const char*)PushEntireFileContents(fps.fs_fp, temp_mem_arena, true);
 
     if (!fs_src) {
         return 0;
@@ -66,13 +63,13 @@ zfw_t_gl_id ZFW_CreateShaderProgFromSrcs(const char* const vert_src, const char*
     return prog_gl_id;
 }
 
-zfw_s_shader_progs ZFW_LoadShaderProgsFromFiles(zfw_s_mem_arena* const mem_arena, const int prog_cnt, const zfw_t_shader_prog_index_to_file_paths prog_index_to_fps, zfw_s_mem_arena* const temp_mem_arena) {
-    assert(mem_arena && ZFW_IsMemArenaValid(mem_arena));
+zfw_s_shader_progs ZFW_LoadShaderProgsFromFiles(s_mem_arena* const mem_arena, const int prog_cnt, const zfw_t_shader_prog_index_to_file_paths prog_index_to_fps, s_mem_arena* const temp_mem_arena) {
+    assert(mem_arena && IsMemArenaValid(mem_arena));
     assert(prog_cnt > 0);
     assert(prog_index_to_fps);
-    assert(temp_mem_arena && ZFW_IsMemArenaValid(temp_mem_arena));
+    assert(temp_mem_arena && IsMemArenaValid(temp_mem_arena));
 
-    zfw_t_gl_id* const gl_ids = ZFW_MEM_ARENA_PUSH_TYPE_MANY(mem_arena, zfw_t_gl_id, prog_cnt);
+    zfw_t_gl_id* const gl_ids = MEM_ARENA_PUSH_TYPE_CNT(mem_arena, zfw_t_gl_id, prog_cnt);
 
     if (!gl_ids) {
         return (zfw_s_shader_progs){0};
@@ -104,5 +101,5 @@ void ZFW_UnloadShaderProgs(zfw_s_shader_progs* const progs) {
         glDeleteProgram(progs->gl_ids[i]);
     }
 
-    ZFW_ZERO_OUT(*progs);
+    ZERO_OUT(*progs);
 }

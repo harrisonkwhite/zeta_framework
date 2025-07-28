@@ -4,6 +4,7 @@
 #include <assert.h>
 #include <limits.h>
 #include <glad/glad.h>
+#include <cu.h>
 #include "zfw_math.h"
 
 #define ZFW_RGBA_CHANNEL_CNT 4
@@ -284,7 +285,7 @@ typedef struct {
 static inline bool ZFW_IsSurfacesValid(const zfw_s_surfaces* const surfs) {
     assert(surfs);
 
-    if (ZFW_IS_ZERO(*surfs)) {
+    if (IS_ZERO(*surfs)) {
         return true;
     }
 
@@ -381,7 +382,7 @@ static inline bool ZFW_IsRenderingContextValid(const zfw_s_rendering_context* co
 zfw_s_renderable ZFW_GenRenderable(const float* const vert_buf, const size_t vert_buf_size, const unsigned short* const elem_buf, const size_t elem_buf_size, const int* const vert_attr_lens, const int vert_attr_cnt);
 void ZFW_CleanRenderable(zfw_s_renderable* const renderable);
 
-bool ZFW_InitRenderingBasis(zfw_s_rendering_basis* const basis, zfw_s_mem_arena* const mem_arena, const int surf_cnt, const zfw_s_vec_2d_i window_size, zfw_s_mem_arena* const temp_mem_arena);
+bool ZFW_InitRenderingBasis(zfw_s_rendering_basis* const basis, s_mem_arena* const mem_arena, const int surf_cnt, const zfw_s_vec_2d_i window_size, s_mem_arena* const temp_mem_arena);
 void ZFW_CleanRenderingBasis(zfw_s_rendering_basis* const basis);
 
 void ZFW_InitRenderingState(zfw_s_rendering_state* const state);
@@ -399,7 +400,7 @@ void ZFW_SubmitBatch(const zfw_s_rendering_context* const context);
 //
 // zfw_surfaces.c
 //
-bool ZFW_InitSurfaces(zfw_s_surfaces* const surfs, zfw_s_mem_arena* const mem_arena, const int cnt, const zfw_s_vec_2d_i size);
+bool ZFW_InitSurfaces(zfw_s_surfaces* const surfs, s_mem_arena* const mem_arena, const int cnt, const zfw_s_vec_2d_i size);
 void ZFW_CleanSurfaces(zfw_s_surfaces* const surfs);
 bool ZFW_ResizeSurfaces(zfw_s_surfaces* const surfs, const zfw_s_vec_2d_i size);
 
@@ -414,9 +415,9 @@ void ZFW_RenderSurface(const zfw_s_rendering_context* const rendering_context, c
 //
 // zfw_textures.c
 //
-void ZFW_SetUpTexture(const zfw_t_gl_id tex_gl_id, const zfw_s_vec_2d_i tex_size, const zfw_t_byte* const rgba_px_data);
+void ZFW_SetUpTexture(const zfw_t_gl_id tex_gl_id, const zfw_s_vec_2d_i tex_size, const t_u8* const rgba_px_data);
 
-static inline zfw_t_gl_id ZFW_GenTexture(const zfw_s_vec_2d_i tex_size, const zfw_t_byte* const rgba_px_data) {
+static inline zfw_t_gl_id ZFW_GenTexture(const zfw_s_vec_2d_i tex_size, const t_u8* const rgba_px_data) {
     assert(tex_size.x > 0 && tex_size.y > 0);
     assert(rgba_px_data);
 
@@ -426,7 +427,7 @@ static inline zfw_t_gl_id ZFW_GenTexture(const zfw_s_vec_2d_i tex_size, const zf
     return gl_id;
 }
 
-zfw_s_textures ZFW_LoadTexturesFromFiles(zfw_s_mem_arena* const mem_arena, const int tex_cnt, const zfw_t_texture_index_to_file_path tex_index_to_fp);
+zfw_s_textures ZFW_LoadTexturesFromFiles(s_mem_arena* const mem_arena, const int tex_cnt, const zfw_t_texture_index_to_file_path tex_index_to_fp);
 void ZFW_UnloadTextures(zfw_s_textures* const textures);
 
 void ZFW_RenderTexture(const zfw_s_rendering_context* const context, const int tex_index, const zfw_s_textures* const textures, const zfw_s_rect_i src_rect, const zfw_s_vec_2d pos, const zfw_s_vec_2d origin, const zfw_s_vec_2d scale, const float rot, const zfw_s_vec_4d blend);
@@ -436,18 +437,18 @@ zfw_s_rect_edges ZFW_TextureCoords(const zfw_s_rect_i src_rect, const zfw_s_vec_
 //
 // zfw_fonts.c
 //
-zfw_s_fonts ZFW_LoadFontsFromFiles(zfw_s_mem_arena* const mem_arena, const int font_cnt, const t_font_index_to_load_info font_index_to_load_info, zfw_s_mem_arena* const temp_mem_arena);
+zfw_s_fonts ZFW_LoadFontsFromFiles(s_mem_arena* const mem_arena, const int font_cnt, const t_font_index_to_load_info font_index_to_load_info, s_mem_arena* const temp_mem_arena);
 void ZFW_UnloadFonts(zfw_s_fonts* const fonts);
 
-bool ZFW_LoadStrCollider(zfw_s_rect* const rect, const char* const str, const int font_index, const zfw_s_fonts* const fonts, const zfw_s_vec_2d pos, const zfw_s_vec_2d alignment, zfw_s_mem_arena* const temp_mem_arena);
-bool ZFW_RenderStr(const zfw_s_rendering_context* const context, const char* const str, const int font_index, const zfw_s_fonts* const fonts, const zfw_s_vec_2d pos, const zfw_s_vec_2d alignment, const zfw_s_vec_4d blend, zfw_s_mem_arena* const temp_mem_arena);
+bool ZFW_LoadStrCollider(zfw_s_rect* const rect, const char* const str, const int font_index, const zfw_s_fonts* const fonts, const zfw_s_vec_2d pos, const zfw_s_vec_2d alignment, s_mem_arena* const temp_mem_arena);
+bool ZFW_RenderStr(const zfw_s_rendering_context* const context, const char* const str, const int font_index, const zfw_s_fonts* const fonts, const zfw_s_vec_2d pos, const zfw_s_vec_2d alignment, const zfw_s_vec_4d blend, s_mem_arena* const temp_mem_arena);
 
 //
 // zfw_shaders.c
 //
 zfw_t_gl_id ZFW_CreateShaderFromSrc(const char* const src, const bool frag);
 zfw_t_gl_id ZFW_CreateShaderProgFromSrcs(const char* const vert_src, const char* const frag_src);
-zfw_s_shader_progs ZFW_LoadShaderProgsFromFiles(zfw_s_mem_arena* const mem_arena, const int prog_cnt, const zfw_t_shader_prog_index_to_file_paths prog_index_to_fps, zfw_s_mem_arena* const temp_mem_arena);
+zfw_s_shader_progs ZFW_LoadShaderProgsFromFiles(s_mem_arena* const mem_arena, const int prog_cnt, const zfw_t_shader_prog_index_to_file_paths prog_index_to_fps, s_mem_arena* const temp_mem_arena);
 void ZFW_UnloadShaderProgs(zfw_s_shader_progs* const progs);
 
 #endif

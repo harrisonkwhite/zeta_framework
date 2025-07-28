@@ -5,7 +5,7 @@
 #include <stdint.h>
 #include <assert.h>
 #include <math.h>
-#include "zfw_mem.h"
+#include <cu.h>
 #include "zfw_random.h"
 
 #define ZFW_PI 3.14159265358979323846f
@@ -97,8 +97,8 @@ void ZFW_TranslateMatrix4x4(zfw_t_matrix_4x4* const mat, const zfw_s_vec_2d tran
 void ZFW_ScaleMatrix4x4(zfw_t_matrix_4x4* const mat, const float scalar);
 void ZFW_InitOrthoMatrix4x4(zfw_t_matrix_4x4* const mat, const float left, const float right, const float bottom, const float top, const float near, const float far);
 
-bool ZFW_PushQuadPoly(zfw_s_poly* const poly, zfw_s_mem_arena* const mem_arena, const zfw_s_vec_2d pos, const zfw_s_vec_2d size, const zfw_s_vec_2d origin);
-bool ZFW_PushQuadPolyRotated(zfw_s_poly* const poly, zfw_s_mem_arena* const mem_arena, const zfw_s_vec_2d pos, const zfw_s_vec_2d size, const zfw_s_vec_2d origin, const float rot);
+bool ZFW_PushQuadPoly(zfw_s_poly* const poly, s_mem_arena* const mem_arena, const zfw_s_vec_2d pos, const zfw_s_vec_2d size, const zfw_s_vec_2d origin);
+bool ZFW_PushQuadPolyRotated(zfw_s_poly* const poly, s_mem_arena* const mem_arena, const zfw_s_vec_2d pos, const zfw_s_vec_2d size, const zfw_s_vec_2d origin, const float rot);
 bool ZFW_DoPolysInters(const zfw_s_poly a, const zfw_s_poly b);
 bool ZFW_DoesPolyIntersWithRect(const zfw_s_poly poly, const zfw_s_rect rect);
 zfw_s_rect_edges PolySpan(const zfw_s_poly poly);

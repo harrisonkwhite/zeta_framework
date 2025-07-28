@@ -3,7 +3,7 @@
 #include <time.h>
 #include <stdlib.h>
 #include <stdbool.h>
-#include "zfw_io.h"
+#include <cu.h>
 
 static bool g_rng_initted;
 
@@ -12,7 +12,7 @@ void ZFW_InitRNG() {
 
     srand(time(NULL));
     g_rng_initted = true;
-    ZFW_Log("Initialised the RNG.");
+    Log("Initialised the RNG.");
 }
 
 float ZFW_RandPerc() {
