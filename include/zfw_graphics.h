@@ -38,38 +38,6 @@
 
 typedef GLuint zfw_t_gl_id;
 
-static inline bool ZFW_IsOriginValid(const zfw_s_vec_2d orig) {
-    return orig.x >= 0.0f && orig.x <= 1.0f && orig.y >= 0.0f && orig.y <= 1.0f;
-}
-
-static inline bool ZFW_IsTextureCoordsValid(const zfw_s_rect_edges coords) {
-    return coords.left >= 0.0f && coords.top >= 0.0f && coords.right <= 1.0f && coords.bottom <= 1.0f;
-}
-
-static bool ZFW_IsSrcRectValid(const zfw_s_rect_s32 src_rect, const zfw_s_vec_2d_s32 tex_size) {
-    assert(tex_size.x > 0 && tex_size.y > 0);
-    return src_rect.x >= 0 && src_rect.width > 0 && src_rect.x + src_rect.width <= tex_size.x
-        && src_rect.y >= 0 && src_rect.height > 0 && src_rect.y + src_rect.height <= tex_size.y;
-}
-
-static inline bool ZFW_IsColorValid(const zfw_u_vec_4d col) {
-    return col.r >= 0.0f && col.r <= 1.0f
-        && col.g >= 0.0f && col.g <= 1.0f
-        && col.b >= 0.0f && col.b <= 1.0f
-        && col.a >= 0.0f && col.a <= 1.0f;
-}
-
-static inline bool ZFW_IsColorRGBValid(const zfw_u_vec_3d col) {
-    return col.r >= 0.0f && col.r <= 1.0f
-        && col.g >= 0.0f && col.g <= 1.0f
-        && col.b >= 0.0f && col.b <= 1.0f;
-}
-
-static inline bool ZFW_IsStrAlignmentValid(const zfw_s_vec_2d alignment) {
-    return alignment.x >= 0.0f && alignment.x <= 1.0f
-        && alignment.y >= 0.0f && alignment.y <= 1.0f;
-}
-
 typedef struct {
     const zfw_t_gl_id* gl_ids;
     const zfw_s_vec_2d_s32* sizes;
@@ -78,6 +46,8 @@ typedef struct {
 } zfw_s_textures;
 
 static inline bool ZFW_IsTexturesValid(const zfw_s_textures* const textures) {
+    assert(textures);
+
     if (textures->cnt <= 0 || !textures->gl_ids || !textures->sizes) {
         return false;
     }
@@ -116,7 +86,7 @@ typedef struct {
 } zfw_s_fonts;
 
 static inline bool ZFW_IsFontsValid(const zfw_s_fonts* const fonts) {
-    // TODO: Check validity of arrangement information!
+    assert(fonts);
 
     if (!fonts->arrangement_infos || !fonts->tex_gl_ids || !fonts->tex_sizes || !fonts->tex_chr_positions || fonts->cnt <= 0) {
         return false;
@@ -145,6 +115,8 @@ typedef struct {
 } zfw_s_shader_progs;
 
 static inline bool ZFW_IsShaderProgsValid(const zfw_s_shader_progs* const progs) {
+    assert(progs);
+
     if (progs->cnt <= 0 || !progs->gl_ids) {
         return false;
     }
@@ -222,6 +194,38 @@ typedef struct {
     zfw_u_vec_4d blend;
 } zfw_s_batch_slot_write_info;
 
+static inline bool ZFW_IsOriginValid(const zfw_s_vec_2d orig) {
+    return orig.x >= 0.0f && orig.x <= 1.0f && orig.y >= 0.0f && orig.y <= 1.0f;
+}
+
+static inline bool ZFW_IsTextureCoordsValid(const zfw_s_rect_edges coords) {
+    return coords.left >= 0.0f && coords.top >= 0.0f && coords.right <= 1.0f && coords.bottom <= 1.0f;
+}
+
+static bool ZFW_IsSrcRectValid(const zfw_s_rect_s32 src_rect, const zfw_s_vec_2d_s32 tex_size) {
+    assert(tex_size.x > 0 && tex_size.y > 0);
+    return src_rect.x >= 0 && src_rect.width > 0 && src_rect.x + src_rect.width <= tex_size.x
+        && src_rect.y >= 0 && src_rect.height > 0 && src_rect.y + src_rect.height <= tex_size.y;
+}
+
+static inline bool ZFW_IsColorValid(const zfw_u_vec_4d col) {
+    return col.r >= 0.0f && col.r <= 1.0f
+        && col.g >= 0.0f && col.g <= 1.0f
+        && col.b >= 0.0f && col.b <= 1.0f
+        && col.a >= 0.0f && col.a <= 1.0f;
+}
+
+static inline bool ZFW_IsColorRGBValid(const zfw_u_vec_3d col) {
+    return col.r >= 0.0f && col.r <= 1.0f
+        && col.g >= 0.0f && col.g <= 1.0f
+        && col.b >= 0.0f && col.b <= 1.0f;
+}
+
+static inline bool ZFW_IsStrAlignmentValid(const zfw_s_vec_2d alignment) {
+    return alignment.x >= 0.0f && alignment.x <= 1.0f
+        && alignment.y >= 0.0f && alignment.y <= 1.0f;
+}
+
 static inline bool ZFW_IsBatchSlotWriteInfoValid(const zfw_s_batch_slot_write_info* const write_info) {
     assert(write_info);
     return glIsTexture(write_info->tex_gl_id)
@@ -238,6 +242,7 @@ typedef struct {
 } zfw_s_renderable;
 
 static bool ZFW_IsRenderableValid(const zfw_s_renderable* const gl_ids) {
+    assert(gl_ids);
     return glIsVertexArray(gl_ids->vert_array_gl_id) && glIsBuffer(gl_ids->vert_buf_gl_id) && glIsBuffer(gl_ids->elem_buf_gl_id);
 }
 
@@ -248,6 +253,7 @@ typedef struct {
 } zfw_s_batch_shader_prog;
 
 static inline bool ZFW_IsBatchShaderProgValid(const zfw_s_batch_shader_prog* const prog) {
+    assert(prog);
     return glIsProgram(prog->gl_id) && prog->view_uniform_loc >= 0 && prog->proj_uniform_loc >= 0;
 }
 
@@ -260,6 +266,8 @@ typedef struct {
 
 // This does not check whether the slot vertex data is valid.
 static inline bool ZFW_IsBatchStateValid(const zfw_s_batch_state* const state) {
+    assert(state);
+
     if (state->num_slots_used == 0) {
         return state->tex_gl_id == 0;
     }
@@ -306,6 +314,7 @@ typedef struct {
 } zfw_s_rendering_basis;
 
 static inline bool ZFW_IsRenderingBasisValid(const zfw_s_rendering_basis* const basis) {
+    assert(basis);
     return ZFW_IsRenderableValid(&basis->batch_renderable)
         && ZFW_IsBatchShaderProgValid(&basis->batch_shader_prog)
         && glIsTexture(basis->px_tex_gl_id)
@@ -368,6 +377,7 @@ typedef struct {
 } zfw_s_rendering_context;
 
 static inline bool ZFW_IsRenderingContextValid(const zfw_s_rendering_context* const context) {
+    assert(context);
     return ZFW_IsRenderingBasisValid(context->basis) && ZFW_IsRenderingStateValid(context->state, context->basis->surfs.cnt) && context->window_size.x > 0 && context->window_size.y > 0;
 }
 

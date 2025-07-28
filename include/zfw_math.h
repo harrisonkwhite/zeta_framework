@@ -18,14 +18,6 @@
 #define ZFW_CLAMP(x, min, max) (((x) < (min)) ? (min) : ((x) > (max) ? (max) : (x)))
 #define ZFW_SIGN(x) ((x) == 0 ? (x) : ((x) > 0 ? 1 : -1));
 
-static inline float ZFW_Lerp(const float a, const float b, const float t) {
-    assert(t >= 0.0f && t <= 1.0f);
-    return a + ((b - a) * t);
-}
-
-//
-// Vectors
-//
 typedef struct {
     float x;
     float y;
@@ -65,6 +57,68 @@ typedef union {
         float a;
     };
 } zfw_u_vec_4d;
+
+typedef enum {
+    zfw_ek_cardinal_dir_right,
+    zfw_ek_cardinal_dir_left,
+    zfw_ek_cardinal_dir_down,
+    zfw_ek_cardinal_dir_up
+} zfw_e_cardinal_dir;
+
+static const zfw_s_vec_2d_s32 zfw_g_cardinal_dir_vecs[] = {
+    [zfw_ek_cardinal_dir_right] = {1, 0},
+    [zfw_ek_cardinal_dir_left] = {-1, 0},
+    [zfw_ek_cardinal_dir_down] = {0, 1},
+    [zfw_ek_cardinal_dir_up] = {0, -1}
+};
+
+typedef struct {
+    float x;
+    float y;
+    float width;
+    float height;
+} zfw_s_rect;
+
+typedef struct {
+    t_s32 x;
+    t_s32 y;
+    t_s32 width;
+    t_s32 height;
+} zfw_s_rect_s32;
+
+typedef struct {
+    float left;
+    float top;
+    float right;
+    float bottom;
+} zfw_s_rect_edges;
+
+typedef struct {
+    t_s32 left;
+    t_s32 top;
+    t_s32 right;
+    t_s32 bottom;
+} zfw_s_rect_edges_s32;
+
+typedef float zfw_t_matrix_4x4[4][4];
+
+typedef struct {
+    const zfw_s_vec_2d* pts;
+    int cnt;
+} zfw_s_poly;
+
+zfw_s_rect ZFW_GenSpanningRect(const zfw_s_rect* const rects, const int cnt);
+
+zfw_s_poly ZFW_PushQuadPoly(s_mem_arena* const mem_arena, const zfw_s_vec_2d pos, const zfw_s_vec_2d size, const zfw_s_vec_2d origin);
+zfw_s_poly ZFW_PushQuadPolyRotated(s_mem_arena* const mem_arena, const zfw_s_vec_2d pos, const zfw_s_vec_2d size, const zfw_s_vec_2d origin, const float rot);
+bool ZFW_DoPolysInters(const zfw_s_poly a, const zfw_s_poly b);
+bool ZFW_DoesPolyIntersWithRect(const zfw_s_poly poly, const zfw_s_rect rect);
+zfw_s_rect_edges ZFW_PolySpan(const zfw_s_poly poly);
+
+static inline float ZFW_Lerp(const float a, const float b, const float t) {
+    assert(t >= 0.0f && t <= 1.0f);
+    return a + ((b - a) * t);
+}
 
 static inline zfw_s_vec_2d ZFW_Vec2DSum(const zfw_s_vec_2d a, const zfw_s_vec_2d b) {
     return (zfw_s_vec_2d){a.x + b.x, a.y + b.y};
@@ -116,56 +170,6 @@ static inline float ZFW_DirAToB(const zfw_s_vec_2d a, const zfw_s_vec_2d b) {
 static inline zfw_s_vec_2d ZFW_LenDir(const float len, const float dir) {
     return (zfw_s_vec_2d){cosf(dir) * len, -sinf(dir) * len};
 }
-
-//
-// Cardinal Directions
-//
-typedef enum {
-    zfw_ek_cardinal_dir_right,
-    zfw_ek_cardinal_dir_left,
-    zfw_ek_cardinal_dir_down,
-    zfw_ek_cardinal_dir_up
-} zfw_e_cardinal_dir;
-
-static const zfw_s_vec_2d_s32 zfw_g_cardinal_dir_vecs[] = {
-    [zfw_ek_cardinal_dir_right] = {1, 0},
-    [zfw_ek_cardinal_dir_left] = {-1, 0},
-    [zfw_ek_cardinal_dir_down] = {0, 1},
-    [zfw_ek_cardinal_dir_up] = {0, -1}
-};
-
-//
-// Rectangles
-//
-typedef struct {
-    float x;
-    float y;
-    float width;
-    float height;
-} zfw_s_rect;
-
-typedef struct {
-    t_s32 x;
-    t_s32 y;
-    t_s32 width;
-    t_s32 height;
-} zfw_s_rect_s32;
-
-typedef struct {
-    float left;
-    float top;
-    float right;
-    float bottom;
-} zfw_s_rect_edges;
-
-typedef struct {
-    t_s32 left;
-    t_s32 top;
-    t_s32 right;
-    t_s32 bottom;
-} zfw_s_rect_edges_s32;
-
-zfw_s_rect ZFW_GenSpanningRect(const zfw_s_rect* const rects, const int cnt);
 
 static inline zfw_s_vec_2d ZFW_RectPos(const zfw_s_rect rect) {
     return (zfw_s_vec_2d){rect.x, rect.y};
@@ -243,11 +247,6 @@ static inline bool ZFW_IsRangeS32Valid(const zfw_s_rect_edges_s32 range, const z
         && range.top <= range.bottom;
 }
 
-//
-// Matrices
-//
-typedef float zfw_t_matrix_4x4[4][4];
-
 static inline void ZFW_InitIdenMatrix4x4(zfw_t_matrix_4x4* const mat) {
     assert(mat && IS_ZERO(*mat));
 
@@ -288,22 +287,8 @@ static inline void ZFW_InitOrthoMatrix4x4(zfw_t_matrix_4x4* const mat, const flo
     (*mat)[3][3] = 1.0f;
 }
 
-//
-// Polygons
-//
-typedef struct {
-    const zfw_s_vec_2d* pts;
-    int cnt;
-} zfw_s_poly;
-
 static inline bool ZFW_IsPolyValid(const zfw_s_poly poly) {
     return poly.pts && poly.cnt > 0;
 }
-
-zfw_s_poly ZFW_PushQuadPoly(s_mem_arena* const mem_arena, const zfw_s_vec_2d pos, const zfw_s_vec_2d size, const zfw_s_vec_2d origin);
-zfw_s_poly ZFW_PushQuadPolyRotated(s_mem_arena* const mem_arena, const zfw_s_vec_2d pos, const zfw_s_vec_2d size, const zfw_s_vec_2d origin, const float rot);
-bool ZFW_DoPolysInters(const zfw_s_poly a, const zfw_s_poly b);
-bool ZFW_DoesPolyIntersWithRect(const zfw_s_poly poly, const zfw_s_rect rect);
-zfw_s_rect_edges ZFW_PolySpan(const zfw_s_poly poly);
 
 #endif
