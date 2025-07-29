@@ -1,5 +1,5 @@
-#ifndef ZFW_RENDERING_H
-#define ZFW_RENDERING_H
+#ifndef ZFW_GRAPHICS_H
+#define ZFW_GRAPHICS_H
 
 #include <assert.h>
 #include <limits.h>
