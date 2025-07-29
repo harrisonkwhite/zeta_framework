@@ -191,7 +191,7 @@ bool ZFW_RunGame(const zfw_s_game_info* const info) {
 
     // Run the user-defined game initialisation function.
     {
-        const zfw_s_game_init_func_data func_data = {
+        const zfw_s_game_init_context context = {
             .user_mem = user_mem,
             .perm_mem_arena = &perm_mem_arena,
             .temp_mem_arena = &temp_mem_arena,
@@ -199,7 +199,7 @@ bool ZFW_RunGame(const zfw_s_game_info* const info) {
             .audio_sys = &audio_sys
         };
 
-        if (!info->init_func(&func_data)) {
+        if (!info->init_func(&context)) {
             LOG_ERROR("User game initialisation function failed!");
             error = true;
             goto clean_audio_sys;
@@ -241,7 +241,7 @@ bool ZFW_RunGame(const zfw_s_game_info* const info) {
             // Run ticks.
             do {
                 // Execute the user-defined tick function.
-                const zfw_s_game_tick_func_data func_data = {
+                const zfw_s_game_tick_context context = {
                     .user_mem = user_mem,
                     .perm_mem_arena = &perm_mem_arena,
                     .temp_mem_arena = &temp_mem_arena,
@@ -252,17 +252,17 @@ bool ZFW_RunGame(const zfw_s_game_info* const info) {
                     .audio_sys = &audio_sys
                 };
 
-                const zfw_e_game_tick_func_result res = info->tick_func(&func_data);
+                const zfw_e_game_tick_result res = info->tick_func(&context);
 
                 ZERO_OUT(glfw_callback_data.unicode_buf);
                 glfw_callback_data.mouse_scroll_state = zfw_ek_mouse_scroll_state_none;
 
-                if (res == ek_game_tick_func_result_exit) {
+                if (res == ek_game_tick_result_exit) {
                     LOG("Exit request detected from user game tick function...");
                     running = false;
                 }
 
-                if (res == ek_game_tick_func_result_error) {
+                if (res == ek_game_tick_result_error) {
                     LOG_ERROR("User game tick function failed!");
                     error = true;
                     goto clean_user_game;
@@ -277,7 +277,7 @@ bool ZFW_RunGame(const zfw_s_game_info* const info) {
 
             {
                 // Execute the user-defined render function.
-                const zfw_s_game_render_func_data func_data = {
+                const zfw_s_game_render_context context = {
                     .user_mem = user_mem,
                     .perm_mem_arena = &perm_mem_arena,
                     .temp_mem_arena = &temp_mem_arena,
@@ -289,7 +289,7 @@ bool ZFW_RunGame(const zfw_s_game_info* const info) {
                     }
                 };
 
-                if (!info->render_func(&func_data)) {
+                if (!info->render_func(&context)) {
                     LOG_ERROR("User game render function failed!");
                     error = true;
                     goto clean_user_game;
