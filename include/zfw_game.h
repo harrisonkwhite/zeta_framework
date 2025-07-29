@@ -79,6 +79,9 @@ typedef struct {
     void (*clean_func)(void* const user_mem); // Called when the game ends (including if it ends in error). This is not called if the initialisation function failed or was not yet called.
 
     int surf_cnt; // How many surfaces to generate and auto-refresh.
+
+    int snd_type_cnt;
+    zfw_t_sound_type_index_to_file_path snd_type_index_to_fp; // A function mapping sound type indexes to the file paths of where to load the sounds.
 } zfw_s_game_info;
 
 bool ZFW_RunGame(const zfw_s_game_info* const info);

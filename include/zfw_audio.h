@@ -11,7 +11,7 @@
 #define ZFW_PITCH_DEFAULT 1.0f
 
 typedef struct {
-    t_u8* sample_buf;
+    const t_u8* sample_buf;
     int frame_cnt;
     int channel_cnt;
     int sample_rate;
@@ -19,12 +19,14 @@ typedef struct {
 } zfw_s_sound_type;
 
 typedef struct {
-    zfw_s_sound_type* buf;
+    const zfw_s_sound_type* buf;
     int cnt;
 } zfw_s_sound_types;
 
 typedef struct {
     ma_engine eng;
+
+    zfw_s_sound_types snd_types;
 
     ma_sound snds[ZFW_SND_LIMIT];
     ma_audio_buffer audio_bufs[ZFW_SND_LIMIT];
@@ -33,12 +35,10 @@ typedef struct {
 
 typedef const char* (*zfw_t_sound_type_index_to_file_path)(const int index);
 
-bool ZFW_InitAudioSys(zfw_s_audio_sys* const audio_sys);
+bool ZFW_InitAudioSys(zfw_s_audio_sys* const audio_sys, s_mem_arena* const mem_arena, const int snd_type_cnt, const zfw_t_sound_type_index_to_file_path snd_type_index_to_fp);
 void ZFW_CleanAudioSys(zfw_s_audio_sys* const audio_sys);
 void ZFW_UpdateAudioSys(zfw_s_audio_sys* const audio_sys);
 
-bool ZFW_LoadSoundTypesFromFiles(zfw_s_sound_types* const types, s_mem_arena* const mem_arena, const int cnt, const zfw_t_sound_type_index_to_file_path index_to_fp);
-
-bool ZFW_PlaySound(zfw_s_audio_sys* const audio_sys, const zfw_s_sound_types* const snd_types, const int type_index, const float vol, const float pan, const float pitch);
+bool ZFW_PlaySound(zfw_s_audio_sys* const audio_sys, const int snd_type_index, const float vol, const float pan, const float pitch);
 
 #endif
