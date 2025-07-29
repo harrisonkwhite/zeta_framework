@@ -107,26 +107,48 @@ typedef char zfw_t_unicode_buf[32];
 void ZFW_RefreshInputState(zfw_s_input_state* const state, GLFWwindow* const glfw_window, const zfw_e_mouse_scroll_state mouse_scroll_state);
 
 static inline bool ZFW_IsKeyDown(const zfw_e_key_code kc, const zfw_s_input_state* const input_state) {
+    assert(kc < zfw_eks_key_code_cnt);
+    assert(input_state);
+
     return (input_state->keys_down & ((zfw_t_keys_down_bits)1 << kc)) != 0;
 }
 
 static inline bool ZFW_IsKeyPressed(const zfw_e_key_code kc, const zfw_s_input_state* const input_state, const zfw_s_input_state* const input_state_last) {
+    assert(kc < zfw_eks_key_code_cnt);
+    assert(input_state);
+    assert(input_state_last);
+
     return ZFW_IsKeyDown(kc, input_state) && !ZFW_IsKeyDown(kc, input_state_last);
 }
 
 static inline bool ZFW_IsKeyReleased(const zfw_e_key_code kc, const zfw_s_input_state* const input_state, const zfw_s_input_state* const input_state_last) {
+    assert(kc < zfw_eks_key_code_cnt);
+    assert(input_state);
+    assert(input_state_last);
+
     return !ZFW_IsKeyDown(kc, input_state) && ZFW_IsKeyDown(kc, input_state_last);
 }
 
 static inline bool ZFW_IsMouseButtonDown(const zfw_e_mouse_button_code mbc, const zfw_s_input_state* const input_state) {
+    assert(mbc < zfw_eks_mouse_button_code_cnt);
+    assert(input_state);
+
     return (input_state->mouse_buttons_down & ((zfw_t_mouse_buttons_down_bits)1 << mbc)) != 0;
 }
 
 static inline bool ZFW_IsMouseButtonPressed(const zfw_e_mouse_button_code mbc, const zfw_s_input_state* const input_state, const zfw_s_input_state* const input_state_last) {
+    assert(mbc < zfw_eks_mouse_button_code_cnt);
+    assert(input_state);
+    assert(input_state_last);
+
     return ZFW_IsMouseButtonDown(mbc, input_state) && !ZFW_IsMouseButtonDown(mbc, input_state_last);
 }
 
 static inline bool ZFW_IsMouseButtonReleased(const zfw_e_mouse_button_code mbc, const zfw_s_input_state* const input_state, const zfw_s_input_state* const input_state_last) {
+    assert(mbc < zfw_eks_mouse_button_code_cnt);
+    assert(input_state);
+    assert(input_state_last);
+
     return !ZFW_IsMouseButtonDown(mbc, input_state) && ZFW_IsMouseButtonDown(mbc, input_state_last);
 }
 
