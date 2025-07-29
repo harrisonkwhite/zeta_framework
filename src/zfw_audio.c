@@ -9,7 +9,7 @@ static bool LoadSoundTypeFromFile(zfw_s_sound_type* const type, const char* cons
     ma_decoder decoder;
 
     if (ma_decoder_init_file(fp, NULL, &decoder) != MA_SUCCESS) {
-        LogError("Failed to open audio file \"%s\".", fp);
+        LOG_ERROR("Failed to open audio file \"%s\".", fp);
         return false;
     }
 
@@ -30,6 +30,7 @@ static bool LoadSoundTypeFromFile(zfw_s_sound_type* const type, const char* cons
     type->sample_buf = MEM_ARENA_PUSH_TYPE_CNT(mem_arena, t_u8, sample_buf_size);
 
     if (!type->sample_buf) {
+        LOG_ERROR("Failed to reserve memory for audio sample buffer!");
         ma_decoder_uninit(&decoder);
         return false;
     }
@@ -41,7 +42,7 @@ static bool LoadSoundTypeFromFile(zfw_s_sound_type* const type, const char* cons
     ma_decoder_uninit(&decoder);
 
     if (frames_read < frame_cnt) {
-        LogError("Only read %llu of %llu frames for audio file \"%s\"!", frames_read, frame_cnt, fp);
+        LOG_ERROR("Only read %llu of %llu frames for audio file \"%s\"!", frames_read, frame_cnt, fp);
         return false;
     }
 
@@ -52,7 +53,7 @@ bool ZFW_InitAudioSys(zfw_s_audio_sys* const audio_sys) {
     assert(IS_ZERO(*audio_sys));
 
     if (ma_engine_init(NULL, &audio_sys->eng) != MA_SUCCESS) {
-        LogError("Failed to initialise miniaudio engine!");
+        LOG_ERROR("Failed to initialise miniaudio engine!");
         return false;
     }
 
@@ -99,6 +100,7 @@ bool ZFW_LoadSoundTypesFromFiles(zfw_s_sound_types* const types, s_mem_arena* co
     };
 
     if (!types->buf) {
+        LOG_ERROR("Failed to reserve memory for sound types!");
         return false;
     }
 
@@ -106,6 +108,7 @@ bool ZFW_LoadSoundTypesFromFiles(zfw_s_sound_types* const types, s_mem_arena* co
         const char* const fp = index_to_fp(i);
 
         if (!LoadSoundTypeFromFile(&types->buf[i], fp, mem_arena)) {
+            LOG_ERROR("Failed to load sound type \"%s\"!", fp);
             return false;
         }
     }
@@ -123,7 +126,7 @@ bool ZFW_PlaySound(zfw_s_audio_sys* const audio_sys, const zfw_s_sound_types* co
     const int index = FirstInactiveBitIndex(audio_sys->snd_activity, ZFW_SND_LIMIT);
 
     if (index == -1) {
-        LogError("Failed to play sound due to insufficient space!");
+        LOG_ERROR("Failed to play sound due to insufficient space!");
         return false;
     }
 

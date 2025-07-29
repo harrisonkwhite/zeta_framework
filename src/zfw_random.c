@@ -12,7 +12,6 @@ void ZFW_InitRNG() {
 
     srand(time(NULL));
     g_rng_initted = true;
-    Log("Initialised the RNG.");
 }
 
 float ZFW_RandPerc() {

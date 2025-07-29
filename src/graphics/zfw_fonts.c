@@ -78,6 +78,7 @@ static zfw_t_gl_id GenFontTexture(const stbtt_fontinfo* const stb_font_info, con
     t_u8* const font_tex_rgba_px_data = MEM_ARENA_PUSH_TYPE_CNT(temp_mem_arena, t_u8, font_tex_rgba_px_data_size);
 
     if (!font_tex_rgba_px_data) {
+        LOG_ERROR("Failed to reserve memory for font texture RGBA pixel data!");
         return 0;
     }
 
@@ -101,6 +102,7 @@ static zfw_t_gl_id GenFontTexture(const stbtt_fontinfo* const stb_font_info, con
         t_u8* const bitmap = stbtt_GetCodepointBitmap(stb_font_info, scale, scale, chr, NULL, NULL, NULL, NULL);
 
         if (!bitmap) {
+            LOG_ERROR("Failed to get bitmap for character '%c' through STB!", chr);
             return 0;
         }
 
@@ -144,30 +146,32 @@ zfw_s_fonts ZFW_LoadFontsFromFiles(s_mem_arena* const mem_arena, const int font_
     zfw_s_font_arrangement_info* const arrangement_infos = MEM_ARENA_PUSH_TYPE_CNT(mem_arena, zfw_s_font_arrangement_info, font_cnt);
 
     if (!arrangement_infos) {
+        LOG_ERROR("Failed to reserve memory for font arrangement information!");
         return (zfw_s_fonts){0};
     }
 
     zfw_t_gl_id* const tex_gl_ids = MEM_ARENA_PUSH_TYPE_CNT(mem_arena, zfw_t_gl_id, font_cnt);
 
     if (!tex_gl_ids) {
+        LOG_ERROR("Failed to reserve memory for font texture OpenGL IDs!");
         return (zfw_s_fonts){0};
     }
 
     zfw_s_vec_2d_s32* const tex_sizes = MEM_ARENA_PUSH_TYPE_CNT(mem_arena, zfw_s_vec_2d_s32, font_cnt);
 
     if (!tex_sizes) {
+        LOG_ERROR("Failed to reserve memory for font texture sizes!");
         return (zfw_s_fonts){0};
     }
 
     zfw_t_tex_chr_positions* const tex_chr_positions = MEM_ARENA_PUSH_TYPE_CNT(mem_arena, zfw_t_tex_chr_positions, font_cnt);
 
     if (!tex_chr_positions) {
+        LOG_ERROR("Failed to reserve memory for font texture character positions!");
         return (zfw_s_fonts){0};
     }
 
     // Load each font.
-    bool err = false;
-
     for (int i = 0; i < font_cnt; i++) {
         const zfw_s_font_load_info load_info = font_index_to_load_info(i);
         assert(load_info.file_path);
@@ -176,8 +180,8 @@ zfw_s_fonts ZFW_LoadFontsFromFiles(s_mem_arena* const mem_arena, const int font_
         const t_u8* const font_file_data = PushEntireFileContents(load_info.file_path, temp_mem_arena, false);
 
         if (!font_file_data) {
-            err = true;
-            break;
+            LOG_ERROR("Failed to reserve memory for font file contents!");
+            goto error;
         }
 
         stbtt_fontinfo stb_font_info;
@@ -185,15 +189,13 @@ zfw_s_fonts ZFW_LoadFontsFromFiles(s_mem_arena* const mem_arena, const int font_
         const int offs = stbtt_GetFontOffsetForIndex(font_file_data, 0);
 
         if (offs == -1) {
-            LogError("Failed to get font offset for font \"%s\"!", load_info.file_path);
-            err = true;
-            break;
+            LOG_ERROR("Failed to get font offset!");
+            goto error;
         }
 
         if (!stbtt_InitFont(&stb_font_info, font_file_data, offs)) {
-            LogError("Failed to initialise font \"%s\"!", load_info.file_path);
-            err = true;
-            break;
+            LOG_ERROR("Failed to initialise font through STB!");
+            goto error;
         }
 
         LoadFontArrangementInfo(&arrangement_infos[i], &stb_font_info, load_info.height);
@@ -203,16 +205,24 @@ zfw_s_fonts ZFW_LoadFontsFromFiles(s_mem_arena* const mem_arena, const int font_
         LoadFontTextureInfo(&tex_sizes[i], &tex_chr_positions[i], &arrangement_infos[i], font_tex_size_limit.x);
 
         if (tex_sizes[i].y > font_tex_size_limit.y) {
-            LogError("Prospective font texture size is too large!");
-            err = true;
-            break;
+            LOG_ERROR("Prospective font texture size is too large!");
+            goto error;
         }
 
         tex_gl_ids[i] = GenFontTexture(&stb_font_info, load_info.height, tex_sizes[i], &tex_chr_positions[i], &arrangement_infos[i], temp_mem_arena);
-    }
 
-    if (err) {
+        if (!tex_gl_ids[i]) {
+            LOG_ERROR("Failed to generate font texture!");
+            goto error;
+        }
+
+        continue;
+
+error:
+        LOG_ERROR("Failed to load font \"%s\" with height %d!", load_info.file_path, load_info.height);
+
         glDeleteTextures(font_cnt, tex_gl_ids);
+
         return (zfw_s_fonts){0};
     }
 
@@ -272,6 +282,7 @@ static zfw_s_vec_2d* PushStrChrRenderPositions(s_mem_arena* const mem_arena, con
     zfw_s_vec_2d* const chr_render_positions = MEM_ARENA_PUSH_TYPE_CNT(mem_arena, zfw_s_vec_2d, str_len_and_line_cnt.len);
 
     if (!chr_render_positions) {
+        LOG_ERROR("Failed to reserve memory for character render positions!");
         return NULL;
     }
 
@@ -330,6 +341,7 @@ bool ZFW_LoadStrCollider(zfw_s_rect* const rect, const char* const str, const in
     const zfw_s_vec_2d* const chr_render_positions = PushStrChrRenderPositions(temp_mem_arena, str, font_index, fonts, pos, alignment);
 
     if (!chr_render_positions) {
+        LOG_ERROR("Failed to reserve memory for character render positions!");
         return false;
     }
 
@@ -391,6 +403,7 @@ bool ZFW_RenderStr(const zfw_s_rendering_context* const context, const char* con
     const zfw_s_vec_2d* const chr_render_positions = PushStrChrRenderPositions(temp_mem_arena, str, font_index, fonts, pos, alignment);
 
     if (!chr_render_positions) {
+        LOG_ERROR("Failed to reserve memory for character render positions!");
         return false;
     }
 

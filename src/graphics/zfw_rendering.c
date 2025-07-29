@@ -1,9 +1,13 @@
+#include "mem.h"
 #include "zfw_graphics.h"
 
-static zfw_s_batch_shader_prog LoadBatchShaderProg() {
+static zfw_s_batch_shader_prog LoadBatchShaderProg(s_mem_arena* const temp_mem_arena) {
+    assert(temp_mem_arena && IsMemArenaValid(temp_mem_arena));
+
+    // Generate shaders.
     static_assert(ZFW_GL_VERSION_MAJOR == 4 && ZFW_GL_VERSION_MINOR == 3, "Invalid OpenGL version for the below scripts!");
 
-    const char* const vert_shader_src = "#version 430 core\n"
+    const char* const vs_src = "#version 430 core\n"
         "layout (location = 0) in vec2 a_vert;\n"
         "layout (location = 1) in vec2 a_pos;\n"
         "layout (location = 2) in vec2 a_size;\n"
@@ -27,7 +31,7 @@ static zfw_s_batch_shader_prog LoadBatchShaderProg() {
         "    v_blend = a_blend;\n"
         "}";
 
-    const char* const frag_shader_src = "#version 430 core\n"
+    const char* const fs_src = "#version 430 core\n"
         "in vec2 v_tex_coord;\n"
         "in vec4 v_blend;\n"
         "out vec4 o_frag_color;\n"
@@ -37,14 +41,26 @@ static zfw_s_batch_shader_prog LoadBatchShaderProg() {
         "    o_frag_color = tex_color * v_blend;\n"
         "}";
 
-    zfw_s_batch_shader_prog prog = {0};
-    prog.gl_id = ZFW_CreateShaderProgFromSrcs(vert_shader_src, frag_shader_src);
-    assert(prog.gl_id != 0);
+    const zfw_t_gl_id vs_gl_id = ZFW_CreateShaderFromSrc(vs_src, false, temp_mem_arena);
+    assert(vs_gl_id);
 
-    prog.view_uniform_loc = glGetUniformLocation(prog.gl_id, "u_view");
-    prog.proj_uniform_loc = glGetUniformLocation(prog.gl_id, "u_proj");
+    const zfw_t_gl_id fs_gl_id = ZFW_CreateShaderFromSrc(fs_src, true, temp_mem_arena);
+    assert(fs_gl_id);
 
-    return prog;
+    // Generate program from shaders.
+    const zfw_t_gl_id prog_gl_id = ZFW_CreateShaderProgAndDeleteShaders(vs_gl_id, fs_gl_id);
+
+    const int view_uniform_loc = glGetUniformLocation(prog_gl_id, "u_view");
+    assert(view_uniform_loc != -1);
+
+    const int proj_uniform_loc = glGetUniformLocation(prog_gl_id, "u_proj");
+    assert(proj_uniform_loc != -1);
+
+    return (zfw_s_batch_shader_prog){
+        .gl_id = prog_gl_id,
+        .view_uniform_loc = view_uniform_loc,
+        .proj_uniform_loc = proj_uniform_loc
+    };
 }
 
 static size_t Stride(const int* const vert_attr_lens, const int vert_attr_cnt) {
@@ -100,15 +116,18 @@ static unsigned short* PushBatchElems(s_mem_arena* const mem_arena) {
 
     unsigned short* const elems = MEM_ARENA_PUSH_TYPE_CNT(mem_arena, unsigned short, ZFW_BATCH_SLOT_ELEM_CNT * ZFW_BATCH_SLOT_CNT);
 
-    if (elems) {
-        for (int i = 0; i < ZFW_BATCH_SLOT_CNT; i++) {
-            elems[(i * 6) + 0] = (i * 4) + 0;
-            elems[(i * 6) + 1] = (i * 4) + 1;
-            elems[(i * 6) + 2] = (i * 4) + 2;
-            elems[(i * 6) + 3] = (i * 4) + 2;
-            elems[(i * 6) + 4] = (i * 4) + 3;
-            elems[(i * 6) + 5] = (i * 4) + 0;
-        }
+    if (!elems) {
+        LOG_ERROR("Failed to reserve memory for batch elements!");
+        return NULL;
+    }
+
+    for (int i = 0; i < ZFW_BATCH_SLOT_CNT; i++) {
+        elems[(i * 6) + 0] = (i * 4) + 0;
+        elems[(i * 6) + 1] = (i * 4) + 1;
+        elems[(i * 6) + 2] = (i * 4) + 2;
+        elems[(i * 6) + 3] = (i * 4) + 2;
+        elems[(i * 6) + 4] = (i * 4) + 3;
+        elems[(i * 6) + 5] = (i * 4) + 0;
     }
 
     return elems;
@@ -180,7 +199,7 @@ bool ZFW_InitRenderingBasis(zfw_s_rendering_basis* const basis, s_mem_arena* con
 
     basis->batch_renderable = ZFW_GenRenderable(NULL, sizeof(zfw_s_batch_vertex) * ZFW_BATCH_SLOT_VERT_CNT * ZFW_BATCH_SLOT_CNT, batch_elems, sizeof(unsigned short) * ZFW_BATCH_SLOT_ELEM_CNT * ZFW_BATCH_SLOT_CNT, zfw_g_batch_vertex_attrib_lens, STATIC_ARRAY_LEN(zfw_g_batch_vertex_attrib_lens));
 
-    basis->batch_shader_prog = LoadBatchShaderProg();
+    basis->batch_shader_prog = LoadBatchShaderProg(temp_mem_arena);
 
     const t_u8 px_tex_rgba_data[ZFW_RGBA_CHANNEL_CNT] = {255, 255, 255, 255};
     basis->px_tex_gl_id = ZFW_GenTexture((zfw_s_vec_2d_s32){1, 1}, px_tex_rgba_data);

@@ -22,12 +22,14 @@ zfw_s_textures ZFW_LoadTexturesFromFiles(s_mem_arena* const mem_arena, const int
     zfw_t_gl_id* const gl_ids = MEM_ARENA_PUSH_TYPE_CNT(mem_arena, zfw_t_gl_id, tex_cnt);
 
     if (!gl_ids) {
+        LOG_ERROR("Failed to reserve memory for texture OpenGL IDs!");
         return (zfw_s_textures){0};
     }
 
     zfw_s_vec_2d_s32* const sizes = MEM_ARENA_PUSH_TYPE_CNT(mem_arena, zfw_s_vec_2d_s32, tex_cnt);
 
     if (!sizes) {
+        LOG_ERROR("Failed to reserve memory for texture sizes!");
         return (zfw_s_textures){0};
     }
 
@@ -41,8 +43,11 @@ zfw_s_textures ZFW_LoadTexturesFromFiles(s_mem_arena* const mem_arena, const int
         unsigned char* const px_data = stbi_load(fp, &sizes[i].x, &sizes[i].y, NULL, ZFW_RGBA_CHANNEL_CNT);
 
         if (!px_data) {
-            LogError("Failed to load image \"%s\"!", fp);
+            LOG_ERROR("Failed to load pixel data for texture \"%s\"!", fp);
+            LOG_ERROR_SPECIAL("STB", "%s", stbi_failure_reason());
+
             glDeleteTextures(tex_cnt, gl_ids);
+
             return (zfw_s_textures){0};
         }
 
@@ -65,7 +70,11 @@ void ZFW_UnloadTextures(zfw_s_textures* const textures) {
 }
 
 void ZFW_RenderTexture(const zfw_s_rendering_context* const context, const int tex_index, const zfw_s_textures* const textures, const zfw_s_rect_s32 src_rect, const zfw_s_vec_2d pos, const zfw_s_vec_2d origin, const zfw_s_vec_2d scale, const float rot, const zfw_u_vec_4d blend) {
-    // TODO: Add assertions.
+    assert(context && ZFW_IsRenderingContextValid(context));
+    assert(tex_index >= 0 && tex_index < textures->cnt);
+    assert(ZFW_IsSrcRectValid(src_rect, textures->sizes[tex_index]));
+    assert(ZFW_IsOriginValid(origin));
+    assert(ZFW_IsColorValid(blend));
 
     const zfw_s_batch_slot_write_info write_info = {
         .tex_gl_id = textures->gl_ids[tex_index],

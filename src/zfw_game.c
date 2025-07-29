@@ -90,9 +90,11 @@ STATIC_ARRAY_LEN_CHECK(g_glfw_mouse_buttons, zfw_eks_mouse_button_code_cnt);
 typedef struct {
     zfw_e_mouse_scroll_state mouse_scroll_state; // When mouse scroll is detected, this can be updated via callback. It can be reset after the next tick (so there is a chance for the ZFW user to detect the scroll).
     zfw_t_unicode_buf unicode_buf; // This is filled up as characters are typed, and zeroed out after the next tick. This way, the ZFW user can see everything that has been typed since the last tick.
-} s_glfw_user_data;
+} s_glfw_callback_data;
 
 static void AssertGameInfoValidity(const zfw_s_game_info* const info) {
+    assert(info);
+
     assert(info->user_mem_size >= 0);
     assert(info->user_mem_size == 0 || IsAlignmentValid(info->user_mem_alignment));
 
@@ -107,6 +109,8 @@ static void AssertGameInfoValidity(const zfw_s_game_info* const info) {
 }
 
 static zfw_s_window_state WindowState(GLFWwindow* const glfw_window) {
+    assert(glfw_window);
+
     zfw_s_window_state state = {
         .fullscreen = glfwGetWindowMonitor(glfw_window) != NULL
     };
@@ -117,6 +121,9 @@ static zfw_s_window_state WindowState(GLFWwindow* const glfw_window) {
 }
 
 static void RefreshInputState(zfw_s_input_state* const state, GLFWwindow* const glfw_window, const zfw_e_mouse_scroll_state mouse_scroll_state) {
+    assert(state);
+    assert(glfw_window);
+
     ZERO_OUT(*state);
 
     for (int i = 0; i < zfw_eks_key_code_cnt; i++) {
@@ -139,55 +146,28 @@ static void RefreshInputState(zfw_s_input_state* const state, GLFWwindow* const 
 }
 
 static void GLFWScrollCallback(GLFWwindow* const window, const double offs_x, const double offs_y) {
-    s_glfw_user_data* const user_data = glfwGetWindowUserPointer(window);
+    s_glfw_callback_data* const cb_data = glfwGetWindowUserPointer(window);
 
     if (offs_y > 0.0) {
-        user_data->mouse_scroll_state = zfw_ek_mouse_scroll_state_up;
+        cb_data->mouse_scroll_state = zfw_ek_mouse_scroll_state_up;
     } else if (offs_y < 0.0) {
-        user_data->mouse_scroll_state = zfw_ek_mouse_scroll_state_down;
+        cb_data->mouse_scroll_state = zfw_ek_mouse_scroll_state_down;
     } else {
-        user_data->mouse_scroll_state = zfw_ek_mouse_scroll_state_none;
+        cb_data->mouse_scroll_state = zfw_ek_mouse_scroll_state_none;
     }
 }
 
 static void GLFWCharCallback(GLFWwindow* const window, const unsigned int codepoint) {
-    s_glfw_user_data* const user_data = glfwGetWindowUserPointer(window);
+    s_glfw_callback_data* const cb_data = glfwGetWindowUserPointer(window);
 
-    for (int i = 0; i < sizeof(user_data->unicode_buf); i++) {
-        if (!user_data->unicode_buf[i]) {
-            user_data->unicode_buf[i] = (char)codepoint;
+    for (int i = 0; i < sizeof(cb_data->unicode_buf); i++) {
+        if (!cb_data->unicode_buf[i]) {
+            cb_data->unicode_buf[i] = (char)codepoint;
             return;
         }
     }
 
-    LogError("Unicode buffer is full!");
-}
-
-static GLFWwindow* CreateGLFWWindow(const zfw_s_vec_2d_s32 size, const char* const title, const zfw_e_window_flags flags, s_glfw_user_data* const user_data) {
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, ZFW_GL_VERSION_MAJOR);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, ZFW_GL_VERSION_MINOR);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-    glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
-
-    GLFWwindow* const glfw_window = glfwCreateWindow(size.x, size.y, title, NULL, NULL);
-
-    if (glfw_window) {
-        glfwSetWindowAttrib(glfw_window, GLFW_RESIZABLE, flags & zfw_ek_window_flags_resizable ? GLFW_TRUE : GLFW_FALSE);
-        glfwSetInputMode(glfw_window, GLFW_CURSOR, flags & zfw_ek_window_flags_hide_cursor ? GLFW_CURSOR_HIDDEN : GLFW_CURSOR_NORMAL);
-
-        glfwMakeContextCurrent(glfw_window);
-
-        glfwSwapInterval(1); // Enables VSync.
-
-        glfwSetWindowUserPointer(glfw_window, user_data);
-
-        glfwSetScrollCallback(glfw_window, GLFWScrollCallback);
-        glfwSetCharCallback(glfw_window, GLFWCharCallback);
-    } else {
-        LogError("Failed to create a GLFW window!");
-    }
-
-    return glfw_window;
+    LOG_WARNING("Unicode buffer is full!");
 }
 
 static void ResizeGLViewportIfDifferent(const zfw_s_vec_2d_s32 size) {
@@ -210,15 +190,13 @@ bool ZFW_RunGame(const zfw_s_game_info* const info) {
     //
     // Initialisation
     //
-    Log("Initialising...");
-
     ZFW_InitRNG();
 
     // Initialise memory arenas.
     s_mem_arena perm_mem_arena = {0}; // The memory in here exists for the lifetime of the program, it does not get reset.
 
     if (!InitMemArena(&perm_mem_arena, PERM_MEM_ARENA_SIZE)) {
-        LogError("Failed to initialise the permanent memory arena!");
+        LOG_ERROR("Failed to initialise the permanent memory arena!");
         error = true;
         goto clean_nothing;
     }
@@ -226,29 +204,49 @@ bool ZFW_RunGame(const zfw_s_game_info* const info) {
     s_mem_arena temp_mem_arena = {0}; // While the memory here also exists for the program lifetime, it gets reset after game initialisation and after every frame. Useful if you just need some temporary working space.
 
     if (!InitMemArena(&temp_mem_arena, TEMP_MEM_ARENA_SIZE)) {
-        LogError("Failed to initialise the temporary memory arena!");
+        LOG_ERROR("Failed to initialise the temporary memory arena!");
         error = true;
         goto clean_perm_mem_arena;
     }
 
     // Initialise GLFW.
     if (!glfwInit()) {
-        LogError("Failed to initialise GLFW!");
+        LOG_ERROR("Failed to initialise GLFW!");
         error = true;
         goto clean_temp_mem_arena;
     }
 
-    s_glfw_user_data glfw_user_data = {0}; // This is accessible from the GLFW callbacks.
-    GLFWwindow* const glfw_window = CreateGLFWWindow(info->window_init_size, info->window_title, info->window_flags, &glfw_user_data);
+    // Set up the GLFW window.
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, ZFW_GL_VERSION_MAJOR);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, ZFW_GL_VERSION_MINOR);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+    glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
+
+    GLFWwindow* const glfw_window = glfwCreateWindow(info->window_init_size.x, info->window_init_size.y, info->window_title, NULL, NULL);
 
     if (!glfw_window) {
+        LOG_ERROR("Failed to create a GLFW window!");
         error = true;
         goto clean_glfw;
     }
 
+    glfwSetWindowAttrib(glfw_window, GLFW_RESIZABLE, info->window_flags & zfw_ek_window_flags_resizable ? GLFW_TRUE : GLFW_FALSE);
+    glfwSetInputMode(glfw_window, GLFW_CURSOR, info->window_flags & zfw_ek_window_flags_hide_cursor ? GLFW_CURSOR_HIDDEN : GLFW_CURSOR_NORMAL);
+
+    glfwMakeContextCurrent(glfw_window);
+
+    glfwSwapInterval(1); // Enables VSync.
+
+    // Set up GLFW callbacks.
+    s_glfw_callback_data glfw_callback_data = {0};
+    glfwSetWindowUserPointer(glfw_window, &glfw_callback_data);
+
+    glfwSetScrollCallback(glfw_window, GLFWScrollCallback);
+    glfwSetCharCallback(glfw_window, GLFWCharCallback);
+
     // Initialise OpenGL rendering.
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
-        LogError("Failed to load OpenGL function pointers!");
+        LOG_ERROR("Failed to load OpenGL function pointers!");
         error = true;
         goto clean_glfw_window;
     }
@@ -259,6 +257,7 @@ bool ZFW_RunGame(const zfw_s_game_info* const info) {
     zfw_s_rendering_basis rendering_basis = {0};
 
     if (!ZFW_InitRenderingBasis(&rendering_basis, &perm_mem_arena, info->surf_cnt, WindowState(glfw_window).size, &temp_mem_arena)) {
+        LOG_ERROR("Failed to initialise the rendering basis!");
         error = true;
         goto clean_glfw_window;
     }
@@ -266,6 +265,7 @@ bool ZFW_RunGame(const zfw_s_game_info* const info) {
     zfw_s_rendering_state* const rendering_state = MEM_ARENA_PUSH_TYPE(&perm_mem_arena, zfw_s_rendering_state);
 
     if (!rendering_state) {
+        LOG_ERROR("Failed to reserve memory for the rendering state!");
         error = true;
         goto clean_rendering_basis;
     }
@@ -274,6 +274,7 @@ bool ZFW_RunGame(const zfw_s_game_info* const info) {
     zfw_s_audio_sys audio_sys = {0};
 
     if (!ZFW_InitAudioSys(&audio_sys)) {
+        LOG_ERROR("Failed to initialise the audio system!");
         error = true;
         goto clean_rendering_basis;
     }
@@ -285,7 +286,7 @@ bool ZFW_RunGame(const zfw_s_game_info* const info) {
         user_mem = PushToMemArena(&perm_mem_arena, info->user_mem_size, info->user_mem_alignment);
 
         if (!user_mem) {
-            LogError("Failed to allocate user memory!");
+            LOG_ERROR("Failed to allocate user memory!");
             error = true;
             goto clean_audio_sys;
         }
@@ -302,7 +303,7 @@ bool ZFW_RunGame(const zfw_s_game_info* const info) {
         };
 
         if (!info->init_func(&func_data)) {
-            LogError("Provided game initialisation function failed!");
+            LOG_ERROR("User game initialisation function failed!");
             error = true;
             goto clean_audio_sys;
         }
@@ -320,8 +321,6 @@ bool ZFW_RunGame(const zfw_s_game_info* const info) {
 
     bool running = true;
 
-    Log("Entering the main loop...");
-
     while (!glfwWindowShouldClose(glfw_window) && running) {
         glfwPollEvents();
 
@@ -338,7 +337,7 @@ bool ZFW_RunGame(const zfw_s_game_info* const info) {
         // Once enough time has passed (i.e. the time accumulator has reached the tick interval), run at least a single tick and update the display.
         if (frame_dur_accum >= TARG_TICK_INTERVAL) {
             const zfw_s_input_state input_state_last = input_state;
-            RefreshInputState(&input_state, glfw_window, glfw_user_data.mouse_scroll_state);
+            RefreshInputState(&input_state, glfw_window, glfw_callback_data.mouse_scroll_state);
 
             ZFW_UpdateAudioSys(&audio_sys);
 
@@ -352,20 +351,22 @@ bool ZFW_RunGame(const zfw_s_game_info* const info) {
                     .window_state = window_state,
                     .input_state = &input_state,
                     .input_state_last = &input_state_last,
-                    .unicode_buf = &glfw_user_data.unicode_buf,
+                    .unicode_buf = &glfw_callback_data.unicode_buf,
                     .audio_sys = &audio_sys
                 };
 
                 const zfw_e_game_tick_func_result res = info->tick_func(&func_data);
 
-                ZERO_OUT(glfw_user_data.unicode_buf);
-                glfw_user_data.mouse_scroll_state = zfw_ek_mouse_scroll_state_none;
+                ZERO_OUT(glfw_callback_data.unicode_buf);
+                glfw_callback_data.mouse_scroll_state = zfw_ek_mouse_scroll_state_none;
 
                 if (res == ek_game_tick_func_result_exit) {
+                    LOG("Exit request detected from user game tick function...");
                     running = false;
                 }
 
                 if (res == ek_game_tick_func_result_error) {
+                    LOG_ERROR("User game tick function failed!");
                     error = true;
                     goto clean_user_game;
                 }
@@ -392,11 +393,13 @@ bool ZFW_RunGame(const zfw_s_game_info* const info) {
                 };
 
                 if (!info->render_func(&func_data)) {
+                    LOG_ERROR("User game render function failed!");
                     error = true;
                     goto clean_user_game;
                 }
 
                 assert(rendering_state->batch.num_slots_used == 0 && "User-defined rendering function completed, but not everything has been flushed!");
+                assert(rendering_state->surf_index_stack.height == 0 && "User-defined rendering function completed, but a surface is still active!");
             }
 
             glfwSwapBuffers(glfw_window);

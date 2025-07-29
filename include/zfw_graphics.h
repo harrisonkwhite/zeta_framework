@@ -451,9 +451,9 @@ bool ZFW_RenderStr(const zfw_s_rendering_context* const context, const char* con
 //
 // zfw_shaders.c
 //
-zfw_t_gl_id ZFW_CreateShaderFromSrc(const char* const src, const bool frag);
-zfw_t_gl_id ZFW_CreateShaderProgFromSrcs(const char* const vert_src, const char* const frag_src);
-zfw_s_shader_progs ZFW_LoadShaderProgsFromFiles(s_mem_arena* const mem_arena, const int prog_cnt, const zfw_t_shader_prog_index_to_file_paths prog_index_to_fps, s_mem_arena* const temp_mem_arena);
+zfw_t_gl_id ZFW_CreateShaderFromSrc(const char* const src, const bool frag, s_mem_arena* const temp_mem_arena);
+zfw_t_gl_id ZFW_CreateShaderProgAndDeleteShaders(const zfw_t_gl_id vs_gl_id, const zfw_t_gl_id fs_gl_id);
+zfw_s_shader_progs ZFW_CreateShaderProgsFromFiles(s_mem_arena* const mem_arena, const int prog_cnt, const zfw_t_shader_prog_index_to_file_paths prog_index_to_fps, s_mem_arena* const temp_mem_arena);
 void ZFW_UnloadShaderProgs(zfw_s_shader_progs* const progs);
 
 #endif

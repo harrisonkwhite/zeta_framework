@@ -164,7 +164,7 @@ typedef struct {
     bool (*render_func)(const zfw_s_game_render_func_data* const func_data); // Called after a tick.
     void (*clean_func)(void* const user_mem); // Called when the game ends (including if it ends in error). This is not called if the initialisation function failed or was not yet called.
 
-    int surf_cnt;
+    int surf_cnt; // How many surfaces to generate and auto-refresh.
 } zfw_s_game_info;
 
 bool ZFW_RunGame(const zfw_s_game_info* const info);

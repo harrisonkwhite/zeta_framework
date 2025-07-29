@@ -95,6 +95,7 @@ zfw_s_poly ZFW_PushQuadPoly(s_mem_arena* const mem_arena, const zfw_s_vec_2d pos
     zfw_s_vec_2d* const pts = MEM_ARENA_PUSH_TYPE_CNT(mem_arena, zfw_s_vec_2d, 4);
 
     if (!pts) {
+        LOG_ERROR("Failed to reserve memory for quad polygon points!");
         return (zfw_s_poly){0};
     }
 
@@ -119,6 +120,7 @@ zfw_s_poly ZFW_PushQuadPolyRotated(s_mem_arena* const mem_arena, const zfw_s_vec
     zfw_s_vec_2d* const pts = MEM_ARENA_PUSH_TYPE_CNT(mem_arena, zfw_s_vec_2d, 4);
 
     if (!pts) {
+        LOG_ERROR("Failed to reserve memory for rotated quad polygon points!");
         return (zfw_s_poly){0};
     }
 

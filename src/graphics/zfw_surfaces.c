@@ -56,6 +56,8 @@ bool ZFW_InitSurfaces(zfw_s_surfaces* const surfs, s_mem_arena* const mem_arena,
 
     for (int i = 0; i < cnt; i++) {
         if (!AttachFramebufferTexture(surfs->fb_gl_ids[i], surfs->fb_tex_gl_ids[i], size)) {
+            LOG_ERROR("Failed to attach framebuffer texture for surface %d!", i);
+
             glDeleteTextures(cnt, surfs->fb_tex_gl_ids);
             glDeleteFramebuffers(cnt, surfs->fb_gl_ids);
 
@@ -96,6 +98,7 @@ bool ZFW_ResizeSurfaces(zfw_s_surfaces* const surfs, const zfw_s_vec_2d_s32 size
 
     for (int i = 0; i < surfs->cnt; i++) {
         if (!AttachFramebufferTexture(surfs->fb_gl_ids[i], surfs->fb_tex_gl_ids[i], size)) {
+            LOG_ERROR("Failed to attach framebuffer texture for surface %d!", i);
             return false;
         }
     }
@@ -130,11 +133,12 @@ bool ZFW_SetSurface(const zfw_s_rendering_context* const rendering_context, cons
     zfw_s_rendering_basis* const rb = rendering_context->basis;
     zfw_s_rendering_state* const rs = rendering_context->state;
 
-    assert(rs->batch.num_slots_used == 0);
+    assert(rs->batch.num_slots_used == 0 && "Submit the current batch before changing surface!");
 
     assert(surf_index >= 0 && surf_index < rb->surfs.cnt);
 
     if (rs->surf_index_stack.height == rb->surfs.cnt) {
+        LOG_ERROR("Failed to set surface as the limit has been reached!");
         return false;
     }
 
@@ -152,8 +156,8 @@ void ZFW_UnsetSurface(const zfw_s_rendering_context* const rendering_context) {
     zfw_s_rendering_basis* const rb = rendering_context->basis;
     zfw_s_rendering_state* const rs = rendering_context->state;
 
-    assert(rs->batch.num_slots_used == 0);
-    assert(rs->surf_index_stack.height == 0 && "Trying to unset a surface, but none have been set!");
+    assert(rs->batch.num_slots_used == 0 && "Submit the current batch before changing surface!");
+    assert(rs->surf_index_stack.height > 0 && "There must be a surface to unset!");
 
     (void)PopSurfaceIndex(&rs->surf_index_stack, rb->surfs.cnt);
 
