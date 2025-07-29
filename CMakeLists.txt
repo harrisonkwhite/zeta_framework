@@ -21,7 +21,7 @@ add_library(zeta_framework STATIC
     src/zfw_input.c
     src/zfw_math.c
     src/zfw_audio.c
-    src/zfw_random.c
+    src/zfw_rng.c
     src/graphics/zfw_rendering.c
     src/graphics/zfw_surfaces.c
     src/graphics/zfw_textures.c
@@ -37,7 +37,7 @@ add_library(zeta_framework STATIC
     include/zfw_math.h
     include/zfw_graphics.h
     include/zfw_audio.h
-    include/zfw_random.h
+    include/zfw_rng.h
     external/glad/include/glad/glad.h
     external/stb/include/stb_image.h
     external/stb/include/stb_truetype.h

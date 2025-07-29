@@ -1,7 +1,7 @@
 #include "zfw_game.h"
 
 #include <stdio.h>
-#include "zfw_random.h"
+#include "zfw_rng.h"
 
 #define PERM_MEM_ARENA_SIZE MEGABYTES(80)
 #define TEMP_MEM_ARENA_SIZE MEGABYTES(40)

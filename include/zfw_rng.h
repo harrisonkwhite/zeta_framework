@@ -1,5 +1,5 @@
-#ifndef ZFW_RANDOM
-#define ZFW_RANDOM
+#ifndef ZFW_RNG_H
+#define ZFW_RNG_H
 
 #include <assert.h>
 

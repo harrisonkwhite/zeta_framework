@@ -1,4 +1,4 @@
-#include "zfw_random.h"
+#include "zfw_rng.h"
 
 #include <time.h>
 #include <stdlib.h>
