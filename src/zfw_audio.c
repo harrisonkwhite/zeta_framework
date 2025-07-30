@@ -93,11 +93,13 @@ bool ZFW_InitAudioSys(zfw_s_audio_sys* const audio_sys, s_mem_arena* const mem_a
         return false;
     }
 
-    audio_sys->snd_types = LoadSoundTypesFromFiles(mem_arena, snd_type_cnt, snd_type_fps);
+    if (audio_sys->snd_types.cnt > 0) {
+        audio_sys->snd_types = LoadSoundTypesFromFiles(mem_arena, snd_type_cnt, snd_type_fps);
 
-    if (IS_ZERO(audio_sys->snd_types)) {
-        LOG_ERROR("Failed to load sound types!");
-        return false;
+        if (IS_ZERO(audio_sys->snd_types)) {
+            LOG_ERROR("Failed to load sound types!");
+            return false;
+        }
     }
 
     return true;
