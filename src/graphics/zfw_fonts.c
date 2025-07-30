@@ -136,10 +136,10 @@ static inline zfw_s_vec_2d_s32 GLTextureSizeLimit() {
     return (zfw_s_vec_2d_s32){size, size};
 }
 
-zfw_s_fonts ZFW_LoadFontsFromFiles(s_mem_arena* const mem_arena, const int font_cnt, const t_font_index_to_load_info font_index_to_load_info, s_mem_arena* const temp_mem_arena) {
+zfw_s_fonts ZFW_LoadFontsFromFiles(s_mem_arena* const mem_arena, const int font_cnt, const zfw_s_font_load_info* const font_load_infos, s_mem_arena* const temp_mem_arena) {
     assert(mem_arena && IsMemArenaValid(mem_arena));
     assert(font_cnt > 0);
-    assert(font_index_to_load_info);
+    assert(font_load_infos);
     assert(temp_mem_arena && IsMemArenaValid(temp_mem_arena));
 
     // Reserve memory for font data.
@@ -173,11 +173,10 @@ zfw_s_fonts ZFW_LoadFontsFromFiles(s_mem_arena* const mem_arena, const int font_
 
     // Load each font.
     for (int i = 0; i < font_cnt; i++) {
-        const zfw_s_font_load_info load_info = font_index_to_load_info(i);
-        assert(load_info.file_path);
-        assert(load_info.height > 0);
+        const zfw_s_font_load_info* const load_info = &font_load_infos[i];
+        assert(ZFW_IsFontLoadInfoValid(load_info));
 
-        const t_u8* const font_file_data = PushEntireFileContents(load_info.file_path, temp_mem_arena, false);
+        const t_u8* const font_file_data = PushEntireFileContents(load_info->file_path, temp_mem_arena, false);
 
         if (!font_file_data) {
             LOG_ERROR("Failed to reserve memory for font file contents!");
@@ -198,7 +197,7 @@ zfw_s_fonts ZFW_LoadFontsFromFiles(s_mem_arena* const mem_arena, const int font_
             goto error;
         }
 
-        LoadFontArrangementInfo(&arrangement_infos[i], &stb_font_info, load_info.height);
+        LoadFontArrangementInfo(&arrangement_infos[i], &stb_font_info, load_info->height);
 
         const zfw_s_vec_2d_s32 font_tex_size_limit = GLTextureSizeLimit();
 
@@ -209,7 +208,7 @@ zfw_s_fonts ZFW_LoadFontsFromFiles(s_mem_arena* const mem_arena, const int font_
             goto error;
         }
 
-        tex_gl_ids[i] = GenFontTexture(&stb_font_info, load_info.height, tex_sizes[i], &tex_chr_positions[i], &arrangement_infos[i], temp_mem_arena);
+        tex_gl_ids[i] = GenFontTexture(&stb_font_info, load_info->height, tex_sizes[i], &tex_chr_positions[i], &arrangement_infos[i], temp_mem_arena);
 
         if (!tex_gl_ids[i]) {
             LOG_ERROR("Failed to generate font texture!");
@@ -219,7 +218,7 @@ zfw_s_fonts ZFW_LoadFontsFromFiles(s_mem_arena* const mem_arena, const int font_
         continue;
 
 error:
-        LOG_ERROR("Failed to load font \"%s\" with height %d!", load_info.file_path, load_info.height);
+        LOG_ERROR("Failed to load font \"%s\" with height %d!", load_info->file_path, load_info->height);
 
         glDeleteTextures(font_cnt, tex_gl_ids);
 

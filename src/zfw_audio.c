@@ -58,7 +58,11 @@ static zfw_s_sound_type LoadSoundTypeFromFile(const char* const fp, s_mem_arena*
     return snd_type;
 }
 
-static zfw_s_sound_types LoadSoundTypesFromFiles(s_mem_arena* const mem_arena, const int cnt, const zfw_t_sound_type_index_to_file_path index_to_fp) {
+static zfw_s_sound_types LoadSoundTypesFromFiles(s_mem_arena* const mem_arena, const int cnt, const char* const* const snd_type_fps) {
+    assert(mem_arena && IsMemArenaValid(mem_arena));
+    assert(cnt > 0);
+    assert(snd_type_fps);
+
     zfw_s_sound_type* const buf = MEM_ARENA_PUSH_TYPE_CNT(mem_arena, zfw_s_sound_type, cnt);
 
     if (!buf) {
@@ -67,12 +71,10 @@ static zfw_s_sound_types LoadSoundTypesFromFiles(s_mem_arena* const mem_arena, c
     }
 
     for (int i = 0; i < cnt; i++) {
-        const char* const fp = index_to_fp(i);
-
-        buf[i] = LoadSoundTypeFromFile(fp, mem_arena);
+        buf[i] = LoadSoundTypeFromFile(snd_type_fps[i], mem_arena);
 
         if (IS_ZERO(buf[i])) {
-            LOG_ERROR("Failed to load sound type \"%s\"!", fp);
+            LOG_ERROR("Failed to load sound type \"%s\"!", snd_type_fps[i]);
             return (zfw_s_sound_types){0};
         }
     }

@@ -106,7 +106,10 @@ typedef struct {
     int height;
 } zfw_s_font_load_info;
 
-typedef zfw_s_font_load_info (*t_font_index_to_load_info)(const int index);
+static inline bool ZFW_IsFontLoadInfoValid(const zfw_s_font_load_info* const load_info) {
+    assert(load_info);
+    return load_info->file_path && load_info->height > 0;
+}
 
 // Shader programs can be manually loaded by the user. Their main purpose in this system is with surfaces and surface rendering, when you want to render a surface with a particular effect. Multiple of these might be defined by the user in case they want a shader program group system for example.
 typedef struct {
@@ -442,7 +445,7 @@ zfw_s_rect_edges ZFW_TextureCoords(const zfw_s_rect_s32 src_rect, const zfw_s_ve
 //
 // zfw_fonts.c
 //
-zfw_s_fonts ZFW_LoadFontsFromFiles(s_mem_arena* const mem_arena, const int font_cnt, const t_font_index_to_load_info font_index_to_load_info, s_mem_arena* const temp_mem_arena);
+zfw_s_fonts ZFW_LoadFontsFromFiles(s_mem_arena* const mem_arena, const int font_cnt, const zfw_s_font_load_info* const font_load_infos, s_mem_arena* const temp_mem_arena);
 void ZFW_UnloadFonts(zfw_s_fonts* const fonts);
 
 bool ZFW_LoadStrCollider(zfw_s_rect* const rect, const char* const str, const int font_index, const zfw_s_fonts* const fonts, const zfw_s_vec_2d pos, const zfw_s_vec_2d alignment, s_mem_arena* const temp_mem_arena);
