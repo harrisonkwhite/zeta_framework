@@ -10,15 +10,15 @@
 #define TARG_TICK_INTERVAL (1.0 / (TARG_TICKS_PER_SEC))
 
 typedef struct {
-    zfw_e_mouse_scroll_state mouse_scroll_state; // When mouse scroll is detected, this can be updated via callback. It can be reset after the next tick (so there is a chance for the ZFW user to detect the scroll).
-    zfw_t_unicode_buf unicode_buf; // This is filled up as characters are typed, and zeroed out after the next tick. This way, the ZFW user can see everything that has been typed since the last tick.
+    zfw_e_mouse_scroll_state mouse_scroll_state; // When mouse scroll is detected, this can be updated via callback. It can be reset after the next tick (so there is a chance for the developer using ZFW to detect the scroll).
+    zfw_t_unicode_buf unicode_buf; // This is filled up as characters are typed, and zeroed out after the next tick. This way, the developer using ZFW can see everything that has been typed since the last tick.
 } s_glfw_callback_data;
 
 static void AssertGameInfoValidity(const zfw_s_game_info* const info) {
     assert(info);
 
-    assert(info->user_mem_size >= 0);
-    assert(info->user_mem_size == 0 || IsAlignmentValid(info->user_mem_alignment));
+    assert(info->dev_mem_size >= 0);
+    assert(info->dev_mem_size == 0 || IsAlignmentValid(info->dev_mem_alignment));
 
     assert(info->window_title);
     assert(info->window_init_size.x > 0 && info->window_init_size.y > 0);
@@ -180,23 +180,23 @@ bool ZFW_RunGame(const zfw_s_game_info* const info) {
         goto clean_rendering_basis;
     }
 
-    // Initialise user memory.
-    void* user_mem = NULL;
+    // Initialise developer memory.
+    void* dev_mem = NULL;
 
-    if (info->user_mem_size > 0) {
-        user_mem = PushToMemArena(&perm_mem_arena, info->user_mem_size, info->user_mem_alignment);
+    if (info->dev_mem_size > 0) {
+        dev_mem = PushToMemArena(&perm_mem_arena, info->dev_mem_size, info->dev_mem_alignment);
 
-        if (!user_mem) {
-            LOG_ERROR("Failed to allocate user memory!");
+        if (!dev_mem) {
+            LOG_ERROR("Failed to reserve developer memory!");
             error = true;
             goto clean_audio_sys;
         }
     }
 
-    // Run the user-defined game initialisation function.
+    // Run the developer's initialisation function.
     {
         const zfw_s_game_init_context context = {
-            .user_mem = user_mem,
+            .dev_mem = dev_mem,
             .perm_mem_arena = &perm_mem_arena,
             .temp_mem_arena = &temp_mem_arena,
             .window_state = WindowState(glfw_window),
@@ -204,7 +204,7 @@ bool ZFW_RunGame(const zfw_s_game_info* const info) {
         };
 
         if (!info->init_func(&context)) {
-            LOG_ERROR("User game initialisation function failed!");
+            LOG_ERROR("Developer game initialisation function failed!");
             error = true;
             goto clean_audio_sys;
         }
@@ -244,9 +244,9 @@ bool ZFW_RunGame(const zfw_s_game_info* const info) {
 
             // Run ticks.
             do {
-                // Execute the user-defined tick function.
+                // Execute the developer's tick function.
                 const zfw_s_game_tick_context context = {
-                    .user_mem = user_mem,
+                    .dev_mem = dev_mem,
                     .perm_mem_arena = &perm_mem_arena,
                     .temp_mem_arena = &temp_mem_arena,
                     .window_state = window_state,
@@ -262,14 +262,14 @@ bool ZFW_RunGame(const zfw_s_game_info* const info) {
                 glfw_callback_data.mouse_scroll_state = zfw_ek_mouse_scroll_state_none;
 
                 if (res == zfw_ek_game_tick_result_exit) {
-                    LOG("Exit request detected from user game tick function...");
+                    LOG("Exit request detected from developer game tick function...");
                     running = false;
                 }
 
                 if (res == zfw_ek_game_tick_result_error) {
-                    LOG_ERROR("User game tick function failed!");
+                    LOG_ERROR("Developer game tick function failed!");
                     error = true;
-                    goto clean_user_game;
+                    goto clean_dev_game;
                 }
 
                 frame_dur_accum -= TARG_TICK_INTERVAL;
@@ -280,9 +280,9 @@ bool ZFW_RunGame(const zfw_s_game_info* const info) {
             ZFW_InitRenderingState(rendering_state);
 
             {
-                // Execute the user-defined render function.
+                // Execute the developer's render function.
                 const zfw_s_game_render_context context = {
-                    .user_mem = user_mem,
+                    .dev_mem = dev_mem,
                     .perm_mem_arena = &perm_mem_arena,
                     .temp_mem_arena = &temp_mem_arena,
                     .mouse_pos = input_state.mouse_pos,
@@ -294,13 +294,13 @@ bool ZFW_RunGame(const zfw_s_game_info* const info) {
                 };
 
                 if (!info->render_func(&context)) {
-                    LOG_ERROR("User game render function failed!");
+                    LOG_ERROR("Developer game render function failed!");
                     error = true;
-                    goto clean_user_game;
+                    goto clean_dev_game;
                 }
 
-                assert(rendering_state->batch.num_slots_used == 0 && "User-defined rendering function completed, but not everything has been flushed!");
-                assert(rendering_state->surf_index_stack.height == 0 && "User-defined rendering function completed, but a surface is still active!");
+                assert(rendering_state->batch.num_slots_used == 0 && "Developer rendering function completed, but not everything has been flushed!");
+                assert(rendering_state->surf_index_stack.height == 0 && "Developer rendering function completed, but a surface is still active!");
             }
 
             glfwSwapBuffers(glfw_window);
@@ -310,9 +310,9 @@ bool ZFW_RunGame(const zfw_s_game_info* const info) {
     //
     // Cleanup
     //
-clean_user_game:
+clean_dev_game:
     if (info->clean_func) {
-        info->clean_func(user_mem);
+        info->clean_func(dev_mem);
     }
 
 clean_audio_sys:

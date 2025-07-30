@@ -21,7 +21,7 @@ typedef struct {
 } zfw_s_window_state;
 
 typedef struct {
-    void* user_mem;
+    void* dev_mem;
 
     s_mem_arena* perm_mem_arena;
     s_mem_arena* temp_mem_arena;
@@ -38,7 +38,7 @@ typedef enum {
 } zfw_e_game_tick_result;
 
 typedef struct {
-    void* user_mem;
+    void* dev_mem;
 
     s_mem_arena* perm_mem_arena;
     s_mem_arena* temp_mem_arena;
@@ -54,7 +54,7 @@ typedef struct {
 } zfw_s_game_tick_context;
 
 typedef struct {
-    void* user_mem;
+    void* dev_mem;
 
     s_mem_arena* perm_mem_arena;
     s_mem_arena* temp_mem_arena;
@@ -65,8 +65,8 @@ typedef struct {
 } zfw_s_game_render_context;
 
 typedef struct {
-    size_t user_mem_size; // How much memory should be allocated in the permanent arena for your use? This might be the size of a specific struct, for example.
-    size_t user_mem_alignment; // The alignment of the above memory.
+    size_t dev_mem_size; // How much memory should be allocated in the permanent arena for your use? This might be the size of a specific struct, for example.
+    size_t dev_mem_alignment; // The alignment of the above memory.
 
     zfw_s_vec_2d_s32 window_init_size;
     const char* window_title;
@@ -76,7 +76,7 @@ typedef struct {
     bool (*init_func)(const zfw_s_game_init_context* const func_data); // Called as one of the last steps of the game initialisation phase.
     zfw_e_game_tick_result (*tick_func)(const zfw_s_game_tick_context* const func_data); // Called once every tick.
     bool (*render_func)(const zfw_s_game_render_context* const func_data); // Called after a tick.
-    void (*clean_func)(void* const user_mem); // Called when the game ends (including if it ends in error). This is not called if the initialisation function failed or was not yet called.
+    void (*clean_func)(void* const dev_mem); // Called when the game ends (including if it ends in error). This is not called if the initialisation function failed or was not yet called.
 
     int font_cnt;
     const zfw_s_font_load_info* font_load_infos;
