@@ -81,7 +81,7 @@ typedef struct {
     int surf_cnt; // How many surfaces to generate and auto-refresh.
 
     int snd_type_cnt;
-    zfw_t_sound_type_index_to_file_path snd_type_index_to_fp; // A function mapping sound type indexes to the file paths of where to load the sounds.
+    const char* const* snd_type_fps; // The file paths of the sound types to load.
 } zfw_s_game_info;
 
 bool ZFW_RunGame(const zfw_s_game_info* const info);

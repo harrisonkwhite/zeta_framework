@@ -83,7 +83,7 @@ static zfw_s_sound_types LoadSoundTypesFromFiles(s_mem_arena* const mem_arena, c
     };
 }
 
-bool ZFW_InitAudioSys(zfw_s_audio_sys* const audio_sys, s_mem_arena* const mem_arena, const int snd_type_cnt, const zfw_t_sound_type_index_to_file_path snd_type_index_to_fp) {
+bool ZFW_InitAudioSys(zfw_s_audio_sys* const audio_sys, s_mem_arena* const mem_arena, const int snd_type_cnt, const char* const* const snd_type_fps) {
     assert(audio_sys && IS_ZERO(*audio_sys));
 
     if (ma_engine_init(NULL, &audio_sys->eng) != MA_SUCCESS) {
@@ -91,7 +91,7 @@ bool ZFW_InitAudioSys(zfw_s_audio_sys* const audio_sys, s_mem_arena* const mem_a
         return false;
     }
 
-    audio_sys->snd_types = LoadSoundTypesFromFiles(mem_arena, snd_type_cnt, snd_type_index_to_fp);
+    audio_sys->snd_types = LoadSoundTypesFromFiles(mem_arena, snd_type_cnt, snd_type_fps);
 
     if (IS_ZERO(audio_sys->snd_types)) {
         LOG_ERROR("Failed to load sound types!");

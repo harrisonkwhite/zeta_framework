@@ -172,7 +172,7 @@ bool ZFW_RunGame(const zfw_s_game_info* const info) {
     // Initialise audio system.
     zfw_s_audio_sys audio_sys = {0};
 
-    if (!ZFW_InitAudioSys(&audio_sys, &perm_mem_arena, info->snd_type_cnt, info->snd_type_index_to_fp)) {
+    if (!ZFW_InitAudioSys(&audio_sys, &perm_mem_arena, info->snd_type_cnt, info->snd_type_fps)) {
         LOG_ERROR("Failed to initialise the audio system!");
         error = true;
         goto clean_rendering_basis;

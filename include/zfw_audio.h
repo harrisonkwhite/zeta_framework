@@ -33,9 +33,7 @@ typedef struct {
     t_u8 snd_activity[BITS_TO_BYTES(ZFW_SND_LIMIT)];
 } zfw_s_audio_sys;
 
-typedef const char* (*zfw_t_sound_type_index_to_file_path)(const int index);
-
-bool ZFW_InitAudioSys(zfw_s_audio_sys* const audio_sys, s_mem_arena* const mem_arena, const int snd_type_cnt, const zfw_t_sound_type_index_to_file_path snd_type_index_to_fp);
+bool ZFW_InitAudioSys(zfw_s_audio_sys* const audio_sys, s_mem_arena* const mem_arena, const int snd_type_cnt, const char* const* const snd_type_fps);
 void ZFW_CleanAudioSys(zfw_s_audio_sys* const audio_sys);
 void ZFW_UpdateAudioSys(zfw_s_audio_sys* const audio_sys);
 
