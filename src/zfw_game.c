@@ -261,12 +261,12 @@ bool ZFW_RunGame(const zfw_s_game_info* const info) {
                 ZERO_OUT(glfw_callback_data.unicode_buf);
                 glfw_callback_data.mouse_scroll_state = zfw_ek_mouse_scroll_state_none;
 
-                if (res == ek_game_tick_result_exit) {
+                if (res == zfw_ek_game_tick_result_exit) {
                     LOG("Exit request detected from user game tick function...");
                     running = false;
                 }
 
-                if (res == ek_game_tick_result_error) {
+                if (res == zfw_ek_game_tick_result_error) {
                     LOG_ERROR("User game tick function failed!");
                     error = true;
                     goto clean_user_game;

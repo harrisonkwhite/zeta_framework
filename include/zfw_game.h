@@ -32,9 +32,9 @@ typedef struct {
 } zfw_s_game_init_context;
 
 typedef enum {
-    ek_game_tick_result_normal, // Continue running the game as normal.
-    ek_game_tick_result_exit,
-    ek_game_tick_result_error
+    zfw_ek_game_tick_result_normal, // Continue running the game as normal.
+    zfw_ek_game_tick_result_exit,
+    zfw_ek_game_tick_result_error
 } zfw_e_game_tick_result;
 
 typedef struct {
