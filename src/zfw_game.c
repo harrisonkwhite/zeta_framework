@@ -27,11 +27,7 @@ static void AssertGameInfoValidity(const zfw_s_game_info* const info) {
     assert(info->tick_func);
     assert(info->render_func);
 
-    assert((info->font_cnt == 0 && !info->font_load_infos) || (info->font_cnt > 0 && info->font_load_infos));
-
     assert(info->surf_cnt >= 0 && info->surf_cnt <= ZFW_SURFACE_LIMIT);
-
-    assert((info->snd_type_cnt == 0 && !info->snd_type_file_paths) || (info->snd_type_cnt > 0 && info->snd_type_file_paths));
 }
 
 static zfw_s_window_state WindowState(GLFWwindow* const glfw_window) {
@@ -174,7 +170,7 @@ bool ZFW_RunGame(const zfw_s_game_info* const info) {
     // Initialise audio system.
     zfw_s_audio_sys audio_sys = {0};
 
-    if (!ZFW_InitAudioSys(&audio_sys, &perm_mem_arena, info->snd_type_cnt, info->snd_type_file_paths)) {
+    if (!ZFW_InitAudioSys(&audio_sys)) {
         LOG_ERROR("Failed to initialise the audio system!");
         error = true;
         goto clean_rendering_basis;
