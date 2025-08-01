@@ -166,6 +166,30 @@ static zfw_s_renderables GenRenderables(zfw_s_gl_resource_arena* const gl_res_ar
                 }
 
                 break;
+
+            case zfw_ek_renderable_surface:
+                {
+                    const float verts[] = {
+                        -1.0, -1.0, 0.0, 0.0,
+                        1.0, -1.0, 1.0, 0.0,
+                        1.0,  1.0, 1.0, 1.0,
+                        -1.0,  1.0, 0.0, 1.0
+                    };
+
+                    const unsigned short elems[] = {
+                        0, 1, 2,
+                        2, 3, 0
+                    };
+
+                    const int vert_attr_lens[] = {
+                        2,
+                        2
+                    };
+
+                    ZFW_GenRenderable(&va_gl_ids[i], &vb_gl_ids[i], &eb_gl_ids[i], verts, sizeof(verts), elems, sizeof(elems), vert_attr_lens, STATIC_ARRAY_LEN(vert_attr_lens));
+                }
+
+                break;
         }
     }
 
