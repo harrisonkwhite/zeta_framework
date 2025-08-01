@@ -91,4 +91,17 @@ void ZFW_RenderTexture(const zfw_s_rendering_context* const context, const int t
 
 void ZFW_SubmitBatch(const zfw_s_rendering_context* const context);
 
+static inline void ZFW_RenderRect(const zfw_s_rendering_context* const context, const zfw_s_rect rect, const zfw_u_vec_4d blend) {
+    ZFW_RenderTexture(context, zfw_ek_builtin_texture_pixel, &context->basis->builtin_textures, (zfw_s_rect_s32){0}, ZFW_RectPos(rect), (zfw_s_vec_2d){0}, ZFW_RectSize(rect), 0, blend);
+}
+
+static inline void ZFW_RenderLine(const zfw_s_rendering_context* const context, const zfw_s_vec_2d a, const zfw_s_vec_2d b, const zfw_u_vec_4d blend, const float width) {
+    assert(width > 0.0f);
+
+    const zfw_s_vec_2d diff = {b.x - a.x, b.y - a.y};
+    const float len = sqrtf((diff.x * diff.x) + (diff.y * diff.y));
+
+    ZFW_RenderTexture(context, zfw_ek_builtin_texture_pixel, &context->basis->builtin_textures, (zfw_s_rect_s32){0}, a, (zfw_s_vec_2d){0.0f, 0.5f}, (zfw_s_vec_2d){len, width}, atan2f(-diff.y, diff.x), blend);
+}
+
 #endif

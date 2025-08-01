@@ -279,15 +279,17 @@ void ZFW_Render(const zfw_s_rendering_context* const context, const zfw_s_batch_
 void ZFW_RenderTexture(const zfw_s_rendering_context* const context, const int tex_index, const zfw_s_texture_group* const textures, const zfw_s_rect_s32 src_rect, const zfw_s_vec_2d pos, const zfw_s_vec_2d origin, const zfw_s_vec_2d scale, const float rot, const zfw_u_vec_4d blend) {
     assert(context);
     assert(textures && tex_index >= 0 && tex_index < textures->cnt);
-    assert(ZFW_IsSrcRectValid(src_rect, textures->sizes[tex_index]));
+    assert(IS_ZERO(src_rect) || ZFW_IsSrcRectValid(src_rect, textures->sizes[tex_index]));
     assert(ZFW_IsOriginValid(origin));
     assert(ZFW_IsColorValid(blend));
 
+    const zfw_s_rect_s32 src_rect_to_use = IS_ZERO(src_rect) ? (zfw_s_rect_s32){0, 0, textures->sizes[tex_index].x, textures->sizes[tex_index].y} : src_rect;
+
     const zfw_s_batch_slot_write_info write_info = {
         .tex_gl_id = textures->gl_ids[tex_index],
-        .tex_coords = ZFW_TextureCoords(src_rect, textures->sizes[tex_index]),
+        .tex_coords = ZFW_TextureCoords(src_rect_to_use, textures->sizes[tex_index]),
         .pos = pos,
-        .size = {src_rect.width * scale.x, src_rect.height * scale.y},
+        .size = {src_rect_to_use.width * scale.x, src_rect_to_use.height * scale.y},
         .origin = origin,
         .rot = rot,
         .blend = blend
