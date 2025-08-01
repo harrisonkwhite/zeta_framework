@@ -36,42 +36,28 @@ static const char* const g_batch_frag_shader_src = "#version 430 core\n"
     "    o_frag_color = tex_color * v_blend;\n"
     "}";
 
-static zfw_s_texture_group GenBuiltinTextures(zfw_s_gl_resource_arena* const gl_res_arena, s_mem_arena* const mem_arena) {
-    assert(gl_res_arena);
-    assert(mem_arena && IsMemArenaValid(mem_arena));
+static zfw_s_texture_info GenBuiltinTextureInfo(const int tex_index, s_mem_arena* const mem_arena) {
+    switch ((zfw_e_builtin_texture)tex_index) {
+        case zfw_ek_builtin_texture_pixel:
+            {
+                t_u8* const rgba_px_data = MEM_ARENA_PUSH_TYPE_CNT(mem_arena, t_u8, 4);
+                rgba_px_data[0] = 255;
+                rgba_px_data[1] = 255;
+                rgba_px_data[2] = 255;
+                rgba_px_data[3] = 255;
 
-    zfw_t_gl_id* const gl_ids = ZFW_ReserveGLIDs(gl_res_arena, zfw_eks_builtin_texture_cnt, zfw_ek_gl_resource_type_texture);
+                return (zfw_s_texture_info){
+                    .rgba_px_data = rgba_px_data,
+                    .tex_size = {1, 1}
+                };
+            }
 
-    if (!gl_ids) {
-        LOG_ERROR("Failed to reserve OpenGL texture IDs for built-in textures!");
-        return (zfw_s_texture_group){0};
+            break;
+
+        default:
+            assert(false);
+            return (zfw_s_texture_info){0};
     }
-
-    zfw_s_vec_2d_s32* const sizes = MEM_ARENA_PUSH_TYPE_CNT(mem_arena, zfw_s_vec_2d_s32, zfw_eks_builtin_texture_cnt);
-
-    if (!sizes) {
-        LOG_ERROR("Failed to reserve memory for built-in texture sizes!");
-        return (zfw_s_texture_group){0};
-    }
-
-    for (int i = 0; i < zfw_eks_builtin_texture_cnt; i++) {
-        switch ((zfw_e_builtin_texture)i) {
-            case zfw_ek_builtin_texture_pixel:
-                {
-                    const t_u8 rgba_px_data[4] = {255, 255, 255, 255};
-                    sizes[i] = (zfw_s_vec_2d_s32){1, 1};
-                    gl_ids[i] = ZFW_GenGLTextureFromRGBAPixelData(rgba_px_data, sizes[i]);
-                }
-
-                break;
-        }
-    }
-
-    return (zfw_s_texture_group){
-        .gl_ids = gl_ids,
-        .sizes = sizes,
-        .cnt = zfw_eks_builtin_texture_cnt
-    };
 }
 
 static zfw_s_shader_prog_group GenBuiltinShaderProgs(zfw_s_gl_resource_arena* const gl_res_arena, s_mem_arena* const temp_mem_arena) {
@@ -207,7 +193,7 @@ bool ZFW_InitRenderingBasis(zfw_s_rendering_basis* const basis, zfw_s_gl_resourc
     assert(mem_arena && IsMemArenaValid(mem_arena));
     assert(temp_mem_arena && IsMemArenaValid(temp_mem_arena));
 
-    basis->builtin_textures = GenBuiltinTextures(gl_res_arena, mem_arena);
+    basis->builtin_textures = ZFW_GenTextures(zfw_eks_builtin_texture_cnt, GenBuiltinTextureInfo, gl_res_arena, mem_arena, temp_mem_arena);
 
     if (IS_ZERO(basis->builtin_textures)) {
         LOG_ERROR("Failed to generate built-in textures for rendering basis!");

@@ -77,7 +77,7 @@ zfw_t_gl_id* ZFW_ReserveGLIDs(zfw_s_gl_resource_arena* const res_arena, const in
     return res_arena->ids + res_used_prev;
 }
 
-zfw_t_gl_id ZFW_GenGLTextureFromRGBAPixelData(const t_u8* const rgba_px_data, const zfw_s_vec_2d_s32 tex_size) {
+static zfw_t_gl_id GenGLTextureFromRGBAPixelData(const t_u8* const rgba_px_data, const zfw_s_vec_2d_s32 tex_size) {
     assert(rgba_px_data);
     assert(tex_size.x > 0 && tex_size.y > 0);
 
@@ -94,11 +94,31 @@ zfw_t_gl_id ZFW_GenGLTextureFromRGBAPixelData(const t_u8* const rgba_px_data, co
     return tex_gl_id;
 }
 
-zfw_s_texture_group ZFW_GenTexturesFromFiles(zfw_s_gl_resource_arena* const gl_res_arena, s_mem_arena* const mem_arena, const int tex_cnt, const char* const* const file_paths) {
+zfw_s_texture_info ZFW_GenTextureInfoFromFile(const char* const file_path, s_mem_arena* const mem_arena) {
+    assert(file_path);
+    assert(mem_arena && IsMemArenaValid(mem_arena));
+
+    zfw_s_vec_2d_s32 tex_size = {0};
+    unsigned char* const rgba_px_data = stbi_load(file_path, &tex_size.x, &tex_size.y, NULL, 4);
+
+    if (!rgba_px_data) {
+        LOG_ERROR("Failed to load pixel data from file \"%s\"!", file_path);
+        LOG_ERROR_SPECIAL("STB", "%s", stbi_failure_reason());
+        return (zfw_s_texture_info){0};
+    }
+
+    return (zfw_s_texture_info){
+        .rgba_px_data = rgba_px_data,
+        .tex_size = tex_size
+    };
+}
+
+zfw_s_texture_group ZFW_GenTextures(const int tex_cnt, const zfw_t_gen_texture_info_func gen_tex_info_func, zfw_s_gl_resource_arena* const gl_res_arena, s_mem_arena* const mem_arena, s_mem_arena* const temp_mem_arena) {
+    assert(tex_cnt > 0);
+    assert(gen_tex_info_func);
     assert(gl_res_arena);
     assert(mem_arena && IsMemArenaValid(mem_arena));
-    assert(tex_cnt > 0);
-    assert(file_paths);
+    assert(temp_mem_arena && IsMemArenaValid(temp_mem_arena));
 
     zfw_t_gl_id* const gl_ids = ZFW_ReserveGLIDs(gl_res_arena, tex_cnt, zfw_ek_gl_resource_type_texture);
 
@@ -115,10 +135,17 @@ zfw_s_texture_group ZFW_GenTexturesFromFiles(zfw_s_gl_resource_arena* const gl_r
     }
 
     for (int i = 0; i < tex_cnt; i++) {
-        if (!ZFW_GenGLTextureFromFile(&gl_ids[i], &sizes[i], file_paths[i])) {
-            LOG_ERROR("Failed to generate OpenGL texture from file \"%s\"!", file_paths[i]);
+        const zfw_s_texture_info tex_info = gen_tex_info_func(i, temp_mem_arena);
+
+        if (IS_ZERO(tex_info)) {
+            // TODO: Log error.
             return (zfw_s_texture_group){0};
         }
+
+        assert(tex_info.rgba_px_data && tex_info.tex_size.x > 0 && tex_info.tex_size.y > 0);
+
+        gl_ids[i] = GenGLTextureFromRGBAPixelData(tex_info.rgba_px_data, tex_info.tex_size);
+        sizes[i] = tex_info.tex_size;
     }
 
     return (zfw_s_texture_group){
@@ -126,24 +153,6 @@ zfw_s_texture_group ZFW_GenTexturesFromFiles(zfw_s_gl_resource_arena* const gl_r
         .sizes = sizes,
         .cnt = tex_cnt
     };
-}
-
-bool ZFW_GenGLTextureFromFile(zfw_t_gl_id* const tex_gl_id, zfw_s_vec_2d_s32* const tex_size, const char* const file_path) {
-    assert(tex_gl_id && !(*tex_gl_id));
-    assert(tex_size && IS_ZERO(*tex_size));
-    assert(file_path);
-
-    unsigned char* const px_data = stbi_load(file_path, &tex_size->x, &tex_size->y, NULL, 4);
-
-    if (!px_data) {
-        LOG_ERROR("Failed to load pixel data for texture from file \"%s\"!", file_path);
-        LOG_ERROR_SPECIAL("STB", "%s", stbi_failure_reason());
-        return false;
-    }
-
-    *tex_gl_id = ZFW_GenGLTextureFromRGBAPixelData(px_data, *tex_size);
-
-    return true;
 }
 
 zfw_s_rect_edges ZFW_TextureCoords(const zfw_s_rect_s32 src_rect, const zfw_s_vec_2d_s32 tex_size) {

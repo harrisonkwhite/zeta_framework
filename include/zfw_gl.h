@@ -47,6 +47,13 @@ typedef struct {
 } zfw_s_texture_group;
 
 typedef struct {
+    const t_u8* rgba_px_data;
+    zfw_s_vec_2d_s32 tex_size;
+} zfw_s_texture_info;
+
+typedef zfw_s_texture_info (*zfw_t_gen_texture_info_func)(const int tex_index, s_mem_arena* const mem_arena);
+
+typedef struct {
     const zfw_t_gl_id* gl_ids;
     int cnt;
 } zfw_s_shader_prog_group;
@@ -71,9 +78,8 @@ zfw_s_gl_resource_arena ZFW_GenGLResourceArena(s_mem_arena* const mem_arena, con
 void ZFW_CleanGLResourceArena(zfw_s_gl_resource_arena* const res_arena);
 zfw_t_gl_id* ZFW_ReserveGLIDs(zfw_s_gl_resource_arena* const res_arena, const int cnt, const zfw_e_gl_resource_type res_type);
 
-zfw_t_gl_id ZFW_GenGLTextureFromRGBAPixelData(const t_u8* const rgba_px_data, const zfw_s_vec_2d_s32 tex_size);
-bool ZFW_GenGLTextureFromFile(zfw_t_gl_id* const tex_gl_id, zfw_s_vec_2d_s32* const tex_size, const char* const file_path);
-zfw_s_texture_group ZFW_GenTexturesFromFiles(zfw_s_gl_resource_arena* const gl_res_arena, s_mem_arena* const mem_arena, const int tex_cnt, const char* const* const file_paths);
+zfw_s_texture_info ZFW_GenTextureInfoFromFile(const char* const file_path, s_mem_arena* const mem_arena);
+zfw_s_texture_group ZFW_GenTextures(const int tex_cnt, const zfw_t_gen_texture_info_func gen_tex_info_func, zfw_s_gl_resource_arena* const gl_res_arena, s_mem_arena* const mem_arena, s_mem_arena* const temp_mem_arena);
 zfw_s_rect_edges ZFW_TextureCoords(const zfw_s_rect_s32 src_rect, const zfw_s_vec_2d_s32 tex_size);
 
 zfw_t_gl_id ZFW_GenShaderFromSrc(const char* const src, const bool frag, s_mem_arena* const temp_mem_arena);
