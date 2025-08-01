@@ -26,6 +26,7 @@ typedef enum {
     zfw_ek_gl_resource_type_vert_array,
     zfw_ek_gl_resource_type_vert_buf,
     zfw_ek_gl_resource_type_elem_buf,
+    zfw_ek_gl_resource_type_framebuffer,
 
     zfw_eks_gl_resource_type_cnt
 } zfw_e_gl_resource_type;
@@ -58,6 +59,14 @@ typedef struct {
     int cnt;
 } zfw_s_renderables;
 
+typedef struct {
+    const zfw_t_gl_id* fb_gl_ids;
+    zfw_t_gl_id* fb_tex_gl_ids;
+    int cnt;
+
+    zfw_s_vec_2d_s32 size;
+} zfw_s_surface_group;
+
 zfw_s_gl_resource_arena ZFW_GenGLResourceArena(s_mem_arena* const mem_arena, const int res_limit);
 void ZFW_CleanGLResourceArena(zfw_s_gl_resource_arena* const res_arena);
 zfw_t_gl_id* ZFW_ReserveGLIDs(zfw_s_gl_resource_arena* const res_arena, const int cnt, const zfw_e_gl_resource_type res_type);
@@ -71,6 +80,9 @@ zfw_t_gl_id ZFW_GenShaderFromSrc(const char* const src, const bool frag, s_mem_a
 zfw_t_gl_id ZFW_GenShaderProg(const char* const vs_src, const char* const fs_src, s_mem_arena* const temp_mem_arena);
 
 void ZFW_GenRenderable(zfw_t_gl_id* const va_gl_id, zfw_t_gl_id* const vb_gl_id, zfw_t_gl_id* const eb_gl_id, const float* const vert_buf, const size_t vert_buf_size, const unsigned short* const elem_buf, const size_t elem_buf_size, const int* const vert_attr_lens, const int vert_attr_cnt);
+
+zfw_s_surface_group ZFW_GenSurfaces(zfw_s_gl_resource_arena* const gl_res_arena, const int cnt, const zfw_s_vec_2d_s32 size);
+bool ZFW_ResizeSurfaces(zfw_s_surface_group* const surfs, const zfw_s_vec_2d_s32 size);
 
 static inline bool ZFW_IsOriginValid(const zfw_s_vec_2d orig) {
     return orig.x >= 0.0f && orig.x <= 1.0f && orig.y >= 0.0f && orig.y <= 1.0f;

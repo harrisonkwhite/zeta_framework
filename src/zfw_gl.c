@@ -54,6 +54,10 @@ void ZFW_CleanGLResourceArena(zfw_s_gl_resource_arena* const res_arena) {
             case zfw_ek_gl_resource_type_elem_buf:
                 glDeleteBuffers(1, &gl_id);
                 break;
+
+            case zfw_ek_gl_resource_type_framebuffer:
+                glDeleteFramebuffers(1, &gl_id);
+                break;
         }
     }
 }
@@ -265,4 +269,84 @@ void ZFW_GenRenderable(zfw_t_gl_id* const va_gl_id, zfw_t_gl_id* const vb_gl_id,
     }
 
     glBindVertexArray(0);
+}
+
+static bool AttachFramebufferTexture(const zfw_t_gl_id fb_gl_id, const zfw_t_gl_id tex_gl_id, const zfw_s_vec_2d_s32 tex_size) {
+    assert(fb_gl_id != 0);
+    assert(tex_gl_id != 0);
+    assert(tex_size.x > 0 && tex_size.y > 0);
+
+    glBindTexture(GL_TEXTURE_2D, tex_gl_id);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, tex_size.x, tex_size.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    glBindFramebuffer(GL_FRAMEBUFFER, fb_gl_id);
+
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tex_gl_id, 0);
+
+    const bool success = glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE;
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    return success;
+}
+
+zfw_s_surface_group ZFW_GenSurfaces(zfw_s_gl_resource_arena* const gl_res_arena, const int cnt, const zfw_s_vec_2d_s32 size) {
+    assert(gl_res_arena);
+    assert(cnt > 0);
+    assert(size.x > 0 && size.y > 0);
+
+    zfw_t_gl_id* const fb_gl_ids = ZFW_ReserveGLIDs(gl_res_arena, cnt, zfw_ek_gl_resource_type_framebuffer);
+
+    if (!fb_gl_ids) {
+        LOG_ERROR("Failed to reserve OpenGL framebuffer IDs!");
+        return (zfw_s_surface_group){0};
+    }
+
+    zfw_t_gl_id* const fb_tex_gl_ids = ZFW_ReserveGLIDs(gl_res_arena, cnt, zfw_ek_gl_resource_type_texture);
+
+    if (!fb_tex_gl_ids) {
+        LOG_ERROR("Failed to reserve OpenGL texture IDs for framebuffers!");
+        return (zfw_s_surface_group){0};
+    }
+
+    glGenFramebuffers(cnt, fb_gl_ids);
+    glGenTextures(cnt, fb_tex_gl_ids);
+
+    for (int i = 0; i < cnt; i++) {
+        if (!AttachFramebufferTexture(fb_gl_ids[i], fb_tex_gl_ids[i], size)) {
+            LOG_ERROR("Failed to attach framebuffer texture for surface %d!", i);
+            return (zfw_s_surface_group){0};
+        }
+    }
+
+    return (zfw_s_surface_group){
+        .fb_gl_ids = fb_gl_ids,
+        .fb_tex_gl_ids = fb_tex_gl_ids,
+        .cnt = cnt,
+        .size = size
+    };
+}
+
+bool ZFW_ResizeSurfaces(zfw_s_surface_group* const surfs, const zfw_s_vec_2d_s32 size) {
+    assert(surfs);
+    assert(size.x > 0 && size.y > 0 && size.x != surfs->size.x || size.y != surfs->size.y);
+
+    surfs->size = size;
+
+    // Delete old textures.
+    glDeleteTextures(surfs->cnt, surfs->fb_tex_gl_ids);
+
+    // Generate and attach new ones with the new size.
+    glGenTextures(surfs->cnt, surfs->fb_tex_gl_ids);
+
+    for (int i = 0; i < surfs->cnt; i++) {
+        if (!AttachFramebufferTexture(surfs->fb_gl_ids[i], surfs->fb_tex_gl_ids[i], size)) {
+            LOG_ERROR("Failed to attach framebuffer texture for surface %d!", i);
+            return false;
+        }
+    }
+
+    return true;
 }
