@@ -17,17 +17,15 @@ typedef struct {
 static void AssertGameInfoValidity(const zfw_s_game_info* const info) {
     assert(info);
 
-    assert(info->dev_mem_size >= 0);
-    assert(info->dev_mem_size == 0 || IsAlignmentValid(info->dev_mem_alignment));
-
     assert(info->window_title);
     assert(info->window_init_size.x > 0 && info->window_init_size.y > 0);
+
+    assert(info->dev_mem_size >= 0);
+    assert(info->dev_mem_size == 0 || IsAlignmentValid(info->dev_mem_alignment));
 
     assert(info->init_func);
     assert(info->tick_func);
     assert(info->render_func);
-
-    assert(info->surf_cnt >= 0 && info->surf_cnt <= ZFW_SURFACE_LIMIT);
 }
 
 static zfw_s_window_state WindowState(GLFWwindow* const glfw_window) {
@@ -151,12 +149,20 @@ bool ZFW_RunGame(const zfw_s_game_info* const info) {
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    zfw_s_rendering_basis rendering_basis = {0};
+    zfw_s_gl_resource_arena gl_res_arena = ZFW_GenGLResourceArena(&perm_mem_arena, KILOBYTES(1));
 
-    if (!ZFW_InitRenderingBasis(&rendering_basis, &perm_mem_arena, info->surf_cnt, WindowState(glfw_window).size, &temp_mem_arena)) {
-        LOG_ERROR("Failed to initialise the rendering basis!");
+    if (IS_ZERO(gl_res_arena)) {
+        LOG_ERROR("Failed to generate the OpenGL resource arena!");
         error = true;
         goto clean_glfw_window;
+    }
+
+    zfw_s_rendering_basis rendering_basis = {0};
+
+    if (!ZFW_InitRenderingBasis(&rendering_basis, &gl_res_arena, &perm_mem_arena, &temp_mem_arena)) {
+        LOG_ERROR("Failed to initialise the rendering basis!");
+        error = true;
+        goto clean_gl_res_arena;
     }
 
     zfw_s_rendering_state* const rendering_state = MEM_ARENA_PUSH_TYPE(&perm_mem_arena, zfw_s_rendering_state);
@@ -164,7 +170,7 @@ bool ZFW_RunGame(const zfw_s_game_info* const info) {
     if (!rendering_state) {
         LOG_ERROR("Failed to reserve memory for the rendering state!");
         error = true;
-        goto clean_rendering_basis;
+        goto clean_gl_res_arena;
     }
 
     // Initialise audio system.
@@ -173,7 +179,7 @@ bool ZFW_RunGame(const zfw_s_game_info* const info) {
     if (!ZFW_InitAudioSys(&audio_sys)) {
         LOG_ERROR("Failed to initialise the audio system!");
         error = true;
-        goto clean_rendering_basis;
+        goto clean_gl_res_arena;
     }
 
     // Initialise developer memory.
@@ -196,6 +202,8 @@ bool ZFW_RunGame(const zfw_s_game_info* const info) {
             .perm_mem_arena = &perm_mem_arena,
             .temp_mem_arena = &temp_mem_arena,
             .window_state = WindowState(glfw_window),
+            .gl_res_arena = &gl_res_arena,
+            .rendering_basis = &rendering_basis,
             .audio_sys = &audio_sys
         };
 
@@ -249,6 +257,8 @@ bool ZFW_RunGame(const zfw_s_game_info* const info) {
                     .input_state = &input_state,
                     .input_state_last = &input_state_last,
                     .unicode_buf = &glfw_callback_data.unicode_buf,
+                    .gl_res_arena = &gl_res_arena,
+                    .rendering_basis = &rendering_basis,
                     .audio_sys = &audio_sys
                 };
 
@@ -296,7 +306,7 @@ bool ZFW_RunGame(const zfw_s_game_info* const info) {
                 }
 
                 assert(rendering_state->batch.num_slots_used == 0 && "Developer rendering function completed, but not everything has been flushed!");
-                assert(rendering_state->surf_index_stack.height == 0 && "Developer rendering function completed, but a surface is still active!");
+                //assert(rendering_state->surf_index_stack.height == 0 && "Developer rendering function completed, but a surface is still active!");
             }
 
             glfwSwapBuffers(glfw_window);
@@ -314,8 +324,8 @@ clean_dev_game:
 clean_audio_sys:
     ZFW_CleanAudioSys(&audio_sys);
 
-clean_rendering_basis:
-    ZFW_CleanRenderingBasis(&rendering_basis);
+clean_gl_res_arena:
+    ZFW_CleanGLResourceArena(&gl_res_arena);
 
 clean_glfw_window:
     glfwDestroyWindow(glfw_window);

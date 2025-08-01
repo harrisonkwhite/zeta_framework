@@ -19,14 +19,11 @@ find_package(OpenGL REQUIRED)
 add_library(zeta_framework STATIC
     src/zfw_game.c
     src/zfw_input.c
+    src/zfw_gl.c
+    src/zfw_rendering.c
     src/zfw_math.c
     src/zfw_audio.c
     src/zfw_rng.c
-    src/graphics/zfw_rendering.c
-    src/graphics/zfw_surfaces.c
-    src/graphics/zfw_textures.c
-    src/graphics/zfw_fonts.c
-    src/graphics/zfw_shaders.c
     external/glad/src/glad.c
     external/stb/src/stb.c
     external/miniaudio/src/miniaudio.c
@@ -34,8 +31,9 @@ add_library(zeta_framework STATIC
     include/zfw.h
     include/zfw_game.h
     include/zfw_input.h
+    include/zfw_gl.h
+    include/zfw_rendering.h
     include/zfw_math.h
-    include/zfw_graphics.h
     include/zfw_audio.h
     include/zfw_rng.h
     external/glad/include/glad/glad.h
