@@ -25,6 +25,7 @@ typedef enum {
 typedef enum {
     zfw_ek_renderable_batch,
     zfw_ek_renderable_surface,
+
     zfw_eks_renderable_cnt
 } zfw_e_renderable;
 

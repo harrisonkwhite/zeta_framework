@@ -8,6 +8,10 @@
 #define ZFW_GL_VERSION_MAJOR 4
 #define ZFW_GL_VERSION_MINOR 3
 
+#define ZFW_ASCII_PRINTABLE_MIN ' '
+#define ZFW_ASCII_PRINTABLE_MAX '~'
+#define ZFW_ASCII_PRINTABLE_RANGE_LEN (ZFW_ASCII_PRINTABLE_MAX - ZFW_ASCII_PRINTABLE_MIN + 1)
+
 #define ZFW_WHITE (zfw_u_vec_4d){1.0f, 1.0f, 1.0f, 1.0f}
 #define ZFW_RED (zfw_u_vec_4d){1.0f, 0.0f, 0.0f, 1.0f}
 #define ZFW_GREEN (zfw_u_vec_4d){0.0f, 1.0f, 0.0f, 1.0f}
@@ -52,6 +56,30 @@ typedef struct {
 } zfw_s_texture_info;
 
 typedef zfw_s_texture_info (*zfw_t_gen_texture_info_func)(const int tex_index, s_mem_arena* const mem_arena);
+
+typedef struct {
+    int line_height;
+
+    zfw_s_vec_2d_s32 chr_offsets[ZFW_ASCII_PRINTABLE_RANGE_LEN];
+    zfw_s_vec_2d_s32 chr_sizes[ZFW_ASCII_PRINTABLE_RANGE_LEN];
+    int chr_advances[ZFW_ASCII_PRINTABLE_RANGE_LEN];
+} zfw_s_font_arrangement_info;
+
+typedef zfw_s_vec_2d_s32 zfw_t_tex_chr_positions[ZFW_ASCII_PRINTABLE_RANGE_LEN];
+
+typedef struct {
+    const zfw_s_font_arrangement_info* arrangement_infos;
+    const zfw_t_gl_id* tex_gl_ids;
+    const zfw_s_vec_2d_s32* tex_sizes;
+    const zfw_t_tex_chr_positions* tex_chr_positions;
+
+    int cnt;
+} zfw_s_font_group;
+
+typedef struct {
+    const char* file_path;
+    int height;
+} zfw_s_font_load_info;
 
 typedef struct {
     const zfw_t_gl_id* gl_ids;
@@ -110,6 +138,8 @@ zfw_t_gl_id* ZFW_ReserveGLIDs(zfw_s_gl_resource_arena* const res_arena, const in
 zfw_s_texture_info ZFW_GenTextureInfoFromFile(const char* const file_path, s_mem_arena* const mem_arena);
 zfw_s_texture_group ZFW_GenTextures(const int tex_cnt, const zfw_t_gen_texture_info_func gen_tex_info_func, zfw_s_gl_resource_arena* const gl_res_arena, s_mem_arena* const mem_arena, s_mem_arena* const temp_mem_arena);
 zfw_s_rect_edges ZFW_TextureCoords(const zfw_s_rect_s32 src_rect, const zfw_s_vec_2d_s32 tex_size);
+
+zfw_s_font_group ZFW_GenFonts(const int font_cnt, const zfw_s_font_load_info* const load_infos, zfw_s_gl_resource_arena* const gl_res_arena, s_mem_arena* const mem_arena, s_mem_arena* const temp_mem_arena);
 
 zfw_s_shader_prog_group ZFW_GenShaderProgs(const int prog_cnt, const zfw_t_gen_shader_prog_info_func gen_prog_info_func, zfw_s_gl_resource_arena* const gl_res_arena, s_mem_arena* const temp_mem_arena);
 
