@@ -326,54 +326,64 @@ static bool AttachFramebufferTexture(const zfw_t_gl_id fb_gl_id, const zfw_t_gl_
     return success;
 }
 
-zfw_s_surface_group ZFW_GenSurfaces(zfw_s_gl_resource_arena* const gl_res_arena, const int cnt, const zfw_s_vec_2d_s32 size) {
+zfw_s_surface_group ZFW_GenSurfaces(const int surf_cnt, const zfw_s_vec_2d_s32* const surf_sizes, zfw_s_gl_resource_arena* const gl_res_arena, s_mem_arena* const mem_arena) {
+    assert(surf_cnt > 0);
+    assert(surf_sizes);
     assert(gl_res_arena);
-    assert(cnt > 0);
-    assert(size.x > 0 && size.y > 0);
+    assert(mem_arena && IsMemArenaValid(mem_arena));
 
-    zfw_t_gl_id* const fb_gl_ids = ZFW_ReserveGLIDs(gl_res_arena, cnt, zfw_ek_gl_resource_type_framebuffer);
+    zfw_t_gl_id* const fb_gl_ids = ZFW_ReserveGLIDs(gl_res_arena, surf_cnt, zfw_ek_gl_resource_type_framebuffer);
 
     if (!fb_gl_ids) {
         LOG_ERROR("Failed to reserve OpenGL framebuffer IDs!");
         return (zfw_s_surface_group){0};
     }
 
-    zfw_t_gl_id* const fb_tex_gl_ids = ZFW_ReserveGLIDs(gl_res_arena, cnt, zfw_ek_gl_resource_type_texture);
+    zfw_t_gl_id* const fb_tex_gl_ids = ZFW_ReserveGLIDs(gl_res_arena, surf_cnt, zfw_ek_gl_resource_type_texture);
 
     if (!fb_tex_gl_ids) {
         LOG_ERROR("Failed to reserve OpenGL texture IDs for framebuffers!");
         return (zfw_s_surface_group){0};
     }
 
-    glGenFramebuffers(cnt, fb_gl_ids);
-    glGenTextures(cnt, fb_tex_gl_ids);
+    zfw_s_vec_2d_s32* const surf_sizes_pers = MEM_ARENA_PUSH_TYPE_CNT(mem_arena, zfw_s_vec_2d_s32, surf_cnt);
 
-    for (int i = 0; i < cnt; i++) {
-        if (!AttachFramebufferTexture(fb_gl_ids[i], fb_tex_gl_ids[i], size)) {
+    if (!surf_sizes_pers) {
+        LOG_ERROR("Failed to reserve memory for surface sizes!");
+        return (zfw_s_surface_group){0};
+    }
+
+    glGenFramebuffers(surf_cnt, fb_gl_ids);
+    glGenTextures(surf_cnt, fb_tex_gl_ids);
+
+    for (int i = 0; i < surf_cnt; i++) {
+        if (!AttachFramebufferTexture(fb_gl_ids[i], fb_tex_gl_ids[i], surf_sizes[i])) {
             LOG_ERROR("Failed to attach framebuffer texture for surface %d!", i);
             return (zfw_s_surface_group){0};
         }
     }
 
+    memcpy(surf_sizes_pers, surf_sizes, sizeof(*surf_sizes) * surf_cnt);
+
     return (zfw_s_surface_group){
         .fb_gl_ids = fb_gl_ids,
         .fb_tex_gl_ids = fb_tex_gl_ids,
-        .cnt = cnt,
-        .size = size
+        .sizes = surf_sizes_pers,
+        .cnt = surf_cnt
     };
 }
 
-bool ZFW_ResizeSurfaces(zfw_s_surface_group* const surfs, const zfw_s_vec_2d_s32 size) {
+bool ZFW_ResizeSurface(zfw_s_surface_group* const surfs, const int surf_index, const zfw_s_vec_2d_s32 size) {
     assert(surfs);
-    assert(size.x > 0 && size.y > 0 && size.x != surfs->size.x || size.y != surfs->size.y);
+    assert(surf_index >= 0 && surf_index < surfs->cnt);
+    assert(size.x > 0 && size.y > 0);
+    assert(size.x != surfs->sizes[surf_index].x || size.y != surfs->sizes[surf_index].y);
 
-    surfs->size = size;
+    // Delete old texture.
+    glDeleteTextures(surfs->cnt, &surfs->fb_tex_gl_ids[surf_index]);
 
-    // Delete old textures.
-    glDeleteTextures(surfs->cnt, surfs->fb_tex_gl_ids);
-
-    // Generate and attach new ones with the new size.
-    glGenTextures(surfs->cnt, surfs->fb_tex_gl_ids);
+    // Generate and attach new texture of the new size.
+    glGenTextures(surfs->cnt, &surfs->fb_tex_gl_ids[surf_index]);
 
     for (int i = 0; i < surfs->cnt; i++) {
         if (!AttachFramebufferTexture(surfs->fb_gl_ids[i], surfs->fb_tex_gl_ids[i], size)) {
