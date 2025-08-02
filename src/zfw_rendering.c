@@ -1,5 +1,6 @@
 #include "zfw_rendering.h"
 
+#include <ctype.h>
 #include <stb_image.h>
 
 static const char* const g_batch_vert_shader_src = "#version 430 core\n"
@@ -269,7 +270,7 @@ void ZFW_Render(const zfw_s_rendering_context* const context, const zfw_s_batch_
     batch_state->num_slots_used++;
 }
 
-void ZFW_RenderTexture(const zfw_s_rendering_context* const context, const int tex_index, const zfw_s_texture_group* const textures, const zfw_s_rect_s32 src_rect, const zfw_s_vec_2d pos, const zfw_s_vec_2d origin, const zfw_s_vec_2d scale, const float rot, const zfw_u_vec_4d blend) {
+void ZFW_RenderTexture(const zfw_s_rendering_context* const context, const zfw_s_texture_group* const textures, const int tex_index, const zfw_s_rect_s32 src_rect, const zfw_s_vec_2d pos, const zfw_s_vec_2d origin, const zfw_s_vec_2d scale, const float rot, const zfw_u_vec_4d blend) {
     assert(context);
     assert(textures && tex_index >= 0 && tex_index < textures->cnt);
     assert(IS_ZERO(src_rect) || ZFW_IsSrcRectValid(src_rect, textures->sizes[tex_index]));
@@ -289,6 +290,56 @@ void ZFW_RenderTexture(const zfw_s_rendering_context* const context, const int t
     };
 
     ZFW_Render(context, &write_info);
+}
+
+bool ZFW_RenderStr(const zfw_s_rendering_context* const context, const char* const str, const zfw_s_font_group* const fonts, const int font_index, const zfw_s_vec_2d pos, const zfw_s_vec_2d alignment, const zfw_u_vec_4d blend, s_mem_arena* const temp_mem_arena) {
+    assert(context);
+    assert(str && str[0]);
+    assert(fonts);
+    assert(font_index >= 0 && font_index < fonts->cnt);
+    assert(ZFW_IsStrAlignmentValid(alignment));
+    assert(ZFW_IsColorValid(blend));
+    assert(temp_mem_arena && IsMemArenaValid(temp_mem_arena));
+
+    const zfw_s_vec_2d* const chr_render_positions = ZFW_PushStrChrRenderPositions(temp_mem_arena, str, fonts, font_index, pos, alignment);
+
+    if (!chr_render_positions) {
+        LOG_ERROR("Failed to reserve memory for character render positions!");
+        return false;
+    }
+
+    for (int i = 0; str[i]; i++) {
+        const char chr = str[i];
+
+        if (chr == ' ' || chr == '\n') {
+            continue;
+        }
+
+        assert(isprint(chr));
+
+        const int chr_ascii_printable_index = chr - ZFW_ASCII_PRINTABLE_MIN;
+
+        const zfw_s_rect_s32 chr_src_rect = {
+            .x = fonts->tex_chr_positions[font_index][chr_ascii_printable_index].x,
+            .y = fonts->tex_chr_positions[font_index][chr_ascii_printable_index].y,
+            .width = fonts->arrangement_infos[font_index].chr_sizes[chr_ascii_printable_index].x,
+            .height = fonts->arrangement_infos[font_index].chr_sizes[chr_ascii_printable_index].y
+        };
+
+        const zfw_s_rect_edges chr_tex_coords = ZFW_TextureCoords(chr_src_rect, fonts->tex_sizes[font_index]);
+
+        const zfw_s_batch_slot_write_info write_info = {
+            .tex_gl_id = fonts->tex_gl_ids[font_index],
+            .tex_coords = chr_tex_coords,
+            .pos = chr_render_positions[i],
+            .size = {chr_src_rect.width, chr_src_rect.height},
+            .blend = blend
+        };
+
+        ZFW_Render(context, &write_info);
+    }
+
+    return true;
 }
 
 void ZFW_SubmitBatch(const zfw_s_rendering_context* const context) {

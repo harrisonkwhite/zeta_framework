@@ -92,7 +92,8 @@ void ZFW_InitRenderingState(zfw_s_rendering_state* const state);
 
 void ZFW_RenderClear(const zfw_u_vec_4d col);
 void ZFW_Render(const zfw_s_rendering_context* const context, const zfw_s_batch_slot_write_info* const write_info);
-void ZFW_RenderTexture(const zfw_s_rendering_context* const context, const int tex_index, const zfw_s_texture_group* const textures, const zfw_s_rect_s32 src_rect, const zfw_s_vec_2d pos, const zfw_s_vec_2d origin, const zfw_s_vec_2d scale, const float rot, const zfw_u_vec_4d blend);
+void ZFW_RenderTexture(const zfw_s_rendering_context* const context, const zfw_s_texture_group* const textures, const int tex_index, const zfw_s_rect_s32 src_rect, const zfw_s_vec_2d pos, const zfw_s_vec_2d origin, const zfw_s_vec_2d scale, const float rot, const zfw_u_vec_4d blend);
+bool ZFW_RenderStr(const zfw_s_rendering_context* const context, const char* const str, const zfw_s_font_group* const fonts, const int font_index, const zfw_s_vec_2d pos, const zfw_s_vec_2d alignment, const zfw_u_vec_4d blend, s_mem_arena* const temp_mem_arena);
 
 void ZFW_SubmitBatch(const zfw_s_rendering_context* const context);
 
@@ -103,7 +104,7 @@ void ZFW_SetSurfaceShaderProgUniform(const zfw_s_rendering_context* const render
 void ZFW_RenderSurface(const zfw_s_rendering_context* const rendering_context, const zfw_s_surface_group* const surfs, const int surf_index);
 
 static inline void ZFW_RenderRect(const zfw_s_rendering_context* const context, const zfw_s_rect rect, const zfw_u_vec_4d blend) {
-    ZFW_RenderTexture(context, zfw_ek_builtin_texture_pixel, &context->basis->builtin_textures, (zfw_s_rect_s32){0}, ZFW_RectPos(rect), (zfw_s_vec_2d){0}, ZFW_RectSize(rect), 0, blend);
+    ZFW_RenderTexture(context, &context->basis->builtin_textures, zfw_ek_builtin_texture_pixel, (zfw_s_rect_s32){0}, ZFW_RectPos(rect), (zfw_s_vec_2d){0}, ZFW_RectSize(rect), 0, blend);
 }
 
 static inline void ZFW_RenderLine(const zfw_s_rendering_context* const context, const zfw_s_vec_2d a, const zfw_s_vec_2d b, const zfw_u_vec_4d blend, const float width) {
@@ -112,7 +113,7 @@ static inline void ZFW_RenderLine(const zfw_s_rendering_context* const context, 
     const zfw_s_vec_2d diff = {b.x - a.x, b.y - a.y};
     const float len = sqrtf((diff.x * diff.x) + (diff.y * diff.y));
 
-    ZFW_RenderTexture(context, zfw_ek_builtin_texture_pixel, &context->basis->builtin_textures, (zfw_s_rect_s32){0}, a, (zfw_s_vec_2d){0.0f, 0.5f}, (zfw_s_vec_2d){len, width}, atan2f(-diff.y, diff.x), blend);
+    ZFW_RenderTexture(context, &context->basis->builtin_textures, zfw_ek_builtin_texture_pixel, (zfw_s_rect_s32){0}, a, (zfw_s_vec_2d){0.0f, 0.5f}, (zfw_s_vec_2d){len, width}, atan2f(-diff.y, diff.x), blend);
 }
 
 #endif

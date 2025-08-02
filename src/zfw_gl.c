@@ -1,5 +1,6 @@
 #include "zfw_gl.h"
 
+#include <ctype.h>
 #include <stb_image.h>
 #include <stb_truetype.h>
 
@@ -409,6 +410,157 @@ error:
         .tex_chr_positions = tex_chr_positions,
         .cnt = font_cnt
     };
+}
+
+typedef struct {
+    int len;
+    int line_cnt;
+} s_str_len_and_line_cnt;
+
+static s_str_len_and_line_cnt StrLenAndLineCnt(const char* const str) {
+    int len = 0;
+    int line_cnt = 1;
+
+    while (str[len]) {
+        if (str[len] == '\n') {
+            line_cnt++;
+        }
+
+        len++;
+    }
+
+    return (s_str_len_and_line_cnt){
+        .len = len,
+        .line_cnt = line_cnt
+    };
+}
+
+zfw_s_vec_2d* ZFW_PushStrChrRenderPositions(s_mem_arena* const mem_arena, const char* const str, const zfw_s_font_group* const fonts, const int font_index, const zfw_s_vec_2d pos, const zfw_s_vec_2d alignment) {
+    assert(mem_arena && IsMemArenaValid(mem_arena));
+    assert(str && str[0]);
+    assert(fonts);
+    assert(font_index >= 0 && font_index < fonts->cnt);
+    assert(ZFW_IsStrAlignmentValid(alignment));
+
+    const zfw_s_font_arrangement_info* const arrangement_info = &fonts->arrangement_infos[font_index];
+
+    const s_str_len_and_line_cnt str_len_and_line_cnt = StrLenAndLineCnt(str);
+
+    // From just the string line count we can determine the vertical alignment offset to apply to all characters.
+    const float alignment_offs_y = -(str_len_and_line_cnt.line_cnt * arrangement_info->line_height) * alignment.y;
+
+    // Reserve memory for the character render positions.
+    zfw_s_vec_2d* const chr_render_positions = MEM_ARENA_PUSH_TYPE_CNT(mem_arena, zfw_s_vec_2d, str_len_and_line_cnt.len);
+
+    if (!chr_render_positions) {
+        LOG_ERROR("Failed to reserve memory for character render positions!");
+        return NULL;
+    }
+
+    // Calculate the render position for each character.
+    zfw_s_vec_2d chr_pos_pen = {0}; // The position of the current character.
+    int line_starting_chr_index = 0; // The index of the first character in the current line.
+
+    for (int i = 0; i <= str_len_and_line_cnt.len; i++) {
+        const char chr = str[i];
+
+        if (chr == '\n' || !chr) {
+            // Apply horizontal alignment offset to all the characters of the line we just finished, only if the line was not empty.
+            const int line_len = i - line_starting_chr_index;
+
+            if (line_len > 0) {
+                const float line_width = chr_pos_pen.x;
+
+                for (int j = line_starting_chr_index; j < i; j++) {
+                    chr_render_positions[j].x -= line_width * alignment.x;
+                }
+            }
+
+            // If '\n', move to the next line.
+            if (chr == '\n') {
+                chr_pos_pen.x = 0.0f;
+                chr_pos_pen.y += arrangement_info->line_height;
+
+                line_starting_chr_index = i + 1;
+            }
+
+            continue;
+        }
+
+        assert(isprint(chr));
+
+        const int chr_ascii_printable_index = chr - ZFW_ASCII_PRINTABLE_MIN;
+
+        chr_render_positions[i] = (zfw_s_vec_2d){
+            pos.x + chr_pos_pen.x + arrangement_info->chr_offsets[chr_ascii_printable_index].x,
+            pos.y + chr_pos_pen.y + arrangement_info->chr_offsets[chr_ascii_printable_index].y + alignment_offs_y
+        };
+
+        chr_pos_pen.x += arrangement_info->chr_advances[chr_ascii_printable_index];
+    }
+
+    return chr_render_positions;
+}
+
+bool ZFW_LoadStrCollider(zfw_s_rect* const rect, const char* const str, const zfw_s_font_group* const fonts, const int font_index, const zfw_s_vec_2d pos, const zfw_s_vec_2d alignment, s_mem_arena* const temp_mem_arena) {
+    assert(rect && IS_ZERO(*rect));
+    assert(str && str[0]);
+    assert(fonts);
+    assert(font_index >= 0 && font_index < fonts->cnt);
+    assert(ZFW_IsStrAlignmentValid(alignment));
+    assert(temp_mem_arena && IsMemArenaValid(temp_mem_arena));
+
+    const zfw_s_vec_2d* const chr_render_positions = ZFW_PushStrChrRenderPositions(temp_mem_arena, str, fonts, font_index, pos, alignment);
+
+    if (!chr_render_positions) {
+        LOG_ERROR("Failed to reserve memory for character render positions!");
+        return false;
+    }
+
+    zfw_s_rect_edges collider_edges;
+    bool initted = false;
+
+    for (int i = 0; str[i]; i++) {
+        const char chr = str[i];
+
+        if (chr == '\n') {
+            continue;
+        }
+
+        assert(isprint(chr));
+
+        const int chr_ascii_printable_index = chr - ZFW_ASCII_PRINTABLE_MIN;
+
+        const zfw_s_vec_2d_s32 chr_size = fonts->arrangement_infos[font_index].chr_sizes[chr_ascii_printable_index];
+
+        const zfw_s_rect_edges chr_rect_edges = {
+            .left = chr_render_positions[i].x,
+            .top = chr_render_positions[i].y,
+            .right = chr_render_positions[i].x + chr_size.x,
+            .bottom = chr_render_positions[i].y + chr_size.y
+        };
+
+        if (!initted) {
+            collider_edges = chr_rect_edges;
+            initted = true;
+        } else {
+            collider_edges.left = ZFW_MIN(collider_edges.left, chr_rect_edges.left);
+            collider_edges.top = ZFW_MIN(collider_edges.top, chr_rect_edges.top);
+            collider_edges.right = ZFW_MAX(collider_edges.right, chr_rect_edges.right);
+            collider_edges.bottom = ZFW_MAX(collider_edges.bottom, chr_rect_edges.bottom);
+        }
+    }
+
+    assert(initted && "Cannot generate the collider of a string comprised entirely of '\n'!");
+
+    *rect = (zfw_s_rect){
+        .x = collider_edges.left,
+        .y = collider_edges.top,
+        .width = collider_edges.right - collider_edges.left,
+        .height = collider_edges.bottom - collider_edges.top
+    };
+
+    return true;
 }
 
 static zfw_t_gl_id GenShaderFromSrc(const char* const src, const bool frag, s_mem_arena* const temp_mem_arena) {

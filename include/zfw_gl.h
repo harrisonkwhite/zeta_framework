@@ -22,6 +22,16 @@
 #define ZFW_MAGENTA (zfw_u_vec_4d){1.0f, 0.0f, 1.0f, 1.0f}
 #define ZFW_GRAY (zfw_u_vec_4d){0.5f, 0.5f, 0.5f, 1.0f}
 
+#define ZFW_ALIGNMENT_TOP_LEFT (zfw_s_vec_2d){0.0f, 0.0f}
+#define ZFW_ALIGNMENT_TOP_CENTER (zfw_s_vec_2d){0.5f, 0.0f}
+#define ZFW_ALIGNMENT_TOP_RIGHT (zfw_s_vec_2d){1.0f, 0.0f}
+#define ZFW_ALIGNMENT_CENTER_LEFT (zfw_s_vec_2d){0.0f, 0.5f}
+#define ZFW_ALIGNMENT_CENTER (zfw_s_vec_2d){0.5f, 0.5f}
+#define ZFW_ALIGNMENT_CENTER_RIGHT (zfw_s_vec_2d){1.0f, 0.5f}
+#define ZFW_ALIGNMENT_BOTTOM_LEFT (zfw_s_vec_2d){0.0f, 1.0f}
+#define ZFW_ALIGNMENT_BOTTOM_CENTER (zfw_s_vec_2d){0.5f, 1.0f}
+#define ZFW_ALIGNMENT_BOTTOM_RIGHT (zfw_s_vec_2d){1.0f, 1.0f}
+
 typedef GLuint zfw_t_gl_id;
 
 typedef enum {
@@ -140,6 +150,8 @@ zfw_s_texture_group ZFW_GenTextures(const int tex_cnt, const zfw_t_gen_texture_i
 zfw_s_rect_edges ZFW_TextureCoords(const zfw_s_rect_s32 src_rect, const zfw_s_vec_2d_s32 tex_size);
 
 zfw_s_font_group ZFW_GenFonts(const int font_cnt, const zfw_s_font_load_info* const load_infos, zfw_s_gl_resource_arena* const gl_res_arena, s_mem_arena* const mem_arena, s_mem_arena* const temp_mem_arena);
+zfw_s_vec_2d* ZFW_PushStrChrRenderPositions(s_mem_arena* const mem_arena, const char* const str, const zfw_s_font_group* const fonts, const int font_index, const zfw_s_vec_2d pos, const zfw_s_vec_2d alignment);
+bool ZFW_LoadStrCollider(zfw_s_rect* const rect, const char* const str, const zfw_s_font_group* const fonts, const int font_index, const zfw_s_vec_2d pos, const zfw_s_vec_2d alignment, s_mem_arena* const temp_mem_arena);
 
 zfw_s_shader_prog_group ZFW_GenShaderProgs(const int prog_cnt, const zfw_t_gen_shader_prog_info_func gen_prog_info_func, zfw_s_gl_resource_arena* const gl_res_arena, s_mem_arena* const temp_mem_arena);
 
@@ -173,6 +185,11 @@ static inline bool ZFW_IsColorRGBValid(const zfw_u_vec_3d col) {
     return col.r >= 0.0f && col.r <= 1.0f
         && col.g >= 0.0f && col.g <= 1.0f
         && col.b >= 0.0f && col.b <= 1.0f;
+}
+
+static inline bool ZFW_IsStrAlignmentValid(const zfw_s_vec_2d alignment) {
+    return alignment.x >= 0.0f && alignment.x <= 1.0f
+        && alignment.y >= 0.0f && alignment.y <= 1.0f;
 }
 
 #endif
