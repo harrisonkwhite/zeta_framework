@@ -3,15 +3,15 @@
 
 #include <stdio.h>
 
-static zfw_s_sound_type LoadSoundTypeFromFile(const char* const fp, s_mem_arena* const mem_arena) {
-    assert(fp);
+static zfw_s_sound_type LoadSoundTypeFromFile(const char* const file_path, s_mem_arena* const mem_arena) {
+    assert(file_path);
     assert(mem_arena && IsMemArenaValid(mem_arena));
 
     // Decode the audio file, store properties (e.g. sample rate, channel count).
     ma_decoder decoder;
 
-    if (ma_decoder_init_file(fp, NULL, &decoder) != MA_SUCCESS) {
-        LOG_ERROR("Failed to open audio file \"%s\".", fp);
+    if (ma_decoder_init_file(file_path, NULL, &decoder) != MA_SUCCESS) {
+        LOG_ERROR("Failed to open audio file \"%s\".", file_path);
         return (zfw_s_sound_type){0};
     }
 
@@ -37,10 +37,8 @@ static zfw_s_sound_type LoadSoundTypeFromFile(const char* const fp, s_mem_arena*
     ma_uint64 frames_read;
     const ma_result res = ma_decoder_read_pcm_frames(&decoder, sample_buf, frame_cnt, &frames_read);
 
-    ma_decoder_uninit(&decoder);
-
     if (frames_read < frame_cnt) {
-        LOG_ERROR("Only read %llu of %llu frames for audio file \"%s\"!", frames_read, frame_cnt, fp);
+        LOG_ERROR("Only read %llu of %llu frames for audio file \"%s\"!", frames_read, frame_cnt, file_path);
         ma_decoder_uninit(&decoder);
         return (zfw_s_sound_type){0};
     }
