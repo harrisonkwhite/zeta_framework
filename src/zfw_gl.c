@@ -639,6 +639,11 @@ zfw_s_shader_prog_group ZFW_GenShaderProgs(const int prog_cnt, const zfw_t_gen_s
     for (int i = 0; i < prog_cnt; i++) {
         const zfw_s_shader_prog_info prog_info = gen_prog_info_func(i, temp_mem_arena);
 
+        if (IS_ZERO(prog_info)) {
+            LOG_ERROR("Failed to generate shader program information for shader program with index %d!", i);
+            return (zfw_s_shader_prog_group){0};
+        }
+
         gl_ids[i] = GenShaderProg(prog_info.vs_src, prog_info.fs_src, temp_mem_arena);
 
         if (!gl_ids[i]) {
