@@ -247,19 +247,19 @@ static void WriteBatchSlot(zfw_t_batch_slot* const slot, const zfw_s_batch_slot_
     }
 }
 
-void ZFW_Render(const zfw_s_rendering_context* const context, const zfw_s_batch_slot_write_info* const write_info) {
-    assert(context);
+void ZFW_Render(const zfw_s_rendering_context* const rendering_context, const zfw_s_batch_slot_write_info* const write_info) {
+    assert(rendering_context);
     assert(write_info);
 
-    zfw_s_batch_state* const batch_state = &context->state->batch;
+    zfw_s_batch_state* const batch_state = &rendering_context->state->batch;
 
     if (batch_state->num_slots_used == 0) {
         // This is the first render to the batch, so set the texture associated with the batch to the one we're trying to render.
         batch_state->tex_gl_id = write_info->tex_gl_id;
     } else if (batch_state->num_slots_used == ZFW_BATCH_SLOT_CNT || write_info->tex_gl_id != batch_state->tex_gl_id) {
         // Submit the batch and then try this same render operation again but on a fresh batch.
-        ZFW_SubmitBatch(context);
-        ZFW_Render(context, write_info);
+        ZFW_SubmitBatch(rendering_context);
+        ZFW_Render(rendering_context, write_info);
         return;
     }
 
@@ -270,8 +270,8 @@ void ZFW_Render(const zfw_s_rendering_context* const context, const zfw_s_batch_
     batch_state->num_slots_used++;
 }
 
-void ZFW_RenderTexture(const zfw_s_rendering_context* const context, const zfw_s_texture_group* const textures, const int tex_index, const zfw_s_rect_s32 src_rect, const zfw_s_vec_2d pos, const zfw_s_vec_2d origin, const zfw_s_vec_2d scale, const float rot, const zfw_u_vec_4d blend) {
-    assert(context);
+void ZFW_RenderTexture(const zfw_s_rendering_context* const rendering_context, const zfw_s_texture_group* const textures, const int tex_index, const zfw_s_rect_s32 src_rect, const zfw_s_vec_2d pos, const zfw_s_vec_2d origin, const zfw_s_vec_2d scale, const float rot, const zfw_u_vec_4d blend) {
+    assert(rendering_context);
     assert(textures && tex_index >= 0 && tex_index < textures->cnt);
     assert(IS_ZERO(src_rect) || ZFW_IsSrcRectValid(src_rect, textures->sizes[tex_index]));
     assert(ZFW_IsOriginValid(origin));
@@ -289,16 +289,68 @@ void ZFW_RenderTexture(const zfw_s_rendering_context* const context, const zfw_s
         .blend = blend
     };
 
-    ZFW_Render(context, &write_info);
+    ZFW_Render(rendering_context, &write_info);
 }
 
-bool ZFW_RenderStr(const zfw_s_rendering_context* const context, const char* const str, const zfw_s_font_group* const fonts, const int font_index, const zfw_s_vec_2d pos, const zfw_s_vec_2d alignment, const zfw_u_vec_4d blend, s_mem_arena* const temp_mem_arena) {
-    assert(context);
+static inline zfw_s_rect InnerRect(const zfw_s_rect rect, const float outline_thickness) {
+    return (zfw_s_rect){
+        rect.x + outline_thickness,
+        rect.y + outline_thickness,
+        rect.width - (outline_thickness * 2.0f),
+        rect.height - (outline_thickness * 2.0f)
+    };
+}
+
+void ZFW_RenderRectWithOutline(const zfw_s_rendering_context* const rendering_context, const zfw_s_rect rect, const zfw_u_vec_4d fill_color, const zfw_u_vec_4d outline_color, const float outline_thickness) {
+    assert(rendering_context);
+    assert(rect.width > 0 && rect.height > 0);
+    assert(ZFW_IsColorValid(fill_color));
+    assert(ZFW_IsColorValid(outline_color));
+    assert(outline_thickness > 0.0f && outline_thickness <= ZFW_MIN(rect.width, rect.height) / 2.0f);
+
+#ifndef NDEBUG
+    if (fabsf(fill_color.a - 1.0f) < 0.001f) { // TODO: Create function for float comparisons with precision level.
+        LOG_WARNING("ZFW_RenderRectWithOutline() being called despite opaque fill colour. Consider using ZFW_RenderRectWithOutlineAndOpaqueFill() instead.");
+    }
+#endif
+
+    // Top Outline
+    ZFW_RenderRect(rendering_context, (zfw_s_rect){rect.x, rect.y, rect.width - outline_thickness, outline_thickness}, outline_color);
+
+    // Right Outline
+    ZFW_RenderRect(rendering_context, (zfw_s_rect){rect.x + rect.width - outline_thickness, rect.y, outline_thickness, rect.height - outline_thickness}, outline_color);
+
+    // Bottom Outline
+    ZFW_RenderRect(rendering_context, (zfw_s_rect){rect.x + outline_thickness, rect.y + rect.height - outline_thickness, rect.width - outline_thickness, outline_thickness}, outline_color);
+
+    // Left Outline
+    ZFW_RenderRect(rendering_context, (zfw_s_rect){rect.x, rect.y + outline_thickness, outline_thickness, rect.height - outline_thickness}, outline_color);
+
+    // Inside
+    ZFW_RenderRect(rendering_context, InnerRect(rect, outline_thickness), fill_color);
+}
+
+void ZFW_RenderRectWithOutlineAndOpaqueFill(const zfw_s_rendering_context* const rendering_context, const zfw_s_rect rect, const zfw_u_vec_3d fill_color, const zfw_u_vec_4d outline_color, const float outline_thickness) {
+    assert(rendering_context);
+    assert(rect.width > 0 && rect.height > 0);
+    assert(ZFW_IsColorRGBValid(fill_color));
+    assert(ZFW_IsColorValid(outline_color));
+    assert(outline_thickness > 0.0f && outline_thickness <= ZFW_MIN(rect.width, rect.height) / 2.0f);
+
+    // Outline
+    ZFW_RenderRect(rendering_context, rect, outline_color);
+
+    // Inside
+    ZFW_RenderRect(rendering_context, InnerRect(rect, outline_thickness), (zfw_u_vec_4d){fill_color.r, fill_color.g, fill_color.b, 1.0f});
+}
+
+bool ZFW_RenderStr(const zfw_s_rendering_context* const rendering_context, const char* const str, const zfw_s_font_group* const fonts, const int font_index, const zfw_s_vec_2d pos, const zfw_s_vec_2d alignment, const zfw_u_vec_4d color, s_mem_arena* const temp_mem_arena) {
+    assert(rendering_context);
     assert(str && str[0]);
     assert(fonts);
     assert(font_index >= 0 && font_index < fonts->cnt);
     assert(ZFW_IsStrAlignmentValid(alignment));
-    assert(ZFW_IsColorValid(blend));
+    assert(ZFW_IsColorValid(color));
     assert(temp_mem_arena && IsMemArenaValid(temp_mem_arena));
 
     const zfw_s_vec_2d* const chr_render_positions = ZFW_PushStrChrRenderPositions(temp_mem_arena, str, fonts, font_index, pos, alignment);
@@ -333,26 +385,26 @@ bool ZFW_RenderStr(const zfw_s_rendering_context* const context, const char* con
             .tex_coords = chr_tex_coords,
             .pos = chr_render_positions[i],
             .size = {chr_src_rect.width, chr_src_rect.height},
-            .blend = blend
+            .blend = color
         };
 
-        ZFW_Render(context, &write_info);
+        ZFW_Render(rendering_context, &write_info);
     }
 
     return true;
 }
 
-void ZFW_SubmitBatch(const zfw_s_rendering_context* const context) {
-    assert(context);
+void ZFW_SubmitBatch(const zfw_s_rendering_context* const rendering_context) {
+    assert(rendering_context);
 
-    if (context->state->batch.num_slots_used == 0) {
+    if (rendering_context->state->batch.num_slots_used == 0) {
         // There is nothing to flush.
         return;
     }
 
-    const zfw_t_gl_id va_gl_id = context->basis->renderables.vert_array_gl_ids[zfw_ek_renderable_batch];
-    const zfw_t_gl_id vb_gl_id = context->basis->renderables.vert_buf_gl_ids[zfw_ek_renderable_batch];
-    const zfw_t_gl_id eb_gl_id = context->basis->renderables.elem_buf_gl_ids[zfw_ek_renderable_batch];
+    const zfw_t_gl_id va_gl_id = rendering_context->basis->renderables.vert_array_gl_ids[zfw_ek_renderable_batch];
+    const zfw_t_gl_id vb_gl_id = rendering_context->basis->renderables.vert_buf_gl_ids[zfw_ek_renderable_batch];
+    const zfw_t_gl_id eb_gl_id = rendering_context->basis->renderables.elem_buf_gl_ids[zfw_ek_renderable_batch];
 
     //
     // Submitting Vertex Data to GPU
@@ -361,34 +413,34 @@ void ZFW_SubmitBatch(const zfw_s_rendering_context* const context) {
     glBindBuffer(GL_ARRAY_BUFFER, vb_gl_id);
 
     {
-        const size_t write_size = sizeof(zfw_t_batch_slot) * context->state->batch.num_slots_used;
-        glBufferSubData(GL_ARRAY_BUFFER, 0, write_size, context->state->batch.slots);
+        const size_t write_size = sizeof(zfw_t_batch_slot) * rendering_context->state->batch.num_slots_used;
+        glBufferSubData(GL_ARRAY_BUFFER, 0, write_size, rendering_context->state->batch.slots);
     }
 
     //
     // Rendering the Batch
     //
-    const zfw_t_gl_id prog_gl_id = context->basis->builtin_shader_progs.gl_ids[zfw_ek_builtin_shader_prog_batch];
+    const zfw_t_gl_id prog_gl_id = rendering_context->basis->builtin_shader_progs.gl_ids[zfw_ek_builtin_shader_prog_batch];
 
     glUseProgram(prog_gl_id);
 
     const int view_uniform_loc = glGetUniformLocation(prog_gl_id, "u_view");
-    glUniformMatrix4fv(view_uniform_loc, 1, GL_FALSE, &context->state->view_mat[0][0]);
+    glUniformMatrix4fv(view_uniform_loc, 1, GL_FALSE, &rendering_context->state->view_mat[0][0]);
 
     zfw_t_matrix_4x4 proj_mat = {0};
-    ZFW_InitOrthoMatrix4x4(&proj_mat, 0.0f, context->window_size.x, context->window_size.y, 0.0f, -1.0f, 1.0f);
+    ZFW_InitOrthoMatrix4x4(&proj_mat, 0.0f, rendering_context->window_size.x, rendering_context->window_size.y, 0.0f, -1.0f, 1.0f);
 
     const int proj_uniform_loc = glGetUniformLocation(prog_gl_id, "u_proj");
     glUniformMatrix4fv(proj_uniform_loc, 1, GL_FALSE, &proj_mat[0][0]);
 
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, context->state->batch.tex_gl_id);
+    glBindTexture(GL_TEXTURE_2D, rendering_context->state->batch.tex_gl_id);
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, eb_gl_id);
-    glDrawElements(GL_TRIANGLES, ZFW_BATCH_SLOT_ELEM_CNT * context->state->batch.num_slots_used, GL_UNSIGNED_SHORT, NULL);
+    glDrawElements(GL_TRIANGLES, ZFW_BATCH_SLOT_ELEM_CNT * rendering_context->state->batch.num_slots_used, GL_UNSIGNED_SHORT, NULL);
 
-    context->state->batch.num_slots_used = 0;
-    context->state->batch.tex_gl_id = 0;
+    rendering_context->state->batch.num_slots_used = 0;
+    rendering_context->state->batch.tex_gl_id = 0;
 }
 
 void ZFW_SetSurface(const zfw_s_rendering_context* const rendering_context, const zfw_s_surface_group* const surfs, const int surf_index) {
