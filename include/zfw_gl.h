@@ -59,6 +59,13 @@ typedef struct {
 } zfw_s_shader_prog_group;
 
 typedef struct {
+    const char* vs_src;
+    const char* fs_src;
+} zfw_s_shader_prog_info;
+
+typedef zfw_s_shader_prog_info (*zfw_t_gen_shader_prog_info_func)(const int prog_index, s_mem_arena* const mem_arena);
+
+typedef struct {
     const zfw_t_gl_id* vert_array_gl_ids;
     const zfw_t_gl_id* vert_buf_gl_ids;
     const zfw_t_gl_id* elem_buf_gl_ids;
@@ -82,8 +89,7 @@ zfw_s_texture_info ZFW_GenTextureInfoFromFile(const char* const file_path, s_mem
 zfw_s_texture_group ZFW_GenTextures(const int tex_cnt, const zfw_t_gen_texture_info_func gen_tex_info_func, zfw_s_gl_resource_arena* const gl_res_arena, s_mem_arena* const mem_arena, s_mem_arena* const temp_mem_arena);
 zfw_s_rect_edges ZFW_TextureCoords(const zfw_s_rect_s32 src_rect, const zfw_s_vec_2d_s32 tex_size);
 
-zfw_t_gl_id ZFW_GenShaderFromSrc(const char* const src, const bool frag, s_mem_arena* const temp_mem_arena);
-zfw_t_gl_id ZFW_GenShaderProg(const char* const vs_src, const char* const fs_src, s_mem_arena* const temp_mem_arena);
+zfw_s_shader_prog_group ZFW_GenShaderProgs(const int prog_cnt, const zfw_t_gen_shader_prog_info_func gen_prog_info_func, zfw_s_gl_resource_arena* const gl_res_arena, s_mem_arena* const temp_mem_arena);
 
 void ZFW_GenRenderable(zfw_t_gl_id* const va_gl_id, zfw_t_gl_id* const vb_gl_id, zfw_t_gl_id* const eb_gl_id, const float* const vert_buf, const size_t vert_buf_size, const unsigned short* const elem_buf, const size_t elem_buf_size, const int* const vert_attr_lens, const int vert_attr_cnt);
 

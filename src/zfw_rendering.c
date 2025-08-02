@@ -60,35 +60,18 @@ static zfw_s_texture_info GenBuiltinTextureInfo(const int tex_index, s_mem_arena
     }
 }
 
-static zfw_s_shader_prog_group GenBuiltinShaderProgs(zfw_s_gl_resource_arena* const gl_res_arena, s_mem_arena* const temp_mem_arena) {
-    assert(gl_res_arena);
-    assert(temp_mem_arena && IsMemArenaValid(temp_mem_arena));
+static zfw_s_shader_prog_info GenBuiltinShaderProgInfo(const int prog_index, s_mem_arena* const mem_arena) {
+    switch ((zfw_e_builtin_shader_prog)prog_index) {
+        case zfw_ek_builtin_shader_prog_batch:
+            return (zfw_s_shader_prog_info){
+                .vs_src = g_batch_vert_shader_src,
+                .fs_src = g_batch_frag_shader_src
+            };
 
-    zfw_t_gl_id* const gl_ids = ZFW_ReserveGLIDs(gl_res_arena, zfw_eks_builtin_shader_prog_cnt, zfw_ek_gl_resource_type_shader_prog);
-
-    if (!gl_ids) {
-        LOG_ERROR("Failed to reserve OpenGL shader program IDs for built-in shader programs!");
-        return (zfw_s_shader_prog_group){0};
+        default:
+            assert(false && "Unhandled built-in shader program case!");
+            return (zfw_s_shader_prog_info){0};
     }
-
-    for (int i = 0; i < zfw_eks_builtin_shader_prog_cnt; i++) {
-        switch ((zfw_e_builtin_shader_prog)i) {
-            case zfw_ek_builtin_shader_prog_batch:
-                gl_ids[i] = ZFW_GenShaderProg(g_batch_vert_shader_src, g_batch_frag_shader_src, temp_mem_arena);
-
-                if (!gl_ids[i]) {
-                    LOG_ERROR("Failed to generate built-in batch shader program!");
-                    return (zfw_s_shader_prog_group){0};
-                }
-
-                break;
-        }
-    }
-
-    return (zfw_s_shader_prog_group){
-        .gl_ids = gl_ids,
-        .cnt = zfw_eks_builtin_shader_prog_cnt
-    };
 }
 
 static unsigned short* PushBatchRenderableElems(s_mem_arena* const mem_arena) {
@@ -200,7 +183,7 @@ bool ZFW_InitRenderingBasis(zfw_s_rendering_basis* const basis, zfw_s_gl_resourc
         return false;
     }
 
-    basis->builtin_shader_progs = GenBuiltinShaderProgs(gl_res_arena, temp_mem_arena);
+    basis->builtin_shader_progs = ZFW_GenShaderProgs(zfw_eks_builtin_shader_prog_cnt, GenBuiltinShaderProgInfo, gl_res_arena, temp_mem_arena);
 
     if (IS_ZERO(basis->builtin_shader_progs)) {
         LOG_ERROR("Failed to generate built-in shader programs for rendering basis!");

@@ -167,7 +167,7 @@ zfw_s_rect_edges ZFW_TextureCoords(const zfw_s_rect_s32 src_rect, const zfw_s_ve
     };
 }
 
-zfw_t_gl_id ZFW_GenShaderFromSrc(const char* const src, const bool frag, s_mem_arena* const temp_mem_arena) {
+static zfw_t_gl_id GenShaderFromSrc(const char* const src, const bool frag, s_mem_arena* const temp_mem_arena) {
     assert(src);
     assert(temp_mem_arena && IsMemArenaValid(temp_mem_arena));
 
@@ -201,19 +201,19 @@ zfw_t_gl_id ZFW_GenShaderFromSrc(const char* const src, const bool frag, s_mem_a
     return shader_gl_id;
 }
 
-zfw_t_gl_id ZFW_GenShaderProg(const char* const vs_src, const char* const fs_src, s_mem_arena* const temp_mem_arena) {
+static zfw_t_gl_id GenShaderProg(const char* const vs_src, const char* const fs_src, s_mem_arena* const temp_mem_arena) {
     assert(vs_src);
     assert(fs_src);
     assert(temp_mem_arena && IsMemArenaValid(temp_mem_arena));
 
-    const zfw_t_gl_id vs_gl_id = ZFW_GenShaderFromSrc(vs_src, false, temp_mem_arena);
+    const zfw_t_gl_id vs_gl_id = GenShaderFromSrc(vs_src, false, temp_mem_arena);
 
     if (!vs_gl_id) {
         LOG_ERROR("Failed to generate vertex shader from source!");
         return 0;
     }
 
-    const zfw_t_gl_id fs_gl_id = ZFW_GenShaderFromSrc(fs_src, true, temp_mem_arena);
+    const zfw_t_gl_id fs_gl_id = GenShaderFromSrc(fs_src, true, temp_mem_arena);
 
     if (!fs_gl_id) {
         LOG_ERROR("Failed to generate fragment shader from source!");
@@ -230,6 +230,31 @@ zfw_t_gl_id ZFW_GenShaderProg(const char* const vs_src, const char* const fs_src
     glDeleteShader(vs_gl_id);
 
     return prog_gl_id;
+}
+
+zfw_s_shader_prog_group ZFW_GenShaderProgs(const int prog_cnt, const zfw_t_gen_shader_prog_info_func gen_prog_info_func, zfw_s_gl_resource_arena* const gl_res_arena, s_mem_arena* const temp_mem_arena) {
+    zfw_t_gl_id* const gl_ids = ZFW_ReserveGLIDs(gl_res_arena, prog_cnt, zfw_ek_gl_resource_type_shader_prog);
+
+    if (!gl_ids) {
+        LOG_ERROR("Failed to reserve OpenGL shader program IDs for built-in shader programs!");
+        return (zfw_s_shader_prog_group){0};
+    }
+
+    for (int i = 0; i < prog_cnt; i++) {
+        const zfw_s_shader_prog_info prog_info = gen_prog_info_func(i, temp_mem_arena);
+
+        gl_ids[i] = GenShaderProg(prog_info.vs_src, prog_info.fs_src, temp_mem_arena);
+
+        if (!gl_ids[i]) {
+            LOG_ERROR("Failed to generate shader program with index %d!", i);
+            return (zfw_s_shader_prog_group){0};
+        }
+    }
+
+    return (zfw_s_shader_prog_group){
+        .gl_ids = gl_ids,
+        .cnt = prog_cnt
+    };
 }
 
 static size_t Stride(const int* const vert_attr_lens, const int vert_attr_cnt) {
