@@ -306,7 +306,7 @@ void ZFW_RenderRectWithOutline(const zfw_s_rendering_context* const rendering_co
     assert(rect.width > 0 && rect.height > 0);
     assert(ZFW_IsColorValid(fill_color));
     assert(ZFW_IsColorValid(outline_color));
-    assert(outline_thickness > 0.0f && outline_thickness <= MIN(rect.width, rect.height) / 2.0f);
+    assert(outline_thickness != 0.0f && outline_thickness <= MIN(rect.width, rect.height) / 2.0f);
 
 #ifndef NDEBUG
     if (fabsf(fill_color.a - 1.0f) < 0.001f) { // TODO: Create function for float comparisons with precision level.
@@ -335,13 +335,55 @@ void ZFW_RenderRectWithOutlineAndOpaqueFill(const zfw_s_rendering_context* const
     assert(rect.width > 0 && rect.height > 0);
     assert(ZFW_IsColorRGBValid(fill_color));
     assert(ZFW_IsColorValid(outline_color));
-    assert(outline_thickness > 0.0f && outline_thickness <= MIN(rect.width, rect.height) / 2.0f);
+    assert(outline_thickness != 0.0f && outline_thickness <= MIN(rect.width, rect.height) / 2.0f);
 
     // Outline
     ZFW_RenderRect(rendering_context, rect, outline_color);
 
     // Inside
     ZFW_RenderRect(rendering_context, InnerRect(rect, outline_thickness), (zfw_u_vec_4d){fill_color.r, fill_color.g, fill_color.b, 1.0f});
+}
+
+void ZFW_RenderBarHor(const zfw_s_rendering_context* const rendering_context, const zfw_s_rect rect, const float perc, const zfw_u_vec_4d front_color, const zfw_u_vec_4d bg_color) {
+    assert(rendering_context);
+    assert(rect.width > 0.0f && rect.height > 0.0f);
+    assert(perc >= 0.0f && perc <= 1.0f);
+    assert(ZFW_IsColorValid(front_color));
+    assert(ZFW_IsColorValid(bg_color));
+
+    const float front_rect_width = rect.width * perc;
+
+    if (front_rect_width > 0.0f) {
+        ZFW_RenderRect(rendering_context, (zfw_s_rect){rect.x, rect.y, front_rect_width, rect.height}, front_color);
+    }
+
+    const float bg_rect_x = rect.x + front_rect_width;
+    const float bg_rect_width = rect.width - front_rect_width;
+
+    if (bg_rect_width > 0.0f) {
+        ZFW_RenderRect(rendering_context, (zfw_s_rect){bg_rect_x, rect.y, bg_rect_width, rect.height}, bg_color);
+    }
+}
+
+void ZFW_RenderBarVer(const zfw_s_rendering_context* const rendering_context, const zfw_s_rect rect, const float perc, const zfw_u_vec_4d front_color, const zfw_u_vec_4d bg_color) {
+    assert(rendering_context);
+    assert(rect.width > 0.0f && rect.height > 0.0f);
+    assert(perc >= 0.0f && perc <= 1.0f);
+    assert(ZFW_IsColorValid(front_color));
+    assert(ZFW_IsColorValid(bg_color));
+
+    const float front_rect_height = rect.height * perc;
+
+    if (front_rect_height > 0.0f) {
+        ZFW_RenderRect(rendering_context, (zfw_s_rect){rect.x, rect.y, rect.width, front_rect_height}, front_color);
+    }
+
+    const float bg_rect_y = rect.x + front_rect_height;
+    const float bg_rect_height = rect.width - front_rect_height;
+
+    if (bg_rect_height > 0.0f) {
+        ZFW_RenderRect(rendering_context, (zfw_s_rect){rect.x, bg_rect_y, rect.width, bg_rect_height}, bg_color);
+    }
 }
 
 bool ZFW_RenderStr(const zfw_s_rendering_context* const rendering_context, const char* const str, const zfw_s_font_group* const fonts, const int font_index, const zfw_s_vec_2d pos, const zfw_s_vec_2d alignment, const zfw_u_vec_4d color, s_mem_arena* const temp_mem_arena) {
