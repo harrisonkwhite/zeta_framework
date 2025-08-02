@@ -7,17 +7,6 @@
 #include <math.h>
 #include <cu.h>
 
-#define ZFW_PI 3.14159265358979323846f
-#define ZFW_TAU 6.28318530717958647692f
-
-#define ZFW_MIN(x, y) ((x) <= (y) ? (x) : (y))
-#define ZFW_MAX(x, y) ((x) >= (y) ? (x) : (y))
-
-#define ZFW_ABS(x) (x) < 0 ? -(x) : (x)
-
-#define ZFW_CLAMP(x, min, max) (((x) < (min)) ? (min) : ((x) > (max) ? (max) : (x)))
-#define ZFW_SIGN(x) ((x) == 0 ? (x) : ((x) > 0 ? 1 : -1));
-
 typedef struct {
     float x;
     float y;
@@ -115,11 +104,6 @@ bool ZFW_DoPolysInters(const zfw_s_poly a, const zfw_s_poly b);
 bool ZFW_DoesPolyIntersWithRect(const zfw_s_poly poly, const zfw_s_rect rect);
 zfw_s_rect_edges ZFW_PolySpan(const zfw_s_poly poly);
 
-static inline float ZFW_Lerp(const float a, const float b, const float t) {
-    assert(t >= 0.0f && t <= 1.0f);
-    return a + ((b - a) * t);
-}
-
 static inline zfw_s_vec_2d ZFW_Vec2DSum(const zfw_s_vec_2d a, const zfw_s_vec_2d b) {
     return (zfw_s_vec_2d){a.x + b.x, a.y + b.y};
 }
@@ -209,19 +193,19 @@ static inline bool ZFW_DoRectsInters(const zfw_s_rect a, const zfw_s_rect b) {
 
 static inline zfw_s_rect_edges ZFW_RectEdgesClamped(const zfw_s_rect_edges edges, const zfw_s_rect_edges clamp_edges) {
     return (zfw_s_rect_edges){
-        ZFW_MAX(edges.left, clamp_edges.left),
-        ZFW_MAX(edges.top, clamp_edges.top),
-        ZFW_MIN(edges.right, clamp_edges.right),
-        ZFW_MIN(edges.bottom, clamp_edges.bottom)
+        MAX(edges.left, clamp_edges.left),
+        MAX(edges.top, clamp_edges.top),
+        MIN(edges.right, clamp_edges.right),
+        MIN(edges.bottom, clamp_edges.bottom)
     };
 }
 
 static inline zfw_s_rect_edges_s32 ZFW_RectEdgesS32Clamped(const zfw_s_rect_edges_s32 edges, const zfw_s_rect_edges_s32 clamp_edges) {
     return (zfw_s_rect_edges_s32){
-        ZFW_MAX(edges.left, clamp_edges.left),
-        ZFW_MAX(edges.top, clamp_edges.top),
-        ZFW_MIN(edges.right, clamp_edges.right),
-        ZFW_MIN(edges.bottom, clamp_edges.bottom)
+        MAX(edges.left, clamp_edges.left),
+        MAX(edges.top, clamp_edges.top),
+        MIN(edges.right, clamp_edges.right),
+        MIN(edges.bottom, clamp_edges.bottom)
     };
 }
 

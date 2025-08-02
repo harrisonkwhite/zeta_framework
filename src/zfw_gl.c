@@ -240,8 +240,8 @@ static void LoadFontTextureInfo(zfw_s_vec_2d_s32* const tex_size, zfw_t_tex_chr_
             chr_pos.y + FONT_TEX_CHR_MARGIN.y
         };
 
-        tex_size->x = ZFW_MAX(chr_pos.x + chr_container_width, tex_size->x);
-        tex_size->y = ZFW_MAX(chr_pos.y + chr_container_height, tex_size->y);
+        tex_size->x = MAX(chr_pos.x + chr_container_width, tex_size->x);
+        tex_size->y = MAX(chr_pos.y + chr_container_height, tex_size->y);
 
         chr_pos.x += chr_container_width;
     }
@@ -544,10 +544,10 @@ bool ZFW_LoadStrCollider(zfw_s_rect* const rect, const char* const str, const zf
             collider_edges = chr_rect_edges;
             initted = true;
         } else {
-            collider_edges.left = ZFW_MIN(collider_edges.left, chr_rect_edges.left);
-            collider_edges.top = ZFW_MIN(collider_edges.top, chr_rect_edges.top);
-            collider_edges.right = ZFW_MAX(collider_edges.right, chr_rect_edges.right);
-            collider_edges.bottom = ZFW_MAX(collider_edges.bottom, chr_rect_edges.bottom);
+            collider_edges.left = MIN(collider_edges.left, chr_rect_edges.left);
+            collider_edges.top = MIN(collider_edges.top, chr_rect_edges.top);
+            collider_edges.right = MAX(collider_edges.right, chr_rect_edges.right);
+            collider_edges.bottom = MAX(collider_edges.bottom, chr_rect_edges.bottom);
         }
     }
 

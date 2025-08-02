@@ -1,5 +1,4 @@
 #include "zfw_math.h"
-#include "mem.h"
 
 #include <float.h>
 
@@ -124,10 +123,10 @@ zfw_s_poly ZFW_PushQuadPolyRotated(s_mem_arena* const mem_arena, const zfw_s_vec
         return (zfw_s_poly){0};
     }
 
-    const zfw_s_vec_2d offs_left  = ZFW_LenDir(size.x * origin.x, rot + ZFW_PI);
-    const zfw_s_vec_2d offs_up = ZFW_LenDir(size.y * origin.y, rot + (ZFW_PI * 0.5f));
+    const zfw_s_vec_2d offs_left  = ZFW_LenDir(size.x * origin.x, rot + PI);
+    const zfw_s_vec_2d offs_up = ZFW_LenDir(size.y * origin.y, rot + (PI * 0.5f));
     const zfw_s_vec_2d offs_right = ZFW_LenDir(size.x * (1.0f - origin.x), rot);
-    const zfw_s_vec_2d offs_down = ZFW_LenDir(size.y * (1.0f - origin.y), rot - (ZFW_PI * 0.5f));
+    const zfw_s_vec_2d offs_down = ZFW_LenDir(size.y * (1.0f - origin.y), rot - (PI * 0.5f));
 
     pts[0] = (zfw_s_vec_2d){pos.x + offs_left.x + offs_up.x, pos.y + offs_left.y + offs_up.y};
     pts[1] = (zfw_s_vec_2d){pos.x + offs_right.x + offs_up.x, pos.y + offs_right.y + offs_up.y};
@@ -179,10 +178,10 @@ zfw_s_rect_edges ZFW_PolySpan(const zfw_s_poly poly) {
     for (int i = 0; i < poly.cnt; i++) {
         const zfw_s_vec_2d pt = poly.pts[i];
 
-        span.left = ZFW_MIN(pt.x, span.left);
-        span.right = ZFW_MAX(pt.x, span.right);
-        span.top = ZFW_MIN(pt.y, span.top);
-        span.bottom = ZFW_MAX(pt.y, span.bottom);
+        span.left = MIN(pt.x, span.left);
+        span.right = MAX(pt.x, span.right);
+        span.top = MIN(pt.y, span.top);
+        span.bottom = MAX(pt.y, span.bottom);
     }
 
     return span;

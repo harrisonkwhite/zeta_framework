@@ -306,7 +306,7 @@ void ZFW_RenderRectWithOutline(const zfw_s_rendering_context* const rendering_co
     assert(rect.width > 0 && rect.height > 0);
     assert(ZFW_IsColorValid(fill_color));
     assert(ZFW_IsColorValid(outline_color));
-    assert(outline_thickness > 0.0f && outline_thickness <= ZFW_MIN(rect.width, rect.height) / 2.0f);
+    assert(outline_thickness > 0.0f && outline_thickness <= MIN(rect.width, rect.height) / 2.0f);
 
 #ifndef NDEBUG
     if (fabsf(fill_color.a - 1.0f) < 0.001f) { // TODO: Create function for float comparisons with precision level.
@@ -335,7 +335,7 @@ void ZFW_RenderRectWithOutlineAndOpaqueFill(const zfw_s_rendering_context* const
     assert(rect.width > 0 && rect.height > 0);
     assert(ZFW_IsColorRGBValid(fill_color));
     assert(ZFW_IsColorValid(outline_color));
-    assert(outline_thickness > 0.0f && outline_thickness <= ZFW_MIN(rect.width, rect.height) / 2.0f);
+    assert(outline_thickness > 0.0f && outline_thickness <= MIN(rect.width, rect.height) / 2.0f);
 
     // Outline
     ZFW_RenderRect(rendering_context, rect, outline_color);
