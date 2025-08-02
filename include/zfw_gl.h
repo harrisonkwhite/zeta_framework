@@ -65,6 +65,28 @@ typedef struct {
 
 typedef zfw_s_shader_prog_info (*zfw_t_gen_shader_prog_info_func)(const int prog_index, s_mem_arena* const mem_arena);
 
+typedef enum {
+    zfw_ek_shader_prog_uniform_value_type_int,
+    zfw_ek_shader_prog_uniform_value_type_float,
+    zfw_ek_shader_prog_uniform_value_type_v2,
+    zfw_ek_shader_prog_uniform_value_type_v3,
+    zfw_ek_shader_prog_uniform_value_type_v4,
+    zfw_ek_shader_prog_uniform_value_type_mat4x4,
+} zfw_e_shader_prog_uniform_value_type;
+
+typedef struct {
+    zfw_e_shader_prog_uniform_value_type type;
+
+    union {
+        int as_int;
+        float as_float;
+        zfw_s_vec_2d as_v2;
+        zfw_u_vec_3d as_v3;
+        zfw_u_vec_4d as_v4;
+        zfw_t_matrix_4x4 as_mat4x4;
+    };
+} zfw_s_shader_prog_uniform_value;
+
 typedef struct {
     const zfw_t_gl_id* vert_array_gl_ids;
     const zfw_t_gl_id* vert_buf_gl_ids;

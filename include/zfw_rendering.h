@@ -73,7 +73,10 @@ typedef struct {
 
 typedef struct {
     zfw_s_batch_state batch;
+
     zfw_t_matrix_4x4 view_mat;
+
+    zfw_t_gl_id surf_shader_prog_gl_id; // When a surface is rendered, this shader program is used.
 } zfw_s_rendering_state;
 
 typedef struct {
@@ -91,6 +94,12 @@ void ZFW_Render(const zfw_s_rendering_context* const context, const zfw_s_batch_
 void ZFW_RenderTexture(const zfw_s_rendering_context* const context, const int tex_index, const zfw_s_texture_group* const textures, const zfw_s_rect_s32 src_rect, const zfw_s_vec_2d pos, const zfw_s_vec_2d origin, const zfw_s_vec_2d scale, const float rot, const zfw_u_vec_4d blend);
 
 void ZFW_SubmitBatch(const zfw_s_rendering_context* const context);
+
+void ZFW_SetSurface(const zfw_s_rendering_context* const rendering_context, const zfw_s_surface_group* const surfs, const int surf_index);
+void ZFW_UnsetSurface(const zfw_s_rendering_context* const rendering_context);
+void ZFW_SetSurfaceShaderProg(const zfw_s_rendering_context* const rendering_context, const zfw_s_shader_prog_group* const progs, const int prog_index);
+void ZFW_SetSurfaceShaderProgUniform(const zfw_s_rendering_context* const rendering_context, const char* const name, const zfw_s_shader_prog_uniform_value val);
+void ZFW_RenderSurface(const zfw_s_rendering_context* const rendering_context, const zfw_s_surface_group* const surfs, const int surf_index);
 
 static inline void ZFW_RenderRect(const zfw_s_rendering_context* const context, const zfw_s_rect rect, const zfw_u_vec_4d blend) {
     ZFW_RenderTexture(context, zfw_ek_builtin_texture_pixel, &context->basis->builtin_textures, (zfw_s_rect_s32){0}, ZFW_RectPos(rect), (zfw_s_vec_2d){0}, ZFW_RectSize(rect), 0, blend);

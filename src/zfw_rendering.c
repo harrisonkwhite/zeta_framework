@@ -302,13 +302,22 @@ void ZFW_SubmitBatch(const zfw_s_rendering_context* const context) {
     const zfw_t_gl_id va_gl_id = context->basis->renderables.vert_array_gl_ids[zfw_ek_renderable_batch];
     const zfw_t_gl_id vb_gl_id = context->basis->renderables.vert_buf_gl_ids[zfw_ek_renderable_batch];
     const zfw_t_gl_id eb_gl_id = context->basis->renderables.elem_buf_gl_ids[zfw_ek_renderable_batch];
-    const zfw_t_gl_id prog_gl_id = context->basis->builtin_shader_progs.gl_ids[zfw_ek_builtin_shader_prog_batch];
 
+    //
+    // Submitting Vertex Data to GPU
+    //
     glBindVertexArray(va_gl_id);
     glBindBuffer(GL_ARRAY_BUFFER, vb_gl_id);
 
-    const size_t write_size = sizeof(zfw_t_batch_slot) * context->state->batch.num_slots_used;
-    glBufferSubData(GL_ARRAY_BUFFER, 0, write_size, context->state->batch.slots);
+    {
+        const size_t write_size = sizeof(zfw_t_batch_slot) * context->state->batch.num_slots_used;
+        glBufferSubData(GL_ARRAY_BUFFER, 0, write_size, context->state->batch.slots);
+    }
+
+    //
+    // Rendering the Batch
+    //
+    const zfw_t_gl_id prog_gl_id = context->basis->builtin_shader_progs.gl_ids[zfw_ek_builtin_shader_prog_batch];
 
     glUseProgram(prog_gl_id);
 
@@ -323,10 +332,85 @@ void ZFW_SubmitBatch(const zfw_s_rendering_context* const context) {
 
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, context->state->batch.tex_gl_id);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, eb_gl_id);
 
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, eb_gl_id);
     glDrawElements(GL_TRIANGLES, ZFW_BATCH_SLOT_ELEM_CNT * context->state->batch.num_slots_used, GL_UNSIGNED_SHORT, NULL);
 
     context->state->batch.num_slots_used = 0;
     context->state->batch.tex_gl_id = 0;
+}
+
+void ZFW_SetSurface(const zfw_s_rendering_context* const rendering_context, const zfw_s_surface_group* const surfs, const int surf_index) {
+    assert(rendering_context);
+    assert(surfs);
+    assert(surf_index >= 0 && surf_index < surfs->cnt);
+
+    assert(rendering_context->state->batch.num_slots_used == 0 && "Submit the current batch before changing surface!");
+
+    glBindFramebuffer(GL_FRAMEBUFFER, surfs->fb_gl_ids[surf_index]);
+}
+
+void ZFW_UnsetSurface(const zfw_s_rendering_context* const rendering_context) {
+    assert(rendering_context->state->batch.num_slots_used == 0 && "Submit the current batch before changing surface!");
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
+void ZFW_SetSurfaceShaderProg(const zfw_s_rendering_context* const rendering_context, const zfw_s_shader_prog_group* const progs, const int prog_index) {
+    assert(rendering_context);
+    assert(progs);
+    assert(prog_index >= 0 && prog_index < progs->cnt);
+
+    assert(rendering_context->state->surf_shader_prog_gl_id == 0 && "Potential double-assignment of surface shader program?");
+
+    rendering_context->state->surf_shader_prog_gl_id = progs->gl_ids[prog_index];
+    glUseProgram(rendering_context->state->surf_shader_prog_gl_id);
+}
+
+void ZFW_SetSurfaceShaderProgUniform(const zfw_s_rendering_context* const rendering_context, const char* const name, const zfw_s_shader_prog_uniform_value val) {
+    assert(rendering_context);
+    assert(name);
+    assert(rendering_context->state->surf_shader_prog_gl_id != 0 && "Surface shader program must be set before setting uniforms!");
+
+    const int loc = glGetUniformLocation(rendering_context->state->surf_shader_prog_gl_id, name);
+    assert(loc != -1 && "Failed to get location of shader uniform!");
+
+    switch (val.type) {
+        case zfw_ek_shader_prog_uniform_value_type_int:
+            glUniform1i(loc, val.as_int);
+            break;
+
+        case zfw_ek_shader_prog_uniform_value_type_float:
+            glUniform1f(loc, val.as_float);
+            break;
+
+        case zfw_ek_shader_prog_uniform_value_type_v2:
+            glUniform2f(loc, val.as_v2.x, val.as_v2.y);
+            break;
+
+        case zfw_ek_shader_prog_uniform_value_type_v3:
+            glUniform3f(loc, val.as_v3.x, val.as_v3.y, val.as_v3.z);
+            break;
+
+        case zfw_ek_shader_prog_uniform_value_type_v4:
+            glUniform4f(loc, val.as_v4.x, val.as_v4.y, val.as_v4.z, val.as_v4.w);
+            break;
+
+        case zfw_ek_shader_prog_uniform_value_type_mat4x4:
+            glUniformMatrix4fv(loc, 1, false, &val.as_mat4x4[0][0]);
+            break;
+    }
+}
+
+void ZFW_RenderSurface(const zfw_s_rendering_context* const rendering_context, const zfw_s_surface_group* const surfs, const int surf_index) {
+    assert(rendering_context);
+    assert(rendering_context->state->surf_shader_prog_gl_id != 0 && "Surface shader program must be set before rendering a surface!");
+    assert(surfs);
+    assert(surf_index >= 0 && surf_index < surfs->cnt);
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, surfs->fb_tex_gl_ids[surf_index]);
+
+    glBindVertexArray(rendering_context->basis->renderables.vert_array_gl_ids[zfw_ek_renderable_surface]);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, rendering_context->basis->renderables.elem_buf_gl_ids[zfw_ek_renderable_surface]);
+    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, NULL);
 }
