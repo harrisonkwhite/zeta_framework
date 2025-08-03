@@ -97,7 +97,7 @@ static inline void ZFW_AssertBatchStateValidity(const zfw_s_batch_state* const b
 
 typedef struct {
     zfw_s_batch_state batch;
-    zfw_t_matrix_4x4 view_mat;
+    zfw_s_matrix_4x4 view_mat;
 } zfw_s_rendering_state;
 
 static inline void ZFW_AssertRenderingStateValidity(const zfw_s_rendering_state* const state) {
@@ -124,7 +124,7 @@ bool ZFW_InitRenderingBasis(zfw_s_rendering_basis* const basis, zfw_s_gl_resourc
 void ZFW_InitRenderingState(zfw_s_rendering_state* const state);
 
 void ZFW_Clear(const zfw_s_rendering_context* const rendering_context, const zfw_u_vec_4d col);
-void ZFW_SetViewMatrix(const zfw_s_rendering_context* const rendering_context, const zfw_t_matrix_4x4* const mat);
+void ZFW_SetViewMatrix(const zfw_s_rendering_context* const rendering_context, const zfw_s_matrix_4x4* const mat);
 void ZFW_Render(const zfw_s_rendering_context* const rendering_context, const zfw_s_batch_slot_write_info* const write_info);
 void ZFW_RenderTexture(const zfw_s_rendering_context* const rendering_context, const zfw_s_texture_group* const textures, const int tex_index, const zfw_s_rect_s32 src_rect, const zfw_s_vec_2d pos, const zfw_s_vec_2d origin, const zfw_s_vec_2d scale, const float rot, const zfw_u_vec_4d blend);
 void ZFW_RenderRectWithOutline(const zfw_s_rendering_context* const rendering_context, const zfw_s_rect rect, const zfw_u_vec_4d fill_color, const zfw_u_vec_4d outline_color, const float outline_thickness);

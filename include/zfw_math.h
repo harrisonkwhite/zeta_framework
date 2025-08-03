@@ -89,7 +89,9 @@ typedef struct {
     t_s32 bottom;
 } zfw_s_rect_edges_s32;
 
-typedef float zfw_t_matrix_4x4[4][4];
+typedef struct {
+    float elems[4][4];
+} zfw_s_matrix_4x4;
 
 typedef struct {
     const zfw_s_vec_2d* pts;
@@ -231,44 +233,47 @@ static inline bool ZFW_IsRangeS32Valid(const zfw_s_rect_edges_s32 range, const z
         && range.top <= range.bottom;
 }
 
-static inline void ZFW_InitIdenMatrix4x4(zfw_t_matrix_4x4* const mat) {
-    assert(mat && IS_ZERO(*mat));
+static inline zfw_s_matrix_4x4 ZFW_IdentityMatrix4x4() {
+    zfw_s_matrix_4x4 mat = {0};
+    mat.elems[0][0] = 1.0f;
+    mat.elems[1][1] = 1.0f;
+    mat.elems[2][2] = 1.0f;
+    mat.elems[3][3] = 1.0f;
 
-    (*mat)[0][0] = 1.0f;
-    (*mat)[1][1] = 1.0f;
-    (*mat)[2][2] = 1.0f;
-    (*mat)[3][3] = 1.0f;
+    return mat;
 }
 
-static inline void ZFW_TranslateMatrix4x4(zfw_t_matrix_4x4* const mat, const zfw_s_vec_2d trans) {
-    assert(mat);
-
-    (*mat)[3][0] += trans.x;
-    (*mat)[3][1] += trans.y;
-}
-
-static inline void ZFW_ScaleMatrix4x4(zfw_t_matrix_4x4* const mat, const float scalar) {
-    assert(mat);
-
-    (*mat)[0][0] *= scalar;
-    (*mat)[1][1] *= scalar;
-    (*mat)[2][2] *= scalar;
-}
-
-static inline void ZFW_InitOrthoMatrix4x4(zfw_t_matrix_4x4* const mat, const float left, const float right, const float bottom, const float top, const float near, const float far) {
-    assert(mat && IS_ZERO(*mat));
+static inline zfw_s_matrix_4x4 ZFW_OrthographicMatrix(const float left, const float right, const float bottom, const float top, const float near, const float far) {
     assert(right > left);
     assert(top < bottom);
     assert(far > near);
     assert(near < far);
 
-    (*mat)[0][0] = 2.0f / (right - left);
-    (*mat)[1][1] = 2.0f / (top - bottom);
-    (*mat)[2][2] = -2.0f / (far - near);
-    (*mat)[3][0] = -(right + left) / (right - left);
-    (*mat)[3][1] = -(top + bottom) / (top - bottom);
-    (*mat)[3][2] = -(far + near) / (far - near);
-    (*mat)[3][3] = 1.0f;
+    zfw_s_matrix_4x4 mat = {0};
+    mat.elems[0][0] = 2.0f / (right - left);
+    mat.elems[1][1] = 2.0f / (top - bottom);
+    mat.elems[2][2] = -2.0f / (far - near);
+    mat.elems[3][0] = -(right + left) / (right - left);
+    mat.elems[3][1] = -(top + bottom) / (top - bottom);
+    mat.elems[3][2] = -(far + near) / (far - near);
+    mat.elems[3][3] = 1.0f;
+
+    return mat;
+}
+
+static inline void ZFW_TranslateMatrix4x4(zfw_s_matrix_4x4* const mat, const zfw_s_vec_2d trans) {
+    assert(mat);
+
+    mat->elems[3][0] += trans.x;
+    mat->elems[3][1] += trans.y;
+}
+
+static inline void ZFW_ScaleMatrix4x4(zfw_s_matrix_4x4* const mat, const float scalar) {
+    assert(mat);
+
+    mat->elems[0][0] *= scalar;
+    mat->elems[1][1] *= scalar;
+    mat->elems[2][2] *= scalar;
 }
 
 static inline bool ZFW_IsPolyValid(const zfw_s_poly poly) {

@@ -203,7 +203,7 @@ typedef struct {
         zfw_s_vec_2d as_v2;
         zfw_u_vec_3d as_v3;
         zfw_u_vec_4d as_v4;
-        zfw_t_matrix_4x4 as_mat4x4;
+        zfw_s_matrix_4x4 as_mat4x4;
     };
 } zfw_s_shader_prog_uniform_value;
 

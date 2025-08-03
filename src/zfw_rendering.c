@@ -203,7 +203,7 @@ bool ZFW_InitRenderingBasis(zfw_s_rendering_basis* const basis, zfw_s_gl_resourc
 
 void ZFW_InitRenderingState(zfw_s_rendering_state* const state) {
     assert(state && IS_ZERO(*state));
-    ZFW_InitIdenMatrix4x4(&state->view_mat);
+    state->view_mat = ZFW_IdentityMatrix4x4();
 }
 
 void ZFW_Clear(const zfw_s_rendering_context* const rendering_context, const zfw_u_vec_4d col) {
@@ -214,12 +214,12 @@ void ZFW_Clear(const zfw_s_rendering_context* const rendering_context, const zfw
     glClear(GL_COLOR_BUFFER_BIT);
 }
 
-void ZFW_SetViewMatrix(const zfw_s_rendering_context* const rendering_context, const zfw_t_matrix_4x4* const mat) {
+void ZFW_SetViewMatrix(const zfw_s_rendering_context* const rendering_context, const zfw_s_matrix_4x4* const mat) {
     ZFW_AssertRenderingContextValidity(rendering_context);
     assert(mat);
 
     ZFW_SubmitBatch(rendering_context);
-    memcpy(rendering_context->state->view_mat, mat, sizeof(zfw_t_matrix_4x4));
+    rendering_context->state->view_mat = *mat;
 }
 
 static void WriteBatchSlot(zfw_t_batch_slot* const slot, const zfw_s_batch_slot_write_info* const write_info) {
@@ -478,13 +478,12 @@ void ZFW_SubmitBatch(const zfw_s_rendering_context* const rendering_context) {
     glUseProgram(prog_gl_id);
 
     const int view_uniform_loc = glGetUniformLocation(prog_gl_id, "u_view");
-    glUniformMatrix4fv(view_uniform_loc, 1, GL_FALSE, &rendering_context->state->view_mat[0][0]);
+    glUniformMatrix4fv(view_uniform_loc, 1, GL_FALSE, &rendering_context->state->view_mat.elems[0][0]);
 
-    zfw_t_matrix_4x4 proj_mat = {0};
-    ZFW_InitOrthoMatrix4x4(&proj_mat, 0.0f, rendering_context->window_size.x, rendering_context->window_size.y, 0.0f, -1.0f, 1.0f);
+    const zfw_s_matrix_4x4 proj_mat = ZFW_OrthographicMatrix(0.0f, rendering_context->window_size.x, rendering_context->window_size.y, 0.0f, -1.0f, 1.0f);
 
     const int proj_uniform_loc = glGetUniformLocation(prog_gl_id, "u_proj");
-    glUniformMatrix4fv(proj_uniform_loc, 1, GL_FALSE, &proj_mat[0][0]);
+    glUniformMatrix4fv(proj_uniform_loc, 1, GL_FALSE, &proj_mat.elems[0][0]);
 
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, rendering_context->state->batch.tex_gl_id);
@@ -576,7 +575,7 @@ void ZFW_SetSurfaceShaderProgUniform(const zfw_s_rendering_context* const render
             break;
 
         case zfw_ek_shader_prog_uniform_value_type_mat4x4:
-            glUniformMatrix4fv(loc, 1, false, &val.as_mat4x4[0][0]);
+            glUniformMatrix4fv(loc, 1, false, &val.as_mat4x4.elems[0][0]);
             break;
     }
 }
