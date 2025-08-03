@@ -564,4 +564,6 @@ void ZFW_RenderSurface(const zfw_s_rendering_context* const rendering_context, c
     glBindVertexArray(rendering_context->basis->renderables.vert_array_gl_ids[zfw_ek_renderable_surface]);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, rendering_context->basis->renderables.elem_buf_gl_ids[zfw_ek_renderable_surface]);
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, NULL);
+
+    rendering_context->state->surf_shader_prog_gl_id = 0;
 }
