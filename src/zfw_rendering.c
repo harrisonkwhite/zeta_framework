@@ -206,11 +206,20 @@ void ZFW_InitRenderingState(zfw_s_rendering_state* const state) {
     ZFW_InitIdenMatrix4x4(&state->view_mat);
 }
 
-void ZFW_RenderClear(const zfw_u_vec_4d col) {
+void ZFW_Clear(const zfw_s_rendering_context* const rendering_context, const zfw_u_vec_4d col) {
+    ZFW_AssertRenderingContextValidity(rendering_context);
     assert(ZFW_IsColorValid(col));
 
     glClearColor(col.r, col.g, col.b, col.a);
     glClear(GL_COLOR_BUFFER_BIT);
+}
+
+void ZFW_SetViewMatrix(const zfw_s_rendering_context* const rendering_context, const zfw_t_matrix_4x4* const mat) {
+    ZFW_AssertRenderingContextValidity(rendering_context);
+    assert(mat);
+
+    ZFW_SubmitBatch(rendering_context);
+    memcpy(rendering_context->state->view_mat, mat, sizeof(zfw_t_matrix_4x4));
 }
 
 static void WriteBatchSlot(zfw_t_batch_slot* const slot, const zfw_s_batch_slot_write_info* const write_info) {
@@ -442,7 +451,7 @@ void ZFW_SubmitBatch(const zfw_s_rendering_context* const rendering_context) {
     ZFW_AssertRenderingContextValidity(rendering_context);
 
     if (rendering_context->state->batch.num_slots_used == 0) {
-        // There is nothing to flush.
+        // Nothing to flush!
         return;
     }
 
@@ -500,16 +509,20 @@ void ZFW_SetSurface(const zfw_s_rendering_context* const rendering_context, cons
     ZFW_AssertSurfaceGroupValidity(surfs);
     assert(surf_index >= 0 && surf_index < surfs->cnt);
 
-    assert(rendering_context->state->batch.num_slots_used == 0 && "Submit the current batch before changing surface!");
+    const zfw_t_gl_id fb_gl_id = surfs->fb_gl_ids[surf_index];
+    assert(fb_gl_id != BoundGLFramebuffer() && "Trying to set a surface that is already set!");
 
-    glBindFramebuffer(GL_FRAMEBUFFER, surfs->fb_gl_ids[surf_index]);
+    ZFW_SubmitBatch(rendering_context);
+
+    glBindFramebuffer(GL_FRAMEBUFFER, fb_gl_id);
 }
 
 void ZFW_UnsetSurface(const zfw_s_rendering_context* const rendering_context) {
     ZFW_AssertRenderingContextValidity(rendering_context);
 
     assert(BoundGLFramebuffer() != 0 && "Trying to unset surface but no OpenGL framebuffer is bound!");
-    assert(rendering_context->state->batch.num_slots_used == 0 && "Submit the current batch before changing surface!");
+
+    ZFW_SubmitBatch(rendering_context);
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }

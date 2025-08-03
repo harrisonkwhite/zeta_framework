@@ -305,7 +305,7 @@ bool ZFW_RunGame(const zfw_s_game_info* const info) {
                     goto clean_dev_game;
                 }
 
-                assert(rendering_state->batch.num_slots_used == 0 && "Developer rendering function completed, but not everything has been flushed!");
+                ZFW_SubmitBatch(&context.rendering_context);
             }
 
             glfwSwapBuffers(glfw_window);
