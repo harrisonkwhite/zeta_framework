@@ -41,7 +41,7 @@ static zfw_s_texture_info GenBuiltinTextureInfo(const int tex_index, s_mem_arena
     switch ((zfw_e_builtin_texture)tex_index) {
         case zfw_ek_builtin_texture_pixel:
             {
-                t_u8* const rgba_px_data = MEM_ARENA_PUSH_TYPE_CNT(mem_arena, t_u8, 4);
+                t_byte* const rgba_px_data = MEM_ARENA_PUSH_TYPE_CNT(mem_arena, t_byte, 4);
                 rgba_px_data[0] = 255;
                 rgba_px_data[1] = 255;
                 rgba_px_data[2] = 255;
@@ -279,7 +279,7 @@ void ZFW_Render(const zfw_s_rendering_context* const rendering_context, const zf
     batch_state->num_slots_used++;
 }
 
-void ZFW_RenderTexture(const zfw_s_rendering_context* const rendering_context, const zfw_s_texture_group* const textures, const int tex_index, const zfw_s_rect_s32 src_rect, const zfw_s_vec_2d pos, const zfw_s_vec_2d origin, const zfw_s_vec_2d scale, const float rot, const zfw_u_vec_4d blend) {
+void ZFW_RenderTexture(const zfw_s_rendering_context* const rendering_context, const zfw_s_texture_group* const textures, const int tex_index, const zfw_s_rect_int src_rect, const zfw_s_vec_2d pos, const zfw_s_vec_2d origin, const zfw_s_vec_2d scale, const float rot, const zfw_u_vec_4d blend) {
     ZFW_AssertRenderingContextValidity(rendering_context);
     ZFW_AssertTextureGroupValidity(textures);
     assert(tex_index >= 0 && tex_index < textures->cnt);
@@ -288,7 +288,7 @@ void ZFW_RenderTexture(const zfw_s_rendering_context* const rendering_context, c
     assert(scale.x != 0.0f && scale.y != 0.0f);
     assert(ZFW_IsColorValid(blend));
 
-    const zfw_s_rect_s32 src_rect_to_use = IS_ZERO(src_rect) ? (zfw_s_rect_s32){0, 0, textures->sizes[tex_index].x, textures->sizes[tex_index].y} : src_rect;
+    const zfw_s_rect_int src_rect_to_use = IS_ZERO(src_rect) ? (zfw_s_rect_int){0, 0, textures->sizes[tex_index].x, textures->sizes[tex_index].y} : src_rect;
 
     const zfw_s_batch_slot_write_info write_info = {
         .tex_gl_id = textures->gl_ids[tex_index],
@@ -424,7 +424,7 @@ bool ZFW_RenderStr(const zfw_s_rendering_context* const rendering_context, const
 
         const int chr_ascii_printable_index = chr - ZFW_ASCII_PRINTABLE_MIN;
 
-        const zfw_s_rect_s32 chr_src_rect = {
+        const zfw_s_rect_int chr_src_rect = {
             .x = fonts->tex_chr_positions[font_index][chr_ascii_printable_index].x,
             .y = fonts->tex_chr_positions[font_index][chr_ascii_printable_index].y,
             .width = fonts->arrangement_infos[font_index].chr_sizes[chr_ascii_printable_index].x,

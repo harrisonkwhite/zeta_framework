@@ -13,9 +13,9 @@ typedef struct {
 } zfw_s_vec_2d;
 
 typedef struct {
-    t_s32 x;
-    t_s32 y;
-} zfw_s_vec_2d_s32;
+    int x;
+    int y;
+} zfw_s_vec_2d_int;
 
 typedef union {
     struct {
@@ -54,7 +54,7 @@ typedef enum {
     zfw_ek_cardinal_dir_up
 } zfw_e_cardinal_dir;
 
-static const zfw_s_vec_2d_s32 zfw_g_cardinal_dir_vecs[] = {
+static const zfw_s_vec_2d_int zfw_g_cardinal_dir_vecs[] = {
     [zfw_ek_cardinal_dir_right] = {1, 0},
     [zfw_ek_cardinal_dir_left] = {-1, 0},
     [zfw_ek_cardinal_dir_down] = {0, 1},
@@ -69,11 +69,11 @@ typedef struct {
 } zfw_s_rect;
 
 typedef struct {
-    t_s32 x;
-    t_s32 y;
-    t_s32 width;
-    t_s32 height;
-} zfw_s_rect_s32;
+    int x;
+    int y;
+    int width;
+    int height;
+} zfw_s_rect_int;
 
 typedef struct {
     float left;
@@ -83,11 +83,11 @@ typedef struct {
 } zfw_s_rect_edges;
 
 typedef struct {
-    t_s32 left;
-    t_s32 top;
-    t_s32 right;
-    t_s32 bottom;
-} zfw_s_rect_edges_s32;
+    int left;
+    int top;
+    int right;
+    int bottom;
+} zfw_s_rect_edges_int;
 
 typedef struct {
     float elems[4][4];
@@ -110,8 +110,8 @@ static inline zfw_s_vec_2d ZFW_Vec2DSum(const zfw_s_vec_2d a, const zfw_s_vec_2d
     return (zfw_s_vec_2d){a.x + b.x, a.y + b.y};
 }
 
-static inline zfw_s_vec_2d_s32 ZFW_Vec2DS32Sum(const zfw_s_vec_2d_s32 a, const zfw_s_vec_2d_s32 b) {
-    return (zfw_s_vec_2d_s32){a.x + b.x, a.y + b.y};
+static inline zfw_s_vec_2d_int ZFW_Vec2DS32Sum(const zfw_s_vec_2d_int a, const zfw_s_vec_2d_int b) {
+    return (zfw_s_vec_2d_int){a.x + b.x, a.y + b.y};
 }
 
 static inline zfw_s_vec_2d ZFW_Vec2DScaled(const zfw_s_vec_2d vec, const float scalar) {
@@ -161,16 +161,16 @@ static inline zfw_s_vec_2d ZFW_RectPos(const zfw_s_rect rect) {
     return (zfw_s_vec_2d){rect.x, rect.y};
 }
 
-static inline zfw_s_vec_2d_s32 ZFW_RectS32Pos(const zfw_s_rect_s32 rect) {
-    return (zfw_s_vec_2d_s32){rect.x, rect.y};
+static inline zfw_s_vec_2d_int ZFW_RectS32Pos(const zfw_s_rect_int rect) {
+    return (zfw_s_vec_2d_int){rect.x, rect.y};
 }
 
 static inline zfw_s_vec_2d ZFW_RectSize(const zfw_s_rect rect) {
     return (zfw_s_vec_2d){rect.width, rect.height};
 }
 
-static inline zfw_s_vec_2d_s32 ZFW_RectS32Size(const zfw_s_rect_s32 rect) {
-    return (zfw_s_vec_2d_s32){rect.width, rect.height};
+static inline zfw_s_vec_2d_int ZFW_RectS32Size(const zfw_s_rect_int rect) {
+    return (zfw_s_vec_2d_int){rect.width, rect.height};
 }
 
 static inline zfw_s_vec_2d ZFW_RectCenter(const zfw_s_rect rect) {
@@ -181,8 +181,8 @@ static inline zfw_s_rect ZFW_RectTranslated(const zfw_s_rect rect, const zfw_s_v
     return (zfw_s_rect){rect.x + trans.x, rect.y + trans.y, rect.width, rect.height};
 }
 
-static inline zfw_s_rect_s32 ZFW_RectTranslatedS32(const zfw_s_rect_s32 rect, const zfw_s_vec_2d_s32 trans) {
-    return (zfw_s_rect_s32){rect.x + trans.x, rect.y + trans.y, rect.width, rect.height};
+static inline zfw_s_rect_int ZFW_RectTranslatedS32(const zfw_s_rect_int rect, const zfw_s_vec_2d_int trans) {
+    return (zfw_s_rect_int){rect.x + trans.x, rect.y + trans.y, rect.width, rect.height};
 }
 
 static inline bool ZFW_IsPointInRect(const zfw_s_vec_2d pt, const zfw_s_rect rect) {
@@ -202,8 +202,8 @@ static inline zfw_s_rect_edges ZFW_RectEdgesClamped(const zfw_s_rect_edges edges
     };
 }
 
-static inline zfw_s_rect_edges_s32 ZFW_RectEdgesS32Clamped(const zfw_s_rect_edges_s32 edges, const zfw_s_rect_edges_s32 clamp_edges) {
-    return (zfw_s_rect_edges_s32){
+static inline zfw_s_rect_edges_int ZFW_RectEdgesS32Clamped(const zfw_s_rect_edges_int edges, const zfw_s_rect_edges_int clamp_edges) {
+    return (zfw_s_rect_edges_int){
         MAX(edges.left, clamp_edges.left),
         MAX(edges.top, clamp_edges.top),
         MIN(edges.right, clamp_edges.right),
@@ -222,7 +222,7 @@ static inline bool ZFW_IsRangeValid(const zfw_s_rect_edges range, const zfw_s_ve
         && range.top <= range.bottom;
 }
 
-static inline bool ZFW_IsRangeS32Valid(const zfw_s_rect_edges_s32 range, const zfw_s_vec_2d_s32 size) {
+static inline bool ZFW_IsRangeS32Valid(const zfw_s_rect_edges_int range, const zfw_s_vec_2d_int size) {
     assert(size.x > 0 && size.y > 0);
 
     return range.left >= 0 && range.left < size.x

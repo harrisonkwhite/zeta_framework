@@ -65,7 +65,7 @@ static inline void ZFW_AssertGLResourceArenaValidity(const zfw_s_gl_resource_are
 
 typedef struct {
     const zfw_t_gl_id* gl_ids;
-    const zfw_s_vec_2d_s32* sizes;
+    const zfw_s_vec_2d_int* sizes;
 
     int cnt;
 } zfw_s_texture_group;
@@ -84,8 +84,8 @@ static inline void ZFW_AssertTextureGroupValidity(const zfw_s_texture_group* con
 }
 
 typedef struct {
-    const t_u8* rgba_px_data;
-    zfw_s_vec_2d_s32 tex_size;
+    const t_byte* rgba_px_data;
+    zfw_s_vec_2d_int tex_size;
 } zfw_s_texture_info;
 
 static inline void ZFW_AssertTextureInfoValidity(const zfw_s_texture_info* const tex_info) {
@@ -100,8 +100,8 @@ typedef zfw_s_texture_info (*zfw_t_gen_texture_info_func)(const int tex_index, s
 typedef struct {
     int line_height;
 
-    zfw_s_vec_2d_s32 chr_offsets[ZFW_ASCII_PRINTABLE_RANGE_LEN];
-    zfw_s_vec_2d_s32 chr_sizes[ZFW_ASCII_PRINTABLE_RANGE_LEN];
+    zfw_s_vec_2d_int chr_offsets[ZFW_ASCII_PRINTABLE_RANGE_LEN];
+    zfw_s_vec_2d_int chr_sizes[ZFW_ASCII_PRINTABLE_RANGE_LEN];
     int chr_advances[ZFW_ASCII_PRINTABLE_RANGE_LEN];
 } zfw_s_font_arrangement_info;
 
@@ -116,12 +116,12 @@ static inline void ZFW_AssertFontArrangementInfoValidity(const zfw_s_font_arrang
     }
 }
 
-typedef zfw_s_vec_2d_s32 zfw_t_tex_chr_positions[ZFW_ASCII_PRINTABLE_RANGE_LEN];
+typedef zfw_s_vec_2d_int zfw_t_tex_chr_positions[ZFW_ASCII_PRINTABLE_RANGE_LEN];
 
 typedef struct {
     const zfw_s_font_arrangement_info* arrangement_infos;
     const zfw_t_gl_id* tex_gl_ids;
-    const zfw_s_vec_2d_s32* tex_sizes;
+    const zfw_s_vec_2d_int* tex_sizes;
     const zfw_t_tex_chr_positions* tex_chr_positions;
 
     int cnt;
@@ -233,7 +233,7 @@ static inline void ZFW_AssertRenderablesValidity(const zfw_s_renderables* const 
 typedef struct {
     const zfw_t_gl_id* fb_gl_ids;
     zfw_t_gl_id* fb_tex_gl_ids;
-    zfw_s_vec_2d_s32* sizes;
+    zfw_s_vec_2d_int* sizes;
 
     int cnt;
 } zfw_s_surface_group;
@@ -259,7 +259,7 @@ zfw_t_gl_id* ZFW_ReserveGLIDs(zfw_s_gl_resource_arena* const res_arena, const in
 
 zfw_s_texture_info ZFW_GenTextureInfoFromFile(const char* const file_path, s_mem_arena* const mem_arena);
 zfw_s_texture_group ZFW_GenTextures(const int tex_cnt, const zfw_t_gen_texture_info_func gen_tex_info_func, zfw_s_gl_resource_arena* const gl_res_arena, s_mem_arena* const mem_arena, s_mem_arena* const temp_mem_arena);
-zfw_s_rect_edges ZFW_TextureCoords(const zfw_s_rect_s32 src_rect, const zfw_s_vec_2d_s32 tex_size);
+zfw_s_rect_edges ZFW_TextureCoords(const zfw_s_rect_int src_rect, const zfw_s_vec_2d_int tex_size);
 
 zfw_s_font_group ZFW_GenFonts(const int font_cnt, const zfw_s_font_load_info* const load_infos, zfw_s_gl_resource_arena* const gl_res_arena, s_mem_arena* const mem_arena, s_mem_arena* const temp_mem_arena);
 zfw_s_vec_2d* ZFW_PushStrChrRenderPositions(s_mem_arena* const mem_arena, const char* const str, const zfw_s_font_group* const fonts, const int font_index, const zfw_s_vec_2d pos, const zfw_s_vec_2d alignment);
@@ -269,8 +269,8 @@ zfw_s_shader_prog_group ZFW_GenShaderProgs(const int prog_cnt, const zfw_t_gen_s
 
 void ZFW_GenRenderable(zfw_t_gl_id* const va_gl_id, zfw_t_gl_id* const vb_gl_id, zfw_t_gl_id* const eb_gl_id, const float* const vert_buf, const size_t vert_buf_size, const unsigned short* const elem_buf, const size_t elem_buf_size, const int* const vert_attr_lens, const int vert_attr_cnt);
 
-zfw_s_surface_group ZFW_GenSurfaces(const int surf_cnt, const zfw_s_vec_2d_s32* const surf_sizes, zfw_s_gl_resource_arena* const gl_res_arena, s_mem_arena* const mem_arena);
-bool ZFW_ResizeSurface(zfw_s_surface_group* const surfs, const int surf_index, const zfw_s_vec_2d_s32 size);
+zfw_s_surface_group ZFW_GenSurfaces(const int surf_cnt, const zfw_s_vec_2d_int* const surf_sizes, zfw_s_gl_resource_arena* const gl_res_arena, s_mem_arena* const mem_arena);
+bool ZFW_ResizeSurface(zfw_s_surface_group* const surfs, const int surf_index, const zfw_s_vec_2d_int size);
 
 static inline bool ZFW_IsOriginValid(const zfw_s_vec_2d orig) {
     return orig.x >= 0.0f && orig.x <= 1.0f && orig.y >= 0.0f && orig.y <= 1.0f;
@@ -280,7 +280,7 @@ static inline bool ZFW_IsTextureCoordsValid(const zfw_s_rect_edges coords) {
     return coords.left >= 0.0f && coords.top >= 0.0f && coords.right <= 1.0f && coords.bottom <= 1.0f;
 }
 
-static bool ZFW_IsSrcRectValid(const zfw_s_rect_s32 src_rect, const zfw_s_vec_2d_s32 tex_size) {
+static bool ZFW_IsSrcRectValid(const zfw_s_rect_int src_rect, const zfw_s_vec_2d_int tex_size) {
     assert(tex_size.x > 0 && tex_size.y > 0);
     return src_rect.x >= 0 && src_rect.width > 0 && src_rect.x + src_rect.width <= tex_size.x
         && src_rect.y >= 0 && src_rect.height > 0 && src_rect.y + src_rect.height <= tex_size.y;

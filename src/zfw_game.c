@@ -65,7 +65,7 @@ static void GLFWCharCallback(GLFWwindow* const window, const unsigned int codepo
     LOG_WARNING("Unicode buffer is full!");
 }
 
-static void ResizeGLViewportIfDifferent(const zfw_s_vec_2d_s32 size) {
+static void ResizeGLViewportIfDifferent(const zfw_s_vec_2d_int size) {
     assert(size.x > 0 && size.y > 0);
 
     GLint viewport[4];

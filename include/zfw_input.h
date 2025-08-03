@@ -73,7 +73,7 @@ typedef enum {
     zfw_eks_key_code_cnt
 } zfw_e_key_code;
 
-typedef t_u64 zfw_t_keys_down_bits;
+typedef uint64_t zfw_t_keys_down_bits;
 
 static_assert(zfw_eks_key_code_cnt < SIZE_IN_BITS(zfw_t_keys_down_bits), "Too many key codes!");
 
@@ -85,7 +85,7 @@ typedef enum {
     zfw_eks_mouse_button_code_cnt
 } zfw_e_mouse_button_code;
 
-typedef t_u8 zfw_t_mouse_buttons_down_bits;
+typedef uint8_t zfw_t_mouse_buttons_down_bits;
 
 static_assert(zfw_eks_mouse_button_code_cnt < SIZE_IN_BITS(zfw_t_mouse_buttons_down_bits), "Too many mouse button codes!");
 

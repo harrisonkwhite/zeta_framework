@@ -11,7 +11,7 @@
 #define ZFW_PITCH_DEFAULT 1.0f
 
 typedef struct {
-    const t_u8* sample_buf;
+    const t_byte* sample_buf;
     int frame_cnt;
     int channel_cnt;
     int sample_rate;
@@ -45,7 +45,7 @@ typedef struct {
 
     ma_sound snds[ZFW_SND_LIMIT];
     ma_audio_buffer audio_bufs[ZFW_SND_LIMIT];
-    t_u8 snd_activity[BITS_TO_BYTES(ZFW_SND_LIMIT)];
+    t_byte snd_activity[BITS_TO_BYTES(ZFW_SND_LIMIT)];
 } zfw_s_audio_sys;
 
 bool ZFW_InitAudioSys(zfw_s_audio_sys* const audio_sys);

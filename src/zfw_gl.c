@@ -4,7 +4,7 @@
 #include <stb_image.h>
 #include <stb_truetype.h>
 
-#define FONT_TEX_CHR_MARGIN (zfw_s_vec_2d_s32){4, 4}
+#define FONT_TEX_CHR_MARGIN (zfw_s_vec_2d_int){4, 4}
 
 zfw_s_gl_resource_arena ZFW_GenGLResourceArena(s_mem_arena* const mem_arena, const int res_limit) {
     assert(mem_arena && IsMemArenaValid(mem_arena));
@@ -81,17 +81,17 @@ zfw_t_gl_id* ZFW_ReserveGLIDs(zfw_s_gl_resource_arena* const res_arena, const in
     return res_arena->ids + res_used_prev;
 }
 
-static inline zfw_s_vec_2d_s32 GLTextureSizeLimit() {
+static inline zfw_s_vec_2d_int GLTextureSizeLimit() {
     int size;
     glGetIntegerv(GL_MAX_TEXTURE_SIZE, &size);
-    return (zfw_s_vec_2d_s32){size, size};
+    return (zfw_s_vec_2d_int){size, size};
 }
 
-static zfw_t_gl_id GenGLTextureFromRGBAPixelData(const t_u8* const rgba_px_data, const zfw_s_vec_2d_s32 tex_size) {
+static zfw_t_gl_id GenGLTextureFromRGBAPixelData(const t_byte* const rgba_px_data, const zfw_s_vec_2d_int tex_size) {
     assert(rgba_px_data);
     assert(tex_size.x > 0 && tex_size.y > 0);
 
-    const zfw_s_vec_2d_s32 tex_size_limit = GLTextureSizeLimit();
+    const zfw_s_vec_2d_int tex_size_limit = GLTextureSizeLimit();
 
     if (tex_size.x > tex_size_limit.x || tex_size.y > tex_size_limit.y) {
         LOG_ERROR("Texture size (%d, %d) exceeds OpenGL limits (%d, %d)!", tex_size.x, tex_size.y, tex_size_limit.x, tex_size_limit.y);
@@ -115,7 +115,7 @@ zfw_s_texture_info ZFW_GenTextureInfoFromFile(const char* const file_path, s_mem
     assert(file_path);
     assert(mem_arena && IsMemArenaValid(mem_arena));
 
-    zfw_s_vec_2d_s32 tex_size = {0};
+    zfw_s_vec_2d_int tex_size = {0};
     unsigned char* const rgba_px_data = stbi_load(file_path, &tex_size.x, &tex_size.y, NULL, 4);
 
     if (!rgba_px_data) {
@@ -144,7 +144,7 @@ zfw_s_texture_group ZFW_GenTextures(const int tex_cnt, const zfw_t_gen_texture_i
         return (zfw_s_texture_group){0};
     }
 
-    zfw_s_vec_2d_s32* const sizes = MEM_ARENA_PUSH_TYPE_CNT(mem_arena, zfw_s_vec_2d_s32, tex_cnt);
+    zfw_s_vec_2d_int* const sizes = MEM_ARENA_PUSH_TYPE_CNT(mem_arena, zfw_s_vec_2d_int, tex_cnt);
 
     if (!sizes) {
         LOG_ERROR("Failed to reserve memory for texture sizes!");
@@ -176,7 +176,7 @@ zfw_s_texture_group ZFW_GenTextures(const int tex_cnt, const zfw_t_gen_texture_i
     };
 }
 
-zfw_s_rect_edges ZFW_TextureCoords(const zfw_s_rect_s32 src_rect, const zfw_s_vec_2d_s32 tex_size) {
+zfw_s_rect_edges ZFW_TextureCoords(const zfw_s_rect_int src_rect, const zfw_s_vec_2d_int tex_size) {
     assert(ZFW_IsSrcRectValid(src_rect, tex_size));
     assert(tex_size.x > 0 && tex_size.y > 0);
 
@@ -203,11 +203,11 @@ static void LoadFontArrangementInfo(zfw_s_font_arrangement_info* const arrangeme
     for (int i = 0; i < ZFW_ASCII_PRINTABLE_RANGE_LEN; i++) {
         const char chr = ZFW_ASCII_PRINTABLE_MIN + i;
 
-        zfw_s_rect_edges_s32 bitmap_box;
+        zfw_s_rect_edges_int bitmap_box;
         stbtt_GetCodepointBitmapBox(stb_font_info, chr, scale, scale, &bitmap_box.left, &bitmap_box.top, &bitmap_box.right, &bitmap_box.bottom);
 
-        arrangement_info->chr_offsets[i] = (zfw_s_vec_2d_s32){bitmap_box.left, bitmap_box.top + (vm_ascent * scale)};
-        arrangement_info->chr_sizes[i] = (zfw_s_vec_2d_s32){bitmap_box.right - bitmap_box.left, bitmap_box.bottom - bitmap_box.top};
+        arrangement_info->chr_offsets[i] = (zfw_s_vec_2d_int){bitmap_box.left, bitmap_box.top + (vm_ascent * scale)};
+        arrangement_info->chr_sizes[i] = (zfw_s_vec_2d_int){bitmap_box.right - bitmap_box.left, bitmap_box.bottom - bitmap_box.top};
 
         int hm_advance;
         stbtt_GetCodepointHMetrics(stb_font_info, chr, &hm_advance, NULL);
@@ -215,19 +215,19 @@ static void LoadFontArrangementInfo(zfw_s_font_arrangement_info* const arrangeme
     }
 }
 
-static void LoadFontTextureInfo(zfw_s_vec_2d_s32* const tex_size, zfw_t_tex_chr_positions* const tex_chr_positions, const zfw_s_font_arrangement_info* const arrangement_info, const int tex_width_limit) {
+static void LoadFontTextureInfo(zfw_s_vec_2d_int* const tex_size, zfw_t_tex_chr_positions* const tex_chr_positions, const zfw_s_font_arrangement_info* const arrangement_info, const int tex_width_limit) {
     assert(tex_size && IS_ZERO(*tex_size));
     assert(tex_chr_positions && IS_ZERO(*tex_chr_positions));
     ZFW_AssertFontArrangementInfoValidity(arrangement_info);
     assert(tex_width_limit > 0);
 
-    zfw_s_vec_2d_s32 chr_pos = {0};
+    zfw_s_vec_2d_int chr_pos = {0};
 
     // Each character can be conceptualised as existing within its own container, and that container has margins on all sides.
     const int chr_container_height = FONT_TEX_CHR_MARGIN.y + arrangement_info->line_height + FONT_TEX_CHR_MARGIN.y;
 
     for (int i = 0; i < ZFW_ASCII_PRINTABLE_RANGE_LEN; i++) {
-        const zfw_s_vec_2d_s32 chr_size = arrangement_info->chr_sizes[i];
+        const zfw_s_vec_2d_int chr_size = arrangement_info->chr_sizes[i];
         const int chr_container_width = FONT_TEX_CHR_MARGIN.x + chr_size.x + FONT_TEX_CHR_MARGIN.x;
 
         if (chr_pos.x + chr_container_width > tex_width_limit) {
@@ -235,7 +235,7 @@ static void LoadFontTextureInfo(zfw_s_vec_2d_s32* const tex_size, zfw_t_tex_chr_
             chr_pos.y += chr_container_height;
         }
 
-        (*tex_chr_positions)[i] = (zfw_s_vec_2d_s32){
+        (*tex_chr_positions)[i] = (zfw_s_vec_2d_int){
             chr_pos.x + FONT_TEX_CHR_MARGIN.x,
             chr_pos.y + FONT_TEX_CHR_MARGIN.y
         };
@@ -247,7 +247,7 @@ static void LoadFontTextureInfo(zfw_s_vec_2d_s32* const tex_size, zfw_t_tex_chr_
     }
 }
 
-static zfw_t_gl_id GenFontTexture(const stbtt_fontinfo* const stb_font_info, const int font_height, const zfw_s_vec_2d_s32 tex_size, const zfw_t_tex_chr_positions* const tex_chr_positions, const zfw_s_font_arrangement_info* const font_arrangement_info, s_mem_arena* const temp_mem_arena) {
+static zfw_t_gl_id GenFontTexture(const stbtt_fontinfo* const stb_font_info, const int font_height, const zfw_s_vec_2d_int tex_size, const zfw_t_tex_chr_positions* const tex_chr_positions, const zfw_s_font_arrangement_info* const font_arrangement_info, s_mem_arena* const temp_mem_arena) {
     assert(stb_font_info);
     assert(font_height > 0);
     assert(tex_size.x > 0 && tex_size.y > 0);
@@ -258,7 +258,7 @@ static zfw_t_gl_id GenFontTexture(const stbtt_fontinfo* const stb_font_info, con
     const float scale = stbtt_ScaleForPixelHeight(stb_font_info, font_height);
 
     const size_t font_tex_rgba_px_data_size = 4 * tex_size.x * tex_size.y;
-    t_u8* const font_tex_rgba_px_data = MEM_ARENA_PUSH_TYPE_CNT(temp_mem_arena, t_u8, font_tex_rgba_px_data_size);
+    t_byte* const font_tex_rgba_px_data = MEM_ARENA_PUSH_TYPE_CNT(temp_mem_arena, t_byte, font_tex_rgba_px_data_size);
 
     if (!font_tex_rgba_px_data) {
         LOG_ERROR("Failed to reserve memory for font texture RGBA pixel data!");
@@ -282,14 +282,14 @@ static zfw_t_gl_id GenFontTexture(const stbtt_fontinfo* const stb_font_info, con
             continue;
         }
 
-        t_u8* const bitmap = stbtt_GetCodepointBitmap(stb_font_info, scale, scale, chr, NULL, NULL, NULL, NULL);
+        t_byte* const bitmap = stbtt_GetCodepointBitmap(stb_font_info, scale, scale, chr, NULL, NULL, NULL, NULL);
 
         if (!bitmap) {
             LOG_ERROR("Failed to get bitmap for character '%c' through STB!", chr);
             return 0;
         }
 
-        const zfw_s_rect_s32 src_rect = {
+        const zfw_s_rect_int src_rect = {
             (*tex_chr_positions)[i].x,
             (*tex_chr_positions)[i].y,
             font_arrangement_info->chr_sizes[i].x,
@@ -298,7 +298,7 @@ static zfw_t_gl_id GenFontTexture(const stbtt_fontinfo* const stb_font_info, con
 
         for (int yo = 0; yo < src_rect.height; yo++) {
             for (int xo = 0; xo < src_rect.width; xo++) {
-                const zfw_s_vec_2d_s32 px_pos = {src_rect.x + xo, src_rect.y + yo};
+                const zfw_s_vec_2d_int px_pos = {src_rect.x + xo, src_rect.y + yo};
                 const int px_index = ((px_pos.y * tex_size.x) + px_pos.x) * 4;
 
                 const int bitmap_index = IndexFrom2D(xo, yo, src_rect.width);
@@ -334,7 +334,7 @@ zfw_s_font_group ZFW_GenFonts(const int font_cnt, const zfw_s_font_load_info* co
         return (zfw_s_font_group){0};
     }
 
-    zfw_s_vec_2d_s32* const tex_sizes = MEM_ARENA_PUSH_TYPE_CNT(mem_arena, zfw_s_vec_2d_s32, font_cnt);
+    zfw_s_vec_2d_int* const tex_sizes = MEM_ARENA_PUSH_TYPE_CNT(mem_arena, zfw_s_vec_2d_int, font_cnt);
 
     if (!tex_sizes) {
         LOG_ERROR("Failed to reserve memory for font texture sizes!");
@@ -353,7 +353,7 @@ zfw_s_font_group ZFW_GenFonts(const int font_cnt, const zfw_s_font_load_info* co
         const zfw_s_font_load_info* const load_info = &load_infos[i];
         ZFW_AssertFontLoadInfoValidity(load_info);
 
-        const t_u8* const font_file_data = PushEntireFileContents(load_info->file_path, temp_mem_arena, false);
+        const t_byte* const font_file_data = PushEntireFileContents(load_info->file_path, temp_mem_arena, false);
 
         if (!font_file_data) {
             LOG_ERROR("Failed to reserve memory for font file contents!");
@@ -376,7 +376,7 @@ zfw_s_font_group ZFW_GenFonts(const int font_cnt, const zfw_s_font_load_info* co
 
         LoadFontArrangementInfo(&arrangement_infos[i], &stb_font_info, load_info->height);
 
-        const zfw_s_vec_2d_s32 font_tex_size_limit = GLTextureSizeLimit();
+        const zfw_s_vec_2d_int font_tex_size_limit = GLTextureSizeLimit();
 
         LoadFontTextureInfo(&tex_sizes[i], &tex_chr_positions[i], &arrangement_infos[i], font_tex_size_limit.x);
 
@@ -532,7 +532,7 @@ bool ZFW_LoadStrCollider(zfw_s_rect* const rect, const char* const str, const zf
 
         const int chr_ascii_printable_index = chr - ZFW_ASCII_PRINTABLE_MIN;
 
-        const zfw_s_vec_2d_s32 chr_size = fonts->arrangement_infos[font_index].chr_sizes[chr_ascii_printable_index];
+        const zfw_s_vec_2d_int chr_size = fonts->arrangement_infos[font_index].chr_sizes[chr_ascii_printable_index];
 
         const zfw_s_rect_edges chr_rect_edges = {
             .left = chr_render_positions[i].x,
@@ -712,7 +712,7 @@ void ZFW_GenRenderable(zfw_t_gl_id* const va_gl_id, zfw_t_gl_id* const vb_gl_id,
     glBindVertexArray(0);
 }
 
-static bool AttachFramebufferTexture(const zfw_t_gl_id fb_gl_id, const zfw_t_gl_id tex_gl_id, const zfw_s_vec_2d_s32 tex_size) {
+static bool AttachFramebufferTexture(const zfw_t_gl_id fb_gl_id, const zfw_t_gl_id tex_gl_id, const zfw_s_vec_2d_int tex_size) {
     assert(fb_gl_id != 0);
     assert(tex_gl_id != 0);
     assert(tex_size.x > 0 && tex_size.y > 0);
@@ -733,7 +733,7 @@ static bool AttachFramebufferTexture(const zfw_t_gl_id fb_gl_id, const zfw_t_gl_
     return success;
 }
 
-zfw_s_surface_group ZFW_GenSurfaces(const int surf_cnt, const zfw_s_vec_2d_s32* const surf_sizes, zfw_s_gl_resource_arena* const gl_res_arena, s_mem_arena* const mem_arena) {
+zfw_s_surface_group ZFW_GenSurfaces(const int surf_cnt, const zfw_s_vec_2d_int* const surf_sizes, zfw_s_gl_resource_arena* const gl_res_arena, s_mem_arena* const mem_arena) {
     assert(surf_cnt > 0);
     assert(surf_sizes);
     ZFW_AssertGLResourceArenaValidity(gl_res_arena);
@@ -753,7 +753,7 @@ zfw_s_surface_group ZFW_GenSurfaces(const int surf_cnt, const zfw_s_vec_2d_s32* 
         return (zfw_s_surface_group){0};
     }
 
-    zfw_s_vec_2d_s32* const surf_sizes_pers = MEM_ARENA_PUSH_TYPE_CNT(mem_arena, zfw_s_vec_2d_s32, surf_cnt);
+    zfw_s_vec_2d_int* const surf_sizes_pers = MEM_ARENA_PUSH_TYPE_CNT(mem_arena, zfw_s_vec_2d_int, surf_cnt);
 
     if (!surf_sizes_pers) {
         LOG_ERROR("Failed to reserve memory for surface sizes!");
@@ -782,7 +782,7 @@ zfw_s_surface_group ZFW_GenSurfaces(const int surf_cnt, const zfw_s_vec_2d_s32* 
     };
 }
 
-bool ZFW_ResizeSurface(zfw_s_surface_group* const surfs, const int surf_index, const zfw_s_vec_2d_s32 size) {
+bool ZFW_ResizeSurface(zfw_s_surface_group* const surfs, const int surf_index, const zfw_s_vec_2d_int size) {
     ZFW_AssertSurfaceGroupValidity(surfs);
     assert(surf_index >= 0 && surf_index < surfs->cnt);
     assert(size.x > 0 && size.y > 0);

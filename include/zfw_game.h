@@ -15,8 +15,8 @@ typedef enum {
 } zfw_e_window_flags;
 
 typedef struct {
-    zfw_s_vec_2d_s32 pos;
-    zfw_s_vec_2d_s32 size;
+    zfw_s_vec_2d_int pos;
+    zfw_s_vec_2d_int size;
     bool fullscreen;
 } zfw_s_window_state;
 
@@ -71,7 +71,7 @@ typedef struct {
 } zfw_s_game_render_context;
 
 typedef struct {
-    zfw_s_vec_2d_s32 window_init_size;
+    zfw_s_vec_2d_int window_init_size;
     const char* window_title;
     zfw_e_window_flags window_flags;
 

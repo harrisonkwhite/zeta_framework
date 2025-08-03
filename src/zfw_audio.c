@@ -23,8 +23,8 @@ static zfw_s_sound_type LoadSoundTypeFromFile(const char* const file_path, s_mem
     ma_decoder_get_length_in_pcm_frames(&decoder, &frame_cnt);
 
     // Allocate memory for the audio sample buffer.
-    const int sample_buf_size = frame_size * frame_cnt;
-    t_u8* const sample_buf = MEM_ARENA_PUSH_TYPE_CNT(mem_arena, t_u8, sample_buf_size);
+    const size_t sample_buf_size = frame_size * frame_cnt;
+    t_byte* const sample_buf = MEM_ARENA_PUSH_TYPE_CNT(mem_arena, t_byte, sample_buf_size);
 
     if (!sample_buf) {
         LOG_ERROR("Failed to reserve memory for audio sample buffer!");
