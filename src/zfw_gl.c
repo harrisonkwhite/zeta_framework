@@ -312,9 +312,9 @@ static zfw_t_gl_id GenFontTexture(const stbtt_fontinfo* const stb_font_info, con
     return GenGLTextureFromRGBAPixelData(font_tex_rgba_px_data, tex_size);
 }
 
-zfw_s_font_group ZFW_GenFonts(const int font_cnt, const zfw_s_font_load_info* const load_infos, zfw_s_gl_resource_arena* const gl_res_arena, s_mem_arena* const mem_arena, s_mem_arena* const temp_mem_arena) {
+zfw_s_font_group ZFW_GenFonts(const int font_cnt, const zfw_s_font_info* const font_infos, zfw_s_gl_resource_arena* const gl_res_arena, s_mem_arena* const mem_arena, s_mem_arena* const temp_mem_arena) {
     assert(font_cnt > 0);
-    assert(load_infos);
+    assert(font_infos);
     ZFW_AssertGLResourceArenaValidity(gl_res_arena);
     assert(mem_arena && IsMemArenaValid(mem_arena));
     assert(temp_mem_arena && IsMemArenaValid(temp_mem_arena));
@@ -350,10 +350,10 @@ zfw_s_font_group ZFW_GenFonts(const int font_cnt, const zfw_s_font_load_info* co
 
     // Load each font.
     for (int i = 0; i < font_cnt; i++) {
-        const zfw_s_font_load_info* const load_info = &load_infos[i];
-        ZFW_AssertFontLoadInfoValidity(load_info);
+        const zfw_s_font_info* const info = &font_infos[i];
+        ZFW_AssertFontInfoValidity(info);
 
-        const t_byte* const font_file_data = PushEntireFileContents(load_info->file_path, temp_mem_arena, false);
+        const t_byte* const font_file_data = PushEntireFileContents(info->file_path, temp_mem_arena, false);
 
         if (!font_file_data) {
             LOG_ERROR("Failed to reserve memory for font file contents!");
@@ -374,7 +374,7 @@ zfw_s_font_group ZFW_GenFonts(const int font_cnt, const zfw_s_font_load_info* co
             goto error;
         }
 
-        LoadFontArrangementInfo(&arrangement_infos[i], &stb_font_info, load_info->height);
+        LoadFontArrangementInfo(&arrangement_infos[i], &stb_font_info, info->height);
 
         const zfw_s_vec_2d_int font_tex_size_limit = GLTextureSizeLimit();
 
@@ -385,7 +385,7 @@ zfw_s_font_group ZFW_GenFonts(const int font_cnt, const zfw_s_font_load_info* co
             goto error;
         }
 
-        tex_gl_ids[i] = GenFontTexture(&stb_font_info, load_info->height, tex_sizes[i], &tex_chr_positions[i], &arrangement_infos[i], temp_mem_arena);
+        tex_gl_ids[i] = GenFontTexture(&stb_font_info, info->height, tex_sizes[i], &tex_chr_positions[i], &arrangement_infos[i], temp_mem_arena);
 
         if (!tex_gl_ids[i]) {
             LOG_ERROR("Failed to generate font texture!");
@@ -395,7 +395,7 @@ zfw_s_font_group ZFW_GenFonts(const int font_cnt, const zfw_s_font_load_info* co
         continue;
 
 error:
-        LOG_ERROR("Failed to load font \"%s\" with height %d!", load_info->file_path, load_info->height);
+        LOG_ERROR("Failed to load font \"%s\" with height %d!", info->file_path, info->height);
 
         glDeleteTextures(font_cnt, tex_gl_ids);
 
@@ -598,40 +598,75 @@ static zfw_t_gl_id GenShaderFromSrc(const char* const src, const bool frag, s_me
     return shader_gl_id;
 }
 
-static zfw_t_gl_id GenShaderProg(const char* const vs_src, const char* const fs_src, s_mem_arena* const temp_mem_arena) {
-    assert(vs_src);
-    assert(fs_src);
+static zfw_t_gl_id GenShaderProg(const zfw_s_shader_prog_gen_info* const gen_info, s_mem_arena* const temp_mem_arena) {
+    ZFW_AssertShaderProgGenInfoValidity(gen_info);
     assert(temp_mem_arena && IsMemArenaValid(temp_mem_arena));
 
+    // Determine the shader sources.
+    const char *vs_src, *fs_src;
+
+    if (gen_info->is_srcs) {
+        vs_src = gen_info->vs_src;
+        fs_src = gen_info->fs_src;
+    } else {
+        vs_src = (const char*)PushEntireFileContents(gen_info->vs_file_path, temp_mem_arena, true);
+
+        if (!vs_src) {
+            LOG_ERROR("Failed to get contents of vertex shader source file \"%s\"!", gen_info->vs_file_path);
+            return 0;
+        }
+
+        fs_src = (const char*)PushEntireFileContents(gen_info->fs_file_path, temp_mem_arena, true);
+
+        if (!fs_src) {
+            LOG_ERROR("Failed to get contents of fragment shader source file \"%s\"!", gen_info->fs_file_path);
+            return 0;
+        }
+    }
+
+    // Generate the shaders from the sources.
     const zfw_t_gl_id vs_gl_id = GenShaderFromSrc(vs_src, false, temp_mem_arena);
 
     if (!vs_gl_id) {
-        LOG_ERROR("Failed to generate vertex shader from source!");
+        if (gen_info->is_srcs) {
+            LOG_ERROR("Failed to generate vertex shader from source!");
+        } else {
+            LOG_ERROR("Failed to generate vertex shader from source file \"%s\"!", gen_info->vs_file_path);
+        }
+
         return 0;
     }
 
     const zfw_t_gl_id fs_gl_id = GenShaderFromSrc(fs_src, true, temp_mem_arena);
 
     if (!fs_gl_id) {
-        LOG_ERROR("Failed to generate fragment shader from source!");
+        if (gen_info->is_srcs) {
+            LOG_ERROR("Failed to generate fragment shader from source!");
+        } else {
+            LOG_ERROR("Failed to generate fragment shader from source file \"%s\"!", gen_info->fs_file_path);
+        }
+
         glDeleteShader(vs_gl_id);
+
         return 0;
     }
 
+    // Set up the shader program.
     const zfw_t_gl_id prog_gl_id = glCreateProgram();
     glAttachShader(prog_gl_id, vs_gl_id);
     glAttachShader(prog_gl_id, fs_gl_id);
     glLinkProgram(prog_gl_id);
 
+    // Dispose the shaders, they're no longer needed.
     glDeleteShader(fs_gl_id);
     glDeleteShader(vs_gl_id);
 
     return prog_gl_id;
 }
 
-zfw_s_shader_prog_group ZFW_GenShaderProgs(const int prog_cnt, const zfw_t_gen_shader_prog_info_func gen_prog_info_func, zfw_s_gl_resource_arena* const gl_res_arena, s_mem_arena* const temp_mem_arena) {
+zfw_s_shader_prog_group ZFW_GenShaderProgs(const int prog_cnt, const zfw_s_shader_prog_gen_info* const prog_gen_infos, zfw_s_gl_resource_arena* const gl_res_arena, s_mem_arena* const temp_mem_arena) {
     assert(prog_cnt > 0);
-    assert(gen_prog_info_func);
+    assert(prog_gen_infos);
     ZFW_AssertGLResourceArenaValidity(gl_res_arena);
     assert(temp_mem_arena && IsMemArenaValid(temp_mem_arena));
 
@@ -643,14 +678,10 @@ zfw_s_shader_prog_group ZFW_GenShaderProgs(const int prog_cnt, const zfw_t_gen_s
     }
 
     for (int i = 0; i < prog_cnt; i++) {
-        const zfw_s_shader_prog_info prog_info = gen_prog_info_func(i, temp_mem_arena);
+        const zfw_s_shader_prog_gen_info* const gen_info = &prog_gen_infos[i];
+        ZFW_AssertShaderProgGenInfoValidity(gen_info);
 
-        if (IS_ZERO(prog_info)) {
-            LOG_ERROR("Failed to generate shader program information for shader program with index %d!", i);
-            return (zfw_s_shader_prog_group){0};
-        }
-
-        gl_ids[i] = GenShaderProg(prog_info.vs_src, prog_info.fs_src, temp_mem_arena);
+        gl_ids[i] = GenShaderProg(gen_info, temp_mem_arena);
 
         if (!gl_ids[i]) {
             LOG_ERROR("Failed to generate shader program with index %d!", i);

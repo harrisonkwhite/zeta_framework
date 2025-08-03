@@ -146,13 +146,13 @@ static inline void ZFW_AssertFontGroupValidity(const zfw_s_font_group* const fon
 typedef struct {
     const char* file_path;
     int height;
-} zfw_s_font_load_info;
+} zfw_s_font_info;
 
-static inline void ZFW_AssertFontLoadInfoValidity(const zfw_s_font_load_info* const load_info) {
-    assert(load_info);
+static inline void ZFW_AssertFontInfoValidity(const zfw_s_font_info* const info) {
+    assert(info);
 
-    assert(load_info->file_path);
-    assert(load_info->height > 0);
+    assert(info->file_path);
+    assert(info->height > 0);
 }
 
 typedef struct {
@@ -172,18 +172,27 @@ static inline void ZFW_AssertShaderProgGroupValidity(const zfw_s_shader_prog_gro
 }
 
 typedef struct {
-    const char* vs_src;
-    const char* fs_src;
-} zfw_s_shader_prog_info;
+    bool is_srcs;
 
-static inline void ZFW_AssertShaderProgInfoValidity(const zfw_s_shader_prog_info* const prog_info) {
-    assert(prog_info);
+    union {
+        struct {
+            const char* vs_src;
+            const char* fs_src;
+        };
 
-    assert(prog_info->vs_src);
-    assert(prog_info->fs_src);
+        struct {
+            const char* vs_file_path;
+            const char* fs_file_path;
+        };
+    };
+} zfw_s_shader_prog_gen_info;
+
+static inline void ZFW_AssertShaderProgGenInfoValidity(const zfw_s_shader_prog_gen_info* const gen_info) {
+    assert(gen_info);
+
+    assert(gen_info->vs_src);
+    assert(gen_info->fs_src);
 }
-
-typedef zfw_s_shader_prog_info (*zfw_t_gen_shader_prog_info_func)(const int prog_index, s_mem_arena* const mem_arena);
 
 typedef enum {
     zfw_ek_shader_prog_uniform_value_type_int,
@@ -261,11 +270,11 @@ zfw_s_texture_info ZFW_GenTextureInfoFromFile(const char* const file_path, s_mem
 zfw_s_texture_group ZFW_GenTextures(const int tex_cnt, const zfw_t_gen_texture_info_func gen_tex_info_func, zfw_s_gl_resource_arena* const gl_res_arena, s_mem_arena* const mem_arena, s_mem_arena* const temp_mem_arena);
 zfw_s_rect_edges ZFW_TextureCoords(const zfw_s_rect_int src_rect, const zfw_s_vec_2d_int tex_size);
 
-zfw_s_font_group ZFW_GenFonts(const int font_cnt, const zfw_s_font_load_info* const load_infos, zfw_s_gl_resource_arena* const gl_res_arena, s_mem_arena* const mem_arena, s_mem_arena* const temp_mem_arena);
+zfw_s_font_group ZFW_GenFonts(const int font_cnt, const zfw_s_font_info* const font_infos, zfw_s_gl_resource_arena* const gl_res_arena, s_mem_arena* const mem_arena, s_mem_arena* const temp_mem_arena);
 zfw_s_vec_2d* ZFW_PushStrChrRenderPositions(s_mem_arena* const mem_arena, const char* const str, const zfw_s_font_group* const fonts, const int font_index, const zfw_s_vec_2d pos, const zfw_s_vec_2d alignment);
 bool ZFW_LoadStrCollider(zfw_s_rect* const rect, const char* const str, const zfw_s_font_group* const fonts, const int font_index, const zfw_s_vec_2d pos, const zfw_s_vec_2d alignment, s_mem_arena* const temp_mem_arena);
 
-zfw_s_shader_prog_group ZFW_GenShaderProgs(const int prog_cnt, const zfw_t_gen_shader_prog_info_func gen_prog_info_func, zfw_s_gl_resource_arena* const gl_res_arena, s_mem_arena* const temp_mem_arena);
+zfw_s_shader_prog_group ZFW_GenShaderProgs(const int prog_cnt, const zfw_s_shader_prog_gen_info* const prog_gen_infos, zfw_s_gl_resource_arena* const gl_res_arena, s_mem_arena* const temp_mem_arena);
 
 void ZFW_GenRenderable(zfw_t_gl_id* const va_gl_id, zfw_t_gl_id* const vb_gl_id, zfw_t_gl_id* const eb_gl_id, const float* const vert_buf, const size_t vert_buf_size, const unsigned short* const elem_buf, const size_t elem_buf_size, const int* const vert_attr_lens, const int vert_attr_cnt);
 

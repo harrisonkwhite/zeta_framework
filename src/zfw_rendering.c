@@ -61,19 +61,21 @@ static zfw_s_texture_info GenBuiltinTextureInfo(const int tex_index, s_mem_arena
     }
 }
 
-static zfw_s_shader_prog_info GenBuiltinShaderProgInfo(const int prog_index, s_mem_arena* const mem_arena) {
+#if 0
+static zfw_s_shader_prog_gen_info GenBuiltinShaderProgInfo(const int prog_index) {
     switch ((zfw_e_builtin_shader_prog)prog_index) {
         case zfw_ek_builtin_shader_prog_batch:
-            return (zfw_s_shader_prog_info){
+            return (zfw_s_shader_prog_gen_info){
                 .vs_src = g_batch_vert_shader_src,
                 .fs_src = g_batch_frag_shader_src
             };
 
         default:
             assert(false && "Unhandled built-in shader program case!");
-            return (zfw_s_shader_prog_info){0};
+            return (zfw_s_shader_prog_gen_info){0};
     }
 }
+#endif
 
 static unsigned short* PushBatchRenderableElems(s_mem_arena* const mem_arena) {
     assert(mem_arena && IsMemArenaValid(mem_arena));
@@ -184,11 +186,23 @@ bool ZFW_InitRenderingBasis(zfw_s_rendering_basis* const basis, zfw_s_gl_resourc
         return false;
     }
 
-    basis->builtin_shader_progs = ZFW_GenShaderProgs(zfw_eks_builtin_shader_prog_cnt, GenBuiltinShaderProgInfo, gl_res_arena, temp_mem_arena);
+    {
+        const zfw_s_shader_prog_gen_info builtin_shader_prog_gen_infos[] = {
+            [zfw_ek_builtin_shader_prog_batch] = {
+                .is_srcs = true,
+                .vs_src = g_batch_vert_shader_src,
+                .fs_src = g_batch_frag_shader_src
+            }
+        };
 
-    if (IS_ZERO(basis->builtin_shader_progs)) {
-        LOG_ERROR("Failed to generate built-in shader programs for rendering basis!");
-        return false;
+        STATIC_ARRAY_LEN_CHECK(builtin_shader_prog_gen_infos, zfw_eks_builtin_shader_prog_cnt);
+
+        basis->builtin_shader_progs = ZFW_GenShaderProgs(zfw_eks_builtin_shader_prog_cnt, builtin_shader_prog_gen_infos, gl_res_arena, temp_mem_arena);
+
+        if (IS_ZERO(basis->builtin_shader_progs)) {
+            LOG_ERROR("Failed to generate built-in shader programs for rendering basis!");
+            return false;
+        }
     }
 
     basis->renderables = GenRenderables(gl_res_arena, temp_mem_arena);
