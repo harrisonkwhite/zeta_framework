@@ -483,6 +483,8 @@ void ZFW_SubmitBatch(const zfw_s_rendering_context* const rendering_context) {
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, eb_gl_id);
     glDrawElements(GL_TRIANGLES, ZFW_BATCH_SLOT_ELEM_CNT * rendering_context->state->batch.num_slots_used, GL_UNSIGNED_SHORT, NULL);
 
+    glUseProgram(0);
+
     rendering_context->state->batch.num_slots_used = 0;
     rendering_context->state->batch.tex_gl_id = 0;
 }
@@ -512,24 +514,31 @@ void ZFW_UnsetSurface(const zfw_s_rendering_context* const rendering_context) {
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
+static inline zfw_t_gl_id CurrentGLShaderProgram() {
+    int prog;
+    glGetIntegerv(GL_CURRENT_PROGRAM, &prog);
+    return prog;
+}
+
 void ZFW_SetSurfaceShaderProg(const zfw_s_rendering_context* const rendering_context, const zfw_s_shader_prog_group* const progs, const int prog_index) {
     ZFW_AssertRenderingContextValidity(rendering_context);
     ZFW_AssertShaderProgGroupValidity(progs);
     assert(prog_index >= 0 && prog_index < progs->cnt);
 
-    assert(rendering_context->state->surf_shader_prog_gl_id == 0 && "Potential double-assignment of surface shader program?");
+    assert(CurrentGLShaderProgram() == 0 && "Potential attempted double-assignment of surface shader program?");
 
-    rendering_context->state->surf_shader_prog_gl_id = progs->gl_ids[prog_index];
-    glUseProgram(rendering_context->state->surf_shader_prog_gl_id);
+    glUseProgram(progs->gl_ids[prog_index]);
 }
 
 void ZFW_SetSurfaceShaderProgUniform(const zfw_s_rendering_context* const rendering_context, const char* const name, const zfw_s_shader_prog_uniform_value val) {
     ZFW_AssertRenderingContextValidity(rendering_context);
     assert(name);
 
-    assert(rendering_context->state->surf_shader_prog_gl_id != 0 && "Surface shader program must be set before setting uniforms!");
+    const zfw_t_gl_id prog_gl_id = CurrentGLShaderProgram();
 
-    const int loc = glGetUniformLocation(rendering_context->state->surf_shader_prog_gl_id, name);
+    assert(prog_gl_id != 0 && "Surface shader program must be set before setting uniforms!");
+
+    const int loc = glGetUniformLocation(prog_gl_id, name);
     assert(loc != -1 && "Failed to get location of shader uniform!");
 
     switch (val.type) {
@@ -564,7 +573,7 @@ void ZFW_RenderSurface(const zfw_s_rendering_context* const rendering_context, c
     ZFW_AssertSurfaceGroupValidity(surfs);
     assert(surf_index >= 0 && surf_index < surfs->cnt);
 
-    assert(rendering_context->state->surf_shader_prog_gl_id != 0 && "Surface shader program must be set before rendering a surface!");
+    assert(CurrentGLShaderProgram() != 0 && "Surface shader program must be set before rendering a surface!");
 
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, surfs->fb_tex_gl_ids[surf_index]);
@@ -573,5 +582,5 @@ void ZFW_RenderSurface(const zfw_s_rendering_context* const rendering_context, c
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, rendering_context->basis->renderables.elem_buf_gl_ids[zfw_ek_renderable_surface]);
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, NULL);
 
-    rendering_context->state->surf_shader_prog_gl_id = 0;
+    glUseProgram(0);
 }

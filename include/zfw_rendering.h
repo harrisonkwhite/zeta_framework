@@ -97,16 +97,12 @@ static inline void ZFW_AssertBatchStateValidity(const zfw_s_batch_state* const b
 
 typedef struct {
     zfw_s_batch_state batch;
-
     zfw_t_matrix_4x4 view_mat;
-
-    zfw_t_gl_id surf_shader_prog_gl_id; // When a surface is rendered, this shader program is used.
 } zfw_s_rendering_state;
 
 static inline void ZFW_AssertRenderingStateValidity(const zfw_s_rendering_state* const state) {
     assert(state);
     ZFW_AssertBatchStateValidity(&state->batch);
-    assert(state->surf_shader_prog_gl_id == 0 || glIsProgram(state->surf_shader_prog_gl_id));
 }
 
 typedef struct {
