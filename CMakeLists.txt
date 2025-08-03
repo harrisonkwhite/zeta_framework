@@ -3,7 +3,7 @@ project(zeta_framework C)
 
 set(CMAKE_C_STANDARD 11)
 
-add_subdirectory(c_utils)
+add_subdirectory(external/c_utils)
 
 include(FetchContent)
 
@@ -36,15 +36,11 @@ add_library(zeta_framework STATIC
     include/zfw_math.h
     include/zfw_audio.h
     include/zfw_rng.h
-    external/glad/include/glad/glad.h
-    external/stb/include/stb_image.h
-    external/stb/include/stb_truetype.h
-    external/miniaudio/include/miniaudio.h
 )
 
 target_include_directories(zeta_framework PUBLIC
     include
-    c_utils/include
+    external/c_utils/include
     external/stb/include
     external/glad/include
     external/miniaudio/include
