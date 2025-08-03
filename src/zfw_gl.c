@@ -32,7 +32,7 @@ zfw_s_gl_resource_arena ZFW_GenGLResourceArena(s_mem_arena* const mem_arena, con
 }
 
 void ZFW_CleanGLResourceArena(zfw_s_gl_resource_arena* const res_arena) {
-    assert(res_arena);
+    ZFW_AssertGLResourceArenaValidity(res_arena);
 
     for (int i = 0; i < res_arena->res_used; i++) {
         const zfw_t_gl_id gl_id = res_arena->ids[i];
@@ -67,9 +67,9 @@ void ZFW_CleanGLResourceArena(zfw_s_gl_resource_arena* const res_arena) {
 }
 
 zfw_t_gl_id* ZFW_ReserveGLIDs(zfw_s_gl_resource_arena* const res_arena, const int cnt, const zfw_e_gl_resource_type res_type) {
-    assert(res_arena);
+    ZFW_AssertGLResourceArenaValidity(res_arena);
     assert(cnt > 0);
-    assert(res_type >= 0 && res_type < zfw_eks_gl_resource_type_cnt);
+    assert(res_type < zfw_eks_gl_resource_type_cnt);
 
     if (res_arena->res_used + cnt > res_arena->res_limit) {
         LOG_ERROR("OpenGL resource arena is full! Cannot reserve %d more IDs!", cnt);
@@ -82,7 +82,7 @@ zfw_t_gl_id* ZFW_ReserveGLIDs(zfw_s_gl_resource_arena* const res_arena, const in
 }
 
 static inline zfw_s_vec_2d_s32 GLTextureSizeLimit() {
-    GLint size;
+    int size;
     glGetIntegerv(GL_MAX_TEXTURE_SIZE, &size);
     return (zfw_s_vec_2d_s32){size, size};
 }
@@ -133,7 +133,7 @@ zfw_s_texture_info ZFW_GenTextureInfoFromFile(const char* const file_path, s_mem
 zfw_s_texture_group ZFW_GenTextures(const int tex_cnt, const zfw_t_gen_texture_info_func gen_tex_info_func, zfw_s_gl_resource_arena* const gl_res_arena, s_mem_arena* const mem_arena, s_mem_arena* const temp_mem_arena) {
     assert(tex_cnt > 0);
     assert(gen_tex_info_func);
-    assert(gl_res_arena);
+    ZFW_AssertGLResourceArenaValidity(gl_res_arena);
     assert(mem_arena && IsMemArenaValid(mem_arena));
     assert(temp_mem_arena && IsMemArenaValid(temp_mem_arena));
 
@@ -189,7 +189,7 @@ zfw_s_rect_edges ZFW_TextureCoords(const zfw_s_rect_s32 src_rect, const zfw_s_ve
 }
 
 static void LoadFontArrangementInfo(zfw_s_font_arrangement_info* const arrangement_info, const stbtt_fontinfo* const stb_font_info, const int height) {
-    assert(arrangement_info);
+    assert(arrangement_info && IS_ZERO(*arrangement_info));
     assert(stb_font_info);
     assert(height > 0);
 
@@ -218,7 +218,7 @@ static void LoadFontArrangementInfo(zfw_s_font_arrangement_info* const arrangeme
 static void LoadFontTextureInfo(zfw_s_vec_2d_s32* const tex_size, zfw_t_tex_chr_positions* const tex_chr_positions, const zfw_s_font_arrangement_info* const arrangement_info, const int tex_width_limit) {
     assert(tex_size && IS_ZERO(*tex_size));
     assert(tex_chr_positions && IS_ZERO(*tex_chr_positions));
-    assert(arrangement_info);
+    ZFW_AssertFontArrangementInfoValidity(arrangement_info);
     assert(tex_width_limit > 0);
 
     zfw_s_vec_2d_s32 chr_pos = {0};
@@ -252,7 +252,7 @@ static zfw_t_gl_id GenFontTexture(const stbtt_fontinfo* const stb_font_info, con
     assert(font_height > 0);
     assert(tex_size.x > 0 && tex_size.y > 0);
     assert(tex_chr_positions);
-    assert(font_arrangement_info);
+    ZFW_AssertFontArrangementInfoValidity(font_arrangement_info);
     assert(temp_mem_arena && IsMemArenaValid(temp_mem_arena));
 
     const float scale = stbtt_ScaleForPixelHeight(stb_font_info, font_height);
@@ -315,7 +315,7 @@ static zfw_t_gl_id GenFontTexture(const stbtt_fontinfo* const stb_font_info, con
 zfw_s_font_group ZFW_GenFonts(const int font_cnt, const zfw_s_font_load_info* const load_infos, zfw_s_gl_resource_arena* const gl_res_arena, s_mem_arena* const mem_arena, s_mem_arena* const temp_mem_arena) {
     assert(font_cnt > 0);
     assert(load_infos);
-    assert(gl_res_arena);
+    ZFW_AssertGLResourceArenaValidity(gl_res_arena);
     assert(mem_arena && IsMemArenaValid(mem_arena));
     assert(temp_mem_arena && IsMemArenaValid(temp_mem_arena));
 
@@ -351,8 +351,7 @@ zfw_s_font_group ZFW_GenFonts(const int font_cnt, const zfw_s_font_load_info* co
     // Load each font.
     for (int i = 0; i < font_cnt; i++) {
         const zfw_s_font_load_info* const load_info = &load_infos[i];
-        assert(load_info->file_path);
-        assert(load_info->height > 0);
+        AssertFontLoadInfoValidity(load_info);
 
         const t_u8* const font_file_data = PushEntireFileContents(load_info->file_path, temp_mem_arena, false);
 
@@ -418,6 +417,8 @@ typedef struct {
 } s_str_len_and_line_cnt;
 
 static s_str_len_and_line_cnt StrLenAndLineCnt(const char* const str) {
+    assert(str);
+
     int len = 0;
     int line_cnt = 1;
 
@@ -438,7 +439,7 @@ static s_str_len_and_line_cnt StrLenAndLineCnt(const char* const str) {
 zfw_s_vec_2d* ZFW_PushStrChrRenderPositions(s_mem_arena* const mem_arena, const char* const str, const zfw_s_font_group* const fonts, const int font_index, const zfw_s_vec_2d pos, const zfw_s_vec_2d alignment) {
     assert(mem_arena && IsMemArenaValid(mem_arena));
     assert(str && str[0]);
-    assert(fonts);
+    ZFW_AssertFontGroupValidity(fonts);
     assert(font_index >= 0 && font_index < fonts->cnt);
     assert(ZFW_IsStrAlignmentValid(alignment));
 
@@ -505,7 +506,7 @@ zfw_s_vec_2d* ZFW_PushStrChrRenderPositions(s_mem_arena* const mem_arena, const 
 bool ZFW_LoadStrCollider(zfw_s_rect* const rect, const char* const str, const zfw_s_font_group* const fonts, const int font_index, const zfw_s_vec_2d pos, const zfw_s_vec_2d alignment, s_mem_arena* const temp_mem_arena) {
     assert(rect && IS_ZERO(*rect));
     assert(str && str[0]);
-    assert(fonts);
+    ZFW_AssertFontGroupValidity(fonts);
     assert(font_index >= 0 && font_index < fonts->cnt);
     assert(ZFW_IsStrAlignmentValid(alignment));
     assert(temp_mem_arena && IsMemArenaValid(temp_mem_arena));
@@ -629,6 +630,11 @@ static zfw_t_gl_id GenShaderProg(const char* const vs_src, const char* const fs_
 }
 
 zfw_s_shader_prog_group ZFW_GenShaderProgs(const int prog_cnt, const zfw_t_gen_shader_prog_info_func gen_prog_info_func, zfw_s_gl_resource_arena* const gl_res_arena, s_mem_arena* const temp_mem_arena) {
+    assert(prog_cnt > 0);
+    assert(gen_prog_info_func);
+    ZFW_AssertGLResourceArenaValidity(gl_res_arena);
+    assert(temp_mem_arena && IsMemArenaValid(temp_mem_arena));
+
     zfw_t_gl_id* const gl_ids = ZFW_ReserveGLIDs(gl_res_arena, prog_cnt, zfw_ek_gl_resource_type_shader_prog);
 
     if (!gl_ids) {
@@ -730,7 +736,7 @@ static bool AttachFramebufferTexture(const zfw_t_gl_id fb_gl_id, const zfw_t_gl_
 zfw_s_surface_group ZFW_GenSurfaces(const int surf_cnt, const zfw_s_vec_2d_s32* const surf_sizes, zfw_s_gl_resource_arena* const gl_res_arena, s_mem_arena* const mem_arena) {
     assert(surf_cnt > 0);
     assert(surf_sizes);
-    assert(gl_res_arena);
+    ZFW_AssertGLResourceArenaValidity(gl_res_arena);
     assert(mem_arena && IsMemArenaValid(mem_arena));
 
     zfw_t_gl_id* const fb_gl_ids = ZFW_ReserveGLIDs(gl_res_arena, surf_cnt, zfw_ek_gl_resource_type_framebuffer);
@@ -758,6 +764,8 @@ zfw_s_surface_group ZFW_GenSurfaces(const int surf_cnt, const zfw_s_vec_2d_s32* 
     glGenTextures(surf_cnt, fb_tex_gl_ids);
 
     for (int i = 0; i < surf_cnt; i++) {
+        assert(surf_sizes[i].x > 0 && surf_sizes[i].y > 0);
+
         if (!AttachFramebufferTexture(fb_gl_ids[i], fb_tex_gl_ids[i], surf_sizes[i])) {
             LOG_ERROR("Failed to attach framebuffer texture for surface %d!", i);
             return (zfw_s_surface_group){0};
@@ -775,7 +783,7 @@ zfw_s_surface_group ZFW_GenSurfaces(const int surf_cnt, const zfw_s_vec_2d_s32* 
 }
 
 bool ZFW_ResizeSurface(zfw_s_surface_group* const surfs, const int surf_index, const zfw_s_vec_2d_s32 size) {
-    assert(surfs);
+    ZFW_AssertSurfaceGroupValidity(surfs);
     assert(surf_index >= 0 && surf_index < surfs->cnt);
     assert(size.x > 0 && size.y > 0);
     assert(size.x != surfs->sizes[surf_index].x || size.y != surfs->sizes[surf_index].y);

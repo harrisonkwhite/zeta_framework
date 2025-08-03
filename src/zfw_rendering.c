@@ -98,7 +98,7 @@ static unsigned short* PushBatchRenderableElems(s_mem_arena* const mem_arena) {
 }
 
 static zfw_s_renderables GenRenderables(zfw_s_gl_resource_arena* const gl_res_arena, s_mem_arena* const temp_mem_arena) {
-    assert(gl_res_arena);
+    ZFW_AssertGLResourceArenaValidity(gl_res_arena);
     assert(temp_mem_arena && IsMemArenaValid(temp_mem_arena));
 
     zfw_t_gl_id* const va_gl_ids = ZFW_ReserveGLIDs(gl_res_arena, zfw_eks_renderable_cnt, zfw_ek_gl_resource_type_vert_array);
@@ -173,7 +173,7 @@ static zfw_s_renderables GenRenderables(zfw_s_gl_resource_arena* const gl_res_ar
 
 bool ZFW_InitRenderingBasis(zfw_s_rendering_basis* const basis, zfw_s_gl_resource_arena* const gl_res_arena, s_mem_arena* const mem_arena, s_mem_arena* const temp_mem_arena) {
     assert(basis && IS_ZERO(*basis));
-    assert(gl_res_arena);
+    ZFW_AssertGLResourceArenaValidity(gl_res_arena);
     assert(mem_arena && IsMemArenaValid(mem_arena));
     assert(temp_mem_arena && IsMemArenaValid(temp_mem_arena));
 
@@ -215,7 +215,7 @@ void ZFW_RenderClear(const zfw_u_vec_4d col) {
 
 static void WriteBatchSlot(zfw_t_batch_slot* const slot, const zfw_s_batch_slot_write_info* const write_info) {
     assert(slot && IS_ZERO(*slot));
-    assert(write_info);
+    ZFW_AssertBatchSlotWriteInfoValidity(write_info);
 
     const zfw_s_vec_2d vert_coords[] = {
         {0.0f - write_info->origin.x, 0.0f - write_info->origin.y},
@@ -248,8 +248,8 @@ static void WriteBatchSlot(zfw_t_batch_slot* const slot, const zfw_s_batch_slot_
 }
 
 void ZFW_Render(const zfw_s_rendering_context* const rendering_context, const zfw_s_batch_slot_write_info* const write_info) {
-    assert(rendering_context);
-    assert(write_info);
+    ZFW_AssertRenderingContextValidity(rendering_context);
+    ZFW_AssertBatchSlotWriteInfoValidity(write_info);
 
     zfw_s_batch_state* const batch_state = &rendering_context->state->batch;
 
@@ -271,10 +271,12 @@ void ZFW_Render(const zfw_s_rendering_context* const rendering_context, const zf
 }
 
 void ZFW_RenderTexture(const zfw_s_rendering_context* const rendering_context, const zfw_s_texture_group* const textures, const int tex_index, const zfw_s_rect_s32 src_rect, const zfw_s_vec_2d pos, const zfw_s_vec_2d origin, const zfw_s_vec_2d scale, const float rot, const zfw_u_vec_4d blend) {
-    assert(rendering_context);
-    assert(textures && tex_index >= 0 && tex_index < textures->cnt);
+    ZFW_AssertRenderingContextValidity(rendering_context);
+    ZFW_AssertTextureGroupValidity(textures);
+    assert(tex_index >= 0 && tex_index < textures->cnt);
     assert(IS_ZERO(src_rect) || ZFW_IsSrcRectValid(src_rect, textures->sizes[tex_index]));
     assert(ZFW_IsOriginValid(origin));
+    assert(scale.x != 0.0f && scale.y != 0.0f);
     assert(ZFW_IsColorValid(blend));
 
     const zfw_s_rect_s32 src_rect_to_use = IS_ZERO(src_rect) ? (zfw_s_rect_s32){0, 0, textures->sizes[tex_index].x, textures->sizes[tex_index].y} : src_rect;
@@ -302,7 +304,7 @@ static inline zfw_s_rect InnerRect(const zfw_s_rect rect, const float outline_th
 }
 
 void ZFW_RenderRectWithOutline(const zfw_s_rendering_context* const rendering_context, const zfw_s_rect rect, const zfw_u_vec_4d fill_color, const zfw_u_vec_4d outline_color, const float outline_thickness) {
-    assert(rendering_context);
+    ZFW_AssertRenderingContextValidity(rendering_context);
     assert(rect.width > 0 && rect.height > 0);
     assert(ZFW_IsColorValid(fill_color));
     assert(ZFW_IsColorValid(outline_color));
@@ -331,8 +333,8 @@ void ZFW_RenderRectWithOutline(const zfw_s_rendering_context* const rendering_co
 }
 
 void ZFW_RenderRectWithOutlineAndOpaqueFill(const zfw_s_rendering_context* const rendering_context, const zfw_s_rect rect, const zfw_u_vec_3d fill_color, const zfw_u_vec_4d outline_color, const float outline_thickness) {
-    assert(rendering_context);
-    assert(rect.width > 0 && rect.height > 0);
+    ZFW_AssertRenderingContextValidity(rendering_context);
+    assert(rect.width > 0.0f && rect.height > 0.0f);
     assert(ZFW_IsColorRGBValid(fill_color));
     assert(ZFW_IsColorValid(outline_color));
     assert(outline_thickness != 0.0f && outline_thickness <= MIN(rect.width, rect.height) / 2.0f);
@@ -345,7 +347,7 @@ void ZFW_RenderRectWithOutlineAndOpaqueFill(const zfw_s_rendering_context* const
 }
 
 void ZFW_RenderBarHor(const zfw_s_rendering_context* const rendering_context, const zfw_s_rect rect, const float perc, const zfw_u_vec_4d front_color, const zfw_u_vec_4d bg_color) {
-    assert(rendering_context);
+    ZFW_AssertRenderingContextValidity(rendering_context);
     assert(rect.width > 0.0f && rect.height > 0.0f);
     assert(perc >= 0.0f && perc <= 1.0f);
     assert(ZFW_IsColorValid(front_color));
@@ -366,7 +368,7 @@ void ZFW_RenderBarHor(const zfw_s_rendering_context* const rendering_context, co
 }
 
 void ZFW_RenderBarVer(const zfw_s_rendering_context* const rendering_context, const zfw_s_rect rect, const float perc, const zfw_u_vec_4d front_color, const zfw_u_vec_4d bg_color) {
-    assert(rendering_context);
+    ZFW_AssertRenderingContextValidity(rendering_context);
     assert(rect.width > 0.0f && rect.height > 0.0f);
     assert(perc >= 0.0f && perc <= 1.0f);
     assert(ZFW_IsColorValid(front_color));
@@ -387,9 +389,9 @@ void ZFW_RenderBarVer(const zfw_s_rendering_context* const rendering_context, co
 }
 
 bool ZFW_RenderStr(const zfw_s_rendering_context* const rendering_context, const char* const str, const zfw_s_font_group* const fonts, const int font_index, const zfw_s_vec_2d pos, const zfw_s_vec_2d alignment, const zfw_u_vec_4d color, s_mem_arena* const temp_mem_arena) {
-    assert(rendering_context);
+    ZFW_AssertRenderingContextValidity(rendering_context);
     assert(str && str[0]);
-    assert(fonts);
+    ZFW_AssertFontGroupValidity(fonts);
     assert(font_index >= 0 && font_index < fonts->cnt);
     assert(ZFW_IsStrAlignmentValid(alignment));
     assert(ZFW_IsColorValid(color));
@@ -437,7 +439,7 @@ bool ZFW_RenderStr(const zfw_s_rendering_context* const rendering_context, const
 }
 
 void ZFW_SubmitBatch(const zfw_s_rendering_context* const rendering_context) {
-    assert(rendering_context);
+    ZFW_AssertRenderingContextValidity(rendering_context);
 
     if (rendering_context->state->batch.num_slots_used == 0) {
         // There is nothing to flush.
@@ -486,8 +488,8 @@ void ZFW_SubmitBatch(const zfw_s_rendering_context* const rendering_context) {
 }
 
 void ZFW_SetSurface(const zfw_s_rendering_context* const rendering_context, const zfw_s_surface_group* const surfs, const int surf_index) {
-    assert(rendering_context);
-    assert(surfs);
+    ZFW_AssertRenderingContextValidity(rendering_context);
+    ZFW_AssertSurfaceGroupValidity(surfs);
     assert(surf_index >= 0 && surf_index < surfs->cnt);
 
     assert(rendering_context->state->batch.num_slots_used == 0 && "Submit the current batch before changing surface!");
@@ -496,13 +498,15 @@ void ZFW_SetSurface(const zfw_s_rendering_context* const rendering_context, cons
 }
 
 void ZFW_UnsetSurface(const zfw_s_rendering_context* const rendering_context) {
+    ZFW_AssertRenderingContextValidity(rendering_context);
     assert(rendering_context->state->batch.num_slots_used == 0 && "Submit the current batch before changing surface!");
+
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 void ZFW_SetSurfaceShaderProg(const zfw_s_rendering_context* const rendering_context, const zfw_s_shader_prog_group* const progs, const int prog_index) {
-    assert(rendering_context);
-    assert(progs);
+    ZFW_AssertRenderingContextValidity(rendering_context);
+    ZFW_AssertShaderProgGroupValidity(progs);
     assert(prog_index >= 0 && prog_index < progs->cnt);
 
     assert(rendering_context->state->surf_shader_prog_gl_id == 0 && "Potential double-assignment of surface shader program?");
@@ -512,8 +516,9 @@ void ZFW_SetSurfaceShaderProg(const zfw_s_rendering_context* const rendering_con
 }
 
 void ZFW_SetSurfaceShaderProgUniform(const zfw_s_rendering_context* const rendering_context, const char* const name, const zfw_s_shader_prog_uniform_value val) {
-    assert(rendering_context);
+    ZFW_AssertRenderingContextValidity(rendering_context);
     assert(name);
+
     assert(rendering_context->state->surf_shader_prog_gl_id != 0 && "Surface shader program must be set before setting uniforms!");
 
     const int loc = glGetUniformLocation(rendering_context->state->surf_shader_prog_gl_id, name);
@@ -547,10 +552,11 @@ void ZFW_SetSurfaceShaderProgUniform(const zfw_s_rendering_context* const render
 }
 
 void ZFW_RenderSurface(const zfw_s_rendering_context* const rendering_context, const zfw_s_surface_group* const surfs, const int surf_index) {
-    assert(rendering_context);
-    assert(rendering_context->state->surf_shader_prog_gl_id != 0 && "Surface shader program must be set before rendering a surface!");
-    assert(surfs);
+    ZFW_AssertRenderingContextValidity(rendering_context);
+    ZFW_AssertSurfaceGroupValidity(surfs);
     assert(surf_index >= 0 && surf_index < surfs->cnt);
+
+    assert(rendering_context->state->surf_shader_prog_gl_id != 0 && "Surface shader program must be set before rendering a surface!");
 
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, surfs->fb_tex_gl_ids[surf_index]);

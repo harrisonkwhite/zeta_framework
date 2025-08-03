@@ -35,6 +35,14 @@ typedef struct {
     zfw_s_renderables renderables;
 } zfw_s_rendering_basis;
 
+static inline void ZFW_AssertRenderingBasisValidity(const zfw_s_rendering_basis* const basis) {
+    assert(basis);
+
+    ZFW_AssertTextureGroupValidity(&basis->builtin_textures);
+    ZFW_AssertShaderProgGroupValidity(&basis->builtin_shader_progs);
+    ZFW_AssertRenderablesValidity(&basis->renderables);
+}
+
 typedef struct {
     zfw_s_vec_2d vert_coord;
     zfw_s_vec_2d pos;
@@ -65,12 +73,27 @@ typedef struct {
     zfw_u_vec_4d blend;
 } zfw_s_batch_slot_write_info;
 
+static inline void ZFW_AssertBatchSlotWriteInfoValidity(const zfw_s_batch_slot_write_info* const write_info) {
+    assert(write_info);
+    assert(glIsTexture(write_info->tex_gl_id));
+    assert(write_info->tex_coords.left >= 0.0f && write_info->tex_coords.top >= 0.0f && write_info->tex_coords.right <= 1.0f && write_info->tex_coords.bottom <= 1.0f);
+    assert(write_info->size.x > 0.0f && write_info->size.y > 0.0f);
+    assert(ZFW_IsOriginValid(write_info->origin));
+    assert(ZFW_IsColorValid(write_info->blend));
+}
+
 typedef struct {
     zfw_t_batch_slot slots[ZFW_BATCH_SLOT_CNT];
     int num_slots_used;
 
     zfw_t_gl_id tex_gl_id;
 } zfw_s_batch_state;
+
+static inline void ZFW_AssertBatchStateValidity(const zfw_s_batch_state* const batch_state) {
+    assert(batch_state);
+    assert(batch_state->num_slots_used >= 0 && batch_state->num_slots_used <= ZFW_BATCH_SLOT_CNT);
+    assert(batch_state->num_slots_used == 0 || glIsTexture(batch_state->tex_gl_id));
+}
 
 typedef struct {
     zfw_s_batch_state batch;
@@ -80,12 +103,26 @@ typedef struct {
     zfw_t_gl_id surf_shader_prog_gl_id; // When a surface is rendered, this shader program is used.
 } zfw_s_rendering_state;
 
+static inline void ZFW_AssertRenderingStateValidity(const zfw_s_rendering_state* const state) {
+    assert(state);
+    ZFW_AssertBatchStateValidity(&state->batch);
+    assert(state->surf_shader_prog_gl_id == 0 || glIsProgram(state->surf_shader_prog_gl_id));
+}
+
 typedef struct {
     const zfw_s_rendering_basis* basis;
     zfw_s_rendering_state* state;
 
     zfw_s_vec_2d_s32 window_size;
 } zfw_s_rendering_context;
+
+static inline void ZFW_AssertRenderingContextValidity(const zfw_s_rendering_context* const rendering_context) {
+    assert(rendering_context);
+
+    ZFW_AssertRenderingBasisValidity(rendering_context->basis);
+    ZFW_AssertRenderingStateValidity(rendering_context->state);
+    assert(rendering_context->window_size.x > 0 && rendering_context->window_size.y > 0);
+}
 
 bool ZFW_InitRenderingBasis(zfw_s_rendering_basis* const basis, zfw_s_gl_resource_arena* const gl_res_arena, s_mem_arena* const mem_arena, s_mem_arena* const temp_mem_arena);
 void ZFW_InitRenderingState(zfw_s_rendering_state* const state);
