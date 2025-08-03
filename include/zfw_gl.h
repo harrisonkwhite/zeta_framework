@@ -88,7 +88,7 @@ typedef struct {
     zfw_s_vec_2d_s32 tex_size;
 } zfw_s_texture_info;
 
-static inline void AssertTextureInfoValidity(const zfw_s_texture_info* const tex_info) {
+static inline void ZFW_AssertTextureInfoValidity(const zfw_s_texture_info* const tex_info) {
     assert(tex_info);
 
     assert(tex_info->rgba_px_data);
@@ -148,7 +148,7 @@ typedef struct {
     int height;
 } zfw_s_font_load_info;
 
-static inline void AssertFontLoadInfoValidity(const zfw_s_font_load_info* const load_info) {
+static inline void ZFW_AssertFontLoadInfoValidity(const zfw_s_font_load_info* const load_info) {
     assert(load_info);
 
     assert(load_info->file_path);
@@ -176,7 +176,7 @@ typedef struct {
     const char* fs_src;
 } zfw_s_shader_prog_info;
 
-static inline void AssertShaderProgInfoValidity(const zfw_s_shader_prog_info* const prog_info) {
+static inline void ZFW_AssertShaderProgInfoValidity(const zfw_s_shader_prog_info* const prog_info) {
     assert(prog_info);
 
     assert(prog_info->vs_src);

@@ -351,7 +351,7 @@ zfw_s_font_group ZFW_GenFonts(const int font_cnt, const zfw_s_font_load_info* co
     // Load each font.
     for (int i = 0; i < font_cnt; i++) {
         const zfw_s_font_load_info* const load_info = &load_infos[i];
-        AssertFontLoadInfoValidity(load_info);
+        ZFW_AssertFontLoadInfoValidity(load_info);
 
         const t_u8* const font_file_data = PushEntireFileContents(load_info->file_path, temp_mem_arena, false);
 

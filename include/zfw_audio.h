@@ -18,7 +18,7 @@ typedef struct {
     ma_format format;
 } zfw_s_sound_type;
 
-static inline void AssertSoundTypeValidity(const zfw_s_sound_type* const snd_type) {
+static inline void ZFW_AssertSoundTypeValidity(const zfw_s_sound_type* const snd_type) {
     assert(snd_type);
     assert(snd_type->sample_buf);
     assert(snd_type->frame_cnt > 0);
@@ -31,12 +31,12 @@ typedef struct {
     int cnt;
 } zfw_s_sound_types;
 
-static inline void AssertSoundTypesValidity(const zfw_s_sound_types* const snd_types) {
+static inline void ZFW_AssertSoundTypesValidity(const zfw_s_sound_types* const snd_types) {
     assert(snd_types);
     assert((!snd_types->buf && snd_types->cnt == 0) || (snd_types->buf && snd_types->cnt > 0));
 
     for (int i = 0; i < snd_types->cnt; i++) {
-        AssertSoundTypeValidity(&snd_types->buf[i]);
+        ZFW_AssertSoundTypeValidity(&snd_types->buf[i]);
     }
 }
 

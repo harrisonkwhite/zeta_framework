@@ -129,7 +129,7 @@ zfw_s_sound_types ZFW_LoadSoundTypesFromFiles(s_mem_arena* const mem_arena, cons
 
 bool ZFW_PlaySound(zfw_s_audio_sys* const audio_sys, const zfw_s_sound_types* const snd_types, const int snd_type_index, const float vol, const float pan, const float pitch) {
     assert(audio_sys);
-    AssertSoundTypesValidity(snd_types);
+    ZFW_AssertSoundTypesValidity(snd_types);
     assert(snd_type_index >= 0 && snd_type_index < snd_types->cnt);
     assert(vol >= 0.0f && vol <= 1.0f);
     assert(pan >= -1.0f && pan <= 1.0f);
