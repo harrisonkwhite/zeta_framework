@@ -487,6 +487,12 @@ void ZFW_SubmitBatch(const zfw_s_rendering_context* const rendering_context) {
     rendering_context->state->batch.tex_gl_id = 0;
 }
 
+static inline zfw_t_gl_id BoundGLFramebuffer() {
+    int fb;
+    glGetIntegerv(GL_FRAMEBUFFER_BINDING, &fb);
+    return fb;
+}
+
 void ZFW_SetSurface(const zfw_s_rendering_context* const rendering_context, const zfw_s_surface_group* const surfs, const int surf_index) {
     ZFW_AssertRenderingContextValidity(rendering_context);
     ZFW_AssertSurfaceGroupValidity(surfs);
@@ -499,6 +505,8 @@ void ZFW_SetSurface(const zfw_s_rendering_context* const rendering_context, cons
 
 void ZFW_UnsetSurface(const zfw_s_rendering_context* const rendering_context) {
     ZFW_AssertRenderingContextValidity(rendering_context);
+
+    assert(BoundGLFramebuffer() != 0 && "Trying to unset surface but no OpenGL framebuffer is bound!");
     assert(rendering_context->state->batch.num_slots_used == 0 && "Submit the current batch before changing surface!");
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);

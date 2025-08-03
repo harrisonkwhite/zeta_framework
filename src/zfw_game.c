@@ -7,7 +7,7 @@
 #define TEMP_MEM_ARENA_SIZE MEGABYTES(40)
 
 #define TARG_TICKS_PER_SEC 60
-#define TARG_TICK_INTERVAL (1.0 / (TARG_TICKS_PER_SEC))
+#define TARG_TICK_INTERVAL (1.0 / TARG_TICKS_PER_SEC)
 
 typedef struct {
     zfw_e_mouse_scroll_state mouse_scroll_state; // When mouse scroll is detected, this can be updated via callback. It can be reset after the next tick (so there is a chance for the developer using ZFW to detect the scroll).
@@ -306,7 +306,6 @@ bool ZFW_RunGame(const zfw_s_game_info* const info) {
                 }
 
                 assert(rendering_state->batch.num_slots_used == 0 && "Developer rendering function completed, but not everything has been flushed!");
-                //assert(rendering_state->surf_index_stack.height == 0 && "Developer rendering function completed, but a surface is still active!");
             }
 
             glfwSwapBuffers(glfw_window);
