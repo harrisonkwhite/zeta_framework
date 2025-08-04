@@ -169,9 +169,9 @@ typedef struct {
     const zfw_s_input_events* events;
 } zfw_s_input_context;
 
-static inline void ZFW_AssertInputContextValidity(const zfw_s_input_context input_context) {
-    ZFW_AssertInputStateValidity(input_context.state);
-    ZFW_AssertInputEventsValidity(input_context.events);
+static inline void ZFW_AssertInputContextValidity(const zfw_s_input_context* const input_context) {
+    ZFW_AssertInputStateValidity(input_context->state);
+    ZFW_AssertInputEventsValidity(input_context->events);
 }
 
 zfw_s_input_state ZFW_InputState(GLFWwindow* const glfw_window);
@@ -181,52 +181,52 @@ void ZFW_GLFWMouseButtonCallback(GLFWwindow* const window, const int button, con
 void ZFW_GLFWScrollCallback(GLFWwindow* const window, const double offs_x, const double offs_y);
 void ZFW_GLFWCharCallback(GLFWwindow* const window, const unsigned int codepoint);
 
-static inline bool ZFW_IsKeyDown(const zfw_s_input_context input_context, const zfw_e_key_code kc) {
+static inline bool ZFW_IsKeyDown(const zfw_s_input_context* const input_context, const zfw_e_key_code kc) {
     ZFW_AssertInputContextValidity(input_context);
     assert(kc >= 0 && kc < zfw_eks_key_code_cnt);
 
     const zfw_t_key_bits key_mask = (zfw_t_key_bits)1 << kc;
-    return (input_context.state->keys_down & key_mask) != 0;
+    return (input_context->state->keys_down & key_mask) != 0;
 }
 
-static inline bool ZFW_IsKeyPressed(const zfw_s_input_context input_context, const zfw_e_key_code kc) {
+static inline bool ZFW_IsKeyPressed(const zfw_s_input_context* const input_context, const zfw_e_key_code kc) {
     ZFW_AssertInputContextValidity(input_context);
     assert(kc >= 0 && kc < zfw_eks_key_code_cnt);
 
     const zfw_t_key_bits key_mask = (zfw_t_key_bits)1 << kc;
-    return (input_context.events->keys_pressed & key_mask) != 0;
+    return (input_context->events->keys_pressed & key_mask) != 0;
 }
 
-static inline bool ZFW_IsKeyReleased(const zfw_s_input_context input_context, const zfw_e_key_code kc) {
+static inline bool ZFW_IsKeyReleased(const zfw_s_input_context* const input_context, const zfw_e_key_code kc) {
     ZFW_AssertInputContextValidity(input_context);
     assert(kc >= 0 && kc < zfw_eks_key_code_cnt);
 
     const zfw_t_key_bits key_mask = (zfw_t_key_bits)1 << kc;
-    return (input_context.events->keys_released & key_mask) != 0;
+    return (input_context->events->keys_released & key_mask) != 0;
 }
 
-static inline bool ZFW_IsMouseButtonDown(const zfw_s_input_context input_context, const zfw_e_mouse_button_code mbc) {
+static inline bool ZFW_IsMouseButtonDown(const zfw_s_input_context* const input_context, const zfw_e_mouse_button_code mbc) {
     ZFW_AssertInputContextValidity(input_context);
     assert(mbc >= 0 && mbc < zfw_eks_mouse_button_code_cnt);
 
     const zfw_t_mouse_button_bits mb_mask = (zfw_t_mouse_button_bits)1 << mbc;
-    return (input_context.state->mouse_buttons_down & mb_mask) != 0;
+    return (input_context->state->mouse_buttons_down & mb_mask) != 0;
 }
 
-static inline bool ZFW_IsMouseButtonPressed(const zfw_s_input_context input_context, const zfw_e_mouse_button_code mbc) {
+static inline bool ZFW_IsMouseButtonPressed(const zfw_s_input_context* const input_context, const zfw_e_mouse_button_code mbc) {
     ZFW_AssertInputContextValidity(input_context);
     assert(mbc >= 0 && mbc < zfw_eks_mouse_button_code_cnt);
 
     const zfw_t_mouse_button_bits mb_mask = (zfw_t_mouse_button_bits)1 << mbc;
-    return (input_context.events->mouse_buttons_pressed & mb_mask) != 0;
+    return (input_context->events->mouse_buttons_pressed & mb_mask) != 0;
 }
 
-static inline bool ZFW_IsMouseButtonReleased(const zfw_s_input_context input_context, const zfw_e_mouse_button_code mbc) {
+static inline bool ZFW_IsMouseButtonReleased(const zfw_s_input_context* const input_context, const zfw_e_mouse_button_code mbc) {
     ZFW_AssertInputContextValidity(input_context);
     assert(mbc >= 0 && mbc < zfw_eks_mouse_button_code_cnt);
 
     const zfw_t_mouse_button_bits mb_mask = (zfw_t_mouse_button_bits)1 << mbc;
-    return (input_context.events->mouse_buttons_released & mb_mask) != 0;
+    return (input_context->events->mouse_buttons_released & mb_mask) != 0;
 }
 
 #endif
