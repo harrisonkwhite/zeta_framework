@@ -6,29 +6,28 @@
 
 #define FONT_TEX_CHR_MARGIN (zfw_s_vec_2d_int){4, 4}
 
-zfw_s_gl_resource_arena ZFW_GenGLResourceArena(s_mem_arena* const mem_arena, const int res_limit) {
+bool ZFW_InitGLResourceArena(zfw_s_gl_resource_arena* const res_arena, s_mem_arena* const mem_arena, const int res_limit) {
+    assert(res_arena && IS_ZERO(*res_arena));
     assert(mem_arena && IsMemArenaValid(mem_arena));
     assert(res_limit > 0);
 
-    zfw_t_gl_id* const gl_ids = MEM_ARENA_PUSH_TYPE_CNT(mem_arena, zfw_t_gl_id, res_limit);
+    res_arena->ids = MEM_ARENA_PUSH_TYPE_CNT(mem_arena, zfw_t_gl_id, res_limit);
 
-    if (!gl_ids) {
+    if (!res_arena->ids) {
         LOG_ERROR("Failed to reserve memory for OpenGL resource IDs!");
-        return (zfw_s_gl_resource_arena){0};
+        return false;
     }
 
-    zfw_e_gl_resource_type* const res_types = MEM_ARENA_PUSH_TYPE_CNT(mem_arena, zfw_e_gl_resource_type, res_limit);
+    res_arena->res_types = MEM_ARENA_PUSH_TYPE_CNT(mem_arena, zfw_e_gl_resource_type, res_limit);
 
-    if (!res_types) {
+    if (!res_arena->res_types) {
         LOG_ERROR("Failed to reserve memory for OpenGL resource types!");
-        return (zfw_s_gl_resource_arena){0};
+        return false;
     }
 
-    return (zfw_s_gl_resource_arena){
-        .ids = gl_ids,
-        .res_types = res_types,
-        .res_limit = res_limit
-    };
+    res_arena->res_limit = res_limit;
+
+    return true;
 }
 
 void ZFW_CleanGLResourceArena(zfw_s_gl_resource_arena* const res_arena) {

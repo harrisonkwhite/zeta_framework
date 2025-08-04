@@ -262,7 +262,7 @@ static inline void ZFW_AssertSurfaceGroupValidity(const zfw_s_surface_group* con
     }
 }
 
-zfw_s_gl_resource_arena ZFW_GenGLResourceArena(s_mem_arena* const mem_arena, const int res_limit);
+bool ZFW_InitGLResourceArena(zfw_s_gl_resource_arena* const res_arena, s_mem_arena* const mem_arena, const int res_limit);
 void ZFW_CleanGLResourceArena(zfw_s_gl_resource_arena* const res_arena);
 zfw_t_gl_id* ZFW_ReserveGLIDs(zfw_s_gl_resource_arena* const res_arena, const int cnt, const zfw_e_gl_resource_type res_type);
 

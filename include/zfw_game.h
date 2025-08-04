@@ -77,10 +77,23 @@ typedef struct {
 
     // Below are pointers to functions that the framework will call for you. The provided struct pointers expose parts of the framework state for you to work with.
     bool (*init_func)(const zfw_s_game_init_context* const func_data); // Called as one of the last steps of the game initialisation phase.
-    zfw_e_game_tick_result (*tick_func)(const zfw_s_game_tick_context* const func_data); // Called once every tick.
-    bool (*render_func)(const zfw_s_game_render_context* const func_data); // Called after a tick.
-    void (*clean_func)(void* const dev_mem); // Called when the game ends (including if it ends in error). This is not called if the initialisation function failed or was not yet called.
+    zfw_e_game_tick_result (*tick_func)(const zfw_s_game_tick_context* const func_data); // Called once every tick (which can occur multiple times a frame).
+    bool (*render_func)(const zfw_s_game_render_context* const func_data); // Called after all ticks have been run.
+    void (*clean_func)(void* const dev_mem); // Called when the game ends (including if it ends in error). This is not called if your initialisation function failed or hasn't yet been called.
 } zfw_s_game_info;
+
+static inline void ZFW_AssertGameInfoValidity(const zfw_s_game_info* const info) {
+    assert(info);
+
+    assert(info->window_title);
+    assert(info->window_init_size.x > 0 && info->window_init_size.y > 0);
+
+    assert((info->dev_mem_size == 0 && info->dev_mem_alignment == 0) || (info->dev_mem_size > 0 && IsAlignmentValid(info->dev_mem_alignment)));
+
+    assert(info->init_func);
+    assert(info->tick_func);
+    assert(info->render_func);
+}
 
 bool ZFW_RunGame(const zfw_s_game_info* const info);
 

@@ -215,9 +215,16 @@ bool ZFW_InitRenderingBasis(zfw_s_rendering_basis* const basis, zfw_s_gl_resourc
     return true;
 }
 
-void ZFW_InitRenderingState(zfw_s_rendering_state* const state) {
-    assert(state && IS_ZERO(*state));
-    state->view_mat = ZFW_IdentityMatrix4x4();
+zfw_s_rendering_state* ZFW_PushRenderingState(s_mem_arena* const mem_arena) {
+    assert(mem_arena && IsMemArenaValid(mem_arena));
+
+    zfw_s_rendering_state* const state = MEM_ARENA_PUSH_TYPE(mem_arena, zfw_s_rendering_state);
+
+    if (state) {
+        state->view_mat = ZFW_IdentityMatrix4x4();
+    }
+
+    return state;
 }
 
 void ZFW_Clear(const zfw_s_rendering_context* const rendering_context, const zfw_u_vec_4d col) {
