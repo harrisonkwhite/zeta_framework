@@ -6,6 +6,8 @@
 #include "zfw_math.h"
 
 typedef enum {
+    zfw_eks_key_code_none = -1,
+
     zfw_ek_key_code_space,
     zfw_ek_key_code_0,
     zfw_ek_key_code_1,
@@ -73,11 +75,19 @@ typedef enum {
     zfw_eks_key_code_cnt
 } zfw_e_key_code;
 
-typedef uint64_t zfw_t_keys_down_bits;
+typedef uint64_t zfw_t_key_bits;
 
-static_assert(zfw_eks_key_code_cnt < SIZE_IN_BITS(zfw_t_keys_down_bits), "Too many key codes!");
+static_assert(zfw_eks_key_code_cnt < SIZE_IN_BITS(zfw_t_key_bits), "Too many key codes!");
+
+static inline bool ZFW_IsKeyBitsValid(const zfw_t_key_bits key_bits) {
+    // Check if any bit is set outside the valid range.
+    const zfw_t_key_bits mask = ((zfw_t_key_bits)1 << zfw_eks_key_code_cnt) - 1;
+    return (key_bits & ~mask) == 0;
+}
 
 typedef enum {
+    zfw_eks_mouse_button_code_none = -1,
+
     zfw_ek_mouse_button_code_left,
     zfw_ek_mouse_button_code_right,
     zfw_ek_mouse_button_code_middle,
@@ -85,9 +95,15 @@ typedef enum {
     zfw_eks_mouse_button_code_cnt
 } zfw_e_mouse_button_code;
 
-typedef uint8_t zfw_t_mouse_buttons_down_bits;
+typedef uint8_t zfw_t_mouse_button_bits;
 
-static_assert(zfw_eks_mouse_button_code_cnt < SIZE_IN_BITS(zfw_t_mouse_buttons_down_bits), "Too many mouse button codes!");
+static_assert(zfw_eks_mouse_button_code_cnt < SIZE_IN_BITS(zfw_t_mouse_button_bits), "Too many mouse button codes!");
+
+static inline bool ZFW_IsMouseButtonBitsValid(const zfw_t_mouse_button_bits mb_bits) {
+    // Check if any bit is set outside the valid range.
+    const zfw_t_mouse_button_bits mask = ((zfw_t_mouse_button_bits)1 << zfw_eks_mouse_button_code_cnt) - 1;
+    return (mb_bits & ~mask) == 0;
+}
 
 typedef enum {
     zfw_ek_mouse_scroll_state_none,
@@ -95,61 +111,122 @@ typedef enum {
     zfw_ek_mouse_scroll_state_up
 } zfw_e_mouse_scroll_state;
 
-typedef struct {
-    zfw_t_keys_down_bits keys_down;
-    zfw_t_mouse_buttons_down_bits mouse_buttons_down;
-    zfw_s_vec_2d mouse_pos;
-    zfw_e_mouse_scroll_state mouse_scroll_state;
-} zfw_s_input_state;
-
 typedef char zfw_t_unicode_buf[32];
 
-void ZFW_RefreshInputState(zfw_s_input_state* const state, GLFWwindow* const glfw_window, const zfw_e_mouse_scroll_state mouse_scroll_state);
+typedef struct {
+    zfw_t_key_bits keys_down;
+    zfw_t_mouse_button_bits mouse_buttons_down;
 
-static inline bool ZFW_IsKeyDown(const zfw_e_key_code kc, const zfw_s_input_state* const input_state) {
-    assert(kc < zfw_eks_key_code_cnt);
-    assert(input_state);
+    zfw_s_vec_2d mouse_pos;
+} zfw_s_input_state;
 
-    return (input_state->keys_down & ((zfw_t_keys_down_bits)1 << kc)) != 0;
+static inline void ZFW_AssertInputStateValidity(const zfw_s_input_state* const state) {
+    assert(state);
+
+    assert(ZFW_IsKeyBitsValid(state->keys_down));
+    assert(ZFW_IsMouseButtonBitsValid(state->mouse_buttons_down));
 }
 
-static inline bool ZFW_IsKeyPressed(const zfw_e_key_code kc, const zfw_s_input_state* const input_state, const zfw_s_input_state* const input_state_last) {
-    assert(kc < zfw_eks_key_code_cnt);
-    assert(input_state);
-    assert(input_state_last);
+typedef struct {
+    zfw_t_key_bits keys_pressed;
+    zfw_t_key_bits keys_released;
 
-    return ZFW_IsKeyDown(kc, input_state) && !ZFW_IsKeyDown(kc, input_state_last);
+    zfw_t_mouse_button_bits mouse_buttons_pressed;
+    zfw_t_mouse_button_bits mouse_buttons_released;
+
+    zfw_e_mouse_scroll_state mouse_scroll_state;
+
+    zfw_t_unicode_buf unicode_buf;
+} zfw_s_input_events;
+
+static inline void ZFW_AssertInputEventsValidity(const zfw_s_input_events* const events) {
+    assert(events);
+
+    // Check key bits.
+    const zfw_t_key_bits keys_mask = ((zfw_t_key_bits)1 << zfw_eks_key_code_cnt) - 1;
+    assert(ZFW_IsKeyBitsValid(events->keys_pressed));
+    assert(ZFW_IsKeyBitsValid(events->keys_released));
+
+    // Check mouse button bits.
+    const zfw_t_mouse_button_bits mouse_buttons_mask = ((zfw_t_mouse_button_bits)1 << zfw_eks_mouse_button_code_cnt) - 1;
+    assert(ZFW_IsMouseButtonBitsValid(events->mouse_buttons_pressed));
+    assert(ZFW_IsMouseButtonBitsValid(events->mouse_buttons_released));
+
+    // Check the unicode buffer.
+    for (size_t i = 0; i < sizeof(zfw_t_unicode_buf); i++) {
+        if (!events->unicode_buf[i]) {
+            for (size_t j = i + 1; j < sizeof(zfw_t_unicode_buf); j++) {
+                assert(!events->unicode_buf[j] && "Everything after the first '\0' in the unicode buffer should also be '\0'!");
+            }
+
+            break;
+        }
+    }
 }
 
-static inline bool ZFW_IsKeyReleased(const zfw_e_key_code kc, const zfw_s_input_state* const input_state, const zfw_s_input_state* const input_state_last) {
-    assert(kc < zfw_eks_key_code_cnt);
-    assert(input_state);
-    assert(input_state_last);
+typedef struct {
+    const zfw_s_input_state* state;
+    const zfw_s_input_events* events;
+} zfw_s_input_context;
 
-    return !ZFW_IsKeyDown(kc, input_state) && ZFW_IsKeyDown(kc, input_state_last);
+static inline void ZFW_AssertInputContextValidity(const zfw_s_input_context input_context) {
+    ZFW_AssertInputStateValidity(input_context.state);
+    ZFW_AssertInputEventsValidity(input_context.events);
 }
 
-static inline bool ZFW_IsMouseButtonDown(const zfw_e_mouse_button_code mbc, const zfw_s_input_state* const input_state) {
-    assert(mbc < zfw_eks_mouse_button_code_cnt);
-    assert(input_state);
+zfw_s_input_state ZFW_InputState(GLFWwindow* const glfw_window);
 
-    return (input_state->mouse_buttons_down & ((zfw_t_mouse_buttons_down_bits)1 << mbc)) != 0;
+void ZFW_GLFWKeyCallback(GLFWwindow* const window, const int key, const int scancode, const int action, const int mods);
+void ZFW_GLFWMouseButtonCallback(GLFWwindow* const window, const int button, const int action, const int mods);
+void ZFW_GLFWScrollCallback(GLFWwindow* const window, const double offs_x, const double offs_y);
+void ZFW_GLFWCharCallback(GLFWwindow* const window, const unsigned int codepoint);
+
+static inline bool ZFW_IsKeyDown(const zfw_s_input_context input_context, const zfw_e_key_code kc) {
+    ZFW_AssertInputContextValidity(input_context);
+    assert(kc >= 0 && kc < zfw_eks_key_code_cnt);
+
+    const zfw_t_key_bits key_mask = (zfw_t_key_bits)1 << kc;
+    return (input_context.state->keys_down & key_mask) != 0;
 }
 
-static inline bool ZFW_IsMouseButtonPressed(const zfw_e_mouse_button_code mbc, const zfw_s_input_state* const input_state, const zfw_s_input_state* const input_state_last) {
-    assert(mbc < zfw_eks_mouse_button_code_cnt);
-    assert(input_state);
-    assert(input_state_last);
+static inline bool ZFW_IsKeyPressed(const zfw_s_input_context input_context, const zfw_e_key_code kc) {
+    ZFW_AssertInputContextValidity(input_context);
+    assert(kc >= 0 && kc < zfw_eks_key_code_cnt);
 
-    return ZFW_IsMouseButtonDown(mbc, input_state) && !ZFW_IsMouseButtonDown(mbc, input_state_last);
+    const zfw_t_key_bits key_mask = (zfw_t_key_bits)1 << kc;
+    return (input_context.events->keys_pressed & key_mask) != 0;
 }
 
-static inline bool ZFW_IsMouseButtonReleased(const zfw_e_mouse_button_code mbc, const zfw_s_input_state* const input_state, const zfw_s_input_state* const input_state_last) {
-    assert(mbc < zfw_eks_mouse_button_code_cnt);
-    assert(input_state);
-    assert(input_state_last);
+static inline bool ZFW_IsKeyReleased(const zfw_s_input_context input_context, const zfw_e_key_code kc) {
+    ZFW_AssertInputContextValidity(input_context);
+    assert(kc >= 0 && kc < zfw_eks_key_code_cnt);
 
-    return !ZFW_IsMouseButtonDown(mbc, input_state) && ZFW_IsMouseButtonDown(mbc, input_state_last);
+    const zfw_t_key_bits key_mask = (zfw_t_key_bits)1 << kc;
+    return (input_context.events->keys_released & key_mask) != 0;
+}
+
+static inline bool ZFW_IsMouseButtonDown(const zfw_s_input_context input_context, const zfw_e_mouse_button_code mbc) {
+    ZFW_AssertInputContextValidity(input_context);
+    assert(mbc >= 0 && mbc < zfw_eks_mouse_button_code_cnt);
+
+    const zfw_t_mouse_button_bits mb_mask = (zfw_t_mouse_button_bits)1 << mbc;
+    return (input_context.state->mouse_buttons_down & mb_mask) != 0;
+}
+
+static inline bool ZFW_IsMouseButtonPressed(const zfw_s_input_context input_context, const zfw_e_mouse_button_code mbc) {
+    ZFW_AssertInputContextValidity(input_context);
+    assert(mbc >= 0 && mbc < zfw_eks_mouse_button_code_cnt);
+
+    const zfw_t_mouse_button_bits mb_mask = (zfw_t_mouse_button_bits)1 << mbc;
+    return (input_context.events->mouse_buttons_pressed & mb_mask) != 0;
+}
+
+static inline bool ZFW_IsMouseButtonReleased(const zfw_s_input_context input_context, const zfw_e_mouse_button_code mbc) {
+    ZFW_AssertInputContextValidity(input_context);
+    assert(mbc >= 0 && mbc < zfw_eks_mouse_button_code_cnt);
+
+    const zfw_t_mouse_button_bits mb_mask = (zfw_t_mouse_button_bits)1 << mbc;
+    return (input_context.events->mouse_buttons_released & mb_mask) != 0;
 }
 
 #endif

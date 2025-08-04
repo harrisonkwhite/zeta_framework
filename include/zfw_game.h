@@ -48,10 +48,7 @@ typedef struct {
 
     zfw_s_window_state window_state;
 
-    const zfw_s_input_state* input_state;
-    const zfw_s_input_state* input_state_last;
-
-    const zfw_t_unicode_buf* unicode_buf; // TODO: Move into input state?
+    zfw_s_input_context input_context;
 
     zfw_s_gl_resource_arena* const gl_res_arena;
     const zfw_s_rendering_basis* const rendering_basis;

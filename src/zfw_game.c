@@ -9,11 +9,6 @@
 #define TARG_TICKS_PER_SEC 60
 #define TARG_TICK_INTERVAL (1.0 / TARG_TICKS_PER_SEC)
 
-typedef struct {
-    zfw_e_mouse_scroll_state mouse_scroll_state; // When mouse scroll is detected, this can be updated via callback. It can be reset after the next tick (so there is a chance for the developer using ZFW to detect the scroll).
-    zfw_t_unicode_buf unicode_buf; // This is filled up as characters are typed, and zeroed out after the next tick. This way, the developer using ZFW can see everything that has been typed since the last tick.
-} s_glfw_callback_data;
-
 static void AssertGameInfoValidity(const zfw_s_game_info* const info) {
     assert(info);
 
@@ -28,7 +23,7 @@ static void AssertGameInfoValidity(const zfw_s_game_info* const info) {
     assert(info->render_func);
 }
 
-static zfw_s_window_state WindowState(GLFWwindow* const glfw_window) {
+static zfw_s_window_state GenWindowState(GLFWwindow* const glfw_window) {
     assert(glfw_window);
 
     zfw_s_window_state state = {
@@ -38,31 +33,6 @@ static zfw_s_window_state WindowState(GLFWwindow* const glfw_window) {
     glfwGetWindowSize(glfw_window, &state.size.x, &state.size.y);
 
     return state;
-}
-
-static void GLFWScrollCallback(GLFWwindow* const window, const double offs_x, const double offs_y) {
-    s_glfw_callback_data* const cb_data = glfwGetWindowUserPointer(window);
-
-    if (offs_y > 0.0) {
-        cb_data->mouse_scroll_state = zfw_ek_mouse_scroll_state_up;
-    } else if (offs_y < 0.0) {
-        cb_data->mouse_scroll_state = zfw_ek_mouse_scroll_state_down;
-    } else {
-        cb_data->mouse_scroll_state = zfw_ek_mouse_scroll_state_none;
-    }
-}
-
-static void GLFWCharCallback(GLFWwindow* const window, const unsigned int codepoint) {
-    s_glfw_callback_data* const cb_data = glfwGetWindowUserPointer(window);
-
-    for (int i = 0; i < sizeof(cb_data->unicode_buf); i++) {
-        if (!cb_data->unicode_buf[i]) {
-            cb_data->unicode_buf[i] = (char)codepoint;
-            return;
-        }
-    }
-
-    LOG_WARNING("Unicode buffer is full!");
 }
 
 static void ResizeGLViewportIfDifferent(const zfw_s_vec_2d_int size) {
@@ -77,7 +47,6 @@ static void ResizeGLViewportIfDifferent(const zfw_s_vec_2d_int size) {
 }
 
 bool ZFW_RunGame(const zfw_s_game_info* const info) {
-    assert(info);
     AssertGameInfoValidity(info);
 
     bool error = false;
@@ -132,12 +101,16 @@ bool ZFW_RunGame(const zfw_s_game_info* const info) {
 
     glfwSwapInterval(1); // Enables VSync.
 
-    // Set up GLFW callbacks.
-    s_glfw_callback_data glfw_callback_data = {0};
-    glfwSetWindowUserPointer(glfw_window, &glfw_callback_data);
+    // Initialise input events.
+    zfw_s_input_events input_events = {0};
 
-    glfwSetScrollCallback(glfw_window, GLFWScrollCallback);
-    glfwSetCharCallback(glfw_window, GLFWCharCallback);
+    // Set up GLFW callbacks.
+    glfwSetWindowUserPointer(glfw_window, &input_events);
+
+    glfwSetKeyCallback(glfw_window, ZFW_GLFWKeyCallback);
+    glfwSetMouseButtonCallback(glfw_window, ZFW_GLFWMouseButtonCallback);
+    glfwSetScrollCallback(glfw_window, ZFW_GLFWScrollCallback);
+    glfwSetCharCallback(glfw_window, ZFW_GLFWCharCallback);
 
     // Initialise OpenGL rendering.
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
@@ -201,7 +174,7 @@ bool ZFW_RunGame(const zfw_s_game_info* const info) {
             .dev_mem = dev_mem,
             .perm_mem_arena = &perm_mem_arena,
             .temp_mem_arena = &temp_mem_arena,
-            .window_state = WindowState(glfw_window),
+            .window_state = GenWindowState(glfw_window),
             .gl_res_arena = &gl_res_arena,
             .rendering_basis = &rendering_basis,
             .audio_sys = &audio_sys
@@ -219,30 +192,26 @@ bool ZFW_RunGame(const zfw_s_game_info* const info) {
     //
     glfwShowWindow(glfw_window);
 
-    zfw_s_input_state input_state = {0};
-
     double frame_time_last = glfwGetTime();
     double frame_dur_accum = 0.0;
 
     bool running = true;
 
     while (!glfwWindowShouldClose(glfw_window) && running) {
-        glfwPollEvents();
-
         RewindMemArena(&temp_mem_arena, 0);
 
-        const zfw_s_window_state window_state = WindowState(glfw_window);
+        const zfw_s_window_state window_state = GenWindowState(glfw_window);
 
         ResizeGLViewportIfDifferent(window_state.size);
 
         const double frame_time = glfwGetTime();
-        frame_dur_accum += frame_time - frame_time_last; // Update accumulator with delta time.
+        const double frame_time_delta = frame_time - frame_time_last;
+        frame_dur_accum += frame_time_delta;
         frame_time_last = frame_time;
 
         // Once enough time has passed (i.e. the time accumulator has reached the tick interval), run at least a single tick and update the display.
         if (frame_dur_accum >= TARG_TICK_INTERVAL) {
-            const zfw_s_input_state input_state_last = input_state;
-            ZFW_RefreshInputState(&input_state, glfw_window, glfw_callback_data.mouse_scroll_state);
+            const zfw_s_input_state input_state = ZFW_InputState(glfw_window);
 
             ZFW_UpdateAudioSys(&audio_sys);
 
@@ -254,9 +223,10 @@ bool ZFW_RunGame(const zfw_s_game_info* const info) {
                     .perm_mem_arena = &perm_mem_arena,
                     .temp_mem_arena = &temp_mem_arena,
                     .window_state = window_state,
-                    .input_state = &input_state,
-                    .input_state_last = &input_state_last,
-                    .unicode_buf = &glfw_callback_data.unicode_buf,
+                    .input_context = {
+                        .state = &input_state,
+                        .events = &input_events
+                    },
                     .gl_res_arena = &gl_res_arena,
                     .rendering_basis = &rendering_basis,
                     .audio_sys = &audio_sys
@@ -264,8 +234,7 @@ bool ZFW_RunGame(const zfw_s_game_info* const info) {
 
                 const zfw_e_game_tick_result res = info->tick_func(&context);
 
-                ZERO_OUT(glfw_callback_data.unicode_buf);
-                glfw_callback_data.mouse_scroll_state = zfw_ek_mouse_scroll_state_none;
+                ZERO_OUT(input_events);
 
                 if (res == zfw_ek_game_tick_result_exit) {
                     LOG("Exit request detected from developer game tick function...");
@@ -310,6 +279,8 @@ bool ZFW_RunGame(const zfw_s_game_info* const info) {
 
             glfwSwapBuffers(glfw_window);
         }
+
+        glfwPollEvents();
     }
 
     //
