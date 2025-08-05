@@ -27,15 +27,6 @@ add_library(zeta_framework STATIC
     external/glad/src/glad.c
     external/stb/src/stb.c
     external/miniaudio/src/miniaudio.c
-
-    include/zfw.h
-    include/zfw_game.h
-    include/zfw_input.h
-    include/zfw_gl.h
-    include/zfw_rendering.h
-    include/zfw_math.h
-    include/zfw_audio.h
-    include/zfw_rng.h
 )
 
 target_include_directories(zeta_framework PUBLIC
