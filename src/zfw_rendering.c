@@ -227,7 +227,7 @@ zfw_s_rendering_state* ZFW_PushRenderingState(s_mem_arena* const mem_arena) {
     return state;
 }
 
-void ZFW_Clear(const zfw_s_rendering_context* const rendering_context, const zfw_u_vec_4d col) {
+void ZFW_Clear(const zfw_s_rendering_context* const rendering_context, const u_v4 col) {
     ZFW_AssertRenderingContextValidity(rendering_context);
     assert(ZFW_IsColorValid(col));
 
@@ -247,7 +247,7 @@ static void WriteBatchSlot(zfw_t_batch_slot* const slot, const zfw_s_batch_slot_
     assert(slot && IS_ZERO(*slot));
     ZFW_AssertBatchSlotWriteInfoValidity(write_info);
 
-    const zfw_s_vec_2d vert_coords[] = {
+    const s_v2 vert_coords[] = {
         {0.0f - write_info->origin.x, 0.0f - write_info->origin.y},
         {1.0f - write_info->origin.x, 0.0f - write_info->origin.y},
         {1.0f - write_info->origin.x, 1.0f - write_info->origin.y},
@@ -256,7 +256,7 @@ static void WriteBatchSlot(zfw_t_batch_slot* const slot, const zfw_s_batch_slot_
 
     STATIC_ARRAY_LEN_CHECK(vert_coords, STATIC_ARRAY_LEN(*slot));
 
-    const zfw_s_vec_2d tex_coords[] = {
+    const s_v2 tex_coords[] = {
         {write_info->tex_coords.left, write_info->tex_coords.top},
         {write_info->tex_coords.right, write_info->tex_coords.top},
         {write_info->tex_coords.right, write_info->tex_coords.bottom},
@@ -300,7 +300,7 @@ void ZFW_Render(const zfw_s_rendering_context* const rendering_context, const zf
     batch_state->num_slots_used++;
 }
 
-void ZFW_RenderTexture(const zfw_s_rendering_context* const rendering_context, const zfw_s_texture_group* const textures, const int tex_index, const zfw_s_rect_int src_rect, const zfw_s_vec_2d pos, const zfw_s_vec_2d origin, const zfw_s_vec_2d scale, const float rot, const zfw_u_vec_4d blend) {
+void ZFW_RenderTexture(const zfw_s_rendering_context* const rendering_context, const zfw_s_texture_group* const textures, const int tex_index, const zfw_s_rect_int src_rect, const s_v2 pos, const s_v2 origin, const s_v2 scale, const float rot, const u_v4 blend) {
     ZFW_AssertRenderingContextValidity(rendering_context);
     ZFW_AssertTextureGroupValidity(textures);
     assert(tex_index >= 0 && tex_index < textures->cnt);
@@ -333,7 +333,7 @@ static inline zfw_s_rect InnerRect(const zfw_s_rect rect, const float outline_th
     };
 }
 
-void ZFW_RenderRectWithOutline(const zfw_s_rendering_context* const rendering_context, const zfw_s_rect rect, const zfw_u_vec_4d fill_color, const zfw_u_vec_4d outline_color, const float outline_thickness) {
+void ZFW_RenderRectWithOutline(const zfw_s_rendering_context* const rendering_context, const zfw_s_rect rect, const u_v4 fill_color, const u_v4 outline_color, const float outline_thickness) {
     ZFW_AssertRenderingContextValidity(rendering_context);
     assert(rect.width > 0 && rect.height > 0);
     assert(ZFW_IsColorValid(fill_color));
@@ -362,7 +362,7 @@ void ZFW_RenderRectWithOutline(const zfw_s_rendering_context* const rendering_co
     ZFW_RenderRect(rendering_context, InnerRect(rect, outline_thickness), fill_color);
 }
 
-void ZFW_RenderRectWithOutlineAndOpaqueFill(const zfw_s_rendering_context* const rendering_context, const zfw_s_rect rect, const zfw_u_vec_3d fill_color, const zfw_u_vec_4d outline_color, const float outline_thickness) {
+void ZFW_RenderRectWithOutlineAndOpaqueFill(const zfw_s_rendering_context* const rendering_context, const zfw_s_rect rect, const u_v3 fill_color, const u_v4 outline_color, const float outline_thickness) {
     ZFW_AssertRenderingContextValidity(rendering_context);
     assert(rect.width > 0.0f && rect.height > 0.0f);
     assert(ZFW_IsColorRGBValid(fill_color));
@@ -373,10 +373,10 @@ void ZFW_RenderRectWithOutlineAndOpaqueFill(const zfw_s_rendering_context* const
     ZFW_RenderRect(rendering_context, rect, outline_color);
 
     // Inside
-    ZFW_RenderRect(rendering_context, InnerRect(rect, outline_thickness), (zfw_u_vec_4d){fill_color.r, fill_color.g, fill_color.b, 1.0f});
+    ZFW_RenderRect(rendering_context, InnerRect(rect, outline_thickness), (u_v4){fill_color.r, fill_color.g, fill_color.b, 1.0f});
 }
 
-void ZFW_RenderBarHor(const zfw_s_rendering_context* const rendering_context, const zfw_s_rect rect, const float perc, const zfw_u_vec_4d front_color, const zfw_u_vec_4d bg_color) {
+void ZFW_RenderBarHor(const zfw_s_rendering_context* const rendering_context, const zfw_s_rect rect, const float perc, const u_v4 front_color, const u_v4 bg_color) {
     ZFW_AssertRenderingContextValidity(rendering_context);
     assert(rect.width > 0.0f && rect.height > 0.0f);
     assert(perc >= 0.0f && perc <= 1.0f);
@@ -397,7 +397,7 @@ void ZFW_RenderBarHor(const zfw_s_rendering_context* const rendering_context, co
     }
 }
 
-void ZFW_RenderBarVer(const zfw_s_rendering_context* const rendering_context, const zfw_s_rect rect, const float perc, const zfw_u_vec_4d front_color, const zfw_u_vec_4d bg_color) {
+void ZFW_RenderBarVer(const zfw_s_rendering_context* const rendering_context, const zfw_s_rect rect, const float perc, const u_v4 front_color, const u_v4 bg_color) {
     ZFW_AssertRenderingContextValidity(rendering_context);
     assert(rect.width > 0.0f && rect.height > 0.0f);
     assert(perc >= 0.0f && perc <= 1.0f);
@@ -418,7 +418,7 @@ void ZFW_RenderBarVer(const zfw_s_rendering_context* const rendering_context, co
     }
 }
 
-bool ZFW_RenderStr(const zfw_s_rendering_context* const rendering_context, const char* const str, const zfw_s_font_group* const fonts, const int font_index, const zfw_s_vec_2d pos, const zfw_s_vec_2d alignment, const zfw_u_vec_4d color, s_mem_arena* const temp_mem_arena) {
+bool ZFW_RenderStr(const zfw_s_rendering_context* const rendering_context, const char* const str, const zfw_s_font_group* const fonts, const int font_index, const s_v2 pos, const s_v2 alignment, const u_v4 color, s_mem_arena* const temp_mem_arena) {
     ZFW_AssertRenderingContextValidity(rendering_context);
     assert(str && str[0]);
     ZFW_AssertFontGroupValidity(fonts);
@@ -427,7 +427,7 @@ bool ZFW_RenderStr(const zfw_s_rendering_context* const rendering_context, const
     assert(ZFW_IsColorValid(color));
     assert(temp_mem_arena && IsMemArenaValid(temp_mem_arena));
 
-    const zfw_s_vec_2d* const chr_render_positions = ZFW_PushStrChrRenderPositions(temp_mem_arena, str, fonts, font_index, pos, alignment);
+    const s_v2* const chr_render_positions = ZFW_PushStrChrRenderPositions(temp_mem_arena, str, fonts, font_index, pos, alignment);
 
     if (!chr_render_positions) {
         LOG_ERROR("Failed to reserve memory for character render positions!");

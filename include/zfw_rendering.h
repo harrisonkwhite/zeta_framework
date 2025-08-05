@@ -44,12 +44,12 @@ static inline void ZFW_AssertRenderingBasisValidity(const zfw_s_rendering_basis*
 }
 
 typedef struct {
-    zfw_s_vec_2d vert_coord;
-    zfw_s_vec_2d pos;
-    zfw_s_vec_2d size;
+    s_v2 vert_coord;
+    s_v2 pos;
+    s_v2 size;
     float rot;
-    zfw_s_vec_2d tex_coord;
-    zfw_u_vec_4d blend;
+    s_v2 tex_coord;
+    u_v4 blend;
 } zfw_s_batch_vertex;
 
 static const int zfw_g_batch_vertex_attrib_lens[] = {
@@ -66,11 +66,11 @@ typedef zfw_s_batch_vertex zfw_t_batch_slot[ZFW_BATCH_SLOT_VERT_CNT];
 typedef struct {
     zfw_t_gl_id tex_gl_id;
     zfw_s_rect_edges tex_coords;
-    zfw_s_vec_2d pos;
-    zfw_s_vec_2d size;
-    zfw_s_vec_2d origin;
+    s_v2 pos;
+    s_v2 size;
+    s_v2 origin;
     float rot;
-    zfw_u_vec_4d blend;
+    u_v4 blend;
 } zfw_s_batch_slot_write_info;
 
 static inline void ZFW_AssertBatchSlotWriteInfoValidity(const zfw_s_batch_slot_write_info* const write_info) {
@@ -109,7 +109,7 @@ typedef struct {
     const zfw_s_rendering_basis* basis;
     zfw_s_rendering_state* state;
 
-    zfw_s_vec_2d_int window_size;
+    s_v2_int window_size;
 } zfw_s_rendering_context;
 
 static inline void ZFW_AssertRenderingContextValidity(const zfw_s_rendering_context* const rendering_context) {
@@ -123,15 +123,15 @@ static inline void ZFW_AssertRenderingContextValidity(const zfw_s_rendering_cont
 bool ZFW_InitRenderingBasis(zfw_s_rendering_basis* const basis, zfw_s_gl_resource_arena* const gl_res_arena, s_mem_arena* const mem_arena, s_mem_arena* const temp_mem_arena);
 zfw_s_rendering_state* ZFW_PushRenderingState(s_mem_arena* const mem_arena);
 
-void ZFW_Clear(const zfw_s_rendering_context* const rendering_context, const zfw_u_vec_4d col);
+void ZFW_Clear(const zfw_s_rendering_context* const rendering_context, const u_v4 col);
 void ZFW_SetViewMatrix(const zfw_s_rendering_context* const rendering_context, const zfw_s_matrix_4x4* const mat);
 void ZFW_Render(const zfw_s_rendering_context* const rendering_context, const zfw_s_batch_slot_write_info* const write_info);
-void ZFW_RenderTexture(const zfw_s_rendering_context* const rendering_context, const zfw_s_texture_group* const textures, const int tex_index, const zfw_s_rect_int src_rect, const zfw_s_vec_2d pos, const zfw_s_vec_2d origin, const zfw_s_vec_2d scale, const float rot, const zfw_u_vec_4d blend);
-void ZFW_RenderRectWithOutline(const zfw_s_rendering_context* const rendering_context, const zfw_s_rect rect, const zfw_u_vec_4d fill_color, const zfw_u_vec_4d outline_color, const float outline_thickness);
-void ZFW_RenderRectWithOutlineAndOpaqueFill(const zfw_s_rendering_context* const rendering_context, const zfw_s_rect rect, const zfw_u_vec_3d fill_color, const zfw_u_vec_4d outline_color, const float outline_thickness);
-void ZFW_RenderBarHor(const zfw_s_rendering_context* const rendering_context, const zfw_s_rect rect, const float perc, const zfw_u_vec_4d front_color, const zfw_u_vec_4d bg_color);
-void ZFW_RenderBarVer(const zfw_s_rendering_context* const rendering_context, const zfw_s_rect rect, const float perc, const zfw_u_vec_4d front_color, const zfw_u_vec_4d bg_color);
-bool ZFW_RenderStr(const zfw_s_rendering_context* const rendering_context, const char* const str, const zfw_s_font_group* const fonts, const int font_index, const zfw_s_vec_2d pos, const zfw_s_vec_2d alignment, const zfw_u_vec_4d color, s_mem_arena* const temp_mem_arena);
+void ZFW_RenderTexture(const zfw_s_rendering_context* const rendering_context, const zfw_s_texture_group* const textures, const int tex_index, const zfw_s_rect_int src_rect, const s_v2 pos, const s_v2 origin, const s_v2 scale, const float rot, const u_v4 blend);
+void ZFW_RenderRectWithOutline(const zfw_s_rendering_context* const rendering_context, const zfw_s_rect rect, const u_v4 fill_color, const u_v4 outline_color, const float outline_thickness);
+void ZFW_RenderRectWithOutlineAndOpaqueFill(const zfw_s_rendering_context* const rendering_context, const zfw_s_rect rect, const u_v3 fill_color, const u_v4 outline_color, const float outline_thickness);
+void ZFW_RenderBarHor(const zfw_s_rendering_context* const rendering_context, const zfw_s_rect rect, const float perc, const u_v4 front_color, const u_v4 bg_color);
+void ZFW_RenderBarVer(const zfw_s_rendering_context* const rendering_context, const zfw_s_rect rect, const float perc, const u_v4 front_color, const u_v4 bg_color);
+bool ZFW_RenderStr(const zfw_s_rendering_context* const rendering_context, const char* const str, const zfw_s_font_group* const fonts, const int font_index, const s_v2 pos, const s_v2 alignment, const u_v4 color, s_mem_arena* const temp_mem_arena);
 
 void ZFW_SubmitBatch(const zfw_s_rendering_context* const rendering_context);
 
@@ -141,25 +141,25 @@ void ZFW_SetSurfaceShaderProg(const zfw_s_rendering_context* const rendering_con
 void ZFW_SetSurfaceShaderProgUniform(const zfw_s_rendering_context* const rendering_context, const char* const name, const zfw_s_shader_prog_uniform_value val);
 void ZFW_RenderSurface(const zfw_s_rendering_context* const rendering_context, const zfw_s_surface_group* const surfs, const int surf_index);
 
-static inline void ZFW_RenderRect(const zfw_s_rendering_context* const rendering_context, const zfw_s_rect rect, const zfw_u_vec_4d color) {
-    ZFW_RenderTexture(rendering_context, &rendering_context->basis->builtin_textures, zfw_ek_builtin_texture_pixel, (zfw_s_rect_int){0}, ZFW_RectPos(rect), (zfw_s_vec_2d){0}, ZFW_RectSize(rect), 0, color);
+static inline void ZFW_RenderRect(const zfw_s_rendering_context* const rendering_context, const zfw_s_rect rect, const u_v4 color) {
+    ZFW_RenderTexture(rendering_context, &rendering_context->basis->builtin_textures, zfw_ek_builtin_texture_pixel, (zfw_s_rect_int){0}, ZFW_RectPos(rect), (s_v2){0}, ZFW_RectSize(rect), 0, color);
 }
 
-static inline void ZFW_RenderBarHorRev(const zfw_s_rendering_context* const rendering_context, const zfw_s_rect rect, const float perc, const zfw_u_vec_4d front_color, const zfw_u_vec_4d bg_color) {
+static inline void ZFW_RenderBarHorRev(const zfw_s_rendering_context* const rendering_context, const zfw_s_rect rect, const float perc, const u_v4 front_color, const u_v4 bg_color) {
     ZFW_RenderBarHor(rendering_context, rect, 1.0f - perc, bg_color, front_color);
 }
 
-static inline void ZFW_RenderBarVerRev(const zfw_s_rendering_context* const rendering_context, const zfw_s_rect rect, const float perc, const zfw_u_vec_4d front_color, const zfw_u_vec_4d bg_color) {
+static inline void ZFW_RenderBarVerRev(const zfw_s_rendering_context* const rendering_context, const zfw_s_rect rect, const float perc, const u_v4 front_color, const u_v4 bg_color) {
     ZFW_RenderBarVer(rendering_context, rect, 1.0f - perc, bg_color, front_color);
 }
 
-static inline void ZFW_RenderLine(const zfw_s_rendering_context* const rendering_context, const zfw_s_vec_2d a, const zfw_s_vec_2d b, const zfw_u_vec_4d blend, const float width) {
+static inline void ZFW_RenderLine(const zfw_s_rendering_context* const rendering_context, const s_v2 a, const s_v2 b, const u_v4 blend, const float width) {
     assert(width > 0.0f);
 
-    const zfw_s_vec_2d diff = {b.x - a.x, b.y - a.y};
+    const s_v2 diff = {b.x - a.x, b.y - a.y};
     const float len = sqrtf((diff.x * diff.x) + (diff.y * diff.y));
 
-    ZFW_RenderTexture(rendering_context, &rendering_context->basis->builtin_textures, zfw_ek_builtin_texture_pixel, (zfw_s_rect_int){0}, a, (zfw_s_vec_2d){0.0f, 0.5f}, (zfw_s_vec_2d){len, width}, atan2f(-diff.y, diff.x), blend);
+    ZFW_RenderTexture(rendering_context, &rendering_context->basis->builtin_textures, zfw_ek_builtin_texture_pixel, (zfw_s_rect_int){0}, a, (s_v2){0.0f, 0.5f}, (s_v2){len, width}, atan2f(-diff.y, diff.x), blend);
 }
 
 #endif

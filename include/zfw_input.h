@@ -117,7 +117,7 @@ typedef struct {
     zfw_t_key_bits keys_down;
     zfw_t_mouse_button_bits mouse_buttons_down;
 
-    zfw_s_vec_2d mouse_pos;
+    s_v2 mouse_pos;
 } zfw_s_input_state;
 
 static inline void ZFW_AssertInputStateValidity(const zfw_s_input_state* const state) {

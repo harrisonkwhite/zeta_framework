@@ -104,12 +104,12 @@ static zfw_t_mouse_button_bits MouseButtonsDownBits(GLFWwindow* const glfw_windo
     return mouse_buttons_down;
 }
 
-static zfw_s_vec_2d MousePos(GLFWwindow* const glfw_window) {
+static s_v2 MousePos(GLFWwindow* const glfw_window) {
     assert(glfw_window);
 
     double mouse_x_dbl, mouse_y_dbl;
     glfwGetCursorPos(glfw_window, &mouse_x_dbl, &mouse_y_dbl);
-    return (zfw_s_vec_2d){mouse_x_dbl, mouse_y_dbl};
+    return (s_v2){mouse_x_dbl, mouse_y_dbl};
 }
 
 zfw_s_input_state ZFW_InputState(GLFWwindow* const glfw_window) {

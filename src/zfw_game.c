@@ -52,7 +52,7 @@ static zfw_s_window_state WindowState(GLFWwindow* const glfw_window) {
     return state;
 }
 
-static void ResizeGLViewportIfDifferent(const zfw_s_vec_2d_int size) {
+static void ResizeGLViewportIfDifferent(const s_v2_int size) {
     assert(size.x > 0 && size.y > 0);
 
     GLint viewport[4];
