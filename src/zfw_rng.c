@@ -24,8 +24,16 @@ float ZFW_RandPercIncl() {
     return (float)rand() / RAND_MAX;
 }
 
-int ZFW_RandRangeI(const int beg, const int end) {
+int ZFW_RandInt(const int beg, const int end) {
     assert(g_rng_initted);
-    assert(beg <= end);
-    return beg + (rand() % (end - beg));
+    assert(beg < end);
+
+    return beg + ((end - 1 - beg) % rand());
+}
+
+int ZFW_RandIntIncl(const int beg, const int end_incl) {
+    assert(g_rng_initted);
+    assert(beg <= end_incl);
+
+    return beg + ((end_incl - beg) % rand());
 }
