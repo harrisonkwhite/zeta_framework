@@ -10,8 +10,8 @@ void ZFW_InitRNG();
 float ZFW_RandPerc(); // Generates a random float in the range [0.0f, 1.0f).
 float ZFW_RandPercIncl(); // Generates a random float in the range [0.0f, 1.0f].
 
-int ZFW_RandInt(const int beg, const int end);
-int ZFW_RandIntIncl(const int beg, const int end_incl);
+int ZFW_RandRangeInt(const int beg, const int end);
+int ZFW_RandRangeIntIncl(const int beg, const int end_incl);
 
 static inline float ZFW_RandRange(const float beg, const float end) {
     assert(beg < end);
