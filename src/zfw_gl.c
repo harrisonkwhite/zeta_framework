@@ -11,16 +11,16 @@ bool ZFW_InitGLResourceArena(zfw_s_gl_resource_arena* const res_arena, s_mem_are
     assert(mem_arena && IsMemArenaValid(mem_arena));
     assert(res_limit > 0);
 
-    res_arena->ids = MEM_ARENA_PUSH_TYPE_CNT(mem_arena, zfw_t_gl_id, res_limit);
+    res_arena->ids = PushGLIDs(mem_arena, res_limit);
 
-    if (!res_arena->ids) {
+    if (IS_ZERO(res_arena->ids)) {
         LOG_ERROR("Failed to reserve memory for OpenGL resource IDs!");
         return false;
     }
 
-    res_arena->res_types = MEM_ARENA_PUSH_TYPE_CNT(mem_arena, zfw_e_gl_resource_type, res_limit);
+    res_arena->res_types = PushGLResourceTypes(mem_arena, res_limit);
 
-    if (!res_arena->res_types) {
+    if (IS_ZERO(res_arena->res_types)) {
         LOG_ERROR("Failed to reserve memory for OpenGL resource types!");
         return false;
     }
@@ -34,7 +34,7 @@ void ZFW_CleanGLResourceArena(zfw_s_gl_resource_arena* const res_arena) {
     ZFW_AssertGLResourceArenaValidity(res_arena);
 
     for (int i = 0; i < res_arena->res_used; i++) {
-        const zfw_t_gl_id gl_id = res_arena->ids[i];
+        const zfw_t_gl_id gl_id = *GLIDArray_Get(&res_arena->ids, i);
 
         if (!gl_id) {
             continue;
@@ -65,19 +65,19 @@ void ZFW_CleanGLResourceArena(zfw_s_gl_resource_arena* const res_arena) {
     }
 }
 
-zfw_t_gl_id* ZFW_ReserveGLIDs(zfw_s_gl_resource_arena* const res_arena, const int cnt, const zfw_e_gl_resource_type res_type) {
+s_gl_id_array ZFW_ReserveGLIDs(zfw_s_gl_resource_arena* const res_arena, const int cnt, const zfw_e_gl_resource_type res_type) {
     ZFW_AssertGLResourceArenaValidity(res_arena);
     assert(cnt > 0);
     assert(res_type < zfw_eks_gl_resource_type_cnt);
 
     if (res_arena->res_used + cnt > res_arena->res_limit) {
         LOG_ERROR("OpenGL resource arena is full! Cannot reserve %d more IDs!", cnt);
-        return NULL;
+        return (s_gl_id_array){0};
     }
 
     const int res_used_prev = res_arena->res_used;
     res_arena->res_used += cnt;
-    return res_arena->ids + res_used_prev;
+    return (s_gl_id_array){(res_arena->ids.buf + res_used_prev), cnt};
 }
 
 static inline s_v2_int GLTextureSizeLimit() {
@@ -136,16 +136,16 @@ zfw_s_texture_group ZFW_GenTextures(const int tex_cnt, const zfw_t_gen_texture_i
     assert(mem_arena && IsMemArenaValid(mem_arena));
     assert(temp_mem_arena && IsMemArenaValid(temp_mem_arena));
 
-    zfw_t_gl_id* const gl_ids = ZFW_ReserveGLIDs(gl_res_arena, tex_cnt, zfw_ek_gl_resource_type_texture);
+    const s_gl_id_array gl_ids = ZFW_ReserveGLIDs(gl_res_arena, tex_cnt, zfw_ek_gl_resource_type_texture);
 
-    if (!gl_ids) {
+    if (IS_ZERO(gl_ids)) {
         LOG_ERROR("Failed to reserve OpenGL texture IDs!");
         return (zfw_s_texture_group){0};
     }
 
-    s_v2_int* const sizes = MEM_ARENA_PUSH_TYPE_CNT(mem_arena, s_v2_int, tex_cnt);
+    const s_v2_int_array sizes = PushV2Ints(mem_arena, tex_cnt);
 
-    if (!sizes) {
+    if (IS_ZERO(sizes)) {
         LOG_ERROR("Failed to reserve memory for texture sizes!");
         return (zfw_s_texture_group){0};
     }
@@ -158,14 +158,14 @@ zfw_s_texture_group ZFW_GenTextures(const int tex_cnt, const zfw_t_gen_texture_i
             return (zfw_s_texture_group){0};
         }
 
-        gl_ids[i] = GenGLTextureFromRGBAPixelData(tex_info.rgba_px_data, tex_info.tex_size);
+        *GLIDArray_Get(&gl_ids, i) = GenGLTextureFromRGBAPixelData(tex_info.rgba_px_data, tex_info.tex_size);
 
-        if (!gl_ids[i]) {
+        if (!(*GLIDArray_Get(&gl_ids, i))) {
             LOG_ERROR("Failed to generate OpenGL texture from RGBA pixel data for texture with index %d!", i);
             return (zfw_s_texture_group){0};
         }
 
-        sizes[i] = tex_info.tex_size;
+        *V2IntArray_Get(&sizes, i) = tex_info.tex_size;
     }
 
     return (zfw_s_texture_group){
@@ -669,9 +669,9 @@ zfw_s_shader_prog_group ZFW_GenShaderProgs(const int prog_cnt, const zfw_s_shade
     ZFW_AssertGLResourceArenaValidity(gl_res_arena);
     assert(temp_mem_arena && IsMemArenaValid(temp_mem_arena));
 
-    zfw_t_gl_id* const gl_ids = ZFW_ReserveGLIDs(gl_res_arena, prog_cnt, zfw_ek_gl_resource_type_shader_prog);
+    const s_gl_id_array gl_ids = ZFW_ReserveGLIDs(gl_res_arena, prog_cnt, zfw_ek_gl_resource_type_shader_prog);
 
-    if (!gl_ids) {
+    if (IS_ZERO(gl_ids)) {
         LOG_ERROR("Failed to reserve OpenGL shader program IDs for built-in shader programs!");
         return (zfw_s_shader_prog_group){0};
     }
@@ -680,17 +680,17 @@ zfw_s_shader_prog_group ZFW_GenShaderProgs(const int prog_cnt, const zfw_s_shade
         const zfw_s_shader_prog_gen_info* const gen_info = &prog_gen_infos[i];
         ZFW_AssertShaderProgGenInfoValidity(gen_info);
 
-        gl_ids[i] = GenShaderProg(gen_info, temp_mem_arena);
+        zfw_t_gl_id* const gl_id = GLIDArray_Get(&gl_ids, i);
+        *gl_id = GenShaderProg(gen_info, temp_mem_arena);
 
-        if (!gl_ids[i]) {
+        if (!(*gl_id)) {
             LOG_ERROR("Failed to generate shader program with index %d!", i);
             return (zfw_s_shader_prog_group){0};
         }
     }
 
     return (zfw_s_shader_prog_group){
-        .gl_ids = gl_ids,
-        .cnt = prog_cnt
+        .gl_ids = gl_ids
     };
 }
 
@@ -769,16 +769,16 @@ zfw_s_surface_group ZFW_GenSurfaces(const int surf_cnt, const s_v2_int* const su
     ZFW_AssertGLResourceArenaValidity(gl_res_arena);
     assert(mem_arena && IsMemArenaValid(mem_arena));
 
-    zfw_t_gl_id* const fb_gl_ids = ZFW_ReserveGLIDs(gl_res_arena, surf_cnt, zfw_ek_gl_resource_type_framebuffer);
+    const s_gl_id_array fb_gl_ids = ZFW_ReserveGLIDs(gl_res_arena, surf_cnt, zfw_ek_gl_resource_type_framebuffer);
 
-    if (!fb_gl_ids) {
+    if (IS_ZERO(fb_gl_ids)) {
         LOG_ERROR("Failed to reserve OpenGL framebuffer IDs!");
         return (zfw_s_surface_group){0};
     }
 
-    zfw_t_gl_id* const fb_tex_gl_ids = ZFW_ReserveGLIDs(gl_res_arena, surf_cnt, zfw_ek_gl_resource_type_texture);
+    const s_gl_id_array fb_tex_gl_ids = ZFW_ReserveGLIDs(gl_res_arena, surf_cnt, zfw_ek_gl_resource_type_texture);
 
-    if (!fb_tex_gl_ids) {
+    if (IS_ZERO(fb_tex_gl_ids)) {
         LOG_ERROR("Failed to reserve OpenGL texture IDs for framebuffers!");
         return (zfw_s_surface_group){0};
     }
@@ -790,13 +790,13 @@ zfw_s_surface_group ZFW_GenSurfaces(const int surf_cnt, const s_v2_int* const su
         return (zfw_s_surface_group){0};
     }
 
-    glGenFramebuffers(surf_cnt, fb_gl_ids);
-    glGenTextures(surf_cnt, fb_tex_gl_ids);
+    glGenFramebuffers(surf_cnt, fb_gl_ids.buf);
+    glGenTextures(surf_cnt, fb_tex_gl_ids.buf);
 
     for (int i = 0; i < surf_cnt; i++) {
         assert(surf_sizes[i].x > 0 && surf_sizes[i].y > 0);
 
-        if (!AttachFramebufferTexture(fb_gl_ids[i], fb_tex_gl_ids[i], surf_sizes[i])) {
+        if (!AttachFramebufferTexture(*GLIDArray_Get(&fb_gl_ids, i), *GLIDArray_Get(&fb_tex_gl_ids, i), surf_sizes[i])) {
             LOG_ERROR("Failed to attach framebuffer texture for surface %d!", i);
             return (zfw_s_surface_group){0};
         }
@@ -818,17 +818,18 @@ bool ZFW_ResizeSurface(zfw_s_surface_group* const surfs, const int surf_index, c
     assert(size.x > 0 && size.y > 0);
     assert(size.x != surfs->sizes[surf_index].x || size.y != surfs->sizes[surf_index].y);
 
+    const zfw_t_gl_id fb_gl_id = *GLIDArray_Get(&surfs->fb_gl_ids, surf_index);
+    zfw_t_gl_id* const fb_tex_gl_id = GLIDArray_Get(&surfs->fb_tex_gl_ids, surf_index);
+
     // Delete old texture.
-    glDeleteTextures(surfs->cnt, &surfs->fb_tex_gl_ids[surf_index]);
+    glDeleteTextures(1, fb_tex_gl_id);
 
     // Generate and attach new texture of the new size.
-    glGenTextures(surfs->cnt, &surfs->fb_tex_gl_ids[surf_index]);
+    glGenTextures(1, fb_tex_gl_id);
 
-    for (int i = 0; i < surfs->cnt; i++) {
-        if (!AttachFramebufferTexture(surfs->fb_gl_ids[i], surfs->fb_tex_gl_ids[i], size)) {
-            LOG_ERROR("Failed to attach framebuffer texture for surface %d!", i);
-            return false;
-        }
+    if (!AttachFramebufferTexture(fb_gl_id, *fb_tex_gl_id, size)) {
+        LOG_ERROR("Failed to attach framebuffer texture for surface %d!", surf_index);
+        return false;
     }
 
     return true;

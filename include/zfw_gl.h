@@ -34,6 +34,8 @@
 
 typedef GLuint zfw_t_gl_id;
 
+DECLARE_ARRAY_TYPE(zfw_t_gl_id, gl_id, GLID);
+
 typedef enum {
     zfw_ek_gl_resource_type_texture,
     zfw_ek_gl_resource_type_shader_prog,
@@ -45,9 +47,11 @@ typedef enum {
     zfw_eks_gl_resource_type_cnt
 } zfw_e_gl_resource_type;
 
+DECLARE_ARRAY_TYPE(zfw_e_gl_resource_type, gl_resource_type, GLResourceType);
+
 typedef struct {
-    zfw_t_gl_id* ids;
-    zfw_e_gl_resource_type* res_types;
+    s_gl_id_array ids;
+    s_gl_resource_type_array res_types;
 
     int res_used;
     int res_limit;
@@ -56,16 +60,20 @@ typedef struct {
 static inline void ZFW_AssertGLResourceArenaValidity(const zfw_s_gl_resource_arena* const res_arena) {
     assert(res_arena);
 
-    assert(res_arena->ids);
-    assert(res_arena->res_types);
+    GLIDArray_AssertValidity(&res_arena->ids);
+    assert(res_arena->ids.len == res_arena->res_limit);
+
+    GLResourceTypeArray_AssertValidity(&res_arena->res_types);
+    assert(res_arena->res_types.len == res_arena->res_limit);
+
     assert(res_arena->res_used >= 0);
     assert(res_arena->res_limit > 0);
     assert(res_arena->res_used <= res_arena->res_limit);
 }
 
 typedef struct {
-    const zfw_t_gl_id* gl_ids;
-    const s_v2_int* sizes;
+    s_gl_id_array gl_ids;
+    s_v2_int_array sizes;
 
     int cnt;
 } zfw_s_texture_group;
@@ -73,13 +81,19 @@ typedef struct {
 static inline void ZFW_AssertTextureGroupValidity(const zfw_s_texture_group* const tex_group) {
     assert(tex_group);
 
-    assert(tex_group->gl_ids);
-    assert(tex_group->sizes);
+    GLIDArray_AssertValidity(&tex_group->gl_ids);
+    assert(tex_group->gl_ids.len == tex_group->cnt);
+
+    V2IntArray_AssertValidity(&tex_group->sizes);
+    assert(tex_group->sizes.len == tex_group->cnt);
+
     assert(tex_group->cnt > 0);
 
     for (int i = 0; i < tex_group->cnt; i++) {
-        assert(glIsTexture(tex_group->gl_ids[i]));
-        assert(tex_group->sizes[i].x > 0 && tex_group->sizes[i].y > 0);
+        assert(glIsTexture(*GLIDArray_Get(&tex_group->gl_ids, i)));
+
+        const s_v2_int size = *V2IntArray_Get(&tex_group->sizes, i);
+        assert(size.x > 0 && size.y > 0);
     }
 }
 
@@ -156,18 +170,16 @@ static inline void ZFW_AssertFontInfoValidity(const zfw_s_font_info* const info)
 }
 
 typedef struct {
-    const zfw_t_gl_id* gl_ids;
-    int cnt;
+    s_gl_id_array gl_ids;
 } zfw_s_shader_prog_group;
 
 static inline void ZFW_AssertShaderProgGroupValidity(const zfw_s_shader_prog_group* const prog_group) {
     assert(prog_group);
 
-    assert(prog_group->gl_ids);
-    assert(prog_group->cnt > 0);
+    GLIDArray_AssertValidity(&prog_group->gl_ids);
 
-    for (int i = 0; i < prog_group->cnt; i++) {
-        assert(glIsProgram(prog_group->gl_ids[i]));
+    for (int i = 0; i < prog_group->gl_ids.len; i++) {
+        assert(glIsProgram(*GLIDArray_Get(&prog_group->gl_ids, i)));
     }
 }
 
@@ -217,9 +229,9 @@ typedef struct {
 } zfw_s_shader_prog_uniform_value;
 
 typedef struct {
-    const zfw_t_gl_id* vert_array_gl_ids;
-    const zfw_t_gl_id* vert_buf_gl_ids;
-    const zfw_t_gl_id* elem_buf_gl_ids;
+    s_gl_id_array vert_array_gl_ids;
+    s_gl_id_array vert_buf_gl_ids;
+    s_gl_id_array elem_buf_gl_ids;
 
     int cnt;
 } zfw_s_renderables;
@@ -227,21 +239,32 @@ typedef struct {
 static inline void ZFW_AssertRenderablesValidity(const zfw_s_renderables* const renderables) {
     assert(renderables);
 
-    assert(renderables->vert_array_gl_ids);
-    assert(renderables->vert_buf_gl_ids);
-    assert(renderables->elem_buf_gl_ids);
+    GLIDArray_AssertValidity(&renderables->vert_array_gl_ids);
+    assert(renderables->vert_array_gl_ids.len == renderables->cnt);
+
+    GLIDArray_AssertValidity(&renderables->vert_buf_gl_ids);
+    assert(renderables->vert_buf_gl_ids.len == renderables->cnt);
+
+    GLIDArray_AssertValidity(&renderables->elem_buf_gl_ids);
+    assert(renderables->elem_buf_gl_ids.len == renderables->cnt);
+
     assert(renderables->cnt > 0);
 
     for (int i = 0; i < renderables->cnt; i++) {
-        assert(glIsVertexArray(renderables->vert_array_gl_ids[i]));
-        assert(glIsBuffer(renderables->vert_buf_gl_ids[i]));
-        assert(glIsBuffer(renderables->elem_buf_gl_ids[i]));
+        const zfw_t_gl_id va_gl_id = *GLIDArray_Get(&renderables->vert_array_gl_ids, i);
+        assert(glIsVertexArray(va_gl_id));
+
+        const zfw_t_gl_id vb_gl_id = *GLIDArray_Get(&renderables->vert_buf_gl_ids, i);
+        assert(glIsBuffer(vb_gl_id));
+
+        const zfw_t_gl_id eb_gl_id = *GLIDArray_Get(&renderables->elem_buf_gl_ids, i);
+        assert(glIsBuffer(eb_gl_id));
     }
 }
 
 typedef struct {
-    const zfw_t_gl_id* fb_gl_ids;
-    zfw_t_gl_id* fb_tex_gl_ids;
+    s_gl_id_array fb_gl_ids;
+    s_gl_id_array fb_tex_gl_ids;
     s_v2_int* sizes;
 
     int cnt;
@@ -250,21 +273,26 @@ typedef struct {
 static inline void ZFW_AssertSurfaceGroupValidity(const zfw_s_surface_group* const surfs) {
     assert(surfs);
 
-    assert(surfs->fb_gl_ids);
-    assert(surfs->fb_tex_gl_ids);
+    GLIDArray_AssertValidity(&surfs->fb_gl_ids);
+    assert(surfs->fb_gl_ids.len == surfs->cnt);
+
+    GLIDArray_AssertValidity(&surfs->fb_tex_gl_ids);
+    assert(surfs->fb_tex_gl_ids.len == surfs->cnt);
+
     assert(surfs->sizes);
+
     assert(surfs->cnt > 0);
 
     for (int i = 0; i < surfs->cnt; i++) {
-        assert(glIsFramebuffer(surfs->fb_gl_ids[i]));
-        assert(glIsTexture(surfs->fb_tex_gl_ids[i]));
+        assert(glIsFramebuffer(*GLIDArray_Get(&surfs->fb_gl_ids, i)));
+        assert(glIsTexture(*GLIDArray_Get(&surfs->fb_tex_gl_ids, i)));
         assert(surfs->sizes[i].x > 0 && surfs->sizes[i].y > 0);
     }
 }
 
 bool ZFW_InitGLResourceArena(zfw_s_gl_resource_arena* const res_arena, s_mem_arena* const mem_arena, const int res_limit);
 void ZFW_CleanGLResourceArena(zfw_s_gl_resource_arena* const res_arena);
-zfw_t_gl_id* ZFW_ReserveGLIDs(zfw_s_gl_resource_arena* const res_arena, const int cnt, const zfw_e_gl_resource_type res_type);
+s_gl_id_array ZFW_ReserveGLIDs(zfw_s_gl_resource_arena* const res_arena, const int cnt, const zfw_e_gl_resource_type res_type);
 
 zfw_s_texture_info ZFW_GenTextureInfoFromFile(const char* const file_path, s_mem_arena* const mem_arena);
 zfw_s_texture_group ZFW_GenTextures(const int tex_cnt, const zfw_t_gen_texture_info_func gen_tex_info_func, zfw_s_gl_resource_arena* const gl_res_arena, s_mem_arena* const mem_arena, s_mem_arena* const temp_mem_arena);
