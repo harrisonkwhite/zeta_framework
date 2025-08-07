@@ -14,33 +14,25 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(glfw)
 
-find_package(OpenGL REQUIRED)
-
 add_library(zeta_framework STATIC
     src/zfw_game.c
     src/zfw_input.c
-    src/zfw_gl.c
     src/zfw_rendering.c
     src/zfw_math.c
     src/zfw_audio.c
     src/zfw_rng.c
-    external/glad/src/glad.c
-    external/stb/src/stb.c
+
     external/miniaudio/src/miniaudio.c
 )
 
 target_include_directories(zeta_framework PUBLIC
     include
-    external/c_utils/include
-    external/stb/include
-    external/glad/include
     external/miniaudio/include
 )
 
 target_link_libraries(zeta_framework PUBLIC
     c_utils
     glfw
-    OpenGL::GL
 )
 
 target_compile_definitions(zeta_framework PUBLIC

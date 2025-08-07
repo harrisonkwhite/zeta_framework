@@ -6,7 +6,6 @@
 #include <cu.h>
 #include "zfw_input.h"
 #include "zfw_rendering.h"
-#include "zfw_math.h"
 #include "zfw_audio.h"
 
 typedef enum {
@@ -28,7 +27,7 @@ typedef struct {
 
     zfw_s_window_state window_state;
 
-    zfw_s_gl_resource_arena* const gl_res_arena;
+    s_gl_resource_arena* const gl_res_arena;
     const zfw_s_rendering_basis* const rendering_basis;
 
     zfw_s_audio_sys* audio_sys;
@@ -50,7 +49,7 @@ typedef struct {
 
     zfw_s_input_context input_context;
 
-    zfw_s_gl_resource_arena* const gl_res_arena;
+    s_gl_resource_arena* const gl_res_arena;
     const zfw_s_rendering_basis* const rendering_basis;
 
     zfw_s_audio_sys* audio_sys;

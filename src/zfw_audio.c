@@ -70,7 +70,7 @@ void ZFW_CleanAudioSys(zfw_s_audio_sys* const audio_sys) {
     assert(audio_sys);
 
     for (int i = 0; i < ZFW_SND_LIMIT; i++) {
-        if (IsBitActive(audio_sys->snd_activity, i, ZFW_SND_LIMIT)) {
+        if (SndActivity_IsBitActive(&audio_sys->snd_activity, i)) {
             ma_sound_uninit(&audio_sys->snds[i]);
             ma_audio_buffer_uninit(&audio_sys->audio_bufs[i]);
         }
@@ -86,7 +86,7 @@ void ZFW_UpdateAudioSys(zfw_s_audio_sys* const audio_sys) {
 
     // Find any active sound slots where the sound has finished playing and deactivate them.
     for (int i = 0; i < ZFW_SND_LIMIT; i++) {
-        if (!IsBitActive(audio_sys->snd_activity, i, ZFW_SND_LIMIT)) {
+        if (!SndActivity_IsBitActive(&audio_sys->snd_activity, i)) {
             continue;
         }
 
@@ -95,7 +95,7 @@ void ZFW_UpdateAudioSys(zfw_s_audio_sys* const audio_sys) {
         if (!ma_sound_is_playing(snd)) {
             ma_sound_uninit(snd);
             ma_audio_buffer_uninit(&audio_sys->audio_bufs[i]);
-            DeactivateBit(audio_sys->snd_activity, i, ZFW_SND_LIMIT);
+            SndActivity_UnsetBit(&audio_sys->snd_activity, i);
         }
     }
 }
@@ -136,7 +136,7 @@ bool ZFW_PlaySound(zfw_s_audio_sys* const audio_sys, const zfw_s_sound_types* co
     assert(pitch > 0.0f);
 
     // Get the index of the first inactive sound slot.
-    const int index = FirstInactiveBitIndex(audio_sys->snd_activity, ZFW_SND_LIMIT);
+    const int index = SndActivity_IndexOfFirstUnsetBit(&audio_sys->snd_activity);
 
     if (index == -1) {
         LOG_ERROR("Failed to play sound due to insufficient space!");
@@ -144,7 +144,7 @@ bool ZFW_PlaySound(zfw_s_audio_sys* const audio_sys, const zfw_s_sound_types* co
     }
 
     // Activate the sound slot.
-    ActivateBit(audio_sys->snd_activity, index, ZFW_SND_LIMIT);
+    SndActivity_SetBit(&audio_sys->snd_activity, index);
 
     const zfw_s_sound_type* const snd_type = &snd_types->buf[snd_type_index];
     ma_sound* const snd = &audio_sys->snds[index];

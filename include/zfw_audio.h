@@ -40,12 +40,14 @@ static inline void ZFW_AssertSoundTypesValidity(const zfw_s_sound_types* const s
     }
 }
 
+DECLARE_STATIC_BITSET_TYPE(ZFW_SND_LIMIT, snd_activity, SndActivity);
+
 typedef struct {
     ma_engine eng;
 
     ma_sound snds[ZFW_SND_LIMIT];
     ma_audio_buffer audio_bufs[ZFW_SND_LIMIT];
-    t_byte snd_activity[BITS_TO_BYTES(ZFW_SND_LIMIT)];
+    t_snd_activity snd_activity;
 } zfw_s_audio_sys;
 
 bool ZFW_InitAudioSys(zfw_s_audio_sys* const audio_sys);

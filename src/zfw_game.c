@@ -32,7 +32,7 @@ typedef struct {
 
     zfw_s_input_events input_events; // Events such as key presses and mouse wheel scrolls are stored here via GLFW callbacks, accessible in the next tick and then cleared. Ensures that events occurring between ticks are not lost.
 
-    zfw_s_gl_resource_arena gl_res_arena; // Contains all OpenGL resources used over the lifetime of the game, so they can be cleaned up all at once (simplifies resource management).
+    s_gl_resource_arena gl_res_arena; // Contains all OpenGL resources used over the lifetime of the game, so they can be cleaned up all at once (simplifies resource management).
     zfw_s_rendering_basis rendering_basis; // Foundational rendering data used throughout the lifetime of the game.
 
     zfw_s_audio_sys audio_sys;
@@ -96,8 +96,8 @@ static bool ExecGameInitAndMainLoop(s_game* const game, const zfw_s_game_info* c
     game->run_stage = ek_game_run_stage_glfw_initted;
 
     // Set up the GLFW window.
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, ZFW_GL_VERSION_MAJOR);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, ZFW_GL_VERSION_MINOR);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, GL_VERSION_MAJOR);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, GL_VERSION_MINOR);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     glfwWindowHint(GLFW_VISIBLE, false);
 
@@ -134,7 +134,7 @@ static bool ExecGameInitAndMainLoop(s_game* const game, const zfw_s_game_info* c
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    if (!ZFW_InitGLResourceArena(&game->gl_res_arena, &game->perm_mem_arena, GL_RESOURCE_ARENA_RES_LIMIT)) {
+    if (!InitGLResourceArena(&game->gl_res_arena, &game->perm_mem_arena, GL_RESOURCE_ARENA_RES_LIMIT)) {
         LOG_ERROR("Failed to initialise OpenGL resource arena!");
         return false;
     }
@@ -315,7 +315,7 @@ bool ZFW_RunGame(const zfw_s_game_info* const info) {
                 break;
 
             case ek_game_run_stage_gl_res_arena_initted:
-                ZFW_CleanGLResourceArena(&game.gl_res_arena);
+                CleanGLResourceArena(&game.gl_res_arena);
                 break;
 
             case ek_game_run_stage_audio_sys_initted:

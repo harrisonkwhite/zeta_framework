@@ -2,40 +2,6 @@
 
 #include <float.h>
 
-zfw_s_rect ZFW_GenSpanningRect(const zfw_s_rect* const rects, const int cnt) {
-    assert(rects);
-    assert(cnt > 0);
-
-    zfw_s_rect_edges span = {
-        rects[0].x,
-        rects[0].y,
-        rects[0].x + rects[0].width,
-        rects[0].y + rects[0].height
-    };
-
-    for (int i = 1; i < cnt; ++i) {
-        const zfw_s_rect* const r = &rects[i];
-
-        if (r->x < span.left) {
-            span.left = r->x;
-        }
-        
-        if (r->y < span.top) {
-            span.top = r->y;
-        }
-        
-        if (r->x + r->width > span.right) {
-            span.right = r->x + r->width;
-        }
-        
-        if (r->y + r->height > span.bottom) {
-            span.bottom = r->y + r->height;
-        }
-    }
-
-    return (zfw_s_rect){span.left, span.top, span.right - span.left, span.bottom - span.top};
-}
-
 typedef struct {
     float min;
     float max;
@@ -146,7 +112,7 @@ bool ZFW_DoPolysInters(const zfw_s_poly a, const zfw_s_poly b) {
     return CheckPolySep(a, b) && CheckPolySep(b, a);
 }
 
-bool ZFW_DoesPolyIntersWithRect(const zfw_s_poly poly, const zfw_s_rect rect) {
+bool ZFW_DoesPolyIntersWithRect(const zfw_s_poly poly, const s_rect rect) {
     assert(ZFW_IsPolyValid(poly));
     assert(rect.width > 0.0f && rect.height > 0.0f);
 
@@ -165,10 +131,10 @@ bool ZFW_DoesPolyIntersWithRect(const zfw_s_poly poly, const zfw_s_rect rect) {
     return ZFW_DoPolysInters(poly, rect_poly);
 }
 
-zfw_s_rect_edges ZFW_PolySpan(const zfw_s_poly poly) {
+s_rect_edges ZFW_PolySpan(const zfw_s_poly poly) {
     assert(ZFW_IsPolyValid(poly));
 
-    zfw_s_rect_edges span = {
+    s_rect_edges span = {
         .left = FLT_MAX,
         .top = FLT_MAX,
         .right = FLT_MIN,
