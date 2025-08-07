@@ -21,18 +21,18 @@ static const s_v2_int zfw_g_cardinal_dirs[] = {
 };
 
 typedef struct {
-    const s_v2* pts;
-    int cnt;
+    s_v2_array pts;
 } zfw_s_poly;
+
+static inline void Poly_AssertValidity(const zfw_s_poly poly) {
+    V2Array_AssertValidity(poly.pts);
+    assert(poly.pts.len >= 3);
+}
 
 zfw_s_poly ZFW_PushQuadPoly(s_mem_arena* const mem_arena, const s_v2 pos, const s_v2 size, const s_v2 origin);
 zfw_s_poly ZFW_PushQuadPolyRotated(s_mem_arena* const mem_arena, const s_v2 pos, const s_v2 size, const s_v2 origin, const float rot);
 bool ZFW_DoPolysInters(const zfw_s_poly a, const zfw_s_poly b);
 bool ZFW_DoesPolyIntersWithRect(const zfw_s_poly poly, const s_rect rect);
 s_rect_edges ZFW_PolySpan(const zfw_s_poly poly);
-
-static inline bool ZFW_IsPolyValid(const zfw_s_poly poly) {
-    return poly.pts && poly.cnt > 0;
-}
 
 #endif

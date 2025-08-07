@@ -41,11 +41,16 @@ static s_texture_info GenBuiltinTextureInfo(const int tex_index, s_mem_arena* co
     switch ((zfw_e_builtin_texture)tex_index) {
         case zfw_ek_builtin_texture_pixel:
             {
-                t_byte* const rgba_px_data = MEM_ARENA_PUSH_TYPE_CNT(mem_arena, t_byte, 4);
-                rgba_px_data[0] = 255;
-                rgba_px_data[1] = 255;
-                rgba_px_data[2] = 255;
-                rgba_px_data[3] = 255;
+                const s_byte_array rgba_px_data = PushBytes(mem_arena, 4);
+
+                if (IS_ZERO(rgba_px_data)) {
+                    return (s_texture_info){0};
+                }
+
+                *ByteArray_Get(rgba_px_data, 0) = 255;
+                *ByteArray_Get(rgba_px_data, 1) = 255;
+                *ByteArray_Get(rgba_px_data, 2) = 255;
+                *ByteArray_Get(rgba_px_data, 3) = 255;
 
                 return (s_texture_info){
                     .rgba_px_data = rgba_px_data,
@@ -61,30 +66,30 @@ static s_texture_info GenBuiltinTextureInfo(const int tex_index, s_mem_arena* co
     }
 }
 
-static unsigned short* PushBatchRenderableElems(s_mem_arena* const mem_arena) {
+static s_ushort_array PushBatchRenderableElems(s_mem_arena* const mem_arena) {
     assert(mem_arena && IsMemArenaValid(mem_arena));
 
-    unsigned short* const elems = MEM_ARENA_PUSH_TYPE_CNT(mem_arena, unsigned short, ZFW_BATCH_SLOT_ELEM_CNT * ZFW_BATCH_SLOT_CNT);
+    const s_ushort_array elems = PushUShorts(mem_arena, ZFW_BATCH_SLOT_ELEM_CNT * ZFW_BATCH_SLOT_CNT);
 
-    if (!elems) {
+    if (IS_ZERO(elems)) {
         LOG_ERROR("Failed to reserve memory for batch renderable elements!");
-        return NULL;
+        return (s_ushort_array){0};
     }
 
     for (int i = 0; i < ZFW_BATCH_SLOT_CNT; i++) {
-        elems[(i * 6) + 0] = (i * 4) + 0;
-        elems[(i * 6) + 1] = (i * 4) + 1;
-        elems[(i * 6) + 2] = (i * 4) + 2;
-        elems[(i * 6) + 3] = (i * 4) + 2;
-        elems[(i * 6) + 4] = (i * 4) + 3;
-        elems[(i * 6) + 5] = (i * 4) + 0;
+        *UShortArray_Get(elems, (i * 6) + 0) = (i * 4) + 0;
+        *UShortArray_Get(elems, (i * 6) + 1) = (i * 4) + 1;
+        *UShortArray_Get(elems, (i * 6) + 2) = (i * 4) + 2;
+        *UShortArray_Get(elems, (i * 6) + 3) = (i * 4) + 2;
+        *UShortArray_Get(elems, (i * 6) + 4) = (i * 4) + 3;
+        *UShortArray_Get(elems, (i * 6) + 5) = (i * 4) + 0;
     }
 
     return elems;
 }
 
 static s_renderables GenRenderables(s_gl_resource_arena* const gl_res_arena, s_mem_arena* const temp_mem_arena) {
-    AssertGLResourceArenaValidity(gl_res_arena);
+    GLResourceArena_AssertValidity(gl_res_arena);
     assert(temp_mem_arena && IsMemArenaValid(temp_mem_arena));
 
     const s_gl_id_array va_gl_ids = ReserveGLIDs(gl_res_arena, zfw_eks_renderable_cnt, ek_gl_resource_type_vert_array);
@@ -109,20 +114,20 @@ static s_renderables GenRenderables(s_gl_resource_arena* const gl_res_arena, s_m
     }
 
     for (int i = 0; i < zfw_eks_renderable_cnt; i++) {
-        t_gl_id* const va_gl_id = GLIDArray_Get(&va_gl_ids, i);
-        t_gl_id* const vb_gl_id = GLIDArray_Get(&vb_gl_ids, i);
-        t_gl_id* const eb_gl_id = GLIDArray_Get(&eb_gl_ids, i);
+        t_gl_id* const va_gl_id = GLIDArray_Get(va_gl_ids, i);
+        t_gl_id* const vb_gl_id = GLIDArray_Get(vb_gl_ids, i);
+        t_gl_id* const eb_gl_id = GLIDArray_Get(eb_gl_ids, i);
 
         switch ((zfw_e_renderable)i) {
             case zfw_ek_renderable_batch:
                 {
-                    const unsigned short* const batch_elems = PushBatchRenderableElems(temp_mem_arena);
+                    const s_ushort_array batch_elems = PushBatchRenderableElems(temp_mem_arena);
 
-                    if (!batch_elems) {
+                    if (IS_ZERO(batch_elems)) {
                         return (s_renderables){0};
                     }
 
-                    GenRenderable(va_gl_id, vb_gl_id, eb_gl_id, NULL, sizeof(zfw_s_batch_vertex) * ZFW_BATCH_SLOT_VERT_CNT * ZFW_BATCH_SLOT_CNT, batch_elems, sizeof(unsigned short) * ZFW_BATCH_SLOT_ELEM_CNT * ZFW_BATCH_SLOT_CNT, zfw_g_batch_vertex_attrib_lens, STATIC_ARRAY_LEN(zfw_g_batch_vertex_attrib_lens));
+                    GenRenderable(va_gl_id, vb_gl_id, eb_gl_id, NULL, sizeof(zfw_s_batch_vertex) * ZFW_BATCH_SLOT_VERT_CNT * ZFW_BATCH_SLOT_CNT, batch_elems.buf_raw, sizeof(unsigned short) * ZFW_BATCH_SLOT_ELEM_CNT * ZFW_BATCH_SLOT_CNT, zfw_g_batch_vertex_attrib_lens, STATIC_ARRAY_LEN(zfw_g_batch_vertex_attrib_lens));
                 }
 
                 break;
@@ -163,7 +168,7 @@ static s_renderables GenRenderables(s_gl_resource_arena* const gl_res_arena, s_m
 
 bool ZFW_InitRenderingBasis(zfw_s_rendering_basis* const basis, s_gl_resource_arena* const gl_res_arena, s_mem_arena* const mem_arena, s_mem_arena* const temp_mem_arena) {
     assert(basis && IS_ZERO(*basis));
-    AssertGLResourceArenaValidity(gl_res_arena);
+    GLResourceArena_AssertValidity(gl_res_arena);
     assert(mem_arena && IsMemArenaValid(mem_arena));
     assert(temp_mem_arena && IsMemArenaValid(temp_mem_arena));
 
@@ -283,17 +288,18 @@ void ZFW_Render(const zfw_s_rendering_context* const rendering_context, const zf
 
     // Write the vertex data to the topmost slot, then update used slot count.
     const int slot_index = batch_state->num_slots_used;
-    ZERO_OUT(batch_state->slots[slot_index]);
-    WriteBatchSlot(&batch_state->slots[slot_index], write_info);
+    zfw_t_batch_slot* const slot = BatchSlots_Get(&batch_state->slots, slot_index);
+    ZERO_OUT(*slot);
+    WriteBatchSlot(slot, write_info);
     batch_state->num_slots_used++;
 }
 
 void ZFW_RenderTexture(const zfw_s_rendering_context* const rendering_context, const s_texture_group* const textures, const int tex_index, const s_rect_int src_rect, const s_v2 pos, const s_v2 origin, const s_v2 scale, const float rot, const u_v4 blend) {
     ZFW_AssertRenderingContextValidity(rendering_context);
-    AssertTextureGroupValidity(textures);
+    TextureGroup_AssertValidity(textures);
     assert(tex_index >= 0 && tex_index < textures->cnt);
 
-    const s_v2_int tex_size = *V2IntArray_Get(&textures->sizes, tex_index);
+    const s_v2_int tex_size = *V2IntArray_Get(textures->sizes, tex_index);
     assert(IS_ZERO(src_rect) || IsSrcRectValid(src_rect, tex_size));
 
     assert(IsOriginValid(origin));
@@ -303,7 +309,7 @@ void ZFW_RenderTexture(const zfw_s_rendering_context* const rendering_context, c
     const s_rect_int src_rect_to_use = IS_ZERO(src_rect) ? (s_rect_int){0, 0, tex_size.x, tex_size.y} : src_rect;
 
     const zfw_s_batch_slot_write_info write_info = {
-        .tex_gl_id = *GLIDArray_Get(&textures->gl_ids, tex_index),
+        .tex_gl_id = *GLIDArray_Get(textures->gl_ids, tex_index),
         .tex_coords = TextureCoords(src_rect_to_use, tex_size),
         .pos = pos,
         .size = {src_rect_to_use.width * scale.x, src_rect_to_use.height * scale.y},
@@ -412,15 +418,19 @@ void ZFW_RenderBarVer(const zfw_s_rendering_context* const rendering_context, co
 bool ZFW_RenderStr(const zfw_s_rendering_context* const rendering_context, const char* const str, const s_font_group* const fonts, const int font_index, const s_v2 pos, const s_v2 alignment, const u_v4 color, s_mem_arena* const temp_mem_arena) {
     ZFW_AssertRenderingContextValidity(rendering_context);
     assert(str && str[0]);
-    AssertFontGroupValidity(fonts);
+    FontGroup_AssertValidity(fonts);
     assert(font_index >= 0 && font_index < fonts->cnt);
     assert(IsStrAlignmentValid(alignment));
     assert(IsColorValid(color));
     assert(temp_mem_arena && IsMemArenaValid(temp_mem_arena));
 
-    const s_v2* const chr_render_positions = PushStrChrRenderPositions(temp_mem_arena, str, fonts, font_index, pos, alignment);
+    const s_font_tex_chr_positions* const tex_chr_positions = FontTexChrPositionsArray_Get(fonts->tex_chr_positions, font_index);
 
-    if (!chr_render_positions) {
+    const s_font_arrangement_info* const arrangement_info = FontArrangementInfoArray_Get(fonts->arrangement_infos, font_index);
+
+    const s_v2_array chr_render_positions = PushStrChrRenderPositions(temp_mem_arena, str, fonts, font_index, pos, alignment);
+
+    if (IS_ZERO(chr_render_positions)) {
         LOG_ERROR("Failed to reserve memory for character render positions!");
         return false;
     }
@@ -436,19 +446,24 @@ bool ZFW_RenderStr(const zfw_s_rendering_context* const rendering_context, const
 
         const int chr_ascii_printable_index = chr - ASCII_PRINTABLE_MIN;
 
+        const s_v2_int chr_size = *FontChrSizes_GetConst(&arrangement_info->chr_offsets, chr_ascii_printable_index);
+
+        const s_v2_int tex_size = *V2IntArray_Get(fonts->tex_sizes, font_index);
+        const s_v2_int tex_chr_pos = *FontTexChrPositions_Get(tex_chr_positions, i);
+
         const s_rect_int chr_src_rect = {
-            .x = fonts->tex_chr_positions[font_index][chr_ascii_printable_index].x,
-            .y = fonts->tex_chr_positions[font_index][chr_ascii_printable_index].y,
-            .width = fonts->arrangement_infos[font_index].chr_sizes[chr_ascii_printable_index].x,
-            .height = fonts->arrangement_infos[font_index].chr_sizes[chr_ascii_printable_index].y
+            .x = tex_chr_pos.x,
+            .y = tex_chr_pos.y,
+            .width = chr_size.x,
+            .height = chr_size.y
         };
 
-        const s_rect_edges chr_tex_coords = TextureCoords(chr_src_rect, fonts->tex_sizes[font_index]);
+        const s_rect_edges chr_tex_coords = TextureCoords(chr_src_rect, tex_size);
 
         const zfw_s_batch_slot_write_info write_info = {
-            .tex_gl_id = fonts->tex_gl_ids[font_index],
+            .tex_gl_id = *GLIDArray_Get(fonts->tex_gl_ids, font_index),
             .tex_coords = chr_tex_coords,
-            .pos = chr_render_positions[i],
+            .pos = *V2Array_Get(chr_render_positions, i),
             .size = {chr_src_rect.width, chr_src_rect.height},
             .blend = color
         };
@@ -467,9 +482,9 @@ void ZFW_SubmitBatch(const zfw_s_rendering_context* const rendering_context) {
         return;
     }
 
-    const t_gl_id va_gl_id = *GLIDArray_Get(&rendering_context->basis->renderables.vert_array_gl_ids, zfw_ek_renderable_batch);
-    const t_gl_id vb_gl_id = *GLIDArray_Get(&rendering_context->basis->renderables.vert_buf_gl_ids, zfw_ek_renderable_batch);
-    const t_gl_id eb_gl_id = *GLIDArray_Get(&rendering_context->basis->renderables.elem_buf_gl_ids, zfw_ek_renderable_batch);
+    const t_gl_id va_gl_id = *GLIDArray_Get(rendering_context->basis->renderables.vert_array_gl_ids, zfw_ek_renderable_batch);
+    const t_gl_id vb_gl_id = *GLIDArray_Get(rendering_context->basis->renderables.vert_buf_gl_ids, zfw_ek_renderable_batch);
+    const t_gl_id eb_gl_id = *GLIDArray_Get(rendering_context->basis->renderables.elem_buf_gl_ids, zfw_ek_renderable_batch);
 
     //
     // Submitting Vertex Data to GPU
@@ -479,13 +494,13 @@ void ZFW_SubmitBatch(const zfw_s_rendering_context* const rendering_context) {
 
     {
         const size_t write_size = sizeof(zfw_t_batch_slot) * rendering_context->state->batch.num_slots_used;
-        glBufferSubData(GL_ARRAY_BUFFER, 0, write_size, rendering_context->state->batch.slots);
+        glBufferSubData(GL_ARRAY_BUFFER, 0, write_size, rendering_context->state->batch.slots.buf_raw);
     }
 
     //
     // Rendering the Batch
     //
-    const t_gl_id prog_gl_id = *GLIDArray_Get(&rendering_context->basis->builtin_shader_progs.gl_ids, zfw_ek_builtin_shader_prog_batch);
+    const t_gl_id prog_gl_id = *GLIDArray_Get(rendering_context->basis->builtin_shader_progs.gl_ids, zfw_ek_builtin_shader_prog_batch);
 
     glUseProgram(prog_gl_id);
 
@@ -520,7 +535,7 @@ void ZFW_SetSurface(const zfw_s_rendering_context* const rendering_context, cons
     AssertSurfaceGroupValidity(surfs);
     assert(surf_index >= 0 && surf_index < surfs->cnt);
 
-    const t_gl_id fb_gl_id = *GLIDArray_Get(&surfs->fb_gl_ids, surf_index);
+    const t_gl_id fb_gl_id = *GLIDArray_Get(surfs->fb_gl_ids, surf_index);
     assert(fb_gl_id != BoundGLFramebuffer() && "Trying to set a surface that is already set!");
 
     ZFW_SubmitBatch(rendering_context);
@@ -550,7 +565,7 @@ void ZFW_SetSurfaceShaderProg(const zfw_s_rendering_context* const rendering_con
 
     assert(CurrentGLShaderProgram() == 0 && "Potential attempted double-assignment of surface shader program?");
 
-    glUseProgram(*GLIDArray_Get(&progs->gl_ids, prog_index));
+    glUseProgram(*GLIDArray_Get(progs->gl_ids, prog_index));
 }
 
 void ZFW_SetSurfaceShaderProgUniform(const zfw_s_rendering_context* const rendering_context, const char* const name, const s_shader_prog_uniform_value val) {
@@ -599,10 +614,10 @@ void ZFW_RenderSurface(const zfw_s_rendering_context* const rendering_context, c
     assert(CurrentGLShaderProgram() != 0 && "Surface shader program must be set before rendering a surface!");
 
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, *GLIDArray_Get(&surfs->fb_tex_gl_ids, surf_index));
+    glBindTexture(GL_TEXTURE_2D, *GLIDArray_Get(surfs->fb_tex_gl_ids, surf_index));
 
-    glBindVertexArray(*GLIDArray_Get(&rendering_context->basis->renderables.vert_array_gl_ids, zfw_ek_renderable_surface));
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, *GLIDArray_Get(&rendering_context->basis->renderables.elem_buf_gl_ids, zfw_ek_renderable_surface));
+    glBindVertexArray(*GLIDArray_Get(rendering_context->basis->renderables.vert_array_gl_ids, zfw_ek_renderable_surface));
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, *GLIDArray_Get(rendering_context->basis->renderables.elem_buf_gl_ids, zfw_ek_renderable_surface));
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, NULL);
 
     glUseProgram(0);

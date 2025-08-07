@@ -24,9 +24,9 @@ static zfw_s_sound_type LoadSoundTypeFromFile(const char* const file_path, s_mem
 
     // Allocate memory for the audio sample buffer.
     const size_t sample_buf_size = frame_size * frame_cnt;
-    t_byte* const sample_buf = MEM_ARENA_PUSH_TYPE_CNT(mem_arena, t_byte, sample_buf_size);
+    const s_byte_array sample_buf = PushBytes(mem_arena, sample_buf_size);
 
-    if (!sample_buf) {
+    if (IS_ZERO(sample_buf)) {
         LOG_ERROR("Failed to reserve memory for audio sample buffer!");
         ma_decoder_uninit(&decoder);
         return (zfw_s_sound_type){0};
@@ -34,7 +34,7 @@ static zfw_s_sound_type LoadSoundTypeFromFile(const char* const file_path, s_mem
 
     // Populate the buffer, also get the number of frames read for error checking.
     ma_uint64 frames_read;
-    const ma_result res = ma_decoder_read_pcm_frames(&decoder, sample_buf, frame_cnt, &frames_read);
+    const ma_result res = ma_decoder_read_pcm_frames(&decoder, sample_buf.buf_raw, frame_cnt, &frames_read);
 
     if (frames_read < frame_cnt) {
         LOG_ERROR("Only read %llu of %llu frames for audio file \"%s\"!", frames_read, frame_cnt, file_path);
@@ -43,7 +43,7 @@ static zfw_s_sound_type LoadSoundTypeFromFile(const char* const file_path, s_mem
     }
 
     const zfw_s_sound_type snd_type = {
-        .sample_buf = sample_buf,
+        .samples = sample_buf,
         .frame_cnt = frame_cnt,
         .channel_cnt = decoder.outputChannels,
         .sample_rate = decoder.outputSampleRate,
@@ -100,37 +100,35 @@ void ZFW_UpdateAudioSys(zfw_s_audio_sys* const audio_sys) {
     }
 }
 
-zfw_s_sound_types ZFW_LoadSoundTypesFromFiles(s_mem_arena* const mem_arena, const int snd_type_cnt, const char* const* const snd_type_file_paths) {
+s_sound_type_array ZFW_LoadSoundTypesFromFiles(s_mem_arena* const mem_arena, const int snd_type_cnt, const char* const* const snd_type_file_paths) {
     assert(mem_arena && IsMemArenaValid(mem_arena));
     assert(snd_type_cnt > 0);
     assert(snd_type_file_paths);
 
-    zfw_s_sound_type* const buf = MEM_ARENA_PUSH_TYPE_CNT(mem_arena, zfw_s_sound_type, snd_type_cnt);
+    const s_sound_type_array snd_types = PushSoundTypes(mem_arena, snd_type_cnt);
 
-    if (!buf) {
+    if (IS_ZERO(snd_types)) {
         LOG_ERROR("Failed to reserve memory for sound types!");
-        return (zfw_s_sound_types){0};
+        return (s_sound_type_array){0};
     }
 
     for (int i = 0; i < snd_type_cnt; i++) {
-        buf[i] = LoadSoundTypeFromFile(snd_type_file_paths[i], mem_arena);
+        zfw_s_sound_type* const snd_type = SoundTypeArray_Get(snd_types, i);
+        *snd_type = LoadSoundTypeFromFile(snd_type_file_paths[i], mem_arena);
 
-        if (IS_ZERO(buf[i])) {
+        if (IS_ZERO(*snd_type)) {
             LOG_ERROR("Failed to load sound type \"%s\"!", snd_type_file_paths[i]);
-            return (zfw_s_sound_types){0};
+            return (s_sound_type_array){0};
         }
     }
 
-    return (zfw_s_sound_types){
-        .buf = buf,
-        .cnt = snd_type_cnt
-    };
+    return snd_types;
 }
 
-bool ZFW_PlaySound(zfw_s_audio_sys* const audio_sys, const zfw_s_sound_types* const snd_types, const int snd_type_index, const float vol, const float pan, const float pitch) {
+bool ZFW_PlaySound(zfw_s_audio_sys* const audio_sys, const s_sound_type_array snd_types, const int snd_type_index, const float vol, const float pan, const float pitch) {
     assert(audio_sys);
-    ZFW_AssertSoundTypesValidity(snd_types);
-    assert(snd_type_index >= 0 && snd_type_index < snd_types->cnt);
+    SoundTypeArray_AssertValidity(snd_types);
+    assert(snd_type_index >= 0 && snd_type_index < snd_types.len);
     assert(vol >= 0.0f && vol <= 1.0f);
     assert(pan >= -1.0f && pan <= 1.0f);
     assert(pitch > 0.0f);
@@ -146,11 +144,11 @@ bool ZFW_PlaySound(zfw_s_audio_sys* const audio_sys, const zfw_s_sound_types* co
     // Activate the sound slot.
     SndActivity_SetBit(&audio_sys->snd_activity, index);
 
-    const zfw_s_sound_type* const snd_type = &snd_types->buf[snd_type_index];
+    const zfw_s_sound_type* const snd_type = SoundTypeArray_Get(snd_types, snd_type_index);
     ma_sound* const snd = &audio_sys->snds[index];
 
     // Set up a new audio buffer using the sound type sample buffer.
-    const ma_audio_buffer_config buf_config = ma_audio_buffer_config_init(snd_type->format, snd_type->channel_cnt, snd_type->frame_cnt, snd_type->sample_buf, NULL);
+    const ma_audio_buffer_config buf_config = ma_audio_buffer_config_init(snd_type->format, snd_type->channel_cnt, snd_type->frame_cnt, snd_type->samples.buf_raw, NULL);
 
     ma_audio_buffer_init_copy(&buf_config, &audio_sys->audio_bufs[index]);
 

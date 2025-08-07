@@ -36,7 +36,7 @@ typedef struct {
 static inline void ZFW_AssertRenderingBasisValidity(const zfw_s_rendering_basis* const basis) {
     assert(basis);
 
-    AssertTextureGroupValidity(&basis->builtin_textures);
+    TextureGroup_AssertValidity(&basis->builtin_textures);
     AssertShaderProgGroupValidity(&basis->builtin_shader_progs);
     AssertRenderablesValidity(&basis->renderables);
 }
@@ -80,8 +80,10 @@ static inline void ZFW_AssertBatchSlotWriteInfoValidity(const zfw_s_batch_slot_w
     assert(IsColorValid(write_info->blend));
 }
 
+DECLARE_STATIC_ARRAY_TYPE(zfw_t_batch_slot, ZFW_BATCH_SLOT_CNT, batch_slots, BatchSlots);
+
 typedef struct {
-    zfw_t_batch_slot slots[ZFW_BATCH_SLOT_CNT];
+    s_batch_slots slots;
     int num_slots_used;
 
     t_gl_id tex_gl_id;
