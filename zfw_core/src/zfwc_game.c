@@ -1,7 +1,7 @@
-#include "zfw_game.h"
+#include "zfwc_game.h"
 
 #include <stdio.h>
-#include "zfw_rng.h"
+#include "zfwc_rng.h"
 
 #define PERM_MEM_ARENA_SIZE MEGABYTES(80)
 #define TEMP_MEM_ARENA_SIZE MEGABYTES(40)
@@ -30,20 +30,18 @@ typedef struct {
 
     GLFWwindow* glfw_window;
 
-    zfw_s_input_events input_events; // Events such as key presses and mouse wheel scrolls are stored here via GLFW callbacks, accessible in the next tick and then cleared. Ensures that events occurring between ticks are not lost.
+    s_input_events input_events; // Events such as key presses and mouse wheel scrolls are stored here via GLFW callbacks, accessible in the next tick and then cleared. Ensures that events occurring between ticks are not lost.
 
     s_gl_resource_arena gl_res_arena; // Contains all OpenGL resources used over the lifetime of the game, so they can be cleaned up all at once (simplifies resource management).
-    zfw_s_rendering_basis rendering_basis; // Foundational rendering data used throughout the lifetime of the game.
-
-    zfw_s_audio_sys audio_sys;
+    s_rendering_basis rendering_basis; // Foundational rendering data used throughout the lifetime of the game.
 
     void* dev_mem; // Memory optionally reserved by the developer for their own use, accessible in their defined functions through the provided ZFW context.
 } s_game;
 
-static zfw_s_window_state WindowState(GLFWwindow* const glfw_window) {
+static s_window_state WindowState(GLFWwindow* const glfw_window) {
     assert(glfw_window);
 
-    zfw_s_window_state state = {
+    s_window_state state = {
         .fullscreen = glfwGetWindowMonitor(glfw_window) != NULL
     };
     glfwGetWindowPos(glfw_window, &state.pos.x, &state.pos.y);
@@ -52,25 +50,28 @@ static zfw_s_window_state WindowState(GLFWwindow* const glfw_window) {
     return state;
 }
 
-static void ResizeGLViewportIfDifferent(const s_v2_int size) {
+static void ResizeGLViewportIfDifferent(const s_v2_s32 size) {
     assert(size.x > 0 && size.y > 0);
 
-    GLint viewport[4];
+    t_s32 viewport[4];
     glGetIntegerv(GL_VIEWPORT, viewport);
 
-    if (viewport[0] != 0 || viewport[1] != 0 || viewport[2] != size.x || viewport[3] != size.y) {
+    if (*STATIC_ARRAY_ELEM(viewport, 0) != 0
+        || *STATIC_ARRAY_ELEM(viewport, 1) != 0
+        || *STATIC_ARRAY_ELEM(viewport, 2) != size.x
+        || *STATIC_ARRAY_ELEM(viewport, 3) != size.y) {
         glViewport(0, 0, size.x, size.y);
     }
 }
 
-static bool ExecGameInitAndMainLoop(s_game* const game, const zfw_s_game_info* const info) {
+static bool ExecGameInitAndMainLoop(s_game* const game, const s_game_info* const info) {
     assert(game && IS_ZERO(*game));
-    ZFW_AssertGameInfoValidity(info);
+    AssertGameInfoValidity(info);
 
     //
     // Initialisation
     //
-    ZFW_InitRNG();
+    InitRNG();
 
     // Initialise memory arenas.
     if (!InitMemArena(&game->perm_mem_arena, PERM_MEM_ARENA_SIZE)) {
@@ -101,7 +102,7 @@ static bool ExecGameInitAndMainLoop(s_game* const game, const zfw_s_game_info* c
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     glfwWindowHint(GLFW_VISIBLE, false);
 
-    game->glfw_window = glfwCreateWindow(info->window_init_size.x, info->window_init_size.y, info->window_title, NULL, NULL);
+    game->glfw_window = glfwCreateWindow(info->window_init_size.x, info->window_init_size.y, info->window_title.buf_raw, NULL, NULL);
 
     if (!game->glfw_window) {
         LOG_ERROR("Failed to create a GLFW window!");
@@ -110,8 +111,8 @@ static bool ExecGameInitAndMainLoop(s_game* const game, const zfw_s_game_info* c
 
     game->run_stage = ek_game_run_stage_glfw_window_created;
 
-    glfwSetWindowAttrib(game->glfw_window, GLFW_RESIZABLE, info->window_flags & zfw_ek_window_flags_resizable ? true : false);
-    glfwSetInputMode(game->glfw_window, GLFW_CURSOR, info->window_flags & zfw_ek_window_flags_hide_cursor ? GLFW_CURSOR_HIDDEN : GLFW_CURSOR_NORMAL);
+    glfwSetWindowAttrib(game->glfw_window, GLFW_RESIZABLE, info->window_flags & ek_window_flags_resizable ? true : false);
+    glfwSetInputMode(game->glfw_window, GLFW_CURSOR, info->window_flags & ek_window_flags_hide_cursor ? GLFW_CURSOR_HIDDEN : GLFW_CURSOR_NORMAL);
 
     glfwMakeContextCurrent(game->glfw_window);
 
@@ -120,10 +121,10 @@ static bool ExecGameInitAndMainLoop(s_game* const game, const zfw_s_game_info* c
     // Set up GLFW callbacks.
     glfwSetWindowUserPointer(game->glfw_window, &game->input_events);
 
-    glfwSetKeyCallback(game->glfw_window, ZFW_GLFWKeyCallback);
-    glfwSetMouseButtonCallback(game->glfw_window, ZFW_GLFWMouseButtonCallback);
-    glfwSetScrollCallback(game->glfw_window, ZFW_GLFWScrollCallback);
-    glfwSetCharCallback(game->glfw_window, ZFW_GLFWCharCallback);
+    glfwSetKeyCallback(game->glfw_window, GLFWKeyCallback);
+    glfwSetMouseButtonCallback(game->glfw_window, GLFWMouseButtonCallback);
+    glfwSetScrollCallback(game->glfw_window, GLFWScrollCallback);
+    glfwSetCharCallback(game->glfw_window, GLFWCharCallback);
 
     // Initialise rendering.
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
@@ -141,16 +142,16 @@ static bool ExecGameInitAndMainLoop(s_game* const game, const zfw_s_game_info* c
 
     game->run_stage = ek_game_run_stage_gl_res_arena_initted;
 
-    if (!ZFW_InitRenderingBasis(&game->rendering_basis, &game->gl_res_arena, &game->perm_mem_arena, &game->temp_mem_arena)) {
+    if (!InitRenderingBasis(&game->rendering_basis, &game->gl_res_arena, &game->perm_mem_arena, &game->temp_mem_arena)) {
         LOG_ERROR("Failed to initialise the rendering basis!");
         return false;
     }
 
     // Initialise audio.
-    if (!ZFW_InitAudioSys(&game->audio_sys)) {
+    /*if (!InitAudioSys(&game->audio_sys)) {
         LOG_ERROR("Failed to initialise the audio system!");
         return false;
-    }
+    }*/
 
     game->run_stage = ek_game_run_stage_audio_sys_initted;
 
@@ -166,14 +167,14 @@ static bool ExecGameInitAndMainLoop(s_game* const game, const zfw_s_game_info* c
 
     // Run the developer's initialisation function.
     {
-        const zfw_s_game_init_context context = {
+        const s_game_init_context context = {
             .dev_mem = game->dev_mem,
             .perm_mem_arena = &game->perm_mem_arena,
             .temp_mem_arena = &game->temp_mem_arena,
             .window_state = WindowState(game->glfw_window),
             .gl_res_arena = &game->gl_res_arena,
             .rendering_basis = &game->rendering_basis,
-            .audio_sys = &game->audio_sys
+            //.audio_sys = &game->audio_sys
         };
 
         if (!info->init_func(&context)) {
@@ -196,7 +197,7 @@ static bool ExecGameInitAndMainLoop(s_game* const game, const zfw_s_game_info* c
     while (!glfwWindowShouldClose(game->glfw_window)) {
         RewindMemArena(&game->temp_mem_arena, 0);
 
-        const zfw_s_window_state window_state = WindowState(game->glfw_window);
+        const s_window_state window_state = WindowState(game->glfw_window);
 
         ResizeGLViewportIfDifferent(window_state.size);
 
@@ -207,14 +208,14 @@ static bool ExecGameInitAndMainLoop(s_game* const game, const zfw_s_game_info* c
 
         // Once enough time has passed (i.e. the time accumulator has reached the tick interval), run at least a single tick and update the display.
         if (frame_dur_accum >= TARG_TICK_INTERVAL) {
-            const zfw_s_input_state input_state = ZFW_InputState(game->glfw_window);
+            const s_input_state input_state = InputState(game->glfw_window);
 
-            ZFW_UpdateAudioSys(&game->audio_sys);
+            //UpdateAudioSys(&game->audio_sys);
 
             // Run ticks.
             do {
                 // Execute the developer's tick function.
-                const zfw_s_game_tick_context context = {
+                const s_game_tick_context context = {
                     .dev_mem = game->dev_mem,
                     .perm_mem_arena = &game->perm_mem_arena,
                     .temp_mem_arena = &game->temp_mem_arena,
@@ -225,19 +226,19 @@ static bool ExecGameInitAndMainLoop(s_game* const game, const zfw_s_game_info* c
                     },
                     .gl_res_arena = &game->gl_res_arena,
                     .rendering_basis = &game->rendering_basis,
-                    .audio_sys = &game->audio_sys
+                    //.audio_sys = &game->audio_sys
                 };
 
-                const zfw_e_game_tick_result res = info->tick_func(&context);
+                const e_game_tick_result res = info->tick_func(&context);
 
                 ZERO_OUT(game->input_events);
 
-                if (res == zfw_ek_game_tick_result_exit) {
+                if (res == ek_game_tick_result_exit) {
                     LOG("Exit request detected from developer game tick function...");
                     glfwSetWindowShouldClose(game->glfw_window, true);
                 }
 
-                if (res == zfw_ek_game_tick_result_error) {
+                if (res == ek_game_tick_result_error) {
                     LOG_ERROR("Developer game tick function failed!");
                     return false;
                 }
@@ -246,7 +247,7 @@ static bool ExecGameInitAndMainLoop(s_game* const game, const zfw_s_game_info* c
             } while (frame_dur_accum >= TARG_TICK_INTERVAL);
 
             // Render the game.
-            zfw_s_rendering_state* const rendering_state = ZFW_PushRenderingState(&game->temp_mem_arena);
+            s_rendering_state* const rendering_state = GenRenderingState(&game->temp_mem_arena);
 
             if (!rendering_state) {
                 LOG_ERROR("Failed to reserve memory for rendering state!");
@@ -255,7 +256,7 @@ static bool ExecGameInitAndMainLoop(s_game* const game, const zfw_s_game_info* c
 
             {
                 // Execute the developer's render function.
-                const zfw_s_game_render_context context = {
+                const s_game_render_context context = {
                     .dev_mem = game->dev_mem,
                     .perm_mem_arena = &game->perm_mem_arena,
                     .temp_mem_arena = &game->temp_mem_arena,
@@ -272,7 +273,7 @@ static bool ExecGameInitAndMainLoop(s_game* const game, const zfw_s_game_info* c
                     return false;
                 }
 
-                ZFW_SubmitBatch(&context.rendering_context);
+                SubmitBatch(&context.rendering_context);
             }
 
             glfwSwapBuffers(game->glfw_window);
@@ -284,8 +285,8 @@ static bool ExecGameInitAndMainLoop(s_game* const game, const zfw_s_game_info* c
     return true;
 }
 
-bool ZFW_RunGame(const zfw_s_game_info* const info) {
-    ZFW_AssertGameInfoValidity(info);
+bool RunGame(const s_game_info* const info) {
+    AssertGameInfoValidity(info);
 
     s_game game = {0};
 
@@ -319,7 +320,7 @@ bool ZFW_RunGame(const zfw_s_game_info* const info) {
                 break;
 
             case ek_game_run_stage_audio_sys_initted:
-                ZFW_CleanAudioSys(&game.audio_sys);
+                //CleanAudioSys(&game.audio_sys);
                 break;
 
             case ek_game_run_stage_dev_init_func_ran_and_succeeded:
