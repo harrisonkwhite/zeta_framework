@@ -40,7 +40,7 @@ static s_font_texture_meta LoadFontTexMeta(const stbtt_fontinfo* const stb_font_
     t_s32 chr_x_pen = 0;
 
     for (t_s32 i = 0; i < ASCII_PRINTABLE_RANGE_LEN; i++) {
-        const t_s32 chr_margin = 4;
+        const t_s32 chr_margin = 2;
 
         chr_x_pen += chr_margin;
 
@@ -145,7 +145,7 @@ static bool OutputFontFile(const s_char_array_view file_path, const s_font_arran
 
 bool PackFont(const s_char_array_view file_path, const t_s32 height, const s_char_array_view output_file_path, s_mem_arena* const temp_mem_arena) {
     if (height <= 0) {
-        LOG_ERROR("Invalid font height \"%d\"!", height);
+        LOG_ERROR("Invalid font height %d!", height);
         return false;
     }
 
@@ -177,11 +177,16 @@ bool PackFont(const s_char_array_view file_path, const t_s32 height, const s_cha
     const s_font_texture_meta tex_meta = LoadFontTexMeta(&stb_font_info, height, &arrangement);
     const s_u8_array_view tex_rgba_px_data = GenFontTextureRGBAPixelData(temp_mem_arena, &stb_font_info, height, &arrangement, tex_meta);
 
+    if (IS_ZERO(tex_rgba_px_data)) {
+        LOG_ERROR("Failed to generate font texture RGBA pixel data!");
+        return false;
+    }
+
     if (!OutputFontFile(output_file_path, &arrangement, tex_meta, tex_rgba_px_data)) {
         return false;
     }
 
-    LOG_SUCCESS("Packed font from file \"%s\" with height \"%d\"!", file_path.buf_raw, height);
+    LOG_SUCCESS("Packed font from file \"%s\" with height %d!", file_path.buf_raw, height);
 
     return true;
 }
