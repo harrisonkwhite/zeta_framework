@@ -247,8 +247,8 @@ static inline void RenderLine(const s_rendering_context* const rendering_context
 // zfwc_fonts.c
 //
 s_font_group GenFontGroupFromFiles(const s_char_array_view_array_view file_paths, s_mem_arena *const mem_arena, s_gl_resource_arena* const gl_res_arena, s_mem_arena* const temp_mem_arena);
-s_v2_array CalcStrChrRenderPositions(s_mem_arena* const mem_arena, const s_char_array_view str, const s_font_group* const font_group, const t_s32 font_index, const s_v2 pos, const s_v2 alignment);
-bool CalcStrCollider(s_rect* const rect, const s_char_array_view str, const s_font_group* const font_group, const t_s32 font_index, const s_v2 pos, const s_v2 alignment, s_mem_arena* const temp_mem_arena);
+s_v2_array GenStrChrRenderPositions(s_mem_arena* const mem_arena, const s_char_array_view str, const s_font_group* const font_group, const t_s32 font_index, const s_v2 pos, const s_v2 alignment);
+bool GenStrCollider(s_rect* const rect, const s_char_array_view str, const s_font_group* const font_group, const t_s32 font_index, const s_v2 pos, const s_v2 alignment, s_mem_arena* const temp_mem_arena);
 bool RenderStr(const s_rendering_context* const rendering_context, const s_char_array_view str, const s_font_group* const fonts, const t_s32 font_index, const s_v2 pos, const s_v2 alignment, const u_v4 color, s_mem_arena* const temp_mem_arena);
 
 //

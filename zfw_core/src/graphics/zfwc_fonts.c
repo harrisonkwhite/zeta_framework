@@ -110,18 +110,18 @@ static t_s32 CalcStrLineCnt(const s_char_array_view str) {
     return line_cnt;
 }
 
-s_v2_array CalcStrChrRenderPositions(s_mem_arena* const mem_arena, const s_char_array_view str, const s_font_group* const font_group, const t_s32 font_index, const s_v2 pos, const s_v2 alignment) {
+s_v2_array GenStrChrRenderPositions(s_mem_arena* const mem_arena, const s_char_array_view str, const s_font_group* const font_group, const t_s32 font_index, const s_v2 pos, const s_v2 alignment) {
+    assert(IsStrTerminated(str));
     assert(alignment.x >= 0.0f && alignment.x <= 1.0f && alignment.y >= 0.0f && alignment.y <= 1.0f);
 
     const s_font_arrangement* const arrangement = FontArrangementElemView(font_group->arrangements, font_index);
 
-    const t_s32 str_line_cnt = CalcStrLineCnt(str);
-
     // From just the string line count we can determine the vertical alignment offset to apply to all characters.
-    const t_r32 alignment_offs_y = -(str_line_cnt * arrangement->line_height) * alignment.y;
+    const t_s32 line_cnt = CalcStrLineCnt(str);
+    const t_r32 alignment_offs_y = -(line_cnt * arrangement->line_height) * alignment.y;
 
     // Reserve memory for the character render positions.
-    const s_v2_array chr_render_positions = PushV2ArrayToMemArena(mem_arena, str_line_cnt);
+    const s_v2_array chr_render_positions = PushV2ArrayToMemArena(mem_arena, str.len - 1);
 
     if (IS_ZERO(chr_render_positions)) {
         LOG_ERROR("Failed to reserve memory for character render positions!");
@@ -175,11 +175,11 @@ s_v2_array CalcStrChrRenderPositions(s_mem_arena* const mem_arena, const s_char_
     return chr_render_positions;
 }
 
-bool CalcStrCollider(s_rect* const rect, const s_char_array_view str, const s_font_group* const font_group, const t_s32 font_index, const s_v2 pos, const s_v2 alignment, s_mem_arena* const temp_mem_arena) {
+bool GenStrCollider(s_rect* const rect, const s_char_array_view str, const s_font_group* const font_group, const t_s32 font_index, const s_v2 pos, const s_v2 alignment, s_mem_arena* const temp_mem_arena) {
     assert(rect && IS_ZERO(*rect));
     assert(alignment.x >= 0.0f && alignment.x <= 1.0f && alignment.y >= 0.0f && alignment.y <= 1.0f);
 
-    const s_v2_array chr_render_positions = CalcStrChrRenderPositions(temp_mem_arena, str, font_group, font_index, pos, alignment);
+    const s_v2_array chr_render_positions = GenStrChrRenderPositions(temp_mem_arena, str, font_group, font_index, pos, alignment);
 
     if (IS_ZERO(chr_render_positions)) {
         LOG_ERROR("Failed to reserve memory for character render positions!");
@@ -236,16 +236,17 @@ bool CalcStrCollider(s_rect* const rect, const s_char_array_view str, const s_fo
 }
 
 bool RenderStr(const s_rendering_context* const rendering_context, const s_char_array_view str, const s_font_group* const fonts, const t_s32 font_index, const s_v2 pos, const s_v2 alignment, const u_v4 color, s_mem_arena* const temp_mem_arena) {
+    assert(IsStrTerminated(str));
     assert(alignment.x >= 0.0f && alignment.x <= 1.0f && alignment.y >= 0.0f && alignment.y <= 1.0f);
 
-    const s_v2_array chr_render_positions = CalcStrChrRenderPositions(temp_mem_arena, str, fonts, font_index, pos, alignment);
+    const s_v2_array chr_render_positions = GenStrChrRenderPositions(temp_mem_arena, str, fonts, font_index, pos, alignment);
 
     if (IS_ZERO(chr_render_positions)) {
         LOG_ERROR("Failed to reserve memory for character render positions!");
         return false;
     }
 
-    for (t_s32 i = 0; i < str.len; i++) {
+    for (t_s32 i = 0; i < str.len - 1; i++) {
         const char chr = *CharElemView(str, i);
 
         if (chr == ' ' || chr == '\n') {
