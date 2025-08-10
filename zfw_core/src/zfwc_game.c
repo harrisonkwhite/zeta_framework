@@ -18,7 +18,6 @@ typedef enum {
     ek_game_run_stage_glfw_initted,
     ek_game_run_stage_glfw_window_created,
     ek_game_run_stage_gl_res_arena_initted,
-    ek_game_run_stage_audio_sys_initted,
     ek_game_run_stage_dev_init_func_ran_and_succeeded
 } e_game_run_stage;
 
@@ -144,14 +143,6 @@ static bool ExecGameInitAndMainLoop(s_game* const game, const s_game_info* const
         return false;
     }
 
-    // Initialise audio.
-    /*if (!InitAudioSys(&game->audio_sys)) {
-        LOG_ERROR("Failed to initialise the audio system!");
-        return false;
-    }*/
-
-    game->run_stage = ek_game_run_stage_audio_sys_initted;
-
     // Initialise developer memory.
     if (info->dev_mem_size > 0) {
         game->dev_mem = PushToMemArena(&game->perm_mem_arena, info->dev_mem_size, info->dev_mem_alignment);
@@ -170,8 +161,7 @@ static bool ExecGameInitAndMainLoop(s_game* const game, const s_game_info* const
             .temp_mem_arena = &game->temp_mem_arena,
             .window_state = WindowState(game->glfw_window),
             .gl_res_arena = &game->gl_res_arena,
-            .rendering_basis = &game->rendering_basis,
-            //.audio_sys = &game->audio_sys
+            .rendering_basis = &game->rendering_basis
         };
 
         if (!info->init_func(&context)) {
@@ -207,8 +197,6 @@ static bool ExecGameInitAndMainLoop(s_game* const game, const s_game_info* const
         if (frame_dur_accum >= TARG_TICK_INTERVAL) {
             const s_input_state input_state = InputState(game->glfw_window);
 
-            //UpdateAudioSys(&game->audio_sys);
-
             // Run ticks.
             do {
                 // Execute the developer's tick function.
@@ -222,8 +210,7 @@ static bool ExecGameInitAndMainLoop(s_game* const game, const s_game_info* const
                         .events = &game->input_events
                     },
                     .gl_res_arena = &game->gl_res_arena,
-                    .rendering_basis = &game->rendering_basis,
-                    //.audio_sys = &game->audio_sys
+                    .rendering_basis = &game->rendering_basis
                 };
 
                 const e_game_tick_result res = info->tick_func(&context);
@@ -314,10 +301,6 @@ bool RunGame(const s_game_info* const info) {
 
             case ek_game_run_stage_gl_res_arena_initted:
                 CleanGLResourceArena(&game.gl_res_arena);
-                break;
-
-            case ek_game_run_stage_audio_sys_initted:
-                //CleanAudioSys(&game.audio_sys);
                 break;
 
             case ek_game_run_stage_dev_init_func_ran_and_succeeded:
