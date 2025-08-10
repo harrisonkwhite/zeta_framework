@@ -212,7 +212,7 @@ void Render(const s_rendering_context* const rendering_context, const s_batch_sl
 void RenderRectWithOutline(const s_rendering_context* const rendering_context, const s_rect rect, const u_v4 fill_color, const u_v4 outline_color, const t_r32 outline_thickness);
 void RenderRectWithOutlineAndOpaqueFill(const s_rendering_context* const rendering_context, const s_rect rect, const u_v3 fill_color, const u_v4 outline_color, const t_r32 outline_thickness);
 void RenderBarHor(const s_rendering_context* const rendering_context, const s_rect rect, const t_r32 perc, const u_v4 front_color, const u_v4 bg_color);
-void RenderBarVer(const s_rendering_context* const rendering_context, const s_rect rect, const t_r32 perc, const u_v4 front_color, const u_v4 bg_color);
+void RenderBarVertical(const s_rendering_context* const rendering_context, const s_rect rect, const t_r32 perc, const u_v4 front_color, const u_v4 bg_color);
 
 void SubmitBatch(const s_rendering_context* const rendering_context);
 
@@ -261,7 +261,7 @@ static inline void RenderBarHorReverse(const s_rendering_context* const renderin
 }
 
 static inline void RenderBarVerticalReverse(const s_rendering_context* const rendering_context, const s_rect rect, const t_r32 perc, const u_v4 front_color, const u_v4 bg_color) {
-    RenderBarVer(rendering_context, rect, 1.0f - perc, bg_color, front_color);
+    RenderBarVertical(rendering_context, rect, 1.0f - perc, bg_color, front_color);
 }
 
 static inline void RenderLine(const s_rendering_context* const rendering_context, const s_v2 a, const s_v2 b, const u_v4 blend, const t_r32 width) {

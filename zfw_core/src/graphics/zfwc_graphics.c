@@ -432,7 +432,7 @@ void RenderBarHor(const s_rendering_context* const rendering_context, const s_re
     }
 }
 
-void RenderBarVer(const s_rendering_context* const rendering_context, const s_rect rect, const t_r32 perc, const u_v4 front_color, const u_v4 bg_color) {
+void RenderBarVertical(const s_rendering_context* const rendering_context, const s_rect rect, const t_r32 perc, const u_v4 front_color, const u_v4 bg_color) {
     assert(perc >= 0.0f && perc <= 1.0f);
 
     const t_r32 front_rect_height = rect.height * perc;
@@ -441,8 +441,8 @@ void RenderBarVer(const s_rendering_context* const rendering_context, const s_re
         RenderRect(rendering_context, (s_rect){rect.x, rect.y, rect.width, front_rect_height}, front_color);
     }
 
-    const t_r32 bg_rect_y = rect.x + front_rect_height;
-    const t_r32 bg_rect_height = rect.width - front_rect_height;
+    const t_r32 bg_rect_y = rect.y + front_rect_height;
+    const t_r32 bg_rect_height = rect.height - front_rect_height;
 
     if (bg_rect_height > 0.0f) {
         RenderRect(rendering_context, (s_rect){rect.x, bg_rect_y, rect.width, bg_rect_height}, bg_color);
