@@ -1,9 +1,6 @@
 #ifndef ZFWC_MATH_H
 #define ZFWC_MATH_H
 
-#include <stdbool.h>
-#include <stdint.h>
-#include <assert.h>
 #include <cu.h>
 
 typedef enum {

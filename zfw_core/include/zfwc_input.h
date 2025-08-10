@@ -75,7 +75,7 @@ typedef enum {
     eks_key_code_cnt
 } e_key_code;
 
-typedef uint64_t t_key_bits;
+typedef t_u64 t_key_bits;
 
 static_assert(eks_key_code_cnt < SIZE_IN_BITS(t_key_bits), "Too many key codes!");
 
@@ -95,7 +95,7 @@ typedef enum {
     eks_mouse_button_code_cnt
 } e_mouse_button_code;
 
-typedef uint8_t t_mouse_button_bits;
+typedef t_u8 t_mouse_button_bits;
 
 static_assert(eks_mouse_button_code_cnt < SIZE_IN_BITS(t_mouse_button_bits), "Too many mouse button codes!");
 

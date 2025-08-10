@@ -62,7 +62,7 @@ bool ResizeSurface(s_surface* const surf, const s_v2_s32 size) {
 }
 
 static inline t_gl_id BoundGLFramebuffer() {
-    int fb;
+    t_s32 fb;
     glGetIntegerv(GL_FRAMEBUFFER_BINDING, &fb);
     return fb;
 }
@@ -84,12 +84,12 @@ void UnsetSurface(const s_rendering_context* const rendering_context) {
 }
 
 static inline t_gl_id CurrentGLShaderProgram() {
-    int prog;
+    t_s32 prog;
     glGetIntegerv(GL_CURRENT_PROGRAM, &prog);
     return prog;
 }
 
-void SetSurfaceShaderProg(const s_rendering_context* const rendering_context, const s_shader_prog_group* const progs, const int prog_index) {
+void SetSurfaceShaderProg(const s_rendering_context* const rendering_context, const s_shader_prog_group* const progs, const t_s32 prog_index) {
     assert(CurrentGLShaderProgram() == 0 && "Potential attempted double-assignment of surface shader program?");
     glUseProgram(*GLIDElemView(progs->gl_ids, prog_index));
 }
@@ -101,7 +101,7 @@ void SetSurfaceShaderProgUniform(const s_rendering_context* const rendering_cont
 
     assert(prog_gl_id != 0 && "Surface shader program must be set before setting uniforms!");
 
-    const int loc = glGetUniformLocation(prog_gl_id, name);
+    const t_s32 loc = glGetUniformLocation(prog_gl_id, name);
     assert(loc != -1 && "Failed to get location of shader uniform!");
 
     switch (val.type) {

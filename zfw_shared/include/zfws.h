@@ -8,7 +8,7 @@
 #define ASCII_PRINTABLE_RANGE_LEN (ASCII_PRINTABLE_MAX - ASCII_PRINTABLE_MIN + 1)
 
 typedef struct {
-    int line_height;
+    t_s32 line_height;
 
     s_v2_s32 chr_offsets[ASCII_PRINTABLE_RANGE_LEN];
     s_v2_s32 chr_sizes[ASCII_PRINTABLE_RANGE_LEN];

@@ -118,7 +118,7 @@ s_v2_array CalcStrChrRenderPositions(s_mem_arena* const mem_arena, const s_char_
     const t_s32 str_line_cnt = CalcStrLineCnt(str);
 
     // From just the string line count we can determine the vertical alignment offset to apply to all characters.
-    const float alignment_offs_y = -(str_line_cnt * arrangement->line_height) * alignment.y;
+    const t_r32 alignment_offs_y = -(str_line_cnt * arrangement->line_height) * alignment.y;
 
     // Reserve memory for the character render positions.
     const s_v2_array chr_render_positions = PushV2ArrayToMemArena(mem_arena, str_line_cnt);
@@ -140,7 +140,7 @@ s_v2_array CalcStrChrRenderPositions(s_mem_arena* const mem_arena, const s_char_
             const t_s32 line_len = i - line_starting_chr_index;
 
             if (line_len > 0) {
-                const float line_width = chr_pos_pen.x;
+                const t_r32 line_width = chr_pos_pen.x;
 
                 for (t_s32 j = line_starting_chr_index; j < i; j++) {
                     V2Elem(chr_render_positions, j)->x -= line_width * alignment.x;

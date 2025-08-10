@@ -2,7 +2,6 @@
 #define ZFWC_GAME_H
 
 #include <stdbool.h>
-#include <stdint.h>
 #include <cu.h>
 #include "zfwc_input.h"
 #include "zfwc_graphics.h"

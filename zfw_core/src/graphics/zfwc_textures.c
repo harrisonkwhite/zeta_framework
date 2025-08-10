@@ -2,10 +2,10 @@
 
 s_rect_edges GenTextureCoords(const s_rect_s32 src_rect, const s_v2_s32 tex_size) {
     return (s_rect_edges){
-        .left = (float)src_rect.x / tex_size.x,
-        .top = (float)src_rect.y / tex_size.y,
-        .right = (float)(src_rect.x + src_rect.width) / tex_size.x,
-        .bottom = (float)(src_rect.y + src_rect.height) / tex_size.y
+        .left = (t_r32)src_rect.x / tex_size.x,
+        .top = (t_r32)src_rect.y / tex_size.y,
+        .right = (t_r32)(src_rect.x + src_rect.width) / tex_size.x,
+        .bottom = (t_r32)(src_rect.y + src_rect.height) / tex_size.y
     };
 }
 
@@ -118,7 +118,7 @@ s_texture_group GenTextureGroup(const t_s32 tex_cnt, const t_texture_group_rgba_
     };
 }
 
-void RenderTexture(const s_rendering_context* const rendering_context, const s_texture_group* const textures, const t_s32 tex_index, const s_rect_s32 src_rect, const s_v2 pos, const s_v2 origin, const s_v2 scale, const float rot, const u_v4 blend) {
+void RenderTexture(const s_rendering_context* const rendering_context, const s_texture_group* const textures, const t_s32 tex_index, const s_rect_s32 src_rect, const s_v2 pos, const s_v2 origin, const s_v2 scale, const t_r32 rot, const u_v4 blend) {
     assert(origin.x >= 0.0f && origin.x <= 1.0f && origin.y >= 0.0f && origin.y <= 1.0f);
 
     const s_v2_s32 tex_size = *V2S32ElemView(textures->sizes, tex_index);

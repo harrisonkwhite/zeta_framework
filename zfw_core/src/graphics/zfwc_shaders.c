@@ -5,7 +5,7 @@ static t_gl_id GenShaderFromSrc(const s_char_array_view src, const bool frag, s_
     glShaderSource(shader_gl_id, 1, &src.buf_raw, NULL);
     glCompileShader(shader_gl_id);
 
-    GLint success;
+    t_s32 success;
     glGetShaderiv(shader_gl_id, GL_COMPILE_STATUS, &success);
 
     if (!success) {
@@ -43,7 +43,7 @@ static bool LoadShaderSrcsFromFile(s_char_array_view* const vert_src, s_char_arr
         return false;
     }
 
-    int vert_src_len;
+    t_s32 vert_src_len;
 
     if (fread(&vert_src_len, sizeof(vert_src_len), 1, fs) < 1) {
         LOG_ERROR("Failed to read vertex shader source length from file \"%s\"!", file_path.buf_raw);
@@ -65,7 +65,7 @@ static bool LoadShaderSrcsFromFile(s_char_array_view* const vert_src, s_char_arr
         return false;
     }
 
-    int frag_src_len;
+    t_s32 frag_src_len;
 
     if (fread(&frag_src_len, sizeof(frag_src_len), 1, fs) < 1) {
         LOG_ERROR("Failed to read fragment shader source length from file \"%s\"!", file_path.buf_raw);
@@ -152,7 +152,7 @@ static t_gl_id GenShaderProg(const s_shader_prog_gen_info gen_info, s_mem_arena*
 s_shader_prog_group GenShaderProgGroup(const s_shader_prog_gen_info_array_view gen_infos, s_gl_resource_arena* const gl_res_arena, s_mem_arena* const temp_mem_arena) {
     assert(gen_infos.len > 0);
 
-    const int prog_cnt = gen_infos.len;
+    const t_s32 prog_cnt = gen_infos.len;
 
     const s_gl_id_array gl_ids = PushToGLResourceArena(gl_res_arena, prog_cnt, ek_gl_resource_type_shader_prog);
 
@@ -161,7 +161,7 @@ s_shader_prog_group GenShaderProgGroup(const s_shader_prog_gen_info_array_view g
         return (s_shader_prog_group){0};
     }
 
-    for (int i = 0; i < prog_cnt; i++) {
+    for (t_s32 i = 0; i < prog_cnt; i++) {
         const s_shader_prog_gen_info gen_info = *ShaderProgGenInfoElemView(gen_infos, i);
 
         t_gl_id* const gl_id = GLIDElem(gl_ids, i);

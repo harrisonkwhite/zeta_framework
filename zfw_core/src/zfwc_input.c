@@ -1,6 +1,6 @@
 #include "zfwc_input.h"
 
-static const int g_glfw_keys[] = {
+static const t_s32 g_glfw_keys[] = {
     [ek_key_code_space] = GLFW_KEY_SPACE,
     [ek_key_code_0] = GLFW_KEY_0,
     [ek_key_code_1] = GLFW_KEY_1,
@@ -68,7 +68,7 @@ static const int g_glfw_keys[] = {
 
 STATIC_ARRAY_LEN_CHECK(g_glfw_keys, eks_key_code_cnt);
 
-static const int g_glfw_mouse_buttons[] = {
+static const t_s32 g_glfw_mouse_buttons[] = {
     [ek_mouse_button_code_left] = GLFW_MOUSE_BUTTON_LEFT,
     [ek_mouse_button_code_right] = GLFW_MOUSE_BUTTON_RIGHT,
     [ek_mouse_button_code_middle] = GLFW_MOUSE_BUTTON_MIDDLE
@@ -79,7 +79,7 @@ STATIC_ARRAY_LEN_CHECK(g_glfw_mouse_buttons, eks_mouse_button_code_cnt);
 static t_key_bits KeysDownBits(GLFWwindow* const glfw_window) {
     t_key_bits keys_down = 0;
 
-    for (int i = 0; i < eks_key_code_cnt; i++) {
+    for (t_s32 i = 0; i < eks_key_code_cnt; i++) {
         if (glfwGetKey(glfw_window, g_glfw_keys[i])) {
             keys_down |= (t_key_bits)1 << i;
         }
@@ -91,7 +91,7 @@ static t_key_bits KeysDownBits(GLFWwindow* const glfw_window) {
 static t_mouse_button_bits MouseButtonsDownBits(GLFWwindow* const glfw_window) {
     t_mouse_button_bits mouse_buttons_down = 0;
 
-    for (int i = 0; i < eks_mouse_button_code_cnt; i++) {
+    for (t_s32 i = 0; i < eks_mouse_button_code_cnt; i++) {
         if (glfwGetMouseButton(glfw_window, g_glfw_mouse_buttons[i])) {
             mouse_buttons_down |= (t_mouse_button_bits)1 << i;
         }
@@ -114,7 +114,7 @@ s_input_state InputState(GLFWwindow* const glfw_window) {
     };
 }
 
-static e_key_code GLFWToZFWKeyCode(const int glfw_key) {
+static e_key_code GLFWToZFWKeyCode(const t_s32 glfw_key) {
     switch (glfw_key) {
         case GLFW_KEY_SPACE: return ek_key_code_space;
         case GLFW_KEY_0: return ek_key_code_0;
@@ -184,7 +184,7 @@ static e_key_code GLFWToZFWKeyCode(const int glfw_key) {
     }
 }
 
-static e_mouse_button_code GLFWToZFWMouseButtonCode(const int glfw_button) {
+static e_mouse_button_code GLFWToZFWMouseButtonCode(const t_s32 glfw_button) {
     switch (glfw_button) {
         case GLFW_MOUSE_BUTTON_LEFT: return ek_mouse_button_code_left;
         case GLFW_MOUSE_BUTTON_RIGHT: return ek_mouse_button_code_right;

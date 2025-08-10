@@ -1,24 +1,22 @@
 #ifndef ZFWC_RNG_H
 #define ZFWC_RNG_H
 
-// NOTE: This is all very much temporary and will be replaced with a more robust RNG system later on.
-
-#include <assert.h>
+#include <cu.h>
 
 void InitRNG();
 
-float RandPerc(); // Generates a random float in the range [0.0f, 1.0f).
-float RandPercIncl(); // Generates a random float in the range [0.0f, 1.0f].
+t_r32 RandPerc(); // Generates a random t_r32 in the range [0.0f, 1.0f).
+t_r32 RandPercIncl(); // Generates a random t_r32 in the range [0.0f, 1.0f].
 
-int RandRangeInt(const int beg, const int end);
-int RandRangeIntIncl(const int beg, const int end_incl);
+t_s32 RandRangeS32(const t_s32 beg, const t_s32 end);
+t_s32 RandRangeS32Incl(const t_s32 beg, const t_s32 end_incl);
 
-static inline float RandRange(const float beg, const float end) {
+static inline t_r32 RandRange(const t_r32 beg, const t_r32 end) {
     assert(beg < end);
     return beg + (RandPerc() * (end - beg));
 }
 
-static inline float RandRangeIncl(const float beg, const float end_incl) {
+static inline t_r32 RandRangeIncl(const t_r32 beg, const t_r32 end_incl) {
     assert(beg <= end_incl);
     return beg + (RandPercIncl() * (end_incl - beg));
 }

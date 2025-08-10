@@ -5,7 +5,7 @@
 static s_font_arrangement LoadFontArrangement(const stbtt_fontinfo* const stb_font_info, const t_s32 height) {
     s_font_arrangement arrangement_info = {0};
 
-    const float scale = stbtt_ScaleForPixelHeight(stb_font_info, height);
+    const t_r32 scale = stbtt_ScaleForPixelHeight(stb_font_info, height);
 
     t_s32 vm_ascent, vm_descent, vm_line_gap;
     stbtt_GetFontVMetrics(stb_font_info, &vm_ascent, &vm_descent, &vm_line_gap);
@@ -77,7 +77,7 @@ static s_u8_array_view GenFontTextureRGBAPixelData(s_mem_arena* const mem_arena,
     }
 
     // Write the pixel data of each character.
-    const float scale = stbtt_ScaleForPixelHeight(stb_font_info, height);
+    const t_r32 scale = stbtt_ScaleForPixelHeight(stb_font_info, height);
 
     for (t_s32 i = 0; i < ASCII_PRINTABLE_RANGE_LEN; i++) {
         const char chr = ASCII_PRINTABLE_MIN + i;
@@ -87,7 +87,7 @@ static s_u8_array_view GenFontTextureRGBAPixelData(s_mem_arena* const mem_arena,
             continue;
         }
 
-        unsigned char* const stb_bitmap = stbtt_GetCodepointBitmap(stb_font_info, scale, scale, chr, NULL, NULL, NULL, NULL);
+        t_u8* const stb_bitmap = stbtt_GetCodepointBitmap(stb_font_info, scale, scale, chr, NULL, NULL, NULL, NULL);
 
         if (!stb_bitmap) {
             LOG_ERROR("Failed to get bitmap for character '%c' through STB!", chr);

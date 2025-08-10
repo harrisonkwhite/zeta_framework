@@ -12,9 +12,9 @@ static bool PackAssets(cJSON* const cj, s_mem_arena* const temp_mem_arena) {
         return false;
     }
 
-    const int item_cnt = cJSON_GetArraySize(cj);
+    const t_s32 item_cnt = cJSON_GetArraySize(cj);
 
-    for (int i = 0; i < item_cnt; i++) {
+    for (t_s32 i = 0; i < item_cnt; i++) {
         const cJSON* const cj_item = cJSON_GetArrayItem(cj, i);
 
         const cJSON* const cj_type = cJSON_GetObjectItem(cj_item, "type");
@@ -88,7 +88,7 @@ static bool PackAssets(cJSON* const cj, s_mem_arena* const temp_mem_arena) {
     return true;
 }
 
-int main() {
+t_s32 main() {
     s_mem_arena mem_arena = {0};
 
     if (!InitMemArena(&mem_arena, MEM_ARENA_SIZE)) {

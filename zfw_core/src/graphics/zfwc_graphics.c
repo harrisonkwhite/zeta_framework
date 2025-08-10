@@ -381,7 +381,7 @@ void Render(const s_rendering_context* const rendering_context, const s_batch_sl
     batch_state->num_slots_used++;
 }
 
-static inline s_rect InnerRect(const s_rect rect, const float outline_thickness) {
+static inline s_rect InnerRect(const s_rect rect, const t_r32 outline_thickness) {
     return (s_rect){
         rect.x + outline_thickness,
         rect.y + outline_thickness,
@@ -390,7 +390,7 @@ static inline s_rect InnerRect(const s_rect rect, const float outline_thickness)
     };
 }
 
-void RenderRectWithOutline(const s_rendering_context* const rendering_context, const s_rect rect, const u_v4 fill_color, const u_v4 outline_color, const float outline_thickness) {
+void RenderRectWithOutline(const s_rendering_context* const rendering_context, const s_rect rect, const u_v4 fill_color, const u_v4 outline_color, const t_r32 outline_thickness) {
     // Top Outline
     RenderRect(rendering_context, (s_rect){rect.x, rect.y, rect.width - outline_thickness, outline_thickness}, outline_color);
 
@@ -407,7 +407,7 @@ void RenderRectWithOutline(const s_rendering_context* const rendering_context, c
     RenderRect(rendering_context, InnerRect(rect, outline_thickness), fill_color);
 }
 
-void RenderRectWithOutlineAndOpaqueFill(const s_rendering_context* const rendering_context, const s_rect rect, const u_v3 fill_color, const u_v4 outline_color, const float outline_thickness) {
+void RenderRectWithOutlineAndOpaqueFill(const s_rendering_context* const rendering_context, const s_rect rect, const u_v3 fill_color, const u_v4 outline_color, const t_r32 outline_thickness) {
     // Outline
     RenderRect(rendering_context, rect, outline_color);
 
@@ -415,34 +415,34 @@ void RenderRectWithOutlineAndOpaqueFill(const s_rendering_context* const renderi
     RenderRect(rendering_context, InnerRect(rect, outline_thickness), (u_v4){fill_color.r, fill_color.g, fill_color.b, 1.0f});
 }
 
-void RenderBarHor(const s_rendering_context* const rendering_context, const s_rect rect, const float perc, const u_v4 front_color, const u_v4 bg_color) {
+void RenderBarHor(const s_rendering_context* const rendering_context, const s_rect rect, const t_r32 perc, const u_v4 front_color, const u_v4 bg_color) {
     assert(perc >= 0.0f && perc <= 1.0f);
 
-    const float front_rect_width = rect.width * perc;
+    const t_r32 front_rect_width = rect.width * perc;
 
     if (front_rect_width > 0.0f) {
         RenderRect(rendering_context, (s_rect){rect.x, rect.y, front_rect_width, rect.height}, front_color);
     }
 
-    const float bg_rect_x = rect.x + front_rect_width;
-    const float bg_rect_width = rect.width - front_rect_width;
+    const t_r32 bg_rect_x = rect.x + front_rect_width;
+    const t_r32 bg_rect_width = rect.width - front_rect_width;
 
     if (bg_rect_width > 0.0f) {
         RenderRect(rendering_context, (s_rect){bg_rect_x, rect.y, bg_rect_width, rect.height}, bg_color);
     }
 }
 
-void RenderBarVer(const s_rendering_context* const rendering_context, const s_rect rect, const float perc, const u_v4 front_color, const u_v4 bg_color) {
+void RenderBarVer(const s_rendering_context* const rendering_context, const s_rect rect, const t_r32 perc, const u_v4 front_color, const u_v4 bg_color) {
     assert(perc >= 0.0f && perc <= 1.0f);
 
-    const float front_rect_height = rect.height * perc;
+    const t_r32 front_rect_height = rect.height * perc;
 
     if (front_rect_height > 0.0f) {
         RenderRect(rendering_context, (s_rect){rect.x, rect.y, rect.width, front_rect_height}, front_color);
     }
 
-    const float bg_rect_y = rect.x + front_rect_height;
-    const float bg_rect_height = rect.width - front_rect_height;
+    const t_r32 bg_rect_y = rect.x + front_rect_height;
+    const t_r32 bg_rect_height = rect.width - front_rect_height;
 
     if (bg_rect_height > 0.0f) {
         RenderRect(rendering_context, (s_rect){rect.x, bg_rect_y, rect.width, bg_rect_height}, bg_color);

@@ -277,7 +277,7 @@ bool RunGame(const s_game_info* const info) {
     const bool result = ExecGameInitAndMainLoop(&game, info);
 
     // Clean up.
-    for (int i = game.run_stage; i >= 0; i--) {
+    for (t_s32 i = game.run_stage; i >= 0; i--) {
         switch ((e_game_run_stage)i) {
             case ek_game_run_stage_nothing_initted:
                 break;
