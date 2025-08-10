@@ -39,8 +39,6 @@ typedef struct {
 } s_game;
 
 static s_window_state WindowState(GLFWwindow* const glfw_window) {
-    assert(glfw_window);
-
     s_window_state state = {
         .fullscreen = glfwGetWindowMonitor(glfw_window) != NULL
     };
@@ -65,8 +63,7 @@ static void ResizeGLViewportIfDifferent(const s_v2_s32 size) {
 }
 
 static bool ExecGameInitAndMainLoop(s_game* const game, const s_game_info* const info) {
-    assert(game && IS_ZERO(*game));
-    AssertGameInfoValidity(info);
+    assert(IS_ZERO(*game));
 
     //
     // Initialisation

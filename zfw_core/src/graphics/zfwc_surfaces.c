@@ -1,10 +1,6 @@
 #include "zfwc_graphics.h"
 
 static bool AttachFramebufferTexture(const t_gl_id fb_gl_id, const t_gl_id tex_gl_id, const s_v2_s32 tex_size) {
-    assert(fb_gl_id != 0);
-    assert(tex_gl_id != 0);
-    assert(tex_size.x > 0 && tex_size.y > 0);
-
     glBindTexture(GL_TEXTURE_2D, tex_gl_id);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, tex_size.x, tex_size.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);

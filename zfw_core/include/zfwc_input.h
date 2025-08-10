@@ -120,13 +120,6 @@ typedef struct {
     s_v2 mouse_pos;
 } s_input_state;
 
-static inline void AssertInputStateValidity(const s_input_state* const state) {
-    assert(state);
-
-    assert(IsKeyBitsValid(state->keys_down));
-    assert(IsMouseButtonBitsValid(state->mouse_buttons_down));
-}
-
 typedef struct {
     t_key_bits keys_pressed;
     t_key_bits keys_released;
@@ -139,40 +132,10 @@ typedef struct {
     t_unicode_buf unicode_buf;
 } s_input_events;
 
-static inline void AssertInputEventsValidity(const s_input_events* const events) {
-    assert(events);
-
-    // Check key bits.
-    const t_key_bits keys_mask = ((t_key_bits)1 << eks_key_code_cnt) - 1;
-    assert(IsKeyBitsValid(events->keys_pressed));
-    assert(IsKeyBitsValid(events->keys_released));
-
-    // Check mouse button bits.
-    const t_mouse_button_bits mouse_buttons_mask = ((t_mouse_button_bits)1 << eks_mouse_button_code_cnt) - 1;
-    assert(IsMouseButtonBitsValid(events->mouse_buttons_pressed));
-    assert(IsMouseButtonBitsValid(events->mouse_buttons_released));
-
-    // Check the unicode buffer.
-    for (size_t i = 0; i < sizeof(t_unicode_buf); i++) {
-        if (!events->unicode_buf[i]) {
-            for (size_t j = i + 1; j < sizeof(t_unicode_buf); j++) {
-                assert(!events->unicode_buf[j] && "Everything after the first '\0' in the unicode buffer should also be '\0'!");
-            }
-
-            break;
-        }
-    }
-}
-
 typedef struct {
     const s_input_state* state;
     const s_input_events* events;
 } s_input_context;
-
-static inline void AssertInputContextValidity(const s_input_context* const input_context) {
-    AssertInputStateValidity(input_context->state);
-    AssertInputEventsValidity(input_context->events);
-}
 
 s_input_state InputState(GLFWwindow* const glfw_window);
 
@@ -182,49 +145,31 @@ void GLFWScrollCallback(GLFWwindow* const window, const double offs_x, const dou
 void GLFWCharCallback(GLFWwindow* const window, const unsigned int codepoint);
 
 static inline bool IsKeyDown(const s_input_context* const input_context, const e_key_code kc) {
-    AssertInputContextValidity(input_context);
-    assert(kc >= 0 && kc < eks_key_code_cnt);
-
     const t_key_bits key_mask = (t_key_bits)1 << kc;
     return (input_context->state->keys_down & key_mask) != 0;
 }
 
 static inline bool IsKeyPressed(const s_input_context* const input_context, const e_key_code kc) {
-    AssertInputContextValidity(input_context);
-    assert(kc >= 0 && kc < eks_key_code_cnt);
-
     const t_key_bits key_mask = (t_key_bits)1 << kc;
     return (input_context->events->keys_pressed & key_mask) != 0;
 }
 
 static inline bool IsKeyReleased(const s_input_context* const input_context, const e_key_code kc) {
-    AssertInputContextValidity(input_context);
-    assert(kc >= 0 && kc < eks_key_code_cnt);
-
     const t_key_bits key_mask = (t_key_bits)1 << kc;
     return (input_context->events->keys_released & key_mask) != 0;
 }
 
 static inline bool IsMouseButtonDown(const s_input_context* const input_context, const e_mouse_button_code mbc) {
-    AssertInputContextValidity(input_context);
-    assert(mbc >= 0 && mbc < eks_mouse_button_code_cnt);
-
     const t_mouse_button_bits mb_mask = (t_mouse_button_bits)1 << mbc;
     return (input_context->state->mouse_buttons_down & mb_mask) != 0;
 }
 
 static inline bool IsMouseButtonPressed(const s_input_context* const input_context, const e_mouse_button_code mbc) {
-    AssertInputContextValidity(input_context);
-    assert(mbc >= 0 && mbc < eks_mouse_button_code_cnt);
-
     const t_mouse_button_bits mb_mask = (t_mouse_button_bits)1 << mbc;
     return (input_context->events->mouse_buttons_pressed & mb_mask) != 0;
 }
 
 static inline bool IsMouseButtonReleased(const s_input_context* const input_context, const e_mouse_button_code mbc) {
-    AssertInputContextValidity(input_context);
-    assert(mbc >= 0 && mbc < eks_mouse_button_code_cnt);
-
     const t_mouse_button_bits mb_mask = (t_mouse_button_bits)1 << mbc;
     return (input_context->events->mouse_buttons_released & mb_mask) != 0;
 }

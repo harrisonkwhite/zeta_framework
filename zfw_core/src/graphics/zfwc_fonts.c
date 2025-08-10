@@ -109,6 +109,8 @@ static t_s32 CalcStrLineCnt(const s_char_array_view str) {
 }
 
 s_v2_array CalcStrChrRenderPositions(s_mem_arena* const mem_arena, const s_char_array_view str, const s_font_group* const font_group, const t_s32 font_index, const s_v2 pos, const s_v2 alignment) {
+    assert(alignment.x >= 0.0f && alignment.x <= 1.0f && alignment.y >= 0.0f && alignment.y <= 1.0f);
+
     const s_font_arrangement* const arrangement = FontArrangementElemView(font_group->arrangements, font_index);
 
     const t_s32 str_line_cnt = CalcStrLineCnt(str);
@@ -173,6 +175,7 @@ s_v2_array CalcStrChrRenderPositions(s_mem_arena* const mem_arena, const s_char_
 
 bool CalcStrCollider(s_rect* const rect, const s_char_array_view str, const s_font_group* const font_group, const t_s32 font_index, const s_v2 pos, const s_v2 alignment, s_mem_arena* const temp_mem_arena) {
     assert(rect && IS_ZERO(*rect));
+    assert(alignment.x >= 0.0f && alignment.x <= 1.0f && alignment.y >= 0.0f && alignment.y <= 1.0f);
 
     const s_v2_array chr_render_positions = CalcStrChrRenderPositions(temp_mem_arena, str, font_group, font_index, pos, alignment);
 
@@ -231,6 +234,8 @@ bool CalcStrCollider(s_rect* const rect, const s_char_array_view str, const s_fo
 }
 
 bool RenderStr(const s_rendering_context* const rendering_context, const s_char_array_view str, const s_font_group* const fonts, const t_s32 font_index, const s_v2 pos, const s_v2 alignment, const u_v4 color, s_mem_arena* const temp_mem_arena) {
+    assert(alignment.x >= 0.0f && alignment.x <= 1.0f && alignment.y >= 0.0f && alignment.y <= 1.0f);
+
     const s_v2_array chr_render_positions = CalcStrChrRenderPositions(temp_mem_arena, str, fonts, font_index, pos, alignment);
 
     if (IS_ZERO(chr_render_positions)) {

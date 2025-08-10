@@ -31,6 +31,9 @@ static t_gl_id GenShaderFromSrc(const s_char_array_view src, const bool frag, s_
 }
 
 static bool LoadShaderSrcsFromFile(s_char_array_view* const vert_src, s_char_array_view* const frag_src, const s_char_array_view file_path, s_mem_arena* const mem_arena) {
+    assert(IS_ZERO(*vert_src));
+    assert(IS_ZERO(*frag_src));
+
     FILE* const fs = fopen(file_path.buf_raw, "rb");
 
     if (!fs) {
@@ -137,6 +140,8 @@ static t_gl_id GenShaderProg(const s_shader_prog_gen_info gen_info, s_mem_arena*
 }
 
 s_shader_prog_group GenShaderProgGroup(const s_shader_prog_gen_info_array_view gen_infos, s_gl_resource_arena* const gl_res_arena, s_mem_arena* const temp_mem_arena) {
+    assert(gen_infos.len > 0);
+
     const int prog_cnt = gen_infos.len;
 
     const s_gl_id_array gl_ids = PushToGLResourceArena(gl_res_arena, prog_cnt, ek_gl_resource_type_shader_prog);

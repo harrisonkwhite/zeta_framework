@@ -74,6 +74,8 @@ t_gl_id GenGLTextureFromRGBA(const s_rgba_texture rgba_tex) {
 }
 
 s_texture_group GenTextureGroup(const t_s32 tex_cnt, const t_texture_group_rgba_generator_func rgba_generator_func, s_mem_arena *const mem_arena, s_gl_resource_arena* const gl_res_arena, s_mem_arena* const temp_mem_arena) {
+    assert(tex_cnt > 0);
+
     const s_v2_s32_array sizes = PushV2S32ArrayToMemArena(mem_arena, tex_cnt);
 
     if (IS_ZERO(sizes)) {
@@ -114,9 +116,18 @@ s_texture_group GenTextureGroup(const t_s32 tex_cnt, const t_texture_group_rgba_
 }
 
 void RenderTexture(const s_rendering_context* const rendering_context, const s_texture_group* const textures, const t_s32 tex_index, const s_rect_s32 src_rect, const s_v2 pos, const s_v2 origin, const s_v2 scale, const float rot, const u_v4 blend) {
+    assert(origin.x >= 0.0f && origin.x <= 1.0f && origin.y >= 0.0f && origin.y <= 1.0f);
+
     const s_v2_s32 tex_size = *V2S32ElemView(textures->sizes, tex_index);
 
-    const s_rect_s32 src_rect_to_use = IS_ZERO(src_rect) ? (s_rect_s32){0, 0, tex_size.x, tex_size.y} : src_rect;
+    s_rect_s32 src_rect_to_use;
+
+    if (IS_ZERO(src_rect)) {
+        src_rect_to_use = (s_rect_s32){0, 0, tex_size.x, tex_size.y};
+    } else {
+        src_rect_to_use = src_rect;
+        assert(src_rect.x + src_rect.width <= tex_size.x && src_rect.y + src_rect.height <= tex_size.y);
+    }
 
     const s_batch_slot_write_info write_info = {
         .tex_gl_id = *GLIDElemView(textures->gl_ids, tex_index),

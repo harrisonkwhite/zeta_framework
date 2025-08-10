@@ -77,8 +77,6 @@ static const int g_glfw_mouse_buttons[] = {
 STATIC_ARRAY_LEN_CHECK(g_glfw_mouse_buttons, eks_mouse_button_code_cnt);
 
 static t_key_bits KeysDownBits(GLFWwindow* const glfw_window) {
-    assert(glfw_window);
-
     t_key_bits keys_down = 0;
 
     for (int i = 0; i < eks_key_code_cnt; i++) {
@@ -91,8 +89,6 @@ static t_key_bits KeysDownBits(GLFWwindow* const glfw_window) {
 }
 
 static t_mouse_button_bits MouseButtonsDownBits(GLFWwindow* const glfw_window) {
-    assert(glfw_window);
-
     t_mouse_button_bits mouse_buttons_down = 0;
 
     for (int i = 0; i < eks_mouse_button_code_cnt; i++) {
@@ -105,16 +101,12 @@ static t_mouse_button_bits MouseButtonsDownBits(GLFWwindow* const glfw_window) {
 }
 
 static s_v2 MousePos(GLFWwindow* const glfw_window) {
-    assert(glfw_window);
-
     double mouse_x_dbl, mouse_y_dbl;
     glfwGetCursorPos(glfw_window, &mouse_x_dbl, &mouse_y_dbl);
     return (s_v2){mouse_x_dbl, mouse_y_dbl};
 }
 
 s_input_state InputState(GLFWwindow* const glfw_window) {
-    assert(glfw_window);
-
     return (s_input_state){
         .keys_down = KeysDownBits(glfw_window),
         .mouse_buttons_down = MouseButtonsDownBits(glfw_window),

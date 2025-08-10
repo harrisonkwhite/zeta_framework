@@ -7,35 +7,45 @@ static const char g_batch_vert_shader_src[] = "#version 430 core\n"
     "layout (location = 3) in float a_rot;\n"
     "layout (location = 4) in vec2 a_tex_coord;\n"
     "layout (location = 5) in vec4 a_blend;\n"
+    "\n"
     "out vec2 v_tex_coord;\n"
     "out vec4 v_blend;\n"
+    "\n"
     "uniform mat4 u_view;\n"
     "uniform mat4 u_proj;\n"
+    "\n"
     "void main() {\n"
     "    float rot_cos = cos(a_rot);\n"
     "    float rot_sin = -sin(a_rot);\n"
+    "\n"
     "    mat4 model = mat4(\n"
     "        vec4(a_size.x * rot_cos, a_size.x * rot_sin, 0.0, 0.0),\n"
     "        vec4(a_size.y * -rot_sin, a_size.y * rot_cos, 0.0, 0.0),\n"
     "        vec4(0.0, 0.0, 1.0, 0.0),\n"
-    "        vec4(a_pos.x, a_pos.y, 0.0, 1.0));\n"
+    "        vec4(a_pos.x, a_pos.y, 0.0, 1.0)\n"
+    "    );\n"
+    "\n"
     "    gl_Position = u_proj * u_view * model * vec4(a_vert, 0.0, 1.0);\n"
     "    v_tex_coord = a_tex_coord;\n"
     "    v_blend = a_blend;\n"
-    "}";
+    "}\n";
 
 static const char g_batch_frag_shader_src[] = "#version 430 core\n"
     "in vec2 v_tex_coord;\n"
     "in vec4 v_blend;\n"
+    "\n"
     "out vec4 o_frag_color;\n"
+    "\n"
     "uniform sampler2D u_tex;\n"
+    "\n"
     "void main() {\n"
     "    vec4 tex_color = texture(u_tex, v_tex_coord);\n"
     "    o_frag_color = tex_color * v_blend;\n"
-    "}";
+    "}\n";
 
-bool InitGLResourceArena(s_gl_resource_arena* const res_arena, s_mem_arena* const mem_arena, const int res_limit) {
-    assert(res_arena && IS_ZERO(*res_arena));
+bool InitGLResourceArena(s_gl_resource_arena* const res_arena, s_mem_arena* const mem_arena, const t_s32 res_limit) {
+    assert(IS_ZERO(*res_arena));
+    assert(res_limit > 0);
 
     res_arena->ids = PushGLIDArrayToMemArena(mem_arena, res_limit);
 
@@ -57,7 +67,7 @@ bool InitGLResourceArena(s_gl_resource_arena* const res_arena, s_mem_arena* cons
 }
 
 void CleanGLResourceArena(s_gl_resource_arena* const res_arena) {
-    for (int i = 0; i < res_arena->res_used; i++) {
+    for (t_s32 i = 0; i < res_arena->res_used; i++) {
         const t_gl_id gl_id = *GLIDElem(res_arena->ids, i);
 
         if (!gl_id) {
@@ -95,21 +105,21 @@ void CleanGLResourceArena(s_gl_resource_arena* const res_arena) {
     }
 }
 
-s_gl_id_array PushToGLResourceArena(s_gl_resource_arena* const res_arena, const int cnt, const e_gl_resource_type res_type) {
+s_gl_id_array PushToGLResourceArena(s_gl_resource_arena* const res_arena, const t_s32 cnt, const e_gl_resource_type res_type) {
     if (res_arena->res_used + cnt > res_arena->res_limit) {
         LOG_ERROR("OpenGL resource arena is full!");
         return (s_gl_id_array){0};
     }
 
-    const int res_used_prev = res_arena->res_used;
+    const t_s32 res_used_prev = res_arena->res_used;
     res_arena->res_used += cnt;
     return (s_gl_id_array){(res_arena->ids.buf_raw + res_used_prev), cnt};
 }
 
 static size_t CalcStride(const s_s32_array_view vert_attr_lens) {
-    int stride = 0;
+    t_s32 stride = 0;
 
-    for (int i = 0; i < vert_attr_lens.len; i++) {
+    for (t_s32 i = 0; i < vert_attr_lens.len; i++) {
         stride += sizeof(t_r32) * *S32ElemView(vert_attr_lens, i);
     }
 
@@ -150,9 +160,9 @@ static s_renderable GenRenderable(s_gl_resource_arena* const gl_res_arena, const
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(*elems.buf_raw) * elems.len, elems.buf_raw, GL_STATIC_DRAW);
 
     const size_t stride = CalcStride(vert_attr_lens);
-    int offs = 0;
+    t_s32 offs = 0;
 
-    for (int i = 0; i < vert_attr_lens.len; i++) {
+    for (t_s32 i = 0; i < vert_attr_lens.len; i++) {
         const t_s32 attr_len = *S32ElemView(vert_attr_lens, i);
 
         glVertexAttribPointer(i, attr_len, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(t_r32) * offs));
@@ -178,7 +188,7 @@ static s_u16_array_view GenBatchRenderableElems(s_mem_arena* const mem_arena) {
         return (s_u16_array_view){0};
     }
 
-    for (int i = 0; i < BATCH_SLOT_CNT; i++) {
+    for (t_s32 i = 0; i < BATCH_SLOT_CNT; i++) {
         *U16Elem(elems, (i * 6) + 0) = (i * 4) + 0;
         *U16Elem(elems, (i * 6) + 1) = (i * 4) + 1;
         *U16Elem(elems, (i * 6) + 2) = (i * 4) + 2;
@@ -263,6 +273,8 @@ static s_rgba_texture BuiltinTextureRGBAGenerator(const t_s32 tex_index, s_mem_a
 }
 
 bool InitRenderingBasis(s_rendering_basis* const basis, s_gl_resource_arena* const gl_res_arena, s_mem_arena* const mem_arena, s_mem_arena* const temp_mem_arena) {
+    assert(IS_ZERO(*basis));
+
     basis->builtin_textures = GenTextureGroup(eks_builtin_texture_cnt, BuiltinTextureRGBAGenerator, mem_arena, gl_res_arena, temp_mem_arena);
 
     if (IS_ZERO(basis->builtin_textures)) {
@@ -287,7 +299,7 @@ bool InitRenderingBasis(s_rendering_basis* const basis, s_gl_resource_arena* con
         }
     }
 
-    for (int i = 0; i < eks_renderable_cnt; i++) {
+    for (t_s32 i = 0; i < eks_renderable_cnt; i++) {
         basis->renderables[i] = GenRenderableOfType(gl_res_arena, i, temp_mem_arena);
 
         if (IS_ZERO(basis->renderables)) {
@@ -335,7 +347,7 @@ static void WriteBatchSlot(t_batch_slot* const slot, const s_batch_slot_write_in
         {write_info->tex_coords.left, write_info->tex_coords.bottom}
     };
 
-    for (int i = 0; i < STATIC_ARRAY_LEN(*slot); i++) {
+    for (t_s32 i = 0; i < STATIC_ARRAY_LEN(*slot); i++) {
         (*slot)[i] = (s_batch_vert){
             .vert_coord = *STATIC_ARRAY_ELEM(vert_coords, i),
             .pos = write_info->pos,
@@ -361,7 +373,7 @@ void Render(const s_rendering_context* const rendering_context, const s_batch_sl
     }
 
     // Write the vertex data to the topmost slot, then update used slot count.
-    const int slot_index = batch_state->num_slots_used;
+    const t_s32 slot_index = batch_state->num_slots_used;
     t_batch_slot* const slot = STATIC_ARRAY_ELEM(batch_state->slots, slot_index);
     ZERO_OUT(*slot);
     WriteBatchSlot(slot, write_info);
@@ -378,12 +390,6 @@ static inline s_rect InnerRect(const s_rect rect, const float outline_thickness)
 }
 
 void RenderRectWithOutline(const s_rendering_context* const rendering_context, const s_rect rect, const u_v4 fill_color, const u_v4 outline_color, const float outline_thickness) {
-#ifndef NDEBUG
-    if (fabsf(fill_color.a - 1.0f) < 0.001f) { // TODO: Create function for float comparisons with precision level.
-        LOG_WARNING("RenderRectWithOutline() being called despite opaque fill colour. Consider using RenderRectWithOutlineAndOpaqueFill() instead.");
-    }
-#endif
-
     // Top Outline
     RenderRect(rendering_context, (s_rect){rect.x, rect.y, rect.width - outline_thickness, outline_thickness}, outline_color);
 
@@ -409,6 +415,8 @@ void RenderRectWithOutlineAndOpaqueFill(const s_rendering_context* const renderi
 }
 
 void RenderBarHor(const s_rendering_context* const rendering_context, const s_rect rect, const float perc, const u_v4 front_color, const u_v4 bg_color) {
+    assert(perc >= 0.0f && perc <= 1.0f);
+
     const float front_rect_width = rect.width * perc;
 
     if (front_rect_width > 0.0f) {
@@ -424,6 +432,8 @@ void RenderBarHor(const s_rendering_context* const rendering_context, const s_re
 }
 
 void RenderBarVer(const s_rendering_context* const rendering_context, const s_rect rect, const float perc, const u_v4 front_color, const u_v4 bg_color) {
+    assert(perc >= 0.0f && perc <= 1.0f);
+
     const float front_rect_height = rect.height * perc;
 
     if (front_rect_height > 0.0f) {
@@ -464,12 +474,12 @@ void SubmitBatch(const s_rendering_context* const rendering_context) {
 
     glUseProgram(prog_gl_id);
 
-    const int view_uniform_loc = glGetUniformLocation(prog_gl_id, "u_view");
+    const t_s32 view_uniform_loc = glGetUniformLocation(prog_gl_id, "u_view");
     glUniformMatrix4fv(view_uniform_loc, 1, false, (const t_r32*)rendering_context->state->view_mat.elems);
 
     const s_matrix_4x4 proj_mat = OrthographicMatrix(0.0f, rendering_context->window_size.x, rendering_context->window_size.y, 0.0f, -1.0f, 1.0f);
 
-    const int proj_uniform_loc = glGetUniformLocation(prog_gl_id, "u_proj");
+    const t_s32 proj_uniform_loc = glGetUniformLocation(prog_gl_id, "u_proj");
     glUniformMatrix4fv(proj_uniform_loc, 1, false, (const t_r32*)proj_mat.elems);
 
     glActiveTexture(GL_TEXTURE0);

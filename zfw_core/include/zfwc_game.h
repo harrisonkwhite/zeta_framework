@@ -81,10 +81,11 @@ typedef struct {
 static inline void AssertGameInfoValidity(const s_game_info* const info) {
     assert(info);
 
-    assert(IsStrTerminated(info->window_title));
     assert(info->window_init_size.x > 0 && info->window_init_size.y > 0);
+    assert(IsStrTerminated(info->window_title));
 
-    assert((info->dev_mem_size == 0 && info->dev_mem_alignment == 0) || (info->dev_mem_size > 0 && IsAlignmentValid(info->dev_mem_alignment)));
+    assert((info->dev_mem_size == 0 && info->dev_mem_alignment == 0)
+        || (info->dev_mem_size > 0 && IsAlignmentValid(info->dev_mem_alignment)));
 
     assert(info->init_func);
     assert(info->tick_func);

@@ -48,6 +48,8 @@ static bool CheckPolySep(const s_poly poly, const s_poly other) {
 }
 
 s_poly GenQuadPoly(s_mem_arena* const mem_arena, const s_v2 pos, const s_v2 size, const s_v2 origin) {
+    assert(origin.x >= 0.0f && origin.x <= 1.0f && origin.y >= 0.0f && origin.y <= 1.0f);
+
     const s_v2_array pts = PushV2ArrayToMemArena(mem_arena, 4);
 
     if (IS_ZERO(pts)) {
@@ -68,6 +70,8 @@ s_poly GenQuadPoly(s_mem_arena* const mem_arena, const s_v2 pos, const s_v2 size
 }
 
 s_poly GenQuadPolyRotated(s_mem_arena* const mem_arena, const s_v2 pos, const s_v2 size, const s_v2 origin, const t_r32 rot) {
+    assert(origin.x >= 0.0f && origin.x <= 1.0f && origin.y >= 0.0f && origin.y <= 1.0f);
+
     const s_v2_array pts = PushV2ArrayToMemArena(mem_arena, 4);
 
     if (IS_ZERO(pts)) {
