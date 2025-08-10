@@ -13,16 +13,14 @@ static s_rgba_texture LoadRGBATextureFromFS(FILE* const fs, s_mem_arena *const m
     s_v2_s32 tex_size;
 
     if (fread(&tex_size, sizeof(tex_size), 1, fs) < 1) {
-        return (s_rgba_texture){0};
-    }
-
-    if (tex_size.x <= 0 || tex_size.y <= 0) {
+        LOG_ERROR("Failed to read texture size from file stream!");
         return (s_rgba_texture){0};
     }
 
     const s_u8_array px_data = PushU8ArrayToMemArena(mem_arena, 4 * tex_size.x * tex_size.y);
 
     if (fread(px_data.buf_raw, 1, px_data.len, fs) < px_data.len) {
+        LOG_ERROR("Failed to read RGBA pixel data from file stream!");
         return (s_rgba_texture){0};
     }
 
@@ -36,10 +34,15 @@ s_rgba_texture LoadRGBATextureFromFile(const s_char_array_view file_path, s_mem_
     FILE* const fs = fopen(file_path.buf_raw, "rb");
 
     if (!fs) {
+        LOG_ERROR("Failed to open \"%s\"!", file_path.buf_raw);
         return (s_rgba_texture){0};
     }
 
     const s_rgba_texture tex = LoadRGBATextureFromFS(fs, mem_arena);
+
+    if (IS_ZERO(tex)) {
+        LOG_ERROR("Failed to load RGBA texture from file \"%s\"!", file_path.buf_raw);
+    }
 
     fclose(fs);
 

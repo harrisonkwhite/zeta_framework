@@ -19,6 +19,8 @@ static t_gl_id GenShaderFromSrc(const s_char_array_view src, const bool frag, s_
             if (!IS_ZERO(log)) {
                 glGetShaderInfoLog(shader_gl_id, log.len, NULL, log.buf_raw);
                 LOG_ERROR_SPECIAL("OpenGL Shader Compilation", "%s", log.buf_raw);
+            } else {
+                LOG_ERROR("Failed to reserve memory for OpenGL shader compilation error log!");
             }
         }
 
@@ -37,12 +39,14 @@ static bool LoadShaderSrcsFromFile(s_char_array_view* const vert_src, s_char_arr
     FILE* const fs = fopen(file_path.buf_raw, "rb");
 
     if (!fs) {
+        LOG_ERROR("Failed to open shader program file \"%s\"!", file_path.buf_raw);
         return false;
     }
 
     int vert_src_len;
 
     if (fread(&vert_src_len, sizeof(vert_src_len), 1, fs) < 1) {
+        LOG_ERROR("Failed to read vertex shader source length from file \"%s\"!", file_path.buf_raw);
         fclose(fs);
         return false;
     }
@@ -50,11 +54,13 @@ static bool LoadShaderSrcsFromFile(s_char_array_view* const vert_src, s_char_arr
     const s_char_array vert_src_nonview = PushCharArrayToMemArena(mem_arena, vert_src_len);
 
     if (IS_ZERO(vert_src_nonview)) {
+        LOG_ERROR("Failed to reserve memory for vertex shader source from file \"%s\"!", file_path.buf_raw);
         fclose(fs);
         return false;
     }
 
     if (fread(vert_src_nonview.buf_raw, 1, vert_src_nonview.len, fs) < vert_src_nonview.len) {
+        LOG_ERROR("Failed to read vertex shader source from file \"%s\"!", file_path.buf_raw);
         fclose(fs);
         return false;
     }
@@ -62,6 +68,7 @@ static bool LoadShaderSrcsFromFile(s_char_array_view* const vert_src, s_char_arr
     int frag_src_len;
 
     if (fread(&frag_src_len, sizeof(frag_src_len), 1, fs) < 1) {
+        LOG_ERROR("Failed to read fragment shader source length from file \"%s\"!", file_path.buf_raw);
         fclose(fs);
         return false;
     }
@@ -69,11 +76,13 @@ static bool LoadShaderSrcsFromFile(s_char_array_view* const vert_src, s_char_arr
     const s_char_array frag_src_nonview = PushCharArrayToMemArena(mem_arena, frag_src_len);
 
     if (IS_ZERO(frag_src_nonview)) {
+        LOG_ERROR("Failed to reserve memory for fragment shader source from file \"%s\"!", file_path.buf_raw);
         fclose(fs);
         return false;
     }
 
     if (fread(frag_src_nonview.buf_raw, 1, frag_src_nonview.len, fs) < frag_src_nonview.len) {
+        LOG_ERROR("Failed to read fragment shader source from file \"%s\"!", file_path.buf_raw);
         fclose(fs);
         return false;
     }
@@ -95,6 +104,7 @@ static t_gl_id GenShaderProg(const s_shader_prog_gen_info gen_info, s_mem_arena*
         frag_src = gen_info.frag_src;
     } else {
         if (!LoadShaderSrcsFromFile(&vert_src, &frag_src, gen_info.file_path, temp_mem_arena)) {
+            LOG_ERROR("Failed to load shader sources from file \"%s\"!", gen_info.file_path.buf_raw);
             return 0;
         }
     }

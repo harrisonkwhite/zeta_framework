@@ -303,6 +303,7 @@ bool InitRenderingBasis(s_rendering_basis* const basis, s_gl_resource_arena* con
         basis->renderables[i] = GenRenderableOfType(gl_res_arena, i, temp_mem_arena);
 
         if (IS_ZERO(basis->renderables)) {
+            LOG_ERROR("Failed to generate renderable of index %d for rendering basis!", i);
             return false;
         }
     }

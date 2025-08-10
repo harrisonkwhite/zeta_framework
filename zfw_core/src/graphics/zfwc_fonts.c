@@ -10,31 +10,32 @@ static bool LoadFontFromFile(s_font_arrangement* const arrangement, s_font_textu
     FILE* const fs = fopen(file_path.buf_raw, "rb");
 
     if (!fs) {
+        LOG_ERROR("Failed to open font file \"%s\"!", file_path.buf_raw);
         return false;
     }
 
     if (fread(arrangement, sizeof(*arrangement), 1, fs) < 1) {
+        LOG_ERROR("Failed to read font arrangement from file \"%s\"!", file_path.buf_raw);
         fclose(fs);
         return false;
     }
-
-    // TODO: Check the validity of the arrangement!
 
     if (fread(tex_meta, sizeof(*tex_meta), 1, fs) < 1) {
+        LOG_ERROR("Failed to read font texture metadata from file \"%s\"!", file_path.buf_raw);
         fclose(fs);
         return false;
     }
-
-    // TODO: Check the validity of the texture metadata!
 
     *tex_rgba_px_data = PushU8ArrayToMemArena(tex_rgba_px_data_mem_arena, 4 * tex_meta->size.x * tex_meta->size.y);
 
     if (IS_ZERO(*tex_rgba_px_data)) {
+        LOG_ERROR("Failed to reserve memory for font texture RGBA pixel data from file \"%s\"!", file_path.buf_raw);
         fclose(fs);
         return false;
     }
 
     if (fread(tex_rgba_px_data->buf_raw, 1, tex_rgba_px_data->len, fs) < tex_rgba_px_data->len) {
+        LOG_ERROR("Failed to read font texture RGBA pixel data from file \"%s\"!", file_path.buf_raw);
         fclose(fs);
         return false;
     }
@@ -85,6 +86,7 @@ s_font_group GenFontGroupFromFiles(const s_char_array_view_array_view file_paths
         *tex_gl_id = GenGLTextureFromRGBA((s_rgba_texture){.px_data = tex_rgba_px_data, .tex_size = tex_meta->size});
 
         if (!*tex_gl_id) {
+            LOG_ERROR("Failed to generate OpenGL texture from font RGBA pixel data for font file \"%s\"!", file_path.buf_raw);
             return (s_font_group){0};
         }
     }
