@@ -209,11 +209,6 @@ s_rendering_state* GenRenderingState(s_mem_arena* const mem_arena);
 void Clear(const s_rendering_context* const rendering_context, const u_v4 col);
 void SetViewMatrix(const s_rendering_context* const rendering_context, const s_matrix_4x4* const mat);
 void Render(const s_rendering_context* const rendering_context, const s_batch_slot_write_info* const write_info);
-void RenderRectWithOutline(const s_rendering_context* const rendering_context, const s_rect rect, const u_v4 fill_color, const u_v4 outline_color, const t_r32 outline_thickness);
-void RenderRectWithOutlineAndOpaqueFill(const s_rendering_context* const rendering_context, const s_rect rect, const u_v3 fill_color, const u_v4 outline_color, const t_r32 outline_thickness);
-void RenderBarHor(const s_rendering_context* const rendering_context, const s_rect rect, const t_r32 perc, const u_v4 front_color, const u_v4 bg_color);
-void RenderBarVertical(const s_rendering_context* const rendering_context, const s_rect rect, const t_r32 perc, const u_v4 front_color, const u_v4 bg_color);
-
 void SubmitBatch(const s_rendering_context* const rendering_context);
 
 //
@@ -224,6 +219,29 @@ s_rgba_texture LoadRGBATextureFromFile(const s_char_array_view file_path, s_mem_
 t_gl_id GenGLTextureFromRGBA(const s_rgba_texture rgba_tex);
 s_texture_group GenTextureGroup(const t_s32 tex_cnt, const t_texture_group_rgba_generator_func rgba_generator_func, s_mem_arena *const mem_arena, s_gl_resource_arena* const gl_res_arena, s_mem_arena* const temp_mem_arena);
 void RenderTexture(const s_rendering_context* const rendering_context, const s_texture_group* const textures, const t_s32 tex_index, const s_rect_s32 src_rect, const s_v2 pos, const s_v2 origin, const s_v2 scale, const t_r32 rot, const u_v4 blend);
+void RenderRectWithOutline(const s_rendering_context* const rendering_context, const s_rect rect, const u_v4 fill_color, const u_v4 outline_color, const t_r32 outline_thickness);
+void RenderRectWithOutlineAndOpaqueFill(const s_rendering_context* const rendering_context, const s_rect rect, const u_v3 fill_color, const u_v4 outline_color, const t_r32 outline_thickness);
+void RenderBarHor(const s_rendering_context* const rendering_context, const s_rect rect, const t_r32 perc, const u_v4 front_color, const u_v4 bg_color);
+void RenderBarVertical(const s_rendering_context* const rendering_context, const s_rect rect, const t_r32 perc, const u_v4 front_color, const u_v4 bg_color);
+
+static inline void RenderRect(const s_rendering_context* const rendering_context, const s_rect rect, const u_v4 color) {
+    RenderTexture(rendering_context, &rendering_context->basis->builtin_textures, ek_builtin_texture_pixel, (s_rect_s32){0}, RectPos(rect), (s_v2){0}, RectSize(rect), 0, color);
+}
+
+static inline void RenderBarHorReverse(const s_rendering_context* const rendering_context, const s_rect rect, const t_r32 perc, const u_v4 front_color, const u_v4 bg_color) {
+    RenderBarHor(rendering_context, rect, 1.0f - perc, bg_color, front_color);
+}
+
+static inline void RenderBarVerticalReverse(const s_rendering_context* const rendering_context, const s_rect rect, const t_r32 perc, const u_v4 front_color, const u_v4 bg_color) {
+    RenderBarVertical(rendering_context, rect, 1.0f - perc, bg_color, front_color);
+}
+
+static inline void RenderLine(const s_rendering_context* const rendering_context, const s_v2 a, const s_v2 b, const u_v4 blend, const t_r32 width) {
+    const s_v2 diff = {b.x - a.x, b.y - a.y};
+    const t_r32 len = sqrtf((diff.x * diff.x) + (diff.y * diff.y));
+
+    RenderTexture(rendering_context, &rendering_context->basis->builtin_textures, ek_builtin_texture_pixel, (s_rect_s32){0}, a, (s_v2){0.0f, 0.5f}, (s_v2){len, width}, atan2f(-diff.y, diff.x), blend);
+}
 
 //
 // zfwc_fonts.c
@@ -248,27 +266,5 @@ void UnsetSurface(const s_rendering_context* const rendering_context);
 void SetSurfaceShaderProg(const s_rendering_context* const rendering_context, const s_shader_prog_group* const progs, const t_s32 prog_index);
 void SetSurfaceShaderProgUniform(const s_rendering_context* const rendering_context, const char* const name, const s_shader_prog_uniform_value val);
 void RenderSurface(const s_rendering_context* const rendering_context, const s_surface* const surf);
-
-//
-//
-//
-static inline void RenderRect(const s_rendering_context* const rendering_context, const s_rect rect, const u_v4 color) {
-    RenderTexture(rendering_context, &rendering_context->basis->builtin_textures, ek_builtin_texture_pixel, (s_rect_s32){0}, RectPos(rect), (s_v2){0}, RectSize(rect), 0, color);
-}
-
-static inline void RenderBarHorReverse(const s_rendering_context* const rendering_context, const s_rect rect, const t_r32 perc, const u_v4 front_color, const u_v4 bg_color) {
-    RenderBarHor(rendering_context, rect, 1.0f - perc, bg_color, front_color);
-}
-
-static inline void RenderBarVerticalReverse(const s_rendering_context* const rendering_context, const s_rect rect, const t_r32 perc, const u_v4 front_color, const u_v4 bg_color) {
-    RenderBarVertical(rendering_context, rect, 1.0f - perc, bg_color, front_color);
-}
-
-static inline void RenderLine(const s_rendering_context* const rendering_context, const s_v2 a, const s_v2 b, const u_v4 blend, const t_r32 width) {
-    const s_v2 diff = {b.x - a.x, b.y - a.y};
-    const t_r32 len = sqrtf((diff.x * diff.x) + (diff.y * diff.y));
-
-    RenderTexture(rendering_context, &rendering_context->basis->builtin_textures, ek_builtin_texture_pixel, (s_rect_s32){0}, a, (s_v2){0.0f, 0.5f}, (s_v2){len, width}, atan2f(-diff.y, diff.x), blend);
-}
 
 #endif
