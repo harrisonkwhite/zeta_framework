@@ -5,6 +5,8 @@
 
 #define MEM_ARENA_SIZE MEGABYTES(10)
 
+static const s_char_array_view g_json_file_path = ARRAY_FROM_STATIC(s_char_array_view, "asset_packing_instrs.json"); // TODO: Maybe pass this in through command-line arguments instead?
+
 static bool PackAssets(cJSON* const cj, s_mem_arena* const temp_mem_arena) {
     if (!cJSON_IsArray(cj)) {
         return false;
@@ -19,6 +21,7 @@ static bool PackAssets(cJSON* const cj, s_mem_arena* const temp_mem_arena) {
         const cJSON* const cj_output_file_path = cJSON_GetObjectItem(cj_item, "output_file_path");
 
         if (!cJSON_IsString(cj_type) || !cJSON_IsString(cj_output_file_path)) {
+            LOG_ERROR("Invalid JSON item at index %d; \"type\" and \"output_file_path\" should be strings!", i);
             return false;
         }
 
@@ -30,6 +33,7 @@ static bool PackAssets(cJSON* const cj, s_mem_arena* const temp_mem_arena) {
             const cJSON* const cj_file_path = cJSON_GetObjectItem(cj_item, "file_path");
 
             if (!cJSON_IsString(cj_file_path)) {
+                LOG_ERROR("Invalid JSON item at index %d; \"file_path\" should be a string for texture type!", i);
                 return false;
             }
 
@@ -45,6 +49,7 @@ static bool PackAssets(cJSON* const cj, s_mem_arena* const temp_mem_arena) {
             const cJSON* const cj_height = cJSON_GetObjectItem(cj_item, "height");
 
             if (!cJSON_IsString(cj_file_path) || !cJSON_IsNumber(cj_height)) {
+                LOG_ERROR("Invalid JSON item at index %d; \"file_path\" should be a string and \"height\" should be a number for font type!", i);
                 return false;
             }
 
@@ -60,6 +65,7 @@ static bool PackAssets(cJSON* const cj, s_mem_arena* const temp_mem_arena) {
             const cJSON* const cj_frag_file_path = cJSON_GetObjectItem(cj_item, "frag_file_path");
 
             if (!cJSON_IsString(cj_vert_file_path) || !cJSON_IsNumber(cj_frag_file_path)) {
+                LOG_ERROR("Invalid JSON item at index %d; \"vert_file_path\" and \"frag_file_path\" should be strings for shader program type!", i);
                 return false;
             }
 
@@ -75,23 +81,26 @@ static bool PackAssets(cJSON* const cj, s_mem_arena* const temp_mem_arena) {
                 return false;
             }
         }
+
+        RewindMemArena(temp_mem_arena, 0);
     }
 
     return true;
 }
 
-const s_char_array_view g_json_file_path = ARRAY_FROM_STATIC(s_char_array_view, "asset_packing_instrs.json"); // TODO: Maybe pass this in through command-line arguments instead?
-
 int main() {
     s_mem_arena mem_arena = {0};
 
     if (!InitMemArena(&mem_arena, MEM_ARENA_SIZE)) {
+        LOG_ERROR("Failed to initialise the asset packer memory arena!");
         return EXIT_FAILURE;
     }
 
     const s_char_array_view json_file_contents = CharArrayView(LoadFileContentsAsStr(g_json_file_path, &mem_arena));
 
     if (IS_ZERO(json_file_contents)) {
+        LOG_ERROR("Failed to load contents of asset packing JSON file \"%s\"!", g_json_file_path.buf_raw);
+        CleanMemArena(&mem_arena);
         return EXIT_FAILURE;
     }
 
@@ -99,11 +108,14 @@ int main() {
 
     if (!cj) {
         LOG_ERROR_SPECIAL("cJSON", "%s", cJSON_GetErrorPtr());
-        return false;
+        CleanMemArena(&mem_arena);
+        return EXIT_FAILURE;
     }
 
     if (!PackAssets(cj, &mem_arena)) {
+        LOG_ERROR("Failed to pack assets from JSON file \"%s\"!", g_json_file_path.buf_raw);
         cJSON_Delete(cj);
+        CleanMemArena(&mem_arena);
         return EXIT_FAILURE;
     }
 

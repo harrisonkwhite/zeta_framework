@@ -9,15 +9,18 @@ static bool OutputTextureFile(const s_char_array_view file_path, const s_v2_s32 
     FILE* const fs = fopen(file_path.buf_raw, "wb");
 
     if (!fs) {
+        LOG_ERROR("Failed to open \"%s\" for writing!", file_path.buf_raw);
         return false;
     }
 
     if (fwrite(&tex_size, sizeof(tex_size), 1, fs) < 1) {
+        LOG_ERROR("Failed to write texture size to file \"%s\"!", file_path.buf_raw);
         fclose(fs);
         return false;
     }
 
     if (fwrite(rgba_tex_data.buf_raw, 1, rgba_tex_data.len, fs) < rgba_tex_data.len) {
+        LOG_ERROR("Failed to write pixel data to file \"%s\"!", file_path.buf_raw);
         fclose(fs);
         return false;
     }

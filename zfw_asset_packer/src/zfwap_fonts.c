@@ -116,20 +116,24 @@ static bool OutputFontFile(const s_char_array_view file_path, const s_font_arran
     FILE* const fs = fopen(file_path.buf_raw, "wb");
 
     if (!fs) {
+        LOG_ERROR("Failed to open \"%s\" for writing!", file_path.buf_raw);
         return false;
     }
 
     if (fwrite(arrangement, sizeof(*arrangement), 1, fs) < 1) {
+        LOG_ERROR("Failed to write font arrangement to file \"%s\"!", file_path.buf_raw);
         fclose(fs);
         return false;
     }
 
     if (fwrite(&tex_meta, sizeof(tex_meta), 1, fs) < 1) {
+        LOG_ERROR("Failed to write font texture metadata to file \"%s\"!", file_path.buf_raw);
         fclose(fs);
         return false;
     }
 
     if (fwrite(tex_rgba_px_data.buf_raw, 1, tex_rgba_px_data.len, fs) < tex_rgba_px_data.len) {
+        LOG_ERROR("Failed to write font texture RGBA pixel data to file \"%s\"!", file_path.buf_raw);
         fclose(fs);
         return false;
     }
@@ -140,6 +144,11 @@ static bool OutputFontFile(const s_char_array_view file_path, const s_font_arran
 }
 
 bool PackFont(const s_char_array_view file_path, const t_s32 height, const s_char_array_view output_file_path, s_mem_arena* const temp_mem_arena) {
+    if (height <= 0) {
+        LOG_ERROR("Invalid font height \"%d\"!", height);
+        return false;
+    }
+
     // Get the plain font file data.
     const s_u8_array file_data = LoadFileContents(file_path, temp_mem_arena, false);
 
