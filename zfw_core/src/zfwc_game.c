@@ -47,20 +47,6 @@ static s_window_state WindowState(GLFWwindow* const glfw_window) {
     return state;
 }
 
-static void ResizeGLViewportIfDifferent(const s_v2_s32 size) {
-    assert(size.x > 0 && size.y > 0);
-
-    t_s32 viewport[4];
-    glGetIntegerv(GL_VIEWPORT, viewport);
-
-    if (*STATIC_ARRAY_ELEM(viewport, 0) != 0
-        || *STATIC_ARRAY_ELEM(viewport, 1) != 0
-        || *STATIC_ARRAY_ELEM(viewport, 2) != size.x
-        || *STATIC_ARRAY_ELEM(viewport, 3) != size.y) {
-        glViewport(0, 0, size.x, size.y);
-    }
-}
-
 static bool ExecGameInitAndMainLoop(s_game* const game, const s_game_info* const info) {
     assert(IS_ZERO(*game));
 
@@ -143,6 +129,13 @@ static bool ExecGameInitAndMainLoop(s_game* const game, const s_game_info* const
         return false;
     }
 
+    s_rendering_state* const rendering_state = PushToMemArena(&game->perm_mem_arena, sizeof(s_rendering_state), ALIGN_OF(s_rendering_state));
+
+    if (!rendering_state) {
+        LOG_ERROR("Failed to reserve memory for rendering state!");
+        return false;
+    }
+
     // Initialise developer memory.
     if (info->dev_mem_size > 0) {
         game->dev_mem = PushToMemArena(&game->perm_mem_arena, info->dev_mem_size, info->dev_mem_alignment);
@@ -182,11 +175,9 @@ static bool ExecGameInitAndMainLoop(s_game* const game, const s_game_info* const
     double frame_dur_accum = 0.0;
 
     while (!glfwWindowShouldClose(game->glfw_window)) {
-        RewindMemArena(&game->temp_mem_arena, 0);
-
         const s_window_state window_state = WindowState(game->glfw_window);
 
-        ResizeGLViewportIfDifferent(window_state.size);
+        RewindMemArena(&game->temp_mem_arena, 0);
 
         const double frame_time = glfwGetTime();
         const double frame_time_delta = frame_time - frame_time_last;
@@ -231,12 +222,7 @@ static bool ExecGameInitAndMainLoop(s_game* const game, const s_game_info* const
             } while (frame_dur_accum >= TARG_TICK_INTERVAL);
 
             // Render the game.
-            s_rendering_state* const rendering_state = GenRenderingState(&game->temp_mem_arena);
-
-            if (!rendering_state) {
-                LOG_ERROR("Failed to reserve memory for rendering state!");
-                return false;
-            }
+            InitRenderingState(rendering_state, window_state.size);
 
             {
                 // Execute the developer's render function.

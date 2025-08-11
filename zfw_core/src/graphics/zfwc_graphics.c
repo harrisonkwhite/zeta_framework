@@ -1,6 +1,7 @@
 #include "zfwc_graphics.h"
 
 static const char g_batch_vert_shader_src[] = "#version 430 core\n"
+    "\n"
     "layout (location = 0) in vec2 a_vert;\n"
     "layout (location = 1) in vec2 a_pos;\n"
     "layout (location = 2) in vec2 a_size;\n"
@@ -31,6 +32,7 @@ static const char g_batch_vert_shader_src[] = "#version 430 core\n"
     "}\n";
 
 static const char g_batch_frag_shader_src[] = "#version 430 core\n"
+    "\n"
     "in vec2 v_tex_coord;\n"
     "in vec4 v_blend;\n"
     "\n"
@@ -41,6 +43,40 @@ static const char g_batch_frag_shader_src[] = "#version 430 core\n"
     "void main() {\n"
     "    vec4 tex_color = texture(u_tex, v_tex_coord);\n"
     "    o_frag_color = tex_color * v_blend;\n"
+    "}\n";
+
+static const char g_surface_vert_shader_src[] = "#version 430 core\n"
+    "\n"
+    "layout (location = 0) in vec2 a_vert;\n"
+    "layout (location = 1) in vec2 a_tex_coord;\n"
+    "\n"
+    "out vec2 v_tex_coord;\n"
+    "\n"
+    "uniform vec2 u_pos;\n"
+    "uniform vec2 u_size;\n"
+    "uniform mat4 u_proj;\n"
+    "\n"
+    "void main() {\n"
+    "    mat4 model = mat4(\n"
+    "        vec4(u_size.x, 0.0, 0.0, 0.0),\n"
+    "        vec4(0.0, u_size.y, 0.0, 0.0),\n"
+    "        vec4(0.0, 0.0, 1.0, 0.0),\n"
+    "        vec4(u_pos.x, u_pos.y, 0.0, 1.0)\n"
+    "    );\n"
+    "\n"
+    "    gl_Position = u_proj * model * vec4(a_vert, 0.0, 1.0);\n"
+    "    v_tex_coord = a_tex_coord;\n"
+    "}\n";
+
+static const char g_surface_frag_shader_src[] = "#version 430 core\n"
+    "\n"
+    "in vec2 v_tex_coord;\n"
+    "out vec4 o_frag_color;\n"
+    "\n"
+    "uniform sampler2D u_tex;\n"
+    "\n"
+    "void main() {\n"
+        "o_frag_color = texture(u_tex, v_tex_coord);\n"
     "}\n";
 
 bool InitGLResourceArena(s_gl_resource_arena* const res_arena, s_mem_arena* const mem_arena, const t_s32 res_limit) {
@@ -206,7 +242,7 @@ static s_renderable GenRenderableOfType(s_gl_resource_arena* const gl_res_arena,
             {
                 const s_r32_array_view verts = {
                     .buf_raw = NULL,
-                    .len = sizeof(s_batch_vert) * BATCH_SLOT_VERT_CNT * BATCH_SLOT_CNT
+                    .len = BATCH_SLOT_VERT_CNT * BATCH_SLOT_CNT
                 };
 
                 const s_u16_array_view elems = GenBatchRenderableElems(temp_mem_arena);
@@ -223,10 +259,10 @@ static s_renderable GenRenderableOfType(s_gl_resource_arena* const gl_res_arena,
         case ek_renderable_surface:
             {
                 const t_r32 verts[] = {
-                    -1.0f, -1.0f, 0.0f, 0.0f,
-                     1.0f, -1.0f, 1.0f, 0.0f,
-                     1.0f,  1.0f, 1.0f, 1.0f,
-                    -1.0f,  1.0f, 0.0f, 1.0f
+                    0.0f, 1.0f, 0.0f, 0.0f,
+                    1.0f, 1.0f, 1.0f, 0.0f,
+                    1.0f, 0.0f, 1.0f, 1.0f,
+                    0.0f, 0.0f, 0.0f, 1.0f
                 };
 
                 const t_u16 elems[] = {
@@ -288,6 +324,11 @@ bool InitRenderingBasis(s_rendering_basis* const basis, s_gl_resource_arena* con
                 .holds_srcs = true,
                 .vert_src = g_batch_vert_shader_src,
                 .frag_src = g_batch_frag_shader_src
+            },
+            [ek_builtin_shader_prog_surface] = {
+                .holds_srcs = true,
+                .vert_src = g_surface_vert_shader_src,
+                .frag_src = g_surface_frag_shader_src
             }
         };
 
@@ -311,14 +352,12 @@ bool InitRenderingBasis(s_rendering_basis* const basis, s_gl_resource_arena* con
     return true;
 }
 
-s_rendering_state* GenRenderingState(s_mem_arena* const mem_arena) {
-    s_rendering_state* const state = PushToMemArena(mem_arena, sizeof(s_rendering_state), ALIGN_OF(s_rendering_state));
+void InitRenderingState(s_rendering_state* const state, const s_v2_s32 window_size) {
+    *state = (s_rendering_state){
+        .view_mat = IdentityMatrix4x4()
+    };
 
-    if (state) {
-        state->view_mat = IdentityMatrix4x4();
-    }
-
-    return state;
+    glViewport(0, 0, window_size.x, window_size.y);
 }
 
 void Clear(const s_rendering_context* const rendering_context, const u_v4 col) {
@@ -410,7 +449,8 @@ void SubmitBatch(const s_rendering_context* const rendering_context) {
     const t_s32 view_uniform_loc = glGetUniformLocation(prog_gl_id, "u_view");
     glUniformMatrix4fv(view_uniform_loc, 1, false, (const t_r32*)rendering_context->state->view_mat.elems);
 
-    const s_matrix_4x4 proj_mat = OrthographicMatrix(0.0f, rendering_context->window_size.x, rendering_context->window_size.y, 0.0f, -1.0f, 1.0f);
+    const s_rect_s32 viewport = GLViewport();
+    const s_matrix_4x4 proj_mat = OrthographicMatrix(0.0f, viewport.width, viewport.height, 0.0f, -1.0f, 1.0f);
 
     const t_s32 proj_uniform_loc = glGetUniformLocation(prog_gl_id, "u_proj");
     glUniformMatrix4fv(proj_uniform_loc, 1, false, (const t_r32*)proj_mat.elems);

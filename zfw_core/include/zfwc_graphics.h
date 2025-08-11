@@ -127,6 +127,8 @@ typedef struct {
 
 typedef enum {
     ek_builtin_shader_prog_batch,
+    ek_builtin_shader_prog_surface,
+
     eks_builtin_shader_prog_cnt
 } e_builtin_shader_prog;
 
@@ -200,7 +202,21 @@ typedef struct {
 typedef struct {
     const t_gl_id* fb_gl_id;
     t_gl_id* fb_tex_gl_id;
+
+    s_v2_s32 size;
 } s_surface;
+
+static inline t_gl_id BoundGLFramebuffer() {
+    t_s32 fb;
+    glGetIntegerv(GL_FRAMEBUFFER_BINDING, &fb);
+    return fb;
+}
+
+static inline s_rect_s32 GLViewport() {
+    s_rect_s32 vp;
+    glGetIntegerv(GL_VIEWPORT, (t_s32*)&vp);
+    return vp;
+}
 
 //
 // zfwc_graphics.c
@@ -210,7 +226,7 @@ void CleanGLResourceArena(s_gl_resource_arena* const res_arena);
 s_gl_id_array PushToGLResourceArena(s_gl_resource_arena* const res_arena, const t_s32 cnt, const e_gl_resource_type res_type);
 
 bool InitRenderingBasis(s_rendering_basis* const basis, s_gl_resource_arena* const gl_res_arena, s_mem_arena* const mem_arena, s_mem_arena* const temp_mem_arena);
-s_rendering_state* GenRenderingState(s_mem_arena* const mem_arena);
+void InitRenderingState(s_rendering_state* const state, const s_v2_s32 window_size);
 
 void Clear(const s_rendering_context* const rendering_context, const u_v4 col);
 void SetViewMatrix(const s_rendering_context* const rendering_context, const s_matrix_4x4* const mat);
@@ -271,12 +287,6 @@ void SetSurface(const s_rendering_context* const rendering_context, const s_surf
 void UnsetSurface(const s_rendering_context* const rendering_context);
 void SetSurfaceShaderProg(const s_rendering_context* const rendering_context, const s_shader_prog_group* const progs, const t_s32 prog_index);
 void SetSurfaceShaderProgUniform(const s_rendering_context* const rendering_context, const char* const name, const s_shader_prog_uniform_value val);
-void RenderSurface(const s_rendering_context* const rendering_context, const s_surface* const surf);
-
-static inline t_gl_id BoundGLFramebuffer() {
-    t_s32 fb;
-    glGetIntegerv(GL_FRAMEBUFFER_BINDING, &fb);
-    return fb;
-}
+void RenderSurface(const s_rendering_context* const rendering_context, const s_surface* const surf, const s_v2 pos);
 
 #endif
