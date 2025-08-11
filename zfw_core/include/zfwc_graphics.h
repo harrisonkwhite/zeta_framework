@@ -6,15 +6,23 @@
 #include <cu.h>
 #include <glad/glad.h>
 
+#define BLACK (u_v4){0.0f, 0.0f, 0.0f, 1.0f}
+#define DARK_GRAY (u_v4){0.25f, 0.25f, 0.25f, 1.0f}
+#define GRAY (u_v4){0.5f, 0.5f, 0.5f, 1.0f}
+#define LIGHT_GRAY (u_v4){0.75f, 0.75f, 0.75f, 1.0f}
 #define WHITE (u_v4){1.0f, 1.0f, 1.0f, 1.0f}
 #define RED (u_v4){1.0f, 0.0f, 0.0f, 1.0f}
-#define GREEN (u_v4){0.0f, 1.0f, 0.0f, 1.0f}
-#define BLUE (u_v4){0.0f, 0.0f, 1.0f, 1.0f}
-#define BLACK (u_v4){0.0f, 0.0f, 0.0f, 1.0f}
+#define ORANGE (u_v4){1.0f, 0.5f, 0.0f, 1.0f}
 #define YELLOW (u_v4){1.0f, 1.0f, 0.0f, 1.0f}
+#define LIME (u_v4){0.75f, 1.0f, 0.0f, 1.0f}
+#define GREEN (u_v4){0.0f, 1.0f, 0.0f, 1.0f}
+#define TEAL (u_v4){0.0f, 0.5f, 0.5f, 1.0f}
 #define CYAN (u_v4){0.0f, 1.0f, 1.0f, 1.0f}
+#define BLUE (u_v4){0.0f, 0.0f, 1.0f, 1.0f}
+#define PURPLE (u_v4){0.5f, 0.0f, 0.5f, 1.0f}
 #define MAGENTA (u_v4){1.0f, 0.0f, 1.0f, 1.0f}
-#define GRAY (u_v4){0.5f, 0.5f, 0.5f, 1.0f}
+#define PINK (u_v4){1.0f, 0.75f, 0.8f, 1.0f}
+#define BROWN (u_v4){0.6f, 0.3f, 0.0f, 1.0f}
 
 #define ALIGNMENT_TOP_LEFT (s_v2){0.0f, 0.0f}
 #define ALIGNMENT_TOP_CENTER (s_v2){0.5f, 0.0f}
