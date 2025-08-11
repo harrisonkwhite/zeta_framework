@@ -66,7 +66,7 @@ static bool PackAssets(cJSON* const cj, s_mem_arena* const temp_mem_arena) {
             const cJSON* const cj_vert_file_path = cJSON_GetObjectItem(cj_item, "vert_file_path");
             const cJSON* const cj_frag_file_path = cJSON_GetObjectItem(cj_item, "frag_file_path");
 
-            if (!cJSON_IsString(cj_vert_file_path) || !cJSON_IsNumber(cj_frag_file_path)) {
+            if (!cJSON_IsString(cj_vert_file_path) || !cJSON_IsString(cj_frag_file_path)) {
                 LOG_ERROR("Invalid JSON item at index %d; \"vert_file_path\" and \"frag_file_path\" should be strings for shader program type!", i);
                 return false;
             }
