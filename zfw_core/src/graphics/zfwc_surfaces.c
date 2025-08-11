@@ -61,10 +61,37 @@ bool ResizeSurface(s_surface* const surf, const s_v2_s32 size) {
     return true;
 }
 
+static void PushToSurfaceFramebufferGLIDStack(s_surface_framebuffer_gl_id_stack* const stack, const t_gl_id gl_id) {
+    assert(glIsFramebuffer(gl_id));
+    assert(stack->height < STATIC_ARRAY_LEN(stack->buf));
+
+#ifndef NDEBUG
+    for (int i = 0; i < stack->height; i++) {
+        assert(*STATIC_ARRAY_ELEM(stack->buf, i) != gl_id && "Trying to push a surface framebuffer OpenGL ID that is already on the stack!");
+    }
+#endif
+
+    *STATIC_ARRAY_ELEM(stack->buf, stack->height) = gl_id;
+    stack->height++;
+}
+
+static t_gl_id PopFromSurfaceFramebufferGLIDStack(s_surface_framebuffer_gl_id_stack* const stack) {
+    assert(stack->height > 0 && "Trying to pop from an empty stack!");
+
+    stack->height--;
+    return *STATIC_ARRAY_ELEM(stack->buf, stack->height);
+}
+
 void SetSurface(const s_rendering_context* const rendering_context, const s_surface* const surf) {
     assert(*surf->fb_gl_id != BoundGLFramebuffer() && "Trying to set a surface that is already set!");
 
     SubmitBatch(rendering_context);
+
+    const t_gl_id bound_fb_gl_id = BoundGLFramebuffer();
+
+    if (bound_fb_gl_id != 0) {
+        PushToSurfaceFramebufferGLIDStack(&rendering_context->state->surf_fb_gl_id_stack, bound_fb_gl_id);
+    }
 
     glBindFramebuffer(GL_FRAMEBUFFER, *surf->fb_gl_id);
 }
@@ -74,7 +101,12 @@ void UnsetSurface(const s_rendering_context* const rendering_context) {
 
     SubmitBatch(rendering_context);
 
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    if (rendering_context->state->surf_fb_gl_id_stack.height > 0) {
+        const t_gl_id fb_gl_id = PopFromSurfaceFramebufferGLIDStack(&rendering_context->state->surf_fb_gl_id_stack);
+        glBindFramebuffer(GL_FRAMEBUFFER, fb_gl_id);
+    } else {
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    }
 }
 
 static inline t_gl_id CurrentGLShaderProgram() {
@@ -126,12 +158,20 @@ void SetSurfaceShaderProgUniform(const s_rendering_context* const rendering_cont
 }
 
 void RenderSurface(const s_rendering_context* const rendering_context, const s_surface* const surf) {
+    assert(*surf->fb_gl_id != BoundGLFramebuffer() && "Trying to render the currently set surface! Unset the surface first.");
+
+#ifndef NDEBUG
+    for (int i = 0; i < rendering_context->state->surf_fb_gl_id_stack.height; i++) {
+        assert(*STATIC_ARRAY_ELEM(rendering_context->state->surf_fb_gl_id_stack.buf, i) != *surf->fb_gl_id && "Trying to render a surface currently in the stack! Unset the surface first.");
+    }
+#endif
+
     assert(CurrentGLShaderProgram() != 0 && "Surface shader program must be set before rendering a surface!");
 
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, *surf->fb_tex_gl_id);
 
-    const s_renderable* const renderable = &rendering_context->basis->renderables[ek_renderable_surface];
+    const s_renderable* const renderable = STATIC_ARRAY_ELEM(rendering_context->basis->renderables, ek_renderable_surface);
 
     glBindVertexArray(*renderable->vert_array_gl_id);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, *renderable->elem_buf_gl_id);

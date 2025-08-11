@@ -180,8 +180,14 @@ typedef struct {
 } s_batch_state;
 
 typedef struct {
+    t_gl_id buf[256]; // NOTE: Size of this is pretty arbitrary. Could make it dynamic, but that would add unnecessary complication I think.
+    int height;
+} s_surface_framebuffer_gl_id_stack;
+
+typedef struct {
     s_batch_state batch;
     s_matrix_4x4 view_mat;
+    s_surface_framebuffer_gl_id_stack surf_fb_gl_id_stack;
 } s_rendering_state;
 
 typedef struct {
