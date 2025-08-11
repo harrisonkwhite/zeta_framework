@@ -257,6 +257,8 @@ static bool ExecGameInitAndMainLoop(s_game* const game, const s_game_info* const
                     return false;
                 }
 
+                assert(BoundGLFramebuffer() == 0 && "Potentially forgot to unset all surfaces in developer render function?");
+
                 SubmitBatch(&context.rendering_context);
             }
 

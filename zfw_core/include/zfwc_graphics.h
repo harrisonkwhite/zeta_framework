@@ -267,4 +267,10 @@ void SetSurfaceShaderProg(const s_rendering_context* const rendering_context, co
 void SetSurfaceShaderProgUniform(const s_rendering_context* const rendering_context, const char* const name, const s_shader_prog_uniform_value val);
 void RenderSurface(const s_rendering_context* const rendering_context, const s_surface* const surf);
 
+static inline t_gl_id BoundGLFramebuffer() {
+    t_s32 fb;
+    glGetIntegerv(GL_FRAMEBUFFER_BINDING, &fb);
+    return fb;
+}
+
 #endif

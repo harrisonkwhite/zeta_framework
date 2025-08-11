@@ -61,12 +61,6 @@ bool ResizeSurface(s_surface* const surf, const s_v2_s32 size) {
     return true;
 }
 
-static inline t_gl_id BoundGLFramebuffer() {
-    t_s32 fb;
-    glGetIntegerv(GL_FRAMEBUFFER_BINDING, &fb);
-    return fb;
-}
-
 void SetSurface(const s_rendering_context* const rendering_context, const s_surface* const surf) {
     assert(*surf->fb_gl_id != BoundGLFramebuffer() && "Trying to set a surface that is already set!");
 
