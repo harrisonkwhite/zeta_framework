@@ -229,11 +229,11 @@ static inline s_rect_s32 GLViewport() {
 //
 // zfwc_graphics.c
 //
-bool InitGLResourceArena(s_gl_resource_arena* const res_arena, s_mem_arena* const mem_arena, const t_s32 res_limit);
+bool WARN_UNUSED_RESULT InitGLResourceArena(s_gl_resource_arena* const res_arena, s_mem_arena* const mem_arena, const t_s32 res_limit);
 void CleanGLResourceArena(s_gl_resource_arena* const res_arena);
 s_gl_id_array PushToGLResourceArena(s_gl_resource_arena* const res_arena, const t_s32 cnt, const e_gl_resource_type res_type);
 
-bool InitRenderingBasis(s_rendering_basis* const basis, s_gl_resource_arena* const gl_res_arena, s_mem_arena* const mem_arena, s_mem_arena* const temp_mem_arena);
+bool WARN_UNUSED_RESULT InitRenderingBasis(s_rendering_basis* const basis, s_gl_resource_arena* const gl_res_arena, s_mem_arena* const mem_arena, s_mem_arena* const temp_mem_arena);
 void InitRenderingState(s_rendering_state* const state, const s_v2_s32 window_size);
 
 void Clear(const s_rendering_context* const rendering_context, const u_v4 col);
@@ -247,7 +247,7 @@ void SubmitBatch(const s_rendering_context* const rendering_context);
 s_rect_edges GenTextureCoords(const s_rect_s32 src_rect, const s_v2_s32 tex_size);
 s_rgba_texture LoadRGBATextureFromFile(const s_char_array_view file_path, s_mem_arena *const mem_arena);
 t_gl_id GenGLTextureFromRGBA(const s_rgba_texture rgba_tex);
-s_texture_group GenTextureGroup(const t_s32 tex_cnt, const t_texture_group_rgba_generator_func rgba_generator_func, s_mem_arena *const mem_arena, s_gl_resource_arena* const gl_res_arena, s_mem_arena* const temp_mem_arena);
+bool WARN_UNUSED_RESULT InitTextureGroup(s_texture_group* const texture_group, const t_s32 tex_cnt, const t_texture_group_rgba_generator_func rgba_generator_func, s_mem_arena *const mem_arena, s_gl_resource_arena* const gl_res_arena, s_mem_arena* const temp_mem_arena);
 void RenderTexture(const s_rendering_context* const rendering_context, const s_texture_group* const textures, const t_s32 tex_index, const s_rect_s32 src_rect, const s_v2 pos, const s_v2 origin, const s_v2 scale, const t_r32 rot, const u_v4 blend);
 void RenderRectWithOutline(const s_rendering_context* const rendering_context, const s_rect rect, const u_v4 fill_color, const u_v4 outline_color, const t_r32 outline_thickness);
 void RenderRectWithOutlineAndOpaqueFill(const s_rendering_context* const rendering_context, const s_rect rect, const u_v3 fill_color, const u_v4 outline_color, const t_r32 outline_thickness);
@@ -276,21 +276,21 @@ static inline void RenderLine(const s_rendering_context* const rendering_context
 //
 // zfwc_fonts.c
 //
-s_font_group GenFontGroupFromFiles(const s_char_array_view_array_view file_paths, s_mem_arena *const mem_arena, s_gl_resource_arena* const gl_res_arena, s_mem_arena* const temp_mem_arena);
-s_v2_array GenStrChrRenderPositions(s_mem_arena* const mem_arena, const s_char_array_view str, const s_font_group* const font_group, const t_s32 font_index, const s_v2 pos, const s_v2 alignment);
-bool GenStrCollider(s_rect* const rect, const s_char_array_view str, const s_font_group* const font_group, const t_s32 font_index, const s_v2 pos, const s_v2 alignment, s_mem_arena* const temp_mem_arena);
-bool RenderStr(const s_rendering_context* const rendering_context, const s_char_array_view str, const s_font_group* const fonts, const t_s32 font_index, const s_v2 pos, const s_v2 alignment, const u_v4 color, s_mem_arena* const temp_mem_arena);
+bool WARN_UNUSED_RESULT InitFontGroupFromFiles(s_font_group* const font_group, const s_char_array_view_array_view file_paths, s_mem_arena *const mem_arena, s_gl_resource_arena* const gl_res_arena, s_mem_arena* const temp_mem_arena);
+bool WARN_UNUSED_RESULT GenStrChrRenderPositions(s_v2_array* const positions, s_mem_arena* const mem_arena, const s_char_array_view str, const s_font_group* const font_group, const t_s32 font_index, const s_v2 pos, const s_v2 alignment);
+bool WARN_UNUSED_RESULT GenStrCollider(s_rect* const rect, const s_char_array_view str, const s_font_group* const font_group, const t_s32 font_index, const s_v2 pos, const s_v2 alignment, s_mem_arena* const temp_mem_arena);
+bool WARN_UNUSED_RESULT RenderStr(const s_rendering_context* const rendering_context, const s_char_array_view str, const s_font_group* const fonts, const t_s32 font_index, const s_v2 pos, const s_v2 alignment, const u_v4 color, s_mem_arena* const temp_mem_arena);
 
 //
 // zfwc_shaders.c
 //
-s_shader_prog_group GenShaderProgGroup(const s_shader_prog_gen_info_array_view gen_infos, s_gl_resource_arena* const gl_res_arena, s_mem_arena* const temp_mem_arena);
+bool WARN_UNUSED_RESULT InitShaderProgGroup(s_shader_prog_group* const prog_group, const s_shader_prog_gen_info_array_view gen_infos, s_gl_resource_arena* const gl_res_arena, s_mem_arena* const temp_mem_arena);
 
 //
 // zfwc_surfaces.c
 //
-s_surface GenSurface(const s_v2_s32 size, s_gl_resource_arena* const gl_res_arena);
-bool ResizeSurface(s_surface* const surf, const s_v2_s32 size);
+bool WARN_UNUSED_RESULT InitSurface(s_surface* const surf, const s_v2_s32 size, s_gl_resource_arena* const gl_res_arena);
+bool WARN_UNUSED_RESULT ResizeSurface(s_surface* const surf, const s_v2_s32 size);
 void SetSurface(const s_rendering_context* const rendering_context, const s_surface* const surf);
 void UnsetSurface(const s_rendering_context* const rendering_context);
 void SetSurfaceShaderProg(const s_rendering_context* const rendering_context, const s_shader_prog_group* const progs, const t_s32 prog_index);

@@ -311,9 +311,7 @@ static s_rgba_texture BuiltinTextureRGBAGenerator(const t_s32 tex_index, s_mem_a
 bool InitRenderingBasis(s_rendering_basis* const basis, s_gl_resource_arena* const gl_res_arena, s_mem_arena* const mem_arena, s_mem_arena* const temp_mem_arena) {
     assert(IS_ZERO(*basis));
 
-    basis->builtin_textures = GenTextureGroup(eks_builtin_texture_cnt, BuiltinTextureRGBAGenerator, mem_arena, gl_res_arena, temp_mem_arena);
-
-    if (IS_ZERO(basis->builtin_textures)) {
+    if (!InitTextureGroup(&basis->builtin_textures, eks_builtin_texture_cnt, BuiltinTextureRGBAGenerator, mem_arena, gl_res_arena, temp_mem_arena)) {
         LOG_ERROR("Failed to generate built-in textures for rendering basis!");
         return false;
     }
@@ -332,9 +330,7 @@ bool InitRenderingBasis(s_rendering_basis* const basis, s_gl_resource_arena* con
             }
         };
 
-        basis->builtin_shader_progs = GenShaderProgGroup(ARRAY_FROM_STATIC(s_shader_prog_gen_info_array_view, gen_infos), gl_res_arena, temp_mem_arena);
-
-        if (IS_ZERO(basis->builtin_shader_progs)) {
+        if (!InitShaderProgGroup(&basis->builtin_shader_progs, ARRAY_FROM_STATIC(s_shader_prog_gen_info_array_view, gen_infos), gl_res_arena, temp_mem_arena)) {
             LOG_ERROR("Failed to generate built-in shader programs for rendering basis!");
             return false;
         }

@@ -149,7 +149,8 @@ static t_gl_id GenShaderProg(const s_shader_prog_gen_info gen_info, s_mem_arena*
     return prog_gl_id;
 }
 
-s_shader_prog_group GenShaderProgGroup(const s_shader_prog_gen_info_array_view gen_infos, s_gl_resource_arena* const gl_res_arena, s_mem_arena* const temp_mem_arena) {
+bool InitShaderProgGroup(s_shader_prog_group* const prog_group, const s_shader_prog_gen_info_array_view gen_infos, s_gl_resource_arena* const gl_res_arena, s_mem_arena* const temp_mem_arena) {
+    assert(IS_ZERO(*prog_group));
     assert(gen_infos.len > 0);
 
     const t_s32 prog_cnt = gen_infos.len;
@@ -158,7 +159,7 @@ s_shader_prog_group GenShaderProgGroup(const s_shader_prog_gen_info_array_view g
 
     if (IS_ZERO(gl_ids)) {
         LOG_ERROR("Failed to reserve OpenGL shader program IDs for shader program group!");
-        return (s_shader_prog_group){0};
+        return false;
     }
 
     for (t_s32 i = 0; i < prog_cnt; i++) {
@@ -170,11 +171,13 @@ s_shader_prog_group GenShaderProgGroup(const s_shader_prog_gen_info_array_view g
 
         if (!*gl_id) {
             LOG_ERROR("Failed to generate shader program with index %d!", i);
-            return (s_shader_prog_group){0};
+            return false;
         }
     }
 
-    return (s_shader_prog_group){
+    *prog_group = (s_shader_prog_group){
         .gl_ids = GLIDArrayView(gl_ids)
     };
+
+    return true;
 }

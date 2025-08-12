@@ -76,21 +76,22 @@ t_gl_id GenGLTextureFromRGBA(const s_rgba_texture rgba_tex) {
     return tex_gl_id;
 }
 
-s_texture_group GenTextureGroup(const t_s32 tex_cnt, const t_texture_group_rgba_generator_func rgba_generator_func, s_mem_arena *const mem_arena, s_gl_resource_arena* const gl_res_arena, s_mem_arena* const temp_mem_arena) {
+bool InitTextureGroup(s_texture_group* const texture_group, const t_s32 tex_cnt, const t_texture_group_rgba_generator_func rgba_generator_func, s_mem_arena *const mem_arena, s_gl_resource_arena* const gl_res_arena, s_mem_arena* const temp_mem_arena) {
+    assert(IS_ZERO(*texture_group));
     assert(tex_cnt > 0);
 
     const s_v2_s32_array sizes = PushV2S32ArrayToMemArena(mem_arena, tex_cnt);
 
     if (IS_ZERO(sizes)) {
         LOG_ERROR("Failed to reserve memory for texture sizes!");
-        return (s_texture_group){0};
+        return false;
     }
 
     const s_gl_id_array gl_ids = PushToGLResourceArena(gl_res_arena, tex_cnt, ek_gl_resource_type_texture);
 
     if (IS_ZERO(gl_ids)) {
         LOG_ERROR("Failed to reserve OpenGL texture IDs!");
-        return (s_texture_group){0};
+        return false;
     }
 
     for (t_s32 i = 0; i < tex_cnt; i++) {
@@ -98,7 +99,7 @@ s_texture_group GenTextureGroup(const t_s32 tex_cnt, const t_texture_group_rgba_
 
         if (IS_ZERO(rgba_tex)) {
             LOG_ERROR("Failed to generate RGBA texture for texture with index %d!", i);
-            return (s_texture_group){0};
+            return false;
         }
 
         t_gl_id* const gl_id = GLIDElem(gl_ids, i);
@@ -106,16 +107,18 @@ s_texture_group GenTextureGroup(const t_s32 tex_cnt, const t_texture_group_rgba_
 
         if (!*gl_id) {
             LOG_ERROR("Failed to generate OpenGL texture for texture with index %d!", i);
-            return (s_texture_group){0};
+            return false;
         }
 
         *V2S32Elem(sizes, i) = rgba_tex.tex_size;
     }
 
-    return (s_texture_group){
+    *texture_group = (s_texture_group){
         .sizes = V2S32ArrayView(sizes),
         .gl_ids = GLIDArrayView(gl_ids)
     };
+
+    return true;
 }
 
 void RenderTexture(const s_rendering_context* const rendering_context, const s_texture_group* const textures, const t_s32 tex_index, const s_rect_s32 src_rect, const s_v2 pos, const s_v2 origin, const s_v2 scale, const t_r32 rot, const u_v4 blend) {

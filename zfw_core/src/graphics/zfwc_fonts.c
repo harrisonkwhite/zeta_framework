@@ -2,7 +2,7 @@
 
 #include <ctype.h>
 
-static bool LoadFontFromFile(s_font_arrangement* const arrangement, s_font_texture_meta* const tex_meta, s_u8_array* const tex_rgba_px_data, s_mem_arena* const tex_rgba_px_data_mem_arena, const s_char_array_view file_path) {
+static bool WARN_UNUSED_RESULT LoadFontFromFile(s_font_arrangement* const arrangement, s_font_texture_meta* const tex_meta, s_u8_array* const tex_rgba_px_data, s_mem_arena* const tex_rgba_px_data_mem_arena, const s_char_array_view file_path) {
     assert(IS_ZERO(*arrangement));
     assert(IS_ZERO(*tex_meta));
     assert(IS_ZERO(*tex_rgba_px_data));
@@ -45,28 +45,30 @@ static bool LoadFontFromFile(s_font_arrangement* const arrangement, s_font_textu
     return true;
 }
 
-s_font_group GenFontGroupFromFiles(const s_char_array_view_array_view file_paths, s_mem_arena *const mem_arena, s_gl_resource_arena* const gl_res_arena, s_mem_arena* const temp_mem_arena) {
+bool InitFontGroupFromFiles(s_font_group* const font_group, const s_char_array_view_array_view file_paths, s_mem_arena *const mem_arena, s_gl_resource_arena* const gl_res_arena, s_mem_arena* const temp_mem_arena) {
+    assert(IS_ZERO(*font_group));
+
     const t_s32 font_cnt = file_paths.len;
 
     const s_font_arrangement_array arrangements = PushFontArrangementArrayToMemArena(mem_arena, font_cnt);
 
     if (IS_ZERO(arrangements)) {
         LOG_ERROR("Failed to reserve memory for font arrangements!");
-        return (s_font_group){0};
+        return false;
     }
 
     const s_font_texture_meta_array tex_metas = PushFontTextureMetaArrayToMemArena(mem_arena, font_cnt);
 
     if (IS_ZERO(tex_metas)) {
         LOG_ERROR("Failed to reserve memory for font texture metadata!");
-        return (s_font_group){0};
+        return false;
     }
 
     const s_gl_id_array tex_gl_ids = PushToGLResourceArena(gl_res_arena, font_cnt, ek_gl_resource_type_texture);
 
     if (IS_ZERO(tex_gl_ids)) {
         LOG_ERROR("Failed to reserve OpenGL texture IDs for fonts!");
-        return (s_font_group){0};
+        return false;
     }
 
     for (t_s32 i = 0; i < font_cnt; i++) {
@@ -78,7 +80,7 @@ s_font_group GenFontGroupFromFiles(const s_char_array_view_array_view file_paths
         s_u8_array tex_rgba_px_data = {0};
 
         if (!LoadFontFromFile(arrangement, tex_meta, &tex_rgba_px_data, temp_mem_arena, file_path)) {
-            return (s_font_group){0};
+            return false;
         }
 
         t_gl_id* const tex_gl_id = GLIDElem(tex_gl_ids, i);
@@ -87,15 +89,17 @@ s_font_group GenFontGroupFromFiles(const s_char_array_view_array_view file_paths
 
         if (!*tex_gl_id) {
             LOG_ERROR("Failed to generate OpenGL texture from font RGBA pixel data for font file \"%s\"!", file_path.buf_raw);
-            return (s_font_group){0};
+            return false;
         }
     }
 
-    return (s_font_group){
+    *font_group = (s_font_group){
         .arrangements = FontArrangementArrayView(arrangements),
         .tex_metas = FontTextureMetaArrayView(tex_metas),
         .tex_gl_ids = GLIDArrayView(tex_gl_ids)
     };
+
+    return true;
 }
 
 static t_s32 CalcStrLineCnt(const s_char_array_view str) {
@@ -110,7 +114,8 @@ static t_s32 CalcStrLineCnt(const s_char_array_view str) {
     return line_cnt;
 }
 
-s_v2_array GenStrChrRenderPositions(s_mem_arena* const mem_arena, const s_char_array_view str, const s_font_group* const font_group, const t_s32 font_index, const s_v2 pos, const s_v2 alignment) {
+bool GenStrChrRenderPositions(s_v2_array* const positions, s_mem_arena* const mem_arena, const s_char_array_view str, const s_font_group* const font_group, const t_s32 font_index, const s_v2 pos, const s_v2 alignment) {
+    assert(IS_ZERO(*positions));
     assert(IsStrTerminated(str));
     assert(alignment.x >= 0.0f && alignment.x <= 1.0f && alignment.y >= 0.0f && alignment.y <= 1.0f);
 
@@ -121,11 +126,11 @@ s_v2_array GenStrChrRenderPositions(s_mem_arena* const mem_arena, const s_char_a
     const t_r32 alignment_offs_y = -(line_cnt * arrangement->line_height) * alignment.y;
 
     // Reserve memory for the character render positions.
-    const s_v2_array chr_render_positions = PushV2ArrayToMemArena(mem_arena, str.len - 1);
+    *positions = PushV2ArrayToMemArena(mem_arena, str.len - 1);
 
-    if (IS_ZERO(chr_render_positions)) {
+    if (IS_ZERO(*positions)) {
         LOG_ERROR("Failed to reserve memory for character render positions!");
-        return (s_v2_array){0};
+        return false;
     }
 
     // Calculate the render position for each character.
@@ -143,7 +148,7 @@ s_v2_array GenStrChrRenderPositions(s_mem_arena* const mem_arena, const s_char_a
                 const t_r32 line_width = chr_pos_pen.x;
 
                 for (t_s32 j = line_starting_chr_index; j < i; j++) {
-                    V2Elem(chr_render_positions, j)->x -= line_width * alignment.x;
+                    V2Elem(*positions, j)->x -= line_width * alignment.x;
                 }
             }
 
@@ -164,7 +169,7 @@ s_v2_array GenStrChrRenderPositions(s_mem_arena* const mem_arena, const s_char_a
 
         const s_v2_s32 chr_offs = *STATIC_ARRAY_ELEM(arrangement->chr_offsets, chr_ascii_printable_index);
 
-        *V2Elem(chr_render_positions, i) = (s_v2){
+        *V2Elem(*positions, i) = (s_v2){
             pos.x + chr_pos_pen.x + chr_offs.x,
             pos.y + chr_pos_pen.y + chr_offs.y + alignment_offs_y
         };
@@ -172,14 +177,18 @@ s_v2_array GenStrChrRenderPositions(s_mem_arena* const mem_arena, const s_char_a
         chr_pos_pen.x += *STATIC_ARRAY_ELEM(arrangement->chr_advances, chr_ascii_printable_index);
     }
 
-    return chr_render_positions;
+    return true;
 }
 
 bool GenStrCollider(s_rect* const rect, const s_char_array_view str, const s_font_group* const font_group, const t_s32 font_index, const s_v2 pos, const s_v2 alignment, s_mem_arena* const temp_mem_arena) {
     assert(rect && IS_ZERO(*rect));
     assert(alignment.x >= 0.0f && alignment.x <= 1.0f && alignment.y >= 0.0f && alignment.y <= 1.0f);
 
-    const s_v2_array chr_render_positions = GenStrChrRenderPositions(temp_mem_arena, str, font_group, font_index, pos, alignment);
+    s_v2_array chr_render_positions = {0};
+
+    if (!GenStrChrRenderPositions(&chr_render_positions, temp_mem_arena, str, font_group, font_index, pos, alignment)) {
+        return false;
+    }
 
     if (IS_ZERO(chr_render_positions)) {
         LOG_ERROR("Failed to reserve memory for character render positions!");
@@ -239,9 +248,9 @@ bool RenderStr(const s_rendering_context* const rendering_context, const s_char_
     assert(IsStrTerminated(str));
     assert(alignment.x >= 0.0f && alignment.x <= 1.0f && alignment.y >= 0.0f && alignment.y <= 1.0f);
 
-    const s_v2_array chr_render_positions = GenStrChrRenderPositions(temp_mem_arena, str, fonts, font_index, pos, alignment);
+    s_v2_array chr_render_positions = {0};
 
-    if (IS_ZERO(chr_render_positions)) {
+    if (!GenStrChrRenderPositions(&chr_render_positions, temp_mem_arena, str, fonts, font_index, pos, alignment)) {
         LOG_ERROR("Failed to reserve memory for character render positions!");
         return false;
     }

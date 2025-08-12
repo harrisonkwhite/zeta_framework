@@ -17,19 +17,19 @@ static bool AttachFramebufferTexture(const t_gl_id fb_gl_id, const t_gl_id tex_g
     return success;
 }
 
-s_surface GenSurface(const s_v2_s32 size, s_gl_resource_arena* const gl_res_arena) {
+bool InitSurface(s_surface* const surf, const s_v2_s32 size, s_gl_resource_arena* const gl_res_arena) {
     t_gl_id* const fb_gl_id = PushToGLResourceArena(gl_res_arena, 1, ek_gl_resource_type_framebuffer).buf_raw;
 
     if (!fb_gl_id) {
         LOG_ERROR("Failed to reserve OpenGL framebuffer ID for surface!");
-        return (s_surface){0};
+        return false;
     }
 
     t_gl_id* const fb_tex_gl_id = PushToGLResourceArena(gl_res_arena, 1, ek_gl_resource_type_texture).buf_raw;
 
     if (!fb_tex_gl_id) {
         LOG_ERROR("Failed to reserve OpenGL texture ID for surface framebuffer!");
-        return (s_surface){0};
+        return false;
     }
 
     glGenFramebuffers(1, fb_gl_id);
@@ -37,14 +37,16 @@ s_surface GenSurface(const s_v2_s32 size, s_gl_resource_arena* const gl_res_aren
 
     if (!AttachFramebufferTexture(*fb_gl_id, *fb_tex_gl_id, size)) {
         LOG_ERROR("Failed to attach framebuffer texture for surface!");
-        return (s_surface){0};
+        return false;
     }
 
-    return (s_surface){
+    *surf = (s_surface){
         .fb_gl_id = fb_gl_id,
         .fb_tex_gl_id = fb_tex_gl_id,
         .size = size
     };
+
+    return true;
 }
 
 bool ResizeSurface(s_surface* const surf, const s_v2_s32 size) {

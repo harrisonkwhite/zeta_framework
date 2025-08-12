@@ -91,6 +91,6 @@ static inline void AssertGameInfoValidity(const s_game_info* const info) {
     assert(info->render_func);
 }
 
-bool RunGame(const s_game_info* const info);
+bool WARN_UNUSED_RESULT RunGame(const s_game_info* const info);
 
 #endif

@@ -3,7 +3,6 @@
 
 #include <cu.h>
 #include <GLFW/glfw3.h>
-#include "zfwc_math.h"
 
 typedef enum {
     eks_key_code_none = -1,
@@ -79,12 +78,6 @@ typedef t_u64 t_key_bits;
 
 static_assert(eks_key_code_cnt < SIZE_IN_BITS(t_key_bits), "Too many key codes!");
 
-static inline bool IsKeyBitsValid(const t_key_bits key_bits) {
-    // Check if any bit is set outside the valid range.
-    const t_key_bits mask = ((t_key_bits)1 << eks_key_code_cnt) - 1;
-    return (key_bits & ~mask) == 0;
-}
-
 typedef enum {
     eks_mouse_button_code_none = -1,
 
@@ -98,12 +91,6 @@ typedef enum {
 typedef t_u8 t_mouse_button_bits;
 
 static_assert(eks_mouse_button_code_cnt < SIZE_IN_BITS(t_mouse_button_bits), "Too many mouse button codes!");
-
-static inline bool IsMouseButtonBitsValid(const t_mouse_button_bits mb_bits) {
-    // Check if any bit is set outside the valid range.
-    const t_mouse_button_bits mask = ((t_mouse_button_bits)1 << eks_mouse_button_code_cnt) - 1;
-    return (mb_bits & ~mask) == 0;
-}
 
 typedef enum {
     ek_mouse_scroll_state_none,
