@@ -45,41 +45,7 @@ static const char g_batch_frag_shader_src[] = "#version 430 core\n"
     "    o_frag_color = tex_color * v_blend;\n"
     "}\n";
 
-static const char g_surface_vert_shader_src[] = "#version 430 core\n"
-    "\n"
-    "layout (location = 0) in vec2 a_vert;\n"
-    "layout (location = 1) in vec2 a_tex_coord;\n"
-    "\n"
-    "out vec2 v_tex_coord;\n"
-    "\n"
-    "uniform vec2 u_pos;\n"
-    "uniform vec2 u_size;\n"
-    "uniform mat4 u_proj;\n"
-    "\n"
-    "void main() {\n"
-    "    mat4 model = mat4(\n"
-    "        vec4(u_size.x, 0.0, 0.0, 0.0),\n"
-    "        vec4(0.0, u_size.y, 0.0, 0.0),\n"
-    "        vec4(0.0, 0.0, 1.0, 0.0),\n"
-    "        vec4(u_pos.x, u_pos.y, 0.0, 1.0)\n"
-    "    );\n"
-    "\n"
-    "    gl_Position = u_proj * model * vec4(a_vert, 0.0, 1.0);\n"
-    "    v_tex_coord = a_tex_coord;\n"
-    "}\n";
-
-static const char g_surface_frag_shader_src[] = "#version 430 core\n"
-    "\n"
-    "in vec2 v_tex_coord;\n"
-    "out vec4 o_frag_color;\n"
-    "\n"
-    "uniform sampler2D u_tex;\n"
-    "\n"
-    "void main() {\n"
-        "o_frag_color = texture(u_tex, v_tex_coord);\n"
-    "}\n";
-
-bool WARN_UNUSED_RESULT InitGLResourceArena(s_gl_resource_arena* const res_arena, s_mem_arena* const mem_arena, const t_s32 res_limit) {
+bool InitGLResourceArena(s_gl_resource_arena* const res_arena, s_mem_arena* const mem_arena, const t_s32 res_limit) {
     assert(IS_ZERO(*res_arena));
     assert(res_limit > 0);
 
@@ -308,7 +274,7 @@ static s_rgba_texture BuiltinTextureRGBAGenerator(const t_s32 tex_index, s_mem_a
     }
 }
 
-bool WARN_UNUSED_RESULT InitRenderingBasis(s_rendering_basis* const basis, s_gl_resource_arena* const gl_res_arena, s_mem_arena* const mem_arena, s_mem_arena* const temp_mem_arena) {
+bool InitRenderingBasis(s_rendering_basis* const basis, s_gl_resource_arena* const gl_res_arena, s_mem_arena* const mem_arena, s_mem_arena* const temp_mem_arena) {
     assert(IS_ZERO(*basis));
 
     if (!InitTextureGroup(&basis->builtin_textures, eks_builtin_texture_cnt, BuiltinTextureRGBAGenerator, mem_arena, gl_res_arena, temp_mem_arena)) {
@@ -323,10 +289,15 @@ bool WARN_UNUSED_RESULT InitRenderingBasis(s_rendering_basis* const basis, s_gl_
                 .vert_src = g_batch_vert_shader_src,
                 .frag_src = g_batch_frag_shader_src
             },
-            [ek_builtin_shader_prog_surface] = {
+            [ek_builtin_shader_prog_surface_default] = {
                 .holds_srcs = true,
-                .vert_src = g_surface_vert_shader_src,
-                .frag_src = g_surface_frag_shader_src
+                .vert_src = g_surface_default_vert_shader_src,
+                .frag_src = g_surface_default_frag_shader_src
+            },
+            [ek_builtin_shader_prog_surface_blend] = {
+                .holds_srcs = true,
+                .vert_src = g_surface_default_vert_shader_src,
+                .frag_src = g_surface_default_frag_shader_src
             }
         };
 

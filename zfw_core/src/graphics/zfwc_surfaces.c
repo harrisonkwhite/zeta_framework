@@ -1,5 +1,86 @@
 #include "zfwc_graphics.h"
 
+const char g_surface_default_vert_shader_src[] = "#version 430 core\n"
+    "\n"
+    "layout (location = 0) in vec2 a_vert;\n"
+    "layout (location = 1) in vec2 a_tex_coord;\n"
+    "\n"
+    "out vec2 v_tex_coord;\n"
+    "\n"
+    "uniform vec2 u_pos;\n"
+    "uniform vec2 u_size;\n"
+    "uniform mat4 u_proj;\n"
+    "\n"
+    "void main() {\n"
+    "    mat4 model = mat4(\n"
+    "        vec4(u_size.x, 0.0, 0.0, 0.0),\n"
+    "        vec4(0.0, u_size.y, 0.0, 0.0),\n"
+    "        vec4(0.0, 0.0, 1.0, 0.0),\n"
+    "        vec4(u_pos.x, u_pos.y, 0.0, 1.0)\n"
+    "    );\n"
+    "\n"
+    "    gl_Position = u_proj * model * vec4(a_vert, 0.0, 1.0);\n"
+    "    v_tex_coord = a_tex_coord;\n"
+    "}\n";
+
+const char g_surface_default_frag_shader_src[] = "#version 430 core\n"
+    "\n"
+    "in vec2 v_tex_coord;\n"
+    "out vec4 o_frag_color;\n"
+    "\n"
+    "uniform sampler2D u_tex;\n"
+    "\n"
+    "void main() {\n"
+        "o_frag_color = texture(u_tex, v_tex_coord);\n"
+    "}\n";
+
+const char g_surface_blend_vert_shader_src[] = "#version 430 core\n" \
+    "\n" \
+    "layout (location = 0) in vec2 a_vert;\n" \
+    "layout (location = 1) in vec2 a_tex_coord;\n" \
+    "\n" \
+    "out vec2 v_tex_coord;\n" \
+    "\n" \
+    "uniform vec2 u_pos;\n" \
+    "uniform vec2 u_size;\n" \
+    "uniform mat4 u_proj;\n" \
+    "\n" \
+    "void main() {\n" \
+        "mat4 model = mat4(\n" \
+            "vec4(u_size.x, 0.0, 0.0, 0.0),\n" \
+            "vec4(0.0, u_size.y, 0.0, 0.0),\n" \
+            "vec4(0.0, 0.0, 1.0, 0.0),\n" \
+            "vec4(u_pos.x, u_pos.y, 0.0, 1.0)\n" \
+        ");\n" \
+    "\n" \
+        "gl_Position = u_proj * model * vec4(a_vert, 0.0, 1.0);\n" \
+        "v_tex_coord = a_tex_coord;\n" \
+    "}\n";
+
+const char g_surface_blend_frag_shader_src[] = "#version 430 core\n" \
+    "\n" \
+    "in vec2 v_tex_coord;\n" \
+    "out vec4 o_frag_color;\n" \
+    "\n" \
+    "uniform sampler2D u_tex;\n" \
+    "uniform vec3 u_col;\n" \
+    "uniform float u_intensity;\n" \
+    "\n" \
+    "void main() {\n" \
+        "vec4 tex_col = texture(u_tex, v_tex_coord);\n" \
+    "\n" \
+        "if (tex_col.a > 0.0) {\n" \
+            "o_frag_color = vec4(\n" \
+                "mix(tex_col.r, u_col.r, u_intensity),\n" \
+                "mix(tex_col.g, u_col.g, u_intensity),\n" \
+                "mix(tex_col.b, u_col.b, u_intensity),\n" \
+                "tex_col.a\n" \
+            ");\n" \
+        "} else {\n" \
+            "o_frag_color = tex_col;\n" \
+        "}\n" \
+    "}\n";
+
 static bool AttachFramebufferTexture(const t_gl_id fb_gl_id, const t_gl_id tex_gl_id, const s_v2_s32 tex_size) {
     glBindTexture(GL_TEXTURE_2D, tex_gl_id);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, tex_size.x, tex_size.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);

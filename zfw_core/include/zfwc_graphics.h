@@ -125,7 +125,8 @@ typedef struct {
 
 typedef enum {
     ek_builtin_shader_prog_batch,
-    ek_builtin_shader_prog_surface,
+    ek_builtin_shader_prog_surface_default,
+    ek_builtin_shader_prog_surface_blend,
 
     eks_builtin_shader_prog_cnt
 } e_builtin_shader_prog;
@@ -280,6 +281,11 @@ bool WARN_UNUSED_RESULT RenderStr(const s_rendering_context* const rendering_con
 //
 // zfwc_shaders.c
 //
+extern const char g_surface_default_vert_shader_src[];
+extern const char g_surface_default_frag_shader_src[];
+extern const char g_surface_blend_vert_shader_src[];
+extern const char g_surface_blend_frag_shader_src[];
+
 bool WARN_UNUSED_RESULT InitShaderProgGroup(s_shader_prog_group* const prog_group, const s_shader_prog_gen_info_array_view gen_infos, s_gl_resource_arena* const gl_res_arena, s_mem_arena* const temp_mem_arena);
 
 //
