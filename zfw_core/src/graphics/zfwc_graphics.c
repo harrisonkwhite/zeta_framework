@@ -155,7 +155,7 @@ s_gl_id_array PushToGLResourceArena(s_gl_resource_arena* const res_arena, const 
 static size_t CalcStride(const s_s32_array_view vert_attr_lens) {
     t_s32 stride = 0;
 
-    for (t_s32 i = 0; i < vert_attr_lens.len; i++) {
+    for (t_s32 i = 0; i < vert_attr_lens.elem_cnt; i++) {
         stride += sizeof(t_r32) * *S32ElemView(vert_attr_lens, i);
     }
 
@@ -189,19 +189,19 @@ static s_renderable GenRenderable(s_gl_resource_arena* const gl_res_arena, const
 
     glGenBuffers(1, vb_gl_id);
     glBindBuffer(GL_ARRAY_BUFFER, *vb_gl_id);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(*verts.buf_raw) * verts.len, verts.buf_raw, GL_DYNAMIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(*verts.buf_raw) * verts.elem_cnt, verts.buf_raw, GL_DYNAMIC_DRAW);
 
     glGenBuffers(1, eb_gl_id);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, *eb_gl_id);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(*elems.buf_raw) * elems.len, elems.buf_raw, GL_STATIC_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(*elems.buf_raw) * elems.elem_cnt, elems.buf_raw, GL_STATIC_DRAW);
 
     const size_t stride = CalcStride(vert_attr_lens);
     t_s32 offs = 0;
 
-    for (t_s32 i = 0; i < vert_attr_lens.len; i++) {
+    for (t_s32 i = 0; i < vert_attr_lens.elem_cnt; i++) {
         const t_s32 attr_len = *S32ElemView(vert_attr_lens, i);
 
-        glVertexAttribPointer(i, attr_len, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(t_r32) * offs));
+        glVertexAttribPointer(i, attr_len, GL_FLOAT, false, stride, (void*)(sizeof(t_r32) * offs));
         glEnableVertexAttribArray(i);
 
         offs += attr_len;
@@ -242,7 +242,7 @@ static s_renderable GenRenderableOfType(s_gl_resource_arena* const gl_res_arena,
             {
                 const s_r32_array_view verts = {
                     .buf_raw = NULL,
-                    .len = BATCH_SLOT_VERT_CNT * BATCH_SLOT_CNT
+                    .elem_cnt = BATCH_SLOT_VERT_LEN * BATCH_SLOT_VERT_CNT * BATCH_SLOT_CNT
                 };
 
                 const s_u16_array_view elems = GenBatchRenderableElems(temp_mem_arena);
@@ -337,9 +337,11 @@ bool InitRenderingBasis(s_rendering_basis* const basis, s_gl_resource_arena* con
     }
 
     for (t_s32 i = 0; i < eks_renderable_cnt; i++) {
-        basis->renderables[i] = GenRenderableOfType(gl_res_arena, i, temp_mem_arena);
+        s_renderable* const renderable = STATIC_ARRAY_ELEM(basis->renderables, i);
 
-        if (IS_ZERO(basis->renderables)) {
+        *renderable = GenRenderableOfType(gl_res_arena, i, temp_mem_arena);
+
+        if (IS_ZERO(*renderable)) {
             LOG_ERROR("Failed to generate renderable of index %d for rendering basis!", i);
             return false;
         }
@@ -367,7 +369,7 @@ void SetViewMatrix(const s_rendering_context* const rendering_context, const s_m
 }
 
 static void WriteBatchSlot(t_batch_slot* const slot, const s_batch_slot_write_info* const write_info) {
-    assert(slot && IS_ZERO(*slot));
+    assert(IS_ZERO(*slot));
 
     const s_v2 vert_coords[] = {
         {0.0f - write_info->origin.x, 0.0f - write_info->origin.y},
@@ -384,7 +386,7 @@ static void WriteBatchSlot(t_batch_slot* const slot, const s_batch_slot_write_in
     };
 
     for (t_s32 i = 0; i < STATIC_ARRAY_LEN(*slot); i++) {
-        (*slot)[i] = (s_batch_vert){
+        *STATIC_ARRAY_ELEM(*slot, i) = (s_batch_vert){
             .vert_coord = *STATIC_ARRAY_ELEM(vert_coords, i),
             .pos = write_info->pos,
             .size = write_info->size,
@@ -418,7 +420,7 @@ void Render(const s_rendering_context* const rendering_context, const s_batch_sl
 
 void SubmitBatch(const s_rendering_context* const rendering_context) {
     if (rendering_context->state->batch.num_slots_used == 0) {
-        // Nothing to flush!
+        // Nothing to submit!
         return;
     }
 

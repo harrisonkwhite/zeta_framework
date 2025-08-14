@@ -22,25 +22,25 @@ bool PackShaderProg(const s_char_array_view vert_file_path, const s_char_array_v
         return false;
     }
 
-    if (fwrite(&vert_src.len, sizeof(vert_src.len), 1, fs) < 1) {
+    if (fwrite(&vert_src.elem_cnt, sizeof(vert_src.elem_cnt), 1, fs) < 1) {
         LOG_ERROR("Failed to write vertex shader source length to file \"%s\"!", output_file_path.buf_raw);
         fclose(fs);
         return false;
     }
 
-    if (fwrite(vert_src.buf_raw, 1, vert_src.len, fs) < vert_src.len) {
+    if (fwrite(vert_src.buf_raw, 1, vert_src.elem_cnt, fs) < vert_src.elem_cnt) {
         LOG_ERROR("Failed to write vertex shader source to file \"%s\"!", output_file_path.buf_raw);
         fclose(fs);
         return false;
     }
 
-    if (fwrite(&frag_src.len, sizeof(frag_src.len), 1, fs) < 1) {
+    if (fwrite(&frag_src.elem_cnt, sizeof(frag_src.elem_cnt), 1, fs) < 1) {
         LOG_ERROR("Failed to write fragment shader source length to file \"%s\"!", output_file_path.buf_raw);
         fclose(fs);
         return false;
     }
 
-    if (fwrite(frag_src.buf_raw, 1, frag_src.len, fs) < frag_src.len) {
+    if (fwrite(frag_src.buf_raw, 1, frag_src.elem_cnt, fs) < frag_src.elem_cnt) {
         LOG_ERROR("Failed to write fragment shader source to file \"%s\"!", output_file_path.buf_raw);
         fclose(fs);
         return false;

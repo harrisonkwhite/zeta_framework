@@ -34,11 +34,6 @@
 #define ALIGNMENT_BOTTOM_CENTER (s_v2){0.5f, 1.0f}
 #define ALIGNMENT_BOTTOM_RIGHT (s_v2){1.0f, 1.0f}
 
-#define BATCH_SLOT_CNT 8192
-#define BATCH_SLOT_VERT_CNT 4
-#define BATCH_SLOT_ELEM_CNT 6
-static_assert(BATCH_SLOT_ELEM_CNT * BATCH_SLOT_CNT <= USHRT_MAX, "Batch slot count is too high!");
-
 #define GL_VERSION_MAJOR 4
 #define GL_VERSION_MINOR 3
 
@@ -170,7 +165,13 @@ typedef struct {
 
 DEF_ARRAY_TYPE(s_batch_vert, batch_vert_array, BatchVert);
 
-typedef s_batch_vert t_batch_slot[BATCH_SLOT_VERT_CNT];
+#define BATCH_SLOT_CNT 8192
+#define BATCH_SLOT_VERT_LEN (sizeof(s_batch_vert) / sizeof(t_r32))
+#define BATCH_SLOT_VERT_CNT 4
+#define BATCH_SLOT_ELEM_CNT 6
+static_assert(BATCH_SLOT_ELEM_CNT * BATCH_SLOT_CNT <= USHRT_MAX, "Batch slot count is too high!");
+
+typedef s_batch_vert t_batch_slot[BATCH_SLOT_VERT_CNT]; // A batch slot is essentially the data for a single rendered quad.
 
 typedef struct {
     t_gl_id tex_gl_id;

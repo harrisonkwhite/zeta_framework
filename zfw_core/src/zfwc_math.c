@@ -13,7 +13,7 @@ static s_range ProjectPts(const s_v2_array_view pts, const s_v2 edge) {
         .max = -FLT_MAX
     };
 
-    for (t_s32 i = 0; i < pts.len; ++i) {
+    for (t_s32 i = 0; i < pts.elem_cnt; ++i) {
         const s_v2 pt = *V2ElemView(pts, i);
         const t_r32 dot = Dot(pt, edge);
 
@@ -30,9 +30,9 @@ static s_range ProjectPts(const s_v2_array_view pts, const s_v2 edge) {
 }
 
 static bool CheckPolySep(const s_poly poly, const s_poly other) {
-    for (t_s32 i = 0; i < poly.pts.len; ++i) {
+    for (t_s32 i = 0; i < poly.pts.elem_cnt; ++i) {
         const s_v2 a = *V2ElemView(poly.pts, i);
-        const s_v2 b = *V2ElemView(poly.pts, (i + 1) % poly.pts.len);
+        const s_v2 b = *V2ElemView(poly.pts, (i + 1) % poly.pts.elem_cnt);
 
         const s_v2 normal = {b.y - a.y, -(b.x - a.x)};
 
@@ -121,7 +121,7 @@ s_rect_edges PolySpan(const s_poly poly) {
         .bottom = FLT_MIN
     };
 
-    for (t_s32 i = 0; i < poly.pts.len; i++) {
+    for (t_s32 i = 0; i < poly.pts.elem_cnt; i++) {
         const s_v2 pt = *V2ElemView(poly.pts, i);
 
         span.left = MIN(pt.x, span.left);

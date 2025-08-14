@@ -4,7 +4,7 @@
 
 static bool OutputTextureFile(const s_char_array_view file_path, const s_v2_s32 tex_size, const s_u8_array_view rgba_tex_data) {
     assert(tex_size.x > 0 && tex_size.y > 0);
-    assert(rgba_tex_data.buf_raw && rgba_tex_data.len > 0 && rgba_tex_data.len % 4 == 0 && rgba_tex_data.len / 4 == tex_size.x * tex_size.y);
+    assert(rgba_tex_data.buf_raw && rgba_tex_data.elem_cnt > 0 && rgba_tex_data.elem_cnt % 4 == 0 && rgba_tex_data.elem_cnt / 4 == tex_size.x * tex_size.y);
 
     FILE* const fs = fopen(file_path.buf_raw, "wb");
 
@@ -19,7 +19,7 @@ static bool OutputTextureFile(const s_char_array_view file_path, const s_v2_s32 
         return false;
     }
 
-    if (fwrite(rgba_tex_data.buf_raw, 1, rgba_tex_data.len, fs) < rgba_tex_data.len) {
+    if (fwrite(rgba_tex_data.buf_raw, 1, rgba_tex_data.elem_cnt, fs) < rgba_tex_data.elem_cnt) {
         LOG_ERROR("Failed to write pixel data to file \"%s\"!", file_path.buf_raw);
         fclose(fs);
         return false;
@@ -41,7 +41,7 @@ bool PackTexture(const s_char_array_view file_path, const s_char_array_view outp
         return false;
     }
 
-    const bool success = OutputTextureFile(output_file_path, tex_size, (s_u8_array_view){.buf_raw = stb_px_data, .len = 4 * tex_size.x * tex_size.y});
+    const bool success = OutputTextureFile(output_file_path, tex_size, (s_u8_array_view){.buf_raw = stb_px_data, .elem_cnt = 4 * tex_size.x * tex_size.y});
 
     stbi_image_free(stb_px_data);
 

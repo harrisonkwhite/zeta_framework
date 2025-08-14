@@ -34,7 +34,7 @@ static bool WARN_UNUSED_RESULT LoadFontFromFile(s_font_arrangement* const arrang
         return false;
     }
 
-    if (fread(tex_rgba_px_data->buf_raw, 1, tex_rgba_px_data->len, fs) < tex_rgba_px_data->len) {
+    if (fread(tex_rgba_px_data->buf_raw, 1, tex_rgba_px_data->elem_cnt, fs) < tex_rgba_px_data->elem_cnt) {
         LOG_ERROR("Failed to read font texture RGBA pixel data from file \"%s\"!", file_path.buf_raw);
         fclose(fs);
         return false;
@@ -48,7 +48,7 @@ static bool WARN_UNUSED_RESULT LoadFontFromFile(s_font_arrangement* const arrang
 bool InitFontGroupFromFiles(s_font_group* const font_group, const s_char_array_view_array_view file_paths, s_mem_arena *const mem_arena, s_gl_resource_arena* const gl_res_arena, s_mem_arena* const temp_mem_arena) {
     assert(IS_ZERO(*font_group));
 
-    const t_s32 font_cnt = file_paths.len;
+    const t_s32 font_cnt = file_paths.elem_cnt;
 
     const s_font_arrangement_array arrangements = PushFontArrangementArrayToMemArena(mem_arena, font_cnt);
 
@@ -102,16 +102,18 @@ bool InitFontGroupFromFiles(s_font_group* const font_group, const s_char_array_v
     return true;
 }
 
-static t_s32 CalcStrLineCnt(const s_char_array_view str) {
-    t_s32 line_cnt = 1;
+static void CalcStrLenAndLineCnt(t_s32* const len, t_s32* const line_cnt, const s_char_array_view str) {
+    assert(IS_ZERO(*len));
+    assert(IS_ZERO(*line_cnt));
+    assert(IsStrTerminated(str));
 
-    for (t_s32 i = 0; i < str.len; i++) {
-        if (*CharElemView(str, i) == '\n') {
-            line_cnt++;
+    *line_cnt = 1;
+
+    for (; *CharElemView(str, *len); (*len)++) {
+        if (*CharElemView(str, *len) == '\n') {
+            (*line_cnt)++;
         }
     }
-
-    return line_cnt;
 }
 
 bool GenStrChrRenderPositions(s_v2_array* const positions, s_mem_arena* const mem_arena, const s_char_array_view str, const s_font_group* const font_group, const t_s32 font_index, const s_v2 pos, const s_v2 alignment) {
@@ -121,12 +123,14 @@ bool GenStrChrRenderPositions(s_v2_array* const positions, s_mem_arena* const me
 
     const s_font_arrangement* const arrangement = FontArrangementElemView(font_group->arrangements, font_index);
 
+    t_s32 str_len = 0, line_cnt = 0;
+    CalcStrLenAndLineCnt(&str_len, &line_cnt, str);
+
     // From just the string line count we can determine the vertical alignment offset to apply to all characters.
-    const t_s32 line_cnt = CalcStrLineCnt(str);
     const t_r32 alignment_offs_y = -(line_cnt * arrangement->line_height) * alignment.y;
 
     // Reserve memory for the character render positions.
-    *positions = PushV2ArrayToMemArena(mem_arena, str.len - 1);
+    *positions = PushV2ArrayToMemArena(mem_arena, str_len);
 
     if (IS_ZERO(*positions)) {
         LOG_ERROR("Failed to reserve memory for character render positions!");
@@ -137,7 +141,7 @@ bool GenStrChrRenderPositions(s_v2_array* const positions, s_mem_arena* const me
     s_v2 chr_pos_pen = {0}; // The position of the current character.
     t_s32 line_starting_chr_index = 0; // The index of the first character in the current line.
 
-    for (t_s32 i = 0; i < str.len; i++) {
+    for (t_s32 i = 0; i <= str_len; i++) {
         const char chr = *CharElemView(str, i);
 
         if (chr == '\n' || !chr) {
@@ -181,16 +185,13 @@ bool GenStrChrRenderPositions(s_v2_array* const positions, s_mem_arena* const me
 }
 
 bool GenStrCollider(s_rect* const rect, const s_char_array_view str, const s_font_group* const font_group, const t_s32 font_index, const s_v2 pos, const s_v2 alignment, s_mem_arena* const temp_mem_arena) {
-    assert(rect && IS_ZERO(*rect));
+    assert(IS_ZERO(*rect));
+    assert(IsStrTerminated(str));
     assert(alignment.x >= 0.0f && alignment.x <= 1.0f && alignment.y >= 0.0f && alignment.y <= 1.0f);
 
     s_v2_array chr_render_positions = {0};
 
     if (!GenStrChrRenderPositions(&chr_render_positions, temp_mem_arena, str, font_group, font_index, pos, alignment)) {
-        return false;
-    }
-
-    if (IS_ZERO(chr_render_positions)) {
         LOG_ERROR("Failed to reserve memory for character render positions!");
         return false;
     }
@@ -198,7 +199,7 @@ bool GenStrCollider(s_rect* const rect, const s_char_array_view str, const s_fon
     s_rect_edges collider_edges;
     bool initted = false;
 
-    for (t_s32 i = 0; i < str.len - 1; i++) {
+    for (t_s32 i = 0; *CharElemView(str, i); i++) {
         const char chr = *CharElemView(str, i);
 
         if (chr == '\n') {
@@ -255,7 +256,7 @@ bool RenderStr(const s_rendering_context* const rendering_context, const s_char_
         return false;
     }
 
-    for (t_s32 i = 0; i < str.len - 1; i++) {
+    for (t_s32 i = 0; *CharElemView(str, i); i++) {
         const char chr = *CharElemView(str, i);
 
         if (chr == ' ' || chr == '\n') {

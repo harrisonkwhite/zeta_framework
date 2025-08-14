@@ -19,7 +19,7 @@ static s_rgba_texture LoadRGBATextureFromFS(FILE* const fs, s_mem_arena *const m
 
     const s_u8_array px_data = PushU8ArrayToMemArena(mem_arena, 4 * tex_size.x * tex_size.y);
 
-    if (fread(px_data.buf_raw, 1, px_data.len, fs) < px_data.len) {
+    if (fread(px_data.buf_raw, 1, px_data.elem_cnt, fs) < px_data.elem_cnt) {
         LOG_ERROR("Failed to read RGBA pixel data from file stream!");
         return (s_rgba_texture){0};
     }

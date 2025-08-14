@@ -69,7 +69,7 @@ static s_u8_array_view GenFontTextureRGBAPixelData(s_mem_arena* const mem_arena,
     }
 
     // Clear the pixel data to transparent white.
-    for (t_s32 i = 0; i < rgba_px_data.len; i += 4) {
+    for (t_s32 i = 0; i < rgba_px_data.elem_cnt; i += 4) {
         *U8Elem(rgba_px_data, i + 0) = 255;
         *U8Elem(rgba_px_data, i + 1) = 255;
         *U8Elem(rgba_px_data, i + 2) = 255;
@@ -132,7 +132,7 @@ static bool OutputFontFile(const s_char_array_view file_path, const s_font_arran
         return false;
     }
 
-    if (fwrite(tex_rgba_px_data.buf_raw, 1, tex_rgba_px_data.len, fs) < tex_rgba_px_data.len) {
+    if (fwrite(tex_rgba_px_data.buf_raw, 1, tex_rgba_px_data.elem_cnt, fs) < tex_rgba_px_data.elem_cnt) {
         LOG_ERROR("Failed to write font texture RGBA pixel data to file \"%s\"!", file_path.buf_raw);
         fclose(fs);
         return false;

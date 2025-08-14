@@ -25,9 +25,7 @@ static bool PackAssets(cJSON* const cj, s_mem_arena* const temp_mem_arena) {
             return false;
         }
 
-        const s_char_array_view output_file_path = {
-            .buf_raw = cj_output_file_path->valuestring, .len = strlen(cj_output_file_path->valuestring)
-        };
+        const s_char_array_view output_file_path = StrViewFromRawTerminated(cj_output_file_path->valuestring);
 
         if (strcmp(cj_type->valuestring, "texture") == 0) {
             const cJSON* const cj_file_path = cJSON_GetObjectItem(cj_item, "file_path");
@@ -37,9 +35,7 @@ static bool PackAssets(cJSON* const cj, s_mem_arena* const temp_mem_arena) {
                 return false;
             }
 
-            const s_char_array_view file_path = {
-                .buf_raw = cj_file_path->valuestring, .len = strlen(cj_file_path->valuestring)
-            };
+            const s_char_array_view file_path = StrViewFromRawTerminated(cj_file_path->valuestring);
 
             if (!PackTexture(file_path, output_file_path)) {
                 LOG_ERROR("Failed to pack texture with file path \"%s\"!", file_path.buf_raw);
@@ -54,9 +50,7 @@ static bool PackAssets(cJSON* const cj, s_mem_arena* const temp_mem_arena) {
                 return false;
             }
 
-            const s_char_array_view file_path = {
-                .buf_raw = cj_file_path->valuestring, .len = strlen(cj_file_path->valuestring)
-            };
+            const s_char_array_view file_path = StrViewFromRawTerminated(cj_file_path->valuestring);
 
             if (!PackFont(file_path, cj_height->valueint, output_file_path, temp_mem_arena)) {
                 LOG_ERROR("Failed to pack font with file path \"%s\" and height %d!", file_path.buf_raw, cj_height->valueint);
@@ -71,13 +65,9 @@ static bool PackAssets(cJSON* const cj, s_mem_arena* const temp_mem_arena) {
                 return false;
             }
 
-            const s_char_array_view vert_file_path = {
-                .buf_raw = cj_vert_file_path->valuestring, .len = strlen(cj_vert_file_path->valuestring)
-            };
+            const s_char_array_view vert_file_path = StrViewFromRawTerminated(cj_vert_file_path->valuestring);
 
-            const s_char_array_view frag_file_path = {
-                .buf_raw = cj_frag_file_path->valuestring, .len = strlen(cj_frag_file_path->valuestring)
-            };
+            const s_char_array_view frag_file_path = StrViewFromRawTerminated(cj_frag_file_path->valuestring);
 
             if (!PackShaderProg(vert_file_path, frag_file_path, output_file_path, temp_mem_arena)) {
                 LOG_ERROR("Failed to pack shader program with vertex shader file path \"%s\" and fragment shader file path \"%s\"!", vert_file_path.buf_raw, frag_file_path.buf_raw);
@@ -91,7 +81,7 @@ static bool PackAssets(cJSON* const cj, s_mem_arena* const temp_mem_arena) {
     return true;
 }
 
-t_s32 main() {
+int main() {
     s_mem_arena mem_arena = {0};
 
     if (!InitMemArena(&mem_arena, MEM_ARENA_SIZE)) {

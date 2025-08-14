@@ -17,7 +17,7 @@ static t_gl_id GenShaderFromSrc(const s_char_array_view src, const bool frag, s_
             const s_char_array log = PushCharArrayToMemArena(temp_mem_arena, log_len);
 
             if (!IS_ZERO(log)) {
-                glGetShaderInfoLog(shader_gl_id, log.len, NULL, log.buf_raw);
+                glGetShaderInfoLog(shader_gl_id, log.elem_cnt, NULL, log.buf_raw);
                 LOG_ERROR_SPECIAL("OpenGL Shader Compilation", "%s", log.buf_raw);
             } else {
                 LOG_ERROR("Failed to reserve memory for OpenGL shader compilation error log!");
@@ -59,7 +59,7 @@ static bool LoadShaderSrcsFromFile(s_char_array_view* const vert_src, s_char_arr
         return false;
     }
 
-    if (fread(vert_src_nonview.buf_raw, 1, vert_src_nonview.len, fs) < vert_src_nonview.len) {
+    if (fread(vert_src_nonview.buf_raw, 1, vert_src_nonview.elem_cnt, fs) < vert_src_nonview.elem_cnt) {
         LOG_ERROR("Failed to read vertex shader source from file \"%s\"!", file_path.buf_raw);
         fclose(fs);
         return false;
@@ -81,7 +81,7 @@ static bool LoadShaderSrcsFromFile(s_char_array_view* const vert_src, s_char_arr
         return false;
     }
 
-    if (fread(frag_src_nonview.buf_raw, 1, frag_src_nonview.len, fs) < frag_src_nonview.len) {
+    if (fread(frag_src_nonview.buf_raw, 1, frag_src_nonview.elem_cnt, fs) < frag_src_nonview.elem_cnt) {
         LOG_ERROR("Failed to read fragment shader source from file \"%s\"!", file_path.buf_raw);
         fclose(fs);
         return false;
@@ -151,9 +151,9 @@ static t_gl_id GenShaderProg(const s_shader_prog_gen_info gen_info, s_mem_arena*
 
 bool InitShaderProgGroup(s_shader_prog_group* const prog_group, const s_shader_prog_gen_info_array_view gen_infos, s_gl_resource_arena* const gl_res_arena, s_mem_arena* const temp_mem_arena) {
     assert(IS_ZERO(*prog_group));
-    assert(gen_infos.len > 0);
+    assert(gen_infos.elem_cnt > 0);
 
-    const t_s32 prog_cnt = gen_infos.len;
+    const t_s32 prog_cnt = gen_infos.elem_cnt;
 
     const s_gl_id_array gl_ids = PushToGLResourceArena(gl_res_arena, prog_cnt, ek_gl_resource_type_shader_prog);
 
