@@ -8,6 +8,11 @@
 #define ASCII_PRINTABLE_RANGE_LEN (ASCII_PRINTABLE_MAX - ASCII_PRINTABLE_MIN + 1)
 
 typedef struct {
+    s_v2_s32 tex_size;
+    s_u8_array px_data;
+} s_rgba_texture;
+
+typedef struct {
     t_s32 line_height;
 
     s_v2_s32 chr_offsets[ASCII_PRINTABLE_RANGE_LEN];
@@ -23,5 +28,7 @@ typedef struct {
 } s_font_texture_meta;
 
 DEF_ARRAY_TYPE(s_font_texture_meta, font_texture_meta, FontTextureMeta);
+
+bool WARN_UNUSED_RESULT LoadRGBATextureFromRawFile(s_rgba_texture* const tex, s_mem_arena* const mem_arena, const s_char_array_view file_path);
 
 #endif

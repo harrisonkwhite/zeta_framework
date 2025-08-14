@@ -9,7 +9,7 @@ s_rect_edges GenTextureCoords(const s_rect_s32 src_rect, const s_v2_s32 tex_size
     };
 }
 
-static s_rgba_texture LoadRGBATextureFromFS(FILE* const fs, s_mem_arena *const mem_arena) {
+static s_rgba_texture LoadRGBATextureFromPackedFS(FILE* const fs, s_mem_arena *const mem_arena) {
     s_v2_s32 tex_size;
 
     if (fread(&tex_size, sizeof(tex_size), 1, fs) < 1) {
@@ -30,7 +30,7 @@ static s_rgba_texture LoadRGBATextureFromFS(FILE* const fs, s_mem_arena *const m
     };
 }
 
-s_rgba_texture LoadRGBATextureFromFile(const s_char_array_view file_path, s_mem_arena *const mem_arena) {
+s_rgba_texture LoadRGBATextureFromPackedFile(const s_char_array_view file_path, s_mem_arena *const mem_arena) {
     FILE* const fs = fopen(file_path.buf_raw, "rb");
 
     if (!fs) {
@@ -38,10 +38,10 @@ s_rgba_texture LoadRGBATextureFromFile(const s_char_array_view file_path, s_mem_
         return (s_rgba_texture){0};
     }
 
-    const s_rgba_texture tex = LoadRGBATextureFromFS(fs, mem_arena);
+    const s_rgba_texture tex = LoadRGBATextureFromPackedFS(fs, mem_arena);
 
     if (IS_ZERO(tex)) {
-        LOG_ERROR("Failed to load RGBA texture from file \"%s\"!", file_path.buf_raw);
+        LOG_ERROR("Failed to load RGBA texture from packed texture file \"%s\"!", file_path.buf_raw);
     }
 
     fclose(fs);

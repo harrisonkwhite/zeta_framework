@@ -37,7 +37,7 @@ static bool PackAssets(cJSON* const cj, s_mem_arena* const temp_mem_arena) {
 
             const s_char_array_view file_path = StrViewFromRawTerminated(cj_file_path->valuestring);
 
-            if (!PackTexture(file_path, output_file_path)) {
+            if (!PackTexture(file_path, output_file_path, temp_mem_arena)) {
                 LOG_ERROR("Failed to pack texture with file path \"%s\"!", file_path.buf_raw);
                 return false;
             }

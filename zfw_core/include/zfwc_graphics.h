@@ -37,11 +37,6 @@
 #define GL_VERSION_MAJOR 4
 #define GL_VERSION_MINOR 3
 
-typedef struct {
-    s_v2_s32 tex_size;
-    s_u8_array px_data;
-} s_rgba_texture;
-
 typedef t_u32 t_gl_id;
 
 DEF_ARRAY_TYPE(t_gl_id, gl_id, GLID);
@@ -246,7 +241,7 @@ void SubmitBatch(const s_rendering_context* const rendering_context);
 // zfwc_textures.c
 //
 s_rect_edges GenTextureCoords(const s_rect_s32 src_rect, const s_v2_s32 tex_size);
-s_rgba_texture LoadRGBATextureFromFile(const s_char_array_view file_path, s_mem_arena *const mem_arena);
+s_rgba_texture LoadRGBATextureFromPackedFile(const s_char_array_view file_path, s_mem_arena *const mem_arena);
 t_gl_id GenGLTextureFromRGBA(const s_rgba_texture rgba_tex);
 bool WARN_UNUSED_RESULT InitTextureGroup(s_texture_group* const texture_group, const t_s32 tex_cnt, const t_texture_group_rgba_generator_func rgba_generator_func, s_mem_arena *const mem_arena, s_gl_resource_arena* const gl_res_arena, s_mem_arena* const temp_mem_arena);
 void RenderTexture(const s_rendering_context* const rendering_context, const s_texture_group* const textures, const t_s32 tex_index, const s_rect_s32 src_rect, const s_v2 pos, const s_v2 origin, const s_v2 scale, const t_r32 rot, const u_v4 blend);
