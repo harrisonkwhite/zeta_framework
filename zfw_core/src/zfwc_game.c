@@ -222,6 +222,7 @@ static bool ExecGameInitAndMainLoop(s_game* const game, const s_game_info* const
             } while (frame_dur_accum >= TARG_TICK_INTERVAL);
 
             // Render the game.
+            ZERO_OUT(*rendering_state);
             InitRenderingState(rendering_state, window_state.size);
 
             {

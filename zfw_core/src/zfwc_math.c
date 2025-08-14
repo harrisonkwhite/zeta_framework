@@ -107,7 +107,7 @@ bool DoesPolyIntersWithRect(const s_poly poly, const s_rect rect) {
     };
 
     const s_poly rect_poly = {
-        .pts = ARRAY_FROM_STATIC(s_v2_array_view, pts)
+        .pts = ARRAY_FROM_STATIC(pts)
     };
 
     return DoPolysInters(poly, rect_poly);

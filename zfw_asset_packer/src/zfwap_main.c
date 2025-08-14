@@ -5,7 +5,7 @@
 
 #define MEM_ARENA_SIZE MEGABYTES(20)
 
-static const s_char_array_view g_json_file_path = ARRAY_FROM_STATIC(s_char_array_view, "asset_packing_instrs.json"); // TODO: Maybe pass this in through command-line arguments instead?
+static const s_char_array_view g_json_file_path = ARRAY_FROM_STATIC("asset_packing_instrs.json"); // TODO: Maybe pass this in through command-line arguments instead?
 
 static bool PackAssets(cJSON* const cj, s_mem_arena* const temp_mem_arena) {
     if (!cJSON_IsArray(cj)) {

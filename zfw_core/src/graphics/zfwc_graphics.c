@@ -79,7 +79,7 @@ static const char g_surface_frag_shader_src[] = "#version 430 core\n"
         "o_frag_color = texture(u_tex, v_tex_coord);\n"
     "}\n";
 
-bool InitGLResourceArena(s_gl_resource_arena* const res_arena, s_mem_arena* const mem_arena, const t_s32 res_limit) {
+bool WARN_UNUSED_RESULT InitGLResourceArena(s_gl_resource_arena* const res_arena, s_mem_arena* const mem_arena, const t_s32 res_limit) {
     assert(IS_ZERO(*res_arena));
     assert(res_limit > 0);
 
@@ -253,7 +253,7 @@ static s_renderable GenRenderableOfType(s_gl_resource_arena* const gl_res_arena,
 
                 const t_s32 vert_attr_lens[] = {2, 2, 2, 1, 2, 4};
 
-                return GenRenderable(gl_res_arena, verts, elems, ARRAY_FROM_STATIC(s_s32_array_view, vert_attr_lens));
+                return GenRenderable(gl_res_arena, verts, elems, (s_s32_array_view)ARRAY_FROM_STATIC(vert_attr_lens));
             }
 
         case ek_renderable_surface:
@@ -272,7 +272,7 @@ static s_renderable GenRenderableOfType(s_gl_resource_arena* const gl_res_arena,
 
                 const t_s32 vert_attr_lens[] = {2, 2};
 
-                return GenRenderable(gl_res_arena, ARRAY_FROM_STATIC(s_r32_array_view, verts), ARRAY_FROM_STATIC(s_u16_array_view, elems), ARRAY_FROM_STATIC(s_s32_array_view, vert_attr_lens));
+                return GenRenderable(gl_res_arena, (s_r32_array_view)ARRAY_FROM_STATIC(verts), (s_u16_array_view)ARRAY_FROM_STATIC(elems), (s_s32_array_view)ARRAY_FROM_STATIC(vert_attr_lens));
             }
 
         default:
@@ -308,7 +308,7 @@ static s_rgba_texture BuiltinTextureRGBAGenerator(const t_s32 tex_index, s_mem_a
     }
 }
 
-bool InitRenderingBasis(s_rendering_basis* const basis, s_gl_resource_arena* const gl_res_arena, s_mem_arena* const mem_arena, s_mem_arena* const temp_mem_arena) {
+bool WARN_UNUSED_RESULT InitRenderingBasis(s_rendering_basis* const basis, s_gl_resource_arena* const gl_res_arena, s_mem_arena* const mem_arena, s_mem_arena* const temp_mem_arena) {
     assert(IS_ZERO(*basis));
 
     if (!InitTextureGroup(&basis->builtin_textures, eks_builtin_texture_cnt, BuiltinTextureRGBAGenerator, mem_arena, gl_res_arena, temp_mem_arena)) {
@@ -330,7 +330,7 @@ bool InitRenderingBasis(s_rendering_basis* const basis, s_gl_resource_arena* con
             }
         };
 
-        if (!InitShaderProgGroup(&basis->builtin_shader_progs, ARRAY_FROM_STATIC(s_shader_prog_gen_info_array_view, gen_infos), gl_res_arena, temp_mem_arena)) {
+        if (!InitShaderProgGroup(&basis->builtin_shader_progs, (s_shader_prog_gen_info_array_view)ARRAY_FROM_STATIC(gen_infos), gl_res_arena, temp_mem_arena)) {
             LOG_ERROR("Failed to generate built-in shader programs for rendering basis!");
             return false;
         }
@@ -351,10 +351,9 @@ bool InitRenderingBasis(s_rendering_basis* const basis, s_gl_resource_arena* con
 }
 
 void InitRenderingState(s_rendering_state* const state, const s_v2_s32 window_size) {
-    *state = (s_rendering_state){
-        .view_mat = IdentityMatrix4x4()
-    };
+    assert(IS_ZERO(*state));
 
+    state->view_mat = IdentityMatrix4x4();
     glViewport(0, 0, window_size.x, window_size.y);
 }
 
