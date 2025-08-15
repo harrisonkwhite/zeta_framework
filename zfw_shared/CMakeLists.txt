@@ -3,6 +3,8 @@ project(zfw_shared C)
 add_library(zfw_shared STATIC
     src/zfws.c
     ../external/stb_image/src/stb_image.c
+
+    include/zfws.h
 )
 
 target_include_directories(zfw_shared PUBLIC

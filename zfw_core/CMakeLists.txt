@@ -21,8 +21,14 @@ add_library(zfw_core STATIC
     src/graphics/zfwc_fonts.c
     src/graphics/zfwc_shaders.c
     src/graphics/zfwc_surfaces.c
-
     ../external/glad/src/glad.c
+
+    include/zfwc.h
+    include/zfwc_game.h
+    include/zfwc_input.h
+    include/zfwc_graphics.h
+    include/zfwc_math.h
+    include/zfwc_rng.h
 )
 
 target_include_directories(zfw_core PUBLIC
