@@ -296,8 +296,8 @@ bool InitRenderingBasis(s_rendering_basis* const basis, s_gl_resource_arena* con
             },
             [ek_builtin_shader_prog_surface_blend] = {
                 .holds_srcs = true,
-                .vert_src = g_surface_default_vert_shader_src,
-                .frag_src = g_surface_default_frag_shader_src
+                .vert_src = g_surface_blend_vert_shader_src,
+                .frag_src = g_surface_blend_frag_shader_src
             }
         };
 
