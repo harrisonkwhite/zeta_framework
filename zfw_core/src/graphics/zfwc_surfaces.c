@@ -259,7 +259,7 @@ void SetSurfaceShaderProgUniform(const s_rendering_context* const rendering_cont
     }
 }
 
-void RenderSurface(const s_rendering_context* const rendering_context, const s_surface* const surf, const s_v2 pos) {
+void RenderSurface(const s_rendering_context* const rendering_context, const s_surface* const surf, const s_v2 pos, const bool blend) {
     assert(*surf->fb_gl_id != BoundGLFramebuffer() && "Trying to render the currently set surface! Unset the surface first.");
 
 #ifndef NDEBUG
@@ -269,6 +269,10 @@ void RenderSurface(const s_rendering_context* const rendering_context, const s_s
 #endif
 
     assert(CurrentGLShaderProgram() != 0 && "Surface shader program must be set before rendering a surface!");
+
+    if (!blend) {
+        glDisable(GL_BLEND);
+    }
 
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, *surf->fb_tex_gl_id);
@@ -296,4 +300,8 @@ void RenderSurface(const s_rendering_context* const rendering_context, const s_s
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, NULL);
 
     glUseProgram(0);
+
+    if (!blend) {
+        glEnable(blend);
+    }
 }

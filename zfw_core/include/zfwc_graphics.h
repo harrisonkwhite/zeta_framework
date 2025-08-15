@@ -297,6 +297,6 @@ void SetSurface(const s_rendering_context* const rendering_context, const s_surf
 void UnsetSurface(const s_rendering_context* const rendering_context);
 void SetSurfaceShaderProg(const s_rendering_context* const rendering_context, const s_shader_prog_group* const progs, const t_s32 prog_index);
 void SetSurfaceShaderProgUniform(const s_rendering_context* const rendering_context, const char* const name, const s_shader_prog_uniform_value val);
-void RenderSurface(const s_rendering_context* const rendering_context, const s_surface* const surf, const s_v2 pos);
+void RenderSurface(const s_rendering_context* const rendering_context, const s_surface* const surf, const s_v2 pos, const bool blend);
 
 #endif
