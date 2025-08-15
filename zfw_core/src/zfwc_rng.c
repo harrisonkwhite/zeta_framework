@@ -26,13 +26,11 @@ t_r32 RandPercIncl() {
 t_s32 RandRangeS32(const t_s32 beg, const t_s32 end) {
     assert(g_rng_initted);
     assert(beg < end);
-
-    return beg + ((end - 1 - beg) % rand());
+    return beg + rand() % (end - beg);
 }
 
 t_s32 RandRangeS32Incl(const t_s32 beg, const t_s32 end_incl) {
     assert(g_rng_initted);
     assert(beg <= end_incl);
-
-    return beg + ((end_incl - beg) % rand());
+    return beg + rand() % (end_incl - beg + 1);
 }
