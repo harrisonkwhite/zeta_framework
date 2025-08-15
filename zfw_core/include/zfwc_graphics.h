@@ -299,4 +299,8 @@ void SetSurfaceShaderProg(const s_rendering_context* const rendering_context, co
 void SetSurfaceShaderProgUniform(const s_rendering_context* const rendering_context, const char* const name, const s_shader_prog_uniform_value val);
 void RenderSurface(const s_rendering_context* const rendering_context, const s_surface* const surf, const s_v2 pos, const bool blend);
 
+static inline s_v2 SurfaceTexelSize(const s_surface* const surf) {
+    return (s_v2){1.0f / surf->size.x, 1.0f / surf->size.y};
+}
+
 #endif

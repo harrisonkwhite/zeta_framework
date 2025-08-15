@@ -302,6 +302,6 @@ void RenderSurface(const s_rendering_context* const rendering_context, const s_s
     glUseProgram(0);
 
     if (!blend) {
-        glEnable(blend);
+        glEnable(GL_BLEND);
     }
 }
