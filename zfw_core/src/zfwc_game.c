@@ -168,20 +168,20 @@ static bool ExecGameInitAndMainLoop(s_game* const game, const s_game_info* const
     //
     // Main Loop
     //
-    double frame_time_last = glfwGetTime();
-    double frame_dur_accum = 0.0;
+    t_r64 frame_time_last = glfwGetTime();
+    t_r64 frame_dur_accum = 0.0;
 
     while (!glfwWindowShouldClose(game->glfw_window)) {
         const s_window_state window_state = WindowState(game->glfw_window);
 
         RewindMemArena(&game->temp_mem_arena, 0);
 
-        const double frame_time = glfwGetTime();
-        const double frame_time_delta = frame_time - frame_time_last;
+        const t_r64 frame_time = glfwGetTime();
+        const t_r64 frame_time_delta = frame_time - frame_time_last;
         frame_dur_accum += frame_time_delta;
         frame_time_last = frame_time;
         
-        const double targ_tick_interval = 1.0 / info->targ_ticks_per_sec;
+        const t_r64 targ_tick_interval = 1.0 / info->targ_ticks_per_sec;
 
         // Once enough time has passed (i.e. the time accumulator has reached the tick interval), run at least a single tick and update the display.
         if (frame_dur_accum >= targ_tick_interval) {

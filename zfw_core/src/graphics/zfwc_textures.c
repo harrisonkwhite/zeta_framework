@@ -1,11 +1,16 @@
 #include "zfwc_graphics.h"
 
 s_rect_edges GenTextureCoords(const s_rect_s32 src_rect, const s_v2_s32 tex_size) {
+    const s_v2 half_texel = {
+        0.5f / (t_r32)tex_size.x,
+        0.5f / (t_r32)tex_size.y
+    };
+
     return (s_rect_edges){
-        .left = (t_r32)src_rect.x / tex_size.x,
-        .top = (t_r32)src_rect.y / tex_size.y,
-        .right = (t_r32)(src_rect.x + src_rect.width) / tex_size.x,
-        .bottom = (t_r32)(src_rect.y + src_rect.height) / tex_size.y
+        .left = ((t_r32)src_rect.x + half_texel.x) / (t_r32)tex_size.x,
+        .top = ((t_r32)src_rect.y + half_texel.y) / (t_r32)tex_size.y,
+        .right = ((t_r32)(src_rect.x + src_rect.width)  - half_texel.x) / (t_r32)tex_size.x,
+        .bottom = ((t_r32)(src_rect.y + src_rect.height) - half_texel.y) / (t_r32)tex_size.y
     };
 }
 
