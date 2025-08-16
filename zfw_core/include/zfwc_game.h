@@ -70,6 +70,8 @@ typedef struct {
     size_t dev_mem_size; // How much memory should be allocated in the permanent arena for your use? This might be the size of a specific struct, for example.
     size_t dev_mem_alignment; // The alignment of the above memory.
 
+    int targ_ticks_per_sec;
+
     // Below are pointers to functions that the framework will call for you. The provided struct pointers expose parts of the framework state for you to work with.
     bool (*init_func)(const s_game_init_context* const func_data); // Called as one of the last steps of the game initialisation phase.
     e_game_tick_result (*tick_func)(const s_game_tick_context* const func_data); // Called once every tick (which can occur multiple times a frame).
@@ -85,6 +87,8 @@ static inline void AssertGameInfoValidity(const s_game_info* const info) {
 
     assert((info->dev_mem_size == 0 && info->dev_mem_alignment == 0)
         || (info->dev_mem_size > 0 && IsAlignmentValid(info->dev_mem_alignment)));
+
+    assert(info->targ_ticks_per_sec > 0);
 
     assert(info->init_func);
     assert(info->tick_func);

@@ -8,9 +8,6 @@
 
 #define GL_RESOURCE_ARENA_RES_LIMIT 1024
 
-#define TARG_TICKS_PER_SEC 60
-#define TARG_TICK_INTERVAL (1.0 / TARG_TICKS_PER_SEC)
-
 typedef enum {
     ek_game_run_stage_nothing_initted,
     ek_game_run_stage_perm_mem_arena_initted,
@@ -183,9 +180,11 @@ static bool ExecGameInitAndMainLoop(s_game* const game, const s_game_info* const
         const double frame_time_delta = frame_time - frame_time_last;
         frame_dur_accum += frame_time_delta;
         frame_time_last = frame_time;
+        
+        const double targ_tick_interval = 1.0 / info->targ_ticks_per_sec;
 
         // Once enough time has passed (i.e. the time accumulator has reached the tick interval), run at least a single tick and update the display.
-        if (frame_dur_accum >= TARG_TICK_INTERVAL) {
+        if (frame_dur_accum >= targ_tick_interval) {
             const s_input_state input_state = InputState(game->glfw_window);
 
             // Run ticks.
@@ -218,8 +217,8 @@ static bool ExecGameInitAndMainLoop(s_game* const game, const s_game_info* const
                     return false;
                 }
 
-                frame_dur_accum -= TARG_TICK_INTERVAL;
-            } while (frame_dur_accum >= TARG_TICK_INTERVAL);
+                frame_dur_accum -= targ_tick_interval;
+            } while (frame_dur_accum >= targ_tick_interval);
 
             // Render the game.
             ZERO_OUT(*rendering_state);
