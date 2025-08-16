@@ -84,8 +84,8 @@ const char g_surface_blend_frag_shader_src[] = "#version 430 core\n" \
 static bool AttachFramebufferTexture(const t_gl_id fb_gl_id, const t_gl_id tex_gl_id, const s_v2_s32 tex_size) {
     glBindTexture(GL_TEXTURE_2D, tex_gl_id);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, tex_size.x, tex_size.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
     glBindFramebuffer(GL_FRAMEBUFFER, fb_gl_id);
 
@@ -259,7 +259,7 @@ void SetSurfaceShaderProgUniform(const s_rendering_context* const rendering_cont
     }
 }
 
-void RenderSurface(const s_rendering_context* const rendering_context, const s_surface* const surf, const s_v2 pos, const bool blend) {
+void RenderSurface(const s_rendering_context* const rendering_context, const s_surface* const surf, const s_v2 pos, const s_v2 scale, const bool blend) {
     assert(*surf->fb_gl_id != BoundGLFramebuffer() && "Trying to render the currently set surface! Unset the surface first.");
 
 #ifndef NDEBUG
@@ -274,12 +274,24 @@ void RenderSurface(const s_rendering_context* const rendering_context, const s_s
         glDisable(GL_BLEND);
     }
 
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, *surf->fb_tex_gl_id);
-
     const s_renderable* const renderable = STATIC_ARRAY_ELEM(rendering_context->basis->renderables, ek_renderable_surface);
 
     glBindVertexArray(*renderable->vert_array_gl_id);
+    glBindBuffer(GL_ARRAY_BUFFER, *renderable->vert_buf_gl_id);
+
+    {
+        const t_r32 verts[] = {
+            0.0f, scale.y, 0.0f, 0.0f,
+            scale.x, scale.y, 1.0f, 0.0f,
+            scale.x, 0.0f, 1.0f, 1.0f,
+            0.0f, 0.0f, 0.0f, 1.0f
+        };
+
+        glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(verts), verts);
+    }
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, *surf->fb_tex_gl_id);
 
     const t_s32 proj_uniform_loc = glGetUniformLocation(CurrentGLShaderProgram(), "u_proj");
     assert(proj_uniform_loc != -1);
