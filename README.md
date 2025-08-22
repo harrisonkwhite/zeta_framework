@@ -12,7 +12,7 @@ There is also a [template available](https://github.com/harrisonkwhite/zfw_game_
 
 ## Building
 
-Building and running this project has been tested on Linux and Windows.
+Building and running this project has only been tested on Windows.
 
 Clone the repository by running `git clone --recursive https://github.com/harrisonkwhite/zeta_framework.git`.
 
@@ -25,10 +25,6 @@ mkdir build
 cd build
 cmake ..
 ```
-
-For Linux, there are a number of dependencies you might need to manually install. CMake will report if any are missing.
-
-You can also use the "build.sh" shell script if on a platform which supports it.
 
 ---
 
