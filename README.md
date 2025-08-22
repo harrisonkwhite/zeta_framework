@@ -33,5 +33,3 @@ cmake ..
 - [GLFW](https://github.com/glfw/glfw)
 - [glad](https://github.com/Dav1dde/glad)
 - [stb](https://github.com/nothings/stb)
-
----
