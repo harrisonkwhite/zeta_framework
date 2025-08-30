@@ -24,6 +24,16 @@
 #define PINK (u_v4){1.0f, 0.75f, 0.8f, 1.0f}
 #define BROWN (u_v4){0.6f, 0.3f, 0.0f, 1.0f}
 
+#define ORIGIN_TOP_LEFT (s_v2){0.0f, 0.0f}
+#define ORIGIN_TOP_CENTER (s_v2){0.5f, 0.0f}
+#define ORIGIN_TOP_RIGHT (s_v2){1.0f, 0.0f}
+#define ORIGIN_CENTER_LEFT (s_v2){0.0f, 0.5f}
+#define ORIGIN_CENTER (s_v2){0.5f, 0.5f}
+#define ORIGIN_CENTER_RIGHT (s_v2){1.0f, 0.5f}
+#define ORIGIN_BOTTOM_LEFT (s_v2){0.0f, 1.0f}
+#define ORIGIN_BOTTOM_CENTER (s_v2){0.5f, 1.0f}
+#define ORIGIN_BOTTOM_RIGHT (s_v2){1.0f, 1.0f}
+
 #define ALIGNMENT_TOP_LEFT (s_v2){0.0f, 0.0f}
 #define ALIGNMENT_TOP_CENTER (s_v2){0.5f, 0.0f}
 #define ALIGNMENT_TOP_RIGHT (s_v2){1.0f, 0.0f}
