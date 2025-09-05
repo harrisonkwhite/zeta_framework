@@ -1,10 +1,10 @@
-project(zfw_asset_packer C)
+project(zfw_asset_packer CXX)
 
 add_executable(zfw_asset_packer
-    src/zfwap_main.c
-    src/zfwap_textures.c
-    src/zfwap_fonts.c
-    src/zfwap_shaders.c
+    src/zfwap_main.cpp
+    src/zfwap_textures.cpp
+    src/zfwap_fonts.cpp
+    src/zfwap_shaders.cpp
     ../external/c_json/src/cJSON.c
     ../external/stb_truetype/src/stb_truetype.c
 

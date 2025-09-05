@@ -59,7 +59,7 @@ static s_font_texture_meta LoadFontTexMeta(const stbtt_fontinfo* const stb_font_
     return tex_meta;
 }
 
-static s_u8_array_view GenFontTextureRGBAPixelData(s_mem_arena* const mem_arena, const stbtt_fontinfo* const stb_font_info, const t_s32 height, const s_font_arrangement* const arrangement, const s_font_texture_meta tex_meta) {
+static s_u8_array_view GenFontTextureRGBAPixelData(c_mem_arena* const mem_arena, const stbtt_fontinfo* const stb_font_info, const t_s32 height, const s_font_arrangement* const arrangement, const s_font_texture_meta tex_meta) {
     // Reserve the needed memory based on font texture size.
     const s_u8_array rgba_px_data = PushU8ArrayToMemArena(mem_arena, 4 * tex_meta.size.x * tex_meta.size.y);
 
@@ -112,7 +112,7 @@ static s_u8_array_view GenFontTextureRGBAPixelData(s_mem_arena* const mem_arena,
     return U8ArrayView(rgba_px_data);
 }
 
-static bool OutputFontFile(const s_char_array_view file_path, const s_font_arrangement* const arrangement, const s_font_texture_meta tex_meta, const s_u8_array_view tex_rgba_px_data) {
+static bool OutputFontFile(const c_array<const char> file_path, const s_font_arrangement* const arrangement, const s_font_texture_meta tex_meta, const s_u8_array_view tex_rgba_px_data) {
     FILE* const fs = fopen(file_path.buf_raw, "wb");
 
     if (!fs) {
@@ -143,7 +143,7 @@ static bool OutputFontFile(const s_char_array_view file_path, const s_font_arran
     return true;
 }
 
-bool PackFont(const s_char_array_view file_path, const t_s32 height, const s_char_array_view output_file_path, s_mem_arena* const temp_mem_arena) {
+bool PackFont(const c_array<const char> file_path, const t_s32 height, const c_array<const char> output_file_path, c_mem_arena* const temp_mem_arena) {
     if (height <= 0) {
         LOG_ERROR("Invalid font height %d!", height);
         return false;

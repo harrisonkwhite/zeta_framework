@@ -2,7 +2,7 @@
 
 #include <stb_image.h>
 
-static bool OutputTextureFile(const s_char_array_view file_path, const s_rgba_texture rgba_tex) {
+static bool OutputTextureFile(const c_array<const char> file_path, const s_rgba_texture rgba_tex) {
     FILE* const fs = fopen(file_path.buf_raw, "wb");
 
     if (!fs) {
@@ -27,7 +27,7 @@ static bool OutputTextureFile(const s_char_array_view file_path, const s_rgba_te
     return true;
 }
 
-bool PackTexture(const s_char_array_view file_path, const s_char_array_view output_file_path, s_mem_arena* const temp_mem_arena) {
+bool PackTexture(const c_array<const char> file_path, const c_array<const char> output_file_path, c_mem_arena* const temp_mem_arena) {
     s_rgba_texture rgba_tex = {0};
 
     if (!LoadRGBATextureFromRawFile(&rgba_tex, temp_mem_arena, file_path)) {

@@ -1,14 +1,14 @@
 #include "zfwap.h"
 
-bool PackShaderProg(const s_char_array_view vert_file_path, const s_char_array_view frag_file_path, const s_char_array_view output_file_path, s_mem_arena* const temp_mem_arena) {
-    const s_char_array_view vert_src = CharArrayView(LoadFileContentsAsStr(vert_file_path, temp_mem_arena));
+bool PackShaderProg(const c_array<const char> vert_file_path, const c_array<const char> frag_file_path, const c_array<const char> output_file_path, c_mem_arena* const temp_mem_arena) {
+    const c_array<const char> vert_src = CharArrayView(LoadFileContentsAsStr(vert_file_path, temp_mem_arena));
 
     if (IS_ZERO(vert_src)) {
         LOG_ERROR("Failed to load vertex shader source from file \"%s\"!", vert_file_path.buf_raw);
         return false;
     }
 
-    const s_char_array_view frag_src = CharArrayView(LoadFileContentsAsStr(frag_file_path, temp_mem_arena));
+    const c_array<const char> frag_src = CharArrayView(LoadFileContentsAsStr(frag_file_path, temp_mem_arena));
 
     if (IS_ZERO(frag_src)) {
         LOG_ERROR("Failed to load fragment shader source from file \"%s\"!", frag_file_path.buf_raw);

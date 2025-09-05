@@ -101,13 +101,13 @@ static t_mouse_button_bits MouseButtonsDownBits(GLFWwindow* glfw_window) {
 }
 
 static s_v2 MousePos(GLFWwindow* glfw_window) {
-    double mouse_x_dbl{}, mouse_y_dbl{};
+    double mouse_x_dbl, mouse_y_dbl;
     glfwGetCursorPos(glfw_window, &mouse_x_dbl, &mouse_y_dbl);
-    return s_v2{static_cast<t_r32>(mouse_x_dbl), static_cast<t_r32>(mouse_y_dbl)};
+    return {static_cast<t_r32>(mouse_x_dbl), static_cast<t_r32>(mouse_y_dbl)};
 }
 
 s_input_state InputState(GLFWwindow* glfw_window) {
-    return s_input_state{
+    return {
         .keys_down = KeysDownBits(glfw_window),
         .mouse_buttons_down = MouseButtonsDownBits(glfw_window),
         .mouse_pos = MousePos(glfw_window)
@@ -252,5 +252,5 @@ void GLFWCharCallback(GLFWwindow* window, const unsigned int codepoint) {
         }
     }
 
-    LOG_WARNING("Unicode buffer is full!");
+    //LOG_WARNING("Unicode buffer is full!");
 }

@@ -1,8 +1,12 @@
 #include "zfwc_graphics.h"
 
-static t_gl_id GenShaderFromSrc(const s_char_array_view src, const bool frag, s_mem_arena& temp_mem_arena) {
+#include <cstdio>
+#include "cu_mem.h"
+
+static t_gl_id GenShaderFromSrc(const c_array<const char> src, const bool frag, c_mem_arena& temp_mem_arena) {
     const t_gl_id shader_gl_id = glCreateShader(frag ? GL_FRAGMENT_SHADER : GL_VERTEX_SHADER);
-    glShaderSource(shader_gl_id, 1, &src.buf_raw, nullptr);
+    const char* const src_ptr = src.Raw();
+    glShaderSource(shader_gl_id, 1, &src_ptr, nullptr);
     glCompileShader(shader_gl_id);
 
     t_s32 success;
@@ -14,13 +18,13 @@ static t_gl_id GenShaderFromSrc(const s_char_array_view src, const bool frag, s_
         glGetShaderiv(shader_gl_id, GL_INFO_LOG_LENGTH, &log_len);
 
         if (log_len > 1) {
-            const s_char_array log = PushCharArrayToMemArena(&temp_mem_arena, log_len);
+            const auto log = PushArrayToMemArena<char>(temp_mem_arena, log_len);
 
-            if (!IS_ZERO(log)) {
-                glGetShaderInfoLog(shader_gl_id, log.elem_cnt, nullptr, log.buf_raw);
-                LOG_ERROR_SPECIAL("OpenGL Shader Compilation", "%s", log.buf_raw);
+            if (!log.IsEmpty()) {
+                glGetShaderInfoLog(shader_gl_id, log.Len(), nullptr, log.Raw());
+                //LOG_ERROR_SPECIAL("OpenGL Shader Compilation", "%s", log.Raw());
             } else {
-                LOG_ERROR("Failed to reserve memory for OpenGL shader compilation error log!");
+                //LOG_ERROR("Failed to reserve memory for OpenGL shader compilation error log!");
             }
         }
 
@@ -32,35 +36,35 @@ static t_gl_id GenShaderFromSrc(const s_char_array_view src, const bool frag, s_
     return shader_gl_id;
 }
 
-static bool LoadShaderSrcsFromFile(s_char_array_view& vert_src, s_char_array_view& frag_src, const s_char_array_view file_path, s_mem_arena& mem_arena) {
-    assert(IS_ZERO(vert_src));
-    assert(IS_ZERO(frag_src));
+static bool LoadShaderSrcsFromFile(c_array<const char>& vert_src, c_array<const char>& frag_src, const c_array<const char> file_path, c_mem_arena& mem_arena) {
+    assert(vert_src.IsEmpty());
+    assert(frag_src.IsEmpty());
 
-    FILE* const fs = fopen(file_path.buf_raw, "rb");
+    FILE* const fs = fopen(file_path.Raw(), "rb");
 
     if (!fs) {
-        LOG_ERROR("Failed to open shader program file \"%s\"!", file_path.buf_raw);
+        //LOG_ERROR("Failed to open shader program file \"%s\"!", file_path.Raw());
         return false;
     }
 
     t_s32 vert_src_len;
 
     if (fread(&vert_src_len, sizeof(vert_src_len), 1, fs) < 1) {
-        LOG_ERROR("Failed to read vertex shader source length from file \"%s\"!", file_path.buf_raw);
+        //LOG_ERROR("Failed to read vertex shader source length from file \"%s\"!", file_path.Raw());
         fclose(fs);
         return false;
     }
 
-    const s_char_array vert_src_nonview = PushCharArrayToMemArena(&mem_arena, vert_src_len);
+    const auto vert_src_nonview = PushArrayToMemArena<char>(mem_arena, vert_src_len);
 
-    if (IS_ZERO(vert_src_nonview)) {
-        LOG_ERROR("Failed to reserve memory for vertex shader source from file \"%s\"!", file_path.buf_raw);
+    if (vert_src_nonview.IsEmpty()) {
+        //LOG_ERROR("Failed to reserve memory for vertex shader source from file \"%s\"!", file_path.Raw());
         fclose(fs);
         return false;
     }
 
-    if (fread(vert_src_nonview.buf_raw, 1, vert_src_nonview.elem_cnt, fs) < vert_src_nonview.elem_cnt) {
-        LOG_ERROR("Failed to read vertex shader source from file \"%s\"!", file_path.buf_raw);
+    if (fread(vert_src_nonview.Raw(), 1, vert_src_nonview.Len(), fs) < vert_src_nonview.Len()) {
+        //LOG_ERROR("Failed to read vertex shader source from file \"%s\"!", file_path.Raw());
         fclose(fs);
         return false;
     }
@@ -68,44 +72,44 @@ static bool LoadShaderSrcsFromFile(s_char_array_view& vert_src, s_char_array_vie
     t_s32 frag_src_len;
 
     if (fread(&frag_src_len, sizeof(frag_src_len), 1, fs) < 1) {
-        LOG_ERROR("Failed to read fragment shader source length from file \"%s\"!", file_path.buf_raw);
+        //LOG_ERROR("Failed to read fragment shader source length from file \"%s\"!", file_path.Raw());
         fclose(fs);
         return false;
     }
 
-    const s_char_array frag_src_nonview = PushCharArrayToMemArena(&mem_arena, frag_src_len);
+    const auto frag_src_nonview = PushArrayToMemArena<char>(mem_arena, frag_src_len);
 
-    if (IS_ZERO(frag_src_nonview)) {
-        LOG_ERROR("Failed to reserve memory for fragment shader source from file \"%s\"!", file_path.buf_raw);
+    if (frag_src_nonview.IsEmpty()) {
+        //LOG_ERROR("Failed to reserve memory for fragment shader source from file \"%s\"!", file_path.Raw());
         fclose(fs);
         return false;
     }
 
-    if (fread(frag_src_nonview.buf_raw, 1, frag_src_nonview.elem_cnt, fs) < frag_src_nonview.elem_cnt) {
-        LOG_ERROR("Failed to read fragment shader source from file \"%s\"!", file_path.buf_raw);
+    if (fread(frag_src_nonview.Raw(), 1, frag_src_nonview.Len(), fs) < frag_src_nonview.Len()) {
+        //LOG_ERROR("Failed to read fragment shader source from file \"%s\"!", file_path.Raw());
         fclose(fs);
         return false;
     }
 
     fclose(fs);
 
-    vert_src = CharArrayView(vert_src_nonview);
-    frag_src = CharArrayView(frag_src_nonview);
+    vert_src = vert_src_nonview.View();
+    frag_src = frag_src_nonview.View();
 
     return true;
 }
 
-static t_gl_id GenShaderProg(const s_shader_prog_gen_info gen_info, s_mem_arena& temp_mem_arena) {
+static t_gl_id GenShaderProg(const s_shader_prog_gen_info gen_info, c_mem_arena& temp_mem_arena) {
     // Determine the shader sources.
-    s_char_array_view vert_src{};
-    s_char_array_view frag_src{};
+    c_array<const char> vert_src;
+    c_array<const char> frag_src;
 
     if (gen_info.holds_srcs) {
         vert_src = gen_info.vert_src;
         frag_src = gen_info.frag_src;
     } else {
         if (!LoadShaderSrcsFromFile(vert_src, frag_src, gen_info.file_path, temp_mem_arena)) {
-            LOG_ERROR("Failed to load shader sources from file \"%s\"!", gen_info.file_path.buf_raw);
+            //LOG_ERROR("Failed to load shader sources from file \"%s\"!", gen_info.file_path.Raw());
             return 0;
         }
     }
@@ -115,9 +119,9 @@ static t_gl_id GenShaderProg(const s_shader_prog_gen_info gen_info, s_mem_arena&
 
     if (!vs_gl_id) {
         if (gen_info.holds_srcs) {
-            LOG_ERROR("Failed to generate vertex shader from source!");
+            //LOG_ERROR("Failed to generate vertex shader from source!");
         } else {
-            LOG_ERROR("Failed to generate vertex shader from file \"%s\"!", gen_info.file_path.buf_raw);
+            //LOG_ERROR("Failed to generate vertex shader from file \"%s\"!", gen_info.file_path.Raw());
         }
 
         return 0;
@@ -127,9 +131,9 @@ static t_gl_id GenShaderProg(const s_shader_prog_gen_info gen_info, s_mem_arena&
 
     if (!fs_gl_id) {
         if (gen_info.holds_srcs) {
-            LOG_ERROR("Failed to generate fragment shader from source!");
+            //LOG_ERROR("Failed to generate fragment shader from source!");
         } else {
-            LOG_ERROR("Failed to generate fragment shader from file \"%s\"!", gen_info.file_path.buf_raw);
+            //LOG_ERROR("Failed to generate fragment shader from file \"%s\"!", gen_info.file_path.Raw());
         }
 
         glDeleteShader(vs_gl_id);
@@ -150,34 +154,31 @@ static t_gl_id GenShaderProg(const s_shader_prog_gen_info gen_info, s_mem_arena&
     return prog_gl_id;
 }
 
-bool InitShaderProgGroup(s_shader_prog_group& prog_group, const s_shader_prog_gen_info_array_view gen_infos, s_gl_resource_arena& gl_res_arena, s_mem_arena& temp_mem_arena) {
-    assert(IS_ZERO(prog_group));
-    assert(gen_infos.elem_cnt > 0);
+bool InitShaderProgGroup(s_shader_prog_group& prog_group, const c_array<const s_shader_prog_gen_info> gen_infos, s_gl_resource_arena& gl_res_arena, c_mem_arena& temp_mem_arena) {
+    assert(gen_infos.Len() > 0);
 
-    const t_s32 prog_cnt = gen_infos.elem_cnt;
+    const t_s32 prog_cnt = gen_infos.Len();
 
-    const s_gl_id_array gl_ids = PushToGLResourceArena(gl_res_arena, prog_cnt, ek_gl_resource_type_shader_prog);
+    const c_array<t_gl_id> gl_ids = PushArrayToGLResourceArena(gl_res_arena, prog_cnt, ek_gl_resource_type_shader_prog);
 
-    if (IS_ZERO(gl_ids)) {
-        LOG_ERROR("Failed to reserve OpenGL shader program IDs for shader program group!");
+    if (gl_ids.IsEmpty()) {
+        //LOG_ERROR("Failed to reserve OpenGL shader program IDs for shader program group!");
         return false;
     }
 
     for (t_s32 i = 0; i < prog_cnt; i++) {
-        const s_shader_prog_gen_info gen_info = *ShaderProgGenInfoElemView(gen_infos, i);
+        const s_shader_prog_gen_info gen_info = gen_infos[i];
 
-        t_gl_id* const gl_id = GLIDElem(gl_ids, i);
+        gl_ids[i] = GenShaderProg(gen_info, temp_mem_arena);
 
-        *gl_id = GenShaderProg(gen_info, temp_mem_arena);
-
-        if (!*gl_id) {
-            LOG_ERROR("Failed to generate shader program with index %d!", i);
+        if (!gl_ids[i]) {
+            //LOG_ERROR("Failed to generate shader program with index %d!", i);
             return false;
         }
     }
 
-    prog_group = s_shader_prog_group{
-        .gl_ids = GLIDArrayView(gl_ids)
+    prog_group = (s_shader_prog_group){
+        .gl_ids = gl_ids.View()
     };
 
     return true;

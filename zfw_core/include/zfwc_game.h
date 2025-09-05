@@ -2,7 +2,6 @@
 
 #include <cstddef>
 #include <cassert>
-
 #include "zfwc_input.h"
 #include "zfwc_graphics.h"
 

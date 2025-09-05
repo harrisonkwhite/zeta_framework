@@ -77,7 +77,7 @@ enum e_key_code {
 
 using t_key_bits = t_u64;
 
-static_assert(eks_key_code_cnt < SizeInBits(t_key_bits), "Too many key codes!");
+static_assert(eks_key_code_cnt < CU_SIZE_IN_BITS(t_key_bits), "Too many key codes!");
 
 enum e_mouse_button_code {
     eks_mouse_button_code_none = -1,
@@ -91,7 +91,7 @@ enum e_mouse_button_code {
 
 using t_mouse_button_bits = t_u8;
 
-static_assert(eks_mouse_button_code_cnt < SizeInBits(t_mouse_button_bits), "Too many mouse button codes!");
+static_assert(eks_mouse_button_code_cnt < CU_SIZE_IN_BITS(t_mouse_button_bits), "Too many mouse button codes!");
 
 enum e_mouse_scroll_state {
     ek_mouse_scroll_state_none,

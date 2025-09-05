@@ -5,9 +5,9 @@
 
 #define MEM_ARENA_SIZE MEGABYTES(20)
 
-static const s_char_array_view g_json_file_path = ARRAY_FROM_STATIC("asset_packing_instrs.json"); // TODO: Maybe pass this in through command-line arguments instead?
+static const c_array<const char> g_json_file_path = ARRAY_FROM_STATIC("asset_packing_instrs.json"); // TODO: Maybe pass this in through command-line arguments instead?
 
-static bool PackAssets(cJSON* const cj, s_mem_arena* const temp_mem_arena) {
+static bool PackAssets(cJSON* const cj, c_mem_arena* const temp_mem_arena) {
     if (!cJSON_IsArray(cj)) {
         return false;
     }
@@ -25,7 +25,7 @@ static bool PackAssets(cJSON* const cj, s_mem_arena* const temp_mem_arena) {
             return false;
         }
 
-        const s_char_array_view output_file_path = StrViewFromRawTerminated(cj_output_file_path->valuestring);
+        const c_array<const char> output_file_path = StrViewFromRawTerminated(cj_output_file_path->valuestring);
 
         if (strcmp(cj_type->valuestring, "texture") == 0) {
             const cJSON* const cj_file_path = cJSON_GetObjectItem(cj_item, "file_path");
@@ -35,7 +35,7 @@ static bool PackAssets(cJSON* const cj, s_mem_arena* const temp_mem_arena) {
                 return false;
             }
 
-            const s_char_array_view file_path = StrViewFromRawTerminated(cj_file_path->valuestring);
+            const c_array<const char> file_path = StrViewFromRawTerminated(cj_file_path->valuestring);
 
             if (!PackTexture(file_path, output_file_path, temp_mem_arena)) {
                 LOG_ERROR("Failed to pack texture with file path \"%s\"!", file_path.buf_raw);
@@ -50,7 +50,7 @@ static bool PackAssets(cJSON* const cj, s_mem_arena* const temp_mem_arena) {
                 return false;
             }
 
-            const s_char_array_view file_path = StrViewFromRawTerminated(cj_file_path->valuestring);
+            const c_array<const char> file_path = StrViewFromRawTerminated(cj_file_path->valuestring);
 
             if (!PackFont(file_path, cj_height->valueint, output_file_path, temp_mem_arena)) {
                 LOG_ERROR("Failed to pack font with file path \"%s\" and height %d!", file_path.buf_raw, cj_height->valueint);
@@ -65,9 +65,9 @@ static bool PackAssets(cJSON* const cj, s_mem_arena* const temp_mem_arena) {
                 return false;
             }
 
-            const s_char_array_view vert_file_path = StrViewFromRawTerminated(cj_vert_file_path->valuestring);
+            const c_array<const char> vert_file_path = StrViewFromRawTerminated(cj_vert_file_path->valuestring);
 
-            const s_char_array_view frag_file_path = StrViewFromRawTerminated(cj_frag_file_path->valuestring);
+            const c_array<const char> frag_file_path = StrViewFromRawTerminated(cj_frag_file_path->valuestring);
 
             if (!PackShaderProg(vert_file_path, frag_file_path, output_file_path, temp_mem_arena)) {
                 LOG_ERROR("Failed to pack shader program with vertex shader file path \"%s\" and fragment shader file path \"%s\"!", vert_file_path.buf_raw, frag_file_path.buf_raw);
@@ -82,16 +82,16 @@ static bool PackAssets(cJSON* const cj, s_mem_arena* const temp_mem_arena) {
 }
 
 int main() {
-    s_mem_arena mem_arena = {0};
+    c_mem_arena mem_arena;
 
-    if (!InitMemArena(&mem_arena, MEM_ARENA_SIZE)) {
+    if (!mem_arena.Init(MEM_ARENA_SIZE)) {
         LOG_ERROR("Failed to initialise the asset packer memory arena!");
         return EXIT_FAILURE;
     }
 
-    const s_char_array_view json_file_contents = CharArrayView(LoadFileContentsAsStr(g_json_file_path, &mem_arena));
+    const c_array<const char> json_file_contents = LoadFileContentsAsStr(g_json_file_path, &mem_arena);
 
-    if (IS_ZERO(json_file_contents)) {
+    if (json_file_contents.IsEmpty()) {
         LOG_ERROR("Failed to load contents of asset packing JSON file \"%s\"!", g_json_file_path.buf_raw);
         CleanMemArena(&mem_arena);
         return EXIT_FAILURE;

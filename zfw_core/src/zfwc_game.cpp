@@ -51,14 +51,14 @@ static bool ExecGameInitAndMainLoop(s_game& game, const s_game_info& info) {
 
     // Initialise memory arenas.
     if (!game.perm_mem_arena.Init(g_perm_mem_arena_size)) {
-        LOG_ERROR("Failed to initialise the permanent memory arena!");
+        //LOG_ERROR("Failed to initialise the permanent memory arena!");
         return false;
     }
 
     game.run_stage = ek_game_run_stage_perm_mem_arena_initted;
 
     if (!game.temp_mem_arena.Init(g_temp_mem_arena_size)) {
-        LOG_ERROR("Failed to initialise the temporary memory arena!");
+        //LOG_ERROR("Failed to initialise the temporary memory arena!");
         return false;
     }
 
@@ -66,7 +66,7 @@ static bool ExecGameInitAndMainLoop(s_game& game, const s_game_info& info) {
 
     // Initialise GLFW.
     if (!glfwInit()) {
-        LOG_ERROR("Failed to initialise GLFW!");
+        //LOG_ERROR("Failed to initialise GLFW!");
         return false;
     }
 
@@ -87,7 +87,7 @@ static bool ExecGameInitAndMainLoop(s_game& game, const s_game_info& info) {
     );
 
     if (!game.glfw_window) {
-        LOG_ERROR("Failed to create a GLFW window!");
+        //LOG_ERROR("Failed to create a GLFW window!");
         return false;
     }
 
@@ -118,7 +118,7 @@ static bool ExecGameInitAndMainLoop(s_game& game, const s_game_info& info) {
 
     // Initialise rendering.
     if (!gladLoadGLLoader(reinterpret_cast<GLADloadproc>(glfwGetProcAddress))) {
-        LOG_ERROR("Failed to load OpenGL function pointers!");
+        //LOG_ERROR("Failed to load OpenGL function pointers!");
         return false;
     }
 
@@ -126,23 +126,21 @@ static bool ExecGameInitAndMainLoop(s_game& game, const s_game_info& info) {
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     if (!InitGLResourceArena(game.gl_res_arena, game.perm_mem_arena, g_gl_resource_arena_res_limit)) {
-        LOG_ERROR("Failed to initialise OpenGL resource arena!");
+        //LOG_ERROR("Failed to initialise OpenGL resource arena!");
         return false;
     }
 
     game.run_stage = ek_game_run_stage_gl_res_arena_initted;
 
     if (!InitRenderingBasis(game.rendering_basis, game.gl_res_arena, game.perm_mem_arena, game.temp_mem_arena)) {
-        LOG_ERROR("Failed to initialise the rendering basis!");
+        //LOG_ERROR("Failed to initialise the rendering basis!");
         return false;
     }
 
-    auto* rendering_state = static_cast<s_rendering_state*>(
-        PushToMemArena(game.perm_mem_arena, sizeof(s_rendering_state), ALIGN_OF(s_rendering_state))
-    );
+    const auto rendering_state = game.perm_mem_arena.Push<s_rendering_state>();
 
     if (!rendering_state) {
-        LOG_ERROR("Failed to reserve memory for rendering state!");
+        //LOG_ERROR("Failed to reserve memory for rendering state!");
         return false;
     }
 
@@ -151,7 +149,7 @@ static bool ExecGameInitAndMainLoop(s_game& game, const s_game_info& info) {
         game.dev_mem = game.perm_mem_arena.PushRaw(info.dev_mem_size, info.dev_mem_alignment);
 
         if (!game.dev_mem) {
-            LOG_ERROR("Failed to reserve developer memory!");
+            //LOG_ERROR("Failed to reserve developer memory!");
             return false;
         }
     }
@@ -168,7 +166,7 @@ static bool ExecGameInitAndMainLoop(s_game& game, const s_game_info& info) {
         };
 
         if (!info.init_func(&context)) {
-            LOG_ERROR("Developer game initialisation function failed!");
+            //LOG_ERROR("Developer game initialisation function failed!");
             return false;
         }
     }
@@ -218,15 +216,15 @@ static bool ExecGameInitAndMainLoop(s_game& game, const s_game_info& info) {
 
                 const e_game_tick_result res = info.tick_func(&context);
 
-                ZERO_OUT(game.input_events);
+                game.input_events = {};
 
                 if (res == ek_game_tick_result_exit) {
-                    LOG("Exit request detected from developer game tick function...");
+                    //LOG("Exit request detected from developer game tick function...");
                     glfwSetWindowShouldClose(game.glfw_window, true);
                 }
 
                 if (res == ek_game_tick_result_error) {
-                    LOG_ERROR("Developer game tick function failed!");
+                    //LOG_ERROR("Developer game tick function failed!");
                     return false;
                 }
 
@@ -234,7 +232,7 @@ static bool ExecGameInitAndMainLoop(s_game& game, const s_game_info& info) {
             } while (frame_dur_accum >= targ_tick_interval);
 
             // Render the game.
-            ZERO_OUT(*rendering_state);
+            //ZERO_OUT(*rendering_state);
             InitRenderingState(*rendering_state, window_state.size);
 
             {
@@ -252,7 +250,7 @@ static bool ExecGameInitAndMainLoop(s_game& game, const s_game_info& info) {
                 };
 
                 if (!info.render_func(&context)) {
-                    LOG_ERROR("Developer game render function failed!");
+                    //LOG_ERROR("Developer game render function failed!");
                     return false;
                 }
 
@@ -273,7 +271,7 @@ static bool ExecGameInitAndMainLoop(s_game& game, const s_game_info& info) {
 bool RunGame(const s_game_info& info) {
     AssertGameInfoValidity(&info);
 
-    s_game game{};
+    s_game game = {};
 
     const bool result = ExecGameInitAndMainLoop(game, info);
 
@@ -284,11 +282,11 @@ bool RunGame(const s_game_info& info) {
                 break;
 
             case ek_game_run_stage_perm_mem_arena_initted:
-                game.perm_mem_arena.CleanMemArena(game.perm_mem_arena);
+                game.perm_mem_arena.Clean();
                 break;
 
             case ek_game_run_stage_temp_mem_arena_initted:
-                CleanMemArena(game.temp_mem_arena);
+                game.temp_mem_arena.Clean();
                 break;
 
             case ek_game_run_stage_glfw_initted:
@@ -308,6 +306,7 @@ bool RunGame(const s_game_info& info) {
                 if (info.clean_func) {
                     info.clean_func(game.dev_mem);
                 }
+
                 break;
         }
     }

@@ -1,35 +1,27 @@
-#ifndef ZFWS_H
-#define ZFWS_H
+#pragma once
 
-#include <zfws_mem.h>
 #include <cu.h>
 
 #define ASCII_PRINTABLE_MIN ' '
 #define ASCII_PRINTABLE_MAX '~'
 #define ASCII_PRINTABLE_RANGE_LEN (ASCII_PRINTABLE_MAX - ASCII_PRINTABLE_MIN + 1)
 
-typedef struct {
+struct s_rgba_texture {
     s_v2_s32 tex_size;
-    s_u8_array px_data;
-} s_rgba_texture;
+    c_array<t_u8> px_data;
+};
 
-typedef struct {
-    t_s32 line_height;
+struct s_font_arrangement {
+    t_s32 line_height = 0;
 
-    s_v2_s32 chr_offsets[ASCII_PRINTABLE_RANGE_LEN];
-    s_v2_s32 chr_sizes[ASCII_PRINTABLE_RANGE_LEN];
-    t_s32 chr_advances[ASCII_PRINTABLE_RANGE_LEN];
-} s_font_arrangement;
+    c_static_array<s_v2_s32, ASCII_PRINTABLE_RANGE_LEN> chr_offsets;
+    c_static_array<s_v2_s32, ASCII_PRINTABLE_RANGE_LEN> chr_sizes;
+    c_static_array<t_s32, ASCII_PRINTABLE_RANGE_LEN> chr_advances;
+};
 
-DEF_ARRAY_TYPE(s_font_arrangement, font_arrangement, FontArrangement);
-
-typedef struct {
+struct s_font_texture_meta {
     s_v2_s32 size;
-    t_s32 chr_xs[ASCII_PRINTABLE_RANGE_LEN];
-} s_font_texture_meta;
+    c_static_array<t_s32, ASCII_PRINTABLE_RANGE_LEN> chr_xs;
+};
 
-DEF_ARRAY_TYPE(s_font_texture_meta, font_texture_meta, FontTextureMeta);
-
-bool WARN_UNUSED_RESULT LoadRGBATextureFromRawFile(s_rgba_texture* const tex, s_mem_arena* const mem_arena, const s_char_array_view file_path);
-
-#endif
+[[nodiscard]] bool LoadRGBATextureFromRawFile(s_rgba_texture& tex, c_mem_arena& mem_arena, const c_array<const char> file_path);

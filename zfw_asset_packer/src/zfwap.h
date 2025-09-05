@@ -1,11 +1,8 @@
-#ifndef ZFWAP_H
-#define ZFWAP_H
+#pragma once
 
 #include <zfws.h>
 #include <cu.h>
 
-bool PackTexture(const s_char_array_view file_path, const s_char_array_view output_file_path, s_mem_arena* const temp_mem_arena);
-bool PackFont(const s_char_array_view file_path, const t_s32 height, const s_char_array_view output_file_path, s_mem_arena* const temp_mem_arena);
-bool PackShaderProg(const s_char_array_view vert_file_path, const s_char_array_view frag_file_path, const s_char_array_view output_file_path, s_mem_arena* const temp_mem_arena);
-
-#endif
+bool PackTexture(const c_array<const char> file_path, const c_array<const char> output_file_path, c_mem_arena& temp_mem_arena);
+bool PackFont(const c_array<const char> file_path, const t_s32 height, const c_array<const char> output_file_path, c_mem_arena& temp_mem_arena);
+bool PackShaderProg(const c_array<const char> vert_file_path, const c_array<const char> frag_file_path, const c_array<const char> output_file_path, c_mem_arena& temp_mem_arena);

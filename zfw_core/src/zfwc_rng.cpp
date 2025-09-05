@@ -13,14 +13,14 @@ void InitRNG() {
     g_rng_initted = true;
 }
 
-t_r32 RandPerc() {
+float RandPerc() {
     assert(g_rng_initted);
-    return static_cast<t_r32>(rand()) / (RAND_MAX + 1.0f);
+    return static_cast<float>(rand()) / (RAND_MAX + 1.0f);
 }
 
-t_r32 RandPercIncl() {
+float RandPercIncl() {
     assert(g_rng_initted);
-    return static_cast<t_r32>(rand()) / RAND_MAX;
+    return static_cast<float>(rand()) / RAND_MAX;
 }
 
 t_s32 RandRangeS32(const t_s32 beg, const t_s32 end) {
