@@ -1,10 +1,11 @@
-#ifndef ZFWC_INPUT_H
-#define ZFWC_INPUT_H
+#pragma once
 
-#include <cu.h>
+#include <cassert>
+
 #include <GLFW/glfw3.h>
+#include <cu.h>
 
-typedef enum {
+enum e_key_code {
     eks_key_code_none = -1,
 
     ek_key_code_space,
@@ -72,13 +73,13 @@ typedef enum {
     ek_key_code_right_alt,
 
     eks_key_code_cnt
-} e_key_code;
+};
 
-typedef t_u64 t_key_bits;
+using t_key_bits = t_u64;
 
-static_assert(eks_key_code_cnt < SIZE_IN_BITS(t_key_bits), "Too many key codes!");
+static_assert(eks_key_code_cnt < SizeInBits(t_key_bits), "Too many key codes!");
 
-typedef enum {
+enum e_mouse_button_code {
     eks_mouse_button_code_none = -1,
 
     ek_mouse_button_code_left,
@@ -86,28 +87,28 @@ typedef enum {
     ek_mouse_button_code_middle,
 
     eks_mouse_button_code_cnt
-} e_mouse_button_code;
+};
 
-typedef t_u8 t_mouse_button_bits;
+using t_mouse_button_bits = t_u8;
 
-static_assert(eks_mouse_button_code_cnt < SIZE_IN_BITS(t_mouse_button_bits), "Too many mouse button codes!");
+static_assert(eks_mouse_button_code_cnt < SizeInBits(t_mouse_button_bits), "Too many mouse button codes!");
 
-typedef enum {
+enum e_mouse_scroll_state {
     ek_mouse_scroll_state_none,
     ek_mouse_scroll_state_down,
     ek_mouse_scroll_state_up
-} e_mouse_scroll_state;
+};
 
-typedef char t_unicode_buf[32];
+using t_unicode_buf = char[32];
 
-typedef struct {
+struct s_input_state {
     t_key_bits keys_down;
     t_mouse_button_bits mouse_buttons_down;
 
     s_v2 mouse_pos;
-} s_input_state;
+};
 
-typedef struct {
+struct s_input_events {
     t_key_bits keys_pressed;
     t_key_bits keys_released;
 
@@ -117,12 +118,12 @@ typedef struct {
     e_mouse_scroll_state mouse_scroll_state;
 
     t_unicode_buf unicode_buf;
-} s_input_events;
+};
 
-typedef struct {
-    const s_input_state* state;
-    const s_input_events* events;
-} s_input_context;
+struct s_input_context {
+    const s_input_state& state;
+    const s_input_events& events;
+};
 
 s_input_state InputState(GLFWwindow* const glfw_window);
 
@@ -131,34 +132,32 @@ void GLFWMouseButtonCallback(GLFWwindow* const window, const int button, const i
 void GLFWScrollCallback(GLFWwindow* const window, const double offs_x, const double offs_y);
 void GLFWCharCallback(GLFWwindow* const window, const unsigned int codepoint);
 
-static inline bool IsKeyDown(const s_input_context* const input_context, const e_key_code kc) {
-    const t_key_bits key_mask = (t_key_bits)1 << kc;
-    return (input_context->state->keys_down & key_mask) != 0;
+static inline bool IsKeyDown(const s_input_context& input_context, const e_key_code kc) {
+    const t_key_bits key_mask = static_cast<t_key_bits>(1) << kc;
+    return (input_context.state.keys_down & key_mask) != 0;
 }
 
-static inline bool IsKeyPressed(const s_input_context* const input_context, const e_key_code kc) {
-    const t_key_bits key_mask = (t_key_bits)1 << kc;
-    return (input_context->events->keys_pressed & key_mask) != 0;
+static inline bool IsKeyPressed(const s_input_context& input_context, const e_key_code kc) {
+    const t_key_bits key_mask = static_cast<t_key_bits>(1) << kc;
+    return (input_context.events.keys_pressed & key_mask) != 0;
 }
 
-static inline bool IsKeyReleased(const s_input_context* const input_context, const e_key_code kc) {
-    const t_key_bits key_mask = (t_key_bits)1 << kc;
-    return (input_context->events->keys_released & key_mask) != 0;
+static inline bool IsKeyReleased(const s_input_context& input_context, const e_key_code kc) {
+    const t_key_bits key_mask = static_cast<t_key_bits>(1) << kc;
+    return (input_context.events.keys_released & key_mask) != 0;
 }
 
-static inline bool IsMouseButtonDown(const s_input_context* const input_context, const e_mouse_button_code mbc) {
-    const t_mouse_button_bits mb_mask = (t_mouse_button_bits)1 << mbc;
-    return (input_context->state->mouse_buttons_down & mb_mask) != 0;
+static inline bool IsMouseButtonDown(const s_input_context& input_context, const e_mouse_button_code mbc) {
+    const t_mouse_button_bits mb_mask = static_cast<t_mouse_button_bits>(1) << mbc;
+    return (input_context.state.mouse_buttons_down & mb_mask) != 0;
 }
 
-static inline bool IsMouseButtonPressed(const s_input_context* const input_context, const e_mouse_button_code mbc) {
-    const t_mouse_button_bits mb_mask = (t_mouse_button_bits)1 << mbc;
-    return (input_context->events->mouse_buttons_pressed & mb_mask) != 0;
+static inline bool IsMouseButtonPressed(const s_input_context& input_context, const e_mouse_button_code mbc) {
+    const t_mouse_button_bits mb_mask = static_cast<t_mouse_button_bits>(1) << mbc;
+    return (input_context.events.mouse_buttons_pressed & mb_mask) != 0;
 }
 
-static inline bool IsMouseButtonReleased(const s_input_context* const input_context, const e_mouse_button_code mbc) {
-    const t_mouse_button_bits mb_mask = (t_mouse_button_bits)1 << mbc;
-    return (input_context->events->mouse_buttons_released & mb_mask) != 0;
+static inline bool IsMouseButtonReleased(const s_input_context& input_context, const e_mouse_button_code mbc) {
+    const t_mouse_button_bits mb_mask = static_cast<t_mouse_button_bits>(1) << mbc;
+    return (input_context.events.mouse_buttons_released & mb_mask) != 0;
 }
-
-#endif

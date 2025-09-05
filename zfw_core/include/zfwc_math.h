@@ -1,30 +1,30 @@
-#ifndef ZFWC_MATH_H
-#define ZFWC_MATH_H
+#pragma once
 
 #include <cu.h>
 
-typedef enum {
+enum e_cardinal_dir {
     ek_cardinal_dir_right,
     ek_cardinal_dir_left,
     ek_cardinal_dir_down,
-    ek_cardinal_dir_up
-} e_cardinal_dir;
+    ek_cardinal_dir_up,
 
-static const s_v2_s32 g_cardinal_dirs[] = {
-    [ek_cardinal_dir_right] = {1, 0},
-    [ek_cardinal_dir_left] = {-1, 0},
-    [ek_cardinal_dir_down] = {0, 1},
-    [ek_cardinal_dir_up] = {0, -1}
+    ek_cardinal_dir_cnt
 };
 
-typedef struct {
-    s_v2_array_view pts;
-} s_poly;
+static constexpr c_static_array<s_v2, ek_cardinal_dir_cnt> g_cardinal_dirs = {
+    {1, 0},
+    {-1, 0},
+    {0, 1},
+    {0, -1}
+};
 
-s_poly GenQuadPoly(s_mem_arena* const mem_arena, const s_v2 pos, const s_v2 size, const s_v2 origin);
-s_poly GenQuadPolyRotated(s_mem_arena* const mem_arena, const s_v2 pos, const s_v2 size, const s_v2 origin, const t_r32 rot);
+struct s_poly {
+    c_array<const s_v2> pts;
+};
+
+s_poly GenQuadPoly(c_mem_arena& mem_arena, const s_v2 pos, const s_v2 size, const s_v2 origin);
+s_poly GenQuadPolyRotated(c_mem_arena& mem_arena, const s_v2 pos, const s_v2 size, const s_v2 origin, const float rot);
+
 bool DoPolysInters(const s_poly a, const s_poly b);
 bool DoesPolyIntersWithRect(const s_poly poly, const s_rect rect);
 s_rect_edges PolySpan(const s_poly poly);
-
-#endif

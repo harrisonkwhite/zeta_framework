@@ -83,7 +83,7 @@ const char g_surface_blend_frag_shader_src[] = "#version 430 core\n" \
 
 static bool AttachFramebufferTexture(const t_gl_id fb_gl_id, const t_gl_id tex_gl_id, const s_v2_s32 tex_size) {
     glBindTexture(GL_TEXTURE_2D, tex_gl_id);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, tex_size.x, tex_size.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, tex_size.x, tex_size.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
@@ -98,15 +98,15 @@ static bool AttachFramebufferTexture(const t_gl_id fb_gl_id, const t_gl_id tex_g
     return success;
 }
 
-bool InitSurface(s_surface* const surf, const s_v2_s32 size, s_gl_resource_arena* const gl_res_arena) {
-    t_gl_id* const fb_gl_id = PushToGLResourceArena(gl_res_arena, 1, ek_gl_resource_type_framebuffer).buf_raw;
+bool InitSurface(s_surface& surf, const s_v2_s32 size, s_gl_resource_arena& gl_res_arena) {
+    t_gl_id* const fb_gl_id = PushToGLResourceArena(&gl_res_arena, 1, ek_gl_resource_type_framebuffer).buf_raw;
 
     if (!fb_gl_id) {
         LOG_ERROR("Failed to reserve OpenGL framebuffer ID for surface!");
         return false;
     }
 
-    t_gl_id* const fb_tex_gl_id = PushToGLResourceArena(gl_res_arena, 1, ek_gl_resource_type_texture).buf_raw;
+    t_gl_id* const fb_tex_gl_id = PushToGLResourceArena(&gl_res_arena, 1, ek_gl_resource_type_texture).buf_raw;
 
     if (!fb_tex_gl_id) {
         LOG_ERROR("Failed to reserve OpenGL texture ID for surface framebuffer!");
@@ -121,7 +121,7 @@ bool InitSurface(s_surface* const surf, const s_v2_s32 size, s_gl_resource_arena
         return false;
     }
 
-    *surf = (s_surface){
+    surf = s_surface{
         .fb_gl_id = fb_gl_id,
         .fb_tex_gl_id = fb_tex_gl_id,
         .size = size
@@ -130,73 +130,73 @@ bool InitSurface(s_surface* const surf, const s_v2_s32 size, s_gl_resource_arena
     return true;
 }
 
-bool ResizeSurface(s_surface* const surf, const s_v2_s32 size) {
-    assert(surf->size.x != size.x || surf->size.y != size.y);
+bool ResizeSurface(s_surface& surf, const s_v2_s32 size) {
+    assert(surf.size.x != size.x || surf.size.y != size.y);
 
     // Delete old texture.
-    glDeleteTextures(1, surf->fb_tex_gl_id);
+    glDeleteTextures(1, surf.fb_tex_gl_id);
 
     // Generate and attach new texture of the new size.
-    glGenTextures(1, surf->fb_tex_gl_id);
+    glGenTextures(1, surf.fb_tex_gl_id);
 
-    if (!AttachFramebufferTexture(*surf->fb_gl_id, *surf->fb_tex_gl_id, size)) {
+    if (!AttachFramebufferTexture(*surf.fb_gl_id, *surf.fb_tex_gl_id, size)) {
         LOG_ERROR("Failed to attach framebuffer texture for surface during resize!");
         return false;
     }
 
-    surf->size = size;
+    surf.size = size;
 
     return true;
 }
 
-static void PushToSurfaceFramebufferGLIDStack(s_surface_framebuffer_gl_id_stack* const stack, const t_gl_id gl_id) {
+static void PushToSurfaceFramebufferGLIDStack(s_surface_framebuffer_gl_id_stack& stack, const t_gl_id gl_id) {
     assert(glIsFramebuffer(gl_id));
-    assert(stack->height < STATIC_ARRAY_LEN(stack->buf));
+    assert(stack.height < STATIC_ARRAY_LEN(stack.buf));
 
 #ifndef NDEBUG
-    for (int i = 0; i < stack->height; i++) {
-        assert(*STATIC_ARRAY_ELEM(stack->buf, i) != gl_id && "Trying to push a surface framebuffer OpenGL ID that is already on the stack!");
+    for (int i = 0; i < stack.height; i++) {
+        assert(*STATIC_ARRAY_ELEM(stack.buf, i) != gl_id && "Trying to push a surface framebuffer OpenGL ID that is already on the stack!");
     }
 #endif
 
-    *STATIC_ARRAY_ELEM(stack->buf, stack->height) = gl_id;
-    stack->height++;
+    *STATIC_ARRAY_ELEM(stack.buf, stack.height) = gl_id;
+    stack.height++;
 }
 
-static t_gl_id PopFromSurfaceFramebufferGLIDStack(s_surface_framebuffer_gl_id_stack* const stack) {
-    assert(stack->height > 0 && "Trying to pop from an empty stack!");
+static t_gl_id PopFromSurfaceFramebufferGLIDStack(s_surface_framebuffer_gl_id_stack& stack) {
+    assert(stack.height > 0 && "Trying to pop from an empty stack!");
 
-    stack->height--;
-    return *STATIC_ARRAY_ELEM(stack->buf, stack->height);
+    stack.height--;
+    return *STATIC_ARRAY_ELEM(stack.buf, stack.height);
 }
 
-void SetSurface(const s_rendering_context* const rendering_context, const s_surface* const surf) {
-    assert(*surf->fb_gl_id != BoundGLFramebuffer() && "Trying to set a surface that is already set!");
+void SetSurface(const s_rendering_context& rendering_context, const s_surface& surf) {
+    assert(*surf.fb_gl_id != BoundGLFramebuffer() && "Trying to set a surface that is already set!");
 
-    SubmitBatch(rendering_context);
+    SubmitBatch(&rendering_context);
 
     const t_gl_id bound_fb_gl_id = BoundGLFramebuffer();
 
     if (bound_fb_gl_id != 0) {
-        PushToSurfaceFramebufferGLIDStack(&rendering_context->state->surf_fb_gl_id_stack, bound_fb_gl_id);
+        PushToSurfaceFramebufferGLIDStack(rendering_context.state->surf_fb_gl_id_stack, bound_fb_gl_id);
     }
 
-    glBindFramebuffer(GL_FRAMEBUFFER, *surf->fb_gl_id);
-    glViewport(0, 0, surf->size.x, surf->size.y);
+    glBindFramebuffer(GL_FRAMEBUFFER, *surf.fb_gl_id);
+    glViewport(0, 0, surf.size.x, surf.size.y);
 }
 
-void UnsetSurface(const s_rendering_context* const rendering_context) {
+void UnsetSurface(const s_rendering_context& rendering_context) {
     assert(BoundGLFramebuffer() != 0 && "Trying to unset surface but no OpenGL framebuffer is bound!");
 
-    SubmitBatch(rendering_context);
+    SubmitBatch(&rendering_context);
 
-    if (rendering_context->state->surf_fb_gl_id_stack.height > 0) {
-        const t_gl_id fb_gl_id = PopFromSurfaceFramebufferGLIDStack(&rendering_context->state->surf_fb_gl_id_stack);
+    if (rendering_context.state->surf_fb_gl_id_stack.height > 0) {
+        const t_gl_id fb_gl_id = PopFromSurfaceFramebufferGLIDStack(rendering_context.state->surf_fb_gl_id_stack);
         glBindFramebuffer(GL_FRAMEBUFFER, fb_gl_id);
 
         // TODO: The below is pretty bad. Really should be accessing the surface data directly.
         t_gl_id fb_tex_gl_id;
-        glGetFramebufferAttachmentParameteriv(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME, (t_s32*)&fb_tex_gl_id);
+        glGetFramebufferAttachmentParameteriv(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME, reinterpret_cast<t_s32*>(&fb_tex_gl_id));
         assert(glIsTexture(fb_tex_gl_id));
     
         s_v2_s32 fb_tex_size;
@@ -207,7 +207,7 @@ void UnsetSurface(const s_rendering_context* const rendering_context) {
         glViewport(0, 0, fb_tex_size.x, fb_tex_size.y);
     } else {
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
-        glViewport(0, 0, rendering_context->window_size.x, rendering_context->window_size.y);
+        glViewport(0, 0, rendering_context.window_size.x, rendering_context.window_size.y);
     }
 }
 
@@ -217,12 +217,12 @@ static inline t_gl_id CurrentGLShaderProgram() {
     return prog;
 }
 
-void SetSurfaceShaderProg(const s_rendering_context* const rendering_context, const s_shader_prog_group* const progs, const t_s32 prog_index) {
+void SetSurfaceShaderProg(const s_rendering_context& rendering_context, const s_shader_prog_group& progs, const t_s32 prog_index) {
     assert(CurrentGLShaderProgram() == 0 && "Potential attempted double-assignment of surface shader program?");
-    glUseProgram(*GLIDElemView(progs->gl_ids, prog_index));
+    glUseProgram(*GLIDElemView(progs.gl_ids, prog_index));
 }
 
-void SetSurfaceShaderProgUniform(const s_rendering_context* const rendering_context, const char* const name, const s_shader_prog_uniform_value val) {
+void SetSurfaceShaderProgUniform(const s_rendering_context& rendering_context, const char* const name, const s_shader_prog_uniform_value val) {
     assert(name);
 
     const t_gl_id prog_gl_id = CurrentGLShaderProgram();
@@ -259,12 +259,12 @@ void SetSurfaceShaderProgUniform(const s_rendering_context* const rendering_cont
     }
 }
 
-void RenderSurface(const s_rendering_context* const rendering_context, const s_surface* const surf, const s_v2 pos, const s_v2 scale, const bool blend) {
-    assert(*surf->fb_gl_id != BoundGLFramebuffer() && "Trying to render the currently set surface! Unset the surface first.");
+void RenderSurface(const s_rendering_context& rendering_context, const s_surface& surf, const s_v2 pos, const s_v2 scale, const bool blend) {
+    assert(*surf.fb_gl_id != BoundGLFramebuffer() && "Trying to render the currently set surface! Unset the surface first.");
 
 #ifndef NDEBUG
-    for (int i = 0; i < rendering_context->state->surf_fb_gl_id_stack.height; i++) {
-        assert(*STATIC_ARRAY_ELEM(rendering_context->state->surf_fb_gl_id_stack.buf, i) != *surf->fb_gl_id && "Trying to render a surface currently in the stack! Unset the surface first.");
+    for (int i = 0; i < rendering_context.state->surf_fb_gl_id_stack.height; i++) {
+        assert(*STATIC_ARRAY_ELEM(rendering_context.state->surf_fb_gl_id_stack.buf, i) != *surf.fb_gl_id && "Trying to render a surface currently in the stack! Unset the surface first.");
     }
 #endif
 
@@ -274,7 +274,7 @@ void RenderSurface(const s_rendering_context* const rendering_context, const s_s
         glDisable(GL_BLEND);
     }
 
-    const s_renderable* const renderable = STATIC_ARRAY_ELEM(rendering_context->basis->renderables, ek_renderable_surface);
+    const s_renderable* const renderable = STATIC_ARRAY_ELEM(rendering_context.basis->renderables, ek_renderable_surface);
 
     glBindVertexArray(*renderable->vert_array_gl_id);
     glBindBuffer(GL_ARRAY_BUFFER, *renderable->vert_buf_gl_id);
@@ -291,25 +291,25 @@ void RenderSurface(const s_rendering_context* const rendering_context, const s_s
     }
 
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, *surf->fb_tex_gl_id);
+    glBindTexture(GL_TEXTURE_2D, *surf.fb_tex_gl_id);
 
     const t_s32 proj_uniform_loc = glGetUniformLocation(CurrentGLShaderProgram(), "u_proj");
     assert(proj_uniform_loc != -1);
     const s_rect_s32 viewport = GLViewport();
     const s_matrix_4x4 proj_mat = OrthographicMatrix(0.0f, viewport.width, viewport.height, 0.0f, -1.0f, 1.0f);
-    glUniformMatrix4fv(proj_uniform_loc, 1, false, (const t_r32*)proj_mat.elems);
+    glUniformMatrix4fv(proj_uniform_loc, 1, false, reinterpret_cast<const t_r32*>(proj_mat.elems));
 
     const t_s32 pos_uniform_loc = glGetUniformLocation(CurrentGLShaderProgram(), "u_pos");
     assert(pos_uniform_loc != -1);
-    glUniform2fv(pos_uniform_loc, 1, (const t_r32*)&pos);
+    glUniform2fv(pos_uniform_loc, 1, reinterpret_cast<const t_r32*>(&pos));
 
     const t_s32 size_uniform_loc = glGetUniformLocation(CurrentGLShaderProgram(), "u_size");
     assert(size_uniform_loc != -1);
-    const s_v2 surf_size_r32 = {surf->size.x, surf->size.y};
-    glUniform2fv(size_uniform_loc, 1, (const t_r32*)&surf_size_r32);
+    const s_v2 surf_size_r32 = {surf.size.x, surf.size.y};
+    glUniform2fv(size_uniform_loc, 1, reinterpret_cast<const t_r32*>(&surf_size_r32));
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, *renderable->elem_buf_gl_id);
-    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, NULL);
+    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, nullptr);
 
     glUseProgram(0);
 

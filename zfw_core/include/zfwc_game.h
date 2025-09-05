@@ -1,46 +1,46 @@
-#ifndef ZFWC_GAME_H
-#define ZFWC_GAME_H
+#pragma once
 
-#include <stdbool.h>
-#include <cu.h>
+#include <cstddef>
+#include <cassert>
+
 #include "zfwc_input.h"
 #include "zfwc_graphics.h"
 
-typedef enum {
+enum e_window_flags {
     ek_window_flags_resizable = 1 << 0,
     ek_window_flags_hide_cursor = 1 << 1
-} e_window_flags;
+};
 
-typedef struct {
+struct s_window_state {
     s_v2_s32 pos;
     s_v2_s32 size;
     bool fullscreen;
-} s_window_state;
+};
 
-typedef struct {
+struct s_game_init_context {
     void* dev_mem;
 
-    s_mem_arena* perm_mem_arena;
-    s_mem_arena* temp_mem_arena;
+    c_mem_arena* perm_mem_arena;
+    c_mem_arena* temp_mem_arena;
 
     s_window_state window_state;
 
     s_gl_resource_arena* gl_res_arena;
 
     s_rendering_basis* rendering_basis;
-} s_game_init_context;
+};
 
-typedef enum {
+enum e_game_tick_result {
     ek_game_tick_result_normal, // Continue running the game as normal.
     ek_game_tick_result_exit,
     ek_game_tick_result_error
-} e_game_tick_result;
+};
 
-typedef struct {
+struct s_game_tick_context {
     void* dev_mem;
 
-    s_mem_arena* perm_mem_arena;
-    s_mem_arena* temp_mem_arena;
+    c_mem_arena* perm_mem_arena;
+    c_mem_arena* temp_mem_arena;
 
     s_window_state window_state;
 
@@ -49,26 +49,26 @@ typedef struct {
     s_gl_resource_arena* gl_res_arena;
 
     s_rendering_basis* rendering_basis;
-} s_game_tick_context;
+};
 
-typedef struct {
+struct s_game_render_context {
     void* dev_mem;
 
-    s_mem_arena* perm_mem_arena;
-    s_mem_arena* temp_mem_arena;
+    c_mem_arena* perm_mem_arena;
+    c_mem_arena* temp_mem_arena;
 
     s_v2 mouse_pos;
 
     s_rendering_context rendering_context;
-} s_game_render_context;
+};
 
-typedef struct {
+struct s_game_info {
     s_v2_s32 window_init_size;
-    s_char_array_view window_title;
+    c_array<const char> window_title;
     e_window_flags window_flags;
 
-    size_t dev_mem_size; // How much memory should be allocated in the permanent arena for your use? This might be the size of a specific struct, for example.
-    size_t dev_mem_alignment; // The alignment of the above memory.
+    std::size_t dev_mem_size; // How much memory should be allocated in the permanent arena for your use? This might be the size of a specific struct, for example.
+    std::size_t dev_mem_alignment; // The alignment of the above memory.
 
     t_s32 targ_ticks_per_sec;
 
@@ -77,13 +77,13 @@ typedef struct {
     e_game_tick_result (*tick_func)(const s_game_tick_context* const func_data); // Called once every tick (which can occur multiple times a frame).
     bool (*render_func)(const s_game_render_context* const func_data); // Called after all ticks have been run.
     void (*clean_func)(void* const dev_mem); // Called when the game ends (including if it ends in error). This is not called if your initialisation function failed or hasn't yet been called.
-} s_game_info;
+};
 
-static inline void AssertGameInfoValidity(const s_game_info* const info) {
+inline void AssertGameInfoValidity(const s_game_info* const info) {
     assert(info);
 
     assert(info->window_init_size.x > 0 && info->window_init_size.y > 0);
-    assert(IsStrTerminated(info->window_title));
+    //assert(IsStrTerminated(info->window_title));
 
     assert((info->dev_mem_size == 0 && info->dev_mem_alignment == 0)
         || (info->dev_mem_size > 0 && IsAlignmentValid(info->dev_mem_alignment)));
@@ -95,6 +95,5 @@ static inline void AssertGameInfoValidity(const s_game_info* const info) {
     assert(info->render_func);
 }
 
-bool WARN_UNUSED_RESULT RunGame(const s_game_info* const info);
-
-#endif
+[[nodiscard]]
+bool RunGame(const s_game_info* const info);

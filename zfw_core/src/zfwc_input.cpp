@@ -1,6 +1,6 @@
 #include "zfwc_input.h"
 
-static const t_s32 g_glfw_keys[] = {
+static constexpr t_s32 g_glfw_keys[] = {
     [ek_key_code_space] = GLFW_KEY_SPACE,
     [ek_key_code_0] = GLFW_KEY_0,
     [ek_key_code_1] = GLFW_KEY_1,
@@ -68,7 +68,7 @@ static const t_s32 g_glfw_keys[] = {
 
 STATIC_ARRAY_LEN_CHECK(g_glfw_keys, eks_key_code_cnt);
 
-static const t_s32 g_glfw_mouse_buttons[] = {
+static constexpr t_s32 g_glfw_mouse_buttons[] = {
     [ek_mouse_button_code_left] = GLFW_MOUSE_BUTTON_LEFT,
     [ek_mouse_button_code_right] = GLFW_MOUSE_BUTTON_RIGHT,
     [ek_mouse_button_code_middle] = GLFW_MOUSE_BUTTON_MIDDLE
@@ -76,38 +76,38 @@ static const t_s32 g_glfw_mouse_buttons[] = {
 
 STATIC_ARRAY_LEN_CHECK(g_glfw_mouse_buttons, eks_mouse_button_code_cnt);
 
-static t_key_bits KeysDownBits(GLFWwindow* const glfw_window) {
+static t_key_bits KeysDownBits(GLFWwindow* glfw_window) {
     t_key_bits keys_down = 0;
 
     for (t_s32 i = 0; i < eks_key_code_cnt; i++) {
         if (glfwGetKey(glfw_window, g_glfw_keys[i])) {
-            keys_down |= (t_key_bits)1 << i;
+            keys_down |= static_cast<t_key_bits>(1) << i;
         }
     }
 
     return keys_down;
 }
 
-static t_mouse_button_bits MouseButtonsDownBits(GLFWwindow* const glfw_window) {
+static t_mouse_button_bits MouseButtonsDownBits(GLFWwindow* glfw_window) {
     t_mouse_button_bits mouse_buttons_down = 0;
 
     for (t_s32 i = 0; i < eks_mouse_button_code_cnt; i++) {
         if (glfwGetMouseButton(glfw_window, g_glfw_mouse_buttons[i])) {
-            mouse_buttons_down |= (t_mouse_button_bits)1 << i;
+            mouse_buttons_down |= static_cast<t_mouse_button_bits>(1) << i;
         }
     }
 
     return mouse_buttons_down;
 }
 
-static s_v2 MousePos(GLFWwindow* const glfw_window) {
-    double mouse_x_dbl, mouse_y_dbl;
+static s_v2 MousePos(GLFWwindow* glfw_window) {
+    double mouse_x_dbl{}, mouse_y_dbl{};
     glfwGetCursorPos(glfw_window, &mouse_x_dbl, &mouse_y_dbl);
-    return (s_v2){mouse_x_dbl, mouse_y_dbl};
+    return s_v2{static_cast<t_r32>(mouse_x_dbl), static_cast<t_r32>(mouse_y_dbl)};
 }
 
-s_input_state InputState(GLFWwindow* const glfw_window) {
-    return (s_input_state){
+s_input_state InputState(GLFWwindow* glfw_window) {
+    return s_input_state{
         .keys_down = KeysDownBits(glfw_window),
         .mouse_buttons_down = MouseButtonsDownBits(glfw_window),
         .mouse_pos = MousePos(glfw_window)
@@ -194,8 +194,8 @@ static e_mouse_button_code GLFWToZFWMouseButtonCode(const t_s32 glfw_button) {
     }
 }
 
-void GLFWKeyCallback(GLFWwindow* const window, const int key, const int scancode, const int action, const int mods) {
-    s_input_events* const input_events = glfwGetWindowUserPointer(window);
+void GLFWKeyCallback(GLFWwindow* window, const int key, const int, const int action, const int) {
+    auto* input_events = reinterpret_cast<s_input_events*>(glfwGetWindowUserPointer(window));
 
     const e_key_code key_code = GLFWToZFWKeyCode(key);
 
@@ -203,7 +203,7 @@ void GLFWKeyCallback(GLFWwindow* const window, const int key, const int scancode
         return;
     }
 
-    const t_key_bits key_mask = (t_key_bits)1 << key_code;
+    const t_key_bits key_mask = static_cast<t_key_bits>(1) << key_code;
 
     if (action == GLFW_PRESS) {
         input_events->keys_pressed |= key_mask;
@@ -212,8 +212,8 @@ void GLFWKeyCallback(GLFWwindow* const window, const int key, const int scancode
     }
 }
 
-void GLFWMouseButtonCallback(GLFWwindow* const window, const int button, const int action, const int mods) {
-    s_input_events* const input_events = glfwGetWindowUserPointer(window);
+void GLFWMouseButtonCallback(GLFWwindow* window, const int button, const int action, const int) {
+    auto* input_events = reinterpret_cast<s_input_events*>(glfwGetWindowUserPointer(window));
 
     const e_mouse_button_code mb_code = GLFWToZFWMouseButtonCode(button);
 
@@ -221,7 +221,7 @@ void GLFWMouseButtonCallback(GLFWwindow* const window, const int button, const i
         return;
     }
 
-    const t_mouse_button_bits mb_mask = (t_mouse_button_bits)1 << mb_code;
+    const t_mouse_button_bits mb_mask = static_cast<t_mouse_button_bits>(1) << mb_code;
 
     if (action == GLFW_PRESS) {
         input_events->mouse_buttons_pressed |= mb_mask;
@@ -230,8 +230,8 @@ void GLFWMouseButtonCallback(GLFWwindow* const window, const int button, const i
     }
 }
 
-void GLFWScrollCallback(GLFWwindow* const window, const double offs_x, const double offs_y) {
-    s_input_events* const input_events = glfwGetWindowUserPointer(window);
+void GLFWScrollCallback(GLFWwindow* window, const double, const double offs_y) {
+    auto* input_events = reinterpret_cast<s_input_events*>(glfwGetWindowUserPointer(window));
 
     if (offs_y > 0.0) {
         input_events->mouse_scroll_state = ek_mouse_scroll_state_up;
@@ -242,12 +242,12 @@ void GLFWScrollCallback(GLFWwindow* const window, const double offs_x, const dou
     }
 }
 
-void GLFWCharCallback(GLFWwindow* const window, const unsigned int codepoint) {
-    s_input_events* const input_events = glfwGetWindowUserPointer(window);
+void GLFWCharCallback(GLFWwindow* window, const unsigned int codepoint) {
+    auto* input_events = reinterpret_cast<s_input_events*>(glfwGetWindowUserPointer(window));
 
     for (size_t i = 0; i < sizeof(input_events->unicode_buf); i++) {
         if (!input_events->unicode_buf[i]) {
-            input_events->unicode_buf[i] = codepoint;
+            input_events->unicode_buf[i] = static_cast<char>(codepoint);
             return;
         }
     }

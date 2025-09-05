@@ -1,7 +1,7 @@
-project(zfw_shared C)
+project(zfw_shared CXX)
 
 add_library(zfw_shared STATIC
-    src/zfws.c
+    src/zfws.cpp
     ../external/stb_image/src/stb_image.c
 
     include/zfws.h

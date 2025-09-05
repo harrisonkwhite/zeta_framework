@@ -1,6 +1,6 @@
-#ifndef ZFWC_RNG_H
-#define ZFWC_RNG_H
+#pragma once
 
+#include <cassert>
 #include <cu.h>
 
 void InitRNG();
@@ -20,5 +20,3 @@ static inline t_r32 RandRangeIncl(const t_r32 beg, const t_r32 end_incl) {
     assert(beg <= end_incl);
     return beg + (RandPercIncl() * (end_incl - beg));
 }
-
-#endif

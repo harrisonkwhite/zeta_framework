@@ -1,6 +1,7 @@
 #ifndef ZFWS_H
 #define ZFWS_H
 
+#include <zfws_mem.h>
 #include <cu.h>
 
 #define ASCII_PRINTABLE_MIN ' '

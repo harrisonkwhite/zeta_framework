@@ -1,8 +1,8 @@
 #include "zfwc_graphics.h"
 
-static t_gl_id GenShaderFromSrc(const s_char_array_view src, const bool frag, s_mem_arena* const temp_mem_arena) {
+static t_gl_id GenShaderFromSrc(const s_char_array_view src, const bool frag, s_mem_arena& temp_mem_arena) {
     const t_gl_id shader_gl_id = glCreateShader(frag ? GL_FRAGMENT_SHADER : GL_VERTEX_SHADER);
-    glShaderSource(shader_gl_id, 1, &src.buf_raw, NULL);
+    glShaderSource(shader_gl_id, 1, &src.buf_raw, nullptr);
     glCompileShader(shader_gl_id);
 
     t_s32 success;
@@ -14,10 +14,10 @@ static t_gl_id GenShaderFromSrc(const s_char_array_view src, const bool frag, s_
         glGetShaderiv(shader_gl_id, GL_INFO_LOG_LENGTH, &log_len);
 
         if (log_len > 1) {
-            const s_char_array log = PushCharArrayToMemArena(temp_mem_arena, log_len);
+            const s_char_array log = PushCharArrayToMemArena(&temp_mem_arena, log_len);
 
             if (!IS_ZERO(log)) {
-                glGetShaderInfoLog(shader_gl_id, log.elem_cnt, NULL, log.buf_raw);
+                glGetShaderInfoLog(shader_gl_id, log.elem_cnt, nullptr, log.buf_raw);
                 LOG_ERROR_SPECIAL("OpenGL Shader Compilation", "%s", log.buf_raw);
             } else {
                 LOG_ERROR("Failed to reserve memory for OpenGL shader compilation error log!");
@@ -32,9 +32,9 @@ static t_gl_id GenShaderFromSrc(const s_char_array_view src, const bool frag, s_
     return shader_gl_id;
 }
 
-static bool LoadShaderSrcsFromFile(s_char_array_view* const vert_src, s_char_array_view* const frag_src, const s_char_array_view file_path, s_mem_arena* const mem_arena) {
-    assert(IS_ZERO(*vert_src));
-    assert(IS_ZERO(*frag_src));
+static bool LoadShaderSrcsFromFile(s_char_array_view& vert_src, s_char_array_view& frag_src, const s_char_array_view file_path, s_mem_arena& mem_arena) {
+    assert(IS_ZERO(vert_src));
+    assert(IS_ZERO(frag_src));
 
     FILE* const fs = fopen(file_path.buf_raw, "rb");
 
@@ -51,7 +51,7 @@ static bool LoadShaderSrcsFromFile(s_char_array_view* const vert_src, s_char_arr
         return false;
     }
 
-    const s_char_array vert_src_nonview = PushCharArrayToMemArena(mem_arena, vert_src_len);
+    const s_char_array vert_src_nonview = PushCharArrayToMemArena(&mem_arena, vert_src_len);
 
     if (IS_ZERO(vert_src_nonview)) {
         LOG_ERROR("Failed to reserve memory for vertex shader source from file \"%s\"!", file_path.buf_raw);
@@ -73,7 +73,7 @@ static bool LoadShaderSrcsFromFile(s_char_array_view* const vert_src, s_char_arr
         return false;
     }
 
-    const s_char_array frag_src_nonview = PushCharArrayToMemArena(mem_arena, frag_src_len);
+    const s_char_array frag_src_nonview = PushCharArrayToMemArena(&mem_arena, frag_src_len);
 
     if (IS_ZERO(frag_src_nonview)) {
         LOG_ERROR("Failed to reserve memory for fragment shader source from file \"%s\"!", file_path.buf_raw);
@@ -89,21 +89,22 @@ static bool LoadShaderSrcsFromFile(s_char_array_view* const vert_src, s_char_arr
 
     fclose(fs);
 
-    *vert_src = CharArrayView(vert_src_nonview);
-    *frag_src = CharArrayView(frag_src_nonview);
+    vert_src = CharArrayView(vert_src_nonview);
+    frag_src = CharArrayView(frag_src_nonview);
 
     return true;
 }
 
-static t_gl_id GenShaderProg(const s_shader_prog_gen_info gen_info, s_mem_arena* const temp_mem_arena) {
+static t_gl_id GenShaderProg(const s_shader_prog_gen_info gen_info, s_mem_arena& temp_mem_arena) {
     // Determine the shader sources.
-    s_char_array_view vert_src = {0}, frag_src = {0};
+    s_char_array_view vert_src{};
+    s_char_array_view frag_src{};
 
     if (gen_info.holds_srcs) {
         vert_src = gen_info.vert_src;
         frag_src = gen_info.frag_src;
     } else {
-        if (!LoadShaderSrcsFromFile(&vert_src, &frag_src, gen_info.file_path, temp_mem_arena)) {
+        if (!LoadShaderSrcsFromFile(vert_src, frag_src, gen_info.file_path, temp_mem_arena)) {
             LOG_ERROR("Failed to load shader sources from file \"%s\"!", gen_info.file_path.buf_raw);
             return 0;
         }
@@ -149,8 +150,8 @@ static t_gl_id GenShaderProg(const s_shader_prog_gen_info gen_info, s_mem_arena*
     return prog_gl_id;
 }
 
-bool InitShaderProgGroup(s_shader_prog_group* const prog_group, const s_shader_prog_gen_info_array_view gen_infos, s_gl_resource_arena* const gl_res_arena, s_mem_arena* const temp_mem_arena) {
-    assert(IS_ZERO(*prog_group));
+bool InitShaderProgGroup(s_shader_prog_group& prog_group, const s_shader_prog_gen_info_array_view gen_infos, s_gl_resource_arena& gl_res_arena, s_mem_arena& temp_mem_arena) {
+    assert(IS_ZERO(prog_group));
     assert(gen_infos.elem_cnt > 0);
 
     const t_s32 prog_cnt = gen_infos.elem_cnt;
@@ -175,7 +176,7 @@ bool InitShaderProgGroup(s_shader_prog_group* const prog_group, const s_shader_p
         }
     }
 
-    *prog_group = (s_shader_prog_group){
+    prog_group = s_shader_prog_group{
         .gl_ids = GLIDArrayView(gl_ids)
     };
 

@@ -15,22 +15,22 @@ void InitRNG() {
 
 t_r32 RandPerc() {
     assert(g_rng_initted);
-    return (t_r32)rand() / (RAND_MAX + 1.0f);
+    return static_cast<t_r32>(rand()) / (RAND_MAX + 1.0f);
 }
 
 t_r32 RandPercIncl() {
     assert(g_rng_initted);
-    return (t_r32)rand() / RAND_MAX;
+    return static_cast<t_r32>(rand()) / RAND_MAX;
 }
 
 t_s32 RandRangeS32(const t_s32 beg, const t_s32 end) {
     assert(g_rng_initted);
     assert(beg < end);
-    return beg + rand() % (end - beg);
+    return beg + (rand() % (end - beg));
 }
 
 t_s32 RandRangeS32Incl(const t_s32 beg, const t_s32 end_incl) {
     assert(g_rng_initted);
     assert(beg <= end_incl);
-    return beg + rand() % (end_incl - beg + 1);
+    return beg + (rand() % (end_incl - beg + 1));
 }

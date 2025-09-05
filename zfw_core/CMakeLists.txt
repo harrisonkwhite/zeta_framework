@@ -1,4 +1,4 @@
-project(zfw_core C)
+project(zfw_core CXX)
 
 include(FetchContent)
 
@@ -12,15 +12,15 @@ FetchContent_MakeAvailable(glfw)
 find_package(OpenGL REQUIRED)
 
 add_library(zfw_core STATIC
-    src/zfwc_game.c
-    src/zfwc_input.c
-    src/zfwc_math.c
-    src/zfwc_rng.c
-    src/graphics/zfwc_graphics.c
-    src/graphics/zfwc_textures.c
-    src/graphics/zfwc_fonts.c
-    src/graphics/zfwc_shaders.c
-    src/graphics/zfwc_surfaces.c
+    src/zfwc_game.cpp
+    src/zfwc_input.cpp
+    src/zfwc_math.cpp
+    src/zfwc_rng.cpp
+    src/graphics/zfwc_graphics.cpp
+    src/graphics/zfwc_textures.cpp
+    src/graphics/zfwc_fonts.cpp
+    src/graphics/zfwc_shaders.cpp
+    src/graphics/zfwc_surfaces.cpp
     ../external/glad/src/glad.c
 
     include/zfwc.h

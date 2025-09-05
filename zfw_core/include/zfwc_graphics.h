@@ -1,57 +1,62 @@
-#ifndef ZFWC_GRAPHICS_H
-#define ZFWC_GRAPHICS_H
+#pragma once
 
-#include <limits.h>
+#include <climits>
 #include <zfws.h>
 #include <cu.h>
 #include <glad/glad.h>
 
-#define BLACK (u_v4){0.0f, 0.0f, 0.0f, 1.0f}
-#define DARK_GRAY (u_v4){0.25f, 0.25f, 0.25f, 1.0f}
-#define GRAY (u_v4){0.5f, 0.5f, 0.5f, 1.0f}
-#define LIGHT_GRAY (u_v4){0.75f, 0.75f, 0.75f, 1.0f}
-#define WHITE (u_v4){1.0f, 1.0f, 1.0f, 1.0f}
-#define RED (u_v4){1.0f, 0.0f, 0.0f, 1.0f}
-#define ORANGE (u_v4){1.0f, 0.5f, 0.0f, 1.0f}
-#define YELLOW (u_v4){1.0f, 1.0f, 0.0f, 1.0f}
-#define LIME (u_v4){0.75f, 1.0f, 0.0f, 1.0f}
-#define GREEN (u_v4){0.0f, 1.0f, 0.0f, 1.0f}
-#define TEAL (u_v4){0.0f, 0.5f, 0.5f, 1.0f}
-#define CYAN (u_v4){0.0f, 1.0f, 1.0f, 1.0f}
-#define BLUE (u_v4){0.0f, 0.0f, 1.0f, 1.0f}
-#define PURPLE (u_v4){0.5f, 0.0f, 0.5f, 1.0f}
-#define MAGENTA (u_v4){1.0f, 0.0f, 1.0f, 1.0f}
-#define PINK (u_v4){1.0f, 0.75f, 0.8f, 1.0f}
-#define BROWN (u_v4){0.6f, 0.3f, 0.0f, 1.0f}
+namespace colors {
+    constexpr u_v4 g_black = {0.0f, 0.0f, 0.0f, 1.0f};
+    constexpr u_v4 g_dark_gray = {0.25f, 0.25f, 0.25f, 1.0f};
+    constexpr u_v4 g_gray = {0.5f, 0.5f, 0.5f, 1.0f};
+    constexpr u_v4 g_light_gray = {0.75f, 0.75f, 0.75f, 1.0f};
+    constexpr u_v4 g_white = {1.0f, 1.0f, 1.0f, 1.0f};
+    constexpr u_v4 g_red = {1.0f, 0.0f, 0.0f, 1.0f};
+    constexpr u_v4 g_orange = {1.0f, 0.5f, 0.0f, 1.0f};
+    constexpr u_v4 g_yellow = {1.0f, 1.0f, 0.0f, 1.0f};
+    constexpr u_v4 g_lime = {0.75f, 1.0f, 0.0f, 1.0f};
+    constexpr u_v4 g_green = {0.0f, 1.0f, 0.0f, 1.0f};
+    constexpr u_v4 g_teal = {0.0f, 0.5f, 0.5f, 1.0f};
+    constexpr u_v4 g_cyan = {0.0f, 1.0f, 1.0f, 1.0f};
+    constexpr u_v4 g_blue = {0.0f, 0.0f, 1.0f, 1.0f};
+    constexpr u_v4 g_purple = {0.5f, 0.0f, 0.5f, 1.0f};
+    constexpr u_v4 g_magenta = {1.0f, 0.0f, 1.0f, 1.0f};
+    constexpr u_v4 g_pink = {1.0f, 0.75f, 0.8f, 1.0f};
+    constexpr u_v4 g_brown = {0.6f, 0.3f, 0.0f, 1.0f};
+}
 
-#define ORIGIN_TOP_LEFT (s_v2){0.0f, 0.0f}
-#define ORIGIN_TOP_CENTER (s_v2){0.5f, 0.0f}
-#define ORIGIN_TOP_RIGHT (s_v2){1.0f, 0.0f}
-#define ORIGIN_CENTER_LEFT (s_v2){0.0f, 0.5f}
-#define ORIGIN_CENTER (s_v2){0.5f, 0.5f}
-#define ORIGIN_CENTER_RIGHT (s_v2){1.0f, 0.5f}
-#define ORIGIN_BOTTOM_LEFT (s_v2){0.0f, 1.0f}
-#define ORIGIN_BOTTOM_CENTER (s_v2){0.5f, 1.0f}
-#define ORIGIN_BOTTOM_RIGHT (s_v2){1.0f, 1.0f}
+namespace origins {
+    constexpr s_v2 g_origin_top_left = {0.0f, 0.0f};
+    constexpr s_v2 g_origin_top_center = {0.5f, 0.0f};
+    constexpr s_v2 g_origin_top_right = {1.0f, 0.0f};
+    constexpr s_v2 g_origin_center_left = {0.0f, 0.5f};
+    constexpr s_v2 g_origin_center = {0.5f, 0.5f};
+    constexpr s_v2 g_origin_center_right = {1.0f, 0.5f};
+    constexpr s_v2 g_origin_bottom_left = {0.0f, 1.0f};
+    constexpr s_v2 g_origin_bottom_center = {0.5f, 1.0f};
+    constexpr s_v2 g_origin_bottom_right = {1.0f, 1.0f};
+}
 
-#define ALIGNMENT_TOP_LEFT (s_v2){0.0f, 0.0f}
-#define ALIGNMENT_TOP_CENTER (s_v2){0.5f, 0.0f}
-#define ALIGNMENT_TOP_RIGHT (s_v2){1.0f, 0.0f}
-#define ALIGNMENT_CENTER_LEFT (s_v2){0.0f, 0.5f}
-#define ALIGNMENT_CENTER (s_v2){0.5f, 0.5f}
-#define ALIGNMENT_CENTER_RIGHT (s_v2){1.0f, 0.5f}
-#define ALIGNMENT_BOTTOM_LEFT (s_v2){0.0f, 1.0f}
-#define ALIGNMENT_BOTTOM_CENTER (s_v2){0.5f, 1.0f}
-#define ALIGNMENT_BOTTOM_RIGHT (s_v2){1.0f, 1.0f}
+namespace alignments {
+    constexpr s_v2 g_alignment_top_left = {0.0f, 0.0f};
+    constexpr s_v2 g_alignment_top_center = {0.5f, 0.0f};
+    constexpr s_v2 g_alignment_top_right = {1.0f, 0.0f};
+    constexpr s_v2 g_alignment_center_left = {0.0f, 0.5f};
+    constexpr s_v2 g_alignment_center = {0.5f, 0.5f};
+    constexpr s_v2 g_alignment_center_right = {1.0f, 0.5f};
+    constexpr s_v2 g_alignment_bottom_left = {0.0f, 1.0f};
+    constexpr s_v2 g_alignment_bottom_center = {0.5f, 1.0f};
+    constexpr s_v2 g_alignment_bottom_right = {1.0f, 1.0f};
+}
 
-#define GL_VERSION_MAJOR 4
-#define GL_VERSION_MINOR 3
+constexpr t_s32 g_gl_version_major = 4;
+constexpr t_s32 g_gl_version_minor = 3;
 
-typedef t_u32 t_gl_id;
+using t_gl_id = t_u32;
 
 DEF_ARRAY_TYPE(t_gl_id, gl_id, GLID);
 
-typedef enum {
+enum e_gl_resource_type {
     ek_gl_resource_type_texture,
     ek_gl_resource_type_shader_prog,
     ek_gl_resource_type_vert_array,
@@ -60,41 +65,49 @@ typedef enum {
     ek_gl_resource_type_framebuffer,
 
     eks_gl_resource_type_cnt
-} e_gl_resource_type;
+};
 
 DEF_ARRAY_TYPE(e_gl_resource_type, gl_resource_type, GLResourceType);
 
-typedef struct {
+struct s_gl_resource_arena {
+public:
+    [[nodiscard]]
+    bool Init();
+    void Clean();
+
+    cu::c_array<t_gl_id> Push(t_s32 cnt, e_gl_resource_type res_type);
+
+private:
     s_gl_id_array ids;
     s_gl_resource_type_array res_types;
 
     t_s32 res_used;
     t_s32 res_limit;
-} s_gl_resource_arena;
+};
 
-typedef struct {
+struct s_texture_group {
     s_v2_s32_array_view sizes;
     s_gl_id_array_view gl_ids;
-} s_texture_group;
+};
 
-typedef s_rgba_texture (*t_texture_group_rgba_generator_func)(const t_s32 tex_index, s_mem_arena* const mem_arena);
+using t_texture_group_rgba_generator_func = s_rgba_texture (*)(t_s32 tex_index, c_mem_arena& mem_arena);
 
-typedef enum {
+enum e_builtin_texture {
     ek_builtin_texture_pixel,
     eks_builtin_texture_cnt
-} e_builtin_texture;
+};
 
-typedef struct {
+struct s_font_group {
     s_font_arrangement_array_view arrangements;
     s_font_texture_meta_array_view tex_metas;
     s_gl_id_array_view tex_gl_ids;
-} s_font_group;
+};
 
-typedef struct {
+struct s_shader_prog_group {
     s_gl_id_array_view gl_ids;
-} s_shader_prog_group;
+};
 
-typedef struct {
+struct s_shader_prog_gen_info {
     bool holds_srcs;
 
     union {
@@ -107,20 +120,20 @@ typedef struct {
             s_char_array_view frag_src;
         };
     };
-} s_shader_prog_gen_info;
+};
 
 DEF_ARRAY_TYPE(s_shader_prog_gen_info, shader_prog_gen_info, ShaderProgGenInfo);
 
-typedef enum {
+enum e_shader_prog_uniform_value_type {
     ek_shader_prog_uniform_value_type_s32,
     ek_shader_prog_uniform_value_type_r32,
     ek_shader_prog_uniform_value_type_v2,
     ek_shader_prog_uniform_value_type_v3,
     ek_shader_prog_uniform_value_type_v4,
     ek_shader_prog_uniform_value_type_mat4x4,
-} e_shader_prog_uniform_value_type;
+};
 
-typedef struct {
+struct s_shader_prog_uniform_value {
     e_shader_prog_uniform_value_type type;
 
     union {
@@ -131,55 +144,55 @@ typedef struct {
         u_v4 as_v4;
         s_matrix_4x4 as_mat4x4;
     };
-} s_shader_prog_uniform_value;
+};
 
-typedef enum {
+enum e_builtin_shader_prog {
     ek_builtin_shader_prog_batch,
     ek_builtin_shader_prog_surface_default,
     ek_builtin_shader_prog_surface_blend,
 
     eks_builtin_shader_prog_cnt
-} e_builtin_shader_prog;
+};
 
-typedef enum {
+enum e_renderable {
     ek_renderable_batch,
     ek_renderable_surface,
 
     eks_renderable_cnt
-} e_renderable;
+};
 
-typedef struct {
+struct s_renderable {
     const t_gl_id* vert_array_gl_id;
     const t_gl_id* vert_buf_gl_id;
     const t_gl_id* elem_buf_gl_id;
-} s_renderable;
+};
 
-typedef struct {
+struct s_rendering_basis {
     s_texture_group builtin_textures;
     s_shader_prog_group builtin_shader_progs;
     s_renderable renderables[eks_renderable_cnt];
-} s_rendering_basis;
+};
 
-typedef struct {
+struct s_batch_vert {
     s_v2 vert_coord;
     s_v2 pos;
     s_v2 size;
     t_r32 rot;
     s_v2 tex_coord;
     u_v4 blend;
-} s_batch_vert;
+};
 
 DEF_ARRAY_TYPE(s_batch_vert, batch_vert_array, BatchVert);
 
-#define BATCH_SLOT_CNT 8192
-#define BATCH_SLOT_VERT_LEN (sizeof(s_batch_vert) / sizeof(t_r32))
-#define BATCH_SLOT_VERT_CNT 4
-#define BATCH_SLOT_ELEM_CNT 6
-static_assert(BATCH_SLOT_ELEM_CNT * BATCH_SLOT_CNT <= USHRT_MAX, "Batch slot count is too high!");
+constexpr t_s32 g_batch_slot_cnt = 8192;
+constexpr t_s32 g_batch_slot_vert_len = sizeof(s_batch_vert) / sizeof(t_r32);
+constexpr t_s32 g_batch_slot_vert_cnt = 4;
+constexpr t_s32 g_batch_slot_elem_cnt = 6;
+static_assert(g_batch_slot_elem_cnt * g_batch_slot_cnt <= USHRT_MAX, "Batch slot count is too high!");
 
-typedef s_batch_vert t_batch_slot[BATCH_SLOT_VERT_CNT]; // A batch slot is essentially the data for a single rendered quad.
+using t_batch_slot = s_batch_vert[g_batch_slot_vert_cnt];
 
-typedef struct {
+struct s_batch_slot_write_info {
     t_gl_id tex_gl_id;
     s_rect_edges tex_coords;
     s_v2 pos;
@@ -187,106 +200,106 @@ typedef struct {
     s_v2 origin;
     t_r32 rot;
     u_v4 blend;
-} s_batch_slot_write_info;
+};
 
-typedef struct {
-    t_batch_slot slots[BATCH_SLOT_CNT];
+struct s_batch_state {
+    t_batch_slot slots[g_batch_slot_cnt];
     t_s32 num_slots_used;
 
     t_gl_id tex_gl_id;
-} s_batch_state;
+};
 
-typedef struct {
-    t_gl_id buf[256]; // NOTE: Size of this is pretty arbitrary. Could make it dynamic, but that would add unnecessary complication I think.
+struct s_surface_framebuffer_gl_id_stack {
+    t_gl_id buf[256];
     int height;
-} s_surface_framebuffer_gl_id_stack;
+};
 
-typedef struct {
+struct s_rendering_state {
     s_batch_state batch;
     s_matrix_4x4 view_mat;
     s_surface_framebuffer_gl_id_stack surf_fb_gl_id_stack;
-} s_rendering_state;
+};
 
-typedef struct {
-    const s_rendering_basis* basis;
-    s_rendering_state* state;
+struct s_rendering_context {
+    const s_rendering_basis& basis;
+    s_rendering_state& state;
 
     s_v2_s32 window_size;
-} s_rendering_context;
+};
 
-typedef struct {
+struct s_surface {
     const t_gl_id* fb_gl_id;
     t_gl_id* fb_tex_gl_id;
 
     s_v2_s32 size;
-} s_surface;
+};
 
 static inline t_gl_id BoundGLFramebuffer() {
     t_s32 fb;
     glGetIntegerv(GL_FRAMEBUFFER_BINDING, &fb);
-    return fb;
+    return static_cast<t_gl_id>(fb);
 }
 
 static inline s_rect_s32 GLViewport() {
     s_rect_s32 vp;
-    glGetIntegerv(GL_VIEWPORT, (t_s32*)&vp);
+    glGetIntegerv(GL_VIEWPORT, reinterpret_cast<t_s32*>(&vp));
     return vp;
 }
 
 //
 // zfwc_graphics.c
 //
-bool WARN_UNUSED_RESULT InitGLResourceArena(s_gl_resource_arena* const res_arena, s_mem_arena* const mem_arena, const t_s32 res_limit);
-void CleanGLResourceArena(s_gl_resource_arena* const res_arena);
-s_gl_id_array PushToGLResourceArena(s_gl_resource_arena* const res_arena, const t_s32 cnt, const e_gl_resource_type res_type);
+[[nodiscard]] bool InitGLResourceArena(s_gl_resource_arena& res_arena, c_mem_arena& mem_arena, t_s32 res_limit);
+void CleanGLResourceArena(s_gl_resource_arena& res_arena);
+s_gl_id_array PushToGLResourceArena(s_gl_resource_arena& res_arena, t_s32 cnt, e_gl_resource_type res_type);
 
-bool WARN_UNUSED_RESULT InitRenderingBasis(s_rendering_basis* const basis, s_gl_resource_arena* const gl_res_arena, s_mem_arena* const mem_arena, s_mem_arena* const temp_mem_arena);
-void InitRenderingState(s_rendering_state* const state, const s_v2_s32 window_size);
+[[nodiscard]] bool InitRenderingBasis(s_rendering_basis& basis, s_gl_resource_arena& gl_res_arena, c_mem_arena& mem_arena, c_mem_arena& temp_mem_arena);
+void InitRenderingState(s_rendering_state& state, s_v2_s32 window_size);
 
-void Clear(const s_rendering_context* const rendering_context, const u_v4 col);
-void SetViewMatrix(const s_rendering_context* const rendering_context, const s_matrix_4x4* const mat);
-void Render(const s_rendering_context* const rendering_context, const s_batch_slot_write_info* const write_info);
-void SubmitBatch(const s_rendering_context* const rendering_context);
+void Clear(const s_rendering_context& rendering_context, u_v4 col);
+void SetViewMatrix(const s_rendering_context& rendering_context, const s_matrix_4x4& mat);
+void Render(const s_rendering_context& rendering_context, const s_batch_slot_write_info& write_info);
+void SubmitBatch(const s_rendering_context& rendering_context);
 
 //
 // zfwc_textures.c
 //
-s_rect_edges GenTextureCoords(const s_rect_s32 src_rect, const s_v2_s32 tex_size);
-s_rgba_texture LoadRGBATextureFromPackedFile(const s_char_array_view file_path, s_mem_arena *const mem_arena);
-t_gl_id GenGLTextureFromRGBA(const s_rgba_texture rgba_tex);
-bool WARN_UNUSED_RESULT InitTextureGroup(s_texture_group* const texture_group, const t_s32 tex_cnt, const t_texture_group_rgba_generator_func rgba_generator_func, s_mem_arena *const mem_arena, s_gl_resource_arena* const gl_res_arena, s_mem_arena* const temp_mem_arena);
-void RenderTexture(const s_rendering_context* const rendering_context, const s_texture_group* const textures, const t_s32 tex_index, const s_rect_s32 src_rect, const s_v2 pos, const s_v2 origin, const s_v2 scale, const t_r32 rot, const u_v4 blend);
-void RenderRectWithOutline(const s_rendering_context* const rendering_context, const s_rect rect, const u_v4 fill_color, const u_v4 outline_color, const t_r32 outline_thickness);
-void RenderRectWithOutlineAndOpaqueFill(const s_rendering_context* const rendering_context, const s_rect rect, const u_v3 fill_color, const u_v4 outline_color, const t_r32 outline_thickness);
-void RenderBarHor(const s_rendering_context* const rendering_context, const s_rect rect, const t_r32 perc, const u_v4 front_color, const u_v4 bg_color);
-void RenderBarVertical(const s_rendering_context* const rendering_context, const s_rect rect, const t_r32 perc, const u_v4 front_color, const u_v4 bg_color);
+s_rect_edges GenTextureCoords(s_rect_s32 src_rect, s_v2_s32 tex_size);
+s_rgba_texture LoadRGBATextureFromPackedFile(s_char_array_view file_path, c_mem_arena& mem_arena);
+t_gl_id GenGLTextureFromRGBA(const s_rgba_texture& rgba_tex);
+[[nodiscard]] bool InitTextureGroup(s_texture_group& texture_group, t_s32 tex_cnt, t_texture_group_rgba_generator_func rgba_generator_func, c_mem_arena& mem_arena, s_gl_resource_arena& gl_res_arena, c_mem_arena& temp_mem_arena);
+void RenderTexture(const s_rendering_context& rendering_context, const s_texture_group& textures, t_s32 tex_index, s_rect_s32 src_rect, s_v2 pos, s_v2 origin, s_v2 scale, t_r32 rot, u_v4 blend);
+void RenderRectWithOutline(const s_rendering_context& rendering_context, s_rect rect, u_v4 fill_color, u_v4 outline_color, t_r32 outline_thickness);
+void RenderRectWithOutlineAndOpaqueFill(const s_rendering_context& rendering_context, s_rect rect, u_v3 fill_color, u_v4 outline_color, t_r32 outline_thickness);
+void RenderBarHor(const s_rendering_context& rendering_context, s_rect rect, t_r32 perc, u_v4 front_color, u_v4 bg_color);
+void RenderBarVertical(const s_rendering_context& rendering_context, s_rect rect, t_r32 perc, u_v4 front_color, u_v4 bg_color);
 
-static inline void RenderRect(const s_rendering_context* const rendering_context, const s_rect rect, const u_v4 color) {
-    RenderTexture(rendering_context, &rendering_context->basis->builtin_textures, ek_builtin_texture_pixel, (s_rect_s32){0}, RectPos(rect), (s_v2){0}, RectSize(rect), 0, color);
+static inline void RenderRect(const s_rendering_context& rendering_context, s_rect rect, u_v4 color) {
+    RenderTexture(rendering_context, rendering_context.basis.builtin_textures, ek_builtin_texture_pixel, s_rect_s32{0}, RectPos(rect), s_v2{0}, RectSize(rect), 0, color);
 }
 
-static inline void RenderBarHorReverse(const s_rendering_context* const rendering_context, const s_rect rect, const t_r32 perc, const u_v4 front_color, const u_v4 bg_color) {
+static inline void RenderBarHorReverse(const s_rendering_context& rendering_context, s_rect rect, t_r32 perc, u_v4 front_color, u_v4 bg_color) {
     RenderBarHor(rendering_context, rect, 1.0f - perc, bg_color, front_color);
 }
 
-static inline void RenderBarVerticalReverse(const s_rendering_context* const rendering_context, const s_rect rect, const t_r32 perc, const u_v4 front_color, const u_v4 bg_color) {
+static inline void RenderBarVerticalReverse(const s_rendering_context& rendering_context, s_rect rect, t_r32 perc, u_v4 front_color, u_v4 bg_color) {
     RenderBarVertical(rendering_context, rect, 1.0f - perc, bg_color, front_color);
 }
 
-static inline void RenderLine(const s_rendering_context* const rendering_context, const s_v2 a, const s_v2 b, const u_v4 blend, const t_r32 width) {
-    const s_v2 diff = {b.x - a.x, b.y - a.y};
+static inline void RenderLine(const s_rendering_context& rendering_context, s_v2 a, s_v2 b, u_v4 blend, t_r32 width) {
+    const s_v2 diff{b.x - a.x, b.y - a.y};
     const t_r32 len = sqrtf((diff.x * diff.x) + (diff.y * diff.y));
 
-    RenderTexture(rendering_context, &rendering_context->basis->builtin_textures, ek_builtin_texture_pixel, (s_rect_s32){0}, a, (s_v2){0.0f, 0.5f}, (s_v2){len, width}, atan2f(-diff.y, diff.x), blend);
+    RenderTexture(rendering_context, rendering_context.basis.builtin_textures, ek_builtin_texture_pixel, s_rect_s32{0}, a, s_v2{0.0f, 0.5f}, s_v2{len, width}, atan2f(-diff.y, diff.x), blend);
 }
 
 //
 // zfwc_fonts.c
 //
-bool WARN_UNUSED_RESULT InitFontGroupFromFiles(s_font_group* const font_group, const s_char_array_view_array_view file_paths, s_mem_arena *const mem_arena, s_gl_resource_arena* const gl_res_arena, s_mem_arena* const temp_mem_arena);
-bool WARN_UNUSED_RESULT GenStrChrRenderPositions(s_v2_array* const positions, s_mem_arena* const mem_arena, const s_char_array_view str, const s_font_group* const font_group, const t_s32 font_index, const s_v2 pos, const s_v2 alignment);
-bool WARN_UNUSED_RESULT GenStrCollider(s_rect* const rect, const s_char_array_view str, const s_font_group* const font_group, const t_s32 font_index, const s_v2 pos, const s_v2 alignment, s_mem_arena* const temp_mem_arena);
-bool WARN_UNUSED_RESULT RenderStr(const s_rendering_context* const rendering_context, const s_char_array_view str, const s_font_group* const fonts, const t_s32 font_index, const s_v2 pos, const s_v2 alignment, const u_v4 color, s_mem_arena* const temp_mem_arena);
+[[nodiscard]] bool InitFontGroupFromFiles(s_font_group& font_group, const s_char_array_view_array_view file_paths, c_mem_arena& mem_arena, s_gl_resource_arena& gl_res_arena, c_mem_arena& temp_mem_arena);
+[[nodiscard]] bool GenStrChrRenderPositions(s_v2_array& positions, c_mem_arena& mem_arena, const s_char_array_view str, const s_font_group& font_group, t_s32 font_index, s_v2 pos, s_v2 alignment);
+[[nodiscard]] bool GenStrCollider(s_rect& rect, const s_char_array_view str, const s_font_group& font_group, t_s32 font_index, s_v2 pos, s_v2 alignment, c_mem_arena& temp_mem_arena);
+[[nodiscard]] bool RenderStr(const s_rendering_context& rendering_context, const s_char_array_view str, const s_font_group& fonts, t_s32 font_index, s_v2 pos, s_v2 alignment, u_v4 color, c_mem_arena& temp_mem_arena);
 
 //
 // zfwc_shaders.c
@@ -296,21 +309,20 @@ extern const char g_surface_default_frag_shader_src[];
 extern const char g_surface_blend_vert_shader_src[];
 extern const char g_surface_blend_frag_shader_src[];
 
-bool WARN_UNUSED_RESULT InitShaderProgGroup(s_shader_prog_group* const prog_group, const s_shader_prog_gen_info_array_view gen_infos, s_gl_resource_arena* const gl_res_arena, s_mem_arena* const temp_mem_arena);
+[[nodiscard]]
+bool InitShaderProgGroup(s_shader_prog_group& prog_group, s_shader_prog_gen_info_array_view gen_infos, s_gl_resource_arena& gl_res_arena, c_mem_arena& temp_mem_arena);
 
 //
 // zfwc_surfaces.c
 //
-bool WARN_UNUSED_RESULT InitSurface(s_surface* const surf, const s_v2_s32 size, s_gl_resource_arena* const gl_res_arena);
-bool WARN_UNUSED_RESULT ResizeSurface(s_surface* const surf, const s_v2_s32 size);
-void SetSurface(const s_rendering_context* const rendering_context, const s_surface* const surf);
-void UnsetSurface(const s_rendering_context* const rendering_context);
-void SetSurfaceShaderProg(const s_rendering_context* const rendering_context, const s_shader_prog_group* const progs, const t_s32 prog_index);
-void SetSurfaceShaderProgUniform(const s_rendering_context* const rendering_context, const char* const name, const s_shader_prog_uniform_value val);
-void RenderSurface(const s_rendering_context* const rendering_context, const s_surface* const surf, const s_v2 pos, const s_v2 scale, const bool blend);
+[[nodiscard]] bool InitSurface(s_surface& surf, s_v2_s32 size, s_gl_resource_arena& gl_res_arena);
+[[nodiscard]] bool ResizeSurface(s_surface& surf, s_v2_s32 size);
+void SetSurface(const s_rendering_context& rendering_context, const s_surface& surf);
+void UnsetSurface(const s_rendering_context& rendering_context);
+void SetSurfaceShaderProg(const s_rendering_context& rendering_context, const s_shader_prog_group& progs, t_s32 prog_index);
+void SetSurfaceShaderProgUniform(const s_rendering_context& rendering_context, const char* name, s_shader_prog_uniform_value val);
+void RenderSurface(const s_rendering_context& rendering_context, const s_surface& surf, s_v2 pos, s_v2 scale, bool blend);
 
-static inline s_v2 SurfaceTexelSize(const s_surface* const surf) {
-    return (s_v2){1.0f / surf->size.x, 1.0f / surf->size.y};
+static inline s_v2 SurfaceTexelSize(const s_surface& surf) {
+    return s_v2{1.0f / surf.size.x, 1.0f / surf.size.y};
 }
-
-#endif
