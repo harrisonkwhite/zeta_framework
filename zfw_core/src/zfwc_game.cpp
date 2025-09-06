@@ -81,7 +81,7 @@ static bool ExecGameInitAndMainLoop(s_game& game, const s_game_info& info) {
     game.glfw_window = glfwCreateWindow(
         info.window_init_size.x,
         info.window_init_size.y,
-        info.window_title.buf_raw,
+        info.window_title.Raw(),
         nullptr,
         nullptr
     );
@@ -269,7 +269,7 @@ static bool ExecGameInitAndMainLoop(s_game& game, const s_game_info& info) {
 }
 
 bool RunGame(const s_game_info& info) {
-    AssertGameInfoValidity(&info);
+    AssertGameInfoValidity(info);
 
     s_game game = {};
 

@@ -1,3 +1,4 @@
+#if 0
 #include "zfwap.h"
 
 bool PackShaderProg(const c_array<const char> vert_file_path, const c_array<const char> frag_file_path, const c_array<const char> output_file_path, c_mem_arena* const temp_mem_arena) {
@@ -52,3 +53,4 @@ bool PackShaderProg(const c_array<const char> vert_file_path, const c_array<cons
 
     return true;
 }
+#endif

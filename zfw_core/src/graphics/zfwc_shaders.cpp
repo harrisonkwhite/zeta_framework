@@ -177,7 +177,7 @@ bool InitShaderProgGroup(s_shader_prog_group& prog_group, const c_array<const s_
         }
     }
 
-    prog_group = (s_shader_prog_group){
+    prog_group = {
         .gl_ids = gl_ids.View()
     };
 

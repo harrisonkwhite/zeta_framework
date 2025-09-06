@@ -1,3 +1,4 @@
+#if 0
 #include "zfwap.h"
 
 #include <stdlib.h>
@@ -117,3 +118,5 @@ int main() {
 
     return EXIT_SUCCESS;
 }
+#endif
+int main() {}

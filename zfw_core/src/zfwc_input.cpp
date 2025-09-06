@@ -1,86 +1,90 @@
 #include "zfwc_input.h"
 
-static constexpr t_s32 g_glfw_keys[] = {
-    [ek_key_code_space] = GLFW_KEY_SPACE,
-    [ek_key_code_0] = GLFW_KEY_0,
-    [ek_key_code_1] = GLFW_KEY_1,
-    [ek_key_code_2] = GLFW_KEY_2,
-    [ek_key_code_3] = GLFW_KEY_3,
-    [ek_key_code_4] = GLFW_KEY_4,
-    [ek_key_code_5] = GLFW_KEY_5,
-    [ek_key_code_6] = GLFW_KEY_6,
-    [ek_key_code_7] = GLFW_KEY_7,
-    [ek_key_code_8] = GLFW_KEY_8,
-    [ek_key_code_9] = GLFW_KEY_9,
-    [ek_key_code_a] = GLFW_KEY_A,
-    [ek_key_code_b] = GLFW_KEY_B,
-    [ek_key_code_c] = GLFW_KEY_C,
-    [ek_key_code_d] = GLFW_KEY_D,
-    [ek_key_code_e] = GLFW_KEY_E,
-    [ek_key_code_f] = GLFW_KEY_F,
-    [ek_key_code_g] = GLFW_KEY_G,
-    [ek_key_code_h] = GLFW_KEY_H,
-    [ek_key_code_i] = GLFW_KEY_I,
-    [ek_key_code_j] = GLFW_KEY_J,
-    [ek_key_code_k] = GLFW_KEY_K,
-    [ek_key_code_l] = GLFW_KEY_L,
-    [ek_key_code_m] = GLFW_KEY_M,
-    [ek_key_code_n] = GLFW_KEY_N,
-    [ek_key_code_o] = GLFW_KEY_O,
-    [ek_key_code_p] = GLFW_KEY_P,
-    [ek_key_code_q] = GLFW_KEY_Q,
-    [ek_key_code_r] = GLFW_KEY_R,
-    [ek_key_code_s] = GLFW_KEY_S,
-    [ek_key_code_t] = GLFW_KEY_T,
-    [ek_key_code_u] = GLFW_KEY_U,
-    [ek_key_code_v] = GLFW_KEY_V,
-    [ek_key_code_w] = GLFW_KEY_W,
-    [ek_key_code_x] = GLFW_KEY_X,
-    [ek_key_code_y] = GLFW_KEY_Y,
-    [ek_key_code_z] = GLFW_KEY_Z,
-    [ek_key_code_escape] = GLFW_KEY_ESCAPE,
-    [ek_key_code_enter] = GLFW_KEY_ENTER,
-    [ek_key_code_backspace] = GLFW_KEY_BACKSPACE,
-    [ek_key_code_tab] = GLFW_KEY_TAB,
-    [ek_key_code_right] = GLFW_KEY_RIGHT,
-    [ek_key_code_left] = GLFW_KEY_LEFT,
-    [ek_key_code_down] = GLFW_KEY_DOWN,
-    [ek_key_code_up] = GLFW_KEY_UP,
-    [ek_key_code_f1] = GLFW_KEY_F1,
-    [ek_key_code_f2] = GLFW_KEY_F2,
-    [ek_key_code_f3] = GLFW_KEY_F3,
-    [ek_key_code_f4] = GLFW_KEY_F4,
-    [ek_key_code_f5] = GLFW_KEY_F5,
-    [ek_key_code_f6] = GLFW_KEY_F6,
-    [ek_key_code_f7] = GLFW_KEY_F7,
-    [ek_key_code_f8] = GLFW_KEY_F8,
-    [ek_key_code_f9] = GLFW_KEY_F9,
-    [ek_key_code_f10] = GLFW_KEY_F10,
-    [ek_key_code_f11] = GLFW_KEY_F11,
-    [ek_key_code_f12] = GLFW_KEY_F12,
-    [ek_key_code_left_shift] = GLFW_KEY_LEFT_SHIFT,
-    [ek_key_code_left_control] = GLFW_KEY_LEFT_CONTROL,
-    [ek_key_code_left_alt] = GLFW_KEY_LEFT_ALT,
-    [ek_key_code_right_shift] = GLFW_KEY_RIGHT_SHIFT,
-    [ek_key_code_right_control] = GLFW_KEY_RIGHT_CONTROL,
-    [ek_key_code_right_alt] = GLFW_KEY_RIGHT_ALT
-};
+static constexpr t_s32 ToGLFWKey(const e_key_code kc) {
+    switch (kc) {
+        case ek_key_code_space: return GLFW_KEY_SPACE;
+        case ek_key_code_0: return GLFW_KEY_0;
+        case ek_key_code_1: return GLFW_KEY_1;
+        case ek_key_code_2: return GLFW_KEY_2;
+        case ek_key_code_3: return GLFW_KEY_3;
+        case ek_key_code_4: return GLFW_KEY_4;
+        case ek_key_code_5: return GLFW_KEY_5;
+        case ek_key_code_6: return GLFW_KEY_6;
+        case ek_key_code_7: return GLFW_KEY_7;
+        case ek_key_code_8: return GLFW_KEY_8;
+        case ek_key_code_9: return GLFW_KEY_9;
+        case ek_key_code_a: return GLFW_KEY_A;
+        case ek_key_code_b: return GLFW_KEY_B;
+        case ek_key_code_c: return GLFW_KEY_C;
+        case ek_key_code_d: return GLFW_KEY_D;
+        case ek_key_code_e: return GLFW_KEY_E;
+        case ek_key_code_f: return GLFW_KEY_F;
+        case ek_key_code_g: return GLFW_KEY_G;
+        case ek_key_code_h: return GLFW_KEY_H;
+        case ek_key_code_i: return GLFW_KEY_I;
+        case ek_key_code_j: return GLFW_KEY_J;
+        case ek_key_code_k: return GLFW_KEY_K;
+        case ek_key_code_l: return GLFW_KEY_L;
+        case ek_key_code_m: return GLFW_KEY_M;
+        case ek_key_code_n: return GLFW_KEY_N;
+        case ek_key_code_o: return GLFW_KEY_O;
+        case ek_key_code_p: return GLFW_KEY_P;
+        case ek_key_code_q: return GLFW_KEY_Q;
+        case ek_key_code_r: return GLFW_KEY_R;
+        case ek_key_code_s: return GLFW_KEY_S;
+        case ek_key_code_t: return GLFW_KEY_T;
+        case ek_key_code_u: return GLFW_KEY_U;
+        case ek_key_code_v: return GLFW_KEY_V;
+        case ek_key_code_w: return GLFW_KEY_W;
+        case ek_key_code_x: return GLFW_KEY_X;
+        case ek_key_code_y: return GLFW_KEY_Y;
+        case ek_key_code_z: return GLFW_KEY_Z;
+        case ek_key_code_escape: return GLFW_KEY_ESCAPE;
+        case ek_key_code_enter: return GLFW_KEY_ENTER;
+        case ek_key_code_backspace: return GLFW_KEY_BACKSPACE;
+        case ek_key_code_tab: return GLFW_KEY_TAB;
+        case ek_key_code_right: return GLFW_KEY_RIGHT;
+        case ek_key_code_left: return GLFW_KEY_LEFT;
+        case ek_key_code_down: return GLFW_KEY_DOWN;
+        case ek_key_code_up: return GLFW_KEY_UP;
+        case ek_key_code_f1: return GLFW_KEY_F1;
+        case ek_key_code_f2: return GLFW_KEY_F2;
+        case ek_key_code_f3: return GLFW_KEY_F3;
+        case ek_key_code_f4: return GLFW_KEY_F4;
+        case ek_key_code_f5: return GLFW_KEY_F5;
+        case ek_key_code_f6: return GLFW_KEY_F6;
+        case ek_key_code_f7: return GLFW_KEY_F7;
+        case ek_key_code_f8: return GLFW_KEY_F8;
+        case ek_key_code_f9: return GLFW_KEY_F9;
+        case ek_key_code_f10: return GLFW_KEY_F10;
+        case ek_key_code_f11: return GLFW_KEY_F11;
+        case ek_key_code_f12: return GLFW_KEY_F12;
+        case ek_key_code_left_shift: return GLFW_KEY_LEFT_SHIFT;
+        case ek_key_code_left_control: return GLFW_KEY_LEFT_CONTROL;
+        case ek_key_code_left_alt: return GLFW_KEY_LEFT_ALT;
+        case ek_key_code_right_shift: return GLFW_KEY_RIGHT_SHIFT;
+        case ek_key_code_right_control: return GLFW_KEY_RIGHT_CONTROL;
+        case ek_key_code_right_alt: return GLFW_KEY_RIGHT_ALT;
 
-STATIC_ARRAY_LEN_CHECK(g_glfw_keys, eks_key_code_cnt);
+        default: return eks_key_code_none;
+    }
+}
 
-static constexpr t_s32 g_glfw_mouse_buttons[] = {
-    [ek_mouse_button_code_left] = GLFW_MOUSE_BUTTON_LEFT,
-    [ek_mouse_button_code_right] = GLFW_MOUSE_BUTTON_RIGHT,
-    [ek_mouse_button_code_middle] = GLFW_MOUSE_BUTTON_MIDDLE
-};
+static constexpr t_s32 ToGLFWMouseButton(const e_mouse_button_code mbc) {
+    switch (mbc) {
+        case ek_mouse_button_code_left: return GLFW_MOUSE_BUTTON_LEFT;
+        case ek_mouse_button_code_right: return GLFW_MOUSE_BUTTON_RIGHT;
+        case ek_mouse_button_code_middle: return GLFW_MOUSE_BUTTON_MIDDLE;
 
-STATIC_ARRAY_LEN_CHECK(g_glfw_mouse_buttons, eks_mouse_button_code_cnt);
+        default: return eks_mouse_button_code_none;
+    }
+}
 
 static t_key_bits KeysDownBits(GLFWwindow* glfw_window) {
     t_key_bits keys_down = 0;
 
     for (t_s32 i = 0; i < eks_key_code_cnt; i++) {
-        if (glfwGetKey(glfw_window, g_glfw_keys[i])) {
+        if (glfwGetKey(glfw_window, ToGLFWKey(static_cast<e_key_code>(i)))) {
             keys_down |= static_cast<t_key_bits>(1) << i;
         }
     }
@@ -92,7 +96,7 @@ static t_mouse_button_bits MouseButtonsDownBits(GLFWwindow* glfw_window) {
     t_mouse_button_bits mouse_buttons_down = 0;
 
     for (t_s32 i = 0; i < eks_mouse_button_code_cnt; i++) {
-        if (glfwGetMouseButton(glfw_window, g_glfw_mouse_buttons[i])) {
+        if (glfwGetMouseButton(glfw_window, ToGLFWMouseButton(static_cast<e_mouse_button_code>(i)))) {
             mouse_buttons_down |= static_cast<t_mouse_button_bits>(1) << i;
         }
     }
@@ -103,7 +107,7 @@ static t_mouse_button_bits MouseButtonsDownBits(GLFWwindow* glfw_window) {
 static s_v2 MousePos(GLFWwindow* glfw_window) {
     double mouse_x_dbl, mouse_y_dbl;
     glfwGetCursorPos(glfw_window, &mouse_x_dbl, &mouse_y_dbl);
-    return {static_cast<t_r32>(mouse_x_dbl), static_cast<t_r32>(mouse_y_dbl)};
+    return {static_cast<float>(mouse_x_dbl), static_cast<float>(mouse_y_dbl)};
 }
 
 s_input_state InputState(GLFWwindow* glfw_window) {

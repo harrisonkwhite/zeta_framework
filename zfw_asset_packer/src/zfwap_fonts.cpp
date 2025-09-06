@@ -1,4 +1,4 @@
-#include "zfwap.h"
+/*#include "zfwap.h"
 
 #include <stb_truetype.h>
 
@@ -189,4 +189,4 @@ bool PackFont(const c_array<const char> file_path, const t_s32 height, const c_a
     LOG_SUCCESS("Packed font from file \"%s\" with height %d!", file_path.buf_raw, height);
 
     return true;
-}
+}*/

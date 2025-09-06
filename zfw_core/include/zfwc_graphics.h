@@ -175,7 +175,7 @@ constexpr t_s32 g_batch_slot_vert_cnt = 4;
 constexpr t_s32 g_batch_slot_elem_cnt = 6;
 static_assert(g_batch_slot_elem_cnt * g_batch_slot_cnt <= USHRT_MAX, "Batch slot count is too high!");
 
-using t_batch_slot = s_batch_vert[g_batch_slot_vert_cnt];
+using t_batch_slot = c_static_array<s_batch_vert, g_batch_slot_vert_cnt>;
 
 struct s_batch_slot_write_info {
     t_gl_id tex_gl_id;

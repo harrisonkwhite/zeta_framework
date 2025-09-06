@@ -84,7 +84,7 @@ bool InitFontGroupFromFiles(s_font_group& font_group, const c_array<const c_arra
         }
     }
 
-    font_group = (s_font_group){
+    font_group = {
         .arrangements = arrangements.View(),
         .tex_metas = tex_metas.View(),
         .tex_gl_ids = tex_gl_ids.View()

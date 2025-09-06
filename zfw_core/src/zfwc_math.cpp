@@ -1,7 +1,6 @@
 #include "zfwc_math.h"
 
 #include <cfloat>
-#include "cu_mem.h"
 
 struct s_range {
     float min;
@@ -64,9 +63,7 @@ s_poly GenQuadPoly(c_mem_arena& mem_arena, const s_v2 pos, const s_v2 size, cons
     pts[2] = {pos_base.x + size.x, pos_base.y + size.y};
     pts[3] = {pos_base.x, pos_base.y + size.y};
 
-    return {
-        .pts = pts
-    };
+    return {.pts = pts.View()};
 }
 
 s_poly GenQuadPolyRotated(c_mem_arena& mem_arena, const s_v2 pos, const s_v2 size, const s_v2 origin, const float rot) {
@@ -79,17 +76,17 @@ s_poly GenQuadPolyRotated(c_mem_arena& mem_arena, const s_v2 pos, const s_v2 siz
         return {};
     }
 
-    const s_v2 offs_left = LenDir(size.x * origin.x, rot + PI);
-    const s_v2 offs_up = LenDir(size.y * origin.y, rot + (PI * 0.5f));
+    const s_v2 offs_left = LenDir(size.x * origin.x, rot + g_pi);
+    const s_v2 offs_up = LenDir(size.y * origin.y, rot + (g_pi * 0.5f));
     const s_v2 offs_right = LenDir(size.x * (1.0f - origin.x), rot);
-    const s_v2 offs_down = LenDir(size.y * (1.0f - origin.y), rot - (PI * 0.5f));
+    const s_v2 offs_down = LenDir(size.y * (1.0f - origin.y), rot - (g_pi * 0.5f));
 
     pts[0] = {pos.x + offs_left.x + offs_up.x, pos.y + offs_left.y + offs_up.y};
     pts[1] = {pos.x + offs_right.x + offs_up.x, pos.y + offs_right.y + offs_up.y};
     pts[2] = {pos.x + offs_right.x + offs_down.x, pos.y + offs_right.y + offs_down.y};
     pts[3] = {pos.x + offs_left.x + offs_down.x, pos.y + offs_left.y + offs_down.y};
 
-    return {.pts = pts};
+    return {.pts = pts.View()};
 }
 
 bool DoPolysInters(const s_poly a, const s_poly b) {

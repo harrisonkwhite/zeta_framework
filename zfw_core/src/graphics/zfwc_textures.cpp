@@ -129,12 +129,14 @@ void RenderTexture(const s_rendering_context& rendering_context, const s_texture
 
     s_rect_s32 src_rect_to_use;
 
-    if (src_rect == (s_rect_s32){}) {
+    /*if (src_rect == (s_rect_s32){}) {
         src_rect_to_use = {0, 0, tex_size.x, tex_size.y};
     } else {
         src_rect_to_use = src_rect;
         assert(src_rect.x + src_rect.width <= tex_size.x && src_rect.y + src_rect.height <= tex_size.y);
-    }
+    }*/
+
+    assert(false);
 
     const s_batch_slot_write_info write_info = {
         .tex_gl_id = textures.gl_ids[tex_index],

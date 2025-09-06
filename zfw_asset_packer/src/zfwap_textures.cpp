@@ -1,3 +1,4 @@
+#if 0
 #include "zfwap.h"
 
 #include <stb_image.h>
@@ -42,3 +43,4 @@ bool PackTexture(const c_array<const char> file_path, const c_array<const char> 
 
     return true;
 }
+#endif

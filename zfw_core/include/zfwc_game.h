@@ -78,21 +78,18 @@ struct s_game_info {
     void (*clean_func)(void* const dev_mem); // Called when the game ends (including if it ends in error). This is not called if your initialisation function failed or hasn't yet been called.
 };
 
-inline void AssertGameInfoValidity(const s_game_info* const info) {
-    assert(info);
+inline void AssertGameInfoValidity(const s_game_info& info) {
+    assert(info.window_init_size.x > 0 && info.window_init_size.y > 0);
+    //assert(IsStrTerminated(info.window_title));
 
-    assert(info->window_init_size.x > 0 && info->window_init_size.y > 0);
-    //assert(IsStrTerminated(info->window_title));
+    assert((info.dev_mem_size == 0 && info.dev_mem_alignment == 0)
+        || (info.dev_mem_size > 0 && IsAlignmentValid(info.dev_mem_alignment)));
 
-    assert((info->dev_mem_size == 0 && info->dev_mem_alignment == 0)
-        || (info->dev_mem_size > 0 && IsAlignmentValid(info->dev_mem_alignment)));
+    assert(info.targ_ticks_per_sec > 0);
 
-    assert(info->targ_ticks_per_sec > 0);
-
-    assert(info->init_func);
-    assert(info->tick_func);
-    assert(info->render_func);
+    assert(info.init_func);
+    assert(info.tick_func);
+    assert(info.render_func);
 }
 
-[[nodiscard]]
-bool RunGame(const s_game_info* const info);
+[[nodiscard]] bool RunGame(const s_game_info& info);

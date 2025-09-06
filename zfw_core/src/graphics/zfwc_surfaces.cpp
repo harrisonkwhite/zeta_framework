@@ -121,7 +121,7 @@ bool InitSurface(s_surface& surf, const s_v2_s32 size, s_gl_resource_arena& gl_r
         return false;
     }
 
-    surf = (s_surface){
+    surf = {
         .fb_gl_id = fb_gl_id,
         .fb_tex_gl_id = fb_tex_gl_id,
         .size = size
