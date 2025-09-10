@@ -1,6 +1,4 @@
 #include "zfwc_graphics.h"
-#include "cu_mem.h"
-#include "zfwc_math.h"
 
 static const char g_batch_vert_shader_src[] = "#version 430 core\n"
     "\n"
@@ -218,25 +216,25 @@ static s_renderable GenRenderableOfType(s_gl_resource_arena& gl_res_arena, e_ren
                 return {};
             }
 
-            const c_static_array<t_s32, 6> vert_attr_lens = {{2, 2, 2, 1, 2, 4}};
+            const s_static_array<t_s32, 6> vert_attr_lens = {{2, 2, 2, 1, 2, 4}};
 
             return GenRenderable(gl_res_arena, verts, elems, vert_attr_lens.Nonstatic());
         }
 
         case ek_renderable_surface: {
-            const c_static_array<float, 16> verts = {{
+            const s_static_array<float, 16> verts = {{
                 0.0f, 1.0f, 0.0f, 0.0f,
                 1.0f, 1.0f, 1.0f, 0.0f,
                 1.0f, 0.0f, 1.0f, 1.0f,
                 0.0f, 0.0f, 0.0f, 1.0f
             }};
 
-            const c_static_array<t_u16, 6> elems = {{
+            const s_static_array<t_u16, 6> elems = {{
                 0, 1, 2,
                 2, 3, 0
             }};
 
-            const c_static_array<t_s32, 2> vert_attr_lens = {{2, 2}};
+            const s_static_array<t_s32, 2> vert_attr_lens = {{2, 2}};
 
             return GenRenderable(gl_res_arena, verts.Nonstatic(), elems.Nonstatic(), vert_attr_lens.Nonstatic());
         }
@@ -305,8 +303,8 @@ void InitRenderingState(s_rendering_state& state, const s_v2_s32 window_size) {
     glViewport(0, 0, window_size.x, window_size.y);
 }
 
-void Clear(const s_rendering_context& rendering_context, const u_v4 col) {
-    glClearColor(col.r, col.g, col.b, col.a);
+void Clear(const s_rendering_context& rendering_context, const s_v4 col) {
+    glClearColor(col.x, col.y, col.z, col.w);
     glClear(GL_COLOR_BUFFER_BIT);
 }
 
@@ -316,14 +314,14 @@ void SetViewMatrix(const s_rendering_context& rendering_context, const s_matrix_
 }
 
 static void WriteBatchSlot(t_batch_slot& slot, const s_batch_slot_write_info& write_info) {
-    const c_static_array<s_v2, 4> vert_coords = {{
+    const s_static_array<s_v2, 4> vert_coords = {{
         {0.0f - write_info.origin.x, 0.0f - write_info.origin.y},
         {1.0f - write_info.origin.x, 0.0f - write_info.origin.y},
         {1.0f - write_info.origin.x, 1.0f - write_info.origin.y},
         {0.0f - write_info.origin.x, 1.0f - write_info.origin.y}
     }};
 
-    const c_static_array<s_v2, 4> tex_coords = {{
+    const s_static_array<s_v2, 4> tex_coords = {{
         {write_info.tex_coords.left, write_info.tex_coords.top},
         {write_info.tex_coords.right, write_info.tex_coords.top},
         {write_info.tex_coords.right, write_info.tex_coords.bottom},

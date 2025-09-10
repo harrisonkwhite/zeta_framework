@@ -94,7 +94,7 @@ bool DoPolysInters(const s_poly a, const s_poly b) {
 }
 
 bool DoesPolyIntersWithRect(const s_poly poly, const s_rect rect) {
-    const c_static_array<s_v2, 4> pts = {{
+    const s_static_array<s_v2, 4> pts = {{
         {rect.x, rect.y},
         {rect.x + rect.width, rect.y},
         {rect.x + rect.width, rect.y + rect.height},

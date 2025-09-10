@@ -1,6 +1,6 @@
 #include "zfwc_graphics.h"
 
-const char g_surface_default_vert_shader_src[] = "#version 430 core\n"
+const c_string_view g_surface_default_vert_shader_src = "#version 430 core\n"
     "\n"
     "layout (location = 0) in vec2 a_vert;\n"
     "layout (location = 1) in vec2 a_tex_coord;\n"
@@ -23,7 +23,7 @@ const char g_surface_default_vert_shader_src[] = "#version 430 core\n"
     "    v_tex_coord = a_tex_coord;\n"
     "}\n";
 
-const char g_surface_default_frag_shader_src[] = "#version 430 core\n"
+const c_string_view g_surface_default_frag_shader_src = "#version 430 core\n"
     "\n"
     "in vec2 v_tex_coord;\n"
     "out vec4 o_frag_color;\n"
@@ -34,7 +34,7 @@ const char g_surface_default_frag_shader_src[] = "#version 430 core\n"
         "o_frag_color = texture(u_tex, v_tex_coord);\n"
     "}\n";
 
-const char g_surface_blend_vert_shader_src[] = "#version 430 core\n" \
+const c_string_view g_surface_blend_vert_shader_src = "#version 430 core\n" \
     "\n" \
     "layout (location = 0) in vec2 a_vert;\n" \
     "layout (location = 1) in vec2 a_tex_coord;\n" \
@@ -57,7 +57,7 @@ const char g_surface_blend_vert_shader_src[] = "#version 430 core\n" \
         "v_tex_coord = a_tex_coord;\n" \
     "}\n";
 
-const char g_surface_blend_frag_shader_src[] = "#version 430 core\n" \
+const c_string_view g_surface_blend_frag_shader_src = "#version 430 core\n" \
     "\n" \
     "in vec2 v_tex_coord;\n" \
     "out vec4 o_frag_color;\n" \

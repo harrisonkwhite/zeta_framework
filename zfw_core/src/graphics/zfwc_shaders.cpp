@@ -3,7 +3,7 @@
 #include <cstdio>
 #include "cu_mem.h"
 
-static t_gl_id GenShaderFromSrc(const c_array<const char> src, const bool frag, c_mem_arena& temp_mem_arena) {
+static t_gl_id GenShaderFromSrc(const c_string_view src, const bool frag, c_mem_arena& temp_mem_arena) {
     const t_gl_id shader_gl_id = glCreateShader(frag ? GL_FRAGMENT_SHADER : GL_VERTEX_SHADER);
     const char* const src_ptr = src.Raw();
     glShaderSource(shader_gl_id, 1, &src_ptr, nullptr);
@@ -36,7 +36,7 @@ static t_gl_id GenShaderFromSrc(const c_array<const char> src, const bool frag, 
     return shader_gl_id;
 }
 
-static bool LoadShaderSrcsFromFile(c_array<const char>& vert_src, c_array<const char>& frag_src, const c_array<const char> file_path, c_mem_arena& mem_arena) {
+static bool LoadShaderSrcsFromFile(c_string_view& vert_src, c_string_view& frag_src, const c_string_view file_path, c_mem_arena& mem_arena) {
     assert(vert_src.IsEmpty());
     assert(frag_src.IsEmpty());
 
@@ -55,15 +55,15 @@ static bool LoadShaderSrcsFromFile(c_array<const char>& vert_src, c_array<const 
         return false;
     }
 
-    const auto vert_src_nonview = PushArrayToMemArena<char>(mem_arena, vert_src_len);
+    const auto vert_src_chrs = PushArrayToMemArena<char>(mem_arena, vert_src_len);
 
-    if (vert_src_nonview.IsEmpty()) {
+    if (vert_src_chrs.IsEmpty()) {
         //LOG_ERROR("Failed to reserve memory for vertex shader source from file \"%s\"!", file_path.Raw());
         fclose(fs);
         return false;
     }
 
-    if (fread(vert_src_nonview.Raw(), 1, vert_src_nonview.Len(), fs) < vert_src_nonview.Len()) {
+    if (fread(vert_src_chrs.Raw(), 1, vert_src_chrs.Len(), fs) < vert_src_chrs.Len()) {
         //LOG_ERROR("Failed to read vertex shader source from file \"%s\"!", file_path.Raw());
         fclose(fs);
         return false;
@@ -77,15 +77,15 @@ static bool LoadShaderSrcsFromFile(c_array<const char>& vert_src, c_array<const 
         return false;
     }
 
-    const auto frag_src_nonview = PushArrayToMemArena<char>(mem_arena, frag_src_len);
+    const auto frag_src_chrs = PushArrayToMemArena<char>(mem_arena, frag_src_len);
 
-    if (frag_src_nonview.IsEmpty()) {
+    if (frag_src_chrs.IsEmpty()) {
         //LOG_ERROR("Failed to reserve memory for fragment shader source from file \"%s\"!", file_path.Raw());
         fclose(fs);
         return false;
     }
 
-    if (fread(frag_src_nonview.Raw(), 1, frag_src_nonview.Len(), fs) < frag_src_nonview.Len()) {
+    if (fread(frag_src_chrs.Raw(), 1, frag_src_chrs.Len(), fs) < frag_src_chrs.Len()) {
         //LOG_ERROR("Failed to read fragment shader source from file \"%s\"!", file_path.Raw());
         fclose(fs);
         return false;
@@ -93,16 +93,16 @@ static bool LoadShaderSrcsFromFile(c_array<const char>& vert_src, c_array<const 
 
     fclose(fs);
 
-    vert_src = vert_src_nonview.View();
-    frag_src = frag_src_nonview.View();
+    vert_src = vert_src_chrs.View();
+    frag_src = frag_src_chrs.View();
 
     return true;
 }
 
 static t_gl_id GenShaderProg(const s_shader_prog_gen_info gen_info, c_mem_arena& temp_mem_arena) {
     // Determine the shader sources.
-    c_array<const char> vert_src;
-    c_array<const char> frag_src;
+    c_string_view vert_src;
+    c_string_view frag_src;
 
     if (gen_info.holds_srcs) {
         vert_src = gen_info.vert_src;
@@ -156,6 +156,8 @@ static t_gl_id GenShaderProg(const s_shader_prog_gen_info gen_info, c_mem_arena&
 
 bool InitShaderProgGroup(s_shader_prog_group& prog_group, const c_array<const s_shader_prog_gen_info> gen_infos, s_gl_resource_arena& gl_res_arena, c_mem_arena& temp_mem_arena) {
     assert(gen_infos.Len() > 0);
+
+    c_string_view test = "dog";
 
     const t_s32 prog_cnt = gen_infos.Len();
 

@@ -122,7 +122,7 @@ bool InitTextureGroup(s_texture_group& texture_group, const t_s32 tex_cnt, const
     return true;
 }
 
-void RenderTexture(const s_rendering_context& rendering_context, const s_texture_group& textures, const t_s32 tex_index, const s_rect_s32 src_rect, const s_v2 pos, const s_v2 origin, const s_v2 scale, const float rot, const u_v4 blend) {
+void RenderTexture(const s_rendering_context& rendering_context, const s_texture_group& textures, const t_s32 tex_index, const s_rect_s32 src_rect, const s_v2 pos, const s_v2 origin, const s_v2 scale, const float rot, const s_v4 blend) {
     assert(origin.x >= 0.0f && origin.x <= 1.0f && origin.y >= 0.0f && origin.y <= 1.0f);
 
     const s_v2_s32 tex_size = textures.sizes[tex_index];
@@ -160,7 +160,7 @@ static inline s_rect InnerRect(const s_rect rect, const float outline_thickness)
     };
 }
 
-void RenderRectWithOutline(const s_rendering_context& rendering_context, const s_rect rect, const u_v4 fill_color, const u_v4 outline_color, const float outline_thickness) {
+void RenderRectWithOutline(const s_rendering_context& rendering_context, const s_rect rect, const s_v4 fill_color, const s_v4 outline_color, const float outline_thickness) {
     // Top Outline
     RenderRect(rendering_context, {rect.x, rect.y, rect.width - outline_thickness, outline_thickness}, outline_color);
 
@@ -177,15 +177,15 @@ void RenderRectWithOutline(const s_rendering_context& rendering_context, const s
     RenderRect(rendering_context, InnerRect(rect, outline_thickness), fill_color);
 }
 
-void RenderRectWithOutlineAndOpaqueFill(const s_rendering_context& rendering_context, const s_rect rect, const u_v3 fill_color, const u_v4 outline_color, const float outline_thickness) {
+void RenderRectWithOutlineAndOpaqueFill(const s_rendering_context& rendering_context, const s_rect rect, const s_v3 fill_color, const s_v4 outline_color, const float outline_thickness) {
     // Outline
     RenderRect(rendering_context, rect, outline_color);
 
     // Inside
-    RenderRect(rendering_context, InnerRect(rect, outline_thickness), u_v4{fill_color.r, fill_color.g, fill_color.b, 1.0f});
+    RenderRect(rendering_context, InnerRect(rect, outline_thickness), s_v4{fill_color.x, fill_color.y, fill_color.z, 1.0f});
 }
 
-void RenderBarHor(const s_rendering_context& rendering_context, const s_rect rect, const float perc, const u_v4 front_color, const u_v4 bg_color) {
+void RenderBarHor(const s_rendering_context& rendering_context, const s_rect rect, const float perc, const s_v4 front_color, const s_v4 bg_color) {
     assert(perc >= 0.0f && perc <= 1.0f);
 
     const float front_rect_width = rect.width * perc;
@@ -202,7 +202,7 @@ void RenderBarHor(const s_rendering_context& rendering_context, const s_rect rec
     }
 }
 
-void RenderBarVertical(const s_rendering_context& rendering_context, const s_rect rect, const float perc, const u_v4 front_color, const u_v4 bg_color) {
+void RenderBarVertical(const s_rendering_context& rendering_context, const s_rect rect, const float perc, const s_v4 front_color, const s_v4 bg_color) {
     assert(perc >= 0.0f && perc <= 1.0f);
 
     const float front_rect_height = rect.height * perc;

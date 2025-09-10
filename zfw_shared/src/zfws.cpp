@@ -3,7 +3,7 @@
 
 #include <stb_image.h>
 
-bool LoadRGBATextureFromRawFile(s_rgba_texture& tex, c_mem_arena& mem_arena, const c_array<const char> file_path) {
+bool LoadRGBATextureFromRawFile(s_rgba_texture& tex, c_mem_arena& mem_arena, const c_string_view file_path) {
     stbi_uc* const stb_px_data = stbi_load(file_path.Raw(), &tex.tex_size.x, &tex.tex_size.y, NULL, 4);
 
     if (!stb_px_data) {

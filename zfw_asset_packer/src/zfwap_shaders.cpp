@@ -1,56 +1,58 @@
-#if 0
 #include "zfwap.h"
 
-bool PackShaderProg(const c_array<const char> vert_file_path, const c_array<const char> frag_file_path, const c_array<const char> output_file_path, c_mem_arena* const temp_mem_arena) {
-    const c_array<const char> vert_src = CharArrayView(LoadFileContentsAsStr(vert_file_path, temp_mem_arena));
+bool PackShaderProg(const c_string_view vert_file_path, const c_string_view frag_file_path, const c_string_view output_file_path, c_mem_arena& temp_mem_arena) {
+    const c_array<const t_u8> vert_src_bytes = LoadFileContents(vert_file_path, temp_mem_arena, true).View();
 
-    if (IS_ZERO(vert_src)) {
-        LOG_ERROR("Failed to load vertex shader source from file \"%s\"!", vert_file_path.buf_raw);
+    if (vert_src_bytes.IsEmpty()) {
+        //LOG_ERROR("Failed to load vertex shader source from file \"%s\"!", vert_file_path.Raw());
         return false;
     }
 
-    const c_array<const char> frag_src = CharArrayView(LoadFileContentsAsStr(frag_file_path, temp_mem_arena));
+    const c_array<const t_u8> frag_src_bytes = LoadFileContents(frag_file_path, temp_mem_arena, true).View();
 
-    if (IS_ZERO(frag_src)) {
-        LOG_ERROR("Failed to load fragment shader source from file \"%s\"!", frag_file_path.buf_raw);
+    if (frag_src_bytes.IsEmpty()) {
+        //LOG_ERROR("Failed to load fragment shader source from file \"%s\"!", frag_file_path.Raw());
         return false;
     }
 
-    FILE* const fs = fopen(output_file_path.buf_raw, "wb");
+    FILE* const fs = fopen(output_file_path.Raw(), "wb");
 
     if (!fs) {
-        LOG_ERROR("Failed to open \"%s\" for writing!", output_file_path.buf_raw);
+        //LOG_ERROR("Failed to open \"%s\" for writing!", output_file_path.Raw());
         return false;
     }
 
-    if (fwrite(&vert_src.elem_cnt, sizeof(vert_src.elem_cnt), 1, fs) < 1) {
-        LOG_ERROR("Failed to write vertex shader source length to file \"%s\"!", output_file_path.buf_raw);
+    const t_s32 vert_src_size = vert_src_bytes.Len();
+
+    if (fwrite(&vert_src_size, sizeof(vert_src_size), 1, fs) < 1) {
+        //LOG_ERROR("Failed to write vertex shader source length to file \"%s\"!", output_file_path.Raw());
         fclose(fs);
         return false;
     }
 
-    if (fwrite(vert_src.buf_raw, 1, vert_src.elem_cnt, fs) < vert_src.elem_cnt) {
-        LOG_ERROR("Failed to write vertex shader source to file \"%s\"!", output_file_path.buf_raw);
+    if (fwrite(vert_src_bytes.Raw(), 1, vert_src_bytes.Len(), fs) < vert_src_bytes.Len()) {
+        //LOG_ERROR("Failed to write vertex shader source to file \"%s\"!", output_file_path.Raw());
         fclose(fs);
         return false;
     }
 
-    if (fwrite(&frag_src.elem_cnt, sizeof(frag_src.elem_cnt), 1, fs) < 1) {
-        LOG_ERROR("Failed to write fragment shader source length to file \"%s\"!", output_file_path.buf_raw);
+    const t_s32 frag_src_size = frag_src_bytes.Len();
+
+    if (fwrite(&frag_src_size, sizeof(frag_src_size), 1, fs) < 1) {
+        //LOG_ERROR("Failed to write fragment shader source length to file \"%s\"!", output_file_path.Raw());
         fclose(fs);
         return false;
     }
 
-    if (fwrite(frag_src.buf_raw, 1, frag_src.elem_cnt, fs) < frag_src.elem_cnt) {
-        LOG_ERROR("Failed to write fragment shader source to file \"%s\"!", output_file_path.buf_raw);
+    if (fwrite(frag_src_bytes.Raw(), 1, frag_src_bytes.Len(), fs) < frag_src_bytes.Len()) {
+        //LOG_ERROR("Failed to write fragment shader source to file \"%s\"!", output_file_path.Raw());
         fclose(fs);
         return false;
     }
 
     fclose(fs);
 
-    LOG_SUCCESS("Packed shader program from vertex shader file \"%s\" and fragment shader file \"%s\"!", vert_file_path.buf_raw, frag_file_path.buf_raw);
+    //LOG_SUCCESS("Packed shader program from vertex shader file \"%s\" and fragment shader file \"%s\"!", vert_file_path.Raw(), frag_file_path.Raw());
 
     return true;
 }
-#endif

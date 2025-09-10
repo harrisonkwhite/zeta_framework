@@ -1,10 +1,9 @@
-#include "cu_mem.h"
 #include "zfwc_graphics.h"
 
 #include <cstdio>
 #include <cctype>
 
-static bool LoadFontFromFile(s_font_arrangement& arrangement, s_font_texture_meta& tex_meta, c_array<t_u8>& tex_rgba_px_data, c_mem_arena& tex_rgba_px_data_mem_arena, const c_array<const char> file_path) {
+static bool LoadFontFromFile(s_font_arrangement& arrangement, s_font_texture_meta& tex_meta, c_array<t_u8>& tex_rgba_px_data, c_mem_arena& tex_rgba_px_data_mem_arena, const c_string_view file_path) {
     FILE* const fs = fopen(file_path.Raw(), "rb");
 
     if (!fs) {
@@ -43,7 +42,7 @@ static bool LoadFontFromFile(s_font_arrangement& arrangement, s_font_texture_met
     return true;
 }
 
-bool InitFontGroupFromFiles(s_font_group& font_group, const c_array<const c_array<const char>> file_paths, c_mem_arena& mem_arena, s_gl_resource_arena& gl_res_arena, c_mem_arena& temp_mem_arena) {
+bool InitFontGroupFromFiles(s_font_group& font_group, const c_array<const c_string_view> file_paths, c_mem_arena& mem_arena, s_gl_resource_arena& gl_res_arena, c_mem_arena& temp_mem_arena) {
     const t_s32 font_cnt = file_paths.Len();
 
     const auto arrangements = PushArrayToMemArena<s_font_arrangement>(mem_arena, font_cnt);
@@ -122,7 +121,7 @@ bool GenStrChrRenderPositions(c_array<s_v2>& positions, c_mem_arena& mem_arena, 
         return false;
     }
 
-    s_v2 chr_pos_pen{}; 
+    s_v2 chr_pos_pen; 
     t_s32 line_starting_chr_index = 0;
 
     for (t_s32 i = 0; i <= str_len; i++) {
@@ -151,7 +150,7 @@ bool GenStrChrRenderPositions(c_array<s_v2>& positions, c_mem_arena& mem_arena, 
 
         assert(isprint(static_cast<unsigned char>(chr)));
 
-        const t_s32 chr_ascii_printable_index = chr - ASCII_PRINTABLE_MIN;
+        const t_s32 chr_ascii_printable_index = chr - g_ascii_printable_min;
 
         const s_v2_s32 chr_offs = arrangement.chr_offsets[chr_ascii_printable_index];
 
@@ -170,14 +169,14 @@ bool GenStrCollider(s_rect& rect, const c_array<const char> str, const s_font_gr
     //assert(IsStrTerminated(str));
     assert(alignment.x >= 0.0f && alignment.x <= 1.0f && alignment.y >= 0.0f && alignment.y <= 1.0f);
 
-    c_array<s_v2> chr_render_positions{};
+    c_array<s_v2> chr_render_positions;
 
     if (!GenStrChrRenderPositions(chr_render_positions, temp_mem_arena, str, font_group, font_index, pos, alignment)) {
         //LOG_ERROR("Failed to reserve memory for character render positions!");
         return false;
     }
 
-    s_rect_edges collider_edges{};
+    s_rect_edges collider_edges;
     bool initted = false;
 
     for (t_s32 i = 0; str[i]; i++) {
@@ -189,14 +188,14 @@ bool GenStrCollider(s_rect& rect, const c_array<const char> str, const s_font_gr
 
         assert(isprint(static_cast<unsigned char>(chr)));
 
-        const t_s32 chr_ascii_printable_index = chr - ASCII_PRINTABLE_MIN;
+        const t_s32 chr_ascii_printable_index = chr - g_ascii_printable_min;
 
         const s_font_arrangement& arrangement = font_group.arrangements[font_index];
         const s_v2_s32 chr_size = arrangement.chr_sizes[chr_ascii_printable_index];
 
         const s_v2 chr_render_pos = chr_render_positions[i];
 
-        const s_rect_edges chr_rect_edges{
+        const s_rect_edges chr_rect_edges = {
             .left = chr_render_pos.x,
             .top = chr_render_pos.y,
             .right = chr_render_pos.x + chr_size.x,
@@ -226,7 +225,7 @@ bool GenStrCollider(s_rect& rect, const c_array<const char> str, const s_font_gr
     return true;
 }
 
-bool RenderStr(const s_rendering_context& rendering_context, const c_array<const char> str, const s_font_group& fonts, const t_s32 font_index, const s_v2 pos, const s_v2 alignment, const u_v4 color, c_mem_arena& temp_mem_arena) {
+bool RenderStr(const s_rendering_context& rendering_context, const c_array<const char> str, const s_font_group& fonts, const t_s32 font_index, const s_v2 pos, const s_v2 alignment, const s_v4 color, c_mem_arena& temp_mem_arena) {
     //assert(IsStrTerminated(str));
     assert(alignment.x >= 0.0f && alignment.x <= 1.0f && alignment.y >= 0.0f && alignment.y <= 1.0f);
 
@@ -246,7 +245,7 @@ bool RenderStr(const s_rendering_context& rendering_context, const c_array<const
 
         assert(isprint(static_cast<unsigned char>(chr)));
 
-        const t_s32 chr_ascii_printable_index = chr - ASCII_PRINTABLE_MIN;
+        const t_s32 chr_ascii_printable_index = chr - g_ascii_printable_min;
 
         const s_font_arrangement& arrangement = fonts.arrangements[font_index];
         const s_v2_s32 chr_size = arrangement.chr_sizes[chr_ascii_printable_index];
@@ -263,7 +262,7 @@ bool RenderStr(const s_rendering_context& rendering_context, const c_array<const
 
         const s_rect_edges chr_tex_coords = GenTextureCoords(chr_src_rect, tex_meta.size);
 
-        const s_batch_slot_write_info write_info{
+        const s_batch_slot_write_info write_info = {
             .tex_gl_id = fonts.tex_gl_ids[font_index],
             .tex_coords = chr_tex_coords,
             .pos = chr_render_positions[i],

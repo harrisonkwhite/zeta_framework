@@ -63,11 +63,11 @@ struct s_game_render_context {
 
 struct s_game_info {
     s_v2_s32 window_init_size;
-    c_array<const char> window_title;
+    c_string_view window_title;
     e_window_flags window_flags;
 
-    std::size_t dev_mem_size; // How much memory should be allocated in the permanent arena for your use? This might be the size of a specific struct, for example.
-    std::size_t dev_mem_alignment; // The alignment of the above memory.
+    size_t dev_mem_size; // How much memory should be allocated in the permanent arena for your use? This might be the size of a specific struct, for example.
+    size_t dev_mem_alignment; // The alignment of the above memory.
 
     t_s32 targ_ticks_per_sec;
 
