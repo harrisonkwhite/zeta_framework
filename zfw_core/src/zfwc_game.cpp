@@ -3,8 +3,8 @@
 #include <cstdio>
 #include "zfwc_rng.h"
 
-constexpr std::size_t g_perm_mem_arena_size = Megabytes(80);
-constexpr std::size_t g_temp_mem_arena_size = Megabytes(40);
+constexpr size_t g_perm_mem_arena_size = Megabytes(80);
+constexpr size_t g_temp_mem_arena_size = Megabytes(40);
 constexpr t_s32 g_gl_resource_arena_res_limit = 1024;
 
 enum e_game_run_stage {
@@ -158,14 +158,14 @@ static bool ExecGameInitAndMainLoop(s_game& game, const s_game_info& info) {
     {
         const s_game_init_context context = {
             .dev_mem = game.dev_mem,
-            .perm_mem_arena = &game.perm_mem_arena,
-            .temp_mem_arena = &game.temp_mem_arena,
+            .perm_mem_arena = game.perm_mem_arena,
+            .temp_mem_arena = game.temp_mem_arena,
             .window_state = WindowState(*game.glfw_window),
-            .gl_res_arena = &game.gl_res_arena,
-            .rendering_basis = &game.rendering_basis
+            .gl_res_arena = game.gl_res_arena,
+            .rendering_basis = game.rendering_basis
         };
 
-        if (!info.init_func(&context)) {
+        if (!info.init_func(context)) {
             //LOG_ERROR("Developer game initialisation function failed!");
             return false;
         }
@@ -203,18 +203,18 @@ static bool ExecGameInitAndMainLoop(s_game& game, const s_game_info& info) {
                 // Execute the developer's tick function.
                 const s_game_tick_context context = {
                     .dev_mem = game.dev_mem,
-                    .perm_mem_arena = &game.perm_mem_arena,
-                    .temp_mem_arena = &game.temp_mem_arena,
+                    .perm_mem_arena = game.perm_mem_arena,
+                    .temp_mem_arena = game.temp_mem_arena,
                     .window_state = window_state,
                     .input_context = {
                         .state = input_state,
                         .events = game.input_events
                     },
-                    .gl_res_arena = &game.gl_res_arena,
-                    .rendering_basis = &game.rendering_basis
+                    .gl_res_arena = game.gl_res_arena,
+                    .rendering_basis = game.rendering_basis
                 };
 
-                const e_game_tick_result res = info.tick_func(&context);
+                const e_game_tick_result res = info.tick_func(context);
 
                 game.input_events = {};
 
@@ -239,8 +239,8 @@ static bool ExecGameInitAndMainLoop(s_game& game, const s_game_info& info) {
                 // Execute the developer's render function.
                 const s_game_render_context context = {
                     .dev_mem = game.dev_mem,
-                    .perm_mem_arena = &game.perm_mem_arena,
-                    .temp_mem_arena = &game.temp_mem_arena,
+                    .perm_mem_arena = game.perm_mem_arena,
+                    .temp_mem_arena = game.temp_mem_arena,
                     .mouse_pos = input_state.mouse_pos,
                     .rendering_context = {
                         .basis = game.rendering_basis,
@@ -249,7 +249,7 @@ static bool ExecGameInitAndMainLoop(s_game& game, const s_game_info& info) {
                     }
                 };
 
-                if (!info.render_func(&context)) {
+                if (!info.render_func(context)) {
                     //LOG_ERROR("Developer game render function failed!");
                     return false;
                 }

@@ -19,14 +19,14 @@ struct s_window_state {
 struct s_game_init_context {
     void* dev_mem;
 
-    c_mem_arena* perm_mem_arena;
-    c_mem_arena* temp_mem_arena;
+    c_mem_arena& perm_mem_arena;
+    c_mem_arena& temp_mem_arena;
 
     s_window_state window_state;
 
-    s_gl_resource_arena* gl_res_arena;
+    s_gl_resource_arena& gl_res_arena;
 
-    s_rendering_basis* rendering_basis;
+    s_rendering_basis& rendering_basis;
 };
 
 enum e_game_tick_result {
@@ -38,23 +38,23 @@ enum e_game_tick_result {
 struct s_game_tick_context {
     void* dev_mem;
 
-    c_mem_arena* perm_mem_arena;
-    c_mem_arena* temp_mem_arena;
+    c_mem_arena& perm_mem_arena;
+    c_mem_arena& temp_mem_arena;
 
     s_window_state window_state;
 
     s_input_context input_context;
 
-    s_gl_resource_arena* gl_res_arena;
+    s_gl_resource_arena& gl_res_arena;
 
-    s_rendering_basis* rendering_basis;
+    s_rendering_basis& rendering_basis;
 };
 
 struct s_game_render_context {
     void* dev_mem;
 
-    c_mem_arena* perm_mem_arena;
-    c_mem_arena* temp_mem_arena;
+    c_mem_arena& perm_mem_arena;
+    c_mem_arena& temp_mem_arena;
 
     s_v2 mouse_pos;
 
@@ -72,9 +72,9 @@ struct s_game_info {
     t_s32 targ_ticks_per_sec;
 
     // Below are pointers to functions that the framework will call for you. The provided struct pointers expose parts of the framework state for you to work with.
-    bool (*init_func)(const s_game_init_context* const func_data); // Called as one of the last steps of the game initialisation phase.
-    e_game_tick_result (*tick_func)(const s_game_tick_context* const func_data); // Called once every tick (which can occur multiple times a frame).
-    bool (*render_func)(const s_game_render_context* const func_data); // Called after all ticks have been run.
+    bool (*init_func)(const s_game_init_context& zfw_context); // Called as one of the last steps of the game initialisation phase.
+    e_game_tick_result (*tick_func)(const s_game_tick_context& zfw_context); // Called once every tick (which can occur multiple times a frame).
+    bool (*render_func)(const s_game_render_context& zfw_context); // Called after all ticks have been run.
     void (*clean_func)(void* const dev_mem); // Called when the game ends (including if it ends in error). This is not called if your initialisation function failed or hasn't yet been called.
 };
 
