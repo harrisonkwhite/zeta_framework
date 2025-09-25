@@ -15,3 +15,7 @@ target_include_directories(zfw_shared PUBLIC
 target_link_libraries(zfw_shared PUBLIC
     cpp_utils
 )
+
+target_compile_definitions(zfw_shared PRIVATE
+    _CRT_SECURE_NO_WARNINGS
+)

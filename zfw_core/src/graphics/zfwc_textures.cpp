@@ -1,6 +1,5 @@
 #include "zfwc_graphics.h"
 
-#include <cstdio>
 #include "cu_mem.h"
 #include "zfws.h"
 
@@ -18,35 +17,26 @@ s_rect_edges GenTextureCoords(const s_rect_s32 src_rect, const s_v2_s32 tex_size
     };
 }
 
-static bool LoadRGBATextureFromPackedFS(s_rgba_texture& tex, FILE* const fs, c_mem_arena& mem_arena) {
-    if (fread(&tex.tex_size, sizeof(tex.tex_size), 1, fs) < 1) {
+bool LoadRGBATextureFromPackedFile(s_rgba_texture& tex, const c_array<const char> file_path, c_mem_arena& mem_arena) {
+    c_file_reader fr;
+    fr.DeferClose();
+
+    if (!fr.Open(file_path)) {
+        //LOG_ERROR("Failed to open \"%s\"!", file_path.Raw());
+        return false;
+    }
+
+    if (!fr.ReadItem(tex.tex_size)) {
         //LOG_ERROR("Failed to read texture size from file stream!");
         return false;
     }
 
     tex.px_data = PushArrayToMemArena<t_u8>(mem_arena, 4 * tex.tex_size.x * tex.tex_size.y);
 
-    if (fread(tex.px_data.Raw(), 1, tex.px_data.Len(), fs) < tex.px_data.Len()) {
+    if (fr.Read(tex.px_data) < tex.px_data.Len()) {
         //LOG_ERROR("Failed to read RGBA pixel data from file stream!");
         return false;
     }
-
-    return true;
-}
-
-bool LoadRGBATextureFromPackedFile(s_rgba_texture& tex, const c_array<const char> file_path, c_mem_arena& mem_arena) {
-    FILE* const fs = fopen(file_path.Raw(), "rb");
-
-    if (!fs) {
-        //LOG_ERROR("Failed to open \"%s\"!", file_path.Raw());
-        return false;
-    }
-
-    if (!LoadRGBATextureFromPackedFS(tex, fs, mem_arena)) {
-        //LOG_ERROR("Failed to load RGBA texture from packed texture file \"%s\"!", file_path.Raw());
-    }
-
-    fclose(fs);
 
     return true;
 }

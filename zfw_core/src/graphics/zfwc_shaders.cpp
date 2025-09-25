@@ -40,18 +40,18 @@ static bool LoadShaderSrcsFromFile(c_string_view& vert_src, c_string_view& frag_
     assert(vert_src.IsEmpty());
     assert(frag_src.IsEmpty());
 
-    FILE* const fs = fopen(file_path.Raw(), "rb");
+    c_file_reader fr;
+    fr.DeferClose();
 
-    if (!fs) {
+    if (!fr.Open(file_path)) {
         //LOG_ERROR("Failed to open shader program file \"%s\"!", file_path.Raw());
         return false;
     }
 
     t_s32 vert_src_len;
 
-    if (fread(&vert_src_len, sizeof(vert_src_len), 1, fs) < 1) {
+    if (!fr.ReadItem(vert_src_len)) {
         //LOG_ERROR("Failed to read vertex shader source length from file \"%s\"!", file_path.Raw());
-        fclose(fs);
         return false;
     }
 
@@ -59,21 +59,18 @@ static bool LoadShaderSrcsFromFile(c_string_view& vert_src, c_string_view& frag_
 
     if (vert_src_chrs.IsEmpty()) {
         //LOG_ERROR("Failed to reserve memory for vertex shader source from file \"%s\"!", file_path.Raw());
-        fclose(fs);
         return false;
     }
 
-    if (fread(vert_src_chrs.Raw(), 1, vert_src_chrs.Len(), fs) < vert_src_chrs.Len()) {
+    if (fr.Read(vert_src_chrs) < vert_src_chrs.Len()) {
         //LOG_ERROR("Failed to read vertex shader source from file \"%s\"!", file_path.Raw());
-        fclose(fs);
         return false;
     }
 
     t_s32 frag_src_len;
 
-    if (fread(&frag_src_len, sizeof(frag_src_len), 1, fs) < 1) {
+    if (!fr.ReadItem(frag_src_len)) {
         //LOG_ERROR("Failed to read fragment shader source length from file \"%s\"!", file_path.Raw());
-        fclose(fs);
         return false;
     }
 
@@ -81,17 +78,13 @@ static bool LoadShaderSrcsFromFile(c_string_view& vert_src, c_string_view& frag_
 
     if (frag_src_chrs.IsEmpty()) {
         //LOG_ERROR("Failed to reserve memory for fragment shader source from file \"%s\"!", file_path.Raw());
-        fclose(fs);
         return false;
     }
 
-    if (fread(frag_src_chrs.Raw(), 1, frag_src_chrs.Len(), fs) < frag_src_chrs.Len()) {
+    if (fr.Read(frag_src_chrs) < frag_src_chrs.Len()) {
         //LOG_ERROR("Failed to read fragment shader source from file \"%s\"!", file_path.Raw());
-        fclose(fs);
         return false;
     }
-
-    fclose(fs);
 
     vert_src = vert_src_chrs.View();
     frag_src = frag_src_chrs.View();

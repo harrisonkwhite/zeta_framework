@@ -3,26 +3,23 @@
 #include <stb_image.h>
 
 static bool OutputTextureFile(const c_string_view file_path, const s_rgba_texture rgba_tex) {
-    FILE* const fs = fopen(file_path.Raw(), "wb");
+    c_file_writer fw;
+    fw.DeferClose();
 
-    if (!fs) {
+    if (!fw.Open(file_path)) {
         //LOG_ERROR("Failed to open \"%s\" for writing!", file_path.Raw());
         return false;
     }
 
-    if (fwrite(&rgba_tex.tex_size, sizeof(rgba_tex.tex_size), 1, fs) < 1) {
+    if (!fw.WriteItem(rgba_tex.tex_size)) {
         //LOG_ERROR("Failed to write texture size to file \"%s\"!", file_path.Raw());
-        fclose(fs);
         return false;
     }
 
-    if (fwrite(rgba_tex.px_data.Raw(), 1, rgba_tex.px_data.Len(), fs) < rgba_tex.px_data.Len()) {
+    if (fw.Write(rgba_tex.px_data.View()) < rgba_tex.px_data.Len()) {
         //LOG_ERROR("Failed to write pixel data to file \"%s\"!", file_path.Raw());
-        fclose(fs);
         return false;
     }
-
-    fclose(fs);
 
     return true;
 }

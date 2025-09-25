@@ -45,3 +45,7 @@ target_link_libraries(zfw_core PUBLIC
 target_compile_definitions(zfw_core PUBLIC
     GLFW_INCLUDE_NONE
 )
+
+target_compile_definitions(zfw_core PRIVATE
+    _CRT_SECURE_NO_WARNINGS
+)

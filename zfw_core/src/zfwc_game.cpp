@@ -33,12 +33,12 @@ struct s_game {
     void* dev_mem; // Memory optionally reserved by the developer for their own use, accessible in their defined functions through the provided ZFW context.
 };
 
-static s_window_state WindowState(GLFWwindow& glfw_window) {
+static s_window_state WindowState(GLFWwindow* glfw_window) {
     s_window_state state = {
-        .fullscreen = glfwGetWindowMonitor(&glfw_window) != nullptr
+        .fullscreen = glfwGetWindowMonitor(glfw_window) != nullptr
     };
-    glfwGetWindowPos(&glfw_window, &state.pos.x, &state.pos.y);
-    glfwGetWindowSize(&glfw_window, &state.size.x, &state.size.y);
+    glfwGetWindowPos(glfw_window, &state.pos.x, &state.pos.y);
+    glfwGetWindowSize(glfw_window, &state.size.x, &state.size.y);
 
     return state;
 }
@@ -160,7 +160,7 @@ static bool ExecGameInitAndMainLoop(s_game& game, const s_game_info& info) {
             .dev_mem = game.dev_mem,
             .perm_mem_arena = game.perm_mem_arena,
             .temp_mem_arena = game.temp_mem_arena,
-            .window_state = WindowState(*game.glfw_window),
+            .window_state = WindowState(game.glfw_window),
             .gl_res_arena = game.gl_res_arena,
             .rendering_basis = game.rendering_basis
         };
@@ -183,7 +183,7 @@ static bool ExecGameInitAndMainLoop(s_game& game, const s_game_info& info) {
     float frame_dur_accum = 0.0;
 
     while (!glfwWindowShouldClose(game.glfw_window)) {
-        const s_window_state window_state = WindowState(*game.glfw_window);
+        const s_window_state window_state = WindowState(game.glfw_window);
 
         game.temp_mem_arena.Rewind(0);
 

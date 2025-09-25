@@ -110,32 +110,28 @@ static c_array<const t_u8> GenFontTextureRGBAPixelData(c_mem_arena& mem_arena, c
 }
 
 static bool OutputFontFile(const c_string_view file_path, const s_font_arrangement& arrangement, const s_font_texture_meta tex_meta, const c_array<const t_u8> tex_rgba_px_data) {
-    FILE* const fs = fopen(file_path.Raw(), "wb");
+    c_file_writer fw;
+    fw.DeferClose();
 
-    if (!fs) {
+    if (!fw.Open(file_path)) {
         //LOG_ERROR("Failed to open \"%s\" for writing!", file_path.Raw());
         return false;
     }
 
-    if (fwrite(&arrangement, sizeof(arrangement), 1, fs) < 1) {
+    if (!fw.WriteItem(arrangement)) {
         //LOG_ERROR("Failed to write font arrangement to file \"%s\"!", file_path.Raw());
-        fclose(fs);
         return false;
     }
 
-    if (fwrite(&tex_meta, sizeof(tex_meta), 1, fs) < 1) {
+    if (!fw.WriteItem(tex_meta)) {
         //LOG_ERROR("Failed to write font texture metadata to file \"%s\"!", file_path.Raw());
-        fclose(fs);
         return false;
     }
 
-    if (fwrite(tex_rgba_px_data.Raw(), 1, tex_rgba_px_data.Len(), fs) < tex_rgba_px_data.Len()) {
+    if (fw.Write(tex_rgba_px_data) < tex_rgba_px_data.Len()) {
         //LOG_ERROR("Failed to write font texture RGBA pixel data to file \"%s\"!", file_path.Raw());
-        fclose(fs);
         return false;
     }
-
-    fclose(fs);
 
     return true;
 }

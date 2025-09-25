@@ -19,3 +19,7 @@ target_include_directories(zfw_asset_packer PRIVATE
 target_link_libraries(zfw_asset_packer PRIVATE
     zfw_shared
 )
+
+target_compile_definitions(zfw_asset_packer PRIVATE
+    _CRT_SECURE_NO_WARNINGS
+)

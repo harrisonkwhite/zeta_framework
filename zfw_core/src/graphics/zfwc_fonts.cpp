@@ -1,25 +1,23 @@
 #include "zfwc_graphics.h"
 
-#include <cstdio>
 #include <cctype>
 
 static bool LoadFontFromFile(s_font_arrangement& arrangement, s_font_texture_meta& tex_meta, c_array<t_u8>& tex_rgba_px_data, c_mem_arena& tex_rgba_px_data_mem_arena, const c_string_view file_path) {
-    FILE* const fs = fopen(file_path.Raw(), "rb");
+    c_file_reader fr;
+    fr.DeferClose();
 
-    if (!fs) {
+    if (!fr.Open(file_path)) {
         //LOG_ERROR("Failed to open font file \"%s\"!", file_path.Raw());
         return false;
     }
 
-    if (fread(&arrangement, sizeof(arrangement), 1, fs) < 1) {
+    if (!fr.ReadItem(arrangement)) {
         //LOG_ERROR("Failed to read font arrangement from file \"%s\"!", file_path.Raw());
-        fclose(fs);
         return false;
     }
 
-    if (fread(&tex_meta, sizeof(tex_meta), 1, fs) < 1) {
+    if (!fr.ReadItem(tex_meta)) {
         //LOG_ERROR("Failed to read font texture metadata from file \"%s\"!", file_path.Raw());
-        fclose(fs);
         return false;
     }
 
@@ -27,17 +25,13 @@ static bool LoadFontFromFile(s_font_arrangement& arrangement, s_font_texture_met
 
     if (tex_rgba_px_data.IsEmpty()) {
         //LOG_ERROR("Failed to reserve memory for font texture RGBA pixel data from file \"%s\"!", file_path.Raw());
-        fclose(fs);
         return false;
     }
 
-    if (fread(tex_rgba_px_data.Raw(), 1, tex_rgba_px_data.Len(), fs) < static_cast<size_t>(tex_rgba_px_data.Len())) {
+    if (fr.Read(tex_rgba_px_data) < tex_rgba_px_data.Len()) {
         //LOG_ERROR("Failed to read font texture RGBA pixel data from file \"%s\"!", file_path.Raw());
-        fclose(fs);
         return false;
     }
-
-    fclose(fs);
 
     return true;
 }
