@@ -32,7 +32,63 @@ namespace zf {
 
             return {x / mag, y / mag};
         }
+
+        constexpr bool operator==(const s_v2& other) const {
+            return x == other.x && y == other.y;
+        }
+
+        constexpr bool operator!=(const s_v2& other) const {
+            return !(*this == other);
+        }
+
+        constexpr s_v2 operator-() const {
+            return {-x, -y};
+        }
+
+        constexpr s_v2 operator+(const s_v2& other) const {
+            return {x + other.x, y + other.y};
+        }
+
+        constexpr s_v2 operator-(const s_v2& other) const {
+            return {x - other.x, y - other.y};
+        }
+
+        s_v2& operator+=(const s_v2& other) {
+            x += other.x;
+            y += other.y;
+            return *this;
+        }
+
+        s_v2& operator-=(const s_v2& other) {
+            x -= other.x;
+            y -= other.y;
+            return *this;
+        }
+
+        constexpr s_v2 operator*(float scalar) const {
+            return {x * scalar, y * scalar};
+        }
+
+        constexpr s_v2 operator/(float scalar) const {
+            return {x / scalar, y / scalar};
+        }
+
+        s_v2& operator*=(float scalar) {
+            x *= scalar;
+            y *= scalar;
+            return *this;
+        }
+
+        s_v2& operator/=(float scalar) {
+            x /= scalar;
+            y /= scalar;
+            return *this;
+        }
     };
+
+    constexpr s_v2 operator*(float scalar, const s_v2& v) {
+        return {v.x * scalar, v.y * scalar};
+    }
 
     struct s_v2_s32 {
         t_s32 x = 0;
@@ -191,5 +247,13 @@ namespace zf {
 
     static inline s_v2 LenDir(const float len, const float dir) {
         return {cosf(dir) * len, -sinf(dir) * len};
+    }
+
+    static inline float Lerp(const float a, const float b, const float t) {
+        return a + ((b - a) * t);
+    }
+
+    static inline s_v2 Lerp(const s_v2 a, const s_v2 b, const float t) {
+        return {Lerp(a.x, b.x, t), Lerp(a.y, b.y, t)};
     }
 }
