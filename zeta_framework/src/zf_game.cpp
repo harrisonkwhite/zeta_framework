@@ -31,7 +31,7 @@ namespace zf {
         s_gl_resource_arena gl_res_arena; // Contains all OpenGL resources used over the lifetime of the game, so they can be cleaned up all at once (simplifies resource management).
         s_rendering_basis rendering_basis; // Foundational rendering data used throughout the lifetime of the game.
 
-        void* dev_mem; // Memory optionally reserved by the developer for their own use, accessible in their defined functions through the provided ZFW context.
+        void* dev_mem; // Memory optionally reserved by the developer for their own use, accessible in their defined functions through the provided ZF context.
     };
 
     static s_window_state WindowState(GLFWwindow* glfw_window) {

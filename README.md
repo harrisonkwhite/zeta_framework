@@ -2,7 +2,7 @@
 
 This is a simple framework in C++ for developing 2D games using OpenGL.
 
-You can find it being put to use in my [game Kaōzeth](https://github.com/harrisonkwhite/terraria_clone).
+You can find it being put to use in my game [Kaōzeth](https://github.com/harrisonkwhite/terraria_clone).
 
 There is also a [template available](https://github.com/harrisonkwhite/zfw_game_template) for making a new game with this framework.
 
