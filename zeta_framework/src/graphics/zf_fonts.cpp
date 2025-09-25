@@ -8,29 +8,29 @@ namespace zf {
         fr.DeferClose();
 
         if (!fr.Open(file_path)) {
-            //LOG_ERROR("Failed to open font file \"%s\"!", file_path.Raw());
+            ZF_LOG_ERROR("Failed to open font file \"%s\"!", file_path.Raw());
             return false;
         }
 
         if (!fr.ReadItem(arrangement)) {
-            //LOG_ERROR("Failed to read font arrangement from file \"%s\"!", file_path.Raw());
+            ZF_LOG_ERROR("Failed to read font arrangement from file \"%s\"!", file_path.Raw());
             return false;
         }
 
         if (!fr.ReadItem(tex_meta)) {
-            //LOG_ERROR("Failed to read font texture metadata from file \"%s\"!", file_path.Raw());
+            ZF_LOG_ERROR("Failed to read font texture metadata from file \"%s\"!", file_path.Raw());
             return false;
         }
 
         tex_rgba_px_data = PushArrayToMemArena<t_u8>(tex_rgba_px_data_mem_arena, 4 * tex_meta.size.x * tex_meta.size.y);
 
         if (tex_rgba_px_data.IsEmpty()) {
-            //LOG_ERROR("Failed to reserve memory for font texture RGBA pixel data from file \"%s\"!", file_path.Raw());
+            ZF_LOG_ERROR("Failed to reserve memory for font texture RGBA pixel data from file \"%s\"!", file_path.Raw());
             return false;
         }
 
         if (fr.Read(tex_rgba_px_data) < tex_rgba_px_data.Len()) {
-            //LOG_ERROR("Failed to read font texture RGBA pixel data from file \"%s\"!", file_path.Raw());
+            ZF_LOG_ERROR("Failed to read font texture RGBA pixel data from file \"%s\"!", file_path.Raw());
             return false;
         }
 
@@ -43,21 +43,21 @@ namespace zf {
         const auto arrangements = PushArrayToMemArena<s_font_arrangement>(mem_arena, font_cnt);
 
         if (arrangements.IsEmpty()) {
-            //LOG_ERROR("Failed to reserve memory for font arrangements!");
+            ZF_LOG_ERROR("Failed to reserve memory for font arrangements!");
             return false;
         }
 
         const auto tex_metas = PushArrayToMemArena<s_font_texture_meta>(mem_arena, font_cnt);
 
         if (tex_metas.IsEmpty()) {
-            //LOG_ERROR("Failed to reserve memory for font texture metadata!");
+            ZF_LOG_ERROR("Failed to reserve memory for font texture metadata!");
             return false;
         }
 
         const c_array<t_gl_id> tex_gl_ids = PushArrayToGLResourceArena(gl_res_arena, font_cnt, ek_gl_resource_type_texture);
 
         if (tex_gl_ids.IsEmpty()) {
-            //LOG_ERROR("Failed to reserve OpenGL texture IDs for fonts!");
+            ZF_LOG_ERROR("Failed to reserve OpenGL texture IDs for fonts!");
             return false;
         }
 
@@ -73,7 +73,7 @@ namespace zf {
             tex_gl_ids[i] = GenGLTextureFromRGBA(s_rgba_texture{.tex_size = tex_metas[i].size, .px_data = tex_rgba_px_data});
 
             if (!tex_gl_ids[i]) {
-                //LOG_ERROR("Failed to generate OpenGL texture from font RGBA pixel data for font file \"%s\"!", file_path.Raw());
+                ZF_LOG_ERROR("Failed to generate OpenGL texture from font RGBA pixel data for font file \"%s\"!", file_path.Raw());
                 return false;
             }
         }
@@ -112,7 +112,7 @@ namespace zf {
         positions = PushArrayToMemArena<s_v2>(mem_arena, str_len);
 
         if (positions.IsEmpty()) {
-            //LOG_ERROR("Failed to reserve memory for character render positions!");
+            ZF_LOG_ERROR("Failed to reserve memory for character render positions!");
             return false;
         }
 
@@ -167,7 +167,7 @@ namespace zf {
         c_array<s_v2> chr_render_positions;
 
         if (!GenStrChrRenderPositions(chr_render_positions, temp_mem_arena, str, font_group, font_index, pos, alignment)) {
-            //LOG_ERROR("Failed to reserve memory for character render positions!");
+            ZF_LOG_ERROR("Failed to reserve memory for character render positions!");
             return false;
         }
 
@@ -227,7 +227,7 @@ namespace zf {
         c_array<s_v2> chr_render_positions;
 
         if (!GenStrChrRenderPositions(chr_render_positions, temp_mem_arena, str, fonts, font_index, pos, alignment)) {
-            //LOG_ERROR("Failed to reserve memory for character render positions!");
+            ZF_LOG_ERROR("Failed to reserve memory for character render positions!");
             return false;
         }
 

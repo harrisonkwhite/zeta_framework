@@ -103,14 +103,14 @@ namespace zf {
         auto fb_gl_id = PushToGLResourceArena(gl_res_arena, ek_gl_resource_type_framebuffer);
 
         if (!fb_gl_id) {
-            //LOG_ERROR("Failed to reserve OpenGL framebuffer ID for surface!");
+            ZF_LOG_ERROR("Failed to reserve OpenGL framebuffer ID for surface!");
             return false;
         }
 
         auto fb_tex_gl_id = PushToGLResourceArena(gl_res_arena, ek_gl_resource_type_texture);
 
         if (!fb_tex_gl_id) {
-            //LOG_ERROR("Failed to reserve OpenGL texture ID for surface framebuffer!");
+            ZF_LOG_ERROR("Failed to reserve OpenGL texture ID for surface framebuffer!");
             return false;
         }
 
@@ -118,7 +118,7 @@ namespace zf {
         glGenTextures(1, &fb_tex_gl_id);
 
         if (!AttachFramebufferTexture(fb_gl_id, fb_tex_gl_id, size)) {
-            //LOG_ERROR("Failed to attach framebuffer texture for surface!");
+            ZF_LOG_ERROR("Failed to attach framebuffer texture for surface!");
             return false;
         }
 
@@ -141,7 +141,7 @@ namespace zf {
         glGenTextures(1, &surf.fb_tex_gl_id);
 
         if (!AttachFramebufferTexture(surf.fb_gl_id, surf.fb_tex_gl_id, size)) {
-            //LOG_ERROR("Failed to attach framebuffer texture for surface during resize!");
+            ZF_LOG_ERROR("Failed to attach framebuffer texture for surface during resize!");
             return false;
         }
 

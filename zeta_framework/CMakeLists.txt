@@ -14,7 +14,6 @@ find_package(OpenGL REQUIRED)
 add_library(zf STATIC
     src/zf_game.cpp
     src/zf_input.cpp
-    src/zf_math.cpp
     src/zf_rng.cpp
     src/graphics/zf_rendering.cpp
     src/graphics/zf_textures.cpp
@@ -27,7 +26,6 @@ add_library(zf STATIC
     include/zf_game.h
     include/zf_input.h
     include/zf_rendering.h
-    include/zf_math.h
     include/zf_rng.h
 )
 

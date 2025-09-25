@@ -52,14 +52,14 @@ namespace zf {
         res_arena.ids = PushArrayToMemArena<t_gl_id>(mem_arena, res_limit);
 
         if (res_arena.ids.IsEmpty()) {
-            //LOG_ERROR("Failed to reserve memory for OpenGL resource IDs!");
+            ZF_LOG_ERROR("Failed to reserve memory for OpenGL resource IDs!");
             return false;
         }
 
         res_arena.res_types = PushArrayToMemArena<e_gl_resource_type>(mem_arena, res_limit);
 
         if (res_arena.res_types.IsEmpty()) {
-            //LOG_ERROR("Failed to reserve memory for OpenGL resource types!");
+            ZF_LOG_ERROR("Failed to reserve memory for OpenGL resource types!");
             return false;
         }
 
@@ -113,7 +113,7 @@ namespace zf {
 
     c_array<t_gl_id> PushArrayToGLResourceArena(s_gl_resource_arena& res_arena, t_s32 cnt, e_gl_resource_type res_type) {
         if (res_arena.res_used + cnt > res_arena.res_limit) {
-            //LOG_ERROR("OpenGL resource arena is full!");
+            ZF_LOG_ERROR("OpenGL resource arena is full!");
             return {};
         }
 
@@ -136,21 +136,21 @@ namespace zf {
         t_gl_id va_gl_id = PushToGLResourceArena(gl_res_arena, ek_gl_resource_type_vert_array);
 
         if (!va_gl_id) {
-            //LOG_ERROR("Failed to reserve OpenGL vertex array ID for renderable!");
+            ZF_LOG_ERROR("Failed to reserve OpenGL vertex array ID for renderable!");
             return {};
         }
 
         t_gl_id vb_gl_id = PushToGLResourceArena(gl_res_arena, ek_gl_resource_type_vert_buf);
 
         if (!vb_gl_id) {
-            //LOG_ERROR("Failed to reserve OpenGL vertex buffer ID for renderable!");
+            ZF_LOG_ERROR("Failed to reserve OpenGL vertex buffer ID for renderable!");
             return {};
         }
 
         t_gl_id eb_gl_id = PushToGLResourceArena(gl_res_arena, ek_gl_resource_type_elem_buf);
 
         if (!eb_gl_id) {
-            //LOG_ERROR("Failed to reserve OpenGL element buffer ID for renderable!");
+            ZF_LOG_ERROR("Failed to reserve OpenGL element buffer ID for renderable!");
             return {};
         }
 
@@ -190,7 +190,7 @@ namespace zf {
         const auto elems = PushArrayToMemArena<t_u16>(mem_arena, g_batch_slot_elem_cnt * g_batch_slot_cnt);
 
         if (elems.IsEmpty()) {
-            //LOG_ERROR("Failed to reserve memory for batch renderable elements!");
+            ZF_LOG_ERROR("Failed to reserve memory for batch renderable elements!");
             return {};
         }
 
@@ -271,7 +271,7 @@ namespace zf {
 
     bool InitRenderingBasis(s_rendering_basis& basis, s_gl_resource_arena& gl_res_arena, c_mem_arena& mem_arena, c_mem_arena& temp_mem_arena) {
         /*if (!InitTextureGroup(basis.builtin_textures, eks_builtin_texture_cnt, BuiltinTextureRGBAGenerator, mem_arena, gl_res_arena, temp_mem_arena)) {
-            //LOG_ERROR("Failed to generate built-in textures for rendering basis!");
+            ZF_LOG_ERROR("Failed to generate built-in textures for rendering basis!");
             return false;
         }
 
@@ -282,7 +282,7 @@ namespace zf {
             gen_infos[ek_builtin_shader_prog_surface_blend] = {true, g_surface_blend_vert_shader_src, g_surface_blend_frag_shader_src};
 
             if (!InitShaderProgGroup(basis.builtin_shader_progs, {gen_infos, eks_builtin_shader_prog_cnt}, gl_res_arena, temp_mem_arena)) {
-                //LOG_ERROR("Failed to generate built-in shader programs for rendering basis!");
+                ZF_LOG_ERROR("Failed to generate built-in shader programs for rendering basis!");
                 return false;
             }
         }
@@ -291,7 +291,7 @@ namespace zf {
             basis.renderables[i] = GenRenderableOfType(gl_res_arena, static_cast<e_renderable>(i), temp_mem_arena);
 
             if (basis.renderables[i].IsZero()) {
-                //LOG_ERROR("Failed to generate renderable of index %d for rendering basis!", i);
+                ZF_LOG_ERROR("Failed to generate renderable of index %d for rendering basis!", i);
                 return false;
             }
         }*/
@@ -300,6 +300,7 @@ namespace zf {
     }
 
     void InitRenderingState(s_rendering_state& state, const s_v2_s32 window_size) {
+        ZeroOut(state);
         state.view_mat = s_matrix_4x4::Identity();
         glViewport(0, 0, window_size.x, window_size.y);
     }

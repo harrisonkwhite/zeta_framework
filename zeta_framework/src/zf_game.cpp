@@ -52,14 +52,14 @@ namespace zf {
 
         // Initialise memory arenas.
         if (!game.perm_mem_arena.Init(g_perm_mem_arena_size)) {
-            //LOG_ERROR("Failed to initialise the permanent memory arena!");
+            ZF_LOG_ERROR("Failed to initialise the permanent memory arena!");
             return false;
         }
 
         game.run_stage = ek_game_run_stage_perm_mem_arena_initted;
 
         if (!game.temp_mem_arena.Init(g_temp_mem_arena_size)) {
-            //LOG_ERROR("Failed to initialise the temporary memory arena!");
+            ZF_LOG_ERROR("Failed to initialise the temporary memory arena!");
             return false;
         }
 
@@ -67,7 +67,7 @@ namespace zf {
 
         // Initialise GLFW.
         if (!glfwInit()) {
-            //LOG_ERROR("Failed to initialise GLFW!");
+            ZF_LOG_ERROR("Failed to initialise GLFW!");
             return false;
         }
 
@@ -88,22 +88,15 @@ namespace zf {
         );
 
         if (!game.glfw_window) {
-            //LOG_ERROR("Failed to create a GLFW window!");
+            ZF_LOG_ERROR("Failed to create a GLFW window!");
             return false;
         }
 
         game.run_stage = ek_game_run_stage_glfw_window_created;
 
-        glfwSetWindowAttrib(
-            game.glfw_window,
-            GLFW_RESIZABLE,
-            (info.window_flags & ek_window_flags_resizable) ? true : false
-        );
-        glfwSetInputMode(
-            game.glfw_window,
-            GLFW_CURSOR,
-            (info.window_flags & ek_window_flags_hide_cursor) ? GLFW_CURSOR_HIDDEN : GLFW_CURSOR_NORMAL
-        );
+        glfwSetWindowAttrib(game.glfw_window, GLFW_RESIZABLE, (info.window_flags & ek_window_flags_resizable) ? true : false);
+
+        glfwSetInputMode(game.glfw_window, GLFW_CURSOR, (info.window_flags & ek_window_flags_hide_cursor) ? GLFW_CURSOR_HIDDEN : GLFW_CURSOR_NORMAL);
 
         glfwMakeContextCurrent(game.glfw_window);
 
@@ -119,7 +112,7 @@ namespace zf {
 
         // Initialise rendering.
         if (!gladLoadGLLoader(reinterpret_cast<GLADloadproc>(glfwGetProcAddress))) {
-            //LOG_ERROR("Failed to load OpenGL function pointers!");
+            ZF_LOG_ERROR("Failed to load OpenGL function pointers!");
             return false;
         }
 
@@ -127,21 +120,21 @@ namespace zf {
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
         if (!InitGLResourceArena(game.gl_res_arena, game.perm_mem_arena, g_gl_resource_arena_res_limit)) {
-            //LOG_ERROR("Failed to initialise OpenGL resource arena!");
+            ZF_LOG_ERROR("Failed to initialise OpenGL resource arena!");
             return false;
         }
 
         game.run_stage = ek_game_run_stage_gl_res_arena_initted;
 
         if (!InitRenderingBasis(game.rendering_basis, game.gl_res_arena, game.perm_mem_arena, game.temp_mem_arena)) {
-            //LOG_ERROR("Failed to initialise the rendering basis!");
+            ZF_LOG_ERROR("Failed to initialise the rendering basis!");
             return false;
         }
 
         const auto rendering_state = game.perm_mem_arena.Push<s_rendering_state>();
 
         if (!rendering_state) {
-            //LOG_ERROR("Failed to reserve memory for rendering state!");
+            ZF_LOG_ERROR("Failed to reserve memory for rendering state!");
             return false;
         }
 
@@ -150,7 +143,7 @@ namespace zf {
             game.dev_mem = game.perm_mem_arena.PushRaw(info.dev_mem_size, info.dev_mem_alignment);
 
             if (!game.dev_mem) {
-                //LOG_ERROR("Failed to reserve developer memory!");
+                ZF_LOG_ERROR("Failed to reserve developer memory!");
                 return false;
             }
         }
@@ -167,7 +160,7 @@ namespace zf {
             };
 
             if (!info.init_func(context)) {
-                //LOG_ERROR("Developer game initialisation function failed!");
+                ZF_LOG_ERROR("Developer game initialisation function failed!");
                 return false;
             }
         }
@@ -220,12 +213,12 @@ namespace zf {
                     game.input_events = {};
 
                     if (res == ek_game_tick_result_exit) {
-                        //LOG("Exit request detected from developer game tick function...");
+                        ZF_LOG("Exit request detected from developer game tick function...");
                         glfwSetWindowShouldClose(game.glfw_window, true);
                     }
 
                     if (res == ek_game_tick_result_error) {
-                        //LOG_ERROR("Developer game tick function failed!");
+                        ZF_LOG_ERROR("Developer game tick function failed!");
                         return false;
                     }
 
@@ -233,7 +226,6 @@ namespace zf {
                 } while (frame_dur_accum >= targ_tick_interval);
 
                 // Render the game.
-                //ZERO_OUT(*rendering_state);
                 InitRenderingState(*rendering_state, window_state.size);
 
                 {
@@ -251,7 +243,7 @@ namespace zf {
                     };
 
                     if (!info.render_func(context)) {
-                        //LOG_ERROR("Developer game render function failed!");
+                        ZF_LOG_ERROR("Developer game render function failed!");
                         return false;
                     }
 

@@ -19,6 +19,15 @@ namespace zf {
     using t_u64 = unsigned long long;
 
     template<typename tp_type>
+    static inline void ZeroOut(tp_type& item) {
+        const auto item_bytes = reinterpret_cast<t_u8*>(&item);
+
+        for (size_t i = 0; i < sizeof(item); i++) {
+            item_bytes[i] = 0;
+        }
+    }
+
+    template<typename tp_type>
     static constexpr int Min(const tp_type& a, const tp_type& b) {
         return a <= b ? a : b;
     }
@@ -250,7 +259,6 @@ namespace zf {
             m_buf = static_cast<t_u8*>(calloc(size, 1));
 
             if (!m_buf) {
-                //LOG_ERROR("Failed to initialise memory arena of size %zu bytes!", size);
                 return false;
             }
 
@@ -273,7 +281,6 @@ namespace zf {
             const size_t offs_next = offs_aligned + size;
 
             if (offs_next > m_size) {
-                //LOG_ERROR("Failed to push %zu bytes to memory arena!", size);
                 return nullptr;
             }
 

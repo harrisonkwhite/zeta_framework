@@ -61,7 +61,7 @@ namespace zf {
         const auto rgba_px_data = PushArrayToMemArena<t_u8>(mem_arena, 4 * tex_meta.size.x * tex_meta.size.y);
 
         if (rgba_px_data.IsEmpty()) {
-            ////LOG_ERROR("Failed to reserve memory for font texture RGBA pixel data!");
+            //ZF_LOG_ERROR("Failed to reserve memory for font texture RGBA pixel data!");
             return {};
         }
 
@@ -87,7 +87,7 @@ namespace zf {
             t_u8* const stb_bitmap = stbtt_GetCodepointBitmap(&stb_font_info, scale, scale, chr, nullptr, nullptr, nullptr, nullptr);
 
             if (!stb_bitmap) {
-                ////LOG_ERROR("Failed to get bitmap for character '%c' through STB!", chr);
+                //ZF_LOG_ERROR("Failed to get bitmap for character '%c' through STB!", chr);
                 return {};
             }
 
@@ -114,22 +114,22 @@ namespace zf {
         fw.DeferClose();
 
         if (!fw.Open(file_path)) {
-            //LOG_ERROR("Failed to open \"%s\" for writing!", file_path.Raw());
+            ZF_LOG_ERROR("Failed to open \"%s\" for writing!", file_path.Raw());
             return false;
         }
 
         if (!fw.WriteItem(arrangement)) {
-            //LOG_ERROR("Failed to write font arrangement to file \"%s\"!", file_path.Raw());
+            ZF_LOG_ERROR("Failed to write font arrangement to file \"%s\"!", file_path.Raw());
             return false;
         }
 
         if (!fw.WriteItem(tex_meta)) {
-            //LOG_ERROR("Failed to write font texture metadata to file \"%s\"!", file_path.Raw());
+            ZF_LOG_ERROR("Failed to write font texture metadata to file \"%s\"!", file_path.Raw());
             return false;
         }
 
         if (fw.Write(tex_rgba_px_data) < tex_rgba_px_data.Len()) {
-            //LOG_ERROR("Failed to write font texture RGBA pixel data to file \"%s\"!", file_path.Raw());
+            ZF_LOG_ERROR("Failed to write font texture RGBA pixel data to file \"%s\"!", file_path.Raw());
             return false;
         }
 
@@ -138,7 +138,7 @@ namespace zf {
 
     bool PackFont(const c_string_view file_path, const t_s32 height, const c_string_view output_file_path, c_mem_arena& temp_mem_arena) {
         if (height <= 0) {
-            //LOG_ERROR("Invalid font height %d!", height);
+            ZF_LOG_ERROR("Invalid font height %d!", height);
             return false;
         }
 
@@ -146,7 +146,7 @@ namespace zf {
         const c_array<t_u8> file_data = LoadFileContents(file_path, temp_mem_arena);
 
         if (file_data.IsEmpty()) {
-            //LOG_ERROR("Failed to reserve memory for font file contents!");
+            ZF_LOG_ERROR("Failed to reserve memory for font file contents!");
             return false;
         }
 
@@ -156,12 +156,12 @@ namespace zf {
         const t_s32 offs = stbtt_GetFontOffsetForIndex(file_data.Raw(), 0);
 
         if (offs == -1) {
-            //LOG_ERROR("Failed to get font offset!");
+            ZF_LOG_ERROR("Failed to get font offset!");
             return false;
         }
 
         if (!stbtt_InitFont(&stb_font_info, file_data.Raw(), offs)) {
-            //LOG_ERROR("Failed to initialise font through STB!");
+            ZF_LOG_ERROR("Failed to initialise font through STB!");
             return false;
         }
 
@@ -171,7 +171,7 @@ namespace zf {
         const c_array<const t_u8> tex_rgba_px_data = GenFontTextureRGBAPixelData(temp_mem_arena, stb_font_info, height, arrangement, tex_meta);
 
         if (tex_rgba_px_data.IsEmpty()) {
-            //LOG_ERROR("Failed to generate font texture RGBA pixel data!");
+            ZF_LOG_ERROR("Failed to generate font texture RGBA pixel data!");
             return false;
         }
 
@@ -179,7 +179,7 @@ namespace zf {
             return false;
         }
 
-        //LOG_SUCCESS("Packed font from file \"%s\" with height %d!", file_path.Raw(), height);
+        ZF_LOG_SUCCESS("Packed font from file \"%s\" with height %d!", file_path.Raw(), height);
 
         return true;
     }

@@ -20,9 +20,9 @@ namespace zf {
 
                 if (!log.IsEmpty()) {
                     glGetShaderInfoLog(shader_gl_id, log.Len(), nullptr, log.Raw());
-                    //LOG_ERROR_SPECIAL("OpenGL Shader Compilation", "%s", log.Raw());
+                    ZF_LOG_ERROR_SPECIAL("OpenGL Shader Compilation", "%s", log.Raw());
                 } else {
-                    //LOG_ERROR("Failed to reserve memory for OpenGL shader compilation error log!");
+                    ZF_LOG_ERROR("Failed to reserve memory for OpenGL shader compilation error log!");
                 }
             }
 
@@ -42,45 +42,45 @@ namespace zf {
         fr.DeferClose();
 
         if (!fr.Open(file_path)) {
-            //LOG_ERROR("Failed to open shader program file \"%s\"!", file_path.Raw());
+            ZF_LOG_ERROR("Failed to open shader program file \"%s\"!", file_path.Raw());
             return false;
         }
 
         t_s32 vert_src_len;
 
         if (!fr.ReadItem(vert_src_len)) {
-            //LOG_ERROR("Failed to read vertex shader source length from file \"%s\"!", file_path.Raw());
+            ZF_LOG_ERROR("Failed to read vertex shader source length from file \"%s\"!", file_path.Raw());
             return false;
         }
 
         const auto vert_src_chrs = PushArrayToMemArena<char>(mem_arena, vert_src_len);
 
         if (vert_src_chrs.IsEmpty()) {
-            //LOG_ERROR("Failed to reserve memory for vertex shader source from file \"%s\"!", file_path.Raw());
+            ZF_LOG_ERROR("Failed to reserve memory for vertex shader source from file \"%s\"!", file_path.Raw());
             return false;
         }
 
         if (fr.Read(vert_src_chrs) < vert_src_chrs.Len()) {
-            //LOG_ERROR("Failed to read vertex shader source from file \"%s\"!", file_path.Raw());
+            ZF_LOG_ERROR("Failed to read vertex shader source from file \"%s\"!", file_path.Raw());
             return false;
         }
 
         t_s32 frag_src_len;
 
         if (!fr.ReadItem(frag_src_len)) {
-            //LOG_ERROR("Failed to read fragment shader source length from file \"%s\"!", file_path.Raw());
+            ZF_LOG_ERROR("Failed to read fragment shader source length from file \"%s\"!", file_path.Raw());
             return false;
         }
 
         const auto frag_src_chrs = PushArrayToMemArena<char>(mem_arena, frag_src_len);
 
         if (frag_src_chrs.IsEmpty()) {
-            //LOG_ERROR("Failed to reserve memory for fragment shader source from file \"%s\"!", file_path.Raw());
+            ZF_LOG_ERROR("Failed to reserve memory for fragment shader source from file \"%s\"!", file_path.Raw());
             return false;
         }
 
         if (fr.Read(frag_src_chrs) < frag_src_chrs.Len()) {
-            //LOG_ERROR("Failed to read fragment shader source from file \"%s\"!", file_path.Raw());
+            ZF_LOG_ERROR("Failed to read fragment shader source from file \"%s\"!", file_path.Raw());
             return false;
         }
 
@@ -100,7 +100,7 @@ namespace zf {
             frag_src = gen_info.frag_src;
         } else {
             if (!LoadShaderSrcsFromFile(vert_src, frag_src, gen_info.file_path, temp_mem_arena)) {
-                //LOG_ERROR("Failed to load shader sources from file \"%s\"!", gen_info.file_path.Raw());
+                ZF_LOG_ERROR("Failed to load shader sources from file \"%s\"!", gen_info.file_path.Raw());
                 return 0;
             }
         }
@@ -110,9 +110,9 @@ namespace zf {
 
         if (!vs_gl_id) {
             if (gen_info.holds_srcs) {
-                //LOG_ERROR("Failed to generate vertex shader from source!");
+                ZF_LOG_ERROR("Failed to generate vertex shader from source!");
             } else {
-                //LOG_ERROR("Failed to generate vertex shader from file \"%s\"!", gen_info.file_path.Raw());
+                ZF_LOG_ERROR("Failed to generate vertex shader from file \"%s\"!", gen_info.file_path.Raw());
             }
 
             return 0;
@@ -122,9 +122,9 @@ namespace zf {
 
         if (!fs_gl_id) {
             if (gen_info.holds_srcs) {
-                //LOG_ERROR("Failed to generate fragment shader from source!");
+                ZF_LOG_ERROR("Failed to generate fragment shader from source!");
             } else {
-                //LOG_ERROR("Failed to generate fragment shader from file \"%s\"!", gen_info.file_path.Raw());
+                ZF_LOG_ERROR("Failed to generate fragment shader from file \"%s\"!", gen_info.file_path.Raw());
             }
 
             glDeleteShader(vs_gl_id);
@@ -155,7 +155,7 @@ namespace zf {
         const c_array<t_gl_id> gl_ids = PushArrayToGLResourceArena(gl_res_arena, prog_cnt, ek_gl_resource_type_shader_prog);
 
         if (gl_ids.IsEmpty()) {
-            //LOG_ERROR("Failed to reserve OpenGL shader program IDs for shader program group!");
+            ZF_LOG_ERROR("Failed to reserve OpenGL shader program IDs for shader program group!");
             return false;
         }
 
@@ -165,7 +165,7 @@ namespace zf {
             gl_ids[i] = GenShaderProg(gen_info, temp_mem_arena);
 
             if (!gl_ids[i]) {
-                //LOG_ERROR("Failed to generate shader program with index %d!", i);
+                ZF_LOG_ERROR("Failed to generate shader program with index %d!", i);
                 return false;
             }
         }

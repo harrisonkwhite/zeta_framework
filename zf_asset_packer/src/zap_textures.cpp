@@ -8,17 +8,17 @@ namespace zf {
         fw.DeferClose();
 
         if (!fw.Open(file_path)) {
-            //LOG_ERROR("Failed to open \"%s\" for writing!", file_path.Raw());
+            ZF_LOG_ERROR("Failed to open \"%s\" for writing!", file_path.Raw());
             return false;
         }
 
         if (!fw.WriteItem(rgba_tex.tex_size)) {
-            //LOG_ERROR("Failed to write texture size to file \"%s\"!", file_path.Raw());
+            ZF_LOG_ERROR("Failed to write texture size to file \"%s\"!", file_path.Raw());
             return false;
         }
 
         if (fw.Write(rgba_tex.px_data.View()) < rgba_tex.px_data.Len()) {
-            //LOG_ERROR("Failed to write pixel data to file \"%s\"!", file_path.Raw());
+            ZF_LOG_ERROR("Failed to write pixel data to file \"%s\"!", file_path.Raw());
             return false;
         }
 
@@ -36,7 +36,7 @@ namespace zf {
             return false;
         }
 
-        //LOG_SUCCESS("Packed texture from file \"%s\"!", file_path.Raw());
+        ZF_LOG_SUCCESS("Packed texture from file \"%s\"!", file_path.Raw());
 
         return true;
     }

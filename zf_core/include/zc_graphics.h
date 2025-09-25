@@ -1,12 +1,10 @@
 #pragma once
 
+#include "zc_mem.h"
 #include "zc_math.h"
+#include "zc_io.h"
 
 namespace zf {
-    constexpr char g_ascii_printable_min = ' ';
-    constexpr char g_ascii_printable_max = '~';
-    constexpr int g_ascii_printable_range_len = g_ascii_printable_max - g_ascii_printable_min + 1;
-
     namespace colors {
         constexpr s_v4 g_black = {0.0f, 0.0f, 0.0f, 1.0f};
         constexpr s_v4 g_dark_gray = {0.25f, 0.25f, 0.25f, 1.0f};

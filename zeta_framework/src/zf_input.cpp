@@ -257,6 +257,6 @@ namespace zf {
             }
         }
 
-        //LOG_WARNING("Unicode buffer is full!");
+        ZF_LOG_WARNING("Unicode buffer is full!");
     }
 }

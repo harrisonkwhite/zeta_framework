@@ -6,7 +6,7 @@ namespace zf {
         fr.DeferClose();
 
         if (!fr.Open(file_path)) {
-            //LOG_ERROR("Failed to open \"%s\"!", file_path.Raw());
+            ZF_LOG_ERROR("Failed to open \"%s\"!", file_path.Raw());
             return {};
         }
 
@@ -15,12 +15,12 @@ namespace zf {
         const auto contents = PushArrayToMemArena<t_u8>(mem_arena, include_terminating_byte ? file_size + 1 : file_size);
 
         if (contents.IsEmpty()) {
-            //LOG_ERROR("Failed to reserve memory for the contents of file \"%s\"!", file_path.Raw());
+            ZF_LOG_ERROR("Failed to reserve memory for the contents of file \"%s\"!", file_path.Raw());
             return {};
         }
 
         if (fr.Read(contents) < file_size) {
-            //LOG_ERROR("Failed to read the contents of \"%s\"!", file_path.buf_raw);
+            ZF_LOG_ERROR("Failed to read the contents of \"%s\"!", file_path.Raw());
             return {};
         }
 
