@@ -4,7 +4,6 @@
 #include <cassert>
 #include <zc.h>
 #include "zf_input.h"
-#include "zf_rendering.h"
 
 namespace zf {
     enum e_window_flags {
@@ -25,10 +24,6 @@ namespace zf {
         c_mem_arena& temp_mem_arena;
 
         s_window_state window_state;
-
-        s_gl_resource_arena& gl_res_arena;
-
-        s_rendering_basis& rendering_basis;
     };
 
     enum e_game_tick_result {
@@ -46,10 +41,6 @@ namespace zf {
         s_window_state window_state;
 
         s_input_context input_context;
-
-        s_gl_resource_arena& gl_res_arena;
-
-        s_rendering_basis& rendering_basis;
     };
 
     struct s_game_render_context {
@@ -59,8 +50,6 @@ namespace zf {
         c_mem_arena& temp_mem_arena;
 
         s_v2 mouse_pos;
-
-        s_rendering_context rendering_context;
     };
 
     struct s_game_info {

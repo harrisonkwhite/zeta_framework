@@ -1,8 +1,8 @@
 # Zeta Framework
 
-This is a simple framework in C++ for developing 2D games using OpenGL.
+This is a simple framework in C++ for developing 2D games.
 
-You can find it being put to use in my game [Kaōzeth](https://github.com/harrisonkwhite/terraria_clone).
+You can find it being put to use in my game [Kaōzeth](https://github.com/harrisonkwhite/kaozeth).
 
 There is also a [template available](https://github.com/harrisonkwhite/zfw_game_template) for making a new game with this framework.
 
@@ -29,5 +29,4 @@ cmake ..
 ## Third-Party Projects
 
 - [GLFW](https://github.com/glfw/glfw)
-- [glad](https://github.com/Dav1dde/glad)
 - [stb](https://github.com/nothings/stb)

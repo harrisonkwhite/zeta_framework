@@ -211,7 +211,7 @@ namespace zf {
             assert(far > near);
             assert(near < far);
 
-            s_matrix_4x4 mat = {0};
+            s_matrix_4x4 mat;
             mat.elems[0][0] = 2.0f / (right - left);
             mat.elems[1][1] = 2.0f / (top - bottom);
             mat.elems[2][2] = -2.0f / (far - near);
@@ -219,7 +219,6 @@ namespace zf {
             mat.elems[3][1] = -(top + bottom) / (top - bottom);
             mat.elems[3][2] = -(far + near) / (far - near);
             mat.elems[3][3] = 1.0f;
-
             return mat;
         }
 

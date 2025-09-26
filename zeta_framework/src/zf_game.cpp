@@ -1,6 +1,21 @@
 #include "zf_game.h"
 
 #include <cstdio>
+
+#if defined(_WIN32)
+    #define GLFW_EXPOSE_NATIVE_WIN32
+#elif defined(__linux__)
+    #define GLFW_EXPOSE_NATIVE_X11
+#elif defined(__APPLE__)
+    #define GLFW_EXPOSE_NATIVE_COCOA
+#endif
+
+#include <GLFW/glfw3.h>
+#include <GLFW/glfw3native.h>
+
+#include <bgfx/bgfx.h>
+#include <bgfx/platform.h>
+
 #include "zf_rng.h"
 
 namespace zf {
@@ -8,18 +23,18 @@ namespace zf {
     constexpr size_t g_temp_mem_arena_size = Megabytes(40);
     constexpr t_s32 g_gl_resource_arena_res_limit = 1024;
 
-    enum e_game_run_stage {
-        ek_game_run_stage_nothing_initted,
-        ek_game_run_stage_perm_mem_arena_initted,
-        ek_game_run_stage_temp_mem_arena_initted,
-        ek_game_run_stage_glfw_initted,
-        ek_game_run_stage_glfw_window_created,
-        ek_game_run_stage_gl_res_arena_initted,
-        ek_game_run_stage_dev_init_func_ran_and_succeeded
+    enum class ec_game_run_stage {
+        nothing_initted,
+        perm_mem_arena_initted,
+        temp_mem_arena_initted,
+        glfw_initted,
+        glfw_window_created,
+        bgfx_initted,
+        dev_init_func_ran_and_succeeded
     };
 
     struct s_game {
-        e_game_run_stage run_stage; // Used to determine what needs to be cleaned up.
+        ec_game_run_stage run_stage; // Used to determine what needs to be cleaned up.
 
         c_mem_arena perm_mem_arena; // The memory in here exists for the lifetime of the program, it does not get reset.
         c_mem_arena temp_mem_arena; // While the memory here also exists for the program lifetime, it gets reset after game initialisation and after every frame. Useful if you just need some temporary working space.
@@ -27,9 +42,6 @@ namespace zf {
         GLFWwindow* glfw_window;
 
         s_input_events input_events; // Events such as key presses and mouse wheel scrolls are stored here via GLFW callbacks, accessible in the next tick and then cleared. Ensures that events occurring between ticks are not lost.
-
-        s_gl_resource_arena gl_res_arena; // Contains all OpenGL resources used over the lifetime of the game, so they can be cleaned up all at once (simplifies resource management).
-        s_rendering_basis rendering_basis; // Foundational rendering data used throughout the lifetime of the game.
 
         void* dev_mem; // Memory optionally reserved by the developer for their own use, accessible in their defined functions through the provided ZF context.
     };
@@ -56,14 +68,14 @@ namespace zf {
             return false;
         }
 
-        game.run_stage = ek_game_run_stage_perm_mem_arena_initted;
+        game.run_stage = ec_game_run_stage::perm_mem_arena_initted;
 
         if (!game.temp_mem_arena.Init(g_temp_mem_arena_size)) {
             ZF_LOG_ERROR("Failed to initialise the temporary memory arena!");
             return false;
         }
 
-        game.run_stage = ek_game_run_stage_temp_mem_arena_initted;
+        game.run_stage = ec_game_run_stage::temp_mem_arena_initted;
 
         // Initialise GLFW.
         if (!glfwInit()) {
@@ -71,36 +83,24 @@ namespace zf {
             return false;
         }
 
-        game.run_stage = ek_game_run_stage_glfw_initted;
+        game.run_stage = ec_game_run_stage::glfw_initted;
 
         // Set up the GLFW window.
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, g_gl_version_major);
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, g_gl_version_minor);
-        glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
         glfwWindowHint(GLFW_VISIBLE, false);
+        glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 
-        game.glfw_window = glfwCreateWindow(
-            info.window_init_size.x,
-            info.window_init_size.y,
-            info.window_title.Raw(),
-            nullptr,
-            nullptr
-        );
+        game.glfw_window = glfwCreateWindow(info.window_init_size.x, info.window_init_size.y, info.window_title.Raw(), nullptr, nullptr);
 
         if (!game.glfw_window) {
             ZF_LOG_ERROR("Failed to create a GLFW window!");
             return false;
         }
 
-        game.run_stage = ek_game_run_stage_glfw_window_created;
+        game.run_stage = ec_game_run_stage::glfw_window_created;
 
         glfwSetWindowAttrib(game.glfw_window, GLFW_RESIZABLE, (info.window_flags & ek_window_flags_resizable) ? true : false);
 
         glfwSetInputMode(game.glfw_window, GLFW_CURSOR, (info.window_flags & ek_window_flags_hide_cursor) ? GLFW_CURSOR_HIDDEN : GLFW_CURSOR_NORMAL);
-
-        glfwMakeContextCurrent(game.glfw_window);
-
-        glfwSwapInterval(1); // Enables VSync.
 
         // Set up GLFW callbacks.
         glfwSetWindowUserPointer(game.glfw_window, &game.input_events);
@@ -110,33 +110,58 @@ namespace zf {
         glfwSetScrollCallback(game.glfw_window, GLFWScrollCallback);
         glfwSetCharCallback(game.glfw_window, GLFWCharCallback);
 
-        // Initialise rendering.
-        if (!gladLoadGLLoader(reinterpret_cast<GLADloadproc>(glfwGetProcAddress))) {
-            ZF_LOG_ERROR("Failed to load OpenGL function pointers!");
+        // Get native window handle and size.
+        int fbWidth = 0, fbHeight = 0;
+
+        glfwGetFramebufferSize(game.glfw_window, &fbWidth, &fbHeight);
+
+        if (fbWidth == 0 || fbHeight == 0) {
+            fbWidth = 1;
+            fbHeight = 1;
+        }
+
+        bgfx::PlatformData pd = {};
+#if defined(_WIN32)
+            pd.nwh = glfwGetWin32Window(game.glfw_window);
+#elif defined(__linux__)
+            pd.nwh = (void*)(uintptr_t)glfwGetX11Window(game.glfw_window);
+            pd.ndt = glfwGetX11Display();
+#elif defined(__APPLE__)
+            pd.nwh = glfwGetCocoaWindow(game.glfw_window);
+#endif
+
+        // Initialise bgfx.
+        bgfx::Init init;
+        #if defined(_WIN32)
+            init.type = bgfx::RendererType::Direct3D11;
+        #else
+            init.type = bgfx::RendererType::Count;
+        #endif
+        init.resolution.width = static_cast<uint32_t>(fbWidth);
+        init.resolution.height = static_cast<uint32_t>(fbHeight);
+        init.resolution.reset = BGFX_RESET_VSYNC;
+        init.platformData = pd;
+
+        if (!bgfx::init(init)) {
+            ZF_LOG_ERROR("Failed to initialise bgfx!");
             return false;
         }
 
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        game.run_stage = ec_game_run_stage::bgfx_initted;
 
-        if (!InitGLResourceArena(game.gl_res_arena, game.perm_mem_arena, g_gl_resource_arena_res_limit)) {
-            ZF_LOG_ERROR("Failed to initialise OpenGL resource arena!");
-            return false;
-        }
+        // Set the initial view.
+        bgfx::setViewClear(0, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, 0x303030ff, 1.0f, 0);
+        bgfx::setViewRect(0, 0, 0, static_cast<uint16_t>(fbWidth), static_cast<uint16_t>(fbHeight));
 
-        game.run_stage = ek_game_run_stage_gl_res_arena_initted;
-
-        if (!InitRenderingBasis(game.rendering_basis, game.gl_res_arena, game.perm_mem_arena, game.temp_mem_arena)) {
-            ZF_LOG_ERROR("Failed to initialise the rendering basis!");
-            return false;
-        }
-
-        const auto rendering_state = game.perm_mem_arena.Push<s_rendering_state>();
-
-        if (!rendering_state) {
-            ZF_LOG_ERROR("Failed to reserve memory for rendering state!");
-            return false;
-        }
+        // Resize callback should also update view rectangle.
+        glfwSetFramebufferSizeCallback(game.glfw_window,
+            [](GLFWwindow*, int w, int h){
+                if (w > 0 && h > 0) {
+                    bgfx::reset((uint32_t)w, (uint32_t)h, BGFX_RESET_VSYNC);
+                    bgfx::setViewRect(0, 0, 0, (uint16_t)w, (uint16_t)h);
+                }
+            }
+        );
 
         // Initialise developer memory.
         if (info.dev_mem_size > 0) {
@@ -154,9 +179,7 @@ namespace zf {
                 .dev_mem = game.dev_mem,
                 .perm_mem_arena = game.perm_mem_arena,
                 .temp_mem_arena = game.temp_mem_arena,
-                .window_state = WindowState(game.glfw_window),
-                .gl_res_arena = game.gl_res_arena,
-                .rendering_basis = game.rendering_basis
+                .window_state = WindowState(game.glfw_window)
             };
 
             if (!info.init_func(context)) {
@@ -165,7 +188,7 @@ namespace zf {
             }
         }
 
-        game.run_stage = ek_game_run_stage_dev_init_func_ran_and_succeeded;
+        game.run_stage = ec_game_run_stage::dev_init_func_ran_and_succeeded;
 
         // Now that everything is set up, we can show the window.
         glfwShowWindow(game.glfw_window);
@@ -203,9 +226,7 @@ namespace zf {
                         .input_context = {
                             .state = input_state,
                             .events = game.input_events
-                        },
-                        .gl_res_arena = game.gl_res_arena,
-                        .rendering_basis = game.rendering_basis
+                        }
                     };
 
                     const e_game_tick_result res = info.tick_func(context);
@@ -225,34 +246,8 @@ namespace zf {
                     frame_dur_accum -= targ_tick_interval;
                 } while (frame_dur_accum >= targ_tick_interval);
 
-                // Render the game.
-                InitRenderingState(*rendering_state, window_state.size);
-
-                {
-                    // Execute the developer's render function.
-                    const s_game_render_context context = {
-                        .dev_mem = game.dev_mem,
-                        .perm_mem_arena = game.perm_mem_arena,
-                        .temp_mem_arena = game.temp_mem_arena,
-                        .mouse_pos = input_state.mouse_pos,
-                        .rendering_context = {
-                            .basis = game.rendering_basis,
-                            .state = *rendering_state,
-                            .window_size = window_state.size
-                        }
-                    };
-
-                    if (!info.render_func(context)) {
-                        ZF_LOG_ERROR("Developer game render function failed!");
-                        return false;
-                    }
-
-                    assert(BoundGLFramebuffer() == 0 && "Potentially forgot to unset all surfaces in developer render function?");
-
-                    SubmitBatch(context.rendering_context);
-                }
-
-                glfwSwapBuffers(game.glfw_window);
+                bgfx::touch(0);
+                bgfx::frame();
             }
 
             glfwPollEvents();
@@ -264,38 +259,38 @@ namespace zf {
     bool RunGame(const s_game_info& info) {
         AssertGameInfoValidity(info);
 
-        s_game game = {};
+        s_game game;
 
         const bool result = ExecGameInitAndMainLoop(game, info);
 
         // Clean up.
-        for (t_s32 i = game.run_stage; i >= 0; i--) {
-            switch (static_cast<e_game_run_stage>(i)) {
-                case ek_game_run_stage_nothing_initted:
+        for (auto i = static_cast<t_s32>(game.run_stage); i >= 0; i--) {
+            switch (static_cast<ec_game_run_stage>(i)) {
+                case ec_game_run_stage::nothing_initted:
                     break;
 
-                case ek_game_run_stage_perm_mem_arena_initted:
+                case ec_game_run_stage::perm_mem_arena_initted:
                     game.perm_mem_arena.Clean();
                     break;
 
-                case ek_game_run_stage_temp_mem_arena_initted:
+                case ec_game_run_stage::temp_mem_arena_initted:
                     game.temp_mem_arena.Clean();
                     break;
 
-                case ek_game_run_stage_glfw_initted:
+                case ec_game_run_stage::glfw_initted:
                     glfwTerminate();
                     break;
 
-                case ek_game_run_stage_glfw_window_created:
+                case ec_game_run_stage::glfw_window_created:
                     assert(game.glfw_window);
                     glfwDestroyWindow(game.glfw_window);
                     break;
 
-                case ek_game_run_stage_gl_res_arena_initted:
-                    CleanGLResourceArena(game.gl_res_arena);
+                case ec_game_run_stage::bgfx_initted:
+                    bgfx::shutdown();
                     break;
 
-                case ek_game_run_stage_dev_init_func_ran_and_succeeded:
+                case ec_game_run_stage::dev_init_func_ran_and_succeeded:
                     if (info.clean_func) {
                         info.clean_func(game.dev_mem);
                     }

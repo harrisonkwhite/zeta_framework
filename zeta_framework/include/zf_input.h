@@ -1,7 +1,7 @@
 #pragma once
 
 #include <cassert>
-#include <GLFW/glfw3.h>
+#include <GLFW/glfw3.h> // @todo: Do not expose this.
 #include <zc.h>
 
 namespace zf {
