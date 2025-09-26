@@ -135,6 +135,7 @@ namespace zf {
         s_rect() = default;
         s_rect(const float x, const float y, const float width, const float height) : x(x), y(y), width(width), height(height) {}
         s_rect(const s_v2 pos, const s_v2 size) : x(pos.x), y(pos.y), width(size.x), height(size.y) {}
+        s_rect(const s_v2 pos, const s_v2 size, const s_v2 origin) : x(pos.x - (size.x * origin.x)), y(pos.y - (size.y * origin.y)), width(size.x), height(size.y) {}
 
         s_v2 Pos() const {
             return {x, y};
@@ -191,10 +192,10 @@ namespace zf {
     };
 
     struct s_matrix_4x4 {
-        float elems[4][4];
+        s_static_array<s_static_array<float, 4>, 4> elems;
 
         static s_matrix_4x4 Identity() {
-            s_matrix_4x4 mat = {0};
+            s_matrix_4x4 mat;
 
             mat.elems[0][0] = 1.0f;
             mat.elems[1][1] = 1.0f;

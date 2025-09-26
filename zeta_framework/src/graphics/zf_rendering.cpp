@@ -1,6 +1,7 @@
 #include "zf_rendering.h"
 
 namespace zf {
+#if 0
     static const char g_batch_vert_shader_src[] = "#version 430 core\n"
         "\n"
         "layout (location = 0) in vec2 a_vert;\n"
@@ -46,146 +47,6 @@ namespace zf {
         "    o_frag_color = tex_color * v_blend;\n"
         "}\n";
 
-    bool InitGLResourceArena(s_gl_resource_arena& res_arena, c_mem_arena& mem_arena, const t_s32 res_limit) {
-        assert(res_limit > 0);
-
-        res_arena.ids = PushArrayToMemArena<t_gl_id>(mem_arena, res_limit);
-
-        if (res_arena.ids.IsEmpty()) {
-            ZF_LOG_ERROR("Failed to reserve memory for OpenGL resource IDs!");
-            return false;
-        }
-
-        res_arena.res_types = PushArrayToMemArena<e_gl_resource_type>(mem_arena, res_limit);
-
-        if (res_arena.res_types.IsEmpty()) {
-            ZF_LOG_ERROR("Failed to reserve memory for OpenGL resource types!");
-            return false;
-        }
-
-        res_arena.res_limit = res_limit;
-
-        return true;
-    }
-
-    void CleanGLResourceArena(s_gl_resource_arena& res_arena) {
-        for (t_s32 i = 0; i < res_arena.res_used; i++) {
-            const t_gl_id gl_id = res_arena.ids[i];
-
-            if (!gl_id) {
-                continue;
-            }
-
-            const e_gl_resource_type res_type = res_arena.res_types[i];
-
-            switch (res_type) {
-                case ek_gl_resource_type_texture:
-                    glDeleteTextures(1, &gl_id);
-                    break;
-
-                case ek_gl_resource_type_shader_prog:
-                    glDeleteProgram(gl_id);
-                    break;
-
-                case ek_gl_resource_type_vert_array:
-                    glDeleteVertexArrays(1, &gl_id);
-                    break;
-
-                case ek_gl_resource_type_vert_buf:
-                case ek_gl_resource_type_elem_buf:
-                    glDeleteBuffers(1, &gl_id);
-                    break;
-
-                case ek_gl_resource_type_framebuffer:
-                    glDeleteFramebuffers(1, &gl_id);
-                    break;
-
-                default:
-                    assert(false && "Unhandled OpenGL resource type case!");
-                    break;
-            }
-        }
-    }
-
-    t_gl_id PushToGLResourceArena(s_gl_resource_arena& res_arena, const e_gl_resource_type res_type) {
-        return 0;
-    }
-
-    c_array<t_gl_id> PushArrayToGLResourceArena(s_gl_resource_arena& res_arena, t_s32 cnt, e_gl_resource_type res_type) {
-        if (res_arena.res_used + cnt > res_arena.res_limit) {
-            ZF_LOG_ERROR("OpenGL resource arena is full!");
-            return {};
-        }
-
-        const t_s32 res_used_prev = res_arena.res_used;
-        res_arena.res_used += cnt;
-        return {res_arena.ids.Raw() + res_used_prev, cnt};
-    }
-
-    static size_t CalcStride(const c_array<const t_s32> vert_attr_lens) {
-        t_s32 stride = 0;
-
-        for (t_s32 i = 0; i < vert_attr_lens.Len(); i++) {
-            stride += sizeof(float) * vert_attr_lens[i];
-        }
-
-        return stride;
-    }
-
-    static s_renderable GenRenderable(s_gl_resource_arena& gl_res_arena, const c_array<const float> verts, const c_array<const t_u16> elems, const c_array<const t_s32> vert_attr_lens) {
-        t_gl_id va_gl_id = PushToGLResourceArena(gl_res_arena, ek_gl_resource_type_vert_array);
-
-        if (!va_gl_id) {
-            ZF_LOG_ERROR("Failed to reserve OpenGL vertex array ID for renderable!");
-            return {};
-        }
-
-        t_gl_id vb_gl_id = PushToGLResourceArena(gl_res_arena, ek_gl_resource_type_vert_buf);
-
-        if (!vb_gl_id) {
-            ZF_LOG_ERROR("Failed to reserve OpenGL vertex buffer ID for renderable!");
-            return {};
-        }
-
-        t_gl_id eb_gl_id = PushToGLResourceArena(gl_res_arena, ek_gl_resource_type_elem_buf);
-
-        if (!eb_gl_id) {
-            ZF_LOG_ERROR("Failed to reserve OpenGL element buffer ID for renderable!");
-            return {};
-        }
-
-        glGenVertexArrays(1, &va_gl_id);
-        glBindVertexArray(va_gl_id);
-
-        glGenBuffers(1, &vb_gl_id);
-        glBindBuffer(GL_ARRAY_BUFFER, vb_gl_id);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(*verts.Raw()) * verts.Len(), verts.Raw(), GL_DYNAMIC_DRAW);
-
-        glGenBuffers(1, &eb_gl_id);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, eb_gl_id);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(*elems.Raw()) * elems.Len(), elems.Raw(), GL_STATIC_DRAW);
-
-        const size_t stride = CalcStride(vert_attr_lens);
-        t_s32 offs = 0;
-
-        for (t_s32 i = 0; i < vert_attr_lens.Len(); i++) {
-            const auto attr_len = vert_attr_lens[i];
-
-            glVertexAttribPointer(i, attr_len, GL_FLOAT, false, stride, reinterpret_cast<void*>(sizeof(float) * offs));
-            glEnableVertexAttribArray(i);
-
-            offs += attr_len;
-        }
-
-        glBindVertexArray(0);
-
-        return {
-            .vert_array_gl_id = va_gl_id,
-            .vert_buf_gl_id = vb_gl_id,
-            .elem_buf_gl_id = eb_gl_id
-        };
-    }
-
     static c_array<const t_u16> GenBatchRenderableElems(c_mem_arena& mem_arena) {
         const auto elems = PushArrayToMemArena<t_u16>(mem_arena, g_batch_slot_elem_cnt * g_batch_slot_cnt);
 
@@ -206,7 +67,7 @@ namespace zf {
         return elems.View();
     }
 
-    static s_renderable GenRenderableOfType(s_gl_resource_arena& gl_res_arena, e_renderable type, c_mem_arena& temp_mem_arena) {
+    [[nodiscard]] static bool GenRenderableOfType(s_renderable& renderable, s_gl_resource_arena& gl_res_arena, const e_renderable type, c_mem_arena& temp_mem_arena) {
         switch (type) {
             case ek_renderable_batch: {
                 const auto verts = c_array<const float>{nullptr, g_batch_slot_vert_len * g_batch_slot_vert_cnt * g_batch_slot_cnt};
@@ -219,7 +80,7 @@ namespace zf {
 
                 const s_static_array<t_s32, 6> vert_attr_lens = {{2, 2, 2, 1, 2, 4}};
 
-                return GenRenderable(gl_res_arena, verts, elems, vert_attr_lens.Nonstatic());
+                return GenRenderable(renderable, gl_res_arena, verts, elems, vert_attr_lens.Nonstatic());
             }
 
             case ek_renderable_surface: {
@@ -237,7 +98,7 @@ namespace zf {
 
                 const s_static_array<t_s32, 2> vert_attr_lens = {{2, 2}};
 
-                return GenRenderable(gl_res_arena, verts.Nonstatic(), elems.Nonstatic(), vert_attr_lens.Nonstatic());
+                return GenRenderable(renderable, gl_res_arena, verts.Nonstatic(), elems.Nonstatic(), vert_attr_lens.Nonstatic());
             }
 
             default:
@@ -246,73 +107,29 @@ namespace zf {
         }
     }
 
-    static s_rgba_texture BuiltinTextureRGBAGenerator(const t_s32 tex_index, c_mem_arena& mem_arena) {
+    static bool BuiltinTextureRGBALoader(s_rgba_texture& rgba, const t_s32 tex_index, c_mem_arena& mem_arena) {
         switch (static_cast<e_builtin_texture>(tex_index)) {
             case ek_builtin_texture_pixel: {
-                const auto px_data = PushArrayToMemArena<t_u8>(mem_arena, 4);
+                rgba.px_data = PushArrayToMemArena<t_u8>(mem_arena, 4);
 
-                if (px_data.IsEmpty()) {
-                    return {};
+                if (rgba.px_data.IsEmpty()) {
+                    return false;
                 }
 
-                px_data[0] = 255;
-                px_data[1] = 255;
-                px_data[2] = 255;
-                px_data[3] = 255;
+                rgba.px_data[0] = 255;
+                rgba.px_data[1] = 255;
+                rgba.px_data[2] = 255;
+                rgba.px_data[3] = 255;
 
-                return {{1, 1}, px_data};
+                rgba.tex_size = {1, 1};
+
+                return true;
             }
 
             default:
                 assert(false && "Unhandled built-in texture case!");
                 return {};
         }
-    }
-
-    bool InitRenderingBasis(s_rendering_basis& basis, s_gl_resource_arena& gl_res_arena, c_mem_arena& mem_arena, c_mem_arena& temp_mem_arena) {
-        /*if (!InitTextureGroup(basis.builtin_textures, eks_builtin_texture_cnt, BuiltinTextureRGBAGenerator, mem_arena, gl_res_arena, temp_mem_arena)) {
-            ZF_LOG_ERROR("Failed to generate built-in textures for rendering basis!");
-            return false;
-        }
-
-        {
-            s_shader_prog_gen_info gen_infos[eks_builtin_shader_prog_cnt] = {};
-            gen_infos[ek_builtin_shader_prog_batch] = (s_shader_prog_gen_info){true, g_batch_vert_shader_src, g_batch_frag_shader_src};
-            gen_infos[ek_builtin_shader_prog_surface_default] = {true, g_surface_default_vert_shader_src, g_surface_default_frag_shader_src};
-            gen_infos[ek_builtin_shader_prog_surface_blend] = {true, g_surface_blend_vert_shader_src, g_surface_blend_frag_shader_src};
-
-            if (!InitShaderProgGroup(basis.builtin_shader_progs, {gen_infos, eks_builtin_shader_prog_cnt}, gl_res_arena, temp_mem_arena)) {
-                ZF_LOG_ERROR("Failed to generate built-in shader programs for rendering basis!");
-                return false;
-            }
-        }
-
-        for (t_s32 i = 0; i < eks_renderable_cnt; i++) {
-            basis.renderables[i] = GenRenderableOfType(gl_res_arena, static_cast<e_renderable>(i), temp_mem_arena);
-
-            if (basis.renderables[i].IsZero()) {
-                ZF_LOG_ERROR("Failed to generate renderable of index %d for rendering basis!", i);
-                return false;
-            }
-        }*/
-
-        return true;
-    }
-
-    void InitRenderingState(s_rendering_state& state, const s_v2_s32 window_size) {
-        ZeroOut(state);
-        state.view_mat = s_matrix_4x4::Identity();
-        glViewport(0, 0, window_size.x, window_size.y);
-    }
-
-    void Clear(const s_rendering_context& rendering_context, const s_v4 col) {
-        glClearColor(col.x, col.y, col.z, col.w);
-        glClear(GL_COLOR_BUFFER_BIT);
-    }
-
-    void SetViewMatrix(const s_rendering_context& rendering_context, const s_matrix_4x4& mat) {
-        SubmitBatch(rendering_context);
-        rendering_context.state.view_mat = mat;
     }
 
     static void WriteBatchSlot(t_batch_slot& slot, const s_batch_slot_write_info& write_info) {
@@ -341,8 +158,19 @@ namespace zf {
             };
         }
     }
+#endif
 
-    void Render(const s_rendering_context& rendering_context, const s_batch_slot_write_info& write_info) {
+    void c_renderer::Clear(const s_v4 col) {
+        glClearColor(col.x, col.y, col.z, col.w);
+        glClear(GL_COLOR_BUFFER_BIT);
+    }
+
+    void c_renderer::SetViewMatrix(const s_matrix_4x4& mat) {
+        SubmitBatch(rendering_context);
+        rendering_context.state.view_mat = mat;
+    }
+
+    void c_renderer::Render(const s_batch_slot_write_info& write_info) {
         auto& batch_state = rendering_context.state.batch;
 
         if (batch_state.num_slots_used == 0) {
@@ -359,7 +187,113 @@ namespace zf {
         batch_state.num_slots_used++;
     }
 
-    void SubmitBatch(const s_rendering_context& rendering_context) {
+    void c_renderer::RenderTexture(const s_rendering_context& rendering_context, const s_texture_group& textures, const t_s32 tex_index, const s_rect_s32 src_rect, const s_v2 pos, const s_v2 origin, const s_v2 scale, const float rot, const s_v4 blend) {
+        assert(origin.x >= 0.0f && origin.x <= 1.0f && origin.y >= 0.0f && origin.y <= 1.0f);
+
+        const s_v2_s32 tex_size = textures.sizes[tex_index];
+
+        s_rect_s32 src_rect_to_use;
+
+        if (src_rect == (s_rect_s32){}) {
+            src_rect_to_use = {0, 0, tex_size.x, tex_size.y};
+        } else {
+            src_rect_to_use = src_rect;
+            assert(src_rect.x + src_rect.width <= tex_size.x && src_rect.y + src_rect.height <= tex_size.y);
+        }
+
+        const s_batch_slot_write_info write_info = {
+            .tex_gl_id = textures.gl_ids[tex_index],
+            .tex_coords = GenTextureCoords(src_rect_to_use, tex_size),
+            .pos = pos,
+            .size = {src_rect_to_use.width * scale.x, src_rect_to_use.height * scale.y},
+            .origin = origin,
+            .rot = rot,
+            .blend = blend
+        };
+
+        Render(rendering_context, write_info);
+    }
+
+    void c_renderer::RenderRect(const s_rendering_context& rendering_context, const s_rect rect, const s_v4 color) {
+        RenderTexture(rendering_context.basis.builtin_textures, ek_builtin_texture_pixel, {}, rect.Pos(), {}, rect.Size(), 0, color);
+    }
+
+    static inline s_rect InnerRect(const s_rect rect, const float outline_thickness) {
+        return s_rect{
+            rect.x + outline_thickness,
+            rect.y + outline_thickness,
+            rect.width - (outline_thickness * 2.0f),
+            rect.height - (outline_thickness * 2.0f)
+        };
+    }
+
+    void c_renderer::RenderRectWithOutline(const s_rendering_context& rendering_context, const s_rect rect, const s_v4 fill_color, const s_v4 outline_color, const float outline_thickness) {
+        // Top Outline
+        RenderRect(rendering_context, {rect.x, rect.y, rect.width - outline_thickness, outline_thickness}, outline_color);
+
+        // Right Outline
+        RenderRect(rendering_context, {rect.x + rect.width - outline_thickness, rect.y, outline_thickness, rect.height - outline_thickness}, outline_color);
+
+        // Bottom Outline
+        RenderRect(rendering_context, {rect.x + outline_thickness, rect.y + rect.height - outline_thickness, rect.width - outline_thickness, outline_thickness}, outline_color);
+
+        // Left Outline
+        RenderRect(rendering_context, {rect.x, rect.y + outline_thickness, outline_thickness, rect.height - outline_thickness}, outline_color);
+
+        // Inside
+        RenderRect(rendering_context, InnerRect(rect, outline_thickness), fill_color);
+    }
+
+    void RenderRectWithOutlineAndOpaqueFill(const s_rendering_context& rendering_context, const s_rect rect, const s_v3 fill_color, const s_v4 outline_color, const float outline_thickness) {
+        // Outline
+        RenderRect(rendering_context, rect, outline_color);
+
+        // Inside
+        RenderRect(rendering_context, InnerRect(rect, outline_thickness), s_v4{fill_color.x, fill_color.y, fill_color.z, 1.0f});
+    }
+
+    void c_renderer::RenderBarHor(const s_rendering_context& rendering_context, const s_rect rect, const float perc, const s_v4 front_color, const s_v4 bg_color) {
+        assert(perc >= 0.0f && perc <= 1.0f);
+
+        const float front_rect_width = rect.width * perc;
+
+        if (front_rect_width > 0.0f) {
+            RenderRect(rendering_context, s_rect{rect.x, rect.y, front_rect_width, rect.height}, front_color);
+        }
+
+        const float bg_rect_x = rect.x + front_rect_width;
+        const float bg_rect_width = rect.width - front_rect_width;
+
+        if (bg_rect_width > 0.0f) {
+            RenderRect(rendering_context, s_rect{bg_rect_x, rect.y, bg_rect_width, rect.height}, bg_color);
+        }
+    }
+
+    void c_renderer::RenderBarVertical(const s_rendering_context& rendering_context, const s_rect rect, const float perc, const s_v4 front_color, const s_v4 bg_color) {
+        assert(perc >= 0.0f && perc <= 1.0f);
+
+        const float front_rect_height = rect.height * perc;
+
+        if (front_rect_height > 0.0f) {
+            RenderRect(rendering_context, s_rect{rect.x, rect.y, rect.width, front_rect_height}, front_color);
+        }
+
+        const float bg_rect_y = rect.y + front_rect_height;
+        const float bg_rect_height = rect.height - front_rect_height;
+
+        if (bg_rect_height > 0.0f) {
+            RenderRect(rendering_context, s_rect{rect.x, bg_rect_y, rect.width, bg_rect_height}, bg_color);
+        }
+    }
+
+    void c_renderer::RenderLine(const s_rendering_context& rendering_context, s_v2 a, s_v2 b, s_v4 blend, float width) {
+        const s_v2 diff{b.x - a.x, b.y - a.y};
+        const float len = sqrtf((diff.x * diff.x) + (diff.y * diff.y));
+
+        RenderTexture(rendering_context, rendering_context.basis.builtin_textures, ek_builtin_texture_pixel, {}, a, s_v2{0.0f, 0.5f}, s_v2{len, width}, atan2f(-diff.y, diff.x), blend);
+    }
+
+    void c_renderer::Flush() {
         if (rendering_context.state.batch.num_slots_used == 0) {
             return;
         }
