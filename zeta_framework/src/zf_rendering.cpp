@@ -49,10 +49,10 @@ namespace zf {
 
     void BuildQuadRenderable(s_renderable& renderable) {
         static const s_static_array<s_quad_vertex, 4> verts = {{
-            {-1.0f, 1.0f, 0xff0000ff},
-            {1.0f, 1.0f, 0xff00ff00},
-            {-1.0f, -1.0f, 0xffff0000},
-            {1.0f, -1.0f, 0xffffffff}
+            {100.0f, 100.0f, 0xff0000ff},
+            {200.0f, 100.0f, 0xff00ff00},
+            {100.0f, 200.0f, 0xffff0000},
+            {200.0f, 200.0f, 0xffffffff}
         }};
 
         bgfx::VertexLayout vert_layout;
@@ -117,30 +117,24 @@ namespace zf {
     }
 
     void c_renderer::Render() {
-        const bx::Vec3 at = {0.0f, 0.0f, 0.0f};
-        const bx::Vec3 eye = {0.0f, 0.0f, -5.0f};
+        sm_size = c_window::GetFramebufferSize(); // @todo: Perform resize on window resize callback.
 
-        float view[16];
-        bx::mtxLookAt(view, eye, at);
+        s_static_array<float, 16> ortho_mat;
+        bx::mtxOrtho(ortho_mat.buf_raw, 0.0f, float(sm_size.x), float(sm_size.y), 0.0f, 0.0f, 100.0f, 0.0f, bgfx::getCaps()->homogeneousDepth);
 
-        float proj[16];
-        bx::mtxProj(proj, 60.0f, float(sm_size.x) / float(sm_size.y), 0.1f, 100.0f, bgfx::getCaps()->homogeneousDepth);
-        bgfx::setViewTransform(0, view, proj);
+        s_static_array<float, 16> view_mat;
+        bx::mtxIdentity(view_mat.buf_raw);
 
+        bgfx::setViewTransform(0, view_mat.buf_raw, ortho_mat.buf_raw);
         bgfx::setViewRect(0, 0, 0, uint16_t(sm_size.x), uint16_t(sm_size.y));
         bgfx::touch(0);
-
-        float mtx[16];
-        bx::mtxIdentity(mtx);
-        bgfx::setTransform(mtx);
 
         bgfx::setVertexBuffer(0, sm_quad_renderable.vbh);
         bgfx::setIndexBuffer(sm_quad_renderable.ibh);
 
-        bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A | BGFX_STATE_WRITE_Z | BGFX_STATE_DEPTH_TEST_LESS);
+        bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A | BGFX_STATE_BLEND_ALPHA);
 
         bgfx::submit(0, sm_prog);
-
         bgfx::frame();
     }
 }

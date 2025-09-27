@@ -5,10 +5,37 @@
 #include <zc.h>
 
 namespace zf {
+    // @todo: We need a module for the generic graphics abstraction, another for the renderer.
+
     struct s_renderable {
-        bgfx::VertexBufferHandle vbh = {};
-        bgfx::IndexBufferHandle ibh = {};
+        bgfx::VertexBufferHandle vbh;
+        bgfx::IndexBufferHandle ibh;
     };
+
+#if 0
+    enum e_renderable {
+        ek_renderable_batch,
+        eks_renderable_cnt
+    };
+
+    // PROPER IMPLEMENTATION STUFF, GET THE RECTANGLE DONE FIRST!
+    struct s_batch_vert {
+        s_v2 vert_coord;
+        s_v2 pos;
+        s_v2 size;
+        float rot;
+        s_v2 tex_coord;
+        s_v4 blend;
+    }; // @todo: Figure out how to map attributes using the BGFX enums!
+
+    static void BuildBatchVertexLayout(bgfx::VertexLayout& layout) {
+        layout.begin()
+            .add(bgfx::Attrib::Position, 2, bgfx::AttribType::Float)
+            .add(bgfx::Attrib::Color0, 4, bgfx::AttribType::Uint8, true)
+            .end();
+    };
+
+#endif
 
     class c_renderer {
     public:

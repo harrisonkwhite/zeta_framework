@@ -56,7 +56,7 @@ namespace zf {
         game.run_stage = ec_game_run_stage::window_initted;
 
         // Initialise the renderer.
-        if (!c_renderer::Init()) {
+        if (!c_renderer::Init(game.temp_mem_arena)) {
             ZF_LOG_ERROR("Failed to initialise the renderer!");
             return false;
         }

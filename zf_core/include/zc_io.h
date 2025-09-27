@@ -88,7 +88,7 @@ namespace zf {
             fseek(m_fs, 0, SEEK_END);
             const size_t file_size = ftell(m_fs);
             fseek(m_fs, pos_old, SEEK_SET);
-            return pos_old;
+            return file_size;
         }
 
         template<typename tp_type>
@@ -140,7 +140,7 @@ namespace zf {
             fseek(m_fs, 0, SEEK_END);
             const size_t file_size = ftell(m_fs);
             fseek(m_fs, pos_old, SEEK_SET);
-            return pos_old;
+            return file_size;
         }
 
         template<typename tp_type>
