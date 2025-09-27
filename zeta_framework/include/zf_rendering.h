@@ -7,35 +7,54 @@
 namespace zf {
     // @todo: We need a module for the generic graphics abstraction, another for the renderer.
 
-    struct s_renderable {
-        bgfx::VertexBufferHandle vbh;
-        bgfx::IndexBufferHandle ibh;
+    struct s_int_rgba {
+        t_u8 r = 0;
+        t_u8 g = 0;
+        t_u8 b = 0;
+        t_u8 a = 0;
+
+        t_u32 RGBA() const {
+            return *reinterpret_cast<const t_u32*>(this);
+        }
     };
 
-#if 0
-    enum e_renderable {
-        ek_renderable_batch,
-        eks_renderable_cnt
-    };
+    static inline s_int_rgba ToIntRGBA(const s_v4 flt) {
+        return {
+            static_cast<t_u8>(roundf(flt.x * 255.0f)),
+            static_cast<t_u8>(roundf(flt.y * 255.0f)),
+            static_cast<t_u8>(roundf(flt.z * 255.0f)),
+            static_cast<t_u8>(roundf(flt.w * 255.0f))
+        };
+    }
 
-    // PROPER IMPLEMENTATION STUFF, GET THE RECTANGLE DONE FIRST!
+    constexpr t_s32 g_batch_slot_cnt = 8192;
+    constexpr t_s32 g_batch_slot_vert_cnt = 4;
+    constexpr t_s32 g_batch_slot_elem_cnt = 6;
+    static_assert(g_batch_slot_elem_cnt * g_batch_slot_cnt <= USHRT_MAX, "Batch slot count is too high!");
+
     struct s_batch_vert {
         s_v2 vert_coord;
         s_v2 pos;
         s_v2 size;
-        float rot;
-        s_v2 tex_coord;
+        float rot = 0.0f;
         s_v4 blend;
-    }; // @todo: Figure out how to map attributes using the BGFX enums!
 
-    static void BuildBatchVertexLayout(bgfx::VertexLayout& layout) {
-        layout.begin()
-            .add(bgfx::Attrib::Position, 2, bgfx::AttribType::Float)
-            .add(bgfx::Attrib::Color0, 4, bgfx::AttribType::Uint8, true)
-            .end();
+        static bgfx::VertexLayout BuildLayout() {
+            bgfx::VertexLayout layout;
+
+            layout.begin()
+                .add(bgfx::Attrib::Position, 2, bgfx::AttribType::Float)
+                .add(bgfx::Attrib::TexCoord0, 2, bgfx::AttribType::Float)
+                .add(bgfx::Attrib::TexCoord1, 2, bgfx::AttribType::Float)
+                .add(bgfx::Attrib::TexCoord2, 1, bgfx::AttribType::Float)
+                .add(bgfx::Attrib::Color0, 4, bgfx::AttribType::Float)
+                .end();
+
+            return layout;
+        }
     };
 
-#endif
+    using t_batch_slot = s_static_array<s_batch_vert, g_batch_slot_vert_cnt>;
 
     class c_renderer {
     public:
@@ -44,13 +63,21 @@ namespace zf {
         c_renderer& operator=(const c_renderer&) = delete;
 
         static bool Init(c_mem_arena& temp_mem_arena);
-        static void Clean();
+        static void Shutdown();
 
-        static void Render();
+        static void Clear(const s_v4 col);
+        static void Draw(const s_v2 pos, const s_v2 size, const s_v2 origin = origins::g_origin_top_left, const float rot = 0.0f, const s_v4 blend = colors::g_white);
+        //static void Flush();
+
+        static void CompleteFrame();
 
     private:
-        static inline s_v2 sm_size;
-        static inline bgfx::ProgramHandle sm_prog = {};
-        static inline s_renderable sm_quad_renderable;
+        static inline bgfx::ProgramHandle sm_quad_batch_ph;
+
+        static inline bgfx::DynamicVertexBufferHandle sm_quad_batch_vbh;
+        static inline bgfx::IndexBufferHandle sm_quad_batch_ibh;
+
+        static inline s_static_array<t_batch_slot, g_batch_slot_cnt> sm_batch_slots;
+        static inline t_s32 sm_batch_slots_used_cnt = 0;
     };
 }

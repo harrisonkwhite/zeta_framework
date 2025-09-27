@@ -134,7 +134,7 @@ namespace zf {
                     frame_dur_accum -= targ_tick_interval;
                 } while (frame_dur_accum >= targ_tick_interval);
 
-                c_renderer::Render();
+                c_renderer::CompleteFrame();
             }
 
             c_window::PollEvents();
@@ -169,7 +169,7 @@ namespace zf {
                     break;
 
                 case ec_game_run_stage::renderer_initted:
-                    c_renderer::Clean();
+                    c_renderer::Shutdown();
                     break;
 
                 case ec_game_run_stage::dev_init_func_ran_and_succeeded:
