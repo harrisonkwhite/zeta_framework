@@ -125,6 +125,86 @@ namespace zf {
         s_static_array<char, 32> unicode_buf;
     };
 
+    static constexpr int ToGLFWKey(const e_key_code kc) {
+        switch (kc) {
+            case ek_key_code_space: return GLFW_KEY_SPACE;
+            case ek_key_code_0: return GLFW_KEY_0;
+            case ek_key_code_1: return GLFW_KEY_1;
+            case ek_key_code_2: return GLFW_KEY_2;
+            case ek_key_code_3: return GLFW_KEY_3;
+            case ek_key_code_4: return GLFW_KEY_4;
+            case ek_key_code_5: return GLFW_KEY_5;
+            case ek_key_code_6: return GLFW_KEY_6;
+            case ek_key_code_7: return GLFW_KEY_7;
+            case ek_key_code_8: return GLFW_KEY_8;
+            case ek_key_code_9: return GLFW_KEY_9;
+            case ek_key_code_a: return GLFW_KEY_A;
+            case ek_key_code_b: return GLFW_KEY_B;
+            case ek_key_code_c: return GLFW_KEY_C;
+            case ek_key_code_d: return GLFW_KEY_D;
+            case ek_key_code_e: return GLFW_KEY_E;
+            case ek_key_code_f: return GLFW_KEY_F;
+            case ek_key_code_g: return GLFW_KEY_G;
+            case ek_key_code_h: return GLFW_KEY_H;
+            case ek_key_code_i: return GLFW_KEY_I;
+            case ek_key_code_j: return GLFW_KEY_J;
+            case ek_key_code_k: return GLFW_KEY_K;
+            case ek_key_code_l: return GLFW_KEY_L;
+            case ek_key_code_m: return GLFW_KEY_M;
+            case ek_key_code_n: return GLFW_KEY_N;
+            case ek_key_code_o: return GLFW_KEY_O;
+            case ek_key_code_p: return GLFW_KEY_P;
+            case ek_key_code_q: return GLFW_KEY_Q;
+            case ek_key_code_r: return GLFW_KEY_R;
+            case ek_key_code_s: return GLFW_KEY_S;
+            case ek_key_code_t: return GLFW_KEY_T;
+            case ek_key_code_u: return GLFW_KEY_U;
+            case ek_key_code_v: return GLFW_KEY_V;
+            case ek_key_code_w: return GLFW_KEY_W;
+            case ek_key_code_x: return GLFW_KEY_X;
+            case ek_key_code_y: return GLFW_KEY_Y;
+            case ek_key_code_z: return GLFW_KEY_Z;
+            case ek_key_code_escape: return GLFW_KEY_ESCAPE;
+            case ek_key_code_enter: return GLFW_KEY_ENTER;
+            case ek_key_code_backspace: return GLFW_KEY_BACKSPACE;
+            case ek_key_code_tab: return GLFW_KEY_TAB;
+            case ek_key_code_right: return GLFW_KEY_RIGHT;
+            case ek_key_code_left: return GLFW_KEY_LEFT;
+            case ek_key_code_down: return GLFW_KEY_DOWN;
+            case ek_key_code_up: return GLFW_KEY_UP;
+            case ek_key_code_f1: return GLFW_KEY_F1;
+            case ek_key_code_f2: return GLFW_KEY_F2;
+            case ek_key_code_f3: return GLFW_KEY_F3;
+            case ek_key_code_f4: return GLFW_KEY_F4;
+            case ek_key_code_f5: return GLFW_KEY_F5;
+            case ek_key_code_f6: return GLFW_KEY_F6;
+            case ek_key_code_f7: return GLFW_KEY_F7;
+            case ek_key_code_f8: return GLFW_KEY_F8;
+            case ek_key_code_f9: return GLFW_KEY_F9;
+            case ek_key_code_f10: return GLFW_KEY_F10;
+            case ek_key_code_f11: return GLFW_KEY_F11;
+            case ek_key_code_f12: return GLFW_KEY_F12;
+            case ek_key_code_left_shift: return GLFW_KEY_LEFT_SHIFT;
+            case ek_key_code_left_control: return GLFW_KEY_LEFT_CONTROL;
+            case ek_key_code_left_alt: return GLFW_KEY_LEFT_ALT;
+            case ek_key_code_right_shift: return GLFW_KEY_RIGHT_SHIFT;
+            case ek_key_code_right_control: return GLFW_KEY_RIGHT_CONTROL;
+            case ek_key_code_right_alt: return GLFW_KEY_RIGHT_ALT;
+
+            default: return GLFW_KEY_UNKNOWN;
+        }
+    }
+
+    static constexpr int ToGLFWMouseButton(const e_mouse_button_code mbc) {
+        switch (mbc) {
+            case ek_mouse_button_code_left: return GLFW_MOUSE_BUTTON_LEFT;
+            case ek_mouse_button_code_right: return GLFW_MOUSE_BUTTON_RIGHT;
+            case ek_mouse_button_code_middle: return GLFW_MOUSE_BUTTON_MIDDLE;
+
+            default: return -1;
+        }
+    }
+
     class c_window {
     public:
         c_window() = delete;
@@ -138,7 +218,7 @@ namespace zf {
 #if defined(_WIN32)
             return glfwGetWin32Window(sm_glfw_window);
 #elif defined(__linux__)
-            return glfwGetX11Window(glfw_window);
+            return glfwGetX11Window(sm_glfw_window);
 #elif defined(__APPLE__)
             return glfwGetCocoaWindow(sm_glfw_window);
 #endif
@@ -190,32 +270,40 @@ namespace zf {
             sm_input_events = {};
         }
 
-        /*static inline bool IsKeyDown(const e_key_code kc) {
-            const t_key_bits key_mask = static_cast<t_key_bits>(1) << kc;
-            return (sm_input_state.keys_down & key_mask) != 0;
-        }*/
+        static inline bool IsKeyDown(const e_key_code kc) {
+            assert(kc != eks_key_code_none);
+            return glfwGetKey(sm_glfw_window, ToGLFWKey(kc)) != GLFW_RELEASE;
+        }
 
         static inline bool IsKeyPressed(const e_key_code kc) {
+            assert(kc != eks_key_code_none);
+
             const t_key_bits key_mask = static_cast<t_key_bits>(1) << kc;
             return (sm_input_events.keys_pressed & key_mask) != 0;
         }
 
         static inline bool IsKeyReleased(const e_key_code kc) {
+            assert(kc != eks_key_code_none);
+
             const t_key_bits key_mask = static_cast<t_key_bits>(1) << kc;
             return (sm_input_events.keys_released & key_mask) != 0;
         }
 
-        /*static inline bool IsMouseButtonDown(const e_mouse_button_code mbc) {
-            const t_mouse_button_bits mb_mask = static_cast<t_mouse_button_bits>(1) << mbc;
-            return (sm_input_state.mouse_buttons_down & mb_mask) != 0;
-        }*/
+        static inline bool IsMouseButtonDown(const e_mouse_button_code mbc) {
+            assert(mbc != eks_mouse_button_code_none);
+            return glfwGetMouseButton(sm_glfw_window, ToGLFWMouseButton(mbc)) != GLFW_RELEASE;
+        }
 
         static inline bool IsMouseButtonPressed(const e_mouse_button_code mbc) {
+            assert(mbc != eks_mouse_button_code_none);
+
             const t_mouse_button_bits mb_mask = static_cast<t_mouse_button_bits>(1) << mbc;
             return (sm_input_events.mouse_buttons_pressed & mb_mask) != 0;
         }
 
         static inline bool IsMouseButtonReleased(const e_mouse_button_code mbc) {
+            assert(mbc != eks_mouse_button_code_none);
+
             const t_mouse_button_bits mb_mask = static_cast<t_mouse_button_bits>(1) << mbc;
             return (sm_input_events.mouse_buttons_released & mb_mask) != 0;
         }
