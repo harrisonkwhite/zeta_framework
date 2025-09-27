@@ -1,49 +1,23 @@
 #include "zf_rendering.h"
 
-#if defined(_WIN32)
-    #define GLFW_EXPOSE_NATIVE_WIN32
-#elif defined(__linux__)
-    #define GLFW_EXPOSE_NATIVE_X11
-#elif defined(__APPLE__)
-    #define GLFW_EXPOSE_NATIVE_COCOA
-#endif
-
-#include <GLFW/glfw3native.h>
+#include "zf_window.h"
 
 #include <bgfx/bgfx.h>
 #include <bgfx/platform.h>
 
 namespace zf {
-    bool c_renderer::Init(GLFWwindow* glfw_window) {
-        bgfx::PlatformData pd = {};
-
-#if defined(_WIN32)
-        pd.nwh = glfwGetWin32Window(glfw_window);
-#elif defined(__linux__)
-        pd.nwh = (void*)(uintptr_t)glfwGetX11Window(glfw_window);
-        pd.ndt = glfwGetX11Display();
-#elif defined(__APPLE__)
-        pd.nwh = glfwGetCocoaWindow(glfw_window);
-#endif
-
+    bool c_renderer::Init() {
         bgfx::Init init;
         init.type = bgfx::RendererType::Count;
+
         init.resolution.reset = BGFX_RESET_VSYNC;
-        init.platformData = pd;
+        const s_v2_s32 fb_size = c_window::GetFramebufferSize();
+        init.resolution.width = static_cast<uint32_t>(fb_size.x);
+        init.resolution.height = static_cast<uint32_t>(fb_size.y);
 
-        {
-            int fbWidth = 0, fbHeight = 0;
-
-            glfwGetFramebufferSize(glfw_window, &fbWidth, &fbHeight);
-
-            if (fbWidth == 0 || fbHeight == 0) {
-                fbWidth = 1;
-                fbHeight = 1;
-            }
-
-            init.resolution.width = static_cast<uint32_t>(fbWidth);
-            init.resolution.height = static_cast<uint32_t>(fbHeight);
-        }
+        init.platformData.nwh = c_window::GetNativeWindowHandle();
+        init.platformData.ndt = c_window::GetNativeDisplayHandle();
+        init.platformData.type = bgfx::NativeWindowHandleType::Default;
 
         if (!bgfx::init(init)) {
             ZF_LOG_ERROR("Failed to initialise bgfx!");
@@ -59,7 +33,8 @@ namespace zf {
         bgfx::shutdown();
     }
 
-    void c_renderer::Render(const s_v2_s32 window_size) {
+    void c_renderer::Render() {
+        const s_v2_s32 window_size = c_window::GetSize();
         bgfx::setViewRect(0, 0, 0, static_cast<uint16_t>(window_size.x), static_cast<uint16_t>(window_size.y));
 
         bgfx::touch(0);

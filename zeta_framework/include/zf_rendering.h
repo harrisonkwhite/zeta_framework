@@ -2,15 +2,17 @@
 
 #include <zc.h>
 
-#include <GLFW/glfw3.h>
-
 namespace zf {
     class c_renderer {
     public:
-        static bool Init(GLFWwindow* glfw_window);
+        c_renderer() = delete;
+        c_renderer(const c_renderer&) = delete;
+        c_renderer& operator=(const c_renderer&) = delete;
+
+        static bool Init();
         static void Clean();
 
-        static void Render(const s_v2_s32 window_size);
+        static void Render();
 
     private:
     };

@@ -4,27 +4,14 @@
 #include <cassert>
 #include <zc.h>
 #include "zf_rendering.h"
-#include "zf_input.h"
+#include "zf_window.h"
 
 namespace zf {
-    enum e_window_flags {
-        ek_window_flags_resizable = 1 << 0,
-        ek_window_flags_hide_cursor = 1 << 1
-    };
-
-    struct s_window_state {
-        s_v2_s32 pos;
-        s_v2_s32 size;
-        bool fullscreen;
-    };
-
     struct s_game_init_context {
         void* dev_mem;
 
         c_mem_arena& perm_mem_arena;
         c_mem_arena& temp_mem_arena;
-
-        s_window_state window_state;
     };
 
     enum e_game_tick_result {
@@ -38,10 +25,6 @@ namespace zf {
 
         c_mem_arena& perm_mem_arena;
         c_mem_arena& temp_mem_arena;
-
-        s_window_state window_state;
-
-        s_input_context input_context;
     };
 
     struct s_game_render_context {
@@ -49,8 +32,6 @@ namespace zf {
 
         c_mem_arena& perm_mem_arena;
         c_mem_arena& temp_mem_arena;
-
-        s_v2 mouse_pos;
     };
 
     struct s_game_info {

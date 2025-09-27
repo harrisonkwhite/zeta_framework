@@ -1,7 +1,6 @@
 #include "zf_game.h"
 
 #include <cstdio>
-#include <GLFW/glfw3.h>
 #include "zf_rng.h"
 
 namespace zf {
@@ -13,8 +12,7 @@ namespace zf {
         nothing_initted,
         perm_mem_arena_initted,
         temp_mem_arena_initted,
-        glfw_initted,
-        glfw_window_created,
+        window_initted,
         renderer_initted,
         dev_init_func_ran_and_succeeded
     };
@@ -25,22 +23,8 @@ namespace zf {
         c_mem_arena perm_mem_arena; // The memory in here exists for the lifetime of the program, it does not get reset.
         c_mem_arena temp_mem_arena; // While the memory here also exists for the program lifetime, it gets reset after game initialisation and after every frame. Useful if you just need some temporary working space.
 
-        GLFWwindow* glfw_window;
-
-        s_input_events input_events; // Events such as key presses and mouse wheel scrolls are stored here via GLFW callbacks, accessible in the next tick and then cleared. Ensures that events occurring between ticks are not lost.
-
         void* dev_mem; // Memory optionally reserved by the developer for their own use, accessible in their defined functions through the provided ZF context.
     };
-
-    static s_window_state WindowState(GLFWwindow* glfw_window) {
-        s_window_state state = {
-            .fullscreen = glfwGetWindowMonitor(glfw_window) != nullptr
-        };
-        glfwGetWindowPos(glfw_window, &state.pos.x, &state.pos.y);
-        glfwGetWindowSize(glfw_window, &state.size.x, &state.size.y);
-
-        return state;
-    }
 
     static bool ExecGameInitAndMainLoop(s_game& game, const s_game_info& info) {
         //
@@ -63,41 +47,16 @@ namespace zf {
 
         game.run_stage = ec_game_run_stage::temp_mem_arena_initted;
 
-        // Initialise GLFW.
-        if (!glfwInit()) {
-            ZF_LOG_ERROR("Failed to initialise GLFW!");
+        // Initialise the window.
+        if (!c_window::Init(info.window_init_size, info.window_title, info.window_flags)) {
+            ZF_LOG_ERROR("Failed to initialise the window!");
             return false;
         }
 
-        game.run_stage = ec_game_run_stage::glfw_initted;
-
-        // Set up the GLFW window.
-        glfwWindowHint(GLFW_VISIBLE, false);
-        glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-
-        game.glfw_window = glfwCreateWindow(info.window_init_size.x, info.window_init_size.y, info.window_title.Raw(), nullptr, nullptr);
-
-        if (!game.glfw_window) {
-            ZF_LOG_ERROR("Failed to create a GLFW window!");
-            return false;
-        }
-
-        game.run_stage = ec_game_run_stage::glfw_window_created;
-
-        glfwSetWindowAttrib(game.glfw_window, GLFW_RESIZABLE, (info.window_flags & ek_window_flags_resizable) ? true : false);
-
-        glfwSetInputMode(game.glfw_window, GLFW_CURSOR, (info.window_flags & ek_window_flags_hide_cursor) ? GLFW_CURSOR_HIDDEN : GLFW_CURSOR_NORMAL);
-
-        // Set up GLFW callbacks.
-        glfwSetWindowUserPointer(game.glfw_window, &game.input_events);
-
-        glfwSetKeyCallback(game.glfw_window, GLFWKeyCallback);
-        glfwSetMouseButtonCallback(game.glfw_window, GLFWMouseButtonCallback);
-        glfwSetScrollCallback(game.glfw_window, GLFWScrollCallback);
-        glfwSetCharCallback(game.glfw_window, GLFWCharCallback);
+        game.run_stage = ec_game_run_stage::window_initted;
 
         // Initialise the renderer.
-        if (!c_renderer::Init(game.glfw_window)) {
+        if (!c_renderer::Init()) {
             ZF_LOG_ERROR("Failed to initialise the renderer!");
             return false;
         }
@@ -119,8 +78,7 @@ namespace zf {
             const s_game_init_context context = {
                 .dev_mem = game.dev_mem,
                 .perm_mem_arena = game.perm_mem_arena,
-                .temp_mem_arena = game.temp_mem_arena,
-                .window_state = WindowState(game.glfw_window)
+                .temp_mem_arena = game.temp_mem_arena
             };
 
             if (!info.init_func(context)) {
@@ -132,51 +90,40 @@ namespace zf {
         game.run_stage = ec_game_run_stage::dev_init_func_ran_and_succeeded;
 
         // Now that everything is set up, we can show the window.
-        glfwShowWindow(game.glfw_window);
+        c_window::Show();
 
         //
         // Main Loop
         //
-        float frame_time_last = glfwGetTime();
-        float frame_dur_accum = 0.0;
+        double frame_time_last = c_window::GetTime();
+        double frame_dur_accum = 0.0;
 
-        while (!glfwWindowShouldClose(game.glfw_window)) {
-            const s_window_state window_state = WindowState(game.glfw_window);
-
+        while (!c_window::ShouldClose()) {
             game.temp_mem_arena.Rewind(0);
 
-            const float frame_time = glfwGetTime();
-            const float frame_time_delta = frame_time - frame_time_last;
+            const double frame_time = c_window::GetTime();
+            const double frame_time_delta = frame_time - frame_time_last;
             frame_dur_accum += frame_time_delta;
             frame_time_last = frame_time;
 
-            const float targ_tick_interval = 1.0 / info.targ_ticks_per_sec;
+            const double targ_tick_interval = 1.0 / info.targ_ticks_per_sec;
 
             // Once enough time has passed (i.e. the time accumulator has reached the tick interval), run at least a single tick and update the display.
             if (frame_dur_accum >= targ_tick_interval) {
-                const s_input_state input_state = GenInputState(game.glfw_window);
-
-                // Run ticks.
                 do {
-                    // Execute the developer's tick function.
                     const s_game_tick_context context = {
                         .dev_mem = game.dev_mem,
                         .perm_mem_arena = game.perm_mem_arena,
-                        .temp_mem_arena = game.temp_mem_arena,
-                        .window_state = window_state,
-                        .input_context = {
-                            .state = input_state,
-                            .events = game.input_events
-                        }
+                        .temp_mem_arena = game.temp_mem_arena
                     };
 
                     const e_game_tick_result res = info.tick_func(context);
 
-                    game.input_events = {};
+                    c_window::ClearInputEvents();
 
                     if (res == ek_game_tick_result_exit) {
                         ZF_LOG("Exit request detected from developer game tick function...");
-                        glfwSetWindowShouldClose(game.glfw_window, true);
+                        c_window::SetWindowShouldClose(true);
                     }
 
                     if (res == ek_game_tick_result_error) {
@@ -187,10 +134,10 @@ namespace zf {
                     frame_dur_accum -= targ_tick_interval;
                 } while (frame_dur_accum >= targ_tick_interval);
 
-                c_renderer::Render(window_state.size);
+                c_renderer::Render();
             }
 
-            glfwPollEvents();
+            c_window::PollEvents();
         }
 
         return true;
@@ -217,13 +164,8 @@ namespace zf {
                     game.temp_mem_arena.Clean();
                     break;
 
-                case ec_game_run_stage::glfw_initted:
-                    glfwTerminate();
-                    break;
-
-                case ec_game_run_stage::glfw_window_created:
-                    assert(game.glfw_window);
-                    glfwDestroyWindow(game.glfw_window);
+                case ec_game_run_stage::window_initted:
+                    c_window::Clean();
                     break;
 
                 case ec_game_run_stage::renderer_initted:

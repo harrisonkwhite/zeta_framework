@@ -1,0 +1,233 @@
+#pragma once
+
+#include <zc.h>
+#include <GLFW/glfw3.h>
+
+#if defined(_WIN32)
+    #define GLFW_EXPOSE_NATIVE_WIN32
+#elif defined(__linux__)
+    #define GLFW_EXPOSE_NATIVE_X11
+#elif defined(__APPLE__)
+    #define GLFW_EXPOSE_NATIVE_COCOA
+#endif
+
+#include <GLFW/glfw3native.h>
+
+namespace zf {
+    enum e_window_flags {
+        ek_window_flags_resizable = 1 << 0,
+        ek_window_flags_hide_cursor = 1 << 1
+    };
+
+    enum e_key_code {
+        eks_key_code_none = -1,
+
+        ek_key_code_space,
+        ek_key_code_0,
+        ek_key_code_1,
+        ek_key_code_2,
+        ek_key_code_3,
+        ek_key_code_4,
+        ek_key_code_5,
+        ek_key_code_6,
+        ek_key_code_7,
+        ek_key_code_8,
+        ek_key_code_9,
+        ek_key_code_a,
+        ek_key_code_b,
+        ek_key_code_c,
+        ek_key_code_d,
+        ek_key_code_e,
+        ek_key_code_f,
+        ek_key_code_g,
+        ek_key_code_h,
+        ek_key_code_i,
+        ek_key_code_j,
+        ek_key_code_k,
+        ek_key_code_l,
+        ek_key_code_m,
+        ek_key_code_n,
+        ek_key_code_o,
+        ek_key_code_p,
+        ek_key_code_q,
+        ek_key_code_r,
+        ek_key_code_s,
+        ek_key_code_t,
+        ek_key_code_u,
+        ek_key_code_v,
+        ek_key_code_w,
+        ek_key_code_x,
+        ek_key_code_y,
+        ek_key_code_z,
+        ek_key_code_escape,
+        ek_key_code_enter,
+        ek_key_code_backspace,
+        ek_key_code_tab,
+        ek_key_code_right,
+        ek_key_code_left,
+        ek_key_code_down,
+        ek_key_code_up,
+        ek_key_code_f1,
+        ek_key_code_f2,
+        ek_key_code_f3,
+        ek_key_code_f4,
+        ek_key_code_f5,
+        ek_key_code_f6,
+        ek_key_code_f7,
+        ek_key_code_f8,
+        ek_key_code_f9,
+        ek_key_code_f10,
+        ek_key_code_f11,
+        ek_key_code_f12,
+        ek_key_code_left_shift,
+        ek_key_code_left_control,
+        ek_key_code_left_alt,
+        ek_key_code_right_shift,
+        ek_key_code_right_control,
+        ek_key_code_right_alt,
+
+        eks_key_code_cnt
+    };
+
+    using t_key_bits = t_u64;
+
+    static_assert(eks_key_code_cnt < ZF_SIZE_IN_BITS(t_key_bits), "Too many key codes!");
+
+    enum e_mouse_button_code {
+        eks_mouse_button_code_none = -1,
+
+        ek_mouse_button_code_left,
+        ek_mouse_button_code_right,
+        ek_mouse_button_code_middle,
+
+        eks_mouse_button_code_cnt
+    };
+
+    using t_mouse_button_bits = t_u8;
+
+    static_assert(eks_mouse_button_code_cnt < ZF_SIZE_IN_BITS(t_mouse_button_bits), "Too many mouse button codes!");
+
+    enum class ec_mouse_scroll_state {
+        none,
+        down,
+        up
+    };
+
+    struct s_input_events {
+        t_key_bits keys_pressed = 0;
+        t_key_bits keys_released = 0;
+
+        t_mouse_button_bits mouse_buttons_pressed = 0;
+        t_mouse_button_bits mouse_buttons_released = 0;
+
+        ec_mouse_scroll_state mouse_scroll_state = ec_mouse_scroll_state::none;
+
+        s_static_array<char, 32> unicode_buf;
+    };
+
+    class c_window {
+    public:
+        c_window() = delete;
+        c_window(const c_window&) = delete;
+        c_window& operator=(const c_window&) = delete;
+
+        [[nodiscard]] static bool Init(const s_v2_s32 size, const c_string_view title, const e_window_flags flags);
+        static void Clean();
+
+        static void* GetNativeWindowHandle() {
+#if defined(_WIN32)
+            return glfwGetWin32Window(sm_glfw_window);
+#elif defined(__linux__)
+            return glfwGetX11Window(glfw_window);
+#elif defined(__APPLE__)
+            return glfwGetCocoaWindow(sm_glfw_window);
+#endif
+        }
+
+        static void* GetNativeDisplayHandle() {
+#if defined(_WIN32)
+            return nullptr;
+#elif defined(__linux__)
+            return glfwGetX11Display();
+#elif defined(__APPLE__)
+            return nullptr;
+#endif
+        }
+
+        static inline void Show() {
+            glfwShowWindow(sm_glfw_window);
+        }
+
+        static inline void PollEvents() {
+            glfwPollEvents();
+        }
+
+        static inline bool ShouldClose() {
+            return glfwWindowShouldClose(sm_glfw_window);
+        }
+
+        static inline void SetWindowShouldClose(const bool close) {
+            glfwSetWindowShouldClose(sm_glfw_window, close);
+        }
+
+        static inline double GetTime() {
+            return glfwGetTime();
+        }
+
+        static inline s_v2_s32 GetSize() {
+            int w, h;
+            glfwGetWindowSize(sm_glfw_window, &w, &h);
+            return {w, h};
+        }
+
+        static inline s_v2_s32 GetFramebufferSize() {
+            int w, h;
+            glfwGetFramebufferSize(sm_glfw_window, &w, &h);
+            return {w, h};
+        }
+
+        static inline void ClearInputEvents() {
+            sm_input_events = {};
+        }
+
+        /*static inline bool IsKeyDown(const e_key_code kc) {
+            const t_key_bits key_mask = static_cast<t_key_bits>(1) << kc;
+            return (sm_input_state.keys_down & key_mask) != 0;
+        }*/
+
+        static inline bool IsKeyPressed(const e_key_code kc) {
+            const t_key_bits key_mask = static_cast<t_key_bits>(1) << kc;
+            return (sm_input_events.keys_pressed & key_mask) != 0;
+        }
+
+        static inline bool IsKeyReleased(const e_key_code kc) {
+            const t_key_bits key_mask = static_cast<t_key_bits>(1) << kc;
+            return (sm_input_events.keys_released & key_mask) != 0;
+        }
+
+        /*static inline bool IsMouseButtonDown(const e_mouse_button_code mbc) {
+            const t_mouse_button_bits mb_mask = static_cast<t_mouse_button_bits>(1) << mbc;
+            return (sm_input_state.mouse_buttons_down & mb_mask) != 0;
+        }*/
+
+        static inline bool IsMouseButtonPressed(const e_mouse_button_code mbc) {
+            const t_mouse_button_bits mb_mask = static_cast<t_mouse_button_bits>(1) << mbc;
+            return (sm_input_events.mouse_buttons_pressed & mb_mask) != 0;
+        }
+
+        static inline bool IsMouseButtonReleased(const e_mouse_button_code mbc) {
+            const t_mouse_button_bits mb_mask = static_cast<t_mouse_button_bits>(1) << mbc;
+            return (sm_input_events.mouse_buttons_released & mb_mask) != 0;
+        }
+
+        static s_v2 GetMousePos() {
+            double mouse_x_dbl, mouse_y_dbl;
+            glfwGetCursorPos(sm_glfw_window, &mouse_x_dbl, &mouse_y_dbl);
+            return {static_cast<float>(mouse_x_dbl), static_cast<float>(mouse_y_dbl)};
+        }
+
+    private:
+        static inline GLFWwindow* sm_glfw_window = nullptr;
+        static inline s_input_events sm_input_events; // Events such as key presses and mouse wheel scrolls are recordeded here in callbacks.
+    };
+}

@@ -1,4 +1,7 @@
-#include "zf_input.h"
+#include "zf_window.h"
+
+#include <zc.h>
+#include <GLFW/glfw3.h>
 
 namespace zf {
     static constexpr t_s32 ToGLFWKey(const e_key_code kc) {
@@ -81,7 +84,7 @@ namespace zf {
         }
     }
 
-    static t_key_bits KeysDownBits(GLFWwindow* glfw_window) {
+    static t_key_bits KeysDownBits(GLFWwindow* const glfw_window) {
         t_key_bits keys_down = 0;
 
         for (t_s32 i = 0; i < eks_key_code_cnt; i++) {
@@ -93,7 +96,7 @@ namespace zf {
         return keys_down;
     }
 
-    static t_mouse_button_bits MouseButtonsDownBits(GLFWwindow* glfw_window) {
+    static t_mouse_button_bits MouseButtonsDownBits(GLFWwindow* const glfw_window) {
         t_mouse_button_bits mouse_buttons_down = 0;
 
         for (t_s32 i = 0; i < eks_mouse_button_code_cnt; i++) {
@@ -105,21 +108,7 @@ namespace zf {
         return mouse_buttons_down;
     }
 
-    static s_v2 MousePos(GLFWwindow* glfw_window) {
-        double mouse_x_dbl, mouse_y_dbl;
-        glfwGetCursorPos(glfw_window, &mouse_x_dbl, &mouse_y_dbl);
-        return {static_cast<float>(mouse_x_dbl), static_cast<float>(mouse_y_dbl)};
-    }
-
-    s_input_state GenInputState(GLFWwindow* glfw_window) {
-        return {
-            .keys_down = KeysDownBits(glfw_window),
-            .mouse_buttons_down = MouseButtonsDownBits(glfw_window),
-            .mouse_pos = MousePos(glfw_window)
-        };
-    }
-
-    static e_key_code GLFWToZFWKeyCode(const t_s32 glfw_key) {
+    static e_key_code GLFWToZFKeyCode(const t_s32 glfw_key) {
         switch (glfw_key) {
             case GLFW_KEY_SPACE: return ek_key_code_space;
             case GLFW_KEY_0: return ek_key_code_0;
@@ -189,7 +178,7 @@ namespace zf {
         }
     }
 
-    static e_mouse_button_code GLFWToZFWMouseButtonCode(const t_s32 glfw_button) {
+    static e_mouse_button_code GLFWToZFMouseButtonCode(const t_s32 glfw_button) {
         switch (glfw_button) {
             case GLFW_MOUSE_BUTTON_LEFT: return ek_mouse_button_code_left;
             case GLFW_MOUSE_BUTTON_RIGHT: return ek_mouse_button_code_right;
@@ -199,64 +188,99 @@ namespace zf {
         }
     }
 
-    void GLFWKeyCallback(GLFWwindow* window, const int key, const int, const int action, const int) {
-        auto* input_events = reinterpret_cast<s_input_events*>(glfwGetWindowUserPointer(window));
+    bool c_window::Init(const s_v2_s32 size, const c_string_view title, const e_window_flags flags) {
+        assert(!sm_glfw_window);
 
-        const e_key_code key_code = GLFWToZFWKeyCode(key);
-
-        if (key_code == eks_key_code_none) {
-            return;
+        if (!glfwInit()) {
+            ZF_LOG_ERROR("Failed to initialise GLFW!");
+            return false;
         }
 
-        const t_key_bits key_mask = static_cast<t_key_bits>(1) << key_code;
+        // Set up the GLFW window.
+        glfwWindowHint(GLFW_VISIBLE, false);
+        glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 
-        if (action == GLFW_PRESS) {
-            input_events->keys_pressed |= key_mask;
-        } else if (action == GLFW_RELEASE) {
-            input_events->keys_released |= key_mask;
-        }
-    }
+        sm_glfw_window = glfwCreateWindow(size.x, size.y, title.Raw(), nullptr, nullptr);
 
-    void GLFWMouseButtonCallback(GLFWwindow* window, const int button, const int action, const int) {
-        auto* input_events = reinterpret_cast<s_input_events*>(glfwGetWindowUserPointer(window));
-
-        const e_mouse_button_code mb_code = GLFWToZFWMouseButtonCode(button);
-
-        if (mb_code == eks_mouse_button_code_none) {
-            return;
+        if (!sm_glfw_window) {
+            ZF_LOG_ERROR("Failed to create a GLFW window!");
+            glfwTerminate();
+            return false;
         }
 
-        const t_mouse_button_bits mb_mask = static_cast<t_mouse_button_bits>(1) << mb_code;
+        glfwSetWindowAttrib(sm_glfw_window, GLFW_RESIZABLE, (flags & ek_window_flags_resizable) ? true : false);
 
-        if (action == GLFW_PRESS) {
-            input_events->mouse_buttons_pressed |= mb_mask;
-        } else if (action == GLFW_RELEASE) {
-            input_events->mouse_buttons_released |= mb_mask;
-        }
-    }
+        glfwSetInputMode(sm_glfw_window, GLFW_CURSOR, (flags & ek_window_flags_hide_cursor) ? GLFW_CURSOR_HIDDEN : GLFW_CURSOR_NORMAL);
 
-    void GLFWScrollCallback(GLFWwindow* window, const double, const double offs_y) {
-        auto* input_events = reinterpret_cast<s_input_events*>(glfwGetWindowUserPointer(window));
+        // Set up GLFW callbacks.
+        glfwSetKeyCallback(sm_glfw_window,
+            [](GLFWwindow* window, const int key, const int, const int action, const int mods) {
+                const e_key_code key_code = GLFWToZFKeyCode(key);
 
-        if (offs_y > 0.0) {
-            input_events->mouse_scroll_state = ek_mouse_scroll_state_up;
-        } else if (offs_y < 0.0) {
-            input_events->mouse_scroll_state = ek_mouse_scroll_state_down;
-        } else {
-            input_events->mouse_scroll_state = ek_mouse_scroll_state_none;
-        }
-    }
+                if (key_code == eks_key_code_none) {
+                    return;
+                }
 
-    void GLFWCharCallback(GLFWwindow* window, const unsigned int codepoint) {
-        auto* input_events = reinterpret_cast<s_input_events*>(glfwGetWindowUserPointer(window));
+                const t_key_bits key_mask = static_cast<t_key_bits>(1) << key_code;
 
-        for (size_t i = 0; i < sizeof(input_events->unicode_buf); i++) {
-            if (!input_events->unicode_buf[i]) {
-                input_events->unicode_buf[i] = static_cast<char>(codepoint);
-                return;
+                if (action == GLFW_PRESS) {
+                    sm_input_events.keys_pressed |= key_mask;
+                } else if (action == GLFW_RELEASE) {
+                    sm_input_events.keys_released |= key_mask;
+                }
             }
-        }
+        );
 
-        ZF_LOG_WARNING("Unicode buffer is full!");
+        glfwSetMouseButtonCallback(sm_glfw_window,
+            [](GLFWwindow* window, const int button, const int action, const int mods) {
+                const e_mouse_button_code mb_code = GLFWToZFMouseButtonCode(button);
+
+                if (mb_code == eks_mouse_button_code_none) {
+                    return;
+                }
+
+                const t_mouse_button_bits mb_mask = static_cast<t_mouse_button_bits>(1) << mb_code;
+
+                if (action == GLFW_PRESS) {
+                    sm_input_events.mouse_buttons_pressed |= mb_mask;
+                } else if (action == GLFW_RELEASE) {
+                    sm_input_events.mouse_buttons_released |= mb_mask;
+                }
+            }
+        );
+
+        glfwSetScrollCallback(sm_glfw_window,
+            [](GLFWwindow* window, const double, const double offs_y) {
+                if (offs_y > 0.0) {
+                    sm_input_events.mouse_scroll_state = ec_mouse_scroll_state::up;
+                } else if (offs_y < 0.0) {
+                    sm_input_events.mouse_scroll_state = ec_mouse_scroll_state::down;
+                } else {
+                    sm_input_events.mouse_scroll_state = ec_mouse_scroll_state::none;
+                }
+            }
+        );
+
+        glfwSetCharCallback(sm_glfw_window,
+            [](GLFWwindow* window, const unsigned int codepoint) {
+                for (size_t i = 0; i < sizeof(sm_input_events.unicode_buf); i++) {
+                    if (!sm_input_events.unicode_buf[i]) {
+                        sm_input_events.unicode_buf[i] = static_cast<char>(codepoint);
+                        return;
+                    }
+                }
+
+                ZF_LOG_WARNING("Unicode buffer is full!");
+            }
+        );
+
+        return true;
+    }
+
+    void c_window::Clean() {
+        assert(sm_glfw_window);
+
+        glfwDestroyWindow(sm_glfw_window);
+        glfwTerminate();
     }
 }
