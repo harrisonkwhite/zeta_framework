@@ -65,11 +65,11 @@ namespace zf {
         static bool Init(c_mem_arena& temp_mem_arena);
         static void Shutdown();
 
+        static void CompleteFrame();
+
         static void Clear(const s_v4 col);
         static void Draw(const s_v2 pos, const s_v2 size, const s_v2 origin = origins::g_origin_top_left, const float rot = 0.0f, const s_v4 blend = colors::g_white);
-        //static void Flush();
-
-        static void CompleteFrame();
+        static void Flush();
 
     private:
         static inline bgfx::ProgramHandle sm_quad_batch_ph;

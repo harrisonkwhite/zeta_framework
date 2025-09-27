@@ -34,6 +34,31 @@ namespace zf {
         return bgfx::createProgram(vs, fs, true);
     }
 
+    static bgfx::DynamicVertexBufferHandle BuildQuadBatchVertBuf() {
+        const bgfx::VertexLayout layout = s_batch_vert::BuildLayout();
+        return bgfx::createDynamicVertexBuffer(g_batch_slot_vert_cnt * g_batch_slot_cnt, layout);
+    }
+
+    static bgfx::IndexBufferHandle BuildQuadBatchIndexBuf(c_mem_arena& temp_mem_arena) {
+        const auto indices = PushArrayToMemArena<t_u16>(temp_mem_arena, g_batch_slot_elem_cnt * g_batch_slot_cnt);
+
+        if (indices.IsEmpty()) {
+            ZF_LOG_ERROR("Failed to reserve memory for quad batch indices!");
+            return BGFX_INVALID_HANDLE;
+        }
+
+        for (int i = 0; i < g_batch_slot_cnt; i++) {
+            indices[(i * 6) + 0] = (i * 4) + 0;
+            indices[(i * 6) + 1] = (i * 4) + 1;
+            indices[(i * 6) + 2] = (i * 4) + 2;
+            indices[(i * 6) + 3] = (i * 4) + 2;
+            indices[(i * 6) + 4] = (i * 4) + 3;
+            indices[(i * 6) + 5] = (i * 4) + 0;
+        }
+
+        return bgfx::createIndexBuffer(bgfx::makeRef(indices.Raw(), indices.Len() * sizeof(indices[0])));
+    }
+
     bool c_renderer::Init(c_mem_arena& temp_mem_arena) {
         const s_v2_s32 fb_size = c_window::GetFramebufferSize();
 
@@ -62,23 +87,54 @@ namespace zf {
             return false;
         }
 
-        ZF_LOG("up to here");
+        sm_quad_batch_vbh = BuildQuadBatchVertBuf();
 
-        /*BuildQuadRenderable(sm_quad_renderable);
+        if (!bgfx::isValid(sm_quad_batch_vbh)) {
+            bgfx::destroy(sm_quad_batch_ph);
+            bgfx::shutdown();
+            return false;
+        }
 
-        sm_tex_color_uni = bgfx::createUniform("s_tex_color_uni", bgfx::UniformType::Sampler);*/
+        sm_quad_batch_ibh = BuildQuadBatchIndexBuf(temp_mem_arena);
 
-        /*const bgfx::Memory* mem = bgfx::copy(data, w * h * 4);
-        sm_texture = bgfx::createTexture2D((uint16_t)w, (uint16_t)h, false, 1, bgfx::TextureFormat::RGBA8, 0, mem);*/
+        if (!bgfx::isValid(sm_quad_batch_ibh)) {
+            bgfx::destroy(sm_quad_batch_vbh);
+            bgfx::destroy(sm_quad_batch_ph);
+            bgfx::shutdown();
+            return false;
+        }
 
         return true;
     }
 
     void c_renderer::Shutdown() {
-        //bgfx::destroy(sm_quad_batch_ibh);
-        //bgfx::destroy(sm_quad_batch_vbh);
+        bgfx::destroy(sm_quad_batch_ibh);
+        bgfx::destroy(sm_quad_batch_vbh);
         bgfx::destroy(sm_quad_batch_ph);
         bgfx::shutdown();
+    }
+
+    void c_renderer::CompleteFrame() {
+        if (sm_batch_slots_used_cnt > 0) {
+            Flush();
+        }
+
+        const s_v2_s32 fb_size = c_window::GetFramebufferSize();
+
+        s_static_array<float, 16> ortho_mat;
+        bx::mtxOrtho(ortho_mat.buf_raw, 0.0f, static_cast<float>(fb_size.x), static_cast<float>(fb_size.y), 0.0f, 0.0f, 100.0f, 0.0f, bgfx::getCaps()->homogeneousDepth);
+
+        s_static_array<float, 16> view_mat;
+        bx::mtxIdentity(view_mat.buf_raw);
+
+        bgfx::setViewTransform(0, view_mat.buf_raw, ortho_mat.buf_raw);
+        bgfx::setViewRect(0, 0, 0, static_cast<uint16_t>(fb_size.x), static_cast<uint16_t>(fb_size.y));
+        bgfx::touch(0);
+
+        bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A | BGFX_STATE_BLEND_ALPHA);
+
+        bgfx::submit(0, sm_quad_batch_ph);
+        bgfx::frame();
     }
 
     void c_renderer::Clear(const s_v4 col) {
@@ -119,29 +175,7 @@ namespace zf {
 #endif
     }
 
-    void c_renderer::CompleteFrame() {
-        const s_v2_s32 fb_size = c_window::GetFramebufferSize();
-
-        s_static_array<float, 16> ortho_mat;
-        bx::mtxOrtho(ortho_mat.buf_raw, 0.0f, static_cast<float>(fb_size.x), static_cast<float>(fb_size.y), 0.0f, 0.0f, 100.0f, 0.0f, bgfx::getCaps()->homogeneousDepth);
-
-        s_static_array<float, 16> view_mat;
-        bx::mtxIdentity(view_mat.buf_raw);
-
-        bgfx::setViewTransform(0, view_mat.buf_raw, ortho_mat.buf_raw);
-        bgfx::setViewRect(0, 0, 0, static_cast<uint16_t>(fb_size.x), static_cast<uint16_t>(fb_size.y));
-        bgfx::touch(0);
-
-        bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A | BGFX_STATE_BLEND_ALPHA);
-
-        bgfx::submit(0, sm_quad_batch_ph);
-        bgfx::frame();
-    }
-
-#if 0
     void c_renderer::Flush() {
-        return;
-
         const s_v2_s32 fb_size = c_window::GetFramebufferSize();
 
         s_static_array<float, 16> ortho_mat;
@@ -162,7 +196,6 @@ namespace zf {
         bgfx::submit(0, sm_quad_batch_ph);
         bgfx::frame();
     }
-#endif
 }
 
 #if 0
