@@ -1,21 +1,7 @@
 #include "zf_game.h"
 
 #include <cstdio>
-
-#if defined(_WIN32)
-    #define GLFW_EXPOSE_NATIVE_WIN32
-#elif defined(__linux__)
-    #define GLFW_EXPOSE_NATIVE_X11
-#elif defined(__APPLE__)
-    #define GLFW_EXPOSE_NATIVE_COCOA
-#endif
-
 #include <GLFW/glfw3.h>
-#include <GLFW/glfw3native.h>
-
-#include <bgfx/bgfx.h>
-#include <bgfx/platform.h>
-
 #include "zf_rng.h"
 
 namespace zf {
@@ -29,7 +15,7 @@ namespace zf {
         temp_mem_arena_initted,
         glfw_initted,
         glfw_window_created,
-        bgfx_initted,
+        renderer_initted,
         dev_init_func_ran_and_succeeded
     };
 
@@ -110,58 +96,13 @@ namespace zf {
         glfwSetScrollCallback(game.glfw_window, GLFWScrollCallback);
         glfwSetCharCallback(game.glfw_window, GLFWCharCallback);
 
-        // Get native window handle and size.
-        int fbWidth = 0, fbHeight = 0;
-
-        glfwGetFramebufferSize(game.glfw_window, &fbWidth, &fbHeight);
-
-        if (fbWidth == 0 || fbHeight == 0) {
-            fbWidth = 1;
-            fbHeight = 1;
-        }
-
-        bgfx::PlatformData pd = {};
-#if defined(_WIN32)
-            pd.nwh = glfwGetWin32Window(game.glfw_window);
-#elif defined(__linux__)
-            pd.nwh = (void*)(uintptr_t)glfwGetX11Window(game.glfw_window);
-            pd.ndt = glfwGetX11Display();
-#elif defined(__APPLE__)
-            pd.nwh = glfwGetCocoaWindow(game.glfw_window);
-#endif
-
-        // Initialise bgfx.
-        bgfx::Init init;
-        #if defined(_WIN32)
-            init.type = bgfx::RendererType::Direct3D11;
-        #else
-            init.type = bgfx::RendererType::Count;
-        #endif
-        init.resolution.width = static_cast<uint32_t>(fbWidth);
-        init.resolution.height = static_cast<uint32_t>(fbHeight);
-        init.resolution.reset = BGFX_RESET_VSYNC;
-        init.platformData = pd;
-
-        if (!bgfx::init(init)) {
-            ZF_LOG_ERROR("Failed to initialise bgfx!");
+        // Initialise the renderer.
+        if (!c_renderer::Init(game.glfw_window)) {
+            ZF_LOG_ERROR("Failed to initialise the renderer!");
             return false;
         }
 
-        game.run_stage = ec_game_run_stage::bgfx_initted;
-
-        // Set the initial view.
-        bgfx::setViewClear(0, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, 0x303030ff, 1.0f, 0);
-        bgfx::setViewRect(0, 0, 0, static_cast<uint16_t>(fbWidth), static_cast<uint16_t>(fbHeight));
-
-        // Resize callback should also update view rectangle.
-        glfwSetFramebufferSizeCallback(game.glfw_window,
-            [](GLFWwindow*, int w, int h){
-                if (w > 0 && h > 0) {
-                    bgfx::reset((uint32_t)w, (uint32_t)h, BGFX_RESET_VSYNC);
-                    bgfx::setViewRect(0, 0, 0, (uint16_t)w, (uint16_t)h);
-                }
-            }
-        );
+        game.run_stage = ec_game_run_stage::renderer_initted;
 
         // Initialise developer memory.
         if (info.dev_mem_size > 0) {
@@ -246,8 +187,7 @@ namespace zf {
                     frame_dur_accum -= targ_tick_interval;
                 } while (frame_dur_accum >= targ_tick_interval);
 
-                bgfx::touch(0);
-                bgfx::frame();
+                c_renderer::Render(window_state.size);
             }
 
             glfwPollEvents();
@@ -286,8 +226,8 @@ namespace zf {
                     glfwDestroyWindow(game.glfw_window);
                     break;
 
-                case ec_game_run_stage::bgfx_initted:
-                    bgfx::shutdown();
+                case ec_game_run_stage::renderer_initted:
+                    c_renderer::Clean();
                     break;
 
                 case ec_game_run_stage::dev_init_func_ran_and_succeeded:

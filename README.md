@@ -29,4 +29,6 @@ cmake ..
 ## Third-Party Projects
 
 - [GLFW](https://github.com/glfw/glfw)
+- [bgfx](https://github.com/bkaradzic/bgfx)
+- [cJSON](https://github.com/DaveGamble/cJSON)
 - [stb](https://github.com/nothings/stb)

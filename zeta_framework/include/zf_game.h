@@ -3,6 +3,7 @@
 #include <cstddef>
 #include <cassert>
 #include <zc.h>
+#include "zf_rendering.h"
 #include "zf_input.h"
 
 namespace zf {
