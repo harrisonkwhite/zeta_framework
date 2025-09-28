@@ -2,6 +2,9 @@
 
 namespace zf {
     bool PackShaderProg(const c_string_view vert_file_path, const c_string_view frag_file_path, const c_string_view output_file_path, c_mem_arena& temp_mem_arena) {
+
+
+        /*
         const c_array<const t_u8> vert_src_bytes = LoadFileContents(vert_file_path, temp_mem_arena, true).View();
 
         if (vert_src_bytes.IsEmpty()) {
@@ -48,7 +51,7 @@ namespace zf {
             return false;
         }
 
-        ZF_LOG_SUCCESS("Packed shader program from vertex shader file \"%s\" and fragment shader file \"%s\"!", vert_file_path.Raw(), frag_file_path.Raw());
+        ZF_LOG_SUCCESS("Packed shader program from vertex shader file \"%s\" and fragment shader file \"%s\"!", vert_file_path.Raw(), frag_file_path.Raw());*/
 
         return true;
     }

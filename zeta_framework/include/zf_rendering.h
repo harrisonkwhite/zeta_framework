@@ -32,30 +32,6 @@ namespace zf {
     constexpr t_s32 g_batch_slot_elem_cnt = 6;
     static_assert(g_batch_slot_elem_cnt * g_batch_slot_cnt <= USHRT_MAX, "Batch slot count is too high!");
 
-    struct s_batch_vert {
-        s_v2 vert_coord;
-        s_v2 pos;
-        s_v2 size;
-        float rot = 0.0f;
-        s_v4 blend;
-
-        static bgfx::VertexLayout BuildLayout() {
-            bgfx::VertexLayout layout;
-
-            layout.begin()
-                .add(bgfx::Attrib::Position, 2, bgfx::AttribType::Float)
-                .add(bgfx::Attrib::TexCoord0, 2, bgfx::AttribType::Float)
-                .add(bgfx::Attrib::TexCoord1, 2, bgfx::AttribType::Float)
-                .add(bgfx::Attrib::TexCoord2, 1, bgfx::AttribType::Float)
-                .add(bgfx::Attrib::Color0, 4, bgfx::AttribType::Float)
-                .end();
-
-            return layout;
-        }
-    };
-
-    using t_batch_slot = s_static_array<s_batch_vert, g_batch_slot_vert_cnt>;
-
     class c_renderer {
     public:
         c_renderer() = delete;
@@ -72,12 +48,36 @@ namespace zf {
         static void Flush();
 
     private:
-        static inline bgfx::ProgramHandle sm_quad_batch_ph;
+        struct s_quad_batch_vert {
+            s_v2 vert_coord;
+            s_v2 pos;
+            s_v2 size;
+            float rot = 0.0f;
+            s_v4 blend;
 
-        static inline bgfx::DynamicVertexBufferHandle sm_quad_batch_vbh;
-        static inline bgfx::IndexBufferHandle sm_quad_batch_ibh;
+            static bgfx::VertexLayout BuildVertLayout() {
+                bgfx::VertexLayout layout;
 
-        static inline s_static_array<t_batch_slot, g_batch_slot_cnt> sm_batch_slots;
-        static inline t_s32 sm_batch_slots_used_cnt = 0;
+                layout.begin()
+                    .add(bgfx::Attrib::Position, 2, bgfx::AttribType::Float)
+                    .add(bgfx::Attrib::TexCoord0, 2, bgfx::AttribType::Float)
+                    .add(bgfx::Attrib::TexCoord1, 2, bgfx::AttribType::Float)
+                    .add(bgfx::Attrib::TexCoord2, 1, bgfx::AttribType::Float)
+                    .add(bgfx::Attrib::Color0, 4, bgfx::AttribType::Float)
+                    .end();
+
+                return layout;
+            }
+        };
+
+        using t_quad_batch_slot = s_static_array<s_quad_batch_vert, g_batch_slot_vert_cnt>;
+
+        static inline bgfx::ProgramHandle sm_quad_batch_prog;
+
+        static inline bgfx::DynamicVertexBufferHandle sm_quad_batch_vb;
+        static inline bgfx::IndexBufferHandle sm_quad_batch_eb;
+
+        static inline s_static_array<t_quad_batch_slot, g_batch_slot_cnt> sm_quad_batch_slots;
+        static inline t_s32 sm_quad_batch_slots_used_cnt = 0;
     };
 }

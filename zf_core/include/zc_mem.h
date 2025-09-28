@@ -79,6 +79,10 @@ namespace zf {
             return m_len;
         }
 
+        size_t SizeInBytes() const {
+            return sizeof(tp_type) * Len();
+        }
+
         bool IsEmpty() const {
             return m_len == 0;
         }

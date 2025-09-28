@@ -134,8 +134,8 @@ namespace zf {
                     frame_dur_accum -= targ_tick_interval;
                 } while (frame_dur_accum >= targ_tick_interval);
 
-                //c_renderer::Draw({32.0f, 32.0f}, {64.0f, 64.0f}, origins::g_origin_top_left, 0.0f, colors::g_white);
-                //c_renderer::Flush();
+                c_renderer::Draw({32.0f, 32.0f}, {64.0f, 64.0f}, origins::g_origin_top_left, 0.0f, colors::g_blue);
+                c_renderer::Draw({64.0f, 64.0f}, {64.0f, 64.0f}, origins::g_origin_top_left, 0.0f, colors::g_brown);
 
                 c_renderer::CompleteFrame();
             }
