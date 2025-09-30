@@ -1,8 +1,8 @@
 #pragma once
 
 #include <bgfx/bgfx.h>
-#include "zc_gfx.h"
-#include "zc_math.h"
+#include <zc.h>
+#include "zf_window.h"
 
 namespace zf {
     constexpr t_s32 g_quad_batch_slot_cnt = 8192;
@@ -105,7 +105,12 @@ namespace zf {
         static bool Init(c_mem_arena& temp_mem_arena);
         static void Shutdown();
 
-        static inline void UpdateViewMatrix(const t_s32 view_index, const s_matrix_4x4& mat) {
+        static void RefreshSize() {
+            s_v2_s32 fb_size = c_window::GetFramebufferSize();
+            bgfx::reset(static_cast<uint32_t>(fb_size.x), static_cast<uint32_t>(fb_size.y), BGFX_RESET_VSYNC);
+        }
+
+        static void UpdateViewMatrix(const t_s32 view_index, const s_matrix_4x4& mat) {
             assert(sm_core.state == ec_renderer_state::initted);
             sm_core.view_mats[view_index] = mat;
         }

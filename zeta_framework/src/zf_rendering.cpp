@@ -1,10 +1,5 @@
 #include "zf_rendering.h"
 
-#include "bgfx/bgfx.h"
-#include "zc_io.h"
-#include "zc_math.h"
-#include "zf_window.h"
-
 namespace zf {
     static bgfx::ProgramHandle CreateShaderProg(const c_array<const t_u8> vs_bin, const c_array<const t_u8> fs_bin) {
         const bgfx::Memory* vs_mem = bgfx::makeRef(vs_bin.Raw(), vs_bin.Len());

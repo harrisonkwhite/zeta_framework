@@ -2,6 +2,7 @@
 
 #include <zc.h>
 #include <GLFW/glfw3.h>
+#include "zf_rendering.h"
 
 namespace zf {
     static e_key_code GLFWToZFKeyCode(const t_s32 glfw_key) {
@@ -109,8 +110,14 @@ namespace zf {
         glfwSetInputMode(sm_glfw_window, GLFW_CURSOR, (flags & ek_window_flags_hide_cursor) ? GLFW_CURSOR_HIDDEN : GLFW_CURSOR_NORMAL);
 
         // Set up GLFW callbacks.
+        glfwSetFramebufferSizeCallback(sm_glfw_window,
+            [](GLFWwindow* const window, const int width, const int height) {
+                c_renderer::RefreshSize();
+            }
+        );
+
         glfwSetKeyCallback(sm_glfw_window,
-            [](GLFWwindow* window, const int key, const int, const int action, const int mods) {
+            [](GLFWwindow* const window, const int key, const int, const int action, const int mods) {
                 const e_key_code key_code = GLFWToZFKeyCode(key);
 
                 if (key_code == eks_key_code_none) {
@@ -128,7 +135,7 @@ namespace zf {
         );
 
         glfwSetMouseButtonCallback(sm_glfw_window,
-            [](GLFWwindow* window, const int button, const int action, const int mods) {
+            [](GLFWwindow* const window, const int button, const int action, const int mods) {
                 const e_mouse_button_code mb_code = GLFWToZFMouseButtonCode(button);
 
                 if (mb_code == eks_mouse_button_code_none) {
@@ -146,7 +153,7 @@ namespace zf {
         );
 
         glfwSetScrollCallback(sm_glfw_window,
-            [](GLFWwindow* window, const double, const double offs_y) {
+            [](GLFWwindow* const window, const double, const double offs_y) {
                 if (offs_y > 0.0) {
                     sm_input_events.mouse_scroll_state = ec_mouse_scroll_state::up;
                 } else if (offs_y < 0.0) {
