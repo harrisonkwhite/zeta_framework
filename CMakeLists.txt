@@ -4,6 +4,7 @@ project(zeta_framework)
 
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 
 add_subdirectory(zeta_framework)
 add_subdirectory(zf_asset_packer)

@@ -134,10 +134,12 @@ namespace zf {
                     frame_dur_accum -= targ_tick_interval;
                 } while (frame_dur_accum >= targ_tick_interval);
 
+                c_renderer::BeginFrame();
+
                 c_renderer::Draw({32.0f, 32.0f}, {64.0f, 64.0f}, origins::g_origin_top_left, 0.0f, colors::g_blue);
                 c_renderer::Draw({64.0f, 64.0f}, {64.0f, 64.0f}, origins::g_origin_top_left, 0.0f, colors::g_brown);
 
-                c_renderer::CompleteFrame();
+                c_renderer::EndFrame();
             }
 
             c_window::PollEvents();
@@ -172,7 +174,7 @@ namespace zf {
                     break;
 
                 case ec_game_run_stage::renderer_initted:
-                    c_renderer::Shutdown();
+                    //c_renderer::Shutdown();
                     break;
 
                 case ec_game_run_stage::dev_init_func_ran_and_succeeded:

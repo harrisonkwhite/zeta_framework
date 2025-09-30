@@ -177,4 +177,14 @@ namespace zf {
     };
 
     c_array<t_u8> LoadFileContents(const c_string_view file_path, c_mem_arena& mem_arena, const bool include_terminating_byte = false);
+
+    static inline c_string LoadFileContentsAsStr(const c_string_view file_path, c_mem_arena& mem_arena) {
+        const auto contents = LoadFileContents(file_path, mem_arena);
+
+        if (contents.IsEmpty()) {
+            return {};
+        }
+
+        return {reinterpret_cast<char*>(contents.Raw())};
+    }
 }

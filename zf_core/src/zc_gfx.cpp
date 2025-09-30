@@ -88,7 +88,7 @@ namespace zf {
         const auto rgba_px_data = PushArrayToMemArena<t_u8>(mem_arena, 4 * tex_meta.size.x * tex_meta.size.y);
 
         if (rgba_px_data.IsEmpty()) {
-            //ZF_LOG_ERROR("Failed to reserve memory for font texture RGBA pixel data!");
+            ZF_LOG_ERROR("Failed to reserve memory for font texture RGBA pixel data!");
             return {};
         }
 
@@ -133,7 +133,7 @@ namespace zf {
             stbtt_FreeBitmap(stb_bitmap, nullptr);
         }
 
-        return rgba_px_data.View();
+        return rgba_px_data;
     }
 
     bool LoadFontFromRawFile(s_font_arrangement& arrangement, s_font_texture_meta& tex_meta, c_array<const t_u8>& tex_rgba_px_data, const c_string_view file_path, const t_s32 height, c_mem_arena& temp_mem_arena) {

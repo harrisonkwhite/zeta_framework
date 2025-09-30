@@ -6,7 +6,7 @@
 #include <type_traits>
 #include <new>
 
-#define ZF_SIZE_IN_BITS(x) (sizeof(x) * 8)
+#define ZF_SIZE_IN_BITS(x) (8 * sizeof(x))
 
 namespace zf {
     using t_s8 = char;
@@ -103,6 +103,10 @@ namespace zf {
             return {m_buf, m_len};
         }
 
+        operator c_array<const tp_type>() const {
+            return View();
+        }
+
     private:
         tp_type* m_buf = nullptr;
         int m_len = 0;
@@ -151,6 +155,10 @@ namespace zf {
 
         c_array_list<const tp_type> View() const {
             return {m_arr.Raw(), m_arr.Len(), m_len};
+        }
+
+        operator c_array_list<const tp_type>() const {
+            return View();
         }
 
     private:
@@ -244,7 +252,7 @@ namespace zf {
         c_bitset() = default;
 
         c_bitset(const c_array<t_u8> bytes, const size_t bit_cnt) : m_bytes(bytes), m_bit_cnt(bit_cnt) {
-            assert(bit_cnt <= 8 * bytes.Len());
+            assert(bit_cnt <= 8u * bytes.Len());
         }
 
         bool IsBitActive(const size_t index) {
@@ -371,41 +379,6 @@ namespace zf {
         size_t m_offs = 0;
     };
 
-    class c_string {
-    public:
-        c_string() = default;
-
-        c_string(char* const c_str) {
-            m_chrs = c_array<char>(c_str, strlen(c_str) + 1);
-        }
-
-        c_string(char* const c_str, const size_t c_str_len) {
-            assert(strnlen(c_str, c_str_len) == c_str_len && "Invalid string length provided!");
-            m_chrs = c_array<char>(c_str, c_str_len + 1);
-        }
-
-        c_string(const c_array<char> chrs) {
-            const int chrs_str_len = strnlen(chrs.Raw(), chrs.Len());
-            assert(chrs_str_len != chrs.Len() && "Unterminated array of characters provided!");
-            m_chrs = chrs.Slice(0, chrs_str_len + 1);
-        }
-
-        char* Raw() const {
-            return m_chrs.Raw();
-        }
-
-        int Len() const {
-            return m_chrs.IsEmpty() ? 0 : m_chrs.Len() - 1;
-        }
-
-        bool IsEmpty() const {
-            return m_chrs.Len() <= 1;
-        }
-
-    private:
-        c_array<char> m_chrs;
-    };
-
     class c_string_view {
     public:
         c_string_view() = default;
@@ -429,7 +402,7 @@ namespace zf {
             return m_chrs.Raw();
         }
 
-        int Len() const {
+        size_t Len() const {
             return m_chrs.IsEmpty() ? 0 : m_chrs.Len() - 1;
         }
 
@@ -439,6 +412,52 @@ namespace zf {
 
     private:
         c_array<const char> m_chrs;
+    };
+
+    class c_string {
+    public:
+        c_string() = default;
+
+        c_string(char* const c_str) {
+            assert(c_str);
+            m_chrs = c_array<char>(c_str, strlen(c_str) + 1);
+        }
+
+        c_string(char* const c_str, const size_t c_str_len) {
+            assert(c_str);
+            assert(strnlen(c_str, c_str_len) == c_str_len && "Invalid string length provided!");
+            m_chrs = c_array<char>(c_str, c_str_len + 1);
+        }
+
+        c_string(const c_array<char> chrs) {
+            assert(chrs.Len() > 0);
+            const int chrs_str_len = strnlen(chrs.Raw(), chrs.Len());
+            assert(chrs_str_len != chrs.Len() && "Unterminated array of characters provided!");
+            m_chrs = chrs.Slice(0, chrs_str_len + 1);
+        }
+
+        char* Raw() const {
+            return m_chrs.Raw();
+        }
+
+        size_t Len() const {
+            return m_chrs.IsEmpty() ? 0 : m_chrs.Len() - 1;
+        }
+
+        bool IsEmpty() const {
+            return m_chrs.Len() <= 1;
+        }
+
+        c_string_view View() const {
+            return {m_chrs.Raw(), Len()};
+        }
+
+        operator c_string_view() const {
+            return View();
+        }
+
+    private:
+        c_array<char> m_chrs;
     };
 
     template<typename tp_type>
@@ -453,7 +472,7 @@ namespace zf {
 
         tp_type* const arr_raw = reinterpret_cast<tp_type*>(mem);
 
-        for (size_t i = 0; i < cnt; i++) {
+        for (int i = 0; i < cnt; i++) {
             new (&arr_raw[i]) tp_type();
         }
 

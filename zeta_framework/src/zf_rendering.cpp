@@ -1,20 +1,12 @@
 #include "zf_rendering.h"
 
+#include "bgfx/bgfx.h"
+#include "zc_io.h"
+#include "zc_math.h"
 #include "zf_window.h"
 
 namespace zf {
-    static bgfx::ShaderHandle LoadShaderFromFile(const c_string_view file_path, c_mem_arena& temp_mem_arena) {
-        const c_array<t_u8> file_contents = LoadFileContents(file_path, temp_mem_arena, false);
-
-        if (file_contents.IsEmpty()) {
-            return BGFX_INVALID_HANDLE;
-        }
-
-        const bgfx::Memory* mem = bgfx::makeRef(file_contents.Raw(), file_contents.Len());
-        return bgfx::createShader(mem);
-    }
-
-    static bgfx::ProgramHandle CreateShaderProg(const c_array<const t_u8> vs_bin, const c_array<const t_u8> fs_bin, c_mem_arena& temp_mem_arena) {
+    static bgfx::ProgramHandle CreateShaderProg(const c_array<const t_u8> vs_bin, const c_array<const t_u8> fs_bin) {
         const bgfx::Memory* vs_mem = bgfx::makeRef(vs_bin.Raw(), vs_bin.Len());
         const bgfx::ShaderHandle vs_hdl = bgfx::createShader(vs_mem);
 
@@ -32,8 +24,89 @@ namespace zf {
         return bgfx::createProgram(vs_hdl, fs_hdl, true);
     }
 
+    static bgfx::ProgramHandle LoadShaderProgFromRawFiles(const c_string_view vs_bin_file_path, const c_string_view fs_bin_file_path, c_mem_arena& temp_mem_arena) {
+        const auto vs_bin = LoadFileContents(vs_bin_file_path, temp_mem_arena);
+
+        if (vs_bin.IsEmpty()) {
+            return BGFX_INVALID_HANDLE;
+        }
+
+        const auto fs_bin = LoadFileContents(fs_bin_file_path, temp_mem_arena);
+
+        if (fs_bin.IsEmpty()) {
+            return BGFX_INVALID_HANDLE;
+        }
+
+        return CreateShaderProg(vs_bin, fs_bin);
+    }
+
+    static bgfx::VertexLayout GenQuadBatchVertLayout() {
+        bgfx::VertexLayout layout;
+
+        layout.begin()
+            .add(bgfx::Attrib::Position, 2, bgfx::AttribType::Float)
+            .add(bgfx::Attrib::TexCoord0, 2, bgfx::AttribType::Float)
+            .add(bgfx::Attrib::TexCoord1, 2, bgfx::AttribType::Float)
+            .add(bgfx::Attrib::TexCoord2, 1, bgfx::AttribType::Float)
+            .add(bgfx::Attrib::Color0, 4, bgfx::AttribType::Float)
+            .end();
+
+        return layout;
+    }
+
+    static bgfx::DynamicVertexBufferHandle GenQuadBatchVertBuf() {
+        const bgfx::VertexLayout layout = GenQuadBatchVertLayout();
+        return bgfx::createDynamicVertexBuffer(g_quad_batch_slot_vert_cnt * g_quad_batch_slot_cnt, layout);
+    }
+
+    static bgfx::IndexBufferHandle GenQuadBatchIndexBuf() {
+        const int index_cnt = g_quad_batch_slot_elem_cnt * g_quad_batch_slot_cnt;
+
+        const auto indices_mem = bgfx::alloc(sizeof(t_u16) * index_cnt);
+
+        if (!indices_mem) {
+            ZF_LOG_ERROR("Failed to allocate memory for quad batch indices!");
+            return BGFX_INVALID_HANDLE;
+        }
+
+        const c_array<t_u16> indices = {reinterpret_cast<t_u16*>(indices_mem->data), index_cnt};
+
+        for (int i = 0; i < g_quad_batch_slot_cnt; i++) {
+            indices[(i * 6) + 0] = (i * 4) + 0;
+            indices[(i * 6) + 1] = (i * 4) + 1;
+            indices[(i * 6) + 2] = (i * 4) + 2;
+            indices[(i * 6) + 3] = (i * 4) + 2;
+            indices[(i * 6) + 4] = (i * 4) + 3;
+            indices[(i * 6) + 5] = (i * 4) + 0;
+        }
+
+        return bgfx::createIndexBuffer(indices_mem);
+    }
+
+    static bool InitQuadBatchRenderable(s_renderable& renderable, c_mem_arena& temp_mem_arena) {
+        renderable.prog_bgfx_hdl = LoadShaderProgFromRawFiles("zeta_framework/shaders/quad/vs.bin", "zeta_framework/shaders/quad/fs.bin", temp_mem_arena);
+
+        if (!bgfx::isValid(renderable.prog_bgfx_hdl)) {
+            return false;
+        }
+
+        renderable.dvb_bgfx_hdl = GenQuadBatchVertBuf();
+
+        if (!bgfx::isValid(renderable.dvb_bgfx_hdl)) {
+            return false;
+        }
+
+        renderable.index_bgfx_hdl = GenQuadBatchIndexBuf();
+
+        if (!bgfx::isValid(renderable.index_bgfx_hdl)) {
+            return false;
+        }
+
+        return true;
+    }
+
     bool c_renderer::Init(c_mem_arena& temp_mem_arena) {
-        assert(sm_state == ec_renderer_state::not_initted);
+        assert(sm_core.state == ec_renderer_state::not_initted);
 
         const s_v2_s32 fb_size = c_window::GetFramebufferSize();
 
@@ -53,76 +126,88 @@ namespace zf {
             return false;
         }
 
-        sm_state = ec_renderer_state::initted;
+        if (!InitQuadBatchRenderable(sm_core.quad_batch_renderable, temp_mem_arena)) {
+            ZF_LOG_ERROR("Failed to initialise the quad batch renderable!");
+            return false;
+        }
+
+        for (int i = 0; i < g_view_limit; i++) {
+            sm_core.view_mats[i] = s_matrix_4x4::Identity();
+        }
+
+        sm_core.state = ec_renderer_state::initted;
 
         return true;
     }
 
     void c_renderer::Shutdown() {
-        assert(sm_state == ec_renderer_state::initted);
+        assert(sm_core.state == ec_renderer_state::initted);
 
-        sm_surface_renderable.Clean();
-        sm_quad_batch_renderable.Clean();
-        bgfx::frame();
+        sm_core.quad_batch_renderable.Clean();
+        bgfx::frame(); // @todo: Might not be needed?
         bgfx::shutdown();
 
-        sm_state = ec_renderer_state::not_initted;
+        sm_core = {};
     }
 
     void c_renderer::BeginFrame() {
-        assert(sm_state == ec_renderer_state::initted);
-        sm_state = ec_renderer_state::rendering;
+        assert(sm_core.state == ec_renderer_state::initted);
+        sm_core.state = ec_renderer_state::rendering;
         SetView(0);
     }
 
     void c_renderer::EndFrame() {
-        assert(sm_state == ec_renderer_state::rendering);
+        assert(sm_core.state == ec_renderer_state::rendering);
 
-        if (sm_quad_batch_slots_used_cnt > 0) {
+        if (sm_core.quad_batch_slots_used_cnt > 0) {
             Flush();
         }
 
         bgfx::frame();
 
-        sm_state = ec_renderer_state::initted;
+        sm_core.state = ec_renderer_state::initted;
     }
 
     void c_renderer::SetView(const t_s32 view_index, const s_v4 clear_col) {
-        assert(sm_state == ec_renderer_state::rendering);
+        assert(sm_core.state == ec_renderer_state::rendering);
         assert(view_index >= 0 && view_index < g_view_limit);
 
-        if (sm_quad_batch_slots_used_cnt > 0) {
+        if (sm_core.quad_batch_slots_used_cnt > 0) {
             Flush();
         }
 
-        sm_active_view_index = view_index;
+        sm_core.active_view_index = view_index;
 
-        const auto& mats = sm_view_mats[view_index];
-        bgfx::setViewTransform(view_index, mats.view.elems.buf_raw, mats.proj.elems.buf_raw);
+        bgfx::setViewMode(view_index, bgfx::ViewMode::Sequential);
 
         const s_v2_s32 fb_size = c_window::GetFramebufferSize();
+
+        const auto& view_mat = sm_core.view_mats[view_index];
+        const auto proj_mat = s_matrix_4x4::Orthographic(0.0f, fb_size.x, fb_size.y, 0.0f, -1.0f, 1.0f); // @todo: Cache this.
+        bgfx::setViewTransform(view_index, view_mat.elems.buf_raw, proj_mat.elems.buf_raw);
+
         bgfx::setViewRect(view_index, 0, 0, static_cast<uint16_t>(fb_size.x), static_cast<uint16_t>(fb_size.y));
 
         Clear(clear_col);
     }
 
     void c_renderer::Clear(const s_v4 col) {
-        assert(sm_state == ec_renderer_state::rendering);
+        assert(sm_core.state == ec_renderer_state::rendering);
 
         const s_int_rgba int_rgba = ToIntRGBA(col); // @todo: Update.
-        bgfx::setViewClear(sm_active_view_index, BGFX_CLEAR_COLOR, 0x303030ff);
+        bgfx::setViewClear(sm_core.active_view_index, BGFX_CLEAR_COLOR, 0x303030ff);
     }
 
     void c_renderer::Draw(const s_v2 pos, const s_v2 size, const s_v2 origin, const float rot, const s_v4 blend) {
-        assert(sm_state == ec_renderer_state::rendering);
+        assert(sm_core.state == ec_renderer_state::rendering);
 
-        if (sm_quad_batch_slots_used_cnt == g_quad_batch_slot_cnt) {
+        if (sm_core.quad_batch_slots_used_cnt == g_quad_batch_slot_cnt) {
             Flush();
             Draw(pos, size, origin, rot, blend);
             return;
         }
 
-        auto& slot = sm_quad_batch_slots[sm_quad_batch_slots_used_cnt];
+        auto& slot = sm_core.quad_batch_slots[sm_core.quad_batch_slots_used_cnt];
 
         const s_static_array<s_v2, 4> vert_coords = {{
             {0.0f - origin.x, 0.0f - origin.y},
@@ -141,25 +226,25 @@ namespace zf {
             };
         }
 
-        sm_quad_batch_slots_used_cnt++;
+        sm_core.quad_batch_slots_used_cnt++;
     }
 
     void c_renderer::Flush() {
-        assert(sm_state == ec_renderer_state::rendering);
-        assert(sm_quad_batch_slots_used_cnt > 0);
+        assert(sm_core.state == ec_renderer_state::rendering);
+        assert(sm_core.quad_batch_slots_used_cnt > 0);
 
         // Upload vertex data to GPU.
-        const uint32_t vert_cnt = g_quad_batch_slot_vert_cnt * sm_quad_batch_slots_used_cnt;
-        const auto mem = bgfx::makeRef(sm_quad_batch_slots.buf_raw, sizeof(s_quad_batch_vert) * vert_cnt);
-        bgfx::update(sm_quad_batch_renderable.dvb_bgfx_hdl, 0, mem);
+        const uint32_t vert_cnt = g_quad_batch_slot_vert_cnt * sm_core.quad_batch_slots_used_cnt;
+        const auto mem = bgfx::makeRef(sm_core.quad_batch_slots.buf_raw, sizeof(s_quad_batch_vert) * vert_cnt);
+        bgfx::update(sm_core.quad_batch_renderable.dvb_bgfx_hdl, 0, mem);
 
         // Render the batch.
-        bgfx::setVertexBuffer(0, sm_quad_batch_renderable.dvb_bgfx_hdl, 0, vert_cnt);
-        bgfx::setIndexBuffer(sm_quad_batch_renderable.index_bgfx_hdl);
+        bgfx::setVertexBuffer(0, sm_core.quad_batch_renderable.dvb_bgfx_hdl, 0, vert_cnt);
+        bgfx::setIndexBuffer(sm_core.quad_batch_renderable.index_bgfx_hdl);
         bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A | BGFX_STATE_BLEND_ALPHA);
-        bgfx::submit(0, sm_quad_batch_renderable.prog_bgfx_hdl);
+        bgfx::submit(0, sm_core.quad_batch_renderable.prog_bgfx_hdl);
 
         // Reset to batch beginning.
-        sm_quad_batch_slots_used_cnt = 0;
+        sm_core.quad_batch_slots_used_cnt = 0;
     }
 }
