@@ -1,4 +1,5 @@
 #include "zf_rendering.h"
+#include "bgfx/bgfx.h"
 
 namespace zf {
     static bgfx::ProgramHandle CreateShaderProg(const c_array<const t_u8> vs_bin, const c_array<const t_u8> fs_bin) {
@@ -43,6 +44,7 @@ namespace zf {
             .add(bgfx::Attrib::TexCoord0, 2, bgfx::AttribType::Float)
             .add(bgfx::Attrib::TexCoord1, 2, bgfx::AttribType::Float)
             .add(bgfx::Attrib::TexCoord2, 1, bgfx::AttribType::Float)
+            .add(bgfx::Attrib::TexCoord3, 2, bgfx::AttribType::Float)
             .add(bgfx::Attrib::Color0, 4, bgfx::AttribType::Float)
             .end();
 
@@ -82,22 +84,40 @@ namespace zf {
         renderable.prog_bgfx_hdl = LoadShaderProgFromRawFiles("zeta_framework/shaders/quad/vs.bin", "zeta_framework/shaders/quad/fs.bin", temp_mem_arena);
 
         if (!bgfx::isValid(renderable.prog_bgfx_hdl)) {
-            return false;
+            goto err_a;
+        }
+
+        renderable.tex_uni_bgfx_hdl = bgfx::createUniform("u_tex", bgfx::UniformType::Sampler);
+
+        if (!bgfx::isValid(renderable.tex_uni_bgfx_hdl)) {
+            goto err_b;
         }
 
         renderable.dvb_bgfx_hdl = GenQuadBatchVertBuf();
 
         if (!bgfx::isValid(renderable.dvb_bgfx_hdl)) {
-            return false;
+            goto err_c;
         }
 
         renderable.index_bgfx_hdl = GenQuadBatchIndexBuf();
 
         if (!bgfx::isValid(renderable.index_bgfx_hdl)) {
-            return false;
+            goto err_d;
         }
 
         return true;
+
+err_d:
+        bgfx::destroy(renderable.dvb_bgfx_hdl);
+
+err_c:
+        bgfx::destroy(renderable.tex_uni_bgfx_hdl);
+
+err_b:
+        bgfx::destroy(renderable.prog_bgfx_hdl);
+
+err_a:
+        return false;
     }
 
     bool c_renderer::Init(c_mem_arena& temp_mem_arena) {
@@ -183,6 +203,8 @@ namespace zf {
 
         bgfx::setViewRect(view_index, 0, 0, static_cast<uint16_t>(fb_size.x), static_cast<uint16_t>(fb_size.y));
 
+        bgfx::touch(view_index);
+
         Clear(clear_col);
     }
 
@@ -193,14 +215,19 @@ namespace zf {
         bgfx::setViewClear(sm_core.active_view_index, BGFX_CLEAR_COLOR, 0x303030ff);
     }
 
-    void c_renderer::Draw(const s_v2 pos, const s_v2 size, const s_v2 origin, const float rot, const s_v4 blend) {
+    void c_renderer::Draw(const int tex_index, const c_texture_group& tex_group, const s_v2 pos, const s_v2 size, const s_v2 origin, const float rot, const s_v4 blend) {
         assert(sm_core.state == ec_renderer_state::rendering);
 
-        if (sm_core.quad_batch_slots_used_cnt == g_quad_batch_slot_cnt) {
+        const auto tex_bgfx_hdl = tex_group.GetTextureBGFXHandle(tex_index);
+
+        if (sm_core.quad_batch_slots_used_cnt == g_quad_batch_slot_cnt
+            || (sm_core.quad_batch_slots_used_cnt > 0 && tex_bgfx_hdl.idx != sm_core.quad_batch_tex_bgfx_hdl.idx)) {
             Flush();
-            Draw(pos, size, origin, rot, blend);
+            Draw(tex_index, tex_group, pos, size, origin, rot, blend);
             return;
         }
+
+        sm_core.quad_batch_tex_bgfx_hdl = tex_bgfx_hdl;
 
         auto& slot = sm_core.quad_batch_slots[sm_core.quad_batch_slots_used_cnt];
 
@@ -211,12 +238,28 @@ namespace zf {
             {0.0f - origin.x, 1.0f - origin.y}
         }};
 
+        const s_static_array<s_v2, 4> uvs = {{
+            {0.0f, 0.0f},
+            {1.0f, 0.0f},
+            {1.0f, 1.0f},
+            {0.0f, 1.0f}
+        }};
+
+        // @todo: src_rect
+        /*const s_static_array<s_v2, 4> tex_coords = {{
+            {write_info.tex_coords.left, write_info.tex_coords.top},
+            {write_info.tex_coords.right, write_info.tex_coords.top},
+            {write_info.tex_coords.right, write_info.tex_coords.bottom},
+            {write_info.tex_coords.left, write_info.tex_coords.bottom}
+        }};*/
+
         for (int i = 0; i < slot.Len(); i++) {
             slot[i] = {
                 .vert_coord = vert_coords[i],
                 .pos = pos,
                 .size = size,
                 .rot = rot,
+                .uv = uvs[i],
                 .blend = blend
             };
         }
@@ -236,6 +279,7 @@ namespace zf {
         // Render the batch.
         bgfx::setVertexBuffer(0, sm_core.quad_batch_renderable.dvb_bgfx_hdl, 0, vert_cnt);
         bgfx::setIndexBuffer(sm_core.quad_batch_renderable.index_bgfx_hdl);
+        bgfx::setTexture(0, sm_core.quad_batch_renderable.tex_uni_bgfx_hdl, sm_core.quad_batch_tex_bgfx_hdl);
         bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A | BGFX_STATE_BLEND_ALPHA);
         bgfx::submit(0, sm_core.quad_batch_renderable.prog_bgfx_hdl);
 

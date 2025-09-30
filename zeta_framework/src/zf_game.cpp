@@ -136,8 +136,18 @@ namespace zf {
 
                 c_renderer::BeginFrame();
 
-                c_renderer::Draw({32.0f, 32.0f}, {64.0f, 64.0f}, origins::g_origin_top_left, 0.0f, colors::g_blue);
-                c_renderer::Draw({64.0f, 64.0f}, {64.0f, 64.0f}, origins::g_origin_top_left, 0.0f, colors::g_brown);
+                {
+                    const s_game_render_context context = {
+                        .dev_mem = game.dev_mem,
+                        .perm_mem_arena = game.perm_mem_arena,
+                        .temp_mem_arena = game.temp_mem_arena
+                    };
+
+                    if (!info.render_func(context)) {
+                        ZF_LOG_ERROR("Developer game render function failed!");
+                        return false;
+                    }
+                }
 
                 c_renderer::EndFrame();
             }

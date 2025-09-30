@@ -2,6 +2,9 @@
 
 #include <bgfx/bgfx.h>
 #include <zc.h>
+#include "zc_gfx.h"
+#include "zc_math.h"
+#include "zc_mem.h"
 #include "zf_window.h"
 
 namespace zf {
@@ -16,12 +19,70 @@ namespace zf {
 
     class c_texture_group {
     public:
-        bool LoadFromPacked(c_file_reader& fr, const int cnt, c_mem_arena& mem_arena);
-        void Unload();
+        bool LoadRaws(const c_array<const c_string_view> file_paths, c_mem_arena& mem_arena, c_mem_arena& temp_mem_arena) {
+            assert(!m_loaded);
+
+            m_bgfx_hdls = PushArrayToMemArena<bgfx::TextureHandle>(mem_arena, file_paths.Len());
+
+            if (m_bgfx_hdls.IsEmpty()) {
+                return false;
+            }
+
+            m_sizes = PushArrayToMemArena<s_v2_s32>(mem_arena, file_paths.Len());
+
+            if (m_sizes.IsEmpty()) {
+                return false;
+            }
+
+            for (int i = 0; i < file_paths.Len(); i++) {
+                s_rgba_texture rgba;
+
+                if (!LoadRGBATextureFromRawFile(rgba, temp_mem_arena, file_paths[i])) {
+                    return false;
+                }
+
+                m_bgfx_hdls[i] = bgfx::createTexture2D(static_cast<uint16_t>(rgba.dims.x), static_cast<uint16_t>(rgba.dims.y), false, 1, bgfx::TextureFormat::RGBA8, 0, bgfx::copy(rgba.px_data.Raw(), rgba.px_data.Len()));
+
+                if (!bgfx::isValid(m_bgfx_hdls[i])) {
+                    return false;
+                }
+
+                m_sizes[i] = rgba.dims;
+            }
+
+            m_loaded = true;
+
+            return true;
+        }
+
+        void Unload() {
+            assert(m_loaded);
+        }
+
+        bool IsLoaded() const {
+            return m_loaded;
+        }
+
+        int GetCnt() const {
+            assert(m_loaded);
+            return m_bgfx_hdls.Len();
+        }
+
+        bgfx::TextureHandle GetTextureBGFXHandle(const int index) const {
+            assert(m_loaded);
+            return m_bgfx_hdls[index];
+        }
+
+        s_v2_s32 GetTextureSize(const int index) const {
+            assert(m_loaded);
+            return m_sizes[index];
+        }
 
     private:
-        c_array<const bgfx::TextureHandle> m_bgfx_hdls = {};
-        c_array<const s_v2_s32> m_sizes = {};
+        bool m_loaded;
+
+        c_array<bgfx::TextureHandle> m_bgfx_hdls = {};
+        c_array<s_v2_s32> m_sizes = {};
     };
 
     class c_font_group {
@@ -55,24 +116,26 @@ namespace zf {
     };
 
     struct s_quad_batch_vert {
-        s_v2 vert_coord = {};
-        s_v2 pos = {};
-        s_v2 size = {};
+        s_v2 vert_coord;
+        s_v2 pos;
+        s_v2 size;
         float rot = 0.0f;
-        s_v4 blend = {};
+        s_v2 uv;
+        s_v4 blend;
     };
 
     using t_quad_batch_slot = s_static_array<s_quad_batch_vert, g_quad_batch_slot_vert_cnt>;
 
     struct s_renderable {
         bgfx::ProgramHandle prog_bgfx_hdl = BGFX_INVALID_HANDLE;
+        bgfx::UniformHandle tex_uni_bgfx_hdl = BGFX_INVALID_HANDLE;
         bgfx::DynamicVertexBufferHandle dvb_bgfx_hdl = BGFX_INVALID_HANDLE;
         bgfx::IndexBufferHandle index_bgfx_hdl = BGFX_INVALID_HANDLE;
 
         void Clean() {
-            if (bgfx::isValid(index_bgfx_hdl)) bgfx::destroy(index_bgfx_hdl);
-            if (bgfx::isValid(dvb_bgfx_hdl))   bgfx::destroy(dvb_bgfx_hdl);
-            if (bgfx::isValid(prog_bgfx_hdl))  bgfx::destroy(prog_bgfx_hdl);
+            bgfx::destroy(index_bgfx_hdl);
+            bgfx::destroy(dvb_bgfx_hdl);
+            bgfx::destroy(prog_bgfx_hdl);
 
             *this = {};
         }
@@ -87,13 +150,14 @@ namespace zf {
     struct s_renderer_core {
         ec_renderer_state state = ec_renderer_state::not_initted;
 
-        s_renderable quad_batch_renderable = {};
+        s_renderable quad_batch_renderable;
 
         t_s32 active_view_index = 0;
-        s_static_array<s_matrix_4x4, g_view_limit> view_mats = {};
+        s_static_array<s_matrix_4x4, g_view_limit> view_mats;
 
-        s_static_array<t_quad_batch_slot, g_quad_batch_slot_cnt> quad_batch_slots = {};
+        s_static_array<t_quad_batch_slot, g_quad_batch_slot_cnt> quad_batch_slots;
         t_s32 quad_batch_slots_used_cnt = 0;
+        bgfx::TextureHandle quad_batch_tex_bgfx_hdl = BGFX_INVALID_HANDLE;
     };
 
     class c_renderer {
@@ -106,6 +170,8 @@ namespace zf {
         static void Shutdown();
 
         static void RefreshSize() {
+            assert(sm_core.state == ec_renderer_state::initted);
+
             s_v2_s32 fb_size = c_window::GetFramebufferSize();
             bgfx::reset(static_cast<uint32_t>(fb_size.x), static_cast<uint32_t>(fb_size.y), BGFX_RESET_VSYNC);
         }
@@ -119,10 +185,10 @@ namespace zf {
         static void EndFrame();
         static void SetView(const t_s32 view_index, const s_v4 clear_col = {});
         static void Clear(const s_v4 col);
-        static void Draw(const s_v2 pos, const s_v2 size, const s_v2 origin = origins::g_origin_top_left, const float rot = 0.0f, const s_v4 blend = colors::g_white);
+        static void Draw(const int tex_index, const c_texture_group& tex_group, const s_v2 pos, const s_v2 size, const s_v2 origin = origins::g_origin_top_left, const float rot = 0.0f, const s_v4 blend = colors::g_white);
 
     private:
-        static inline s_renderer_core sm_core = {};
+        static inline s_renderer_core sm_core;
 
         static void Flush();
     };
