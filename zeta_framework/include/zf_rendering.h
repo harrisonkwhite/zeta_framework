@@ -1,8 +1,8 @@
 #pragma once
 
 #include <bgfx/bgfx.h>
-#include <zc.h>
-#include "zf_assets.h"
+#include "zc_gfx.h"
+#include "zc_math.h"
 
 namespace zf {
     constexpr t_s32 g_quad_batch_slot_cnt = 8192;
@@ -10,107 +10,48 @@ namespace zf {
     constexpr t_s32 g_quad_batch_slot_elem_cnt = 6;
     static_assert(g_quad_batch_slot_elem_cnt * g_quad_batch_slot_cnt <= USHRT_MAX, "Quad batch slot count is too high!");
 
-    enum class ec_gfx_resource_type {
-        invalid,
-        vert_buf,
-        index_buf,
-        shader_prog,
-        texture
-    };
+    constexpr t_s32 g_view_limit = 128;
+    constexpr t_s32 g_surf_limit = 128;
+    static_assert(g_view_limit + g_surf_limit <= 256, "Needed view count exceeds BGFX limit!");
 
-    struct s_gfx_resource_hdl {
-        t_u16 raw_bgfx;
-        ec_gfx_resource_type type;
-    };
-
-    class c_gfx_resource_arena {
+    class c_texture_group {
     public:
-        s_gfx_resource_hdl CreateVertBuf(const int vert_cnt) {
-        }
-
-        void Clean() {
-        }
+        bool LoadFromPacked(c_file_reader& fr, const int cnt, c_mem_arena& mem_arena);
+        void Unload();
 
     private:
-        c_array_list<s_gfx_resource_hdl> m_hdls;
+        c_array<const bgfx::TextureHandle> m_bgfx_hdls;
+        c_array<const s_v2_s32> m_sizes;
     };
 
-    class c_quad_batch_bgfx_resources {
+    class c_font_group {
     public:
-        bool Init() {
-            vb_hdl = GenVertBuf();
-
-            if (!bgfx::isValid(vb_hdl)) {
-                return false;
-            }
-
-            ib_hdl = GenIndexBuf();
-
-            if (!bgfx::isValid(vb_hdl)) {
-                return false;
-            }
-
-            return true;
-        }
-
-        void Clean() {
-            bgfx::destroy(prog_hdl);
-            prog_hdl = BGFX_INVALID_HANDLE;
-
-            bgfx::destroy(ib_hdl);
-            ib_hdl = BGFX_INVALID_HANDLE;
-
-            bgfx::destroy(vb_hdl);
-            vb_hdl = BGFX_INVALID_HANDLE;
-        }
+        bool LoadFromPacked(c_file_reader& fr, const int cnt, c_mem_arena& mem_arena);
+        void Unload();
 
     private:
-        bgfx::ProgramHandle prog_hdl = BGFX_INVALID_HANDLE;
-        bgfx::DynamicVertexBufferHandle vb_hdl = BGFX_INVALID_HANDLE;
-        bgfx::IndexBufferHandle ib_hdl = BGFX_INVALID_HANDLE;
+        c_array<const bgfx::TextureHandle> m_bgfx_tex_hdls;
+        c_array<const s_font_arrangement> m_arrangements;
+        c_array<const s_font_texture_meta> m_tex_metas;
+    };
 
-        static bgfx::VertexLayout GenVertLayout() {
-            bgfx::VertexLayout layout;
+    class c_shader_prog_group {
+    public:
+        bool LoadFromPacked(c_file_reader& fr, const int cnt, c_mem_arena& mem_arena);
+        void Unload();
 
-            layout.begin()
-                .add(bgfx::Attrib::Position, 2, bgfx::AttribType::Float)
-                .add(bgfx::Attrib::TexCoord0, 2, bgfx::AttribType::Float)
-                .add(bgfx::Attrib::TexCoord1, 2, bgfx::AttribType::Float)
-                .add(bgfx::Attrib::TexCoord2, 1, bgfx::AttribType::Float)
-                .add(bgfx::Attrib::Color0, 4, bgfx::AttribType::Float)
-                .end();
+    private:
+        c_array<const bgfx::ProgramHandle> m_bgfx_hdls;
+    };
 
-            return layout;
-        }
+    class c_surface_group {
+    public:
+        bool LoadFromPacked(c_file_reader& fr, const int cnt, c_mem_arena& mem_arena);
+        void Unload();
 
-        static bgfx::DynamicVertexBufferHandle GenVertBuf() {
-            const bgfx::VertexLayout layout = GenVertLayout();
-            return bgfx::createDynamicVertexBuffer(g_quad_batch_slot_vert_cnt * g_quad_batch_slot_cnt, layout);
-        }
-
-        static bgfx::IndexBufferHandle GenIndexBuf() {
-            const int index_cnt = g_quad_batch_slot_elem_cnt * g_quad_batch_slot_cnt;
-
-            const auto indices_mem = bgfx::alloc(sizeof(t_u16) * index_cnt);
-
-            if (!indices_mem) {
-                ZF_LOG_ERROR("Failed to allocate memory for quad batch indices!");
-                return BGFX_INVALID_HANDLE;
-            }
-
-            const c_array<t_u16> indices = {reinterpret_cast<t_u16*>(indices_mem->data), index_cnt};
-
-            for (int i = 0; i < g_quad_batch_slot_cnt; i++) {
-                indices[(i * 6) + 0] = (i * 4) + 0;
-                indices[(i * 6) + 1] = (i * 4) + 1;
-                indices[(i * 6) + 2] = (i * 4) + 2;
-                indices[(i * 6) + 3] = (i * 4) + 2;
-                indices[(i * 6) + 4] = (i * 4) + 3;
-                indices[(i * 6) + 5] = (i * 4) + 0;
-            }
-
-            return bgfx::createIndexBuffer(indices_mem);
-        }
+    private:
+        c_array<const bgfx::FrameBufferHandle> m_frame_buf_bgfx_hdls;
+        c_array<const bgfx::TextureHandle> m_tex_bgfx_hdls;
     };
 
     struct s_quad_batch_vert {
@@ -123,6 +64,31 @@ namespace zf {
 
     using t_quad_batch_slot = s_static_array<s_quad_batch_vert, g_quad_batch_slot_vert_cnt>;
 
+    struct s_view_matrices {
+        s_matrix_4x4 view;
+        s_matrix_4x4 proj;
+    };
+
+    struct s_renderable {
+        bgfx::ProgramHandle prog_bgfx_hdl = BGFX_INVALID_HANDLE;
+        bgfx::DynamicVertexBufferHandle dvb_bgfx_hdl = BGFX_INVALID_HANDLE;
+        bgfx::IndexBufferHandle index_bgfx_hdl = BGFX_INVALID_HANDLE;
+
+        void Clean() {
+            if (bgfx::isValid(index_bgfx_hdl)) bgfx::destroy(index_bgfx_hdl);
+            if (bgfx::isValid(dvb_bgfx_hdl))   bgfx::destroy(dvb_bgfx_hdl);
+            if (bgfx::isValid(prog_bgfx_hdl))  bgfx::destroy(prog_bgfx_hdl);
+
+            *this = {};
+        }
+    };
+
+    enum class ec_renderer_state {
+        not_initted,
+        initted,
+        rendering
+    };
+
     class c_renderer {
     public:
         c_renderer() = delete;
@@ -132,16 +98,29 @@ namespace zf {
         static bool Init(c_mem_arena& temp_mem_arena);
         static void Shutdown();
 
-        static void CompleteFrame();
+        static inline void UpdateViewMatrices(const t_s32 view_index, const s_view_matrices& mats) {
+            assert(sm_state == ec_renderer_state::initted);
+            sm_view_mats[view_index] = mats;
+        }
 
+        static void BeginFrame();
+        static void EndFrame();
+        static void SetView(const t_s32 view_index, const s_v4 clear_col = {});
         static void Clear(const s_v4 col);
         static void Draw(const s_v2 pos, const s_v2 size, const s_v2 origin = origins::g_origin_top_left, const float rot = 0.0f, const s_v4 blend = colors::g_white);
-        static void Flush();
 
     private:
-        static inline c_quad_batch_bgfx_resources sm_quad_batch_bgfx_resources;
+        static inline ec_renderer_state sm_state;
+
+        static inline s_renderable sm_quad_batch_renderable;
+        static inline s_renderable sm_surface_renderable;
+
+        static inline t_s32 sm_active_view_index;
+        static inline s_static_array<s_view_matrices, g_view_limit> sm_view_mats;
 
         static inline s_static_array<t_quad_batch_slot, g_quad_batch_slot_cnt> sm_quad_batch_slots;
-        static inline t_s32 sm_quad_batch_slots_used_cnt = 0;
+        static inline t_s32 sm_quad_batch_slots_used_cnt;
+
+        static void Flush();
     };
 }
