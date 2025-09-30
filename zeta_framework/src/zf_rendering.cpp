@@ -13,29 +13,29 @@ namespace zf {
         }
 
         const bgfx::Memory* mem = bgfx::makeRef(file_contents.Raw(), file_contents.Len());
-
         return bgfx::createShader(mem);
     }
 
-    static bgfx::ProgramHandle LoadProgFromShaderFiles(const c_string_view vs_file_path, const c_string_view fs_file_path, c_mem_arena& temp_mem_arena) {
-        const auto vs = LoadShaderFromFile(vs_file_path.Raw(), temp_mem_arena);
+    bgfx::ProgramHandle CreateShaderProg(const c_array<const t_u8> vs_bin, const c_array<const t_u8> fs_bin, c_mem_arena& temp_mem_arena) {
+        const bgfx::Memory* vs_mem = bgfx::makeRef(vs_bin.Raw(), vs_bin.Len());
+        const bgfx::ShaderHandle vs_hdl = bgfx::createShader(vs_mem);
 
-        if (!bgfx::isValid(vs)) {
+        if (!bgfx::isValid(vs_hdl)) {
             return BGFX_INVALID_HANDLE;
         }
 
-        const auto fs = LoadShaderFromFile(fs_file_path.Raw(), temp_mem_arena);
+        const bgfx::Memory* fs_mem = bgfx::makeRef(fs_bin.Raw(), fs_bin.Len());
+        const bgfx::ShaderHandle fs_hdl = bgfx::createShader(fs_mem);
 
-        if (!bgfx::isValid(fs)) {
-            bgfx::destroy(vs);
+        if (!bgfx::isValid(fs_hdl)) {
             return BGFX_INVALID_HANDLE;
         }
 
-        return bgfx::createProgram(vs, fs, true);
+        return bgfx::createProgram(vs_hdl, fs_hdl, true);
     }
 
     static bgfx::DynamicVertexBufferHandle BuildQuadBatchVertBuf() {
-        const bgfx::VertexLayout layout = s_batch_vert::BuildLayout();
+        const bgfx::VertexLayout layout = s_quad_batch_vert::BuildLayout();
         return bgfx::createDynamicVertexBuffer(g_batch_slot_vert_cnt * g_batch_slot_cnt, layout);
     }
 
@@ -84,26 +84,26 @@ namespace zf {
 
         Clear(colors::g_cyan);
 
-        sm_quad_batch_prog = LoadProgFromShaderFiles("quad_vs.bin", "quad_fs.bin", temp_mem_arena);
+        sm_bgfx_res_arena.Clean();
+
+        sm_quad_batch_prog_bgfx_hdl = LoadProgFromShaderFiles("quad_vs.bin", "quad_fs.bin", temp_mem_arena);
+        sm_bgfx_res_arena.progs.Append(sm_quad_batch_prog_bgfx_hdl);
 
         if (!bgfx::isValid(sm_quad_batch_prog)) {
             bgfx::shutdown();
             return false;
         }
 
-        sm_quad_batch_vb = BuildQuadBatchVertBuf();
+        sm_quad_batch_vb_bgfx_hdl = BuildQuadBatchVertBuf();
 
         if (!bgfx::isValid(sm_quad_batch_vb)) {
-            bgfx::destroy(sm_quad_batch_prog);
             bgfx::shutdown();
             return false;
         }
 
-        sm_quad_batch_eb = BuildQuadBatchIndexBuf();
+        sm_quad_batch_eb_bgfx_hdl = BuildQuadBatchIndexBuf();
 
         if (!bgfx::isValid(sm_quad_batch_eb)) {
-            bgfx::destroy(sm_quad_batch_vb);
-            bgfx::destroy(sm_quad_batch_prog);
             bgfx::shutdown();
             return false;
         }
@@ -112,9 +112,7 @@ namespace zf {
     }
 
     void c_renderer::Shutdown() {
-        bgfx::destroy(sm_quad_batch_eb);
-        bgfx::destroy(sm_quad_batch_vb);
-        bgfx::destroy(sm_quad_batch_prog);
+        sm_bgfx_res_arena.Clean();
         bgfx::shutdown();
     }
 
@@ -178,12 +176,12 @@ namespace zf {
             return;
         }
 
-        const uint32_t vertCount = g_batch_slot_vert_cnt * sm_quad_batch_slots_used_cnt;
+        const uint32_t vert_cnt = g_batch_slot_vert_cnt * sm_quad_batch_slots_used_cnt;
 
-        const auto mem = bgfx::makeRef(sm_quad_batch_slots.buf_raw, sizeof(s_quad_batch_vert) * vertCount);
+        const auto mem = bgfx::makeRef(sm_quad_batch_slots.buf_raw, sizeof(s_quad_batch_vert) * vert_cnt);
         bgfx::update(sm_quad_batch_vb, 0, mem);
 
-        bgfx::setVertexBuffer(0, sm_quad_batch_vb, 0, vertCount);
+        bgfx::setVertexBuffer(0, sm_quad_batch_vb, 0, vert_cnt);
         bgfx::setIndexBuffer(sm_quad_batch_eb);
 
         bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A | BGFX_STATE_BLEND_ALPHA);

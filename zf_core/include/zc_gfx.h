@@ -49,8 +49,28 @@ namespace zf {
         constexpr s_v2 g_alignment_bottom_right = {1.0f, 1.0f};
     }
 
+    struct s_int_rgba {
+        t_u8 r = 0;
+        t_u8 g = 0;
+        t_u8 b = 0;
+        t_u8 a = 0;
+
+        t_u32 RGBA() const {
+            return *reinterpret_cast<const t_u32*>(this);
+        }
+    };
+
+    static inline s_int_rgba ToIntRGBA(const s_v4 flt) {
+        return {
+            static_cast<t_u8>(roundf(flt.x * 255.0f)),
+            static_cast<t_u8>(roundf(flt.y * 255.0f)),
+            static_cast<t_u8>(roundf(flt.z * 255.0f)),
+            static_cast<t_u8>(roundf(flt.w * 255.0f))
+        };
+    }
+
     struct s_rgba_texture {
-        s_v2_s32 tex_size;
+        s_v2_s32 dims;
         c_array<t_u8> px_data;
     };
 
@@ -68,4 +88,9 @@ namespace zf {
     };
 
     [[nodiscard]] bool LoadRGBATextureFromRawFile(s_rgba_texture& tex, c_mem_arena& mem_arena, const c_string_view file_path);
+
+    bool PackTexture(c_file_writer& fw, const s_rgba_texture rgba_tex);
+    void UnpackTexture(c_file_reader& fr, s_rgba_texture& rgba_tex);
+    bool PackFont(c_file_writer& fw, const s_font_arrangement& arrangement, const s_font_texture_meta tex_meta, const c_array<const t_u8> tex_rgba_px_data);
+    void UnpackFont(c_file_reader& fr, s_font_arrangement& arrangement, s_font_texture_meta tex_meta, c_array<const t_u8>& tex_rgba_px_data);
 }

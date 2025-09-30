@@ -60,6 +60,9 @@ namespace zf {
 
     class c_file_reader {
     public:
+        c_file_reader() = default;
+        c_file_reader(FILE* const fs) : m_fs(fs) {}
+
         ~c_file_reader() {
             if (m_fs && m_close_deferred) {
                 Close();
@@ -79,6 +82,10 @@ namespace zf {
 
         void DeferClose() {
             m_close_deferred = true;
+        }
+
+        FILE* Raw() {
+            return m_fs;
         }
 
         size_t CalcSize() {
@@ -112,6 +119,9 @@ namespace zf {
 
     class c_file_writer {
     public:
+        c_file_writer() = default;
+        c_file_writer(FILE* const fs) : m_fs(fs) {}
+
         ~c_file_writer() {
             if (m_fs && m_close_deferred) {
                 Close();
@@ -131,6 +141,10 @@ namespace zf {
 
         void DeferClose() {
             m_close_deferred = true;
+        }
+
+        FILE* Raw() {
+            return m_fs;
         }
 
         size_t CalcSize() {

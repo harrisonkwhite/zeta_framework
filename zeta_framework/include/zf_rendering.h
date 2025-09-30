@@ -5,32 +5,72 @@
 #include <zc.h>
 
 namespace zf {
-    // @todo: We need a module for the generic graphics abstraction, another for the renderer.
+    class c_texture_group {
+    public:
+        bool LoadFromPacked(c_file_reader& fr, const int cnt, c_mem_arena& mem_arena);
+        void Unload();
 
-    struct s_int_rgba {
-        t_u8 r = 0;
-        t_u8 g = 0;
-        t_u8 b = 0;
-        t_u8 a = 0;
-
-        t_u32 RGBA() const {
-            return *reinterpret_cast<const t_u32*>(this);
-        }
+    private:
+        c_array<const bgfx::TextureHandle> m_bgfx_hdls;
+        c_array<const s_v2_s32> m_sizes;
     };
 
-    static inline s_int_rgba ToIntRGBA(const s_v4 flt) {
-        return {
-            static_cast<t_u8>(roundf(flt.x * 255.0f)),
-            static_cast<t_u8>(roundf(flt.y * 255.0f)),
-            static_cast<t_u8>(roundf(flt.z * 255.0f)),
-            static_cast<t_u8>(roundf(flt.w * 255.0f))
-        };
-    }
+    class c_font_group {
+    public:
+        bool LoadFromPacked(c_file_reader& fr, const int cnt, c_mem_arena& mem_arena);
+        void Unload();
+
+    private:
+        c_array<const bgfx::TextureHandle> m_bgfx_tex_hdls;
+        c_array<const s_font_arrangement> m_arrangements;
+        c_array<const s_font_texture_meta> m_tex_metas;
+    };
+
+    class c_shader_prog_group {
+    public:
+        bool LoadFromPacked(c_file_reader& fr, const int cnt, c_mem_arena& mem_arena);
+        void Unload();
+
+    private:
+        c_array<const bgfx::ProgramHandle> m_bgfx_hdls;
+    };
+
+    struct s_bgfx_resource_arena {
+        c_array_list<bgfx::DynamicVertexBufferHandle> vert_bufs;
+        c_array_list<bgfx::IndexBufferHandle> elem_bufs;
+        c_array_list<bgfx::ProgramHandle> progs;
+        c_array_list<bgfx::TextureHandle> textures;
+
+        void Init(const int vert_buf_limit, const int elem_buf_limit, const int prog_limit, const int tex_limit);
+        void Clean();
+    };
 
     constexpr t_s32 g_batch_slot_cnt = 8192;
     constexpr t_s32 g_batch_slot_vert_cnt = 4;
     constexpr t_s32 g_batch_slot_elem_cnt = 6;
     static_assert(g_batch_slot_elem_cnt * g_batch_slot_cnt <= USHRT_MAX, "Batch slot count is too high!");
+
+    struct s_quad_batch_vert {
+        s_v2 vert_coord;
+        s_v2 pos;
+        s_v2 size;
+        float rot = 0.0f;
+        s_v4 blend;
+
+        static bgfx::VertexLayout BuildLayout() {
+            bgfx::VertexLayout layout;
+
+            layout.begin()
+                .add(bgfx::Attrib::Position, 2, bgfx::AttribType::Float)
+                .add(bgfx::Attrib::TexCoord0, 2, bgfx::AttribType::Float)
+                .add(bgfx::Attrib::TexCoord1, 2, bgfx::AttribType::Float)
+                .add(bgfx::Attrib::TexCoord2, 1, bgfx::AttribType::Float)
+                .add(bgfx::Attrib::Color0, 4, bgfx::AttribType::Float)
+                .end();
+
+            return layout;
+        }
+    };
 
     class c_renderer {
     public:
@@ -48,34 +88,14 @@ namespace zf {
         static void Flush();
 
     private:
-        struct s_quad_batch_vert {
-            s_v2 vert_coord;
-            s_v2 pos;
-            s_v2 size;
-            float rot = 0.0f;
-            s_v4 blend;
-
-            static bgfx::VertexLayout BuildVertLayout() {
-                bgfx::VertexLayout layout;
-
-                layout.begin()
-                    .add(bgfx::Attrib::Position, 2, bgfx::AttribType::Float)
-                    .add(bgfx::Attrib::TexCoord0, 2, bgfx::AttribType::Float)
-                    .add(bgfx::Attrib::TexCoord1, 2, bgfx::AttribType::Float)
-                    .add(bgfx::Attrib::TexCoord2, 1, bgfx::AttribType::Float)
-                    .add(bgfx::Attrib::Color0, 4, bgfx::AttribType::Float)
-                    .end();
-
-                return layout;
-            }
-        };
-
         using t_quad_batch_slot = s_static_array<s_quad_batch_vert, g_batch_slot_vert_cnt>;
 
-        static inline bgfx::ProgramHandle sm_quad_batch_prog;
+        static inline s_bgfx_resource_arena sm_bgfx_res_arena;
 
-        static inline bgfx::DynamicVertexBufferHandle sm_quad_batch_vb;
-        static inline bgfx::IndexBufferHandle sm_quad_batch_eb;
+        static inline bgfx::ProgramHandle sm_quad_batch_prog_bgfx_hdl;
+
+        static inline bgfx::DynamicVertexBufferHandle sm_quad_batch_vb_bgfx_hdl;
+        static inline bgfx::IndexBufferHandle sm_quad_batch_eb_bgfx_hdl;
 
         static inline s_static_array<t_quad_batch_slot, g_batch_slot_cnt> sm_quad_batch_slots;
         static inline t_s32 sm_quad_batch_slots_used_cnt = 0;

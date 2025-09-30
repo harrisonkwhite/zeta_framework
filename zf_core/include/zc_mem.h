@@ -108,6 +108,56 @@ namespace zf {
         int m_len = 0;
     };
 
+    template<typename tp_type>
+    class c_array_list {
+    public:
+        c_array_list() = default;
+
+        c_array_list(tp_type* const buf, const int cap, const int len = 0) : m_arr(buf, cap), m_len(len) {
+            assert(len >= 0 && len <= cap);
+        }
+
+        tp_type* Raw() const {
+            return m_arr.Raw();
+        }
+
+        int Len() const {
+            return m_len;
+        }
+
+        int Cap() const {
+            return m_arr.Len();
+        }
+
+        bool IsEmpty() const {
+            return m_len == 0;
+        }
+
+        bool IsFull() const {
+            return m_len == Cap();
+        }
+
+        void Append(const tp_type& elem) {
+            assert(!IsFull());
+
+            m_arr[m_len] = elem;
+            m_len++;
+        }
+
+        tp_type& operator[](const int index) const {
+            assert(index < m_len);
+            return m_arr[index];
+        }
+
+        c_array_list<const tp_type> View() const {
+            return {m_arr.Raw(), m_arr.Len(), m_len};
+        }
+
+    private:
+        c_array<tp_type> m_arr;
+        int m_len = 0;
+    };
+
     template<typename tp_type, int tp_len>
     struct s_static_array {
         tp_type buf_raw[tp_len] = {};

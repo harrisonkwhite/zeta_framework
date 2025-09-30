@@ -5,9 +5,17 @@
 
 namespace zf {
     static constexpr size_t g_mem_arena_size = Megabytes(20);
-    static const c_string_view g_json_file_path = "asset_packing_instrs.json"; // TODO: Maybe pass this in through command-line arguments instead?
+    static const c_string_view g_output_file_path = "assets.zfdat";
+    static const c_string_view g_json_file_path = "asset_packing_instrs.json";
 
     static bool PackAssets(cJSON* const cj, c_mem_arena& temp_mem_arena) {
+        c_file_writer fw;
+        fw.DeferClose();
+
+        if (!fw.Open(g_output_file_path)) {
+            return false;
+        }
+
         if (!cJSON_IsArray(cj)) {
             return false;
         }
@@ -18,26 +26,23 @@ namespace zf {
             const cJSON* const cj_item = cJSON_GetArrayItem(cj, i);
 
             const cJSON* const cj_type = cJSON_GetObjectItem(cj_item, "type");
-            const cJSON* const cj_output_file_path = cJSON_GetObjectItem(cj_item, "output_file_path");
 
-            if (!cJSON_IsString(cj_type) || !cJSON_IsString(cj_output_file_path)) {
-                ZF_LOG_ERROR("Invalid JSON item at index %d; \"type\" and \"output_file_path\" should be strings!", i);
+            if (!cJSON_IsString(cj_type)) {
+                ZF_LOG_ERROR("Invalid JSON item at index %d; \"type\" should be a present string!", i);
                 return false;
             }
-
-            const c_string_view output_file_path = cj_output_file_path->valuestring;
 
             if (strcmp(cj_type->valuestring, "texture") == 0) {
                 const cJSON* const cj_file_path = cJSON_GetObjectItem(cj_item, "file_path");
 
                 if (!cJSON_IsString(cj_file_path)) {
-                    ZF_LOG_ERROR("Invalid JSON item at index %d; \"file_path\" should be a string for texture type!", i);
+                    ZF_LOG_ERROR("Invalid JSON item at index %d; \"file_path\" should be a string!", i);
                     return false;
                 }
 
                 const c_string_view file_path = cj_file_path->valuestring;
 
-                if (!PackTexture(file_path, output_file_path, temp_mem_arena)) {
+                if (!PackTextureFromRawFile(fw, file_path, temp_mem_arena)) {
                     ZF_LOG_ERROR("Failed to pack texture with file path \"%s\"!", file_path.Raw());
                     return false;
                 }
@@ -46,30 +51,34 @@ namespace zf {
                 const cJSON* const cj_height = cJSON_GetObjectItem(cj_item, "height");
 
                 if (!cJSON_IsString(cj_file_path) || !cJSON_IsNumber(cj_height)) {
-                    ZF_LOG_ERROR("Invalid JSON item at index %d; \"file_path\" should be a string and \"height\" should be a number for font type!", i);
+                    ZF_LOG_ERROR("Invalid JSON item at index %d; \"file_path\" should be a string and \"height\" should be a number!", i);
                     return false;
                 }
 
                 const c_string_view file_path = cj_file_path->valuestring;
 
-                if (!PackFont(file_path, cj_height->valueint, output_file_path, temp_mem_arena)) {
+                if (!PackFontFromRawFile(fw, file_path, cj_height->valueint, temp_mem_arena)) {
                     ZF_LOG_ERROR("Failed to pack font with file path \"%s\" and height %d!", file_path.Raw(), cj_height->valueint);
                     return false;
                 }
             } else if (strcmp(cj_type->valuestring, "shader_prog") == 0) {
-                const cJSON* const cj_vert_file_path = cJSON_GetObjectItem(cj_item, "vert_file_path");
-                const cJSON* const cj_frag_file_path = cJSON_GetObjectItem(cj_item, "frag_file_path");
+                const cJSON* const cj_vs_file_path = cJSON_GetObjectItem(cj_item, "vs_file_path");
+                const cJSON* const cj_fs_file_path = cJSON_GetObjectItem(cj_item, "fs_file_path");
+                const cJSON* const cj_varying_def_file_path = cJSON_GetObjectItem(cj_item, "varying_def_file_path");
 
-                if (!cJSON_IsString(cj_vert_file_path) || !cJSON_IsString(cj_frag_file_path)) {
-                    ZF_LOG_ERROR("Invalid JSON item at index %d; \"vert_file_path\" and \"frag_file_path\" should be strings for shader program type!", i);
+                if (!cJSON_IsString(cj_vs_file_path)
+                    || !cJSON_IsString(cj_fs_file_path)
+                    || !cJSON_IsString(cj_varying_def_file_path)) {
+                    ZF_LOG_ERROR("Invalid JSON item at index %d; \"vs_file_path\", \"fs_file_path\", and \"varying_def_file_path\" should be strings!", i);
                     return false;
                 }
 
-                const c_string_view vert_file_path = cj_vert_file_path->valuestring;
-                const c_string_view frag_file_path = cj_frag_file_path->valuestring;
+                const c_string_view vert_file_path = cj_vs_file_path->valuestring;
+                const c_string_view frag_file_path = cj_fs_file_path->valuestring;
+                const c_string_view varying_def_file_path = cj_varying_def_file_path->valuestring;
 
-                if (!PackShaderProg(vert_file_path, frag_file_path, output_file_path, temp_mem_arena)) {
-                    ZF_LOG_ERROR("Failed to pack shader program with vertex shader file path \"%s\" and fragment shader file path \"%s\"!", vert_file_path.Raw(), frag_file_path.Raw());
+                if (!PackShaderProgFromRawFiles(fw, vert_file_path, frag_file_path, varying_def_file_path)) {
+                    ZF_LOG_ERROR("Failed to pack shader program with vertex shader file path \"%s\", fragment shader file path \"%s\", and varying definition file path \"%s\"!", vert_file_path.Raw(), frag_file_path.Raw(), varying_def_file_path.Raw());
                     return false;
                 }
             }

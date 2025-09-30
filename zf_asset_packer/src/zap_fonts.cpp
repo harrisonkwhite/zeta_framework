@@ -87,7 +87,7 @@ namespace zf {
             t_u8* const stb_bitmap = stbtt_GetCodepointBitmap(&stb_font_info, scale, scale, chr, nullptr, nullptr, nullptr, nullptr);
 
             if (!stb_bitmap) {
-                //ZF_LOG_ERROR("Failed to get bitmap for character '%c' through STB!", chr);
+                ZF_LOG_ERROR("Failed to get bitmap for character '%c' through STB!", chr);
                 return {};
             }
 
@@ -109,34 +109,7 @@ namespace zf {
         return rgba_px_data.View();
     }
 
-    static bool OutputFontFile(const c_string_view file_path, const s_font_arrangement& arrangement, const s_font_texture_meta tex_meta, const c_array<const t_u8> tex_rgba_px_data) {
-        c_file_writer fw;
-        fw.DeferClose();
-
-        if (!fw.Open(file_path)) {
-            ZF_LOG_ERROR("Failed to open \"%s\" for writing!", file_path.Raw());
-            return false;
-        }
-
-        if (!fw.WriteItem(arrangement)) {
-            ZF_LOG_ERROR("Failed to write font arrangement to file \"%s\"!", file_path.Raw());
-            return false;
-        }
-
-        if (!fw.WriteItem(tex_meta)) {
-            ZF_LOG_ERROR("Failed to write font texture metadata to file \"%s\"!", file_path.Raw());
-            return false;
-        }
-
-        if (fw.Write(tex_rgba_px_data) < tex_rgba_px_data.Len()) {
-            ZF_LOG_ERROR("Failed to write font texture RGBA pixel data to file \"%s\"!", file_path.Raw());
-            return false;
-        }
-
-        return true;
-    }
-
-    bool PackFont(const c_string_view file_path, const t_s32 height, const c_string_view output_file_path, c_mem_arena& temp_mem_arena) {
+    bool PackFontFromRawFile(c_file_writer& fw, const c_string_view file_path, const t_s32 height, c_mem_arena& temp_mem_arena) {
         if (height <= 0) {
             ZF_LOG_ERROR("Invalid font height %d!", height);
             return false;
@@ -175,7 +148,8 @@ namespace zf {
             return false;
         }
 
-        if (!OutputFontFile(output_file_path, arrangement, tex_meta, tex_rgba_px_data)) {
+        if (!PackFont(fw, arrangement, tex_meta, tex_rgba_px_data)) {
+            ZF_LOG_ERROR("Failed to pack font!");
             return false;
         }
 
