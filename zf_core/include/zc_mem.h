@@ -356,6 +356,10 @@ namespace zf {
             return ptr;
         }
 
+        size_t Offs() {
+            return m_offs;
+        }
+
         void Rewind(const size_t offs) {
             assert(offs <= m_size);
             m_offs = offs;

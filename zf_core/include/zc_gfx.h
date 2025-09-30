@@ -88,9 +88,11 @@ namespace zf {
     };
 
     [[nodiscard]] bool LoadRGBATextureFromRawFile(s_rgba_texture& tex, c_mem_arena& mem_arena, const c_string_view file_path);
+    bool LoadFontFromRawFile(s_font_arrangement& arrangement, s_font_texture_meta& tex_meta, c_array<const t_u8>& tex_rgba_px_data, const c_string_view file_path, const t_s32 height, c_mem_arena& temp_mem_arena);
 
     bool PackTexture(c_file_writer& fw, const s_rgba_texture rgba_tex);
     void UnpackTexture(c_file_reader& fr, s_rgba_texture& rgba_tex);
+
     bool PackFont(c_file_writer& fw, const s_font_arrangement& arrangement, const s_font_texture_meta tex_meta, const c_array<const t_u8> tex_rgba_px_data);
     void UnpackFont(c_file_reader& fr, s_font_arrangement& arrangement, s_font_texture_meta tex_meta, c_array<const t_u8>& tex_rgba_px_data);
 }

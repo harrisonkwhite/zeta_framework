@@ -5,64 +5,6 @@
 #include "zf_window.h"
 
 namespace zf {
-    static bgfx::ShaderHandle LoadShaderFromFile(const c_string_view file_path, c_mem_arena& temp_mem_arena) {
-        const c_array<t_u8> file_contents = LoadFileContents(file_path, temp_mem_arena, false);
-
-        if (file_contents.IsEmpty()) {
-            return BGFX_INVALID_HANDLE;
-        }
-
-        const bgfx::Memory* mem = bgfx::makeRef(file_contents.Raw(), file_contents.Len());
-        return bgfx::createShader(mem);
-    }
-
-    bgfx::ProgramHandle CreateShaderProg(const c_array<const t_u8> vs_bin, const c_array<const t_u8> fs_bin, c_mem_arena& temp_mem_arena) {
-        const bgfx::Memory* vs_mem = bgfx::makeRef(vs_bin.Raw(), vs_bin.Len());
-        const bgfx::ShaderHandle vs_hdl = bgfx::createShader(vs_mem);
-
-        if (!bgfx::isValid(vs_hdl)) {
-            return BGFX_INVALID_HANDLE;
-        }
-
-        const bgfx::Memory* fs_mem = bgfx::makeRef(fs_bin.Raw(), fs_bin.Len());
-        const bgfx::ShaderHandle fs_hdl = bgfx::createShader(fs_mem);
-
-        if (!bgfx::isValid(fs_hdl)) {
-            return BGFX_INVALID_HANDLE;
-        }
-
-        return bgfx::createProgram(vs_hdl, fs_hdl, true);
-    }
-
-    static bgfx::DynamicVertexBufferHandle BuildQuadBatchVertBuf() {
-        const bgfx::VertexLayout layout = s_quad_batch_vert::BuildLayout();
-        return bgfx::createDynamicVertexBuffer(g_batch_slot_vert_cnt * g_batch_slot_cnt, layout);
-    }
-
-    static bgfx::IndexBufferHandle BuildQuadBatchIndexBuf() {
-        const int index_cnt = g_batch_slot_elem_cnt * g_batch_slot_cnt;
-
-        const auto indices_mem = bgfx::alloc(sizeof(t_u16) * index_cnt);
-
-        if (!indices_mem) {
-            ZF_LOG_ERROR("Failed to allocate memory for quad batch indices!");
-            return BGFX_INVALID_HANDLE;
-        }
-
-        const c_array<t_u16> indices = {reinterpret_cast<t_u16*>(indices_mem->data), index_cnt};
-
-        for (int i = 0; i < g_batch_slot_cnt; i++) {
-            indices[(i * 6) + 0] = (i * 4) + 0;
-            indices[(i * 6) + 1] = (i * 4) + 1;
-            indices[(i * 6) + 2] = (i * 4) + 2;
-            indices[(i * 6) + 3] = (i * 4) + 2;
-            indices[(i * 6) + 4] = (i * 4) + 3;
-            indices[(i * 6) + 5] = (i * 4) + 0;
-        }
-
-        return bgfx::createIndexBuffer(indices_mem);
-    }
-
     bool c_renderer::Init(c_mem_arena& temp_mem_arena) {
         const s_v2_s32 fb_size = c_window::GetFramebufferSize();
 
@@ -82,37 +24,27 @@ namespace zf {
             return false;
         }
 
-        Clear(colors::g_cyan);
-
-        sm_bgfx_res_arena.Clean();
-
-        sm_quad_batch_prog_bgfx_hdl = LoadProgFromShaderFiles("quad_vs.bin", "quad_fs.bin", temp_mem_arena);
-        sm_bgfx_res_arena.progs.Append(sm_quad_batch_prog_bgfx_hdl);
-
-        if (!bgfx::isValid(sm_quad_batch_prog)) {
-            bgfx::shutdown();
-            return false;
-        }
-
         sm_quad_batch_vb_bgfx_hdl = BuildQuadBatchVertBuf();
 
-        if (!bgfx::isValid(sm_quad_batch_vb)) {
+        if (!bgfx::isValid(sm_quad_batch_vb_bgfx_hdl)) {
             bgfx::shutdown();
             return false;
         }
 
         sm_quad_batch_eb_bgfx_hdl = BuildQuadBatchIndexBuf();
 
-        if (!bgfx::isValid(sm_quad_batch_eb)) {
+        if (!bgfx::isValid(sm_quad_batch_eb_bgfx_hdl)) {
             bgfx::shutdown();
             return false;
         }
+
+        Clear(colors::g_cyan);
 
         return true;
     }
 
     void c_renderer::Shutdown() {
-        sm_bgfx_res_arena.Clean();
+        // @todo: Clean up.
         bgfx::shutdown();
     }
 
@@ -143,7 +75,7 @@ namespace zf {
     }
 
     void c_renderer::Draw(const s_v2 pos, const s_v2 size, const s_v2 origin, const float rot, const s_v4 blend) {
-        if (sm_quad_batch_slots_used_cnt == g_batch_slot_cnt) {
+        if (sm_quad_batch_slots_used_cnt == g_quad_batch_slot_cnt) {
             Flush();
             Draw(pos, size, origin, rot, blend);
             return;
@@ -176,17 +108,17 @@ namespace zf {
             return;
         }
 
-        const uint32_t vert_cnt = g_batch_slot_vert_cnt * sm_quad_batch_slots_used_cnt;
+        const uint32_t vert_cnt = g_quad_batch_slot_vert_cnt * sm_quad_batch_slots_used_cnt;
 
         const auto mem = bgfx::makeRef(sm_quad_batch_slots.buf_raw, sizeof(s_quad_batch_vert) * vert_cnt);
-        bgfx::update(sm_quad_batch_vb, 0, mem);
+        bgfx::update(sm_quad_batch_vb_bgfx_hdl, 0, mem);
 
-        bgfx::setVertexBuffer(0, sm_quad_batch_vb, 0, vert_cnt);
-        bgfx::setIndexBuffer(sm_quad_batch_eb);
+        bgfx::setVertexBuffer(0, sm_quad_batch_vb_bgfx_hdl, 0, vert_cnt);
+        bgfx::setIndexBuffer(sm_quad_batch_eb_bgfx_hdl);
 
         bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A | BGFX_STATE_BLEND_ALPHA);
 
-        bgfx::submit(0, sm_quad_batch_prog);
+        bgfx::submit(0, sm_quad_batch_prog_bgfx_hdl);
 
         sm_quad_batch_slots_used_cnt = 0;
     }

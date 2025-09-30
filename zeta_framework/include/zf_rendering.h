@@ -1,63 +1,75 @@
 #pragma once
 
 #include <bgfx/bgfx.h>
-#include <bgfx/platform.h>
 #include <zc.h>
+#include "zf_assets.h"
 
 namespace zf {
-    class c_texture_group {
+    constexpr t_s32 g_quad_batch_slot_cnt = 8192;
+    constexpr t_s32 g_quad_batch_slot_vert_cnt = 4;
+    constexpr t_s32 g_quad_batch_slot_elem_cnt = 6;
+    static_assert(g_quad_batch_slot_elem_cnt * g_quad_batch_slot_cnt <= USHRT_MAX, "Quad batch slot count is too high!");
+
+    enum class ec_gfx_resource_type {
+        invalid,
+        vert_buf,
+        index_buf,
+        shader_prog,
+        texture
+    };
+
+    struct s_gfx_resource_hdl {
+        t_u16 raw_bgfx;
+        ec_gfx_resource_type type;
+    };
+
+    class c_gfx_resource_arena {
     public:
-        bool LoadFromPacked(c_file_reader& fr, const int cnt, c_mem_arena& mem_arena);
-        void Unload();
+        s_gfx_resource_hdl CreateVertBuf(const int vert_cnt) {
+        }
+
+        void Clean() {
+        }
 
     private:
-        c_array<const bgfx::TextureHandle> m_bgfx_hdls;
-        c_array<const s_v2_s32> m_sizes;
+        c_array_list<s_gfx_resource_hdl> m_hdls;
     };
 
-    class c_font_group {
+    class c_quad_batch_bgfx_resources {
     public:
-        bool LoadFromPacked(c_file_reader& fr, const int cnt, c_mem_arena& mem_arena);
-        void Unload();
+        bool Init() {
+            vb_hdl = GenVertBuf();
+
+            if (!bgfx::isValid(vb_hdl)) {
+                return false;
+            }
+
+            ib_hdl = GenIndexBuf();
+
+            if (!bgfx::isValid(vb_hdl)) {
+                return false;
+            }
+
+            return true;
+        }
+
+        void Clean() {
+            bgfx::destroy(prog_hdl);
+            prog_hdl = BGFX_INVALID_HANDLE;
+
+            bgfx::destroy(ib_hdl);
+            ib_hdl = BGFX_INVALID_HANDLE;
+
+            bgfx::destroy(vb_hdl);
+            vb_hdl = BGFX_INVALID_HANDLE;
+        }
 
     private:
-        c_array<const bgfx::TextureHandle> m_bgfx_tex_hdls;
-        c_array<const s_font_arrangement> m_arrangements;
-        c_array<const s_font_texture_meta> m_tex_metas;
-    };
+        bgfx::ProgramHandle prog_hdl = BGFX_INVALID_HANDLE;
+        bgfx::DynamicVertexBufferHandle vb_hdl = BGFX_INVALID_HANDLE;
+        bgfx::IndexBufferHandle ib_hdl = BGFX_INVALID_HANDLE;
 
-    class c_shader_prog_group {
-    public:
-        bool LoadFromPacked(c_file_reader& fr, const int cnt, c_mem_arena& mem_arena);
-        void Unload();
-
-    private:
-        c_array<const bgfx::ProgramHandle> m_bgfx_hdls;
-    };
-
-    struct s_bgfx_resource_arena {
-        c_array_list<bgfx::DynamicVertexBufferHandle> vert_bufs;
-        c_array_list<bgfx::IndexBufferHandle> elem_bufs;
-        c_array_list<bgfx::ProgramHandle> progs;
-        c_array_list<bgfx::TextureHandle> textures;
-
-        void Init(const int vert_buf_limit, const int elem_buf_limit, const int prog_limit, const int tex_limit);
-        void Clean();
-    };
-
-    constexpr t_s32 g_batch_slot_cnt = 8192;
-    constexpr t_s32 g_batch_slot_vert_cnt = 4;
-    constexpr t_s32 g_batch_slot_elem_cnt = 6;
-    static_assert(g_batch_slot_elem_cnt * g_batch_slot_cnt <= USHRT_MAX, "Batch slot count is too high!");
-
-    struct s_quad_batch_vert {
-        s_v2 vert_coord;
-        s_v2 pos;
-        s_v2 size;
-        float rot = 0.0f;
-        s_v4 blend;
-
-        static bgfx::VertexLayout BuildLayout() {
+        static bgfx::VertexLayout GenVertLayout() {
             bgfx::VertexLayout layout;
 
             layout.begin()
@@ -70,7 +82,46 @@ namespace zf {
 
             return layout;
         }
+
+        static bgfx::DynamicVertexBufferHandle GenVertBuf() {
+            const bgfx::VertexLayout layout = GenVertLayout();
+            return bgfx::createDynamicVertexBuffer(g_quad_batch_slot_vert_cnt * g_quad_batch_slot_cnt, layout);
+        }
+
+        static bgfx::IndexBufferHandle GenIndexBuf() {
+            const int index_cnt = g_quad_batch_slot_elem_cnt * g_quad_batch_slot_cnt;
+
+            const auto indices_mem = bgfx::alloc(sizeof(t_u16) * index_cnt);
+
+            if (!indices_mem) {
+                ZF_LOG_ERROR("Failed to allocate memory for quad batch indices!");
+                return BGFX_INVALID_HANDLE;
+            }
+
+            const c_array<t_u16> indices = {reinterpret_cast<t_u16*>(indices_mem->data), index_cnt};
+
+            for (int i = 0; i < g_quad_batch_slot_cnt; i++) {
+                indices[(i * 6) + 0] = (i * 4) + 0;
+                indices[(i * 6) + 1] = (i * 4) + 1;
+                indices[(i * 6) + 2] = (i * 4) + 2;
+                indices[(i * 6) + 3] = (i * 4) + 2;
+                indices[(i * 6) + 4] = (i * 4) + 3;
+                indices[(i * 6) + 5] = (i * 4) + 0;
+            }
+
+            return bgfx::createIndexBuffer(indices_mem);
+        }
     };
+
+    struct s_quad_batch_vert {
+        s_v2 vert_coord;
+        s_v2 pos;
+        s_v2 size;
+        float rot = 0.0f;
+        s_v4 blend;
+    };
+
+    using t_quad_batch_slot = s_static_array<s_quad_batch_vert, g_quad_batch_slot_vert_cnt>;
 
     class c_renderer {
     public:
@@ -88,16 +139,9 @@ namespace zf {
         static void Flush();
 
     private:
-        using t_quad_batch_slot = s_static_array<s_quad_batch_vert, g_batch_slot_vert_cnt>;
+        static inline c_quad_batch_bgfx_resources sm_quad_batch_bgfx_resources;
 
-        static inline s_bgfx_resource_arena sm_bgfx_res_arena;
-
-        static inline bgfx::ProgramHandle sm_quad_batch_prog_bgfx_hdl;
-
-        static inline bgfx::DynamicVertexBufferHandle sm_quad_batch_vb_bgfx_hdl;
-        static inline bgfx::IndexBufferHandle sm_quad_batch_eb_bgfx_hdl;
-
-        static inline s_static_array<t_quad_batch_slot, g_batch_slot_cnt> sm_quad_batch_slots;
+        static inline s_static_array<t_quad_batch_slot, g_quad_batch_slot_cnt> sm_quad_batch_slots;
         static inline t_s32 sm_quad_batch_slots_used_cnt = 0;
     };
 }
