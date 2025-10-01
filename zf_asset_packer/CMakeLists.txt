@@ -1,5 +1,3 @@
-project(zf_asset_packer CXX)
-
 add_executable(zf_asset_packer
     src/zap_entry.cpp
     src/zap_packing.cpp

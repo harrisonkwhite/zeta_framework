@@ -1,5 +1,3 @@
-project(zf_core CXX)
-
 add_library(zf_core STATIC
     src/zc_io.cpp
     src/zc_mem.cpp

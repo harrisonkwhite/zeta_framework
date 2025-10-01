@@ -2,6 +2,12 @@
 #include "bgfx/bgfx.h"
 
 namespace zf {
+    extern const uint8_t g_quad_vs[];
+    extern const size_t g_quad_vs_size;
+
+    extern const uint8_t g_quad_fs[];
+    extern const size_t g_quad_fs_size;
+
     static bgfx::ProgramHandle CreateShaderProg(const c_array<const t_u8> vs_bin, const c_array<const t_u8> fs_bin) {
         const bgfx::Memory* vs_mem = bgfx::makeRef(vs_bin.Raw(), vs_bin.Len());
         const bgfx::ShaderHandle vs_hdl = bgfx::createShader(vs_mem);
@@ -81,7 +87,7 @@ namespace zf {
     }
 
     static bool InitQuadBatchRenderable(s_renderable& renderable, c_gfx_resource_lifetime& gfx_res_lifetime, c_mem_arena& temp_mem_arena) {
-        renderable.prog_bgfx_hdl = LoadShaderProgFromRawFiles("zeta_framework/shaders/quad/vs.bin", "zeta_framework/shaders/quad/fs.bin", temp_mem_arena);
+        renderable.prog_bgfx_hdl = CreateShaderProg({g_quad_vs, static_cast<int>(g_quad_vs_size)}, {g_quad_fs, static_cast<int>(g_quad_fs_size)});
 
         if (!bgfx::isValid(renderable.prog_bgfx_hdl)) {
             return false;
