@@ -2,53 +2,57 @@
 #include <cstdlib>
 #include <zc.h>
 
-#ifdef _WIN32
-#include <fcntl.h>
-#include <io.h>
-#endif
-
 namespace zf {
-    void OutputCode(const c_string_view arr_subname) {
-        printf("#include <zc.h>\n");
-        printf("\n");
-        printf("namespace zf {\n");
+    bool OutputCode(const c_string_view input_file_path, const c_string_view output_file_path, const c_string_view arr_subname) {
+        c_file_reader input_reader;
+        input_reader.DeferClose();
 
-        printf("    const t_u8 g_%s[] = {", arr_subname.Raw());
-
-        size_t size = 0;
-        int c;
-
-        while ((c = getchar()) != EOF) {
-            const auto byte = static_cast<t_u8>(c);
-
-            if (size > 0) {
-                printf(", ");
-            }
-
-            printf("0x%02X", byte);
-
-            size++;
+        if (!input_reader.Open(input_file_path)) {
+            return false;
         }
 
-        printf("};\n");
+        c_file_writer output_writer;
+        output_writer.DeferClose();
 
-        printf("    const size_t g_%s_size = %zu;\n", arr_subname.Raw(), size);
-        printf("};\n");
+        if (!output_writer.Open(output_file_path)) {
+            return false;
+        }
+
+        fprintf(output_writer.Raw(), "#include <zc.h>\n");
+        fprintf(output_writer.Raw(), "\n");
+        fprintf(output_writer.Raw(), "namespace zf {\n");
+
+        fprintf(output_writer.Raw(), "    extern const t_u8 g_%s_raw[] = {", arr_subname.Raw());
+
+        t_u8 read_byte;
+        size_t read_cnt = 0;
+
+        while (input_reader.ReadItem(read_byte)) {
+            if (read_cnt > 0) {
+                fprintf(output_writer.Raw(), ", ");
+            }
+
+            fprintf(output_writer.Raw(), "0x%02X", read_byte);
+
+            read_cnt++;
+        }
+
+        fprintf(output_writer.Raw(), "};\n");
+
+        fprintf(output_writer.Raw(), "    extern const size_t g_%s_size = %zu;\n", arr_subname.Raw(), read_cnt);
+
+        fprintf(output_writer.Raw(), "}\n");
+
+        return true;
     }
 }
 
 int main(const int arg_cnt, const char* const* args) {
-#ifdef _WIN32
-    _setmode(_fileno(stdin), _O_BINARY);
-    _setmode(_fileno(stdout), _O_BINARY);
-#endif
-
-    if (arg_cnt != 2) {
-        ZF_LOG_ERROR("Invalid command-line argument count! Expected an array variable subname to be provided.");
+    if (arg_cnt != 4) {
+        ZF_LOG_ERROR("Invalid command-line argument count!");
+        ZF_LOG_ERROR("Usage: zf_bin_to_array <input_file_path> <output_file_path> <arr_subname>");
         return EXIT_FAILURE;
     }
 
-    zf::OutputCode(args[1]);
-
-    return EXIT_SUCCESS;
+    return zf::OutputCode(args[1], args[2], args[3]) ? EXIT_SUCCESS : EXIT_FAILURE;
 }

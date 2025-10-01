@@ -145,6 +145,14 @@ namespace zf {
             return {width, height};
         }
 
+        float Right() const {
+            return x + width;
+        }
+
+        float Bottom() const {
+            return y + height;
+        }
+
         bool operator==(const s_rect& other) const {
             return x == other.x && y == other.y && width == other.width && height == other.height;
         }
@@ -166,6 +174,14 @@ namespace zf {
 
         s_v2_s32 Size() const {
             return {width, height};
+        }
+
+        t_s32 Right() const {
+            return x + width;
+        }
+
+        t_s32 Bottom() const {
+            return y + height;
         }
 
         operator s_rect() const {

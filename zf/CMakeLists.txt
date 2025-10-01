@@ -17,7 +17,7 @@ function(embed_shader SHADER_NAME SHADER_TYPE)
             --profile s_5_0
             --varyingdef ${VD_FILE}
             -i ${CMAKE_CURRENT_SOURCE_DIR}/../external/bgfx.cmake/bgfx/src
-        COMMAND ${CMAKE_COMMAND} -E cat ${BIN_FILE} | ${BTA_EXE} ${SHADER_NAME} > ${CPP_FILE}
+        COMMAND ${BTA_EXE} ${BIN_FILE} ${CPP_FILE} ${SHADER_NAME}
         DEPENDS ${SRC_FILE} ${VD_FILE} shaderc zf_bin_to_array
         VERBATIM
     )
@@ -44,7 +44,7 @@ add_library(zf STATIC
     ${quad_fs_CPP}
 )
 
-add_dependencies(zf shaderc bin2c)
+add_dependencies(zf shaderc zf_bin_to_array)
 
 target_include_directories(zf PUBLIC
     include

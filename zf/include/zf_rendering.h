@@ -244,7 +244,7 @@ namespace zf {
         static bool Init(c_mem_arena& mem_arena, c_mem_arena& temp_mem_arena);
         static void Shutdown();
 
-        static c_gfx_resource_lifetime GFXResourceLifetime() {
+        static c_gfx_resource_lifetime& GFXResourceLifetime() {
             assert(sm_core.state == ec_renderer_state::initted);
             return sm_core.res_lifetime;
         }
@@ -265,7 +265,7 @@ namespace zf {
         static void EndFrame();
         static void SetView(const t_s32 view_index, const s_v4 clear_col = {});
         static void Clear(const s_v4 col);
-        static void Draw(const int tex_index, const c_texture_group& tex_group, const s_v2 pos, const s_v2 size, const s_v2 origin = origins::g_origin_top_left, const float rot = 0.0f, const s_v4 blend = colors::g_white);
+        static void Draw(const int tex_index, const c_texture_group& tex_group, const s_v2 pos, const s_v2 size, const s_rect_s32 src_rect = {}, const s_v2 origin = origins::g_origin_top_left, const float rot = 0.0f, const s_v4 blend = colors::g_white);
 
     private:
         static inline s_renderer_core sm_core;

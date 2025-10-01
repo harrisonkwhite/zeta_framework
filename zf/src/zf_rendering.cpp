@@ -1,12 +1,25 @@
 #include "zf_rendering.h"
-#include "bgfx/bgfx.h"
 
 namespace zf {
-    extern const uint8_t g_quad_vs[];
+    extern const t_u8 g_quad_vs_raw[];
     extern const size_t g_quad_vs_size;
 
-    extern const uint8_t g_quad_fs[];
+    extern const t_u8 g_quad_fs_raw[];
     extern const size_t g_quad_fs_size;
+
+    static s_rect_edges GenUVEdges(const s_rect_s32 src_rect, const s_v2_s32 tex_size) {
+        const s_v2 half_texel = {
+            0.5f / static_cast<float>(tex_size.x),
+            0.5f / static_cast<float>(tex_size.y)
+        };
+
+        return {
+            .left = (static_cast<float>(src_rect.x) + half_texel.x) / static_cast<float>(tex_size.x),
+            .top = (static_cast<float>(src_rect.y) + half_texel.y) / static_cast<float>(tex_size.y),
+            .right = (static_cast<float>(src_rect.x + src_rect.width) - half_texel.x) / static_cast<float>(tex_size.x),
+            .bottom = (static_cast<float>(src_rect.y + src_rect.height) - half_texel.y) / static_cast<float>(tex_size.y)
+        };
+    }
 
     static bgfx::ProgramHandle CreateShaderProg(const c_array<const t_u8> vs_bin, const c_array<const t_u8> fs_bin) {
         const bgfx::Memory* vs_mem = bgfx::makeRef(vs_bin.Raw(), vs_bin.Len());
@@ -87,7 +100,7 @@ namespace zf {
     }
 
     static bool InitQuadBatchRenderable(s_renderable& renderable, c_gfx_resource_lifetime& gfx_res_lifetime, c_mem_arena& temp_mem_arena) {
-        renderable.prog_bgfx_hdl = CreateShaderProg({g_quad_vs, static_cast<int>(g_quad_vs_size)}, {g_quad_fs, static_cast<int>(g_quad_fs_size)});
+        renderable.prog_bgfx_hdl = CreateShaderProg({g_quad_vs_raw, static_cast<int>(g_quad_vs_size)}, {g_quad_fs_raw, static_cast<int>(g_quad_fs_size)});
 
         if (!bgfx::isValid(renderable.prog_bgfx_hdl)) {
             return false;
@@ -224,7 +237,7 @@ namespace zf {
         bgfx::setViewClear(sm_core.active_view_index, BGFX_CLEAR_COLOR, 0x303030ff);
     }
 
-    void c_renderer::Draw(const int tex_index, const c_texture_group& tex_group, const s_v2 pos, const s_v2 size, const s_v2 origin, const float rot, const s_v4 blend) {
+    void c_renderer::Draw(const int tex_index, const c_texture_group& tex_group, const s_v2 pos, const s_v2 size, const s_rect_s32 src_rect, const s_v2 origin, const float rot, const s_v4 blend) {
         assert(sm_core.state == ec_renderer_state::rendering);
 
         const auto tex_bgfx_hdl = tex_group.GetTextureBGFXHandle(tex_index);
@@ -232,7 +245,7 @@ namespace zf {
         if (sm_core.quad_batch_slots_used_cnt == g_quad_batch_slot_cnt
             || (sm_core.quad_batch_slots_used_cnt > 0 && tex_bgfx_hdl.idx != sm_core.quad_batch_tex_bgfx_hdl.idx)) {
             Flush();
-            Draw(tex_index, tex_group, pos, size, origin, rot, blend);
+            Draw(tex_index, tex_group, pos, size, src_rect, origin, rot, blend);
             return;
         }
 
@@ -247,20 +260,25 @@ namespace zf {
             {0.0f - origin.x, 1.0f - origin.y}
         }};
 
-        const s_static_array<s_v2, 4> uvs = {{
-            {0.0f, 0.0f},
-            {1.0f, 0.0f},
-            {1.0f, 1.0f},
-            {0.0f, 1.0f}
-        }};
+        const auto tex_size = tex_group.GetTextureSize(tex_index);
 
-        // @todo: src_rect
-        /*const s_static_array<s_v2, 4> tex_coords = {{
-            {write_info.tex_coords.left, write_info.tex_coords.top},
-            {write_info.tex_coords.right, write_info.tex_coords.top},
-            {write_info.tex_coords.right, write_info.tex_coords.bottom},
-            {write_info.tex_coords.left, write_info.tex_coords.bottom}
-        }};*/
+        s_rect_s32 src_rect_to_use;
+
+        if (src_rect == s_rect_s32()) {
+            src_rect_to_use = {{}, tex_size};
+        } else {
+            assert(src_rect.x >= 0 && src_rect.y >= 0 && src_rect.Right() <= tex_size.x && src_rect.Bottom() <= tex_size.y);
+            src_rect_to_use = src_rect;
+        }
+
+        const s_rect_edges uvs_edges = GenUVEdges(src_rect_to_use, tex_size);
+
+        const s_static_array<s_v2, 4> uvs = {{
+            {uvs_edges.left, uvs_edges.top},
+            {uvs_edges.right, uvs_edges.top},
+            {uvs_edges.right, uvs_edges.bottom},
+            {uvs_edges.left, uvs_edges.bottom}
+        }};
 
         for (int i = 0; i < slot.Len(); i++) {
             slot[i] = {
