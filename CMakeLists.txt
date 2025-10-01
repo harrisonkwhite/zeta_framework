@@ -12,6 +12,7 @@ add_subdirectory(external/bgfx.cmake)
 
 add_subdirectory(zf)
 add_subdirectory(zf_asset_packer)
+add_subdirectory(zf_bin_to_array)
 add_subdirectory(zf_core)
 add_subdirectory(external/glfw)
 add_subdirectory(external/reproc)

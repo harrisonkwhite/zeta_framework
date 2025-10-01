@@ -1,5 +1,5 @@
 set(SHADERC_EXE $<TARGET_FILE:shaderc>)
-set(BIN2C_EXE $<TARGET_FILE:bin2c>)
+set(BTA_EXE $<TARGET_FILE:zf_bin_to_array>)
 
 function(embed_shader SHADER_NAME SHADER_TYPE)
     set(SRC_FILE ${CMAKE_CURRENT_SOURCE_DIR}/shaders/${SHADER_NAME}.sc)
@@ -17,14 +17,8 @@ function(embed_shader SHADER_NAME SHADER_TYPE)
             --profile s_5_0
             --varyingdef ${VD_FILE}
             -i ${CMAKE_CURRENT_SOURCE_DIR}/../external/bgfx.cmake/bgfx/src
-        COMMAND ${CMAKE_COMMAND} -E echo "#include <cstdint>" > ${CPP_FILE}
-        COMMAND ${CMAKE_COMMAND} -E echo "namespace zf {" >> ${CPP_FILE}
-        COMMAND ${BIN2C_EXE} -f ${BIN_FILE} -o ${CPP_FILE}.tmp -n g_${SHADER_NAME}
-        COMMAND ${CMAKE_COMMAND} -E cat ${CPP_FILE}.tmp >> ${CPP_FILE}
-        COMMAND ${CMAKE_COMMAND} -E rm ${CPP_FILE}.tmp
-        COMMAND ${CMAKE_COMMAND} -E echo "const size_t g_${SHADER_NAME}_size = sizeof(g_${SHADER_NAME});" >> ${CPP_FILE}
-        COMMAND ${CMAKE_COMMAND} -E echo "}" >> ${CPP_FILE}
-        DEPENDS ${SRC_FILE} ${VD_FILE} shaderc bin2c
+        COMMAND ${CMAKE_COMMAND} -E cat ${BIN_FILE} | ${BTA_EXE} ${SHADER_NAME} > ${CPP_FILE}
+        DEPENDS ${SRC_FILE} ${VD_FILE} shaderc zf_bin_to_array
         VERBATIM
     )
 
