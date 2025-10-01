@@ -62,6 +62,80 @@ namespace zf {
         return (width * y) + x;
     }
 
+    class c_mem_arena {
+    public:
+        bool Init(const size_t size) {
+            assert(!m_buf);
+
+            m_buf = static_cast<t_u8*>(calloc(size, 1));
+
+            if (!m_buf) {
+                return false;
+            }
+
+            m_size = size;
+
+            return true;
+        }
+
+        void Clean() {
+            assert(m_buf);
+
+            free(m_buf);
+            m_buf = nullptr;
+            m_size = 0;
+            m_offs = 0;
+        }
+
+        void* PushRaw(const size_t size, const size_t alignment) {
+            const size_t offs_aligned = AlignForward(m_offs, alignment);
+            const size_t offs_next = offs_aligned + size;
+
+            if (offs_next > m_size) {
+                return nullptr;
+            }
+
+            m_offs = offs_next;
+
+            return m_buf + offs_aligned;
+        }
+
+        template<typename tp_type>
+        tp_type* Push() {
+            static_assert(std::is_trivially_destructible_v<tp_type>);
+
+            tp_type* const ptr = static_cast<tp_type*>(PushRaw(sizeof(tp_type), alignof(tp_type)));
+
+            if (ptr) {
+                new (ptr) tp_type();
+            }
+
+            return ptr;
+        }
+
+        size_t Size() const {
+            return m_size;
+        }
+
+        size_t Offs() const {
+            return m_offs;
+        }
+
+        bool IsEmpty() const {
+            return m_offs == 0;
+        }
+
+        void Rewind(const size_t offs) {
+            assert(offs <= m_size);
+            m_offs = offs;
+        }
+
+    private:
+        t_u8* m_buf = nullptr;
+        size_t m_size = 0;
+        size_t m_offs = 0;
+    };
+
     template<typename tp_type>
     class c_array {
     public:
@@ -109,60 +183,6 @@ namespace zf {
 
     private:
         tp_type* m_buf = nullptr;
-        int m_len = 0;
-    };
-
-    template<typename tp_type>
-    class c_array_list {
-    public:
-        c_array_list() = default;
-
-        c_array_list(tp_type* const buf, const int cap, const int len = 0) : m_arr(buf, cap), m_len(len) {
-            assert(len >= 0 && len <= cap);
-        }
-
-        tp_type* Raw() const {
-            return m_arr.Raw();
-        }
-
-        int Len() const {
-            return m_len;
-        }
-
-        int Cap() const {
-            return m_arr.Len();
-        }
-
-        bool IsEmpty() const {
-            return m_len == 0;
-        }
-
-        bool IsFull() const {
-            return m_len == Cap();
-        }
-
-        void Append(const tp_type& elem) {
-            assert(!IsFull());
-
-            m_arr[m_len] = elem;
-            m_len++;
-        }
-
-        tp_type& operator[](const int index) const {
-            assert(index < m_len);
-            return m_arr[index];
-        }
-
-        c_array_list<const tp_type> View() const {
-            return {m_arr.Raw(), m_arr.Len(), m_len};
-        }
-
-        operator c_array_list<const tp_type>() const {
-            return View();
-        }
-
-    private:
-        c_array<tp_type> m_arr;
         int m_len = 0;
     };
 
@@ -311,72 +331,6 @@ namespace zf {
 
         c_array<t_u8> m_bytes;
         size_t m_bit_cnt;
-    };
-
-    class c_mem_arena {
-    public:
-        bool Init(const size_t size) {
-            assert(!m_buf);
-
-            m_buf = static_cast<t_u8*>(calloc(size, 1));
-
-            if (!m_buf) {
-                return false;
-            }
-
-            m_size = size;
-
-            return true;
-        }
-
-        void Clean() {
-            assert(m_buf);
-
-            free(m_buf);
-            m_buf = nullptr;
-            m_size = 0;
-            m_offs = 0;
-        }
-
-        void* PushRaw(const size_t size, const size_t alignment) {
-            const size_t offs_aligned = AlignForward(m_offs, alignment);
-            const size_t offs_next = offs_aligned + size;
-
-            if (offs_next > m_size) {
-                return nullptr;
-            }
-
-            m_offs = offs_next;
-
-            return m_buf + offs_aligned;
-        }
-
-        template<typename tp_type>
-        tp_type* Push() {
-            static_assert(std::is_trivially_destructible_v<tp_type>);
-
-            tp_type* const ptr = static_cast<tp_type*>(PushRaw(sizeof(tp_type), alignof(tp_type)));
-
-            if (ptr) {
-                new (ptr) tp_type();
-            }
-
-            return ptr;
-        }
-
-        size_t Offs() {
-            return m_offs;
-        }
-
-        void Rewind(const size_t offs) {
-            assert(offs <= m_size);
-            m_offs = offs;
-        }
-
-    private:
-        t_u8* m_buf = nullptr;
-        size_t m_size = 0;
-        size_t m_offs = 0;
     };
 
     class c_string_view {

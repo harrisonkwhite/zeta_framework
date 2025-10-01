@@ -17,9 +17,88 @@ namespace zf {
     constexpr t_s32 g_surf_limit = 128;
     static_assert(g_view_limit + g_surf_limit <= 256, "Needed view count exceeds BGFX limit!");
 
+    using t_bgfx_resource_hdl = t_u16;
+    static_assert(std::is_same_v<decltype(bgfx::ProgramHandle::idx), t_bgfx_resource_hdl>, "bgfx::ProgramHandle::idx is not t_u16!");
+
+    enum class ec_bgfx_resource_type : t_bgfx_resource_hdl {
+        prog,
+        uniform,
+        dynamic_vert_buf,
+        index_buf,
+        texture
+    };
+
+    struct s_bgfx_resource_hdl_wrapper {
+        t_bgfx_resource_hdl hdl = BGFX_INVALID_HANDLE;
+        ec_bgfx_resource_type type;
+
+        s_bgfx_resource_hdl_wrapper() = default;
+        s_bgfx_resource_hdl_wrapper(const bgfx::ProgramHandle prog_hdl) : hdl(prog_hdl.idx), type(ec_bgfx_resource_type::prog) {}
+        s_bgfx_resource_hdl_wrapper(const bgfx::UniformHandle uni_hdl) : hdl(uni_hdl.idx), type(ec_bgfx_resource_type::uniform) {}
+        s_bgfx_resource_hdl_wrapper(const bgfx::DynamicVertexBufferHandle dvb_hdl) : hdl(dvb_hdl.idx), type(ec_bgfx_resource_type::dynamic_vert_buf) {}
+        s_bgfx_resource_hdl_wrapper(const bgfx::IndexBufferHandle ib_hdl) : hdl(ib_hdl.idx), type(ec_bgfx_resource_type::index_buf) {}
+        s_bgfx_resource_hdl_wrapper(const bgfx::TextureHandle tex_hdl) : hdl(tex_hdl.idx), type(ec_bgfx_resource_type::texture) {}
+
+        bool IsValid() const {
+            const t_bgfx_resource_hdl invalid = BGFX_INVALID_HANDLE;
+            return hdl != invalid;
+        }
+    };
+
+    class c_gfx_resource_lifetime {
+    public:
+        bool Init(c_mem_arena& mem_arena, const int hdl_limit = 1024) {
+            assert(hdl_limit > 0);
+
+            m_hdls = PushArrayToMemArena<s_bgfx_resource_hdl_wrapper>(mem_arena, hdl_limit);
+
+            return !m_hdls.IsEmpty();
+        }
+
+        void Clean() {
+            for (int i = 0; i < m_hdls_used_cnt; i++) {
+                switch (m_hdls[i].type) {
+                    case ec_bgfx_resource_type::prog:
+                        bgfx::destroy(bgfx::ProgramHandle{m_hdls[i].hdl});
+                        break;
+
+                    case ec_bgfx_resource_type::uniform:
+                        bgfx::destroy(bgfx::UniformHandle{m_hdls[i].hdl});
+                        break;
+
+                    case ec_bgfx_resource_type::dynamic_vert_buf:
+                        bgfx::destroy(bgfx::DynamicVertexBufferHandle{m_hdls[i].hdl});
+                        break;
+
+                    case ec_bgfx_resource_type::index_buf:
+                        bgfx::destroy(bgfx::IndexBufferHandle{m_hdls[i].hdl});
+                        break;
+
+                    case ec_bgfx_resource_type::texture:
+                        bgfx::destroy(bgfx::TextureHandle{m_hdls[i].hdl});
+                        break;
+                }
+            }
+
+            *this = {};
+        }
+
+        void AddBGFXResource(const s_bgfx_resource_hdl_wrapper hdl_wrapper) {
+            assert(m_hdls_used_cnt < m_hdls.Len());
+            assert(hdl_wrapper.IsValid());
+
+            m_hdls[m_hdls_used_cnt] = hdl_wrapper;
+            m_hdls_used_cnt++;
+        }
+
+    private:
+        c_array<s_bgfx_resource_hdl_wrapper> m_hdls;
+        t_s32 m_hdls_used_cnt = 0;
+    };
+
     class c_texture_group {
     public:
-        bool LoadRaws(const c_array<const c_string_view> file_paths, c_mem_arena& mem_arena, c_mem_arena& temp_mem_arena) {
+        bool LoadRaws(const c_array<const c_string_view> file_paths, c_mem_arena& mem_arena, c_gfx_resource_lifetime& gfx_res_lifetime, c_mem_arena& temp_mem_arena) {
             assert(!m_loaded);
 
             m_bgfx_hdls = PushArrayToMemArena<bgfx::TextureHandle>(mem_arena, file_paths.Len());
@@ -46,6 +125,8 @@ namespace zf {
                 if (!bgfx::isValid(m_bgfx_hdls[i])) {
                     return false;
                 }
+
+                gfx_res_lifetime.AddBGFXResource(m_bgfx_hdls[i]);
 
                 m_sizes[i] = rgba.dims;
             }
@@ -81,8 +162,8 @@ namespace zf {
     private:
         bool m_loaded;
 
-        c_array<bgfx::TextureHandle> m_bgfx_hdls = {};
-        c_array<s_v2_s32> m_sizes = {};
+        c_array<bgfx::TextureHandle> m_bgfx_hdls;
+        c_array<s_v2_s32> m_sizes;
     };
 
     class c_font_group {
@@ -91,9 +172,9 @@ namespace zf {
         void Unload();
 
     private:
-        c_array<const bgfx::TextureHandle> m_bgfx_tex_hdls = {};
-        c_array<const s_font_arrangement> m_arrangements = {};
-        c_array<const s_font_texture_meta> m_tex_metas = {};
+        c_array<const bgfx::TextureHandle> m_bgfx_tex_hdls;
+        c_array<const s_font_arrangement> m_arrangements;
+        c_array<const s_font_texture_meta> m_tex_metas;
     };
 
     class c_shader_prog_group {
@@ -131,14 +212,6 @@ namespace zf {
         bgfx::UniformHandle tex_uni_bgfx_hdl = BGFX_INVALID_HANDLE;
         bgfx::DynamicVertexBufferHandle dvb_bgfx_hdl = BGFX_INVALID_HANDLE;
         bgfx::IndexBufferHandle index_bgfx_hdl = BGFX_INVALID_HANDLE;
-
-        void Clean() {
-            bgfx::destroy(index_bgfx_hdl);
-            bgfx::destroy(dvb_bgfx_hdl);
-            bgfx::destroy(prog_bgfx_hdl);
-
-            *this = {};
-        }
     };
 
     enum class ec_renderer_state {
@@ -149,6 +222,8 @@ namespace zf {
 
     struct s_renderer_core {
         ec_renderer_state state = ec_renderer_state::not_initted;
+
+        c_gfx_resource_lifetime res_lifetime;
 
         s_renderable quad_batch_renderable;
 
@@ -166,8 +241,13 @@ namespace zf {
         c_renderer(const c_renderer&) = delete;
         c_renderer& operator=(const c_renderer&) = delete;
 
-        static bool Init(c_mem_arena& temp_mem_arena);
+        static bool Init(c_mem_arena& mem_arena, c_mem_arena& temp_mem_arena);
         static void Shutdown();
+
+        static c_gfx_resource_lifetime GFXResourceLifetime() {
+            assert(sm_core.state == ec_renderer_state::initted);
+            return sm_core.res_lifetime;
+        }
 
         static void RefreshSize() {
             assert(sm_core.state == ec_renderer_state::initted);

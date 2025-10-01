@@ -80,47 +80,43 @@ namespace zf {
         return bgfx::createIndexBuffer(indices_mem);
     }
 
-    static bool InitQuadBatchRenderable(s_renderable& renderable, c_mem_arena& temp_mem_arena) {
+    static bool InitQuadBatchRenderable(s_renderable& renderable, c_gfx_resource_lifetime& gfx_res_lifetime, c_mem_arena& temp_mem_arena) {
         renderable.prog_bgfx_hdl = LoadShaderProgFromRawFiles("zeta_framework/shaders/quad/vs.bin", "zeta_framework/shaders/quad/fs.bin", temp_mem_arena);
 
         if (!bgfx::isValid(renderable.prog_bgfx_hdl)) {
-            goto err_a;
+            return false;
         }
+
+        gfx_res_lifetime.AddBGFXResource(renderable.prog_bgfx_hdl);
 
         renderable.tex_uni_bgfx_hdl = bgfx::createUniform("u_tex", bgfx::UniformType::Sampler);
 
         if (!bgfx::isValid(renderable.tex_uni_bgfx_hdl)) {
-            goto err_b;
+            return false;
         }
+
+        gfx_res_lifetime.AddBGFXResource(renderable.tex_uni_bgfx_hdl);
 
         renderable.dvb_bgfx_hdl = GenQuadBatchVertBuf();
 
         if (!bgfx::isValid(renderable.dvb_bgfx_hdl)) {
-            goto err_c;
+            return false;
         }
+
+        gfx_res_lifetime.AddBGFXResource(renderable.dvb_bgfx_hdl);
 
         renderable.index_bgfx_hdl = GenQuadBatchIndexBuf();
 
         if (!bgfx::isValid(renderable.index_bgfx_hdl)) {
-            goto err_d;
+            return false;
         }
 
+        gfx_res_lifetime.AddBGFXResource(renderable.index_bgfx_hdl);
+
         return true;
-
-err_d:
-        bgfx::destroy(renderable.dvb_bgfx_hdl);
-
-err_c:
-        bgfx::destroy(renderable.tex_uni_bgfx_hdl);
-
-err_b:
-        bgfx::destroy(renderable.prog_bgfx_hdl);
-
-err_a:
-        return false;
     }
 
-    bool c_renderer::Init(c_mem_arena& temp_mem_arena) {
+    bool c_renderer::Init(c_mem_arena& mem_arena, c_mem_arena& temp_mem_arena) {
         assert(sm_core.state == ec_renderer_state::not_initted);
 
         const s_v2_s32 fb_size = c_window::GetFramebufferSize();
@@ -141,8 +137,16 @@ err_a:
             return false;
         }
 
-        if (!InitQuadBatchRenderable(sm_core.quad_batch_renderable, temp_mem_arena)) {
+        if (!sm_core.res_lifetime.Init(mem_arena)) {
+            ZF_LOG_ERROR("Failed to initialise the renderer GFX resource lifetime!");
+            bgfx::shutdown();
+            return false;
+        }
+
+        if (!InitQuadBatchRenderable(sm_core.quad_batch_renderable, sm_core.res_lifetime, temp_mem_arena)) {
             ZF_LOG_ERROR("Failed to initialise the quad batch renderable!");
+            sm_core.res_lifetime.Clean();
+            bgfx::shutdown();
             return false;
         }
 
@@ -158,8 +162,7 @@ err_a:
     void c_renderer::Shutdown() {
         assert(sm_core.state == ec_renderer_state::initted);
 
-        sm_core.quad_batch_renderable.Clean();
-        bgfx::frame(); // @todo: Might not be needed?
+        sm_core.res_lifetime.Clean();
         bgfx::shutdown();
 
         sm_core = {};
