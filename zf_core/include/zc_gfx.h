@@ -95,4 +95,13 @@ namespace zf {
 
     bool PackFont(c_file_writer& fw, const s_font_arrangement& arrangement, const s_font_texture_meta tex_meta, const c_array<const t_u8> tex_rgba_px_data);
     void UnpackFont(c_file_reader& fr, s_font_arrangement& arrangement, s_font_texture_meta tex_meta, c_array<const t_u8>& tex_rgba_px_data);
+
+    struct s_font {
+        s_font_arrangement arrangement;
+        s_font_texture_meta tex_meta;
+    };
+
+    [[nodiscard]] bool GenStrChrRenderPositions(c_array<s_v2>& positions, c_mem_arena& mem_arena, const c_string_view str, const s_font_group& font_group, t_s32 font_index, s_v2 pos, s_v2 alignment);
+    [[nodiscard]] bool GenStrCollider(s_rect& rect, const c_string_view str, const s_font_group& font_group, t_s32 font_index, s_v2 pos, s_v2 alignment, c_mem_arena& temp_mem_arena);
+    [[nodiscard]] bool RenderStr(const s_rendering_context& rendering_context, const c_string_view str, const s_font_group& fonts, t_s32 font_index, s_v2 pos, s_v2 alignment, s_v4 color, c_mem_arena& temp_mem_arena);
 }

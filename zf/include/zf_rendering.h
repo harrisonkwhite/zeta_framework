@@ -2,10 +2,12 @@
 
 #include <bgfx/bgfx.h>
 #include <zc.h>
-#include "zc_gfx.h"
-#include "zc_math.h"
-#include "zc_mem.h"
-#include "zf_window.h"
+
+// @todo:
+// - Ensure that everything is possible WITHOUT using the asset packer.
+// - Move most string utility functions to the generic core library.
+
+// @todo: It might actually be simpler to NOT do this grouping. Textures are already grouped by arena/lifetime. Let the developer set up their own organisational systems (e.g. a single array containing textures from BOTH raw and packed sources). Only downside might be caching of texture sizes...
 
 namespace zf {
     constexpr t_s32 g_quad_batch_slot_cnt = 8192;
@@ -19,31 +21,6 @@ namespace zf {
 
     using t_bgfx_resource_hdl = t_u16;
     static_assert(std::is_same_v<decltype(bgfx::ProgramHandle::idx), t_bgfx_resource_hdl>, "bgfx::ProgramHandle::idx is not t_u16!");
-
-    enum class ec_bgfx_resource_type : t_bgfx_resource_hdl {
-        prog,
-        uniform,
-        dynamic_vert_buf,
-        index_buf,
-        texture
-    };
-
-    struct s_bgfx_resource_hdl_wrapper {
-        t_bgfx_resource_hdl hdl = BGFX_INVALID_HANDLE;
-        ec_bgfx_resource_type type;
-
-        s_bgfx_resource_hdl_wrapper() = default;
-        s_bgfx_resource_hdl_wrapper(const bgfx::ProgramHandle prog_hdl) : hdl(prog_hdl.idx), type(ec_bgfx_resource_type::prog) {}
-        s_bgfx_resource_hdl_wrapper(const bgfx::UniformHandle uni_hdl) : hdl(uni_hdl.idx), type(ec_bgfx_resource_type::uniform) {}
-        s_bgfx_resource_hdl_wrapper(const bgfx::DynamicVertexBufferHandle dvb_hdl) : hdl(dvb_hdl.idx), type(ec_bgfx_resource_type::dynamic_vert_buf) {}
-        s_bgfx_resource_hdl_wrapper(const bgfx::IndexBufferHandle ib_hdl) : hdl(ib_hdl.idx), type(ec_bgfx_resource_type::index_buf) {}
-        s_bgfx_resource_hdl_wrapper(const bgfx::TextureHandle tex_hdl) : hdl(tex_hdl.idx), type(ec_bgfx_resource_type::texture) {}
-
-        bool IsValid() const {
-            const t_bgfx_resource_hdl invalid = BGFX_INVALID_HANDLE;
-            return hdl != invalid;
-        }
-    };
 
     class c_gfx_resource_lifetime {
     public:
@@ -96,104 +73,13 @@ namespace zf {
         t_s32 m_hdls_used_cnt = 0;
     };
 
-    class c_texture_group {
-    public:
-        bool LoadRaws(const c_array<const c_string_view> file_paths, c_mem_arena& mem_arena, c_gfx_resource_lifetime& gfx_res_lifetime, c_mem_arena& temp_mem_arena) {
-            assert(!m_loaded);
+    struct s_texture {
+        // @idea: OPTIONALLY keep pixel data? nullptr otherwise?
+        s_v2_s32 size;
+        bgfx::TextureHandle bgfx_hdl = BGFX_INVALID_HANDLE;
 
-            m_bgfx_hdls = PushArrayToMemArena<bgfx::TextureHandle>(mem_arena, file_paths.Len());
-
-            if (m_bgfx_hdls.IsEmpty()) {
-                return false;
-            }
-
-            m_sizes = PushArrayToMemArena<s_v2_s32>(mem_arena, file_paths.Len());
-
-            if (m_sizes.IsEmpty()) {
-                return false;
-            }
-
-            for (int i = 0; i < file_paths.Len(); i++) {
-                s_rgba_texture rgba;
-
-                if (!LoadRGBATextureFromRawFile(rgba, temp_mem_arena, file_paths[i])) {
-                    return false;
-                }
-
-                m_bgfx_hdls[i] = bgfx::createTexture2D(static_cast<uint16_t>(rgba.dims.x), static_cast<uint16_t>(rgba.dims.y), false, 1, bgfx::TextureFormat::RGBA8, 0, bgfx::copy(rgba.px_data.Raw(), rgba.px_data.Len()));
-
-                if (!bgfx::isValid(m_bgfx_hdls[i])) {
-                    return false;
-                }
-
-                gfx_res_lifetime.AddBGFXResource(m_bgfx_hdls[i]);
-
-                m_sizes[i] = rgba.dims;
-            }
-
-            m_loaded = true;
-
-            return true;
-        }
-
-        void Unload() {
-            assert(m_loaded);
-        }
-
-        bool IsLoaded() const {
-            return m_loaded;
-        }
-
-        int GetCnt() const {
-            assert(m_loaded);
-            return m_bgfx_hdls.Len();
-        }
-
-        bgfx::TextureHandle GetTextureBGFXHandle(const int index) const {
-            assert(m_loaded);
-            return m_bgfx_hdls[index];
-        }
-
-        s_v2_s32 GetTextureSize(const int index) const {
-            assert(m_loaded);
-            return m_sizes[index];
-        }
-
-    private:
-        bool m_loaded;
-
-        c_array<bgfx::TextureHandle> m_bgfx_hdls;
-        c_array<s_v2_s32> m_sizes;
-    };
-
-    class c_font_group {
-    public:
-        bool LoadFromPacked(c_file_reader& fr, const int cnt, c_mem_arena& mem_arena);
-        void Unload();
-
-    private:
-        c_array<const bgfx::TextureHandle> m_bgfx_tex_hdls;
-        c_array<const s_font_arrangement> m_arrangements;
-        c_array<const s_font_texture_meta> m_tex_metas;
-    };
-
-    class c_shader_prog_group {
-    public:
-        bool LoadFromPacked(c_file_reader& fr, const int cnt, c_mem_arena& mem_arena);
-        void Unload();
-
-    private:
-        c_array<const bgfx::ProgramHandle> m_bgfx_hdls = {};
-    };
-
-    class c_surface_group {
-    public:
-        bool LoadFromPacked(c_file_reader& fr, const int cnt, c_mem_arena& mem_arena);
-        void Unload();
-
-    private:
-        c_array<const bgfx::FrameBufferHandle> m_frame_buf_bgfx_hdls = {};
-        c_array<const bgfx::TextureHandle> m_tex_bgfx_hdls = {};
+        bool LoadFromRaw(const c_string_view file_path, c_gfx_resource_lifetime& gfx_res_lifetime);
+        void LoadFromPacked(c_file_reader& fr, c_gfx_resource_lifetime& gfx_res_lifetime); // @todo: Just ask for the buffer for this specific packing. You can easily pull that from a file, store temporarily in a buffer, then pass into here. Much more flexible than a file explicitly.
     };
 
     struct s_quad_batch_vert {
@@ -265,7 +151,8 @@ namespace zf {
         static void EndFrame();
         static void SetView(const t_s32 view_index, const s_v4 clear_col = {});
         static void Clear(const s_v4 col);
-        static void Draw(const int tex_index, const c_texture_group& tex_group, const s_v2 pos, const s_v2 size, const s_rect_s32 src_rect = {}, const s_v2 origin = origins::g_origin_top_left, const float rot = 0.0f, const s_v4 blend = colors::g_white);
+        static void Draw(const s_texture& tex, const s_v2 pos, const s_v2 size, const s_rect_s32 src_rect = {}, const s_v2 origin = origins::g_origin_top_left, const float rot = 0.0f, const s_v4 blend = colors::g_white);
+        //[[nodiscard]] bool DrawStr(const c_string_view str, const int font_index, const s_font_group& fonts, const s_v2 pos, const s_v2 alignment, const s_v4 color, c_mem_arena& temp_mem_arena);
 
     private:
         static inline s_renderer_core sm_core;
