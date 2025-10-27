@@ -3,48 +3,61 @@
 #include "zc_mem.h"
 
 namespace zf {
-    static inline int IndexOfLeft(const int index) {
-        return (2 * index) + 1;
-    }
-
-    static inline int IndexOfRight(const int index) {
-        return (2 * index) + 2;
-    }
-
-    static inline int IndexOfParent(const int index) {
-        return (index - 1) / 2;
-    }
-
     template<typename tp_type>
     class c_min_heap {
     public:
-        void Insert(const tp_type& val) {
-            assert(m_used < m_elems.Len());
+        bool Init(c_mem_arena& mem_arena, const int cap) {
+            assert(cap > 0);
 
-            m_used++;
-            m_elems[m_used - 1] = val;
-            BubbleUp(m_used - 1);
+            *this = {};
+            m_elems = mem_arena.PushArray<tp_type>(cap);
+            return !m_elems.IsEmpty();
+        }
+
+        void Insert(const tp_type& val) {
+            assert(m_elems_used_cnt < m_elems.Len());
+
+            m_elems_used_cnt++;
+            m_elems[m_elems_used_cnt - 1] = val;
+            BubbleUp(m_elems_used_cnt - 1);
         }
 
         const tp_type& GetMin() const {
+            assert(m_elems_used_cnt > 0);
             return m_elems[0];
         }
 
         void RemoveMin() {
-            m_used--;
+            m_elems_used_cnt--;
 
-            if (m_used > 0) {
-                m_elems[0] = m_elems[m_used];
+            if (m_elems_used_cnt > 0) {
+                m_elems[0] = m_elems[m_elems_used_cnt];
                 BubbleDown(0);
             }
         }
 
+        int GetElemCnt() {
+            return m_elems_used_cnt;
+        }
+
     private:
         c_array<tp_type> m_elems;
-        int m_used;
+        int m_elems_used_cnt = 0;
+
+        static int IndexOfLeft(const int index) {
+            return (2 * index) + 1;
+        }
+
+        static int IndexOfRight(const int index) {
+            return (2 * index) + 2;
+        }
+
+        static int IndexOfParent(const int index) {
+            return (index - 1) / 2;
+        }
 
         bool Contains(const int index) const {
-            return index >= 0 && index < m_used;
+            return index >= 0 && index < m_elems_used_cnt;
         }
 
         void BubbleUp(const int index) {

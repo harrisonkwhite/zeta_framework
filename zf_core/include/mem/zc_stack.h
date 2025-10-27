@@ -1,3 +1,7 @@
+#pragma once
+
+#include "zc_mem.h"
+
 namespace zf {
     template<typename tp_type>
     class c_stack {
