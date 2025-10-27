@@ -451,6 +451,15 @@ namespace zf {
     }
 
     template<typename tp_type>
+    void Swap(tp_type& a, tp_type& b) {
+        const tp_type temp = a;
+        a = b;
+        b = temp;
+    }
+
+    // @todo: Need to figure out some way to allow for custom sorting comparison approaches.
+
+    template<typename tp_type>
     bool IsSorted(const c_array<const tp_type> arr) {
         for (int i = 0; i < arr.Len() - 1; i++) {
             if (arr[i] >= arr[i + 1]) {
@@ -498,6 +507,21 @@ namespace zf {
             }
 
             arr[j + 1] = arr[i];
+        }
+    }
+
+    template<typename tp_type>
+    void SelectionSort(const c_array<tp_type> arr) {
+        for (int i = 0; i < arr.Len() - 1; i++) {
+            tp_type& min = arr[i];
+
+            for (int j = i + 1; j < arr.Len(); j++) {
+                if (arr[j] < min) {
+                    min = arr[j];
+                }
+            }
+
+            Swap(arr[i], min);
         }
     }
 }
