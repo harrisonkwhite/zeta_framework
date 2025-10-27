@@ -55,6 +55,7 @@ namespace zf {
 
         game.run_stage = ec_game_run_stage::window_initted;
 
+#if 0
         // Initialise the renderer.
         if (!c_renderer::Init(game.perm_mem_arena, game.temp_mem_arena)) {
             ZF_LOG_ERROR("Failed to initialise the renderer!");
@@ -62,6 +63,7 @@ namespace zf {
         }
 
         game.run_stage = ec_game_run_stage::renderer_initted;
+#endif
 
         // Initialise developer memory.
         if (info.dev_mem_size > 0) {
@@ -134,7 +136,7 @@ namespace zf {
                     frame_dur_accum -= targ_tick_interval;
                 } while (frame_dur_accum >= targ_tick_interval);
 
-                c_renderer::BeginFrame();
+                //c_renderer::BeginFrame();
 
                 {
                     const s_game_render_context context = {
@@ -149,7 +151,7 @@ namespace zf {
                     }
                 }
 
-                c_renderer::EndFrame();
+                //c_renderer::EndFrame();
             }
 
             c_window::PollEvents();
@@ -184,7 +186,7 @@ namespace zf {
                     break;
 
                 case ec_game_run_stage::renderer_initted:
-                    c_renderer::Shutdown();
+                    //c_renderer::Shutdown();
                     break;
 
                 case ec_game_run_stage::dev_init_func_ran_and_succeeded:

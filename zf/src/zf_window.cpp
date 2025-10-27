@@ -112,7 +112,7 @@ namespace zf {
         // Set up GLFW callbacks.
         glfwSetFramebufferSizeCallback(sm_glfw_window,
             [](GLFWwindow* const window, const int width, const int height) {
-                c_renderer::RefreshSize();
+                //c_renderer::RefreshSize();
             }
         );
 

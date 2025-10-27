@@ -1,5 +1,6 @@
 #include "zf_rendering.h"
 
+#if 0
 namespace zf {
     extern const t_u8 g_quad_vs_raw[];
     extern const size_t g_quad_vs_size;
@@ -314,3 +315,4 @@ namespace zf {
         sm_core.quad_batch_slots_used_cnt = 0;
     }
 }
+#endif

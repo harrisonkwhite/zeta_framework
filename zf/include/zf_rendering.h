@@ -1,5 +1,6 @@
 #pragma once
 
+#if 0
 #include <bgfx/bgfx.h>
 #include <zc.h>
 #include "zc_gfx.h"
@@ -273,3 +274,4 @@ namespace zf {
         static void Flush();
     };
 }
+#endif
