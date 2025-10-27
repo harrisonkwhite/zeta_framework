@@ -415,6 +415,12 @@ namespace zf {
     };
 
     template<typename tp_type>
+    void MemCopy(const c_array<tp_type> dest, const c_array<const tp_type> src) {
+        assert(dest.Len() >= src.Len());
+        memcpy(dest.m_buf, src.m_buf, src.SizeInBytes());
+    }
+
+    template<typename tp_type>
     c_array<tp_type> PushArrayToMemArena(c_mem_arena& arena, const int cnt) {
         static_assert(std::is_trivially_destructible_v<tp_type>);
 
@@ -431,6 +437,17 @@ namespace zf {
         }
 
         return {arr_raw, cnt};
+    }
+
+    template<typename tp_type>
+    c_array<tp_type> MemClone(c_mem_arena& mem_arena, const c_array<const tp_type> src) {
+        const c_array<tp_type> clone = PushArrayToMemArena<tp_type>(mem_arena, src.Len());
+
+        if (!clone.IsEmpty()) {
+            MemCopy(clone, src);
+        }
+
+        return clone;
     }
 
     template<typename tp_type>
@@ -479,12 +496,8 @@ namespace zf {
 
             for (int i = 0; i < arr.Len() - 1; i++) {
                 if (arr[i] >= arr[i + 1]) {
-                    const tp_type temp = arr[i + 1];
-                    arr[i + 1] = arr[i];
-                    arr[i] = temp;
-
+                    Swap(arr[i], arr[i + 1]);
                     sorted = false;
-
                     break;
                 }
             }
@@ -523,5 +536,57 @@ namespace zf {
 
             Swap(arr[i], min);
         }
+    }
+
+    template<typename tp_type>
+    bool MergeSort(const c_array<tp_type> arr, c_mem_arena& temp_mem_arena) {
+        if (arr.Len() <= 1) {
+            return true;
+        }
+
+        // Sort copies of the left and right partitions.
+        const c_array<tp_type> arr_left = MemClone(temp_mem_arena, arr.Slice(0, arr.Len() / 2));
+
+        if (arr_left.IsEmpty()) {
+            return false;
+        }
+
+        const c_array<tp_type> arr_right = MemClone(temp_mem_arena, arr.Slice(arr.Len() / 2));
+
+        if (arr_right.IsEmpty()) {
+            return false;
+        }
+
+        if (!MergeSort(arr_left, temp_mem_arena) || !MergeSort(arr_right, temp_mem_arena)) {
+            return false;
+        }
+
+        // Update this array.
+        int i = 0;
+        int j = 0;
+
+        do {
+            if (arr_left[i] <= arr_right[j]) {
+                arr[i + j] = arr_left[i];
+                i++;
+
+                if (i == arr_left.Len()) {
+                    // Copy over the remainder of the right array.
+                    MemCopy(arr.Slice(i + j), arr_right.Slice(j));
+                    break;
+                }
+            } else {
+                arr[i + j] = arr_right[j];
+                j++;
+
+                if (j == arr_right.Len()) {
+                    // Copy over the remainder of the left array.
+                    MemCopy(arr.Slice(i + j), arr_left.Slice(i));
+                    break;
+                }
+            }
+        } while (true);
+
+        return true;
     }
 }
