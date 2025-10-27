@@ -1,7 +1,7 @@
 #pragma once
 
 #include <cstdio>
-#include "zc_mem.h"
+#include "mem/zc_strs.h"
 
 #define ZF_ANSI_ESC "\x1b"
 

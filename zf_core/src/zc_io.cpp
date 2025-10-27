@@ -12,7 +12,7 @@ namespace zf {
 
         const auto file_size = fr.CalcSize();
 
-        const auto contents = PushArrayToMemArena<t_u8>(mem_arena, include_terminating_byte ? file_size + 1 : file_size);
+        const auto contents = mem_arena.PushArray<t_u8>(include_terminating_byte ? file_size + 1 : file_size);
 
         if (contents.IsEmpty()) {
             ZF_LOG_ERROR("Failed to reserve memory for the contents of file \"%s\"!", file_path.Raw());

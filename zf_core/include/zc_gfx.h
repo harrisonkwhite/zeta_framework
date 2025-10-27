@@ -1,6 +1,6 @@
 #pragma once
 
-#include "zc_mem.h"
+#include "mem/zc_static_array.h"
 #include "zc_math.h"
 #include "zc_io.h"
 

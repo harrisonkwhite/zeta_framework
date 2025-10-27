@@ -2,7 +2,7 @@
 
 #include <cmath>
 #include <cassert>
-#include "zc_mem.h"
+#include "mem/zc_static_array.h"
 
 namespace zf {
     constexpr float g_pi = 3.14159265358979323846f;
