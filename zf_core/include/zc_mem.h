@@ -470,14 +470,34 @@ namespace zf {
 
             for (int i = 0; i < arr.Len() - 1; i++) {
                 if (arr[i] >= arr[i + 1]) {
-                    const tp_type next_old = arr[i + 1];
+                    const tp_type temp = arr[i + 1];
                     arr[i + 1] = arr[i];
-                    arr[i] = next_old;
+                    arr[i] = temp;
 
                     sorted = false;
+
                     break;
                 }
             }
         } while (!sorted);
+    }
+
+    template<typename tp_type>
+    void InsertionSort(const c_array<tp_type> arr) {
+        for (int i = 0; i < arr.Len(); i++) {
+            const tp_type temp = arr[i];
+
+            int j = i - 1;
+
+            for (; j >= 0; j--) {
+                if (arr[j] <= arr[i]) {
+                    break;
+                }
+
+                arr[j + 1] = arr[j];
+            }
+
+            arr[j + 1] = arr[i];
+        }
     }
 }
