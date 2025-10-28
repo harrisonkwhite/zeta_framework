@@ -174,11 +174,11 @@ namespace zf {
                     break;
 
                 case ec_game_run_stage::perm_mem_arena_initted:
-                    game.perm_mem_arena.Clean();
+                    game.perm_mem_arena.Release();
                     break;
 
                 case ec_game_run_stage::temp_mem_arena_initted:
-                    game.temp_mem_arena.Clean();
+                    game.temp_mem_arena.Release();
                     break;
 
                 case ec_game_run_stage::window_initted:

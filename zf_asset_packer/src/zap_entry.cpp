@@ -62,17 +62,17 @@ int main(const int arg_cnt, const char* const* const args_raw) {
 
     if (instrs_json.IsEmpty()) {
         ZF_LOG_ERROR("Failed to load contents of asset packing instructions JSON file \"%s\"!", instrs_json_file_path.Raw());
-        temp_mem_arena.Clean();
+        temp_mem_arena.Release();
         return EXIT_FAILURE;
     }
 
     if (!PackAssets(instrs_json, output_file_path, temp_mem_arena)) {
         ZF_LOG_ERROR("Failed to pack assets!");
-        temp_mem_arena.Clean();
+        temp_mem_arena.Release();
         return EXIT_FAILURE;
     }
 
-    temp_mem_arena.Clean();
+    temp_mem_arena.Release();
 
     ZF_LOG_SUCCESS("Asset packing completed!");
 

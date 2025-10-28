@@ -28,12 +28,12 @@ namespace zf {
     }
 
     template<typename tp_type>
-    static constexpr int Min(const tp_type& a, const tp_type& b) {
+    static constexpr tp_type Min(const tp_type& a, const tp_type& b) {
         return a <= b ? a : b;
     }
 
     template<typename tp_type>
-    static constexpr int Max(const tp_type& a, const tp_type& b) {
+    static constexpr tp_type Max(const tp_type& a, const tp_type& b) {
         return a >= b ? a : b;
     }
 
@@ -61,6 +61,9 @@ namespace zf {
         assert(x < width);
         return (width * y) + x;
     }
+
+    struct s_array {
+    };
 
     template<typename tp_type>
     class c_array {
@@ -115,7 +118,12 @@ namespace zf {
     template<typename tp_type>
     void MemCopy(const c_array<tp_type> dest, const c_array<const tp_type> src) {
         assert(dest.Len() >= src.Len());
-        memcpy(dest.m_buf, src.m_buf, src.SizeInBytes());
+        memcpy(dest.Raw(), src.Raw(), src.SizeInBytes());
+    }
+
+    template<typename tp_type>
+    void MemCopy(const c_array<tp_type> dest, const c_array<tp_type> src) {
+        MemCopy(dest, src.View());
     }
 
     class c_mem_arena {
@@ -134,7 +142,7 @@ namespace zf {
             return true;
         }
 
-        void Clean() {
+        void Release() {
             assert(m_buf);
 
             free(m_buf);

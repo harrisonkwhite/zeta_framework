@@ -4,42 +4,60 @@
 #include "zc_dynamic_array.h"
 
 namespace zf {
-    template<typename tp_type>
+    template<typename tp_key_type, typename tp_value_type>
     class c_binary_tree {
     public:
         struct s_node {
-            tp_type val;
+            // @todo: Probably better off putting these into distinct arrays.
+            tp_key_type key = {};
+            tp_value_type val = {};
+            s_node* left = nullptr; // @todo: Use index instead?
+            s_node* right = nullptr;
 
-            // @todo: Probably better off putting these into 2 distinct arrays.
-            s_node* left;
-            s_node* right;
+            int CalcHeight() {
+                return 1 + Min(left ? left->CalcHeight() : 0, right ? right->CalcHeight() : 0);
+            }
         };
 
+        [[nodiscard]]
         bool Init(c_mem_arena& mem_arena, const int cap) {
             assert(cap > 0);
 
             *this = {};
 
-            if (!m_nodes.Init(mem_arena, cap)) {
-                return false;
-            }
-
-            m_root = &m_nodes[0];
-
-            return true;
+            return m_nodes.Init(mem_arena, cap);
         }
 
-        bool Insert(const tp_type& val) {
-            s_node*& n = m_root;
+        [[nodiscard]]
+        bool Find(const tp_key_type key, tp_value_type* const val = nullptr) {
+            const s_node* node = m_root;
 
-            while (n) {
-                if (val == n->val) {
-                    // @todo: Probably increment a counter or something?
+            while (node) {
+                if (key == node->key) {
+                    if (val) {
+                        *val = node->val;
+                    }
+
                     return true;
-                } else if (val < n->val) {
-                    n = n->left;
+                } else if (key > node->key) {
+                    node = node->right;
                 } else {
-                    n = n->right;
+                    node = node->left;
+                }
+            }
+
+            return false;
+        }
+
+        [[nodiscard]]
+        bool Insert(const tp_key_type& key, const tp_value_type& val) {
+            s_node** node = &m_root;
+
+            while (*node) {
+                if (key >= (*node)->key) {
+                    node = &(*node)->right;
+                } else {
+                    node = &(*node)->left;
                 }
             }
 
@@ -49,13 +67,16 @@ namespace zf {
                 return false;
             }
 
-            n = new_node;
+            new_node->key = key;
+            new_node->val = val;
+
+            *node = new_node;
 
             return true;
         }
 
     private:
         c_dynamic_array<s_node> m_nodes;
-        s_node* m_root;
+        s_node* m_root = nullptr;
     };
 }
