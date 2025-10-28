@@ -8,6 +8,7 @@ namespace zf {
     public:
         bool Init(c_mem_arena& mem_arena, const int cap) {
             assert(cap > 0);
+
             *this = {};
             m_elems = mem_arena.PushArray<tp_type>(cap);
             m_mem_arena = &mem_arena;
@@ -32,13 +33,13 @@ namespace zf {
             return m_elems[index];
         }
 
-        bool Append(const tp_type& elem) {
+        tp_type* Append() {
             if (m_len == Capacity()) {
                 const int cap_next = m_elems.Len() + (m_elems.Len() / 2);
                 const c_array<tp_type> elems_next = m_mem_arena->PushArray<tp_type>(cap_next);
 
                 if (elems_next.IsEmpty()) {
-                    return false;
+                    return nullptr;
                 }
 
                 MemCopy(elems_next, m_elems);
@@ -46,11 +47,9 @@ namespace zf {
                 m_elems = elems_next;
             }
 
-            m_elems[m_len] = elem;
-
             m_len++;
 
-            return true;
+            return &m_elems[m_len - 1];
         }
 
     private:

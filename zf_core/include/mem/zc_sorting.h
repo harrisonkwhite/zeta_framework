@@ -1,5 +1,7 @@
 #include "zc_mem.h"
 
+#include "zc_static_array.h"
+
 namespace zf {
     // @todo: Need to figure out some way to allow for custom sorting comparison approaches.
 
@@ -115,5 +117,56 @@ namespace zf {
         } while (true);
 
         return true;
+    }
+
+    template<typename tp_type>
+    void QuickSort(const c_array<const tp_type> arr) {
+        if (arr.Len() <= 1) {
+            return;
+        }
+
+        if (arr.Len() == 2) {
+            if (arr[0] > arr[1]) {
+                Swap(arr[0], arr[1]);
+            }
+
+            return;
+        }
+
+        // Select the pivot as being the median of the leftmost, middle, and rightmost elements. We obviously need at least 3 elements at this point.
+        const auto pivot_index = [arr](){
+            const s_static_array<int, 3> pivot_index_opts = {
+                {0, arr.Len() / 2, arr.Len() - 1}
+            };
+
+            for (int i = 0; i < pivot_index_opts.Len() - 1; i++) {
+                const int next = pivot_index_opts[Wrap(i + 1, 0, pivot_index_opts.Len())];
+                const int prev = pivot_index_opts[Wrap(i - 1, 0, pivot_index_opts.Len())];
+
+                if ((prev <= pivot_index_opts[i] && pivot_index_opts[i] <= next) || (next <= pivot_index_opts[i] && pivot_index_opts[i] <= prev)) {
+                    return pivot_index_opts[i];
+                }
+            }
+
+            return pivot_index_opts[pivot_index_opts.Len() - 1];
+        }();
+
+        // Swap the pivot out to the end.
+        Swap(arr[pivot_index], arr[arr.Len() - 1]);
+
+        // Move smaller elements to the left, and decide the final pivot position.
+        int left_sec_last_index = -1;
+
+        for (int i = 0; i < arr.Len(); i++) {
+            if (arr[i] <= arr[arr.Len() - 1]) {
+                // This element is not greater than the pivot, so swap it to the left section.
+                left_sec_last_index++;
+                Swap(arr[left_sec_last_index], arr[i]);
+            }
+        }
+
+        // Sort for each subsection.
+        QuickSort(arr.Slice(0, left_sec_last_index));
+        QuickSort(arr.Slice(left_sec_last_index + 1));
     }
 }
