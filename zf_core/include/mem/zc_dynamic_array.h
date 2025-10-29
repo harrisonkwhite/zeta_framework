@@ -77,6 +77,10 @@ namespace zf {
             return true;
         }
 
+        void Clear() {
+            m_len = 0;
+        }
+
     private:
         bool IsInitted() const {
             return m_mem_arena && !m_elems.IsEmpty();
