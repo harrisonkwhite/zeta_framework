@@ -134,7 +134,7 @@ namespace zf {
         }
 
         // Select the pivot as being the median of the leftmost, middle, and rightmost elements. We obviously need at least 3 elements at this point.
-        const auto pivot_index = [arr](){
+        const auto pivot_index = [arr]() {
             const s_static_array<int, 3> pivot_index_opts = {
                 {0, arr.Len() / 2, arr.Len() - 1}
             };
