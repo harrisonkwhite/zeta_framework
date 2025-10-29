@@ -9,6 +9,7 @@ namespace zf {
     template<typename tp_type>
     class c_dynamic_array {
     public:
+        [[nodiscard]]
         bool Init(c_mem_arena& mem_arena, const int cap) {
             assert(cap > 0);
 
@@ -40,6 +41,7 @@ namespace zf {
             return m_elems[index];
         }
 
+        [[nodiscard]]
         tp_type* Append() {
             assert(IsInitted());
 
@@ -62,6 +64,7 @@ namespace zf {
             return &m_elems[m_len - 1];
         }
 
+        [[nodiscard]]
         bool Append(const tp_type& elem) {
             tp_type* const elem_in_arr = Append();
 
