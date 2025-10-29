@@ -62,6 +62,18 @@ namespace zf {
             return &m_elems[m_len - 1];
         }
 
+        bool Append(const tp_type& elem) {
+            tp_type* const elem_in_arr = Append();
+
+            if (!elem_in_arr) {
+                return false;
+            }
+
+            *elem_in_arr = elem;
+
+            return true;
+        }
+
     private:
         bool IsInitted() const {
             return m_mem_arena && !m_elems.IsEmpty();
