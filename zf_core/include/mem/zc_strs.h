@@ -115,7 +115,7 @@ namespace zf {
         }
 
         s_str Suffix(const int index) const {
-            assert(index >= 0 && index < Len());
+            assert(index >= 0 && index <= Len());
             return {chrs.Slice(index, chrs.Len())};
         }
 
