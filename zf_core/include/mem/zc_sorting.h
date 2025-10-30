@@ -2,6 +2,7 @@
 
 #include "zc_static_array.h"
 #include "zc_dynamic_array.h"
+#include "zc_heaps.h"
 #include "zc_math.h"
 
 namespace zf {
@@ -213,5 +214,18 @@ namespace zf {
         }
 
         return true;
+    }
+
+    template<typename tp_type>
+    void HeapSort(const c_array<tp_type> dest, c_min_heap<tp_type>& min_heap) {
+        assert(dest.Len() >= min_heap.GetElemCnt());
+
+        int dest_index = 0;
+
+        while (!min_heap.IsEmpty()) {
+            dest[dest_index] = min_heap.GetMin();
+            min_heap.RemoveMin();
+            dest_index++;
+        }
     }
 }

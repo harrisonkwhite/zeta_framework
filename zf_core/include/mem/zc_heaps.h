@@ -6,6 +6,7 @@ namespace zf {
     template<typename tp_type>
     class c_min_heap {
     public:
+        [[nodiscard]]
         bool Init(c_mem_arena& mem_arena, const int cap) {
             assert(cap > 0);
 
@@ -36,8 +37,12 @@ namespace zf {
             }
         }
 
-        int GetElemCnt() {
+        int GetElemCnt() const {
             return m_elems_used_cnt;
+        }
+
+        bool IsEmpty() const {
+            return m_elems_used_cnt == 0;
         }
 
     private:
