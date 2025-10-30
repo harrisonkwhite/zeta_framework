@@ -18,6 +18,14 @@ namespace zf {
         return 0;
     }
 
+    constexpr int WrapUpper(const int val, const int max_excl) {
+        return ((val % max_excl) + max_excl) % max_excl;
+    }
+
+    constexpr int Wrap(const int val, const int min, const int max_excl) {
+        return min + WrapUpper(val - min, max_excl - min);
+    }
+
     constexpr int DigitAt(const int n, const unsigned int index) {
         if (n < 0) {
             return DigitAt(-n, index);
