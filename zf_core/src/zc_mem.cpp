@@ -15,6 +15,7 @@ namespace zf {
         return Sign(b.Len() - a.Len());
     }
 
+    // @todo: These should be made generic to support any array, not just strings.
     c_array<int> GenSuffixArray(const s_str str, c_mem_arena& mem_arena) {
         const auto arr = mem_arena.PushArray<int>(str.Len());
 

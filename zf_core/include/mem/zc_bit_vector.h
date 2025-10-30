@@ -369,6 +369,10 @@ namespace zf {
             return ret < m_bit_cnt ? ret : -1;
         }
 
+        int IndexOfFirstUnsetBit(const int from = 0) const {
+            return IndexOfFirstSetBit(from, true);
+        }
+
         void WriteBitStr(const c_array<char> str_chrs) {
             assert(IsInitted());
             assert(str_chrs.Len() >= m_bit_cnt + 1);

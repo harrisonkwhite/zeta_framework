@@ -3,6 +3,7 @@
 #include "zc_mem.h"
 
 namespace zf {
+    // @todo: Allow compile-time use (i.e. constexpr)!
     template<typename tp_type, int tp_len>
     struct s_static_array {
         tp_type buf_raw[tp_len] = {};
