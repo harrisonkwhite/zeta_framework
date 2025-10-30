@@ -1,6 +1,8 @@
 #include "zc_mem.h"
 
 #include "zc_static_array.h"
+#include "zc_dynamic_array.h"
+#include "zc_math.h"
 
 namespace zf {
     // @todo: Need to figure out some way to allow for custom sorting comparison approaches.
@@ -168,5 +170,48 @@ namespace zf {
         // Sort for each subsection.
         QuickSort(arr.Slice(0, left_sec_last_index));
         QuickSort(arr.Slice(left_sec_last_index + 1));
+    }
+
+    static bool RadixSort(const zf::c_array<int> arr, zf::c_mem_arena& temp_mem_arena) {
+        int digit_cnt_max = 1;
+
+        for (int i = 0; i < arr.Len(); i++) {
+            arr[i] = 10 + arr.Len() - 1 - i;
+            const int digit_cnt = DigitCnt(arr[i]);
+            digit_cnt_max = zf::Max(digit_cnt_max, digit_cnt);
+        }
+
+        // Set up 10 buckets, one per digit.
+        zf::s_static_array<zf::c_dynamic_array<int>, 10> buckets;
+
+        for (int i = 0; i < buckets.Len(); i++) {
+            if (!buckets[i].Init(temp_mem_arena, (arr.Len() / buckets.Len()) + 2)) {
+                return false;
+            }
+        }
+
+        for (int d = 0; d < digit_cnt_max; d++) {
+            for (int i = 0; i < arr.Len(); i++) {
+                const int digit = DigitAt(arr[i], d);
+
+                if (!buckets[digit].Append(arr[i])) {
+                    return false;
+                }
+            }
+
+            // Repopulate the array.
+            int arr_index = 0;
+
+            for (int i = 0; i < buckets.Len(); i++) {
+                for (int j = 0; j < buckets[i].Len(); j++) {
+                    arr[arr_index] = buckets[i][j];
+                    arr_index++;
+                }
+
+                buckets[i].Clear();
+            }
+        }
+
+        return true;
     }
 }

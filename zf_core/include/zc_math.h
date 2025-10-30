@@ -8,6 +8,34 @@ namespace zf {
     constexpr float g_pi = 3.14159265358979323846f;
     constexpr float g_tau = 6.28318530717958647692f;
 
+    constexpr int DigitAt(const int n, const unsigned int index) {
+        if (n < 0) {
+            return DigitAt(-n, index);
+        }
+
+        if (index == 0) {
+            return n % 10;
+        }
+
+        if (n < 10) {
+            return 0;
+        }
+
+        return DigitAt(n / 10, index - 1);
+    }
+
+    constexpr int DigitCnt(const int n) {
+        if (n < 0) {
+            return DigitCnt(-n);
+        }
+
+        if (n < 10) {
+            return 1;
+        }
+
+        return 1 + DigitCnt(n / 10);
+    }
+
     struct s_v2 {
         float x = 0.0f;
         float y = 0.0f;
