@@ -109,6 +109,11 @@ namespace zf {
             return IsTerminated() ? chrs.Len() - 1 : chrs.Len();
         }
 
+        s_str Prefix(const int len) const {
+            assert(len >= 0 && len <= Len());
+            return {chrs.Slice(0, len)};
+        }
+
         s_str Suffix(const int index) const {
             assert(index >= 0 && index < Len());
             return {chrs.Slice(index, chrs.Len())};
@@ -121,5 +126,4 @@ namespace zf {
     };
 
     int CompareStrs(const s_str a, const s_str b);
-    bool SuffixArray(const s_str str);
 }

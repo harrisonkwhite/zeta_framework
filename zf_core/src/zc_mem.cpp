@@ -14,17 +14,4 @@ namespace zf {
 
         return Sign(b.Len() - a.Len());
     }
-
-#if 0
-    bool SuffixArray(const s_str str) {
-        for (int i = 0; i < str.Len(); i++) {
-            const auto suffix = str.Suffix(i);
-
-            for (int j = 0; j < str.Len(); j++) {
-            }
-        }
-
-        return true;
-    }
-#endif
 }
