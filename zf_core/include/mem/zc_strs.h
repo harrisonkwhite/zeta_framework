@@ -1,6 +1,11 @@
 #include "zc_mem.h"
 
+#include "zc_math.h"
+
 namespace zf {
+    // @todo: Rethink this whole approach.
+    // @todo: Constructors should not have calls to strlen() or anything potentially performance-intensive. They must be trivial.
+
     class c_string_view {
     public:
         c_string_view() = default;
@@ -30,6 +35,11 @@ namespace zf {
 
         bool IsEmpty() const {
             return m_chrs.Len() <= 1;
+        }
+
+        c_string_view Suffix(const int index) const {
+            assert(index >= 0 && index < Len());
+            return {m_chrs.Raw() + 1, Len() - 1};
         }
 
     private:
@@ -78,7 +88,38 @@ namespace zf {
             return View();
         }
 
+        c_string Suffix(const int index) const {
+            assert(index >= 0 && index < Len());
+            return {m_chrs.Raw() + 1, Len() - 1};
+        }
+
     private:
         c_array<char> m_chrs;
     };
+
+    // @idea
+    struct s_str {
+        c_array<char> chrs;
+
+        bool IsTerminated() const {
+            return !chrs[chrs.Len() - 1];
+        }
+
+        int Len() const {
+            return IsTerminated() ? chrs.Len() - 1 : chrs.Len();
+        }
+
+        s_str Suffix(const int index) const {
+            assert(index >= 0 && index < Len());
+            return {chrs.Slice(index, chrs.Len())};
+        }
+
+        char& operator[](const int index) const {
+            assert(index >= 0 && index < Len());
+            return chrs[index];
+        }
+    };
+
+    int CompareStrs(const s_str a, const s_str b);
+    bool SuffixArray(const s_str str);
 }

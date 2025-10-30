@@ -8,6 +8,16 @@ namespace zf {
     constexpr float g_pi = 3.14159265358979323846f;
     constexpr float g_tau = 6.28318530717958647692f;
 
+    constexpr int Sign(const int n) {
+        if (n > 0) {
+            return 1;
+        } else if (n < 0) {
+            return -1;
+        }
+
+        return 0;
+    }
+
     constexpr int DigitAt(const int n, const unsigned int index) {
         if (n < 0) {
             return DigitAt(-n, index);

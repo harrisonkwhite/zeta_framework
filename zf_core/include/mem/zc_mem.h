@@ -62,9 +62,6 @@ namespace zf {
         return (width * y) + x;
     }
 
-    struct s_array {
-    };
-
     template<typename tp_type>
     class c_array {
     public:
