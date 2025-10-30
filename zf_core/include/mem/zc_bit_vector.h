@@ -334,18 +334,29 @@ namespace zf {
             }
         }
 
-        int IndexOfFirstSetBit(const int from = 0) const {
+        int IndexOfFirstSetBit(const int from = 0, const bool flip = false) const {
             assert(IsInitted());
             assert(from >= 0 && from < m_bit_cnt);
 
             int ret = -1;
 
+            const t_u8 from_mask = (1 << (from % 8)) - 1;
+
             const int first_byte_index = from / 8;
             const auto first_byte_saved = m_bytes[first_byte_index];
-            m_bytes[first_byte_index] = m_bytes[first_byte_index] & ~((1 << (from % 8)) - 1); // Ignore the initial bits specified.
+
+            t_u8 byte_xor;
+
+            if (flip) {
+                m_bytes[first_byte_index] |= from_mask;
+                byte_xor = 0xFF;
+            } else {
+                m_bytes[first_byte_index] &= ~from_mask;
+                byte_xor = 0x00;
+            }
 
             for (int i = first_byte_index; i < m_bytes.Len(); i++) {
-                const int bi = g_indexes_of_first_set_bits[m_bytes[i]];
+                const int bi = g_indexes_of_first_set_bits[m_bytes[i] ^ byte_xor];
 
                 if (bi != -1) {
                     ret = (i * 8) + bi;
