@@ -6,20 +6,70 @@ namespace zf {
     template<typename tp_key_type, typename tp_value_type>
     class c_unordered_map {
     public:
+        bool Init(c_mem_arena& mem_arena, int (* const hash_code_generator)(const tp_key_type& key)) {
+            // @todo: Add ability to customise capacities.
+
+            if (!m_backing_store.Init(mem_arena, 1 << 16)) {
+                return false;
+            }
+
+            m_backing_store_indexes = mem_arena.PushArray<int>(1024);
+
+            if (m_backing_store_indexes.IsEmpty()) {
+                return false;
+            }
+
+            for (int i = 0; i < m_backing_store_indexes.Len(); i++) {
+                m_backing_store_indexes[i] = -1;
+            }
+
+            return true;
+        }
+
         bool Get(const tp_key_type& key, tp_value_type& val) const {
             const int hash_index = KeyToHashIndex(key);
-            return m_backing_store.Get(hash_index, key, val);
+            return m_backing_store.Get(m_backing_store_indexes[hash_index], key, val);
         }
 
         [[nodiscard]]
         bool Put(const tp_key_type& key, const tp_value_type& val) {
             const int hash_index = KeyToHashIndex(key);
-            return m_backing_store.Get(hash_index, key, val);
+            return m_backing_store.Put(m_backing_store_indexes[hash_index], key, val);
         }
 
     private:
         class c_backing_store {
         public:
+            bool Init(c_mem_arena& mem_arena, const int cap) {
+                m_keys = mem_arena.PushArray<tp_key_type>(cap);
+
+                if (m_keys.IsEmpty()) {
+                    return false;
+                }
+
+                m_vals = mem_arena.PushArray<tp_value_type>(cap);
+
+                if (m_vals.IsEmpty()) {
+                    return false;
+                }
+
+                m_next_indexes = mem_arena.PushArray<int>(cap);
+
+                if (m_next_indexes.IsEmpty()) {
+                    return false;
+                }
+
+                for (int i = 0; i < m_next_indexes.Len(); i++) {
+                    m_next_indexes[i] = -1; // Probably not needed!
+                }
+
+                if (!m_usage.Init(mem_arena, cap)) {
+                    return false;
+                }
+
+                return true;
+            }
+
             bool Get(const int index, const tp_key_type& key, tp_value_type& val) const {
                 //assert(index >= -1 && index < ???);
 
@@ -40,7 +90,6 @@ namespace zf {
                 //assert(index >= -1 && index < ???);
 
                 if (index == -1) {
-                    // @todo: New node!
                     const int prospective_index = m_usage.IndexOfFirstUnsetBit();
 
                     if (prospective_index == -1) {
@@ -73,12 +122,12 @@ namespace zf {
             c_bit_vector m_usage;
         };
 
+        c_backing_store m_backing_store;
+        c_array<int> m_backing_store_indexes;
+
         int KeyToHashIndex(const tp_key_type& key) const {
             return Wrap(m_hash_code_generator(key), 0, m_backing_store_indexes.Len());
         }
-
-        c_backing_store m_backing_store;
-        c_array<int> m_backing_store_indexes;
     };
 
 #if 0
