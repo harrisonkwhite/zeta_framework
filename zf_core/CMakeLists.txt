@@ -2,7 +2,6 @@ add_library(zf_core STATIC
     src/math.cpp
     src/io.cpp
     src/gfx.cpp
-    src/mem/strs.cpp
     ../external/stb_image/src/stb_image.c
     ../external/stb_truetype/src/stb_truetype.c
 

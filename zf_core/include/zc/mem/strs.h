@@ -4,9 +4,6 @@
 #include <zc/math.h>
 
 namespace zf {
-    // @todo: Rethink this whole approach.
-    // @todo: Constructors should not have calls to strlen() or anything potentially performance-intensive. They must be trivial.
-
     class c_string_view {
     public:
         c_string_view() = default;
@@ -97,34 +94,4 @@ namespace zf {
     private:
         c_array<char> m_chrs;
     };
-
-    // @idea
-    struct s_str {
-        c_array<char> chrs;
-
-        bool IsTerminated() const {
-            return !chrs[chrs.Len() - 1];
-        }
-
-        int Len() const {
-            return IsTerminated() ? chrs.Len() - 1 : chrs.Len();
-        }
-
-        s_str Prefix(const int len) const {
-            assert(len >= 0 && len <= Len());
-            return {chrs.Slice(0, len)};
-        }
-
-        s_str Suffix(const int index) const {
-            assert(index >= 0 && index <= Len());
-            return {chrs.Slice(index, chrs.Len())};
-        }
-
-        char& operator[](const int index) const {
-            assert(index >= 0 && index < Len());
-            return chrs[index];
-        }
-    };
-
-    int CompareStrs(const s_str a, const s_str b);
 }
