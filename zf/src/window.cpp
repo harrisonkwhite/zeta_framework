@@ -1,8 +1,8 @@
-#include "zf_window.h"
+#include <zf/window.h>
 
-#include <zc.h>
 #include <GLFW/glfw3.h>
-#include "zf_rendering.h"
+#include <zc/io.h>
+#include <zf/rendering.h>
 
 namespace zf {
     static e_key_code GLFWToZFKeyCode(const t_s32 glfw_key) {

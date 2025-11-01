@@ -18,7 +18,7 @@ namespace zf {
             return false;
         }
 
-        fprintf(output_writer.Raw(), "#include <zc.h>\n");
+        fprintf(output_writer.Raw(), "#include <zc/mem/mem.h>\n");
         fprintf(output_writer.Raw(), "\n");
         fprintf(output_writer.Raw(), "namespace zf {\n");
 

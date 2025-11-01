@@ -29,16 +29,17 @@ embed_shader(quad_vs vertex)
 embed_shader(quad_fs fragment)
 
 add_library(zf STATIC
-    src/zf_game.cpp
-    src/zf_window.cpp
-    src/zf_rng.cpp
-    src/zf_rendering.cpp
+    src/game.cpp
+    src/window.cpp
+    src/rng.cpp
+    src/rendering.cpp
 
     include/zf.h
-    include/zf_game.h
-    include/zf_window.h
-    include/zf_rng.h
-    include/zf_rendering.h
+    include/zf/game.h
+    include/zf/window.h
+    include/zf/rng.h
+    include/zf/rendering.h
+    include/zf/assets.h
 
     ${quad_vs_CPP}
     ${quad_fs_CPP}

@@ -1,6 +1,7 @@
 #pragma once
 
-#include "zf_game.h"
-#include "zf_window.h"
-#include "zf_rendering.h"
-#include "zf_rng.h"
+#include <zf/game.h>
+#include <zf/window.h>
+#include <zf/rendering.h>
+#include <zf/assets.h>
+#include <zf/rng.h>

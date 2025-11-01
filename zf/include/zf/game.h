@@ -2,9 +2,11 @@
 
 #include <cstddef>
 #include <cassert>
-#include <zc.h>
-#include "zf_rendering.h"
-#include "zf_window.h"
+#include <zc/math.h>
+#include <zc/mem/mem.h>
+#include <zc/mem/strs.h>
+#include <zf/rendering.h>
+#include <zf/window.h>
 
 namespace zf {
     struct s_game_init_context {

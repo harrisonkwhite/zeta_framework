@@ -267,19 +267,19 @@ namespace zf {
             return mat;
         }
 
-        static s_matrix_4x4 Orthographic(const float left, const float right, const float bottom, const float top, const float near, const float far) {
+        static s_matrix_4x4 Orthographic(const float left, const float right, const float bottom, const float top, const float z_near, const float z_far) {
             assert(right > left);
             assert(top < bottom);
-            assert(far > near);
-            assert(near < far);
+            assert(z_far > z_near);
+            assert(z_near < z_far);
 
             s_matrix_4x4 mat;
             mat.elems[0][0] = 2.0f / (right - left);
             mat.elems[1][1] = 2.0f / (top - bottom);
-            mat.elems[2][2] = -2.0f / (far - near);
+            mat.elems[2][2] = -2.0f / (z_far - z_near);
             mat.elems[3][0] = -(right + left) / (right - left);
             mat.elems[3][1] = -(top + bottom) / (top - bottom);
-            mat.elems[3][2] = -(far + near) / (far - near);
+            mat.elems[3][2] = -(z_far + z_near) / (z_far - z_near);
             mat.elems[3][3] = 1.0f;
             return mat;
         }

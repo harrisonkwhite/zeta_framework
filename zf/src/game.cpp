@@ -1,7 +1,8 @@
-#include "zf_game.h"
+#include <zf/game.h>
 
 #include <cstdio>
-#include "zf_rng.h"
+#include <zc/io.h>
+#include <zf/rng.h>
 
 namespace zf {
     constexpr size_t g_perm_mem_arena_size = Megabytes(80);

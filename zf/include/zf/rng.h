@@ -1,7 +1,7 @@
 #pragma once
 
 #include <cassert>
-#include <zc.h>
+#include <zc/math.h>
 
 namespace zf {
     void InitRNG();

@@ -51,7 +51,7 @@ namespace zf {
     s_poly GenQuadPoly(c_mem_arena& mem_arena, const s_v2 pos, const s_v2 size, const s_v2 origin) {
         assert(origin.x >= 0.0f && origin.x <= 1.0f && origin.y >= 0.0f && origin.y <= 1.0f);
 
-        const auto pts = PushArrayToMemArena<s_v2>(mem_arena, 4);
+        const auto pts = mem_arena.PushArray<s_v2>(4);
 
         if (pts.IsEmpty()) {
             ZF_LOG_ERROR("Failed to reserve memory for quad polygon points!");
@@ -71,7 +71,7 @@ namespace zf {
     s_poly GenQuadPolyRotated(c_mem_arena& mem_arena, const s_v2 pos, const s_v2 size, const s_v2 origin, const float rot) {
         assert(origin.x >= 0.0f && origin.x <= 1.0f && origin.y >= 0.0f && origin.y <= 1.0f);
 
-        const auto pts = PushArrayToMemArena<s_v2>(mem_arena, 4);
+        const auto pts = mem_arena.PushArray<s_v2>(4);
 
         if (pts.IsEmpty()) {
             ZF_LOG_ERROR("Failed to reserve memory for rotated quad polygon points!");

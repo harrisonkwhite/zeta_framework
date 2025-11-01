@@ -1,6 +1,5 @@
 #pragma once
 
-#include <zc.h>
 #include <GLFW/glfw3.h>
 
 #if defined(_WIN32)
@@ -12,6 +11,8 @@
 #endif
 
 #include <GLFW/glfw3native.h>
+#include <zc/math.h>
+#include <zc/mem/strs.h>
 
 namespace zf {
     enum e_window_flags {
