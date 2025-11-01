@@ -1,5 +1,5 @@
 add_executable(zf_bin_to_array
-    src/zfbta.cpp
+    src/main.cpp
 )
 
 target_link_libraries(zf_bin_to_array PRIVATE

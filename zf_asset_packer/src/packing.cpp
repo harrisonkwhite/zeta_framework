@@ -1,8 +1,6 @@
 #include "zap_packing.h"
 
 #include <cJSON.h>
-#include "zc_gfx.h"
-#include "zc_io.h"
 
 namespace zf {
     struct s_packed_header {

@@ -1,6 +1,6 @@
 #include <cstdio>
 #include <cstdlib>
-#include <zc.h>
+#include <zc/io.h>
 
 namespace zf {
     bool OutputCode(const c_string_view input_file_path, const c_string_view output_file_path, const c_string_view arr_subname) {

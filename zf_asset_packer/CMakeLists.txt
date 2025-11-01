@@ -1,9 +1,9 @@
 add_executable(zf_asset_packer
-    src/zap_entry.cpp
-    src/zap_packing.cpp
+    src/entry.cpp
+    src/packing.cpp
     ../external/c_json/src/cJSON.c
 
-    src/zap_packing.h
+    src/packing.h
 )
 
 target_include_directories(zf_asset_packer PRIVATE
