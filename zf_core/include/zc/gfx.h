@@ -1,8 +1,8 @@
 #pragma once
 
-#include "mem/zc_static_array.h"
-#include "zc_math.h"
-#include "zc_io.h"
+#include <zc/mem/static_array.h>
+#include <zc/math.h>
+#include <zc/io.h>
 
 namespace zf {
     namespace colors {

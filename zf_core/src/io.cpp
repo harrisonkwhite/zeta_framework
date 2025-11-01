@@ -1,4 +1,4 @@
-#include "zc_io.h"
+#include <zc/io.h>
 
 namespace zf {
     c_array<t_u8> LoadFileContents(const c_string_view file_path, c_mem_arena& mem_arena, const bool include_terminating_byte) {

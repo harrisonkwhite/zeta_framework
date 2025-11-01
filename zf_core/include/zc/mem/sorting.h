@@ -1,9 +1,10 @@
-#include "zc_mem.h"
+#pragma once
 
-#include "zc_static_array.h"
-#include "zc_dynamic_array.h"
-#include "zc_heaps.h"
-#include "zc_math.h"
+#include <zc/mem/mem.h>
+#include <zc/mem/static_array.h>
+#include <zc/mem/dynamic_array.h>
+#include <zc/mem/heaps.h>
+#include <zc/mem/math.h>
 
 namespace zf {
     // @todo: Need to figure out some way to allow for custom sorting comparison approaches.

@@ -1,7 +1,7 @@
 #pragma once
 
-#include "zc_mem.h"
-#include "zc_dynamic_array.h"
+#include <zc/mem/mem.h>
+#include <zc/mem/dynamic_array.h>
 
 namespace zf {
     struct s_avl_node_mapping {

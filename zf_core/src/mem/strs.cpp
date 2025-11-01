@@ -1,4 +1,4 @@
-#include "mem/zc_strs.h"
+#include <zc/mem/strs.h>
 
 namespace zf {
     int CompareStrs(const s_str a, const s_str b) {

@@ -65,5 +65,6 @@ namespace zf {
         assert(info.render_func);
     }
 
+    // @idea: Give ZF core a distinct namespace. If something cannot run outside the call stack of this RunGame function, it should be in this ZF engine library.
     [[nodiscard]] bool RunGame(const s_game_info& info);
 }

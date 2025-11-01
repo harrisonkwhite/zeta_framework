@@ -1,6 +1,7 @@
-#include "zc_mem.h"
+#pragma once
 
-#include "zc_math.h"
+#include <zc/mem/mem.h>
+#include <zc/math.h>
 
 namespace zf {
     // @todo: Rethink this whole approach.

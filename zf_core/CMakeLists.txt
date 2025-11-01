@@ -1,10 +1,25 @@
 add_library(zf_core STATIC
-    src/zc_io.cpp
-    src/zc_gfx.cpp
+    src/math.cpp
+    src/io.cpp
+    src/gfx.cpp
+    src/mem/strs.cpp
     ../external/stb_image/src/stb_image.c
     ../external/stb_truetype/src/stb_truetype.c
 
-    include/zc.h
+    include/zc/gfx.h
+    include/zc/io.h
+    include/zc/math.h
+    include/zc/mem/avl_tree.h
+    include/zc/mem/bit_vector.h
+    include/zc/mem/dynamic_array.h
+    include/zc/mem/heaps.h
+    include/zc/mem/mem.h
+    include/zc/mem/queue.h
+    include/zc/mem/sorting.h
+    include/zc/mem/stack.h
+    include/zc/mem/static_array.h
+    include/zc/mem/strs.h
+    include/zc/mem/unordered_map.h
 )
 
 target_include_directories(zf_core PUBLIC

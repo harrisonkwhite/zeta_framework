@@ -1,12 +1,15 @@
-#include "zc_mem.h"
+#pragma once
 
-#include "zc_bit_vector.h"
+#include <zc/mem/mem.h>
+#include <zc/mem/bit_vector.h>
 
 namespace zf {
     template<typename tp_key_type, typename tp_value_type>
     class c_unordered_map {
     public:
         bool Init(c_mem_arena& mem_arena, int (* const hash_code_generator)(const tp_key_type& key)) {
+            assert(hash_code_generator);
+
             // @todo: Add ability to customise capacities.
 
             *this = {};

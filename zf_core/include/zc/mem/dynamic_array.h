@@ -1,7 +1,7 @@
 #pragma once
 
-#include "zc_mem.h"
 #include <cassert>
+#include <zc/mem/mem.h>
 
 namespace zf {
     constexpr float g_dyn_arr_resize_scalar = 1.5f;

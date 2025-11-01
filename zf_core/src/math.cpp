@@ -1,7 +1,7 @@
-#include "zc_math.h"
+#include <zc/math.h>
 
 #include <cfloat>
-#include "zc_io.h"
+#include <zc/io.h>
 
 namespace zf {
     struct s_range {
