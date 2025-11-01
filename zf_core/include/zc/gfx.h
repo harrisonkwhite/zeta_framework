@@ -1,6 +1,6 @@
 #pragma once
 
-#include <zc/mem/static_array.h>
+#include <zc/mem/arrays.h>
 #include <zc/math.h>
 #include <zc/io.h>
 

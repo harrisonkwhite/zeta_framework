@@ -10,13 +10,11 @@ add_library(zf_core STATIC
     include/zc/math.h
     include/zc/mem/avl_tree.h
     include/zc/mem/bit_vector.h
+    include/zc/mem/arrays.h
     include/zc/mem/dynamic_array.h
     include/zc/mem/heaps.h
     include/zc/mem/mem.h
-    include/zc/mem/queue.h
     include/zc/mem/sorting.h
-    include/zc/mem/stack.h
-    include/zc/mem/static_array.h
     include/zc/mem/strs.h
     include/zc/mem/unordered_map.h
 )

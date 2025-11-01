@@ -5,6 +5,7 @@
 #include <cstdlib>
 #include <type_traits>
 #include <new>
+#include <zc/mem/arrays.h>
 
 #define ZF_SIZE_IN_BITS(x) (8 * sizeof(x))
 
@@ -61,56 +62,6 @@ namespace zf {
         assert(x < width);
         return (width * y) + x;
     }
-
-    template<typename tp_type>
-    class c_array {
-    public:
-        c_array() = default;
-
-        c_array(tp_type* const buf, const int len) : m_buf(buf), m_len(len) {
-            assert((!buf && len == 0) || (buf && len > 0));
-        }
-
-        tp_type* Raw() const {
-            return m_buf;
-        }
-
-        int Len() const {
-            return m_len;
-        }
-
-        size_t SizeInBytes() const {
-            return sizeof(tp_type) * Len();
-        }
-
-        bool IsEmpty() const {
-            return m_len == 0;
-        }
-
-        tp_type& operator[](const int index) const {
-            assert(index >= 0 && index < m_len);
-            return m_buf[index];
-        }
-
-        c_array Slice(const int beg, const int end) const {
-            assert(beg >= 0 && beg <= m_len);
-            assert(end >= 0 && end <= m_len);
-            assert(beg <= end);
-            return {m_buf + beg, end - beg};
-        }
-
-        c_array<const tp_type> View() const {
-            return {m_buf, m_len};
-        }
-
-        operator c_array<const tp_type>() const {
-            return View();
-        }
-
-    private:
-        tp_type* m_buf = nullptr;
-        int m_len = 0;
-    };
 
     template<typename tp_type>
     void MemCopy(const c_array<tp_type> dest, const c_array<const tp_type> src) {
