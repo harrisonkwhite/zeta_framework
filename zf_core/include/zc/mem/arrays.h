@@ -59,9 +59,9 @@ namespace zf {
 
         tp_type buf_raw[tp_len] = {};
 
-        s_static_array() = default;
+        constexpr s_static_array() = default;
 
-        s_static_array(const tp_type (&buf)[tp_len]) {
+        constexpr s_static_array(const tp_type (&buf)[tp_len]) {
             for (int i = 0; i < tp_len; i++) {
                 buf_raw[i] = buf[i];
             }
