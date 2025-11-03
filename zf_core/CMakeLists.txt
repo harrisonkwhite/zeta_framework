@@ -2,7 +2,7 @@ add_library(zf_core STATIC
     src/math.cpp
     src/io.cpp
     src/gfx.cpp
-    src/mem/bits.cpp
+    src/mem/bit_vector.cpp
     ../external/stb_image/src/stb_image.c
     ../external/stb_truetype/src/stb_truetype.c
 
@@ -10,7 +10,7 @@ add_library(zf_core STATIC
     include/zc/io.h
     include/zc/math.h
     include/zc/mem/avl_tree.h
-    include/zc/mem/bits.h
+    include/zc/mem/bit_vector.h
     include/zc/mem/arrays.h
     include/zc/mem/dynamic_array.h
     include/zc/mem/heaps.h
