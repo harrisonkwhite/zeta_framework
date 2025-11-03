@@ -138,4 +138,57 @@ namespace zf {
         c_array<tp_type> m_backing_arr;
         int m_height = 0;
     };
+
+    template<typename tp_type>
+    class c_queue {
+    public:
+        c_queue() = default;
+
+        c_queue(const c_array<tp_type> backing_arr, const int init_len = 0, const int init_begin_index = 0) : m_backing_arr(backing_arr), m_len(init_len), m_begin_index(init_begin_index) {
+            assert(init_len >= 0 && init_len <= backing_arr.Len());
+            assert(init_begin_index >= 0 && init_begin_index < backing_arr.Len());
+        }
+
+        int Len() const {
+            return m_len;
+        }
+
+        int Cap() const {
+            return m_backing_arr.Len();
+        }
+
+        bool IsEmpty() const {
+            return m_len == 0;
+        }
+
+        bool IsFull() const {
+            return m_len == Cap();
+        }
+
+        tp_type& operator[](const int index) const {
+            assert(index < m_len);
+            return m_backing_arr[Wrap(m_begin_index + index, 0, m_backing_arr.Len())];
+        }
+
+        void Enqueue(const tp_type& val) {
+            assert(!IsFull());
+
+            m_backing_arr[Wrap(m_begin_index + m_len, 0, m_backing_arr.Len())] = val;
+            m_len++;
+        }
+
+        tp_type Dequeue() {
+            assert(!IsEmpty());
+
+            const int bi_old = m_begin_index;
+            m_begin_index = Wrap(m_begin_index + 1, 0, m_backing_arr.Len());
+            m_len--;
+            return m_backing_arr[bi_old];
+        }
+
+    private:
+        c_array<tp_type> m_backing_arr;
+        int m_len;
+        int m_begin_index;
+    };
 }

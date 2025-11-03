@@ -4,6 +4,11 @@
 #include <zc/math.h>
 
 namespace zf {
+    // @todo:
+    // This all needs to be reworked. These should be structs and not classes, since there is no ownership of the string buffer.
+    // Also need to support other languages.
+    // Also account for the fact that a null-terminated string array does not necessarily have the terminator in the last character.
+
     class c_string_view {
     public:
         c_string_view() = default;
