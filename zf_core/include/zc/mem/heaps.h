@@ -11,43 +11,57 @@ namespace zf {
             assert(cap > 0);
 
             *this = {};
-            m_elems = mem_arena.PushArray<tp_type>(cap);
-            return !m_elems.IsEmpty();
+            m_nodes = mem_arena.PushArray<tp_type>(cap);
+            return !m_nodes.IsEmpty();
         }
 
-        void Insert(const tp_type& val) {
-            assert(m_elems_used_cnt < m_elems.Len());
-
-            m_elems_used_cnt++;
-            m_elems[m_elems_used_cnt - 1] = val;
-            BubbleUp(m_elems_used_cnt - 1);
+        int Len() const {
+            return m_len;
         }
 
-        const tp_type& GetMin() const {
-            assert(m_elems_used_cnt > 0);
-            return m_elems[0];
-        }
-
-        void RemoveMin() {
-            m_elems_used_cnt--;
-
-            if (m_elems_used_cnt > 0) {
-                m_elems[0] = m_elems[m_elems_used_cnt];
-                BubbleDown(0);
-            }
-        }
-
-        int GetElemCnt() const {
-            return m_elems_used_cnt;
+        int Cap() const {
+            return m_nodes.Len();
         }
 
         bool IsEmpty() const {
-            return m_elems_used_cnt == 0;
+            return m_len == 0;
+        }
+
+        bool IsFull() const {
+            return m_len == Cap();
+        }
+
+        void Insert(const tp_type& val) {
+            assert(!IsFull());
+
+            m_len++;
+            m_nodes[m_len - 1] = val;
+            BubbleUp(m_len - 1);
+        }
+
+        const tp_type& Min() const {
+            assert(!IsEmpty());
+            return m_nodes[0];
+        }
+
+        tp_type RemoveMin() {
+            assert(!IsEmpty());
+
+            const tp_type ret = m_nodes[0];
+
+            m_len--;
+
+            if (m_len > 0) {
+                m_nodes[0] = m_nodes[m_len];
+                BubbleDown(0);
+            }
+
+            return ret;
         }
 
     private:
-        c_array<tp_type> m_elems;
-        int m_elems_used_cnt = 0;
+        c_array<tp_type> m_nodes;
+        int m_len = 0;
 
         static int IndexOfLeft(const int index) {
             return (2 * index) + 1;
@@ -62,7 +76,7 @@ namespace zf {
         }
 
         bool Contains(const int index) const {
-            return index >= 0 && index < m_elems_used_cnt;
+            return index >= 0 && index < m_len;
         }
 
         void BubbleUp(const int index) {
@@ -74,11 +88,11 @@ namespace zf {
 
             const int par_index = IndexOfParent(index);
 
-            if (m_elems[par_index] <= m_elems[index]) {
+            if (m_nodes[par_index] <= m_nodes[index]) {
                 return;
             }
 
-            Swap(m_elems[index], m_elems[par_index]);
+            Swap(m_nodes[index], m_nodes[par_index]);
             BubbleUp(par_index);
         }
 
@@ -95,10 +109,10 @@ namespace zf {
                 return;
             }
 
-            const int index_of_smaller = !right_exists || m_elems[left_index] <= m_elems[right_index] ? left_index : right_index;
+            const int index_of_smaller = !right_exists || m_nodes[left_index] <= m_nodes[right_index] ? left_index : right_index;
 
-            if (m_elems[index_of_smaller] < m_elems[index]) {
-                Swap(m_elems[index], m_elems[index_of_smaller]);
+            if (m_nodes[index_of_smaller] < m_nodes[index]) {
+                Swap(m_nodes[index], m_nodes[index_of_smaller]);
                 BubbleDown(index_of_smaller);
             }
         }
