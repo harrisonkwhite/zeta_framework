@@ -94,15 +94,45 @@ namespace zf {
     class c_stack {
     public:
         c_stack() = default;
+
         c_stack(const c_array<tp_type> backing_arr, const int init_height = 0) : m_backing_arr(backing_arr), m_height(init_height) {
             assert(init_height >= 0 && init_height <= backing_arr.Len());
         }
 
-        int Height() const;
-        int Cap() const;
-        tp_type& operator[](const int index) const;
-        void Push(const tp_type& val);
-        tp_type Pop();
+        int Height() const {
+            return m_height;
+        }
+
+        int Cap() const {
+            return m_backing_arr.Len();
+        }
+
+        bool IsEmpty() const {
+            return m_height == 0;
+        }
+
+        bool IsFull() const {
+            return m_height == Cap();
+        }
+
+        tp_type& operator[](const int index) const {
+            assert(index < m_height);
+            return m_backing_arr[index];
+        }
+
+        void Push(const tp_type& val) {
+            assert(!IsFull());
+
+            m_backing_arr[m_height] = val;
+            m_height++;
+        }
+
+        tp_type Pop() {
+            assert(!IsEmpty());
+
+            m_height--;
+            return m_backing_arr[m_height];
+        }
 
     private:
         c_array<tp_type> m_backing_arr;
