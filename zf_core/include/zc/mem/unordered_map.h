@@ -160,7 +160,10 @@ namespace zf {
         int (*m_hash_code_generator)(const tp_key_type& key) = nullptr;
 
         int KeyToHashIndex(const tp_key_type& key) const {
-            return Wrap(m_hash_code_generator(key), 0, m_backing_store_indexes.Len());
+            const int val = m_hash_code_generator(key);
+            assert(val >= 0);
+
+            return val % m_backing_store_indexes.Len();
         }
     };
 }
