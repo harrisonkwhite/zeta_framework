@@ -4,13 +4,14 @@
 #include <zc/io.h>
 
 namespace zf {
+#if 0
     struct s_range {
-        float min;
-        float max;
+        float min = 0.0f;
+        float max = 0.0f;
     };
 
     static s_range ProjectPts(const c_array<const s_v2> pts, const s_v2 edge) {
-        s_range range{
+        s_range range = {
             .min = FLT_MAX,
             .max = -FLT_MAX
         };
@@ -48,14 +49,12 @@ namespace zf {
         return true;
     }
 
-    s_poly GenQuadPoly(c_mem_arena& mem_arena, const s_v2 pos, const s_v2 size, const s_v2 origin) {
+    bool s_poly::InitQuad(c_mem_arena& mem_arena, const s_v2 pos, const s_v2 size, const s_v2 origin) {
         assert(origin.x >= 0.0f && origin.x <= 1.0f && origin.y >= 0.0f && origin.y <= 1.0f);
 
-        const auto pts = mem_arena.PushArray<s_v2>(4);
-
-        if (pts.IsEmpty()) {
+        if (!pts.Init(mem_arena, 4)) {
             ZF_LOG_ERROR("Failed to reserve memory for quad polygon points!");
-            return {};
+            return false;
         }
 
         const s_v2 pos_base = {pos.x - (size.x * origin.x), pos.y - (size.y * origin.y)};
@@ -65,17 +64,15 @@ namespace zf {
         pts[2] = {pos_base.x + size.x, pos_base.y + size.y};
         pts[3] = {pos_base.x, pos_base.y + size.y};
 
-        return {.pts = pts.View()};
+        return true;
     }
 
-    s_poly GenQuadPolyRotated(c_mem_arena& mem_arena, const s_v2 pos, const s_v2 size, const s_v2 origin, const float rot) {
+    bool s_poly::InitQuadWithRot(c_mem_arena& mem_arena, const s_v2 pos, const s_v2 size, const s_v2 origin, const float rot) {
         assert(origin.x >= 0.0f && origin.x <= 1.0f && origin.y >= 0.0f && origin.y <= 1.0f);
 
-        const auto pts = mem_arena.PushArray<s_v2>(4);
-
-        if (pts.IsEmpty()) {
+        if (!pts.Init(mem_arena, 4)) {
             ZF_LOG_ERROR("Failed to reserve memory for rotated quad polygon points!");
-            return {};
+            return false;
         }
 
         const s_v2 offs_left = LenDir(size.x * origin.x, rot + g_pi);
@@ -88,29 +85,34 @@ namespace zf {
         pts[2] = {pos.x + offs_right.x + offs_down.x, pos.y + offs_right.y + offs_down.y};
         pts[3] = {pos.x + offs_left.x + offs_down.x, pos.y + offs_left.y + offs_down.y};
 
-        return {.pts = pts.View()};
+        return true;
     }
 
-    bool DoPolysInters(const s_poly a, const s_poly b) {
-        return CheckPolySep(a, b) && CheckPolySep(b, a);
+    bool s_poly::DoesIntersWith(const s_poly other) const {
+        return CheckPolySep(*this, other) && CheckPolySep(other, *this);
     }
 
-    bool DoesPolyIntersWithRect(const s_poly poly, const s_rect rect) {
+    bool s_poly::DoesIntersWith(const s_rect other) const {
         const s_static_array<s_v2, 4> pts = {{
-            {rect.x, rect.y},
-            {rect.x + rect.width, rect.y},
-            {rect.x + rect.width, rect.y + rect.height},
-            {rect.x, rect.y + rect.height}
+            {other.x, other.y},
+            {other.x + other.width, other.y},
+            {other.x + other.width, other.y + other.height},
+            {other.x, other.y + other.height}
         }};
 
-        return DoPolysInters(poly, {.pts = pts.Nonstatic()});
+        return DoesIntersWith({.pts = pts.Nonstatic()});
     }
 
-    s_rect_edges PolySpan(const s_poly poly) {
-        s_rect_edges span{.left = FLT_MAX, .top = FLT_MAX, .right = FLT_MIN, .bottom = FLT_MIN};
+    s_rect_edges s_poly::CalcSpan() const {
+        s_rect_edges span = {
+            .left = FLT_MAX,
+            .top = FLT_MAX,
+            .right = FLT_MIN,
+            .bottom = FLT_MIN
+        };
 
-        for (t_s32 i = 0; i < poly.pts.Len(); i++) {
-            const s_v2 pt = poly.pts[i];
+        for (t_s32 i = 0; i < pts.Len(); i++) {
+            const s_v2 pt = pts[i];
 
             span.left = Min(pt.x, span.left);
             span.right = Max(pt.x, span.right);
@@ -120,4 +122,5 @@ namespace zf {
 
         return span;
     }
+#endif
 }

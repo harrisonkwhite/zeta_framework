@@ -1,6 +1,6 @@
 #pragma once
 
-#include <zc/mem/mem.h>
+#include <zc/mem/arrays.h>
 
 namespace zf {
     template<typename tp_type>
@@ -10,9 +10,16 @@ namespace zf {
         bool Init(c_mem_arena& mem_arena, const int cap) {
             assert(cap > 0);
 
-            *this = {};
-            m_nodes = mem_arena.PushArray<tp_type>(cap);
-            return !m_nodes.IsEmpty();
+            c_array<tp_type> nodes;
+
+            if (!nodes.Init(mem_arena, cap)) {
+                return false;
+            }
+
+            m_nodes = nodes;
+            m_len = 0;
+
+            return true;
         }
 
         int Len() const {

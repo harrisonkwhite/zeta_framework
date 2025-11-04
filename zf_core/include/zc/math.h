@@ -297,16 +297,22 @@ namespace zf {
         }
     };
 
+#if 0
     struct s_poly {
-        c_array<const s_v2> pts;
+        c_array<s_v2> pts;
+
+        [[nodiscard]] bool InitQuad(c_mem_arena& mem_arena, const s_v2 pos, const s_v2 size, const s_v2 origin);
+        [[nodiscard]] bool InitQuadWithRot(c_mem_arena& mem_arena, const s_v2 pos, const s_v2 size, const s_v2 origin, const float rot);
+
+        bool DoesIntersWith(const s_poly other) const;
+        bool DoesIntersWith(const s_rect other) const;
+
+        s_rect_edges CalcSpan() const;
     };
 
-    s_poly GenQuadPoly(c_mem_arena& mem_arena, const s_v2 pos, const s_v2 size, const s_v2 origin);
-    s_poly GenQuadPolyRotated(c_mem_arena& mem_arena, const s_v2 pos, const s_v2 size, const s_v2 origin, const float rot);
-
-    bool DoPolysInters(const s_poly a, const s_poly b);
-    bool DoesPolyIntersWithRect(const s_poly poly, const s_rect rect);
-    s_rect_edges PolySpan(const s_poly poly);
+    using td_poly = c_array<s_v2>;
+    using td_poly_view = c_array<const s_v2>;
+#endif
 
     static inline s_v2 LenDir(const float len, const float dir) {
         return {cosf(dir) * len, -sinf(dir) * len};

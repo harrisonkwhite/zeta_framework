@@ -4,19 +4,6 @@
 #include <zc/mem/arrays.h>
 
 namespace zf {
-    constexpr t_u8 BitMask(const size_t index) {
-        return 1 << (index % 8);
-    }
-
-    constexpr t_u8 BitRangeMask(const size_t begin_index, const size_t end_index = 8) {
-        assert(end_index <= 8);
-        assert(begin_index <= end_index);
-
-        const size_t range_len = end_index - begin_index;
-        const t_u8 mask_at_bottom = (1 << range_len) - 1;
-        return mask_at_bottom << begin_index;
-    }
-
     class c_bit_vector {
     public:
         c_bit_vector() = default;

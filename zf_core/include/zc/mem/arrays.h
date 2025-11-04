@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cassert>
+#include <zc/mem/mem.h>
 
 namespace zf {
     template<typename tp_type>
@@ -10,6 +11,26 @@ namespace zf {
 
         c_array(tp_type* const buf, const int len) : m_buf(buf), m_len(len) {
             assert((!buf && len == 0) || (buf && len >= 0));
+        }
+
+        [[nodiscard]]
+        bool Init(c_mem_arena& mem_arena, const int len) {
+            assert(!IsInitted());
+            assert(len > 0);
+
+            m_buf = mem_arena.PushType<tp_type>();
+
+            if (!m_buf) {
+                return false;
+            }
+
+            m_len = len;
+
+            return true;
+        }
+
+        bool IsInitted() const {
+            return m_buf;
         }
 
         tp_type* Raw() const {
@@ -99,6 +120,22 @@ namespace zf {
             assert(init_height >= 0 && init_height <= backing_arr.Len());
         }
 
+        [[nodiscard]]
+        bool Init(c_mem_arena& mem_arena, const int cap) {
+            assert(cap > 0);
+
+            c_array<tp_type> arr;
+
+            if (!arr.Init(mem_arena, cap)) {
+                return false;
+            }
+
+            m_backing_arr = arr;
+            m_height = 0;
+
+            return true;
+        }
+
         int Height() const {
             return m_height;
         }
@@ -149,6 +186,23 @@ namespace zf {
             assert(init_begin_index >= 0 && init_begin_index < backing_arr.Len());
         }
 
+        [[nodiscard]]
+        bool Init(c_mem_arena& mem_arena, const int cap) {
+            assert(cap > 0);
+
+            c_array<tp_type> arr;
+
+            if (!arr.Init(mem_arena, cap)) {
+                return false;
+            }
+
+            m_backing_arr = arr;
+            m_len = 0;
+            m_begin_index = 0;
+
+            return true;
+        }
+
         int Len() const {
             return m_len;
         }
@@ -191,4 +245,21 @@ namespace zf {
         int m_len;
         int m_begin_index;
     };
+
+    template<typename tp_type>
+    bool BinarySearch(const c_array<const tp_type> arr, const tp_type& elem) {
+        assert(IsSorted(arr));
+
+        if (arr.Len() == 0) {
+            return false;
+        }
+
+        const tp_type& mid = elem[arr.Len() / 2];
+
+        if (mid == elem) {
+            return true;
+        }
+
+        return elem < mid ? BinarySearch(arr.Slice(0, arr.Len() / 2), elem) : BinarySearch(arr.Slice((arr.Len() / 2) + 1, arr.Len()), elem);
+    }
 }

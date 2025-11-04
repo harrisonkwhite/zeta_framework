@@ -15,9 +15,7 @@ namespace zf {
             return false;
         }
 
-        tex.px_data = mem_arena.PushArray<t_u8>(4 * tex.dims.x * tex.dims.y);
-
-        if (tex.px_data.IsEmpty()) {
+        if (!tex.px_data.Init(mem_arena, 4 * tex.dims.x * tex.dims.y)) {
             ZF_LOG_ERROR("Failed to reserve memory for RGBA texture pixel data!");
             stbi_image_free(stb_px_data);
             return false;
@@ -85,9 +83,9 @@ namespace zf {
 
     static c_array<const t_u8> GenFontTextureRGBAPixelData(c_mem_arena& mem_arena, const stbtt_fontinfo& stb_font_info, const t_s32 height, const s_font_arrangement& arrangement, const s_font_texture_meta tex_meta) {
         // Reserve the needed memory based on font texture size.
-        const auto rgba_px_data = mem_arena.PushArray<t_u8>(4 * tex_meta.size.x * tex_meta.size.y);
+        c_array<t_u8> rgba_px_data;
 
-        if (rgba_px_data.IsEmpty()) {
+        if (!rgba_px_data.Init(mem_arena, 4 * tex_meta.size.x * tex_meta.size.y)) {
             ZF_LOG_ERROR("Failed to reserve memory for font texture RGBA pixel data!");
             return {};
         }
