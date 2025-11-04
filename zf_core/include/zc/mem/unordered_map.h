@@ -83,7 +83,7 @@ namespace zf {
             }
 
             bool Get(const int index, const tp_key_type& key, tp_value_type* const val) const {
-                //assert(index >= -1 && index < ???);
+                assert(index >= -1 && index < Len());
 
                 if (index == -1) {
                     return false;
@@ -102,7 +102,7 @@ namespace zf {
 
             [[nodiscard]]
             bool Put(int& index, const tp_key_type& key, const tp_value_type& val) {
-                //assert(index >= -1 && index < ???);
+                assert(index >= -1 && index < Len());
 
                 if (index == -1) {
                     const int prospective_index = m_usage.IndexOfFirstUnsetBit();
@@ -131,16 +131,15 @@ namespace zf {
             }
 
             bool Remove(int& index, const tp_key_type& key, const tp_value_type& val) {
-                //assert(index >= -1 && index < ???);
+                assert(index >= -1 && index < Len());
 
                 if (index == -1) {
                     return false;
                 }
 
                 if (m_keys[index] == key) {
-                    index = m_next_indexes[index];
-                    m_next_indexes[index] = -1; // Not really needed?
                     m_usage.UnsetBit(index);
+                    index = m_next_indexes[index];
                     return true;
                 }
 
@@ -148,6 +147,10 @@ namespace zf {
             }
 
         private:
+            int Len() const {
+                return m_keys.Len();
+            }
+
             c_array<tp_key_type> m_keys;
             c_array<tp_value_type> m_vals;
             c_array<int> m_next_indexes;
