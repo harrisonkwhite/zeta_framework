@@ -141,9 +141,9 @@ namespace zf {
         }
 
         // Get the plain font file data.
-        const c_array<t_u8> file_data = LoadFileContents(file_path, temp_mem_arena);
+        c_array<t_u8> file_data;
 
-        if (file_data.IsEmpty()) {
+        if (!LoadFileContents(file_data, temp_mem_arena, file_path)) {
             ZF_LOG_ERROR("Failed to reserve memory for font file contents!");
             return false;
         }

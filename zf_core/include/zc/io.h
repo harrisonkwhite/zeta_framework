@@ -176,5 +176,5 @@ namespace zf {
         bool m_close_deferred = false;
     };
 
-    bool LoadFileContents(c_array<t_u8>& contents, const c_string_view file_path, c_mem_arena& mem_arena, const bool include_terminating_byte);
+    bool LoadFileContents(c_array<t_u8>& contents, c_mem_arena& mem_arena, const c_string_view file_path, const bool include_terminating_byte = false);
 }
