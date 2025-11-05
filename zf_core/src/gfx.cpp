@@ -177,11 +177,12 @@ namespace zf {
         return true;
     }
 
-    static bool PackShaderFromRawFile(c_file_writer& fw, const s_str_view file_path, const bool is_fs, const s_str_view varying_def_file_path) {
+    static bool PackShaderFromRawFile(c_file_stream& fs, const s_str_view file_path, const bool is_fs, const s_str_view varying_def_file_path) {
+        assert(fs.IsWriting());
         assert(file_path.IsTerminated());
         assert(varying_def_file_path.IsTerminated());
 
-        const char* args[] = {
+        const char* const args[] = {
             "shaderc",
             "-f", file_path.Raw(),
             "--type", is_fs ? "fragment" : "vertex",
@@ -193,7 +194,7 @@ namespace zf {
 
         reproc_options options = {};
         options.redirect.out.type = REPROC_REDIRECT_FILE;
-        options.redirect.out.file = fw.Raw();
+        options.redirect.out.file = fs.Raw();
 
         const int res = reproc_run(args, options);
 
@@ -205,25 +206,29 @@ namespace zf {
         return true;
     }
 
-    static bool PackShaderProgFromRawFiles(c_file_writer& fw, const s_str_view vs_file_path, const s_str_view fs_file_path, const s_str_view varying_def_file_path) {
-        if (!PackShaderFromRawFile(fw, vs_file_path, false, varying_def_file_path)) {
+    static bool PackShaderProgFromRawFiles(c_file_stream& fs, const s_str_view vs_file_path, const s_str_view fs_file_path, const s_str_view varying_def_file_path) {
+        assert(fs.IsWriting());
+
+        if (!PackShaderFromRawFile(fs, vs_file_path, false, varying_def_file_path)) {
             return false;
         }
 
-        if (!PackShaderFromRawFile(fw, fs_file_path, true, varying_def_file_path)) {
+        if (!PackShaderFromRawFile(fs, fs_file_path, true, varying_def_file_path)) {
             return false;
         }
 
         return true;
     }
 
-    bool PackTexture(c_file_writer& fw, const s_rgba_texture rgba_tex) {
-        if (!fw.WriteItem(rgba_tex.dims)) {
+    bool PackTexture(c_file_stream& fs, const s_rgba_texture rgba_tex) {
+        assert(fs.IsWriting());
+
+        if (!fs.WriteItem(rgba_tex.dims)) {
             ZF_LOG_ERROR("Failed to write texture size during packing!");
             return false;
         }
 
-        if (fw.Write(rgba_tex.px_data.View()) < rgba_tex.px_data.Len()) {
+        if (fs.WriteItems(rgba_tex.px_data.View()) < rgba_tex.px_data.Len()) {
             ZF_LOG_ERROR("Failed to write pixel data during packing!");
             return false;
         }
@@ -231,21 +236,24 @@ namespace zf {
         return true;
     }
 
-    void UnpackTexture(c_file_reader& fr, s_rgba_texture& rgba_tex) {
+    void UnpackTexture(c_file_stream& fs, s_rgba_texture& rgba_tex) {
+        assert(!fs.IsWriting());
     }
 
-    bool PackFont(c_file_writer& fw, const s_font_arrangement& arrangement, const s_font_texture_meta tex_meta, const c_array<const t_u8> tex_rgba_px_data) {
-        if (!fw.WriteItem(arrangement)) {
+    bool PackFont(c_file_stream& fs, const s_font_arrangement& arrangement, const s_font_texture_meta tex_meta, const c_array<const t_u8> tex_rgba_px_data) {
+        assert(fs.IsWriting());
+
+        if (!fs.WriteItem(arrangement)) {
             ZF_LOG_ERROR("Failed to write font arrangement during packing!");
             return false;
         }
 
-        if (!fw.WriteItem(tex_meta)) {
+        if (!fs.WriteItem(tex_meta)) {
             ZF_LOG_ERROR("Failed to write font texture metadata during packing!");
             return false;
         }
 
-        if (fw.Write(tex_rgba_px_data) < tex_rgba_px_data.Len()) {
+        if (fs.WriteItems(tex_rgba_px_data) < tex_rgba_px_data.Len()) {
             ZF_LOG_ERROR("Failed to write font texture RGBA pixel data during packing!");
             return false;
         }
@@ -253,6 +261,7 @@ namespace zf {
         return true;
     }
 
-    void UnpackFont(c_file_reader& fr, s_font_arrangement& arrangement, s_font_texture_meta tex_meta, c_array<const t_u8>& tex_rgba_px_data) {
+    void UnpackFont(c_file_stream& fs, s_font_arrangement& arrangement, s_font_texture_meta tex_meta, c_array<const t_u8>& tex_rgba_px_data) {
+        assert(!fs.IsWriting());
     }
 }

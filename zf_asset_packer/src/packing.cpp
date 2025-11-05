@@ -9,7 +9,10 @@ namespace zf {
         t_s32 shader_prog_cnt;
     };
 
-    static bool PackTexturesFromInstrs(c_file_writer& fw, cJSON* const cj, c_mem_arena& temp_mem_arena) {
+    static bool PackTexturesFromInstrs(c_file_stream& fs, cJSON* const cj, c_mem_arena& temp_mem_arena) {
+        assert(fs.IsWriting());
+        assert(cj);
+
         cJSON* const cj_textures = cJSON_GetObjectItemCaseSensitive(cj, "textures");
 
         if (!cJSON_IsArray(cj_textures)) {
@@ -41,7 +44,7 @@ namespace zf {
                 return false;
             }
 
-            if (!PackTexture(fw, rgba_tex)) {
+            if (!PackTexture(fs, rgba_tex)) {
                 ZF_LOG_ERROR("Failed to pack texture from file \"%s\"!", cj_file_path->valuestring);
                 return false;
             }
@@ -54,7 +57,10 @@ namespace zf {
         return true;
     }
 
-    static bool PackFontsFromInstrs(c_file_writer& fw, cJSON* const cj, c_mem_arena& temp_mem_arena) {
+    static bool PackFontsFromInstrs(c_file_stream& fs, cJSON* const cj, c_mem_arena& temp_mem_arena) {
+        assert(fs.IsWriting());
+        assert(cj);
+
         cJSON* const cj_fonts = cJSON_GetObjectItemCaseSensitive(cj, "fonts");
 
         if (!cJSON_IsArray(cj_fonts)) {
@@ -104,7 +110,7 @@ namespace zf {
 
         cJSON* const cj = cJSON_Parse(instrs_json.Raw());
 
-        c_file_writer fw;
+        c_file_stream fs;
 
         if (!cj) {
             ZF_LOG_ERROR_SPECIAL("cJSON", "%s", cJSON_GetErrorPtr());
@@ -118,26 +124,26 @@ namespace zf {
             goto out_b;
         }
 
-        if (!fw.Open(output_file_path)) {
+        if (!fs.Open(output_file_path, true)) {
             ZF_LOG_ERROR("Failed to open output file \"%s\" for writing!", output_file_path.Raw());
             success = false;
             goto out_b;
         }
 
-        if (!PackTexturesFromInstrs(fw, cj, temp_mem_arena)) {
+        if (!PackTexturesFromInstrs(fs, cj, temp_mem_arena)) {
             ZF_LOG_ERROR("Failed to pack textures!");
             success = false;
             goto out_c;
         }
 
-        if (!PackFontsFromInstrs(fw, cj, temp_mem_arena)) {
+        if (!PackFontsFromInstrs(fs, cj, temp_mem_arena)) {
             ZF_LOG_ERROR("Failed to pack fonts!");
             success = false;
             goto out_c;
         }
 
 out_c:
-        fw.Close();
+        fs.Close();
 
 out_b:
         cJSON_Delete(cj);

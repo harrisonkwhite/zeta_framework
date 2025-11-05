@@ -5,22 +5,22 @@ namespace zf {
         assert(!contents.IsInitted());
         assert(file_path.IsTerminated());
 
-        c_file_reader fr;
-        fr.DeferClose();
+        c_file_stream fs;
+        fs.DeferClose();
 
-        if (!fr.Open(file_path)) {
+        if (!fs.Open(file_path, false)) {
             ZF_LOG_ERROR("Failed to open \"%s\"!", file_path.Raw());
             return false;
         }
 
-        const auto file_size = fr.CalcSize();
+        const auto file_size = fs.CalcSize();
 
         if (!contents.Init(mem_arena, include_terminating_byte ? file_size + 1 : file_size)) {
             ZF_LOG_ERROR("Failed to reserve memory for the contents of file \"%s\"!", file_path.Raw());
             return false;
         }
 
-        if (fr.Read(contents) < file_size) {
+        if (fs.ReadItems(contents) < file_size) {
             ZF_LOG_ERROR("Failed to read the contents of \"%s\"!", file_path.Raw());
             return false;
         }

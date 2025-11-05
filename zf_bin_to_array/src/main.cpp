@@ -6,7 +6,7 @@ namespace zf {
     bool OutputCode(const s_str_view input_file_path, const s_str_view output_file_path, const s_str_view arr_subname) {
         assert(arr_subname.IsTerminated());
 
-        c_file_reader input_reader;
+        c_file_stream input_reader;
         input_reader.DeferClose();
 
         if (!input_reader.Open(input_file_path)) {
