@@ -8,7 +8,7 @@
 
 namespace zf {
     bool LoadRGBATextureFromRawFile(s_rgba_texture& tex, c_mem_arena& mem_arena, const s_str_view file_path) {
-        assert(file_path.IsTerminated());
+        ZF_ASSERT(file_path.IsTerminated());
 
         stbi_uc* const stb_px_data = stbi_load(file_path.Raw(), &tex.dims.x, &tex.dims.y, NULL, 4);
 
@@ -85,7 +85,7 @@ namespace zf {
     }
 
     static bool LoadFontTextureRGBAPixelData(c_array<t_u8>& rgba_px_data, c_mem_arena& mem_arena, const stbtt_fontinfo& stb_font_info, const t_s32 height, const s_font_arrangement& arrangement, const s_font_texture_meta tex_meta) {
-        assert(rgba_px_data.IsEmpty());
+        ZF_ASSERT(rgba_px_data.IsEmpty());
 
         // Reserve the needed memory based on font texture size.
         if (!rgba_px_data.Init(mem_arena, 4 * tex_meta.size.x * tex_meta.size.y)) {
@@ -179,8 +179,8 @@ namespace zf {
     }
 
     static bool PackShaderFromRawFile(s_file_stream& fs, const s_str_view file_path, const bool is_fs, const s_str_view varying_def_file_path) {
-        assert(file_path.IsTerminated());
-        assert(varying_def_file_path.IsTerminated());
+        ZF_ASSERT(file_path.IsTerminated());
+        ZF_ASSERT(varying_def_file_path.IsTerminated());
 
         const char* const args[] = {
             "shaderc",

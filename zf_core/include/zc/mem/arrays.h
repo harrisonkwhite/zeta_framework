@@ -1,6 +1,5 @@
 #pragma once
 
-#include <cassert>
 #include <zc/mem/mem.h>
 
 namespace zf {
@@ -10,12 +9,12 @@ namespace zf {
         c_array() = default;
 
         c_array(tp_type* const buf, const int len) : m_buf(buf), m_len(len) {
-            assert((!buf && len == 0) || (buf && len >= 0));
+            ZF_ASSERT((!buf && len == 0) || (buf && len >= 0));
         }
 
         [[nodiscard]]
         bool Init(c_mem_arena& mem_arena, const int len) {
-            assert(len > 0);
+            ZF_ASSERT(len > 0);
 
             m_buf = mem_arena.PushType<tp_type>(len);
 
@@ -45,7 +44,7 @@ namespace zf {
         }
 
         tp_type& operator[](const int index) const {
-            assert(index >= 0 && index < m_len);
+            ZF_ASSERT(index >= 0 && index < m_len);
             return m_buf[index];
         }
 
@@ -58,9 +57,9 @@ namespace zf {
         }
 
         c_array Slice(const int beg, const int end) const {
-            assert(beg >= 0 && beg <= m_len);
-            assert(end >= 0 && end <= m_len);
-            assert(beg <= end);
+            ZF_ASSERT(beg >= 0 && beg <= m_len);
+            ZF_ASSERT(end >= 0 && end <= m_len);
+            ZF_ASSERT(beg <= end);
             return {m_buf + beg, end - beg};
         }
 
@@ -88,12 +87,12 @@ namespace zf {
         }
 
         tp_type& operator[](const int index) {
-            assert(index >= 0 && index < tp_len);
+            ZF_ASSERT(index >= 0 && index < tp_len);
             return buf_raw[index];
         }
 
         const tp_type& operator[](const int index) const {
-            assert(index >= 0 && index < tp_len);
+            ZF_ASSERT(index >= 0 && index < tp_len);
             return buf_raw[index];
         }
 
@@ -112,12 +111,12 @@ namespace zf {
         c_stack() = default;
 
         c_stack(const c_array<tp_type> backing_arr, const int init_height = 0) : m_backing_arr(backing_arr), m_height(init_height) {
-            assert(init_height >= 0 && init_height <= backing_arr.Len());
+            ZF_ASSERT(init_height >= 0 && init_height <= backing_arr.Len());
         }
 
         [[nodiscard]]
         bool Init(c_mem_arena& mem_arena, const int cap) {
-            assert(cap > 0);
+            ZF_ASSERT(cap > 0);
 
             c_array<tp_type> arr;
 
@@ -148,19 +147,19 @@ namespace zf {
         }
 
         tp_type& operator[](const int index) const {
-            assert(index < m_height);
+            ZF_ASSERT(index < m_height);
             return m_backing_arr[index];
         }
 
         void Push(const tp_type& val) {
-            assert(!IsFull());
+            ZF_ASSERT(!IsFull());
 
             m_backing_arr[m_height] = val;
             m_height++;
         }
 
         tp_type Pop() {
-            assert(!IsEmpty());
+            ZF_ASSERT(!IsEmpty());
 
             m_height--;
             return m_backing_arr[m_height];
@@ -177,13 +176,13 @@ namespace zf {
         c_queue() = default;
 
         c_queue(const c_array<tp_type> backing_arr, const int init_len = 0, const int init_begin_index = 0) : m_backing_arr(backing_arr), m_len(init_len), m_begin_index(init_begin_index) {
-            assert(init_len >= 0 && init_len <= backing_arr.Len());
-            assert(init_begin_index >= 0 && init_begin_index < backing_arr.Len());
+            ZF_ASSERT(init_len >= 0 && init_len <= backing_arr.Len());
+            ZF_ASSERT(init_begin_index >= 0 && init_begin_index < backing_arr.Len());
         }
 
         [[nodiscard]]
         bool Init(c_mem_arena& mem_arena, const int cap) {
-            assert(cap > 0);
+            ZF_ASSERT(cap > 0);
 
             c_array<tp_type> arr;
 
@@ -215,19 +214,19 @@ namespace zf {
         }
 
         tp_type& operator[](const int index) const {
-            assert(index < m_len);
+            ZF_ASSERT(index < m_len);
             return m_backing_arr[Wrap(m_begin_index + index, 0, m_backing_arr.Len())];
         }
 
         void Enqueue(const tp_type& val) {
-            assert(!IsFull());
+            ZF_ASSERT(!IsFull());
 
             m_backing_arr[Wrap(m_begin_index + m_len, 0, m_backing_arr.Len())] = val;
             m_len++;
         }
 
         tp_type Dequeue() {
-            assert(!IsEmpty());
+            ZF_ASSERT(!IsEmpty());
 
             const int bi_old = m_begin_index;
             m_begin_index = Wrap(m_begin_index + 1, 0, m_backing_arr.Len());
@@ -243,7 +242,7 @@ namespace zf {
 
     template<typename tp_type>
     bool BinarySearch(const c_array<const tp_type> arr, const tp_type& elem) {
-        assert(IsSorted(arr));
+        ZF_ASSERT(IsSorted(arr));
 
         if (arr.Len() == 0) {
             return false;

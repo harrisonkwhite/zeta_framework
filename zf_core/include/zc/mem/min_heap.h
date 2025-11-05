@@ -8,7 +8,7 @@ namespace zf {
     public:
         [[nodiscard]]
         bool Init(c_mem_arena& mem_arena, const int cap) {
-            assert(cap > 0);
+            ZF_ASSERT(cap > 0);
 
             c_array<tp_type> nodes;
 
@@ -23,7 +23,7 @@ namespace zf {
         }
 
         void Insert(const tp_type& val) {
-            assert(!IsFull());
+            ZF_ASSERT(!IsFull());
 
             m_len++;
             m_nodes[m_len - 1] = val;
@@ -31,7 +31,7 @@ namespace zf {
         }
 
         tp_type RemoveMin() {
-            assert(!IsEmpty());
+            ZF_ASSERT(!IsEmpty());
 
             const tp_type ret = m_nodes[0];
 
@@ -62,7 +62,7 @@ namespace zf {
         }
 
         const tp_type& Min() const {
-            assert(!IsEmpty());
+            ZF_ASSERT(!IsEmpty());
             return m_nodes[0];
         }
 
@@ -87,7 +87,7 @@ namespace zf {
         }
 
         void BubbleUp(const int index) {
-            assert(Contains(index));
+            ZF_ASSERT(Contains(index));
 
             if (index == 0) {
                 return;
@@ -104,7 +104,7 @@ namespace zf {
         }
 
         void BubbleDown(const int index) {
-            assert(Contains(index));
+            ZF_ASSERT(Contains(index));
 
             const int left_index = IndexOfLeft(index);
             const bool left_exists = Contains(left_index);

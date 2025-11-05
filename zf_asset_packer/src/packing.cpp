@@ -99,7 +99,7 @@ namespace zf {
     }
 
     bool PackAssets(const s_str_view instrs_json, const s_str_view output_file_path, c_mem_arena& temp_mem_arena) {
-        assert(instrs_json.IsTerminated());
+        ZF_ASSERT(instrs_json.IsTerminated());
 
         bool success = true;
 

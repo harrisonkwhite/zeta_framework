@@ -2,8 +2,8 @@
 
 namespace zf {
     bool c_mem_arena::Init(const size_t size) {
-        assert(!IsInitted());
-        assert(size > 0);
+        ZF_ASSERT(!IsInitted());
+        ZF_ASSERT(size > 0);
 
         m_buf = static_cast<t_u8*>(calloc(size, 1));
 
@@ -17,14 +17,14 @@ namespace zf {
     }
 
     void c_mem_arena::Release() {
-        assert(IsInitted());
+        ZF_ASSERT(IsInitted());
 
         free(m_buf);
         *this = {};
     }
 
     void* c_mem_arena::Push(const size_t size, const size_t alignment) {
-        assert(IsInitted());
+        ZF_ASSERT(IsInitted());
 
         const size_t offs_aligned = AlignForward(m_offs, alignment);
         const size_t offs_next = offs_aligned + size;

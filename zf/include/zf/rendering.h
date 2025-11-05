@@ -49,7 +49,7 @@ namespace zf {
     class c_gfx_resource_lifetime {
     public:
         bool Init(c_mem_arena& mem_arena, const int hdl_limit = 1024) {
-            assert(hdl_limit > 0);
+            ZF_ASSERT(hdl_limit > 0);
 
             m_hdls = PushArrayToMemArena<s_bgfx_resource_hdl_wrapper>(mem_arena, hdl_limit);
 
@@ -85,8 +85,8 @@ namespace zf {
         }
 
         void AddBGFXResource(const s_bgfx_resource_hdl_wrapper hdl_wrapper) {
-            assert(m_hdls_used_cnt < m_hdls.Len());
-            assert(hdl_wrapper.IsValid());
+            ZF_ASSERT(m_hdls_used_cnt < m_hdls.Len());
+            ZF_ASSERT(hdl_wrapper.IsValid());
 
             m_hdls[m_hdls_used_cnt] = hdl_wrapper;
             m_hdls_used_cnt++;
@@ -100,7 +100,7 @@ namespace zf {
     class c_texture_group {
     public:
         bool LoadRaws(const c_array<const c_string_view> file_paths, c_mem_arena& mem_arena, c_gfx_resource_lifetime& gfx_res_lifetime, c_mem_arena& temp_mem_arena) {
-            assert(!m_loaded);
+            ZF_ASSERT(!m_loaded);
 
             m_bgfx_hdls = PushArrayToMemArena<bgfx::TextureHandle>(mem_arena, file_paths.Len());
 
@@ -138,7 +138,7 @@ namespace zf {
         }
 
         void Unload() {
-            assert(m_loaded);
+            ZF_ASSERT(m_loaded);
         }
 
         bool IsLoaded() const {
@@ -146,17 +146,17 @@ namespace zf {
         }
 
         int GetCnt() const {
-            assert(m_loaded);
+            ZF_ASSERT(m_loaded);
             return m_bgfx_hdls.Len();
         }
 
         bgfx::TextureHandle GetTextureBGFXHandle(const int index) const {
-            assert(m_loaded);
+            ZF_ASSERT(m_loaded);
             return m_bgfx_hdls[index];
         }
 
         s_v2_s32 GetTextureSize(const int index) const {
-            assert(m_loaded);
+            ZF_ASSERT(m_loaded);
             return m_sizes[index];
         }
 
@@ -246,19 +246,19 @@ namespace zf {
         static void Shutdown();
 
         static c_gfx_resource_lifetime& GFXResourceLifetime() {
-            assert(sm_core.state == ec_renderer_state::initted);
+            ZF_ASSERT(sm_core.state == ec_renderer_state::initted);
             return sm_core.res_lifetime;
         }
 
         static void RefreshSize() {
-            assert(sm_core.state == ec_renderer_state::initted);
+            ZF_ASSERT(sm_core.state == ec_renderer_state::initted);
 
             s_v2_s32 fb_size = c_window::GetFramebufferSize();
             bgfx::reset(static_cast<uint32_t>(fb_size.x), static_cast<uint32_t>(fb_size.y), BGFX_RESET_VSYNC);
         }
 
         static void UpdateViewMatrix(const t_s32 view_index, const s_matrix_4x4& mat) {
-            assert(sm_core.state == ec_renderer_state::initted);
+            ZF_ASSERT(sm_core.state == ec_renderer_state::initted);
             sm_core.view_mats[view_index] = mat;
         }
 

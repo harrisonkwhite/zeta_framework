@@ -13,7 +13,7 @@ namespace zf {
     };
 
     inline const t_hash_func<s_str_view> g_str_hash_func = [](const s_str_view& key) {
-        assert(key.IsTerminated());
+        ZF_ASSERT(key.IsTerminated());
 
         // This is an FNV-1a implementation.
         const unsigned int offs_basis = 2166136261u;
@@ -36,8 +36,8 @@ namespace zf {
         // The immediate capacity is the total number of upfront slots (i.e. the maximum possible number of slots for which an O(1) access of a value from a key can happen).
         // The key-value pair capacity is the overall limit of how many key-value pairs this map can ever hold. It obviously has to be equal to or greater than the immediate capacity.
         bool Init(c_mem_arena& mem_arena, const t_hash_func<tp_key_type> hash_func, const int immediate_cap = 1024, const int kv_pair_cap = 1 << 16) {
-            assert(hash_func);
-            assert(kv_pair_cap >= immediate_cap);
+            ZF_ASSERT(hash_func);
+            ZF_ASSERT(kv_pair_cap >= immediate_cap);
 
             *this = {};
 
@@ -99,7 +99,7 @@ namespace zf {
             }
 
             bool Get(const int index, const tp_key_type& key, tp_value_type* const val) const {
-                assert(index >= -1 && index < Len());
+                ZF_ASSERT(index >= -1 && index < Len());
 
                 if (index == -1) {
                     return false;
@@ -118,7 +118,7 @@ namespace zf {
 
             [[nodiscard]]
             bool Put(int& index, const tp_key_type& key, const tp_value_type& val) {
-                assert(index >= -1 && index < Len());
+                ZF_ASSERT(index >= -1 && index < Len());
 
                 if (index == -1) {
                     const int prospective_index = m_usage.IndexOfFirstUnsetBit();
@@ -147,7 +147,7 @@ namespace zf {
             }
 
             bool Remove(int& index, const tp_key_type& key) {
-                assert(index >= -1 && index < Len());
+                ZF_ASSERT(index >= -1 && index < Len());
 
                 if (index == -1) {
                     return false;
@@ -180,7 +180,7 @@ namespace zf {
 
         int KeyToHashIndex(const tp_key_type& key) const {
             const int val = m_hash_func(key);
-            assert(val >= 0);
+            ZF_ASSERT(val >= 0);
 
             return val % m_backing_store_indexes.Len();
         }

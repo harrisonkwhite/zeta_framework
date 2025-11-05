@@ -12,7 +12,7 @@ namespace zf {
         }
 
         static s_str_view FromRawTerminated(const char* const raw, const int len) {
-            assert(len == strlen(raw));
+            ZF_ASSERT(len == strlen(raw));
             return {{raw, len + 1}};
         }
 
@@ -39,7 +39,7 @@ namespace zf {
         }
 
         static s_str FromRawTerminated(char* const raw, const int len) {
-            assert(len == strlen(raw));
+            ZF_ASSERT(len == strlen(raw));
             return {{raw, len + 1}};
         }
 

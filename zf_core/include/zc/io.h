@@ -13,7 +13,7 @@ namespace zf {
 
         [[nodiscard]]
         bool Open(const s_str_view file_path, const bool is_write) {
-            assert(file_path.IsTerminated());
+            ZF_ASSERT(file_path.IsTerminated());
             raw = fopen(file_path.Raw(), is_write ? "wb" : "rb");
             return raw;
         }
@@ -59,7 +59,7 @@ namespace zf {
     bool LoadFileContents(c_array<t_u8>& contents, c_mem_arena& mem_arena, const s_str_view file_path, const bool include_terminating_byte = false);
 
     inline bool LoadFileContentsAsStr(s_str& contents, c_mem_arena& mem_arena, const s_str_view file_path) {
-        assert(contents.chrs.IsEmpty());
+        ZF_ASSERT(contents.chrs.IsEmpty());
 
         c_array<t_u8> contents_default;
 

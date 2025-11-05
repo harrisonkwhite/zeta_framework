@@ -9,7 +9,7 @@ namespace zf {
         c_bit_vector() = default;
 
         c_bit_vector(const c_array<t_u8> bytes, const size_t bit_cnt) : m_bytes(bytes), m_bit_cnt(bit_cnt) {
-            assert(bytes.Len() == BitsToBytes(bit_cnt));
+            ZF_ASSERT(bytes.Len() == BitsToBytes(bit_cnt));
         }
 
         [[nodiscard]] bool Init(c_mem_arena& mem_arena, const size_t bit_cnt);
@@ -22,17 +22,17 @@ namespace zf {
         void ApplyXor(const c_bit_vector mask) const;
 
         void SetBit(const size_t index) const {
-            assert(index < m_bit_cnt);
+            ZF_ASSERT(index < m_bit_cnt);
             m_bytes[index / 8] |= BitMask(index);
         }
 
         void UnsetBit(const size_t index) const {
-            assert(index < m_bit_cnt);
+            ZF_ASSERT(index < m_bit_cnt);
             m_bytes[index / 8] &= ~BitMask(index);
         }
 
         bool IsBitSet(const size_t index) const {
-            assert(index < m_bit_cnt);
+            ZF_ASSERT(index < m_bit_cnt);
             return m_bytes[index / 8] & BitMask(index);
         }
 

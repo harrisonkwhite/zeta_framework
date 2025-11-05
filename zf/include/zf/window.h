@@ -11,6 +11,7 @@
 #endif
 
 #include <GLFW/glfw3native.h>
+#include <zc/debug.h>
 #include <zc/math.h>
 #include <zc/mem/strs.h>
 
@@ -272,38 +273,38 @@ namespace zf {
         }
 
         static bool IsKeyDown(const e_key_code kc) {
-            assert(kc != eks_key_code_none);
+            ZF_ASSERT(kc != eks_key_code_none);
             return glfwGetKey(sm_glfw_window, ToGLFWKey(kc)) != GLFW_RELEASE;
         }
 
         static bool IsKeyPressed(const e_key_code kc) {
-            assert(kc != eks_key_code_none);
+            ZF_ASSERT(kc != eks_key_code_none);
 
             const t_key_bits key_mask = static_cast<t_key_bits>(1) << kc;
             return (sm_input_events.keys_pressed & key_mask) != 0;
         }
 
         static bool IsKeyReleased(const e_key_code kc) {
-            assert(kc != eks_key_code_none);
+            ZF_ASSERT(kc != eks_key_code_none);
 
             const t_key_bits key_mask = static_cast<t_key_bits>(1) << kc;
             return (sm_input_events.keys_released & key_mask) != 0;
         }
 
         static bool IsMouseButtonDown(const e_mouse_button_code mbc) {
-            assert(mbc != eks_mouse_button_code_none);
+            ZF_ASSERT(mbc != eks_mouse_button_code_none);
             return glfwGetMouseButton(sm_glfw_window, ToGLFWMouseButton(mbc)) != GLFW_RELEASE;
         }
 
         static bool IsMouseButtonPressed(const e_mouse_button_code mbc) {
-            assert(mbc != eks_mouse_button_code_none);
+            ZF_ASSERT(mbc != eks_mouse_button_code_none);
 
             const t_mouse_button_bits mb_mask = static_cast<t_mouse_button_bits>(1) << mbc;
             return (sm_input_events.mouse_buttons_pressed & mb_mask) != 0;
         }
 
         static bool IsMouseButtonReleased(const e_mouse_button_code mbc) {
-            assert(mbc != eks_mouse_button_code_none);
+            ZF_ASSERT(mbc != eks_mouse_button_code_none);
 
             const t_mouse_button_bits mb_mask = static_cast<t_mouse_button_bits>(1) << mbc;
             return (sm_input_events.mouse_buttons_released & mb_mask) != 0;

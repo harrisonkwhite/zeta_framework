@@ -1,9 +1,9 @@
 #pragma once
 
 #include <cstring>
-#include <cassert>
 #include <cstdlib>
 #include <new>
+#include <zc/debug.h>
 
 #define ZF_SIZE_IN_BITS(x) (8 * sizeof(x))
 
@@ -55,23 +55,23 @@ namespace zf {
         }
 
         size_t Size() const {
-            assert(IsInitted());
+            ZF_ASSERT(IsInitted());
             return m_size;
         }
 
         size_t Offs() const {
-            assert(IsInitted());
+            ZF_ASSERT(IsInitted());
             return m_offs;
         }
 
         bool IsEmpty() const {
-            assert(IsInitted());
+            ZF_ASSERT(IsInitted());
             return m_offs == 0;
         }
 
         void Rewind(const size_t offs) {
-            assert(IsInitted());
-            assert(offs <= m_size);
+            ZF_ASSERT(IsInitted());
+            ZF_ASSERT(offs <= m_size);
             m_offs = offs;
         }
 
@@ -83,8 +83,8 @@ namespace zf {
 
     template<typename tp_type>
     tp_type* c_mem_arena::PushType(const int cnt) {
-        assert(m_buf);
-        assert(cnt > 0);
+        ZF_ASSERT(m_buf);
+        ZF_ASSERT(cnt > 0);
 
         void* const buf_generic = Push(sizeof(tp_type) * cnt, alignof(tp_type));
 
@@ -109,13 +109,13 @@ namespace zf {
     }
 
     inline size_t IndexFrom2D(const size_t x, const size_t y, const size_t width) {
-        assert(x < width);
+        ZF_ASSERT(x < width);
         return (width * y) + x;
     }
 
     inline t_u8 BitRangeMask(const size_t begin_index, const size_t end_index = 8) {
-        assert(end_index <= 8);
-        assert(begin_index <= end_index);
+        ZF_ASSERT(end_index <= 8);
+        ZF_ASSERT(begin_index <= end_index);
 
         const size_t range_len = end_index - begin_index;
         const t_u8 mask_at_bottom = (1 << range_len) - 1;

@@ -1,7 +1,6 @@
 #include <zf/window.h>
 
 #include <GLFW/glfw3.h>
-#include <zc/debug.h>
 #include <zf/rendering.h>
 
 namespace zf {
@@ -86,8 +85,8 @@ namespace zf {
     }
 
     bool c_window::Init(const s_v2_s32 size, const s_str_view title, const e_window_flags flags) {
-        assert(!sm_glfw_window);
-        assert(title.IsTerminated());
+        ZF_ASSERT(!sm_glfw_window);
+        ZF_ASSERT(title.IsTerminated());
 
         if (!glfwInit()) {
             ZF_LOG_ERROR("Failed to initialise GLFW!");
@@ -182,7 +181,7 @@ namespace zf {
     }
 
     void c_window::Clean() {
-        assert(sm_glfw_window);
+        ZF_ASSERT(sm_glfw_window);
 
         glfwDestroyWindow(sm_glfw_window);
         glfwTerminate();

@@ -1,6 +1,5 @@
 #pragma once
 
-#include <cassert>
 #include <zc/math.h>
 
 namespace zf {
@@ -13,12 +12,12 @@ namespace zf {
     t_s32 RandRangeS32Incl(const t_s32 beg, const t_s32 end_incl);
 
     inline float RandRange(const float beg, const float end) {
-        assert(beg < end);
+        ZF_ASSERT(beg < end);
         return beg + (RandPerc() * (end - beg));
     }
 
     inline float RandRangeIncl(const float beg, const float end_incl) {
-        assert(beg <= end_incl);
+        ZF_ASSERT(beg <= end_incl);
         return beg + (RandPercIncl() * (end_incl - beg));
     }
 }

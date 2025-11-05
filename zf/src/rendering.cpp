@@ -137,7 +137,7 @@ namespace zf {
     }
 
     bool c_renderer::Init(c_mem_arena& mem_arena, c_mem_arena& temp_mem_arena) {
-        assert(sm_core.state == ec_renderer_state::not_initted);
+        ZF_ASSERT(sm_core.state == ec_renderer_state::not_initted);
 
         const s_v2_s32 fb_size = c_window::GetFramebufferSize();
 
@@ -180,7 +180,7 @@ namespace zf {
     }
 
     void c_renderer::Shutdown() {
-        assert(sm_core.state == ec_renderer_state::initted);
+        ZF_ASSERT(sm_core.state == ec_renderer_state::initted);
 
         sm_core.res_lifetime.Clean();
         bgfx::shutdown();
@@ -189,13 +189,13 @@ namespace zf {
     }
 
     void c_renderer::BeginFrame() {
-        assert(sm_core.state == ec_renderer_state::initted);
+        ZF_ASSERT(sm_core.state == ec_renderer_state::initted);
         sm_core.state = ec_renderer_state::rendering;
         SetView(0);
     }
 
     void c_renderer::EndFrame() {
-        assert(sm_core.state == ec_renderer_state::rendering);
+        ZF_ASSERT(sm_core.state == ec_renderer_state::rendering);
 
         if (sm_core.quad_batch_slots_used_cnt > 0) {
             Flush();
@@ -207,8 +207,8 @@ namespace zf {
     }
 
     void c_renderer::SetView(const t_s32 view_index, const s_v4 clear_col) {
-        assert(sm_core.state == ec_renderer_state::rendering);
-        assert(view_index >= 0 && view_index < g_view_limit);
+        ZF_ASSERT(sm_core.state == ec_renderer_state::rendering);
+        ZF_ASSERT(view_index >= 0 && view_index < g_view_limit);
 
         if (sm_core.quad_batch_slots_used_cnt > 0) {
             Flush();
@@ -232,14 +232,14 @@ namespace zf {
     }
 
     void c_renderer::Clear(const s_v4 col) {
-        assert(sm_core.state == ec_renderer_state::rendering);
+        ZF_ASSERT(sm_core.state == ec_renderer_state::rendering);
 
         const s_int_rgba int_rgba = ToIntRGBA(col); // @todo: Update.
         bgfx::setViewClear(sm_core.active_view_index, BGFX_CLEAR_COLOR, 0x303030ff);
     }
 
     void c_renderer::Draw(const int tex_index, const c_texture_group& tex_group, const s_v2 pos, const s_v2 size, const s_rect_s32 src_rect, const s_v2 origin, const float rot, const s_v4 blend) {
-        assert(sm_core.state == ec_renderer_state::rendering);
+        ZF_ASSERT(sm_core.state == ec_renderer_state::rendering);
 
         const auto tex_bgfx_hdl = tex_group.GetTextureBGFXHandle(tex_index);
 
@@ -268,7 +268,7 @@ namespace zf {
         if (src_rect == s_rect_s32()) {
             src_rect_to_use = {{}, tex_size};
         } else {
-            assert(src_rect.x >= 0 && src_rect.y >= 0 && src_rect.Right() <= tex_size.x && src_rect.Bottom() <= tex_size.y);
+            ZF_ASSERT(src_rect.x >= 0 && src_rect.y >= 0 && src_rect.Right() <= tex_size.x && src_rect.Bottom() <= tex_size.y);
             src_rect_to_use = src_rect;
         }
 
@@ -296,8 +296,8 @@ namespace zf {
     }
 
     void c_renderer::Flush() {
-        assert(sm_core.state == ec_renderer_state::rendering);
-        assert(sm_core.quad_batch_slots_used_cnt > 0);
+        ZF_ASSERT(sm_core.state == ec_renderer_state::rendering);
+        ZF_ASSERT(sm_core.quad_batch_slots_used_cnt > 0);
 
         // Upload vertex data to GPU.
         const uint32_t vert_cnt = g_quad_batch_slot_vert_cnt * sm_core.quad_batch_slots_used_cnt;

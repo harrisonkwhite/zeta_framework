@@ -50,7 +50,7 @@ namespace zf {
     }
 
     bool s_poly::InitQuad(c_mem_arena& mem_arena, const s_v2 pos, const s_v2 size, const s_v2 origin) {
-        assert(origin.x >= 0.0f && origin.x <= 1.0f && origin.y >= 0.0f && origin.y <= 1.0f);
+        ZF_ASSERT(origin.x >= 0.0f && origin.x <= 1.0f && origin.y >= 0.0f && origin.y <= 1.0f);
 
         if (!pts.Init(mem_arena, 4)) {
             ZF_LOG_ERROR("Failed to reserve memory for quad polygon points!");
@@ -68,7 +68,7 @@ namespace zf {
     }
 
     bool s_poly::InitQuadWithRot(c_mem_arena& mem_arena, const s_v2 pos, const s_v2 size, const s_v2 origin, const float rot) {
-        assert(origin.x >= 0.0f && origin.x <= 1.0f && origin.y >= 0.0f && origin.y <= 1.0f);
+        ZF_ASSERT(origin.x >= 0.0f && origin.x <= 1.0f && origin.y >= 0.0f && origin.y <= 1.0f);
 
         if (!pts.Init(mem_arena, 4)) {
             ZF_LOG_ERROR("Failed to reserve memory for rotated quad polygon points!");

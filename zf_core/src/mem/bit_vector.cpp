@@ -2,7 +2,7 @@
 
 namespace zf {
     bool c_bit_vector::Init(c_mem_arena& mem_arena, const size_t bit_cnt) {
-        assert(bit_cnt > 0);
+        ZF_ASSERT(bit_cnt > 0);
 
         if (!m_bytes.Init(mem_arena, BitsToBytes(bit_cnt))) {
             return false;
@@ -14,7 +14,7 @@ namespace zf {
     }
 
     int c_bit_vector::IndexOfFirstSetBit(const size_t from) const {
-        assert(from <= m_bit_cnt); // Intentionally allowing the upper bound here for the case of iteration.
+        ZF_ASSERT(from <= m_bit_cnt); // Intentionally allowing the upper bound here for the case of iteration.
 
         static constexpr s_static_array<int, 256> lg_mappings = {
             {
@@ -304,7 +304,7 @@ namespace zf {
     }
 
     int c_bit_vector::IndexOfFirstUnsetBit(const size_t from) const {
-        assert(from <= m_bit_cnt); // Intentionally allowing the upper bound here for the case of iteration.
+        ZF_ASSERT(from <= m_bit_cnt); // Intentionally allowing the upper bound here for the case of iteration.
 
         static constexpr s_static_array<int, 256> lg_mappings = {
             {
@@ -594,7 +594,7 @@ namespace zf {
     }
 
     void c_bit_vector::ApplyAnd(const c_bit_vector mask) const {
-        assert(m_bit_cnt == mask.m_bit_cnt);
+        ZF_ASSERT(m_bit_cnt == mask.m_bit_cnt);
 
         if (m_bit_cnt == 0) {
             return;
@@ -608,7 +608,7 @@ namespace zf {
     }
 
     void c_bit_vector::ApplyOr(const c_bit_vector mask) const {
-        assert(m_bit_cnt == mask.m_bit_cnt);
+        ZF_ASSERT(m_bit_cnt == mask.m_bit_cnt);
 
         if (m_bit_cnt == 0) {
             return;
@@ -622,7 +622,7 @@ namespace zf {
     }
 
     void c_bit_vector::ApplyXor(const c_bit_vector mask) const {
-        assert(m_bit_cnt == mask.m_bit_cnt);
+        ZF_ASSERT(m_bit_cnt == mask.m_bit_cnt);
 
         if (m_bit_cnt == 0) {
             return;

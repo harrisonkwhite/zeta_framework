@@ -13,6 +13,7 @@ namespace zf {
         }
 
         // @todo: Print stack trace!
+        fprintf(stderr, "\nStack Trace:\n");
 
         fprintf(stderr, "==========================================================\n\n");
 

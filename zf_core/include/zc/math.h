@@ -1,7 +1,6 @@
 #pragma once
 
 #include <cmath>
-#include <cassert>
 #include <zc/mem/mem.h>
 #include <zc/mem/arrays.h>
 
@@ -279,10 +278,10 @@ namespace zf {
         }
 
         static s_matrix_4x4 Orthographic(const float left, const float right, const float bottom, const float top, const float z_near, const float z_far) {
-            assert(right > left);
-            assert(top < bottom);
-            assert(z_far > z_near);
-            assert(z_near < z_far);
+            ZF_ASSERT(right > left);
+            ZF_ASSERT(top < bottom);
+            ZF_ASSERT(z_far > z_near);
+            ZF_ASSERT(z_near < z_far);
 
             s_matrix_4x4 mat;
             mat.elems[0][0] = 2.0f / (right - left);
