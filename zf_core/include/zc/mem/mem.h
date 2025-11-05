@@ -3,6 +3,7 @@
 #include <cstring>
 #include <cassert>
 #include <cstdlib>
+#include <new>
 
 #define ZF_SIZE_IN_BITS(x) (8 * sizeof(x))
 
