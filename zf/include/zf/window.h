@@ -235,74 +235,74 @@ namespace zf {
 #endif
         }
 
-        static inline void Show() {
+        inline void Show() {
             glfwShowWindow(sm_glfw_window);
         }
 
-        static inline void PollEvents() {
+        inline void PollEvents() {
             glfwPollEvents();
         }
 
-        static inline bool ShouldClose() {
+        inline bool ShouldClose() {
             return glfwWindowShouldClose(sm_glfw_window);
         }
 
-        static inline void SetWindowShouldClose(const bool close) {
+        inline void SetWindowShouldClose(const bool close) {
             glfwSetWindowShouldClose(sm_glfw_window, close);
         }
 
-        static inline double GetTime() {
+        inline double GetTime() {
             return glfwGetTime();
         }
 
-        static inline s_v2_s32 GetSize() {
+        inline s_v2_s32 GetSize() {
             int w, h;
             glfwGetWindowSize(sm_glfw_window, &w, &h);
             return {w, h};
         }
 
-        static inline s_v2_s32 GetFramebufferSize() {
+        inline s_v2_s32 GetFramebufferSize() {
             int w, h;
             glfwGetFramebufferSize(sm_glfw_window, &w, &h);
             return {w, h};
         }
 
-        static inline void ClearInputEvents() {
+        inline void ClearInputEvents() {
             sm_input_events = {};
         }
 
-        static inline bool IsKeyDown(const e_key_code kc) {
+        inline bool IsKeyDown(const e_key_code kc) {
             assert(kc != eks_key_code_none);
             return glfwGetKey(sm_glfw_window, ToGLFWKey(kc)) != GLFW_RELEASE;
         }
 
-        static inline bool IsKeyPressed(const e_key_code kc) {
+        inline bool IsKeyPressed(const e_key_code kc) {
             assert(kc != eks_key_code_none);
 
             const t_key_bits key_mask = static_cast<t_key_bits>(1) << kc;
             return (sm_input_events.keys_pressed & key_mask) != 0;
         }
 
-        static inline bool IsKeyReleased(const e_key_code kc) {
+        inline bool IsKeyReleased(const e_key_code kc) {
             assert(kc != eks_key_code_none);
 
             const t_key_bits key_mask = static_cast<t_key_bits>(1) << kc;
             return (sm_input_events.keys_released & key_mask) != 0;
         }
 
-        static inline bool IsMouseButtonDown(const e_mouse_button_code mbc) {
+        inline bool IsMouseButtonDown(const e_mouse_button_code mbc) {
             assert(mbc != eks_mouse_button_code_none);
             return glfwGetMouseButton(sm_glfw_window, ToGLFWMouseButton(mbc)) != GLFW_RELEASE;
         }
 
-        static inline bool IsMouseButtonPressed(const e_mouse_button_code mbc) {
+        inline bool IsMouseButtonPressed(const e_mouse_button_code mbc) {
             assert(mbc != eks_mouse_button_code_none);
 
             const t_mouse_button_bits mb_mask = static_cast<t_mouse_button_bits>(1) << mbc;
             return (sm_input_events.mouse_buttons_pressed & mb_mask) != 0;
         }
 
-        static inline bool IsMouseButtonReleased(const e_mouse_button_code mbc) {
+        inline bool IsMouseButtonReleased(const e_mouse_button_code mbc) {
             assert(mbc != eks_mouse_button_code_none);
 
             const t_mouse_button_bits mb_mask = static_cast<t_mouse_button_bits>(1) << mbc;

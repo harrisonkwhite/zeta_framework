@@ -332,7 +332,7 @@ namespace zf {
         return {Lerp(a.x, b.x, t), Lerp(a.y, b.y, t)};
     }
 
-    static inline s_v2 LenDir(const float len, const float dir) {
+    inline s_v2 LenDir(const float len, const float dir) {
         return {cosf(dir) * len, -sinf(dir) * len};
     }
 }

@@ -12,12 +12,12 @@ namespace zf {
     t_s32 RandRangeS32(const t_s32 beg, const t_s32 end);
     t_s32 RandRangeS32Incl(const t_s32 beg, const t_s32 end_incl);
 
-    static inline float RandRange(const float beg, const float end) {
+    inline float RandRange(const float beg, const float end) {
         assert(beg < end);
         return beg + (RandPerc() * (end - beg));
     }
 
-    static inline float RandRangeIncl(const float beg, const float end_incl) {
+    inline float RandRangeIncl(const float beg, const float end_incl) {
         assert(beg <= end_incl);
         return beg + (RandPercIncl() * (end_incl - beg));
     }

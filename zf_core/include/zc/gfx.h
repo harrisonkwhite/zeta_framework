@@ -60,7 +60,7 @@ namespace zf {
         }
     };
 
-    static inline s_int_rgba ToIntRGBA(const s_v4 flt) {
+    inline s_int_rgba ToIntRGBA(const s_v4 flt) {
         return {
             static_cast<t_u8>(roundf(flt.x * 255.0f)),
             static_cast<t_u8>(roundf(flt.y * 255.0f)),

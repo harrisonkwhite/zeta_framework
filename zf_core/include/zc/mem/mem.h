@@ -108,12 +108,12 @@ namespace zf {
         b = temp;
     }
 
-    static inline size_t IndexFrom2D(const size_t x, const size_t y, const size_t width) {
+    inline size_t IndexFrom2D(const size_t x, const size_t y, const size_t width) {
         assert(x < width);
         return (width * y) + x;
     }
 
-    static inline t_u8 BitRangeMask(const size_t begin_index, const size_t end_index = 8) {
+    inline t_u8 BitRangeMask(const size_t begin_index, const size_t end_index = 8) {
         assert(end_index <= 8);
         assert(begin_index <= end_index);
 
