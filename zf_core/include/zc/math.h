@@ -271,53 +271,6 @@ namespace zf {
         };
     }
 
-    // @todo: Remove?
-    template<co_numeric tp_type>
-    class c_rect_edges {
-    public:
-        c_rect_edges() = default;
-
-        c_rect_edges(const tp_type left, const tp_type top, const tp_type right, const tp_type bottom) : m_left(left), m_top(top), m_right(right), m_bottom(bottom) {
-            ZF_ASSERT(left <= right);
-            ZF_ASSERT(top <= bottom);
-        }
-
-        c_rect_edges(const s_v2 topleft, const s_v2 bottomright) : m_left(topleft.x), m_top(topleft.y), m_right(bottomright.x), m_bottom(bottomright.y) {
-            ZF_ASSERT(topleft.x <= bottomright.x && topleft.y <= bottomright.y);
-        }
-
-        tp_type Left() const { return m_left; }
-        tp_type Top() const { return m_top; }
-        tp_type Right() const { return m_right; }
-        tp_type Bottom() const { return m_bottom; }
-
-        void SetLeft(const tp_type left) {
-            ZF_ASSERT(left <= m_right);
-            m_left = left;
-        }
-
-        void SetRight(const tp_type right) {
-            ZF_ASSERT(right >= m_left);
-            m_right = right;
-        }
-
-        void SetTop(const tp_type top) {
-            ZF_ASSERT(top <= m_bottom);
-            m_top = top;
-        }
-
-        void SetBottom(const tp_type bottom) {
-            ZF_ASSERT(bottom >= m_top);
-            m_bottom = bottom;
-        }
-
-    private:
-        tp_type m_left = 0.0f;
-        tp_type m_top = 0.0f;
-        tp_type m_right = 0.0f;
-        tp_type m_bottom = 0.0f;
-    };
-
     struct s_matrix_4x4 {
         s_static_array<s_static_array<float, 4>, 4> elems;
 
