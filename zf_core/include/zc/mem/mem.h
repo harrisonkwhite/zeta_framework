@@ -3,12 +3,11 @@
 #include <cstring>
 #include <cassert>
 #include <cstdlib>
-#include <type_traits>
-#include <new>
 
 #define ZF_SIZE_IN_BITS(x) (8 * sizeof(x))
 
 namespace zf {
+    // @todo: This is used very inconsistently! Fix!
     using t_s8 = char;
     using t_u8 = unsigned char;
     using t_s16 = short;
@@ -17,25 +16,7 @@ namespace zf {
     using t_u32 = unsigned int;
     using t_s64 = long long;
     using t_u64 = unsigned long long;
-
-    template<typename tp_type>
-    static inline void ZeroOut(tp_type& item) {
-        const auto item_bytes = reinterpret_cast<t_u8*>(&item);
-
-        for (size_t i = 0; i < sizeof(item); i++) {
-            item_bytes[i] = 0;
-        }
-    }
-
-    template<typename tp_type>
-    static constexpr tp_type Min(const tp_type& a, const tp_type& b) {
-        return a <= b ? a : b;
-    }
-
-    template<typename tp_type>
-    static constexpr tp_type Max(const tp_type& a, const tp_type& b) {
-        return a >= b ? a : b;
-    }
+    // =============================================
 
     constexpr size_t Kilobytes(const size_t x) { return (static_cast<size_t>(1) << 10) * x; }
     constexpr size_t Megabytes(const size_t x) { return (static_cast<size_t>(1) << 20) * x; }
@@ -49,17 +30,6 @@ namespace zf {
         return 1 << (index % 8);
     }
 
-    constexpr t_u8 BitRangeMask(const size_t begin_index, const size_t end_index = 8) {
-        if (!std::is_constant_evaluated()) {
-            assert(end_index <= 8);
-            assert(begin_index <= end_index);
-        }
-
-        const size_t range_len = end_index - begin_index;
-        const t_u8 mask_at_bottom = (1 << range_len) - 1;
-        return mask_at_bottom << begin_index;
-    }
-
     constexpr bool IsPowerOfTwo(const size_t n) {
         return n > 0 && (n & (n - 1)) == 0;
     }
@@ -70,14 +40,6 @@ namespace zf {
 
     constexpr size_t AlignForward(const size_t n, const size_t alignment) {
         return (n + alignment - 1) & ~(alignment - 1);
-    }
-
-    constexpr size_t IndexFrom2D(const size_t x, const size_t y, const size_t width) {
-        if (!std::is_constant_evaluated()) {
-            assert(x < width);
-        }
-
-        return (width * y) + x;
     }
 
     class c_mem_arena {
@@ -126,7 +88,7 @@ namespace zf {
         void* const buf_generic = Push(sizeof(tp_type) * cnt, alignof(tp_type));
 
         if (!buf_generic) {
-            return {};
+            return nullptr;
         }
 
         tp_type* const buf = reinterpret_cast<tp_type*>(buf_generic);
@@ -143,5 +105,19 @@ namespace zf {
         const tp_type temp = a;
         a = b;
         b = temp;
+    }
+
+    static inline size_t IndexFrom2D(const size_t x, const size_t y, const size_t width) {
+        assert(x < width);
+        return (width * y) + x;
+    }
+
+    static inline t_u8 BitRangeMask(const size_t begin_index, const size_t end_index = 8) {
+        assert(end_index <= 8);
+        assert(begin_index <= end_index);
+
+        const size_t range_len = end_index - begin_index;
+        const t_u8 mask_at_bottom = (1 << range_len) - 1;
+        return mask_at_bottom << begin_index;
     }
 }

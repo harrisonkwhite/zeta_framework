@@ -9,6 +9,16 @@ namespace zf {
     constexpr float g_pi = 3.14159265358979323846f;
     constexpr float g_tau = 6.28318530717958647692f;
 
+    template<typename tp_type>
+    static constexpr tp_type Min(const tp_type& a, const tp_type& b) {
+        return a <= b ? a : b;
+    }
+
+    template<typename tp_type>
+    static constexpr tp_type Max(const tp_type& a, const tp_type& b) {
+        return a >= b ? a : b;
+    }
+
     constexpr int Sign(const int n) {
         if (n > 0) {
             return 1;
@@ -314,15 +324,15 @@ namespace zf {
     using td_poly_view = c_array<const s_v2>;
 #endif
 
-    static inline s_v2 LenDir(const float len, const float dir) {
-        return {cosf(dir) * len, -sinf(dir) * len};
-    }
-
-    static inline float Lerp(const float a, const float b, const float t) {
+    constexpr float Lerp(const float a, const float b, const float t) {
         return a + ((b - a) * t);
     }
 
-    static inline s_v2 Lerp(const s_v2 a, const s_v2 b, const float t) {
+    constexpr s_v2 Lerp(const s_v2 a, const s_v2 b, const float t) {
         return {Lerp(a.x, b.x, t), Lerp(a.y, b.y, t)};
+    }
+
+    static inline s_v2 LenDir(const float len, const float dir) {
+        return {cosf(dir) * len, -sinf(dir) * len};
     }
 }
