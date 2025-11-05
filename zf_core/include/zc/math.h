@@ -306,23 +306,6 @@ namespace zf {
         }
     };
 
-#if 0
-    struct s_poly {
-        c_array<s_v2> pts;
-
-        [[nodiscard]] bool InitQuad(c_mem_arena& mem_arena, const s_v2 pos, const s_v2 size, const s_v2 origin);
-        [[nodiscard]] bool InitQuadWithRot(c_mem_arena& mem_arena, const s_v2 pos, const s_v2 size, const s_v2 origin, const float rot);
-
-        bool DoesIntersWith(const s_poly other) const;
-        bool DoesIntersWith(const s_rect other) const;
-
-        s_rect_edges CalcSpan() const;
-    };
-
-    using td_poly = c_array<s_v2>;
-    using td_poly_view = c_array<const s_v2>;
-#endif
-
     constexpr float Lerp(const float a, const float b, const float t) {
         return a + ((b - a) * t);
     }
