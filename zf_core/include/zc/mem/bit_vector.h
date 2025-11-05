@@ -12,6 +12,15 @@ namespace zf {
             assert(bytes.Len() == BitsToBytes(bit_cnt));
         }
 
+        [[nodiscard]] bool Init(c_mem_arena& mem_arena, const size_t bit_cnt);
+
+        int IndexOfFirstSetBit(const size_t from = 0) const;
+        int IndexOfFirstUnsetBit(const size_t from = 0) const;
+
+        void ApplyAnd(const c_bit_vector mask) const;
+        void ApplyOr(const c_bit_vector mask) const;
+        void ApplyXor(const c_bit_vector mask) const;
+
         void SetBit(const size_t index) const {
             assert(index < m_bit_cnt);
             m_bytes[index / 8] |= BitMask(index);
@@ -26,13 +35,6 @@ namespace zf {
             assert(index < m_bit_cnt);
             return m_bytes[index / 8] & BitMask(index);
         }
-
-        int IndexOfFirstSetBit(const size_t from = 0) const;
-        int IndexOfFirstUnsetBit(const size_t from = 0) const;
-
-        void ApplyAnd(const c_bit_vector mask) const;
-        void ApplyOr(const c_bit_vector mask) const;
-        void ApplyXor(const c_bit_vector mask) const;
 
     private:
         c_array<t_u8> m_bytes;
