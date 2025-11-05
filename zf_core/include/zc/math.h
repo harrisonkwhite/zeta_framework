@@ -244,6 +244,31 @@ namespace zf {
         }
     };
 
+    // Generate a rectangle encompassing all of the provided rectangles.
+    // At least a single rectangle must be provided.
+    inline s_rect CalcSpanningRect(const c_array<const s_rect> rects) {
+        ZF_ASSERT(!rects.IsEmpty());
+
+        float min_left = rects[0].x;
+        float min_top = rects[0].y;
+        float max_right = rects[0].Right();
+        float max_bottom = rects[0].Bottom();
+
+        for (int i = 1; i < rects.Len(); i++) {
+            min_left = Min(rects[i].x, min_left);
+            min_top = Min(rects[i].y, min_top);
+            max_right = Max(rects[i].Right(), max_right);
+            max_bottom = Max(rects[i].Bottom(), max_bottom);
+        }
+
+        return {
+            min_left,
+            min_top,
+            max_right - min_left,
+            max_bottom - min_top
+        };
+    }
+
     struct s_rect_int {
         int x = 0;
         int y = 0;
