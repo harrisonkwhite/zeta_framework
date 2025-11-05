@@ -47,10 +47,10 @@ namespace zf {
         t_s32 targ_ticks_per_sec;
 
         // Below are pointers to functions that the framework will call for you. The provided struct pointers expose parts of the framework state for you to work with.
-        bool (*init_func)(const s_game_init_context& zf_context); // Called as one of the last steps of the game initialisation phase.
-        e_game_tick_result (*tick_func)(const s_game_tick_context& zf_context); // Called once every tick (which can occur multiple times a frame).
-        bool (*render_func)(const s_game_render_context& zf_context); // Called after all ticks have been run.
-        void (*clean_func)(void* const dev_mem); // Called when the game ends (including if it ends in error). This is not called if your initialisation function failed or hasn't yet been called.
+        bool (* init_func)(const s_game_init_context& zf_context); // Called as one of the last steps of the game initialisation phase.
+        e_game_tick_result (* tick_func)(const s_game_tick_context& zf_context); // Called once every tick (which can occur multiple times a frame).
+        bool (* render_func)(const s_game_render_context& zf_context); // Called after all ticks have been run.
+        void (* clean_func)(void* const dev_mem); // Called when the game ends (including if it ends in error). This is not called if your initialisation function failed or hasn't yet been called.
     };
 
     inline void AssertGameInfoValidity(const s_game_info& info) {
