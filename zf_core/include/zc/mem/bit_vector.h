@@ -8,7 +8,7 @@ namespace zf {
     public:
         c_bit_vector() = default;
 
-        c_bit_vector(const c_array<t_u8> bytes, const size_t bit_cnt) : m_bytes(bytes), m_bit_cnt(bit_cnt) {
+        c_bit_vector(const c_array<t_byte> bytes, const size_t bit_cnt) : m_bytes(bytes), m_bit_cnt(bit_cnt) {
             ZF_ASSERT(bytes.Len() == BitsToBytes(bit_cnt));
         }
 
@@ -37,10 +37,10 @@ namespace zf {
         }
 
     private:
-        c_array<t_u8> m_bytes;
+        c_array<t_byte> m_bytes;
         size_t m_bit_cnt = 0;
 
-        t_u8 LastByteMask() const {
+        t_byte LastByteMask() const {
             const size_t last_byte_bit_cnt = m_bit_cnt % 8 == 0 ? 8 : m_bit_cnt % 8;
             return BitRangeMask(0, last_byte_bit_cnt);
         }
@@ -84,6 +84,6 @@ namespace zf {
         }
 
     private:
-        s_static_array<t_u8, BitsToBytes(tp_bit_cnt)> m_bytes;
+        s_static_array<t_byte, BitsToBytes(tp_bit_cnt)> m_bytes;
     };
 }

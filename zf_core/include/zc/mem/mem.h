@@ -8,16 +8,7 @@
 #define ZF_SIZE_IN_BITS(x) (8 * sizeof(x))
 
 namespace zf {
-    // @todo: This is used very inconsistently! Fix!
-    using t_s8 = char;
-    using t_u8 = unsigned char;
-    using t_s16 = short;
-    using t_u16 = unsigned short;
-    using t_s32 = int;
-    using t_u32 = unsigned int;
-    using t_s64 = long long;
-    using t_u64 = unsigned long long;
-    // =============================================
+    using t_byte = unsigned char;
 
     constexpr size_t Kilobytes(const size_t x) { return (static_cast<size_t>(1) << 10) * x; }
     constexpr size_t Megabytes(const size_t x) { return (static_cast<size_t>(1) << 20) * x; }
@@ -27,7 +18,7 @@ namespace zf {
     constexpr size_t BitsToBytes(const size_t x) { return (x + 7) / 8; }
     constexpr size_t BytesToBits(const size_t x) { return x * 8; }
 
-    constexpr t_u8 BitMask(const size_t index) {
+    constexpr t_byte BitMask(const size_t index) {
         return 1 << (index % 8);
     }
 
@@ -76,7 +67,7 @@ namespace zf {
         }
 
     private:
-        t_u8* m_buf = nullptr;
+        t_byte* m_buf = nullptr;
         size_t m_size = 0;
         size_t m_offs = 0;
     };
@@ -113,12 +104,12 @@ namespace zf {
         return (width * y) + x;
     }
 
-    inline t_u8 BitRangeMask(const size_t begin_index, const size_t end_index = 8) {
+    inline t_byte BitRangeMask(const size_t begin_index, const size_t end_index = 8) {
         ZF_ASSERT(end_index <= 8);
         ZF_ASSERT(begin_index <= end_index);
 
         const size_t range_len = end_index - begin_index;
-        const t_u8 mask_at_bottom = (1 << range_len) - 1;
+        const t_byte mask_at_bottom = (1 << range_len) - 1;
         return mask_at_bottom << begin_index;
     }
 }

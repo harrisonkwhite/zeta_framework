@@ -6,7 +6,7 @@
 namespace zf {
     constexpr size_t g_perm_mem_arena_size = Megabytes(80);
     constexpr size_t g_temp_mem_arena_size = Megabytes(40);
-    constexpr t_s32 g_gl_resource_arena_res_limit = 1024;
+    constexpr int g_gl_resource_arena_res_limit = 1024;
 
     enum class ec_game_run_stage {
         nothing_initted,
@@ -168,7 +168,7 @@ namespace zf {
         const bool result = ExecGameInitAndMainLoop(game, info);
 
         // Clean up.
-        for (auto i = static_cast<t_s32>(game.run_stage); i >= 0; i--) {
+        for (auto i = static_cast<int>(game.run_stage); i >= 0; i--) {
             switch (static_cast<ec_game_run_stage>(i)) {
                 case ec_game_run_stage::nothing_initted:
                     break;

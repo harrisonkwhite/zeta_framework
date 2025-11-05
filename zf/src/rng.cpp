@@ -23,13 +23,13 @@ namespace zf {
         return static_cast<float>(rand()) / RAND_MAX;
     }
 
-    t_s32 RandRangeS32(const t_s32 beg, const t_s32 end) {
+    int RandRangeInt(const int beg, const int end) {
         ZF_ASSERT(g_rng_initted);
         ZF_ASSERT(beg < end);
         return beg + (rand() % (end - beg));
     }
 
-    t_s32 RandRangeS32Incl(const t_s32 beg, const t_s32 end_incl) {
+    int RandRangeIntIncl(const int beg, const int end_incl) {
         ZF_ASSERT(g_rng_initted);
         ZF_ASSERT(beg <= end_incl);
         return beg + (rand() % (end_incl - beg + 1));

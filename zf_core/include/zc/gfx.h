@@ -50,49 +50,49 @@ namespace zf {
     }
 
     struct s_int_rgba {
-        t_u8 r = 0;
-        t_u8 g = 0;
-        t_u8 b = 0;
-        t_u8 a = 0;
+        t_byte r = 0;
+        t_byte g = 0;
+        t_byte b = 0;
+        t_byte a = 0;
 
-        t_u32 RGBA() const {
-            return *reinterpret_cast<const t_u32*>(this);
+        unsigned int RGBA() const {
+            return *reinterpret_cast<const unsigned int*>(this);
         }
     };
 
     inline s_int_rgba ToIntRGBA(const s_v4 flt) {
         return {
-            static_cast<t_u8>(roundf(flt.x * 255.0f)),
-            static_cast<t_u8>(roundf(flt.y * 255.0f)),
-            static_cast<t_u8>(roundf(flt.z * 255.0f)),
-            static_cast<t_u8>(roundf(flt.w * 255.0f))
+            static_cast<t_byte>(roundf(flt.x * 255.0f)),
+            static_cast<t_byte>(roundf(flt.y * 255.0f)),
+            static_cast<t_byte>(roundf(flt.z * 255.0f)),
+            static_cast<t_byte>(roundf(flt.w * 255.0f))
         };
     }
 
     struct s_rgba_texture {
-        s_v2_s32 dims;
-        c_array<t_u8> px_data;
+        s_v2_int dims;
+        c_array<t_byte> px_data;
     };
 
     struct s_font_arrangement {
-        t_s32 line_height = 0;
+        int line_height = 0;
 
-        s_static_array<s_v2_s32, g_ascii_printable_range_len> chr_offsets;
-        s_static_array<s_v2_s32, g_ascii_printable_range_len> chr_sizes;
-        s_static_array<t_s32, g_ascii_printable_range_len> chr_advances;
+        s_static_array<s_v2_int, g_ascii_printable_range_len> chr_offsets;
+        s_static_array<s_v2_int, g_ascii_printable_range_len> chr_sizes;
+        s_static_array<int, g_ascii_printable_range_len> chr_advances;
     };
 
     struct s_font_texture_meta {
-        s_v2_s32 size;
-        s_static_array<t_s32, g_ascii_printable_range_len> chr_xs;
+        s_v2_int size;
+        s_static_array<int, g_ascii_printable_range_len> chr_xs;
     };
 
     [[nodiscard]] bool LoadRGBATextureFromRawFile(s_rgba_texture& tex, c_mem_arena& mem_arena, const s_str_view file_path);
-    bool LoadFontFromRawFile(s_font_arrangement& arrangement, s_font_texture_meta& tex_meta, c_array<t_u8>& tex_rgba_px_data, const s_str_view file_path, const t_s32 height, c_mem_arena& temp_mem_arena);
+    bool LoadFontFromRawFile(s_font_arrangement& arrangement, s_font_texture_meta& tex_meta, c_array<t_byte>& tex_rgba_px_data, const s_str_view file_path, const int height, c_mem_arena& temp_mem_arena);
 
     bool PackTexture(s_file_stream& fs, const s_rgba_texture rgba_tex);
     void UnpackTexture(s_file_stream& fs, s_rgba_texture& rgba_tex);
 
-    bool PackFont(s_file_stream& fs, const s_font_arrangement& arrangement, const s_font_texture_meta tex_meta, const c_array<const t_u8> tex_rgba_px_data);
-    void UnpackFont(s_file_stream& fs, s_font_arrangement& arrangement, s_font_texture_meta tex_meta, c_array<const t_u8>& tex_rgba_px_data);
+    bool PackFont(s_file_stream& fs, const s_font_arrangement& arrangement, const s_font_texture_meta tex_meta, const c_array<const t_byte> tex_rgba_px_data);
+    void UnpackFont(s_file_stream& fs, s_font_arrangement& arrangement, s_font_texture_meta tex_meta, c_array<const t_byte>& tex_rgba_px_data);
 }

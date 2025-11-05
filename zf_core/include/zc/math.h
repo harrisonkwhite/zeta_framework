@@ -121,21 +121,21 @@ namespace zf {
             return *this;
         }
 
-        constexpr s_v2 operator*(float scalar) const {
+        constexpr s_v2 operator*(const float scalar) const {
             return {x * scalar, y * scalar};
         }
 
-        constexpr s_v2 operator/(float scalar) const {
+        constexpr s_v2 operator/(const float scalar) const {
             return {x / scalar, y / scalar};
         }
 
-        s_v2& operator*=(float scalar) {
+        s_v2& operator*=(const float scalar) {
             x *= scalar;
             y *= scalar;
             return *this;
         }
 
-        s_v2& operator/=(float scalar) {
+        s_v2& operator/=(const float scalar) {
             x /= scalar;
             y /= scalar;
             return *this;
@@ -146,12 +146,20 @@ namespace zf {
         return {v.x * scalar, v.y * scalar};
     }
 
-    struct s_v2_s32 {
-        t_s32 x = 0;
-        t_s32 y = 0;
+    struct s_v2_int {
+        int x = 0;
+        int y = 0;
 
-        constexpr s_v2_s32() = default;
-        constexpr s_v2_s32(const t_s32 x, const t_s32 y) : x(x), y(y) {}
+        constexpr s_v2_int() = default;
+        constexpr s_v2_int(const int x, const int y) : x(x), y(y) {}
+
+        constexpr bool operator==(const s_v2_int& other) const {
+            return x == other.x && y == other.y;
+        }
+
+        constexpr bool operator!=(const s_v2_int& other) const {
+            return !(*this == other);
+        }
 
         operator s_v2() const {
             return {static_cast<float>(x), static_cast<float>(y)};
@@ -165,6 +173,18 @@ namespace zf {
 
         constexpr s_v3() = default;
         constexpr s_v3(const float x, const float y, const float z) : x(x), y(y), z(z) {}
+
+        s_v2 XY() {
+            return {x, y};
+        }
+
+        constexpr bool operator==(const s_v3& other) const {
+            return x == other.x && y == other.y && z == other.z;
+        }
+
+        constexpr bool operator!=(const s_v3& other) const {
+            return !(*this == other);
+        }
     };
 
     struct s_v4 {
@@ -179,6 +199,14 @@ namespace zf {
 
         s_v3 XYZ() {
             return {x, y, z};
+        }
+
+        constexpr bool operator==(const s_v4& other) const {
+            return x == other.x && y == other.y && z == other.z && w == other.w;
+        }
+
+        constexpr bool operator!=(const s_v4& other) const {
+            return !(*this == other);
         }
     };
 
@@ -208,77 +236,84 @@ namespace zf {
         float Bottom() const {
             return y + height;
         }
-
-        bool operator==(const s_rect& other) const {
-            return x == other.x && y == other.y && width == other.width && height == other.height;
-        }
     };
 
-    struct s_rect_s32 {
-        t_s32 x = 0;
-        t_s32 y = 0;
-        t_s32 width = 0;
-        t_s32 height = 0;
+    struct s_rect_int {
+        int x = 0;
+        int y = 0;
+        int width = 0;
+        int height = 0;
 
-        s_rect_s32() = default;
-        s_rect_s32(const t_s32 x, const t_s32 y, const t_s32 width, const t_s32 height) : x(x), y(y), width(width), height(height) {}
-        s_rect_s32(const s_v2_s32 pos, const s_v2_s32 size) : x(pos.x), y(pos.y), width(size.x), height(size.y) {}
+        s_rect_int() = default;
+        s_rect_int(const int x, const int y, const int width, const int height) : x(x), y(y), width(width), height(height) {}
+        s_rect_int(const s_v2_int pos, const s_v2_int size) : x(pos.x), y(pos.y), width(size.x), height(size.y) {}
 
-        s_v2_s32 Pos() const {
+        s_v2_int Pos() const {
             return {x, y};
         }
 
-        s_v2_s32 Size() const {
+        s_v2_int Size() const {
             return {width, height};
         }
 
-        t_s32 Right() const {
+        int Right() const {
             return x + width;
         }
 
-        t_s32 Bottom() const {
+        int Bottom() const {
             return y + height;
         }
 
         operator s_rect() const {
             return {static_cast<float>(x), static_cast<float>(y), static_cast<float>(width), static_cast<float>(height)};
         }
-
-        bool operator==(const s_rect_s32& other) const {
-            return x == other.x && y == other.y && width == other.width && height == other.height;
-        }
     };
 
-    struct s_rect_edges {
-        float left = 0.0f;
-        float top = 0.0f;
-        float right = 0.0f;
-        float bottom = 0.0f;
+    // @todo: This should only be numeric types.
+    template<typename tp_type>
+    class c_rect_edges {
+    public:
+        c_rect_edges() = default;
 
-        s_rect_edges() = default;
-
-        s_rect_edges(const float left, const float top, const float right, const float bottom) : left(left), top(top), right(right), bottom(bottom) {
-            ZF_ASSERT(left <= right);
-            ZF_ASSERT(top <= bottom);
-        }
-    };
-
-    struct s_rect_edges_int {
-        int left = 0;
-        int top = 0;
-        int right = 0;
-        int bottom = 0;
-
-        s_rect_edges_int() = default;
-
-        s_rect_edges_int(const int left, const int top, const int right, const int bottom) : left(left), top(top), right(right), bottom(bottom) {
+        c_rect_edges(const tp_type left, const tp_type top, const tp_type right, const tp_type bottom) : m_left(left), m_top(top), m_right(right), m_bottom(bottom) {
             ZF_ASSERT(left <= right);
             ZF_ASSERT(top <= bottom);
         }
 
-        operator s_rect_edges() const {
-            return {static_cast<float>(left), static_cast<float>(top), static_cast<float>(right), static_cast<float>(bottom)};
+        c_rect_edges(const s_v2 topleft, const s_v2 bottomright) : m_left(topleft.x), m_top(topleft.y), m_right(bottomright.x), m_bottom(bottomright.y) {
+            ZF_ASSERT(topleft.x <= bottomright.x && topleft.y <= bottomright.y);
         }
+
+        tp_type Left() const { return m_left; }
+        tp_type Top() const { return m_top; }
+        tp_type Right() const { return m_right; }
+        tp_type Bottom() const { return m_bottom; }
+
+        void SetLeft(const tp_type left) {
+            ZF_ASSERT(left <= m_right);
+            m_left = left;
+        }
+
+        void SetRight(const tp_type right) {
+            ZF_ASSERT(right >= m_left);
+            m_right = right;
+        }
+
+        void SetTop(const tp_type top) {
+            ZF_ASSERT(top <= m_bottom);
+            m_top = top;
+        }
+
+        void SetBottom(const tp_type bottom) {
+            ZF_ASSERT(bottom >= m_top);
+            m_bottom = bottom;
+        }
+
+    private:
+        tp_type m_left = 0.0f;
+        tp_type m_top = 0.0f;
+        tp_type m_right = 0.0f;
+        tp_type m_bottom = 0.0f;
     };
 
     struct s_matrix_4x4 {

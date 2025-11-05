@@ -31,26 +31,26 @@ namespace zf {
         return true;
     }
 
-    static s_font_arrangement LoadFontArrangement(const stbtt_fontinfo& stb_font_info, const t_s32 height) {
+    static s_font_arrangement LoadFontArrangement(const stbtt_fontinfo& stb_font_info, const int height) {
         s_font_arrangement arrangement_info = {};
 
         const float scale = stbtt_ScaleForPixelHeight(&stb_font_info, height);
 
-        t_s32 vm_ascent, vm_descent, vm_line_gap;
+        int vm_ascent, vm_descent, vm_line_gap;
         stbtt_GetFontVMetrics(&stb_font_info, &vm_ascent, &vm_descent, &vm_line_gap);
 
         arrangement_info.line_height = (vm_ascent - vm_descent + vm_line_gap) * scale;
 
-        for (t_s32 i = 0; i < g_ascii_printable_range_len; i++) {
+        for (int i = 0; i < g_ascii_printable_range_len; i++) {
             const char chr = g_ascii_printable_min + i;
 
-            s_rect_edges_int bitmap_box;
-            stbtt_GetCodepointBitmapBox(&stb_font_info, chr, scale, scale, &bitmap_box.left, &bitmap_box.top, &bitmap_box.right, &bitmap_box.bottom);
+            int bm_box_left, bm_box_top, bm_box_right, bm_box_bottom;
+            stbtt_GetCodepointBitmapBox(&stb_font_info, chr, scale, scale, &bm_box_left, &bm_box_top, &bm_box_right, &bm_box_bottom);
 
-            arrangement_info.chr_offsets[i] = {bitmap_box.left, static_cast<t_s32>(bitmap_box.top + (vm_ascent * scale))};
-            arrangement_info.chr_sizes[i] = {bitmap_box.right - bitmap_box.left, bitmap_box.bottom - bitmap_box.top};
+            arrangement_info.chr_offsets[i] = {bm_box_left, static_cast<int>(bm_box_top + (vm_ascent * scale))};
+            arrangement_info.chr_sizes[i] = {bm_box_right - bm_box_left, bm_box_bottom - bm_box_top};
 
-            t_s32 hm_advance;
+            int hm_advance;
             stbtt_GetCodepointHMetrics(&stb_font_info, chr, &hm_advance, nullptr);
 
             arrangement_info.chr_advances[i] = hm_advance * scale;
@@ -59,19 +59,19 @@ namespace zf {
         return arrangement_info;
     }
 
-    static s_font_texture_meta LoadFontTexMeta(const stbtt_fontinfo& stb_font_info, const t_s32 height, const s_font_arrangement& arrangement) {
+    static s_font_texture_meta LoadFontTexMeta(const stbtt_fontinfo& stb_font_info, const int height, const s_font_arrangement& arrangement) {
         s_font_texture_meta tex_meta = {};
 
-        t_s32 chr_x_pen = 0;
+        int chr_x_pen = 0;
 
-        for (t_s32 i = 0; i < g_ascii_printable_range_len; i++) {
-            const t_s32 chr_margin = 2;
+        for (int i = 0; i < g_ascii_printable_range_len; i++) {
+            const int chr_margin = 2;
 
             chr_x_pen += chr_margin;
 
             tex_meta.chr_xs[i] = chr_x_pen;
 
-            const s_v2_s32 chr_size = arrangement.chr_sizes[i];
+            const s_v2_int chr_size = arrangement.chr_sizes[i];
             chr_x_pen += chr_size.x;
 
             chr_x_pen += chr_margin;
@@ -84,7 +84,7 @@ namespace zf {
         return tex_meta;
     }
 
-    static bool LoadFontTextureRGBAPixelData(c_array<t_u8>& rgba_px_data, c_mem_arena& mem_arena, const stbtt_fontinfo& stb_font_info, const t_s32 height, const s_font_arrangement& arrangement, const s_font_texture_meta tex_meta) {
+    static bool LoadFontTextureRGBAPixelData(c_array<t_byte>& rgba_px_data, c_mem_arena& mem_arena, const stbtt_fontinfo& stb_font_info, const int height, const s_font_arrangement& arrangement, const s_font_texture_meta tex_meta) {
         ZF_ASSERT(rgba_px_data.IsEmpty());
 
         // Reserve the needed memory based on font texture size.
@@ -94,7 +94,7 @@ namespace zf {
         }
 
         // Clear the pixel data to transparent white.
-        for (t_s32 i = 0; i < rgba_px_data.Len(); i += 4) {
+        for (int i = 0; i < rgba_px_data.Len(); i += 4) {
             rgba_px_data[i + 0] = 255;
             rgba_px_data[i + 1] = 255;
             rgba_px_data[i + 2] = 255;
@@ -104,7 +104,7 @@ namespace zf {
         // Write the pixel data of each character.
         const float scale = stbtt_ScaleForPixelHeight(&stb_font_info, height);
 
-        for (t_s32 i = 0; i < g_ascii_printable_range_len; i++) {
+        for (int i = 0; i < g_ascii_printable_range_len; i++) {
             const char chr = g_ascii_printable_min + i;
 
             if (chr == ' ') {
@@ -112,21 +112,21 @@ namespace zf {
                 continue;
             }
 
-            t_u8* const stb_bitmap = stbtt_GetCodepointBitmap(&stb_font_info, scale, scale, chr, nullptr, nullptr, nullptr, nullptr);
+            t_byte* const stb_bitmap = stbtt_GetCodepointBitmap(&stb_font_info, scale, scale, chr, nullptr, nullptr, nullptr, nullptr);
 
             if (!stb_bitmap) {
                 ZF_LOG_ERROR("Failed to get bitmap for character '%c' through STB!", chr);
                 return false;
             }
 
-            const s_v2_s32 chr_size = arrangement.chr_sizes[i];
+            const s_v2_int chr_size = arrangement.chr_sizes[i];
 
-            const t_s32 chr_x = tex_meta.chr_xs[i];
+            const int chr_x = tex_meta.chr_xs[i];
 
-            for (t_s32 y = 0; y < chr_size.y; y++) {
-                for (t_s32 xo = 0; xo < chr_size.x; xo++) {
-                    const t_s32 px_index = ((y * tex_meta.size.x) + chr_x + xo) * 4;
-                    const t_s32 stb_bitmap_index = IndexFrom2D(xo, y, chr_size.x);
+            for (int y = 0; y < chr_size.y; y++) {
+                for (int xo = 0; xo < chr_size.x; xo++) {
+                    const int px_index = ((y * tex_meta.size.x) + chr_x + xo) * 4;
+                    const int stb_bitmap_index = IndexFrom2D(xo, y, chr_size.x);
                     rgba_px_data[px_index + 3] = stb_bitmap[stb_bitmap_index];
                 }
             }
@@ -137,14 +137,14 @@ namespace zf {
         return true;
     }
 
-    bool LoadFontFromRawFile(s_font_arrangement& arrangement, s_font_texture_meta& tex_meta, c_array<t_u8>& tex_rgba_px_data, const s_str_view file_path, const t_s32 height, c_mem_arena& temp_mem_arena) {
+    bool LoadFontFromRawFile(s_font_arrangement& arrangement, s_font_texture_meta& tex_meta, c_array<t_byte>& tex_rgba_px_data, const s_str_view file_path, const int height, c_mem_arena& temp_mem_arena) {
         if (height <= 0) {
             ZF_LOG_ERROR("Invalid font height %d!", height);
             return false;
         }
 
         // Get the plain font file data.
-        c_array<t_u8> file_data;
+        c_array<t_byte> file_data;
 
         if (!LoadFileContents(file_data, temp_mem_arena, file_path)) {
             ZF_LOG_ERROR("Failed to reserve memory for font file contents!");
@@ -154,7 +154,7 @@ namespace zf {
         // Initialise the font through STB.
         stbtt_fontinfo stb_font_info;
 
-        const t_s32 offs = stbtt_GetFontOffsetForIndex(file_data.Raw(), 0);
+        const int offs = stbtt_GetFontOffsetForIndex(file_data.Raw(), 0);
 
         if (offs == -1) {
             ZF_LOG_ERROR("Failed to get font offset!");
@@ -235,7 +235,7 @@ namespace zf {
     void UnpackTexture(s_file_stream& fs, s_rgba_texture& rgba_tex) {
     }
 
-    bool PackFont(s_file_stream& fs, const s_font_arrangement& arrangement, const s_font_texture_meta tex_meta, const c_array<const t_u8> tex_rgba_px_data) {
+    bool PackFont(s_file_stream& fs, const s_font_arrangement& arrangement, const s_font_texture_meta tex_meta, const c_array<const t_byte> tex_rgba_px_data) {
         if (!fs.WriteItem(arrangement)) {
             ZF_LOG_ERROR("Failed to write font arrangement during packing!");
             return false;
@@ -254,6 +254,6 @@ namespace zf {
         return true;
     }
 
-    void UnpackFont(s_file_stream& fs, s_font_arrangement& arrangement, s_font_texture_meta tex_meta, c_array<const t_u8>& tex_rgba_px_data) {
+    void UnpackFont(s_file_stream& fs, s_font_arrangement& arrangement, s_font_texture_meta tex_meta, c_array<const t_byte>& tex_rgba_px_data) {
     }
 }

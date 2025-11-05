@@ -37,14 +37,14 @@ namespace zf {
     };
 
     struct s_game_info {
-        s_v2_s32 window_init_size;
+        s_v2_int window_init_size;
         s_str_view window_title;
         e_window_flags window_flags;
 
         size_t dev_mem_size; // How much memory should be allocated in the permanent arena for your use? This might be the size of a specific struct, for example.
         size_t dev_mem_alignment; // The alignment of the above memory.
 
-        t_s32 targ_ticks_per_sec;
+        int targ_ticks_per_sec;
 
         // Below are pointers to functions that the framework will call for you. The provided struct pointers expose parts of the framework state for you to work with.
         bool (* init_func)(const s_game_init_context& zf_context); // Called as one of the last steps of the game initialisation phase.

@@ -91,7 +91,7 @@ namespace zf {
         eks_key_code_cnt
     };
 
-    using t_key_bits = t_u64;
+    using t_key_bits = uint64_t;
 
     static_assert(eks_key_code_cnt < ZF_SIZE_IN_BITS(t_key_bits), "Too many key codes!");
 
@@ -105,7 +105,7 @@ namespace zf {
         eks_mouse_button_code_cnt
     };
 
-    using t_mouse_button_bits = t_u8;
+    using t_mouse_button_bits = t_byte;
 
     static_assert(eks_mouse_button_code_cnt < ZF_SIZE_IN_BITS(t_mouse_button_bits), "Too many mouse button codes!");
 
@@ -213,7 +213,7 @@ namespace zf {
         c_window(const c_window&) = delete;
         c_window& operator=(const c_window&) = delete;
 
-        [[nodiscard]] static bool Init(const s_v2_s32 size, const s_str_view title, const e_window_flags flags);
+        [[nodiscard]] static bool Init(const s_v2_int size, const s_str_view title, const e_window_flags flags);
         static void Clean();
 
         static void* GetNativeWindowHandle() {
@@ -256,13 +256,13 @@ namespace zf {
             return glfwGetTime();
         }
 
-        static s_v2_s32 GetSize() {
+        static s_v2_int GetSize() {
             int w, h;
             glfwGetWindowSize(sm_glfw_window, &w, &h);
             return {w, h};
         }
 
-        static s_v2_s32 GetFramebufferSize() {
+        static s_v2_int GetFramebufferSize() {
             int w, h;
             glfwGetFramebufferSize(sm_glfw_window, &w, &h);
             return {w, h};

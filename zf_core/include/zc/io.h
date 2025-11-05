@@ -56,12 +56,12 @@ namespace zf {
         }
     };
 
-    bool LoadFileContents(c_array<t_u8>& contents, c_mem_arena& mem_arena, const s_str_view file_path, const bool include_terminating_byte = false);
+    bool LoadFileContents(c_array<t_byte>& contents, c_mem_arena& mem_arena, const s_str_view file_path, const bool include_terminating_byte = false);
 
     inline bool LoadFileContentsAsStr(s_str& contents, c_mem_arena& mem_arena, const s_str_view file_path) {
         ZF_ASSERT(contents.chrs.IsEmpty());
 
-        c_array<t_u8> contents_default;
+        c_array<t_byte> contents_default;
 
         if (!LoadFileContents(contents_default, mem_arena, file_path, true)) {
             return false;

@@ -24,9 +24,9 @@ namespace zf {
         fprintf(output_writer.raw, "\n");
         fprintf(output_writer.raw, "namespace zf {\n");
 
-        fprintf(output_writer.raw, "    extern const t_u8 g_%s_raw[] = {", arr_subname.Raw());
+        fprintf(output_writer.raw, "    extern const t_byte g_%s_raw[] = {", arr_subname.Raw());
 
-        t_u8 read_byte;
+        t_byte read_byte;
         size_t read_cnt = 0;
 
         while (input_reader.ReadItem(read_byte)) {

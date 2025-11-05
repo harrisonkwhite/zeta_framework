@@ -5,7 +5,7 @@ namespace zf {
         ZF_ASSERT(!IsInitted());
         ZF_ASSERT(size > 0);
 
-        m_buf = static_cast<t_u8*>(calloc(size, 1));
+        m_buf = static_cast<t_byte*>(calloc(size, 1));
 
         if (!m_buf) {
             return false;

@@ -282,9 +282,9 @@ namespace zf {
         }
 
         const int starting_byte_index = from / 8;
-        const t_u8 starting_byte_old = m_bytes[starting_byte_index];
+        const t_byte starting_byte_old = m_bytes[starting_byte_index];
 
-        const t_u8 last_byte_old = m_bytes[m_bytes.Len() - 1];
+        const t_byte last_byte_old = m_bytes[m_bytes.Len() - 1];
 
         m_bytes[starting_byte_index] &= BitRangeMask(from % 8);
         m_bytes[m_bytes.Len() - 1] &= LastByteMask();
@@ -572,9 +572,9 @@ namespace zf {
         }
 
         const int starting_byte_index = from / 8;
-        const t_u8 starting_byte_old = m_bytes[starting_byte_index];
+        const t_byte starting_byte_old = m_bytes[starting_byte_index];
 
-        const t_u8 last_byte_old = m_bytes[m_bytes.Len() - 1];
+        const t_byte last_byte_old = m_bytes[m_bytes.Len() - 1];
 
         m_bytes[starting_byte_index] &= BitRangeMask(from % 8);
         m_bytes[m_bytes.Len() - 1] &= LastByteMask();

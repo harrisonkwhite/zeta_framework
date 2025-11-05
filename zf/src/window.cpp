@@ -4,7 +4,7 @@
 #include <zf/rendering.h>
 
 namespace zf {
-    static e_key_code GLFWToZFKeyCode(const t_s32 glfw_key) {
+    static e_key_code GLFWToZFKeyCode(const int glfw_key) {
         switch (glfw_key) {
             case GLFW_KEY_SPACE: return ek_key_code_space;
             case GLFW_KEY_0: return ek_key_code_0;
@@ -74,7 +74,7 @@ namespace zf {
         }
     }
 
-    static e_mouse_button_code GLFWToZFMouseButtonCode(const t_s32 glfw_button) {
+    static e_mouse_button_code GLFWToZFMouseButtonCode(const int glfw_button) {
         switch (glfw_button) {
             case GLFW_MOUSE_BUTTON_LEFT: return ek_mouse_button_code_left;
             case GLFW_MOUSE_BUTTON_RIGHT: return ek_mouse_button_code_right;
@@ -84,7 +84,7 @@ namespace zf {
         }
     }
 
-    bool c_window::Init(const s_v2_s32 size, const s_str_view title, const e_window_flags flags) {
+    bool c_window::Init(const s_v2_int size, const s_str_view title, const e_window_flags flags) {
         ZF_ASSERT(!sm_glfw_window);
         ZF_ASSERT(title.IsTerminated());
 

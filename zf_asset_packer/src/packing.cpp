@@ -5,9 +5,9 @@
 
 namespace zf {
     struct s_packed_header {
-        t_s32 tex_cnt;
-        t_s32 font_cnt;
-        t_s32 shader_prog_cnt;
+        int tex_cnt;
+        int font_cnt;
+        int shader_prog_cnt;
     };
 
     static bool PackTexturesFromInstrs(s_file_stream& fs, cJSON* const cj, c_mem_arena& temp_mem_arena) {
@@ -83,7 +83,7 @@ namespace zf {
 
             s_font_arrangement arrangement;
             s_font_texture_meta tex_meta;
-            c_array<t_u8> tex_rbga_px_data;
+            c_array<t_byte> tex_rbga_px_data;
 
             if (!LoadFontFromRawFile(arrangement, tex_meta, tex_rbga_px_data, zf::s_str_view::FromRawTerminated(cj_file_path->valuestring), cj_height->valueint, temp_mem_arena)) {
                 ZF_LOG_ERROR("Failed to load font with height %d from file \"%s\"!", cj_height->valueint, cj_file_path->valuestring);

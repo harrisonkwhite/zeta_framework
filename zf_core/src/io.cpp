@@ -3,7 +3,7 @@
 #include <zc/debug.h>
 
 namespace zf {
-    bool LoadFileContents(c_array<t_u8>& contents, c_mem_arena& mem_arena, const s_str_view file_path, const bool include_terminating_byte) {
+    bool LoadFileContents(c_array<t_byte>& contents, c_mem_arena& mem_arena, const s_str_view file_path, const bool include_terminating_byte) {
         ZF_ASSERT(contents.IsEmpty());
         ZF_ASSERT(file_path.IsTerminated());
 
