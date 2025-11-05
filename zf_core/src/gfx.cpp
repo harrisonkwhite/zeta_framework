@@ -44,7 +44,7 @@ namespace zf {
         for (t_s32 i = 0; i < g_ascii_printable_range_len; i++) {
             const char chr = g_ascii_printable_min + i;
 
-            s_rect_edges_s32 bitmap_box;
+            s_rect_edges_int bitmap_box;
             stbtt_GetCodepointBitmapBox(&stb_font_info, chr, scale, scale, &bitmap_box.left, &bitmap_box.top, &bitmap_box.right, &bitmap_box.bottom);
 
             arrangement_info.chr_offsets[i] = {bitmap_box.left, static_cast<t_s32>(bitmap_box.top + (vm_ascent * scale))};

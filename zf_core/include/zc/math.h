@@ -254,13 +254,31 @@ namespace zf {
         float top = 0.0f;
         float right = 0.0f;
         float bottom = 0.0f;
+
+        s_rect_edges() = default;
+
+        s_rect_edges(const float left, const float top, const float right, const float bottom) : left(left), top(top), right(right), bottom(bottom) {
+            ZF_ASSERT(left <= right);
+            ZF_ASSERT(top <= bottom);
+        }
     };
 
-    struct s_rect_edges_s32 {
-        t_s32 left = 0;
-        t_s32 top = 0;
-        t_s32 right = 0;
-        t_s32 bottom = 0;
+    struct s_rect_edges_int {
+        int left = 0;
+        int top = 0;
+        int right = 0;
+        int bottom = 0;
+
+        s_rect_edges_int() = default;
+
+        s_rect_edges_int(const int left, const int top, const int right, const int bottom) : left(left), top(top), right(right), bottom(bottom) {
+            ZF_ASSERT(left <= right);
+            ZF_ASSERT(top <= bottom);
+        }
+
+        operator s_rect_edges() const {
+            return {static_cast<float>(left), static_cast<float>(top), static_cast<float>(right), static_cast<float>(bottom)};
+        }
     };
 
     struct s_matrix_4x4 {
