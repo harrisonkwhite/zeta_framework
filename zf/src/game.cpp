@@ -1,7 +1,7 @@
 #include <zf/game.h>
 
 #include <cstdio>
-#include <zc/io.h>
+#include <zc/debug.h>
 #include <zf/rng.h>
 
 namespace zf {

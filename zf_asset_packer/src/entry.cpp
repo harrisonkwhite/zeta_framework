@@ -1,5 +1,7 @@
 #include "packing.h"
 
+#include <zc/debug.h>
+
 static bool ProcCmdlineArgs(const zf::c_array<const char* const> args, zf::s_str_view& instrs_json_file_path, zf::s_str_view& output_file_path) {
     if ((args.Len() - 1) % 2 != 0) {
         ZF_LOG_ERROR("Invalid command-line argument count!");

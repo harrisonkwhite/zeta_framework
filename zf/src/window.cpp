@@ -1,7 +1,7 @@
 #include <zf/window.h>
 
 #include <GLFW/glfw3.h>
-#include <zc/io.h>
+#include <zc/debug.h>
 #include <zf/rendering.h>
 
 namespace zf {

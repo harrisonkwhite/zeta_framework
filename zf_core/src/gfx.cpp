@@ -1,9 +1,10 @@
 #include <zc/gfx.h>
 
+#include <zc/debug.h>
+#include <zc/io.h>
 #include <stb_image.h>
 #include <stb_truetype.h>
 #include <reproc/run.h>
-#include <zc/io.h>
 
 namespace zf {
     bool LoadRGBATextureFromRawFile(s_rgba_texture& tex, c_mem_arena& mem_arena, const s_str_view file_path) {

@@ -1,5 +1,6 @@
 #include "packing.h"
 
+#include <zc/debug.h>
 #include <cJSON.h>
 
 namespace zf {

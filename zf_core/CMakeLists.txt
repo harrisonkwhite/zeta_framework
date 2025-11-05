@@ -2,6 +2,7 @@ add_library(zf_core STATIC
     src/math.cpp
     src/io.cpp
     src/gfx.cpp
+    src/debug.cpp
     src/mem/mem.cpp
     src/mem/bit_vector.cpp
     src/mem/strs.cpp
@@ -10,6 +11,7 @@ add_library(zf_core STATIC
 
     include/zc/gfx.h
     include/zc/io.h
+    include/zc/debug.h
     include/zc/math.h
     include/zc/mem/bit_vector.h
     include/zc/mem/arrays.h
