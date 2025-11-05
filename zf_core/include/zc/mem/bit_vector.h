@@ -49,6 +49,8 @@ namespace zf {
     template<size_t tp_bit_cnt>
     class c_static_bit_vector {
     public:
+        static_assert(tp_bit_cnt > 0, "Invalid bit count for bit vector!");
+
         void SetBit(const size_t index) {
             c_bit_vector(m_bytes, tp_bit_cnt).SetBit(index);
         }
