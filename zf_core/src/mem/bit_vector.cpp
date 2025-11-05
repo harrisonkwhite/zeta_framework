@@ -14,6 +14,8 @@ namespace zf {
     }
 
     int c_bit_vector::IndexOfFirstSetBit(const size_t from) const {
+        assert(from <= m_bit_cnt); // Intentionally allowing the upper bound here for the case of iteration.
+
         static constexpr s_static_array<int, 256> lg_mappings = {
             {
                 -1, // 0000 0000
@@ -275,7 +277,7 @@ namespace zf {
             }
         };
 
-        if (m_bit_cnt == 0) {
+        if (m_bit_cnt == 0 || from == m_bit_cnt) {
             return -1;
         }
 
@@ -302,6 +304,8 @@ namespace zf {
     }
 
     int c_bit_vector::IndexOfFirstUnsetBit(const size_t from) const {
+        assert(from <= m_bit_cnt); // Intentionally allowing the upper bound here for the case of iteration.
+
         static constexpr s_static_array<int, 256> lg_mappings = {
             {
                 0, // 0000 0000
@@ -563,7 +567,7 @@ namespace zf {
             }
         };
 
-        if (m_bit_cnt == 0) {
+        if (m_bit_cnt == 0 || from == m_bit_cnt) {
             return -1;
         }
 
