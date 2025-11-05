@@ -2,10 +2,32 @@
 
 #include <zc/mem/mem.h>
 #include <zc/mem/bit_vector.h>
+#include <zc/mem/strs.h>
 
 namespace zf {
     template<typename tp_type>
     using t_hash_func = int (*)(const tp_type& key);
+
+    inline const t_hash_func<int> g_int_hash_func = [](const int& key) {
+        return key & 0x7FFFFFFF; // Mask out the sign bit.
+    };
+
+    inline const t_hash_func<s_str_view> g_str_hash_func = [](const s_str_view& key) {
+        assert(key.IsTerminated());
+
+        // This is an FNV-1a implementation.
+        const unsigned int offs_basis = 2166136261u;
+        const unsigned int prime = 16777619u;
+
+        unsigned int hash = offs_basis;
+
+        for (int i = 0; key.chrs[i]; i++) {
+            hash ^= static_cast<unsigned char>(key.chrs[i]);
+            hash *= prime;
+        }
+
+        return static_cast<int>(hash & 0x7FFFFFFF);
+    };
 
     template<typename tp_key_type, typename tp_value_type>
     class c_unordered_map {

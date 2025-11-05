@@ -21,6 +21,9 @@ namespace zf {
         s_str_view() = default;
         s_str_view(const c_array<const char> chrs) : chrs(chrs) {}
 
+        int CalcLen() const;
+        bool IsTerminated() const;
+
         const char* Raw() const {
             return chrs.Raw();
         }
@@ -28,9 +31,6 @@ namespace zf {
         bool IsEmpty() const {
             return chrs.IsEmpty() || !chrs[0];
         }
-
-        int CalcLen() const;
-        bool IsTerminated() const;
     };
 
     struct s_str {
@@ -48,20 +48,20 @@ namespace zf {
         s_str() = default;
         s_str(const c_array<char> chrs) : chrs(chrs) {}
 
-        char* Raw() const {
-            return chrs.Raw();
-        }
-
-        bool IsEmpty() const {
-            return s_str_view(chrs).IsEmpty();
-        }
-
         int CalcLen() const {
             return s_str_view(chrs).CalcLen();
         }
 
         bool IsTerminated(const c_array<const char> str) const {
             return s_str_view(chrs).IsTerminated();
+        }
+
+        char* Raw() const {
+            return chrs.Raw();
+        }
+
+        bool IsEmpty() const {
+            return s_str_view(chrs).IsEmpty();
         }
 
         operator s_str_view() const {
