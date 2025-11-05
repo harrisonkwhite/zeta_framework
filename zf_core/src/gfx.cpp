@@ -177,8 +177,7 @@ namespace zf {
         return true;
     }
 
-    static bool PackShaderFromRawFile(c_file_stream& fs, const s_str_view file_path, const bool is_fs, const s_str_view varying_def_file_path) {
-        assert(fs.IsWriting());
+    static bool PackShaderFromRawFile(s_file_stream& fs, const s_str_view file_path, const bool is_fs, const s_str_view varying_def_file_path) {
         assert(file_path.IsTerminated());
         assert(varying_def_file_path.IsTerminated());
 
@@ -194,7 +193,7 @@ namespace zf {
 
         reproc_options options = {};
         options.redirect.out.type = REPROC_REDIRECT_FILE;
-        options.redirect.out.file = fs.Raw();
+        options.redirect.out.file = fs.raw;
 
         const int res = reproc_run(args, options);
 
@@ -206,9 +205,7 @@ namespace zf {
         return true;
     }
 
-    static bool PackShaderProgFromRawFiles(c_file_stream& fs, const s_str_view vs_file_path, const s_str_view fs_file_path, const s_str_view varying_def_file_path) {
-        assert(fs.IsWriting());
-
+    static bool PackShaderProgFromRawFiles(s_file_stream& fs, const s_str_view vs_file_path, const s_str_view fs_file_path, const s_str_view varying_def_file_path) {
         if (!PackShaderFromRawFile(fs, vs_file_path, false, varying_def_file_path)) {
             return false;
         }
@@ -220,9 +217,7 @@ namespace zf {
         return true;
     }
 
-    bool PackTexture(c_file_stream& fs, const s_rgba_texture rgba_tex) {
-        assert(fs.IsWriting());
-
+    bool PackTexture(s_file_stream& fs, const s_rgba_texture rgba_tex) {
         if (!fs.WriteItem(rgba_tex.dims)) {
             ZF_LOG_ERROR("Failed to write texture size during packing!");
             return false;
@@ -236,13 +231,10 @@ namespace zf {
         return true;
     }
 
-    void UnpackTexture(c_file_stream& fs, s_rgba_texture& rgba_tex) {
-        assert(!fs.IsWriting());
+    void UnpackTexture(s_file_stream& fs, s_rgba_texture& rgba_tex) {
     }
 
-    bool PackFont(c_file_stream& fs, const s_font_arrangement& arrangement, const s_font_texture_meta tex_meta, const c_array<const t_u8> tex_rgba_px_data) {
-        assert(fs.IsWriting());
-
+    bool PackFont(s_file_stream& fs, const s_font_arrangement& arrangement, const s_font_texture_meta tex_meta, const c_array<const t_u8> tex_rgba_px_data) {
         if (!fs.WriteItem(arrangement)) {
             ZF_LOG_ERROR("Failed to write font arrangement during packing!");
             return false;
@@ -261,7 +253,6 @@ namespace zf {
         return true;
     }
 
-    void UnpackFont(c_file_stream& fs, s_font_arrangement& arrangement, s_font_texture_meta tex_meta, c_array<const t_u8>& tex_rgba_px_data) {
-        assert(!fs.IsWriting());
+    void UnpackFont(s_file_stream& fs, s_font_arrangement& arrangement, s_font_texture_meta tex_meta, c_array<const t_u8>& tex_rgba_px_data) {
     }
 }

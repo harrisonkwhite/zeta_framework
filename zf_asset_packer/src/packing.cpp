@@ -9,10 +9,7 @@ namespace zf {
         t_s32 shader_prog_cnt;
     };
 
-    static bool PackTexturesFromInstrs(c_file_stream& fs, cJSON* const cj, c_mem_arena& temp_mem_arena) {
-        assert(fs.IsWriting());
-        assert(cj);
-
+    static bool PackTexturesFromInstrs(s_file_stream& fs, cJSON* const cj, c_mem_arena& temp_mem_arena) {
         cJSON* const cj_textures = cJSON_GetObjectItemCaseSensitive(cj, "textures");
 
         if (!cJSON_IsArray(cj_textures)) {
@@ -57,10 +54,7 @@ namespace zf {
         return true;
     }
 
-    static bool PackFontsFromInstrs(c_file_stream& fs, cJSON* const cj, c_mem_arena& temp_mem_arena) {
-        assert(fs.IsWriting());
-        assert(cj);
-
+    static bool PackFontsFromInstrs(s_file_stream& fs, cJSON* const cj, c_mem_arena& temp_mem_arena) {
         cJSON* const cj_fonts = cJSON_GetObjectItemCaseSensitive(cj, "fonts");
 
         if (!cJSON_IsArray(cj_fonts)) {
@@ -110,7 +104,7 @@ namespace zf {
 
         cJSON* const cj = cJSON_Parse(instrs_json.Raw());
 
-        c_file_stream fs;
+        s_file_stream fs;
 
         if (!cj) {
             ZF_LOG_ERROR_SPECIAL("cJSON", "%s", cJSON_GetErrorPtr());

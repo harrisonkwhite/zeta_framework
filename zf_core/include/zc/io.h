@@ -58,85 +58,52 @@ namespace zf {
     constexpr char g_ascii_printable_max = '~';
     constexpr int g_ascii_printable_range_len = g_ascii_printable_max - g_ascii_printable_min + 1;
 
-    class c_file_stream {
-    public:
-        ~c_file_stream() {
-            if (m_defer_close && m_fs_raw) {
-                Close();
-            }
-        }
+    struct s_file_stream {
+        FILE* raw = nullptr;
 
         [[nodiscard]]
         bool Open(const s_str_view file_path, const bool is_write) {
-            assert(!IsOpen());
             assert(file_path.IsTerminated());
-
-            m_fs_raw = fopen(file_path.Raw(), is_write ? "wb" : "rb");
-            return m_fs_raw;
+            raw = fopen(file_path.Raw(), is_write ? "wb" : "rb");
+            return raw;
         }
 
         void Close() {
-            assert(IsOpen());
-
-            fclose(m_fs_raw);
-            m_fs_raw = nullptr;
-        }
-
-        void DeferClose() {
-            m_defer_close = true;
-        }
-
-        bool IsOpen() const {
-            return m_fs_raw;
-        }
-
-        bool IsWriting() const {
-            assert(IsOpen());
-            return m_is_write;
+            fclose(raw);
+            raw = nullptr;
         }
 
         size_t CalcSize() {
-            assert(IsOpen());
-
-            const auto pos_old = ftell(m_fs_raw);
-            fseek(m_fs_raw, 0, SEEK_END);
-            const size_t file_size = ftell(m_fs_raw);
-            fseek(m_fs_raw, pos_old, SEEK_SET);
+            const auto pos_old = ftell(raw);
+            fseek(raw, 0, SEEK_END);
+            const size_t file_size = ftell(raw);
+            fseek(raw, pos_old, SEEK_SET);
             return file_size;
         }
 
         template<typename tp_type>
         [[nodiscard]]
         bool ReadItem(tp_type& item) {
-            assert(IsOpen() && !IsWriting());
-            return fread(&item, sizeof(tp_type), 1, m_fs_raw) == 1;
+            return fread(&item, sizeof(tp_type), 1, raw) == 1;
         }
 
         template<typename tp_type>
         [[nodiscard]]
         int ReadItems(const c_array<tp_type> arr) {
-            assert(IsOpen() && !IsWriting());
-            return fread(arr.Raw(), sizeof(tp_type), arr.Len(), m_fs_raw);
+            return fread(arr.Raw(), sizeof(tp_type), arr.Len(), raw);
         }
 
         template<typename tp_type>
         [[nodiscard]]
         bool WriteItem(const tp_type& item) {
-            assert(IsOpen() && IsWriting());
-            return fwrite(&item, sizeof(tp_type), 1, m_fs_raw) == 1;
+            return fwrite(&item, sizeof(tp_type), 1, raw) == 1;
         }
 
         template<typename tp_type>
         [[nodiscard]]
         int WriteItems(const c_array<const tp_type> arr) {
-            assert(IsOpen() && IsWriting());
-            return fwrite(arr.Raw(), sizeof(tp_type), arr.Len(), m_fs_raw);
+            return fwrite(arr.Raw(), sizeof(tp_type), arr.Len(), raw);
         }
-
-    private:
-        FILE* m_fs_raw = nullptr;
-        bool m_is_write = false;
-        bool m_defer_close = false;
     };
 
     bool LoadFileContents(c_array<t_u8>& contents, c_mem_arena& mem_arena, const s_str_view file_path, const bool include_terminating_byte = false);
