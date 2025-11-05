@@ -216,16 +216,17 @@ namespace zf {
         }
     };
 
+    template<co_numeric tp_type>
     struct s_rect {
-        float x = 0.0f;
-        float y = 0.0f;
-        float width = 0.0f;
-        float height = 0.0f;
+        tp_type x = 0;
+        tp_type y = 0;
+        tp_type width = 0;
+        tp_type height = 0;
 
         s_rect() = default;
-        s_rect(const float x, const float y, const float width, const float height) : x(x), y(y), width(width), height(height) {}
-        s_rect(const s_v2 pos, const s_v2 size) : x(pos.x), y(pos.y), width(size.x), height(size.y) {}
-        s_rect(const s_v2 pos, const s_v2 size, const s_v2 origin) : x(pos.x - (size.x * origin.x)), y(pos.y - (size.y * origin.y)), width(size.x), height(size.y) {}
+        s_rect(const tp_type x, const tp_type y, const tp_type width, const tp_type height) : x(x), y(y), width(width), height(height) {}
+        //s_rect(const s_v2 pos, const s_v2 size) : x(pos.x), y(pos.y), width(size.x), height(size.y) {}
+        //s_rect(const s_v2 pos, const s_v2 size, const s_v2 origin) : x(pos.x - (size.x * origin.x)), y(pos.y - (size.y * origin.y)), width(size.x), height(size.y) {}
 
         s_v2 Pos() const {
             return {x, y};
@@ -246,13 +247,14 @@ namespace zf {
 
     // Generate a rectangle encompassing all of the provided rectangles.
     // At least a single rectangle must be provided.
-    inline s_rect CalcSpanningRect(const c_array<const s_rect> rects) {
+    template<co_numeric tp_type>
+    s_rect<tp_type> CalcSpanningRect(const c_array<const s_rect<tp_type>> rects) {
         ZF_ASSERT(!rects.IsEmpty());
 
-        float min_left = rects[0].x;
-        float min_top = rects[0].y;
-        float max_right = rects[0].Right();
-        float max_bottom = rects[0].Bottom();
+        tp_type min_left = rects[0].x;
+        tp_type min_top = rects[0].y;
+        tp_type max_right = rects[0].Right();
+        tp_type max_bottom = rects[0].Bottom();
 
         for (int i = 1; i < rects.Len(); i++) {
             min_left = Min(rects[i].x, min_left);
@@ -269,37 +271,7 @@ namespace zf {
         };
     }
 
-    struct s_rect_int {
-        int x = 0;
-        int y = 0;
-        int width = 0;
-        int height = 0;
-
-        s_rect_int() = default;
-        s_rect_int(const int x, const int y, const int width, const int height) : x(x), y(y), width(width), height(height) {}
-        s_rect_int(const s_v2_int pos, const s_v2_int size) : x(pos.x), y(pos.y), width(size.x), height(size.y) {}
-
-        s_v2_int Pos() const {
-            return {x, y};
-        }
-
-        s_v2_int Size() const {
-            return {width, height};
-        }
-
-        int Right() const {
-            return x + width;
-        }
-
-        int Bottom() const {
-            return y + height;
-        }
-
-        operator s_rect() const {
-            return {static_cast<float>(x), static_cast<float>(y), static_cast<float>(width), static_cast<float>(height)};
-        }
-    };
-
+    // @todo: Remove?
     template<co_numeric tp_type>
     class c_rect_edges {
     public:
