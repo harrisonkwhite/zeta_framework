@@ -1,6 +1,6 @@
 # Zeta Framework
 
-This is a simple framework in C++ for developing 2D games. It currently supports Windows, Mac, and Linux platforms.
+This is a framework in C++ for developing 2D games, developed mostly for personal use. It currently only supports Windows.
 
 You can find it being put to use in my in-development game [Kaōzeth](https://github.com/harrisonkwhite/kaozeth).
 
