@@ -59,7 +59,7 @@
 #define ZF_LOG_SUCCESS(format, ...) fprintf(stderr, ZF_ANSI_BOLD ZF_ANSI_FG_GREEN "Success: " ZF_ANSI_RESET format "\n", ##__VA_ARGS__)
 
 namespace zf {
-    void HandleAssertFailure(const char* const condition, const char* const file, const int line, const char* const func);
+    void HandleAssertFailure(const char* const condition, const char* const file, const int line, const char* const func, const char* const msg = nullptr);
 }
 
 #ifdef NDEBUG
@@ -69,6 +69,13 @@ namespace zf {
         do { \
             if (!(condition)) { \
                 zf::HandleAssertFailure(#condition, __FILE__, __LINE__, __FUNCTION__); \
+            } \
+        } while(0)
+
+    #define ZF_ASSERT_MSG(condition, msg) \
+        do { \
+            if (!(condition)) { \
+                zf::HandleAssertFailure(#condition, __FILE__, __LINE__, __FUNCTION__, msg); \
             } \
         } while(0)
 #endif
