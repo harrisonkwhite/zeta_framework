@@ -2,12 +2,6 @@
 
 #include <cstdio>
 
-#ifdef _WIN32
-    #include <windows.h>
-    #include <dbghelp.h>
-    #pragma comment(lib, "dbghelp.lib")
-#endif
-
 #define ZF_ANSI_ESC "\x1b"
 
 #define ZF_ANSI_RESET ZF_ANSI_ESC "[0m"
