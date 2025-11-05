@@ -3,22 +3,24 @@
 #include <cmath>
 #include <zc/mem/mem.h>
 #include <zc/mem/arrays.h>
+#include <zc/type_traits.h>
 
 namespace zf {
     constexpr float g_pi = 3.14159265358979323846f;
     constexpr float g_tau = 6.28318530717958647692f;
 
-    template<typename tp_type>
+    template<co_numeric tp_type>
     static constexpr tp_type Min(const tp_type& a, const tp_type& b) {
         return a <= b ? a : b;
     }
 
-    template<typename tp_type>
+    template<co_numeric tp_type>
     static constexpr tp_type Max(const tp_type& a, const tp_type& b) {
         return a >= b ? a : b;
     }
 
-    constexpr int Sign(const int n) {
+    template<co_numeric tp_type>
+    constexpr int Sign(const tp_type n) {
         if (n > 0) {
             return 1;
         } else if (n < 0) {
@@ -28,15 +30,18 @@ namespace zf {
         return 0;
     }
 
-    constexpr int WrapUpper(const int val, const int max_excl) {
+    template<co_integral tp_type>
+    constexpr tp_type WrapUpper(const tp_type val, const tp_type max_excl) {
         return ((val % max_excl) + max_excl) % max_excl;
     }
 
-    constexpr int Wrap(const int val, const int min, const int max_excl) {
+    template<co_integral tp_type>
+    constexpr tp_type Wrap(const tp_type val, const tp_type min, const tp_type max_excl) {
         return min + WrapUpper(val - min, max_excl - min);
     }
 
-    constexpr int DigitAt(const int n, const unsigned int index) {
+    template<co_integral tp_type>
+    constexpr tp_type DigitAt(const tp_type n, const unsigned int index) {
         if (n < 0) {
             return DigitAt(-n, index);
         }
@@ -52,7 +57,8 @@ namespace zf {
         return DigitAt(n / 10, index - 1);
     }
 
-    constexpr int DigitCnt(const int n) {
+    template<co_integral tp_type>
+    constexpr int DigitCnt(const tp_type n) {
         if (n < 0) {
             return DigitCnt(-n);
         }
@@ -269,8 +275,7 @@ namespace zf {
         }
     };
 
-    // @todo: This should only be numeric types.
-    template<typename tp_type>
+    template<co_numeric tp_type>
     class c_rect_edges {
     public:
         c_rect_edges() = default;
