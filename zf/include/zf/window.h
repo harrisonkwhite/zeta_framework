@@ -212,7 +212,7 @@ namespace zf {
         c_window(const c_window&) = delete;
         c_window& operator=(const c_window&) = delete;
 
-        [[nodiscard]] static bool Init(const s_v2_s32 size, const c_string_view title, const e_window_flags flags);
+        [[nodiscard]] static bool Init(const s_v2_s32 size, const s_str_view title, const e_window_flags flags);
         static void Clean();
 
         static void* GetNativeWindowHandle() {

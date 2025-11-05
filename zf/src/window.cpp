@@ -85,8 +85,9 @@ namespace zf {
         }
     }
 
-    bool c_window::Init(const s_v2_s32 size, const c_string_view title, const e_window_flags flags) {
+    bool c_window::Init(const s_v2_s32 size, const s_str_view title, const e_window_flags flags) {
         assert(!sm_glfw_window);
+        assert(title.IsTerminated());
 
         if (!glfwInit()) {
             ZF_LOG_ERROR("Failed to initialise GLFW!");

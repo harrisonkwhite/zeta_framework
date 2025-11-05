@@ -6,7 +6,9 @@
 #include <zc/io.h>
 
 namespace zf {
-    bool LoadRGBATextureFromRawFile(s_rgba_texture& tex, c_mem_arena& mem_arena, const c_string_view file_path) {
+    bool LoadRGBATextureFromRawFile(s_rgba_texture& tex, c_mem_arena& mem_arena, const s_str_view file_path) {
+        assert(file_path.IsTerminated());
+
         stbi_uc* const stb_px_data = stbi_load(file_path.Raw(), &tex.dims.x, &tex.dims.y, NULL, 4);
 
         if (!stb_px_data) {
@@ -81,13 +83,13 @@ namespace zf {
         return tex_meta;
     }
 
-    static c_array<const t_u8> GenFontTextureRGBAPixelData(c_mem_arena& mem_arena, const stbtt_fontinfo& stb_font_info, const t_s32 height, const s_font_arrangement& arrangement, const s_font_texture_meta tex_meta) {
-        // Reserve the needed memory based on font texture size.
-        c_array<t_u8> rgba_px_data;
+    static bool LoadFontTextureRGBAPixelData(c_array<t_u8>& rgba_px_data, c_mem_arena& mem_arena, const stbtt_fontinfo& stb_font_info, const t_s32 height, const s_font_arrangement& arrangement, const s_font_texture_meta tex_meta) {
+        assert(!rgba_px_data.IsInitted());
 
+        // Reserve the needed memory based on font texture size.
         if (!rgba_px_data.Init(mem_arena, 4 * tex_meta.size.x * tex_meta.size.y)) {
             ZF_LOG_ERROR("Failed to reserve memory for font texture RGBA pixel data!");
-            return {};
+            return false;
         }
 
         // Clear the pixel data to transparent white.
@@ -113,7 +115,7 @@ namespace zf {
 
             if (!stb_bitmap) {
                 ZF_LOG_ERROR("Failed to get bitmap for character '%c' through STB!", chr);
-                return {};
+                return false;
             }
 
             const s_v2_s32 chr_size = arrangement.chr_sizes[i];
@@ -131,10 +133,10 @@ namespace zf {
             stbtt_FreeBitmap(stb_bitmap, nullptr);
         }
 
-        return rgba_px_data;
+        return true;
     }
 
-    bool LoadFontFromRawFile(s_font_arrangement& arrangement, s_font_texture_meta& tex_meta, c_array<const t_u8>& tex_rgba_px_data, const c_string_view file_path, const t_s32 height, c_mem_arena& temp_mem_arena) {
+    bool LoadFontFromRawFile(s_font_arrangement& arrangement, s_font_texture_meta& tex_meta, c_array<t_u8>& tex_rgba_px_data, const s_str_view file_path, const t_s32 height, c_mem_arena& temp_mem_arena) {
         if (height <= 0) {
             ZF_LOG_ERROR("Invalid font height %d!", height);
             return false;
@@ -167,9 +169,7 @@ namespace zf {
         arrangement = LoadFontArrangement(stb_font_info, height);
         tex_meta = LoadFontTexMeta(stb_font_info, height, arrangement);
 
-        tex_rgba_px_data = GenFontTextureRGBAPixelData(temp_mem_arena, stb_font_info, height, arrangement, tex_meta);
-
-        if (tex_rgba_px_data.IsEmpty()) {
+        if (!LoadFontTextureRGBAPixelData(tex_rgba_px_data, temp_mem_arena, stb_font_info, height, arrangement, tex_meta)) {
             ZF_LOG_ERROR("Failed to generate font texture RGBA pixel data!");
             return false;
         }
@@ -177,7 +177,10 @@ namespace zf {
         return true;
     }
 
-    static bool PackShaderFromRawFile(c_file_writer& fw, const c_string_view file_path, const bool is_fs, const c_string_view varying_def_file_path) {
+    static bool PackShaderFromRawFile(c_file_writer& fw, const s_str_view file_path, const bool is_fs, const s_str_view varying_def_file_path) {
+        assert(file_path.IsTerminated());
+        assert(varying_def_file_path.IsTerminated());
+
         const char* args[] = {
             "shaderc",
             "-f", file_path.Raw(),
@@ -202,7 +205,7 @@ namespace zf {
         return true;
     }
 
-    static bool PackShaderProgFromRawFiles(c_file_writer& fw, const c_string_view vs_file_path, const c_string_view fs_file_path, const c_string_view varying_def_file_path) {
+    static bool PackShaderProgFromRawFiles(c_file_writer& fw, const s_str_view vs_file_path, const s_str_view fs_file_path, const s_str_view varying_def_file_path) {
         if (!PackShaderFromRawFile(fw, vs_file_path, false, varying_def_file_path)) {
             return false;
         }

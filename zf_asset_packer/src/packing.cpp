@@ -36,7 +36,7 @@ namespace zf {
 
             s_rgba_texture rgba_tex;
 
-            if (!LoadRGBATextureFromRawFile(rgba_tex, temp_mem_arena, cj_file_path->valuestring)) {
+            if (!LoadRGBATextureFromRawFile(rgba_tex, temp_mem_arena, zf::s_str_view::FromRawTerminated(cj_file_path->valuestring))) {
                 ZF_LOG_ERROR("Failed to load RGBA texture from file \"%s\"!", cj_file_path->valuestring);
                 return false;
             }
@@ -82,9 +82,9 @@ namespace zf {
 
             s_font_arrangement arrangement;
             s_font_texture_meta tex_meta;
-            c_array<const t_u8> tex_rbga_px_data;
+            c_array<t_u8> tex_rbga_px_data;
 
-            if (!LoadFontFromRawFile(arrangement, tex_meta, tex_rbga_px_data, cj_file_path->valuestring, cj_height->valueint, temp_mem_arena)) {
+            if (!LoadFontFromRawFile(arrangement, tex_meta, tex_rbga_px_data, zf::s_str_view::FromRawTerminated(cj_file_path->valuestring), cj_height->valueint, temp_mem_arena)) {
                 ZF_LOG_ERROR("Failed to load font with height %d from file \"%s\"!", cj_height->valueint, cj_file_path->valuestring);
                 return false;
             }
@@ -97,7 +97,9 @@ namespace zf {
         return true;
     }
 
-    bool PackAssets(const c_string_view instrs_json, const c_string_view output_file_path, c_mem_arena& temp_mem_arena) {
+    bool PackAssets(const s_str_view instrs_json, const s_str_view output_file_path, c_mem_arena& temp_mem_arena) {
+        assert(instrs_json.IsTerminated());
+
         bool success = true;
 
         cJSON* const cj = cJSON_Parse(instrs_json.Raw());

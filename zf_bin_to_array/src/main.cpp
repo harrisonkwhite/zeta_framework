@@ -3,7 +3,9 @@
 #include <zc/io.h>
 
 namespace zf {
-    bool OutputCode(const c_string_view input_file_path, const c_string_view output_file_path, const c_string_view arr_subname) {
+    bool OutputCode(const s_str_view input_file_path, const s_str_view output_file_path, const s_str_view arr_subname) {
+        assert(arr_subname.IsTerminated());
+
         c_file_reader input_reader;
         input_reader.DeferClose();
 
@@ -54,5 +56,9 @@ int main(const int arg_cnt, const char* const* args) {
         return EXIT_FAILURE;
     }
 
-    return zf::OutputCode(args[1], args[2], args[3]) ? EXIT_SUCCESS : EXIT_FAILURE;
+    return zf::OutputCode(
+        zf::s_str_view::FromRawTerminated(args[1]),
+        zf::s_str_view::FromRawTerminated(args[2]),
+        zf::s_str_view::FromRawTerminated(args[3])
+    ) ? EXIT_SUCCESS : EXIT_FAILURE;
 }

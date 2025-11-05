@@ -7,8 +7,13 @@ namespace zf {
     // @todo: Also need to support other languages (i.e. characters more than a byte in length).
 
     struct s_str_view {
-        static s_str_view FromRaw(const char* const raw) {
-            return {{raw, static_cast<int>(strlen(raw))}};
+        static s_str_view FromRawTerminated(const char* const raw) {
+            return {{raw, static_cast<int>(strlen(raw)) + 1}};
+        }
+
+        static s_str_view FromRawTerminated(const char* const raw, const int len) {
+            assert(len == strlen(raw));
+            return {{raw, len + 1}};
         }
 
         c_array<const char> chrs; // The length of this IS NOT necessarily the string length!
@@ -16,13 +21,26 @@ namespace zf {
         s_str_view() = default;
         s_str_view(const c_array<const char> chrs) : chrs(chrs) {}
 
+        const char* Raw() const {
+            return chrs.Raw();
+        }
+
+        bool IsEmpty() const {
+            return chrs.IsEmpty() || !chrs[0];
+        }
+
         int CalcLen() const;
         bool IsTerminated() const;
     };
 
     struct s_str {
-        static s_str FromRaw(char* const raw) {
-            return {{raw, static_cast<int>(strlen(raw))}};
+        static s_str FromRawTerminated(char* const raw) {
+            return {{raw, static_cast<int>(strlen(raw)) + 1}};
+        }
+
+        static s_str FromRawTerminated(char* const raw, const int len) {
+            assert(len == strlen(raw));
+            return {{raw, len + 1}};
         }
 
         c_array<char> chrs;
@@ -30,8 +48,12 @@ namespace zf {
         s_str() = default;
         s_str(const c_array<char> chrs) : chrs(chrs) {}
 
-        operator s_str_view() const {
-            return {chrs};
+        char* Raw() const {
+            return chrs.Raw();
+        }
+
+        bool IsEmpty() const {
+            return s_str_view(chrs).IsEmpty();
         }
 
         int CalcLen() const {
@@ -40,6 +62,10 @@ namespace zf {
 
         bool IsTerminated(const c_array<const char> str) const {
             return s_str_view(chrs).IsTerminated();
+        }
+
+        operator s_str_view() const {
+            return {static_cast<c_array<const char>>(chrs)};
         }
     };
 }

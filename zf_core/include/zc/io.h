@@ -69,8 +69,10 @@ namespace zf {
             }
         }
 
-        [[nodiscard]] bool Open(const c_string_view file_path) {
+        [[nodiscard]] bool Open(const s_str_view file_path) {
             assert(!m_fs);
+            assert(file_path.IsTerminated());
+
             m_fs = fopen(file_path.Raw(), "rb");
             return m_fs;
         }
@@ -128,7 +130,7 @@ namespace zf {
             }
         }
 
-        [[nodiscard]] bool Open(const c_string_view file_path) {
+        [[nodiscard]] bool Open(const s_str_view file_path) {
             assert(!m_fs);
             m_fs = fopen(file_path.Raw(), "wb");
             return m_fs;
@@ -176,5 +178,19 @@ namespace zf {
         bool m_close_deferred = false;
     };
 
-    bool LoadFileContents(c_array<t_u8>& contents, c_mem_arena& mem_arena, const c_string_view file_path, const bool include_terminating_byte = false);
+    bool LoadFileContents(c_array<t_u8>& contents, c_mem_arena& mem_arena, const s_str_view file_path, const bool include_terminating_byte = false);
+
+    static inline bool LoadFileContentsAsStr(s_str& contents, c_mem_arena& mem_arena, const s_str_view file_path) {
+        assert(!contents.chrs.IsInitted());
+
+        c_array<t_u8> contents_default;
+
+        if (!LoadFileContents(contents_default, mem_arena, file_path, true)) {
+            return false;
+        }
+
+        contents = s_str::FromRawTerminated(reinterpret_cast<char*>(contents_default.Raw()), contents_default.Len() - 1);
+
+        return true;
+    }
 }

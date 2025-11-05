@@ -18,7 +18,7 @@ namespace zf {
             assert(!IsInitted());
             assert(len > 0);
 
-            m_buf = mem_arena.PushType<tp_type>();
+            m_buf = mem_arena.PushType<tp_type>(len);
 
             if (!m_buf) {
                 return false;

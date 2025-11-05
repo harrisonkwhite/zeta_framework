@@ -1,6 +1,6 @@
 #include "packing.h"
 
-static bool ProcCmdlineArgs(const zf::c_array<const char* const> args, zf::c_string_view& instrs_json_file_path, zf::c_string_view& output_file_path) {
+static bool ProcCmdlineArgs(const zf::c_array<const char* const> args, zf::s_str_view& instrs_json_file_path, zf::s_str_view& output_file_path) {
     if ((args.Len() - 1) % 2 != 0) {
         ZF_LOG_ERROR("Invalid command-line argument count!");
         return false;
@@ -13,7 +13,7 @@ static bool ProcCmdlineArgs(const zf::c_array<const char* const> args, zf::c_str
                 return false;
             }
 
-            instrs_json_file_path = {args[i + 1]};
+            instrs_json_file_path = zf::s_str_view::FromRawTerminated(args[i + 1]);
             i++;
         } else if (strcmp(args[i], "-o") == 0) {
             if (!output_file_path.IsEmpty()) {
@@ -21,7 +21,7 @@ static bool ProcCmdlineArgs(const zf::c_array<const char* const> args, zf::c_str
                 return false;
             }
 
-            output_file_path = {args[i + 1]};
+            output_file_path = zf::s_str_view::FromRawTerminated(args[i + 1]);
             i++;
         } else {
             ZF_LOG_ERROR("Unsupported command-line argument \"%s\"!", args[i]);
@@ -35,8 +35,8 @@ static bool ProcCmdlineArgs(const zf::c_array<const char* const> args, zf::c_str
 int main(const int arg_cnt, const char* const* const args_raw) {
     const zf::c_array<const char* const> args = {args_raw, arg_cnt};
 
-    zf::c_string_view instrs_json_file_path;
-    zf::c_string_view output_file_path;
+    zf::s_str_view instrs_json_file_path;
+    zf::s_str_view output_file_path;
 
     if (!ProcCmdlineArgs(args, instrs_json_file_path, output_file_path)) {
         ZF_LOG_ERROR("Error while processing command-line arguments!");
@@ -44,11 +44,11 @@ int main(const int arg_cnt, const char* const* const args_raw) {
     }
 
     if (instrs_json_file_path.IsEmpty()) {
-        instrs_json_file_path = "zf_asset_packing_instrs.json";
+        instrs_json_file_path = zf::s_str_view::FromRawTerminated("zf_asset_packing_instrs.json");
     }
 
     if (output_file_path.IsEmpty()) {
-        output_file_path = "assets.zfdat";
+        output_file_path = zf::s_str_view::FromRawTerminated("assets.zfdat");
     }
 
     zf::c_mem_arena temp_mem_arena;
@@ -58,23 +58,28 @@ int main(const int arg_cnt, const char* const* const args_raw) {
         return EXIT_FAILURE;
     }
 
-    const auto instrs_json = zf::LoadFileContentsAsStr(instrs_json_file_path, temp_mem_arena);
+    const bool success = [instrs_json_file_path, output_file_path, &temp_mem_arena]() {
+        zf::s_str instrs_json;
 
-    if (instrs_json.IsEmpty()) {
-        ZF_LOG_ERROR("Failed to load contents of asset packing instructions JSON file \"%s\"!", instrs_json_file_path.Raw());
-        temp_mem_arena.Release();
-        return EXIT_FAILURE;
-    }
+        if (!zf::LoadFileContentsAsStr(instrs_json, temp_mem_arena, instrs_json_file_path)) {
+            ZF_LOG_ERROR("Failed to load contents of asset packing instructions JSON file \"%s\"!", instrs_json_file_path.Raw());
+            return false;
+        }
 
-    if (!PackAssets(instrs_json, output_file_path, temp_mem_arena)) {
-        ZF_LOG_ERROR("Failed to pack assets!");
-        temp_mem_arena.Release();
-        return EXIT_FAILURE;
-    }
+        if (!PackAssets(instrs_json, output_file_path, temp_mem_arena)) {
+            ZF_LOG_ERROR("Failed to pack assets!");
+            return false;
+        }
+
+        return true;
+    }();
 
     temp_mem_arena.Release();
 
-    ZF_LOG_SUCCESS("Asset packing completed!");
-
-    return EXIT_SUCCESS;
+    if (success) {
+        ZF_LOG_SUCCESS("Asset packing completed!");
+        return EXIT_SUCCESS;
+    } else {
+        return EXIT_FAILURE;
+    }
 }

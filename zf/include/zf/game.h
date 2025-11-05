@@ -38,7 +38,7 @@ namespace zf {
 
     struct s_game_info {
         s_v2_s32 window_init_size;
-        c_string_view window_title;
+        s_str_view window_title;
         e_window_flags window_flags;
 
         size_t dev_mem_size; // How much memory should be allocated in the permanent arena for your use? This might be the size of a specific struct, for example.
@@ -55,7 +55,7 @@ namespace zf {
 
     inline void AssertGameInfoValidity(const s_game_info& info) {
         assert(info.window_init_size.x > 0 && info.window_init_size.y > 0);
-        //assert(IsStrTerminated(info.window_title));
+        assert(info.window_title.IsTerminated());
 
         assert((info.dev_mem_size == 0 && info.dev_mem_alignment == 0)
             || (info.dev_mem_size > 0 && IsAlignmentValid(info.dev_mem_alignment)));
