@@ -2,7 +2,7 @@
 
 namespace zf {
     bool LoadFileContents(c_array<t_u8>& contents, c_mem_arena& mem_arena, const s_str_view file_path, const bool include_terminating_byte) {
-        assert(!contents.IsInitted());
+        assert(contents.IsEmpty());
         assert(file_path.IsTerminated());
 
         s_file_stream fs;

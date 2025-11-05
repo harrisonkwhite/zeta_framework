@@ -15,7 +15,6 @@ namespace zf {
 
         [[nodiscard]]
         bool Init(c_mem_arena& mem_arena, const int len) {
-            assert(!IsInitted());
             assert(len > 0);
 
             m_buf = mem_arena.PushType<tp_type>(len);
@@ -27,10 +26,6 @@ namespace zf {
             m_len = len;
 
             return true;
-        }
-
-        bool IsInitted() const {
-            return m_buf;
         }
 
         tp_type* Raw() const {
@@ -242,8 +237,8 @@ namespace zf {
 
     private:
         c_array<tp_type> m_backing_arr;
-        int m_len;
-        int m_begin_index;
+        int m_len = 0;
+        int m_begin_index = 0;
     };
 
     template<typename tp_type>

@@ -84,7 +84,7 @@ namespace zf {
     }
 
     static bool LoadFontTextureRGBAPixelData(c_array<t_u8>& rgba_px_data, c_mem_arena& mem_arena, const stbtt_fontinfo& stb_font_info, const t_s32 height, const s_font_arrangement& arrangement, const s_font_texture_meta tex_meta) {
-        assert(!rgba_px_data.IsInitted());
+        assert(rgba_px_data.IsEmpty());
 
         // Reserve the needed memory based on font texture size.
         if (!rgba_px_data.Init(mem_arena, 4 * tex_meta.size.x * tex_meta.size.y)) {
