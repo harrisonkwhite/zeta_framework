@@ -1,9 +1,3 @@
 [submodule "external/glfw"]
 	path = external/glfw
 	url = https://github.com/glfw/glfw
-[submodule "external/bgfx.cmake"]
-	path = external/bgfx.cmake
-	url = https://github.com/bkaradzic/bgfx.cmake
-[submodule "external/reproc"]
-	path = external/reproc
-	url = git@github.com:DaanDeMeyer/reproc.git
