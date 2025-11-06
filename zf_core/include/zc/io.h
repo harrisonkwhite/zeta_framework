@@ -82,6 +82,7 @@ namespace zf {
 
     ec_directory_creation_result CreateDirectory(const s_str_view path); // This DOES NOT create non-existent parent directories.
     ec_directory_creation_result CreateDirectoryAndParents(const s_str path);
+    bool CreateFileAndParentDirs(const s_str path);
 
     enum class ec_path_type {
         not_found,

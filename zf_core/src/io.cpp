@@ -111,6 +111,42 @@ namespace zf {
         return ec_directory_creation_result::success;
     }
 
+    bool CreateFileAndParentDirs(const s_str path) {
+        ZF_ASSERT(path.IsTerminated());
+
+        const int path_len = path.CalcLen();
+
+        for (int i = path_len - 1; i >= 0; i--) {
+            if (path.chrs[i] == '/' || path.chrs[i] == '\\') {
+                if (i > 0) {
+                    const char temp = path.chrs[i];
+
+                    path.chrs[i] = '\0';
+
+                    const auto res = CreateDirectoryAndParents(path);
+
+                    path.chrs[i] = temp;
+
+                    if (res != ec_directory_creation_result::success) {
+                        return false;
+                    }
+                }
+
+                const auto fs = fopen(path.Raw(), "w");
+
+                if (!fs) {
+                    return false;
+                }
+
+                fclose(fs);
+
+                break;
+            }
+        }
+
+        return true;
+    }
+
     ec_path_type CheckPathType(const s_str_view path) {
         struct stat info;
 
