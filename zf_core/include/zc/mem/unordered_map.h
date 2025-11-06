@@ -29,21 +29,23 @@ namespace zf {
         return static_cast<int>(hash & 0x7FFFFFFF);
     };
 
+    template<typename tp_type>
+    using t_key_cmp_func = bool (*)(const tp_type& key_a, const tp_type& key_b); // Returns true if the two keys are equal.
+
     template<typename tp_key_type, typename tp_value_type>
     class c_unordered_map {
     public:
         // The provided hash function has to map a key to an integer 0 or higher.
         // The immediate capacity is the total number of upfront slots (i.e. the maximum possible number of slots for which an O(1) access of a value from a key can happen).
         // The key-value pair capacity is the overall limit of how many key-value pairs this map can ever hold. It obviously has to be equal to or greater than the immediate capacity.
-        bool Init(c_mem_arena& mem_arena, const t_hash_func<tp_key_type> hash_func, const int immediate_cap = 1024, const int kv_pair_cap = 1 << 16) {
+        bool Init(c_mem_arena& mem_arena, const t_hash_func<tp_key_type> hash_func, const t_key_cmp_func<tp_key_type> key_cmp_func, const int immediate_cap = 1024, const int kv_pair_cap = 1 << 16) {
             ZF_ASSERT(hash_func);
+            ZF_ASSERT(key_cmp_func);
             ZF_ASSERT(kv_pair_cap >= immediate_cap);
 
             *this = {};
 
-            m_hash_func = hash_func;
-
-            if (!m_backing_store.Init(mem_arena, kv_pair_cap)) {
+            if (!m_backing_store.Init(mem_arena, kv_pair_cap, key_cmp_func)) {
                 return false;
             }
 
@@ -54,6 +56,8 @@ namespace zf {
             for (int i = 0; i < m_backing_store_indexes.Len(); i++) {
                 m_backing_store_indexes[i] = -1;
             }
+
+            m_hash_func = hash_func;
 
             return true;
         }
@@ -78,7 +82,12 @@ namespace zf {
         // This is where all the key-value pairs are actually stored, it's basically a single buffer containing a bunch of linked lists.
         class c_backing_store {
         public:
-            bool Init(c_mem_arena& mem_arena, const int cap) {
+            bool Init(c_mem_arena& mem_arena, const int cap, const t_key_cmp_func<tp_key_type> key_cmp_func) {
+                ZF_ASSERT(cap > 0);
+                ZF_ASSERT(key_cmp_func);
+
+                *this = {};
+
                 if (!m_keys.Init(mem_arena, cap)) {
                     return false;
                 }
@@ -95,6 +104,8 @@ namespace zf {
                     return false;
                 }
 
+                m_key_cmp_func = key_cmp_func;
+
                 return true;
             }
 
@@ -105,7 +116,7 @@ namespace zf {
                     return false;
                 }
 
-                if (m_keys[index] == key) {
+                if (m_key_cmp_func(m_keys[index], key)) {
                     if (val) {
                         *val = m_vals[index];
                     }
@@ -138,7 +149,7 @@ namespace zf {
                     return true;
                 }
 
-                if (m_keys[index] == key) {
+                if (m_key_cmp_func(m_keys[index], key)) {
                     m_vals[index] = val;
                     return true;
                 }
@@ -153,7 +164,7 @@ namespace zf {
                     return false;
                 }
 
-                if (m_keys[index] == key) {
+                if (m_key_cmp_func(m_keys[index], key)) {
                     m_usage.UnsetBit(index);
                     index = m_next_indexes[index];
                     return true;
@@ -171,12 +182,14 @@ namespace zf {
             c_array<tp_value_type> m_vals;
             c_array<int> m_next_indexes;
             c_bit_vector m_usage;
+
+            t_key_cmp_func<tp_key_type> m_key_cmp_func = nullptr;
         };
 
         c_backing_store m_backing_store;
         c_array<int> m_backing_store_indexes;
 
-        t_hash_func<tp_key_type> m_hash_func;
+        t_hash_func<tp_key_type> m_hash_func = nullptr;
 
         int KeyToHashIndex(const tp_key_type& key) const {
             const int val = m_hash_func(key);
