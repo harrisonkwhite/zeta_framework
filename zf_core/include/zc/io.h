@@ -71,4 +71,14 @@ namespace zf {
 
         return true;
     }
+
+    enum class ec_folder_create_result {
+        success,
+        already_exists,
+        permission_denied,
+        path_not_found,
+        unknown_err
+    };
+
+    ec_folder_create_result CreateFolder(const s_str_view path); // This DOES NOT create non-existent parent folders.
 }
