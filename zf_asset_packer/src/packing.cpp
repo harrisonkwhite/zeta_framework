@@ -5,9 +5,9 @@
 
 namespace zf {
     struct s_packed_header {
-        int tex_cnt;
-        int font_cnt;
-        int shader_prog_cnt;
+        int tex_cnt = 0;
+        int font_cnt = 0;
+        int shader_prog_cnt = 0;
     };
 
     static bool PackTexturesFromInstrs(cJSON* const cj, c_mem_arena& temp_mem_arena) {
@@ -51,7 +51,7 @@ namespace zf {
                 return false;
             }
 
-            if (!PackTexture(zf::s_str_view::FromRawTerminated(cj_dest_file_path->valuestring), rgba_tex)) {
+            if (!PackTexture(zf::s_str_view::FromRawTerminated(cj_dest_file_path->valuestring), rgba_tex, temp_mem_arena)) {
                 ZF_LOG_ERROR("Failed to pack texture from file \"%s\"!", cj_src_file_path->valuestring);
                 return false;
             }
@@ -67,37 +67,29 @@ namespace zf {
     bool PackAssets(const s_str_view instrs_json, c_mem_arena& temp_mem_arena) {
         ZF_ASSERT(instrs_json.IsTerminated());
 
-        bool success = true;
-
         cJSON* const cj = cJSON_Parse(instrs_json.Raw());
-
-        s_file_stream fs;
 
         if (!cj) {
             ZF_LOG_ERROR_SPECIAL("cJSON", "%s", cJSON_GetErrorPtr());
-            success = false;
-            goto out_a;
+            return false;
         }
 
-        if (!cJSON_IsObject(cj)) {
-            ZF_LOG_ERROR("Invalid JSON structure in asset packing instructions!");
-            success = false;
-            goto out_b;
-        }
+        const bool success = [cj, &temp_mem_arena]() {
+            if (!cJSON_IsObject(cj)) {
+                ZF_LOG_ERROR("Invalid JSON structure in asset packing instructions!");
+                return false;
+            }
 
-        if (!PackTexturesFromInstrs(cj, temp_mem_arena)) {
-            ZF_LOG_ERROR("Failed to pack textures!");
-            success = false;
-            goto out_c;
-        }
+            if (!PackTexturesFromInstrs(cj, temp_mem_arena)) {
+                ZF_LOG_ERROR("Failed to pack textures!");
+                return false;
+            }
 
-out_c:
-        fs.Close();
+            return true;
+        }();
 
-out_b:
         cJSON_Delete(cj);
 
-out_a:
         return success;
     }
 }
