@@ -52,7 +52,7 @@ namespace zf {
             return s_str_view(chrs).CalcLen();
         }
 
-        bool IsTerminated(const c_array<const char> str) const {
+        bool IsTerminated() const {
             return s_str_view(chrs).IsTerminated();
         }
 

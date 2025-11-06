@@ -41,7 +41,7 @@ namespace zf {
         return success;
     }
 
-    ec_folder_create_result CreateFolder(const s_str_view path) {
+    ec_directory_creation_result CreateDirectory(const s_str_view path) {
         ZF_ASSERT(path.IsTerminated());
 
 #ifdef _WIN32
@@ -51,22 +51,77 @@ namespace zf {
 #endif
 
         if (res == 0) {
-            return ec_folder_create_result::success;
+            return ec_directory_creation_result::success;
         }
 
         switch (errno) {
             case EEXIST:
-                return ec_folder_create_result::already_exists;
+                return ec_directory_creation_result::already_exists;
 
             case EACCES:
             case EPERM:
-                return ec_folder_create_result::permission_denied;
+                return ec_directory_creation_result::permission_denied;
 
             case ENOENT:
-                return ec_folder_create_result::path_not_found;
+                return ec_directory_creation_result::path_not_found;
 
             default:
-                return ec_folder_create_result::unknown_err;
+                return ec_directory_creation_result::unknown_err;
         }
+    }
+
+    ec_directory_creation_result CreateDirectoryAndParents(const s_str path) {
+        ZF_ASSERT(path.IsTerminated());
+
+        bool cur_dir_name_is_empty = true;
+
+        int i = 0;
+
+        while (true) {
+            if (path.chrs[i] == '/' || path.chrs[i] == '\\' || !path.chrs[i]) {
+                if (!cur_dir_name_is_empty) {
+                    const char temp = path.chrs[i];
+
+                    path.chrs[i] = '\0'; // Temporarily cut the string off here to form the subpath.
+
+                    if (CheckPathType(path) == ec_path_type::not_found) {
+                        const auto res = CreateDirectory(path);
+
+                        if (res != ec_directory_creation_result::success) {
+                            path.chrs[i] = temp;
+                            return res;
+                        }
+                    }
+
+                    path.chrs[i] = temp;
+
+                    cur_dir_name_is_empty = true;
+                }
+
+                if (!path.chrs[i]) {
+                    break;
+                }
+            } else {
+                cur_dir_name_is_empty = false;
+            }
+
+            i++;
+        }
+
+        return ec_directory_creation_result::success;
+    }
+
+    ec_path_type CheckPathType(const s_str_view path) {
+        struct stat info;
+
+        if (stat(path.Raw(), &info) != 0) {
+            return ec_path_type::not_found;
+        }
+
+        if (info.st_mode & S_IFDIR) {
+            return ec_path_type::directory;
+        }
+
+        return ec_path_type::file;
     }
 }
