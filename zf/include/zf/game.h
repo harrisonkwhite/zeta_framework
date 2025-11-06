@@ -37,7 +37,7 @@ namespace zf {
     };
 
     struct s_game_info {
-        s_v2_int window_init_size;
+        s_v2<int> window_init_size;
         s_str_view window_title;
         e_window_flags window_flags;
 

@@ -5,6 +5,7 @@
 #include <zc/io.h>
 
 namespace zf {
+#if 0
     namespace colors {
         constexpr s_v4 g_black = {0.0f, 0.0f, 0.0f, 1.0f};
         constexpr s_v4 g_dark_gray = {0.25f, 0.25f, 0.25f, 1.0f};
@@ -24,6 +25,7 @@ namespace zf {
         constexpr s_v4 g_pink = {1.0f, 0.75f, 0.8f, 1.0f};
         constexpr s_v4 g_brown = {0.6f, 0.3f, 0.0f, 1.0f};
     }
+#endif
 
     namespace origins {
         constexpr s_v2 g_origin_top_left = {0.0f, 0.0f};
@@ -49,6 +51,7 @@ namespace zf {
         constexpr s_v2 g_alignment_bottom_right = {1.0f, 1.0f};
     }
 
+#if 0
     struct s_int_rgba {
         t_byte r = 0;
         t_byte g = 0;
@@ -68,22 +71,23 @@ namespace zf {
             static_cast<t_byte>(roundf(flt.w * 255.0f))
         };
     }
+#endif
 
     struct s_rgba_texture {
-        s_v2_int dims;
+        s_v2<int> dims;
         c_array<t_byte> px_data;
     };
 
     struct s_font_arrangement {
         int line_height = 0;
 
-        s_static_array<s_v2_int, g_ascii_printable_range_len> chr_offsets;
-        s_static_array<s_v2_int, g_ascii_printable_range_len> chr_sizes;
+        s_static_array<s_v2<int>, g_ascii_printable_range_len> chr_offsets;
+        s_static_array<s_v2<int>, g_ascii_printable_range_len> chr_sizes;
         s_static_array<int, g_ascii_printable_range_len> chr_advances;
     };
 
     struct s_font_texture_meta {
-        s_v2_int size;
+        s_v2<int> size;
         s_static_array<int, g_ascii_printable_range_len> chr_xs;
     };
 

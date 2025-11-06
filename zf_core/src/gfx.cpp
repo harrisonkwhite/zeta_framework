@@ -71,7 +71,7 @@ namespace zf {
 
             tex_meta.chr_xs[i] = chr_x_pen;
 
-            const s_v2_int chr_size = arrangement.chr_sizes[i];
+            const s_v2<int> chr_size = arrangement.chr_sizes[i];
             chr_x_pen += chr_size.x;
 
             chr_x_pen += chr_margin;
@@ -119,7 +119,7 @@ namespace zf {
                 return false;
             }
 
-            const s_v2_int chr_size = arrangement.chr_sizes[i];
+            const s_v2<int> chr_size = arrangement.chr_sizes[i];
 
             const int chr_x = tex_meta.chr_xs[i];
 

@@ -84,7 +84,7 @@ namespace zf {
         }
     }
 
-    bool c_window::Init(const s_v2_int size, const s_str_view title, const e_window_flags flags) {
+    bool c_window::Init(const s_v2<int> size, const s_str_view title, const e_window_flags flags) {
         ZF_ASSERT(!sm_glfw_window);
         ZF_ASSERT(title.IsTerminated());
 

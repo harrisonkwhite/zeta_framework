@@ -213,7 +213,7 @@ namespace zf {
         c_window(const c_window&) = delete;
         c_window& operator=(const c_window&) = delete;
 
-        [[nodiscard]] static bool Init(const s_v2_int size, const s_str_view title, const e_window_flags flags);
+        [[nodiscard]] static bool Init(const s_v2<int> size, const s_str_view title, const e_window_flags flags);
         static void Clean();
 
         static void* GetNativeWindowHandle() {
@@ -256,13 +256,13 @@ namespace zf {
             return glfwGetTime();
         }
 
-        static s_v2_int GetSize() {
+        static s_v2<int> GetSize() {
             int w, h;
             glfwGetWindowSize(sm_glfw_window, &w, &h);
             return {w, h};
         }
 
-        static s_v2_int GetFramebufferSize() {
+        static s_v2<int> GetFramebufferSize() {
             int w, h;
             glfwGetFramebufferSize(sm_glfw_window, &w, &h);
             return {w, h};
@@ -310,10 +310,11 @@ namespace zf {
             return (sm_input_events.mouse_buttons_released & mb_mask) != 0;
         }
 
-        static s_v2 GetMousePos() {
-            double mouse_x_dbl, mouse_y_dbl;
-            glfwGetCursorPos(sm_glfw_window, &mouse_x_dbl, &mouse_y_dbl);
-            return {static_cast<float>(mouse_x_dbl), static_cast<float>(mouse_y_dbl)};
+        template<co_floating_point tp_type>
+        static s_v2<tp_type> GetMousePos() {
+            double mx, my;
+            glfwGetCursorPos(sm_glfw_window, &mx, &my);
+            return {static_cast<tp_type>(mx), static_cast<tp_type>(my)};
         }
 
     private:
