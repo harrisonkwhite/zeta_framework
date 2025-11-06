@@ -56,6 +56,8 @@ namespace zf {
     void HandleAssertFailure(const char* const condition, const char* const file, const int line, const char* const func, const char* const msg = nullptr);
 }
 
+#define ZF_BANANA_ERROR() static_cast<void>(0)
+
 #ifdef NDEBUG
     #define ZF_ASSERT(condition) static_cast<void>(0)
 #else

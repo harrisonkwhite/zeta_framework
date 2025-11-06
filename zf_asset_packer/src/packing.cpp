@@ -37,12 +37,12 @@ namespace zf {
 
             s_rgba_texture rgba_tex;
 
-            if (!LoadRGBATextureFromRawFile(rgba_tex, temp_mem_arena, zf::s_str_view::FromRawTerminated(cj_file_path->valuestring))) {
+            if (!LoadRGBATextureFromRaw(rgba_tex, temp_mem_arena, zf::s_str_view::FromRawTerminated(cj_file_path->valuestring))) {
                 ZF_LOG_ERROR("Failed to load RGBA texture from file \"%s\"!", cj_file_path->valuestring);
                 return false;
             }
 
-            if (!PackTexture(fs, rgba_tex)) {
+            if (!PackRGBATexture(fs, rgba_tex)) {
                 ZF_LOG_ERROR("Failed to pack texture from file \"%s\"!", cj_file_path->valuestring);
                 return false;
             }
@@ -55,6 +55,7 @@ namespace zf {
         return true;
     }
 
+#if 0
     static bool PackFontsFromInstrs(s_file_stream& fs, cJSON* const cj, c_mem_arena& temp_mem_arena) {
         cJSON* const cj_fonts = cJSON_GetObjectItemCaseSensitive(cj, "fonts");
 
@@ -97,6 +98,7 @@ namespace zf {
 
         return true;
     }
+#endif
 
     bool PackAssets(const s_str_view instrs_json, const s_str_view output_file_path, c_mem_arena& temp_mem_arena) {
         ZF_ASSERT(instrs_json.IsTerminated());
@@ -131,11 +133,13 @@ namespace zf {
             goto out_c;
         }
 
+#if 0
         if (!PackFontsFromInstrs(fs, cj, temp_mem_arena)) {
             ZF_LOG_ERROR("Failed to pack fonts!");
             success = false;
             goto out_c;
         }
+#endif
 
 out_c:
         fs.Close();

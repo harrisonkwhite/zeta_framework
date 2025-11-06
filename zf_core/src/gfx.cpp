@@ -1,16 +1,66 @@
 #include <zc/gfx.h>
 
-#include <zc/debug.h>
-#include <zc/io.h>
 #include <stb_image.h>
 #include <stb_truetype.h>
-#include <reproc/run.h>
 
 namespace zf {
+    bool LoadRGBATextureFromRaw(s_rgba_texture& tex, c_mem_arena& mem_arena, const s_str_view file_path) {
+        ZF_ASSERT(file_path.IsTerminated());
+
+        stbi_uc* const stb_px_data = stbi_load(file_path.Raw(), &tex.size_in_pxs.x, &tex.size_in_pxs.y, nullptr, 4);
+
+        if (!stb_px_data) {
+            ZF_BANANA_ERROR();
+            ZF_LOG_ERROR_SPECIAL("STB", "%s", stbi_failure_reason());
+            return false;
+        }
+
+        if (!tex.px_data.Init(mem_arena, 4 * tex.size_in_pxs.x * tex.size_in_pxs.y)) {
+            ZF_BANANA_ERROR();
+            stbi_image_free(stb_px_data);
+            return false;
+        }
+
+        memcpy(tex.px_data.Raw(), stb_px_data, sizeof(*tex.px_data.Raw()) * tex.px_data.Len());
+
+        stbi_image_free(stb_px_data);
+
+        return true;
+    }
+
+    bool PackRGBATexture(s_file_stream& fs, const s_rgba_texture tex) {
+        if (!fs.WriteItem(tex.size_in_pxs)) {
+            ZF_BANANA_ERROR();
+            return false;
+        }
+
+        if (fs.WriteItems(tex.px_data.View()) < tex.px_data.Len()) {
+            ZF_BANANA_ERROR();
+            return false;
+        }
+
+        return true;
+    }
+
+    bool UnpackRGBATexture(s_rgba_texture& tex, s_file_stream& fs) {
+        if (!fs.ReadItem(tex.size_in_pxs)) {
+            ZF_BANANA_ERROR();
+            return false;
+        }
+
+        if (fs.ReadItems(tex.px_data) < tex.px_data.Len()) {
+            ZF_BANANA_ERROR();
+            return false;
+        }
+
+        return true;
+    }
+
+#if 0
     bool LoadRGBATextureFromRawFile(s_rgba_texture& tex, c_mem_arena& mem_arena, const s_str_view file_path) {
         ZF_ASSERT(file_path.IsTerminated());
 
-        stbi_uc* const stb_px_data = stbi_load(file_path.Raw(), &tex.dims.x, &tex.dims.y, NULL, 4);
+        stbi_uc* const stb_px_data = stbi_load(file_path.Raw(), &tex.size_in_pxs.x, &tex.size_in_pxs.y, NULL, 4);
 
         if (!stb_px_data) {
             ZF_LOG_ERROR("Failed to load pixel data from file \"%s\" through STB!", file_path.Raw());
@@ -18,7 +68,7 @@ namespace zf {
             return false;
         }
 
-        if (!tex.px_data.Init(mem_arena, 4 * tex.dims.x * tex.dims.y)) {
+        if (!tex.px_data.Init(mem_arena, 4 * tex.size_in_pxs.x * tex.size_in_pxs.y)) {
             ZF_LOG_ERROR("Failed to reserve memory for RGBA texture pixel data!");
             stbi_image_free(stb_px_data);
             return false;
@@ -219,7 +269,7 @@ namespace zf {
     }
 
     bool PackTexture(s_file_stream& fs, const s_rgba_texture rgba_tex) {
-        if (!fs.WriteItem(rgba_tex.dims)) {
+        if (!fs.WriteItem(rgba_tex.size_in_pxs)) {
             ZF_LOG_ERROR("Failed to write texture size during packing!");
             return false;
         }
@@ -256,4 +306,5 @@ namespace zf {
 
     void UnpackFont(s_file_stream& fs, s_font_arrangement& arrangement, s_font_texture_meta tex_meta, c_array<const t_byte>& tex_rgba_px_data) {
     }
+#endif
 }
