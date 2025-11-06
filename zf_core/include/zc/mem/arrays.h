@@ -63,10 +63,31 @@ namespace zf {
             return {m_buf + beg, end - beg};
         }
 
+        void CopyTo(const c_array<tp_type> dest) const {
+            ZF_ASSERT(dest.Len() >= m_len);
+
+            for (int i = 0; i < m_len; i++) {
+                dest[i] = m_buf[i];
+            }
+        }
+
     private:
         tp_type* m_buf = nullptr;
         int m_len = 0;
     };
+
+    template<typename tp_type>
+    bool CloneArray(c_array<tp_type>& out, c_mem_arena& out_mem_arena, const c_array<const tp_type> src) {
+        ZF_ASSERT(src.Len() > 0);
+
+        if (!out.Init(out_mem_arena, src.Len())) {
+            return false;
+        }
+
+        src.CopyTo(out);
+
+        return true;
+    }
 
     template<typename tp_type, int tp_len>
     struct s_static_array {

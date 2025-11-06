@@ -41,7 +41,7 @@ namespace zf {
         return success;
     }
 
-    ec_directory_creation_result CreateDirectory(const s_str_view path) {
+    bool CreateDirectory(const s_str_view path) {
         ZF_ASSERT(path.IsTerminated());
 
 #ifdef _WIN32
@@ -50,6 +50,9 @@ namespace zf {
         const int res = mkdir(path, 0755);
 #endif
 
+        return res == 0;
+
+#if 0
         if (res == 0) {
             return ec_directory_creation_result::success;
         }
@@ -68,37 +71,43 @@ namespace zf {
             default:
                 return ec_directory_creation_result::unknown_err;
         }
+#endif
     }
 
-    ec_directory_creation_result CreateDirectoryAndParents(const s_str path) {
+    bool CreateDirectoryAndParents(const s_str_view path, c_mem_arena& temp_mem_arena) {
         ZF_ASSERT(path.IsTerminated());
+
+        // @speed: Ideally we'd start at the end of the path and move back.
+
+        s_str path_cloned; // @speed: A clone on every call to this? Yuck!
+
+        if (!CloneArray(path_cloned.chrs, temp_mem_arena, path.chrs)) {
+            return false;
+        }
 
         bool cur_dir_name_is_empty = true;
 
         int i = 0;
 
         while (true) {
-            if (path.chrs[i] == '/' || path.chrs[i] == '\\' || !path.chrs[i]) {
+            if (path_cloned.chrs[i] == '/' || path_cloned.chrs[i] == '\\' || !path_cloned.chrs[i]) {
                 if (!cur_dir_name_is_empty) {
-                    const char temp = path.chrs[i];
+                    const char temp = path_cloned.chrs[i];
 
-                    path.chrs[i] = '\0'; // Temporarily cut the string off here to form the subpath.
+                    path_cloned.chrs[i] = '\0'; // Temporarily cut the string off here to form the subpath.
 
-                    if (CheckPathType(path) == ec_path_type::not_found) {
-                        const auto res = CreateDirectory(path);
-
-                        if (res != ec_directory_creation_result::success) {
-                            path.chrs[i] = temp;
-                            return res;
+                    if (CheckPathType(path_cloned) == ec_path_type::not_found) {
+                        if (!CreateDirectory(path_cloned)) {
+                            return false;
                         }
                     }
 
-                    path.chrs[i] = temp;
+                    path_cloned.chrs[i] = temp;
 
                     cur_dir_name_is_empty = true;
                 }
 
-                if (!path.chrs[i]) {
+                if (!path_cloned.chrs[i]) {
                     break;
                 }
             } else {
@@ -108,26 +117,26 @@ namespace zf {
             i++;
         }
 
-        return ec_directory_creation_result::success;
+        return true;
     }
 
-    bool CreateFileAndParentDirs(const s_str path) {
+    bool CreateFileAndParentDirs(const s_str_view path, c_mem_arena& temp_mem_arena) {
         ZF_ASSERT(path.IsTerminated());
 
         const int path_len = path.CalcLen();
 
+        s_str path_cloned; // @speed: A clone on every call to this? Yuck!
+
+        if (!CloneArray(path_cloned.chrs, temp_mem_arena, path.chrs.Slice(0, path_len + 1))) {
+            return false;
+        }
+
         for (int i = path_len - 1; i >= 0; i--) {
-            if (path.chrs[i] == '/' || path.chrs[i] == '\\') {
+            if (path_cloned.chrs[i] == '/' || path_cloned.chrs[i] == '\\') {
                 if (i > 0) {
-                    const char temp = path.chrs[i];
+                    path_cloned.chrs[i] = '\0';
 
-                    path.chrs[i] = '\0';
-
-                    const auto res = CreateDirectoryAndParents(path);
-
-                    path.chrs[i] = temp;
-
-                    if (res != ec_directory_creation_result::success) {
+                    if (!CreateDirectoryAndParents(path_cloned, temp_mem_arena)) {
                         return false;
                     }
                 }

@@ -10,7 +10,9 @@ namespace zf {
         int shader_prog_cnt;
     };
 
-    static bool PackTexturesFromInstrs(s_file_stream& fs, cJSON* const cj, c_mem_arena& temp_mem_arena) {
+    static bool PackTexturesFromInstrs(cJSON* const cj, c_mem_arena& temp_mem_arena) {
+        ZF_ASSERT(cj);
+
         cJSON* const cj_textures = cJSON_GetObjectItemCaseSensitive(cj, "textures");
 
         if (!cJSON_IsArray(cj_textures)) {
@@ -26,10 +28,17 @@ namespace zf {
                 continue;
             }
 
-            const cJSON* const cj_file_path = cJSON_GetObjectItem(cj_tex, "file_path");
+            const cJSON* const cj_src_file_path = cJSON_GetObjectItem(cj_tex, "src_file_path");
 
-            if (!cJSON_IsString(cj_file_path)) {
-                ZF_LOG_ERROR("\"file_path\" field missing or invalid in texture entry!");
+            if (!cJSON_IsString(cj_src_file_path)) {
+                ZF_LOG_ERROR("\"src_file_path\" field missing or invalid in texture entry!");
+                return false;
+            }
+
+            const cJSON* const cj_dest_file_path = cJSON_GetObjectItem(cj_tex, "dest_file_path");
+
+            if (!cJSON_IsString(cj_dest_file_path)) {
+                ZF_LOG_ERROR("\"dest_file_path\" field missing or invalid in texture entry!");
                 return false;
             }
 
@@ -37,17 +46,17 @@ namespace zf {
 
             s_rgba_texture rgba_tex;
 
-            if (!LoadRGBATextureFromRaw(rgba_tex, temp_mem_arena, zf::s_str_view::FromRawTerminated(cj_file_path->valuestring))) {
-                ZF_LOG_ERROR("Failed to load RGBA texture from file \"%s\"!", cj_file_path->valuestring);
+            if (!LoadRGBATextureFromRaw(rgba_tex, temp_mem_arena, zf::s_str_view::FromRawTerminated(cj_src_file_path->valuestring))) {
+                ZF_LOG_ERROR("Failed to load RGBA texture from file \"%s\"!", cj_src_file_path->valuestring);
                 return false;
             }
 
-            if (!PackRGBATexture(fs, rgba_tex)) {
-                ZF_LOG_ERROR("Failed to pack texture from file \"%s\"!", cj_file_path->valuestring);
+            if (!PackTexture(zf::s_str_view::FromRawTerminated(cj_dest_file_path->valuestring), rgba_tex)) {
+                ZF_LOG_ERROR("Failed to pack texture from file \"%s\"!", cj_src_file_path->valuestring);
                 return false;
             }
 
-            ZF_LOG_SUCCESS("Packed texture from file \"%s\"!", cj_file_path->valuestring);
+            ZF_LOG_SUCCESS("Packed texture from file \"%s\"!", cj_src_file_path->valuestring);
 
             temp_mem_arena.Rewind(temp_mem_arena_offs_old);
         }
@@ -55,52 +64,7 @@ namespace zf {
         return true;
     }
 
-#if 0
-    static bool PackFontsFromInstrs(s_file_stream& fs, cJSON* const cj, c_mem_arena& temp_mem_arena) {
-        cJSON* const cj_fonts = cJSON_GetObjectItemCaseSensitive(cj, "fonts");
-
-        if (!cJSON_IsArray(cj_fonts)) {
-            ZF_LOG_ERROR("No \"fonts\" array found in asset packing instructions!");
-            return false;
-        }
-
-        cJSON* cj_font = nullptr;
-
-        cJSON_ArrayForEach(cj_font, cj_fonts) {
-            if (!cJSON_IsObject(cj_font)) {
-                ZF_LOG_ERROR("Invalid font entry in asset packing instructions!");
-                continue;
-            }
-
-            const cJSON* const cj_file_path = cJSON_GetObjectItem(cj_font, "file_path");
-            const cJSON* const cj_height = cJSON_GetObjectItem(cj_font, "height");
-
-            if (!cJSON_IsString(cj_file_path) || !cJSON_IsNumber(cj_height)) {
-                ZF_LOG_ERROR("\"file_path\" or \"height\" field missing or invalid in font entry!");
-                return false;
-            }
-
-            const auto temp_mem_arena_offs_old = temp_mem_arena.Offs();
-
-            s_font_arrangement arrangement;
-            s_font_texture_meta tex_meta;
-            c_array<t_byte> tex_rbga_px_data;
-
-            if (!LoadFontFromRawFile(arrangement, tex_meta, tex_rbga_px_data, zf::s_str_view::FromRawTerminated(cj_file_path->valuestring), cj_height->valueint, temp_mem_arena)) {
-                ZF_LOG_ERROR("Failed to load font with height %d from file \"%s\"!", cj_height->valueint, cj_file_path->valuestring);
-                return false;
-            }
-
-            ZF_LOG_SUCCESS("Loaded font with height %d from file \"%s\"!", cj_height->valueint, cj_file_path->valuestring);
-
-            temp_mem_arena.Rewind(temp_mem_arena_offs_old);
-        }
-
-        return true;
-    }
-#endif
-
-    bool PackAssets(const s_str_view instrs_json, const s_str_view output_file_path, c_mem_arena& temp_mem_arena) {
+    bool PackAssets(const s_str_view instrs_json, c_mem_arena& temp_mem_arena) {
         ZF_ASSERT(instrs_json.IsTerminated());
 
         bool success = true;
@@ -121,25 +85,11 @@ namespace zf {
             goto out_b;
         }
 
-        if (!fs.Open(output_file_path, true)) {
-            ZF_LOG_ERROR("Failed to open output file \"%s\" for writing!", output_file_path.Raw());
-            success = false;
-            goto out_b;
-        }
-
-        if (!PackTexturesFromInstrs(fs, cj, temp_mem_arena)) {
+        if (!PackTexturesFromInstrs(cj, temp_mem_arena)) {
             ZF_LOG_ERROR("Failed to pack textures!");
             success = false;
             goto out_c;
         }
-
-#if 0
-        if (!PackFontsFromInstrs(fs, cj, temp_mem_arena)) {
-            ZF_LOG_ERROR("Failed to pack fonts!");
-            success = false;
-            goto out_c;
-        }
-#endif
 
 out_c:
         fs.Close();

@@ -18,12 +18,11 @@ namespace zf {
             return raw;
         }
 
-        void Close() {
+        void Close() const {
             fclose(raw);
-            raw = nullptr;
         }
 
-        size_t CalcSize() {
+        size_t CalcSize() const {
             const auto pos_old = ftell(raw);
             fseek(raw, 0, SEEK_END);
             const size_t file_size = ftell(raw);
@@ -33,25 +32,25 @@ namespace zf {
 
         template<typename tp_type>
         [[nodiscard]]
-        bool ReadItem(tp_type& item) {
+        bool ReadItem(tp_type& item) const {
             return fread(&item, sizeof(tp_type), 1, raw) == 1;
         }
 
         template<typename tp_type>
         [[nodiscard]]
-        int ReadItems(const c_array<tp_type> arr) {
+        int ReadItems(const c_array<tp_type> arr) const {
             return fread(arr.Raw(), sizeof(tp_type), arr.Len(), raw);
         }
 
         template<typename tp_type>
         [[nodiscard]]
-        bool WriteItem(const tp_type& item) {
+        bool WriteItem(const tp_type& item) const {
             return fwrite(&item, sizeof(tp_type), 1, raw) == 1;
         }
 
         template<typename tp_type>
         [[nodiscard]]
-        int WriteItems(const c_array<const tp_type> arr) {
+        int WriteItems(const c_array<const tp_type> arr) const {
             return fwrite(arr.Raw(), sizeof(tp_type), arr.Len(), raw);
         }
     };
@@ -72,6 +71,7 @@ namespace zf {
         return true;
     }
 
+#if 0
     enum class ec_directory_creation_result {
         success,
         already_exists,
@@ -79,10 +79,11 @@ namespace zf {
         path_not_found,
         unknown_err
     };
+#endif
 
-    ec_directory_creation_result CreateDirectory(const s_str_view path); // This DOES NOT create non-existent parent directories.
-    ec_directory_creation_result CreateDirectoryAndParents(const s_str path);
-    bool CreateFileAndParentDirs(const s_str path);
+    bool CreateDirectory(const s_str_view path); // This DOES NOT create non-existent parent directories.
+    bool CreateDirectoryAndParents(const s_str_view path, c_mem_arena& temp_mem_arena);
+    bool CreateFileAndParentDirs(const s_str_view path, c_mem_arena& temp_mem_arena);
 
     enum class ec_path_type {
         not_found,

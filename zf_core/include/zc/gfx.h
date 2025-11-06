@@ -54,6 +54,6 @@ namespace zf {
     };
 
     bool LoadRGBATextureFromRaw(s_rgba_texture& tex, c_mem_arena& mem_arena, const s_str_view file_path);
-    bool PackRGBATexture(s_file_stream& fs, const s_rgba_texture tex);
-    bool UnpackRGBATexture(s_rgba_texture& tex, s_file_stream& fs);
+    bool PackTexture(const s_str_view file_path, const s_rgba_texture tex);
+    bool UnpackTexture(s_rgba_texture& tex, const s_str_view file_path);
 }
