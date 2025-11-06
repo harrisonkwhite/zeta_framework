@@ -32,10 +32,6 @@ target_include_directories(zf_core PRIVATE
     ../external/stb_truetype/include
 )
 
-target_link_libraries(zf_core PRIVATE
-    reproc
-)
-
 if(WIN32)
     target_link_libraries(zf_core PRIVATE dbghelp)
 endif()
