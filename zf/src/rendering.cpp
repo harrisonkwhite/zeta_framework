@@ -69,4 +69,35 @@ namespace zf {
 
         return hdl;
     }
+
+    bool c_texture_group::Load(c_mem_arena& mem_arena, c_gfx_resource_arena& lifetime, const int cnt, bool (* const rgba_tex_loader_func)(s_rgba_texture& rgba_tex, const int index)) {
+        ZF_ASSERT(cnt > 0);
+        ZF_ASSERT(rgba_tex_loader_func);
+
+        if (!m_hdls.Init(mem_arena, cnt)) {
+            return false;
+        }
+
+        if (!m_sizes.Init(mem_arena, cnt)) {
+            return false;
+        }
+
+        for (int i = 0; i < cnt; i++) {
+            s_rgba_texture rgba_tex;
+
+            if (!rgba_tex_loader_func(rgba_tex, i)) {
+                return false;
+            }
+
+            // @todo: Check that the RGBA texture is valid!
+
+            m_hdls[i] = lifetime.AddTexture(rgba_tex);
+
+            if (!m_hdls[i].IsValid()) {
+                return false;
+            }
+        }
+
+        return true;
+    }
 }
