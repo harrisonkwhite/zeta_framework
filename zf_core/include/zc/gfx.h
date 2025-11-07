@@ -51,6 +51,10 @@ namespace zf {
     struct s_rgba_texture {
         s_v2<int> size_in_pxs;
         c_array<t_byte> px_data; // 4 bytes per pixel (RGBA).
+
+        bool IsValid() const {
+            return !px_data.IsEmpty() && px_data.Len() == 4 * size_in_pxs.x * size_in_pxs.y;
+        }
     };
 
     bool LoadRGBATextureFromRaw(s_rgba_texture& tex, c_mem_arena& mem_arena, const s_str_view file_path);

@@ -75,10 +75,12 @@ namespace zf {
         ZF_ASSERT(rgba_tex_loader_func);
 
         if (!m_hdls.Init(mem_arena, cnt)) {
+            ZF_BANANA_ERROR();
             return false;
         }
 
         if (!m_sizes.Init(mem_arena, cnt)) {
+            ZF_BANANA_ERROR();
             return false;
         }
 
@@ -86,14 +88,19 @@ namespace zf {
             s_rgba_texture rgba_tex;
 
             if (!rgba_tex_loader_func(rgba_tex, i)) {
+                ZF_BANANA_ERROR();
                 return false;
             }
 
-            // @todo: Check that the RGBA texture is valid!
+            if (!rbga_tex.IsValid()) {
+                ZF_BANANA_ERROR();
+                return false;
+            }
 
             m_hdls[i] = lifetime.AddTexture(rgba_tex);
 
             if (!m_hdls[i].IsValid()) {
+                ZF_BANANA_ERROR();
                 return false;
             }
         }
