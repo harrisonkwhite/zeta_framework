@@ -4,8 +4,6 @@
 #include <zc/math.h>
 
 namespace zf {
-    // @todo: Also need to support other languages (i.e. characters more than a byte in length).
-
     struct s_str_view {
         static s_str_view FromRawTerminated(const char* const raw) {
             return {{raw, static_cast<int>(strlen(raw)) + 1}};

@@ -68,12 +68,12 @@ namespace zf {
         }
 
         [[nodiscard]]
-        bool Put(const tp_key_type& key, const tp_value_type& val) {
+        bool Put(const tp_key_type& key, const tp_value_type& val) const {
             const int hash_index = KeyToHashIndex(key);
             return m_backing_store.Put(m_backing_store_indexes[hash_index], key, val);
         }
 
-        bool Remove(const tp_key_type& key) {
+        bool Remove(const tp_key_type& key) const {
             const int hash_index = KeyToHashIndex(key);
             return m_backing_store.Remove(m_backing_store_indexes[hash_index], key);
         }
@@ -128,7 +128,7 @@ namespace zf {
             }
 
             [[nodiscard]]
-            bool Put(int& index, const tp_key_type& key, const tp_value_type& val) {
+            bool Put(int& index, const tp_key_type& key, const tp_value_type& val) const {
                 ZF_ASSERT(index >= -1 && index < Len());
 
                 if (index == -1) {
@@ -157,7 +157,7 @@ namespace zf {
                 return Put(m_next_indexes[index], key, val);
             }
 
-            bool Remove(int& index, const tp_key_type& key) {
+            bool Remove(int& index, const tp_key_type& key) const {
                 ZF_ASSERT(index >= -1 && index < Len());
 
                 if (index == -1) {
