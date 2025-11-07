@@ -3,6 +3,7 @@ add_library(zf STATIC
     src/window.cpp
     src/rng.cpp
     src/rendering.cpp
+	../external/glad/src/glad.c
 
     include/zf/game.h
     include/zf/window.h
@@ -12,6 +13,7 @@ add_library(zf STATIC
 
 target_include_directories(zf PUBLIC
     include
+    ../external/glad/include
 )
 
 target_link_libraries(zf PUBLIC
@@ -19,4 +21,7 @@ target_link_libraries(zf PUBLIC
     glfw
 )
 
-target_compile_definitions(zf PRIVATE _CRT_SECURE_NO_WARNINGS)
+target_compile_definitions(zf PRIVATE
+	_CRT_SECURE_NO_WARNINGS
+    GLFW_INCLUDE_NONE
+)

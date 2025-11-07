@@ -1,7 +1,6 @@
 #include <zf/window.h>
 
-#include <GLFW/glfw3.h>
-#include <zf/rendering.h>
+#include <glad/glad.h>
 
 namespace zf {
     static e_key_code GLFWToZFKeyCode(const int glfw_key) {
@@ -94,8 +93,10 @@ namespace zf {
         }
 
         // Set up the GLFW window.
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
+        glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
         glfwWindowHint(GLFW_VISIBLE, false);
-        glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 
         sm_glfw_window = glfwCreateWindow(size.x, size.y, title.Raw(), nullptr, nullptr);
 
@@ -104,6 +105,8 @@ namespace zf {
             glfwTerminate();
             return false;
         }
+
+        glfwMakeContextCurrent(sm_glfw_window);
 
         glfwSetWindowAttrib(sm_glfw_window, GLFW_RESIZABLE, (flags & ek_window_flags_resizable) ? true : false);
 
@@ -176,6 +179,12 @@ namespace zf {
                 ZF_LOG_WARNING("Unicode buffer is full!");
             }
         );
+
+        // Initialise OpenGL function pointers.
+        if (!gladLoadGLLoader(reinterpret_cast<GLADloadproc>(glfwGetProcAddress))) {
+            ZF_LOG_ERROR("Failed to load OpenGL function pointers!");
+            return false;
+        }
 
         return true;
     }
