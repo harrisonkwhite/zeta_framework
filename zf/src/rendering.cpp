@@ -1,6 +1,47 @@
 #include <zf/rendering.h>
 
 namespace zf {
+    static size_t CalcStride(const c_array<const int> vert_attr_lens) {
+        size_t stride = 0;
+
+        for (int i = 0; i < vert_attr_lens.Len(); i++) {
+            stride += sizeof(int) * vert_attr_lens[i];
+        }
+
+        return stride;
+    }
+
+    static s_gl_mesh MakeGLMesh(const c_array<const float> verts, const c_array<const unsigned short> elems, const c_array<const int> vert_attr_lens) {
+        s_gl_mesh mesh;
+
+        glGenVertexArrays(1, &mesh.vert_arr_gl_id);
+        glBindVertexArray(mesh.vert_arr_gl_id);
+
+        glGenBuffers(1, &mesh.vert_buf_gl_id);
+        glBindBuffer(GL_ARRAY_BUFFER, mesh.vert_buf_gl_id);
+        glBufferData(GL_ARRAY_BUFFER, verts.SizeInBytes(), verts.Raw(), GL_DYNAMIC_DRAW);
+
+        glGenBuffers(1, &mesh.elem_buf_gl_id);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh.elem_buf_gl_id);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, elems.SizeInBytes(), elems.Raw(), GL_STATIC_DRAW);
+
+        const size_t stride = CalcStride(vert_attr_lens);
+        int offs = 0;
+
+        for (int i = 0; i < vert_attr_lens.Len(); i++) {
+            const int attr_len = vert_attr_lens[i];
+
+            glVertexAttribPointer(i, attr_len, GL_FLOAT, false, stride, reinterpret_cast<void*>(sizeof(int) * offs));
+            glEnableVertexAttribArray(i);
+
+            offs += attr_len;
+        }
+
+        glBindVertexArray(0);
+
+        return mesh;
+    }
+
     static inline s_v2<int> GLTextureSizeLimit() {
         int size;
         glGetIntegerv(GL_MAX_TEXTURE_SIZE, &size);
@@ -40,8 +81,18 @@ namespace zf {
             const auto hdl = m_hdls[i];
 
             switch (hdl.type) {
+            case ec_gfx_resource_type::mesh:
+                glDeleteBuffers(1, &hdl.mesh.elem_buf_gl_id);
+                glDeleteBuffers(1, &hdl.mesh.vert_buf_gl_id);
+                glDeleteVertexArrays(1, &hdl.mesh.vert_arr_gl_id);
+                break;
+
+            case ec_gfx_resource_type::shader_prog:
+                glDeleteProgram(hdl.shader_prog.gl_id);
+                break;
+
             case ec_gfx_resource_type::texture:
-                glDeleteTextures(1, &hdl.gl_id);
+                glDeleteTextures(1, &hdl.tex.gl_id);
                 break;
             }
         }
@@ -62,7 +113,7 @@ namespace zf {
 
         hdl = {
             .type = ec_gfx_resource_type::texture,
-            .gl_id = tex_gl_id
+            .tex = {.gl_id = tex_gl_id}
         };
 
         m_hdls_taken++;

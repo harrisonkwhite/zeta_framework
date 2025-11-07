@@ -10,12 +10,25 @@ namespace zf {
 
     enum class ec_gfx_resource_type {
         invalid,
+        mesh,
+        shader_prog,
         texture
+    };
+
+    struct s_gl_mesh {
+        t_gl_id vert_arr_gl_id = 0;
+        t_gl_id vert_buf_gl_id = 0;
+        t_gl_id elem_buf_gl_id = 0;
     };
 
     struct s_gfx_resource_handle {
         ec_gfx_resource_type type = ec_gfx_resource_type::invalid;
-        t_gl_id gl_id = 0;
+
+        union {
+            s_gl_mesh mesh;
+            struct { t_gl_id gl_id = 0; } shader_prog;
+            struct { t_gl_id gl_id = 0; } tex;
+        };
 
         bool IsValid() const {
             return type != ec_gfx_resource_type::invalid;
