@@ -41,6 +41,7 @@ namespace zf {
         void Release();
 
         s_gfx_resource_handle AddMesh(const float* const verts_raw, const int verts_len, const c_array<const unsigned short> elems, const c_array<const int> vert_attr_lens); // You might not want to provide vertices to start with, and only the count - passing nullptr in for verts_raw allows this.
+        s_gfx_resource_handle AddShaderProg(const s_str_view vert_src, const s_str_view frag_src);
         s_gfx_resource_handle AddTexture(const c_rgba_texture& rgba_tex);
 
     private:

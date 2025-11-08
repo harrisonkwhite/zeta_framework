@@ -42,6 +42,74 @@ namespace zf {
         return mesh;
     }
 
+    static t_gl_id GenGLShaderProg(const s_str_view vert_src, const s_str_view frag_src, c_mem_arena& temp_mem_arena) {
+        ZF_ASSERT(vert_src.IsTerminated());
+        ZF_ASSERT(frag_src.IsTerminated());
+
+        // Generate the individual shaders.
+        const auto shader_gen_func = [&temp_mem_arena](const s_str_view src, const bool is_frag) -> bool {
+            const t_gl_id shader_gl_id = glCreateShader(is_frag ? GL_FRAGMENT_SHADER : GL_VERTEX_SHADER);
+
+            const auto src_raw = src.Raw();
+            glShaderSource(shader_gl_id, 1, &src_raw, nullptr);
+
+            glCompileShader(shader_gl_id);
+
+            int success;
+            glGetShaderiv(shader_gl_id, GL_COMPILE_STATUS, &success);
+
+            if (!success) {
+                // Try getting the OpenGL compile error message.
+                int log_chr_cnt;
+                glGetShaderiv(shader_gl_id, GL_INFO_LOG_LENGTH, &log_chr_cnt);
+
+                if (log_chr_cnt > 1) {
+                    c_array<char> log_chrs;
+
+                    if (log_chrs.Init(temp_mem_arena, log_chr_cnt)) {
+                        glGetShaderInfoLog(shader_gl_id, log_chrs.Len(), nullptr, log_chrs.Raw());
+                        ZF_LOG_ERROR_SPECIAL("OpenGL Shader Compilation", "%s", log_chrs.Raw());
+                    } else {
+                        ZF_LOG_ERROR("Failed to reserve memory for OpenGL shader compilation error log!");
+                    }
+                } else {
+                    ZF_LOG_ERROR("OpenGL shader compilation failed, but no error message available!");
+                }
+
+                glDeleteShader(shader_gl_id);
+
+                return 0;
+            }
+
+            return shader_gl_id;
+        };
+
+        const t_gl_id vert_gl_id = shader_gen_func(vert_src, false);
+
+        if (!vert_gl_id) {
+            return 0;
+        }
+
+        const t_gl_id frag_gl_id = shader_gen_func(frag_src, true);
+
+        if (!frag_gl_id) {
+            glDeleteShader(vert_gl_id);
+            return 0;
+        }
+
+        // Set up the shader program.
+        const t_gl_id prog_gl_id = glCreateProgram();
+        glAttachShader(prog_gl_id, vert_gl_id);
+        glAttachShader(prog_gl_id, frag_gl_id);
+        glLinkProgram(prog_gl_id);
+
+        // Dispose the shaders, they're no longer needed.
+        glDeleteShader(frag_gl_id);
+        glDeleteShader(vert_gl_id);
+
+        return prog_gl_id;
+    }
+
     static inline s_v2<int> GLTextureSizeLimit() {
         int size;
         glGetIntegerv(GL_MAX_TEXTURE_SIZE, &size);
@@ -114,6 +182,10 @@ namespace zf {
         m_hdls_taken++;
 
         return hdl;
+    }
+
+    s_gfx_resource_handle c_gfx_resource_arena::AddShaderProg(const s_str_view vert_src, const s_str_view frag_src) {
+
     }
 
     s_gfx_resource_handle c_gfx_resource_arena::AddTexture(const c_rgba_texture& rgba_tex) {
