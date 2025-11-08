@@ -228,42 +228,4 @@ namespace zf {
 
         return hdl;
     }
-
-    bool c_texture_group::Load(c_mem_arena& mem_arena, c_gfx_resource_arena& lifetime, const int cnt, bool (* const rgba_tex_loader_func)(c_rgba_texture& rgba_tex, const int index)) {
-        ZF_ASSERT(cnt > 0);
-        ZF_ASSERT(rgba_tex_loader_func);
-
-        if (!m_hdls.Init(mem_arena, cnt)) {
-            ZF_BANANA_ERROR();
-            return false;
-        }
-
-        if (!m_sizes.Init(mem_arena, cnt)) {
-            ZF_BANANA_ERROR();
-            return false;
-        }
-
-        for (int i = 0; i < cnt; i++) {
-            c_rgba_texture rgba_tex;
-
-            if (!rgba_tex_loader_func(rgba_tex, i)) {
-                ZF_BANANA_ERROR();
-                return false;
-            }
-
-            if (!rgba_tex.IsLoaded()) {
-                ZF_BANANA_ERROR();
-                return false;
-            }
-
-            m_hdls[i] = lifetime.AddTexture(rgba_tex);
-
-            if (!m_hdls[i].IsValid()) {
-                ZF_BANANA_ERROR();
-                return false;
-            }
-        }
-
-        return true;
-    }
 }

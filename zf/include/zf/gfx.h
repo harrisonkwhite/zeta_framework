@@ -37,7 +37,7 @@ namespace zf {
 
     class c_gfx_resource_arena {
     public:
-        bool Init(c_mem_arena& mem_arena, const int cap);
+        [[nodiscard]] bool Init(c_mem_arena& mem_arena, const int cap);
         void Release();
 
         s_gfx_resource_handle AddMesh(const float* const verts_raw, const int verts_len, const c_array<const unsigned short> elems, const c_array<const int> vert_attr_lens); // You might not want to provide vertices to start with, and only the count - passing nullptr in for verts_raw allows this.
@@ -49,9 +49,18 @@ namespace zf {
         int m_hdls_taken = 0;
     };
 
+    struct s_texture {
+        s_gfx_resource_handle hdl;
+        s_v2<int> size;
+
+        [[nodiscard]] bool LoadFromRaw(const s_str_view file_path, c_gfx_resource_arena& gfx_res_arena);
+        [[nodiscard]] bool LoadFromPacked(const s_str_view file_path, c_gfx_resource_arena& gfx_res_arena);
+    };
+
+#if 0
     class c_texture_group {
     public:
-        bool Load(c_mem_arena& mem_arena, c_gfx_resource_arena& lifetime, const int cnt, bool (* const rgba_tex_loader_func)(c_rgba_texture& rgba_tex, const int index));
+        [[nodiscard]] bool Load(c_mem_arena& mem_arena, c_gfx_resource_arena& lifetime, const int cnt, bool (* const rgba_tex_loader_func)(c_rgba_texture& rgba_tex, const int index));
 
         s_gfx_resource_handle GetHandle(const int index) {
             return m_hdls[index];
@@ -65,4 +74,5 @@ namespace zf {
         c_array<s_gfx_resource_handle> m_hdls;
         c_array<s_v2<int>> m_sizes;
     };
+#endif
 }

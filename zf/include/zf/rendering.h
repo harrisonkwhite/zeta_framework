@@ -56,4 +56,19 @@ namespace zf {
 
         [[nodiscard]] bool Init(c_gfx_resource_arena& gfx_res_arena, c_mem_arena& temp_mem_arena);
     };
+
+#if 0
+    class c_renderer {
+    public:
+        c_renderer(const s_rendering_basis& basis) : m_basis(basis) {}
+
+        void Clear(const s_v4<float> col);
+        void Draw(const s_texture tex, const s_v2<float> pos, const s_rect<int> src_rect = {}, const s_v2<float> origin = origins::g_topleft, const s_v2<float> scale = {1.0f, 1.0f}, const float rot = 0.0f, const s_v4<float> blend = colors::g_white);
+
+    private:
+        const s_rendering_basis& m_basis;
+
+        void Flush();
+    };
+#endif
 }
