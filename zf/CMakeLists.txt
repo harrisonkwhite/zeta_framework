@@ -2,12 +2,14 @@ add_library(zf STATIC
     src/game.cpp
     src/window.cpp
     src/rng.cpp
+    src/gfx.cpp
     src/rendering.cpp
 	../external/glad/src/glad.c
 
     include/zf/game.h
     include/zf/window.h
     include/zf/rng.h
+    include/zf/gfx.h
     include/zf/rendering.h
 )
 

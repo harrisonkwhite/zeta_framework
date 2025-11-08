@@ -48,16 +48,35 @@ namespace zf {
         constexpr s_v2<float> g_bottomright = {1.0f, 1.0f};
     }
 
-    struct s_rgba_texture {
-        s_v2<int> size_in_pxs;
-        c_array<t_byte> px_data; // 4 bytes per pixel (RGBA).
+    class c_rgba_texture {
+    public:
+        c_rgba_texture() = default;
 
-        bool IsValid() const {
-            return !px_data.IsEmpty() && px_data.Len() == 4 * size_in_pxs.x * size_in_pxs.y;
+        c_rgba_texture(const s_v2<int> size_in_pxs, const c_array<const t_byte> px_data) : m_size_in_pxs(size_in_pxs), m_px_data(px_data) {
+            ZF_ASSERT(px_data.IsEmpty() || (px_data.Len() == 4 * size_in_pxs.x * size_in_pxs.y));
         }
+
+        [[nodiscard]] bool LoadFromRaw(c_mem_arena& mem_arena, const s_str_view file_path);
+
+        s_v2<int> SizeInPixels() const {
+            ZF_ASSERT(IsLoaded());
+            return m_size_in_pxs;
+        }
+
+        c_array<const t_byte> PixelData() const {
+            ZF_ASSERT(IsLoaded());
+            return m_px_data;
+        }
+
+        bool IsLoaded() const {
+            return !m_px_data.IsEmpty();
+        }
+
+    private:
+        s_v2<int> m_size_in_pxs;
+        c_array<const t_byte> m_px_data; // 4 bytes per pixel (RGBA).
     };
 
-    bool LoadRGBATextureFromRaw(s_rgba_texture& tex, c_mem_arena& mem_arena, const s_str_view file_path);
-    bool PackTexture(const s_str_view file_path, const s_rgba_texture tex, c_mem_arena& temp_mem_arena);
-    bool UnpackTexture(s_rgba_texture& tex, const s_str_view file_path);
+    bool PackTexture(const s_str_view file_path, const c_rgba_texture tex, c_mem_arena& temp_mem_arena);
+    bool UnpackTexture(c_rgba_texture& tex, const s_str_view file_path);
 }

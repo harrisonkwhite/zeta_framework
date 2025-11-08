@@ -44,9 +44,9 @@ namespace zf {
 
             const auto temp_mem_arena_offs_old = temp_mem_arena.Offs();
 
-            s_rgba_texture rgba_tex;
+            c_rgba_texture rgba_tex;
 
-            if (!LoadRGBATextureFromRaw(rgba_tex, temp_mem_arena, zf::s_str_view::FromRawTerminated(cj_src_file_path->valuestring))) {
+            if (!rgba_tex.LoadFromRaw(temp_mem_arena, zf::s_str_view::FromRawTerminated(cj_src_file_path->valuestring))) {
                 ZF_LOG_ERROR("Failed to load RGBA texture from file \"%s\"!", cj_src_file_path->valuestring);
                 return false;
             }

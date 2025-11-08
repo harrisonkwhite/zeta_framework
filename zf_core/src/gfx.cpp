@@ -4,10 +4,11 @@
 #include <stb_truetype.h>
 
 namespace zf {
-    bool LoadRGBATextureFromRaw(s_rgba_texture& tex, c_mem_arena& mem_arena, const s_str_view file_path) {
+    bool c_rgba_texture::LoadFromRaw(c_mem_arena& mem_arena, const s_str_view file_path) {
+        //ZF_ASSERT(!IsLoaded());
         ZF_ASSERT(file_path.IsTerminated());
 
-        stbi_uc* const stb_px_data = stbi_load(file_path.Raw(), &tex.size_in_pxs.x, &tex.size_in_pxs.y, nullptr, 4);
+        stbi_uc* const stb_px_data = stbi_load(file_path.Raw(), &m_size_in_pxs.x, &m_size_in_pxs.y, nullptr, 4);
 
         if (!stb_px_data) {
             ZF_BANANA_ERROR();
@@ -15,20 +16,24 @@ namespace zf {
             return false;
         }
 
-        if (!tex.px_data.Init(mem_arena, 4 * tex.size_in_pxs.x * tex.size_in_pxs.y)) {
+        c_array<t_byte> px_data;
+
+        if (!px_data.Init(mem_arena, 4 * m_size_in_pxs.x * m_size_in_pxs.y)) {
             ZF_BANANA_ERROR();
             stbi_image_free(stb_px_data);
             return false;
         }
 
-        memcpy(tex.px_data.Raw(), stb_px_data, sizeof(*tex.px_data.Raw()) * tex.px_data.Len());
+        memcpy(px_data.Raw(), stb_px_data, sizeof(*px_data.Raw()) * px_data.Len());
 
         stbi_image_free(stb_px_data);
+
+        *this = {m_size_in_pxs, px_data};
 
         return true;
     }
 
-    bool PackTexture(const s_str_view file_path, const s_rgba_texture tex, c_mem_arena& temp_mem_arena) {
+    bool PackTexture(const s_str_view file_path, const c_rgba_texture tex, c_mem_arena& temp_mem_arena) {
         if (!CreateFileAndParentDirs(file_path, temp_mem_arena)) {
             return false;
         }
@@ -40,11 +45,11 @@ namespace zf {
         }
 
         const bool success = [tex, fs]() {
-            if (!fs.WriteItem(tex.size_in_pxs)) {
+            if (!fs.WriteItem(tex.SizeInPixels())) {
                 return false;
             }
 
-            if (fs.WriteItems(tex.px_data.View()) < tex.px_data.Len()) {
+            if (fs.WriteItems(tex.PixelData().View()) < tex.PixelData().Len()) {
                 return false;
             }
 
@@ -56,7 +61,7 @@ namespace zf {
         return success;
     }
 
-    bool UnpackTexture(s_rgba_texture& tex, const s_str_view file_path) {
+    bool UnpackTexture(c_rgba_texture& tex, const s_str_view file_path) {
 #if 0
         if (!fs.ReadItem(tex.size_in_pxs)) {
             ZF_BANANA_ERROR();

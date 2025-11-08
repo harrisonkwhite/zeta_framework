@@ -125,6 +125,14 @@ namespace zf {
         c_array<const tp_type> Nonstatic() const {
             return {buf_raw, tp_len};
         }
+
+        operator c_array<tp_type>() {
+            return Nonstatic();
+        }
+
+        operator c_array<const tp_type>() const {
+            return Nonstatic();
+        }
     };
 
     template<typename tp_type>
