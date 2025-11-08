@@ -1,9 +1,18 @@
 #include <zc/debug.h>
 
 #ifdef _WIN32
+    #ifndef WIN32_LEAN_AND_MEAN
+        #define WIN32_LEAN_AND_MEAN
+    #endif
+    #ifndef NOMINMAX
+        #define NOMINMAX
+    #endif
     #include <windows.h>
+
     #include <dbghelp.h>
 #endif
+
+#include <cstdlib> // Reinclude necessary since abort() gets overwritten.
 
 namespace zf {
     static void PrintStackTrace() {
