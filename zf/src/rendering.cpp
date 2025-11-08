@@ -1,16 +1,53 @@
 #include <zf/rendering.h>
 
 namespace zf {
+    static s_gfx_resource_handle MakeBatchMesh(c_gfx_resource_arena& gfx_res_arena, c_mem_arena& temp_mem_arena) {
+        const int verts_len = g_batch_slot_vert_len * g_batch_slot_vert_cnt * g_batch_slot_cnt;
+
+        c_array<unsigned short> elems;
+
+        const bool elems_make_failed = [&elems, &temp_mem_arena]() {
+            if (!elems.Init(temp_mem_arena, g_batch_slot_elem_cnt * g_batch_slot_cnt)) {
+                ZF_LOG_ERROR("Failed to reserve memory for batch renderable elements!");
+                return false;
+            }
+
+            for (int i = 0; i < g_batch_slot_cnt; i++) {
+                elems[(i * 6) + 0] = (i * 4) + 0;
+                elems[(i * 6) + 1] = (i * 4) + 1;
+                elems[(i * 6) + 2] = (i * 4) + 2;
+                elems[(i * 6) + 3] = (i * 4) + 2;
+                elems[(i * 6) + 4] = (i * 4) + 3;
+                elems[(i * 6) + 5] = (i * 4) + 0;
+            }
+
+            return true;
+        }();
+
+        const s_static_array<int, 6> vert_attr_lens = {{2, 2, 2, 1, 2, 4}};
+
+        return gfx_res_arena.AddMesh(nullptr, verts_len, elems, vert_attr_lens);
+    }
+
     bool s_rendering_basis::Init(c_gfx_resource_arena& gfx_res_arena, c_mem_arena& temp_mem_arena) {
-        // Generate the pixel texture.
-        const s_static_array<t_byte, 4> px_rgba = {
-            {255, 255, 255, 255}
-        };
+        // Generate the batch mesh.
+        batch_mesh_hdl = MakeBatchMesh(gfx_res_arena, temp_mem_arena);
 
-        px_tex_hdl = gfx_res_arena.AddTexture({{1, 1}, px_rgba});
-
-        if (!px_tex_hdl.IsValid()) {
+        if (!batch_mesh_hdl.IsValid()) {
             return false;
+        }
+
+        // Generate the pixel texture.
+        {
+            const s_static_array<t_byte, 4> px_rgba = {
+                {255, 255, 255, 255}
+            };
+
+            px_tex_hdl = gfx_res_arena.AddTexture({ {1, 1}, px_rgba });
+
+            if (!px_tex_hdl.IsValid()) {
+                return false;
+            }
         }
 
         return true;

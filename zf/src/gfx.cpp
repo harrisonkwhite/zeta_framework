@@ -11,7 +11,7 @@ namespace zf {
         return stride;
     }
 
-    static s_gl_mesh MakeGLMesh(const c_array<const float> verts, const c_array<const unsigned short> elems, const c_array<const int> vert_attr_lens) {
+    static s_gl_mesh MakeGLMesh(const float* const verts_raw, const int verts_len, const c_array<const unsigned short> elems, const c_array<const int> vert_attr_lens) {
         s_gl_mesh mesh;
 
         glGenVertexArrays(1, &mesh.vert_arr_gl_id);
@@ -19,7 +19,7 @@ namespace zf {
 
         glGenBuffers(1, &mesh.vert_buf_gl_id);
         glBindBuffer(GL_ARRAY_BUFFER, mesh.vert_buf_gl_id);
-        glBufferData(GL_ARRAY_BUFFER, verts.SizeInBytes(), verts.Raw(), GL_DYNAMIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(float) * verts_len, verts_raw, GL_DYNAMIC_DRAW);
 
         glGenBuffers(1, &mesh.elem_buf_gl_id);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh.elem_buf_gl_id);
@@ -98,14 +98,18 @@ namespace zf {
         }
     }
 
-    s_gfx_resource_handle c_gfx_resource_arena::AddMesh(const c_array<const float> verts, const c_array<const unsigned short> elems, const c_array<const int> vert_attr_lens) {
+    s_gfx_resource_handle c_gfx_resource_arena::AddMesh(const float* const verts_raw, const int verts_len, const c_array<const unsigned short> elems, const c_array<const int> vert_attr_lens) {
+        ZF_ASSERT(verts_len > 0);
+        ZF_ASSERT(!elems.IsEmpty());
+        ZF_ASSERT(!vert_attr_lens.IsEmpty());
+
         if (m_hdls_taken == m_hdls.Len()) {
             return {};
         }
 
         auto& hdl = m_hdls[m_hdls_taken];
         hdl.type = ec_gfx_resource_type::mesh;
-        hdl.mesh = MakeGLMesh(verts, elems, vert_attr_lens);
+        hdl.mesh = MakeGLMesh(verts_raw, verts_len, elems, vert_attr_lens);
 
         m_hdls_taken++;
 
@@ -113,6 +117,8 @@ namespace zf {
     }
 
     s_gfx_resource_handle c_gfx_resource_arena::AddTexture(const c_rgba_texture& rgba_tex) {
+        ZF_ASSERT(rgba_tex.IsLoaded());
+
         if (m_hdls_taken == m_hdls.Len()) {
             return {};
         }
