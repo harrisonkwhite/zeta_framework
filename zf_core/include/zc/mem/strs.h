@@ -4,25 +4,31 @@
 #include <zc/math.h>
 
 namespace zf {
+    constexpr int RawStrLen(const char* const raw_str) {
+        int len = 0;
+        for (; raw_str[len]; len++) {}
+        return len;
+    }
+
     struct s_str_view {
-        static s_str_view FromRawTerminated(const char* const raw) {
-            return {{raw, static_cast<int>(strlen(raw)) + 1}};
+        constexpr static s_str_view FromRawTerminated(const char* const raw) {
+            return {{raw, static_cast<int>(RawStrLen(raw)) + 1}};
         }
 
         static s_str_view FromRawTerminated(const char* const raw, const int len) {
-            ZF_ASSERT(len == strlen(raw));
+            ZF_ASSERT(len == RawStrLen(raw));
             return {{raw, len + 1}};
         }
 
         c_array<const char> chrs; // The length of this IS NOT necessarily the string length!
 
-        s_str_view() = default;
-        s_str_view(const c_array<const char> chrs) : chrs(chrs) {}
+        constexpr s_str_view() = default;
+        constexpr s_str_view(const c_array<const char> chrs) : chrs(chrs) {}
 
         int CalcLen() const;
         bool IsTerminated() const;
 
-        const char* Raw() const {
+        constexpr const char* Raw() const {
             return chrs.Raw();
         }
 
@@ -43,8 +49,8 @@ namespace zf {
 
         c_array<char> chrs;
 
-        s_str() = default;
-        s_str(const c_array<char> chrs) : chrs(chrs) {}
+        constexpr s_str() = default;
+        constexpr s_str(const c_array<char> chrs) : chrs(chrs) {}
 
         int CalcLen() const {
             return s_str_view(chrs).CalcLen();
@@ -54,7 +60,7 @@ namespace zf {
             return s_str_view(chrs).IsTerminated();
         }
 
-        char* Raw() const {
+        constexpr char* Raw() const {
             return chrs.Raw();
         }
 
@@ -62,7 +68,7 @@ namespace zf {
             return s_str_view(chrs).IsEmpty();
         }
 
-        operator s_str_view() const {
+        constexpr operator s_str_view() const {
             return {static_cast<c_array<const char>>(chrs)};
         }
     };

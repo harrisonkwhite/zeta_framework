@@ -51,6 +51,7 @@ namespace zf {
 
     struct s_rendering_basis {
         s_gfx_resource_handle batch_mesh_hdl;
+        s_gfx_resource_handle batch_shader_prog_hdl;
         s_gfx_resource_handle px_tex_hdl; // Used for rendering rectangles and lines via scaling, rotation, etc.
 
         [[nodiscard]] bool Init(c_gfx_resource_arena& gfx_res_arena, c_mem_arena& temp_mem_arena);
