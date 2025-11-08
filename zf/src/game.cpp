@@ -13,7 +13,7 @@ namespace zf {
         perm_mem_arena_initted,
         temp_mem_arena_initted,
         window_initted,
-        renderer_initted,
+        gfx_res_arena_initted,
         dev_init_func_ran_and_succeeded
     };
 
@@ -57,15 +57,13 @@ namespace zf {
 
         game.run_stage = ec_game_run_stage::window_initted;
 
-#if 0
-        // Initialise the renderer.
-        if (!c_renderer::Init(game.perm_mem_arena, game.temp_mem_arena)) {
-            ZF_LOG_ERROR("Failed to initialise the renderer!");
+        // Initialise the permanent GFX resource arena.
+        if (!game.gfx_res_arena.Init(game.perm_mem_arena, 1024)) {
+            ZF_LOG_ERROR("Failed to initialise the permanent GFX resource arena!");
             return false;
         }
 
-        game.run_stage = ec_game_run_stage::renderer_initted;
-#endif
+        game.run_stage = ec_game_run_stage::gfx_res_arena_initted;
 
         // Initialise developer memory.
         if (info.dev_mem_size > 0) {
@@ -187,8 +185,8 @@ namespace zf {
                     c_window::Clean();
                     break;
 
-                case ec_game_run_stage::renderer_initted:
-                    //c_renderer::Shutdown();
+                case ec_game_run_stage::gfx_res_arena_initted:
+                    game.gfx_res_arena.Release();
                     break;
 
                 case ec_game_run_stage::dev_init_func_ran_and_succeeded:

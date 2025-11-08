@@ -56,23 +56,4 @@ namespace zf {
         [[nodiscard]] bool LoadFromRaw(const s_str_view file_path, c_gfx_resource_arena& gfx_res_arena);
         [[nodiscard]] bool LoadFromPacked(const s_str_view file_path, c_gfx_resource_arena& gfx_res_arena);
     };
-
-#if 0
-    class c_texture_group {
-    public:
-        [[nodiscard]] bool Load(c_mem_arena& mem_arena, c_gfx_resource_arena& lifetime, const int cnt, bool (* const rgba_tex_loader_func)(c_rgba_texture& rgba_tex, const int index));
-
-        s_gfx_resource_handle GetHandle(const int index) {
-            return m_hdls[index];
-        }
-
-        s_v2<int> GetSize(const int index) {
-            return m_sizes[index];
-        }
-
-    private:
-        c_array<s_gfx_resource_handle> m_hdls;
-        c_array<s_v2<int>> m_sizes;
-    };
-#endif
 }
