@@ -215,8 +215,16 @@ namespace zf {
             return {width, height};
         }
 
+        float Left() const {
+            return x;
+        }
+
         float Right() const {
             return x + width;
+        }
+
+        float Top() const {
+            return y;
         }
 
         float Bottom() const {

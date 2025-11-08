@@ -3,35 +3,20 @@
 #include <zf/gfx.h>
 
 namespace zf {
-    using t_vert_component = float;
-    using t_elem = unsigned short;
-
     struct s_batch_vert {
-        t_vert_component vert_coord_x = 0;
-        t_vert_component vert_coord_y = 0;
-
-        t_vert_component pos_x = 0;
-        t_vert_component pos_y = 0;
-
-        t_vert_component size_x = 0;
-        t_vert_component size_y = 0;
-
-        t_vert_component rot = 0;
-
-        t_vert_component tex_coord_x = 0;
-        t_vert_component tex_coord_y = 0;
-
-        t_vert_component blend_r = 0;
-        t_vert_component blend_g = 0;
-        t_vert_component blend_b = 0;
-        t_vert_component blend_a = 0;
+        s_v2<float> vert_coord;
+        s_v2<float> pos;
+        s_v2<float> size;
+        float rot = 0.0f;
+        s_v2<float> tex_coord;
+        s_v4<float> blend;
     };
 
     constexpr s_static_array<int, 6> g_batch_vert_attr_lens = {
         {2, 2, 2, 1, 2, 4} // This has to match the number of components per attribute above.
     };
 
-    constexpr int g_batch_vert_component_cnt = sizeof(s_batch_vert) / sizeof(t_vert_component);
+    constexpr int g_batch_vert_component_cnt = sizeof(s_batch_vert) / sizeof(float);
 
     static_assert([]() {
         int sum = 0;
@@ -57,18 +42,32 @@ namespace zf {
         [[nodiscard]] bool Init(c_gfx_resource_arena& gfx_res_arena, c_mem_arena& temp_mem_arena);
     };
 
-#if 0
+    using t_batch_slot = s_static_array<s_batch_vert, g_batch_slot_vert_cnt>;
+
     class c_renderer {
     public:
         c_renderer(const s_rendering_basis& basis) : m_basis(basis) {}
 
+#if 0
+        void Begin(c_mem_arena& mem_arena) {
+        }
+#endif
+
         void Clear(const s_v4<float> col);
-        void Draw(const s_texture tex, const s_v2<float> pos, const s_rect<int> src_rect = {}, const s_v2<float> origin = origins::g_topleft, const s_v2<float> scale = {1.0f, 1.0f}, const float rot = 0.0f, const s_v4<float> blend = colors::g_white);
+        void SetViewMatrix(const s_matrix_4x4& mat);
+        void DrawTexture(const s_texture tex, const s_v2<float> pos, const s_rect<int> src_rect = {}, const s_v2<float> origin = origins::g_topleft, const s_v2<float> scale = {1.0f, 1.0f}, const float rot = 0.0f, const s_v4<float> blend = colors::g_white);
 
     private:
         const s_rendering_basis& m_basis;
 
+        c_array<t_batch_slot> m_slots;
+        int m_slots_used_cnt = 0;
+
+        s_matrix_4x4 m_view_mat = s_matrix_4x4::Identity();
+
+        s_gfx_resource_handle m_batch_tex_hdl;
+
+        void Draw(const s_gfx_resource_handle tex_hdl, const s_rect<float> tex_coords, s_v2<float> pos, s_v2<float> size, s_v2<float> origin, const float rot, const s_v4<float> blend);
         void Flush();
     };
-#endif
 }

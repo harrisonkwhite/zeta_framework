@@ -33,6 +33,27 @@ namespace zf {
         bool IsValid() const {
             return type != ec_gfx_resource_type::invalid;
         }
+
+        bool Equals(const s_gfx_resource_handle& other) const {
+            if (type != other.type) {
+                return false;
+            }
+
+            switch (type) {
+            case ec_gfx_resource_type::mesh:
+                return mesh.vert_arr_gl_id == other.mesh.vert_arr_gl_id
+                    && mesh.vert_buf_gl_id == other.mesh.vert_buf_gl_id
+                    && mesh.elem_buf_gl_id == other.mesh.elem_buf_gl_id;
+
+            case ec_gfx_resource_type::shader_prog:
+                return shader_prog.gl_id == other.shader_prog.gl_id;
+
+            case ec_gfx_resource_type::texture:
+                return tex.gl_id == other.tex.gl_id;
+            }
+
+            return true;
+        }
     };
 
     class c_gfx_resource_arena {
