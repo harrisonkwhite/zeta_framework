@@ -23,6 +23,8 @@ namespace zf {
         c_mem_arena perm_mem_arena; // The memory in here exists for the lifetime of the program, it does not get reset.
         c_mem_arena temp_mem_arena; // While the memory here also exists for the program lifetime, it gets reset after game initialisation and after every frame. Useful if you just need some temporary working space.
 
+        c_gfx_resource_arena gfx_res_arena; // For GFX resources existing for the lifetime of the game.
+
         void* dev_mem = nullptr; // Memory optionally reserved by the developer for their own use, accessible in their defined functions through the provided ZF context.
     };
 

@@ -6,9 +6,9 @@ namespace zf {
     template<typename tp_type>
     class c_array {
     public:
-        c_array() = default;
+        constexpr c_array() = default;
 
-        c_array(tp_type* const buf, const int len) : m_buf(buf), m_len(len) {
+        constexpr c_array(tp_type* const buf, const int len) : m_buf(buf), m_len(len) {
             ZF_ASSERT((!buf && len == 0) || (buf && len >= 0));
         }
 
@@ -27,19 +27,19 @@ namespace zf {
             return true;
         }
 
-        tp_type* Raw() const {
+        constexpr tp_type* Raw() const {
             return m_buf;
         }
 
-        int Len() const {
+        constexpr int Len() const {
             return m_len;
         }
 
-        size_t SizeInBytes() const {
+        constexpr size_t SizeInBytes() const {
             return sizeof(tp_type) * Len();
         }
 
-        bool IsEmpty() const {
+        constexpr bool IsEmpty() const {
             return m_len == 0;
         }
 
@@ -48,15 +48,15 @@ namespace zf {
             return m_buf[index];
         }
 
-        c_array<const tp_type> View() const {
+        constexpr c_array<const tp_type> View() const {
             return {m_buf, m_len};
         }
 
-        operator c_array<const tp_type>() const {
+        constexpr operator c_array<const tp_type>() const {
             return View();
         }
 
-        c_array Slice(const int beg, const int end) const {
+        constexpr c_array Slice(const int beg, const int end) const {
             ZF_ASSERT(beg >= 0 && beg <= m_len);
             ZF_ASSERT(end >= 0 && end <= m_len);
             ZF_ASSERT(beg <= end);
@@ -104,7 +104,7 @@ namespace zf {
             }
         }
 
-        int Len() const {
+        constexpr int Len() const {
             return tp_len;
         }
 
@@ -113,24 +113,24 @@ namespace zf {
             return buf_raw[index];
         }
 
-        const tp_type& operator[](const int index) const {
+        constexpr const tp_type& operator[](const int index) const {
             ZF_ASSERT(index >= 0 && index < tp_len);
             return buf_raw[index];
         }
 
-        c_array<tp_type> Nonstatic() {
+        constexpr c_array<tp_type> Nonstatic() {
             return {buf_raw, tp_len};
         }
 
-        c_array<const tp_type> Nonstatic() const {
+        constexpr c_array<const tp_type> Nonstatic() const {
             return {buf_raw, tp_len};
         }
 
-        operator c_array<tp_type>() {
+        constexpr operator c_array<tp_type>() {
             return Nonstatic();
         }
 
-        operator c_array<const tp_type>() const {
+        constexpr operator c_array<const tp_type>() const {
             return Nonstatic();
         }
     };

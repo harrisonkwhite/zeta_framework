@@ -2,7 +2,7 @@
 
 namespace zf {
     static s_gfx_resource_handle MakeBatchMesh(c_gfx_resource_arena& gfx_res_arena, c_mem_arena& temp_mem_arena) {
-        const int verts_len = g_batch_slot_vert_len * g_batch_slot_vert_cnt * g_batch_slot_cnt;
+        const int verts_len = g_batch_vert_component_cnt * g_batch_slot_vert_cnt * g_batch_slot_cnt;
 
         c_array<unsigned short> elems;
 
@@ -24,9 +24,7 @@ namespace zf {
             return true;
         }();
 
-        const s_static_array<int, 6> vert_attr_lens = {{2, 2, 2, 1, 2, 4}};
-
-        return gfx_res_arena.AddMesh(nullptr, verts_len, elems, vert_attr_lens);
+        return gfx_res_arena.AddMesh(nullptr, verts_len, elems, g_batch_vert_attr_lens);
     }
 
     bool s_rendering_basis::Init(c_gfx_resource_arena& gfx_res_arena, c_mem_arena& temp_mem_arena) {
