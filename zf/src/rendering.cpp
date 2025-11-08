@@ -90,16 +90,12 @@ void main() {
         }
 
         // Generate the pixel texture.
-        {
-            const s_static_array<t_byte, 4> px_rgba = {
-                {255, 255, 255, 255}
-            };
+        const s_static_array<t_byte, 4> px_rgba = {
+            {255, 255, 255, 255}
+        };
 
-            px_tex_hdl = gfx_res_arena.AddTexture({ {1, 1}, px_rgba });
-
-            if (!px_tex_hdl.IsValid()) {
-                return false;
-            }
+        if (!px_tex.LoadFromRGBA({{1, 1}, px_rgba}, gfx_res_arena)) {
+            return false;
         }
 
         return true;

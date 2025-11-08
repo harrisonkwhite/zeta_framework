@@ -37,7 +37,7 @@ namespace zf {
     struct s_rendering_basis {
         s_gfx_resource_handle batch_mesh_hdl;
         s_gfx_resource_handle batch_shader_prog_hdl;
-        s_gfx_resource_handle px_tex_hdl; // Used for rendering rectangles and lines via scaling, rotation, etc.
+        s_texture px_tex; // Used for rendering rectangles and lines via scaling, rotation, etc.
 
         [[nodiscard]] bool Init(c_gfx_resource_arena& gfx_res_arena, c_mem_arena& temp_mem_arena);
     };
@@ -56,9 +56,13 @@ namespace zf {
             Flush();
         }
 
-        void Clear(const s_v4<float> col);
+        void Clear(const s_v4<float> col = {});
         void SetViewMatrix(const s_matrix_4x4& mat);
         void DrawTexture(const s_texture& tex, const s_v2<float> pos, const s_rect<int> src_rect = {}, const s_v2<float> origin = origins::g_topleft, const s_v2<float> scale = {1.0f, 1.0f}, const float rot = 0.0f, const s_v4<float> blend = colors::g_white);
+
+        void DrawRect(const s_rect<float> rect, const s_v4<float> color) {
+            DrawTexture(m_basis.px_tex, rect.Pos(), {}, {}, rect.Size(), 0.0f, color);
+        }
 
     private:
         s_rendering_basis m_basis;

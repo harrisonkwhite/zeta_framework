@@ -74,6 +74,7 @@ namespace zf {
         s_gfx_resource_handle hdl;
         s_v2<int> size;
 
+        [[nodiscard]] bool LoadFromRGBA(const c_rgba_texture& rgba_tex, c_gfx_resource_arena& gfx_res_arena);
         [[nodiscard]] bool LoadFromRaw(const s_str_view file_path, c_gfx_resource_arena& gfx_res_arena);
         [[nodiscard]] bool LoadFromPacked(const s_str_view file_path, c_gfx_resource_arena& gfx_res_arena);
     };

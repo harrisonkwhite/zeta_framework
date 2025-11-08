@@ -47,7 +47,7 @@ namespace zf {
         ZF_ASSERT(frag_src.IsTerminated());
 
         // Generate the individual shaders.
-        const auto shader_gen_func = [&temp_mem_arena](const s_str_view src, const bool is_frag) -> bool {
+        const auto shader_gen_func = [&temp_mem_arena](const s_str_view src, const bool is_frag) -> t_gl_id {
             const t_gl_id shader_gl_id = glCreateShader(is_frag ? GL_FRAGMENT_SHADER : GL_VERTEX_SHADER);
 
             const auto src_raw = src.Raw();
@@ -227,5 +227,26 @@ namespace zf {
         m_hdls_taken++;
 
         return hdl;
+    }
+
+    bool s_texture::LoadFromRGBA(const c_rgba_texture& rgba_tex, c_gfx_resource_arena& gfx_res_arena) {
+        const s_gfx_resource_handle new_hdl = gfx_res_arena.AddTexture(rgba_tex);
+
+        if (!new_hdl.IsValid()) {
+            return false;
+        }
+
+        hdl = new_hdl;
+        size = rgba_tex.SizeInPixels();
+
+        return true;
+    }
+
+    bool s_texture::LoadFromRaw(const s_str_view file_path, c_gfx_resource_arena& gfx_res_arena) {
+        return false;
+    }
+
+    bool s_texture::LoadFromPacked(const s_str_view file_path, c_gfx_resource_arena& gfx_res_arena) {
+        return false;
     }
 }

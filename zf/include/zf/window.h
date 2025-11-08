@@ -244,6 +244,10 @@ namespace zf {
             glfwPollEvents();
         }
 
+        static void SwapBuffers() {
+            glfwSwapBuffers(sm_glfw_window);
+        }
+
         static bool ShouldClose() {
             return glfwWindowShouldClose(sm_glfw_window);
         }

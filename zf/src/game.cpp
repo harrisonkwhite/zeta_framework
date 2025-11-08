@@ -161,6 +161,8 @@ namespace zf {
                 }
 
                 renderer.End();
+
+                c_window::SwapBuffers();
             }
 
             c_window::PollEvents();
