@@ -88,7 +88,8 @@ namespace zf {
             const s_game_init_context context = {
                 .dev_mem = game.dev_mem,
                 .perm_mem_arena = game.perm_mem_arena,
-                .temp_mem_arena = game.temp_mem_arena
+                .temp_mem_arena = game.temp_mem_arena,
+                .gfx_res_arena = game.gfx_res_arena
             };
 
             if (!info.init_func(context)) {

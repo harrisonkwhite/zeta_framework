@@ -50,6 +50,7 @@ namespace zf {
 
         void Begin() {
             m_batch_view_mat = s_matrix_4x4::Identity();
+            Clear();
         }
 
         void End() {

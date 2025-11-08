@@ -242,8 +242,14 @@ namespace zf {
         return true;
     }
 
-    bool s_texture::LoadFromRaw(const s_str_view file_path, c_gfx_resource_arena& gfx_res_arena) {
-        return false;
+    bool s_texture::LoadFromRaw(const s_str_view file_path, c_gfx_resource_arena& gfx_res_arena, c_mem_arena& temp_mem_arena) {
+        c_rgba_texture rgba_tex;
+
+        if (!rgba_tex.LoadFromRaw(temp_mem_arena, file_path)) {
+            return false;
+        }
+
+        return LoadFromRGBA(rgba_tex, gfx_res_arena);
     }
 
     bool s_texture::LoadFromPacked(const s_str_view file_path, c_gfx_resource_arena& gfx_res_arena) {
