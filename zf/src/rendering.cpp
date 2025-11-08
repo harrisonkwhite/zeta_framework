@@ -105,6 +105,18 @@ void main() {
         return true;
     }
 
+    bool c_renderer::Init(c_gfx_resource_arena& gfx_res_arena, c_mem_arena& mem_arena, c_mem_arena& temp_mem_arena) {
+        if (!m_basis.Init(gfx_res_arena, temp_mem_arena)) {
+            return false;
+        }
+
+        if (!m_batch_slots.Init(mem_arena, g_batch_slot_cnt)) {
+            return false;
+        }
+
+        return true;
+    }
+
     void c_renderer::Clear(const s_v4<float> col) {
         glClearColor(col.x, col.y, col.z, col.w);
         glClear(GL_COLOR_BUFFER_BIT);
@@ -112,14 +124,14 @@ void main() {
 
     void c_renderer::SetViewMatrix(const s_matrix_4x4& mat) {
         Flush();
-        m_view_mat = mat;
+        m_batch_view_mat = mat;
     }
 
     void c_renderer::Draw(const s_gfx_resource_handle tex_hdl, const s_rect<float> tex_coords, s_v2<float> pos, s_v2<float> size, s_v2<float> origin, const float rot, const s_v4<float> blend) {
-        if (m_slots_used_cnt == 0) {
+        if (m_batch_slots_used_cnt == 0) {
             // This is the first draw to the batch, so set the texture associated with the batch to the one we're trying to render.
             m_batch_tex_hdl = tex_hdl;
-        } else if (m_slots_used_cnt == g_batch_slot_cnt || !tex_hdl.Equals(m_batch_tex_hdl)) {
+        } else if (m_batch_slots_used_cnt == g_batch_slot_cnt || !tex_hdl.Equals(m_batch_tex_hdl)) {
             // Flush the batch and then try this same render operation again but on a fresh batch.
             Flush();
             Draw(tex_hdl, tex_coords, pos, size, origin, rot, blend);
@@ -141,7 +153,7 @@ void main() {
             {tex_coords.Left(), tex_coords.Bottom()}
         }};
 
-        t_batch_slot& slot = m_slots[m_slots_used_cnt];
+        t_batch_slot& slot = m_batch_slots[m_batch_slots_used_cnt];
 
         for (int i = 0; i < slot.Len(); i++) {
             slot[i] = {
@@ -155,7 +167,7 @@ void main() {
         }
 
         // Update the count - we've used a slot!
-        m_slots_used_cnt++;
+        m_batch_slots_used_cnt++;
     }
 
     s_rect<float> MakeTextureCoords(const s_rect<int> src_rect, const s_v2<int> tex_size) {
@@ -191,7 +203,7 @@ void main() {
     }
 
     void c_renderer::Flush() {
-        if (m_slots_used_cnt == 0) {
+        if (m_batch_slots_used_cnt == 0) {
             // Nothing to flush!
             return;
         }
@@ -203,8 +215,8 @@ void main() {
         glBindBuffer(GL_ARRAY_BUFFER, m_basis.batch_mesh_hdl.mesh.vert_buf_gl_id);
 
         {
-            const size_t write_size = sizeof(t_batch_slot) * m_slots_used_cnt;
-            glBufferSubData(GL_ARRAY_BUFFER, 0, write_size, m_slots.Raw());
+            const size_t write_size = sizeof(t_batch_slot) * m_batch_slots_used_cnt;
+            glBufferSubData(GL_ARRAY_BUFFER, 0, write_size, m_batch_slots.Raw());
         }
 
         //
@@ -215,7 +227,7 @@ void main() {
         glUseProgram(prog_gl_id);
 
         const int view_uniform_loc = glGetUniformLocation(prog_gl_id, "u_view");
-        glUniformMatrix4fv(view_uniform_loc, 1, false, m_view_mat.Raw());
+        glUniformMatrix4fv(view_uniform_loc, 1, false, m_batch_view_mat.Raw());
 
         const s_rect<int> viewport = []() {
             s_rect<int> vp;
@@ -231,11 +243,10 @@ void main() {
         glBindTexture(GL_TEXTURE_2D, m_batch_tex_hdl.tex.gl_id);
 
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_basis.batch_mesh_hdl.mesh.elem_buf_gl_id);
-        glDrawElements(GL_TRIANGLES, g_batch_slot_elem_cnt * m_slots_used_cnt, GL_UNSIGNED_SHORT, nullptr);
+        glDrawElements(GL_TRIANGLES, g_batch_slot_elem_cnt * m_batch_slots_used_cnt, GL_UNSIGNED_SHORT, nullptr);
 
         glUseProgram(0);
 
-        m_slots_used_cnt = 0;
-        m_batch_tex_hdl = {};
+        m_batch_slots_used_cnt = 0;
     }
 }

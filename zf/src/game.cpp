@@ -65,6 +65,14 @@ namespace zf {
 
         game.run_stage = ec_game_run_stage::gfx_res_arena_initted;
 
+        // Initialise the rendering basis.
+        c_renderer renderer;
+
+        if (!renderer.Init(game.gfx_res_arena, game.perm_mem_arena, game.temp_mem_arena)) {
+            ZF_LOG_ERROR("Failed to initialise the renderer!");
+            return false;
+        }
+
         // Initialise developer memory.
         if (info.dev_mem_size > 0) {
             game.dev_mem = game.perm_mem_arena.Push(info.dev_mem_size, info.dev_mem_alignment);
@@ -136,13 +144,14 @@ namespace zf {
                     frame_dur_accum -= targ_tick_interval;
                 } while (frame_dur_accum >= targ_tick_interval);
 
-                //c_renderer::BeginFrame();
+                renderer.Begin();
 
                 {
                     const s_game_render_context context = {
                         .dev_mem = game.dev_mem,
                         .perm_mem_arena = game.perm_mem_arena,
-                        .temp_mem_arena = game.temp_mem_arena
+                        .temp_mem_arena = game.temp_mem_arena,
+                        .renderer = renderer
                     };
 
                     if (!info.render_func(context)) {
@@ -151,7 +160,7 @@ namespace zf {
                     }
                 }
 
-                //c_renderer::EndFrame();
+                renderer.End();
             }
 
             c_window::PollEvents();
