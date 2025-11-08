@@ -42,7 +42,7 @@ namespace zf {
         return mesh;
     }
 
-    static t_gl_id GenGLShaderProg(const s_str_view vert_src, const s_str_view frag_src, c_mem_arena& temp_mem_arena) {
+    static t_gl_id MakeGLShaderProg(const s_str_view vert_src, const s_str_view frag_src, c_mem_arena& temp_mem_arena) {
         ZF_ASSERT(vert_src.IsTerminated());
         ZF_ASSERT(frag_src.IsTerminated());
 
@@ -184,8 +184,27 @@ namespace zf {
         return hdl;
     }
 
-    s_gfx_resource_handle c_gfx_resource_arena::AddShaderProg(const s_str_view vert_src, const s_str_view frag_src) {
+    s_gfx_resource_handle c_gfx_resource_arena::AddShaderProg(const s_str_view vert_src, const s_str_view frag_src, c_mem_arena& temp_mem_arena) {
+        ZF_ASSERT(vert_src.IsTerminated());
+        ZF_ASSERT(frag_src.IsTerminated());
 
+        if (m_hdls_taken == m_hdls.Len()) {
+            return {};
+        }
+
+        const t_gl_id prog_gl_id = MakeGLShaderProg(vert_src, frag_src, temp_mem_arena);
+
+        if (!prog_gl_id) {
+            return {};
+        }
+
+        auto& hdl = m_hdls[m_hdls_taken];
+        hdl.type = ec_gfx_resource_type::shader_prog;
+        hdl.shader_prog.gl_id = prog_gl_id;
+
+        m_hdls_taken++;
+
+        return hdl;
     }
 
     s_gfx_resource_handle c_gfx_resource_arena::AddTexture(const c_rgba_texture& rgba_tex) {
@@ -202,11 +221,8 @@ namespace zf {
         }
 
         auto& hdl = m_hdls[m_hdls_taken];
-
-        hdl = {
-            .type = ec_gfx_resource_type::texture,
-            .tex = {.gl_id = tex_gl_id}
-        };
+        hdl.type = ec_gfx_resource_type::texture;
+        hdl.tex.gl_id = tex_gl_id;
 
         m_hdls_taken++;
 
