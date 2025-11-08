@@ -55,7 +55,7 @@ namespace zf {
 
         void Clear(const s_v4<float> col);
         void SetViewMatrix(const s_matrix_4x4& mat);
-        void DrawTexture(const s_texture tex, const s_v2<float> pos, const s_rect<int> src_rect = {}, const s_v2<float> origin = origins::g_topleft, const s_v2<float> scale = {1.0f, 1.0f}, const float rot = 0.0f, const s_v4<float> blend = colors::g_white);
+        void DrawTexture(const s_texture& tex, const s_v2<float> pos, const s_rect<int> src_rect = {}, const s_v2<float> origin = origins::g_topleft, const s_v2<float> scale = {1.0f, 1.0f}, const float rot = 0.0f, const s_v4<float> blend = colors::g_white);
 
     private:
         const s_rendering_basis& m_basis;

@@ -127,14 +127,14 @@ void main() {
         }
 
         // Write the vertex data to the next slot.
-        const s_static_array<s_v2<float>, 4> slot_vert_coords = {{
+        const s_static_array<s_v2<float>, 4> vert_coords = {{
             {0.0f - origin.x, 0.0f - origin.y},
             {1.0f - origin.x, 0.0f - origin.y},
             {1.0f - origin.x, 1.0f - origin.y},
             {0.0f - origin.x, 1.0f - origin.y}
         }};
 
-        const s_static_array<s_v2<float>, 4> slot_tex_coords = {{
+        const s_static_array<s_v2<float>, 4> tex_coords_per_vert = {{
             {tex_coords.Left(), tex_coords.Top()},
             {tex_coords.Right(), tex_coords.Top()},
             {tex_coords.Right(), tex_coords.Bottom()},
@@ -145,11 +145,11 @@ void main() {
 
         for (int i = 0; i < slot.Len(); i++) {
             slot[i] = {
-                .vert_coord = slot_vert_coords[i],
+                .vert_coord = vert_coords[i],
                 .pos = pos,
                 .size = size,
                 .rot = rot,
-                .tex_coord = slot_tex_coords[i],
+                .tex_coord = tex_coords_per_vert[i],
                 .blend = blend
             };
         }
@@ -158,8 +158,36 @@ void main() {
         m_slots_used_cnt++;
     }
 
-    void DrawTexture(const s_texture tex, const s_v2<float> pos, const s_rect<int> src_rect, const s_v2<float> origin, const s_v2<float> scale, const float rot, const s_v4<float> blend) {
+    s_rect<float> MakeTextureCoords(const s_rect<int> src_rect, const s_v2<int> tex_size) {
+        const s_v2<float> half_texel = {
+            0.5f / tex_size.x,
+            0.5f / tex_size.y
+        };
 
+        return {
+            (src_rect.x + half_texel.x) / static_cast<float>(tex_size.x),
+            (src_rect.y + half_texel.y) / static_cast<float>(tex_size.y),
+            (src_rect.width  - half_texel.x) / static_cast<float>(tex_size.x),
+            (src_rect.height - half_texel.y) / static_cast<float>(tex_size.y)
+        };
+    }
+
+    void c_renderer::DrawTexture(const s_texture& tex, const s_v2<float> pos, const s_rect<int> src_rect, const s_v2<float> origin, const s_v2<float> scale, const float rot, const s_v4<float> blend) {
+        ZF_ASSERT(origin.x >= 0.0f && origin.x <= 1.0f && origin.y >= 0.0f && origin.y <= 1.0f); // @todo: Generic function for this check?
+
+        s_rect<int> src_rect_to_use;
+
+        if (src_rect == s_rect<int>()) {
+            // If the source rectangle wasn't set, just go with the whole texture.
+            src_rect_to_use = {0, 0, tex.size.x, tex.size.y};
+        } else {
+            ZF_ASSERT_MSG(src_rect.Left() >= 0 && src_rect.Top() >= 0 && src_rect.Right() <= tex.size.x && src_rect.Top() <= tex.size.y, "Invalid source rectangle!");
+            src_rect_to_use = src_rect;
+        }
+
+        const s_rect tex_coords = MakeTextureCoords(src_rect_to_use, tex.size);
+        const s_v2<float> size = {src_rect_to_use.width * scale.x, src_rect_to_use.height * scale.y};
+        Draw(tex.hdl, tex_coords, pos, size, origin, rot, blend);
     }
 
     void c_renderer::Flush() {
@@ -168,7 +196,6 @@ void main() {
             return;
         }
 
-#if 0
         //
         // Submitting Vertex Data to GPU
         //
@@ -188,13 +215,17 @@ void main() {
         glUseProgram(prog_gl_id);
 
         const int view_uniform_loc = glGetUniformLocation(prog_gl_id, "u_view");
-        glUniformMatrix4fv(view_uniform_loc, 1, false, reinterpret_cast<float*>(m_view_mat.elems.buf_raw.buf_raw));
+        glUniformMatrix4fv(view_uniform_loc, 1, false, m_view_mat.Raw());
 
-        const s_rect<int> viewport = GLViewport();
+        const s_rect<int> viewport = []() {
+            s_rect<int> vp;
+            glGetIntegerv(GL_VIEWPORT, reinterpret_cast<int*>(&vp));
+            return vp;
+        }();
+
         const auto proj_mat = s_matrix_4x4::Orthographic(0.0f, viewport.width, viewport.height, 0.0f, -1.0f, 1.0f);
-
         const int proj_uniform_loc = glGetUniformLocation(prog_gl_id, "u_proj");
-        glUniformMatrix4fv(proj_uniform_loc, 1, false, (const t_r32*)proj_mat.elems);
+        glUniformMatrix4fv(proj_uniform_loc, 1, false, proj_mat.Raw());
 
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, m_batch_tex_hdl.tex.gl_id);
@@ -206,6 +237,5 @@ void main() {
 
         m_slots_used_cnt = 0;
         m_batch_tex_hdl = {};
-#endif
     }
 }

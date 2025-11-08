@@ -297,6 +297,14 @@ namespace zf {
             return mat;
         }
 
+        float* Raw() {
+            return elems[0].buf_raw;
+        }
+
+        const float* Raw() const {
+            return elems[0].buf_raw;
+        }
+
         void Translate(const s_v2<float> trans) {
             elems[3][0] += trans.x;
             elems[3][1] += trans.y;
