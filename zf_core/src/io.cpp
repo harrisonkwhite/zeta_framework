@@ -21,7 +21,7 @@ namespace zf {
         }
 
         const bool success = [&contents, &mem_arena, file_path, include_terminating_byte, &fs]() {
-            const auto file_size = fs.CalcSize();
+            const auto file_size = static_cast<int>(fs.CalcSize());
 
             if (!contents.Init(mem_arena, include_terminating_byte ? file_size + 1 : file_size)) {
                 ZF_LOG_ERROR("Failed to reserve memory for the contents of file \"%s\"!", file_path.Raw());

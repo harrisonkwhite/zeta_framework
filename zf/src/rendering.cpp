@@ -60,12 +60,12 @@ void main() {
             }
 
             for (int i = 0; i < g_batch_slot_cnt; i++) {
-                elems[(i * 6) + 0] = (i * 4) + 0;
-                elems[(i * 6) + 1] = (i * 4) + 1;
-                elems[(i * 6) + 2] = (i * 4) + 2;
-                elems[(i * 6) + 3] = (i * 4) + 2;
-                elems[(i * 6) + 4] = (i * 4) + 3;
-                elems[(i * 6) + 5] = (i * 4) + 0;
+                elems[(i * 6) + 0] = static_cast<unsigned short>((i * 4) + 0);
+                elems[(i * 6) + 1] = static_cast<unsigned short>((i * 4) + 1);
+                elems[(i * 6) + 2] = static_cast<unsigned short>((i * 4) + 2);
+                elems[(i * 6) + 3] = static_cast<unsigned short>((i * 4) + 2);
+                elems[(i * 6) + 4] = static_cast<unsigned short>((i * 4) + 3);
+                elems[(i * 6) + 5] = static_cast<unsigned short>((i * 4) + 0);
             }
 
             return true;
@@ -231,7 +231,7 @@ void main() {
             return vp;
         }();
 
-        const auto proj_mat = s_matrix_4x4::Orthographic(0.0f, viewport.width, viewport.height, 0.0f, -1.0f, 1.0f);
+        const auto proj_mat = s_matrix_4x4::Orthographic(0.0f, static_cast<float>(viewport.width), static_cast<float>(viewport.height), 0.0f, -1.0f, 1.0f);
         const int proj_uniform_loc = glGetUniformLocation(prog_gl_id, "u_proj");
         glUniformMatrix4fv(proj_uniform_loc, 1, false, proj_mat.Raw());
 

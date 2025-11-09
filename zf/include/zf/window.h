@@ -17,6 +17,7 @@
 
 namespace zf {
     enum e_window_flags {
+        ek_window_flags_none = 0,
         ek_window_flags_resizable = 1 << 0,
         ek_window_flags_hide_cursor = 1 << 1
     };

@@ -169,7 +169,7 @@ namespace zf {
 
         glfwSetCharCallback(sm_glfw_window,
             [](GLFWwindow* window, const unsigned int codepoint) {
-                for (size_t i = 0; i < sizeof(sm_input_events.unicode_buf); i++) {
+                for (int i = 0; i < sm_input_events.unicode_buf.Len(); i++) {
                     if (!sm_input_events.unicode_buf[i]) {
                         sm_input_events.unicode_buf[i] = static_cast<char>(codepoint);
                         return;

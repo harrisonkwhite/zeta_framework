@@ -1,3 +1,4 @@
+#include "zf/gfx.h"
 #include <zf/rendering.h>
 
 namespace zf {
@@ -5,7 +6,7 @@ namespace zf {
         size_t stride = 0;
 
         for (int i = 0; i < vert_attr_lens.Len(); i++) {
-            stride += sizeof(int) * vert_attr_lens[i];
+            stride += sizeof(int) * static_cast<size_t>(vert_attr_lens[i]);
         }
 
         return stride;
@@ -23,7 +24,7 @@ namespace zf {
 
         glGenBuffers(1, &mesh.elem_buf_gl_id);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh.elem_buf_gl_id);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, elems.SizeInBytes(), elems.Raw(), GL_STATIC_DRAW);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, static_cast<GLsizeiptr>(elems.SizeInBytes()), elems.Raw(), GL_STATIC_DRAW);
 
         const size_t stride = CalcStride(vert_attr_lens);
         int offs = 0;
@@ -31,8 +32,8 @@ namespace zf {
         for (int i = 0; i < vert_attr_lens.Len(); i++) {
             const int attr_len = vert_attr_lens[i];
 
-            glVertexAttribPointer(i, attr_len, GL_FLOAT, false, stride, reinterpret_cast<void*>(sizeof(int) * offs));
-            glEnableVertexAttribArray(i);
+            glVertexAttribPointer(static_cast<GLuint>(i), attr_len, GL_FLOAT, false, static_cast<GLsizei>(stride), reinterpret_cast<void*>(sizeof(int) * offs));
+            glEnableVertexAttribArray(static_cast<GLuint>(i));
 
             offs += attr_len;
         }
@@ -149,6 +150,10 @@ namespace zf {
             const auto hdl = m_hdls[i];
 
             switch (hdl.type) {
+            case zf::ec_gfx_resource_type::invalid:
+                ZF_ASSERT_MSG(false, "There shouldn't be an invalid resource type here!");
+                break;
+
             case ec_gfx_resource_type::mesh:
                 glDeleteBuffers(1, &hdl.mesh.elem_buf_gl_id);
                 glDeleteBuffers(1, &hdl.mesh.vert_buf_gl_id);

@@ -10,7 +10,7 @@
 
 namespace zf {
     struct s_game_init_context {
-        void* dev_mem;
+        void* dev_mem = nullptr;
 
         c_mem_arena& perm_mem_arena;
         c_mem_arena& temp_mem_arena;
@@ -25,14 +25,14 @@ namespace zf {
     };
 
     struct s_game_tick_context {
-        void* dev_mem;
+        void* dev_mem = nullptr;
 
         c_mem_arena& perm_mem_arena;
         c_mem_arena& temp_mem_arena;
     };
 
     struct s_game_render_context {
-        void* dev_mem;
+        void* dev_mem = nullptr;
 
         c_mem_arena& perm_mem_arena;
         c_mem_arena& temp_mem_arena;
@@ -43,18 +43,18 @@ namespace zf {
     struct s_game_info {
         s_v2<int> window_init_size;
         s_str_view window_title;
-        e_window_flags window_flags;
+        e_window_flags window_flags = ek_window_flags_none;
 
-        size_t dev_mem_size; // How much memory should be allocated in the permanent arena for your use? This might be the size of a specific struct, for example.
-        size_t dev_mem_alignment; // The alignment of the above memory.
+        size_t dev_mem_size = 0; // How much memory should be allocated in the permanent arena for your use? This might be the size of a specific struct, for example.
+        size_t dev_mem_alignment = 0; // The alignment of the above memory.
 
-        int targ_ticks_per_sec;
+        int targ_ticks_per_sec = 0;
 
         // Below are pointers to functions that the framework will call for you. The provided struct pointers expose parts of the framework state for you to work with.
-        bool (* init_func)(const s_game_init_context& zf_context); // Called as one of the last steps of the game initialisation phase.
-        e_game_tick_result (* tick_func)(const s_game_tick_context& zf_context); // Called once every tick (which can occur multiple times a frame).
-        bool (* render_func)(const s_game_render_context& zf_context); // Called after all ticks have been run.
-        void (* clean_func)(void* const dev_mem); // Called when the game ends (including if it ends in error). This is not called if your initialisation function failed or hasn't yet been called.
+        bool (* init_func)(const s_game_init_context& zf_context) = nullptr; // Called as one of the last steps of the game initialisation phase.
+        e_game_tick_result (* tick_func)(const s_game_tick_context& zf_context) = nullptr; // Called once every tick (which can occur multiple times a frame).
+        bool (* render_func)(const s_game_render_context& zf_context) = nullptr; // Called after all ticks have been run.
+        void (* clean_func)(void* const dev_mem) = nullptr; // Called when the game ends (including if it ends in error). This is not called if your initialisation function failed or hasn't yet been called.
     };
 
     inline void AssertGameInfoValidity(const s_game_info& info) {

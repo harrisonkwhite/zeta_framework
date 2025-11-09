@@ -4,7 +4,7 @@ namespace zf {
     bool c_bit_vector::Init(c_mem_arena& mem_arena, const size_t bit_cnt) {
         ZF_ASSERT(bit_cnt > 0);
 
-        if (!m_bytes.Init(mem_arena, BitsToBytes(bit_cnt))) {
+        if (!m_bytes.Init(mem_arena, static_cast<int>(BitsToBytes(bit_cnt)))) {
             return false;
         }
 
@@ -281,7 +281,7 @@ namespace zf {
             return -1;
         }
 
-        const int starting_byte_index = from / 8;
+        const auto starting_byte_index = static_cast<int>(from / 8);
         const t_byte starting_byte_old = m_bytes[starting_byte_index];
 
         const t_byte last_byte_old = m_bytes[m_bytes.Len() - 1];
@@ -571,7 +571,7 @@ namespace zf {
             return -1;
         }
 
-        const int starting_byte_index = from / 8;
+        const auto starting_byte_index = static_cast<int>(from / 8);
         const t_byte starting_byte_old = m_bytes[starting_byte_index];
 
         const t_byte last_byte_old = m_bytes[m_bytes.Len() - 1];

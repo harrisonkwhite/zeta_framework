@@ -25,9 +25,9 @@ namespace zf {
         size_t CalcSize() const {
             const auto pos_old = ftell(raw);
             fseek(raw, 0, SEEK_END);
-            const size_t file_size = ftell(raw);
+            const auto file_size = ftell(raw);
             fseek(raw, pos_old, SEEK_SET);
-            return file_size;
+            return static_cast<size_t>(file_size);
         }
 
         template<typename tp_type>
@@ -39,7 +39,7 @@ namespace zf {
         template<typename tp_type>
         [[nodiscard]]
         int ReadItems(const c_array<tp_type> arr) const {
-            return fread(arr.Raw(), sizeof(tp_type), arr.Len(), raw);
+            return static_cast<int>(fread(arr.Raw(), sizeof(tp_type), arr.Len(), raw));
         }
 
         template<typename tp_type>
@@ -51,7 +51,7 @@ namespace zf {
         template<typename tp_type>
         [[nodiscard]]
         int WriteItems(const c_array<const tp_type> arr) const {
-            return fwrite(arr.Raw(), sizeof(tp_type), arr.Len(), raw);
+            return static_cast<int>(fwrite(arr.Raw(), sizeof(tp_type), arr.Len(), raw));
         }
     };
 

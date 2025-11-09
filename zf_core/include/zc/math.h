@@ -215,19 +215,19 @@ namespace zf {
             return {width, height};
         }
 
-        float Left() const {
+        tp_type Left() const {
             return x;
         }
 
-        float Right() const {
+        tp_type Right() const {
             return x + width;
         }
 
-        float Top() const {
+        tp_type Top() const {
             return y;
         }
 
-        float Bottom() const {
+        tp_type Bottom() const {
             return y + height;
         }
 

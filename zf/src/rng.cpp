@@ -9,7 +9,7 @@ namespace zf {
     void InitRNG() {
         ZF_ASSERT(!g_rng_initted);
 
-        srand(time(NULL));
+        srand(static_cast<unsigned int>(time(nullptr)));
         g_rng_initted = true;
     }
 
