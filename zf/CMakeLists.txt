@@ -5,6 +5,7 @@ add_library(zf STATIC
     src/gfx.cpp
     src/rendering.cpp
 	../external/glad/src/glad.c
+	../external/miniaudio/src/miniaudio.c
 
     include/zf/game.h
     include/zf/window.h
@@ -16,6 +17,7 @@ add_library(zf STATIC
 target_include_directories(zf PUBLIC
     include
     ../external/glad/include
+    ../external/miniaudio/include
 )
 
 target_link_libraries(zf PUBLIC
