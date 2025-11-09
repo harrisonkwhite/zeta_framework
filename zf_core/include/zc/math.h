@@ -7,11 +7,23 @@
 #include <zc/type_traits.h>
 
 namespace zf {
-    constexpr float g_pi_f = 3.14159265358979323846f;
-    constexpr double g_pi_d = 3.141592653589793238462643383279502884;
+    template<co_floating_point tp_type> constexpr tp_type Pi();
+    template<> constexpr float Pi<float>() { return 3.14159265358979323846f; }
+    template<> constexpr double Pi<double>() { return 3.141592653589793238462643383279502884; }
 
-    constexpr float g_tau_f = 6.28318530717958647692f;
-    constexpr double g_tau_d = 6.283185307179586476925286766559005768;
+    template<co_floating_point tp_type> constexpr tp_type Tau();
+    template<> constexpr float Tau<float>() { return 6.28318530717958647692f; }
+    template<> constexpr double Tau<double>() { return 6.283185307179586476925286766559005768; }
+
+    template<co_floating_point tp_type>
+    constexpr tp_type DegsToRads(const tp_type degs) {
+        return degs * (Pi<tp_type>() / 180);
+    }
+
+    template<co_floating_point tp_type>
+    constexpr tp_type RadsToDegs(const tp_type rads) {
+        return rads * (180 / Pi<tp_type>());
+    }
 
     template<co_numeric tp_type>
     static constexpr tp_type Min(const tp_type& a, const tp_type& b) {
@@ -160,6 +172,14 @@ namespace zf {
             }
 
             return {x / mag, y / mag};
+        }
+
+        inline s_v2<tp_type> DirTo(const s_v2<tp_type> other) requires co_floating_point<tp_type> {
+            return (other - *this).NormalizedOrZero();
+        }
+
+        inline tp_type DirToInRads(const s_v2<tp_type> other) requires co_floating_point<tp_type> {
+            return atan2(other.y - y, other.x - x);
         }
     };
 
