@@ -5,12 +5,12 @@
 
 namespace zf {
     struct s_packed_header {
-        int tex_cnt = 0;
-        int font_cnt = 0;
-        int shader_prog_cnt = 0;
+        t_s32 tex_cnt = 0;
+        t_s32 font_cnt = 0;
+        t_s32 shader_prog_cnt = 0;
     };
 
-    static bool PackTexturesFromInstrs(cJSON* const cj, c_mem_arena& temp_mem_arena) {
+    static t_b8 PackTexturesFromInstrs(cJSON* const cj, c_mem_arena& temp_mem_arena) {
         ZF_ASSERT(cj);
 
         cJSON* const cj_textures = cJSON_GetObjectItemCaseSensitive(cj, "textures");
@@ -64,7 +64,7 @@ namespace zf {
         return true;
     }
 
-    bool PackAssets(const s_str_view instrs_json, c_mem_arena& temp_mem_arena) {
+    t_b8 PackAssets(const s_str_view instrs_json, c_mem_arena& temp_mem_arena) {
         ZF_ASSERT(instrs_json.IsTerminated());
 
         cJSON* const cj = cJSON_Parse(instrs_json.Raw());
@@ -74,7 +74,7 @@ namespace zf {
             return false;
         }
 
-        const bool success = [cj, &temp_mem_arena]() {
+        const t_b8 success = [cj, &temp_mem_arena]() {
             if (!cJSON_IsObject(cj)) {
                 ZF_LOG_ERROR("Invalid JSON structure in asset packing instructions!");
                 return false;

@@ -1,79 +1,75 @@
 #pragma once
 
-#include <cstring>
-#include <cstdlib>
 #include <new>
 #include <zc/debug.h>
 
 #define ZF_SIZE_IN_BITS(x) (8 * sizeof(x))
 
 namespace zf {
-    using t_byte = uint8_t;
+    constexpr t_u64 Kilobytes(const t_u64 x) { return (static_cast<t_u64>(1) << 10) * x; }
+    constexpr t_u64 Megabytes(const t_u64 x) { return (static_cast<t_u64>(1) << 20) * x; }
+    constexpr t_u64 Gigabytes(const t_u64 x) { return (static_cast<t_u64>(1) << 30) * x; }
+    constexpr t_u64 Terabytes(const t_u64 x) { return (static_cast<t_u64>(1) << 40) * x; }
 
-    constexpr size_t Kilobytes(const size_t x) { return (static_cast<size_t>(1) << 10) * x; }
-    constexpr size_t Megabytes(const size_t x) { return (static_cast<size_t>(1) << 20) * x; }
-    constexpr size_t Gigabytes(const size_t x) { return (static_cast<size_t>(1) << 30) * x; }
-    constexpr size_t Terabytes(const size_t x) { return (static_cast<size_t>(1) << 40) * x; }
+    constexpr t_u64 BitsToBytes(const t_u64 x) { return (x + 7) / 8; }
+    constexpr t_u64 BytesToBits(const t_u64 x) { return x * 8; }
 
-    constexpr size_t BitsToBytes(const size_t x) { return (x + 7) / 8; }
-    constexpr size_t BytesToBits(const size_t x) { return x * 8; }
-
-    constexpr t_byte BitMask(const size_t index) {
-        return static_cast<t_byte>(1 << (index % 8));
+    constexpr t_u8 BitMask(const t_u64 index) {
+        return static_cast<t_u8>(1 << (index % 8));
     }
 
-    constexpr bool IsPowerOfTwo(const size_t n) {
+    constexpr t_b8 IsPowerOfTwo(const t_u64 n) {
         return n > 0 && (n & (n - 1)) == 0;
     }
 
-    constexpr bool IsAlignmentValid(const size_t n) {
+    constexpr t_b8 IsAlignmentValid(const t_u64 n) {
         return n > 0 && IsPowerOfTwo(n);
     }
 
-    constexpr size_t AlignForward(const size_t n, const size_t alignment) {
+    constexpr t_u64 AlignForward(const t_u64 n, const t_u64 alignment) {
         return (n + alignment - 1) & ~(alignment - 1);
     }
 
     class c_mem_arena {
     public:
-        [[nodiscard]] bool Init(const size_t size);
+        [[nodiscard]] t_b8 Init(const t_u64 size);
         void Release();
-        void* Push(const size_t size, const size_t alignment);
-        template<typename tp_type> tp_type* PushType(const int cnt = 1);
+        void* Push(const t_u64 size, const t_u64 alignment);
+        template<typename tp_type> tp_type* PushType(const t_s32 cnt = 1);
 
-        bool IsInitted() const {
+        t_b8 IsInitted() const {
             return m_buf;
         }
 
-        size_t Size() const {
+        t_u64 Size() const {
             ZF_ASSERT(IsInitted());
             return m_size;
         }
 
-        size_t Offs() const {
+        t_u64 Offs() const {
             ZF_ASSERT(IsInitted());
             return m_offs;
         }
 
-        bool IsEmpty() const {
+        t_b8 IsEmpty() const {
             ZF_ASSERT(IsInitted());
             return m_offs == 0;
         }
 
-        void Rewind(const size_t offs) {
+        void Rewind(const t_u64 offs) {
             ZF_ASSERT(IsInitted());
             ZF_ASSERT(offs <= m_size);
             m_offs = offs;
         }
 
     private:
-        t_byte* m_buf = nullptr;
-        size_t m_size = 0;
-        size_t m_offs = 0;
+        t_u8* m_buf = nullptr;
+        t_u64 m_size = 0;
+        t_u64 m_offs = 0;
     };
 
     template<typename tp_type>
-    tp_type* c_mem_arena::PushType(const int cnt) {
+    tp_type* c_mem_arena::PushType(const t_s32 cnt) {
         ZF_ASSERT(m_buf);
         ZF_ASSERT(cnt > 0);
 
@@ -85,7 +81,7 @@ namespace zf {
 
         tp_type* const buf = reinterpret_cast<tp_type*>(buf_generic);
 
-        for (int i = 0; i < cnt; i++) {
+        for (t_s32 i = 0; i < cnt; i++) {
             new (&buf[i]) tp_type();
         }
 
@@ -99,17 +95,17 @@ namespace zf {
         b = temp;
     }
 
-    inline size_t IndexFrom2D(const size_t x, const size_t y, const size_t width) {
+    inline t_u64 IndexFrom2D(const t_u64 x, const t_u64 y, const t_u64 width) {
         ZF_ASSERT(x < width);
         return (width * y) + x;
     }
 
-    inline t_byte BitRangeMask(const size_t begin_index, const size_t end_index = 8) {
+    inline t_u8 BitRangeMask(const t_u64 begin_index, const t_u64 end_index = 8) {
         ZF_ASSERT(end_index <= 8);
         ZF_ASSERT(begin_index <= end_index);
 
-        const size_t range_len = end_index - begin_index;
-        const t_byte mask_at_bottom = (1 << range_len) - 1;
+        const t_u64 range_len = end_index - begin_index;
+        const t_u8 mask_at_bottom = (1 << range_len) - 1;
         return mask_at_bottom << begin_index;
     }
 }

@@ -7,7 +7,7 @@ namespace zf {
     class c_min_heap {
     public:
         [[nodiscard]]
-        bool Init(c_mem_arena& mem_arena, const int cap) {
+        t_b8 Init(c_mem_arena& mem_arena, const t_s32 cap) {
             ZF_ASSERT(cap > 0);
 
             c_array<tp_type> nodes;
@@ -45,19 +45,19 @@ namespace zf {
             return ret;
         }
 
-        int Len() const {
+        t_s32 Len() const {
             return m_len;
         }
 
-        int Cap() const {
+        t_s32 Cap() const {
             return m_nodes.Len();
         }
 
-        bool IsEmpty() const {
+        t_b8 IsEmpty() const {
             return m_len == 0;
         }
 
-        bool IsFull() const {
+        t_b8 IsFull() const {
             return m_len == Cap();
         }
 
@@ -68,32 +68,32 @@ namespace zf {
 
     private:
         c_array<tp_type> m_nodes;
-        int m_len = 0;
+        t_s32 m_len = 0;
 
-        static int IndexOfLeft(const int index) {
+        static t_s32 IndexOfLeft(const t_s32 index) {
             return (2 * index) + 1;
         }
 
-        static int IndexOfRight(const int index) {
+        static t_s32 IndexOfRight(const t_s32 index) {
             return (2 * index) + 2;
         }
 
-        static int IndexOfParent(const int index) {
+        static t_s32 IndexOfParent(const t_s32 index) {
             return (index - 1) / 2;
         }
 
-        bool Contains(const int index) const {
+        t_b8 Contains(const t_s32 index) const {
             return index >= 0 && index < m_len;
         }
 
-        void BubbleUp(const int index) {
+        void BubbleUp(const t_s32 index) {
             ZF_ASSERT(Contains(index));
 
             if (index == 0) {
                 return;
             }
 
-            const int par_index = IndexOfParent(index);
+            const t_s32 par_index = IndexOfParent(index);
 
             if (m_nodes[par_index] <= m_nodes[index]) {
                 return;
@@ -103,20 +103,20 @@ namespace zf {
             BubbleUp(par_index);
         }
 
-        void BubbleDown(const int index) {
+        void BubbleDown(const t_s32 index) {
             ZF_ASSERT(Contains(index));
 
-            const int left_index = IndexOfLeft(index);
-            const bool left_exists = Contains(left_index);
+            const t_s32 left_index = IndexOfLeft(index);
+            const t_b8 left_exists = Contains(left_index);
 
-            const int right_index = IndexOfRight(index);
-            const bool right_exists = Contains(right_index);
+            const t_s32 right_index = IndexOfRight(index);
+            const t_b8 right_exists = Contains(right_index);
 
             if (!left_exists && !right_exists) {
                 return;
             }
 
-            const int index_of_smaller = !right_exists || m_nodes[left_index] <= m_nodes[right_index] ? left_index : right_index;
+            const t_s32 index_of_smaller = !right_exists || m_nodes[left_index] <= m_nodes[right_index] ? left_index : right_index;
 
             if (m_nodes[index_of_smaller] < m_nodes[index]) {
                 Swap(m_nodes[index], m_nodes[index_of_smaller]);

@@ -4,7 +4,7 @@
 #include <zc/debug.h>
 
 namespace zf {
-    bool OutputCode(const s_str_view input_file_path, const s_str_view output_file_path, const s_str_view arr_subname) {
+    t_b8 OutputCode(const s_str_view input_file_path, const s_str_view output_file_path, const s_str_view arr_subname) {
         ZF_ASSERT(arr_subname.IsTerminated());
 
         s_file_stream input_reader;
@@ -26,8 +26,8 @@ namespace zf {
 
         fprintf(output_writer.raw, "    extern const t_byte g_%s_raw[] = {", arr_subname.Raw());
 
-        t_byte read_byte;
-        size_t read_cnt = 0;
+        t_u8 read_byte;
+        t_u64 read_cnt = 0;
 
         while (input_reader.ReadItem(read_byte)) {
             if (read_cnt > 0) {
@@ -41,7 +41,7 @@ namespace zf {
 
         fprintf(output_writer.raw, "};\n");
 
-        fprintf(output_writer.raw, "    extern const size_t g_%s_size = %zu;\n", arr_subname.Raw(), read_cnt);
+        fprintf(output_writer.raw, "    extern const t_u64 g_%s_size = %zu;\n", arr_subname.Raw(), read_cnt);
 
         fprintf(output_writer.raw, "}\n");
 

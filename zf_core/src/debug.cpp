@@ -20,11 +20,11 @@ namespace zf {
         const HANDLE proc = GetCurrentProcess();
         SymInitialize(proc, nullptr, TRUE);
 
-        constexpr int stack_len = 32;
+        constexpr t_s32 stack_len = 32;
         void* stack[stack_len];
-        const int frame_cnt = CaptureStackBackTrace(0, stack_len, stack, nullptr);
+        const t_s32 frame_cnt = CaptureStackBackTrace(0, stack_len, stack, nullptr);
 
-        constexpr int func_name_buf_size = 256;
+        constexpr t_s32 func_name_buf_size = 256;
         char symbol_buf[sizeof(SYMBOL_INFO) + func_name_buf_size];
         const auto symbol = reinterpret_cast<SYMBOL_INFO*>(symbol_buf);
         symbol->MaxNameLen = func_name_buf_size - 1;
@@ -33,7 +33,7 @@ namespace zf {
         IMAGEHLP_LINE64 line;
         line.SizeOfStruct = sizeof(IMAGEHLP_LINE64);
 
-        for (int i = 0; i < frame_cnt; i++) {
+        for (t_s32 i = 0; i < frame_cnt; i++) {
             const auto addr = static_cast<DWORD64>(reinterpret_cast<uintptr_t>(stack[i]));
 
             if (SymFromAddr(proc, addr, 0, symbol)) {
@@ -53,7 +53,7 @@ namespace zf {
 #endif
     }
 
-    void HandleAssertFailure(const char* const condition, const char* const file, const int line, const char* const func, const char* const msg) {
+    void HandleAssertFailure(const char* const condition, const char* const file, const t_s32 line, const char* const func, const char* const msg) {
         fprintf(stderr, ZF_ANSI_BOLD ZF_ANSI_FG_RED "\n==================== ASSERTION FAILED ====================\n" ZF_ANSI_RESET);
         fprintf(stderr, "Condition: %s\n", condition);
         fprintf(stderr, "Function:  %s\n", func);

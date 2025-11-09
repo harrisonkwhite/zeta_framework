@@ -4,9 +4,9 @@
 #include <zf/rng.h>
 
 namespace zf {
-    constexpr size_t g_perm_mem_arena_size = Megabytes(80);
-    constexpr size_t g_temp_mem_arena_size = Megabytes(40);
-    constexpr int g_gl_resource_arena_res_limit = 1024;
+    constexpr t_u64 g_perm_mem_arena_size = Megabytes(80);
+    constexpr t_u64 g_temp_mem_arena_size = Megabytes(40);
+    constexpr t_s32 g_gl_resource_arena_res_limit = 1024;
 
     enum class ec_game_run_stage {
         nothing_initted,
@@ -28,7 +28,7 @@ namespace zf {
         void* dev_mem = nullptr; // Memory optionally reserved by the developer for their own use, accessible in their defined functions through the provided ZF context.
     };
 
-    static bool ExecGameInitAndMainLoop(s_game& game, const s_game_info& info) {
+    static t_b8 ExecGameInitAndMainLoop(s_game& game, const s_game_info& info) {
         //
         // Initialisation
         //
@@ -106,18 +106,18 @@ namespace zf {
         //
         // Main Loop
         //
-        double frame_time_last = c_window::GetTime();
-        double frame_dur_accum = 0.0;
+        t_f64 frame_time_last = c_window::GetTime();
+        t_f64 frame_dur_accum = 0.0;
 
         while (!c_window::ShouldClose()) {
             game.temp_mem_arena.Rewind(0);
 
-            const double frame_time = c_window::GetTime();
-            const double frame_time_delta = frame_time - frame_time_last;
+            const t_f64 frame_time = c_window::GetTime();
+            const t_f64 frame_time_delta = frame_time - frame_time_last;
             frame_dur_accum += frame_time_delta;
             frame_time_last = frame_time;
 
-            const double targ_tick_interval = 1.0 / info.targ_ticks_per_sec;
+            const t_f64 targ_tick_interval = 1.0 / info.targ_ticks_per_sec;
 
             // Once enough time has passed (i.e. the time accumulator has reached the tick interval), run at least a single tick and update the display.
             if (frame_dur_accum >= targ_tick_interval) {
@@ -172,15 +172,15 @@ namespace zf {
         return true;
     }
 
-    bool RunGame(const s_game_info& info) {
+    t_b8 RunGame(const s_game_info& info) {
         AssertGameInfoValidity(info);
 
         s_game game;
 
-        const bool result = ExecGameInitAndMainLoop(game, info);
+        const t_b8 result = ExecGameInitAndMainLoop(game, info);
 
         // Clean up.
-        for (auto i = static_cast<int>(game.run_stage); i >= 0; i--) {
+        for (auto i = static_cast<t_s32>(game.run_stage); i >= 0; i--) {
             switch (static_cast<ec_game_run_stage>(i)) {
                 case ec_game_run_stage::nothing_initted:
                     break;

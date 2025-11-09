@@ -19,7 +19,7 @@ int main(const int arg_cnt, const char* const* const args_raw) {
         return EXIT_FAILURE;
     }
 
-    const bool success = [instrs_json_file_path, &temp_mem_arena]() {
+    const zf::t_b8 success = [instrs_json_file_path, &temp_mem_arena]() {
         zf::s_str instrs_json;
 
         if (!zf::LoadFileContentsAsStr(instrs_json, temp_mem_arena, instrs_json_file_path)) {

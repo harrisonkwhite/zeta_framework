@@ -9,7 +9,7 @@
 #endif
 
 namespace zf {
-    bool LoadFileContents(c_array<t_byte>& contents, c_mem_arena& mem_arena, const s_str_view file_path, const bool include_terminating_byte) {
+    t_b8 LoadFileContents(c_array<t_u8>& contents, c_mem_arena& mem_arena, const s_str_view file_path, const t_b8 include_terminating_byte) {
         ZF_ASSERT(contents.IsEmpty());
         ZF_ASSERT(file_path.IsTerminated());
 
@@ -20,8 +20,8 @@ namespace zf {
             return false;
         }
 
-        const bool success = [&contents, &mem_arena, file_path, include_terminating_byte, &fs]() {
-            const auto file_size = static_cast<int>(fs.CalcSize());
+        const t_b8 success = [&contents, &mem_arena, file_path, include_terminating_byte, &fs]() {
+            const auto file_size = static_cast<t_s32>(fs.CalcSize());
 
             if (!contents.Init(mem_arena, include_terminating_byte ? file_size + 1 : file_size)) {
                 ZF_LOG_ERROR("Failed to reserve memory for the contents of file \"%s\"!", file_path.Raw());
@@ -41,13 +41,13 @@ namespace zf {
         return success;
     }
 
-    bool CreateDirectory(const s_str_view path) {
+    t_b8 CreateDirectory(const s_str_view path) {
         ZF_ASSERT(path.IsTerminated());
 
 #ifdef _WIN32
-        const int res = _mkdir(path.Raw());
+        const t_s32 res = _mkdir(path.Raw());
 #else
-        const int res = mkdir(path, 0755);
+        const t_s32 res = mkdir(path, 0755);
 #endif
 
         return res == 0;
@@ -74,7 +74,7 @@ namespace zf {
 #endif
     }
 
-    bool CreateDirectoryAndParents(const s_str_view path, c_mem_arena& temp_mem_arena) {
+    t_b8 CreateDirectoryAndParents(const s_str_view path, c_mem_arena& temp_mem_arena) {
         ZF_ASSERT(path.IsTerminated());
 
         // @speed: Ideally we'd start at the end of the path and move back.
@@ -85,9 +85,9 @@ namespace zf {
             return false;
         }
 
-        bool cur_dir_name_is_empty = true;
+        t_b8 cur_dir_name_is_empty = true;
 
-        int i = 0;
+        t_s32 i = 0;
 
         while (true) {
             if (path_cloned.chrs[i] == '/' || path_cloned.chrs[i] == '\\' || !path_cloned.chrs[i]) {
@@ -120,10 +120,10 @@ namespace zf {
         return true;
     }
 
-    bool CreateFileAndParentDirs(const s_str_view path, c_mem_arena& temp_mem_arena) {
+    t_b8 CreateFileAndParentDirs(const s_str_view path, c_mem_arena& temp_mem_arena) {
         ZF_ASSERT(path.IsTerminated());
 
-        const int path_len = path.CalcLen();
+        const t_s32 path_len = path.CalcLen();
 
         s_str path_cloned; // @speed: A clone on every call to this? Yuck!
 
@@ -131,7 +131,7 @@ namespace zf {
             return false;
         }
 
-        for (int i = path_len - 1; i >= 0; i--) {
+        for (t_s32 i = path_len - 1; i >= 0; i--) {
             if (path_cloned.chrs[i] == '/' || path_cloned.chrs[i] == '\\') {
                 if (i > 0) {
                     path_cloned.chrs[i] = '\0';

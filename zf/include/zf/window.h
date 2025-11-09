@@ -106,7 +106,7 @@ namespace zf {
         eks_mouse_button_code_cnt
     };
 
-    using t_mouse_button_bits = t_byte;
+    using t_mouse_button_bits = t_u8;
 
     static_assert(eks_mouse_button_code_cnt < ZF_SIZE_IN_BITS(t_mouse_button_bits), "Too many mouse button codes!");
 
@@ -128,7 +128,7 @@ namespace zf {
         s_static_array<char, 32> unicode_buf;
     };
 
-    static constexpr int ToGLFWKey(const e_key_code kc) {
+    static constexpr t_s32 ToGLFWKey(const e_key_code kc) {
         switch (kc) {
             case ek_key_code_space: return GLFW_KEY_SPACE;
             case ek_key_code_0: return GLFW_KEY_0;
@@ -198,7 +198,7 @@ namespace zf {
         }
     }
 
-    static constexpr int ToGLFWMouseButton(const e_mouse_button_code mbc) {
+    static constexpr t_s32 ToGLFWMouseButton(const e_mouse_button_code mbc) {
         switch (mbc) {
             case ek_mouse_button_code_left: return GLFW_MOUSE_BUTTON_LEFT;
             case ek_mouse_button_code_right: return GLFW_MOUSE_BUTTON_RIGHT;
@@ -214,7 +214,7 @@ namespace zf {
         c_window(const c_window&) = delete;
         c_window& operator=(const c_window&) = delete;
 
-        [[nodiscard]] static bool Init(const s_v2<int> size, const s_str_view title, const e_window_flags flags);
+        [[nodiscard]] static t_b8 Init(const s_v2<t_s32> size, const s_str_view title, const e_window_flags flags);
         static void Clean();
 
         static void* GetNativeWindowHandle() {
@@ -249,26 +249,26 @@ namespace zf {
             glfwSwapBuffers(sm_glfw_window);
         }
 
-        static bool ShouldClose() {
+        static t_b8 ShouldClose() {
             return glfwWindowShouldClose(sm_glfw_window);
         }
 
-        static void SetWindowShouldClose(const bool close) {
+        static void SetWindowShouldClose(const t_b8 close) {
             glfwSetWindowShouldClose(sm_glfw_window, close);
         }
 
-        static double GetTime() {
+        static t_f64 GetTime() {
             return glfwGetTime();
         }
 
-        static s_v2<int> GetSize() {
-            int w, h;
+        static s_v2<t_s32> GetSize() {
+            t_s32 w, h;
             glfwGetWindowSize(sm_glfw_window, &w, &h);
             return {w, h};
         }
 
-        static s_v2<int> GetFramebufferSize() {
-            int w, h;
+        static s_v2<t_s32> GetFramebufferSize() {
+            t_s32 w, h;
             glfwGetFramebufferSize(sm_glfw_window, &w, &h);
             return {w, h};
         }
@@ -277,38 +277,38 @@ namespace zf {
             sm_input_events = {};
         }
 
-        static bool IsKeyDown(const e_key_code kc) {
+        static t_b8 IsKeyDown(const e_key_code kc) {
             ZF_ASSERT(kc != eks_key_code_none);
             return glfwGetKey(sm_glfw_window, ToGLFWKey(kc)) != GLFW_RELEASE;
         }
 
-        static bool IsKeyPressed(const e_key_code kc) {
+        static t_b8 IsKeyPressed(const e_key_code kc) {
             ZF_ASSERT(kc != eks_key_code_none);
 
             const t_key_bits key_mask = static_cast<t_key_bits>(1) << kc;
             return (sm_input_events.keys_pressed & key_mask) != 0;
         }
 
-        static bool IsKeyReleased(const e_key_code kc) {
+        static t_b8 IsKeyReleased(const e_key_code kc) {
             ZF_ASSERT(kc != eks_key_code_none);
 
             const t_key_bits key_mask = static_cast<t_key_bits>(1) << kc;
             return (sm_input_events.keys_released & key_mask) != 0;
         }
 
-        static bool IsMouseButtonDown(const e_mouse_button_code mbc) {
+        static t_b8 IsMouseButtonDown(const e_mouse_button_code mbc) {
             ZF_ASSERT(mbc != eks_mouse_button_code_none);
             return glfwGetMouseButton(sm_glfw_window, ToGLFWMouseButton(mbc)) != GLFW_RELEASE;
         }
 
-        static bool IsMouseButtonPressed(const e_mouse_button_code mbc) {
+        static t_b8 IsMouseButtonPressed(const e_mouse_button_code mbc) {
             ZF_ASSERT(mbc != eks_mouse_button_code_none);
 
             const t_mouse_button_bits mb_mask = static_cast<t_mouse_button_bits>(1) << mbc;
             return (sm_input_events.mouse_buttons_pressed & mb_mask) != 0;
         }
 
-        static bool IsMouseButtonReleased(const e_mouse_button_code mbc) {
+        static t_b8 IsMouseButtonReleased(const e_mouse_button_code mbc) {
             ZF_ASSERT(mbc != eks_mouse_button_code_none);
 
             const t_mouse_button_bits mb_mask = static_cast<t_mouse_button_bits>(1) << mbc;
@@ -317,7 +317,7 @@ namespace zf {
 
         template<co_floating_point tp_type>
         static s_v2<tp_type> GetMousePos() {
-            double mx, my;
+            t_f64 mx, my;
             glfwGetCursorPos(sm_glfw_window, &mx, &my);
             return {static_cast<tp_type>(mx), static_cast<tp_type>(my)};
         }

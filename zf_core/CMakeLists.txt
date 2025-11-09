@@ -13,7 +13,7 @@ add_library(zf_core STATIC
     include/zc/io.h
     include/zc/debug.h
     include/zc/math.h
-    include/zc/type_traits.h
+    include/zc/types.h
     include/zc/mem/bit_vector.h
     include/zc/mem/arrays.h
     include/zc/mem/min_heap.h

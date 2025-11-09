@@ -49,17 +49,17 @@ void main() {
 )");
 
     static s_gfx_resource_handle MakeBatchMesh(c_gfx_resource_arena& gfx_res_arena, c_mem_arena& temp_mem_arena) {
-        const int verts_len = g_batch_vert_component_cnt * g_batch_slot_vert_cnt * g_batch_slot_cnt;
+        const t_s32 verts_len = g_batch_vert_component_cnt * g_batch_slot_vert_cnt * g_batch_slot_cnt;
 
         c_array<unsigned short> elems;
 
-        const bool elems_make_failed = [&elems, &temp_mem_arena]() {
+        const t_b8 elems_make_failed = [&elems, &temp_mem_arena]() {
             if (!elems.Init(temp_mem_arena, g_batch_slot_elem_cnt * g_batch_slot_cnt)) {
                 ZF_LOG_ERROR("Failed to reserve memory for batch renderable elements!");
                 return false;
             }
 
-            for (int i = 0; i < g_batch_slot_cnt; i++) {
+            for (t_s32 i = 0; i < g_batch_slot_cnt; i++) {
                 elems[(i * 6) + 0] = static_cast<unsigned short>((i * 4) + 0);
                 elems[(i * 6) + 1] = static_cast<unsigned short>((i * 4) + 1);
                 elems[(i * 6) + 2] = static_cast<unsigned short>((i * 4) + 2);
@@ -74,7 +74,7 @@ void main() {
         return gfx_res_arena.AddMesh(nullptr, verts_len, elems, g_batch_vert_attr_lens);
     }
 
-    bool s_rendering_basis::Init(c_gfx_resource_arena& gfx_res_arena, c_mem_arena& temp_mem_arena) {
+    t_b8 s_rendering_basis::Init(c_gfx_resource_arena& gfx_res_arena, c_mem_arena& temp_mem_arena) {
         // Generate the batch mesh.
         batch_mesh_hdl = MakeBatchMesh(gfx_res_arena, temp_mem_arena);
 
@@ -90,7 +90,7 @@ void main() {
         }
 
         // Generate the pixel texture.
-        const s_static_array<t_byte, 4> px_rgba = {
+        const s_static_array<t_u8, 4> px_rgba = {
             {255, 255, 255, 255}
         };
 
@@ -101,7 +101,7 @@ void main() {
         return true;
     }
 
-    bool c_renderer::Init(c_gfx_resource_arena& gfx_res_arena, c_mem_arena& mem_arena, c_mem_arena& temp_mem_arena) {
+    t_b8 c_renderer::Init(c_gfx_resource_arena& gfx_res_arena, c_mem_arena& mem_arena, c_mem_arena& temp_mem_arena) {
         if (!m_basis.Init(gfx_res_arena, temp_mem_arena)) {
             return false;
         }
@@ -123,7 +123,7 @@ void main() {
         m_batch_view_mat = mat;
     }
 
-    void c_renderer::Draw(const s_gfx_resource_handle tex_hdl, const s_rect<float> tex_coords, s_v2<float> pos, s_v2<float> size, s_v2<float> origin, const float rot, const c_color_rgba_32f blend) {
+    void c_renderer::Draw(const s_gfx_resource_handle tex_hdl, const s_rect<t_f32> tex_coords, s_v2<t_f32> pos, s_v2<t_f32> size, s_v2<t_f32> origin, const t_f32 rot, const c_color_rgba_32f blend) {
         if (m_batch_slots_used_cnt == 0) {
             // This is the first draw to the batch, so set the texture associated with the batch to the one we're trying to render.
             m_batch_tex_hdl = tex_hdl;
@@ -135,14 +135,14 @@ void main() {
         }
 
         // Write the vertex data to the next slot.
-        const s_static_array<s_v2<float>, 4> vert_coords = {{
+        const s_static_array<s_v2<t_f32>, 4> vert_coords = {{
             {0.0f - origin.x, 0.0f - origin.y},
             {1.0f - origin.x, 0.0f - origin.y},
             {1.0f - origin.x, 1.0f - origin.y},
             {0.0f - origin.x, 1.0f - origin.y}
         }};
 
-        const s_static_array<s_v2<float>, 4> tex_coords_per_vert = {{
+        const s_static_array<s_v2<t_f32>, 4> tex_coords_per_vert = {{
             {tex_coords.Left(), tex_coords.Top()},
             {tex_coords.Right(), tex_coords.Top()},
             {tex_coords.Right(), tex_coords.Bottom()},
@@ -151,7 +151,7 @@ void main() {
 
         t_batch_slot& slot = m_batch_slots[m_batch_slots_used_cnt];
 
-        for (int i = 0; i < slot.Len(); i++) {
+        for (t_s32 i = 0; i < slot.Len(); i++) {
             slot[i] = {
                 .vert_coord = vert_coords[i],
                 .pos = pos,
@@ -166,26 +166,26 @@ void main() {
         m_batch_slots_used_cnt++;
     }
 
-    s_rect<float> MakeTextureCoords(const s_rect<int> src_rect, const s_v2<int> tex_size) {
-        const s_v2<float> half_texel = {
+    s_rect<t_f32> MakeTextureCoords(const s_rect<t_s32> src_rect, const s_v2<t_s32> tex_size) {
+        const s_v2<t_f32> half_texel = {
             0.5f / tex_size.x,
             0.5f / tex_size.y
         };
 
         return {
-            (static_cast<float>(src_rect.x) + half_texel.x) / static_cast<float>(tex_size.x),
-            (static_cast<float>(src_rect.y) + half_texel.y) / static_cast<float>(tex_size.y),
-            (static_cast<float>(src_rect.width) - half_texel.x) / static_cast<float>(tex_size.x),
-            (static_cast<float>(src_rect.height) - half_texel.y) / static_cast<float>(tex_size.y)
+            (static_cast<t_f32>(src_rect.x) + half_texel.x) / static_cast<t_f32>(tex_size.x),
+            (static_cast<t_f32>(src_rect.y) + half_texel.y) / static_cast<t_f32>(tex_size.y),
+            (static_cast<t_f32>(src_rect.width) - half_texel.x) / static_cast<t_f32>(tex_size.x),
+            (static_cast<t_f32>(src_rect.height) - half_texel.y) / static_cast<t_f32>(tex_size.y)
         };
     }
 
-    void c_renderer::DrawTexture(const s_texture& tex, const s_v2<float> pos, const s_rect<int> src_rect, const s_v2<float> origin, const s_v2<float> scale, const float rot, const c_color_rgba_32f blend) {
+    void c_renderer::DrawTexture(const s_texture& tex, const s_v2<t_f32> pos, const s_rect<t_s32> src_rect, const s_v2<t_f32> origin, const s_v2<t_f32> scale, const t_f32 rot, const c_color_rgba_32f blend) {
         ZF_ASSERT(origin.x >= 0.0f && origin.x <= 1.0f && origin.y >= 0.0f && origin.y <= 1.0f); // @todo: Generic function for this check?
 
-        s_rect<int> src_rect_to_use;
+        s_rect<t_s32> src_rect_to_use;
 
-        if (src_rect == s_rect<int>()) {
+        if (src_rect == s_rect<t_s32>()) {
             // If the source rectangle wasn't set, just go with the whole texture.
             src_rect_to_use = {0, 0, tex.size.x, tex.size.y};
         } else {
@@ -194,7 +194,7 @@ void main() {
         }
 
         const s_rect tex_coords = MakeTextureCoords(src_rect_to_use, tex.size);
-        const s_v2<float> size = {src_rect_to_use.width * scale.x, src_rect_to_use.height * scale.y};
+        const s_v2<t_f32> size = {src_rect_to_use.width * scale.x, src_rect_to_use.height * scale.y};
         Draw(tex.hdl, tex_coords, pos, size, origin, rot, blend);
     }
 
@@ -211,7 +211,7 @@ void main() {
         glBindBuffer(GL_ARRAY_BUFFER, m_basis.batch_mesh_hdl.mesh.vert_buf_gl_id);
 
         {
-            const size_t write_size = sizeof(t_batch_slot) * m_batch_slots_used_cnt;
+            const t_u64 write_size = sizeof(t_batch_slot) * m_batch_slots_used_cnt;
             glBufferSubData(GL_ARRAY_BUFFER, 0, write_size, m_batch_slots.Raw());
         }
 
@@ -222,17 +222,17 @@ void main() {
 
         glUseProgram(prog_gl_id);
 
-        const int view_uniform_loc = glGetUniformLocation(prog_gl_id, "u_view");
+        const t_s32 view_uniform_loc = glGetUniformLocation(prog_gl_id, "u_view");
         glUniformMatrix4fv(view_uniform_loc, 1, false, m_batch_view_mat.Raw());
 
-        const s_rect<int> viewport = []() {
-            s_rect<int> vp;
-            glGetIntegerv(GL_VIEWPORT, reinterpret_cast<int*>(&vp));
+        const s_rect<t_s32> viewport = []() {
+            s_rect<t_s32> vp;
+            glGetIntegerv(GL_VIEWPORT, reinterpret_cast<t_s32*>(&vp));
             return vp;
         }();
 
-        const auto proj_mat = s_matrix_4x4::Orthographic(0.0f, static_cast<float>(viewport.width), static_cast<float>(viewport.height), 0.0f, -1.0f, 1.0f);
-        const int proj_uniform_loc = glGetUniformLocation(prog_gl_id, "u_proj");
+        const auto proj_mat = s_matrix_4x4::Orthographic(0.0f, static_cast<t_f32>(viewport.width), static_cast<t_f32>(viewport.height), 0.0f, -1.0f, 1.0f);
+        const t_s32 proj_uniform_loc = glGetUniformLocation(prog_gl_id, "u_proj");
         glUniformMatrix4fv(proj_uniform_loc, 1, false, proj_mat.Raw());
 
         glActiveTexture(GL_TEXTURE0);

@@ -8,39 +8,39 @@ namespace zf {
     public:
         constexpr c_color_rgba_32f() = default;
 
-        constexpr c_color_rgba_32f(const float r, const float g, const float b, const float a = 1.0f) : m_r(r), m_g(g), m_b(b), m_a(a) {
+        constexpr c_color_rgba_32f(const t_f32 r, const t_f32 g, const t_f32 b, const t_f32 a = 1.0f) : m_r(r), m_g(g), m_b(b), m_a(a) {
             ZF_ASSERT(r >= 0.0f && r <= 1.0f
                 && g >= 0.0f && g <= 1.0f
                 && b >= 0.0f && b <= 1.0f
                 && a >= 0.0f && a <= 1.0f);
         }
 
-        constexpr float R() const { return m_r; }
-        constexpr float G() const { return m_g; }
-        constexpr float B() const { return m_b; }
-        constexpr float A() const { return m_a; }
+        constexpr t_f32 R() const { return m_r; }
+        constexpr t_f32 G() const { return m_g; }
+        constexpr t_f32 B() const { return m_b; }
+        constexpr t_f32 A() const { return m_a; }
 
-        constexpr void SetR(const float r) {
+        constexpr void SetR(const t_f32 r) {
             ZF_ASSERT(r >= 0.0f && r <= 1.0f);
             m_r = r;
         }
 
-        constexpr void SetG(const float g) {
+        constexpr void SetG(const t_f32 g) {
             ZF_ASSERT(g >= 0.0f && g <= 1.0f);
             m_g = g;
         }
 
-        constexpr void SetB(const float b) {
+        constexpr void SetB(const t_f32 b) {
             ZF_ASSERT(b >= 0.0f && b <= 1.0f);
             m_b = b;
         }
 
-        constexpr void SetA(const float a) {
+        constexpr void SetA(const t_f32 a) {
             ZF_ASSERT(a >= 0.0f && a <= 1.0f);
             m_a = a;
         }
 
-        constexpr c_color_rgba_32f MixedWith(const c_color_rgba_32f other, const float amount) const {
+        constexpr c_color_rgba_32f MixedWith(const c_color_rgba_32f other, const t_f32 amount) const {
             ZF_ASSERT(amount >= 0.0f && amount <= 1.0f);
 
             return {
@@ -51,36 +51,36 @@ namespace zf {
             };
         }
 
-        constexpr float Luminance() const {
+        constexpr t_f32 Luminance() const {
             return (0.2126f * m_r) + (0.7152f * m_g) + (0.0722f * m_b);
         }
 
         constexpr c_color_rgba_32f Grayscale() const {
-            const float lum = Luminance();
+            const t_f32 lum = Luminance();
             return {lum, lum, lum, m_a};
         }
 
     private:
-        float m_r = 0.0f;
-        float m_g = 0.0f;
-        float m_b = 0.0f;
-        float m_a = 0.0f;
+        t_f32 m_r = 0.0f;
+        t_f32 m_g = 0.0f;
+        t_f32 m_b = 0.0f;
+        t_f32 m_a = 0.0f;
     };
 
     struct s_color_rgba_8 {
-        t_byte r = 0;
-        t_byte g = 0;
-        t_byte b = 0;
-        t_byte a = 0;
+        t_u8 r = 0;
+        t_u8 g = 0;
+        t_u8 b = 0;
+        t_u8 a = 0;
 
         constexpr s_color_rgba_8() = default;
-        constexpr s_color_rgba_8(const t_byte r, const t_byte g, const t_byte b, const t_byte a) : r(r), g(g), b(b), a(a) {}
+        constexpr s_color_rgba_8(const t_u8 r, const t_u8 g, const t_u8 b, const t_u8 a) : r(r), g(g), b(b), a(a) {}
 
         static constexpr s_color_rgba_8 FromHex(const uint32_t hex) {
-            const auto r = static_cast<t_byte>((hex & 0xFF000000) >> 24);
-            const auto g = static_cast<t_byte>((hex & 0x00FF0000) >> 16);
-            const auto b = static_cast<t_byte>((hex & 0x0000FF00) >> 8);
-            const auto a = static_cast<t_byte>(hex & 0x000000FF);
+            const auto r = static_cast<t_u8>((hex & 0xFF000000) >> 24);
+            const auto g = static_cast<t_u8>((hex & 0x00FF0000) >> 16);
+            const auto b = static_cast<t_u8>((hex & 0x0000FF00) >> 8);
+            const auto a = static_cast<t_u8>(hex & 0x000000FF);
 
             return {r, g, b, a};
         }
@@ -111,58 +111,58 @@ namespace zf {
     }
 
     namespace origins {
-        constexpr s_v2<float> g_topleft = {0.0f, 0.0f};
-        constexpr s_v2<float> g_topcenter = {0.5f, 0.0f};
-        constexpr s_v2<float> g_topright = {1.0f, 0.0f};
-        constexpr s_v2<float> g_centerleft = {0.0f, 0.5f};
-        constexpr s_v2<float> g_center = {0.5f, 0.5f};
-        constexpr s_v2<float> g_centerright = {1.0f, 0.5f};
-        constexpr s_v2<float> g_bottomleft = {0.0f, 1.0f};
-        constexpr s_v2<float> g_bottomcenter = {0.5f, 1.0f};
-        constexpr s_v2<float> g_bottomright = {1.0f, 1.0f};
+        constexpr s_v2<t_f32> g_topleft = {0.0f, 0.0f};
+        constexpr s_v2<t_f32> g_topcenter = {0.5f, 0.0f};
+        constexpr s_v2<t_f32> g_topright = {1.0f, 0.0f};
+        constexpr s_v2<t_f32> g_centerleft = {0.0f, 0.5f};
+        constexpr s_v2<t_f32> g_center = {0.5f, 0.5f};
+        constexpr s_v2<t_f32> g_centerright = {1.0f, 0.5f};
+        constexpr s_v2<t_f32> g_bottomleft = {0.0f, 1.0f};
+        constexpr s_v2<t_f32> g_bottomcenter = {0.5f, 1.0f};
+        constexpr s_v2<t_f32> g_bottomright = {1.0f, 1.0f};
     }
 
     namespace alignments {
-        constexpr s_v2<float> g_topleft = {0.0f, 0.0f};
-        constexpr s_v2<float> g_topcenter = {0.5f, 0.0f};
-        constexpr s_v2<float> g_topright = {1.0f, 0.0f};
-        constexpr s_v2<float> g_centerleft = {0.0f, 0.5f};
-        constexpr s_v2<float> g_center = {0.5f, 0.5f};
-        constexpr s_v2<float> g_centerright = {1.0f, 0.5f};
-        constexpr s_v2<float> g_bottomleft = {0.0f, 1.0f};
-        constexpr s_v2<float> g_bottomcenter = {0.5f, 1.0f};
-        constexpr s_v2<float> g_bottomright = {1.0f, 1.0f};
+        constexpr s_v2<t_f32> g_topleft = {0.0f, 0.0f};
+        constexpr s_v2<t_f32> g_topcenter = {0.5f, 0.0f};
+        constexpr s_v2<t_f32> g_topright = {1.0f, 0.0f};
+        constexpr s_v2<t_f32> g_centerleft = {0.0f, 0.5f};
+        constexpr s_v2<t_f32> g_center = {0.5f, 0.5f};
+        constexpr s_v2<t_f32> g_centerright = {1.0f, 0.5f};
+        constexpr s_v2<t_f32> g_bottomleft = {0.0f, 1.0f};
+        constexpr s_v2<t_f32> g_bottomcenter = {0.5f, 1.0f};
+        constexpr s_v2<t_f32> g_bottomright = {1.0f, 1.0f};
     }
 
     class c_rgba_texture {
     public:
         c_rgba_texture() = default;
 
-        c_rgba_texture(const s_v2<int> size_in_pxs, const c_array<const t_byte> px_data) : m_size_in_pxs(size_in_pxs), m_px_data(px_data) {
+        c_rgba_texture(const s_v2<t_s32> size_in_pxs, const c_array<const t_u8> px_data) : m_size_in_pxs(size_in_pxs), m_px_data(px_data) {
             ZF_ASSERT(px_data.IsEmpty() || (px_data.Len() == 4 * size_in_pxs.x * size_in_pxs.y));
         }
 
-        [[nodiscard]] bool LoadFromRaw(c_mem_arena& mem_arena, const s_str_view file_path);
+        [[nodiscard]] t_b8 LoadFromRaw(c_mem_arena& mem_arena, const s_str_view file_path);
 
-        s_v2<int> SizeInPixels() const {
+        s_v2<t_s32> SizeInPixels() const {
             ZF_ASSERT(IsLoaded());
             return m_size_in_pxs;
         }
 
-        c_array<const t_byte> PixelData() const {
+        c_array<const t_u8> PixelData() const {
             ZF_ASSERT(IsLoaded());
             return m_px_data;
         }
 
-        bool IsLoaded() const {
+        t_b8 IsLoaded() const {
             return !m_px_data.IsEmpty();
         }
 
     private:
-        s_v2<int> m_size_in_pxs;
-        c_array<const t_byte> m_px_data; // 4 bytes per pixel (RGBA).
+        s_v2<t_s32> m_size_in_pxs;
+        c_array<const t_u8> m_px_data; // 4 bytes per pixel (RGBA).
     };
 
-    bool PackTexture(const s_str_view file_path, const c_rgba_texture tex, c_mem_arena& temp_mem_arena);
-    bool UnpackTexture(c_rgba_texture& tex, const s_str_view file_path);
+    t_b8 PackTexture(const s_str_view file_path, const c_rgba_texture tex, c_mem_arena& temp_mem_arena);
+    t_b8 UnpackTexture(c_rgba_texture& tex, const s_str_view file_path);
 }

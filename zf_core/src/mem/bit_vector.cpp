@@ -1,10 +1,10 @@
 #include <zc/mem/bit_vector.h>
 
 namespace zf {
-    bool c_bit_vector::Init(c_mem_arena& mem_arena, const size_t bit_cnt) {
+    t_b8 c_bit_vector::Init(c_mem_arena& mem_arena, const t_u64 bit_cnt) {
         ZF_ASSERT(bit_cnt > 0);
 
-        if (!m_bytes.Init(mem_arena, static_cast<int>(BitsToBytes(bit_cnt)))) {
+        if (!m_bytes.Init(mem_arena, static_cast<t_s32>(BitsToBytes(bit_cnt)))) {
             return false;
         }
 
@@ -13,10 +13,10 @@ namespace zf {
         return true;
     }
 
-    int c_bit_vector::IndexOfFirstSetBit(const size_t from) const {
+    t_s32 c_bit_vector::IndexOfFirstSetBit(const t_u64 from) const {
         ZF_ASSERT(from <= m_bit_cnt); // Intentionally allowing the upper bound here for the case of iteration.
 
-        static constexpr s_static_array<int, 256> lg_mappings = {
+        static constexpr s_static_array<t_s32, 256> lg_mappings = {
             {
                 -1, // 0000 0000
                 0, // 0000 0001
@@ -281,16 +281,16 @@ namespace zf {
             return -1;
         }
 
-        const auto starting_byte_index = static_cast<int>(from / 8);
-        const t_byte starting_byte_old = m_bytes[starting_byte_index];
+        const auto starting_byte_index = static_cast<t_s32>(from / 8);
+        const t_u8 starting_byte_old = m_bytes[starting_byte_index];
 
-        const t_byte last_byte_old = m_bytes[m_bytes.Len() - 1];
+        const t_u8 last_byte_old = m_bytes[m_bytes.Len() - 1];
 
         m_bytes[starting_byte_index] &= BitRangeMask(from % 8);
         m_bytes[m_bytes.Len() - 1] &= LastByteMask();
 
-        for (int i = starting_byte_index; i < m_bytes.Len(); i++) {
-            const int bi = lg_mappings[m_bytes[i]];
+        for (t_s32 i = starting_byte_index; i < m_bytes.Len(); i++) {
+            const t_s32 bi = lg_mappings[m_bytes[i]];
 
             if (bi != -1) {
                 return bi;
@@ -303,10 +303,10 @@ namespace zf {
         return -1;
     }
 
-    int c_bit_vector::IndexOfFirstUnsetBit(const size_t from) const {
+    t_s32 c_bit_vector::IndexOfFirstUnsetBit(const t_u64 from) const {
         ZF_ASSERT(from <= m_bit_cnt); // Intentionally allowing the upper bound here for the case of iteration.
 
-        static constexpr s_static_array<int, 256> lg_mappings = {
+        static constexpr s_static_array<t_s32, 256> lg_mappings = {
             {
                 0, // 0000 0000
                 1, // 0000 0001
@@ -571,16 +571,16 @@ namespace zf {
             return -1;
         }
 
-        const auto starting_byte_index = static_cast<int>(from / 8);
-        const t_byte starting_byte_old = m_bytes[starting_byte_index];
+        const auto starting_byte_index = static_cast<t_s32>(from / 8);
+        const t_u8 starting_byte_old = m_bytes[starting_byte_index];
 
-        const t_byte last_byte_old = m_bytes[m_bytes.Len() - 1];
+        const t_u8 last_byte_old = m_bytes[m_bytes.Len() - 1];
 
         m_bytes[starting_byte_index] &= BitRangeMask(from % 8);
         m_bytes[m_bytes.Len() - 1] &= LastByteMask();
 
-        for (int i = starting_byte_index; i < m_bytes.Len(); i++) {
-            const int bi = lg_mappings[m_bytes[i]];
+        for (t_s32 i = starting_byte_index; i < m_bytes.Len(); i++) {
+            const t_s32 bi = lg_mappings[m_bytes[i]];
 
             if (bi != -1) {
                 return bi;
@@ -600,7 +600,7 @@ namespace zf {
             return;
         }
 
-        for (int i = 0; i < m_bytes.Len() - 1; i++) {
+        for (t_s32 i = 0; i < m_bytes.Len() - 1; i++) {
             m_bytes[i] &= mask.m_bytes[i];
         }
 
@@ -614,7 +614,7 @@ namespace zf {
             return;
         }
 
-        for (int i = 0; i < m_bytes.Len() - 1; i++) {
+        for (t_s32 i = 0; i < m_bytes.Len() - 1; i++) {
             m_bytes[i] |= mask.m_bytes[i];
         }
 
@@ -628,7 +628,7 @@ namespace zf {
             return;
         }
 
-        for (int i = 0; i < m_bytes.Len() - 1; i++) {
+        for (t_s32 i = 0; i < m_bytes.Len() - 1; i++) {
             m_bytes[i] ^= mask.m_bytes[i];
         }
 

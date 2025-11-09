@@ -4,16 +4,16 @@
 #include <zc/debug.h>
 #include <zc/mem/mem.h>
 #include <zc/mem/arrays.h>
-#include <zc/type_traits.h>
+#include <zc/types.h>
 
 namespace zf {
     template<co_floating_point tp_type> constexpr tp_type Pi();
-    template<> constexpr float Pi<float>() { return 3.14159265358979323846f; }
-    template<> constexpr double Pi<double>() { return 3.141592653589793238462643383279502884; }
+    template<> constexpr t_f32 Pi<t_f32>() { return 3.14159265358979323846f; }
+    template<> constexpr t_f64 Pi<t_f64>() { return 3.141592653589793238462643383279502884; }
 
     template<co_floating_point tp_type> constexpr tp_type Tau();
-    template<> constexpr float Tau<float>() { return 6.28318530717958647692f; }
-    template<> constexpr double Tau<double>() { return 6.283185307179586476925286766559005768; }
+    template<> constexpr t_f32 Tau<t_f32>() { return 6.28318530717958647692f; }
+    template<> constexpr t_f64 Tau<t_f64>() { return 6.283185307179586476925286766559005768; }
 
     template<co_floating_point tp_type>
     constexpr tp_type DegsToRads(const tp_type degs) {
@@ -41,7 +41,7 @@ namespace zf {
     }
 
     template<co_numeric tp_type>
-    constexpr int Sign(const tp_type n) {
+    constexpr t_s32 Sign(const tp_type n) {
         if (n > 0) {
             return 1;
         } else if (n < 0) {
@@ -68,7 +68,7 @@ namespace zf {
     }
 
     template<co_integral tp_type>
-    constexpr tp_type DigitAt(const tp_type n, const unsigned int index) {
+    constexpr tp_type DigitAt(const tp_type n, const t_u32 index) {
         if (n < 0) {
             return DigitAt(-n, index);
         }
@@ -85,7 +85,7 @@ namespace zf {
     }
 
     template<co_integral tp_type>
-    constexpr int DigitCnt(const tp_type n) {
+    constexpr t_s32 DigitCnt(const tp_type n) {
         if (n < 0) {
             return DigitCnt(-n);
         }
@@ -98,7 +98,7 @@ namespace zf {
     }
 
     template<co_floating_point tp_type>
-    constexpr bool NearlyEqual(const tp_type val, const tp_type targ, const tp_type tol = 1e-5) {
+    constexpr t_b8 NearlyEqual(const tp_type val, const tp_type targ, const tp_type tol = 1e-5) {
         ZF_ASSERT(tol >= 0);
         return val >= targ - tol && val <= targ + tol;
     }
@@ -112,11 +112,11 @@ namespace zf {
             return (x * other.x) + (y * other.y);
         }
 
-        constexpr bool operator==(const s_v2<tp_type>& other) const {
+        constexpr t_b8 operator==(const s_v2<tp_type>& other) const {
             return x == other.x && y == other.y;
         }
 
-        constexpr bool operator!=(const s_v2<tp_type>& other) const {
+        constexpr t_b8 operator!=(const s_v2<tp_type>& other) const {
             return !(*this == other);
         }
 
@@ -227,27 +227,27 @@ namespace zf {
             return y + height;
         }
 
-        constexpr bool operator==(const s_rect<tp_type>& other) const {
+        constexpr t_b8 operator==(const s_rect<tp_type>& other) const {
             return x == other.x && y == other.y;
         }
 
-        constexpr bool operator!=(const s_rect<tp_type>& other) const {
+        constexpr t_b8 operator!=(const s_rect<tp_type>& other) const {
             return !(*this == other);
         }
 
-        bool Contains(const s_v2<tp_type> pt) const {
+        t_b8 Contains(const s_v2<tp_type> pt) const {
             return pt.x > Left() && pt.y > Top() && pt.x < Right() && pt.y < Bottom();
         }
 
-        bool Intersects(const s_rect<tp_type> other) const {
+        t_b8 Intersects(const s_rect<tp_type> other) const {
             return Left() < other.Right() && Top() < other.Bottom() && Right() > other.Left() && Bottom() > other.Top();
         }
 
-        bool Touches(const s_v2<tp_type> pt) const {
+        t_b8 Touches(const s_v2<tp_type> pt) const {
             return pt.x >= Left() && pt.y >= Top() && pt.x <= Right() && pt.y <= Bottom();
         }
 
-        bool Touches(const s_rect<tp_type> other) const {
+        t_b8 Touches(const s_rect<tp_type> other) const {
             return Left() <= other.Right() && Top() <= other.Bottom() && Right() >= other.Left() && Bottom() >= other.Top();
         }
     };
@@ -263,7 +263,7 @@ namespace zf {
         tp_type max_right = rects[0].Right();
         tp_type max_bottom = rects[0].Bottom();
 
-        for (int i = 1; i < rects.Len(); i++) {
+        for (t_s32 i = 1; i < rects.Len(); i++) {
             min_left = Min(rects[i].x, min_left);
             min_top = Min(rects[i].y, min_top);
             max_right = Max(rects[i].Right(), max_right);
@@ -279,7 +279,7 @@ namespace zf {
     }
 
     struct s_matrix_4x4 {
-        s_static_array<s_static_array<float, 4>, 4> elems;
+        s_static_array<s_static_array<t_f32, 4>, 4> elems;
 
         static s_matrix_4x4 Identity() {
             s_matrix_4x4 mat;
@@ -292,7 +292,7 @@ namespace zf {
             return mat;
         }
 
-        static s_matrix_4x4 Orthographic(const float left, const float right, const float bottom, const float top, const float z_near, const float z_far) {
+        static s_matrix_4x4 Orthographic(const t_f32 left, const t_f32 right, const t_f32 bottom, const t_f32 top, const t_f32 z_near, const t_f32 z_far) {
             ZF_ASSERT(right > left);
             ZF_ASSERT(top < bottom);
             ZF_ASSERT(z_far > z_near);
@@ -309,20 +309,20 @@ namespace zf {
             return mat;
         }
 
-        float* Raw() {
+        t_f32* Raw() {
             return elems[0].buf_raw;
         }
 
-        const float* Raw() const {
+        const t_f32* Raw() const {
             return elems[0].buf_raw;
         }
 
-        void Translate(const s_v2<float> trans) {
+        void Translate(const s_v2<t_f32> trans) {
             elems[3][0] += trans.x;
             elems[3][1] += trans.y;
         }
 
-        void Scale(const float scalar) {
+        void Scale(const t_f32 scalar) {
             elems[0][0] *= scalar;
             elems[1][1] *= scalar;
             elems[2][2] *= scalar;
@@ -348,10 +348,10 @@ namespace zf {
     tp_type FindClosest(const c_array<const tp_type> nums, const tp_type targ) {
         ZF_ASSERT(!nums.IsEmpty());
 
-        int index_of_closest = 0;
+        t_s32 index_of_closest = 0;
         tp_type closest_diff = Abs(nums[0] - targ);
 
-        for (int i = 1; i < nums.Len(); i++) {
+        for (t_s32 i = 1; i < nums.Len(); i++) {
             const tp_type diff = Abs(nums[i] - targ);
 
             if (diff < closest_diff) {

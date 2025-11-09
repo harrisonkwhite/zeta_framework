@@ -3,7 +3,7 @@
 #include <glad/glad.h>
 
 namespace zf {
-    static e_key_code GLFWToZFKeyCode(const int glfw_key) {
+    static e_key_code GLFWToZFKeyCode(const t_s32 glfw_key) {
         switch (glfw_key) {
             case GLFW_KEY_SPACE: return ek_key_code_space;
             case GLFW_KEY_0: return ek_key_code_0;
@@ -73,7 +73,7 @@ namespace zf {
         }
     }
 
-    static e_mouse_button_code GLFWToZFMouseButtonCode(const int glfw_button) {
+    static e_mouse_button_code GLFWToZFMouseButtonCode(const t_s32 glfw_button) {
         switch (glfw_button) {
             case GLFW_MOUSE_BUTTON_LEFT: return ek_mouse_button_code_left;
             case GLFW_MOUSE_BUTTON_RIGHT: return ek_mouse_button_code_right;
@@ -83,7 +83,7 @@ namespace zf {
         }
     }
 
-    bool c_window::Init(const s_v2<int> size, const s_str_view title, const e_window_flags flags) {
+    t_b8 c_window::Init(const s_v2<t_s32> size, const s_str_view title, const e_window_flags flags) {
         ZF_ASSERT(!sm_glfw_window);
         ZF_ASSERT(title.IsTerminated());
 
@@ -114,13 +114,13 @@ namespace zf {
 
         // Set up GLFW callbacks.
         glfwSetFramebufferSizeCallback(sm_glfw_window,
-            [](GLFWwindow* const window, const int width, const int height) {
+            [](GLFWwindow* const window, const t_s32 width, const t_s32 height) {
                 //c_renderer::RefreshSize();
             }
         );
 
         glfwSetKeyCallback(sm_glfw_window,
-            [](GLFWwindow* const window, const int key, const int, const int action, const int mods) {
+            [](GLFWwindow* const window, const t_s32 key, const t_s32, const t_s32 action, const t_s32 mods) {
                 const e_key_code key_code = GLFWToZFKeyCode(key);
 
                 if (key_code == eks_key_code_none) {
@@ -138,7 +138,7 @@ namespace zf {
         );
 
         glfwSetMouseButtonCallback(sm_glfw_window,
-            [](GLFWwindow* const window, const int button, const int action, const int mods) {
+            [](GLFWwindow* const window, const t_s32 button, const t_s32 action, const t_s32 mods) {
                 const e_mouse_button_code mb_code = GLFWToZFMouseButtonCode(button);
 
                 if (mb_code == eks_mouse_button_code_none) {
@@ -156,7 +156,7 @@ namespace zf {
         );
 
         glfwSetScrollCallback(sm_glfw_window,
-            [](GLFWwindow* const window, const double, const double offs_y) {
+            [](GLFWwindow* const window, const t_f64, const t_f64 offs_y) {
                 if (offs_y > 0.0) {
                     sm_input_events.mouse_scroll_state = ec_mouse_scroll_state::up;
                 } else if (offs_y < 0.0) {
@@ -168,8 +168,8 @@ namespace zf {
         );
 
         glfwSetCharCallback(sm_glfw_window,
-            [](GLFWwindow* window, const unsigned int codepoint) {
-                for (int i = 0; i < sm_input_events.unicode_buf.Len(); i++) {
+            [](GLFWwindow* window, const t_u32 codepoint) {
+                for (t_s32 i = 0; i < sm_input_events.unicode_buf.Len(); i++) {
                     if (!sm_input_events.unicode_buf[i]) {
                         sm_input_events.unicode_buf[i] = static_cast<char>(codepoint);
                         return;

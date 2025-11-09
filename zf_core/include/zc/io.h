@@ -6,13 +6,13 @@
 namespace zf {
     constexpr char g_ascii_printable_min = ' ';
     constexpr char g_ascii_printable_max = '~';
-    constexpr int g_ascii_printable_range_len = g_ascii_printable_max - g_ascii_printable_min + 1;
+    constexpr t_s32 g_ascii_printable_range_len = g_ascii_printable_max - g_ascii_printable_min + 1;
 
     struct s_file_stream {
         FILE* raw = nullptr;
 
         [[nodiscard]]
-        bool Open(const s_str_view file_path, const bool is_write) {
+        t_b8 Open(const s_str_view file_path, const t_b8 is_write) {
             ZF_ASSERT(file_path.IsTerminated());
             raw = fopen(file_path.Raw(), is_write ? "wb" : "rb");
             return raw;
@@ -22,45 +22,45 @@ namespace zf {
             fclose(raw);
         }
 
-        size_t CalcSize() const {
+        t_u64 CalcSize() const {
             const auto pos_old = ftell(raw);
             fseek(raw, 0, SEEK_END);
             const auto file_size = ftell(raw);
             fseek(raw, pos_old, SEEK_SET);
-            return static_cast<size_t>(file_size);
+            return static_cast<t_u64>(file_size);
         }
 
         template<typename tp_type>
         [[nodiscard]]
-        bool ReadItem(tp_type& item) const {
+        t_b8 ReadItem(tp_type& item) const {
             return fread(&item, sizeof(tp_type), 1, raw) == 1;
         }
 
         template<typename tp_type>
         [[nodiscard]]
-        int ReadItems(const c_array<tp_type> arr) const {
-            return static_cast<int>(fread(arr.Raw(), sizeof(tp_type), arr.Len(), raw));
+        t_s32 ReadItems(const c_array<tp_type> arr) const {
+            return static_cast<t_s32>(fread(arr.Raw(), sizeof(tp_type), arr.Len(), raw));
         }
 
         template<typename tp_type>
         [[nodiscard]]
-        bool WriteItem(const tp_type& item) const {
+        t_b8 WriteItem(const tp_type& item) const {
             return fwrite(&item, sizeof(tp_type), 1, raw) == 1;
         }
 
         template<typename tp_type>
         [[nodiscard]]
-        int WriteItems(const c_array<const tp_type> arr) const {
-            return static_cast<int>(fwrite(arr.Raw(), sizeof(tp_type), arr.Len(), raw));
+        t_s32 WriteItems(const c_array<const tp_type> arr) const {
+            return static_cast<t_s32>(fwrite(arr.Raw(), sizeof(tp_type), arr.Len(), raw));
         }
     };
 
-    bool LoadFileContents(c_array<t_byte>& contents, c_mem_arena& mem_arena, const s_str_view file_path, const bool include_terminating_byte = false);
+    t_b8 LoadFileContents(c_array<t_u8>& contents, c_mem_arena& mem_arena, const s_str_view file_path, const t_b8 include_terminating_byte = false);
 
-    inline bool LoadFileContentsAsStr(s_str& contents, c_mem_arena& mem_arena, const s_str_view file_path) {
+    inline t_b8 LoadFileContentsAsStr(s_str& contents, c_mem_arena& mem_arena, const s_str_view file_path) {
         ZF_ASSERT(contents.chrs.IsEmpty());
 
-        c_array<t_byte> contents_default;
+        c_array<t_u8> contents_default;
 
         if (!LoadFileContents(contents_default, mem_arena, file_path, true)) {
             return false;
@@ -81,9 +81,9 @@ namespace zf {
     };
 #endif
 
-    bool CreateDirectory(const s_str_view path); // This DOES NOT create non-existent parent directories.
-    bool CreateDirectoryAndParents(const s_str_view path, c_mem_arena& temp_mem_arena);
-    bool CreateFileAndParentDirs(const s_str_view path, c_mem_arena& temp_mem_arena);
+    t_b8 CreateDirectory(const s_str_view path); // This DOES NOT create non-existent parent directories.
+    t_b8 CreateDirectoryAndParents(const s_str_view path, c_mem_arena& temp_mem_arena);
+    t_b8 CreateFileAndParentDirs(const s_str_view path, c_mem_arena& temp_mem_arena);
 
     enum class ec_path_type {
         not_found,

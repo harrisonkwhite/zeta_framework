@@ -30,11 +30,11 @@ namespace zf {
         struct { t_gl_id gl_id = 0; } shader_prog;
         struct { t_gl_id gl_id = 0; } tex;
 
-        bool IsValid() const {
+        t_b8 IsValid() const {
             return type != ec_gfx_resource_type::invalid;
         }
 
-        bool Equals(const s_gfx_resource_handle& other) const {
+        t_b8 Equals(const s_gfx_resource_handle& other) const {
             if (type != other.type) {
                 return false;
             }
@@ -58,24 +58,24 @@ namespace zf {
 
     class c_gfx_resource_arena {
     public:
-        [[nodiscard]] bool Init(c_mem_arena& mem_arena, const int cap);
+        [[nodiscard]] t_b8 Init(c_mem_arena& mem_arena, const t_s32 cap);
         void Release();
 
-        s_gfx_resource_handle AddMesh(const float* const verts_raw, const int verts_len, const c_array<const unsigned short> elems, const c_array<const int> vert_attr_lens); // You might not want to provide vertices to start with, and only the count - passing nullptr in for verts_raw allows this.
+        s_gfx_resource_handle AddMesh(const t_f32* const verts_raw, const t_s32 verts_len, const c_array<const unsigned short> elems, const c_array<const t_s32> vert_attr_lens); // You might not want to provide vertices to start with, and only the count - passing nullptr in for verts_raw allows this.
         s_gfx_resource_handle AddShaderProg(const s_str_view vert_src, const s_str_view frag_src, c_mem_arena& temp_mem_arena);
         s_gfx_resource_handle AddTexture(const c_rgba_texture& rgba_tex);
 
     private:
         c_array<s_gfx_resource_handle> m_hdls; // @todo: Consider making this a dynamic array. Any capacity on this is kind of arbitrary...
-        int m_hdls_taken = 0;
+        t_s32 m_hdls_taken = 0;
     };
 
     struct s_texture {
         s_gfx_resource_handle hdl;
-        s_v2<int> size;
+        s_v2<t_s32> size;
 
-        [[nodiscard]] bool LoadFromRGBA(const c_rgba_texture& rgba_tex, c_gfx_resource_arena& gfx_res_arena);
-        [[nodiscard]] bool LoadFromRaw(const s_str_view file_path, c_gfx_resource_arena& gfx_res_arena, c_mem_arena& temp_mem_arena);
-        [[nodiscard]] bool LoadFromPacked(const s_str_view file_path, c_gfx_resource_arena& gfx_res_arena);
+        [[nodiscard]] t_b8 LoadFromRGBA(const c_rgba_texture& rgba_tex, c_gfx_resource_arena& gfx_res_arena);
+        [[nodiscard]] t_b8 LoadFromRaw(const s_str_view file_path, c_gfx_resource_arena& gfx_res_arena, c_mem_arena& temp_mem_arena);
+        [[nodiscard]] t_b8 LoadFromPacked(const s_str_view file_path, c_gfx_resource_arena& gfx_res_arena);
     };
 }

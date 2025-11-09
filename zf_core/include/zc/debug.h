@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdio>
+#include <zc/types.h>
 
 #define ZF_ANSI_ESC "\x1b"
 
@@ -53,7 +54,7 @@
 #define ZF_LOG_SUCCESS(format, ...) fprintf(stderr, ZF_ANSI_BOLD ZF_ANSI_FG_GREEN "Success: " ZF_ANSI_RESET format "\n", ##__VA_ARGS__)
 
 namespace zf {
-    void HandleAssertFailure(const char* const condition, const char* const file, const int line, const char* const func, const char* const msg = nullptr);
+    void HandleAssertFailure(const char* const condition, const char* const file, const t_s32 line, const char* const func, const char* const msg = nullptr);
 }
 
 #define ZF_BANANA_ERROR() static_cast<void>(0)
