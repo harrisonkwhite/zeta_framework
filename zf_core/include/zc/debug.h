@@ -75,3 +75,11 @@ namespace zf {
             } \
         } while(0)
 #endif
+
+#if defined(__cpp_lib_is_constant_evaluated)
+    #define ZF_IS_CONSTEXPR() (std::is_constant_evaluated())
+#elif defined(__clang__) || defined(__GNUC__) || defined(_MSC_VER)
+    #define ZF_IS_CONSTEXPR() (__builtin_is_constant_evaluated())
+#else
+    #define ZF_IS_CONSTEXPR() (false)
+#endif

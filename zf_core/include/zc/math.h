@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cmath>
+#include <zc/debug.h>
 #include <zc/mem/mem.h>
 #include <zc/mem/arrays.h>
 #include <zc/type_traits.h>
@@ -36,6 +37,12 @@ namespace zf {
         }
 
         return 0;
+    }
+
+    template<co_numeric tp_type>
+    constexpr tp_type Clamp(const tp_type n, const tp_type min, const tp_type max) {
+        ZF_ASSERT(min <= max);
+        return n < 0 ? -n : n;
     }
 
     template<co_integral tp_type>
@@ -76,6 +83,12 @@ namespace zf {
         }
 
         return 1 + DigitCnt(n / 10);
+    }
+
+    template<co_floating_point tp_type>
+    constexpr bool NearlyEqual(const tp_type val, const tp_type targ, const tp_type tol = 1e-5) {
+        ZF_ASSERT(tol >= 0);
+        return val >= targ - tol && val <= targ + tol;
     }
 
     template<co_numeric tp_type>
@@ -242,6 +255,22 @@ namespace zf {
 
         constexpr bool operator!=(const s_rect<tp_type>& other) const {
             return !(*this == other);
+        }
+
+        bool Contains(const s_v2<tp_type> pt) const {
+            return pt.x > Left() && pt.y > Top() && pt.x < Right() && pt.y < Bottom();
+        }
+
+        bool Intersects(const s_rect<tp_type> other) const {
+            return Left() < other.Right() && Top() < other.Bottom() && Right() > other.Left() && Bottom() > other.Top();
+        }
+
+        bool Touches(const s_v2<tp_type> pt) const {
+            return pt.x >= Left() && pt.y >= Top() && pt.x <= Right() && pt.y <= Bottom();
+        }
+
+        bool Touches(const s_rect<tp_type> other) const {
+            return Left() <= other.Right() && Top() <= other.Bottom() && Right() >= other.Left() && Bottom() >= other.Top();
         }
     };
 
