@@ -183,7 +183,7 @@ namespace zf {
         }
 
         tp_type DirToInRads(const s_v2<tp_type> other) const requires co_floating_point<tp_type> {
-            return atan2(other.y - y, other.x - x);
+            return atan2(-(other.y - y), other.x - x);
         }
     };
 
