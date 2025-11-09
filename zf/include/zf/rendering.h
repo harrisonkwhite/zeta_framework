@@ -9,7 +9,7 @@ namespace zf {
         s_v2<float> size;
         float rot = 0.0f;
         s_v2<float> tex_coord;
-        s_v4<float> blend;
+        c_color_rgba blend;
     };
 
     constexpr s_static_array<int, 6> g_batch_vert_attr_lens = {
@@ -57,11 +57,11 @@ namespace zf {
             Flush();
         }
 
-        void Clear(const s_v4<float> col = {});
+        void Clear(const c_color_rgba col = {}) const;
         void SetViewMatrix(const s_matrix_4x4& mat);
-        void DrawTexture(const s_texture& tex, const s_v2<float> pos, const s_rect<int> src_rect = {}, const s_v2<float> origin = origins::g_topleft, const s_v2<float> scale = {1.0f, 1.0f}, const float rot = 0.0f, const s_v4<float> blend = colors::g_white);
+        void DrawTexture(const s_texture& tex, const s_v2<float> pos, const s_rect<int> src_rect = {}, const s_v2<float> origin = origins::g_topleft, const s_v2<float> scale = {1.0f, 1.0f}, const float rot = 0.0f, const c_color_rgba blend = colors::g_white);
 
-        void DrawRect(const s_rect<float> rect, const s_v4<float> color) {
+        void DrawRect(const s_rect<float> rect, const c_color_rgba color) {
             DrawTexture(m_basis.px_tex, rect.Pos(), {}, {}, rect.Size(), 0.0f, color);
         }
 
@@ -75,7 +75,7 @@ namespace zf {
 
         s_gfx_resource_handle m_batch_tex_hdl;
 
-        void Draw(const s_gfx_resource_handle tex_hdl, const s_rect<float> tex_coords, s_v2<float> pos, s_v2<float> size, s_v2<float> origin, const float rot, const s_v4<float> blend);
+        void Draw(const s_gfx_resource_handle tex_hdl, const s_rect<float> tex_coords, s_v2<float> pos, s_v2<float> size, s_v2<float> origin, const float rot, const c_color_rgba blend);
         void Flush();
     };
 }

@@ -189,52 +189,6 @@ namespace zf {
     }
 
     template<co_numeric tp_type>
-    struct s_v3 {
-        tp_type x = 0;
-        tp_type y = 0;
-        tp_type z = 0;
-
-        constexpr s_v3() = default;
-        constexpr s_v3(const tp_type x, const tp_type y, const tp_type z) : x(x), y(y), z(z) {}
-
-        s_v2<tp_type> XY() {
-            return {x, y};
-        }
-
-        constexpr bool operator==(const s_v3& other) const {
-            return x == other.x && y == other.y && z == other.z;
-        }
-
-        constexpr bool operator!=(const s_v3& other) const {
-            return !(*this == other);
-        }
-    };
-
-    template<co_numeric tp_type>
-    struct s_v4 {
-        tp_type x = 0;
-        tp_type y = 0;
-        tp_type z = 0;
-        tp_type w = 0;
-
-        constexpr s_v4() = default;
-        constexpr s_v4(const tp_type x, const tp_type y, const tp_type z, const tp_type w) : x(x), y(y), z(z), w(w) {}
-        constexpr s_v4(const s_v3<tp_type> v3, const tp_type w) : x(v3.x), y(v3.y), z(v3.z), w(w) {}
-
-        s_v3<tp_type> XYZ() {
-            return {x, y, z};
-        }
-
-        constexpr bool operator==(const s_v4& other) const {
-            return x == other.x && y == other.y && z == other.z && w == other.w;
-        }
-
-        constexpr bool operator!=(const s_v4& other) const {
-            return !(*this == other);
-        }
-    };
-
-    template<co_numeric tp_type>
     struct s_rect {
         tp_type x = 0;
         tp_type y = 0;
