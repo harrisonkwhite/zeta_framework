@@ -23,6 +23,11 @@ namespace zf {
     }
 
     template<co_numeric tp_type>
+    constexpr tp_type Abs(const tp_type n) {
+        return n < 0 ? -n : n;
+    }
+
+    template<co_numeric tp_type>
     constexpr int Sign(const tp_type n) {
         if (n > 0) {
             return 1;
@@ -330,5 +335,24 @@ namespace zf {
     template<co_floating_point tp_type>
     inline s_v2<tp_type> LenDir(const tp_type len, const tp_type dir) {
         return s_v2<tp_type>(cos(dir), -sin(dir)) * len;
+    }
+
+    template<co_numeric tp_type>
+    tp_type FindClosest(const c_array<const tp_type> nums, const tp_type targ) {
+        ZF_ASSERT(!nums.IsEmpty());
+
+        int index_of_closest = 0;
+        tp_type closest_diff = Abs(nums[0] - targ);
+
+        for (int i = 1; i < nums.Len(); i++) {
+            const tp_type diff = Abs(nums[i] - targ);
+
+            if (diff < closest_diff) {
+                index_of_closest = i;
+                closest_diff = diff;
+            }
+        }
+
+        return nums[index_of_closest];
     }
 }
