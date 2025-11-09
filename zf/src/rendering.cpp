@@ -113,7 +113,7 @@ void main() {
         return true;
     }
 
-    void c_renderer::Clear(const c_color_rgba col) const {
+    void c_renderer::Clear(const c_color_rgba_32f col) const {
         glClearColor(col.R(), col.G(), col.B(), 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
     }
@@ -123,7 +123,7 @@ void main() {
         m_batch_view_mat = mat;
     }
 
-    void c_renderer::Draw(const s_gfx_resource_handle tex_hdl, const s_rect<float> tex_coords, s_v2<float> pos, s_v2<float> size, s_v2<float> origin, const float rot, const c_color_rgba blend) {
+    void c_renderer::Draw(const s_gfx_resource_handle tex_hdl, const s_rect<float> tex_coords, s_v2<float> pos, s_v2<float> size, s_v2<float> origin, const float rot, const c_color_rgba_32f blend) {
         if (m_batch_slots_used_cnt == 0) {
             // This is the first draw to the batch, so set the texture associated with the batch to the one we're trying to render.
             m_batch_tex_hdl = tex_hdl;
@@ -180,7 +180,7 @@ void main() {
         };
     }
 
-    void c_renderer::DrawTexture(const s_texture& tex, const s_v2<float> pos, const s_rect<int> src_rect, const s_v2<float> origin, const s_v2<float> scale, const float rot, const c_color_rgba blend) {
+    void c_renderer::DrawTexture(const s_texture& tex, const s_v2<float> pos, const s_rect<int> src_rect, const s_v2<float> origin, const s_v2<float> scale, const float rot, const c_color_rgba_32f blend) {
         ZF_ASSERT(origin.x >= 0.0f && origin.x <= 1.0f && origin.y >= 0.0f && origin.y <= 1.0f); // @todo: Generic function for this check?
 
         s_rect<int> src_rect_to_use;

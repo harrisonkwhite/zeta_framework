@@ -8,7 +8,7 @@
 #define ZF_SIZE_IN_BITS(x) (8 * sizeof(x))
 
 namespace zf {
-    using t_byte = unsigned char;
+    using t_byte = uint8_t;
 
     constexpr size_t Kilobytes(const size_t x) { return (static_cast<size_t>(1) << 10) * x; }
     constexpr size_t Megabytes(const size_t x) { return (static_cast<size_t>(1) << 20) * x; }
@@ -19,7 +19,7 @@ namespace zf {
     constexpr size_t BytesToBits(const size_t x) { return x * 8; }
 
     constexpr t_byte BitMask(const size_t index) {
-        return 1 << (index % 8);
+        return static_cast<t_byte>(1 << (index % 8));
     }
 
     constexpr bool IsPowerOfTwo(const size_t n) {

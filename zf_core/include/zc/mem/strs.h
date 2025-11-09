@@ -11,7 +11,7 @@ namespace zf {
     }
 
     struct s_str_view {
-        constexpr static s_str_view FromRawTerminated(const char* const raw) {
+        static constexpr s_str_view FromRawTerminated(const char* const raw) {
             return {{raw, static_cast<int>(RawStrLen(raw)) + 1}};
         }
 
