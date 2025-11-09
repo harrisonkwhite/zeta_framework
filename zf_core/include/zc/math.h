@@ -174,11 +174,15 @@ namespace zf {
             return {x / mag, y / mag};
         }
 
-        inline s_v2<tp_type> DirTo(const s_v2<tp_type> other) requires co_floating_point<tp_type> {
+        tp_type DistTo(const s_v2<tp_type> other) const requires co_floating_point<tp_type> {
+            return (other - *this).Mag();
+        }
+
+        s_v2<tp_type> DirTo(const s_v2<tp_type> other) const requires co_floating_point<tp_type> {
             return (other - *this).NormalizedOrZero();
         }
 
-        inline tp_type DirToInRads(const s_v2<tp_type> other) requires co_floating_point<tp_type> {
+        tp_type DirToInRads(const s_v2<tp_type> other) const requires co_floating_point<tp_type> {
             return atan2(other.y - y, other.x - x);
         }
     };

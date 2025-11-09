@@ -65,6 +65,14 @@ namespace zf {
             DrawTexture(m_basis.px_tex, rect.Pos(), {}, {}, rect.Size(), 0.0f, color);
         }
 
+        void DrawLine(const s_v2<float> a, const s_v2<float> b, const c_color_rgba_32f blend, const float width) {
+            ZF_ASSERT(width > 0.0f);
+
+            const float len = a.DistTo(b);
+            const float dir = a.DirToInRads(b);
+            DrawTexture(m_basis.px_tex, a, {}, origins::g_centerleft, {len, width}, dir, blend);
+        }
+
     private:
         s_rendering_basis m_basis;
 
