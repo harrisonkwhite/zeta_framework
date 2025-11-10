@@ -24,17 +24,17 @@ namespace zf {
 
         void SetBit(const t_size index) const {
             ZF_ASSERT(index < m_bit_cnt);
-            m_bytes[index / 8] |= BitMask(index);
+            m_bytes[index / 8] |= BitMask<t_u8>(index);
         }
 
         void UnsetBit(const t_size index) const {
             ZF_ASSERT(index < m_bit_cnt);
-            m_bytes[index / 8] &= ~BitMask(index);
+            m_bytes[index / 8] &= ~BitMask<t_u8>(index);
         }
 
         t_b8 IsBitSet(const t_size index) const {
             ZF_ASSERT(index < m_bit_cnt);
-            return m_bytes[index / 8] & BitMask(index);
+            return m_bytes[index / 8] & BitMask<t_u8>(index);
         }
 
     private:
@@ -43,7 +43,7 @@ namespace zf {
 
         t_u8 LastByteMask() const {
             const t_size last_byte_bit_cnt = m_bit_cnt % 8 == 0 ? 8 : m_bit_cnt % 8;
-            return BitRangeMask(0, last_byte_bit_cnt);
+            return BitRangeMask<t_u8>(0, last_byte_bit_cnt);
         }
     };
 

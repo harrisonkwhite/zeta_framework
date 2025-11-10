@@ -285,14 +285,14 @@ namespace zf {
         static t_b8 IsKeyPressed(const e_key_code kc) {
             ZF_ASSERT(kc != eks_key_code_none);
 
-            const t_key_bits key_mask = static_cast<t_key_bits>(1) << kc;
+            const auto key_mask = BitMask<t_key_bits>(kc);
             return (sm_input_events.keys_pressed & key_mask) != 0;
         }
 
         static t_b8 IsKeyReleased(const e_key_code kc) {
             ZF_ASSERT(kc != eks_key_code_none);
 
-            const t_key_bits key_mask = static_cast<t_key_bits>(1) << kc;
+            const auto key_mask = BitMask<t_key_bits>(kc);
             return (sm_input_events.keys_released & key_mask) != 0;
         }
 
@@ -304,14 +304,14 @@ namespace zf {
         static t_b8 IsMouseButtonPressed(const e_mouse_button_code mbc) {
             ZF_ASSERT(mbc != eks_mouse_button_code_none);
 
-            const auto mb_mask = static_cast<t_mouse_button_bits>(static_cast<t_mouse_button_bits>(1) << mbc);
+            const auto mb_mask = BitMask<t_mouse_button_bits>(mbc);
             return (sm_input_events.mouse_buttons_pressed & mb_mask) != 0;
         }
 
         static t_b8 IsMouseButtonReleased(const e_mouse_button_code mbc) {
             ZF_ASSERT(mbc != eks_mouse_button_code_none);
 
-            const auto mb_mask = static_cast<t_mouse_button_bits>(static_cast<t_mouse_button_bits>(1) << mbc);
+            const auto mb_mask = BitMask<t_mouse_button_bits>(mbc);
             return (sm_input_events.mouse_buttons_released & mb_mask) != 0;
         }
 

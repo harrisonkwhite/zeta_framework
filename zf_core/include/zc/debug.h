@@ -3,6 +3,13 @@
 #include <cstdio>
 #include <zc/types.h>
 
+#ifdef NDEBUG
+    #define ZF_DEBUG 0
+#else
+    #define ZF_DEBUG 1
+#endif
+
+// @todo: Why the hell are these codes here? Get them out!
 #define ZF_ANSI_ESC "\x1b"
 
 #define ZF_ANSI_RESET ZF_ANSI_ESC "[0m"
@@ -59,7 +66,7 @@ namespace zf {
 
 #define ZF_BANANA_ERROR() static_cast<void>(0)
 
-#ifdef NDEBUG
+#ifdef ZF_DEBUG
     #define ZF_ASSERT(condition) static_cast<void>(0)
 #else
     #define ZF_ASSERT(condition) \

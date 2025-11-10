@@ -15,18 +15,20 @@ namespace zf {
     constexpr t_size BitsToBytes(const t_size x) { return (x + 7) / 8; }
     constexpr t_size BytesToBits(const t_size x) { return x * 8; }
 
-    constexpr t_u8 BitMask(const t_size index) {
-        ZF_ASSERT(index >= 0 && index < 8);
-        return static_cast<t_u8>(1 << (index % 8));
+    template<co_unsigned_integral tp_type>
+    constexpr tp_type BitMask(const t_size index) {
+        ZF_ASSERT(index >= 0 && index < ZF_SIZE_IN_BITS(tp_type));
+        return static_cast<tp_type>(static_cast<tp_type>(1) << index);
     }
 
-    constexpr t_u8 BitRangeMask(const t_size begin_index, const t_size end_index = 8) {
-        ZF_ASSERT(end_index >= 0 && end_index <= 8);
+    template<co_unsigned_integral tp_type>
+    constexpr tp_type BitRangeMask(const t_size begin_index, const t_size end_index = ZF_SIZE_IN_BITS(tp_type)) {
+        ZF_ASSERT(end_index >= 0 && end_index <= ZF_SIZE_IN_BITS(tp_type));
         ZF_ASSERT(begin_index >= 0 && begin_index <= end_index);
 
         const t_size range_len = end_index - begin_index;
-        const t_u8 mask_at_bottom = static_cast<t_u8>((1 << range_len) - 1);
-        return static_cast<t_u8>(mask_at_bottom << begin_index);
+        const auto mask_at_bottom = static_cast<tp_type>(BitMask<tp_type>(range_len) - 1);
+        return static_cast<tp_type>(mask_at_bottom << begin_index);
     }
 
     constexpr t_b8 IsPowerOfTwo(const t_size n) {
