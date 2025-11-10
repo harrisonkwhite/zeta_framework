@@ -24,7 +24,7 @@ namespace zf {
             return false;
         }
 
-        memcpy(px_data.Raw(), stb_px_data, sizeof(*px_data.Raw()) * px_data.Len());
+        memcpy(px_data.Raw(), stb_px_data, static_cast<size_t>(ZF_SIZE_OF(*px_data.Raw()) * px_data.Len()));
 
         stbi_image_free(stb_px_data);
 

@@ -1,11 +1,11 @@
 #include <zc/mem/mem.h>
 
 namespace zf {
-    t_b8 c_mem_arena::Init(const t_u64 size) {
+    t_b8 c_mem_arena::Init(const t_size size) {
         ZF_ASSERT(!IsInitted());
         ZF_ASSERT(size > 0);
 
-        m_buf = static_cast<t_u8*>(calloc(size, 1));
+        m_buf = calloc(static_cast<size_t>(size), 1);
 
         if (!m_buf) {
             return false;
@@ -23,11 +23,13 @@ namespace zf {
         *this = {};
     }
 
-    void* c_mem_arena::Push(const t_u64 size, const t_u64 alignment) {
+    void* c_mem_arena::Push(const t_size size, const t_size alignment) {
         ZF_ASSERT(IsInitted());
+        ZF_ASSERT(size > 0);
+        ZF_ASSERT(IsAlignmentValid(alignment));
 
-        const t_u64 offs_aligned = AlignForward(m_offs, alignment);
-        const t_u64 offs_next = offs_aligned + size;
+        const t_size offs_aligned = AlignForward(m_offs, alignment);
+        const t_size offs_next = offs_aligned + size;
 
         if (offs_next > m_size) {
             return nullptr;
@@ -35,6 +37,6 @@ namespace zf {
 
         m_offs = offs_next;
 
-        return m_buf + offs_aligned;
+        return static_cast<t_s8*>(m_buf) + offs_aligned;
     }
 }

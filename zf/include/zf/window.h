@@ -16,7 +16,7 @@
 #include <zc/mem/strs.h>
 
 namespace zf {
-    enum e_window_flags {
+    enum e_window_flags : t_u8 {
         ek_window_flags_none = 0,
         ek_window_flags_resizable = 1 << 0,
         ek_window_flags_hide_cursor = 1 << 1
@@ -92,7 +92,7 @@ namespace zf {
         eks_key_code_cnt
     };
 
-    using t_key_bits = uint64_t;
+    using t_key_bits = t_u64;
 
     static_assert(eks_key_code_cnt < ZF_SIZE_IN_BITS(t_key_bits), "Too many key codes!");
 
@@ -304,14 +304,14 @@ namespace zf {
         static t_b8 IsMouseButtonPressed(const e_mouse_button_code mbc) {
             ZF_ASSERT(mbc != eks_mouse_button_code_none);
 
-            const t_mouse_button_bits mb_mask = static_cast<t_mouse_button_bits>(1) << mbc;
+            const auto mb_mask = static_cast<t_mouse_button_bits>(static_cast<t_mouse_button_bits>(1) << mbc);
             return (sm_input_events.mouse_buttons_pressed & mb_mask) != 0;
         }
 
         static t_b8 IsMouseButtonReleased(const e_mouse_button_code mbc) {
             ZF_ASSERT(mbc != eks_mouse_button_code_none);
 
-            const t_mouse_button_bits mb_mask = static_cast<t_mouse_button_bits>(1) << mbc;
+            const auto mb_mask = static_cast<t_mouse_button_bits>(static_cast<t_mouse_button_bits>(1) << mbc);
             return (sm_input_events.mouse_buttons_released & mb_mask) != 0;
         }
 

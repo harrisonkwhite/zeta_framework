@@ -13,6 +13,7 @@
 #endif
 
 #include <cstdlib> // Reinclude necessary since abort() gets overwritten.
+#include <zc/mem/mem.h>
 
 namespace zf {
     static void PrintStackTrace() {
@@ -25,13 +26,13 @@ namespace zf {
         const t_s32 frame_cnt = CaptureStackBackTrace(0, stack_len, stack, nullptr);
 
         constexpr t_s32 func_name_buf_size = 256;
-        char symbol_buf[sizeof(SYMBOL_INFO) + func_name_buf_size];
+        char symbol_buf[ZF_SIZE_OF(SYMBOL_INFO) + func_name_buf_size];
         const auto symbol = reinterpret_cast<SYMBOL_INFO*>(symbol_buf);
         symbol->MaxNameLen = func_name_buf_size - 1;
-        symbol->SizeOfStruct = sizeof(SYMBOL_INFO);
+        symbol->SizeOfStruct = ZF_SIZE_OF(SYMBOL_INFO);
 
         IMAGEHLP_LINE64 line;
-        line.SizeOfStruct = sizeof(IMAGEHLP_LINE64);
+        line.SizeOfStruct = ZF_SIZE_OF(IMAGEHLP_LINE64);
 
         for (t_s32 i = 0; i < frame_cnt; i++) {
             const auto addr = static_cast<DWORD64>(reinterpret_cast<uintptr_t>(stack[i]));

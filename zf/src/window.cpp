@@ -85,6 +85,7 @@ namespace zf {
 
     t_b8 c_window::Init(const s_v2<t_s32> size, const s_str_view title, const e_window_flags flags) {
         ZF_ASSERT(!sm_glfw_window);
+        ZF_ASSERT(size.x > 0 && size.y > 0);
         ZF_ASSERT(title.IsTerminated());
 
         if (!glfwInit()) {
@@ -145,7 +146,7 @@ namespace zf {
                     return;
                 }
 
-                const t_mouse_button_bits mb_mask = static_cast<t_mouse_button_bits>(1) << mb_code;
+                const auto mb_mask = static_cast<t_mouse_button_bits>(static_cast<t_mouse_button_bits>(1) << mb_code);
 
                 if (action == GLFW_PRESS) {
                     sm_input_events.mouse_buttons_pressed |= mb_mask;

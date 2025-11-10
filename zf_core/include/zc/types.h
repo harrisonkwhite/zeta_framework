@@ -38,6 +38,12 @@ namespace zf {
     using t_b8 = bool;
     static_assert(sizeof(t_b8) == 1);
 
+    // Why signed for this?
+    // 1. Mixing signed and unsigned can lead to strange overflow bugs that cannot always be caught by warnings. Better to be consistent and have predictability.
+    // 2. The signed 64-bit range is more than sufficient for realistic use cases.
+    // 3. If you want a value to be 0 or greater, ASSERT that it is!
+    using t_size = t_s64;
+
     template<typename tp_type> struct s_is_integral { static constexpr t_b8 sm_value = false; };
     template<> struct s_is_integral<t_s8> { static constexpr t_b8 sm_value = true; };
     template<> struct s_is_integral<t_u8> { static constexpr t_b8 sm_value = true; };

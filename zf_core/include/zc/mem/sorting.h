@@ -11,7 +11,7 @@ namespace zf {
     t_b8 IsSorted(const c_array<const tp_type> arr, const t_comparison_func<tp_type> comparison_func) {
         ZF_ASSERT(comparison_func);
 
-        for (t_s32 i = 0; i < arr.Len() - 1; i++) {
+        for (t_size i = 0; i < arr.Len() - 1; i++) {
             if (comparison_func(arr[i], arr[i + 1]) > 0) {
                 return false;
             }
@@ -30,7 +30,7 @@ namespace zf {
         do {
             sorted = true;
 
-            for (t_s32 i = 0; i < arr.Len() - 1; i++) {
+            for (t_size i = 0; i < arr.Len() - 1; i++) {
                 if (comparison_func(arr[i], arr[i + 1]) > 0) {
                     Swap(arr[i], arr[i + 1]);
                     sorted = false;
@@ -44,10 +44,10 @@ namespace zf {
     void InsertionSort(const c_array<tp_type> arr, const t_comparison_func<tp_type> comparison_func) {
         ZF_ASSERT(comparison_func);
 
-        for (t_s32 i = 1; i < arr.Len(); i++) {
+        for (t_size i = 1; i < arr.Len(); i++) {
             const tp_type temp = arr[i];
 
-            t_s32 j = i - 1;
+            t_size j = i - 1;
 
             for (; j >= 0; j--) {
                 if (comparison_func(arr[j], temp) <= 0) {
@@ -66,10 +66,10 @@ namespace zf {
     void SelectionSort(const c_array<tp_type> arr, const t_comparison_func<tp_type> comparison_func) {
         ZF_ASSERT(comparison_func);
 
-        for (t_s32 i = 0; i < arr.Len() - 1; i++) {
+        for (t_size i = 0; i < arr.Len() - 1; i++) {
             tp_type& min = arr[i];
 
-            for (t_s32 j = i + 1; j < arr.Len(); j++) {
+            for (t_size j = i + 1; j < arr.Len(); j++) {
                 if (comparison_func(arr[j], min) < 0) {
                     min = arr[j];
                 }
@@ -106,8 +106,8 @@ namespace zf {
         }
 
         // Update this array.
-        t_s32 i = 0;
-        t_s32 j = 0;
+        t_size i = 0;
+        t_size j = 0;
 
         do {
             if (comparison_func(arr_left[i], arr_right[j]) <= 0) {
@@ -135,10 +135,10 @@ namespace zf {
     }
 
     template<typename tp_type>
-    t_s32 QuickSortMedianOfThreePivotIndexSelection(const c_array<const tp_type> arr) {
-        const t_s32 ia = 0;
-        const t_s32 ib = arr.Len() / 2;
-        const t_s32 ic = arr.Len() - 1;
+    t_size QuickSortMedianOfThreePivotIndexSelection(const c_array<const tp_type> arr) {
+        const t_size ia = 0;
+        const t_size ib = arr.Len() / 2;
+        const t_size ic = arr.Len() - 1;
 
         if (arr[ia] <= arr[ib]) {
             if (arr[ib] <= arr[ic]) {
@@ -167,7 +167,7 @@ namespace zf {
     // Space complexity is O(1) compared to merge sort.
     // Custom pivot index selection function is only for arrays of length 3 or greater.
     template<typename tp_type>
-    void QuickSort(const c_array<const tp_type> arr, const t_comparison_func<const tp_type> comparison_func, t_s32 (* const pivot_index_selection_func)(const c_array<const tp_type> arr) = QuickSortMedianOfThreePivotIndexSelection) {
+    void QuickSort(const c_array<const tp_type> arr, const t_comparison_func<const tp_type> comparison_func, t_size (* const pivot_index_selection_func)(const c_array<const tp_type> arr) = QuickSortMedianOfThreePivotIndexSelection) {
         ZF_ASSERT(comparison_func);
         ZF_ASSERT(pivot_index_selection_func);
 
@@ -184,15 +184,15 @@ namespace zf {
         }
 
         // Get the pivot index from the given function and swap the pivot out to the end.
-        const t_s32 pivot_index = pivot_index_selection_func(arr);
-        ZF_ASSERT(pivot_index >= 0 && pivot_index < arr.Len());
+        const t_size pivot_index = pivot_index_selection_func(arr);
+        ZF_ASSERT(pivot_index < arr.Len());
 
         Swap(arr[pivot_index], arr[arr.Len() - 1]);
 
         // Move smaller elements to the left, and decide the final pivot position.
-        t_s32 left_sec_last_index = -1;
+        t_size left_sec_last_index = -1;
 
-        for (t_s32 i = 0; i < arr.Len(); i++) {
+        for (t_size i = 0; i < arr.Len(); i++) {
             if (comparison_func(arr[i], arr[arr.Len() - 1]) <= 0) {
                 // This element is not greater than the pivot, so swap it to the left section.
                 left_sec_last_index++;
@@ -210,7 +210,7 @@ namespace zf {
     void HeapSort(const c_array<tp_type> dest, c_min_heap<tp_type>& min_heap) {
         ZF_ASSERT(dest.Len() >= min_heap.GetElemCnt());
 
-        t_s32 dest_index = 0;
+        t_size dest_index = 0;
 
         while (!min_heap.IsEmpty()) {
             dest[dest_index] = min_heap.GetMin();

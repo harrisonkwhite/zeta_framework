@@ -26,8 +26,8 @@ namespace zf {
 
         fprintf(output_writer.raw, "    extern const t_byte g_%s_raw[] = {", arr_subname.Raw());
 
-        t_u8 read_byte;
-        t_u64 read_cnt = 0;
+        t_s8 read_byte;
+        t_size read_cnt = 0;
 
         while (input_reader.ReadItem(read_byte)) {
             if (read_cnt > 0) {
@@ -41,7 +41,7 @@ namespace zf {
 
         fprintf(output_writer.raw, "};\n");
 
-        fprintf(output_writer.raw, "    extern const t_u64 g_%s_size = %zu;\n", arr_subname.Raw(), read_cnt);
+        fprintf(output_writer.raw, "    extern const t_size g_%s_size = %zu;\n", arr_subname.Raw(), read_cnt);
 
         fprintf(output_writer.raw, "}\n");
 

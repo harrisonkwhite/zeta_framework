@@ -48,28 +48,24 @@ void main() {
 }
 )");
 
-    static s_gfx_resource_handle MakeBatchMesh(c_gfx_resource_arena& gfx_res_arena, c_mem_arena& temp_mem_arena) {
-        const t_s32 verts_len = g_batch_vert_component_cnt * g_batch_slot_vert_cnt * g_batch_slot_cnt;
+    static c_gfx_resource_handle MakeBatchMesh(c_gfx_resource_arena& gfx_res_arena, c_mem_arena& temp_mem_arena) {
+        const t_size verts_len = g_batch_vert_component_cnt * g_batch_slot_vert_cnt * g_batch_slot_cnt;
 
-        c_array<unsigned short> elems;
+        c_array<t_u16> elems;
 
-        const t_b8 elems_make_failed = [&elems, &temp_mem_arena]() {
-            if (!elems.Init(temp_mem_arena, g_batch_slot_elem_cnt * g_batch_slot_cnt)) {
-                ZF_LOG_ERROR("Failed to reserve memory for batch renderable elements!");
-                return false;
-            }
+        if (!elems.Init(temp_mem_arena, g_batch_slot_elem_cnt * g_batch_slot_cnt)) {
+            ZF_LOG_ERROR("Failed to reserve memory for batch renderable elements!");
+            return {};
+        }
 
-            for (t_s32 i = 0; i < g_batch_slot_cnt; i++) {
-                elems[(i * 6) + 0] = static_cast<unsigned short>((i * 4) + 0);
-                elems[(i * 6) + 1] = static_cast<unsigned short>((i * 4) + 1);
-                elems[(i * 6) + 2] = static_cast<unsigned short>((i * 4) + 2);
-                elems[(i * 6) + 3] = static_cast<unsigned short>((i * 4) + 2);
-                elems[(i * 6) + 4] = static_cast<unsigned short>((i * 4) + 3);
-                elems[(i * 6) + 5] = static_cast<unsigned short>((i * 4) + 0);
-            }
-
-            return true;
-        }();
+        for (t_size i = 0; i < g_batch_slot_cnt; i++) {
+            elems[(i * 6) + 0] = static_cast<t_u16>((i * 4) + 0);
+            elems[(i * 6) + 1] = static_cast<t_u16>((i * 4) + 1);
+            elems[(i * 6) + 2] = static_cast<t_u16>((i * 4) + 2);
+            elems[(i * 6) + 3] = static_cast<t_u16>((i * 4) + 2);
+            elems[(i * 6) + 4] = static_cast<t_u16>((i * 4) + 3);
+            elems[(i * 6) + 5] = static_cast<t_u16>((i * 4) + 0);
+        }
 
         return gfx_res_arena.AddMesh(nullptr, verts_len, elems, g_batch_vert_attr_lens);
     }
@@ -113,7 +109,7 @@ void main() {
         return true;
     }
 
-    void c_renderer::Clear(const c_color_rgba_32f col) const {
+    void c_renderer::Clear(const c_color_rgba32f col) const {
         glClearColor(col.R(), col.G(), col.B(), 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
     }
@@ -123,7 +119,9 @@ void main() {
         m_batch_view_mat = mat;
     }
 
-    void c_renderer::Draw(const s_gfx_resource_handle tex_hdl, const s_rect<t_f32> tex_coords, s_v2<t_f32> pos, s_v2<t_f32> size, s_v2<t_f32> origin, const t_f32 rot, const c_color_rgba_32f blend) {
+    void c_renderer::Draw(const c_gfx_resource_handle tex_hdl, const s_rect<t_f32> tex_coords, s_v2<t_f32> pos, s_v2<t_f32> size, s_v2<t_f32> origin, const t_f32 rot, const c_color_rgba32f blend) {
+        ZF_ASSERT(tex_hdl.IsValid());
+
         if (m_batch_slots_used_cnt == 0) {
             // This is the first draw to the batch, so set the texture associated with the batch to the one we're trying to render.
             m_batch_tex_hdl = tex_hdl;
@@ -151,7 +149,7 @@ void main() {
 
         t_batch_slot& slot = m_batch_slots[m_batch_slots_used_cnt];
 
-        for (t_s32 i = 0; i < slot.Len(); i++) {
+        for (t_size i = 0; i < slot.Len(); i++) {
             slot[i] = {
                 .vert_coord = vert_coords[i],
                 .pos = pos,
@@ -180,8 +178,10 @@ void main() {
         };
     }
 
-    void c_renderer::DrawTexture(const s_texture& tex, const s_v2<t_f32> pos, const s_rect<t_s32> src_rect, const s_v2<t_f32> origin, const s_v2<t_f32> scale, const t_f32 rot, const c_color_rgba_32f blend) {
+    void c_renderer::DrawTexture(const s_texture& tex, const s_v2<t_f32> pos, const s_rect<t_s32> src_rect, const s_v2<t_f32> origin, const s_v2<t_f32> scale, const t_f32 rot, const c_color_rgba32f blend) {
+        ZF_ASSERT(tex.hdl.IsValid());
         ZF_ASSERT(origin.x >= 0.0f && origin.x <= 1.0f && origin.y >= 0.0f && origin.y <= 1.0f); // @todo: Generic function for this check?
+        // @todo: Add more assertions here!
 
         s_rect<t_s32> src_rect_to_use;
 
@@ -207,18 +207,18 @@ void main() {
         //
         // Submitting Vertex Data to GPU
         //
-        glBindVertexArray(m_basis.batch_mesh_hdl.mesh.vert_arr_gl_id);
-        glBindBuffer(GL_ARRAY_BUFFER, m_basis.batch_mesh_hdl.mesh.vert_buf_gl_id);
+        glBindVertexArray(m_basis.batch_mesh_hdl.Mesh().vert_arr_gl_id);
+        glBindBuffer(GL_ARRAY_BUFFER, m_basis.batch_mesh_hdl.Mesh().vert_buf_gl_id);
 
         {
-            const t_u64 write_size = sizeof(t_batch_slot) * m_batch_slots_used_cnt;
+            const t_size write_size = ZF_SIZE_OF(t_batch_slot) * m_batch_slots_used_cnt;
             glBufferSubData(GL_ARRAY_BUFFER, 0, write_size, m_batch_slots.Raw());
         }
 
         //
         // Rendering the Batch
         //
-        const t_gl_id prog_gl_id = m_basis.batch_shader_prog_hdl.shader_prog.gl_id;
+        const t_gl_id prog_gl_id = m_basis.batch_shader_prog_hdl.ShaderProg().gl_id;
 
         glUseProgram(prog_gl_id);
 
@@ -236,10 +236,10 @@ void main() {
         glUniformMatrix4fv(proj_uniform_loc, 1, false, proj_mat.Raw());
 
         glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, m_batch_tex_hdl.tex.gl_id);
+        glBindTexture(GL_TEXTURE_2D, m_batch_tex_hdl.Texture().gl_id);
 
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_basis.batch_mesh_hdl.mesh.elem_buf_gl_id);
-        glDrawElements(GL_TRIANGLES, g_batch_slot_elem_cnt * m_batch_slots_used_cnt, GL_UNSIGNED_SHORT, nullptr);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_basis.batch_mesh_hdl.Mesh().elem_buf_gl_id);
+        glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(g_batch_slot_elem_cnt * m_batch_slots_used_cnt), GL_UNSIGNED_SHORT, nullptr);
 
         glUseProgram(0);
 

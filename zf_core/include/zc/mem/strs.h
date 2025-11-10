@@ -4,18 +4,18 @@
 #include <zc/math.h>
 
 namespace zf {
-    constexpr t_s32 RawStrLen(const char* const raw_str) {
-        t_s32 len = 0;
+    constexpr t_size RawStrLen(const char* const raw_str) {
+        t_size len = 0;
         for (; raw_str[len]; len++) {}
         return len;
     }
 
     struct s_str_view {
         static constexpr s_str_view FromRawTerminated(const char* const raw) {
-            return {{raw, static_cast<t_s32>(RawStrLen(raw)) + 1}};
+            return {{raw, RawStrLen(raw) + 1}};
         }
 
-        static s_str_view FromRawTerminated(const char* const raw, const t_s32 len) {
+        static s_str_view FromRawTerminated(const char* const raw, const t_size len) {
             ZF_ASSERT(len == RawStrLen(raw));
             return {{raw, len + 1}};
         }
@@ -25,7 +25,7 @@ namespace zf {
         constexpr s_str_view() = default;
         constexpr s_str_view(const c_array<const char> chrs) : chrs(chrs) {}
 
-        t_s32 CalcLen() const;
+        t_size CalcLen() const;
         t_b8 IsTerminated() const;
 
         constexpr const char* Raw() const {
@@ -39,11 +39,11 @@ namespace zf {
 
     struct s_str {
         static s_str FromRawTerminated(char* const raw) {
-            return {{raw, static_cast<t_s32>(strlen(raw)) + 1}};
+            return {{raw, RawStrLen(raw) + 1}};
         }
 
-        static s_str FromRawTerminated(char* const raw, const t_s32 len) {
-            ZF_ASSERT(len == strlen(raw));
+        static s_str FromRawTerminated(char* const raw, const t_size len) {
+            ZF_ASSERT(len == RawStrLen(raw));
             return {{raw, len + 1}};
         }
 

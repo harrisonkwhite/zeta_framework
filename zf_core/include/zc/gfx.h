@@ -4,11 +4,11 @@
 #include <zc/math.h>
 
 namespace zf {
-    class c_color_rgba_32f {
+    class c_color_rgba32f {
     public:
-        constexpr c_color_rgba_32f() = default;
+        constexpr c_color_rgba32f() = default;
 
-        constexpr c_color_rgba_32f(const t_f32 r, const t_f32 g, const t_f32 b, const t_f32 a = 1.0f) : m_r(r), m_g(g), m_b(b), m_a(a) {
+        constexpr c_color_rgba32f(const t_f32 r, const t_f32 g, const t_f32 b, const t_f32 a = 1.0f) : m_r(r), m_g(g), m_b(b), m_a(a) {
             ZF_ASSERT(r >= 0.0f && r <= 1.0f
                 && g >= 0.0f && g <= 1.0f
                 && b >= 0.0f && b <= 1.0f
@@ -40,7 +40,7 @@ namespace zf {
             m_a = a;
         }
 
-        constexpr c_color_rgba_32f MixedWith(const c_color_rgba_32f other, const t_f32 amount) const {
+        constexpr c_color_rgba32f MixedWith(const c_color_rgba32f other, const t_f32 amount) const {
             ZF_ASSERT(amount >= 0.0f && amount <= 1.0f);
 
             return {
@@ -55,7 +55,7 @@ namespace zf {
             return (0.2126f * m_r) + (0.7152f * m_g) + (0.0722f * m_b);
         }
 
-        constexpr c_color_rgba_32f Grayscale() const {
+        constexpr c_color_rgba32f Grayscale() const {
             const t_f32 lum = Luminance();
             return {lum, lum, lum, m_a};
         }
@@ -67,16 +67,16 @@ namespace zf {
         t_f32 m_a = 0.0f;
     };
 
-    struct s_color_rgba_8 {
+    struct s_color_rgba8 {
         t_u8 r = 0;
         t_u8 g = 0;
         t_u8 b = 0;
         t_u8 a = 0;
 
-        constexpr s_color_rgba_8() = default;
-        constexpr s_color_rgba_8(const t_u8 r, const t_u8 g, const t_u8 b, const t_u8 a) : r(r), g(g), b(b), a(a) {}
+        constexpr s_color_rgba8() = default;
+        constexpr s_color_rgba8(const t_u8 r, const t_u8 g, const t_u8 b, const t_u8 a) : r(r), g(g), b(b), a(a) {}
 
-        static constexpr s_color_rgba_8 FromHex(const uint32_t hex) {
+        static constexpr s_color_rgba8 FromHex(const t_u32 hex) {
             const auto r = static_cast<t_u8>((hex & 0xFF000000) >> 24);
             const auto g = static_cast<t_u8>((hex & 0x00FF0000) >> 16);
             const auto b = static_cast<t_u8>((hex & 0x0000FF00) >> 8);
@@ -85,29 +85,29 @@ namespace zf {
             return {r, g, b, a};
         }
 
-        constexpr operator c_color_rgba_32f() {
+        constexpr operator c_color_rgba32f() {
             return {r / 255.0f, g / 255.0f, b / 255.0f, a / 255.0f};
         }
     };
 
     namespace colors {
-        constexpr c_color_rgba_32f g_black = {0.0f, 0.0f, 0.0f};
-        constexpr c_color_rgba_32f g_dark_gray = {0.25f, 0.25f, 0.25f};
-        constexpr c_color_rgba_32f g_gray = {0.5f, 0.5f, 0.5f};
-        constexpr c_color_rgba_32f g_light_gray = {0.75f, 0.75f, 0.75f};
-        constexpr c_color_rgba_32f g_white = {1.0f, 1.0f, 1.0f};
-        constexpr c_color_rgba_32f g_red = {1.0f, 0.0f, 0.0f};
-        constexpr c_color_rgba_32f g_orange = {1.0f, 0.5f, 0.0f};
-        constexpr c_color_rgba_32f g_yellow = {1.0f, 1.0f, 0.0f};
-        constexpr c_color_rgba_32f g_lime = {0.75f, 1.0f, 0.0f};
-        constexpr c_color_rgba_32f g_green = {0.0f, 1.0f, 0.0f};
-        constexpr c_color_rgba_32f g_teal = {0.0f, 0.5f, 0.5f};
-        constexpr c_color_rgba_32f g_cyan = {0.0f, 1.0f, 1.0f};
-        constexpr c_color_rgba_32f g_blue = {0.0f, 0.0f, 1.0f};
-        constexpr c_color_rgba_32f g_purple = {0.5f, 0.0f, 0.5f};
-        constexpr c_color_rgba_32f g_magenta = {1.0f, 0.0f, 1.0f};
-        constexpr c_color_rgba_32f g_pink = {1.0f, 0.75f, 0.8f};
-        constexpr c_color_rgba_32f g_brown = {0.6f, 0.3f, 0.0f};
+        constexpr c_color_rgba32f g_black = {0.0f, 0.0f, 0.0f};
+        constexpr c_color_rgba32f g_dark_gray = {0.25f, 0.25f, 0.25f};
+        constexpr c_color_rgba32f g_gray = {0.5f, 0.5f, 0.5f};
+        constexpr c_color_rgba32f g_light_gray = {0.75f, 0.75f, 0.75f};
+        constexpr c_color_rgba32f g_white = {1.0f, 1.0f, 1.0f};
+        constexpr c_color_rgba32f g_red = {1.0f, 0.0f, 0.0f};
+        constexpr c_color_rgba32f g_orange = {1.0f, 0.5f, 0.0f};
+        constexpr c_color_rgba32f g_yellow = {1.0f, 1.0f, 0.0f};
+        constexpr c_color_rgba32f g_lime = {0.75f, 1.0f, 0.0f};
+        constexpr c_color_rgba32f g_green = {0.0f, 1.0f, 0.0f};
+        constexpr c_color_rgba32f g_teal = {0.0f, 0.5f, 0.5f};
+        constexpr c_color_rgba32f g_cyan = {0.0f, 1.0f, 1.0f};
+        constexpr c_color_rgba32f g_blue = {0.0f, 0.0f, 1.0f};
+        constexpr c_color_rgba32f g_purple = {0.5f, 0.0f, 0.5f};
+        constexpr c_color_rgba32f g_magenta = {1.0f, 0.0f, 1.0f};
+        constexpr c_color_rgba32f g_pink = {1.0f, 0.75f, 0.8f};
+        constexpr c_color_rgba32f g_brown = {0.6f, 0.3f, 0.0f};
     }
 
     namespace origins {

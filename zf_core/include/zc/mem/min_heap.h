@@ -7,7 +7,7 @@ namespace zf {
     class c_min_heap {
     public:
         [[nodiscard]]
-        t_b8 Init(c_mem_arena& mem_arena, const t_s32 cap) {
+        t_b8 Init(c_mem_arena& mem_arena, const t_size cap) {
             ZF_ASSERT(cap > 0);
 
             c_array<tp_type> nodes;
@@ -45,11 +45,11 @@ namespace zf {
             return ret;
         }
 
-        t_s32 Len() const {
+        t_size Len() const {
             return m_len;
         }
 
-        t_s32 Cap() const {
+        t_size Cap() const {
             return m_nodes.Len();
         }
 
@@ -68,32 +68,32 @@ namespace zf {
 
     private:
         c_array<tp_type> m_nodes;
-        t_s32 m_len = 0;
+        t_size m_len = 0;
 
-        static t_s32 IndexOfLeft(const t_s32 index) {
+        static t_size IndexOfLeft(const t_size index) {
             return (2 * index) + 1;
         }
 
-        static t_s32 IndexOfRight(const t_s32 index) {
+        static t_size IndexOfRight(const t_size index) {
             return (2 * index) + 2;
         }
 
-        static t_s32 IndexOfParent(const t_s32 index) {
+        static t_size IndexOfParent(const t_size index) {
             return (index - 1) / 2;
         }
 
-        t_b8 Contains(const t_s32 index) const {
+        t_b8 Contains(const t_size index) const {
             return index >= 0 && index < m_len;
         }
 
-        void BubbleUp(const t_s32 index) {
+        void BubbleUp(const t_size index) {
             ZF_ASSERT(Contains(index));
 
             if (index == 0) {
                 return;
             }
 
-            const t_s32 par_index = IndexOfParent(index);
+            const t_size par_index = IndexOfParent(index);
 
             if (m_nodes[par_index] <= m_nodes[index]) {
                 return;
@@ -103,20 +103,20 @@ namespace zf {
             BubbleUp(par_index);
         }
 
-        void BubbleDown(const t_s32 index) {
+        void BubbleDown(const t_size index) {
             ZF_ASSERT(Contains(index));
 
-            const t_s32 left_index = IndexOfLeft(index);
+            const t_size left_index = IndexOfLeft(index);
             const t_b8 left_exists = Contains(left_index);
 
-            const t_s32 right_index = IndexOfRight(index);
+            const t_size right_index = IndexOfRight(index);
             const t_b8 right_exists = Contains(right_index);
 
             if (!left_exists && !right_exists) {
                 return;
             }
 
-            const t_s32 index_of_smaller = !right_exists || m_nodes[left_index] <= m_nodes[right_index] ? left_index : right_index;
+            const t_size index_of_smaller = !right_exists || m_nodes[left_index] <= m_nodes[right_index] ? left_index : right_index;
 
             if (m_nodes[index_of_smaller] < m_nodes[index]) {
                 Swap(m_nodes[index], m_nodes[index_of_smaller]);

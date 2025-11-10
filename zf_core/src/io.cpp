@@ -9,7 +9,7 @@
 #endif
 
 namespace zf {
-    t_b8 LoadFileContents(c_array<t_u8>& contents, c_mem_arena& mem_arena, const s_str_view file_path, const t_b8 include_terminating_byte) {
+    t_b8 LoadFileContents(c_array<t_s8>& contents, c_mem_arena& mem_arena, const s_str_view file_path, const t_b8 include_terminating_byte) {
         ZF_ASSERT(contents.IsEmpty());
         ZF_ASSERT(file_path.IsTerminated());
 

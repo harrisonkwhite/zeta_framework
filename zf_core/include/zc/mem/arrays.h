@@ -8,12 +8,12 @@ namespace zf {
     public:
         constexpr c_array() = default;
 
-        constexpr c_array(tp_type* const buf, const t_s32 len) : m_buf(buf), m_len(len) {
-            ZF_ASSERT((!buf && len == 0) || (buf && len >= 0));
+        constexpr c_array(tp_type* const buf, const t_size len) : m_buf(buf), m_len(len) {
+            ZF_ASSERT((!buf && len == 0) || buf);
         }
 
         [[nodiscard]]
-        t_b8 Init(c_mem_arena& mem_arena, const t_s32 len) {
+        t_b8 Init(c_mem_arena& mem_arena, const t_size len) {
             ZF_ASSERT(len > 0);
 
             m_buf = mem_arena.PushType<tp_type>(len);
@@ -31,19 +31,19 @@ namespace zf {
             return m_buf;
         }
 
-        constexpr t_s32 Len() const {
+        constexpr t_size Len() const {
             return m_len;
         }
 
-        constexpr t_u64 SizeInBytes() const {
-            return sizeof(tp_type) * Len();
+        constexpr t_size SizeInBytes() const {
+            return ZF_SIZE_OF(tp_type) * Len();
         }
 
         constexpr t_b8 IsEmpty() const {
             return m_len == 0;
         }
 
-        tp_type& operator[](const t_s32 index) const {
+        tp_type& operator[](const t_size index) const {
             ZF_ASSERT(index >= 0 && index < m_len);
             return m_buf[index];
         }
@@ -56,23 +56,22 @@ namespace zf {
             return View();
         }
 
-        constexpr c_array Slice(const t_s32 beg, const t_s32 end) const {
+        constexpr c_array Slice(const t_size beg, const t_size end) const {
             ZF_ASSERT(beg >= 0 && beg <= m_len);
-            ZF_ASSERT(end >= 0 && end <= m_len);
-            ZF_ASSERT(beg <= end);
+            ZF_ASSERT(end >= beg && end <= m_len);
             return {m_buf + beg, end - beg};
         }
 
     private:
         tp_type* m_buf = nullptr;
-        t_s32 m_len = 0;
+        t_size m_len = 0;
     };
 
     template<typename tp_type>
     void CopyArray(const c_array<tp_type> dest, const c_array<const tp_type> src) {
         ZF_ASSERT(dest.Len() >= src.Len());
 
-        for (t_s32 i = 0; i < src.Len(); i++) {
+        for (t_size i = 0; i < src.Len(); i++) {
             dest[i] = src[i];
         }
     }
@@ -90,7 +89,7 @@ namespace zf {
         return true;
     }
 
-    template<typename tp_type, t_s32 tp_len>
+    template<typename tp_type, t_size tp_len>
     struct s_static_array {
         static_assert(tp_len > 0, "Invalid static array length!");
 
@@ -99,21 +98,21 @@ namespace zf {
         constexpr s_static_array() = default;
 
         constexpr s_static_array(const tp_type (&buf)[tp_len]) {
-            for (t_s32 i = 0; i < tp_len; i++) {
+            for (t_size i = 0; i < tp_len; i++) {
                 buf_raw[i] = buf[i];
             }
         }
 
-        constexpr t_s32 Len() const {
+        constexpr t_size Len() const {
             return tp_len;
         }
 
-        tp_type& operator[](const t_s32 index) {
+        tp_type& operator[](const t_size index) {
             ZF_ASSERT(index >= 0 && index < tp_len);
             return buf_raw[index];
         }
 
-        constexpr const tp_type& operator[](const t_s32 index) const {
+        constexpr const tp_type& operator[](const t_size index) const {
             ZF_ASSERT(index >= 0 && index < tp_len);
             return buf_raw[index];
         }
@@ -140,12 +139,12 @@ namespace zf {
     public:
         c_stack() = default;
 
-        c_stack(const c_array<tp_type> backing_arr, const t_s32 init_height = 0) : m_backing_arr(backing_arr), m_height(init_height) {
+        c_stack(const c_array<tp_type> backing_arr, const t_size init_height = 0) : m_backing_arr(backing_arr), m_height(init_height) {
             ZF_ASSERT(init_height >= 0 && init_height <= backing_arr.Len());
         }
 
         [[nodiscard]]
-        t_b8 Init(c_mem_arena& mem_arena, const t_s32 cap) {
+        t_b8 Init(c_mem_arena& mem_arena, const t_size cap) {
             ZF_ASSERT(cap > 0);
 
             c_array<tp_type> arr;
@@ -160,11 +159,11 @@ namespace zf {
             return true;
         }
 
-        t_s32 Height() const {
+        t_size Height() const {
             return m_height;
         }
 
-        t_s32 Cap() const {
+        t_size Cap() const {
             return m_backing_arr.Len();
         }
 
@@ -176,7 +175,7 @@ namespace zf {
             return m_height == Cap();
         }
 
-        tp_type& operator[](const t_s32 index) const {
+        tp_type& operator[](const t_size index) const {
             ZF_ASSERT(index < m_height);
             return m_backing_arr[index];
         }
@@ -197,7 +196,7 @@ namespace zf {
 
     private:
         c_array<tp_type> m_backing_arr;
-        t_s32 m_height = 0;
+        t_size m_height = 0;
     };
 
     template<typename tp_type>
@@ -205,13 +204,13 @@ namespace zf {
     public:
         c_queue() = default;
 
-        c_queue(const c_array<tp_type> backing_arr, const t_s32 init_len = 0, const t_s32 init_begin_index = 0) : m_backing_arr(backing_arr), m_len(init_len), m_begin_index(init_begin_index) {
+        c_queue(const c_array<tp_type> backing_arr, const t_size init_len = 0, const t_size init_begin_index = 0) : m_backing_arr(backing_arr), m_len(init_len), m_begin_index(init_begin_index) {
             ZF_ASSERT(init_len >= 0 && init_len <= backing_arr.Len());
             ZF_ASSERT(init_begin_index >= 0 && init_begin_index < backing_arr.Len());
         }
 
         [[nodiscard]]
-        t_b8 Init(c_mem_arena& mem_arena, const t_s32 cap) {
+        t_b8 Init(c_mem_arena& mem_arena, const t_size cap) {
             ZF_ASSERT(cap > 0);
 
             c_array<tp_type> arr;
@@ -227,11 +226,11 @@ namespace zf {
             return true;
         }
 
-        t_s32 Len() const {
+        t_size Len() const {
             return m_len;
         }
 
-        t_s32 Cap() const {
+        t_size Cap() const {
             return m_backing_arr.Len();
         }
 
@@ -243,8 +242,8 @@ namespace zf {
             return m_len == Cap();
         }
 
-        tp_type& operator[](const t_s32 index) const {
-            ZF_ASSERT(index < m_len);
+        tp_type& operator[](const t_size index) const {
+            ZF_ASSERT(index >= 0 && index < m_len);
             return m_backing_arr[Wrap(m_begin_index + index, 0, m_backing_arr.Len())];
         }
 
@@ -258,7 +257,7 @@ namespace zf {
         tp_type Dequeue() {
             ZF_ASSERT(!IsEmpty());
 
-            const t_s32 bi_old = m_begin_index;
+            const t_size bi_old = m_begin_index;
             m_begin_index = Wrap(m_begin_index + 1, 0, m_backing_arr.Len());
             m_len--;
             return m_backing_arr[bi_old];
@@ -266,8 +265,8 @@ namespace zf {
 
     private:
         c_array<tp_type> m_backing_arr;
-        t_s32 m_len = 0;
-        t_s32 m_begin_index = 0;
+        t_size m_len = 0;
+        t_size m_begin_index = 0;
     };
 
     template<typename tp_type>

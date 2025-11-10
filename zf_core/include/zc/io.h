@@ -22,45 +22,45 @@ namespace zf {
             fclose(raw);
         }
 
-        t_u64 CalcSize() const {
+        t_size CalcSize() const {
             const auto pos_old = ftell(raw);
             fseek(raw, 0, SEEK_END);
             const auto file_size = ftell(raw);
             fseek(raw, pos_old, SEEK_SET);
-            return static_cast<t_u64>(file_size);
+            return static_cast<t_size>(file_size);
         }
 
         template<typename tp_type>
         [[nodiscard]]
         t_b8 ReadItem(tp_type& item) const {
-            return fread(&item, sizeof(tp_type), 1, raw) == 1;
+            return fread(&item, ZF_SIZE_OF(tp_type), 1, raw) == 1;
         }
 
         template<typename tp_type>
         [[nodiscard]]
         t_s32 ReadItems(const c_array<tp_type> arr) const {
-            return static_cast<t_s32>(fread(arr.Raw(), sizeof(tp_type), arr.Len(), raw));
+            return static_cast<t_s32>(fread(arr.Raw(), ZF_SIZE_OF(tp_type), arr.Len(), raw));
         }
 
         template<typename tp_type>
         [[nodiscard]]
         t_b8 WriteItem(const tp_type& item) const {
-            return fwrite(&item, sizeof(tp_type), 1, raw) == 1;
+            return fwrite(&item, ZF_SIZE_OF(tp_type), 1, raw) == 1;
         }
 
         template<typename tp_type>
         [[nodiscard]]
         t_s32 WriteItems(const c_array<const tp_type> arr) const {
-            return static_cast<t_s32>(fwrite(arr.Raw(), sizeof(tp_type), arr.Len(), raw));
+            return static_cast<t_s32>(fwrite(arr.Raw(), ZF_SIZE_OF(tp_type), arr.Len(), raw));
         }
     };
 
-    t_b8 LoadFileContents(c_array<t_u8>& contents, c_mem_arena& mem_arena, const s_str_view file_path, const t_b8 include_terminating_byte = false);
+    t_b8 LoadFileContents(c_array<t_s8>& contents, c_mem_arena& mem_arena, const s_str_view file_path, const t_b8 include_terminating_byte = false);
 
     inline t_b8 LoadFileContentsAsStr(s_str& contents, c_mem_arena& mem_arena, const s_str_view file_path) {
         ZF_ASSERT(contents.chrs.IsEmpty());
 
-        c_array<t_u8> contents_default;
+        c_array<t_s8> contents_default;
 
         if (!LoadFileContents(contents_default, mem_arena, file_path, true)) {
             return false;

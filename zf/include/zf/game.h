@@ -44,8 +44,8 @@ namespace zf {
         s_str_view window_title;
         e_window_flags window_flags = ek_window_flags_none;
 
-        t_u64 dev_mem_size = 0; // How much memory should be allocated in the permanent arena for your use? This might be the size of a specific struct, for example.
-        t_u64 dev_mem_alignment = 0; // The alignment of the above memory.
+        t_size dev_mem_size = 0; // How much memory should be allocated in the permanent arena for your use? This might be the size of a specific struct, for example.
+        t_size dev_mem_alignment = 0; // The alignment of the above memory.
 
         t_s32 targ_ticks_per_sec = 0;
 

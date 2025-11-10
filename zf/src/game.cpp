@@ -4,8 +4,8 @@
 #include <zf/rng.h>
 
 namespace zf {
-    constexpr t_u64 g_perm_mem_arena_size = Megabytes(80);
-    constexpr t_u64 g_temp_mem_arena_size = Megabytes(40);
+    constexpr t_size g_perm_mem_arena_size = Megabytes(80);
+    constexpr t_size g_temp_mem_arena_size = Megabytes(40);
     constexpr t_s32 g_gl_resource_arena_res_limit = 1024;
 
     enum class ec_game_run_stage {
