@@ -9,6 +9,7 @@ add_library(zf_core STATIC
     src/mem/strs.cpp
     ../external/stb_image/src/stb_image.c
     ../external/stb_truetype/src/stb_truetype.c
+	../external/miniaudio/src/miniaudio.c
 
     include/zc/gfx.h
     include/zc/audio.h
@@ -27,6 +28,7 @@ add_library(zf_core STATIC
 
 target_include_directories(zf_core PUBLIC
     include
+    ../external/miniaudio/include # Might want to make this private in the future?
 )
 
 target_include_directories(zf_core PRIVATE

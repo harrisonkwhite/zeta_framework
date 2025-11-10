@@ -52,7 +52,7 @@ namespace zf {
         constexpr s_str() = default;
         constexpr s_str(const c_array<char> chrs) : chrs(chrs) {}
 
-        t_s32 CalcLen() const {
+        t_size CalcLen() const {
             return s_str_view(chrs).CalcLen();
         }
 
