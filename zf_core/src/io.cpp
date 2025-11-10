@@ -15,7 +15,7 @@ namespace zf {
 
         s_file_stream fs;
 
-        if (!fs.Open(file_path, false)) {
+        if (!fs.Open(file_path, ec_file_access_mode::read)) {
             ZF_LOG_ERROR("Failed to open \"%s\"!", file_path.Raw());
             return false;
         }

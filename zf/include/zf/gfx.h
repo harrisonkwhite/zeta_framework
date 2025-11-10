@@ -98,19 +98,46 @@ namespace zf {
 
         c_gfx_resource_handle AddMesh(const t_f32* const verts_raw, const t_size verts_len, const c_array<const t_u16> elems, const c_array<const t_s32> vert_attr_lens); // You might not want to provide vertices to start with, and only the count - passing nullptr in for verts_raw allows this.
         c_gfx_resource_handle AddShaderProg(const s_str_view vert_src, const s_str_view frag_src, c_mem_arena& temp_mem_arena);
-        c_gfx_resource_handle AddTexture(const c_rgba_texture& rgba_tex);
+        c_gfx_resource_handle AddTexture(const s_texture_data_view& tex_data);
 
     private:
+        c_gfx_resource_handle AddHandle(const c_gfx_resource_handle& hdl) {
+            ZF_ASSERT(m_hdls_taken < m_hdls.Len());
+
+            auto& hdl_inplace = m_hdls[m_hdls_taken];
+            hdl_inplace = hdl;
+            m_hdls_taken++;
+            return hdl_inplace;
+        }
+
         c_array<c_gfx_resource_handle> m_hdls; // @todo: Consider making this a dynamic array. Any capacity on this is kind of arbitrary...
         t_size m_hdls_taken = 0;
     };
 
     struct s_texture {
         c_gfx_resource_handle hdl;
-        s_v2<t_s32> size;
+        s_v2<t_s32> size_cache;
 
-        [[nodiscard]] t_b8 LoadFromRGBA(const c_rgba_texture& rgba_tex, c_gfx_resource_arena& gfx_res_arena);
-        [[nodiscard]] t_b8 LoadFromRaw(const s_str_view file_path, c_gfx_resource_arena& gfx_res_arena, c_mem_arena& temp_mem_arena);
-        [[nodiscard]] t_b8 LoadFromPacked(const s_str_view file_path, c_gfx_resource_arena& gfx_res_arena);
+        [[nodiscard]] t_b8 Load(const s_texture_data_view& tex_data, c_gfx_resource_arena& gfx_res_arena);
+
+        [[nodiscard]] t_b8 LoadFromRaw(const s_str_view file_path, c_gfx_resource_arena& gfx_res_arena, c_mem_arena& temp_mem_arena) {
+            s_texture_data tex_data;
+
+            if (!LoadTextureFromRaw(file_path, temp_mem_arena, tex_data)) {
+                return false;
+            }
+
+            return Load(tex_data, gfx_res_arena);
+        }
+
+        [[nodiscard]] t_b8 LoadFromPacked(const s_str_view file_path, c_gfx_resource_arena& gfx_res_arena, c_mem_arena& temp_mem_arena) {
+            s_texture_data tex_data;
+
+            if (!LoadTextureFromPacked(file_path, temp_mem_arena, tex_data)) {
+                return false;
+            }
+
+            return Load(tex_data, gfx_res_arena);
+        }
     };
 }

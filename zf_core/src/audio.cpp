@@ -48,7 +48,7 @@ namespace zf {
 
         s_file_stream fs;
 
-        if (!fs.Open(file_path, true)) {
+        if (!fs.Open(file_path, ec_file_access_mode::write)) {
             return false;
         }
 

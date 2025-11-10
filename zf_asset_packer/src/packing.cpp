@@ -47,14 +47,14 @@ namespace zf {
 
             const auto temp_mem_arena_offs_old = temp_mem_arena.Offs();
 
-            c_rgba_texture rgba_tex;
+            s_texture_data tex_data;
 
-            if (!rgba_tex.LoadFromRaw(temp_mem_arena, zf::s_str_view::FromRawTerminated(cj_src_file_path->valuestring))) {
+            if (!LoadTextureFromRaw(zf::s_str_view::FromRawTerminated(cj_src_file_path->valuestring), temp_mem_arena, tex_data)) {
                 ZF_LOG_ERROR("Failed to load RGBA texture from file \"%s\"!", cj_src_file_path->valuestring);
                 return false;
             }
 
-            if (!PackTexture(zf::s_str_view::FromRawTerminated(cj_dest_file_path->valuestring), rgba_tex, temp_mem_arena)) {
+            if (!PackTexture(tex_data, zf::s_str_view::FromRawTerminated(cj_dest_file_path->valuestring), temp_mem_arena)) {
                 ZF_LOG_ERROR("Failed to pack texture from file \"%s\"!", cj_src_file_path->valuestring);
                 return false;
             }

@@ -6,15 +6,30 @@
 namespace zf {
     constexpr char g_ascii_printable_min = ' ';
     constexpr char g_ascii_printable_max = '~';
-    constexpr t_s32 g_ascii_printable_range_len = g_ascii_printable_max - g_ascii_printable_min + 1;
+    //constexpr t_s32 g_ascii_printable_range_len = g_ascii_printable_max - g_ascii_printable_min + 1;
+
+    enum ec_file_access_mode {
+        read,
+        write
+    };
 
     struct s_file_stream {
         FILE* raw = nullptr;
 
         [[nodiscard]]
-        t_b8 Open(const s_str_view file_path, const t_b8 is_write) {
+        t_b8 Open(const s_str_view file_path, const ec_file_access_mode mode) {
             ZF_ASSERT(file_path.IsTerminated());
-            raw = fopen(file_path.Raw(), is_write ? "wb" : "rb");
+
+            switch (mode) {
+            case ec_file_access_mode::read:
+                raw = fopen(file_path.Raw(), "rb");
+                break;
+
+            case ec_file_access_mode::write:
+                raw = fopen(file_path.Raw(), "wb");
+                break;
+            }
+
             return raw;
         }
 

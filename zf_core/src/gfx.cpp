@@ -4,11 +4,10 @@
 #include <stb_truetype.h>
 
 namespace zf {
-    t_b8 c_rgba_texture::LoadFromRaw(c_mem_arena& mem_arena, const s_str_view file_path) {
-        //ZF_ASSERT(!IsLoaded());
+    t_b8 LoadTextureFromRaw(const s_str_view file_path, c_mem_arena& mem_arena, s_texture_data& o_tex_data) {
         ZF_ASSERT(file_path.IsTerminated());
 
-        stbi_uc* const stb_px_data = stbi_load(file_path.Raw(), &m_size_in_pxs.x, &m_size_in_pxs.y, nullptr, 4);
+        stbi_uc* const stb_px_data = stbi_load(file_path.Raw(), &o_tex_data.size_in_pxs.x, &o_tex_data.size_in_pxs.y, nullptr, 4);
 
         if (!stb_px_data) {
             ZF_BANANA_ERROR();
@@ -16,40 +15,38 @@ namespace zf {
             return false;
         }
 
-        c_array<t_u8> px_data;
-
-        if (!px_data.Init(mem_arena, 4 * m_size_in_pxs.x * m_size_in_pxs.y)) {
+        if (!o_tex_data.rgba_px_data.Init(mem_arena, 4 * o_tex_data.size_in_pxs.x * o_tex_data.size_in_pxs.y)) {
             ZF_BANANA_ERROR();
             stbi_image_free(stb_px_data);
             return false;
         }
 
-        memcpy(px_data.Raw(), stb_px_data, static_cast<size_t>(ZF_SIZE_OF(*px_data.Raw()) * px_data.Len()));
+        memcpy(o_tex_data.rgba_px_data.Raw(), stb_px_data, static_cast<size_t>(ZF_SIZE_OF(*o_tex_data.rgba_px_data.Raw()) * o_tex_data.rgba_px_data.Len()));
 
         stbi_image_free(stb_px_data);
-
-        *this = {m_size_in_pxs, px_data};
 
         return true;
     }
 
-    t_b8 PackTexture(const s_str_view file_path, const c_rgba_texture tex, c_mem_arena& temp_mem_arena) {
-        if (!CreateFileAndParentDirs(file_path, temp_mem_arena)) {
-            return false;
-        }
+    t_b8 LoadTextureFromPacked(const s_str_view file_path, c_mem_arena& mem_arena, s_texture_data& o_tex_data) {
+        ZF_ASSERT(file_path.IsTerminated());
 
         s_file_stream fs;
 
-        if (!fs.Open(file_path, true)) {
+        if (!fs.Open(file_path, ec_file_access_mode::read)) {
             return false;
         }
 
-        const t_b8 success = [tex, fs]() {
-            if (!fs.WriteItem(tex.SizeInPixels())) {
+        const t_b8 success = [fs, &mem_arena, &o_tex_data]() {
+            if (!fs.ReadItem(o_tex_data.size_in_pxs)) {
                 return false;
             }
 
-            if (fs.WriteItems(tex.PixelData().View()) < tex.PixelData().Len()) {
+            if (!o_tex_data.rgba_px_data.Init(mem_arena, 4 * o_tex_data.size_in_pxs.x * o_tex_data.size_in_pxs.y)) {
+                return false;
+            }
+
+            if (fs.ReadItems(o_tex_data.rgba_px_data) < o_tex_data.rgba_px_data.Len()) {
                 return false;
             }
 
@@ -61,19 +58,33 @@ namespace zf {
         return success;
     }
 
-    t_b8 UnpackTexture(c_rgba_texture& tex, const s_str_view file_path) {
-#if 0
-        if (!fs.ReadItem(tex.size_in_pxs)) {
-            ZF_BANANA_ERROR();
+    t_b8 PackTexture(const s_texture_data_view& tex_data, const s_str_view file_path, c_mem_arena& temp_mem_arena) {
+        ZF_ASSERT(file_path.IsTerminated());
+
+        if (!CreateFileAndParentDirs(file_path, temp_mem_arena)) {
             return false;
         }
 
-        if (fs.ReadItems(tex.px_data) < tex.px_data.Len()) {
-            ZF_BANANA_ERROR();
+        s_file_stream fs;
+
+        if (!fs.Open(file_path, ec_file_access_mode::write)) {
             return false;
         }
-#endif
 
-        return true;
+        const t_b8 success = [fs, tex_data]() {
+            if (!fs.WriteItem(tex_data.size_in_pxs)) {
+                return false;
+            }
+
+            if (fs.WriteItems(tex_data.rgba_px_data.View()) < tex_data.rgba_px_data.Len()) {
+                return false;
+            }
+
+            return true;
+        }();
+
+        fs.Close();
+
+        return success;
     }
 }

@@ -118,11 +118,11 @@ namespace zf {
         return { size, size };
     }
 
-    static t_gl_id GenGLTextureFromRGBA(const c_rgba_texture& rgba_tex) {
+    static t_gl_id MakeGLTexture(const s_texture_data_view& tex_data) {
         const s_v2<t_s32> tex_size_limit = GLTextureSizeLimit();
 
-        if (rgba_tex.SizeInPixels().x > tex_size_limit.x || rgba_tex.SizeInPixels().y > tex_size_limit.y) {
-            ZF_LOG_ERROR("Texture size (%d, %d) exceeds OpenGL limits (%d, %d)!", rgba_tex.SizeInPixels().x, rgba_tex.SizeInPixels().y, tex_size_limit.x, tex_size_limit.y);
+        if (tex_data.size_in_pxs.x > tex_size_limit.x || tex_data.size_in_pxs.y > tex_size_limit.y) {
+            ZF_LOG_ERROR("Texture size (%d, %d) exceeds OpenGL limits (%d, %d)!", tex_data.size_in_pxs.x, tex_data.size_in_pxs.y, tex_size_limit.x, tex_size_limit.y);
             return 0;
         }
 
@@ -134,7 +134,7 @@ namespace zf {
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, rgba_tex.SizeInPixels().x, rgba_tex.SizeInPixels().y, 0, GL_RGBA, GL_UNSIGNED_BYTE, rgba_tex.PixelData().Raw());
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, tex_data.size_in_pxs.x, tex_data.size_in_pxs.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, tex_data.rgba_px_data.Raw());
 
         return tex_gl_id;
     }
@@ -181,10 +181,7 @@ namespace zf {
             return {};
         }
 
-        auto& hdl = m_hdls[m_hdls_taken];
-        hdl = {MakeGLMesh(verts_raw, verts_len, elems, vert_attr_lens)};
-        m_hdls_taken++;
-        return hdl;
+        return AddHandle(MakeGLMesh(verts_raw, verts_len, elems, vert_attr_lens));
     }
 
     c_gfx_resource_handle c_gfx_resource_arena::AddShaderProg(const s_str_view vert_src, const s_str_view frag_src, c_mem_arena& temp_mem_arena) {
@@ -201,55 +198,33 @@ namespace zf {
             return {};
         }
 
-        auto& hdl = m_hdls[m_hdls_taken];
-        hdl = {us_gl_shader_prog(prog_gl_id)};
-        m_hdls_taken++;
-        return hdl;
+        return AddHandle(us_gl_shader_prog(prog_gl_id));
     }
 
-    c_gfx_resource_handle c_gfx_resource_arena::AddTexture(const c_rgba_texture& rgba_tex) {
-        ZF_ASSERT(rgba_tex.IsLoaded());
-
+    c_gfx_resource_handle c_gfx_resource_arena::AddTexture(const s_texture_data_view& tex_data) {
         if (m_hdls_taken == m_hdls.Len()) {
             return {};
         }
 
-        const t_gl_id tex_gl_id = GenGLTextureFromRGBA(rgba_tex);
+        const t_gl_id tex_gl_id = MakeGLTexture(tex_data);
 
         if (!tex_gl_id) {
             return {};
         }
 
-        auto& hdl = m_hdls[m_hdls_taken];
-        hdl = {us_gl_texture(tex_gl_id)};
-        m_hdls_taken++;
-        return hdl;
+        return AddHandle(us_gl_texture(tex_gl_id));
     }
 
-    t_b8 s_texture::LoadFromRGBA(const c_rgba_texture& rgba_tex, c_gfx_resource_arena& gfx_res_arena) {
-        const c_gfx_resource_handle new_hdl = gfx_res_arena.AddTexture(rgba_tex);
+    t_b8 s_texture::Load(const s_texture_data_view& tex_data, c_gfx_resource_arena& gfx_res_arena) {
+        const auto hdl_temp = gfx_res_arena.AddTexture(tex_data);
 
-        if (!new_hdl.IsValid()) {
+        if (!hdl_temp.IsValid()) {
             return false;
         }
 
-        hdl = new_hdl;
-        size = rgba_tex.SizeInPixels();
+        hdl = hdl_temp;
+        size_cache = tex_data.size_in_pxs;
 
         return true;
-    }
-
-    t_b8 s_texture::LoadFromRaw(const s_str_view file_path, c_gfx_resource_arena& gfx_res_arena, c_mem_arena& temp_mem_arena) {
-        c_rgba_texture rgba_tex;
-
-        if (!rgba_tex.LoadFromRaw(temp_mem_arena, file_path)) {
-            return false;
-        }
-
-        return LoadFromRGBA(rgba_tex, gfx_res_arena);
-    }
-
-    t_b8 s_texture::LoadFromPacked(const s_str_view file_path, c_gfx_resource_arena& gfx_res_arena) {
-        return false;
     }
 }

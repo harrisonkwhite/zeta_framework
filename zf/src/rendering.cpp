@@ -90,7 +90,7 @@ void main() {
             {255, 255, 255, 255}
         };
 
-        if (!px_tex.LoadFromRGBA({{1, 1}, px_rgba}, gfx_res_arena)) {
+        if (!px_tex.Load({{1, 1}, px_rgba}, gfx_res_arena)) {
             return false;
         }
 
@@ -187,13 +187,13 @@ void main() {
 
         if (src_rect == s_rect<t_s32>()) {
             // If the source rectangle wasn't set, just go with the whole texture.
-            src_rect_to_use = {0, 0, tex.size.x, tex.size.y};
+            src_rect_to_use = {0, 0, tex.size_cache.x, tex.size_cache.y};
         } else {
-            ZF_ASSERT_MSG(src_rect.Left() >= 0 && src_rect.Top() >= 0 && src_rect.Right() <= tex.size.x && src_rect.Top() <= tex.size.y, "Invalid source rectangle!");
+            ZF_ASSERT_MSG(src_rect.Left() >= 0 && src_rect.Top() >= 0 && src_rect.Right() <= tex.size_cache.x && src_rect.Top() <= tex.size_cache.y, "Invalid source rectangle!");
             src_rect_to_use = src_rect;
         }
 
-        const s_rect tex_coords = MakeTextureCoords(src_rect_to_use, tex.size);
+        const s_rect tex_coords = MakeTextureCoords(src_rect_to_use, tex.size_cache);
         const s_v2<t_f32> size = {src_rect_to_use.width * scale.x, src_rect_to_use.height * scale.y};
         Draw(tex.hdl, tex_coords, pos, size, origin, rot, blend);
     }

@@ -134,35 +134,32 @@ namespace zf {
         constexpr s_v2<t_f32> g_bottomright = {1.0f, 1.0f};
     }
 
-    class c_rgba_texture {
-    public:
-        c_rgba_texture() = default;
+    // For simplicity, RGBA is the only format we work with.
 
-        c_rgba_texture(const s_v2<t_s32> size_in_pxs, const c_array<const t_u8> px_data) : m_size_in_pxs(size_in_pxs), m_px_data(px_data) {
-            ZF_ASSERT(px_data.IsEmpty() || (px_data.Len() == 4 * size_in_pxs.x * size_in_pxs.y));
-        }
+    struct s_texture_data_view {
+        s_v2<t_s32> size_in_pxs;
+        c_array<const t_u8> rgba_px_data;
 
-        [[nodiscard]] t_b8 LoadFromRaw(c_mem_arena& mem_arena, const s_str_view file_path);
-
-        s_v2<t_s32> SizeInPixels() const {
-            ZF_ASSERT(IsLoaded());
-            return m_size_in_pxs;
-        }
-
-        c_array<const t_u8> PixelData() const {
-            ZF_ASSERT(IsLoaded());
-            return m_px_data;
-        }
-
-        t_b8 IsLoaded() const {
-            return !m_px_data.IsEmpty();
-        }
-
-    private:
-        s_v2<t_s32> m_size_in_pxs;
-        c_array<const t_u8> m_px_data; // 4 bytes per pixel (RGBA).
+        s_texture_data_view() = default;
+        s_texture_data_view(const s_v2<t_s32> size_in_pxs, const c_array<const t_u8> rgba_px_data)
+            : size_in_pxs(size_in_pxs), rgba_px_data(rgba_px_data) {}
     };
 
-    t_b8 PackTexture(const s_str_view file_path, const c_rgba_texture tex, c_mem_arena& temp_mem_arena);
-    t_b8 UnpackTexture(c_rgba_texture& tex, const s_str_view file_path);
+    struct s_texture_data {
+        s_v2<t_s32> size_in_pxs;
+        c_array<t_u8> rgba_px_data;
+
+        s_texture_data() = default;
+        s_texture_data(const s_v2<t_s32> size_in_pxs, const c_array<t_u8> rgba_px_data)
+            : size_in_pxs(size_in_pxs), rgba_px_data(rgba_px_data) {}
+
+        operator s_texture_data_view() const {
+            return {size_in_pxs, c_array<const t_u8>(rgba_px_data)};
+        }
+    };
+
+    [[nodiscard]] t_b8 LoadTextureFromRaw(const s_str_view file_path, c_mem_arena& mem_arena, s_texture_data& o_tex_data);
+    [[nodiscard]] t_b8 LoadTextureFromPacked(const s_str_view file_path, c_mem_arena& mem_arena, s_texture_data& o_tex_data);
+
+    [[nodiscard]] t_b8 PackTexture(const s_texture_data_view& tex_data, const s_str_view file_path, c_mem_arena& temp_mem_arena);
 }
