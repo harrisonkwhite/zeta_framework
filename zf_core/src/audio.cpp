@@ -1,9 +1,10 @@
 #include <zc/audio.h>
 
+#include <zc/io.h>
 #include <miniaudio.h>
 
 namespace zf {
-    bool s_audio_data::LoadFromRaw(const s_str_view file_path, c_mem_arena& temp_mem_arena) {
+    bool s_sound_data::LoadFromRaw(c_mem_arena& mem_arena, const s_str_view file_path) {
         ZF_ASSERT(file_path.IsTerminated());
 
         ma_decoder decoder;
@@ -12,7 +13,7 @@ namespace zf {
             return false;
         }
 
-        const bool success = [this, &decoder, &temp_mem_arena]() {
+        const bool success = [this, &decoder, &mem_arena]() {
             ma_uint64 frame_cnt;
 
             if (ma_decoder_get_length_in_pcm_frames(&decoder, &frame_cnt) != MA_SUCCESS) {
@@ -24,7 +25,7 @@ namespace zf {
 
             const t_size total_sample_cnt = static_cast<t_size>(frame_cnt) * channel_cnt;
 
-            if (!pcm.Init(temp_mem_arena, total_sample_cnt)) {
+            if (!pcm.Init(mem_arena, total_sample_cnt)) {
                 return false;
             }
 
@@ -39,4 +40,40 @@ namespace zf {
 
         return success;
     }
-};
+
+    bool PackSound(const s_str_view file_path, const s_sound_data& snd_data, c_mem_arena& temp_mem_arena) {
+        if (!CreateFileAndParentDirs(file_path, temp_mem_arena)) {
+            return false;
+        }
+
+        s_file_stream fs;
+
+        if (!fs.Open(file_path, true)) {
+            return false;
+        }
+
+        const t_b8 success = [snd_data, fs]() {
+            if (!fs.WriteItem(snd_data.channel_cnt)) {
+                return false;
+            }
+
+            if (!fs.WriteItem(snd_data.sample_rate)) {
+                return false;
+            }
+
+            if (fs.WriteItems(snd_data.pcm.View()) < snd_data.pcm.Len()) {
+                return false;
+            }
+
+            return true;
+        }();
+
+        fs.Close();
+
+        return success;
+    }
+
+    bool UnpackSound(s_sound_data& snd_data, const s_str_view file_path) {
+        return false;
+    }
+}

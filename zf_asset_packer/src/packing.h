@@ -1,8 +1,6 @@
 #pragma once
 
 #include <zc/io.h>
-#include <zc/gfx.h>
-#include <zc/mem/mem.h>
 #include <zc/mem/strs.h>
 
 namespace zf {

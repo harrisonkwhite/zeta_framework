@@ -1,6 +1,9 @@
 #include "packing.h"
 
 #include <zc/debug.h>
+#include <zc/gfx.h>
+#include <zc/audio.h>
+#include <zc/mem/mem.h>
 #include <cJSON.h>
 
 namespace zf {
@@ -64,6 +67,60 @@ namespace zf {
         return true;
     }
 
+    static t_b8 PackSoundsFromInstrs(cJSON* const cj, c_mem_arena& temp_mem_arena) {
+        ZF_ASSERT(cj);
+
+        cJSON* const cj_snds = cJSON_GetObjectItemCaseSensitive(cj, "sounds");
+
+        if (!cJSON_IsArray(cj_snds)) {
+            ZF_LOG_ERROR("No \"sounds\" array found in asset packing instructions!");
+            return false;
+        }
+
+        cJSON* cj_snd = nullptr;
+
+        cJSON_ArrayForEach(cj_snd, cj_snds) {
+            if (!cJSON_IsObject(cj_snd)) {
+                ZF_LOG_ERROR("Invalid sound entry in asset packing instructions!");
+                continue;
+            }
+
+            const cJSON* const cj_src_file_path = cJSON_GetObjectItem(cj_snd, "src_file_path");
+
+            if (!cJSON_IsString(cj_src_file_path)) {
+                ZF_LOG_ERROR("\"src_file_path\" field missing or invalid in sound entry!");
+                return false;
+            }
+
+            const cJSON* const cj_dest_file_path = cJSON_GetObjectItem(cj_snd, "dest_file_path");
+
+            if (!cJSON_IsString(cj_dest_file_path)) {
+                ZF_LOG_ERROR("\"dest_file_path\" field missing or invalid in sound entry!");
+                return false;
+            }
+
+            const auto temp_mem_arena_offs_old = temp_mem_arena.Offs();
+
+            s_sound_data snd_data;
+
+            if (!snd_data.LoadFromRaw(temp_mem_arena, zf::s_str_view::FromRawTerminated(cj_src_file_path->valuestring))) {
+                ZF_LOG_ERROR("Failed to load sound from file \"%s\"!", cj_src_file_path->valuestring);
+                return false;
+            }
+
+            if (!PackSound(zf::s_str_view::FromRawTerminated(cj_dest_file_path->valuestring), snd_data, temp_mem_arena)) {
+                ZF_LOG_ERROR("Failed to pack sound from file \"%s\"!", cj_src_file_path->valuestring);
+                return false;
+            }
+
+            ZF_LOG_SUCCESS("Packed sound from file \"%s\"!", cj_src_file_path->valuestring);
+
+            temp_mem_arena.Rewind(temp_mem_arena_offs_old);
+        }
+
+        return true;
+    }
+
     t_b8 PackAssets(const s_str_view instrs_json, c_mem_arena& temp_mem_arena) {
         ZF_ASSERT(instrs_json.IsTerminated());
 
@@ -82,6 +139,11 @@ namespace zf {
 
             if (!PackTexturesFromInstrs(cj, temp_mem_arena)) {
                 ZF_LOG_ERROR("Failed to pack textures!");
+                return false;
+            }
+
+            if (!PackSoundsFromInstrs(cj, temp_mem_arena)) {
+                ZF_LOG_ERROR("Failed to pack sounds!");
                 return false;
             }
 

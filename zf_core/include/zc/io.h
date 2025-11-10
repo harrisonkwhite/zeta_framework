@@ -38,8 +38,8 @@ namespace zf {
 
         template<typename tp_type>
         [[nodiscard]]
-        t_s32 ReadItems(const c_array<tp_type> arr) const {
-            return static_cast<t_s32>(fread(arr.Raw(), ZF_SIZE_OF(tp_type), arr.Len(), raw));
+        t_size ReadItems(const c_array<tp_type> arr) const {
+            return fread(arr.Raw(), ZF_SIZE_OF(tp_type), arr.Len(), raw);
         }
 
         template<typename tp_type>
@@ -50,8 +50,8 @@ namespace zf {
 
         template<typename tp_type>
         [[nodiscard]]
-        t_s32 WriteItems(const c_array<const tp_type> arr) const {
-            return static_cast<t_s32>(fwrite(arr.Raw(), ZF_SIZE_OF(tp_type), arr.Len(), raw));
+        t_size WriteItems(const c_array<const tp_type> arr) const {
+            return fwrite(arr.Raw(), ZF_SIZE_OF(tp_type), arr.Len(), raw);
         }
     };
 
