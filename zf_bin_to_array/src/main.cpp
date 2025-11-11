@@ -9,13 +9,13 @@ namespace zf {
 
         s_file_stream input_reader;
 
-        if (!input_reader.Open(input_file_path, false)) {
+        if (!input_reader.Open(input_file_path, ec_file_access_mode::read)) {
             return false;
         }
 
         s_file_stream output_writer;
 
-        if (!output_writer.Open(output_file_path, true)) {
+        if (!output_writer.Open(output_file_path, ec_file_access_mode::write)) {
             input_reader.Close();
             return false;
         }

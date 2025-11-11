@@ -65,6 +65,9 @@ namespace zf {
             }
 
             switch (m_type) {
+            case ec_gfx_resource_type::invalid:
+                return true;
+
             case ec_gfx_resource_type::mesh:
                 return m_raw.mesh.vert_arr_gl_id == other.m_raw.mesh.vert_arr_gl_id
                     && m_raw.mesh.vert_buf_gl_id == other.m_raw.mesh.vert_buf_gl_id
@@ -75,10 +78,10 @@ namespace zf {
 
             case ec_gfx_resource_type::texture:
                 return m_raw.tex.gl_id == other.m_raw.tex.gl_id;
-
-            case ec_gfx_resource_type::invalid:
-                return true;
             }
+
+            ZF_ASSERT(false);
+            return false;
         }
 
     private:

@@ -21,7 +21,7 @@ namespace zf {
         }
 
         const t_b8 success = [&contents, &mem_arena, file_path, include_terminating_byte, &fs]() {
-            const auto file_size = static_cast<t_s32>(fs.CalcSize());
+            const t_size file_size = fs.CalcSize();
 
             if (!contents.Init(mem_arena, include_terminating_byte ? file_size + 1 : file_size)) {
                 ZF_LOG_ERROR("Failed to reserve memory for the contents of file \"%s\"!", file_path.Raw());
@@ -87,7 +87,7 @@ namespace zf {
 
         t_b8 cur_dir_name_is_empty = true;
 
-        t_s32 i = 0;
+        t_size i = 0;
 
         while (true) {
             if (path_cloned.chrs[i] == '/' || path_cloned.chrs[i] == '\\' || !path_cloned.chrs[i]) {
@@ -123,7 +123,7 @@ namespace zf {
     t_b8 CreateFileAndParentDirs(const s_str_view path, c_mem_arena& temp_mem_arena) {
         ZF_ASSERT(path.IsTerminated());
 
-        const t_s32 path_len = path.CalcLen();
+        const t_size path_len = path.CalcLen();
 
         s_str path_cloned; // @speed: A clone on every call to this? Yuck!
 
@@ -131,7 +131,7 @@ namespace zf {
             return false;
         }
 
-        for (t_s32 i = path_len - 1; i >= 0; i--) {
+        for (t_size i = path_len - 1; i >= 0; i--) {
             if (path_cloned.chrs[i] == '/' || path_cloned.chrs[i] == '\\') {
                 if (i > 0) {
                     path_cloned.chrs[i] = '\0';
