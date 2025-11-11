@@ -3,37 +3,40 @@
 #include <zc/mem/arrays.h>
 
 namespace zf {
-    template<typename tp_type>
+    template<typename tp_key_type, typename tp_value_type>
     class c_min_heap {
     public:
+        struct s_node {
+            tp_key_type key = {};
+            tp_value_type val = {};
+        };
+
         [[nodiscard]]
         t_b8 Init(c_mem_arena& mem_arena, const t_size cap) {
             ZF_ASSERT(cap > 0);
 
-            c_array<tp_type> nodes;
+            m_len = 0;
 
-            if (!nodes.Init(mem_arena, cap)) {
+            if (!m_nodes.Init(mem_arena, cap)) {
                 return false;
             }
-
-            m_nodes = nodes;
-            m_len = 0;
 
             return true;
         }
 
-        void Insert(const tp_type& val) {
+        void Insert(const tp_key_type& key, const tp_value_type& val) {
             ZF_ASSERT(!IsFull());
 
             m_len++;
-            m_nodes[m_len - 1] = val;
+            m_nodes[m_len - 1].key = key;
+            m_nodes[m_len - 1].val = val;
             BubbleUp(m_len - 1);
         }
 
-        tp_type RemoveMin() {
+        s_node RemoveMin() {
             ZF_ASSERT(!IsEmpty());
 
-            const tp_type ret = m_nodes[0];
+            const s_node ret = m_nodes[0];
 
             m_len--;
 
@@ -61,13 +64,13 @@ namespace zf {
             return m_len == Cap();
         }
 
-        const tp_type& Min() const {
+        const s_node& Min() const {
             ZF_ASSERT(!IsEmpty());
             return m_nodes[0];
         }
 
     private:
-        c_array<tp_type> m_nodes;
+        c_array<s_node> m_nodes;
         t_size m_len = 0;
 
         static t_size IndexOfLeft(const t_size index) {
@@ -95,7 +98,7 @@ namespace zf {
 
             const t_size par_index = IndexOfParent(index);
 
-            if (m_nodes[par_index] <= m_nodes[index]) {
+            if (m_nodes[par_index].key <= m_nodes[index].key) {
                 return;
             }
 
@@ -116,9 +119,9 @@ namespace zf {
                 return;
             }
 
-            const t_size index_of_smaller = !right_exists || m_nodes[left_index] <= m_nodes[right_index] ? left_index : right_index;
+            const t_size index_of_smaller = (!right_exists || m_nodes[left_index].key <= m_nodes[right_index].key) ? left_index : right_index;
 
-            if (m_nodes[index_of_smaller] < m_nodes[index]) {
+            if (m_nodes[index_of_smaller].key < m_nodes[index].key) {
                 Swap(m_nodes[index], m_nodes[index_of_smaller]);
                 BubbleDown(index_of_smaller);
             }

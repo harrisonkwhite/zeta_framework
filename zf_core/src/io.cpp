@@ -141,7 +141,7 @@ namespace zf {
                     }
                 }
 
-                const auto fs = fopen(path.Raw(), "w");
+                const auto fs = fopen(path.Raw(), "wb");
 
                 if (!fs) {
                     return false;
