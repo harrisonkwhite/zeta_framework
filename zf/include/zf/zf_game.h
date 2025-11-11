@@ -1,9 +1,7 @@
 #pragma once
 
-#include <zc/debug.h>
-#include <zc/math.h>
-#include <zc/mem/mem.h>
-#include <zc/mem/strs.h>
+#include <zc.h>
+#include <zc/zc_math.h>
 #include <zf/rendering.h>
 #include <zf/window.h>
 

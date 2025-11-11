@@ -1,8 +1,7 @@
 #pragma once
 
-#include <zc/mem/mem.h>
-#include <zc/mem/bit_vector.h>
-#include <zc/mem/strs.h>
+#include <zc/essential.h>
+#include <zc/strs.h>
 
 namespace zf {
     template<typename tp_type>

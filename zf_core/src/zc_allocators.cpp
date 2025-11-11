@@ -1,8 +1,7 @@
-#include <zc/mem/mem.h>
+#include <zc/allocators.h>
 
 namespace zf {
     t_b8 c_mem_arena::Init(const t_size size) {
-        ZF_ASSERT(!IsInitted());
         ZF_ASSERT(size > 0);
 
         m_buf = calloc(static_cast<size_t>(size), 1);
@@ -17,14 +16,10 @@ namespace zf {
     }
 
     void c_mem_arena::Release() {
-        ZF_ASSERT(IsInitted());
-
         free(m_buf);
-        *this = {};
     }
 
-    void* c_mem_arena::Push(const t_size size, const t_size alignment) {
-        ZF_ASSERT(IsInitted());
+    void* c_mem_arena::PushRaw(const t_size size, const t_size alignment) {
         ZF_ASSERT(size > 0);
         ZF_ASSERT(IsAlignmentValid(alignment));
 

@@ -1,6 +1,6 @@
-#include <zc/debug.h>
+#include <zc/zc_essential.h>
 
-#ifdef _WIN32
+#ifdef ZF_PLATFORM_WINDOWS
     #ifndef WIN32_LEAN_AND_MEAN
         #define WIN32_LEAN_AND_MEAN
     #endif
@@ -13,11 +13,12 @@
 #endif
 
 #include <cstdlib> // Reinclude necessary since abort() gets overwritten.
-#include <zc/mem/mem.h>
 
 namespace zf {
     static void PrintStackTrace() {
-#ifdef _WIN32
+        fprintf(stderr, "\nStack Trace:\n");
+
+#ifdef ZF_PLATFORM_WINDOWS
         const HANDLE proc = GetCurrentProcess();
         SymInitialize(proc, nullptr, TRUE);
 
@@ -54,7 +55,36 @@ namespace zf {
 #endif
     }
 
-    void HandleAssertFailure(const char* const condition, const char* const file, const t_s32 line, const char* const func, const char* const msg) {
+    static void BreakIntoDebuggerOrAbort() {
+#ifdef ZF_PLATFORM_WINDOWS
+        if (IsDebuggerPresent()) {
+            __debugbreak();
+        } else {
+            abort();
+        }
+#else
+        abort();
+#endif
+    }
+
+    void HandleFailureDump(const char* const func, const char* const file, const int line, const char* const msg) {
+        fprintf(stderr, ZF_ANSI_BOLD ZF_ANSI_FG_RED "\n==================== FAILURE ====================\n" ZF_ANSI_RESET);
+        fprintf(stderr, "Function: %s\n", func);
+        fprintf(stderr, "File:     %s\n", file);
+        fprintf(stderr, "Line:     %d\n", line);
+
+        if (msg) {
+            fprintf(stderr, "Message:   \"%s\"\n", msg);
+        }
+
+        PrintStackTrace();
+
+        fprintf(stderr, ZF_ANSI_BOLD ZF_ANSI_FG_RED "=================================================\n\n" ZF_ANSI_RESET);
+
+        BreakIntoDebuggerOrAbort();
+    }
+
+    void HandleAssertFailure(const char* const condition, const char* const file, const int line, const char* const func, const char* const msg) {
         fprintf(stderr, ZF_ANSI_BOLD ZF_ANSI_FG_RED "\n==================== ASSERTION FAILED ====================\n" ZF_ANSI_RESET);
         fprintf(stderr, "Condition: %s\n", condition);
         fprintf(stderr, "Function:  %s\n", func);
@@ -65,20 +95,10 @@ namespace zf {
             fprintf(stderr, "Message:   \"%s\"\n", msg);
         }
 
-        fprintf(stderr, "\nStack Trace:\n");
         PrintStackTrace();
 
         fprintf(stderr, ZF_ANSI_BOLD ZF_ANSI_FG_RED "==========================================================\n\n" ZF_ANSI_RESET);
 
-        // Break into debugger if attached, otherwise abort.
-#ifdef _WIN32
-        if (IsDebuggerPresent()) {
-            __debugbreak();
-        } else {
-            abort();
-        }
-#else
-        abort();
-#endif
+        BreakIntoDebuggerOrAbort();
     }
 }

@@ -1,104 +1,8 @@
 #pragma once
 
-#include <zc/mem/mem.h>
+#include <zc/essential.h>
 
 namespace zf {
-    template<typename tp_type>
-    class c_array {
-    public:
-        constexpr c_array() = default;
-
-        constexpr c_array(tp_type* const buf, const t_size len) : m_buf(buf), m_len(len) {
-            ZF_ASSERT((!buf && len == 0) || buf);
-        }
-
-        [[nodiscard]]
-        t_b8 Init(c_mem_arena& mem_arena, const t_size len) {
-            ZF_ASSERT(len > 0);
-
-            m_buf = mem_arena.PushType<tp_type>(len);
-
-            if (!m_buf) {
-                return false;
-            }
-
-            m_len = len;
-
-            return true;
-        }
-
-        constexpr tp_type* Raw() const {
-            return m_buf;
-        }
-
-        constexpr t_size Len() const {
-            return m_len;
-        }
-
-        constexpr t_size SizeInBytes() const {
-            return ZF_SIZE_OF(tp_type) * Len();
-        }
-
-        constexpr t_b8 IsEmpty() const {
-            return m_len == 0;
-        }
-
-        tp_type& operator[](const t_size index) const {
-            ZF_ASSERT(index >= 0 && index < m_len);
-            return m_buf[index];
-        }
-
-        constexpr c_array<const tp_type> View() const {
-            return {m_buf, m_len};
-        }
-
-        constexpr operator c_array<const tp_type>() const {
-            return View();
-        }
-
-        constexpr c_array Slice(const t_size beg, const t_size end) const {
-            ZF_ASSERT(beg >= 0 && beg <= m_len);
-            ZF_ASSERT(end >= beg && end <= m_len);
-            return {m_buf + beg, end - beg};
-        }
-
-    private:
-        tp_type* m_buf = nullptr;
-        t_size m_len = 0;
-    };
-
-    template<typename tp_type>
-    void CopyArray(const c_array<tp_type> dest, const c_array<const tp_type> src) {
-        ZF_ASSERT(dest.Len() >= src.Len());
-
-        for (t_size i = 0; i < src.Len(); i++) {
-            dest[i] = src[i];
-        }
-    }
-
-    template<typename tp_type>
-    t_b8 CloneArray(c_array<tp_type>& out, c_mem_arena& out_mem_arena, const c_array<const tp_type> src) {
-        ZF_ASSERT(src.Len() > 0);
-
-        if (!out.Init(out_mem_arena, src.Len())) {
-            return false;
-        }
-
-        CopyArray(out, src);
-
-        return true;
-    }
-
-    template<typename tp_type>
-    constexpr c_array<const t_u8> ToBytes(const tp_type& obj) {
-        return {reinterpret_cast<const t_u8*>(obj), ZF_SIZE_OF(obj)};
-    }
-
-    template<typename tp_type>
-    constexpr c_array<t_u8> ToBytes(tp_type& obj) {
-        return {reinterpret_cast<t_u8*>(obj), ZF_SIZE_OF(obj)};
-    }
-
     template<typename tp_type, t_size tp_len>
     struct s_static_array {
         static_assert(tp_len > 0, "Invalid static array length!");
@@ -289,7 +193,7 @@ namespace zf {
     };
 
     template<typename tp_type>
-    t_b8 BinarySearch(const c_array<const tp_type> arr, const tp_type& elem) {
+    t_b8 BinarySearch(const c_array<const tp_type> arr, const tp_type& elem, const t_comparator<tp_type> comparator = DefaultComparator) {
         ZF_ASSERT(IsSorted(arr));
 
         if (arr.Len() == 0) {
@@ -298,10 +202,12 @@ namespace zf {
 
         const tp_type& mid = elem[arr.Len() / 2];
 
-        if (mid == elem) {
+        if (elem == mid) {
             return true;
+        } else if (elem < mid) {
+            return BinarySearch(arr.Slice(0, arr.Len() / 2), elem);
+        } else {
+            return BinarySearch(arr.Slice((arr.Len() / 2) + 1, arr.Len()), elem);
         }
-
-        return elem < mid ? BinarySearch(arr.Slice(0, arr.Len() / 2), elem) : BinarySearch(arr.Slice((arr.Len() / 2) + 1, arr.Len()), elem);
     }
 }

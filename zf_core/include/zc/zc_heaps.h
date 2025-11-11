@@ -1,7 +1,6 @@
 #pragma once
 
-#include <zc/types.h>
-#include <zc/mem/arrays.h>
+#include <zc/essential.h>
 
 namespace zf {
     template<typename tp_key_type, typename tp_value_type>

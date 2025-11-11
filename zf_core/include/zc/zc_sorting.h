@@ -1,8 +1,6 @@
 #pragma once
 
-#include <zc/types.h>
-#include <zc/mem/bit_vector.h>
-#include <zc/mem/min_heap.h>
+#include <zc/essential.h>
 
 namespace zf {
     template<typename tp_type>

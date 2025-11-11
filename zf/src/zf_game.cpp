@@ -75,7 +75,7 @@ namespace zf {
 
         // Initialise developer memory.
         if (info.dev_mem_size > 0) {
-            game.dev_mem = game.perm_mem_arena.Push(info.dev_mem_size, info.dev_mem_alignment);
+            game.dev_mem = game.perm_mem_arena.PushRaw(info.dev_mem_size, info.dev_mem_alignment);
 
             if (!game.dev_mem) {
                 ZF_LOG_ERROR("Failed to reserve developer memory!");
