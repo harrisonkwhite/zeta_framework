@@ -89,6 +89,16 @@ namespace zf {
         return true;
     }
 
+    template<typename tp_type>
+    constexpr c_array<const t_u8> ToBytes(const tp_type& obj) {
+        return {reinterpret_cast<const t_u8*>(obj), ZF_SIZE_OF(obj)};
+    }
+
+    template<typename tp_type>
+    constexpr c_array<t_u8> ToBytes(tp_type& obj) {
+        return {reinterpret_cast<t_u8*>(obj), ZF_SIZE_OF(obj)};
+    }
+
     template<typename tp_type, t_size tp_len>
     struct s_static_array {
         static_assert(tp_len > 0, "Invalid static array length!");
@@ -194,6 +204,10 @@ namespace zf {
             return m_backing_arr[m_height];
         }
 
+        void Clear() {
+            m_height = 0;
+        }
+
     private:
         c_array<tp_type> m_backing_arr;
         t_size m_height = 0;
@@ -261,6 +275,11 @@ namespace zf {
             m_begin_index = Wrap(m_begin_index + 1, 0, m_backing_arr.Len());
             m_len--;
             return m_backing_arr[bi_old];
+        }
+
+        void Clear() {
+            m_len = 0;
+            m_begin_index = 0;
         }
 
     private:
