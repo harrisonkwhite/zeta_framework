@@ -1,5 +1,6 @@
 #pragma once
 
+#include <zc/types.h>
 #include <zc/mem/arrays.h>
 
 namespace zf {
@@ -12,7 +13,7 @@ namespace zf {
         };
 
         [[nodiscard]]
-        t_b8 Init(c_mem_arena& mem_arena, const t_size cap) {
+        t_b8 Init(c_mem_arena& mem_arena, const t_size cap, const t_comparator<tp_key_type> comparator = DefaultComparator) {
             ZF_ASSERT(cap > 0);
 
             m_len = 0;
@@ -72,6 +73,7 @@ namespace zf {
     private:
         c_array<s_node> m_nodes;
         t_size m_len = 0;
+        t_comparator<tp_key_type> m_comparator = nullptr;
 
         static t_size IndexOfLeft(const t_size index) {
             return (2 * index) + 1;
@@ -98,7 +100,7 @@ namespace zf {
 
             const t_size par_index = IndexOfParent(index);
 
-            if (m_nodes[par_index].key <= m_nodes[index].key) {
+            if (m_comparator(m_nodes[par_index].key, m_nodes[index].key) <= 0) {
                 return;
             }
 
@@ -119,9 +121,9 @@ namespace zf {
                 return;
             }
 
-            const t_size index_of_smaller = (!right_exists || m_nodes[left_index].key <= m_nodes[right_index].key) ? left_index : right_index;
+            const t_size index_of_smaller = (!right_exists || m_comparator(m_nodes[left_index].key, m_nodes[right_index].key) <= 0) ? left_index : right_index;
 
-            if (m_nodes[index_of_smaller].key < m_nodes[index].key) {
+            if (m_comparator(m_nodes[index_of_smaller].key, m_nodes[index].key)) {
                 Swap(m_nodes[index], m_nodes[index_of_smaller]);
                 BubbleDown(index_of_smaller);
             }

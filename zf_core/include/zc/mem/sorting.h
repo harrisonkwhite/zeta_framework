@@ -1,18 +1,15 @@
 #pragma once
 
+#include <zc/types.h>
 #include <zc/mem/min_heap.h>
 
 namespace zf {
-    // Like the qsort comparison function, should return negative if a < b, 0 if a == b, and positive if b > a.
     template<typename tp_type>
-    using t_comparison_func = t_s32 (*)(const tp_type& a, const tp_type& b);
-
-    template<typename tp_type>
-    t_b8 IsSorted(const c_array<const tp_type> arr, const t_comparison_func<tp_type> comparison_func) {
-        ZF_ASSERT(comparison_func);
+    t_b8 IsSorted(const c_array<const tp_type> arr, const t_comparator<tp_type> comparator = DefaultComparator) {
+        ZF_ASSERT(comparator);
 
         for (t_size i = 0; i < arr.Len() - 1; i++) {
-            if (comparison_func(arr[i], arr[i + 1]) > 0) {
+            if (comparator(arr[i], arr[i + 1]) > 0) {
                 return false;
             }
         }
@@ -22,8 +19,8 @@ namespace zf {
 
     // O(n) best-case if array is already sorted, O(n^2) worst-case.
     template<typename tp_type>
-    void BubbleSort(const c_array<tp_type> arr, const t_comparison_func<tp_type> comparison_func) {
-        ZF_ASSERT(comparison_func);
+    void BubbleSort(const c_array<tp_type> arr, const t_comparator<tp_type> comparator = DefaultComparator) {
+        ZF_ASSERT(comparator);
 
         t_b8 sorted;
 
@@ -31,7 +28,7 @@ namespace zf {
             sorted = true;
 
             for (t_size i = 0; i < arr.Len() - 1; i++) {
-                if (comparison_func(arr[i], arr[i + 1]) > 0) {
+                if (comparator(arr[i], arr[i + 1]) > 0) {
                     Swap(arr[i], arr[i + 1]);
                     sorted = false;
                 }
@@ -41,8 +38,8 @@ namespace zf {
 
     // O(n) best-case if array is already sorted, O(n^2) worst-case.
     template<typename tp_type>
-    void InsertionSort(const c_array<tp_type> arr, const t_comparison_func<tp_type> comparison_func) {
-        ZF_ASSERT(comparison_func);
+    void InsertionSort(const c_array<tp_type> arr, const t_comparator<tp_type> comparator = DefaultComparator) {
+        ZF_ASSERT(comparator);
 
         for (t_size i = 1; i < arr.Len(); i++) {
             const tp_type temp = arr[i];
@@ -50,7 +47,7 @@ namespace zf {
             t_size j = i - 1;
 
             for (; j >= 0; j--) {
-                if (comparison_func(arr[j], temp) <= 0) {
+                if (comparator(arr[j], temp) <= 0) {
                     break;
                 }
 
@@ -63,14 +60,14 @@ namespace zf {
 
     // O(n^2) in every case.
     template<typename tp_type>
-    void SelectionSort(const c_array<tp_type> arr, const t_comparison_func<tp_type> comparison_func) {
-        ZF_ASSERT(comparison_func);
+    void SelectionSort(const c_array<tp_type> arr, const t_comparator<tp_type> comparator = DefaultComparator) {
+        ZF_ASSERT(comparator);
 
         for (t_size i = 0; i < arr.Len() - 1; i++) {
             tp_type& min = arr[i];
 
             for (t_size j = i + 1; j < arr.Len(); j++) {
-                if (comparison_func(arr[j], min) < 0) {
+                if (comparator(arr[j], min) < 0) {
                     min = arr[j];
                 }
             }
@@ -81,8 +78,8 @@ namespace zf {
 
     // O(n log n) in both time complexity and space complexity in every case.
     template<typename tp_type>
-    t_b8 MergeSort(const c_array<tp_type> arr, const t_comparison_func<tp_type> comparison_func, c_mem_arena& temp_mem_arena) {
-        ZF_ASSERT(comparison_func);
+    t_b8 MergeSort(const c_array<tp_type> arr, c_mem_arena& temp_mem_arena, const t_comparator<tp_type> comparator = DefaultComparator) {
+        ZF_ASSERT(comparator);
 
         if (arr.Len() <= 1) {
             return true;
@@ -101,7 +98,7 @@ namespace zf {
             return false;
         }
 
-        if (!MergeSort(arr_left, comparison_func, temp_mem_arena) || !MergeSort(arr_right, comparison_func, temp_mem_arena)) {
+        if (!MergeSort(arr_left, comparator, temp_mem_arena) || !MergeSort(arr_right, comparator, temp_mem_arena)) {
             return false;
         }
 
@@ -110,7 +107,7 @@ namespace zf {
         t_size j = 0;
 
         do {
-            if (comparison_func(arr_left[i], arr_right[j]) <= 0) {
+            if (comparator(arr_left[i], arr_right[j]) <= 0) {
                 arr[i + j] = arr_left[i];
                 i++;
 
@@ -167,8 +164,8 @@ namespace zf {
     // Space complexity is O(1) compared to merge sort.
     // Custom pivot index selection function is only for arrays of length 3 or greater.
     template<typename tp_type>
-    void QuickSort(const c_array<const tp_type> arr, const t_comparison_func<const tp_type> comparison_func, t_size (* const pivot_index_selection_func)(const c_array<const tp_type> arr) = QuickSortMedianOfThreePivotIndexSelection) {
-        ZF_ASSERT(comparison_func);
+    void QuickSort(const c_array<const tp_type> arr, const t_comparator<tp_type> comparator = DefaultComparator, t_size (* const pivot_index_selection_func)(const c_array<const tp_type> arr) = QuickSortMedianOfThreePivotIndexSelection) {
+        ZF_ASSERT(comparator);
         ZF_ASSERT(pivot_index_selection_func);
 
         if (arr.Len() <= 1) {
@@ -176,7 +173,7 @@ namespace zf {
         }
 
         if (arr.Len() == 2) {
-            if (comparison_func(arr[0], arr[1]) > 0) {
+            if (comparator(arr[0], arr[1]) > 0) {
                 Swap(arr[0], arr[1]);
             }
 
@@ -193,7 +190,7 @@ namespace zf {
         t_size left_sec_last_index = -1;
 
         for (t_size i = 0; i < arr.Len(); i++) {
-            if (comparison_func(arr[i], arr[arr.Len() - 1]) <= 0) {
+            if (comparator(arr[i], arr[arr.Len() - 1]) <= 0) {
                 // This element is not greater than the pivot, so swap it to the left section.
                 left_sec_last_index++;
                 Swap(arr[left_sec_last_index], arr[i]);
@@ -201,19 +198,19 @@ namespace zf {
         }
 
         // Sort for each subsection.
-        QuickSort(arr.Slice(0, left_sec_last_index), comparison_func, pivot_index_selection_func);
-        QuickSort(arr.Slice(left_sec_last_index + 1), comparison_func, pivot_index_selection_func);
+        QuickSort(arr.Slice(0, left_sec_last_index), comparator, pivot_index_selection_func);
+        QuickSort(arr.Slice(left_sec_last_index + 1), comparator, pivot_index_selection_func);
     }
 
     // O(n log n) in time complexity. The provided heap is modified in-place, a duplicate is not created for you.
-    template<typename tp_type>
-    void HeapSort(const c_array<tp_type> dest, c_min_heap<tp_type>& min_heap) {
+    template<typename tp_key_type, typename tp_value_type>
+    void HeapSort(const c_array<tp_value_type> dest, c_min_heap<tp_key_type, tp_value_type>& min_heap) {
         ZF_ASSERT(dest.Len() >= min_heap.GetElemCnt());
 
         t_size dest_index = 0;
 
         while (!min_heap.IsEmpty()) {
-            dest[dest_index] = min_heap.GetMin();
+            dest[dest_index] = min_heap.GetMin().val;
             min_heap.RemoveMin();
             dest_index++;
         }

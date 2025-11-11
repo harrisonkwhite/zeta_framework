@@ -84,4 +84,19 @@ namespace zf {
 
     template<typename tp_type>
     concept co_numeric = s_is_integral<tp_type>::sm_value || s_is_floating_point<tp_type>::sm_value;
+
+    // If a < b, return a negative result, if a == b, return 0, and if a > b, return a positive result.
+    template<typename tp_type>
+    using t_comparator = t_s32 (*)(const tp_type& a, const tp_type& b);
+
+    template<typename tp_type>
+    t_s32 DefaultComparator(const tp_type& a, const tp_type& b) {
+        if (a < b) {
+            return -1;
+        } else if (a == b) {
+            return 0;
+        } else {
+            return 1;
+        }
+    }
 }
