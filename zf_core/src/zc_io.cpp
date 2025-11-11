@@ -1,4 +1,4 @@
-#include <zc/io.h>
+#include <zc/zc_io.h>
 
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -9,8 +9,7 @@
 #endif
 
 namespace zf {
-    t_b8 LoadFileContents(c_array<t_s8>& contents, c_mem_arena& mem_arena, const s_str_view file_path, const t_b8 include_terminating_byte) {
-        ZF_ASSERT(contents.IsEmpty());
+    t_b8 LoadFileContents(c_mem_arena& mem_arena, const s_str_view file_path, c_array<t_s8>& o_contents, const t_b8 include_terminating_byte) {
         ZF_ASSERT(file_path.IsTerminated());
 
         s_file_stream fs;
@@ -20,15 +19,15 @@ namespace zf {
             return false;
         }
 
-        const t_b8 success = [&contents, &mem_arena, file_path, include_terminating_byte, &fs]() {
+        const t_b8 success = [&o_contents, &mem_arena, file_path, include_terminating_byte, &fs]() {
             const t_size file_size = fs.CalcSize();
 
-            if (!contents.Init(mem_arena, include_terminating_byte ? file_size + 1 : file_size)) {
+            if (!mem_arena.PushArray(include_terminating_byte ? file_size + 1 : file_size, o_contents)) {
                 ZF_LOG_ERROR("Failed to reserve memory for the contents of file \"%s\"!", file_path.Raw());
                 return false;
             }
 
-            if (fs.ReadItems(contents) < file_size) {
+            if (fs.ReadItems(o_contents) < file_size) {
                 ZF_LOG_ERROR("Failed to read the contents of \"%s\"!", file_path.Raw());
                 return false;
             }
@@ -81,7 +80,7 @@ namespace zf {
 
         s_str path_cloned; // @speed: A clone on every call to this? Yuck!
 
-        if (!CloneArray(path_cloned.chrs, temp_mem_arena, path.chrs)) {
+        if (!temp_mem_arena.CloneArray(path.chrs, path_cloned.chrs)) {
             return false;
         }
 
@@ -127,7 +126,7 @@ namespace zf {
 
         s_str path_cloned; // @speed: A clone on every call to this? Yuck!
 
-        if (!CloneArray(path_cloned.chrs, temp_mem_arena, path.chrs.Slice(0, path_len + 1))) {
+        if (!temp_mem_arena.CloneArray(path.chrs.Slice(0, path_len + 1), path_cloned.chrs)) {
             return false;
         }
 

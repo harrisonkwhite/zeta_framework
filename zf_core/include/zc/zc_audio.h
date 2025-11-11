@@ -1,6 +1,7 @@
 #pragma once
 
-#include <zc/mem/strs.h>
+#include <zc/zc_strs.h>
+#include <zc/zc_allocators.h>
 
 namespace zf {
     struct s_sound_meta {

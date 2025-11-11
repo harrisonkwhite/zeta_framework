@@ -1,9 +1,11 @@
 #pragma once
 
-#include <zc/essential.h>
-#include <zc/strs.h>
+#include <zc/zc_allocators.h>
+#include <zc/zc_strs.h>
+#include <zc/zc_bits.h>
 
 namespace zf {
+#if 0
     template<typename tp_type>
     using t_hash_func = t_size (*)(const tp_type& key);
 
@@ -48,7 +50,7 @@ namespace zf {
                 return false;
             }
 
-            if (!m_backing_store_indexes.Init(mem_arena, immediate_cap)) {
+            if (!mem_arena.PushArray(immediate_cap, m_backing_store_indexes)) {
                 return false;
             }
 
@@ -143,7 +145,7 @@ namespace zf {
                     m_keys[index] = key;
                     m_vals[index] = val;
                     m_next_indexes[index] = -1;
-                    m_usage.SetBit(index);
+                    SetBit(m_usage, index);
 
                     return true;
                 }
@@ -164,7 +166,7 @@ namespace zf {
                 }
 
                 if (m_key_cmp_func(m_keys[index], key)) {
-                    m_usage.UnsetBit(index);
+                    UnsetBit(m_usage, index);
                     index = m_next_indexes[index];
                     return true;
                 }
@@ -197,4 +199,5 @@ namespace zf {
             return val % m_backing_store_indexes.Len();
         }
     };
+#endif
 }

@@ -1,7 +1,8 @@
 #pragma once
 
 #include <cstdio>
-#include <zc/mem/strs.h>
+#include <zc/zc_strs.h>
+#include <zc/zc_allocators.h>
 
 namespace zf {
     constexpr char g_ascii_printable_min = ' ';
@@ -70,18 +71,16 @@ namespace zf {
         }
     };
 
-    t_b8 LoadFileContents(c_array<t_s8>& contents, c_mem_arena& mem_arena, const s_str_view file_path, const t_b8 include_terminating_byte = false);
+    t_b8 LoadFileContents(c_mem_arena& mem_arena, const s_str_view file_path, c_array<t_s8>& o_contents, const t_b8 include_terminating_byte = false);
 
-    inline t_b8 LoadFileContentsAsStr(s_str& contents, c_mem_arena& mem_arena, const s_str_view file_path) {
-        ZF_ASSERT(contents.chrs.IsEmpty());
-
+    inline t_b8 LoadFileContentsAsStr(c_mem_arena& mem_arena, const s_str_view file_path, s_str& o_contents) {
         c_array<t_s8> contents_default;
 
-        if (!LoadFileContents(contents_default, mem_arena, file_path, true)) {
+        if (!LoadFileContents(mem_arena, file_path, contents_default, true)) {
             return false;
         }
 
-        contents = s_str::FromRawTerminated(reinterpret_cast<char*>(contents_default.Raw()), contents_default.Len() - 1);
+        o_contents = s_str::FromRawTerminated(reinterpret_cast<char*>(contents_default.Raw()), contents_default.Len() - 1);
 
         return true;
     }

@@ -91,7 +91,7 @@
     #define ZF_ASSERT_MSG(condition, msg) \
         do { \
             if (!(condition)) { \
-                zf::HandleAssertFailure(__FUNCTION__, #condition, __FILE__, __LINE__, msg); \
+                zf::HandleAssertFailure(#condition, __FUNCTION__, __FILE__, __LINE__, msg); \
             } \
         } while(0)
 #else
@@ -111,9 +111,6 @@
 #define ZF_SIZE_IN_BITS(x) (8 * ZF_SIZE_OF(x))
 
 namespace zf {
-    void HandleFailureDump(const char* const func, const char* const file, const int line, const char* const msg = nullptr);
-    void HandleAssertFailure(const char* const condition, const char* const func, const char* const file, const int line, const char* const msg = nullptr); // @todo: This feels awkward here, might want to move somewhere else? But where?
-
     static_assert(CHAR_BIT == 8);
 
     using t_s8 = signed char;
@@ -211,6 +208,9 @@ namespace zf {
         }
     }
 
+    void HandleFailureDump(const char* const func, const char* const file, const t_s32 line, const char* const msg = nullptr);
+    void HandleAssertFailure(const char* const condition, const char* const func, const char* const file, const t_s32 line, const char* const msg = nullptr); // @todo: This feels awkward here, might want to move somewhere else? But where?
+
     constexpr t_size Kilobytes(const t_size x) { return (static_cast<t_size>(1) << 10) * x; }
     constexpr t_size Megabytes(const t_size x) { return (static_cast<t_size>(1) << 20) * x; }
     constexpr t_size Gigabytes(const t_size x) { return (static_cast<t_size>(1) << 30) * x; }
@@ -239,24 +239,37 @@ namespace zf {
     }
 
     template<typename tp_type>
-    struct c_array {
-        tp_type* buf = nullptr;
-        t_size len = 0;
-
+    class c_array {
+    public:
         constexpr c_array() = default;
-        constexpr c_array(tp_type* const buf, const t_size len) : buf(buf), len(len) {}
+
+        constexpr c_array(tp_type* const buf, const t_size len) : m_buf(buf), m_len(len) {
+            ZF_ASSERT((!buf && len == 0) || (buf && len >= 0));
+        }
+
+        constexpr tp_type* Raw() const {
+            return m_buf;
+        }
+
+        constexpr t_size Len() const {
+            return m_len;
+        }
 
         constexpr t_size SizeInBytes() const {
-            return ZF_SIZE_OF(tp_type) * len;
+            return ZF_SIZE_OF(tp_type) * m_len;
+        }
+
+        constexpr bool IsEmpty() const {
+            return m_len == 0;
         }
 
         tp_type& operator[](const t_size index) const {
-            ZF_ASSERT(index >= 0 && index < len);
-            return buf[index];
+            ZF_ASSERT(index >= 0 && index < m_len);
+            return m_buf[index];
         }
 
         constexpr c_array<const tp_type> View() const {
-            return {buf, len};
+            return {m_buf, m_len};
         }
 
         constexpr operator c_array<const tp_type>() const {
@@ -264,18 +277,14 @@ namespace zf {
         }
 
         constexpr c_array Slice(const t_size beg, const t_size end) const {
-            ZF_ASSERT(beg >= 0 && beg <= len);
-            ZF_ASSERT(end >= beg && end <= len);
-            return {buf + beg, end - beg};
+            ZF_ASSERT(beg >= 0 && beg <= m_len);
+            ZF_ASSERT(end >= beg && end <= m_len);
+            return {m_buf + beg, end - beg};
         }
 
-        void CopyTo(const c_array<tp_type> dest) const {
-            ZF_ASSERT(dest.len >= len);
-
-            for (t_size i = 0; i < len; i++) {
-                dest[i] = buf[i];
-            }
-        }
+    private:
+        tp_type* m_buf = nullptr;
+        t_size m_len = 0;
     };
 
     template<typename tp_type>
@@ -286,5 +295,33 @@ namespace zf {
     template<typename tp_type>
     constexpr c_array<t_u8> ToBytes(tp_type& obj) {
         return {reinterpret_cast<t_u8*>(obj), ZF_SIZE_OF(obj)};
+    }
+
+    template<typename tp_type>
+    void Copy(const c_array<tp_type> dest, const c_array<const tp_type> src) {
+        ZF_ASSERT(dest.Len() >= src.Len());
+
+        for (t_size i = 0; i < src.Len(); i++) {
+            dest[i] = src[i];
+        }
+    }
+
+    template<typename tp_type>
+    t_b8 BinarySearch(const c_array<const tp_type> arr, const tp_type& elem, const t_comparator<tp_type> comparator = DefaultComparator) {
+        ZF_ASSERT(IsSorted(arr));
+
+        if (arr.Len() == 0) {
+            return false;
+        }
+
+        const tp_type& mid = elem[arr.Len() / 2];
+
+        if (elem == mid) {
+            return true;
+        } else if (elem < mid) {
+            return BinarySearch(arr.Slice(0, arr.Len() / 2), elem);
+        } else {
+            return BinarySearch(arr.Slice((arr.Len() / 2) + 1, arr.Len()), elem);
+        }
     }
 }

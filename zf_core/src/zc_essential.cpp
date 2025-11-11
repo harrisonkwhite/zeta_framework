@@ -67,7 +67,7 @@ namespace zf {
 #endif
     }
 
-    void HandleFailureDump(const char* const func, const char* const file, const int line, const char* const msg) {
+    void HandleFailureDump(const char* const func, const char* const file, const t_s32 line, const char* const msg) {
         fprintf(stderr, ZF_ANSI_BOLD ZF_ANSI_FG_RED "\n==================== FAILURE ====================\n" ZF_ANSI_RESET);
         fprintf(stderr, "Function: %s\n", func);
         fprintf(stderr, "File:     %s\n", file);
@@ -84,7 +84,7 @@ namespace zf {
         BreakIntoDebuggerOrAbort();
     }
 
-    void HandleAssertFailure(const char* const condition, const char* const file, const int line, const char* const func, const char* const msg) {
+    void HandleAssertFailure(const char* const condition, const char* const func, const char* const file, const t_s32 line, const char* const msg) {
         fprintf(stderr, ZF_ANSI_BOLD ZF_ANSI_FG_RED "\n==================== ASSERTION FAILED ====================\n" ZF_ANSI_RESET);
         fprintf(stderr, "Condition: %s\n", condition);
         fprintf(stderr, "Function:  %s\n", func);

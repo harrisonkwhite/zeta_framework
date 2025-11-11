@@ -1,6 +1,4 @@
-#include <zf/rendering.h>
-
-#include <zc/debug.h>
+#include <zf/zf_rendering.h>
 
 namespace zf {
     static constexpr auto g_batch_vert_shader_src = s_str_view::FromRawTerminated(R"(#version 460 core
@@ -55,7 +53,7 @@ void main() {
 
         c_array<t_u16> elems;
 
-        if (!elems.Init(temp_mem_arena, g_batch_slot_elem_cnt * g_batch_slot_cnt)) {
+        if (!temp_mem_arena.PushArray(g_batch_slot_elem_cnt * g_batch_slot_cnt, elems)) {
             ZF_LOG_ERROR("Failed to reserve memory for batch renderable elements!");
             return {};
         }
@@ -104,7 +102,7 @@ void main() {
             return false;
         }
 
-        if (!m_batch_slots.Init(mem_arena, g_batch_slot_cnt)) {
+        if (!mem_arena.PushArray(g_batch_slot_cnt, m_batch_slots)) {
             return false;
         }
 

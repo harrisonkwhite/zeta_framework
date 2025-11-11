@@ -1,4 +1,4 @@
-#include <zc/math.h>
+#include <zc/zc_math.h>
 
 namespace zf {
 }

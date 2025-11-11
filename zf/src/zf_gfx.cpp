@@ -1,6 +1,4 @@
-#include <zf/gfx.h>
-
-#include <zc/debug.h>
+#include <zf/zf_gfx.h>
 
 namespace zf {
     static t_size CalcStride(const c_array<const t_s32> vert_attr_lens) {
@@ -68,7 +66,7 @@ namespace zf {
                 if (log_chr_cnt > 1) {
                     c_array<char> log_chrs;
 
-                    if (log_chrs.Init(temp_mem_arena, log_chr_cnt)) {
+                    if (temp_mem_arena.PushArray(log_chr_cnt, log_chrs)) {
                         glGetShaderInfoLog(shader_gl_id, static_cast<GLsizei>(log_chrs.Len()), nullptr, log_chrs.Raw());
                         ZF_LOG_ERROR_SPECIAL("OpenGL Shader Compilation", "%s", log_chrs.Raw());
                     } else {
@@ -143,7 +141,7 @@ namespace zf {
         ZF_ASSERT(cap > 0);
 
         m_hdls_taken = 0;
-        return m_hdls.Init(mem_arena, cap);
+        return mem_arena.PushArray(cap, m_hdls);
     }
 
     void c_gfx_resource_arena::Release() {

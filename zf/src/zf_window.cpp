@@ -1,4 +1,4 @@
-#include <zf/window.h>
+#include <zf/zf_window.h>
 
 #include <glad/glad.h>
 

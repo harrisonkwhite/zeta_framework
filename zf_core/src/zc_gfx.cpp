@@ -1,4 +1,4 @@
-#include <zc/gfx.h>
+#include <zc/zc_gfx.h>
 
 #include <stb_image.h>
 #include <stb_truetype.h>
@@ -10,13 +10,11 @@ namespace zf {
         stbi_uc* const stb_px_data = stbi_load(file_path.Raw(), &o_tex_data.size_in_pxs.x, &o_tex_data.size_in_pxs.y, nullptr, 4);
 
         if (!stb_px_data) {
-            ZF_BANANA_ERROR();
             ZF_LOG_ERROR_SPECIAL("STB", "%s", stbi_failure_reason());
             return false;
         }
 
-        if (!o_tex_data.rgba_px_data.Init(mem_arena, 4 * o_tex_data.size_in_pxs.x * o_tex_data.size_in_pxs.y)) {
-            ZF_BANANA_ERROR();
+        if (!mem_arena.PushArray(4 * o_tex_data.size_in_pxs.x * o_tex_data.size_in_pxs.y, o_tex_data.rgba_px_data)) {
             stbi_image_free(stb_px_data);
             return false;
         }
@@ -42,7 +40,7 @@ namespace zf {
                 return false;
             }
 
-            if (!o_tex_data.rgba_px_data.Init(mem_arena, 4 * o_tex_data.size_in_pxs.x * o_tex_data.size_in_pxs.y)) {
+            if (!mem_arena.PushArray(4 * o_tex_data.size_in_pxs.x * o_tex_data.size_in_pxs.y, o_tex_data.rgba_px_data)) {
                 return false;
             }
 

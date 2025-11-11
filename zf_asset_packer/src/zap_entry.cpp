@@ -1,6 +1,4 @@
-#include "packing.h"
-
-#include <zc/debug.h>
+#include "zap_packing.h"
 
 int main(const int arg_cnt, const char* const* const args_raw) {
     const zf::c_array<const char* const> args = {args_raw, arg_cnt};
@@ -22,7 +20,7 @@ int main(const int arg_cnt, const char* const* const args_raw) {
     const zf::t_b8 success = [instrs_json_file_path, &temp_mem_arena]() {
         zf::s_str instrs_json;
 
-        if (!zf::LoadFileContentsAsStr(instrs_json, temp_mem_arena, instrs_json_file_path)) {
+        if (!zf::LoadFileContentsAsStr(temp_mem_arena, instrs_json_file_path, instrs_json)) {
             ZF_LOG_ERROR("Failed to load contents of asset packing instructions JSON file \"%s\"!", instrs_json_file_path.Raw());
             return false;
         }

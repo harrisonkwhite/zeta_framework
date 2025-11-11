@@ -1,4 +1,4 @@
-#include <zc/mem/strs.h>
+#include <zc/zc_strs.h>
 
 namespace zf {
     t_size s_str_view::CalcLen() const {

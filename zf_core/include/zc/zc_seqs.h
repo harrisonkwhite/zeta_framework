@@ -1,6 +1,6 @@
 #pragma once
 
-#include <zc/essential.h>
+#include <zc/zc_allocators.h>
 
 namespace zf {
     template<typename tp_type, t_size tp_len>
@@ -191,23 +191,4 @@ namespace zf {
         t_size m_len = 0;
         t_size m_begin_index = 0;
     };
-
-    template<typename tp_type>
-    t_b8 BinarySearch(const c_array<const tp_type> arr, const tp_type& elem, const t_comparator<tp_type> comparator = DefaultComparator) {
-        ZF_ASSERT(IsSorted(arr));
-
-        if (arr.Len() == 0) {
-            return false;
-        }
-
-        const tp_type& mid = elem[arr.Len() / 2];
-
-        if (elem == mid) {
-            return true;
-        } else if (elem < mid) {
-            return BinarySearch(arr.Slice(0, arr.Len() / 2), elem);
-        } else {
-            return BinarySearch(arr.Slice((arr.Len() / 2) + 1, arr.Len()), elem);
-        }
-    }
 }

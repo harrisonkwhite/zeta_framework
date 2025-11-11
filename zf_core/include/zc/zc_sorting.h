@@ -1,6 +1,8 @@
 #pragma once
 
-#include <zc/essential.h>
+#include <zc/zc_seqs.h>
+#include <zc/zc_bits.h>
+#include <zc/zc_heaps.h>
 
 namespace zf {
     template<typename tp_type>
@@ -222,7 +224,7 @@ namespace zf {
             for (t_size i = 0; i < arr.Len(); i++) {
                 const c_bit_vector bytes(ToBytes(arr[0]));
 
-                if (bytes.IsBitSet(bit_index)) {
+                if (IsBitSet(bytes, bit_index)) {
                     arr_1s.Push(arr[i]);
                 } else {
                     arr_0s.Push(arr[i]);

@@ -11,9 +11,7 @@
 #endif
 
 #include <GLFW/glfw3native.h>
-#include <zc/debug.h>
-#include <zc/math.h>
-#include <zc/mem/strs.h>
+#include <zc.h>
 
 namespace zf {
     enum e_window_flags : t_u8 {

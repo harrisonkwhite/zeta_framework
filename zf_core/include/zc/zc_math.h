@@ -1,10 +1,7 @@
 #pragma once
 
 #include <cmath>
-#include <zc/debug.h>
-#include <zc/mem/mem.h>
-#include <zc/mem/arrays.h>
-#include <zc/types.h>
+#include <zc/zc_seqs.h>
 
 namespace zf {
     template<co_floating_point tp_type> constexpr tp_type Pi();

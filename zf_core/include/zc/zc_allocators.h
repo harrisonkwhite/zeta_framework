@@ -12,6 +12,7 @@ namespace zf {
         void* PushRaw(const t_size size, const t_size alignment);
         template<typename tp_type> tp_type* Push();
         template<typename tp_type> [[nodiscard]] t_b8 PushArray(const t_size cnt, c_array<tp_type>& o_arr);
+        template<typename tp_type> [[nodiscard]] t_b8 CloneArray(const c_array<const tp_type> src_arr, c_array<tp_type>& o_arr);
 
         t_size Size() const {
             return m_size;
@@ -61,6 +62,19 @@ namespace zf {
         }
 
         o_arr = {buf, cnt};
+
+        return true;
+    }
+
+    template<typename tp_type>
+    t_b8 c_mem_arena::CloneArray(const c_array<const tp_type> src_arr, c_array<tp_type>& o_arr) {
+        ZF_ASSERT(!src_arr.IsEmpty());
+
+        if (!PushArray(src_arr.Len(), o_arr)) {
+            return false;
+        }
+
+        Copy(o_arr, src_arr);
 
         return true;
     }

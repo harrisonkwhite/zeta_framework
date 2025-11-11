@@ -1,7 +1,6 @@
 #pragma once
 
-#include <zc/mem/mem.h>
-#include <zc/math.h>
+#include <zc/zc_essential.h>
 
 namespace zf {
     constexpr t_size RawStrLen(const char* const raw_str) {
@@ -9,6 +8,8 @@ namespace zf {
         for (; raw_str[len]; len++) {}
         return len;
     }
+
+    // @todo: Probably don't use methods here.
 
     struct s_str_view {
         static constexpr s_str_view FromRawTerminated(const char* const raw) {

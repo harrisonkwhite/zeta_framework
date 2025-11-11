@@ -1,6 +1,6 @@
-#include <zc/audio.h>
+#include <zc/zc_audio.h>
 
-#include <zc/io.h>
+#include <zc/zc_io.h>
 #include <miniaudio.h>
 
 namespace zf {
@@ -24,7 +24,7 @@ namespace zf {
             o_snd_data.meta.sample_rate = static_cast<t_s32>(decoder.outputSampleRate);
             o_snd_data.meta.frame_cnt = static_cast<t_s64>(frame_cnt);
 
-            if (!o_snd_data.pcm.Init(mem_arena, o_snd_data.meta.SampleCount())) {
+            if (!mem_arena.PushArray(o_snd_data.meta.SampleCount(), o_snd_data.pcm)) {
                 return false;
             }
 
@@ -54,7 +54,7 @@ namespace zf {
                 return false;
             }
 
-            if (!o_snd_data.pcm.Init(mem_arena, o_snd_data.meta.SampleCount())) {
+            if (!mem_arena.PushArray(o_snd_data.meta.SampleCount(), o_snd_data.pcm)) {
                 return false;
             }
 

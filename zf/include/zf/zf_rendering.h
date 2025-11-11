@@ -1,6 +1,6 @@
 #pragma once
 
-#include <zf/gfx.h>
+#include <zf/zf_gfx.h>
 
 namespace zf {
     struct s_batch_vert {

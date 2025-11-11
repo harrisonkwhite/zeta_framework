@@ -1,4 +1,4 @@
-#include <zf/rng.h>
+#include <zf/zf_rng.h>
 
 #include <ctime>
 #include <cstdlib>

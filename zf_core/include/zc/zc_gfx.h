@@ -1,7 +1,7 @@
 #pragma once
 
-#include <zc/io.h>
-#include <zc/math.h>
+#include <zc/zc_io.h>
+#include <zc/zc_math.h>
 
 namespace zf {
     class c_color_rgba32f {

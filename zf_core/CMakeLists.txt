@@ -1,28 +1,26 @@
 add_library(zf_core STATIC
-    src/math.cpp
-    src/io.cpp
-    src/gfx.cpp
-    src/audio.cpp
-    src/debug.cpp
-    src/bits.cpp
-    src/strs.cpp
-    src/allocators.cpp
+    src/zc_math.cpp
+    src/zc_essential.cpp
+    src/zc_io.cpp
+    src/zc_gfx.cpp
+    src/zc_audio.cpp
+    src/zc_strs.cpp
+    src/zc_allocators.cpp
     ../external/stb_image/src/stb_image.c
     ../external/stb_truetype/src/stb_truetype.c
 	../external/miniaudio/src/miniaudio.c
 
-    include/zc/essential.h
-    include/zc/gfx.h
-    include/zc/audio.h
-    include/zc/io.h
-    include/zc/math.h
-    include/zc/allocators.h
-    include/zc/bits.h
-    include/zc/debug.h
-    include/zc/heaps.h
-    include/zc/sorting.h
-    include/zc/strs.h
-    include/zc/maps.h
+    include/zc/zc_essential.h
+    include/zc/zc_gfx.h
+    include/zc/zc_audio.h
+    include/zc/zc_io.h
+    include/zc/zc_math.h
+    include/zc/zc_allocators.h
+    include/zc/zc_bits.h
+    include/zc/zc_heaps.h
+    include/zc/zc_sorting.h
+    include/zc/zc_strs.h
+    include/zc/zc_maps.h
 )
 
 target_include_directories(zf_core PUBLIC

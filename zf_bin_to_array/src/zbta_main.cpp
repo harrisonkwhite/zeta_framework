@@ -1,7 +1,6 @@
 #include <cstdio>
 #include <cstdlib>
-#include <zc/io.h>
-#include <zc/debug.h>
+#include <zc.h>
 
 namespace zf {
     t_b8 OutputCode(const s_str_view input_file_path, const s_str_view output_file_path, const s_str_view arr_subname) {

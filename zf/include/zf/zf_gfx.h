@@ -1,9 +1,7 @@
 #pragma once
 
 #include <glad/glad.h>
-#include <zc/mem/arrays.h>
-#include <zc/math.h>
-#include <zc/gfx.h>
+#include <zc.h>
 
 namespace zf {
     using t_gl_id = GLuint;

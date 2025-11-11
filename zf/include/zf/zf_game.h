@@ -1,9 +1,8 @@
 #pragma once
 
 #include <zc.h>
-#include <zc/zc_math.h>
-#include <zf/rendering.h>
-#include <zf/window.h>
+#include <zf/zf_rendering.h>
+#include <zf/zf_window.h>
 
 namespace zf {
     struct s_game_init_context {
