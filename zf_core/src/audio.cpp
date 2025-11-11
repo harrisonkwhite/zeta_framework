@@ -4,7 +4,7 @@
 #include <miniaudio.h>
 
 namespace zf {
-    bool s_sound_data::LoadFromRaw(c_mem_arena& mem_arena, const s_str_view file_path) {
+    t_b8 LoadSoundFromRaw(const s_str_view file_path, c_mem_arena& mem_arena, s_sound_data& o_snd_data) {
         ZF_ASSERT(file_path.IsTerminated());
 
         ma_decoder decoder;
@@ -13,23 +13,22 @@ namespace zf {
             return false;
         }
 
-        const bool success = [this, &decoder, &mem_arena]() {
+        const t_b8 success = [&decoder, &mem_arena, &o_snd_data]() {
             ma_uint64 frame_cnt;
 
             if (ma_decoder_get_length_in_pcm_frames(&decoder, &frame_cnt) != MA_SUCCESS) {
                 return false;
             }
 
-            channel_cnt = static_cast<t_s32>(decoder.outputChannels);
-            sample_rate = static_cast<t_s32>(decoder.outputSampleRate);
+            o_snd_data.meta.channel_cnt = static_cast<t_s32>(decoder.outputChannels);
+            o_snd_data.meta.sample_rate = static_cast<t_s32>(decoder.outputSampleRate);
+            o_snd_data.meta.frame_cnt = static_cast<t_s64>(frame_cnt);
 
-            const t_size total_sample_cnt = static_cast<t_size>(frame_cnt) * channel_cnt;
-
-            if (!pcm.Init(mem_arena, total_sample_cnt)) {
+            if (!o_snd_data.pcm.Init(mem_arena, o_snd_data.meta.SampleCount())) {
                 return false;
             }
 
-            if (ma_decoder_read_pcm_frames(&decoder, pcm.Raw(), frame_cnt, nullptr) != MA_SUCCESS) {
+            if (ma_decoder_read_pcm_frames(&decoder, o_snd_data.pcm.Raw(), frame_cnt, nullptr) != MA_SUCCESS) {
                 return false;
             }
 
@@ -41,7 +40,39 @@ namespace zf {
         return success;
     }
 
-    bool PackSound(const s_str_view file_path, const s_sound_data& snd_data, c_mem_arena& temp_mem_arena) {
+    t_b8 LoadSoundFromPacked(const s_str_view file_path, c_mem_arena& mem_arena, s_sound_data& o_snd_data) {
+        ZF_ASSERT(file_path.IsTerminated());
+
+        s_file_stream fs;
+
+        if (!fs.Open(file_path, ec_file_access_mode::read)) {
+            return false;
+        }
+
+        const t_b8 success = [fs, &mem_arena, &o_snd_data]() {
+            if (!fs.ReadItem(o_snd_data.meta)) {
+                return false;
+            }
+
+            if (!o_snd_data.pcm.Init(mem_arena, o_snd_data.meta.SampleCount())) {
+                return false;
+            }
+
+            if (fs.ReadItems(o_snd_data.pcm) < o_snd_data.pcm.Len()) {
+                return false;
+            }
+
+            return true;
+        }();
+
+        fs.Close();
+
+        return success;
+    }
+
+    t_b8 PackSound(const s_sound_data_view& snd_data, const s_str_view file_path, c_mem_arena& temp_mem_arena) {
+        ZF_ASSERT(file_path.IsTerminated());
+
         if (!CreateFileAndParentDirs(file_path, temp_mem_arena)) {
             return false;
         }
@@ -52,12 +83,8 @@ namespace zf {
             return false;
         }
 
-        const t_b8 success = [snd_data, fs]() {
-            if (!fs.WriteItem(snd_data.channel_cnt)) {
-                return false;
-            }
-
-            if (!fs.WriteItem(snd_data.sample_rate)) {
+        const t_b8 success = [fs, snd_data]() {
+            if (!fs.WriteItem(snd_data.meta)) {
                 return false;
             }
 
@@ -71,9 +98,5 @@ namespace zf {
         fs.Close();
 
         return success;
-    }
-
-    bool UnpackSound(s_sound_data& snd_data, const s_str_view file_path) {
-        return false;
     }
 }

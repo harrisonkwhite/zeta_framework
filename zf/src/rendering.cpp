@@ -1,5 +1,7 @@
 #include <zf/rendering.h>
 
+#include <zc/debug.h>
+
 namespace zf {
     static constexpr auto g_batch_vert_shader_src = s_str_view::FromRawTerminated(R"(#version 460 core
 

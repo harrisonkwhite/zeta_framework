@@ -67,8 +67,6 @@ namespace zf {
 #define ZF_BANANA_ERROR() static_cast<void>(0)
 
 #ifdef ZF_DEBUG
-    #define ZF_ASSERT(condition) static_cast<void>(0)
-#else
     #define ZF_ASSERT(condition) \
         do { \
             if (!(condition)) { \
@@ -82,6 +80,8 @@ namespace zf {
                 zf::HandleAssertFailure(#condition, __FILE__, __LINE__, __FUNCTION__, msg); \
             } \
         } while(0)
+#else
+    #define ZF_ASSERT(condition) static_cast<void>(0)
 #endif
 
 #if defined(__cpp_lib_is_constant_evaluated)

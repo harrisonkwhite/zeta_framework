@@ -103,12 +103,12 @@ namespace zf {
 
             s_sound_data snd_data;
 
-            if (!snd_data.LoadFromRaw(temp_mem_arena, zf::s_str_view::FromRawTerminated(cj_src_file_path->valuestring))) {
+            if (!LoadSoundFromRaw(zf::s_str_view::FromRawTerminated(cj_src_file_path->valuestring), temp_mem_arena, snd_data)) {
                 ZF_LOG_ERROR("Failed to load sound from file \"%s\"!", cj_src_file_path->valuestring);
                 return false;
             }
 
-            if (!PackSound(zf::s_str_view::FromRawTerminated(cj_dest_file_path->valuestring), snd_data, temp_mem_arena)) {
+            if (!PackSound(snd_data, zf::s_str_view::FromRawTerminated(cj_dest_file_path->valuestring), temp_mem_arena)) {
                 ZF_LOG_ERROR("Failed to pack sound from file \"%s\"!", cj_src_file_path->valuestring);
                 return false;
             }

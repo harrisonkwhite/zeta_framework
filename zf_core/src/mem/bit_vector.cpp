@@ -286,7 +286,7 @@ namespace zf {
 
         // Mask out the bits we don't care about.
         // These need to be updated only after BOTH bytes have been saved, because they could be the same!
-        m_bytes[starting_byte_index] &= BitRangeMask(from % 8);
+        m_bytes[starting_byte_index] &= BitRangeMask<t_u8>(from % 8);
         m_bytes[m_bytes.Len() - 1] &= LastByteMask();
 
         // Check each byte for a set bit.

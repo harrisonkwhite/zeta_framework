@@ -1,6 +1,6 @@
 #include <zf/gfx.h>
 
-#include <zf/rendering.h>
+#include <zc/debug.h>
 
 namespace zf {
     static t_size CalcStride(const c_array<const t_s32> vert_attr_lens) {
