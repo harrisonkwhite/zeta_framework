@@ -299,6 +299,15 @@ namespace zf {
     }
 
     template<typename tp_type>
+    void CopyReverse(const c_array<tp_type> dest, const c_array<const tp_type> src) {
+        ZF_ASSERT(dest.Len() >= src.Len());
+
+        for (t_size i = src.Len() - 1; i >= 0; i--) {
+            dest[i] = src[i];
+        }
+    }
+
+    template<typename tp_type>
     t_b8 BinarySearch(const c_array<const tp_type> arr, const tp_type& elem, const t_comparator<tp_type> comparator = DefaultComparator) {
         ZF_ASSERT(IsSorted(arr));
 
