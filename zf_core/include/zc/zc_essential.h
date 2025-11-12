@@ -4,27 +4,19 @@
 #include <cstdio>
 
 #ifdef _WIN32
-    #define ZF_PLATFORM_WINDOWS 1
-#else
-    #define ZF_PLATFORM_WINDOWS 0
+    #define ZF_PLATFORM_WINDOWS
 #endif
 
 #ifdef __linux__
-    #define ZF_PLATFORM_LINUX 1
-#else
-    #define ZF_PLATFORM_LINUX 0
+    #define ZF_PLATFORM_LINUX
 #endif
 
 #if defined(__APPLE__) && defined(__MACH__)
-    #define ZF_PLATFORM_MACOS 1
-#else
-    #define ZF_PLATFORM_MACOS 0
+    #define ZF_PLATFORM_MACOS
 #endif
 
-#ifdef NDEBUG
-    #define ZF_DEBUG 0
-#else
-    #define ZF_DEBUG 1
+#ifndef NDEBUG
+    #define ZF_DEBUG
 #endif
 
 #define ZF_ANSI_ESC "\x1b"
@@ -288,13 +280,13 @@ namespace zf {
     };
 
     template<typename tp_type>
-    constexpr c_array<const t_u8> ToBytes(const tp_type& obj) {
-        return {reinterpret_cast<const t_u8*>(obj), ZF_SIZE_OF(obj)};
+    constexpr c_array<const t_u8> ToBytes(const tp_type& item) {
+        return {reinterpret_cast<const t_u8*>(item), ZF_SIZE_OF(item)};
     }
 
     template<typename tp_type>
-    constexpr c_array<t_u8> ToBytes(tp_type& obj) {
-        return {reinterpret_cast<t_u8*>(obj), ZF_SIZE_OF(obj)};
+    constexpr c_array<t_u8> ToBytes(tp_type& item) {
+        return {reinterpret_cast<t_u8*>(item), ZF_SIZE_OF(item)};
     }
 
     template<typename tp_type>

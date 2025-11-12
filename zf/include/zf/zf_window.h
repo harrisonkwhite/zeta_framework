@@ -1,17 +1,17 @@
 #pragma once
 
 #include <GLFW/glfw3.h>
+#include <zc.h>
 
-#if defined(_WIN32)
+#if defined(ZF_PLATFORM_WINDOWS)
     #define GLFW_EXPOSE_NATIVE_WIN32
-#elif defined(__linux__)
-    #define GLFW_EXPOSE_NATIVE_X11
-#elif defined(__APPLE__)
+#elif defined(ZF_PLATFORM_MACOS)
     #define GLFW_EXPOSE_NATIVE_COCOA
+#elif defined(ZF_PLATFORM_LINUX)
+    #define GLFW_EXPOSE_NATIVE_X11
 #endif
 
 #include <GLFW/glfw3native.h>
-#include <zc.h>
 
 namespace zf {
     enum e_window_flags : t_u8 {
@@ -90,10 +90,6 @@ namespace zf {
         eks_key_code_cnt
     };
 
-    using t_key_bits = t_u64;
-
-    static_assert(eks_key_code_cnt < ZF_SIZE_IN_BITS(t_key_bits), "Too many key codes!");
-
     enum e_mouse_button_code {
         eks_mouse_button_code_none = -1,
 
@@ -104,10 +100,6 @@ namespace zf {
         eks_mouse_button_code_cnt
     };
 
-    using t_mouse_button_bits = t_u8;
-
-    static_assert(eks_mouse_button_code_cnt < ZF_SIZE_IN_BITS(t_mouse_button_bits), "Too many mouse button codes!");
-
     enum class ec_mouse_scroll_state {
         none,
         down,
@@ -115,11 +107,11 @@ namespace zf {
     };
 
     struct s_input_events {
-        t_key_bits keys_pressed = 0;
-        t_key_bits keys_released = 0;
+        s_static_bit_vector<eks_key_code_cnt> keys_pressed;
+        s_static_bit_vector<eks_key_code_cnt> keys_released;
 
-        t_mouse_button_bits mouse_buttons_pressed = 0;
-        t_mouse_button_bits mouse_buttons_released = 0;
+        s_static_bit_vector<eks_mouse_button_code_cnt> mouse_buttons_pressed;
+        s_static_bit_vector<eks_mouse_button_code_cnt> mouse_buttons_released;
 
         ec_mouse_scroll_state mouse_scroll_state = ec_mouse_scroll_state::none;
 
@@ -216,22 +208,22 @@ namespace zf {
         static void Clean();
 
         static void* GetNativeWindowHandle() {
-#if defined(_WIN32)
+#if defined(ZF_PLATFORM_WINDOWS)
             return glfwGetWin32Window(sm_glfw_window);
-#elif defined(__linux__)
-            return glfwGetX11Window(sm_glfw_window);
-#elif defined(__APPLE__)
+#elif defined(ZF_PLATFORM_MACOS)
             return glfwGetCocoaWindow(sm_glfw_window);
+#elif defined(ZF_PLATFORM_LINUX)
+            return glfwGetX11Window(sm_glfw_window);
 #endif
         }
 
         static void* GetNativeDisplayHandle() {
-#if defined(_WIN32)
+#if defined(ZF_PLATFORM_WINDOWS)
             return nullptr;
-#elif defined(__linux__)
+#elif defined(ZF_PLATFORM_MACOS)
+            return nullptr;
+#elif defined(ZF_PLATFORM_LINUX)
             return glfwGetX11Display();
-#elif defined(__APPLE__)
-            return nullptr;
 #endif
         }
 
@@ -282,16 +274,12 @@ namespace zf {
 
         static t_b8 IsKeyPressed(const e_key_code kc) {
             ZF_ASSERT(kc != eks_key_code_none);
-
-            const auto key_mask = BitMask<t_key_bits>(kc);
-            return (sm_input_events.keys_pressed & key_mask) != 0;
+            return IsBitSet(sm_input_events.keys_pressed, kc);
         }
 
         static t_b8 IsKeyReleased(const e_key_code kc) {
             ZF_ASSERT(kc != eks_key_code_none);
-
-            const auto key_mask = BitMask<t_key_bits>(kc);
-            return (sm_input_events.keys_released & key_mask) != 0;
+            return IsBitSet(sm_input_events.keys_released, kc);
         }
 
         static t_b8 IsMouseButtonDown(const e_mouse_button_code mbc) {
@@ -301,16 +289,12 @@ namespace zf {
 
         static t_b8 IsMouseButtonPressed(const e_mouse_button_code mbc) {
             ZF_ASSERT(mbc != eks_mouse_button_code_none);
-
-            const auto mb_mask = BitMask<t_mouse_button_bits>(mbc);
-            return (sm_input_events.mouse_buttons_pressed & mb_mask) != 0;
+            return IsBitSet(sm_input_events.mouse_buttons_pressed, mbc);
         }
 
         static t_b8 IsMouseButtonReleased(const e_mouse_button_code mbc) {
             ZF_ASSERT(mbc != eks_mouse_button_code_none);
-
-            const auto mb_mask = BitMask<t_mouse_button_bits>(mbc);
-            return (sm_input_events.mouse_buttons_released & mb_mask) != 0;
+            return IsBitSet(sm_input_events.mouse_buttons_released, mbc);
         }
 
         template<co_floating_point tp_type>

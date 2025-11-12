@@ -86,7 +86,7 @@ namespace zf {
     t_b8 c_window::Init(const s_v2<t_s32> size, const s_str_view title, const e_window_flags flags) {
         ZF_ASSERT(!sm_glfw_window);
         ZF_ASSERT(size.x > 0 && size.y > 0);
-        ZF_ASSERT(title.IsTerminated());
+        ZF_ASSERT(IsStrTerminated(title));
 
         if (!glfwInit()) {
             ZF_LOG_ERROR("Failed to initialise GLFW!");
@@ -128,12 +128,10 @@ namespace zf {
                     return;
                 }
 
-                const auto key_mask = BitMask<t_key_bits>(key_code);
-
                 if (action == GLFW_PRESS) {
-                    sm_input_events.keys_pressed |= key_mask;
+                    SetBit(sm_input_events.keys_pressed, key_code);
                 } else if (action == GLFW_RELEASE) {
-                    sm_input_events.keys_released |= key_mask;
+                    SetBit(sm_input_events.keys_released, key_code);
                 }
             }
         );
@@ -146,12 +144,10 @@ namespace zf {
                     return;
                 }
 
-                const auto mb_mask = BitMask<t_mouse_button_bits>(mb_code);
-
                 if (action == GLFW_PRESS) {
-                    sm_input_events.mouse_buttons_pressed |= mb_mask;
+                    SetBit(sm_input_events.mouse_buttons_pressed, mb_code);
                 } else if (action == GLFW_RELEASE) {
-                    sm_input_events.mouse_buttons_released |= mb_mask;
+                    SetBit(sm_input_events.mouse_buttons_released, mb_code);
                 }
             }
         );

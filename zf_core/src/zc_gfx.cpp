@@ -5,7 +5,7 @@
 
 namespace zf {
     t_b8 LoadTextureFromRaw(const s_str_view file_path, c_mem_arena& mem_arena, s_texture_data& o_tex_data) {
-        ZF_ASSERT(file_path.IsTerminated());
+        ZF_ASSERT(IsStrTerminated(file_path));
 
         stbi_uc* const stb_px_data = stbi_load(file_path.Raw(), &o_tex_data.size_in_pxs.x, &o_tex_data.size_in_pxs.y, nullptr, 4);
 
@@ -27,7 +27,7 @@ namespace zf {
     }
 
     t_b8 LoadTextureFromPacked(const s_str_view file_path, c_mem_arena& mem_arena, s_texture_data& o_tex_data) {
-        ZF_ASSERT(file_path.IsTerminated());
+        ZF_ASSERT(IsStrTerminated(file_path));
 
         s_file_stream fs;
 
@@ -57,7 +57,7 @@ namespace zf {
     }
 
     t_b8 PackTexture(const s_texture_data_view& tex_data, const s_str_view file_path, c_mem_arena& temp_mem_arena) {
-        ZF_ASSERT(file_path.IsTerminated());
+        ZF_ASSERT(IsStrTerminated(file_path));
 
         if (!CreateFileAndParentDirs(file_path, temp_mem_arena)) {
             return false;

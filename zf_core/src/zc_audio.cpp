@@ -5,7 +5,7 @@
 
 namespace zf {
     t_b8 LoadSoundFromRaw(const s_str_view file_path, c_mem_arena& mem_arena, s_sound_data& o_snd_data) {
-        ZF_ASSERT(file_path.IsTerminated());
+        ZF_ASSERT(IsStrTerminated(file_path));
 
         ma_decoder decoder;
 
@@ -41,7 +41,7 @@ namespace zf {
     }
 
     t_b8 LoadSoundFromPacked(const s_str_view file_path, c_mem_arena& mem_arena, s_sound_data& o_snd_data) {
-        ZF_ASSERT(file_path.IsTerminated());
+        ZF_ASSERT(IsStrTerminated(file_path));
 
         s_file_stream fs;
 
@@ -71,7 +71,7 @@ namespace zf {
     }
 
     t_b8 PackSound(const s_sound_data_view& snd_data, const s_str_view file_path, c_mem_arena& temp_mem_arena) {
-        ZF_ASSERT(file_path.IsTerminated());
+        ZF_ASSERT(IsStrTerminated(file_path));
 
         if (!CreateFileAndParentDirs(file_path, temp_mem_arena)) {
             return false;

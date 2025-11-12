@@ -43,8 +43,8 @@ namespace zf {
     }
 
     static t_gl_id MakeGLShaderProg(const s_str_view vert_src, const s_str_view frag_src, c_mem_arena& temp_mem_arena) {
-        ZF_ASSERT(vert_src.IsTerminated());
-        ZF_ASSERT(frag_src.IsTerminated());
+        ZF_ASSERT(IsStrTerminated(vert_src));
+        ZF_ASSERT(IsStrTerminated(frag_src));
 
         // Generate the individual shaders.
         const auto shader_gen_func = [&temp_mem_arena](const s_str_view src, const t_b8 is_frag) -> t_gl_id {
@@ -183,8 +183,8 @@ namespace zf {
     }
 
     c_gfx_resource_handle c_gfx_resource_arena::AddShaderProg(const s_str_view vert_src, const s_str_view frag_src, c_mem_arena& temp_mem_arena) {
-        ZF_ASSERT(vert_src.IsTerminated());
-        ZF_ASSERT(frag_src.IsTerminated());
+        ZF_ASSERT(IsStrTerminated(vert_src));
+        ZF_ASSERT(IsStrTerminated(frag_src));
 
         if (m_hdls_taken == m_hdls.Len()) {
             return {};

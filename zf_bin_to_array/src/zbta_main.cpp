@@ -4,7 +4,7 @@
 
 namespace zf {
     t_b8 OutputCode(const s_str_view input_file_path, const s_str_view output_file_path, const s_str_view arr_subname) {
-        ZF_ASSERT(arr_subname.IsTerminated());
+        ZF_ASSERT(IsStrTerminated(arr_subname));
 
         s_file_stream input_reader;
 

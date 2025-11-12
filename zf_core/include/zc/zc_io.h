@@ -19,7 +19,7 @@ namespace zf {
 
         [[nodiscard]]
         t_b8 Open(const s_str_view file_path, const ec_file_access_mode mode) {
-            ZF_ASSERT(file_path.IsTerminated());
+            ZF_ASSERT(IsStrTerminated(file_path));
 
             switch (mode) {
             case ec_file_access_mode::read:

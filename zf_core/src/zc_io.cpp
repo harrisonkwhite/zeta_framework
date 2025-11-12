@@ -10,7 +10,7 @@
 
 namespace zf {
     t_b8 LoadFileContents(c_mem_arena& mem_arena, const s_str_view file_path, c_array<t_s8>& o_contents, const t_b8 include_terminating_byte) {
-        ZF_ASSERT(file_path.IsTerminated());
+        ZF_ASSERT(IsStrTerminated(file_path));
 
         s_file_stream fs;
 
@@ -41,7 +41,7 @@ namespace zf {
     }
 
     t_b8 CreateDirectory(const s_str_view path) {
-        ZF_ASSERT(path.IsTerminated());
+        ZF_ASSERT(IsStrTerminated(path));
 
 #ifdef _WIN32
         const t_s32 res = _mkdir(path.Raw());
@@ -74,7 +74,7 @@ namespace zf {
     }
 
     t_b8 CreateDirectoryAndParents(const s_str_view path, c_mem_arena& temp_mem_arena) {
-        ZF_ASSERT(path.IsTerminated());
+        ZF_ASSERT(IsStrTerminated(path));
 
         // @speed: Ideally we'd start at the end of the path and move back.
 
@@ -120,9 +120,9 @@ namespace zf {
     }
 
     t_b8 CreateFileAndParentDirs(const s_str_view path, c_mem_arena& temp_mem_arena) {
-        ZF_ASSERT(path.IsTerminated());
+        ZF_ASSERT(IsStrTerminated(path));
 
-        const t_size path_len = path.CalcLen();
+        const t_size path_len = CalcStrLen(path);
 
         s_str path_cloned; // @speed: A clone on every call to this? Yuck!
 

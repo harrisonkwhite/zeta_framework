@@ -9,6 +9,8 @@ Prefixes:
     us_ = Union Struct (No members are initialised.)
     c_ = Class
     e_ = Enum
+    ek_ = Enum Constant
+    eks_ = Special Enum Constant
     ec_ = Enum Class
     g_ = Global Variable (Includes file-scope globals.)
     m_ = Member Variable

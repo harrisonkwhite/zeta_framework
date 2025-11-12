@@ -55,7 +55,7 @@ namespace zf {
 
     inline void AssertGameInfoValidity(const s_game_info& info) {
         ZF_ASSERT(info.window_init_size.x > 0 && info.window_init_size.y > 0);
-        ZF_ASSERT(info.window_title.IsTerminated());
+        ZF_ASSERT(IsStrTerminated(info.window_title));
 
         ZF_ASSERT((info.dev_mem_size == 0 && info.dev_mem_alignment == 0)
             || (info.dev_mem_size > 0 && IsAlignmentValid(info.dev_mem_alignment)));

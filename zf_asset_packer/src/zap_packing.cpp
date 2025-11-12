@@ -118,7 +118,7 @@ namespace zf {
     }
 
     t_b8 PackAssets(const s_str_view instrs_json, c_mem_arena& temp_mem_arena) {
-        ZF_ASSERT(instrs_json.IsTerminated());
+        ZF_ASSERT(IsStrTerminated(instrs_json));
 
         cJSON* const cj = cJSON_Parse(instrs_json.Raw());
 
