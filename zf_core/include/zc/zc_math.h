@@ -105,7 +105,19 @@ namespace zf {
         tp_type x = 0;
         tp_type y = 0;
 
-        tp_type Dot(const s_v2<tp_type> other) const {
+        constexpr s_v2() = default;
+        constexpr s_v2(const tp_type x, const tp_type y) : x(x), y(y) {}
+
+        template<co_numeric tp_other_type>
+        constexpr explicit operator s_v2<tp_other_type>() const {
+            return {static_cast<tp_other_type>(x), static_cast<tp_other_type>(y)};
+        }
+
+        s_v2<tp_type> CompwiseProd(const s_v2<tp_type> other) const {
+            return {x * other.x, y * other.y};
+        }
+
+        tp_type DotProd(const s_v2<tp_type> other) const {
             return (x * other.x) + (y * other.y);
         }
 
@@ -332,7 +344,7 @@ namespace zf {
     }
 
     template<co_floating_point tp_type>
-    constexpr tp_type Lerp(const s_v2<tp_type> a, const s_v2<tp_type> b, const tp_type t) {
+    constexpr s_v2<tp_type> Lerp(const s_v2<tp_type> a, const s_v2<tp_type> b, const tp_type t) {
         return a + ((b - a) * t);
     }
 
