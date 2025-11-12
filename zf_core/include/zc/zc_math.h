@@ -211,6 +211,8 @@ namespace zf {
         s_rect() = default;
         s_rect(const tp_type x, const tp_type y, const tp_type width, const tp_type height) : x(x), y(y), width(width), height(height) {}
         s_rect(const s_v2<tp_type> pos, const s_v2<tp_type> size) : x(pos.x), y(pos.y), width(size.x), height(size.y) {}
+        s_rect(const s_v2<tp_type> pos, const s_v2<tp_type> size, const s_v2<tp_type> origin) requires co_floating_point<tp_type>
+            : x(pos.x - (size.x * origin.x)), y(pos.y - (size.y * origin.y)), width(size.x), height(size.y) {}
 
         s_v2<tp_type> Pos() const {
             return {x, y};
