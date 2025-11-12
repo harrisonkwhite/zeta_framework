@@ -7,19 +7,21 @@ namespace zf {
     t_b8 LoadTextureFromRaw(const s_str_view file_path, c_mem_arena& mem_arena, s_texture_data& o_tex_data) {
         ZF_ASSERT(IsStrTerminated(file_path));
 
-        stbi_uc* const stb_px_data = stbi_load(file_path.Raw(), &o_tex_data.size_in_pxs.x, &o_tex_data.size_in_pxs.y, nullptr, 4);
+        t_u8* const stb_px_data = stbi_load(file_path.Raw(), &o_tex_data.size_in_pxs.x, &o_tex_data.size_in_pxs.y, nullptr, 4);
 
         if (!stb_px_data) {
             ZF_LOG_ERROR_SPECIAL("STB", "%s", stbi_failure_reason());
             return false;
         }
 
+        const c_array<const t_u8> stb_px_data_arr = {stb_px_data, 4 * o_tex_data.size_in_pxs.x * o_tex_data.size_in_pxs.y};
+
         if (!mem_arena.PushArray(4 * o_tex_data.size_in_pxs.x * o_tex_data.size_in_pxs.y, o_tex_data.rgba_px_data)) {
             stbi_image_free(stb_px_data);
             return false;
         }
 
-        memcpy(o_tex_data.rgba_px_data.Raw(), stb_px_data, static_cast<size_t>(ZF_SIZE_OF(*o_tex_data.rgba_px_data.Raw()) * o_tex_data.rgba_px_data.Len()));
+        Copy(o_tex_data.rgba_px_data, stb_px_data_arr);
 
         stbi_image_free(stb_px_data);
 
