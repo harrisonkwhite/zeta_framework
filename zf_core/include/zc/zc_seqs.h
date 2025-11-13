@@ -49,14 +49,20 @@ namespace zf {
     };
 
     template<typename tp_type>
-    struct s_list_state {
+    struct s_list_state_ro {
+        s_array<tp_type> backing_arr;
+        const t_size& len;
+    };
+
+    template<typename tp_type>
+    struct s_list_state_mut {
         s_array<tp_type> backing_arr;
         t_size& len;
     };
 
     template<typename tp_type>
     struct s_list {
-        using elem_type = tp_type;
+        using t_elem = tp_type;
 
         s_array<tp_type> backing_arr;
         t_size len = 0;
@@ -68,11 +74,27 @@ namespace zf {
             ZF_ASSERT(index < len);
             return backing_arr[index];
         }
+
+        constexpr s_list_state_mut<tp_type> State() {
+            return {backing_arr, len};
+        }
+
+        constexpr operator s_list_state_mut<tp_type>() {
+            return State();
+        }
+
+        constexpr s_list_state_ro<tp_type> State() const {
+            return {backing_arr, len};
+        }
+
+        constexpr operator s_list_state_ro<tp_type>() const {
+            return State();
+        }
     };
 
     template<typename tp_type, t_size tp_cap>
     struct s_static_list {
-        using elem_type = tp_type;
+        using t_elem = tp_type;
 
         s_static_array<tp_type, tp_cap> backing_arr;
         t_size len = 0;
@@ -86,11 +108,19 @@ namespace zf {
             return backing_arr[index];
         }
 
-        constexpr s_list_state<tp_type> State() {
+        constexpr s_list_state_mut<tp_type> State() {
             return {backing_arr, len};
         }
 
-        constexpr operator s_list_state<tp_type>() {
+        constexpr operator s_list_state_mut<tp_type>() {
+            return State();
+        }
+
+        constexpr s_list_state_ro<tp_type> State() const {
+            return {backing_arr, len};
+        }
+
+        constexpr operator s_list_state_ro<tp_type>() const {
             return State();
         }
     };
@@ -107,112 +137,74 @@ namespace zf {
     }
 
     template<typename tp_type>
-    t_b8 IsListEmpty(const s_list_state<const tp_type> list) {
-        return list.len == 0;
+    t_b8 IsListEmpty(const tp_type& list) {
+        return list.State().len == 0;
     }
 
     template<typename tp_type>
-    t_b8 IsListFull(const s_list_state<const tp_type>& list) {
-        return list.len == list.backing_arr.Len();
+    t_b8 IsListFull(const tp_type& list) {
+        const auto ls = list.State();
+        return ls.len == ls.backing_arr.Len();
     }
 
     template<typename tp_type>
-    void ListAppend(tp_type& list, const typename tp_type::elem_type& val) {
-        const auto& ls = list.State();
+    void ListAppend(tp_type& list, const typename tp_type::t_elem& val) {
+        static_assert(!s_is_const<typename tp_type::t_elem>::sm_value);
 
-        //ZF_ASSERT(!IsListFull(ls));
+        ZF_ASSERT(!IsListFull(list));
 
+        const auto ls = list.State();
         ls.backing_arr[ls.len] = val;
         ls.len++;
     }
 
     template<typename tp_type>
-    void ListInsert(const s_list_state<tp_type> list, const t_size index, const tp_type& val) {
-        ZF_ASSERT(!IsListFull<tp_type>(list));
-        ZF_ASSERT(index >= 0 && index < list.len);
+    void ListInsert(tp_type& list, const t_size index, const typename tp_type::t_elem& val) {
+        static_assert(!s_is_const<typename tp_type::t_elem>::sm_value);
 
-        CopyReverse(list.backing_arr.Slice(index + 1, list.len + 1), list.backing_arr.Slice(index, list.len));
-        list.len++;
+        ZF_ASSERT(!IsListFull(list));
+
+        const auto ls = list.State();
+        ZF_ASSERT(index >= 0 && index < ls.len);
+
+        CopyReverse(ls.backing_arr.Slice(index + 1, ls.len + 1), ls.backing_arr.Slice(index, ls.len));
+        ls.len++;
     }
 
     template<typename tp_type>
-    void ListRemoveLast(const s_list_state<tp_type> list) {
-        ZF_ASSERT(!IsListEmpty<tp_type>(list));
+    typename tp_type::t_elem ListRemoveLast(tp_type& list) {
+        static_assert(!s_is_const<typename tp_type::t_elem>::sm_value);
 
-        list.len--;
-        return list.backing_arr[list.len];
+        ZF_ASSERT(!IsListEmpty(list));
+
+        const auto ls = list.State();
+        ls.len--;
+        return ls.backing_arr[ls.len];
     }
 
     template<typename tp_type>
-    void ListRemoveSwapback(const s_list_state<tp_type> list, const t_size index) {
-        ZF_ASSERT(!IsListEmpty<tp_type>(list));
-        ZF_ASSERT(index >= 0 && index < list.len);
+    void ListRemoveSwapback(tp_type& list, const t_size index) {
+        static_assert(!s_is_const<typename tp_type::t_elem>::sm_value);
 
-        list.backing_arr[index] = list.backing_arr[list.len - 1];
-        list.len--;
+        ZF_ASSERT(!IsListEmpty(list));
+
+        const auto ls = list.State();
+        ZF_ASSERT(index >= 0 && index < ls.len);
+
+        ls.backing_arr[index] = ls.backing_arr[ls.len - 1];
+        ls.len--;
     }
 
     template<typename tp_type>
-    void ListRemove(const s_list_state<tp_type> list, const t_size index) {
-        ZF_ASSERT(!IsListFull<tp_type>(list));
-        ZF_ASSERT(index >= 0 && index < list.len);
+    void ListRemove(tp_type& list, const t_size index) {
+        static_assert(!s_is_const<typename tp_type::t_elem>::sm_value);
 
-        Copy(list.backing_arr.Slice(index, list.len - 1), list.backing_arr.Slice(index + 1, list.len));
-        list.len--;
+        ZF_ASSERT(!IsListFull(list));
+
+        const auto ls = list.State();
+        ZF_ASSERT(index >= 0 && index < ls.len);
+
+        Copy(ls.backing_arr.Slice(index, ls.len - 1), ls.backing_arr.Slice(index + 1, ls.len));
+        ls.len--;
     }
-
-#if 0
-    template<typename tp_type>
-    t_b8 IsEmpty(const s_list_state_ro<tp_type>& list) {
-        return list.len == 0;
-    }
-
-    template<typename tp_type>
-    t_b8 IsFull(const s_list_state_ro<tp_type>& list) {
-        return list.len == list.backing_arr.Len();
-    }
-
-    template<typename tp_type>
-    void Append(const s_list_state_mut<tp_type>& list, const tp_type& val) {
-        ZF_ASSERT(!IsFull<tp_type>(list));
-
-        list.backing_arr[list.len] = val;
-        list.len++;
-    }
-
-    template<typename tp_type>
-    void Insert(const s_list_state_mut<tp_type>& list, const t_size index, const tp_type& val) {
-        ZF_ASSERT(!IsFull<tp_type>(list));
-        ZF_ASSERT(index >= 0 && index < list.len);
-
-        CopyReverse(list.backing_arr.Slice(index + 1, list.len + 1), list.backing_arr.Slice(index, list.len));
-        list.len++;
-    }
-
-    template<typename tp_type>
-    void RemoveLast(const s_list_state_mut<tp_type>& list) {
-        ZF_ASSERT(!IsEmpty<tp_type>(list));
-
-        list.len--;
-        return list.backing_arr[list.len];
-    }
-
-    template<typename tp_type>
-    void RemoveSwapback(const s_list_state_mut<tp_type>& list, const t_size index) {
-        ZF_ASSERT(!IsEmpty<tp_type>(list));
-        ZF_ASSERT(index >= 0 && index < list.len);
-
-        list.backing_arr[index] = list.backing_arr[list.len - 1];
-        list.len--;
-    }
-
-    template<typename tp_type>
-    void Remove(const s_list_state_mut<tp_type>& list, const t_size index) {
-        ZF_ASSERT(!IsFull<tp_type>(list));
-        ZF_ASSERT(index >= 0 && index < list.len);
-
-        Copy(list.backing_arr.Slice(index, list.len - 1), list.backing_arr.Slice(index + 1, list.len));
-        list.len--;
-    }
-#endif
 }
