@@ -203,56 +203,6 @@ namespace zf {
         QuickSort(arr.Slice(left_sec_last_index + 1), comparator, pivot_index_selection_func);
     }
 
-    // Binary?
-    template<co_integral tp_type>
-    t_b8 RadixSort(const c_array<tp_type> arr, c_mem_arena& temp_mem_arena) {
-        c_stack<tp_type> arr_0s;
-        c_stack<tp_type> arr_1s;
-
-        if (!arr_0s.Init(temp_mem_arena, arr.Len())) {
-            return false;
-        }
-
-        if (!arr_1s.Init(temp_mem_arena, arr.Len())) {
-            return false;
-        }
-
-        // Sort each bit from LSB to MSB.
-        t_size bit_index = 0;
-
-        while (bit_index < ZF_SIZE_IN_BITS(tp_type)) {
-            for (t_size i = 0; i < arr.Len(); i++) {
-                const c_bit_vector bytes(ToBytes(arr[0]));
-
-                if (IsBitSet(bytes, bit_index)) {
-                    arr_1s.Push(arr[i]);
-                } else {
-                    arr_0s.Push(arr[i]);
-                }
-            }
-
-            t_size i = 0;
-
-            for (t_size j = 0; j < arr_0s.Len(); j++) {
-                arr[i] = arr_0s[j];
-                i++;
-            }
-
-            arr_0s.Clear();
-
-            for (t_size j = 0; j < arr_1s.Len(); j++) {
-                arr[i] = arr_1s[j];
-                i++;
-            }
-
-            arr_1s.Clear();
-
-            bit_index++;
-        }
-
-        return true;
-    }
-
     // O(n log n) in time complexity. The provided heap is modified in-place, a duplicate is not created for you.
     template<typename tp_key_type, typename tp_value_type>
     void HeapSort(const c_array<tp_value_type> dest, c_min_heap<tp_key_type, tp_value_type>& min_heap) {
