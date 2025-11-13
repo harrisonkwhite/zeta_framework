@@ -4,20 +4,20 @@
 #include <zc/zc_math.h>
 
 namespace zf {
-    class c_bit_vector_view {
+    class c_bit_vector_ro {
     public:
-        constexpr c_bit_vector_view() = default;
+        constexpr c_bit_vector_ro() = default;
 
-        constexpr c_bit_vector_view(const c_array<const t_u8> bytes)
+        constexpr c_bit_vector_ro(const s_array<const t_u8> bytes)
             : m_bytes(bytes), m_bit_cnt(BytesToBits(bytes.Len())) {}
 
-        constexpr c_bit_vector_view(const c_array<const t_u8> bytes, const t_size bit_cnt)
+        constexpr c_bit_vector_ro(const s_array<const t_u8> bytes, const t_size bit_cnt)
             : m_bytes(bytes), m_bit_cnt(bit_cnt) {
             ZF_ASSERT(bit_cnt >= 0);
             ZF_ASSERT(bytes.Len() == BitsToBytes(bit_cnt));
         }
 
-        constexpr c_array<const t_u8> Bytes() const {
+        constexpr s_array<const t_u8> Bytes() const {
             return m_bytes;
         }
 
@@ -26,24 +26,24 @@ namespace zf {
         }
 
     private:
-        c_array<const t_u8> m_bytes;
+        s_array<const t_u8> m_bytes;
         t_size m_bit_cnt = 0;
     };
 
-    class c_bit_vector {
+    class c_bit_vector_mut {
     public:
-        constexpr c_bit_vector() = default;
+        constexpr c_bit_vector_mut() = default;
 
-        constexpr c_bit_vector(const c_array<t_u8> bytes)
+        constexpr c_bit_vector_mut(const s_array<t_u8> bytes)
             : m_bytes(bytes), m_bit_cnt(BytesToBits(bytes.Len())) {}
 
-        constexpr c_bit_vector(const c_array<t_u8> bytes, const t_size bit_cnt)
+        constexpr c_bit_vector_mut(const s_array<t_u8> bytes, const t_size bit_cnt)
             : m_bytes(bytes), m_bit_cnt(bit_cnt) {
             ZF_ASSERT(bit_cnt >= 0);
             ZF_ASSERT(bytes.Len() == BitsToBytes(bit_cnt));
         }
 
-        constexpr c_array<t_u8> Bytes() const {
+        constexpr s_array<t_u8> Bytes() const {
             return m_bytes;
         }
 
@@ -52,7 +52,7 @@ namespace zf {
         }
 
     private:
-        c_array<t_u8> m_bytes;
+        s_array<t_u8> m_bytes;
         t_size m_bit_cnt = 0;
     };
 
@@ -66,11 +66,11 @@ namespace zf {
             return tp_bit_cnt;
         }
 
-        constexpr operator c_bit_vector() {
+        constexpr operator c_bit_vector_mut() {
             return {bytes, tp_bit_cnt};
         }
 
-        constexpr operator c_bit_vector_view() const {
+        constexpr operator c_bit_vector_ro() const {
             return {bytes, tp_bit_cnt};
         }
     };
@@ -83,25 +83,25 @@ namespace zf {
     }
 #endif
 
-    inline t_b8 IsBitSet(const c_bit_vector_view bv, const t_size index) {
+    inline t_b8 IsBitSet(const c_bit_vector_ro bv, const t_size index) {
         ZF_ASSERT(index >= 0 && index < bv.BitCount());
         return bv.Bytes()[index / 8] & (1 << (index % 8));
     }
 
-    inline void SetBit(const c_bit_vector bv, const t_size index) {
+    inline void SetBit(const c_bit_vector_mut bv, const t_size index) {
         ZF_ASSERT(index >= 0 && index < bv.BitCount());
         bv.Bytes()[index / 8] |= (1 << (index % 8));
     }
 
-    inline void UnsetBit(const c_bit_vector bv, const t_size index) {
+    inline void UnsetBit(const c_bit_vector_mut bv, const t_size index) {
         ZF_ASSERT(index >= 0 && index < bv.BitCount());
         bv.Bytes()[index / 8] &= ~(1 << (index % 8));
     }
 
-    void ShiftLeft(const c_bit_vector bv, const t_size amount = 1);
-    void RotLeft(const c_bit_vector bv, const t_size amount = 1);
-    void ShiftRight(const c_bit_vector bv, const t_size amount = 1);
-    void RotRight(const c_bit_vector bv, const t_size amount = 1);
+    void ShiftLeft(const c_bit_vector_mut bv, const t_size amount = 1);
+    void RotLeft(const c_bit_vector_mut bv, const t_size amount = 1);
+    void ShiftRight(const c_bit_vector_mut bv, const t_size amount = 1);
+    void RotRight(const c_bit_vector_mut bv, const t_size amount = 1);
 
 #if 0
     t_size FindFirstSetBit(const c_bit_vector_view bv, const t_size index);

@@ -6,7 +6,7 @@
 
 namespace zf {
     template<typename tp_type>
-    t_b8 IsSorted(const c_array<const tp_type> arr, const t_comparator<tp_type> comparator = DefaultComparator) {
+    t_b8 IsSorted(const s_array<const tp_type> arr, const t_comparator<tp_type> comparator = DefaultComparator) {
         ZF_ASSERT(comparator);
 
         for (t_size i = 0; i < arr.Len() - 1; i++) {
@@ -20,7 +20,7 @@ namespace zf {
 
     // O(n) best-case if array is already sorted, O(n^2) worst-case.
     template<typename tp_type>
-    void BubbleSort(const c_array<tp_type> arr, const t_comparator<tp_type> comparator = DefaultComparator) {
+    void BubbleSort(const s_array<tp_type> arr, const t_comparator<tp_type> comparator = DefaultComparator) {
         ZF_ASSERT(comparator);
 
         t_b8 sorted;
@@ -39,7 +39,7 @@ namespace zf {
 
     // O(n) best-case if array is already sorted, O(n^2) worst-case.
     template<typename tp_type>
-    void InsertionSort(const c_array<tp_type> arr, const t_comparator<tp_type> comparator = DefaultComparator) {
+    void InsertionSort(const s_array<tp_type> arr, const t_comparator<tp_type> comparator = DefaultComparator) {
         ZF_ASSERT(comparator);
 
         for (t_size i = 1; i < arr.Len(); i++) {
@@ -61,7 +61,7 @@ namespace zf {
 
     // O(n^2) in every case.
     template<typename tp_type>
-    void SelectionSort(const c_array<tp_type> arr, const t_comparator<tp_type> comparator = DefaultComparator) {
+    void SelectionSort(const s_array<tp_type> arr, const t_comparator<tp_type> comparator = DefaultComparator) {
         ZF_ASSERT(comparator);
 
         for (t_size i = 0; i < arr.Len() - 1; i++) {
@@ -79,7 +79,7 @@ namespace zf {
 
     // O(n log n) in both time complexity and space complexity in every case.
     template<typename tp_type>
-    t_b8 MergeSort(const c_array<tp_type> arr, c_mem_arena& temp_mem_arena, const t_comparator<tp_type> comparator = DefaultComparator) {
+    t_b8 MergeSort(const s_array<tp_type> arr, c_mem_arena& temp_mem_arena, const t_comparator<tp_type> comparator = DefaultComparator) {
         ZF_ASSERT(comparator);
 
         if (arr.Len() <= 1) {
@@ -87,13 +87,13 @@ namespace zf {
         }
 
         // Sort copies of the left and right partitions.
-        const c_array<tp_type> arr_left = MemClone(temp_mem_arena, arr.Slice(0, arr.Len() / 2));
+        const s_array<tp_type> arr_left = MemClone(temp_mem_arena, arr.Slice(0, arr.Len() / 2));
 
         if (arr_left.IsEmpty()) {
             return false;
         }
 
-        const c_array<tp_type> arr_right = MemClone(temp_mem_arena, arr.Slice(arr.Len() / 2));
+        const s_array<tp_type> arr_right = MemClone(temp_mem_arena, arr.Slice(arr.Len() / 2));
 
         if (arr_right.IsEmpty()) {
             return false;
@@ -133,7 +133,7 @@ namespace zf {
     }
 
     template<typename tp_type>
-    t_size QuickSortMedianOfThreePivotIndexSelection(const c_array<const tp_type> arr) {
+    t_size QuickSortMedianOfThreePivotIndexSelection(const s_array<const tp_type> arr) {
         const t_size ia = 0;
         const t_size ib = arr.Len() / 2;
         const t_size ic = arr.Len() - 1;
@@ -165,7 +165,7 @@ namespace zf {
     // Space complexity is O(1) compared to merge sort.
     // Custom pivot index selection function is only for arrays of length 3 or greater.
     template<typename tp_type>
-    void QuickSort(const c_array<const tp_type> arr, const t_comparator<tp_type> comparator = DefaultComparator, t_size (* const pivot_index_selection_func)(const c_array<const tp_type> arr) = QuickSortMedianOfThreePivotIndexSelection) {
+    void QuickSort(const s_array<const tp_type> arr, const t_comparator<tp_type> comparator = DefaultComparator, t_size (* const pivot_index_selection_func)(const s_array<const tp_type> arr) = QuickSortMedianOfThreePivotIndexSelection) {
         ZF_ASSERT(comparator);
         ZF_ASSERT(pivot_index_selection_func);
 
@@ -205,7 +205,7 @@ namespace zf {
 
     // O(n log n) in time complexity. The provided heap is modified in-place, a duplicate is not created for you.
     template<typename tp_key_type, typename tp_value_type>
-    void HeapSort(const c_array<tp_value_type> dest, c_min_heap<tp_key_type, tp_value_type>& min_heap) {
+    void HeapSort(const s_array<tp_value_type> dest, c_min_heap<tp_key_type, tp_value_type>& min_heap) {
         ZF_ASSERT(dest.Len() >= min_heap.GetElemCnt());
 
         t_size dest_index = 0;

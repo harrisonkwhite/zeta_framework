@@ -59,8 +59,8 @@ int main(const int arg_cnt, const char* const* args) {
     }
 
     return zf::OutputCode(
-        zf::s_str_ro::FromRawTerminated(args[1]),
-        zf::s_str_ro::FromRawTerminated(args[2]),
-        zf::s_str_ro::FromRawTerminated(args[3])
+        zf::StrFromRawTerminated(args[1]),
+        zf::StrFromRawTerminated(args[2]),
+        zf::StrFromRawTerminated(args[3])
     ) ? EXIT_SUCCESS : EXIT_FAILURE;
 }

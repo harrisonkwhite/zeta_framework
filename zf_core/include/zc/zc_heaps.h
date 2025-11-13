@@ -70,7 +70,7 @@ namespace zf {
         }
 
     private:
-        c_array<s_node> m_nodes;
+        s_array<s_node> m_nodes;
         t_size m_len = 0;
         t_comparator<tp_key_type> m_comparator = nullptr;
 

@@ -77,10 +77,10 @@ namespace zf {
 #endif
 
     struct s_str_ro {
-        c_array<const char> chrs; // The length of this IS NOT necessarily the string length!
+        s_array<const char> chrs; // The length of this IS NOT necessarily the string length!
 
         constexpr s_str_ro() = default;
-        constexpr s_str_ro(const c_array<const char> chrs) : chrs(chrs) {}
+        constexpr s_str_ro(const s_array<const char> chrs) : chrs(chrs) {}
         consteval s_str_ro(const char* const raw);
 
         constexpr const char* Raw() const {
@@ -89,17 +89,17 @@ namespace zf {
     };
 
     struct s_str_mut {
-        c_array<char> chrs;
+        s_array<char> chrs;
 
         constexpr s_str_mut() = default;
-        constexpr s_str_mut(const c_array<char> chrs) : chrs(chrs) {}
+        constexpr s_str_mut(const s_array<char> chrs) : chrs(chrs) {}
 
         constexpr char* Raw() const {
             return chrs.Raw();
         }
 
         constexpr operator s_str_ro() const {
-            return {static_cast<c_array<const char>>(chrs)};
+            return {static_cast<s_array<const char>>(chrs)};
         }
     };
 

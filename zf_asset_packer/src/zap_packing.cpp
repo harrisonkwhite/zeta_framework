@@ -97,7 +97,7 @@ namespace zf {
 
             const auto temp_mem_arena_offs_old = temp_mem_arena.Offs();
 
-            s_sound_data snd_data;
+            s_sound_data_mut snd_data;
 
             if (!LoadSoundFromRaw(StrFromRawTerminated(cj_src_file_path->valuestring), temp_mem_arena, snd_data)) {
                 ZF_LOG_ERROR("Failed to load sound from file \"%s\"!", cj_src_file_path->valuestring);

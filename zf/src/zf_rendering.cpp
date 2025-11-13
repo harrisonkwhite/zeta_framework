@@ -51,7 +51,7 @@ void main() {
     static c_gfx_resource_handle MakeBatchMesh(c_gfx_resource_arena& gfx_res_arena, c_mem_arena& temp_mem_arena) {
         const t_size verts_len = g_batch_vert_component_cnt * g_batch_slot_vert_cnt * g_batch_slot_cnt;
 
-        c_array<t_u16> elems;
+        s_array<t_u16> elems;
 
         if (!temp_mem_arena.PushArray(g_batch_slot_elem_cnt * g_batch_slot_cnt, elems)) {
             ZF_LOG_ERROR("Failed to reserve memory for batch renderable elements!");
@@ -166,8 +166,8 @@ void main() {
 
     s_rect<t_f32> MakeTextureCoords(const s_rect<t_s32> src_rect, const s_v2<t_s32> tex_size) {
         const s_v2<t_f32> half_texel = {
-            0.5f / tex_size.x,
-            0.5f / tex_size.y
+            0.5f / static_cast<t_f32>(tex_size.x),
+            0.5f / static_cast<t_f32>(tex_size.y)
         };
 
         return {
@@ -194,7 +194,11 @@ void main() {
         }
 
         const s_rect tex_coords = MakeTextureCoords(src_rect_to_use, tex.size_cache);
-        const s_v2<t_f32> size = {src_rect_to_use.width * scale.x, src_rect_to_use.height * scale.y};
+
+        const s_v2<t_f32> size = {
+            static_cast<t_f32>(src_rect_to_use.width) * scale.x, static_cast<t_f32>(src_rect_to_use.height) * scale.y
+        };
+
         Draw(tex.hdl, tex_coords, pos, size, origin, rot, blend);
     }
 

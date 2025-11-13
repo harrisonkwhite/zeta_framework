@@ -4,7 +4,7 @@
 #include <miniaudio.h>
 
 namespace zf {
-    t_b8 LoadSoundFromRaw(const s_str_ro file_path, c_mem_arena& mem_arena, s_sound_data& o_snd_data) {
+    t_b8 LoadSoundFromRaw(const s_str_ro file_path, c_mem_arena& mem_arena, s_sound_data_mut& o_snd_data) {
         ZF_ASSERT(IsStrTerminated(file_path));
 
         ma_decoder decoder;
@@ -24,7 +24,7 @@ namespace zf {
             o_snd_data.meta.sample_rate = static_cast<t_s32>(decoder.outputSampleRate);
             o_snd_data.meta.frame_cnt = static_cast<t_s64>(frame_cnt);
 
-            if (!mem_arena.PushArray(o_snd_data.meta.SampleCount(), o_snd_data.pcm)) {
+            if (!mem_arena.PushArray(CalcSampleCount(o_snd_data), o_snd_data.pcm)) {
                 return false;
             }
 
@@ -40,7 +40,7 @@ namespace zf {
         return success;
     }
 
-    t_b8 LoadSoundFromPacked(const s_str_ro file_path, c_mem_arena& mem_arena, s_sound_data& o_snd_data) {
+    t_b8 LoadSoundFromPacked(const s_str_ro file_path, c_mem_arena& mem_arena, s_sound_data_mut& o_snd_data) {
         ZF_ASSERT(IsStrTerminated(file_path));
 
         s_file_stream fs;
@@ -54,7 +54,7 @@ namespace zf {
                 return false;
             }
 
-            if (!mem_arena.PushArray(o_snd_data.meta.SampleCount(), o_snd_data.pcm)) {
+            if (!mem_arena.PushArray(CalcSampleCount(o_snd_data), o_snd_data.pcm)) {
                 return false;
             }
 
@@ -70,7 +70,7 @@ namespace zf {
         return success;
     }
 
-    t_b8 PackSound(const s_sound_data_view& snd_data, const s_str_ro file_path, c_mem_arena& temp_mem_arena) {
+    t_b8 PackSound(const s_sound_data_ro& snd_data, const s_str_ro file_path, c_mem_arena& temp_mem_arena) {
         ZF_ASSERT(IsStrTerminated(file_path));
 
         if (!CreateFileAndParentDirs(file_path, temp_mem_arena)) {
@@ -88,7 +88,7 @@ namespace zf {
                 return false;
             }
 
-            if (fs.WriteItems(snd_data.pcm.View()) < snd_data.pcm.Len()) {
+            if (fs.WriteItems(snd_data.pcm.Readonly()) < snd_data.pcm.Len()) {
                 return false;
             }
 
