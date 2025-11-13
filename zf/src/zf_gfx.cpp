@@ -42,12 +42,12 @@ namespace zf {
         return mesh;
     }
 
-    static t_gl_id MakeGLShaderProg(const s_str_view vert_src, const s_str_view frag_src, c_mem_arena& temp_mem_arena) {
+    static t_gl_id MakeGLShaderProg(const s_str_ro vert_src, const s_str_ro frag_src, c_mem_arena& temp_mem_arena) {
         ZF_ASSERT(IsStrTerminated(vert_src));
         ZF_ASSERT(IsStrTerminated(frag_src));
 
         // Generate the individual shaders.
-        const auto shader_gen_func = [&temp_mem_arena](const s_str_view src, const t_b8 is_frag) -> t_gl_id {
+        const auto shader_gen_func = [&temp_mem_arena](const s_str_ro src, const t_b8 is_frag) -> t_gl_id {
             const t_gl_id shader_gl_id = glCreateShader(is_frag ? GL_FRAGMENT_SHADER : GL_VERTEX_SHADER);
 
             const auto src_raw = src.Raw();
@@ -116,7 +116,7 @@ namespace zf {
         return { size, size };
     }
 
-    static t_gl_id MakeGLTexture(const s_texture_data_view& tex_data) {
+    static t_gl_id MakeGLTexture(const s_texture_data_ro& tex_data) {
         const s_v2<t_s32> tex_size_limit = GLTextureSizeLimit();
 
         if (tex_data.size_in_pxs.x > tex_size_limit.x || tex_data.size_in_pxs.y > tex_size_limit.y) {
@@ -182,7 +182,7 @@ namespace zf {
         return AddHandle(MakeGLMesh(verts_raw, verts_len, elems, vert_attr_lens));
     }
 
-    c_gfx_resource_handle c_gfx_resource_arena::AddShaderProg(const s_str_view vert_src, const s_str_view frag_src, c_mem_arena& temp_mem_arena) {
+    c_gfx_resource_handle c_gfx_resource_arena::AddShaderProg(const s_str_ro vert_src, const s_str_ro frag_src, c_mem_arena& temp_mem_arena) {
         ZF_ASSERT(IsStrTerminated(vert_src));
         ZF_ASSERT(IsStrTerminated(frag_src));
 
@@ -199,7 +199,7 @@ namespace zf {
         return AddHandle(us_gl_shader_prog(prog_gl_id));
     }
 
-    c_gfx_resource_handle c_gfx_resource_arena::AddTexture(const s_texture_data_view& tex_data) {
+    c_gfx_resource_handle c_gfx_resource_arena::AddTexture(const s_texture_data_ro& tex_data) {
         if (m_hdls_taken == m_hdls.Len()) {
             return {};
         }
@@ -213,7 +213,7 @@ namespace zf {
         return AddHandle(us_gl_texture(tex_gl_id));
     }
 
-    t_b8 s_texture::Load(const s_texture_data_view& tex_data, c_gfx_resource_arena& gfx_res_arena) {
+    t_b8 s_texture::Load(const s_texture_data_ro& tex_data, c_gfx_resource_arena& gfx_res_arena) {
         const auto hdl_temp = gfx_res_arena.AddTexture(tex_data);
 
         if (!hdl_temp.IsValid()) {

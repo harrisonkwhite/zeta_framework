@@ -1,7 +1,7 @@
 #include <zf/zf_rendering.h>
 
 namespace zf {
-    static constexpr auto g_batch_vert_shader_src = s_str_view::FromRawTerminated(R"(#version 460 core
+    static constexpr s_str_ro g_batch_vert_shader_src = StrFromRawTerminated(R"(#version 460 core
 
 layout (location = 0) in vec2 a_vert;
 layout (location = 1) in vec2 a_pos;
@@ -33,7 +33,7 @@ void main() {
 }
 )");
 
-    static constexpr auto g_batch_frag_shader_src = s_str_view::FromRawTerminated(R"(#version 460 core
+    static constexpr s_str_ro g_batch_frag_shader_src = StrFromRawTerminated(R"(#version 460 core
 
 in vec2 v_tex_coord;
 in vec4 v_blend;

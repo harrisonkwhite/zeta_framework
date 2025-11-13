@@ -43,14 +43,14 @@ namespace zf {
 
             const auto temp_mem_arena_offs_old = temp_mem_arena.Offs();
 
-            s_texture_data tex_data;
+            s_texture_data_mut tex_data;
 
-            if (!LoadTextureFromRaw(zf::s_str_view::FromRawTerminated(cj_src_file_path->valuestring), temp_mem_arena, tex_data)) {
+            if (!LoadTextureFromRaw(StrFromRawTerminated(cj_src_file_path->valuestring), temp_mem_arena, tex_data)) {
                 ZF_LOG_ERROR("Failed to load RGBA texture from file \"%s\"!", cj_src_file_path->valuestring);
                 return false;
             }
 
-            if (!PackTexture(tex_data, zf::s_str_view::FromRawTerminated(cj_dest_file_path->valuestring), temp_mem_arena)) {
+            if (!PackTexture(tex_data, StrFromRawTerminated(cj_dest_file_path->valuestring), temp_mem_arena)) {
                 ZF_LOG_ERROR("Failed to pack texture from file \"%s\"!", cj_src_file_path->valuestring);
                 return false;
             }
@@ -99,12 +99,12 @@ namespace zf {
 
             s_sound_data snd_data;
 
-            if (!LoadSoundFromRaw(zf::s_str_view::FromRawTerminated(cj_src_file_path->valuestring), temp_mem_arena, snd_data)) {
+            if (!LoadSoundFromRaw(StrFromRawTerminated(cj_src_file_path->valuestring), temp_mem_arena, snd_data)) {
                 ZF_LOG_ERROR("Failed to load sound from file \"%s\"!", cj_src_file_path->valuestring);
                 return false;
             }
 
-            if (!PackSound(snd_data, zf::s_str_view::FromRawTerminated(cj_dest_file_path->valuestring), temp_mem_arena)) {
+            if (!PackSound(snd_data, StrFromRawTerminated(cj_dest_file_path->valuestring), temp_mem_arena)) {
                 ZF_LOG_ERROR("Failed to pack sound from file \"%s\"!", cj_src_file_path->valuestring);
                 return false;
             }
@@ -117,7 +117,7 @@ namespace zf {
         return true;
     }
 
-    t_b8 PackAssets(const s_str_view instrs_json, c_mem_arena& temp_mem_arena) {
+    t_b8 PackAssets(const s_str_ro instrs_json, c_mem_arena& temp_mem_arena) {
         ZF_ASSERT(IsStrTerminated(instrs_json));
 
         cJSON* const cj = cJSON_Parse(instrs_json.Raw());

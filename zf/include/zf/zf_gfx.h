@@ -98,8 +98,8 @@ namespace zf {
         void Release();
 
         c_gfx_resource_handle AddMesh(const t_f32* const verts_raw, const t_size verts_len, const c_array<const t_u16> elems, const c_array<const t_s32> vert_attr_lens); // You might not want to provide vertices to start with, and only the count - passing nullptr in for verts_raw allows this.
-        c_gfx_resource_handle AddShaderProg(const s_str_view vert_src, const s_str_view frag_src, c_mem_arena& temp_mem_arena);
-        c_gfx_resource_handle AddTexture(const s_texture_data_view& tex_data);
+        c_gfx_resource_handle AddShaderProg(const s_str_ro vert_src, const s_str_ro frag_src, c_mem_arena& temp_mem_arena);
+        c_gfx_resource_handle AddTexture(const s_texture_data_ro& tex_data);
 
     private:
         c_gfx_resource_handle AddHandle(const c_gfx_resource_handle& hdl) {
@@ -119,10 +119,10 @@ namespace zf {
         c_gfx_resource_handle hdl;
         s_v2<t_s32> size_cache;
 
-        [[nodiscard]] t_b8 Load(const s_texture_data_view& tex_data, c_gfx_resource_arena& gfx_res_arena);
+        [[nodiscard]] t_b8 Load(const s_texture_data_ro& tex_data, c_gfx_resource_arena& gfx_res_arena);
 
-        [[nodiscard]] t_b8 LoadFromRaw(const s_str_view file_path, c_gfx_resource_arena& gfx_res_arena, c_mem_arena& temp_mem_arena) {
-            s_texture_data tex_data;
+        [[nodiscard]] t_b8 LoadFromRaw(const s_str_ro file_path, c_gfx_resource_arena& gfx_res_arena, c_mem_arena& temp_mem_arena) {
+            s_texture_data_mut tex_data;
 
             if (!LoadTextureFromRaw(file_path, temp_mem_arena, tex_data)) {
                 return false;
@@ -131,8 +131,8 @@ namespace zf {
             return Load(tex_data, gfx_res_arena);
         }
 
-        [[nodiscard]] t_b8 LoadFromPacked(const s_str_view file_path, c_gfx_resource_arena& gfx_res_arena, c_mem_arena& temp_mem_arena) {
-            s_texture_data tex_data;
+        [[nodiscard]] t_b8 LoadFromPacked(const s_str_ro file_path, c_gfx_resource_arena& gfx_res_arena, c_mem_arena& temp_mem_arena) {
+            s_texture_data_mut tex_data;
 
             if (!LoadTextureFromPacked(file_path, temp_mem_arena, tex_data)) {
                 return false;

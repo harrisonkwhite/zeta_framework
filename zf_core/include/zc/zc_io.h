@@ -18,7 +18,7 @@ namespace zf {
         FILE* raw = nullptr;
 
         [[nodiscard]]
-        t_b8 Open(const s_str_view file_path, const ec_file_access_mode mode) {
+        t_b8 Open(const s_str_ro file_path, const ec_file_access_mode mode) {
             ZF_ASSERT(IsStrTerminated(file_path));
 
             switch (mode) {
@@ -71,16 +71,16 @@ namespace zf {
         }
     };
 
-    t_b8 LoadFileContents(c_mem_arena& mem_arena, const s_str_view file_path, c_array<t_s8>& o_contents, const t_b8 include_terminating_byte = false);
+    t_b8 LoadFileContents(c_mem_arena& mem_arena, const s_str_ro file_path, c_array<t_s8>& o_contents, const t_b8 include_terminating_byte = false);
 
-    inline t_b8 LoadFileContentsAsStr(c_mem_arena& mem_arena, const s_str_view file_path, s_str& o_contents) {
+    inline t_b8 LoadFileContentsAsStr(c_mem_arena& mem_arena, const s_str_ro file_path, s_str_mut& o_contents) {
         c_array<t_s8> contents_default;
 
         if (!LoadFileContents(mem_arena, file_path, contents_default, true)) {
             return false;
         }
 
-        o_contents = s_str::FromRawTerminated(reinterpret_cast<char*>(contents_default.Raw()), contents_default.Len() - 1);
+        o_contents = StrFromRawTerminated(reinterpret_cast<char*>(contents_default.Raw()), contents_default.Len() - 1);
 
         return true;
     }
@@ -95,9 +95,9 @@ namespace zf {
     };
 #endif
 
-    t_b8 CreateDirectory(const s_str_view path); // This DOES NOT create non-existent parent directories.
-    t_b8 CreateDirectoryAndParents(const s_str_view path, c_mem_arena& temp_mem_arena);
-    t_b8 CreateFileAndParentDirs(const s_str_view path, c_mem_arena& temp_mem_arena);
+    t_b8 CreateDirectory(const s_str_ro path); // This DOES NOT create non-existent parent directories.
+    t_b8 CreateDirectoryAndParents(const s_str_ro path, c_mem_arena& temp_mem_arena);
+    t_b8 CreateFileAndParentDirs(const s_str_ro path, c_mem_arena& temp_mem_arena);
 
     enum class ec_path_type {
         not_found,
@@ -105,5 +105,5 @@ namespace zf {
         directory
     };
 
-    ec_path_type CheckPathType(const s_str_view path);
+    ec_path_type CheckPathType(const s_str_ro path);
 }

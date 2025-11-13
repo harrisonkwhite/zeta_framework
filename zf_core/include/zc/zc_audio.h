@@ -36,8 +36,8 @@ namespace zf {
         }
     };
 
-    [[nodiscard]] t_b8 LoadSoundFromRaw(const s_str_view file_path, c_mem_arena& mem_arena, s_sound_data& o_snd_data);
-    [[nodiscard]] t_b8 LoadSoundFromPacked(const s_str_view file_path, c_mem_arena& mem_arena, s_sound_data& o_snd_data);
+    [[nodiscard]] t_b8 LoadSoundFromRaw(const s_str_ro file_path, c_mem_arena& mem_arena, s_sound_data& o_snd_data);
+    [[nodiscard]] t_b8 LoadSoundFromPacked(const s_str_ro file_path, c_mem_arena& mem_arena, s_sound_data& o_snd_data);
 
-    [[nodiscard]] t_b8 PackSound(const s_sound_data_view& snd_data, const s_str_view file_path, c_mem_arena& temp_mem_arena);
+    [[nodiscard]] t_b8 PackSound(const s_sound_data_view& snd_data, const s_str_ro file_path, c_mem_arena& temp_mem_arena);
 }

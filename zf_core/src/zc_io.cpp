@@ -9,7 +9,7 @@
 #endif
 
 namespace zf {
-    t_b8 LoadFileContents(c_mem_arena& mem_arena, const s_str_view file_path, c_array<t_s8>& o_contents, const t_b8 include_terminating_byte) {
+    t_b8 LoadFileContents(c_mem_arena& mem_arena, const s_str_ro file_path, c_array<t_s8>& o_contents, const t_b8 include_terminating_byte) {
         ZF_ASSERT(IsStrTerminated(file_path));
 
         s_file_stream fs;
@@ -40,7 +40,7 @@ namespace zf {
         return success;
     }
 
-    t_b8 CreateDirectory(const s_str_view path) {
+    t_b8 CreateDirectory(const s_str_ro path) {
         ZF_ASSERT(IsStrTerminated(path));
 
 #ifdef _WIN32
@@ -73,12 +73,12 @@ namespace zf {
 #endif
     }
 
-    t_b8 CreateDirectoryAndParents(const s_str_view path, c_mem_arena& temp_mem_arena) {
+    t_b8 CreateDirectoryAndParents(const s_str_ro path, c_mem_arena& temp_mem_arena) {
         ZF_ASSERT(IsStrTerminated(path));
 
         // @speed: Ideally we'd start at the end of the path and move back.
 
-        s_str path_cloned; // @speed: A clone on every call to this? Yuck!
+        s_str_mut path_cloned; // @speed: A clone on every call to this? Yuck!
 
         if (!temp_mem_arena.CloneArray(path.chrs, path_cloned.chrs)) {
             return false;
@@ -119,12 +119,12 @@ namespace zf {
         return true;
     }
 
-    t_b8 CreateFileAndParentDirs(const s_str_view path, c_mem_arena& temp_mem_arena) {
+    t_b8 CreateFileAndParentDirs(const s_str_ro path, c_mem_arena& temp_mem_arena) {
         ZF_ASSERT(IsStrTerminated(path));
 
         const t_size path_len = CalcStrLen(path);
 
-        s_str path_cloned; // @speed: A clone on every call to this? Yuck!
+        s_str_mut path_cloned; // @speed: A clone on every call to this? Yuck!
 
         if (!temp_mem_arena.CloneArray(path.chrs.Slice(0, path_len + 1), path_cloned.chrs)) {
             return false;
@@ -155,7 +155,7 @@ namespace zf {
         return true;
     }
 
-    ec_path_type CheckPathType(const s_str_view path) {
+    ec_path_type CheckPathType(const s_str_ro path) {
         struct stat info;
 
         if (stat(path.Raw(), &info) != 0) {

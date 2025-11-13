@@ -136,30 +136,30 @@ namespace zf {
 
     // For simplicity, RGBA is the only format we work with.
 
-    struct s_texture_data_view {
+    struct s_texture_data_ro {
         s_v2<t_s32> size_in_pxs;
         c_array<const t_u8> rgba_px_data;
 
-        s_texture_data_view() = default;
-        s_texture_data_view(const s_v2<t_s32> size_in_pxs, const c_array<const t_u8> rgba_px_data)
+        s_texture_data_ro() = default;
+        s_texture_data_ro(const s_v2<t_s32> size_in_pxs, const c_array<const t_u8> rgba_px_data)
             : size_in_pxs(size_in_pxs), rgba_px_data(rgba_px_data) {}
     };
 
-    struct s_texture_data {
+    struct s_texture_data_mut {
         s_v2<t_s32> size_in_pxs;
         c_array<t_u8> rgba_px_data;
 
-        s_texture_data() = default;
-        s_texture_data(const s_v2<t_s32> size_in_pxs, const c_array<t_u8> rgba_px_data)
+        s_texture_data_mut() = default;
+        s_texture_data_mut(const s_v2<t_s32> size_in_pxs, const c_array<t_u8> rgba_px_data)
             : size_in_pxs(size_in_pxs), rgba_px_data(rgba_px_data) {}
 
-        operator s_texture_data_view() const {
+        operator s_texture_data_ro() const {
             return {size_in_pxs, c_array<const t_u8>(rgba_px_data)};
         }
     };
 
-    [[nodiscard]] t_b8 LoadTextureFromRaw(const s_str_view file_path, c_mem_arena& mem_arena, s_texture_data& o_tex_data);
-    [[nodiscard]] t_b8 LoadTextureFromPacked(const s_str_view file_path, c_mem_arena& mem_arena, s_texture_data& o_tex_data);
+    [[nodiscard]] t_b8 LoadTextureFromRaw(const s_str_ro file_path, c_mem_arena& mem_arena, s_texture_data_mut& o_tex_data);
+    [[nodiscard]] t_b8 LoadTextureFromPacked(const s_str_ro file_path, c_mem_arena& mem_arena, s_texture_data_mut& o_tex_data);
 
-    [[nodiscard]] t_b8 PackTexture(const s_texture_data_view& tex_data, const s_str_view file_path, c_mem_arena& temp_mem_arena);
+    [[nodiscard]] t_b8 PackTexture(const s_texture_data_ro& tex_data, const s_str_ro file_path, c_mem_arena& temp_mem_arena);
 }

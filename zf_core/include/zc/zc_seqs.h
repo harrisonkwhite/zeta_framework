@@ -48,6 +48,7 @@ namespace zf {
         }
     };
 
+#if 0
     template<typename tp_type>
     struct s_bounded_list_view {
         const c_array<const tp_type> backing_arr;
@@ -138,6 +139,7 @@ namespace zf {
         Copy(list.backing_arr.Slice(index, list.len - 1), list.backing_arr.Slice(index + 1, list.len));
         list.len--;
     }
+#endif
 
 #if 0
     template<typename tp_type>

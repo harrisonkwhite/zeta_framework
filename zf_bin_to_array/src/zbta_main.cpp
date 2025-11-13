@@ -3,7 +3,7 @@
 #include <zc.h>
 
 namespace zf {
-    t_b8 OutputCode(const s_str_view input_file_path, const s_str_view output_file_path, const s_str_view arr_subname) {
+    t_b8 OutputCode(const s_str_ro input_file_path, const s_str_ro output_file_path, const s_str_ro arr_subname) {
         ZF_ASSERT(IsStrTerminated(arr_subname));
 
         s_file_stream input_reader;
@@ -59,8 +59,8 @@ int main(const int arg_cnt, const char* const* args) {
     }
 
     return zf::OutputCode(
-        zf::s_str_view::FromRawTerminated(args[1]),
-        zf::s_str_view::FromRawTerminated(args[2]),
-        zf::s_str_view::FromRawTerminated(args[3])
+        zf::s_str_ro::FromRawTerminated(args[1]),
+        zf::s_str_ro::FromRawTerminated(args[2]),
+        zf::s_str_ro::FromRawTerminated(args[3])
     ) ? EXIT_SUCCESS : EXIT_FAILURE;
 }

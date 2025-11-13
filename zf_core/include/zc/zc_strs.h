@@ -76,55 +76,57 @@ namespace zf {
     };
 #endif
 
-    struct s_str_view {
-        static constexpr s_str_view FromRawTerminated(const char* const raw) {
-            return {{raw, CalcRawStrLen(raw) + 1}};
-        }
-
-        static constexpr s_str_view FromRawTerminated(const char* const raw, const t_size len) {
-            ZF_ASSERT(len == CalcRawStrLen(raw));
-            return {{raw, len + 1}};
-        }
-
+    struct s_str_ro {
         c_array<const char> chrs; // The length of this IS NOT necessarily the string length!
 
-        constexpr s_str_view() = default;
-        constexpr s_str_view(const c_array<const char> chrs) : chrs(chrs) {}
-        consteval s_str_view(const char* const raw) : chrs(FromRawTerminated(raw).chrs) {}
+        constexpr s_str_ro() = default;
+        constexpr s_str_ro(const c_array<const char> chrs) : chrs(chrs) {}
+        consteval s_str_ro(const char* const raw);
 
         constexpr const char* Raw() const {
             return chrs.Raw();
         }
     };
 
-    struct s_str {
-        static constexpr s_str FromRawTerminated(char* const raw) {
-            return {{raw, CalcRawStrLen(raw) + 1}};
-        }
-
-        static constexpr s_str FromRawTerminated(char* const raw, const t_size len) {
-            ZF_ASSERT(len == CalcRawStrLen(raw));
-            return {{raw, len + 1}};
-        }
-
+    struct s_str_mut {
         c_array<char> chrs;
 
-        constexpr s_str() = default;
-        constexpr s_str(const c_array<char> chrs) : chrs(chrs) {}
+        constexpr s_str_mut() = default;
+        constexpr s_str_mut(const c_array<char> chrs) : chrs(chrs) {}
 
         constexpr char* Raw() const {
             return chrs.Raw();
         }
 
-        constexpr operator s_str_view() const {
+        constexpr operator s_str_ro() const {
             return {static_cast<c_array<const char>>(chrs)};
         }
     };
 
-    constexpr t_b8 IsStrEmpty(const s_str_view str) {
+    constexpr s_str_ro StrFromRawTerminated(const char* const raw) {
+        return {{raw, CalcRawStrLen(raw) + 1}};
+    }
+
+    constexpr s_str_mut StrFromRawTerminated(char* const raw) {
+        return {{raw, CalcRawStrLen(raw) + 1}};
+    }
+
+    constexpr s_str_ro StrFromRawTerminated(const char* const raw, const t_size len) {
+        ZF_ASSERT(len == CalcRawStrLen(raw));
+        return {{raw, len + 1}};
+    }
+
+    constexpr s_str_mut StrFromRawTerminated(char* const raw, const t_size len) {
+        ZF_ASSERT(len == CalcRawStrLen(raw));
+        return {{raw, len + 1}};
+    }
+
+    consteval s_str_ro::s_str_ro(const char* const raw) : chrs(StrFromRawTerminated(raw).chrs) {}
+
+    constexpr t_b8 IsStrEmpty(const s_str_ro str) {
         return str.chrs.IsEmpty() || !str.chrs[0];
     }
 
-    t_size CalcStrLen(const s_str_view str);
-    t_b8 IsStrTerminated(const s_str_view str);
+    t_size CalcStrLen(const s_str_ro str);
+    t_b8 IsStrTerminated(const s_str_ro str);
 }

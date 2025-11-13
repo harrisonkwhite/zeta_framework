@@ -8,7 +8,7 @@ int main(const int arg_cnt, const char* const* const args_raw) {
         return EXIT_FAILURE;
     }
 
-    const auto instrs_json_file_path = zf::s_str_view::FromRawTerminated(args[1]);
+    const zf::s_str_ro instrs_json_file_path = zf::StrFromRawTerminated(args[1]);
 
     zf::c_mem_arena temp_mem_arena;
 
@@ -18,7 +18,7 @@ int main(const int arg_cnt, const char* const* const args_raw) {
     }
 
     const zf::t_b8 success = [instrs_json_file_path, &temp_mem_arena]() {
-        zf::s_str instrs_json;
+        zf::s_str_mut instrs_json;
 
         if (!zf::LoadFileContentsAsStr(temp_mem_arena, instrs_json_file_path, instrs_json)) {
             ZF_LOG_ERROR("Failed to load contents of asset packing instructions JSON file \"%s\"!", instrs_json_file_path.Raw());
