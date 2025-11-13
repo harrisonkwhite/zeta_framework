@@ -1,31 +1,34 @@
 #include <zc/zc_bits.h>
 
 namespace zf {
-    static t_u8 ShiftLeftSingle(const c_bit_vector bv, t_u8 carry = 0) {
+    static t_b8 BitVectorLastByteBitmask(const s_bit_vector_ro bv) {
+        const t_size bits_in_last_byte = (bv.BitCount() % 8 == 0) ? 8 : (bv.BitCount() % 8);
+        return ByteBitmask(0, bits_in_last_byte);
+    }
+
+    static t_u8 ShiftLeftSingle(const s_bit_vector_mut bv, t_u8 carry = 0) {
         ZF_ASSERT(carry == 0 || carry == 1);
 
         if (bv.BitCount() == 0) {
             return 0;
         }
 
-        const auto bytes = bv.Bytes();
-
         const auto make_carry = [](const t_u8 byte, const t_size bit_cnt) {
             return static_cast<t_u8>((byte & (1 << (bit_cnt - 1))) >> (bit_cnt - 1));
         };
 
         // Shift all bytes except the last.
-        for (t_size i = 0; i < bytes.Len() - 1; i++) {
+        for (t_size i = 0; i < bv.Bytes().Len() - 1; i++) {
             const t_u8 carry_old = carry;
-            carry = make_carry(bytes[i], 8);
-            bytes[i] <<= 1;
-            bytes[i] |= carry_old;
+            carry = make_carry(bv.Bytes()[i], 8);
+            bv.Bytes()[i] <<= 1;
+            bv.Bytes()[i] |= carry_old;
         }
 
         // Apply shift to final byte (might have less than 8 bits in the vector).
-        const t_size remaining_bit_cnt = bv.BitCount() - (8 * (bytes.Len() - 1));
+        const t_size remaining_bit_cnt = bv.BitCount() - (8 * (bv.Bytes().Len() - 1));
 
-        t_u8& last_byte = bytes[bytes.Len() - 1];
+        t_u8& last_byte = bv.Bytes()[bv.Bytes().Len() - 1];
         const t_u8 carry_old = carry;
         carry = make_carry(last_byte, remaining_bit_cnt);
         last_byte <<= 1;
@@ -34,7 +37,7 @@ namespace zf {
         return carry;
     }
 
-    void ShiftLeft(const c_bit_vector bv, const t_size amount) {
+    void ShiftLeft(const s_bit_vector_mut bv, const t_size amount) {
         ZF_ASSERT(amount >= 0);
 
         for (t_size i = 0; i < amount; i++) {
@@ -42,7 +45,7 @@ namespace zf {
         }
     }
 
-    void RotLeft(const c_bit_vector bv, const t_size amount) {
+    void RotLeft(const s_bit_vector_mut bv, const t_size amount) {
         ZF_ASSERT(amount >= 0);
 
         t_u8 carry = 0;
@@ -52,11 +55,315 @@ namespace zf {
         }
     }
 
-#if 0
-    t_size FindFirstSetBit(const c_bit_vector bv, const t_size index) {
+    t_size FindFirstSetBit(const s_bit_vector_mut bv, const t_size from) {
+        ZF_ASSERT(from <= bv.BitCount()); // Intentionally allowing the upper bound here for the case of iteration.
+
+        static constexpr s_static_array<int, 256> lg_mappings = {
+            {
+                -1, // 0000 0000
+                0, // 0000 0001
+                1, // 0000 0010
+                0, // 0000 0011
+                2, // 0000 0100
+                0, // 0000 0101
+                1, // 0000 0110
+                0, // 0000 0111
+                3, // 0000 1000
+                0, // 0000 1001
+                1, // 0000 1010
+                0, // 0000 1011
+                2, // 0000 1100
+                0, // 0000 1101
+                1, // 0000 1110
+                0, // 0000 1111
+                4, // 0001 0000
+                0, // 0001 0001
+                1, // 0001 0010
+                0, // 0001 0011
+                2, // 0001 0100
+                0, // 0001 0101
+                1, // 0001 0110
+                0, // 0001 0111
+                3, // 0001 1000
+                0, // 0001 1001
+                1, // 0001 1010
+                0, // 0001 1011
+                2, // 0001 1100
+                0, // 0001 1101
+                1, // 0001 1110
+                0, // 0001 1111
+                5, // 0010 0000
+                0, // 0010 0001
+                1, // 0010 0010
+                0, // 0010 0011
+                2, // 0010 0100
+                0, // 0010 0101
+                1, // 0010 0110
+                0, // 0010 0111
+                3, // 0010 1000
+                0, // 0010 1001
+                1, // 0010 1010
+                0, // 0010 1011
+                2, // 0010 1100
+                0, // 0010 1101
+                1, // 0010 1110
+                0, // 0010 1111
+                4, // 0011 0000
+                0, // 0011 0001
+                1, // 0011 0010
+                0, // 0011 0011
+                2, // 0011 0100
+                0, // 0011 0101
+                1, // 0011 0110
+                0, // 0011 0111
+                3, // 0011 1000
+                0, // 0011 1001
+                1, // 0011 1010
+                0, // 0011 1011
+                2, // 0011 1100
+                0, // 0011 1101
+                1, // 0011 1110
+                0, // 0011 1111
+                6, // 0100 0000
+                0, // 0100 0001
+                1, // 0100 0010
+                0, // 0100 0011
+                2, // 0100 0100
+                0, // 0100 0101
+                1, // 0100 0110
+                0, // 0100 0111
+                3, // 0100 1000
+                0, // 0100 1001
+                1, // 0100 1010
+                0, // 0100 1011
+                2, // 0100 1100
+                0, // 0100 1101
+                1, // 0100 1110
+                0, // 0100 1111
+                4, // 0101 0000
+                0, // 0101 0001
+                1, // 0101 0010
+                0, // 0101 0011
+                2, // 0101 0100
+                0, // 0101 0101
+                1, // 0101 0110
+                0, // 0101 0111
+                3, // 0101 1000
+                0, // 0101 1001
+                1, // 0101 1010
+                0, // 0101 1011
+                2, // 0101 1100
+                0, // 0101 1101
+                1, // 0101 1110
+                0, // 0101 1111
+                5, // 0110 0000
+                0, // 0110 0001
+                1, // 0110 0010
+                0, // 0110 0011
+                2, // 0110 0100
+                0, // 0110 0101
+                1, // 0110 0110
+                0, // 0110 0111
+                3, // 0110 1000
+                0, // 0110 1001
+                1, // 0110 1010
+                0, // 0110 1011
+                2, // 0110 1100
+                0, // 0110 1101
+                1, // 0110 1110
+                0, // 0110 1111
+                4, // 0111 0000
+                0, // 0111 0001
+                1, // 0111 0010
+                0, // 0111 0011
+                2, // 0111 0100
+                0, // 0111 0101
+                1, // 0111 0110
+                0, // 0111 0111
+                3, // 0111 1000
+                0, // 0111 1001
+                1, // 0111 1010
+                0, // 0111 1011
+                2, // 0111 1100
+                0, // 0111 1101
+                1, // 0111 1110
+                0, // 0111 1111
+                7, // 1000 0000
+                0, // 1000 0001
+                1, // 1000 0010
+                0, // 1000 0011
+                2, // 1000 0100
+                0, // 1000 0101
+                1, // 1000 0110
+                0, // 1000 0111
+                3, // 1000 1000
+                0, // 1000 1001
+                1, // 1000 1010
+                0, // 1000 1011
+                2, // 1000 1100
+                0, // 1000 1101
+                1, // 1000 1110
+                0, // 1000 1111
+                4, // 1001 0000
+                0, // 1001 0001
+                1, // 1001 0010
+                0, // 1001 0011
+                2, // 1001 0100
+                0, // 1001 0101
+                1, // 1001 0110
+                0, // 1001 0111
+                3, // 1001 1000
+                0, // 1001 1001
+                1, // 1001 1010
+                0, // 1001 1011
+                2, // 1001 1100
+                0, // 1001 1101
+                1, // 1001 1110
+                0, // 1001 1111
+                5, // 1010 0000
+                0, // 1010 0001
+                1, // 1010 0010
+                0, // 1010 0011
+                2, // 1010 0100
+                0, // 1010 0101
+                1, // 1010 0110
+                0, // 1010 0111
+                3, // 1010 1000
+                0, // 1010 1001
+                1, // 1010 1010
+                0, // 1010 1011
+                2, // 1010 1100
+                0, // 1010 1101
+                1, // 1010 1110
+                0, // 1010 1111
+                4, // 1011 0000
+                0, // 1011 0001
+                1, // 1011 0010
+                0, // 1011 0011
+                2, // 1011 0100
+                0, // 1011 0101
+                1, // 1011 0110
+                0, // 1011 0111
+                3, // 1011 1000
+                0, // 1011 1001
+                1, // 1011 1010
+                0, // 1011 1011
+                2, // 1011 1100
+                0, // 1011 1101
+                1, // 1011 1110
+                0, // 1011 1111
+                6, // 1100 0000
+                0, // 1100 0001
+                1, // 1100 0010
+                0, // 1100 0011
+                2, // 1100 0100
+                0, // 1100 0101
+                1, // 1100 0110
+                0, // 1100 0111
+                3, // 1100 1000
+                0, // 1100 1001
+                1, // 1100 1010
+                0, // 1100 1011
+                2, // 1100 1100
+                0, // 1100 1101
+                1, // 1100 1110
+                0, // 1100 1111
+                4, // 1101 0000
+                0, // 1101 0001
+                1, // 1101 0010
+                0, // 1101 0011
+                2, // 1101 0100
+                0, // 1101 0101
+                1, // 1101 0110
+                0, // 1101 0111
+                3, // 1101 1000
+                0, // 1101 1001
+                1, // 1101 1010
+                0, // 1101 1011
+                2, // 1101 1100
+                0, // 1101 1101
+                1, // 1101 1110
+                0, // 1101 1111
+                5, // 1110 0000
+                0, // 1110 0001
+                1, // 1110 0010
+                0, // 1110 0011
+                2, // 1110 0100
+                0, // 1110 0101
+                1, // 1110 0110
+                0, // 1110 0111
+                3, // 1110 1000
+                0, // 1110 1001
+                1, // 1110 1010
+                0, // 1110 1011
+                2, // 1110 1100
+                0, // 1110 1101
+                1, // 1110 1110
+                0, // 1110 1111
+                4, // 1111 0000
+                0, // 1111 0001
+                1, // 1111 0010
+                0, // 1111 0011
+                2, // 1111 0100
+                0, // 1111 0101
+                1, // 1111 0110
+                0, // 1111 0111
+                3, // 1111 1000
+                0, // 1111 1001
+                1, // 1111 1010
+                0, // 1111 1011
+                2, // 1111 1100
+                0, // 1111 1101
+                1, // 1111 1110
+                0 // 1111 1111
+            }
+        };
+
+        if (bv.BitCount() == 0 || from == bv.BitCount()) {
+            return -1;
+        }
+
+        const t_size starting_byte_index = from / 8;
+        const t_u8 starting_byte_old = bv.Bytes()[starting_byte_index];
+
+        const t_u8 last_byte_old = bv.Bytes()[bv.Bytes().Len() - 1];
+
+        bv.Bytes()[starting_byte_index] &= ByteBitmask(from % 8, 8);
+        bv.Bytes()[bv.Bytes().Len() - 1] &= BitVectorLastByteBitmask(bv);
+
+        const auto res = [starting_byte_index, bv]() {
+            for (t_size i = starting_byte_index; i < bv.Bytes().Len(); i++) {
+                const t_size bi = lg_mappings[bv.Bytes()[i]];
+
+                if (bi != -1) {
+                    return bi;
+                }
+            }
+
+            return static_cast<t_size>(-1);
+        }();
+
+        bv.Bytes()[starting_byte_index] = starting_byte_old;
+        bv.Bytes()[bv.Bytes().Len() - 1] = last_byte_old;
+
+        return res;
     }
 
-    t_size FindFirstUnsetBit(const c_bit_vector bv, const t_size index) {
+    t_size FindFirstUnsetBit(const s_bit_vector_mut bv, const t_size from) {
+        ZF_ASSERT(from <= bv.BitCount()); // Intentionally allowing the upper bound here for the case of iteration.
+
+        // @speed: The flipping of all bits before and after is not essential.
+
+        for (t_size i = 0; i < bv.Bytes().Len(); i++) {
+            bv.Bytes()[i] = static_cast<t_u8>(~bv.Bytes()[i]);
+        }
+
+        const t_size res = FindFirstSetBit(bv, from);
+
+        for (t_size i = 0; i < bv.Bytes().Len(); i++) {
+            bv.Bytes()[i] = static_cast<t_u8>(~bv.Bytes()[i]);
+        }
+
+        return res;
     }
-#endif
 }

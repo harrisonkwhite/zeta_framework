@@ -4,56 +4,68 @@
 #include <zc/zc_math.h>
 
 namespace zf {
-    class c_bit_vector_ro {
-    public:
-        constexpr c_bit_vector_ro() = default;
+    constexpr t_u8 ByteBitmask(const t_size bit_index) {
+        ZF_ASSERT(bit_index >= 0 && bit_index < 8);
+        return static_cast<t_u8>(1 << bit_index);
+    }
 
-        constexpr c_bit_vector_ro(const s_array<const t_u8> bytes)
-            : m_bytes(bytes), m_bit_cnt(BytesToBits(bytes.Len())) {}
+    constexpr t_u8 ByteBitmask(const t_size begin_bit_index, const t_size end_bit_index) {
+        ZF_ASSERT(begin_bit_index >= 0 && begin_bit_index < 8);
+        ZF_ASSERT(end_bit_index > begin_bit_index && end_bit_index <= 8);
 
-        constexpr c_bit_vector_ro(const s_array<const t_u8> bytes, const t_size bit_cnt)
-            : m_bytes(bytes), m_bit_cnt(bit_cnt) {
-            ZF_ASSERT(bit_cnt >= 0);
+        const auto bits_at_bottom = static_cast<t_u8>((1 << (end_bit_index - begin_bit_index)) - 1);
+        return static_cast<t_u8>(bits_at_bottom << begin_bit_index);
+    }
+
+    struct s_bit_vector_ro {
+        constexpr s_bit_vector_ro() = default;
+        constexpr s_bit_vector_ro(const s_array<const t_u8> bytes)
+            : bytes(bytes), bit_cnt(BytesToBits(bytes.Len())) {}
+        constexpr s_bit_vector_ro(const s_array<const t_u8> bytes, const t_size bit_cnt)
+            : bytes(bytes), bit_cnt(bit_cnt) {
             ZF_ASSERT(bytes.Len() == BitsToBytes(bit_cnt));
         }
 
         constexpr s_array<const t_u8> Bytes() const {
-            return m_bytes;
+            return bytes;
         }
 
         constexpr t_size BitCount() const {
-            return m_bit_cnt;
+            return bit_cnt;
         }
 
     private:
-        s_array<const t_u8> m_bytes;
-        t_size m_bit_cnt = 0;
+        s_array<const t_u8> bytes;
+        t_size bit_cnt = 0;
     };
 
-    class c_bit_vector_mut {
-    public:
-        constexpr c_bit_vector_mut() = default;
+    struct s_bit_vector_mut {
+        constexpr s_bit_vector_mut() = default;
 
-        constexpr c_bit_vector_mut(const s_array<t_u8> bytes)
-            : m_bytes(bytes), m_bit_cnt(BytesToBits(bytes.Len())) {}
+        constexpr s_bit_vector_mut(const s_array<t_u8> bytes)
+            : bytes(bytes), bit_cnt(BytesToBits(bytes.Len())) {}
 
-        constexpr c_bit_vector_mut(const s_array<t_u8> bytes, const t_size bit_cnt)
-            : m_bytes(bytes), m_bit_cnt(bit_cnt) {
+        constexpr s_bit_vector_mut(const s_array<t_u8> bytes, const t_size bit_cnt)
+            : bytes(bytes), bit_cnt(bit_cnt) {
             ZF_ASSERT(bit_cnt >= 0);
             ZF_ASSERT(bytes.Len() == BitsToBytes(bit_cnt));
         }
 
         constexpr s_array<t_u8> Bytes() const {
-            return m_bytes;
+            return bytes;
         }
 
         constexpr t_size BitCount() const {
-            return m_bit_cnt;
+            return bit_cnt;
+        }
+
+        constexpr operator s_bit_vector_ro() const {
+            return {bytes, bit_cnt};
         }
 
     private:
-        s_array<t_u8> m_bytes;
-        t_size m_bit_cnt = 0;
+        s_array<t_u8> bytes;
+        t_size bit_cnt = 0;
     };
 
     template<t_size tp_bit_cnt>
@@ -62,106 +74,35 @@ namespace zf {
 
         s_static_array<t_u8, BitsToBytes(tp_bit_cnt)> bytes;
 
-        constexpr t_size BitCount() const {
-            return tp_bit_cnt;
-        }
-
-        constexpr operator c_bit_vector_mut() {
+        constexpr operator s_bit_vector_mut() {
             return {bytes, tp_bit_cnt};
         }
 
-        constexpr operator c_bit_vector_ro() const {
+        constexpr operator s_bit_vector_ro() const {
             return {bytes, tp_bit_cnt};
         }
     };
 
-#if 0
-    template<t_size tp_bit_cnt>
-    constexpr s_static_bit_vector<tp_bit_cnt> BitMask(const t_size index) {
-        ZF_ASSERT(index >= 0 && index < tp_bit_cnt);
-        return static_cast<tp_type>(static_cast<tp_type>(1) << index);
-    }
-#endif
-
-    inline t_b8 IsBitSet(const c_bit_vector_ro bv, const t_size index) {
+    inline t_b8 IsBitSet(const s_bit_vector_ro bv, const t_size index) {
         ZF_ASSERT(index >= 0 && index < bv.BitCount());
         return bv.Bytes()[index / 8] & (1 << (index % 8));
     }
 
-    inline void SetBit(const c_bit_vector_mut bv, const t_size index) {
+    inline void SetBit(const s_bit_vector_mut bv, const t_size index) {
         ZF_ASSERT(index >= 0 && index < bv.BitCount());
         bv.Bytes()[index / 8] |= (1 << (index % 8));
     }
 
-    inline void UnsetBit(const c_bit_vector_mut bv, const t_size index) {
+    inline void UnsetBit(const s_bit_vector_mut bv, const t_size index) {
         ZF_ASSERT(index >= 0 && index < bv.BitCount());
         bv.Bytes()[index / 8] &= ~(1 << (index % 8));
     }
 
-    void ShiftLeft(const c_bit_vector_mut bv, const t_size amount = 1);
-    void RotLeft(const c_bit_vector_mut bv, const t_size amount = 1);
-    void ShiftRight(const c_bit_vector_mut bv, const t_size amount = 1);
-    void RotRight(const c_bit_vector_mut bv, const t_size amount = 1);
+    void ShiftLeft(const s_bit_vector_mut bv, const t_size amount = 1);
+    void RotLeft(const s_bit_vector_mut bv, const t_size amount = 1);
+    void ShiftRight(const s_bit_vector_mut bv, const t_size amount = 1);
+    void RotRight(const s_bit_vector_mut bv, const t_size amount = 1);
 
-#if 0
-    t_size FindFirstSetBit(const c_bit_vector_view bv, const t_size index);
-    t_size FindFirstUnsetBit(const c_bit_vector_view bv, const t_size index);
-#endif
-
-#if 0
-    template<co_unsigned_integral tp_type>
-    constexpr tp_type BitMask(const t_size index) {
-        ZF_ASSERT(index >= 0 && index < ZF_SIZE_IN_BITS(tp_type));
-        return static_cast<tp_type>(static_cast<tp_type>(1) << index);
-    }
-
-    template<co_unsigned_integral tp_type>
-    constexpr tp_type BitRangeMask(const t_size begin_index, const t_size end_index = ZF_SIZE_IN_BITS(tp_type)) {
-        ZF_ASSERT(end_index >= 0 && end_index <= ZF_SIZE_IN_BITS(tp_type));
-        ZF_ASSERT(begin_index >= 0 && begin_index <= end_index);
-
-        const t_size range_len = end_index - begin_index;
-        const auto mask_at_bottom = static_cast<tp_type>(BitMask<tp_type>(range_len) - 1);
-        return static_cast<tp_type>(mask_at_bottom << begin_index);
-    }
-
-    template<co_unsigned_integral tp_type>
-    t_b8 IsBitSet(const tp_type& val, const t_size index) {
-        ZF_ASSERT(index >= 0 && index < ZF_SIZE_IN_BITS(tp_type));
-        return val & BitMask<t_u8>(index);
-    }
-
-    inline t_b8 IsBitSet(const c_bit_vector_view bv, const t_size index) {
-        ZF_ASSERT(index < bv.BitCount());
-        return IsBitSet(bv.Bytes()[index / 8], index % 8);
-    }
-
-    template<co_unsigned_integral tp_type>
-    void SetBit(tp_type& val, const t_size index) {
-        ZF_ASSERT(index >= 0 && index < ZF_SIZE_IN_BITS(tp_type));
-        val |= BitMask<t_u8>(index);
-    }
-
-    inline void SetBit(const c_bit_vector bv, const t_size index) {
-        ZF_ASSERT(index < bv.BitCount());
-        SetBit(bv.Bytes()[index / 8], index % 8);
-    }
-
-    template<co_unsigned_integral tp_type>
-    void UnsetBit(tp_type& val, const t_size index) {
-        ZF_ASSERT(index >= 0 && index < ZF_SIZE_IN_BITS(tp_type));
-        val &= ~BitMask<t_u8>(index);
-    }
-
-    inline void UnsetBit(const c_bit_vector bv, const t_size index) {
-        ZF_ASSERT(index < bv.BitCount());
-        UnsetBit(bv.Bytes()[index / 8], index % 8);
-    }
-
-    template<co_unsigned_integral tp_type> t_s64 FindFirstSetBit(const c_bit_vector bv, const t_size index);
-    t_s64 FindFirstSetBit(const c_bit_vector bv, const t_size index);
-
-    template<co_unsigned_integral tp_type> t_s64 FindFirstUnsetBit(const c_bit_vector bv, const t_size index);
-    t_s64 FindFirstUnsetBit(const c_bit_vector bv, const t_size index);
-#endif
+    t_size FindFirstSetBit(const s_bit_vector_mut bv, const t_size from = 0);
+    t_size FindFirstUnsetBit(const s_bit_vector_mut bv, const t_size from = 0);
 }
