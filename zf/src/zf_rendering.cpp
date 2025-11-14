@@ -54,7 +54,7 @@ void main() {
         c_array<t_u16> elems;
 
         if (!MakeArray(temp_mem_arena, g_batch_slot_elem_cnt * g_batch_slot_cnt, elems)) {
-            ZF_LOG_ERROR("Failed to reserve memory for batch renderable elements!");
+            ZF_REPORT_FAILURE();
             return {};
         }
 
@@ -75,6 +75,7 @@ void main() {
         batch_mesh_hdl = MakeBatchMesh(gfx_res_arena, temp_mem_arena);
 
         if (!batch_mesh_hdl.IsValid()) {
+            ZF_REPORT_FAILURE();
             return false;
         }
 
@@ -82,6 +83,7 @@ void main() {
         batch_shader_prog_hdl = gfx_res_arena.AddShaderProg(g_batch_vert_shader_src, g_batch_frag_shader_src, temp_mem_arena);
 
         if (!batch_shader_prog_hdl.IsValid()) {
+            ZF_REPORT_FAILURE();
             return false;
         }
 
@@ -91,6 +93,7 @@ void main() {
         };
 
         if (!px_tex.Load({{1, 1}, px_rgba}, gfx_res_arena)) {
+            ZF_REPORT_FAILURE();
             return false;
         }
 
@@ -99,10 +102,12 @@ void main() {
 
     t_b8 c_renderer::Init(c_gfx_resource_arena& gfx_res_arena, c_mem_arena& mem_arena, c_mem_arena& temp_mem_arena) {
         if (!m_basis.Init(gfx_res_arena, temp_mem_arena)) {
+            ZF_REPORT_FAILURE();
             return false;
         }
 
         if (!MakeArray(mem_arena, g_batch_slot_cnt, m_batch_slots)) {
+            ZF_REPORT_FAILURE();
             return false;
         }
 

@@ -10,7 +10,6 @@ namespace zf {
         t_u8* const stb_px_data = stbi_load(file_path.Raw(), &o_tex_data.size_in_pxs.x, &o_tex_data.size_in_pxs.y, nullptr, 4);
 
         if (!stb_px_data) {
-            ZF_LOG_ERROR_SPECIAL("STB", "%s", stbi_failure_reason());
             return false;
         }
 

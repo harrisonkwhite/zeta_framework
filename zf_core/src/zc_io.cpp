@@ -15,20 +15,17 @@ namespace zf {
         s_file_stream fs;
 
         if (!fs.Open(file_path, ec_file_access_mode::read)) {
-            ZF_LOG_ERROR("Failed to open \"%s\"!", file_path.Raw());
             return false;
         }
 
-        const t_b8 success = [&o_contents, &mem_arena, file_path, include_terminating_byte, &fs]() {
+        const t_b8 success = [&o_contents, &mem_arena, include_terminating_byte, &fs]() {
             const t_size file_size = fs.CalcSize();
 
             if (!MakeArray(mem_arena, include_terminating_byte ? file_size + 1 : file_size, o_contents)) {
-                ZF_LOG_ERROR("Failed to reserve memory for the contents of file \"%s\"!", file_path.Raw());
                 return false;
             }
 
             if (fs.ReadItems(o_contents) < file_size) {
-                ZF_LOG_ERROR("Failed to read the contents of \"%s\"!", file_path.Raw());
                 return false;
             }
 

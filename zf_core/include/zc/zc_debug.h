@@ -3,15 +3,15 @@
 #include <cstdio>
 #include <zc/zc_basic.h>
 
-#define ZF_LOG(format, ...) printf(format "\n", ##__VA_ARGS__)
-#define ZF_LOG_WARNING(format, ...) fprintf(stderr, ZF_ANSI_BOLD ZF_ANSI_FG_YELLOW "Warning: " ZF_ANSI_RESET format "\n", ##__VA_ARGS__)
-#define ZF_LOG_ERROR(format, ...) fprintf(stderr, ZF_ANSI_BOLD ZF_ANSI_FG_RED "Error: " ZF_ANSI_RESET format "\n", ##__VA_ARGS__)
-#define ZF_LOG_ERROR_SPECIAL(prefix, format, ...) fprintf(stderr, ZF_ANSI_BOLD ZF_ANSI_FG_BRED prefix " Error: " ZF_ANSI_RESET); \
-    fprintf(stderr, format "\n", ##__VA_ARGS__)
-#define ZF_LOG_SUCCESS(format, ...) fprintf(stderr, ZF_ANSI_BOLD ZF_ANSI_FG_GREEN "Success: " ZF_ANSI_RESET format "\n", ##__VA_ARGS__)
+#define ZF_LOG(fmt, ...) printf(fmt "\n", ##__VA_ARGS__)
+#define ZF_LOG_WARNING(fmt, ...) fprintf(stderr, "Warning: " fmt "\n", ##__VA_ARGS__)
+#define ZF_LOG_ERROR(fmt, ...) fprintf(stderr, "Error: " fmt "\n", ##__VA_ARGS__)
+#define ZF_LOG_ERROR_SPECIAL(prefix, fmt, ...) fprintf(stderr, prefix " Error: "); \
+    fprintf(stderr, fmt "\n", ##__VA_ARGS__)
+#define ZF_LOG_SUCCESS(fmt, ...) printf("Success: " fmt "\n", ##__VA_ARGS__)
 
-#define ZF_FAILURE_DUMP() zf::HandleFailureDump(__FUNCTION__, __FILE__, __LINE__)
-#define ZF_FAILURE_DUMP_MSG(msg) zf::HandleFailureDump(__FUNCTION__, __FILE__, __LINE__, msg)
+#define ZF_REPORT_FAILURE() zf::ReportFailure(__FUNCTION__, __FILE__, __LINE__)
+#define ZF_REPORT_FAILURE_MSG(msg) zf::ReportFailure(__FUNCTION__, __FILE__, __LINE__, msg)
 
 #ifdef ZF_DEBUG
     #define ZF_ASSERT(condition) \
@@ -33,6 +33,7 @@
 #endif
 
 namespace zf {
-    void HandleFailureDump(const char* const func, const char* const file, const t_s32 line, const char* const msg = nullptr);
+    void ConfigErrorOutput();
+    void ReportFailure(const char* const func, const char* const file, const t_s32 line, const char* const msg = nullptr);
     void HandleAssertFailure(const char* const condition, const char* const func, const char* const file, const t_s32 line, const char* const msg = nullptr); // @todo: This feels awkward here, might want to move somewhere else? But where?
 }

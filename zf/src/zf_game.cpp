@@ -31,18 +31,22 @@ namespace zf {
         //
         // Initialisation
         //
+        ConfigErrorOutput();
+
         InitRNG();
+
+        ZF_REPORT_FAILURE();
 
         // Initialise memory arenas.
         if (!game.perm_mem_arena.Init(g_perm_mem_arena_size)) {
-            ZF_LOG_ERROR("Failed to initialise the permanent memory arena!");
+            ZF_REPORT_FAILURE();
             return false;
         }
 
         game.run_stage = ec_game_run_stage::perm_mem_arena_initted;
 
         if (!game.temp_mem_arena.Init(g_temp_mem_arena_size)) {
-            ZF_LOG_ERROR("Failed to initialise the temporary memory arena!");
+            ZF_REPORT_FAILURE();
             return false;
         }
 
@@ -50,7 +54,7 @@ namespace zf {
 
         // Initialise the window.
         if (!c_window::Init(info.window_init_size, info.window_title, info.window_flags)) {
-            ZF_LOG_ERROR("Failed to initialise the window!");
+            ZF_REPORT_FAILURE();
             return false;
         }
 
@@ -58,7 +62,7 @@ namespace zf {
 
         // Initialise the permanent GFX resource arena.
         if (!game.gfx_res_arena.Init(game.perm_mem_arena, 1024)) {
-            ZF_LOG_ERROR("Failed to initialise the permanent GFX resource arena!");
+            ZF_REPORT_FAILURE();
             return false;
         }
 
@@ -68,7 +72,7 @@ namespace zf {
         c_renderer renderer;
 
         if (!renderer.Init(game.gfx_res_arena, game.perm_mem_arena, game.temp_mem_arena)) {
-            ZF_LOG_ERROR("Failed to initialise the renderer!");
+            ZF_REPORT_FAILURE();
             return false;
         }
 
@@ -77,7 +81,7 @@ namespace zf {
             game.dev_mem = game.perm_mem_arena.PushRaw(info.dev_mem_size, info.dev_mem_alignment);
 
             if (!game.dev_mem) {
-                ZF_LOG_ERROR("Failed to reserve developer memory!");
+                ZF_REPORT_FAILURE();
                 return false;
             }
         }
@@ -92,7 +96,7 @@ namespace zf {
             };
 
             if (!info.init_func(context)) {
-                ZF_LOG_ERROR("Developer game initialisation function failed!");
+                ZF_REPORT_FAILURE();
                 return false;
             }
         }
@@ -137,7 +141,7 @@ namespace zf {
                     }
 
                     if (res == ek_game_tick_result_error) {
-                        ZF_LOG_ERROR("Developer game tick function failed!");
+                        ZF_REPORT_FAILURE();
                         return false;
                     }
 
@@ -155,7 +159,7 @@ namespace zf {
                     };
 
                     if (!info.render_func(context)) {
-                        ZF_LOG_ERROR("Developer game render function failed!");
+                        ZF_REPORT_FAILURE();
                         return false;
                     }
                 }

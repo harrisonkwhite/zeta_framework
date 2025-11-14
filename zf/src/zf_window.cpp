@@ -89,7 +89,7 @@ namespace zf {
         ZF_ASSERT(IsStrTerminated(title));
 
         if (!glfwInit()) {
-            ZF_LOG_ERROR("Failed to initialise GLFW!");
+            ZF_REPORT_FAILURE();
             return false;
         }
 
@@ -102,7 +102,7 @@ namespace zf {
         sm_glfw_window = glfwCreateWindow(size.x, size.y, title.Raw(), nullptr, nullptr);
 
         if (!sm_glfw_window) {
-            ZF_LOG_ERROR("Failed to create a GLFW window!");
+            ZF_REPORT_FAILURE();
             glfwTerminate();
             return false;
         }
@@ -179,7 +179,7 @@ namespace zf {
 
         // Initialise OpenGL function pointers.
         if (!gladLoadGLLoader(reinterpret_cast<GLADloadproc>(glfwGetProcAddress))) {
-            ZF_LOG_ERROR("Failed to load OpenGL function pointers!");
+            ZF_REPORT_FAILURE();
             return false;
         }
 

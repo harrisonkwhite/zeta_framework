@@ -43,6 +43,8 @@ namespace zf {
     }
 
     static t_gl_id MakeGLShaderProg(const s_str_ro vert_src, const s_str_ro frag_src, c_mem_arena& temp_mem_arena) {
+        // @todo: Improve error logging here. Should be in return value.
+        
         ZF_ASSERT(IsStrTerminated(vert_src));
         ZF_ASSERT(IsStrTerminated(frag_src));
 
