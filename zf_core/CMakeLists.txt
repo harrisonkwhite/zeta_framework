@@ -42,6 +42,15 @@ if(WIN32)
     target_link_libraries(zf_core PRIVATE dbghelp)
 endif()
 
+if (MSVC)
+    target_compile_options(zf PRIVATE
+        $<$<CONFIG:Release>:/Zi /Oy->
+    )
+    target_link_options(zf PRIVATE
+        $<$<CONFIG:Release>:/DEBUG>
+    )
+endif()
+
 target_compile_definitions(zf_core PRIVATE
     _CRT_SECURE_NO_WARNINGS
 )

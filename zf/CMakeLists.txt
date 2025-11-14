@@ -30,3 +30,12 @@ target_compile_definitions(zf PRIVATE
 	_CRT_SECURE_NO_WARNINGS
     GLFW_INCLUDE_NONE
 )
+
+if (MSVC)
+    target_compile_options(zf PRIVATE
+        $<$<CONFIG:Release>:/Zi /Oy->
+    )
+    target_link_options(zf PRIVATE
+        $<$<CONFIG:Release>:/DEBUG>
+    )
+endif()

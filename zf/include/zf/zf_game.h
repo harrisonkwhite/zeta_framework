@@ -68,5 +68,5 @@ namespace zf {
     }
 
     // @idea: Give ZF core a distinct namespace. If something cannot run outside the call stack of this RunGame function, it should be in this ZF engine library.
-    [[nodiscard]] t_b8 RunGame(const s_game_info& info);
+    t_b8 RunGame(const s_game_info& info);
 }

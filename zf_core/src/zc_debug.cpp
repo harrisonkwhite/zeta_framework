@@ -70,7 +70,13 @@ namespace zf {
     void ConfigErrorOutput() {
 #ifndef ZF_DEBUG
         // Redirect stderr to crash log file.
-        freopen("crash.log", "w", stderr);
+        freopen("error.log", "w", stderr);
+#endif
+    }
+
+    void ShowFatalErrorBox() {
+#ifdef ZF_PLATFORM_WINDOWS
+        MessageBoxA(nullptr, "A fatal error occurred! Please look at \"error.log\" for details.", "Error", MB_OK | MB_ICONERROR | MB_TOPMOST);
 #endif
     }
 
@@ -87,7 +93,7 @@ namespace zf {
 
         PrintStackTrace();
 
-        fprintf(stderr, "=================================================\n\n");
+        fprintf(stderr, "=================================================\n");
 
 #ifdef ZF_DEBUG
         BreakIntoDebugger();
@@ -107,7 +113,7 @@ namespace zf {
 
         PrintStackTrace();
 
-        fprintf(stderr, "==========================================================\n\n");
+        fprintf(stderr, "==========================================================\n");
 
         if (!BreakIntoDebugger()) {
             abort();

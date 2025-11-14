@@ -35,8 +35,6 @@ namespace zf {
 
         InitRNG();
 
-        ZF_REPORT_FAILURE();
-
         // Initialise memory arenas.
         if (!game.perm_mem_arena.Init(g_perm_mem_arena_size)) {
             ZF_REPORT_FAILURE();
@@ -180,7 +178,7 @@ namespace zf {
 
         s_game game;
 
-        const t_b8 result = ExecGameInitAndMainLoop(game, info);
+        const t_b8 success = ExecGameInitAndMainLoop(game, info);
 
         // Clean up.
         for (auto i = static_cast<t_s32>(game.run_stage); i >= 0; i--) {
@@ -213,6 +211,12 @@ namespace zf {
             }
         }
 
-        return result;
+#ifndef ZF_DEBUG
+        if (!success) {
+            ShowFatalErrorBox();
+        }
+#endif
+
+        return success;
     }
 }
