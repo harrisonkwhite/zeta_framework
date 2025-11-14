@@ -54,8 +54,8 @@ namespace zf {
 
         template<typename tp_type>
         [[nodiscard]]
-        t_size ReadItems(const s_array<tp_type> arr) const {
-            return fread(arr.Raw(), ZF_SIZE_OF(tp_type), arr.Len(), raw);
+        t_size ReadItems(const c_array<tp_type> arr) const {
+            return fread(arr.Buf(), ZF_SIZE_OF(tp_type), arr.Len(), raw);
         }
 
         template<typename tp_type>
@@ -66,21 +66,21 @@ namespace zf {
 
         template<typename tp_type>
         [[nodiscard]]
-        t_size WriteItems(const s_array<const tp_type> arr) const {
-            return fwrite(arr.Raw(), ZF_SIZE_OF(tp_type), arr.Len(), raw);
+        t_size WriteItems(const c_array<const tp_type> arr) const {
+            return fwrite(arr.Buf(), ZF_SIZE_OF(tp_type), arr.Len(), raw);
         }
     };
 
-    t_b8 LoadFileContents(c_mem_arena& mem_arena, const s_str_ro file_path, s_array<t_s8>& o_contents, const t_b8 include_terminating_byte = false);
+    t_b8 LoadFileContents(c_mem_arena& mem_arena, const s_str_ro file_path, c_array<t_s8>& o_contents, const t_b8 include_terminating_byte = false);
 
     inline t_b8 LoadFileContentsAsStr(c_mem_arena& mem_arena, const s_str_ro file_path, s_str_mut& o_contents) {
-        s_array<t_s8> contents_default;
+        c_array<t_s8> contents_default;
 
         if (!LoadFileContents(mem_arena, file_path, contents_default, true)) {
             return false;
         }
 
-        o_contents = StrFromRawTerminated(reinterpret_cast<char*>(contents_default.Raw()), contents_default.Len() - 1);
+        o_contents = StrFromRawTerminated(reinterpret_cast<char*>(contents_default.Buf()), contents_default.Len() - 1);
 
         return true;
     }

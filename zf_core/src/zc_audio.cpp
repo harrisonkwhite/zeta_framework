@@ -88,7 +88,7 @@ namespace zf {
                 return false;
             }
 
-            if (fs.WriteItems(snd_data.pcm.Readonly()) < snd_data.pcm.Len()) {
+            if (fs.WriteItems(snd_data.pcm.ToReadonly()) < snd_data.pcm.Len()) {
                 return false;
             }
 

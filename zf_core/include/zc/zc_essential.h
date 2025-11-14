@@ -185,8 +185,8 @@ namespace zf {
     template<typename tp_type>
     concept co_numeric = s_is_integral<tp_type>::sm_value || s_is_floating_point<tp_type>::sm_value;
 
-    template<typename tp_type> struct s_is_const { static constexpr bool sm_value = false; };
-    template<typename tp_type> struct s_is_const<tp_type const> { static constexpr bool sm_value = true; };
+    template<typename tp_type> struct s_is_const { static constexpr t_b8 sm_value = false; };
+    template<typename tp_type> struct s_is_const<tp_type const> { static constexpr t_b8 sm_value = true; };
 
     // If a < b, return a negative result, if a == b, return 0, and if a > b, return a positive result.
     template<typename tp_type>
@@ -234,55 +234,56 @@ namespace zf {
     }
 
     template<typename tp_type>
-    struct s_array {
-        tp_type* buf = nullptr;
-        t_size len = 0;
+    struct c_array {
+        constexpr c_array() = default;
 
-        constexpr s_array() = default;
-
-        constexpr s_array(tp_type* const buf, const t_size len) : buf(buf), len(len) {
+        constexpr c_array(tp_type* const buf, const t_size len) : m_buf(buf), m_len(len) {
             ZF_ASSERT((!buf && len == 0) || (buf && len >= 0));
         }
 
-        constexpr tp_type* Raw() const {
-            return buf;
+        constexpr tp_type* Buf() const {
+            return m_buf;
         }
 
         constexpr t_size Len() const {
-            return len;
+            return m_len;
         }
 
         constexpr t_size SizeInBytes() const {
-            return ZF_SIZE_OF(tp_type) * len;
+            return ZF_SIZE_OF(tp_type) * m_len;
         }
 
-        constexpr bool IsEmpty() const {
-            return len == 0;
+        constexpr t_b8 IsEmpty() const {
+            return m_len == 0;
         }
 
         tp_type& operator[](const t_size index) const {
-            ZF_ASSERT(index >= 0 && index < len);
-            return buf[index];
+            ZF_ASSERT(index >= 0 && index < m_len);
+            return m_buf[index];
         }
 
-        constexpr s_array<const tp_type> Readonly() const {
-            return {buf, len};
+        constexpr c_array<const tp_type> ToReadonly() const {
+            return {m_buf, m_len};
         }
 
-        constexpr operator s_array<const tp_type>() const {
-            return Readonly();
+        constexpr operator c_array<const tp_type>() const {
+            return ToReadonly();
         }
+
+    private:
+        tp_type* m_buf = nullptr;
+        t_size m_len = 0;
     };
 
     template<typename tp_type>
-    constexpr s_array<tp_type> Slice(const s_array<tp_type> arr, const t_size beg, const t_size end) {
-        ZF_ASSERT(beg >= 0 && beg <= arr.len);
-        ZF_ASSERT(end >= beg && end <= arr.len);
+    constexpr c_array<tp_type> Slice(const c_array<tp_type> arr, const t_size beg, const t_size end) {
+        ZF_ASSERT(beg >= 0 && beg <= arr.Len());
+        ZF_ASSERT(end >= beg && end <= arr.Len());
         return {&arr[beg], end - beg};
     }
 
     template<typename tp_type>
-    void Copy(const s_array<tp_type> dest, const s_array<const tp_type> src) {
+    void Copy(const c_array<tp_type> dest, const c_array<const tp_type> src) {
         ZF_ASSERT(dest.Len() >= src.Len());
 
         for (t_size i = 0; i < src.Len(); i++) {
@@ -291,7 +292,7 @@ namespace zf {
     }
 
     template<typename tp_type>
-    void CopyReverse(const s_array<tp_type> dest, const s_array<const tp_type> src) {
+    void CopyReverse(const c_array<tp_type> dest, const c_array<const tp_type> src) {
         ZF_ASSERT(dest.Len() >= src.Len());
 
         for (t_size i = src.Len() - 1; i >= 0; i--) {
@@ -300,7 +301,7 @@ namespace zf {
     }
 
     template<typename tp_type>
-    t_b8 BinarySearch(const s_array<const tp_type> arr, const tp_type& elem, const t_comparator<tp_type> comparator = DefaultComparator) {
+    t_b8 BinarySearch(const c_array<const tp_type> arr, const tp_type& elem, const t_comparator<tp_type> comparator = DefaultComparator) {
         ZF_ASSERT(IsSorted(arr));
 
         if (arr.Len() == 0) {
@@ -319,12 +320,12 @@ namespace zf {
     }
 
     template<typename tp_type>
-    constexpr s_array<const t_u8> ToBytes(const tp_type& item) {
+    constexpr c_array<const t_u8> ToBytes(const tp_type& item) {
         return {reinterpret_cast<const t_u8*>(item), ZF_SIZE_OF(item)};
     }
 
     template<typename tp_type>
-    constexpr s_array<t_u8> ToBytes(tp_type& item) {
+    constexpr c_array<t_u8> ToBytes(tp_type& item) {
         return {reinterpret_cast<t_u8*>(item), ZF_SIZE_OF(item)};
     }
 }

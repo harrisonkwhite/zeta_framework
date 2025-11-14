@@ -19,14 +19,14 @@ namespace zf {
 
     struct s_bit_vector_ro {
         constexpr s_bit_vector_ro() = default;
-        constexpr s_bit_vector_ro(const s_array<const t_u8> bytes)
+        constexpr s_bit_vector_ro(const c_array<const t_u8> bytes)
             : bytes(bytes), bit_cnt(BytesToBits(bytes.Len())) {}
-        constexpr s_bit_vector_ro(const s_array<const t_u8> bytes, const t_size bit_cnt)
+        constexpr s_bit_vector_ro(const c_array<const t_u8> bytes, const t_size bit_cnt)
             : bytes(bytes), bit_cnt(bit_cnt) {
             ZF_ASSERT(bytes.Len() == BitsToBytes(bit_cnt));
         }
 
-        constexpr s_array<const t_u8> Bytes() const {
+        constexpr c_array<const t_u8> Bytes() const {
             return bytes;
         }
 
@@ -35,23 +35,23 @@ namespace zf {
         }
 
     private:
-        s_array<const t_u8> bytes;
+        c_array<const t_u8> bytes;
         t_size bit_cnt = 0;
     };
 
     struct s_bit_vector_mut {
         constexpr s_bit_vector_mut() = default;
 
-        constexpr s_bit_vector_mut(const s_array<t_u8> bytes)
+        constexpr s_bit_vector_mut(const c_array<t_u8> bytes)
             : bytes(bytes), bit_cnt(BytesToBits(bytes.Len())) {}
 
-        constexpr s_bit_vector_mut(const s_array<t_u8> bytes, const t_size bit_cnt)
+        constexpr s_bit_vector_mut(const c_array<t_u8> bytes, const t_size bit_cnt)
             : bytes(bytes), bit_cnt(bit_cnt) {
             ZF_ASSERT(bit_cnt >= 0);
             ZF_ASSERT(bytes.Len() == BitsToBytes(bit_cnt));
         }
 
-        constexpr s_array<t_u8> Bytes() const {
+        constexpr c_array<t_u8> Bytes() const {
             return bytes;
         }
 
@@ -64,7 +64,7 @@ namespace zf {
         }
 
     private:
-        s_array<t_u8> bytes;
+        c_array<t_u8> bytes;
         t_size bit_cnt = 0;
     };
 

@@ -51,7 +51,7 @@ void main() {
     static c_gfx_resource_handle MakeBatchMesh(c_gfx_resource_arena& gfx_res_arena, c_mem_arena& temp_mem_arena) {
         const t_size verts_len = g_batch_vert_component_cnt * g_batch_slot_vert_cnt * g_batch_slot_cnt;
 
-        s_array<t_u16> elems;
+        c_array<t_u16> elems;
 
         if (!temp_mem_arena.PushArray(g_batch_slot_elem_cnt * g_batch_slot_cnt, elems)) {
             ZF_LOG_ERROR("Failed to reserve memory for batch renderable elements!");
@@ -216,7 +216,7 @@ void main() {
 
         {
             const t_size write_size = ZF_SIZE_OF(t_batch_slot) * m_batch_slots_used_cnt;
-            glBufferSubData(GL_ARRAY_BUFFER, 0, write_size, m_batch_slots.Raw());
+            glBufferSubData(GL_ARRAY_BUFFER, 0, write_size, m_batch_slots.Buf());
         }
 
         //

@@ -9,7 +9,7 @@
 #endif
 
 namespace zf {
-    t_b8 LoadFileContents(c_mem_arena& mem_arena, const s_str_ro file_path, s_array<t_s8>& o_contents, const t_b8 include_terminating_byte) {
+    t_b8 LoadFileContents(c_mem_arena& mem_arena, const s_str_ro file_path, c_array<t_s8>& o_contents, const t_b8 include_terminating_byte) {
         ZF_ASSERT(IsStrTerminated(file_path));
 
         s_file_stream fs;

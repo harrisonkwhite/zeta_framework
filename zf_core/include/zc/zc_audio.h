@@ -12,19 +12,19 @@ namespace zf {
 
     struct s_sound_data_ro {
         s_sound_meta meta;
-        s_array<const t_f32> pcm;
+        c_array<const t_f32> pcm;
 
         s_sound_data_ro() = default;
-        s_sound_data_ro(const s_sound_meta meta, const s_array<const t_f32> pcm)
+        s_sound_data_ro(const s_sound_meta meta, const c_array<const t_f32> pcm)
             : meta(meta), pcm(pcm) {}
     };
 
     struct s_sound_data_mut {
         s_sound_meta meta;
-        s_array<t_f32> pcm;
+        c_array<t_f32> pcm;
 
         s_sound_data_mut() = default;
-        s_sound_data_mut(const s_sound_meta meta, const s_array<t_f32> pcm)
+        s_sound_data_mut(const s_sound_meta meta, const c_array<t_f32> pcm)
             : meta(meta), pcm(pcm) {}
 
         operator s_sound_data_ro() const {

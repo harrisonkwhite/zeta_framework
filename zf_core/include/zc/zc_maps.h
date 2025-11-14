@@ -5,7 +5,6 @@
 #include <zc/zc_bits.h>
 
 namespace zf {
-#if 0
     template<typename tp_type>
     using t_hash_func = t_size (*)(const tp_type& key);
 
@@ -13,8 +12,8 @@ namespace zf {
         return static_cast<t_size>(key & 0x7FFFFFFF); // Mask out the sign bit.
     };
 
-    inline const t_hash_func<s_str_view> g_str_hash_func = [](const s_str_view& key) {
-        ZF_ASSERT(key.IsTerminated());
+    inline const t_hash_func<s_str_ro> g_str_hash_func = [](const s_str_ro& key) {
+        ZF_ASSERT(IsStrTerminated(key));
 
         // This is an FNV-1a implementation.
         const t_u32 offs_basis = 2166136261u;
@@ -133,7 +132,7 @@ namespace zf {
                 ZF_ASSERT(index >= -1 && index < Len());
 
                 if (index == -1) {
-                    const t_size prospective_index = m_usage.FindFirstUnsetBit();
+                    const t_size prospective_index = FindFirstUnsetBit(m_usage);
 
                     if (prospective_index == -1) {
                         // We're out of room!
@@ -182,7 +181,7 @@ namespace zf {
             c_array<tp_key_type> m_keys;
             c_array<tp_value_type> m_vals;
             c_array<t_size> m_next_indexes;
-            c_bit_vector m_usage;
+            s_bit_vector_mut m_usage;
 
             t_key_cmp_func<tp_key_type> m_key_cmp_func = nullptr;
         };
@@ -199,5 +198,4 @@ namespace zf {
             return val % m_backing_store_indexes.Len();
         }
     };
-#endif
 }

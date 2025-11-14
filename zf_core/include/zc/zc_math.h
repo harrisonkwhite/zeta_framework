@@ -266,7 +266,7 @@ namespace zf {
     // Generate a rectangle encompassing all of the provided rectangles.
     // At least a single rectangle must be provided.
     template<co_numeric tp_type>
-    s_rect<tp_type> CalcSpanningRect(const s_array<const s_rect<tp_type>> rects) {
+    s_rect<tp_type> CalcSpanningRect(const c_array<const s_rect<tp_type>> rects) {
         ZF_ASSERT(!rects.IsEmpty());
 
         tp_type min_left = rects[0].x;
@@ -321,11 +321,11 @@ namespace zf {
         }
 
         t_f32* Raw() {
-            return elems[0].buf_raw;
+            return elems[0].buf;
         }
 
         const t_f32* Raw() const {
-            return elems[0].buf_raw;
+            return elems[0].buf;
         }
 
         void Translate(const s_v2<t_f32> trans) {
@@ -356,7 +356,7 @@ namespace zf {
     }
 
     template<co_numeric tp_type>
-    tp_type FindClosest(const s_array<const tp_type> nums, const tp_type targ) {
+    tp_type FindClosest(const c_array<const tp_type> nums, const tp_type targ) {
         ZF_ASSERT(!nums.IsEmpty());
 
         t_s32 index_of_closest = 0;

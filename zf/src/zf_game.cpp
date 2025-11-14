@@ -134,7 +134,7 @@ namespace zf {
 
                     if (res == ek_game_tick_result_exit) {
                         ZF_LOG("Exit request detected from developer game tick function...");
-                        c_window::SetWindowShouldClose(true);
+                        c_window::SetShouldClose(true);
                     }
 
                     if (res == ek_game_tick_result_error) {

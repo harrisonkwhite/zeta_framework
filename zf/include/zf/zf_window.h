@@ -243,7 +243,7 @@ namespace zf {
             return glfwWindowShouldClose(sm_glfw_window);
         }
 
-        static void SetWindowShouldClose(const t_b8 close) {
+        static void SetShouldClose(const t_b8 close) {
             glfwSetWindowShouldClose(sm_glfw_window, close);
         }
 
