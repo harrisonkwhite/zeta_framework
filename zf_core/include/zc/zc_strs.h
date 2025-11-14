@@ -1,6 +1,7 @@
 #pragma once
 
-#include <zc/zc_essential.h>
+#include <zc/zc_basic.h>
+#include <zc/ds/zc_array.h>
 
 namespace zf {
     constexpr t_size CalcRawStrLen(const char* const raw_str) {

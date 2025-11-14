@@ -1,0 +1,174 @@
+#pragma once
+
+#include <zc/zc_allocators.h>
+
+namespace zf {
+    template<typename tp_type>
+    class c_array {
+    public:
+        constexpr c_array() = default;
+
+        constexpr c_array(tp_type* const buf_raw, const t_size len) : m_buf_raw(buf_raw), m_len(len) {
+            ZF_ASSERT((!buf_raw && len == 0) || (buf_raw && len >= 0));
+        }
+
+        constexpr tp_type* Raw() const {
+            return m_buf_raw;
+        }
+
+        constexpr t_size Len() const {
+            return m_len;
+        }
+
+        constexpr t_size SizeInBytes() const {
+            return ZF_SIZE_OF(tp_type) * m_len;
+        }
+
+        constexpr t_b8 IsEmpty() const {
+            return m_len == 0;
+        }
+
+        tp_type& operator[](const t_size index) const {
+            ZF_ASSERT(index >= 0 && index < m_len);
+            return m_buf_raw[index];
+        }
+
+        constexpr c_array<const tp_type> ToReadonly() const {
+            return {m_buf_raw, m_len};
+        }
+
+        constexpr operator c_array<const tp_type>() const {
+            return ToReadonly();
+        }
+
+        constexpr c_array<tp_type> Slice(const t_size beg, const t_size end) const {
+            ZF_ASSERT(beg >= 0 && beg <= m_len);
+            ZF_ASSERT(end >= beg && end <= m_len);
+            return {&m_buf_raw[beg], end - beg};
+        }
+
+    private:
+        tp_type* m_buf_raw = nullptr;
+        t_size m_len = 0;
+    };
+
+    template<typename tp_type, t_size tp_len>
+    struct s_static_array {
+        static_assert(tp_len > 0, "Invalid static array length!");
+
+        tp_type buf_raw[tp_len] = {};
+
+        constexpr s_static_array() = default;
+
+        constexpr s_static_array(const tp_type (&buf_raw)[tp_len]) {
+            for (t_size i = 0; i < tp_len; i++) {
+                this->buf_raw[i] = buf_raw[i];
+            }
+        }
+
+        constexpr t_size Len() const {
+            return tp_len;
+        }
+
+        tp_type& operator[](const t_size index) {
+            ZF_ASSERT(index >= 0 && index < tp_len);
+            return buf_raw[index];
+        }
+
+        constexpr const tp_type& operator[](const t_size index) const {
+            ZF_ASSERT(index >= 0 && index < tp_len);
+            return buf_raw[index];
+        }
+
+        constexpr c_array<tp_type> ToNonstatic() {
+            return {buf_raw, tp_len};
+        }
+
+        constexpr operator c_array<tp_type>() {
+            return ToNonstatic();
+        }
+
+        constexpr c_array<const tp_type> ToNonstatic() const {
+            return {buf_raw, tp_len};
+        }
+
+        constexpr operator c_array<const tp_type>() const {
+            return ToNonstatic();
+        }
+    };
+
+    template<typename tp_type>
+    void Copy(const c_array<tp_type> dest, const c_array<const tp_type> src) {
+        ZF_ASSERT(dest.Len() >= src.Len());
+
+        for (t_size i = 0; i < src.Len(); i++) {
+            dest[i] = src[i];
+        }
+    }
+
+    template<typename tp_type>
+    void CopyReverse(const c_array<tp_type> dest, const c_array<const tp_type> src) {
+        ZF_ASSERT(dest.Len() >= src.Len());
+
+        for (t_size i = src.Len() - 1; i >= 0; i--) {
+            dest[i] = src[i];
+        }
+    }
+
+    template<typename tp_type>
+    t_b8 MakeArray(c_mem_arena& mem_arena, const t_size len, c_array<tp_type>& o_arr) {
+        ZF_ASSERT(len > 0);
+
+        const auto buf_raw = mem_arena.Push<tp_type>(len);
+
+        if (!buf_raw) {
+            return false;
+        }
+
+        o_arr = {buf_raw, len};
+
+        return true;
+    }
+
+    template<typename tp_type>
+    t_b8 CloneArray(c_mem_arena& mem_arena, const c_array<const tp_type> arr_to_clone, c_array<tp_type>& o_arr) {
+        ZF_ASSERT(!arr_to_clone.IsEmpty());
+
+        if (!MakeArray(mem_arena, arr_to_clone.Len(), o_arr)) {
+            return false;
+        }
+
+        Copy(o_arr, arr_to_clone);
+
+        return true;
+    }
+
+    template<typename tp_type>
+    t_b8 BinarySearch(const c_array<const tp_type> arr, const tp_type& elem, const t_comparator<tp_type> comparator = DefaultComparator) {
+        ZF_ASSERT(IsSorted(arr));
+
+        if (arr.Len() == 0) {
+            return false;
+        }
+
+        const tp_type& mid = elem[arr.Len() / 2];
+
+        if (elem == mid) {
+            return true;
+        } else if (elem < mid) {
+            return BinarySearch(arr.Slice(0, arr.Len() / 2), elem);
+        } else {
+            return BinarySearch(arr.Slice((arr.Len() / 2) + 1, arr.Len()), elem);
+        }
+    }
+
+    template<typename tp_type>
+    constexpr c_array<const t_u8> ToBytes(const tp_type& item) {
+        return {reinterpret_cast<const t_u8*>(item), ZF_SIZE_OF(item)};
+    }
+
+    template<typename tp_type>
+    constexpr c_array<t_u8> ToBytes(tp_type& item) {
+        return {reinterpret_cast<t_u8*>(item), ZF_SIZE_OF(item)};
+    }
+}

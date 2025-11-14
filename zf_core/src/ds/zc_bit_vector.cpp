@@ -1,12 +1,26 @@
-#include <zc/zc_bits.h>
+#include <zc/ds/zc_bit_vector.h>
 
 namespace zf {
-    static t_b8 BitVectorLastByteBitmask(const s_bit_vector_ro bv) {
+    static t_b8 BitVectorLastByteBitmask(const c_bit_vector_ro bv) {
         const t_size bits_in_last_byte = (bv.BitCount() % 8 == 0) ? 8 : (bv.BitCount() % 8);
         return ByteBitmask(0, bits_in_last_byte);
     }
 
-    static t_u8 ShiftLeftSingle(const s_bit_vector_mut bv, t_u8 carry = 0) {
+    t_b8 MakeBitVector(c_mem_arena& mem_arena, const t_size bit_cnt, c_bit_vector_mut& o_bv) {
+        ZF_ASSERT(bit_cnt > 0);
+
+        c_array<t_u8> bytes;
+
+        if (!MakeArray(mem_arena, BitsToBytes(bit_cnt), bytes)) {
+            return false;
+        }
+
+        o_bv = {bytes, bit_cnt};
+
+        return true;
+    }
+
+    static t_u8 ShiftLeftSingle(const c_bit_vector_mut bv, t_u8 carry = 0) {
         ZF_ASSERT(carry == 0 || carry == 1);
 
         if (bv.BitCount() == 0) {
@@ -37,7 +51,7 @@ namespace zf {
         return carry;
     }
 
-    void ShiftLeft(const s_bit_vector_mut bv, const t_size amount) {
+    void ShiftLeft(const c_bit_vector_mut bv, const t_size amount) {
         ZF_ASSERT(amount >= 0);
 
         for (t_size i = 0; i < amount; i++) {
@@ -45,7 +59,7 @@ namespace zf {
         }
     }
 
-    void RotLeft(const s_bit_vector_mut bv, const t_size amount) {
+    void RotLeft(const c_bit_vector_mut bv, const t_size amount) {
         ZF_ASSERT(amount >= 0);
 
         t_u8 carry = 0;
@@ -55,7 +69,7 @@ namespace zf {
         }
     }
 
-    t_size FindFirstSetBit(const s_bit_vector_mut bv, const t_size from) {
+    t_size FindFirstSetBit(const c_bit_vector_mut bv, const t_size from) {
         ZF_ASSERT(from <= bv.BitCount()); // Intentionally allowing the upper bound here for the case of iteration.
 
         static constexpr s_static_array<int, 256> lg_mappings = {
@@ -349,7 +363,7 @@ namespace zf {
         return res;
     }
 
-    t_size FindFirstUnsetBit(const s_bit_vector_mut bv, const t_size from) {
+    t_size FindFirstUnsetBit(const c_bit_vector_mut bv, const t_size from) {
         ZF_ASSERT(from <= bv.BitCount()); // Intentionally allowing the upper bound here for the case of iteration.
 
         // @speed: The flipping of all bits before and after is not essential.

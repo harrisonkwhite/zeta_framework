@@ -2,7 +2,7 @@
 
 #include <zc/zc_allocators.h>
 #include <zc/zc_strs.h>
-#include <zc/zc_bits.h>
+#include <zc/ds/zc_bit_vector.h>
 
 namespace zf {
     template<typename tp_type>
@@ -49,7 +49,7 @@ namespace zf {
                 return false;
             }
 
-            if (!mem_arena.PushArray(immediate_cap, m_backing_store_indexes)) {
+            if (!MakeArray(mem_arena, immediate_cap, m_backing_store_indexes)) {
                 return false;
             }
 
@@ -88,19 +88,19 @@ namespace zf {
 
                 *this = {};
 
-                if (!m_keys.Init(mem_arena, cap)) {
+                if (!MakeArray(mem_arena, cap, m_keys)) {
                     return false;
                 }
 
-                if (!m_vals.Init(mem_arena, cap)) {
+                if (!MakeArray(mem_arena, cap, m_vals)) {
                     return false;
                 }
 
-                if (!m_next_indexes.Init(mem_arena, cap)) {
+                if (!MakeArray(mem_arena, cap, m_next_indexes)) {
                     return false;
                 }
 
-                if (!m_usage.Init(mem_arena, cap)) {
+                if (!MakeBitVector(mem_arena, cap, m_usage)) {
                     return false;
                 }
 
@@ -181,7 +181,7 @@ namespace zf {
             c_array<tp_key_type> m_keys;
             c_array<tp_value_type> m_vals;
             c_array<t_size> m_next_indexes;
-            s_bit_vector_mut m_usage;
+            c_bit_vector_mut m_usage;
 
             t_key_cmp_func<tp_key_type> m_key_cmp_func = nullptr;
         };

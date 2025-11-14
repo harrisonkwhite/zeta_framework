@@ -1,7 +1,6 @@
 #pragma once
 
-#include <zc/zc_seqs.h>
-#include <zc/zc_math.h>
+#include <zc/ds/zc_array.h>
 
 namespace zf {
     constexpr t_u8 ByteBitmask(const t_size bit_index) {
@@ -17,11 +16,12 @@ namespace zf {
         return static_cast<t_u8>(bits_at_bottom << begin_bit_index);
     }
 
-    struct s_bit_vector_ro {
-        constexpr s_bit_vector_ro() = default;
-        constexpr s_bit_vector_ro(const c_array<const t_u8> bytes)
+    class c_bit_vector_ro {
+    public:
+        constexpr c_bit_vector_ro() = default;
+        constexpr c_bit_vector_ro(const c_array<const t_u8> bytes)
             : bytes(bytes), bit_cnt(BytesToBits(bytes.Len())) {}
-        constexpr s_bit_vector_ro(const c_array<const t_u8> bytes, const t_size bit_cnt)
+        constexpr c_bit_vector_ro(const c_array<const t_u8> bytes, const t_size bit_cnt)
             : bytes(bytes), bit_cnt(bit_cnt) {
             ZF_ASSERT(bytes.Len() == BitsToBytes(bit_cnt));
         }
@@ -39,13 +39,14 @@ namespace zf {
         t_size bit_cnt = 0;
     };
 
-    struct s_bit_vector_mut {
-        constexpr s_bit_vector_mut() = default;
+    class c_bit_vector_mut {
+    public:
+        constexpr c_bit_vector_mut() = default;
 
-        constexpr s_bit_vector_mut(const c_array<t_u8> bytes)
+        constexpr c_bit_vector_mut(const c_array<t_u8> bytes)
             : bytes(bytes), bit_cnt(BytesToBits(bytes.Len())) {}
 
-        constexpr s_bit_vector_mut(const c_array<t_u8> bytes, const t_size bit_cnt)
+        constexpr c_bit_vector_mut(const c_array<t_u8> bytes, const t_size bit_cnt)
             : bytes(bytes), bit_cnt(bit_cnt) {
             ZF_ASSERT(bit_cnt >= 0);
             ZF_ASSERT(bytes.Len() == BitsToBytes(bit_cnt));
@@ -59,7 +60,7 @@ namespace zf {
             return bit_cnt;
         }
 
-        constexpr operator s_bit_vector_ro() const {
+        constexpr operator c_bit_vector_ro() const {
             return {bytes, bit_cnt};
         }
 
@@ -74,35 +75,37 @@ namespace zf {
 
         s_static_array<t_u8, BitsToBytes(tp_bit_cnt)> bytes;
 
-        constexpr operator s_bit_vector_mut() {
+        constexpr operator c_bit_vector_mut() {
             return {bytes, tp_bit_cnt};
         }
 
-        constexpr operator s_bit_vector_ro() const {
+        constexpr operator c_bit_vector_ro() const {
             return {bytes, tp_bit_cnt};
         }
     };
 
-    inline t_b8 IsBitSet(const s_bit_vector_ro bv, const t_size index) {
+    t_b8 MakeBitVector(c_mem_arena& mem_arena, const t_size bit_cnt, c_bit_vector_mut& o_bv);
+
+    void ShiftLeft(const c_bit_vector_mut bv, const t_size amount = 1);
+    void RotLeft(const c_bit_vector_mut bv, const t_size amount = 1);
+    void ShiftRight(const c_bit_vector_mut bv, const t_size amount = 1);
+    void RotRight(const c_bit_vector_mut bv, const t_size amount = 1);
+
+    t_size FindFirstSetBit(const c_bit_vector_mut bv, const t_size from = 0);
+    t_size FindFirstUnsetBit(const c_bit_vector_mut bv, const t_size from = 0);
+
+    inline t_b8 IsBitSet(const c_bit_vector_ro bv, const t_size index) {
         ZF_ASSERT(index >= 0 && index < bv.BitCount());
         return bv.Bytes()[index / 8] & (1 << (index % 8));
     }
 
-    inline void SetBit(const s_bit_vector_mut bv, const t_size index) {
+    inline void SetBit(const c_bit_vector_mut bv, const t_size index) {
         ZF_ASSERT(index >= 0 && index < bv.BitCount());
         bv.Bytes()[index / 8] |= (1 << (index % 8));
     }
 
-    inline void UnsetBit(const s_bit_vector_mut bv, const t_size index) {
+    inline void UnsetBit(const c_bit_vector_mut bv, const t_size index) {
         ZF_ASSERT(index >= 0 && index < bv.BitCount());
         bv.Bytes()[index / 8] &= ~(1 << (index % 8));
     }
-
-    void ShiftLeft(const s_bit_vector_mut bv, const t_size amount = 1);
-    void RotLeft(const s_bit_vector_mut bv, const t_size amount = 1);
-    void ShiftRight(const s_bit_vector_mut bv, const t_size amount = 1);
-    void RotRight(const s_bit_vector_mut bv, const t_size amount = 1);
-
-    t_size FindFirstSetBit(const s_bit_vector_mut bv, const t_size from = 0);
-    t_size FindFirstUnsetBit(const s_bit_vector_mut bv, const t_size from = 0);
 }

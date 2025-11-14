@@ -1,6 +1,5 @@
 #include <zf/zf_game.h>
 
-#include <cstdio>
 #include <zf/zf_rng.h>
 
 namespace zf {

@@ -53,7 +53,7 @@ void main() {
 
         c_array<t_u16> elems;
 
-        if (!temp_mem_arena.PushArray(g_batch_slot_elem_cnt * g_batch_slot_cnt, elems)) {
+        if (!MakeArray(temp_mem_arena, g_batch_slot_elem_cnt * g_batch_slot_cnt, elems)) {
             ZF_LOG_ERROR("Failed to reserve memory for batch renderable elements!");
             return {};
         }
@@ -102,7 +102,7 @@ void main() {
             return false;
         }
 
-        if (!mem_arena.PushArray(g_batch_slot_cnt, m_batch_slots)) {
+        if (!MakeArray(mem_arena, g_batch_slot_cnt, m_batch_slots)) {
             return false;
         }
 

@@ -16,7 +16,7 @@ namespace zf {
 
         const c_array<const t_u8> stb_px_data_arr = {stb_px_data, 4 * o_tex_data.size_in_pxs.x * o_tex_data.size_in_pxs.y};
 
-        if (!mem_arena.PushArray(4 * o_tex_data.size_in_pxs.x * o_tex_data.size_in_pxs.y, o_tex_data.rgba_px_data)) {
+        if (!MakeArray(mem_arena, 4 * o_tex_data.size_in_pxs.x * o_tex_data.size_in_pxs.y, o_tex_data.rgba_px_data)) {
             stbi_image_free(stb_px_data);
             return false;
         }
@@ -42,7 +42,7 @@ namespace zf {
                 return false;
             }
 
-            if (!mem_arena.PushArray(4 * o_tex_data.size_in_pxs.x * o_tex_data.size_in_pxs.y, o_tex_data.rgba_px_data)) {
+            if (!MakeArray(mem_arena, 4 * o_tex_data.size_in_pxs.x * o_tex_data.size_in_pxs.y, o_tex_data.rgba_px_data)) {
                 return false;
             }
 

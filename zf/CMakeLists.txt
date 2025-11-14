@@ -7,6 +7,7 @@ add_library(zf STATIC
     src/zf_audio.cpp
 	../external/glad/src/glad.c
 
+    include/zf.h
     include/zf/zf_game.h
     include/zf/zf_window.h
     include/zf/zf_rng.h

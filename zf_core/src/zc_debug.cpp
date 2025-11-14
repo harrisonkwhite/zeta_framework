@@ -1,4 +1,4 @@
-#include <zc/zc_essential.h>
+#include <zc/zc_debug.h>
 
 #ifdef ZF_PLATFORM_WINDOWS
     #ifndef WIN32_LEAN_AND_MEAN

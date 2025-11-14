@@ -1,8 +1,6 @@
 #pragma once
 
-#include <zc/zc_seqs.h>
-#include <zc/zc_bits.h>
-#include <zc/zc_heaps.h>
+#include <zc/ds/zc_array.h>
 
 namespace zf {
     template<typename tp_type>
@@ -201,19 +199,5 @@ namespace zf {
         // Sort for each subsection.
         QuickSort(arr.Slice(0, left_sec_last_index), comparator, pivot_index_selection_func);
         QuickSort(arr.Slice(left_sec_last_index + 1), comparator, pivot_index_selection_func);
-    }
-
-    // O(n log n) in time complexity. The provided heap is modified in-place, a duplicate is not created for you.
-    template<typename tp_key_type, typename tp_value_type>
-    void HeapSort(const c_array<tp_value_type> dest, c_min_heap<tp_key_type, tp_value_type>& min_heap) {
-        ZF_ASSERT(dest.Len() >= min_heap.GetElemCnt());
-
-        t_size dest_index = 0;
-
-        while (!min_heap.IsEmpty()) {
-            dest[dest_index] = min_heap.GetMin().val;
-            min_heap.RemoveMin();
-            dest_index++;
-        }
     }
 }

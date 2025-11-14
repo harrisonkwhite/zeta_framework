@@ -24,7 +24,7 @@ namespace zf {
             o_snd_data.meta.sample_rate = static_cast<t_s32>(decoder.outputSampleRate);
             o_snd_data.meta.frame_cnt = static_cast<t_s64>(frame_cnt);
 
-            if (!mem_arena.PushArray(CalcSampleCount(o_snd_data), o_snd_data.pcm)) {
+            if (!MakeArray(mem_arena, CalcSampleCount(o_snd_data), o_snd_data.pcm)) {
                 return false;
             }
 
@@ -54,7 +54,7 @@ namespace zf {
                 return false;
             }
 
-            if (!mem_arena.PushArray(CalcSampleCount(o_snd_data), o_snd_data.pcm)) {
+            if (!MakeArray(mem_arena, CalcSampleCount(o_snd_data), o_snd_data.pcm)) {
                 return false;
             }
 

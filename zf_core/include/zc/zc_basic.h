@@ -1,7 +1,6 @@
 #pragma once
 
 #include <climits>
-#include <cstdio>
 
 #ifdef _WIN32
     #define ZF_PLATFORM_WINDOWS
@@ -61,35 +60,6 @@
 #define ZF_ANSI_BG_BCYAN ZF_ANSI_ESC "[106m"
 #define ZF_ANSI_BG_WHITE ZF_ANSI_ESC "[47m"
 #define ZF_ANSI_BG_BWHITE ZF_ANSI_ESC "[107m"
-
-#define ZF_LOG(format, ...) printf(format "\n", ##__VA_ARGS__)
-#define ZF_LOG_WARNING(format, ...) fprintf(stderr, ZF_ANSI_BOLD ZF_ANSI_FG_YELLOW "Warning: " ZF_ANSI_RESET format "\n", ##__VA_ARGS__)
-#define ZF_LOG_ERROR(format, ...) fprintf(stderr, ZF_ANSI_BOLD ZF_ANSI_FG_RED "Error: " ZF_ANSI_RESET format "\n", ##__VA_ARGS__)
-#define ZF_LOG_ERROR_SPECIAL(prefix, format, ...) fprintf(stderr, ZF_ANSI_BOLD ZF_ANSI_FG_BRED prefix " Error: " ZF_ANSI_RESET); \
-    fprintf(stderr, format "\n", ##__VA_ARGS__)
-#define ZF_LOG_SUCCESS(format, ...) fprintf(stderr, ZF_ANSI_BOLD ZF_ANSI_FG_GREEN "Success: " ZF_ANSI_RESET format "\n", ##__VA_ARGS__)
-
-#ifdef ZF_DEBUG
-    #define ZF_FAILURE_DUMP() zf::HandleFailureDump(__FUNCTION__, __FILE__, __LINE__)
-    #define ZF_FAILURE_DUMP_MSG(msg) zf::HandleFailureDump(__FUNCTION__, __FILE__, __LINE__, msg)
-
-    #define ZF_ASSERT(condition) \
-        do { \
-            if (!(condition)) { \
-                zf::HandleAssertFailure(#condition, __FUNCTION__, __FILE__, __LINE__); \
-            } \
-        } while(0)
-
-    #define ZF_ASSERT_MSG(condition, msg) \
-        do { \
-            if (!(condition)) { \
-                zf::HandleAssertFailure(#condition, __FUNCTION__, __FILE__, __LINE__, msg); \
-            } \
-        } while(0)
-#else
-    #define ZF_ASSERT(condition) static_cast<void>(0)
-    #define ZF_ASSERT_MSG(condition, msg) static_cast<void>(0)
-#endif
 
 #if defined(__cpp_lib_is_constant_evaluated)
     #define ZF_IS_CONSTEXPR() (std::is_constant_evaluated())
@@ -203,9 +173,6 @@ namespace zf {
         }
     }
 
-    void HandleFailureDump(const char* const func, const char* const file, const t_s32 line, const char* const msg = nullptr);
-    void HandleAssertFailure(const char* const condition, const char* const func, const char* const file, const t_s32 line, const char* const msg = nullptr); // @todo: This feels awkward here, might want to move somewhere else? But where?
-
     constexpr t_size Kilobytes(const t_size x) { return (static_cast<t_size>(1) << 10) * x; }
     constexpr t_size Megabytes(const t_size x) { return (static_cast<t_size>(1) << 20) * x; }
     constexpr t_size Gigabytes(const t_size x) { return (static_cast<t_size>(1) << 30) * x; }
@@ -220,9 +187,6 @@ namespace zf {
     }
 
     constexpr t_size AlignForward(const t_size n, const t_size alignment) {
-        ZF_ASSERT(n >= 0);
-        ZF_ASSERT(IsAlignmentValid(alignment));
-
         return (n + alignment - 1) & ~(alignment - 1);
     }
 
@@ -231,101 +195,5 @@ namespace zf {
         const tp_type temp = a;
         a = b;
         b = temp;
-    }
-
-    template<typename tp_type>
-    struct c_array {
-        constexpr c_array() = default;
-
-        constexpr c_array(tp_type* const buf_raw, const t_size len) : m_buf_raw(buf_raw), m_len(len) {
-            ZF_ASSERT((!buf_raw && len == 0) || (buf_raw && len >= 0));
-        }
-
-        constexpr tp_type* Raw() const {
-            return m_buf_raw;
-        }
-
-        constexpr t_size Len() const {
-            return m_len;
-        }
-
-        constexpr t_size SizeInBytes() const {
-            return ZF_SIZE_OF(tp_type) * m_len;
-        }
-
-        constexpr t_b8 IsEmpty() const {
-            return m_len == 0;
-        }
-
-        tp_type& operator[](const t_size index) const {
-            ZF_ASSERT(index >= 0 && index < m_len);
-            return m_buf_raw[index];
-        }
-
-        constexpr c_array<const tp_type> ToReadonly() const {
-            return {m_buf_raw, m_len};
-        }
-
-        constexpr operator c_array<const tp_type>() const {
-            return ToReadonly();
-        }
-
-    private:
-        tp_type* m_buf_raw = nullptr;
-        t_size m_len = 0;
-    };
-
-    template<typename tp_type>
-    constexpr c_array<tp_type> Slice(const c_array<tp_type> arr, const t_size beg, const t_size end) {
-        ZF_ASSERT(beg >= 0 && beg <= arr.Len());
-        ZF_ASSERT(end >= beg && end <= arr.Len());
-        return {&arr[beg], end - beg};
-    }
-
-    template<typename tp_type>
-    void Copy(const c_array<tp_type> dest, const c_array<const tp_type> src) {
-        ZF_ASSERT(dest.Len() >= src.Len());
-
-        for (t_size i = 0; i < src.Len(); i++) {
-            dest[i] = src[i];
-        }
-    }
-
-    template<typename tp_type>
-    void CopyReverse(const c_array<tp_type> dest, const c_array<const tp_type> src) {
-        ZF_ASSERT(dest.Len() >= src.Len());
-
-        for (t_size i = src.Len() - 1; i >= 0; i--) {
-            dest[i] = src[i];
-        }
-    }
-
-    template<typename tp_type>
-    t_b8 BinarySearch(const c_array<const tp_type> arr, const tp_type& elem, const t_comparator<tp_type> comparator = DefaultComparator) {
-        ZF_ASSERT(IsSorted(arr));
-
-        if (arr.Len() == 0) {
-            return false;
-        }
-
-        const tp_type& mid = elem[arr.Len() / 2];
-
-        if (elem == mid) {
-            return true;
-        } else if (elem < mid) {
-            return BinarySearch(arr.Slice(0, arr.Len() / 2), elem);
-        } else {
-            return BinarySearch(arr.Slice((arr.Len() / 2) + 1, arr.Len()), elem);
-        }
-    }
-
-    template<typename tp_type>
-    constexpr c_array<const t_u8> ToBytes(const tp_type& item) {
-        return {reinterpret_cast<const t_u8*>(item), ZF_SIZE_OF(item)};
-    }
-
-    template<typename tp_type>
-    constexpr c_array<t_u8> ToBytes(tp_type& item) {
-        return {reinterpret_cast<t_u8*>(item), ZF_SIZE_OF(item)};
     }
 }

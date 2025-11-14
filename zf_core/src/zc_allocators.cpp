@@ -2,6 +2,7 @@
 
 namespace zf {
     t_b8 c_mem_arena::Init(const t_size size) {
+        ZF_ASSERT(!m_buf);
         ZF_ASSERT(size > 0);
 
         m_buf = calloc(static_cast<size_t>(size), 1);
@@ -16,10 +17,12 @@ namespace zf {
     }
 
     void c_mem_arena::Release() {
+        ZF_ASSERT(m_buf);
         free(m_buf);
     }
 
     void* c_mem_arena::PushRaw(const t_size size, const t_size alignment) {
+        ZF_ASSERT(m_buf);
         ZF_ASSERT(size > 0);
         ZF_ASSERT(IsAlignmentValid(alignment));
 

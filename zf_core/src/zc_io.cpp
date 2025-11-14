@@ -22,7 +22,7 @@ namespace zf {
         const t_b8 success = [&o_contents, &mem_arena, file_path, include_terminating_byte, &fs]() {
             const t_size file_size = fs.CalcSize();
 
-            if (!mem_arena.PushArray(include_terminating_byte ? file_size + 1 : file_size, o_contents)) {
+            if (!MakeArray(mem_arena, include_terminating_byte ? file_size + 1 : file_size, o_contents)) {
                 ZF_LOG_ERROR("Failed to reserve memory for the contents of file \"%s\"!", file_path.Raw());
                 return false;
             }
@@ -78,9 +78,9 @@ namespace zf {
 
         // @speed: Ideally we'd start at the end of the path and move back.
 
-        s_str_mut path_cloned; // @speed: A clone on every call to this? Yuck!
+        s_str_mut path_clone; // @speed: A clone on every call to this? Yuck!
 
-        if (!temp_mem_arena.CloneArray(path.chrs, path_cloned.chrs)) {
+        if (!CloneArray(temp_mem_arena, path.chrs, path_clone.chrs)) {
             return false;
         }
 
@@ -89,24 +89,24 @@ namespace zf {
         t_size i = 0;
 
         while (true) {
-            if (path_cloned.chrs[i] == '/' || path_cloned.chrs[i] == '\\' || !path_cloned.chrs[i]) {
+            if (path_clone.chrs[i] == '/' || path_clone.chrs[i] == '\\' || !path_clone.chrs[i]) {
                 if (!cur_dir_name_is_empty) {
-                    const char temp = path_cloned.chrs[i];
+                    const char temp = path_clone.chrs[i];
 
-                    path_cloned.chrs[i] = '\0'; // Temporarily cut the string off here to form the subpath.
+                    path_clone.chrs[i] = '\0'; // Temporarily cut the string off here to form the subpath.
 
-                    if (CheckPathType(path_cloned) == ec_path_type::not_found) {
-                        if (!CreateDirectory(path_cloned)) {
+                    if (CheckPathType(path_clone) == ec_path_type::not_found) {
+                        if (!CreateDirectory(path_clone)) {
                             return false;
                         }
                     }
 
-                    path_cloned.chrs[i] = temp;
+                    path_clone.chrs[i] = temp;
 
                     cur_dir_name_is_empty = true;
                 }
 
-                if (!path_cloned.chrs[i]) {
+                if (!path_clone.chrs[i]) {
                     break;
                 }
             } else {
@@ -124,18 +124,18 @@ namespace zf {
 
         const t_size path_len = CalcStrLen(path);
 
-        s_str_mut path_cloned; // @speed: A clone on every call to this? Yuck!
+        s_str_mut path_clone; // @speed: A clone on every call to this? Yuck!
 
-        if (!temp_mem_arena.CloneArray(Slice(path.chrs, 0, path_len + 1), path_cloned.chrs)) {
+        if (!CloneArray(temp_mem_arena, path.chrs.Slice(0, path_len + 1), path_clone.chrs)) {
             return false;
         }
 
         for (t_size i = path_len - 1; i >= 0; i--) {
-            if (path_cloned.chrs[i] == '/' || path_cloned.chrs[i] == '\\') {
+            if (path_clone.chrs[i] == '/' || path_clone.chrs[i] == '\\') {
                 if (i > 0) {
-                    path_cloned.chrs[i] = '\0';
+                    path_clone.chrs[i] = '\0';
 
-                    if (!CreateDirectoryAndParents(path_cloned, temp_mem_arena)) {
+                    if (!CreateDirectoryAndParents(path_clone, temp_mem_arena)) {
                         return false;
                     }
                 }

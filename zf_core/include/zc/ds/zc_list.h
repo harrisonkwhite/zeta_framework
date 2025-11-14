@@ -1,53 +1,8 @@
 #pragma once
 
-#include <zc/zc_allocators.h>
+#include <zc/ds/zc_array.h>
 
 namespace zf {
-    template<typename tp_type, t_size tp_len>
-    struct s_static_array {
-        static_assert(tp_len > 0, "Invalid static array length!");
-
-        tp_type buf_raw[tp_len] = {};
-
-        constexpr s_static_array() = default;
-
-        constexpr s_static_array(const tp_type (&buf_raw)[tp_len]) {
-            for (t_size i = 0; i < tp_len; i++) {
-                this->buf_raw[i] = buf_raw[i];
-            }
-        }
-
-        constexpr t_size Len() const {
-            return tp_len;
-        }
-
-        tp_type& operator[](const t_size index) {
-            ZF_ASSERT(index >= 0 && index < tp_len);
-            return buf_raw[index];
-        }
-
-        constexpr const tp_type& operator[](const t_size index) const {
-            ZF_ASSERT(index >= 0 && index < tp_len);
-            return buf_raw[index];
-        }
-
-        constexpr c_array<tp_type> ToNonstatic() {
-            return {buf_raw, tp_len};
-        }
-
-        constexpr operator c_array<tp_type>() {
-            return ToNonstatic();
-        }
-
-        constexpr c_array<const tp_type> ToNonstatic() const {
-            return {buf_raw, tp_len};
-        }
-
-        constexpr operator c_array<const tp_type>() const {
-            return ToNonstatic();
-        }
-    };
-
     template<typename tp_type>
     void ListAppend(const c_array<tp_type> backing_arr, t_size& len, const tp_type& val) {
         ZF_ASSERT(len >= 0 && len < backing_arr.Len());
@@ -216,10 +171,12 @@ namespace zf {
     };
 
     template<typename tp_type>
-    t_b8 MakeList(c_mem_arena& mem_arena, const t_size cap, c_list<tp_type>& o_list) {
+    t_b8 MakeList(c_mem_arena& mem_arena, const t_size cap, c_list<tp_type>& o_list, const t_size len = 1) {
+        ZF_ASSERT(cap > 0 && len >= 0 && len <= cap);
+
         c_array<tp_type> backing_arr;
 
-        if (!mem_arena.PushArray(cap, backing_arr)) {
+        if (!MakeArray(mem_arena, cap, backing_arr)) {
             return false;
         }
 
