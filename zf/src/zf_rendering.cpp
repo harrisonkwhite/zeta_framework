@@ -216,7 +216,7 @@ void main() {
 
         {
             const t_size write_size = ZF_SIZE_OF(t_batch_slot) * m_batch_slots_used_cnt;
-            glBufferSubData(GL_ARRAY_BUFFER, 0, write_size, m_batch_slots.Buf());
+            glBufferSubData(GL_ARRAY_BUFFER, 0, write_size, m_batch_slots.Raw());
         }
 
         //

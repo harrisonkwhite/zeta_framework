@@ -23,7 +23,7 @@ namespace zf {
 
         glGenBuffers(1, &mesh.elem_buf_gl_id);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh.elem_buf_gl_id);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, static_cast<GLsizeiptr>(elems.SizeInBytes()), elems.Buf(), GL_STATIC_DRAW);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, static_cast<GLsizeiptr>(elems.SizeInBytes()), elems.Raw(), GL_STATIC_DRAW);
 
         const t_size stride = CalcStride(vert_attr_lens);
         t_s32 offs = 0;
@@ -67,8 +67,8 @@ namespace zf {
                     c_array<char> log_chrs;
 
                     if (temp_mem_arena.PushArray(log_chr_cnt, log_chrs)) {
-                        glGetShaderInfoLog(shader_gl_id, static_cast<GLsizei>(log_chrs.Len()), nullptr, log_chrs.Buf());
-                        ZF_LOG_ERROR_SPECIAL("OpenGL Shader Compilation", "%s", log_chrs.Buf());
+                        glGetShaderInfoLog(shader_gl_id, static_cast<GLsizei>(log_chrs.Len()), nullptr, log_chrs.Raw());
+                        ZF_LOG_ERROR_SPECIAL("OpenGL Shader Compilation", "%s", log_chrs.Raw());
                     } else {
                         ZF_LOG_ERROR("Failed to reserve memory for OpenGL shader compilation error log!");
                     }
@@ -132,7 +132,7 @@ namespace zf {
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, tex_data.size_in_pxs.x, tex_data.size_in_pxs.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, tex_data.rgba_px_data.Buf());
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, tex_data.size_in_pxs.x, tex_data.size_in_pxs.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, tex_data.rgba_px_data.Raw());
 
         return tex_gl_id;
     }

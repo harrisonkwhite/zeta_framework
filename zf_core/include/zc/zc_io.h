@@ -55,7 +55,7 @@ namespace zf {
         template<typename tp_type>
         [[nodiscard]]
         t_size ReadItems(const c_array<tp_type> arr) const {
-            return fread(arr.Buf(), ZF_SIZE_OF(tp_type), arr.Len(), raw);
+            return fread(arr.Raw(), ZF_SIZE_OF(tp_type), arr.Len(), raw);
         }
 
         template<typename tp_type>
@@ -67,7 +67,7 @@ namespace zf {
         template<typename tp_type>
         [[nodiscard]]
         t_size WriteItems(const c_array<const tp_type> arr) const {
-            return fwrite(arr.Buf(), ZF_SIZE_OF(tp_type), arr.Len(), raw);
+            return fwrite(arr.Raw(), ZF_SIZE_OF(tp_type), arr.Len(), raw);
         }
     };
 
@@ -80,7 +80,7 @@ namespace zf {
             return false;
         }
 
-        o_contents = StrFromRawTerminated(reinterpret_cast<char*>(contents_default.Buf()), contents_default.Len() - 1);
+        o_contents = StrFromRawTerminated(reinterpret_cast<char*>(contents_default.Raw()), contents_default.Len() - 1);
 
         return true;
     }

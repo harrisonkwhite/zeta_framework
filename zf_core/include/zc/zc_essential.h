@@ -237,12 +237,12 @@ namespace zf {
     struct c_array {
         constexpr c_array() = default;
 
-        constexpr c_array(tp_type* const buf, const t_size len) : m_buf(buf), m_len(len) {
-            ZF_ASSERT((!buf && len == 0) || (buf && len >= 0));
+        constexpr c_array(tp_type* const buf_raw, const t_size len) : m_buf_raw(buf_raw), m_len(len) {
+            ZF_ASSERT((!buf_raw && len == 0) || (buf_raw && len >= 0));
         }
 
-        constexpr tp_type* Buf() const {
-            return m_buf;
+        constexpr tp_type* Raw() const {
+            return m_buf_raw;
         }
 
         constexpr t_size Len() const {
@@ -259,11 +259,11 @@ namespace zf {
 
         tp_type& operator[](const t_size index) const {
             ZF_ASSERT(index >= 0 && index < m_len);
-            return m_buf[index];
+            return m_buf_raw[index];
         }
 
         constexpr c_array<const tp_type> ToReadonly() const {
-            return {m_buf, m_len};
+            return {m_buf_raw, m_len};
         }
 
         constexpr operator c_array<const tp_type>() const {
@@ -271,7 +271,7 @@ namespace zf {
         }
 
     private:
-        tp_type* m_buf = nullptr;
+        tp_type* m_buf_raw = nullptr;
         t_size m_len = 0;
     };
 

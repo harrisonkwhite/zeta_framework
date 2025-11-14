@@ -321,11 +321,11 @@ namespace zf {
         }
 
         t_f32* Raw() {
-            return elems[0].buf;
+            return elems[0].buf_raw;
         }
 
         const t_f32* Raw() const {
-            return elems[0].buf;
+            return elems[0].buf_raw;
         }
 
         void Translate(const s_v2<t_f32> trans) {

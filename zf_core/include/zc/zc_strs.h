@@ -17,7 +17,7 @@ namespace zf {
         consteval s_str_ro(const char* const raw);
 
         constexpr const char* Raw() const {
-            return chrs.Buf();
+            return chrs.Raw();
         }
     };
 
@@ -28,7 +28,7 @@ namespace zf {
         constexpr s_str_mut(const c_array<char> chrs) : chrs(chrs) {}
 
         constexpr char* Raw() const {
-            return chrs.Buf();
+            return chrs.Raw();
         }
 
         constexpr operator s_str_ro() const {
