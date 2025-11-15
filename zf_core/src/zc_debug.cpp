@@ -67,19 +67,6 @@ namespace zf {
         return false;
     }
 
-    void ConfigErrorOutput() {
-#ifndef ZF_DEBUG
-        // Redirect stderr to crash log file.
-        freopen("error.log", "w", stderr);
-#endif
-    }
-
-    void ShowFatalErrorBox() {
-#ifdef ZF_PLATFORM_WINDOWS
-        MessageBoxA(nullptr, "A fatal error occurred! Please look at \"error.log\" for details.", "Error", MB_OK | MB_ICONERROR | MB_TOPMOST);
-#endif
-    }
-
     void ReportFailure(const char* const func, const char* const file, const t_s32 line, const char* const msg) {
         fprintf(stderr, "==================== FAILURE ====================\n");
 
@@ -118,5 +105,11 @@ namespace zf {
         if (!BreakIntoDebugger()) {
             abort();
         }
+    }
+
+    void ShowErrorBox(const char* const title, const char* const contents) {
+#ifdef ZF_PLATFORM_WINDOWS
+        MessageBoxA(nullptr, contents, title, MB_OK | MB_ICONERROR | MB_TOPMOST);
+#endif
     }
 }

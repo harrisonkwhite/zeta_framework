@@ -33,8 +33,7 @@
 #endif
 
 namespace zf {
-    void ConfigErrorOutput();
-    void ShowFatalErrorBox();
     void ReportFailure(const char* const func, const char* const file, const t_s32 line, const char* const msg = nullptr);
-    void HandleAssertFailure(const char* const condition, const char* const func, const char* const file, const t_s32 line, const char* const msg = nullptr); // @todo: This feels awkward here, might want to move somewhere else? But where?
+    void HandleAssertFailure(const char* const condition, const char* const func, const char* const file, const t_s32 line, const char* const msg = nullptr);
+    void ShowErrorBox(const char* const title, const char* const contents);
 }

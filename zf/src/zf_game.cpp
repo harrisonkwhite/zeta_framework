@@ -1,6 +1,7 @@
 #include <zf/zf_game.h>
 
 #include <zf/zf_rng.h>
+#include <zf/zf_debug.h>
 
 namespace zf {
     constexpr t_size g_perm_mem_arena_size = Megabytes(80);
@@ -213,7 +214,7 @@ namespace zf {
 
 #ifndef ZF_DEBUG
         if (!success) {
-            ShowFatalErrorBox();
+            ShowErrorBox("Error", "A fatal error occurred! Please check \"error.log\" for details.");
         }
 #endif
 

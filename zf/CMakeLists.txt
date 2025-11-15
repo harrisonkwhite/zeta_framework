@@ -5,6 +5,7 @@ add_library(zf STATIC
     src/zf_gfx.cpp
     src/zf_rendering.cpp
     src/zf_audio.cpp
+    src/zf_debug.cpp
 	../external/glad/src/glad.c
 
     include/zf.h
@@ -14,6 +15,7 @@ add_library(zf STATIC
     include/zf/zf_gfx.h
     include/zf/zf_rendering.h
     include/zf/zf_audio.h
+    include/zf/zf_debug.h
 )
 
 target_include_directories(zf PUBLIC
