@@ -28,7 +28,7 @@ namespace zf {
             return m_len == 0;
         }
 
-        tp_type& operator[](const t_size index) const {
+        constexpr tp_type& operator[](const t_size index) const {
             ZF_ASSERT(index >= 0 && index < m_len);
             return m_buf_raw[index];
         }
@@ -70,7 +70,7 @@ namespace zf {
             return tp_len;
         }
 
-        tp_type& operator[](const t_size index) {
+        constexpr tp_type& operator[](const t_size index) {
             ZF_ASSERT(index >= 0 && index < tp_len);
             return buf_raw[index];
         }

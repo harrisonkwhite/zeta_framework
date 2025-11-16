@@ -94,17 +94,17 @@ namespace zf {
     t_size FindFirstSetBit(const c_bit_vector_mut bv, const t_size from = 0);
     t_size FindFirstUnsetBit(const c_bit_vector_mut bv, const t_size from = 0);
 
-    inline t_b8 IsBitSet(const c_bit_vector_ro bv, const t_size index) {
+    constexpr t_b8 IsBitSet(const c_bit_vector_ro bv, const t_size index) {
         ZF_ASSERT(index >= 0 && index < bv.BitCount());
         return bv.Bytes()[index / 8] & (1 << (index % 8));
     }
 
-    inline void SetBit(const c_bit_vector_mut bv, const t_size index) {
+    constexpr void SetBit(const c_bit_vector_mut bv, const t_size index) {
         ZF_ASSERT(index >= 0 && index < bv.BitCount());
         bv.Bytes()[index / 8] |= (1 << (index % 8));
     }
 
-    inline void UnsetBit(const c_bit_vector_mut bv, const t_size index) {
+    constexpr void UnsetBit(const c_bit_vector_mut bv, const t_size index) {
         ZF_ASSERT(index >= 0 && index < bv.BitCount());
         bv.Bytes()[index / 8] &= ~(1 << (index % 8));
     }

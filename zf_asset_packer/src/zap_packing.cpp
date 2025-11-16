@@ -93,6 +93,7 @@ namespace zf {
                     return {};
                 }();
 
+                // Get each field.
                 for (t_size fi = 0; fi < fields.Len(); fi++) {
                     field_vals[fi] = cJSON_GetObjectItem(cj_asset, fields[fi].name.Raw());
 
@@ -114,6 +115,7 @@ namespace zf {
                     }
                 }
 
+                // Perform different packing for each asset type.
                 const auto temp_mem_arena_offs_old = temp_mem_arena.Offs();
 
                 switch (asset_type_index) {
