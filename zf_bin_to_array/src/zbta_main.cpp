@@ -3,7 +3,7 @@
 #include <zc.h>
 
 namespace zf {
-    t_b8 OutputCode(const s_str_ro input_file_path, const s_str_ro output_file_path, const s_str_ro arr_subname) {
+    t_b8 OutputCode(const s_str_rdonly input_file_path, const s_str_rdonly output_file_path, const s_str_rdonly arr_subname) {
         ZF_ASSERT(IsStrTerminated(arr_subname));
 
         s_file_stream input_reader;

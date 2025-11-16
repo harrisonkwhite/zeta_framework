@@ -12,7 +12,7 @@ namespace zf {
         return static_cast<t_size>(key & 0x7FFFFFFF); // Mask out the sign bit.
     };
 
-    inline const t_hash_func<s_str_ro> g_str_hash_func = [](const s_str_ro& key) {
+    inline const t_hash_func<s_str_rdonly> g_str_hash_func = [](const s_str_rdonly& key) {
         ZF_ASSERT(IsStrTerminated(key));
 
         // This is an FNV-1a implementation.
@@ -181,7 +181,7 @@ namespace zf {
             c_array<tp_key_type> m_keys;
             c_array<tp_value_type> m_vals;
             c_array<t_size> m_next_indexes;
-            c_bit_vector_mut m_usage;
+            c_bit_vector m_usage;
 
             t_key_cmp_func<tp_key_type> m_key_cmp_func = nullptr;
         };

@@ -1,7 +1,7 @@
 #include <zc/zc_strs.h>
 
 namespace zf {
-    t_size CalcStrLen(const s_str_ro str) {
+    t_size CalcStrLen(const s_str_rdonly str) {
         t_size len = 0;
 
         while (len < str.chrs.Len() && str.chrs[len]) {
@@ -11,7 +11,7 @@ namespace zf {
         return len;
     }
 
-    t_b8 IsStrTerminated(const s_str_ro str) {
+    t_b8 IsStrTerminated(const s_str_rdonly str) {
         // The terminator is most likely at the end, so we start there.
         for (t_size i = str.chrs.Len() - 1; i >= 0; i--) {
             if (!str.chrs[i]) {

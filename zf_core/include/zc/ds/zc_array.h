@@ -33,12 +33,8 @@ namespace zf {
             return m_buf_raw[index];
         }
 
-        constexpr c_array<const tp_type> ToReadonly() const {
+        constexpr operator c_array<const tp_type>() const requires (!s_is_const<tp_type>::sm_value) {
             return {m_buf_raw, m_len};
-        }
-
-        constexpr operator c_array<const tp_type>() const {
-            return ToReadonly();
         }
 
         constexpr c_array<tp_type> Slice(const t_size beg, const t_size end) const {
@@ -54,7 +50,8 @@ namespace zf {
 
     template<typename tp_type, t_size tp_len>
     struct s_static_array {
-        static_assert(tp_len > 0, "Invalid static array length!");
+        static_assert(!s_is_const<tp_type>::sm_value);
+        static_assert(tp_len > 0);
 
         tp_type buf_raw[tp_len] = {};
 

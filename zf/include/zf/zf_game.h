@@ -38,7 +38,7 @@ namespace zf {
 
     struct s_game_info {
         s_v2<t_s32> window_init_size;
-        s_str_ro window_title;
+        s_str_rdonly window_title;
         e_window_flags window_flags = ek_window_flags_none;
 
         t_size dev_mem_size = 0; // How much memory should be allocated in the permanent arena for your use? This might be the size of a specific struct, for example.

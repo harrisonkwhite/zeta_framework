@@ -10,7 +10,7 @@ namespace zf {
         eks_asset_type_cnt
     };
 
-    constexpr s_static_array<s_str_ro, eks_asset_type_cnt> g_asset_type_arr_names = {{
+    constexpr s_static_array<s_str_rdonly, eks_asset_type_cnt> g_asset_type_arr_names = {{
         "textures",
         "sounds"
     }};
@@ -21,7 +21,7 @@ namespace zf {
     };
 
     struct s_asset_field {
-        s_str_ro name;
+        s_str_rdonly name;
         ec_asset_field_type type = ec_asset_field_type::str;
     };
 
@@ -121,7 +121,7 @@ namespace zf {
                 switch (asset_type_index) {
                     case ek_asset_type_texture:
                         {
-                            s_texture_data_mut tex_data;
+                            s_texture_data tex_data;
 
                             const auto src_fp_raw = field_vals[ek_tex_field_src_file_path]->valuestring;
                             const auto dest_fp_raw = field_vals[ek_tex_field_dest_file_path]->valuestring;
@@ -143,7 +143,7 @@ namespace zf {
 
                     case ek_asset_type_sound:
                         {
-                            s_sound_data_mut snd_data;
+                            s_sound_data snd_data;
 
                             const auto src_fp_raw = field_vals[ek_snd_field_src_file_path]->valuestring;
                             const auto dest_fp_raw = field_vals[ek_snd_field_dest_file_path]->valuestring;
@@ -171,7 +171,7 @@ namespace zf {
         return true;
     }
 
-    t_b8 PackAssets(const s_str_ro instrs_json, c_mem_arena& temp_mem_arena) {
+    t_b8 PackAssets(const s_str_rdonly instrs_json, c_mem_arena& temp_mem_arena) {
         ZF_ASSERT(IsStrTerminated(instrs_json));
 
         cJSON* const cj = cJSON_Parse(instrs_json.Raw());
