@@ -69,10 +69,10 @@ namespace zf {
         }
     }
 
-    t_size FindFirstSetBit(const c_bit_vector_mut bv, const t_size from) {
+    t_size FindFirstSetBit(const c_bit_vector_ro bv, const t_size from, const t_b8 inverted) {
         ZF_ASSERT(from <= bv.BitCount()); // Intentionally allowing the upper bound here for the case of iteration.
 
-        static constexpr s_static_array<int, 256> lg_mappings = {
+        static constexpr s_static_array<t_size, 256> lg_mappings = {
             {
                 -1, // 0000 0000
                 0, // 0000 0001
@@ -337,47 +337,27 @@ namespace zf {
             return -1;
         }
 
-        const t_size starting_byte_index = from / 8;
-        const t_u8 starting_byte_old = bv.Bytes()[starting_byte_index];
+        const t_u8 xor_mask = inverted ? 0xFF : 0x00;
 
-        const t_u8 last_byte_old = bv.Bytes()[bv.Bytes().Len() - 1];
+        for (t_size i = from / 8; i < bv.Bytes().Len(); i++) {
+            t_u8 byte = bv.Bytes()[i];
 
-        bv.Bytes()[starting_byte_index] &= ByteBitmask(from % 8, 8);
-        bv.Bytes()[bv.Bytes().Len() - 1] &= BitVectorLastByteBitmask(bv);
-
-        const auto res = [starting_byte_index, bv]() {
-            for (t_size i = starting_byte_index; i < bv.Bytes().Len(); i++) {
-                const t_size bi = lg_mappings[bv.Bytes()[i]];
-
-                if (bi != -1) {
-                    return bi;
-                }
+            // @speed: Not sure if the compiler will pull these checks out.
+            if (i == 0) {
+                byte &= ByteBitmask(from % 8, 8);
             }
 
-            return static_cast<t_size>(-1);
-        }();
+            if (i == bv.Bytes().Len() - 1) {
+                byte &= BitVectorLastByteBitmask(bv);
+            }
 
-        bv.Bytes()[starting_byte_index] = starting_byte_old;
-        bv.Bytes()[bv.Bytes().Len() - 1] = last_byte_old;
+            const t_size bi = lg_mappings[byte ^ xor_mask];
 
-        return res;
-    }
-
-    t_size FindFirstUnsetBit(const c_bit_vector_mut bv, const t_size from) {
-        ZF_ASSERT(from <= bv.BitCount()); // Intentionally allowing the upper bound here for the case of iteration.
-
-        // @speed: The flipping of all bits before and after is not essential.
-
-        for (t_size i = 0; i < bv.Bytes().Len(); i++) {
-            bv.Bytes()[i] = static_cast<t_u8>(~bv.Bytes()[i]);
+            if (bi != -1) {
+                return bi;
+            }
         }
 
-        const t_size res = FindFirstSetBit(bv, from);
-
-        for (t_size i = 0; i < bv.Bytes().Len(); i++) {
-            bv.Bytes()[i] = static_cast<t_u8>(~bv.Bytes()[i]);
-        }
-
-        return res;
+        return -1;
     }
 }

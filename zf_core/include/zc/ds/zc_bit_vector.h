@@ -91,9 +91,11 @@ namespace zf {
     void ShiftRight(const c_bit_vector_mut bv, const t_size amount = 1);
     void RotRight(const c_bit_vector_mut bv, const t_size amount = 1);
 
-    // @todo: These shouldn't mutate the BV.
-    t_size FindFirstSetBit(const c_bit_vector_mut bv, const t_size from = 0);
-    t_size FindFirstUnsetBit(const c_bit_vector_mut bv, const t_size from = 0);
+    t_size FindFirstSetBit(const c_bit_vector_ro bv, const t_size from = 0, const t_b8 inverted = false);
+
+    inline t_size FindFirstUnsetBit(const c_bit_vector_ro bv, const t_size from = 0) {
+        return FindFirstSetBit(bv, from, true);
+    }
 
     constexpr t_b8 IsBitSet(const c_bit_vector_ro bv, const t_size index) {
         ZF_ASSERT(index >= 0 && index < bv.BitCount());

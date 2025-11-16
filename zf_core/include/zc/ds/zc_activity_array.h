@@ -37,13 +37,10 @@ namespace zf {
             return IsBitSet(m_slot_activity, index);
         }
 
-        // @todo
-#if 0
         t_size IndexOfFirstActiveSlot(const t_size from = 0) const {
             ZF_ASSERT(from >= 0 && from <= m_slots.Len());
             return FindFirstSetBit(m_slot_activity, from);
         }
-#endif
 
     private:
         c_array<const tp_type> m_slots;
