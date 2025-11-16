@@ -91,6 +91,7 @@ namespace zf {
     void ShiftRight(const c_bit_vector_mut bv, const t_size amount = 1);
     void RotRight(const c_bit_vector_mut bv, const t_size amount = 1);
 
+    // @todo: These shouldn't mutate the BV.
     t_size FindFirstSetBit(const c_bit_vector_mut bv, const t_size from = 0);
     t_size FindFirstUnsetBit(const c_bit_vector_mut bv, const t_size from = 0);
 

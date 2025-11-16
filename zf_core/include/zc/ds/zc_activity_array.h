@@ -3,10 +3,10 @@
 #include <zc/ds/zc_bit_vector.h>
 
 // An "activity array" is an array where each slot has an associated "active" bit indicating whether it is in use.
+// A "versioned activity array" (VAA) augments this with a version number per slot, so that slot lifetimes can be uniquely identified.
 
 namespace zf {
-
-template<typename tp_type>
+    template<typename tp_type>
     class c_activity_array_ro {
     public:
         constexpr c_activity_array_ro() = default;
@@ -131,11 +131,11 @@ template<typename tp_type>
             return tp_len;
         }
 
-        constexpr void ActivateSlot(const t_size index) const {
+        constexpr void ActivateSlot(const t_size index) {
             SetBit(slot_activity, index);
         }
 
-        constexpr void DeactivateSlot(const t_size index) const {
+        constexpr void DeactivateSlot(const t_size index) {
             UnsetBit(slot_activity, index);
         }
 
@@ -195,4 +195,50 @@ template<typename tp_type>
 
         return true;
     }
+
+    struct s_vaa_slot_id {
+        t_size index = 0;
+        t_size version = 0;
+    };
+
+    template<typename tp_type, t_size tp_len>
+    struct s_static_vaa {
+        s_static_activity_array<tp_type, tp_len> activity_arr;
+        s_static_array<t_size, tp_len> slot_versions;
+
+        constexpr s_static_vaa() = default;
+
+        constexpr t_b8 CheckID(const s_vaa_slot_id id) {
+            return id.version == slot_versions[id.index];
+        }
+
+        constexpr tp_type& Get(const s_vaa_slot_id id) {
+            ZF_ASSERT(CheckID(id));
+            return activity_arr[id.index];
+        }
+
+        constexpr const tp_type& Get(const s_vaa_slot_id id) const {
+            ZF_ASSERT(CheckID(id));
+            return activity_arr[id.index];
+        }
+
+        constexpr t_size Len() const {
+            return tp_len;
+        }
+
+        constexpr void ActivateSlot(const s_vaa_slot_id id) {
+            ZF_ASSERT(CheckID(id));
+            activity_arr.ActivateSlot(id.index);
+        }
+
+        constexpr void DeactivateSlot(const s_vaa_slot_id id) {
+            ZF_ASSERT(CheckID(id));
+            activity_arr.DeactivateSlot(id.index);
+        }
+
+        constexpr t_b8 IsSlotActive(const s_vaa_slot_id id) const {
+            ZF_ASSERT(CheckID(id));
+            return activity_arr.IsSlotActive(id.index);
+        }
+    };
 }
