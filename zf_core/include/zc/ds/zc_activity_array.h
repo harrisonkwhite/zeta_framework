@@ -75,10 +75,12 @@ namespace zf {
         }
 
         constexpr void ActivateSlot(const t_size index) const {
+            ZF_ASSERT(!IsSlotActive(index));
             SetBit(m_slot_activity, index);
         }
 
         constexpr void DeactivateSlot(const t_size index) const {
+            ZF_ASSERT(IsSlotActive(index));
             UnsetBit(m_slot_activity, index);
         }
 
@@ -129,10 +131,12 @@ namespace zf {
         }
 
         constexpr void ActivateSlot(const t_size index) {
+            ZF_ASSERT(!IsSlotActive(index));
             SetBit(slot_activity, index);
         }
 
         constexpr void DeactivateSlot(const t_size index) {
+            ZF_ASSERT(IsSlotActive(index));
             UnsetBit(slot_activity, index);
         }
 
@@ -146,7 +150,7 @@ namespace zf {
         }
 
         // Returns the index of the newly taken (activated) slot, or -1 if all slots are already active.
-        t_size TakeFirstInactiveSlot() const {
+        t_size TakeFirstInactiveSlot() {
             const t_size index = FindFirstUnsetBit(slot_activity);
 
             if (index != -1) {
@@ -198,44 +202,57 @@ namespace zf {
         t_size version = 0;
     };
 
+    // @todo: Set up non-static version.
     template<typename tp_type, t_size tp_len>
     struct s_static_vaa {
-        s_static_activity_array<tp_type, tp_len> activity_arr;
-        s_static_array<t_size, tp_len> slot_versions;
-
+    public:
         constexpr s_static_vaa() = default;
 
-        constexpr t_b8 CheckID(const s_vaa_slot_id id) {
-            return id.version == slot_versions[id.index];
+        constexpr t_b8 Exists(const s_vaa_slot_id id) const {
+            return m_activity_arr.IsSlotActive(id.index) && id.version == m_slot_versions[id.index];
         }
 
         constexpr tp_type& Get(const s_vaa_slot_id id) {
-            ZF_ASSERT(CheckID(id));
-            return activity_arr[id.index];
+            ZF_ASSERT(Exists(id));
+            return m_activity_arr[id.index];
         }
 
         constexpr const tp_type& Get(const s_vaa_slot_id id) const {
-            ZF_ASSERT(CheckID(id));
-            return activity_arr[id.index];
+            ZF_ASSERT(Exists(id));
+            return m_activity_arr[id.index];
         }
 
         constexpr t_size Len() const {
             return tp_len;
         }
 
-        constexpr void ActivateSlot(const s_vaa_slot_id id) {
-            ZF_ASSERT(CheckID(id));
-            activity_arr.ActivateSlot(id.index);
+        constexpr s_vaa_slot_id ActivateSlot(const t_size index) {
+            m_activity_arr.ActivateSlot(index);
+            m_slot_versions[index]++;
+
+            return {index, m_slot_versions[index]};
         }
 
         constexpr void DeactivateSlot(const s_vaa_slot_id id) {
-            ZF_ASSERT(CheckID(id));
-            activity_arr.DeactivateSlot(id.index);
+            ZF_ASSERT(Exists(id));
+            m_activity_arr.UnsetBit(id.index);
         }
 
-        constexpr t_b8 IsSlotActive(const s_vaa_slot_id id) const {
-            ZF_ASSERT(CheckID(id));
-            return activity_arr.IsSlotActive(id.index);
+        // Returns true iff an inactive slot was found and taken.
+        t_b8 TakeFirstInactiveSlot(s_vaa_slot_id& o_id) {
+            const size_t index = m_activity_arr.TakeFirstInactiveSlot();
+
+            if (index == -1) {
+                return false;
+            }
+
+            o_id = ActivateSlot(index);
+
+            return true;
         }
+
+    private:
+        s_static_activity_array<tp_type, tp_len> m_activity_arr;
+        s_static_array<t_size, tp_len> m_slot_versions;
     };
 }
