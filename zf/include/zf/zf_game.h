@@ -11,7 +11,7 @@ namespace zf {
         s_mem_arena& perm_mem_arena;
         s_mem_arena& temp_mem_arena;
 
-        c_gfx_resource_arena& gfx_res_arena;
+        s_gfx_resource_arena& gfx_res_arena;
     };
 
     enum e_game_tick_result {

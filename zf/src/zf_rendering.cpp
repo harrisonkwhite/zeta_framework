@@ -48,7 +48,7 @@ void main() {
 }
 )");
 
-    static c_gfx_resource_handle MakeBatchMesh(c_gfx_resource_arena& gfx_res_arena, s_mem_arena& temp_mem_arena) {
+    static s_gfx_resource_handle MakeBatchMesh(s_gfx_resource_arena& gfx_res_arena, s_mem_arena& temp_mem_arena) {
         const t_size verts_len = g_batch_vert_component_cnt * g_batch_slot_vert_cnt * g_batch_slot_cnt;
 
         s_array<t_u16> elems;
@@ -67,10 +67,10 @@ void main() {
             elems[(i * 6) + 5] = static_cast<t_u16>((i * 4) + 0);
         }
 
-        return gfx_res_arena.AddMesh(nullptr, verts_len, elems, g_batch_vert_attr_lens);
+        return AddMesh(gfx_res_arena, nullptr, verts_len, elems, g_batch_vert_attr_lens);
     }
 
-    t_b8 s_rendering_basis::Init(c_gfx_resource_arena& gfx_res_arena, s_mem_arena& temp_mem_arena) {
+    t_b8 s_rendering_basis::Init(s_gfx_resource_arena& gfx_res_arena, s_mem_arena& temp_mem_arena) {
         // Generate the batch mesh.
         batch_mesh_hdl = MakeBatchMesh(gfx_res_arena, temp_mem_arena);
 
@@ -100,7 +100,7 @@ void main() {
         return true;
     }
 
-    t_b8 c_renderer::Init(c_gfx_resource_arena& gfx_res_arena, s_mem_arena& mem_arena, s_mem_arena& temp_mem_arena) {
+    t_b8 c_renderer::Init(s_gfx_resource_arena& gfx_res_arena, s_mem_arena& mem_arena, s_mem_arena& temp_mem_arena) {
         if (!m_basis.Init(gfx_res_arena, temp_mem_arena)) {
             ZF_REPORT_FAILURE();
             return false;
@@ -124,7 +124,7 @@ void main() {
         m_batch_view_mat = mat;
     }
 
-    void c_renderer::Draw(const c_gfx_resource_handle tex_hdl, const s_rect<t_f32> tex_coords, s_v2<t_f32> pos, s_v2<t_f32> size, s_v2<t_f32> origin, const t_f32 rot, const s_color_rgba32f blend) {
+    void c_renderer::Draw(const s_gfx_resource_handle tex_hdl, const s_rect<t_f32> tex_coords, s_v2<t_f32> pos, s_v2<t_f32> size, s_v2<t_f32> origin, const t_f32 rot, const s_color_rgba32f blend) {
         ZF_ASSERT(tex_hdl.IsValid());
 
         if (m_batch_slots_used_cnt == 0) {
@@ -183,7 +183,7 @@ void main() {
         };
     }
 
-    void c_renderer::DrawTexture(const s_texture& tex, const s_v2<t_f32> pos, const s_rect<t_s32> src_rect, const s_v2<t_f32> origin, const s_v2<t_f32> scale, const t_f32 rot, const s_color_rgba32f blend) {
+    void c_renderer::DrawTexture(const s_texture_asset& tex, const s_v2<t_f32> pos, const s_rect<t_s32> src_rect, const s_v2<t_f32> origin, const s_v2<t_f32> scale, const t_f32 rot, const s_color_rgba32f blend) {
         ZF_ASSERT(tex.hdl.IsValid());
         ZF_ASSERT(origin.x >= 0.0f && origin.x <= 1.0f && origin.y >= 0.0f && origin.y <= 1.0f); // @todo: Generic function for this check?
         // @todo: Add more assertions here!

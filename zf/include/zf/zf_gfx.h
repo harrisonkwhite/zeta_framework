@@ -27,118 +27,85 @@ namespace zf {
         t_gl_id gl_id;
     };
 
-    class c_gfx_resource_handle {
-    public:
-        c_gfx_resource_handle() = default;
-        c_gfx_resource_handle(const us_gl_mesh mesh) : m_type(ec_gfx_resource_type::mesh), m_raw({.mesh = mesh}) {}
-        c_gfx_resource_handle(const us_gl_shader_prog shader_prog) : m_type(ec_gfx_resource_type::shader_prog), m_raw({.shader_prog = shader_prog}) {}
-        c_gfx_resource_handle(const us_gl_texture tex) : m_type(ec_gfx_resource_type::texture), m_raw({.tex = tex}) {}
+    struct s_gfx_resource_handle {
+        s_gfx_resource_handle() = default;
+        s_gfx_resource_handle(const us_gl_mesh mesh) : type(ec_gfx_resource_type::mesh), raw({.mesh = mesh}) {}
+        s_gfx_resource_handle(const us_gl_shader_prog shader_prog) : type(ec_gfx_resource_type::shader_prog), raw({.shader_prog = shader_prog}) {}
+        s_gfx_resource_handle(const us_gl_texture tex) : type(ec_gfx_resource_type::texture), raw({.tex = tex}) {}
 
         ec_gfx_resource_type Type() const {
-            return m_type;
+            return type;
         }
 
         t_b8 IsValid() const {
-            return m_type != ec_gfx_resource_type::invalid;
+            return type != ec_gfx_resource_type::invalid;
         }
 
         const us_gl_mesh& Mesh() const {
-            ZF_ASSERT(m_type == ec_gfx_resource_type::mesh);
-            return m_raw.mesh;
+            ZF_ASSERT(type == ec_gfx_resource_type::mesh);
+            return raw.mesh;
         }
 
         const us_gl_shader_prog& ShaderProg() const {
-            ZF_ASSERT(m_type == ec_gfx_resource_type::shader_prog);
-            return m_raw.shader_prog;
+            ZF_ASSERT(type == ec_gfx_resource_type::shader_prog);
+            return raw.shader_prog;
         }
 
         const us_gl_texture& Texture() const {
-            ZF_ASSERT(m_type == ec_gfx_resource_type::texture);
-            return m_raw.tex;
-        }
-
-        t_b8 Equals(const c_gfx_resource_handle& other) const {
-            if (m_type != other.m_type) {
-                return false;
-            }
-
-            switch (m_type) {
-            case ec_gfx_resource_type::invalid:
-                return true;
-
-            case ec_gfx_resource_type::mesh:
-                return m_raw.mesh.vert_arr_gl_id == other.m_raw.mesh.vert_arr_gl_id
-                    && m_raw.mesh.vert_buf_gl_id == other.m_raw.mesh.vert_buf_gl_id
-                    && m_raw.mesh.elem_buf_gl_id == other.m_raw.mesh.elem_buf_gl_id;
-
-            case ec_gfx_resource_type::shader_prog:
-                return m_raw.shader_prog.gl_id == other.m_raw.shader_prog.gl_id;
-
-            case ec_gfx_resource_type::texture:
-                return m_raw.tex.gl_id == other.m_raw.tex.gl_id;
-            }
-
-            ZF_ASSERT(false);
-            return false;
+            ZF_ASSERT(type == ec_gfx_resource_type::texture);
+            return raw.tex;
         }
 
     private:
-        ec_gfx_resource_type m_type = ec_gfx_resource_type::invalid;
+        ec_gfx_resource_type type = ec_gfx_resource_type::invalid;
 
         union {
             us_gl_mesh mesh;
             us_gl_shader_prog shader_prog;
             us_gl_texture tex;
-        } m_raw = {};
+        } raw = {};
     };
 
-    class c_gfx_resource_arena {
-    public:
-        [[nodiscard]] t_b8 Init(s_mem_arena& mem_arena, const t_size cap);
-        void Release();
-
-        c_gfx_resource_handle AddMesh(const t_f32* const verts_raw, const t_size verts_len, const s_array<const t_u16> elems, const s_array<const t_s32> vert_attr_lens); // You might not want to provide vertices to start with, and only the count - passing nullptr in for verts_raw allows this.
-        c_gfx_resource_handle AddShaderProg(const s_str_rdonly vert_src, const s_str_rdonly frag_src, s_mem_arena& temp_mem_arena);
-        c_gfx_resource_handle AddTexture(const s_texture_data& tex_data);
-
-    private:
-        c_gfx_resource_handle AddHandle(const c_gfx_resource_handle& hdl) {
-            ZF_ASSERT(m_hdls_taken < m_hdls.Len());
-
-            auto& hdl_inplace = m_hdls[m_hdls_taken];
-            hdl_inplace = hdl;
-            m_hdls_taken++;
-            return hdl_inplace;
-        }
-
-        s_array<c_gfx_resource_handle> m_hdls; // @todo: Consider making this a dynamic array. Any capacity on this is kind of arbitrary...
-        t_size m_hdls_taken = 0;
+    struct s_gfx_resource_arena {
+        s_list<s_gfx_resource_handle> hdls;
     };
 
-    struct s_texture {
-        c_gfx_resource_handle hdl;
+    t_b8 AreGFXResourcesEqual(const s_gfx_resource_handle& a, const s_gfx_resource_handle& b);
+    void ReleaseGFXResource(const s_gfx_resource_handle hdl);
+
+    [[nodiscard]] t_b8 MakeGFXResourceArena(s_mem_arena& mem_arena, const t_size cap, s_gfx_resource_arena& o_res_arena);
+    void ReleaseGFXResourceArena(s_gfx_resource_arena& res_arena);
+
+    s_gfx_resource_handle MakeMesh(s_gfx_resource_arena& gfx_res_arena, const t_f32* const verts_raw, const t_size verts_len, const s_array<const t_u16> elems, const s_array<const t_s32> vert_attr_lens); // You might not want to provide vertices to start with, and only the count - passing nullptr in for verts_raw allows this.
+    s_gfx_resource_handle MakeShaderProg(s_gfx_resource_arena& gfx_res_arena, const s_str_rdonly vert_src, const s_str_rdonly frag_src, s_mem_arena& temp_mem_arena);
+    s_gfx_resource_handle MakeTexture(s_gfx_resource_arena& gfx_res_arena, const s_texture_data& tex_data);
+
+#if 0
+    struct s_texture_asset {
+        s_gfx_resource_handle hdl;
         s_v2<t_s32> size_cache;
-
-        [[nodiscard]] t_b8 Load(const s_texture_data& tex_data, c_gfx_resource_arena& gfx_res_arena);
-
-        [[nodiscard]] t_b8 LoadFromRaw(const s_str_rdonly file_path, c_gfx_resource_arena& gfx_res_arena, s_mem_arena& temp_mem_arena) {
-            s_texture_data tex_data;
-
-            if (!LoadTextureFromRaw(file_path, temp_mem_arena, tex_data)) {
-                return false;
-            }
-
-            return Load(tex_data, gfx_res_arena);
-        }
-
-        [[nodiscard]] t_b8 LoadFromPacked(const s_str_rdonly file_path, c_gfx_resource_arena& gfx_res_arena, s_mem_arena& temp_mem_arena) {
-            s_texture_data tex_data;
-
-            if (!LoadTextureFromPacked(file_path, temp_mem_arena, tex_data)) {
-                return false;
-            }
-
-            return Load(tex_data, gfx_res_arena);
-        }
     };
+
+    [[nodiscard]] t_b8 Load(const s_texture_data& tex_data, s_gfx_resource_arena& gfx_res_arena);
+
+    [[nodiscard]] t_b8 LoadFromRaw(const s_str_rdonly file_path, s_gfx_resource_arena& gfx_res_arena, s_mem_arena& temp_mem_arena) {
+        s_texture_data tex_data;
+
+        if (!LoadTextureFromRaw(file_path, temp_mem_arena, tex_data)) {
+            return false;
+        }
+
+        return Load(tex_data, gfx_res_arena);
+    }
+
+    [[nodiscard]] t_b8 LoadFromPacked(const s_str_rdonly file_path, s_gfx_resource_arena& gfx_res_arena, s_mem_arena& temp_mem_arena) {
+        s_texture_data tex_data;
+
+        if (!LoadTextureFromPacked(file_path, temp_mem_arena, tex_data)) {
+            return false;
+        }
+
+        return Load(tex_data, gfx_res_arena);
+    }
+#endif
 }
