@@ -35,7 +35,7 @@ namespace zf {
 
     private:
         s_array<const t_u8> bytes;
-        t_size bit_cnt;
+        t_size bit_cnt = 0;
     };
 
     struct s_bit_vector {
@@ -61,7 +61,7 @@ namespace zf {
 
     private:
         s_array<t_u8> bytes;
-        t_size bit_cnt;
+        t_size bit_cnt = 0;
     };
 
     template<t_size tp_bit_cnt>

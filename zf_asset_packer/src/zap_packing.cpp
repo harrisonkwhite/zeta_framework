@@ -116,7 +116,7 @@ namespace zf {
                 }
 
                 // Perform different packing for each asset type.
-                const auto temp_mem_arena_offs_old = temp_mem_arena.offs;
+                const auto temp_mem_arena_offs_old = temp_mem_arena.Offs();
 
                 switch (asset_type_index) {
                     case ek_asset_type_texture:
@@ -164,7 +164,7 @@ namespace zf {
                         break;
                 }
 
-                Rewind(temp_mem_arena, temp_mem_arena_offs_old);
+                RewindMemArena(temp_mem_arena, temp_mem_arena_offs_old);
             }
         }
 

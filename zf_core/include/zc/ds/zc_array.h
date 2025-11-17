@@ -96,7 +96,7 @@ namespace zf {
     t_b8 MakeArray(s_mem_arena& mem_arena, const t_size len, s_array<tp_type>& o_arr) {
         ZF_ASSERT(len > 0);
 
-        const auto buf_raw = Push<tp_type>(mem_arena, len);
+        const auto buf_raw = PushToMemArena<tp_type>(mem_arena, len);
 
         if (!buf_raw) {
             return false;

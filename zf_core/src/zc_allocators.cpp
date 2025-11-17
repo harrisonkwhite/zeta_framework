@@ -1,5 +1,7 @@
 #include <zc/zc_allocators.h>
 
+#include <cstring>
+
 namespace zf {
     [[nodiscard]] t_b8 MakeMemArena(const t_size size, s_mem_arena& o_ma) {
         ZF_ASSERT(size > 0);
@@ -10,32 +12,38 @@ namespace zf {
             return false;
         }
 
-        o_ma = {};
-        o_ma.buf = buf;
-        o_ma.size = size;
+        o_ma = {buf, size};
 
         return true;
     }
 
     void ReleaseMemArena(s_mem_arena& ma) {
-        ZF_ASSERT(ma.buf);
-        free(ma.buf);
+        ZF_ASSERT(ma.Buf());
+        free(ma.Buf());
         ma = {};
     }
 
-    void* PushRaw(s_mem_arena& ma, const t_size size, const t_size alignment) {
+    void RewindMemArena(s_mem_arena& ma, const t_size offs) {
+        ZF_ASSERT(ma.Buf());
+        ZF_ASSERT(offs >= 0 && offs <= ma.Offs());
+        memset(static_cast<t_u8*>(ma.Buf()) + offs, 0, static_cast<size_t>(ma.Offs() - offs));
+        ma.SetOffs(offs);
+    }
+
+    void* PushToMemArena(s_mem_arena& ma, const t_size size, const t_size alignment) {
+        ZF_ASSERT(ma.Buf());
         ZF_ASSERT(size > 0);
         ZF_ASSERT(IsAlignmentValid(alignment));
 
-        const t_size offs_aligned = AlignForward(ma.offs, alignment);
+        const t_size offs_aligned = AlignForward(ma.Offs(), alignment);
         const t_size offs_next = offs_aligned + size;
 
-        if (offs_next > ma.size) {
+        if (offs_next > ma.Size()) {
             return nullptr;
         }
 
-        ma.offs = offs_next;
+        ma.SetOffs(offs_next);
 
-        return static_cast<t_u8*>(ma.buf) + offs_aligned;
+        return static_cast<t_u8*>(ma.Buf()) + offs_aligned;
     }
 }

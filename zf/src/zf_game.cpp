@@ -77,7 +77,7 @@ namespace zf {
 
         // Initialise developer memory.
         if (info.dev_mem_size > 0) {
-            game.dev_mem = PushRaw(game.perm_mem_arena, info.dev_mem_size, info.dev_mem_alignment);
+            game.dev_mem = PushToMemArena(game.perm_mem_arena, info.dev_mem_size, info.dev_mem_alignment);
 
             if (!game.dev_mem) {
                 ZF_REPORT_FAILURE();
@@ -112,7 +112,7 @@ namespace zf {
         t_f64 frame_dur_accum = 0.0;
 
         while (!ShouldWindowClose()) {
-            Rewind(game.temp_mem_arena, 0);
+            RewindMemArena(game.temp_mem_arena, 0);
 
             const t_f64 frame_time = GetTime();
             const t_f64 frame_time_delta = frame_time - frame_time_last;
