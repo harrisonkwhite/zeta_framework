@@ -10,7 +10,7 @@ int main(const int arg_cnt, const char* const* const args_raw) {
 
     const zf::s_str_rdonly instrs_json_file_path = zf::StrFromRawTerminated(args[1]);
 
-    zf::c_mem_arena temp_mem_arena;
+    zf::s_mem_arena temp_mem_arena;
 
     if (!temp_mem_arena.Init(zf::Megabytes(4))) {
         ZF_LOG_ERROR("Failed to initialise temporary memory arena!");

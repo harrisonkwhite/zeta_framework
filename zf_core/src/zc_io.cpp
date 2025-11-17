@@ -9,7 +9,7 @@
 #endif
 
 namespace zf {
-    t_b8 LoadFileContents(c_mem_arena& mem_arena, const s_str_rdonly file_path, s_array<t_s8>& o_contents, const t_b8 include_terminating_byte) {
+    t_b8 LoadFileContents(s_mem_arena& mem_arena, const s_str_rdonly file_path, s_array<t_s8>& o_contents, const t_b8 include_terminating_byte) {
         ZF_ASSERT(IsStrTerminated(file_path));
 
         s_file_stream fs;
@@ -70,7 +70,7 @@ namespace zf {
 #endif
     }
 
-    t_b8 CreateDirectoryAndParents(const s_str_rdonly path, c_mem_arena& temp_mem_arena) {
+    t_b8 CreateDirectoryAndParents(const s_str_rdonly path, s_mem_arena& temp_mem_arena) {
         ZF_ASSERT(IsStrTerminated(path));
 
         // @speed: Ideally we'd start at the end of the path and move back.
@@ -116,7 +116,7 @@ namespace zf {
         return true;
     }
 
-    t_b8 CreateFileAndParentDirs(const s_str_rdonly path, c_mem_arena& temp_mem_arena) {
+    t_b8 CreateFileAndParentDirs(const s_str_rdonly path, s_mem_arena& temp_mem_arena) {
         ZF_ASSERT(IsStrTerminated(path));
 
         const t_size path_len = CalcStrLen(path);

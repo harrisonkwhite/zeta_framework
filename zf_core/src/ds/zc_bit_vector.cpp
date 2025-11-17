@@ -1,7 +1,7 @@
 #include <zc/ds/zc_bit_vector.h>
 
 namespace zf {
-    t_b8 MakeBitVector(c_mem_arena& mem_arena, const t_size bit_cnt, c_bit_vector& o_bv) {
+    t_b8 MakeBitVector(s_mem_arena& mem_arena, const t_size bit_cnt, s_bit_vector& o_bv) {
         ZF_ASSERT(bit_cnt > 0);
 
         s_array<t_u8> bytes;
@@ -15,7 +15,7 @@ namespace zf {
         return true;
     }
 
-    static t_u8 ShiftLeftSingle(const c_bit_vector bv, t_u8 carry = 0) {
+    static t_u8 ShiftLeftSingle(const s_bit_vector bv, t_u8 carry = 0) {
         ZF_ASSERT(carry == 0 || carry == 1);
 
         if (bv.BitCount() == 0) {
@@ -46,7 +46,7 @@ namespace zf {
         return carry;
     }
 
-    void ShiftLeft(const c_bit_vector bv, const t_size amount) {
+    void ShiftLeft(const s_bit_vector bv, const t_size amount) {
         ZF_ASSERT(amount >= 0);
 
         for (t_size i = 0; i < amount; i++) {
@@ -54,7 +54,7 @@ namespace zf {
         }
     }
 
-    void RotLeft(const c_bit_vector bv, const t_size amount) {
+    void RotLeft(const s_bit_vector bv, const t_size amount) {
         ZF_ASSERT(amount >= 0);
 
         t_u8 carry = 0;
@@ -64,7 +64,7 @@ namespace zf {
         }
     }
 
-    t_size FindFirstSetBit(const c_bit_vector_rdonly bv, const t_size from, const t_b8 inverted) {
+    t_size FindFirstSetBit(const s_bit_vector_rdonly bv, const t_size from, const t_b8 inverted) {
         ZF_ASSERT(from <= bv.BitCount()); // Intentionally allowing the upper bound here for the case of iteration.
 
         static constexpr s_static_array<t_size, 256> lg_mappings = {

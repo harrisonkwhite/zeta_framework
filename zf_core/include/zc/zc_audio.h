@@ -23,8 +23,8 @@ namespace zf {
         return snd_data.meta.channel_cnt * snd_data.meta.frame_cnt;
     }
 
-    [[nodiscard]] t_b8 LoadSoundFromRaw(const s_str_rdonly file_path, c_mem_arena& mem_arena, s_sound_data& o_snd_data);
-    [[nodiscard]] t_b8 LoadSoundFromPacked(const s_str_rdonly file_path, c_mem_arena& mem_arena, s_sound_data& o_snd_data);
+    [[nodiscard]] t_b8 LoadSoundFromRaw(const s_str_rdonly file_path, s_mem_arena& mem_arena, s_sound_data& o_snd_data);
+    [[nodiscard]] t_b8 LoadSoundFromPacked(const s_str_rdonly file_path, s_mem_arena& mem_arena, s_sound_data& o_snd_data);
 
-    [[nodiscard]] t_b8 PackSound(const s_sound_data& snd_data, const s_str_rdonly file_path, c_mem_arena& temp_mem_arena);
+    [[nodiscard]] t_b8 PackSound(const s_sound_data& snd_data, const s_str_rdonly file_path, s_mem_arena& temp_mem_arena);
 }

@@ -10,7 +10,7 @@ namespace zf {
     struct s_activity_array {
         constexpr s_activity_array() = default;
 
-        constexpr s_activity_array(const s_array<tp_type> slots, const c_bit_vector slot_activity)
+        constexpr s_activity_array(const s_array<tp_type> slots, const s_bit_vector slot_activity)
             : slots(slots), slot_activity(slot_activity) {
             ZF_ASSERT(slots.Len() == slot_activity.BitCount());
         }
@@ -19,7 +19,7 @@ namespace zf {
             return slots;
         }
 
-        constexpr c_bit_vector SlotActivity() const {
+        constexpr s_bit_vector SlotActivity() const {
             return slot_activity;
         }
 
@@ -30,7 +30,7 @@ namespace zf {
 
     private:
         s_array<tp_type> slots;
-        c_bit_vector slot_activity;
+        s_bit_vector slot_activity;
     };
 
     template<typename tp_type, t_size tp_len>
@@ -85,11 +85,11 @@ namespace zf {
     }
 
     template<typename tp_type>
-    t_b8 MakeActivityArray(c_mem_arena& mem_arena, const t_size len, s_activity_array<tp_type>& o_aa) {
+    t_b8 MakeActivityArray(s_mem_arena& mem_arena, const t_size len, s_activity_array<tp_type>& o_aa) {
         ZF_ASSERT(len > 0);
 
         s_array<tp_type> slots;
-        c_bit_vector slot_activity;
+        s_bit_vector slot_activity;
 
         if (!MakeArray(mem_arena, len, slots)) {
             return false;

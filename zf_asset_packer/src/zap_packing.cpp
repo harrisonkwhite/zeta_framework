@@ -47,7 +47,7 @@ namespace zf {
         {"dest_file_path", ec_asset_field_type::str}
     }};
 
-    static t_b8 PackAssetsFromInstrs(cJSON* const cj, c_mem_arena& temp_mem_arena) {
+    static t_b8 PackAssetsFromInstrs(cJSON* const cj, s_mem_arena& temp_mem_arena) {
         ZF_ASSERT(cj);
 
         s_static_array<cJSON*, eks_tex_field_cnt> tex_field_cj_ptrs;
@@ -171,7 +171,7 @@ namespace zf {
         return true;
     }
 
-    t_b8 PackAssets(const s_str_rdonly instrs_json, c_mem_arena& temp_mem_arena) {
+    t_b8 PackAssets(const s_str_rdonly instrs_json, s_mem_arena& temp_mem_arena) {
         ZF_ASSERT(IsStrTerminated(instrs_json));
 
         cJSON* const cj = cJSON_Parse(instrs_json.Raw());

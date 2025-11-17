@@ -94,11 +94,11 @@ namespace zf {
 
     class c_gfx_resource_arena {
     public:
-        [[nodiscard]] t_b8 Init(c_mem_arena& mem_arena, const t_size cap);
+        [[nodiscard]] t_b8 Init(s_mem_arena& mem_arena, const t_size cap);
         void Release();
 
         c_gfx_resource_handle AddMesh(const t_f32* const verts_raw, const t_size verts_len, const s_array<const t_u16> elems, const s_array<const t_s32> vert_attr_lens); // You might not want to provide vertices to start with, and only the count - passing nullptr in for verts_raw allows this.
-        c_gfx_resource_handle AddShaderProg(const s_str_rdonly vert_src, const s_str_rdonly frag_src, c_mem_arena& temp_mem_arena);
+        c_gfx_resource_handle AddShaderProg(const s_str_rdonly vert_src, const s_str_rdonly frag_src, s_mem_arena& temp_mem_arena);
         c_gfx_resource_handle AddTexture(const s_texture_data& tex_data);
 
     private:
@@ -121,7 +121,7 @@ namespace zf {
 
         [[nodiscard]] t_b8 Load(const s_texture_data& tex_data, c_gfx_resource_arena& gfx_res_arena);
 
-        [[nodiscard]] t_b8 LoadFromRaw(const s_str_rdonly file_path, c_gfx_resource_arena& gfx_res_arena, c_mem_arena& temp_mem_arena) {
+        [[nodiscard]] t_b8 LoadFromRaw(const s_str_rdonly file_path, c_gfx_resource_arena& gfx_res_arena, s_mem_arena& temp_mem_arena) {
             s_texture_data tex_data;
 
             if (!LoadTextureFromRaw(file_path, temp_mem_arena, tex_data)) {
@@ -131,7 +131,7 @@ namespace zf {
             return Load(tex_data, gfx_res_arena);
         }
 
-        [[nodiscard]] t_b8 LoadFromPacked(const s_str_rdonly file_path, c_gfx_resource_arena& gfx_res_arena, c_mem_arena& temp_mem_arena) {
+        [[nodiscard]] t_b8 LoadFromPacked(const s_str_rdonly file_path, c_gfx_resource_arena& gfx_res_arena, s_mem_arena& temp_mem_arena) {
             s_texture_data tex_data;
 
             if (!LoadTextureFromPacked(file_path, temp_mem_arena, tex_data)) {

@@ -123,7 +123,7 @@ namespace zf {
     };
 
     template<typename tp_key_type, typename tp_value_type>
-    [[nodiscard]] t_b8 MakeMinHeap(c_mem_arena& mem_arena, const t_size cap, s_min_heap<tp_key_type, tp_value_type> &o_mh, const t_comparator<tp_key_type> comparator = DefaultComparator) {
+    [[nodiscard]] t_b8 MakeMinHeap(s_mem_arena& mem_arena, const t_size cap, s_min_heap<tp_key_type, tp_value_type> &o_mh, const t_comparator<tp_key_type> comparator = DefaultComparator) {
         ZF_ASSERT(cap > 0);
 
         s_array<s_min_heap<tp_key_type, tp_value_type>::s_node> nodes;

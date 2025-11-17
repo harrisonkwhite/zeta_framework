@@ -42,7 +42,7 @@ namespace zf {
         return mesh;
     }
 
-    static t_gl_id MakeGLShaderProg(const s_str_rdonly vert_src, const s_str_rdonly frag_src, c_mem_arena& temp_mem_arena) {
+    static t_gl_id MakeGLShaderProg(const s_str_rdonly vert_src, const s_str_rdonly frag_src, s_mem_arena& temp_mem_arena) {
         // @todo: Improve error logging here. Should be in return value.
         
         ZF_ASSERT(IsStrTerminated(vert_src));
@@ -139,7 +139,7 @@ namespace zf {
         return tex_gl_id;
     }
 
-    t_b8 c_gfx_resource_arena::Init(c_mem_arena& mem_arena, const t_size cap) {
+    t_b8 c_gfx_resource_arena::Init(s_mem_arena& mem_arena, const t_size cap) {
         ZF_ASSERT(cap > 0);
 
         m_hdls_taken = 0;
@@ -184,7 +184,7 @@ namespace zf {
         return AddHandle(MakeGLMesh(verts_raw, verts_len, elems, vert_attr_lens));
     }
 
-    c_gfx_resource_handle c_gfx_resource_arena::AddShaderProg(const s_str_rdonly vert_src, const s_str_rdonly frag_src, c_mem_arena& temp_mem_arena) {
+    c_gfx_resource_handle c_gfx_resource_arena::AddShaderProg(const s_str_rdonly vert_src, const s_str_rdonly frag_src, s_mem_arena& temp_mem_arena) {
         ZF_ASSERT(IsStrTerminated(vert_src));
         ZF_ASSERT(IsStrTerminated(frag_src));
 

@@ -37,7 +37,7 @@ namespace zf {
     public:
         s_unordered_map_backing_store() = default;
 
-        s_unordered_map_backing_store(const s_array<tp_key_type> keys, const s_array<tp_value_type> vals, const s_array<t_size> next_indexes, const c_bit_vector usage, const t_key_cmp_func<tp_key_type> key_cmp_func)
+        s_unordered_map_backing_store(const s_array<tp_key_type> keys, const s_array<tp_value_type> vals, const s_array<t_size> next_indexes, const s_bit_vector usage, const t_key_cmp_func<tp_key_type> key_cmp_func)
             : m_keys(keys), m_vals(vals), m_next_indexes(next_indexes), m_usage(usage), m_key_cmp_func(m_key_cmp_func) {
             ZF_ASSERT(m_vals.Len() == m_keys.Len() && m_next_indexes.Len() == m_keys.Len() && m_usage.BitCount() == m_keys.Len());
             ZF_ASSERT(AreAllEqualTo(m_next_indexes.ToReadonly(), static_cast<t_size>(-1)));
@@ -117,7 +117,7 @@ namespace zf {
         s_array<tp_key_type> m_keys;
         s_array<tp_value_type> m_vals;
         s_array<t_size> m_next_indexes;
-        c_bit_vector m_usage;
+        s_bit_vector m_usage;
 
         t_key_cmp_func<tp_key_type> m_key_cmp_func;
     };
@@ -165,14 +165,14 @@ namespace zf {
     };
 
     template<typename tp_key_type, typename tp_value_type>
-    [[nodiscard]] t_b8 MakeUnorderedMapBackingStore(c_mem_arena& mem_arena, const t_size cap, const t_key_cmp_func<tp_key_type> key_cmp_func, s_unordered_map_backing_store<tp_key_type, tp_value_type>& o_umbs) {
+    [[nodiscard]] t_b8 MakeUnorderedMapBackingStore(s_mem_arena& mem_arena, const t_size cap, const t_key_cmp_func<tp_key_type> key_cmp_func, s_unordered_map_backing_store<tp_key_type, tp_value_type>& o_umbs) {
         ZF_ASSERT(cap > 0);
         ZF_ASSERT(key_cmp_func);
 
         s_array<tp_key_type> keys;
         s_array<tp_value_type> vals;
         s_array<t_size> next_indexes;
-        c_bit_vector usage;
+        s_bit_vector usage;
 
         if (!MakeArray(mem_arena, cap, keys)) {
             return false;
@@ -199,7 +199,7 @@ namespace zf {
     // The immediate capacity is the total number of upfront slots (i.e. the maximum possible number of slots for which an O(1) access of a value from a key can happen).
     // The key-value pair capacity is the overall limit of how many key-value pairs this map can ever hold. It obviously has to be equal to or greater than the immediate capacity.
     template<typename tp_key_type, typename tp_value_type>
-    [[nodiscard]] t_b8 MakeUnorderedMap(c_mem_arena& mem_arena, const t_hash_func<tp_key_type> hash_func, s_unordered_map<tp_key_type, tp_value_type>& o_um, const t_key_cmp_func<tp_key_type> key_cmp_func = DefaultComparator, const t_size immediate_cap = 1024, const t_size kv_pair_cap = 1 << 16) {
+    [[nodiscard]] t_b8 MakeUnorderedMap(s_mem_arena& mem_arena, const t_hash_func<tp_key_type> hash_func, s_unordered_map<tp_key_type, tp_value_type>& o_um, const t_key_cmp_func<tp_key_type> key_cmp_func = DefaultComparator, const t_size immediate_cap = 1024, const t_size kv_pair_cap = 1 << 16) {
         ZF_ASSERT(hash_func);
         ZF_ASSERT(key_cmp_func);
         ZF_ASSERT(immediate_cap > 0 && kv_pair_cap >= immediate_cap);

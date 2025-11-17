@@ -20,8 +20,8 @@ namespace zf {
     struct s_game {
         ec_game_run_stage run_stage = ec_game_run_stage::nothing_initted; // Used to determine what needs to be cleaned up.
 
-        c_mem_arena perm_mem_arena; // The memory in here exists for the lifetime of the program, it does not get reset.
-        c_mem_arena temp_mem_arena; // While the memory here also exists for the program lifetime, it gets reset after game initialisation and after every frame. Useful if you just need some temporary working space.
+        s_mem_arena perm_mem_arena; // The memory in here exists for the lifetime of the program, it does not get reset.
+        s_mem_arena temp_mem_arena; // While the memory here also exists for the program lifetime, it gets reset after game initialisation and after every frame. Useful if you just need some temporary working space.
 
         c_gfx_resource_arena gfx_res_arena; // For GFX resources existing for the lifetime of the game.
 
@@ -52,7 +52,7 @@ namespace zf {
         game.run_stage = ec_game_run_stage::temp_mem_arena_initted;
 
         // Initialise the window.
-        if (!c_window::Init(info.window_init_size, info.window_title, info.window_flags)) {
+        if (!InitWindow(info.window_init_size, info.window_title, info.window_flags)) {
             ZF_REPORT_FAILURE();
             return false;
         }
@@ -103,18 +103,18 @@ namespace zf {
         game.run_stage = ec_game_run_stage::dev_init_func_ran_and_succeeded;
 
         // Now that everything is set up, we can show the window.
-        c_window::Show();
+        ShowWindow();
 
         //
         // Main Loop
         //
-        t_f64 frame_time_last = c_window::GetTime();
+        t_f64 frame_time_last = GetTime();
         t_f64 frame_dur_accum = 0.0;
 
-        while (!c_window::ShouldClose()) {
+        while (!ShouldWindowClose()) {
             game.temp_mem_arena.Rewind(0);
 
-            const t_f64 frame_time = c_window::GetTime();
+            const t_f64 frame_time = GetTime();
             const t_f64 frame_time_delta = frame_time - frame_time_last;
             frame_dur_accum += frame_time_delta;
             frame_time_last = frame_time;
@@ -132,11 +132,11 @@ namespace zf {
 
                     const e_game_tick_result res = info.tick_func(context);
 
-                    c_window::ClearInputEvents();
+                    ClearInputEvents();
 
                     if (res == ek_game_tick_result_exit) {
                         ZF_LOG("Exit request detected from developer game tick function...");
-                        c_window::SetShouldClose(true);
+                        SetWindowShouldClose(true);
                     }
 
                     if (res == ek_game_tick_result_error) {
@@ -165,10 +165,10 @@ namespace zf {
 
                 renderer.End();
 
-                c_window::SwapBuffers();
+                SwapBuffers();
             }
 
-            c_window::PollEvents();
+            PollEvents();
         }
 
         return true;
@@ -196,7 +196,7 @@ namespace zf {
                     break;
 
                 case ec_game_run_stage::window_initted:
-                    c_window::Clean();
+                    DestroyWindow();
                     break;
 
                 case ec_game_run_stage::gfx_res_arena_initted:

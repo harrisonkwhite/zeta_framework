@@ -77,7 +77,7 @@ namespace zf {
 
     // O(n log n) in both time complexity and space complexity in every case.
     template<typename tp_type>
-    t_b8 MergeSort(const s_array<tp_type> arr, c_mem_arena& temp_mem_arena, const t_comparator<tp_type> comparator = DefaultComparator) {
+    t_b8 MergeSort(const s_array<tp_type> arr, s_mem_arena& temp_mem_arena, const t_comparator<tp_type> comparator = DefaultComparator) {
         ZF_ASSERT(comparator);
 
         if (arr.Len() <= 1) {

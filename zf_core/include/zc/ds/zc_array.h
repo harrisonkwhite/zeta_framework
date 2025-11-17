@@ -93,7 +93,7 @@ namespace zf {
     };
 
     template<typename tp_type>
-    t_b8 MakeArray(c_mem_arena& mem_arena, const t_size len, s_array<tp_type>& o_arr) {
+    t_b8 MakeArray(s_mem_arena& mem_arena, const t_size len, s_array<tp_type>& o_arr) {
         ZF_ASSERT(len > 0);
 
         const auto buf_raw = mem_arena.Push<tp_type>(len);
@@ -108,7 +108,7 @@ namespace zf {
     }
 
     template<typename tp_type>
-    t_b8 CloneArray(c_mem_arena& mem_arena, const s_array<const tp_type> arr_to_clone, s_array<tp_type>& o_arr) {
+    t_b8 CloneArray(s_mem_arena& mem_arena, const s_array<const tp_type> arr_to_clone, s_array<tp_type>& o_arr) {
         ZF_ASSERT(!arr_to_clone.IsEmpty());
 
         if (!MakeArray(mem_arena, arr_to_clone.Len(), o_arr)) {

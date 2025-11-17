@@ -71,9 +71,9 @@ namespace zf {
         }
     };
 
-    t_b8 LoadFileContents(c_mem_arena& mem_arena, const s_str_rdonly file_path, s_array<t_s8>& o_contents, const t_b8 include_terminating_byte = false);
+    t_b8 LoadFileContents(s_mem_arena& mem_arena, const s_str_rdonly file_path, s_array<t_s8>& o_contents, const t_b8 include_terminating_byte = false);
 
-    inline t_b8 LoadFileContentsAsStr(c_mem_arena& mem_arena, const s_str_rdonly file_path, s_str& o_contents) {
+    inline t_b8 LoadFileContentsAsStr(s_mem_arena& mem_arena, const s_str_rdonly file_path, s_str& o_contents) {
         s_array<t_s8> contents_default;
 
         if (!LoadFileContents(mem_arena, file_path, contents_default, true)) {
@@ -96,8 +96,8 @@ namespace zf {
 #endif
 
     t_b8 CreateDirectory(const s_str_rdonly path); // This DOES NOT create non-existent parent directories.
-    t_b8 CreateDirectoryAndParents(const s_str_rdonly path, c_mem_arena& temp_mem_arena);
-    t_b8 CreateFileAndParentDirs(const s_str_rdonly path, c_mem_arena& temp_mem_arena);
+    t_b8 CreateDirectoryAndParents(const s_str_rdonly path, s_mem_arena& temp_mem_arena);
+    t_b8 CreateFileAndParentDirs(const s_str_rdonly path, s_mem_arena& temp_mem_arena);
 
     enum class ec_path_type {
         not_found,

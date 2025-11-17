@@ -4,7 +4,7 @@
 #include <miniaudio.h>
 
 namespace zf {
-    t_b8 LoadSoundFromRaw(const s_str_rdonly file_path, c_mem_arena& mem_arena, s_sound_data& o_snd_data) {
+    t_b8 LoadSoundFromRaw(const s_str_rdonly file_path, s_mem_arena& mem_arena, s_sound_data& o_snd_data) {
         ZF_ASSERT(IsStrTerminated(file_path));
 
         ma_decoder decoder;
@@ -40,7 +40,7 @@ namespace zf {
         return success;
     }
 
-    t_b8 LoadSoundFromPacked(const s_str_rdonly file_path, c_mem_arena& mem_arena, s_sound_data& o_snd_data) {
+    t_b8 LoadSoundFromPacked(const s_str_rdonly file_path, s_mem_arena& mem_arena, s_sound_data& o_snd_data) {
         ZF_ASSERT(IsStrTerminated(file_path));
 
         s_file_stream fs;
@@ -70,7 +70,7 @@ namespace zf {
         return success;
     }
 
-    t_b8 PackSound(const s_sound_data& snd_data, const s_str_rdonly file_path, c_mem_arena& temp_mem_arena) {
+    t_b8 PackSound(const s_sound_data& snd_data, const s_str_rdonly file_path, s_mem_arena& temp_mem_arena) {
         ZF_ASSERT(IsStrTerminated(file_path));
 
         if (!CreateFileAndParentDirs(file_path, temp_mem_arena)) {
