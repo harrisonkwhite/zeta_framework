@@ -81,6 +81,48 @@ namespace zf {
 
     t_b8 MakeBitVector(c_mem_arena& mem_arena, const t_size bit_cnt, c_bit_vector& o_bv);
 
+    inline t_u8 BitVectorLastByteBitmask(const c_bit_vector_rdonly bv) {
+        ZF_ASSERT(bv.BitCount() > 0);
+
+        const t_size bit_cnt = bv.BitCount() - (8 * (bv.Bytes().Len() - 1));
+        return ByteBitmask(0, bit_cnt);
+    }
+
+    inline t_u8 BitVectorLastByte(const c_bit_vector_rdonly bv) {
+        ZF_ASSERT(bv.BitCount() > 0);
+        return bv.Bytes()[bv.Bytes().Len() - 1] & BitVectorLastByteBitmask(bv);
+    }
+
+    inline t_b8 AreAllBitsSet(const c_bit_vector_rdonly bv) {
+        ZF_ASSERT(bv.BitCount() > 0);
+
+        for (t_size i = 0; i < bv.Bytes().Len() - 1; i++) {
+            if (bv.Bytes()[i] != 0xFF) {
+                return false;
+            }
+        }
+
+        return BitVectorLastByte(bv) == 0xFF;
+    }
+
+    inline t_b8 IsAnyBitSet(const c_bit_vector_rdonly bv) {
+        for (t_size i = 0; i < bv.Bytes().Len() - 1; i++) {
+            if (bv.Bytes()[i] != 0) {
+                return true;
+            }
+        }
+
+        return BitVectorLastByte(bv) != 0;
+    }
+
+    inline t_b8 AreAllBitsUnset(const c_bit_vector_rdonly bv) {
+        return !IsAnyBitSet(bv);
+    }
+
+    inline t_b8 IsAnyBitUnset(const c_bit_vector_rdonly bv) {
+        return !AreAllBitsSet(bv);
+    }
+
     void ShiftLeft(const c_bit_vector bv, const t_size amount = 1);
     void RotLeft(const c_bit_vector bv, const t_size amount = 1);
 

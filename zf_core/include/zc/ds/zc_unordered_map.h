@@ -40,7 +40,7 @@ namespace zf {
 
         s_unordered_map_backing_store(const c_array<tp_key_type> keys, const c_array<tp_value_type> vals, const c_array<t_size> next_indexes, const c_bit_vector usage, const t_key_cmp_func<tp_key_type> key_cmp_func)
             : m_keys(keys), m_vals(vals), m_next_indexes(next_indexes), m_usage(usage), m_key_cmp_func(m_key_cmp_func) {
-            ZF_ASSERT(AreAllEqual(m_keys.Len(), m_vals.Len(), m_next_indexes.Len(), m_usage.BitCount()));
+            ZF_ASSERT(m_vals.Len() == m_keys.Len() && m_next_indexes.Len() == m_keys.Len() && m_usage.BitCount() == m_keys.Len());
             ZF_ASSERT(AreAllEqualTo(m_next_indexes, -1));
             ZF_ASSERT(AreAllBitsUnset(m_usage));
             ZF_ASSERT(m_key_cmp_func);

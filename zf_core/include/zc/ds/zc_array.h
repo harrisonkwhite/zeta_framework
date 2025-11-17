@@ -142,7 +142,7 @@ namespace zf {
     }
 
     template<typename tp_type>
-    t_b8 AreAllEqualTo(const c_array<tp_type> arr, const tp_type& val, const t_comparator<tp_type> comparator = DefaultComparator) {
+    t_b8 AreAllEqualTo(const c_array<const tp_type> arr, const tp_type& val, const t_comparator<tp_type> comparator = DefaultComparator) {
         ZF_ASSERT(comparator);
 
         for (t_size i = 0; i < arr.Len(); i++) {
@@ -155,7 +155,7 @@ namespace zf {
     }
 
     template<typename tp_type>
-    t_b8 AreAnyEqualTo(const c_array<tp_type> arr, const tp_type& val, const t_comparator<tp_type> comparator = DefaultComparator) {
+    t_b8 AreAnyEqualTo(const c_array<const tp_type> arr, const tp_type& val, const t_comparator<tp_type> comparator = DefaultComparator) {
         ZF_ASSERT(comparator);
 
         for (t_size i = 0; i < arr.Len(); i++) {

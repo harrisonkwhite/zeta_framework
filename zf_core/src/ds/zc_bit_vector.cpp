@@ -1,11 +1,6 @@
 #include <zc/ds/zc_bit_vector.h>
 
 namespace zf {
-    static t_u8 BitVectorLastByteBitmask(const c_bit_vector_rdonly bv) {
-        const t_size bits_in_last_byte = (bv.BitCount() % 8 == 0) ? 8 : (bv.BitCount() % 8);
-        return ByteBitmask(0, bits_in_last_byte);
-    }
-
     t_b8 MakeBitVector(c_mem_arena& mem_arena, const t_size bit_cnt, c_bit_vector& o_bv) {
         ZF_ASSERT(bit_cnt > 0);
 
