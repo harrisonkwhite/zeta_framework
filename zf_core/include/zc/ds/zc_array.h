@@ -37,12 +37,6 @@ namespace zf {
             return {m_buf_raw, m_len};
         }
 
-        constexpr c_array<tp_type> Slice(const t_size beg, const t_size end) const {
-            ZF_ASSERT(beg >= 0 && beg <= m_len);
-            ZF_ASSERT(end >= beg && end <= m_len);
-            return {&m_buf_raw[beg], end - beg};
-        }
-
     private:
         tp_type* m_buf_raw = nullptr;
         t_size m_len = 0;
@@ -95,24 +89,6 @@ namespace zf {
     };
 
     template<typename tp_type>
-    void Copy(const c_array<tp_type> dest, const c_array<const tp_type> src) {
-        ZF_ASSERT(dest.Len() >= src.Len());
-
-        for (t_size i = 0; i < src.Len(); i++) {
-            dest[i] = src[i];
-        }
-    }
-
-    template<typename tp_type>
-    void CopyReverse(const c_array<tp_type> dest, const c_array<const tp_type> src) {
-        ZF_ASSERT(dest.Len() >= src.Len());
-
-        for (t_size i = src.Len() - 1; i >= 0; i--) {
-            dest[i] = src[i];
-        }
-    }
-
-    template<typename tp_type>
     t_b8 MakeArray(c_mem_arena& mem_arena, const t_size len, c_array<tp_type>& o_arr) {
         ZF_ASSERT(len > 0);
 
@@ -138,6 +114,64 @@ namespace zf {
         Copy(o_arr, arr_to_clone);
 
         return true;
+    }
+
+    template<typename tp_type>
+    constexpr c_array<tp_type> Slice(const c_array<tp_type> arr, const t_size beg, const t_size end) {
+        ZF_ASSERT(beg >= 0 && beg <= arr.Len());
+        ZF_ASSERT(end >= beg && end <= arr.Len());
+        return {arr.Raw() + beg, end - beg};
+    }
+
+    template<typename tp_type>
+    void Copy(const c_array<tp_type> dest, const c_array<const tp_type> src) {
+        ZF_ASSERT(dest.Len() >= src.Len());
+
+        for (t_size i = 0; i < src.Len(); i++) {
+            dest[i] = src[i];
+        }
+    }
+
+    template<typename tp_type>
+    void CopyReverse(const c_array<tp_type> dest, const c_array<const tp_type> src) {
+        ZF_ASSERT(dest.Len() >= src.Len());
+
+        for (t_size i = src.Len() - 1; i >= 0; i--) {
+            dest[i] = src[i];
+        }
+    }
+
+    template<typename tp_type>
+    t_b8 AreAllEqualTo(const c_array<tp_type> arr, const tp_type& val, const t_comparator<tp_type> comparator = DefaultComparator) {
+        ZF_ASSERT(comparator);
+
+        for (t_size i = 0; i < arr.Len(); i++) {
+            if (comparator(arr[i], val) != 0) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    template<typename tp_type>
+    t_b8 AreAnyEqualTo(const c_array<tp_type> arr, const tp_type& val, const t_comparator<tp_type> comparator = DefaultComparator) {
+        ZF_ASSERT(comparator);
+
+        for (t_size i = 0; i < arr.Len(); i++) {
+            if (comparator(arr[i], val) == 0) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    template<typename tp_type>
+    void SetAllTo(const c_array<tp_type> arr, const tp_type& val) {
+        for (t_size i = 0; i < arr.Len(); i++) {
+            arr[i] = val;
+        }
     }
 
     template<typename tp_type>
