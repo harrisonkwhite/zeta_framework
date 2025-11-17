@@ -11,29 +11,26 @@ namespace zf {
         static_assert(!s_is_const<tp_elem_type>::sm_value);
 
     public:
-        c_array<tp_elem_type> Slots() const {
-            return static_cast<const tp_derived_type*>(this)->Slots();
-        }
-
-        c_bit_vector SlotActivity() const {
-            return static_cast<const tp_derived_type*>(this)->SlotActivity();
-        }
-
-        tp_elem_type& operator[](const t_size index) const {
-            ZF_ASSERT(IsSlotActive(index));
-            return Slots()[index];
-        }
-
         t_size Len() const {
             return Slots().Len();
         }
 
-        void ActivateSlot(const t_size index) const {
+        tp_elem_type& operator[](const t_size index) {
+            ZF_ASSERT(IsSlotActive(index));
+            return Slots()[index];
+        }
+
+        const tp_elem_type& operator[](const t_size index) const {
+            ZF_ASSERT(IsSlotActive(index));
+            return Slots()[index];
+        }
+
+        void ActivateSlot(const t_size index) {
             ZF_ASSERT(!IsSlotActive(index));
             SetBit(SlotActivity(), index);
         }
 
-        void DeactivateSlot(const t_size index) const {
+        void DeactivateSlot(const t_size index) {
             ZF_ASSERT(IsSlotActive(index));
             UnsetBit(SlotActivity(), index);
         }
@@ -48,7 +45,7 @@ namespace zf {
         }
 
         // Returns the index of the newly taken (activated) slot, or -1 if all slots are already active.
-        t_size TakeFirstInactiveSlot() const {
+        t_size TakeFirstInactiveSlot() {
             const t_size index = FindFirstUnsetBit(SlotActivity());
 
             if (index != -1) {
@@ -59,12 +56,28 @@ namespace zf {
         }
 
     private:
-        c_array<tp_elem_type> m_slots;
-        c_bit_vector m_slot_activity;
+        c_array<tp_elem_type> Slots() {
+            return static_cast<tp_derived_type*>(this)->Slots();
+        }
+
+        c_array<const tp_elem_type> Slots() const {
+            return static_cast<const tp_derived_type*>(this)->Slots();
+        }
+
+        c_bit_vector SlotActivity() {
+            return static_cast<tp_derived_type*>(this)->SlotActivity();
+        }
+
+        c_bit_vector_rdonly SlotActivity() const {
+            return static_cast<const tp_derived_type*>(this)->SlotActivity();
+        }
     };
 
     template<typename tp_type>
     class c_activity_array : public c_activity_array_base<c_activity_array<tp_type>, tp_type> {
+        template<typename, typename>
+        friend class c_activity_array_base;
+
     public:
         t_b8 Init(c_mem_arena& mem_arena, const t_size len) {
             ZF_ASSERT(len > 0);
@@ -86,32 +99,50 @@ namespace zf {
             return true;
         }
 
-        c_array<tp_type> Slots() const {
-            return m_slots;
-        }
-
-        c_bit_vector SlotActivity() const {
-            return m_slot_activity;
-        }
-
     private:
         c_array<tp_type> m_slots;
         c_bit_vector m_slot_activity;
+
+        c_array<tp_type> Slots() {
+            return m_slots;
+        }
+
+        c_array<const tp_type> Slots() const {
+            return m_slots;
+        }
+
+        c_bit_vector SlotActivity() {
+            return m_slot_activity;
+        }
+
+        c_bit_vector_rdonly SlotActivity() const {
+            return m_slot_activity;
+        }
     };
 
     template<typename tp_type, t_size tp_len>
     class c_static_activity_array : public c_activity_array_base<c_static_activity_array<tp_type, tp_len>, tp_type> {
-    public:
-        c_array<tp_type> Slots() const {
-            return m_slots;
-        }
-
-        c_bit_vector SlotActivity() const {
-            return m_slot_activity;
-        }
+        template<typename, typename>
+        friend class c_activity_array_base;
 
     private:
         s_static_array<tp_type, tp_len> m_slots;
         s_static_bit_vector<tp_len> m_slot_activity;
+
+        c_array<tp_type> Slots() {
+            return m_slots;
+        }
+
+        c_bit_vector SlotActivity() {
+            return m_slot_activity;
+        }
+
+        c_array<const tp_type> Slots() const {
+            return m_slots;
+        }
+
+        c_bit_vector_rdonly SlotActivity() const {
+            return m_slot_activity;
+        }
     };
 }
