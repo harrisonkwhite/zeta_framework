@@ -7,21 +7,35 @@ namespace zf {
     class c_min_heap {
     public:
         struct s_node {
-            tp_key_type key = {};
-            tp_value_type val = {};
+            tp_key_type key;
+            tp_value_type val;
+
+            s_node() = default;
         };
 
-        [[nodiscard]]
-        t_b8 Init(c_mem_arena& mem_arena, const t_size cap, const t_comparator<tp_key_type> comparator = DefaultComparator) {
-            ZF_ASSERT(cap > 0);
+        c_min_heap() = default;
+        c_min_heap(const c_array<s_node> nodes, const t_size len = 0, const t_comparator<tp_key_type> comparator = DefaultComparator)
+            : m_nodes(nodes), m_len(len), m_comparator(comparator) {}
 
-            m_len = 0;
+        t_size Len() const {
+            return m_len;
+        }
 
-            if (!m_nodes.Init(mem_arena, cap)) {
-                return false;
-            }
+        t_size Cap() const {
+            return m_nodes.Len();
+        }
 
-            return true;
+        t_b8 IsEmpty() const {
+            return m_len == 0;
+        }
+
+        t_b8 IsFull() const {
+            return m_len == Cap();
+        }
+
+        const s_node& Min() const {
+            ZF_ASSERT(!IsEmpty());
+            return m_nodes[0];
         }
 
         void Insert(const tp_key_type& key, const tp_value_type& val) {
@@ -48,31 +62,10 @@ namespace zf {
             return ret;
         }
 
-        t_size Len() const {
-            return m_len;
-        }
-
-        t_size Cap() const {
-            return m_nodes.Len();
-        }
-
-        t_b8 IsEmpty() const {
-            return m_len == 0;
-        }
-
-        t_b8 IsFull() const {
-            return m_len == Cap();
-        }
-
-        const s_node& Min() const {
-            ZF_ASSERT(!IsEmpty());
-            return m_nodes[0];
-        }
-
     private:
         c_array<s_node> m_nodes;
-        t_size m_len = 0;
-        t_comparator<tp_key_type> m_comparator = nullptr;
+        t_size m_len;
+        t_comparator<tp_key_type> m_comparator;
 
         static t_size IndexOfLeft(const t_size index) {
             return (2 * index) + 1;
@@ -128,4 +121,19 @@ namespace zf {
             }
         }
     };
+
+    template<typename tp_key_type, typename tp_value_type>
+    [[nodiscard]] t_b8 MakeMinHeap(c_mem_arena& mem_arena, const t_size cap, c_min_heap<tp_key_type, tp_value_type> &o_mh, const t_comparator<tp_key_type> comparator = DefaultComparator) {
+        ZF_ASSERT(cap > 0);
+
+        c_array<c_min_heap<tp_key_type, tp_value_type>::s_node> nodes;
+
+        if (!MakeArray(mem_arena, cap, nodes)) {
+            return false;
+        }
+
+        o_mh = {nodes, cap, comparator};
+
+        return true;
+    }
 }
