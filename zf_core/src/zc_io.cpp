@@ -123,7 +123,7 @@ namespace zf {
 
         s_str path_clone; // @speed: A clone on every call to this? Yuck!
 
-        if (!CloneArray(temp_mem_arena, path.chrs.Slice(0, path_len + 1), path_clone.chrs)) {
+        if (!CloneArray(temp_mem_arena, Slice(path.chrs, 0, path_len + 1), path_clone.chrs)) {
             return false;
         }
 

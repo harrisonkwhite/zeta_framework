@@ -88,7 +88,7 @@ namespace zf {
                 return false;
             }
 
-            if (fs.WriteItems(static_cast<c_array<const t_f32>>(snd_data.pcm)) < snd_data.pcm.Len()) {
+            if (fs.WriteItems(snd_data.pcm.ToReadonly()) < snd_data.pcm.Len()) {
                 return false;
             }
 

@@ -1,6 +1,5 @@
 #pragma once
 
-#include <zc/zc_allocators.h>
 #include <zc/zc_strs.h>
 #include <zc/ds/zc_bit_vector.h>
 
@@ -41,7 +40,7 @@ namespace zf {
         s_unordered_map_backing_store(const c_array<tp_key_type> keys, const c_array<tp_value_type> vals, const c_array<t_size> next_indexes, const c_bit_vector usage, const t_key_cmp_func<tp_key_type> key_cmp_func)
             : m_keys(keys), m_vals(vals), m_next_indexes(next_indexes), m_usage(usage), m_key_cmp_func(m_key_cmp_func) {
             ZF_ASSERT(m_vals.Len() == m_keys.Len() && m_next_indexes.Len() == m_keys.Len() && m_usage.BitCount() == m_keys.Len());
-            ZF_ASSERT(AreAllEqualTo(m_next_indexes, -1));
+            ZF_ASSERT(AreAllEqualTo(m_next_indexes.ToReadonly(), static_cast<t_size>(-1)));
             ZF_ASSERT(AreAllBitsUnset(m_usage));
             ZF_ASSERT(m_key_cmp_func);
         }
@@ -131,7 +130,7 @@ namespace zf {
         s_unordered_map(const s_unordered_map_backing_store<tp_key_type, tp_value_type> backing_store, const c_array<t_size> backing_store_indexes, const t_hash_func<tp_key_type> hash_func)
             : m_backing_store(backing_store), m_backing_store_indexes(backing_store_indexes), m_hash_func(hash_func) {
             ZF_ASSERT(backing_store.Len() >= backing_store_indexes);
-            ZF_ASSERT(AreAllEqualTo(backing_store_indexes, -1));
+            ZF_ASSERT(AreAllEqualTo(backing_store_indexes.ToReadonly(), static_cast<t_size>(-1)));
             ZF_ASSERT(hash_func);
         }
 
@@ -217,7 +216,7 @@ namespace zf {
             return false;
         }
 
-        SetAllTo(backing_store_indexes, -1);
+        SetAllTo(backing_store_indexes, static_cast<t_size>(-1));
 
         o_um = {backing_store, backing_store_indexes, hash_func};
 

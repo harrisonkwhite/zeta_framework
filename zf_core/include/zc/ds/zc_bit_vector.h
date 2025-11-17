@@ -36,7 +36,7 @@ namespace zf {
 
     private:
         c_array<const t_u8> m_bytes;
-        t_size m_bit_cnt = 0;
+        t_size m_bit_cnt;
     };
 
     class c_bit_vector {
@@ -63,7 +63,7 @@ namespace zf {
 
     private:
         c_array<t_u8> m_bytes;
-        t_size m_bit_cnt = 0;
+        t_size m_bit_cnt;
     };
 
     template<t_size tp_bit_cnt>
@@ -125,6 +125,8 @@ namespace zf {
 
     void ShiftLeft(const c_bit_vector bv, const t_size amount = 1);
     void RotLeft(const c_bit_vector bv, const t_size amount = 1);
+
+    // @todo: Right (either arithmetic or logical) shift and right rotate.
 
     t_size FindFirstSetBit(const c_bit_vector_rdonly bv, const t_size from = 0, const t_b8 inverted = false);
 

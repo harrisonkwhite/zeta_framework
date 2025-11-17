@@ -75,7 +75,7 @@ namespace zf {
                 return false;
             }
 
-            if (fs.WriteItems(static_cast<c_array<const t_u8>>(tex_data.rgba_px_data)) < tex_data.rgba_px_data.Len()) {
+            if (fs.WriteItems(tex_data.rgba_px_data.ToReadonly()) < tex_data.rgba_px_data.Len()) {
                 return false;
             }
 

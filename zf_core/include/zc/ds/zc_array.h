@@ -33,13 +33,17 @@ namespace zf {
             return m_buf_raw[index];
         }
 
-        constexpr operator c_array<const tp_type>() const requires (!s_is_const<tp_type>::sm_value) {
+        constexpr c_array<const tp_type> ToReadonly() const requires (!s_is_const<tp_type>::sm_value) {
             return {m_buf_raw, m_len};
         }
 
+        constexpr operator c_array<const tp_type>() const requires (!s_is_const<tp_type>::sm_value) {
+            return ToReadonly();
+        }
+
     private:
-        tp_type* m_buf_raw = nullptr;
-        t_size m_len = 0;
+        tp_type* m_buf_raw;
+        t_size m_len;
     };
 
     template<typename tp_type, t_size tp_len>
