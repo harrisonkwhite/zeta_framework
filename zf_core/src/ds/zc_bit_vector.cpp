@@ -1,7 +1,7 @@
 #include <zc/ds/zc_bit_vector.h>
 
 namespace zf {
-    static t_u8 BitVectorLastByteBitmask(const c_bit_vector bv) {
+    static t_u8 BitVectorLastByteBitmask(const c_bit_vector_rdonly bv) {
         const t_size bits_in_last_byte = (bv.BitCount() % 8 == 0) ? 8 : (bv.BitCount() % 8);
         return ByteBitmask(0, bits_in_last_byte);
     }
@@ -69,7 +69,7 @@ namespace zf {
         }
     }
 
-    t_size FindFirstSetBit(const c_bit_vector bv, const t_size from, const t_b8 inverted) {
+    t_size FindFirstSetBit(const c_bit_vector_rdonly bv, const t_size from, const t_b8 inverted) {
         ZF_ASSERT(from <= bv.BitCount()); // Intentionally allowing the upper bound here for the case of iteration.
 
         static constexpr s_static_array<t_size, 256> lg_mappings = {
