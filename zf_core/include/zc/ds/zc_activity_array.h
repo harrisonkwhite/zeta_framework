@@ -6,143 +6,101 @@
 // A "versioned activity array" (VAA) augments this with a version number per slot, so that slot lifetimes can be uniquely identified.
 
 namespace zf {
-    template<typename tp_derived_type, typename tp_elem_type>
-    class c_activity_array_base {
-        static_assert(!s_is_const<tp_elem_type>::sm_value);
+    template<typename tp_type>
+    struct s_activity_array {
+        constexpr s_activity_array() = default;
 
-    public:
-        t_size Len() const {
-            return Slots().Len();
+        constexpr s_activity_array(const s_array<tp_type> slots, const c_bit_vector slot_activity)
+            : slots(slots), slot_activity(slot_activity) {
+            ZF_ASSERT(slots.Len() == slot_activity.BitCount());
         }
 
-        tp_elem_type& operator[](const t_size index) {
-            ZF_ASSERT(IsSlotActive(index));
-            return Slots()[index];
+        constexpr s_array<tp_type> Slots() const {
+            return slots;
         }
 
-        const tp_elem_type& operator[](const t_size index) const {
-            ZF_ASSERT(IsSlotActive(index));
-            return Slots()[index];
+        constexpr c_bit_vector SlotActivity() const {
+            return slot_activity;
         }
 
-        void ActivateSlot(const t_size index) {
-            ZF_ASSERT(!IsSlotActive(index));
-            SetBit(SlotActivity(), index);
-        }
-
-        void DeactivateSlot(const t_size index) {
-            ZF_ASSERT(IsSlotActive(index));
-            UnsetBit(SlotActivity(), index);
-        }
-
-        t_b8 IsSlotActive(const t_size index) const {
-            return IsBitSet(SlotActivity(), index);
-        }
-
-        t_size IndexOfFirstActiveSlot(const t_size from = 0) const {
-            ZF_ASSERT(from >= 0 && from <= Slots().Len());
-            return FindFirstSetBit(SlotActivity(), from);
-        }
-
-        // Returns the index of the newly taken (activated) slot, or -1 if all slots are already active.
-        t_size TakeFirstInactiveSlot() {
-            const t_size index = FindFirstUnsetBit(SlotActivity());
-
-            if (index != -1) {
-                ActivateSlot(index);
-            }
-
-            return index;
+        tp_type& operator[](const t_size index) const {
+            ZF_ASSERT(IsSlotActive(*this, index));
+            return slots[index];
         }
 
     private:
-        s_array<tp_elem_type> Slots() {
-            return static_cast<tp_derived_type*>(this)->Slots();
+        s_array<tp_type> slots;
+        c_bit_vector slot_activity;
+    };
+
+    template<typename tp_type, t_size tp_len>
+    struct s_static_activity_array {
+        s_static_array<tp_type, tp_len> slots;
+        s_static_bit_vector<tp_len> slot_activity;
+
+        constexpr s_static_activity_array() = default;
+
+        constexpr s_activity_array<tp_type> ToNonstatic() {
+            return {slots.ToNonstatic(), slot_activity};
         }
 
-        s_array<const tp_elem_type> Slots() const {
-            return static_cast<const tp_derived_type*>(this)->Slots();
-        }
-
-        c_bit_vector SlotActivity() {
-            return static_cast<tp_derived_type*>(this)->SlotActivity();
-        }
-
-        c_bit_vector_rdonly SlotActivity() const {
-            return static_cast<const tp_derived_type*>(this)->SlotActivity();
+        constexpr operator s_activity_array<tp_type>() {
+            return ToNonstatic();
         }
     };
 
     template<typename tp_type>
-    class c_activity_array : public c_activity_array_base<c_activity_array<tp_type>, tp_type> {
-        template<typename, typename>
-        friend class c_activity_array_base;
+    t_b8 IsSlotActive(const s_activity_array<tp_type>& aa, const t_size index) {
+        return IsBitSet(aa.SlotActivity(), index);
+    }
 
-    public:
-        t_b8 Init(c_mem_arena& mem_arena, const t_size len) {
-            ZF_ASSERT(len > 0);
+    template<typename tp_type>
+    void ActivateSlot(const s_activity_array<tp_type>& aa, const t_size index) {
+        ZF_ASSERT(!IsSlotActive(aa, index));
+        SetBit(aa.SlotActivity(), index);
+    }
 
-            s_array<tp_type> slots;
-            c_bit_vector slot_activity;
+    template<typename tp_type>
+    void DeactivateSlot(const s_activity_array<tp_type>& aa, const t_size index) {
+        ZF_ASSERT(IsSlotActive(aa, index));
+        UnsetBit(aa.SlotActivity(), index);
+    }
 
-            if (!MakeArray(mem_arena, len, slots)) {
-                return false;
-            }
+    template<typename tp_type>
+    t_size IndexOfFirstActiveSlot(const s_activity_array<tp_type>& aa, const t_size from = 0) {
+        ZF_ASSERT(from >= 0 && from <= aa.Slots().Len());
+        return FindFirstSetBit(aa.SlotActivity(), from);
+    }
 
-            if (!MakeBitVector(mem_arena, len, slot_activity)) {
-                return false;
-            }
+    // Returns the index of the newly taken (activated) slot, or -1 if all slots are already active.
+    template<typename tp_type>
+    t_size TakeFirstInactiveSlot(const s_activity_array<tp_type>& aa) {
+        const t_size index = FindFirstUnsetBit(aa.SlotActivity());
 
-            m_slots = slots;
-            m_slot_activity = slot_activity;
-
-            return true;
+        if (index != -1) {
+            ActivateSlot(aa, index);
         }
 
-    private:
-        s_array<tp_type> m_slots;
-        c_bit_vector m_slot_activity;
+        return index;
+    }
 
-        s_array<tp_type> Slots() {
-            return m_slots;
+    template<typename tp_type>
+    t_b8 MakeActivityArray(c_mem_arena& mem_arena, const t_size len, s_activity_array<tp_type>& o_aa) {
+        ZF_ASSERT(len > 0);
+
+        s_array<tp_type> slots;
+        c_bit_vector slot_activity;
+
+        if (!MakeArray(mem_arena, len, slots)) {
+            return false;
         }
 
-        s_array<const tp_type> Slots() const {
-            return m_slots;
+        if (!MakeBitVector(mem_arena, len, slot_activity)) {
+            return false;
         }
 
-        c_bit_vector SlotActivity() {
-            return m_slot_activity;
-        }
+        o_aa = {slots, slot_activity};
 
-        c_bit_vector_rdonly SlotActivity() const {
-            return m_slot_activity;
-        }
-    };
-
-    template<typename tp_type, t_size tp_len>
-    class c_static_activity_array : public c_activity_array_base<c_static_activity_array<tp_type, tp_len>, tp_type> {
-        template<typename, typename>
-        friend class c_activity_array_base;
-
-    private:
-        s_static_array<tp_type, tp_len> m_slots;
-        s_static_bit_vector<tp_len> m_slot_activity;
-
-        s_array<tp_type> Slots() {
-            return m_slots;
-        }
-
-        c_bit_vector SlotActivity() {
-            return m_slot_activity;
-        }
-
-        s_array<const tp_type> Slots() const {
-            return m_slots;
-        }
-
-        c_bit_vector_rdonly SlotActivity() const {
-            return m_slot_activity;
-        }
-    };
+        return true;
+    }
 }
