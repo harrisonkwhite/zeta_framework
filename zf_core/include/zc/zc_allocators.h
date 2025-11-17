@@ -5,37 +5,23 @@
 
 namespace zf {
     struct s_mem_arena {
-        [[nodiscard]] t_b8 Init(const t_size size);
-        void Release();
+        void* buf;
+        t_size size;
+        t_size offs;
 
-        void* PushRaw(const t_size size, const t_size alignment);
-        template<typename tp_type> tp_type* Push(const t_size cnt = 1);
-
-        t_size Size() const {
-            return size;
-        }
-
-        t_size Offs() const {
-            return offs;
-        }
-
-        void Rewind(const t_size offs) {
-            ZF_ASSERT(offs <= size);
-            this->offs = offs;
-        }
-
-    private:
-        void* buf = nullptr;
-        t_size size = 0;
-        t_size offs = 0;
+        s_mem_arena() = default;
     };
 
+    [[nodiscard]] t_b8 MakeMemArena(const t_size size, s_mem_arena& o_ma);
+    void ReleaseMemArena(s_mem_arena& ma);
+    void* PushRaw(s_mem_arena& ma, const t_size size, const t_size alignment);
+
     template<typename tp_type>
-    tp_type* s_mem_arena::Push(const t_size cnt) {
-        ZF_ASSERT(buf);
+    tp_type* Push(s_mem_arena& ma, const t_size cnt) {
+        ZF_ASSERT(ma.buf);
         ZF_ASSERT(cnt >= 1);
 
-        void* const buf_generic = PushRaw(ZF_SIZE_OF(tp_type) * cnt, alignof(tp_type));
+        void* const buf_generic = PushRaw(ma, ZF_SIZE_OF(tp_type) * cnt, alignof(tp_type));
 
         if (!buf_generic) {
             return nullptr;
@@ -48,5 +34,10 @@ namespace zf {
         }
 
         return buf;
+    }
+
+    inline void Rewind(s_mem_arena& ma, const t_size offs) {
+        ZF_ASSERT(offs >= 0 && offs <= ma.size);
+        ma.offs = offs;
     }
 }

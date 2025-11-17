@@ -12,7 +12,7 @@ int main(const int arg_cnt, const char* const* const args_raw) {
 
     zf::s_mem_arena temp_mem_arena;
 
-    if (!temp_mem_arena.Init(zf::Megabytes(4))) {
+    if (!zf::MakeMemArena(zf::Megabytes(4), temp_mem_arena)) {
         ZF_LOG_ERROR("Failed to initialise temporary memory arena!");
         return EXIT_FAILURE;
     }
@@ -25,7 +25,7 @@ int main(const int arg_cnt, const char* const* const args_raw) {
             return false;
         }
 
-        if (!PackAssets(instrs_json, temp_mem_arena)) {
+        if (!zf::PackAssets(instrs_json, temp_mem_arena)) {
             ZF_LOG_ERROR("Failed to pack assets!");
             return false;
         }
@@ -33,7 +33,7 @@ int main(const int arg_cnt, const char* const* const args_raw) {
         return true;
     }();
 
-    temp_mem_arena.Release();
+    zf::ReleaseMemArena(temp_mem_arena);
 
     if (success) {
         ZF_LOG_SUCCESS("Asset packing completed!");

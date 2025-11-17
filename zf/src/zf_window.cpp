@@ -294,7 +294,7 @@ namespace zf {
         return true;
     }
 
-    void DestroyWindow() {
+    void ReleaseWindow() {
         ZF_ASSERT(g_glfw_window);
 
         glfwDestroyWindow(g_glfw_window);

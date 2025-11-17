@@ -1,40 +1,41 @@
 #include <zc/zc_allocators.h>
 
 namespace zf {
-    t_b8 s_mem_arena::Init(const t_size size) {
-        ZF_ASSERT(!buf);
+    [[nodiscard]] t_b8 MakeMemArena(const t_size size, s_mem_arena& o_ma) {
         ZF_ASSERT(size > 0);
 
-        buf = calloc(static_cast<size_t>(size), 1);
+        const auto buf = calloc(static_cast<size_t>(size), 1);
 
         if (!buf) {
             return false;
         }
 
-        this->size = size;
+        o_ma = {};
+        o_ma.buf = buf;
+        o_ma.size = size;
 
         return true;
     }
 
-    void s_mem_arena::Release() {
-        ZF_ASSERT(buf);
-        free(buf);
+    void ReleaseMemArena(s_mem_arena& ma) {
+        ZF_ASSERT(ma.buf);
+        free(ma.buf);
+        ma = {};
     }
 
-    void* s_mem_arena::PushRaw(const t_size size, const t_size alignment) {
-        ZF_ASSERT(buf);
+    void* PushRaw(s_mem_arena& ma, const t_size size, const t_size alignment) {
         ZF_ASSERT(size > 0);
         ZF_ASSERT(IsAlignmentValid(alignment));
 
-        const t_size offs_aligned = AlignForward(offs, alignment);
+        const t_size offs_aligned = AlignForward(ma.offs, alignment);
         const t_size offs_next = offs_aligned + size;
 
-        if (offs_next > this->size) {
+        if (offs_next > ma.size) {
             return nullptr;
         }
 
-        offs = offs_next;
+        ma.offs = offs_next;
 
-        return static_cast<t_s8*>(buf) + offs_aligned;
+        return static_cast<t_u8*>(ma.buf) + offs_aligned;
     }
 }

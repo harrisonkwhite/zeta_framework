@@ -37,14 +37,14 @@ namespace zf {
         InitRNG();
 
         // Initialise memory arenas.
-        if (!game.perm_mem_arena.Init(g_perm_mem_arena_size)) {
+        if (!MakeMemArena(g_perm_mem_arena_size, game.perm_mem_arena)) {
             ZF_REPORT_FAILURE();
             return false;
         }
 
         game.run_stage = ec_game_run_stage::perm_mem_arena_initted;
 
-        if (!game.temp_mem_arena.Init(g_temp_mem_arena_size)) {
+        if (!MakeMemArena(g_temp_mem_arena_size, game.temp_mem_arena)) {
             ZF_REPORT_FAILURE();
             return false;
         }
@@ -77,7 +77,7 @@ namespace zf {
 
         // Initialise developer memory.
         if (info.dev_mem_size > 0) {
-            game.dev_mem = game.perm_mem_arena.PushRaw(info.dev_mem_size, info.dev_mem_alignment);
+            game.dev_mem = PushRaw(game.perm_mem_arena, info.dev_mem_size, info.dev_mem_alignment);
 
             if (!game.dev_mem) {
                 ZF_REPORT_FAILURE();
@@ -112,7 +112,7 @@ namespace zf {
         t_f64 frame_dur_accum = 0.0;
 
         while (!ShouldWindowClose()) {
-            game.temp_mem_arena.Rewind(0);
+            Rewind(game.temp_mem_arena, 0);
 
             const t_f64 frame_time = GetTime();
             const t_f64 frame_time_delta = frame_time - frame_time_last;
@@ -188,15 +188,15 @@ namespace zf {
                     break;
 
                 case ec_game_run_stage::perm_mem_arena_initted:
-                    game.perm_mem_arena.Release();
+                    ReleaseMemArena(game.perm_mem_arena);
                     break;
 
                 case ec_game_run_stage::temp_mem_arena_initted:
-                    game.temp_mem_arena.Release();
+                    ReleaseMemArena(game.temp_mem_arena);
                     break;
 
                 case ec_game_run_stage::window_initted:
-                    DestroyWindow();
+                    ReleaseWindow();
                     break;
 
                 case ec_game_run_stage::gfx_res_arena_initted:

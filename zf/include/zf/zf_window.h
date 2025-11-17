@@ -96,7 +96,7 @@ namespace zf {
     };
 
     t_b8 InitWindow(const s_v2<t_s32> size, const s_str_rdonly title, const e_window_flags flags);
-    void DestroyWindow();
+    void ReleaseWindow();
 
     void* GetNativeWindowHandle();
     void* GetNativeDisplayHandle();
