@@ -4,7 +4,7 @@ namespace zf {
     t_b8 MakeBitVector(c_mem_arena& mem_arena, const t_size bit_cnt, c_bit_vector& o_bv) {
         ZF_ASSERT(bit_cnt > 0);
 
-        c_array<t_u8> bytes;
+        s_array<t_u8> bytes;
 
         if (!MakeArray(mem_arena, BitsToBytes(bit_cnt), bytes)) {
             return false;

@@ -76,7 +76,7 @@ namespace zf {
     private:
         s_rendering_basis m_basis;
 
-        c_array<t_batch_slot> m_batch_slots;
+        s_array<t_batch_slot> m_batch_slots;
         t_size m_batch_slots_used_cnt = 0;
 
         s_matrix_4x4 m_batch_view_mat;

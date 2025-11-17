@@ -138,10 +138,10 @@ namespace zf {
 
     struct s_texture_data {
         s_v2<t_s32> size_in_pxs;
-        c_array<t_u8> rgba_px_data;
+        s_array<t_u8> rgba_px_data;
 
         s_texture_data() = default;
-        s_texture_data(const s_v2<t_s32> size_in_pxs, const c_array<t_u8> rgba_px_data)
+        s_texture_data(const s_v2<t_s32> size_in_pxs, const s_array<t_u8> rgba_px_data)
             : size_in_pxs(size_in_pxs), rgba_px_data(rgba_px_data) {}
     };
 

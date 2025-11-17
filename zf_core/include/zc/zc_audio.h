@@ -12,10 +12,10 @@ namespace zf {
 
     struct s_sound_data {
         s_sound_meta meta;
-        c_array<t_f32> pcm;
+        s_array<t_f32> pcm;
 
         s_sound_data() = default;
-        s_sound_data(const s_sound_meta meta, const c_array<t_f32> pcm)
+        s_sound_data(const s_sound_meta meta, const s_array<t_f32> pcm)
             : meta(meta), pcm(pcm) {}
     };
 

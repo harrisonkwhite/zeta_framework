@@ -4,7 +4,40 @@
 
 namespace zf {
     template<typename tp_type>
-    void ListAppend(const c_array<tp_type> backing_arr, t_size& len, const tp_type& val) {
+    struct s_list {
+        s_array<tp_type> backing_arr;
+        t_size len;
+
+        constexpr s_list() = default;
+        constexpr s_list(const s_array<tp_type> backing_arr, const t_size len)
+            : backing_arr(backing_arr), len(len) {}
+
+        tp_type& operator[](const t_size index) const {
+            ZF_ASSERT(index < len);
+            return backing_arr[index];
+        }
+    };
+
+    template<typename tp_type, t_size tp_len>
+    struct s_static_list {
+        s_static_array<tp_type, tp_len> backing_arr;
+        t_size len;
+
+        constexpr s_static_list() = default;
+
+        tp_type& operator[](const t_size index) {
+            ZF_ASSERT(index < len);
+            return backing_arr[index];
+        }
+
+        const tp_type& operator[](const t_size index) const {
+            ZF_ASSERT(index < len);
+            return backing_arr[index];
+        }
+    };
+
+    template<typename tp_type>
+    void ListAppend(const s_array<tp_type> backing_arr, t_size& len, const tp_type& val) {
         ZF_ASSERT(len >= 0 && len < backing_arr.Len());
 
         backing_arr[len] = val;
@@ -12,18 +45,38 @@ namespace zf {
     }
 
     template<typename tp_type>
-    void ListInsert(const c_array<tp_type> backing_arr, t_size& len, const t_size index, const tp_type& val) {
+    void ListAppend(s_list<tp_type>& list, const tp_type& val) {
+        return ListAppend(list.backing_arr, list.len, val);
+    }
+
+    template<typename tp_type, t_size tp_len>
+    void ListAppend(s_static_list<tp_type, tp_len>& list, const tp_type& val) {
+        return ListAppend(list.backing_arr.ToNonstatic(), list.len, val);
+    }
+
+    template<typename tp_type>
+    void ListInsert(const s_array<tp_type> backing_arr, t_size& len, const t_size index, const tp_type& val) {
         ZF_ASSERT(len >= 0 && len < backing_arr.Len());
         ZF_ASSERT(index >= 0 && index <= len);
 
-        CopyReverse(backing_arr.Slice(index + 1, len + 1), backing_arr.Slice(index, len));
+        CopyReverse(Slice(backing_arr, index + 1, len + 1), Slice(backing_arr, index, len));
 
         len++;
         backing_arr[index] = val;
     }
 
     template<typename tp_type>
-    tp_type ListRemoveLast(const c_array<tp_type> backing_arr, t_size& len) {
+    void ListInsert(s_list<tp_type>& list, const t_size index, const tp_type& val) {
+        return ListInsert(list.backing_arr, list.len, index, val);
+    }
+
+    template<typename tp_type, t_size tp_len>
+    void ListInsert(s_static_list<tp_type, tp_len>& list, const t_size index, const tp_type& val) {
+        return ListInsert(list.backing_arr.ToNonstatic(), list.len, index, val);
+    }
+
+    template<typename tp_type>
+    tp_type ListRemoveLast(const s_array<tp_type> backing_arr, t_size& len) {
         ZF_ASSERT(len > 0 && len <= backing_arr.Len());
 
         len--;
@@ -31,7 +84,17 @@ namespace zf {
     }
 
     template<typename tp_type>
-    void ListRemoveSwapback(const c_array<tp_type> backing_arr, t_size& len, const t_size index) {
+    tp_type ListRemoveLast(s_list<tp_type>& list) {
+        return ListRemoveLast(list.backing_arr, list.len);
+    }
+
+    template<typename tp_type, t_size tp_len>
+    tp_type ListRemoveLast(s_static_list<tp_type, tp_len>& list) {
+        return ListRemoveLast(list.backing_arr.ToNonstatic(), list.len);
+    }
+
+    template<typename tp_type>
+    void ListRemoveSwapback(const s_array<tp_type> backing_arr, t_size& len, const t_size index) {
         ZF_ASSERT(len > 0 && len <= backing_arr.Len());
         ZF_ASSERT(index >= 0 && index < len);
 
@@ -40,141 +103,39 @@ namespace zf {
     }
 
     template<typename tp_type>
-    void ListRemove(const c_array<tp_type> backing_arr, t_size& len, const t_size index) {
+    void ListRemoveSwapback(s_list<tp_type>& list, const t_size index) {
+        return ListRemoveSwapback(list.backing_arr, list.len, index);
+    }
+
+    template<typename tp_type, t_size tp_len>
+    void ListRemoveSwapback(s_static_list<tp_type, tp_len>& list, const t_size index) {
+        return ListRemoveSwapback(list.backing_arr.ToNonstatic(), list.len, index);
+    }
+
+    template<typename tp_type>
+    void ListRemove(const s_array<tp_type> backing_arr, t_size& len, const t_size index) {
         ZF_ASSERT(len > 0 && len <= backing_arr.Len());
         ZF_ASSERT(index >= 0 && index < len);
 
-        Copy(backing_arr.Slice(index, len - 1), backing_arr.Slice(index + 1, len));
+        Copy(Slice(backing_arr, index, len - 1), Slice(backing_arr, index + 1, len));
         len--;
     }
 
     template<typename tp_type>
-    class c_list {
-    public:
-        constexpr c_list() = default;
+    void ListRemove(s_list<tp_type>& list, const t_size index) {
+        return ListRemove(list.backing_arr, list.len, index);
+    }
 
-        constexpr c_list(const c_array<tp_type> backing_arr, const t_size len = 0)
-            : m_backing_arr(backing_arr), m_len(len) {
-            ZF_ASSERT(len >= 0 && len <= backing_arr.Len());
-        }
-
-        tp_type& operator[](const t_size index) const {
-            ZF_ASSERT(index < m_len);
-            return m_backing_arr[index];
-        }
-
-        constexpr t_size Len() const {
-            return m_len;
-        }
-
-        constexpr t_size Cap() const {
-            return m_backing_arr.Len();
-        }
-
-        t_b8 IsEmpty() const {
-            return Len() == 0;
-        }
-
-        t_b8 IsFull() const {
-            return Len() == Cap();
-        }
-
-        void Append(const tp_type& val) {
-            ListAppend(m_backing_arr, m_len);
-        }
-
-        void Insert(const t_size index, const tp_type& val) {
-            ListInsert(m_backing_arr, m_len, index, val);
-        }
-
-        tp_type RemoveLast() {
-            ListRemoveLast(m_backing_arr, m_len);
-        }
-
-        void RemoveSwapback(const t_size index) {
-            ListRemoveSwapback(m_backing_arr, m_len, index);
-        }
-
-        void Remove(const t_size index) {
-            ListRemove(m_backing_arr, m_len, index);
-        }
-
-    private:
-        c_array<tp_type> m_backing_arr;
-        t_size m_len = 0;
-    };
-
-    template<typename tp_type, t_size tp_cap>
-    class c_static_list {
-        static_assert(tp_cap > 0, "Invalid capacity for static list!");
-
-    public:
-        constexpr c_static_list() = default;
-
-        constexpr c_static_list(const tp_type (&backing_buf)[tp_cap], const t_size len = 0) : m_len(len) {
-            ZF_ASSERT(len >= 0 && len <= tp_cap);
-
-            for (t_size i = 0; i < tp_cap; i++) {
-                m_backing_arr[i] = backing_buf[i];
-            }
-        }
-
-        tp_type& operator[](const t_size index) {
-            ZF_ASSERT(index < m_len);
-            return m_backing_arr[index];
-        }
-
-        const tp_type& operator[](const t_size index) const {
-            ZF_ASSERT(index < m_len);
-            return m_backing_arr[index];
-        }
-
-        constexpr t_size Len() const {
-            return m_len;
-        }
-
-        constexpr t_size Cap() const {
-            return tp_cap;
-        }
-
-        t_b8 IsEmpty() const {
-            return Len() == 0;
-        }
-
-        t_b8 IsFull() const {
-            return Len() == Cap();
-        }
-
-        void Append(const tp_type& val) {
-            ListAppend(m_backing_arr, m_len, val);
-        }
-
-        void Insert(const t_size index, const tp_type& val) {
-            ListInsert(m_backing_arr, m_len, index, val);
-        }
-
-        tp_type RemoveLast() {
-            ListRemoveLast(m_backing_arr, m_len);
-        }
-
-        void RemoveSwapback(const t_size index) {
-            ListRemoveSwapback(m_backing_arr, m_len, index);
-        }
-
-        void Remove(const t_size index) {
-            ListRemove(m_backing_arr, m_len, index);
-        }
-
-    private:
-        s_static_array<tp_type, tp_cap> m_backing_arr;
-        t_size m_len = 0;
-    };
+    template<typename tp_type, t_size tp_len>
+    void ListRemove(s_static_list<tp_type, tp_len>& list, const t_size index) {
+        return ListRemove(list.backing_arr.ToNonstatic(), list.len, index);
+    }
 
     template<typename tp_type>
-    t_b8 MakeList(c_mem_arena& mem_arena, const t_size cap, c_list<tp_type>& o_list, const t_size len = 1) {
+    t_b8 MakeList(c_mem_arena& mem_arena, const t_size cap, s_list<tp_type>& o_list, const t_size len = 1) {
         ZF_ASSERT(cap > 0 && len >= 0 && len <= cap);
 
-        c_array<tp_type> backing_arr;
+        s_array<tp_type> backing_arr;
 
         if (!MakeArray(mem_arena, cap, backing_arr)) {
             return false;

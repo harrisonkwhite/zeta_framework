@@ -1,7 +1,7 @@
 #include <zf/zf_gfx.h>
 
 namespace zf {
-    static t_size CalcStride(const c_array<const t_s32> vert_attr_lens) {
+    static t_size CalcStride(const s_array<const t_s32> vert_attr_lens) {
         t_size stride = 0;
 
         for (t_size i = 0; i < vert_attr_lens.Len(); i++) {
@@ -11,7 +11,7 @@ namespace zf {
         return stride;
     }
 
-    static us_gl_mesh MakeGLMesh(const t_f32* const verts_raw, const t_size verts_len, const c_array<const t_u16> elems, const c_array<const t_s32> vert_attr_lens) {
+    static us_gl_mesh MakeGLMesh(const t_f32* const verts_raw, const t_size verts_len, const s_array<const t_u16> elems, const s_array<const t_s32> vert_attr_lens) {
         us_gl_mesh mesh = {};
 
         glGenVertexArrays(1, &mesh.vert_arr_gl_id);
@@ -66,7 +66,7 @@ namespace zf {
                 glGetShaderiv(shader_gl_id, GL_INFO_LOG_LENGTH, &log_chr_cnt);
 
                 if (log_chr_cnt > 1) {
-                    c_array<char> log_chrs;
+                    s_array<char> log_chrs;
 
                     if (MakeArray(temp_mem_arena, log_chr_cnt, log_chrs)) {
                         glGetShaderInfoLog(shader_gl_id, static_cast<GLsizei>(log_chrs.Len()), nullptr, log_chrs.Raw());
@@ -172,7 +172,7 @@ namespace zf {
         }
     }
 
-    c_gfx_resource_handle c_gfx_resource_arena::AddMesh(const t_f32* const verts_raw, const t_size verts_len, const c_array<const t_u16> elems, const c_array<const t_s32> vert_attr_lens) {
+    c_gfx_resource_handle c_gfx_resource_arena::AddMesh(const t_f32* const verts_raw, const t_size verts_len, const s_array<const t_u16> elems, const s_array<const t_s32> vert_attr_lens) {
         ZF_ASSERT(verts_len > 0);
         ZF_ASSERT(!elems.IsEmpty());
         ZF_ASSERT(!vert_attr_lens.IsEmpty());

@@ -14,7 +14,7 @@ namespace zf {
         };
 
         s_min_heap() = default;
-        s_min_heap(const c_array<s_node> nodes, const t_size len = 0, const t_comparator<tp_key_type> comparator = DefaultComparator)
+        s_min_heap(const s_array<s_node> nodes, const t_size len = 0, const t_comparator<tp_key_type> comparator = DefaultComparator)
             : m_nodes(nodes), m_len(len), m_comparator(comparator) {}
 
         t_size Len() const {
@@ -63,7 +63,7 @@ namespace zf {
         }
 
     private:
-        c_array<s_node> m_nodes;
+        s_array<s_node> m_nodes;
         t_size m_len;
         t_comparator<tp_key_type> m_comparator;
 
@@ -126,7 +126,7 @@ namespace zf {
     [[nodiscard]] t_b8 MakeMinHeap(c_mem_arena& mem_arena, const t_size cap, s_min_heap<tp_key_type, tp_value_type> &o_mh, const t_comparator<tp_key_type> comparator = DefaultComparator) {
         ZF_ASSERT(cap > 0);
 
-        c_array<s_min_heap<tp_key_type, tp_value_type>::s_node> nodes;
+        s_array<s_min_heap<tp_key_type, tp_value_type>::s_node> nodes;
 
         if (!MakeArray(mem_arena, cap, nodes)) {
             return false;

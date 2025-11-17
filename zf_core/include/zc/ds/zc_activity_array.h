@@ -56,11 +56,11 @@ namespace zf {
         }
 
     private:
-        c_array<tp_elem_type> Slots() {
+        s_array<tp_elem_type> Slots() {
             return static_cast<tp_derived_type*>(this)->Slots();
         }
 
-        c_array<const tp_elem_type> Slots() const {
+        s_array<const tp_elem_type> Slots() const {
             return static_cast<const tp_derived_type*>(this)->Slots();
         }
 
@@ -82,7 +82,7 @@ namespace zf {
         t_b8 Init(c_mem_arena& mem_arena, const t_size len) {
             ZF_ASSERT(len > 0);
 
-            c_array<tp_type> slots;
+            s_array<tp_type> slots;
             c_bit_vector slot_activity;
 
             if (!MakeArray(mem_arena, len, slots)) {
@@ -100,14 +100,14 @@ namespace zf {
         }
 
     private:
-        c_array<tp_type> m_slots;
+        s_array<tp_type> m_slots;
         c_bit_vector m_slot_activity;
 
-        c_array<tp_type> Slots() {
+        s_array<tp_type> Slots() {
             return m_slots;
         }
 
-        c_array<const tp_type> Slots() const {
+        s_array<const tp_type> Slots() const {
             return m_slots;
         }
 
@@ -129,7 +129,7 @@ namespace zf {
         s_static_array<tp_type, tp_len> m_slots;
         s_static_bit_vector<tp_len> m_slot_activity;
 
-        c_array<tp_type> Slots() {
+        s_array<tp_type> Slots() {
             return m_slots;
         }
 
@@ -137,7 +137,7 @@ namespace zf {
             return m_slot_activity;
         }
 
-        c_array<const tp_type> Slots() const {
+        s_array<const tp_type> Slots() const {
             return m_slots;
         }
 

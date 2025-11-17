@@ -69,7 +69,7 @@ namespace zf {
                     continue;
                 }
 
-                const auto fields = [asset_type_index]() -> c_array<const s_asset_field> {
+                const auto fields = [asset_type_index]() -> s_array<const s_asset_field> {
                     switch (asset_type_index) {
                         case ek_asset_type_texture:
                             return g_tex_fields.ToNonstatic();
@@ -81,7 +81,7 @@ namespace zf {
                     return {};
                 }();
 
-                const auto field_vals = [asset_type_index, &tex_field_cj_ptrs, &snd_field_cj_ptrs]() -> c_array<cJSON*> {
+                const auto field_vals = [asset_type_index, &tex_field_cj_ptrs, &snd_field_cj_ptrs]() -> s_array<cJSON*> {
                     switch (asset_type_index) {
                         case ek_asset_type_texture:
                             return tex_field_cj_ptrs.ToNonstatic();

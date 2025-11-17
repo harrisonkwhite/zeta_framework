@@ -51,7 +51,7 @@ void main() {
     static c_gfx_resource_handle MakeBatchMesh(c_gfx_resource_arena& gfx_res_arena, c_mem_arena& temp_mem_arena) {
         const t_size verts_len = g_batch_vert_component_cnt * g_batch_slot_vert_cnt * g_batch_slot_cnt;
 
-        c_array<t_u16> elems;
+        s_array<t_u16> elems;
 
         if (!MakeArray(temp_mem_arena, g_batch_slot_elem_cnt * g_batch_slot_cnt, elems)) {
             ZF_REPORT_FAILURE();
