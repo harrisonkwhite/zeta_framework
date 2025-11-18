@@ -121,12 +121,12 @@ namespace zf {
                 switch (asset_type_index) {
                     case ek_asset_type_texture:
                         {
-                            s_texture_data tex_data;
+                            s_rgba_texture_data tex_data;
 
                             const auto src_fp_raw = field_vals[ek_tex_field_src_file_path]->valuestring;
                             const auto dest_fp_raw = field_vals[ek_tex_field_dest_file_path]->valuestring;
 
-                            if (!LoadTextureFromRaw(StrFromRawTerminated(src_fp_raw), temp_mem_arena, tex_data)) {
+                            if (!LoadRGBATextureDataFromRaw(StrFromRawTerminated(src_fp_raw), temp_mem_arena, tex_data)) {
                                 ZF_LOG_ERROR("Failed to load RGBA texture from file \"%s\"!", src_fp_raw);
                                 return false;
                             }

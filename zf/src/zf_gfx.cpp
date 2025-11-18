@@ -118,7 +118,7 @@ namespace zf {
         return { size, size };
     }
 
-    static t_gl_id MakeGLTexture(const s_texture_data& tex_data) {
+    static t_gl_id MakeGLTexture(const s_rgba_texture_data& tex_data) {
         const s_v2<t_s32> tex_size_limit = GLTextureSizeLimit();
 
         if (tex_data.size_in_pxs.x > tex_size_limit.x || tex_data.size_in_pxs.y > tex_size_limit.y) {
@@ -134,7 +134,7 @@ namespace zf {
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, tex_data.size_in_pxs.x, tex_data.size_in_pxs.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, tex_data.rgba_px_data.Raw());
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, tex_data.size_in_pxs.x, tex_data.size_in_pxs.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, tex_data.px_data.Raw());
 
         return tex_gl_id;
     }
@@ -222,7 +222,7 @@ namespace zf {
         return ListAppend(gfx_res_arena.hdls, {us_gl_shader_prog(prog_gl_id)});
     }
 
-    s_gfx_resource_handle MakeTexture(s_gfx_resource_arena& gfx_res_arena, const s_texture_data& tex_data) {
+    s_gfx_resource_handle MakeTexture(s_gfx_resource_arena& gfx_res_arena, const s_rgba_texture_data& tex_data) {
         if (IsListFull(gfx_res_arena.hdls)) {
             return {};
         }

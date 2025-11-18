@@ -113,19 +113,17 @@ namespace zf {
         constexpr s_v2<t_f32> g_bottomright = {1.0f, 1.0f};
     }
 
-    // For simplicity, RGBA is the only format we work with.
-
-    struct s_texture_data {
+    struct s_rgba_texture_data {
         s_v2<t_s32> size_in_pxs;
-        s_array<t_u8> rgba_px_data;
+        s_array<t_u8> px_data;
 
-        s_texture_data() = default;
-        s_texture_data(const s_v2<t_s32> size_in_pxs, const s_array<t_u8> rgba_px_data)
-            : size_in_pxs(size_in_pxs), rgba_px_data(rgba_px_data) {}
+        s_rgba_texture_data() = default;
+        s_rgba_texture_data(const s_v2<t_s32> size_in_pxs, const s_array<t_u8> px_data)
+            : size_in_pxs(size_in_pxs), px_data(px_data) {}
     };
 
-    [[nodiscard]] t_b8 LoadTextureFromRaw(const s_str_rdonly file_path, s_mem_arena& mem_arena, s_texture_data& o_tex_data);
-    [[nodiscard]] t_b8 LoadTextureFromPacked(const s_str_rdonly file_path, s_mem_arena& mem_arena, s_texture_data& o_tex_data);
+    [[nodiscard]] t_b8 LoadRGBATextureDataFromRaw(const s_str_rdonly file_path, s_mem_arena& mem_arena, s_rgba_texture_data& o_tex_data);
 
-    [[nodiscard]] t_b8 PackTexture(const s_texture_data& tex_data, const s_str_rdonly file_path, s_mem_arena& temp_mem_arena);
+    [[nodiscard]] t_b8 PackTexture(const s_rgba_texture_data& tex_data, const s_str_rdonly file_path, s_mem_arena& temp_mem_arena);
+    [[nodiscard]] t_b8 UnpackTexture(const s_str_rdonly file_path, s_mem_arena& mem_arena, s_rgba_texture_data& o_tex_data);
 }

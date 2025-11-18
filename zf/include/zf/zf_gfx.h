@@ -78,34 +78,43 @@ namespace zf {
 
     s_gfx_resource_handle MakeMesh(s_gfx_resource_arena& gfx_res_arena, const t_f32* const verts_raw, const t_size verts_len, const s_array<const t_u16> elems, const s_array<const t_s32> vert_attr_lens); // You might not want to provide vertices to start with, and only the count - passing nullptr in for verts_raw allows this.
     s_gfx_resource_handle MakeShaderProg(s_gfx_resource_arena& gfx_res_arena, const s_str_rdonly vert_src, const s_str_rdonly frag_src, s_mem_arena& temp_mem_arena);
-    s_gfx_resource_handle MakeTexture(s_gfx_resource_arena& gfx_res_arena, const s_texture_data& tex_data);
+    s_gfx_resource_handle MakeTexture(s_gfx_resource_arena& gfx_res_arena, const s_rgba_texture_data& tex_data);
 
     struct s_texture_asset {
         s_gfx_resource_handle hdl;
         s_v2<t_s32> size_cache;
     };
 
-#if 0
-    [[nodiscard]] t_b8 Load(const s_texture_data& tex_data, s_gfx_resource_arena& gfx_res_arena);
+    [[nodiscard]] inline t_b8 LoadTextureAsset(const s_rgba_texture_data& tex_data, s_gfx_resource_arena& gfx_res_arena, s_texture_asset& o_asset) {
+        const auto hdl = MakeTexture(gfx_res_arena, tex_data);
 
-    [[nodiscard]] t_b8 LoadFromRaw(const s_str_rdonly file_path, s_gfx_resource_arena& gfx_res_arena, s_mem_arena& temp_mem_arena) {
-        s_texture_data tex_data;
-
-        if (!LoadTextureFromRaw(file_path, temp_mem_arena, tex_data)) {
+        if (!hdl.IsValid()) {
             return false;
         }
 
-        return Load(tex_data, gfx_res_arena);
+        o_asset.hdl = hdl;
+        o_asset.size_cache = tex_data.size_in_pxs;
+
+        return true;
     }
 
-    [[nodiscard]] t_b8 LoadFromPacked(const s_str_rdonly file_path, s_gfx_resource_arena& gfx_res_arena, s_mem_arena& temp_mem_arena) {
-        s_texture_data tex_data;
+    [[nodiscard]] inline t_b8 LoadTextureAssetFromRaw(const s_str_rdonly file_path, s_gfx_resource_arena& gfx_res_arena, s_mem_arena& temp_mem_arena, s_texture_asset& o_asset) {
+        s_rgba_texture_data tex_data;
 
-        if (!LoadTextureFromPacked(file_path, temp_mem_arena, tex_data)) {
+        if (!LoadRGBATextureDataFromRaw(file_path, temp_mem_arena, tex_data)) {
             return false;
         }
 
-        return Load(tex_data, gfx_res_arena);
+        return LoadTextureAsset(tex_data, gfx_res_arena, o_asset);
     }
-#endif
+
+    [[nodiscard]] inline t_b8 LoadTextureAssetFromPacked(const s_str_rdonly file_path, s_gfx_resource_arena& gfx_res_arena, s_mem_arena& temp_mem_arena, s_texture_asset& o_asset) {
+        s_rgba_texture_data tex_data;
+
+        if (!UnpackTexture(file_path, temp_mem_arena, tex_data)) {
+            return false;
+        }
+
+        return LoadTextureAsset(tex_data, gfx_res_arena, o_asset);
+    }
 }

@@ -42,14 +42,7 @@ namespace zf {
 
     using t_batch_slot = s_static_array<s_batch_vert, g_batch_slot_vert_cnt>;
 
-    struct s_rendering_state {
-        s_array<t_batch_slot> batch_slots;
-        t_size batch_slots_used_cnt = 0;
-
-        s_matrix_4x4 batch_view_mat = s_matrix_4x4::Identity();
-
-        s_gfx_resource_handle batch_tex_hdl;
-    };
+    struct s_rendering_state;
 
     struct s_rendering_context {
         const s_rendering_basis& basis;

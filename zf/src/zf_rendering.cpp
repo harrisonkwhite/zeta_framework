@@ -1,6 +1,15 @@
 #include <zf/zf_rendering.h>
 
 namespace zf {
+    struct s_rendering_state {
+        s_static_array<t_batch_slot, g_batch_slot_cnt> batch_slots;
+        t_size batch_slots_used_cnt = 0;
+
+        s_matrix_4x4 batch_view_mat = s_matrix_4x4::Identity();
+
+        s_gfx_resource_handle batch_tex_hdl;
+    };
+
     static constexpr s_str_rdonly g_batch_vert_shader_src = StrFromRawTerminated(R"(#version 460 core
 
 layout (location = 0) in vec2 a_vert;
@@ -87,17 +96,15 @@ void main() {
             return false;
         }
 
-#if 0
         // Generate the pixel texture.
         s_static_array<t_u8, 4> px_rgba = {
             {255, 255, 255, 255}
         };
 
-        if (!o_basis.px_tex.Load({{1, 1}, px_rgba}, gfx_res_arena)) {
+        if (!LoadTextureAsset({{1, 1}, px_rgba}, gfx_res_arena, o_basis.px_tex)) {
             ZF_REPORT_FAILURE();
             return false;
         }
-#endif
 
         return true;
     }
@@ -116,7 +123,7 @@ void main() {
 
         {
             const t_size write_size = ZF_SIZE_OF(t_batch_slot) * rc.state.batch_slots_used_cnt;
-            glBufferSubData(GL_ARRAY_BUFFER, 0, write_size, rc.state.batch_slots.Raw());
+            glBufferSubData(GL_ARRAY_BUFFER, 0, write_size, rc.state.batch_slots.buf_raw);
         }
 
         //
