@@ -1,7 +1,6 @@
 #include <zf/zf_gfx.h>
 
-namespace zf {
-#if 0
+namespace zf::gfx {
     static t_size CalcStride(const s_array<const t_s32> vert_attr_lens) {
         t_size stride = 0;
 
@@ -24,7 +23,7 @@ namespace zf {
 
         glGenBuffers(1, &mesh.elem_buf_gl_id);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh.elem_buf_gl_id);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, static_cast<GLsizeiptr>(ArraySizeInBytes(elems), elems.buf_raw, GL_STATIC_DRAW);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, static_cast<GLsizeiptr>(ArraySizeInBytes(elems)), elems.buf_raw, GL_STATIC_DRAW);
 
         const t_size stride = CalcStride(vert_attr_lens);
         t_s32 offs = 0;
@@ -119,7 +118,7 @@ namespace zf {
         return { size, size };
     }
 
-    static t_gl_id MakeGLTexture(const s_rgba_texture_data& tex_data) {
+    static t_gl_id MakeGLTexture(const s_rgba_texture_data_rdonly& tex_data) {
         const s_v2<t_s32> tex_size_limit = GLTextureSizeLimit();
 
         if (tex_data.size_in_pxs.x > tex_size_limit.x || tex_data.size_in_pxs.y > tex_size_limit.y) {
@@ -140,77 +139,78 @@ namespace zf {
         return tex_gl_id;
     }
 
-    t_b8 AreGFXResourcesEqual(const s_gfx_resource_handle& a, const s_gfx_resource_handle& b) {
-        if (a.Type() == b.Type()) {
-            switch (a.Type()) {
-            case ec_gfx_resource_type::invalid:
+    t_b8 AreResourcesEqual(const s_resource_handle& a, const s_resource_handle& b) {
+        if (a.type == b.type) {
+            switch (a.type) {
+            case ec_resource_type::invalid:
                 return true;
 
-            case ec_gfx_resource_type::mesh:
-                return a.Mesh().vert_arr_gl_id == b.Mesh().vert_arr_gl_id
-                    && a.Mesh().vert_buf_gl_id == b.Mesh().vert_buf_gl_id
-                    && a.Mesh().elem_buf_gl_id == b.Mesh().elem_buf_gl_id;
+            case ec_resource_type::mesh:
+                return a.raw.mesh.vert_arr_gl_id == b.raw.mesh.vert_arr_gl_id
+                    && a.raw.mesh.vert_buf_gl_id == b.raw.mesh.vert_buf_gl_id
+                    && a.raw.mesh.elem_buf_gl_id == b.raw.mesh.elem_buf_gl_id;
 
-            case ec_gfx_resource_type::shader_prog:
-                return a.ShaderProg().gl_id == b.ShaderProg().gl_id;
+            case ec_resource_type::shader_prog:
+                return a.raw.shader_prog.gl_id == b.raw.shader_prog.gl_id;
 
-            case ec_gfx_resource_type::texture:
-                return a.Texture().gl_id == b.Texture().gl_id;
+            case ec_resource_type::texture:
+                return a.raw.tex.gl_id == b.raw.tex.gl_id;
             }
         }
 
         return false;
     }
 
-    void ReleaseGFXResource(const s_gfx_resource_handle hdl) {
-        switch (hdl.Type()) {
-        case zf::ec_gfx_resource_type::invalid:
+    void ReleaseResource(const s_resource_handle& hdl) {
+        switch (hdl.type) {
+        case ec_resource_type::invalid:
             ZF_ASSERT(false);
             break;
 
-        case ec_gfx_resource_type::mesh:
-            glDeleteBuffers(1, &hdl.Mesh().elem_buf_gl_id);
-            glDeleteBuffers(1, &hdl.Mesh().vert_buf_gl_id);
-            glDeleteVertexArrays(1, &hdl.Mesh().vert_arr_gl_id);
+        case ec_resource_type::mesh:
+            glDeleteBuffers(1, &hdl.raw.mesh.elem_buf_gl_id);
+            glDeleteBuffers(1, &hdl.raw.mesh.vert_buf_gl_id);
+            glDeleteVertexArrays(1, &hdl.raw.mesh.vert_arr_gl_id);
             break;
 
-        case ec_gfx_resource_type::shader_prog:
-            glDeleteProgram(hdl.ShaderProg().gl_id);
+        case ec_resource_type::shader_prog:
+            glDeleteProgram(hdl.raw.shader_prog.gl_id);
             break;
 
-        case ec_gfx_resource_type::texture:
-            glDeleteTextures(1, &hdl.Texture().gl_id);
+        case ec_resource_type::texture:
+            glDeleteTextures(1, &hdl.raw.tex.gl_id);
             break;
         }
     }
 
-    t_b8 MakeGFXResourceArena(s_mem_arena& mem_arena, const t_size cap, s_gfx_resource_arena& o_res_arena) {
+    t_b8 MakeResourceArena(s_mem_arena& mem_arena, const t_size cap, s_resource_arena& o_res_arena) {
         return MakeList(mem_arena, cap, o_res_arena.hdls);
     }
 
-    void ReleaseGFXResourceArena(s_gfx_resource_arena& res_arena) {
+    void ReleaseResourceArena(s_resource_arena& res_arena) {
         for (t_size i = 0; i < res_arena.hdls.len; i++) {
-            ReleaseGFXResource(res_arena.hdls[i]);
+            ReleaseResource(res_arena.hdls[i]);
         }
     }
 
-    s_gfx_resource_handle MakeMesh(s_gfx_resource_arena& gfx_res_arena, const t_f32* const verts_raw, const t_size verts_len, const s_array<const t_u16> elems, const s_array<const t_s32> vert_attr_lens) {
+    s_resource_handle MakeMesh(s_resource_arena& res_arena, const t_f32* const verts_raw, const t_size verts_len, const s_array<const t_u16> elems, const s_array<const t_s32> vert_attr_lens) {
         ZF_ASSERT(verts_len > 0);
         ZF_ASSERT(!IsEmpty(elems));
         ZF_ASSERT(!IsEmpty(vert_attr_lens));
 
-        if (IsListFull(gfx_res_arena.hdls)) {
+        if (IsListFull(res_arena.hdls)) {
             return {};
         }
 
-        return ListAppend(gfx_res_arena.hdls, {MakeGLMesh(verts_raw, verts_len, elems, vert_attr_lens)});
+        const auto gl_mesh = MakeGLMesh(verts_raw, verts_len, elems, vert_attr_lens);
+        return ListAppend(res_arena.hdls, MakeMeshHandle(gl_mesh));
     }
 
-    s_gfx_resource_handle MakeShaderProg(s_gfx_resource_arena& gfx_res_arena, const s_str_rdonly vert_src, const s_str_rdonly frag_src, s_mem_arena& temp_mem_arena) {
+    s_resource_handle MakeShaderProg(s_resource_arena& res_arena, const s_str_rdonly vert_src, const s_str_rdonly frag_src, s_mem_arena& temp_mem_arena) {
         ZF_ASSERT(IsStrTerminated(vert_src));
         ZF_ASSERT(IsStrTerminated(frag_src));
 
-        if (IsListFull(gfx_res_arena.hdls)) {
+        if (IsListFull(res_arena.hdls)) {
             return {};
         }
 
@@ -220,11 +220,11 @@ namespace zf {
             return {};
         }
 
-        return ListAppend(gfx_res_arena.hdls, {s_gl_shader_prog(prog_gl_id)});
+        return ListAppend(res_arena.hdls, MakeShaderProgHandle(prog_gl_id));
     }
 
-    s_gfx_resource_handle MakeTexture(s_gfx_resource_arena& gfx_res_arena, const s_rgba_texture_data& tex_data) {
-        if (IsListFull(gfx_res_arena.hdls)) {
+    s_resource_handle MakeTexture(s_resource_arena& res_arena, const s_rgba_texture_data_rdonly& tex_data) {
+        if (IsListFull(res_arena.hdls)) {
             return {};
         }
 
@@ -234,7 +234,6 @@ namespace zf {
             return {};
         }
 
-        return ListAppend(gfx_res_arena.hdls, {s_gl_texture(tex_gl_id)});
+        return ListAppend(res_arena.hdls, MakeTextureHandle(tex_gl_id));
     }
-#endif
 }

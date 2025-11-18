@@ -27,7 +27,7 @@ namespace zf {
         return true;
     }
 
-    t_b8 PackTexture(const s_rgba_texture_data& tex_data, const s_str_rdonly file_path, s_mem_arena& temp_mem_arena) {
+    t_b8 PackTexture(const s_rgba_texture_data_rdonly& tex_data, const s_str_rdonly file_path, s_mem_arena& temp_mem_arena) {
         ZF_ASSERT(IsStrTerminated(file_path));
 
         if (!CreateFileAndParentDirs(file_path, temp_mem_arena)) {

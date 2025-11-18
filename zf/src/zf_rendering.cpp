@@ -1,17 +1,16 @@
 #include <zf/zf_rendering.h>
 
 namespace zf {
-#if 0
     struct s_rendering_state {
         s_static_array<t_batch_slot, g_batch_slot_cnt> batch_slots;
         t_size batch_slots_used_cnt;
 
         s_matrix_4x4 batch_view_mat;
 
-        s_gfx_resource_handle batch_tex_hdl;
+        gfx::s_resource_handle batch_tex_hdl;
     };
 
-    static constexpr s_str_rdonly g_batch_vert_shader_src = StrFromRawTerminated(R"(#version 460 core
+    static constexpr s_str_rdonly g_batch_vert_shader_src = R"(#version 460 core
 
 layout (location = 0) in vec2 a_vert;
 layout (location = 1) in vec2 a_pos;
@@ -41,9 +40,9 @@ void main() {
     v_tex_coord = a_tex_coord;
     v_blend = a_blend;
 }
-)");
+)";
 
-    static constexpr s_str_rdonly g_batch_frag_shader_src = StrFromRawTerminated(R"(#version 460 core
+    static constexpr s_str_rdonly g_batch_frag_shader_src = R"(#version 460 core
 
 in vec2 v_tex_coord;
 in vec4 v_blend;
@@ -56,9 +55,9 @@ void main() {
     vec4 tex_color = texture(u_tex, v_tex_coord);
     o_frag_color = tex_color * v_blend;
 }
-)");
+)";
 
-    static s_gfx_resource_handle MakeBatchMesh(s_gfx_resource_arena& gfx_res_arena, s_mem_arena& temp_mem_arena) {
+    static gfx::s_resource_handle MakeBatchMesh(gfx::s_resource_arena& gfx_res_arena, s_mem_arena& temp_mem_arena) {
         const t_size verts_len = g_batch_vert_component_cnt * g_batch_slot_vert_cnt * g_batch_slot_cnt;
 
         s_array<t_u16> elems;
@@ -80,11 +79,11 @@ void main() {
         return MakeMesh(gfx_res_arena, nullptr, verts_len, elems, g_batch_vert_attr_lens);
     }
 
-    t_b8 MakeRenderingBasis(s_gfx_resource_arena& gfx_res_arena, s_mem_arena& temp_mem_arena, s_rendering_basis& o_basis) {
+    t_b8 MakeRenderingBasis(gfx::s_resource_arena& gfx_res_arena, s_mem_arena& temp_mem_arena, s_rendering_basis& o_basis) {
         // Generate the batch mesh.
         o_basis.batch_mesh_hdl = MakeBatchMesh(gfx_res_arena, temp_mem_arena);
 
-        if (!o_basis.batch_mesh_hdl.IsValid()) {
+        if (!gfx::IsResourceHandleValid(o_basis.batch_mesh_hdl)) {
             ZF_REPORT_FAILURE();
             return false;
         }
@@ -92,14 +91,14 @@ void main() {
         // Generate batch shader program.
         o_basis.batch_shader_prog_hdl = MakeShaderProg(gfx_res_arena, g_batch_vert_shader_src, g_batch_frag_shader_src, temp_mem_arena);
 
-        if (!o_basis.batch_shader_prog_hdl.IsValid()) {
+        if (!gfx::IsResourceHandleValid(o_basis.batch_shader_prog_hdl)) {
             ZF_REPORT_FAILURE();
             return false;
         }
 
         // Generate the pixel texture.
-        s_static_array<t_u8, 4> px_rgba = {
-            {255, 255, 255, 255}
+        const s_static_array<t_u8, 4> px_rgba = {
+            255, 255, 255, 255
         };
 
         if (!LoadTextureAsset({{1, 1}, px_rgba}, gfx_res_arena, o_basis.px_tex)) {
@@ -119,8 +118,8 @@ void main() {
         //
         // Submitting Vertex Data to GPU
         //
-        glBindVertexArray(rc.basis.batch_mesh_hdl.Mesh().vert_arr_gl_id);
-        glBindBuffer(GL_ARRAY_BUFFER, rc.basis.batch_mesh_hdl.Mesh().vert_buf_gl_id);
+        glBindVertexArray(rc.basis.batch_mesh_hdl.raw.mesh.vert_arr_gl_id);
+        glBindBuffer(GL_ARRAY_BUFFER, rc.basis.batch_mesh_hdl.raw.mesh.vert_buf_gl_id);
 
         {
             const t_size write_size = ZF_SIZE_OF(t_batch_slot) * rc.state.batch_slots_used_cnt;
@@ -130,12 +129,12 @@ void main() {
         //
         // Rendering the Batch
         //
-        const t_gl_id prog_gl_id = rc.basis.batch_shader_prog_hdl.ShaderProg().gl_id;
+        const gfx::t_gl_id prog_gl_id = rc.basis.batch_shader_prog_hdl.raw.shader_prog.gl_id;
 
         glUseProgram(prog_gl_id);
 
         const t_s32 view_uniform_loc = glGetUniformLocation(prog_gl_id, "u_view");
-        glUniformMatrix4fv(view_uniform_loc, 1, false, rc.state.batch_view_mat.Raw());
+        glUniformMatrix4fv(view_uniform_loc, 1, false, &rc.state.batch_view_mat.elems[0][0]);
 
         const s_rect<t_s32> viewport = []() {
             s_rect<t_s32> vp;
@@ -143,14 +142,14 @@ void main() {
             return vp;
         }();
 
-        const auto proj_mat = s_matrix_4x4::Orthographic(0.0f, static_cast<t_f32>(viewport.width), static_cast<t_f32>(viewport.height), 0.0f, -1.0f, 1.0f);
+        const auto proj_mat = MakeOrthographicMatrix4x4(0.0f, static_cast<t_f32>(viewport.width), static_cast<t_f32>(viewport.height), 0.0f, -1.0f, 1.0f);
         const t_s32 proj_uniform_loc = glGetUniformLocation(prog_gl_id, "u_proj");
-        glUniformMatrix4fv(proj_uniform_loc, 1, false, proj_mat.Raw());
+        glUniformMatrix4fv(proj_uniform_loc, 1, false, &proj_mat.elems[0][0]);
 
         glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, rc.state.batch_tex_hdl.Texture().gl_id);
+        glBindTexture(GL_TEXTURE_2D, rc.state.batch_tex_hdl.raw.tex.gl_id);
 
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, rc.basis.batch_mesh_hdl.Mesh().elem_buf_gl_id);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, rc.basis.batch_mesh_hdl.raw.mesh.elem_buf_gl_id);
         glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(g_batch_slot_elem_cnt * rc.state.batch_slots_used_cnt), GL_UNSIGNED_SHORT, nullptr);
 
         glUseProgram(0);
@@ -173,7 +172,7 @@ void main() {
     }
 
     void DrawClear(const s_color_rgba32f col) {
-        glClearColor(col.R(), col.G(), col.B(), 1.0f);
+        glClearColor(col.r, col.g, col.b, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
     }
 
@@ -182,13 +181,13 @@ void main() {
         rc.state.batch_view_mat = mat;
     }
 
-    static void Draw(const s_rendering_context& rc, const s_gfx_resource_handle tex_hdl, const s_rect<t_f32> tex_coords, s_v2<t_f32> pos, s_v2<t_f32> size, s_v2<t_f32> origin, const t_f32 rot, const s_color_rgba32f blend) {
-        ZF_ASSERT(tex_hdl.IsValid());
+    static void Draw(const s_rendering_context& rc, const gfx::s_resource_handle tex_hdl, const s_rect<t_f32> tex_coords, s_v2<t_f32> pos, s_v2<t_f32> size, s_v2<t_f32> origin, const t_f32 rot, const s_color_rgba32f blend) {
+        ZF_ASSERT(gfx::IsResourceHandleValid(tex_hdl));
 
         if (rc.state.batch_slots_used_cnt == 0) {
             // This is the first draw to the batch, so set the texture associated with the batch to the one we're trying to render.
             rc.state.batch_tex_hdl = tex_hdl;
-        } else if (rc.state.batch_slots_used_cnt == g_batch_slot_cnt || !AreGFXResourcesEqual(tex_hdl, rc.state.batch_tex_hdl)) {
+        } else if (rc.state.batch_slots_used_cnt == g_batch_slot_cnt || !gfx::AreResourcesEqual(tex_hdl, rc.state.batch_tex_hdl)) {
             // Flush the batch and then try this same render operation again but on a fresh batch.
             Flush(rc);
             Draw(rc, tex_hdl, tex_coords, pos, size, origin, rot, blend);
@@ -196,23 +195,23 @@ void main() {
         }
 
         // Write the vertex data to the next slot.
-        const s_static_array<s_v2<t_f32>, 4> vert_coords = {{
+        const s_static_array<s_v2<t_f32>, 4> vert_coords = {
             {0.0f - origin.x, 0.0f - origin.y},
             {1.0f - origin.x, 0.0f - origin.y},
             {1.0f - origin.x, 1.0f - origin.y},
             {0.0f - origin.x, 1.0f - origin.y}
-        }};
+        };
 
-        const s_static_array<s_v2<t_f32>, 4> tex_coords_per_vert = {{
-            {tex_coords.Left(), tex_coords.Top()},
-            {tex_coords.Right(), tex_coords.Top()},
-            {tex_coords.Right(), tex_coords.Bottom()},
-            {tex_coords.Left(), tex_coords.Bottom()}
-        }};
+        const s_static_array<s_v2<t_f32>, 4> tex_coords_per_vert = {
+            {RectLeft(tex_coords), RectTop(tex_coords)},
+            {RectRight(tex_coords), RectTop(tex_coords)},
+            {RectRight(tex_coords), RectBottom(tex_coords)},
+            {RectLeft(tex_coords), RectBottom(tex_coords)}
+        };
 
         t_batch_slot& slot = rc.state.batch_slots[rc.state.batch_slots_used_cnt];
 
-        for (t_size i = 0; i < slot.Len(); i++) {
+        for (t_size i = 0; i < slot.g_len; i++) {
             slot[i] = {
                 .vert_coord = vert_coords[i],
                 .pos = pos,
@@ -241,8 +240,8 @@ void main() {
         };
     }
 
-    void DrawTexture(const s_rendering_context& rc, const s_texture_asset& tex, const s_v2<t_f32> pos, const s_rect<t_s32> src_rect, const s_v2<t_f32> origin, const s_v2<t_f32> scale, const t_f32 rot, const s_color_rgba32f blend) {
-        ZF_ASSERT(tex.hdl.IsValid());
+    void DrawTexture(const s_rendering_context& rc, const gfx::s_texture_asset& tex, const s_v2<t_f32> pos, const s_rect<t_s32> src_rect, const s_v2<t_f32> origin, const s_v2<t_f32> scale, const t_f32 rot, const s_color_rgba32f blend) {
+        ZF_ASSERT(gfx::IsResourceHandleValid(tex.hdl));
         ZF_ASSERT(origin.x >= 0.0f && origin.x <= 1.0f && origin.y >= 0.0f && origin.y <= 1.0f); // @todo: Generic function for this check?
         // @todo: Add more assertions here!
 
@@ -252,7 +251,7 @@ void main() {
             // If the source rectangle wasn't set, just go with the whole texture.
             src_rect_to_use = {0, 0, tex.size_cache.x, tex.size_cache.y};
         } else {
-            ZF_ASSERT_MSG(src_rect.Left() >= 0 && src_rect.Top() >= 0 && src_rect.Right() <= tex.size_cache.x && src_rect.Top() <= tex.size_cache.y, "Invalid source rectangle!");
+            ZF_ASSERT_MSG(RectLeft(src_rect) >= 0 && RectTop(src_rect) >= 0 && RectRight(src_rect) <= tex.size_cache.x && RectTop(src_rect) <= tex.size_cache.y, "Invalid source rectangle!");
             src_rect_to_use = src_rect;
         }
 
@@ -264,5 +263,4 @@ void main() {
 
         Draw(rc, tex.hdl, tex_coords, pos, size, origin, rot, blend);
     }
-#endif
 }

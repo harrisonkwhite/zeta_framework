@@ -66,6 +66,11 @@ namespace zf {
     }
 
     template<typename tp_type>
+    constexpr t_size ArraySizeInBytes(const s_array<const tp_type> arr) {
+        return static_cast<t_size>(sizeof(arr[0])) * arr.len;
+    }
+
+    template<typename tp_type>
     t_b8 MakeArray(s_mem_arena& mem_arena, const t_size len, s_array<tp_type>& o_arr) {
         ZF_ASSERT(len > 0);
 

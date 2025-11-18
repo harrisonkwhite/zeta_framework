@@ -95,13 +95,22 @@ namespace zf {
         constexpr s_v2<t_f32> g_bottomright = {1.0f, 1.0f};
     }
 
+    struct s_rgba_texture_data_rdonly {
+        s_v2<t_s32> size_in_pxs;
+        s_array<const t_u8> px_data;
+    };
+
     struct s_rgba_texture_data {
         s_v2<t_s32> size_in_pxs;
         s_array<t_u8> px_data;
+
+        operator s_rgba_texture_data_rdonly() const {
+            return {size_in_pxs, px_data};
+        }
     };
 
     [[nodiscard]] t_b8 LoadRGBATextureDataFromRaw(const s_str_rdonly file_path, s_mem_arena& mem_arena, s_rgba_texture_data& o_tex_data);
 
-    [[nodiscard]] t_b8 PackTexture(const s_rgba_texture_data& tex_data, const s_str_rdonly file_path, s_mem_arena& temp_mem_arena);
+    [[nodiscard]] t_b8 PackTexture(const s_rgba_texture_data_rdonly& tex_data, const s_str_rdonly file_path, s_mem_arena& temp_mem_arena);
     [[nodiscard]] t_b8 UnpackTexture(const s_str_rdonly file_path, s_mem_arena& mem_arena, s_rgba_texture_data& o_tex_data);
 }

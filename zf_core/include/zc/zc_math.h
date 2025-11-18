@@ -195,7 +195,7 @@ namespace zf {
 
     template<co_floating_point tp_type>
     tp_type CalcDist(const s_v2<tp_type> a, const s_v2<tp_type> b) {
-        return CalcMag({b.x - a.x, b.y - a.y});
+        return CalcMag(s_v2<tp_type>(b.x - a.x, b.y - a.y));
     }
 
     template<co_floating_point tp_type>
@@ -230,21 +230,21 @@ namespace zf {
         }
     };
 
-    template<co_numeric tp_type> s_v2<tp_type> Pos(const s_rect<tp_type> rect) { return {rect.x, rect.y}; }
-    template<co_numeric tp_type> s_v2<tp_type> Size(const s_rect<tp_type> rect) { return {rect.width, rect.height}; }
-    template<co_numeric tp_type> tp_type Left(const s_rect<tp_type> rect) { return rect.x; }
-    template<co_numeric tp_type> tp_type Top(const s_rect<tp_type> rect) { return rect.y; }
-    template<co_numeric tp_type> tp_type Right(const s_rect<tp_type> rect) { return rect.x + rect.width; }
-    template<co_numeric tp_type> tp_type Bottom(const s_rect<tp_type> rect) { return rect.y + rect.height; }
+    template<co_numeric tp_type> s_v2<tp_type> RectPos(const s_rect<tp_type> rect) { return {rect.x, rect.y}; }
+    template<co_numeric tp_type> s_v2<tp_type> RectSize(const s_rect<tp_type> rect) { return {rect.width, rect.height}; }
+    template<co_numeric tp_type> tp_type RectLeft(const s_rect<tp_type> rect) { return rect.x; }
+    template<co_numeric tp_type> tp_type RectTop(const s_rect<tp_type> rect) { return rect.y; }
+    template<co_numeric tp_type> tp_type RectRight(const s_rect<tp_type> rect) { return rect.x + rect.width; }
+    template<co_numeric tp_type> tp_type RectBottom(const s_rect<tp_type> rect) { return rect.y + rect.height; }
 
     template<co_numeric tp_type>
-    t_b8 DoesRectContain(const s_rect<tp_type> rect, const s_v2<tp_type> pt) {
-        return pt.x > Left(rect) && pt.y > Top(rect) && pt.x < Right(rect) && pt.y < Bottom(rect);
+    t_b8 DoesRectContainPoint(const s_rect<tp_type> rect, const s_v2<tp_type> pt) {
+        return pt.x > RectLeft(rect) && pt.y > RectTop(rect) && pt.x < RectRight(rect) && pt.y < RectBottom(rect);
     }
 
     template<co_numeric tp_type>
     t_b8 DoRectsIntersect(const s_rect<tp_type> a, const s_rect<tp_type> b) {
-        return Left(a) < Right(b) && Top(a) < Bottom(b) && Right(a) > Left(b) && Bottom(a) > Top(b);
+        return RectLeft(a) < RectRight(b) && RectTop(a) < RectBottom(b) && RectRight(a) > RectLeft(b) && RectBottom(a) > RectTop(b);
     }
 
     // Generate a rectangle encompassing all of the provided rectangles. At least a single rectangle must be provided.

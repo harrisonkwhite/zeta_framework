@@ -23,7 +23,7 @@ namespace zf {
         s_mem_arena perm_mem_arena; // The memory in here exists for the lifetime of the program, it does not get reset.
         s_mem_arena temp_mem_arena; // While the memory here also exists for the program lifetime, it gets reset after game initialisation and after every frame. Useful if you just need some temporary working space.
 
-        //s_gfx_resource_arena gfx_res_arena; // For GFX resources existing for the lifetime of the game.
+        gfx::s_resource_arena gfx_res_arena; // For GFX resources existing for the lifetime of the game.
 
         void* dev_mem; // Memory optionally reserved by the developer for their own use, accessible in their defined functions through the provided ZF context.
     };
@@ -59,9 +59,8 @@ namespace zf {
 
         game.run_stage = ec_game_run_stage::window_initted;
 
-#if 0
         // Initialise the permanent GFX resource arena.
-        if (!MakeGFXResourceArena(game.perm_mem_arena, 1024, game.gfx_res_arena)) {
+        if (!gfx::MakeResourceArena(game.perm_mem_arena, 1024, game.gfx_res_arena)) {
             ZF_REPORT_FAILURE();
             return false;
         }
@@ -75,7 +74,6 @@ namespace zf {
             ZF_REPORT_FAILURE();
             return false;
         }
-#endif
 
         // Initialise developer memory.
         if (info.dev_mem_size > 0) {
@@ -93,7 +91,7 @@ namespace zf {
                 .dev_mem = game.dev_mem,
                 .perm_mem_arena = game.perm_mem_arena,
                 .temp_mem_arena = game.temp_mem_arena,
-                //.gfx_res_arena = game.gfx_res_arena
+                .gfx_res_arena = game.gfx_res_arena
             };
 
             if (!info.init_func(context)) {
@@ -151,7 +149,6 @@ namespace zf {
                 } while (frame_dur_accum >= targ_tick_interval);
 
                 // Perform a single render.
-#if 0
                 s_rendering_state* const rendering_state = PrepareRenderingPhase(game.temp_mem_arena);
 
                 if (!rendering_state) {
@@ -179,7 +176,6 @@ namespace zf {
                 }
 
                 CompleteRenderingPhase(rendering_context);
-#endif
 
                 SwapBuffers();
             }
@@ -216,7 +212,7 @@ namespace zf {
                     break;
 
                 case ec_game_run_stage::gfx_res_arena_initted:
-                    //ReleaseGFXResourceArena(game.gfx_res_arena);
+                    gfx::ReleaseResourceArena(game.gfx_res_arena);
                     break;
 
                 case ec_game_run_stage::dev_init_func_ran_and_succeeded:
