@@ -9,7 +9,7 @@ namespace zf {
 
         ma_decoder decoder;
 
-        if (ma_decoder_init_file(file_path.Raw(), nullptr, &decoder) != MA_SUCCESS) {
+        if (ma_decoder_init_file(StrRaw(file_path), nullptr, &decoder) != MA_SUCCESS) {
             return false;
         }
 
@@ -28,7 +28,7 @@ namespace zf {
                 return false;
             }
 
-            if (ma_decoder_read_pcm_frames(&decoder, o_snd_data.pcm.Raw(), frame_cnt, nullptr) != MA_SUCCESS) {
+            if (ma_decoder_read_pcm_frames(&decoder, o_snd_data.pcm.buf_raw, frame_cnt, nullptr) != MA_SUCCESS) {
                 return false;
             }
 
@@ -58,7 +58,7 @@ namespace zf {
                 return false;
             }
 
-            if (WriteItemArrayToFile(fs, snd_data.pcm.ToReadonly()) < snd_data.pcm.Len()) {
+            if (WriteItemArrayToFile(fs, snd_data.pcm) < snd_data.pcm.len) {
                 return false;
             }
 
@@ -88,7 +88,7 @@ namespace zf {
                 return false;
             }
 
-            if (ReadItemArrayFromFile(fs, o_snd_data.pcm) < o_snd_data.pcm.Len()) {
+            if (ReadItemArrayFromFile(fs, o_snd_data.pcm) < o_snd_data.pcm.len) {
                 return false;
             }
 

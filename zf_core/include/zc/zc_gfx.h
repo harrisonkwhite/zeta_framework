@@ -5,21 +5,6 @@
 
 namespace zf {
     struct s_color_rgba32f {
-        constexpr s_color_rgba32f() = default;
-
-        constexpr s_color_rgba32f(const t_f32 r, const t_f32 g, const t_f32 b, const t_f32 a = 1.0f) : r(r), g(g), b(b), a(a) {
-            ZF_ASSERT(r >= 0.0f && r <= 1.0f
-                && g >= 0.0f && g <= 1.0f
-                && b >= 0.0f && b <= 1.0f
-                && a >= 0.0f && a <= 1.0f);
-        }
-
-        constexpr t_f32 R() const { return r; }
-        constexpr t_f32 G() const { return g; }
-        constexpr t_f32 B() const { return b; }
-        constexpr t_f32 A() const { return a; }
-
-    private:
         t_f32 r;
         t_f32 g;
         t_f32 b;
@@ -32,9 +17,6 @@ namespace zf {
         t_u8 b;
         t_u8 a;
 
-        constexpr s_color_rgba8() = default;
-        constexpr s_color_rgba8(const t_u8 r, const t_u8 g, const t_u8 b, const t_u8 a) : r(r), g(g), b(b), a(a) {}
-
         constexpr operator s_color_rgba32f() {
             return {r / 255.0f, g / 255.0f, b / 255.0f, a / 255.0f};
         }
@@ -44,20 +26,20 @@ namespace zf {
         ZF_ASSERT(amount >= 0.0f && amount <= 1.0f);
 
         return {
-            Lerp(a.R(), b.R(), amount),
-            Lerp(a.G(), b.G(), amount),
-            Lerp(a.B(), b.B(), amount),
-            Lerp(a.A(), b.A(), amount)
+            Lerp(a.r, b.r, amount),
+            Lerp(a.g, b.g, amount),
+            Lerp(a.b, b.b, amount),
+            Lerp(a.a, b.a, amount)
         };
     }
 
     constexpr t_f32 ColorLuminance(const s_color_rgba32f col) {
-        return (0.2126f * col.R()) + (0.7152f * col.G()) + (0.0722f * col.B());
+        return (0.2126f * col.r) + (0.7152f * col.g) + (0.0722f * col.b);
     }
 
     constexpr s_color_rgba32f ColorAsGrayscale(const s_color_rgba32f col) {
         const t_f32 lum = ColorLuminance(col);
-        return {lum, lum, lum, col.A()};
+        return {lum, lum, lum, col.a};
     }
 
     constexpr s_color_rgba8 ColorFromHex(const t_u32 hex) {
@@ -70,23 +52,23 @@ namespace zf {
     }
 
     namespace colors {
-        constexpr s_color_rgba32f g_black = {0.0f, 0.0f, 0.0f};
-        constexpr s_color_rgba32f g_dark_gray = {0.25f, 0.25f, 0.25f};
-        constexpr s_color_rgba32f g_gray = {0.5f, 0.5f, 0.5f};
-        constexpr s_color_rgba32f g_light_gray = {0.75f, 0.75f, 0.75f};
-        constexpr s_color_rgba32f g_white = {1.0f, 1.0f, 1.0f};
-        constexpr s_color_rgba32f g_red = {1.0f, 0.0f, 0.0f};
-        constexpr s_color_rgba32f g_orange = {1.0f, 0.5f, 0.0f};
-        constexpr s_color_rgba32f g_yellow = {1.0f, 1.0f, 0.0f};
-        constexpr s_color_rgba32f g_lime = {0.75f, 1.0f, 0.0f};
-        constexpr s_color_rgba32f g_green = {0.0f, 1.0f, 0.0f};
-        constexpr s_color_rgba32f g_teal = {0.0f, 0.5f, 0.5f};
-        constexpr s_color_rgba32f g_cyan = {0.0f, 1.0f, 1.0f};
-        constexpr s_color_rgba32f g_blue = {0.0f, 0.0f, 1.0f};
-        constexpr s_color_rgba32f g_purple = {0.5f, 0.0f, 0.5f};
-        constexpr s_color_rgba32f g_magenta = {1.0f, 0.0f, 1.0f};
-        constexpr s_color_rgba32f g_pink = {1.0f, 0.75f, 0.8f};
-        constexpr s_color_rgba32f g_brown = {0.6f, 0.3f, 0.0f};
+        constexpr s_color_rgba32f g_black = {0.0f, 0.0f, 0.0f, 1.0f};
+        constexpr s_color_rgba32f g_dark_gray = {0.25f, 0.25f, 0.25f, 1.0f};
+        constexpr s_color_rgba32f g_gray = {0.5f, 0.5f, 0.5f, 1.0f};
+        constexpr s_color_rgba32f g_light_gray = {0.75f, 0.75f, 0.75f, 1.0f};
+        constexpr s_color_rgba32f g_white = {1.0f, 1.0f, 1.0f, 1.0f};
+        constexpr s_color_rgba32f g_red = {1.0f, 0.0f, 0.0f, 1.0f};
+        constexpr s_color_rgba32f g_orange = {1.0f, 0.5f, 0.0f, 1.0f};
+        constexpr s_color_rgba32f g_yellow = {1.0f, 1.0f, 0.0f, 1.0f};
+        constexpr s_color_rgba32f g_lime = {0.75f, 1.0f, 0.0f, 1.0f};
+        constexpr s_color_rgba32f g_green = {0.0f, 1.0f, 0.0f, 1.0f};
+        constexpr s_color_rgba32f g_teal = {0.0f, 0.5f, 0.5f, 1.0f};
+        constexpr s_color_rgba32f g_cyan = {0.0f, 1.0f, 1.0f, 1.0f};
+        constexpr s_color_rgba32f g_blue = {0.0f, 0.0f, 1.0f, 1.0f};
+        constexpr s_color_rgba32f g_purple = {0.5f, 0.0f, 0.5f, 1.0f};
+        constexpr s_color_rgba32f g_magenta = {1.0f, 0.0f, 1.0f, 1.0f};
+        constexpr s_color_rgba32f g_pink = {1.0f, 0.75f, 0.8f, 1.0f};
+        constexpr s_color_rgba32f g_brown = {0.6f, 0.3f, 0.0f, 1.0f};
     }
 
     namespace origins {
@@ -116,10 +98,6 @@ namespace zf {
     struct s_rgba_texture_data {
         s_v2<t_s32> size_in_pxs;
         s_array<t_u8> px_data;
-
-        s_rgba_texture_data() = default;
-        s_rgba_texture_data(const s_v2<t_s32> size_in_pxs, const s_array<t_u8> px_data)
-            : size_in_pxs(size_in_pxs), px_data(px_data) {}
     };
 
     [[nodiscard]] t_b8 LoadRGBATextureDataFromRaw(const s_str_rdonly file_path, s_mem_arena& mem_arena, s_rgba_texture_data& o_tex_data);

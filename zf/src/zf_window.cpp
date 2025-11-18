@@ -205,7 +205,7 @@ namespace zf {
         glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
         glfwWindowHint(GLFW_VISIBLE, false);
 
-        g_glfw_window = glfwCreateWindow(size.x, size.y, title.Raw(), nullptr, nullptr);
+        g_glfw_window = glfwCreateWindow(size.x, size.y, StrRaw(title), nullptr, nullptr);
 
         if (!g_glfw_window) {
             ZF_REPORT_FAILURE();
@@ -272,7 +272,7 @@ namespace zf {
 
         glfwSetCharCallback(g_glfw_window,
             [](GLFWwindow* window, const t_u32 codepoint) {
-                for (t_s32 i = 0; i < g_input_events.unicode_buf.Len(); i++) {
+                for (t_s32 i = 0; i < g_input_events.unicode_buf.g_len; i++) {
                     if (!g_input_events.unicode_buf[i]) {
                         g_input_events.unicode_buf[i] = static_cast<char>(codepoint);
                         return;

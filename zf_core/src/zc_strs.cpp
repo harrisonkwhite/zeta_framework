@@ -4,7 +4,7 @@ namespace zf {
     t_size CalcStrLen(const s_str_rdonly str) {
         t_size len = 0;
 
-        while (len < str.chrs.Len() && str.chrs[len]) {
+        while (len < str.chrs.len && str.chrs[len]) {
             len++;
         }
 
@@ -13,7 +13,7 @@ namespace zf {
 
     t_b8 IsStrTerminated(const s_str_rdonly str) {
         // The terminator is most likely at the end, so we start there.
-        for (t_size i = str.chrs.Len() - 1; i >= 0; i--) {
+        for (t_size i = str.chrs.len - 1; i >= 0; i--) {
             if (!str.chrs[i]) {
                 return true;
             }

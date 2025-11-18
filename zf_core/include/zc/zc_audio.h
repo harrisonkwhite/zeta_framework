@@ -5,18 +5,14 @@
 
 namespace zf {
     struct s_sound_meta {
-        t_s32 channel_cnt = 0;
-        t_s32 sample_rate = 0;
-        t_s64 frame_cnt = 0; // This isn't really needed, and can be deduced from channel count and PCM array length. But it makes the packing and unpacking I/O simpler.
+        t_s32 channel_cnt;
+        t_s32 sample_rate;
+        t_s64 frame_cnt; // This isn't really needed, and can be deduced from channel count and PCM array length. But it makes the packing and unpacking I/O simpler.
     };
 
     struct s_sound_data {
         s_sound_meta meta;
         s_array<t_f32> pcm;
-
-        s_sound_data() = default;
-        s_sound_data(const s_sound_meta meta, const s_array<t_f32> pcm)
-            : meta(meta), pcm(pcm) {}
     };
 
     inline t_s64 CalcSampleCount(const s_sound_data& snd_data) {

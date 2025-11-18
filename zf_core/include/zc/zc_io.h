@@ -27,7 +27,7 @@ namespace zf {
     // The number of items to read is the length of this array.
     template<typename tp_type>
     [[nodiscard]] t_size ReadItemArrayFromFile(const s_file_stream& fs, const s_array<tp_type> dest_arr) {
-        return fread(dest_arr.Raw(), ZF_SIZE_OF(tp_type), dest_arr.Len(), fs.raw);
+        return fread(dest_arr.buf_raw, ZF_SIZE_OF(tp_type), dest_arr.len, fs.raw);
     }
 
     template<typename tp_type>
@@ -37,12 +37,12 @@ namespace zf {
 
     template<typename tp_type>
     [[nodiscard]] t_size WriteItemArrayToFile(const s_file_stream& fs, const s_array<const tp_type> src_arr) {
-        return fwrite(src_arr.Raw(), ZF_SIZE_OF(tp_type), src_arr.Len(), fs.raw);
+        return fwrite(src_arr.buf_raw, ZF_SIZE_OF(tp_type), src_arr.len, fs.raw);
     }
 
     template<typename tp_type>
     [[nodiscard]] t_size WriteItemArrayToFile(const s_file_stream& fs, const s_array<tp_type> src_arr) {
-        return WriteItemArrayToFile(fs, src_arr.ToReadonly());
+        return WriteItemArrayToFile(fs, static_cast<s_array<const tp_type>>(src_arr));
     }
 
     // Reserve a buffer and populate it with the binary contents of a file, optionally with a terminating byte.
@@ -56,7 +56,7 @@ namespace zf {
             return false;
         }
 
-        o_contents = StrFromRawTerminated(reinterpret_cast<char*>(contents_default.Raw()), contents_default.Len() - 1);
+        o_contents = StrFromRawTerminated(reinterpret_cast<char*>(contents_default.buf_raw), contents_default.len - 1);
 
         return true;
     }

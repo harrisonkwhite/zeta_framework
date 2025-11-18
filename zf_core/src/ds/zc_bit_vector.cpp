@@ -4,7 +4,7 @@ namespace zf {
     static t_u8 ShiftLeftSingle(const s_bit_vector bv, t_u8 carry = 0) {
         ZF_ASSERT(carry == 0 || carry == 1);
 
-        if (bv.BitCount() == 0) {
+        if (bv.bit_cnt == 0) {
             return 0;
         }
 
@@ -13,17 +13,17 @@ namespace zf {
         };
 
         // Shift all bytes except the last.
-        for (t_size i = 0; i < bv.Bytes().Len() - 1; i++) {
+        for (t_size i = 0; i < bv.bytes.len - 1; i++) {
             const t_u8 carry_old = carry;
-            carry = make_carry(bv.Bytes()[i], 8);
-            bv.Bytes()[i] <<= 1;
-            bv.Bytes()[i] |= carry_old;
+            carry = make_carry(bv.bytes[i], 8);
+            bv.bytes[i] <<= 1;
+            bv.bytes[i] |= carry_old;
         }
 
         // Apply shift to final byte (might have less than 8 bits in the vector).
-        const t_size remaining_bit_cnt = bv.BitCount() - (8 * (bv.Bytes().Len() - 1));
+        const t_size remaining_bit_cnt = bv.bit_cnt - (8 * (bv.bytes.len - 1));
 
-        t_u8& last_byte = bv.Bytes()[bv.Bytes().Len() - 1];
+        t_u8& last_byte = bv.bytes[bv.bytes.len - 1];
         const t_u8 carry_old = carry;
         carry = make_carry(last_byte, remaining_bit_cnt);
         last_byte <<= 1;
@@ -51,7 +51,7 @@ namespace zf {
     }
 
     t_size FindFirstSetBit(const s_bit_vector_rdonly bv, const t_size from, const t_b8 inverted) {
-        ZF_ASSERT(from <= bv.BitCount()); // Intentionally allowing the upper bound here for the case of iteration.
+        ZF_ASSERT(from <= bv.bit_cnt); // Intentionally allowing the upper bound here for the case of iteration.
 
         static constexpr s_static_array<t_size, 256> lg_mappings = {
             {
@@ -314,21 +314,21 @@ namespace zf {
             }
         };
 
-        if (bv.BitCount() == 0 || from == bv.BitCount()) {
+        if (bv.bit_cnt == 0 || from == bv.bit_cnt) {
             return -1;
         }
 
         const t_u8 xor_mask = inverted ? 0xFF : 0x00;
 
-        for (t_size i = from / 8; i < bv.Bytes().Len(); i++) {
-            t_u8 byte = bv.Bytes()[i];
+        for (t_size i = from / 8; i < bv.bytes.len; i++) {
+            t_u8 byte = bv.bytes[i];
 
             // @speed: Not sure if the compiler will pull these checks out.
             if (i == 0) {
                 byte &= ByteBitmask(from % 8, 8);
             }
 
-            if (i == bv.Bytes().Len() - 1) {
+            if (i == bv.bytes.len - 1) {
                 byte &= BitVectorLastByteBitmask(bv);
             }
 

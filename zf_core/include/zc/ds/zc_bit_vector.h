@@ -17,51 +17,17 @@ namespace zf {
     }
 
     struct s_bit_vector_rdonly {
-        constexpr s_bit_vector_rdonly() = default;
-        constexpr s_bit_vector_rdonly(const s_array<const t_u8> bytes)
-            : bytes(bytes), bit_cnt(BytesToBits(bytes.Len())) {}
-        constexpr s_bit_vector_rdonly(const s_array<const t_u8> bytes, const t_size bit_cnt)
-            : bytes(bytes), bit_cnt(bit_cnt) {
-            ZF_ASSERT(bytes.Len() == BitsToBytes(bit_cnt));
-        }
-
-        constexpr s_array<const t_u8> Bytes() const {
-            return bytes;
-        }
-
-        constexpr t_size BitCount() const {
-            return bit_cnt;
-        }
-
-    private:
         s_array<const t_u8> bytes;
-        t_size bit_cnt = 0;
+        t_size bit_cnt;
     };
 
     struct s_bit_vector {
-        constexpr s_bit_vector() = default;
-        constexpr s_bit_vector(const s_array<t_u8> bytes)
-            : bytes(bytes), bit_cnt(BytesToBits(bytes.Len())) {}
-        constexpr s_bit_vector(const s_array<t_u8> bytes, const t_size bit_cnt)
-            : bytes(bytes), bit_cnt(bit_cnt) {
-            ZF_ASSERT(bytes.Len() == BitsToBytes(bit_cnt));
-        }
-
-        constexpr s_array<t_u8> Bytes() const {
-            return bytes;
-        }
-
-        constexpr t_size BitCount() const {
-            return bit_cnt;
-        }
+        s_array<t_u8> bytes;
+        t_size bit_cnt;
 
         constexpr operator s_bit_vector_rdonly() const {
             return {bytes, bit_cnt};
         }
-
-    private:
-        s_array<t_u8> bytes;
-        t_size bit_cnt = 0;
     };
 
     template<t_size tp_bit_cnt>
@@ -91,37 +57,37 @@ namespace zf {
     }
 
     constexpr t_b8 IsBitSet(const s_bit_vector_rdonly bv, const t_size index) {
-        ZF_ASSERT(index >= 0 && index < bv.BitCount());
-        return bv.Bytes()[index / 8] & (1 << (index % 8));
+        ZF_ASSERT(index >= 0 && index < bv.bit_cnt);
+        return bv.bytes[index / 8] & (1 << (index % 8));
     }
 
     constexpr void SetBit(const s_bit_vector bv, const t_size index) {
-        ZF_ASSERT(index >= 0 && index < bv.BitCount());
-        bv.Bytes()[index / 8] |= (1 << (index % 8));
+        ZF_ASSERT(index >= 0 && index < bv.bit_cnt);
+        bv.bytes[index / 8] |= (1 << (index % 8));
     }
 
     constexpr void UnsetBit(const s_bit_vector bv, const t_size index) {
-        ZF_ASSERT(index >= 0 && index < bv.BitCount());
-        bv.Bytes()[index / 8] &= ~(1 << (index % 8));
+        ZF_ASSERT(index >= 0 && index < bv.bit_cnt);
+        bv.bytes[index / 8] &= ~(1 << (index % 8));
     }
 
     inline t_u8 BitVectorLastByteBitmask(const s_bit_vector_rdonly bv) {
-        ZF_ASSERT(bv.BitCount() > 0);
+        ZF_ASSERT(bv.bit_cnt > 0);
 
-        const t_size bit_cnt = bv.BitCount() - (8 * (bv.Bytes().Len() - 1));
+        const t_size bit_cnt = bv.bit_cnt - (8 * (bv.bytes.len - 1));
         return ByteBitmask(0, bit_cnt);
     }
 
     inline t_u8 BitVectorLastByte(const s_bit_vector_rdonly bv) {
-        ZF_ASSERT(bv.BitCount() > 0);
-        return bv.Bytes()[bv.Bytes().Len() - 1] & BitVectorLastByteBitmask(bv);
+        ZF_ASSERT(bv.bit_cnt > 0);
+        return bv.bytes[bv.bytes.len - 1] & BitVectorLastByteBitmask(bv);
     }
 
     inline t_b8 AreAllBitsSet(const s_bit_vector_rdonly bv) {
-        ZF_ASSERT(bv.BitCount() > 0);
+        ZF_ASSERT(bv.bit_cnt > 0);
 
-        for (t_size i = 0; i < bv.Bytes().Len() - 1; i++) {
-            if (bv.Bytes()[i] != 0xFF) {
+        for (t_size i = 0; i < bv.bytes.len - 1; i++) {
+            if (bv.bytes[i] != 0xFF) {
                 return false;
             }
         }
@@ -130,8 +96,8 @@ namespace zf {
     }
 
     inline t_b8 IsAnyBitSet(const s_bit_vector_rdonly bv) {
-        for (t_size i = 0; i < bv.Bytes().Len() - 1; i++) {
-            if (bv.Bytes()[i] != 0) {
+        for (t_size i = 0; i < bv.bytes.len - 1; i++) {
+            if (bv.bytes[i] != 0) {
                 return true;
             }
         }

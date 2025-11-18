@@ -102,8 +102,8 @@ namespace zf {
 
     template<co_numeric tp_type>
     struct s_v2 {
-        tp_type x = 0;
-        tp_type y = 0;
+        tp_type x;
+        tp_type y;
 
         constexpr s_v2() = default;
         constexpr s_v2(const tp_type x, const tp_type y) : x(x), y(y) {}
@@ -111,14 +111,6 @@ namespace zf {
         template<co_numeric tp_other_type>
         constexpr explicit operator s_v2<tp_other_type>() const {
             return {static_cast<tp_other_type>(x), static_cast<tp_other_type>(y)};
-        }
-
-        s_v2<tp_type> CompwiseProd(const s_v2<tp_type> other) const {
-            return {x * other.x, y * other.y};
-        }
-
-        tp_type DotProd(const s_v2<tp_type> other) const {
-            return (x * other.x) + (y * other.y);
         }
 
         constexpr t_b8 operator==(const s_v2<tp_type>& other) const {
@@ -168,75 +160,66 @@ namespace zf {
             y /= scalar;
             return *this;
         }
-
-        tp_type Mag() const requires co_floating_point<tp_type> {
-            return sqrt((x * x) + (y * y));
-        }
-
-        s_v2<tp_type> NormalizedOrZero() const requires co_floating_point<tp_type> {
-            const tp_type mag = Mag();
-
-            if (mag == 0) {
-                return {};
-            }
-
-            return {x / mag, y / mag};
-        }
-
-        tp_type DistTo(const s_v2<tp_type> other) const requires co_floating_point<tp_type> {
-            return (other - *this).Mag();
-        }
-
-        s_v2<tp_type> DirTo(const s_v2<tp_type> other) const requires co_floating_point<tp_type> {
-            return (other - *this).NormalizedOrZero();
-        }
-
-        tp_type DirToInRads(const s_v2<tp_type> other) const requires co_floating_point<tp_type> {
-            return atan2(-(other.y - y), other.x - x);
-        }
     };
 
-    template<co_numeric tp_type>
+    template<co_floating_point tp_type>
     constexpr s_v2<tp_type> operator*(const tp_type scalar, const s_v2<tp_type>& v) {
         return {v.x * scalar, v.y * scalar};
     }
 
     template<co_numeric tp_type>
+    s_v2<tp_type> CompwiseProd(const s_v2<tp_type> a, const s_v2<tp_type> b) {
+        return {a.x * b.x, a.y * b.y};
+    }
+
+    template<co_numeric tp_type>
+    tp_type DotProd(const s_v2<tp_type> a, const s_v2<tp_type> b) {
+        return (a.x * b.x) + (a.y * b.y);
+    }
+
+    template<co_floating_point tp_type>
+    tp_type CalcMag(const s_v2<tp_type> v) {
+        return sqrt((v.x * v.x) + (v.y * v.y));
+    }
+
+    template<co_floating_point tp_type>
+    s_v2<tp_type> CalcNormalOrZero(const s_v2<tp_type> v) {
+        const tp_type mag = CalcMag(v);
+
+        if (mag == 0) {
+            return {};
+        }
+
+        return {v.x / mag, v.y / mag};
+    }
+
+    template<co_floating_point tp_type>
+    tp_type CalcDist(const s_v2<tp_type> a, const s_v2<tp_type> b) {
+        return CalcMag({b.x - a.x, b.y - a.y});
+    }
+
+    template<co_floating_point tp_type>
+    s_v2<tp_type> CalcDir(const s_v2<tp_type> a, const s_v2<tp_type> b) {
+        return CalcNormalOrZero({b.x - a.x, b.y - a.y});
+    }
+
+    template<co_floating_point tp_type>
+    tp_type CalcDirInRads(const s_v2<tp_type> a, const s_v2<tp_type> b) {
+        return atan2(-(b.y - a.y), b.x - a.x);
+    }
+
+    template<co_numeric tp_type>
     struct s_rect {
-        tp_type x = 0;
-        tp_type y = 0;
-        tp_type width = 0;
-        tp_type height = 0;
+        tp_type x;
+        tp_type y;
+        tp_type width;
+        tp_type height;
 
-        s_rect() = default;
-        s_rect(const tp_type x, const tp_type y, const tp_type width, const tp_type height) : x(x), y(y), width(width), height(height) {}
-        s_rect(const s_v2<tp_type> pos, const s_v2<tp_type> size) : x(pos.x), y(pos.y), width(size.x), height(size.y) {}
-        s_rect(const s_v2<tp_type> pos, const s_v2<tp_type> size, const s_v2<tp_type> origin) requires co_floating_point<tp_type>
-            : x(pos.x - (size.x * origin.x)), y(pos.y - (size.y * origin.y)), width(size.x), height(size.y) {}
-
-        s_v2<tp_type> Pos() const {
-            return {x, y};
-        }
-
-        s_v2<tp_type> Size() const {
-            return {width, height};
-        }
-
-        tp_type Left() const {
-            return x;
-        }
-
-        tp_type Right() const {
-            return x + width;
-        }
-
-        tp_type Top() const {
-            return y;
-        }
-
-        tp_type Bottom() const {
-            return y + height;
-        }
+        constexpr s_rect() = default;
+        constexpr s_rect(const tp_type x, const tp_type y, const tp_type width, const tp_type height)
+            : x(x), y(y), width(width), height(height) {}
+        constexpr s_rect(const s_v2<tp_type> pos, const s_v2<tp_type> size)
+            : x(pos.x), y(pos.y), width(size.x), height(size.y) {}
 
         constexpr t_b8 operator==(const s_rect<tp_type>& other) const {
             return x == other.x && y == other.y;
@@ -245,26 +228,26 @@ namespace zf {
         constexpr t_b8 operator!=(const s_rect<tp_type>& other) const {
             return !(*this == other);
         }
-
-        t_b8 Contains(const s_v2<tp_type> pt) const {
-            return pt.x > Left() && pt.y > Top() && pt.x < Right() && pt.y < Bottom();
-        }
-
-        t_b8 Intersects(const s_rect<tp_type> other) const {
-            return Left() < other.Right() && Top() < other.Bottom() && Right() > other.Left() && Bottom() > other.Top();
-        }
-
-        t_b8 Touches(const s_v2<tp_type> pt) const {
-            return pt.x >= Left() && pt.y >= Top() && pt.x <= Right() && pt.y <= Bottom();
-        }
-
-        t_b8 Touches(const s_rect<tp_type> other) const {
-            return Left() <= other.Right() && Top() <= other.Bottom() && Right() >= other.Left() && Bottom() >= other.Top();
-        }
     };
 
-    // Generate a rectangle encompassing all of the provided rectangles.
-    // At least a single rectangle must be provided.
+    template<co_numeric tp_type> s_v2<tp_type> Pos(const s_rect<tp_type> rect) { return {rect.x, rect.y}; }
+    template<co_numeric tp_type> s_v2<tp_type> Size(const s_rect<tp_type> rect) { return {rect.width, rect.height}; }
+    template<co_numeric tp_type> tp_type Left(const s_rect<tp_type> rect) { return rect.x; }
+    template<co_numeric tp_type> tp_type Top(const s_rect<tp_type> rect) { return rect.y; }
+    template<co_numeric tp_type> tp_type Right(const s_rect<tp_type> rect) { return rect.x + rect.width; }
+    template<co_numeric tp_type> tp_type Bottom(const s_rect<tp_type> rect) { return rect.y + rect.height; }
+
+    template<co_numeric tp_type>
+    t_b8 DoesRectContain(const s_rect<tp_type> rect, const s_v2<tp_type> pt) {
+        return pt.x > Left(rect) && pt.y > Top(rect) && pt.x < Right(rect) && pt.y < Bottom(rect);
+    }
+
+    template<co_numeric tp_type>
+    t_b8 DoRectsIntersect(const s_rect<tp_type> a, const s_rect<tp_type> b) {
+        return Left(a) < Right(b) && Top(a) < Bottom(b) && Right(a) > Left(b) && Bottom(a) > Top(b);
+    }
+
+    // Generate a rectangle encompassing all of the provided rectangles. At least a single rectangle must be provided.
     template<co_numeric tp_type>
     s_rect<tp_type> CalcSpanningRect(const s_array<const s_rect<tp_type>> rects) {
         ZF_ASSERT(!rects.IsEmpty());
@@ -291,54 +274,35 @@ namespace zf {
 
     struct s_matrix_4x4 {
         s_static_array<s_static_array<t_f32, 4>, 4> elems;
-
-        static s_matrix_4x4 Identity() {
-            s_matrix_4x4 mat;
-
-            mat.elems[0][0] = 1.0f;
-            mat.elems[1][1] = 1.0f;
-            mat.elems[2][2] = 1.0f;
-            mat.elems[3][3] = 1.0f;
-
-            return mat;
-        }
-
-        static s_matrix_4x4 Orthographic(const t_f32 left, const t_f32 right, const t_f32 bottom, const t_f32 top, const t_f32 z_near, const t_f32 z_far) {
-            ZF_ASSERT(right > left);
-            ZF_ASSERT(top < bottom);
-            ZF_ASSERT(z_far > z_near);
-            ZF_ASSERT(z_near < z_far);
-
-            s_matrix_4x4 mat;
-            mat.elems[0][0] = 2.0f / (right - left);
-            mat.elems[1][1] = 2.0f / (top - bottom);
-            mat.elems[2][2] = -2.0f / (z_far - z_near);
-            mat.elems[3][0] = -(right + left) / (right - left);
-            mat.elems[3][1] = -(top + bottom) / (top - bottom);
-            mat.elems[3][2] = -(z_far + z_near) / (z_far - z_near);
-            mat.elems[3][3] = 1.0f;
-            return mat;
-        }
-
-        t_f32* Raw() {
-            return elems[0].buf_raw;
-        }
-
-        const t_f32* Raw() const {
-            return elems[0].buf_raw;
-        }
-
-        void Translate(const s_v2<t_f32> trans) {
-            elems[3][0] += trans.x;
-            elems[3][1] += trans.y;
-        }
-
-        void Scale(const t_f32 scalar) {
-            elems[0][0] *= scalar;
-            elems[1][1] *= scalar;
-            elems[2][2] *= scalar;
-        }
     };
+
+    constexpr s_matrix_4x4 MakeIdentityMatrix4x4() {
+        s_matrix_4x4 mat = {};
+
+        mat.elems[0][0] = 1.0f;
+        mat.elems[1][1] = 1.0f;
+        mat.elems[2][2] = 1.0f;
+        mat.elems[3][3] = 1.0f;
+
+        return mat;
+    }
+
+    inline s_matrix_4x4 MakeOrthographicMatrix4x4(const t_f32 left, const t_f32 right, const t_f32 bottom, const t_f32 top, const t_f32 z_near, const t_f32 z_far) {
+        ZF_ASSERT(right > left);
+        ZF_ASSERT(top < bottom);
+        ZF_ASSERT(z_far > z_near);
+        ZF_ASSERT(z_near < z_far);
+
+        s_matrix_4x4 mat = {};
+        mat.elems[0][0] = 2.0f / (right - left);
+        mat.elems[1][1] = 2.0f / (top - bottom);
+        mat.elems[2][2] = -2.0f / (z_far - z_near);
+        mat.elems[3][0] = -(right + left) / (right - left);
+        mat.elems[3][1] = -(top + bottom) / (top - bottom);
+        mat.elems[3][2] = -(z_far + z_near) / (z_far - z_near);
+        mat.elems[3][3] = 1.0f;
+        return mat;
+    }
 
     template<co_floating_point tp_type>
     constexpr tp_type Lerp(const tp_type a, const tp_type b, const tp_type t) {
@@ -355,6 +319,7 @@ namespace zf {
         return s_v2<tp_type>(cos(dir), -sin(dir)) * len;
     }
 
+    // Find the number in the array closest to the provided target. If there are ties, the first is returned. The array mustn't be empty.
     template<co_numeric tp_type>
     tp_type FindClosest(const s_array<const tp_type> nums, const tp_type targ) {
         ZF_ASSERT(!nums.IsEmpty());

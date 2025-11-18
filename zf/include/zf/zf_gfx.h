@@ -4,6 +4,7 @@
 #include <zc.h>
 
 namespace zf {
+#if 0
     using t_gl_id = GLuint;
 
     enum class ec_gfx_resource_type {
@@ -28,11 +29,15 @@ namespace zf {
     };
 
     struct s_gfx_resource_handle {
-        s_gfx_resource_handle() = default;
-        s_gfx_resource_handle(const s_gl_mesh mesh) : type(ec_gfx_resource_type::mesh), raw({.mesh = mesh}) {}
-        s_gfx_resource_handle(const s_gl_shader_prog shader_prog) : type(ec_gfx_resource_type::shader_prog), raw({.shader_prog = shader_prog}) {}
-        s_gfx_resource_handle(const s_gl_texture tex) : type(ec_gfx_resource_type::texture), raw({.tex = tex}) {}
+        ec_gfx_resource_type type;
 
+        union {
+            s_gl_mesh mesh;
+            s_gl_shader_prog shader_prog;
+            s_gl_texture tex;
+        } raw;
+
+#if 0
         ec_gfx_resource_type Type() const {
             return type;
         }
@@ -55,15 +60,7 @@ namespace zf {
             ZF_ASSERT(type == ec_gfx_resource_type::texture);
             return raw.tex;
         }
-
-    private:
-        ec_gfx_resource_type type = ec_gfx_resource_type::invalid;
-
-        union {
-            s_gl_mesh mesh;
-            s_gl_shader_prog shader_prog;
-            s_gl_texture tex;
-        } raw;
+#endif
     };
 
     struct s_gfx_resource_arena {
@@ -117,4 +114,5 @@ namespace zf {
 
         return LoadTextureAsset(tex_data, gfx_res_arena, o_asset);
     }
+#endif
 }

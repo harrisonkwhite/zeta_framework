@@ -10,10 +10,10 @@ namespace zf {
         eks_asset_type_cnt
     };
 
-    constexpr s_static_array<s_str_rdonly, eks_asset_type_cnt> g_asset_type_arr_names = {{
+    constexpr s_static_array<s_str_rdonly, eks_asset_type_cnt> g_asset_type_arr_names = {
         "textures",
         "sounds"
-    }};
+    };
 
     enum class ec_asset_field_type {
         str,
@@ -31,10 +31,10 @@ namespace zf {
         eks_tex_field_cnt
     };
 
-    constexpr s_static_array<s_asset_field, eks_tex_field_cnt> g_tex_fields = {{
+    constexpr s_static_array<s_asset_field, eks_tex_field_cnt> g_tex_fields = {
         {"src_file_path", ec_asset_field_type::str},
         {"dest_file_path", ec_asset_field_type::str}
-    }};
+    };
 
     enum e_snd_field {
         ek_snd_field_src_file_path,
@@ -54,10 +54,10 @@ namespace zf {
         s_static_array<cJSON*, eks_snd_field_cnt> snd_field_cj_ptrs = {};
 
         for (t_size asset_type_index = 0; asset_type_index < eks_asset_type_cnt; asset_type_index++) {
-            cJSON* const cj_assets = cJSON_GetObjectItemCaseSensitive(cj, g_asset_type_arr_names[asset_type_index].Raw());
+            cJSON* const cj_assets = cJSON_GetObjectItemCaseSensitive(cj, StrRaw(g_asset_type_arr_names[asset_type_index]));
 
             if (!cJSON_IsArray(cj_assets)) {
-                ZF_LOG_ERROR("No \"%s\" array found!", g_asset_type_arr_names[asset_type_index].Raw());
+                ZF_LOG_ERROR("No \"%s\" array found!", StrRaw(g_asset_type_arr_names[asset_type_index]));
                 return false;
             }
 
@@ -72,10 +72,10 @@ namespace zf {
                 const auto fields = [asset_type_index]() -> s_array<const s_asset_field> {
                     switch (asset_type_index) {
                         case ek_asset_type_texture:
-                            return g_tex_fields.ToNonstatic();
+                            return g_tex_fields;
 
                         case ek_asset_type_sound:
-                            return g_snd_fields.ToNonstatic();
+                            return g_snd_fields;
                     }
 
                     return {};
@@ -84,18 +84,18 @@ namespace zf {
                 const auto field_vals = [asset_type_index, &tex_field_cj_ptrs, &snd_field_cj_ptrs]() -> s_array<cJSON*> {
                     switch (asset_type_index) {
                         case ek_asset_type_texture:
-                            return tex_field_cj_ptrs.ToNonstatic();
+                            return tex_field_cj_ptrs;
 
                         case ek_asset_type_sound:
-                            return snd_field_cj_ptrs.ToNonstatic();
+                            return snd_field_cj_ptrs;
                     }
 
                     return {};
                 }();
 
                 // Get each field.
-                for (t_size fi = 0; fi < fields.Len(); fi++) {
-                    field_vals[fi] = cJSON_GetObjectItem(cj_asset, fields[fi].name.Raw());
+                for (t_size fi = 0; fi < fields.len; fi++) {
+                    field_vals[fi] = cJSON_GetObjectItem(cj_asset, StrRaw(fields[fi].name));
 
                     const auto is_valid = [fi, fields, field_vals]() -> t_b8 {
                         switch (fields[fi].type) {
@@ -110,13 +110,13 @@ namespace zf {
                     }();
 
                     if (!is_valid) {
-                        ZF_LOG_ERROR("Found a \"%s\" field missing or invalid in \"%s\"!", fields[fi].name.Raw(), g_asset_type_arr_names[asset_type_index].Raw());
+                        ZF_LOG_ERROR("Found a \"%s\" field missing or invalid in \"%s\"!", StrRaw(fields[fi].name), StrRaw(g_asset_type_arr_names[asset_type_index]));
                         return false;
                     }
                 }
 
                 // Perform different packing for each asset type.
-                const auto temp_mem_arena_offs_old = temp_mem_arena.Offs();
+                const auto temp_mem_arena_offs_old = temp_mem_arena.offs;
 
                 switch (asset_type_index) {
                     case ek_asset_type_texture:
@@ -174,7 +174,7 @@ namespace zf {
     t_b8 PackAssets(const s_str_rdonly instrs_json, s_mem_arena& temp_mem_arena) {
         ZF_ASSERT(IsStrTerminated(instrs_json));
 
-        cJSON* const cj = cJSON_Parse(instrs_json.Raw());
+        cJSON* const cj = cJSON_Parse(StrRaw(instrs_json));
 
         if (!cj) {
             ZF_LOG_ERROR_SPECIAL("cJSON", "%s", cJSON_GetErrorPtr());

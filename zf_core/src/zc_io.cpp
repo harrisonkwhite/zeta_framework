@@ -9,6 +9,7 @@
 #endif
 
 namespace zf {
+    // @todo: Support more access modes.
     t_b8 OpenFile(const s_str_rdonly file_path, const ec_file_access_mode mode, s_file_stream& o_fs) {
         ZF_ASSERT(IsStrTerminated(file_path));
 
@@ -16,11 +17,11 @@ namespace zf {
 
         switch (mode) {
         case ec_file_access_mode::read:
-            fs_raw = fopen(file_path.Raw(), "rb");
+            fs_raw = fopen(StrRaw(file_path), "rb");
             break;
 
         case ec_file_access_mode::write:
-            fs_raw = fopen(file_path.Raw(), "wb");
+            fs_raw = fopen(StrRaw(file_path), "wb");
             break;
         }
 
@@ -79,10 +80,10 @@ namespace zf {
     t_b8 CreateDirectory(const s_str_rdonly path) {
         ZF_ASSERT(IsStrTerminated(path));
 
-#ifdef _WIN32
-        const t_s32 res = _mkdir(path.Raw());
+#ifdef ZF_PLATFORM_WINDOWS
+        const t_s32 res = _mkdir(StrRaw(path));
 #else
-        const t_s32 res = mkdir(path, 0755);
+        const t_s32 res = mkdir(StrRaw(path), 0755);
 #endif
 
         return res == 0;
@@ -176,13 +177,13 @@ namespace zf {
                     }
                 }
 
-                const auto fs = fopen(path.Raw(), "wb");
+                s_file_stream fs;
 
-                if (!fs) {
+                if (!OpenFile(path, ec_file_access_mode::write, fs)) {
                     return false;
                 }
 
-                fclose(fs);
+                CloseFile(fs);
 
                 break;
             }
@@ -194,7 +195,7 @@ namespace zf {
     ec_path_type CheckPathType(const s_str_rdonly path) {
         struct stat info;
 
-        if (stat(path.Raw(), &info) != 0) {
+        if (stat(StrRaw(path), &info) != 0) {
             return ec_path_type::not_found;
         }
 

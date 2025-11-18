@@ -3,6 +3,7 @@
 #include <zf/zf_gfx.h>
 
 namespace zf {
+#if 0
     struct s_batch_vert {
         s_v2<t_f32> vert_coord;
         s_v2<t_f32> pos;
@@ -60,14 +61,15 @@ namespace zf {
     void DrawTexture(const s_rendering_context& rc, const s_texture_asset& tex, const s_v2<t_f32> pos, const s_rect<t_s32> src_rect = {}, const s_v2<t_f32> origin = origins::g_topleft, const s_v2<t_f32> scale = {1.0f, 1.0f}, const t_f32 rot = 0.0f, const s_color_rgba32f blend = colors::g_white);
 
     inline void DrawRect(const s_rendering_context& rc, const s_rect<t_f32> rect, const s_color_rgba32f color) {
-        DrawTexture(rc, rc.basis.px_tex, rect.Pos(), {}, {}, rect.Size(), 0.0f, color);
+        DrawTexture(rc, rc.basis.px_tex, Pos(rect), {}, {}, Size(rect), 0.0f, color);
     }
 
     inline void DrawLine(const s_rendering_context& rc, const s_v2<t_f32> a, const s_v2<t_f32> b, const s_color_rgba32f blend, const t_f32 width) {
         ZF_ASSERT(width > 0.0f);
 
-        const t_f32 len = a.DistTo(b);
-        const t_f32 dir = a.DirToInRads(b);
+        const t_f32 len = CalcDist(a, b);
+        const t_f32 dir = CalcDirInRads(a, b);
         DrawTexture(rc, rc.basis.px_tex, a, {}, origins::g_centerleft, {len, width}, dir, blend);
     }
+#endif
 }

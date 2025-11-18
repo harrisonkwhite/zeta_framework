@@ -1,67 +1,44 @@
 #pragma once
 
+#include <initializer_list>
 #include <zc/zc_mem.h>
 
 namespace zf {
     template<typename tp_type>
     struct s_array {
-        constexpr s_array() = default;
-
-        constexpr s_array(tp_type* const buf_raw, const t_size len) : m_buf_raw(buf_raw), m_len(len) {
-            ZF_ASSERT((!buf_raw && len == 0) || (buf_raw && len >= 0));
-        }
-
-        constexpr tp_type* Raw() const {
-            return m_buf_raw;
-        }
-
-        constexpr t_size Len() const {
-            return m_len;
-        }
-
-        constexpr t_size SizeInBytes() const {
-            return ZF_SIZE_OF(tp_type) * m_len;
-        }
-
-        constexpr t_b8 IsEmpty() const {
-            return m_len == 0;
-        }
+        tp_type* buf_raw;
+        t_size len;
 
         constexpr tp_type& operator[](const t_size index) const {
-            ZF_ASSERT(index >= 0 && index < m_len);
-            return m_buf_raw[index];
+            ZF_ASSERT(index >= 0 && index < len);
+            return buf_raw[index];
         }
 
-        constexpr s_array<const tp_type> ToReadonly() const requires (!s_is_const<tp_type>::sm_value) {
-            return {m_buf_raw, m_len};
+        constexpr operator s_array<const tp_type>() const requires (!s_is_const<tp_type>::g_value) {
+            return {buf_raw, len};
         }
-
-        constexpr operator s_array<const tp_type>() const requires (!s_is_const<tp_type>::sm_value) {
-            return ToReadonly();
-        }
-
-    private:
-        tp_type* m_buf_raw;
-        t_size m_len;
     };
 
     template<typename tp_type, t_size tp_len>
     struct s_static_array {
-        static_assert(!s_is_const<tp_type>::sm_value);
+        static_assert(!s_is_const<tp_type>::g_value);
         static_assert(tp_len > 0);
 
-        tp_type buf_raw[tp_len] = {};
+        static constexpr t_size g_len = tp_len;
+
+        tp_type buf_raw[tp_len];
 
         constexpr s_static_array() = default;
 
-        constexpr s_static_array(const tp_type (&buf_raw)[tp_len]) {
-            for (t_size i = 0; i < tp_len; i++) {
-                this->buf_raw[i] = buf_raw[i];
-            }
-        }
+        constexpr s_static_array(const std::initializer_list<tp_type> init) {
+            ZF_ASSERT(init.size() == tp_len);
 
-        constexpr t_size Len() const {
-            return tp_len;
+            t_size i = 0;
+
+            for (const tp_type& v : init) {
+                buf_raw[i] = v;
+                i++;
+            }
         }
 
         constexpr tp_type& operator[](const t_size index) {
@@ -74,22 +51,19 @@ namespace zf {
             return buf_raw[index];
         }
 
-        constexpr s_array<tp_type> ToNonstatic() {
-            return {buf_raw, tp_len};
-        }
-
         constexpr operator s_array<tp_type>() {
-            return ToNonstatic();
-        }
-
-        constexpr s_array<const tp_type> ToNonstatic() const {
             return {buf_raw, tp_len};
         }
 
         constexpr operator s_array<const tp_type>() const {
-            return ToNonstatic();
+            return {buf_raw, tp_len};
         }
     };
+
+    template<typename tp_type>
+    constexpr t_b8 IsEmpty(const s_array<const tp_type> arr) {
+        return arr.len == 0;
+    }
 
     template<typename tp_type>
     t_b8 MakeArray(s_mem_arena& mem_arena, const t_size len, s_array<tp_type>& o_arr) {
@@ -108,9 +82,9 @@ namespace zf {
 
     template<typename tp_type>
     t_b8 CloneArray(s_mem_arena& mem_arena, const s_array<const tp_type> arr_to_clone, s_array<tp_type>& o_arr) {
-        ZF_ASSERT(!arr_to_clone.IsEmpty());
+        ZF_ASSERT(!IsEmpty(arr_to_clone));
 
-        if (!MakeArray(mem_arena, arr_to_clone.Len(), o_arr)) {
+        if (!MakeArray(mem_arena, arr_to_clone.len, o_arr)) {
             return false;
         }
 
@@ -121,25 +95,26 @@ namespace zf {
 
     template<typename tp_type>
     constexpr s_array<tp_type> Slice(const s_array<tp_type> arr, const t_size beg, const t_size end) {
-        ZF_ASSERT(beg >= 0 && beg <= arr.Len());
-        ZF_ASSERT(end >= beg && end <= arr.Len());
-        return {arr.Raw() + beg, end - beg};
+        ZF_ASSERT(beg >= 0 && beg <= arr.len);
+        ZF_ASSERT(end >= beg && end <= arr.len);
+
+        return {arr.buf_raw + beg, end - beg};
     }
 
     template<typename tp_type>
     void Copy(const s_array<tp_type> dest, const s_array<const tp_type> src) {
-        ZF_ASSERT(dest.Len() >= src.Len());
+        ZF_ASSERT(dest.len >= src.len);
 
-        for (t_size i = 0; i < src.Len(); i++) {
+        for (t_size i = 0; i < src.len; i++) {
             dest[i] = src[i];
         }
     }
 
     template<typename tp_type>
     void CopyReverse(const s_array<tp_type> dest, const s_array<const tp_type> src) {
-        ZF_ASSERT(dest.Len() >= src.Len());
+        ZF_ASSERT(dest.len >= src.len);
 
-        for (t_size i = src.Len() - 1; i >= 0; i--) {
+        for (t_size i = src.len - 1; i >= 0; i--) {
             dest[i] = src[i];
         }
     }
@@ -148,7 +123,7 @@ namespace zf {
     t_b8 AreAllEqualTo(const s_array<const tp_type> arr, const tp_type& val, const t_comparator<tp_type> comparator = DefaultComparator) {
         ZF_ASSERT(comparator);
 
-        for (t_size i = 0; i < arr.Len(); i++) {
+        for (t_size i = 0; i < arr.len; i++) {
             if (comparator(arr[i], val) != 0) {
                 return false;
             }
@@ -161,7 +136,7 @@ namespace zf {
     t_b8 AreAnyEqualTo(const s_array<const tp_type> arr, const tp_type& val, const t_comparator<tp_type> comparator = DefaultComparator) {
         ZF_ASSERT(comparator);
 
-        for (t_size i = 0; i < arr.Len(); i++) {
+        for (t_size i = 0; i < arr.len; i++) {
             if (comparator(arr[i], val) == 0) {
                 return true;
             }
@@ -172,7 +147,7 @@ namespace zf {
 
     template<typename tp_type>
     void SetAllTo(const s_array<tp_type> arr, const tp_type& val) {
-        for (t_size i = 0; i < arr.Len(); i++) {
+        for (t_size i = 0; i < arr.len; i++) {
             arr[i] = val;
         }
     }
@@ -181,18 +156,18 @@ namespace zf {
     t_b8 BinarySearch(const s_array<const tp_type> arr, const tp_type& elem, const t_comparator<tp_type> comparator = DefaultComparator) {
         ZF_ASSERT(IsSorted(arr));
 
-        if (arr.Len() == 0) {
+        if (arr.len == 0) {
             return false;
         }
 
-        const tp_type& mid = elem[arr.Len() / 2];
+        const tp_type& mid = elem[arr.len / 2];
 
         if (elem == mid) {
             return true;
         } else if (elem < mid) {
-            return BinarySearch(arr.Slice(0, arr.Len() / 2), elem);
+            return BinarySearch(arr.Slice(0, arr.len / 2), elem);
         } else {
-            return BinarySearch(arr.Slice((arr.Len() / 2) + 1, arr.Len()), elem);
+            return BinarySearch(arr.Slice((arr.len / 2) + 1, arr.len), elem);
         }
     }
 

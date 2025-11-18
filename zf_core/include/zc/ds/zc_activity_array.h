@@ -8,29 +8,13 @@
 namespace zf {
     template<typename tp_type>
     struct s_activity_array {
-        constexpr s_activity_array() = default;
-
-        constexpr s_activity_array(const s_array<tp_type> slots, const s_bit_vector slot_activity)
-            : slots(slots), slot_activity(slot_activity) {
-            ZF_ASSERT(slots.Len() == slot_activity.BitCount());
-        }
-
-        constexpr s_array<tp_type> Slots() const {
-            return slots;
-        }
-
-        constexpr s_bit_vector SlotActivity() const {
-            return slot_activity;
-        }
+        s_array<tp_type> slots;
+        s_bit_vector slot_activity;
 
         tp_type& operator[](const t_size index) const {
             ZF_ASSERT(IsSlotActive(*this, index));
             return slots[index];
         }
-
-    private:
-        s_array<tp_type> slots;
-        s_bit_vector slot_activity;
     };
 
     template<typename tp_type, t_size tp_len>
@@ -38,14 +22,8 @@ namespace zf {
         s_static_array<tp_type, tp_len> slots;
         s_static_bit_vector<tp_len> slot_activity;
 
-        constexpr s_static_activity_array() = default;
-
-        constexpr s_activity_array<tp_type> ToNonstatic() {
-            return {slots.ToNonstatic(), slot_activity};
-        }
-
         constexpr operator s_activity_array<tp_type>() {
-            return ToNonstatic();
+            return {slots, slot_activity};
         }
     };
 

@@ -8,10 +8,6 @@ namespace zf {
         s_array<tp_type> backing_arr;
         t_size len;
 
-        constexpr s_list() = default;
-        constexpr s_list(const s_array<tp_type> backing_arr, const t_size len = 0)
-            : backing_arr(backing_arr), len(len) {}
-
         tp_type& operator[](const t_size index) const {
             ZF_ASSERT(index < len);
             return backing_arr[index];

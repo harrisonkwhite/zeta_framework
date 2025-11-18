@@ -1,11 +1,12 @@
 #include <zf/zf_rendering.h>
 
 namespace zf {
+#if 0
     struct s_rendering_state {
         s_static_array<t_batch_slot, g_batch_slot_cnt> batch_slots;
         t_size batch_slots_used_cnt;
 
-        s_matrix_4x4 batch_view_mat = s_matrix_4x4::Identity();
+        s_matrix_4x4 batch_view_mat;
 
         s_gfx_resource_handle batch_tex_hdl;
     };
@@ -263,4 +264,5 @@ void main() {
 
         Draw(rc, tex.hdl, tex_coords, pos, size, origin, rot, blend);
     }
+#endif
 }

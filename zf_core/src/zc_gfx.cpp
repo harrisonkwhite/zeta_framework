@@ -7,7 +7,7 @@ namespace zf {
     t_b8 LoadRGBATextureDataFromRaw(const s_str_rdonly file_path, s_mem_arena& mem_arena, s_rgba_texture_data& o_tex_data) {
         ZF_ASSERT(IsStrTerminated(file_path));
 
-        t_u8* const stb_px_data = stbi_load(file_path.Raw(), &o_tex_data.size_in_pxs.x, &o_tex_data.size_in_pxs.y, nullptr, 4);
+        t_u8* const stb_px_data = stbi_load(StrRaw(file_path), &o_tex_data.size_in_pxs.x, &o_tex_data.size_in_pxs.y, nullptr, 4);
 
         if (!stb_px_data) {
             return false;
@@ -45,7 +45,7 @@ namespace zf {
                 return false;
             }
 
-            if (WriteItemArrayToFile(fs, tex_data.px_data) < tex_data.px_data.Len()) {
+            if (WriteItemArrayToFile(fs, tex_data.px_data) < tex_data.px_data.len) {
                 return false;
             }
 
@@ -75,7 +75,7 @@ namespace zf {
                 return false;
             }
 
-            if (ReadItemArrayFromFile(fs, o_tex_data.px_data) < o_tex_data.px_data.Len()) {
+            if (ReadItemArrayFromFile(fs, o_tex_data.px_data) < o_tex_data.px_data.len) {
                 return false;
             }
 

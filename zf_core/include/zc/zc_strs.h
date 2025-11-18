@@ -6,7 +6,7 @@
 namespace zf {
     constexpr char g_ascii_printable_min = ' ';
     constexpr char g_ascii_printable_max = '~';
-    constexpr t_s32 g_ascii_printable_range_len = g_ascii_printable_max - g_ascii_printable_min + 1;
+    constexpr t_size g_ascii_printable_range_len = g_ascii_printable_max - g_ascii_printable_min + 1;
 
     constexpr t_size CalcRawStrLen(const char* const raw_str) {
         t_size len = 0;
@@ -19,27 +19,24 @@ namespace zf {
 
         constexpr s_str_rdonly() = default;
         constexpr s_str_rdonly(const s_array<const char> chrs) : chrs(chrs) {}
-        consteval s_str_rdonly(const char* const raw);
-
-        constexpr const char* Raw() const {
-            return chrs.Raw();
-        }
+        consteval s_str_rdonly(const char* const raw_term);
     };
 
     struct s_str {
         s_array<char> chrs;
 
-        constexpr s_str() = default;
-        constexpr s_str(const s_array<char> chrs) : chrs(chrs) {}
-
-        constexpr char* Raw() const {
-            return chrs.Raw();
-        }
-
         constexpr operator s_str_rdonly() const {
             return {static_cast<s_array<const char>>(chrs)};
         }
     };
+
+    constexpr char* StrRaw(const s_str str) {
+        return str.chrs.buf_raw;
+    }
+
+    constexpr const char* StrRaw(const s_str_rdonly str) {
+        return str.chrs.buf_raw;
+    }
 
     constexpr s_str_rdonly StrFromRawTerminated(const char* const raw) {
         return {{raw, CalcRawStrLen(raw) + 1}};
@@ -59,11 +56,11 @@ namespace zf {
         return {{raw, len + 1}};
     }
 
-    // Compile-time only - this is too big of an operation to occur implicitly at runtime.
-    consteval s_str_rdonly::s_str_rdonly(const char* const raw) : chrs(StrFromRawTerminated(raw).chrs) {}
+    consteval s_str_rdonly::s_str_rdonly(const char* const raw_term)
+        : chrs({raw_term, CalcRawStrLen(raw_term) + 1}) {}
 
     constexpr t_b8 IsStrEmpty(const s_str_rdonly str) {
-        return str.chrs.IsEmpty() || !str.chrs[0];
+        return IsEmpty(str.chrs) || !str.chrs[0];
     }
 
     t_size CalcStrLen(const s_str_rdonly str);

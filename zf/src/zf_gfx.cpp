@@ -1,10 +1,11 @@
 #include <zf/zf_gfx.h>
 
 namespace zf {
+#if 0
     static t_size CalcStride(const s_array<const t_s32> vert_attr_lens) {
         t_size stride = 0;
 
-        for (t_size i = 0; i < vert_attr_lens.Len(); i++) {
+        for (t_size i = 0; i < vert_attr_lens.len; i++) {
             stride += ZF_SIZE_OF(t_s32) * static_cast<t_size>(vert_attr_lens[i]);
         }
 
@@ -23,12 +24,12 @@ namespace zf {
 
         glGenBuffers(1, &mesh.elem_buf_gl_id);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh.elem_buf_gl_id);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, static_cast<GLsizeiptr>(elems.SizeInBytes()), elems.Raw(), GL_STATIC_DRAW);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, static_cast<GLsizeiptr>(ArraySizeInBytes(elems), elems.buf_raw, GL_STATIC_DRAW);
 
         const t_size stride = CalcStride(vert_attr_lens);
         t_s32 offs = 0;
 
-        for (t_size i = 0; i < vert_attr_lens.Len(); i++) {
+        for (t_size i = 0; i < vert_attr_lens.len; i++) {
             const t_s32 attr_len = vert_attr_lens[i];
 
             glVertexAttribPointer(static_cast<GLuint>(i), attr_len, GL_FLOAT, false, static_cast<GLsizei>(stride), reinterpret_cast<void*>(ZF_SIZE_OF(t_s32) * offs));
@@ -52,7 +53,7 @@ namespace zf {
         const auto shader_gen_func = [&temp_mem_arena](const s_str_rdonly src, const t_b8 is_frag) -> t_gl_id {
             const t_gl_id shader_gl_id = glCreateShader(is_frag ? GL_FRAGMENT_SHADER : GL_VERTEX_SHADER);
 
-            const auto src_raw = src.Raw();
+            const auto src_raw = StrRaw(src);
             glShaderSource(shader_gl_id, 1, &src_raw, nullptr);
 
             glCompileShader(shader_gl_id);
@@ -69,8 +70,8 @@ namespace zf {
                     s_array<char> log_chrs;
 
                     if (MakeArray(temp_mem_arena, log_chr_cnt, log_chrs)) {
-                        glGetShaderInfoLog(shader_gl_id, static_cast<GLsizei>(log_chrs.Len()), nullptr, log_chrs.Raw());
-                        ZF_LOG_ERROR_SPECIAL("OpenGL Shader Compilation", "%s", log_chrs.Raw());
+                        glGetShaderInfoLog(shader_gl_id, static_cast<GLsizei>(log_chrs.len), nullptr, log_chrs.buf_raw);
+                        ZF_LOG_ERROR_SPECIAL("OpenGL Shader Compilation", "%s", log_chrs.buf_raw);
                     } else {
                         ZF_LOG_ERROR("Failed to reserve memory for OpenGL shader compilation error log!");
                     }
@@ -134,7 +135,7 @@ namespace zf {
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, tex_data.size_in_pxs.x, tex_data.size_in_pxs.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, tex_data.px_data.Raw());
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, tex_data.size_in_pxs.x, tex_data.size_in_pxs.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, tex_data.px_data.buf_raw);
 
         return tex_gl_id;
     }
@@ -195,8 +196,8 @@ namespace zf {
 
     s_gfx_resource_handle MakeMesh(s_gfx_resource_arena& gfx_res_arena, const t_f32* const verts_raw, const t_size verts_len, const s_array<const t_u16> elems, const s_array<const t_s32> vert_attr_lens) {
         ZF_ASSERT(verts_len > 0);
-        ZF_ASSERT(!elems.IsEmpty());
-        ZF_ASSERT(!vert_attr_lens.IsEmpty());
+        ZF_ASSERT(!IsEmpty(elems));
+        ZF_ASSERT(!IsEmpty(vert_attr_lens));
 
         if (IsListFull(gfx_res_arena.hdls)) {
             return {};
@@ -235,4 +236,5 @@ namespace zf {
 
         return ListAppend(gfx_res_arena.hdls, {s_gl_texture(tex_gl_id)});
     }
+#endif
 }
