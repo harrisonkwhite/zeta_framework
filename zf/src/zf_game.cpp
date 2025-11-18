@@ -60,7 +60,7 @@ namespace zf {
         game.run_stage = ec_game_run_stage::window_initted;
 
         // Initialise the permanent GFX resource arena.
-        if (!game.gfx_res_arena.Init(game.perm_mem_arena, 1024)) {
+        if (!MakeGFXResourceArena(game.perm_mem_arena, 1024, game.gfx_res_arena)) {
             ZF_REPORT_FAILURE();
             return false;
         }
@@ -68,9 +68,9 @@ namespace zf {
         game.run_stage = ec_game_run_stage::gfx_res_arena_initted;
 
         // Initialise the rendering basis.
-        c_renderer renderer;
+        s_rendering_basis rendering_basis;
 
-        if (!renderer.Init(game.gfx_res_arena, game.perm_mem_arena, game.temp_mem_arena)) {
+        if (!MakeRenderingBasis(game.gfx_res_arena, game.temp_mem_arena, rendering_basis)) {
             ZF_REPORT_FAILURE();
             return false;
         }
@@ -123,6 +123,7 @@ namespace zf {
 
             // Once enough time has passed (i.e. the time accumulator has reached the tick interval), run at least a single tick and update the display.
             if (frame_dur_accum >= targ_tick_interval) {
+                // Run possibly multiple ticks.
                 do {
                     const s_game_tick_context context = {
                         .dev_mem = game.dev_mem,
@@ -147,14 +148,25 @@ namespace zf {
                     frame_dur_accum -= targ_tick_interval;
                 } while (frame_dur_accum >= targ_tick_interval);
 
-                renderer.Begin();
+                // Perform a single render.
+                s_rendering_state* const rendering_state = PrepareRenderingPhase(game.temp_mem_arena);
+
+                if (!rendering_state) {
+                    ZF_REPORT_FAILURE();
+                    return false;
+                }
+
+                const s_rendering_context rendering_context = {
+                    .basis = rendering_basis,
+                    .state = *rendering_state
+                };
 
                 {
                     const s_game_render_context context = {
                         .dev_mem = game.dev_mem,
                         .perm_mem_arena = game.perm_mem_arena,
                         .temp_mem_arena = game.temp_mem_arena,
-                        .renderer = renderer
+                        .rendering_context = rendering_context
                     };
 
                     if (!info.render_func(context)) {
@@ -163,7 +175,7 @@ namespace zf {
                     }
                 }
 
-                renderer.End();
+                CompleteRenderingPhase(rendering_context);
 
                 SwapBuffers();
             }
@@ -200,7 +212,7 @@ namespace zf {
                     break;
 
                 case ec_game_run_stage::gfx_res_arena_initted:
-                    game.gfx_res_arena.Release();
+                    ReleaseGFXResourceArena(game.gfx_res_arena);
                     break;
 
                 case ec_game_run_stage::dev_init_func_ran_and_succeeded:

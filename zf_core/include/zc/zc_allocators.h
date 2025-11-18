@@ -32,7 +32,7 @@ namespace zf {
     void* PushToMemArena(s_mem_arena& ma, const t_size size, const t_size alignment);
 
     template<typename tp_type>
-    tp_type* PushToMemArena(s_mem_arena& ma, const t_size cnt) {
+    tp_type* PushToMemArena(s_mem_arena& ma, const t_size cnt = 1) {
         ZF_ASSERT(ma.Buf());
         ZF_ASSERT(cnt >= 1);
 

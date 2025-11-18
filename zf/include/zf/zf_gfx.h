@@ -80,12 +80,12 @@ namespace zf {
     s_gfx_resource_handle MakeShaderProg(s_gfx_resource_arena& gfx_res_arena, const s_str_rdonly vert_src, const s_str_rdonly frag_src, s_mem_arena& temp_mem_arena);
     s_gfx_resource_handle MakeTexture(s_gfx_resource_arena& gfx_res_arena, const s_texture_data& tex_data);
 
-#if 0
     struct s_texture_asset {
         s_gfx_resource_handle hdl;
         s_v2<t_s32> size_cache;
     };
 
+#if 0
     [[nodiscard]] t_b8 Load(const s_texture_data& tex_data, s_gfx_resource_arena& gfx_res_arena);
 
     [[nodiscard]] t_b8 LoadFromRaw(const s_str_rdonly file_path, s_gfx_resource_arena& gfx_res_arena, s_mem_arena& temp_mem_arena) {

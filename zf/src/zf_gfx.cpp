@@ -187,6 +187,12 @@ namespace zf {
         return MakeList(mem_arena, cap, o_res_arena.hdls);
     }
 
+    void ReleaseGFXResourceArena(s_gfx_resource_arena& res_arena) {
+        for (t_size i = 0; i < res_arena.hdls.len; i++) {
+            ReleaseGFXResource(res_arena.hdls[i]);
+        }
+    }
+
     s_gfx_resource_handle MakeMesh(s_gfx_resource_arena& gfx_res_arena, const t_f32* const verts_raw, const t_size verts_len, const s_array<const t_u16> elems, const s_array<const t_s32> vert_attr_lens) {
         ZF_ASSERT(verts_len > 0);
         ZF_ASSERT(!elems.IsEmpty());

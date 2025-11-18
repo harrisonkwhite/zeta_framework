@@ -33,7 +33,7 @@ namespace zf {
         s_mem_arena& perm_mem_arena;
         s_mem_arena& temp_mem_arena;
 
-        c_renderer& renderer;
+        const s_rendering_context& rendering_context;
     };
 
     struct s_game_info {
