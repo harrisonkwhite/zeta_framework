@@ -13,25 +13,25 @@ namespace zf {
         texture
     };
 
-    struct us_gl_mesh {
+    struct s_gl_mesh {
         t_gl_id vert_arr_gl_id;
         t_gl_id vert_buf_gl_id;
         t_gl_id elem_buf_gl_id;
     };
 
-    struct us_gl_shader_prog {
+    struct s_gl_shader_prog {
         t_gl_id gl_id;
     };
 
-    struct us_gl_texture {
+    struct s_gl_texture {
         t_gl_id gl_id;
     };
 
     struct s_gfx_resource_handle {
         s_gfx_resource_handle() = default;
-        s_gfx_resource_handle(const us_gl_mesh mesh) : type(ec_gfx_resource_type::mesh), raw({.mesh = mesh}) {}
-        s_gfx_resource_handle(const us_gl_shader_prog shader_prog) : type(ec_gfx_resource_type::shader_prog), raw({.shader_prog = shader_prog}) {}
-        s_gfx_resource_handle(const us_gl_texture tex) : type(ec_gfx_resource_type::texture), raw({.tex = tex}) {}
+        s_gfx_resource_handle(const s_gl_mesh mesh) : type(ec_gfx_resource_type::mesh), raw({.mesh = mesh}) {}
+        s_gfx_resource_handle(const s_gl_shader_prog shader_prog) : type(ec_gfx_resource_type::shader_prog), raw({.shader_prog = shader_prog}) {}
+        s_gfx_resource_handle(const s_gl_texture tex) : type(ec_gfx_resource_type::texture), raw({.tex = tex}) {}
 
         ec_gfx_resource_type Type() const {
             return type;
@@ -41,17 +41,17 @@ namespace zf {
             return type != ec_gfx_resource_type::invalid;
         }
 
-        const us_gl_mesh& Mesh() const {
+        const s_gl_mesh& Mesh() const {
             ZF_ASSERT(type == ec_gfx_resource_type::mesh);
             return raw.mesh;
         }
 
-        const us_gl_shader_prog& ShaderProg() const {
+        const s_gl_shader_prog& ShaderProg() const {
             ZF_ASSERT(type == ec_gfx_resource_type::shader_prog);
             return raw.shader_prog;
         }
 
-        const us_gl_texture& Texture() const {
+        const s_gl_texture& Texture() const {
             ZF_ASSERT(type == ec_gfx_resource_type::texture);
             return raw.tex;
         }
@@ -60,10 +60,10 @@ namespace zf {
         ec_gfx_resource_type type = ec_gfx_resource_type::invalid;
 
         union {
-            us_gl_mesh mesh;
-            us_gl_shader_prog shader_prog;
-            us_gl_texture tex;
-        } raw = {};
+            s_gl_mesh mesh;
+            s_gl_shader_prog shader_prog;
+            s_gl_texture tex;
+        } raw;
     };
 
     struct s_gfx_resource_arena {

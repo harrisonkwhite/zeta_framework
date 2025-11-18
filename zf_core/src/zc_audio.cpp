@@ -40,36 +40,6 @@ namespace zf {
         return success;
     }
 
-    t_b8 LoadSoundFromPacked(const s_str_rdonly file_path, s_mem_arena& mem_arena, s_sound_data& o_snd_data) {
-        ZF_ASSERT(IsStrTerminated(file_path));
-
-        s_file_stream fs;
-
-        if (!fs.Open(file_path, ec_file_access_mode::read)) {
-            return false;
-        }
-
-        const t_b8 success = [fs, &mem_arena, &o_snd_data]() {
-            if (!fs.ReadItem(o_snd_data.meta)) {
-                return false;
-            }
-
-            if (!MakeArray(mem_arena, CalcSampleCount(o_snd_data), o_snd_data.pcm)) {
-                return false;
-            }
-
-            if (fs.ReadItems(o_snd_data.pcm) < o_snd_data.pcm.Len()) {
-                return false;
-            }
-
-            return true;
-        }();
-
-        fs.Close();
-
-        return success;
-    }
-
     t_b8 PackSound(const s_sound_data& snd_data, const s_str_rdonly file_path, s_mem_arena& temp_mem_arena) {
         ZF_ASSERT(IsStrTerminated(file_path));
 
@@ -79,23 +49,53 @@ namespace zf {
 
         s_file_stream fs;
 
-        if (!fs.Open(file_path, ec_file_access_mode::write)) {
+        if (!OpenFile(file_path, ec_file_access_mode::write, fs)) {
             return false;
         }
 
         const t_b8 success = [fs, snd_data]() {
-            if (!fs.WriteItem(snd_data.meta)) {
+            if (!WriteItemToFile(fs, snd_data.meta)) {
                 return false;
             }
 
-            if (fs.WriteItems(snd_data.pcm.ToReadonly()) < snd_data.pcm.Len()) {
+            if (WriteItemArrayToFile(fs, snd_data.pcm.ToReadonly()) < snd_data.pcm.Len()) {
                 return false;
             }
 
             return true;
         }();
 
-        fs.Close();
+        CloseFile(fs);
+
+        return success;
+    }
+
+    t_b8 UnpackSound(const s_str_rdonly file_path, s_mem_arena& mem_arena, s_sound_data& o_snd_data) {
+        ZF_ASSERT(IsStrTerminated(file_path));
+
+        s_file_stream fs;
+
+        if (!OpenFile(file_path, ec_file_access_mode::read, fs)) {
+            return false;
+        }
+
+        const t_b8 success = [fs, &mem_arena, &o_snd_data]() {
+            if (!ReadItemFromFile(fs, o_snd_data.meta)) {
+                return false;
+            }
+
+            if (!MakeArray(mem_arena, CalcSampleCount(o_snd_data), o_snd_data.pcm)) {
+                return false;
+            }
+
+            if (ReadItemArrayFromFile(fs, o_snd_data.pcm) < o_snd_data.pcm.Len()) {
+                return false;
+            }
+
+            return true;
+        }();
+
+        CloseFile(fs);
 
         return success;
     }

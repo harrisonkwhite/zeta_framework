@@ -11,8 +11,8 @@ namespace zf {
         return stride;
     }
 
-    static us_gl_mesh MakeGLMesh(const t_f32* const verts_raw, const t_size verts_len, const s_array<const t_u16> elems, const s_array<const t_s32> vert_attr_lens) {
-        us_gl_mesh mesh = {};
+    static s_gl_mesh MakeGLMesh(const t_f32* const verts_raw, const t_size verts_len, const s_array<const t_u16> elems, const s_array<const t_s32> vert_attr_lens) {
+        s_gl_mesh mesh = {};
 
         glGenVertexArrays(1, &mesh.vert_arr_gl_id);
         glBindVertexArray(mesh.vert_arr_gl_id);
@@ -219,7 +219,7 @@ namespace zf {
             return {};
         }
 
-        return ListAppend(gfx_res_arena.hdls, {us_gl_shader_prog(prog_gl_id)});
+        return ListAppend(gfx_res_arena.hdls, {s_gl_shader_prog(prog_gl_id)});
     }
 
     s_gfx_resource_handle MakeTexture(s_gfx_resource_arena& gfx_res_arena, const s_rgba_texture_data& tex_data) {
@@ -233,6 +233,6 @@ namespace zf {
             return {};
         }
 
-        return ListAppend(gfx_res_arena.hdls, {us_gl_texture(tex_gl_id)});
+        return ListAppend(gfx_res_arena.hdls, {s_gl_texture(tex_gl_id)});
     }
 }

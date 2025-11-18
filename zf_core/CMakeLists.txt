@@ -1,5 +1,5 @@
 add_library(zf_core STATIC
-    src/zc_allocators.cpp
+    src/zc_mem.cpp
     src/zc_audio.cpp
     src/zc_gfx.cpp
     src/zc_io.cpp
@@ -12,7 +12,7 @@ add_library(zf_core STATIC
 	../external/miniaudio/src/miniaudio.c
 
     include/zc.h
-    include/zc/zc_allocators.h
+    include/zc/zc_mem.h
     include/zc/zc_audio.h
     include/zc/zc_basic.h
     include/zc/zc_gfx.h
@@ -25,8 +25,7 @@ add_library(zf_core STATIC
     include/zc/ds/zc_bit_vector.h
     include/zc/ds/zc_activity_array.h
     include/zc/ds/zc_list.h
-    include/zc/ds/zc_min_heap.h
-    include/zc/ds/zc_unordered_map.h
+    include/zc/ds/zc_hash_map.h
 )
 
 target_include_directories(zf_core PUBLIC

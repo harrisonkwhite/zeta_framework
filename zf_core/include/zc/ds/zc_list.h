@@ -23,8 +23,6 @@ namespace zf {
         s_static_array<tp_type, tp_cap> backing_arr;
         t_size len;
 
-        constexpr s_static_list() = default;
-
         tp_type& operator[](const t_size index) {
             ZF_ASSERT(index < len);
             return backing_arr[index];
@@ -35,6 +33,11 @@ namespace zf {
             return backing_arr[index];
         }
     };
+
+    template<typename tp_type>
+    s_array<tp_type> ListAsArray(const s_list<tp_type> list) {
+        return Slice(list.backing_arr, 0, list.len);
+    }
 
     template<typename tp_type>
     t_b8 IsListEmpty(const s_list<tp_type> arr) {

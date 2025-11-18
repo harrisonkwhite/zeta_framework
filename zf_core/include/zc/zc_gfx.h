@@ -20,17 +20,17 @@ namespace zf {
         constexpr t_f32 A() const { return a; }
 
     private:
-        t_f32 r = 0.0f;
-        t_f32 g = 0.0f;
-        t_f32 b = 0.0f;
-        t_f32 a = 0.0f;
+        t_f32 r;
+        t_f32 g;
+        t_f32 b;
+        t_f32 a;
     };
 
     struct s_color_rgba8 {
-        t_u8 r = 0;
-        t_u8 g = 0;
-        t_u8 b = 0;
-        t_u8 a = 0;
+        t_u8 r;
+        t_u8 g;
+        t_u8 b;
+        t_u8 a;
 
         constexpr s_color_rgba8() = default;
         constexpr s_color_rgba8(const t_u8 r, const t_u8 g, const t_u8 b, const t_u8 a) : r(r), g(g), b(b), a(a) {}
@@ -40,7 +40,7 @@ namespace zf {
         }
     };
 
-    constexpr s_color_rgba32f MixColors(const s_color_rgba32f a, const s_color_rgba32f b, const t_f32 amount) {
+    constexpr s_color_rgba32f ColorsMixed(const s_color_rgba32f a, const s_color_rgba32f b, const t_f32 amount) {
         ZF_ASSERT(amount >= 0.0f && amount <= 1.0f);
 
         return {
@@ -51,12 +51,12 @@ namespace zf {
         };
     }
 
-    constexpr t_f32 Luminance(const s_color_rgba32f col) {
+    constexpr t_f32 ColorLuminance(const s_color_rgba32f col) {
         return (0.2126f * col.R()) + (0.7152f * col.G()) + (0.0722f * col.B());
     }
 
-    constexpr s_color_rgba32f Grayscale(const s_color_rgba32f col) {
-        const t_f32 lum = Luminance(col);
+    constexpr s_color_rgba32f ColorAsGrayscale(const s_color_rgba32f col) {
+        const t_f32 lum = ColorLuminance(col);
         return {lum, lum, lum, col.A()};
     }
 

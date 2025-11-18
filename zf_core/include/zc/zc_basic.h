@@ -130,23 +130,6 @@ namespace zf {
         }
     }
 
-    constexpr t_size Kilobytes(const t_size x) { return (static_cast<t_size>(1) << 10) * x; }
-    constexpr t_size Megabytes(const t_size x) { return (static_cast<t_size>(1) << 20) * x; }
-    constexpr t_size Gigabytes(const t_size x) { return (static_cast<t_size>(1) << 30) * x; }
-    constexpr t_size Terabytes(const t_size x) { return (static_cast<t_size>(1) << 40) * x; }
-
-    constexpr t_size BitsToBytes(const t_size x) { return (x + 7) / 8; }
-    constexpr t_size BytesToBits(const t_size x) { return x * 8; }
-
-    constexpr t_b8 IsAlignmentValid(const t_size n) {
-        // Is it a power of 2?
-        return n > 0 && (n & (n - 1)) == 0;
-    }
-
-    constexpr t_size AlignForward(const t_size n, const t_size alignment) {
-        return (n + alignment - 1) & ~(alignment - 1);
-    }
-
     template<typename tp_type>
     constexpr void Swap(tp_type& a, tp_type& b) {
         const tp_type temp = a;

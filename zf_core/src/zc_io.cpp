@@ -9,30 +9,69 @@
 #endif
 
 namespace zf {
+    t_b8 OpenFile(const s_str_rdonly file_path, const ec_file_access_mode mode, s_file_stream& o_fs) {
+        ZF_ASSERT(IsStrTerminated(file_path));
+
+        FILE* fs_raw;
+
+        switch (mode) {
+        case ec_file_access_mode::read:
+            fs_raw = fopen(file_path.Raw(), "rb");
+            break;
+
+        case ec_file_access_mode::write:
+            fs_raw = fopen(file_path.Raw(), "wb");
+            break;
+        }
+
+        if (!fs_raw) {
+            return false;
+        }
+
+        o_fs.raw = fs_raw;
+
+        return true;
+    }
+
+    void CloseFile(s_file_stream& fs) {
+        ZF_ASSERT(fs.raw);
+
+        fclose(fs.raw);
+        fs.raw = nullptr;
+    }
+
+    t_size CalcFileSize(const s_file_stream& fs) {
+        const auto pos_old = ftell(fs.raw);
+        fseek(fs.raw, 0, SEEK_END);
+        const auto file_size = ftell(fs.raw);
+        fseek(fs.raw, pos_old, SEEK_SET);
+        return static_cast<t_size>(file_size);
+    }
+
     t_b8 LoadFileContents(s_mem_arena& mem_arena, const s_str_rdonly file_path, s_array<t_s8>& o_contents, const t_b8 include_terminating_byte) {
         ZF_ASSERT(IsStrTerminated(file_path));
 
         s_file_stream fs;
 
-        if (!fs.Open(file_path, ec_file_access_mode::read)) {
+        if (!OpenFile(file_path, ec_file_access_mode::read, fs)) {
             return false;
         }
 
         const t_b8 success = [&o_contents, &mem_arena, include_terminating_byte, &fs]() {
-            const t_size file_size = fs.CalcSize();
+            const t_size file_size = CalcFileSize(fs);
 
             if (!MakeArray(mem_arena, include_terminating_byte ? file_size + 1 : file_size, o_contents)) {
                 return false;
             }
 
-            if (fs.ReadItems(o_contents) < file_size) {
+            if (ReadItemArrayFromFile(fs, o_contents) < file_size) {
                 return false;
             }
 
             return true;
         }();
 
-        fs.Close();
+        CloseFile(fs);
 
         return success;
     }

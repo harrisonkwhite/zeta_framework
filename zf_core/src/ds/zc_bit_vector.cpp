@@ -1,20 +1,6 @@
 #include <zc/ds/zc_bit_vector.h>
 
 namespace zf {
-    t_b8 MakeBitVector(s_mem_arena& mem_arena, const t_size bit_cnt, s_bit_vector& o_bv) {
-        ZF_ASSERT(bit_cnt > 0);
-
-        s_array<t_u8> bytes;
-
-        if (!MakeArray(mem_arena, BitsToBytes(bit_cnt), bytes)) {
-            return false;
-        }
-
-        o_bv = {bytes, bit_cnt};
-
-        return true;
-    }
-
     static t_u8 ShiftLeftSingle(const s_bit_vector bv, t_u8 carry = 0) {
         ZF_ASSERT(carry == 0 || carry == 1);
 
@@ -46,7 +32,7 @@ namespace zf {
         return carry;
     }
 
-    void ShiftLeft(const s_bit_vector bv, const t_size amount) {
+    void ShiftBitsLeft(const s_bit_vector bv, const t_size amount) {
         ZF_ASSERT(amount >= 0);
 
         for (t_size i = 0; i < amount; i++) {
@@ -54,7 +40,7 @@ namespace zf {
         }
     }
 
-    void RotLeft(const s_bit_vector bv, const t_size amount) {
+    void RotBitsLeft(const s_bit_vector bv, const t_size amount) {
         ZF_ASSERT(amount >= 0);
 
         t_u8 carry = 0;
@@ -354,5 +340,19 @@ namespace zf {
         }
 
         return -1;
+    }
+
+    t_b8 MakeBitVector(s_mem_arena& mem_arena, const t_size bit_cnt, s_bit_vector& o_bv) {
+        ZF_ASSERT(bit_cnt > 0);
+
+        s_array<t_u8> bytes;
+
+        if (!MakeArray(mem_arena, BitsToBytes(bit_cnt), bytes)) {
+            return false;
+        }
+
+        o_bv = {bytes, bit_cnt};
+
+        return true;
     }
 }

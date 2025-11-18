@@ -22,7 +22,7 @@ namespace zf {
 
     struct s_asset_field {
         s_str_rdonly name;
-        ec_asset_field_type type = ec_asset_field_type::str;
+        ec_asset_field_type type;
     };
 
     enum e_tex_field {
@@ -50,8 +50,8 @@ namespace zf {
     static t_b8 PackAssetsFromInstrs(cJSON* const cj, s_mem_arena& temp_mem_arena) {
         ZF_ASSERT(cj);
 
-        s_static_array<cJSON*, eks_tex_field_cnt> tex_field_cj_ptrs;
-        s_static_array<cJSON*, eks_snd_field_cnt> snd_field_cj_ptrs;
+        s_static_array<cJSON*, eks_tex_field_cnt> tex_field_cj_ptrs = {};
+        s_static_array<cJSON*, eks_snd_field_cnt> snd_field_cj_ptrs = {};
 
         for (t_size asset_type_index = 0; asset_type_index < eks_asset_type_cnt; asset_type_index++) {
             cJSON* const cj_assets = cJSON_GetObjectItemCaseSensitive(cj, g_asset_type_arr_names[asset_type_index].Raw());

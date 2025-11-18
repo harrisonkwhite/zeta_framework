@@ -24,8 +24,6 @@ namespace zf {
         ec_mouse_scroll_state mouse_scroll_state;
 
         s_static_array<char, 32> unicode_buf;
-
-        s_input_events() = default;
     };
 
     static GLFWwindow* g_glfw_window;

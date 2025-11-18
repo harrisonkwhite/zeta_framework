@@ -1,7 +1,7 @@
 #pragma once
 
 #include <zc/zc_strs.h>
-#include <zc/zc_allocators.h>
+#include <zc/zc_mem.h>
 
 namespace zf {
     struct s_sound_meta {
@@ -24,7 +24,7 @@ namespace zf {
     }
 
     [[nodiscard]] t_b8 LoadSoundFromRaw(const s_str_rdonly file_path, s_mem_arena& mem_arena, s_sound_data& o_snd_data);
-    [[nodiscard]] t_b8 LoadSoundFromPacked(const s_str_rdonly file_path, s_mem_arena& mem_arena, s_sound_data& o_snd_data);
 
     [[nodiscard]] t_b8 PackSound(const s_sound_data& snd_data, const s_str_rdonly file_path, s_mem_arena& temp_mem_arena);
+    [[nodiscard]] t_b8 UnpackSound(const s_str_rdonly file_path, s_mem_arena& mem_arena, s_sound_data& o_snd_data);
 }

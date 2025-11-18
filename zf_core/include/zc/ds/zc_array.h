@@ -1,11 +1,10 @@
 #pragma once
 
-#include <zc/zc_allocators.h>
+#include <zc/zc_mem.h>
 
 namespace zf {
     template<typename tp_type>
     struct s_array {
-    public:
         constexpr s_array() = default;
 
         constexpr s_array(tp_type* const buf_raw, const t_size len) : m_buf_raw(buf_raw), m_len(len) {

@@ -36,23 +36,23 @@ namespace zf {
 
         s_file_stream fs;
 
-        if (!fs.Open(file_path, ec_file_access_mode::write)) {
+        if (!OpenFile(file_path, ec_file_access_mode::write, fs)) {
             return false;
         }
 
         const t_b8 success = [fs, tex_data]() {
-            if (!fs.WriteItem(tex_data.size_in_pxs)) {
+            if (!WriteItemToFile(fs, tex_data.size_in_pxs)) {
                 return false;
             }
 
-            if (fs.WriteItems(tex_data.px_data.ToReadonly()) < tex_data.px_data.Len()) {
+            if (WriteItemArrayToFile(fs, tex_data.px_data) < tex_data.px_data.Len()) {
                 return false;
             }
 
             return true;
         }();
 
-        fs.Close();
+        CloseFile(fs);
 
         return success;
     }
@@ -62,12 +62,12 @@ namespace zf {
 
         s_file_stream fs;
 
-        if (!fs.Open(file_path, ec_file_access_mode::read)) {
+        if (!OpenFile(file_path, ec_file_access_mode::read, fs)) {
             return false;
         }
 
         const t_b8 success = [fs, &mem_arena, &o_tex_data]() {
-            if (!fs.ReadItem(o_tex_data.size_in_pxs)) {
+            if (!ReadItemFromFile(fs, o_tex_data.size_in_pxs)) {
                 return false;
             }
 
@@ -75,14 +75,14 @@ namespace zf {
                 return false;
             }
 
-            if (fs.ReadItems(o_tex_data.px_data) < o_tex_data.px_data.Len()) {
+            if (ReadItemArrayFromFile(fs, o_tex_data.px_data) < o_tex_data.px_data.Len()) {
                 return false;
             }
 
             return true;
         }();
 
-        fs.Close();
+        CloseFile(fs);
 
         return success;
     }

@@ -4,6 +4,10 @@
 #include <zc/ds/zc_array.h>
 
 namespace zf {
+    constexpr char g_ascii_printable_min = ' ';
+    constexpr char g_ascii_printable_max = '~';
+    constexpr t_s32 g_ascii_printable_range_len = g_ascii_printable_max - g_ascii_printable_min + 1;
+
     constexpr t_size CalcRawStrLen(const char* const raw_str) {
         t_size len = 0;
         for (; raw_str[len]; len++) {}

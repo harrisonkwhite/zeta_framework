@@ -7,7 +7,7 @@ namespace zf {
         s_v2<t_f32> vert_coord;
         s_v2<t_f32> pos;
         s_v2<t_f32> size;
-        t_f32 rot = 0.0f;
+        t_f32 rot;
         s_v2<t_f32> tex_coord;
         s_color_rgba32f blend;
     };

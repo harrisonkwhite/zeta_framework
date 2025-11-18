@@ -18,14 +18,14 @@ namespace zf {
     };
 
     struct s_game {
-        ec_game_run_stage run_stage = ec_game_run_stage::nothing_initted; // Used to determine what needs to be cleaned up.
+        ec_game_run_stage run_stage; // Used to determine what needs to be cleaned up.
 
         s_mem_arena perm_mem_arena; // The memory in here exists for the lifetime of the program, it does not get reset.
         s_mem_arena temp_mem_arena; // While the memory here also exists for the program lifetime, it gets reset after game initialisation and after every frame. Useful if you just need some temporary working space.
 
         s_gfx_resource_arena gfx_res_arena; // For GFX resources existing for the lifetime of the game.
 
-        void* dev_mem = nullptr; // Memory optionally reserved by the developer for their own use, accessible in their defined functions through the provided ZF context.
+        void* dev_mem; // Memory optionally reserved by the developer for their own use, accessible in their defined functions through the provided ZF context.
     };
 
     static t_b8 ExecGameInitAndMainLoop(s_game& game, const s_game_info& info) {
@@ -189,7 +189,7 @@ namespace zf {
     t_b8 RunGame(const s_game_info& info) {
         AssertGameInfoValidity(info);
 
-        s_game game;
+        s_game game = {};
 
         const t_b8 success = ExecGameInitAndMainLoop(game, info);
 
