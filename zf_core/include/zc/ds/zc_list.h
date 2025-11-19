@@ -5,6 +5,8 @@
 namespace zf {
     template<typename tp_type>
     struct s_list {
+        static_assert(!s_is_const<tp_type>::g_value);
+
         s_array<tp_type> backing_arr;
         t_size len;
 
@@ -16,6 +18,8 @@ namespace zf {
 
     template<typename tp_type, t_size tp_cap>
     struct s_static_list {
+        static_assert(!s_is_const<tp_type>::g_value);
+
         s_static_array<tp_type, tp_cap> backing_arr;
         t_size len;
 
@@ -36,23 +40,23 @@ namespace zf {
     }
 
     template<typename tp_type>
-    t_b8 IsListEmpty(const s_list<tp_type> arr) {
-        return arr.len == 0;
+    t_b8 IsListEmpty(const s_list<tp_type> list) {
+        return list.len == 0;
     }
 
     template<typename tp_type, t_size tp_cap>
-    t_b8 IsListEmpty(const s_static_list<tp_type, tp_cap>& arr) {
-        return arr.len == 0;
+    t_b8 IsListEmpty(const s_static_list<tp_type, tp_cap>& list) {
+        return list.len == 0;
     }
 
     template<typename tp_type>
-    t_b8 IsListFull(const s_list<tp_type> arr) {
-        return arr.len == arr.backing_arr.len;
+    t_b8 IsListFull(const s_list<tp_type> list) {
+        return list.len == list.backing_arr.len;
     }
 
     template<typename tp_type, t_size tp_cap>
-    t_b8 IsListFull(const s_static_list<tp_type, tp_cap>& arr) {
-        return arr.len == tp_cap;
+    t_b8 IsListFull(const s_static_list<tp_type, tp_cap>& list) {
+        return list.len == tp_cap;
     }
 
     template<typename tp_type>

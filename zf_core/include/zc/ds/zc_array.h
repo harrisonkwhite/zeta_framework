@@ -60,6 +60,16 @@ namespace zf {
         }
     };
 
+    template<typename tp_type, t_size tp_len>
+    constexpr s_array<tp_type> ToNonstatic(s_static_array<tp_type, tp_len>& arr) {
+        return static_cast<s_array<tp_type>>(arr);
+    }
+
+    template<typename tp_type, t_size tp_len>
+    constexpr s_array<const tp_type> ToNonstatic(const s_static_array<tp_type, tp_len>& arr) {
+        return static_cast<s_array<const tp_type>>(arr);
+    }
+
     template<typename tp_type>
     constexpr t_b8 IsEmpty(const s_array<const tp_type> arr) {
         return arr.len == 0;
