@@ -29,6 +29,10 @@ namespace zf {
             ZF_ASSERT(IsSlotActive(*this, index));
             return slots[index];
         }
+
+        constexpr operator s_activity_array_rdonly<tp_type>() const {
+            return {slots, slot_activity};
+        }
     };
 
     template<typename tp_type, t_size tp_len>
@@ -63,13 +67,18 @@ namespace zf {
     }
 
     template<typename tp_type, t_size tp_len>
-    s_activity_array<tp_type> ToNonstatic(const s_static_activity_array<tp_type, tp_len>& aa) {
+    s_activity_array_rdonly<tp_type> ToNonstatic(const s_static_activity_array<tp_type, tp_len>& aa) {
         return static_cast<s_activity_array_rdonly<tp_type>>(aa);
     }
 
     template<typename tp_type>
     t_b8 IsSlotActive(const s_activity_array_rdonly<tp_type>& aa, const t_size index) {
         return IsBitSet(aa.slot_activity, index);
+    }
+
+    template<typename tp_type>
+    t_b8 IsSlotActive(const s_activity_array<tp_type>& aa, const t_size index) {
+        return IsSlotActive(static_cast<s_activity_array_rdonly<tp_type>>(aa), index);
     }
 
     template<typename tp_type, t_size tp_len>
@@ -103,6 +112,11 @@ namespace zf {
     t_size IndexOfFirstActiveSlot(const s_activity_array_rdonly<tp_type>& aa, const t_size from = 0) {
         ZF_ASSERT(from >= 0 && from <= aa.slots.len);
         return FindFirstSetBit(aa.slot_activity, from);
+    }
+
+    template<typename tp_type>
+    t_size IndexOfFirstActiveSlot(const s_activity_array<tp_type>& aa, const t_size from = 0) {
+        return IndexOfFirstActiveSlot(static_cast<s_activity_array_rdonly<tp_type>>(aa), from);
     }
 
     template<typename tp_type, t_size tp_len>
