@@ -21,19 +21,21 @@ namespace zf {
     }
 
     struct s_mem_arena {
-        void* buf;
-        t_size size;
-        t_size offs;
+        t_size chunk_size;
+        void* head_chunk;
+        void* cur_chunk;
+        t_size cur_chunk_offs;
     };
 
-    [[nodiscard]] t_b8 MakeMemArena(const t_size size, s_mem_arena& o_ma);
+    [[nodiscard]] t_b8 MakeMemArena(s_mem_arena& o_ma, const t_size chunk_size = Megabytes(1));
     void ReleaseMemArena(s_mem_arena& ma);
     void RewindMemArena(s_mem_arena& ma, const t_size offs);
     void* PushToMemArena(s_mem_arena& ma, const t_size size, const t_size alignment);
+    void ClearMemArena(s_mem_arena& ma); // Zeroes out all the arena memory and goes back to the start but does not do any freeing.
 
     template<typename tp_type>
     tp_type* PushToMemArena(s_mem_arena& ma, const t_size cnt = 1) {
-        ZF_ASSERT(ma.buf);
+        ZF_ASSERT(ma.head_chunk);
         ZF_ASSERT(cnt >= 1);
 
         const auto buf = PushToMemArena(ma, ZF_SIZE_OF(tp_type) * cnt, alignof(tp_type));

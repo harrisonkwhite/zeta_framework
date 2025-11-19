@@ -12,7 +12,7 @@ int main(const int arg_cnt, const char* const* const args_raw) {
 
     zf::s_mem_arena temp_mem_arena;
 
-    if (!zf::MakeMemArena(zf::Megabytes(4), temp_mem_arena)) {
+    if (!zf::MakeMemArena(temp_mem_arena)) {
         ZF_LOG_ERROR("Failed to initialise temporary memory arena!");
         return EXIT_FAILURE;
     }

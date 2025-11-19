@@ -5,9 +5,7 @@
 #include <zf/zf_debug.h>
 
 namespace zf {
-    constexpr t_size g_perm_mem_arena_size = Megabytes(80);
-    constexpr t_size g_temp_mem_arena_size = Megabytes(40);
-    constexpr t_s32 g_gl_resource_arena_res_limit = 1024;
+    constexpr t_s32 g_gfx_resource_arena_cap = 1024;
 
     struct s_game {
         s_mem_arena perm_mem_arena; // The memory in here exists for the lifetime of the program, it does not get reset.
@@ -30,7 +28,7 @@ namespace zf {
         InitRNG();
 
         // Initialise memory arenas.
-        if (!MakeMemArena(g_perm_mem_arena_size, game.perm_mem_arena)) {
+        if (!MakeMemArena(game.perm_mem_arena)) {
             ZF_REPORT_FAILURE();
             return false;
         }
@@ -39,7 +37,7 @@ namespace zf {
             ReleaseMemArena(game.perm_mem_arena);
         }));
 
-        if (!MakeMemArena(g_temp_mem_arena_size, game.temp_mem_arena)) {
+        if (!MakeMemArena(game.temp_mem_arena)) {
             ZF_REPORT_FAILURE();
             return false;
         }
@@ -59,7 +57,7 @@ namespace zf {
         }));
 
         // Initialise the permanent GFX resource arena.
-        if (!gfx::MakeResourceArena(game.perm_mem_arena, 1024, game.gfx_res_arena)) {
+        if (!gfx::MakeResourceArena(game.perm_mem_arena, g_gfx_resource_arena_cap, game.gfx_res_arena)) {
             ZF_REPORT_FAILURE();
             return false;
         }
@@ -127,7 +125,7 @@ namespace zf {
         t_f64 frame_dur_accum = 0.0;
 
         while (!ShouldWindowClose()) {
-            RewindMemArena(game.temp_mem_arena, 0);
+            ClearMemArena(game.temp_mem_arena);
 
             const t_f64 frame_time = GetTime();
             const t_f64 frame_time_delta = frame_time - frame_time_last;
