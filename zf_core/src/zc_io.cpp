@@ -9,7 +9,6 @@
 #endif
 
 namespace zf {
-    // @todo: Support more access modes.
     t_b8 OpenFile(const s_str_rdonly file_path, const ec_file_access_mode mode, s_file_stream& o_fs) {
         ZF_ASSERT(IsStrTerminated(file_path));
 
@@ -22,6 +21,10 @@ namespace zf {
 
         case ec_file_access_mode::write:
             fs_raw = fopen(StrRaw(file_path), "wb");
+            break;
+
+        case ec_file_access_mode::append:
+            fs_raw = fopen(StrRaw(file_path), "ab");
             break;
         }
 

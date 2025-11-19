@@ -22,7 +22,6 @@ namespace zf {
     template<typename tp_type, t_size tp_len>
     struct s_static_array {
         static_assert(!s_is_const<tp_type>::g_value);
-        static_assert(tp_len > 0);
 
         static constexpr t_size g_len = tp_len;
 

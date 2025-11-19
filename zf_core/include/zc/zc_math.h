@@ -108,11 +108,6 @@ namespace zf {
         constexpr s_v2() = default;
         constexpr s_v2(const tp_type x, const tp_type y) : x(x), y(y) {}
 
-        template<co_numeric tp_other_type>
-        constexpr explicit operator s_v2<tp_other_type>() const {
-            return {static_cast<tp_other_type>(x), static_cast<tp_other_type>(y)};
-        }
-
         constexpr t_b8 operator==(const s_v2<tp_type>& other) const {
             return x == other.x && y == other.y;
         }
@@ -159,6 +154,11 @@ namespace zf {
             x /= scalar;
             y /= scalar;
             return *this;
+        }
+
+        template<co_numeric tp_other_type>
+        constexpr explicit operator s_v2<tp_other_type>() const {
+            return {static_cast<tp_other_type>(x), static_cast<tp_other_type>(y)};
         }
     };
 
@@ -227,6 +227,16 @@ namespace zf {
 
         constexpr t_b8 operator!=(const s_rect<tp_type>& other) const {
             return !(*this == other);
+        }
+
+        template<co_numeric tp_other_type>
+        constexpr explicit operator s_v2<tp_other_type>() const {
+            return {
+                static_cast<tp_other_type>(x),
+                static_cast<tp_other_type>(y),
+                static_cast<tp_other_type>(width),
+                static_cast<tp_other_type>(height)
+            };
         }
     };
 
@@ -317,25 +327,5 @@ namespace zf {
     template<co_floating_point tp_type>
     inline s_v2<tp_type> LenDir(const tp_type len, const tp_type dir) {
         return s_v2<tp_type>(cos(dir), -sin(dir)) * len;
-    }
-
-    // Find the number in the array closest to the provided target. If there are ties, the first is returned. The array mustn't be empty.
-    template<co_numeric tp_type>
-    tp_type FindClosest(const s_array<const tp_type> nums, const tp_type targ) {
-        ZF_ASSERT(!nums.IsEmpty());
-
-        t_s32 index_of_closest = 0;
-        tp_type closest_diff = Abs(nums[0] - targ);
-
-        for (t_s32 i = 1; i < nums.Len(); i++) {
-            const tp_type diff = Abs(nums[i] - targ);
-
-            if (diff < closest_diff) {
-                index_of_closest = i;
-                closest_diff = diff;
-            }
-        }
-
-        return nums[index_of_closest];
     }
 }
