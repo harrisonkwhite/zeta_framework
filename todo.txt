@@ -1,3 +1,4 @@
+- Window and graphics code should be the same module. Input should be a distinct module from these two.
 - The asset packer should allow you to create font asset files which include non-ASCII symbols. The extra symbols could be sourced from some text file (e.g. all the dialogue in a game) and any symbol that ever occurs there needs to be supported (duplicates allowed). Alternatively, you could specify a list of unicode symbol ranges in the packing instructions JSON file. An error or warning should be given if the font itself does not support a specific requested symbol.
 - Set up UTF-8 string handling.
 - Set up rendering of UTF-8 strings. Symbols and associated data (e.g. location in atlas, alignment data) should be put into an unordered map.

@@ -8,8 +8,9 @@ namespace zf {
         ZF_ASSERT(IsStrTerminated(file_path));
 
         ma_decoder decoder;
+        ma_decoder_config decoder_config = ma_decoder_config_init(ma_format_f32, 0, 0);
 
-        if (ma_decoder_init_file(StrRaw(file_path), nullptr, &decoder) != MA_SUCCESS) {
+        if (ma_decoder_init_file(StrRaw(file_path), &decoder_config, &decoder) != MA_SUCCESS) {
             return false;
         }
 
@@ -24,7 +25,7 @@ namespace zf {
             o_snd_data.meta.sample_rate = static_cast<t_s32>(decoder.outputSampleRate);
             o_snd_data.meta.frame_cnt = static_cast<t_s64>(frame_cnt);
 
-            if (!MakeArray(mem_arena, CalcSampleCount(o_snd_data), o_snd_data.pcm)) {
+            if (!MakeArray(mem_arena, CalcSampleCount(o_snd_data.meta), o_snd_data.pcm)) {
                 return false;
             }
 
@@ -40,7 +41,7 @@ namespace zf {
         return success;
     }
 
-    t_b8 PackSound(const s_sound_data& snd_data, const s_str_rdonly file_path, s_mem_arena& temp_mem_arena) {
+    t_b8 PackSound(const s_sound_data_rdonly& snd_data, const s_str_rdonly file_path, s_mem_arena& temp_mem_arena) {
         ZF_ASSERT(IsStrTerminated(file_path));
 
         if (!CreateFileAndParentDirs(file_path, temp_mem_arena)) {
@@ -84,7 +85,7 @@ namespace zf {
                 return false;
             }
 
-            if (!MakeArray(mem_arena, CalcSampleCount(o_snd_data), o_snd_data.pcm)) {
+            if (!MakeArray(mem_arena, CalcSampleCount(o_snd_data.meta), o_snd_data.pcm)) {
                 return false;
             }
 
