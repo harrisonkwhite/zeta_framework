@@ -51,10 +51,10 @@ namespace zf::audio {
                 continue;
             }
 
-            ma_sound* const snd = &g_sys.snds[i];
+            ma_sound& snd = g_sys.snds[i];
 
-            if (!ma_sound_is_playing(snd)) {
-                ma_sound_uninit(snd);
+            if (!ma_sound_is_playing(&snd)) {
+                ma_sound_uninit(&snd);
                 ma_audio_buffer_uninit(&g_sys.audio_bufs[i]);
 
                 UnsetBit(g_sys.snd_activity, i);
@@ -62,7 +62,7 @@ namespace zf::audio {
         }
     }
 
-    t_b8 PlaySound(const s_sound_data_rdonly& snd_data, const t_f32 vol, const t_f32 pan, const t_f32 pitch) {
+    t_b8 PlaySound(const s_sound_data_rdonly& snd_data, const t_f32 vol, const t_f32 pan, const t_f32 pitch, const t_b8 loop) {
         ZF_ASSERT(g_sys.initted);
         ZF_ASSERT(vol >= 0.0f && vol <= 1.0f);
         ZF_ASSERT(pan >= -1.0f && pan <= 1.0f);
@@ -76,21 +76,21 @@ namespace zf::audio {
             return false;
         }
 
-        SetBit(g_sys.snd_activity, index);
-
         ma_sound& snd = g_sys.snds[index];
+        ma_audio_buffer& buf = g_sys.audio_bufs[index];
 
         // Set up a new audio buffer using the sound type sample buffer.
         ma_audio_buffer_config buf_config = ma_audio_buffer_config_init(ma_format_f32, static_cast<ma_uint32>(snd_data.meta.channel_cnt), static_cast<ma_uint64>(snd_data.meta.frame_cnt), snd_data.pcm.buf_raw, nullptr);
         buf_config.sampleRate = static_cast<ma_uint32>(snd_data.meta.sample_rate);
 
-        if (ma_audio_buffer_init_copy(&buf_config, &g_sys.audio_bufs[index]) != MA_SUCCESS) {
+        if (ma_audio_buffer_init_copy(&buf_config, &buf) != MA_SUCCESS) {
             ZF_REPORT_FAILURE();
             return false;
         }
 
         // Bind the buffer to the sound.
-        if (ma_sound_init_from_data_source(&g_sys.eng, &g_sys.audio_bufs[index], 0, nullptr, &snd) != MA_SUCCESS) {
+        if (ma_sound_init_from_data_source(&g_sys.eng, &buf, 0, nullptr, &snd) != MA_SUCCESS) {
+            ma_audio_buffer_uninit(&buf);
             ZF_REPORT_FAILURE();
             return false;
         }
@@ -99,11 +99,16 @@ namespace zf::audio {
         ma_sound_set_volume(&snd, vol);
         ma_sound_set_pan(&snd, pan);
         ma_sound_set_pitch(&snd, pitch);
+        ma_sound_set_looping(&snd, loop);
 
         if (ma_sound_start(&snd) != MA_SUCCESS) {
+            ma_sound_uninit(&snd);
+            ma_audio_buffer_uninit(&buf);
             ZF_REPORT_FAILURE();
             return false;
         }
+
+        SetBit(g_sys.snd_activity, index);
 
         return true;
     }
