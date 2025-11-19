@@ -50,7 +50,7 @@ namespace zf {
         }
     }
 
-    t_size FindFirstSetBit(const s_bit_vector_rdonly bv, const t_size from, const t_b8 inverted) {
+    t_size IndexOfFirstSetBit(const s_bit_vector_rdonly bv, const t_size from, const t_b8 inverted) {
         ZF_ASSERT(from <= bv.bit_cnt); // Intentionally allowing the upper bound here for the case of iteration.
 
         static constexpr s_static_array<t_size, 256> g_mappings = {

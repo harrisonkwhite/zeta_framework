@@ -79,7 +79,7 @@ namespace zf {
         ZF_ASSERT(index >= -1 && index < HashMapBackingStoreLen(bs));
 
         if (index == -1) {
-            const t_size prospective_index = FindFirstUnsetBit(bs.usage);
+            const t_size prospective_index = IndexFirstUnsetBit(bs.usage);
 
             if (prospective_index == -1) {
                 // We're out of room!

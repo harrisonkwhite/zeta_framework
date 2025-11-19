@@ -39,6 +39,8 @@ namespace zf {
     struct s_static_activity_array {
         static_assert(!s_is_const<tp_type>::g_value);
 
+        static constexpr t_size g_len = tp_len;
+
         s_static_array<tp_type, tp_len> slots;
         s_static_bit_vector<tp_len> slot_activity;
 
@@ -108,26 +110,48 @@ namespace zf {
         DeactivateSlot(ToNonstatic(aa), index);
     }
 
+    // Returns -1 if not found.
     template<typename tp_type>
     t_size IndexOfFirstActiveSlot(const s_activity_array_rdonly<tp_type>& aa, const t_size from = 0) {
         ZF_ASSERT(from >= 0 && from <= aa.slots.len);
-        return FindFirstSetBit(aa.slot_activity, from);
+        return IndexOfFirstSetBit(aa.slot_activity, from);
     }
 
+    // Returns -1 if not found.
     template<typename tp_type>
     t_size IndexOfFirstActiveSlot(const s_activity_array<tp_type>& aa, const t_size from = 0) {
         return IndexOfFirstActiveSlot(static_cast<s_activity_array_rdonly<tp_type>>(aa), from);
     }
 
+    // Returns -1 if not found.
     template<typename tp_type, t_size tp_len>
     t_size IndexOfFirstActiveSlot(const s_static_activity_array<tp_type, tp_len>& aa, const t_size from = 0) {
         return IndexOfFirstActiveSlot(ToNonstatic(aa), from);
     }
 
+    // Returns -1 if not found.
+    template<typename tp_type>
+    t_size IndexOfFirstInactiveSlot(const s_activity_array_rdonly<tp_type>& aa, const t_size from = 0) {
+        ZF_ASSERT(from >= 0 && from <= aa.slots.len);
+        return IndexOfFirstUnsetBit(aa.slot_activity, from);
+    }
+
+    // Returns -1 if not found.
+    template<typename tp_type>
+    t_size IndexOfFirstInactiveSlot(const s_activity_array<tp_type>& aa, const t_size from = 0) {
+        return IndexOfFirstInactiveSlot(static_cast<s_activity_array_rdonly<tp_type>>(aa), from);
+    }
+
+    // Returns -1 if not found.
+    template<typename tp_type, t_size tp_len>
+    t_size IndexOfFirstInactiveSlot(const s_static_activity_array<tp_type, tp_len>& aa, const t_size from = 0) {
+        return IndexOfFirstInactiveSlot(ToNonstatic(aa), from);
+    }
+
     // Returns the index of the newly taken (activated) slot, or -1 if all slots are already active.
     template<typename tp_type>
     t_size TakeFirstInactiveSlot(const s_activity_array<tp_type>& aa) {
-        const t_size index = FindFirstUnsetBit(aa.slot_activity);
+        const t_size index = IndexOfFirstUnsetBit(aa.slot_activity);
 
         if (index != -1) {
             ActivateSlot(aa, index);

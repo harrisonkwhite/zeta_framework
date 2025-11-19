@@ -70,13 +70,13 @@ namespace zf {
     }
 
     template<typename tp_type>
-    constexpr t_b8 IsEmpty(const s_array<const tp_type> arr) {
+    constexpr t_b8 IsArrayEmpty(const s_array<const tp_type> arr) {
         return arr.len == 0;
     }
 
     template<typename tp_type, t_size tp_len>
-    constexpr t_b8 IsEmpty(const s_static_array<tp_type, tp_len> arr) {
-        return IsEmpty(ToNonstatic(arr));
+    constexpr t_b8 IsArrayEmpty(const s_static_array<tp_type, tp_len> arr) {
+        return IsArrayEmpty(ToNonstatic(arr));
     }
 
     template<typename tp_type>
@@ -106,7 +106,7 @@ namespace zf {
 
     template<typename tp_type>
     t_b8 CloneArray(s_mem_arena& mem_arena, const s_array<const tp_type> arr_to_clone, s_array<tp_type>& o_arr) {
-        ZF_ASSERT(!IsEmpty(arr_to_clone));
+        ZF_ASSERT(!IsArrayEmpty(arr_to_clone));
 
         if (!MakeArray(mem_arena, arr_to_clone.len, o_arr)) {
             return false;

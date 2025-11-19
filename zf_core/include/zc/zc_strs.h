@@ -60,7 +60,7 @@ namespace zf {
         : chrs({raw_term, CalcRawStrLen(raw_term) + 1}) {}
 
     constexpr t_b8 IsStrEmpty(const s_str_rdonly str) {
-        return IsEmpty(str.chrs) || !str.chrs[0];
+        return IsArrayEmpty(str.chrs) || !str.chrs[0];
     }
 
     t_size CalcStrLen(const s_str_rdonly str);

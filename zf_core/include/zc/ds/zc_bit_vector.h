@@ -50,11 +50,12 @@ namespace zf {
 
     // @todo: Right (either arithmetic or logical) shift and right rotate.
 
-    t_size FindFirstSetBit(const s_bit_vector_rdonly bv, const t_size from = 0, const t_b8 inverted = false); // Returns -1 if all bits are unset.
+    // Returns -1 if not found.
+    t_size IndexOfFirstSetBit(const s_bit_vector_rdonly bv, const t_size from = 0, const t_b8 inverted = false); // Returns -1 if all bits are unset.
 
-    // Returns -1 if all bits are set.
-    inline t_size FindFirstUnsetBit(const s_bit_vector_rdonly bv, const t_size from = 0) {
-        return FindFirstSetBit(bv, from, true);
+    // Returns -1 if not found.
+    inline t_size IndexOfFirstUnsetBit(const s_bit_vector_rdonly bv, const t_size from = 0) {
+        return IndexOfFirstSetBit(bv, from, true);
     }
 
     constexpr t_b8 IsBitSet(const s_bit_vector_rdonly bv, const t_size index) {

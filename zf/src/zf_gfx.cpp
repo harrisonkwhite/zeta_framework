@@ -195,8 +195,8 @@ namespace zf::gfx {
 
     s_resource_handle MakeMesh(s_resource_arena& res_arena, const t_f32* const verts_raw, const t_size verts_len, const s_array<const t_u16> elems, const s_array<const t_s32> vert_attr_lens) {
         ZF_ASSERT(verts_len > 0);
-        ZF_ASSERT(!IsEmpty(elems));
-        ZF_ASSERT(!IsEmpty(vert_attr_lens));
+        ZF_ASSERT(!IsArrayEmpty(elems));
+        ZF_ASSERT(!IsArrayEmpty(vert_attr_lens));
 
         if (IsListFull(res_arena.hdls)) {
             return {};
