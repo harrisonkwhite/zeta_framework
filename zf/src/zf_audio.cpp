@@ -3,14 +3,24 @@
 #include <miniaudio.h>
 
 namespace zf::audio {
+    t_b8 InitSys() {
+        return true;
+    }
+
+    void ShutdownSys() {
+    }
+#if 0
     constexpr t_size g_snd_type_limit = 1024;
     constexpr t_size g_snd_limit = 32;
 
     static struct {
         t_b8 initted;
 
+        s_static_array<s_sound_meta, g_snd_type_limit> snd_type_metas;
+        s_static_array<s_array<t_f32>, g_snd_type_limit> snd_type_pcms;
+        s_static_bit_vector<g_snd_type_limit> snd_type_activity;
+
         ma_engine eng;
-        s_static_activity_array<ma_audio_buffer, g_snd_type_limit> snd_type_bufs;
         s_static_activity_array<ma_sound, g_snd_limit> snds;
     } g_sys;
 
@@ -43,6 +53,11 @@ namespace zf::audio {
         g_sys.initted = false;
     }
 
+    t_b8 RegisterSoundType(const s_sound_data_rdonly snd_data, t_sound_type_id& o_id) {
+
+        return true;
+    }
+
     void ProcFinishedSounds() {
         ZF_ASSERT(g_sys.initted);
 
@@ -56,24 +71,28 @@ namespace zf::audio {
         }
     }
 
-    t_b8 RegisterSoundType(const s_sound_data& snd_data, t_sound_type_id& o_id) {
+    t_b8 RegisterSoundType(const s_sound_meta& snd_meta, const s_array<t_f32> snd_pcm, t_sound_type_id& o_id) {
         ZF_ASSERT(g_sys.initted);
 
-        const t_size index = TakeFirstInactiveSlot(g_sys.snd_type_bufs);
+        const t_size index = IndexOfFirstUnsetBit(g_sys.snd_type_activity);
 
         if (index == -1) {
             ZF_REPORT_FAILURE();
             return false;
         }
 
-        ma_audio_buffer_config buf_config = ma_audio_buffer_config_init(ma_format_f32, static_cast<ma_uint32>(snd_data.meta.channel_cnt), static_cast<ma_uint64>(snd_data.meta.frame_cnt), snd_data.pcm.buf_raw, nullptr);
-        buf_config.sampleRate = static_cast<ma_uint32>(snd_data.meta.sample_rate);
+        const t_size pcm_size = CalcSampleCount(snd_meta);
+        const auto pcm_buf_raw = static_cast<t_f32*>(malloc(static_cast<size_t>(ZF_SIZE_OF(t_f32) * pcm_size)));
 
-        if (ma_audio_buffer_init_copy(&buf_config, &g_sys.snd_type_bufs[index]) != MA_SUCCESS) {
-            DeactivateSlot(g_sys.snd_type_bufs, index);
+        if (!pcm_buf_raw) {
             ZF_REPORT_FAILURE();
             return false;
         }
+
+        g_sys.snd_type_pcms[index] = {pcm_buf_raw, pcm_size};
+        Copy(g_sys.snd_type_pcms[index], snd_pcm);
+
+        g_sys.snd_type_metas[index] = snd_meta;
 
         return true;
     }
@@ -125,4 +144,49 @@ namespace zf::audio {
 
         return true;
     }
+#endif
+
+#if 0
+    t_b8 MakeResourceArena(const t_size snd_type_limit, s_resource_arena& o_res_arena) {
+        o_res_arena = {};
+
+        if (!MakeMemArena(o_res_arena.mem_arena)) {
+            return false;
+        }
+
+        if (!MakeArray(o_res_arena.mem_arena, snd_type_limit, o_res_arena.snd_type_metas)) {
+            return false;
+        }
+
+        if (!MakeArray(o_res_arena.mem_arena, snd_type_limit, o_res_arena.snd_type_pcms)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    void ReleaseResourceArena(s_resource_arena& res_arena) {
+        ReleaseMemArena(res_arena.mem_arena);
+        res_arena = {};
+    }
+
+    [[nodiscard]] t_b8 RegisterSoundTypeFromRaw(s_resource_arena& res_arena, const s_str_rdonly file_path, t_sound_type_id& o_id) {
+        if (res_arena.snd_type_cnt == res_arena.Cap()) {
+            ZF_REPORT_FAILURE();
+            return false;
+        }
+
+        s_sound_meta& meta = res_arena.snd_type_metas[res_arena.snd_type_cnt];
+        s_array<t_f32>& pcm = res_arena.snd_type_pcms[res_arena.snd_type_cnt];
+
+        if (!LoadSoundFromRaw(file_path, res_arena.mem_arena, meta, pcm)) {
+            ZF_REPORT_FAILURE();
+            return false;
+        }
+
+        res_arena.snd_type_cnt++;
+
+        return true;
+    }
+#endif
 }

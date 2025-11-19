@@ -4,7 +4,7 @@
 #include <miniaudio.h>
 
 namespace zf {
-    t_b8 LoadSoundFromRaw(const s_str_rdonly file_path, s_mem_arena& mem_arena, s_sound_data& o_snd_data) {
+    t_b8 LoadSoundFromRaw(const s_str_rdonly file_path, s_mem_arena& mem_arena, s_sound_meta& o_snd_meta, s_array<t_f32>& o_snd_pcm) {
         ZF_ASSERT(IsStrTerminated(file_path));
 
         ma_decoder decoder;
@@ -14,22 +14,22 @@ namespace zf {
             return false;
         }
 
-        const t_b8 success = [&decoder, &mem_arena, &o_snd_data]() {
+        const t_b8 success = [&decoder, &mem_arena, &o_snd_meta, &o_snd_pcm]() {
             ma_uint64 frame_cnt;
 
             if (ma_decoder_get_length_in_pcm_frames(&decoder, &frame_cnt) != MA_SUCCESS) {
                 return false;
             }
 
-            o_snd_data.meta.channel_cnt = static_cast<t_s32>(decoder.outputChannels);
-            o_snd_data.meta.sample_rate = static_cast<t_s32>(decoder.outputSampleRate);
-            o_snd_data.meta.frame_cnt = static_cast<t_s64>(frame_cnt);
+            o_snd_meta.channel_cnt = static_cast<t_s32>(decoder.outputChannels);
+            o_snd_meta.sample_rate = static_cast<t_s32>(decoder.outputSampleRate);
+            o_snd_meta.frame_cnt = static_cast<t_s64>(frame_cnt);
 
-            if (!MakeArray(mem_arena, CalcSampleCount(o_snd_data.meta), o_snd_data.pcm)) {
+            if (!MakeArray(mem_arena, CalcSampleCount(o_snd_meta), o_snd_pcm)) {
                 return false;
             }
 
-            if (ma_decoder_read_pcm_frames(&decoder, o_snd_data.pcm.buf_raw, frame_cnt, nullptr) != MA_SUCCESS) {
+            if (ma_decoder_read_pcm_frames(&decoder, o_snd_pcm.buf_raw, frame_cnt, nullptr) != MA_SUCCESS) {
                 return false;
             }
 
