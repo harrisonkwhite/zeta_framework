@@ -3,15 +3,29 @@
 #include <zc/ds/zc_bit_vector.h>
 
 // An "activity array" is an array where each slot has an associated "active" bit indicating whether it is in use.
-// A "versioned activity array" (VAA) augments this with a version number per slot, so that slot lifetimes can be uniquely identified.
 
 namespace zf {
     template<typename tp_type>
+    struct s_activity_array_rdonly {
+        static_assert(!s_is_const<tp_type>::g_value);
+
+        s_array<const tp_type> slots;
+        s_bit_vector_rdonly slot_activity;
+
+        constexpr const tp_type& operator[](const t_size index) const {
+            ZF_ASSERT(IsSlotActive(*this, index));
+            return slots[index];
+        }
+    };
+
+    template<typename tp_type>
     struct s_activity_array {
+        static_assert(!s_is_const<tp_type>::g_value);
+
         s_array<tp_type> slots;
         s_bit_vector slot_activity;
 
-        tp_type& operator[](const t_size index) const {
+        constexpr tp_type& operator[](const t_size index) const {
             ZF_ASSERT(IsSlotActive(*this, index));
             return slots[index];
         }
@@ -19,61 +33,87 @@ namespace zf {
 
     template<typename tp_type, t_size tp_len>
     struct s_static_activity_array {
+        static_assert(!s_is_const<tp_type>::g_value);
+
         s_static_array<tp_type, tp_len> slots;
         s_static_bit_vector<tp_len> slot_activity;
+
+        constexpr tp_type& operator[](const t_size index) {
+            ZF_ASSERT(IsSlotActive(*this, index));
+            return slots[index];
+        }
+
+        constexpr const tp_type& operator[](const t_size index) const {
+            ZF_ASSERT(IsSlotActive(*this, index));
+            return slots[index];
+        }
 
         constexpr operator s_activity_array<tp_type>() {
             return {slots, slot_activity};
         }
+
+        constexpr operator s_activity_array_rdonly<tp_type>() const {
+            return {slots, slot_activity};
+        }
     };
 
+    template<typename tp_type, t_size tp_len>
+    s_activity_array<tp_type> ToNonstatic(s_static_activity_array<tp_type, tp_len>& aa) {
+        return static_cast<s_activity_array<tp_type>>(aa);
+    }
+
+    template<typename tp_type, t_size tp_len>
+    s_activity_array<tp_type> ToNonstatic(const s_static_activity_array<tp_type, tp_len>& aa) {
+        return static_cast<s_activity_array_rdonly<tp_type>>(aa);
+    }
+
     template<typename tp_type>
-    t_b8 IsSlotActive(const s_activity_array<tp_type>& aa, const t_size index) {
-        return IsBitSet(aa.SlotActivity(), index);
+    t_b8 IsSlotActive(const s_activity_array_rdonly<tp_type>& aa, const t_size index) {
+        return IsBitSet(aa.slot_activity, index);
     }
 
     template<typename tp_type, t_size tp_len>
     t_b8 IsSlotActive(const s_static_activity_array<tp_type, tp_len>& aa, const t_size index) {
-        return IsSlotActive(aa.ToNonstatic(), index);
+        return IsSlotActive(ToNonstatic(aa), index);
     }
 
     template<typename tp_type>
     void ActivateSlot(const s_activity_array<tp_type>& aa, const t_size index) {
         ZF_ASSERT(!IsSlotActive(aa, index));
-        SetBit(aa.SlotActivity(), index);
+        SetBit(aa.slot_activity, index);
     }
 
     template<typename tp_type, t_size tp_len>
-    void ActivateSlot(const s_static_activity_array<tp_type, tp_len>& aa, const t_size index) {
-        ActivateSlot(aa.ToNonstatic(), index);
+    void ActivateSlot(s_static_activity_array<tp_type, tp_len>& aa, const t_size index) {
+        ActivateSlot(ToNonstatic(aa), index);
     }
 
     template<typename tp_type>
     void DeactivateSlot(const s_activity_array<tp_type>& aa, const t_size index) {
         ZF_ASSERT(IsSlotActive(aa, index));
-        UnsetBit(aa.SlotActivity(), index);
+        UnsetBit(aa.slot_activity, index);
     }
 
     template<typename tp_type, t_size tp_len>
-    void DeactivateSlot(const s_static_activity_array<tp_type, tp_len>& aa, const t_size index) {
-        DeactivateSlot(aa.ToNonstatic(), index);
+    void DeactivateSlot(s_static_activity_array<tp_type, tp_len>& aa, const t_size index) {
+        DeactivateSlot(ToNonstatic(aa), index);
     }
 
     template<typename tp_type>
-    t_size IndexOfFirstActiveSlot(const s_activity_array<tp_type>& aa, const t_size from = 0) {
-        ZF_ASSERT(from >= 0 && from <= aa.Slots().Len());
-        return FindFirstSetBit(aa.SlotActivity(), from);
+    t_size IndexOfFirstActiveSlot(const s_activity_array_rdonly<tp_type>& aa, const t_size from = 0) {
+        ZF_ASSERT(from >= 0 && from <= aa.slots.len);
+        return FindFirstSetBit(aa.slot_activity, from);
     }
 
     template<typename tp_type, t_size tp_len>
     t_size IndexOfFirstActiveSlot(const s_static_activity_array<tp_type, tp_len>& aa, const t_size from = 0) {
-        return IndexOfFirstActiveSlot(aa.ToNonstatic(), from);
+        return IndexOfFirstActiveSlot(ToNonstatic(aa), from);
     }
 
     // Returns the index of the newly taken (activated) slot, or -1 if all slots are already active.
     template<typename tp_type>
     t_size TakeFirstInactiveSlot(const s_activity_array<tp_type>& aa) {
-        const t_size index = FindFirstUnsetBit(aa.SlotActivity());
+        const t_size index = FindFirstUnsetBit(aa.slot_activity);
 
         if (index != -1) {
             ActivateSlot(aa, index);
@@ -83,8 +123,8 @@ namespace zf {
     }
 
     template<typename tp_type, t_size tp_len>
-    t_size TakeFirstInactiveSlot(const s_static_activity_array<tp_type, tp_len>& aa) {
-        return TakeFirstInactiveSlot(aa.ToNonstatic());
+    t_size TakeFirstInactiveSlot(s_static_activity_array<tp_type, tp_len>& aa) {
+        return TakeFirstInactiveSlot(ToNonstatic(aa));
     }
 
     template<typename tp_type>

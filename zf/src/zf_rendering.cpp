@@ -76,7 +76,7 @@ void main() {
             elems[(i * 6) + 5] = static_cast<t_u16>((i * 4) + 0);
         }
 
-        return MakeMesh(gfx_res_arena, nullptr, verts_len, elems, g_batch_vert_attr_lens);
+        return gfx::MakeMesh(gfx_res_arena, nullptr, verts_len, elems, g_batch_vert_attr_lens);
     }
 
     t_b8 MakeRenderingBasis(gfx::s_resource_arena& gfx_res_arena, s_mem_arena& temp_mem_arena, s_rendering_basis& o_basis) {
@@ -89,7 +89,7 @@ void main() {
         }
 
         // Generate batch shader program.
-        o_basis.batch_shader_prog_hdl = MakeShaderProg(gfx_res_arena, g_batch_vert_shader_src, g_batch_frag_shader_src, temp_mem_arena);
+        o_basis.batch_shader_prog_hdl = gfx::MakeShaderProg(gfx_res_arena, g_batch_vert_shader_src, g_batch_frag_shader_src, temp_mem_arena);
 
         if (!gfx::IsResourceHandleValid(o_basis.batch_shader_prog_hdl)) {
             ZF_REPORT_FAILURE();
@@ -101,7 +101,7 @@ void main() {
             255, 255, 255, 255
         };
 
-        if (!LoadTextureAsset({{1, 1}, px_rgba}, gfx_res_arena, o_basis.px_tex)) {
+        if (!gfx::LoadTextureAsset({{1, 1}, px_rgba}, gfx_res_arena, o_basis.px_tex)) {
             ZF_REPORT_FAILURE();
             return false;
         }
@@ -226,7 +226,7 @@ void main() {
         rc.state.batch_slots_used_cnt++;
     }
 
-    static s_rect<t_f32> MakeTextureCoords(const s_rect<t_s32> src_rect, const s_v2<t_s32> tex_size) {
+    static s_rect<t_f32> CalcTextureCoords(const s_rect<t_s32> src_rect, const s_v2<t_s32> tex_size) {
         const s_v2<t_f32> half_texel = {
             0.5f / static_cast<t_f32>(tex_size.x),
             0.5f / static_cast<t_f32>(tex_size.y)
@@ -255,7 +255,7 @@ void main() {
             src_rect_to_use = src_rect;
         }
 
-        const s_rect tex_coords = MakeTextureCoords(src_rect_to_use, tex.size_cache);
+        const s_rect tex_coords = CalcTextureCoords(src_rect_to_use, tex.size_cache);
 
         const s_v2<t_f32> size = {
             static_cast<t_f32>(src_rect_to_use.width) * scale.x, static_cast<t_f32>(src_rect_to_use.height) * scale.y
