@@ -13,4 +13,5 @@
 #include <zc/ds/zc_bit_vector.h>
 #include <zc/ds/zc_activity_array.h>
 #include <zc/ds/zc_list.h>
+#include <zc/ds/zc_stack.h>
 #include <zc/ds/zc_hash_map.h>
