@@ -5,7 +5,7 @@ namespace zf::gfx {
         t_size stride = 0;
 
         for (t_size i = 0; i < vert_attr_lens.len; i++) {
-            stride += ZF_SIZE_OF(t_s32) * static_cast<t_size>(vert_attr_lens[i]);
+            stride += ZF_SIZE_OF(t_f32) * static_cast<t_size>(vert_attr_lens[i]);
         }
 
         return stride;

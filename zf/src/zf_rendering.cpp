@@ -8,6 +8,12 @@ namespace zf {
         s_matrix_4x4 batch_view_mat;
 
         gfx::s_resource_handle batch_tex_hdl;
+
+#ifdef ZF_DEBUG
+        struct {
+            t_size batch_flush_cnt;
+        } debug;
+#endif
     };
 
     static constexpr s_str_rdonly g_batch_vert_shader_src = R"(#version 460 core
@@ -155,12 +161,17 @@ void main() {
         glUseProgram(0);
 
         rc.state.batch_slots_used_cnt = 0;
+
+#ifdef ZF_DEBUG
+        rc.state.debug.batch_flush_cnt++;
+#endif
     }
 
     s_rendering_state* PrepareRenderingPhase(s_mem_arena& mem_arena) {
         const auto rs = PushToMemArena<s_rendering_state>(mem_arena);
 
         if (rs) {
+            rs->batch_view_mat = MakeIdentityMatrix4x4();
             DrawClear();
         }
 
@@ -176,7 +187,7 @@ void main() {
         glClear(GL_COLOR_BUFFER_BIT);
     }
 
-    void SetViewMatrix(const s_rendering_context& rc, const s_matrix_4x4& mat) {
+    void UpdateViewMatrix(const s_rendering_context& rc, const s_matrix_4x4& mat) {
         Flush(rc);
         rc.state.batch_view_mat = mat;
     }

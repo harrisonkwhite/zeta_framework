@@ -56,7 +56,7 @@ namespace zf {
 
     void DrawClear(const s_color_rgba32f col = {});
 
-    void SetViewMatrix(const s_rendering_context& rc, const s_matrix_4x4& mat);
+    void UpdateViewMatrix(const s_rendering_context& rc, const s_matrix_4x4& mat);
     void DrawTexture(const s_rendering_context& rc, const gfx::s_texture_asset& tex, const s_v2<t_f32> pos, const s_rect<t_s32> src_rect = {}, const s_v2<t_f32> origin = origins::g_topleft, const s_v2<t_f32> scale = {1.0f, 1.0f}, const t_f32 rot = 0.0f, const s_color_rgba32f blend = colors::g_white);
 
     inline void DrawRect(const s_rendering_context& rc, const s_rect<t_f32> rect, const s_color_rgba32f color) {
