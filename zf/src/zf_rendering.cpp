@@ -172,7 +172,7 @@ void main() {
 
         if (rs) {
             rs->batch_view_mat = MakeIdentityMatrix4x4();
-            DrawClear();
+            DrawClear(g_default_bg_color);
         }
 
         return rs;

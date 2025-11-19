@@ -3,6 +3,8 @@
 #include <zf/zf_gfx.h>
 
 namespace zf {
+    constexpr s_color_rgba32f g_default_bg_color = s_color_rgba8(147, 207, 249, 255);
+
     struct s_batch_vert {
         s_v2<t_f32> vert_coord;
         s_v2<t_f32> pos;
