@@ -8,18 +8,7 @@ namespace zf {
     constexpr t_size g_temp_mem_arena_size = Megabytes(40);
     constexpr t_s32 g_gl_resource_arena_res_limit = 1024;
 
-    enum class ec_game_run_stage {
-        nothing_initted,
-        perm_mem_arena_initted,
-        temp_mem_arena_initted,
-        window_initted,
-        gfx_res_arena_initted,
-        dev_init_func_ran_and_succeeded
-    };
-
     struct s_game {
-        ec_game_run_stage run_stage; // Used to determine what needs to be cleaned up.
-
         s_mem_arena perm_mem_arena; // The memory in here exists for the lifetime of the program, it does not get reset.
         s_mem_arena temp_mem_arena; // While the memory here also exists for the program lifetime, it gets reset after game initialisation and after every frame. Useful if you just need some temporary working space.
 
@@ -28,7 +17,10 @@ namespace zf {
         void* dev_mem; // Memory optionally reserved by the developer for their own use, accessible in their defined functions through the provided ZF context.
     };
 
-    static t_b8 ExecGameInitAndMainLoop(s_game& game, const s_game_info& info) {
+    using t_cleanup_op = void (*)(s_game& game, const s_game_info& info);
+    using t_cleanup_op_stack = s_static_stack<t_cleanup_op, 5>;
+
+    static t_b8 ExecGameInitAndMainLoop(s_game& game, const s_game_info& info, t_cleanup_op_stack& cleanup_ops) {
         //
         // Initialisation
         //
@@ -42,14 +34,18 @@ namespace zf {
             return false;
         }
 
-        game.run_stage = ec_game_run_stage::perm_mem_arena_initted;
+        StackPush(cleanup_ops, static_cast<t_cleanup_op>([](s_game& game, const s_game_info& info) {
+            ReleaseMemArena(game.perm_mem_arena);
+        }));
 
         if (!MakeMemArena(g_temp_mem_arena_size, game.temp_mem_arena)) {
             ZF_REPORT_FAILURE();
             return false;
         }
 
-        game.run_stage = ec_game_run_stage::temp_mem_arena_initted;
+        StackPush(cleanup_ops, static_cast<t_cleanup_op>([](s_game& game, const s_game_info& info) {
+            ReleaseMemArena(game.temp_mem_arena);
+        }));
 
         // Initialise the window.
         if (!InitWindow(info.window_init_size, info.window_title, info.window_flags)) {
@@ -57,7 +53,9 @@ namespace zf {
             return false;
         }
 
-        game.run_stage = ec_game_run_stage::window_initted;
+        StackPush(cleanup_ops, static_cast<t_cleanup_op>([](s_game& game, const s_game_info& info) {
+            ReleaseWindow();
+        }));
 
         // Initialise the permanent GFX resource arena.
         if (!gfx::MakeResourceArena(game.perm_mem_arena, 1024, game.gfx_res_arena)) {
@@ -65,7 +63,9 @@ namespace zf {
             return false;
         }
 
-        game.run_stage = ec_game_run_stage::gfx_res_arena_initted;
+        StackPush(cleanup_ops, static_cast<t_cleanup_op>([](s_game& game, const s_game_info& info) {
+            gfx::ReleaseResourceArena(game.gfx_res_arena);
+        }));
 
         // Initialise the rendering basis.
         s_rendering_basis rendering_basis;
@@ -100,7 +100,11 @@ namespace zf {
             }
         }
 
-        game.run_stage = ec_game_run_stage::dev_init_func_ran_and_succeeded;
+        StackPush(cleanup_ops, static_cast<t_cleanup_op>([](s_game& game, const s_game_info& info) {
+            if (info.clean_func) {
+                info.clean_func(game.dev_mem);
+            }
+        }));
 
         // Now that everything is set up, we can show the window.
         ShowWindow();
@@ -191,37 +195,13 @@ namespace zf {
 
         s_game game = {};
 
-        const t_b8 success = ExecGameInitAndMainLoop(game, info);
+        t_cleanup_op_stack cleanup_ops = {};
 
-        // Clean up.
-        for (auto i = static_cast<t_s32>(game.run_stage); i >= 0; i--) {
-            switch (static_cast<ec_game_run_stage>(i)) {
-                case ec_game_run_stage::nothing_initted:
-                    break;
+        const t_b8 success = ExecGameInitAndMainLoop(game, info, cleanup_ops);
 
-                case ec_game_run_stage::perm_mem_arena_initted:
-                    ReleaseMemArena(game.perm_mem_arena);
-                    break;
-
-                case ec_game_run_stage::temp_mem_arena_initted:
-                    ReleaseMemArena(game.temp_mem_arena);
-                    break;
-
-                case ec_game_run_stage::window_initted:
-                    ReleaseWindow();
-                    break;
-
-                case ec_game_run_stage::gfx_res_arena_initted:
-                    gfx::ReleaseResourceArena(game.gfx_res_arena);
-                    break;
-
-                case ec_game_run_stage::dev_init_func_ran_and_succeeded:
-                    if (info.clean_func) {
-                        info.clean_func(game.dev_mem);
-                    }
-
-                    break;
-            }
+        while (!IsStackEmpty(cleanup_ops)) {
+            const t_cleanup_op op = StackPop(cleanup_ops);
+            op(game, info);
         }
 
 #ifndef ZF_DEBUG
