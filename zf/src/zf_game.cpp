@@ -1,6 +1,7 @@
 #include <zf/zf_game.h>
 
 #include <zf/zf_rng.h>
+#include <zf/zf_audio.h>
 #include <zf/zf_debug.h>
 
 namespace zf {
@@ -18,7 +19,7 @@ namespace zf {
     };
 
     using t_cleanup_op = void (*)(s_game& game, const s_game_info& info);
-    using t_cleanup_op_stack = s_static_stack<t_cleanup_op, 5>;
+    using t_cleanup_op_stack = s_static_stack<t_cleanup_op, 6>;
 
     static t_b8 ExecGameInitAndMainLoop(s_game& game, const s_game_info& info, t_cleanup_op_stack& cleanup_ops) {
         //
@@ -75,6 +76,16 @@ namespace zf {
             return false;
         }
 
+        // Initialise audio system.
+        if (!audio::InitSys()) {
+            ZF_REPORT_FAILURE();
+            return false;
+        }
+
+        StackPush(cleanup_ops, static_cast<t_cleanup_op>([](s_game& game, const s_game_info& info) {
+            audio::ShutdownSys();
+        }));
+
         // Initialise developer memory.
         if (info.dev_mem_size > 0) {
             game.dev_mem = PushToMemArena(game.perm_mem_arena, info.dev_mem_size, info.dev_mem_alignment);
@@ -127,6 +138,8 @@ namespace zf {
 
             // Once enough time has passed (i.e. the time accumulator has reached the tick interval), run at least a single tick and update the display.
             if (frame_dur_accum >= targ_tick_interval) {
+                audio::ProcFinishedSounds();
+
                 // Run possibly multiple ticks.
                 do {
                     const s_game_tick_context context = {
