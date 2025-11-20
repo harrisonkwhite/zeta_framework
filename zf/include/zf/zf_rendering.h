@@ -15,7 +15,7 @@ namespace zf {
     };
 
     constexpr s_static_array<t_s32, 6> g_batch_vert_attr_lens = {
-        2, 2, 2, 1, 2, 4 // This has to match the number of components per attribute above.
+        {2, 2, 2, 1, 2, 4} // This has to match the number of components per attribute above.
     };
 
     constexpr t_size g_batch_vert_component_cnt = ZF_SIZE_OF(s_batch_vert) / ZF_SIZE_OF(t_f32);

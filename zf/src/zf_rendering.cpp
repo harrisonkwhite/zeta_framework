@@ -104,7 +104,7 @@ void main() {
 
         // Generate the pixel texture.
         const s_static_array<t_u8, 4> px_rgba = {
-            255, 255, 255, 255
+            {255, 255, 255, 255}
         };
 
         if (!gfx::LoadTextureAsset({{1, 1}, px_rgba}, gfx_res_arena, o_basis.px_tex)) {
@@ -206,19 +206,19 @@ void main() {
         }
 
         // Write the vertex data to the next slot.
-        const s_static_array<s_v2<t_f32>, 4> vert_coords = {
+        const s_static_array<s_v2<t_f32>, 4> vert_coords = {{
             {0.0f - origin.x, 0.0f - origin.y},
             {1.0f - origin.x, 0.0f - origin.y},
             {1.0f - origin.x, 1.0f - origin.y},
             {0.0f - origin.x, 1.0f - origin.y}
-        };
+        }};
 
-        const s_static_array<s_v2<t_f32>, 4> tex_coords_per_vert = {
+        const s_static_array<s_v2<t_f32>, 4> tex_coords_per_vert = {{
             {RectLeft(tex_coords), RectTop(tex_coords)},
             {RectRight(tex_coords), RectTop(tex_coords)},
             {RectRight(tex_coords), RectBottom(tex_coords)},
             {RectLeft(tex_coords), RectBottom(tex_coords)}
-        };
+        }};
 
         t_batch_slot& slot = rc.state.batch_slots[rc.state.batch_slots_used_cnt];
 

@@ -1,6 +1,5 @@
 #pragma once
 
-#include <initializer_list>
 #include <zc/zc_mem.h>
 
 namespace zf {
@@ -44,14 +43,12 @@ namespace zf {
 
         constexpr s_static_array() = default;
 
-        constexpr s_static_array(const std::initializer_list<tp_type> init) {
-            ZF_ASSERT(init.size() == tp_len);
+        template<t_size tp_other_len>
+        constexpr s_static_array(const tp_type (&buf_raw)[tp_other_len]) {
+            static_assert(tp_other_len == tp_len);
 
-            t_size i = 0;
-
-            for (const tp_type& v : init) {
-                buf_raw[i] = v;
-                i++;
+            for (t_size i = 0; i < tp_other_len; i++) {
+                this->buf_raw[i] = buf_raw[i];
             }
         }
 

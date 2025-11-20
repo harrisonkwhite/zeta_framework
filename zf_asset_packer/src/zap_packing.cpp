@@ -10,10 +10,10 @@ namespace zf {
         eks_asset_type_cnt
     };
 
-    constexpr s_static_array<s_str_rdonly, eks_asset_type_cnt> g_asset_type_arr_names = {
+    constexpr s_static_array<s_str_rdonly, eks_asset_type_cnt> g_asset_type_arr_names = {{
         "textures",
         "sounds"
-    };
+    }};
 
     enum class ec_asset_field_type {
         str,
@@ -31,10 +31,10 @@ namespace zf {
         eks_tex_field_cnt
     };
 
-    constexpr s_static_array<s_asset_field, eks_tex_field_cnt> g_tex_fields = {
+    constexpr s_static_array<s_asset_field, eks_tex_field_cnt> g_tex_fields = {{
         {"src_file_path", ec_asset_field_type::str},
         {"dest_file_path", ec_asset_field_type::str}
-    };
+    }};
 
     enum e_snd_field {
         ek_snd_field_src_file_path,
