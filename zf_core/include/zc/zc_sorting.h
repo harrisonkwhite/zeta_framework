@@ -3,11 +3,11 @@
 #include <zc/ds/zc_array.h>
 
 namespace zf {
-    template<typename tp_type>
-    t_b8 IsSorted(const s_array_rdonly<tp_type> arr, const t_comparator<tp_type> comparator = DefaultComparator) {
+    template<c_array tp_type>
+    t_b8 IsSorted(tp_type& arr, const t_comparator<typename tp_type::t_elem> comparator = DefaultComparator) {
         ZF_ASSERT(comparator);
 
-        for (t_size i = 0; i < arr.Len() - 1; i++) {
+        for (t_size i = 0; i < ArrayLen(arr) - 1; i++) {
             if (comparator(arr[i], arr[i + 1]) > 0) {
                 return false;
             }
@@ -17,8 +17,8 @@ namespace zf {
     }
 
     // O(n) best-case if array is already sorted, O(n^2) worst-case.
-    template<typename tp_type>
-    void BubbleSort(const s_array<tp_type> arr, const t_comparator<tp_type> comparator = DefaultComparator) {
+    template<c_array_mut tp_type>
+    void BubbleSort(tp_type& arr, const t_comparator<typename tp_type::t_elem> comparator = DefaultComparator) {
         ZF_ASSERT(comparator);
 
         t_b8 sorted;
@@ -26,7 +26,7 @@ namespace zf {
         do {
             sorted = true;
 
-            for (t_size i = 0; i < arr.Len() - 1; i++) {
+            for (t_size i = 0; i < ArrayLen(arr) - 1; i++) {
                 if (comparator(arr[i], arr[i + 1]) > 0) {
                     Swap(arr[i], arr[i + 1]);
                     sorted = false;
@@ -36,12 +36,12 @@ namespace zf {
     }
 
     // O(n) best-case if array is already sorted, O(n^2) worst-case.
-    template<typename tp_type>
-    void InsertionSort(const s_array<tp_type> arr, const t_comparator<tp_type> comparator = DefaultComparator) {
+    template<c_array_mut tp_type>
+    void InsertionSort(tp_type& arr, const t_comparator<typename tp_type::t_elem> comparator = DefaultComparator) {
         ZF_ASSERT(comparator);
 
-        for (t_size i = 1; i < arr.Len(); i++) {
-            const tp_type temp = arr[i];
+        for (t_size i = 1; i < ArrayLen(arr); i++) {
+            const auto temp = arr[i];
 
             t_size j = i - 1;
 
@@ -58,14 +58,14 @@ namespace zf {
     }
 
     // O(n^2) in every case.
-    template<typename tp_type>
-    void SelectionSort(const s_array<tp_type> arr, const t_comparator<tp_type> comparator = DefaultComparator) {
+    template<c_array_mut tp_type>
+    void SelectionSort(tp_type& arr, const t_comparator<typename tp_type::t_elem> comparator = DefaultComparator) {
         ZF_ASSERT(comparator);
 
-        for (t_size i = 0; i < arr.Len() - 1; i++) {
-            tp_type& min = arr[i];
+        for (t_size i = 0; i < ArrayLen(arr) - 1; i++) {
+            auto& min = arr[i];
 
-            for (t_size j = i + 1; j < arr.Len(); j++) {
+            for (t_size j = i + 1; j < ArrayLen(arr); j++) {
                 if (comparator(arr[j], min) < 0) {
                     min = arr[j];
                 }
@@ -76,28 +76,30 @@ namespace zf {
     }
 
     // O(n log n) in both time complexity and space complexity in every case.
-    template<typename tp_type>
-    t_b8 MergeSort(const s_array<tp_type> arr, s_mem_arena& temp_mem_arena, const t_comparator<tp_type> comparator = DefaultComparator) {
+    template<c_array_mut tp_type>
+    t_b8 MergeSort(tp_type& arr, s_mem_arena& temp_mem_arena, const t_comparator<typename tp_type::t_elem> comparator = DefaultComparator) {
         ZF_ASSERT(comparator);
 
-        if (arr.Len() <= 1) {
+        if (ArrayLen(arr) <= 1) {
             return true;
         }
 
         // Sort copies of the left and right partitions.
-        const s_array<tp_type> arr_left = MemClone(temp_mem_arena, arr.Slice(0, arr.Len() / 2));
+        const auto arr_left = Slice(arr, 0, ArrayLen(arr) / 2);
+        s_array<typename tp_type::t_elem> arr_left_sorted;
 
-        if (arr_left.IsEmpty()) {
+        if (!MakeArrayClone(temp_mem_arena, arr_left, arr_left_sorted)) {
             return false;
         }
 
-        const s_array<tp_type> arr_right = MemClone(temp_mem_arena, arr.Slice(arr.Len() / 2));
+        const auto arr_right = Slice(arr, ArrayLen(arr) / 2, ArrayLen(arr));
+        s_array<typename tp_type::t_elem> arr_right_sorted;
 
-        if (arr_right.IsEmpty()) {
+        if (!MakeArrayClone(temp_mem_arena, arr_right, arr_right_sorted)) {
             return false;
         }
 
-        if (!MergeSort(arr_left, comparator, temp_mem_arena) || !MergeSort(arr_right, comparator, temp_mem_arena)) {
+        if (!MergeSort(arr_left_sorted, comparator, temp_mem_arena) || !MergeSort(arr_right_sorted, comparator, temp_mem_arena)) {
             return false;
         }
 
@@ -106,22 +108,22 @@ namespace zf {
         t_size j = 0;
 
         do {
-            if (comparator(arr_left[i], arr_right[j]) <= 0) {
-                arr[i + j] = arr_left[i];
+            if (comparator(arr_left_sorted[i], arr_right_sorted[j]) <= 0) {
+                arr[i + j] = arr_left_sorted[i];
                 i++;
 
-                if (i == arr_left.Len()) {
+                if (i == ArrayLen(arr_left_sorted)) {
                     // Copy over the remainder of the right array.
-                    MemCopy(arr.Slice(i + j), arr_right.Slice(j));
+                    Copy(Slice(arr, i + j, ArrayLen(arr)), Slice(arr_right_sorted, j, ArrayLen(arr)));
                     break;
                 }
             } else {
-                arr[i + j] = arr_right[j];
+                arr[i + j] = arr_right_sorted[j];
                 j++;
 
-                if (j == arr_right.Len()) {
+                if (j == ArrayLen(arr_right_sorted)) {
                     // Copy over the remainder of the left array.
-                    MemCopy(arr.Slice(i + j), arr_left.Slice(i));
+                    Copy(Slice(arr, i + j), Slice(arr_left_sorted, i));
                     break;
                 }
             }
@@ -130,11 +132,11 @@ namespace zf {
         return true;
     }
 
-    template<typename tp_type>
-    t_size QuickSortMedianOfThreePivotIndexSelection(const s_array_rdonly<tp_type> arr) {
+    template<c_array tp_type>
+    t_size QuickSortMedianOfThreePivotIndexSelection(tp_type& arr) {
         const t_size ia = 0;
-        const t_size ib = arr.Len() / 2;
-        const t_size ic = arr.Len() - 1;
+        const t_size ib = ArrayLen(arr) / 2;
+        const t_size ic = ArrayLen(arr) - 1;
 
         if (arr[ia] <= arr[ib]) {
             if (arr[ib] <= arr[ic]) {
@@ -162,16 +164,16 @@ namespace zf {
     // Time complexity is O(n log n) best-case and O(n^2) worst-case depending on the pivot.
     // Space complexity is O(1) compared to merge sort.
     // Custom pivot index selection function is only for arrays of length 3 or greater.
-    template<typename tp_type>
-    void QuickSort(const s_array_rdonly<tp_type> arr, const t_comparator<tp_type> comparator = DefaultComparator, t_size (* const pivot_index_selection_func)(const s_array_rdonly<tp_type> arr) = QuickSortMedianOfThreePivotIndexSelection) {
+    template<c_array_mut tp_type>
+    void QuickSort(tp_type& arr, const t_comparator<typename tp_type::t_elem> comparator = DefaultComparator, t_size (* const pivot_index_selection_func)(tp_type& arr) = QuickSortMedianOfThreePivotIndexSelection) {
         ZF_ASSERT(comparator);
         ZF_ASSERT(pivot_index_selection_func);
 
-        if (arr.Len() <= 1) {
+        if (ArrayLen(arr) <= 1) {
             return;
         }
 
-        if (arr.Len() == 2) {
+        if (ArrayLen(arr) == 2) {
             if (comparator(arr[0], arr[1]) > 0) {
                 Swap(arr[0], arr[1]);
             }
@@ -181,15 +183,15 @@ namespace zf {
 
         // Get the pivot index from the given function and swap the pivot out to the end.
         const t_size pivot_index = pivot_index_selection_func(arr);
-        ZF_ASSERT(pivot_index < arr.Len());
+        ZF_ASSERT(pivot_index < ArrayLen(arr));
 
-        Swap(arr[pivot_index], arr[arr.Len() - 1]);
+        Swap(arr[pivot_index], arr[ArrayLen(arr) - 1]);
 
         // Move smaller elements to the left, and decide the final pivot position.
         t_size left_sec_last_index = -1;
 
-        for (t_size i = 0; i < arr.Len(); i++) {
-            if (comparator(arr[i], arr[arr.Len() - 1]) <= 0) {
+        for (t_size i = 0; i < ArrayLen(arr); i++) {
+            if (comparator(arr[i], arr[ArrayLen(arr) - 1]) <= 0) {
                 // This element is not greater than the pivot, so swap it to the left section.
                 left_sec_last_index++;
                 Swap(arr[left_sec_last_index], arr[i]);
@@ -197,7 +199,7 @@ namespace zf {
         }
 
         // Sort for each subsection.
-        QuickSort(arr.Slice(0, left_sec_last_index), comparator, pivot_index_selection_func);
-        QuickSort(arr.Slice(left_sec_last_index + 1), comparator, pivot_index_selection_func);
+        QuickSort(Slice(arr, 0, left_sec_last_index), comparator, pivot_index_selection_func);
+        QuickSort(Slice(arr, left_sec_last_index + 1), comparator, pivot_index_selection_func);
     }
 }

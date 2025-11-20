@@ -70,21 +70,21 @@ namespace zf {
     template<typename tp_type, t_size tp_len> struct s_is_mut_activity_array<s_static_activity_array<tp_type, tp_len>> { static constexpr t_b8 g_val = true; };
 
     template<typename tp_type> concept c_activity_array = s_is_activity_array<tp_type>::g_val;
-    template<typename tp_type> concept c_mut_activity_array = s_is_mut_activity_array<tp_type>::g_val;
-    template<typename tp_type> concept c_rdonly_activity_array = s_is_activity_array<tp_type>::g_val && !s_is_mut_activity_array<tp_type>::g_val;
+    template<typename tp_type> concept c_activity_array_mut = s_is_mut_activity_array<tp_type>::g_val;
+    template<typename tp_type> concept c_activity_array_rdonly = s_is_activity_array<tp_type>::g_val && !s_is_mut_activity_array<tp_type>::g_val;
 
     template<c_activity_array tp_type>
     t_b8 IsSlotActive(tp_type& aa, const t_size index) {
         return IsBitSet(aa.slot_activity, index);
     }
 
-    template<c_mut_activity_array tp_type>
+    template<c_activity_array_mut tp_type>
     void ActivateSlot(tp_type& aa, const t_size index) {
         ZF_ASSERT(!IsSlotActive(aa, index));
         SetBit(aa.slot_activity, index);
     }
 
-    template<c_mut_activity_array tp_type>
+    template<c_activity_array_mut tp_type>
     void DeactivateSlot(tp_type& aa, const t_size index) {
         ZF_ASSERT(IsSlotActive(aa, index));
         UnsetBit(aa.slot_activity, index);
@@ -105,7 +105,7 @@ namespace zf {
     }
 
     // Returns the index of the newly taken (activated) slot, or -1 if all slots are already active.
-    template<c_mut_activity_array tp_type>
+    template<c_activity_array_mut tp_type>
     t_size TakeFirstInactiveSlot(tp_type& aa) {
         const t_size index = IndexOfFirstUnsetBit(aa.slot_activity);
 
