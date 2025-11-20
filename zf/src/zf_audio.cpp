@@ -3,12 +3,86 @@
 #include <miniaudio.h>
 
 namespace zf::audio {
+    constexpr t_size g_snd_type_limit = 1024;
+    constexpr t_size g_snd_limit = 32;
+
+    static struct {
+        t_b8 initted;
+
+        s_static_array<s_sound_meta, g_snd_type_limit> snd_type_metas;
+        s_static_array<s_array<t_f32>, g_snd_type_limit> snd_type_pcms;
+        s_static_bit_vector<g_snd_type_limit> snd_type_activity;
+
+        ma_engine ma_eng;
+    } g_sys;
+
+    static t_b8 IsSoundTypeIDValid(const t_sound_type_id id) {
+        return id >= 0 && id < g_snd_type_limit;
+    }
+
     t_b8 InitSys() {
+        g_sys = {};
+
+        if (ma_engine_init(nullptr, &g_sys.ma_eng) != MA_SUCCESS) {
+            ZF_REPORT_FAILURE();
+            return false;
+        }
+
+        g_sys.initted = true;
+
         return true;
     }
 
     void ShutdownSys() {
+        ZF_ASSERT(g_sys.initted);
+
+        for (t_size i = IndexOfFirstSetBit(g_sys.snd_type_activity); i != -1; i = IndexOfFirstSetBit(g_sys.snd_type_activity, i + 1)) {
+            ZF_LOG_WARNING("Sound type with ID %lld not released!", i); // @todo: Update this if the ID no longer is an index.
+            free(g_sys.snd_type_pcms[i].buf_raw);
+            g_sys.snd_type_pcms[i] = {};
+        }
+
+        ma_engine_uninit(&g_sys.ma_eng);
+
+        g_sys.initted = false;
     }
+
+    t_b8 RegisterSoundType(const s_sound_meta& snd_meta, const s_array_rdonly<t_f32> snd_pcm, t_sound_type_id& o_id) {
+        ZF_ASSERT(g_sys.initted);
+
+        o_id = IndexOfFirstUnsetBit(g_sys.snd_type_activity);
+
+        if (o_id == -1) {
+            ZF_REPORT_FAILURE();
+            return false;
+        }
+
+        const t_size pcm_len = CalcSampleCount(snd_meta);
+        const auto pcm_buf_raw = static_cast<t_f32*>(malloc(static_cast<size_t>(ZF_SIZE_OF(t_f32) * pcm_len)));
+
+        if (!pcm_buf_raw) {
+            ZF_REPORT_FAILURE();
+            return false;
+        }
+
+        g_sys.snd_type_pcms[o_id] = {pcm_buf_raw, pcm_len};
+        Copy(g_sys.snd_type_pcms[o_id], snd_pcm);
+
+        g_sys.snd_type_metas[o_id] = snd_meta;
+
+        return true;
+    }
+
+    void UnregisterSoundType(const t_sound_type_id id) {
+        ZF_ASSERT(g_sys.initted);
+        ZF_ASSERT(IsSoundTypeIDValid(id));
+        ZF_ASSERT(IsBitSet(g_sys.snd_type_activity, id));
+
+        free(g_sys.snd_type_pcms.buf_raw);
+        g_sys.snd_type_pcms = {};
+        UnsetBit(g_sys.snd_type_activity, id);
+    }
+
 #if 0
     constexpr t_size g_snd_type_limit = 1024;
     constexpr t_size g_snd_limit = 32;

@@ -19,7 +19,7 @@ namespace zf {
         s_sound_meta meta;
         s_array<t_f32> pcm;
 
-        operator s_sound_data_rdonly() const {
+        constexpr operator s_sound_data_rdonly() const {
             return {meta, pcm};
         }
     };

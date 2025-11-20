@@ -3,7 +3,7 @@
 #include <zc.h>
 
 namespace zf::audio {
-    using t_sound_type_id = t_size;
+    using t_sound_type_id = t_size; // @todo: Consider a versioning system for error prevention?
 
 #if 0
     struct s_resource_arena {
@@ -25,6 +25,9 @@ namespace zf::audio {
 
     [[nodiscard]] t_b8 InitSys();
     void ShutdownSys();
+
+    [[nodiscard]] t_b8 RegisterSoundType(const s_sound_meta& snd_meta, const s_array_rdonly<t_f32> snd_pcm, t_sound_type_id& o_id);
+    void UnregisterSoundType(const t_sound_type_id id);
 
 #if 0
     [[nodiscard]] t_b8 RegisterSoundType(const s_sound_data_rdonly snd_data, t_sound_type_id& o_id);

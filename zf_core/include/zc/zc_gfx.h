@@ -104,7 +104,7 @@ namespace zf {
         s_v2<t_s32> size_in_pxs;
         s_array<t_u8> px_data;
 
-        operator s_rgba_texture_data_rdonly() const {
+        constexpr operator s_rgba_texture_data_rdonly() const {
             return {size_in_pxs, px_data};
         }
     };
