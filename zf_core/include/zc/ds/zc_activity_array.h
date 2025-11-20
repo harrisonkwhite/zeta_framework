@@ -22,7 +22,7 @@ namespace zf {
         s_bit_vector slot_activity;
 
         constexpr tp_type& operator[](const t_size index) const {
-            ZF_ASSERT(IsSlotActive(ToReadonly(*this), index));
+            ZF_ASSERT(IsSlotActive(*this, index));
             return slots[index];
         }
 
@@ -39,12 +39,12 @@ namespace zf {
         s_static_bit_vector<tp_len> slot_activity;
 
         constexpr tp_type& operator[](const t_size index) {
-            ZF_ASSERT(IsSlotActive(ToReadonly(ToNonstatic(*this)), index));
+            ZF_ASSERT(IsSlotActive(*this, index));
             return slots[index];
         }
 
         constexpr const tp_type& operator[](const t_size index) const {
-            ZF_ASSERT(IsSlotActive(ToNonstatic(*this), index));
+            ZF_ASSERT(IsSlotActive(*this, index));
             return slots[index];
         }
 
@@ -57,55 +57,61 @@ namespace zf {
         }
     };
 
-    template<typename tp_type>
-    s_activity_array_rdonly<tp_type> ToReadonly(const s_activity_array<tp_type>& aa) {
-        return static_cast<s_activity_array_rdonly<tp_type>>(aa);
-    }
+    template<typename tp_type> struct s_is_rdonly_activity_array { static constexpr t_b8 val = false; };
+    template<typename tp_type> struct s_is_rdonly_activity_array<s_activity_array_rdonly<tp_type>> { static constexpr t_b8 val = true; };
+    template<typename tp_type, t_size tp_len> struct s_is_rdonly_activity_array<const s_static_activity_array<tp_type, tp_len>> { static constexpr t_b8 val = true; };
 
-    template<typename tp_type, t_size tp_len>
-    s_activity_array<tp_type> ToNonstatic(s_static_activity_array<tp_type, tp_len>& aa) {
-        return static_cast<s_activity_array<tp_type>>(aa);
-    }
-
-    template<typename tp_type, t_size tp_len>
-    s_activity_array_rdonly<tp_type> ToNonstatic(const s_static_activity_array<tp_type, tp_len>& aa) {
-        return static_cast<s_activity_array_rdonly<tp_type>>(aa);
-    }
+    template<typename tp_type> struct s_is_activity_array { static constexpr t_b8 val = false; };
+    template<typename tp_type> struct s_is_activity_array<s_activity_array<tp_type>> { static constexpr t_b8 val = true; };
+    template<typename tp_type> struct s_is_activity_array<const s_activity_array<tp_type>> { static constexpr t_b8 val = true; };
+    template<typename tp_type> struct s_is_activity_array<s_activity_array_rdonly<tp_type>> { static constexpr t_b8 val = true; };
+    template<typename tp_type> struct s_is_activity_array<const s_activity_array_rdonly<tp_type>> { static constexpr t_b8 val = true; };
+    template<typename tp_type, t_size tp_len> struct s_is_activity_array<s_static_activity_array<tp_type, tp_len>> { static constexpr t_b8 val = true; };
+    template<typename tp_type, t_size tp_len> struct s_is_activity_array<const s_static_activity_array<tp_type, tp_len>> { static constexpr t_b8 val = true; };
 
     template<typename tp_type>
-    t_b8 IsSlotActive(const s_activity_array_rdonly<tp_type>& aa, const t_size index) {
+    concept c_activity_array = s_is_activity_array<tp_type>::val;
+
+    template<typename tp_type>
+    concept c_rdonly_activity_array = s_is_rdonly_activity_array<tp_type>::val;
+
+    template<typename tp_type>
+    concept c_mut_activity_array = s_is_activity_array<tp_type>::val && !s_is_rdonly_activity_array<tp_type>::val;
+
+    template<c_activity_array tp_type>
+    t_b8 IsSlotActive(tp_type& aa, const t_size index) {
         return IsBitSet(aa.slot_activity, index);
     }
 
-    template<typename tp_type>
-    void ActivateSlot(const s_activity_array<tp_type>& aa, const t_size index) {
-        ZF_ASSERT(!IsSlotActive(ToReadonly(aa), index));
+    template<c_mut_activity_array tp_type>
+    void ActivateSlot(tp_type& aa, const t_size index) {
+        ZF_ASSERT(!IsSlotActive(aa, index));
         SetBit(aa.slot_activity, index);
     }
 
-    template<typename tp_type>
-    void DeactivateSlot(const s_activity_array<tp_type>& aa, const t_size index) {
-        ZF_ASSERT(IsSlotActive(ToReadonly(aa), index));
+    template<c_mut_activity_array tp_type>
+    void DeactivateSlot(tp_type& aa, const t_size index) {
+        ZF_ASSERT(IsSlotActive(aa, index));
         UnsetBit(aa.slot_activity, index);
     }
 
     // Returns -1 if not found.
-    template<typename tp_type>
-    t_size IndexOfFirstActiveSlot(const s_activity_array_rdonly<tp_type>& aa, const t_size from = 0) {
+    template<c_activity_array tp_type>
+    t_size IndexOfFirstActiveSlot(tp_type& aa, const t_size from = 0) {
         ZF_ASSERT(from >= 0 && from <= aa.slots.len);
         return IndexOfFirstSetBit(aa.slot_activity, from);
     }
 
     // Returns -1 if not found.
-    template<typename tp_type>
-    t_size IndexOfFirstInactiveSlot(const s_activity_array_rdonly<tp_type>& aa, const t_size from = 0) {
+    template<c_activity_array tp_type>
+    t_size IndexOfFirstInactiveSlot(tp_type& aa, const t_size from = 0) {
         ZF_ASSERT(from >= 0 && from <= aa.slots.len);
         return IndexOfFirstUnsetBit(aa.slot_activity, from);
     }
 
     // Returns the index of the newly taken (activated) slot, or -1 if all slots are already active.
-    template<typename tp_type>
-    t_size TakeFirstInactiveSlot(const s_activity_array<tp_type>& aa) {
+    template<c_mut_activity_array tp_type>
+    t_size TakeFirstInactiveSlot(tp_type& aa) {
         const t_size index = IndexOfFirstUnsetBit(aa.slot_activity);
 
         if (index != -1) {

@@ -111,6 +111,8 @@ namespace zf::audio {
     }
 
     t_b8 PlaySound(const t_sound_type_id type_id, const t_f32 vol, const t_f32 pan, const t_f32 pitch, const t_b8 loop) {
+        // @todo: It sounds like there's a bit of latency with this - see if it can be reduced.
+
         ZF_ASSERT(g_sys.initted);
         ZF_ASSERT(IsSoundTypeIDValid(type_id));
         ZF_ASSERT(vol >= 0.0f && vol <= 1.0f);
