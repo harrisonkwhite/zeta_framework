@@ -57,26 +57,21 @@ namespace zf {
         }
     };
 
-    template<typename tp_type> struct s_is_rdonly_activity_array { static constexpr t_b8 val = false; };
-    template<typename tp_type> struct s_is_rdonly_activity_array<s_activity_array_rdonly<tp_type>> { static constexpr t_b8 val = true; };
-    template<typename tp_type, t_size tp_len> struct s_is_rdonly_activity_array<const s_static_activity_array<tp_type, tp_len>> { static constexpr t_b8 val = true; };
+    template<typename tp_type> struct s_is_activity_array { static constexpr t_b8 g_val = false; };
+    template<typename tp_type> struct s_is_activity_array<s_activity_array<tp_type>> { static constexpr t_b8 g_val = true; };
+    template<typename tp_type> struct s_is_activity_array<const s_activity_array<tp_type>> { static constexpr t_b8 g_val = true; };
+    template<typename tp_type> struct s_is_activity_array<s_activity_array_rdonly<tp_type>> { static constexpr t_b8 g_val = true; };
+    template<typename tp_type> struct s_is_activity_array<const s_activity_array_rdonly<tp_type>> { static constexpr t_b8 g_val = true; };
+    template<typename tp_type, t_size tp_len> struct s_is_activity_array<s_static_activity_array<tp_type, tp_len>> { static constexpr t_b8 g_val = true; };
+    template<typename tp_type, t_size tp_len> struct s_is_activity_array<const s_static_activity_array<tp_type, tp_len>> { static constexpr t_b8 g_val = true; };
 
-    template<typename tp_type> struct s_is_activity_array { static constexpr t_b8 val = false; };
-    template<typename tp_type> struct s_is_activity_array<s_activity_array<tp_type>> { static constexpr t_b8 val = true; };
-    template<typename tp_type> struct s_is_activity_array<const s_activity_array<tp_type>> { static constexpr t_b8 val = true; };
-    template<typename tp_type> struct s_is_activity_array<s_activity_array_rdonly<tp_type>> { static constexpr t_b8 val = true; };
-    template<typename tp_type> struct s_is_activity_array<const s_activity_array_rdonly<tp_type>> { static constexpr t_b8 val = true; };
-    template<typename tp_type, t_size tp_len> struct s_is_activity_array<s_static_activity_array<tp_type, tp_len>> { static constexpr t_b8 val = true; };
-    template<typename tp_type, t_size tp_len> struct s_is_activity_array<const s_static_activity_array<tp_type, tp_len>> { static constexpr t_b8 val = true; };
+    template<typename tp_type> struct s_is_mut_activity_array { static constexpr t_b8 g_val = false; };
+    template<typename tp_type> struct s_is_mut_activity_array<s_activity_array<tp_type>> { static constexpr t_b8 g_val = true; };
+    template<typename tp_type, t_size tp_len> struct s_is_mut_activity_array<s_static_activity_array<tp_type, tp_len>> { static constexpr t_b8 g_val = true; };
 
-    template<typename tp_type>
-    concept c_activity_array = s_is_activity_array<tp_type>::val;
-
-    template<typename tp_type>
-    concept c_rdonly_activity_array = s_is_rdonly_activity_array<tp_type>::val;
-
-    template<typename tp_type>
-    concept c_mut_activity_array = s_is_activity_array<tp_type>::val && !s_is_rdonly_activity_array<tp_type>::val;
+    template<typename tp_type> concept c_activity_array = s_is_activity_array<tp_type>::g_val;
+    template<typename tp_type> concept c_mut_activity_array = s_is_mut_activity_array<tp_type>::g_val;
+    template<typename tp_type> concept c_rdonly_activity_array = s_is_activity_array<tp_type>::g_val && !s_is_mut_activity_array<tp_type>::g_val;
 
     template<c_activity_array tp_type>
     t_b8 IsSlotActive(tp_type& aa, const t_size index) {

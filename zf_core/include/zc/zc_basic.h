@@ -69,51 +69,55 @@ namespace zf {
     // 1. Mixing signed and unsigned can lead to strange overflow bugs that cannot always be caught by warnings. Better to be consistent and have predictability.
     // 2. The signed 64-bit range is more than sufficient for realistic use cases.
     // 3. If you want a value to be 0 or greater, ASSERT that it is!
+    // 4. -1 is far more effective as a sentinel than the positive upper bound is.
     using t_size = t_s64;
 
-    template<typename tp_type> struct s_is_integral { static constexpr t_b8 g_value = false; };
-    template<> struct s_is_integral<t_s8> { static constexpr t_b8 g_value = true; };
-    template<> struct s_is_integral<t_u8> { static constexpr t_b8 g_value = true; };
-    template<> struct s_is_integral<t_s16> { static constexpr t_b8 g_value = true; };
-    template<> struct s_is_integral<t_u16> { static constexpr t_b8 g_value = true; };
-    template<> struct s_is_integral<t_s32> { static constexpr t_b8 g_value = true; };
-    template<> struct s_is_integral<t_u32> { static constexpr t_b8 g_value = true; };
-    template<> struct s_is_integral<t_s64> { static constexpr t_b8 g_value = true; };
-    template<> struct s_is_integral<t_u64> { static constexpr t_b8 g_value = true; };
+    template<typename tp_type_a, typename tp_type_b> struct s_is_same { static constexpr t_b8 g_val = false; };
+    template<typename tp_type> struct s_is_same<tp_type, tp_type> { static constexpr t_b8 g_val = true; };
 
-    template<typename tp_type> struct s_is_signed_integral { static constexpr t_b8 g_value = false; };
-    template<> struct s_is_signed_integral<t_s8> { static constexpr t_b8 g_value = true; };
-    template<> struct s_is_signed_integral<t_s16> { static constexpr t_b8 g_value = true; };
-    template<> struct s_is_signed_integral<t_s32> { static constexpr t_b8 g_value = true; };
-    template<> struct s_is_signed_integral<t_s64> { static constexpr t_b8 g_value = true; };
+    template<typename tp_type> struct s_is_integral { static constexpr t_b8 g_val = false; };
+    template<> struct s_is_integral<t_s8> { static constexpr t_b8 g_val = true; };
+    template<> struct s_is_integral<t_u8> { static constexpr t_b8 g_val = true; };
+    template<> struct s_is_integral<t_s16> { static constexpr t_b8 g_val = true; };
+    template<> struct s_is_integral<t_u16> { static constexpr t_b8 g_val = true; };
+    template<> struct s_is_integral<t_s32> { static constexpr t_b8 g_val = true; };
+    template<> struct s_is_integral<t_u32> { static constexpr t_b8 g_val = true; };
+    template<> struct s_is_integral<t_s64> { static constexpr t_b8 g_val = true; };
+    template<> struct s_is_integral<t_u64> { static constexpr t_b8 g_val = true; };
 
-    template<typename tp_type> struct s_is_unsigned_integral { static constexpr t_b8 g_value = false; };
-    template<> struct s_is_unsigned_integral<t_u8> { static constexpr t_b8 g_value = true; };
-    template<> struct s_is_unsigned_integral<t_u16> { static constexpr t_b8 g_value = true; };
-    template<> struct s_is_unsigned_integral<t_u32> { static constexpr t_b8 g_value = true; };
-    template<> struct s_is_unsigned_integral<t_u64> { static constexpr t_b8 g_value = true; };
+    template<typename tp_type> struct s_is_signed_integral { static constexpr t_b8 g_val = false; };
+    template<> struct s_is_signed_integral<t_s8> { static constexpr t_b8 g_val = true; };
+    template<> struct s_is_signed_integral<t_s16> { static constexpr t_b8 g_val = true; };
+    template<> struct s_is_signed_integral<t_s32> { static constexpr t_b8 g_val = true; };
+    template<> struct s_is_signed_integral<t_s64> { static constexpr t_b8 g_val = true; };
 
-    template<typename tp_type> struct s_is_floating_point { static constexpr t_b8 g_value = false; };
-    template<> struct s_is_floating_point<t_f32> { static constexpr t_b8 g_value = true; };
-    template<> struct s_is_floating_point<t_f64> { static constexpr t_b8 g_value = true; };
+    template<typename tp_type> struct s_is_unsigned_integral { static constexpr t_b8 g_val = false; };
+    template<> struct s_is_unsigned_integral<t_u8> { static constexpr t_b8 g_val = true; };
+    template<> struct s_is_unsigned_integral<t_u16> { static constexpr t_b8 g_val = true; };
+    template<> struct s_is_unsigned_integral<t_u32> { static constexpr t_b8 g_val = true; };
+    template<> struct s_is_unsigned_integral<t_u64> { static constexpr t_b8 g_val = true; };
 
-    template<typename tp_type>
-    concept co_integral = s_is_integral<tp_type>::g_value;
-
-    template<typename tp_type>
-    concept co_signed_integral = s_is_signed_integral<tp_type>::g_value;
+    template<typename tp_type> struct s_is_floating_point { static constexpr t_b8 g_val = false; };
+    template<> struct s_is_floating_point<t_f32> { static constexpr t_b8 g_val = true; };
+    template<> struct s_is_floating_point<t_f64> { static constexpr t_b8 g_val = true; };
 
     template<typename tp_type>
-    concept co_unsigned_integral = s_is_unsigned_integral<tp_type>::g_value;
+    concept c_integral = s_is_integral<tp_type>::g_val;
 
     template<typename tp_type>
-    concept co_floating_point = s_is_floating_point<tp_type>::g_value;
+    concept c_signed_integral = s_is_signed_integral<tp_type>::g_val;
 
     template<typename tp_type>
-    concept co_numeric = s_is_integral<tp_type>::g_value || s_is_floating_point<tp_type>::g_value;
+    concept c_unsigned_integral = s_is_unsigned_integral<tp_type>::g_val;
 
-    template<typename tp_type> struct s_is_const { static constexpr t_b8 g_value = false; };
-    template<typename tp_type> struct s_is_const<tp_type const> { static constexpr t_b8 g_value = true; };
+    template<typename tp_type>
+    concept c_floating_point = s_is_floating_point<tp_type>::g_val;
+
+    template<typename tp_type>
+    concept c_numeric = s_is_integral<tp_type>::g_val || s_is_floating_point<tp_type>::g_val;
+
+    template<typename tp_type> struct s_is_const { static constexpr t_b8 g_val = false; };
+    template<typename tp_type> struct s_is_const<tp_type const> { static constexpr t_b8 g_val = true; };
 
     // If a < b, return a negative result, if a == b, return 0, and if a > b, return a positive result.
     template<typename tp_type>

@@ -4,40 +4,40 @@
 #include <zc/ds/zc_array.h>
 
 namespace zf {
-    template<co_floating_point tp_type> constexpr tp_type Pi();
+    template<c_floating_point tp_type> constexpr tp_type Pi();
     template<> constexpr t_f32 Pi<t_f32>() { return 3.14159265358979323846f; }
     template<> constexpr t_f64 Pi<t_f64>() { return 3.141592653589793238462643383279502884; }
 
-    template<co_floating_point tp_type> constexpr tp_type Tau();
+    template<c_floating_point tp_type> constexpr tp_type Tau();
     template<> constexpr t_f32 Tau<t_f32>() { return 6.28318530717958647692f; }
     template<> constexpr t_f64 Tau<t_f64>() { return 6.283185307179586476925286766559005768; }
 
-    template<co_floating_point tp_type>
+    template<c_floating_point tp_type>
     constexpr tp_type DegsToRads(const tp_type degs) {
         return degs * (Pi<tp_type>() / 180);
     }
 
-    template<co_floating_point tp_type>
+    template<c_floating_point tp_type>
     constexpr tp_type RadsToDegs(const tp_type rads) {
         return rads * (180 / Pi<tp_type>());
     }
 
-    template<co_numeric tp_type>
+    template<c_numeric tp_type>
     static constexpr tp_type Min(const tp_type& a, const tp_type& b) {
         return a <= b ? a : b;
     }
 
-    template<co_numeric tp_type>
+    template<c_numeric tp_type>
     static constexpr tp_type Max(const tp_type& a, const tp_type& b) {
         return a >= b ? a : b;
     }
 
-    template<co_numeric tp_type>
+    template<c_numeric tp_type>
     constexpr tp_type Abs(const tp_type n) {
         return n < 0 ? -n : n;
     }
 
-    template<co_numeric tp_type>
+    template<c_numeric tp_type>
     constexpr t_s32 Sign(const tp_type n) {
         if (n > 0) {
             return 1;
@@ -48,23 +48,23 @@ namespace zf {
         return 0;
     }
 
-    template<co_numeric tp_type>
+    template<c_numeric tp_type>
     constexpr tp_type Clamp(const tp_type n, const tp_type min, const tp_type max) {
         ZF_ASSERT(min <= max);
         return n < 0 ? -n : n;
     }
 
-    template<co_integral tp_type>
+    template<c_integral tp_type>
     constexpr tp_type WrapUpper(const tp_type val, const tp_type max_excl) {
         return ((val % max_excl) + max_excl) % max_excl;
     }
 
-    template<co_integral tp_type>
+    template<c_integral tp_type>
     constexpr tp_type Wrap(const tp_type val, const tp_type min, const tp_type max_excl) {
         return min + WrapUpper(val - min, max_excl - min);
     }
 
-    template<co_integral tp_type>
+    template<c_integral tp_type>
     constexpr tp_type DigitAt(const tp_type n, const t_u32 index) {
         if (n < 0) {
             return DigitAt(-n, index);
@@ -81,7 +81,7 @@ namespace zf {
         return DigitAt(n / 10, index - 1);
     }
 
-    template<co_integral tp_type>
+    template<c_integral tp_type>
     constexpr t_s32 DigitCnt(const tp_type n) {
         if (n < 0) {
             return DigitCnt(-n);
@@ -94,13 +94,13 @@ namespace zf {
         return 1 + DigitCnt(n / 10);
     }
 
-    template<co_floating_point tp_type>
+    template<c_floating_point tp_type>
     constexpr t_b8 NearlyEqual(const tp_type val, const tp_type targ, const tp_type tol = 1e-5) {
         ZF_ASSERT(tol >= 0);
         return val >= targ - tol && val <= targ + tol;
     }
 
-    template<co_numeric tp_type>
+    template<c_numeric tp_type>
     struct s_v2 {
         tp_type x;
         tp_type y;
@@ -136,53 +136,53 @@ namespace zf {
             return *this;
         }
 
-        constexpr s_v2<tp_type> operator*(const tp_type scalar) const requires co_floating_point<tp_type> {
+        constexpr s_v2<tp_type> operator*(const tp_type scalar) const requires c_floating_point<tp_type> {
             return {x * scalar, y * scalar};
         }
 
-        constexpr s_v2<tp_type> operator/(const tp_type scalar) const requires co_floating_point<tp_type> {
+        constexpr s_v2<tp_type> operator/(const tp_type scalar) const requires c_floating_point<tp_type> {
             return {x / scalar, y / scalar};
         }
 
-        s_v2<tp_type>& operator*=(const tp_type scalar) requires co_floating_point<tp_type> {
+        s_v2<tp_type>& operator*=(const tp_type scalar) requires c_floating_point<tp_type> {
             x *= scalar;
             y *= scalar;
             return *this;
         }
 
-        s_v2<tp_type>& operator/=(const tp_type scalar) requires co_floating_point<tp_type> {
+        s_v2<tp_type>& operator/=(const tp_type scalar) requires c_floating_point<tp_type> {
             x /= scalar;
             y /= scalar;
             return *this;
         }
 
-        template<co_numeric tp_other_type>
+        template<c_numeric tp_other_type>
         constexpr explicit operator s_v2<tp_other_type>() const {
             return {static_cast<tp_other_type>(x), static_cast<tp_other_type>(y)};
         }
     };
 
-    template<co_floating_point tp_type>
+    template<c_floating_point tp_type>
     constexpr s_v2<tp_type> operator*(const tp_type scalar, const s_v2<tp_type>& v) {
         return {v.x * scalar, v.y * scalar};
     }
 
-    template<co_numeric tp_type>
+    template<c_numeric tp_type>
     s_v2<tp_type> CompwiseProd(const s_v2<tp_type> a, const s_v2<tp_type> b) {
         return {a.x * b.x, a.y * b.y};
     }
 
-    template<co_numeric tp_type>
+    template<c_numeric tp_type>
     tp_type DotProd(const s_v2<tp_type> a, const s_v2<tp_type> b) {
         return (a.x * b.x) + (a.y * b.y);
     }
 
-    template<co_floating_point tp_type>
+    template<c_floating_point tp_type>
     tp_type CalcMag(const s_v2<tp_type> v) {
         return sqrt((v.x * v.x) + (v.y * v.y));
     }
 
-    template<co_floating_point tp_type>
+    template<c_floating_point tp_type>
     s_v2<tp_type> CalcNormalOrZero(const s_v2<tp_type> v) {
         const tp_type mag = CalcMag(v);
 
@@ -193,22 +193,22 @@ namespace zf {
         return {v.x / mag, v.y / mag};
     }
 
-    template<co_floating_point tp_type>
+    template<c_floating_point tp_type>
     tp_type CalcDist(const s_v2<tp_type> a, const s_v2<tp_type> b) {
         return CalcMag(s_v2<tp_type>(b.x - a.x, b.y - a.y));
     }
 
-    template<co_floating_point tp_type>
+    template<c_floating_point tp_type>
     s_v2<tp_type> CalcDir(const s_v2<tp_type> a, const s_v2<tp_type> b) {
         return CalcNormalOrZero({b.x - a.x, b.y - a.y});
     }
 
-    template<co_floating_point tp_type>
+    template<c_floating_point tp_type>
     tp_type CalcDirInRads(const s_v2<tp_type> a, const s_v2<tp_type> b) {
         return atan2(-(b.y - a.y), b.x - a.x);
     }
 
-    template<co_numeric tp_type>
+    template<c_numeric tp_type>
     struct s_rect {
         tp_type x;
         tp_type y;
@@ -229,7 +229,7 @@ namespace zf {
             return !(*this == other);
         }
 
-        template<co_numeric tp_other_type>
+        template<c_numeric tp_other_type>
         constexpr explicit operator s_v2<tp_other_type>() const {
             return {
                 static_cast<tp_other_type>(x),
@@ -240,25 +240,25 @@ namespace zf {
         }
     };
 
-    template<co_numeric tp_type> s_v2<tp_type> RectPos(const s_rect<tp_type> rect) { return {rect.x, rect.y}; }
-    template<co_numeric tp_type> s_v2<tp_type> RectSize(const s_rect<tp_type> rect) { return {rect.width, rect.height}; }
-    template<co_numeric tp_type> tp_type RectLeft(const s_rect<tp_type> rect) { return rect.x; }
-    template<co_numeric tp_type> tp_type RectTop(const s_rect<tp_type> rect) { return rect.y; }
-    template<co_numeric tp_type> tp_type RectRight(const s_rect<tp_type> rect) { return rect.x + rect.width; }
-    template<co_numeric tp_type> tp_type RectBottom(const s_rect<tp_type> rect) { return rect.y + rect.height; }
+    template<c_numeric tp_type> s_v2<tp_type> RectPos(const s_rect<tp_type> rect) { return {rect.x, rect.y}; }
+    template<c_numeric tp_type> s_v2<tp_type> RectSize(const s_rect<tp_type> rect) { return {rect.width, rect.height}; }
+    template<c_numeric tp_type> tp_type RectLeft(const s_rect<tp_type> rect) { return rect.x; }
+    template<c_numeric tp_type> tp_type RectTop(const s_rect<tp_type> rect) { return rect.y; }
+    template<c_numeric tp_type> tp_type RectRight(const s_rect<tp_type> rect) { return rect.x + rect.width; }
+    template<c_numeric tp_type> tp_type RectBottom(const s_rect<tp_type> rect) { return rect.y + rect.height; }
 
-    template<co_numeric tp_type>
+    template<c_numeric tp_type>
     t_b8 DoesRectContainPoint(const s_rect<tp_type> rect, const s_v2<tp_type> pt) {
         return pt.x > RectLeft(rect) && pt.y > RectTop(rect) && pt.x < RectRight(rect) && pt.y < RectBottom(rect);
     }
 
-    template<co_numeric tp_type>
+    template<c_numeric tp_type>
     t_b8 DoRectsIntersect(const s_rect<tp_type> a, const s_rect<tp_type> b) {
         return RectLeft(a) < RectRight(b) && RectTop(a) < RectBottom(b) && RectRight(a) > RectLeft(b) && RectBottom(a) > RectTop(b);
     }
 
     // Generate a rectangle encompassing all of the provided rectangles. At least a single rectangle must be provided.
-    template<co_numeric tp_type>
+    template<c_numeric tp_type>
     s_rect<tp_type> CalcSpanningRect(const s_array_rdonly<s_rect<tp_type>> rects) {
         ZF_ASSERT(!rects.IsEmpty());
 
@@ -314,17 +314,17 @@ namespace zf {
         return mat;
     }
 
-    template<co_floating_point tp_type>
+    template<c_floating_point tp_type>
     constexpr tp_type Lerp(const tp_type a, const tp_type b, const tp_type t) {
         return a + ((b - a) * t);
     }
 
-    template<co_floating_point tp_type>
+    template<c_floating_point tp_type>
     constexpr s_v2<tp_type> Lerp(const s_v2<tp_type> a, const s_v2<tp_type> b, const tp_type t) {
         return a + ((b - a) * t);
     }
 
-    template<co_floating_point tp_type>
+    template<c_floating_point tp_type>
     inline s_v2<tp_type> LenDir(const tp_type len, const tp_type dir) {
         return s_v2<tp_type>(cos(dir), -sin(dir)) * len;
     }

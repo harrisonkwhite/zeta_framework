@@ -120,7 +120,7 @@ namespace zf {
 
         s_str path_clone; // @speed: A clone on every call to this? Yuck!
 
-        if (!CloneArray(temp_mem_arena, path.chrs, path_clone.chrs)) {
+        if (!MakeArrayClone(temp_mem_arena, path.chrs, path_clone.chrs)) {
             return false;
         }
 
@@ -163,10 +163,11 @@ namespace zf {
         ZF_ASSERT(IsStrTerminated(path));
 
         const t_size path_len = CalcStrLen(path);
+        const auto path_relevant = Slice(path.chrs, 0, path_len + 1);
 
         s_str path_clone; // @speed: A clone on every call to this? Yuck!
 
-        if (!CloneArray(temp_mem_arena, Slice(path.chrs, 0, path_len + 1), path_clone.chrs)) {
+        if (!MakeArrayClone(temp_mem_arena, path_relevant, path_clone.chrs)) {
             return false;
         }
 
