@@ -59,7 +59,6 @@ namespace zf {
         }
     };
 
-#if 0
     template<typename tp_type, t_size tp_len>
     constexpr s_array<tp_type> ToNonstatic(s_static_array<tp_type, tp_len>& arr) {
         return static_cast<s_array<tp_type>>(arr);
@@ -71,7 +70,7 @@ namespace zf {
     }
 
     template<typename tp_type>
-    constexpr t_b8 IsArrayEmpty(const s_array<tp_type> arr) {
+    constexpr t_b8 IsArrayEmpty(const s_array<const tp_type> arr) {
         return arr.len == 0;
     }
 
@@ -81,7 +80,7 @@ namespace zf {
     }
 
     template<typename tp_type>
-    constexpr t_size ArraySizeInBytes(const s_array<tp_type> arr) {
+    constexpr t_size ArraySizeInBytes(const s_array<const tp_type> arr) {
         return static_cast<t_size>(sizeof(arr[0])) * arr.len;
     }
 
@@ -106,7 +105,7 @@ namespace zf {
     }
 
     template<typename tp_type>
-    t_b8 CloneArray(s_mem_arena& mem_arena, const s_array<tp_type> arr_to_clone, s_array<tp_type>& o_arr) {
+    t_b8 CloneArray(s_mem_arena& mem_arena, const s_array<const tp_type> arr_to_clone, s_array<tp_type>& o_arr) {
         ZF_ASSERT(!IsArrayEmpty(arr_to_clone));
 
         if (!MakeArray(mem_arena, arr_to_clone.len, o_arr)) {
@@ -118,8 +117,13 @@ namespace zf {
         return true;
     }
 
+    template<typename tp_type>
+    t_b8 CloneArray(s_mem_arena& mem_arena, const s_array<tp_type> arr_to_clone, s_array<tp_type>& o_arr) {
+        return CloneArray(mem_arena, static_cast<s_array<tp_type>>(arr_to_clone), o_arr);
+    }
+
     template<typename tp_type, t_size tp_len>
-    t_b8 CloneArray(s_mem_arena& mem_arena, const s_static_array<tp_type, tp_len> arr_to_clone, s_array<tp_type>& o_arr) {
+    t_b8 CloneArray(s_mem_arena& mem_arena, const s_static_array<tp_type, tp_len>& arr_to_clone, s_array<tp_type>& o_arr) {
         return CloneArray(mem_arena, ToNonstatic(arr_to_clone), o_arr);
     }
 
@@ -132,12 +136,12 @@ namespace zf {
     }
 
     template<typename tp_type, t_size tp_len>
-    constexpr s_array<tp_type> Slice(const s_static_array<tp_type, tp_len> arr, const t_size beg, const t_size end) {
+    constexpr s_array<tp_type> Slice(s_static_array<tp_type, tp_len>& arr, const t_size beg, const t_size end) {
         return Slice(ToNonstatic(arr), beg, end);
     }
 
     template<typename tp_type>
-    void Copy(const s_array<tp_type> dest, const s_array<tp_type> src) {
+    void Copy(const s_array<tp_type> dest, const s_array<const tp_type> src) {
         ZF_ASSERT(dest.len >= src.len);
 
         for (t_size i = 0; i < src.len; i++) {
@@ -146,7 +150,7 @@ namespace zf {
     }
 
     template<typename tp_type, t_size tp_len>
-    void Copy(const s_static_array<tp_type, tp_len> dest, const s_array<tp_type> src) {
+    void Copy(s_static_array<tp_type, tp_len>& dest, const s_array<const tp_type> src) {
         Copy(ToNonstatic(dest), src);
     }
 
@@ -160,7 +164,7 @@ namespace zf {
     }
 
     template<typename tp_type, t_size tp_len>
-    void CopyReverse(const s_static_array<tp_type, tp_len> dest, const s_array<const tp_type> src) {
+    void CopyReverse(s_static_array<tp_type, tp_len>& dest, const s_array<const tp_type> src) {
         CopyReverse(ToNonstatic(dest), src);
     }
 
@@ -178,7 +182,7 @@ namespace zf {
     }
 
     template<typename tp_type, t_size tp_len>
-    t_b8 AreAllEqualTo(const s_static_array<tp_type, tp_len> arr, const tp_type& val, const t_comparator<tp_type> comparator = DefaultComparator) {
+    t_b8 AreAllEqualTo(const s_static_array<tp_type, tp_len>& arr, const tp_type& val, const t_comparator<tp_type> comparator = DefaultComparator) {
         return AreAllEqualTo(ToNonstatic(arr), val, comparator);
     }
 
@@ -196,7 +200,7 @@ namespace zf {
     }
 
     template<typename tp_type, t_size tp_len>
-    t_b8 AreAnyEqualTo(const s_static_array<tp_type, tp_len> arr, const tp_type& val, const t_comparator<tp_type> comparator = DefaultComparator) {
+    t_b8 AreAnyEqualTo(const s_static_array<tp_type, tp_len>& arr, const tp_type& val, const t_comparator<tp_type> comparator = DefaultComparator) {
         return AreAnyEqualTo(ToNonstatic(arr), val, comparator);
     }
 
@@ -208,7 +212,7 @@ namespace zf {
     }
 
     template<typename tp_type, t_size tp_len>
-    void SetAllTo(const s_static_array<tp_type, tp_len> arr, const tp_type& val) {
+    void SetAllTo(s_static_array<tp_type, tp_len>& arr, const tp_type& val) {
         SetAllTo(ToNonstatic(arr), val);
     }
 
@@ -232,7 +236,7 @@ namespace zf {
     }
 
     template<typename tp_type, t_size tp_len>
-    t_b8 BinarySearch(const s_static_array<tp_type, tp_len> arr, const tp_type& elem, const t_comparator<tp_type> comparator = DefaultComparator) {
+    t_b8 BinarySearch(const s_static_array<tp_type, tp_len>& arr, const tp_type& elem, const t_comparator<tp_type> comparator = DefaultComparator) {
         return BinarySearch(ToNonstatic(arr), elem, comparator);
     }
 
@@ -245,5 +249,4 @@ namespace zf {
     constexpr s_array<t_u8> ToBytes(tp_type& item) {
         return {reinterpret_cast<t_u8*>(item), ZF_SIZE_OF(item)};
     }
-#endif
 }

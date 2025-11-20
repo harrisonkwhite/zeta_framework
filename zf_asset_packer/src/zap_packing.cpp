@@ -146,7 +146,7 @@ namespace zf {
                             const auto src_fp_raw = field_vals[ek_snd_field_src_file_path]->valuestring;
                             const auto dest_fp_raw = field_vals[ek_snd_field_dest_file_path]->valuestring;
 
-                            if (!LoadSoundFromRaw(StrFromRawTerminated(src_fp_raw), temp_mem_arena, snd_data)) {
+                            if (!LoadSoundFromRaw(StrFromRawTerminated(src_fp_raw), temp_mem_arena, snd_data.meta, snd_data.pcm)) {
                                 ZF_LOG_ERROR("Failed to load sound from file \"%s\"!", src_fp_raw);
                                 return false;
                             }

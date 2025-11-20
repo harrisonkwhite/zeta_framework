@@ -136,7 +136,7 @@ namespace zf {
 
             // Once enough time has passed (i.e. the time accumulator has reached the tick interval), run at least a single tick and update the display.
             if (frame_dur_accum >= targ_tick_interval) {
-                audio::ProcFinishedSounds();
+                //audio::ProcFinishedSounds();
 
                 // Run possibly multiple ticks.
                 do {
