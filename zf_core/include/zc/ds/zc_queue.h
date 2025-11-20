@@ -77,7 +77,7 @@ namespace zf {
     }
 
     template<typename tp_type>
-    tp_type Dequeue(const s_array<const tp_type> backing_arr, t_size& begin_index, t_size& len) {
+    tp_type Dequeue(const s_array_rdonly<tp_type> backing_arr, t_size& begin_index, t_size& len) {
         ZF_ASSERT(len > 0 && len <= backing_arr.len);
 
         const tp_type val = backing_arr[begin_index];
@@ -88,12 +88,12 @@ namespace zf {
 
     template<typename tp_type>
     tp_type Dequeue(s_queue<tp_type>& queue) {
-        return Dequeue(static_cast<s_array<const tp_type>>(queue.backing_arr), queue.begin_index, queue.len);
+        return Dequeue(static_cast<s_array_rdonly<tp_type>>(queue.backing_arr), queue.begin_index, queue.len);
     }
 
     template<typename tp_type, t_size tp_cap>
     tp_type Dequeue(s_static_queue<tp_type, tp_cap>& queue) {
-        return Dequeue(static_cast<s_array<const tp_type>>(queue.backing_arr), queue.begin_index, queue.len);
+        return Dequeue(static_cast<s_array_rdonly<tp_type>>(queue.backing_arr), queue.begin_index, queue.len);
     }
 
     template<typename tp_type>

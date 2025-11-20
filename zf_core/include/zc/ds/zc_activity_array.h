@@ -9,7 +9,7 @@ namespace zf {
     struct s_activity_array_rdonly {
         static_assert(!s_is_const<tp_type>::g_value);
 
-        s_array<const tp_type> slots;
+        s_array_rdonly<tp_type> slots;
         s_bit_vector_rdonly slot_activity;
 
         constexpr const tp_type& operator[](const t_size index) const {

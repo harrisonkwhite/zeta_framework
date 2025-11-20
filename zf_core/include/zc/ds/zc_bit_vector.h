@@ -17,7 +17,7 @@ namespace zf {
     }
 
     struct s_bit_vector_rdonly {
-        s_array<const t_u8> bytes;
+        s_array_rdonly<t_u8> bytes;
         t_size bit_cnt;
     };
 

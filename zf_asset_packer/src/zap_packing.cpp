@@ -69,7 +69,7 @@ namespace zf {
                     continue;
                 }
 
-                const auto fields = [asset_type_index]() -> s_array<const s_asset_field> {
+                const auto fields = [asset_type_index]() -> s_array_rdonly<s_asset_field> {
                     switch (asset_type_index) {
                         case ek_asset_type_texture:
                             return g_tex_fields;

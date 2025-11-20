@@ -12,7 +12,7 @@ namespace zf {
 
     struct s_sound_data_rdonly {
         s_sound_meta meta;
-        s_array<const t_f32> pcm;
+        s_array_rdonly<t_f32> pcm;
     };
 
     struct s_sound_data {

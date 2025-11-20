@@ -4,7 +4,7 @@
 
 namespace zf {
     template<typename tp_type>
-    t_b8 IsSorted(const s_array<const tp_type> arr, const t_comparator<tp_type> comparator = DefaultComparator) {
+    t_b8 IsSorted(const s_array_rdonly<tp_type> arr, const t_comparator<tp_type> comparator = DefaultComparator) {
         ZF_ASSERT(comparator);
 
         for (t_size i = 0; i < arr.Len() - 1; i++) {
@@ -131,7 +131,7 @@ namespace zf {
     }
 
     template<typename tp_type>
-    t_size QuickSortMedianOfThreePivotIndexSelection(const s_array<const tp_type> arr) {
+    t_size QuickSortMedianOfThreePivotIndexSelection(const s_array_rdonly<tp_type> arr) {
         const t_size ia = 0;
         const t_size ib = arr.Len() / 2;
         const t_size ic = arr.Len() - 1;
@@ -163,7 +163,7 @@ namespace zf {
     // Space complexity is O(1) compared to merge sort.
     // Custom pivot index selection function is only for arrays of length 3 or greater.
     template<typename tp_type>
-    void QuickSort(const s_array<const tp_type> arr, const t_comparator<tp_type> comparator = DefaultComparator, t_size (* const pivot_index_selection_func)(const s_array<const tp_type> arr) = QuickSortMedianOfThreePivotIndexSelection) {
+    void QuickSort(const s_array_rdonly<tp_type> arr, const t_comparator<tp_type> comparator = DefaultComparator, t_size (* const pivot_index_selection_func)(const s_array_rdonly<tp_type> arr) = QuickSortMedianOfThreePivotIndexSelection) {
         ZF_ASSERT(comparator);
         ZF_ASSERT(pivot_index_selection_func);
 

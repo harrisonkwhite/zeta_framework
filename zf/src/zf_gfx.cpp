@@ -1,7 +1,7 @@
 #include <zf/zf_gfx.h>
 
 namespace zf::gfx {
-    static t_size CalcStride(const s_array<const t_s32> vert_attr_lens) {
+    static t_size CalcStride(const s_array_rdonly<t_s32> vert_attr_lens) {
         t_size stride = 0;
 
         for (t_size i = 0; i < vert_attr_lens.len; i++) {
@@ -11,7 +11,7 @@ namespace zf::gfx {
         return stride;
     }
 
-    static s_gl_mesh MakeGLMesh(const t_f32* const verts_raw, const t_size verts_len, const s_array<const t_u16> elems, const s_array<const t_s32> vert_attr_lens) {
+    static s_gl_mesh MakeGLMesh(const t_f32* const verts_raw, const t_size verts_len, const s_array_rdonly<t_u16> elems, const s_array_rdonly<t_s32> vert_attr_lens) {
         s_gl_mesh mesh = {};
 
         glGenVertexArrays(1, &mesh.vert_arr_gl_id);
@@ -193,7 +193,7 @@ namespace zf::gfx {
         }
     }
 
-    s_resource_handle MakeMesh(s_resource_arena& res_arena, const t_f32* const verts_raw, const t_size verts_len, const s_array<const t_u16> elems, const s_array<const t_s32> vert_attr_lens) {
+    s_resource_handle MakeMesh(s_resource_arena& res_arena, const t_f32* const verts_raw, const t_size verts_len, const s_array_rdonly<t_u16> elems, const s_array_rdonly<t_s32> vert_attr_lens) {
         ZF_ASSERT(verts_len > 0);
         ZF_ASSERT(!IsArrayEmpty(elems));
         ZF_ASSERT(!IsArrayEmpty(vert_attr_lens));

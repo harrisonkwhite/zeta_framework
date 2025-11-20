@@ -15,10 +15,10 @@ namespace zf {
     }
 
     struct s_str_rdonly {
-        s_array<const char> chrs; // The length of this IS NOT necessarily the string length!
+        s_array_rdonly<char> chrs; // The length of this IS NOT necessarily the string length!
 
         constexpr s_str_rdonly() = default;
-        constexpr s_str_rdonly(const s_array<const char> chrs) : chrs(chrs) {}
+        constexpr s_str_rdonly(const s_array_rdonly<char> chrs) : chrs(chrs) {}
         consteval s_str_rdonly(const char* const raw_term);
     };
 
@@ -26,7 +26,7 @@ namespace zf {
         s_array<char> chrs;
 
         constexpr operator s_str_rdonly() const {
-            return {static_cast<s_array<const char>>(chrs)};
+            return {static_cast<s_array_rdonly<char>>(chrs)};
         }
     };
 

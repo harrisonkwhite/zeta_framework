@@ -259,7 +259,7 @@ namespace zf {
 
     // Generate a rectangle encompassing all of the provided rectangles. At least a single rectangle must be provided.
     template<co_numeric tp_type>
-    s_rect<tp_type> CalcSpanningRect(const s_array<const s_rect<tp_type>> rects) {
+    s_rect<tp_type> CalcSpanningRect(const s_array_rdonly<s_rect<tp_type>> rects) {
         ZF_ASSERT(!rects.IsEmpty());
 
         tp_type min_left = rects[0].x;

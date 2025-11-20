@@ -40,13 +40,13 @@ namespace zf {
     }
 
     template<typename tp_type>
-    [[nodiscard]] t_size WriteItemArrayToFile(const s_file_stream& fs, const s_array<const tp_type> src_arr) {
+    [[nodiscard]] t_size WriteItemArrayToFile(const s_file_stream& fs, const s_array_rdonly<tp_type> src_arr) {
         return fwrite(src_arr.buf_raw, ZF_SIZE_OF(tp_type), src_arr.len, fs.raw);
     }
 
     template<typename tp_type>
     [[nodiscard]] t_size WriteItemArrayToFile(const s_file_stream& fs, const s_array<tp_type> src_arr) {
-        return WriteItemArrayToFile(fs, static_cast<s_array<const tp_type>>(src_arr));
+        return WriteItemArrayToFile(fs, static_cast<s_array_rdonly<tp_type>>(src_arr));
     }
 
     template<typename tp_type, t_size tp_len>

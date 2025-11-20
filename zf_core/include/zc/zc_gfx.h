@@ -97,7 +97,7 @@ namespace zf {
 
     struct s_rgba_texture_data_rdonly {
         s_v2<t_s32> size_in_pxs;
-        s_array<const t_u8> px_data;
+        s_array_rdonly<t_u8> px_data;
     };
 
     struct s_rgba_texture_data {
