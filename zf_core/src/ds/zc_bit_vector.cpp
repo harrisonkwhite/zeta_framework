@@ -320,11 +320,13 @@ namespace zf {
 
         const t_u8 xor_mask = inverted ? 0xFF : 0x00;
 
-        for (t_size i = from / 8; i < bv.bytes.len; i++) {
+        const t_size begin_byte_index = from / 8;
+
+        for (t_size i = begin_byte_index; i < bv.bytes.len; i++) {
             t_u8 byte = bv.bytes[i];
 
             // @speed: Not sure if the compiler will pull these checks out.
-            if (i == 0) {
+            if (i == begin_byte_index) {
                 byte &= ByteBitmask(from % 8, 8);
             }
 
