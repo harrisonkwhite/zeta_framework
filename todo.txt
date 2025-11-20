@@ -3,10 +3,20 @@
 - Set up UTF-8 string handling.
 - Set up rendering of UTF-8 strings. Symbols and associated data (e.g. location in atlas, alignment data) should be put into an unordered map.
 - Maybe have a simple wrapper around raw pointers to trip assert on null dereference?
-- Set up iterators.
-- Support sound playing.
 - Support music playing and flexibility over things like volume control.
 - Rework and extend RNG system - it sucks. Refrain from using global state for it.
 - Figure out how to implement surfaces, bypassing the issues with transparency.
+
+Big-picture things that this framework needs by the end of the year:
+- Non-ASCII font loading and text rendering.
+- RNG system overhaul.
+- Music layering and management.
+- Surfaces.
+- Window and graphics code should be the same module. Input should be a distinct module from these two.
+- A* pathfinding utilities.
+- Gamepad support.
+- MAYBE utilities for sprites and animation, but this could be project-specific.
+- MAYBE have more built-in shaders for surfaces, consider putting them in different files and using the zf_bin_to_array tool.
+- Run proper testing on everything, these tests should be PUBLIC.
 
 There are a handful of comments marked with "@todo" throughout the codebase that need to be addressed as well.

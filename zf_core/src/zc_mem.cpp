@@ -46,6 +46,7 @@ namespace zf {
     }
 
     void ReleaseMemArena(s_mem_arena& ma) {
+        ZF_ASSERT(ma.head_chunk);
         FreeChunks(ma.head_chunk, ma.chunk_size);
         ma = {};
     }

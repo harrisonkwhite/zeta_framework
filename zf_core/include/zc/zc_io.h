@@ -24,9 +24,9 @@ namespace zf {
         return fread(&o_item, ZF_SIZE_OF(tp_type), 1, fs.raw) == 1;
     }
 
-    template<typename tp_type>
-    [[nodiscard]] t_size ReadItemArrayFromFile(const s_file_stream& fs, const s_array<tp_type> dest_arr) {
-        return fread(dest_arr.buf_raw, ZF_SIZE_OF(tp_type), dest_arr.len, fs.raw);
+    template<c_array_mut tp_type>
+    [[nodiscard]] t_size ReadItemArrayFromFile(const s_file_stream& fs, tp_type& dest_arr) {
+        return fread(ArrayRaw(dest_arr), ZF_SIZE_OF(typename tp_type::t_elem), ArrayLen(dest_arr), fs.raw);
     }
 
     template<typename tp_type>
@@ -34,9 +34,9 @@ namespace zf {
         return fwrite(&o_item, ZF_SIZE_OF(tp_type), 1, fs.raw) == 1;
     }
 
-    template<typename tp_type>
-    [[nodiscard]] t_size WriteItemArrayToFile(const s_file_stream& fs, const s_array_rdonly<tp_type> src_arr) {
-        return fwrite(src_arr.buf_raw, ZF_SIZE_OF(tp_type), src_arr.len, fs.raw);
+    template<c_array tp_type>
+    [[nodiscard]] t_size WriteItemArrayToFile(const s_file_stream& fs, tp_type& src_arr) {
+        return fwrite(ArrayRaw(src_arr), ZF_SIZE_OF(typename tp_type::t_elem), ArrayLen(src_arr), fs.raw);
     }
 
     // Reserve a buffer and populate it with the binary contents of a file, optionally with a terminating byte.

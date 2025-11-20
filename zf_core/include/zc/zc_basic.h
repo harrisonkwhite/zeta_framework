@@ -69,11 +69,14 @@ namespace zf {
     // 1. Mixing signed and unsigned can lead to strange overflow bugs that cannot always be caught by warnings. Better to be consistent and have predictability.
     // 2. The signed 64-bit range is more than sufficient for realistic use cases.
     // 3. If you want a value to be 0 or greater, ASSERT that it is!
-    // 4. -1 is far more effective as a sentinel than the positive upper bound is.
+    // 4. -1 is far more useful as a sentinel than the positive upper bound is since it is more commonly an outlier.
     using t_size = t_s64;
 
     template<typename tp_type_a, typename tp_type_b> struct s_is_same { static constexpr t_b8 g_val = false; };
     template<typename tp_type> struct s_is_same<tp_type, tp_type> { static constexpr t_b8 g_val = true; };
+
+    template<t_b8 tp_cond, typename tp_then, typename tp_else> struct s_conditional { using t_type = tp_then; };
+    template<typename tp_then, typename tp_else> struct s_conditional<false, tp_then, tp_else> { using t_type = tp_else; };
 
     template<typename tp_type> struct s_is_integral { static constexpr t_b8 g_val = false; };
     template<> struct s_is_integral<t_s8> { static constexpr t_b8 g_val = true; };

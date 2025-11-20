@@ -12,7 +12,7 @@ namespace zf {
     t_b8 OpenFile(const s_str_rdonly file_path, const ec_file_access_mode mode, s_file_stream& o_fs) {
         ZF_ASSERT(IsStrTerminated(file_path));
 
-        FILE* fs_raw;
+        FILE* fs_raw = nullptr;
 
         switch (mode) {
         case ec_file_access_mode::read:
@@ -38,10 +38,12 @@ namespace zf {
     }
 
     void CloseFile(s_file_stream& fs) {
-        ZF_ASSERT(fs.raw);
-
-        fclose(fs.raw);
-        fs.raw = nullptr;
+        if (fs.raw) {
+            fclose(fs.raw);
+            fs.raw = nullptr;
+        } else {
+            ZF_ASSERT(false);
+        }
     }
 
     t_size CalcFileSize(const s_file_stream& fs) {

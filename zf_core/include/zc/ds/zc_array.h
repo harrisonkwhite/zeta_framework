@@ -95,6 +95,26 @@ namespace zf {
     template<typename tp_type> concept c_array_rdonly = s_is_array<tp_type>::g_val && !s_is_mut_array<tp_type>::g_val;
 
     template<typename tp_type>
+    constexpr tp_type* ArrayRaw(const s_array<tp_type> arr) {
+        return arr.buf_raw;
+    }
+
+    template<typename tp_type>
+    constexpr const tp_type* ArrayRaw(const s_array_rdonly<tp_type> arr) {
+        return arr.buf_raw;
+    }
+
+    template<typename tp_type, t_size tp_len>
+    constexpr tp_type* ArrayRaw(s_static_array<tp_type, tp_len>& arr) {
+        return arr.buf_raw;
+    }
+
+    template<typename tp_type, t_size tp_len>
+    constexpr const tp_type* ArrayRaw(const s_static_array<tp_type, tp_len>& arr) {
+        return arr.buf_raw;
+    }
+
+    template<typename tp_type>
     constexpr t_size ArrayLen(const s_array<tp_type> arr) {
         return arr.len;
     }
@@ -157,7 +177,7 @@ namespace zf {
         ZF_ASSERT(beg >= 0 && beg <= ArrayLen(arr));
         ZF_ASSERT(end >= beg && end <= ArrayLen(arr));
 
-        return {&arr[beg], end - beg};
+        return {ArrayRaw(arr) + beg, end - beg};
     }
 
     template<c_array_rdonly tp_type>
@@ -165,7 +185,7 @@ namespace zf {
         ZF_ASSERT(beg >= 0 && beg <= ArrayLen(arr));
         ZF_ASSERT(end >= beg && end <= ArrayLen(arr));
 
-        return {&arr[beg], end - beg};
+        return {ArrayRaw(arr) + beg, end - beg};
     } 
 
     template<c_array_mut tp_dest_type, c_array tp_src_type>

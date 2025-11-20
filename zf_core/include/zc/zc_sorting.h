@@ -77,7 +77,7 @@ namespace zf {
 
     // O(n log n) in both time complexity and space complexity in every case.
     template<c_array_mut tp_type>
-    t_b8 MergeSort(tp_type& arr, s_mem_arena& temp_mem_arena, const t_comparator<typename tp_type::t_elem> comparator = DefaultComparator) {
+    [[nodiscard]] t_b8 MergeSort(tp_type& arr, s_mem_arena& temp_mem_arena, const t_comparator<typename tp_type::t_elem> comparator = DefaultComparator) {
         ZF_ASSERT(comparator);
 
         if (ArrayLen(arr) <= 1) {
@@ -99,7 +99,7 @@ namespace zf {
             return false;
         }
 
-        if (!MergeSort(arr_left_sorted, comparator, temp_mem_arena) || !MergeSort(arr_right_sorted, comparator, temp_mem_arena)) {
+        if (!MergeSort(arr_left_sorted, temp_mem_arena, comparator) || !MergeSort(arr_right_sorted, temp_mem_arena, comparator)) {
             return false;
         }
 
@@ -114,7 +114,10 @@ namespace zf {
 
                 if (i == ArrayLen(arr_left_sorted)) {
                     // Copy over the remainder of the right array.
-                    Copy(Slice(arr, i + j, ArrayLen(arr)), Slice(arr_right_sorted, j, ArrayLen(arr)));
+                    const auto dest = Slice(arr, i + j, ArrayLen(arr));
+                    const auto src = Slice(arr_right_sorted, j, ArrayLen(arr_right_sorted));
+                    Copy(dest, src);
+
                     break;
                 }
             } else {
@@ -123,7 +126,10 @@ namespace zf {
 
                 if (j == ArrayLen(arr_right_sorted)) {
                     // Copy over the remainder of the left array.
-                    Copy(Slice(arr, i + j), Slice(arr_left_sorted, i));
+                    const auto dest = Slice(arr, i + j, ArrayLen(arr));
+                    const auto src = Slice(arr_left_sorted, i, ArrayLen(arr_left_sorted));
+                    Copy(dest, src);
+
                     break;
                 }
             }
@@ -132,42 +138,12 @@ namespace zf {
         return true;
     }
 
-    template<c_array tp_type>
-    t_size QuickSortMedianOfThreePivotIndexSelection(tp_type& arr) {
-        const t_size ia = 0;
-        const t_size ib = ArrayLen(arr) / 2;
-        const t_size ic = ArrayLen(arr) - 1;
-
-        if (arr[ia] <= arr[ib]) {
-            if (arr[ib] <= arr[ic]) {
-                return ib;
-            } else {
-                if (arr[ia] <= arr[ic]) {
-                    return ic;
-                } else {
-                    return ia;
-                }
-            }
-        } else {
-            if (arr[ia] <= arr[ic]) {
-                return ia;
-            } else {
-                if (arr[ib] <= arr[ic]) {
-                    return ic;
-                } else {
-                    return ib;
-                }
-            }
-        }
-    }
-
     // Time complexity is O(n log n) best-case and O(n^2) worst-case depending on the pivot.
     // Space complexity is O(1) compared to merge sort.
-    // Custom pivot index selection function is only for arrays of length 3 or greater.
+    // In each recurse, the pivot is selected as the median of the first, middle, and last elements.
     template<c_array_mut tp_type>
-    void QuickSort(tp_type& arr, const t_comparator<typename tp_type::t_elem> comparator = DefaultComparator, t_size (* const pivot_index_selection_func)(tp_type& arr) = QuickSortMedianOfThreePivotIndexSelection) {
+    void QuickSort(tp_type& arr, const t_comparator<typename tp_type::t_elem> comparator = DefaultComparator) {
         ZF_ASSERT(comparator);
-        ZF_ASSERT(pivot_index_selection_func);
 
         if (ArrayLen(arr) <= 1) {
             return;
@@ -181,10 +157,36 @@ namespace zf {
             return;
         }
 
-        // Get the pivot index from the given function and swap the pivot out to the end.
-        const t_size pivot_index = pivot_index_selection_func(arr);
-        ZF_ASSERT(pivot_index < ArrayLen(arr));
+        // Determine the pivot - median of the first, middle, and last elements.
+        const t_size pivot_index = [arr, comparator]() {
+            const t_size ia = 0;
+            const t_size ib = ArrayLen(arr) / 2;
+            const t_size ic = ArrayLen(arr) - 1;
 
+            if (comparator(arr[ia], arr[ib]) <= 0) {
+                if (comparator(arr[ib], arr[ic]) <= 0) {
+                    return ib;
+                } else {
+                    if (comparator(arr[ia], arr[ic]) <= 0) {
+                        return ic;
+                    } else {
+                        return ia;
+                    }
+                }
+            } else {
+                if (comparator(arr[ia], arr[ic]) <= 0) {
+                    return ia;
+                } else {
+                    if (comparator(arr[ib], arr[ic]) <= 0) {
+                        return ic;
+                    } else {
+                        return ib;
+                    }
+                }
+            }
+        }();
+
+        // Swap it out to the end to get it out of the way.
         Swap(arr[pivot_index], arr[ArrayLen(arr) - 1]);
 
         // Move smaller elements to the left, and decide the final pivot position.
@@ -199,7 +201,10 @@ namespace zf {
         }
 
         // Sort for each subsection.
-        QuickSort(Slice(arr, 0, left_sec_last_index), comparator, pivot_index_selection_func);
-        QuickSort(Slice(arr, left_sec_last_index + 1), comparator, pivot_index_selection_func);
+        const auto left = Slice(arr, 0, left_sec_last_index);
+        QuickSort(left, comparator);
+
+        const auto right = Slice(arr, left_sec_last_index + 1, ArrayLen(arr));
+        QuickSort(right, comparator);
     }
 }
