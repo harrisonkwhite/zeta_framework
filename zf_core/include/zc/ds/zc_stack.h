@@ -5,8 +5,6 @@
 namespace zf {
     template<typename tp_type>
     struct s_stack {
-        static_assert(!s_is_const<tp_type>::g_value);
-
         s_array<tp_type> backing_arr;
         t_size height;
 
@@ -18,8 +16,6 @@ namespace zf {
 
     template<typename tp_type, t_size tp_cap>
     struct s_static_stack {
-        static_assert(!s_is_const<tp_type>::g_value);
-
         s_static_array<tp_type, tp_cap> backing_arr;
         t_size height;
 

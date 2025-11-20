@@ -5,8 +5,6 @@
 namespace zf {
     template<typename tp_type>
     struct s_queue {
-        static_assert(!s_is_const<tp_type>::g_value);
-
         s_array<tp_type> backing_arr;
         t_size begin_index;
         t_size len;
@@ -19,8 +17,6 @@ namespace zf {
 
     template<typename tp_type, t_size tp_cap>
     struct s_static_queue {
-        static_assert(!s_is_const<tp_type>::g_value);
-
         s_static_array<tp_type, tp_cap> backing_arr;
         t_size begin_index;
         t_size len;

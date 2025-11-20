@@ -29,11 +29,6 @@ namespace zf {
         return fread(dest_arr.buf_raw, ZF_SIZE_OF(tp_type), dest_arr.len, fs.raw);
     }
 
-    template<typename tp_type, t_size tp_len>
-    [[nodiscard]] t_size ReadItemArrayFromFile(const s_file_stream& fs, s_static_array<tp_type, tp_len>& dest_arr) {
-        return ReadItemArrayFromFile(fs, ToNonstatic(dest_arr));
-    }
-
     template<typename tp_type>
     [[nodiscard]] t_b8 WriteItemToFile(const s_file_stream& fs, const tp_type& o_item) {
         return fwrite(&o_item, ZF_SIZE_OF(tp_type), 1, fs.raw) == 1;
@@ -42,16 +37,6 @@ namespace zf {
     template<typename tp_type>
     [[nodiscard]] t_size WriteItemArrayToFile(const s_file_stream& fs, const s_array_rdonly<tp_type> src_arr) {
         return fwrite(src_arr.buf_raw, ZF_SIZE_OF(tp_type), src_arr.len, fs.raw);
-    }
-
-    template<typename tp_type>
-    [[nodiscard]] t_size WriteItemArrayToFile(const s_file_stream& fs, const s_array<tp_type> src_arr) {
-        return WriteItemArrayToFile(fs, static_cast<s_array_rdonly<tp_type>>(src_arr));
-    }
-
-    template<typename tp_type, t_size tp_len>
-    [[nodiscard]] t_size WriteItemArrayToFile(const s_file_stream& fs, const s_static_array<tp_type, tp_len>& src_arr) {
-        return WriteItemArrayToFile(fs, ToNonstatic(src_arr));
     }
 
     // Reserve a buffer and populate it with the binary contents of a file, optionally with a terminating byte.

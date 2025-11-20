@@ -98,9 +98,9 @@ namespace zf {
         {
             const s_game_init_context context = {
                 .dev_mem = game.dev_mem,
-                .perm_mem_arena = game.perm_mem_arena,
-                .temp_mem_arena = game.temp_mem_arena,
-                .gfx_res_arena = game.gfx_res_arena
+                .perm_mem_arena = &game.perm_mem_arena,
+                .temp_mem_arena = &game.temp_mem_arena,
+                .gfx_res_arena = &game.gfx_res_arena
             };
 
             if (!info.init_func(context)) {
@@ -142,8 +142,8 @@ namespace zf {
                 do {
                     const s_game_tick_context context = {
                         .dev_mem = game.dev_mem,
-                        .perm_mem_arena = game.perm_mem_arena,
-                        .temp_mem_arena = game.temp_mem_arena
+                        .perm_mem_arena = &game.perm_mem_arena,
+                        .temp_mem_arena = &game.temp_mem_arena
                     };
 
                     const e_game_tick_result res = info.tick_func(context);
@@ -179,9 +179,9 @@ namespace zf {
                 {
                     const s_game_render_context context = {
                         .dev_mem = game.dev_mem,
-                        .perm_mem_arena = game.perm_mem_arena,
-                        .temp_mem_arena = game.temp_mem_arena,
-                        .rendering_context = rendering_context
+                        .perm_mem_arena = &game.perm_mem_arena,
+                        .temp_mem_arena = &game.temp_mem_arena,
+                        .rendering_context = &rendering_context
                     };
 
                     if (!info.render_func(context)) {

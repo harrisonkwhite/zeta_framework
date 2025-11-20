@@ -8,10 +8,10 @@ namespace zf {
     struct s_game_init_context {
         void* dev_mem;
 
-        s_mem_arena& perm_mem_arena;
-        s_mem_arena& temp_mem_arena;
+        s_mem_arena* perm_mem_arena;
+        s_mem_arena* temp_mem_arena;
 
-        gfx::s_resource_arena& gfx_res_arena;
+        gfx::s_resource_arena* gfx_res_arena;
     };
 
     enum e_game_tick_result {
@@ -23,17 +23,17 @@ namespace zf {
     struct s_game_tick_context {
         void* dev_mem;
 
-        s_mem_arena& perm_mem_arena;
-        s_mem_arena& temp_mem_arena;
+        s_mem_arena* perm_mem_arena;
+        s_mem_arena* temp_mem_arena;
     };
 
     struct s_game_render_context {
         void* dev_mem;
 
-        s_mem_arena& perm_mem_arena;
-        s_mem_arena& temp_mem_arena;
+        s_mem_arena* perm_mem_arena;
+        s_mem_arena* temp_mem_arena;
 
-        const s_rendering_context& rendering_context;
+        const s_rendering_context* rendering_context;
     };
 
     struct s_game_info {
