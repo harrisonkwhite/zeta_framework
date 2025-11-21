@@ -40,7 +40,7 @@ namespace zf {
             return false;
         }
 
-        const t_b8 success = [fs, tex_data]() {
+        const t_b8 success = [fs, &tex_data]() {
             if (!WriteItemToFile(fs, tex_data.size_in_pxs)) {
                 return false;
             }

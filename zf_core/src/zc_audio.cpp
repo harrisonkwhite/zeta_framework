@@ -54,7 +54,7 @@ namespace zf {
             return false;
         }
 
-        const t_b8 success = [fs, snd_data]() {
+        const t_b8 success = [fs, &snd_data]() {
             if (!WriteItemToFile(fs, snd_data.meta)) {
                 return false;
             }
