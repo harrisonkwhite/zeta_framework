@@ -113,16 +113,21 @@ namespace zf {
 
 
 
-
+    struct s_font_kerning {
+        t_s32 glyph_a_index;
+        t_s32 glyph_b_index;
+        t_s32 kern;
+    };
 
     struct s_font_arrangement {
         t_s32 line_height;
 
+        // @todo: This is bad. Should be per-glyph, not per-codepoint.
         s_array<s_v2<t_s32>> chr_offsets;
         s_array<s_v2<t_s32>> chr_sizes;
         s_array<t_s32> chr_advances;
 
-        // @todo: Also need kerning pairs, only keep the non-0 ones and index into it with a hash map.
+        s_array<s_font_kerning> kernings; // Only keep non-zero ones. This can be made into a hash map in-game.
     };
 
     [[nodiscard]] static t_b8 LoadFontArrangement(s_mem_arena& mem_arena, const stbtt_fontinfo& stb_font_info, const t_s32 height, const s_array_rdonly<t_s32> utf_codepoints, s_font_arrangement& o_arrangement) {
@@ -149,7 +154,6 @@ namespace zf {
 
         for (t_size i = 0; i < utf_codepoints.len; i++) {
             // @todo: Handle case where codepoint is unsupported.
-            // @todo: We need kerning!
 
             // @todo: Apparently this doesn't always give a tight box? Test with CJK glyphs.
             t_s32 bm_box_left, bm_box_top, bm_box_right, bm_box_bottom;
@@ -168,6 +172,53 @@ namespace zf {
             stbtt_GetCodepointHMetrics(&stb_font_info, utf_codepoints[i], &hm_advance, nullptr);
 
             o_arrangement.chr_advances[i] = static_cast<t_s32>(static_cast<t_f32>(hm_advance) * scale);
+        }
+
+        // Set up kernings.
+        const t_size kern_cnt = [stb_font_info, utf_codepoints]() {
+            t_size cnt = 0;
+
+            for (t_size i = 0; i < utf_codepoints.len; i++) {
+                for (t_size j = 0; j < utf_codepoints.len; j++) {
+                    const auto ga = stbtt_FindGlyphIndex(&stb_font_info, utf_codepoints[i]);
+                    const auto gb = stbtt_FindGlyphIndex(&stb_font_info, utf_codepoints[j]);
+
+                    const t_s32 kern = stbtt_GetGlyphKernAdvance(&stb_font_info, ga, gb);
+
+                    if (kern != 0) {
+                        cnt++;
+                    }
+                }
+            }
+
+            return cnt;
+        }();
+
+        if (kern_cnt > 0) {
+            if (!MakeArray(mem_arena, kern_cnt, o_arrangement.kernings)) {
+                return false;
+            }
+
+            t_size kern_index = 0;
+
+            for (t_size i = 0; i < utf_codepoints.len; i++) {
+                for (t_size j = 0; j < utf_codepoints.len; j++) {
+                    const auto ga = stbtt_FindGlyphIndex(&stb_font_info, utf_codepoints[i]);
+                    const auto gb = stbtt_FindGlyphIndex(&stb_font_info, utf_codepoints[j]);
+
+                    const t_s32 kern = stbtt_GetGlyphKernAdvance(&stb_font_info, ga, gb);
+
+                    if (kern != 0) {
+                        o_arrangement.kernings[kern_index] = {
+                            .glyph_a_index = ga,
+                            .glyph_b_index = gb,
+                            .kern = kern
+                        };
+
+                        kern_index++;
+                    }
+                }
+            }
         }
 
         return true;
