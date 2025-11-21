@@ -4,10 +4,6 @@
 #include <zc/ds/zc_array.h>
 
 namespace zf {
-    constexpr char g_ascii_printable_min = ' ';
-    constexpr char g_ascii_printable_max = '~';
-    constexpr t_size g_ascii_printable_range_len = g_ascii_printable_max - g_ascii_printable_min + 1;
-
     constexpr t_size CalcRawStrLen(const char* const raw_str) {
         t_size len = 0;
         for (; raw_str[len]; len++) {}
@@ -63,6 +59,7 @@ namespace zf {
         return IsArrayEmpty(str.chrs) || !str.chrs[0];
     }
 
-    t_size CalcStrLen(const s_str_rdonly str);
+    t_size CalcASCIIStrLen(const s_str_rdonly str);
+    t_size CalcUTF8LenNonterminatedStrLenFast(const s_str_rdonly str); // This DOES NOT check whether the string is in valid UTF-8 form!
     t_b8 IsStrTerminated(const s_str_rdonly str);
 }
