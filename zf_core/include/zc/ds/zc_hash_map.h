@@ -134,7 +134,7 @@ namespace zf {
     [[nodiscard]] t_b8 HashMapGet(s_hash_map<tp_key_type, tp_value_type>& hm, const tp_key_type& key, tp_value_type* const o_val = nullptr) {
         const t_size hash_index = KeyToHashIndex(key, hm.hash_func, hm.backing_store_indexes.len);
 
-        const auto bs_get = [hm](const auto self, const t_size index, const tp_key_type& key, tp_value_type* const o_val) {
+        const auto bs_get = [hm, key, o_val](const auto self, const t_size index) {
             if (index == -1) {
                 return false;
             }
@@ -147,19 +147,48 @@ namespace zf {
                 return true;
             }
 
-            return self(self, hm.backing_store.next_indexes[index], key, o_val);
+            return self(self, hm.backing_store.next_indexes[index]);
         };
 
-        return bs_get(bs_get, hm.backing_store_indexes[hash_index], key, o_val);
+        return bs_get(bs_get, hm.backing_store_indexes[hash_index]);
+    }
+
+    // Returns true iff the operation was successful (in which failure occurs when there isn't enough room).
+    template<typename tp_key_type, typename tp_value_type>
+    [[nodiscard]] t_b8 HashMapPut(s_hash_map<tp_key_type, tp_value_type>& hm, const tp_key_type& key, const tp_value_type& val) {
+        const t_size hash_index = KeyToHashIndex(key, hm.hash_func, hm.backing_store_indexes.len);
+
+        const auto bs_put = [hm, key, val](const auto self, t_size& index) {
+            if (index == -1) {
+                const t_size prospective_index = IndexOfFirstUnsetBit(hm.backing_store.usage);
+
+                if (prospective_index == -1) {
+                    // We're out of room!
+                    return false;
+                }
+
+                index = prospective_index;
+
+                hm.backing_store.keys[index] = key;
+                hm.backing_store.vals[index] = val;
+                hm.backing_store.next_indexes[index] = -1;
+                SetBit(hm.backing_store.usage, index);
+
+                return true;
+            }
+
+            if (hm.key_comparator(hm.backing_store.keys[index], key) == 0) {
+                hm.backing_store.vals[index] = val;
+                return true;
+            }
+
+            return self(self, hm.backing_store.next_indexes[index]);
+        };
+
+        return bs_put(bs_put, hm.backing_store_indexes[hash_index]);
     }
 
 #if 0
-    template<typename tp_key_type, typename tp_value_type>
-    [[nodiscard]] t_b8 HashMapPut(s_hash_map<tp_key_type, tp_value_type>& hm, const tp_key_type& key, const tp_value_type& val) {
-        const t_size hash_index = KeyToHashIndex(key);
-        return hm.backing_store.Put(hm.backing_store_indexes[hash_index], key, val);
-    }
-
     template<typename tp_key_type, typename tp_value_type>
     t_b8 HashMapRemove(s_hash_map<tp_key_type, tp_value_type>& hm, const tp_key_type& key) {
         const t_size hash_index = KeyToHashIndex(key);
