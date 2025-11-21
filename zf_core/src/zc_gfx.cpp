@@ -1,5 +1,6 @@
 #include <zc/zc_gfx.h>
 
+#include <zc/ds/zc_hash_map.h>
 #include <stb_image.h>
 #include <stb_truetype.h>
 
@@ -109,10 +110,84 @@ namespace zf {
 
 
 
+    struct s_font_kerning {
+        t_s32 glyph_a_index;
+        t_s32 glyph_b_index;
+        t_s32 kern;
+    };
 
+    struct s_font_arrangement {
+        t_s32 line_height;
 
+        s_array<s_v2<t_s32>> chr_offsets;
+        s_array<s_v2<t_s32>> chr_sizes;
+        s_array<t_s32> chr_advances;
 
+        s_array<s_font_kerning> kernings; // Only keep non-zero ones. This can be made into a hash map in-game.
+    };
 
+    struct s_font_glyph_info {
+        s_v2<t_s32> offs;
+        s_v2<t_s32> size;
+        t_s32 adv;
+    };
+
+    // @todo: The UTF codepoints array here should really just be a string processed normally. This means duplicate codepoints are allowed.
+    [[nodiscard]] static t_b8 LoadFontArrangement(s_mem_arena& mem_arena, const stbtt_fontinfo& stb_font_info, const t_s32 height, const s_array_rdonly<t_s32> utf_codepoints, s_font_arrangement& o_arrangement) {
+        ZF_ASSERT(false);
+        ZF_ASSERT(!IsArrayEmpty(utf_codepoints));
+
+        const t_f32 scale = stbtt_ScaleForPixelHeight(&stb_font_info, static_cast<t_f32>(height));
+
+        t_s32 vm_ascent, vm_descent, vm_line_gap;
+        stbtt_GetFontVMetrics(&stb_font_info, &vm_ascent, &vm_descent, &vm_line_gap);
+
+        o_arrangement.line_height = static_cast<t_s32>(static_cast<t_f32>(vm_ascent - vm_descent + vm_line_gap) * scale);
+
+        // Each entry maps a GLYPH INDEX to character data.
+        s_hash_map<t_s32, s_font_glyph_info> glyphs_to_info = {};
+        s_hash_map<t_s32, t_s32> codepoints_to_glyph_indexes = {};
+
+        for (t_size i = 0; i < utf_codepoints.len; i++) {
+            const t_s32 glyph_index = stbtt_FindGlyphIndex(&stb_font_info, utf_codepoints[i]);
+
+            if (!HashMapPut(codepoints_to_glyph_indexes, utf_codepoints[i], glyph_index)) {
+                return false;
+            }
+
+            if (HashMapGet(glyphs_to_info, glyph_index)) {
+                // Glyph already stored.
+                continue;
+            }
+
+            s_font_glyph_info glyph_info = {};
+
+            t_s32 bm_box_left, bm_box_top, bm_box_right, bm_box_bottom;
+            stbtt_GetGlyphBitmapBox(&stb_font_info, glyph_index, scale, scale, &bm_box_left, &bm_box_top, &bm_box_right, &bm_box_bottom);
+
+            glyph_info.offs = {
+                bm_box_left,
+                bm_box_top + static_cast<t_s32>(static_cast<t_f32>(vm_ascent) * scale)
+            };
+
+            glyph_info.size = {
+                bm_box_right - bm_box_left, bm_box_bottom - bm_box_top
+            };
+
+            t_s32 hm_advance;
+            stbtt_GetGlyphHMetrics(&stb_font_info, glyph_index, &hm_advance, nullptr);
+
+            glyph_info.adv = static_cast<t_s32>(static_cast<t_f32>(hm_advance) * scale);
+
+            if (!HashMapPut(glyphs_to_info, glyph_index, glyph_info)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+#if 0
     struct s_font_kerning {
         t_s32 glyph_a_index;
         t_s32 glyph_b_index;
@@ -223,6 +298,7 @@ namespace zf {
 
         return true;
     }
+#endif
 
 
 
