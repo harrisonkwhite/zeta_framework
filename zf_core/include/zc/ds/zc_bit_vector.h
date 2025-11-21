@@ -58,6 +58,12 @@ namespace zf {
         return IndexOfFirstSetBit(bv, from, true);
     }
 
+    t_size CountSetBits(const s_bit_vector_rdonly bv);
+
+    inline t_size CountUnsetBits(const s_bit_vector_rdonly bv) {
+        return bv.bit_cnt - CountSetBits(bv);
+    }
+
     constexpr t_b8 IsBitSet(const s_bit_vector_rdonly bv, const t_size index) {
         ZF_ASSERT(index >= 0 && index < bv.bit_cnt);
         return bv.bytes[index / 8] & (1 << (index % 8));
