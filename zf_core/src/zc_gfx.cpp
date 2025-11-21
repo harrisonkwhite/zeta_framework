@@ -104,12 +104,104 @@ namespace zf {
 
 
 
+    struct s_font_glyph_info {
+        // These are for determining positioning relative to other characters.
+        s_v2<t_s32> offs;
+        s_v2<t_s32> size;
+        t_s32 adv;
 
+        // In what texture atlas is this glyph, and where?
+        t_s32 atlas_index;
+        s_rect<t_s32> atlas_rect;
+    };
 
+    struct s_font {
+        t_s32 line_height;
+        s_hash_map<t_s32, t_s32> codepoints_to_glyph_indexes;
+        s_hash_map<t_s32, s_font_glyph_info> glyph_indexes_to_info;
+    };
 
+    struct s_font_ingame {
+        t_s32 line_height;
+        s_array<s_font_glyph_info> glyph_infos;
+        s_hash_map<t_s32, t_s32> codepoints_to_glyph_info_indexes;
+        s_array<t_s32> glyph_kernings;
+        s_hash_map<t_s64, t_size> codepoint_pairs_to_glyph_kerning_indexes;
+    };
 
+    [[nodiscard]] static t_b8 LoadFontFromSTBInfo(s_mem_arena& mem_arena, const stbtt_fontinfo& stb_font_info, const t_s32 height, const s_array_rdonly<t_s32> utf_codepoints, s_mem_arena& temp_mem_arena, s_font& o_font) {
+        // Get general metadata.
+        const t_f32 scale = stbtt_ScaleForPixelHeight(&stb_font_info, static_cast<t_f32>(height));
 
+        t_s32 vm_ascent, vm_descent, vm_line_gap;
+        stbtt_GetFontVMetrics(&stb_font_info, &vm_ascent, &vm_descent, &vm_line_gap);
 
+        o_font.line_height = static_cast<t_s32>(static_cast<t_f32>(vm_ascent - vm_descent + vm_line_gap) * scale);
+
+        // Figure out which and how many glyphs we'll be using.
+        s_bit_vector glyphs_to_use;
+
+        if (!MakeBitVector(temp_mem_arena, stb_font_info.numGlyphs, glyphs_to_use)) {
+            return false;
+        }
+
+        for (t_size i = 0; i < utf_codepoints.len; i++) {
+            const t_s32 glyph_index = stbtt_FindGlyphIndex(&stb_font_info, utf_codepoints[i]);
+            SetBit(glyphs_to_use, glyph_index);
+        }
+
+        const t_size glyphs_to_use_cnt = CountSetBits(glyphs_to_use);
+
+        // Allocate the necessary memory.
+        if (!MakeHashMap(mem_arena, g_s32_hash_func, o_font.codepoints_to_glyph_indexes, DefaultComparator, glyphs_to_use_cnt, glyphs_to_use_cnt)) {
+            return false;
+        }
+
+        if (!MakeHashMap(mem_arena, g_s32_hash_func, o_font.glyph_indexes_to_info, DefaultComparator, glyphs_to_use_cnt, glyphs_to_use_cnt)) {
+            return false;
+        }
+
+        // Store data for each glyph.
+        for (t_size i = 0; i < utf_codepoints.len; i++) {
+            const t_s32 glyph_index = stbtt_FindGlyphIndex(&stb_font_info, utf_codepoints[i]);
+
+            if (!HashMapPut(o_font.codepoints_to_glyph_indexes, utf_codepoints[i], glyph_index)) {
+                return false;
+            }
+
+            if (HashMapGet(o_font.glyph_indexes_to_info, glyph_index)) {
+                // Glyph already stored.
+                continue;
+            }
+
+            s_font_glyph_info glyph_info = {};
+
+            t_s32 bm_box_left, bm_box_top, bm_box_right, bm_box_bottom;
+            stbtt_GetGlyphBitmapBox(&stb_font_info, glyph_index, scale, scale, &bm_box_left, &bm_box_top, &bm_box_right, &bm_box_bottom);
+
+            glyph_info.offs = {
+                bm_box_left,
+                bm_box_top + static_cast<t_s32>(static_cast<t_f32>(vm_ascent) * scale)
+            };
+
+            glyph_info.size = {
+                bm_box_right - bm_box_left, bm_box_bottom - bm_box_top
+            };
+
+            t_s32 hm_advance;
+            stbtt_GetGlyphHMetrics(&stb_font_info, glyph_index, &hm_advance, nullptr);
+
+            glyph_info.adv = static_cast<t_s32>(static_cast<t_f32>(hm_advance) * scale);
+
+            if (!HashMapPut(o_font.glyph_indexes_to_info, glyph_index, glyph_info)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+#if 0
     struct s_font_kerning {
         t_s32 glyph_a_index;
         t_s32 glyph_b_index;
@@ -181,118 +273,6 @@ namespace zf {
 
             if (!HashMapPut(glyphs_to_info, glyph_index, glyph_info)) {
                 return false;
-            }
-        }
-
-        return true;
-    }
-
-#if 0
-    struct s_font_kerning {
-        t_s32 glyph_a_index;
-        t_s32 glyph_b_index;
-        t_s32 kern;
-    };
-
-    struct s_font_arrangement {
-        t_s32 line_height;
-
-        // @todo: This is bad. Should be per-glyph, not per-codepoint.
-        s_array<s_v2<t_s32>> chr_offsets;
-        s_array<s_v2<t_s32>> chr_sizes;
-        s_array<t_s32> chr_advances;
-
-        s_array<s_font_kerning> kernings; // Only keep non-zero ones. This can be made into a hash map in-game.
-    };
-
-    [[nodiscard]] static t_b8 LoadFontArrangement(s_mem_arena& mem_arena, const stbtt_fontinfo& stb_font_info, const t_s32 height, const s_array_rdonly<t_s32> utf_codepoints, s_font_arrangement& o_arrangement) {
-        ZF_ASSERT(!IsArrayEmpty(utf_codepoints));
-
-        if (!MakeArray(mem_arena, utf_codepoints.len, o_arrangement.chr_offsets)) {
-            return false;
-        }
-
-        if (!MakeArray(mem_arena, utf_codepoints.len, o_arrangement.chr_sizes)) {
-            return false;
-        }
-
-        if (!MakeArray(mem_arena, utf_codepoints.len, o_arrangement.chr_advances)) {
-            return false;
-        }
-
-        const t_f32 scale = stbtt_ScaleForPixelHeight(&stb_font_info, static_cast<t_f32>(height)); // @todo: Why the hell is the height a float?
-
-        t_s32 vm_ascent, vm_descent, vm_line_gap;
-        stbtt_GetFontVMetrics(&stb_font_info, &vm_ascent, &vm_descent, &vm_line_gap);
-
-        o_arrangement.line_height = static_cast<t_s32>(static_cast<t_f32>(vm_ascent - vm_descent + vm_line_gap) * scale);
-
-        for (t_size i = 0; i < utf_codepoints.len; i++) {
-            // @todo: Handle case where codepoint is unsupported.
-
-            // @todo: Apparently this doesn't always give a tight box? Test with CJK glyphs.
-            t_s32 bm_box_left, bm_box_top, bm_box_right, bm_box_bottom;
-            stbtt_GetCodepointBitmapBox(&stb_font_info, utf_codepoints[i], scale, scale, &bm_box_left, &bm_box_top, &bm_box_right, &bm_box_bottom);
-
-            o_arrangement.chr_offsets[i] = {
-                bm_box_left,
-                bm_box_top + static_cast<t_s32>(static_cast<t_f32>(vm_ascent) * scale)
-            };
-
-            o_arrangement.chr_sizes[i] = {
-                bm_box_right - bm_box_left, bm_box_bottom - bm_box_top
-            };
-
-            t_s32 hm_advance;
-            stbtt_GetCodepointHMetrics(&stb_font_info, utf_codepoints[i], &hm_advance, nullptr);
-
-            o_arrangement.chr_advances[i] = static_cast<t_s32>(static_cast<t_f32>(hm_advance) * scale);
-        }
-
-        // Set up kernings.
-        const t_size kern_cnt = [stb_font_info, utf_codepoints]() {
-            t_size cnt = 0;
-
-            for (t_size i = 0; i < utf_codepoints.len; i++) {
-                for (t_size j = 0; j < utf_codepoints.len; j++) {
-                    const auto ga = stbtt_FindGlyphIndex(&stb_font_info, utf_codepoints[i]);
-                    const auto gb = stbtt_FindGlyphIndex(&stb_font_info, utf_codepoints[j]);
-
-                    const t_s32 kern = stbtt_GetGlyphKernAdvance(&stb_font_info, ga, gb);
-
-                    if (kern != 0) {
-                        cnt++;
-                    }
-                }
-            }
-
-            return cnt;
-        }();
-
-        if (kern_cnt > 0) {
-            if (!MakeArray(mem_arena, kern_cnt, o_arrangement.kernings)) {
-                return false;
-            }
-
-            t_size kern_index = 0;
-
-            for (t_size i = 0; i < utf_codepoints.len; i++) {
-                for (t_size j = 0; j < utf_codepoints.len; j++) {
-                    const auto ga = stbtt_FindGlyphIndex(&stb_font_info, utf_codepoints[i]);
-                    const auto gb = stbtt_FindGlyphIndex(&stb_font_info, utf_codepoints[j]);
-
-                    const t_s32 kern = stbtt_GetGlyphKernAdvance(&stb_font_info, ga, gb);
-
-                    if (kern != 0) {
-                        o_arrangement.kernings[kern_index] = {
-                            .glyph_a_index = ga,
-                            .glyph_b_index = gb,
-                            .kern = kern
-                        };
-
-                        kern_index++;
-                    }
-                }
             }
         }
 
