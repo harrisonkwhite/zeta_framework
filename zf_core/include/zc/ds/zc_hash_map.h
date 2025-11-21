@@ -58,7 +58,7 @@ namespace zf {
     // Returns true iff the key was found.
     // If you don't care about getting a reference to the value and are solely looking for whether it exists, pass nullptr in for o_val.
     template<typename tp_key_type, typename tp_value_type>
-    [[nodiscard]] t_b8 HashMapGet(s_hash_map<tp_key_type, tp_value_type>& hm, const tp_key_type& key, tp_value_type* const o_val = nullptr) {
+    [[nodiscard]] t_b8 HashMapGet(const s_hash_map<tp_key_type, tp_value_type>& hm, const tp_key_type& key, tp_value_type* const o_val = nullptr) {
         const t_size hash_index = KeyToHashIndex(key, hm.hash_func, hm.backing_store_indexes.len);
 
         const auto bs_get = [&hm, &key, o_val](const auto self, const t_size index) {
@@ -82,7 +82,7 @@ namespace zf {
 
     // Returns true iff the operation was successful (in which failure occurs when there isn't enough room).
     template<typename tp_key_type, typename tp_value_type>
-    [[nodiscard]] t_b8 HashMapPut(s_hash_map<tp_key_type, tp_value_type>& hm, const tp_key_type& key, const tp_value_type& val) {
+    [[nodiscard]] t_b8 HashMapPut(const s_hash_map<tp_key_type, tp_value_type>& hm, const tp_key_type& key, const tp_value_type& val) {
         const t_size hash_index = KeyToHashIndex(key, hm.hash_func, hm.backing_store_indexes.len);
 
         const auto bs_put = [&hm, &key, &val](const auto self, t_size& index) {
@@ -117,7 +117,7 @@ namespace zf {
 
     // Returns true iff an entry with the given key was found and removed.
     template<typename tp_key_type, typename tp_value_type>
-    t_b8 HashMapRemove(s_hash_map<tp_key_type, tp_value_type>& hm, const tp_key_type& key) {
+    t_b8 HashMapRemove(const s_hash_map<tp_key_type, tp_value_type>& hm, const tp_key_type& key) {
         const t_size hash_index = KeyToHashIndex(key, hm.hash_func, hm.backing_store_indexes.len);
 
         const auto bs_remove = [&hm, &key](const auto self, t_size& index) {

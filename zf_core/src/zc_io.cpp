@@ -54,7 +54,7 @@ namespace zf {
         return static_cast<t_size>(file_size);
     }
 
-    t_b8 LoadFileContents(s_mem_arena& mem_arena, const s_str_rdonly file_path, s_array<t_s8>& o_contents, const t_b8 include_terminating_byte) {
+    t_b8 LoadFileContents(s_mem_arena& mem_arena, const s_str_rdonly file_path, s_array<t_u8>& o_contents, const t_b8 include_terminating_byte) {
         ZF_ASSERT(IsStrTerminated(file_path));
 
         s_file_stream fs;

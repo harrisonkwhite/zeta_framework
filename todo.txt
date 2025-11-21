@@ -8,6 +8,7 @@
 - Figure out how to implement surfaces, bypassing the issues with transparency.
 
 Big-picture things that this framework needs by the end of the year:
+- Helpers for 2D arrays.
 - Non-ASCII font loading and text rendering.
 - RNG system overhaul.
 - Music layering and management.

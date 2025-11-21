@@ -104,6 +104,10 @@ namespace zf {
     // Assume one-to-many relationship between glyphs and codepoints.
     // Therefore number of codepoints >= number of glyphs.
 
+    constexpr s_v2<t_s32> g_atlas_size = {1024, 1024};
+
+    using t_font_atlas = s_static_array<t_u8, 4 * g_atlas_size.x * g_atlas_size.y>;
+
     struct s_font_glyph_info {
         // These are for determining positioning relative to other characters.
         s_v2<t_s32> offs;
@@ -125,12 +129,33 @@ namespace zf {
 
         s_hash_map<t_s32, s_font_glyph_info> codepoints_to_glyph_infos; // Some duplicity here since a single glyph might have multiple codepoints mapped to it.
         s_hash_map<s_codepoint_pair, t_s32> codepoint_pairs_to_kernings;
+        s_array<t_font_atlas> atlases;
     };
 
-    [[nodiscard]] static t_b8 LoadFontFromSTBInfo(s_mem_arena& mem_arena, const stbtt_fontinfo& stb_font_info, const t_s32 height, const s_array_rdonly<t_s32> utf_codepoints, s_font& o_font) {
-        // ASSUMING THE CODEPOINTS ARRAY HAS NO DUPLICATES!
+    [[nodiscard]] static t_b8 LoadFont(s_mem_arena& mem_arena, const s_str_rdonly file_path, const t_s32 height, const s_array_rdonly<t_s32> codepoints_no_dups, s_mem_arena& temp_mem_arena, s_font& o_font) {
+        ZF_ASSERT(IsStrTerminated(file_path));
+        ZF_ASSERT(height > 0);
+        ZF_ASSERT(!IsArrayEmpty(codepoints_no_dups));
 
-        ZF_ASSERT(!IsArrayEmpty(utf_codepoints));
+        // Get the plain font file data.
+        s_array<t_u8> font_file_data;
+
+        if (!LoadFileContents(temp_mem_arena, file_path, font_file_data)) {
+            return false;
+        }
+
+        // Initialise the font through STB.
+        stbtt_fontinfo stb_font_info;
+
+        const t_s32 offs = stbtt_GetFontOffsetForIndex(font_file_data.buf_raw, 0);
+
+        if (offs == -1) {
+            return false;
+        }
+
+        if (!stbtt_InitFont(&stb_font_info, font_file_data.buf_raw, offs)) {
+            return false;
+        }
 
         // Compute general info.
         const t_f32 scale = stbtt_ScaleForPixelHeight(&stb_font_info, static_cast<t_f32>(height));
@@ -143,17 +168,15 @@ namespace zf {
         //
         // Glyph Info
         //
-        static constexpr s_v2<t_s32> atlas_size = {1024, 1024};
-
-        if (!MakeHashMap(mem_arena, g_s32_hash_func, o_font.codepoints_to_glyph_infos, DefaultComparator, utf_codepoints.len, utf_codepoints.len)) {
+        if (!MakeHashMap(mem_arena, g_s32_hash_func, o_font.codepoints_to_glyph_infos, DefaultComparator, codepoints_no_dups.len, codepoints_no_dups.len)) {
             return false;
         }
 
         t_size atlas_index = 0;
         s_v2<t_s32> atlas_pen = {};
 
-        for (t_size i = 0; i < utf_codepoints.len; i++) {
-            const t_s32 glyph_index = stbtt_FindGlyphIndex(&stb_font_info, utf_codepoints[i]);
+        for (t_size i = 0; i < codepoints_no_dups.len; i++) {
+            const t_s32 glyph_index = stbtt_FindGlyphIndex(&stb_font_info, codepoints_no_dups[i]);
 
             s_font_glyph_info glyph_info = {};
 
@@ -169,19 +192,19 @@ namespace zf {
                 bm_box_right - bm_box_left, bm_box_bottom - bm_box_top
             };
 
-            ZF_ASSERT(glyph_info.size.x <= atlas_size.x && glyph_info.size.y <= atlas_size.y);
+            ZF_ASSERT(glyph_info.size.x <= g_atlas_size.x && glyph_info.size.y <= g_atlas_size.y);
 
             t_s32 hm_advance;
             stbtt_GetGlyphHMetrics(&stb_font_info, glyph_index, &hm_advance, nullptr);
 
             glyph_info.adv = static_cast<t_s32>(static_cast<t_f32>(hm_advance) * scale);
 
-            if (atlas_pen.x + glyph_info.size.x > atlas_size.x) {
+            if (atlas_pen.x + glyph_info.size.x > g_atlas_size.x) {
                 atlas_pen.x = 0;
                 atlas_pen.y += o_font.line_height;
             }
 
-            if (atlas_pen.y + glyph_info.size.y > atlas_size.y) {
+            if (atlas_pen.y + glyph_info.size.y > g_atlas_size.y) {
                 atlas_pen = {};
                 atlas_index++;
             }
@@ -190,22 +213,23 @@ namespace zf {
             glyph_info.atlas_rect = {atlas_pen, glyph_info.size};
             atlas_pen.x += glyph_info.size.x;
 
-            if (!HashMapPut(o_font.codepoints_to_glyph_infos, utf_codepoints[i], glyph_info)) {
+            if (!HashMapPut(o_font.codepoints_to_glyph_infos, codepoints_no_dups[i], glyph_info)) {
                 return false;
             }
         }
 
-#if 0
+        const t_size atlas_cnt = atlas_index + 1;
+
         //
         // Kernings
         //
-        const t_size kern_cnt = [utf_codepoints, &stb_font_info]() {
+        const t_size kern_cnt = [codepoints_no_dups, &stb_font_info]() {
             t_size res = 0;
 
-            for (t_size i = 0; i < utf_codepoints.len; i++) {
-                for (t_size j = 0; j < utf_codepoints.len; j++) {
-                    const t_s32 glyph_a_index = stbtt_FindGlyphIndex(&stb_font_info, utf_codepoints[i]);
-                    const t_s32 glyph_b_index = stbtt_FindGlyphIndex(&stb_font_info, utf_codepoints[j]);
+            for (t_size i = 0; i < codepoints_no_dups.len; i++) {
+                for (t_size j = 0; j < codepoints_no_dups.len; j++) {
+                    const t_s32 glyph_a_index = stbtt_FindGlyphIndex(&stb_font_info, codepoints_no_dups[i]);
+                    const t_s32 glyph_b_index = stbtt_FindGlyphIndex(&stb_font_info, codepoints_no_dups[j]);
 
                     const t_s32 kern = stbtt_GetGlyphKernAdvance(&stb_font_info, glyph_a_index, glyph_b_index);
 
@@ -231,15 +255,15 @@ namespace zf {
             return false;
         }
 
-        for (t_size i = 0; i < utf_codepoints.len; i++) {
-            for (t_size j = 0; j < utf_codepoints.len; j++) {
-                const t_s32 glyph_a_index = stbtt_FindGlyphIndex(&stb_font_info, utf_codepoints[i]);
-                const t_s32 glyph_b_index = stbtt_FindGlyphIndex(&stb_font_info, utf_codepoints[j]);
+        for (t_size i = 0; i < codepoints_no_dups.len; i++) {
+            for (t_size j = 0; j < codepoints_no_dups.len; j++) {
+                const t_s32 glyph_a_index = stbtt_FindGlyphIndex(&stb_font_info, codepoints_no_dups[i]);
+                const t_s32 glyph_b_index = stbtt_FindGlyphIndex(&stb_font_info, codepoints_no_dups[j]);
 
                 const t_s32 kern = stbtt_GetGlyphKernAdvance(&stb_font_info, glyph_a_index, glyph_b_index);
 
                 if (kern != 0) {
-                    if (!HashMapPut(o_font.codepoint_pairs_to_kernings, {utf_codepoints[i], utf_codepoints[j]}, kern)) {
+                    if (!HashMapPut(o_font.codepoint_pairs_to_kernings, {codepoints_no_dups[i], codepoints_no_dups[j]}, kern)) {
                         return false;
                     }
                 }
@@ -247,373 +271,39 @@ namespace zf {
         }
 
         //
-        // Texture Atlas
+        // Texture Atlas Pixel Data
         //
-
-        // Let's just suppose every atlas is 1024x1024 even if it could be smaller.
-
-        t_s32 chr_x_pen = 0;
-
-        for (t_size i = 0; i < utf_codepoints.len; i++) {
-            const t_s32 chr_margin = 2;
-
-            chr_x_pen += chr_margin;
-
-            //*STATIC_ARRAY_ELEM(tex_meta.chr_xs, i) = chr_x_pen;
-
-            const s_v2<t_s32> chr_size = *STATIC_ARRAY_ELEM(arrangement->chr_sizes, i);
-            chr_x_pen += chr_size.x;
-
-            chr_x_pen += chr_margin;
-
-            tex_meta.size.y = MAX(chr_size.y, tex_meta.size.y);
-
-            tex_meta.size.x = chr_x_pen;
-        }
-#endif
-
-        return true;
-    }
-
-#if 0
-    [[nodiscard]] static t_b8 LoadFontFromSTBInfo(s_mem_arena& mem_arena, const stbtt_fontinfo& stb_font_info, const t_s32 height, const s_array_rdonly<t_s32> utf_codepoints, s_mem_arena& temp_mem_arena, s_font& o_font) {
-        // Get general metadata.
-        const t_f32 scale = stbtt_ScaleForPixelHeight(&stb_font_info, static_cast<t_f32>(height));
-
-        t_s32 vm_ascent, vm_descent, vm_line_gap;
-        stbtt_GetFontVMetrics(&stb_font_info, &vm_ascent, &vm_descent, &vm_line_gap);
-
-        o_font.line_height = static_cast<t_s32>(static_cast<t_f32>(vm_ascent - vm_descent + vm_line_gap) * scale);
-
-        // Get glyph data for each unicode character.
-        if (!MakeHashMap(mem_arena, g_s32_hash_func, o_font.codepoints_to_glyph_infos, DefaultComparator, utf_codepoints.len, utf_codepoints.len)) {
+        if (!MakeArray(mem_arena, atlas_cnt, o_font.atlases)) {
             return false;
         }
 
-        for (t_size i = 0; i < utf_codepoints.len; i++) {
-            if (HashMapGet(o_font.codepoints_to_glyph_infos, utf_codepoints[i])) {
-                // Codepoint already handled.
-                continue;
+        for (t_size i = 0; i < codepoints_no_dups.len; i++) {
+            s_font_glyph_info glyph_info;
+
+            if (!HashMapGet(o_font.codepoints_to_glyph_infos, codepoints_no_dups[i], &glyph_info)) {
+                ZF_ASSERT(false);
             }
 
-            const t_s32 glyph_index = stbtt_FindGlyphIndex(&stb_font_info, utf_codepoints[i]);
+            t_u8* const stb_bitmap = stbtt_GetCodepointBitmap(&stb_font_info, scale, scale, codepoints_no_dups[i], nullptr, nullptr, nullptr, nullptr);
 
-            s_font_glyph_info glyph_info = {};
-
-            t_s32 bm_box_left, bm_box_top, bm_box_right, bm_box_bottom;
-            stbtt_GetGlyphBitmapBox(&stb_font_info, glyph_index, scale, scale, &bm_box_left, &bm_box_top, &bm_box_right, &bm_box_bottom);
-
-            glyph_info.offs = {
-                bm_box_left,
-                bm_box_top + static_cast<t_s32>(static_cast<t_f32>(vm_ascent) * scale)
-            };
-
-            glyph_info.size = {
-                bm_box_right - bm_box_left, bm_box_bottom - bm_box_top
-            };
-
-            t_s32 hm_advance;
-            stbtt_GetGlyphHMetrics(&stb_font_info, glyph_index, &hm_advance, nullptr);
-
-            glyph_info.adv = static_cast<t_s32>(static_cast<t_f32>(hm_advance) * scale);
-
-            if (!HashMapPut(o_font.codepoints_to_glyph_infos, utf_codepoints[i], glyph_info)) {
+            if (!stb_bitmap) {
                 return false;
             }
-        }
 
-        // Approaches:
-        // - We can allocate for the absolute worst-case.
-        // - We can partition the operation such that we only allocate for one "chunk" of pairs at a time. We only allocate for the chunk, and accumulate some kind of persistent counter as we do this. THIS WON'T WORK - we lose knowledge of whether a particular combo has existed before.
+            auto& atlas = o_font.atlases[glyph_info.atlas_index];
+            const auto& atlas_rect = glyph_info.atlas_rect;
 
-
-        // THIS WILL BREAK IF THERE ARE DUPLICIATES IN INPUT UNICODE LIST.
-        // @todo: Why not just use some arbitrarily large buffer and then serialise only the used portions of it?
-
-        // Solution: Do a nested iteration of GLYPHS, not codepoints.
-        const t_size kern_cnt = [utf_codepoints, &stb_font_info]() {
-            t_size res = 0;
-
-            for (t_size i = 0; i < utf_codepoints.len; i++) {
-                for (t_size j = 0; j < utf_codepoints.len; j++) {
-                    const t_s32 glyph_a_index = stbtt_FindGlyphIndex(&stb_font_info, utf_codepoints[i]);
-                    const t_s32 glyph_b_index = stbtt_FindGlyphIndex(&stb_font_info, utf_codepoints[j]);
-
-                    const t_s32 kern = stbtt_GetGlyphKernAdvance(&stb_font_info, glyph_a_index, glyph_b_index);
-
-                    if (kern != 0) {
-                        res++;
-                    }
+            for (t_s32 y = RectTop(atlas_rect); y < RectBottom(atlas_rect); y++) {
+                for (t_s32 x = RectLeft(atlas_rect); x < RectRight(atlas_rect); x++) {
+                    const t_size px_index = (y * 4 * atlas_rect.width) + (x * 4);
+                    const t_size stb_bitmap_index = ((y - atlas_rect.y) * atlas_rect.width) + (x - atlas_rect.x);
+                    atlas[px_index + 3] = stb_bitmap[stb_bitmap_index];
                 }
             }
 
-            return res;
-        }();
-
-        if (!MakeHashMap<s_codepoint_pair, t_s32>(mem_arena, nullptr, o_font.codepoint_pairs_to_kernings, DefaultComparator, kern_cnt, kern_cnt)) {
-            return false;
-        }
-
-        // Maybe an excuse to implement a dynamic resize operation for the hash map?
-
-        for (t_size i = 0; i < utf_codepoints.len; i++) {
-            for (t_size j = 0; j < utf_codepoints.len; j++) {
-                const t_s32 glyph_a_index = stbtt_FindGlyphIndex(&stb_font_info, utf_codepoints[i]);
-                const t_s32 glyph_b_index = stbtt_FindGlyphIndex(&stb_font_info, utf_codepoints[j]);
-
-                const t_s32 kern = stbtt_GetGlyphKernAdvance(&stb_font_info, glyph_a_index, glyph_b_index);
-
-                if (kern != 0) {
-                    if (!HashMapPut(o_font.codepoint_pairs_to_kernings, {utf_codepoints[i], utf_codepoints[j]}, kern)) {
-                        return false;
-                    }
-                }
-            }
+            stbtt_FreeBitmap(stb_bitmap, nullptr);
         }
 
         return true;
     }
-#endif
-
-#if 0
-    struct s_font_glyph_info {
-        // These are for determining positioning relative to other characters.
-        s_v2<t_s32> offs;
-        s_v2<t_s32> size;
-        t_s32 adv;
-
-        // In what texture atlas is this glyph, and where?
-        t_s32 atlas_index;
-        s_rect<t_s32> atlas_rect;
-    };
-
-    struct s_font {
-        t_s32 line_height;
-        s_hash_map<t_s32, t_s32> codepoints_to_glyph_indexes;
-        s_hash_map<t_s32, s_font_glyph_info> glyph_indexes_to_info;
-    };
-
-#if 0
-    struct s_font_ingame {
-        t_s32 line_height;
-        s_array<s_font_glyph_info> glyph_infos;
-        s_hash_map<t_s32, t_s32> codepoints_to_glyph_info_indexes;
-        s_array<t_s32> glyph_kernings;
-        s_hash_map<t_s64, t_size> codepoint_pairs_to_glyph_kerning_indexes;
-    };
-#endif
-
-    struct s_codepoint_pair {
-        t_s32 a;
-        t_s32 b;
-    };
-
-    struct s_font_ingame {
-        t_s32 line_height;
-        s_hash_map<t_s32, s_font_glyph_info> codepoints_to_glyph_info; // Some duplicity here.
-        s_array<t_s32> glyph_kernings;
-        s_hash_map<s_codepoint_pair, t_size> codepoint_pairs_to_glyph_kerning_indexes;
-    };
-
-    [[nodiscard]] static t_b8 LoadFontFromSTBInfo(s_mem_arena& mem_arena, const stbtt_fontinfo& stb_font_info, const t_s32 height, const s_array_rdonly<t_s32> utf_codepoints, s_mem_arena& temp_mem_arena, s_font_ingame& o_font) {
-        if (!MakeHashMap(mem_arena, g_s32_hash_func, o_font.codepoints_to_glyph_info, DefaultComparator, utf_codepoints.len, utf_codepoints.len)) {
-            return false;
-        }
-
-        // Yeah do the normal thing, some duplicity oh well!
-
-        // Kernings!
-        for (t_size i = 0; i < utf_codepoints.len; i++) {
-            for (t_size j = 0; j < utf_codepoints.len; j++) {
-                const t_s32 cp_a = utf_codepoints[i];
-                const t_s32 glyph_a_index = stbtt_FindGlyphIndex(&stb_font_info, cp_a);
-
-                const t_s32 cp_b = utf_codepoints[j];
-                const t_s32 glyph_b_index = stbtt_FindGlyphIndex(&stb_font_info, cp_b);
-
-                const t_s32 kern = stbtt_GetGlyphKernAdvance(&stb_font_info, glyph_a_index, glyph_b_index);
-
-                if (kern != 0) {
-                    HashMapPut(o_font.codepoint_pairs_to_glyph_kerning_indexes, {cp_a, cp_b}, );
-                }
-            }
-        }
-
-        return true;
-    }
-#endif
-
-#if 0
-    [[nodiscard]] static t_b8 LoadFontFromSTBInfo(s_mem_arena& mem_arena, const stbtt_fontinfo& stb_font_info, const t_s32 height, const s_array_rdonly<t_s32> utf_codepoints, s_mem_arena& temp_mem_arena, s_font& o_font) {
-        // Get general metadata.
-        const t_f32 scale = stbtt_ScaleForPixelHeight(&stb_font_info, static_cast<t_f32>(height));
-
-        t_s32 vm_ascent, vm_descent, vm_line_gap;
-        stbtt_GetFontVMetrics(&stb_font_info, &vm_ascent, &vm_descent, &vm_line_gap);
-
-        o_font.line_height = static_cast<t_s32>(static_cast<t_f32>(vm_ascent - vm_descent + vm_line_gap) * scale);
-
-        // Figure out which and how many glyphs we'll be using.
-        s_bit_vector glyphs_to_use;
-
-        if (!MakeBitVector(temp_mem_arena, stb_font_info.numGlyphs, glyphs_to_use)) {
-            return false;
-        }
-
-        for (t_size i = 0; i < utf_codepoints.len; i++) {
-            const t_s32 glyph_index = stbtt_FindGlyphIndex(&stb_font_info, utf_codepoints[i]);
-            SetBit(glyphs_to_use, glyph_index);
-        }
-
-        const t_size glyphs_to_use_cnt = CountSetBits(glyphs_to_use);
-
-        // Allocate the necessary memory.
-        if (!MakeHashMap(mem_arena, g_s32_hash_func, o_font.codepoints_to_glyph_indexes, DefaultComparator, glyphs_to_use_cnt, glyphs_to_use_cnt)) {
-            return false;
-        }
-
-        if (!MakeHashMap(mem_arena, g_s32_hash_func, o_font.glyph_indexes_to_info, DefaultComparator, glyphs_to_use_cnt, glyphs_to_use_cnt)) {
-            return false;
-        }
-
-        // Store data for each glyph.
-        for (t_size i = 0; i < utf_codepoints.len; i++) {
-            const t_s32 glyph_index = stbtt_FindGlyphIndex(&stb_font_info, utf_codepoints[i]);
-
-            if (!HashMapPut(o_font.codepoints_to_glyph_indexes, utf_codepoints[i], glyph_index)) {
-                return false;
-            }
-
-            if (HashMapGet(o_font.glyph_indexes_to_info, glyph_index)) {
-                // Glyph already stored.
-                continue;
-            }
-
-            s_font_glyph_info glyph_info = {};
-
-            t_s32 bm_box_left, bm_box_top, bm_box_right, bm_box_bottom;
-            stbtt_GetGlyphBitmapBox(&stb_font_info, glyph_index, scale, scale, &bm_box_left, &bm_box_top, &bm_box_right, &bm_box_bottom);
-
-            glyph_info.offs = {
-                bm_box_left,
-                bm_box_top + static_cast<t_s32>(static_cast<t_f32>(vm_ascent) * scale)
-            };
-
-            glyph_info.size = {
-                bm_box_right - bm_box_left, bm_box_bottom - bm_box_top
-            };
-
-            t_s32 hm_advance;
-            stbtt_GetGlyphHMetrics(&stb_font_info, glyph_index, &hm_advance, nullptr);
-
-            glyph_info.adv = static_cast<t_s32>(static_cast<t_f32>(hm_advance) * scale);
-
-            if (!HashMapPut(o_font.glyph_indexes_to_info, glyph_index, glyph_info)) {
-                return false;
-            }
-        }
-
-        return true;
-    }
-#endif
-
-#if 0
-    struct s_font_kerning {
-        t_s32 glyph_a_index;
-        t_s32 glyph_b_index;
-        t_s32 kern;
-    };
-
-    struct s_font_arrangement {
-        t_s32 line_height;
-
-        s_array<s_v2<t_s32>> chr_offsets;
-        s_array<s_v2<t_s32>> chr_sizes;
-        s_array<t_s32> chr_advances;
-
-        s_array<s_font_kerning> kernings; // Only keep non-zero ones. This can be made into a hash map in-game.
-    };
-
-    struct s_font_glyph_info {
-        s_v2<t_s32> offs;
-        s_v2<t_s32> size;
-        t_s32 adv;
-    };
-
-    // @todo: The UTF codepoints array here should really just be a string processed normally. This means duplicate codepoints are allowed.
-    [[nodiscard]] static t_b8 LoadFontArrangement(s_mem_arena& mem_arena, const stbtt_fontinfo& stb_font_info, const t_s32 height, const s_array_rdonly<t_s32> utf_codepoints, s_font_arrangement& o_arrangement) {
-        ZF_ASSERT(false);
-        ZF_ASSERT(!IsArrayEmpty(utf_codepoints));
-
-        const t_f32 scale = stbtt_ScaleForPixelHeight(&stb_font_info, static_cast<t_f32>(height));
-
-        t_s32 vm_ascent, vm_descent, vm_line_gap;
-        stbtt_GetFontVMetrics(&stb_font_info, &vm_ascent, &vm_descent, &vm_line_gap);
-
-        o_arrangement.line_height = static_cast<t_s32>(static_cast<t_f32>(vm_ascent - vm_descent + vm_line_gap) * scale);
-
-        // Each entry maps a GLYPH INDEX to character data.
-        s_hash_map<t_s32, s_font_glyph_info> glyphs_to_info = {};
-        s_hash_map<t_s32, t_s32> codepoints_to_glyph_indexes = {};
-
-        for (t_size i = 0; i < utf_codepoints.len; i++) {
-            const t_s32 glyph_index = stbtt_FindGlyphIndex(&stb_font_info, utf_codepoints[i]);
-
-            if (!HashMapPut(codepoints_to_glyph_indexes, utf_codepoints[i], glyph_index)) {
-                return false;
-            }
-
-            if (HashMapGet(glyphs_to_info, glyph_index)) {
-                // Glyph already stored.
-                continue;
-            }
-
-            s_font_glyph_info glyph_info = {};
-
-            t_s32 bm_box_left, bm_box_top, bm_box_right, bm_box_bottom;
-            stbtt_GetGlyphBitmapBox(&stb_font_info, glyph_index, scale, scale, &bm_box_left, &bm_box_top, &bm_box_right, &bm_box_bottom);
-
-            glyph_info.offs = {
-                bm_box_left,
-                bm_box_top + static_cast<t_s32>(static_cast<t_f32>(vm_ascent) * scale)
-            };
-
-            glyph_info.size = {
-                bm_box_right - bm_box_left, bm_box_bottom - bm_box_top
-            };
-
-            t_s32 hm_advance;
-            stbtt_GetGlyphHMetrics(&stb_font_info, glyph_index, &hm_advance, nullptr);
-
-            glyph_info.adv = static_cast<t_s32>(static_cast<t_f32>(hm_advance) * scale);
-
-            if (!HashMapPut(glyphs_to_info, glyph_index, glyph_info)) {
-                return false;
-            }
-        }
-
-        return true;
-    }
-#endif
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 }
