@@ -111,7 +111,7 @@ namespace zf {
         t_s32 adv;
 
         // In what texture atlas is this glyph, and where?
-        t_s32 atlas_index;
+        t_size atlas_index;
         s_rect<t_s32> atlas_rect;
     };
 
@@ -140,10 +140,17 @@ namespace zf {
 
         o_font.line_height = static_cast<t_s32>(static_cast<t_f32>(vm_ascent - vm_descent + vm_line_gap) * scale);
 
-        // Compute glyph info per codepoint - there'll be some duplicity.
+        //
+        // Glyph Info
+        //
+        static constexpr s_v2<t_s32> atlas_size = {1024, 1024};
+
         if (!MakeHashMap(mem_arena, g_s32_hash_func, o_font.codepoints_to_glyph_infos, DefaultComparator, utf_codepoints.len, utf_codepoints.len)) {
             return false;
         }
+
+        t_size atlas_index = 0;
+        s_v2<t_s32> atlas_pen = {};
 
         for (t_size i = 0; i < utf_codepoints.len; i++) {
             const t_s32 glyph_index = stbtt_FindGlyphIndex(&stb_font_info, utf_codepoints[i]);
@@ -162,17 +169,36 @@ namespace zf {
                 bm_box_right - bm_box_left, bm_box_bottom - bm_box_top
             };
 
+            ZF_ASSERT(glyph_info.size.x <= atlas_size.x && glyph_info.size.y <= atlas_size.y);
+
             t_s32 hm_advance;
             stbtt_GetGlyphHMetrics(&stb_font_info, glyph_index, &hm_advance, nullptr);
 
             glyph_info.adv = static_cast<t_s32>(static_cast<t_f32>(hm_advance) * scale);
+
+            if (atlas_pen.x + glyph_info.size.x > atlas_size.x) {
+                atlas_pen.x = 0;
+                atlas_pen.y += o_font.line_height;
+            }
+
+            if (atlas_pen.y + glyph_info.size.y > atlas_size.y) {
+                atlas_pen = {};
+                atlas_index++;
+            }
+
+            glyph_info.atlas_index = atlas_index;
+            glyph_info.atlas_rect = {atlas_pen, glyph_info.size};
+            atlas_pen.x += glyph_info.size.x;
 
             if (!HashMapPut(o_font.codepoints_to_glyph_infos, utf_codepoints[i], glyph_info)) {
                 return false;
             }
         }
 
-        // Compute how many kernings we need to store so the hash map can be allocated.
+#if 0
+        //
+        // Kernings
+        //
         const t_size kern_cnt = [utf_codepoints, &stb_font_info]() {
             t_size res = 0;
 
@@ -192,7 +218,6 @@ namespace zf {
             return res;
         }();
 
-        // Store the kerning mappings.
         const auto codepoint_pair_hash_func = [](const s_codepoint_pair& pair) {
             // Combine the 32-bit pairs into a single 64-bit integer and mask out the sign bit.
             return ((static_cast<t_size>(pair.a) << 32) & pair.b) & 0x7FFFFFFFFFFFFFFF;
@@ -220,6 +245,32 @@ namespace zf {
                 }
             }
         }
+
+        //
+        // Texture Atlas
+        //
+
+        // Let's just suppose every atlas is 1024x1024 even if it could be smaller.
+
+        t_s32 chr_x_pen = 0;
+
+        for (t_size i = 0; i < utf_codepoints.len; i++) {
+            const t_s32 chr_margin = 2;
+
+            chr_x_pen += chr_margin;
+
+            //*STATIC_ARRAY_ELEM(tex_meta.chr_xs, i) = chr_x_pen;
+
+            const s_v2<t_s32> chr_size = *STATIC_ARRAY_ELEM(arrangement->chr_sizes, i);
+            chr_x_pen += chr_size.x;
+
+            chr_x_pen += chr_margin;
+
+            tex_meta.size.y = MAX(chr_size.y, tex_meta.size.y);
+
+            tex_meta.size.x = chr_x_pen;
+        }
+#endif
 
         return true;
     }
