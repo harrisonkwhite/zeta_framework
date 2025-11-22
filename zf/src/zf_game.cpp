@@ -57,7 +57,7 @@ namespace zf {
         }));
 
         // Initialise the permanent GFX resource arena.
-        if (!gfx::MakeResourceArena(g_gfx_resource_arena_cap, game.gfx_res_arena, ArenaAllocator(game.perm_mem_arena))) {
+        if (!gfx::MakeResourceArena(game.perm_mem_arena, g_gfx_resource_arena_cap, game.gfx_res_arena)) {
             ZF_REPORT_FAILURE();
             return false;
         }
@@ -164,7 +164,7 @@ namespace zf {
                 } while (frame_dur_accum >= targ_tick_interval);
 
                 // Perform a single render.
-                s_rendering_state* const rendering_state = PrepareRenderingPhase(ArenaAllocator(game.temp_mem_arena));
+                s_rendering_state* const rendering_state = PrepareRenderingPhase(game.temp_mem_arena);
 
                 if (!rendering_state) {
                     ZF_REPORT_FAILURE();

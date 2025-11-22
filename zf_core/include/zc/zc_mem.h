@@ -1,7 +1,5 @@
 #pragma once
 
-#include <cstdlib>
-#include <cstring>
 #include <zc/zc_debug.h>
 
 namespace zf {
@@ -22,24 +20,6 @@ namespace zf {
         return (n + alignment - 1) & ~(alignment - 1);
     }
 
-    struct s_allocator {
-        void* (*alloc)(void* const user, const t_size size, const t_size alignment);
-        void (*free)(void* const user, void* const ptr);
-        void* user;
-    };
-
-    constexpr s_allocator DefaultAllocator() {
-        return {
-            .alloc = [](void* const user, const t_size size, const t_size alignment) -> void* {
-                return malloc(static_cast<size_t>(size)); // @todo: This should use alignment!
-            },
-            .free = [](void* const user, void* const ptr) {
-                free(ptr);
-            },
-            .user = nullptr
-        };
-    }
-
     struct s_mem_arena {
         t_size chunk_size;
         void* head_chunk;
@@ -54,27 +34,11 @@ namespace zf {
     void ClearMemArena(s_mem_arena& ma); // Zeroes out all the arena memory and goes back to the start but does not do any freeing.
 
     template<typename tp_type>
-    tp_type* AllocRaw(const s_allocator allocator = DefaultAllocator(), const t_size cnt = 1) {
+    tp_type* PushToMemArena(s_mem_arena& ma, const t_size cnt = 1) {
+        ZF_ASSERT(ma.head_chunk);
         ZF_ASSERT(cnt >= 1);
 
-        const auto ptr = static_cast<tp_type*>(allocator.alloc(allocator.user, ZF_SIZE_OF(tp_type) * cnt, alignof(tp_type)));
-
-        if (ptr) {
-            for (t_size i = 0; i < cnt; i++) {
-                memset(&ptr[i], 0, sizeof(ptr[i]));
-            }
-        }
-
-        return ptr;
-    }
-
-    constexpr s_allocator ArenaAllocator(s_mem_arena& arena) {
-        return {
-            .alloc = [](void* const user, const t_size size, const t_size alignment) -> void* {
-                return PushToMemArena(*static_cast<s_mem_arena*>(user), size, alignment);
-            },
-            .free = [](void* const user, void* const ptr) {},
-            .user = &arena
-        };
+        const auto buf = PushToMemArena(ma, ZF_SIZE_OF(tp_type) * cnt, alignof(tp_type));
+        return static_cast<tp_type*>(buf);
     }
 }

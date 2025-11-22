@@ -4,7 +4,7 @@
 #include <miniaudio.h>
 
 namespace zf {
-    t_b8 LoadSoundFromRaw(const s_str_rdonly file_path, s_sound_meta& o_snd_meta, s_array<t_f32>& o_snd_pcm, const s_allocator allocator) {
+    t_b8 LoadSoundFromRaw(const s_str_rdonly file_path, s_mem_arena& mem_arena, s_sound_meta& o_snd_meta, s_array<t_f32>& o_snd_pcm) {
         ZF_ASSERT(IsStrTerminated(file_path));
 
         ma_decoder decoder;
@@ -14,7 +14,7 @@ namespace zf {
             return false;
         }
 
-        const t_b8 success = [&decoder, &allocator, &o_snd_meta, &o_snd_pcm]() {
+        const t_b8 success = [&decoder, &mem_arena, &o_snd_meta, &o_snd_pcm]() {
             ma_uint64 frame_cnt;
 
             if (ma_decoder_get_length_in_pcm_frames(&decoder, &frame_cnt) != MA_SUCCESS) {
@@ -25,7 +25,7 @@ namespace zf {
             o_snd_meta.sample_rate = static_cast<t_s32>(decoder.outputSampleRate);
             o_snd_meta.frame_cnt = static_cast<t_s64>(frame_cnt);
 
-            if (!AllocArray(CalcSampleCount(o_snd_meta), o_snd_pcm, allocator)) {
+            if (!MakeArray(mem_arena, CalcSampleCount(o_snd_meta), o_snd_pcm)) {
                 return false;
             }
 
@@ -71,7 +71,7 @@ namespace zf {
         return success;
     }
 
-    t_b8 UnpackSound(const s_str_rdonly file_path, s_sound_data& o_snd_data, const s_allocator allocator) {
+    t_b8 UnpackSound(const s_str_rdonly file_path, s_mem_arena& mem_arena, s_sound_data& o_snd_data) {
         ZF_ASSERT(IsStrTerminated(file_path));
 
         s_file_stream fs;
@@ -80,12 +80,12 @@ namespace zf {
             return false;
         }
 
-        const t_b8 success = [fs, &o_snd_data, &allocator]() {
+        const t_b8 success = [fs, &mem_arena, &o_snd_data]() {
             if (!ReadItemFromFile(fs, o_snd_data.meta)) {
                 return false;
             }
 
-            if (!AllocArray(CalcSampleCount(o_snd_data.meta), o_snd_data.pcm, allocator)) {
+            if (!MakeArray(mem_arena, CalcSampleCount(o_snd_data.meta), o_snd_data.pcm)) {
                 return false;
             }
 

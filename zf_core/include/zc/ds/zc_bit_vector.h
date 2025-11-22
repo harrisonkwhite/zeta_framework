@@ -46,7 +46,7 @@ namespace zf {
     void ShiftBitsLeft(const s_bit_vector bv, const t_size amount = 1);
     void RotBitsLeft(const s_bit_vector bv, const t_size amount = 1);
 
-    t_b8 MakeBitVector(const t_size bit_cnt, s_bit_vector& o_bv, const s_allocator allocator = DefaultAllocator());
+    t_b8 MakeBitVector(s_mem_arena& mem_arena, const t_size bit_cnt, s_bit_vector& o_bv);
 
     // @todo: Right (either arithmetic or logical) shift and right rotate.
 

@@ -1,5 +1,8 @@
 #include <zc/zc_mem.h>
 
+#include <cstdlib>
+#include <cstring>
+
 namespace zf {
     static void*& ChunkNextPtr(void* const chunk, const t_size chunk_size) {
         return *reinterpret_cast<void**>(static_cast<t_u8*>(chunk) + chunk_size - sizeof(void*));

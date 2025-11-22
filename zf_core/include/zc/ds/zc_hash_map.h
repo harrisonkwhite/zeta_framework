@@ -179,7 +179,7 @@ namespace zf {
 
     template<typename tp_key_type, typename tp_val_type>
     [[nodiscard]] t_b8 LoadHashMapKeys(s_mem_arena& mem_arena, const s_hash_map<tp_key_type, tp_val_type>& hm, s_array<tp_key_type>& o_keys) {
-        if (!AllocArray(mem_arena, hm.kv_pair_cnt, o_keys)) {
+        if (!MakeArray(mem_arena, hm.kv_pair_cnt, o_keys)) {
             return false;
         }
 
@@ -193,7 +193,7 @@ namespace zf {
     // The immediate capacity is the total number of upfront slots (i.e. the maximum possible number of slots for which an O(1) access of a value from a key can happen).
     // The key-value pair capacity is the overall limit of how many key-value pairs this map can ever hold. It obviously has to be equal to or greater than the immediate capacity.
     template<typename tp_key_type, typename tp_val_type>
-    [[nodiscard]] t_b8 MakeHashMap(const t_hash_func<tp_key_type> hash_func, s_hash_map<tp_key_type, tp_val_type>& o_um, const s_allocator allocator = DefaultAllocator(), const t_bin_comparator<tp_key_type> key_comparator = DefaultBinComparator, const t_size immediate_cap = 1024, const t_size kv_pair_cap = 1 << 16) {
+    [[nodiscard]] t_b8 MakeHashMap(s_mem_arena& mem_arena, const t_hash_func<tp_key_type> hash_func, s_hash_map<tp_key_type, tp_val_type>& o_um, const t_bin_comparator<tp_key_type> key_comparator = DefaultBinComparator, const t_size immediate_cap = 1024, const t_size kv_pair_cap = 1 << 16) {
         ZF_ASSERT(hash_func);
         ZF_ASSERT(key_comparator);
         ZF_ASSERT(immediate_cap > 0 && kv_pair_cap >= immediate_cap);
@@ -203,25 +203,29 @@ namespace zf {
         o_um.hash_func = hash_func;
         o_um.key_comparator = key_comparator;
 
-        if (!AllocArray(immediate_cap, o_um.backing_store_indexes, allocator)) {
+        if (!MakeArray(mem_arena, immediate_cap, o_um.backing_store_indexes)) {
             return false;
         }
 
         SetAllTo(o_um.backing_store_indexes, -1);
 
-        if (!AllocArray(kv_pair_cap, o_um.backing_store.keys, allocator)) {
-            return false;
-        }
+        if (![&o_um, &mem_arena, kv_pair_cap]() {
+            if (!MakeArray(mem_arena, kv_pair_cap, o_um.backing_store.keys)) {
+                return false;
+            }
 
-        if (!AllocArray(kv_pair_cap, o_um.backing_store.vals, allocator)) {
-            return false;
-        }
+            if (!MakeArray(mem_arena, kv_pair_cap, o_um.backing_store.vals)) {
+                return false;
+            }
 
-        if (!AllocArray(kv_pair_cap, o_um.backing_store.next_indexes, allocator)) {
-            return false;
-        }
+            if (!MakeArray(mem_arena, kv_pair_cap, o_um.backing_store.next_indexes)) {
+                return false;
+            }
 
-        if (!MakeBitVector(kv_pair_cap, o_um.backing_store.usage, allocator)) {
+            if (!MakeBitVector(mem_arena, kv_pair_cap, o_um.backing_store.usage)) {
+                return false;
+            }
+        }()) {
             return false;
         }
 

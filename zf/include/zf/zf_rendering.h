@@ -53,7 +53,7 @@ namespace zf {
 
     [[nodiscard]] t_b8 MakeRenderingBasis(gfx::s_resource_arena& gfx_res_arena, s_mem_arena& temp_mem_arena, s_rendering_basis& o_basis);
 
-    s_rendering_state* PrepareRenderingPhase(const s_allocator allocator = DefaultAllocator()); // Returns a newly created rendering state, or nullptr on failure.
+    s_rendering_state* PrepareRenderingPhase(s_mem_arena& mem_arena); // Returns a newly created rendering state, or nullptr on failure.
     void CompleteRenderingPhase(const s_rendering_context& rc);
 
     void DrawClear(const s_color_rgba32f col = {});

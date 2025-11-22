@@ -40,13 +40,13 @@ namespace zf {
     }
 
     // Reserve a buffer and populate it with the binary contents of a file, optionally with a terminating byte.
-    [[nodiscard]] t_b8 LoadFileContents(const s_str_rdonly file_path, s_array<t_u8>& o_contents, const s_allocator allocator = DefaultAllocator(), const t_b8 include_terminating_byte = false);
+    [[nodiscard]] t_b8 LoadFileContents(s_mem_arena& mem_arena, const s_str_rdonly file_path, s_array<t_u8>& o_contents, const t_b8 include_terminating_byte = false);
 
     // @todo: How will this work with non-ASCII?
-    inline t_b8 LoadFileContentsAsStr(const s_str_rdonly file_path, s_str& o_contents, const s_allocator allocator = DefaultAllocator()) {
+    inline t_b8 LoadFileContentsAsStr(s_mem_arena& mem_arena, const s_str_rdonly file_path, s_str& o_contents) {
         s_array<t_u8> contents_default;
 
-        if (!LoadFileContents(file_path, contents_default, allocator, true)) {
+        if (!LoadFileContents(mem_arena, file_path, contents_default, true)) {
             return false;
         }
 

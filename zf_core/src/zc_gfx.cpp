@@ -5,7 +5,7 @@
 #include <stb_truetype.h>
 
 namespace zf {
-    t_b8 LoadRGBATextureDataFromRaw(const s_str_rdonly file_path, s_rgba_texture_data& o_tex_data, const s_allocator allocator) {
+    t_b8 LoadRGBATextureDataFromRaw(const s_str_rdonly file_path, s_mem_arena& mem_arena, s_rgba_texture_data& o_tex_data) {
         ZF_ASSERT(IsStrTerminated(file_path));
 
         t_u8* const stb_px_data = stbi_load(StrRaw(file_path), &o_tex_data.size_in_pxs.x, &o_tex_data.size_in_pxs.y, nullptr, 4);
@@ -16,7 +16,7 @@ namespace zf {
 
         const s_array_rdonly<t_u8> stb_px_data_arr = {stb_px_data, 4 * o_tex_data.size_in_pxs.x * o_tex_data.size_in_pxs.y};
 
-        if (!AllocArray(4 * o_tex_data.size_in_pxs.x * o_tex_data.size_in_pxs.y, o_tex_data.px_data, allocator)) {
+        if (!MakeArray(mem_arena, 4 * o_tex_data.size_in_pxs.x * o_tex_data.size_in_pxs.y, o_tex_data.px_data)) {
             stbi_image_free(stb_px_data);
             return false;
         }
@@ -58,7 +58,7 @@ namespace zf {
         return success;
     }
 
-    t_b8 UnpackTexture(const s_str_rdonly file_path, s_rgba_texture_data& o_tex_data, const s_allocator allocator) {
+    t_b8 UnpackTexture(const s_str_rdonly file_path, s_mem_arena& mem_arena, s_rgba_texture_data& o_tex_data) {
         ZF_ASSERT(IsStrTerminated(file_path));
 
         s_file_stream fs;
@@ -67,12 +67,12 @@ namespace zf {
             return false;
         }
 
-        const t_b8 success = [fs, &allocator, &o_tex_data]() {
+        const t_b8 success = [fs, &mem_arena, &o_tex_data]() {
             if (!ReadItemFromFile(fs, o_tex_data.size_in_pxs)) {
                 return false;
             }
 
-            if (!AllocArray(4 * o_tex_data.size_in_pxs.x * o_tex_data.size_in_pxs.y, o_tex_data.px_data, allocator)) {
+            if (!MakeArray(mem_arena, 4 * o_tex_data.size_in_pxs.x * o_tex_data.size_in_pxs.y, o_tex_data.px_data)) {
                 return false;
             }
 
@@ -132,7 +132,7 @@ namespace zf {
         s_array<t_font_atlas> atlases;
     };
 
-    [[nodiscard]] static t_b8 LoadFont(const s_str_rdonly file_path, const t_s32 height, const s_array_rdonly<t_s32> codepoints_no_dups, s_mem_arena& temp_mem_arena, s_font& o_font, const s_allocator allocator = DefaultAllocator()) {
+    [[nodiscard]] static t_b8 LoadFont(s_mem_arena& mem_arena, const s_str_rdonly file_path, const t_s32 height, const s_array_rdonly<t_s32> codepoints_no_dups, s_mem_arena& temp_mem_arena, s_font& o_font) {
         ZF_ASSERT(IsStrTerminated(file_path));
         ZF_ASSERT(height > 0);
         ZF_ASSERT(!IsArrayEmpty(codepoints_no_dups));
@@ -140,7 +140,7 @@ namespace zf {
         // Get the plain font file data.
         s_array<t_u8> font_file_data;
 
-        if (!LoadFileContents(file_path, font_file_data, ArenaAllocator(temp_mem_arena))) {
+        if (!LoadFileContents(temp_mem_arena, file_path, font_file_data)) {
             return false;
         }
 
@@ -168,7 +168,7 @@ namespace zf {
         //
         // Glyph Info
         //
-        if (!MakeHashMap(g_s32_hash_func, o_font.codepoints_to_glyph_infos, allocator, DefaultBinComparator, codepoints_no_dups.len, codepoints_no_dups.len)) {
+        if (!MakeHashMap(mem_arena, g_s32_hash_func, o_font.codepoints_to_glyph_infos, DefaultBinComparator, codepoints_no_dups.len, codepoints_no_dups.len)) {
             return false;
         }
 
@@ -251,7 +251,7 @@ namespace zf {
             return pa.a == pb.a && pa.b == pb.b;
         };
 
-        if (!MakeHashMap<s_codepoint_pair, t_s32>(codepoint_pair_hash_func, o_font.codepoint_pairs_to_kernings, allocator, codepoint_pair_comparator, kern_cnt, kern_cnt)) {
+        if (!MakeHashMap<s_codepoint_pair, t_s32>(mem_arena, codepoint_pair_hash_func, o_font.codepoint_pairs_to_kernings, codepoint_pair_comparator, kern_cnt, kern_cnt)) {
             return false;
         }
 
@@ -273,7 +273,7 @@ namespace zf {
         //
         // Texture Atlas Pixel Data
         //
-        if (!AllocArray(atlas_cnt, o_font.atlases, allocator)) {
+        if (!MakeArray(mem_arena, atlas_cnt, o_font.atlases)) {
             return false;
         }
 

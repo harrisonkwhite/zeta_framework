@@ -619,12 +619,12 @@ namespace zf {
         return res;
     }
 
-    t_b8 MakeBitVector(const t_size bit_cnt, s_bit_vector& o_bv, const s_allocator allocator) {
+    t_b8 MakeBitVector(s_mem_arena& mem_arena, const t_size bit_cnt, s_bit_vector& o_bv) {
         ZF_ASSERT(bit_cnt > 0);
 
         s_array<t_u8> bytes;
 
-        if (!AllocArray(BitsToBytes(bit_cnt), bytes, allocator)) {
+        if (!MakeArray(mem_arena, BitsToBytes(bit_cnt), bytes)) {
             return false;
         }
 
