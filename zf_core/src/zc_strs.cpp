@@ -274,14 +274,47 @@ namespace zf {
         ek_utf8_byte_type_invalid // 1111 1111
     }};
 
-    t_size CalcASCIIStrLen(const s_str_rdonly str) {
-        t_size len = 0;
+    t_b8 IsValidUTF8Str(const s_str_rdonly str) {
+        t_size cost = 0;
 
-        while (len < str.chrs.len && str.chrs[len]) {
-            len++;
+        for (t_size i = 0; i < str.chrs.len; i++) {
+            const auto byte_type = g_utf8_byte_type_table[str.chrs[i]];
+
+            switch (byte_type) {
+                case ek_utf8_byte_type_ascii:
+                    if (!str.chrs[i]) {
+                        return cost == 0;
+                    }
+
+                    [[fallthrough]];
+
+                case ek_utf8_byte_type_2byte_start:
+                case ek_utf8_byte_type_3byte_start:
+                case ek_utf8_byte_type_4byte_start:
+                    if (cost > 0) {
+                        return false;
+                    }
+
+                    static_assert(ek_utf8_byte_type_4byte_start - ek_utf8_byte_type_ascii + 1 == 4);
+                    cost = byte_type - ek_utf8_byte_type_ascii + 1;
+
+                    break;
+
+                case ek_utf8_byte_type_continuation:
+                    if (cost == 0) {
+                        return false;
+                    }
+
+                    break;
+
+                case ek_utf8_byte_type_invalid:
+                    return false;
+            }
+
+            cost--;
         }
 
-        return len;
+        return cost == 0;
     }
 
     t_b8 CalcUTF8StrLen(const s_str_rdonly str, t_size& o_len) {
@@ -319,19 +352,21 @@ namespace zf {
                         return false;
                     }
 
-                    cost--;
-
                     break;
 
                 case ek_utf8_byte_type_invalid:
                     return false;
             }
+
+            cost--;
         }
 
         return cost == 0;
     }
 
     t_size CalcUTF8StrLenFastButUnsafe(const s_str_rdonly str) {
+        ZF_ASSERT(IsValidUTF8Str(str));
+
         t_size i = 0;
         t_size len = 0;
 
@@ -363,16 +398,5 @@ namespace zf {
         }
 
         return len;
-    }
-
-    t_b8 IsStrTerminated(const s_str_rdonly str) {
-        // The terminator is most likely at the end, so we start there.
-        for (t_size i = str.chrs.len - 1; i >= 0; i--) {
-            if (!str.chrs[i]) {
-                return true;
-            }
-        }
-
-        return false;
     }
 }

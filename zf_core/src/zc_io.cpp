@@ -162,9 +162,9 @@ namespace zf {
     }
 
     t_b8 CreateFileAndParentDirs(const s_str_rdonly path, s_mem_arena& temp_mem_arena) {
-        ZF_ASSERT(IsStrTerminated(path));
+        ZF_ASSERT(IsStrTerminated(path) && IsValidUTF8Str(path));
 
-        const t_size path_len = CalcASCIIStrLen(path);
+        const t_size path_len = CalcUTF8StrLenFastButUnsafe(path);
         const auto path_relevant = Slice(path.chrs, 0, path_len + 1);
 
         s_str path_clone; // @speed: A clone on every call to this? Yuck!
