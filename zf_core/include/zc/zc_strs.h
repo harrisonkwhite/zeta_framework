@@ -60,6 +60,7 @@ namespace zf {
     }
 
     t_size CalcASCIIStrLen(const s_str_rdonly str);
-    t_size CalcUTF8LenNonterminatedStrLenFast(const s_str_rdonly str); // This DOES NOT check whether the string is in valid UTF-8 form!
+    [[nodiscard]] t_b8 CalcUTF8StrLen(const s_str_rdonly str, t_size& o_len); // Returns false iff the provided string is not valid UTF-8 form. Works with either terminated or non-terminated strings.
+    t_size CalcUTF8StrLenFastButUnsafe(const s_str_rdonly str); // This (in release mode) DOES NOT check whether the string is in valid UTF-8 form!
     t_b8 IsStrTerminated(const s_str_rdonly str);
 }

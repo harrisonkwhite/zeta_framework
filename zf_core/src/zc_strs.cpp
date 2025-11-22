@@ -284,9 +284,54 @@ namespace zf {
         return len;
     }
 
-    t_size CalcUTF8LenNonterminatedStrLenFast(const s_str_rdonly str) {
-        ZF_ASSERT(!IsStrTerminated(str));
+    t_b8 CalcUTF8StrLen(const s_str_rdonly str, t_size& o_len) {
+        o_len = 0;
 
+        t_size cost = 0;
+
+        for (t_size i = 0; i < str.chrs.len; i++) {
+            const auto byte_type = g_utf8_byte_type_table[str.chrs[i]];
+
+            switch (byte_type) {
+                case ek_utf8_byte_type_ascii:
+                    if (!str.chrs[i]) {
+                        return cost == 0;
+                    }
+
+                    [[fallthrough]];
+
+                case ek_utf8_byte_type_2byte_start:
+                case ek_utf8_byte_type_3byte_start:
+                case ek_utf8_byte_type_4byte_start:
+                    if (cost > 0) {
+                        return false;
+                    }
+
+                    static_assert(ek_utf8_byte_type_4byte_start - ek_utf8_byte_type_ascii + 1 == 4);
+                    cost = byte_type - ek_utf8_byte_type_ascii + 1;
+
+                    o_len++;
+
+                    break;
+
+                case ek_utf8_byte_type_continuation:
+                    if (cost == 0) {
+                        return false;
+                    }
+
+                    cost--;
+
+                    break;
+
+                case ek_utf8_byte_type_invalid:
+                    return false;
+            }
+        }
+
+        return cost == 0;
+    }
+
+    t_size CalcUTF8StrLenFastButUnsafe(const s_str_rdonly str) {
         t_size i = 0;
         t_size len = 0;
 
@@ -295,19 +340,17 @@ namespace zf {
 
             switch (byte_type) {
                 case ek_utf8_byte_type_ascii:
-                    i++;
-                    break;
+                    if (!str.chrs[i]) {
+                        return len;
+                    }
+
+                    [[fallthrough]];
 
                 case ek_utf8_byte_type_2byte_start:
-                    i += 2;
-                    break;
-
                 case ek_utf8_byte_type_3byte_start:
-                    i += 3;
-                    break;
-
                 case ek_utf8_byte_type_4byte_start:
-                    i += 4;
+                    static_assert(ek_utf8_byte_type_4byte_start - ek_utf8_byte_type_ascii + 1 == 4);
+                    i += byte_type - ek_utf8_byte_type_ascii + 1;
                     break;
 
                 case ek_utf8_byte_type_continuation:
