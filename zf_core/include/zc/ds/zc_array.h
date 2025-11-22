@@ -134,6 +134,16 @@ namespace zf {
         return tp_len;
     }
 
+    template<c_array_mut tp_type>
+    constexpr s_array<typename tp_type::t_elem> ToNonstatic(tp_type& arr) {
+        return {arr.buf_raw, ArrayLen(arr)};
+    }
+
+    template<c_array_rdonly tp_type>
+    constexpr s_array_rdonly<typename tp_type::t_elem> ToNonstatic(tp_type& arr) {
+        return {arr.buf_raw, ArrayLen(arr)};
+    }
+
     template<c_array tp_type>
     constexpr t_b8 IsArrayEmpty(tp_type& arr) {
         return ArrayLen(arr) == 0;
@@ -211,7 +221,7 @@ namespace zf {
         ZF_ASSERT(comparator);
 
         for (t_size i = 0; i < ArrayLen(arr); i++) {
-            if (comparator(arr[i], val) != 0) {
+            if (!comparator(arr[i], val)) {
                 return false;
             }
         }
@@ -224,7 +234,7 @@ namespace zf {
         ZF_ASSERT(comparator);
 
         for (t_size i = 0; i < ArrayLen(arr); i++) {
-            if (comparator(arr[i], val) == 0) {
+            if (comparator(arr[i], val)) {
                 return true;
             }
         }
@@ -239,18 +249,13 @@ namespace zf {
         }
     }
 
-    // O(n) time complexity and space complexity.
-    // @todo
-    static t_b8 HasDuplicates(const s_array_rdonly<t_u8> arr, s_mem_arena& temp_mem_arena) {
-        ZF_ASSERT(false);
-        return false;
-    }
-
     // O(n^2) time complexity, but O(1) space complexity. Can also be done at compile-time.
-    constexpr t_b8 HasDuplicatesSlow(const s_array_rdonly<t_u8> arr) {
-        for (t_size i = 0; i < arr.len; i++) {
-            for (t_size j = 0; j < arr.len; j++) {
-                if (arr[i] == arr[j]) {
+    // You're usually better off using a hash map and a linear search, or a bit vector if values are numeric and the range is small.
+    template<c_array tp_type>
+    constexpr t_b8 HasDuplicatesSlow(tp_type& arr, const t_bin_comparator<typename tp_type::t_elem> comparator = DefaultBinComparator) {
+        for (t_size i = 0; i < ArrayLen(arr.len); i++) {
+            for (t_size j = 0; j < ArrayLen(arr); j++) {
+                if (comparator(arr[i], arr[j])) {
                     return true;
                 }
             }
@@ -266,10 +271,11 @@ namespace zf {
         }
 
         const auto& mid = elem[ArrayLen(arr) / 2];
+        const auto comp = comparator(elem, mid);
 
-        if (elem == mid) {
+        if (comp == 0) {
             return true;
-        } else if (elem < mid) {
+        } else if (comp < 0) {
             return BinarySearch(Slice(arr, 0, ArrayLen(arr) / 2), elem);
         } else {
             return BinarySearch(Slice(arr, (ArrayLen(arr) / 2) + 1, ArrayLen(arr)), elem);
