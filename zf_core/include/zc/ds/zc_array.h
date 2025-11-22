@@ -207,7 +207,7 @@ namespace zf {
     }
 
     template<c_array tp_type>
-    t_b8 AreAllEqualTo(tp_type& arr, const typename tp_type::t_elem& val, const t_comparator<typename tp_type::t_elem> comparator = DefaultComparator) {
+    t_b8 AreAllEqualTo(tp_type& arr, const typename tp_type::t_elem& val, const t_bin_comparator<typename tp_type::t_elem> comparator = DefaultBinComparator) {
         ZF_ASSERT(comparator);
 
         for (t_size i = 0; i < ArrayLen(arr); i++) {
@@ -220,7 +220,7 @@ namespace zf {
     }
 
     template<c_array tp_type>
-    t_b8 AreAnyEqualTo(tp_type& arr, const typename tp_type::t_elem& val, const t_comparator<typename tp_type::t_elem> comparator = DefaultComparator) {
+    t_b8 AreAnyEqualTo(tp_type& arr, const typename tp_type::t_elem& val, const t_bin_comparator<typename tp_type::t_elem> comparator = DefaultBinComparator) {
         ZF_ASSERT(comparator);
 
         for (t_size i = 0; i < ArrayLen(arr); i++) {
@@ -239,8 +239,28 @@ namespace zf {
         }
     }
 
+    // O(n) time complexity and space complexity.
+    // @todo
+    static t_b8 HasDuplicates(const s_array_rdonly<t_u8> arr, s_mem_arena& temp_mem_arena) {
+        ZF_ASSERT(false);
+        return false;
+    }
+
+    // O(n^2) time complexity, but O(1) space complexity. Can also be done at compile-time.
+    constexpr t_b8 HasDuplicatesSlow(const s_array_rdonly<t_u8> arr) {
+        for (t_size i = 0; i < arr.len; i++) {
+            for (t_size j = 0; j < arr.len; j++) {
+                if (arr[i] == arr[j]) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
     template<c_array tp_type>
-    t_b8 BinarySearch(tp_type& arr, const typename tp_type::t_elem& elem, const t_comparator<typename tp_type::t_elem> comparator = DefaultComparator) {
+    t_b8 BinarySearch(tp_type& arr, const typename tp_type::t_elem& elem, const t_ord_comparator<typename tp_type::t_elem> comparator = DefaultOrdComparator) {
         if (IsArrayEmpty(arr)) {
             return false;
         }

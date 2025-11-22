@@ -168,7 +168,7 @@ namespace zf {
         //
         // Glyph Info
         //
-        if (!MakeHashMap(mem_arena, g_s32_hash_func, o_font.codepoints_to_glyph_infos, DefaultComparator, codepoints_no_dups.len, codepoints_no_dups.len)) {
+        if (!MakeHashMap(mem_arena, g_s32_hash_func, o_font.codepoints_to_glyph_infos, DefaultBinComparator, codepoints_no_dups.len, codepoints_no_dups.len)) {
             return false;
         }
 
@@ -213,7 +213,7 @@ namespace zf {
             glyph_info.atlas_rect = {atlas_pen, glyph_info.size};
             atlas_pen.x += glyph_info.size.x;
 
-            if (!HashMapPut(o_font.codepoints_to_glyph_infos, codepoints_no_dups[i], glyph_info)) {
+            if (HashMapPut(o_font.codepoints_to_glyph_infos, codepoints_no_dups[i], glyph_info) == ec_hash_map_put_result::error) {
                 return false;
             }
         }
@@ -248,7 +248,7 @@ namespace zf {
         };
 
         const auto codepoint_pair_comparator = [](const s_codepoint_pair& pa, const s_codepoint_pair& pb) {
-            return pa.a != pb.a || pa.b != pb.b ? -1 : 0;
+            return pa.a == pb.a && pa.b == pb.b;
         };
 
         if (!MakeHashMap<s_codepoint_pair, t_s32>(mem_arena, codepoint_pair_hash_func, o_font.codepoint_pairs_to_kernings, codepoint_pair_comparator, kern_cnt, kern_cnt)) {
@@ -263,7 +263,7 @@ namespace zf {
                 const t_s32 kern = stbtt_GetGlyphKernAdvance(&stb_font_info, glyph_a_index, glyph_b_index);
 
                 if (kern != 0) {
-                    if (!HashMapPut(o_font.codepoint_pairs_to_kernings, {codepoints_no_dups[i], codepoints_no_dups[j]}, kern)) {
+                    if (HashMapPut(o_font.codepoint_pairs_to_kernings, {codepoints_no_dups[i], codepoints_no_dups[j]}, kern) == ec_hash_map_put_result::error) {
                         return false;
                     }
                 }

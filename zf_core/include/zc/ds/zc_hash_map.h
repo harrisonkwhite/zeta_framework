@@ -31,7 +31,7 @@ namespace zf {
     template<typename tp_key_type, typename tp_value_type>
     struct s_hash_map {
         t_hash_func<tp_key_type> hash_func;
-        t_comparator<tp_key_type> key_comparator;
+        t_bin_comparator<tp_key_type> key_comparator;
 
         s_array<t_size> backing_store_indexes; // These are what the hash function initially maps to after modulo. They are indexes into "slots" (linked-list nodes) in the backing store below.
 
@@ -80,9 +80,14 @@ namespace zf {
         return bs_get(bs_get, hm.backing_store_indexes[hash_index]);
     }
 
-    // Returns true iff the operation was successful (in which failure occurs when there isn't enough room).
+    enum class ec_hash_map_put_result {
+        added,
+        updated,
+        error
+    };
+
     template<typename tp_key_type, typename tp_value_type>
-    [[nodiscard]] t_b8 HashMapPut(const s_hash_map<tp_key_type, tp_value_type>& hm, const tp_key_type& key, const tp_value_type& val) {
+    [[nodiscard]] ec_hash_map_put_result HashMapPut(const s_hash_map<tp_key_type, tp_value_type>& hm, const tp_key_type& key, const tp_value_type& val) {
         const t_size hash_index = KeyToHashIndex(key, hm.hash_func, hm.backing_store_indexes.len);
 
         const auto bs_put = [&hm, &key, &val](const auto self, t_size& index) {
@@ -91,7 +96,7 @@ namespace zf {
 
                 if (prospective_index == -1) {
                     // We're out of room!
-                    return false;
+                    return ec_hash_map_put_result::error;
                 }
 
                 index = prospective_index;
@@ -101,12 +106,12 @@ namespace zf {
                 hm.backing_store.next_indexes[index] = -1;
                 SetBit(hm.backing_store.usage, index);
 
-                return true;
+                return ec_hash_map_put_result::added;
             }
 
             if (hm.key_comparator(hm.backing_store.keys[index], key) == 0) {
                 hm.backing_store.vals[index] = val;
-                return true;
+                return ec_hash_map_put_result::updated;
             }
 
             return self(self, hm.backing_store.next_indexes[index]);
@@ -141,7 +146,7 @@ namespace zf {
     // The immediate capacity is the total number of upfront slots (i.e. the maximum possible number of slots for which an O(1) access of a value from a key can happen).
     // The key-value pair capacity is the overall limit of how many key-value pairs this map can ever hold. It obviously has to be equal to or greater than the immediate capacity.
     template<typename tp_key_type, typename tp_value_type>
-    [[nodiscard]] t_b8 MakeHashMap(s_mem_arena& mem_arena, const t_hash_func<tp_key_type> hash_func, s_hash_map<tp_key_type, tp_value_type>& o_um, const t_comparator<tp_key_type> key_comparator = DefaultComparator, const t_size immediate_cap = 1024, const t_size kv_pair_cap = 1 << 16) {
+    [[nodiscard]] t_b8 MakeHashMap(s_mem_arena& mem_arena, const t_hash_func<tp_key_type> hash_func, s_hash_map<tp_key_type, tp_value_type>& o_um, const t_bin_comparator<tp_key_type> key_comparator = DefaultBinComparator, const t_size immediate_cap = 1024, const t_size kv_pair_cap = 1 << 16) {
         ZF_ASSERT(hash_func);
         ZF_ASSERT(key_comparator);
         ZF_ASSERT(immediate_cap > 0 && kv_pair_cap >= immediate_cap);

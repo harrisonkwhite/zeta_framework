@@ -122,12 +122,21 @@ namespace zf {
     template<typename tp_type> struct s_is_const { static constexpr t_b8 g_val = false; };
     template<typename tp_type> struct s_is_const<tp_type const> { static constexpr t_b8 g_val = true; };
 
-    // If a < b, return a negative result, if a == b, return 0, and if a > b, return a positive result.
+    // Return true iff a and b are equal.
     template<typename tp_type>
-    using t_comparator = t_s32 (*)(const tp_type& a, const tp_type& b);
+    using t_bin_comparator = t_b8 (*)(const tp_type& a, const tp_type& b);
 
     template<typename tp_type>
-    t_s32 DefaultComparator(const tp_type& a, const tp_type& b) {
+    t_b8 DefaultBinComparator(const tp_type& a, const tp_type& b) {
+        return a == b;
+    }
+
+    // If a < b, return a negative result, if a == b, return 0, and if a > b, return a positive result.
+    template<typename tp_type>
+    using t_ord_comparator = t_s32 (*)(const tp_type& a, const tp_type& b);
+
+    template<typename tp_type>
+    t_s32 DefaultOrdComparator(const tp_type& a, const tp_type& b) {
         if (a == b) {
             return 0;
         } else if (a < b) {

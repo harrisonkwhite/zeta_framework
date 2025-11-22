@@ -4,7 +4,7 @@
 
 namespace zf {
     template<c_array tp_type>
-    t_b8 IsSorted(tp_type& arr, const t_comparator<typename tp_type::t_elem> comparator = DefaultComparator) {
+    t_b8 IsSorted(tp_type& arr, const t_bin_comparator<typename tp_type::t_elem> comparator = DefaultOrdComparator) {
         ZF_ASSERT(comparator);
 
         for (t_size i = 0; i < ArrayLen(arr) - 1; i++) {
@@ -18,7 +18,7 @@ namespace zf {
 
     // O(n) best-case if array is already sorted, O(n^2) worst-case.
     template<c_array_mut tp_type>
-    void BubbleSort(tp_type& arr, const t_comparator<typename tp_type::t_elem> comparator = DefaultComparator) {
+    void BubbleSort(tp_type& arr, const t_bin_comparator<typename tp_type::t_elem> comparator = DefaultOrdComparator) {
         ZF_ASSERT(comparator);
 
         t_b8 sorted;
@@ -37,7 +37,7 @@ namespace zf {
 
     // O(n) best-case if array is already sorted, O(n^2) worst-case.
     template<c_array_mut tp_type>
-    void InsertionSort(tp_type& arr, const t_comparator<typename tp_type::t_elem> comparator = DefaultComparator) {
+    void InsertionSort(tp_type& arr, const t_bin_comparator<typename tp_type::t_elem> comparator = DefaultOrdComparator) {
         ZF_ASSERT(comparator);
 
         for (t_size i = 1; i < ArrayLen(arr); i++) {
@@ -59,7 +59,7 @@ namespace zf {
 
     // O(n^2) in every case.
     template<c_array_mut tp_type>
-    void SelectionSort(tp_type& arr, const t_comparator<typename tp_type::t_elem> comparator = DefaultComparator) {
+    void SelectionSort(tp_type& arr, const t_bin_comparator<typename tp_type::t_elem> comparator = DefaultOrdComparator) {
         ZF_ASSERT(comparator);
 
         for (t_size i = 0; i < ArrayLen(arr) - 1; i++) {
@@ -77,7 +77,7 @@ namespace zf {
 
     // O(n log n) in both time complexity and space complexity in every case.
     template<c_array_mut tp_type>
-    [[nodiscard]] t_b8 MergeSort(tp_type& arr, s_mem_arena& temp_mem_arena, const t_comparator<typename tp_type::t_elem> comparator = DefaultComparator) {
+    [[nodiscard]] t_b8 MergeSort(tp_type& arr, s_mem_arena& temp_mem_arena, const t_bin_comparator<typename tp_type::t_elem> comparator = DefaultOrdComparator) {
         ZF_ASSERT(comparator);
 
         if (ArrayLen(arr) <= 1) {
@@ -142,7 +142,7 @@ namespace zf {
     // Space complexity is O(1) compared to merge sort.
     // In each recurse, the pivot is selected as the median of the first, middle, and last elements.
     template<c_array_mut tp_type>
-    void QuickSort(tp_type& arr, const t_comparator<typename tp_type::t_elem> comparator = DefaultComparator) {
+    void QuickSort(tp_type& arr, const t_bin_comparator<typename tp_type::t_elem> comparator = DefaultOrdComparator) {
         ZF_ASSERT(comparator);
 
         if (ArrayLen(arr) <= 1) {
