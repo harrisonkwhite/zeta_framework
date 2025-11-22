@@ -20,7 +20,7 @@ int main(const int arg_cnt, const char* const* const args_raw) {
     const zf::t_b8 success = [instrs_json_file_path, &temp_mem_arena]() {
         zf::s_str instrs_json;
 
-        if (!zf::LoadFileContentsAsStr(temp_mem_arena, instrs_json_file_path, instrs_json)) {
+        if (!zf::LoadFileContentsAsStr(instrs_json_file_path, instrs_json, ArenaAllocator(temp_mem_arena))) {
             ZF_LOG_ERROR("Failed to load contents of asset packing instructions JSON file \"%s\"!", zf::StrRaw(instrs_json_file_path));
             return false;
         }

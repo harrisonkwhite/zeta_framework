@@ -68,7 +68,7 @@ namespace zf::gfx {
                 if (log_chr_cnt > 1) {
                     s_array<char> log_chrs;
 
-                    if (MakeArray(temp_mem_arena, log_chr_cnt, log_chrs)) {
+                    if (AllocArray(log_chr_cnt, log_chrs, ArenaAllocator(temp_mem_arena))) {
                         glGetShaderInfoLog(shader_gl_id, static_cast<GLsizei>(log_chrs.len), nullptr, log_chrs.buf_raw);
                         ZF_LOG_ERROR_SPECIAL("OpenGL Shader Compilation", "%s", log_chrs.buf_raw);
                     } else {
@@ -183,8 +183,8 @@ namespace zf::gfx {
         }
     }
 
-    t_b8 MakeResourceArena(s_mem_arena& mem_arena, const t_size cap, s_resource_arena& o_res_arena) {
-        return MakeList(mem_arena, cap, o_res_arena.hdls);
+    t_b8 MakeResourceArena(const t_size cap, s_resource_arena& o_res_arena, const s_allocator allocator) {
+        return MakeList(cap, o_res_arena.hdls, allocator);
     }
 
     void ReleaseResourceArena(s_resource_arena& res_arena) {

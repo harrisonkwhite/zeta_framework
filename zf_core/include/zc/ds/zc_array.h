@@ -155,10 +155,10 @@ namespace zf {
     }
 
     template<typename tp_type>
-    t_b8 MakeArray(s_mem_arena& mem_arena, const t_size len, s_array<tp_type>& o_arr) {
+    [[nodiscard]] t_b8 AllocArray(const t_size len, s_array<tp_type>& o_arr, const s_allocator allocator = DefaultAllocator()) {
         ZF_ASSERT(len > 0);
 
-        const auto buf_raw = PushToMemArena<tp_type>(mem_arena, len);
+        const auto buf_raw = AllocRaw<tp_type>(allocator, len);
 
         if (!buf_raw) {
             return false;
@@ -170,10 +170,10 @@ namespace zf {
     }
 
     template<c_array tp_type>
-    t_b8 MakeArrayClone(s_mem_arena& mem_arena, tp_type& arr_to_clone, s_array<typename tp_type::t_elem>& o_arr) {
+    [[nodiscard]] t_b8 MakeArrayClone(tp_type& arr_to_clone, s_array<typename tp_type::t_elem>& o_arr, const s_allocator allocator = DefaultAllocator()) {
         ZF_ASSERT(!IsArrayEmpty(arr_to_clone));
 
-        if (!MakeArray(mem_arena, ArrayLen(arr_to_clone), o_arr)) {
+        if (!AllocArray(ArrayLen(arr_to_clone), o_arr, allocator)) {
             return false;
         }
 

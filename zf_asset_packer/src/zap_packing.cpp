@@ -124,7 +124,7 @@ namespace zf {
                             const auto src_fp_raw = field_vals[ek_tex_field_src_file_path]->valuestring;
                             const auto dest_fp_raw = field_vals[ek_tex_field_dest_file_path]->valuestring;
 
-                            if (!LoadRGBATextureDataFromRaw(StrFromRawTerminated(src_fp_raw), temp_mem_arena, tex_data)) {
+                            if (!LoadRGBATextureDataFromRaw(StrFromRawTerminated(src_fp_raw), tex_data, ArenaAllocator(temp_mem_arena))) {
                                 ZF_LOG_ERROR("Failed to load RGBA texture from file \"%s\"!", src_fp_raw);
                                 return false;
                             }
@@ -146,7 +146,7 @@ namespace zf {
                             const auto src_fp_raw = field_vals[ek_snd_field_src_file_path]->valuestring;
                             const auto dest_fp_raw = field_vals[ek_snd_field_dest_file_path]->valuestring;
 
-                            if (!LoadSoundFromRaw(StrFromRawTerminated(src_fp_raw), temp_mem_arena, snd_data.meta, snd_data.pcm)) {
+                            if (!LoadSoundFromRaw(StrFromRawTerminated(src_fp_raw), snd_data.meta, snd_data.pcm, ArenaAllocator(temp_mem_arena))) {
                                 ZF_LOG_ERROR("Failed to load sound from file \"%s\"!", src_fp_raw);
                                 return false;
                             }

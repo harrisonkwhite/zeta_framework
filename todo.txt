@@ -8,6 +8,7 @@
 - Figure out how to implement surfaces, bypassing the issues with transparency.
 
 Big-picture things that this framework needs by the end of the year:
+- Add easy ability to restart game.
 - Togglable debug overlays with FPS and so on, use some built-in font.
 - Convert enums to enum classes, use operator overloading if needed.
 - Helpers for 2D arrays.

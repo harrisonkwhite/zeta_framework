@@ -109,8 +109,8 @@ namespace zf {
         }
     };
 
-    [[nodiscard]] t_b8 LoadRGBATextureDataFromRaw(const s_str_rdonly file_path, s_mem_arena& mem_arena, s_rgba_texture_data& o_tex_data);
+    [[nodiscard]] t_b8 LoadRGBATextureDataFromRaw(const s_str_rdonly file_path, s_rgba_texture_data& o_tex_data, const s_allocator allocator = DefaultAllocator());
 
     [[nodiscard]] t_b8 PackTexture(const s_rgba_texture_data_rdonly& tex_data, const s_str_rdonly file_path, s_mem_arena& temp_mem_arena);
-    [[nodiscard]] t_b8 UnpackTexture(const s_str_rdonly file_path, s_mem_arena& mem_arena, s_rgba_texture_data& o_tex_data);
+    [[nodiscard]] t_b8 UnpackTexture(const s_str_rdonly file_path, s_rgba_texture_data& o_tex_data, const s_allocator allocator = DefaultAllocator());
 }

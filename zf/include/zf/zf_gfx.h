@@ -75,7 +75,7 @@ namespace zf::gfx {
     t_b8 AreResourcesEqual(const s_resource_handle& a, const s_resource_handle& b);
     void ReleaseResource(const s_resource_handle& hdl);
 
-    [[nodiscard]] t_b8 MakeResourceArena(s_mem_arena& mem_arena, const t_size cap, s_resource_arena& o_res_arena);
+    [[nodiscard]] t_b8 MakeResourceArena(const t_size cap, s_resource_arena& o_res_arena, const s_allocator allocator = DefaultAllocator());
     void ReleaseResourceArena(s_resource_arena& res_arena);
 
     s_resource_handle MakeMesh(s_resource_arena& res_arena, const t_f32* const verts_raw, const t_size verts_len, const s_array_rdonly<t_u16> elems, const s_array_rdonly<t_s32> vert_attr_lens); // You might not want to provide vertices to start with, and only the count - passing nullptr in for verts_raw allows this.
@@ -103,7 +103,7 @@ namespace zf::gfx {
     [[nodiscard]] inline t_b8 LoadTextureAssetFromRaw(const s_str_rdonly file_path, s_resource_arena& res_arena, s_mem_arena& temp_mem_arena, s_texture_asset& o_asset) {
         s_rgba_texture_data tex_data;
 
-        if (!LoadRGBATextureDataFromRaw(file_path, temp_mem_arena, tex_data)) {
+        if (!LoadRGBATextureDataFromRaw(file_path, tex_data, ArenaAllocator(temp_mem_arena))) {
             return false;
         }
 
@@ -113,7 +113,7 @@ namespace zf::gfx {
     [[nodiscard]] inline t_b8 LoadTextureAssetFromPacked(const s_str_rdonly file_path, s_resource_arena& res_arena, s_mem_arena& temp_mem_arena, s_texture_asset& o_asset) {
         s_rgba_texture_data tex_data;
 
-        if (!UnpackTexture(file_path, temp_mem_arena, tex_data)) {
+        if (!UnpackTexture(file_path, tex_data, ArenaAllocator(temp_mem_arena))) {
             return false;
         }
 

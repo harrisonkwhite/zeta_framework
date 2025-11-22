@@ -93,12 +93,12 @@ namespace zf {
     }
 
     template<typename tp_type>
-    t_b8 MakeStack(s_mem_arena& mem_arena, const t_size cap, s_stack<tp_type>& o_stack, const t_size height = 0) {
+    t_b8 MakeStack(const t_size cap, s_stack<tp_type>& o_stack, const s_allocator allocator = DefaultAllocator(), const t_size height = 0) {
         ZF_ASSERT(cap > 0 && height >= 0 && height <= cap);
 
         s_array<tp_type> backing_arr;
 
-        if (!MakeArray(mem_arena, cap, backing_arr)) {
+        if (!AllocArray(cap, backing_arr, allocator)) {
             return false;
         }
 

@@ -117,17 +117,17 @@ namespace zf {
     }
 
     template<typename tp_type>
-    t_b8 MakeActivityArray(s_mem_arena& mem_arena, const t_size len, s_activity_array<tp_type>& o_aa) {
+    t_b8 MakeActivityArray(const t_size len, s_activity_array<tp_type>& o_aa, const s_allocator allocator = DefaultAllocator()) {
         ZF_ASSERT(len > 0);
 
         s_array<tp_type> slots;
         s_bit_vector slot_activity;
 
-        if (!MakeArray(mem_arena, len, slots)) {
+        if (!AllocArray(len, slots, allocator)) {
             return false;
         }
 
-        if (!MakeBitVector(mem_arena, len, slot_activity)) {
+        if (!MakeBitVector(len, slot_activity, allocator)) {
             return false;
         }
 

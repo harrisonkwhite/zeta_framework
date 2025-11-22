@@ -68,7 +68,7 @@ void main() {
 
         s_array<t_u16> elems;
 
-        if (!MakeArray(temp_mem_arena, g_batch_slot_elem_cnt * g_batch_slot_cnt, elems)) {
+        if (!AllocArray(g_batch_slot_elem_cnt * g_batch_slot_cnt, elems, ArenaAllocator(temp_mem_arena))) {
             ZF_REPORT_FAILURE();
             return {};
         }
@@ -167,8 +167,8 @@ void main() {
 #endif
     }
 
-    s_rendering_state* PrepareRenderingPhase(s_mem_arena& mem_arena) {
-        const auto rs = PushToMemArena<s_rendering_state>(mem_arena);
+    s_rendering_state* PrepareRenderingPhase(const s_allocator allocator) {
+        const auto rs = AllocRaw<s_rendering_state>(allocator);
 
         if (rs) {
             rs->batch_view_mat = MakeIdentityMatrix4x4();

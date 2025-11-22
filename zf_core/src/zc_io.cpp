@@ -54,7 +54,7 @@ namespace zf {
         return static_cast<t_size>(file_size);
     }
 
-    t_b8 LoadFileContents(s_mem_arena& mem_arena, const s_str_rdonly file_path, s_array<t_u8>& o_contents, const t_b8 include_terminating_byte) {
+    t_b8 LoadFileContents(const s_str_rdonly file_path, s_array<t_u8>& o_contents, const s_allocator allocator, const t_b8 include_terminating_byte) {
         ZF_ASSERT(IsStrTerminated(file_path));
 
         s_file_stream fs;
@@ -63,10 +63,10 @@ namespace zf {
             return false;
         }
 
-        const t_b8 success = [&o_contents, &mem_arena, include_terminating_byte, &fs]() {
+        const t_b8 success = [&o_contents, &allocator, include_terminating_byte, &fs]() {
             const t_size file_size = CalcFileSize(fs);
 
-            if (!MakeArray(mem_arena, include_terminating_byte ? file_size + 1 : file_size, o_contents)) {
+            if (!AllocArray(include_terminating_byte ? file_size + 1 : file_size, o_contents, allocator)) {
                 return false;
             }
 
@@ -122,7 +122,7 @@ namespace zf {
 
         s_str path_clone; // @speed: A clone on every call to this? Yuck!
 
-        if (!MakeArrayClone(temp_mem_arena, path.chrs, path_clone.chrs)) {
+        if (!MakeArrayClone(path.chrs, path_clone.chrs, ArenaAllocator(temp_mem_arena))) {
             return false;
         }
 
@@ -169,7 +169,7 @@ namespace zf {
 
         s_str path_clone; // @speed: A clone on every call to this? Yuck!
 
-        if (!MakeArrayClone(temp_mem_arena, path_relevant, path_clone.chrs)) {
+        if (!MakeArrayClone(path_relevant, path_clone.chrs, ArenaAllocator(temp_mem_arena))) {
             return false;
         }
 
