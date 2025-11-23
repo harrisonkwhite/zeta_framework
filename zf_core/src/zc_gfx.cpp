@@ -10,7 +10,7 @@ namespace zf {
 
         const t_size mem_arena_begin_offs = mem_arena.offs;
 
-        const auto success = [file_path, &mem_arena, &o_tex_data]() {
+        const t_b8 success = [file_path, &mem_arena, &o_tex_data]() {
             t_u8* const stb_px_data = stbi_load(StrRaw(file_path), &o_tex_data.size_in_pxs.x, &o_tex_data.size_in_pxs.y, nullptr, 4);
 
             if (!stb_px_data) {
@@ -89,54 +89,12 @@ namespace zf {
         return true;
     }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-    // Assume one-to-many relationship between glyphs and codepoints.
-    // Therefore number of codepoints >= number of glyphs.
-
-    constexpr s_v2<t_s32> g_atlas_size = {1024, 1024};
-
-    using t_font_atlas = s_static_array<t_u8, 4 * g_atlas_size.x * g_atlas_size.y>;
-
-    struct s_font_glyph_info {
-        // These are for determining positioning relative to other characters.
-        s_v2<t_s32> offs;
-        s_v2<t_s32> size;
-        t_s32 adv;
-
-        // In what texture atlas is this glyph, and where?
-        t_size atlas_index;
-        s_rect<t_s32> atlas_rect;
-    };
-
-    struct s_codepoint_pair {
-        t_s32 a;
-        t_s32 b;
-    };
-
-    struct s_font {
-        t_s32 line_height;
-
-        s_hash_map<t_s32, s_font_glyph_info> codepoints_to_glyph_infos; // Some duplicity here since a single glyph might have multiple codepoints mapped to it.
-        s_hash_map<s_codepoint_pair, t_s32> codepoint_pairs_to_kernings;
-        s_array<t_font_atlas> atlases;
-    };
-
-    [[nodiscard]] static t_b8 LoadFont(s_mem_arena& mem_arena, const s_str_rdonly file_path, const t_s32 height, const s_array_rdonly<t_s32> codepoints_no_dups, s_mem_arena& temp_mem_arena, s_font& o_font) {
+    t_b8 LoadFontFromRaw(s_mem_arena& mem_arena, const s_str_rdonly file_path, const t_s32 height, const s_array_rdonly<t_s32> codepoints_no_dups, s_mem_arena& temp_mem_arena, s_font& o_font) {
         ZF_ASSERT(IsStrTerminated(file_path));
         ZF_ASSERT(height > 0);
         ZF_ASSERT(!IsArrayEmpty(codepoints_no_dups));
+
+        const t_size mem_arena_begin_offs = mem_arena.offs;
 
         const t_b8 success = [&]() {
             // Get the plain font file data.
@@ -168,7 +126,7 @@ namespace zf {
             o_font.line_height = static_cast<t_s32>(static_cast<t_f32>(vm_ascent - vm_descent + vm_line_gap) * scale);
 
             //
-            // Glyph Info
+            // Computing Glyph Info
             //
             if (!MakeHashMap(mem_arena, g_s32_hash_func, o_font.codepoints_to_glyph_infos, DefaultBinComparator, codepoints_no_dups.len, codepoints_no_dups.len)) {
                 return false;
@@ -292,6 +250,8 @@ namespace zf {
                     return false;
                 }
 
+                ZF_DEFER({ stbtt_FreeBitmap(stb_bitmap, nullptr); });
+
                 auto& atlas = o_font.atlases[glyph_info.atlas_index];
                 const auto& atlas_rect = glyph_info.atlas_rect;
 
@@ -302,13 +262,79 @@ namespace zf {
                         atlas[px_index + 3] = stb_bitmap[stb_bitmap_index];
                     }
                 }
-
-                stbtt_FreeBitmap(stb_bitmap, nullptr);
             }
 
             return true;
         }();
 
+        if (!success) {
+            RewindMemArena(mem_arena, mem_arena_begin_offs);
+        }
+
         return success;
+    }
+
+    t_b8 PackFont(const s_font& font, const s_str_rdonly file_path, s_mem_arena& temp_mem_arena) {
+        ZF_ASSERT(IsStrTerminated(file_path));
+
+        if (!CreateFileAndParentDirs(file_path, temp_mem_arena)) {
+            return false;
+        }
+
+        s_file_stream fs;
+
+        if (!OpenFile(file_path, ec_file_access_mode::write, fs)) {
+            return false;
+        }
+
+        ZF_DEFER({ CloseFile(fs); });
+
+        if (!WriteItemToFile(fs, font.line_height)) {
+            return false;
+        }
+
+        // @todo
+#if 0
+        if (!SerializeHashMap(font.codepoints_to_glyph_infos, fs)) {
+            return false;
+        }
+
+        if (!SerializeHashMap(font.codepoint_pairs_to_kernings, fs)) {
+            return false;
+        }
+#endif
+
+        if (WriteItemArrayToFile(fs, font.atlases) < font.atlases.len) {
+            return false;
+        }
+
+        return true;
+    }
+
+    t_b8 UnpackFont(const s_str_rdonly file_path, s_mem_arena& mem_arena, s_font& o_font) {
+        ZF_ASSERT(IsStrTerminated(file_path));
+
+        s_file_stream fs;
+
+        if (!OpenFile(file_path, ec_file_access_mode::read, fs)) {
+            return false;
+        }
+
+        ZF_DEFER({ CloseFile(fs); });
+
+        if (!ReadItemFromFile(fs, o_font.line_height)) {
+            return false;
+        }
+
+#if 0
+        if (!DeserializeHashMap(font.codepoints_to_glyph_infos, fs)) {
+        }
+#endif
+
+        if (ReadItemArrayFromFile(fs, o_font.atlases) < o_font.atlases.len) {
+            return false;
+        }
+
+        return true;
     }
 }

@@ -122,7 +122,7 @@ namespace zf {
 
         const t_size mem_arena_begin_offs = mem_arena.offs;
 
-        const auto success = [&]() {
+        const t_b8 success = [&]() {
             o_aa = {};
 
             if (!MakeArray(mem_arena, len, o_aa.slots)) {

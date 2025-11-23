@@ -2,6 +2,7 @@
 
 #include <zc/zc_io.h>
 #include <zc/zc_math.h>
+#include <zc/ds/zc_hash_map.h>
 
 namespace zf {
     struct s_color_rgba32f {
@@ -113,4 +114,40 @@ namespace zf {
 
     [[nodiscard]] t_b8 PackTexture(const s_rgba_texture_data_rdonly& tex_data, const s_str_rdonly file_path, s_mem_arena& temp_mem_arena);
     [[nodiscard]] t_b8 UnpackTexture(const s_str_rdonly file_path, s_mem_arena& mem_arena, s_rgba_texture_data& o_tex_data);
+
+// Assume one-to-many relationship between glyphs and codepoints.
+    // Therefore number of codepoints >= number of glyphs.
+
+    constexpr s_v2<t_s32> g_atlas_size = {1024, 1024};
+
+    using t_font_atlas = s_static_array<t_u8, 4 * g_atlas_size.x * g_atlas_size.y>;
+
+    struct s_font_glyph_info {
+        // These are for determining positioning relative to other characters.
+        s_v2<t_s32> offs;
+        s_v2<t_s32> size;
+        t_s32 adv;
+
+        // In what texture atlas is this glyph, and where?
+        t_size atlas_index;
+        s_rect<t_s32> atlas_rect;
+    };
+
+    struct s_codepoint_pair {
+        t_s32 a;
+        t_s32 b;
+    };
+
+    struct s_font {
+        t_s32 line_height;
+
+        s_hash_map<t_s32, s_font_glyph_info> codepoints_to_glyph_infos; // Some duplicity here since a single glyph might have multiple codepoints mapped to it.
+        s_hash_map<s_codepoint_pair, t_s32> codepoint_pairs_to_kernings;
+        s_array<t_font_atlas> atlases;
+    };
+
+    [[nodiscard]] t_b8 LoadFontFromRaw(s_mem_arena& mem_arena, const s_str_rdonly file_path, const t_s32 height, const s_array_rdonly<t_s32> codepoints_no_dups, s_mem_arena& temp_mem_arena, s_font& o_font);
+
+    [[nodiscard]] t_b8 PackFont(const s_font& font, const s_str_rdonly file_path, s_mem_arena& temp_mem_arena);
+    [[nodiscard]] t_b8 UnpackFont(const s_str_rdonly file_path, s_mem_arena& mem_arena, s_font& o_font);
 }

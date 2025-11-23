@@ -10,7 +10,7 @@ namespace zf {
     t_b8 RunGame(const s_game_info& info) {
         AssertGameInfoValidity(info);
 
-        const auto success = [&info]() {
+        const t_b8 success = [&info]() {
             //
             // Initialisation
             //
