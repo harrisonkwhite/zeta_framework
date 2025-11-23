@@ -80,6 +80,8 @@ namespace zf {
     [[nodiscard]] t_b8 MergeSort(tp_type& arr, s_mem_arena& temp_mem_arena, const t_bin_comparator<typename tp_type::t_elem> comparator = DefaultOrdComparator) {
         ZF_ASSERT(comparator);
 
+        ZF_DEFER_MEM_ARENA_REWIND(temp_mem_arena);
+
         if (ArrayLen(arr) <= 1) {
             return true;
         }

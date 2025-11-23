@@ -47,6 +47,12 @@ namespace zf {
         ma.offs = offs;
     }
 
+#define ZF_DEFER_MEM_ARENA_REWIND(arena) \
+    do { \
+        const zf::t_size arena_begin_offs = arena.offs; \
+        ZF_DEFER({ zf::RewindMemArena(arena, arena_begin_offs); }); \
+    } while(0) \
+
     [[nodiscard]] inline t_b8 MakeSubMemArena(s_mem_arena& parent_ma, const t_size size, s_mem_arena& o_ma) {
         o_ma = {
             .buf = PushToMemArena(parent_ma, size, 1),

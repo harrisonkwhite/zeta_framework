@@ -177,22 +177,18 @@ namespace zf {
             return false;
         }
 
-        const t_b8 success = [cj, &temp_mem_arena]() {
-            if (!cJSON_IsObject(cj)) {
-                ZF_LOG_ERROR("Invalid JSON structure in asset packing instructions!");
-                return false;
-            }
+        ZF_DEFER({ cJSON_Delete(cj); });
 
-            if (!PackAssetsFromInstrs(cj, temp_mem_arena)) {
-                ZF_LOG_ERROR("Failed to pack assets!");
-                return false;
-            }
+        if (!cJSON_IsObject(cj)) {
+            ZF_LOG_ERROR("Invalid JSON structure in asset packing instructions!");
+            return false;
+        }
 
-            return true;
-        }();
+        if (!PackAssetsFromInstrs(cj, temp_mem_arena)) {
+            ZF_LOG_ERROR("Failed to pack assets!");
+            return false;
+        }
 
-        cJSON_Delete(cj);
-
-        return success;
+        return true;
     }
 }

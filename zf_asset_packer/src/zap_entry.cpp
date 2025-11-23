@@ -1,5 +1,7 @@
 #include "zap_packing.h"
 
+constexpr zf::t_size g_temp_mem_arena_size = zf::Megabytes(8);
+
 int main(const int arg_cnt, const char* const* const args_raw) {
     const zf::s_array_rdonly<const char*> args = {args_raw, arg_cnt};
 
@@ -12,33 +14,26 @@ int main(const int arg_cnt, const char* const* const args_raw) {
 
     zf::s_mem_arena temp_mem_arena;
 
-    if (!zf::AllocMemArena(zf::Megabytes(8), temp_mem_arena)) {
+    if (!zf::AllocMemArena(g_temp_mem_arena_size, temp_mem_arena)) {
         ZF_LOG_ERROR("Failed to initialise temporary memory arena!");
         return EXIT_FAILURE;
     }
 
-    const zf::t_b8 success = [instrs_json_file_path, &temp_mem_arena]() {
-        zf::s_str instrs_json;
+    ZF_DEFER({ zf::FreeMemArena(temp_mem_arena); });
 
-        if (!zf::LoadFileContentsAsStr(temp_mem_arena, instrs_json_file_path, instrs_json)) {
-            ZF_LOG_ERROR("Failed to load contents of asset packing instructions JSON file \"%s\"!", zf::StrRaw(instrs_json_file_path));
-            return false;
-        }
+    zf::s_str instrs_json;
 
-        if (!zf::PackAssets(instrs_json, temp_mem_arena)) {
-            ZF_LOG_ERROR("Failed to pack assets!");
-            return false;
-        }
-
-        return true;
-    }();
-
-    zf::FreeMemArena(temp_mem_arena);
-
-    if (success) {
-        ZF_LOG_SUCCESS("Asset packing completed!");
-        return EXIT_SUCCESS;
-    } else {
+    if (!zf::LoadFileContentsAsStr(temp_mem_arena, instrs_json_file_path, instrs_json)) {
+        ZF_LOG_ERROR("Failed to load contents of asset packing instructions JSON file \"%s\"!", zf::StrRaw(instrs_json_file_path));
         return EXIT_FAILURE;
     }
+
+    if (!zf::PackAssets(instrs_json, temp_mem_arena)) {
+        ZF_LOG_ERROR("Failed to pack assets!");
+        return EXIT_FAILURE;
+    }
+
+    ZF_LOG_SUCCESS("Asset packing completed!");
+
+    return EXIT_SUCCESS;
 }

@@ -14,31 +14,27 @@ namespace zf {
             return false;
         }
 
-        const t_b8 success = [&decoder, &mem_arena, &o_snd_meta, &o_snd_pcm]() {
-            ma_uint64 frame_cnt;
+        ZF_DEFER({ ma_decoder_uninit(&decoder); });
 
-            if (ma_decoder_get_length_in_pcm_frames(&decoder, &frame_cnt) != MA_SUCCESS) {
-                return false;
-            }
+        ma_uint64 frame_cnt;
 
-            o_snd_meta.channel_cnt = static_cast<t_s32>(decoder.outputChannels);
-            o_snd_meta.sample_rate = static_cast<t_s32>(decoder.outputSampleRate);
-            o_snd_meta.frame_cnt = static_cast<t_s64>(frame_cnt);
+        if (ma_decoder_get_length_in_pcm_frames(&decoder, &frame_cnt) != MA_SUCCESS) {
+            return false;
+        }
 
-            if (!MakeArray(mem_arena, CalcSampleCount(o_snd_meta), o_snd_pcm)) {
-                return false;
-            }
+        o_snd_meta.channel_cnt = static_cast<t_s32>(decoder.outputChannels);
+        o_snd_meta.sample_rate = static_cast<t_s32>(decoder.outputSampleRate);
+        o_snd_meta.frame_cnt = static_cast<t_s64>(frame_cnt);
 
-            if (ma_decoder_read_pcm_frames(&decoder, o_snd_pcm.buf_raw, frame_cnt, nullptr) != MA_SUCCESS) {
-                return false;
-            }
+        if (!MakeArray(mem_arena, CalcSampleCount(o_snd_meta), o_snd_pcm)) {
+            return false;
+        }
 
-            return true;
-        }();
+        if (ma_decoder_read_pcm_frames(&decoder, o_snd_pcm.buf_raw, frame_cnt, nullptr) != MA_SUCCESS) {
+            return false;
+        }
 
-        ma_decoder_uninit(&decoder);
-
-        return success;
+        return true;
     }
 
     t_b8 PackSound(const s_sound_data_rdonly& snd_data, const s_str_rdonly file_path, s_mem_arena& temp_mem_arena) {
@@ -54,21 +50,17 @@ namespace zf {
             return false;
         }
 
-        const t_b8 success = [fs, &snd_data]() {
-            if (!WriteItemToFile(fs, snd_data.meta)) {
-                return false;
-            }
+        ZF_DEFER({ CloseFile(fs); });
 
-            if (WriteItemArrayToFile(fs, snd_data.pcm) < snd_data.pcm.len) {
-                return false;
-            }
+        if (!WriteItemToFile(fs, snd_data.meta)) {
+            return false;
+        }
 
-            return true;
-        }();
+        if (WriteItemArrayToFile(fs, snd_data.pcm) < snd_data.pcm.len) {
+            return false;
+        }
 
-        CloseFile(fs);
-
-        return success;
+        return true;
     }
 
     t_b8 UnpackSound(const s_str_rdonly file_path, s_mem_arena& mem_arena, s_sound_data& o_snd_data) {
@@ -80,24 +72,20 @@ namespace zf {
             return false;
         }
 
-        const t_b8 success = [fs, &mem_arena, &o_snd_data]() {
-            if (!ReadItemFromFile(fs, o_snd_data.meta)) {
-                return false;
-            }
+        ZF_DEFER({ CloseFile(fs); });
 
-            if (!MakeArray(mem_arena, CalcSampleCount(o_snd_data.meta), o_snd_data.pcm)) {
-                return false;
-            }
+        if (!ReadItemFromFile(fs, o_snd_data.meta)) {
+            return false;
+        }
 
-            if (ReadItemArrayFromFile(fs, o_snd_data.pcm) < o_snd_data.pcm.len) {
-                return false;
-            }
+        if (!MakeArray(mem_arena, CalcSampleCount(o_snd_data.meta), o_snd_data.pcm)) {
+            return false;
+        }
 
-            return true;
-        }();
+        if (ReadItemArrayFromFile(fs, o_snd_data.pcm) < o_snd_data.pcm.len) {
+            return false;
+        }
 
-        CloseFile(fs);
-
-        return success;
+        return true;
     }
 }

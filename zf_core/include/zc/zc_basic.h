@@ -1,6 +1,7 @@
 #pragma once
 
 #include <climits>
+#include <type_traits>
 
 namespace zf {
 #ifdef _WIN32
@@ -44,8 +45,7 @@ namespace zf {
 #define ZF_CONCAT_IMPL(a, b) a##b
 #define ZF_CONCAT(a, b) ZF_CONCAT_IMPL(a, b)
 
-#define ZF_DEFER(x) auto ZF_CONCAT(p_defer_, ZF_CONCAT(l, __LINE__)) = zf::p_s_defer([&]() {x;})
-#define ZF_DEFER_ML(x) auto ZF_CONCAT(p_defer_, ZF_CONCAT(l, __LINE__)) = zf::p_s_defer([&]() x)
+#define ZF_DEFER(x) auto ZF_CONCAT(p_defer_, ZF_CONCAT(l, __LINE__)) = zf::p_s_defer([&]() x)
 
     static_assert(CHAR_BIT == 8);
 

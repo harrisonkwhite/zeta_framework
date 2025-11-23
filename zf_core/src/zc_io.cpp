@@ -63,23 +63,19 @@ namespace zf {
             return false;
         }
 
-        const t_b8 success = [&o_contents, &mem_arena, include_terminating_byte, &fs]() {
-            const t_size file_size = CalcFileSize(fs);
+        ZF_DEFER({ CloseFile(fs); });
 
-            if (!MakeArray(mem_arena, include_terminating_byte ? file_size + 1 : file_size, o_contents)) {
-                return false;
-            }
+        const t_size file_size = CalcFileSize(fs);
 
-            if (ReadItemArrayFromFile(fs, o_contents) < file_size) {
-                return false;
-            }
+        if (!MakeArray(mem_arena, include_terminating_byte ? file_size + 1 : file_size, o_contents)) {
+            return false;
+        }
 
-            return true;
-        }();
+        if (ReadItemArrayFromFile(fs, o_contents) < file_size) {
+            return false;
+        }
 
-        CloseFile(fs);
-
-        return success;
+        return true;
     }
 
     t_b8 CreateDirectory(const s_str_rdonly path) {
@@ -117,6 +113,8 @@ namespace zf {
 
     t_b8 CreateDirectoryAndParents(const s_str_rdonly path, s_mem_arena& temp_mem_arena) {
         ZF_ASSERT(IsStrTerminated(path));
+
+        ZF_DEFER_MEM_ARENA_REWIND(temp_mem_arena);
 
         // @speed: Ideally we'd start at the end of the path and move back.
 

@@ -25,7 +25,7 @@ namespace zf {
             return false;
         }
 
-        ZF_DEFER(FreeMemArena(mem_arena));
+        ZF_DEFER({ FreeMemArena(mem_arena); });
 
         s_mem_arena temp_mem_arena;
 
@@ -40,7 +40,7 @@ namespace zf {
             return false;
         }
 
-        ZF_DEFER(ReleaseWindow());
+        ZF_DEFER({ ReleaseWindow(); });
 
         // Initialise the GFX resource arena.
         gfx::s_resource_arena gfx_res_arena;
@@ -50,7 +50,7 @@ namespace zf {
             return false;
         }
 
-        ZF_DEFER(gfx::ReleaseResources(gfx_res_arena));
+        ZF_DEFER({ gfx::ReleaseResources(gfx_res_arena); });
 
         // Initialise the rendering basis.
         s_rendering_basis rendering_basis;
@@ -66,7 +66,7 @@ namespace zf {
             return false;
         }
 
-        ZF_DEFER(audio::ShutdownSys());
+        ZF_DEFER({ audio::ShutdownSys(); });
 
         // Initialise developer memory.
         void* dev_mem = nullptr;
@@ -95,7 +95,7 @@ namespace zf {
             }
         }
 
-        ZF_DEFER_ML({
+        ZF_DEFER({
             if (info.clean_func) {
                 info.clean_func(dev_mem);
             }

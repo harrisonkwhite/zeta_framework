@@ -8,24 +8,33 @@ namespace zf {
     t_b8 LoadRGBATextureDataFromRaw(const s_str_rdonly file_path, s_mem_arena& mem_arena, s_rgba_texture_data& o_tex_data) {
         ZF_ASSERT(IsStrTerminated(file_path));
 
-        t_u8* const stb_px_data = stbi_load(StrRaw(file_path), &o_tex_data.size_in_pxs.x, &o_tex_data.size_in_pxs.y, nullptr, 4);
+        const t_size mem_arena_begin_offs = mem_arena.offs;
 
-        if (!stb_px_data) {
-            return false;
+        const auto success = [file_path, &mem_arena, &o_tex_data]() {
+            t_u8* const stb_px_data = stbi_load(StrRaw(file_path), &o_tex_data.size_in_pxs.x, &o_tex_data.size_in_pxs.y, nullptr, 4);
+
+            if (!stb_px_data) {
+                return false;
+            }
+
+            ZF_DEFER({ stbi_image_free(stb_px_data); });
+
+            const s_array_rdonly<t_u8> stb_px_data_arr = {stb_px_data, 4 * o_tex_data.size_in_pxs.x * o_tex_data.size_in_pxs.y};
+
+            if (!MakeArray(mem_arena, 4 * o_tex_data.size_in_pxs.x * o_tex_data.size_in_pxs.y, o_tex_data.px_data)) {
+                return false;
+            }
+
+            Copy(o_tex_data.px_data, stb_px_data_arr);
+
+            return true;
+        }();
+
+        if (!success) {
+            RewindMemArena(mem_arena, mem_arena_begin_offs);
         }
 
-        const s_array_rdonly<t_u8> stb_px_data_arr = {stb_px_data, 4 * o_tex_data.size_in_pxs.x * o_tex_data.size_in_pxs.y};
-
-        if (!MakeArray(mem_arena, 4 * o_tex_data.size_in_pxs.x * o_tex_data.size_in_pxs.y, o_tex_data.px_data)) {
-            stbi_image_free(stb_px_data);
-            return false;
-        }
-
-        Copy(o_tex_data.px_data, stb_px_data_arr);
-
-        stbi_image_free(stb_px_data);
-
-        return true;
+        return success;
     }
 
     t_b8 PackTexture(const s_rgba_texture_data_rdonly& tex_data, const s_str_rdonly file_path, s_mem_arena& temp_mem_arena) {
@@ -41,21 +50,17 @@ namespace zf {
             return false;
         }
 
-        const t_b8 success = [fs, &tex_data]() {
-            if (!WriteItemToFile(fs, tex_data.size_in_pxs)) {
-                return false;
-            }
+        ZF_DEFER({ CloseFile(fs); });
 
-            if (WriteItemArrayToFile(fs, tex_data.px_data) < tex_data.px_data.len) {
-                return false;
-            }
+        if (!WriteItemToFile(fs, tex_data.size_in_pxs)) {
+            return false;
+        }
 
-            return true;
-        }();
+        if (WriteItemArrayToFile(fs, tex_data.px_data) < tex_data.px_data.len) {
+            return false;
+        }
 
-        CloseFile(fs);
-
-        return success;
+        return true;
     }
 
     t_b8 UnpackTexture(const s_str_rdonly file_path, s_mem_arena& mem_arena, s_rgba_texture_data& o_tex_data) {
@@ -67,25 +72,21 @@ namespace zf {
             return false;
         }
 
-        const t_b8 success = [fs, &mem_arena, &o_tex_data]() {
-            if (!ReadItemFromFile(fs, o_tex_data.size_in_pxs)) {
-                return false;
-            }
+        ZF_DEFER({ CloseFile(fs); });
 
-            if (!MakeArray(mem_arena, 4 * o_tex_data.size_in_pxs.x * o_tex_data.size_in_pxs.y, o_tex_data.px_data)) {
-                return false;
-            }
+        if (!ReadItemFromFile(fs, o_tex_data.size_in_pxs)) {
+            return false;
+        }
 
-            if (ReadItemArrayFromFile(fs, o_tex_data.px_data) < o_tex_data.px_data.len) {
-                return false;
-            }
+        if (!MakeArray(mem_arena, 4 * o_tex_data.size_in_pxs.x * o_tex_data.size_in_pxs.y, o_tex_data.px_data)) {
+            return false;
+        }
 
-            return true;
-        }();
+        if (ReadItemArrayFromFile(fs, o_tex_data.px_data) < o_tex_data.px_data.len) {
+            return false;
+        }
 
-        CloseFile(fs);
-
-        return success;
+        return true;
     }
 
 
