@@ -628,4 +628,34 @@ namespace zf {
 
         return MakeArray(mem_arena, BitsToBytes(bit_cnt), o_bv.bytes);
     }
+
+    t_b8 SerializeBitVector(s_byte_stream_write& bs, const s_bit_vector_rdonly bv) {
+        if (!SerializeItem(bs, bv.bit_cnt)) {
+            return false;
+        }
+
+        const auto bytes_src = Slice(bv.bytes, 0, BitsToBytes(bv.bit_cnt));
+
+        if (!SerializeItems(bs, bytes_src)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    t_b8 DeserializeBitVector(s_mem_arena& mem_arena, s_byte_stream_read& bs, s_bit_vector& o_bv) {
+        if (!DeserializeItem(bs, o_bv.bit_cnt)) {
+            return false;
+        }
+
+        if (!MakeArray(mem_arena, BitsToBytes(o_bv.bit_cnt), o_bv.bytes)) {
+            return false;
+        }
+
+        if (!DeserializeItems(bs, o_bv.bytes, o_bv.bytes.len)) {
+            return false;
+        }
+
+        return true;
+    }
 }
