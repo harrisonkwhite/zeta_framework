@@ -142,7 +142,7 @@ namespace zf {
     }
 
     template<c_activity_array tp_type>
-    t_b8 SerializeActivityArray(s_byte_stream_write& bs, tp_type& aa) {
+    [[nodiscard]] t_b8 SerializeActivityArray(s_byte_stream_write& bs, tp_type& aa) {
         if (!SerializeArray(bs, aa.slots)) {
             return false;
         }
@@ -155,7 +155,7 @@ namespace zf {
     }
 
     template<typename tp_type>
-    t_b8 DeserializeActivityArray(s_mem_arena& mem_arena, s_byte_stream_read& bs, s_activity_array_rdonly<tp_type>& o_aa) {
+    [[nodiscard]] t_b8 DeserializeActivityArray(s_mem_arena& mem_arena, s_byte_stream_read& bs, s_activity_array_rdonly<tp_type>& o_aa) {
         if (!DeserializeArray(mem_arena, bs, o_aa.slots)) {
             return false;
         }

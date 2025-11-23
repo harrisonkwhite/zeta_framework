@@ -5,6 +5,15 @@
 #include <stb_truetype.h>
 
 namespace zf {
+    const t_hash_func<s_codepoint_pair> g_codepoint_pair_hash_func = [](const s_codepoint_pair& pair) {
+        // Combine the 32-bit pairs into a single 64-bit integer and mask out the sign bit.
+        return ((static_cast<t_size>(pair.a) << 32) & pair.b) & 0x7FFFFFFFFFFFFFFF;
+    };
+
+    const t_bin_comparator<s_codepoint_pair> g_codepoint_pair_comparator = [](const s_codepoint_pair& pa, const s_codepoint_pair& pb) {
+        return pa.a == pb.a && pa.b == pb.b;
+    };
+
     t_b8 LoadRGBATextureDataFromRaw(const s_str_rdonly file_path, s_mem_arena& mem_arena, s_rgba_texture_data& o_tex_data) {
         ZF_ASSERT(IsStrTerminated(file_path));
 
@@ -202,16 +211,7 @@ namespace zf {
                 return res;
             }();
 
-            const auto codepoint_pair_hash_func = [](const s_codepoint_pair& pair) {
-                // Combine the 32-bit pairs into a single 64-bit integer and mask out the sign bit.
-                return ((static_cast<t_size>(pair.a) << 32) & pair.b) & 0x7FFFFFFFFFFFFFFF;
-            };
-
-            const auto codepoint_pair_comparator = [](const s_codepoint_pair& pa, const s_codepoint_pair& pb) {
-                return pa.a == pb.a && pa.b == pb.b;
-            };
-
-            if (!MakeHashMap<s_codepoint_pair, t_s32>(mem_arena, codepoint_pair_hash_func, o_font.codepoint_pairs_to_kernings, codepoint_pair_comparator, kern_cnt, kern_cnt)) {
+            if (!MakeHashMap<s_codepoint_pair, t_s32>(mem_arena, g_codepoint_pair_hash_func, o_font.codepoint_pairs_to_kernings, g_codepoint_pair_comparator, kern_cnt, kern_cnt)) {
                 return false;
             }
 
@@ -274,6 +274,57 @@ namespace zf {
         return success;
     }
 
+    t_b8 SerializeFont(s_byte_stream_write& bs, const s_font& font) {
+        if (!SerializeItem(bs, font.line_height)) {
+            return false;
+        }
+
+        if (!SerializeHashMap(bs, font.codepoints_to_glyph_infos)) {
+            return false;
+        }
+
+        if (!SerializeHashMap(bs, font.codepoint_pairs_to_kernings)) {
+            return false;
+        }
+
+        if (!SerializeArray(bs, font.atlases)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    t_b8 DeserializeFont(s_mem_arena& mem_arena, s_byte_stream_read& bs, s_font& o_font) {
+        const t_size mem_arena_begin_offs = mem_arena.offs;
+
+        const t_b8 success = [&]() {
+            if (!DeserializeItem(bs, o_font.line_height)) {
+                return false;
+            }
+
+            if (!DeserializeHashMap(mem_arena, bs, g_s32_hash_func, DefaultBinComparator, o_font.codepoints_to_glyph_infos)) {
+                return false;
+            }
+
+            if (!DeserializeHashMap(mem_arena, bs, g_codepoint_pair_hash_func, g_codepoint_pair_comparator, o_font.codepoint_pairs_to_kernings)) {
+                return false;
+            }
+
+            if (!DeserializeArray(mem_arena, bs, o_font.atlases)) {
+                return false;
+            }
+
+            return true;
+        }();
+
+        if (!success) {
+            RewindMemArena(mem_arena, mem_arena_begin_offs);
+        }
+
+        return success;
+    }
+
+#if 0
     t_b8 PackFont(const s_font& font, const s_str_rdonly file_path, s_mem_arena& temp_mem_arena) {
         ZF_ASSERT(IsStrTerminated(file_path));
 
@@ -337,4 +388,5 @@ namespace zf {
 
         return true;
     }
+#endif
 }

@@ -243,7 +243,7 @@ namespace zf {
 
     // This DOES NOT serialize the hash function pointer and binary comparator function pointer!
     template<typename tp_key_type, typename tp_val_type>
-    t_b8 SerializeHashMap(s_byte_stream_write& bs, const s_hash_map<tp_key_type, tp_val_type>& hm) {
+    [[nodiscard]] t_b8 SerializeHashMap(s_byte_stream_write& bs, const s_hash_map<tp_key_type, tp_val_type>& hm) {
         if (!SerializeItem(bs, hm.kv_pair_cnt)) {
             return false;
         }
@@ -272,7 +272,7 @@ namespace zf {
     }
 
     template<typename tp_key_type, typename tp_val_type>
-    t_b8 DeserializeHashMap(s_mem_arena& mem_arena, s_byte_stream_read& bs, const t_hash_func<tp_key_type> hash_func, const t_bin_comparator<tp_key_type> key_comparator, s_hash_map<tp_key_type, tp_val_type>& o_hm) {
+    [[nodiscard]] t_b8 DeserializeHashMap(s_mem_arena& mem_arena, s_byte_stream_read& bs, const t_hash_func<tp_key_type> hash_func, const t_bin_comparator<tp_key_type> key_comparator, s_hash_map<tp_key_type, tp_val_type>& o_hm) {
         const t_size mem_arena_begin_offs = mem_arena.offs;
 
         const t_b8 success = [&]() {
@@ -281,7 +281,7 @@ namespace zf {
                 .key_comparator = key_comparator
             };
 
-            if (!DeserializeItem(mem_arena, bs, o_hm.kv_pair_cnt)) {
+            if (!DeserializeItem(bs, o_hm.kv_pair_cnt)) {
                 return false;
             }
 
