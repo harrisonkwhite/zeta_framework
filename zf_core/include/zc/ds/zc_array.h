@@ -197,6 +197,8 @@ namespace zf {
 
     template<c_array_mut tp_dest_type, c_array tp_src_type>
     void Copy(tp_dest_type& dest, tp_src_type& src) {
+        static_assert(s_is_same<typename tp_dest_type::t_elem, typename tp_src_type::t_elem>::g_val);
+
         ZF_ASSERT(ArrayLen(dest) >= ArrayLen(src));
 
         for (t_size i = 0; i < ArrayLen(src); i++) {
@@ -206,6 +208,8 @@ namespace zf {
 
     template<c_array_mut tp_dest_type, c_array tp_src_type>
     void CopyReverse(tp_dest_type& dest, tp_src_type& src) {
+        static_assert(s_is_same<typename tp_dest_type::t_elem, typename tp_src_type::t_elem>::g_val);
+
         ZF_ASSERT(ArrayLen(dest) >= ArrayLen(src));
 
         for (t_size i = ArrayLen(src) - 1; i >= 0; i--) {
@@ -280,12 +284,22 @@ namespace zf {
     }
 
     template<typename tp_type>
+    constexpr s_array<t_u8> ToBytes(tp_type& item) {
+        return {reinterpret_cast<t_u8*>(item), ZF_SIZE_OF(item)};
+    }
+
+    template<typename tp_type>
     constexpr s_array_rdonly<t_u8> ToBytes(const tp_type& item) {
         return {reinterpret_cast<const t_u8*>(item), ZF_SIZE_OF(item)};
     }
 
-    template<typename tp_type>
-    constexpr s_array<t_u8> ToBytes(tp_type& item) {
-        return {reinterpret_cast<t_u8*>(item), ZF_SIZE_OF(item)};
+    template<c_array_mut tp_type>
+    constexpr s_array<t_u8> ToByteArray(tp_type& arr) {
+        return {reinterpret_cast<t_u8*>(ArrayRaw(arr)), ArraySizeInBytes(arr)};
+    }
+
+    template<c_array_rdonly tp_type>
+    constexpr s_array_rdonly<t_u8> ToByteArray(tp_type& arr) {
+        return {reinterpret_cast<const t_u8*>(ArrayRaw(arr)), ArraySizeInBytes(arr)};
     }
 }

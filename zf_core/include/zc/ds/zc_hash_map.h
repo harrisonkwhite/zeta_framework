@@ -38,11 +38,14 @@ namespace zf {
 
         s_array<t_size> backing_store_indexes; // These are what the hash function initially maps to after modulo. They are indexes into "slots" (linked-list nodes) in the backing store below.
 
-        // This is where all the key-value pairs are actually stored, it's basically a single buffer containing a bunch of linked lists.
+        // This is where all the key-value pairs are actually stored.
         struct {
+            // Keeping all of these in distinct arrays to not waste space with padding had they been put in a struct.
             s_array<tp_key_type> keys;
             s_array<tp_val_type> vals;
-            s_array<t_size> next_indexes;
+            s_array<t_size> next_indexes; // Like the standard "next" pointer of a linked list node, but for an index specific to this backing store.
+
+            // Indicates what slots or "nodes" are in use.
             s_bit_vector usage;
         } backing_store;
     };
