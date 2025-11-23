@@ -9,10 +9,7 @@ namespace zf {
 
     struct s_game {
         s_mem_arena perm_mem_arena; // The memory in here exists for the lifetime of the program, it does not get reset.
-        s_mem_arena temp_mem_arena; // While the memory here also exists for the program lifetime, it gets reset after game initialisation and after every frame. Useful if you just need some temporary working space.
-
         gfx::s_resource_arena gfx_res_arena; // For GFX resources existing for the lifetime of the game.
-
         void* dev_mem; // Memory optionally reserved by the developer for their own use, accessible in their defined functions through the provided ZF context.
     };
 
@@ -28,23 +25,21 @@ namespace zf {
         InitRNG();
 
         // Initialise memory arenas.
-        if (!MakeMemArena(game.perm_mem_arena)) {
+        if (!AllocMemArena(Megabytes(80), game.perm_mem_arena)) {
             ZF_REPORT_FAILURE();
             return false;
         }
 
         StackPush(cleanup_ops, static_cast<t_cleanup_op>([](s_game& game, const s_game_info& info) {
-            ReleaseMemArena(game.perm_mem_arena);
+            FreeMemArena(game.perm_mem_arena);
         }));
 
-        if (!MakeMemArena(game.temp_mem_arena)) {
+        s_mem_arena temp_mem_arena; // This is reset after game initialisation and after every frame. Useful as temporary working space.
+
+        if (!MakeSubMemArena(game.perm_mem_arena, Megabytes(10), temp_mem_arena)) {
             ZF_REPORT_FAILURE();
             return false;
         }
-
-        StackPush(cleanup_ops, static_cast<t_cleanup_op>([](s_game& game, const s_game_info& info) {
-            ReleaseMemArena(game.temp_mem_arena);
-        }));
 
         // Initialise the window.
         if (!InitWindow(info.window_init_size, info.window_title, info.window_flags)) {
@@ -69,7 +64,7 @@ namespace zf {
         // Initialise the rendering basis.
         s_rendering_basis rendering_basis;
 
-        if (!MakeRenderingBasis(game.gfx_res_arena, game.temp_mem_arena, rendering_basis)) {
+        if (!MakeRenderingBasis(game.gfx_res_arena, temp_mem_arena, rendering_basis)) {
             ZF_REPORT_FAILURE();
             return false;
         }
@@ -99,7 +94,7 @@ namespace zf {
             const s_game_init_context context = {
                 .dev_mem = game.dev_mem,
                 .perm_mem_arena = &game.perm_mem_arena,
-                .temp_mem_arena = &game.temp_mem_arena,
+                .temp_mem_arena = &temp_mem_arena,
                 .gfx_res_arena = &game.gfx_res_arena
             };
 
@@ -125,7 +120,7 @@ namespace zf {
         t_f64 frame_dur_accum = 0.0;
 
         while (!ShouldWindowClose()) {
-            ClearMemArena(game.temp_mem_arena);
+            RewindMemArena(temp_mem_arena, 0);
 
             const t_f64 frame_time = GetTime();
             const t_f64 frame_time_delta = frame_time - frame_time_last;
@@ -136,14 +131,14 @@ namespace zf {
 
             // Once enough time has passed (i.e. the time accumulator has reached the tick interval), run at least a single tick and update the display.
             if (frame_dur_accum >= targ_tick_interval) {
-                //audio::ProcFinishedSounds();
+                audio::ProcFinishedSounds();
 
                 // Run possibly multiple ticks.
                 do {
                     const s_game_tick_context context = {
                         .dev_mem = game.dev_mem,
                         .perm_mem_arena = &game.perm_mem_arena,
-                        .temp_mem_arena = &game.temp_mem_arena
+                        .temp_mem_arena = &temp_mem_arena
                     };
 
                     const e_game_tick_result res = info.tick_func(context);
@@ -164,7 +159,7 @@ namespace zf {
                 } while (frame_dur_accum >= targ_tick_interval);
 
                 // Perform a single render.
-                s_rendering_state* const rendering_state = PrepareRenderingPhase(game.temp_mem_arena);
+                s_rendering_state* const rendering_state = PrepareRenderingPhase(temp_mem_arena);
 
                 if (!rendering_state) {
                     ZF_REPORT_FAILURE();
@@ -180,7 +175,7 @@ namespace zf {
                     const s_game_render_context context = {
                         .dev_mem = game.dev_mem,
                         .perm_mem_arena = &game.perm_mem_arena,
-                        .temp_mem_arena = &game.temp_mem_arena,
+                        .temp_mem_arena = &temp_mem_arena,
                         .rendering_context = &rendering_context
                     };
 

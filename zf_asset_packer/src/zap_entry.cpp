@@ -12,7 +12,7 @@ int main(const int arg_cnt, const char* const* const args_raw) {
 
     zf::s_mem_arena temp_mem_arena;
 
-    if (!zf::MakeMemArena(temp_mem_arena)) {
+    if (!zf::AllocMemArena(zf::Megabytes(8), temp_mem_arena)) {
         ZF_LOG_ERROR("Failed to initialise temporary memory arena!");
         return EXIT_FAILURE;
     }
@@ -33,7 +33,7 @@ int main(const int arg_cnt, const char* const* const args_raw) {
         return true;
     }();
 
-    zf::ReleaseMemArena(temp_mem_arena);
+    zf::FreeMemArena(temp_mem_arena);
 
     if (success) {
         ZF_LOG_SUCCESS("Asset packing completed!");
