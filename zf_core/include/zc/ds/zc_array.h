@@ -158,15 +158,12 @@ namespace zf {
     t_b8 MakeArray(s_mem_arena& mem_arena, const t_size len, s_array<tp_type>& o_arr) {
         ZF_ASSERT(len > 0);
 
-        const auto buf_raw = PushToMemArena<tp_type>(mem_arena, len);
+        o_arr = {
+            .buf_raw = PushToMemArena<tp_type>(mem_arena, len),
+            .len = len
+        };
 
-        if (!buf_raw) {
-            return false;
-        }
-
-        o_arr = {buf_raw, len};
-
-        return true;
+        return o_arr.buf_raw != nullptr;
     }
 
     template<c_array tp_type>

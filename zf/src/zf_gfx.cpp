@@ -187,7 +187,7 @@ namespace zf::gfx {
         return MakeList(mem_arena, cap, o_res_arena.hdls);
     }
 
-    void ReleaseResourceArena(s_resource_arena& res_arena) {
+    void ReleaseResources(s_resource_arena& res_arena) {
         for (t_size i = 0; i < res_arena.hdls.len; i++) {
             ReleaseResource(res_arena.hdls[i]);
         }

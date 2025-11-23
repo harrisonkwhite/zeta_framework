@@ -622,14 +622,10 @@ namespace zf {
     t_b8 MakeBitVector(s_mem_arena& mem_arena, const t_size bit_cnt, s_bit_vector& o_bv) {
         ZF_ASSERT(bit_cnt > 0);
 
-        s_array<t_u8> bytes;
+        o_bv = {
+            .bit_cnt = bit_cnt
+        };
 
-        if (!MakeArray(mem_arena, BitsToBytes(bit_cnt), bytes)) {
-            return false;
-        }
-
-        o_bv = {bytes, bit_cnt};
-
-        return true;
+        return MakeArray(mem_arena, BitsToBytes(bit_cnt), o_bv.bytes);
     }
 }

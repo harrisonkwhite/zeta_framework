@@ -76,7 +76,7 @@ namespace zf::gfx {
     void ReleaseResource(const s_resource_handle& hdl);
 
     [[nodiscard]] t_b8 MakeResourceArena(s_mem_arena& mem_arena, const t_size cap, s_resource_arena& o_res_arena);
-    void ReleaseResourceArena(s_resource_arena& res_arena);
+    void ReleaseResources(s_resource_arena& res_arena);
 
     s_resource_handle MakeMesh(s_resource_arena& res_arena, const t_f32* const verts_raw, const t_size verts_len, const s_array_rdonly<t_u16> elems, const s_array_rdonly<t_s32> vert_attr_lens); // You might not want to provide vertices to start with, and only the count - passing nullptr in for verts_raw allows this.
     s_resource_handle MakeShaderProg(s_resource_arena& res_arena, const s_str_rdonly vert_src, const s_str_rdonly frag_src, s_mem_arena& temp_mem_arena);

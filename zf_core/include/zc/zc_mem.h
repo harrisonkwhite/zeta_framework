@@ -50,8 +50,7 @@ namespace zf {
     [[nodiscard]] inline t_b8 MakeSubMemArena(s_mem_arena& parent_ma, const t_size size, s_mem_arena& o_ma) {
         o_ma = {
             .buf = PushToMemArena(parent_ma, size, 1),
-            .size = size,
-            .offs = 0
+            .size = size
         };
 
         return o_ma.buf != nullptr;

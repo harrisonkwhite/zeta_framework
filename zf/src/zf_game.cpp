@@ -8,7 +8,7 @@ namespace zf {
     constexpr t_s32 g_gfx_resource_arena_cap = 1024;
 
     struct s_game {
-        s_mem_arena perm_mem_arena; // The memory in here exists for the lifetime of the program, it does not get reset.
+        s_mem_arena mem_arena; // The memory in here exists for the lifetime of the program, it does not get reset.
         gfx::s_resource_arena gfx_res_arena; // For GFX resources existing for the lifetime of the game.
         void* dev_mem; // Memory optionally reserved by the developer for their own use, accessible in their defined functions through the provided ZF context.
     };
@@ -24,19 +24,20 @@ namespace zf {
 
         InitRNG();
 
-        // Initialise memory arenas.
-        if (!AllocMemArena(Megabytes(80), game.perm_mem_arena)) {
+        // Set up memory arenas.
+        if (!AllocMemArena(info.mem_arena_size, game.mem_arena)) {
             ZF_REPORT_FAILURE();
             return false;
         }
 
         StackPush(cleanup_ops, static_cast<t_cleanup_op>([](s_game& game, const s_game_info& info) {
-            FreeMemArena(game.perm_mem_arena);
+            FreeMemArena(game.mem_arena);
         }));
 
         s_mem_arena temp_mem_arena; // This is reset after game initialisation and after every frame. Useful as temporary working space.
+        // @todo: Should this be distinct from tick arena?
 
-        if (!MakeSubMemArena(game.perm_mem_arena, Megabytes(10), temp_mem_arena)) {
+        if (!MakeSubMemArena(game.mem_arena, info.temp_mem_arena_size, temp_mem_arena)) {
             ZF_REPORT_FAILURE();
             return false;
         }
@@ -51,14 +52,14 @@ namespace zf {
             ReleaseWindow();
         }));
 
-        // Initialise the permanent GFX resource arena.
-        if (!gfx::MakeResourceArena(game.perm_mem_arena, g_gfx_resource_arena_cap, game.gfx_res_arena)) {
+        // Initialise the GFX resource arena.
+        if (!gfx::MakeResourceArena(game.mem_arena, g_gfx_resource_arena_cap, game.gfx_res_arena)) {
             ZF_REPORT_FAILURE();
             return false;
         }
 
         StackPush(cleanup_ops, static_cast<t_cleanup_op>([](s_game& game, const s_game_info& info) {
-            gfx::ReleaseResourceArena(game.gfx_res_arena);
+            gfx::ReleaseResources(game.gfx_res_arena);
         }));
 
         // Initialise the rendering basis.
@@ -81,7 +82,7 @@ namespace zf {
 
         // Initialise developer memory.
         if (info.dev_mem_size > 0) {
-            game.dev_mem = PushToMemArena(game.perm_mem_arena, info.dev_mem_size, info.dev_mem_alignment);
+            game.dev_mem = PushToMemArena(game.mem_arena, info.dev_mem_size, info.dev_mem_alignment);
 
             if (!game.dev_mem) {
                 ZF_REPORT_FAILURE();
@@ -93,7 +94,7 @@ namespace zf {
         {
             const s_game_init_context context = {
                 .dev_mem = game.dev_mem,
-                .perm_mem_arena = &game.perm_mem_arena,
+                .mem_arena = &game.mem_arena,
                 .temp_mem_arena = &temp_mem_arena,
                 .gfx_res_arena = &game.gfx_res_arena
             };
@@ -137,7 +138,7 @@ namespace zf {
                 do {
                     const s_game_tick_context context = {
                         .dev_mem = game.dev_mem,
-                        .perm_mem_arena = &game.perm_mem_arena,
+                        .mem_arena = &game.mem_arena,
                         .temp_mem_arena = &temp_mem_arena
                     };
 
@@ -174,7 +175,7 @@ namespace zf {
                 {
                     const s_game_render_context context = {
                         .dev_mem = game.dev_mem,
-                        .perm_mem_arena = &game.perm_mem_arena,
+                        .mem_arena = &game.mem_arena,
                         .temp_mem_arena = &temp_mem_arena,
                         .rendering_context = &rendering_context
                     };

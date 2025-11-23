@@ -93,21 +93,13 @@ namespace zf {
     }
 
     template<typename tp_type>
-    t_b8 MakeQueue(s_mem_arena& mem_arena, const t_size cap, s_queue<tp_type>& o_queue, const t_size len = 0) {
+    [[nodiscard]] t_b8 MakeQueue(s_mem_arena& mem_arena, const t_size cap, s_queue<tp_type>& o_queue, const t_size len = 0) {
         ZF_ASSERT(cap > 0 && len >= 0 && len <= cap);
 
-        s_array<tp_type> backing_arr;
-
-        if (!MakeArray(mem_arena, cap, backing_arr)) {
-            return false;
-        }
-
         o_queue = {
-            .backing_arr = backing_arr,
-            .begin_index = 0,
             .len = len
         };
 
-        return true;
+        return MakeArray(mem_arena, cap, o_queue.backing_arr);
     }
 }

@@ -8,7 +8,7 @@ namespace zf {
     struct s_game_init_context {
         void* dev_mem;
 
-        s_mem_arena* perm_mem_arena;
+        s_mem_arena* mem_arena;
         s_mem_arena* temp_mem_arena;
 
         gfx::s_resource_arena* gfx_res_arena;
@@ -23,37 +23,45 @@ namespace zf {
     struct s_game_tick_context {
         void* dev_mem;
 
-        s_mem_arena* perm_mem_arena;
+        s_mem_arena* mem_arena;
         s_mem_arena* temp_mem_arena;
     };
 
     struct s_game_render_context {
         void* dev_mem;
 
-        s_mem_arena* perm_mem_arena;
+        s_mem_arena* mem_arena;
         s_mem_arena* temp_mem_arena;
 
         const s_rendering_context* rendering_context;
     };
 
     struct s_game_info {
+        t_size mem_arena_size;
+        t_size temp_mem_arena_size;
+
         s_v2<t_s32> window_init_size;
         s_str_rdonly window_title;
         e_window_flags window_flags;
 
-        t_size dev_mem_size; // How much memory should be allocated in the permanent arena for your use? This might be the size of a specific struct, for example.
-        t_size dev_mem_alignment; // The alignment of the above memory.
+        t_size dev_mem_size;
+        t_size dev_mem_alignment;
 
         t_s32 targ_ticks_per_sec;
 
         // Below are pointers to functions that the framework will call for you. The provided struct pointers expose parts of the framework state for you to work with.
-        t_b8 (* init_func)(const s_game_init_context& zf_context); // Called as one of the last steps of the game initialisation phase.
+        t_b8 (* init_func)(const s_game_init_context& zf_context); // Called once as one of the last steps of the game initialisation phase.
         e_game_tick_result (* tick_func)(const s_game_tick_context& zf_context); // Called once every tick (which can occur multiple times a frame).
-        t_b8 (* render_func)(const s_game_render_context& zf_context); // Called after all ticks have been run.
+        t_b8 (* render_func)(const s_game_render_context& zf_context); // Called after all ticks of the frame have been run.
         void (* clean_func)(void* const dev_mem); // Optional. Called when the game ends (including if it ends in error). This is not called if your initialisation function failed or hasn't yet been called.
     };
 
     inline void AssertGameInfoValidity(const s_game_info& info) {
+        ZF_ASSERT(info.mem_arena_size > 0);
+        ZF_ASSERT(info.temp_mem_arena_size > 0);
+
+        ZF_ASSERT(info.window_init_size.x > 0 && info.window_init_size.y > 0);
+
         ZF_ASSERT(info.window_init_size.x > 0 && info.window_init_size.y > 0);
         ZF_ASSERT(IsStrTerminated(info.window_title));
 
@@ -67,6 +75,5 @@ namespace zf {
         ZF_ASSERT(info.render_func);
     }
 
-    // @idea: Give ZF core a distinct namespace. If something cannot run outside the call stack of this RunGame function, it should be in this ZF engine library.
     t_b8 RunGame(const s_game_info& info);
 }
