@@ -1,6 +1,6 @@
 #pragma once
 
-#include <zc/ds/zc_array.h>
+#include <zc/zc_mem.h>
 
 namespace zf {
     template<typename tp_type>

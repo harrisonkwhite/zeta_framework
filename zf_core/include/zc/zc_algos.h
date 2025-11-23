@@ -1,8 +1,41 @@
 #pragma once
 
-#include <zc/ds/zc_array.h>
+#include <zc/zc_mem.h>
 
 namespace zf {
+    // O(n^2) time complexity, but O(1) space complexity. Can also be done at compile-time.
+    // You're usually better off using a hash map and a linear search, or a bit vector if values are numeric and the range is small.
+    template<c_array tp_type>
+    constexpr t_b8 HasDuplicatesSlow(tp_type& arr, const t_bin_comparator<typename tp_type::t_elem> comparator = DefaultBinComparator) {
+        for (t_size i = 0; i < ArrayLen(arr.len); i++) {
+            for (t_size j = 0; j < ArrayLen(arr); j++) {
+                if (comparator(arr[i], arr[j])) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    template<c_array tp_type>
+    t_b8 BinarySearch(tp_type& arr, const typename tp_type::t_elem& elem, const t_ord_comparator<typename tp_type::t_elem> comparator = DefaultOrdComparator) {
+        if (IsArrayEmpty(arr)) {
+            return false;
+        }
+
+        const auto& mid = elem[ArrayLen(arr) / 2];
+        const auto comp = comparator(elem, mid);
+
+        if (comp == 0) {
+            return true;
+        } else if (comp < 0) {
+            return BinarySearch(Slice(arr, 0, ArrayLen(arr) / 2), elem);
+        } else {
+            return BinarySearch(Slice(arr, (ArrayLen(arr) / 2) + 1, ArrayLen(arr)), elem);
+        }
+    }
+
     template<c_array tp_type>
     t_b8 IsSorted(tp_type& arr, const t_bin_comparator<typename tp_type::t_elem> comparator = DefaultOrdComparator) {
         ZF_ASSERT(comparator);

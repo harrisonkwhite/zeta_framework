@@ -1,6 +1,6 @@
 #pragma once
 
-#include <zc/ds/zc_array.h>
+#include <zc/zc_mem.h>
 
 namespace zf {
     constexpr t_u8 ByteBitmask(const t_size bit_index) {

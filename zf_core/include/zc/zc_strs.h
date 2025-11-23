@@ -1,7 +1,6 @@
 #pragma once
 
-#include <zc/zc_basic.h>
-#include <zc/ds/zc_array.h>
+#include <zc/zc_mem.h>
 
 namespace zf {
     constexpr t_size CountCharsUntilNull(const char* const chrs_raw) {

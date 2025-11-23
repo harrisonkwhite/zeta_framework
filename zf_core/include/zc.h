@@ -7,9 +7,8 @@
 #include <zc/zc_gfx.h>
 #include <zc/zc_io.h>
 #include <zc/zc_math.h>
-#include <zc/zc_sorting.h>
+#include <zc/zc_algos.h>
 #include <zc/zc_strs.h>
-#include <zc/ds/zc_array.h>
 #include <zc/ds/zc_bit_vector.h>
 #include <zc/ds/zc_activity_array.h>
 #include <zc/ds/zc_list.h>
