@@ -7,16 +7,9 @@
 namespace zf {
     constexpr t_s32 g_gfx_resource_arena_cap = 1024;
 
-    struct s_game {
-        s_mem_arena mem_arena; // The memory in here exists for the lifetime of the program, it does not get reset.
-        gfx::s_resource_arena gfx_res_arena; // For GFX resources existing for the lifetime of the game.
-        void* dev_mem; // Memory optionally reserved by the developer for their own use, accessible in their defined functions through the provided ZF context.
-    };
+    t_b8 RunGame(const s_game_info& info) {
+        AssertGameInfoValidity(info);
 
-    using t_cleanup_op = void (*)(s_game& game, const s_game_info& info);
-    using t_cleanup_op_stack = s_static_stack<t_cleanup_op, 6>;
-
-    static t_b8 ExecGameInitAndMainLoop(s_game& game, const s_game_info& info, t_cleanup_op_stack& cleanup_ops) {
         //
         // Initialisation
         //
@@ -25,19 +18,18 @@ namespace zf {
         InitRNG();
 
         // Set up memory arenas.
-        if (!AllocMemArena(info.mem_arena_size, game.mem_arena)) {
+        s_mem_arena mem_arena;
+
+        if (!AllocMemArena(info.mem_arena_size, mem_arena)) {
             ZF_REPORT_FAILURE();
             return false;
         }
 
-        StackPush(cleanup_ops, static_cast<t_cleanup_op>([](s_game& game, const s_game_info& info) {
-            FreeMemArena(game.mem_arena);
-        }));
+        ZF_DEFER(FreeMemArena(mem_arena));
 
-        s_mem_arena temp_mem_arena; // This is reset after game initialisation and after every frame. Useful as temporary working space.
-        // @todo: Should this be distinct from tick arena?
+        s_mem_arena temp_mem_arena;
 
-        if (!MakeSubMemArena(game.mem_arena, info.temp_mem_arena_size, temp_mem_arena)) {
+        if (!MakeSubMemArena(mem_arena, info.temp_mem_arena_size, temp_mem_arena)) {
             ZF_REPORT_FAILURE();
             return false;
         }
@@ -48,24 +40,22 @@ namespace zf {
             return false;
         }
 
-        StackPush(cleanup_ops, static_cast<t_cleanup_op>([](s_game& game, const s_game_info& info) {
-            ReleaseWindow();
-        }));
+        ZF_DEFER(ReleaseWindow());
 
         // Initialise the GFX resource arena.
-        if (!gfx::MakeResourceArena(game.mem_arena, g_gfx_resource_arena_cap, game.gfx_res_arena)) {
+        gfx::s_resource_arena gfx_res_arena;
+
+        if (!gfx::MakeResourceArena(mem_arena, g_gfx_resource_arena_cap, gfx_res_arena)) {
             ZF_REPORT_FAILURE();
             return false;
         }
 
-        StackPush(cleanup_ops, static_cast<t_cleanup_op>([](s_game& game, const s_game_info& info) {
-            gfx::ReleaseResources(game.gfx_res_arena);
-        }));
+        ZF_DEFER(gfx::ReleaseResources(gfx_res_arena));
 
         // Initialise the rendering basis.
         s_rendering_basis rendering_basis;
 
-        if (!MakeRenderingBasis(game.gfx_res_arena, temp_mem_arena, rendering_basis)) {
+        if (!MakeRenderingBasis(gfx_res_arena, temp_mem_arena, rendering_basis)) {
             ZF_REPORT_FAILURE();
             return false;
         }
@@ -76,15 +66,15 @@ namespace zf {
             return false;
         }
 
-        StackPush(cleanup_ops, static_cast<t_cleanup_op>([](s_game& game, const s_game_info& info) {
-            audio::ShutdownSys();
-        }));
+        ZF_DEFER(audio::ShutdownSys());
 
         // Initialise developer memory.
-        if (info.dev_mem_size > 0) {
-            game.dev_mem = PushToMemArena(game.mem_arena, info.dev_mem_size, info.dev_mem_alignment);
+        void* dev_mem = nullptr;
 
-            if (!game.dev_mem) {
+        if (info.dev_mem_size > 0) {
+            dev_mem = PushToMemArena(mem_arena, info.dev_mem_size, info.dev_mem_alignment);
+
+            if (!dev_mem) {
                 ZF_REPORT_FAILURE();
                 return false;
             }
@@ -93,10 +83,10 @@ namespace zf {
         // Run the developer's initialisation function.
         {
             const s_game_init_context context = {
-                .dev_mem = game.dev_mem,
-                .mem_arena = &game.mem_arena,
+                .dev_mem = dev_mem,
+                .mem_arena = &mem_arena,
                 .temp_mem_arena = &temp_mem_arena,
-                .gfx_res_arena = &game.gfx_res_arena
+                .gfx_res_arena = &gfx_res_arena
             };
 
             if (!info.init_func(context)) {
@@ -105,11 +95,11 @@ namespace zf {
             }
         }
 
-        StackPush(cleanup_ops, static_cast<t_cleanup_op>([](s_game& game, const s_game_info& info) {
+        ZF_DEFER_ML({
             if (info.clean_func) {
-                info.clean_func(game.dev_mem);
+                info.clean_func(dev_mem);
             }
-        }));
+        });
 
         // Now that everything is set up, we can show the window.
         ShowWindow();
@@ -137,8 +127,8 @@ namespace zf {
                 // Run possibly multiple ticks.
                 do {
                     const s_game_tick_context context = {
-                        .dev_mem = game.dev_mem,
-                        .mem_arena = &game.mem_arena,
+                        .dev_mem = dev_mem,
+                        .mem_arena = &mem_arena,
                         .temp_mem_arena = &temp_mem_arena
                     };
 
@@ -174,8 +164,8 @@ namespace zf {
 
                 {
                     const s_game_render_context context = {
-                        .dev_mem = game.dev_mem,
-                        .mem_arena = &game.mem_arena,
+                        .dev_mem = dev_mem,
+                        .mem_arena = &mem_arena,
                         .temp_mem_arena = &temp_mem_arena,
                         .rendering_context = &rendering_context
                     };
@@ -197,19 +187,9 @@ namespace zf {
         return true;
     }
 
+#if 0
     t_b8 RunGame(const s_game_info& info) {
         AssertGameInfoValidity(info);
-
-        s_game game = {};
-
-        t_cleanup_op_stack cleanup_ops = {};
-
-        const t_b8 success = ExecGameInitAndMainLoop(game, info, cleanup_ops);
-
-        while (!IsStackEmpty(cleanup_ops)) {
-            const t_cleanup_op op = StackPop(cleanup_ops);
-            op(game, info);
-        }
 
 #ifndef ZF_DEBUG
         if (!success) {
@@ -219,4 +199,5 @@ namespace zf {
 
         return success;
     }
+#endif
 }
