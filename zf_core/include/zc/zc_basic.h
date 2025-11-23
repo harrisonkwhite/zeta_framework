@@ -2,6 +2,7 @@
 
 #include <climits>
 
+namespace zf {
 #ifdef _WIN32
     #define ZF_PLATFORM_WINDOWS
 #endif
@@ -29,7 +30,22 @@
 #define ZF_SIZE_OF(x) static_cast<zf::t_size>(sizeof(x))
 #define ZF_SIZE_IN_BITS(x) (8 * ZF_SIZE_OF(x))
 
-namespace zf {
+    template<typename tp_func>
+    struct p_s_defer {
+        tp_func func;
+
+        p_s_defer(const tp_func f) : func(f) {}
+
+        ~p_s_defer() {
+            func();
+        }
+    };
+
+#define ZF_CONCAT_IMPL(a, b) a##b
+#define ZF_CONCAT(a, b) ZF_CONCAT_IMPL(a, b)
+
+#define ZF_DEFER(x) auto ZF_CONCAT(p_defer_, ZF_CONCAT(l, __LINE__)) = zf::p_s_defer([&]() x)
+
     static_assert(CHAR_BIT == 8);
 
     using t_s8 = signed char;

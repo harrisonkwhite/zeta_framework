@@ -64,7 +64,13 @@ void main() {
 )";
 
     static gfx::s_resource_handle MakeBatchMesh(gfx::s_resource_arena& gfx_res_arena, s_mem_arena& temp_mem_arena) {
-        const t_size verts_len = g_batch_vert_component_cnt * g_batch_slot_vert_cnt * g_batch_slot_cnt;
+        static constexpr t_size g_verts_len = g_batch_vert_component_cnt * g_batch_slot_vert_cnt * g_batch_slot_cnt;
+
+        const t_size temp_mem_arena_begin_offs = temp_mem_arena.offs;
+
+        ZF_DEFER({
+            RewindMemArena(temp_mem_arena, temp_mem_arena_begin_offs);
+        });
 
         s_array<t_u16> elems;
 
@@ -82,7 +88,7 @@ void main() {
             elems[(i * 6) + 5] = static_cast<t_u16>((i * 4) + 0);
         }
 
-        return gfx::MakeMesh(gfx_res_arena, nullptr, verts_len, elems, g_batch_vert_attr_lens);
+        return gfx::MakeMesh(gfx_res_arena, nullptr, g_verts_len, elems, g_batch_vert_attr_lens);
     }
 
     t_b8 MakeRenderingBasis(gfx::s_resource_arena& gfx_res_arena, s_mem_arena& temp_mem_arena, s_rendering_basis& o_basis) {
