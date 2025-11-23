@@ -200,37 +200,41 @@ namespace zf {
 
         const t_size mem_arena_begin_offs = mem_arena.offs;
 
-        o_um = {};
+        const auto success = [&]() {
+            o_um = {};
 
-        o_um.hash_func = hash_func;
-        o_um.key_comparator = key_comparator;
+            o_um.hash_func = hash_func;
+            o_um.key_comparator = key_comparator;
 
-        if (!MakeArray(mem_arena, immediate_cap, o_um.backing_store_indexes)) {
-            goto failure;
+            if (!MakeArray(mem_arena, immediate_cap, o_um.backing_store_indexes)) {
+                return false;
+            }
+
+            SetAllTo(o_um.backing_store_indexes, -1);
+
+            if (!MakeArray(mem_arena, kv_pair_cap, o_um.backing_store.keys)) {
+                return false;
+            }
+
+            if (!MakeArray(mem_arena, kv_pair_cap, o_um.backing_store.vals)) {
+                return false;
+            }
+
+            if (!MakeArray(mem_arena, kv_pair_cap, o_um.backing_store.next_indexes)) {
+                return false;
+            }
+
+            if (!MakeBitVector(mem_arena, kv_pair_cap, o_um.backing_store.usage)) {
+                return false;
+            }
+
+            return true;
+        }();
+
+        if (!success) {
+            RewindMemArena(mem_arena, mem_arena_begin_offs);
         }
 
-        SetAllTo(o_um.backing_store_indexes, -1);
-
-        if (!MakeArray(mem_arena, kv_pair_cap, o_um.backing_store.keys)) {
-            goto failure;
-        }
-
-        if (!MakeArray(mem_arena, kv_pair_cap, o_um.backing_store.vals)) {
-            goto failure;
-        }
-
-        if (!MakeArray(mem_arena, kv_pair_cap, o_um.backing_store.next_indexes)) {
-            goto failure;
-        }
-
-        if (!MakeBitVector(mem_arena, kv_pair_cap, o_um.backing_store.usage)) {
-            goto failure;
-        }
-
-        return true;
-
-    failure:
-        RewindMemArena(mem_arena, mem_arena_begin_offs);
-        return false;
+        return success;
     }
 }

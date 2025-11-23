@@ -7,9 +7,13 @@ namespace zf {
 #define ZF_LOG(fmt, ...) printf(fmt "\n", ##__VA_ARGS__)
 #define ZF_LOG_WARNING(fmt, ...) fprintf(stderr, "Warning: " fmt "\n", ##__VA_ARGS__)
 #define ZF_LOG_ERROR(fmt, ...) fprintf(stderr, "Error: " fmt "\n", ##__VA_ARGS__)
-#define ZF_LOG_ERROR_SPECIAL(prefix, fmt, ...) fprintf(stderr, prefix " Error: "); \
-    fprintf(stderr, fmt "\n", ##__VA_ARGS__)
 #define ZF_LOG_SUCCESS(fmt, ...) printf("Success: " fmt "\n", ##__VA_ARGS__)
+
+#define ZF_LOG_ERROR_SPECIAL(prefix, fmt, ...) \
+    do { \
+        fprintf(stderr, prefix " Error: "); \
+        fprintf(stderr, fmt "\n", ##__VA_ARGS__); \
+    } while(0)
 
     void ReportFailure(const char* const func, const char* const file, const t_s32 line, const char* const msg = nullptr);
 

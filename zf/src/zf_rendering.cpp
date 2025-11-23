@@ -66,12 +66,6 @@ void main() {
     static gfx::s_resource_handle MakeBatchMesh(gfx::s_resource_arena& gfx_res_arena, s_mem_arena& temp_mem_arena) {
         static constexpr t_size g_verts_len = g_batch_vert_component_cnt * g_batch_slot_vert_cnt * g_batch_slot_cnt;
 
-        const t_size temp_mem_arena_begin_offs = temp_mem_arena.offs;
-
-        ZF_DEFER({
-            RewindMemArena(temp_mem_arena, temp_mem_arena_begin_offs);
-        });
-
         s_array<t_u16> elems;
 
         if (!MakeArray(temp_mem_arena, g_batch_slot_elem_cnt * g_batch_slot_cnt, elems)) {

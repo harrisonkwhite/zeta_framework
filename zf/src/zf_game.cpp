@@ -10,186 +10,183 @@ namespace zf {
     t_b8 RunGame(const s_game_info& info) {
         AssertGameInfoValidity(info);
 
-        //
-        // Initialisation
-        //
-        ConfigErrorOutput();
+        const auto success = [&info]() {
+            //
+            // Initialisation
+            //
+            ConfigErrorOutput();
 
-        InitRNG();
+            InitRNG();
 
-        // Set up memory arenas.
-        s_mem_arena mem_arena;
+            // Set up memory arenas.
+            s_mem_arena mem_arena;
 
-        if (!AllocMemArena(info.mem_arena_size, mem_arena)) {
-            ZF_REPORT_FAILURE();
-            return false;
-        }
-
-        ZF_DEFER({ FreeMemArena(mem_arena); });
-
-        s_mem_arena temp_mem_arena;
-
-        if (!MakeSubMemArena(mem_arena, info.temp_mem_arena_size, temp_mem_arena)) {
-            ZF_REPORT_FAILURE();
-            return false;
-        }
-
-        // Initialise the window.
-        if (!InitWindow(info.window_init_size, info.window_title, info.window_flags)) {
-            ZF_REPORT_FAILURE();
-            return false;
-        }
-
-        ZF_DEFER({ ReleaseWindow(); });
-
-        // Initialise the GFX resource arena.
-        gfx::s_resource_arena gfx_res_arena;
-
-        if (!gfx::MakeResourceArena(mem_arena, g_gfx_resource_arena_cap, gfx_res_arena)) {
-            ZF_REPORT_FAILURE();
-            return false;
-        }
-
-        ZF_DEFER({ gfx::ReleaseResources(gfx_res_arena); });
-
-        // Initialise the rendering basis.
-        s_rendering_basis rendering_basis;
-
-        if (!MakeRenderingBasis(gfx_res_arena, temp_mem_arena, rendering_basis)) {
-            ZF_REPORT_FAILURE();
-            return false;
-        }
-
-        // Initialise audio system.
-        if (!audio::InitSys()) {
-            ZF_REPORT_FAILURE();
-            return false;
-        }
-
-        ZF_DEFER({ audio::ShutdownSys(); });
-
-        // Initialise developer memory.
-        void* dev_mem = nullptr;
-
-        if (info.dev_mem_size > 0) {
-            dev_mem = PushToMemArena(mem_arena, info.dev_mem_size, info.dev_mem_alignment);
-
-            if (!dev_mem) {
+            if (!AllocMemArena(info.mem_arena_size, mem_arena)) {
                 ZF_REPORT_FAILURE();
                 return false;
             }
-        }
 
-        // Run the developer's initialisation function.
-        {
-            const s_game_init_context context = {
-                .dev_mem = dev_mem,
-                .mem_arena = &mem_arena,
-                .temp_mem_arena = &temp_mem_arena,
-                .gfx_res_arena = &gfx_res_arena
-            };
+            ZF_DEFER({ FreeMemArena(mem_arena); });
 
-            if (!info.init_func(context)) {
+            s_mem_arena temp_mem_arena;
+
+            if (!MakeSubMemArena(mem_arena, info.temp_mem_arena_size, temp_mem_arena)) {
                 ZF_REPORT_FAILURE();
                 return false;
             }
-        }
 
-        ZF_DEFER({
-            if (info.clean_func) {
-                info.clean_func(dev_mem);
+            // Initialise the window.
+            if (!InitWindow(info.window_init_size, info.window_title, info.window_flags)) {
+                ZF_REPORT_FAILURE();
+                return false;
             }
-        });
 
-        // Now that everything is set up, we can show the window.
-        ShowWindow();
+            ZF_DEFER({ ReleaseWindow(); });
 
-        //
-        // Main Loop
-        //
-        t_f64 frame_time_last = GetTime();
-        t_f64 frame_dur_accum = 0.0;
+            // Initialise the GFX resource arena.
+            gfx::s_resource_arena gfx_res_arena;
 
-        while (!ShouldWindowClose()) {
-            RewindMemArena(temp_mem_arena, 0);
+            if (!gfx::MakeResourceArena(mem_arena, g_gfx_resource_arena_cap, gfx_res_arena)) {
+                ZF_REPORT_FAILURE();
+                return false;
+            }
 
-            const t_f64 frame_time = GetTime();
-            const t_f64 frame_time_delta = frame_time - frame_time_last;
-            frame_dur_accum += frame_time_delta;
-            frame_time_last = frame_time;
+            ZF_DEFER({ gfx::ReleaseResources(gfx_res_arena); });
 
-            const t_f64 targ_tick_interval = 1.0 / info.targ_ticks_per_sec;
+            // Initialise the rendering basis.
+            s_rendering_basis rendering_basis;
 
-            // Once enough time has passed (i.e. the time accumulator has reached the tick interval), run at least a single tick and update the display.
-            if (frame_dur_accum >= targ_tick_interval) {
-                audio::ProcFinishedSounds();
+            if (!MakeRenderingBasis(gfx_res_arena, temp_mem_arena, rendering_basis)) {
+                ZF_REPORT_FAILURE();
+                return false;
+            }
 
-                // Run possibly multiple ticks.
-                do {
-                    const s_game_tick_context context = {
-                        .dev_mem = dev_mem,
-                        .mem_arena = &mem_arena,
-                        .temp_mem_arena = &temp_mem_arena
-                    };
+            // Initialise audio system.
+            if (!audio::InitSys()) {
+                ZF_REPORT_FAILURE();
+                return false;
+            }
 
-                    const e_game_tick_result res = info.tick_func(context);
+            ZF_DEFER({ audio::ShutdownSys(); });
 
-                    ClearInputEvents();
+            // Initialise developer memory.
+            void* dev_mem = nullptr;
 
-                    if (res == ek_game_tick_result_exit) {
-                        ZF_LOG("Exit request detected from developer game tick function...");
-                        SetWindowShouldClose(true);
-                    }
+            if (info.dev_mem_size > 0) {
+                dev_mem = PushToMemArena(mem_arena, info.dev_mem_size, info.dev_mem_alignment);
 
-                    if (res == ek_game_tick_result_error) {
-                        ZF_REPORT_FAILURE();
-                        return false;
-                    }
-
-                    frame_dur_accum -= targ_tick_interval;
-                } while (frame_dur_accum >= targ_tick_interval);
-
-                // Perform a single render.
-                s_rendering_state* const rendering_state = PrepareRenderingPhase(temp_mem_arena);
-
-                if (!rendering_state) {
+                if (!dev_mem) {
                     ZF_REPORT_FAILURE();
                     return false;
                 }
+            }
 
-                const s_rendering_context rendering_context = {
-                    .basis = rendering_basis,
-                    .state = *rendering_state
+            // Run the developer's initialisation function.
+            {
+                const s_game_init_context context = {
+                    .dev_mem = dev_mem,
+                    .mem_arena = &mem_arena,
+                    .temp_mem_arena = &temp_mem_arena,
+                    .gfx_res_arena = &gfx_res_arena
                 };
 
-                {
-                    const s_game_render_context context = {
-                        .dev_mem = dev_mem,
-                        .mem_arena = &mem_arena,
-                        .temp_mem_arena = &temp_mem_arena,
-                        .rendering_context = &rendering_context
-                    };
+                if (!info.init_func(context)) {
+                    ZF_REPORT_FAILURE();
+                    return false;
+                }
+            }
 
-                    if (!info.render_func(context)) {
+            ZF_DEFER({
+                if (info.clean_func) {
+                    info.clean_func(dev_mem);
+                }
+            });
+
+            // Now that everything is set up, we can show the window.
+            ShowWindow();
+
+            //
+            // Main Loop
+            //
+            t_f64 frame_time_last = GetTime();
+            t_f64 frame_dur_accum = 0.0;
+
+            while (!ShouldWindowClose()) {
+                RewindMemArena(temp_mem_arena, 0);
+
+                const t_f64 frame_time = GetTime();
+                const t_f64 frame_time_delta = frame_time - frame_time_last;
+                frame_dur_accum += frame_time_delta;
+                frame_time_last = frame_time;
+
+                const t_f64 targ_tick_interval = 1.0 / info.targ_ticks_per_sec;
+
+                // Once enough time has passed (i.e. the time accumulator has reached the tick interval), run at least a single tick and update the display.
+                if (frame_dur_accum >= targ_tick_interval) {
+                    audio::ProcFinishedSounds();
+
+                    // Run possibly multiple ticks.
+                    do {
+                        const s_game_tick_context context = {
+                            .dev_mem = dev_mem,
+                            .mem_arena = &mem_arena,
+                            .temp_mem_arena = &temp_mem_arena
+                        };
+
+                        const e_game_tick_result res = info.tick_func(context);
+
+                        ClearInputEvents();
+
+                        if (res == ek_game_tick_result_exit) {
+                            ZF_LOG("Exit request detected from developer game tick function...");
+                            SetWindowShouldClose(true);
+                        }
+
+                        if (res == ek_game_tick_result_error) {
+                            ZF_REPORT_FAILURE();
+                            return false;
+                        }
+
+                        frame_dur_accum -= targ_tick_interval;
+                    } while (frame_dur_accum >= targ_tick_interval);
+
+                    // Perform a single render.
+                    s_rendering_state* const rendering_state = PrepareRenderingPhase(temp_mem_arena);
+
+                    if (!rendering_state) {
                         ZF_REPORT_FAILURE();
                         return false;
                     }
+
+                    const s_rendering_context rendering_context = {
+                        .basis = rendering_basis,
+                        .state = *rendering_state
+                    };
+
+                    {
+                        const s_game_render_context context = {
+                            .dev_mem = dev_mem,
+                            .mem_arena = &mem_arena,
+                            .temp_mem_arena = &temp_mem_arena,
+                            .rendering_context = &rendering_context
+                        };
+
+                        if (!info.render_func(context)) {
+                            ZF_REPORT_FAILURE();
+                            return false;
+                        }
+                    }
+
+                    CompleteRenderingPhase(rendering_context);
+
+                    SwapBuffers();
                 }
 
-                CompleteRenderingPhase(rendering_context);
-
-                SwapBuffers();
+                PollEvents();
             }
 
-            PollEvents();
-        }
-
-        return true;
-    }
-
-#if 0
-    t_b8 RunGame(const s_game_info& info) {
-        AssertGameInfoValidity(info);
+            return true;
+        }();
 
 #ifndef ZF_DEBUG
         if (!success) {
@@ -199,5 +196,4 @@ namespace zf {
 
         return success;
     }
-#endif
 }

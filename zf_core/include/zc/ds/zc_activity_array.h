@@ -122,20 +122,22 @@ namespace zf {
 
         const t_size mem_arena_begin_offs = mem_arena.offs;
 
-        o_aa = {};
+        const auto success = [&]() {
+            o_aa = {};
 
-        if (!MakeArray(mem_arena, len, o_aa.slots)) {
-            goto failure;
-        }
+            if (!MakeArray(mem_arena, len, o_aa.slots)) {
+                return false;
+            }
 
-        if (!MakeBitVector(mem_arena, len, o_aa.slot_activity)) {
-            goto failure;
-        }
+            if (!MakeBitVector(mem_arena, len, o_aa.slot_activity)) {
+                return false;
+            }
 
-        return true;
+            return true;
+        }();
 
-    failure:
         RewindMemArena(mem_arena, mem_arena_begin_offs);
-        return false;
+
+        return success;
     }
 }
