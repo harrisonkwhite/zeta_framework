@@ -240,4 +240,78 @@ namespace zf {
 
         return success;
     }
+
+    // This DOES NOT serialize the hash function pointer and binary comparator function pointer!
+    template<typename tp_key_type, typename tp_val_type>
+    t_b8 SerializeHashMap(s_byte_stream_write& bs, const s_hash_map<tp_key_type, tp_val_type>& hm) {
+        if (!SerializeItem(bs, hm.kv_pair_cnt)) {
+            return false;
+        }
+
+        if (!SerializeArray(bs, hm.backing_store_indexes)) {
+            return false;
+        }
+
+        if (!SerializeArray(bs, hm.backing_store.keys)) {
+            return false;
+        }
+
+        if (!SerializeArray(bs, hm.backing_store.vals)) {
+            return false;
+        }
+
+        if (!SerializeArray(bs, hm.backing_store.next_indexes)) {
+            return false;
+        }
+
+        if (!SerializeBitVector(bs, hm.backing_store.usage)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    template<typename tp_key_type, typename tp_val_type>
+    t_b8 DeserializeHashMap(s_mem_arena& mem_arena, s_byte_stream_read& bs, const t_hash_func<tp_key_type> hash_func, const t_bin_comparator<tp_key_type> key_comparator, s_hash_map<tp_key_type, tp_val_type>& o_hm) {
+        const t_size mem_arena_begin_offs = mem_arena.offs;
+
+        const t_b8 success = [&]() {
+            o_hm = {
+                .hash_func = hash_func,
+                .key_comparator = key_comparator
+            };
+
+            if (!DeserializeItem(mem_arena, bs, o_hm.kv_pair_cnt)) {
+                return false;
+            }
+
+            if (!DeserializeArray(mem_arena, bs, o_hm.backing_store_indexes)) {
+                return false;
+            }
+
+            if (!DeserializeArray(mem_arena, bs, o_hm.backing_store.keys)) {
+                return false;
+            }
+
+            if (!DeserializeArray(mem_arena, bs, o_hm.backing_store.vals)) {
+                return false;
+            }
+
+            if (!DeserializeArray(mem_arena, bs, o_hm.backing_store.next_indexes)) {
+                return false;
+            }
+
+            if (!DeserializeBitVector(mem_arena, bs, o_hm.backing_store.usage)) {
+                return false;
+            }
+
+            return true;
+        }();
+
+        if (!success) {
+            RewindMemArena(mem_arena, mem_arena_begin_offs);
+        }
+
+        return success;
+    }
 }
