@@ -112,11 +112,8 @@ namespace zf {
 
     [[nodiscard]] t_b8 LoadRGBATextureDataFromRaw(const s_str_rdonly file_path, s_mem_arena& mem_arena, s_rgba_texture_data& o_tex_data);
 
-    [[nodiscard]] t_b8 PackTexture(const s_rgba_texture_data_rdonly& tex_data, const s_str_rdonly file_path, s_mem_arena& temp_mem_arena);
+    [[nodiscard]] t_b8 PackTexture(const s_str_rdonly dest_file_path, const s_str_rdonly src_file_path, s_mem_arena& temp_mem_arena);
     [[nodiscard]] t_b8 UnpackTexture(const s_str_rdonly file_path, s_mem_arena& mem_arena, s_rgba_texture_data& o_tex_data);
-
-// Assume one-to-many relationship between glyphs and codepoints.
-    // Therefore number of codepoints >= number of glyphs.
 
     constexpr s_v2<t_s32> g_atlas_size = {1024, 1024};
 
@@ -146,9 +143,10 @@ namespace zf {
         s_array<t_font_atlas> atlases;
     };
 
-    [[nodiscard]] t_b8 LoadFontFromRaw(s_mem_arena& mem_arena, const s_str_rdonly file_path, const t_s32 height, const s_array_rdonly<t_s32> codepoints_no_dups, s_mem_arena& temp_mem_arena, s_font& o_font);
+    [[nodiscard]] t_b8 LoadFontFromRaw(const s_str_rdonly file_path, const t_s32 height, const s_array_rdonly<t_s32> codepoints_no_dups, s_mem_arena& mem_arena, s_mem_arena& temp_mem_arena, s_font& o_font);
     [[nodiscard]] t_b8 SerializeFont(s_stream& stream, const s_font& font);
-    [[nodiscard]] t_b8 DeserializeFont(s_mem_arena& mem_arena, s_stream& stream, s_font& o_font);
-    [[nodiscard]] t_b8 PackFont(const s_font& font, const s_str_rdonly file_path, s_mem_arena& temp_mem_arena);
+    [[nodiscard]] t_b8 DeserializeFont(s_stream& stream, s_mem_arena& mem_arena, s_font& o_font);
+
+    [[nodiscard]] t_b8 PackFont(const s_str_rdonly dest_file_path, const s_str_rdonly src_file_path, const t_s32 height, const s_array_rdonly<t_s32> codepoints, s_mem_arena& temp_mem_arena);
     [[nodiscard]] t_b8 UnpackFont(const s_str_rdonly file_path, s_mem_arena& mem_arena, s_font& o_font);
 }

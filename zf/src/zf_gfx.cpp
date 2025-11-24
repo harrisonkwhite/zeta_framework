@@ -48,8 +48,6 @@ namespace zf::gfx {
         ZF_ASSERT(IsStrTerminated(vert_src));
         ZF_ASSERT(IsStrTerminated(frag_src));
 
-        ZF_DEFER_MEM_ARENA_REWIND(temp_mem_arena);
-
         // Generate the individual shaders.
         const auto shader_gen_func = [&temp_mem_arena](const s_str_rdonly src, const t_b8 is_frag) -> t_gl_id {
             const t_gl_id shader_gl_id = glCreateShader(is_frag ? GL_FRAGMENT_SHADER : GL_VERTEX_SHADER);
@@ -210,8 +208,6 @@ namespace zf::gfx {
     s_resource_handle MakeShaderProg(s_resource_arena& res_arena, const s_str_rdonly vert_src, const s_str_rdonly frag_src, s_mem_arena& temp_mem_arena) {
         ZF_ASSERT(IsStrTerminated(vert_src));
         ZF_ASSERT(IsStrTerminated(frag_src));
-
-        ZF_DEFER_MEM_ARENA_REWIND(temp_mem_arena);
 
         if (IsListFull(res_arena.hdls)) {
             return {};

@@ -36,18 +36,23 @@ namespace zf {
         return true;
     }
 
-    t_b8 PackTexture(const s_rgba_texture_data_rdonly& tex_data, const s_str_rdonly file_path, s_mem_arena& temp_mem_arena) {
-        ZF_ASSERT(IsStrTerminated(file_path));
+    t_b8 PackTexture(const s_str_rdonly dest_file_path, const s_str_rdonly src_file_path, s_mem_arena& temp_mem_arena) {
+        ZF_ASSERT(IsStrTerminated(src_file_path));
+        ZF_ASSERT(IsStrTerminated(dest_file_path));
 
-        ZF_DEFER_MEM_ARENA_REWIND(temp_mem_arena);
+        s_rgba_texture_data tex_data;
 
-        if (!CreateFileAndParentDirs(file_path, temp_mem_arena)) {
+        if (!LoadRGBATextureDataFromRaw(src_file_path, temp_mem_arena, tex_data)) {
+            return false;
+        }
+
+        if (!CreateFileAndParentDirs(dest_file_path, temp_mem_arena)) {
             return false;
         }
 
         s_stream fs;
 
-        if (!OpenFile(file_path, ek_file_access_mode_write, fs)) {
+        if (!OpenFile(dest_file_path, ek_file_access_mode_write, fs)) {
             return false;
         }
 
@@ -90,12 +95,10 @@ namespace zf {
         return true;
     }
 
-    t_b8 LoadFontFromRaw(s_mem_arena& mem_arena, const s_str_rdonly file_path, const t_s32 height, const s_array_rdonly<t_s32> codepoints_no_dups, s_mem_arena& temp_mem_arena, s_font& o_font) {
+    t_b8 LoadFontFromRaw(const s_str_rdonly file_path, const t_s32 height, const s_array_rdonly<t_s32> codepoints_no_dups, s_mem_arena& mem_arena, s_mem_arena& temp_mem_arena, s_font& o_font) {
         ZF_ASSERT(IsStrTerminated(file_path));
         ZF_ASSERT(height > 0);
         ZF_ASSERT(!IsArrayEmpty(codepoints_no_dups));
-
-        ZF_DEFER_MEM_ARENA_REWIND(temp_mem_arena);
 
         // Get the plain font file data.
         s_array<t_u8> font_file_data;
@@ -278,7 +281,7 @@ namespace zf {
         return true;
     }
 
-    t_b8 DeserializeFont(s_mem_arena& mem_arena, s_stream& stream, s_font& o_font) {
+    t_b8 DeserializeFont(s_stream& stream, s_mem_arena& mem_arena, s_font& o_font) {
         if (!StreamReadItem(stream, o_font.line_height)) {
             return false;
         }
@@ -298,18 +301,23 @@ namespace zf {
         return true;
     }
 
-    t_b8 PackFont(const s_font& font, const s_str_rdonly file_path, s_mem_arena& temp_mem_arena) {
-        ZF_ASSERT(IsStrTerminated(file_path));
+    t_b8 PackFont(const s_str_rdonly dest_file_path, const s_str_rdonly src_file_path, const t_s32 height, const s_array_rdonly<t_s32> codepoints, s_mem_arena& temp_mem_arena) {
+        ZF_ASSERT(IsStrTerminated(dest_file_path));
+        ZF_ASSERT(IsStrTerminated(src_file_path));
 
-        ZF_DEFER_MEM_ARENA_REWIND(temp_mem_arena);
+        s_font font;
 
-        if (!CreateFileAndParentDirs(file_path, temp_mem_arena)) {
+        if (!LoadFontFromRaw(src_file_path, height, codepoints, temp_mem_arena, temp_mem_arena, font)) {
+            return false;
+        }
+
+        if (!CreateFileAndParentDirs(dest_file_path, temp_mem_arena)) {
             return false;
         }
 
         s_stream fs;
 
-        if (!OpenFile(file_path, ek_file_access_mode_write, fs)) {
+        if (!OpenFile(dest_file_path, ek_file_access_mode_write, fs)) {
             return false;
         }
 
@@ -329,6 +337,6 @@ namespace zf {
 
         ZF_DEFER({ CloseFile(fs); });
 
-        return DeserializeFont(mem_arena, fs, o_font);
+        return DeserializeFont(fs, mem_arena, o_font);
     }
 }

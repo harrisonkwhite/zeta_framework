@@ -37,32 +37,59 @@ namespace zf {
         return true;
     }
 
-    t_b8 PackSound(const s_sound_data_rdonly& snd_data, const s_str_rdonly file_path, s_mem_arena& temp_mem_arena) {
-        ZF_ASSERT(IsStrTerminated(file_path));
+    t_b8 SerializeSoundData(s_stream& stream, const s_sound_data& snd_data) {
+        if (!StreamWriteItem(stream, snd_data.meta)) {
+            return false;
+        }
 
-        ZF_DEFER_MEM_ARENA_REWIND(temp_mem_arena);
+        if (!StreamWriteItemsOfArray(stream, snd_data.pcm)) {
+            return false;
+        }
 
-        if (!CreateFileAndParentDirs(file_path, temp_mem_arena)) {
+        return true;
+    }
+
+    t_b8 DeserializeSoundData(s_stream& stream, s_mem_arena& mem_arena, s_sound_data& o_snd_data) {
+        o_snd_data = {};
+
+        if (!StreamReadItem(stream, o_snd_data.meta)) {
+            return false;
+        }
+
+        if (!MakeArray(mem_arena, CalcSampleCount(o_snd_data.meta), o_snd_data.pcm)) {
+            return false;
+        }
+
+        if (!StreamReadItemsIntoArray(stream, o_snd_data.pcm, o_snd_data.pcm.len)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    t_b8 PackSound(const s_str_rdonly dest_file_path, const s_str_rdonly src_file_path, s_mem_arena& temp_mem_arena) {
+        ZF_ASSERT(IsStrTerminated(dest_file_path));
+        ZF_ASSERT(IsStrTerminated(src_file_path));
+
+        s_sound_data snd_data;
+
+        if (!LoadSoundFromRaw(src_file_path, temp_mem_arena, snd_data.meta, snd_data.pcm)) {
+            return false;
+        }
+
+        if (!CreateFileAndParentDirs(dest_file_path, temp_mem_arena)) {
             return false;
         }
 
         s_stream fs;
 
-        if (!OpenFile(file_path, ek_file_access_mode_write, fs)) {
+        if (!OpenFile(dest_file_path, ek_file_access_mode_write, fs)) {
             return false;
         }
 
         ZF_DEFER({ CloseFile(fs); });
 
-        if (!StreamWriteItem(fs, snd_data.meta)) {
-            return false;
-        }
-
-        if (!StreamWriteItemsOfArray(fs, snd_data.pcm)) {
-            return false;
-        }
-
-        return true;
+        return SerializeSoundData(fs, snd_data);
     }
 
     t_b8 UnpackSound(const s_str_rdonly file_path, s_mem_arena& mem_arena, s_sound_data& o_snd_data) {

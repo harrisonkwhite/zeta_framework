@@ -47,8 +47,8 @@ namespace zf {
         ma.offs = offs;
     }
 
-#define ZF_DEFER_MEM_ARENA_REWIND(ma) auto ZF_CONCAT(p_defer_, ZF_CONCAT(l, __LINE__)) = zf::p_s_defer([&, p_offs = ma.offs]() { zf::RewindMemArena(ma, p_offs); })
-#define ZF_DEFER_MEM_ARENA_REWIND_IF(ma, cond) auto ZF_CONCAT(p_defer_, ZF_CONCAT(l, __LINE__)) = zf::p_s_defer([&, p_offs = ma.offs]() { if (cond) { zf::RewindMemArena(ma, p_offs); } })
+//#define ZF_DEFER_MEM_ARENA_REWIND(ma) auto ZF_CONCAT(p_defer_, ZF_CONCAT(l, __LINE__)) = zf::p_s_defer([&, p_offs = ma.offs]() { zf::RewindMemArena(ma, p_offs); })
+//#define ZF_DEFER_MEM_ARENA_REWIND_IF(ma, cond) auto ZF_CONCAT(p_defer_, ZF_CONCAT(l, __LINE__)) = zf::p_s_defer([&, p_offs = ma.offs]() { if (cond) { zf::RewindMemArena(ma, p_offs); } })
 
     [[nodiscard]] inline t_b8 MakeSubMemArena(s_mem_arena& parent_ma, const t_size size, s_mem_arena& o_ma) {
         o_ma = {

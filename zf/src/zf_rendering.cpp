@@ -66,8 +66,6 @@ void main() {
     static gfx::s_resource_handle MakeBatchMesh(gfx::s_resource_arena& gfx_res_arena, s_mem_arena& temp_mem_arena) {
         static constexpr t_size g_verts_len = g_batch_vert_component_cnt * g_batch_slot_vert_cnt * g_batch_slot_cnt;
 
-        ZF_DEFER_MEM_ARENA_REWIND(temp_mem_arena);
-
         s_array<t_u16> elems;
 
         if (!MakeArray(temp_mem_arena, g_batch_slot_elem_cnt * g_batch_slot_cnt, elems)) {
@@ -88,8 +86,6 @@ void main() {
     }
 
     t_b8 MakeRenderingBasis(gfx::s_resource_arena& gfx_res_arena, s_mem_arena& temp_mem_arena, s_rendering_basis& o_basis) {
-        ZF_DEFER_MEM_ARENA_REWIND(temp_mem_arena);
-
         // Generate the batch mesh.
         o_basis.batch_mesh_hdl = MakeBatchMesh(gfx_res_arena, temp_mem_arena);
 
