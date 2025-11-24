@@ -50,6 +50,8 @@ namespace zf {
     static t_b8 PackAssetsFromInstrs(cJSON* const cj, s_mem_arena& temp_mem_arena) {
         ZF_ASSERT(cj);
 
+        ZF_DEFER_MEM_ARENA_REWIND(temp_mem_arena); // @todo: Should be rewinding this per asset load.
+
         s_static_array<cJSON*, eks_tex_field_cnt> tex_field_cj_ptrs = {};
         s_static_array<cJSON*, eks_snd_field_cnt> snd_field_cj_ptrs = {};
 
@@ -169,6 +171,8 @@ namespace zf {
 
     t_b8 PackAssets(const s_str_rdonly instrs_json, s_mem_arena& temp_mem_arena) {
         ZF_ASSERT(IsStrTerminated(instrs_json));
+
+        ZF_DEFER_MEM_ARENA_REWIND(temp_mem_arena);
 
         cJSON* const cj = cJSON_Parse(StrRaw(instrs_json));
 

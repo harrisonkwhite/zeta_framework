@@ -112,8 +112,6 @@ namespace zf {
             t_f64 frame_dur_accum = 0.0;
 
             while (!ShouldWindowClose()) {
-                RewindMemArena(temp_mem_arena, 0);
-
                 const t_f64 frame_time = GetTime();
                 const t_f64 frame_time_delta = frame_time - frame_time_last;
                 frame_dur_accum += frame_time_delta;
@@ -151,6 +149,8 @@ namespace zf {
                     } while (frame_dur_accum >= targ_tick_interval);
 
                     // Perform a single render.
+                    ZF_DEFER_MEM_ARENA_REWIND(temp_mem_arena);
+
                     s_rendering_state* const rendering_state = PrepareRenderingPhase(temp_mem_arena);
 
                     if (!rendering_state) {

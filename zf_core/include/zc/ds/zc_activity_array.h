@@ -120,25 +120,17 @@ namespace zf {
     [[nodiscard]] t_b8 MakeActivityArray(s_mem_arena& mem_arena, const t_size len, s_activity_array<tp_type>& o_aa) {
         ZF_ASSERT(len > 0);
 
-        const t_size mem_arena_begin_offs = mem_arena.offs;
+        o_aa = {};
 
-        const t_b8 success = [&]() {
-            o_aa = {};
+        if (!MakeArray(mem_arena, len, o_aa.slots)) {
+            return false;
+        }
 
-            if (!MakeArray(mem_arena, len, o_aa.slots)) {
-                return false;
-            }
+        if (!MakeBitVector(mem_arena, len, o_aa.slot_activity)) {
+            return false;
+        }
 
-            if (!MakeBitVector(mem_arena, len, o_aa.slot_activity)) {
-                return false;
-            }
-
-            return true;
-        }();
-
-        RewindMemArena(mem_arena, mem_arena_begin_offs);
-
-        return success;
+        return true;
     }
 
     template<c_activity_array tp_type>

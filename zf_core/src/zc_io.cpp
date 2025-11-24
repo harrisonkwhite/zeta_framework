@@ -114,6 +114,8 @@ namespace zf {
     t_b8 CreateDirectoryAndParents(const s_str_rdonly path, s_mem_arena& temp_mem_arena) {
         ZF_ASSERT(IsStrTerminated(path));
 
+        ZF_DEFER_MEM_ARENA_REWIND(temp_mem_arena);
+
         // @speed: Ideally we'd start at the end of the path and move back.
 
         s_str path_clone; // @speed: A clone on every call to this? Yuck!
@@ -159,6 +161,8 @@ namespace zf {
 
     t_b8 CreateFileAndParentDirs(const s_str_rdonly path, s_mem_arena& temp_mem_arena) {
         ZF_ASSERT(IsStrTerminated(path) && IsValidUTF8Str(path));
+
+        ZF_DEFER_MEM_ARENA_REWIND(temp_mem_arena);
 
         const t_size path_len = CalcUTF8StrLenFastButUnsafe(path);
         const auto path_relevant = Slice(path.chrs, 0, path_len + 1);

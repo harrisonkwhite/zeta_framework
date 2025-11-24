@@ -117,6 +117,8 @@ namespace zf {
             return true;
         }
 
+        ZF_DEFER_MEM_ARENA_REWIND(temp_mem_arena);
+
         // Sort copies of the left and right partitions.
         const auto arr_left = Slice(arr, 0, ArrayLen(arr) / 2);
         s_array<typename tp_type::t_elem> arr_left_sorted;

@@ -44,9 +44,11 @@ namespace zf::gfx {
 
     static t_gl_id MakeGLShaderProg(const s_str_rdonly vert_src, const s_str_rdonly frag_src, s_mem_arena& temp_mem_arena) {
         // @todo: Improve error logging here. Should be in return value.
-        
+
         ZF_ASSERT(IsStrTerminated(vert_src));
         ZF_ASSERT(IsStrTerminated(frag_src));
+
+        ZF_DEFER_MEM_ARENA_REWIND(temp_mem_arena);
 
         // Generate the individual shaders.
         const auto shader_gen_func = [&temp_mem_arena](const s_str_rdonly src, const t_b8 is_frag) -> t_gl_id {
@@ -92,22 +94,21 @@ namespace zf::gfx {
             return 0;
         }
 
+        ZF_DEFER({ glDeleteShader(vert_gl_id); });
+
         const t_gl_id frag_gl_id = shader_gen_func(frag_src, true);
 
         if (!frag_gl_id) {
-            glDeleteShader(vert_gl_id);
             return 0;
         }
+
+        ZF_DEFER({ glDeleteShader(frag_gl_id); });
 
         // Set up the shader program.
         const t_gl_id prog_gl_id = glCreateProgram();
         glAttachShader(prog_gl_id, vert_gl_id);
         glAttachShader(prog_gl_id, frag_gl_id);
         glLinkProgram(prog_gl_id);
-
-        // Dispose the shaders, they're no longer needed.
-        glDeleteShader(frag_gl_id);
-        glDeleteShader(vert_gl_id);
 
         return prog_gl_id;
     }
@@ -209,6 +210,8 @@ namespace zf::gfx {
     s_resource_handle MakeShaderProg(s_resource_arena& res_arena, const s_str_rdonly vert_src, const s_str_rdonly frag_src, s_mem_arena& temp_mem_arena) {
         ZF_ASSERT(IsStrTerminated(vert_src));
         ZF_ASSERT(IsStrTerminated(frag_src));
+
+        ZF_DEFER_MEM_ARENA_REWIND(temp_mem_arena);
 
         if (IsListFull(res_arena.hdls)) {
             return {};

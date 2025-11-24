@@ -201,44 +201,34 @@ namespace zf {
         ZF_ASSERT(key_comparator);
         ZF_ASSERT(immediate_cap > 0 && kv_pair_cap >= immediate_cap);
 
-        const t_size mem_arena_begin_offs = mem_arena.offs;
+        o_um = {};
 
-        const t_b8 success = [&]() {
-            o_um = {};
+        o_um.hash_func = hash_func;
+        o_um.key_comparator = key_comparator;
 
-            o_um.hash_func = hash_func;
-            o_um.key_comparator = key_comparator;
-
-            if (!MakeArray(mem_arena, immediate_cap, o_um.backing_store_indexes)) {
-                return false;
-            }
-
-            SetAllTo(o_um.backing_store_indexes, -1);
-
-            if (!MakeArray(mem_arena, kv_pair_cap, o_um.backing_store.keys)) {
-                return false;
-            }
-
-            if (!MakeArray(mem_arena, kv_pair_cap, o_um.backing_store.vals)) {
-                return false;
-            }
-
-            if (!MakeArray(mem_arena, kv_pair_cap, o_um.backing_store.next_indexes)) {
-                return false;
-            }
-
-            if (!MakeBitVector(mem_arena, kv_pair_cap, o_um.backing_store.usage)) {
-                return false;
-            }
-
-            return true;
-        }();
-
-        if (!success) {
-            RewindMemArena(mem_arena, mem_arena_begin_offs);
+        if (!MakeArray(mem_arena, immediate_cap, o_um.backing_store_indexes)) {
+            return false;
         }
 
-        return success;
+        SetAllTo(o_um.backing_store_indexes, -1);
+
+        if (!MakeArray(mem_arena, kv_pair_cap, o_um.backing_store.keys)) {
+            return false;
+        }
+
+        if (!MakeArray(mem_arena, kv_pair_cap, o_um.backing_store.vals)) {
+            return false;
+        }
+
+        if (!MakeArray(mem_arena, kv_pair_cap, o_um.backing_store.next_indexes)) {
+            return false;
+        }
+
+        if (!MakeBitVector(mem_arena, kv_pair_cap, o_um.backing_store.usage)) {
+            return false;
+        }
+
+        return true;
     }
 
     // This DOES NOT serialize the hash function pointer and binary comparator function pointer!
@@ -273,45 +263,35 @@ namespace zf {
 
     template<typename tp_key_type, typename tp_val_type>
     [[nodiscard]] t_b8 DeserializeHashMap(s_mem_arena& mem_arena, s_byte_stream_read& bs, const t_hash_func<tp_key_type> hash_func, const t_bin_comparator<tp_key_type> key_comparator, s_hash_map<tp_key_type, tp_val_type>& o_hm) {
-        const t_size mem_arena_begin_offs = mem_arena.offs;
+        o_hm = {
+            .hash_func = hash_func,
+            .key_comparator = key_comparator
+        };
 
-        const t_b8 success = [&]() {
-            o_hm = {
-                .hash_func = hash_func,
-                .key_comparator = key_comparator
-            };
-
-            if (!DeserializeItem(bs, o_hm.kv_pair_cnt)) {
-                return false;
-            }
-
-            if (!DeserializeArray(mem_arena, bs, o_hm.backing_store_indexes)) {
-                return false;
-            }
-
-            if (!DeserializeArray(mem_arena, bs, o_hm.backing_store.keys)) {
-                return false;
-            }
-
-            if (!DeserializeArray(mem_arena, bs, o_hm.backing_store.vals)) {
-                return false;
-            }
-
-            if (!DeserializeArray(mem_arena, bs, o_hm.backing_store.next_indexes)) {
-                return false;
-            }
-
-            if (!DeserializeBitVector(mem_arena, bs, o_hm.backing_store.usage)) {
-                return false;
-            }
-
-            return true;
-        }();
-
-        if (!success) {
-            RewindMemArena(mem_arena, mem_arena_begin_offs);
+        if (!DeserializeItem(bs, o_hm.kv_pair_cnt)) {
+            return false;
         }
 
-        return success;
+        if (!DeserializeArray(mem_arena, bs, o_hm.backing_store_indexes)) {
+            return false;
+        }
+
+        if (!DeserializeArray(mem_arena, bs, o_hm.backing_store.keys)) {
+            return false;
+        }
+
+        if (!DeserializeArray(mem_arena, bs, o_hm.backing_store.vals)) {
+            return false;
+        }
+
+        if (!DeserializeArray(mem_arena, bs, o_hm.backing_store.next_indexes)) {
+            return false;
+        }
+
+        if (!DeserializeBitVector(mem_arena, bs, o_hm.backing_store.usage)) {
+            return false;
+        }
+
+        return true;
     }
 }

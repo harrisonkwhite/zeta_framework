@@ -40,6 +40,8 @@ namespace zf {
     t_b8 PackSound(const s_sound_data_rdonly& snd_data, const s_str_rdonly file_path, s_mem_arena& temp_mem_arena) {
         ZF_ASSERT(IsStrTerminated(file_path));
 
+        ZF_DEFER_MEM_ARENA_REWIND(temp_mem_arena);
+
         if (!CreateFileAndParentDirs(file_path, temp_mem_arena)) {
             return false;
         }

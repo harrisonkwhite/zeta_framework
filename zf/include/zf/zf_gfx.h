@@ -101,6 +101,8 @@ namespace zf::gfx {
     }
 
     [[nodiscard]] inline t_b8 LoadTextureAssetFromRaw(const s_str_rdonly file_path, s_resource_arena& res_arena, s_mem_arena& temp_mem_arena, s_texture_asset& o_asset) {
+        ZF_DEFER_MEM_ARENA_REWIND(temp_mem_arena);
+
         s_rgba_texture_data tex_data;
 
         if (!LoadRGBATextureDataFromRaw(file_path, temp_mem_arena, tex_data)) {
@@ -111,6 +113,8 @@ namespace zf::gfx {
     }
 
     [[nodiscard]] inline t_b8 LoadTextureAssetFromPacked(const s_str_rdonly file_path, s_resource_arena& res_arena, s_mem_arena& temp_mem_arena, s_texture_asset& o_asset) {
+        ZF_DEFER_MEM_ARENA_REWIND(temp_mem_arena);
+
         s_rgba_texture_data tex_data;
 
         if (!UnpackTexture(file_path, temp_mem_arena, tex_data)) {
