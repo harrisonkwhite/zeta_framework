@@ -629,6 +629,7 @@ namespace zf {
         return MakeArray(mem_arena, BitsToBytes(bit_cnt), o_bv.bytes);
     }
 
+#if 0
     t_b8 SerializeBitVector(s_byte_stream_write& bs, const s_bit_vector_rdonly bv) {
         if (!SerializeItem(bs, bv.bit_cnt)) {
             return false;
@@ -658,4 +659,5 @@ namespace zf {
 
         return true;
     }
+#endif
 }

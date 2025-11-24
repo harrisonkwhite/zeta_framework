@@ -70,7 +70,7 @@ namespace zf {
             return false;
         }
 
-        if (!StreamReadItemsIntoArray(fs, o_contents, file_size)) {
+        if (!StreamRead(fs, o_contents, file_size)) {
             return false;
         }
 

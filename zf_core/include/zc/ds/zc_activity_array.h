@@ -133,6 +133,7 @@ namespace zf {
         return true;
     }
 
+#if 0
     template<c_activity_array tp_type>
     [[nodiscard]] t_b8 SerializeActivityArray(s_byte_stream_write& bs, tp_type& aa) {
         if (!SerializeArray(bs, aa.slots)) {
@@ -158,4 +159,5 @@ namespace zf {
 
         return true;
     }
+#endif
 }

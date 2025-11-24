@@ -54,11 +54,11 @@ namespace zf {
 
         ZF_DEFER({ CloseFile(fs); });
 
-        if (!StreamWriteItem(fs, snd_data.meta)) {
+        if (!StreamWrite(fs, snd_data.meta)) {
             return false;
         }
 
-        if (!StreamWriteItemsOfArray(fs, snd_data.pcm)) {
+        if (!StreamWrite(fs, snd_data.pcm)) {
             return false;
         }
 
@@ -76,7 +76,7 @@ namespace zf {
 
         ZF_DEFER({ CloseFile(fs); });
 
-        if (!StreamReadItem(fs, o_snd_data.meta)) {
+        if (!StreamRead(fs, o_snd_data.meta)) {
             return false;
         }
 
@@ -84,7 +84,7 @@ namespace zf {
             return false;
         }
 
-        if (!StreamReadItemsIntoArray(fs, o_snd_data.pcm, o_snd_data.pcm.len)) {
+        if (!StreamRead(fs, o_snd_data.pcm, o_snd_data.pcm.len)) {
             return false;
         }
 

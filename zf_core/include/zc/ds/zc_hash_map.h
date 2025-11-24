@@ -231,6 +231,7 @@ namespace zf {
         return true;
     }
 
+#if 0
     // This DOES NOT serialize the hash function pointer and binary comparator function pointer!
     template<typename tp_key_type, typename tp_val_type>
     [[nodiscard]] t_b8 SerializeHashMap(s_byte_stream_write& bs, const s_hash_map<tp_key_type, tp_val_type>& hm) {
@@ -294,4 +295,5 @@ namespace zf {
 
         return true;
     }
+#endif
 }

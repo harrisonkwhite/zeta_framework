@@ -53,11 +53,11 @@ namespace zf {
 
         ZF_DEFER({ CloseFile(fs); });
 
-        if (!StreamWriteItem(fs, tex_data.size_in_pxs)) {
+        if (!StreamWrite(fs, tex_data.size_in_pxs)) {
             return false;
         }
 
-        if (!StreamWriteItemsOfArray(fs, tex_data.px_data)) {
+        if (!StreamWrite(fs, tex_data.px_data)) {
             return false;
         }
 
@@ -75,7 +75,7 @@ namespace zf {
 
         ZF_DEFER({ CloseFile(fs); });
 
-        if (!StreamReadItem(fs, o_tex_data.size_in_pxs)) {
+        if (!StreamRead(fs, o_tex_data.size_in_pxs)) {
             return false;
         }
 
@@ -83,7 +83,7 @@ namespace zf {
             return false;
         }
 
-        if (!StreamReadItemsIntoArray(fs, o_tex_data.px_data, o_tex_data.px_data.len)) {
+        if (!StreamRead(fs, o_tex_data.px_data, o_tex_data.px_data.len)) {
             return false;
         }
 
@@ -258,45 +258,47 @@ namespace zf {
         return true;
     }
 
-    t_b8 SerializeFont(s_byte_stream_write& bs, const s_font& font) {
-        if (!SerializeItem(bs, font.line_height)) {
+#if 0
+    t_b8 SerializeFont(s_stream& stream, const s_font& font) {
+        if (!StreamWriteItem(stream, font.line_height)) {
             return false;
         }
 
-        if (!SerializeHashMap(bs, font.codepoints_to_glyph_infos)) {
+        if (!SerializeHashMap(stream, font.codepoints_to_glyph_infos)) {
             return false;
         }
 
-        if (!SerializeHashMap(bs, font.codepoint_pairs_to_kernings)) {
+        if (!SerializeHashMap(stream, font.codepoint_pairs_to_kernings)) {
             return false;
         }
 
-        if (!SerializeArray(bs, font.atlases)) {
-            return false;
-        }
-
-        return true;
-    }
-
-    t_b8 DeserializeFont(s_mem_arena& mem_arena, s_byte_stream_read& bs, s_font& o_font) {
-        if (!DeserializeItem(bs, o_font.line_height)) {
-            return false;
-        }
-
-        if (!DeserializeHashMap(mem_arena, bs, g_s32_hash_func, DefaultBinComparator, o_font.codepoints_to_glyph_infos)) {
-            return false;
-        }
-
-        if (!DeserializeHashMap(mem_arena, bs, g_codepoint_pair_hash_func, g_codepoint_pair_comparator, o_font.codepoint_pairs_to_kernings)) {
-            return false;
-        }
-
-        if (!DeserializeArray(mem_arena, bs, o_font.atlases)) {
+        if (!SerializeArray(stream, font.atlases)) {
             return false;
         }
 
         return true;
     }
+
+    t_b8 DeserializeFont(s_mem_arena& mem_arena, s_stream& stream, s_font& o_font) {
+        if (!DeserializeItem(stream, o_font.line_height)) {
+            return false;
+        }
+
+        if (!DeserializeHashMap(mem_arena, stream, g_s32_hash_func, DefaultBinComparator, o_font.codepoints_to_glyph_infos)) {
+            return false;
+        }
+
+        if (!DeserializeHashMap(mem_arena, stream, g_codepoint_pair_hash_func, g_codepoint_pair_comparator, o_font.codepoint_pairs_to_kernings)) {
+            return false;
+        }
+
+        if (!DeserializeArray(mem_arena, stream, o_font.atlases)) {
+            return false;
+        }
+
+        return true;
+    }
+#endif
 
 #if 0
     t_b8 PackFont(const s_font& font, const s_str_rdonly file_path, s_mem_arena& temp_mem_arena) {

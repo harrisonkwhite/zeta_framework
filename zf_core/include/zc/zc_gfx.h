@@ -147,8 +147,8 @@ namespace zf {
     };
 
     [[nodiscard]] t_b8 LoadFontFromRaw(s_mem_arena& mem_arena, const s_str_rdonly file_path, const t_s32 height, const s_array_rdonly<t_s32> codepoints_no_dups, s_mem_arena& temp_mem_arena, s_font& o_font);
-    [[nodiscard]] t_b8 SerializeFont(s_byte_stream_write& bs, const s_font& font);
-    [[nodiscard]] t_b8 DeserializeFont(s_mem_arena& mem_arena, s_byte_stream_read& bs, s_font& o_font);
+    [[nodiscard]] t_b8 SerializeFont(s_stream& stream, const s_font& font);
+    [[nodiscard]] t_b8 DeserializeFont(s_mem_arena& mem_arena, s_stream& stream, s_font& o_font);
 #if 0
     [[nodiscard]] t_b8 PackFont(const s_font& font, const s_str_rdonly file_path, s_mem_arena& temp_mem_arena);
     [[nodiscard]] t_b8 UnpackFont(const s_str_rdonly file_path, s_mem_arena& mem_arena, s_font& o_font);
