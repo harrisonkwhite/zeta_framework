@@ -20,14 +20,17 @@ namespace zf {
 
         switch (mode) {
         case ek_file_access_mode_read:
+            o_fs.mode = ek_stream_mode_read;
             fs_raw = fopen(StrRaw(file_path), "rb");
             break;
 
         case ek_file_access_mode_write:
+            o_fs.mode = ek_stream_mode_write;
             fs_raw = fopen(StrRaw(file_path), "wb");
             break;
 
         case ek_file_access_mode_append:
+            o_fs.mode = ek_stream_mode_write;
             fs_raw = fopen(StrRaw(file_path), "ab");
             break;
         }
@@ -70,7 +73,7 @@ namespace zf {
             return false;
         }
 
-        if (!StreamRead(fs, o_contents, file_size)) {
+        if (!StreamReadItemsIntoArray(fs, o_contents, file_size)) {
             return false;
         }
 

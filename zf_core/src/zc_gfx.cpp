@@ -53,11 +53,11 @@ namespace zf {
 
         ZF_DEFER({ CloseFile(fs); });
 
-        if (!StreamWrite(fs, tex_data.size_in_pxs)) {
+        if (!StreamWriteItem(fs, tex_data.size_in_pxs)) {
             return false;
         }
 
-        if (!StreamWrite(fs, tex_data.px_data)) {
+        if (!StreamWriteItemsOfArray(fs, tex_data.px_data)) {
             return false;
         }
 
@@ -75,7 +75,7 @@ namespace zf {
 
         ZF_DEFER({ CloseFile(fs); });
 
-        if (!StreamRead(fs, o_tex_data.size_in_pxs)) {
+        if (!StreamReadItem(fs, o_tex_data.size_in_pxs)) {
             return false;
         }
 
@@ -83,7 +83,7 @@ namespace zf {
             return false;
         }
 
-        if (!StreamRead(fs, o_tex_data.px_data, o_tex_data.px_data.len)) {
+        if (!StreamReadItemsIntoArray(fs, o_tex_data.px_data, o_tex_data.px_data.len)) {
             return false;
         }
 
@@ -258,7 +258,6 @@ namespace zf {
         return true;
     }
 
-#if 0
     t_b8 SerializeFont(s_stream& stream, const s_font& font) {
         if (!StreamWriteItem(stream, font.line_height)) {
             return false;
@@ -280,7 +279,7 @@ namespace zf {
     }
 
     t_b8 DeserializeFont(s_mem_arena& mem_arena, s_stream& stream, s_font& o_font) {
-        if (!DeserializeItem(stream, o_font.line_height)) {
+        if (!StreamReadItem(stream, o_font.line_height)) {
             return false;
         }
 
@@ -298,9 +297,7 @@ namespace zf {
 
         return true;
     }
-#endif
 
-#if 0
     t_b8 PackFont(const s_font& font, const s_str_rdonly file_path, s_mem_arena& temp_mem_arena) {
         ZF_ASSERT(IsStrTerminated(file_path));
 
@@ -310,67 +307,28 @@ namespace zf {
             return false;
         }
 
-        s_file_stream fs;
+        s_stream fs;
 
-        if (!OpenFile(file_path, ec_file_access_mode::write, fs)) {
+        if (!OpenFile(file_path, ek_file_access_mode_write, fs)) {
             return false;
         }
 
         ZF_DEFER({ CloseFile(fs); });
 
-        if (!WriteItemToFile(fs, font.line_height)) {
-            return false;
-        }
-
-        // @todo
-#if 0
-        if (!SerializeHashMap(font.codepoints_to_glyph_infos, fs)) {
-            return false;
-        }
-
-        if (!SerializeHashMap(font.codepoint_pairs_to_kernings, fs)) {
-            return false;
-        }
-#endif
-
-        if (WriteItemArrayToFile(fs, font.atlases) < font.atlases.len) {
-            return false;
-        }
-
-        return true;
+        return SerializeFont(fs, font);
     }
 
     t_b8 UnpackFont(const s_str_rdonly file_path, s_mem_arena& mem_arena, s_font& o_font) {
         ZF_ASSERT(IsStrTerminated(file_path));
 
-        t_b8 clean_up = false;
-        ZF_DEFER_MEM_ARENA_REWIND_IF(mem_arena, clean_up);
+        s_stream fs;
 
-        s_file_stream fs;
-
-        if (!OpenFile(file_path, ec_file_access_mode::read, fs)) {
-            clean_up = true;
+        if (!OpenFile(file_path, ek_file_access_mode_read, fs)) {
             return false;
         }
 
         ZF_DEFER({ CloseFile(fs); });
 
-        if (!ReadItemFromFile(fs, o_font.line_height)) {
-            clean_up = true;
-            return false;
-        }
-
-#if 0
-        if (!DeserializeHashMap(font.codepoints_to_glyph_infos, fs)) {
-        }
-#endif
-
-        if (ReadItemArrayFromFile(fs, o_font.atlases) < o_font.atlases.len) {
-            clean_up = true;
-            return false;
-        }
-
-        return true;
+        return DeserializeFont(mem_arena, fs, o_font);
     }
-#endif
 }

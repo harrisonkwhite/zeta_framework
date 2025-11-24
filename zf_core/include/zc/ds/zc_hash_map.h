@@ -1,6 +1,7 @@
 #pragma once
 
 #include <zc/zc_strs.h>
+#include <zc/zc_array_serial.h>
 #include <zc/ds/zc_bit_vector.h>
 #include <zc/ds/zc_list.h>
 
@@ -231,31 +232,30 @@ namespace zf {
         return true;
     }
 
-#if 0
     // This DOES NOT serialize the hash function pointer and binary comparator function pointer!
     template<typename tp_key_type, typename tp_val_type>
-    [[nodiscard]] t_b8 SerializeHashMap(s_byte_stream_write& bs, const s_hash_map<tp_key_type, tp_val_type>& hm) {
-        if (!SerializeItem(bs, hm.kv_pair_cnt)) {
+    [[nodiscard]] t_b8 SerializeHashMap(s_stream& stream, const s_hash_map<tp_key_type, tp_val_type>& hm) {
+        if (!StreamWriteItem(stream, hm.kv_pair_cnt)) {
             return false;
         }
 
-        if (!SerializeArray(bs, hm.backing_store_indexes)) {
+        if (!SerializeArray(stream, hm.backing_store_indexes)) {
             return false;
         }
 
-        if (!SerializeArray(bs, hm.backing_store.keys)) {
+        if (!SerializeArray(stream, hm.backing_store.keys)) {
             return false;
         }
 
-        if (!SerializeArray(bs, hm.backing_store.vals)) {
+        if (!SerializeArray(stream, hm.backing_store.vals)) {
             return false;
         }
 
-        if (!SerializeArray(bs, hm.backing_store.next_indexes)) {
+        if (!SerializeArray(stream, hm.backing_store.next_indexes)) {
             return false;
         }
 
-        if (!SerializeBitVector(bs, hm.backing_store.usage)) {
+        if (!SerializeBitVector(stream, hm.backing_store.usage)) {
             return false;
         }
 
@@ -263,37 +263,36 @@ namespace zf {
     }
 
     template<typename tp_key_type, typename tp_val_type>
-    [[nodiscard]] t_b8 DeserializeHashMap(s_mem_arena& mem_arena, s_byte_stream_read& bs, const t_hash_func<tp_key_type> hash_func, const t_bin_comparator<tp_key_type> key_comparator, s_hash_map<tp_key_type, tp_val_type>& o_hm) {
+    [[nodiscard]] t_b8 DeserializeHashMap(s_mem_arena& mem_arena, s_stream& stream, const t_hash_func<tp_key_type> hash_func, const t_bin_comparator<tp_key_type> key_comparator, s_hash_map<tp_key_type, tp_val_type>& o_hm) {
         o_hm = {
             .hash_func = hash_func,
             .key_comparator = key_comparator
         };
 
-        if (!DeserializeItem(bs, o_hm.kv_pair_cnt)) {
+        if (!StreamReadItem(stream, o_hm.kv_pair_cnt)) {
             return false;
         }
 
-        if (!DeserializeArray(mem_arena, bs, o_hm.backing_store_indexes)) {
+        if (!DeserializeArray(mem_arena, stream, o_hm.backing_store_indexes)) {
             return false;
         }
 
-        if (!DeserializeArray(mem_arena, bs, o_hm.backing_store.keys)) {
+        if (!DeserializeArray(mem_arena, stream, o_hm.backing_store.keys)) {
             return false;
         }
 
-        if (!DeserializeArray(mem_arena, bs, o_hm.backing_store.vals)) {
+        if (!DeserializeArray(mem_arena, stream, o_hm.backing_store.vals)) {
             return false;
         }
 
-        if (!DeserializeArray(mem_arena, bs, o_hm.backing_store.next_indexes)) {
+        if (!DeserializeArray(mem_arena, stream, o_hm.backing_store.next_indexes)) {
             return false;
         }
 
-        if (!DeserializeBitVector(mem_arena, bs, o_hm.backing_store.usage)) {
+        if (!DeserializeBitVector(mem_arena, stream, o_hm.backing_store.usage)) {
             return false;
         }
 
         return true;
     }
-#endif
 }

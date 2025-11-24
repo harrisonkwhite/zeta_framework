@@ -21,6 +21,7 @@ add_library(zf_core STATIC
     include/zc/zc_algos.h
     include/zc/zc_strs.h
     include/zc/zc_debug.h
+    include/zc/zc_array_serial.h
     include/zc/ds/zc_bit_vector.h
     include/zc/ds/zc_activity_array.h
     include/zc/ds/zc_list.h

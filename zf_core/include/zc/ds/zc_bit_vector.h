@@ -1,6 +1,6 @@
 #pragma once
 
-#include <zc/zc_mem.h>
+#include <zc/zc_io.h>
 
 namespace zf {
     constexpr t_u8 ByteBitmask(const t_size bit_index) {
@@ -121,8 +121,6 @@ namespace zf {
 
     t_b8 MakeBitVector(s_mem_arena& mem_arena, const t_size bit_cnt, s_bit_vector& o_bv);
 
-#if 0
-    [[nodiscard]] t_b8 SerializeBitVector(s_byte_stream_write& bs, const s_bit_vector_rdonly bv); // Serializes the bit vector EXCLUDING BYTES BEYOND THE BIT COUNT! For example, a bit vector with a bit count of 10 will only have its first 2 bytes serialized. Excess bits in the final byte are not zeroed out.
-    [[nodiscard]] t_b8 DeserializeBitVector(s_mem_arena& mem_arena, s_byte_stream_read& bs, s_bit_vector& o_bv);
-#endif
+    [[nodiscard]] t_b8 SerializeBitVector(s_stream& stream, const s_bit_vector_rdonly bv); // Serializes the bit vector EXCLUDING BYTES BEYOND THE BIT COUNT! For example, a bit vector with a bit count of 10 will only have its first 2 bytes serialized. Excess bits in the final byte are not zeroed out.
+    [[nodiscard]] t_b8 DeserializeBitVector(s_mem_arena& mem_arena, s_stream& stream, s_bit_vector& o_bv);
 }

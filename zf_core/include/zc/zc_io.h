@@ -22,6 +22,8 @@ namespace zf {
     };
 
     struct s_stream {
+        e_stream_mode mode;
+
         e_stream_type type;
 
         union {
@@ -37,7 +39,9 @@ namespace zf {
     };
 
     template<typename tp_type>
-    [[nodiscard]] t_b8 StreamRead(s_stream& stream, tp_type& o_item) {
+    [[nodiscard]] t_b8 StreamReadItem(s_stream& stream, tp_type& o_item) {
+        ZF_ASSERT(stream.mode == ek_stream_mode_read);
+
         constexpr t_size size = ZF_SIZE_OF(tp_type);
 
         switch(stream.type) {
@@ -65,8 +69,8 @@ namespace zf {
     }
 
     template<typename tp_type>
-    [[nodiscard]] t_b8 StreamWrite(s_stream& stream, const tp_type& item) {
-        return true;
+    [[nodiscard]] t_b8 StreamWriteItem(s_stream& stream, const tp_type& item) {
+        ZF_ASSERT(stream.mode == ek_stream_mode_write);
 
         constexpr t_size size = ZF_SIZE_OF(tp_type);
 
@@ -95,7 +99,8 @@ namespace zf {
     }
 
     template<c_array tp_type>
-    [[nodiscard]] t_b8 StreamRead(s_stream& stream, tp_type& arr, const t_size cnt) {
+    [[nodiscard]] t_b8 StreamReadItemsIntoArray(s_stream& stream, tp_type& arr, const t_size cnt) {
+        ZF_ASSERT(stream.mode == ek_stream_mode_read);
         ZF_ASSERT(cnt >= 0 && cnt <= ArrayLen(arr));
 
         if (cnt == 0) {
@@ -129,7 +134,9 @@ namespace zf {
     }
 
     template<c_array tp_type>
-    [[nodiscard]] t_b8 StreamWrite(s_stream& stream, tp_type& arr) {
+    [[nodiscard]] t_b8 StreamWriteItemsOfArray(s_stream& stream, tp_type& arr) {
+        ZF_ASSERT(stream.mode == ek_stream_mode_write);
+
         if (IsArrayEmpty(arr)) {
             return true;
         }
