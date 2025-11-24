@@ -143,18 +143,18 @@ namespace zf::gfx {
     t_b8 AreResourcesEqual(const s_resource_handle& a, const s_resource_handle& b) {
         if (a.type == b.type) {
             switch (a.type) {
-            case ec_resource_type::invalid:
+            case ek_resource_type_invalid:
                 return true;
 
-            case ec_resource_type::mesh:
+            case ek_resource_type_mesh:
                 return a.raw.mesh.vert_arr_gl_id == b.raw.mesh.vert_arr_gl_id
                     && a.raw.mesh.vert_buf_gl_id == b.raw.mesh.vert_buf_gl_id
                     && a.raw.mesh.elem_buf_gl_id == b.raw.mesh.elem_buf_gl_id;
 
-            case ec_resource_type::shader_prog:
+            case ek_resource_type_shader_prog:
                 return a.raw.shader_prog.gl_id == b.raw.shader_prog.gl_id;
 
-            case ec_resource_type::texture:
+            case ek_resource_type_texture:
                 return a.raw.tex.gl_id == b.raw.tex.gl_id;
             }
         }
@@ -164,21 +164,21 @@ namespace zf::gfx {
 
     void ReleaseResource(const s_resource_handle& hdl) {
         switch (hdl.type) {
-        case ec_resource_type::invalid:
+        case ek_resource_type_invalid:
             ZF_ASSERT(false);
             break;
 
-        case ec_resource_type::mesh:
+        case ek_resource_type_mesh:
             glDeleteBuffers(1, &hdl.raw.mesh.elem_buf_gl_id);
             glDeleteBuffers(1, &hdl.raw.mesh.vert_buf_gl_id);
             glDeleteVertexArrays(1, &hdl.raw.mesh.vert_arr_gl_id);
             break;
 
-        case ec_resource_type::shader_prog:
+        case ek_resource_type_shader_prog:
             glDeleteProgram(hdl.raw.shader_prog.gl_id);
             break;
 
-        case ec_resource_type::texture:
+        case ek_resource_type_texture:
             glDeleteTextures(1, &hdl.raw.tex.gl_id);
             break;
         }

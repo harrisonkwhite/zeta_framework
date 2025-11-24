@@ -9,21 +9,21 @@
 #endif
 
 namespace zf {
-    t_b8 OpenFile(const s_str_rdonly file_path, const ec_file_access_mode mode, s_file_stream& o_fs) {
+    t_b8 OpenFile(const s_str_rdonly file_path, const e_file_access_mode mode, s_file_stream& o_fs) {
         ZF_ASSERT(IsStrTerminated(file_path));
 
         FILE* fs_raw = nullptr;
 
         switch (mode) {
-        case ec_file_access_mode::read:
+        case e_file_access_mode::read:
             fs_raw = fopen(StrRaw(file_path), "rb");
             break;
 
-        case ec_file_access_mode::write:
+        case e_file_access_mode::write:
             fs_raw = fopen(StrRaw(file_path), "wb");
             break;
 
-        case ec_file_access_mode::append:
+        case e_file_access_mode::append:
             fs_raw = fopen(StrRaw(file_path), "ab");
             break;
         }
@@ -59,7 +59,7 @@ namespace zf {
 
         s_file_stream fs;
 
-        if (!OpenFile(file_path, ec_file_access_mode::read, fs)) {
+        if (!OpenFile(file_path, e_file_access_mode::read, fs)) {
             return false;
         }
 
@@ -135,7 +135,7 @@ namespace zf {
 
                     path_clone.chrs[i] = '\0'; // Temporarily cut the string off here to form the subpath.
 
-                    if (CheckPathType(path_clone) == ec_path_type::not_found) {
+                    if (CheckPathType(path_clone) == e_path_type::not_found) {
                         if (!CreateDirectory(path_clone)) {
                             return false;
                         }
@@ -185,7 +185,7 @@ namespace zf {
 
                 s_file_stream fs;
 
-                if (!OpenFile(path, ec_file_access_mode::write, fs)) {
+                if (!OpenFile(path, e_file_access_mode::write, fs)) {
                     return false;
                 }
 
@@ -198,17 +198,17 @@ namespace zf {
         return true;
     }
 
-    ec_path_type CheckPathType(const s_str_rdonly path) {
+    e_path_type CheckPathType(const s_str_rdonly path) {
         struct stat info;
 
         if (stat(StrRaw(path), &info) != 0) {
-            return ec_path_type::not_found;
+            return e_path_type::not_found;
         }
 
         if (info.st_mode & S_IFDIR) {
-            return ec_path_type::directory;
+            return e_path_type::directory;
         }
 
-        return ec_path_type::file;
+        return e_path_type::file;
     }
 }

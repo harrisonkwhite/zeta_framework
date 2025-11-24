@@ -6,11 +6,11 @@
 namespace zf::gfx {
     using t_gl_id = GLuint;
 
-    enum class ec_resource_type {
-        invalid,
-        mesh,
-        shader_prog,
-        texture
+    enum e_resource_type : t_s32 {
+        ek_resource_type_invalid,
+        ek_resource_type_mesh,
+        ek_resource_type_shader_prog,
+        ek_resource_type_texture
     };
 
     struct s_gl_mesh {
@@ -20,7 +20,7 @@ namespace zf::gfx {
     };
 
     struct s_resource_handle {
-        ec_resource_type type;
+        e_resource_type type;
 
         union {
             s_gl_mesh mesh;
@@ -40,7 +40,7 @@ namespace zf::gfx {
     };
 
     inline t_b8 IsResourceHandleValid(const s_resource_handle& hdl) {
-        return hdl.type != ec_resource_type::invalid;
+        return hdl.type != ek_resource_type_invalid;
     }
 
     inline s_resource_handle MakeMeshHandle(const s_gl_mesh gl_mesh) {
@@ -49,7 +49,7 @@ namespace zf::gfx {
         ZF_ASSERT(gl_mesh.elem_buf_gl_id);
 
         return {
-            .type = ec_resource_type::mesh,
+            .type = ek_resource_type_mesh,
             .raw = {.mesh = gl_mesh}
         };
     }
@@ -58,7 +58,7 @@ namespace zf::gfx {
         ZF_ASSERT(shader_prog_gl_id);
 
         return {
-            .type = ec_resource_type::shader_prog,
+            .type = ek_resource_type_shader_prog,
             .raw = {.shader_prog = {shader_prog_gl_id}}
         };
     }
@@ -67,7 +67,7 @@ namespace zf::gfx {
         ZF_ASSERT(tex_gl_id);
 
         return {
-            .type = ec_resource_type::texture,
+            .type = ek_resource_type_texture,
             .raw = {.tex = {tex_gl_id}}
         };
     }

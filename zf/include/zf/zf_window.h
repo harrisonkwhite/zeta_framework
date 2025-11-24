@@ -9,7 +9,7 @@ namespace zf {
         ek_window_flags_hide_cursor = 1 << 1
     };
 
-    enum e_key_code {
+    enum e_key_code : t_s32 {
         eks_key_code_none = -1,
 
         ek_key_code_space,
@@ -79,7 +79,7 @@ namespace zf {
         eks_key_code_cnt
     };
 
-    enum e_mouse_button_code {
+    enum e_mouse_button_code : t_s32 {
         eks_mouse_button_code_none = -1,
 
         ek_mouse_button_code_left,
@@ -89,10 +89,10 @@ namespace zf {
         eks_mouse_button_code_cnt
     };
 
-    enum class ec_mouse_scroll_state {
-        none,
-        down,
-        up
+    enum e_mouse_scroll_state : t_s32 {
+        ek_mouse_scroll_state_none,
+        ek_mouse_scroll_state_down,
+        ek_mouse_scroll_state_up
     };
 
     t_b8 InitWindow(const s_v2<t_s32> size, const s_str_rdonly title, const e_window_flags flags);
@@ -124,5 +124,5 @@ namespace zf {
     t_b8 IsMouseButtonReleased(const e_mouse_button_code mbc);
 
     s_v2<t_f64> GetMousePos();
-    ec_mouse_scroll_state GetMouseScrollState();
+    e_mouse_scroll_state GetMouseScrollState();
 }

@@ -1,7 +1,7 @@
 #include <zc/zc_strs.h>
 
 namespace zf {
-    enum e_utf8_byte_type {
+    enum e_utf8_byte_type : t_s32 {
         ek_utf8_byte_type_ascii,
         ek_utf8_byte_type_2byte_start,
         ek_utf8_byte_type_3byte_start,

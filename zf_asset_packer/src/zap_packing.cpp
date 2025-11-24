@@ -3,7 +3,7 @@
 #include <cJSON.h>
 
 namespace zf {
-    enum e_asset_type {
+    enum e_asset_type : t_s32 {
         ek_asset_type_texture,
         ek_asset_type_sound,
 
@@ -15,36 +15,38 @@ namespace zf {
         "sounds"
     }};
 
-    enum class ec_asset_field_type {
-        str,
-        num
+    enum e_asset_field_type : t_s32 {
+        ek_asset_field_type_str,
+        ek_asset_field_type_num
     };
 
     struct s_asset_field {
         s_str_rdonly name;
-        ec_asset_field_type type;
+        e_asset_field_type type;
     };
 
-    enum e_tex_field {
+    enum e_tex_field : t_s32 {
         ek_tex_field_src_file_path,
         ek_tex_field_dest_file_path,
+
         eks_tex_field_cnt
     };
 
     constexpr s_static_array<s_asset_field, eks_tex_field_cnt> g_tex_fields = {{
-        {"src_file_path", ec_asset_field_type::str},
-        {"dest_file_path", ec_asset_field_type::str}
+        {"src_file_path", ek_asset_field_type_str},
+        {"dest_file_path", ek_asset_field_type_str}
     }};
 
-    enum e_snd_field {
+    enum e_snd_field : t_s32 {
         ek_snd_field_src_file_path,
         ek_snd_field_dest_file_path,
+
         eks_snd_field_cnt
     };
 
     constexpr s_static_array<s_asset_field, eks_snd_field_cnt> g_snd_fields = {{
-        {"src_file_path", ec_asset_field_type::str},
-        {"dest_file_path", ec_asset_field_type::str}
+        {"src_file_path", ek_asset_field_type_str},
+        {"dest_file_path", ek_asset_field_type_str}
     }};
 
     static t_b8 PackAssetsFromInstrs(cJSON* const cj, s_mem_arena& temp_mem_arena) {
@@ -101,10 +103,10 @@ namespace zf {
 
                     const auto is_valid = [fi, fields, field_vals]() -> t_b8 {
                         switch (fields[fi].type) {
-                            case ec_asset_field_type::str:
+                            case ek_asset_field_type_str:
                                 return cJSON_IsString(field_vals[fi]);
 
-                            case ec_asset_field_type::num:
+                            case ek_asset_field_type_num:
                                 return cJSON_IsNumber(field_vals[fi]);
                         }
 

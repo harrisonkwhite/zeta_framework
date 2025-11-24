@@ -5,17 +5,17 @@
 #include <zc/zc_mem.h>
 
 namespace zf {
-    enum ec_file_access_mode {
-        read,
-        write,
-        append
+    enum e_file_access_mode : t_s32 {
+        ek_file_access_mode_read,
+        ek_file_access_mode_write,
+        ek_file_access_mode_append
     };
 
     struct s_file_stream {
         FILE* raw;
     };
 
-    [[nodiscard]] t_b8 OpenFile(const s_str_rdonly file_path, const ec_file_access_mode mode, s_file_stream& o_fs);
+    [[nodiscard]] t_b8 OpenFile(const s_str_rdonly file_path, const e_file_access_mode mode, s_file_stream& o_fs);
     void CloseFile(s_file_stream& fs);
     t_size CalcFileSize(const s_file_stream& fs);
 
@@ -56,23 +56,23 @@ namespace zf {
     }
 
     // @todo: Use this!
-    enum class ec_directory_creation_result {
-        success,
-        already_exists,
-        permission_denied,
-        path_not_found,
-        unknown_err
+    enum e_directory_creation_result : t_s32 {
+        ek_directory_creation_result_success,
+        ek_directory_creation_result_already_exists,
+        ek_directory_creation_result_permission_denied,
+        ek_directory_creation_result_path_not_found,
+        ek_directory_creation_result_unknown_err
     };
 
     t_b8 CreateDirectory(const s_str_rdonly path); // This DOES NOT create non-existent parent directories.
     t_b8 CreateDirectoryAndParents(const s_str_rdonly path, s_mem_arena& temp_mem_arena);
     t_b8 CreateFileAndParentDirs(const s_str_rdonly path, s_mem_arena& temp_mem_arena);
 
-    enum class ec_path_type {
-        not_found,
-        file,
-        directory
+    enum e_path_type : t_s32 {
+        ek_path_type_not_found,
+        ek_path_type_file,
+        ek_path_type_directory
     };
 
-    ec_path_type CheckPathType(const s_str_rdonly path);
+    e_path_type CheckPathType(const s_str_rdonly path);
 }

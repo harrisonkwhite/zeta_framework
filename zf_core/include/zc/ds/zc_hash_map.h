@@ -86,14 +86,14 @@ namespace zf {
         return bs_get(bs_get, hm.backing_store_indexes[hash_index]);
     }
 
-    enum class ec_hash_map_put_result {
-        added,
-        updated,
-        error
+    enum e_hash_map_put_result : t_s32 {
+        ek_hash_map_put_result_added,
+        ek_hash_map_put_result_updated,
+        ek_hash_map_put_result_error
     };
 
     template<typename tp_key_type, typename tp_val_type>
-    [[nodiscard]] ec_hash_map_put_result HashMapPut(s_hash_map<tp_key_type, tp_val_type>& hm, const tp_key_type& key, const tp_val_type& val) {
+    [[nodiscard]] e_hash_map_put_result HashMapPut(s_hash_map<tp_key_type, tp_val_type>& hm, const tp_key_type& key, const tp_val_type& val) {
         const t_size hash_index = KeyToHashIndex(key, hm.hash_func, hm.backing_store_indexes.len);
 
         const auto bs_put = [&hm, &key, &val](const auto self, t_size& index) {
@@ -102,7 +102,7 @@ namespace zf {
 
                 if (prospective_index == -1) {
                     // We're out of room!
-                    return ec_hash_map_put_result::error;
+                    return ek_hash_map_put_result_error;
                 }
 
                 index = prospective_index;
@@ -114,12 +114,12 @@ namespace zf {
 
                 hm.kv_pair_cnt++;
 
-                return ec_hash_map_put_result::added;
+                return ek_hash_map_put_result_added;
             }
 
             if (hm.key_comparator(hm.backing_store.keys[index], key)) {
                 hm.backing_store.vals[index] = val;
-                return ec_hash_map_put_result::updated;
+                return ek_hash_map_put_result_updated;
             }
 
             return self(self, hm.backing_store.next_indexes[index]);

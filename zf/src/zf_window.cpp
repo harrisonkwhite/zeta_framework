@@ -21,7 +21,7 @@ namespace zf {
         s_static_bit_vector<eks_mouse_button_code_cnt> mouse_buttons_pressed;
         s_static_bit_vector<eks_mouse_button_code_cnt> mouse_buttons_released;
 
-        ec_mouse_scroll_state mouse_scroll_state;
+        e_mouse_scroll_state mouse_scroll_state;
 
         s_static_array<char, 32> unicode_buf;
     };
@@ -261,11 +261,11 @@ namespace zf {
         glfwSetScrollCallback(g_glfw_window,
             [](GLFWwindow* const window, const t_f64, const t_f64 offs_y) {
                 if (offs_y > 0.0) {
-                    g_input_events.mouse_scroll_state = ec_mouse_scroll_state::up;
+                    g_input_events.mouse_scroll_state = e_mouse_scroll_state::up;
                 } else if (offs_y < 0.0) {
-                    g_input_events.mouse_scroll_state = ec_mouse_scroll_state::down;
+                    g_input_events.mouse_scroll_state = e_mouse_scroll_state::down;
                 } else {
-                    g_input_events.mouse_scroll_state = ec_mouse_scroll_state::none;
+                    g_input_events.mouse_scroll_state = e_mouse_scroll_state::none;
                 }
             }
         );
@@ -395,7 +395,7 @@ namespace zf {
         return {mx, my};
     }
 
-    ec_mouse_scroll_state GetMouseScrollState() {
+    e_mouse_scroll_state GetMouseScrollState() {
         return g_input_events.mouse_scroll_state;
     }
 }

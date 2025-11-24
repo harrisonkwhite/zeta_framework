@@ -47,6 +47,28 @@ namespace zf {
 
 #define ZF_DEFER(x) auto ZF_CONCAT(p_defer_, ZF_CONCAT(l, __LINE__)) = zf::p_s_defer([&]() x)
 
+#define ZF_ENABLE_ENUM_FLAGS(x) \
+    inline x operator|(x lhs, x rhs) { \
+        using tp_type = std::underlying_type_t<x>; \
+        return static_cast<x>(static_cast<tp_type>(lhs) | static_cast<tp_type>(rhs)); \
+    } \
+    inline x operator&(x lhs, x rhs) { \
+        using tp_type = std::underlying_type_t<x>; \
+        return static_cast<x>(static_cast<tp_type>(lhs) & static_cast<tp_type>(rhs)); \
+    } \
+    inline x& operator|=(x& lhs, x rhs) { \
+        lhs = lhs | rhs; \
+        return lhs; \
+    } \
+    inline x& operator&=(x& lhs, x rhs) { \
+        lhs = lhs & rhs; \
+        return lhs; \
+    } \
+    inline x operator~(x f) { \
+        using tp_type = std::underlying_type_t<x>; \
+        return static_cast<x>(~static_cast<tp_type>(f)); \
+    }
+
     static_assert(CHAR_BIT == 8);
 
     using t_s8 = signed char;
