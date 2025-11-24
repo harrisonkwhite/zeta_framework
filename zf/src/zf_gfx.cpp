@@ -236,27 +236,43 @@ namespace zf::gfx {
         return ListAppend(res_arena.hdls, MakeTextureHandle(tex_gl_id));
     }
 
-    t_b8 LoadFontAssetFromRaw(const s_str_rdonly file_path, const t_s32 height, const s_array_rdonly<t_s32> codepoints_no_dups, s_mem_arena& mem_arena, s_resource_arena& res_arena, s_mem_arena& temp_mem_arena, s_font_asset& o_asset) {
-        o_asset = {};
-
-        s_array<t_font_atlas_rgba> atlas_rgbas;
-
-        if (!LoadFontFromRaw(file_path, height, codepoints_no_dups, mem_arena, temp_mem_arena, o_asset.arrangement, atlas_rgbas)) {
-            return false;
-        }
-
-        if (!MakeArray(mem_arena, atlas_rgbas.len, o_asset.atlas_tex_hdls)) {
+    [[nodiscard]] static t_b8 MakeFontAtlasTextureHandles(const s_array_rdonly<t_font_atlas_rgba> atlas_rgbas, s_mem_arena& mem_arena, s_resource_arena& res_arena, s_array<s_resource_handle> o_hdls) {
+        if (!MakeArray(mem_arena, atlas_rgbas.len, o_hdls)) {
             return false;
         }
 
         for (t_size i = 0; i < atlas_rgbas.len; i++) {
-            o_asset.atlas_tex_hdls[i] = MakeTexture(res_arena, {g_font_atlas_size, atlas_rgbas[i]});
+            o_hdls[i] = MakeTexture(res_arena, {g_font_atlas_size, atlas_rgbas[i]});
 
-            if (!IsResourceHandleValid(o_asset.atlas_tex_hdls[i])) {
+            if (!IsResourceHandleValid(o_hdls[i])) {
                 return false;
             }
         }
 
         return true;
+    }
+
+    t_b8 LoadFontAssetFromRaw(const s_str_rdonly file_path, const t_s32 height, const s_array_rdonly<t_s32> codepoints_no_dups, s_mem_arena& mem_arena, s_resource_arena& res_arena, s_mem_arena& temp_mem_arena, s_font_asset& o_asset) {
+        o_asset = {};
+
+        s_array<t_font_atlas_rgba> atlas_rgbas;
+
+        if (!LoadFontFromRaw(file_path, height, codepoints_no_dups, mem_arena, temp_mem_arena, temp_mem_arena, o_asset.arrangement, atlas_rgbas)) {
+            return false;
+        }
+
+        return MakeFontAtlasTextureHandles(atlas_rgbas, mem_arena, res_arena, o_asset.atlas_tex_hdls);
+    }
+
+    t_b8 LoadFontAssetFromPacked(const s_str_rdonly file_path, s_mem_arena& mem_arena, s_resource_arena& res_arena, s_mem_arena& temp_mem_arena, s_font_asset& o_asset) {
+        o_asset = {};
+
+        s_array<t_font_atlas_rgba> atlas_rgbas;
+
+        if (!UnpackFont(file_path, mem_arena, temp_mem_arena, o_asset.arrangement, atlas_rgbas)) {
+            return false;
+        }
+
+        return MakeFontAtlasTextureHandles(atlas_rgbas, mem_arena, res_arena, o_asset.atlas_tex_hdls);
     }
 }
