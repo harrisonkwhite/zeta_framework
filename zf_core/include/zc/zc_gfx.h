@@ -115,9 +115,9 @@ namespace zf {
     [[nodiscard]] t_b8 PackTexture(const s_str_rdonly dest_file_path, const s_str_rdonly src_file_path, s_mem_arena& temp_mem_arena);
     [[nodiscard]] t_b8 UnpackTexture(const s_str_rdonly file_path, s_mem_arena& mem_arena, s_rgba_texture_data& o_tex_data);
 
-    constexpr s_v2<t_s32> g_atlas_size = {1024, 1024};
+    constexpr s_v2<t_s32> g_font_atlas_size = {1024, 1024};
 
-    using t_font_atlas = s_static_array<t_u8, 4 * g_atlas_size.x * g_atlas_size.y>;
+    using t_font_atlas_rgba = s_static_array<t_u8, 4 * g_font_atlas_size.x * g_font_atlas_size.y>;
 
     struct s_font_glyph_info {
         // These are for determining positioning relative to other characters.
@@ -130,23 +130,18 @@ namespace zf {
         s_rect<t_s32> atlas_rect;
     };
 
-    struct s_codepoint_pair {
+    struct s_font_codepoint_pair {
         t_s32 a;
         t_s32 b;
     };
 
-    struct s_font {
+    struct s_font_arrangement {
         t_s32 line_height;
-
         s_hash_map<t_s32, s_font_glyph_info> codepoints_to_glyph_infos; // Some duplicity here since a single glyph might have multiple codepoints mapped to it.
-        s_hash_map<s_codepoint_pair, t_s32> codepoint_pairs_to_kernings;
-        s_array<t_font_atlas> atlases;
+        s_hash_map<s_font_codepoint_pair, t_s32> codepoint_pairs_to_kernings;
     };
 
-    [[nodiscard]] t_b8 LoadFontFromRaw(const s_str_rdonly file_path, const t_s32 height, const s_array_rdonly<t_s32> codepoints_no_dups, s_mem_arena& mem_arena, s_mem_arena& temp_mem_arena, s_font& o_font);
-    [[nodiscard]] t_b8 SerializeFont(s_stream& stream, const s_font& font);
-    [[nodiscard]] t_b8 DeserializeFont(s_stream& stream, s_mem_arena& mem_arena, s_font& o_font);
-
+    [[nodiscard]] t_b8 LoadFontFromRaw(const s_str_rdonly file_path, const t_s32 height, const s_array_rdonly<t_s32> codepoints_no_dups, s_mem_arena& mem_arena, s_mem_arena& temp_mem_arena, s_font_arrangement& o_arrangement, s_array<t_font_atlas_rgba>& o_atlas_rgbas);
     [[nodiscard]] t_b8 PackFont(const s_str_rdonly dest_file_path, const s_str_rdonly src_file_path, const t_s32 height, const s_array_rdonly<t_s32> codepoints, s_mem_arena& temp_mem_arena);
-    [[nodiscard]] t_b8 UnpackFont(const s_str_rdonly file_path, s_mem_arena& mem_arena, s_font& o_font);
+    [[nodiscard]] t_b8 UnpackFont(const s_str_rdonly file_path, s_mem_arena& mem_arena, s_font_arrangement& o_arrangement, s_array<t_font_atlas_rgba>& o_atlas_rgbas);
 }

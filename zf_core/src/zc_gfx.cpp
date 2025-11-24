@@ -5,12 +5,12 @@
 #include <stb_truetype.h>
 
 namespace zf {
-    const t_hash_func<s_codepoint_pair> g_codepoint_pair_hash_func = [](const s_codepoint_pair& pair) {
+    const t_hash_func<s_font_codepoint_pair> g_codepoint_pair_hash_func = [](const s_font_codepoint_pair& pair) {
         // Combine the 32-bit pairs into a single 64-bit integer and mask out the sign bit.
         return ((static_cast<t_size>(pair.a) << 32) & pair.b) & 0x7FFFFFFFFFFFFFFF;
     };
 
-    const t_bin_comparator<s_codepoint_pair> g_codepoint_pair_comparator = [](const s_codepoint_pair& pa, const s_codepoint_pair& pb) {
+    const t_bin_comparator<s_font_codepoint_pair> g_codepoint_pair_comparator = [](const s_font_codepoint_pair& pa, const s_font_codepoint_pair& pb) {
         return pa.a == pb.a && pa.b == pb.b;
     };
 
@@ -95,10 +95,12 @@ namespace zf {
         return true;
     }
 
-    t_b8 LoadFontFromRaw(const s_str_rdonly file_path, const t_s32 height, const s_array_rdonly<t_s32> codepoints_no_dups, s_mem_arena& mem_arena, s_mem_arena& temp_mem_arena, s_font& o_font) {
+    t_b8 LoadFontFromRaw(const s_str_rdonly file_path, const t_s32 height, const s_array_rdonly<t_s32> codepoints_no_dups, s_mem_arena& mem_arena, s_mem_arena& temp_mem_arena, s_font_arrangement& o_arrangement, s_array<t_font_atlas_rgba>& o_atlas_rgbas) {
         ZF_ASSERT(IsStrTerminated(file_path));
         ZF_ASSERT(height > 0);
         ZF_ASSERT(!IsArrayEmpty(codepoints_no_dups));
+
+        o_arrangement = {};
 
         // Get the plain font file data.
         s_array<t_u8> font_file_data;
@@ -126,12 +128,12 @@ namespace zf {
         t_s32 vm_ascent, vm_descent, vm_line_gap;
         stbtt_GetFontVMetrics(&stb_font_info, &vm_ascent, &vm_descent, &vm_line_gap);
 
-        o_font.line_height = static_cast<t_s32>(static_cast<t_f32>(vm_ascent - vm_descent + vm_line_gap) * scale);
+        o_arrangement.line_height = static_cast<t_s32>(static_cast<t_f32>(vm_ascent - vm_descent + vm_line_gap) * scale);
 
         //
-        // Computing Glyph Info
+        // Glyph Info
         //
-        if (!MakeHashMap(mem_arena, g_s32_hash_func, o_font.codepoints_to_glyph_infos, DefaultBinComparator, codepoints_no_dups.len, codepoints_no_dups.len)) {
+        if (!MakeHashMap(mem_arena, g_s32_hash_func, o_arrangement.codepoints_to_glyph_infos, DefaultBinComparator, codepoints_no_dups.len, codepoints_no_dups.len)) {
             return false;
         }
 
@@ -155,19 +157,19 @@ namespace zf {
                 bm_box_right - bm_box_left, bm_box_bottom - bm_box_top
             };
 
-            ZF_ASSERT(glyph_info.size.x <= g_atlas_size.x && glyph_info.size.y <= g_atlas_size.y);
+            ZF_ASSERT(glyph_info.size.x <= g_font_atlas_size.x && glyph_info.size.y <= g_font_atlas_size.y);
 
             t_s32 hm_advance;
             stbtt_GetGlyphHMetrics(&stb_font_info, glyph_index, &hm_advance, nullptr);
 
             glyph_info.adv = static_cast<t_s32>(static_cast<t_f32>(hm_advance) * scale);
 
-            if (atlas_pen.x + glyph_info.size.x > g_atlas_size.x) {
+            if (atlas_pen.x + glyph_info.size.x > g_font_atlas_size.x) {
                 atlas_pen.x = 0;
-                atlas_pen.y += o_font.line_height;
+                atlas_pen.y += o_arrangement.line_height;
             }
 
-            if (atlas_pen.y + glyph_info.size.y > g_atlas_size.y) {
+            if (atlas_pen.y + glyph_info.size.y > g_font_atlas_size.y) {
                 atlas_pen = {};
                 atlas_index++;
             }
@@ -176,7 +178,7 @@ namespace zf {
             glyph_info.atlas_rect = {atlas_pen, glyph_info.size};
             atlas_pen.x += glyph_info.size.x;
 
-            if (HashMapPut(o_font.codepoints_to_glyph_infos, codepoints_no_dups[i], glyph_info) == ek_hash_map_put_result_error) {
+            if (HashMapPut(o_arrangement.codepoints_to_glyph_infos, codepoints_no_dups[i], glyph_info) == ek_hash_map_put_result_error) {
                 return false;
             }
         }
@@ -205,37 +207,47 @@ namespace zf {
             return res;
         }();
 
-        if (!MakeHashMap<s_codepoint_pair, t_s32>(mem_arena, g_codepoint_pair_hash_func, o_font.codepoint_pairs_to_kernings, g_codepoint_pair_comparator, kern_cnt, kern_cnt)) {
-            return false;
-        }
+        if (kern_cnt > 0) {
+            if (!MakeHashMap<s_font_codepoint_pair, t_s32>(mem_arena, g_codepoint_pair_hash_func, o_arrangement.codepoint_pairs_to_kernings, g_codepoint_pair_comparator, kern_cnt, kern_cnt)) {
+                return false;
+            }
 
-        for (t_size i = 0; i < codepoints_no_dups.len; i++) {
-            for (t_size j = 0; j < codepoints_no_dups.len; j++) {
-                const t_s32 glyph_a_index = stbtt_FindGlyphIndex(&stb_font_info, codepoints_no_dups[i]);
-                const t_s32 glyph_b_index = stbtt_FindGlyphIndex(&stb_font_info, codepoints_no_dups[j]);
+            for (t_size i = 0; i < codepoints_no_dups.len; i++) {
+                for (t_size j = 0; j < codepoints_no_dups.len; j++) {
+                    const t_s32 glyph_a_index = stbtt_FindGlyphIndex(&stb_font_info, codepoints_no_dups[i]);
+                    const t_s32 glyph_b_index = stbtt_FindGlyphIndex(&stb_font_info, codepoints_no_dups[j]);
 
-                const t_s32 kern = stbtt_GetGlyphKernAdvance(&stb_font_info, glyph_a_index, glyph_b_index);
+                    const t_s32 kern = stbtt_GetGlyphKernAdvance(&stb_font_info, glyph_a_index, glyph_b_index);
 
-                if (kern != 0) {
-                    if (HashMapPut(o_font.codepoint_pairs_to_kernings, {codepoints_no_dups[i], codepoints_no_dups[j]}, kern) == ek_hash_map_put_result_error) {
-                        return false;
+                    if (kern != 0) {
+                        if (HashMapPut(o_arrangement.codepoint_pairs_to_kernings, {codepoints_no_dups[i], codepoints_no_dups[j]}, kern) == ek_hash_map_put_result_error) {
+                            return false;
+                        }
                     }
                 }
             }
         }
 
         //
-        // Texture Atlas Pixel Data
+        // Texture Atlases
         //
-        if (!MakeArray(mem_arena, atlas_cnt, o_font.atlases)) {
+        if (!MakeArray(mem_arena, atlas_cnt, o_atlas_rgbas)) {
             return false;
         }
 
         for (t_size i = 0; i < codepoints_no_dups.len; i++) {
             s_font_glyph_info glyph_info;
 
-            if (!HashMapGet(o_font.codepoints_to_glyph_infos, codepoints_no_dups[i], &glyph_info)) {
+            if (!HashMapGet(o_arrangement.codepoints_to_glyph_infos, codepoints_no_dups[i], &glyph_info)) {
                 ZF_ASSERT(false);
+            }
+
+            auto& atlas_rgba = o_atlas_rgbas[glyph_info.atlas_index];
+            const auto& atlas_rect = glyph_info.atlas_rect;
+
+            if (atlas_rect.width == 0 || atlas_rect.height == 0) {
+                // Might be the ' ' character for example.
+                continue;
             }
 
             t_u8* const stb_bitmap = stbtt_GetCodepointBitmap(&stb_font_info, scale, scale, codepoints_no_dups[i], nullptr, nullptr, nullptr, nullptr);
@@ -246,56 +258,13 @@ namespace zf {
 
             ZF_DEFER({ stbtt_FreeBitmap(stb_bitmap, nullptr); });
 
-            auto& atlas = o_font.atlases[glyph_info.atlas_index];
-            const auto& atlas_rect = glyph_info.atlas_rect;
-
             for (t_s32 y = RectTop(atlas_rect); y < RectBottom(atlas_rect); y++) {
                 for (t_s32 x = RectLeft(atlas_rect); x < RectRight(atlas_rect); x++) {
                     const t_size px_index = (y * 4 * atlas_rect.width) + (x * 4);
                     const t_size stb_bitmap_index = ((y - atlas_rect.y) * atlas_rect.width) + (x - atlas_rect.x);
-                    atlas[px_index + 3] = stb_bitmap[stb_bitmap_index];
+                    atlas_rgba[px_index + 3] = stb_bitmap[stb_bitmap_index];
                 }
             }
-        }
-
-        return true;
-    }
-
-    t_b8 SerializeFont(s_stream& stream, const s_font& font) {
-        if (!StreamWriteItem(stream, font.line_height)) {
-            return false;
-        }
-
-        if (!SerializeHashMap(stream, font.codepoints_to_glyph_infos)) {
-            return false;
-        }
-
-        if (!SerializeHashMap(stream, font.codepoint_pairs_to_kernings)) {
-            return false;
-        }
-
-        if (!SerializeArray(stream, font.atlases)) {
-            return false;
-        }
-
-        return true;
-    }
-
-    t_b8 DeserializeFont(s_stream& stream, s_mem_arena& mem_arena, s_font& o_font) {
-        if (!StreamReadItem(stream, o_font.line_height)) {
-            return false;
-        }
-
-        if (!DeserializeHashMap(mem_arena, stream, g_s32_hash_func, DefaultBinComparator, o_font.codepoints_to_glyph_infos)) {
-            return false;
-        }
-
-        if (!DeserializeHashMap(mem_arena, stream, g_codepoint_pair_hash_func, g_codepoint_pair_comparator, o_font.codepoint_pairs_to_kernings)) {
-            return false;
-        }
-
-        if (!DeserializeArray(mem_arena, stream, o_font.atlases)) {
-            return false;
         }
 
         return true;
@@ -305,9 +274,10 @@ namespace zf {
         ZF_ASSERT(IsStrTerminated(dest_file_path));
         ZF_ASSERT(IsStrTerminated(src_file_path));
 
-        s_font font;
+        s_font_arrangement arrangement;
+        s_array<t_font_atlas_rgba> atlas_rgbas;
 
-        if (!LoadFontFromRaw(src_file_path, height, codepoints, temp_mem_arena, temp_mem_arena, font)) {
+        if (!LoadFontFromRaw(src_file_path, height, codepoints, temp_mem_arena, temp_mem_arena, arrangement, atlas_rgbas)) {
             return false;
         }
 
@@ -323,10 +293,26 @@ namespace zf {
 
         ZF_DEFER({ CloseFile(fs); });
 
-        return SerializeFont(fs, font);
+        if (!StreamWriteItem(fs, arrangement.line_height)) {
+            return false;
+        }
+
+        if (!SerializeHashMap(fs, arrangement.codepoints_to_glyph_infos)) {
+            return false;
+        }
+
+        if (!SerializeHashMap(fs, arrangement.codepoint_pairs_to_kernings)) {
+            return false;
+        }
+
+        if (!SerializeArray(fs, atlas_rgbas)) {
+            return false;
+        }
+
+        return true;
     }
 
-    t_b8 UnpackFont(const s_str_rdonly file_path, s_mem_arena& mem_arena, s_font& o_font) {
+    t_b8 UnpackFont(const s_str_rdonly file_path, s_mem_arena& mem_arena, s_font_arrangement& o_arrangement, s_array<t_font_atlas_rgba>& o_atlas_rgbas) {
         ZF_ASSERT(IsStrTerminated(file_path));
 
         s_stream fs;
@@ -337,6 +323,22 @@ namespace zf {
 
         ZF_DEFER({ CloseFile(fs); });
 
-        return DeserializeFont(fs, mem_arena, o_font);
+        if (!StreamReadItem(fs, o_arrangement.line_height)) {
+            return false;
+        }
+
+        if (!DeserializeHashMap(mem_arena, fs, g_s32_hash_func, DefaultBinComparator, o_arrangement.codepoints_to_glyph_infos)) {
+            return false;
+        }
+
+        if (!DeserializeHashMap(mem_arena, fs, g_codepoint_pair_hash_func, g_codepoint_pair_comparator, o_arrangement.codepoint_pairs_to_kernings)) {
+            return false;
+        }
+
+        if (!DeserializeArray(mem_arena, fs, o_atlas_rgbas)) {
+            return false;
+        }
+
+        return true;
     }
 }

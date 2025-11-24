@@ -88,16 +88,12 @@ namespace zf::gfx {
     };
 
     [[nodiscard]] inline t_b8 LoadTextureAsset(const s_rgba_texture_data_rdonly& tex_data, s_resource_arena& res_arena, s_texture_asset& o_asset) {
-        const auto hdl = MakeTexture(res_arena, tex_data);
+        o_asset = {
+            .hdl = MakeTexture(res_arena, tex_data),
+            .size_cache = tex_data.size_in_pxs
+        };
 
-        if (!IsResourceHandleValid(hdl)) {
-            return false;
-        }
-
-        o_asset.hdl = hdl;
-        o_asset.size_cache = tex_data.size_in_pxs;
-
-        return true;
+        return IsResourceHandleValid(o_asset.hdl);
     }
 
     [[nodiscard]] inline t_b8 LoadTextureAssetFromRaw(const s_str_rdonly file_path, s_resource_arena& res_arena, s_mem_arena& temp_mem_arena, s_texture_asset& o_asset) {
@@ -119,4 +115,11 @@ namespace zf::gfx {
 
         return LoadTextureAsset(tex_data, res_arena, o_asset);
     }
+
+    struct s_font_asset {
+        s_font_arrangement arrangement;
+        s_array<s_resource_handle> atlas_tex_hdls;
+    };
+
+    [[nodiscard]] t_b8 LoadFontAssetFromRaw(const s_str_rdonly file_path, const t_s32 height, const s_array_rdonly<t_s32> codepoints_no_dups, s_mem_arena& mem_arena, s_resource_arena& res_arena, s_mem_arena& temp_mem_arena, s_font_asset& o_asset);
 }
