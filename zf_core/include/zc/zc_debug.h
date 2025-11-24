@@ -25,14 +25,14 @@ namespace zf {
 #ifdef ZF_DEBUG
     #define ZF_ASSERT(condition) \
         do { \
-            if (!(condition)) { \
+            if (!ZF_IN_CONSTEXPR() && !(condition)) { \
                 zf::HandleAssertFailure(#condition, __FUNCTION__, __FILE__, __LINE__); \
             } \
         } while(0)
 
     #define ZF_ASSERT_MSG(condition, msg) \
         do { \
-            if (!(condition)) { \
+            if (!ZF_IN_CONSTEXPR() && !(condition)) { \
                 zf::HandleAssertFailure(#condition, __FUNCTION__, __FILE__, __LINE__, msg); \
             } \
         } while(0)

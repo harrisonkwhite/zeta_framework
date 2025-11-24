@@ -15,15 +15,15 @@ namespace zf {
         FILE* fs_raw = nullptr;
 
         switch (mode) {
-        case e_file_access_mode::read:
+        case ek_file_access_mode_read:
             fs_raw = fopen(StrRaw(file_path), "rb");
             break;
 
-        case e_file_access_mode::write:
+        case ek_file_access_mode_write:
             fs_raw = fopen(StrRaw(file_path), "wb");
             break;
 
-        case e_file_access_mode::append:
+        case ek_file_access_mode_append:
             fs_raw = fopen(StrRaw(file_path), "ab");
             break;
         }
@@ -59,7 +59,7 @@ namespace zf {
 
         s_file_stream fs;
 
-        if (!OpenFile(file_path, e_file_access_mode::read, fs)) {
+        if (!OpenFile(file_path, ek_file_access_mode_read, fs)) {
             return false;
         }
 
@@ -135,7 +135,7 @@ namespace zf {
 
                     path_clone.chrs[i] = '\0'; // Temporarily cut the string off here to form the subpath.
 
-                    if (CheckPathType(path_clone) == e_path_type::not_found) {
+                    if (CheckPathType(path_clone) == ek_path_type_not_found) {
                         if (!CreateDirectory(path_clone)) {
                             return false;
                         }
@@ -185,7 +185,7 @@ namespace zf {
 
                 s_file_stream fs;
 
-                if (!OpenFile(path, e_file_access_mode::write, fs)) {
+                if (!OpenFile(path, ek_file_access_mode_write, fs)) {
                     return false;
                 }
 
@@ -202,13 +202,13 @@ namespace zf {
         struct stat info;
 
         if (stat(StrRaw(path), &info) != 0) {
-            return e_path_type::not_found;
+            return ek_path_type_not_found;
         }
 
         if (info.st_mode & S_IFDIR) {
-            return e_path_type::directory;
+            return ek_path_type_directory;
         }
 
-        return e_path_type::file;
+        return ek_path_type_file;
     }
 }

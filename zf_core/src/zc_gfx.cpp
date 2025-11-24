@@ -47,7 +47,7 @@ namespace zf {
 
         s_file_stream fs;
 
-        if (!OpenFile(file_path, e_file_access_mode::write, fs)) {
+        if (!OpenFile(file_path, ek_file_access_mode_write, fs)) {
             return false;
         }
 
@@ -69,7 +69,7 @@ namespace zf {
 
         s_file_stream fs;
 
-        if (!OpenFile(file_path, e_file_access_mode::read, fs)) {
+        if (!OpenFile(file_path, ek_file_access_mode_read, fs)) {
             return false;
         }
 
@@ -173,7 +173,7 @@ namespace zf {
             glyph_info.atlas_rect = {atlas_pen, glyph_info.size};
             atlas_pen.x += glyph_info.size.x;
 
-            if (HashMapPut(o_font.codepoints_to_glyph_infos, codepoints_no_dups[i], glyph_info) == e_hash_map_put_result::error) {
+            if (HashMapPut(o_font.codepoints_to_glyph_infos, codepoints_no_dups[i], glyph_info) == ek_hash_map_put_result_error) {
                 return false;
             }
         }
@@ -214,7 +214,7 @@ namespace zf {
                 const t_s32 kern = stbtt_GetGlyphKernAdvance(&stb_font_info, glyph_a_index, glyph_b_index);
 
                 if (kern != 0) {
-                    if (HashMapPut(o_font.codepoint_pairs_to_kernings, {codepoints_no_dups[i], codepoints_no_dups[j]}, kern) == e_hash_map_put_result::error) {
+                    if (HashMapPut(o_font.codepoint_pairs_to_kernings, {codepoints_no_dups[i], codepoints_no_dups[j]}, kern) == ek_hash_map_put_result_error) {
                         return false;
                     }
                 }

@@ -261,11 +261,11 @@ namespace zf {
         glfwSetScrollCallback(g_glfw_window,
             [](GLFWwindow* const window, const t_f64, const t_f64 offs_y) {
                 if (offs_y > 0.0) {
-                    g_input_events.mouse_scroll_state = e_mouse_scroll_state::up;
+                    g_input_events.mouse_scroll_state = ek_mouse_scroll_state_up;
                 } else if (offs_y < 0.0) {
-                    g_input_events.mouse_scroll_state = e_mouse_scroll_state::down;
+                    g_input_events.mouse_scroll_state = ek_mouse_scroll_state_down;
                 } else {
-                    g_input_events.mouse_scroll_state = e_mouse_scroll_state::none;
+                    g_input_events.mouse_scroll_state = ek_mouse_scroll_state_none;
                 }
             }
         );

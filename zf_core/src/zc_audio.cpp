@@ -48,7 +48,7 @@ namespace zf {
 
         s_file_stream fs;
 
-        if (!OpenFile(file_path, e_file_access_mode::write, fs)) {
+        if (!OpenFile(file_path, ek_file_access_mode_write, fs)) {
             return false;
         }
 
@@ -70,7 +70,7 @@ namespace zf {
 
         s_file_stream fs;
 
-        if (!OpenFile(file_path, e_file_access_mode::read, fs)) {
+        if (!OpenFile(file_path, ek_file_access_mode_read, fs)) {
             return false;
         }
 

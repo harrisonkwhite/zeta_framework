@@ -20,13 +20,7 @@ namespace zf {
     #define ZF_DEBUG
 #endif
 
-#if defined(__cpp_lib_is_constant_evaluated)
-    #define ZF_IS_CONSTEXPR() (std::is_constant_evaluated())
-#elif defined(__clang__) || defined(__GNUC__) || defined(_MSC_VER)
-    #define ZF_IS_CONSTEXPR() (__builtin_is_constant_evaluated())
-#else
-    #define ZF_IS_CONSTEXPR() (false)
-#endif
+#define ZF_IN_CONSTEXPR() std::is_constant_evaluated()
 
 #define ZF_SIZE_OF(x) static_cast<zf::t_size>(sizeof(x))
 #define ZF_SIZE_IN_BITS(x) (8 * ZF_SIZE_OF(x))
@@ -46,28 +40,6 @@ namespace zf {
 #define ZF_CONCAT(a, b) ZF_CONCAT_IMPL(a, b)
 
 #define ZF_DEFER(x) auto ZF_CONCAT(p_defer_, ZF_CONCAT(l, __LINE__)) = zf::p_s_defer([&]() x)
-
-#define ZF_ENABLE_ENUM_FLAGS(x) \
-    inline x operator|(x lhs, x rhs) { \
-        using tp_type = std::underlying_type_t<x>; \
-        return static_cast<x>(static_cast<tp_type>(lhs) | static_cast<tp_type>(rhs)); \
-    } \
-    inline x operator&(x lhs, x rhs) { \
-        using tp_type = std::underlying_type_t<x>; \
-        return static_cast<x>(static_cast<tp_type>(lhs) & static_cast<tp_type>(rhs)); \
-    } \
-    inline x& operator|=(x& lhs, x rhs) { \
-        lhs = lhs | rhs; \
-        return lhs; \
-    } \
-    inline x& operator&=(x& lhs, x rhs) { \
-        lhs = lhs & rhs; \
-        return lhs; \
-    } \
-    inline x operator~(x f) { \
-        using tp_type = std::underlying_type_t<x>; \
-        return static_cast<x>(~static_cast<tp_type>(f)); \
-    }
 
     static_assert(CHAR_BIT == 8);
 
