@@ -399,4 +399,73 @@ namespace zf {
 
         return len;
     }
+
+
+
+
+
+
+
+
+
+    t_u32 UnicodeCodepointFromBytes(const s_array_rdonly<t_u8> bytes) {
+        ZF_ASSERT(bytes.len >= 1 && bytes.len <= 4);
+
+        ZF_ASSERT(false);
+
+        t_u32 res = 0;
+
+        switch (bytes.len) {
+        case 1:
+            res |= bytes[0] & 127;
+            break;
+
+        case 2:
+            res |= (bytes[1] & ByteBitmask(0, 6));
+            res |= (bytes[0] & ByteBitmask(0, 5)) << 6;
+            break;
+        }
+
+        return res;
+    }
+
+    t_s32 WalkUTF8Str(const s_str_rdonly str, t_size& byte_index) {
+        const auto byte_type = g_utf8_byte_type_table[str.chrs[byte_index]];
+
+        t_s32 res = 0;
+
+        switch (byte_type) {
+            case ek_utf8_byte_type_ascii:
+            case ek_utf8_byte_type_2byte_start:
+            case ek_utf8_byte_type_3byte_start:
+            case ek_utf8_byte_type_4byte_start:
+                {
+                    static_assert(ek_utf8_byte_type_4byte_start - ek_utf8_byte_type_ascii + 1 == 4);
+                    const t_size chr_len = byte_type - ek_utf8_byte_type_ascii + 1;
+                    const auto chr_bytes = Slice(str.chrs, byte_index, byte_index + chr_len);
+                    const t_s32 res = UnicodeCodepointFromBytes(ToByteArray(chr_bytes));
+                    byte_index += chr_len;
+                    return res;
+                }
+
+                break;
+
+            case ek_utf8_byte_type_continuation:
+            case ek_utf8_byte_type_invalid:
+                ZF_ASSERT(false);
+                break;
+        }
+
+        return res;
+    }
+
+
+
+
+
+
+
+
+
+
 }

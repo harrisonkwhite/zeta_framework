@@ -341,4 +341,177 @@ namespace zf {
 
         return true;
     }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    t_b8 LoadStrChrPositions(const s_str_rdonly str, const s_font_arrangement& font_arrangement, const s_v2<t_f32> pos, s_mem_arena& mem_arena, s_array<s_v2<t_f32>>& o_positions) {
+        ZF_ASSERT(IsValidUTF8Str(str) && IsStrTerminated(str));
+
+        // Reserve memory for the character positions.
+        const t_size str_len = CalcUTF8StrLenFastButUnsafe(str);
+
+        if (!MakeArray(mem_arena, str_len, o_positions)) {
+            return false;
+        }
+
+        // Calculate the position of each character.
+        s_v2<t_f32> chr_pos_pen = {}; // The position of the current character.
+
+        t_size chr_index = 0;
+
+        while ((codepoint = NextCodepointInStr(str, chr_index))) {
+        }
+
+        //for (t_size i = 0; i < str.chrs.len && str.chrs[i]; i = IndexOfNextUTF8Chr(str, i + 1)) {
+        //}
+
+#if 0
+        for (t_size i = 0; i <= str_len; i++) {
+            const t_size chr = str.chrs[i];
+
+            if (chr == '\n' || !chr) {
+                // Apply horizontal alignment offset to all the characters of the line we just finished, only if the line was not empty.
+                const t_size line_len = i - line_starting_chr_index;
+
+                if (line_len > 0) {
+                    const t_f32 line_width = chr_pos_pen.x;
+
+                    for (t_size j = line_starting_chr_index; j < i; j++) {
+                        o_positions[j].x -= line_width * alignment.x;
+                    }
+                }
+
+                // If '\n', move to the next line.
+                if (chr == '\n') {
+                    chr_pos_pen.x = 0.0f;
+                    chr_pos_pen.y += static_cast<t_f32>(font_arrangement.line_height);
+
+                    line_starting_chr_index = i + 1;
+                }
+
+                continue;
+            }
+
+            //assert(isprint(chr));
+
+#if 0
+            const t_s32 chr_ascii_printable_index = chr - ASCII_PRINTABLE_MIN;
+
+            const s_v2_s32 chr_offs = *STATIC_ARRAY_ELEM(arrangement->chr_offsets, chr_ascii_printable_index);
+
+            *V2Elem(*positions, i) = (s_v2){
+                pos.x + chr_pos_pen.x + chr_offs.x,
+                pos.y + chr_pos_pen.y + chr_offs.y + alignment_offs_y
+            };
+
+            chr_pos_pen.x += *STATIC_ARRAY_ELEM(arrangement->chr_advances, chr_ascii_printable_index);
+#endif
+        }
+#endif
+
+        return true;
+    }
+
+#if 0
+    bool GenStrChrRenderPositions(s_v2_array* const positions, s_mem_arena* const mem_arena, const s_char_array_view str, const s_font_group* const font_group, const t_s32 font_index, const s_v2 pos, const s_v2 alignment) {
+        assert(IS_ZERO(*positions));
+        assert(IsStrTerminated(str));
+        assert(alignment.x >= 0.0f && alignment.x <= 1.0f && alignment.y >= 0.0f && alignment.y <= 1.0f);
+
+        const s_font_arrangement* const arrangement = FontArrangementElemView(font_group->arrangements, font_index);
+
+        t_s32 str_len = 0, line_cnt = 0;
+        CalcStrLenAndLineCnt(&str_len, &line_cnt, str);
+
+        // From just the string line count we can determine the vertical alignment offset to apply to all characters.
+        const t_r32 alignment_offs_y = -(line_cnt * arrangement->line_height) * alignment.y;
+
+        // Reserve memory for the character render positions.
+        *positions = PushV2ArrayToMemArena(mem_arena, str_len);
+
+        if (IS_ZERO(*positions)) {
+            LOG_ERROR("Failed to reserve memory for character render positions!");
+            return false;
+        }
+
+        // Calculate the render position for each character.
+        s_v2 chr_pos_pen = {0}; // The position of the current character.
+        t_s32 line_starting_chr_index = 0; // The index of the first character in the current line.
+
+        for (t_s32 i = 0; i <= str_len; i++) {
+            const char chr = *CharElemView(str, i);
+
+            if (chr == '\n' || !chr) {
+                // Apply horizontal alignment offset to all the characters of the line we just finished, only if the line was not empty.
+                const t_s32 line_len = i - line_starting_chr_index;
+
+                if (line_len > 0) {
+                    const t_r32 line_width = chr_pos_pen.x;
+
+                    for (t_s32 j = line_starting_chr_index; j < i; j++) {
+                        V2Elem(*positions, j)->x -= line_width * alignment.x;
+                    }
+                }
+
+                // If '\n', move to the next line.
+                if (chr == '\n') {
+                    chr_pos_pen.x = 0.0f;
+                    chr_pos_pen.y += arrangement->line_height;
+
+                    line_starting_chr_index = i + 1;
+                }
+
+                continue;
+            }
+
+            assert(isprint(chr));
+
+            const t_s32 chr_ascii_printable_index = chr - ASCII_PRINTABLE_MIN;
+
+            const s_v2_s32 chr_offs = *STATIC_ARRAY_ELEM(arrangement->chr_offsets, chr_ascii_printable_index);
+
+            *V2Elem(*positions, i) = (s_v2){
+                pos.x + chr_pos_pen.x + chr_offs.x,
+                pos.y + chr_pos_pen.y + chr_offs.y + alignment_offs_y
+            };
+
+            chr_pos_pen.x += *STATIC_ARRAY_ELEM(arrangement->chr_advances, chr_ascii_printable_index);
+        }
+
+        return true;
+    }
+#endif
+
+
+
+
+
+
+
+
+
+
+
+
 }

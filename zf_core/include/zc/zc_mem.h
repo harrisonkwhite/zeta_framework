@@ -23,6 +23,19 @@ namespace zf {
         return (n + alignment - 1) & ~(alignment - 1);
     }
 
+    constexpr t_u8 ByteBitmask(const t_size bit_index) {
+        ZF_ASSERT(bit_index >= 0 && bit_index < 8);
+        return static_cast<t_u8>(1 << bit_index);
+    }
+
+    constexpr t_u8 ByteBitmask(const t_size begin_bit_index, const t_size end_bit_index) {
+        ZF_ASSERT(begin_bit_index >= 0 && begin_bit_index < 8);
+        ZF_ASSERT(end_bit_index > begin_bit_index && end_bit_index <= 8);
+
+        const auto bits_at_bottom = static_cast<t_u8>((1 << (end_bit_index - begin_bit_index)) - 1);
+        return static_cast<t_u8>(bits_at_bottom << begin_bit_index);
+    }
+
     struct s_mem_arena {
         void* buf;
         t_size size;
