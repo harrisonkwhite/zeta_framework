@@ -11,38 +11,160 @@ namespace zf {
         ek_file_access_mode_append
     };
 
-    struct s_file_stream {
-        FILE* raw;
+    enum e_stream_type : t_s32 {
+        ek_stream_type_mem,
+        ek_stream_type_file
     };
 
-    [[nodiscard]] t_b8 OpenFile(const s_str_rdonly file_path, const e_file_access_mode mode, s_file_stream& o_fs);
-    void CloseFile(s_file_stream& fs);
-    t_size CalcFileSize(const s_file_stream& fs);
+    enum e_stream_mode : t_s32 {
+        ek_stream_mode_read,
+        ek_stream_mode_write
+    };
+
+    struct s_stream {
+        e_stream_type type;
+
+        union {
+            struct {
+                s_array<t_u8> bytes;
+                t_size pos;
+            } mem;
+
+            struct {
+                FILE* fs_raw;
+            } file;
+        } type_data;
+    };
 
     template<typename tp_type>
-    [[nodiscard]] t_b8 ReadItemFromFile(const s_file_stream& fs, tp_type& o_item) {
-        return fread(&o_item, ZF_SIZE_OF(tp_type), 1, fs.raw) == 1;
-    }
+    [[nodiscard]] t_b8 StreamReadItem(s_stream& stream, tp_type& o_item) {
+        constexpr t_size size = ZF_SIZE_OF(tp_type);
 
-    template<c_array_mut tp_type>
-    [[nodiscard]] t_size ReadItemArrayFromFile(const s_file_stream& fs, tp_type& dest_arr) {
-        return fread(ArrayRaw(dest_arr), ZF_SIZE_OF(typename tp_type::t_elem), ArrayLen(dest_arr), fs.raw);
+        switch(stream.type) {
+            case ek_stream_type_mem:
+                if (stream.type_data.mem.pos + size > stream.type_data.mem.bytes.len) {
+                    return false;
+                }
+
+                {
+                    const auto dest = ToBytes(o_item);
+                    const auto src = Slice(stream.type_data.mem.bytes, stream.type_data.mem.pos, stream.type_data.mem.pos + size);
+                    Copy(dest, src);
+
+                    stream.type_data.mem.pos += size;
+                }
+
+                return true;
+
+            case ek_stream_type_file:
+                return fread(&o_item, size, 1, stream.type_data.file.fs_raw) == 1;
+        }
+
+        ZF_ASSERT(false);
+        return false;
     }
 
     template<typename tp_type>
-    [[nodiscard]] t_b8 WriteItemToFile(const s_file_stream& fs, const tp_type& o_item) {
-        return fwrite(&o_item, ZF_SIZE_OF(tp_type), 1, fs.raw) == 1;
+    [[nodiscard]] t_b8 StreamWriteItem(s_stream& stream, const tp_type& item) {
+        return true;
+
+        constexpr t_size size = ZF_SIZE_OF(tp_type);
+
+        switch(stream.type) {
+            case ek_stream_type_mem:
+                if (stream.type_data.mem.pos + size > stream.type_data.mem.bytes.len) {
+                    return false;
+                }
+
+                {
+                    const auto dest = Slice(stream.type_data.mem.bytes, stream.type_data.mem.pos, stream.type_data.mem.pos + size);
+                    const auto src = ToBytes(item);
+                    Copy(dest, src);
+
+                    stream.type_data.mem.pos += size;
+                }
+
+                return true;
+
+            case ek_stream_type_file:
+                return fwrite(&item, size, 1, stream.type_data.file.fs_raw) == 1;
+        }
+
+        ZF_ASSERT(false);
+        return false;
     }
 
     template<c_array tp_type>
-    [[nodiscard]] t_size WriteItemArrayToFile(const s_file_stream& fs, tp_type& src_arr) {
-        return fwrite(ArrayRaw(src_arr), ZF_SIZE_OF(typename tp_type::t_elem), ArrayLen(src_arr), fs.raw);
+    [[nodiscard]] t_b8 StreamReadItemsIntoArray(s_stream& stream, tp_type& arr, const t_size cnt) {
+        ZF_ASSERT(cnt >= 0 && cnt <= ArrayLen(arr));
+
+        if (cnt == 0) {
+            return true;
+        }
+
+        switch(stream.type) {
+            case ek_stream_type_mem:
+                {
+                    const t_size size = ZF_SIZE_OF(arr[0]) * cnt;
+
+                    if (stream.type_data.mem.pos + size > stream.type_data.mem.bytes.len) {
+                        return false;
+                    }
+
+                    const auto dest = Slice(stream.type_data.mem.bytes, stream.type_data.mem.pos, stream.type_data.mem.pos + size);
+                    const auto src = ToByteArray(arr);
+                    Copy(dest, src);
+
+                    stream.type_data.mem.pos += size;
+                }
+
+                return true;
+
+            case ek_stream_type_file:
+                return fread(ArrayRaw(arr), sizeof(arr[0]), cnt, stream.type_data.file.fs_raw) == cnt;
+        }
+
+        ZF_ASSERT(false);
+        return false;
     }
 
-    // Reserve a buffer and populate it with the binary contents of a file, optionally with a terminating byte.
-    [[nodiscard]] t_b8 LoadFileContents(s_mem_arena& mem_arena, const s_str_rdonly file_path, s_array<t_u8>& o_contents, const t_b8 include_terminating_byte = false);
+    template<c_array tp_type>
+    [[nodiscard]] t_b8 StreamWriteItemsOfArray(s_stream& stream, tp_type& arr) {
+        if (IsArrayEmpty(arr)) {
+            return true;
+        }
 
-    // @todo: How will this work with non-ASCII?
+        switch(stream.type) {
+            case ek_stream_type_mem:
+                {
+                    const t_size size = ArraySizeInBytes(arr);
+
+                    if (stream.type_data.mem.pos + size > stream.type_data.mem.bytes.len) {
+                        return false;
+                    }
+
+                    const auto dest = Slice(stream.type_data.mem.bytes, stream.type_data.mem.pos, stream.type_data.mem.pos + size);
+                    const auto src = ToByteArray(arr);
+                    Copy(dest, src);
+
+                    stream.type_data.mem.pos += size;
+                }
+
+                return true;
+
+            case ek_stream_type_file:
+                return fwrite(ArrayRaw(arr), sizeof(arr[0]), ArrayLen(arr), stream.type_data.file.fs_raw) == ArrayLen(arr);
+        }
+
+        ZF_ASSERT(false);
+        return false;
+    }
+
+    [[nodiscard]] t_b8 OpenFile(const s_str_rdonly file_path, const e_file_access_mode mode, s_stream& o_fs);
+    void CloseFile(s_stream& fs);
+    t_size CalcFileSize(const s_stream& fs);
+    [[nodiscard]] t_b8 LoadFileContents(s_mem_arena& mem_arena, const s_str_rdonly file_path, s_array<t_u8>& o_contents, const t_b8 include_terminating_byte = false); // Reserve a buffer and populate it with the binary contents of a file, optionally with a terminating byte.
+
     inline t_b8 LoadFileContentsAsStr(s_mem_arena& mem_arena, const s_str_rdonly file_path, s_str& o_contents) {
         s_array<t_u8> contents_default;
 
@@ -64,9 +186,9 @@ namespace zf {
         ek_directory_creation_result_unknown_err
     };
 
-    t_b8 CreateDirectory(const s_str_rdonly path); // This DOES NOT create non-existent parent directories.
-    t_b8 CreateDirectoryAndParents(const s_str_rdonly path, s_mem_arena& temp_mem_arena);
-    t_b8 CreateFileAndParentDirs(const s_str_rdonly path, s_mem_arena& temp_mem_arena);
+    [[nodiscard]] t_b8 CreateDirectory(const s_str_rdonly path); // This DOES NOT create non-existent parent directories.
+    [[nodiscard]] t_b8 CreateDirectoryAndParents(const s_str_rdonly path, s_mem_arena& temp_mem_arena);
+    [[nodiscard]] t_b8 CreateFileAndParentDirs(const s_str_rdonly path, s_mem_arena& temp_mem_arena);
 
     enum e_path_type : t_s32 {
         ek_path_type_not_found,

@@ -20,25 +20,25 @@ namespace zf {
 #define ZF_REPORT_FAILURE() zf::ReportFailure(__FUNCTION__, __FILE__, __LINE__)
 #define ZF_REPORT_FAILURE_MSG(msg) zf::ReportFailure(__FUNCTION__, __FILE__, __LINE__, msg)
 
-    void HandleAssertFailure(const char* const condition, const char* const func, const char* const file, const t_s32 line, const char* const msg = nullptr);
+    void HandleAssertFailure(const char* const cond, const char* const func, const char* const file, const t_s32 line, const char* const msg = nullptr);
 
 #ifdef ZF_DEBUG
-    #define ZF_ASSERT(condition) \
+    #define ZF_ASSERT(cond) \
         do { \
-            if (!ZF_IN_CONSTEXPR() && !(condition)) { \
-                zf::HandleAssertFailure(#condition, __FUNCTION__, __FILE__, __LINE__); \
+            if (!ZF_IN_CONSTEXPR() && !(cond)) { \
+                zf::HandleAssertFailure(#cond, __FUNCTION__, __FILE__, __LINE__); \
             } \
         } while(0)
 
-    #define ZF_ASSERT_MSG(condition, msg) \
+    #define ZF_ASSERT_MSG(cond, msg) \
         do { \
-            if (!ZF_IN_CONSTEXPR() && !(condition)) { \
-                zf::HandleAssertFailure(#condition, __FUNCTION__, __FILE__, __LINE__, msg); \
+            if (!ZF_IN_CONSTEXPR() && !(cond)) { \
+                zf::HandleAssertFailure(#cond, __FUNCTION__, __FILE__, __LINE__, msg); \
             } \
         } while(0)
 #else
-    #define ZF_ASSERT(condition) static_cast<void>(0)
-    #define ZF_ASSERT_MSG(condition, msg) static_cast<void>(0)
+    #define ZF_ASSERT(cond) static_cast<void>(0)
+    #define ZF_ASSERT_MSG(cond, msg) static_cast<void>(0)
 #endif
 
     void ShowErrorBox(const char* const title, const char* const contents);

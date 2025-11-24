@@ -9,10 +9,14 @@
 #endif
 
 namespace zf {
-    t_b8 OpenFile(const s_str_rdonly file_path, const e_file_access_mode mode, s_file_stream& o_fs) {
+    t_b8 OpenFile(const s_str_rdonly file_path, const e_file_access_mode mode, s_stream& o_fs) {
         ZF_ASSERT(IsStrTerminated(file_path));
 
-        FILE* fs_raw = nullptr;
+        o_fs = {
+            .type = ek_stream_type_file
+        };
+
+        auto& fs_raw = o_fs.type_data.file.fs_raw;
 
         switch (mode) {
         case ek_file_access_mode_read:
@@ -28,36 +32,31 @@ namespace zf {
             break;
         }
 
-        if (!fs_raw) {
-            return false;
-        }
-
-        o_fs.raw = fs_raw;
-
-        return true;
+        return fs_raw != nullptr;
     }
 
-    void CloseFile(s_file_stream& fs) {
-        if (fs.raw) {
-            fclose(fs.raw);
-            fs.raw = nullptr;
-        } else {
-            ZF_ASSERT(false);
-        }
+    void CloseFile(s_stream& fs) {
+        ZF_ASSERT(fs.type == ek_stream_type_file);
+
+        fclose(fs.type_data.file.fs_raw);
+        fs = {};
     }
 
-    t_size CalcFileSize(const s_file_stream& fs) {
-        const auto pos_old = ftell(fs.raw);
-        fseek(fs.raw, 0, SEEK_END);
-        const auto file_size = ftell(fs.raw);
-        fseek(fs.raw, pos_old, SEEK_SET);
+    t_size CalcFileSize(const s_stream& fs) {
+        ZF_ASSERT(fs.type == ek_stream_type_file);
+
+        const auto& fs_raw = fs.type_data.file.fs_raw;
+        const auto pos_old = ftell(fs_raw);
+        fseek(fs_raw, 0, SEEK_END);
+        const auto file_size = ftell(fs_raw);
+        fseek(fs_raw, pos_old, SEEK_SET);
         return static_cast<t_size>(file_size);
     }
 
     t_b8 LoadFileContents(s_mem_arena& mem_arena, const s_str_rdonly file_path, s_array<t_u8>& o_contents, const t_b8 include_terminating_byte) {
         ZF_ASSERT(IsStrTerminated(file_path));
 
-        s_file_stream fs;
+        s_stream fs;
 
         if (!OpenFile(file_path, ek_file_access_mode_read, fs)) {
             return false;
@@ -71,7 +70,7 @@ namespace zf {
             return false;
         }
 
-        if (ReadItemArrayFromFile(fs, o_contents) < file_size) {
+        if (!StreamReadItemsIntoArray(fs, o_contents, file_size)) {
             return false;
         }
 
@@ -183,7 +182,7 @@ namespace zf {
                     }
                 }
 
-                s_file_stream fs;
+                s_stream fs;
 
                 if (!OpenFile(path, ek_file_access_mode_write, fs)) {
                     return false;

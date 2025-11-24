@@ -46,7 +46,7 @@ namespace zf {
             return false;
         }
 
-        s_file_stream fs;
+        s_stream fs;
 
         if (!OpenFile(file_path, ek_file_access_mode_write, fs)) {
             return false;
@@ -54,11 +54,11 @@ namespace zf {
 
         ZF_DEFER({ CloseFile(fs); });
 
-        if (!WriteItemToFile(fs, snd_data.meta)) {
+        if (!StreamWriteItem(fs, snd_data.meta)) {
             return false;
         }
 
-        if (WriteItemArrayToFile(fs, snd_data.pcm) < snd_data.pcm.len) {
+        if (!StreamWriteItemsOfArray(fs, snd_data.pcm)) {
             return false;
         }
 
@@ -68,7 +68,7 @@ namespace zf {
     t_b8 UnpackSound(const s_str_rdonly file_path, s_mem_arena& mem_arena, s_sound_data& o_snd_data) {
         ZF_ASSERT(IsStrTerminated(file_path));
 
-        s_file_stream fs;
+        s_stream fs;
 
         if (!OpenFile(file_path, ek_file_access_mode_read, fs)) {
             return false;
@@ -76,7 +76,7 @@ namespace zf {
 
         ZF_DEFER({ CloseFile(fs); });
 
-        if (!ReadItemFromFile(fs, o_snd_data.meta)) {
+        if (!StreamReadItem(fs, o_snd_data.meta)) {
             return false;
         }
 
@@ -84,7 +84,7 @@ namespace zf {
             return false;
         }
 
-        if (ReadItemArrayFromFile(fs, o_snd_data.pcm) < o_snd_data.pcm.len) {
+        if (!StreamReadItemsIntoArray(fs, o_snd_data.pcm, o_snd_data.pcm.len)) {
             return false;
         }
 

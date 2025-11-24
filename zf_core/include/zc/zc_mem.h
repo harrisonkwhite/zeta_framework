@@ -207,7 +207,7 @@ namespace zf {
 
     template<c_array tp_type>
     constexpr t_size ArraySizeInBytes(tp_type& arr) {
-        return static_cast<t_size>(sizeof(arr[0])) * ArrayLen(arr);
+        return ZF_SIZE_OF(tp_type::t_elem) * ArrayLen(arr);
     }
 
     template<typename tp_type>
@@ -308,12 +308,12 @@ namespace zf {
 
     template<typename tp_type>
     constexpr s_array<t_u8> ToBytes(tp_type& item) {
-        return {reinterpret_cast<t_u8*>(item), ZF_SIZE_OF(item)};
+        return {reinterpret_cast<t_u8*>(&item), ZF_SIZE_OF(item)};
     }
 
     template<typename tp_type>
     constexpr s_array_rdonly<t_u8> ToBytes(const tp_type& item) {
-        return {reinterpret_cast<const t_u8*>(item), ZF_SIZE_OF(item)};
+        return {reinterpret_cast<const t_u8*>(&item), ZF_SIZE_OF(item)};
     }
 
     template<c_array_mut tp_type>

@@ -45,7 +45,7 @@ namespace zf {
             return false;
         }
 
-        s_file_stream fs;
+        s_stream fs;
 
         if (!OpenFile(file_path, ek_file_access_mode_write, fs)) {
             return false;
@@ -53,11 +53,11 @@ namespace zf {
 
         ZF_DEFER({ CloseFile(fs); });
 
-        if (!WriteItemToFile(fs, tex_data.size_in_pxs)) {
+        if (!StreamWriteItem(fs, tex_data.size_in_pxs)) {
             return false;
         }
 
-        if (WriteItemArrayToFile(fs, tex_data.px_data) < tex_data.px_data.len) {
+        if (!StreamWriteItemsOfArray(fs, tex_data.px_data)) {
             return false;
         }
 
@@ -67,7 +67,7 @@ namespace zf {
     t_b8 UnpackTexture(const s_str_rdonly file_path, s_mem_arena& mem_arena, s_rgba_texture_data& o_tex_data) {
         ZF_ASSERT(IsStrTerminated(file_path));
 
-        s_file_stream fs;
+        s_stream fs;
 
         if (!OpenFile(file_path, ek_file_access_mode_read, fs)) {
             return false;
@@ -75,7 +75,7 @@ namespace zf {
 
         ZF_DEFER({ CloseFile(fs); });
 
-        if (!ReadItemFromFile(fs, o_tex_data.size_in_pxs)) {
+        if (!StreamReadItem(fs, o_tex_data.size_in_pxs)) {
             return false;
         }
 
@@ -83,7 +83,7 @@ namespace zf {
             return false;
         }
 
-        if (ReadItemArrayFromFile(fs, o_tex_data.px_data) < o_tex_data.px_data.len) {
+        if (!StreamReadItemsIntoArray(fs, o_tex_data.px_data, o_tex_data.px_data.len)) {
             return false;
         }
 
