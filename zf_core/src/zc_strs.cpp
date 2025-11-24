@@ -1,5 +1,7 @@
 #include <zc/zc_strs.h>
 
+#include <zc/ds/zc_bit_vector.h>
+
 namespace zf {
     enum e_utf8_byte_type : t_s32 {
         ek_utf8_byte_type_ascii,
@@ -406,18 +408,25 @@ namespace zf {
 
 
 
+    void AppendBits(const s_bit_range bv, const s_bit_range_rdonly bv_of_bits_to_add) {
+        ZF_ASSERT(BitsToBytes(bv.bit_cnt + bv_of_bits_to_add.bit_cnt) <= bv.backing_bytes.len);
 
+        // Basically just append as many bits as we can to the last byte and recurse.
+        const t_size bits_to_append_cnt = 8 - (bv.bit_cnt % 8);
+
+        //bv_of_bits_to_add.bytes[0]
+    }
 
     t_u32 UnicodeCodepointFromBytes(const s_array_rdonly<t_u8> bytes) {
         ZF_ASSERT(bytes.len >= 1 && bytes.len <= 4);
 
-        ZF_ASSERT(false);
-
         t_u32 res = 0;
+        s_bit_range res_bv = ToBytes(res);
 
         switch (bytes.len) {
         case 1:
             res |= bytes[0] & 127;
+            //AppendBits(res_bv, );
             break;
 
         case 2:

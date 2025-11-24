@@ -167,12 +167,42 @@ namespace zf {
         return false;
     }
 
+    template<c_array tp_type>
+    [[nodiscard]] t_b8 SerializeArray(s_stream& stream, tp_type& arr) {
+        if (!StreamWriteItem(stream, arr.len)) {
+            return false;
+        }
+
+        if (!StreamWriteItemsOfArray(stream, arr)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    template<typename tp_type>
+    [[nodiscard]] t_b8 DeserializeArray(s_mem_arena& mem_arena, s_stream& stream, s_array<tp_type>& o_arr) {
+        if (!StreamReadItem(stream, o_arr.len)) {
+            return false;
+        }
+
+        if (!MakeArray(mem_arena, o_arr.len, o_arr)) {
+            return false;
+        }
+
+        if (!StreamReadItemsIntoArray(stream, o_arr, o_arr.len)) {
+            return false;
+        }
+
+        return true;
+    }
+
     [[nodiscard]] t_b8 OpenFile(const s_str_rdonly file_path, const e_file_access_mode mode, s_stream& o_fs);
     void CloseFile(s_stream& fs);
     t_size CalcFileSize(const s_stream& fs);
     [[nodiscard]] t_b8 LoadFileContents(s_mem_arena& mem_arena, const s_str_rdonly file_path, s_array<t_u8>& o_contents, const t_b8 include_terminating_byte = false); // Reserve a buffer and populate it with the binary contents of a file, optionally with a terminating byte.
 
-    inline t_b8 LoadFileContentsAsStr(s_mem_arena& mem_arena, const s_str_rdonly file_path, s_str& o_contents) {
+    [[nodiscard]] inline t_b8 LoadFileContentsAsStr(s_mem_arena& mem_arena, const s_str_rdonly file_path, s_str& o_contents) {
         s_array<t_u8> contents_default;
 
         if (!LoadFileContents(mem_arena, file_path, contents_default, true)) {

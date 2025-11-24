@@ -8,7 +8,7 @@ namespace zf {
     template<typename tp_type>
     struct s_activity_array_rdonly {
         s_array_rdonly<tp_type> slots;
-        s_bit_vector_rdonly slot_activity;
+        s_bit_range_rdonly slot_activity;
 
         constexpr const tp_type& operator[](const t_size index) const {
             ZF_ASSERT(IsSlotActive(*this, index));
@@ -19,7 +19,7 @@ namespace zf {
     template<typename tp_type>
     struct s_activity_array {
         s_array<tp_type> slots;
-        s_bit_vector slot_activity;
+        s_bit_range slot_activity;
 
         constexpr tp_type& operator[](const t_size index) const {
             ZF_ASSERT(IsSlotActive(*this, index));

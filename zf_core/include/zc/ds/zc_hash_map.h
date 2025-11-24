@@ -47,7 +47,7 @@ namespace zf {
             s_array<t_size> next_indexes; // Like the standard "next" pointer of a linked list node, but for an index specific to this backing store.
 
             // Indicates what slots or "nodes" are in use.
-            s_bit_vector usage;
+            s_bit_range usage;
         } backing_store;
     };
 

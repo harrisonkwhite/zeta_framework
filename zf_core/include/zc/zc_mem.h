@@ -335,4 +335,99 @@ namespace zf {
     constexpr s_array_rdonly<t_u8> ToByteArray(tp_type& arr) {
         return {reinterpret_cast<const t_u8*>(ArrayRaw(arr)), ArraySizeInBytes(arr)};
     }
+
+    struct s_bit_range_rdonly {
+        s_array_rdonly<t_u8> backing_bytes;
+        t_size begin_bit_index;
+        t_size bit_cnt;
+    };
+
+    struct s_bit_range {
+        s_array<t_u8> backing_bytes;
+        t_size begin_bit_index;
+        t_size bit_cnt;
+
+        constexpr operator s_bit_range_rdonly() const {
+            return {backing_bytes, bit_cnt};
+        }
+    };
+
+    // Gives a mask of the backing byte where only in-range bits are set.
+    // @speed: Probably overusing this.
+    constexpr t_u8 BitRangeBackingByteMask(const s_bit_range_rdonly br, const t_size byte_index) {
+        ZF_ASSERT(byte_index >= 0 && byte_index < br.backing_bytes.len);
+
+        const t_size first_byte_index = BitsToBytes(br.begin_bit_index);
+        const t_size last_byte_index = BitsToBytes(br.begin_bit_index + br.bit_cnt - 1);
+
+        if (byte_index < first_byte_index || byte_index >= last_byte_index) {
+            return 0;
+        }
+
+        t_u8 res = 0xFF;
+
+        if (byte_index == first_byte_index) {
+            res &= ByteBitmask(br.begin_bit_index % 8);
+        }
+
+        if (byte_index == last_byte_index) {
+            res &= ~ByteBitmask((br.begin_bit_index + br.bit_cnt) % 8);
+        }
+
+        return res;
+    }
+
+    // Gives the backing byte but with any bits outside the range unset.
+    constexpr t_u8 BitRangeBackingByteIsolated(const s_bit_range_rdonly br, const t_size byte_index) {
+        const t_u8 mask = BitRangeBackingByteMask(br, byte_index);
+        return br.backing_bytes[byte_index] & mask;
+    }
+
+    constexpr t_b8 IsBitSet(const s_bit_range_rdonly br, const t_size index) {
+        ZF_ASSERT(index >= 0 && index < br.bit_cnt);
+        const t_size real_index = br.begin_bit_index + index;
+        return br.backing_bytes[real_index / 8] & (1 << (real_index % 8));
+    }
+
+    constexpr void SetBit(const s_bit_range br, const t_size index) {
+        ZF_ASSERT(index >= 0 && index < br.bit_cnt);
+        const t_size real_index = br.begin_bit_index + index;
+        br.backing_bytes[real_index / 8] |= (1 << (real_index % 8));
+    }
+
+    constexpr void UnsetBit(const s_bit_range br, const t_size index) {
+        ZF_ASSERT(index >= 0 && index < br.bit_cnt);
+        const t_size real_index = br.begin_bit_index + index;
+        br.backing_bytes[real_index / 8] &= ~(1 << (real_index % 8));
+    }
+
+    constexpr t_b8 IsAnyBitSet(const s_bit_range_rdonly br) {
+        for (t_size i = 0; i < br.backing_bytes.len; i++) {
+            if (BitRangeBackingByteIsolated(br, i) != 0) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    constexpr t_b8 AreAllBitsSet(const s_bit_range_rdonly br) {
+        for (t_size i = 0; i < br.backing_bytes.len; i++) {
+            const t_u8 mask = BitRangeBackingByteMask(br, i);
+
+            if ((br.backing_bytes[i] & mask) != mask) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    constexpr t_b8 AreAllBitsUnset(const s_bit_range_rdonly br) {
+        return !IsAnyBitSet(br);
+    }
+
+    constexpr t_b8 IsAnyBitUnset(const s_bit_range_rdonly br) {
+        return !AreAllBitsSet(br);
+    }
 }
