@@ -42,9 +42,7 @@ namespace zf {
         return static_cast<t_u8*>(ma.buf) + offs_aligned;
     }
 
-    t_size IndexOfFirstSetBit(const s_bit_range_rdonly bv, const t_size from, const t_b8 inverted) {
-        ZF_ASSERT(from <= bv.bit_cnt); // Intentionally allowing the upper bound here for the case of iteration.
-
+    static t_size IndexOfFirstSetBitHelper(const s_bit_range_rdonly br, const t_b8 inverted) {
         // Map of each byte to the index of the first set bit, or -1 for the first case.
         static constexpr s_static_array<t_size, 256> g_mappings = {{
             -1, // 0000 0000
@@ -305,37 +303,48 @@ namespace zf {
             0 // 1111 1111
         }};
 
-        if (bv.bit_cnt == 0 || from == bv.bit_cnt) {
-            return -1;
-        }
+        if (br.bit_cnt > 0) {
+            const t_u8 xor_mask = inverted ? 0xFF : 0;
 
-        const t_u8 xor_mask = inverted ? 0xFF : 0x00;
+            const t_size last_byte_index = (br.begin_bit_index + br.bit_cnt - 1) / 8;
 
-        const t_size begin_byte_index = from / 8;
+            for (t_size i = br.begin_bit_index / 8; i <= last_byte_index; i++) {
+                const t_size bi = g_mappings[BitRangeBackingByteIsolated(br, i) ^ xor_mask];
 
-        for (t_size i = begin_byte_index; i < bv.backing_bytes.len; i++) {
-            t_u8 byte = bv.backing_bytes[i];
-
-            // @speed: Not sure if the compiler will pull these checks out.
-            if (i == begin_byte_index) {
-                byte &= ByteBitmask(from % 8, 8);
-            }
-
-            if (i == bv.backing_bytes.len - 1) {
-                byte &= BitVectorLastByteBitmask(bv);
-            }
-
-            const t_size bi = g_mappings[byte ^ xor_mask];
-
-            if (bi != -1) {
-                return (8 * i) + bi;
+                if (bi != -1) {
+                    return (8 * i) + bi;
+                }
             }
         }
 
         return -1;
     }
 
-    t_size CountSetBits(const s_bit_range_rdonly bv) {
+    t_size IndexOfFirstSetBit(const s_bit_range_rdonly br, const t_size from) {
+        ZF_ASSERT(from <= br.bit_cnt); // Intentionally allowing the upper bound here for the case of iteration.
+
+        const s_bit_range_rdonly br_slice = {
+            .backing_bytes = br.backing_bytes,
+            .begin_bit_index = br.begin_bit_index + from,
+            .bit_cnt = br.bit_cnt - from
+        };
+
+        return IndexOfFirstSetBitHelper(br_slice, false);
+    }
+
+    t_size IndexOfFirstUnsetBit(const s_bit_range_rdonly br, const t_size from) {
+        ZF_ASSERT(from <= br.bit_cnt); // Intentionally allowing the upper bound here for the case of iteration.
+
+        const s_bit_range_rdonly br_slice = {
+            .backing_bytes = br.backing_bytes,
+            .begin_bit_index = br.begin_bit_index + from,
+            .bit_cnt = br.bit_cnt - from
+        };
+
+        return IndexOfFirstSetBitHelper(br_slice, true);
+    }
+
+    t_size CountSetBits(const s_bit_range_rdonly br) {
         // Map of each byte to the number of set bits in it.
         static constexpr s_static_array<t_size, 256> g_mappings = {{
             0, // 0000 0000
@@ -596,17 +605,16 @@ namespace zf {
             8 // 1111 1111
         }};
 
-        if (bv.bit_cnt == 0) {
+        if (br.bit_cnt == 0) {
             return 0;
         }
 
         t_size res = 0;
 
-        for (t_size i = 0; i < bv.backing_bytes.len - 1; i++) {
-            res += g_mappings[bv.backing_bytes[i]];
+        for (t_size i = 0; i < br.backing_bytes.len; i++) {
+            const t_u8 byte_isolated = BitRangeBackingByteIsolated(br, i);
+            res += g_mappings[byte_isolated];
         }
-
-        res += g_mappings[bv.backing_bytes[bv.backing_bytes.len - 1]] & BitVectorLastByteBitmask(bv);
 
         return res;
     }
