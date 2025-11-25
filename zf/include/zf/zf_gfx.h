@@ -79,7 +79,7 @@ namespace zf::gfx {
     void ReleaseResources(s_resource_arena& res_arena);
 
     s_resource_handle MakeMesh(s_resource_arena& res_arena, const t_f32* const verts_raw, const t_size verts_len, const s_array_rdonly<t_u16> elems, const s_array_rdonly<t_s32> vert_attr_lens); // You might not want to provide vertices to start with, and only the count - passing nullptr in for verts_raw allows this.
-    s_resource_handle MakeShaderProg(s_resource_arena& res_arena, const s_str_rdonly vert_src, const s_str_rdonly frag_src, s_mem_arena& temp_mem_arena);
+    s_resource_handle MakeShaderProg(s_resource_arena& res_arena, const s_str_ascii_rdonly vert_src, const s_str_ascii_rdonly frag_src, s_mem_arena& temp_mem_arena);
     s_resource_handle MakeTexture(s_resource_arena& res_arena, const s_rgba_texture_data_rdonly& tex_data);
 
     struct s_texture_asset {
@@ -96,7 +96,7 @@ namespace zf::gfx {
         return IsResourceHandleValid(o_asset.hdl);
     }
 
-    [[nodiscard]] inline t_b8 LoadTextureAssetFromRaw(const s_str_rdonly file_path, s_resource_arena& res_arena, s_mem_arena& temp_mem_arena, s_texture_asset& o_asset) {
+    [[nodiscard]] inline t_b8 LoadTextureAssetFromRaw(const s_str_ascii_rdonly file_path, s_resource_arena& res_arena, s_mem_arena& temp_mem_arena, s_texture_asset& o_asset) {
         s_rgba_texture_data tex_data;
 
         if (!LoadRGBATextureDataFromRaw(file_path, temp_mem_arena, tex_data)) {
@@ -106,7 +106,7 @@ namespace zf::gfx {
         return LoadTextureAsset(tex_data, res_arena, o_asset);
     }
 
-    [[nodiscard]] inline t_b8 LoadTextureAssetFromPacked(const s_str_rdonly file_path, s_resource_arena& res_arena, s_mem_arena& temp_mem_arena, s_texture_asset& o_asset) {
+    [[nodiscard]] inline t_b8 LoadTextureAssetFromPacked(const s_str_ascii_rdonly file_path, s_resource_arena& res_arena, s_mem_arena& temp_mem_arena, s_texture_asset& o_asset) {
         s_rgba_texture_data tex_data;
 
         if (!UnpackTexture(file_path, temp_mem_arena, tex_data)) {
@@ -121,6 +121,6 @@ namespace zf::gfx {
         s_array<s_resource_handle> atlas_tex_hdls;
     };
 
-    [[nodiscard]] t_b8 LoadFontAssetFromRaw(const s_str_rdonly file_path, const t_s32 height, const s_array_rdonly<t_s32> codepoints_no_dups, s_mem_arena& mem_arena, s_resource_arena& res_arena, s_mem_arena& temp_mem_arena, s_font_asset& o_asset);
-    [[nodiscard]] t_b8 LoadFontAssetFromPacked(const s_str_rdonly file_path, s_mem_arena& mem_arena, s_resource_arena& res_arena, s_mem_arena& temp_mem_arena, s_font_asset& o_asset);
+    [[nodiscard]] t_b8 LoadFontAssetFromRaw(const s_str_ascii_rdonly file_path, const t_s32 height, const s_array_rdonly<t_u32> codepoints_no_dups, s_mem_arena& mem_arena, s_resource_arena& res_arena, s_mem_arena& temp_mem_arena, s_font_asset& o_asset);
+    [[nodiscard]] t_b8 LoadFontAssetFromPacked(const s_str_ascii_rdonly file_path, s_mem_arena& mem_arena, s_resource_arena& res_arena, s_mem_arena& temp_mem_arena, s_font_asset& o_asset);
 }

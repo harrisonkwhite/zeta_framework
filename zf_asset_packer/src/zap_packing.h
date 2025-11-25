@@ -3,5 +3,5 @@
 #include <zc.h>
 
 namespace zf {
-    t_b8 RunPacker(const s_str_rdonly instrs_json_file_path);
+    t_b8 RunPacker(const s_str_ascii_rdonly instrs_json_file_path);
 }

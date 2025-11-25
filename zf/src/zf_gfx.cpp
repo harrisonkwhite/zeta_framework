@@ -42,14 +42,14 @@ namespace zf::gfx {
         return mesh;
     }
 
-    static t_gl_id MakeGLShaderProg(const s_str_rdonly vert_src, const s_str_rdonly frag_src, s_mem_arena& temp_mem_arena) {
+    static t_gl_id MakeGLShaderProg(const s_str_ascii_rdonly vert_src, const s_str_ascii_rdonly frag_src, s_mem_arena& temp_mem_arena) {
         // @todo: Improve error logging here. Should be in return value.
 
         ZF_ASSERT(IsStrTerminated(vert_src));
         ZF_ASSERT(IsStrTerminated(frag_src));
 
         // Generate the individual shaders.
-        const auto shader_gen_func = [&temp_mem_arena](const s_str_rdonly src, const t_b8 is_frag) -> t_gl_id {
+        const auto shader_gen_func = [&temp_mem_arena](const s_str_ascii_rdonly src, const t_b8 is_frag) -> t_gl_id {
             const t_gl_id shader_gl_id = glCreateShader(is_frag ? GL_FRAGMENT_SHADER : GL_VERTEX_SHADER);
 
             const auto src_raw = StrRaw(src);
@@ -205,7 +205,7 @@ namespace zf::gfx {
         return ListAppend(res_arena.hdls, MakeMeshHandle(gl_mesh));
     }
 
-    s_resource_handle MakeShaderProg(s_resource_arena& res_arena, const s_str_rdonly vert_src, const s_str_rdonly frag_src, s_mem_arena& temp_mem_arena) {
+    s_resource_handle MakeShaderProg(s_resource_arena& res_arena, const s_str_ascii_rdonly vert_src, const s_str_ascii_rdonly frag_src, s_mem_arena& temp_mem_arena) {
         ZF_ASSERT(IsStrTerminated(vert_src));
         ZF_ASSERT(IsStrTerminated(frag_src));
 
@@ -252,7 +252,7 @@ namespace zf::gfx {
         return true;
     }
 
-    t_b8 LoadFontAssetFromRaw(const s_str_rdonly file_path, const t_s32 height, const s_array_rdonly<t_s32> codepoints_no_dups, s_mem_arena& mem_arena, s_resource_arena& res_arena, s_mem_arena& temp_mem_arena, s_font_asset& o_asset) {
+    t_b8 LoadFontAssetFromRaw(const s_str_ascii_rdonly file_path, const t_s32 height, const s_array_rdonly<t_u32> codepoints_no_dups, s_mem_arena& mem_arena, s_resource_arena& res_arena, s_mem_arena& temp_mem_arena, s_font_asset& o_asset) {
         o_asset = {};
 
         s_array<t_font_atlas_rgba> atlas_rgbas;
@@ -264,7 +264,7 @@ namespace zf::gfx {
         return MakeFontAtlasTextureHandles(atlas_rgbas, mem_arena, res_arena, o_asset.atlas_tex_hdls);
     }
 
-    t_b8 LoadFontAssetFromPacked(const s_str_rdonly file_path, s_mem_arena& mem_arena, s_resource_arena& res_arena, s_mem_arena& temp_mem_arena, s_font_asset& o_asset) {
+    t_b8 LoadFontAssetFromPacked(const s_str_ascii_rdonly file_path, s_mem_arena& mem_arena, s_resource_arena& res_arena, s_mem_arena& temp_mem_arena, s_font_asset& o_asset) {
         o_asset = {};
 
         s_array<t_font_atlas_rgba> atlas_rgbas;

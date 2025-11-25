@@ -204,7 +204,7 @@ namespace zf {
 
     template<c_array tp_type>
     constexpr t_size ArraySizeInBytes(tp_type& arr) {
-        return ZF_SIZE_OF(tp_type::t_elem) * ArrayLen(arr);
+        return ZF_SIZE_OF(typename tp_type::t_elem) * ArrayLen(arr);
     }
 
     template<typename tp_type>
@@ -353,7 +353,7 @@ namespace zf {
     };
 
     constexpr t_size BitRangeFirstByteIndex(const s_bit_range_rdonly br) {
-        return br.bit_cnt / 8;
+        return br.begin_bit_index / 8;
     }
 
     constexpr t_size BitRangeLastByteIndex(const s_bit_range_rdonly br) {
@@ -456,7 +456,7 @@ namespace zf {
         ZF_ASSERT(pos >= 0 && pos < br.bit_cnt);
         o_index = IndexOfFirstSetBit(br, pos);
         pos = o_index + 1;
-        return o_index < br.begin_bit_index + br.bit_cnt;
+        return o_index != -1;
     }
 
     // pos is the walker state, make sure to initialise it to 0.
@@ -467,9 +467,9 @@ namespace zf {
         ZF_ASSERT(pos >= 0 && pos < br.bit_cnt);
         o_index = IndexOfFirstUnsetBit(br, pos);
         pos = o_index + 1;
-        return o_index < br.begin_bit_index + br.bit_cnt;
+        return o_index != -1;
     }
 
-#define ZF_FOR_EACH_SET_BIT(br, index) for (t_size ZF_CONCAT(p_walk_pos_l, __LINE__) = 0, index; WalkSetBits((br), ZF_CONCAT(p_walk_pos_l, __LINE__), index); )
-#define ZF_FOR_EACH_UNSET_BIT(br, index) for (t_size ZF_CONCAT(p_walk_pos_l, __LINE__) = 0, index; WalkUnsetBits((br), ZF_CONCAT(p_walk_pos_l, __LINE__), index); )
+#define ZF_FOR_EACH_SET_BIT(br, index) for (t_size ZF_CONCAT(p_walk_pos_l, __LINE__) = 0, index; WalkSetBits(br, ZF_CONCAT(p_walk_pos_l, __LINE__), index); )
+#define ZF_FOR_EACH_UNSET_BIT(br, index) for (t_size ZF_CONCAT(p_walk_pos_l, __LINE__) = 0, index; WalkUnsetBits(br, ZF_CONCAT(p_walk_pos_l, __LINE__), index); )
 }

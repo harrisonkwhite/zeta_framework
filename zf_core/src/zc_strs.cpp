@@ -402,7 +402,7 @@ namespace zf {
         return len;
     }
 
-    t_u32 UTF8ChrBytesToCodepoint(const s_array_rdonly<t_u8> bytes) {
+    t_u32 UTF8ChrBytesToCodePoint(const s_array_rdonly<t_u8> bytes) {
         ZF_ASSERT(bytes.len >= 1 && bytes.len <= 4);
         ZF_ASSERT(IsValidUTF8Str({bytes}));
 
@@ -439,11 +439,23 @@ namespace zf {
         return res;
     }
 
-    t_b8 WalkUTF8Str(const s_str_utf8_rdonly str, t_size& pos, t_u32& o_codepoint) {
+    t_b8 WalkUTF8Str(const s_str_utf8_rdonly str, t_size& pos, t_u32& o_code_pt) {
+        ZF_ASSERT(IsValidUTF8Str(str));
+
+        if (pos == str.bytes.len) {
+            return false;
+        }
+
         const auto byte_type = g_utf8_byte_type_table[str.bytes[pos]];
 
         switch (byte_type) {
             case ek_utf8_byte_type_ascii:
+                if (!str.bytes[pos]) {
+                    return false;
+                }
+
+                [[fallthrough]];
+
             case ek_utf8_byte_type_2byte_start:
             case ek_utf8_byte_type_3byte_start:
             case ek_utf8_byte_type_4byte_start:
@@ -451,7 +463,7 @@ namespace zf {
                     static_assert(ek_utf8_byte_type_4byte_start - ek_utf8_byte_type_ascii + 1 == 4);
                     const t_size chr_len = byte_type - ek_utf8_byte_type_ascii + 1;
                     const auto chr_bytes = Slice(str.bytes, pos, pos + chr_len);
-                    o_codepoint = UTF8ChrBytesToCodepoint(chr_bytes);
+                    o_code_pt = UTF8ChrBytesToCodePoint(chr_bytes);
                     pos += chr_len;
                     return true;
                 }

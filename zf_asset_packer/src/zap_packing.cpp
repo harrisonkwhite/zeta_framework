@@ -13,7 +13,7 @@ namespace zf {
         eks_asset_type_cnt
     };
 
-    constexpr s_static_array<s_str_rdonly, eks_asset_type_cnt> g_asset_type_arr_names = {{
+    constexpr s_static_array<s_str_ascii_rdonly, eks_asset_type_cnt> g_asset_type_arr_names = {{
         "textures",
         "fonts",
         "sounds"
@@ -25,7 +25,7 @@ namespace zf {
     };
 
     struct s_asset_field {
-        s_str_rdonly name;
+        s_str_ascii_rdonly name;
         e_asset_field_type type;
     };
 
@@ -67,7 +67,7 @@ namespace zf {
         {"dest_file_path", ek_asset_field_type_str}
     }};
 
-    t_b8 RunPacker(const s_str_rdonly instrs_json_file_path) {
+    t_b8 RunPacker(const s_str_ascii_rdonly instrs_json_file_path) {
         ZF_ASSERT(IsStrTerminated(instrs_json_file_path));
 
         zf::s_mem_arena mem_arena;
@@ -79,7 +79,7 @@ namespace zf {
 
         ZF_DEFER({ zf::FreeMemArena(mem_arena); });
 
-        zf::s_str instrs_json;
+        zf::s_str_ascii instrs_json;
 
         if (!zf::LoadFileContentsAsStr(mem_arena, instrs_json_file_path, instrs_json)) {
             ZF_LOG_ERROR("Failed to load packing instructions JSON file \"%s\"!", StrRaw(instrs_json_file_path));
@@ -192,11 +192,11 @@ namespace zf {
                             const auto src_fp_raw = field_vals[ek_font_field_src_file_path]->valuestring;
                             const auto height = field_vals[ek_font_field_height]->valueint;
 
-                            const s_static_array<t_s32, 4> codepoints = {
+                            const s_static_array<t_u32, 4> code_pts = {
                                 {'a', 'b', 'c', 'd'}
                             };
 
-                            if (!PackFont(StrFromRawTerminated(dest_fp_raw), StrFromRawTerminated(src_fp_raw), height, codepoints, mem_arena)) {
+                            if (!PackFont(StrFromRawTerminated(dest_fp_raw), StrFromRawTerminated(src_fp_raw), height, code_pts, mem_arena)) {
                                 ZF_LOG_ERROR("Failed to pack font \"%s\" to \"%s\"!", StrRaw(StrFromRawTerminated(src_fp_raw)), StrRaw(StrFromRawTerminated(dest_fp_raw)));
                                 return false;
                             }

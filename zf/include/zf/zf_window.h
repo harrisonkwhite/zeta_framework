@@ -95,7 +95,7 @@ namespace zf {
         ek_mouse_scroll_state_up
     };
 
-    t_b8 InitWindow(const s_v2<t_s32> size, const s_str_rdonly title, const e_window_flags flags);
+    t_b8 InitWindow(const s_v2<t_s32> size, const s_str_ascii_rdonly title, const e_window_flags flags);
     void ReleaseWindow();
 
     void* GetNativeWindowHandle();

@@ -189,7 +189,7 @@ namespace zf {
         }
     }
 
-    t_b8 InitWindow(const s_v2<t_s32> size, const s_str_rdonly title, const e_window_flags flags) {
+    t_b8 InitWindow(const s_v2<t_s32> size, const s_str_ascii_rdonly title, const e_window_flags flags) {
         ZF_ASSERT(!g_glfw_window);
         ZF_ASSERT(size.x > 0 && size.y > 0);
         ZF_ASSERT(IsStrTerminated(title));
@@ -271,10 +271,10 @@ namespace zf {
         );
 
         glfwSetCharCallback(g_glfw_window,
-            [](GLFWwindow* window, const t_u32 codepoint) {
+            [](GLFWwindow* window, const t_u32 code_pt) {
                 for (t_s32 i = 0; i < g_input_events.unicode_buf.g_len; i++) {
                     if (!g_input_events.unicode_buf[i]) {
-                        g_input_events.unicode_buf[i] = static_cast<char>(codepoint);
+                        g_input_events.unicode_buf[i] = static_cast<char>(code_pt);
                         return;
                     }
                 }

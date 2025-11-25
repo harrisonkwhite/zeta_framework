@@ -197,12 +197,12 @@ namespace zf {
         return true;
     }
 
-    [[nodiscard]] t_b8 OpenFile(const s_str_rdonly file_path, const e_file_access_mode mode, s_stream& o_fs);
+    [[nodiscard]] t_b8 OpenFile(const s_str_ascii_rdonly file_path, const e_file_access_mode mode, s_stream& o_fs);
     void CloseFile(s_stream& fs);
     t_size CalcFileSize(const s_stream& fs);
-    [[nodiscard]] t_b8 LoadFileContents(s_mem_arena& mem_arena, const s_str_rdonly file_path, s_array<t_u8>& o_contents, const t_b8 include_terminating_byte = false); // Reserve a buffer and populate it with the binary contents of a file, optionally with a terminating byte.
+    [[nodiscard]] t_b8 LoadFileContents(s_mem_arena& mem_arena, const s_str_ascii_rdonly file_path, s_array<t_u8>& o_contents, const t_b8 include_terminating_byte = false); // Reserve a buffer and populate it with the binary contents of a file, optionally with a terminating byte.
 
-    [[nodiscard]] inline t_b8 LoadFileContentsAsStr(s_mem_arena& mem_arena, const s_str_rdonly file_path, s_str& o_contents) {
+    [[nodiscard]] inline t_b8 LoadFileContentsAsStr(s_mem_arena& mem_arena, const s_str_ascii_rdonly file_path, s_str_ascii& o_contents) {
         s_array<t_u8> contents_default;
 
         if (!LoadFileContents(mem_arena, file_path, contents_default, true)) {
@@ -223,9 +223,9 @@ namespace zf {
         ek_directory_creation_result_unknown_err
     };
 
-    [[nodiscard]] t_b8 CreateDirectory(const s_str_rdonly path); // This DOES NOT create non-existent parent directories.
-    [[nodiscard]] t_b8 CreateDirectoryAndParents(const s_str_rdonly path, s_mem_arena& temp_mem_arena);
-    [[nodiscard]] t_b8 CreateFileAndParentDirs(const s_str_rdonly path, s_mem_arena& temp_mem_arena);
+    [[nodiscard]] t_b8 CreateDirectory(const s_str_ascii_rdonly path); // This DOES NOT create non-existent parent directories.
+    [[nodiscard]] t_b8 CreateDirectoryAndParents(const s_str_ascii_rdonly path, s_mem_arena& temp_mem_arena);
+    [[nodiscard]] t_b8 CreateFileAndParentDirs(const s_str_ascii_rdonly path, s_mem_arena& temp_mem_arena);
 
     enum e_path_type : t_s32 {
         ek_path_type_not_found,
@@ -233,5 +233,5 @@ namespace zf {
         ek_path_type_directory
     };
 
-    e_path_type CheckPathType(const s_str_rdonly path);
+    e_path_type CheckPathType(const s_str_ascii_rdonly path);
 }

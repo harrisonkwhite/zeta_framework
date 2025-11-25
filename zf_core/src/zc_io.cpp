@@ -9,7 +9,7 @@
 #endif
 
 namespace zf {
-    t_b8 OpenFile(const s_str_rdonly file_path, const e_file_access_mode mode, s_stream& o_fs) {
+    t_b8 OpenFile(const s_str_ascii_rdonly file_path, const e_file_access_mode mode, s_stream& o_fs) {
         ZF_ASSERT(IsStrTerminated(file_path));
 
         o_fs = {
@@ -56,7 +56,7 @@ namespace zf {
         return static_cast<t_size>(file_size);
     }
 
-    t_b8 LoadFileContents(s_mem_arena& mem_arena, const s_str_rdonly file_path, s_array<t_u8>& o_contents, const t_b8 include_terminating_byte) {
+    t_b8 LoadFileContents(s_mem_arena& mem_arena, const s_str_ascii_rdonly file_path, s_array<t_u8>& o_contents, const t_b8 include_terminating_byte) {
         ZF_ASSERT(IsStrTerminated(file_path));
 
         s_stream fs;
@@ -80,7 +80,7 @@ namespace zf {
         return true;
     }
 
-    t_b8 CreateDirectory(const s_str_rdonly path) {
+    t_b8 CreateDirectory(const s_str_ascii_rdonly path) {
         ZF_ASSERT(IsStrTerminated(path));
 
 #ifdef ZF_PLATFORM_WINDOWS
@@ -113,12 +113,12 @@ namespace zf {
 #endif
     }
 
-    t_b8 CreateDirectoryAndParents(const s_str_rdonly path, s_mem_arena& temp_mem_arena) {
+    t_b8 CreateDirectoryAndParents(const s_str_ascii_rdonly path, s_mem_arena& temp_mem_arena) {
         ZF_ASSERT(IsStrTerminated(path));
 
         // @speed: Ideally we'd start at the end of the path and move back.
 
-        s_str path_clone; // @speed: A clone on every call to this? Yuck!
+        s_str_ascii path_clone; // @speed: A clone on every call to this? Yuck!
 
         if (!MakeArrayClone(temp_mem_arena, path.chrs, path_clone.chrs)) {
             return false;
@@ -159,13 +159,13 @@ namespace zf {
         return true;
     }
 
-    t_b8 CreateFileAndParentDirs(const s_str_rdonly path, s_mem_arena& temp_mem_arena) {
-        ZF_ASSERT(IsStrTerminated(path) && IsValidUTF8Str(path));
+    t_b8 CreateFileAndParentDirs(const s_str_ascii_rdonly path, s_mem_arena& temp_mem_arena) {
+        ZF_ASSERT(IsStrTerminated(path));
 
-        const t_size path_len = CalcUTF8StrLenFastButUnsafe(path);
+        const t_size path_len = CalcStrLen(path);
         const auto path_relevant = Slice(path.chrs, 0, path_len + 1);
 
-        s_str path_clone; // @speed: A clone on every call to this? Yuck!
+        s_str_ascii path_clone; // @speed: A clone on every call to this? Yuck!
 
         if (!MakeArrayClone(temp_mem_arena, path_relevant, path_clone.chrs)) {
             return false;
@@ -196,7 +196,7 @@ namespace zf {
         return true;
     }
 
-    e_path_type CheckPathType(const s_str_rdonly path) {
+    e_path_type CheckPathType(const s_str_ascii_rdonly path) {
         struct stat info;
 
         if (stat(StrRaw(path), &info) != 0) {
