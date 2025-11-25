@@ -303,17 +303,13 @@ namespace zf {
             0 // 1111 1111
         }};
 
-        if (br.bit_cnt > 0) {
-            const t_u8 xor_mask = inverted ? 0xFF : 0;
+        const t_u8 xor_mask = inverted ? 0xFF : 0;
 
-            const t_size last_byte_index = (br.begin_bit_index + br.bit_cnt - 1) / 8;
+        for (t_size i = BitRangeFirstByteIndex(br); i <= BitRangeLastByteIndex(br); i++) {
+            const t_size bi = g_mappings[BitRangeBackingByteIsolated(br, i) ^ xor_mask];
 
-            for (t_size i = br.begin_bit_index / 8; i <= last_byte_index; i++) {
-                const t_size bi = g_mappings[BitRangeBackingByteIsolated(br, i) ^ xor_mask];
-
-                if (bi != -1) {
-                    return (8 * i) + bi;
-                }
+            if (bi != -1) {
+                return (8 * i) + bi;
             }
         }
 
@@ -605,13 +601,9 @@ namespace zf {
             8 // 1111 1111
         }};
 
-        if (br.bit_cnt == 0) {
-            return 0;
-        }
-
         t_size res = 0;
 
-        for (t_size i = 0; i < br.backing_bytes.len; i++) {
+        for (t_size i = BitRangeFirstByteIndex(br); i <= BitRangeLastByteIndex(br); i++) {
             const t_u8 byte_isolated = BitRangeBackingByteIsolated(br, i);
             res += g_mappings[byte_isolated];
         }

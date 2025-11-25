@@ -352,15 +352,23 @@ namespace zf {
         }
     };
 
+    constexpr t_size BitRangeFirstByteIndex(const s_bit_range_rdonly br) {
+        return br.bit_cnt / 8;
+    }
+
+    constexpr t_size BitRangeLastByteIndex(const s_bit_range_rdonly br) {
+        return (br.begin_bit_index + br.bit_cnt - 1) / 8;
+    }
+
     // Gives a mask of the backing byte where only in-range bits are set.
     // @speed: Probably overusing this.
     constexpr t_u8 BitRangeBackingByteMask(const s_bit_range_rdonly br, const t_size byte_index) {
         ZF_ASSERT(byte_index >= 0 && byte_index < br.backing_bytes.len);
 
-        const t_size first_byte_index = BitsToBytes(br.begin_bit_index);
-        const t_size last_byte_index = BitsToBytes(br.begin_bit_index + br.bit_cnt - 1);
+        const t_size first_byte_index = BitRangeFirstByteIndex(br);
+        const t_size last_byte_index = BitRangeLastByteIndex(br);
 
-        if (byte_index < first_byte_index || byte_index >= last_byte_index) {
+        if (byte_index < first_byte_index || byte_index > last_byte_index) {
             return 0;
         }
 
@@ -402,7 +410,7 @@ namespace zf {
     }
 
     constexpr t_b8 IsAnyBitSet(const s_bit_range_rdonly br) {
-        for (t_size i = 0; i < br.backing_bytes.len; i++) {
+        for (t_size i = BitRangeFirstByteIndex(br); i <= BitRangeLastByteIndex(br); i++) {
             if (BitRangeBackingByteIsolated(br, i) != 0) {
                 return true;
             }
@@ -412,7 +420,7 @@ namespace zf {
     }
 
     constexpr t_b8 AreAllBitsSet(const s_bit_range_rdonly br) {
-        for (t_size i = 0; i < br.backing_bytes.len; i++) {
+        for (t_size i = BitRangeFirstByteIndex(br); i <= BitRangeLastByteIndex(br); i++) {
             const t_u8 mask = BitRangeBackingByteMask(br, i);
 
             if ((br.backing_bytes[i] & mask) != mask) {
@@ -439,4 +447,29 @@ namespace zf {
 
     t_size IndexOfFirstSetBit(const s_bit_range_rdonly br, const t_size from);
     t_size IndexOfFirstUnsetBit(const s_bit_range_rdonly br, const t_size from);
+
+    // pos is the walker state, make sure to initialise it to 0.
+    // o_index is assigned the index of the set bit to process.
+    // Returns false iff the walk is complete.
+    // You can use the ZF_FOR_EACH_SET_BIT macro for more brevity if you like.
+    inline t_b8 WalkSetBits(const s_bit_range_rdonly br, t_size& pos, t_size& o_index) {
+        ZF_ASSERT(pos >= 0 && pos < br.bit_cnt);
+        o_index = IndexOfFirstSetBit(br, pos);
+        pos = o_index + 1;
+        return o_index < br.begin_bit_index + br.bit_cnt;
+    }
+
+    // pos is the walker state, make sure to initialise it to 0.
+    // o_index is assigned the index of the unset bit to process.
+    // Returns false iff the walk is complete.
+    // You can use the ZF_FOR_EACH_UNSET_BIT macro for more brevity if you like.
+    inline t_b8 WalkUnsetBits(const s_bit_range_rdonly br, t_size& pos, t_size& o_index) {
+        ZF_ASSERT(pos >= 0 && pos < br.bit_cnt);
+        o_index = IndexOfFirstUnsetBit(br, pos);
+        pos = o_index + 1;
+        return o_index < br.begin_bit_index + br.bit_cnt;
+    }
+
+#define ZF_FOR_EACH_SET_BIT(br, index) for (t_size ZF_CONCAT(p_walk_pos_l, __LINE__) = 0, index; WalkSetBits((br), ZF_CONCAT(p_walk_pos_l, __LINE__), index); )
+#define ZF_FOR_EACH_UNSET_BIT(br, index) for (t_size ZF_CONCAT(p_walk_pos_l, __LINE__) = 0, index; WalkUnsetBits((br), ZF_CONCAT(p_walk_pos_l, __LINE__), index); )
 }
