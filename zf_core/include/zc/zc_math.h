@@ -230,7 +230,7 @@ namespace zf {
         }
 
         template<c_numeric tp_other_type>
-        constexpr explicit operator s_v2<tp_other_type>() const {
+        constexpr explicit operator s_rect<tp_other_type>() const {
             return {
                 static_cast<tp_other_type>(x),
                 static_cast<tp_other_type>(y),

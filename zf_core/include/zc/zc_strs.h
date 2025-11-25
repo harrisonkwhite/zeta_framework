@@ -9,22 +9,6 @@ namespace zf {
         return len;
     }
 
-    struct s_str_ascii_rdonly {
-        s_array_rdonly<char> chrs; // The length of this IS NOT necessarily the string length!
-
-        constexpr s_str_ascii_rdonly() = default;
-        constexpr s_str_ascii_rdonly(const s_array_rdonly<char> chrs) : chrs(chrs) {}
-        consteval s_str_ascii_rdonly(const char* const raw_term);
-    };
-
-    struct s_str_ascii {
-        s_array<char> chrs;
-
-        constexpr operator s_str_ascii_rdonly() const {
-            return {chrs};
-        }
-    };
-
     struct s_str_utf8_rdonly {
         s_array_rdonly<t_u8> bytes;
     };
@@ -34,6 +18,34 @@ namespace zf {
 
         constexpr operator s_str_utf8_rdonly() const {
             return {bytes};
+        }
+    };
+
+    struct s_str_ascii_rdonly {
+        s_array_rdonly<char> chrs; // The length of this IS NOT necessarily the string length!
+
+        constexpr s_str_ascii_rdonly() = default;
+        constexpr s_str_ascii_rdonly(const s_array_rdonly<char> chrs) : chrs(chrs) {}
+        consteval s_str_ascii_rdonly(const char* const raw_term);
+
+        constexpr operator s_str_utf8_rdonly() const {
+            return {ToByteArray(chrs)};
+        }
+    };
+
+    struct s_str_ascii {
+        s_array<char> chrs;
+
+        constexpr operator s_str_ascii_rdonly() const {
+            return {chrs};
+        }
+
+        constexpr operator s_str_utf8() const {
+            return {ToByteArray(chrs)};
+        }
+
+        constexpr operator s_str_utf8_rdonly() const {
+            return {ToByteArray(chrs)};
         }
     };
 

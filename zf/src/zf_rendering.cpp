@@ -274,4 +274,35 @@ void main() {
 
         Draw(rc, tex.hdl, tex_coords, pos, size, origin, rot, blend);
     }
+
+    t_b8 DrawStr(const s_rendering_context& rc, const s_str_utf8_rdonly str, const gfx::s_font_asset& font, const s_v2<t_f32> pos, s_mem_arena& temp_mem_arena) {
+        s_array<s_v2<t_f32>> chr_positions;
+
+        if (!LoadStrChrPositions(str, font.arrangement, pos, temp_mem_arena, chr_positions)) {
+            return false;
+        }
+
+        t_size chr_index = 0;
+
+        ZF_ITER_UTF8_STR(str, code_pt) {
+            if (code_pt == ' ' || code_pt == '\n') {
+                continue;
+            }
+
+            s_font_glyph_info glyph_info;
+
+            if (!HashMapGet(font.arrangement.code_pts_to_glyph_infos, code_pt, &glyph_info)) {
+                // @todo: How to handle unsupported characters?
+                continue;
+            }
+
+            const auto chr_tex_coords = CalcTextureCoords(glyph_info.atlas_rect, g_font_atlas_size);
+
+            Draw(rc, font.atlas_tex_hdls[glyph_info.atlas_index], chr_tex_coords, chr_positions[chr_index], static_cast<s_v2<t_f32>>(RectSize(glyph_info.atlas_rect)), {}, 0.0f, colors::g_white);
+
+            chr_index++;
+        };
+
+        return true;
+    }
 }
