@@ -1,6 +1,6 @@
 #pragma once
 
-#include <zc/ds/zc_bit_vector.h>
+#include <zc/zc_mem.h>
 
 // An "activity array" is an array where each slot has an associated "active" bit indicating whether it is in use.
 

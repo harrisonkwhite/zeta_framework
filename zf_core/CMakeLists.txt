@@ -6,6 +6,7 @@ add_library(zf_core STATIC
     src/zc_math.cpp
     src/zc_strs.cpp
     src/zc_debug.cpp
+    src/ds/zc_bit_vector.cpp
     ../external/stb_image/src/stb_image.c
     ../external/stb_truetype/src/stb_truetype.c
 	../external/miniaudio/src/miniaudio.c
@@ -21,6 +22,7 @@ add_library(zf_core STATIC
     include/zc/zc_strs.h
     include/zc/zc_debug.h
     include/zc/ds/zc_activity_array.h
+    include/zc/ds/zc_bit_vector.h
     include/zc/ds/zc_list.h
     include/zc/ds/zc_stack.h
     include/zc/ds/zc_queue.h
