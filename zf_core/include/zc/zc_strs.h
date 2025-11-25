@@ -3,6 +3,8 @@
 #include <zc/zc_mem.h>
 
 namespace zf {
+    // @todo: Clean up all this.
+
     constexpr t_size CountCharsUntilNull(const char* const chrs_raw) {
         t_size len = 0;
         for (; chrs_raw[len]; len++) {}
@@ -79,6 +81,10 @@ namespace zf {
     constexpr s_str_ascii_rdonly StrFromRawTerminated(const char* const raw, const t_size len) {
         ZF_ASSERT(len == CountCharsUntilNull(raw));
         return {{raw, len + 1}};
+    }
+
+    inline s_str_utf8_rdonly StrFromRawTerminatedTest(const char* const raw) {
+        return {{reinterpret_cast<const t_u8*>(raw), CountCharsUntilNull(raw) + 1}};
     }
 
     consteval s_str_ascii_rdonly::s_str_ascii_rdonly(const char* const raw_term)

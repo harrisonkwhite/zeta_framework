@@ -239,6 +239,19 @@ namespace zf {
             return false;
         }
 
+        // Initialise all pixels to transparent white.
+        // @todo: Maybe don't use RBGA for this?
+        for (t_size i = 0; i < o_atlas_rgbas.len; i++) {
+            auto& atlas_rgba = o_atlas_rgbas[i];
+
+            for (t_size j = 0; j < o_atlas_rgbas[i].g_len; j += 4) {
+                atlas_rgba[j + 0] = 255;
+                atlas_rgba[j + 1] = 255;
+                atlas_rgba[j + 2] = 255;
+                atlas_rgba[j + 3] = 0;
+            }
+        }
+
         for (t_size i = 0; i < code_pts_no_dups.len; i++) {
             s_font_glyph_info glyph_info;
 
@@ -264,7 +277,7 @@ namespace zf {
 
             for (t_s32 y = RectTop(atlas_rect); y < RectBottom(atlas_rect); y++) {
                 for (t_s32 x = RectLeft(atlas_rect); x < RectRight(atlas_rect); x++) {
-                    const t_size px_index = (y * 4 * atlas_rect.width) + (x * 4);
+                    const t_size px_index = (y * 4 * g_font_atlas_size.x) + (x * 4);
                     const t_size stb_bitmap_index = ((y - atlas_rect.y) * atlas_rect.width) + (x - atlas_rect.x);
                     atlas_rgba[px_index + 3] = stb_bitmap[stb_bitmap_index];
                 }
@@ -377,6 +390,8 @@ namespace zf {
             o_positions[pos_index] = pos + chr_pos_pen + static_cast<s_v2<t_f32>>(glyph_info.offs);
 
             chr_pos_pen.x += static_cast<t_f32>(glyph_info.adv);
+
+            pos_index++;
         }
 
         return true;

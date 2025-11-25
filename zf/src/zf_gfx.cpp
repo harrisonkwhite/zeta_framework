@@ -236,7 +236,7 @@ namespace zf::gfx {
         return ListAppend(res_arena.hdls, MakeTextureHandle(tex_gl_id));
     }
 
-    [[nodiscard]] static t_b8 MakeFontAtlasTextureHandles(const s_array_rdonly<t_font_atlas_rgba> atlas_rgbas, s_mem_arena& mem_arena, s_resource_arena& res_arena, s_array<s_resource_handle> o_hdls) {
+    [[nodiscard]] static t_b8 MakeFontAtlasTextureHandles(const s_array_rdonly<t_font_atlas_rgba> atlas_rgbas, s_mem_arena& mem_arena, s_resource_arena& res_arena, s_array<s_resource_handle>& o_hdls) {
         if (!MakeArray(mem_arena, atlas_rgbas.len, o_hdls)) {
             return false;
         }

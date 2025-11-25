@@ -289,6 +289,11 @@ namespace zf {
             return false;
         }
 
+        // Initialise OpenGL blending.
+        // @todo: I hate having this GFX stuff here!
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
         return true;
     }
 

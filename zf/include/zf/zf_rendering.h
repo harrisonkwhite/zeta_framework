@@ -60,7 +60,7 @@ namespace zf {
 
     void UpdateViewMatrix(const s_rendering_context& rc, const s_matrix_4x4& mat);
     void DrawTexture(const s_rendering_context& rc, const gfx::s_texture_asset& tex, const s_v2<t_f32> pos, const s_rect<t_s32> src_rect = {}, const s_v2<t_f32> origin = origins::g_topleft, const s_v2<t_f32> scale = {1.0f, 1.0f}, const t_f32 rot = 0.0f, const s_color_rgba32f blend = colors::g_white);
-    [[nodiscard]] t_b8 DrawStr(const s_rendering_context& rc, const s_str_utf8_rdonly str, const gfx::s_font_asset& font, const s_v2<t_f32> pos);
+    [[nodiscard]] t_b8 DrawStr(const s_rendering_context& rc, const s_str_utf8_rdonly str, const gfx::s_font_asset& font, const s_v2<t_f32> pos, s_mem_arena& temp_mem_arena);
 
     inline void DrawRect(const s_rendering_context& rc, const s_rect<t_f32> rect, const s_color_rgba32f color) {
         DrawTexture(rc, rc.basis.px_tex, RectPos(rect), {}, {}, RectSize(rect), 0.0f, color);
