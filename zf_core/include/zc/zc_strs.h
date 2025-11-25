@@ -25,6 +25,18 @@ namespace zf {
         }
     };
 
+    struct s_str_utf8_rdonly {
+        s_array_rdonly<t_u8> bytes;
+    };
+
+    struct s_str_utf8 {
+        s_array<t_u8> bytes;
+
+        constexpr operator s_str_utf8_rdonly() const {
+            return {bytes};
+        }
+    };
+
     constexpr char* StrRaw(const s_str str) {
         return str.chrs.buf_raw;
     }
@@ -69,7 +81,9 @@ namespace zf {
         return false;
     }
 
-    t_b8 IsValidUTF8Str(const s_str_rdonly str);
-    [[nodiscard]] t_b8 CalcUTF8StrLen(const s_str_rdonly str, t_size& o_len); // Returns false iff the provided string is not valid UTF-8 form. Works with either terminated or non-terminated strings.
-    t_size CalcUTF8StrLenFastButUnsafe(const s_str_rdonly str); // This (in release mode) DOES NOT check whether the string is in valid UTF-8 form!
+    t_b8 IsValidUTF8Str(const s_str_utf8_rdonly str);
+    [[nodiscard]] t_b8 CalcUTF8StrLen(const s_str_utf8_rdonly str, t_size& o_len); // Returns false iff the provided string is not valid UTF-8 form. Works with either terminated or non-terminated strings.
+    t_size CalcUTF8StrLenFastButUnsafe(const s_str_utf8_rdonly str); // This (in release mode) DOES NOT check whether the string is in valid UTF-8 form!
+    t_b8 WalkUTF8Str(const s_str_utf8_rdonly str, t_size& pos, t_u32& o_codepoint); // Returns false iff the walk is complete.
+    t_u32 UTF8ChrBytesToCodepoint(const s_array_rdonly<t_u8> bytes); // Only accepts bytes representing a unicode codepoint in an array with a length in [1, 4].
 }

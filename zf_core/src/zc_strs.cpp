@@ -276,15 +276,15 @@ namespace zf {
         ek_utf8_byte_type_invalid // 1111 1111
     }};
 
-    t_b8 IsValidUTF8Str(const s_str_rdonly str) {
+    t_b8 IsValidUTF8Str(const s_str_utf8_rdonly str) {
         t_size cost = 0;
 
-        for (t_size i = 0; i < str.chrs.len; i++) {
-            const auto byte_type = g_utf8_byte_type_table[str.chrs[i]];
+        for (t_size i = 0; i < str.bytes.len; i++) {
+            const auto byte_type = g_utf8_byte_type_table[str.bytes[i]];
 
             switch (byte_type) {
                 case ek_utf8_byte_type_ascii:
-                    if (!str.chrs[i]) {
+                    if (!str.bytes[i]) {
                         return cost == 0;
                     }
 
@@ -319,17 +319,17 @@ namespace zf {
         return cost == 0;
     }
 
-    t_b8 CalcUTF8StrLen(const s_str_rdonly str, t_size& o_len) {
+    t_b8 CalcUTF8StrLen(const s_str_utf8_rdonly str, t_size& o_len) {
         o_len = 0;
 
         t_size cost = 0;
 
-        for (t_size i = 0; i < str.chrs.len; i++) {
-            const auto byte_type = g_utf8_byte_type_table[str.chrs[i]];
+        for (t_size i = 0; i < str.bytes.len; i++) {
+            const auto byte_type = g_utf8_byte_type_table[str.bytes[i]];
 
             switch (byte_type) {
                 case ek_utf8_byte_type_ascii:
-                    if (!str.chrs[i]) {
+                    if (!str.bytes[i]) {
                         return cost == 0;
                     }
 
@@ -366,18 +366,18 @@ namespace zf {
         return cost == 0;
     }
 
-    t_size CalcUTF8StrLenFastButUnsafe(const s_str_rdonly str) {
+    t_size CalcUTF8StrLenFastButUnsafe(const s_str_utf8_rdonly str) {
         ZF_ASSERT(IsValidUTF8Str(str));
 
         t_size i = 0;
         t_size len = 0;
 
-        while (i < str.chrs.len) {
-            const auto byte_type = g_utf8_byte_type_table[str.chrs[i]];
+        while (i < str.bytes.len) {
+            const auto byte_type = g_utf8_byte_type_table[str.bytes[i]];
 
             switch (byte_type) {
                 case ek_utf8_byte_type_ascii:
-                    if (!str.chrs[i]) {
+                    if (!str.bytes[i]) {
                         return len;
                     }
 
@@ -402,47 +402,45 @@ namespace zf {
         return len;
     }
 
-
-
-
-
-
-#if 0
-
-    void AppendBits(const s_bit_range bv, const s_bit_range_rdonly bv_of_bits_to_add) {
-        ZF_ASSERT(BitsToBytes(bv.bit_cnt + bv_of_bits_to_add.bit_cnt) <= bv.backing_bytes.len);
-
-        // Basically just append as many bits as we can to the last byte and recurse.
-        const t_size bits_to_append_cnt = 8 - (bv.bit_cnt % 8);
-
-        //bv_of_bits_to_add.bytes[0]
-    }
-
-    t_u32 UnicodeCodepointFromBytes(const s_array_rdonly<t_u8> bytes) {
+    t_u32 UTF8ChrBytesToCodepoint(const s_array_rdonly<t_u8> bytes) {
         ZF_ASSERT(bytes.len >= 1 && bytes.len <= 4);
+        ZF_ASSERT(IsValidUTF8Str({bytes}));
 
         t_u32 res = 0;
-        s_bit_range res_bv = ToBytes(res);
 
         switch (bytes.len) {
         case 1:
-            res |= bytes[0] & 127;
-            //AppendBits(res_bv, );
+            // 0xxxxxxx
+            res |= bytes[0] & ByteBitmask(0, 7);
             break;
 
         case 2:
-            res |= (bytes[1] & ByteBitmask(0, 6));
-            res |= (bytes[0] & ByteBitmask(0, 5)) << 6;
+            // 110xxxxx 10xxxxxx
+            res |= static_cast<t_u32>((bytes[0] & ByteBitmask(0, 5)) << 6);
+            res |= bytes[1] & ByteBitmask(0, 6);
+            break;
+
+        case 3:
+            // 1110xxxx 10xxxxxx 10xxxxxx
+            res |= static_cast<t_u32>((bytes[0] & ByteBitmask(0, 4)) << 12);
+            res |= static_cast<t_u32>((bytes[1] & ByteBitmask(0, 6)) << 6);
+            res |= bytes[2] & ByteBitmask(0, 6);
+            break;
+
+        case 4:
+            // 11110xxx 10xxxxxx 10xxxxxx 10xxxxxx
+            res |= static_cast<t_u32>((bytes[0] & ByteBitmask(0, 3)) << 18);
+            res |= static_cast<t_u32>((bytes[1] & ByteBitmask(0, 6)) << 12);
+            res |= static_cast<t_u32>((bytes[2] & ByteBitmask(0, 6)) << 6);
+            res |= bytes[3] & ByteBitmask(0, 6);
             break;
         }
 
         return res;
     }
 
-    t_s32 WalkUTF8Str(const s_str_rdonly str, t_size& byte_index) {
-        const auto byte_type = g_utf8_byte_type_table[str.chrs[byte_index]];
-
-        t_s32 res = 0;
+    t_b8 WalkUTF8Str(const s_str_utf8_rdonly str, t_size& pos, t_u32& o_codepoint) {
+        const auto byte_type = g_utf8_byte_type_table[str.bytes[pos]];
 
         switch (byte_type) {
             case ek_utf8_byte_type_ascii:
@@ -452,30 +450,16 @@ namespace zf {
                 {
                     static_assert(ek_utf8_byte_type_4byte_start - ek_utf8_byte_type_ascii + 1 == 4);
                     const t_size chr_len = byte_type - ek_utf8_byte_type_ascii + 1;
-                    const auto chr_bytes = Slice(str.chrs, byte_index, byte_index + chr_len);
-                    const t_s32 res = UnicodeCodepointFromBytes(ToByteArray(chr_bytes));
-                    byte_index += chr_len;
-                    return res;
+                    const auto chr_bytes = Slice(str.bytes, pos, pos + chr_len);
+                    o_codepoint = UTF8ChrBytesToCodepoint(chr_bytes);
+                    pos += chr_len;
+                    return true;
                 }
-
-                break;
 
             case ek_utf8_byte_type_continuation:
             case ek_utf8_byte_type_invalid:
                 ZF_ASSERT(false);
-                break;
+                return true;
         }
-
-        return res;
     }
-
-#endif
-
-
-
-
-
-
-
-
 }
