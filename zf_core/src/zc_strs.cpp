@@ -403,7 +403,7 @@ namespace zf {
         return len;
     }
 
-    t_b8 WalkUTF8Str(const s_str_utf8_rdonly str, t_size& pos, t_u32& o_code_pt) {
+    t_b8 WalkUTF8Str(const s_str_utf8_rdonly str, t_size& pos, t_code_pt& o_code_pt) {
         ZF_ASSERT(IsValidUTF8Str(str));
 
         if (pos == str.bytes.len) {
@@ -439,11 +439,11 @@ namespace zf {
         }
     }
 
-    t_u32 UTF8ChrBytesToCodePoint(const s_array_rdonly<t_u8> bytes) {
+    t_code_pt UTF8ChrBytesToCodePoint(const s_array_rdonly<t_u8> bytes) {
         ZF_ASSERT(bytes.len >= 1 && bytes.len <= 4);
         ZF_ASSERT(IsValidUTF8Str({bytes}));
 
-        t_u32 res = 0;
+        t_code_pt res = 0;
 
         switch (bytes.len) {
         case 1:
@@ -453,22 +453,22 @@ namespace zf {
 
         case 2:
             // 110xxxxx 10xxxxxx
-            res |= static_cast<t_u32>((bytes[0] & ByteBitmaskRanged(0, 5)) << 6);
+            res |= static_cast<t_code_pt>((bytes[0] & ByteBitmaskRanged(0, 5)) << 6);
             res |= bytes[1] & ByteBitmaskRanged(0, 6);
             break;
 
         case 3:
             // 1110xxxx 10xxxxxx 10xxxxxx
-            res |= static_cast<t_u32>((bytes[0] & ByteBitmaskRanged(0, 4)) << 12);
-            res |= static_cast<t_u32>((bytes[1] & ByteBitmaskRanged(0, 6)) << 6);
+            res |= static_cast<t_code_pt>((bytes[0] & ByteBitmaskRanged(0, 4)) << 12);
+            res |= static_cast<t_code_pt>((bytes[1] & ByteBitmaskRanged(0, 6)) << 6);
             res |= bytes[2] & ByteBitmaskRanged(0, 6);
             break;
 
         case 4:
             // 11110xxx 10xxxxxx 10xxxxxx 10xxxxxx
-            res |= static_cast<t_u32>((bytes[0] & ByteBitmaskRanged(0, 3)) << 18);
-            res |= static_cast<t_u32>((bytes[1] & ByteBitmaskRanged(0, 6)) << 12);
-            res |= static_cast<t_u32>((bytes[2] & ByteBitmaskRanged(0, 6)) << 6);
+            res |= static_cast<t_code_pt>((bytes[0] & ByteBitmaskRanged(0, 3)) << 18);
+            res |= static_cast<t_code_pt>((bytes[1] & ByteBitmaskRanged(0, 6)) << 12);
+            res |= static_cast<t_code_pt>((bytes[2] & ByteBitmaskRanged(0, 6)) << 6);
             res |= bytes[3] & ByteBitmaskRanged(0, 6);
             break;
         }
@@ -476,39 +476,11 @@ namespace zf {
         return res;
     }
 
-    t_b8 GetCodePointCounts(const s_str_utf8_rdonly str, s_mem_arena& mem_arena, s_hash_map<t_u32, t_size>& o_hm) {
+    void MarkCodePoints(const s_str_utf8_rdonly str, t_unicode_code_pt_bit_vector& code_pt_bv) {
         ZF_ASSERT(IsValidUTF8Str(str));
 
-        if (!MakeHashMap<t_u32, t_size>(mem_arena, [](const t_u32& key) { return static_cast<t_size>(key); }, o_hm)) {
-            return false;
-        }
-
         ZF_ITER_UTF8_STR(str, code_pt) {
-            t_size cnt;
-
-            if (!HashMapGet(o_hm, code_pt, &cnt)) {
-                cnt = 0;
-            }
-
-            if (HashMapPut(o_hm, code_pt, cnt) == ek_hash_map_put_result_error) {
-                return false;
-            }
+            SetBit(code_pt_bv, code_pt);
         }
-
-        return true;
-    }
-
-    t_b8 GetUniqueCodePoints(const s_str_utf8_rdonly str, s_mem_arena& mem_arena, s_mem_arena& temp_mem_arena, s_array<t_u32>& o_arr) {
-        s_hash_map<t_u32, t_size> cp_cnts;
-
-        if (!GetCodePointCounts(str, temp_mem_arena, cp_cnts)) {
-            return false;
-        }
-
-        if (!LoadHashMapKeys(cp_cnts, mem_arena, o_arr)) {
-            return false;
-        }
-
-        return true;
     }
 }

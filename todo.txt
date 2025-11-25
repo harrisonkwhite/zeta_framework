@@ -1,3 +1,4 @@
+- Bit code needs a lot more helpers for things like rotation, masking, etc.
 - Consider whether to allow leaks in the case of intermediate failure.
 - Switch to linked block approach for the hash map.
 - Togglable debug overlays with FPS and so on, use some built-in font.
@@ -14,3 +15,11 @@
 - MAYBE use STL type traits, not custom ones. Add safety checking for arena push.
 
 There are a handful of comments marked with "@todo" throughout the codebase that need to be addressed as well.
+
+Fonts, specifically:
+- Clean up string code, split between ASCII and UTF-8.
+- Add kerning support. Also clean up kerning setup code.
+- Add text alignment.
+- Add text colouring, scaling (yes), and rotation.
+- Add function for generating string collider.
+- TEST!

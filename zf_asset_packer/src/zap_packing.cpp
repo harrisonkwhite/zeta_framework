@@ -212,7 +212,14 @@ namespace zf {
                             const auto height = field_vals[ek_font_field_height]->valueint;
                             const auto extra_chrs_fp_raw = field_vals[ek_font_field_extra_chrs_file_path]->valuestring;
 
-                            s_array<t_u32> code_pts;
+                            const auto code_pts = PushToMemArena<t_unicode_code_pt_bit_vector>(mem_arena);
+
+                            if (!code_pts) {
+                                ZF_LOG_ERROR("Failed to allocate code point bit vector for font \"%s\"!", StrRaw(StrFromRawTerminated(src_fp_raw)));
+                                return false;
+                            }
+
+                            ApplyMask(*code_pts, g_asciis, ek_bitwise_mask_op_or);
 
                             if (field_vals[ek_font_field_extra_chrs_file_path]) {
                                 s_str_ascii extra_chrs_file_str;
@@ -222,13 +229,10 @@ namespace zf {
                                     return false;
                                 }
 
-                                if (!GetUniqueCodePoints(extra_chrs_file_str, mem_arena, mem_arena, code_pts)) {
-                                    ZF_LOG_ERROR("Failed to get unique code points from extra characters file \"%s\" for font \"%s\"!", StrRaw(StrFromRawTerminated(extra_chrs_fp_raw)), StrRaw(StrFromRawTerminated(src_fp_raw)));
-                                    return false;
-                                }
+                                MarkCodePoints(extra_chrs_file_str, *code_pts);
                             }
 
-                            if (!PackFont(StrFromRawTerminated(dest_fp_raw), StrFromRawTerminated(src_fp_raw), height, code_pts, mem_arena)) {
+                            if (!PackFont(StrFromRawTerminated(dest_fp_raw), StrFromRawTerminated(src_fp_raw), height, *code_pts, mem_arena)) {
                                 ZF_LOG_ERROR("Failed to pack font \"%s\" to \"%s\"!", StrRaw(StrFromRawTerminated(src_fp_raw)), StrRaw(StrFromRawTerminated(dest_fp_raw)));
                                 return false;
                             }

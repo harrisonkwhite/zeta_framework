@@ -1,5 +1,7 @@
 #include <zc/ds/zc_bit_vector.h>
 
+#include <zc/zc_io.h>
+
 namespace zf {
     t_b8 MakeBitVector(s_mem_arena& mem_arena, const t_size bit_cnt, s_bit_vector& o_bv) {
         ZF_ASSERT(bit_cnt > 0);

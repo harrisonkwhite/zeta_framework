@@ -1,9 +1,28 @@
 #pragma once
 
 #include <zc/zc_mem.h>
+#include <zc/ds/zc_bit_vector.h>
 
 namespace zf {
     // @todo: Clean up all this.
+
+    using t_code_pt = char32_t;
+
+    constexpr t_size g_unicode_code_pt_cnt = 1114112;
+
+    using t_unicode_code_pt_bit_vector = s_static_bit_vector<g_unicode_code_pt_cnt>;
+
+    constexpr t_unicode_code_pt_bit_vector g_asciis = []() constexpr {
+        // @todo: Should be able to use masking for this!
+
+        t_unicode_code_pt_bit_vector bv = {};
+
+        for (t_size i = 32; i < 127; i++) {
+            SetBit(bv, i);
+        }
+
+        return bv;
+    }();
 
     constexpr t_size CountCharsUntilNull(const char* const chrs_raw) {
         t_size len = 0;
@@ -108,15 +127,12 @@ namespace zf {
     t_b8 IsValidUTF8Str(const s_str_utf8_rdonly str);
     [[nodiscard]] t_b8 CalcUTF8StrLen(const s_str_utf8_rdonly str, t_size& o_len); // Returns false iff the provided string is not valid UTF-8 form. Works with either terminated or non-terminated strings.
     t_size CalcUTF8StrLenFastButUnsafe(const s_str_utf8_rdonly str); // This (in release mode) DOES NOT check whether the string is in valid UTF-8 form!
-    t_b8 WalkUTF8Str(const s_str_utf8_rdonly str, t_size& pos, t_u32& o_code_pt); // Returns false iff the walk is complete.
-    t_u32 UTF8ChrBytesToCodePoint(const s_array_rdonly<t_u8> bytes); // Only accepts bytes representing a unicode code point in an array with a length in [1, 4].
+    t_b8 WalkUTF8Str(const s_str_utf8_rdonly str, t_size& pos, t_code_pt& o_code_pt); // Returns false iff the walk is complete.
+    t_code_pt UTF8ChrBytesToCodePoint(const s_array_rdonly<t_u8> bytes); // Only accepts bytes representing a unicode code point in an array with a length in [1, 4].
 
-    template<typename tp_key_type, typename tp_val_type> struct s_hash_map;
-    [[nodiscard]] t_b8 GetCodePointCounts(const s_str_utf8_rdonly str, s_mem_arena& mem_arena, s_hash_map<t_u32, t_size>& o_hm);
-
-    [[nodiscard]] t_b8 GetUniqueCodePoints(const s_str_utf8_rdonly str, s_mem_arena& mem_arena, s_mem_arena& temp_mem_arena, s_array<t_u32>& o_arr);
+    void MarkCodePoints(const s_str_utf8_rdonly str, t_unicode_code_pt_bit_vector& code_pt_bv); // Sets the bits associated with each unicode code point that appear in the input string.
 
 #define ZF_ITER_UTF8_STR(str, code_pt) \
     for (t_size ZF_CONCAT(p_pos_l, __LINE__) = 0; ZF_CONCAT(p_pos_l, __LINE__) != -1; ZF_CONCAT(p_pos_l, __LINE__) = -1) \
-        for (t_u32 code_pt; WalkUTF8Str(str, ZF_CONCAT(p_pos_l, __LINE__), code_pt); )
+        for (t_code_pt code_pt; WalkUTF8Str(str, ZF_CONCAT(p_pos_l, __LINE__), code_pt); )
 }

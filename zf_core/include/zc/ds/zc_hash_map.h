@@ -8,7 +8,7 @@ namespace zf {
     template<typename tp_type>
     using t_hash_func = t_size (*)(const tp_type& key);
 
-    inline const t_hash_func<s_str_ascii_rdonly> g_str_hash_func = [](const s_str_ascii_rdonly& key) {
+    constexpr t_hash_func<s_str_ascii_rdonly> g_str_hash_func = [](const s_str_ascii_rdonly& key) constexpr {
         ZF_ASSERT(IsStrTerminated(key));
 
         // This is an FNV-1a implementation.

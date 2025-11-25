@@ -411,6 +411,59 @@ namespace zf {
         br.backing_bytes[real_index / 8] &= ~ByteBitmaskSingle(real_index % 8);
     }
 
+    enum e_bitwise_mask_op {
+        ek_bitwise_mask_op_and,
+        ek_bitwise_mask_op_or,
+        ek_bitwise_mask_op_xor,
+        ek_bitwise_mask_op_andnot
+    };
+
+    constexpr void ApplyMask(const s_bit_range dest, const s_bit_range_rdonly src, const e_bitwise_mask_op op) {
+        // @speed: This is just terrible.
+
+        ZF_ASSERT(src.bit_cnt <= dest.bit_cnt);
+
+        switch (op) {
+            case ek_bitwise_mask_op_and:
+                for (t_size i = 0; i < src.bit_cnt; i++) {
+                    if (!IsBitSet(src, i)) {
+                        UnsetBit(dest, i);
+                    }
+                }
+
+                break;
+
+            case ek_bitwise_mask_op_or:
+                for (t_size i = 0; i < src.bit_cnt; i++) {
+                    if (IsBitSet(src, i)) {
+                        SetBit(dest, i);
+                    }
+                }
+
+                break;
+
+            case ek_bitwise_mask_op_xor:
+                for (t_size i = 0; i < src.bit_cnt; i++) {
+                    if (IsBitSet(src, i) && !IsBitSet(dest, i)) {
+                        SetBit(dest, i);
+                    } else if (!IsBitSet(src, i) && IsBitSet(dest, i)) {
+                        UnsetBit(dest, i);
+                    }
+                }
+
+                break;
+
+            case ek_bitwise_mask_op_andnot:
+                for (t_size i = 0; i < src.bit_cnt; i++) {
+                    if (IsBitSet(src, i)) {
+                        UnsetBit(dest, i);
+                    }
+                }
+
+                break;
+        }
+    }
+
     constexpr t_b8 IsAnyBitSet(const s_bit_range_rdonly br) {
         for (t_size i = BitRangeFirstByteIndex(br); i <= BitRangeLastByteIndex(br); i++) {
             if (BitRangeBackingByteIsolated(br, i) != 0) {

@@ -252,12 +252,12 @@ namespace zf::gfx {
         return true;
     }
 
-    t_b8 LoadFontAssetFromRaw(const s_str_ascii_rdonly file_path, const t_s32 height, const s_array_rdonly<t_u32> codepoints_no_dups, s_mem_arena& mem_arena, s_resource_arena& res_arena, s_mem_arena& temp_mem_arena, s_font_asset& o_asset) {
+    t_b8 LoadFontAssetFromRaw(const s_str_ascii_rdonly file_path, const t_s32 height, const t_unicode_code_pt_bit_vector& code_pts, s_mem_arena& mem_arena, s_resource_arena& res_arena, s_mem_arena& temp_mem_arena, s_font_asset& o_asset) {
         o_asset = {};
 
         s_array<t_font_atlas_rgba> atlas_rgbas;
 
-        if (!LoadFontFromRaw(file_path, height, codepoints_no_dups, mem_arena, temp_mem_arena, temp_mem_arena, o_asset.arrangement, atlas_rgbas)) {
+        if (!LoadFontFromRaw(file_path, height, code_pts, mem_arena, temp_mem_arena, temp_mem_arena, o_asset.arrangement, atlas_rgbas)) {
             return false;
         }
 
