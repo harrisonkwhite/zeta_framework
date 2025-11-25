@@ -268,23 +268,23 @@ namespace zf {
             return false;
         }
 
-        if (!DeserializeArray(mem_arena, stream, o_hm.backing_store_indexes)) {
+        if (!DeserializeArray(stream, mem_arena, o_hm.backing_store_indexes)) {
             return false;
         }
 
-        if (!DeserializeArray(mem_arena, stream, o_hm.backing_store.keys)) {
+        if (!DeserializeArray(stream, mem_arena, o_hm.backing_store.keys)) {
             return false;
         }
 
-        if (!DeserializeArray(mem_arena, stream, o_hm.backing_store.vals)) {
+        if (!DeserializeArray(stream, mem_arena, o_hm.backing_store.vals)) {
             return false;
         }
 
-        if (!DeserializeArray(mem_arena, stream, o_hm.backing_store.next_indexes)) {
+        if (!DeserializeArray(stream, mem_arena, o_hm.backing_store.next_indexes)) {
             return false;
         }
 
-        if (!DeserializeBitVector(mem_arena, stream, o_hm.backing_store.usage)) {
+        if (!DeserializeBitVector(stream, mem_arena, o_hm.backing_store.usage)) {
             return false;
         }
 

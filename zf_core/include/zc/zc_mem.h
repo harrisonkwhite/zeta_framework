@@ -323,12 +323,14 @@ namespace zf {
         return {reinterpret_cast<const t_u8*>(ArrayRaw(arr)), ArraySizeInBytes(arr)};
     }
 
-    constexpr t_u8 ByteBitmask(const t_size bit_index) {
+    // Creates a bitmask with only a single bit set.
+    constexpr t_u8 ByteBitmaskSingle(const t_size bit_index) {
         ZF_ASSERT(bit_index >= 0 && bit_index < 8);
         return static_cast<t_u8>(1 << bit_index);
     }
 
-    constexpr t_u8 ByteBitmask(const t_size begin_bit_index, const t_size end_bit_index) {
+    // Creates a bitmask with only bits [begin_bit_index, end_bit_index) set.
+    constexpr t_u8 ByteBitmaskRanged(const t_size begin_bit_index, const t_size end_bit_index = 8) {
         ZF_ASSERT(begin_bit_index >= 0 && begin_bit_index < 8);
         ZF_ASSERT(end_bit_index > begin_bit_index && end_bit_index <= 8);
 
@@ -375,11 +377,11 @@ namespace zf {
         t_u8 res = 0xFF;
 
         if (byte_index == first_byte_index) {
-            res &= ByteBitmask(br.begin_bit_index % 8);
+            res &= ByteBitmaskRanged(br.begin_bit_index % 8);
         }
 
         if (byte_index == last_byte_index) {
-            res &= ~ByteBitmask((br.begin_bit_index + br.bit_cnt) % 8);
+            res &= ~ByteBitmaskRanged((br.begin_bit_index + br.bit_cnt) % 8);
         }
 
         return res;
@@ -394,19 +396,19 @@ namespace zf {
     constexpr t_b8 IsBitSet(const s_bit_range_rdonly br, const t_size index) {
         ZF_ASSERT(index >= 0 && index < br.bit_cnt);
         const t_size real_index = br.begin_bit_index + index;
-        return br.backing_bytes[real_index / 8] & (1 << (real_index % 8));
+        return br.backing_bytes[real_index / 8] & ByteBitmaskSingle(real_index % 8);
     }
 
     constexpr void SetBit(const s_bit_range br, const t_size index) {
         ZF_ASSERT(index >= 0 && index < br.bit_cnt);
         const t_size real_index = br.begin_bit_index + index;
-        br.backing_bytes[real_index / 8] |= (1 << (real_index % 8));
+        br.backing_bytes[real_index / 8] |= ByteBitmaskSingle(real_index % 8);
     }
 
     constexpr void UnsetBit(const s_bit_range br, const t_size index) {
         ZF_ASSERT(index >= 0 && index < br.bit_cnt);
         const t_size real_index = br.begin_bit_index + index;
-        br.backing_bytes[real_index / 8] &= ~(1 << (real_index % 8));
+        br.backing_bytes[real_index / 8] &= ~ByteBitmaskSingle(real_index % 8);
     }
 
     constexpr t_b8 IsAnyBitSet(const s_bit_range_rdonly br) {

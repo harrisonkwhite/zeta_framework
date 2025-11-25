@@ -181,17 +181,21 @@ namespace zf {
     }
 
     template<typename tp_type>
-    [[nodiscard]] t_b8 DeserializeArray(s_mem_arena& mem_arena, s_stream& stream, s_array<tp_type>& o_arr) {
+    [[nodiscard]] t_b8 DeserializeArray(s_stream& stream, s_mem_arena& mem_arena, s_array<tp_type>& o_arr) {
+        o_arr = {};
+
         if (!StreamReadItem(stream, o_arr.len)) {
             return false;
         }
 
-        if (!MakeArray(mem_arena, o_arr.len, o_arr)) {
-            return false;
-        }
+        if (o_arr.len > 0) {
+            if (!MakeArray(mem_arena, o_arr.len, o_arr)) {
+                return false;
+            }
 
-        if (!StreamReadItemsIntoArray(stream, o_arr, o_arr.len)) {
-            return false;
+            if (!StreamReadItemsIntoArray(stream, o_arr, o_arr.len)) {
+                return false;
+            }
         }
 
         return true;

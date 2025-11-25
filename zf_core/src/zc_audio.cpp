@@ -42,7 +42,7 @@ namespace zf {
             return false;
         }
 
-        if (!StreamWriteItemsOfArray(stream, snd_data.pcm)) {
+        if (!SerializeArray(stream, snd_data.pcm)) {
             return false;
         }
 
@@ -56,11 +56,7 @@ namespace zf {
             return false;
         }
 
-        if (!MakeArray(mem_arena, CalcSampleCount(o_snd_data.meta), o_snd_data.pcm)) {
-            return false;
-        }
-
-        if (!StreamReadItemsIntoArray(stream, o_snd_data.pcm, o_snd_data.pcm.len)) {
+        if (!DeserializeArray(stream, mem_arena, o_snd_data.pcm)) {
             return false;
         }
 

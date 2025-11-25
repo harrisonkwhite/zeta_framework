@@ -306,6 +306,8 @@ namespace zf {
         const t_u8 xor_mask = inverted ? 0xFF : 0;
 
         for (t_size i = BitRangeFirstByteIndex(br); i <= BitRangeLastByteIndex(br); i++) {
+            const auto test = BitRangeBackingByteIsolated(br, i);
+            const auto test_postxor = BitRangeBackingByteIsolated(br, i) ^ xor_mask;
             const t_size bi = g_mappings[BitRangeBackingByteIsolated(br, i) ^ xor_mask];
 
             if (bi != -1) {

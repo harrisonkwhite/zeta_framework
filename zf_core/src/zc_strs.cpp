@@ -411,28 +411,28 @@ namespace zf {
         switch (bytes.len) {
         case 1:
             // 0xxxxxxx
-            res |= bytes[0] & ByteBitmask(0, 7);
+            res |= bytes[0] & ByteBitmaskRanged(0, 7);
             break;
 
         case 2:
             // 110xxxxx 10xxxxxx
-            res |= static_cast<t_u32>((bytes[0] & ByteBitmask(0, 5)) << 6);
-            res |= bytes[1] & ByteBitmask(0, 6);
+            res |= static_cast<t_u32>((bytes[0] & ByteBitmaskRanged(0, 5)) << 6);
+            res |= bytes[1] & ByteBitmaskRanged(0, 6);
             break;
 
         case 3:
             // 1110xxxx 10xxxxxx 10xxxxxx
-            res |= static_cast<t_u32>((bytes[0] & ByteBitmask(0, 4)) << 12);
-            res |= static_cast<t_u32>((bytes[1] & ByteBitmask(0, 6)) << 6);
-            res |= bytes[2] & ByteBitmask(0, 6);
+            res |= static_cast<t_u32>((bytes[0] & ByteBitmaskRanged(0, 4)) << 12);
+            res |= static_cast<t_u32>((bytes[1] & ByteBitmaskRanged(0, 6)) << 6);
+            res |= bytes[2] & ByteBitmaskRanged(0, 6);
             break;
 
         case 4:
             // 11110xxx 10xxxxxx 10xxxxxx 10xxxxxx
-            res |= static_cast<t_u32>((bytes[0] & ByteBitmask(0, 3)) << 18);
-            res |= static_cast<t_u32>((bytes[1] & ByteBitmask(0, 6)) << 12);
-            res |= static_cast<t_u32>((bytes[2] & ByteBitmask(0, 6)) << 6);
-            res |= bytes[3] & ByteBitmask(0, 6);
+            res |= static_cast<t_u32>((bytes[0] & ByteBitmaskRanged(0, 3)) << 18);
+            res |= static_cast<t_u32>((bytes[1] & ByteBitmaskRanged(0, 6)) << 12);
+            res |= static_cast<t_u32>((bytes[2] & ByteBitmaskRanged(0, 6)) << 6);
+            res |= bytes[3] & ByteBitmaskRanged(0, 6);
             break;
         }
 

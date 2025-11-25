@@ -339,7 +339,7 @@ namespace zf {
             return false;
         }
 
-        if (!DeserializeArray(atlas_rgbas_mem_arena, fs, o_atlas_rgbas)) {
+        if (!DeserializeArray(fs, atlas_rgbas_mem_arena, o_atlas_rgbas)) {
             return false;
         }
 
