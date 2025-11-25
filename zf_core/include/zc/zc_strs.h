@@ -111,6 +111,11 @@ namespace zf {
     t_b8 WalkUTF8Str(const s_str_utf8_rdonly str, t_size& pos, t_u32& o_code_pt); // Returns false iff the walk is complete.
     t_u32 UTF8ChrBytesToCodePoint(const s_array_rdonly<t_u8> bytes); // Only accepts bytes representing a unicode code point in an array with a length in [1, 4].
 
+    template<typename tp_key_type, typename tp_val_type> struct s_hash_map;
+    [[nodiscard]] t_b8 GetCodePointCounts(const s_str_utf8_rdonly str, s_mem_arena& mem_arena, s_hash_map<t_u32, t_size>& o_hm);
+
+    [[nodiscard]] t_b8 GetUniqueCodePoints(const s_str_utf8_rdonly str, s_mem_arena& mem_arena, s_mem_arena& temp_mem_arena, s_array<t_u32>& o_arr);
+
 #define ZF_ITER_UTF8_STR(str, code_pt) \
     for (t_size ZF_CONCAT(p_pos_l, __LINE__) = 0; ZF_CONCAT(p_pos_l, __LINE__) != -1; ZF_CONCAT(p_pos_l, __LINE__) = -1) \
         for (t_u32 code_pt; WalkUTF8Str(str, ZF_CONCAT(p_pos_l, __LINE__), code_pt); )

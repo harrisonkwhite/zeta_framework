@@ -1,6 +1,7 @@
 #include <zc/zc_strs.h>
 
 #include <zc/ds/zc_bit_vector.h>
+#include <zc/ds/zc_hash_map.h>
 
 namespace zf {
     enum e_utf8_byte_type : t_s32 {
@@ -402,6 +403,42 @@ namespace zf {
         return len;
     }
 
+    t_b8 WalkUTF8Str(const s_str_utf8_rdonly str, t_size& pos, t_u32& o_code_pt) {
+        ZF_ASSERT(IsValidUTF8Str(str));
+
+        if (pos == str.bytes.len) {
+            return false;
+        }
+
+        const auto byte_type = g_utf8_byte_type_table[str.bytes[pos]];
+
+        switch (byte_type) {
+            case ek_utf8_byte_type_ascii:
+                if (!str.bytes[pos]) {
+                    return false;
+                }
+
+                [[fallthrough]];
+
+            case ek_utf8_byte_type_2byte_start:
+            case ek_utf8_byte_type_3byte_start:
+            case ek_utf8_byte_type_4byte_start:
+                {
+                    static_assert(ek_utf8_byte_type_4byte_start - ek_utf8_byte_type_ascii + 1 == 4);
+                    const t_size chr_len = byte_type - ek_utf8_byte_type_ascii + 1;
+                    const auto chr_bytes = Slice(str.bytes, pos, pos + chr_len);
+                    o_code_pt = UTF8ChrBytesToCodePoint(chr_bytes);
+                    pos += chr_len;
+                    return true;
+                }
+
+            case ek_utf8_byte_type_continuation:
+            case ek_utf8_byte_type_invalid:
+                ZF_ASSERT(false);
+                return true;
+        }
+    }
+
     t_u32 UTF8ChrBytesToCodePoint(const s_array_rdonly<t_u8> bytes) {
         ZF_ASSERT(bytes.len >= 1 && bytes.len <= 4);
         ZF_ASSERT(IsValidUTF8Str({bytes}));
@@ -439,39 +476,39 @@ namespace zf {
         return res;
     }
 
-    t_b8 WalkUTF8Str(const s_str_utf8_rdonly str, t_size& pos, t_u32& o_code_pt) {
+    t_b8 GetCodePointCounts(const s_str_utf8_rdonly str, s_mem_arena& mem_arena, s_hash_map<t_u32, t_size>& o_hm) {
         ZF_ASSERT(IsValidUTF8Str(str));
 
-        if (pos == str.bytes.len) {
+        if (!MakeHashMap<t_u32, t_size>(mem_arena, [](const t_u32& key) { return static_cast<t_size>(key); }, o_hm)) {
             return false;
         }
 
-        const auto byte_type = g_utf8_byte_type_table[str.bytes[pos]];
+        ZF_ITER_UTF8_STR(str, code_pt) {
+            t_size cnt;
 
-        switch (byte_type) {
-            case ek_utf8_byte_type_ascii:
-                if (!str.bytes[pos]) {
-                    return false;
-                }
+            if (!HashMapGet(o_hm, code_pt, &cnt)) {
+                cnt = 0;
+            }
 
-                [[fallthrough]];
-
-            case ek_utf8_byte_type_2byte_start:
-            case ek_utf8_byte_type_3byte_start:
-            case ek_utf8_byte_type_4byte_start:
-                {
-                    static_assert(ek_utf8_byte_type_4byte_start - ek_utf8_byte_type_ascii + 1 == 4);
-                    const t_size chr_len = byte_type - ek_utf8_byte_type_ascii + 1;
-                    const auto chr_bytes = Slice(str.bytes, pos, pos + chr_len);
-                    o_code_pt = UTF8ChrBytesToCodePoint(chr_bytes);
-                    pos += chr_len;
-                    return true;
-                }
-
-            case ek_utf8_byte_type_continuation:
-            case ek_utf8_byte_type_invalid:
-                ZF_ASSERT(false);
-                return true;
+            if (HashMapPut(o_hm, code_pt, cnt) == ek_hash_map_put_result_error) {
+                return false;
+            }
         }
+
+        return true;
+    }
+
+    t_b8 GetUniqueCodePoints(const s_str_utf8_rdonly str, s_mem_arena& mem_arena, s_mem_arena& temp_mem_arena, s_array<t_u32>& o_arr) {
+        s_hash_map<t_u32, t_size> cp_cnts;
+
+        if (!GetCodePointCounts(str, temp_mem_arena, cp_cnts)) {
+            return false;
+        }
+
+        if (!LoadHashMapKeys(cp_cnts, o_arr)) {
+            return false;
+        }
+
+        return true;
     }
 }

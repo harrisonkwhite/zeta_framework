@@ -292,7 +292,7 @@ void main() {
             s_font_glyph_info glyph_info;
 
             if (!HashMapGet(font.arrangement.code_pts_to_glyph_infos, code_pt, &glyph_info)) {
-                // @todo: How to handle unsupported characters?
+                ZF_LOG_WARNING("Trying to draw a string containing unicode code point %u which is not supported by the given font asset!", code_pt);
                 continue;
             }
 

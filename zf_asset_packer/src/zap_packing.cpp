@@ -193,7 +193,7 @@ namespace zf {
                             const auto height = field_vals[ek_font_field_height]->valueint;
 
                             const s_static_array<t_u32, 4> code_pts = {
-                                {'a', 'b', 'c', 'd'}
+                                {'a', 'b', 'c', U'ë'}
                             };
 
                             if (!PackFont(StrFromRawTerminated(dest_fp_raw), StrFromRawTerminated(src_fp_raw), height, code_pts, mem_arena)) {

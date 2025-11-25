@@ -282,6 +282,12 @@ namespace zf {
         };
     }
 
+    template<c_numeric tp_type>
+    struct s_range {
+        tp_type begin;
+        tp_type end;
+    };
+
     struct s_matrix_4x4 {
         s_static_array<s_static_array<t_f32, 4>, 4> elems;
     };
