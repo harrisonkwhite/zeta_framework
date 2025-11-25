@@ -131,13 +131,13 @@ namespace zf {
     };
 
     struct s_font_code_point_pair {
-        t_code_pt a;
-        t_code_pt b;
+        t_unicode_code_pt a;
+        t_unicode_code_pt b;
     };
 
     struct s_font_arrangement {
         t_s32 line_height;
-        s_hash_map<t_code_pt, s_font_glyph_info> code_pts_to_glyph_infos; // Some duplicity here since a single glyph might have multiple code points mapped to it.
+        s_hash_map<t_unicode_code_pt, s_font_glyph_info> code_pts_to_glyph_infos; // Some duplicity here since a single glyph might have multiple code points mapped to it.
         s_hash_map<s_font_code_point_pair, t_s32> code_pt_pairs_to_kernings;
     };
 

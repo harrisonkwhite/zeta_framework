@@ -1,7 +1,6 @@
 #include <zc/zc_strs.h>
 
 #include <zc/ds/zc_bit_vector.h>
-#include <zc/ds/zc_hash_map.h>
 
 namespace zf {
     enum e_utf8_byte_type : t_s32 {
@@ -320,7 +319,7 @@ namespace zf {
         return cost == 0;
     }
 
-    t_b8 CalcUTF8StrLen(const s_str_utf8_rdonly str, t_size& o_len) {
+    t_b8 CalcStrLen(const s_str_utf8_rdonly str, t_size& o_len) {
         o_len = 0;
 
         t_size cost = 0;
@@ -367,7 +366,7 @@ namespace zf {
         return cost == 0;
     }
 
-    t_size CalcUTF8StrLenFastButUnsafe(const s_str_utf8_rdonly str) {
+    t_size CalcStrLenFastButUnsafe(const s_str_utf8_rdonly str) {
         ZF_ASSERT(IsValidUTF8Str(str));
 
         t_size i = 0;
@@ -403,7 +402,7 @@ namespace zf {
         return len;
     }
 
-    t_b8 WalkUTF8Str(const s_str_utf8_rdonly str, t_size& pos, t_code_pt& o_code_pt) {
+    t_b8 WalkStr(const s_str_utf8_rdonly str, t_size& pos, t_unicode_code_pt& o_code_pt) {
         ZF_ASSERT(IsValidUTF8Str(str));
 
         if (pos == str.bytes.len) {
@@ -439,11 +438,11 @@ namespace zf {
         }
     }
 
-    t_code_pt UTF8ChrBytesToCodePoint(const s_array_rdonly<t_u8> bytes) {
+    t_unicode_code_pt UTF8ChrBytesToCodePoint(const s_array_rdonly<t_u8> bytes) {
         ZF_ASSERT(bytes.len >= 1 && bytes.len <= 4);
         ZF_ASSERT(IsValidUTF8Str({bytes}));
 
-        t_code_pt res = 0;
+        t_unicode_code_pt res = 0;
 
         switch (bytes.len) {
         case 1:
@@ -453,22 +452,22 @@ namespace zf {
 
         case 2:
             // 110xxxxx 10xxxxxx
-            res |= static_cast<t_code_pt>((bytes[0] & ByteBitmaskRanged(0, 5)) << 6);
+            res |= static_cast<t_unicode_code_pt>((bytes[0] & ByteBitmaskRanged(0, 5)) << 6);
             res |= bytes[1] & ByteBitmaskRanged(0, 6);
             break;
 
         case 3:
             // 1110xxxx 10xxxxxx 10xxxxxx
-            res |= static_cast<t_code_pt>((bytes[0] & ByteBitmaskRanged(0, 4)) << 12);
-            res |= static_cast<t_code_pt>((bytes[1] & ByteBitmaskRanged(0, 6)) << 6);
+            res |= static_cast<t_unicode_code_pt>((bytes[0] & ByteBitmaskRanged(0, 4)) << 12);
+            res |= static_cast<t_unicode_code_pt>((bytes[1] & ByteBitmaskRanged(0, 6)) << 6);
             res |= bytes[2] & ByteBitmaskRanged(0, 6);
             break;
 
         case 4:
             // 11110xxx 10xxxxxx 10xxxxxx 10xxxxxx
-            res |= static_cast<t_code_pt>((bytes[0] & ByteBitmaskRanged(0, 3)) << 18);
-            res |= static_cast<t_code_pt>((bytes[1] & ByteBitmaskRanged(0, 6)) << 12);
-            res |= static_cast<t_code_pt>((bytes[2] & ByteBitmaskRanged(0, 6)) << 6);
+            res |= static_cast<t_unicode_code_pt>((bytes[0] & ByteBitmaskRanged(0, 3)) << 18);
+            res |= static_cast<t_unicode_code_pt>((bytes[1] & ByteBitmaskRanged(0, 6)) << 12);
+            res |= static_cast<t_unicode_code_pt>((bytes[2] & ByteBitmaskRanged(0, 6)) << 6);
             res |= bytes[3] & ByteBitmaskRanged(0, 6);
             break;
         }
@@ -476,7 +475,7 @@ namespace zf {
         return res;
     }
 
-    void MarkCodePoints(const s_str_utf8_rdonly str, t_unicode_code_pt_bit_vector& code_pt_bv) {
+    void MarkStrCodePoints(const s_str_utf8_rdonly str, t_unicode_code_pt_bit_vector& code_pt_bv) {
         ZF_ASSERT(IsValidUTF8Str(str));
 
         ZF_ITER_UTF8_STR(str, code_pt) {

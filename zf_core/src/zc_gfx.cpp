@@ -372,7 +372,7 @@ namespace zf {
         ZF_ASSERT(IsValidUTF8Str(str));
 
         // Reserve memory for the character positions.
-        const t_size str_len = CalcUTF8StrLenFastButUnsafe(str);
+        const t_size str_len = CalcStrLenFastButUnsafe(str);
 
         if (!MakeArray(mem_arena, str_len, o_positions)) {
             return false;

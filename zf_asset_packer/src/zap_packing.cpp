@@ -219,7 +219,7 @@ namespace zf {
                                 return false;
                             }
 
-                            ApplyMask(*code_pts, g_asciis, ek_bitwise_mask_op_or);
+                            ApplyMask(*code_pts, g_unicode_ascii_code_pts, ek_bitwise_mask_op_or);
 
                             if (field_vals[ek_font_field_extra_chrs_file_path]) {
                                 s_str_ascii extra_chrs_file_str;
