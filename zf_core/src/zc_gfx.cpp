@@ -362,7 +362,7 @@ namespace zf {
 
 
 
-
+#if 0
 
 
     t_b8 LoadStrChrPositions(const s_str_rdonly str, const s_font_arrangement& font_arrangement, const s_v2<t_f32> pos, s_mem_arena& mem_arena, s_array<s_v2<t_f32>>& o_positions) {
@@ -511,7 +511,7 @@ namespace zf {
 
 
 
-
+#endif
 
 
 }

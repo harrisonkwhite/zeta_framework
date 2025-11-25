@@ -1,7 +1,6 @@
 #pragma once
 
 #include <zc/zc_strs.h>
-#include <zc/zc_array_serial.h>
 #include <zc/ds/zc_bit_vector.h>
 #include <zc/ds/zc_list.h>
 
@@ -47,7 +46,7 @@ namespace zf {
             s_array<t_size> next_indexes; // Like the standard "next" pointer of a linked list node, but for an index specific to this backing store.
 
             // Indicates what slots or "nodes" are in use.
-            s_bit_range usage;
+            s_bit_vector usage;
         } backing_store;
     };
 

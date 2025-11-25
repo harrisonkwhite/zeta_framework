@@ -407,6 +407,7 @@ namespace zf {
 
 
 
+#if 0
 
     void AppendBits(const s_bit_range bv, const s_bit_range_rdonly bv_of_bits_to_add) {
         ZF_ASSERT(BitsToBytes(bv.bit_cnt + bv_of_bits_to_add.bit_cnt) <= bv.backing_bytes.len);
@@ -468,7 +469,7 @@ namespace zf {
         return res;
     }
 
-
+#endif
 
 
 

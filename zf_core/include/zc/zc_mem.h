@@ -445,8 +445,8 @@ namespace zf {
         return br.bit_cnt - CountSetBits(br);
     }
 
-    t_size IndexOfFirstSetBit(const s_bit_range_rdonly br, const t_size from);
-    t_size IndexOfFirstUnsetBit(const s_bit_range_rdonly br, const t_size from);
+    t_size IndexOfFirstSetBit(const s_bit_range_rdonly br, const t_size from = 0);
+    t_size IndexOfFirstUnsetBit(const s_bit_range_rdonly br, const t_size from = 0);
 
     // pos is the walker state, make sure to initialise it to 0.
     // o_index is assigned the index of the set bit to process.
