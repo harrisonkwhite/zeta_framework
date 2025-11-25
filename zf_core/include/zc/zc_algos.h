@@ -7,8 +7,12 @@ namespace zf {
     // You're usually better off using a hash map and a linear search, or a bit vector if values are numeric and the range is small.
     template<c_array tp_type>
     constexpr t_b8 HasDuplicatesSlow(tp_type& arr, const t_bin_comparator<typename tp_type::t_elem> comparator = DefaultBinComparator) {
-        for (t_size i = 0; i < ArrayLen(arr.len); i++) {
+        for (t_size i = 0; i < ArrayLen(arr); i++) {
             for (t_size j = 0; j < ArrayLen(arr); j++) {
+                if (i == j) {
+                    continue;
+                }
+
                 if (comparator(arr[i], arr[j])) {
                     return true;
                 }

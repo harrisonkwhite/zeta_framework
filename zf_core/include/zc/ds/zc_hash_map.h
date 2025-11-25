@@ -149,21 +149,25 @@ namespace zf {
 
     // Returns true iff the destination array had enough room to fit all keys.
     template<typename tp_key_type, typename tp_val_type, c_array tp_arr_type>
-    [[nodiscard]] t_b8 LoadHashMapKeys(const s_hash_map<tp_key_type, tp_val_type>& hm, tp_arr_type& dest_arr) {
+    [[nodiscard]] t_b8 LoadHashMapKeys(const s_hash_map<tp_key_type, tp_val_type>& hm, s_mem_arena& mem_arena, tp_arr_type& o_keys) {
         static_assert(s_is_same<tp_key_type, typename tp_arr_type::t_elem>::g_val);
 
-        s_list<tp_key_type> dest_list = {ToNonstatic(dest_arr)};
+        if (!MakeArray(mem_arena, hm.kv_pair_cnt, o_keys)) {
+            return false;
+        }
 
-        const auto add_from_bs = [&hm, &dest_list](const auto self, const t_size index) {
+        s_list<tp_key_type> keys_list = {ToNonstatic(o_keys)};
+
+        const auto add_from_bs = [&hm, &keys_list](const auto self, const t_size index) {
             if (index == -1) {
                 return true;
             }
             
-            if (IsListFull(dest_list)) {
+            if (IsListFull(keys_list)) {
                 return false;
             }
 
-            ListAppend(dest_list, hm.backing_store.keys[index]);
+            ListAppend(keys_list, hm.backing_store.keys[index]);
             self(self, hm.backing_store.next_indexes[index]);
         };
 

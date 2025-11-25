@@ -21,12 +21,20 @@ namespace zf {
 
     enum e_asset_field_type : t_s32 {
         ek_asset_field_type_str,
-        ek_asset_field_type_num
+        ek_asset_field_type_num,
+
+        eks_asset_field_type_cnt
     };
+
+    constexpr s_static_array<s_str_ascii_rdonly, eks_asset_field_type_cnt> g_asset_field_type_names = {{
+        "string",
+        "number"
+    }};
 
     struct s_asset_field {
         s_str_ascii_rdonly name;
         e_asset_field_type type;
+        t_b8 optional;
     };
 
     enum e_tex_field : t_s32 {
@@ -44,6 +52,7 @@ namespace zf {
     enum e_font_field : t_s32 {
         ek_font_field_src_file_path,
         ek_font_field_height,
+        ek_font_field_extra_chrs_file_path,
         ek_font_field_dest_file_path,
 
         eks_font_field_cnt
@@ -52,6 +61,7 @@ namespace zf {
     constexpr s_static_array<s_asset_field, eks_font_field_cnt> g_font_fields = {{
         {"src_file_path", ek_asset_field_type_str},
         {"height", ek_asset_field_type_num},
+        {"extra_chrs_file_path", ek_asset_field_type_str, true},
         {"dest_file_path", ek_asset_field_type_str}
     }};
 
@@ -154,6 +164,15 @@ namespace zf {
                 for (t_size fi = 0; fi < fields.len; fi++) {
                     field_vals[fi] = cJSON_GetObjectItem(cj_asset, StrRaw(fields[fi].name));
 
+                    if (!field_vals[fi]) {
+                        if (fields[fi].optional) {
+                            continue;
+                        }
+
+                        ZF_LOG_ERROR("A packing instructions JSON \"%s\" entry is missing required field \"%s\"!", StrRaw(g_asset_type_arr_names[asset_type_index]), StrRaw(fields[fi].name));
+                        return false;
+                    }
+
                     const auto is_valid = [fi, fields, field_vals]() -> t_b8 {
                         switch (fields[fi].type) {
                             case ek_asset_field_type_str:
@@ -167,7 +186,7 @@ namespace zf {
                     }();
 
                     if (!is_valid) {
-                        ZF_LOG_ERROR("Packing instructions JSON \"%s\" entry is missing required field \"%s\" or it is of the wrong type!", StrRaw(g_asset_type_arr_names[asset_type_index]), StrRaw(fields[fi].name));
+                        ZF_LOG_ERROR("A packing instructions JSON \"%s\" entry has field \"%s\" as the wrong type! Expected a %s.", StrRaw(g_asset_type_arr_names[asset_type_index]), StrRaw(fields[fi].name), StrRaw(g_asset_field_type_names[fields[fi].type]));
                         return false;
                     }
                 }
@@ -191,10 +210,23 @@ namespace zf {
                             const auto dest_fp_raw = field_vals[ek_font_field_dest_file_path]->valuestring;
                             const auto src_fp_raw = field_vals[ek_font_field_src_file_path]->valuestring;
                             const auto height = field_vals[ek_font_field_height]->valueint;
+                            const auto extra_chrs_fp_raw = field_vals[ek_font_field_extra_chrs_file_path]->valuestring;
 
-                            const s_static_array<t_u32, 4> code_pts = {
-                                {'a', 'b', 'c', U'ë'}
-                            };
+                            s_array<t_u32> code_pts;
+
+                            if (field_vals[ek_font_field_extra_chrs_file_path]) {
+                                s_str_ascii extra_chrs_file_str;
+
+                                if (!LoadFileContentsAsStr(mem_arena, StrFromRawTerminated(extra_chrs_fp_raw), extra_chrs_file_str)) {
+                                    ZF_LOG_ERROR("Failed to load extra characters file \"%s\" for font \"%s\"!", StrRaw(StrFromRawTerminated(extra_chrs_fp_raw)), StrRaw(StrFromRawTerminated(src_fp_raw)));
+                                    return false;
+                                }
+
+                                if (!GetUniqueCodePoints(extra_chrs_file_str, mem_arena, mem_arena, code_pts)) {
+                                    ZF_LOG_ERROR("Failed to get unique code points from extra characters file \"%s\" for font \"%s\"!", StrRaw(StrFromRawTerminated(extra_chrs_fp_raw)), StrRaw(StrFromRawTerminated(src_fp_raw)));
+                                    return false;
+                                }
+                            }
 
                             if (!PackFont(StrFromRawTerminated(dest_fp_raw), StrFromRawTerminated(src_fp_raw), height, code_pts, mem_arena)) {
                                 ZF_LOG_ERROR("Failed to pack font \"%s\" to \"%s\"!", StrRaw(StrFromRawTerminated(src_fp_raw)), StrRaw(StrFromRawTerminated(dest_fp_raw)));

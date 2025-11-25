@@ -1,5 +1,6 @@
 #include <zc/zc_gfx.h>
 
+#include <zc/zc_algos.h>
 #include <zc/ds/zc_hash_map.h>
 #include <stb_image.h>
 #include <stb_truetype.h>
@@ -290,6 +291,7 @@ namespace zf {
     t_b8 PackFont(const s_str_ascii_rdonly dest_file_path, const s_str_ascii_rdonly src_file_path, const t_s32 height, const s_array_rdonly<t_u32> code_pts_no_dups, s_mem_arena& temp_mem_arena) {
         ZF_ASSERT(IsStrTerminated(dest_file_path));
         ZF_ASSERT(IsStrTerminated(src_file_path));
+        ZF_ASSERT(!HasDuplicatesSlow(code_pts_no_dups));
 
         s_font_arrangement arrangement;
         s_array<t_font_atlas_rgba> atlas_rgbas;

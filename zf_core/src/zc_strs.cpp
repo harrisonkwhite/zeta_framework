@@ -505,7 +505,7 @@ namespace zf {
             return false;
         }
 
-        if (!LoadHashMapKeys(cp_cnts, o_arr)) {
+        if (!LoadHashMapKeys(cp_cnts, mem_arena, o_arr)) {
             return false;
         }
 
