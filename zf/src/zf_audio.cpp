@@ -42,12 +42,12 @@ namespace zf::audio {
     void ShutdownSys() {
         ZF_ASSERT(g_sys.initted);
 
-        for (t_size i = IndexOfFirstSetBit(g_sys.snd_insts.activity); i != -1; i = IndexOfFirstSetBit(g_sys.snd_insts.activity, i + 1)) {
+        ZF_FOR_EACH_SET_BIT(g_sys.snd_insts.activity, i) {
             ma_sound_uninit(&g_sys.snd_insts.ma_snds[i]);
             ma_audio_buffer_ref_uninit(&g_sys.snd_insts.ma_buf_refs[i]);
         }
 
-        for (t_size i = IndexOfFirstSetBit(g_sys.snd_type_activity); i != -1; i = IndexOfFirstSetBit(g_sys.snd_type_activity, i + 1)) {
+        ZF_FOR_EACH_SET_BIT(g_sys.snd_type_activity, i) {
             ZF_LOG_WARNING("Sound type with ID %lld not released!", i); // @todo: Update this if the ID no longer is an index.
             free(g_sys.snd_type_pcms[i].buf_raw);
             g_sys.snd_type_pcms[i] = {};
@@ -99,7 +99,7 @@ namespace zf::audio {
     void ProcFinishedSounds() {
         ZF_ASSERT(g_sys.initted);
 
-        for (t_size i = IndexOfFirstSetBit(g_sys.snd_insts.activity); i != -1; i = IndexOfFirstSetBit(g_sys.snd_insts.activity, i + 1)) {
+        ZF_FOR_EACH_SET_BIT(g_sys.snd_insts.activity, i) {
             ma_sound& snd = g_sys.snd_insts.ma_snds[i];
 
             if (!ma_sound_is_playing(&snd)) {
@@ -119,6 +119,8 @@ namespace zf::audio {
         ZF_ASSERT(pan >= -1.0f && pan <= 1.0f);
         ZF_ASSERT(pitch > 0.0f);
 
+        t_b8 clean_up = false;
+
         const s_sound_meta& meta = g_sys.snd_type_metas[type_id];
         const s_array_rdonly<t_f32> pcm = g_sys.snd_type_pcms[type_id];
 
@@ -126,6 +128,7 @@ namespace zf::audio {
 
         if (index == -1) {
             ZF_REPORT_FAILURE();
+            clean_up = true;
             return false;
         }
 
@@ -134,16 +137,29 @@ namespace zf::audio {
 
         if (ma_audio_buffer_ref_init(ma_format_f32, static_cast<ma_uint32>(meta.channel_cnt), pcm.buf_raw, static_cast<ma_uint64>(meta.frame_cnt), &ma_buf_ref) != MA_SUCCESS) {
             ZF_REPORT_FAILURE();
+            clean_up = true;
             return false;
         }
+
+        ZF_DEFER({
+            if (clean_up) {
+                ma_audio_buffer_ref_uninit(&ma_buf_ref);
+            }
+        });
 
         ma_buf_ref.sampleRate = static_cast<ma_uint32>(meta.sample_rate);
 
         if (ma_sound_init_from_data_source(&g_sys.ma_eng, &ma_buf_ref, 0, nullptr, &ma_snd) != MA_SUCCESS) {
-            ma_audio_buffer_ref_uninit(&ma_buf_ref);
             ZF_REPORT_FAILURE();
+            clean_up = true;
             return false;
         }
+
+        ZF_DEFER({
+            if (clean_up) {
+                ma_sound_uninit(&ma_snd);
+            }
+        });
 
         ma_sound_set_volume(&ma_snd, vol);
         ma_sound_set_pan(&ma_snd, pan);
@@ -151,9 +167,8 @@ namespace zf::audio {
         ma_sound_set_looping(&ma_snd, loop);
 
         if (ma_sound_start(&ma_snd) != MA_SUCCESS) {
-            ma_sound_uninit(&ma_snd);
-            ma_audio_buffer_ref_uninit(&ma_buf_ref);
             ZF_REPORT_FAILURE();
+            clean_up = true;
             return false;
         }
 
