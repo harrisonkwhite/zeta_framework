@@ -270,6 +270,13 @@ namespace zf {
         }
     }
 
+    template<c_array_mut tp_type>
+    void Reverse(tp_type& arr) {
+        for (t_size i = 0; i < ArrayLen(arr) / 2; i++) {
+            Swap(arr[i], arr[ArrayLen(arr) - 1 - i]);
+        }
+    }
+
     template<c_array tp_type>
     t_b8 AreAllEqualTo(tp_type& arr, const typename tp_type::t_elem& val, const t_bin_comparator<typename tp_type::t_elem> comparator = DefaultBinComparator) {
         ZF_ASSERT(comparator);

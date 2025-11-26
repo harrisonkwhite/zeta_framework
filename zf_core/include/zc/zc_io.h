@@ -269,22 +269,79 @@ namespace zf {
     }
 
     template<c_integral tp_type>
-    t_b8 PrintType(s_stream& stream, const tp_type& val) {
+    struct s_integral_fmt {
+        tp_type val;
+    };
+
+    template<c_integral tp_type>
+    s_integral_fmt<tp_type> FormatInt(const tp_type val) {
+        return {val};
+    }
+
+    template<c_integral tp_type>
+    t_b8 PrintType(s_stream& stream, const s_integral_fmt<tp_type>& fmt) {
         s_static_array<t_u8, 20> str_bytes = {}; // Maximum possible number of ASCII characters needed to represent a 64-bit integer.
         t_size str_bytes_used = 0;
 
-        if (val < 0) {
+        if (fmt.val < 0) {
             str_bytes[str_bytes_used] = '-';
             str_bytes_used++;
         }
 
-        const tp_type dig_cnt = DigitCnt(val);
+        const tp_type dig_cnt = DigitCnt(fmt.val);
 
         for (t_size i = 0; i < dig_cnt; i++) {
-            str_bytes[str_bytes_used + i] = '0' + DigitAt(val, dig_cnt - 1 - i);
+            str_bytes[str_bytes_used + i] = '0' + DigitAt(fmt.val, dig_cnt - 1 - i);
         }
 
         str_bytes_used += dig_cnt;
+
+        const s_str_rdonly str = {Slice(str_bytes, 0, str_bytes_used)};
+        return Print(stream, str);
+    }
+
+    template<c_unsigned_integral tp_type>
+    struct s_hex_fmt {
+        tp_type val;
+        t_b8 omit_prefix;
+    };
+
+    template<c_unsigned_integral tp_type>
+    s_hex_fmt<tp_type> FormatHex(const tp_type val, const t_b8 omit_prefix = false) {
+        return {val};
+    }
+
+    template<c_unsigned_integral tp_type>
+    t_b8 PrintType(s_stream& stream, const s_hex_fmt<tp_type>& fmt) {
+        s_static_array<t_u8, 18> str_bytes = {}; // Maximum possible number of ASCII characters needed for hex representation of 64-bit integer.
+        t_size str_bytes_used = 0;
+
+        if (!fmt.omit_prefix) {
+            str_bytes[0] = '0';
+            str_bytes[1] = 'x';
+            str_bytes_used += 2;
+        }
+
+        const t_size str_bytes_digits_begin_index = str_bytes_used;
+
+        auto val_mut = fmt.val;
+
+        do {
+            const auto dig = val_mut % 16;
+
+            if (dig < 10) {
+                str_bytes[str_bytes_used] = '0' + dig;
+            } else {
+                str_bytes[str_bytes_used] = 'A' + dig - 10;
+            }
+
+            str_bytes_used++;
+
+            val_mut /= 16;
+        } while (val_mut != 0);
+
+        const auto str_bytes_digits = Slice(str_bytes, str_bytes_digits_begin_index, str_bytes_used);
+        Reverse(str_bytes_digits);
 
         const s_str_rdonly str = {Slice(str_bytes, 0, str_bytes_used)};
         return Print(stream, str);
