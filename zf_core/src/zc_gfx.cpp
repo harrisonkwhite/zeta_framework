@@ -191,17 +191,21 @@ namespace zf {
 
         const t_size atlas_cnt = atlas_index + 1;
 
-#if 0
         //
         // Kernings
         //
-        const t_size kern_cnt = [code_pts_no_dups, &stb_font_info]() {
+
+        // Compute kerning count first so we know how much memory to allocate for the hash map.
+        const t_size kern_cnt = [&code_pts, &stb_font_info]() {
             t_size res = 0;
 
-            for (t_size i = 0; i < code_pts_no_dups.len; i++) {
-                for (t_size j = 0; j < code_pts_no_dups.len; j++) {
-                    const auto glyph_a_index = stbtt_FindGlyphIndex(&stb_font_info, static_cast<t_s32>(code_pts_no_dups[i]));
-                    const auto glyph_b_index = stbtt_FindGlyphIndex(&stb_font_info, static_cast<t_s32>(code_pts_no_dups[j]));
+            ZF_FOR_EACH_SET_BIT(code_pts, i) {
+                ZF_FOR_EACH_SET_BIT(code_pts, j) {
+                    const auto cp_a = static_cast<t_unicode_code_pt>(i);
+                    const auto cp_b = static_cast<t_unicode_code_pt>(j);
+
+                    const auto glyph_a_index = stbtt_FindGlyphIndex(&stb_font_info, static_cast<t_s32>(cp_a));
+                    const auto glyph_b_index = stbtt_FindGlyphIndex(&stb_font_info, static_cast<t_s32>(cp_b));
 
                     const t_s32 kern = stbtt_GetGlyphKernAdvance(&stb_font_info, glyph_a_index, glyph_b_index);
 
@@ -214,27 +218,30 @@ namespace zf {
             return res;
         }();
 
+        // If there were any kernings to store, set up the hash map and go through again and store them.
         if (kern_cnt > 0) {
             if (!MakeHashMap<s_font_code_point_pair, t_s32>(arrangement_mem_arena, g_code_pt_pair_hash_func, o_arrangement.code_pt_pairs_to_kernings, g_code_pt_pair_comparator, kern_cnt, kern_cnt)) {
                 return false;
             }
 
-            for (t_size i = 0; i < code_pts_no_dups.len; i++) {
-                for (t_size j = 0; j < code_pts_no_dups.len; j++) {
-                    const auto glyph_a_index = stbtt_FindGlyphIndex(&stb_font_info, static_cast<t_s32>(code_pts_no_dups[i]));
-                    const auto glyph_b_index = stbtt_FindGlyphIndex(&stb_font_info, static_cast<t_s32>(code_pts_no_dups[j]));
+            ZF_FOR_EACH_SET_BIT(code_pts, i) {
+                ZF_FOR_EACH_SET_BIT(code_pts, j) {
+                    const auto cp_a = static_cast<t_unicode_code_pt>(i);
+                    const auto cp_b = static_cast<t_unicode_code_pt>(j);
+
+                    const auto glyph_a_index = stbtt_FindGlyphIndex(&stb_font_info, static_cast<t_s32>(cp_a));
+                    const auto glyph_b_index = stbtt_FindGlyphIndex(&stb_font_info, static_cast<t_s32>(cp_b));
 
                     const t_s32 kern = stbtt_GetGlyphKernAdvance(&stb_font_info, glyph_a_index, glyph_b_index);
 
                     if (kern != 0) {
-                        if (HashMapPut(o_arrangement.code_pt_pairs_to_kernings, {code_pts_no_dups[i], code_pts_no_dups[j]}, kern) == ek_hash_map_put_result_error) {
+                        if (HashMapPut(o_arrangement.code_pt_pairs_to_kernings, {cp_a, cp_b}, kern) == ek_hash_map_put_result_error) {
                             return false;
                         }
                     }
                 }
             }
         }
-#endif
 
         //
         // Texture Atlases

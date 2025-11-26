@@ -40,7 +40,7 @@ namespace zf {
         return cnt;
     }
 
-    constexpr t_b8 TitleMeLater(const s_str_rdonly str) {
+    constexpr t_b8 IsStrTerminatedOnlyAtEnd(const s_str_rdonly str) {
         // Make sure no terminators exist before end.
         for (t_size i = 0; i < str.bytes.len - 1; i++) {
             if (!str.bytes[i]) {
@@ -52,12 +52,12 @@ namespace zf {
     }
 
     inline char* StrRaw(const s_str str) {
-        ZF_ASSERT(TitleMeLater(str));
+        ZF_ASSERT(IsStrTerminatedOnlyAtEnd(str));
         return reinterpret_cast<char*>(str.bytes.buf_raw);
     }
 
     inline const char* StrRaw(const s_str_rdonly str) {
-        ZF_ASSERT(TitleMeLater(str));
+        ZF_ASSERT(IsStrTerminatedOnlyAtEnd(str));
         return reinterpret_cast<const char*>(str.bytes.buf_raw);
     }
 
