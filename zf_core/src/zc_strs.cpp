@@ -12,6 +12,8 @@ namespace zf {
         ek_utf8_byte_type_invalid
     };
 
+    static_assert(ek_utf8_byte_type_4byte_start - ek_utf8_byte_type_ascii + 1 == 4);
+
     constexpr s_static_array<e_utf8_byte_type, 256> g_utf8_byte_type_table = {{
         ek_utf8_byte_type_ascii, // 0000 0000
         ek_utf8_byte_type_ascii, // 0000 0001
@@ -291,7 +293,6 @@ namespace zf {
                         return false;
                     }
 
-                    static_assert(ek_utf8_byte_type_4byte_start - ek_utf8_byte_type_ascii + 1 == 4);
                     cost = byte_type - ek_utf8_byte_type_ascii + 1;
 
                     break;
@@ -327,7 +328,6 @@ namespace zf {
                 case ek_utf8_byte_type_2byte_start:
                 case ek_utf8_byte_type_3byte_start:
                 case ek_utf8_byte_type_4byte_start:
-                    static_assert(ek_utf8_byte_type_4byte_start - ek_utf8_byte_type_ascii + 1 == 4);
                     i += byte_type - ek_utf8_byte_type_ascii + 1;
                     break;
 
@@ -341,6 +341,26 @@ namespace zf {
         }
 
         return len;
+    }
+
+    t_unicode_code_pt StrChrAtByte(const s_str_rdonly str, const t_size byte_index) {
+        ZF_ASSERT(IsValidUTF8Str(str));
+        ZF_ASSERT(byte_index >= 0 && byte_index < str.bytes.len);
+
+        t_size chr_first_byte_index = byte_index;
+
+        do {
+            const auto byte_type = g_utf8_byte_type_table[str.bytes[chr_first_byte_index]];
+
+            if (byte_type == ek_utf8_byte_type_continuation) {
+                chr_first_byte_index--;
+                continue;
+            }
+
+            const t_size chr_byte_cnt = byte_type - ek_utf8_byte_type_ascii + 1;
+            const auto chr_bytes = Slice(str.bytes, byte_index, byte_index + chr_byte_cnt);
+            return UTF8ChrBytesToCodePoint(chr_bytes);
+        } while (true);
     }
 
     t_b8 WalkStr(const s_str_rdonly str, t_size& byte_index, s_str_chr_info& o_chr_info) {
@@ -359,7 +379,6 @@ namespace zf {
             case ek_utf8_byte_type_3byte_start:
             case ek_utf8_byte_type_4byte_start:
                 {
-                    static_assert(ek_utf8_byte_type_4byte_start - ek_utf8_byte_type_ascii + 1 == 4);
                     const t_size chr_len = byte_type - ek_utf8_byte_type_ascii + 1;
                     const auto chr_bytes = Slice(str.bytes, byte_index, byte_index + chr_len);
                     o_chr_info = {
@@ -397,7 +416,6 @@ namespace zf {
             case ek_utf8_byte_type_3byte_start:
             case ek_utf8_byte_type_4byte_start:
                 {
-                    static_assert(ek_utf8_byte_type_4byte_start - ek_utf8_byte_type_ascii + 1 == 4);
                     const t_size chr_len = byte_type - ek_utf8_byte_type_ascii + 1;
                     const auto chr_bytes = Slice(str.bytes, byte_index, byte_index + chr_len);
                     o_chr_info = {

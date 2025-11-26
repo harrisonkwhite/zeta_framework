@@ -120,6 +120,7 @@ namespace zf {
 
     t_b8 IsValidUTF8Str(const s_str_rdonly str);
     t_size CalcStrLen(const s_str_rdonly str);
+    t_unicode_code_pt StrChrAtByte(const s_str_rdonly str, const t_size byte_index);
 
     struct s_str_chr_info {
         t_unicode_code_pt code_pt;

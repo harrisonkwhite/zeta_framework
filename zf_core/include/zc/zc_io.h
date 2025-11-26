@@ -228,10 +228,7 @@ namespace zf {
 
     void Print(const s_str_rdonly str);
 
-    template<typename tp_type>
-    void PrintType(const tp_type& val) {
-        Print(StrFromRaw("Printing who knows what?"));
-    }
+    template<typename tp_type> void PrintType(const tp_type& val);
 
     template<> inline void PrintType<s_str>(const s_str& val) {
         Print(val);
@@ -241,17 +238,20 @@ namespace zf {
         Print(val);
     }
 
-    template<> inline void PrintType<int>(const int& val) {
+    template<> inline void PrintType<t_s32>(const t_s32& val) {
         Print(StrFromRaw("<int>"));
     }
 
     inline void PrintFmt(const s_str_rdonly fmt) {
+        // Just print the rest of the string.
         Print(fmt);
     }
 
+    // Use a single '%' as the format specifier - the type is inferred. To actually include a '%' in the output, write '%%'.
     template<typename tp_arg, typename... tp_args_leftover>
     void PrintFmt(const s_str_rdonly fmt, tp_arg arg, tp_args_leftover... args_leftover) {
         constexpr t_unicode_code_pt fmt_spec = '%';
+        constexpr t_size fmt_spec_byte_cnt = UnicodeCodePointToByteCnt(fmt_spec);
 
         // Determine how many bytes to print.
         t_size byte_cnt = 0;
@@ -269,12 +269,20 @@ namespace zf {
         // Print the bytes.
         fwrite(fmt.bytes.buf_raw, 1, static_cast<size_t>(byte_cnt), stdout);
 
+        // Handle format specifier case.
         if (fmt_spec_found) {
-            PrintType(arg);
+            const s_str_rdonly fmt_leftover = {Slice(fmt.bytes, byte_cnt + fmt_spec_byte_cnt, fmt.bytes.len)}; // The substring of everything after the format specifier.
 
-            // Recurse on everything after the format specifier.
-            const s_str_rdonly fmt_leftover = {Slice(fmt.bytes, byte_cnt + UnicodeCodePointToByteCnt(fmt_spec), fmt.bytes.len)};
-            PrintFmt(fmt_leftover, args_leftover...);
+            if (!IsStrEmpty(fmt_leftover) && StrChrAtByte(fmt_leftover, 0) == fmt_spec) {
+                // The leftover substring begins with a format specifier, meaning that there have been two consecutives ones. So output the format specifier and recurse on the substring EXCLUDING the second format specifier, not dropping any arguments.
+                fwrite(fmt_leftover.bytes.buf_raw, 1, 1, stdout);
+
+                const s_str_rdonly fmt_leftover_after_spec = {Slice(fmt_leftover.bytes, fmt_spec_byte_cnt, fmt_leftover.bytes.len)};
+                PrintFmt(fmt_leftover_after_spec, arg, args_leftover...);
+            } else {
+                PrintType(arg);
+                PrintFmt(fmt_leftover, args_leftover...);
+            }
         }
     }
 }
