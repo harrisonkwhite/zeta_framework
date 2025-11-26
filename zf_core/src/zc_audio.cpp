@@ -80,7 +80,7 @@ namespace zf {
 
         s_stream fs;
 
-        if (!OpenFile(dest_file_path, ek_file_access_mode_write, fs)) {
+        if (!OpenFile(dest_file_path, ek_file_access_mode_write, temp_mem_arena, fs)) {
             return false;
         }
 
@@ -89,12 +89,10 @@ namespace zf {
         return SerializeSoundData(fs, snd_data);
     }
 
-    t_b8 UnpackSound(const s_str_rdonly file_path, s_mem_arena& mem_arena, s_sound_data& o_snd_data) {
-        ZF_ASSERT(IsStrTerminated(file_path));
-
+    t_b8 UnpackSound(const s_str_rdonly file_path, s_mem_arena& mem_arena, s_mem_arena& temp_mem_arena, s_sound_data& o_snd_data) {
         s_stream fs;
 
-        if (!OpenFile(file_path, ek_file_access_mode_read, fs)) {
+        if (!OpenFile(file_path, ek_file_access_mode_read, temp_mem_arena, fs)) {
             return false;
         }
 

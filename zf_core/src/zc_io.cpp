@@ -82,8 +82,10 @@ namespace zf {
         return true;
     }
 
-    t_b8 CreateDirectory(const s_str_rdonly path, s_mem_arena& temp_mem_arena, e_directory_creation_result& o_creation_res) {
-        o_creation_res = ek_directory_creation_result_success;
+    t_b8 CreateDirectory(const s_str_rdonly path, s_mem_arena& temp_mem_arena, e_directory_creation_result* const o_creation_res) {
+        if (o_creation_res) {
+            *o_creation_res = ek_directory_creation_result_success;
+        }
 
         s_str path_terminated;
 
@@ -101,32 +103,36 @@ namespace zf {
             return true;
         }
 
-        switch (errno) {
-            case EEXIST:
-                o_creation_res = ek_directory_creation_result_already_exists;
-                break;
+        if (o_creation_res) {
+            switch (errno) {
+                case EEXIST:
+                    *o_creation_res = ek_directory_creation_result_already_exists;
+                    break;
 
-            case EACCES:
-            case EPERM:
-                o_creation_res = ek_directory_creation_result_permission_denied;
-                break;
+                case EACCES:
+                case EPERM:
+                    *o_creation_res = ek_directory_creation_result_permission_denied;
+                    break;
 
-            case ENOENT:
-                o_creation_res = ek_directory_creation_result_path_not_found;
-                break;
+                case ENOENT:
+                    *o_creation_res = ek_directory_creation_result_path_not_found;
+                    break;
 
-            default:
-                o_creation_res = ek_directory_creation_result_unknown_err;
-                break;
+                default:
+                    *o_creation_res = ek_directory_creation_result_unknown_err;
+                    break;
+            }
         }
 
         return false;
     }
 
-    t_b8 CreateDirectoryAndParents(const s_str_rdonly path, s_mem_arena& temp_mem_arena, e_directory_creation_result& o_dir_creation_res) {
-        o_dir_creation_res = ek_directory_creation_result_success;
+    t_b8 CreateDirectoryAndParents(const s_str_rdonly path, s_mem_arena& temp_mem_arena, e_directory_creation_result* const o_dir_creation_res) {
+        if (o_dir_creation_res) {
+            *o_dir_creation_res = ek_directory_creation_result_success;
+        }
 
-        const auto create_dir_if_nonexistent = [&temp_mem_arena, &o_dir_creation_res](const s_str_rdonly path) {
+        const auto create_dir_if_nonexistent = [&temp_mem_arena, o_dir_creation_res](const s_str_rdonly path) {
             e_path_type path_type;
 
             if (!CheckPathType(path, temp_mem_arena, path_type)) {
@@ -167,8 +173,10 @@ namespace zf {
         return true;
     }
 
-    t_b8 CreateFileAndParentDirs(const s_str_rdonly path, s_mem_arena& temp_mem_arena, e_directory_creation_result& o_dir_creation_res) {
-        o_dir_creation_res = ek_directory_creation_result_success;
+    t_b8 CreateFileAndParentDirs(const s_str_rdonly path, s_mem_arena& temp_mem_arena, e_directory_creation_result* const o_dir_creation_res) {
+        if (o_dir_creation_res) {
+            *o_dir_creation_res = ek_directory_creation_result_success;
+        }
 
         // Get a substring of all directories and create those.
         ZF_ITER_STR_REVERSE(path, code_pt, byte_index) {
