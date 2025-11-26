@@ -189,10 +189,9 @@ namespace zf {
         }
     }
 
-    t_b8 InitWindow(const s_v2<t_s32> size, const s_str_ascii_rdonly title, const e_window_flags flags) {
+    t_b8 InitWindow(const s_v2<t_s32> size, const s_str_rdonly title, const e_window_flags flags, s_mem_arena& temp_mem_arena) {
         ZF_ASSERT(!g_glfw_window);
         ZF_ASSERT(size.x > 0 && size.y > 0);
-        ZF_ASSERT(IsStrTerminated(title));
 
         if (!glfwInit()) {
             ZF_REPORT_FAILURE();
@@ -205,7 +204,14 @@ namespace zf {
         glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
         glfwWindowHint(GLFW_VISIBLE, false);
 
-        g_glfw_window = glfwCreateWindow(size.x, size.y, StrRaw(title), nullptr, nullptr);
+        s_str title_terminated;
+
+        if (!CloneStrButAddTerminator(title, temp_mem_arena, title_terminated)) {
+            ZF_REPORT_FAILURE();
+            return false;
+        }
+
+        g_glfw_window = glfwCreateWindow(size.x, size.y, StrRaw(title_terminated), nullptr, nullptr);
 
         if (!g_glfw_window) {
             ZF_REPORT_FAILURE();

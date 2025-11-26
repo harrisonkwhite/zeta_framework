@@ -43,13 +43,16 @@ namespace zf::gfx {
     }
 
     static t_gl_id MakeGLShaderProg(const s_str_rdonly vert_src, const s_str_rdonly frag_src, s_mem_arena& temp_mem_arena) {
-        // @todo: Improve error logging here. Should be in return value.
+        s_str vert_src_terminated;
+        s_str frag_src_terminated;
 
-        ZF_ASSERT(IsStrTerminated(vert_src));
-        ZF_ASSERT(IsStrTerminated(frag_src));
+        if (!CloneStrButAddTerminator(vert_src, temp_mem_arena, vert_src_terminated)
+            || !CloneStrButAddTerminator(frag_src, temp_mem_arena, frag_src_terminated)) {
+            return 0;
+        }
 
         // Generate the individual shaders.
-        const auto shader_gen_func = [&temp_mem_arena](const s_str_rdonly src, const t_b8 is_frag) -> t_gl_id {
+        const auto gen_shader = [&temp_mem_arena](const s_str_rdonly src, const t_b8 is_frag) -> t_gl_id {
             const t_gl_id shader_gl_id = glCreateShader(is_frag ? GL_FRAGMENT_SHADER : GL_VERTEX_SHADER);
 
             const auto src_raw = StrRaw(src);
@@ -61,6 +64,8 @@ namespace zf::gfx {
             glGetShaderiv(shader_gl_id, GL_COMPILE_STATUS, &success);
 
             if (!success) {
+                ZF_DEFER({ glDeleteShader(shader_gl_id); });
+
                 // Try getting the OpenGL compile error message.
                 t_s32 log_chr_cnt;
                 glGetShaderiv(shader_gl_id, GL_INFO_LOG_LENGTH, &log_chr_cnt);
@@ -78,15 +83,13 @@ namespace zf::gfx {
                     ZF_LOG_ERROR("OpenGL shader compilation failed, but no error message available!");
                 }
 
-                glDeleteShader(shader_gl_id);
-
                 return 0;
             }
 
             return shader_gl_id;
         };
 
-        const t_gl_id vert_gl_id = shader_gen_func(vert_src, false);
+        const t_gl_id vert_gl_id = gen_shader(vert_src_terminated, false);
 
         if (!vert_gl_id) {
             return 0;
@@ -94,7 +97,7 @@ namespace zf::gfx {
 
         ZF_DEFER({ glDeleteShader(vert_gl_id); });
 
-        const t_gl_id frag_gl_id = shader_gen_func(frag_src, true);
+        const t_gl_id frag_gl_id = gen_shader(frag_src_terminated, true);
 
         if (!frag_gl_id) {
             return 0;

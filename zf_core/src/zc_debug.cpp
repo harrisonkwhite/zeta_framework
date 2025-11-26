@@ -67,15 +67,15 @@ namespace zf {
         return false;
     }
 
-    void ReportFailure(const char* const func, const char* const file, const t_s32 line, const char* const msg) {
+    void ReportFailure(const char* const func_name_raw, const char* const file_name_raw, const t_s32 line, const char* const msg_raw) {
         fprintf(stderr, "==================== FAILURE ====================\n");
 
-        fprintf(stderr, "Function: %s\n", func);
-        fprintf(stderr, "File:     %s\n", file);
+        fprintf(stderr, "Function: %s\n", func_name_raw);
+        fprintf(stderr, "File:     %s\n", file_name_raw);
         fprintf(stderr, "Line:     %d\n", line);
 
-        if (msg) {
-            fprintf(stderr, "Message:  \"%s\"\n", msg);
+        if (msg_raw) {
+            fprintf(stderr, "Message:  \"%s\"\n", msg_raw);
         }
 
         PrintStackTrace();
@@ -87,15 +87,15 @@ namespace zf {
 #endif
     }
 
-    void HandleAssertFailure(const char* const condition, const char* const func, const char* const file, const t_s32 line, const char* const msg) {
+    void HandleAssertFailure(const char* const cond_raw, const char* const func_name_raw, const char* const file_name_raw, const t_s32 line, const char* const msg_raw) {
         fprintf(stderr, "==================== ASSERTION FAILED ====================\n");
-        fprintf(stderr, "Condition: %s\n", condition);
-        fprintf(stderr, "Function:  %s\n", func);
-        fprintf(stderr, "File:      %s\n", file);
+        fprintf(stderr, "Condition: %s\n", cond_raw);
+        fprintf(stderr, "Function:  %s\n", func_name_raw);
+        fprintf(stderr, "File:      %s\n", file_name_raw);
         fprintf(stderr, "Line:      %d\n", line);
 
-        if (msg) {
-            fprintf(stderr, "Message:   \"%s\"\n", msg);
+        if (msg_raw) {
+            fprintf(stderr, "Message:   \"%s\"\n", msg_raw);
         }
 
         PrintStackTrace();
@@ -107,9 +107,9 @@ namespace zf {
         }
     }
 
-    void ShowErrorBox(const char* const title, const char* const contents) {
+    void ShowErrorBox(const char* const title_raw, const char* const contents_raw) {
 #ifdef ZF_PLATFORM_WINDOWS
-        MessageBoxA(nullptr, contents, title, MB_OK | MB_ICONERROR | MB_TOPMOST);
+        MessageBoxA(nullptr, contents_raw, title_raw, MB_OK | MB_ICONERROR | MB_TOPMOST);
 #endif
     }
 }

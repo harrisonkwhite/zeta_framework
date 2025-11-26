@@ -41,14 +41,14 @@ namespace zf {
     }
 
     constexpr t_b8 TitleMeLater(const s_str_rdonly str) {
-        // The terminator is most likely at the end, so we start there.
-        for (t_size i = str.bytes.len - 1; i >= 0; i--) {
+        // Make sure no terminators exist before end.
+        for (t_size i = 0; i < str.bytes.len - 1; i++) {
             if (!str.bytes[i]) {
-                return true;
+                return false;
             }
         }
 
-        return false;
+        return !str.bytes[str.bytes.len - 1];
     }
 
     inline char* StrRaw(const s_str str) {
@@ -61,20 +61,20 @@ namespace zf {
         return reinterpret_cast<const char*>(str.bytes.buf_raw);
     }
 
-    inline s_str StrFromRawTerminated(char* const raw) {
+    inline s_str StrFromRaw(char* const raw) {
         return {{reinterpret_cast<t_u8*>(raw), CountRawChrsBeforeNull(raw)}};
     }
 
-    inline s_str_rdonly StrFromRawTerminated(const char* const raw) {
+    inline s_str_rdonly StrFromRaw(const char* const raw) {
         return {{reinterpret_cast<const t_u8*>(raw), CountRawChrsBeforeNull(raw)}};
     }
 
-    inline s_str StrFromRawTerminated(char* const raw, const t_size len) {
+    inline s_str StrFromRaw(char* const raw, const t_size len) {
         ZF_ASSERT(len == CountRawChrsBeforeNull(raw));
         return {{reinterpret_cast<t_u8*>(raw), len}};
     }
 
-    inline s_str_rdonly StrFromRawTerminated(const char* const raw, const t_size len) {
+    inline s_str_rdonly StrFromRaw(const char* const raw, const t_size len) {
         ZF_ASSERT(len == CountRawChrsBeforeNull(raw));
         return {{reinterpret_cast<const t_u8*>(raw), len}};
     }

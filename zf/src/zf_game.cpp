@@ -36,7 +36,7 @@ namespace zf {
             }
 
             // Initialise the window.
-            if (!InitWindow(info.window_init_size, info.window_title, info.window_flags)) {
+            if (!InitWindow(info.window_init_size, info.window_title, info.window_flags, temp_mem_arena)) {
                 ZF_REPORT_FAILURE();
                 return false;
             }

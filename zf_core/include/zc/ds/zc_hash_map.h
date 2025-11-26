@@ -8,21 +8,19 @@ namespace zf {
     template<typename tp_type>
     using t_hash_func = t_size (*)(const tp_type& key);
 
-    constexpr t_hash_func<s_str_ascii_rdonly> g_str_hash_func = [](const s_str_ascii_rdonly& key) constexpr {
-        ZF_ASSERT(IsStrTerminated(key));
-
+    constexpr t_hash_func<s_str_rdonly> g_str_hash_func = [](const s_str_rdonly& key) constexpr {
         // This is an FNV-1a implementation.
         const t_u32 offs_basis = 2166136261u;
         const t_u32 prime = 16777619u;
 
         t_u32 hash = offs_basis;
 
-        for (t_size i = 0; key.chrs[i]; i++) {
-            hash ^= static_cast<unsigned char>(key.chrs[i]);
+        for (t_size i = 0; i < key.bytes.len; i++) {
+            hash ^= key.bytes[i];
             hash *= prime;
         }
 
-        return static_cast<t_size>(hash & 0x7FFFFFFF);
+        return static_cast<t_size>(static_cast<t_u64>(hash) & 0x7FFFFFFFFFFFFFFFull);
     };
 
     template<typename tp_key_type, typename tp_val_type>

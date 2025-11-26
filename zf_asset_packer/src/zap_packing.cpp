@@ -197,8 +197,8 @@ namespace zf {
                             const auto dest_fp_raw = field_vals[ek_tex_field_dest_file_path]->valuestring;
                             const auto src_fp_raw = field_vals[ek_tex_field_src_file_path]->valuestring;
 
-                            if (!PackTexture(StrFromRawTerminated(dest_fp_raw), StrFromRawTerminated(src_fp_raw), mem_arena)) {
-                                ZF_LOG_ERROR("Failed to pack texture \"%s\" to \"%s\"!", StrRaw(StrFromRawTerminated(src_fp_raw)), StrRaw(StrFromRawTerminated(dest_fp_raw)));
+                            if (!PackTexture(StrFromRaw(dest_fp_raw), StrFromRaw(src_fp_raw), mem_arena)) {
+                                ZF_LOG_ERROR("Failed to pack texture \"%s\" to \"%s\"!", StrRaw(StrFromRaw(src_fp_raw)), StrRaw(StrFromRaw(dest_fp_raw)));
                                 return false;
                             }
                         }
@@ -215,7 +215,7 @@ namespace zf {
                             const auto code_pts = PushToMemArena<t_unicode_code_pt_bit_vector>(mem_arena);
 
                             if (!code_pts) {
-                                ZF_LOG_ERROR("Failed to allocate code point bit vector for font \"%s\"!", StrRaw(StrFromRawTerminated(src_fp_raw)));
+                                ZF_LOG_ERROR("Failed to allocate code point bit vector for font \"%s\"!", StrRaw(StrFromRaw(src_fp_raw)));
                                 return false;
                             }
 
@@ -224,16 +224,16 @@ namespace zf {
                             if (field_vals[ek_font_field_extra_chrs_file_path]) {
                                 s_str_ascii extra_chrs_file_str;
 
-                                if (!LoadFileContentsAsStr(mem_arena, StrFromRawTerminated(extra_chrs_fp_raw), extra_chrs_file_str)) {
-                                    ZF_LOG_ERROR("Failed to load extra characters file \"%s\" for font \"%s\"!", StrRaw(StrFromRawTerminated(extra_chrs_fp_raw)), StrRaw(StrFromRawTerminated(src_fp_raw)));
+                                if (!LoadFileContentsAsStr(mem_arena, StrFromRaw(extra_chrs_fp_raw), extra_chrs_file_str)) {
+                                    ZF_LOG_ERROR("Failed to load extra characters file \"%s\" for font \"%s\"!", StrRaw(StrFromRaw(extra_chrs_fp_raw)), StrRaw(StrFromRaw(src_fp_raw)));
                                     return false;
                                 }
 
                                 MarkCodePoints(extra_chrs_file_str, *code_pts);
                             }
 
-                            if (!PackFont(StrFromRawTerminated(dest_fp_raw), StrFromRawTerminated(src_fp_raw), height, *code_pts, mem_arena)) {
-                                ZF_LOG_ERROR("Failed to pack font \"%s\" to \"%s\"!", StrRaw(StrFromRawTerminated(src_fp_raw)), StrRaw(StrFromRawTerminated(dest_fp_raw)));
+                            if (!PackFont(StrFromRaw(dest_fp_raw), StrFromRaw(src_fp_raw), height, *code_pts, mem_arena)) {
+                                ZF_LOG_ERROR("Failed to pack font \"%s\" to \"%s\"!", StrRaw(StrFromRaw(src_fp_raw)), StrRaw(StrFromRaw(dest_fp_raw)));
                                 return false;
                             }
                         }
@@ -245,8 +245,8 @@ namespace zf {
                             const auto dest_fp_raw = field_vals[ek_snd_field_dest_file_path]->valuestring;
                             const auto src_fp_raw = field_vals[ek_snd_field_src_file_path]->valuestring;
 
-                            if (!PackSound(StrFromRawTerminated(dest_fp_raw), StrFromRawTerminated(src_fp_raw), mem_arena)) {
-                                ZF_LOG_ERROR("Failed to pack sound \"%s\" to \"%s\"!", StrRaw(StrFromRawTerminated(src_fp_raw)), StrRaw(StrFromRawTerminated(dest_fp_raw)));
+                            if (!PackSound(StrFromRaw(dest_fp_raw), StrFromRaw(src_fp_raw), mem_arena)) {
+                                ZF_LOG_ERROR("Failed to pack sound \"%s\" to \"%s\"!", StrRaw(StrFromRaw(src_fp_raw)), StrRaw(StrFromRaw(dest_fp_raw)));
                                 return false;
                             }
                         }
