@@ -12,7 +12,7 @@ namespace zf {
 
         const t_b8 success = [&info]() {
             auto std_out = StdOut();
-            PrintFmt(std_out, StrFromRaw("ye % wow there?"), FormatHex(257u));
+            PrintFmt(std_out, StrFromRaw("ye % wow there?"), FormatBool(false));
 
             //
             // Initialisation

@@ -256,16 +256,28 @@ namespace zf {
     template<typename tp_type>
     t_b8 PrintType(s_stream& stream, const tp_type& val);
 
-    template<> inline t_b8 PrintType<t_b8>(s_stream& stream, const t_b8& val) {
-        return Print(stream, val ? StrFromRaw("true") : StrFromRaw("false"));
+    struct s_bool_fmt {
+        t_b8 val;
+    };
+
+    inline s_bool_fmt FormatBool(const t_b8 val) {
+        return {val};
     }
 
-    template<> inline t_b8 PrintType<s_str>(s_stream& stream, const s_str& val) {
-        return Print(stream, val);
+    template<> inline t_b8 PrintType<s_bool_fmt>(s_stream& stream, const s_bool_fmt& fmt) {
+        return Print(stream, fmt.val ? StrFromRaw("true") : StrFromRaw("false"));
     }
 
-    template<> inline t_b8 PrintType<s_str_rdonly>(s_stream& stream, const s_str_rdonly& val) {
-        return Print(stream, val);
+    struct s_str_fmt {
+        s_str_rdonly val;
+    };
+
+    inline s_str_fmt FormatStr(const s_str_rdonly val) {
+        return {val};
+    }
+
+    template<> inline t_b8 PrintType<s_str_fmt>(s_stream& stream, const s_str_fmt& fmt) {
+        return Print(stream, fmt.val);
     }
 
     template<c_integral tp_type>
@@ -308,7 +320,7 @@ namespace zf {
 
     template<c_unsigned_integral tp_type>
     s_hex_fmt<tp_type> FormatHex(const tp_type val, const t_b8 omit_prefix = false) {
-        return {val};
+        return {val, omit_prefix};
     }
 
     template<c_unsigned_integral tp_type>
@@ -352,9 +364,18 @@ namespace zf {
         return Print(stream, fmt);
     }
 
+    template<typename tp_type> struct s_is_fmt { static constexpr t_b8 g_val = false; };
+    template<> struct s_is_fmt<s_bool_fmt> { static constexpr t_b8 g_val = true; };
+    template<> struct s_is_fmt<s_str_fmt> { static constexpr t_b8 g_val = true; };
+    template<c_integral tp_type> struct s_is_fmt<s_integral_fmt<tp_type>> { static constexpr t_b8 g_val = true; };
+    template<c_unsigned_integral tp_type> struct s_is_fmt<s_hex_fmt<tp_type>> { static constexpr t_b8 g_val = true; };
+
+    template<typename tp_type>
+    concept c_fmt = s_is_fmt<tp_type>::g_val;
+
     // Use a single '%' as the format specifier - the type is inferred. To actually include a '%' in the output, write '%%'.
     // Returns true iff the operation was successful (this does not include the case of having too many arguments or too many format specifiers).
-    template<typename tp_arg, typename... tp_args_leftover>
+    template<c_fmt tp_arg, c_fmt... tp_args_leftover>
     t_b8 PrintFmt(s_stream& stream, const s_str_rdonly fmt, tp_arg arg, tp_args_leftover... args_leftover) {
         constexpr t_unicode_code_pt fmt_spec = '%';
         constexpr t_size fmt_spec_byte_cnt = UnicodeCodePointToByteCnt(fmt_spec);
