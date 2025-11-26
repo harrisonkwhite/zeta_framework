@@ -368,7 +368,7 @@ namespace zf {
         return true;
     }
 
-    t_b8 LoadStrChrPositions(const s_str_utf8_rdonly str, const s_font_arrangement& font_arrangement, const s_v2<t_f32> pos, s_mem_arena& mem_arena, s_array<s_v2<t_f32>>& o_positions) {
+    t_b8 LoadStrChrPositions(const s_str_rdonly str, const s_font_arrangement& font_arrangement, const s_v2<t_f32> pos, s_mem_arena& mem_arena, s_array<s_v2<t_f32>>& o_positions) {
         ZF_ASSERT(IsValidUTF8Str(str));
 
         // Reserve memory for the character positions.

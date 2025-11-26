@@ -144,5 +144,5 @@ namespace zf {
     [[nodiscard]] t_b8 LoadFontFromRaw(const s_str_ascii_rdonly file_path, const t_s32 height, const t_unicode_code_pt_bit_vector& code_pts, s_mem_arena& arrangement_mem_arena, s_mem_arena& atlas_rgbas_mem_arena, s_mem_arena& temp_mem_arena, s_font_arrangement& o_arrangement, s_array<t_font_atlas_rgba>& o_atlas_rgbas);
     [[nodiscard]] t_b8 PackFont(const s_str_ascii_rdonly dest_file_path, const s_str_ascii_rdonly src_file_path, const t_s32 height, const t_unicode_code_pt_bit_vector& code_pts, s_mem_arena& temp_mem_arena);
     [[nodiscard]] t_b8 UnpackFont(const s_str_ascii_rdonly file_path, s_mem_arena& arrangement_mem_arena, s_mem_arena& atlas_rgbas_mem_arena, s_font_arrangement& o_arrangement, s_array<t_font_atlas_rgba>& o_atlas_rgbas);
-    [[nodiscard]] t_b8 LoadStrChrPositions(const s_str_utf8_rdonly str, const s_font_arrangement& font_arrangement, const s_v2<t_f32> pos, s_mem_arena& mem_arena, s_array<s_v2<t_f32>>& o_positions);
+    [[nodiscard]] t_b8 LoadStrChrPositions(const s_str_rdonly str, const s_font_arrangement& font_arrangement, const s_v2<t_f32> pos, s_mem_arena& mem_arena, s_array<s_v2<t_f32>>& o_positions);
 }

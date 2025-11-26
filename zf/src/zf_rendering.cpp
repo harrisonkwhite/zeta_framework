@@ -16,7 +16,7 @@ namespace zf {
 #endif
     };
 
-    static s_str_utf8_rdonly g_batch_vert_shader_src = StrFromRawTerminated(R"(#version 460 core
+    static s_str_rdonly g_batch_vert_shader_src = StrFromRawTerminated(R"(#version 460 core
 
 layout (location = 0) in vec2 a_vert;
 layout (location = 1) in vec2 a_pos;
@@ -48,7 +48,7 @@ void main() {
 }
 )");
 
-    static s_str_utf8_rdonly g_batch_frag_shader_src = StrFromRawTerminated(R"(#version 460 core
+    static s_str_rdonly g_batch_frag_shader_src = StrFromRawTerminated(R"(#version 460 core
 
 in vec2 v_tex_coord;
 in vec4 v_blend;
@@ -275,7 +275,7 @@ void main() {
         Draw(rc, tex.hdl, tex_coords, pos, size, origin, rot, blend);
     }
 
-    t_b8 DrawStr(const s_rendering_context& rc, const s_str_utf8_rdonly str, const gfx::s_font_asset& font, const s_v2<t_f32> pos, s_mem_arena& temp_mem_arena) {
+    t_b8 DrawStr(const s_rendering_context& rc, const s_str_rdonly str, const gfx::s_font_asset& font, const s_v2<t_f32> pos, s_mem_arena& temp_mem_arena) {
         s_array<s_v2<t_f32>> chr_positions;
 
         if (!LoadStrChrPositions(str, font.arrangement, pos, temp_mem_arena, chr_positions)) {

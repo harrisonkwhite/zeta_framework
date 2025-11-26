@@ -276,7 +276,7 @@ namespace zf {
         ek_utf8_byte_type_invalid // 1111 1111
     }};
 
-    t_b8 IsValidUTF8Str(const s_str_utf8_rdonly str) {
+    t_b8 IsValidUTF8Str(const s_str_rdonly str) {
         t_size cost = 0;
 
         for (t_size i = 0; i < str.bytes.len; i++) {
@@ -284,12 +284,6 @@ namespace zf {
 
             switch (byte_type) {
                 case ek_utf8_byte_type_ascii:
-                    if (!str.bytes[i]) {
-                        return cost == 0;
-                    }
-
-                    [[fallthrough]];
-
                 case ek_utf8_byte_type_2byte_start:
                 case ek_utf8_byte_type_3byte_start:
                 case ek_utf8_byte_type_4byte_start:
@@ -319,7 +313,7 @@ namespace zf {
         return cost == 0;
     }
 
-    t_size CalcStrLen(const s_str_utf8_rdonly str) {
+    t_size CalcStrLen(const s_str_rdonly str) {
         ZF_ASSERT(IsValidUTF8Str(str));
 
         t_size i = 0;
@@ -330,12 +324,6 @@ namespace zf {
 
             switch (byte_type) {
                 case ek_utf8_byte_type_ascii:
-                    if (!str.bytes[i]) {
-                        return len;
-                    }
-
-                    [[fallthrough]];
-
                 case ek_utf8_byte_type_2byte_start:
                 case ek_utf8_byte_type_3byte_start:
                 case ek_utf8_byte_type_4byte_start:
@@ -355,54 +343,7 @@ namespace zf {
         return len;
     }
 
-    t_b8 CalcStrLenAndCheckValidity(const s_str_utf8_rdonly str, t_size& o_len) {
-        o_len = 0;
-
-        t_size cost = 0;
-
-        for (t_size i = 0; i < str.bytes.len; i++) {
-            const auto byte_type = g_utf8_byte_type_table[str.bytes[i]];
-
-            switch (byte_type) {
-                case ek_utf8_byte_type_ascii:
-                    if (!str.bytes[i]) {
-                        return cost == 0;
-                    }
-
-                    [[fallthrough]];
-
-                case ek_utf8_byte_type_2byte_start:
-                case ek_utf8_byte_type_3byte_start:
-                case ek_utf8_byte_type_4byte_start:
-                    if (cost > 0) {
-                        return false;
-                    }
-
-                    static_assert(ek_utf8_byte_type_4byte_start - ek_utf8_byte_type_ascii + 1 == 4);
-                    cost = byte_type - ek_utf8_byte_type_ascii + 1;
-
-                    o_len++;
-
-                    break;
-
-                case ek_utf8_byte_type_continuation:
-                    if (cost == 0) {
-                        return false;
-                    }
-
-                    break;
-
-                case ek_utf8_byte_type_invalid:
-                    return false;
-            }
-
-            cost--;
-        }
-
-        return cost == 0;
-    }
-
-    t_b8 WalkStr(const s_str_utf8_rdonly str, t_size& byte_index, t_unicode_code_pt& o_code_pt, const t_b8 end_on_terminator_read) {
+    t_b8 WalkStr(const s_str_rdonly str, t_size& byte_index, t_unicode_code_pt& o_code_pt) {
         ZF_ASSERT(IsValidUTF8Str(str));
         ZF_ASSERT(byte_index >= 0 && byte_index <= str.bytes.len);
 
@@ -414,12 +355,6 @@ namespace zf {
 
         switch (byte_type) {
             case ek_utf8_byte_type_ascii:
-                if (end_on_terminator_read && !str.bytes[byte_index]) {
-                    return false;
-                }
-
-                [[fallthrough]];
-
             case ek_utf8_byte_type_2byte_start:
             case ek_utf8_byte_type_3byte_start:
             case ek_utf8_byte_type_4byte_start:
@@ -438,7 +373,7 @@ namespace zf {
         }
     }
 
-    t_b8 WalkStrReverse(const s_str_utf8_rdonly str, t_size& byte_index, t_unicode_code_pt& o_code_pt) {
+    t_b8 WalkStrReverse(const s_str_rdonly str, t_size& byte_index, t_unicode_code_pt& o_code_pt) {
         ZF_ASSERT(IsValidUTF8Str(str));
         ZF_ASSERT(byte_index >= -1 && byte_index < str.bytes.len);
 
@@ -509,10 +444,10 @@ namespace zf {
         return res;
     }
 
-    void MarkStrCodePoints(const s_str_utf8_rdonly str, t_unicode_code_pt_bit_vector& code_pt_bv) {
+    void MarkStrCodePoints(const s_str_rdonly str, t_unicode_code_pt_bit_vector& code_pt_bv) {
         ZF_ASSERT(IsValidUTF8Str(str));
 
-        ZF_ITER_UTF8_STR(str, code_pt) {
+        ZF_ITER_STR(str, byte_index, code_pt) {
             SetBit(code_pt_bv, code_pt);
         }
     }
