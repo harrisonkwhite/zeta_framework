@@ -225,4 +225,56 @@ namespace zf {
     };
 
     [[nodiscard]] t_b8 CheckPathType(const s_str_rdonly path, s_mem_arena& temp_mem_arena, e_path_type& o_type);
+
+    void Print(const s_str_rdonly str);
+
+    template<typename tp_type>
+    void PrintType(const tp_type& val) {
+        Print(StrFromRaw("Printing who knows what?"));
+    }
+
+    template<> inline void PrintType<s_str>(const s_str& val) {
+        Print(val);
+    }
+
+    template<> inline void PrintType<s_str_rdonly>(const s_str_rdonly& val) {
+        Print(val);
+    }
+
+    template<> inline void PrintType<int>(const int& val) {
+        Print(StrFromRaw("<int>"));
+    }
+
+    inline void PrintFmt(const s_str_rdonly fmt) {
+        Print(fmt);
+    }
+
+    template<typename tp_arg, typename... tp_args_leftover>
+    void PrintFmt(const s_str_rdonly fmt, tp_arg arg, tp_args_leftover... args_leftover) {
+        constexpr t_unicode_code_pt fmt_spec = '%';
+
+        // Determine how many bytes to print.
+        t_size byte_cnt = 0;
+        t_b8 fmt_spec_found = false;
+
+        ZF_WALK_STR(fmt, chr_info) {
+            if (chr_info.code_pt == fmt_spec) {
+                fmt_spec_found = true;
+                break;
+            }
+
+            byte_cnt += UnicodeCodePointToByteCnt(chr_info.code_pt);
+        }
+
+        // Print the bytes.
+        fwrite(fmt.bytes.buf_raw, 1, static_cast<size_t>(byte_cnt), stdout);
+
+        if (fmt_spec_found) {
+            PrintType(arg);
+
+            // Recurse on everything after the format specifier.
+            const s_str_rdonly fmt_leftover = {Slice(fmt.bytes, byte_cnt + UnicodeCodePointToByteCnt(fmt_spec), fmt.bytes.len)};
+            PrintFmt(fmt_leftover, args_leftover...);
+        }
+    }
 }

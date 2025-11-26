@@ -11,6 +11,8 @@ namespace zf {
         AssertGameInfoValidity(info);
 
         const t_b8 success = [&info]() {
+            PrintFmt(StrFromRaw("yeah % wow % there is death"), 1, StrFromRaw("in here"));
+
             //
             // Initialisation
             //

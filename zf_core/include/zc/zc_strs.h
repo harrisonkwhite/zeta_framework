@@ -22,6 +22,28 @@ namespace zf {
         return bv;
     }();
 
+    constexpr t_size UnicodeCodePointToByteCnt(const t_unicode_code_pt cp) {
+        if (cp <= 0x7F) {
+            return 1;
+        }
+
+        if (cp <= 0x7FF) {
+            return 2;
+        }
+
+        if (cp <= 0xFFFF) {
+            return 3;
+        }
+
+        if (cp <= 0x10FFFF) {
+            return 4;
+        }
+
+        ZF_ASSERT(false);
+
+        return 0;
+    }
+
     struct s_str_rdonly {
         s_array_rdonly<t_u8> bytes;
     };
