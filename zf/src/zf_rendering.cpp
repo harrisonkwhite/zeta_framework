@@ -285,6 +285,8 @@ void main() {
         t_size chr_index = 0;
 
         ZF_ITER_STR(str, byte_index, code_pt) {
+            // @todo: Assert that the code point is printable or is '\n'.
+
             if (code_pt == ' ' || code_pt == '\n') {
                 continue;
             }

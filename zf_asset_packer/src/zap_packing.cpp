@@ -81,7 +81,7 @@ namespace zf {
         s_mem_arena mem_arena;
 
         if (!AllocMemArena(g_mem_arena_size, mem_arena)) {
-            ZF_LOG_ERROR("Failed to allocate memory arena!");
+            fprintf(stderr, "Failed to allocate memory arena!");
             return false;
         }
 
@@ -91,14 +91,15 @@ namespace zf {
             s_array<t_u8> instrs_json_file_contents;
 
             if (!LoadFileContents(instrs_json_file_path, mem_arena, mem_arena, instrs_json_file_contents)) {
-                ZF_LOG_ERROR("Failed to load packing instructions JSON file \"%s\"!", StrRaw(instrs_json_file_path));
+                //fprintf(stderr, "Failed to load packing instructions JSON file \"%s\"!", StrRaw(instrs_json_file_path));
+                fprintf(stderr, "Failed to load packing instructions JSON file!");
                 return nullptr;
             }
 
             s_str instrs_json_str_terminated;
 
             if (!CloneStrButAddTerminator({instrs_json_file_contents}, mem_arena, instrs_json_str_terminated)) {
-                ZF_LOG_ERROR("Failed to clone packing instructions JSON file contents to null-terminated string!");
+                fprintf(stderr, "Failed to clone packing instructions JSON file contents to null-terminated string!");
                 return nullptr;
             }
 
@@ -106,14 +107,14 @@ namespace zf {
         }();
 
         if (!cj) {
-            ZF_LOG_ERROR("Failed to parse packing instructions JSON file \"%s\"!", StrRaw(instrs_json_file_path));
+            fprintf(stderr, "Failed to parse packing instructions JSON file");
             return false;
         }
 
         ZF_DEFER({ cJSON_Delete(cj); });
 
         if (!cJSON_IsObject(cj)) {
-            ZF_LOG_ERROR("Packing instructions JSON root is not an object!");
+            fprintf(stderr, "Packing instructions JSON root is not an object!");
             return false;
         }
 
@@ -125,7 +126,7 @@ namespace zf {
             cJSON* const cj_assets = cJSON_GetObjectItemCaseSensitive(cj, g_asset_type_arr_raw_names[asset_type_index]);
 
             if (!cJSON_IsArray(cj_assets)) {
-                ZF_LOG_ERROR("Packing instructions JSON \"%s\" array does not exist or it is of the wrong type!", StrRaw(g_asset_type_arr_names[asset_type_index]));
+                fprintf(stderr, "Packing instructions JSON \"%s\" array does not exist or it is of the wrong type!", g_asset_type_arr_raw_names[asset_type_index]);
                 return false;
             }
 
@@ -176,7 +177,7 @@ namespace zf {
                             continue;
                         }
 
-                        ZF_LOG_ERROR("A packing instructions JSON \"%s\" entry is missing required field \"%s\"!", StrRaw(g_asset_type_arr_names[asset_type_index]), StrRaw(fields[fi].name));
+                        fprintf(stderr, "A packing instructions JSON \"%s\" entry is missing required field \"%s\"!", g_asset_type_arr_raw_names[asset_type_index], fields[fi].name_raw);
                         return false;
                     }
 
@@ -193,7 +194,7 @@ namespace zf {
                     }();
 
                     if (!is_valid) {
-                        ZF_LOG_ERROR("A packing instructions JSON \"%s\" entry has field \"%s\" as the wrong type! Expected a %s.", StrRaw(g_asset_type_arr_names[asset_type_index]), StrRaw(fields[fi].name), StrRaw(g_asset_field_type_names[fields[fi].type]));
+                        fprintf(stderr, "A packing instructions JSON \"%s\" entry has field \"%s\" as the wrong type! Expected a %s.", g_asset_type_arr_raw_names[asset_type_index], fields[fi].name_raw, g_asset_field_type_raw_names[fields[fi].type]);
                         return false;
                     }
                 }
@@ -205,7 +206,7 @@ namespace zf {
                             const auto src_fp_raw = field_vals[ek_tex_field_src_file_path]->valuestring;
 
                             if (!PackTexture(StrFromRaw(dest_fp_raw), StrFromRaw(src_fp_raw), mem_arena)) {
-                                ZF_LOG_ERROR("Failed to pack texture \"%s\" to \"%s\"!", StrRaw(StrFromRaw(src_fp_raw)), StrRaw(StrFromRaw(dest_fp_raw)));
+                                fprintf(stderr, "Failed to pack texture \"%s\" to \"%s\"!", src_fp_raw, dest_fp_raw);
                                 return false;
                             }
                         }
@@ -222,7 +223,7 @@ namespace zf {
                             const auto code_pts = PushToMemArena<t_unicode_code_pt_bit_vector>(mem_arena);
 
                             if (!code_pts) {
-                                ZF_LOG_ERROR("Failed to allocate code point bit vector for font \"%s\"!", StrRaw(StrFromRaw(src_fp_raw)));
+                                fprintf(stderr, "Failed to allocate code point bit vector for font \"%s\"!", src_fp_raw);
                                 return false;
                             }
 
@@ -232,7 +233,7 @@ namespace zf {
                                 s_array<t_u8> extra_chrs_file_contents;
 
                                 if (!LoadFileContents(StrFromRaw(extra_chrs_fp_raw), mem_arena, mem_arena, extra_chrs_file_contents)) {
-                                    ZF_LOG_ERROR("Failed to load extra characters file \"%s\" for font \"%s\"!", StrRaw(StrFromRaw(extra_chrs_fp_raw)), StrRaw(StrFromRaw(src_fp_raw)));
+                                    fprintf(stderr, "Failed to load extra characters file \"%s\" for font \"%s\"!", extra_chrs_fp_raw, src_fp_raw);
                                     return false;
                                 }
 
@@ -240,7 +241,7 @@ namespace zf {
                             }
 
                             if (!PackFont(StrFromRaw(dest_fp_raw), StrFromRaw(src_fp_raw), height, *code_pts, mem_arena)) {
-                                ZF_LOG_ERROR("Failed to pack font \"%s\" to \"%s\"!", StrRaw(StrFromRaw(src_fp_raw)), StrRaw(StrFromRaw(dest_fp_raw)));
+                                fprintf(stderr, "Failed to pack font \"%s\" to \"%s\"!", src_fp_raw, dest_fp_raw);
                                 return false;
                             }
                         }
@@ -253,7 +254,7 @@ namespace zf {
                             const auto src_fp_raw = field_vals[ek_snd_field_src_file_path]->valuestring;
 
                             if (!PackSound(StrFromRaw(dest_fp_raw), StrFromRaw(src_fp_raw), mem_arena)) {
-                                ZF_LOG_ERROR("Failed to pack sound \"%s\" to \"%s\"!", StrRaw(StrFromRaw(src_fp_raw)), StrRaw(StrFromRaw(dest_fp_raw)));
+                                fprintf(stderr, "Failed to pack sound \"%s\" to \"%s\"!", src_fp_raw, dest_fp_raw);
                                 return false;
                             }
                         }

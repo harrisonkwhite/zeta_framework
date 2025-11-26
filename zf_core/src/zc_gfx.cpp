@@ -102,6 +102,8 @@ namespace zf {
     t_b8 LoadFontFromRaw(const s_str_rdonly file_path, const t_s32 height, const t_unicode_code_pt_bit_vector& code_pts, s_mem_arena& arrangement_mem_arena, s_mem_arena& atlas_rgbas_mem_arena, s_mem_arena& temp_mem_arena, s_font_arrangement& o_arrangement, s_array<t_font_atlas_rgba>& o_atlas_rgbas) {
         ZF_ASSERT(height > 0);
 
+        // @todo: Unset bits associated with non-printable characters? Failure needs to be handled in some way...
+
         const t_size code_pt_cnt = CountSetBits(code_pts);
 
         o_arrangement = {};
@@ -220,6 +222,8 @@ namespace zf {
 
         // If there were any kernings to store, set up the hash map and go through again and store them.
         if (kern_cnt > 0) {
+            o_arrangement.has_kernings = true;
+
             if (!MakeHashMap<s_font_code_point_pair, t_s32>(arrangement_mem_arena, g_code_pt_pair_hash_func, o_arrangement.code_pt_pairs_to_kernings, g_code_pt_pair_comparator, kern_cnt, kern_cnt)) {
                 return false;
             }
@@ -378,18 +382,24 @@ namespace zf {
             return false;
         }
 
-        // This array is not necessarily going to used completely - we only need to store positions for displayable characters.
-
         // Calculate the position of each character.
-        t_size pos_index = 0;
+        t_size chr_index = 0;
         s_v2<t_f32> chr_pos_pen = {}; // The position of the current character.
+        t_unicode_code_pt code_pt_last;
 
         ZF_ITER_STR(str, byte_index, code_pt) {
+            ZF_DEFER({
+                chr_index++;
+                code_pt_last = code_pt;
+            });
+
             if (code_pt == '\n') {
                 chr_pos_pen.x = 0.0f;
                 chr_pos_pen.y += static_cast<t_f32>(font_arrangement.line_height);
                 continue;
             }
+
+            // @todo: Assert that the code point is printable.
 
             s_font_glyph_info glyph_info;
 
@@ -398,8 +408,15 @@ namespace zf {
                 continue;
             }
 
-            o_positions[pos_index] = pos + chr_pos_pen + static_cast<s_v2<t_f32>>(glyph_info.offs);
-            pos_index++;
+            if (chr_index > 0 && font_arrangement.has_kernings) {
+                t_s32 kerning;
+
+                if (HashMapGet(font_arrangement.code_pt_pairs_to_kernings, {code_pt_last, code_pt}, &kerning)) {
+                    chr_pos_pen.x += static_cast<t_f32>(kerning); // @todo: Applying to the pen and thus affecting the positioning of other characters could be incorrect.
+                }
+            }
+
+            o_positions[chr_index] = pos + chr_pos_pen + static_cast<s_v2<t_f32>>(glyph_info.offs);
 
             chr_pos_pen.x += static_cast<t_f32>(glyph_info.adv);
         }

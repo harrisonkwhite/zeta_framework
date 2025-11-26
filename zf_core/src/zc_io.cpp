@@ -94,9 +94,9 @@ namespace zf {
         }
 
 #ifdef ZF_PLATFORM_WINDOWS
-        const t_s32 res = _mkdir(StrRaw(path));
+        const t_s32 res = _mkdir(StrRaw(path_terminated));
 #else
-        const t_s32 res = mkdir(StrRaw(path), 0755);
+        const t_s32 res = mkdir(StrRaw(path_terminated), 0755);
 #endif
 
         if (res == 0) {
@@ -179,7 +179,7 @@ namespace zf {
         }
 
         // Get a substring of all directories and create those.
-        ZF_ITER_STR_REVERSE(path, code_pt, byte_index) {
+        ZF_ITER_STR_REVERSE(path, byte_index, code_pt) {
             if (code_pt == '/' || code_pt == '\\') {
                 if (!CreateDirectoryAndParents({Slice(path.bytes, 0, byte_index)}, temp_mem_arena, o_dir_creation_res)) {
                     return false;
@@ -210,7 +210,7 @@ namespace zf {
 
         struct stat info;
 
-        if (stat(StrRaw(path), &info) != 0) {
+        if (stat(StrRaw(path_terminated), &info) != 0) {
             o_type = ek_path_type_not_found;
         } else if (info.st_mode & S_IFDIR) {
             o_type = ek_path_type_directory;
