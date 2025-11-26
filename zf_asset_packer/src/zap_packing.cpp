@@ -13,7 +13,7 @@ namespace zf {
         eks_asset_type_cnt
     };
 
-    constexpr s_static_array<s_str_ascii_rdonly, eks_asset_type_cnt> g_asset_type_arr_names = {{
+    static s_static_array<const char*, eks_asset_type_cnt> g_asset_type_arr_raw_names = {{
         "textures",
         "fonts",
         "sounds"
@@ -26,13 +26,13 @@ namespace zf {
         eks_asset_field_type_cnt
     };
 
-    constexpr s_static_array<s_str_ascii_rdonly, eks_asset_field_type_cnt> g_asset_field_type_names = {{
+    static s_static_array<const char*, eks_asset_field_type_cnt> g_asset_field_type_raw_names = {{
         "string",
         "number"
     }};
 
     struct s_asset_field {
-        s_str_ascii_rdonly name;
+        const char* name_raw;
         e_asset_field_type type;
         t_b8 optional;
     };
@@ -44,7 +44,7 @@ namespace zf {
         eks_tex_field_cnt
     };
 
-    constexpr s_static_array<s_asset_field, eks_tex_field_cnt> g_tex_fields = {{
+    static s_static_array<s_asset_field, eks_tex_field_cnt> g_tex_fields = {{
         {"src_file_path", ek_asset_field_type_str},
         {"dest_file_path", ek_asset_field_type_str}
     }};
@@ -58,7 +58,7 @@ namespace zf {
         eks_font_field_cnt
     };
 
-    constexpr s_static_array<s_asset_field, eks_font_field_cnt> g_font_fields = {{
+    static s_static_array<s_asset_field, eks_font_field_cnt> g_font_fields = {{
         {"src_file_path", ek_asset_field_type_str},
         {"height", ek_asset_field_type_num},
         {"extra_chrs_file_path", ek_asset_field_type_str, true},
@@ -72,31 +72,38 @@ namespace zf {
         eks_snd_field_cnt
     };
 
-    constexpr s_static_array<s_asset_field, eks_snd_field_cnt> g_snd_fields = {{
+    static s_static_array<s_asset_field, eks_snd_field_cnt> g_snd_fields = {{
         {"src_file_path", ek_asset_field_type_str},
         {"dest_file_path", ek_asset_field_type_str}
     }};
 
-    t_b8 RunPacker(const s_str_ascii_rdonly instrs_json_file_path) {
-        ZF_ASSERT(IsStrTerminatedOnlyAtEnd(instrs_json_file_path));
+    t_b8 RunPacker(const s_str_rdonly instrs_json_file_path) {
+        s_mem_arena mem_arena;
 
-        zf::s_mem_arena mem_arena;
-
-        if (!zf::AllocMemArena(g_mem_arena_size, mem_arena)) {
+        if (!AllocMemArena(g_mem_arena_size, mem_arena)) {
             ZF_LOG_ERROR("Failed to allocate memory arena!");
             return false;
         }
 
-        ZF_DEFER({ zf::FreeMemArena(mem_arena); });
+        ZF_DEFER({ FreeMemArena(mem_arena); });
 
-        zf::s_str_ascii instrs_json;
+        const auto cj = [instrs_json_file_path, &mem_arena]() -> cJSON* {
+            s_array<t_u8> instrs_json_file_contents;
 
-        if (!zf::LoadFileContentsAsStr(mem_arena, instrs_json_file_path, instrs_json)) {
-            ZF_LOG_ERROR("Failed to load packing instructions JSON file \"%s\"!", StrRaw(instrs_json_file_path));
-            return false;
-        }
+            if (!LoadFileContents(instrs_json_file_path, mem_arena, mem_arena, instrs_json_file_contents)) {
+                ZF_LOG_ERROR("Failed to load packing instructions JSON file \"%s\"!", StrRaw(instrs_json_file_path));
+                return nullptr;
+            }
 
-        cJSON* const cj = cJSON_Parse(StrRaw(instrs_json));
+            s_str instrs_json_str_terminated;
+
+            if (!CloneStrButAddTerminator({instrs_json_file_contents}, mem_arena, instrs_json_str_terminated)) {
+                ZF_LOG_ERROR("Failed to clone packing instructions JSON file contents to null-terminated string!");
+                return nullptr;
+            }
+
+            return cJSON_Parse(StrRaw(instrs_json_str_terminated));
+        }();
 
         if (!cj) {
             ZF_LOG_ERROR("Failed to parse packing instructions JSON file \"%s\"!", StrRaw(instrs_json_file_path));
@@ -115,7 +122,7 @@ namespace zf {
         s_static_array<cJSON*, eks_snd_field_cnt> snd_field_cj_ptrs = {};
 
         for (t_size asset_type_index = 0; asset_type_index < eks_asset_type_cnt; asset_type_index++) {
-            cJSON* const cj_assets = cJSON_GetObjectItemCaseSensitive(cj, StrRaw(g_asset_type_arr_names[asset_type_index]));
+            cJSON* const cj_assets = cJSON_GetObjectItemCaseSensitive(cj, g_asset_type_arr_raw_names[asset_type_index]);
 
             if (!cJSON_IsArray(cj_assets)) {
                 ZF_LOG_ERROR("Packing instructions JSON \"%s\" array does not exist or it is of the wrong type!", StrRaw(g_asset_type_arr_names[asset_type_index]));
@@ -162,7 +169,7 @@ namespace zf {
                 }();
 
                 for (t_size fi = 0; fi < fields.len; fi++) {
-                    field_vals[fi] = cJSON_GetObjectItem(cj_asset, StrRaw(fields[fi].name));
+                    field_vals[fi] = cJSON_GetObjectItem(cj_asset, fields[fi].name_raw);
 
                     if (!field_vals[fi]) {
                         if (fields[fi].optional) {
@@ -222,14 +229,14 @@ namespace zf {
                             ApplyMask(*code_pts, g_unicode_printable_ascii_code_pts, ek_bitwise_mask_op_or);
 
                             if (field_vals[ek_font_field_extra_chrs_file_path]) {
-                                s_str_ascii extra_chrs_file_str;
+                                s_array<t_u8> extra_chrs_file_contents;
 
-                                if (!LoadFileContentsAsStr(mem_arena, StrFromRaw(extra_chrs_fp_raw), extra_chrs_file_str)) {
+                                if (!LoadFileContents(StrFromRaw(extra_chrs_fp_raw), mem_arena, mem_arena, extra_chrs_file_contents)) {
                                     ZF_LOG_ERROR("Failed to load extra characters file \"%s\" for font \"%s\"!", StrRaw(StrFromRaw(extra_chrs_fp_raw)), StrRaw(StrFromRaw(src_fp_raw)));
                                     return false;
                                 }
 
-                                MarkCodePoints(extra_chrs_file_str, *code_pts);
+                                MarkStrCodePoints({extra_chrs_file_contents}, *code_pts);
                             }
 
                             if (!PackFont(StrFromRaw(dest_fp_raw), StrFromRaw(src_fp_raw), height, *code_pts, mem_arena)) {

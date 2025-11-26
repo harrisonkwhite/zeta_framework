@@ -12,7 +12,7 @@ namespace zf {
         ek_utf8_byte_type_invalid
     };
 
-    static constexpr s_static_array<e_utf8_byte_type, 256> g_utf8_byte_type_table = {{
+    constexpr s_static_array<e_utf8_byte_type, 256> g_utf8_byte_type_table = {{
         ek_utf8_byte_type_ascii, // 0000 0000
         ek_utf8_byte_type_ascii, // 0000 0001
         ek_utf8_byte_type_ascii, // 0000 0010

@@ -23,12 +23,12 @@ namespace zf {
     }
 
     template<c_numeric tp_type>
-    static constexpr tp_type Min(const tp_type& a, const tp_type& b) {
+    constexpr tp_type Min(const tp_type& a, const tp_type& b) {
         return a <= b ? a : b;
     }
 
     template<c_numeric tp_type>
-    static constexpr tp_type Max(const tp_type& a, const tp_type& b) {
+    constexpr tp_type Max(const tp_type& a, const tp_type& b) {
         return a >= b ? a : b;
     }
 

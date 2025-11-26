@@ -209,9 +209,6 @@ namespace zf::gfx {
     }
 
     s_resource_handle MakeShaderProg(s_resource_arena& res_arena, const s_str_rdonly vert_src, const s_str_rdonly frag_src, s_mem_arena& temp_mem_arena) {
-        ZF_ASSERT(IsStrTerminatedAnywhere(vert_src));
-        ZF_ASSERT(IsStrTerminatedAnywhere(frag_src));
-
         if (IsListFull(res_arena.hdls)) {
             return {};
         }
@@ -272,7 +269,7 @@ namespace zf::gfx {
 
         s_array<t_font_atlas_rgba> atlas_rgbas;
 
-        if (!UnpackFont(file_path, mem_arena, temp_mem_arena, o_asset.arrangement, atlas_rgbas)) {
+        if (!UnpackFont(file_path, mem_arena, temp_mem_arena, temp_mem_arena, o_asset.arrangement, atlas_rgbas)) {
             return false;
         }
 

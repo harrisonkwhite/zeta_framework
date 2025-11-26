@@ -29,7 +29,7 @@ namespace zf {
     static GLFWwindow* g_glfw_window;
     static s_input_events g_input_events; // Events such as key presses and mouse wheel scrolls are recordeded here in callbacks.
 
-    static constexpr e_key_code ConvertGLFWKeyCode(const t_s32 glfw_key) {
+    constexpr e_key_code ConvertGLFWKeyCode(const t_s32 glfw_key) {
         switch (glfw_key) {
             case GLFW_KEY_SPACE: return ek_key_code_space;
             case GLFW_KEY_0: return ek_key_code_0;
@@ -99,7 +99,7 @@ namespace zf {
         }
     }
 
-    static constexpr e_mouse_button_code ConvertGLFWMouseButtonCode(const t_s32 glfw_button) {
+    constexpr e_mouse_button_code ConvertGLFWMouseButtonCode(const t_s32 glfw_button) {
         switch (glfw_button) {
             case GLFW_MOUSE_BUTTON_LEFT: return ek_mouse_button_code_left;
             case GLFW_MOUSE_BUTTON_RIGHT: return ek_mouse_button_code_right;
@@ -109,7 +109,7 @@ namespace zf {
         }
     }
 
-    static constexpr t_s32 ToGLFWKey(const e_key_code kc) {
+    constexpr t_s32 ToGLFWKey(const e_key_code kc) {
         switch (kc) {
             case ek_key_code_space: return GLFW_KEY_SPACE;
             case ek_key_code_0: return GLFW_KEY_0;
@@ -179,7 +179,7 @@ namespace zf {
         }
     }
 
-    static constexpr t_s32 ToGLFWMouseButton(const e_mouse_button_code mbc) {
+    constexpr t_s32 ToGLFWMouseButton(const e_mouse_button_code mbc) {
         switch (mbc) {
             case ek_mouse_button_code_left: return GLFW_MOUSE_BUTTON_LEFT;
             case ek_mouse_button_code_right: return GLFW_MOUSE_BUTTON_RIGHT;

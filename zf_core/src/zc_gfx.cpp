@@ -48,7 +48,7 @@ namespace zf {
     t_b8 PackTexture(const s_str_rdonly dest_file_path, const s_str_rdonly src_file_path, s_mem_arena& temp_mem_arena) {
         s_rgba_texture_data tex_data;
 
-        if (!LoadRGBATextureDataFromRaw(src_file_path, temp_mem_arena, tex_data)) {
+        if (!LoadRGBATextureDataFromRaw(src_file_path, temp_mem_arena, temp_mem_arena, tex_data)) {
             return false;
         }
 
