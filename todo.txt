@@ -1,3 +1,4 @@
+- Better error indication in font loading.
 - MAYBE write a code correctness checker tool. This can make sure prefixes are correct, structs are all trivially constructible, there are no parameter name discrepencies between declaration and definition, etc.
 - Bit code needs a lot more helpers for things like rotation, masking, etc.
 - Consider whether to allow leaks in the case of intermediate failure.

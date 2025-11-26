@@ -99,12 +99,8 @@ namespace zf {
         return true;
     }
 
-    t_b8 LoadFontFromRaw(const s_str_rdonly file_path, const t_s32 height, const t_unicode_code_pt_bit_vector& code_pts, s_mem_arena& arrangement_mem_arena, s_mem_arena& atlas_rgbas_mem_arena, s_mem_arena& temp_mem_arena, s_font_arrangement& o_arrangement, s_array<t_font_atlas_rgba>& o_atlas_rgbas) {
+    t_b8 LoadFontFromRaw(const s_str_rdonly file_path, const t_s32 height, t_unicode_code_pt_bit_vector& code_pts, s_mem_arena& arrangement_mem_arena, s_mem_arena& atlas_rgbas_mem_arena, s_mem_arena& temp_mem_arena, s_font_arrangement& o_arrangement, s_array<t_font_atlas_rgba>& o_atlas_rgbas) {
         ZF_ASSERT(height > 0);
-
-        // @todo: Unset bits associated with non-printable characters? Failure needs to be handled in some way...
-
-        const t_size code_pt_cnt = CountSetBits(code_pts);
 
         o_arrangement = {};
 
@@ -125,6 +121,28 @@ namespace zf {
         }
 
         if (!stbtt_InitFont(&stb_font_info, font_file_data.buf_raw, offs)) {
+            return false;
+        }
+
+        // Mask out unsupported code points and while doing that calculate code point count.
+        const t_size code_pt_cnt = [&code_pts, &stb_font_info]() {
+            t_size cnt = 0;
+
+            ZF_FOR_EACH_SET_BIT(code_pts, i) {
+                const auto code_pt = static_cast<t_unicode_code_pt>(i);
+                const t_s32 glyph_index = stbtt_FindGlyphIndex(&stb_font_info, static_cast<t_s32>(code_pt));
+
+                if (glyph_index) {
+                    cnt++;
+                } else {
+                    UnsetBit(code_pts, i);
+                }
+            }
+
+            return cnt;
+        }();
+
+        if (code_pt_cnt == 0) {
             return false;
         }
 
@@ -305,7 +323,7 @@ namespace zf {
         return true;
     }
 
-    t_b8 PackFont(const s_str_rdonly dest_file_path, const s_str_rdonly src_file_path, const t_s32 height, const t_unicode_code_pt_bit_vector& code_pts, s_mem_arena& temp_mem_arena) {
+    t_b8 PackFont(const s_str_rdonly dest_file_path, const s_str_rdonly src_file_path, const t_s32 height, t_unicode_code_pt_bit_vector& code_pts, s_mem_arena& temp_mem_arena) {
         s_font_arrangement arrangement;
         s_array<t_font_atlas_rgba> atlas_rgbas;
 
@@ -399,8 +417,6 @@ namespace zf {
                 continue;
             }
 
-            // @todo: Assert that the code point is printable.
-
             s_font_glyph_info glyph_info;
 
             if (!HashMapGet(font_arrangement.code_pts_to_glyph_infos, chr_info.code_pt, &glyph_info)) {
@@ -412,7 +428,7 @@ namespace zf {
                 t_s32 kerning;
 
                 if (HashMapGet(font_arrangement.code_pt_pairs_to_kernings, {code_pt_last, chr_info.code_pt}, &kerning)) {
-                    chr_pos_pen.x += static_cast<t_f32>(kerning); // @todo: Applying to the pen and thus affecting the positioning of other characters could be incorrect.
+                    chr_pos_pen.x += static_cast<t_f32>(kerning);
                 }
             }
 

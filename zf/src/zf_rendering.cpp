@@ -285,8 +285,6 @@ void main() {
         t_size chr_index = 0;
 
         ZF_WALK_STR(str, chr_info) {
-            // @todo: Assert that the code point is printable or is '\n'.
-
             if (chr_info.code_pt == ' ' || chr_info.code_pt == '\n') {
                 continue;
             }
