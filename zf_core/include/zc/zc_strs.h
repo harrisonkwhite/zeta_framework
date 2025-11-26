@@ -92,6 +92,10 @@ namespace zf {
         return true;
     }
 
+    constexpr t_b8 IsStrEmpty(const s_str_rdonly str) {
+        return IsArrayEmpty(str.bytes);
+    }
+
     t_b8 IsValidUTF8Str(const s_str_rdonly str);
     t_size CalcStrLen(const s_str_rdonly str);
 

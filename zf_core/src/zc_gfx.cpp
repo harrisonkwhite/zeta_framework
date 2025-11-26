@@ -390,20 +390,56 @@ namespace zf {
         return true;
     }
 
-    t_b8 LoadStrChrPositions(const s_str_rdonly str, const s_font_arrangement& font_arrangement, const s_v2<t_f32> pos, s_mem_arena& mem_arena, s_array<s_v2<t_f32>>& o_positions) {
-        ZF_ASSERT(IsValidUTF8Str(str));
+    t_b8 LoadStrChrDrawPositions(const s_str_rdonly str, const s_font_arrangement& font_arrangement, const s_v2<t_f32> pos, const s_v2<t_f32> alignment, s_mem_arena& mem_arena, s_array<s_v2<t_f32>>& o_positions) {
+        ZF_ASSERT(!IsStrEmpty(str) && IsValidUTF8Str(str));
+        ZF_ASSERT(alignment.x >= 0.0f && alignment.y >= 0.0f && alignment.x <= 1.0f && alignment.y <= 1.0f);
+
+        // Calculate some useful string metadata.
+        struct s_str_meta {
+            t_size len;
+            t_size line_cnt;
+        };
+
+        const auto str_meta = [str]() {
+            s_str_meta meta = {
+                .line_cnt = 1
+            };
+
+            ZF_WALK_STR(str, chr_info) {
+                meta.len++;
+
+                if (chr_info.code_pt == '\n') {
+                    meta.line_cnt++;
+                }
+            }
+
+            return meta;
+        }();
 
         // Reserve memory for the character positions.
-        const t_size str_len = CalcStrLen(str);
-
-        if (!MakeArray(mem_arena, str_len, o_positions)) {
+        if (!MakeArray(mem_arena, str_meta.len, o_positions)) {
             return false;
         }
+
+        // From the line count we can determine the vertical alignment offset to apply.
+        const t_f32 alignment_offs_y = static_cast<t_f32>(-(str_meta.line_cnt * font_arrangement.line_height)) * alignment.y;
 
         // Calculate the position of each character.
         t_size chr_index = 0;
         s_v2<t_f32> chr_pos_pen = {}; // The position of the current character.
+        t_size line_begin_chr_index = 0;
+        t_size line_len = 0;
         t_unicode_code_pt code_pt_last;
+
+        const auto apply_hor_alignment_offs = [&]() {
+            if (line_len > 0) {
+                const auto line_width = chr_pos_pen.x;
+
+                for (t_size i = line_begin_chr_index; i < chr_index; i++) {
+                    o_positions[i].x -= line_width * alignment.x;
+                }
+            }
+        };
 
         ZF_WALK_STR(str, chr_info) {
             ZF_DEFER({
@@ -411,9 +447,18 @@ namespace zf {
                 code_pt_last = chr_info.code_pt;
             });
 
+            if (line_len == 0) {
+                line_begin_chr_index = chr_index;
+            }
+
             if (chr_info.code_pt == '\n') {
                 chr_pos_pen.x = 0.0f;
                 chr_pos_pen.y += static_cast<t_f32>(font_arrangement.line_height);
+
+                apply_hor_alignment_offs();
+
+                line_len = 0;
+
                 continue;
             }
 
@@ -433,9 +478,14 @@ namespace zf {
             }
 
             o_positions[chr_index] = pos + chr_pos_pen + static_cast<s_v2<t_f32>>(glyph_info.offs);
+            o_positions[chr_index].y += alignment_offs_y;
 
             chr_pos_pen.x += static_cast<t_f32>(glyph_info.adv);
+
+            line_len++;
         }
+
+        apply_hor_alignment_offs();
 
         return true;
     }

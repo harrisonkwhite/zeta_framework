@@ -275,10 +275,14 @@ void main() {
         Draw(rc, tex.hdl, tex_coords, pos, size, origin, rot, blend);
     }
 
-    t_b8 DrawStr(const s_rendering_context& rc, const s_str_rdonly str, const gfx::s_font_asset& font, const s_v2<t_f32> pos, s_mem_arena& temp_mem_arena) {
+    t_b8 DrawStr(const s_rendering_context& rc, const s_str_rdonly str, const gfx::s_font_asset& font, const s_v2<t_f32> pos, const s_v2<t_f32> alignment, s_mem_arena& temp_mem_arena) {
+        if (IsStrEmpty(str)) {
+            return true;
+        }
+
         s_array<s_v2<t_f32>> chr_positions;
 
-        if (!LoadStrChrPositions(str, font.arrangement, pos, temp_mem_arena, chr_positions)) {
+        if (!LoadStrChrDrawPositions(str, font.arrangement, pos, alignment, temp_mem_arena, chr_positions)) {
             return false;
         }
 
