@@ -387,13 +387,13 @@ namespace zf {
         s_v2<t_f32> chr_pos_pen = {}; // The position of the current character.
         t_unicode_code_pt code_pt_last;
 
-        ZF_ITER_STR(str, byte_index, code_pt) {
+        ZF_WALK_STR(str, chr_info) {
             ZF_DEFER({
                 chr_index++;
-                code_pt_last = code_pt;
+                code_pt_last = chr_info.code_pt;
             });
 
-            if (code_pt == '\n') {
+            if (chr_info.code_pt == '\n') {
                 chr_pos_pen.x = 0.0f;
                 chr_pos_pen.y += static_cast<t_f32>(font_arrangement.line_height);
                 continue;
@@ -403,7 +403,7 @@ namespace zf {
 
             s_font_glyph_info glyph_info;
 
-            if (!HashMapGet(font_arrangement.code_pts_to_glyph_infos, code_pt, &glyph_info)) {
+            if (!HashMapGet(font_arrangement.code_pts_to_glyph_infos, chr_info.code_pt, &glyph_info)) {
                 ZF_LOG_WARNING("Trying to calculate character positions for a string containing unicode code point %u which is not supported by the given font data!", code_pt);
                 continue;
             }
@@ -411,7 +411,7 @@ namespace zf {
             if (chr_index > 0 && font_arrangement.has_kernings) {
                 t_s32 kerning;
 
-                if (HashMapGet(font_arrangement.code_pt_pairs_to_kernings, {code_pt_last, code_pt}, &kerning)) {
+                if (HashMapGet(font_arrangement.code_pt_pairs_to_kernings, {code_pt_last, chr_info.code_pt}, &kerning)) {
                     chr_pos_pen.x += static_cast<t_f32>(kerning); // @todo: Applying to the pen and thus affecting the positioning of other characters could be incorrect.
                 }
             }

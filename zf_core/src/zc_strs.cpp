@@ -343,7 +343,7 @@ namespace zf {
         return len;
     }
 
-    t_b8 WalkStr(const s_str_rdonly str, t_size& byte_index, t_unicode_code_pt& o_code_pt) {
+    t_b8 WalkStr(const s_str_rdonly str, t_size& byte_index, s_str_chr_info& o_chr_info) {
         ZF_ASSERT(IsValidUTF8Str(str));
         ZF_ASSERT(byte_index >= 0 && byte_index <= str.bytes.len);
 
@@ -362,8 +362,12 @@ namespace zf {
                     static_assert(ek_utf8_byte_type_4byte_start - ek_utf8_byte_type_ascii + 1 == 4);
                     const t_size chr_len = byte_type - ek_utf8_byte_type_ascii + 1;
                     const auto chr_bytes = Slice(str.bytes, byte_index, byte_index + chr_len);
-                    o_code_pt = UTF8ChrBytesToCodePoint(chr_bytes);
+                    o_chr_info = {
+                        .code_pt = UTF8ChrBytesToCodePoint(chr_bytes),
+                        .byte_index = byte_index
+                    };
                     byte_index += chr_len;
+
                     return true;
                 }
 
@@ -373,7 +377,7 @@ namespace zf {
         }
     }
 
-    t_b8 WalkStrReverse(const s_str_rdonly str, t_size& byte_index, t_unicode_code_pt& o_code_pt) {
+    t_b8 WalkStrReverse(const s_str_rdonly str, t_size& byte_index, s_str_chr_info& o_chr_info) {
         ZF_ASSERT(IsValidUTF8Str(str));
         ZF_ASSERT(byte_index >= -1 && byte_index < str.bytes.len);
 
@@ -396,7 +400,10 @@ namespace zf {
                     static_assert(ek_utf8_byte_type_4byte_start - ek_utf8_byte_type_ascii + 1 == 4);
                     const t_size chr_len = byte_type - ek_utf8_byte_type_ascii + 1;
                     const auto chr_bytes = Slice(str.bytes, byte_index, byte_index + chr_len);
-                    o_code_pt = UTF8ChrBytesToCodePoint(chr_bytes);
+                    o_chr_info = {
+                        .code_pt = UTF8ChrBytesToCodePoint(chr_bytes),
+                        .byte_index = byte_index
+                    };
                     byte_index--;
                     return true;
                 }
@@ -447,8 +454,8 @@ namespace zf {
     void MarkStrCodePoints(const s_str_rdonly str, t_unicode_code_pt_bit_vector& code_pt_bv) {
         ZF_ASSERT(IsValidUTF8Str(str));
 
-        ZF_ITER_STR(str, byte_index, code_pt) {
-            SetBit(code_pt_bv, code_pt);
+        ZF_WALK_STR(str, chr_info) {
+            SetBit(code_pt_bv, chr_info.code_pt);
         }
     }
 }

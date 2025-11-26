@@ -150,10 +150,10 @@ namespace zf {
 
         t_b8 cur_dir_name_is_empty = true;
 
-        ZF_ITER_STR(path, byte_index, code_pt) {
-            if (code_pt == '/' || code_pt == '\\') {
+        ZF_WALK_STR(path, chr_info) {
+            if (chr_info.code_pt == '/' || chr_info.code_pt == '\\') {
                 if (!cur_dir_name_is_empty) {
-                    if (!create_dir_if_nonexistent({Slice(path.bytes, 0, byte_index)})) {
+                    if (!create_dir_if_nonexistent({Slice(path.bytes, 0, chr_info.byte_index)})) {
                         return false;
                     }
 
@@ -179,9 +179,9 @@ namespace zf {
         }
 
         // Get a substring of all directories and create those.
-        ZF_ITER_STR_REVERSE(path, byte_index, code_pt) {
-            if (code_pt == '/' || code_pt == '\\') {
-                if (!CreateDirectoryAndParents({Slice(path.bytes, 0, byte_index)}, temp_mem_arena, o_dir_creation_res)) {
+        ZF_WALK_STR_REVERSE(path, chr_info) {
+            if (chr_info.code_pt == '/' || chr_info.code_pt == '\\') {
+                if (!CreateDirectoryAndParents({Slice(path.bytes, 0, chr_info.byte_index)}, temp_mem_arena, o_dir_creation_res)) {
                     return false;
                 }
 

@@ -284,16 +284,16 @@ void main() {
 
         t_size chr_index = 0;
 
-        ZF_ITER_STR(str, byte_index, code_pt) {
+        ZF_WALK_STR(str, chr_info) {
             // @todo: Assert that the code point is printable or is '\n'.
 
-            if (code_pt == ' ' || code_pt == '\n') {
+            if (chr_info.code_pt == ' ' || chr_info.code_pt == '\n') {
                 continue;
             }
 
             s_font_glyph_info glyph_info;
 
-            if (!HashMapGet(font.arrangement.code_pts_to_glyph_infos, code_pt, &glyph_info)) {
+            if (!HashMapGet(font.arrangement.code_pts_to_glyph_infos, chr_info.code_pt, &glyph_info)) {
                 ZF_LOG_WARNING("Trying to draw a string containing unicode code point %u which is not supported by the given font asset!", code_pt);
                 continue;
             }
