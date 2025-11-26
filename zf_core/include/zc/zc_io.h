@@ -3,6 +3,7 @@
 #include <cstdio>
 #include <zc/zc_strs.h>
 #include <zc/zc_mem.h>
+#include <zc/zc_math.h>
 
 namespace zf {
     enum e_file_access_mode : t_s32 {
@@ -252,7 +253,12 @@ namespace zf {
 
     t_b8 Print(s_stream& stream, const s_str_rdonly str);
 
-    template<typename tp_type> t_b8 PrintType(s_stream& stream, const tp_type& val);
+    template<typename tp_type>
+    t_b8 PrintType(s_stream& stream, const tp_type& val);
+
+    template<> inline t_b8 PrintType<t_b8>(s_stream& stream, const t_b8& val) {
+        return Print(stream, val ? StrFromRaw("true") : StrFromRaw("false"));
+    }
 
     template<> inline t_b8 PrintType<s_str>(s_stream& stream, const s_str& val) {
         return Print(stream, val);
@@ -260,6 +266,28 @@ namespace zf {
 
     template<> inline t_b8 PrintType<s_str_rdonly>(s_stream& stream, const s_str_rdonly& val) {
         return Print(stream, val);
+    }
+
+    template<c_integral tp_type>
+    t_b8 PrintType(s_stream& stream, const tp_type& val) {
+        s_static_array<t_u8, 20> str_bytes = {}; // Maximum possible number of ASCII characters needed to represent a 64-bit integer.
+        t_size str_bytes_used = 0;
+
+        if (val < 0) {
+            str_bytes[str_bytes_used] = '-';
+            str_bytes_used++;
+        }
+
+        const tp_type dig_cnt = DigitCnt(val);
+
+        for (t_size i = 0; i < dig_cnt; i++) {
+            str_bytes[str_bytes_used + i] = '0' + DigitAt(val, dig_cnt - 1 - i);
+        }
+
+        str_bytes_used += dig_cnt;
+
+        const s_str_rdonly str = {Slice(str_bytes, 0, str_bytes_used)};
+        return Print(stream, str);
     }
 
     inline t_b8 PrintFmt(s_stream& stream, const s_str_rdonly fmt) {

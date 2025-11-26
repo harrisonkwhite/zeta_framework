@@ -19,9 +19,6 @@
 There are a handful of comments marked with "@todo" throughout the codebase that need to be addressed as well.
 
 Fonts, specifically:
-- Clean up string code, split between ASCII and UTF-8.
-- Add kerning support. Also clean up kerning setup code.
-- Add text alignment.
 - Add text colouring, scaling (yes), and rotation.
 - Add function for generating string collider.
 - TEST!

@@ -65,7 +65,23 @@ namespace zf {
     }
 
     template<c_integral tp_type>
-    constexpr tp_type DigitAt(const tp_type n, const t_u32 index) {
+    constexpr t_size DigitCnt(const tp_type n) {
+        if (n < 0) {
+            return DigitCnt(-n);
+        }
+
+        if (n < 10) {
+            return 1;
+        }
+
+        return 1 + DigitCnt(n / 10);
+    }
+
+    // Gives the digit at the given index, where the indexes are from the least significant digit to the most.
+    template<c_integral tp_type>
+    constexpr tp_type DigitAt(const tp_type n, const t_size index) {
+        ZF_ASSERT(index >= 0 && index < DigitCnt(n));
+
         if (n < 0) {
             return DigitAt(-n, index);
         }
@@ -79,19 +95,6 @@ namespace zf {
         }
 
         return DigitAt(n / 10, index - 1);
-    }
-
-    template<c_integral tp_type>
-    constexpr t_s32 DigitCnt(const tp_type n) {
-        if (n < 0) {
-            return DigitCnt(-n);
-        }
-
-        if (n < 10) {
-            return 1;
-        }
-
-        return 1 + DigitCnt(n / 10);
     }
 
     template<c_floating_point tp_type>
