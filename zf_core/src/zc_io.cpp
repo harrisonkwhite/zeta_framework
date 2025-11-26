@@ -9,8 +9,8 @@
 #endif
 
 namespace zf {
-    t_b8 OpenFile(const s_str_ascii_rdonly file_path, const e_file_access_mode mode, s_stream& o_fs) {
-        ZF_ASSERT(IsStrTerminated(file_path));
+    t_b8 OpenFile(const s_str_utf8_rdonly file_path, const e_file_access_mode mode, s_stream& o_fs) {
+        ZF_ASSERT(IsStrTerminatedOnlyAtEnd(file_path));
 
         o_fs = {
             .type = ek_stream_type_file
@@ -56,8 +56,8 @@ namespace zf {
         return static_cast<t_size>(file_size);
     }
 
-    t_b8 LoadFileContents(s_mem_arena& mem_arena, const s_str_ascii_rdonly file_path, s_array<t_u8>& o_contents, const t_b8 include_terminating_byte) {
-        ZF_ASSERT(IsStrTerminated(file_path));
+    t_b8 LoadFileContents(s_mem_arena& mem_arena, const s_str_utf8_rdonly file_path, s_array<t_u8>& o_contents, const t_b8 include_terminating_byte) {
+        ZF_ASSERT(IsStrTerminatedOnlyAtEnd(file_path));
 
         s_stream fs;
 
@@ -80,8 +80,8 @@ namespace zf {
         return true;
     }
 
-    t_b8 CreateDirectory(const s_str_ascii_rdonly path) {
-        ZF_ASSERT(IsStrTerminated(path));
+    e_directory_creation_result CreateDirectory(const s_str_utf8_rdonly path) {
+        ZF_ASSERT(IsStrTerminatedAnywhere(path));
 
 #ifdef ZF_PLATFORM_WINDOWS
         const t_s32 res = _mkdir(StrRaw(path));
@@ -89,114 +89,109 @@ namespace zf {
         const t_s32 res = mkdir(StrRaw(path), 0755);
 #endif
 
-        return res == 0;
-
-#if 0
         if (res == 0) {
-            return ec_directory_creation_result::success;
+            return ek_directory_creation_result_success;
         }
 
         switch (errno) {
             case EEXIST:
-                return ec_directory_creation_result::already_exists;
+                return ek_directory_creation_result_already_exists;
 
             case EACCES:
             case EPERM:
-                return ec_directory_creation_result::permission_denied;
+                return ek_directory_creation_result_permission_denied;
 
             case ENOENT:
-                return ec_directory_creation_result::path_not_found;
+                return ek_directory_creation_result_path_not_found;
 
             default:
-                return ec_directory_creation_result::unknown_err;
+                return ek_directory_creation_result_unknown_err;
         }
-#endif
     }
 
-    t_b8 CreateDirectoryAndParents(const s_str_ascii_rdonly path, s_mem_arena& temp_mem_arena) {
-        ZF_ASSERT(IsStrTerminated(path));
+    t_b8 CreateDirectoryAndParents(const s_str_utf8_rdonly path, s_mem_arena& temp_mem_arena, e_directory_creation_result& o_dir_creation_res) {
+        ZF_ASSERT(IsStrTerminatedOnlyAtEnd(path));
 
-        // @speed: Ideally we'd start at the end of the path and move back.
+        o_dir_creation_res = ek_directory_creation_result_success;
 
-        s_str_ascii path_clone; // @speed: A clone on every call to this? Yuck!
+        s_str_utf8 path_clone; // We need this to temporarily insert terminators at different points to make subpaths.
 
-        if (!MakeArrayClone(temp_mem_arena, path.chrs, path_clone.chrs)) {
+        if (!MakeArrayClone(temp_mem_arena, path.bytes, path_clone.bytes)) {
             return false;
         }
 
         t_b8 cur_dir_name_is_empty = true;
 
-        t_size i = 0;
-
-        while (true) {
-            if (path_clone.chrs[i] == '/' || path_clone.chrs[i] == '\\' || !path_clone.chrs[i]) {
+        ZF_ITER_STR_EXT(path, byte_index, code_pt, false) {
+            if (code_pt == '/' || code_pt == '\\' || !code_pt) {
                 if (!cur_dir_name_is_empty) {
-                    const char temp = path_clone.chrs[i];
-
-                    path_clone.chrs[i] = '\0'; // Temporarily cut the string off here to form the subpath.
+                    path_clone.bytes[byte_index] = '\0'; // Temporarily cut the string off here to form the subpath.
 
                     if (CheckPathType(path_clone) == ek_path_type_not_found) {
-                        if (!CreateDirectory(path_clone)) {
+                        o_dir_creation_res = CreateDirectory(path_clone);
+
+                        if (o_dir_creation_res != ek_directory_creation_result_success) {
                             return false;
                         }
                     }
 
-                    path_clone.chrs[i] = temp;
+                    path_clone.bytes[byte_index] = path.bytes[byte_index];
 
                     cur_dir_name_is_empty = true;
                 }
 
-                if (!path_clone.chrs[i]) {
+                if (!code_pt) {
                     break;
                 }
             } else {
                 cur_dir_name_is_empty = false;
             }
-
-            i++;
         }
 
         return true;
     }
 
-    t_b8 CreateFileAndParentDirs(const s_str_ascii_rdonly path, s_mem_arena& temp_mem_arena) {
-        ZF_ASSERT(IsStrTerminated(path));
+    t_b8 CreateFileAndParentDirs(const s_str_utf8_rdonly path, s_mem_arena& temp_mem_arena, e_directory_creation_result& o_dir_creation_res) {
+        ZF_ASSERT(IsStrTerminatedOnlyAtEnd(path));
 
-        const t_size path_len = CalcStrLen(path);
-        const auto path_relevant = Slice(path.chrs, 0, path_len + 1);
+        o_dir_creation_res = ek_directory_creation_result_success;
 
-        s_str_ascii path_clone; // @speed: A clone on every call to this? Yuck!
+        // Get a substring of all directories and create those.
+        s_str_utf8 path_clone;
 
-        if (!MakeArrayClone(temp_mem_arena, path_relevant, path_clone.chrs)) {
+        if (!MakeArrayClone(temp_mem_arena, path.bytes, path_clone.bytes)) {
             return false;
         }
 
-        for (t_size i = path_len - 1; i >= 0; i--) {
-            if (path_clone.chrs[i] == '/' || path_clone.chrs[i] == '\\') {
-                if (i > 0) {
-                    path_clone.chrs[i] = '\0';
+        ZF_ITER_STR_REVERSE(path, code_pt, byte_index) {
+            if (code_pt == '/' || code_pt == '\\') {
+                path_clone.bytes[byte_index] = '\0'; // Temporarily cut it off to get substring of parent directories.
 
-                    if (!CreateDirectoryAndParents(path_clone, temp_mem_arena)) {
-                        return false;
-                    }
-                }
-
-                s_stream fs;
-
-                if (!OpenFile(path, ek_file_access_mode_write, fs)) {
+                if (!CreateDirectoryAndParents({Slice(path_clone.bytes, 0, byte_index + 1)}, temp_mem_arena, o_dir_creation_res)) {
                     return false;
                 }
 
-                CloseFile(fs);
+                path_clone.bytes[byte_index] = path.bytes[byte_index];
 
                 break;
             }
         }
 
+        // Now that directories are created, create the file.
+        s_stream fs;
+
+        if (!OpenFile(path, ek_file_access_mode_write, fs)) {
+            return false;
+        }
+
+        CloseFile(fs);
+
         return true;
     }
 
-    e_path_type CheckPathType(const s_str_ascii_rdonly path) {
+    e_path_type CheckPathType(const s_str_utf8_rdonly path) {
+        ZF_ASSERT(IsStrTerminatedAnywhere(path));
+
         struct stat info;
 
         if (stat(StrRaw(path), &info) != 0) {

@@ -78,7 +78,7 @@ namespace zf {
     }};
 
     t_b8 RunPacker(const s_str_ascii_rdonly instrs_json_file_path) {
-        ZF_ASSERT(IsStrTerminated(instrs_json_file_path));
+        ZF_ASSERT(IsStrTerminatedOnlyAtEnd(instrs_json_file_path));
 
         zf::s_mem_arena mem_arena;
 

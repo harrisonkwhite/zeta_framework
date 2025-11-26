@@ -70,7 +70,7 @@ namespace zf {
         return IsArrayEmpty(str.bytes) || !str.bytes[0];
     }
 
-    constexpr t_b8 IsStrTerminated(const s_str_utf8_rdonly str) {
+    constexpr t_b8 IsStrTerminatedAnywhere(const s_str_utf8_rdonly str) {
         // The terminator is most likely at the end, so we start there.
         for (t_size i = str.bytes.len - 1; i >= 0; i--) {
             if (!str.bytes[i]) {
@@ -81,14 +81,33 @@ namespace zf {
         return false;
     }
 
+    constexpr t_b8 IsStrTerminatedOnlyAtEnd(const s_str_utf8_rdonly str) {
+        if (IsArrayEmpty(str.bytes)) {
+            return false;
+        }
+
+        for (t_size i = 0; i < str.bytes.len - 1; i++) {
+            if (!str.bytes[i]) {
+                return false;
+            }
+        }
+
+        return str.bytes[str.bytes.len - 1] == '\0';
+    }
+
     t_b8 IsValidUTF8Str(const s_str_utf8_rdonly str);
-    [[nodiscard]] t_b8 CalcStrLen(const s_str_utf8_rdonly str, t_size& o_len); // Returns false iff the provided string is not valid UTF-8 form. Works with either terminated or non-terminated strings.
-    t_size CalcStrLenFastButUnsafe(const s_str_utf8_rdonly str); // This (in release mode) DOES NOT check whether the string is in valid UTF-8 form!
-    t_b8 WalkStr(const s_str_utf8_rdonly str, t_size& pos, t_unicode_code_pt& o_code_pt); // Returns false iff the walk is complete.
+    t_size CalcStrLen(const s_str_utf8_rdonly str);
+    [[nodiscard]] t_b8 CalcStrLenAndCheckValidity(const s_str_utf8_rdonly str, t_size& o_len); // Returns false iff the provided string is not valid UTF-8 form.
+    t_b8 WalkStr(const s_str_utf8_rdonly str, t_size& byte_index, t_unicode_code_pt& o_code_pt); // Returns false iff the walk has ended.
+    t_b8 WalkStrReverse(const s_str_utf8_rdonly str, t_size& byte_index, t_unicode_code_pt& o_code_pt); // Returns false iff the walk has ended. For a full walk, byte index has to be initialised to the index of ANY BYTE in the last character.
     t_unicode_code_pt UTF8ChrBytesToCodePoint(const s_array_rdonly<t_u8> bytes); // Only accepts bytes representing a unicode code point in an array with a length in [1, 4].
     void MarkStrCodePoints(const s_str_utf8_rdonly str, t_unicode_code_pt_bit_vector& code_pt_bv); // Sets the bits associated with each unicode code point that appear in the input string.
 
-#define ZF_ITER_UTF8_STR(str, code_pt) \
-    for (t_size ZF_CONCAT(p_pos_l, __LINE__) = 0; ZF_CONCAT(p_pos_l, __LINE__) != -1; ZF_CONCAT(p_pos_l, __LINE__) = -1) \
-        for (t_unicode_code_pt code_pt; WalkStr(str, ZF_CONCAT(p_pos_l, __LINE__), code_pt); )
+#define ZF_ITER_STR(str, byte_index, code_pt) \
+    for (t_size byte_index = 0; byte_index != -1; byte_index = -1) \
+        for (t_unicode_code_pt code_pt; WalkStr(str, byte_index, code_pt); )
+
+#define ZF_ITER_STR_REVERSE(str, byte_index, code_pt) \
+    for (t_size byte_index = str.bytes.len - 1; byte_index != str.bytes.len; byte_index = str.bytes.len) \
+        for (t_unicode_code_pt code_pt; WalkStrReverse(str, byte_index, code_pt); )
 }

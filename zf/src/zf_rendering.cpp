@@ -16,7 +16,7 @@ namespace zf {
 #endif
     };
 
-    static constexpr s_str_ascii_rdonly g_batch_vert_shader_src = R"(#version 460 core
+    static s_str_utf8_rdonly g_batch_vert_shader_src = StrFromRawTerminated(R"(#version 460 core
 
 layout (location = 0) in vec2 a_vert;
 layout (location = 1) in vec2 a_pos;
@@ -46,9 +46,9 @@ void main() {
     v_tex_coord = a_tex_coord;
     v_blend = a_blend;
 }
-)";
+)");
 
-    static constexpr s_str_ascii_rdonly g_batch_frag_shader_src = R"(#version 460 core
+    static s_str_utf8_rdonly g_batch_frag_shader_src = StrFromRawTerminated(R"(#version 460 core
 
 in vec2 v_tex_coord;
 in vec4 v_blend;
@@ -61,7 +61,7 @@ void main() {
     vec4 tex_color = texture(u_tex, v_tex_coord);
     o_frag_color = tex_color * v_blend;
 }
-)";
+)");
 
     static gfx::s_resource_handle MakeBatchMesh(gfx::s_resource_arena& gfx_res_arena, s_mem_arena& temp_mem_arena) {
         static constexpr t_size g_verts_len = g_batch_vert_component_cnt * g_batch_slot_vert_cnt * g_batch_slot_cnt;
@@ -284,7 +284,7 @@ void main() {
 
         t_size chr_index = 0;
 
-        ZF_ITER_UTF8_STR(str, code_pt) {
+        ZF_ITER_STR(str, byte_index, code_pt) {
             if (code_pt == ' ' || code_pt == '\n') {
                 continue;
             }

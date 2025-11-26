@@ -20,7 +20,7 @@ namespace zf {
     };
 
     t_b8 LoadRGBATextureDataFromRaw(const s_str_ascii_rdonly file_path, s_mem_arena& mem_arena, s_rgba_texture_data& o_tex_data) {
-        ZF_ASSERT(IsStrTerminated(file_path));
+        ZF_ASSERT(IsStrTerminatedOnlyAtEnd(file_path));
 
         t_u8* const stb_px_data = stbi_load(StrRaw(file_path), &o_tex_data.size_in_pxs.x, &o_tex_data.size_in_pxs.y, nullptr, 4);
 
@@ -42,8 +42,8 @@ namespace zf {
     }
 
     t_b8 PackTexture(const s_str_ascii_rdonly dest_file_path, const s_str_ascii_rdonly src_file_path, s_mem_arena& temp_mem_arena) {
-        ZF_ASSERT(IsStrTerminated(src_file_path));
-        ZF_ASSERT(IsStrTerminated(dest_file_path));
+        ZF_ASSERT(IsStrTerminatedOnlyAtEnd(src_file_path));
+        ZF_ASSERT(IsStrTerminatedOnlyAtEnd(dest_file_path));
 
         s_rgba_texture_data tex_data;
 
@@ -75,7 +75,7 @@ namespace zf {
     }
 
     t_b8 UnpackTexture(const s_str_ascii_rdonly file_path, s_mem_arena& mem_arena, s_rgba_texture_data& o_tex_data) {
-        ZF_ASSERT(IsStrTerminated(file_path));
+        ZF_ASSERT(IsStrTerminatedOnlyAtEnd(file_path));
 
         s_stream fs;
 
@@ -101,7 +101,7 @@ namespace zf {
     }
 
     t_b8 LoadFontFromRaw(const s_str_ascii_rdonly file_path, const t_s32 height, const t_unicode_code_pt_bit_vector& code_pts, s_mem_arena& arrangement_mem_arena, s_mem_arena& atlas_rgbas_mem_arena, s_mem_arena& temp_mem_arena, s_font_arrangement& o_arrangement, s_array<t_font_atlas_rgba>& o_atlas_rgbas) {
-        ZF_ASSERT(IsStrTerminated(file_path));
+        ZF_ASSERT(IsStrTerminatedOnlyAtEnd(file_path));
         ZF_ASSERT(height > 0);
 
         const t_size code_pt_cnt = CountSetBits(code_pts);
@@ -297,8 +297,8 @@ namespace zf {
     }
 
     t_b8 PackFont(const s_str_ascii_rdonly dest_file_path, const s_str_ascii_rdonly src_file_path, const t_s32 height, const t_unicode_code_pt_bit_vector& code_pts, s_mem_arena& temp_mem_arena) {
-        ZF_ASSERT(IsStrTerminated(dest_file_path));
-        ZF_ASSERT(IsStrTerminated(src_file_path));
+        ZF_ASSERT(IsStrTerminatedOnlyAtEnd(dest_file_path));
+        ZF_ASSERT(IsStrTerminatedOnlyAtEnd(src_file_path));
 
         s_font_arrangement arrangement;
         s_array<t_font_atlas_rgba> atlas_rgbas;
@@ -339,7 +339,7 @@ namespace zf {
     }
 
     t_b8 UnpackFont(const s_str_ascii_rdonly file_path, s_mem_arena& arrangement_mem_arena, s_mem_arena& atlas_rgbas_mem_arena, s_font_arrangement& o_arrangement, s_array<t_font_atlas_rgba>& o_atlas_rgbas) {
-        ZF_ASSERT(IsStrTerminated(file_path));
+        ZF_ASSERT(IsStrTerminatedOnlyAtEnd(file_path));
 
         s_stream fs;
 
@@ -372,7 +372,7 @@ namespace zf {
         ZF_ASSERT(IsValidUTF8Str(str));
 
         // Reserve memory for the character positions.
-        const t_size str_len = CalcStrLenFastButUnsafe(str);
+        const t_size str_len = CalcStrLen(str);
 
         if (!MakeArray(mem_arena, str_len, o_positions)) {
             return false;
@@ -382,7 +382,7 @@ namespace zf {
         t_size pos_index = 0;
         s_v2<t_f32> chr_pos_pen = {}; // The position of the current character.
 
-        ZF_ITER_UTF8_STR(str, code_pt) {
+        ZF_UTF8_STR(str, code_pt) {
             if (code_pt == '\n') {
                 chr_pos_pen.x = 0.0f;
                 chr_pos_pen.y += static_cast<t_f32>(font_arrangement.line_height);
