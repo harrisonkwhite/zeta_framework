@@ -221,7 +221,7 @@ namespace zf {
         return true;
     }
 
-    void Print(const s_str_rdonly str) {
-        fwrite(str.bytes.buf_raw, 1, static_cast<size_t>(str.bytes.len), stdout);
+    t_b8 Print(s_stream& stream, const s_str_rdonly str) {
+        return StreamWriteItemsOfArray(stream, str.bytes);
     }
 }

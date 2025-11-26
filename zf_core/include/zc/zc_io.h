@@ -38,6 +38,30 @@ namespace zf {
         } type_data;
     };
 
+    inline s_stream StdIn() {
+        return {
+            .mode = ek_stream_mode_read,
+            .type = ek_stream_type_file,
+            .type_data = {.file = {.fs_raw = stdin}}
+        };
+    }
+
+    inline s_stream StdOut() {
+        return {
+            .mode = ek_stream_mode_write,
+            .type = ek_stream_type_file,
+            .type_data = {.file = {.fs_raw = stdout}}
+        };
+    }
+
+    inline s_stream StdError() {
+        return {
+            .mode = ek_stream_mode_write,
+            .type = ek_stream_type_file,
+            .type_data = {.file = {.fs_raw = stderr}}
+        };
+    }
+
     template<typename tp_type>
     [[nodiscard]] t_b8 StreamReadItem(s_stream& stream, tp_type& o_item) {
         ZF_ASSERT(stream.mode == ek_stream_mode_read);
@@ -226,30 +250,27 @@ namespace zf {
 
     [[nodiscard]] t_b8 CheckPathType(const s_str_rdonly path, s_mem_arena& temp_mem_arena, e_path_type& o_type);
 
-    void Print(const s_str_rdonly str);
+    t_b8 Print(s_stream& stream, const s_str_rdonly str);
 
-    template<typename tp_type> void PrintType(const tp_type& val);
+    template<typename tp_type> t_b8 PrintType(s_stream& stream, const tp_type& val);
 
-    template<> inline void PrintType<s_str>(const s_str& val) {
-        Print(val);
+    template<> inline t_b8 PrintType<s_str>(s_stream& stream, const s_str& val) {
+        return Print(stream, val);
     }
 
-    template<> inline void PrintType<s_str_rdonly>(const s_str_rdonly& val) {
-        Print(val);
+    template<> inline t_b8 PrintType<s_str_rdonly>(s_stream& stream, const s_str_rdonly& val) {
+        return Print(stream, val);
     }
 
-    template<> inline void PrintType<t_s32>(const t_s32& val) {
-        Print(StrFromRaw("<int>"));
-    }
-
-    inline void PrintFmt(const s_str_rdonly fmt) {
+    inline t_b8 PrintFmt(s_stream& stream, const s_str_rdonly fmt) {
         // Just print the rest of the string.
-        Print(fmt);
+        return Print(stream, fmt);
     }
 
     // Use a single '%' as the format specifier - the type is inferred. To actually include a '%' in the output, write '%%'.
+    // Returns true iff the operation was successful (this does not include the case of having too many arguments or too many format specifiers).
     template<typename tp_arg, typename... tp_args_leftover>
-    void PrintFmt(const s_str_rdonly fmt, tp_arg arg, tp_args_leftover... args_leftover) {
+    t_b8 PrintFmt(s_stream& stream, const s_str_rdonly fmt, tp_arg arg, tp_args_leftover... args_leftover) {
         constexpr t_unicode_code_pt fmt_spec = '%';
         constexpr t_size fmt_spec_byte_cnt = UnicodeCodePointToByteCnt(fmt_spec);
 
@@ -266,23 +287,35 @@ namespace zf {
             byte_cnt += UnicodeCodePointToByteCnt(chr_info.code_pt);
         }
 
-        // Print the bytes.
-        fwrite(fmt.bytes.buf_raw, 1, static_cast<size_t>(byte_cnt), stdout);
+        const t_b8 fmt_spec_is_duped = fmt_spec_found && byte_cnt < fmt.bytes.len && StrChrAtByte(fmt, byte_cnt + fmt_spec_byte_cnt) == fmt_spec;
 
-        // Handle format specifier case.
+        if (fmt_spec_is_duped) {
+            // Actually include the format specifier in the print.
+            byte_cnt += fmt_spec_byte_cnt;
+        }
+
+        // Print the bytes.
+        const auto bytes_to_print = Slice(fmt.bytes, 0, byte_cnt);
+
+        if (!StreamWriteItemsOfArray(stream, bytes_to_print)) {
+            return false;
+        }
+
+        // Handle leftovers.
         if (fmt_spec_found) {
             const s_str_rdonly fmt_leftover = {Slice(fmt.bytes, byte_cnt + fmt_spec_byte_cnt, fmt.bytes.len)}; // The substring of everything after the format specifier.
 
-            if (!IsStrEmpty(fmt_leftover) && StrChrAtByte(fmt_leftover, 0) == fmt_spec) {
-                // The leftover substring begins with a format specifier, meaning that there have been two consecutives ones. So output the format specifier and recurse on the substring EXCLUDING the second format specifier, not dropping any arguments.
-                fwrite(fmt_leftover.bytes.buf_raw, 1, 1, stdout);
-
-                const s_str_rdonly fmt_leftover_after_spec = {Slice(fmt_leftover.bytes, fmt_spec_byte_cnt, fmt_leftover.bytes.len)};
-                PrintFmt(fmt_leftover_after_spec, arg, args_leftover...);
+            if (fmt_spec_is_duped) {
+                return PrintFmt(stream, fmt_leftover, arg, args_leftover...);
             } else {
-                PrintType(arg);
-                PrintFmt(fmt_leftover, args_leftover...);
+                if (!PrintType(stream, arg)) {
+                    return false;
+                }
+
+                return PrintFmt(stream, fmt_leftover, args_leftover...);
             }
         }
+
+        return true;
     }
 }
