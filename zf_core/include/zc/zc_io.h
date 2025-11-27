@@ -262,21 +262,23 @@ namespace zf {
     // ============================================================
     t_b8 Print(s_stream& stream, const s_str_rdonly str);
 
-    //template<typename tp_type>
-    t_b8 PrintType(s_stream& stream, const tp_type& val);
-
     // ========================================
     // @subsection: Bool Printing
     // ========================================
     struct s_bool_fmt {
+        using t_fmt_tag = void;
         t_b8 val;
     };
 
-    inline s_bool_fmt Format(const t_b8 val) {
+    inline s_bool_fmt FormatBool(const t_b8 val) {
         return {val};
     }
 
-    template<> inline t_b8 PrintType<s_bool_fmt>(s_stream& stream, const s_bool_fmt& fmt) {
+    inline s_bool_fmt FormatType(const t_b8 val) {
+        return FormatBool(val);
+    }
+
+    inline t_b8 PrintType(s_stream& stream, const s_bool_fmt& fmt) {
         return Print(stream, fmt.val ? StrFromRaw("true") : StrFromRaw("false"));
     }
 
@@ -284,14 +286,19 @@ namespace zf {
     // @subsection: String Printing
     // ========================================
     struct s_str_fmt {
+        using t_fmt_tag = void;
         s_str_rdonly val;
     };
 
-    inline s_str_fmt Format(const s_str_rdonly val) {
+    inline s_str_fmt FormatStr(const s_str_rdonly val) {
         return {val};
     }
 
-    template<> inline t_b8 PrintType<s_str_fmt>(s_stream& stream, const s_str_fmt& fmt) {
+    inline s_str_fmt FormatType(const s_str_rdonly val) {
+        return FormatStr(val);
+    }
+
+    inline t_b8 PrintType(s_stream& stream, const s_str_fmt& fmt) {
         return Print(stream, fmt.val);
     }
 
@@ -300,12 +307,18 @@ namespace zf {
     // ========================================
     template<c_integral tp_type>
     struct s_integral_fmt {
+        using t_fmt_tag = void;
         tp_type val;
     };
 
     template<c_integral tp_type>
-    s_integral_fmt<tp_type> Format(const tp_type val) {
+    s_integral_fmt<tp_type> FormatInt(const tp_type val) {
         return {val};
+    }
+
+    template<c_integral tp_type>
+    s_integral_fmt<tp_type> FormatType(const tp_type val) {
+        return FormatInt(val);
     }
 
     template<c_integral tp_type>
@@ -335,13 +348,20 @@ namespace zf {
     // ========================================
     template<c_floating_point tp_type>
     struct s_float_fmt {
+        using t_fmt_tag = void;
+
         tp_type val;
         t_b8 trim_trailing_zeros;
     };
 
     template<c_floating_point tp_type>
-    s_float_fmt<tp_type> Format(const tp_type val, const t_b8 trim_trailing_zeros = false) {
+    s_float_fmt<tp_type> FormatFloat(const tp_type val, const t_b8 trim_trailing_zeros = false) {
         return {val, trim_trailing_zeros};
+    }
+
+    template<c_floating_point tp_type>
+    s_float_fmt<tp_type> FormatType(const tp_type val) {
+        return FormatFloat(val);
     }
 
     template<c_floating_point tp_type>
@@ -380,13 +400,20 @@ namespace zf {
     // ========================================
     template<c_unsigned_integral tp_type>
     struct s_hex_fmt {
+        using t_fmt_tag = void;
+
         tp_type val;
         t_b8 omit_prefix;
     };
 
     template<c_unsigned_integral tp_type>
-    s_hex_fmt<tp_type> Format(const tp_type val, const t_b8 omit_prefix = false) {
+    s_hex_fmt<tp_type> FormatHex(const tp_type val, const t_b8 omit_prefix = false) {
         return {val, omit_prefix};
+    }
+
+    template<c_unsigned_integral tp_type>
+    s_hex_fmt<tp_type> FormatType(const tp_type val) {
+        return FormatHex(val);
     }
 
     template<c_unsigned_integral tp_type>
@@ -430,44 +457,54 @@ namespace zf {
     // ========================================
     template<c_integral tp_type>
     struct s_v2_int_fmt {
+        using t_fmt_tag = void;
         s_v2<tp_type> val;
     };
 
     template<c_floating_point tp_type>
     struct s_v2_float_fmt {
+        using t_fmt_tag = void;
+
         s_v2<tp_type> val;
         t_b8 trim_trailing_zeros;
     };
 
     template<c_integral tp_type>
-    s_v2_int_fmt<tp_type> Format(const s_v2<tp_type> val) {
+    s_v2_int_fmt<tp_type> FormatV2(const s_v2<tp_type> val) {
         return {val};
     }
 
+    template<c_integral tp_type>
+    s_v2_int_fmt<tp_type> FormatType(const s_v2<tp_type> val) {
+        return FormatV2(val);
+    }
+
     template<c_floating_point tp_type>
-    s_v2_float_fmt<tp_type> Format(const s_v2<tp_type> val, const t_b8 trim_trailing_zeros = false) {
+    s_v2_float_fmt<tp_type> FormatV2(const s_v2<tp_type> val, const t_b8 trim_trailing_zeros = false) {
         return {val, trim_trailing_zeros};
+    }
+
+    template<c_floating_point tp_type>
+    s_v2_float_fmt<tp_type> FormatType(const s_v2<tp_type> val) {
+        return FormatV2(val);
     }
 
     template<c_integral tp_type>
     t_b8 PrintType(s_stream& stream, const s_v2_int_fmt<tp_type>& fmt) {
         return Print(stream, "(")
-            && PrintType(stream, Format(fmt.val.x))
+            && PrintType(stream, FormatInt(fmt.val.x))
             && Print(stream, ", ")
-            && PrintType(stream, Format(fmt.val.y))
+            && PrintType(stream, FormatInt(fmt.val.y))
             && Print(stream, ")");
     }
 
     template<c_floating_point tp_type>
     t_b8 PrintType(s_stream& stream, const s_v2_float_fmt<tp_type>& fmt) {
-        return true;
-#if 0
         return Print(stream, "(")
-            && PrintType(stream, Format(fmt.val.x, fmt.trim_trailing_zeros))
+            && PrintType(stream, FormatFloat(fmt.val.x, fmt.trim_trailing_zeros))
             && Print(stream, ", ")
-            && PrintType(stream, Format(fmt.val.y, fmt.trim_trailing_zeros))
+            && PrintType(stream, FormatFloat(fmt.val.y, fmt.trim_trailing_zeros))
             && Print(stream, ")");
-#endif
     }
 
     // ========================================
@@ -497,9 +534,17 @@ namespace zf {
     }
 
     template<typename tp_type>
-    concept c_test = requires(s_stream& stream, const tp_type& v) {
-        PrintType(stream, v);
+    concept c_fmt = requires {
+        typename tp_type::t_fmt_tag;
     };
+
+    template<typename tp_type>
+    concept c_formattable = requires(tp_type val) {
+        { FormatType(val) } -> c_fmt;
+    };
+
+    template<typename tp_type>
+    concept c_print_fmt_arg = c_fmt<tp_type> || c_formattable<tp_type>;
 
     inline t_b8 PrintFormat(s_stream& stream, const s_str_rdonly fmt) {
         ZF_ASSERT_MSG(CountFormatSpecifiers(fmt) == 0, "More format specifiers than arguments provided!");
@@ -510,7 +555,7 @@ namespace zf {
 
     // Use a single '%' as the format specifier - the type is inferred. To actually include a '%' in the output, write '%%'.
     // Returns true iff the operation was successful (this does not include the case of having too many arguments or too many format specifiers).
-    template<typename tp_arg, typename... tp_args_leftover>
+    template<c_print_fmt_arg tp_arg, c_print_fmt_arg... tp_args_leftover>
     t_b8 PrintFormat(s_stream& stream, const s_str_rdonly fmt, tp_arg arg, tp_args_leftover... args_leftover) {
         ZF_ASSERT_MSG(CountFormatSpecifiers(fmt) == 1 + sizeof...(args_leftover), "Mismatch between format specifier count and argument count!");
 
@@ -550,12 +595,12 @@ namespace zf {
             if (fmt_spec_is_duped) {
                 return PrintFormat(stream, fmt_leftover, arg, args_leftover...);
             } else {
-                if constexpr (c_test<tp_arg>) {
+                if constexpr (c_fmt<tp_arg>) {
                     if (!PrintType(stream, arg)) {
                         return false;
                     }
                 } else {
-                    if (!PrintType(stream, Format(arg))) {
+                    if (!PrintType(stream, FormatType(arg))) {
                         return false;
                     }
                 }
