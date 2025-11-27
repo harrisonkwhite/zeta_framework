@@ -14,12 +14,6 @@ namespace zf {
             //
             // Initialisation
             //
-            s_static_array<t_s32, 4> arr = {
-                {4, 1, 2, 1}
-            };
-
-            Log("%", FormatArray(arr));
-
             ConfigErrorOutput();
 
             InitRNG();

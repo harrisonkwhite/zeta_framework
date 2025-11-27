@@ -91,7 +91,7 @@ namespace zf {
             s_array<t_u8> instrs_json_file_contents;
 
             if (!LoadFileContents(instrs_json_file_path, mem_arena, mem_arena, instrs_json_file_contents)) {
-                LogError("Failed to load packing instructions JSON file \"%\"!", FormatStr(instrs_json_file_path));
+                LogError("Failed to load packing instructions JSON file \"%\"!", instrs_json_file_path);
                 return nullptr;
             }
 
@@ -133,7 +133,7 @@ namespace zf {
             cJSON* const cj_assets = cJSON_GetObjectItemCaseSensitive(cj, StrRaw(asset_type_arr_name_terminated));
 
             if (!cJSON_IsArray(cj_assets)) {
-                LogError("Packing instructions JSON \"%\" array does not exist or it is of the wrong type!", FormatStr(asset_type_arr_name));
+                LogError("Packing instructions JSON \"%\" array does not exist or it is of the wrong type!", asset_type_arr_name);
                 return false;
             }
 
@@ -192,7 +192,7 @@ namespace zf {
                             continue;
                         }
 
-                        LogError("A packing instructions JSON \"%\" entry is missing required field \"%\"!", FormatStr(asset_type_arr_name), FormatStr(field_name));
+                        LogError("A packing instructions JSON \"%\" entry is missing required field \"%\"!", asset_type_arr_name, field_name);
                         return false;
                     }
 
@@ -209,7 +209,7 @@ namespace zf {
                     }();
 
                     if (!is_valid) {
-                        LogError("A packing instructions JSON \"%\" entry has field \"%\" as the wrong type! Expected a %.", FormatStr(asset_type_arr_name), FormatStr(field_name), FormatStr(g_asset_field_type_names[fields[fi].type]));
+                        LogError("A packing instructions JSON \"%\" entry has field \"%\" as the wrong type! Expected a %.", asset_type_arr_name, field_name, g_asset_field_type_names[fields[fi].type]);
                         return false;
                     }
                 }
@@ -221,7 +221,7 @@ namespace zf {
                             const auto src_fp = StrFromRaw(field_vals[ek_tex_field_src_file_path]->valuestring);
 
                             if (!PackTexture(dest_fp, src_fp, mem_arena)) {
-                                LogError("Failed to pack texture \"%\" to \"%\"!", FormatStr(src_fp), FormatStr(dest_fp));
+                                LogError("Failed to pack texture \"%\" to \"%\"!", src_fp, dest_fp);
                                 return false;
                             }
                         }
@@ -251,7 +251,7 @@ namespace zf {
                                 s_array<t_u8> extra_chrs_file_contents;
 
                                 if (!LoadFileContents(extra_chrs_fp, mem_arena, mem_arena, extra_chrs_file_contents)) {
-                                    LogError("Failed to load extra characters file \"%\" for font \"%\"!", FormatStr(extra_chrs_fp), FormatStr(src_fp));
+                                    LogError("Failed to load extra characters file \"%\" for font \"%\"!", extra_chrs_fp, src_fp);
                                     return false;
                                 }
 
@@ -259,7 +259,7 @@ namespace zf {
                             }
 
                             if (!PackFont(dest_fp, src_fp, height, *code_pts, mem_arena)) {
-                                LogError("Failed to pack font \"%\" to \"%\"!", FormatStr(src_fp), FormatStr(dest_fp));
+                                LogError("Failed to pack font \"%\" to \"%\"!", src_fp, dest_fp);
                                 return false;
                             }
                         }
@@ -272,7 +272,7 @@ namespace zf {
                             const auto src_fp = StrFromRaw(field_vals[ek_snd_field_src_file_path]->valuestring);
 
                             if (!PackSound(dest_fp, src_fp, mem_arena)) {
-                                LogError("Failed to pack sound \"%\" to \"%\"!", FormatStr(src_fp), FormatStr(dest_fp));
+                                LogError("Failed to pack sound \"%\" to \"%\"!", src_fp, dest_fp);
                                 return false;
                             }
                         }

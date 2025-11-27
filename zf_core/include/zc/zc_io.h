@@ -258,108 +258,21 @@ namespace zf {
     [[nodiscard]] t_b8 CheckPathType(const s_str_rdonly path, s_mem_arena& temp_mem_arena, e_path_type& o_type);
 
     // ============================================================
-    // @section: Printing and Format Printing
+    // @section: Printing
     // ============================================================
-    constexpr t_unicode_code_pt g_fmt_spec = '%';
-    constexpr t_size g_fmt_spec_byte_cnt = UnicodeCodePointToByteCnt(g_fmt_spec);
-
     t_b8 Print(s_stream& stream, const s_str_rdonly str);
 
-    template<typename tp_type>
+    //template<typename tp_type>
     t_b8 PrintType(s_stream& stream, const tp_type& val);
 
-    template<typename tp_type> struct s_is_fmt { static constexpr t_b8 g_val = false; };
-    template<typename tp_type> concept c_fmt = s_is_fmt<tp_type>::g_val;
-
-    constexpr t_size CountFormatSpecifiers(const s_str_rdonly str) {
-        ZF_ASSERT(IsValidUTF8Str(str));
-
-        static_assert(IsASCII(g_fmt_spec)); // Assuming this for this algorithm.
-
-        t_size cnt = 0;
-
-        for (t_size i = 0; i < str.bytes.len; i++) {
-            if (str.bytes[i] == g_fmt_spec) {
-                if (i + 1 < str.bytes.len && str.bytes[i + 1] == g_fmt_spec) {
-                    // There's a duplicate, so don't count it as an occurrence.
-                    i++;
-                } else {
-                    cnt++;
-                }
-            }
-        }
-
-        return cnt;
-    }
-
-    inline t_b8 PrintFmt(s_stream& stream, const s_str_rdonly fmt) {
-        ZF_ASSERT_MSG(CountFormatSpecifiers(fmt) == 0, "More format specifiers than arguments provided!");
-
-        // Just print the rest of the string.
-        return Print(stream, fmt);
-    }
-
-    // Use a single '%' as the format specifier - the type is inferred. To actually include a '%' in the output, write '%%'.
-    // Returns true iff the operation was successful (this does not include the case of having too many arguments or too many format specifiers).
-    template<c_fmt tp_arg, c_fmt... tp_args_leftover>
-    t_b8 PrintFmt(s_stream& stream, const s_str_rdonly fmt, tp_arg arg, tp_args_leftover... args_leftover) {
-        ZF_ASSERT_MSG(CountFormatSpecifiers(fmt) == 1 + sizeof...(args_leftover), "Mismatch between format specifier count and argument count!");
-
-        // Determine how many bytes to print.
-        t_size byte_cnt = 0;
-        t_b8 fmt_spec_found = false;
-
-        ZF_WALK_STR(fmt, chr_info) {
-            if (chr_info.code_pt == g_fmt_spec) {
-                fmt_spec_found = true;
-                break;
-            }
-
-            byte_cnt += UnicodeCodePointToByteCnt(chr_info.code_pt);
-        }
-
-        const t_b8 fmt_spec_is_duped = fmt_spec_found && byte_cnt + g_fmt_spec_byte_cnt < fmt.bytes.len && StrChrAtByte(fmt, byte_cnt + g_fmt_spec_byte_cnt) == g_fmt_spec;
-
-        if (fmt_spec_is_duped) {
-            // Actually include the format specifier in the print.
-            byte_cnt += g_fmt_spec_byte_cnt;
-        }
-
-        // Print the bytes.
-        const auto bytes_to_print = Slice(fmt.bytes, 0, byte_cnt);
-
-        if (!StreamWriteItemsOfArray(stream, bytes_to_print)) {
-            return false;
-        }
-
-        // Handle leftovers.
-        if (fmt_spec_found) {
-            const s_str_rdonly fmt_leftover = {Slice(fmt.bytes, byte_cnt + g_fmt_spec_byte_cnt, fmt.bytes.len)}; // The substring of everything after the format specifier.
-
-            if (fmt_spec_is_duped) {
-                return PrintFmt(stream, fmt_leftover, arg, args_leftover...);
-            } else {
-                if (!PrintType(stream, arg)) {
-                    return false;
-                }
-
-                return PrintFmt(stream, fmt_leftover, args_leftover...);
-            }
-        }
-
-        return true;
-    }
-
-    // ============================================================
-    // @section: Bool Printing
-    // ============================================================
+    // ========================================
+    // @subsection: Bool Printing
+    // ========================================
     struct s_bool_fmt {
         t_b8 val;
     };
 
-    template<> struct s_is_fmt<s_bool_fmt> { static constexpr t_b8 g_val = true; };
-
-    inline s_bool_fmt FormatBool(const t_b8 val) {
+    inline s_bool_fmt Format(const t_b8 val) {
         return {val};
     }
 
@@ -367,16 +280,14 @@ namespace zf {
         return Print(stream, fmt.val ? StrFromRaw("true") : StrFromRaw("false"));
     }
 
-    // ============================================================
-    // @section: String Printing
-    // ============================================================
+    // ========================================
+    // @subsection: String Printing
+    // ========================================
     struct s_str_fmt {
         s_str_rdonly val;
     };
 
-    template<> struct s_is_fmt<s_str_fmt> { static constexpr t_b8 g_val = true; };
-
-    inline s_str_fmt FormatStr(const s_str_rdonly val) {
+    inline s_str_fmt Format(const s_str_rdonly val) {
         return {val};
     }
 
@@ -384,18 +295,16 @@ namespace zf {
         return Print(stream, fmt.val);
     }
 
-    // ============================================================
-    // @section: Integer Printing
-    // ============================================================
+    // ========================================
+    // @subsection: Integer Printing
+    // ========================================
     template<c_integral tp_type>
     struct s_integral_fmt {
         tp_type val;
     };
 
-    template<c_integral tp_type> struct s_is_fmt<s_integral_fmt<tp_type>> { static constexpr t_b8 g_val = true; };
-
     template<c_integral tp_type>
-    s_integral_fmt<tp_type> FormatInt(const tp_type val) {
+    s_integral_fmt<tp_type> Format(const tp_type val) {
         return {val};
     }
 
@@ -421,19 +330,17 @@ namespace zf {
         return Print(stream, str);
     }
 
-    // ============================================================
-    // @section: Float Printing
-    // ============================================================
+    // ========================================
+    // @subsection: Float Printing
+    // ========================================
     template<c_floating_point tp_type>
     struct s_float_fmt {
         tp_type val;
         t_b8 trim_trailing_zeros;
     };
 
-    template<c_floating_point tp_type> struct s_is_fmt<s_float_fmt<tp_type>> { static constexpr t_b8 g_val = true; };
-
     template<c_floating_point tp_type>
-    s_float_fmt<tp_type> FormatFloat(const tp_type val, const t_b8 trim_trailing_zeros = false) {
+    s_float_fmt<tp_type> Format(const tp_type val, const t_b8 trim_trailing_zeros = false) {
         return {val, trim_trailing_zeros};
     }
 
@@ -468,19 +375,17 @@ namespace zf {
         return Print(stream, str);
     }
 
-    // ============================================================
-    // @section: Hex Printing
-    // ============================================================
+    // ========================================
+    // @subsection: Hex Printing
+    // ========================================
     template<c_unsigned_integral tp_type>
     struct s_hex_fmt {
         tp_type val;
         t_b8 omit_prefix;
     };
 
-    template<c_unsigned_integral tp_type> struct s_is_fmt<s_hex_fmt<tp_type>> { static constexpr t_b8 g_val = true; };
-
     template<c_unsigned_integral tp_type>
-    s_hex_fmt<tp_type> FormatHex(const tp_type val, const t_b8 omit_prefix = false) {
+    s_hex_fmt<tp_type> Format(const tp_type val, const t_b8 omit_prefix = false) {
         return {val, omit_prefix};
     }
 
@@ -520,9 +425,9 @@ namespace zf {
         return Print(stream, str);
     }
 
-    // ============================================================
-    // @section: V2 Printing
-    // ============================================================
+    // ========================================
+    // @subsection: V2 Printing
+    // ========================================
     template<c_integral tp_type>
     struct s_v2_int_fmt {
         s_v2<tp_type> val;
@@ -534,120 +439,142 @@ namespace zf {
         t_b8 trim_trailing_zeros;
     };
 
-    template<c_integral tp_type> struct s_is_fmt<s_v2_int_fmt<tp_type>> { static constexpr t_b8 g_val = true; };
-    template<c_floating_point tp_type> struct s_is_fmt<s_v2_float_fmt<tp_type>> { static constexpr t_b8 g_val = true; };
-
     template<c_integral tp_type>
-    s_v2_int_fmt<tp_type> FormatV2(const s_v2<tp_type> val) {
+    s_v2_int_fmt<tp_type> Format(const s_v2<tp_type> val) {
         return {val};
     }
 
     template<c_floating_point tp_type>
-    s_v2_float_fmt<tp_type> FormatV2(const s_v2<tp_type> val, const t_b8 trim_trailing_zeros = false) {
+    s_v2_float_fmt<tp_type> Format(const s_v2<tp_type> val, const t_b8 trim_trailing_zeros = false) {
         return {val, trim_trailing_zeros};
     }
 
     template<c_integral tp_type>
     t_b8 PrintType(s_stream& stream, const s_v2_int_fmt<tp_type>& fmt) {
         return Print(stream, "(")
-            && PrintType(stream, FormatInt(fmt.val.x))
+            && PrintType(stream, Format(fmt.val.x))
             && Print(stream, ", ")
-            && PrintType(stream, FormatInt(fmt.val.y))
+            && PrintType(stream, Format(fmt.val.y))
             && Print(stream, ")");
     }
 
     template<c_floating_point tp_type>
     t_b8 PrintType(s_stream& stream, const s_v2_float_fmt<tp_type>& fmt) {
+        return true;
+#if 0
         return Print(stream, "(")
-            && PrintType(stream, FormatFloat(fmt.val.x, fmt.trim_trailing_zeros))
+            && PrintType(stream, Format(fmt.val.x, fmt.trim_trailing_zeros))
             && Print(stream, ", ")
-            && PrintType(stream, FormatFloat(fmt.val.y, fmt.trim_trailing_zeros))
+            && PrintType(stream, Format(fmt.val.y, fmt.trim_trailing_zeros))
             && Print(stream, ")");
+#endif
     }
 
-    // ============================================================
-    // @section: Array Printing
-    // ============================================================
-    enum e_array_print_style {
-        ek_array_print_style_inline,
-        ek_array_print_style_one_per_line
-    };
+    // ========================================
+    // @subsection: Format Printing
+    // ========================================
+    constexpr t_unicode_code_pt g_fmt_spec = '%';
 
-    template<c_array tp_arr_type, c_fmt tp_fmt_type>
-    using t_array_elem_to_fmt = tp_fmt_type (*)(const typename tp_arr_type::t_elem& elem);
+    constexpr t_size CountFormatSpecifiers(const s_str_rdonly str) {
+        ZF_ASSERT(IsValidUTF8Str(str));
 
-    template<c_array tp_type>
-    struct s_array_fmt {
-        tp_type& val;
-        e_array_print_style style;
-    };
+        static_assert(IsASCII(g_fmt_spec)); // Assuming this for this algorithm.
 
-    template<c_array tp_type> struct s_is_fmt<s_array_fmt<tp_type>> { static constexpr t_b8 g_val = true; };
+        t_size cnt = 0;
 
-    template<c_array tp_type>
-    s_array_fmt<tp_type> FormatArray(tp_type& val, const e_array_print_style style = ek_array_print_style_inline) {
-        return {val, style};
+        for (t_size i = 0; i < str.bytes.len; i++) {
+            if (str.bytes[i] == g_fmt_spec) {
+                if (i + 1 < str.bytes.len && str.bytes[i + 1] == g_fmt_spec) {
+                    // There's a duplicate, so don't count it as an occurrence.
+                    i++;
+                } else {
+                    cnt++;
+                }
+            }
+        }
+
+        return cnt;
     }
 
-    template<c_array tp_type>
-    t_b8 PrintType(s_stream& stream, const s_array_fmt<tp_type>& fmt) {
-        switch (fmt.style) {
-            case ek_array_print_style_inline:
-                if (!Print(stream, "[")) {
-                    return false;
-                }
+    template<typename tp_type>
+    concept c_test = requires(s_stream& stream, const tp_type& v) {
+        PrintType(stream, v);
+    };
 
-                for (t_size i = 0; i < ArrayLen(fmt.val); i++) {
-                    // @todo: Generalise this via a function pointer!
-                    if (!PrintType(stream, FormatInt(fmt.val[i]))) {
+    inline t_b8 PrintFormat(s_stream& stream, const s_str_rdonly fmt) {
+        ZF_ASSERT_MSG(CountFormatSpecifiers(fmt) == 0, "More format specifiers than arguments provided!");
+
+        // Just print the rest of the string.
+        return Print(stream, fmt);
+    }
+
+    // Use a single '%' as the format specifier - the type is inferred. To actually include a '%' in the output, write '%%'.
+    // Returns true iff the operation was successful (this does not include the case of having too many arguments or too many format specifiers).
+    template<typename tp_arg, typename... tp_args_leftover>
+    t_b8 PrintFormat(s_stream& stream, const s_str_rdonly fmt, tp_arg arg, tp_args_leftover... args_leftover) {
+        ZF_ASSERT_MSG(CountFormatSpecifiers(fmt) == 1 + sizeof...(args_leftover), "Mismatch between format specifier count and argument count!");
+
+        static_assert(IsASCII(g_fmt_spec)); // Assuming this for this algorithm.
+
+        // Determine how many bytes to print.
+        t_size byte_cnt = 0;
+        t_b8 fmt_spec_found = false;
+
+        while (byte_cnt < fmt.bytes.len) {
+            if (fmt.bytes[byte_cnt] == g_fmt_spec) {
+                fmt_spec_found = true;
+                break; // We don't want to include the format specifier.
+            }
+
+            byte_cnt++;
+        }
+
+        const t_b8 fmt_spec_is_duped = fmt_spec_found && byte_cnt + 1 < fmt.bytes.len && fmt.bytes[byte_cnt + 1] == g_fmt_spec;
+
+        if (fmt_spec_is_duped) {
+            // Actually include the format specifier in the print.
+            byte_cnt++;
+        }
+
+        // Print the bytes.
+        const auto bytes_to_print = Slice(fmt.bytes, 0, byte_cnt);
+
+        if (!StreamWriteItemsOfArray(stream, bytes_to_print)) {
+            return false;
+        }
+
+        // Handle leftovers.
+        if (fmt_spec_found) {
+            const s_str_rdonly fmt_leftover = {Slice(fmt.bytes, byte_cnt + 1, fmt.bytes.len)}; // The substring of everything after the format specifier.
+
+            if (fmt_spec_is_duped) {
+                return PrintFormat(stream, fmt_leftover, arg, args_leftover...);
+            } else {
+                if constexpr (c_test<tp_arg>) {
+                    if (!PrintType(stream, arg)) {
                         return false;
                     }
-
-                    if (i < ArrayLen(fmt.val) - 1) {
-                        if (!Print(stream, ", ")) {
-                            return false;
-                        }
-                    }
-                }
-
-                if (!Print(stream, "]")) {
-                    return false;
-                }
-
-                break;
-
-            case ek_array_print_style_one_per_line:
-                for (t_size i = 0; i < ArrayLen(fmt.val); i++) {
-                    if (!PrintFmt(stream, "[%] ", FormatInt(i))) {
+                } else {
+                    if (!PrintType(stream, Format(arg))) {
                         return false;
                     }
-
-                    // @todo: Generalise this via a function pointer!
-                    if (!PrintType(stream, FormatInt(fmt.val[i]))) {
-                        return false;
-                    }
-
-                    if (i < ArrayLen(fmt.val) - 1) {
-                        if (!Print(stream, "\n")) {
-                            return false;
-                        }
-                    }
                 }
 
-                break;
+                return PrintFormat(stream, fmt_leftover, args_leftover...);
+            }
         }
 
         return true;
     }
 
-    // ============================================================
-    // @section: Logging Helpers
-    // ============================================================
-    template<c_fmt... tp_args>
+    // ========================================
+    // @subsection: Logging Helpers
+    // ========================================
+    template<typename... tp_args>
     t_b8 Log(const s_str_rdonly fmt, tp_args... args) {
         s_stream std_err = StdOut();
 
-        if (!PrintFmt(std_err, fmt, args...)) {
+        if (!PrintFormat(std_err, fmt, args...)) {
             return false;
         }
 
@@ -658,7 +585,7 @@ namespace zf {
         return true;
     }
 
-    template<c_fmt... tp_args>
+    template<typename... tp_args>
     t_b8 LogError(const s_str_rdonly fmt, tp_args... args) {
         s_stream std_err = StdError();
 
@@ -666,7 +593,7 @@ namespace zf {
             return false;
         }
 
-        if (!PrintFmt(std_err, fmt, args...)) {
+        if (!PrintFormat(std_err, fmt, args...)) {
             return false;
         }
 
@@ -677,17 +604,17 @@ namespace zf {
         return true;
     }
 
-    template<c_fmt... tp_args>
+    template<typename... tp_args>
     t_b8 LogErrorType(const s_str_rdonly type_name, const s_str_rdonly fmt, tp_args... args) {
         ZF_ASSERT(!IsStrEmpty(type_name));
 
         s_stream std_err = StdError();
 
-        if (!PrintFmt(std_err, "% Error: ", FormatStr(type_name))) {
+        if (!PrintFormat(std_err, "% Error: ", type_name)) {
             return false;
         }
 
-        if (!PrintFmt(std_err, fmt, args...)) {
+        if (!PrintFormat(std_err, fmt, args...)) {
             return false;
         }
 
@@ -698,7 +625,7 @@ namespace zf {
         return true;
     }
 
-    template<c_fmt... tp_args>
+    template<typename... tp_args>
     t_b8 LogWarning(const s_str_rdonly fmt, tp_args... args) {
         s_stream std_err = StdError();
 
@@ -706,7 +633,7 @@ namespace zf {
             return false;
         }
 
-        if (!PrintFmt(std_err, fmt, args...)) {
+        if (!PrintFormat(std_err, fmt, args...)) {
             return false;
         }
 
