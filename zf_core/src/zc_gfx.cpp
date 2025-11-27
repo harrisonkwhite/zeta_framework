@@ -465,7 +465,7 @@ namespace zf {
             s_font_glyph_info glyph_info;
 
             if (!HashMapGet(font_arrangement.code_pts_to_glyph_infos, chr_info.code_pt, &glyph_info)) {
-                ZF_LOG_WARNING("Trying to calculate character positions for a string containing unicode code point %u which is not supported by the given font data!", code_pt);
+                ZF_ASSERT_MSG(false, "Unsupported code point!");
                 continue;
             }
 

@@ -424,4 +424,76 @@ namespace zf {
 
         return true;
     }
+
+    template<c_fmt... tp_args>
+    t_b8 Log(const s_str_rdonly fmt, tp_args... args) {
+        s_stream std_err = StdOut();
+
+        if (!PrintFmt(std_err, fmt, args...)) {
+            return false;
+        }
+
+        if (!PrintFmt(std_err, "\n")) {
+            return false;
+        }
+
+        return true;
+    }
+
+    template<c_fmt... tp_args>
+    t_b8 LogError(const s_str_rdonly fmt, tp_args... args) {
+        s_stream std_err = StdError();
+
+        if (!PrintFmt(std_err, "Error: ")) {
+            return false;
+        }
+
+        if (!PrintFmt(std_err, fmt, args...)) {
+            return false;
+        }
+
+        if (!PrintFmt(std_err, "\n")) {
+            return false;
+        }
+
+        return true;
+    }
+
+    template<c_fmt... tp_args>
+    t_b8 LogErrorType(const s_str_rdonly type_name, const s_str_rdonly fmt, tp_args... args) {
+        s_stream std_err = StdError();
+
+        if (!PrintFmt(std_err, "% Error: ", FormatStr(type_name))) {
+            return false;
+        }
+
+        if (!PrintFmt(std_err, fmt, args...)) {
+            return false;
+        }
+
+        if (!PrintFmt(std_err, "\n")) {
+            return false;
+        }
+
+        return true;
+    }
+
+    template<c_fmt... tp_args>
+    t_b8 LogWarning(const s_str_rdonly fmt, tp_args... args) {
+        s_stream std_err = StdError();
+
+        if (!PrintFmt(std_err, "Warning: ")) {
+            return false;
+        }
+
+        if (!PrintFmt(std_err, fmt, args...)) {
+            return false;
+        }
+
+        if (!PrintFmt(std_err, "\n")) {
+            return false;
+        }
+
+        return true;
+    }
 }

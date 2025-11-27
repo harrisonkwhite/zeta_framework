@@ -1,4 +1,6 @@
-#include <zc/zc_debug.h>
+#include <zc/zc_basic.h>
+
+#include <cstdio>
 
 #ifdef ZF_PLATFORM_WINDOWS
     #ifndef WIN32_LEAN_AND_MEAN
@@ -67,26 +69,6 @@ namespace zf {
         return false;
     }
 
-    void ReportFailure(const char* const func_name_raw, const char* const file_name_raw, const t_s32 line, const char* const msg_raw) {
-        fprintf(stderr, "==================== FAILURE ====================\n");
-
-        fprintf(stderr, "Function: %s\n", func_name_raw);
-        fprintf(stderr, "File:     %s\n", file_name_raw);
-        fprintf(stderr, "Line:     %d\n", line);
-
-        if (msg_raw) {
-            fprintf(stderr, "Message:  \"%s\"\n", msg_raw);
-        }
-
-        PrintStackTrace();
-
-        fprintf(stderr, "=================================================\n");
-
-#ifdef ZF_DEBUG
-        BreakIntoDebugger();
-#endif
-    }
-
     void HandleAssertFailure(const char* const cond_raw, const char* const func_name_raw, const char* const file_name_raw, const t_s32 line, const char* const msg_raw) {
         fprintf(stderr, "==================== ASSERTION FAILED ====================\n");
         fprintf(stderr, "Condition: %s\n", cond_raw);
@@ -105,6 +87,26 @@ namespace zf {
         if (!BreakIntoDebugger()) {
             abort();
         }
+    }
+
+    void ReportFailure(const char* const func_name_raw, const char* const file_name_raw, const t_s32 line, const char* const msg_raw) {
+        fprintf(stderr, "==================== FAILURE ====================\n");
+
+        fprintf(stderr, "Function: %s\n", func_name_raw);
+        fprintf(stderr, "File:     %s\n", file_name_raw);
+        fprintf(stderr, "Line:     %d\n", line);
+
+        if (msg_raw) {
+            fprintf(stderr, "Message:  \"%s\"\n", msg_raw);
+        }
+
+        PrintStackTrace();
+
+        fprintf(stderr, "=================================================\n");
+
+#ifdef ZF_DEBUG
+        BreakIntoDebugger();
+#endif
     }
 
     void ShowErrorBox(const char* const title_raw, const char* const contents_raw) {

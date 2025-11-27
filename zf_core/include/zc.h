@@ -3,7 +3,6 @@
 #include <zc/zc_mem.h>
 #include <zc/zc_audio.h>
 #include <zc/zc_basic.h>
-#include <zc/zc_debug.h>
 #include <zc/zc_gfx.h>
 #include <zc/zc_io.h>
 #include <zc/zc_math.h>

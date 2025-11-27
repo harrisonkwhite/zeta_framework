@@ -1,3 +1,8 @@
+// Strings in ZF are all UTF-8 and are NON-TERMINATED.
+// '\0' is now treated just like any other non-printable ASCII character.
+// This adds a huge benefit in terms of simplifying all string-related code.
+// The cost however is that interop with C standard library functions and most other libraries is more awkward, though these are insignificant portions of the code. The approach generally is to make a terminated clone of the string on a temporary memory arena. Since this is just an arena push as opposed to a heap allocation, the cost is trivial.
+
 #pragma once
 
 #include <zc/zc_mem.h>
@@ -9,18 +14,6 @@ namespace zf {
     constexpr t_size g_unicode_code_pt_cnt = 1114112;
 
     using t_unicode_code_pt_bit_vector = s_static_bit_vector<g_unicode_code_pt_cnt>;
-
-    constexpr t_unicode_code_pt_bit_vector g_unicode_printable_ascii_code_pts = []() constexpr {
-        // @todo: Should be able to use masking for this!
-
-        t_unicode_code_pt_bit_vector bv = {};
-
-        for (t_size i = 32; i < 127; i++) {
-            SetBit(bv, i);
-        }
-
-        return bv;
-    }();
 
     constexpr t_size UnicodeCodePointToByteCnt(const t_unicode_code_pt cp) {
         if (cp <= 0x7F) {
@@ -46,6 +39,12 @@ namespace zf {
 
     struct s_str_rdonly {
         s_array_rdonly<t_u8> bytes;
+
+        constexpr s_str_rdonly() = default;
+        constexpr s_str_rdonly(const s_array_rdonly<t_u8> bytes) : bytes(bytes) {}
+
+        template <t_size tp_len>
+        constexpr s_str_rdonly(const char (&raw)[tp_len]) : bytes({reinterpret_cast<const t_u8*>(raw), tp_len - 1}) {}
     };
 
     struct s_str {
@@ -56,9 +55,9 @@ namespace zf {
         }
     };
 
-    constexpr t_size CountRawChrsBeforeNull(const char* const chrs_raw) {
+    constexpr t_size CountRawChrsBeforeNull(const char* const raw) {
         t_size cnt = 0;
-        for (; chrs_raw[cnt]; cnt++) {}
+        for (; raw[cnt]; cnt++) {}
         return cnt;
     }
 

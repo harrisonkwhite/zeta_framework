@@ -11,9 +11,6 @@ namespace zf {
         AssertGameInfoValidity(info);
 
         const t_b8 success = [&info]() {
-            auto std_out = StdOut();
-            PrintFmt(std_out, StrFromRaw("ye % wow there?"), FormatBool(false));
-
             //
             // Initialisation
             //
@@ -141,7 +138,7 @@ namespace zf {
                         ClearInputEvents();
 
                         if (res == ek_game_tick_result_exit) {
-                            ZF_LOG("Exit request detected from developer game tick function...");
+                            Log("Exit request detected from developer game tick function...");
                             SetWindowShouldClose(true);
                         }
 

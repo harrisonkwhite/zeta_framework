@@ -1,7 +1,7 @@
 #pragma once
 
 #include <climits>
-#include <type_traits>
+#include <type_traits> // The only permitted use of STL.
 
 namespace zf {
 #ifdef _WIN32
@@ -40,6 +40,35 @@ namespace zf {
 #define ZF_CONCAT(a, b) ZF_CONCAT_IMPL(a, b)
 
 #define ZF_DEFER(x) auto ZF_CONCAT(p_defer_, ZF_CONCAT(l, __LINE__)) = zf::p_s_defer([&]() x)
+
+    void HandleAssertFailure(const char* const cond_raw, const char* const func_name_raw, const char* const file_name_raw, const int line, const char* const msg_raw = nullptr);
+
+#ifdef ZF_DEBUG
+    #define ZF_ASSERT(cond) \
+        do { \
+            if (!ZF_IN_CONSTEXPR() && !(cond)) { \
+                zf::HandleAssertFailure(#cond, __FUNCTION__, __FILE__, __LINE__); \
+            } \
+        } while(0)
+
+    #define ZF_ASSERT_MSG(cond, msg) \
+        do { \
+            if (!ZF_IN_CONSTEXPR() && !(cond)) { \
+                zf::HandleAssertFailure(#cond, __FUNCTION__, __FILE__, __LINE__, msg); \
+            } \
+        } while(0)
+#else
+    #define ZF_ASSERT(cond) static_cast<void>(0)
+    #define ZF_ASSERT_MSG(cond, msg) static_cast<void>(0)
+#endif
+
+    // Dumps info about the call site alongside a stack trace to stderr.
+    void ReportFailure(const char* const func_name_raw, const char* const file_name_raw, const int line, const char* const msg_raw = nullptr);
+
+#define ZF_REPORT_FAILURE() zf::ReportFailure(__FUNCTION__, __FILE__, __LINE__)
+#define ZF_REPORT_FAILURE_MSG(msg) zf::ReportFailure(__FUNCTION__, __FILE__, __LINE__, msg)
+
+    void ShowErrorBox(const char* const title_raw, const char* const contents_raw);
 
     static_assert(CHAR_BIT == 8);
 

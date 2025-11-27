@@ -6,6 +6,6 @@ int main(const int arg_cnt, const char* const* const args_raw) {
     if (args.len == 2) {
         zf::RunPacker(zf::StrFromRaw(args[1]));
     } else {
-        ZF_LOG_ERROR("Invalid number of command-line arguments provided! Expected a path to a packing instructions JSON file!");
+        zf::LogError("Invalid number of command-line arguments provided! Expected a path to a packing instructions JSON file!");
     }
 }

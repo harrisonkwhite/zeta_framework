@@ -75,12 +75,12 @@ namespace zf::gfx {
 
                     if (MakeArray(temp_mem_arena, log_chr_cnt, log_chrs)) {
                         glGetShaderInfoLog(shader_gl_id, static_cast<GLsizei>(log_chrs.len), nullptr, log_chrs.buf_raw);
-                        ZF_LOG_ERROR_SPECIAL("OpenGL Shader Compilation", "%s", log_chrs.buf_raw);
+                        LogErrorType("OpenGL Shader Compilation", "%", FormatStr(StrFromRaw(log_chrs.buf_raw)));
                     } else {
-                        ZF_LOG_ERROR("Failed to reserve memory for OpenGL shader compilation error log!");
+                        LogError("Failed to reserve memory for OpenGL shader compilation error log!");
                     }
                 } else {
-                    ZF_LOG_ERROR("OpenGL shader compilation failed, but no error message available!");
+                    LogError("OpenGL shader compilation failed, but no error message available!");
                 }
 
                 return 0;
@@ -124,7 +124,8 @@ namespace zf::gfx {
         const s_v2<t_s32> tex_size_limit = GLTextureSizeLimit();
 
         if (tex_data.size_in_pxs.x > tex_size_limit.x || tex_data.size_in_pxs.y > tex_size_limit.y) {
-            ZF_LOG_ERROR("Texture size (%d, %d) exceeds OpenGL limits (%d, %d)!", tex_data.size_in_pxs.x, tex_data.size_in_pxs.y, tex_size_limit.x, tex_size_limit.y);
+            // @todo: Print vectors directly here.
+            LogError("Texture size (%, %) exceeds OpenGL limits (%, %)!", FormatInt(tex_data.size_in_pxs.x), FormatInt(tex_data.size_in_pxs.y), FormatInt(tex_size_limit.x), FormatInt(tex_size_limit.y));
             return 0;
         }
 

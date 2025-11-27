@@ -1,7 +1,7 @@
 #pragma once
 
 #include <cstring>
-#include <zc/zc_debug.h>
+#include <zc/zc_basic.h>
 
 namespace zf {
     constexpr t_size Kilobytes(const t_size x) { return (static_cast<t_size>(1) << 10) * x; }
