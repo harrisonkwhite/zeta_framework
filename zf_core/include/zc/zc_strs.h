@@ -41,6 +41,10 @@ namespace zf {
         return cp <= 0x7F;
     }
 
+    constexpr bool IsPrintableASCII(const t_unicode_code_pt cp) {
+        return cp >= 0x20 && cp <= 0x7E;
+    }
+
     struct s_str_rdonly {
         s_array_rdonly<t_u8> bytes;
 

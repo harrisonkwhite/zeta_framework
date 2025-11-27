@@ -14,6 +14,10 @@ namespace zf {
             //
             // Initialisation
             //
+            s_v2<t_s32> pos = {4, 11};
+            s_v2<t_f32> pos_2 = {4, 11};
+            Log("%%Position: % %%%", FormatV2(pos), FormatV2(pos_2));
+
             ConfigErrorOutput();
 
             InitRNG();

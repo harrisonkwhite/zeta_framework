@@ -316,7 +316,6 @@ namespace zf {
     struct s_float_fmt {
         tp_type val;
         t_b8 trim_trailing_zeros;
-        t_size prec;
     };
 
     template<c_floating_point tp_type>
@@ -371,6 +370,45 @@ namespace zf {
         return {val, omit_prefix};
     }
 
+    template<c_integral tp_type>
+    struct s_v2_int_fmt {
+        s_v2<tp_type> val;
+    };
+
+    template<c_floating_point tp_type>
+    struct s_v2_float_fmt {
+        s_v2<tp_type> val;
+        t_b8 trim_trailing_zeros;
+    };
+
+    template<c_integral tp_type>
+    s_v2_int_fmt<tp_type> FormatV2(const s_v2<tp_type> val) {
+        return {val};
+    }
+
+    template<c_floating_point tp_type>
+    s_v2_float_fmt<tp_type> FormatV2(const s_v2<tp_type> val, const t_b8 trim_trailing_zeros = false) {
+        return {val, trim_trailing_zeros};
+    }
+
+    template<c_integral tp_type>
+    t_b8 PrintType(s_stream& stream, const s_v2_int_fmt<tp_type>& fmt) {
+        return Print(stream, "(")
+            && PrintType(stream, FormatInt(fmt.val.x))
+            && Print(stream, ", ")
+            && PrintType(stream, FormatInt(fmt.val.y))
+            && Print(stream, ")");
+    }
+
+    template<c_floating_point tp_type>
+    t_b8 PrintType(s_stream& stream, const s_v2_float_fmt<tp_type>& fmt) {
+        return Print(stream, "(")
+            && PrintType(stream, FormatFloat(fmt.val.x, fmt.trim_trailing_zeros))
+            && Print(stream, ", ")
+            && PrintType(stream, FormatFloat(fmt.val.y, fmt.trim_trailing_zeros))
+            && Print(stream, ")");
+    }
+
     template<c_unsigned_integral tp_type>
     t_b8 PrintType(s_stream& stream, const s_hex_fmt<tp_type>& fmt) {
         s_static_array<t_u8, 18> str_bytes = {}; // Maximum possible number of ASCII characters needed for hex representation of 64-bit integer.
@@ -413,6 +451,8 @@ namespace zf {
     template<c_integral tp_type> struct s_is_fmt<s_integral_fmt<tp_type>> { static constexpr t_b8 g_val = true; };
     template<c_floating_point tp_type> struct s_is_fmt<s_float_fmt<tp_type>> { static constexpr t_b8 g_val = true; };
     template<c_unsigned_integral tp_type> struct s_is_fmt<s_hex_fmt<tp_type>> { static constexpr t_b8 g_val = true; };
+    template<c_integral tp_type> struct s_is_fmt<s_v2_int_fmt<tp_type>> { static constexpr t_b8 g_val = true; };
+    template<c_floating_point tp_type> struct s_is_fmt<s_v2_float_fmt<tp_type>> { static constexpr t_b8 g_val = true; };
 
     template<typename tp_type>
     concept c_fmt = s_is_fmt<tp_type>::g_val;
@@ -442,7 +482,7 @@ namespace zf {
     }
 
     inline t_b8 PrintFmt(s_stream& stream, const s_str_rdonly fmt) {
-        ZF_ASSERT(CountFormatSpecifiers(fmt) == 0);
+        ZF_ASSERT_MSG(CountFormatSpecifiers(fmt) == 0, "More format specifiers than arguments provided!");
 
         // Just print the rest of the string.
         return Print(stream, fmt);
@@ -452,7 +492,7 @@ namespace zf {
     // Returns true iff the operation was successful (this does not include the case of having too many arguments or too many format specifiers).
     template<c_fmt tp_arg, c_fmt... tp_args_leftover>
     t_b8 PrintFmt(s_stream& stream, const s_str_rdonly fmt, tp_arg arg, tp_args_leftover... args_leftover) {
-        ZF_ASSERT(CountFormatSpecifiers(fmt) == 1 + sizeof...(args_leftover));
+        ZF_ASSERT_MSG(CountFormatSpecifiers(fmt) == 1 + sizeof...(args_leftover), "Mismatch between format specifier count and argument count!");
 
         // Determine how many bytes to print.
         t_size byte_cnt = 0;
@@ -467,7 +507,7 @@ namespace zf {
             byte_cnt += UnicodeCodePointToByteCnt(chr_info.code_pt);
         }
 
-        const t_b8 fmt_spec_is_duped = fmt_spec_found && byte_cnt < fmt.bytes.len && StrChrAtByte(fmt, byte_cnt + g_fmt_spec_byte_cnt) == g_fmt_spec;
+        const t_b8 fmt_spec_is_duped = fmt_spec_found && byte_cnt + g_fmt_spec_byte_cnt < fmt.bytes.len && StrChrAtByte(fmt, byte_cnt + g_fmt_spec_byte_cnt) == g_fmt_spec;
 
         if (fmt_spec_is_duped) {
             // Actually include the format specifier in the print.
