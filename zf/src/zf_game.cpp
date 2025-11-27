@@ -18,8 +18,6 @@ namespace zf {
 
             InitRNG();
 
-            Log("dog house %, wow man!", FormatFloat(-0.01f, true));
-
             // Set up memory arenas.
             s_mem_arena mem_arena;
 

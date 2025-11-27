@@ -37,6 +37,10 @@ namespace zf {
         return 0;
     }
 
+    constexpr t_b8 IsASCII(const t_unicode_code_pt cp) {
+        return cp <= 0x7F;
+    }
+
     struct s_str_rdonly {
         s_array_rdonly<t_u8> bytes;
 

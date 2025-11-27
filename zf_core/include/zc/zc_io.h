@@ -407,11 +407,6 @@ namespace zf {
         return Print(stream, str);
     }
 
-    inline t_b8 PrintFmt(s_stream& stream, const s_str_rdonly fmt) {
-        // Just print the rest of the string.
-        return Print(stream, fmt);
-    }
-
     template<typename tp_type> struct s_is_fmt { static constexpr t_b8 g_val = false; };
     template<> struct s_is_fmt<s_bool_fmt> { static constexpr t_b8 g_val = true; };
     template<> struct s_is_fmt<s_str_fmt> { static constexpr t_b8 g_val = true; };
@@ -422,19 +417,49 @@ namespace zf {
     template<typename tp_type>
     concept c_fmt = s_is_fmt<tp_type>::g_val;
 
+    constexpr t_unicode_code_pt g_fmt_spec = '%';
+    constexpr t_size g_fmt_spec_byte_cnt = UnicodeCodePointToByteCnt(g_fmt_spec);
+
+    constexpr t_size CountFormatSpecifiers(const s_str_rdonly str) {
+        ZF_ASSERT(IsValidUTF8Str(str));
+
+        static_assert(IsASCII(g_fmt_spec)); // Assuming this for this algorithm.
+
+        t_size cnt = 0;
+
+        for (t_size i = 0; i < str.bytes.len; i++) {
+            if (str.bytes[i] == g_fmt_spec) {
+                if (i + 1 < str.bytes.len && str.bytes[i + 1] == g_fmt_spec) {
+                    // There's a duplicate, so don't count it as an occurrence.
+                    i++;
+                } else {
+                    cnt++;
+                }
+            }
+        }
+
+        return cnt;
+    }
+
+    inline t_b8 PrintFmt(s_stream& stream, const s_str_rdonly fmt) {
+        ZF_ASSERT(CountFormatSpecifiers(fmt) == 0);
+
+        // Just print the rest of the string.
+        return Print(stream, fmt);
+    }
+
     // Use a single '%' as the format specifier - the type is inferred. To actually include a '%' in the output, write '%%'.
     // Returns true iff the operation was successful (this does not include the case of having too many arguments or too many format specifiers).
     template<c_fmt tp_arg, c_fmt... tp_args_leftover>
     t_b8 PrintFmt(s_stream& stream, const s_str_rdonly fmt, tp_arg arg, tp_args_leftover... args_leftover) {
-        constexpr t_unicode_code_pt fmt_spec = '%';
-        constexpr t_size fmt_spec_byte_cnt = UnicodeCodePointToByteCnt(fmt_spec);
+        ZF_ASSERT(CountFormatSpecifiers(fmt) == 1 + sizeof...(args_leftover));
 
         // Determine how many bytes to print.
         t_size byte_cnt = 0;
         t_b8 fmt_spec_found = false;
 
         ZF_WALK_STR(fmt, chr_info) {
-            if (chr_info.code_pt == fmt_spec) {
+            if (chr_info.code_pt == g_fmt_spec) {
                 fmt_spec_found = true;
                 break;
             }
@@ -442,11 +467,11 @@ namespace zf {
             byte_cnt += UnicodeCodePointToByteCnt(chr_info.code_pt);
         }
 
-        const t_b8 fmt_spec_is_duped = fmt_spec_found && byte_cnt < fmt.bytes.len && StrChrAtByte(fmt, byte_cnt + fmt_spec_byte_cnt) == fmt_spec;
+        const t_b8 fmt_spec_is_duped = fmt_spec_found && byte_cnt < fmt.bytes.len && StrChrAtByte(fmt, byte_cnt + g_fmt_spec_byte_cnt) == g_fmt_spec;
 
         if (fmt_spec_is_duped) {
             // Actually include the format specifier in the print.
-            byte_cnt += fmt_spec_byte_cnt;
+            byte_cnt += g_fmt_spec_byte_cnt;
         }
 
         // Print the bytes.
@@ -458,7 +483,7 @@ namespace zf {
 
         // Handle leftovers.
         if (fmt_spec_found) {
-            const s_str_rdonly fmt_leftover = {Slice(fmt.bytes, byte_cnt + fmt_spec_byte_cnt, fmt.bytes.len)}; // The substring of everything after the format specifier.
+            const s_str_rdonly fmt_leftover = {Slice(fmt.bytes, byte_cnt + g_fmt_spec_byte_cnt, fmt.bytes.len)}; // The substring of everything after the format specifier.
 
             if (fmt_spec_is_duped) {
                 return PrintFmt(stream, fmt_leftover, arg, args_leftover...);
