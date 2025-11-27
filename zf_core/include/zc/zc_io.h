@@ -6,12 +6,9 @@
 #include <zc/zc_math.h>
 
 namespace zf {
-    enum e_file_access_mode : t_s32 {
-        ek_file_access_mode_read,
-        ek_file_access_mode_write,
-        ek_file_access_mode_append
-    };
-
+    // ============================================================
+    // @section: Streams
+    // ============================================================
     enum e_stream_type : t_s32 {
         ek_stream_type_mem,
         ek_stream_type_file
@@ -226,6 +223,15 @@ namespace zf {
         return true;
     }
 
+    // ============================================================
+    // @section: Files and Directories
+    // ============================================================
+    enum e_file_access_mode : t_s32 {
+        ek_file_access_mode_read,
+        ek_file_access_mode_write,
+        ek_file_access_mode_append
+    };
+
     [[nodiscard]] t_b8 OpenFile(const s_str_rdonly file_path, const e_file_access_mode mode, s_mem_arena& temp_mem_arena, s_stream& o_fs);
     void CloseFile(s_stream& fs);
     t_size CalcFileSize(const s_stream& fs);
@@ -251,214 +257,19 @@ namespace zf {
 
     [[nodiscard]] t_b8 CheckPathType(const s_str_rdonly path, s_mem_arena& temp_mem_arena, e_path_type& o_type);
 
+    // ============================================================
+    // @section: Printing and Format Printing
+    // ============================================================
+    constexpr t_unicode_code_pt g_fmt_spec = '%';
+    constexpr t_size g_fmt_spec_byte_cnt = UnicodeCodePointToByteCnt(g_fmt_spec);
+
     t_b8 Print(s_stream& stream, const s_str_rdonly str);
 
     template<typename tp_type>
     t_b8 PrintType(s_stream& stream, const tp_type& val);
 
-    struct s_bool_fmt {
-        t_b8 val;
-    };
-
-    inline s_bool_fmt FormatBool(const t_b8 val) {
-        return {val};
-    }
-
-    template<> inline t_b8 PrintType<s_bool_fmt>(s_stream& stream, const s_bool_fmt& fmt) {
-        return Print(stream, fmt.val ? StrFromRaw("true") : StrFromRaw("false"));
-    }
-
-    struct s_str_fmt {
-        s_str_rdonly val;
-    };
-
-    inline s_str_fmt FormatStr(const s_str_rdonly val) {
-        return {val};
-    }
-
-    template<> inline t_b8 PrintType<s_str_fmt>(s_stream& stream, const s_str_fmt& fmt) {
-        return Print(stream, fmt.val);
-    }
-
-    template<c_integral tp_type>
-    struct s_integral_fmt {
-        tp_type val;
-    };
-
-    template<c_integral tp_type>
-    s_integral_fmt<tp_type> FormatInt(const tp_type val) {
-        return {val};
-    }
-
-    template<c_integral tp_type>
-    t_b8 PrintType(s_stream& stream, const s_integral_fmt<tp_type>& fmt) {
-        s_static_array<t_u8, 20> str_bytes = {}; // Maximum possible number of ASCII characters needed to represent a 64-bit integer.
-        t_size str_bytes_used = 0;
-
-        if (fmt.val < 0) {
-            str_bytes[str_bytes_used] = '-';
-            str_bytes_used++;
-        }
-
-        const tp_type dig_cnt = DigitCnt(fmt.val);
-
-        for (t_size i = 0; i < dig_cnt; i++) {
-            str_bytes[str_bytes_used + i] = '0' + DigitAt(fmt.val, dig_cnt - 1 - i);
-        }
-
-        str_bytes_used += dig_cnt;
-
-        const s_str_rdonly str = {Slice(str_bytes, 0, str_bytes_used)};
-        return Print(stream, str);
-    }
-
-    template<c_floating_point tp_type>
-    struct s_float_fmt {
-        tp_type val;
-        t_b8 trim_trailing_zeros;
-    };
-
-    template<c_floating_point tp_type>
-    s_float_fmt<tp_type> FormatFloat(const tp_type val, const t_b8 trim_trailing_zeros = false) {
-        return {val, trim_trailing_zeros};
-    }
-
-    template<c_floating_point tp_type>
-    t_b8 PrintType(s_stream& stream, const s_float_fmt<tp_type>& fmt) {
-        s_static_array<t_u8, 400> str_bytes = {}; // Roughly more than how many bytes should ever be needed.
-
-        auto str_bytes_used = snprintf(reinterpret_cast<char*>(str_bytes.buf_raw), str_bytes.g_len, "%f", fmt.val);
-
-        if (str_bytes_used < 0 || str_bytes_used >= str_bytes.g_len) {
-            return false;
-        }
-
-        if (fmt.trim_trailing_zeros) {
-            const auto str_bytes_relevant = Slice(str_bytes, 0, str_bytes_used);
-
-            if (AreAnyEqualTo(str_bytes_relevant, '.')) {
-                for (t_size i = str_bytes_used - 1; ; i--) {
-                    if (str_bytes[i] == '0') {
-                        str_bytes_used--;
-                    } else if (str_bytes[i] == '.') {
-                        str_bytes_used--;
-                        break;
-                    } else {
-                        break;
-                    }
-                }
-            }
-        }
-
-        const s_str_rdonly str = {Slice(str_bytes, 0, str_bytes_used)};
-        return Print(stream, str);
-    }
-
-    template<c_floating_point tp_type>
-    s_float_fmt<tp_type> FormatHex(const tp_type val) {
-        return {val};
-    }
-
-    template<c_unsigned_integral tp_type>
-    struct s_hex_fmt {
-        tp_type val;
-        t_b8 omit_prefix;
-    };
-
-    template<c_unsigned_integral tp_type>
-    s_hex_fmt<tp_type> FormatHex(const tp_type val, const t_b8 omit_prefix = false) {
-        return {val, omit_prefix};
-    }
-
-    template<c_integral tp_type>
-    struct s_v2_int_fmt {
-        s_v2<tp_type> val;
-    };
-
-    template<c_floating_point tp_type>
-    struct s_v2_float_fmt {
-        s_v2<tp_type> val;
-        t_b8 trim_trailing_zeros;
-    };
-
-    template<c_integral tp_type>
-    s_v2_int_fmt<tp_type> FormatV2(const s_v2<tp_type> val) {
-        return {val};
-    }
-
-    template<c_floating_point tp_type>
-    s_v2_float_fmt<tp_type> FormatV2(const s_v2<tp_type> val, const t_b8 trim_trailing_zeros = false) {
-        return {val, trim_trailing_zeros};
-    }
-
-    template<c_integral tp_type>
-    t_b8 PrintType(s_stream& stream, const s_v2_int_fmt<tp_type>& fmt) {
-        return Print(stream, "(")
-            && PrintType(stream, FormatInt(fmt.val.x))
-            && Print(stream, ", ")
-            && PrintType(stream, FormatInt(fmt.val.y))
-            && Print(stream, ")");
-    }
-
-    template<c_floating_point tp_type>
-    t_b8 PrintType(s_stream& stream, const s_v2_float_fmt<tp_type>& fmt) {
-        return Print(stream, "(")
-            && PrintType(stream, FormatFloat(fmt.val.x, fmt.trim_trailing_zeros))
-            && Print(stream, ", ")
-            && PrintType(stream, FormatFloat(fmt.val.y, fmt.trim_trailing_zeros))
-            && Print(stream, ")");
-    }
-
-    template<c_unsigned_integral tp_type>
-    t_b8 PrintType(s_stream& stream, const s_hex_fmt<tp_type>& fmt) {
-        s_static_array<t_u8, 18> str_bytes = {}; // Maximum possible number of ASCII characters needed for hex representation of 64-bit integer.
-        t_size str_bytes_used = 0;
-
-        if (!fmt.omit_prefix) {
-            str_bytes[0] = '0';
-            str_bytes[1] = 'x';
-            str_bytes_used += 2;
-        }
-
-        const t_size str_bytes_digits_begin_index = str_bytes_used;
-
-        auto val_mut = fmt.val;
-
-        do {
-            const auto dig = val_mut % 16;
-
-            if (dig < 10) {
-                str_bytes[str_bytes_used] = '0' + dig;
-            } else {
-                str_bytes[str_bytes_used] = 'A' + dig - 10;
-            }
-
-            str_bytes_used++;
-
-            val_mut /= 16;
-        } while (val_mut != 0);
-
-        const auto str_bytes_digits = Slice(str_bytes, str_bytes_digits_begin_index, str_bytes_used);
-        Reverse(str_bytes_digits);
-
-        const s_str_rdonly str = {Slice(str_bytes, 0, str_bytes_used)};
-        return Print(stream, str);
-    }
-
     template<typename tp_type> struct s_is_fmt { static constexpr t_b8 g_val = false; };
-    template<> struct s_is_fmt<s_bool_fmt> { static constexpr t_b8 g_val = true; };
-    template<> struct s_is_fmt<s_str_fmt> { static constexpr t_b8 g_val = true; };
-    template<c_integral tp_type> struct s_is_fmt<s_integral_fmt<tp_type>> { static constexpr t_b8 g_val = true; };
-    template<c_floating_point tp_type> struct s_is_fmt<s_float_fmt<tp_type>> { static constexpr t_b8 g_val = true; };
-    template<c_unsigned_integral tp_type> struct s_is_fmt<s_hex_fmt<tp_type>> { static constexpr t_b8 g_val = true; };
-    template<c_integral tp_type> struct s_is_fmt<s_v2_int_fmt<tp_type>> { static constexpr t_b8 g_val = true; };
-    template<c_floating_point tp_type> struct s_is_fmt<s_v2_float_fmt<tp_type>> { static constexpr t_b8 g_val = true; };
-
-    template<typename tp_type>
-    concept c_fmt = s_is_fmt<tp_type>::g_val;
-
-    constexpr t_unicode_code_pt g_fmt_spec = '%';
-    constexpr t_size g_fmt_spec_byte_cnt = UnicodeCodePointToByteCnt(g_fmt_spec);
+    template<typename tp_type> concept c_fmt = s_is_fmt<tp_type>::g_val;
 
     constexpr t_size CountFormatSpecifiers(const s_str_rdonly str) {
         ZF_ASSERT(IsValidUTF8Str(str));
@@ -539,6 +350,299 @@ namespace zf {
         return true;
     }
 
+    // ============================================================
+    // @section: Bool Printing
+    // ============================================================
+    struct s_bool_fmt {
+        t_b8 val;
+    };
+
+    template<> struct s_is_fmt<s_bool_fmt> { static constexpr t_b8 g_val = true; };
+
+    inline s_bool_fmt FormatBool(const t_b8 val) {
+        return {val};
+    }
+
+    template<> inline t_b8 PrintType<s_bool_fmt>(s_stream& stream, const s_bool_fmt& fmt) {
+        return Print(stream, fmt.val ? StrFromRaw("true") : StrFromRaw("false"));
+    }
+
+    // ============================================================
+    // @section: String Printing
+    // ============================================================
+    struct s_str_fmt {
+        s_str_rdonly val;
+    };
+
+    template<> struct s_is_fmt<s_str_fmt> { static constexpr t_b8 g_val = true; };
+
+    inline s_str_fmt FormatStr(const s_str_rdonly val) {
+        return {val};
+    }
+
+    template<> inline t_b8 PrintType<s_str_fmt>(s_stream& stream, const s_str_fmt& fmt) {
+        return Print(stream, fmt.val);
+    }
+
+    // ============================================================
+    // @section: Integer Printing
+    // ============================================================
+    template<c_integral tp_type>
+    struct s_integral_fmt {
+        tp_type val;
+    };
+
+    template<c_integral tp_type> struct s_is_fmt<s_integral_fmt<tp_type>> { static constexpr t_b8 g_val = true; };
+
+    template<c_integral tp_type>
+    s_integral_fmt<tp_type> FormatInt(const tp_type val) {
+        return {val};
+    }
+
+    template<c_integral tp_type>
+    t_b8 PrintType(s_stream& stream, const s_integral_fmt<tp_type>& fmt) {
+        s_static_array<t_u8, 20> str_bytes = {}; // Maximum possible number of ASCII characters needed to represent a 64-bit integer.
+        t_size str_bytes_used = 0;
+
+        if (fmt.val < 0) {
+            str_bytes[str_bytes_used] = '-';
+            str_bytes_used++;
+        }
+
+        const tp_type dig_cnt = DigitCnt(fmt.val);
+
+        for (t_size i = 0; i < dig_cnt; i++) {
+            str_bytes[str_bytes_used + i] = '0' + DigitAt(fmt.val, dig_cnt - 1 - i);
+        }
+
+        str_bytes_used += dig_cnt;
+
+        const s_str_rdonly str = {Slice(str_bytes, 0, str_bytes_used)};
+        return Print(stream, str);
+    }
+
+    // ============================================================
+    // @section: Float Printing
+    // ============================================================
+    template<c_floating_point tp_type>
+    struct s_float_fmt {
+        tp_type val;
+        t_b8 trim_trailing_zeros;
+    };
+
+    template<c_floating_point tp_type> struct s_is_fmt<s_float_fmt<tp_type>> { static constexpr t_b8 g_val = true; };
+
+    template<c_floating_point tp_type>
+    s_float_fmt<tp_type> FormatFloat(const tp_type val, const t_b8 trim_trailing_zeros = false) {
+        return {val, trim_trailing_zeros};
+    }
+
+    template<c_floating_point tp_type>
+    t_b8 PrintType(s_stream& stream, const s_float_fmt<tp_type>& fmt) {
+        s_static_array<t_u8, 400> str_bytes = {}; // Roughly more than how many bytes should ever be needed.
+
+        auto str_bytes_used = snprintf(reinterpret_cast<char*>(str_bytes.buf_raw), str_bytes.g_len, "%f", fmt.val);
+
+        if (str_bytes_used < 0 || str_bytes_used >= str_bytes.g_len) {
+            return false;
+        }
+
+        if (fmt.trim_trailing_zeros) {
+            const auto str_bytes_relevant = Slice(str_bytes, 0, str_bytes_used);
+
+            if (AreAnyEqualTo(str_bytes_relevant, '.')) {
+                for (t_size i = str_bytes_used - 1; ; i--) {
+                    if (str_bytes[i] == '0') {
+                        str_bytes_used--;
+                    } else if (str_bytes[i] == '.') {
+                        str_bytes_used--;
+                        break;
+                    } else {
+                        break;
+                    }
+                }
+            }
+        }
+
+        const s_str_rdonly str = {Slice(str_bytes, 0, str_bytes_used)};
+        return Print(stream, str);
+    }
+
+    // ============================================================
+    // @section: Hex Printing
+    // ============================================================
+    template<c_unsigned_integral tp_type>
+    struct s_hex_fmt {
+        tp_type val;
+        t_b8 omit_prefix;
+    };
+
+    template<c_unsigned_integral tp_type> struct s_is_fmt<s_hex_fmt<tp_type>> { static constexpr t_b8 g_val = true; };
+
+    template<c_unsigned_integral tp_type>
+    s_hex_fmt<tp_type> FormatHex(const tp_type val, const t_b8 omit_prefix = false) {
+        return {val, omit_prefix};
+    }
+
+    template<c_unsigned_integral tp_type>
+    t_b8 PrintType(s_stream& stream, const s_hex_fmt<tp_type>& fmt) {
+        s_static_array<t_u8, 18> str_bytes = {}; // Maximum possible number of ASCII characters needed for hex representation of 64-bit integer.
+        t_size str_bytes_used = 0;
+
+        if (!fmt.omit_prefix) {
+            str_bytes[0] = '0';
+            str_bytes[1] = 'x';
+            str_bytes_used += 2;
+        }
+
+        const t_size str_bytes_digits_begin_index = str_bytes_used;
+
+        auto val_mut = fmt.val;
+
+        do {
+            const auto dig = val_mut % 16;
+
+            if (dig < 10) {
+                str_bytes[str_bytes_used] = '0' + dig;
+            } else {
+                str_bytes[str_bytes_used] = 'A' + dig - 10;
+            }
+
+            str_bytes_used++;
+
+            val_mut /= 16;
+        } while (val_mut != 0);
+
+        const auto str_bytes_digits = Slice(str_bytes, str_bytes_digits_begin_index, str_bytes_used);
+        Reverse(str_bytes_digits);
+
+        const s_str_rdonly str = {Slice(str_bytes, 0, str_bytes_used)};
+        return Print(stream, str);
+    }
+
+    // ============================================================
+    // @section: V2 Printing
+    // ============================================================
+    template<c_integral tp_type>
+    struct s_v2_int_fmt {
+        s_v2<tp_type> val;
+    };
+
+    template<c_floating_point tp_type>
+    struct s_v2_float_fmt {
+        s_v2<tp_type> val;
+        t_b8 trim_trailing_zeros;
+    };
+
+    template<c_integral tp_type> struct s_is_fmt<s_v2_int_fmt<tp_type>> { static constexpr t_b8 g_val = true; };
+    template<c_floating_point tp_type> struct s_is_fmt<s_v2_float_fmt<tp_type>> { static constexpr t_b8 g_val = true; };
+
+    template<c_integral tp_type>
+    s_v2_int_fmt<tp_type> FormatV2(const s_v2<tp_type> val) {
+        return {val};
+    }
+
+    template<c_floating_point tp_type>
+    s_v2_float_fmt<tp_type> FormatV2(const s_v2<tp_type> val, const t_b8 trim_trailing_zeros = false) {
+        return {val, trim_trailing_zeros};
+    }
+
+    template<c_integral tp_type>
+    t_b8 PrintType(s_stream& stream, const s_v2_int_fmt<tp_type>& fmt) {
+        return Print(stream, "(")
+            && PrintType(stream, FormatInt(fmt.val.x))
+            && Print(stream, ", ")
+            && PrintType(stream, FormatInt(fmt.val.y))
+            && Print(stream, ")");
+    }
+
+    template<c_floating_point tp_type>
+    t_b8 PrintType(s_stream& stream, const s_v2_float_fmt<tp_type>& fmt) {
+        return Print(stream, "(")
+            && PrintType(stream, FormatFloat(fmt.val.x, fmt.trim_trailing_zeros))
+            && Print(stream, ", ")
+            && PrintType(stream, FormatFloat(fmt.val.y, fmt.trim_trailing_zeros))
+            && Print(stream, ")");
+    }
+
+    // ============================================================
+    // @section: Array Printing
+    // ============================================================
+    enum e_array_print_style {
+        ek_array_print_style_inline,
+        ek_array_print_style_one_per_line
+    };
+
+    template<c_array tp_arr_type, c_fmt tp_fmt_type>
+    using t_array_elem_to_fmt = tp_fmt_type (*)(const typename tp_arr_type::t_elem& elem);
+
+    template<c_array tp_type>
+    struct s_array_fmt {
+        tp_type& val;
+        e_array_print_style style;
+    };
+
+    template<c_array tp_type> struct s_is_fmt<s_array_fmt<tp_type>> { static constexpr t_b8 g_val = true; };
+
+    template<c_array tp_type>
+    s_array_fmt<tp_type> FormatArray(tp_type& val, const e_array_print_style style = ek_array_print_style_inline) {
+        return {val, style};
+    }
+
+    template<c_array tp_type>
+    t_b8 PrintType(s_stream& stream, const s_array_fmt<tp_type>& fmt) {
+        switch (fmt.style) {
+            case ek_array_print_style_inline:
+                if (!Print(stream, "[")) {
+                    return false;
+                }
+
+                for (t_size i = 0; i < ArrayLen(fmt.val); i++) {
+                    // @todo: Generalise this via a function pointer!
+                    if (!PrintType(stream, FormatInt(fmt.val[i]))) {
+                        return false;
+                    }
+
+                    if (i < ArrayLen(fmt.val) - 1) {
+                        if (!Print(stream, ", ")) {
+                            return false;
+                        }
+                    }
+                }
+
+                if (!Print(stream, "]")) {
+                    return false;
+                }
+
+                break;
+
+            case ek_array_print_style_one_per_line:
+                for (t_size i = 0; i < ArrayLen(fmt.val); i++) {
+                    if (!PrintFmt(stream, "[%] ", FormatInt(i))) {
+                        return false;
+                    }
+
+                    // @todo: Generalise this via a function pointer!
+                    if (!PrintType(stream, FormatInt(fmt.val[i]))) {
+                        return false;
+                    }
+
+                    if (i < ArrayLen(fmt.val) - 1) {
+                        if (!Print(stream, "\n")) {
+                            return false;
+                        }
+                    }
+                }
+
+                break;
+        }
+
+        return true;
+    }
+
+    // ============================================================
+    // @section: Logging Helpers
+    // ============================================================
     template<c_fmt... tp_args>
     t_b8 Log(const s_str_rdonly fmt, tp_args... args) {
         s_stream std_err = StdOut();
@@ -547,7 +651,7 @@ namespace zf {
             return false;
         }
 
-        if (!PrintFmt(std_err, "\n")) {
+        if (!Print(std_err, "\n")) {
             return false;
         }
 
@@ -558,7 +662,7 @@ namespace zf {
     t_b8 LogError(const s_str_rdonly fmt, tp_args... args) {
         s_stream std_err = StdError();
 
-        if (!PrintFmt(std_err, "Error: ")) {
+        if (!Print(std_err, "Error: ")) {
             return false;
         }
 
@@ -566,7 +670,7 @@ namespace zf {
             return false;
         }
 
-        if (!PrintFmt(std_err, "\n")) {
+        if (!Print(std_err, "\n")) {
             return false;
         }
 
@@ -575,6 +679,8 @@ namespace zf {
 
     template<c_fmt... tp_args>
     t_b8 LogErrorType(const s_str_rdonly type_name, const s_str_rdonly fmt, tp_args... args) {
+        ZF_ASSERT(!IsStrEmpty(type_name));
+
         s_stream std_err = StdError();
 
         if (!PrintFmt(std_err, "% Error: ", FormatStr(type_name))) {
@@ -585,7 +691,7 @@ namespace zf {
             return false;
         }
 
-        if (!PrintFmt(std_err, "\n")) {
+        if (!Print(std_err, "\n")) {
             return false;
         }
 
@@ -596,7 +702,7 @@ namespace zf {
     t_b8 LogWarning(const s_str_rdonly fmt, tp_args... args) {
         s_stream std_err = StdError();
 
-        if (!PrintFmt(std_err, "Warning: ")) {
+        if (!Print(std_err, "Warning: ")) {
             return false;
         }
 
@@ -604,7 +710,7 @@ namespace zf {
             return false;
         }
 
-        if (!PrintFmt(std_err, "\n")) {
+        if (!Print(std_err, "\n")) {
             return false;
         }
 
