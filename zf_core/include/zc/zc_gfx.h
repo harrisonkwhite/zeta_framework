@@ -5,6 +5,9 @@
 #include <zc/ds/zc_hash_map.h>
 
 namespace zf {
+    // ============================================================
+    // @section: Colours
+    // ============================================================
     struct s_color_rgba32f {
         t_f32 r;
         t_f32 g;
@@ -72,19 +75,10 @@ namespace zf {
         constexpr s_color_rgba32f g_brown = {0.6f, 0.3f, 0.0f, 1.0f};
     }
 
+    // ============================================================
+    // @section: Textures
+    // ============================================================
     namespace origins {
-        constexpr s_v2<t_f32> g_topleft = {0.0f, 0.0f};
-        constexpr s_v2<t_f32> g_topcenter = {0.5f, 0.0f};
-        constexpr s_v2<t_f32> g_topright = {1.0f, 0.0f};
-        constexpr s_v2<t_f32> g_centerleft = {0.0f, 0.5f};
-        constexpr s_v2<t_f32> g_center = {0.5f, 0.5f};
-        constexpr s_v2<t_f32> g_centerright = {1.0f, 0.5f};
-        constexpr s_v2<t_f32> g_bottomleft = {0.0f, 1.0f};
-        constexpr s_v2<t_f32> g_bottomcenter = {0.5f, 1.0f};
-        constexpr s_v2<t_f32> g_bottomright = {1.0f, 1.0f};
-    }
-
-    namespace alignments {
         constexpr s_v2<t_f32> g_topleft = {0.0f, 0.0f};
         constexpr s_v2<t_f32> g_topcenter = {0.5f, 0.0f};
         constexpr s_v2<t_f32> g_topright = {1.0f, 0.0f};
@@ -114,6 +108,21 @@ namespace zf {
 
     [[nodiscard]] t_b8 PackTexture(const s_str_rdonly dest_file_path, const s_str_rdonly src_file_path, s_mem_arena& temp_mem_arena);
     [[nodiscard]] t_b8 UnpackTexture(const s_str_rdonly file_path, s_mem_arena& mem_arena, s_mem_arena& temp_mem_arena, s_rgba_texture_data& o_tex_data);
+
+    // ============================================================
+    // @section: Fonts
+    // ============================================================
+    namespace alignments {
+        constexpr s_v2<t_f32> g_topleft = {0.0f, 0.0f};
+        constexpr s_v2<t_f32> g_topcenter = {0.5f, 0.0f};
+        constexpr s_v2<t_f32> g_topright = {1.0f, 0.0f};
+        constexpr s_v2<t_f32> g_centerleft = {0.0f, 0.5f};
+        constexpr s_v2<t_f32> g_center = {0.5f, 0.5f};
+        constexpr s_v2<t_f32> g_centerright = {1.0f, 0.5f};
+        constexpr s_v2<t_f32> g_bottomleft = {0.0f, 1.0f};
+        constexpr s_v2<t_f32> g_bottomcenter = {0.5f, 1.0f};
+        constexpr s_v2<t_f32> g_bottomright = {1.0f, 1.0f};
+    }
 
     constexpr s_v2<t_s32> g_font_atlas_size = {1024, 1024};
 

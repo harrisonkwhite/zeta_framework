@@ -6,7 +6,6 @@
 #pragma once
 
 #include <zc/zc_mem.h>
-#include <zc/ds/zc_bit_vector.h>
 
 namespace zf {
     using t_unicode_code_pt = char32_t;

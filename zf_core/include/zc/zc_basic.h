@@ -41,6 +41,9 @@ namespace zf {
 
 #define ZF_DEFER(x) auto ZF_CONCAT(p_defer_, ZF_CONCAT(l, __LINE__)) = zf::p_s_defer([&]() x)
 
+    // ============================================================
+    // @section: Key Debugging Features
+    // ============================================================
     void HandleAssertFailure(const char* const cond_raw, const char* const func_name_raw, const char* const file_name_raw, const int line, const char* const msg_raw = nullptr);
 
 #ifdef ZF_DEBUG
@@ -70,6 +73,9 @@ namespace zf {
 
     void ShowErrorBox(const char* const title_raw, const char* const contents_raw);
 
+    // ============================================================
+    // @section: Types
+    // ============================================================
     static_assert(CHAR_BIT == 8);
 
     using t_s8 = signed char;
@@ -186,6 +192,9 @@ namespace zf {
         }
     }
 
+    // ============================================================
+    // @section: Essential Utilities
+    // ============================================================
     template<typename tp_type>
     constexpr void Swap(tp_type& a, tp_type& b) {
         const tp_type temp = a;

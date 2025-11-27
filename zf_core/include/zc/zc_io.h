@@ -260,7 +260,9 @@ namespace zf {
     // ============================================================
     // @section: Printing
     // ============================================================
-    t_b8 Print(s_stream& stream, const s_str_rdonly str);
+    inline t_b8 Print(s_stream& stream, const s_str_rdonly str) {
+        return StreamWriteItemsOfArray(stream, str.bytes);
+    }
 
     // ========================================
     // @subsection: Bool Printing

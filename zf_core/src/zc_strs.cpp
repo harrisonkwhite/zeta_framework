@@ -1,7 +1,5 @@
 #include <zc/zc_strs.h>
 
-#include <zc/ds/zc_bit_vector.h>
-
 namespace zf {
     enum e_utf8_byte_type : t_s32 {
         ek_utf8_byte_type_ascii,

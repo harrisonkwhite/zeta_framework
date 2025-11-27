@@ -40,6 +40,9 @@ namespace zf {
         }
     }
 
+    // ============================================================
+    // @section: Sorting
+    // ============================================================
     template<c_array tp_type>
     t_b8 IsSorted(tp_type& arr, const t_bin_comparator<typename tp_type::t_elem> comparator = DefaultOrdComparator) {
         ZF_ASSERT(comparator);

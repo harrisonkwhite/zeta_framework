@@ -220,8 +220,4 @@ namespace zf {
 
         return true;
     }
-
-    t_b8 Print(s_stream& stream, const s_str_rdonly str) {
-        return StreamWriteItemsOfArray(stream, str.bytes);
-    }
 }

@@ -6,19 +6,9 @@
 #include <stb_truetype.h>
 
 namespace zf {
-    constexpr t_hash_func<t_unicode_code_pt> g_code_pt_hash_func = [](const t_unicode_code_pt& code_pt) constexpr {
-        return static_cast<t_size>(code_pt);
-    };
-
-    constexpr t_hash_func<s_font_code_point_pair> g_code_pt_pair_hash_func = [](const s_font_code_point_pair& pair) constexpr {
-        // Combine the 32-bit pairs into a single 64-bit integer and mask out the sign bit.
-        return ((static_cast<t_size>(pair.a) << 32) & pair.b) & 0x7FFFFFFFFFFFFFFF;
-    };
-
-    constexpr t_bin_comparator<s_font_code_point_pair> g_code_pt_pair_comparator = [](const s_font_code_point_pair& pa, const s_font_code_point_pair& pb) constexpr {
-        return pa.a == pb.a && pa.b == pb.b;
-    };
-
+    // ============================================================
+    // @section: Textures
+    // ============================================================
     t_b8 LoadRGBATextureDataFromRaw(const s_str_rdonly file_path, s_mem_arena& mem_arena, s_mem_arena& temp_mem_arena, s_rgba_texture_data& o_tex_data) {
         s_str file_path_terminated;
 
@@ -98,6 +88,22 @@ namespace zf {
 
         return true;
     }
+
+    // ============================================================
+    // @section: Fonts
+    // ============================================================
+    constexpr t_hash_func<t_unicode_code_pt> g_code_pt_hash_func = [](const t_unicode_code_pt& code_pt) constexpr {
+        return static_cast<t_size>(code_pt);
+    };
+
+    constexpr t_hash_func<s_font_code_point_pair> g_code_pt_pair_hash_func = [](const s_font_code_point_pair& pair) constexpr {
+        // Combine the 32-bit pairs into a single 64-bit integer and mask out the sign bit.
+        return ((static_cast<t_size>(pair.a) << 32) & pair.b) & 0x7FFFFFFFFFFFFFFF;
+    };
+
+    constexpr t_bin_comparator<s_font_code_point_pair> g_code_pt_pair_comparator = [](const s_font_code_point_pair& pa, const s_font_code_point_pair& pb) constexpr {
+        return pa.a == pb.a && pa.b == pb.b;
+    };
 
     t_b8 LoadFontFromRaw(const s_str_rdonly file_path, const t_s32 height, t_unicode_code_pt_bit_vector& code_pts, s_mem_arena& arrangement_mem_arena, s_mem_arena& atlas_rgbas_mem_arena, s_mem_arena& temp_mem_arena, s_font_arrangement& o_arrangement, s_array<t_font_atlas_rgba>& o_atlas_rgbas) {
         ZF_ASSERT(height > 0);

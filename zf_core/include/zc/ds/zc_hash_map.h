@@ -1,8 +1,7 @@
 #pragma once
 
 #include <zc/zc_strs.h>
-#include <zc/ds/zc_bit_vector.h>
-#include <zc/ds/zc_list.h>
+#include <zc/ds/zc_linear.h>
 
 namespace zf {
     template<typename tp_type>

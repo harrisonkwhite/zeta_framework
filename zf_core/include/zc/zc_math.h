@@ -103,6 +103,9 @@ namespace zf {
         return val >= targ - tol && val <= targ + tol;
     }
 
+    // ============================================================
+    // @section: Vectors
+    // ============================================================
     template<c_numeric tp_type>
     struct s_v2 {
         tp_type x;
@@ -211,6 +214,14 @@ namespace zf {
         return atan2(-(b.y - a.y), b.x - a.x);
     }
 
+    template<c_floating_point tp_type>
+    inline s_v2<tp_type> LenDir(const tp_type len, const tp_type dir) {
+        return s_v2<tp_type>(cos(dir), -sin(dir)) * len;
+    }
+
+    // ============================================================
+    // @section: Rectangles
+    // ============================================================
     template<c_numeric tp_type>
     struct s_rect {
         tp_type x;
@@ -285,6 +296,9 @@ namespace zf {
         };
     }
 
+    // ============================================================
+    // @section: Matrices
+    // ============================================================
     struct s_matrix_4x4 {
         s_static_array<s_static_array<t_f32, 4>, 4> elems;
     };
@@ -316,6 +330,7 @@ namespace zf {
         mat.elems[3][3] = 1.0f;
         return mat;
     }
+    // ============================================================
 
     template<c_floating_point tp_type>
     constexpr tp_type Lerp(const tp_type a, const tp_type b, const tp_type t) {
@@ -325,10 +340,5 @@ namespace zf {
     template<c_floating_point tp_type>
     constexpr s_v2<tp_type> Lerp(const s_v2<tp_type> a, const s_v2<tp_type> b, const tp_type t) {
         return a + ((b - a) * t);
-    }
-
-    template<c_floating_point tp_type>
-    inline s_v2<tp_type> LenDir(const tp_type len, const tp_type dir) {
-        return s_v2<tp_type>(cos(dir), -sin(dir)) * len;
     }
 }
