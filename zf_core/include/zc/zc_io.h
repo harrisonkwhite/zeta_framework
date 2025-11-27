@@ -312,6 +312,54 @@ namespace zf {
         return Print(stream, str);
     }
 
+    template<c_floating_point tp_type>
+    struct s_float_fmt {
+        tp_type val;
+        t_b8 trim_trailing_zeros;
+        t_size prec;
+    };
+
+    template<c_floating_point tp_type>
+    s_float_fmt<tp_type> FormatFloat(const tp_type val, const t_b8 trim_trailing_zeros = false) {
+        return {val, trim_trailing_zeros};
+    }
+
+    template<c_floating_point tp_type>
+    t_b8 PrintType(s_stream& stream, const s_float_fmt<tp_type>& fmt) {
+        s_static_array<t_u8, 400> str_bytes = {}; // Roughly more than how many bytes should ever be needed.
+
+        auto str_bytes_used = snprintf(reinterpret_cast<char*>(str_bytes.buf_raw), str_bytes.g_len, "%f", fmt.val);
+
+        if (str_bytes_used < 0 || str_bytes_used >= str_bytes.g_len) {
+            return false;
+        }
+
+        if (fmt.trim_trailing_zeros) {
+            const auto str_bytes_relevant = Slice(str_bytes, 0, str_bytes_used);
+
+            if (AreAnyEqualTo(str_bytes_relevant, '.')) {
+                for (t_size i = str_bytes_used - 1; ; i--) {
+                    if (str_bytes[i] == '0') {
+                        str_bytes_used--;
+                    } else if (str_bytes[i] == '.') {
+                        str_bytes_used--;
+                        break;
+                    } else {
+                        break;
+                    }
+                }
+            }
+        }
+
+        const s_str_rdonly str = {Slice(str_bytes, 0, str_bytes_used)};
+        return Print(stream, str);
+    }
+
+    template<c_floating_point tp_type>
+    s_float_fmt<tp_type> FormatHex(const tp_type val) {
+        return {val};
+    }
+
     template<c_unsigned_integral tp_type>
     struct s_hex_fmt {
         tp_type val;
@@ -368,6 +416,7 @@ namespace zf {
     template<> struct s_is_fmt<s_bool_fmt> { static constexpr t_b8 g_val = true; };
     template<> struct s_is_fmt<s_str_fmt> { static constexpr t_b8 g_val = true; };
     template<c_integral tp_type> struct s_is_fmt<s_integral_fmt<tp_type>> { static constexpr t_b8 g_val = true; };
+    template<c_floating_point tp_type> struct s_is_fmt<s_float_fmt<tp_type>> { static constexpr t_b8 g_val = true; };
     template<c_unsigned_integral tp_type> struct s_is_fmt<s_hex_fmt<tp_type>> { static constexpr t_b8 g_val = true; };
 
     template<typename tp_type>
