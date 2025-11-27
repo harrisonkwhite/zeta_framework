@@ -195,10 +195,45 @@ namespace zf {
     // ============================================================
     // @section: Essential Utilities
     // ============================================================
+#define ZF_MIN(a, b) ((a) <= (b) ? (a) : (b))
+#define ZF_MAX(a, b) ((a) >= (b) ? (a) : (b))
+
     template<typename tp_type>
     constexpr void Swap(tp_type& a, tp_type& b) {
         const tp_type temp = a;
         a = b;
         b = temp;
+    }
+
+    template<c_numeric tp_type>
+    constexpr tp_type Abs(const tp_type n) {
+        return n < 0 ? -n : n;
+    }
+
+    template<c_numeric tp_type>
+    constexpr tp_type Clamp(const tp_type n, const tp_type min, const tp_type max) {
+        ZF_ASSERT(min <= max);
+        return n < 0 ? -n : n;
+    }
+
+    template<c_numeric tp_type>
+    constexpr t_s32 Sign(const tp_type n) {
+        if (n > 0) {
+            return 1;
+        } else if (n < 0) {
+            return -1;
+        }
+
+        return 0;
+    }
+
+    template<c_integral tp_type>
+    constexpr tp_type WrapUpper(const tp_type val, const tp_type max_excl) {
+        return ((val % max_excl) + max_excl) % max_excl;
+    }
+
+    template<c_integral tp_type>
+    constexpr tp_type Wrap(const tp_type val, const tp_type min, const tp_type max_excl) {
+        return min + WrapUpper(val - min, max_excl - min);
     }
 }

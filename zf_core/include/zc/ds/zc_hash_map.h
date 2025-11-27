@@ -1,6 +1,7 @@
 #pragma once
 
 #include <zc/zc_strs.h>
+#include <zc/zc_io.h>
 #include <zc/ds/zc_linear.h>
 
 namespace zf {
@@ -38,8 +39,8 @@ namespace zf {
             s_array<tp_val_type> vals;
             s_array<t_size> next_indexes; // Like the standard "next" pointer of a linked list node, but for an index specific to this backing store.
 
-            // Indicates what slots or "nodes" are in use.
-            s_bit_vector usage;
+            // Each bit indicates whether the slot or "node" is in use.
+            s_array<t_u8> usage;
         } backing_store;
     };
 
@@ -221,7 +222,7 @@ namespace zf {
             return false;
         }
 
-        if (!MakeBitVector(mem_arena, kv_pair_cap, o_um.backing_store.usage)) {
+        if (!MakeArray(mem_arena, BitsToBytes(kv_pair_cap), o_um.backing_store.usage)) {
             return false;
         }
 
@@ -251,7 +252,7 @@ namespace zf {
             return false;
         }
 
-        if (!SerializeBitVector(stream, hm.backing_store.usage)) {
+        if (!SerializeArray(stream, hm.backing_store.usage)) {
             return false;
         }
 
@@ -285,7 +286,7 @@ namespace zf {
             return false;
         }
 
-        if (!DeserializeBitVector(stream, mem_arena, o_hm.backing_store.usage)) {
+        if (!DeserializeArray(stream, mem_arena, o_hm.backing_store.usage)) {
             return false;
         }
 

@@ -235,12 +235,15 @@ namespace zf {
                             const auto height = field_vals[ek_font_field_height]->valueint;
                             const auto extra_chrs_fp = StrFromRaw(field_vals[ek_font_field_extra_chrs_file_path]->valuestring);
 
-                            const auto code_pts = PushToMemArena<t_unicode_code_pt_bit_vector>(mem_arena);
+                            const auto code_pts = PushToMemArena<t_unicode_code_pt_bits>(mem_arena);
 
                             if (!code_pts) {
                                 ZF_REPORT_FAILURE();
                                 return false;
                             }
+
+                            // Add the printable ASCII range as a default.
+                            SetBitsInRange(ToNonstatic(*code_pts), g_ascii_printable_range_begin, g_ascii_printable_range_end);
 
                             // @todo: Save an actual mask of this.
                             for (t_size i = 32; i < 127; i++) {

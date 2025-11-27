@@ -49,7 +49,9 @@ namespace zf {
     // ============================================================
     // @section: Bits
     // ============================================================
-    static t_size IndexOfFirstSetBitHelper(const s_bit_range_rdonly br, const t_b8 inverted) {
+    static t_size IndexOfFirstSetBitHelper(const s_array_rdonly<t_u8> bytes, const t_size from, const t_u8 xor_mask) {
+        ZF_ASSERT(from >= 0 && from <= BytesToBits(bytes.len)); // Intentionally allowing the upper bound here for the case of iteration.
+
         // Map of each byte to the index of the first set bit, or -1 for the first case.
         static constexpr s_static_array<t_size, 256> g_mappings = {{
             -1, // 0000 0000
@@ -310,12 +312,19 @@ namespace zf {
             0 // 1111 1111
         }};
 
-        const t_u8 xor_mask = inverted ? 0xFF : 0;
+        const t_size begin_byte_index = from / 8;
 
-        for (t_size i = BitRangeFirstByteIndex(br); i <= BitRangeLastByteIndex(br); i++) {
-            const auto test = BitRangeBackingByteIsolated(br, i);
-            const auto test_postxor = BitRangeBackingByteIsolated(br, i) ^ xor_mask;
-            const t_size bi = g_mappings[BitRangeBackingByteIsolated(br, i) ^ xor_mask];
+        {
+            const t_u8 begin_byte = bytes[begin_byte_index] & BitmaskRange<t_u8>(from % 8);
+            const t_size bi = g_mappings[begin_byte ^ xor_mask];
+
+            if (bi != -1) {
+                return (8 * begin_byte_index) + bi;
+            }
+        }
+
+        for (t_size i = begin_byte_index + 1; i < bytes.len; i++) {
+            const t_size bi = g_mappings[bytes[i] ^ xor_mask];
 
             if (bi != -1) {
                 return (8 * i) + bi;
@@ -325,31 +334,15 @@ namespace zf {
         return -1;
     }
 
-    t_size IndexOfFirstSetBit(const s_bit_range_rdonly br, const t_size from) {
-        ZF_ASSERT(from <= br.bit_cnt); // Intentionally allowing the upper bound here for the case of iteration.
-
-        const s_bit_range_rdonly br_slice = {
-            .backing_bytes = br.backing_bytes,
-            .begin_bit_index = br.begin_bit_index + from,
-            .bit_cnt = br.bit_cnt - from
-        };
-
-        return IndexOfFirstSetBitHelper(br_slice, false);
+    t_size IndexOfFirstSetBit(const s_array_rdonly<t_u8> bytes, const t_size from) {
+        return IndexOfFirstSetBitHelper(bytes, from, 0);
     }
 
-    t_size IndexOfFirstUnsetBit(const s_bit_range_rdonly br, const t_size from) {
-        ZF_ASSERT(from <= br.bit_cnt); // Intentionally allowing the upper bound here for the case of iteration.
-
-        const s_bit_range_rdonly br_slice = {
-            .backing_bytes = br.backing_bytes,
-            .begin_bit_index = br.begin_bit_index + from,
-            .bit_cnt = br.bit_cnt - from
-        };
-
-        return IndexOfFirstSetBitHelper(br_slice, true);
+    t_size IndexOfFirstUnsetBit(const s_array_rdonly<t_u8> bytes, const t_size from) {
+        return IndexOfFirstSetBitHelper(bytes, from, 0xFF);
     }
 
-    t_size CountSetBits(const s_bit_range_rdonly br) {
+    t_size CountSetBits(const s_array_rdonly<t_u8> bytes) {
         // Map of each byte to the number of set bits in it.
         static constexpr s_static_array<t_size, 256> g_mappings = {{
             0, // 0000 0000
@@ -612,53 +605,10 @@ namespace zf {
 
         t_size res = 0;
 
-        for (t_size i = BitRangeFirstByteIndex(br); i <= BitRangeLastByteIndex(br); i++) {
-            const t_u8 byte_isolated = BitRangeBackingByteIsolated(br, i);
-            res += g_mappings[byte_isolated];
+        for (t_size i = 0; i < bytes.len; i++) {
+            res += g_mappings[bytes[i]];
         }
 
         return res;
-    }
-
-    t_b8 MakeBitVector(s_mem_arena& mem_arena, const t_size bit_cnt, s_bit_vector& o_bv) {
-        ZF_ASSERT(bit_cnt > 0);
-
-        o_bv = {
-            .bit_cnt = bit_cnt
-        };
-
-        return MakeArray(mem_arena, BitsToBytes(bit_cnt), o_bv.bytes);
-    }
-
-    t_b8 SerializeBitVector(s_stream& stream, const s_bit_vector_rdonly bv) {
-        if (!StreamWriteItem(stream, bv.bit_cnt)) {
-            return false;
-        }
-
-        const auto bytes_src = Slice(bv.bytes, 0, BitsToBytes(bv.bit_cnt));
-
-        if (!StreamWriteItemsOfArray(stream, bytes_src)) {
-            return false;
-        }
-
-        return true;
-    }
-
-    t_b8 DeserializeBitVector(s_stream& stream, s_mem_arena& mem_arena, s_bit_vector& o_bv) {
-        if (!StreamReadItem(stream, o_bv.bit_cnt)) {
-            return false;
-        }
-
-        if (o_bv.bit_cnt > 0) {
-            if (!MakeArray(mem_arena, BitsToBytes(o_bv.bit_cnt), o_bv.bytes)) {
-                return false;
-            }
-
-            if (!StreamReadItemsIntoArray(stream, o_bv.bytes, o_bv.bytes.len)) {
-                return false;
-            }
-        }
-
-        return true;
     }
 }

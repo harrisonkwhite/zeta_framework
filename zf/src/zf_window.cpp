@@ -15,11 +15,11 @@
 
 namespace zf {
     struct s_input_events {
-        s_static_bit_vector<eks_key_code_cnt> keys_pressed;
-        s_static_bit_vector<eks_key_code_cnt> keys_released;
+        s_static_array<t_u8, BitsToBytes(eks_key_code_cnt)> keys_pressed;
+        s_static_array<t_u8, BitsToBytes(eks_key_code_cnt)> keys_released;
 
-        s_static_bit_vector<eks_mouse_button_code_cnt> mouse_buttons_pressed;
-        s_static_bit_vector<eks_mouse_button_code_cnt> mouse_buttons_released;
+        s_static_array<t_u8, BitsToBytes(eks_mouse_button_code_cnt)> mouse_buttons_pressed;
+        s_static_array<t_u8, BitsToBytes(eks_mouse_button_code_cnt)> mouse_buttons_released;
 
         e_mouse_scroll_state mouse_scroll_state;
 
@@ -371,32 +371,26 @@ namespace zf {
     }
 
     t_b8 IsKeyDown(const e_key_code kc) {
-        ZF_ASSERT(kc != eks_key_code_none);
         return glfwGetKey(g_glfw_window, ToGLFWKey(kc)) != GLFW_RELEASE;
     }
 
     t_b8 IsKeyPressed(const e_key_code kc) {
-        ZF_ASSERT(kc != eks_key_code_none);
         return IsBitSet(g_input_events.keys_pressed, kc);
     }
 
     t_b8 IsKeyReleased(const e_key_code kc) {
-        ZF_ASSERT(kc != eks_key_code_none);
         return IsBitSet(g_input_events.keys_released, kc);
     }
 
     t_b8 IsMouseButtonDown(const e_mouse_button_code mbc) {
-        ZF_ASSERT(mbc != eks_mouse_button_code_none);
         return glfwGetMouseButton(g_glfw_window, ToGLFWMouseButton(mbc)) != GLFW_RELEASE;
     }
 
     t_b8 IsMouseButtonPressed(const e_mouse_button_code mbc) {
-        ZF_ASSERT(mbc != eks_mouse_button_code_none);
         return IsBitSet(g_input_events.mouse_buttons_pressed, mbc);
     }
 
     t_b8 IsMouseButtonReleased(const e_mouse_button_code mbc) {
-        ZF_ASSERT(mbc != eks_mouse_button_code_none);
         return IsBitSet(g_input_events.mouse_buttons_released, mbc);
     }
 

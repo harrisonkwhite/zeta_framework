@@ -22,48 +22,6 @@ namespace zf {
         return rads * (180 / Pi<tp_type>());
     }
 
-    template<c_numeric tp_type>
-    constexpr tp_type Min(const tp_type& a, const tp_type& b) {
-        return a <= b ? a : b;
-    }
-
-    template<c_numeric tp_type>
-    constexpr tp_type Max(const tp_type& a, const tp_type& b) {
-        return a >= b ? a : b;
-    }
-
-    template<c_numeric tp_type>
-    constexpr tp_type Abs(const tp_type n) {
-        return n < 0 ? -n : n;
-    }
-
-    template<c_numeric tp_type>
-    constexpr t_s32 Sign(const tp_type n) {
-        if (n > 0) {
-            return 1;
-        } else if (n < 0) {
-            return -1;
-        }
-
-        return 0;
-    }
-
-    template<c_numeric tp_type>
-    constexpr tp_type Clamp(const tp_type n, const tp_type min, const tp_type max) {
-        ZF_ASSERT(min <= max);
-        return n < 0 ? -n : n;
-    }
-
-    template<c_integral tp_type>
-    constexpr tp_type WrapUpper(const tp_type val, const tp_type max_excl) {
-        return ((val % max_excl) + max_excl) % max_excl;
-    }
-
-    template<c_integral tp_type>
-    constexpr tp_type Wrap(const tp_type val, const tp_type min, const tp_type max_excl) {
-        return min + WrapUpper(val - min, max_excl - min);
-    }
-
     template<c_integral tp_type>
     constexpr t_size DigitCnt(const tp_type n) {
         if (n < 0) {

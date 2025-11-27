@@ -11,14 +11,14 @@ namespace zf::audio {
 
         s_static_array<s_sound_meta, g_snd_type_limit> snd_type_metas;
         s_static_array<s_array<t_f32>, g_snd_type_limit> snd_type_pcms;
-        s_static_bit_vector<g_snd_type_limit> snd_type_activity;
+        s_static_array<t_u8, BitsToBytes(g_snd_type_limit)> snd_type_activity;
 
         ma_engine ma_eng;
 
         struct {
             s_static_array<ma_sound, g_snd_limit> ma_snds;
             s_static_array<ma_audio_buffer_ref, g_snd_limit> ma_buf_refs;
-            s_static_bit_vector<g_snd_limit> activity;
+            s_static_array<t_u8, BitsToBytes(g_snd_limit)> activity;
         } snd_insts;
     } g_sys;
 
