@@ -473,22 +473,31 @@ namespace zf {
     }
 
     constexpr t_b8 AreAllBitsUnset(const s_bit_vec_rdonly& bv) {
+        if (bv.bit_cnt == 0) {
+            return false;
+        }
+
         return !IsAnyBitSet(bv);
     }
 
     constexpr t_b8 IsAnyBitUnset(const s_bit_vec_rdonly& bv) {
+        if (bv.bit_cnt == 0) {
+            return false;
+        }
+
         return !AreAllBitsSet(bv);
     }
 
+    // Sets all bits in the range [begin_bit_index, end_bit_index).
     constexpr void SetBitsInRange(const s_bit_vec& bv, const t_size begin_bit_index, const t_size end_bit_index) {
         ZF_ASSERT(IsBitVecValid(bv));
         ZF_ASSERT(begin_bit_index >= 0 && begin_bit_index < bv.bit_cnt);
         ZF_ASSERT(end_bit_index >= begin_bit_index && end_bit_index <= bv.bit_cnt);
 
         const t_size begin_elem_index = begin_bit_index / 8;
-        const t_size elem_cnt = BitsToBytes(end_bit_index - begin_bit_index);
+        const t_size end_elem_index = BitsToBytes(end_bit_index);
 
-        for (t_size i = begin_elem_index; i < begin_elem_index + elem_cnt; i++) {
+        for (t_size i = begin_elem_index; i < end_elem_index; i++) {
             const t_size bit_offs = i * 8;
             const t_size begin_bit_index_rel = begin_bit_index - bit_offs;
             const t_size end_bit_index_rel = end_bit_index - bit_offs;
@@ -518,55 +527,58 @@ namespace zf {
 
         switch (op) {
             case ek_bitwise_mask_op_and:
-                for (t_size i = 0; i < dest.bytes.len - 1; i++) {
+                for (t_size i = 0; i < dest.bytes.len; i++) {
                     dest.bytes[i] &= src.bytes[i];
                 }
 
                 break;
 
             case ek_bitwise_mask_op_or:
-                for (t_size i = 0; i < dest.bytes.len - 1; i++) {
+                for (t_size i = 0; i < dest.bytes.len; i++) {
                     dest.bytes[i] |= src.bytes[i];
                 }
 
                 break;
 
             case ek_bitwise_mask_op_xor:
-                for (t_size i = 0; i < dest.bytes.len - 1; i++) {
+                for (t_size i = 0; i < dest.bytes.len; i++) {
                     dest.bytes[i] ^= src.bytes[i];
                 }
 
                 break;
 
             case ek_bitwise_mask_op_andnot:
-                for (t_size i = 0; i < dest.bytes.len - 1; i++) {
+                for (t_size i = 0; i < dest.bytes.len; i++) {
                     dest.bytes[i] &= ~src.bytes[i];
                 }
 
                 break;
         }
 
-        dest.bytes[dest.bytes.len - 1] &= BitVecLastByteMask(src);
+        dest.bytes[dest.bytes.len - 1] &= BitVecLastByteMask(dest);
     }
 
-    // Shifts left only by 1. Returns the carry bit. Input carry can only be 0 or 1.
-    constexpr t_u8 ShiftBitsLeft(const s_bit_vec& bv, t_u8 carry = 0) {
+    // Shifts left only by 1. Returns the discarded bit as 0 or 1.
+    constexpr t_u8 ShiftBitsLeft(const s_bit_vec& bv) {
         ZF_ASSERT(IsBitVecValid(bv));
-        ZF_ASSERT(carry == 0 || carry == 1);
 
-        if (bv.bit_cnt > 0) {
-            for (t_size i = 0; i < bv.bytes.len; i++) {
-                const t_size bits_in_byte = i == bv.bytes.len - 1 ? BitVecLastByteBitCnt(bv) : 8;
-                const t_u8 discard = bv.bytes[i] & BitmaskSingle(bits_in_byte - 1);
-                bv.bytes[i] <<= 1;
-                bv.bytes[i] |= carry;
-                carry = discard >> (bits_in_byte - 1);
-            }
-
-            bv.bytes[bv.bytes.len - 1] &= BitVecLastByteMask(bv);
+        if (bv.bit_cnt == 0) {
+            return 0;
         }
 
-        return carry;
+        t_u8 discard = 0;
+
+        for (t_size i = 0; i < bv.bytes.len; i++) {
+            const t_size bits_in_byte = i == bv.bytes.len - 1 ? BitVecLastByteBitCnt(bv) : 8;
+            const t_u8 discard_last = discard;
+            discard = (bv.bytes[i] & BitmaskSingle(bits_in_byte - 1)) >> (bits_in_byte - 1);
+            bv.bytes[i] <<= 1;
+            bv.bytes[i] |= discard_last;
+        }
+
+        bv.bytes[bv.bytes.len - 1] &= BitVecLastByteMask(bv);
+
+        return discard;
     }
 
     constexpr void ShiftBitsLeftBy(const s_bit_vec& bv, const t_size amount) {
@@ -590,13 +602,73 @@ namespace zf {
 
         // @speed: :(
 
-        t_u8 carry = 0;
-
         for (t_size i = 0; i < amount; i++) {
-            carry = ShiftBitsLeft(bv, carry);
+            const auto discard = ShiftBitsLeft(bv);
+
+            if (discard) {
+                SetBit(bv, 0);
+            } else {
+                UnsetBit(bv, 0);
+            }
+        }
+    }
+
+    // Shifts right only by 1. Returns the carry bit.
+    constexpr t_u8 ShiftBitsRight(const s_bit_vec& bv) {
+        ZF_ASSERT(IsBitVecValid(bv));
+
+        if (bv.bit_cnt == 0) {
+            return 0;
         }
 
-        bv.bytes[0] |= carry;
+        bv.bytes[bv.bytes.len - 1] &= BitVecLastByteMask(bv); // Drop any excess bits so we don't accidentally shift a 1 in.
+
+        t_u8 discard = 0;
+
+        for (t_size i = bv.bytes.len - 1; i >= 0; i--) {
+            const t_size bits_in_byte = i == bv.bytes.len - 1 ? BitVecLastByteBitCnt(bv) : 8;
+            const t_u8 discard_last = discard;
+            discard = bv.bytes[i] & BitmaskSingle(0);
+            bv.bytes[i] >>= 1;
+
+            if (discard_last) {
+                bv.bytes[i] |= BitmaskSingle(bits_in_byte - 1);
+            }
+        }
+
+        return discard;
+    }
+
+    constexpr void ShiftBitsRightBy(const s_bit_vec& bv, const t_size amount) {
+        ZF_ASSERT(IsBitVecValid(bv));
+        ZF_ASSERT(amount >= 0);
+
+        // @speed: :(
+
+        for (t_size i = 0; i < amount; i++) {
+            ShiftBitsRight(bv);
+        }
+    }
+
+    constexpr void RotBitsRightBy(const s_bit_vec& bv, const t_size amount) {
+        ZF_ASSERT(IsBitVecValid(bv));
+        ZF_ASSERT(amount >= 0);
+
+        if (bv.bit_cnt == 0) {
+            return;
+        }
+
+        // @speed: :(
+
+        for (t_size i = 0; i < amount; i++) {
+            const auto discard = ShiftBitsRight(bv);
+
+            if (discard) {
+                SetBit(bv, bv.bit_cnt - 1);
+            } else {
+                UnsetBit(bv, bv.bit_cnt - 1);
+            }
+        }
     }
 
     t_size IndexOfFirstSetBit(const s_bit_vec_rdonly& bv, const t_size from = 0);
