@@ -223,6 +223,38 @@ namespace zf {
         return true;
     }
 
+    [[nodiscard]] inline t_b8 SerializeBitVec(s_stream& stream, const s_bit_vec_rdonly& bv) {
+        if (!StreamWriteItem(stream, bv.bit_cnt)) {
+            return false;
+        }
+
+        if (!StreamWriteItemsOfArray(stream, bv.bytes)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    [[nodiscard]] inline t_b8 DeserializeBitVec(s_stream& stream, s_mem_arena& mem_arena, s_bit_vec& o_bv) {
+        o_bv = {};
+
+        if (!StreamReadItem(stream, o_bv.bit_cnt)) {
+            return false;
+        }
+
+        if (o_bv.bit_cnt > 0) {
+            if (!MakeArray(mem_arena, BitsToBytes(o_bv.bit_cnt), o_bv.bytes)) {
+                return false;
+            }
+
+            if (!StreamReadItemsIntoArray(stream, o_bv.bytes, o_bv.bytes.len)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     // ============================================================
     // @section: Files and Directories
     // ============================================================

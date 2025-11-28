@@ -49,8 +49,9 @@ namespace zf {
     // ============================================================
     // @section: Bits
     // ============================================================
-    static t_size IndexOfFirstSetBitHelper(const s_array_rdonly<t_u8> bytes, const t_size from, const t_u8 xor_mask) {
-        ZF_ASSERT(from >= 0 && from <= BytesToBits(bytes.len)); // Intentionally allowing the upper bound here for the case of iteration.
+    static t_size IndexOfFirstSetBitHelper(const s_bit_vec_rdonly& bv, const t_size from, const t_u8 xor_mask) {
+        ZF_ASSERT(IsBitVecValid(bv));
+        ZF_ASSERT(from >= 0 && from <= bv.bit_cnt); // Intentionally allowing the upper bound here for the case of iteration.
 
         // Map of each byte to the index of the first set bit, or -1 for the first case.
         static constexpr s_static_array<t_size, 256> g_mappings = {{
@@ -314,17 +315,18 @@ namespace zf {
 
         const t_size begin_byte_index = from / 8;
 
-        {
-            const t_u8 begin_byte = bytes[begin_byte_index] & BitmaskRange<t_u8>(from % 8);
-            const t_size bi = g_mappings[begin_byte ^ xor_mask];
+        for (t_size i = begin_byte_index; i < bv.bytes.len; i++) {
+            t_u8 byte = bv.bytes[i];
 
-            if (bi != -1) {
-                return (8 * begin_byte_index) + bi;
+            if (i == begin_byte_index) {
+                byte &= BitmaskRange(from % 8);
             }
-        }
 
-        for (t_size i = begin_byte_index + 1; i < bytes.len; i++) {
-            const t_size bi = g_mappings[bytes[i] ^ xor_mask];
+            if (i == bv.bytes.len - 1) {
+                byte &= BitVecLastByteMask(bv);
+            }
+
+            const t_size bi = g_mappings[byte ^ xor_mask];
 
             if (bi != -1) {
                 return (8 * i) + bi;
@@ -334,15 +336,17 @@ namespace zf {
         return -1;
     }
 
-    t_size IndexOfFirstSetBit(const s_array_rdonly<t_u8> bytes, const t_size from) {
-        return IndexOfFirstSetBitHelper(bytes, from, 0);
+    t_size IndexOfFirstSetBit(const s_bit_vec_rdonly& bv, const t_size from) {
+        return IndexOfFirstSetBitHelper(bv, from, 0);
     }
 
-    t_size IndexOfFirstUnsetBit(const s_array_rdonly<t_u8> bytes, const t_size from) {
-        return IndexOfFirstSetBitHelper(bytes, from, 0xFF);
+    t_size IndexOfFirstUnsetBit(const s_bit_vec_rdonly& bv, const t_size from) {
+        return IndexOfFirstSetBitHelper(bv, from, 0xFF);
     }
 
-    t_size CountSetBits(const s_array_rdonly<t_u8> bytes) {
+    t_size CountSetBits(const s_bit_vec_rdonly& bv) {
+        ZF_ASSERT(IsBitVecValid(bv));
+
         // Map of each byte to the number of set bits in it.
         static constexpr s_static_array<t_size, 256> g_mappings = {{
             0, // 0000 0000
@@ -605,8 +609,12 @@ namespace zf {
 
         t_size res = 0;
 
-        for (t_size i = 0; i < bytes.len; i++) {
-            res += g_mappings[bytes[i]];
+        if (bv.bytes.len > 0) {
+            for (t_size i = 0; i < bv.bytes.len - 1; i++) {
+                res += g_mappings[bv.bytes[i]];
+            }
+
+            res += g_mappings[bv.bytes[bv.bytes.len - 1] & BitVecLastByteMask(bv)];
         }
 
         return res;

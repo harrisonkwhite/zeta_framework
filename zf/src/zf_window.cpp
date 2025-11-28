@@ -15,11 +15,11 @@
 
 namespace zf {
     struct s_input_events {
-        s_static_array<t_u8, BitsToBytes(eks_key_code_cnt)> keys_pressed;
-        s_static_array<t_u8, BitsToBytes(eks_key_code_cnt)> keys_released;
+        s_static_bit_vec<eks_key_code_cnt> keys_pressed;
+        s_static_bit_vec<eks_key_code_cnt> keys_released;
 
-        s_static_array<t_u8, BitsToBytes(eks_mouse_button_code_cnt)> mouse_buttons_pressed;
-        s_static_array<t_u8, BitsToBytes(eks_mouse_button_code_cnt)> mouse_buttons_released;
+        s_static_bit_vec<eks_mouse_button_code_cnt> mouse_buttons_pressed;
+        s_static_bit_vec<eks_mouse_button_code_cnt> mouse_buttons_released;
 
         e_mouse_scroll_state mouse_scroll_state;
 

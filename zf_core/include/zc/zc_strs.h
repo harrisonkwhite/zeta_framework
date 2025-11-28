@@ -12,7 +12,7 @@ namespace zf {
 
     constexpr t_size g_unicode_code_pt_cnt = 1114112;
 
-    using t_unicode_code_pt_bits = s_static_array<t_u8, BitsToBytes(g_unicode_code_pt_cnt)>;
+    using t_unicode_code_pt_bit_vec = s_static_bit_vec<g_unicode_code_pt_cnt>;
 
     constexpr t_size UnicodeCodePointToByteCnt(const t_unicode_code_pt cp) {
         if (cp <= 0x7F) {
@@ -36,11 +36,18 @@ namespace zf {
         return 0;
     }
 
-    constexpr t_size g_ascii_printable_range_begin = 0x20;
-    constexpr t_size g_ascii_printable_range_end = 0x7F;
+    constexpr t_size g_ascii_range_begin = 0;
+    constexpr t_size g_ascii_range_end = 0x80;
 
     constexpr t_b8 IsASCII(const t_unicode_code_pt cp) {
-        return cp <= 0x7F;
+        return cp >= g_ascii_range_begin && cp < g_ascii_range_end;
+    }
+
+    constexpr t_size g_printable_ascii_range_begin = 0x20;
+    constexpr t_size g_printable_ascii_range_end = 0x7F;
+
+    constexpr t_b8 IsPrintableASCII(const t_unicode_code_pt cp) {
+        return cp >= g_printable_ascii_range_begin && cp < g_printable_ascii_range_end;
     }
 
     struct s_str_rdonly {
@@ -136,7 +143,7 @@ namespace zf {
     t_b8 WalkStrReverse(const s_str_rdonly str, t_size& byte_index, s_str_chr_info& o_chr_info); // Returns false iff the walk has ended. For a full walk, the byte index has to be initialised to the index of ANY BYTE in the last character.
 
     t_unicode_code_pt UTF8ChrBytesToCodePoint(const s_array_rdonly<t_u8> bytes); // Only accepts bytes representing a unicode code point in an array with a length in [1, 4].
-    void MarkStrCodePoints(const s_str_rdonly str, t_unicode_code_pt_bits& code_pt_bits); // Sets the bits associated with each unicode code point that appear in the input string.
+    void MarkStrCodePoints(const s_str_rdonly str, t_unicode_code_pt_bit_vec& code_pts); // Sets the bits associated with each unicode code point that appear in the input string.
 
 #define ZF_WALK_STR(str, chr_info) \
     for (t_size ZF_CONCAT(p_bi_l, __LINE__) = 0; ZF_CONCAT(p_bi_l, __LINE__) != -1; ZF_CONCAT(p_bi_l, __LINE__) = -1) \

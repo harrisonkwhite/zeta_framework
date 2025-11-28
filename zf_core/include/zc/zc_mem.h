@@ -359,40 +359,131 @@ namespace zf {
         return static_cast<t_u8>(bits_at_bottom << begin_bit_index);
     }
 
-    constexpr t_b8 IsBitSet(const s_array_rdonly<t_u8> bytes, const t_size index) {
-        ZF_ASSERT(index >= 0 && index < BytesToBits(bytes.len));
-        return bytes[index / 8] & BitmaskSingle(index % 8);
+    struct s_bit_vec_rdonly {
+        s_array_rdonly<t_u8> bytes;
+        t_size bit_cnt;
+
+        constexpr s_bit_vec_rdonly() = default;
+        constexpr s_bit_vec_rdonly(const s_array_rdonly<t_u8> bytes, const t_size bit_cnt) : bytes(bytes), bit_cnt(bit_cnt) {}
+        constexpr s_bit_vec_rdonly(const s_array_rdonly<t_u8> bytes) : bytes(bytes), bit_cnt(BytesToBits(bytes.len)) {}
+    };
+
+    struct s_bit_vec {
+        s_array<t_u8> bytes;
+        t_size bit_cnt;
+
+        constexpr s_bit_vec() = default;
+        constexpr s_bit_vec(const s_array<t_u8> bytes, const t_size bit_cnt) : bytes(bytes), bit_cnt(bit_cnt) {}
+        constexpr s_bit_vec(const s_array<t_u8> bytes) : bytes(bytes), bit_cnt(BytesToBits(bytes.len)) {}
+
+        constexpr operator s_bit_vec_rdonly() const {
+            return {bytes, bit_cnt};
+        }
+    };
+
+    template<t_size tp_bit_cnt>
+    struct s_static_bit_vec {
+        static constexpr t_size g_bit_cnt = tp_bit_cnt;
+
+        s_static_array<t_u8, BitsToBytes(tp_bit_cnt)> bytes;
+
+        constexpr operator s_bit_vec() {
+            return {bytes, tp_bit_cnt};
+        }
+
+        constexpr operator s_bit_vec_rdonly() const {
+            return {bytes, tp_bit_cnt};
+        }
+    };
+
+    // Bit vector invariant.
+    constexpr t_b8 IsBitVecValid(const s_bit_vec_rdonly& bv) {
+        return BitsToBytes(bv.bit_cnt) == bv.bytes.len;
     }
 
-    constexpr void SetBit(const s_array<t_u8> bytes, const t_size index) {
-        ZF_ASSERT(index >= 0 && index < BytesToBits(bytes.len));
-        bytes[index / 8] |= BitmaskSingle(index % 8);
+    constexpr t_size BitVecLastByteBitCnt(const s_bit_vec_rdonly& bv) {
+        ZF_ASSERT(IsBitVecValid(bv));
+        return ((bv.bit_cnt - 1) % 8) + 1;
     }
 
-    constexpr void UnsetBit(const s_array<t_u8> bytes, const t_size index) {
-        ZF_ASSERT(index >= 0 && index < BytesToBits(bytes.len));
-        bytes[index / 8] &= ~BitmaskSingle(index % 8);
+    // Gives a mask of the last byte of the bit vector where only excess bits are unset.
+    constexpr t_u8 BitVecLastByteMask(const s_bit_vec_rdonly& bv) {
+        ZF_ASSERT(IsBitVecValid(bv));
+        return BitmaskRange(0, BitVecLastByteBitCnt(bv));
     }
 
-    constexpr t_b8 IsAnyBitSet(const s_array_rdonly<t_u8> bytes) {
-        return !AreAllEqualTo(bytes, 0);
+    [[nodiscard]] inline t_b8 MakeBitVec(s_mem_arena& mem_arena, const t_size bit_cnt, s_bit_vec& o_bv) {
+        ZF_ASSERT(bit_cnt > 0);
+
+        o_bv = {};
+        o_bv.bit_cnt = bit_cnt;
+
+        return MakeArray(mem_arena, BitsToBytes(o_bv.bit_cnt), o_bv.bytes);
     }
 
-    constexpr t_b8 AreAllBitsSet(const s_array_rdonly<t_u8> bytes) {
-        return AreAllEqualTo(bytes, 0xFF);
+    constexpr t_b8 IsBitSet(const s_bit_vec_rdonly& bv, const t_size index) {
+        ZF_ASSERT(IsBitVecValid(bv));
+        ZF_ASSERT(index >= 0 && index < bv.bit_cnt);
+        return bv.bytes[index / 8] & BitmaskSingle(index % 8);
     }
 
-    constexpr t_b8 AreAllBitsUnset(const s_array_rdonly<t_u8> bytes) {
-        return !IsAnyBitSet(bytes);
+    constexpr void SetBit(const s_bit_vec& bv, const t_size index) {
+        ZF_ASSERT(IsBitVecValid(bv));
+        ZF_ASSERT(index >= 0 && index < bv.bit_cnt);
+        bv.bytes[index / 8] |= BitmaskSingle(index % 8);
     }
 
-    constexpr t_b8 IsAnyBitUnset(const s_array_rdonly<t_u8> bytes) {
-        return !AreAllBitsSet(bytes);
+    constexpr void UnsetBit(const s_bit_vec& bv, const t_size index) {
+        ZF_ASSERT(IsBitVecValid(bv));
+        ZF_ASSERT(index >= 0 && index < bv.bit_cnt);
+        bv.bytes[index / 8] &= ~BitmaskSingle(index % 8);
     }
 
-    constexpr void SetBitsInRange(const s_array<t_u8> bytes, const t_size begin_bit_index, const t_size end_bit_index) {
-        ZF_ASSERT(begin_bit_index >= 0 && begin_bit_index < BytesToBits(bytes.len));
-        ZF_ASSERT(end_bit_index >= begin_bit_index && end_bit_index <= BytesToBits(bytes.len));
+    constexpr t_b8 IsAnyBitSet(const s_bit_vec_rdonly& bv) {
+        ZF_ASSERT(IsBitVecValid(bv));
+
+        if (bv.bit_cnt == 0) {
+            return false;
+        }
+
+        const auto first_bytes = Slice(bv.bytes, 0, bv.bytes.len - 1);
+
+        if (!AreAllEqualTo(first_bytes, 0)) {
+            return true;
+        }
+
+        return (bv.bytes[bv.bytes.len - 1] & BitVecLastByteMask(bv)) != 0;
+    }
+
+    constexpr t_b8 AreAllBitsSet(const s_bit_vec_rdonly& bv) {
+        ZF_ASSERT(IsBitVecValid(bv));
+
+        if (bv.bit_cnt == 0) {
+            return false;
+        }
+
+        const auto first_bytes = Slice(bv.bytes, 0, bv.bytes.len - 1);
+
+        if (!AreAllEqualTo(first_bytes, 0xFF)) {
+            return false;
+        }
+
+        const auto last_byte_mask = BitVecLastByteMask(bv);
+        return (bv.bytes[bv.bytes.len - 1] & last_byte_mask) == last_byte_mask;
+    }
+
+    constexpr t_b8 AreAllBitsUnset(const s_bit_vec_rdonly& bv) {
+        return !IsAnyBitSet(bv);
+    }
+
+    constexpr t_b8 IsAnyBitUnset(const s_bit_vec_rdonly& bv) {
+        return !AreAllBitsSet(bv);
+    }
+
+    constexpr void SetBitsInRange(const s_bit_vec& bv, const t_size begin_bit_index, const t_size end_bit_index) {
+        ZF_ASSERT(IsBitVecValid(bv));
+        ZF_ASSERT(begin_bit_index >= 0 && begin_bit_index < bv.bit_cnt);
+        ZF_ASSERT(end_bit_index >= begin_bit_index && end_bit_index <= bv.bit_cnt);
 
         const t_size begin_elem_index = begin_bit_index / 8;
         const t_size elem_cnt = BitsToBytes(end_bit_index - begin_bit_index);
@@ -405,7 +496,7 @@ namespace zf {
             const t_size set_range_begin = ZF_MAX(begin_bit_index_rel, 0);
             const t_size set_range_end = ZF_MIN(end_bit_index_rel, 8);
 
-            bytes[i] |= BitmaskRange(set_range_begin, set_range_end);
+            bv.bytes[i] |= BitmaskRange(set_range_begin, set_range_end);
         }
     }
 
@@ -416,66 +507,84 @@ namespace zf {
         ek_bitwise_mask_op_andnot
     };
 
-    constexpr void ApplyMask(const s_array<t_u8> dest, const s_array_rdonly<t_u8> src, const e_bitwise_mask_op op) {
+    constexpr void ApplyMask(const s_bit_vec& dest, const s_bit_vec_rdonly& src, const e_bitwise_mask_op op) {
+        ZF_ASSERT(IsBitVecValid(dest));
+        ZF_ASSERT(IsBitVecValid(src));
+        ZF_ASSERT(dest.bit_cnt == src.bit_cnt);
+
+        if (dest.bit_cnt == 0) {
+            return;
+        }
+
         switch (op) {
             case ek_bitwise_mask_op_and:
-                for (t_size i = 0; i < dest.len; i++) {
-                    dest[i] &= src[i];
+                for (t_size i = 0; i < dest.bytes.len - 1; i++) {
+                    dest.bytes[i] &= src.bytes[i];
                 }
 
                 break;
 
             case ek_bitwise_mask_op_or:
-                for (t_size i = 0; i < dest.len; i++) {
-                    dest[i] |= src[i];
+                for (t_size i = 0; i < dest.bytes.len - 1; i++) {
+                    dest.bytes[i] |= src.bytes[i];
                 }
 
                 break;
 
             case ek_bitwise_mask_op_xor:
-                for (t_size i = 0; i < dest.len; i++) {
-                    dest[i] ^= src[i];
+                for (t_size i = 0; i < dest.bytes.len - 1; i++) {
+                    dest.bytes[i] ^= src.bytes[i];
                 }
 
                 break;
 
             case ek_bitwise_mask_op_andnot:
-                for (t_size i = 0; i < dest.len; i++) {
-                    dest[i] &= ~src[i];
+                for (t_size i = 0; i < dest.bytes.len - 1; i++) {
+                    dest.bytes[i] &= ~src.bytes[i];
                 }
 
                 break;
         }
+
+        dest.bytes[dest.bytes.len - 1] &= BitVecLastByteMask(src);
     }
 
     // Shifts left only by 1. Returns the carry bit. Input carry can only be 0 or 1.
-    constexpr t_u8 ShiftBitsLeft(const s_array<t_u8> bytes, t_u8 carry = 0) {
+    constexpr t_u8 ShiftBitsLeft(const s_bit_vec& bv, t_u8 carry = 0) {
+        ZF_ASSERT(IsBitVecValid(bv));
         ZF_ASSERT(carry == 0 || carry == 1);
 
-        for (t_size j = 0; j < bytes.len; j++) {
-            const t_u8 discard = bytes[j] & BitmaskSingle(7);
-            bytes[j] <<= 1;
-            bytes[j] |= carry;
-            carry = discard >> 7;
+        if (bv.bit_cnt > 0) {
+            for (t_size i = 0; i < bv.bytes.len; i++) {
+                const t_size bits_in_byte = i == bv.bytes.len - 1 ? BitVecLastByteBitCnt(bv) : 8;
+                const t_u8 discard = bv.bytes[i] & BitmaskSingle(bits_in_byte - 1);
+                bv.bytes[i] <<= 1;
+                bv.bytes[i] |= carry;
+                carry = discard >> (bits_in_byte - 1);
+            }
+
+            bv.bytes[bv.bytes.len - 1] &= BitVecLastByteMask(bv);
         }
 
         return carry;
     }
 
-    constexpr void ShiftBitsLeftBy(const s_array<t_u8> bytes, t_size amount) {
+    constexpr void ShiftBitsLeftBy(const s_bit_vec& bv, const t_size amount) {
+        ZF_ASSERT(IsBitVecValid(bv));
         ZF_ASSERT(amount >= 0);
 
         // @speed: :(
 
         for (t_size i = 0; i < amount; i++) {
-            ShiftBitsLeft(bytes);
+            ShiftBitsLeft(bv);
         }
     }
 
-    constexpr void RotBitsLeftBy(s_array<t_u8> arr, t_size amount) {
+    constexpr void RotBitsLeftBy(const s_bit_vec& bv, const t_size amount) {
+        ZF_ASSERT(IsBitVecValid(bv));
         ZF_ASSERT(amount >= 0);
 
-        if (IsArrayEmpty(arr)) {
+        if (bv.bit_cnt == 0) {
             return;
         }
 
@@ -484,28 +593,28 @@ namespace zf {
         t_u8 carry = 0;
 
         for (t_size i = 0; i < amount; i++) {
-            carry = ShiftBitsLeft(arr, carry);
+            carry = ShiftBitsLeft(bv, carry);
         }
 
-        arr[0] |= carry;
+        bv.bytes[0] |= carry;
     }
 
-    t_size IndexOfFirstSetBit(const s_array_rdonly<t_u8> bytes, const t_size from = 0);
-    t_size IndexOfFirstUnsetBit(const s_array_rdonly<t_u8> bytes, const t_size from = 0);
+    t_size IndexOfFirstSetBit(const s_bit_vec_rdonly& bv, const t_size from = 0);
+    t_size IndexOfFirstUnsetBit(const s_bit_vec_rdonly& bv, const t_size from = 0);
 
-    t_size CountSetBits(const s_array_rdonly<t_u8> bytes);
+    t_size CountSetBits(const s_bit_vec_rdonly& bv);
 
-    inline t_size CountUnsetBits(const s_array_rdonly<t_u8> bytes) {
-        return BytesToBits(bytes.len) - CountSetBits(bytes);
+    inline t_size CountUnsetBits(const s_bit_vec_rdonly& bv) {
+        return bv.bit_cnt - CountSetBits(bv);
     }
 
     // pos is the walker state, initialise it to the bit index you want to start from.
     // o_index is assigned the index of the set bit to process.
     // Returns false iff the walk is complete.
     // You can use the ZF_FOR_EACH_SET_BIT macro for more brevity if you like.
-    inline t_b8 WalkSetBits(const s_array_rdonly<t_u8> bytes, t_size& pos, t_size& o_index) {
-        ZF_ASSERT(pos >= 0 && pos < BytesToBits(bytes.len));
-        o_index = IndexOfFirstSetBit(bytes, pos);
+    inline t_b8 WalkSetBits(const s_bit_vec_rdonly& bv, t_size& pos, t_size& o_index) {
+        ZF_ASSERT(pos >= 0 && pos < bv.bit_cnt);
+        o_index = IndexOfFirstSetBit(bv, pos);
         pos = o_index + 1;
         return o_index != -1;
     }
@@ -514,9 +623,9 @@ namespace zf {
     // o_index is assigned the index of the unset bit to process.
     // Returns false iff the walk is complete.
     // You can use the ZF_FOR_EACH_UNSET_BIT macro for more brevity if you like.
-    inline t_b8 WalkUnsetBits(const s_array_rdonly<t_u8> bytes, t_size& pos, t_size& o_index) {
-        ZF_ASSERT(pos >= 0 && pos < BytesToBits(bytes.len));
-        o_index = IndexOfFirstUnsetBit(bytes, pos);
+    inline t_b8 WalkUnsetBits(const s_bit_vec_rdonly& bv, t_size& pos, t_size& o_index) {
+        ZF_ASSERT(pos >= 0 && pos < bv.bit_cnt);
+        o_index = IndexOfFirstUnsetBit(bv, pos);
         pos = o_index + 1;
         return o_index != -1;
     }

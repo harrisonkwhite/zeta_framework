@@ -40,7 +40,7 @@ namespace zf {
             s_array<t_size> next_indexes; // Like the standard "next" pointer of a linked list node, but for an index specific to this backing store.
 
             // Each bit indicates whether the slot or "node" is in use.
-            s_array<t_u8> usage;
+            s_bit_vec usage;
         } backing_store;
     };
 
@@ -222,7 +222,7 @@ namespace zf {
             return false;
         }
 
-        if (!MakeArray(mem_arena, BitsToBytes(kv_pair_cap), o_um.backing_store.usage)) {
+        if (!MakeBitVec(mem_arena, kv_pair_cap, o_um.backing_store.usage)) {
             return false;
         }
 
@@ -252,7 +252,7 @@ namespace zf {
             return false;
         }
 
-        if (!SerializeArray(stream, hm.backing_store.usage)) {
+        if (!SerializeBitVec(stream, hm.backing_store.usage)) {
             return false;
         }
 
@@ -286,7 +286,7 @@ namespace zf {
             return false;
         }
 
-        if (!DeserializeArray(stream, mem_arena, o_hm.backing_store.usage)) {
+        if (!DeserializeBitVec(stream, mem_arena, o_hm.backing_store.usage)) {
             return false;
         }
 

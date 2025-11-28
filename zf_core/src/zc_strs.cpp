@@ -439,39 +439,39 @@ namespace zf {
         switch (bytes.len) {
         case 1:
             // 0xxxxxxx
-            res |= bytes[0] & BitmaskRange<t_u8>(0, 7);
+            res |= bytes[0] & BitmaskRange(0, 7);
             break;
 
         case 2:
             // 110xxxxx 10xxxxxx
-            res |= static_cast<t_unicode_code_pt>((bytes[0] & BitmaskRange<t_u8>(0, 5)) << 6);
-            res |= bytes[1] & BitmaskRange<t_u8>(0, 6);
+            res |= static_cast<t_unicode_code_pt>((bytes[0] & BitmaskRange(0, 5)) << 6);
+            res |= bytes[1] & BitmaskRange(0, 6);
             break;
 
         case 3:
             // 1110xxxx 10xxxxxx 10xxxxxx
-            res |= static_cast<t_unicode_code_pt>((bytes[0] & BitmaskRange<t_u8>(0, 4)) << 12);
-            res |= static_cast<t_unicode_code_pt>((bytes[1] & BitmaskRange<t_u8>(0, 6)) << 6);
-            res |= bytes[2] & BitmaskRange<t_u8>(0, 6);
+            res |= static_cast<t_unicode_code_pt>((bytes[0] & BitmaskRange(0, 4)) << 12);
+            res |= static_cast<t_unicode_code_pt>((bytes[1] & BitmaskRange(0, 6)) << 6);
+            res |= bytes[2] & BitmaskRange(0, 6);
             break;
 
         case 4:
             // 11110xxx 10xxxxxx 10xxxxxx 10xxxxxx
-            res |= static_cast<t_unicode_code_pt>((bytes[0] & BitmaskRange<t_u8>(0, 3)) << 18);
-            res |= static_cast<t_unicode_code_pt>((bytes[1] & BitmaskRange<t_u8>(0, 6)) << 12);
-            res |= static_cast<t_unicode_code_pt>((bytes[2] & BitmaskRange<t_u8>(0, 6)) << 6);
-            res |= bytes[3] & BitmaskRange<t_u8>(0, 6);
+            res |= static_cast<t_unicode_code_pt>((bytes[0] & BitmaskRange(0, 3)) << 18);
+            res |= static_cast<t_unicode_code_pt>((bytes[1] & BitmaskRange(0, 6)) << 12);
+            res |= static_cast<t_unicode_code_pt>((bytes[2] & BitmaskRange(0, 6)) << 6);
+            res |= bytes[3] & BitmaskRange(0, 6);
             break;
         }
 
         return res;
     }
 
-    void MarkStrCodePoints(const s_str_rdonly str, t_unicode_code_pt_bits& code_pt_bits) {
+    void MarkStrCodePoints(const s_str_rdonly str, t_unicode_code_pt_bit_vec& code_pts) {
         ZF_ASSERT(IsValidUTF8Str(str));
 
         ZF_WALK_STR(str, chr_info) {
-            SetBit(code_pt_bits, chr_info.code_pt);
+            SetBit(code_pts, chr_info.code_pt);
         }
     }
 }

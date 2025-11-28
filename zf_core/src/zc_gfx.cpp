@@ -105,7 +105,7 @@ namespace zf {
         return pa.a == pb.a && pa.b == pb.b;
     };
 
-    t_b8 LoadFontFromRaw(const s_str_rdonly file_path, const t_s32 height, t_unicode_code_pt_bits& code_pt_bits, s_mem_arena& arrangement_mem_arena, s_mem_arena& atlas_rgbas_mem_arena, s_mem_arena& temp_mem_arena, s_font_arrangement& o_arrangement, s_array<t_font_atlas_rgba>& o_atlas_rgbas) {
+    t_b8 LoadFontFromRaw(const s_str_rdonly file_path, const t_s32 height, t_unicode_code_pt_bit_vec& code_pts, s_mem_arena& arrangement_mem_arena, s_mem_arena& atlas_rgbas_mem_arena, s_mem_arena& temp_mem_arena, s_font_arrangement& o_arrangement, s_array<t_font_atlas_rgba>& o_atlas_rgbas) {
         ZF_ASSERT(height > 0);
 
         o_arrangement = {};
@@ -131,17 +131,17 @@ namespace zf {
         }
 
         // Mask out unsupported code points and while doing that calculate code point count.
-        const t_size code_pt_cnt = [&code_pt_bits, &stb_font_info]() {
+        const t_size code_pt_cnt = [&code_pts, &stb_font_info]() {
             t_size cnt = 0;
 
-            ZF_FOR_EACH_SET_BIT(code_pt_bits, i) {
+            ZF_FOR_EACH_SET_BIT(code_pts, i) {
                 const auto code_pt = static_cast<t_unicode_code_pt>(i);
                 const t_s32 glyph_index = stbtt_FindGlyphIndex(&stb_font_info, static_cast<t_s32>(code_pt));
 
                 if (glyph_index) {
                     cnt++;
                 } else {
-                    UnsetBit(code_pt_bits, i);
+                    UnsetBit(code_pts, i);
                 }
             }
 
@@ -170,7 +170,7 @@ namespace zf {
         t_size atlas_index = 0;
         s_v2<t_s32> atlas_pen = {};
 
-        ZF_FOR_EACH_SET_BIT(code_pt_bits, i) {
+        ZF_FOR_EACH_SET_BIT(code_pts, i) {
             const auto code_pt = static_cast<t_unicode_code_pt>(i);
 
             const t_s32 glyph_index = stbtt_FindGlyphIndex(&stb_font_info, static_cast<t_s32>(code_pt));
@@ -222,11 +222,11 @@ namespace zf {
         //
 
         // Compute kerning count first so we know how much memory to allocate for the hash map.
-        const t_size kern_cnt = [&code_pt_bits, &stb_font_info]() {
+        const t_size kern_cnt = [&code_pts, &stb_font_info]() {
             t_size res = 0;
 
-            ZF_FOR_EACH_SET_BIT(code_pt_bits, i) {
-                ZF_FOR_EACH_SET_BIT(code_pt_bits, j) {
+            ZF_FOR_EACH_SET_BIT(code_pts, i) {
+                ZF_FOR_EACH_SET_BIT(code_pts, j) {
                     const auto cp_a = static_cast<t_unicode_code_pt>(i);
                     const auto cp_b = static_cast<t_unicode_code_pt>(j);
 
@@ -252,8 +252,8 @@ namespace zf {
                 return false;
             }
 
-            ZF_FOR_EACH_SET_BIT(code_pt_bits, i) {
-                ZF_FOR_EACH_SET_BIT(code_pt_bits, j) {
+            ZF_FOR_EACH_SET_BIT(code_pts, i) {
+                ZF_FOR_EACH_SET_BIT(code_pts, j) {
                     const auto cp_a = static_cast<t_unicode_code_pt>(i);
                     const auto cp_b = static_cast<t_unicode_code_pt>(j);
 
@@ -292,7 +292,7 @@ namespace zf {
         }
 
         // Write pixel data for each individual glyph.
-        ZF_FOR_EACH_SET_BIT(code_pt_bits, i) {
+        ZF_FOR_EACH_SET_BIT(code_pts, i) {
             const auto code_pt = static_cast<t_unicode_code_pt>(i);
 
             s_font_glyph_info glyph_info;
@@ -329,11 +329,11 @@ namespace zf {
         return true;
     }
 
-    t_b8 PackFont(const s_str_rdonly dest_file_path, const s_str_rdonly src_file_path, const t_s32 height, t_unicode_code_pt_bits& code_pt_bits, s_mem_arena& temp_mem_arena) {
+    t_b8 PackFont(const s_str_rdonly dest_file_path, const s_str_rdonly src_file_path, const t_s32 height, t_unicode_code_pt_bit_vec& code_pts, s_mem_arena& temp_mem_arena) {
         s_font_arrangement arrangement;
         s_array<t_font_atlas_rgba> atlas_rgbas;
 
-        if (!LoadFontFromRaw(src_file_path, height, code_pt_bits, temp_mem_arena, temp_mem_arena, temp_mem_arena, arrangement, atlas_rgbas)) {
+        if (!LoadFontFromRaw(src_file_path, height, code_pts, temp_mem_arena, temp_mem_arena, temp_mem_arena, arrangement, atlas_rgbas)) {
             return false;
         }
 
