@@ -341,78 +341,71 @@ namespace zf {
     // ============================================================
 
     // Creates a bitmask with only a single bit set.
-    template<c_unsigned_integral tp_type>
-    constexpr tp_type BitmaskSingle(const t_size bit_index) {
-        ZF_ASSERT(bit_index >= 0 && bit_index < ZF_SIZE_IN_BITS(tp_type));
-        return static_cast<tp_type>(static_cast<tp_type>(1) << bit_index);
+    constexpr t_u8 BitmaskSingle(const t_size bit_index) {
+        ZF_ASSERT(bit_index >= 0 && bit_index < 8);
+        return static_cast<t_u8>(1 << bit_index);
     }
 
     // Creates a bitmask with only bits in the range [begin_bit_index, end_bit_index) set.
-    template<c_unsigned_integral tp_type>
-    constexpr tp_type BitmaskRange(const t_size begin_bit_index, const t_size end_bit_index = ZF_SIZE_IN_BITS(tp_type)) {
-        ZF_ASSERT(begin_bit_index >= 0 && begin_bit_index < ZF_SIZE_IN_BITS(tp_type));
-        ZF_ASSERT(end_bit_index >= begin_bit_index && end_bit_index <= ZF_SIZE_IN_BITS(tp_type));
+    constexpr t_u8 BitmaskRange(const t_size begin_bit_index, const t_size end_bit_index = 8) {
+        ZF_ASSERT(begin_bit_index >= 0 && begin_bit_index < 8);
+        ZF_ASSERT(end_bit_index >= begin_bit_index && end_bit_index <= 8);
 
-        if (end_bit_index - begin_bit_index == ZF_SIZE_IN_BITS(tp_type)) {
-            return static_cast<tp_type>(-1);
+        if (end_bit_index - begin_bit_index == 8) {
+            return 0xFF;
         }
 
-        const auto bits_at_bottom = static_cast<tp_type>((static_cast<tp_type>(1) << (end_bit_index - begin_bit_index)) - 1);
-        return static_cast<tp_type>(bits_at_bottom << begin_bit_index);
+        const auto bits_at_bottom = static_cast<t_u8>((1 << (end_bit_index - begin_bit_index)) - 1);
+        return static_cast<t_u8>(bits_at_bottom << begin_bit_index);
     }
 
     constexpr t_b8 IsBitSet(const s_array_rdonly<t_u8> bytes, const t_size index) {
         ZF_ASSERT(index >= 0 && index < BytesToBits(bytes.len));
-        return bytes[index / 8] & BitmaskSingle<t_u8>(index % 8);
+        return bytes[index / 8] & BitmaskSingle(index % 8);
     }
 
     constexpr void SetBit(const s_array<t_u8> bytes, const t_size index) {
         ZF_ASSERT(index >= 0 && index < BytesToBits(bytes.len));
-        bytes[index / 8] |= BitmaskSingle<t_u8>(index % 8);
+        bytes[index / 8] |= BitmaskSingle(index % 8);
     }
 
     constexpr void UnsetBit(const s_array<t_u8> bytes, const t_size index) {
         ZF_ASSERT(index >= 0 && index < BytesToBits(bytes.len));
-        bytes[index / 8] &= ~BitmaskSingle<t_u8>(index % 8);
+        bytes[index / 8] &= ~BitmaskSingle(index % 8);
     }
 
-    template<c_unsigned_integral tp_type = t_u64>
-    constexpr t_b8 IsAnyBitSet(const s_array_rdonly<t_u8> arr) {
-        return !AreAllEqualTo(arr, 0);
+    constexpr t_b8 IsAnyBitSet(const s_array_rdonly<t_u8> bytes) {
+        return !AreAllEqualTo(bytes, 0);
     }
 
-    template<c_unsigned_integral tp_type = t_u64>
-    constexpr t_b8 AreAllBitsSet(const s_array_rdonly<tp_type> arr) {
-        return AreAllEqualTo(arr, static_cast<tp_type>(-1));
+    constexpr t_b8 AreAllBitsSet(const s_array_rdonly<t_u8> bytes) {
+        return AreAllEqualTo(bytes, 0xFF);
     }
 
-    template<c_unsigned_integral tp_type = t_u64>
-    constexpr t_b8 AreAllBitsUnset(const s_array_rdonly<t_u8> arr) {
-        return !IsAnyBitSet(arr);
+    constexpr t_b8 AreAllBitsUnset(const s_array_rdonly<t_u8> bytes) {
+        return !IsAnyBitSet(bytes);
     }
 
-    template<c_unsigned_integral tp_type = t_u64>
-    constexpr t_b8 IsAnyBitUnset(const s_array_rdonly<t_u8> arr) {
-        return !AreAllBitsSet(arr);
+    constexpr t_b8 IsAnyBitUnset(const s_array_rdonly<t_u8> bytes) {
+        return !AreAllBitsSet(bytes);
     }
 
-    template<c_unsigned_integral tp_type = t_u64>
-    constexpr void SetBitsInRange(const s_array<tp_type> arr, const t_size begin_bit_index, const t_size end_bit_index) {
-        ZF_ASSERT(begin_bit_index >= 0 && begin_bit_index < ZF_SIZE_IN_BITS(tp_type) * arr.len);
-        ZF_ASSERT(end_bit_index >= begin_bit_index && end_bit_index <= ZF_SIZE_IN_BITS(tp_type) * arr.len);
+    constexpr void SetBitsInRange(const s_array<t_u8> bytes, const t_size begin_bit_index, const t_size end_bit_index) {
+        ZF_ASSERT(begin_bit_index >= 0 && begin_bit_index < BytesToBits(bytes.len));
+        ZF_ASSERT(end_bit_index >= begin_bit_index && end_bit_index <= BytesToBits(bytes.len));
 
-        const t_size begin_elem_index = begin_bit_index / ZF_SIZE_IN_BITS(tp_type);
-        const t_size elem_cnt = ((end_bit_index - begin_bit_index) + ZF_SIZE_IN_BITS(tp_type) - 1) / ZF_SIZE_IN_BITS(tp_type);
+        const t_size begin_elem_index = begin_bit_index / 8;
+        const t_size elem_cnt = BitsToBytes(end_bit_index - begin_bit_index);
 
         for (t_size i = begin_elem_index; i < begin_elem_index + elem_cnt; i++) {
-            const t_size bit_offs = i * ZF_SIZE_IN_BITS(tp_type);
+            const t_size bit_offs = i * 8;
             const t_size begin_bit_index_rel = begin_bit_index - bit_offs;
             const t_size end_bit_index_rel = end_bit_index - bit_offs;
 
             const t_size set_range_begin = ZF_MAX(begin_bit_index_rel, 0);
-            const t_size set_range_end = ZF_MIN(end_bit_index_rel, ZF_SIZE_IN_BITS(tp_type));
+            const t_size set_range_end = ZF_MIN(end_bit_index_rel, 8);
 
-            arr[i] |= BitmaskRange<tp_type>(set_range_begin, set_range_end);
+            bytes[i] |= BitmaskRange(set_range_begin, set_range_end);
         }
     }
 
@@ -423,7 +416,6 @@ namespace zf {
         ek_bitwise_mask_op_andnot
     };
 
-    template<c_unsigned_integral tp_type = t_u64>
     constexpr void ApplyMask(const s_array<t_u8> dest, const s_array_rdonly<t_u8> src, const e_bitwise_mask_op op) {
         switch (op) {
             case ek_bitwise_mask_op_and:
@@ -456,20 +448,46 @@ namespace zf {
         }
     }
 
-    template<c_unsigned_integral tp_type = t_u64>
-    constexpr void ShiftBitsLeft(const s_array_rdonly<tp_type> arr, const t_size amount = 1) {
+    // Shifts left only by 1. Returns the carry bit. Input carry can only be 0 or 1.
+    constexpr t_u8 ShiftBitsLeft(const s_array<t_u8> bytes, t_u8 carry = 0) {
+        ZF_ASSERT(carry == 0 || carry == 1);
+
+        for (t_size j = 0; j < bytes.len; j++) {
+            const t_u8 discard = bytes[j] & BitmaskSingle(7);
+            bytes[j] <<= 1;
+            bytes[j] |= carry;
+            carry = discard >> 7;
+        }
+
+        return carry;
     }
 
-    template<c_unsigned_integral tp_type = t_u64>
-    constexpr void RotBitsLeft(const s_array_rdonly<tp_type> arr, const t_size amount = 1) {
+    constexpr void ShiftBitsLeftBy(const s_array<t_u8> bytes, t_size amount) {
+        ZF_ASSERT(amount >= 0);
+
+        // @speed: :(
+
+        for (t_size i = 0; i < amount; i++) {
+            ShiftBitsLeft(bytes);
+        }
     }
 
-    template<c_unsigned_integral tp_type = t_u64>
-    constexpr void ShiftBitsRight(const s_array_rdonly<tp_type> arr, const t_size amount = 1) {
-    }
+    constexpr void RotBitsLeftBy(s_array<t_u8> arr, t_size amount) {
+        ZF_ASSERT(amount >= 0);
 
-    template<c_unsigned_integral tp_type = t_u64>
-    constexpr void RotBitsRight(const s_array_rdonly<tp_type> arr, const t_size amount = 1) {
+        if (IsArrayEmpty(arr)) {
+            return;
+        }
+
+        // @speed: :(
+
+        t_u8 carry = 0;
+
+        for (t_size i = 0; i < amount; i++) {
+            carry = ShiftBitsLeft(arr, carry);
+        }
+
+        arr[0] |= carry;
     }
 
     t_size IndexOfFirstSetBit(const s_array_rdonly<t_u8> bytes, const t_size from = 0);
