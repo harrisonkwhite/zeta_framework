@@ -470,6 +470,57 @@ namespace zf {
     }
 
     // ========================================
+    // @subsection: Bit Vector Printing
+    // ========================================
+    struct s_bit_vec_fmt {
+        using t_fmt_tag = void;
+
+        s_bit_vec_rdonly val;
+        t_b8 split_into_bytes;
+    };
+
+    inline s_bit_vec_fmt FormatBitVec(const s_bit_vec_rdonly& val, const t_b8 split_into_bytes = false) {
+        return {val, split_into_bytes};
+    }
+
+    inline t_b8 PrintType(s_stream& stream, const s_bit_vec_fmt& fmt) {
+        ZF_ASSERT(IsBitVecValid(fmt.val));
+
+        const auto print_bit = [&stream, &fmt](const t_size bit_index) {
+            const s_str_rdonly str = IsBitSet(fmt.val, bit_index) ? "1" : "0";
+            return Print(stream, str);
+        };
+
+        if (fmt.val.bit_cnt > 0) {
+            if (fmt.split_into_bytes) {
+                for (t_size j = BitVecLastByteBitCnt(fmt.val) - 1; j >= 0; j--) {
+                    if (!print_bit(((fmt.val.bytes.len - 1) * 8) + j)) {
+                        return false;
+                    }
+                }
+
+                for (t_size i = fmt.val.bytes.len - 2; i >= 0; i--) {
+                    Print(stream, " ");
+
+                    for (t_size j = 7; j >= 0; j--) {
+                        if (!print_bit((i * 8) + j)) {
+                            return false;
+                        }
+                    }
+                }
+            } else {
+                for (t_size i = fmt.val.bit_cnt - 1; i >= 0; i--) {
+                    if (!print_bit(i)) {
+                        return false;
+                    }
+                }
+            }
+        }
+
+        return true;
+    }
+
+    // ========================================
     // @subsection: V2 Printing
     // ========================================
     template<c_integral tp_type>
