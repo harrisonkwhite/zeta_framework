@@ -168,6 +168,9 @@ namespace zf {
     template<typename tp_type> struct s_is_const { static constexpr t_b8 g_val = false; };
     template<typename tp_type> struct s_is_const<tp_type const> { static constexpr t_b8 g_val = true; };
 
+    template<typename tp_type> struct s_is_ptr { static constexpr t_b8 g_val = false; };
+    template<typename tp_type> struct s_is_ptr<tp_type*> { static constexpr t_b8 g_val = true; };
+
     // Return true iff a and b are equal.
     template<typename tp_type>
     using t_bin_comparator = t_b8 (*)(const tp_type& a, const tp_type& b);

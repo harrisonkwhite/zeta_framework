@@ -221,7 +221,7 @@ namespace zf {
                             const auto src_fp = StrFromRaw(field_vals[ek_tex_field_src_file_path]->valuestring);
 
                             if (!PackTexture(dest_fp, src_fp, mem_arena)) {
-                                LogError("Failed to pack texture \"%\" to \"%\"!", src_fp, dest_fp);
+                                ZF_REPORT_FAILURE();
                                 return false;
                             }
                         }
@@ -235,20 +235,14 @@ namespace zf {
                             const auto height = field_vals[ek_font_field_height]->valueint;
                             const auto extra_chrs_fp = StrFromRaw(field_vals[ek_font_field_extra_chrs_file_path]->valuestring);
 
-                            const auto code_pts = PushToMemArena<t_unicode_code_pt_bit_vec>(mem_arena);
+                            s_array<t_unicode_code_pt_bit_vec> code_pt_bvs; // First is for input code points, second is for output unsupported ones.
 
-                            if (!code_pts) {
+                            if (!MakeArray(mem_arena, 2, code_pt_bvs)) {
                                 ZF_REPORT_FAILURE();
                                 return false;
                             }
 
-                            // Add the printable ASCII range as a default.
-                            SetBitsInRange(*code_pts, g_printable_ascii_range_begin, g_printable_ascii_range_end);
-
-                            // @todo: Save an actual mask of this.
-                            for (t_size i = 32; i < 127; i++) {
-                                SetBit(*code_pts, i);
-                            }
+                            SetBitsInRange(code_pt_bvs[0], g_printable_ascii_range_begin, g_printable_ascii_range_end); // Add the printable ASCII range as a default.
 
                             if (field_vals[ek_font_field_extra_chrs_file_path]) {
                                 s_array<t_u8> extra_chrs_file_contents;
@@ -258,11 +252,30 @@ namespace zf {
                                     return false;
                                 }
 
-                                MarkStrCodePoints({extra_chrs_file_contents}, *code_pts);
+                                MarkStrCodePoints({extra_chrs_file_contents}, code_pt_bvs[0]);
+
+                                // Unset irrelevant code points.
+                                UnsetBit(code_pt_bvs[0], 10);
                             }
 
-                            if (!PackFont(dest_fp, src_fp, height, *code_pts, mem_arena)) {
-                                LogError("Failed to pack font \"%\" to \"%\"!", src_fp, dest_fp);
+                            e_font_load_from_raw_result load_from_raw_res;
+
+                            if (!PackFont(dest_fp, src_fp, height, code_pt_bvs[0], mem_arena, load_from_raw_res, &code_pt_bvs[1])) {
+                                switch (load_from_raw_res) {
+                                case ek_font_load_from_raw_result_unsupported_code_pt:
+                                    LogError("Unsupported code points:");
+
+                                    ZF_FOR_EACH_SET_BIT(code_pt_bvs[1], i) {
+                                        Log("- %", i);
+                                    }
+
+                                    return false;
+
+                                default:
+                                    break;
+                                }
+
+                                ZF_REPORT_FAILURE();
                                 return false;
                             }
                         }
@@ -275,7 +288,7 @@ namespace zf {
                             const auto src_fp = StrFromRaw(field_vals[ek_snd_field_src_file_path]->valuestring);
 
                             if (!PackSound(dest_fp, src_fp, mem_arena)) {
-                                LogError("Failed to pack sound \"%\" to \"%\"!", src_fp, dest_fp);
+                                ZF_REPORT_FAILURE();
                                 return false;
                             }
                         }

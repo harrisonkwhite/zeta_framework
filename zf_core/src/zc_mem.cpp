@@ -344,7 +344,7 @@ namespace zf {
         return IndexOfFirstSetBitHelper(bv, from, 0xFF);
     }
 
-    t_size CountSetBits(const s_bit_vec_rdonly& bv) {
+    t_size CntSetBits(const s_bit_vec_rdonly& bv) {
         ZF_ASSERT(IsBitVecValid(bv));
 
         // Map of each byte to the number of set bits in it.

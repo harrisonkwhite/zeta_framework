@@ -121,6 +121,6 @@ namespace zf::gfx {
         s_array<s_resource_handle> atlas_tex_hdls;
     };
 
-    [[nodiscard]] t_b8 LoadFontAssetFromRaw(const s_str_rdonly file_path, const t_s32 height, t_unicode_code_pt_bit_vec& code_pts, s_mem_arena& mem_arena, s_resource_arena& res_arena, s_mem_arena& temp_mem_arena, s_font_asset& o_asset);
+    [[nodiscard]] t_b8 LoadFontAssetFromRaw(const s_str_rdonly file_path, const t_s32 height, const t_unicode_code_pt_bit_vec& code_pts, s_mem_arena& mem_arena, s_resource_arena& res_arena, s_mem_arena& temp_mem_arena, s_font_asset& o_asset, e_font_load_from_raw_result* const o_load_from_raw_res, t_unicode_code_pt_bit_vec* const o_unsupported_code_pts);
     [[nodiscard]] t_b8 LoadFontAssetFromPacked(const s_str_rdonly file_path, s_mem_arena& mem_arena, s_resource_arena& res_arena, s_mem_arena& temp_mem_arena, s_font_asset& o_asset);
 }

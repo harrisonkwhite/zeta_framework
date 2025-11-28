@@ -23,6 +23,13 @@ namespace zf {
         return (n + alignment - 1) & ~(alignment - 1);
     }
 
+    // Prohibiting pointer use here for safety.
+    template<typename tp_type>
+    constexpr void ZeroOut(tp_type& val) {
+        static_assert(!s_is_ptr<tp_type>::g_val);
+        memset(&val, 0, sizeof(val));
+    }
+
     // ============================================================
     // @section: Memory Arenas
     // ============================================================
@@ -674,10 +681,10 @@ namespace zf {
     t_size IndexOfFirstSetBit(const s_bit_vec_rdonly& bv, const t_size from = 0);
     t_size IndexOfFirstUnsetBit(const s_bit_vec_rdonly& bv, const t_size from = 0);
 
-    t_size CountSetBits(const s_bit_vec_rdonly& bv);
+    t_size CntSetBits(const s_bit_vec_rdonly& bv);
 
-    inline t_size CountUnsetBits(const s_bit_vec_rdonly& bv) {
-        return bv.bit_cnt - CountSetBits(bv);
+    inline t_size CntUnsetBits(const s_bit_vec_rdonly& bv) {
+        return bv.bit_cnt - CntSetBits(bv);
     }
 
     // pos is the walker state, initialise it to the bit index you want to start from.
