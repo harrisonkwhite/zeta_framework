@@ -290,6 +290,7 @@ void main() {
 
         ZF_WALK_STR(str, chr_info) {
             if (chr_info.code_pt == ' ' || chr_info.code_pt == '\n') {
+                chr_index++;
                 continue;
             }
 
@@ -297,7 +298,7 @@ void main() {
 
             if (!HashMapGet(font.arrangement.code_pts_to_glyph_infos, chr_info.code_pt, &glyph_info)) {
                 ZF_ASSERT_MSG(false, "Unsupported code point!");
-                continue;
+                return false;
             }
 
             const auto chr_tex_coords = CalcTextureCoords(glyph_info.atlas_rect, g_font_atlas_size);

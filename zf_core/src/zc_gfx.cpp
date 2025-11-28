@@ -489,7 +489,7 @@ namespace zf {
 
             if (!HashMapGet(font_arrangement.code_pts_to_glyph_infos, chr_info.code_pt, &glyph_info)) {
                 ZF_ASSERT_MSG(false, "Unsupported code point!");
-                continue;
+                return false;
             }
 
             if (chr_index > 0 && font_arrangement.has_kernings) {
