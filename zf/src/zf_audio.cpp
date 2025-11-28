@@ -48,7 +48,7 @@ namespace zf::audio {
         }
 
         ZF_FOR_EACH_SET_BIT(g_sys.snd_type_activity, i) {
-            LogWarning("Sound type with ID % not released!", i); // @todo: Update this if the ID no longer is an index.
+            LogWarning("Sound type with ID % not released!", FormatInt(i)); // @todo: Update this if the ID no longer is an index.
             free(g_sys.snd_type_pcms[i].buf_raw);
             g_sys.snd_type_pcms[i] = {};
         }

@@ -296,6 +296,12 @@ namespace zf {
         return StreamWriteItemsOfArray(stream, str.bytes);
     }
 
+    // Type format structs which are to be accepted as format printing arguments need to meet this (i.e. have the tag).
+    template<typename tp_type>
+    concept c_fmt = requires {
+        typename tp_type::t_fmt_tag;
+    };
+
     // ========================================
     // @subsection: Bool Printing
     // ========================================
@@ -306,10 +312,6 @@ namespace zf {
 
     inline s_bool_fmt FormatBool(const t_b8 val) {
         return {val};
-    }
-
-    inline s_bool_fmt FormatType(const t_b8 val) {
-        return FormatBool(val);
     }
 
     inline t_b8 PrintType(s_stream& stream, const s_bool_fmt& fmt) {
@@ -328,10 +330,6 @@ namespace zf {
         return {val};
     }
 
-    inline s_str_fmt FormatType(const s_str_rdonly val) {
-        return FormatStr(val);
-    }
-
     inline t_b8 PrintType(s_stream& stream, const s_str_fmt& fmt) {
         return Print(stream, fmt.val);
     }
@@ -348,11 +346,6 @@ namespace zf {
     template<c_integral tp_type>
     s_integral_fmt<tp_type> FormatInt(const tp_type val) {
         return {val};
-    }
-
-    template<c_integral tp_type>
-    s_integral_fmt<tp_type> FormatType(const tp_type val) {
-        return FormatInt(val);
     }
 
     template<c_integral tp_type>
@@ -391,11 +384,6 @@ namespace zf {
     template<c_floating_point tp_type>
     s_float_fmt<tp_type> FormatFloat(const tp_type val, const t_b8 trim_trailing_zeros = false) {
         return {val, trim_trailing_zeros};
-    }
-
-    template<c_floating_point tp_type>
-    s_float_fmt<tp_type> FormatType(const tp_type val) {
-        return FormatFloat(val);
     }
 
     template<c_floating_point tp_type>
@@ -443,11 +431,6 @@ namespace zf {
     template<c_unsigned_integral tp_type>
     s_hex_fmt<tp_type> FormatHex(const tp_type val, const t_b8 omit_prefix = false) {
         return {val, omit_prefix};
-    }
-
-    template<c_unsigned_integral tp_type>
-    s_hex_fmt<tp_type> FormatType(const tp_type val) {
-        return FormatHex(val);
     }
 
     template<c_unsigned_integral tp_type>
@@ -508,19 +491,9 @@ namespace zf {
         return {val};
     }
 
-    template<c_integral tp_type>
-    s_v2_int_fmt<tp_type> FormatType(const s_v2<tp_type> val) {
-        return FormatV2(val);
-    }
-
     template<c_floating_point tp_type>
     s_v2_float_fmt<tp_type> FormatV2(const s_v2<tp_type> val, const t_b8 trim_trailing_zeros = false) {
         return {val, trim_trailing_zeros};
-    }
-
-    template<c_floating_point tp_type>
-    s_v2_float_fmt<tp_type> FormatType(const s_v2<tp_type> val) {
-        return FormatV2(val);
     }
 
     template<c_integral tp_type>
@@ -567,19 +540,6 @@ namespace zf {
         return cnt;
     }
 
-    template<typename tp_type>
-    concept c_fmt = requires {
-        typename tp_type::t_fmt_tag;
-    };
-
-    template<typename tp_type>
-    concept c_formattable = requires(tp_type val) {
-        { FormatType(val) } -> c_fmt;
-    };
-
-    template<typename tp_type>
-    concept c_print_fmt_arg = c_fmt<tp_type> || c_formattable<tp_type>;
-
     inline t_b8 PrintFormat(s_stream& stream, const s_str_rdonly fmt) {
         ZF_ASSERT_MSG(CountFormatSpecifiers(fmt) == 0, "More format specifiers than arguments provided!");
 
@@ -587,9 +547,9 @@ namespace zf {
         return Print(stream, fmt);
     }
 
-    // Use a single '%' as the format specifier - the type is inferred. To actually include a '%' in the output, write '%%'.
-    // Returns true iff the operation was successful (this does not include the case of having too many arguments or too many format specifiers).
-    template<c_print_fmt_arg tp_arg, c_print_fmt_arg... tp_args_leftover>
+    // Use a single '%' as the format specifier. To actually include a '%' in the output, write '%%'.
+    // Returns true iff the operation was successful (does not include the case of having too many arguments or too many format specifiers).
+    template<c_fmt tp_arg, c_fmt... tp_args_leftover>
     t_b8 PrintFormat(s_stream& stream, const s_str_rdonly fmt, tp_arg arg, tp_args_leftover... args_leftover) {
         ZF_ASSERT_MSG(CountFormatSpecifiers(fmt) == 1 + sizeof...(args_leftover), "Mismatch between format specifier count and argument count!");
 
@@ -629,14 +589,8 @@ namespace zf {
             if (fmt_spec_is_duped) {
                 return PrintFormat(stream, fmt_leftover, arg, args_leftover...);
             } else {
-                if constexpr (c_fmt<tp_arg>) {
-                    if (!PrintType(stream, arg)) {
-                        return false;
-                    }
-                } else {
-                    if (!PrintType(stream, FormatType(arg))) {
-                        return false;
-                    }
+                if (!PrintType(stream, arg)) {
+                    return false;
                 }
 
                 return PrintFormat(stream, fmt_leftover, args_leftover...);
@@ -649,7 +603,7 @@ namespace zf {
     // ========================================
     // @subsection: Logging Helpers
     // ========================================
-    template<typename... tp_args>
+    template<c_fmt... tp_args>
     t_b8 Log(const s_str_rdonly fmt, tp_args... args) {
         s_stream std_err = StdOut();
 
@@ -664,7 +618,7 @@ namespace zf {
         return true;
     }
 
-    template<typename... tp_args>
+    template<c_fmt... tp_args>
     t_b8 LogError(const s_str_rdonly fmt, tp_args... args) {
         s_stream std_err = StdError();
 
@@ -683,13 +637,13 @@ namespace zf {
         return true;
     }
 
-    template<typename... tp_args>
+    template<c_fmt... tp_args>
     t_b8 LogErrorType(const s_str_rdonly type_name, const s_str_rdonly fmt, tp_args... args) {
         ZF_ASSERT(!IsStrEmpty(type_name));
 
         s_stream std_err = StdError();
 
-        if (!PrintFormat(std_err, "% Error: ", type_name)) {
+        if (!PrintFormat(std_err, "% Error: ", FormatStr(type_name))) {
             return false;
         }
 
@@ -704,7 +658,7 @@ namespace zf {
         return true;
     }
 
-    template<typename... tp_args>
+    template<c_fmt... tp_args>
     t_b8 LogWarning(const s_str_rdonly fmt, tp_args... args) {
         s_stream std_err = StdError();
 
