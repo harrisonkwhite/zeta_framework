@@ -22,7 +22,7 @@ namespace zf {
             s_mem_arena mem_arena;
 
             if (!AllocMemArena(info.mem_arena_size, mem_arena)) {
-                ZF_REPORT_FAILURE();
+                ZF_REPORT_ERROR();
                 return false;
             }
 
@@ -31,13 +31,13 @@ namespace zf {
             s_mem_arena temp_mem_arena;
 
             if (!MakeSubMemArena(mem_arena, info.temp_mem_arena_size, temp_mem_arena)) {
-                ZF_REPORT_FAILURE();
+                ZF_REPORT_ERROR();
                 return false;
             }
 
             // Initialise the window.
             if (!InitWindow(info.window_init_size, info.window_title, info.window_flags, temp_mem_arena)) {
-                ZF_REPORT_FAILURE();
+                ZF_REPORT_ERROR();
                 return false;
             }
 
@@ -47,7 +47,7 @@ namespace zf {
             gfx::s_resource_arena gfx_res_arena;
 
             if (!gfx::MakeResourceArena(mem_arena, g_gfx_resource_arena_cap, gfx_res_arena)) {
-                ZF_REPORT_FAILURE();
+                ZF_REPORT_ERROR();
                 return false;
             }
 
@@ -57,13 +57,13 @@ namespace zf {
             s_rendering_basis rendering_basis;
 
             if (!MakeRenderingBasis(gfx_res_arena, temp_mem_arena, rendering_basis)) {
-                ZF_REPORT_FAILURE();
+                ZF_REPORT_ERROR();
                 return false;
             }
 
             // Initialise audio system.
             if (!audio::InitSys()) {
-                ZF_REPORT_FAILURE();
+                ZF_REPORT_ERROR();
                 return false;
             }
 
@@ -76,7 +76,7 @@ namespace zf {
                 dev_mem = PushToMemArena(mem_arena, info.dev_mem_size, info.dev_mem_alignment);
 
                 if (!dev_mem) {
-                    ZF_REPORT_FAILURE();
+                    ZF_REPORT_ERROR();
                     return false;
                 }
             }
@@ -91,7 +91,7 @@ namespace zf {
                 };
 
                 if (!info.init_func(context)) {
-                    ZF_REPORT_FAILURE();
+                    ZF_REPORT_ERROR();
                     return false;
                 }
             }
@@ -143,7 +143,7 @@ namespace zf {
                         }
 
                         if (res == ek_game_tick_result_error) {
-                            ZF_REPORT_FAILURE();
+                            ZF_REPORT_ERROR();
                             return false;
                         }
 
@@ -154,7 +154,7 @@ namespace zf {
                     s_rendering_state* const rendering_state = PrepareRenderingPhase(temp_mem_arena);
 
                     if (!rendering_state) {
-                        ZF_REPORT_FAILURE();
+                        ZF_REPORT_ERROR();
                         return false;
                     }
 
@@ -172,7 +172,7 @@ namespace zf {
                         };
 
                         if (!info.render_func(context)) {
-                            ZF_REPORT_FAILURE();
+                            ZF_REPORT_ERROR();
                             return false;
                         }
                     }

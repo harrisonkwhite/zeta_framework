@@ -153,7 +153,7 @@ namespace zf {
         s_hash_map<s_font_code_point_pair, t_s32> code_pt_pairs_to_kernings;
     };
 
-    enum e_font_load_from_raw_result {
+    enum e_font_load_from_raw_result : t_s32 {
         ek_font_load_from_raw_result_success,
         ek_font_load_from_raw_result_no_code_pts_given,
         ek_font_load_from_raw_result_unsupported_code_pt,

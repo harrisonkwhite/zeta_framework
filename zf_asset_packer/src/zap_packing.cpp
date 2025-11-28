@@ -3,7 +3,7 @@
 #include <cJSON.h>
 
 namespace zf {
-    constexpr t_size g_mem_arena_size = Megabytes(8);
+    constexpr t_size g_mem_arena_size = Megabytes(40);
 
     enum e_asset_type : t_s32 {
         ek_asset_type_texture,
@@ -98,7 +98,7 @@ namespace zf {
             s_str instrs_json_str_terminated;
 
             if (!CloneStrButAddTerminator({instrs_json_file_contents}, mem_arena, instrs_json_str_terminated)) {
-                ZF_REPORT_FAILURE();
+                ZF_REPORT_ERROR();
                 return nullptr;
             }
 
@@ -126,7 +126,7 @@ namespace zf {
             s_str asset_type_arr_name_terminated;
 
             if (!CloneStrButAddTerminator(asset_type_arr_name, mem_arena, asset_type_arr_name_terminated)) {
-                ZF_REPORT_FAILURE();
+                ZF_REPORT_ERROR();
                 return false;
             }
 
@@ -181,7 +181,7 @@ namespace zf {
                     s_str field_name_terminated;
 
                     if (!CloneStrButAddTerminator(field_name, mem_arena, field_name_terminated)) {
-                        ZF_REPORT_FAILURE();
+                        ZF_REPORT_ERROR();
                         return false;
                     }
 
@@ -221,7 +221,7 @@ namespace zf {
                             const auto src_fp = StrFromRaw(field_vals[ek_tex_field_src_file_path]->valuestring);
 
                             if (!PackTexture(dest_fp, src_fp, mem_arena)) {
-                                ZF_REPORT_FAILURE();
+                                ZF_REPORT_ERROR();
                                 return false;
                             }
                         }
@@ -238,7 +238,7 @@ namespace zf {
                             s_array<t_unicode_code_pt_bit_vec> code_pt_bvs; // First is for input code points, second is for output unsupported ones.
 
                             if (!MakeArray(mem_arena, 2, code_pt_bvs)) {
-                                ZF_REPORT_FAILURE();
+                                ZF_REPORT_ERROR();
                                 return false;
                             }
 
@@ -275,7 +275,7 @@ namespace zf {
                                     break;
                                 }
 
-                                ZF_REPORT_FAILURE();
+                                ZF_REPORT_ERROR();
                                 return false;
                             }
                         }
@@ -288,7 +288,7 @@ namespace zf {
                             const auto src_fp = StrFromRaw(field_vals[ek_snd_field_src_file_path]->valuestring);
 
                             if (!PackSound(dest_fp, src_fp, mem_arena)) {
-                                ZF_REPORT_FAILURE();
+                                ZF_REPORT_ERROR();
                                 return false;
                             }
                         }

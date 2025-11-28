@@ -69,7 +69,7 @@ void main() {
         s_array<t_u16> elems;
 
         if (!MakeArray(temp_mem_arena, g_batch_slot_elem_cnt * g_batch_slot_cnt, elems)) {
-            ZF_REPORT_FAILURE();
+            ZF_REPORT_ERROR();
             return {};
         }
 
@@ -90,7 +90,7 @@ void main() {
         o_basis.batch_mesh_hdl = MakeBatchMesh(gfx_res_arena, temp_mem_arena);
 
         if (!gfx::IsResourceHandleValid(o_basis.batch_mesh_hdl)) {
-            ZF_REPORT_FAILURE();
+            ZF_REPORT_ERROR();
             return false;
         }
 
@@ -98,7 +98,7 @@ void main() {
         o_basis.batch_shader_prog_hdl = gfx::MakeShaderProg(gfx_res_arena, g_batch_vert_shader_src, g_batch_frag_shader_src, temp_mem_arena);
 
         if (!gfx::IsResourceHandleValid(o_basis.batch_shader_prog_hdl)) {
-            ZF_REPORT_FAILURE();
+            ZF_REPORT_ERROR();
             return false;
         }
 
@@ -108,7 +108,7 @@ void main() {
         };
 
         if (!gfx::LoadTextureAsset({{1, 1}, px_rgba}, gfx_res_arena, o_basis.px_tex)) {
-            ZF_REPORT_FAILURE();
+            ZF_REPORT_ERROR();
             return false;
         }
 

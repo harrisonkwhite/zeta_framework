@@ -30,7 +30,7 @@ namespace zf::audio {
         g_sys = {};
 
         if (ma_engine_init(nullptr, &g_sys.ma_eng) != MA_SUCCESS) {
-            ZF_REPORT_FAILURE();
+            ZF_REPORT_ERROR();
             return false;
         }
 
@@ -64,7 +64,7 @@ namespace zf::audio {
         o_id = IndexOfFirstUnsetBit(g_sys.snd_type_activity);
 
         if (o_id == -1) {
-            ZF_REPORT_FAILURE();
+            ZF_REPORT_ERROR();
             return false;
         }
 
@@ -72,7 +72,7 @@ namespace zf::audio {
         const auto pcm_buf_raw = static_cast<t_f32*>(malloc(static_cast<size_t>(ZF_SIZE_OF(t_f32) * pcm_len)));
 
         if (!pcm_buf_raw) {
-            ZF_REPORT_FAILURE();
+            ZF_REPORT_ERROR();
             return false;
         }
 
@@ -127,7 +127,7 @@ namespace zf::audio {
         const t_size index = IndexOfFirstUnsetBit(g_sys.snd_insts.activity);
 
         if (index == -1) {
-            ZF_REPORT_FAILURE();
+            ZF_REPORT_ERROR();
             clean_up = true;
             return false;
         }
@@ -136,7 +136,7 @@ namespace zf::audio {
         ma_audio_buffer_ref& ma_buf_ref = g_sys.snd_insts.ma_buf_refs[index];
 
         if (ma_audio_buffer_ref_init(ma_format_f32, static_cast<ma_uint32>(meta.channel_cnt), pcm.buf_raw, static_cast<ma_uint64>(meta.frame_cnt), &ma_buf_ref) != MA_SUCCESS) {
-            ZF_REPORT_FAILURE();
+            ZF_REPORT_ERROR();
             clean_up = true;
             return false;
         }
@@ -150,7 +150,7 @@ namespace zf::audio {
         ma_buf_ref.sampleRate = static_cast<ma_uint32>(meta.sample_rate);
 
         if (ma_sound_init_from_data_source(&g_sys.ma_eng, &ma_buf_ref, 0, nullptr, &ma_snd) != MA_SUCCESS) {
-            ZF_REPORT_FAILURE();
+            ZF_REPORT_ERROR();
             clean_up = true;
             return false;
         }
@@ -167,7 +167,7 @@ namespace zf::audio {
         ma_sound_set_looping(&ma_snd, loop);
 
         if (ma_sound_start(&ma_snd) != MA_SUCCESS) {
-            ZF_REPORT_FAILURE();
+            ZF_REPORT_ERROR();
             clean_up = true;
             return false;
         }

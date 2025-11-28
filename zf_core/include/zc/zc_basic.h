@@ -44,20 +44,20 @@ namespace zf {
     // ============================================================
     // @section: Key Debugging Features
     // ============================================================
-    void HandleAssertFailure(const char* const cond_raw, const char* const func_name_raw, const char* const file_name_raw, const int line, const char* const msg_raw = nullptr);
+    void ReportAssertError(const char* const cond_raw, const char* const func_name_raw, const char* const file_name_raw, const int line, const char* const msg_raw = nullptr);
 
 #ifdef ZF_DEBUG
     #define ZF_ASSERT(cond) \
         do { \
             if (!ZF_IN_CONSTEXPR() && !(cond)) { \
-                zf::HandleAssertFailure(#cond, __FUNCTION__, __FILE__, __LINE__); \
+                zf::ReportAssertError(#cond, __FUNCTION__, __FILE__, __LINE__); \
             } \
         } while(0)
 
     #define ZF_ASSERT_MSG(cond, msg) \
         do { \
             if (!ZF_IN_CONSTEXPR() && !(cond)) { \
-                zf::HandleAssertFailure(#cond, __FUNCTION__, __FILE__, __LINE__, msg); \
+                zf::ReportAssertError(#cond, __FUNCTION__, __FILE__, __LINE__, msg); \
             } \
         } while(0)
 #else
@@ -66,10 +66,10 @@ namespace zf {
 #endif
 
     // Dumps info about the call site alongside a stack trace to stderr.
-    void ReportFailure(const char* const func_name_raw, const char* const file_name_raw, const int line, const char* const msg_raw = nullptr);
+    void ReportError(const char* const func_name_raw, const char* const file_name_raw, const int line, const char* const msg_raw = nullptr);
 
-#define ZF_REPORT_FAILURE() zf::ReportFailure(__FUNCTION__, __FILE__, __LINE__)
-#define ZF_REPORT_FAILURE_MSG(msg) zf::ReportFailure(__FUNCTION__, __FILE__, __LINE__, msg)
+#define ZF_REPORT_ERROR() zf::ReportError(__FUNCTION__, __FILE__, __LINE__)
+#define ZF_REPORT_ERROR_MSG(msg) zf::ReportError(__FUNCTION__, __FILE__, __LINE__, msg)
 
     void ShowErrorBox(const char* const title_raw, const char* const contents_raw);
 

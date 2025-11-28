@@ -194,7 +194,7 @@ namespace zf {
         ZF_ASSERT(size.x > 0 && size.y > 0);
 
         if (!glfwInit()) {
-            ZF_REPORT_FAILURE();
+            ZF_REPORT_ERROR();
             return false;
         }
 
@@ -207,14 +207,14 @@ namespace zf {
         s_str title_terminated;
 
         if (!CloneStrButAddTerminator(title, temp_mem_arena, title_terminated)) {
-            ZF_REPORT_FAILURE();
+            ZF_REPORT_ERROR();
             return false;
         }
 
         g_glfw_window = glfwCreateWindow(size.x, size.y, StrRaw(title_terminated), nullptr, nullptr);
 
         if (!g_glfw_window) {
-            ZF_REPORT_FAILURE();
+            ZF_REPORT_ERROR();
             glfwTerminate();
             return false;
         }
@@ -291,7 +291,7 @@ namespace zf {
 
         // Initialise OpenGL function pointers.
         if (!gladLoadGLLoader(reinterpret_cast<GLADloadproc>(glfwGetProcAddress))) {
-            ZF_REPORT_FAILURE();
+            ZF_REPORT_ERROR();
             return false;
         }
 
