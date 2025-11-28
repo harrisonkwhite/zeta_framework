@@ -475,10 +475,10 @@ namespace zf {
             }
 
             if (chr_info.code_pt == '\n') {
+                apply_hor_alignment_offs();
+
                 chr_pos_pen.x = 0.0f;
                 chr_pos_pen.y += static_cast<t_f32>(font_arrangement.line_height);
-
-                apply_hor_alignment_offs();
 
                 line_len = 0;
 
