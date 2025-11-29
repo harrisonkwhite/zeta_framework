@@ -275,7 +275,7 @@ void main() {
         Draw(rc, tex.hdl, tex_coords, pos, size, origin, rot, blend);
     }
 
-    t_b8 DrawStr(const s_rendering_context& rc, const s_str_rdonly str, const gfx::s_font_asset& font, const s_v2<t_f32> pos, const s_v2<t_f32> alignment, s_mem_arena& temp_mem_arena) {
+    t_b8 DrawStr(const s_rendering_context& rc, const s_str_rdonly str, const gfx::s_font_asset& font, const s_v2<t_f32> pos, const s_v2<t_f32> alignment, const s_color_rgba32f blend, s_mem_arena& temp_mem_arena) {
         if (IsStrEmpty(str)) {
             return true;
         }
@@ -303,7 +303,7 @@ void main() {
 
             const auto chr_tex_coords = CalcTextureCoords(glyph_info.atlas_rect, g_font_atlas_size);
 
-            Draw(rc, font.atlas_tex_hdls[glyph_info.atlas_index], chr_tex_coords, chr_positions[chr_index], static_cast<s_v2<t_f32>>(RectSize(glyph_info.atlas_rect)), {}, 0.0f, colors::g_white);
+            Draw(rc, font.atlas_tex_hdls[glyph_info.atlas_index], chr_tex_coords, chr_positions[chr_index], static_cast<s_v2<t_f32>>(RectSize(glyph_info.atlas_rect)), {}, 0.0f, blend);
 
             chr_index++;
         };

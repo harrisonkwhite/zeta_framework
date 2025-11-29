@@ -1,11 +1,7 @@
-- Add ability to render binary with format printing.
-- Better error indication in font loading.
+- MAYBE update the font system such that the input unicode code point bit vector gets mutated BUT the asset packer gives warnings if the bit vector is mutated. Reasoning being that you might have an "extra chars" file being all game dialogue, and you have all fonts map to it - but you are probably fine with not all glyphs being supported by every single font.
 - MAYBE write a code correctness checker tool. This can make sure prefixes are correct, structs are all trivially constructible, there are no parameter name discrepencies between declaration and definition, etc.
-- Bit code needs a lot more helpers for things like rotation, masking, etc.
-- Consider whether to allow leaks in the case of intermediate failure.
 - Switch to linked block approach for the hash map.
 - Togglable debug overlays with FPS and so on, use some built-in font.
-- Non-ASCII font loading and text rendering.
 - RNG system overhaul.
 - Music layering and management.
 - Surfaces.
