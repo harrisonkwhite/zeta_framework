@@ -41,7 +41,10 @@ namespace zf {
     struct s_rendering_basis {
         gfx::s_resource_handle batch_mesh_hdl;
         gfx::s_resource_handle batch_shader_prog_hdl;
+
+        gfx::s_resource_handle surf_mesh_hdl;
         gfx::s_resource_handle surf_default_shader_prog_hdl;
+
         gfx::s_texture_asset px_tex; // Used for rendering rectangles and lines via scaling, rotation, etc.
     };
 
@@ -79,6 +82,7 @@ namespace zf {
 
     [[nodiscard]] t_b8 DrawStr(const s_rendering_context& rc, const s_str_rdonly str, const gfx::s_font_asset& font, const s_v2<t_f32> pos, const s_v2<t_f32> alignment, const s_color_rgba32f blend, s_mem_arena& temp_mem_arena);
 
-    void SetSurface(const s_rendering_context& rc, const gfx::s_resource_handle surf_hdl);
+    void SetSurface(const s_rendering_context& rc, const gfx::s_resource_handle& surf_hdl);
     void UnsetSurface(const s_rendering_context& rc);
+    void DrawSurface(const s_rendering_context& rc, const gfx::s_resource_handle& surf_hdl, const s_v2<t_f32> pos, const s_v2<t_f32> scale);
 }

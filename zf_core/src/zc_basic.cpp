@@ -81,7 +81,6 @@ namespace zf {
         fprintf(stderr, "=========================================================\n");
 
         if (!BreakIntoDebugger()) {
-            getchar();
             abort();
         }
     }
