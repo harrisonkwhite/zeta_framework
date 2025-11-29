@@ -42,6 +42,39 @@ namespace zf::gfx {
         } raw;
     };
 
+    enum e_shader_prog_uniform_val_type {
+        ek_shader_prog_uniform_val_type_s32,
+        ek_shader_prog_uniform_val_type_u32,
+        ek_shader_prog_uniform_val_type_f32,
+        ek_shader_prog_uniform_val_type_v2,
+        ek_shader_prog_uniform_val_type_v3,
+        ek_shader_prog_uniform_val_type_v4,
+        ek_shader_prog_uniform_val_type_mat4x4
+    };
+
+    struct s_shader_prog_uniform_val {
+        e_shader_prog_uniform_val_type type;
+
+        union {
+            t_s32 s32;
+            t_u32 u32;
+            t_f32 f32;
+            s_v2<t_f32> v2;
+            s_v3<t_f32> v3;
+            s_v4<t_f32> v4;
+            s_matrix_4x4 mat4x4;
+        } type_data;
+
+        s_shader_prog_uniform_val() = default;
+        s_shader_prog_uniform_val(const t_s32 v) : type(ek_shader_prog_uniform_val_type_s32), type_data({.s32 = v}) {};
+        s_shader_prog_uniform_val(const t_u32 v) : type(ek_shader_prog_uniform_val_type_u32), type_data({.u32 = v}) {};
+        s_shader_prog_uniform_val(const t_f32 v) : type(ek_shader_prog_uniform_val_type_f32), type_data({.f32 = v}) {};
+        s_shader_prog_uniform_val(const s_v2<t_f32> v) : type(ek_shader_prog_uniform_val_type_v2), type_data({.v2 = v}) {};
+        s_shader_prog_uniform_val(const s_v3<t_f32> v) : type(ek_shader_prog_uniform_val_type_v3), type_data({.v3 = v}) {};
+        s_shader_prog_uniform_val(const s_v4<t_f32> v) : type(ek_shader_prog_uniform_val_type_v4), type_data({.v4 = v}) {};
+        s_shader_prog_uniform_val(const s_matrix_4x4& v) : type(ek_shader_prog_uniform_val_type_mat4x4), type_data({.mat4x4 = v}) {};
+    };
+
     struct s_resource_arena {
         s_list<s_resource_handle> hdls;
     };

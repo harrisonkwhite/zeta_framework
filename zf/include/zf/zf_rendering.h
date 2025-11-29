@@ -84,5 +84,7 @@ namespace zf {
 
     void SetSurface(const s_rendering_context& rc, const gfx::s_resource_handle& surf_hdl);
     void UnsetSurface(const s_rendering_context& rc);
+    void SetSurfaceShaderProg(const s_rendering_context& rc, const gfx::s_resource_handle& prog);
+    [[nodiscard]] t_b8 SetSurfaceShaderProgUniform(const s_rendering_context& rc, const s_str_rdonly name, const gfx::s_shader_prog_uniform_val& val, s_mem_arena& temp_mem_arena);
     void DrawSurface(const s_rendering_context& rc, const gfx::s_resource_handle& surf_hdl, const s_v2<t_f32> pos, const s_v2<t_f32> scale);
 }

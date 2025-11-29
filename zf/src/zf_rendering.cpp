@@ -438,6 +438,58 @@ void main() {
         return static_cast<gfx::t_gl_id>(prog);
     }
 
+    void SetSurfaceShaderProg(const s_rendering_context& rc, const gfx::s_resource_handle& prog) {
+        ZF_ASSERT(CurGLShaderProg() == 0 && "Potential attempted double-assignment of surface shader program?");
+        glUseProgram(prog.raw.shader_prog.gl_id);
+    }
+
+    t_b8 SetSurfaceShaderProgUniform(const s_rendering_context& rc, const s_str_rdonly name, const gfx::s_shader_prog_uniform_val& val, s_mem_arena& temp_mem_arena) {
+        const gfx::t_gl_id cur_prog_gl_id = CurGLShaderProg();
+
+        ZF_ASSERT(cur_prog_gl_id != 0 && "Surface shader program must be set before setting uniforms!");
+
+        s_str name_terminated;
+
+        if (!CloneStrButAddTerminator(name, temp_mem_arena, name_terminated)) {
+            return false;
+        }
+
+        const t_s32 loc = glGetUniformLocation(cur_prog_gl_id, StrRaw(name_terminated));
+        ZF_ASSERT(loc != -1 && "Failed to get location of shader uniform!"); // @todo: Possibly too strict? If a uniform is optimised out, it might be annoying to have to deal with these assert trips.
+
+        switch (val.type) {
+            case gfx::ek_shader_prog_uniform_val_type_s32:
+                glUniform1i(loc, val.type_data.s32);
+                break;
+
+            case gfx::ek_shader_prog_uniform_val_type_u32:
+                glUniform1ui(loc, val.type_data.u32);
+                break;
+
+            case gfx::ek_shader_prog_uniform_val_type_f32:
+                glUniform1f(loc, val.type_data.f32);
+                break;
+
+            case gfx::ek_shader_prog_uniform_val_type_v2:
+                glUniform2f(loc, val.type_data.v2.x, val.type_data.v2.y);
+                break;
+
+            case gfx::ek_shader_prog_uniform_val_type_v3:
+                glUniform3f(loc, val.type_data.v3.x, val.type_data.v3.y, val.type_data.v3.z);
+                break;
+
+            case gfx::ek_shader_prog_uniform_val_type_v4:
+                glUniform4f(loc, val.type_data.v4.x, val.type_data.v4.y, val.type_data.v4.z, val.type_data.v4.w);
+                break;
+
+            case gfx::ek_shader_prog_uniform_val_type_mat4x4:
+                glUniformMatrix4fv(loc, 1, false, reinterpret_cast<const t_f32*>(&val.type_data.mat4x4));
+                break;
+        }
+
+        return true;
+    }
+
     static inline s_rect<t_s32> GLViewport() {
         s_rect<t_s32> v;
         glGetIntegerv(GL_VIEWPORT, reinterpret_cast<t_s32*>(&v));
@@ -469,19 +521,19 @@ void main() {
         glBindTexture(GL_TEXTURE_2D, surf_hdl.raw.surf.tex_gl_id);
 
         const t_s32 proj_uniform_loc = glGetUniformLocation(CurGLShaderProg(), "u_proj");
-        ZF_ASSERT(proj_uniform_loc != -1);
+        ZF_ASSERT(proj_uniform_loc != -1); // @todo: Remove, do at load time.
 
         const auto viewport = GLViewport();
         const s_matrix_4x4 proj_mat = MakeOrthographicMatrix4x4(0.0f, static_cast<t_f32>(viewport.width), static_cast<t_f32>(viewport.height), 0.0f, -1.0f, 1.0f);
         glUniformMatrix4fv(proj_uniform_loc, 1, false, reinterpret_cast<const t_f32*>(&proj_mat));
 
         const t_s32 pos_uniform_loc = glGetUniformLocation(CurGLShaderProg(), "u_pos");
-        ZF_ASSERT(pos_uniform_loc != -1);
+        ZF_ASSERT(pos_uniform_loc != -1); // @todo: Remove, do at load time.
 
         glUniform2fv(pos_uniform_loc, 1, reinterpret_cast<const t_f32*>(&pos));
 
         const t_s32 size_uniform_loc = glGetUniformLocation(CurGLShaderProg(), "u_size");
-        ZF_ASSERT(size_uniform_loc != -1);
+        ZF_ASSERT(size_uniform_loc != -1); // @todo: Remove, do at load time.
 
         const auto surf_size = static_cast<s_v2<t_f32>>(surf_hdl.raw.surf.size);
         glUniform2fv(size_uniform_loc, 1, reinterpret_cast<const t_f32*>(&surf_size));

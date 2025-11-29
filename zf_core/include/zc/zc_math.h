@@ -177,6 +177,21 @@ namespace zf {
         return s_v2<tp_type>(cos(dir), -sin(dir)) * len;
     }
 
+    template<c_numeric tp_type>
+    struct s_v3 {
+        tp_type x;
+        tp_type y;
+        tp_type z;
+    };
+
+    template<c_numeric tp_type>
+    struct s_v4 {
+        tp_type x;
+        tp_type y;
+        tp_type z;
+        tp_type w;
+    };
+
     // ============================================================
     // @section: Rectangles
     // ============================================================
@@ -194,7 +209,7 @@ namespace zf {
             : x(pos.x), y(pos.y), width(size.x), height(size.y) {}
 
         constexpr t_b8 operator==(const s_rect<tp_type>& other) const {
-            return x == other.x && y == other.y;
+            return x == other.x && y == other.y && width == other.width && height == other.height;
         }
 
         constexpr t_b8 operator!=(const s_rect<tp_type>& other) const {
