@@ -81,11 +81,18 @@ namespace zf {
         fprintf(stderr, "=========================================================\n");
 
         if (!BreakIntoDebugger()) {
+            getchar();
             abort();
         }
     }
 
     void P_ReportError(const char* const func_name_raw, const char* const file_name_raw, const t_s32 line) {
+        static t_b8 g_reported;
+
+        if (g_reported) {
+            return;
+        }
+
         fprintf(stderr, "==================== ERROR ====================\n");
 
         fprintf(stderr, "Function: %s\n", func_name_raw);
@@ -96,9 +103,15 @@ namespace zf {
 
         fprintf(stderr, "===============================================\n");
 
+        fflush(stderr);
+
 #ifdef ZF_DEBUG
-        BreakIntoDebugger();
+        if (!BreakIntoDebugger()) {
+            getchar();
+        }
 #endif
+
+        g_reported = true;
     }
 
     void ShowErrorBox(const char* const title_raw, const char* const contents_raw) {
