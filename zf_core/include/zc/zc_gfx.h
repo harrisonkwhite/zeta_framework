@@ -165,4 +165,15 @@ namespace zf {
     [[nodiscard]] t_b8 PackFont(const s_str_rdonly dest_file_path, const s_str_rdonly src_file_path, const t_s32 height, const t_unicode_code_pt_bit_vec& code_pts, s_mem_arena& temp_mem_arena, e_font_load_from_raw_result& o_font_load_from_raw_res, t_unicode_code_pt_bit_vec* const o_unsupported_code_pts = nullptr);
     [[nodiscard]] t_b8 UnpackFont(const s_str_rdonly file_path, s_mem_arena& arrangement_mem_arena, s_mem_arena& atlas_rgbas_mem_arena, s_mem_arena& temp_mem_arena, s_font_arrangement& o_arrangement, s_array<t_font_atlas_rgba>& o_atlas_rgbas);
     [[nodiscard]] t_b8 LoadStrChrDrawPositions(const s_str_rdonly str, const s_font_arrangement& font_arrangement, const s_v2<t_f32> pos, const s_v2<t_f32> alignment, s_mem_arena& mem_arena, s_array<s_v2<t_f32>>& o_positions); // Creates an array of length n, where n is the number of CHARACTERS (not bytes) in the string, including non-printable characters. Each element is the top-left position of the corresponding character. Ignore any elements associated with non-printable characters, including '\n'.
+
+    // ============================================================
+    // @section: Shaders
+    // ============================================================
+    struct s_shader_prog {
+        s_str vs;
+        s_str fs;
+    };
+
+    [[nodiscard]] t_b8 PackShaderProg(const s_str_rdonly dest_file_path, const s_str_rdonly vs_file_path, const s_str_rdonly fs_file_path, s_mem_arena& temp_mem_arena);
+    [[nodiscard]] t_b8 UnpackShaderProg(const s_str_rdonly file_path, s_mem_arena& mem_arena, s_mem_arena& temp_mem_arena, s_shader_prog& o_prog);
 }

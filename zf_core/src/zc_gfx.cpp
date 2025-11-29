@@ -66,6 +66,8 @@ namespace zf {
     }
 
     t_b8 UnpackTexture(const s_str_rdonly file_path, s_mem_arena& mem_arena, s_mem_arena& temp_mem_arena, s_rgba_texture_data& o_tex_data) {
+        o_tex_data = {};
+
         s_stream fs;
 
         if (!OpenFile(file_path, ek_file_access_mode_read, temp_mem_arena, fs)) {
@@ -386,6 +388,9 @@ namespace zf {
     }
 
     t_b8 UnpackFont(const s_str_rdonly file_path, s_mem_arena& arrangement_mem_arena, s_mem_arena& atlas_rgbas_mem_arena, s_mem_arena& temp_mem_arena, s_font_arrangement& o_arrangement, s_array<t_font_atlas_rgba>& o_atlas_rgbas) {
+        o_arrangement = {};
+        o_atlas_rgbas = {};
+
         s_stream fs;
 
         if (!OpenFile(file_path, ek_file_access_mode_read, temp_mem_arena, fs)) {
@@ -509,6 +514,63 @@ namespace zf {
         }
 
         apply_hor_alignment_offs();
+
+        return true;
+    }
+
+    // ============================================================
+    // @section: Shaders
+    // ============================================================
+    t_b8 PackShaderProg(const s_str_rdonly dest_file_path, const s_str_rdonly vs_file_path, const s_str_rdonly fs_file_path, s_mem_arena& temp_mem_arena) {
+        s_array<t_u8> vs_contents;
+        s_array<t_u8> fs_contents;
+
+        if (!LoadFileContents(vs_file_path, temp_mem_arena, temp_mem_arena, vs_contents)
+            || !LoadFileContents(fs_file_path, temp_mem_arena, temp_mem_arena, fs_contents)) {
+            return false;
+        }
+
+        s_stream fs;
+
+        if (!OpenFile(dest_file_path, ek_file_access_mode_write, temp_mem_arena, fs)) {
+            return false;
+        }
+
+        ZF_DEFER({ CloseFile(fs); });
+
+        if (!SerializeArray(fs, vs_contents)) {
+            return false;
+        }
+
+        if (!SerializeArray(fs, fs_contents)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    t_b8 UnpackShaderProg(const s_str_rdonly file_path, s_mem_arena& mem_arena, s_mem_arena& temp_mem_arena, s_shader_prog& o_prog) {
+        o_prog = {};
+
+        s_stream file_stream;
+
+        if (!OpenFile(file_path, ek_file_access_mode_read, temp_mem_arena, file_stream)) {
+            return false;
+        }
+
+        ZF_DEFER({ CloseFile(file_stream); });
+
+        s_str vert_shader;
+
+        if (!DeserializeArray(file_stream, mem_arena, vert_shader.bytes)) {
+            return false;
+        }
+
+        s_str frag_shader;
+
+        if (!DeserializeArray(file_stream, mem_arena, frag_shader.bytes)) {
+            return false;
+        }
 
         return true;
     }

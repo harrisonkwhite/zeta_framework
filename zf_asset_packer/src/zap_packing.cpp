@@ -8,6 +8,7 @@ namespace zf {
     enum e_asset_type : t_s32 {
         ek_asset_type_texture,
         ek_asset_type_font,
+        ek_asset_type_shader_prog,
         ek_asset_type_sound,
 
         eks_asset_type_cnt
@@ -16,6 +17,7 @@ namespace zf {
     static s_static_array<s_str_rdonly, eks_asset_type_cnt> g_asset_type_arr_names = {{
         "textures",
         "fonts",
+        "shader_progs",
         "sounds"
     }};
 
@@ -62,6 +64,20 @@ namespace zf {
         {"src_file_path", ek_asset_field_type_str},
         {"height", ek_asset_field_type_num},
         {"extra_chrs_file_path", ek_asset_field_type_str, true},
+        {"dest_file_path", ek_asset_field_type_str}
+    }};
+
+    enum e_shader_prog_field : t_s32 {
+        ek_shader_prog_field_src_vs_file_path,
+        ek_shader_prog_field_src_fs_file_path,
+        ek_shader_prog_field_dest_file_path,
+
+        eks_shader_prog_field_cnt
+    };
+
+    static s_static_array<s_asset_field, eks_shader_prog_field_cnt> g_shader_prog_fields = {{
+        {"src_vs_file_path", ek_asset_field_type_str},
+        {"src_fs_file_path", ek_asset_field_type_str},
         {"dest_file_path", ek_asset_field_type_str}
     }};
 
@@ -119,6 +135,7 @@ namespace zf {
 
         s_static_array<cJSON*, eks_tex_field_cnt> tex_field_cj_ptrs = {};
         s_static_array<cJSON*, eks_font_field_cnt> font_field_cj_ptrs = {};
+        s_static_array<cJSON*, eks_shader_prog_field_cnt> shader_prog_field_cj_ptrs = {};
         s_static_array<cJSON*, eks_snd_field_cnt> snd_field_cj_ptrs = {};
 
         for (t_size asset_type_index = 0; asset_type_index < eks_asset_type_cnt; asset_type_index++) {
@@ -154,6 +171,9 @@ namespace zf {
                         case ek_asset_type_font:
                             return g_font_fields;
 
+                        case ek_asset_type_shader_prog:
+                            return g_shader_prog_fields;
+
                         case ek_asset_type_sound:
                             return g_snd_fields;
                     }
@@ -161,13 +181,16 @@ namespace zf {
                     return {};
                 }();
 
-                const auto field_vals = [asset_type_index, &tex_field_cj_ptrs, &font_field_cj_ptrs, &snd_field_cj_ptrs]() -> s_array<cJSON*> {
+                const auto field_vals = [asset_type_index, &tex_field_cj_ptrs, &font_field_cj_ptrs, &shader_prog_field_cj_ptrs, &snd_field_cj_ptrs]() -> s_array<cJSON*> {
                     switch (asset_type_index) {
                         case ek_asset_type_texture:
                             return tex_field_cj_ptrs;
 
                         case ek_asset_type_font:
                             return font_field_cj_ptrs;
+
+                        case ek_asset_type_shader_prog:
+                            return shader_prog_field_cj_ptrs;
 
                         case ek_asset_type_sound:
                             return snd_field_cj_ptrs;
@@ -275,6 +298,20 @@ namespace zf {
                                     break;
                                 }
 
+                                ZF_REPORT_ERROR();
+                                return false;
+                            }
+                        }
+
+                        break;
+
+                    case ek_asset_type_shader_prog:
+                        {
+                            const auto dest_fp = StrFromRaw(field_vals[ek_shader_prog_field_dest_file_path]->valuestring);
+                            const auto vs_fp = StrFromRaw(field_vals[ek_shader_prog_field_src_vs_file_path]->valuestring);
+                            const auto fs_fp = StrFromRaw(field_vals[ek_shader_prog_field_src_fs_file_path]->valuestring);
+
+                            if (!PackShaderProg(dest_fp, vs_fp, fs_fp, mem_arena)) {
                                 ZF_REPORT_ERROR();
                                 return false;
                             }

@@ -42,7 +42,7 @@ namespace zf::gfx {
         } raw;
     };
 
-    enum e_shader_prog_uniform_val_type {
+    enum e_shader_prog_uniform_val_type : t_s32 {
         ek_shader_prog_uniform_val_type_s32,
         ek_shader_prog_uniform_val_type_u32,
         ek_shader_prog_uniform_val_type_f32,
