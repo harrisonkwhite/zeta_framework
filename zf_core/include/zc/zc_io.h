@@ -617,7 +617,7 @@ namespace zf {
     }
 
     inline t_b8 PrintFormat(s_stream& stream, const s_str_rdonly fmt) {
-        ZF_ASSERT_MSG(CountFormatSpecifiers(fmt) == 0, "More format specifiers than arguments provided!");
+        ZF_ASSERT(CountFormatSpecifiers(fmt) == 0);
 
         // Just print the rest of the string.
         return Print(stream, fmt);
@@ -627,7 +627,7 @@ namespace zf {
     // Returns true iff the operation was successful (does not include the case of having too many arguments or too many format specifiers).
     template<c_fmt tp_arg, c_fmt... tp_args_leftover>
     t_b8 PrintFormat(s_stream& stream, const s_str_rdonly fmt, tp_arg arg, tp_args_leftover... args_leftover) {
-        ZF_ASSERT_MSG(CountFormatSpecifiers(fmt) == 1 + sizeof...(args_leftover), "Mismatch between format specifier count and argument count!");
+        ZF_ASSERT(CountFormatSpecifiers(fmt) == 1 + sizeof...(args_leftover));
 
         static_assert(IsASCII(g_fmt_spec)); // Assuming this for this algorithm.
 

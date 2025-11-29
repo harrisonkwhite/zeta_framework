@@ -69,16 +69,12 @@ namespace zf {
         return false;
     }
 
-    void ReportAssertError(const char* const cond_raw, const char* const func_name_raw, const char* const file_name_raw, const t_s32 line, const char* const msg_raw) {
+    void P_ReportAssertError(const char* const cond_raw, const char* const func_name_raw, const char* const file_name_raw, const t_s32 line) {
         fprintf(stderr, "==================== ASSERTION ERROR ====================\n");
         fprintf(stderr, "Condition: %s\n", cond_raw);
         fprintf(stderr, "Function:  %s\n", func_name_raw);
         fprintf(stderr, "File:      %s\n", file_name_raw);
         fprintf(stderr, "Line:      %d\n", line);
-
-        if (msg_raw) {
-            fprintf(stderr, "Message:   \"%s\"\n", msg_raw);
-        }
 
         PrintStackTrace();
 
@@ -89,16 +85,12 @@ namespace zf {
         }
     }
 
-    void ReportError(const char* const func_name_raw, const char* const file_name_raw, const t_s32 line, const char* const msg_raw) {
+    void P_ReportError(const char* const func_name_raw, const char* const file_name_raw, const t_s32 line) {
         fprintf(stderr, "==================== ERROR ====================\n");
 
         fprintf(stderr, "Function: %s\n", func_name_raw);
         fprintf(stderr, "File:     %s\n", file_name_raw);
         fprintf(stderr, "Line:     %d\n", line);
-
-        if (msg_raw) {
-            fprintf(stderr, "Message:  \"%s\"\n", msg_raw);
-        }
 
         PrintStackTrace();
 

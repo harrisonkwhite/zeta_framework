@@ -488,7 +488,7 @@ namespace zf {
             s_font_glyph_info glyph_info;
 
             if (!HashMapGet(font_arrangement.code_pts_to_glyph_infos, chr_info.code_pt, &glyph_info)) {
-                ZF_ASSERT_MSG(false, "Unsupported code point!");
+                ZF_ASSERT(false);
                 return false;
             }
 

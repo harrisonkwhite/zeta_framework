@@ -228,7 +228,7 @@ void main() {
 
     t_b8 CompleteRenderingPhase(const s_rendering_context& rc) {
         if (!IsStackEmpty(rc.state.surf_hdls)) {
-            ZF_REPORT_ERROR_MSG("Rendering phase finished but not all surfaces have been unset!");
+            ZF_REPORT_ERROR();
             return false;
         }
 
@@ -317,7 +317,7 @@ void main() {
             // If the source rectangle wasn't set, just go with the whole texture.
             src_rect_to_use = {0, 0, tex.size_cache.x, tex.size_cache.y};
         } else {
-            ZF_ASSERT_MSG(RectLeft(src_rect) >= 0 && RectTop(src_rect) >= 0 && RectRight(src_rect) <= tex.size_cache.x && RectTop(src_rect) <= tex.size_cache.y, "Invalid source rectangle!");
+            ZF_ASSERT(RectLeft(src_rect) >= 0 && RectTop(src_rect) >= 0 && RectRight(src_rect) <= tex.size_cache.x && RectTop(src_rect) <= tex.size_cache.y);
             src_rect_to_use = src_rect;
         }
 
@@ -352,7 +352,7 @@ void main() {
             s_font_glyph_info glyph_info;
 
             if (!HashMapGet(font.arrangement.code_pts_to_glyph_infos, chr_info.code_pt, &glyph_info)) {
-                ZF_ASSERT_MSG(false, "Unsupported code point!");
+                ZF_ASSERT(false);
                 return false;
             }
 
@@ -368,7 +368,7 @@ void main() {
 
     void SetSurface(const s_rendering_context& rc, const gfx::s_resource_handle surf_hdl) {
         if (IsStackFull(rc.state.surf_hdls)) {
-            ZF_REPORT_ERROR_MSG("Attempting to exceed surface limit!");
+            ZF_REPORT_ERROR();
             return;
         }
 
@@ -382,7 +382,7 @@ void main() {
 
     void UnsetSurface(const s_rendering_context& rc) {
         if (IsStackEmpty(rc.state.surf_hdls)) {
-            ZF_REPORT_ERROR_MSG("Trying to unset surface, but no surface is set!");
+            ZF_REPORT_ERROR();
             return;
         }
 
