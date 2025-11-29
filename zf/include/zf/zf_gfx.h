@@ -10,7 +10,8 @@ namespace zf::gfx {
         ek_resource_type_invalid,
         ek_resource_type_mesh,
         ek_resource_type_shader_prog,
-        ek_resource_type_texture
+        ek_resource_type_texture,
+        ek_resource_type_surface
     };
 
     struct s_gl_mesh {
@@ -32,6 +33,11 @@ namespace zf::gfx {
             struct {
                 t_gl_id gl_id;
             } tex;
+
+            struct {
+                t_gl_id fb_gl_id;
+                t_gl_id tex_gl_id;
+            } surf;
         } raw;
     };
 
@@ -72,6 +78,16 @@ namespace zf::gfx {
         };
     }
 
+    inline s_resource_handle MakeSurfaceHandle(const t_gl_id fb_gl_id, const t_gl_id tex_gl_id) {
+        ZF_ASSERT(fb_gl_id);
+        ZF_ASSERT(tex_gl_id);
+
+        return {
+            .type = ek_resource_type_surface,
+            .raw = {.surf = {.fb_gl_id = fb_gl_id, .tex_gl_id = tex_gl_id}}
+        };
+    }
+
     t_b8 AreResourcesEqual(const s_resource_handle& a, const s_resource_handle& b);
     void ReleaseResource(const s_resource_handle& hdl);
 
@@ -81,6 +97,7 @@ namespace zf::gfx {
     s_resource_handle MakeMesh(s_resource_arena& res_arena, const t_f32* const verts_raw, const t_size verts_len, const s_array_rdonly<t_u16> elems, const s_array_rdonly<t_s32> vert_attr_lens); // You might not want to provide vertices to start with, and only the count - passing nullptr in for verts_raw allows this.
     s_resource_handle MakeShaderProg(s_resource_arena& res_arena, const s_str_rdonly vert_src, const s_str_rdonly frag_src, s_mem_arena& temp_mem_arena);
     s_resource_handle MakeTexture(s_resource_arena& res_arena, const s_rgba_texture_data_rdonly& tex_data);
+    s_resource_handle MakeSurface(s_resource_arena& res_arena, const s_v2<t_size> size);
 
     struct s_texture_asset {
         s_resource_handle hdl;

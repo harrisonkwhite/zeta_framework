@@ -182,6 +182,11 @@ namespace zf::gfx {
             case ek_resource_type_texture:
                 glDeleteTextures(1, &hdl.raw.tex.gl_id);
                 break;
+
+            case ek_resource_type_surface:
+                glDeleteTextures(1, &hdl.raw.surf.tex_gl_id);
+                glDeleteFramebuffers(1, &hdl.raw.surf.fb_gl_id);
+                break;
         }
     }
 
@@ -234,6 +239,38 @@ namespace zf::gfx {
         }
 
         return ListAppend(res_arena.hdls, MakeTextureHandle(tex_gl_id));
+    }
+
+    static t_b8 AttachGLFramebufferTexture(const t_gl_id fb_gl_id, const t_gl_id tex_gl_id, const s_v2<t_size> tex_size) {
+        glBindTexture(GL_TEXTURE_2D, tex_gl_id);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, static_cast<GLsizei>(tex_size.x), static_cast<GLsizei>(tex_size.y), 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+        glBindFramebuffer(GL_FRAMEBUFFER, fb_gl_id);
+
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tex_gl_id, 0);
+
+        const t_b8 success = glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE;
+
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+        return success;
+    }
+
+    s_resource_handle MakeSurface(s_resource_arena& res_arena, const s_v2<t_size> size) {
+        t_gl_id fb_gl_id;
+        glGenFramebuffers(1, &fb_gl_id);
+
+        t_gl_id tex_gl_id;
+        glGenTextures(1, &tex_gl_id);
+
+        if (!AttachGLFramebufferTexture(fb_gl_id, tex_gl_id, size)) {
+            LogError("Failed to attach framebuffer texture for surface!");
+            return {};
+        }
+
+        return ListAppend(res_arena.hdls, MakeSurfaceHandle(fb_gl_id, tex_gl_id));
     }
 
     [[nodiscard]] static t_b8 MakeFontAtlasTextureHandles(const s_array_rdonly<t_font_atlas_rgba> atlas_rgbas, s_mem_arena& mem_arena, s_resource_arena& res_arena, s_array<s_resource_handle>& o_hdls) {
