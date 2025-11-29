@@ -350,13 +350,13 @@ namespace zf {
         glfwSetWindowShouldClose(g_glfw_window, close);
     }
 
-    s_v2<t_s32> GetWindowSize() {
+    s_v2<t_size> GetWindowSize() {
         t_s32 w, h;
         glfwGetWindowSize(g_glfw_window, &w, &h);
         return {w, h};
     }
 
-    s_v2<t_s32> GetFramebufferSize() {
+    s_v2<t_size> GetFramebufferSize() {
         t_s32 w, h;
         glfwGetFramebufferSize(g_glfw_window, &w, &h);
         return {w, h};

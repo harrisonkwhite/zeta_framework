@@ -36,6 +36,8 @@ namespace zf {
     constexpr t_size g_batch_slot_vert_cnt = 4;
     constexpr t_size g_batch_slot_elem_cnt = 6;
 
+    constexpr t_size g_surf_stack_cap = 32; // Max number of surfaces you can have set at once.
+
     struct s_rendering_basis {
         gfx::s_resource_handle batch_mesh_hdl;
         gfx::s_resource_handle batch_shader_prog_hdl;

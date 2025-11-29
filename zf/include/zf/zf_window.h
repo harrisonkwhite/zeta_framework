@@ -108,8 +108,8 @@ namespace zf {
     t_b8 ShouldWindowClose();
     void SetWindowShouldClose(const t_b8 close);
 
-    s_v2<t_s32> GetWindowSize();
-    s_v2<t_s32> GetFramebufferSize();
+    s_v2<t_size> GetWindowSize();
+    s_v2<t_size> GetFramebufferSize();
 
     t_f64 GetTime();
 

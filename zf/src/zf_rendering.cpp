@@ -1,5 +1,7 @@
 #include <zf/zf_rendering.h>
 
+#include <zf/zf_window.h>
+
 namespace zf {
     struct s_rendering_state {
         s_static_array<t_batch_slot, g_batch_slot_cnt> batch_slots;
@@ -8,6 +10,8 @@ namespace zf {
         s_matrix_4x4 batch_view_mat;
 
         gfx::s_resource_handle batch_tex_hdl;
+
+        s_static_stack<gfx::s_resource_handle, g_surf_stack_cap> surf_hdls;
 
 #ifdef ZF_DEBUG
         struct {
@@ -309,5 +313,48 @@ void main() {
         };
 
         return true;
+    }
+
+    // ============================================================
+    // @section: Surfaces
+    // ============================================================
+    void SetSurface(const s_rendering_context& rc, const gfx::s_resource_handle surf_hdl) {
+        if (IsStackFull(rc.state.surf_hdls)) {
+            ZF_REPORT_ERROR_MSG("Attempting to exceed surface limit!");
+            return;
+        }
+
+        Flush(rc);
+
+        glBindFramebuffer(GL_FRAMEBUFFER, surf_hdl.raw.surf.fb_gl_id);
+        glViewport(0, 0, static_cast<GLsizei>(surf_hdl.raw.surf.size.x), static_cast<GLsizei>(surf_hdl.raw.surf.size.y));
+
+        StackPush(rc.state.surf_hdls, surf_hdl);
+    }
+
+    void UnsetSurface(const s_rendering_context& rc) {
+        if (IsStackEmpty(rc.state.surf_hdls)) {
+            ZF_REPORT_ERROR_MSG("Trying to unset surface, but no surface is set!");
+            return;
+        }
+
+        Flush(rc);
+
+        StackPop(rc.state.surf_hdls);
+
+        gfx::t_gl_id fb_gl_id;
+        s_v2<t_size> viewport_size;
+
+        if (IsStackEmpty(rc.state.surf_hdls)) {
+            fb_gl_id = 0;
+            viewport_size = GetWindowSize();
+        } else {
+            const auto new_surf = StackTop(rc.state.surf_hdls);
+            fb_gl_id = new_surf.raw.surf.fb_gl_id;
+            viewport_size = new_surf.raw.surf.size;
+        }
+
+        glBindFramebuffer(GL_FRAMEBUFFER, fb_gl_id);
+        glViewport(0, 0, static_cast<GLsizei>(viewport_size.x), static_cast<GLsizei>(viewport_size.y));
     }
 }

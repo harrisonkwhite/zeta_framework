@@ -37,6 +37,7 @@ namespace zf::gfx {
             struct {
                 t_gl_id fb_gl_id;
                 t_gl_id tex_gl_id;
+                s_v2<t_size> size;
             } surf;
         } raw;
     };
