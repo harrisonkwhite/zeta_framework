@@ -472,49 +472,74 @@ namespace zf {
     // ========================================
     // @subsection: Bit Vector Printing
     // ========================================
+    enum e_bit_vec_fmt_style {
+        ek_bit_vec_fmt_style_seq = 0, // List all bits from LSB to MSB, not divided into bytes.
+        ek_bit_vec_fmt_style_little_endian = 1 << 0, // Split into bytes, ordered in little endian.
+        ek_bit_vec_fmt_style_big_endian = 1 << 1 // Split into bytes, ordered in big endian.
+    };
+
     struct s_bit_vec_fmt {
         using t_fmt_tag = void;
 
         s_bit_vec_rdonly val;
-        t_b8 split_into_bytes;
+        e_bit_vec_fmt_style style;
     };
 
-    inline s_bit_vec_fmt FormatBitVec(const s_bit_vec_rdonly& val, const t_b8 split_into_bytes = false) {
-        return {val, split_into_bytes};
+    inline s_bit_vec_fmt FormatBitVec(const s_bit_vec_rdonly& val, const e_bit_vec_fmt_style style) {
+        return {val, style};
     }
 
     inline t_b8 PrintType(s_stream& stream, const s_bit_vec_fmt& fmt) {
         ZF_ASSERT(IsBitVecValid(fmt.val));
 
-        const auto print_bit = [&stream, &fmt](const t_size bit_index) {
+        const auto print_bit = [&](const t_size bit_index) {
             const s_str_rdonly str = IsBitSet(fmt.val, bit_index) ? "1" : "0";
             return Print(stream, str);
         };
 
-        if (fmt.val.bit_cnt > 0) {
-            if (fmt.split_into_bytes) {
-                for (t_size j = BitVecLastByteBitCnt(fmt.val) - 1; j >= 0; j--) {
-                    if (!print_bit(((fmt.val.bytes.len - 1) * 8) + j)) {
-                        return false;
-                    }
-                }
+        const auto print_byte = [&](const t_size index) {
+            const t_size bit_cnt = index == fmt.val.bytes.len - 1 ? BitVecLastByteBitCnt(fmt.val) : 8;
 
-                for (t_size i = fmt.val.bytes.len - 2; i >= 0; i--) {
-                    Print(stream, " ");
+            for (t_size i = 7; i >= bit_cnt; i--) {
+                Print(stream, "0");
+            }
 
-                    for (t_size j = 7; j >= 0; j--) {
-                        if (!print_bit((i * 8) + j)) {
-                            return false;
-                        }
-                    }
-                }
-            } else {
-                for (t_size i = fmt.val.bit_cnt - 1; i >= 0; i--) {
+            for (t_size i = bit_cnt - 1; i >= 0; i--) {
+                print_bit((index * 8) + i);
+            }
+        };
+
+        switch (fmt.style) {
+            case ek_bit_vec_fmt_style_seq:
+                for (t_size i = 0; i < fmt.val.bit_cnt; i++) {
                     if (!print_bit(i)) {
                         return false;
                     }
                 }
-            }
+
+                break;
+
+            case ek_bit_vec_fmt_style_little_endian:
+                for (t_size i = 0; i < fmt.val.bytes.len; i++) {
+                    if (i > 0) {
+                        Print(stream, " ");
+                    }
+
+                    print_byte(i);
+                }
+
+                break;
+
+            case ek_bit_vec_fmt_style_big_endian:
+                for (t_size i = fmt.val.bytes.len - 1; i >= 0; i--) {
+                    print_byte(i);
+
+                    if (i > 0) {
+                        Print(stream, " ");
+                    }
+                }
+
+                break;
         }
 
         return true;
