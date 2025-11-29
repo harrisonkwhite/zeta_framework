@@ -53,8 +53,8 @@ namespace zf {
     struct s_rendering_state;
 
     struct s_rendering_context {
-        const s_rendering_basis& basis;
-        s_rendering_state& state;
+        const s_rendering_basis* basis;
+        s_rendering_state* state;
     };
 
     [[nodiscard]] t_b8 MakeRenderingBasis(gfx::s_resource_arena& gfx_res_arena, s_mem_arena& temp_mem_arena, s_rendering_basis& o_basis);

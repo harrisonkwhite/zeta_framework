@@ -190,7 +190,7 @@ void main() {
     }
 
     static void Flush(const s_rendering_context& rc) {
-        if (rc.state.batch_slots_used_cnt == 0) {
+        if (rc.state->batch_slots_used_cnt == 0) {
             // Nothing to flush!
             return;
         }
@@ -198,23 +198,23 @@ void main() {
         //
         // Submitting Vertex Data to GPU
         //
-        glBindVertexArray(rc.basis.batch_mesh_hdl.raw.mesh.vert_arr_gl_id);
-        glBindBuffer(GL_ARRAY_BUFFER, rc.basis.batch_mesh_hdl.raw.mesh.vert_buf_gl_id);
+        glBindVertexArray(rc.basis->batch_mesh_hdl.raw.mesh.vert_arr_gl_id);
+        glBindBuffer(GL_ARRAY_BUFFER, rc.basis->batch_mesh_hdl.raw.mesh.vert_buf_gl_id);
 
         {
-            const t_size write_size = ZF_SIZE_OF(t_batch_slot) * rc.state.batch_slots_used_cnt;
-            glBufferSubData(GL_ARRAY_BUFFER, 0, write_size, rc.state.batch_slots.buf_raw);
+            const t_size write_size = ZF_SIZE_OF(t_batch_slot) * rc.state->batch_slots_used_cnt;
+            glBufferSubData(GL_ARRAY_BUFFER, 0, write_size, rc.state->batch_slots.buf_raw);
         }
 
         //
         // Rendering the Batch
         //
-        const gfx::t_gl_id prog_gl_id = rc.basis.batch_shader_prog_hdl.raw.shader_prog.gl_id;
+        const gfx::t_gl_id prog_gl_id = rc.basis->batch_shader_prog_hdl.raw.shader_prog.gl_id;
 
         glUseProgram(prog_gl_id);
 
         const t_s32 view_uniform_loc = glGetUniformLocation(prog_gl_id, "u_view");
-        glUniformMatrix4fv(view_uniform_loc, 1, false, &rc.state.batch_view_mat.elems[0][0]);
+        glUniformMatrix4fv(view_uniform_loc, 1, false, &rc.state->batch_view_mat.elems[0][0]);
 
         const s_rect<t_s32> viewport = []() {
             s_rect<t_s32> vp;
@@ -227,17 +227,17 @@ void main() {
         glUniformMatrix4fv(proj_uniform_loc, 1, false, &proj_mat.elems[0][0]);
 
         glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, rc.state.batch_tex_hdl.raw.tex.gl_id);
+        glBindTexture(GL_TEXTURE_2D, rc.state->batch_tex_hdl.raw.tex.gl_id);
 
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, rc.basis.batch_mesh_hdl.raw.mesh.elem_buf_gl_id);
-        glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(g_batch_slot_elem_cnt * rc.state.batch_slots_used_cnt), GL_UNSIGNED_SHORT, nullptr);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, rc.basis->batch_mesh_hdl.raw.mesh.elem_buf_gl_id);
+        glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(g_batch_slot_elem_cnt * rc.state->batch_slots_used_cnt), GL_UNSIGNED_SHORT, nullptr);
 
         glUseProgram(0);
 
-        rc.state.batch_slots_used_cnt = 0;
+        rc.state->batch_slots_used_cnt = 0;
 
 #ifdef ZF_DEBUG
-        rc.state.debug.batch_flush_cnt++;
+        rc.state->debug.batch_flush_cnt++;
 #endif
     }
 
@@ -253,7 +253,7 @@ void main() {
     }
 
     t_b8 CompleteRenderingPhase(const s_rendering_context& rc) {
-        if (!IsStackEmpty(rc.state.surf_hdls)) {
+        if (!IsStackEmpty(rc.state->surf_hdls)) {
             ZF_REPORT_ERROR();
             return false;
         }
@@ -270,16 +270,16 @@ void main() {
 
     void UpdateViewMatrix(const s_rendering_context& rc, const s_matrix_4x4& mat) {
         Flush(rc);
-        rc.state.batch_view_mat = mat;
+        rc.state->batch_view_mat = mat;
     }
 
     static void Draw(const s_rendering_context& rc, const gfx::s_resource_handle tex_hdl, const s_rect<t_f32> tex_coords, s_v2<t_f32> pos, s_v2<t_f32> size, s_v2<t_f32> origin, const t_f32 rot, const s_color_rgba32f blend) {
         ZF_ASSERT(gfx::IsResourceHandleValid(tex_hdl));
 
-        if (rc.state.batch_slots_used_cnt == 0) {
+        if (rc.state->batch_slots_used_cnt == 0) {
             // This is the first draw to the batch, so set the texture associated with the batch to the one we're trying to render.
-            rc.state.batch_tex_hdl = tex_hdl;
-        } else if (rc.state.batch_slots_used_cnt == g_batch_slot_cnt || !gfx::AreResourcesEqual(tex_hdl, rc.state.batch_tex_hdl)) {
+            rc.state->batch_tex_hdl = tex_hdl;
+        } else if (rc.state->batch_slots_used_cnt == g_batch_slot_cnt || !gfx::AreResourcesEqual(tex_hdl, rc.state->batch_tex_hdl)) {
             // Flush the batch and then try this same render operation again but on a fresh batch.
             Flush(rc);
             Draw(rc, tex_hdl, tex_coords, pos, size, origin, rot, blend);
@@ -301,7 +301,7 @@ void main() {
             {RectLeft(tex_coords), RectBottom(tex_coords)}
         }};
 
-        t_batch_slot& slot = rc.state.batch_slots[rc.state.batch_slots_used_cnt];
+        t_batch_slot& slot = rc.state->batch_slots[rc.state->batch_slots_used_cnt];
 
         for (t_size i = 0; i < slot.g_len; i++) {
             slot[i] = {
@@ -315,7 +315,7 @@ void main() {
         }
 
         // Update the count - we've used a slot!
-        rc.state.batch_slots_used_cnt++;
+        rc.state->batch_slots_used_cnt++;
     }
 
     static s_rect<t_f32> CalcTextureCoords(const s_rect<t_s32> src_rect, const s_v2<t_s32> tex_size) {
@@ -393,7 +393,7 @@ void main() {
     }
 
     void SetSurface(const s_rendering_context& rc, const gfx::s_resource_handle& surf_hdl) {
-        if (IsStackFull(rc.state.surf_hdls)) {
+        if (IsStackFull(rc.state->surf_hdls)) {
             ZF_REPORT_ERROR();
             return;
         }
@@ -403,27 +403,27 @@ void main() {
         glBindFramebuffer(GL_FRAMEBUFFER, surf_hdl.raw.surf.fb_gl_id);
         glViewport(0, 0, static_cast<GLsizei>(surf_hdl.raw.surf.size.x), static_cast<GLsizei>(surf_hdl.raw.surf.size.y));
 
-        StackPush(rc.state.surf_hdls, surf_hdl);
+        StackPush(rc.state->surf_hdls, surf_hdl);
     }
 
     void UnsetSurface(const s_rendering_context& rc) {
-        if (IsStackEmpty(rc.state.surf_hdls)) {
+        if (IsStackEmpty(rc.state->surf_hdls)) {
             ZF_REPORT_ERROR();
             return;
         }
 
         Flush(rc);
 
-        StackPop(rc.state.surf_hdls);
+        StackPop(rc.state->surf_hdls);
 
         gfx::t_gl_id fb_gl_id;
         s_v2<t_size> viewport_size;
 
-        if (IsStackEmpty(rc.state.surf_hdls)) {
+        if (IsStackEmpty(rc.state->surf_hdls)) {
             fb_gl_id = 0;
             viewport_size = GetWindowSize();
         } else {
-            const auto new_surf = StackTop(rc.state.surf_hdls);
+            const auto new_surf = StackTop(rc.state->surf_hdls);
             fb_gl_id = new_surf.raw.surf.fb_gl_id;
             viewport_size = new_surf.raw.surf.size;
         }
@@ -501,7 +501,7 @@ void main() {
 
         ZF_ASSERT(CurGLShaderProg() != 0 && "Surface shader program must be set before rendering a surface!");
 
-        const auto& surf_gl_mesh = rc.basis.surf_mesh_hdl.raw.mesh;
+        const auto& surf_gl_mesh = rc.basis->surf_mesh_hdl.raw.mesh;
 
         glBindVertexArray(surf_gl_mesh.vert_arr_gl_id);
         glBindBuffer(GL_ARRAY_BUFFER, surf_gl_mesh.vert_buf_gl_id);

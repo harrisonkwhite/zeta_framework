@@ -159,8 +159,8 @@ namespace zf {
                     }
 
                     const s_rendering_context rendering_context = {
-                        .basis = rendering_basis,
-                        .state = *rendering_state
+                        .basis = &rendering_basis,
+                        .state = rendering_state
                     };
 
                     {
