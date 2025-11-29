@@ -241,7 +241,7 @@ namespace zf::gfx {
         return ListAppend(res_arena.hdls, MakeTextureHandle(tex_gl_id));
     }
 
-    static t_b8 AttachGLFramebufferTexture(const t_gl_id fb_gl_id, const t_gl_id tex_gl_id, const s_v2<t_size> tex_size) {
+    [[nodiscard]] static t_b8 AttachGLFramebufferTexture(const t_gl_id fb_gl_id, const t_gl_id tex_gl_id, const s_v2<t_size> tex_size) {
         glBindTexture(GL_TEXTURE_2D, tex_gl_id);
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, static_cast<GLsizei>(tex_size.x), static_cast<GLsizei>(tex_size.y), 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
@@ -270,7 +270,7 @@ namespace zf::gfx {
             return {};
         }
 
-        return ListAppend(res_arena.hdls, MakeSurfaceHandle(fb_gl_id, tex_gl_id));
+        return ListAppend(res_arena.hdls, MakeSurfaceHandle(fb_gl_id, tex_gl_id, size));
     }
 
     [[nodiscard]] static t_b8 MakeFontAtlasTextureHandles(const s_array_rdonly<t_font_atlas_rgba> atlas_rgbas, s_mem_arena& mem_arena, s_resource_arena& res_arena, s_array<s_resource_handle>& o_hdls) {

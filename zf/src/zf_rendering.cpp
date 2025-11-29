@@ -67,6 +67,42 @@ void main() {
 }
 )";
 
+    static s_str_rdonly g_surface_default_vert_shader_src = R"(#version 430 core
+
+layout (location = 0) in vec2 a_vert;
+layout (location = 1) in vec2 a_tex_coord;
+
+out vec2 v_tex_coord;
+
+uniform vec2 u_pos;
+uniform vec2 u_size;
+uniform mat4 u_proj;
+
+void main() {
+    mat4 model = mat4(
+        vec4(u_size.x, 0.0, 0.0, 0.0),
+        vec4(0.0, u_size.y, 0.0, 0.0),
+        vec4(0.0, 0.0, 1.0, 0.0),
+        vec4(u_pos.x, u_pos.y, 0.0, 1.0)
+    );
+
+    gl_Position = u_proj * model * vec4(a_vert, 0.0, 1.0);
+    v_tex_coord = a_tex_coord;
+}
+)";
+
+    const s_str_rdonly g_surface_default_frag_shader_src = R"(#version 430 core
+
+in vec2 v_tex_coord;
+out vec4 o_frag_color;
+
+uniform sampler2D u_tex;
+
+void main() {
+    o_frag_color = texture(u_tex, v_tex_coord);
+}
+)";
+
     static gfx::s_resource_handle MakeBatchMesh(gfx::s_resource_arena& gfx_res_arena, s_mem_arena& temp_mem_arena) {
         static constexpr t_size g_verts_len = g_batch_vert_component_cnt * g_batch_slot_vert_cnt * g_batch_slot_cnt;
 
@@ -102,6 +138,14 @@ void main() {
         o_basis.batch_shader_prog_hdl = gfx::MakeShaderProg(gfx_res_arena, g_batch_vert_shader_src, g_batch_frag_shader_src, temp_mem_arena);
 
         if (!gfx::IsResourceHandleValid(o_basis.batch_shader_prog_hdl)) {
+            ZF_REPORT_ERROR();
+            return false;
+        }
+
+        // Generate surface shader program.
+        o_basis.surf_default_shader_prog_hdl = gfx::MakeShaderProg(gfx_res_arena, g_surface_default_vert_shader_src, g_surface_default_frag_shader_src, temp_mem_arena);
+
+        if (!gfx::IsResourceHandleValid(o_basis.surf_default_shader_prog_hdl)) {
             ZF_REPORT_ERROR();
             return false;
         }
@@ -182,8 +226,15 @@ void main() {
         return rs;
     }
 
-    void CompleteRenderingPhase(const s_rendering_context& rc) {
+    t_b8 CompleteRenderingPhase(const s_rendering_context& rc) {
+        if (!IsStackEmpty(rc.state.surf_hdls)) {
+            ZF_REPORT_ERROR_MSG("Rendering phase finished but not all surfaces have been unset!");
+            return false;
+        }
+
         Flush(rc);
+
+        return true;
     }
 
     void DrawClear(const s_color_rgba32f col) {
@@ -315,9 +366,6 @@ void main() {
         return true;
     }
 
-    // ============================================================
-    // @section: Surfaces
-    // ============================================================
     void SetSurface(const s_rendering_context& rc, const gfx::s_resource_handle surf_hdl) {
         if (IsStackFull(rc.state.surf_hdls)) {
             ZF_REPORT_ERROR_MSG("Attempting to exceed surface limit!");
@@ -357,4 +405,65 @@ void main() {
         glBindFramebuffer(GL_FRAMEBUFFER, fb_gl_id);
         glViewport(0, 0, static_cast<GLsizei>(viewport_size.x), static_cast<GLsizei>(viewport_size.y));
     }
+
+#if 0
+    void RenderSurface(const s_rendering_context* const rendering_context, const s_surface* const surf, const s_v2 pos, const s_v2 scale, const bool blend) {
+        assert(*surf->fb_gl_id != BoundGLFramebuffer() && "Trying to render the currently set surface! Unset the surface first.");
+
+#ifndef NDEBUG
+        for (int i = 0; i < rendering_context->state->surf_fb_gl_id_stack.height; i++) {
+            assert(*STATIC_ARRAY_ELEM(rendering_context->state->surf_fb_gl_id_stack.buf, i) != *surf->fb_gl_id && "Trying to render a surface currently in the stack! Unset the surface first.");
+        }
+#endif
+
+        assert(CurrentGLShaderProgram() != 0 && "Surface shader program must be set before rendering a surface!");
+
+        if (!blend) {
+            glDisable(GL_BLEND);
+        }
+
+        const s_renderable* const renderable = STATIC_ARRAY_ELEM(rendering_context->basis->renderables, ek_renderable_surface);
+
+        glBindVertexArray(*renderable->vert_array_gl_id);
+        glBindBuffer(GL_ARRAY_BUFFER, *renderable->vert_buf_gl_id);
+
+        {
+            const t_r32 verts[] = {
+                0.0f, scale.y, 0.0f, 0.0f,
+                scale.x, scale.y, 1.0f, 0.0f,
+                scale.x, 0.0f, 1.0f, 1.0f,
+                0.0f, 0.0f, 0.0f, 1.0f
+            };
+
+            glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(verts), verts);
+        }
+
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, *surf->fb_tex_gl_id);
+
+        const t_s32 proj_uniform_loc = glGetUniformLocation(CurrentGLShaderProgram(), "u_proj");
+        assert(proj_uniform_loc != -1);
+        const s_rect_s32 viewport = GLViewport();
+        const s_matrix_4x4 proj_mat = OrthographicMatrix(0.0f, viewport.width, viewport.height, 0.0f, -1.0f, 1.0f);
+        glUniformMatrix4fv(proj_uniform_loc, 1, false, (const t_r32*)proj_mat.elems);
+
+        const t_s32 pos_uniform_loc = glGetUniformLocation(CurrentGLShaderProgram(), "u_pos");
+        assert(pos_uniform_loc != -1);
+        glUniform2fv(pos_uniform_loc, 1, (const t_r32*)&pos);
+
+        const t_s32 size_uniform_loc = glGetUniformLocation(CurrentGLShaderProgram(), "u_size");
+        assert(size_uniform_loc != -1);
+        const s_v2 surf_size_r32 = {surf->size.x, surf->size.y};
+        glUniform2fv(size_uniform_loc, 1, (const t_r32*)&surf_size_r32);
+
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, *renderable->elem_buf_gl_id);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, NULL);
+
+        glUseProgram(0);
+
+        if (!blend) {
+            glEnable(GL_BLEND);
+        }
+    }
+#endif
 }

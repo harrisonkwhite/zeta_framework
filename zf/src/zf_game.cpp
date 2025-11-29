@@ -177,7 +177,10 @@ namespace zf {
                         }
                     }
 
-                    CompleteRenderingPhase(rendering_context);
+                    if (!CompleteRenderingPhase(rendering_context)) {
+                        ZF_REPORT_ERROR();
+                        return false;
+                    }
 
                     SwapBuffers();
                 }

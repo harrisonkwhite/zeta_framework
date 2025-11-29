@@ -41,6 +41,7 @@ namespace zf {
     struct s_rendering_basis {
         gfx::s_resource_handle batch_mesh_hdl;
         gfx::s_resource_handle batch_shader_prog_hdl;
+        gfx::s_resource_handle surf_default_shader_prog_hdl;
         gfx::s_texture_asset px_tex; // Used for rendering rectangles and lines via scaling, rotation, etc.
     };
 
@@ -56,13 +57,13 @@ namespace zf {
     [[nodiscard]] t_b8 MakeRenderingBasis(gfx::s_resource_arena& gfx_res_arena, s_mem_arena& temp_mem_arena, s_rendering_basis& o_basis);
 
     s_rendering_state* PrepareRenderingPhase(s_mem_arena& mem_arena); // Returns a newly created rendering state, or nullptr on failure.
-    void CompleteRenderingPhase(const s_rendering_context& rc);
+    [[nodiscard]] t_b8 CompleteRenderingPhase(const s_rendering_context& rc);
 
     void DrawClear(const s_color_rgba32f col = {});
 
     void UpdateViewMatrix(const s_rendering_context& rc, const s_matrix_4x4& mat);
+
     void DrawTexture(const s_rendering_context& rc, const gfx::s_texture_asset& tex, const s_v2<t_f32> pos, const s_rect<t_s32> src_rect = {}, const s_v2<t_f32> origin = origins::g_topleft, const s_v2<t_f32> scale = {1.0f, 1.0f}, const t_f32 rot = 0.0f, const s_color_rgba32f blend = colors::g_white);
-    [[nodiscard]] t_b8 DrawStr(const s_rendering_context& rc, const s_str_rdonly str, const gfx::s_font_asset& font, const s_v2<t_f32> pos, const s_v2<t_f32> alignment, const s_color_rgba32f blend, s_mem_arena& temp_mem_arena);
 
     inline void DrawRect(const s_rendering_context& rc, const s_rect<t_f32> rect, const s_color_rgba32f color) {
         DrawTexture(rc, rc.basis.px_tex, RectPos(rect), {}, {}, RectSize(rect), 0.0f, color);
@@ -75,4 +76,9 @@ namespace zf {
         const t_f32 dir = CalcDirInRads(a, b);
         DrawTexture(rc, rc.basis.px_tex, a, {}, origins::g_centerleft, {len, width}, dir, blend);
     }
+
+    [[nodiscard]] t_b8 DrawStr(const s_rendering_context& rc, const s_str_rdonly str, const gfx::s_font_asset& font, const s_v2<t_f32> pos, const s_v2<t_f32> alignment, const s_color_rgba32f blend, s_mem_arena& temp_mem_arena);
+
+    void SetSurface(const s_rendering_context& rc, const gfx::s_resource_handle surf_hdl);
+    void UnsetSurface(const s_rendering_context& rc);
 }

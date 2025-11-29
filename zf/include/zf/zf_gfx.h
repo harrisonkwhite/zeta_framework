@@ -79,13 +79,13 @@ namespace zf::gfx {
         };
     }
 
-    inline s_resource_handle MakeSurfaceHandle(const t_gl_id fb_gl_id, const t_gl_id tex_gl_id) {
+    inline s_resource_handle MakeSurfaceHandle(const t_gl_id fb_gl_id, const t_gl_id tex_gl_id, const s_v2<t_size> size) {
         ZF_ASSERT(fb_gl_id);
         ZF_ASSERT(tex_gl_id);
 
         return {
             .type = ek_resource_type_surface,
-            .raw = {.surf = {.fb_gl_id = fb_gl_id, .tex_gl_id = tex_gl_id}}
+            .raw = {.surf = {.fb_gl_id = fb_gl_id, .tex_gl_id = tex_gl_id, .size = size}}
         };
     }
 
