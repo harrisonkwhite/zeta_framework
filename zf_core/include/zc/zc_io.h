@@ -312,6 +312,11 @@ namespace zf {
         return StreamWriteItemsOfArray(stream, str.bytes);
     }
 
+    inline t_b8 PrintFormat(s_stream& stream, const s_str_rdonly fmt);
+
+    template<typename tp_arg_type, typename... tp_arg_types_leftover>
+    t_b8 PrintFormat(s_stream& stream, const s_str_rdonly fmt, const tp_arg_type& arg, const tp_arg_types_leftover&... args_leftover);
+
     // Type format structs which are to be accepted as format printing arguments need to meet this (i.e. have the tag).
     template<typename tp_type>
     concept c_fmt = requires {
@@ -644,18 +649,19 @@ namespace zf {
     template<c_nonstatic_array tp_arr_type>
     struct s_array_fmt {
         using t_fmt_tag = void;
+
         tp_arr_type val;
         t_b8 one_per_line;
     };
 
     template<c_nonstatic_array tp_arr_type>
     s_array_fmt<tp_arr_type> FormatArray(const tp_arr_type val, const t_b8 one_per_line = false) {
-        return {val};
+        return {val, one_per_line};
     }
 
     template<typename tp_type, t_size tp_len>
-    s_array_fmt<s_array<tp_type>> FormatArray(const s_static_array<tp_type, tp_len>& val, const t_b8 one_per_line = false) {
-        return {val};
+    s_array_fmt<s_array_rdonly<tp_type>> FormatArray(const s_static_array<tp_type, tp_len>& val, const t_b8 one_per_line = false) {
+        return {ToNonstatic(val), one_per_line};
     }
 
     template<c_nonstatic_array tp_arr_type>
@@ -664,7 +670,7 @@ namespace zf {
     }
 
     template<typename tp_type, t_size tp_len>
-    s_array_fmt<s_array<tp_type>> FormatDefault(const s_static_array<tp_type, tp_len>& val) {
+    s_array_fmt<s_array_rdonly<tp_type>> FormatDefault(const s_static_array<tp_type, tp_len>& val) {
         return FormatArray(ToNonstatic(val));
     }
 
@@ -672,14 +678,8 @@ namespace zf {
     t_b8 PrintType(s_stream& stream, const s_array_fmt<tp_type>& fmt) {
         if (fmt.one_per_line) {
             for (t_size i = 0; i < fmt.val.len; i++) {
-                if (!PrintFormat(stream, "[%] %%", i, fmt.val[i], i < fmt.val.len - 1 ? "\n" : "")) {
+                if (!PrintFormat(stream, "[%] %%", i, fmt.val[i], i < fmt.val.len - 1 ? s_str_rdonly("\n") : s_str_rdonly(""))) {
                     return false;
-                }
-
-                if (i < fmt.val.len - 1) {
-                    if (!Print(stream, "\n")) {
-                        return false;
-                    }
                 }
             }
         } else {
@@ -710,23 +710,26 @@ namespace zf {
     // ========================================
     // @subsection: Format Printing
     // ========================================
-    constexpr t_unicode_code_pt g_fmt_spec = '%';
+    constexpr t_unicode_code_pt g_print_fmt_spec = '%';
+    constexpr t_unicode_code_pt g_print_fmt_esc = '^';
 
     constexpr t_size CountFormatSpecifiers(const s_str_rdonly str) {
         ZF_ASSERT(IsValidUTF8Str(str));
 
-        static_assert(IsASCII(g_fmt_spec)); // Assuming this for this algorithm.
+        static_assert(IsASCII(g_print_fmt_spec) && IsASCII(g_print_fmt_esc)); // Assuming this for this algorithm.
 
+        t_b8 escaped = false;
         t_size cnt = 0;
 
         for (t_size i = 0; i < str.bytes.len; i++) {
-            if (str.bytes[i] == g_fmt_spec) {
-                if (i + 1 < str.bytes.len && str.bytes[i + 1] == g_fmt_spec) {
-                    // There's a duplicate, so don't count it as an occurrence.
-                    i++;
-                } else {
+            if (!escaped) {
+                if (str.bytes[i] == g_print_fmt_esc) {
+                    escaped = true;
+                } else if (str.bytes[i] == g_print_fmt_spec) {
                     cnt++;
                 }
+            } else {
+                escaped = false;
             }
         }
 
@@ -740,63 +743,41 @@ namespace zf {
         return Print(stream, fmt);
     }
 
-    // Use a single '%' as the format specifier. To actually include a '%' in the output, write "^%". To actually include a '^', write "^^".
-    // Returns true iff the operation was successful (does not include the case of having too many arguments or too many format specifiers).
-    // @todo: Problem if you want 2 format items immediately after each other, "%%" will not allow that. Maybe do "^%" for "%".
+    // Use a single '%' as the format specifier. To actually include a '%' in the output, write "^%". To actually include a '^', write "^^". Returns true iff the operation was successful.
     template<typename tp_arg_type, typename... tp_arg_types_leftover>
     t_b8 PrintFormat(s_stream& stream, const s_str_rdonly fmt, const tp_arg_type& arg, const tp_arg_types_leftover&... args_leftover) {
-        static_assert(false, "update");
-
         ZF_ASSERT(CountFormatSpecifiers(fmt) == 1 + sizeof...(args_leftover));
 
-        static_assert(IsASCII(g_fmt_spec)); // Assuming this for this algorithm.
+        static_assert(IsASCII(g_print_fmt_spec) && IsASCII(g_print_fmt_esc)); // Assuming this for this algorithm.
 
-        // Determine how many bytes to print.
-        t_size byte_cnt = 0;
-        t_b8 fmt_spec_found = false;
+        t_b8 escaped = false;
 
-        while (byte_cnt < fmt.bytes.len) {
-            if (fmt.bytes[byte_cnt] == g_fmt_spec) {
-                fmt_spec_found = true;
-                break; // We don't want to include the format specifier.
-            }
-
-            byte_cnt++;
-        }
-
-        const t_b8 fmt_spec_is_duped = fmt_spec_found && byte_cnt + 1 < fmt.bytes.len && fmt.bytes[byte_cnt + 1] == g_fmt_spec;
-
-        if (fmt_spec_is_duped) {
-            // Actually include the format specifier in the print.
-            byte_cnt++;
-        }
-
-        // Print the bytes.
-        const auto bytes_to_print = Slice(fmt.bytes, 0, byte_cnt);
-
-        if (!StreamWriteItemsOfArray(stream, bytes_to_print)) {
-            return false;
-        }
-
-        // Handle leftovers.
-        if (fmt_spec_found) {
-            const s_str_rdonly fmt_leftover = {Slice(fmt.bytes, byte_cnt + 1, fmt.bytes.len)}; // The substring of everything after the format specifier.
-
-            if (fmt_spec_is_duped) {
-                return PrintFormat(stream, fmt_leftover, arg, args_leftover...);
-            } else {
-                if constexpr (c_fmt<tp_arg_type>) {
-                    if (!PrintType(stream, arg)) {
-                        return false;
+        for (t_size i = 0; i < fmt.bytes.len; i++) {
+            if (!escaped) {
+                if (fmt.bytes[i] == g_print_fmt_esc) {
+                    escaped = true;
+                    continue;
+                } else if (fmt.bytes[i] == g_print_fmt_spec) {
+                    if constexpr (c_fmt<tp_arg_type>) {
+                        if (!PrintType(stream, arg)) {
+                            return false;
+                        }
+                    } else {
+                        if (!PrintType(stream, FormatDefault(arg))) {
+                            return false;
+                        }
                     }
-                } else {
-                    if (!PrintType(stream, FormatDefault(arg))) {
-                        return false;
-                    }
+
+                    const s_str_rdonly fmt_leftover = {Slice(fmt.bytes, i + 1, fmt.bytes.len)}; // The substring of everything after the format specifier.
+                    return PrintFormat(stream, fmt_leftover, args_leftover...);
                 }
-
-                return PrintFormat(stream, fmt_leftover, args_leftover...);
             }
+
+            if (!StreamWriteItem(stream, fmt.bytes[i])) {
+                return false;
+            }
+
+            escaped = false;
         }
 
         return true;
