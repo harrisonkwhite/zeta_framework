@@ -645,10 +645,16 @@ namespace zf {
     struct s_array_fmt {
         using t_fmt_tag = void;
         tp_arr_type val;
+        t_b8 one_per_line;
     };
 
     template<c_nonstatic_array tp_arr_type>
-    s_array_fmt<tp_arr_type> FormatArray(const tp_arr_type val) {
+    s_array_fmt<tp_arr_type> FormatArray(const tp_arr_type val, const t_b8 one_per_line = false) {
+        return {val};
+    }
+
+    template<typename tp_type, t_size tp_len>
+    s_array_fmt<s_array<tp_type>> FormatArray(const s_static_array<tp_type, tp_len>& val, const t_b8 one_per_line = false) {
         return {val};
     }
 
@@ -664,24 +670,38 @@ namespace zf {
 
     template<typename tp_type>
     t_b8 PrintType(s_stream& stream, const s_array_fmt<tp_type>& fmt) {
-        if (!Print(stream, "[")) {
-            return false;
-        }
+        if (fmt.one_per_line) {
+            for (t_size i = 0; i < fmt.val.len; i++) {
+                if (!PrintFormat(stream, "[%] %%", i, fmt.val[i], i < fmt.val.len - 1 ? "\n" : "")) {
+                    return false;
+                }
 
-        for (t_size i = 0; i < fmt.val.len; i++) {
-            if (!PrintFormat(stream, "%", fmt.val[i])) {
+                if (i < fmt.val.len - 1) {
+                    if (!Print(stream, "\n")) {
+                        return false;
+                    }
+                }
+            }
+        } else {
+            if (!Print(stream, "[")) {
                 return false;
             }
 
-            if (i < fmt.val.len - 1) {
-                if (!Print(stream, ", ")) {
+            for (t_size i = 0; i < fmt.val.len; i++) {
+                if (!PrintFormat(stream, "%", fmt.val[i])) {
                     return false;
                 }
-            }
-        }
 
-        if (!Print(stream, "]")) {
-            return false;
+                if (i < fmt.val.len - 1) {
+                    if (!Print(stream, ", ")) {
+                        return false;
+                    }
+                }
+            }
+
+            if (!Print(stream, "]")) {
+                return false;
+            }
         }
 
         return true;
@@ -720,10 +740,13 @@ namespace zf {
         return Print(stream, fmt);
     }
 
-    // Use a single '%' as the format specifier. To actually include a '%' in the output, write '%%'.
+    // Use a single '%' as the format specifier. To actually include a '%' in the output, write "^%". To actually include a '^', write "^^".
     // Returns true iff the operation was successful (does not include the case of having too many arguments or too many format specifiers).
+    // @todo: Problem if you want 2 format items immediately after each other, "%%" will not allow that. Maybe do "^%" for "%".
     template<typename tp_arg_type, typename... tp_arg_types_leftover>
     t_b8 PrintFormat(s_stream& stream, const s_str_rdonly fmt, const tp_arg_type& arg, const tp_arg_types_leftover&... args_leftover) {
+        static_assert(false, "update");
+
         ZF_ASSERT(CountFormatSpecifiers(fmt) == 1 + sizeof...(args_leftover));
 
         static_assert(IsASCII(g_fmt_spec)); // Assuming this for this algorithm.
