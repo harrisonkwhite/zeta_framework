@@ -75,7 +75,7 @@ namespace zf::gfx {
 
                     if (MakeArray(temp_mem_arena, log_chr_cnt, log_chrs)) {
                         glGetShaderInfoLog(shader_gl_id, static_cast<GLsizei>(log_chrs.len), nullptr, log_chrs.buf_raw);
-                        LogErrorType("OpenGL Shader Compilation", "%", FormatStr(StrFromRaw(log_chrs.buf_raw)));
+                        LogErrorType("OpenGL Shader Compilation", "%", StrFromRaw(log_chrs.buf_raw));
                     } else {
                         LogError("Failed to reserve memory for OpenGL shader compilation error log!");
                     }
@@ -124,7 +124,7 @@ namespace zf::gfx {
         const s_v2<t_s32> tex_size_limit = GLTextureSizeLimit();
 
         if (tex_data.size_in_pxs.x > tex_size_limit.x || tex_data.size_in_pxs.y > tex_size_limit.y) {
-            LogError("Texture size % exceeds OpenGL limits %!", FormatV2(tex_data.size_in_pxs), FormatV2(tex_size_limit));
+            LogError("Texture size % exceeds OpenGL limits %!", tex_data.size_in_pxs, tex_size_limit);
             return 0;
         }
 

@@ -148,7 +148,7 @@ namespace zf {
                 return true;
 
             case ek_stream_type_file:
-                return fread(ArrayRaw(arr), sizeof(arr[0]), cnt, stream.type_data.file.fs_raw) == cnt;
+                return static_cast<t_size>(fread(ArrayRaw(arr), sizeof(arr[0]), static_cast<size_t>(cnt), stream.type_data.file.fs_raw)) == cnt;
         }
 
         ZF_ASSERT(false);
@@ -182,7 +182,7 @@ namespace zf {
                 return true;
 
             case ek_stream_type_file:
-                return fwrite(ArrayRaw(arr), sizeof(arr[0]), ArrayLen(arr), stream.type_data.file.fs_raw) == ArrayLen(arr);
+                return static_cast<t_size>(fwrite(ArrayRaw(arr), sizeof(arr[0]), static_cast<size_t>(ArrayLen(arr)), stream.type_data.file.fs_raw)) == ArrayLen(arr);
         }
 
         ZF_ASSERT(false);
@@ -314,6 +314,10 @@ namespace zf {
         return {val};
     }
 
+    inline s_bool_fmt FormatDefault(const t_b8 val) {
+        return FormatBool(val);
+    }
+
     inline t_b8 PrintType(s_stream& stream, const s_bool_fmt& fmt) {
         return Print(stream, fmt.val ? StrFromRaw("true") : StrFromRaw("false"));
     }
@@ -328,6 +332,10 @@ namespace zf {
 
     inline s_str_fmt FormatStr(const s_str_rdonly val) {
         return {val};
+    }
+
+    inline s_str_fmt FormatDefault(const s_str_rdonly val) {
+        return FormatStr(val);
     }
 
     inline t_b8 PrintType(s_stream& stream, const s_str_fmt& fmt) {
@@ -346,6 +354,11 @@ namespace zf {
     template<c_integral tp_type>
     s_integral_fmt<tp_type> FormatInt(const tp_type val) {
         return {val};
+    }
+
+    template<c_integral tp_type>
+    s_integral_fmt<tp_type> FormatDefault(const tp_type val) {
+        return FormatInt(val);
     }
 
     template<c_integral tp_type>
@@ -384,6 +397,11 @@ namespace zf {
     template<c_floating_point tp_type>
     s_float_fmt<tp_type> FormatFloat(const tp_type val, const t_b8 trim_trailing_zeros = false) {
         return {val, trim_trailing_zeros};
+    }
+
+    template<c_floating_point tp_type>
+    s_float_fmt<tp_type> FormatDefault(const tp_type val) {
+        return FormatFloat(val);
     }
 
     template<c_floating_point tp_type>
@@ -489,6 +507,10 @@ namespace zf {
         return {val, style};
     }
 
+    inline s_bit_vec_fmt FormatDefault(const s_bit_vec_rdonly& val) {
+        return FormatBitVec(val, ek_bit_vec_fmt_style_seq);
+    }
+
     inline t_b8 PrintType(s_stream& stream, const s_bit_vec_fmt& fmt) {
         ZF_ASSERT(IsBitVecValid(fmt.val));
 
@@ -567,9 +589,19 @@ namespace zf {
         return {val};
     }
 
+    template<c_integral tp_type>
+    s_v2_int_fmt<tp_type> FormatDefault(const s_v2<tp_type> val) {
+        return FormatV2(val);
+    }
+
     template<c_floating_point tp_type>
     s_v2_float_fmt<tp_type> FormatV2(const s_v2<tp_type> val, const t_b8 trim_trailing_zeros = false) {
         return {val, trim_trailing_zeros};
+    }
+
+    template<c_floating_point tp_type>
+    s_v2_float_fmt<tp_type> FormatDefault(const s_v2<tp_type> val) {
+        return FormatV2(val);
     }
 
     template<c_integral tp_type>
@@ -588,50 +620,6 @@ namespace zf {
             && Print(stream, ", ")
             && PrintType(stream, FormatFloat(fmt.val.y, fmt.trim_trailing_zeros))
             && Print(stream, ")");
-    }
-
-    // ========================================
-    // @subsection: Array Printing
-    // ========================================
-    template<typename tp_elem_type, typename tp_fmt_type>
-    using t_array_elem_to_fmt = tp_fmt_type (*)(const tp_elem_type& elem);
-
-    template<typename tp_elem_type, typename tp_fmt_type>
-    struct s_array_fmt {
-        using t_fmt_tag = void;
-
-        s_array_rdonly<tp_elem_type> val;
-        t_array_elem_to_fmt<tp_elem_type, tp_fmt_type> elem_to_fmt;
-    };
-
-    template<typename tp_elem_type, typename tp_fmt_type>
-    s_array_fmt<tp_elem_type, tp_fmt_type> FormatArray(const s_array_rdonly<tp_elem_type> val, const t_array_elem_to_fmt<tp_elem_type, tp_fmt_type> elem_to_fmt) {
-        return {val, elem_to_fmt};
-    }
-
-    template<typename tp_elem_type, typename tp_fmt_type>
-    t_b8 PrintType(s_stream& stream, const s_array_fmt<tp_elem_type, tp_fmt_type>& fmt) {
-        if (!Print(stream, "[")) {
-            return false;
-        }
-
-        for (t_size i = 0; i < fmt.val.len; i++) {
-            if (!PrintFormat(stream, "%", fmt.elem_to_fmt(fmt.val[i]))) {
-                return false;
-            }
-
-            if (i < fmt.val.len - 1) {
-                if (!Print(stream, ", ")) {
-                    return false;
-                }
-            }
-        }
-
-        if (!Print(stream, "]")) {
-            return false;
-        }
-
-        return true;
     }
 
     // ========================================
@@ -669,8 +657,8 @@ namespace zf {
 
     // Use a single '%' as the format specifier. To actually include a '%' in the output, write '%%'.
     // Returns true iff the operation was successful (does not include the case of having too many arguments or too many format specifiers).
-    template<c_fmt tp_arg, c_fmt... tp_args_leftover>
-    t_b8 PrintFormat(s_stream& stream, const s_str_rdonly fmt, tp_arg arg, tp_args_leftover... args_leftover) {
+    template<typename tp_arg_type, typename... tp_arg_types_leftover>
+    t_b8 PrintFormat(s_stream& stream, const s_str_rdonly fmt, const tp_arg_type& arg, const tp_arg_types_leftover&... args_leftover) {
         ZF_ASSERT(CountFormatSpecifiers(fmt) == 1 + sizeof...(args_leftover));
 
         static_assert(IsASCII(g_fmt_spec)); // Assuming this for this algorithm.
@@ -709,8 +697,14 @@ namespace zf {
             if (fmt_spec_is_duped) {
                 return PrintFormat(stream, fmt_leftover, arg, args_leftover...);
             } else {
-                if (!PrintType(stream, arg)) {
-                    return false;
+                if constexpr (c_fmt<tp_arg_type>) {
+                    if (!PrintType(stream, arg)) {
+                        return false;
+                    }
+                } else {
+                    if (!PrintType(stream, FormatDefault(arg))) {
+                        return false;
+                    }
                 }
 
                 return PrintFormat(stream, fmt_leftover, args_leftover...);
@@ -723,8 +717,8 @@ namespace zf {
     // ========================================
     // @subsection: Logging Helpers
     // ========================================
-    template<c_fmt... tp_args>
-    t_b8 Log(const s_str_rdonly fmt, tp_args... args) {
+    template<typename... tp_arg_types>
+    t_b8 Log(const s_str_rdonly fmt, const tp_arg_types&... args) {
         s_stream std_err = StdOut();
 
         if (!PrintFormat(std_err, fmt, args...)) {
@@ -738,8 +732,8 @@ namespace zf {
         return true;
     }
 
-    template<c_fmt... tp_args>
-    t_b8 LogError(const s_str_rdonly fmt, tp_args... args) {
+    template<typename... tp_arg_types>
+    t_b8 LogError(const s_str_rdonly fmt, const tp_arg_types&... args) {
         s_stream std_err = StdError();
 
         if (!Print(std_err, "Error: ")) {
@@ -757,13 +751,13 @@ namespace zf {
         return true;
     }
 
-    template<c_fmt... tp_args>
-    t_b8 LogErrorType(const s_str_rdonly type_name, const s_str_rdonly fmt, tp_args... args) {
+    template<typename... tp_arg_types>
+    t_b8 LogErrorType(const s_str_rdonly type_name, const s_str_rdonly fmt, const tp_arg_types&... args) {
         ZF_ASSERT(!IsStrEmpty(type_name));
 
         s_stream std_err = StdError();
 
-        if (!PrintFormat(std_err, "% Error: ", FormatStr(type_name))) {
+        if (!PrintFormat(std_err, "% Error: ", type_name)) {
             return false;
         }
 
@@ -778,8 +772,8 @@ namespace zf {
         return true;
     }
 
-    template<c_fmt... tp_args>
-    t_b8 LogWarning(const s_str_rdonly fmt, tp_args... args) {
+    template<typename... tp_arg_types>
+    t_b8 LogWarning(const s_str_rdonly fmt, const tp_arg_types&... args) {
         s_stream std_err = StdError();
 
         if (!Print(std_err, "Warning: ")) {

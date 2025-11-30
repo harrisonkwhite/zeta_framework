@@ -18,11 +18,6 @@ namespace zf {
 
             InitRNG();
 
-            const s_static_array<t_s32, 5> nums = {{1, 6, 4, 2, 1}};
-            const auto nums_nonstatic = ToNonstatic(nums);
-
-            Log("array: %", FormatArray<t_s32, s_integral_fmt<t_s32>>(nums_nonstatic, [](const t_s32& elem) { return FormatInt(elem); }));
-
             // Set up memory arenas.
             s_mem_arena mem_arena;
 

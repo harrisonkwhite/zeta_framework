@@ -107,7 +107,7 @@ namespace zf {
             s_array<t_u8> instrs_json_file_contents;
 
             if (!LoadFileContents(instrs_json_file_path, mem_arena, mem_arena, instrs_json_file_contents)) {
-                LogError("Failed to load packing instructions JSON file \"%\"!", FormatStr(instrs_json_file_path));
+                LogError("Failed to load packing instructions JSON file \"%\"!", instrs_json_file_path);
                 return nullptr;
             }
 
@@ -150,7 +150,7 @@ namespace zf {
             cJSON* const cj_assets = cJSON_GetObjectItemCaseSensitive(cj, StrRaw(asset_type_arr_name_terminated));
 
             if (!cJSON_IsArray(cj_assets)) {
-                LogError("Packing instructions JSON \"%\" array does not exist or it is of the wrong type!", FormatStr(asset_type_arr_name));
+                LogError("Packing instructions JSON \"%\" array does not exist or it is of the wrong type!", asset_type_arr_name);
                 return false;
             }
 
@@ -215,7 +215,7 @@ namespace zf {
                             continue;
                         }
 
-                        LogError("A packing instructions JSON \"%\" entry is missing required field \"%\"!", FormatStr(asset_type_arr_name), FormatStr(field_name));
+                        LogError("A packing instructions JSON \"%\" entry is missing required field \"%\"!", asset_type_arr_name, field_name);
                         return false;
                     }
 
@@ -232,7 +232,7 @@ namespace zf {
                     }();
 
                     if (!is_valid) {
-                        LogError("A packing instructions JSON \"%\" entry has field \"%\" as the wrong type! Expected a %.", FormatStr(asset_type_arr_name), FormatStr(field_name), FormatStr(g_asset_field_type_names[fields[fi].type]));
+                        LogError("A packing instructions JSON \"%\" entry has field \"%\" as the wrong type! Expected a %.", asset_type_arr_name, field_name, g_asset_field_type_names[fields[fi].type]);
                         return false;
                     }
                 }
@@ -271,7 +271,7 @@ namespace zf {
                                 s_array<t_u8> extra_chrs_file_contents;
 
                                 if (!LoadFileContents(extra_chrs_fp, mem_arena, mem_arena, extra_chrs_file_contents)) {
-                                    LogError("Failed to load extra characters file \"%\" for font \"%\"!", FormatStr(extra_chrs_fp), FormatStr(src_fp));
+                                    LogError("Failed to load extra characters file \"%\" for font \"%\"!", extra_chrs_fp, src_fp);
                                     return false;
                                 }
 
@@ -289,7 +289,7 @@ namespace zf {
                                     LogError("Unsupported code points:");
 
                                     ZF_FOR_EACH_SET_BIT(code_pt_bvs[1], i) {
-                                        Log("- %", FormatInt(i));
+                                        Log("- %", i);
                                     }
 
                                     return false;
