@@ -623,6 +623,50 @@ namespace zf {
     }
 
     // ========================================
+    // @subsection: Array Printing
+    // ========================================
+    template<typename tp_type>
+    struct s_array_fmt {
+        using t_fmt_tag = void;
+        s_array_rdonly<tp_type> val;
+    };
+
+    template<typename tp_type>
+    s_array_fmt<tp_type> FormatArray(const s_array_rdonly<tp_type> val) {
+        return {val};
+    }
+
+    template<typename tp_type>
+    s_array_fmt<tp_type> FormatDefault(const s_array_rdonly<tp_type> val) {
+        return FormatArray(val);
+    }
+
+    template<typename tp_type>
+    t_b8 PrintType(s_stream& stream, const s_array_fmt<tp_type>& fmt) {
+        if (!Print(stream, "[")) {
+            return false;
+        }
+
+        for (t_size i = 0; i < fmt.val.len; i++) {
+            if (!PrintFormat(stream, "%", fmt.val[i])) {
+                return false;
+            }
+
+            if (i < fmt.val.len - 1) {
+                if (!Print(stream, ", ")) {
+                    return false;
+                }
+            }
+        }
+
+        if (!Print(stream, "]")) {
+            return false;
+        }
+
+        return true;
+    }
+
+    // ========================================
     // @subsection: Format Printing
     // ========================================
     constexpr t_unicode_code_pt g_fmt_spec = '%';
