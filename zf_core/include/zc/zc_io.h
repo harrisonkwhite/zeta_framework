@@ -120,7 +120,7 @@ namespace zf {
         return false;
     }
 
-    template<c_nonstatic_array tp_type>
+    template<c_nonstatic_array_mut tp_type>
     [[nodiscard]] t_b8 StreamReadItemsIntoArray(s_stream& stream, const tp_type arr, const t_size cnt) {
         ZF_ASSERT(stream.mode == ek_stream_mode_read);
         ZF_ASSERT(cnt >= 0 && cnt <= arr.len);
@@ -153,6 +153,12 @@ namespace zf {
 
         ZF_ASSERT(false);
         return false;
+    }
+
+    template<typename tp_type, t_size tp_len>
+    [[nodiscard]] t_b8 StreamReadItemsIntoArray(s_stream& stream, s_static_array<tp_type, tp_len>& arr, const t_size cnt) {
+        ZF_ASSERT(cnt >= 0 && cnt <= arr.g_len);
+        return StreamReadItemsIntoArray(stream, static_cast<s_array<tp_type>>(arr), cnt);
     }
 
     template<c_nonstatic_array tp_type>
@@ -189,6 +195,11 @@ namespace zf {
         return false;
     }
 
+    template<typename tp_type, t_size tp_len>
+    [[nodiscard]] t_b8 StreamWriteItemsOfArray(s_stream& stream, const s_static_array<tp_type, tp_len>& arr) {
+        return StreamWriteItemsOfArray(stream, static_cast<s_array_rdonly<tp_type>>(arr));
+    }
+
     template<c_nonstatic_array tp_type>
     [[nodiscard]] t_b8 SerializeArray(s_stream& stream, const tp_type arr) {
         if (!StreamWriteItem(stream, arr.len)) {
@@ -200,6 +211,11 @@ namespace zf {
         }
 
         return true;
+    }
+
+    template<typename tp_type, t_size tp_len>
+    [[nodiscard]] t_b8 SerializeArray(s_stream& stream, const s_static_array<tp_type, tp_len>& arr) {
+        return SerializeArray(stream, static_cast<s_array_rdonly<tp_type>>(arr));
     }
 
     template<typename tp_type>
@@ -379,7 +395,7 @@ namespace zf {
 
         str_bytes_used += dig_cnt;
 
-        const s_str_rdonly str = {Slice(ToNonstatic(str_bytes), 0, str_bytes_used)};
+        const s_str_rdonly str = {Slice(str_bytes, 0, str_bytes_used)};
         return Print(stream, str);
     }
 
@@ -480,10 +496,10 @@ namespace zf {
             val_mut /= 16;
         } while (val_mut != 0);
 
-        const auto str_bytes_digits = Slice(ToNonstatic(str_bytes), str_bytes_digits_begin_index, str_bytes_used);
+        const auto str_bytes_digits = Slice(str_bytes, str_bytes_digits_begin_index, str_bytes_used);
         Reverse(str_bytes_digits);
 
-        const s_str_rdonly str = {Slice(ToNonstatic(str_bytes), 0, str_bytes_used)};
+        const s_str_rdonly str = {Slice(str_bytes, 0, str_bytes_used)};
         return Print(stream, str);
     }
 

@@ -19,7 +19,7 @@ namespace zf {
             InitRNG();
 
             const s_static_array<t_size, 1> arr = {{2}};
-            Log("arr: %", ToNonstatic(arr));
+            Log("arr: %", arr);
 
             // Set up memory arenas.
             s_mem_arena mem_arena;

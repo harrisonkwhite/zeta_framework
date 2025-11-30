@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstddef>
 #include <cstring>
 #include <zc/zc_basic.h>
 
@@ -107,8 +108,6 @@ namespace zf {
     struct s_static_array {
         static_assert(!s_is_const<tp_type>::g_val);
 
-        using t_elem = tp_type;
-
         static constexpr t_size g_len = tp_len;
 
         tp_type buf_raw[tp_len];
@@ -215,13 +214,23 @@ namespace zf {
         return {arr.buf_raw + beg, end - beg};
     }
 
+    template<typename tp_type, t_size tp_len>
+    constexpr s_array<tp_type> Slice(s_static_array<tp_type, tp_len>& arr, const t_size beg, const t_size end) {
+        return Slice(static_cast<s_array<tp_type>>(arr), beg, end);
+    }
+
     template<c_nonstatic_array_rdonly tp_type>
     constexpr s_array_rdonly<typename tp_type::t_elem> Slice(const tp_type arr, const t_size beg, const t_size end) {
         ZF_ASSERT(beg >= 0 && beg <= arr.len);
         ZF_ASSERT(end >= beg && end <= arr.len);
 
         return {arr.buf_raw + beg, end - beg};
-    } 
+    }
+
+    template<typename tp_type, t_size tp_len>
+    constexpr s_array_rdonly<tp_type> Slice(const s_static_array<tp_type, tp_len>& arr, const t_size beg, const t_size end) {
+        return Slice(static_cast<s_array_rdonly<tp_type>>(arr), beg, end);
+    }
 
     // @todo: Overload.
     template<c_nonstatic_array_mut tp_dest_type, c_nonstatic_array tp_src_type>
@@ -254,6 +263,11 @@ namespace zf {
         }
     }
 
+    template<typename tp_type, t_size tp_len>
+    constexpr void Reverse(s_static_array<tp_type, tp_len>& arr) {
+        Reverse(static_cast<s_array<tp_type>>(arr));
+    }
+
     template<c_nonstatic_array tp_type>
     constexpr t_b8 AreAllEqualTo(const tp_type arr, const typename tp_type::t_elem& val, const t_bin_comparator<typename tp_type::t_elem> comparator = DefaultBinComparator) {
         ZF_ASSERT(comparator);
@@ -265,6 +279,11 @@ namespace zf {
         }
 
         return true;
+    }
+    
+    template<typename tp_type, t_size tp_len>
+    constexpr t_b8 AreAllEqualTo(const s_static_array<tp_type, tp_len>& arr, const tp_type& val, const t_bin_comparator<tp_type> comparator = DefaultBinComparator) {
+        return AreAllEqualTo(static_cast<s_array_rdonly<tp_type>>(arr), val, comparator);
     }
 
     template<c_nonstatic_array tp_type>
@@ -280,11 +299,21 @@ namespace zf {
         return false;
     }
 
+    template<typename tp_type, t_size tp_len>
+    constexpr t_b8 AreAnyEqualTo(const s_static_array<tp_type, tp_len>& arr, const tp_type& val, const t_bin_comparator<tp_type> comparator = DefaultBinComparator) {
+        return AreAnyEqualTo(static_cast<s_array_rdonly<tp_type>>(arr), val, comparator);
+    }
+
     template<c_nonstatic_array_mut tp_type>
     constexpr void SetAllTo(const tp_type arr, const typename tp_type::t_elem& val) {
         for (t_size i = 0; i < arr.len; i++) {
             arr[i] = val;
         }
+    }
+
+    template<typename tp_type, t_size tp_len>
+    constexpr void SetAllTo(s_static_array<tp_type, tp_len>& arr, const tp_type& val) {
+        SetAllTo(static_cast<s_array<tp_type>>(arr), val);
     }
 
     template<typename tp_type>

@@ -7,6 +7,17 @@ namespace zf {
     // @section: List
     // ============================================================
     template<typename tp_type>
+    struct s_list_rdonly {
+        s_array_rdonly<tp_type> backing_arr;
+        t_size len;
+
+        const tp_type& operator[](const t_size index) const {
+            ZF_ASSERT(index < len);
+            return backing_arr[index];
+        }
+    };
+
+    template<typename tp_type>
     struct s_list {
         s_array<tp_type> backing_arr;
         t_size len;
@@ -252,7 +263,7 @@ namespace zf {
 
     template<typename tp_type, t_size tp_cap>
     tp_type& StackPush(s_static_stack<tp_type, tp_cap>& stack, const tp_type& val) {
-        return StackPush(ToNonstatic(stack.backing_arr), stack.height, val);
+        return StackPush(stack.backing_arr, stack.height, val);
     }
 
     template<typename tp_type>
