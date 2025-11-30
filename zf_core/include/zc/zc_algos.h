@@ -5,8 +5,8 @@
 namespace zf {
     // O(n^2) time complexity, but O(1) space complexity. Can also be done at compile-time.
     // You're usually better off using a hash map and a linear search, or a bit vector if values are numeric and the range is small.
-    template<c_array tp_type>
-    constexpr t_b8 HasDuplicatesSlow(tp_type& arr, const t_bin_comparator<typename tp_type::t_elem> comparator = DefaultBinComparator) {
+    template<c_nonstatic_array tp_type>
+    constexpr t_b8 HasDuplicatesSlow(const tp_type arr, const t_bin_comparator<typename tp_type::t_elem> comparator = DefaultBinComparator) {
         for (t_size i = 0; i < ArrayLen(arr); i++) {
             for (t_size j = 0; j < ArrayLen(arr); j++) {
                 if (i == j) {
@@ -22,8 +22,8 @@ namespace zf {
         return false;
     }
 
-    template<c_array tp_type>
-    t_b8 BinarySearch(tp_type& arr, const typename tp_type::t_elem& elem, const t_ord_comparator<typename tp_type::t_elem> comparator = DefaultOrdComparator) {
+    template<c_nonstatic_array tp_type>
+    t_b8 BinarySearch(const tp_type arr, const typename tp_type::t_elem& elem, const t_ord_comparator<typename tp_type::t_elem> comparator = DefaultOrdComparator) {
         if (IsArrayEmpty(arr)) {
             return false;
         }
@@ -43,8 +43,8 @@ namespace zf {
     // ============================================================
     // @section: Sorting
     // ============================================================
-    template<c_array tp_type>
-    t_b8 IsSorted(tp_type& arr, const t_bin_comparator<typename tp_type::t_elem> comparator = DefaultOrdComparator) {
+    template<c_nonstatic_array tp_type>
+    t_b8 IsSorted(const tp_type arr, const t_bin_comparator<typename tp_type::t_elem> comparator = DefaultOrdComparator) {
         ZF_ASSERT(comparator);
 
         for (t_size i = 0; i < ArrayLen(arr) - 1; i++) {
@@ -57,8 +57,8 @@ namespace zf {
     }
 
     // O(n) best-case if array is already sorted, O(n^2) worst-case.
-    template<c_array_mut tp_type>
-    void BubbleSort(tp_type& arr, const t_bin_comparator<typename tp_type::t_elem> comparator = DefaultOrdComparator) {
+    template<c_nonstatic_array_mut tp_type>
+    void BubbleSort(const tp_type arr, const t_bin_comparator<typename tp_type::t_elem> comparator = DefaultOrdComparator) {
         ZF_ASSERT(comparator);
 
         t_b8 sorted;
@@ -76,8 +76,8 @@ namespace zf {
     }
 
     // O(n) best-case if array is already sorted, O(n^2) worst-case.
-    template<c_array_mut tp_type>
-    void InsertionSort(tp_type& arr, const t_bin_comparator<typename tp_type::t_elem> comparator = DefaultOrdComparator) {
+    template<c_nonstatic_array_mut tp_type>
+    void InsertionSort(const tp_type arr, const t_bin_comparator<typename tp_type::t_elem> comparator = DefaultOrdComparator) {
         ZF_ASSERT(comparator);
 
         for (t_size i = 1; i < ArrayLen(arr); i++) {
@@ -98,8 +98,8 @@ namespace zf {
     }
 
     // O(n^2) in every case.
-    template<c_array_mut tp_type>
-    void SelectionSort(tp_type& arr, const t_bin_comparator<typename tp_type::t_elem> comparator = DefaultOrdComparator) {
+    template<c_nonstatic_array_mut tp_type>
+    void SelectionSort(const tp_type arr, const t_bin_comparator<typename tp_type::t_elem> comparator = DefaultOrdComparator) {
         ZF_ASSERT(comparator);
 
         for (t_size i = 0; i < ArrayLen(arr) - 1; i++) {
@@ -116,8 +116,8 @@ namespace zf {
     }
 
     // O(n log n) in both time complexity and space complexity in every case. Returns true iff no error occurred.
-    template<c_array_mut tp_type>
-    [[nodiscard]] t_b8 MergeSort(tp_type& arr, s_mem_arena& temp_mem_arena, const t_bin_comparator<typename tp_type::t_elem> comparator = DefaultOrdComparator) {
+    template<c_nonstatic_array_mut tp_type>
+    [[nodiscard]] t_b8 MergeSort(const tp_type arr, s_mem_arena& temp_mem_arena, const t_bin_comparator<typename tp_type::t_elem> comparator = DefaultOrdComparator) {
         ZF_ASSERT(comparator);
 
         if (ArrayLen(arr) <= 1) {
@@ -181,8 +181,8 @@ namespace zf {
     // Time complexity is O(n log n) best-case and O(n^2) worst-case depending on the pivot.
     // Space complexity is O(1) compared to merge sort.
     // In each recurse, the pivot is selected as the median of the first, middle, and last elements.
-    template<c_array_mut tp_type>
-    void QuickSort(tp_type& arr, const t_bin_comparator<typename tp_type::t_elem> comparator = DefaultOrdComparator) {
+    template<c_nonstatic_array_mut tp_type>
+    void QuickSort(const tp_type arr, const t_bin_comparator<typename tp_type::t_elem> comparator = DefaultOrdComparator) {
         ZF_ASSERT(comparator);
 
         if (ArrayLen(arr) <= 1) {

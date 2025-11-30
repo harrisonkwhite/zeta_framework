@@ -120,10 +120,10 @@ namespace zf {
         return false;
     }
 
-    template<c_array tp_type>
-    [[nodiscard]] t_b8 StreamReadItemsIntoArray(s_stream& stream, tp_type& arr, const t_size cnt) {
+    template<c_nonstatic_array tp_type>
+    [[nodiscard]] t_b8 StreamReadItemsIntoArray(s_stream& stream, const tp_type arr, const t_size cnt) {
         ZF_ASSERT(stream.mode == ek_stream_mode_read);
-        ZF_ASSERT(cnt >= 0 && cnt <= ArrayLen(arr));
+        ZF_ASSERT(cnt >= 0 && cnt <= arr.len);
 
         if (cnt == 0) {
             return true;
@@ -148,15 +148,15 @@ namespace zf {
                 return true;
 
             case ek_stream_type_file:
-                return static_cast<t_size>(fread(ArrayRaw(arr), sizeof(arr[0]), static_cast<size_t>(cnt), stream.type_data.file.fs_raw)) == cnt;
+                return static_cast<t_size>(fread(arr.buf_raw, sizeof(arr[0]), static_cast<size_t>(cnt), stream.type_data.file.fs_raw)) == cnt;
         }
 
         ZF_ASSERT(false);
         return false;
     }
 
-    template<c_array tp_type>
-    [[nodiscard]] t_b8 StreamWriteItemsOfArray(s_stream& stream, tp_type& arr) {
+    template<c_nonstatic_array tp_type>
+    [[nodiscard]] t_b8 StreamWriteItemsOfArray(s_stream& stream, const tp_type arr) {
         ZF_ASSERT(stream.mode == ek_stream_mode_write);
 
         if (IsArrayEmpty(arr)) {
@@ -182,15 +182,15 @@ namespace zf {
                 return true;
 
             case ek_stream_type_file:
-                return static_cast<t_size>(fwrite(ArrayRaw(arr), sizeof(arr[0]), static_cast<size_t>(ArrayLen(arr)), stream.type_data.file.fs_raw)) == ArrayLen(arr);
+                return static_cast<t_size>(fwrite(arr.buf_raw, sizeof(arr[0]), static_cast<size_t>(arr.len), stream.type_data.file.fs_raw)) == arr.len;
         }
 
         ZF_ASSERT(false);
         return false;
     }
 
-    template<c_array tp_type>
-    [[nodiscard]] t_b8 SerializeArray(s_stream& stream, tp_type& arr) {
+    template<c_nonstatic_array tp_type>
+    [[nodiscard]] t_b8 SerializeArray(s_stream& stream, const tp_type arr) {
         if (!StreamWriteItem(stream, arr.len)) {
             return false;
         }
@@ -379,7 +379,7 @@ namespace zf {
 
         str_bytes_used += dig_cnt;
 
-        const s_str_rdonly str = {Slice(str_bytes, 0, str_bytes_used)};
+        const s_str_rdonly str = {Slice(ToNonstatic(str_bytes), 0, str_bytes_used)};
         return Print(stream, str);
     }
 
@@ -480,10 +480,10 @@ namespace zf {
             val_mut /= 16;
         } while (val_mut != 0);
 
-        const auto str_bytes_digits = Slice(str_bytes, str_bytes_digits_begin_index, str_bytes_used);
+        const auto str_bytes_digits = Slice(ToNonstatic(str_bytes), str_bytes_digits_begin_index, str_bytes_used);
         Reverse(str_bytes_digits);
 
-        const s_str_rdonly str = {Slice(str_bytes, 0, str_bytes_used)};
+        const s_str_rdonly str = {Slice(ToNonstatic(str_bytes), 0, str_bytes_used)};
         return Print(stream, str);
     }
 

@@ -146,7 +146,7 @@ namespace zf {
     }
 
     // Returns true iff the destination array had enough room to fit all keys.
-    template<typename tp_key_type, typename tp_val_type, c_array tp_arr_type>
+    template<typename tp_key_type, typename tp_val_type, c_nonstatic_array tp_arr_type>
     [[nodiscard]] t_b8 LoadHashMapKeys(const s_hash_map<tp_key_type, tp_val_type>& hm, s_mem_arena& mem_arena, tp_arr_type& o_keys) {
         static_assert(s_is_same<tp_key_type, typename tp_arr_type::t_elem>::g_val);
 
