@@ -120,8 +120,8 @@ namespace zf {
         return false;
     }
 
-    template<c_nonstatic_array_mut tp_type>
-    [[nodiscard]] t_b8 StreamReadItemsIntoArray(s_stream& stream, const tp_type arr, const t_size cnt) {
+    template<typename tp_type>
+    [[nodiscard]] t_b8 StreamReadItemsIntoArray(s_stream& stream, const s_array<tp_type> arr, const t_size cnt) {
         ZF_ASSERT(stream.mode == ek_stream_mode_read);
         ZF_ASSERT(cnt >= 0 && cnt <= arr.len);
 
@@ -158,7 +158,7 @@ namespace zf {
     template<typename tp_type, t_size tp_len>
     [[nodiscard]] t_b8 StreamReadItemsIntoArray(s_stream& stream, s_static_array<tp_type, tp_len>& arr, const t_size cnt) {
         ZF_ASSERT(cnt >= 0 && cnt <= arr.g_len);
-        return StreamReadItemsIntoArray(stream, static_cast<s_array<tp_type>>(arr), cnt);
+        return StreamReadItemsIntoArray(stream, ToNonstatic(arr), cnt);
     }
 
     template<c_nonstatic_array tp_type>
@@ -197,7 +197,7 @@ namespace zf {
 
     template<typename tp_type, t_size tp_len>
     [[nodiscard]] t_b8 StreamWriteItemsOfArray(s_stream& stream, const s_static_array<tp_type, tp_len>& arr) {
-        return StreamWriteItemsOfArray(stream, static_cast<s_array_rdonly<tp_type>>(arr));
+        return StreamWriteItemsOfArray(stream, ToNonstatic(arr));
     }
 
     template<c_nonstatic_array tp_type>
@@ -215,7 +215,7 @@ namespace zf {
 
     template<typename tp_type, t_size tp_len>
     [[nodiscard]] t_b8 SerializeArray(s_stream& stream, const s_static_array<tp_type, tp_len>& arr) {
-        return SerializeArray(stream, static_cast<s_array_rdonly<tp_type>>(arr));
+        return SerializeArray(stream, ToNonstatic(arr));
     }
 
     template<typename tp_type>
@@ -390,7 +390,7 @@ namespace zf {
         const tp_type dig_cnt = DigitCnt(fmt.val);
 
         for (t_size i = 0; i < dig_cnt; i++) {
-            str_bytes[str_bytes_used + i] = '0' + DigitAt(fmt.val, dig_cnt - 1 - i);
+            str_bytes[str_bytes_used + i] = static_cast<t_u8>('0' + DigitAt(fmt.val, dig_cnt - 1 - i));
         }
 
         str_bytes_used += dig_cnt;
@@ -641,20 +641,25 @@ namespace zf {
     // ========================================
     // @subsection: Array Printing
     // ========================================
-    template<typename tp_type>
+    template<c_nonstatic_array tp_arr_type>
     struct s_array_fmt {
         using t_fmt_tag = void;
-        s_array_rdonly<tp_type> val;
+        tp_arr_type val;
     };
 
-    template<typename tp_type>
-    s_array_fmt<tp_type> FormatArray(const s_array_rdonly<tp_type> val) {
+    template<c_nonstatic_array tp_arr_type>
+    s_array_fmt<tp_arr_type> FormatArray(const tp_arr_type val) {
         return {val};
     }
 
-    template<typename tp_type>
-    s_array_fmt<tp_type> FormatDefault(const s_array_rdonly<tp_type> val) {
+    template<c_nonstatic_array tp_arr_type>
+    s_array_fmt<tp_arr_type> FormatDefault(const tp_arr_type val) {
         return FormatArray(val);
+    }
+
+    template<typename tp_type, t_size tp_len>
+    s_array_fmt<s_array<tp_type>> FormatDefault(const s_static_array<tp_type, tp_len>& val) {
+        return FormatArray(ToNonstatic(val));
     }
 
     template<typename tp_type>

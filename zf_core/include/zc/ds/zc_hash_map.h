@@ -206,7 +206,7 @@ namespace zf {
             return false;
         }
 
-        SetAllTo(o_um.backing_store_indexes, -1);
+        SetAllTo(o_um.backing_store_indexes, static_cast<t_size>(-1));
 
         if (!MakeArray(mem_arena, kv_pair_cap, o_um.backing_store.keys)) {
             return false;
