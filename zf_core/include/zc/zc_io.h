@@ -591,6 +591,50 @@ namespace zf {
     }
 
     // ========================================
+    // @subsection: Array Printing
+    // ========================================
+    template<typename tp_elem_type, typename tp_fmt_type>
+    using t_array_elem_to_fmt = tp_fmt_type (*)(const tp_elem_type& elem);
+
+    template<typename tp_elem_type, typename tp_fmt_type>
+    struct s_array_fmt {
+        using t_fmt_tag = void;
+
+        s_array_rdonly<tp_elem_type> val;
+        t_array_elem_to_fmt<tp_elem_type, tp_fmt_type> elem_to_fmt;
+    };
+
+    template<typename tp_elem_type, typename tp_fmt_type>
+    s_array_fmt<tp_elem_type, tp_fmt_type> FormatArray(const s_array_rdonly<tp_elem_type> val, const t_array_elem_to_fmt<tp_elem_type, tp_fmt_type> elem_to_fmt) {
+        return {val, elem_to_fmt};
+    }
+
+    template<typename tp_elem_type, typename tp_fmt_type>
+    t_b8 PrintType(s_stream& stream, const s_array_fmt<tp_elem_type, tp_fmt_type>& fmt) {
+        if (!Print(stream, "[")) {
+            return false;
+        }
+
+        for (t_size i = 0; i < fmt.val.len; i++) {
+            if (!PrintFormat(stream, "%", fmt.elem_to_fmt(fmt.val[i]))) {
+                return false;
+            }
+
+            if (i < fmt.val.len - 1) {
+                if (!Print(stream, ", ")) {
+                    return false;
+                }
+            }
+        }
+
+        if (!Print(stream, "]")) {
+            return false;
+        }
+
+        return true;
+    }
+
+    // ========================================
     // @subsection: Format Printing
     // ========================================
     constexpr t_unicode_code_pt g_fmt_spec = '%';
