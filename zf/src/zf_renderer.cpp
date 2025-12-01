@@ -414,7 +414,13 @@ void main() {
         return res;
     }
 
-#if 0
+    s_v2<t_s32> TextureSize(const s_resource* const res) {
+        ZF_ASSERT(res);
+        ZF_ASSERT(res->type == ek_resource_type_texture);
+
+        return res->type_data.tex.size;
+    }
+
     [[nodiscard]] static t_b8 MakeFontAtlasGLTextures(const s_array_rdonly<t_font_atlas_rgba> atlas_rgbas, s_array<t_gl_id>& o_gl_ids) {
         o_gl_ids = {
             .buf_raw = static_cast<t_gl_id*>(malloc(static_cast<size_t>(ZF_SIZE_OF(t_gl_id) * atlas_rgbas.len))),
@@ -436,66 +442,63 @@ void main() {
         return true;
     }
 
-    t_b8 LoadFontFromRaw(const s_str_rdonly file_path, const t_s32 height, const t_unicode_code_pt_bit_vec& code_pts, s_resource_arena& res_arena, s_mem_arena& temp_mem_arena, s_resource_id& o_id, e_font_load_from_raw_result* const o_load_from_raw_res, t_unicode_code_pt_bit_vec* const o_unsupported_code_pts) {
-        if (IsListFull(res_arena.resources)) {
-            return {};
-        }
-
-        auto& resource = res_arena.resources.backing_arr[res_arena.resources.len];
-
-        ZeroOut(resource);
-        resource.type = ek_resource_type_font;
-
+    s_resource* LoadFontFromRaw(const s_str_rdonly file_path, const t_s32 height, const t_unicode_code_pt_bit_vec& code_pts, s_resource_arena& res_arena, s_mem_arena& temp_mem_arena, e_font_load_from_raw_result* const o_load_from_raw_res, t_unicode_code_pt_bit_vec* const o_unsupported_code_pts) {
+        s_font_arrangement arrangement;
         s_array<t_font_atlas_rgba> atlas_rgbas;
 
-        const auto result = zf::LoadFontFromRaw(file_path, height, code_pts, *res_arena.mem_arena, temp_mem_arena, temp_mem_arena, resource.type_data.font.arrangement, atlas_rgbas, o_unsupported_code_pts);
+        const auto result = zf::LoadFontFromRaw(file_path, height, code_pts, *res_arena.mem_arena, temp_mem_arena, temp_mem_arena, arrangement, atlas_rgbas, o_unsupported_code_pts);
 
         if (o_load_from_raw_res) {
             *o_load_from_raw_res = result;
         }
 
         if (result != ek_font_load_from_raw_result_success) {
-            return false;
+            return nullptr;
         }
 
-        if (!MakeFontAtlasGLTextures(atlas_rgbas, resource.type_data.font.atlas_gl_ids)) {
-            return false;
+        s_array<t_gl_id> atlas_gl_ids;
+
+        if (!MakeFontAtlasGLTextures(atlas_rgbas, atlas_gl_ids)) {
+            return nullptr;
         }
 
-        res_arena.resources.len++;
+        const auto resource = PushResource(res_arena);
 
-        o_id = {res_arena.resources.len - 1, &res_arena};
+        if (!resource) {
+            return nullptr;
+        }
 
-        return true;
+        resource->type = ek_resource_type_font;
+        resource->type_data.font = {.arrangement = arrangement, .atlas_gl_ids = atlas_gl_ids}; // The arrangement struct copy isn't great, but I'd rather keep this whole thing somewhat atomic.
+
+        return resource;
     }
 
-    t_b8 LoadFontFromPacked(const s_str_rdonly file_path, s_resource_arena& res_arena, s_mem_arena& temp_mem_arena, s_resource_id& o_id) {
-        if (IsListFull(res_arena.resources)) {
-            return {};
-        }
-
-        auto& resource = res_arena.resources.backing_arr[res_arena.resources.len];
-
-        ZeroOut(resource);
-        resource.type = ek_resource_type_font;
-
+    s_resource* LoadFontFromPacked(const s_str_rdonly file_path, s_resource_arena& res_arena, s_mem_arena& temp_mem_arena) {
+        s_font_arrangement arrangement;
         s_array<t_font_atlas_rgba> atlas_rgbas;
 
-        if (!zf::UnpackFont(file_path, *res_arena.mem_arena, temp_mem_arena, temp_mem_arena, resource.type_data.font.arrangement, atlas_rgbas)) {
-            return false;
+        if (!zf::UnpackFont(file_path, *res_arena.mem_arena, temp_mem_arena, temp_mem_arena, arrangement, atlas_rgbas)) {
+            return nullptr;
         }
 
-        if (!MakeFontAtlasGLTextures(atlas_rgbas, resource.type_data.font.atlas_gl_ids)) {
-            return false;
+        s_array<t_gl_id> atlas_gl_ids;
+
+        if (!MakeFontAtlasGLTextures(atlas_rgbas, atlas_gl_ids)) {
+            return nullptr;
         }
 
-        res_arena.resources.len++;
+        const auto res = PushResource(res_arena);
 
-        o_id = {res_arena.resources.len - 1, &res_arena};
+        if (!res) {
+            return nullptr;
+        }
 
-        return true;
+        res->type = ek_resource_type_font;
+        res->type_data.font = {.arrangement = arrangement, .atlas_gl_ids = atlas_gl_ids}; // The arrangement struct copy isn't great, but I'd rather keep this whole thing somewhat atomic.
+
+        return res;
     }
-#endif
 
     // ============================================================
     // @section: Rendering
@@ -639,6 +642,7 @@ void main() {
 
     void DrawTexture(const s_resource* const tex, const s_v2<t_f32> pos, const s_rect<t_s32> src_rect, const s_v2<t_f32> origin, const s_v2<t_f32> scale, const t_f32 rot, const s_color_rgba32f blend) {
         ZF_ASSERT(g_state.phase == ek_phase_rendering);
+        ZF_ASSERT(tex && tex->type == ek_resource_type_texture);
         ZF_ASSERT(origin.x >= 0.0f && origin.x <= 1.0f && origin.y >= 0.0f && origin.y <= 1.0f); // @todo: Generic function for this check?
         // @todo: Add more assertions here!
 
@@ -664,6 +668,10 @@ void main() {
     }
 
     t_b8 DrawStr(const s_str_rdonly str, const s_resource* const font, const s_v2<t_f32> pos, const s_v2<t_f32> alignment, const s_color_rgba32f blend, s_mem_arena& temp_mem_arena) {
+        ZF_ASSERT(IsValidUTF8Str(str));
+        ZF_ASSERT(font && font->type == ek_resource_type_font);
+        // @todo: Add more assertions here!
+
         if (IsStrEmpty(str)) {
             return true;
         }
