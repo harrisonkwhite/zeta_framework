@@ -169,11 +169,6 @@ namespace zf {
     // ============================================================
     // @section: Shaders
     // ============================================================
-    struct s_shader_prog {
-        s_str vs;
-        s_str fs;
-    };
-
-    [[nodiscard]] t_b8 PackShaderProg(const s_str_rdonly dest_file_path, const s_str_rdonly vs_file_path, const s_str_rdonly fs_file_path, s_mem_arena& temp_mem_arena);
-    [[nodiscard]] t_b8 UnpackShaderProg(const s_str_rdonly file_path, s_mem_arena& mem_arena, s_mem_arena& temp_mem_arena, s_shader_prog& o_prog);
+    [[nodiscard]] t_b8 PackShaderProg(const s_str_rdonly dest_file_path, const s_str_rdonly vert_file_path, const s_str_rdonly frag_file_path, s_mem_arena& temp_mem_arena);
+    [[nodiscard]] t_b8 UnpackShaderProg(const s_str_rdonly file_path, s_mem_arena& mem_arena, s_mem_arena& temp_mem_arena, s_str& o_vert_src, s_str& o_frag_src);
 }

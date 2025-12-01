@@ -1,6 +1,59 @@
 #include <zf/zf_gfx.h>
 
 namespace zf::gfx {
+    // ============================================================
+    // @section: Resources
+    // ============================================================
+
+
+    // ============================================================
+    // @section: Rendering
+    // ============================================================
+    constexpr s_color_rgba32f g_default_bg_color = s_color_rgba8(147, 207, 249, 255);
+
+    struct s_batch_vert {
+        s_v2<t_f32> vert_coord;
+        s_v2<t_f32> pos;
+        s_v2<t_f32> size;
+        t_f32 rot;
+        s_v2<t_f32> tex_coord;
+        s_color_rgba32f blend;
+    };
+
+    constexpr s_static_array<t_s32, 6> g_batch_vert_attr_lens = {
+        {2, 2, 2, 1, 2, 4} // This has to match the number of components per attribute above.
+    };
+
+    constexpr t_size g_batch_vert_component_cnt = ZF_SIZE_OF(s_batch_vert) / ZF_SIZE_OF(t_f32);
+
+    static_assert([]() {
+        t_size sum = 0;
+
+        for (t_size i = 0; i < g_batch_vert_attr_lens.g_len; i++) {
+            sum += g_batch_vert_attr_lens[i];
+        }
+
+        return sum == g_batch_vert_component_cnt;
+    }(), "Mismatch between specified batch vertex attribute lengths and component count!");
+
+    constexpr t_size g_batch_slot_cnt = 1 << 8;
+    static_assert(g_batch_slot_cnt <= 1 << 16, "Batch slot count is too large (need to account for range limits of elements).");
+
+    constexpr t_size g_batch_slot_vert_cnt = 4;
+    constexpr t_size g_batch_slot_elem_cnt = 6;
+
+    using t_batch_slot = s_static_array<s_batch_vert, g_batch_slot_vert_cnt>;
+
+    struct s_rendering_basis {
+        gfx::s_resource_handle batch_mesh_hdl;
+        gfx::s_resource_handle batch_shader_prog_hdl;
+
+        gfx::s_resource_handle surf_mesh_hdl;
+        gfx::s_resource_handle surf_default_shader_prog_hdl;
+
+        gfx::s_texture_asset px_tex; // Used for rendering rectangles and lines via scaling, rotation, etc.
+    };
+
 #if 0
     static t_size CalcStride(const s_array_rdonly<t_s32> vert_attr_lens) {
         t_size stride = 0;

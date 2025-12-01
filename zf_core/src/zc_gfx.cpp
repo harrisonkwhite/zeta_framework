@@ -521,12 +521,12 @@ namespace zf {
     // ============================================================
     // @section: Shaders
     // ============================================================
-    t_b8 PackShaderProg(const s_str_rdonly dest_file_path, const s_str_rdonly vs_file_path, const s_str_rdonly fs_file_path, s_mem_arena& temp_mem_arena) {
-        s_array<t_u8> vs_contents;
-        s_array<t_u8> fs_contents;
+    t_b8 PackShaderProg(const s_str_rdonly dest_file_path, const s_str_rdonly vert_file_path, const s_str_rdonly frag_file_path, s_mem_arena& temp_mem_arena) {
+        s_array<t_u8> vert_contents;
+        s_array<t_u8> frag_contents;
 
-        if (!LoadFileContents(vs_file_path, temp_mem_arena, temp_mem_arena, vs_contents)
-            || !LoadFileContents(fs_file_path, temp_mem_arena, temp_mem_arena, fs_contents)) {
+        if (!LoadFileContents(vert_file_path, temp_mem_arena, temp_mem_arena, vert_contents)
+            || !LoadFileContents(frag_file_path, temp_mem_arena, temp_mem_arena, frag_contents)) {
             return false;
         }
 
@@ -538,19 +538,20 @@ namespace zf {
 
         ZF_DEFER({ CloseFile(fs); });
 
-        if (!SerializeArray(fs, vs_contents)) {
+        if (!SerializeArray(fs, vert_contents)) {
             return false;
         }
 
-        if (!SerializeArray(fs, fs_contents)) {
+        if (!SerializeArray(fs, frag_contents)) {
             return false;
         }
 
         return true;
     }
 
-    t_b8 UnpackShaderProg(const s_str_rdonly file_path, s_mem_arena& mem_arena, s_mem_arena& temp_mem_arena, s_shader_prog& o_prog) {
-        o_prog = {};
+    t_b8 UnpackShaderProg(const s_str_rdonly file_path, s_mem_arena& mem_arena, s_mem_arena& temp_mem_arena, s_str& o_vert_src, s_str& o_frag_src) {
+        o_vert_src = {};
+        o_frag_src = {};
 
         s_stream file_stream;
 
@@ -560,15 +561,11 @@ namespace zf {
 
         ZF_DEFER({ CloseFile(file_stream); });
 
-        s_str vert_shader;
-
-        if (!DeserializeArray(file_stream, mem_arena, vert_shader.bytes)) {
+        if (!DeserializeArray(file_stream, mem_arena, o_vert_src.bytes)) {
             return false;
         }
 
-        s_str frag_shader;
-
-        if (!DeserializeArray(file_stream, mem_arena, frag_shader.bytes)) {
+        if (!DeserializeArray(file_stream, mem_arena, o_frag_src.bytes)) {
             return false;
         }
 
