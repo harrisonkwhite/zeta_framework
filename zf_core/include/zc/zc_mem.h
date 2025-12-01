@@ -690,8 +690,8 @@ namespace zf {
         }
     }
 
-    t_size IndexOfFirstSetBit(const s_bit_vec_rdonly& bv, const t_size from = 0);
-    t_size IndexOfFirstUnsetBit(const s_bit_vec_rdonly& bv, const t_size from = 0);
+    t_size IndexOfFirstSetBit(const s_bit_vec_rdonly& bv, const t_size from = 0); // Returns -1 if all bits are unset.
+    t_size IndexOfFirstUnsetBit(const s_bit_vec_rdonly& bv, const t_size from = 0); // Returns -1 if all bits are set.
 
     t_size CntSetBits(const s_bit_vec_rdonly& bv);
 

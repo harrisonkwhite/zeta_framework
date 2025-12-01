@@ -214,6 +214,7 @@ void main() {
 
     enum e_state {
         ek_state_uninitted,
+        ek_state_initting,
         ek_state_initted,
         ek_state_rendering
     };
@@ -230,6 +231,8 @@ void main() {
             s_static_bit_vec<g_texture_limit> activity;
         } textures;
 
+        s_resource_hdl px_tex_hdl;
+
         struct {
             s_static_array<t_batch_slot, g_batch_slot_cnt> batch_slots;
             t_size batch_slots_used_cnt;
@@ -244,6 +247,19 @@ void main() {
 
         t_b8 clean_up = false;
 
+        g_state.state = ek_state_initting;
+
+        ZF_DEFER({
+            if (clean_up) {
+                g_state.state = ek_state_uninitted;
+            }
+        });
+
+        // Enable blending.
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+        // Create the batch mesh.
         {
             s_array<t_u16> elems;
 
@@ -272,6 +288,7 @@ void main() {
             }
         });
 
+        // Create the batch shader program.
         g_state.batch_shader_prog_gl_id = MakeGLShaderProg(g_batch_vert_shader_src, g_batch_frag_shader_src, temp_mem_arena);
 
         if (!g_state.batch_shader_prog_gl_id) {
@@ -286,6 +303,18 @@ void main() {
                 g_state.batch_shader_prog_gl_id = 0;
             }
         });
+
+        // Create the pixel texture (for rectangles, lines, etc.)
+        {
+            const s_static_array<t_u8, 4> rgba = {{255, 255, 255, 255}};
+            g_state.px_tex_hdl = CreateTexture({{1, 1}, rgba});
+
+            if (!g_state.px_tex_hdl) {
+                ZF_REPORT_ERROR();
+                clean_up = true;
+                return false;
+            }
+        }
 
         g_state.state = ek_state_initted;
 
@@ -310,7 +339,7 @@ void main() {
     }
 
     s_resource_hdl CreateTexture(const s_rgba_texture_data_rdonly& tex_data) {
-        ZF_ASSERT(g_state.state == ek_state_initted);
+        ZF_ASSERT(g_state.state == ek_state_initting || g_state.state == ek_state_initted);
 
         const t_size index = IndexOfFirstUnsetBit(g_state.textures.activity);
 
@@ -318,6 +347,8 @@ void main() {
             LogError("Out of room - no available slots for new texture!");
             return {};
         }
+
+        SetBit(g_state.textures.activity, index);
 
         const s_v2<t_s32> tex_size_limit = GLTextureSizeLimit();
 
@@ -401,9 +432,9 @@ void main() {
         ZeroOut(g_state.rendering);
         g_state.rendering.view_mat = MakeIdentityMatrix4x4();
 
-        Clear(s_color_rgba8(147, 207, 249, 255));
-
         g_state.state = ek_state_rendering;
+
+        Clear(s_color_rgba8(147, 207, 249, 255));
     }
 
     void EndRenderingPhase() {
@@ -414,16 +445,22 @@ void main() {
     }
 
     void Clear(const s_color_rgba32f col) {
+        ZF_ASSERT(g_state.state == ek_state_rendering);
+
         glClearColor(col.r, col.g, col.b, col.a);
         glClear(GL_COLOR_BUFFER_BIT);
     }
 
     void SetViewMatrix(const s_matrix_4x4& mat) {
+        ZF_ASSERT(g_state.state == ek_state_rendering);
+
         Flush();
         g_state.rendering.view_mat = mat;
     }
 
     static void Draw(const s_resource_hdl tex_hdl, const s_rect<t_f32> tex_coords, s_v2<t_f32> pos, s_v2<t_f32> size, s_v2<t_f32> origin, const t_f32 rot, const s_color_rgba32f blend) {
+        ZF_ASSERT(g_state.state == ek_state_rendering);
+
         if (g_state.rendering.batch_slots_used_cnt == 0) {
             // This is the first draw to the batch, so set the texture associated with the batch to the one we're trying to render.
             g_state.rendering.tex_hdl = tex_hdl;
@@ -481,6 +518,7 @@ void main() {
     }
 
     void DrawTexture(const s_resource_hdl hdl, const s_v2<t_f32> pos, const s_rect<t_s32> src_rect, const s_v2<t_f32> origin, const s_v2<t_f32> scale, const t_f32 rot, const s_color_rgba32f blend) {
+        ZF_ASSERT(g_state.state == ek_state_rendering);
         ZF_ASSERT(origin.x >= 0.0f && origin.x <= 1.0f && origin.y >= 0.0f && origin.y <= 1.0f); // @todo: Generic function for this check?
         // @todo: Add more assertions here!
 
@@ -503,5 +541,19 @@ void main() {
         };
 
         Draw(hdl, tex_coords, pos, size, origin, rot, blend);
+    }
+
+    void DrawRect(const s_rect<t_f32> rect, const s_color_rgba32f color) {
+        ZF_ASSERT(g_state.state == ek_state_rendering);
+        DrawTexture(g_state.px_tex_hdl, RectPos(rect), {}, {}, RectSize(rect), 0.0f, color);
+    }
+
+    void DrawLine(const s_v2<t_f32> a, const s_v2<t_f32> b, const s_color_rgba32f blend, const t_f32 width) {
+        ZF_ASSERT(g_state.state == ek_state_rendering);
+        ZF_ASSERT(width > 0.0f);
+
+        const t_f32 len = CalcDist(a, b);
+        const t_f32 dir = CalcDirInRads(a, b);
+        DrawTexture(g_state.px_tex_hdl, a, {}, origins::g_centerleft, {len, width}, dir, blend);
     }
 }
