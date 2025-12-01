@@ -407,6 +407,87 @@ void main() {
         return id.arena->resources[id.index].type_data.tex.size;
     }
 
+    [[nodiscard]] static t_b8 MakeFontAtlasGLTextures(const s_array_rdonly<t_font_atlas_rgba> atlas_rgbas, s_array<t_gl_id>& o_gl_ids) {
+        o_gl_ids = {
+            .buf_raw = static_cast<t_gl_id*>(malloc(static_cast<size_t>(ZF_SIZE_OF(t_gl_id) * atlas_rgbas.len))),
+            .len = atlas_rgbas.len
+        };
+
+        if (!o_gl_ids.buf_raw) {
+            return false;
+        }
+
+        for (t_size i = 0; i < atlas_rgbas.len; i++) {
+            o_gl_ids[i] = MakeGLTexture({g_font_atlas_size, atlas_rgbas[i]});
+
+            if (!o_gl_ids[i]) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    t_b8 LoadFontFromRaw(const s_str_rdonly file_path, const t_s32 height, const t_unicode_code_pt_bit_vec& code_pts, s_resource_arena& res_arena, s_mem_arena& temp_mem_arena, s_resource_id& o_id, e_font_load_from_raw_result* const o_load_from_raw_res, t_unicode_code_pt_bit_vec* const o_unsupported_code_pts) {
+        if (IsListFull(res_arena.resources)) {
+            return {};
+        }
+
+        auto& resource = res_arena.resources.backing_arr[res_arena.resources.len];
+
+        ZeroOut(resource);
+        resource.type = ek_resource_type_font;
+
+        s_array<t_font_atlas_rgba> atlas_rgbas;
+
+        const auto result = zf::LoadFontFromRaw(file_path, height, code_pts, *res_arena.mem_arena, temp_mem_arena, temp_mem_arena, resource.type_data.font.arrangement, atlas_rgbas, o_unsupported_code_pts);
+
+        if (o_load_from_raw_res) {
+            *o_load_from_raw_res = result;
+        }
+
+        if (result != ek_font_load_from_raw_result_success) {
+            return false;
+        }
+
+        if (!MakeFontAtlasGLTextures(atlas_rgbas, resource.type_data.font.atlas_gl_ids)) {
+            return false;
+        }
+
+        res_arena.resources.len++;
+
+        o_id = {res_arena.resources.len - 1, &res_arena};
+
+        return true;
+    }
+
+    t_b8 LoadFontFromPacked(const s_str_rdonly file_path, s_resource_arena& res_arena, s_mem_arena& temp_mem_arena, s_resource_id& o_id) {
+        if (IsListFull(res_arena.resources)) {
+            return {};
+        }
+
+        auto& resource = res_arena.resources.backing_arr[res_arena.resources.len];
+
+        ZeroOut(resource);
+        resource.type = ek_resource_type_font;
+
+        s_array<t_font_atlas_rgba> atlas_rgbas;
+
+        if (!zf::UnpackFont(file_path, *res_arena.mem_arena, temp_mem_arena, temp_mem_arena, resource.type_data.font.arrangement, atlas_rgbas)) {
+            return false;
+        }
+
+        if (!MakeFontAtlasGLTextures(atlas_rgbas, resource.type_data.font.atlas_gl_ids)) {
+            return false;
+        }
+
+        res_arena.resources.len++;
+
+        o_id = {res_arena.resources.len - 1, &res_arena};
+
+        return true;
+    }
+
     // ============================================================
     // @section: Rendering
     // ============================================================
@@ -571,5 +652,44 @@ void main() {
         };
 
         Draw(TextureGLID(tex_id), tex_coords, pos, size, origin, rot, blend);
+    }
+
+    t_b8 DrawStr(const s_str_rdonly str, const s_resource_id font_id, const s_v2<t_f32> pos, const s_v2<t_f32> alignment, const s_color_rgba32f blend, s_mem_arena& temp_mem_arena) {
+        if (IsStrEmpty(str)) {
+            return true;
+        }
+
+        const auto& font_arrangement = font_id.arena->resources[font_id.index].type_data.font.arrangement;
+        const auto& font_atlas_gl_ids = font_id.arena->resources[font_id.index].type_data.font.atlas_gl_ids;
+
+        s_array<s_v2<t_f32>> chr_positions;
+
+        if (!LoadStrChrDrawPositions(str, font_arrangement, pos, alignment, temp_mem_arena, chr_positions)) {
+            return false;
+        }
+
+        t_size chr_index = 0;
+
+        ZF_WALK_STR(str, chr_info) {
+            if (chr_info.code_pt == ' ' || chr_info.code_pt == '\n') {
+                chr_index++;
+                continue;
+            }
+
+            s_font_glyph_info glyph_info;
+
+            if (!HashMapGet(font_arrangement.code_pts_to_glyph_infos, chr_info.code_pt, &glyph_info)) {
+                ZF_ASSERT(false);
+                return false;
+            }
+
+            const auto chr_tex_coords = CalcTextureCoords(glyph_info.atlas_rect, g_font_atlas_size);
+
+            Draw(font_atlas_gl_ids[glyph_info.atlas_index], chr_tex_coords, chr_positions[chr_index], static_cast<s_v2<t_f32>>(RectSize(glyph_info.atlas_rect)), {}, 0.0f, blend);
+
+            chr_index++;
+        };
+
+        return true;
     }
 }
