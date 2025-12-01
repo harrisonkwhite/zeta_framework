@@ -266,11 +266,34 @@ namespace zf::gfx {
         glGenTextures(1, &tex_gl_id);
 
         if (!AttachGLFramebufferTexture(fb_gl_id, tex_gl_id, size)) {
-            LogError("Failed to attach framebuffer texture for surface!");
             return {};
         }
 
         return ListAppend(res_arena.hdls, MakeSurfaceHandle(fb_gl_id, tex_gl_id, size));
+    }
+
+    t_b8 ResizeSurface(s_resource_handle& hdl, const s_v2<t_size> size) {
+        ZF_ASSERT(hdl.type == ek_resource_type_surface);
+        ZF_ASSERT(hdl.raw.surf.size != size && "Unnecessarily resizing a surface - new surface size is the same.");
+
+        t_gl_id new_fb_gl_id;
+        glGenFramebuffers(1, &new_fb_gl_id);
+
+        t_gl_id new_tex_gl_id;
+        glGenTextures(1, &new_tex_gl_id);
+
+        if (!AttachGLFramebufferTexture(new_fb_gl_id, new_tex_gl_id, size)) {
+            glDeleteTextures(1, &new_tex_gl_id);
+            glDeleteFramebuffers(1, &new_fb_gl_id);
+            return false;
+        }
+
+        glDeleteTextures(1, &hdl.raw.surf.tex_gl_id);
+        glDeleteFramebuffers(1, &hdl.raw.surf.fb_gl_id);
+
+        hdl = MakeSurfaceHandle(new_fb_gl_id, new_tex_gl_id, size);
+
+        return true;
     }
 
     [[nodiscard]] static t_b8 MakeFontAtlasTextureHandles(const s_array_rdonly<t_font_atlas_rgba> atlas_rgbas, s_mem_arena& mem_arena, s_resource_arena& res_arena, s_array<s_resource_handle>& o_hdls) {

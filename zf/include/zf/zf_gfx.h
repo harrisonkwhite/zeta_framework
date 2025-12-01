@@ -37,7 +37,7 @@ namespace zf::gfx {
             struct {
                 t_gl_id fb_gl_id;
                 t_gl_id tex_gl_id;
-                s_v2<t_size> size;
+                s_v2<t_size> size; // @todo: This shouldn't be here! The handle is solely a composite identifier, it shouldn't have metadata.
             } surf;
         } raw;
     };
@@ -129,9 +129,13 @@ namespace zf::gfx {
     void ReleaseResources(s_resource_arena& res_arena);
 
     s_resource_handle MakeMesh(s_resource_arena& res_arena, const t_f32* const verts_raw, const t_size verts_len, const s_array_rdonly<t_u16> elems, const s_array_rdonly<t_s32> vert_attr_lens); // You might not want to provide vertices to start with, and only the count - passing nullptr in for verts_raw allows this.
+
     s_resource_handle MakeShaderProg(s_resource_arena& res_arena, const s_str_rdonly vert_src, const s_str_rdonly frag_src, s_mem_arena& temp_mem_arena);
+
     s_resource_handle MakeTexture(s_resource_arena& res_arena, const s_rgba_texture_data_rdonly& tex_data);
+
     s_resource_handle MakeSurface(s_resource_arena& res_arena, const s_v2<t_size> size);
+    [[nodiscard]] t_b8 ResizeSurface(s_resource_handle& hdl, const s_v2<t_size> size); // Returns true iff the operation was successful. If it failed, the old surface state with its old size is left intact.
 
     struct s_texture_asset {
         s_resource_handle hdl;

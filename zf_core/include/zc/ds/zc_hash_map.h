@@ -290,43 +290,4 @@ namespace zf {
 
         return true;
     }
-
-#if 0
-    template<typename tp_key_type, typename tp_val_type>
-    struct s_hash_map_fmt {
-        using t_fmt_tag = void;
-
-        s_hash_map<tp_key_type, tp_val_type>* val;
-        t_b8 omit_empty_lists;
-    };
-
-    template<typename tp_key_type, typename tp_val_type>
-    inline s_hash_map_fmt<tp_key_type, tp_val_type> FormatHashMap(s_hash_map<tp_key_type, tp_val_type>* const val, const t_b8 omit_empty_lists = false) {
-        return {val, omit_empty_lists};
-    }
-
-    template<typename tp_key_type, typename tp_val_type>
-    inline t_b8 PrintType(s_stream& stream, const s_hash_map_fmt<tp_key_type, tp_val_type>& fmt) {
-        auto& hm = *fmt.val;
-
-        const auto yeah = [&](const auto self, const t_size index) {
-            Print(stream, " -> ");
-
-            if (index != -1) {
-                Print("[]");
-                self(self, hm.backing_store.next_indexes[index]);
-            } else {
-                Print(stream, "N/A");
-            }
-        };
-
-        // Visualise as an array of linked lists.
-        for (t_size i = 0; i < fmt.val->backing_store_indexes.len; i++) {
-            PrintFormat(stream, "[%]", FormatInt(i));
-            yeah(yeah, fmt.val->backing_store_indexes[i]);
-        }
-
-        return true;
-    }
-#endif
 }

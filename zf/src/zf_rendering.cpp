@@ -264,7 +264,7 @@ void main() {
     }
 
     void DrawClear(const s_color_rgba32f col) {
-        glClearColor(col.r, col.g, col.b, 1.0f);
+        glClearColor(col.r, col.g, col.b, col.a);
         glClear(GL_COLOR_BUFFER_BIT);
     }
 
