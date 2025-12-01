@@ -19,19 +19,19 @@ namespace zf::renderer {
     struct s_resource_hdl {
         e_resource_type type;
         t_size index;
-
-        constexpr t_b8 operator!() const {
-            return type == ek_resource_type_invalid;
-        }
-
-        constexpr t_b8 operator==(const s_resource_hdl other) const {
-            return type == other.type && index == other.index; // @todo: Perhaps if both are invalid, they should be equal irrespective of index?
-        }
-
-        constexpr t_b8 operator!=(const s_resource_hdl other) const {
-            return !(*this == other);
-        }
     };
+
+    inline t_b8 IsResourceValid(const s_resource_hdl hdl) {
+        return hdl.type != ek_resource_type_invalid;
+    }
+
+    inline t_b8 AreResourcesEqual(const s_resource_hdl a, const s_resource_hdl b) {
+        if (a.type == ek_resource_type_invalid && b.type == ek_resource_type_invalid) {
+            return true;
+        }
+
+        return a.type == b.type && a.index == b.index;
+    }
 
     struct s_resource_lifetime {
         s_list<s_resource_hdl> hdls;

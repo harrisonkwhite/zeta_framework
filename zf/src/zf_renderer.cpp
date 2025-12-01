@@ -212,15 +212,15 @@ void main() {
 
     constexpr t_size g_texture_limit = 1024;
 
-    enum e_state {
-        ek_state_uninitted,
-        ek_state_initting,
-        ek_state_initted,
-        ek_state_rendering
+    enum e_phase {
+        ek_phase_uninitted,
+        ek_phase_initting,
+        ek_phase_initted,
+        ek_phase_rendering
     };
 
-    struct {
-        e_state state;
+    static struct {
+        e_phase phase;
 
         s_mesh_gl_ids batch_mesh_gl_ids;
         t_gl_id batch_shader_prog_gl_id;
@@ -247,11 +247,11 @@ void main() {
 
         t_b8 clean_up = false;
 
-        g_state.state = ek_state_initting;
+        g_state.phase = ek_phase_initting;
 
         ZF_DEFER({
             if (clean_up) {
-                g_state.state = ek_state_uninitted;
+                g_state.phase = ek_phase_uninitted;
             }
         });
 
@@ -309,20 +309,20 @@ void main() {
             const s_static_array<t_u8, 4> rgba = {{255, 255, 255, 255}};
             g_state.px_tex_hdl = CreateTexture({{1, 1}, rgba});
 
-            if (!g_state.px_tex_hdl) {
+            if (!IsResourceValid(g_state.px_tex_hdl)) {
                 ZF_REPORT_ERROR();
                 clean_up = true;
                 return false;
             }
         }
 
-        g_state.state = ek_state_initted;
+        g_state.phase = ek_phase_initted;
 
         return true;
     }
 
     void Shutdown() {
-        ZF_ASSERT(g_state.state == ek_state_initted);
+        ZF_ASSERT(g_state.phase == ek_phase_initted);
 
         ZF_FOR_EACH_SET_BIT(g_state.textures.activity, i) {
             glDeleteTextures(1, &g_state.textures.gl_ids[i]);
@@ -339,7 +339,7 @@ void main() {
     }
 
     s_resource_hdl CreateTexture(const s_rgba_texture_data_rdonly& tex_data) {
-        ZF_ASSERT(g_state.state == ek_state_initting || g_state.state == ek_state_initted);
+        ZF_ASSERT(g_state.phase == ek_phase_initting || g_state.phase == ek_phase_initted);
 
         const t_size index = IndexOfFirstUnsetBit(g_state.textures.activity);
 
@@ -427,44 +427,44 @@ void main() {
     }
 
     void BeginRenderingPhase() {
-        ZF_ASSERT(g_state.state == ek_state_initted);
+        ZF_ASSERT(g_state.phase == ek_phase_initted);
 
         ZeroOut(g_state.rendering);
         g_state.rendering.view_mat = MakeIdentityMatrix4x4();
 
-        g_state.state = ek_state_rendering;
+        g_state.phase = ek_phase_rendering;
 
         Clear(s_color_rgba8(147, 207, 249, 255));
     }
 
     void EndRenderingPhase() {
-        ZF_ASSERT(g_state.state == ek_state_rendering);
+        ZF_ASSERT(g_state.phase == ek_phase_rendering);
 
         Flush();
-        g_state.state = ek_state_initted;
+        g_state.phase = ek_phase_initted;
     }
 
     void Clear(const s_color_rgba32f col) {
-        ZF_ASSERT(g_state.state == ek_state_rendering);
+        ZF_ASSERT(g_state.phase == ek_phase_rendering);
 
         glClearColor(col.r, col.g, col.b, col.a);
         glClear(GL_COLOR_BUFFER_BIT);
     }
 
     void SetViewMatrix(const s_matrix_4x4& mat) {
-        ZF_ASSERT(g_state.state == ek_state_rendering);
+        ZF_ASSERT(g_state.phase == ek_phase_rendering);
 
         Flush();
         g_state.rendering.view_mat = mat;
     }
 
     static void Draw(const s_resource_hdl tex_hdl, const s_rect<t_f32> tex_coords, s_v2<t_f32> pos, s_v2<t_f32> size, s_v2<t_f32> origin, const t_f32 rot, const s_color_rgba32f blend) {
-        ZF_ASSERT(g_state.state == ek_state_rendering);
+        ZF_ASSERT(g_state.phase == ek_phase_rendering);
 
         if (g_state.rendering.batch_slots_used_cnt == 0) {
             // This is the first draw to the batch, so set the texture associated with the batch to the one we're trying to render.
             g_state.rendering.tex_hdl = tex_hdl;
-        } else if (g_state.rendering.batch_slots_used_cnt == g_batch_slot_cnt || tex_hdl != g_state.rendering.tex_hdl) {
+        } else if (g_state.rendering.batch_slots_used_cnt == g_batch_slot_cnt || !AreResourcesEqual(tex_hdl, g_state.rendering.tex_hdl)) {
             // Flush the batch and then try this same render operation again but on a fresh batch.
             Flush();
             Draw(tex_hdl, tex_coords, pos, size, origin, rot, blend);
@@ -518,7 +518,7 @@ void main() {
     }
 
     void DrawTexture(const s_resource_hdl hdl, const s_v2<t_f32> pos, const s_rect<t_s32> src_rect, const s_v2<t_f32> origin, const s_v2<t_f32> scale, const t_f32 rot, const s_color_rgba32f blend) {
-        ZF_ASSERT(g_state.state == ek_state_rendering);
+        ZF_ASSERT(g_state.phase == ek_phase_rendering);
         ZF_ASSERT(origin.x >= 0.0f && origin.x <= 1.0f && origin.y >= 0.0f && origin.y <= 1.0f); // @todo: Generic function for this check?
         // @todo: Add more assertions here!
 
@@ -544,12 +544,12 @@ void main() {
     }
 
     void DrawRect(const s_rect<t_f32> rect, const s_color_rgba32f color) {
-        ZF_ASSERT(g_state.state == ek_state_rendering);
+        ZF_ASSERT(g_state.phase == ek_phase_rendering);
         DrawTexture(g_state.px_tex_hdl, RectPos(rect), {}, {}, RectSize(rect), 0.0f, color);
     }
 
     void DrawLine(const s_v2<t_f32> a, const s_v2<t_f32> b, const s_color_rgba32f blend, const t_f32 width) {
-        ZF_ASSERT(g_state.state == ek_state_rendering);
+        ZF_ASSERT(g_state.phase == ek_phase_rendering);
         ZF_ASSERT(width > 0.0f);
 
         const t_f32 len = CalcDist(a, b);

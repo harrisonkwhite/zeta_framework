@@ -2,12 +2,10 @@
 
 #include <zf/zf_renderer.h>
 #include <zf/zf_rng.h>
-#include <zf/zf_audio.h>
+#include <zf/zf_audio_sys.h>
 #include <zf/zf_debug.h>
 
 namespace zf {
-    constexpr t_s32 g_gfx_resource_arena_cap = 1024;
-
     t_b8 RunGame(const s_game_info& info) {
         AssertGameInfoValidity(info);
 
@@ -53,12 +51,12 @@ namespace zf {
             ZF_DEFER({ renderer::Shutdown(); });
 
             // Initialise audio system.
-            if (!audio::InitSys()) {
+            if (!audio_sys::Init()) {
                 ZF_REPORT_ERROR();
                 return false;
             }
 
-            ZF_DEFER({ audio::ShutdownSys(); });
+            ZF_DEFER({ audio_sys::Shutdown(); });
 
             // Initialise developer memory.
             void* dev_mem = nullptr;
@@ -113,7 +111,7 @@ namespace zf {
 
                 // Once enough time has passed (i.e. the time accumulator has reached the tick interval), run at least a single tick and update the display.
                 if (frame_dur_accum >= targ_tick_interval) {
-                    audio::ProcFinishedSounds();
+                    audio_sys::ProcFinishedSounds();
 
                     // Run possibly multiple ticks.
                     do {
