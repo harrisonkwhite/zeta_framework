@@ -42,7 +42,7 @@ namespace zf {
             ZF_DEFER({ window::Shutdown(); });
 
             // Initialise the renderer.
-            if (!renderer::Init(temp_mem_arena)) {
+            if (!renderer::Init(mem_arena, temp_mem_arena)) {
                 ZF_REPORT_ERROR();
                 return false;
             }

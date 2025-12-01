@@ -224,6 +224,8 @@ void main() {
                 s_array<t_gl_id> atlas_gl_ids;
             } font;
         } type_data;
+
+        s_resource* next;
     };
 
     enum e_phase {
@@ -239,6 +241,9 @@ void main() {
         s_mesh_gl_ids batch_mesh_gl_ids;
         t_gl_id batch_shader_prog_gl_id;
 
+        s_resource_arena res_arena;
+        s_resource* px_tex;
+
         struct {
             s_static_array<t_batch_slot, g_batch_slot_cnt> batch_slots;
             t_size batch_slots_used_cnt;
@@ -248,7 +253,7 @@ void main() {
         } rendering;
     } g_state;
 
-    t_b8 Init(s_mem_arena& temp_mem_arena) {
+    t_b8 Init(s_mem_arena& mem_arena, s_mem_arena& temp_mem_arena) {
         ZeroOut(g_state);
 
         t_b8 clean_up = false;
@@ -322,29 +327,25 @@ void main() {
         glDeleteProgram(g_state.batch_shader_prog_gl_id);
     }
 
-    t_b8 MakeResourceArena(const t_size res_limit, s_mem_arena& mem_arena, s_resource_arena& o_res_arena) {
-        ZeroOut(o_res_arena);
-        o_res_arena.mem_arena = &mem_arena;
-        return MakeList(mem_arena, res_limit, o_res_arena.resources);
-    }
-
     void ReleaseResources(const s_resource_arena& res_arena) {
-        for (t_size i = 0; i < res_arena.resources.len; i++) {
-            const auto& res = res_arena.resources[i];
+        const s_resource* res = res_arena.head;
 
-            switch (res.type) {
+        while (res) {
+            switch (res->type) {
                 case ek_resource_type_texture:
-                    glDeleteTextures(1, &res.type_data.tex.gl_id);
+                    glDeleteTextures(1, &res->type_data.tex.gl_id);
                     break;
 
                 case ek_resource_type_font:
-                    glDeleteTextures(static_cast<GLsizei>(res.type_data.font.atlas_gl_ids.len), res.type_data.font.atlas_gl_ids.buf_raw);
+                    glDeleteTextures(static_cast<GLsizei>(res->type_data.font.atlas_gl_ids.len), res->type_data.font.atlas_gl_ids.buf_raw);
                     break;
 
                 default:
                     ZF_ASSERT(false);
                     break;
             }
+
+            res = res->next;
         }
     }
 
@@ -376,37 +377,44 @@ void main() {
         return gl_id;
     }
 
-    t_b8 LoadTexture(const s_rgba_texture_data_rdonly& tex_data, s_resource_arena& res_arena, s_resource_id& o_id) {
+    s_resource* PushResource(s_resource_arena& res_arena) {
+        const auto res = PushToMemArena<s_resource>(*res_arena.mem_arena);
+
+        if (!res) {
+            return nullptr;
+        }
+
+        if (!res_arena.head) {
+            res_arena.head = res;
+            res_arena.tail = res;
+        } else {
+            res_arena.tail->next = res;
+            res_arena.tail = res;
+        }
+
+        return res;
+    }
+
+    s_resource* LoadTexture(const s_rgba_texture_data_rdonly& tex_data, s_resource_arena& res_arena) {
         ZF_ASSERT(g_state.phase == ek_phase_initting || g_state.phase == ek_phase_initted);
 
-        if (IsListFull(res_arena.resources)) {
-            return false;
+        const t_gl_id gl_id = MakeGLTexture(tex_data);
+
+        if (!gl_id) {
+            return nullptr;
         }
 
-        const t_gl_id tex_gl_id = MakeGLTexture(tex_data);
+        const auto res = PushResource(res_arena);
 
-        if (!tex_gl_id) {
-            return false;
+        if (res) {
+            res->type = ek_resource_type_texture;
+            res->type_data.tex = {.gl_id = gl_id, .size = tex_data.size_in_pxs};
         }
 
-        ListAppend(res_arena.resources, {
-            .type = ek_resource_type_texture,
-            .type_data = {.tex = {.gl_id = tex_gl_id, .size = tex_data.size_in_pxs}}
-        });
-
-        o_id = {res_arena.resources.len - 1, &res_arena};
-
-        return true;
+        return res;
     }
 
-    static inline t_gl_id TextureGLID(const s_resource_id id) {
-        return id.arena->resources[id.index].type_data.tex.gl_id;
-    }
-
-    s_v2<t_s32> TextureSize(const s_resource_id id) {
-        return id.arena->resources[id.index].type_data.tex.size;
-    }
-
+#if 0
     [[nodiscard]] static t_b8 MakeFontAtlasGLTextures(const s_array_rdonly<t_font_atlas_rgba> atlas_rgbas, s_array<t_gl_id>& o_gl_ids) {
         o_gl_ids = {
             .buf_raw = static_cast<t_gl_id*>(malloc(static_cast<size_t>(ZF_SIZE_OF(t_gl_id) * atlas_rgbas.len))),
@@ -487,6 +495,7 @@ void main() {
 
         return true;
     }
+#endif
 
     // ============================================================
     // @section: Rendering
@@ -628,12 +637,12 @@ void main() {
         };
     }
 
-    void DrawTexture(const s_resource_id tex_id, const s_v2<t_f32> pos, const s_rect<t_s32> src_rect, const s_v2<t_f32> origin, const s_v2<t_f32> scale, const t_f32 rot, const s_color_rgba32f blend) {
+    void DrawTexture(const s_resource* const tex, const s_v2<t_f32> pos, const s_rect<t_s32> src_rect, const s_v2<t_f32> origin, const s_v2<t_f32> scale, const t_f32 rot, const s_color_rgba32f blend) {
         ZF_ASSERT(g_state.phase == ek_phase_rendering);
         ZF_ASSERT(origin.x >= 0.0f && origin.x <= 1.0f && origin.y >= 0.0f && origin.y <= 1.0f); // @todo: Generic function for this check?
         // @todo: Add more assertions here!
 
-        const auto tex_size = TextureSize(tex_id);
+        const auto tex_size = tex->type_data.tex.size;
 
         s_rect<t_s32> src_rect_to_use;
 
@@ -651,16 +660,16 @@ void main() {
             static_cast<t_f32>(src_rect_to_use.width) * scale.x, static_cast<t_f32>(src_rect_to_use.height) * scale.y
         };
 
-        Draw(TextureGLID(tex_id), tex_coords, pos, size, origin, rot, blend);
+        Draw(tex->type_data.tex.gl_id, tex_coords, pos, size, origin, rot, blend);
     }
 
-    t_b8 DrawStr(const s_str_rdonly str, const s_resource_id font_id, const s_v2<t_f32> pos, const s_v2<t_f32> alignment, const s_color_rgba32f blend, s_mem_arena& temp_mem_arena) {
+    t_b8 DrawStr(const s_str_rdonly str, const s_resource* const font, const s_v2<t_f32> pos, const s_v2<t_f32> alignment, const s_color_rgba32f blend, s_mem_arena& temp_mem_arena) {
         if (IsStrEmpty(str)) {
             return true;
         }
 
-        const auto& font_arrangement = font_id.arena->resources[font_id.index].type_data.font.arrangement;
-        const auto& font_atlas_gl_ids = font_id.arena->resources[font_id.index].type_data.font.atlas_gl_ids;
+        const auto& font_arrangement = font->type_data.font.arrangement;
+        const auto& font_atlas_gl_ids = font->type_data.font.atlas_gl_ids;
 
         s_array<s_v2<t_f32>> chr_positions;
 
