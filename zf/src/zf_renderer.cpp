@@ -7,11 +7,287 @@ namespace zf::renderer {
 
     constexpr t_size g_texture_limit = 1024;
 
+    struct s_mesh_gl_ids {
+        t_gl_id vert_arr_gl_id;
+        t_gl_id vert_buf_gl_id;
+        t_gl_id elem_buf_gl_id;
+    };
+
     struct {
-        s_static_array<t_gl_id, g_texture_limit> gl_ids;
-        s_static_array<s_v2<t_s32>, g_texture_limit> sizes;
-        s_static_bit_vec<g_texture_limit> activity;
-    } g_textures;
+        s_mesh_gl_ids batch_mesh_gl_ids;
+        t_gl_id batch_shader_prog_gl_id;
+
+        struct {
+            s_static_array<t_gl_id, g_texture_limit> gl_ids;
+            s_static_array<s_v2<t_s32>, g_texture_limit> sizes;
+            s_static_bit_vec<g_texture_limit> activity;
+        } textures;
+    } g_state;
+
+    static t_size CalcStride(const s_array_rdonly<t_s32> vert_attr_lens) {
+        t_size stride = 0;
+
+        for (t_size i = 0; i < vert_attr_lens.len; i++) {
+            stride += ZF_SIZE_OF(t_f32) * static_cast<t_size>(vert_attr_lens[i]);
+        }
+
+        return stride;
+    }
+
+    static s_mesh_gl_ids MakeGLMesh(const t_f32* const verts_raw, const t_size verts_len, const s_array_rdonly<t_u16> elems, const s_array_rdonly<t_s32> vert_attr_lens) {
+        s_mesh_gl_ids mesh = {};
+
+        glGenVertexArrays(1, &mesh.vert_arr_gl_id);
+        glBindVertexArray(mesh.vert_arr_gl_id);
+
+        glGenBuffers(1, &mesh.vert_buf_gl_id);
+        glBindBuffer(GL_ARRAY_BUFFER, mesh.vert_buf_gl_id);
+        glBufferData(GL_ARRAY_BUFFER, ZF_SIZE_OF(t_f32) * verts_len, verts_raw, GL_DYNAMIC_DRAW);
+
+        glGenBuffers(1, &mesh.elem_buf_gl_id);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh.elem_buf_gl_id);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, static_cast<GLsizeiptr>(ArraySizeInBytes(elems)), elems.buf_raw, GL_STATIC_DRAW);
+
+        const t_size stride = CalcStride(vert_attr_lens);
+        t_s32 offs = 0;
+
+        for (t_size i = 0; i < vert_attr_lens.len; i++) {
+            const t_s32 attr_len = vert_attr_lens[i];
+
+            glVertexAttribPointer(static_cast<GLuint>(i), attr_len, GL_FLOAT, false, static_cast<GLsizei>(stride), reinterpret_cast<void*>(ZF_SIZE_OF(t_s32) * offs));
+            glEnableVertexAttribArray(static_cast<GLuint>(i));
+
+            offs += attr_len;
+        }
+
+        glBindVertexArray(0);
+
+        return mesh;
+    }
+
+    static void ReleaseGLMesh(const s_mesh_gl_ids& mesh_gl_ids) {
+        glDeleteBuffers(1, &mesh_gl_ids.elem_buf_gl_id);
+        glDeleteBuffers(1, &mesh_gl_ids.vert_buf_gl_id);
+        glDeleteVertexArrays(1, &mesh_gl_ids.vert_arr_gl_id);
+    }
+
+    static t_gl_id MakeGLShaderProg(const s_str_rdonly vert_src, const s_str_rdonly frag_src, s_mem_arena& temp_mem_arena) {
+        s_str vert_src_terminated;
+        s_str frag_src_terminated;
+
+        if (!CloneStrButAddTerminator(vert_src, temp_mem_arena, vert_src_terminated)
+            || !CloneStrButAddTerminator(frag_src, temp_mem_arena, frag_src_terminated)) {
+            return 0;
+        }
+
+        // Generate the individual shaders.
+        const auto gen_shader = [&temp_mem_arena](const s_str_rdonly src, const t_b8 is_frag) -> t_gl_id {
+            const t_gl_id shader_gl_id = glCreateShader(is_frag ? GL_FRAGMENT_SHADER : GL_VERTEX_SHADER);
+
+            const auto src_raw = StrRaw(src);
+            glShaderSource(shader_gl_id, 1, &src_raw, nullptr);
+
+            glCompileShader(shader_gl_id);
+
+            t_s32 success;
+            glGetShaderiv(shader_gl_id, GL_COMPILE_STATUS, &success);
+
+            if (!success) {
+                ZF_DEFER({ glDeleteShader(shader_gl_id); });
+
+                // Try getting the OpenGL compile error message.
+                t_s32 log_chr_cnt;
+                glGetShaderiv(shader_gl_id, GL_INFO_LOG_LENGTH, &log_chr_cnt);
+
+                if (log_chr_cnt > 1) {
+                    s_array<char> log_chrs;
+
+                    if (MakeArray(temp_mem_arena, log_chr_cnt, log_chrs)) {
+                        glGetShaderInfoLog(shader_gl_id, static_cast<GLsizei>(log_chrs.len), nullptr, log_chrs.buf_raw);
+                        LogErrorType("OpenGL Shader Compilation", "%", StrFromRaw(log_chrs.buf_raw));
+                    } else {
+                        LogError("Failed to reserve memory for OpenGL shader compilation error log!");
+                    }
+                } else {
+                    LogError("OpenGL shader compilation failed, but no error message available!");
+                }
+
+                return 0;
+            }
+
+            return shader_gl_id;
+        };
+
+        const t_gl_id vert_gl_id = gen_shader(vert_src_terminated, false);
+
+        if (!vert_gl_id) {
+            return 0;
+        }
+
+        ZF_DEFER({ glDeleteShader(vert_gl_id); });
+
+        const t_gl_id frag_gl_id = gen_shader(frag_src_terminated, true);
+
+        if (!frag_gl_id) {
+            return 0;
+        }
+
+        ZF_DEFER({ glDeleteShader(frag_gl_id); });
+
+        // Set up the shader program.
+        const t_gl_id prog_gl_id = glCreateProgram();
+        glAttachShader(prog_gl_id, vert_gl_id);
+        glAttachShader(prog_gl_id, frag_gl_id);
+        glLinkProgram(prog_gl_id);
+
+        return prog_gl_id;
+    }
+
+    // ============================================================
+    // @section: Yeah
+    // ============================================================
+    static s_str_rdonly g_batch_vert_shader_src = R"(#version 460 core
+
+layout (location = 0) in vec2 a_vert;
+layout (location = 1) in vec2 a_pos;
+layout (location = 2) in vec2 a_size;
+layout (location = 3) in float a_rot;
+layout (location = 4) in vec2 a_tex_coord;
+layout (location = 5) in vec4 a_blend;
+
+out vec2 v_tex_coord;
+out vec4 v_blend;
+
+uniform mat4 u_view;
+uniform mat4 u_proj;
+
+void main() {
+    float rot_cos = cos(a_rot);
+    float rot_sin = -sin(a_rot);
+
+    mat4 model = mat4(
+        vec4(a_size.x * rot_cos, a_size.x * rot_sin, 0.0, 0.0),
+        vec4(a_size.y * -rot_sin, a_size.y * rot_cos, 0.0, 0.0),
+        vec4(0.0, 0.0, 1.0, 0.0),
+        vec4(a_pos.x, a_pos.y, 0.0, 1.0)
+    );
+
+    gl_Position = u_proj * u_view * model * vec4(a_vert, 0.0, 1.0);
+    v_tex_coord = a_tex_coord;
+    v_blend = a_blend;
+}
+)";
+
+    static s_str_rdonly g_batch_frag_shader_src = R"(#version 460 core
+
+in vec2 v_tex_coord;
+in vec4 v_blend;
+
+out vec4 o_frag_color;
+
+uniform sampler2D u_tex;
+
+void main() {
+    vec4 tex_color = texture(u_tex, v_tex_coord);
+    o_frag_color = tex_color * v_blend;
+}
+)";
+
+    constexpr s_color_rgba32f g_default_bg_color = s_color_rgba8(147, 207, 249, 255);
+
+    struct s_batch_vert {
+        s_v2<t_f32> vert_coord;
+        s_v2<t_f32> pos;
+        s_v2<t_f32> size;
+        t_f32 rot;
+        s_v2<t_f32> tex_coord;
+        s_color_rgba32f blend;
+    };
+
+    constexpr s_static_array<t_s32, 6> g_batch_vert_attr_lens = {
+        {2, 2, 2, 1, 2, 4} // This has to match the number of components per attribute above.
+    };
+
+    constexpr t_size g_batch_vert_component_cnt = ZF_SIZE_OF(s_batch_vert) / ZF_SIZE_OF(t_f32);
+
+    static_assert([]() {
+        t_size sum = 0;
+
+        for (t_size i = 0; i < g_batch_vert_attr_lens.g_len; i++) {
+            sum += g_batch_vert_attr_lens[i];
+        }
+
+        return sum == g_batch_vert_component_cnt;
+    }(), "Mismatch between specified batch vertex attribute lengths and component count!");
+
+    constexpr t_size g_batch_slot_cnt = 1 << 8;
+    static_assert(g_batch_slot_cnt <= 1 << 16, "Batch slot count is too large (need to account for range limits of elements).");
+
+    constexpr t_size g_batch_slot_vert_cnt = 4;
+    constexpr t_size g_batch_slot_elem_cnt = 6;
+
+    using t_batch_slot = s_static_array<s_batch_vert, g_batch_slot_vert_cnt>;
+
+    t_b8 Init(s_mem_arena& temp_mem_arena) {
+        t_b8 clean_up = false;
+
+        {
+            s_array<t_u16> elems;
+
+            if (!MakeArray(temp_mem_arena, g_batch_slot_elem_cnt * g_batch_slot_cnt, elems)) {
+                ZF_REPORT_ERROR();
+                clean_up = true;
+                return false;
+            }
+
+            for (t_size i = 0; i < g_batch_slot_cnt; i++) {
+                elems[(i * 6) + 0] = static_cast<t_u16>((i * 4) + 0);
+                elems[(i * 6) + 1] = static_cast<t_u16>((i * 4) + 1);
+                elems[(i * 6) + 2] = static_cast<t_u16>((i * 4) + 2);
+                elems[(i * 6) + 3] = static_cast<t_u16>((i * 4) + 2);
+                elems[(i * 6) + 4] = static_cast<t_u16>((i * 4) + 3);
+                elems[(i * 6) + 5] = static_cast<t_u16>((i * 4) + 0);
+            }
+
+            constexpr t_size verts_len = g_batch_vert_component_cnt * g_batch_slot_vert_cnt * g_batch_slot_cnt;
+            g_state.batch_mesh_gl_ids = MakeGLMesh(nullptr, verts_len, elems, g_batch_vert_attr_lens);
+        }
+
+        ZF_DEFER({
+            if (clean_up) {
+                ReleaseGLMesh(g_state.batch_mesh_gl_ids);
+                g_state.batch_mesh_gl_ids = {};
+            }
+        });
+
+        g_state.batch_shader_prog_gl_id = MakeGLShaderProg(g_batch_vert_shader_src, g_batch_frag_shader_src, temp_mem_arena);
+
+        if (!g_state.batch_shader_prog_gl_id) {
+            ZF_REPORT_ERROR();
+            clean_up = true;
+            return false;
+        }
+
+        ZF_DEFER({
+            if (clean_up) {
+                glDeleteProgram(g_state.batch_shader_prog_gl_id);
+                g_state.batch_shader_prog_gl_id = 0;
+            }
+        });
+
+        return true;
+    }
+
+    void Shutdown() {
+        ZF_FOR_EACH_SET_BIT(g_state.textures.activity, i) {
+            glDeleteTextures(1, &g_state.textures.gl_ids[i]);
+        }
+
+        ReleaseGLMesh(g_state.batch_mesh_gl_ids);
+        glDeleteProgram(g_state.batch_shader_prog_gl_id);
+
+        g_state = {};
+    }
 
     static inline s_v2<t_s32> GLTextureSizeLimit() {
         t_s32 size;
@@ -20,7 +296,7 @@ namespace zf::renderer {
     }
 
     s_resource_hdl CreateTexture(const s_rgba_texture_data_rdonly& tex_data) {
-        const t_size index = IndexOfFirstUnsetBit(g_textures.activity);
+        const t_size index = IndexOfFirstUnsetBit(g_state.textures.activity);
 
         if (index == -1) {
             LogError("Out of room - no available slots for new texture!");
@@ -44,8 +320,8 @@ namespace zf::renderer {
 
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, tex_data.size_in_pxs.x, tex_data.size_in_pxs.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, tex_data.px_data.buf_raw);
 
-        g_textures.gl_ids[index] = gl_id;
-        g_textures.sizes[index] = tex_data.size_in_pxs;
+        g_state.textures.gl_ids[index] = gl_id;
+        g_state.textures.sizes[index] = tex_data.size_in_pxs;
 
         return {ek_resource_type_texture, index};
     }

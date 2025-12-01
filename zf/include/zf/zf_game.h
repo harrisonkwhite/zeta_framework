@@ -1,19 +1,16 @@
 #pragma once
 
 #include <zc.h>
-#include <zf/zf_renderer.h>
 #include <zf/zf_window.h>
 
 namespace zf {
+    // @todo: Could the context structs be unified into one? Or omitted entirely?
+
     struct s_game_init_context {
         void* dev_mem;
 
         s_mem_arena* mem_arena;
         s_mem_arena* temp_mem_arena;
-
-#if 0
-        gfx::s_resource_arena* gfx_res_arena;
-#endif
     };
 
     enum e_game_tick_result {
@@ -30,14 +27,10 @@ namespace zf {
     };
 
     struct s_game_render_context {
-        void* dev_mem;
+        const void* dev_mem;
 
         s_mem_arena* mem_arena;
         s_mem_arena* temp_mem_arena;
-
-#if 0
-        const s_rendering_context* rendering_context;
-#endif
     };
 
     struct s_game_info {

@@ -1,5 +1,6 @@
 #include <zf/zf_game.h>
 
+#include <zf/zf_renderer.h>
 #include <zf/zf_rng.h>
 #include <zf/zf_audio.h>
 #include <zf/zf_debug.h>
@@ -43,25 +44,13 @@ namespace zf {
 
             ZF_DEFER({ ReleaseWindow(); });
 
-#if 0
-            // Initialise the GFX resource arena.
-            gfx::s_resource_arena gfx_res_arena;
-
-            if (!gfx::MakeResourceArena(mem_arena, g_gfx_resource_arena_cap, gfx_res_arena)) {
+            // Initialise the renderer.
+            if (!renderer::Init(temp_mem_arena)) {
                 ZF_REPORT_ERROR();
                 return false;
             }
 
-            ZF_DEFER({ gfx::ReleaseResources(gfx_res_arena); });
-
-            // Initialise the rendering basis.
-            s_rendering_basis rendering_basis;
-
-            if (!MakeRenderingBasis(gfx_res_arena, temp_mem_arena, rendering_basis)) {
-                ZF_REPORT_ERROR();
-                return false;
-            }
-#endif
+            ZF_DEFER({ renderer::Shutdown(); });
 
             // Initialise audio system.
             if (!audio::InitSys()) {

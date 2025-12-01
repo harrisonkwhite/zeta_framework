@@ -3,7 +3,7 @@
 #include <zc.h>
 
 namespace zf::renderer {
-    [[nodiscard]] t_b8 Init();
+    [[nodiscard]] t_b8 Init(s_mem_arena& temp_mem_arena);
     void Shutdown();
 
     // ============================================================

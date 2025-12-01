@@ -721,6 +721,6 @@ namespace zf {
         return o_index != -1;
     }
 
-#define ZF_FOR_EACH_SET_BIT(br, index) for (t_size ZF_CONCAT(p_walk_pos_l, __LINE__) = 0, index; WalkSetBits(br, ZF_CONCAT(p_walk_pos_l, __LINE__), index); )
-#define ZF_FOR_EACH_UNSET_BIT(br, index) for (t_size ZF_CONCAT(p_walk_pos_l, __LINE__) = 0, index; WalkUnsetBits(br, ZF_CONCAT(p_walk_pos_l, __LINE__), index); )
+#define ZF_FOR_EACH_SET_BIT(bv, index) for (t_size ZF_CONCAT(p_walk_pos_l, __LINE__) = 0, index; WalkSetBits(bv, ZF_CONCAT(p_walk_pos_l, __LINE__), index); )
+#define ZF_FOR_EACH_UNSET_BIT(bv, index) for (t_size ZF_CONCAT(p_walk_pos_l, __LINE__) = 0, index; WalkUnsetBits(bv, ZF_CONCAT(p_walk_pos_l, __LINE__), index); )
 }
