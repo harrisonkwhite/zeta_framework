@@ -3,6 +3,7 @@
 #include <zf/zf_gfx.h>
 
 namespace zf {
+#if 0
     constexpr s_color_rgba32f g_default_bg_color = s_color_rgba8(147, 207, 249, 255);
 
     struct s_batch_vert {
@@ -87,4 +88,5 @@ namespace zf {
     void SetSurfaceShaderProg(const s_rendering_context& rc, const gfx::s_resource_handle& prog);
     [[nodiscard]] t_b8 SetSurfaceShaderProgUniform(const s_rendering_context& rc, const s_str_rdonly name, const gfx::s_shader_prog_uniform_val& val, s_mem_arena& temp_mem_arena);
     void DrawSurface(const s_rendering_context& rc, const gfx::s_resource_handle& surf_hdl, const s_v2<t_f32> pos, const s_v2<t_f32> scale);
+#endif
 }

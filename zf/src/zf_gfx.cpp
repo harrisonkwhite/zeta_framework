@@ -1,6 +1,7 @@
 #include <zf/zf_gfx.h>
 
 namespace zf::gfx {
+#if 0
     static t_size CalcStride(const s_array_rdonly<t_s32> vert_attr_lens) {
         t_size stride = 0;
 
@@ -141,7 +142,7 @@ namespace zf::gfx {
         return tex_gl_id;
     }
 
-    t_b8 AreResourcesEqual(const s_resource_handle& a, const s_resource_handle& b) {
+    t_b8 AreResourcesEqual(const s_resource_handle a, const s_resource_handle b) {
         if (a.type == b.type) {
             switch (a.type) {
                 case ek_resource_type_invalid:
@@ -157,37 +158,13 @@ namespace zf::gfx {
 
                 case ek_resource_type_texture:
                     return a.raw.tex.gl_id == b.raw.tex.gl_id;
+
+                case ek_resource_type_surface:
+                    return a.raw.surf.fb_gl_id == b.raw.surf.fb_gl_id && a.raw.surf.tex_gl_id == b.raw.surf.tex_gl_id;
             }
         }
 
         return false;
-    }
-
-    void ReleaseResource(const s_resource_handle& hdl) {
-        switch (hdl.type) {
-            case ek_resource_type_invalid:
-                ZF_ASSERT(false);
-                break;
-
-            case ek_resource_type_mesh:
-                glDeleteBuffers(1, &hdl.raw.mesh.elem_buf_gl_id);
-                glDeleteBuffers(1, &hdl.raw.mesh.vert_buf_gl_id);
-                glDeleteVertexArrays(1, &hdl.raw.mesh.vert_arr_gl_id);
-                break;
-
-            case ek_resource_type_shader_prog:
-                glDeleteProgram(hdl.raw.shader_prog.gl_id);
-                break;
-
-            case ek_resource_type_texture:
-                glDeleteTextures(1, &hdl.raw.tex.gl_id);
-                break;
-
-            case ek_resource_type_surface:
-                glDeleteTextures(1, &hdl.raw.surf.tex_gl_id);
-                glDeleteFramebuffers(1, &hdl.raw.surf.fb_gl_id);
-                break;
-        }
     }
 
     t_b8 MakeResourceArena(s_mem_arena& mem_arena, const t_size cap, s_resource_arena& o_res_arena) {
@@ -196,7 +173,32 @@ namespace zf::gfx {
 
     void ReleaseResources(s_resource_arena& res_arena) {
         for (t_size i = 0; i < res_arena.hdls.len; i++) {
-            ReleaseResource(res_arena.hdls[i]);
+            const auto& hdl = res_arena.hdls[i];
+
+            switch (hdl.type) {
+                case ek_resource_type_invalid:
+                    ZF_ASSERT(false);
+                    break;
+
+                case ek_resource_type_mesh:
+                    glDeleteBuffers(1, &hdl.raw.mesh.elem_buf_gl_id);
+                    glDeleteBuffers(1, &hdl.raw.mesh.vert_buf_gl_id);
+                    glDeleteVertexArrays(1, &hdl.raw.mesh.vert_arr_gl_id);
+                    break;
+
+                case ek_resource_type_shader_prog:
+                    glDeleteProgram(hdl.raw.shader_prog.gl_id);
+                    break;
+
+                case ek_resource_type_texture:
+                    glDeleteTextures(1, &hdl.raw.tex.gl_id);
+                    break;
+
+                case ek_resource_type_surface:
+                    glDeleteTextures(1, &hdl.raw.surf.tex_gl_id);
+                    glDeleteFramebuffers(1, &hdl.raw.surf.fb_gl_id);
+                    break;
+            }
         }
     }
 
@@ -272,7 +274,7 @@ namespace zf::gfx {
         return ListAppend(res_arena.hdls, MakeSurfaceHandle(fb_gl_id, tex_gl_id, size));
     }
 
-    t_b8 ResizeSurface(s_resource_handle& hdl, const s_v2<t_size> size) {
+    t_b8 ResizeSurface(s_resource_handle hdl, const s_v2<t_size> size) {
         ZF_ASSERT(hdl.type == ek_resource_type_surface);
         ZF_ASSERT(hdl.raw.surf.size != size && "Unnecessarily resizing a surface - new surface size is the same.");
 
@@ -341,4 +343,5 @@ namespace zf::gfx {
 
         return MakeFontAtlasTextureHandles(atlas_rgbas, mem_arena, res_arena, o_asset.atlas_tex_hdls);
     }
+#endif
 }

@@ -43,6 +43,7 @@ namespace zf {
 
             ZF_DEFER({ ReleaseWindow(); });
 
+#if 0
             // Initialise the GFX resource arena.
             gfx::s_resource_arena gfx_res_arena;
 
@@ -60,6 +61,7 @@ namespace zf {
                 ZF_REPORT_ERROR();
                 return false;
             }
+#endif
 
             // Initialise audio system.
             if (!audio::InitSys()) {
@@ -87,7 +89,9 @@ namespace zf {
                     .dev_mem = dev_mem,
                     .mem_arena = &mem_arena,
                     .temp_mem_arena = &temp_mem_arena,
+#if 0
                     .gfx_res_arena = &gfx_res_arena
+#endif
                 };
 
                 if (!info.init_func(context)) {
@@ -150,6 +154,7 @@ namespace zf {
                         frame_dur_accum -= targ_tick_interval;
                     } while (frame_dur_accum >= targ_tick_interval);
 
+#if 0
                     // Perform a single render.
                     s_rendering_state* const rendering_state = PrepareRenderingPhase(temp_mem_arena);
 
@@ -181,6 +186,7 @@ namespace zf {
                         ZF_REPORT_ERROR();
                         return false;
                     }
+#endif
 
                     SwapBuffers();
                 }

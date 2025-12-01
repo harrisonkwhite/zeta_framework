@@ -11,7 +11,9 @@ namespace zf {
         s_mem_arena* mem_arena;
         s_mem_arena* temp_mem_arena;
 
+#if 0
         gfx::s_resource_arena* gfx_res_arena;
+#endif
     };
 
     enum e_game_tick_result {
@@ -33,7 +35,9 @@ namespace zf {
         s_mem_arena* mem_arena;
         s_mem_arena* temp_mem_arena;
 
+#if 0
         const s_rendering_context* rendering_context;
+#endif
     };
 
     struct s_game_info {
