@@ -38,6 +38,10 @@ namespace zf {
         void* buf;
         t_size size;
         t_size offs;
+
+        s_mem_arena() = default;
+        s_mem_arena(const s_mem_arena&) = delete;
+        s_mem_arena& operator=(const s_mem_arena&) = delete;
     };
 
     [[nodiscard]] t_b8 AllocMemArena(const t_size size, s_mem_arena& o_ma);
@@ -59,10 +63,10 @@ namespace zf {
     }
 
     [[nodiscard]] inline t_b8 MakeSubMemArena(s_mem_arena& parent_ma, const t_size size, s_mem_arena& o_ma) {
-        o_ma = {
-            .buf = PushToMemArena(parent_ma, size, 1),
-            .size = size
-        };
+        ZeroOut(o_ma);
+
+        o_ma.buf = PushToMemArena(parent_ma, size, 1);
+        o_ma.size = size;
 
         return o_ma.buf != nullptr;
     }

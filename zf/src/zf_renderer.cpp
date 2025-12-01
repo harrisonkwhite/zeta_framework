@@ -210,13 +210,21 @@ void main() {
 }
 )";
 
-#ifndef ZF_TEXTURE_LIMIT
-    #define ZF_TEXTURE_LIMIT 1024
-#endif
+    struct s_resource {
+        e_resource_type type;
 
-#ifndef ZF_FONT_LIMIT
-    #define ZF_FONT_LIMIT 128
-#endif
+        union {
+            struct {
+                t_gl_id gl_id;
+                s_v2<t_s32> size;
+            } tex;
+
+            struct {
+                s_font_arrangement arrangement;
+                s_array<t_gl_id> atlas_gl_ids;
+            } font;
+        } type_data;
+    };
 
     enum e_phase {
         ek_phase_uninitted,
@@ -232,26 +240,11 @@ void main() {
         t_gl_id batch_shader_prog_gl_id;
 
         struct {
-            s_static_array<t_gl_id, ZF_TEXTURE_LIMIT> gl_ids;
-            s_static_array<s_v2<t_s32>, ZF_TEXTURE_LIMIT> sizes;
-            s_static_bit_vec<ZF_TEXTURE_LIMIT> activity;
-        } textures;
-
-        struct {
-            s_static_array<s_mem_arena, ZF_FONT_LIMIT> mem_arenas;
-            s_static_array<s_font_arrangement, ZF_FONT_LIMIT> arrangements;
-            s_static_array<s_array<t_gl_id>, ZF_FONT_LIMIT> atlas_gl_id_arrs;
-            s_static_bit_vec<ZF_FONT_LIMIT> activity;
-        } fonts;
-
-        s_resource_hdl px_tex_hdl;
-
-        struct {
             s_static_array<t_batch_slot, g_batch_slot_cnt> batch_slots;
             t_size batch_slots_used_cnt;
 
             s_matrix_4x4 view_mat; // The view matrix to be used when flushing.
-            s_resource_hdl tex_hdl; // The texture to be used when flushing.
+            t_gl_id tex_gl_id; // The texture to be used when flushing.
         } rendering;
     } g_state;
 
@@ -317,18 +310,6 @@ void main() {
             }
         });
 
-        // Create the pixel texture (for rectangles, lines, etc.)
-        {
-            const s_static_array<t_u8, 4> rgba = {{255, 255, 255, 255}};
-            g_state.px_tex_hdl = CreateTexture({{1, 1}, rgba});
-
-            if (!IsResourceValid(g_state.px_tex_hdl)) {
-                ZF_REPORT_ERROR();
-                clean_up = true;
-                return false;
-            }
-        }
-
         g_state.phase = ek_phase_initted;
 
         return true;
@@ -337,12 +318,34 @@ void main() {
     void Shutdown() {
         ZF_ASSERT(g_state.phase == ek_phase_initted);
 
-        ZF_FOR_EACH_SET_BIT(g_state.textures.activity, i) {
-            glDeleteTextures(1, &g_state.textures.gl_ids[i]);
-        }
-
         ReleaseGLMesh(g_state.batch_mesh_gl_ids);
         glDeleteProgram(g_state.batch_shader_prog_gl_id);
+    }
+
+    t_b8 MakeResourceArena(const t_size res_limit, s_mem_arena& mem_arena, s_resource_arena& o_res_arena) {
+        ZeroOut(o_res_arena);
+        o_res_arena.mem_arena = &mem_arena;
+        return MakeList(mem_arena, res_limit, o_res_arena.resources);
+    }
+
+    void ReleaseResources(const s_resource_arena& res_arena) {
+        for (t_size i = 0; i < res_arena.resources.len; i++) {
+            const auto& res = res_arena.resources[i];
+
+            switch (res.type) {
+                case ek_resource_type_texture:
+                    glDeleteTextures(1, &res.type_data.tex.gl_id);
+                    break;
+
+                case ek_resource_type_font:
+                    glDeleteTextures(static_cast<GLsizei>(res.type_data.font.atlas_gl_ids.len), res.type_data.font.atlas_gl_ids.buf_raw);
+                    break;
+
+                default:
+                    ZF_ASSERT(false);
+                    break;
+            }
+        }
     }
 
     static inline s_v2<t_s32> GLTextureSizeLimit() {
@@ -351,7 +354,7 @@ void main() {
         return { size, size };
     }
 
-    static t_gl_id CreateGLTexture(const s_rgba_texture_data_rdonly& tex_data) {
+    static t_gl_id MakeGLTexture(const s_rgba_texture_data_rdonly& tex_data) {
         const s_v2<t_s32> tex_size_limit = GLTextureSizeLimit();
 
         if (tex_data.size_in_pxs.x > tex_size_limit.x || tex_data.size_in_pxs.y > tex_size_limit.y) {
@@ -373,80 +376,35 @@ void main() {
         return gl_id;
     }
 
-    s_resource_hdl CreateTexture(const s_rgba_texture_data_rdonly& tex_data) {
+    t_b8 LoadTexture(const s_rgba_texture_data_rdonly& tex_data, s_resource_arena& res_arena, s_resource_id& o_id) {
         ZF_ASSERT(g_state.phase == ek_phase_initting || g_state.phase == ek_phase_initted);
 
-        const t_size index = IndexOfFirstUnsetBit(g_state.textures.activity);
-
-        if (index == -1) {
-            LogError("Out of room - no available slots for new texture!");
-            return {};
-        }
-
-        SetBit(g_state.textures.activity, index);
-
-        const t_gl_id gl_id = CreateGLTexture(tex_data);
-
-        g_state.textures.gl_ids[index] = gl_id;
-        g_state.textures.sizes[index] = tex_data.size_in_pxs;
-
-        return {ek_resource_type_texture, index};
-    }
-
-    s_v2<t_s32> TextureSize(const s_resource_hdl hdl) {
-        return g_state.textures.sizes[hdl.index];
-    }
-
-    [[nodiscard]] static t_b8 MakeFontAtlasGLTextures(const s_array_rdonly<t_font_atlas_rgba> atlas_rgbas, s_array<t_gl_id>& o_gl_ids) {
-        o_gl_ids = {
-            .buf_raw = static_cast<t_gl_id*>(malloc(static_cast<size_t>(ZF_SIZE_OF(t_gl_id) * atlas_rgbas.len))),
-            .len = atlas_rgbas.len
-        };
-
-        if (!o_gl_ids.buf_raw) {
+        if (IsListFull(res_arena.resources)) {
             return false;
         }
 
-        for (t_size i = 0; i < atlas_rgbas.len; i++) {
-            o_gl_ids[i] = CreateGLTexture({g_font_atlas_size, atlas_rgbas[i]});
+        const t_gl_id tex_gl_id = MakeGLTexture(tex_data);
 
-            if (!o_gl_ids[i]) {
-                return false;
-            }
+        if (!tex_gl_id) {
+            return false;
         }
+
+        ListAppend(res_arena.resources, {
+            .type = ek_resource_type_texture,
+            .type_data = {.tex = {.gl_id = tex_gl_id, .size = tex_data.size_in_pxs}}
+        });
+
+        o_id = {res_arena.resources.len - 1, &res_arena};
 
         return true;
     }
 
-    s_resource_hdl CreateFontFromRaw(const s_str_rdonly file_path, const t_s32 height, const t_unicode_code_pt_bit_vec& code_pts, s_mem_arena& mem_arena, s_mem_arena& temp_mem_arena, e_font_load_from_raw_result* const o_load_from_raw_res, t_unicode_code_pt_bit_vec* const o_unsupported_code_pts) {
-        const t_size index = IndexOfFirstUnsetBit(g_state.fonts.activity);
+    static inline t_gl_id TextureGLID(const s_resource_id id) {
+        return id.arena->resources[id.index].type_data.tex.gl_id;
+    }
 
-        if (index == -1) {
-            LogError("Out of room - no available slots for new font!");
-            return {};
-        }
-
-        SetBit(g_state.fonts.activity, index);
-
-#if 0
-        s_array<t_font_atlas_rgba> atlas_rgbas;
-
-        const auto res = LoadFontFromRaw(file_path, height, code_pts, mem_arena, temp_mem_arena, temp_mem_arena, g_state.fonts.arrangements[index], atlas_rgbas, o_unsupported_code_pts);
-
-        if (o_load_from_raw_res) {
-            *o_load_from_raw_res = res;
-        }
-
-        if (res != ek_font_load_from_raw_result_success) {
-            return {};
-        }
-
-        if (!MakeFontAtlasGLTextures(atlas_rgbas, g_state.fonts.atlas_gl_id_arrs[index])) {
-            return {};
-        }
-#endif
-
-        return {ek_resource_type_font, index};
+    s_v2<t_s32> TextureSize(const s_resource_id id) {
+        return id.arena->resources[id.index].type_data.tex.size;
     }
 
     // ============================================================
@@ -488,7 +446,7 @@ void main() {
         glUniformMatrix4fv(proj_uniform_loc, 1, false, reinterpret_cast<const t_f32*>(&proj_mat));
 
         glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, g_state.textures.gl_ids[g_state.rendering.tex_hdl.index]);
+        glBindTexture(GL_TEXTURE_2D, g_state.rendering.tex_gl_id);
 
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, g_state.batch_mesh_gl_ids.elem_buf_gl_id);
         glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(g_batch_slot_elem_cnt * g_state.rendering.batch_slots_used_cnt), GL_UNSIGNED_SHORT, nullptr);
@@ -530,16 +488,16 @@ void main() {
         g_state.rendering.view_mat = mat;
     }
 
-    static void Draw(const s_resource_hdl tex_hdl, const s_rect<t_f32> tex_coords, s_v2<t_f32> pos, s_v2<t_f32> size, s_v2<t_f32> origin, const t_f32 rot, const s_color_rgba32f blend) {
+    static void Draw(const t_gl_id tex_gl_id, const s_rect<t_f32> tex_coords, s_v2<t_f32> pos, s_v2<t_f32> size, s_v2<t_f32> origin, const t_f32 rot, const s_color_rgba32f blend) {
         ZF_ASSERT(g_state.phase == ek_phase_rendering);
 
         if (g_state.rendering.batch_slots_used_cnt == 0) {
             // This is the first draw to the batch, so set the texture associated with the batch to the one we're trying to render.
-            g_state.rendering.tex_hdl = tex_hdl;
-        } else if (g_state.rendering.batch_slots_used_cnt == g_batch_slot_cnt || !AreResourcesEqual(tex_hdl, g_state.rendering.tex_hdl)) {
+            g_state.rendering.tex_gl_id = tex_gl_id;
+        } else if (g_state.rendering.batch_slots_used_cnt == g_batch_slot_cnt || tex_gl_id != g_state.rendering.tex_gl_id) {
             // Flush the batch and then try this same render operation again but on a fresh batch.
             Flush();
-            Draw(tex_hdl, tex_coords, pos, size, origin, rot, blend);
+            Draw(tex_gl_id, tex_coords, pos, size, origin, rot, blend);
             return;
         }
 
@@ -589,12 +547,12 @@ void main() {
         };
     }
 
-    void DrawTexture(const s_resource_hdl hdl, const s_v2<t_f32> pos, const s_rect<t_s32> src_rect, const s_v2<t_f32> origin, const s_v2<t_f32> scale, const t_f32 rot, const s_color_rgba32f blend) {
+    void DrawTexture(const s_resource_id tex_id, const s_v2<t_f32> pos, const s_rect<t_s32> src_rect, const s_v2<t_f32> origin, const s_v2<t_f32> scale, const t_f32 rot, const s_color_rgba32f blend) {
         ZF_ASSERT(g_state.phase == ek_phase_rendering);
         ZF_ASSERT(origin.x >= 0.0f && origin.x <= 1.0f && origin.y >= 0.0f && origin.y <= 1.0f); // @todo: Generic function for this check?
         // @todo: Add more assertions here!
 
-        const auto tex_size = TextureSize(hdl);
+        const auto tex_size = TextureSize(tex_id);
 
         s_rect<t_s32> src_rect_to_use;
 
@@ -612,20 +570,6 @@ void main() {
             static_cast<t_f32>(src_rect_to_use.width) * scale.x, static_cast<t_f32>(src_rect_to_use.height) * scale.y
         };
 
-        Draw(hdl, tex_coords, pos, size, origin, rot, blend);
-    }
-
-    void DrawRect(const s_rect<t_f32> rect, const s_color_rgba32f color) {
-        ZF_ASSERT(g_state.phase == ek_phase_rendering);
-        DrawTexture(g_state.px_tex_hdl, RectPos(rect), {}, {}, RectSize(rect), 0.0f, color);
-    }
-
-    void DrawLine(const s_v2<t_f32> a, const s_v2<t_f32> b, const s_color_rgba32f blend, const t_f32 width) {
-        ZF_ASSERT(g_state.phase == ek_phase_rendering);
-        ZF_ASSERT(width > 0.0f);
-
-        const t_f32 len = CalcDist(a, b);
-        const t_f32 dir = CalcDirInRads(a, b);
-        DrawTexture(g_state.px_tex_hdl, a, {}, origins::g_centerleft, {len, width}, dir, blend);
+        Draw(TextureGLID(tex_id), tex_coords, pos, size, origin, rot, blend);
     }
 }
