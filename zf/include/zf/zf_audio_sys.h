@@ -3,12 +3,24 @@
 #include <zc.h>
 
 namespace zf::audio_sys {
-    using t_sound_type_id = t_size; // @todo: Consider a versioning system for error prevention?
-
     [[nodiscard]] t_b8 Init();
     void Shutdown();
-    [[nodiscard]] t_b8 RegisterSoundType(const s_sound_meta& snd_meta, const s_array_rdonly<t_f32> snd_pcm, t_sound_type_id& o_id);
-    void UnregisterSoundType(const t_sound_type_id id);
+
+    struct s_sound_type_arena {
+        t_size cnt = 0;
+        s_array<s_sound_meta> metas;
+        s_array<s_array<t_f32>> pcms;
+        s_mem_arena* mem_arena; // We don't know how large the PCM will need to be for each sound type, so we try pushing it each time here.
+    };
+
+    inline t_size SoundTypeArenaCap(const s_sound_type_arena& arena) {
+        ZF_ASSERT(arena.metas.len == arena.pcms.len);
+        return arena.metas.len;
+    }
+
+    [[nodiscard]] t_b8 MakeSoundTypeArena(const t_size snd_type_limit, s_mem_arena& mem_arena, s_sound_type_arena& o_arena);
+    [[nodiscard]] t_b8 RegisterSoundType(s_sound_type_arena& arena, const s_sound_meta& meta, const s_array_rdonly<t_f32> pcm, t_size& o_index);
+
     void ProcFinishedSounds();
-    [[nodiscard]] t_b8 PlaySound(const t_sound_type_id type_id, const t_f32 vol = 1.0f, const t_f32 pan = 0.0f, const t_f32 pitch = 1.0f, const t_b8 loop = false);
+    [[nodiscard]] t_b8 PlaySound(const s_sound_type_arena& type_arena, const t_size type_index, const t_f32 vol = 1.0f, const t_f32 pan = 0.0f, const t_f32 pitch = 1.0f, const t_b8 loop = false);
 }

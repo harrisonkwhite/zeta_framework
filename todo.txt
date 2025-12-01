@@ -1,3 +1,4 @@
+- Helpers for non-arena allocation.
 - Create a really tight model for SURFACE shader program validation. Check that all necessary uniforms and so on are there.
 - MAYBE update the font system such that the input unicode code point bit vector gets mutated BUT the asset packer gives warnings if the bit vector is mutated. Reasoning being that you might have an "extra chars" file being all game dialogue, and you have all fonts map to it - but you are probably fine with not all glyphs being supported by every single font.
 - MAYBE write a code correctness checker tool. This can make sure prefixes are correct, structs are all trivially constructible, there are no parameter name discrepencies between declaration and definition, etc.
@@ -6,7 +7,6 @@
 - RNG system overhaul.
 - Music layering and management.
 - Surfaces.
-- Window and graphics code should be the same module. Input should be a distinct module from these two.
 - A* pathfinding utilities.
 - Gamepad support.
 - Run proper testing on everything, these tests should be PUBLIC.

@@ -25,6 +25,8 @@ namespace zf {
 #define ZF_SIZE_OF(x) static_cast<zf::t_size>(sizeof(x))
 #define ZF_SIZE_IN_BITS(x) (8 * ZF_SIZE_OF(x))
 
+#define ZF_ALIGN_OF(x) static_cast<zf::t_size>(alignof(x))
+
     template<typename tp_func>
     struct p_s_defer {
         tp_func func;

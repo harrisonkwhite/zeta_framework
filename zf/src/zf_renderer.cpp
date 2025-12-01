@@ -210,7 +210,13 @@ void main() {
 }
 )";
 
-    constexpr t_size g_texture_limit = 1024;
+#ifndef ZF_TEXTURE_LIMIT
+    #define ZF_TEXTURE_LIMIT 1024
+#endif
+
+#ifndef ZF_FONT_LIMIT
+    #define ZF_FONT_LIMIT 128
+#endif
 
     enum e_phase {
         ek_phase_uninitted,
@@ -226,10 +232,17 @@ void main() {
         t_gl_id batch_shader_prog_gl_id;
 
         struct {
-            s_static_array<t_gl_id, g_texture_limit> gl_ids;
-            s_static_array<s_v2<t_s32>, g_texture_limit> sizes;
-            s_static_bit_vec<g_texture_limit> activity;
+            s_static_array<t_gl_id, ZF_TEXTURE_LIMIT> gl_ids;
+            s_static_array<s_v2<t_s32>, ZF_TEXTURE_LIMIT> sizes;
+            s_static_bit_vec<ZF_TEXTURE_LIMIT> activity;
         } textures;
+
+        struct {
+            s_static_array<s_mem_arena, ZF_FONT_LIMIT> mem_arenas;
+            s_static_array<s_font_arrangement, ZF_FONT_LIMIT> arrangements;
+            s_static_array<s_array<t_gl_id>, ZF_FONT_LIMIT> atlas_gl_id_arrs;
+            s_static_bit_vec<ZF_FONT_LIMIT> activity;
+        } fonts;
 
         s_resource_hdl px_tex_hdl;
 
@@ -338,23 +351,13 @@ void main() {
         return { size, size };
     }
 
-    s_resource_hdl CreateTexture(const s_rgba_texture_data_rdonly& tex_data) {
-        ZF_ASSERT(g_state.phase == ek_phase_initting || g_state.phase == ek_phase_initted);
-
-        const t_size index = IndexOfFirstUnsetBit(g_state.textures.activity);
-
-        if (index == -1) {
-            LogError("Out of room - no available slots for new texture!");
-            return {};
-        }
-
-        SetBit(g_state.textures.activity, index);
-
+    static t_gl_id CreateGLTexture(const s_rgba_texture_data_rdonly& tex_data) {
         const s_v2<t_s32> tex_size_limit = GLTextureSizeLimit();
 
         if (tex_data.size_in_pxs.x > tex_size_limit.x || tex_data.size_in_pxs.y > tex_size_limit.y) {
             LogError("Texture size % exceeds limits %!", tex_data.size_in_pxs, tex_size_limit);
-            return {};
+            ZF_REPORT_ERROR();
+            return 0;
         }
 
         t_gl_id gl_id;
@@ -367,6 +370,23 @@ void main() {
 
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, tex_data.size_in_pxs.x, tex_data.size_in_pxs.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, tex_data.px_data.buf_raw);
 
+        return gl_id;
+    }
+
+    s_resource_hdl CreateTexture(const s_rgba_texture_data_rdonly& tex_data) {
+        ZF_ASSERT(g_state.phase == ek_phase_initting || g_state.phase == ek_phase_initted);
+
+        const t_size index = IndexOfFirstUnsetBit(g_state.textures.activity);
+
+        if (index == -1) {
+            LogError("Out of room - no available slots for new texture!");
+            return {};
+        }
+
+        SetBit(g_state.textures.activity, index);
+
+        const t_gl_id gl_id = CreateGLTexture(tex_data);
+
         g_state.textures.gl_ids[index] = gl_id;
         g_state.textures.sizes[index] = tex_data.size_in_pxs;
 
@@ -375,6 +395,58 @@ void main() {
 
     s_v2<t_s32> TextureSize(const s_resource_hdl hdl) {
         return g_state.textures.sizes[hdl.index];
+    }
+
+    [[nodiscard]] static t_b8 MakeFontAtlasGLTextures(const s_array_rdonly<t_font_atlas_rgba> atlas_rgbas, s_array<t_gl_id>& o_gl_ids) {
+        o_gl_ids = {
+            .buf_raw = static_cast<t_gl_id*>(malloc(static_cast<size_t>(ZF_SIZE_OF(t_gl_id) * atlas_rgbas.len))),
+            .len = atlas_rgbas.len
+        };
+
+        if (!o_gl_ids.buf_raw) {
+            return false;
+        }
+
+        for (t_size i = 0; i < atlas_rgbas.len; i++) {
+            o_gl_ids[i] = CreateGLTexture({g_font_atlas_size, atlas_rgbas[i]});
+
+            if (!o_gl_ids[i]) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    s_resource_hdl CreateFontFromRaw(const s_str_rdonly file_path, const t_s32 height, const t_unicode_code_pt_bit_vec& code_pts, s_mem_arena& mem_arena, s_mem_arena& temp_mem_arena, e_font_load_from_raw_result* const o_load_from_raw_res, t_unicode_code_pt_bit_vec* const o_unsupported_code_pts) {
+        const t_size index = IndexOfFirstUnsetBit(g_state.fonts.activity);
+
+        if (index == -1) {
+            LogError("Out of room - no available slots for new font!");
+            return {};
+        }
+
+        SetBit(g_state.fonts.activity, index);
+
+#if 0
+        s_array<t_font_atlas_rgba> atlas_rgbas;
+
+        const auto res = LoadFontFromRaw(file_path, height, code_pts, mem_arena, temp_mem_arena, temp_mem_arena, g_state.fonts.arrangements[index], atlas_rgbas, o_unsupported_code_pts);
+
+        if (o_load_from_raw_res) {
+            *o_load_from_raw_res = res;
+        }
+
+        if (res != ek_font_load_from_raw_result_success) {
+            return {};
+        }
+
+        if (!MakeFontAtlasGLTextures(atlas_rgbas, g_state.fonts.atlas_gl_id_arrs[index])) {
+            return {};
+        }
+#endif
+
+        return {ek_resource_type_font, index};
     }
 
     // ============================================================
