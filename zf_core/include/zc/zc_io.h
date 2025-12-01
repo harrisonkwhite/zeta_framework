@@ -472,6 +472,14 @@ namespace zf {
         return {val, omit_prefix};
     }
 
+    inline s_hex_fmt<t_uintptr> FormatHex(const void* const ptr, const t_b8 omit_prefix = false) {
+        return {reinterpret_cast<t_uintptr>(ptr), omit_prefix};
+    }
+
+    inline s_hex_fmt<t_uintptr> FormatDefault(const void* const ptr) {
+        return FormatHex(ptr);
+    }
+
     template<c_unsigned_integral tp_type>
     t_b8 PrintType(s_stream& stream, const s_hex_fmt<tp_type>& fmt) {
         s_static_array<t_u8, 18> str_bytes = {}; // Maximum possible number of ASCII characters needed for hex representation of 64-bit integer.

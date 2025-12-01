@@ -79,12 +79,14 @@ namespace zf {
     using t_b8 = bool;
     static_assert(sizeof(t_b8) == 1);
 
+    using t_uintptr = uintptr_t; // Generally 64 bits EXCEPT for WASM.
+
     // Why signed for this?
     // 1. Mixing signed and unsigned can lead to strange overflow bugs that cannot always be caught by warnings. Better to be consistent and have predictability.
     // 2. The signed 64-bit range is more than sufficient for realistic use cases.
     // 3. If you want a value to be 0 or greater, ASSERT that it is!
     // 4. -1 is far more useful as a sentinel than the positive upper bound is since it is more commonly an outlier.
-    using t_size = t_s64;
+    using t_size = intptr_t; // Generally 64 bits EXCEPT for WASM.
 
     template<typename tp_type_a, typename tp_type_b> struct s_is_same { static constexpr t_b8 g_val = false; };
     template<typename tp_type> struct s_is_same<tp_type, tp_type> { static constexpr t_b8 g_val = true; };

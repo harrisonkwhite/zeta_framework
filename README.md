@@ -35,4 +35,5 @@ cmake ..
 ## Future Plans
 
 - Networking features
+- WASM support
 - Better cross-platform support via supporting other graphics APIs like Metal

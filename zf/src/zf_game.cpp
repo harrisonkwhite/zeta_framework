@@ -18,9 +18,6 @@ namespace zf {
 
             InitRNG();
 
-            s_static_array<t_size, 5> arr = {{2, 5, 11, 2, 1}};
-            Log("arr: %", FormatArray(arr, true));
-
             // Set up memory arenas.
             s_mem_arena mem_arena;
 
