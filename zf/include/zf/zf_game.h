@@ -1,7 +1,7 @@
 #pragma once
 
 #include <zc.h>
-#include <zf/zf_rendering.h>
+#include <zf/zf_renderer.h>
 #include <zf/zf_window.h>
 
 namespace zf {

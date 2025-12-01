@@ -2,8 +2,7 @@ add_library(zf STATIC
     src/zf_game.cpp
     src/zf_window.cpp
     src/zf_rng.cpp
-    src/zf_gfx.cpp
-    src/zf_rendering.cpp
+    src/zf_renderer.cpp
     src/zf_audio.cpp
     src/zf_debug.cpp
 	../external/glad/src/glad.c
@@ -12,8 +11,7 @@ add_library(zf STATIC
     include/zf/zf_game.h
     include/zf/zf_window.h
     include/zf/zf_rng.h
-    include/zf/zf_gfx.h
-    include/zf/zf_rendering.h
+    include/zf/zf_renderer.h
     include/zf/zf_audio.h
     include/zf/zf_debug.h
 )

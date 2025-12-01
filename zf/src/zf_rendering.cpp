@@ -3,6 +3,8 @@
 #include <zf/zf_window.h>
 
 namespace zf {
+
+
 #if 0
     struct s_rendering_state {
         s_static_array<t_batch_slot, g_batch_slot_cnt> batch_slots;

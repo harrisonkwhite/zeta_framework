@@ -1,7 +1,5 @@
 #pragma once
 
-#include <zf/zf_gfx.h>
-
 namespace zf {
 #if 0
     constexpr s_color_rgba32f g_default_bg_color = s_color_rgba8(147, 207, 249, 255);
