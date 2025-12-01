@@ -1,33 +1,24 @@
 #include <zf/zf_window.h>
 
 #include <GLFW/glfw3.h>
-
-#if defined(ZF_PLATFORM_WINDOWS)
-    #define GLFW_EXPOSE_NATIVE_WIN32
-#elif defined(ZF_PLATFORM_MACOS)
-    #define GLFW_EXPOSE_NATIVE_COCOA
-#elif defined(ZF_PLATFORM_LINUX)
-    #define GLFW_EXPOSE_NATIVE_X11
-#endif
-
-#include <GLFW/glfw3native.h>
 #include <glad/glad.h>
 
-namespace zf {
-    struct s_input_events {
-        s_static_bit_vec<eks_key_code_cnt> keys_pressed;
-        s_static_bit_vec<eks_key_code_cnt> keys_released;
+namespace zf::window {
+    static struct {
+        GLFWwindow* glfw_window;
 
-        s_static_bit_vec<eks_mouse_button_code_cnt> mouse_buttons_pressed;
-        s_static_bit_vec<eks_mouse_button_code_cnt> mouse_buttons_released;
+        struct {
+            s_static_bit_vec<eks_key_code_cnt> keys_pressed;
+            s_static_bit_vec<eks_key_code_cnt> keys_released;
 
-        e_mouse_scroll_state mouse_scroll_state;
+            s_static_bit_vec<eks_mouse_button_code_cnt> mouse_buttons_pressed;
+            s_static_bit_vec<eks_mouse_button_code_cnt> mouse_buttons_released;
 
-        s_static_array<char, 32> unicode_buf;
-    };
+            e_mouse_scroll_state mouse_scroll_state;
 
-    static GLFWwindow* g_glfw_window;
-    static s_input_events g_input_events; // Events such as key presses and mouse wheel scrolls are recordeded here in callbacks.
+            s_static_array<char, 32> unicode_buf;
+        } input_events; // Events such as key presses and mouse wheel scrolls are recordeded here in callbacks.
+    } g_state;
 
     constexpr e_key_code ConvertGLFWKeyCode(const t_s32 glfw_key) {
         switch (glfw_key) {
@@ -189,8 +180,8 @@ namespace zf {
         }
     }
 
-    t_b8 InitWindow(const s_v2<t_s32> size, const s_str_rdonly title, const e_window_flags flags, s_mem_arena& temp_mem_arena) {
-        ZF_ASSERT(!g_glfw_window);
+    t_b8 Init(const s_v2<t_s32> size, const s_str_rdonly title, const e_init_flags flags, s_mem_arena& temp_mem_arena) {
+        ZF_ASSERT(!g_state.glfw_window);
         ZF_ASSERT(size.x > 0 && size.y > 0);
 
         if (!glfwInit()) {
@@ -211,28 +202,28 @@ namespace zf {
             return false;
         }
 
-        g_glfw_window = glfwCreateWindow(size.x, size.y, StrRaw(title_terminated), nullptr, nullptr);
+        g_state.glfw_window = glfwCreateWindow(size.x, size.y, StrRaw(title_terminated), nullptr, nullptr);
 
-        if (!g_glfw_window) {
+        if (!g_state.glfw_window) {
             ZF_REPORT_ERROR();
             glfwTerminate();
             return false;
         }
 
-        glfwMakeContextCurrent(g_glfw_window);
+        glfwMakeContextCurrent(g_state.glfw_window);
 
-        glfwSetWindowAttrib(g_glfw_window, GLFW_RESIZABLE, (flags & ek_window_flags_resizable) ? true : false);
+        glfwSetWindowAttrib(g_state.glfw_window, GLFW_RESIZABLE, (flags & ek_init_flags_resizable) ? true : false);
 
-        glfwSetInputMode(g_glfw_window, GLFW_CURSOR, (flags & ek_window_flags_hide_cursor) ? GLFW_CURSOR_HIDDEN : GLFW_CURSOR_NORMAL);
+        glfwSetInputMode(g_state.glfw_window, GLFW_CURSOR, (flags & ek_init_flags_hide_cursor) ? GLFW_CURSOR_HIDDEN : GLFW_CURSOR_NORMAL);
 
         // Set up GLFW callbacks.
-        glfwSetFramebufferSizeCallback(g_glfw_window,
+        glfwSetFramebufferSizeCallback(g_state.glfw_window,
             [](GLFWwindow* const window, const t_s32 width, const t_s32 height) {
                 glViewport(0, 0, width, height);
             }
         );
 
-        glfwSetKeyCallback(g_glfw_window,
+        glfwSetKeyCallback(g_state.glfw_window,
             [](GLFWwindow* const window, const t_s32 key, const t_s32, const t_s32 action, const t_s32 mods) {
                 const e_key_code key_code = ConvertGLFWKeyCode(key);
 
@@ -241,14 +232,14 @@ namespace zf {
                 }
 
                 if (action == GLFW_PRESS) {
-                    SetBit(g_input_events.keys_pressed, key_code);
+                    SetBit(g_state.input_events.keys_pressed, key_code);
                 } else if (action == GLFW_RELEASE) {
-                    SetBit(g_input_events.keys_released, key_code);
+                    SetBit(g_state.input_events.keys_released, key_code);
                 }
             }
         );
 
-        glfwSetMouseButtonCallback(g_glfw_window,
+        glfwSetMouseButtonCallback(g_state.glfw_window,
             [](GLFWwindow* const window, const t_s32 button, const t_s32 action, const t_s32 mods) {
                 const e_mouse_button_code mb_code = ConvertGLFWMouseButtonCode(button);
 
@@ -257,30 +248,30 @@ namespace zf {
                 }
 
                 if (action == GLFW_PRESS) {
-                    SetBit(g_input_events.mouse_buttons_pressed, mb_code);
+                    SetBit(g_state.input_events.mouse_buttons_pressed, mb_code);
                 } else if (action == GLFW_RELEASE) {
-                    SetBit(g_input_events.mouse_buttons_released, mb_code);
+                    SetBit(g_state.input_events.mouse_buttons_released, mb_code);
                 }
             }
         );
 
-        glfwSetScrollCallback(g_glfw_window,
+        glfwSetScrollCallback(g_state.glfw_window,
             [](GLFWwindow* const window, const t_f64, const t_f64 offs_y) {
                 if (offs_y > 0.0) {
-                    g_input_events.mouse_scroll_state = ek_mouse_scroll_state_up;
+                    g_state.input_events.mouse_scroll_state = ek_mouse_scroll_state_up;
                 } else if (offs_y < 0.0) {
-                    g_input_events.mouse_scroll_state = ek_mouse_scroll_state_down;
+                    g_state.input_events.mouse_scroll_state = ek_mouse_scroll_state_down;
                 } else {
-                    g_input_events.mouse_scroll_state = ek_mouse_scroll_state_none;
+                    g_state.input_events.mouse_scroll_state = ek_mouse_scroll_state_none;
                 }
             }
         );
 
-        glfwSetCharCallback(g_glfw_window,
+        glfwSetCharCallback(g_state.glfw_window,
             [](GLFWwindow* window, const t_u32 code_pt) {
-                for (t_s32 i = 0; i < g_input_events.unicode_buf.g_len; i++) {
-                    if (!g_input_events.unicode_buf[i]) {
-                        g_input_events.unicode_buf[i] = static_cast<char>(code_pt);
+                for (t_s32 i = 0; i < g_state.input_events.unicode_buf.g_len; i++) {
+                    if (!g_state.input_events.unicode_buf[i]) {
+                        g_state.input_events.unicode_buf[i] = static_cast<char>(code_pt);
                         return;
                     }
                 }
@@ -298,31 +289,11 @@ namespace zf {
         return true;
     }
 
-    void ReleaseWindow() {
-        ZF_ASSERT(g_glfw_window);
+    void Shutdown() {
+        ZF_ASSERT(g_state.glfw_window);
 
-        glfwDestroyWindow(g_glfw_window);
+        glfwDestroyWindow(g_state.glfw_window);
         glfwTerminate();
-    }
-
-    void* GetNativeWindowHandle() {
-#if defined(ZF_PLATFORM_WINDOWS)
-        return glfwGetWin32Window(g_glfw_window);
-#elif defined(ZF_PLATFORM_MACOS)
-        return glfwGetCocoaWindow(sm_glfw_window);
-#elif defined(ZF_PLATFORM_LINUX)
-        return glfwGetX11Window(sm_glfw_window);
-#endif
-    }
-
-    void* GetNativeDisplayHandle() {
-#if defined(ZF_PLATFORM_WINDOWS)
-        return nullptr;
-#elif defined(ZF_PLATFORM_MACOS)
-        return nullptr;
-#elif defined(ZF_PLATFORM_LINUX)
-        return glfwGetX11Display();
-#endif
     }
 
     void PollEvents() {
@@ -330,72 +301,72 @@ namespace zf {
     }
 
     void SwapBuffers() {
-        glfwSwapBuffers(g_glfw_window);
+        glfwSwapBuffers(g_state.glfw_window);
     }
 
-    void ShowWindow() {
-        glfwShowWindow(g_glfw_window);
+    void Show() {
+        glfwShowWindow(g_state.glfw_window);
     }
 
-    t_b8 ShouldWindowClose() {
-        return glfwWindowShouldClose(g_glfw_window);
+    t_b8 ShouldClose() {
+        return glfwWindowShouldClose(g_state.glfw_window);
     }
 
-    void SetWindowShouldClose(const t_b8 close) {
-        glfwSetWindowShouldClose(g_glfw_window, close);
+    void SetShouldClose(const t_b8 close) {
+        glfwSetWindowShouldClose(g_state.glfw_window, close);
     }
 
-    s_v2<t_size> GetWindowSize() {
+    s_v2<t_s32> Size() {
         t_s32 w, h;
-        glfwGetWindowSize(g_glfw_window, &w, &h);
+        glfwGetWindowSize(g_state.glfw_window, &w, &h);
         return {w, h};
     }
 
-    s_v2<t_size> GetFramebufferSize() {
+    s_v2<t_s32> FramebufferSize() {
         t_s32 w, h;
-        glfwGetFramebufferSize(g_glfw_window, &w, &h);
+        glfwGetFramebufferSize(g_state.glfw_window, &w, &h);
         return {w, h};
     }
 
-    t_f64 GetTime() {
+    t_f64 Time() {
         return glfwGetTime();
     }
 
     void ClearInputEvents() {
-        g_input_events = {};
+        g_state.input_events = {};
     }
 
     t_b8 IsKeyDown(const e_key_code kc) {
-        return glfwGetKey(g_glfw_window, ToGLFWKey(kc)) != GLFW_RELEASE;
+        return glfwGetKey(g_state.glfw_window, ToGLFWKey(kc)) != GLFW_RELEASE;
     }
 
     t_b8 IsKeyPressed(const e_key_code kc) {
-        return IsBitSet(g_input_events.keys_pressed, kc);
+        return IsBitSet(g_state.input_events.keys_pressed, kc);
     }
 
     t_b8 IsKeyReleased(const e_key_code kc) {
-        return IsBitSet(g_input_events.keys_released, kc);
+        return IsBitSet(g_state.input_events.keys_released, kc);
     }
 
     t_b8 IsMouseButtonDown(const e_mouse_button_code mbc) {
-        return glfwGetMouseButton(g_glfw_window, ToGLFWMouseButton(mbc)) != GLFW_RELEASE;
+        return glfwGetMouseButton(g_state.glfw_window, ToGLFWMouseButton(mbc)) != GLFW_RELEASE;
     }
 
     t_b8 IsMouseButtonPressed(const e_mouse_button_code mbc) {
-        return IsBitSet(g_input_events.mouse_buttons_pressed, mbc);
+        return IsBitSet(g_state.input_events.mouse_buttons_pressed, mbc);
     }
 
     t_b8 IsMouseButtonReleased(const e_mouse_button_code mbc) {
-        return IsBitSet(g_input_events.mouse_buttons_released, mbc);
+        return IsBitSet(g_state.input_events.mouse_buttons_released, mbc);
     }
 
-    s_v2<t_f64> GetMousePos() {
+    s_v2<t_f64> MousePos() {
         t_f64 mx, my;
-        glfwGetCursorPos(g_glfw_window, &mx, &my);
+        glfwGetCursorPos(g_state.glfw_window, &mx, &my);
         return {mx, my};
     }
 
-    e_mouse_scroll_state GetMouseScrollState() {
-        return g_input_events.mouse_scroll_state;
+    e_mouse_scroll_state MouseScrollState() {
+        return g_state.input_events.mouse_scroll_state;
     }
 }

@@ -38,8 +38,8 @@ namespace zf {
         t_size temp_mem_arena_size;
 
         s_v2<t_s32> window_init_size;
-        s_str_rdonly window_title;
-        e_window_flags window_flags;
+        s_str_rdonly window_init_title;
+        window::e_init_flags window_init_flags;
 
         t_size dev_mem_size;
         t_size dev_mem_alignment;

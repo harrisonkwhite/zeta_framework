@@ -1,9 +1,7 @@
 #include <zf/zf_game.h>
 
 #include <zf/zf_renderer.h>
-#include <zf/zf_rng.h>
 #include <zf/zf_audio_sys.h>
-#include <zf/zf_debug.h>
 
 namespace zf {
     t_b8 RunGame(const s_game_info& info) {
@@ -13,9 +11,10 @@ namespace zf {
             //
             // Initialisation
             //
-            ConfigErrorOutput();
-
-            InitRNG();
+#ifndef ZF_DEBUG
+            // Redirect stderr to crash log file.
+            freopen("error.log", "w", stderr);
+#endif
 
             // Set up memory arenas.
             s_mem_arena mem_arena;
@@ -35,12 +34,12 @@ namespace zf {
             }
 
             // Initialise the window.
-            if (!InitWindow(info.window_init_size, info.window_title, info.window_flags, temp_mem_arena)) {
+            if (!window::Init(info.window_init_size, info.window_init_title, info.window_init_flags, temp_mem_arena)) {
                 ZF_REPORT_ERROR();
                 return false;
             }
 
-            ZF_DEFER({ ReleaseWindow(); });
+            ZF_DEFER({ window::Shutdown(); });
 
             // Initialise the renderer.
             if (!renderer::Init(temp_mem_arena)) {
@@ -91,18 +90,18 @@ namespace zf {
             });
 
             // Now that everything is set up, we can show the window.
-            ShowWindow();
+            window::Show();
 
             //
             // Main Loop
             //
-            t_f64 frame_time_last = GetTime();
+            t_f64 frame_time_last = window::Time();
             t_f64 frame_dur_accum = 0.0;
 
-            while (!ShouldWindowClose()) {
+            while (!window::ShouldClose()) {
                 RewindMemArena(temp_mem_arena, 0);
 
-                const t_f64 frame_time = GetTime();
+                const t_f64 frame_time = window::Time();
                 const t_f64 frame_time_delta = frame_time - frame_time_last;
                 frame_dur_accum += frame_time_delta;
                 frame_time_last = frame_time;
@@ -123,11 +122,11 @@ namespace zf {
 
                         const e_game_tick_result res = info.tick_func(context);
 
-                        ClearInputEvents();
+                        window::ClearInputEvents();
 
                         if (res == ek_game_tick_result_exit) {
                             Log("Exit request detected from developer game tick function...");
-                            SetWindowShouldClose(true);
+                            window::SetShouldClose(true);
                         }
 
                         if (res == ek_game_tick_result_error) {
@@ -157,10 +156,10 @@ namespace zf {
 
                     renderer::EndRenderingPhase();
 
-                    SwapBuffers();
+                    window::SwapBuffers();
                 }
 
-                PollEvents();
+                window::PollEvents();
             }
 
             return true;

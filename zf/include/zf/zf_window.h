@@ -2,11 +2,11 @@
 
 #include <zc.h>
 
-namespace zf {
-    enum e_window_flags : t_u8 {
-        ek_window_flags_none = 0,
-        ek_window_flags_resizable = 1 << 0,
-        ek_window_flags_hide_cursor = 1 << 1
+namespace zf::window {
+    enum e_init_flags : t_u8 {
+        ek_init_flags_none = 0,
+        ek_init_flags_resizable = 1 << 0,
+        ek_init_flags_hide_cursor = 1 << 1
     };
 
     enum e_key_code : t_s32 {
@@ -95,23 +95,20 @@ namespace zf {
         ek_mouse_scroll_state_up
     };
 
-    t_b8 InitWindow(const s_v2<t_s32> size, const s_str_rdonly title, const e_window_flags flags, s_mem_arena& temp_mem_arena);
-    void ReleaseWindow();
-
-    void* GetNativeWindowHandle();
-    void* GetNativeDisplayHandle();
+    [[nodiscard]] t_b8 Init(const s_v2<t_s32> size, const s_str_rdonly title, const e_init_flags flags, s_mem_arena& temp_mem_arena);
+    void Shutdown();
 
     void PollEvents();
     void SwapBuffers();
 
-    void ShowWindow();
-    t_b8 ShouldWindowClose();
-    void SetWindowShouldClose(const t_b8 close);
+    void Show();
+    t_b8 ShouldClose();
+    void SetShouldClose(const t_b8 close);
 
-    s_v2<t_size> GetWindowSize();
-    s_v2<t_size> GetFramebufferSize();
+    s_v2<t_s32> Size();
+    s_v2<t_s32> FramebufferSize();
 
-    t_f64 GetTime();
+    t_f64 Time();
 
     void ClearInputEvents();
 
@@ -123,6 +120,6 @@ namespace zf {
     t_b8 IsMouseButtonPressed(const e_mouse_button_code mbc);
     t_b8 IsMouseButtonReleased(const e_mouse_button_code mbc);
 
-    s_v2<t_f64> GetMousePos();
-    e_mouse_scroll_state GetMouseScrollState();
+    s_v2<t_f64> MousePos();
+    e_mouse_scroll_state MouseScrollState();
 }
