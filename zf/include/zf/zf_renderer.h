@@ -23,6 +23,14 @@ namespace zf::renderer {
         constexpr t_b8 operator!() const {
             return type == ek_resource_type_invalid;
         }
+
+        constexpr t_b8 operator==(const s_resource_hdl other) const {
+            return type == other.type && index == other.index; // @todo: Perhaps if both are invalid, they should be equal irrespective of index?
+        }
+
+        constexpr t_b8 operator!=(const s_resource_hdl other) const {
+            return !(*this == other);
+        }
     };
 
     struct s_resource_lifetime {
@@ -51,7 +59,7 @@ namespace zf::renderer {
         return CreateTexture(tex_data);
     }
 
-    t_size TextureSize(const s_resource_hdl hdl);
+    s_v2<t_s32> TextureSize(const s_resource_hdl hdl);
 
     s_resource_hdl CreateFontFromRaw(const s_str_rdonly file_path, const t_s32 height, const t_unicode_code_pt_bit_vec& code_pts, s_mem_arena& mem_arena, s_resource_lifetime& lifetime, s_mem_arena& temp_mem_arena, e_font_load_from_raw_result* const o_load_from_raw_res, t_unicode_code_pt_bit_vec* const o_unsupported_code_pts);
     s_resource_hdl CreateFontFromPacked(const s_str_rdonly file_path, s_mem_arena& mem_arena, s_resource_lifetime& lifetime, s_mem_arena& temp_mem_arena);

@@ -143,39 +143,24 @@ namespace zf {
                         frame_dur_accum -= targ_tick_interval;
                     } while (frame_dur_accum >= targ_tick_interval);
 
-#if 0
                     // Perform a single render.
-                    s_rendering_state* const rendering_state = PrepareRenderingPhase(temp_mem_arena);
-
-                    if (!rendering_state) {
-                        ZF_REPORT_ERROR();
-                        return false;
-                    }
-
-                    const s_rendering_context rendering_context = {
-                        .basis = &rendering_basis,
-                        .state = rendering_state
-                    };
+                    renderer::BeginRenderingPhase();
 
                     {
                         const s_game_render_context context = {
                             .dev_mem = dev_mem,
                             .mem_arena = &mem_arena,
-                            .temp_mem_arena = &temp_mem_arena,
-                            .rendering_context = &rendering_context
+                            .temp_mem_arena = &temp_mem_arena
                         };
 
                         if (!info.render_func(context)) {
                             ZF_REPORT_ERROR();
+                            renderer::EndRenderingPhase();
                             return false;
                         }
                     }
 
-                    if (!CompleteRenderingPhase(rendering_context)) {
-                        ZF_REPORT_ERROR();
-                        return false;
-                    }
-#endif
+                    renderer::EndRenderingPhase();
 
                     SwapBuffers();
                 }
