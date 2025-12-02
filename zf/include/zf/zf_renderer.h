@@ -88,4 +88,8 @@ namespace zf::renderer {
     void DrawLine(const s_v2<t_f32> a, const s_v2<t_f32> b, const s_color_rgba32f blend, const t_f32 width = 1.0f);
 
     [[nodiscard]] t_b8 DrawStr(const s_str_rdonly str, const s_resource* const font, const s_v2<t_f32> pos, const s_v2<t_f32> alignment, const s_color_rgba32f blend, s_mem_arena& temp_mem_arena);
+
+    void SetSurface(const s_resource* const surf);
+    void UnsetSurface();
+    void DrawSurface(const s_resource* const surf, const s_v2<t_f32> pos);
 }

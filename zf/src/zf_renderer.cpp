@@ -1,14 +1,16 @@
+#include <cstddef>
 #include <zf/zf_renderer.h>
 
 #include <glad/glad.h>
+#include <zf/zf_window.h>
 
 namespace zf::renderer {
     using t_gl_id = GLuint;
 
     struct s_mesh_gl_ids {
-        t_gl_id vert_arr_gl_id;
-        t_gl_id vert_buf_gl_id;
-        t_gl_id elem_buf_gl_id;
+        t_gl_id vert_arr;
+        t_gl_id vert_buf;
+        t_gl_id elem_buf;
     };
 
     static t_size CalcStride(const s_array_rdonly<t_s32> vert_attr_lens) {
@@ -22,17 +24,17 @@ namespace zf::renderer {
     }
 
     static s_mesh_gl_ids MakeGLMesh(const t_f32* const verts_raw, const t_size verts_len, const s_array_rdonly<t_u16> elems, const s_array_rdonly<t_s32> vert_attr_lens) {
-        s_mesh_gl_ids mesh = {};
+        s_mesh_gl_ids gl_ids = {};
 
-        glGenVertexArrays(1, &mesh.vert_arr_gl_id);
-        glBindVertexArray(mesh.vert_arr_gl_id);
+        glGenVertexArrays(1, &gl_ids.vert_arr);
+        glBindVertexArray(gl_ids.vert_arr);
 
-        glGenBuffers(1, &mesh.vert_buf_gl_id);
-        glBindBuffer(GL_ARRAY_BUFFER, mesh.vert_buf_gl_id);
+        glGenBuffers(1, &gl_ids.vert_buf);
+        glBindBuffer(GL_ARRAY_BUFFER, gl_ids.vert_buf);
         glBufferData(GL_ARRAY_BUFFER, ZF_SIZE_OF(t_f32) * verts_len, verts_raw, GL_DYNAMIC_DRAW);
 
-        glGenBuffers(1, &mesh.elem_buf_gl_id);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh.elem_buf_gl_id);
+        glGenBuffers(1, &gl_ids.elem_buf);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, gl_ids.elem_buf);
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, static_cast<GLsizeiptr>(ArraySizeInBytes(elems)), elems.buf_raw, GL_STATIC_DRAW);
 
         const t_size stride = CalcStride(vert_attr_lens);
@@ -41,7 +43,7 @@ namespace zf::renderer {
         for (t_size i = 0; i < vert_attr_lens.len; i++) {
             const t_s32 attr_len = vert_attr_lens[i];
 
-            glVertexAttribPointer(static_cast<GLuint>(i), attr_len, GL_FLOAT, false, static_cast<GLsizei>(stride), reinterpret_cast<void*>(ZF_SIZE_OF(t_s32) * offs));
+            glVertexAttribPointer(static_cast<GLuint>(i), attr_len, GL_FLOAT, false, static_cast<GLsizei>(stride), reinterpret_cast<void*>(ZF_SIZE_OF(t_f32) * offs));
             glEnableVertexAttribArray(static_cast<GLuint>(i));
 
             offs += attr_len;
@@ -49,13 +51,13 @@ namespace zf::renderer {
 
         glBindVertexArray(0);
 
-        return mesh;
+        return gl_ids;
     }
 
-    static void ReleaseGLMesh(const s_mesh_gl_ids& mesh_gl_ids) {
-        glDeleteBuffers(1, &mesh_gl_ids.elem_buf_gl_id);
-        glDeleteBuffers(1, &mesh_gl_ids.vert_buf_gl_id);
-        glDeleteVertexArrays(1, &mesh_gl_ids.vert_arr_gl_id);
+    static void ReleaseGLMesh(const s_mesh_gl_ids& gl_ids) {
+        glDeleteBuffers(1, &gl_ids.elem_buf);
+        glDeleteBuffers(1, &gl_ids.vert_buf);
+        glDeleteVertexArrays(1, &gl_ids.vert_arr);
     }
 
     static t_gl_id MakeGLShaderProg(const s_str_rdonly vert_src, const s_str_rdonly frag_src, s_mem_arena& temp_mem_arena) {
@@ -163,7 +165,7 @@ namespace zf::renderer {
 
     using t_batch_slot = s_static_array<s_batch_vert, g_batch_slot_vert_cnt>;
 
-    static s_str_rdonly g_batch_vert_shader_src = R"(#version 460 core
+    static const s_str_rdonly g_batch_vert_shader_src = R"(#version 460 core
 
 layout (location = 0) in vec2 a_vert;
 layout (location = 1) in vec2 a_pos;
@@ -195,7 +197,7 @@ void main() {
 }
 )";
 
-    static s_str_rdonly g_batch_frag_shader_src = R"(#version 460 core
+    static const s_str_rdonly g_batch_frag_shader_src = R"(#version 460 core
 
 in vec2 v_tex_coord;
 in vec4 v_blend;
@@ -207,6 +209,42 @@ uniform sampler2D u_tex;
 void main() {
     vec4 tex_color = texture(u_tex, v_tex_coord);
     o_frag_color = tex_color * v_blend;
+}
+)";
+
+    static const s_str_rdonly g_surface_default_vert_shader_src = R"(#version 460 core
+
+layout (location = 0) in vec2 a_vert;
+layout (location = 1) in vec2 a_tex_coord;
+
+out vec2 v_tex_coord;
+
+uniform vec2 u_pos;
+uniform vec2 u_size;
+uniform mat4 u_proj;
+
+void main() {
+    mat4 model = mat4(
+        vec4(u_size.x, 0.0, 0.0, 0.0),
+        vec4(0.0, u_size.y, 0.0, 0.0),
+        vec4(0.0, 0.0, 1.0, 0.0),
+        vec4(u_pos.x, u_pos.y, 0.0, 1.0)
+    );
+
+    gl_Position = u_proj * model * vec4(a_vert, 0.0, 1.0);
+    v_tex_coord = a_tex_coord;
+}
+)";
+
+    static const s_str_rdonly g_surface_default_frag_shader_src = R"(#version 460 core
+
+in vec2 v_tex_coord;
+out vec4 o_frag_color;
+
+uniform sampler2D u_tex;
+
+void main() {
+    o_frag_color = texture(u_tex, v_tex_coord);
 }
 )";
 
@@ -246,6 +284,9 @@ void main() {
         s_mesh_gl_ids batch_mesh_gl_ids;
         t_gl_id batch_shader_prog_gl_id;
 
+        s_mesh_gl_ids surf_mesh_gl_ids;
+        t_gl_id surf_default_shader_prog_gl_id;
+
         s_resource_arena perm_res_arena;
         s_resource* px_tex;
 
@@ -255,6 +296,8 @@ void main() {
 
             s_matrix_4x4 view_mat; // The view matrix to be used when flushing.
             t_gl_id tex_gl_id; // The texture to be used when flushing.
+
+            s_static_stack<const s_resource*, 32> surfs;
         } rendering;
     } g_state;
 
@@ -311,6 +354,45 @@ void main() {
             }
         });
 
+        // Create the surface mesh.
+        {
+            constexpr s_static_array<t_f32, 16> verts = {{
+                0.0f, 1.0f, 0.0f, 0.0f,
+                1.0f, 1.0f, 1.0f, 0.0f,
+                1.0f, 0.0f, 1.0f, 1.0f,
+                0.0f, 0.0f, 0.0f, 1.0f
+            }};
+
+            constexpr s_static_array<t_u16, 6> elems = {{
+                0, 1, 2,
+                2, 3, 0
+            }};
+
+            constexpr s_static_array<t_s32, 2> vert_attr_lens = {{2, 2}};
+
+            g_state.surf_mesh_gl_ids = MakeGLMesh(verts.buf_raw, verts.g_len, elems, vert_attr_lens);
+        }
+
+        ZF_DEFER({
+            if (clean_up) {
+                ReleaseGLMesh(g_state.surf_mesh_gl_ids);
+            }
+        });
+
+        // Generate default surface shader program.
+        g_state.surf_default_shader_prog_gl_id = MakeGLShaderProg(g_surface_default_vert_shader_src, g_surface_default_frag_shader_src, temp_mem_arena);
+
+        if (!g_state.surf_default_shader_prog_gl_id) {
+            ZF_REPORT_ERROR();
+            return false;
+        }
+
+        ZF_DEFER({
+            if (clean_up) {
+                glDeleteProgram(g_state.surf_default_shader_prog_gl_id);
+            }
+        });
+
         // Set up permanent resource arena.
         g_state.perm_res_arena = MakeResourceArena(mem_arena);
 
@@ -341,8 +423,11 @@ void main() {
 
         ReleaseResources(g_state.perm_res_arena);
 
-        ReleaseGLMesh(g_state.batch_mesh_gl_ids);
+        glDeleteProgram(g_state.surf_default_shader_prog_gl_id);
+        ReleaseGLMesh(g_state.surf_mesh_gl_ids);
+
         glDeleteProgram(g_state.batch_shader_prog_gl_id);
+        ReleaseGLMesh(g_state.batch_mesh_gl_ids);
     }
 
     void ReleaseResources(const s_resource_arena& res_arena) {
@@ -356,6 +441,11 @@ void main() {
 
                 case ek_resource_type_font:
                     glDeleteTextures(static_cast<GLsizei>(res->type_data.font.atlas_gl_ids.len), res->type_data.font.atlas_gl_ids.buf_raw);
+                    break;
+
+                case ek_resource_type_surface:
+                    glDeleteTextures(1, &res->type_data.surf.tex_gl_id);
+                    glDeleteFramebuffers(1, &res->type_data.surf.fb_gl_id);
                     break;
 
                 default:
@@ -609,8 +699,8 @@ void main() {
         //
         // Submitting Vertex Data to GPU
         //
-        glBindVertexArray(g_state.batch_mesh_gl_ids.vert_arr_gl_id);
-        glBindBuffer(GL_ARRAY_BUFFER, g_state.batch_mesh_gl_ids.vert_buf_gl_id);
+        glBindVertexArray(g_state.batch_mesh_gl_ids.vert_arr);
+        glBindBuffer(GL_ARRAY_BUFFER, g_state.batch_mesh_gl_ids.vert_buf);
 
         {
             const t_size write_size = ZF_SIZE_OF(t_batch_slot) * g_state.rendering.batch_slots_used_cnt;
@@ -638,7 +728,7 @@ void main() {
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, g_state.rendering.tex_gl_id);
 
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, g_state.batch_mesh_gl_ids.elem_buf_gl_id);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, g_state.batch_mesh_gl_ids.elem_buf);
         glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(g_batch_slot_elem_cnt * g_state.rendering.batch_slots_used_cnt), GL_UNSIGNED_SHORT, nullptr);
 
         glUseProgram(0);
@@ -661,6 +751,20 @@ void main() {
         ZF_ASSERT(g_state.state == ek_state_rendering);
 
         Flush();
+
+        if (!IsStackEmpty(g_state.rendering.surfs)) {
+            if (g_state.rendering.surfs.height == 1) {
+                LogWarning("Rendering phase completed but there is still 1 surface active!");
+            } else if (g_state.rendering.surfs.height > 1) {
+                LogWarning("Rendering phase completed but there are still % surfaces active!", g_state.rendering.surfs.height);
+            }
+
+            glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+            const auto window_size = window::Size();
+            glViewport(0, 0, static_cast<GLsizei>(window_size.x), static_cast<GLsizei>(window_size.y));
+        }
+
         g_state.state = ek_state_initted;
     }
 
@@ -820,5 +924,115 @@ void main() {
         };
 
         return true;
+    }
+
+    void SetSurface(const s_resource* const surf) {
+        ZF_ASSERT(g_state.state == ek_state_rendering);
+        ZF_ASSERT(surf && surf->type == ek_resource_type_surface);
+
+        if (IsStackFull(g_state.rendering.surfs)) {
+            LogError("Attempting to set a surface even though the limit has been reached!");
+            ZF_REPORT_ERROR();
+            return;
+        }
+
+        Flush();
+
+        glBindFramebuffer(GL_FRAMEBUFFER, surf->type_data.surf.fb_gl_id);
+        glViewport(0, 0, static_cast<GLsizei>(surf->type_data.surf.size.x), static_cast<GLsizei>(surf->type_data.surf.size.y));
+
+        StackPush(g_state.rendering.surfs, surf);
+    }
+
+    void UnsetSurface() {
+        ZF_ASSERT(g_state.state == ek_state_rendering);
+
+        if (IsStackEmpty(g_state.rendering.surfs)) {
+            LogError("Attempting to unset a surface even though none are set!");
+            ZF_REPORT_ERROR();
+            return;
+        }
+
+        Flush();
+
+        StackPop(g_state.rendering.surfs);
+
+        t_gl_id fb_gl_id;
+        s_v2<t_s32> viewport_size;
+
+        if (IsStackEmpty(g_state.rendering.surfs)) {
+            fb_gl_id = 0;
+            viewport_size = window::Size();
+        } else {
+            const auto new_surf = StackTop(g_state.rendering.surfs);
+            fb_gl_id = new_surf->type_data.surf.fb_gl_id;
+            viewport_size = new_surf->type_data.surf.size;
+        }
+
+        glBindFramebuffer(GL_FRAMEBUFFER, fb_gl_id);
+        glViewport(0, 0, static_cast<GLsizei>(viewport_size.x), static_cast<GLsizei>(viewport_size.y));
+    }
+
+    static inline t_gl_id CurGLShaderProg() {
+        t_s32 prog;
+        glGetIntegerv(GL_CURRENT_PROGRAM, &prog);
+        return static_cast<t_gl_id>(prog);
+    }
+
+    static inline s_rect<t_s32> GLViewport() {
+        s_rect<t_s32> v;
+        glGetIntegerv(GL_VIEWPORT, reinterpret_cast<t_s32*>(&v));
+        return v;
+    }
+
+    void DrawSurface(const s_resource* const surf, const s_v2<t_f32> pos) {
+        ZF_ASSERT(g_state.state == ek_state_rendering);
+        ZF_ASSERT(surf && surf->type == ek_resource_type_surface);
+
+        if (CurGLShaderProg() == 0) {
+            glUseProgram(g_state.surf_default_shader_prog_gl_id);
+        }
+
+        glBindVertexArray(g_state.surf_mesh_gl_ids.vert_arr);
+        glBindBuffer(GL_ARRAY_BUFFER, g_state.surf_mesh_gl_ids.vert_buf);
+
+        {
+            constexpr s_v2<t_f32> scale = {1.0f, 1.0f}; // @todo: Make this customisable, or remove entirely.
+
+            constexpr s_static_array<t_f32, 16> verts = {{
+                0.0f,    scale.y, 0.0f, 0.0f,
+                scale.x, scale.y, 1.0f, 0.0f,
+                scale.x, 0.0f,    1.0f, 1.0f,
+                0.0f,    0.0f,    0.0f, 1.0f
+            }};
+
+            glBufferSubData(GL_ARRAY_BUFFER, 0, ArraySizeInBytes(verts), verts.buf_raw);
+        }
+
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, surf->type_data.surf.tex_gl_id);
+
+        const t_s32 proj_uniform_loc = glGetUniformLocation(CurGLShaderProg(), "u_proj");
+        ZF_ASSERT(proj_uniform_loc != -1); // @todo: Remove, do at load time.
+
+        const auto viewport = GLViewport();
+        const s_matrix_4x4 proj_mat = MakeOrthographicMatrix4x4(0.0f, static_cast<t_f32>(viewport.width), static_cast<t_f32>(viewport.height), 0.0f, -1.0f, 1.0f);
+        glUniformMatrix4fv(proj_uniform_loc, 1, false, reinterpret_cast<const t_f32*>(&proj_mat));
+
+        const t_s32 pos_uniform_loc = glGetUniformLocation(CurGLShaderProg(), "u_pos");
+        ZF_ASSERT(pos_uniform_loc != -1); // @todo: Remove, do at load time.
+
+        glUniform2fv(pos_uniform_loc, 1, reinterpret_cast<const t_f32*>(&pos));
+
+        const t_s32 size_uniform_loc = glGetUniformLocation(CurGLShaderProg(), "u_size");
+        ZF_ASSERT(size_uniform_loc != -1); // @todo: Remove, do at load time.
+
+        const auto size_f32 = static_cast<s_v2<t_f32>>(surf->type_data.surf.size);
+        glUniform2fv(size_uniform_loc, 1, reinterpret_cast<const t_f32*>(&size_f32));
+
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, g_state.surf_mesh_gl_ids.elem_buf);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, nullptr);
+
+        glUseProgram(0);
     }
 }
