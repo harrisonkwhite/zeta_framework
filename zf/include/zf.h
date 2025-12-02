@@ -171,4 +171,65 @@ namespace zf {
     t_b8 IsMouseButtonReleased(const e_mouse_button_code mbc);
 
     s_v2<t_f32> MousePos();
+
+    // ============================================================
+    // @section: GFX Resources
+    // ============================================================
+    enum e_resource_type {
+        ek_resource_type_invalid,
+        ek_resource_type_texture,
+        ek_resource_type_font,
+        ek_resource_type_surface,
+        ek_resource_type_surface_shader_prog
+    };
+
+    struct s_resource;
+
+    struct s_resource_arena {
+        s_mem_arena* mem_arena;
+        s_resource* head;
+        s_resource* tail;
+    };
+
+    inline s_resource_arena MakeResourceArena(s_mem_arena& mem_arena) {
+        return {
+            .mem_arena = &mem_arena
+        };
+    }
+
+    void ReleaseResources(const s_resource_arena& res_arena);
+
+    // Returns false iff the load failed. Failure DOES NOT leave the underlying resource system in an invalid state - you are safe to continue.
+    [[nodiscard]] t_b8 LoadTexture(const s_rgba_texture_data_rdonly& tex_data, s_resource*& o_tex, s_resource_arena* const res_arena = nullptr);
+
+    // Returns false iff the load failed. Failure DOES NOT leave the underlying resource system in an invalid state - you are safe to continue.
+    [[nodiscard]] inline t_b8 LoadTextureFromRaw(const s_str_rdonly file_path, s_mem_arena& temp_mem_arena, s_resource*& o_tex, s_resource_arena* const res_arena = nullptr) {
+        s_rgba_texture_data tex_data;
+
+        if (!LoadRGBATextureDataFromRaw(file_path, temp_mem_arena, temp_mem_arena, tex_data)) {
+            return false;
+        }
+
+        return LoadTexture(tex_data, o_tex, res_arena);
+    }
+
+    // Returns false iff the load failed. Failure DOES NOT leave the underlying resource system in an invalid state - you are safe to continue.
+    [[nodiscard]] inline t_b8 LoadTextureFromPacked(const s_str_rdonly file_path, s_mem_arena& temp_mem_arena, s_resource*& o_tex, s_resource_arena* const res_arena = nullptr) {
+        s_rgba_texture_data tex_data;
+
+        if (!UnpackTexture(file_path, temp_mem_arena, temp_mem_arena, tex_data)) {
+            return false;
+        }
+
+        return LoadTexture(tex_data, o_tex, res_arena);
+    }
+
+    s_v2<t_s32> TextureSize(const s_resource* const res);
+
+    // ============================================================
+    // @section: Rendering
+    // ============================================================
+    void Clear(const s_color_rgba32f col = {});
+    void SetViewMatrix(const s_matrix_4x4& mat);
+    void DrawTexture(const s_resource* const tex, const s_v2<t_f32> pos, const s_rect<t_s32> src_rect = {}, const s_v2<t_f32> origin = origins::g_topleft, const s_v2<t_f32> scale = {1.0f, 1.0f}, const t_f32 rot = 0.0f, const s_color_rgba32f blend = colors::g_white);
 }
