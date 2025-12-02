@@ -42,6 +42,7 @@ namespace zf {
     struct s_game_info {
         t_size mem_arena_size;
         t_size temp_mem_arena_size;
+        t_size frame_mem_arena_size;
 
         s_v2<t_s32> window_init_size;
         s_str_rdonly window_init_title;
@@ -61,6 +62,7 @@ namespace zf {
     inline void AssertGameInfoValidity(const s_game_info& info) {
         ZF_ASSERT(info.mem_arena_size > 0);
         ZF_ASSERT(info.temp_mem_arena_size > 0 && info.temp_mem_arena_size <= info.mem_arena_size);
+        ZF_ASSERT(info.frame_mem_arena_size > 0 && info.frame_mem_arena_size <= info.mem_arena_size);
 
         ZF_ASSERT(info.window_init_size.x > 0 && info.window_init_size.y > 0);
 
