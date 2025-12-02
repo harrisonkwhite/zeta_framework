@@ -226,10 +226,17 @@ namespace zf {
 
     s_v2<t_s32> TextureSize(const s_gfx_resource* const res);
 
+    // Returns false iff the load failed. Failure DOES NOT leave the underlying resource system in an invalid state - you are safe to continue.
+    [[nodiscard]] t_b8 LoadFontFromRaw(const s_str_rdonly file_path, const t_s32 height, const t_unicode_code_pt_bit_vec& code_pts, s_mem_arena& temp_mem_arena, s_gfx_resource*& o_font, s_gfx_resource_arena* const res_arena = nullptr, e_font_load_from_raw_result* const o_load_from_raw_res = nullptr, t_unicode_code_pt_bit_vec* const o_unsupported_code_pts = nullptr);
+
+    // Returns false iff the load failed. Failure DOES NOT leave the underlying resource system in an invalid state - you are safe to continue.
+    [[nodiscard]] t_b8 LoadFontFromPacked(const s_str_rdonly file_path, s_mem_arena& temp_mem_arena, s_gfx_resource*& o_font, s_gfx_resource_arena* const res_arena = nullptr);
+
     // ============================================================
     // @section: Rendering
     // ============================================================
     void Clear(const s_color_rgba32f col = {});
     void SetViewMatrix(const s_matrix_4x4& mat);
     void DrawTexture(const s_gfx_resource* const tex, const s_v2<t_f32> pos, const s_rect<t_s32> src_rect = {}, const s_v2<t_f32> origin = origins::g_topleft, const s_v2<t_f32> scale = {1.0f, 1.0f}, const t_f32 rot = 0.0f, const s_color_rgba32f blend = colors::g_white);
+    [[nodiscard]] t_b8 DrawStr(const s_str_rdonly str, const s_gfx_resource* const font, const s_v2<t_f32> pos, const s_v2<t_f32> alignment, const s_color_rgba32f blend, s_mem_arena& temp_mem_arena);
 }
