@@ -1,8 +1,8 @@
-#include <cstddef>
 #include <zf/zf_renderer.h>
 
+#include <GLFW/glfw3.h>
 #include <glad/glad.h>
-#include <zf/zf_window.h>
+#include <zf/zf_platform.h>
 
 namespace zf::renderer {
     using t_gl_id = GLuint;
@@ -31,7 +31,7 @@ namespace zf::renderer {
 
         glGenBuffers(1, &gl_ids.vert_buf);
         glBindBuffer(GL_ARRAY_BUFFER, gl_ids.vert_buf);
-        glBufferData(GL_ARRAY_BUFFER, ZF_SIZE_OF(t_f32) * verts_len, verts_raw, GL_DYNAMIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, ZF_SIZE_OF(t_f32) * verts_len, verts_raw, GL_STREAM_DRAW);
 
         glGenBuffers(1, &gl_ids.elem_buf);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, gl_ids.elem_buf);
@@ -310,7 +310,13 @@ void main() {
 
         t_b8 clean_up = false;
 
-        // Enable blending.
+        // Initialise OpenGL function pointers.
+        if (!gladLoadGLLoader(reinterpret_cast<GLADloadproc>(glfwGetProcAddress))) {
+            ZF_REPORT_ERROR();
+            return false;
+        }
+
+        // Enable OpenGL blending.
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
@@ -434,6 +440,9 @@ void main() {
         ReleaseGLMesh(g_state.batch_mesh_gl_ids);
     }
 
+    // ============================================================
+    // @section: Resources
+    // ============================================================
     void ReleaseResources(const s_resource_arena& res_arena) {
         const s_resource* res = res_arena.head;
 
@@ -537,13 +546,8 @@ void main() {
         return res->type_data.tex.size;
     }
 
-    [[nodiscard]] static t_b8 MakeFontAtlasGLTextures(const s_array_rdonly<t_font_atlas_rgba> atlas_rgbas, s_array<t_gl_id>& o_gl_ids) {
-        o_gl_ids = {
-            .buf_raw = static_cast<t_gl_id*>(malloc(static_cast<size_t>(ZF_SIZE_OF(t_gl_id) * atlas_rgbas.len))),
-            .len = atlas_rgbas.len
-        };
-
-        if (!o_gl_ids.buf_raw) {
+    [[nodiscard]] static t_b8 MakeFontAtlasGLTextures(const s_array_rdonly<t_font_atlas_rgba> atlas_rgbas, s_mem_arena& mem_arena, s_array<t_gl_id>& o_gl_ids) {
+        if (!MakeArray(mem_arena, atlas_rgbas.len, o_gl_ids)) {
             return false;
         }
 
@@ -576,7 +580,7 @@ void main() {
 
         s_array<t_gl_id> atlas_gl_ids;
 
-        if (!MakeFontAtlasGLTextures(atlas_rgbas, atlas_gl_ids)) {
+        if (!MakeFontAtlasGLTextures(atlas_rgbas, *res_arena_to_use.mem_arena, atlas_gl_ids)) {
             return false;
         }
 
@@ -604,7 +608,7 @@ void main() {
 
         s_array<t_gl_id> atlas_gl_ids;
 
-        if (!MakeFontAtlasGLTextures(atlas_rgbas, atlas_gl_ids)) {
+        if (!MakeFontAtlasGLTextures(atlas_rgbas, *res_arena_to_use.mem_arena, atlas_gl_ids)) {
             return false;
         }
 
@@ -787,9 +791,7 @@ void main() {
             }
 
             glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-            const auto window_size = window::Size();
-            glViewport(0, 0, static_cast<GLsizei>(window_size.x), static_cast<GLsizei>(window_size.y));
+            glViewport(0, 0, static_cast<GLsizei>(WindowSize().x), static_cast<GLsizei>(WindowSize().y));
         }
 
         g_state.state = ek_state_initted;
@@ -855,16 +857,11 @@ void main() {
     }
 
     static s_rect<t_f32> CalcTextureCoords(const s_rect<t_s32> src_rect, const s_v2<t_s32> tex_size) {
-        const s_v2<t_f32> half_texel = {
-            0.5f / static_cast<t_f32>(tex_size.x),
-            0.5f / static_cast<t_f32>(tex_size.y)
-        };
-
         return {
-            (static_cast<t_f32>(src_rect.x) + half_texel.x) / static_cast<t_f32>(tex_size.x),
-            (static_cast<t_f32>(src_rect.y) + half_texel.y) / static_cast<t_f32>(tex_size.y),
-            (static_cast<t_f32>(src_rect.width) - half_texel.x) / static_cast<t_f32>(tex_size.x),
-            (static_cast<t_f32>(src_rect.height) - half_texel.y) / static_cast<t_f32>(tex_size.y)
+            static_cast<t_f32>(src_rect.x) / static_cast<t_f32>(tex_size.x),
+            static_cast<t_f32>(src_rect.y) / static_cast<t_f32>(tex_size.y),
+            static_cast<t_f32>(src_rect.width) / static_cast<t_f32>(tex_size.x),
+            static_cast<t_f32>(src_rect.height) / static_cast<t_f32>(tex_size.y)
         };
     }
 
@@ -989,7 +986,7 @@ void main() {
 
         if (IsStackEmpty(g_state.rendering.surfs)) {
             fb_gl_id = 0;
-            viewport_size = window::Size();
+            viewport_size = WindowSize();
         } else {
             const auto new_surf = StackTop(g_state.rendering.surfs);
             fb_gl_id = new_surf->type_data.surf.fb_gl_id;

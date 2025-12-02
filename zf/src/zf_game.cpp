@@ -34,12 +34,12 @@ namespace zf {
             }
 
             // Initialise the window.
-            if (!window::Init(info.window_init_size, info.window_init_title, info.window_init_flags, temp_mem_arena)) {
+            if (!InitWindow(info.window_init_size, info.window_init_title, info.window_init_flags, temp_mem_arena)) {
                 ZF_REPORT_ERROR();
                 return false;
             }
 
-            ZF_DEFER({ window::Shutdown(); });
+            ZF_DEFER({ ShutdownWindow(); });
 
             // Initialise the renderer.
             if (!renderer::Init(mem_arena, temp_mem_arena)) {
@@ -90,18 +90,18 @@ namespace zf {
             });
 
             // Now that everything is set up, we can show the window.
-            window::Show();
+            ShowWindow();
 
             //
             // Main Loop
             //
-            t_f64 frame_time_last = window::Time();
+            t_f64 frame_time_last = Time();
             t_f64 frame_dur_accum = 0.0;
 
-            while (!window::ShouldClose()) {
+            while (!ShouldWindowClose()) {
                 RewindMemArena(temp_mem_arena, 0);
 
-                const t_f64 frame_time = window::Time();
+                const t_f64 frame_time = Time();
                 const t_f64 frame_time_delta = frame_time - frame_time_last;
                 frame_dur_accum += frame_time_delta;
                 frame_time_last = frame_time;
@@ -122,11 +122,11 @@ namespace zf {
 
                         const e_game_tick_result res = info.tick_func(context);
 
-                        window::ClearInputEvents();
+                        ClearInputEvents();
 
                         if (res == ek_game_tick_result_exit) {
                             Log("Exit request detected from developer game tick function...");
-                            window::SetShouldClose(true);
+                            SetWindowShouldClose();
                         }
 
                         if (res == ek_game_tick_result_error) {
@@ -156,10 +156,10 @@ namespace zf {
 
                     renderer::EndRenderingPhase();
 
-                    window::SwapBuffers();
+                    SwapWindowBuffers();
                 }
 
-                window::PollEvents();
+                PollOSEvents();
             }
 
             return true;

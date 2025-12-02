@@ -1,9 +1,8 @@
-#include <zf/zf_window.h>
+#include <zf/zf_platform.h>
 
 #include <GLFW/glfw3.h>
-#include <glad/glad.h>
 
-namespace zf::window {
+namespace zf {
     static struct {
         GLFWwindow* glfw_window;
 
@@ -180,7 +179,7 @@ namespace zf::window {
         }
     }
 
-    t_b8 Init(const s_v2<t_s32> size, const s_str_rdonly title, const e_init_flags flags, s_mem_arena& temp_mem_arena) {
+    t_b8 InitWindow(const s_v2<t_s32> size, const s_str_rdonly title, const e_window_init_flags flags, s_mem_arena& temp_mem_arena) {
         ZF_ASSERT(!g_state.glfw_window);
         ZF_ASSERT(size.x > 0 && size.y > 0);
 
@@ -212,17 +211,11 @@ namespace zf::window {
 
         glfwMakeContextCurrent(g_state.glfw_window);
 
-        glfwSetWindowAttrib(g_state.glfw_window, GLFW_RESIZABLE, (flags & ek_init_flags_resizable) ? true : false);
+        glfwSetWindowAttrib(g_state.glfw_window, GLFW_RESIZABLE, (flags & ek_window_init_flags_resizable) ? true : false);
 
-        glfwSetInputMode(g_state.glfw_window, GLFW_CURSOR, (flags & ek_init_flags_hide_cursor) ? GLFW_CURSOR_HIDDEN : GLFW_CURSOR_NORMAL);
+        glfwSetInputMode(g_state.glfw_window, GLFW_CURSOR, (flags & ek_window_init_flags_hide_cursor) ? GLFW_CURSOR_HIDDEN : GLFW_CURSOR_NORMAL);
 
         // Set up GLFW callbacks.
-        glfwSetFramebufferSizeCallback(g_state.glfw_window,
-            [](GLFWwindow* const window, const t_s32 width, const t_s32 height) {
-                glViewport(0, 0, width, height);
-            }
-        );
-
         glfwSetKeyCallback(g_state.glfw_window,
             [](GLFWwindow* const window, const t_s32 key, const t_s32, const t_s32 action, const t_s32 mods) {
                 const e_key_code key_code = ConvertGLFWKeyCode(key);
@@ -280,56 +273,50 @@ namespace zf::window {
             }
         );
 
-        // Initialise OpenGL function pointers.
-        if (!gladLoadGLLoader(reinterpret_cast<GLADloadproc>(glfwGetProcAddress))) {
-            ZF_REPORT_ERROR();
-            return false;
-        }
-
         return true;
     }
 
-    void Shutdown() {
+    void ShutdownWindow() {
         ZF_ASSERT(g_state.glfw_window);
 
         glfwDestroyWindow(g_state.glfw_window);
         glfwTerminate();
     }
 
-    void PollEvents() {
+    t_f64 Time() {
+        return glfwGetTime();
+    }
+
+    void PollOSEvents() {
         glfwPollEvents();
     }
 
-    void SwapBuffers() {
+    void SwapWindowBuffers() {
         glfwSwapBuffers(g_state.glfw_window);
     }
 
-    void Show() {
+    void ShowWindow() {
         glfwShowWindow(g_state.glfw_window);
     }
 
-    t_b8 ShouldClose() {
+    t_b8 ShouldWindowClose() {
         return glfwWindowShouldClose(g_state.glfw_window);
     }
 
-    void SetShouldClose(const t_b8 close) {
-        glfwSetWindowShouldClose(g_state.glfw_window, close);
+    void SetWindowShouldClose() {
+        glfwSetWindowShouldClose(g_state.glfw_window, true);
     }
 
-    s_v2<t_s32> Size() {
+    s_v2<t_s32> WindowSize() {
         t_s32 w, h;
         glfwGetWindowSize(g_state.glfw_window, &w, &h);
         return {w, h};
     }
 
-    s_v2<t_s32> FramebufferSize() {
+    s_v2<t_s32> WindowFramebufferSize() {
         t_s32 w, h;
         glfwGetFramebufferSize(g_state.glfw_window, &w, &h);
         return {w, h};
-    }
-
-    t_f64 Time() {
-        return glfwGetTime();
     }
 
     void ClearInputEvents() {
@@ -360,13 +347,13 @@ namespace zf::window {
         return IsBitSet(g_state.input_events.mouse_buttons_released, mbc);
     }
 
+    e_mouse_scroll_state MouseScrollState() {
+        return g_state.input_events.mouse_scroll_state;
+    }
+
     s_v2<t_f32> MousePos() {
         t_f64 mx, my;
         glfwGetCursorPos(g_state.glfw_window, &mx, &my);
         return {static_cast<t_f32>(mx), static_cast<t_f32>(my)};
-    }
-
-    e_mouse_scroll_state MouseScrollState() {
-        return g_state.input_events.mouse_scroll_state;
     }
 }

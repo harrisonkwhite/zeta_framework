@@ -1,7 +1,7 @@
 #pragma once
 
 #include <zc.h>
-#include <zf/zf_window.h>
+#include <zf/zf_platform.h>
 
 namespace zf {
     // @todo: Could the context structs be unified into one? Or omitted entirely?
@@ -39,7 +39,7 @@ namespace zf {
 
         s_v2<t_s32> window_init_size;
         s_str_rdonly window_init_title;
-        window::e_init_flags window_init_flags;
+        e_window_init_flags window_init_flags;
 
         t_size dev_mem_size;
         t_size dev_mem_alignment;
