@@ -228,20 +228,19 @@ void main() {
         s_resource* next;
     };
 
-    enum e_phase {
-        ek_phase_uninitted,
-        ek_phase_initting,
-        ek_phase_initted,
-        ek_phase_rendering
+    enum e_state {
+        ek_state_uninitted,
+        ek_state_initted,
+        ek_state_rendering
     };
 
     static struct {
-        e_phase phase;
+        e_state state;
 
         s_mesh_gl_ids batch_mesh_gl_ids;
         t_gl_id batch_shader_prog_gl_id;
 
-        s_resource_arena res_arena;
+        s_resource_arena perm_res_arena;
         s_resource* px_tex;
 
         struct {
@@ -257,14 +256,6 @@ void main() {
         ZeroOut(g_state);
 
         t_b8 clean_up = false;
-
-        g_state.phase = ek_phase_initting;
-
-        ZF_DEFER({
-            if (clean_up) {
-                g_state.phase = ek_phase_uninitted;
-            }
-        });
 
         // Enable blending.
         glEnable(GL_BLEND);
@@ -311,17 +302,38 @@ void main() {
         ZF_DEFER({
             if (clean_up) {
                 glDeleteProgram(g_state.batch_shader_prog_gl_id);
-                g_state.batch_shader_prog_gl_id = 0;
             }
         });
 
-        g_state.phase = ek_phase_initted;
+        // Set up permanent resource arena.
+        g_state.perm_res_arena = MakeResourceArena(mem_arena);
+
+        ZF_DEFER({
+            if (clean_up) {
+                ReleaseResources(g_state.perm_res_arena);
+            }
+        });
+
+        // Set up pixel texture.
+        {
+            const s_static_array<t_u8, 4> rgba = {{255, 255, 255, 255}};
+
+            if (!LoadTexture({{1, 1}, rgba}, g_state.perm_res_arena, g_state.px_tex)) {
+                ZF_REPORT_ERROR();
+                clean_up = true;
+                return false;
+            }
+        }
+
+        g_state.state = ek_state_initted;
 
         return true;
     }
 
     void Shutdown() {
-        ZF_ASSERT(g_state.phase == ek_phase_initted);
+        ZF_ASSERT(g_state.state == ek_state_initted);
+
+        ReleaseResources(g_state.perm_res_arena);
 
         ReleaseGLMesh(g_state.batch_mesh_gl_ids);
         glDeleteProgram(g_state.batch_shader_prog_gl_id);
@@ -396,8 +408,6 @@ void main() {
     }
 
     t_b8 LoadTexture(const s_rgba_texture_data_rdonly& tex_data, s_resource_arena& res_arena, s_resource*& o_res) {
-        ZF_ASSERT(g_state.phase == ek_phase_initting || g_state.phase == ek_phase_initted);
-
         const t_gl_id gl_id = MakeGLTexture(tex_data);
 
         if (!gl_id) {
@@ -552,39 +562,39 @@ void main() {
     }
 
     void BeginRenderingPhase() {
-        ZF_ASSERT(g_state.phase == ek_phase_initted);
+        ZF_ASSERT(g_state.state == ek_state_initted);
 
         ZeroOut(g_state.rendering);
         g_state.rendering.view_mat = MakeIdentityMatrix4x4();
 
-        g_state.phase = ek_phase_rendering;
+        g_state.state = ek_state_rendering;
 
         Clear(s_color_rgba8(147, 207, 249, 255));
     }
 
     void EndRenderingPhase() {
-        ZF_ASSERT(g_state.phase == ek_phase_rendering);
+        ZF_ASSERT(g_state.state == ek_state_rendering);
 
         Flush();
-        g_state.phase = ek_phase_initted;
+        g_state.state = ek_state_initted;
     }
 
     void Clear(const s_color_rgba32f col) {
-        ZF_ASSERT(g_state.phase == ek_phase_rendering);
+        ZF_ASSERT(g_state.state == ek_state_rendering);
 
         glClearColor(col.r, col.g, col.b, col.a);
         glClear(GL_COLOR_BUFFER_BIT);
     }
 
     void SetViewMatrix(const s_matrix_4x4& mat) {
-        ZF_ASSERT(g_state.phase == ek_phase_rendering);
+        ZF_ASSERT(g_state.state == ek_state_rendering);
 
         Flush();
         g_state.rendering.view_mat = mat;
     }
 
     static void Draw(const t_gl_id tex_gl_id, const s_rect<t_f32> tex_coords, s_v2<t_f32> pos, s_v2<t_f32> size, s_v2<t_f32> origin, const t_f32 rot, const s_color_rgba32f blend) {
-        ZF_ASSERT(g_state.phase == ek_phase_rendering);
+        ZF_ASSERT(g_state.state == ek_state_rendering);
 
         if (g_state.rendering.batch_slots_used_cnt == 0) {
             // This is the first draw to the batch, so set the texture associated with the batch to the one we're trying to render.
@@ -643,7 +653,7 @@ void main() {
     }
 
     void DrawTexture(const s_resource* const tex, const s_v2<t_f32> pos, const s_rect<t_s32> src_rect, const s_v2<t_f32> origin, const s_v2<t_f32> scale, const t_f32 rot, const s_color_rgba32f blend) {
-        ZF_ASSERT(g_state.phase == ek_phase_rendering);
+        ZF_ASSERT(g_state.state == ek_state_rendering);
         ZF_ASSERT(tex && tex->type == ek_resource_type_texture);
         ZF_ASSERT(origin.x >= 0.0f && origin.x <= 1.0f && origin.y >= 0.0f && origin.y <= 1.0f); // @todo: Generic function for this check?
         // @todo: Add more assertions here!
@@ -669,7 +679,22 @@ void main() {
         Draw(tex->type_data.tex.gl_id, tex_coords, pos, size, origin, rot, blend);
     }
 
+    void DrawRect(const s_rect<t_f32> rect, const s_color_rgba32f color) {
+        ZF_ASSERT(g_state.state == ek_state_rendering);
+        DrawTexture(g_state.px_tex, RectPos(rect), {}, {}, RectSize(rect), 0.0f, color);
+    }
+
+    void DrawLine(const s_v2<t_f32> a, const s_v2<t_f32> b, const s_color_rgba32f blend, const t_f32 width) {
+        ZF_ASSERT(g_state.state == ek_state_rendering);
+        ZF_ASSERT(width > 0.0f);
+
+        const t_f32 len = CalcDist(a, b);
+        const t_f32 dir = CalcDirInRads(a, b);
+        DrawTexture(g_state.px_tex, a, {}, origins::g_centerleft, {len, width}, dir, blend);
+    }
+
     t_b8 DrawStr(const s_str_rdonly str, const s_resource* const font, const s_v2<t_f32> pos, const s_v2<t_f32> alignment, const s_color_rgba32f blend, s_mem_arena& temp_mem_arena) {
+        ZF_ASSERT(g_state.state == ek_state_rendering);
         ZF_ASSERT(IsValidUTF8Str(str));
         ZF_ASSERT(font && font->type == ek_resource_type_font);
         // @todo: Add more assertions here!

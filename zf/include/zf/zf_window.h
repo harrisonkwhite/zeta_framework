@@ -120,6 +120,6 @@ namespace zf::window {
     t_b8 IsMouseButtonPressed(const e_mouse_button_code mbc);
     t_b8 IsMouseButtonReleased(const e_mouse_button_code mbc);
 
-    s_v2<t_f64> MousePos();
+    s_v2<t_f32> MousePos();
     e_mouse_scroll_state MouseScrollState();
 }

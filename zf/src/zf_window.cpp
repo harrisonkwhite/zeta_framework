@@ -360,10 +360,10 @@ namespace zf::window {
         return IsBitSet(g_state.input_events.mouse_buttons_released, mbc);
     }
 
-    s_v2<t_f64> MousePos() {
+    s_v2<t_f32> MousePos() {
         t_f64 mx, my;
         glfwGetCursorPos(g_state.glfw_window, &mx, &my);
-        return {mx, my};
+        return {static_cast<t_f32>(mx), static_cast<t_f32>(my)};
     }
 
     e_mouse_scroll_state MouseScrollState() {
