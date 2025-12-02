@@ -13,7 +13,8 @@ namespace zf::renderer {
         ek_resource_type_invalid,
         ek_resource_type_texture,
         ek_resource_type_font,
-        ek_resource_type_surface
+        ek_resource_type_surface,
+        ek_resource_type_surface_shader_prog
     };
 
     struct s_resource;
@@ -71,6 +72,8 @@ namespace zf::renderer {
     // Returns true iff the operation was successful. If it failed, the old surface state with its old size is left intact.
     [[nodiscard]] t_b8 ResizeSurface(s_resource* const surf, const s_v2<t_s32> size);
 
+    [[nodiscard]] t_b8 MakeSurfaceShaderProg(const s_str_rdonly vert_src, const s_str_rdonly frag_src, s_resource*& o_prog, s_resource_arena* const res_arena = nullptr);
+
     // ============================================================
     // @section: Rendering
     // ============================================================
@@ -91,5 +94,42 @@ namespace zf::renderer {
 
     void SetSurface(const s_resource* const surf);
     void UnsetSurface();
+
+    enum e_surface_shader_prog_uniform_val_type : t_s32 {
+        ek_surface_shader_prog_uniform_val_type_s32,
+        ek_surface_shader_prog_uniform_val_type_u32,
+        ek_surface_shader_prog_uniform_val_type_f32,
+        ek_surface_shader_prog_uniform_val_type_v2,
+        ek_surface_shader_prog_uniform_val_type_v3,
+        ek_surface_shader_prog_uniform_val_type_v4,
+        ek_surface_shader_prog_uniform_val_type_mat4x4
+    };
+
+    struct s_surface_shader_prog_uniform_val {
+        e_surface_shader_prog_uniform_val_type type;
+
+        union {
+            t_s32 s32;
+            t_u32 u32;
+            t_f32 f32;
+            s_v2<t_f32> v2;
+            s_v3<t_f32> v3;
+            s_v4<t_f32> v4;
+            s_matrix_4x4 mat4x4;
+        } type_data;
+
+        s_surface_shader_prog_uniform_val() = default;
+        s_surface_shader_prog_uniform_val(const t_s32 v) : type(ek_surface_shader_prog_uniform_val_type_s32), type_data({.s32 = v}) {};
+        s_surface_shader_prog_uniform_val(const t_u32 v) : type(ek_surface_shader_prog_uniform_val_type_u32), type_data({.u32 = v}) {};
+        s_surface_shader_prog_uniform_val(const t_f32 v) : type(ek_surface_shader_prog_uniform_val_type_f32), type_data({.f32 = v}) {};
+        s_surface_shader_prog_uniform_val(const s_v2<t_f32> v) : type(ek_surface_shader_prog_uniform_val_type_v2), type_data({.v2 = v}) {};
+        s_surface_shader_prog_uniform_val(const s_v3<t_f32> v) : type(ek_surface_shader_prog_uniform_val_type_v3), type_data({.v3 = v}) {};
+        s_surface_shader_prog_uniform_val(const s_v4<t_f32> v) : type(ek_surface_shader_prog_uniform_val_type_v4), type_data({.v4 = v}) {};
+        s_surface_shader_prog_uniform_val(const s_matrix_4x4& v) : type(ek_surface_shader_prog_uniform_val_type_mat4x4), type_data({.mat4x4 = v}) {};
+    };
+
+    void SetSurfaceShaderProg(const s_resource* const prog);
+    [[nodiscard]] t_b8 SetSurfaceShaderProgUniform(const s_str_rdonly name, const s_surface_shader_prog_uniform_val& val, s_mem_arena& temp_mem_arena);
+
     void DrawSurface(const s_resource* const surf, const s_v2<t_f32> pos);
 }

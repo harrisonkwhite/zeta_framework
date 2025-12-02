@@ -267,6 +267,10 @@ void main() {
                 t_gl_id tex_gl_id;
                 s_v2<t_s32> size;
             } surf;
+
+            struct {
+                t_gl_id gl_id;
+            } surf_shader_prog;
         } type_data;
 
         s_resource* next;
@@ -446,6 +450,10 @@ void main() {
                 case ek_resource_type_surface:
                     glDeleteTextures(1, &res->type_data.surf.tex_gl_id);
                     glDeleteFramebuffers(1, &res->type_data.surf.fb_gl_id);
+                    break;
+
+                case ek_resource_type_surface_shader_prog:
+                    glDeleteProgram(res->type_data.surf_shader_prog.gl_id);
                     break;
 
                 default:
@@ -683,6 +691,25 @@ void main() {
             .tex_gl_id = new_tex_gl_id,
             .size = size
         };
+
+        return true;
+    }
+
+    t_b8 MakeSurfaceShaderProg(const s_str_rdonly vert_src, const s_str_rdonly frag_src, s_mem_arena& temp_mem_arena, s_resource*& o_prog, s_resource_arena* const res_arena) {
+        const t_gl_id gl_id = MakeGLShaderProg(vert_src, frag_src, temp_mem_arena);
+
+        if (!gl_id) {
+            return false;
+        }
+
+        o_prog = PushResource(res_arena ? *res_arena : g_state.perm_res_arena);
+
+        if (!o_prog) {
+            return false;
+        }
+
+        o_prog->type = ek_resource_type_surface_shader_prog;
+        o_prog->type_data.surf_shader_prog = {.gl_id = gl_id};
 
         return true;
     }
@@ -977,6 +1004,58 @@ void main() {
         t_s32 prog;
         glGetIntegerv(GL_CURRENT_PROGRAM, &prog);
         return static_cast<t_gl_id>(prog);
+    }
+
+    void SetSurfaceShaderProg(const s_resource* const prog) {
+        ZF_ASSERT(CurGLShaderProg() == 0 && "Potential attempted double-assignment of surface shader program?");
+        glUseProgram(prog->type_data.surf_shader_prog.gl_id);
+    }
+
+    t_b8 SetSurfaceShaderProgUniform(const s_str_rdonly name, const s_surface_shader_prog_uniform_val& val, s_mem_arena& temp_mem_arena) {
+        const t_gl_id cur_prog_gl_id = CurGLShaderProg();
+
+        ZF_ASSERT(cur_prog_gl_id != 0 && "Surface shader program must be set before setting uniforms!");
+
+        s_str name_terminated;
+
+        if (!CloneStrButAddTerminator(name, temp_mem_arena, name_terminated)) {
+            return false;
+        }
+
+        const t_s32 loc = glGetUniformLocation(cur_prog_gl_id, StrRaw(name_terminated));
+        ZF_ASSERT(loc != -1 && "Failed to get location of shader uniform!");
+
+        switch (val.type) {
+            case ek_surface_shader_prog_uniform_val_type_s32:
+                glUniform1i(loc, val.type_data.s32);
+                break;
+
+            case ek_surface_shader_prog_uniform_val_type_u32:
+                glUniform1ui(loc, val.type_data.u32);
+                break;
+
+            case ek_surface_shader_prog_uniform_val_type_f32:
+                glUniform1f(loc, val.type_data.f32);
+                break;
+
+            case ek_surface_shader_prog_uniform_val_type_v2:
+                glUniform2f(loc, val.type_data.v2.x, val.type_data.v2.y);
+                break;
+
+            case ek_surface_shader_prog_uniform_val_type_v3:
+                glUniform3f(loc, val.type_data.v3.x, val.type_data.v3.y, val.type_data.v3.z);
+                break;
+
+            case ek_surface_shader_prog_uniform_val_type_v4:
+                glUniform4f(loc, val.type_data.v4.x, val.type_data.v4.y, val.type_data.v4.z, val.type_data.v4.w);
+                break;
+
+            case ek_surface_shader_prog_uniform_val_type_mat4x4:
+                glUniformMatrix4fv(loc, 1, false, reinterpret_cast<const t_f32*>(&val.type_data.mat4x4));
+                break;
+        }
+
+        return true;
     }
 
     static inline s_rect<t_s32> GLViewport() {
