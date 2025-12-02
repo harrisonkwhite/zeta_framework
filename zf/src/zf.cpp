@@ -4,6 +4,9 @@
 #include <glad/glad.h>
 
 namespace zf {
+    // ============================================================
+    // @section: Types and Constants
+    // ============================================================
     using t_gl_id = GLuint;
 
     struct s_mesh_gl_ids {
@@ -12,124 +15,33 @@ namespace zf {
         t_gl_id elem_buf;
     };
 
-    static t_size CalcStride(const s_array_rdonly<t_s32> vert_attr_lens) {
-        t_size stride = 0;
+    struct s_gfx_resource {
+        e_gfx_resource_type type;
 
-        for (t_size i = 0; i < vert_attr_lens.len; i++) {
-            stride += ZF_SIZE_OF(t_f32) * static_cast<t_size>(vert_attr_lens[i]);
-        }
+        union {
+            struct {
+                t_gl_id gl_id;
+                s_v2<t_s32> size;
+            } tex;
 
-        return stride;
-    }
+            struct {
+                s_font_arrangement arrangement;
+                s_array<t_gl_id> atlas_gl_ids;
+            } font;
 
-    static s_mesh_gl_ids MakeGLMesh(const t_f32* const verts_raw, const t_size verts_len, const s_array_rdonly<t_u16> elems, const s_array_rdonly<t_s32> vert_attr_lens) {
-        s_mesh_gl_ids gl_ids = {};
+            struct {
+                t_gl_id fb_gl_id;
+                t_gl_id tex_gl_id;
+                s_v2<t_s32> size;
+            } surf;
 
-        glGenVertexArrays(1, &gl_ids.vert_arr);
-        glBindVertexArray(gl_ids.vert_arr);
+            struct {
+                t_gl_id gl_id;
+            } surf_shader_prog;
+        } type_data;
 
-        glGenBuffers(1, &gl_ids.vert_buf);
-        glBindBuffer(GL_ARRAY_BUFFER, gl_ids.vert_buf);
-        glBufferData(GL_ARRAY_BUFFER, ZF_SIZE_OF(t_f32) * verts_len, verts_raw, GL_DYNAMIC_DRAW);
-
-        glGenBuffers(1, &gl_ids.elem_buf);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, gl_ids.elem_buf);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, static_cast<GLsizeiptr>(ArraySizeInBytes(elems)), elems.buf_raw, GL_STATIC_DRAW);
-
-        const t_size stride = CalcStride(vert_attr_lens);
-        t_s32 offs = 0;
-
-        for (t_size i = 0; i < vert_attr_lens.len; i++) {
-            const t_s32 attr_len = vert_attr_lens[i];
-
-            glVertexAttribPointer(static_cast<GLuint>(i), attr_len, GL_FLOAT, false, static_cast<GLsizei>(stride), reinterpret_cast<void*>(ZF_SIZE_OF(t_f32) * offs));
-            glEnableVertexAttribArray(static_cast<GLuint>(i));
-
-            offs += attr_len;
-        }
-
-        glBindVertexArray(0);
-
-        return gl_ids;
-    }
-
-    static void ReleaseGLMesh(const s_mesh_gl_ids& gl_ids) {
-        glDeleteBuffers(1, &gl_ids.elem_buf);
-        glDeleteBuffers(1, &gl_ids.vert_buf);
-        glDeleteVertexArrays(1, &gl_ids.vert_arr);
-    }
-
-    static t_gl_id MakeGLShaderProg(const s_str_rdonly vert_src, const s_str_rdonly frag_src, s_mem_arena& temp_mem_arena) {
-        s_str vert_src_terminated;
-        s_str frag_src_terminated;
-
-        if (!CloneStrButAddTerminator(vert_src, temp_mem_arena, vert_src_terminated)
-            || !CloneStrButAddTerminator(frag_src, temp_mem_arena, frag_src_terminated)) {
-            return 0;
-        }
-
-        // Generate the individual shaders.
-        const auto gen_shader = [&temp_mem_arena](const s_str_rdonly src, const t_b8 is_frag) -> t_gl_id {
-            const t_gl_id shader_gl_id = glCreateShader(is_frag ? GL_FRAGMENT_SHADER : GL_VERTEX_SHADER);
-
-            const auto src_raw = StrRaw(src);
-            glShaderSource(shader_gl_id, 1, &src_raw, nullptr);
-
-            glCompileShader(shader_gl_id);
-
-            t_s32 success;
-            glGetShaderiv(shader_gl_id, GL_COMPILE_STATUS, &success);
-
-            if (!success) {
-                ZF_DEFER({ glDeleteShader(shader_gl_id); });
-
-                // Try getting the OpenGL compile error message.
-                t_s32 log_chr_cnt;
-                glGetShaderiv(shader_gl_id, GL_INFO_LOG_LENGTH, &log_chr_cnt);
-
-                if (log_chr_cnt > 1) {
-                    s_array<char> log_chrs;
-
-                    if (MakeArray(temp_mem_arena, log_chr_cnt, log_chrs)) {
-                        glGetShaderInfoLog(shader_gl_id, static_cast<GLsizei>(log_chrs.len), nullptr, log_chrs.buf_raw);
-                        LogErrorType("OpenGL Shader Compilation", "%", StrFromRaw(log_chrs.buf_raw));
-                    } else {
-                        LogError("Failed to reserve memory for OpenGL shader compilation error log!");
-                    }
-                } else {
-                    LogError("OpenGL shader compilation failed, but no error message available!");
-                }
-
-                return 0;
-            }
-
-            return shader_gl_id;
-        };
-
-        const t_gl_id vert_gl_id = gen_shader(vert_src_terminated, false);
-
-        if (!vert_gl_id) {
-            return 0;
-        }
-
-        ZF_DEFER({ glDeleteShader(vert_gl_id); });
-
-        const t_gl_id frag_gl_id = gen_shader(frag_src_terminated, true);
-
-        if (!frag_gl_id) {
-            return 0;
-        }
-
-        ZF_DEFER({ glDeleteShader(frag_gl_id); });
-
-        // Set up the shader program.
-        const t_gl_id prog_gl_id = glCreateProgram();
-        glAttachShader(prog_gl_id, vert_gl_id);
-        glAttachShader(prog_gl_id, frag_gl_id);
-        glLinkProgram(prog_gl_id);
-
-        return prog_gl_id;
-    }
+        s_gfx_resource* next;
+    };
 
     struct s_batch_vert {
         s_v2<t_f32> vert_coord;
@@ -211,34 +123,9 @@ void main() {
 }
 )";
 
-    struct s_resource {
-        e_resource_type type;
-
-        union {
-            struct {
-                t_gl_id gl_id;
-                s_v2<t_s32> size;
-            } tex;
-
-            struct {
-                s_font_arrangement arrangement;
-                s_array<t_gl_id> atlas_gl_ids;
-            } font;
-
-            struct {
-                t_gl_id fb_gl_id;
-                t_gl_id tex_gl_id;
-                s_v2<t_s32> size;
-            } surf;
-
-            struct {
-                t_gl_id gl_id;
-            } surf_shader_prog;
-        } type_data;
-
-        s_resource* next;
-    };
-
+    // ============================================================
+    // @section: State
+    // ============================================================
     struct {
         GLFWwindow* glfw_window;
 
@@ -259,7 +146,7 @@ void main() {
         s_mesh_gl_ids surf_mesh_gl_ids;
         t_gl_id surf_default_shader_prog_gl_id;
 
-        s_resource_arena perm_res_arena;
+        s_gfx_resource_arena perm_res_arena;
 
         struct {
             s_static_array<t_batch_slot, g_batch_slot_cnt> batch_slots;
@@ -268,10 +155,370 @@ void main() {
             s_matrix_4x4 view_mat; // The view matrix to be used when flushing.
             t_gl_id tex_gl_id; // The texture to be used when flushing.
 
-            s_static_stack<const s_resource*, 32> surfs;
+            s_static_stack<const s_gfx_resource*, 32> surfs;
         } rendering;
     } g_game;
 
+    // ============================================================
+    // @section: OpenGL Helpers
+    // ============================================================
+    static s_mesh_gl_ids MakeGLMesh(const t_f32* const verts_raw, const t_size verts_len, const s_array_rdonly<t_u16> elems, const s_array_rdonly<t_s32> vert_attr_lens) {
+        s_mesh_gl_ids gl_ids = {};
+
+        glGenVertexArrays(1, &gl_ids.vert_arr);
+        glBindVertexArray(gl_ids.vert_arr);
+
+        glGenBuffers(1, &gl_ids.vert_buf);
+        glBindBuffer(GL_ARRAY_BUFFER, gl_ids.vert_buf);
+        glBufferData(GL_ARRAY_BUFFER, ZF_SIZE_OF(t_f32) * verts_len, verts_raw, GL_DYNAMIC_DRAW);
+
+        glGenBuffers(1, &gl_ids.elem_buf);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, gl_ids.elem_buf);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, static_cast<GLsizeiptr>(ArraySizeInBytes(elems)), elems.buf_raw, GL_STATIC_DRAW);
+
+        const t_size stride = [vert_attr_lens]() {
+            t_size res = 0;
+
+            for (t_size i = 0; i < vert_attr_lens.len; i++) {
+                res += ZF_SIZE_OF(t_f32) * static_cast<t_size>(vert_attr_lens[i]);
+            }
+
+            return res;
+        }();
+
+        t_s32 offs = 0;
+
+        for (t_size i = 0; i < vert_attr_lens.len; i++) {
+            const t_s32 attr_len = vert_attr_lens[i];
+
+            glVertexAttribPointer(static_cast<GLuint>(i), attr_len, GL_FLOAT, false, static_cast<GLsizei>(stride), reinterpret_cast<void*>(ZF_SIZE_OF(t_f32) * offs));
+            glEnableVertexAttribArray(static_cast<GLuint>(i));
+
+            offs += attr_len;
+        }
+
+        glBindVertexArray(0);
+
+        return gl_ids;
+    }
+
+    static void ReleaseGLMesh(const s_mesh_gl_ids& gl_ids) {
+        glDeleteBuffers(1, &gl_ids.elem_buf);
+        glDeleteBuffers(1, &gl_ids.vert_buf);
+        glDeleteVertexArrays(1, &gl_ids.vert_arr);
+    }
+
+    static t_gl_id MakeGLShaderProg(const s_str_rdonly vert_src, const s_str_rdonly frag_src, s_mem_arena& temp_mem_arena) {
+        s_str vert_src_terminated;
+        s_str frag_src_terminated;
+
+        if (!CloneStrButAddTerminator(vert_src, temp_mem_arena, vert_src_terminated)
+            || !CloneStrButAddTerminator(frag_src, temp_mem_arena, frag_src_terminated)) {
+            return 0;
+        }
+
+        // Generate the individual shaders.
+        const auto gen_shader = [&temp_mem_arena](const s_str_rdonly src, const t_b8 is_frag) -> t_gl_id {
+            const t_gl_id shader_gl_id = glCreateShader(is_frag ? GL_FRAGMENT_SHADER : GL_VERTEX_SHADER);
+
+            const auto src_raw = StrRaw(src);
+            glShaderSource(shader_gl_id, 1, &src_raw, nullptr);
+
+            glCompileShader(shader_gl_id);
+
+            t_s32 success;
+            glGetShaderiv(shader_gl_id, GL_COMPILE_STATUS, &success);
+
+            if (!success) {
+                ZF_DEFER({ glDeleteShader(shader_gl_id); });
+
+                // Try getting the OpenGL compile error message.
+                t_s32 log_chr_cnt;
+                glGetShaderiv(shader_gl_id, GL_INFO_LOG_LENGTH, &log_chr_cnt);
+
+                if (log_chr_cnt >= 1) {
+                    s_array<char> log_chrs;
+
+                    if (MakeArray(temp_mem_arena, log_chr_cnt, log_chrs)) {
+                        glGetShaderInfoLog(shader_gl_id, static_cast<GLsizei>(log_chrs.len), nullptr, log_chrs.buf_raw);
+                        LogErrorType("OpenGL Shader Compilation", "%", StrFromRaw(log_chrs.buf_raw));
+                    } else {
+                        LogError("Failed to reserve memory for OpenGL shader compilation error log!");
+                    }
+                } else {
+                    LogError("OpenGL shader compilation failed, but no error message available!");
+                }
+
+                return 0;
+            }
+
+            return shader_gl_id;
+        };
+
+        const t_gl_id vert_gl_id = gen_shader(vert_src_terminated, false);
+
+        if (!vert_gl_id) {
+            return 0;
+        }
+
+        ZF_DEFER({ glDeleteShader(vert_gl_id); });
+
+        const t_gl_id frag_gl_id = gen_shader(frag_src_terminated, true);
+
+        if (!frag_gl_id) {
+            return 0;
+        }
+
+        ZF_DEFER({ glDeleteShader(frag_gl_id); });
+
+        // Set up the shader program.
+        const t_gl_id prog_gl_id = glCreateProgram();
+        glAttachShader(prog_gl_id, vert_gl_id);
+        glAttachShader(prog_gl_id, frag_gl_id);
+        glLinkProgram(prog_gl_id);
+
+        // @todo: Check for link success.
+
+        return prog_gl_id;
+    }
+
+    static inline s_v2<t_s32> GLTextureSizeLimit() {
+        t_s32 size;
+        glGetIntegerv(GL_MAX_TEXTURE_SIZE, &size);
+        return { size, size };
+    }
+
+    static t_gl_id MakeGLTexture(const s_rgba_texture_data_rdonly& tex_data) {
+        const s_v2<t_s32> tex_size_limit = GLTextureSizeLimit();
+
+        if (tex_data.size_in_pxs.x > tex_size_limit.x || tex_data.size_in_pxs.y > tex_size_limit.y) {
+            LogError("Texture size % exceeds limits %!", tex_data.size_in_pxs, tex_size_limit);
+            ZF_REPORT_ERROR();
+            return 0;
+        }
+
+        t_gl_id gl_id;
+        glGenTextures(1, &gl_id);
+
+        glBindTexture(GL_TEXTURE_2D, gl_id);
+
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, tex_data.size_in_pxs.x, tex_data.size_in_pxs.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, tex_data.px_data.buf_raw);
+
+        return gl_id;
+    }
+
+    // ============================================================
+    // @section: GFX Resources
+    // ============================================================
+    void ReleaseGFXResources(const s_gfx_resource_arena& res_arena) {
+        const s_gfx_resource* res = res_arena.head;
+
+        while (res) {
+            switch (res->type) {
+                case ek_gfx_resource_type_texture:
+                    glDeleteTextures(1, &res->type_data.tex.gl_id);
+                    break;
+
+                case ek_gfx_resource_type_font:
+                    glDeleteTextures(static_cast<GLsizei>(res->type_data.font.atlas_gl_ids.len), res->type_data.font.atlas_gl_ids.buf_raw);
+                    break;
+
+                case ek_gfx_resource_type_surface:
+                    glDeleteTextures(1, &res->type_data.surf.tex_gl_id);
+                    glDeleteFramebuffers(1, &res->type_data.surf.fb_gl_id);
+                    break;
+
+                case ek_gfx_resource_type_surface_shader_prog:
+                    glDeleteProgram(res->type_data.surf_shader_prog.gl_id);
+                    break;
+
+                default:
+                    ZF_ASSERT(false);
+                    break;
+            }
+
+            res = res->next;
+        }
+    }
+
+    static s_gfx_resource* PushGFXResource(s_gfx_resource_arena& res_arena) {
+        const auto res = PushToMemArena<s_gfx_resource>(*res_arena.mem_arena);
+
+        if (!res) {
+            return nullptr;
+        }
+
+        if (!res_arena.head) {
+            res_arena.head = res;
+            res_arena.tail = res;
+        } else {
+            res_arena.tail->next = res;
+            res_arena.tail = res;
+        }
+
+        return res;
+    }
+
+    t_b8 LoadTexture(const s_rgba_texture_data_rdonly& tex_data, s_gfx_resource*& o_tex, s_gfx_resource_arena* const res_arena) {
+        const t_gl_id gl_id = MakeGLTexture(tex_data);
+
+        if (!gl_id) {
+            return false;
+        }
+
+        o_tex = PushGFXResource(res_arena ? *res_arena : g_game.perm_res_arena);
+
+        if (!o_tex) {
+            return false;
+        }
+
+        o_tex->type = ek_gfx_resource_type_texture;
+        o_tex->type_data.tex = {.gl_id = gl_id, .size = tex_data.size_in_pxs};
+
+        return true;
+    }
+
+    s_v2<t_s32> TextureSize(const s_gfx_resource* const res) {
+        ZF_ASSERT(res);
+        ZF_ASSERT(res->type == ek_gfx_resource_type_texture);
+
+        return res->type_data.tex.size;
+    }
+
+    // ============================================================
+    // @section: Rendering
+    // ============================================================
+    static void Flush() {
+        if (g_game.rendering.batch_slots_used_cnt == 0) {
+            // Nothing to flush!
+            return;
+        }
+
+        //
+        // Submitting Vertex Data to GPU
+        //
+        glBindVertexArray(g_game.batch_mesh_gl_ids.vert_arr);
+        glBindBuffer(GL_ARRAY_BUFFER, g_game.batch_mesh_gl_ids.vert_buf);
+
+        {
+            const t_size write_size = ZF_SIZE_OF(t_batch_slot) * g_game.rendering.batch_slots_used_cnt;
+            glBufferSubData(GL_ARRAY_BUFFER, 0, write_size, g_game.rendering.batch_slots.buf_raw);
+        }
+
+        //
+        // Rendering the Batch
+        //
+        glUseProgram(g_game.batch_shader_prog_gl_id);
+
+        const t_s32 view_uniform_loc = glGetUniformLocation(g_game.batch_shader_prog_gl_id, "u_view");
+        glUniformMatrix4fv(view_uniform_loc, 1, false, reinterpret_cast<const t_f32*>(&g_game.rendering.view_mat));
+
+        const s_rect<t_s32> viewport = []() {
+            s_rect<t_s32> vp;
+            glGetIntegerv(GL_VIEWPORT, reinterpret_cast<t_s32*>(&vp));
+            return vp;
+        }();
+
+        const auto proj_mat = MakeOrthographicMatrix4x4(0.0f, static_cast<t_f32>(viewport.width), static_cast<t_f32>(viewport.height), 0.0f, -1.0f, 1.0f);
+        const t_s32 proj_uniform_loc = glGetUniformLocation(g_game.batch_shader_prog_gl_id, "u_proj");
+        glUniformMatrix4fv(proj_uniform_loc, 1, false, reinterpret_cast<const t_f32*>(&proj_mat));
+
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, g_game.rendering.tex_gl_id);
+
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, g_game.batch_mesh_gl_ids.elem_buf);
+        glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(g_batch_slot_elem_cnt * g_game.rendering.batch_slots_used_cnt), GL_UNSIGNED_SHORT, nullptr);
+
+        glUseProgram(0);
+
+        g_game.rendering.batch_slots_used_cnt = 0;
+    }
+
+    void Clear(const s_color_rgba32f col) {
+        glClearColor(col.r, col.g, col.b, col.a);
+        glClear(GL_COLOR_BUFFER_BIT);
+    }
+
+    void SetViewMatrix(const s_matrix_4x4& mat) {
+        Flush();
+        g_game.rendering.view_mat = mat;
+    }
+
+    static void Draw(const t_gl_id tex_gl_id, const s_rect<t_f32> tex_coords, s_v2<t_f32> pos, s_v2<t_f32> size, s_v2<t_f32> origin, const t_f32 rot, const s_color_rgba32f blend) {
+        if (g_game.rendering.batch_slots_used_cnt == 0) {
+            // This is the first draw to the batch, so set the texture associated with the batch to the one we're trying to render.
+            g_game.rendering.tex_gl_id = tex_gl_id;
+        } else if (g_game.rendering.batch_slots_used_cnt == g_batch_slot_cnt || tex_gl_id != g_game.rendering.tex_gl_id) {
+            // Flush the batch and then try this same render operation again but on a fresh batch.
+            Flush();
+            Draw(tex_gl_id, tex_coords, pos, size, origin, rot, blend);
+            return;
+        }
+
+        // Write the vertex data to the next slot.
+        const s_static_array<s_v2<t_f32>, 4> vert_coords = {{
+            {0.0f - origin.x, 0.0f - origin.y},
+            {1.0f - origin.x, 0.0f - origin.y},
+            {1.0f - origin.x, 1.0f - origin.y},
+            {0.0f - origin.x, 1.0f - origin.y}
+        }};
+
+        const s_static_array<s_v2<t_f32>, 4> tex_coords_per_vert = {{
+            {RectLeft(tex_coords), RectTop(tex_coords)},
+            {RectRight(tex_coords), RectTop(tex_coords)},
+            {RectRight(tex_coords), RectBottom(tex_coords)},
+            {RectLeft(tex_coords), RectBottom(tex_coords)}
+        }};
+
+        t_batch_slot& slot = g_game.rendering.batch_slots[g_game.rendering.batch_slots_used_cnt];
+
+        for (t_size i = 0; i < slot.g_len; i++) {
+            slot[i] = {
+                .vert_coord = vert_coords[i],
+                .pos = pos,
+                .size = size,
+                .rot = rot,
+                .tex_coord = tex_coords_per_vert[i],
+                .blend = blend
+            };
+        }
+
+        // Update the count - we've used a slot!
+        g_game.rendering.batch_slots_used_cnt++;
+    }
+
+    void DrawTexture(const s_gfx_resource* const tex, const s_v2<t_f32> pos, const s_rect<t_s32> src_rect, const s_v2<t_f32> origin, const s_v2<t_f32> scale, const t_f32 rot, const s_color_rgba32f blend) {
+        ZF_ASSERT(tex && tex->type == ek_gfx_resource_type_texture);
+        ZF_ASSERT(origin.x >= 0.0f && origin.x <= 1.0f && origin.y >= 0.0f && origin.y <= 1.0f); // @todo: Generic function for this check?
+        // @todo: Add more assertions here!
+
+        const auto tex_size = tex->type_data.tex.size;
+
+        s_rect<t_s32> src_rect_to_use;
+
+        if (src_rect == s_rect<t_s32>()) {
+            // If the source rectangle wasn't set, just go with the whole texture.
+            src_rect_to_use = {0, 0, tex_size.x, tex_size.y};
+        } else {
+            ZF_ASSERT(RectLeft(src_rect) >= 0 && RectTop(src_rect) >= 0 && RectRight(src_rect) <= tex_size.x && RectTop(src_rect) <= tex_size.y);
+            src_rect_to_use = src_rect;
+        }
+
+        const s_rect tex_coords = CalcTextureCoords(src_rect_to_use, tex_size);
+
+        const s_v2<t_f32> size = {
+            static_cast<t_f32>(src_rect_to_use.width) * scale.x, static_cast<t_f32>(src_rect_to_use.height) * scale.y
+        };
+
+        Draw(tex->type_data.tex.gl_id, tex_coords, pos, size, origin, rot, blend);
+    }
+
+    // ============================================================
+    // @section: Input
+    // ============================================================
     constexpr e_key_code ConvertGLFWKeyCode(const t_s32 glfw_key) {
         switch (glfw_key) {
             case GLFW_KEY_SPACE: return ek_key_code_space;
@@ -352,8 +599,39 @@ void main() {
         }
     }
 
-    static void Flush();
+    t_b8 IsKeyDown(const e_key_code kc) {
+        return IsBitSet(g_game.keys_down, kc);
+    }
 
+    t_b8 IsKeyPressed(const e_key_code kc) {
+        return IsBitSet(g_game.input_events.keys_pressed, kc);
+    }
+
+    t_b8 IsKeyReleased(const e_key_code kc) {
+        return IsBitSet(g_game.input_events.keys_released, kc);
+    }
+
+    t_b8 IsMouseButtonDown(const e_mouse_button_code mbc) {
+        return IsBitSet(g_game.mouse_buttons_down, mbc);
+    }
+
+    t_b8 IsMouseButtonPressed(const e_mouse_button_code mbc) {
+        return IsBitSet(g_game.input_events.mouse_buttons_pressed, mbc);
+    }
+
+    t_b8 IsMouseButtonReleased(const e_mouse_button_code mbc) {
+        return IsBitSet(g_game.input_events.mouse_buttons_released, mbc);
+    }
+
+    s_v2<t_f32> MousePos() {
+        t_f64 mx, my;
+        glfwGetCursorPos(g_game.glfw_window, &mx, &my);
+        return {static_cast<t_f32>(mx), static_cast<t_f32>(my)};
+    }
+
+    // ============================================================
+    // @section: Game
+    // ============================================================
     t_b8 RunGame(const s_game_info& info) {
         AssertGameInfoValidity(info);
 
@@ -503,8 +781,8 @@ void main() {
             ZF_DEFER({ glDeleteProgram(g_game.batch_shader_prog_gl_id); });
 
             // Set up permanent resource arena.
-            g_game.perm_res_arena = MakeResourceArena(mem_arena);
-            ZF_DEFER({ ReleaseResources(g_game.perm_res_arena); });
+            g_game.perm_res_arena = MakeGFXResourceArena(mem_arena);
+            ZF_DEFER({ ReleaseGFXResources(g_game.perm_res_arena); });
 
             //
             // Developer Initialisation
@@ -542,12 +820,11 @@ void main() {
                 }
             });
 
-            // Now that everything is set up, we can show the window.
-            glfwShowWindow(g_game.glfw_window);
-
             //
             // Main Loop
             //
+            glfwShowWindow(g_game.glfw_window);
+
             t_f64 frame_time_last = glfwGetTime();
             t_f64 frame_dur_accum = 0.0;
 
@@ -633,272 +910,5 @@ void main() {
         t_s32 w, h;
         glfwGetFramebufferSize(g_game.glfw_window, &w, &h);
         return {w, h};
-    }
-
-    // ============================================================
-    // @section: Input
-    // ============================================================
-    t_b8 IsKeyDown(const e_key_code kc) {
-        return IsBitSet(g_game.keys_down, kc);
-    }
-
-    t_b8 IsKeyPressed(const e_key_code kc) {
-        return IsBitSet(g_game.input_events.keys_pressed, kc);
-    }
-
-    t_b8 IsKeyReleased(const e_key_code kc) {
-        return IsBitSet(g_game.input_events.keys_released, kc);
-    }
-
-    t_b8 IsMouseButtonDown(const e_mouse_button_code mbc) {
-        return IsBitSet(g_game.mouse_buttons_down, mbc);
-    }
-
-    t_b8 IsMouseButtonPressed(const e_mouse_button_code mbc) {
-        return IsBitSet(g_game.input_events.mouse_buttons_pressed, mbc);
-    }
-
-    t_b8 IsMouseButtonReleased(const e_mouse_button_code mbc) {
-        return IsBitSet(g_game.input_events.mouse_buttons_released, mbc);
-    }
-
-    s_v2<t_f32> MousePos() {
-        t_f64 mx, my;
-        glfwGetCursorPos(g_game.glfw_window, &mx, &my);
-        return {static_cast<t_f32>(mx), static_cast<t_f32>(my)};
-    }
-
-    // ============================================================
-    // @section: GFX Resources
-    // ============================================================
-    static inline s_v2<t_s32> GLTextureSizeLimit() {
-        t_s32 size;
-        glGetIntegerv(GL_MAX_TEXTURE_SIZE, &size);
-        return { size, size };
-    }
-
-    static t_gl_id MakeGLTexture(const s_rgba_texture_data_rdonly& tex_data) {
-        const s_v2<t_s32> tex_size_limit = GLTextureSizeLimit();
-
-        if (tex_data.size_in_pxs.x > tex_size_limit.x || tex_data.size_in_pxs.y > tex_size_limit.y) {
-            LogError("Texture size % exceeds limits %!", tex_data.size_in_pxs, tex_size_limit);
-            ZF_REPORT_ERROR();
-            return 0;
-        }
-
-        t_gl_id gl_id;
-        glGenTextures(1, &gl_id);
-
-        glBindTexture(GL_TEXTURE_2D, gl_id);
-
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, tex_data.size_in_pxs.x, tex_data.size_in_pxs.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, tex_data.px_data.buf_raw);
-
-        return gl_id;
-    }
-
-    void ReleaseResources(const s_resource_arena& res_arena) {
-        const s_resource* res = res_arena.head;
-
-        while (res) {
-            switch (res->type) {
-                case ek_resource_type_texture:
-                    glDeleteTextures(1, &res->type_data.tex.gl_id);
-                    break;
-
-                case ek_resource_type_font:
-                    glDeleteTextures(static_cast<GLsizei>(res->type_data.font.atlas_gl_ids.len), res->type_data.font.atlas_gl_ids.buf_raw);
-                    break;
-
-                case ek_resource_type_surface:
-                    glDeleteTextures(1, &res->type_data.surf.tex_gl_id);
-                    glDeleteFramebuffers(1, &res->type_data.surf.fb_gl_id);
-                    break;
-
-                case ek_resource_type_surface_shader_prog:
-                    glDeleteProgram(res->type_data.surf_shader_prog.gl_id);
-                    break;
-
-                default:
-                    ZF_ASSERT(false);
-                    break;
-            }
-
-            res = res->next;
-        }
-    }
-
-    static s_resource* PushResource(s_resource_arena& res_arena) {
-        const auto res = PushToMemArena<s_resource>(*res_arena.mem_arena);
-
-        if (!res) {
-            return nullptr;
-        }
-
-        if (!res_arena.head) {
-            res_arena.head = res;
-            res_arena.tail = res;
-        } else {
-            res_arena.tail->next = res;
-            res_arena.tail = res;
-        }
-
-        return res;
-    }
-
-    t_b8 LoadTexture(const s_rgba_texture_data_rdonly& tex_data, s_resource*& o_tex, s_resource_arena* const res_arena) {
-        const t_gl_id gl_id = MakeGLTexture(tex_data);
-
-        if (!gl_id) {
-            return false;
-        }
-
-        o_tex = PushResource(res_arena ? *res_arena : g_game.perm_res_arena);
-
-        if (!o_tex) {
-            return false;
-        }
-
-        o_tex->type = ek_resource_type_texture;
-        o_tex->type_data.tex = {.gl_id = gl_id, .size = tex_data.size_in_pxs};
-
-        return true;
-    }
-
-    s_v2<t_s32> TextureSize(const s_resource* const res) {
-        ZF_ASSERT(res);
-        ZF_ASSERT(res->type == ek_resource_type_texture);
-
-        return res->type_data.tex.size;
-    }
-
-    // ============================================================
-    // @section: Rendering
-    // ============================================================
-    static void Flush() {
-        if (g_game.rendering.batch_slots_used_cnt == 0) {
-            // Nothing to flush!
-            return;
-        }
-
-        //
-        // Submitting Vertex Data to GPU
-        //
-        glBindVertexArray(g_game.batch_mesh_gl_ids.vert_arr);
-        glBindBuffer(GL_ARRAY_BUFFER, g_game.batch_mesh_gl_ids.vert_buf);
-
-        {
-            const t_size write_size = ZF_SIZE_OF(t_batch_slot) * g_game.rendering.batch_slots_used_cnt;
-            glBufferSubData(GL_ARRAY_BUFFER, 0, write_size, g_game.rendering.batch_slots.buf_raw);
-        }
-
-        //
-        // Rendering the Batch
-        //
-        glUseProgram(g_game.batch_shader_prog_gl_id);
-
-        const t_s32 view_uniform_loc = glGetUniformLocation(g_game.batch_shader_prog_gl_id, "u_view");
-        glUniformMatrix4fv(view_uniform_loc, 1, false, reinterpret_cast<const t_f32*>(&g_game.rendering.view_mat));
-
-        const s_rect<t_s32> viewport = []() {
-            s_rect<t_s32> vp;
-            glGetIntegerv(GL_VIEWPORT, reinterpret_cast<t_s32*>(&vp));
-            return vp;
-        }();
-
-        const auto proj_mat = MakeOrthographicMatrix4x4(0.0f, static_cast<t_f32>(viewport.width), static_cast<t_f32>(viewport.height), 0.0f, -1.0f, 1.0f);
-        const t_s32 proj_uniform_loc = glGetUniformLocation(g_game.batch_shader_prog_gl_id, "u_proj");
-        glUniformMatrix4fv(proj_uniform_loc, 1, false, reinterpret_cast<const t_f32*>(&proj_mat));
-
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, g_game.rendering.tex_gl_id);
-
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, g_game.batch_mesh_gl_ids.elem_buf);
-        glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(g_batch_slot_elem_cnt * g_game.rendering.batch_slots_used_cnt), GL_UNSIGNED_SHORT, nullptr);
-
-        glUseProgram(0);
-
-        g_game.rendering.batch_slots_used_cnt = 0;
-    }
-
-    void Clear(const s_color_rgba32f col) {
-        glClearColor(col.r, col.g, col.b, col.a);
-        glClear(GL_COLOR_BUFFER_BIT);
-    }
-
-    void SetViewMatrix(const s_matrix_4x4& mat) {
-        Flush();
-        g_game.rendering.view_mat = mat;
-    }
-
-    static void Draw(const t_gl_id tex_gl_id, const s_rect<t_f32> tex_coords, s_v2<t_f32> pos, s_v2<t_f32> size, s_v2<t_f32> origin, const t_f32 rot, const s_color_rgba32f blend) {
-        if (g_game.rendering.batch_slots_used_cnt == 0) {
-            // This is the first draw to the batch, so set the texture associated with the batch to the one we're trying to render.
-            g_game.rendering.tex_gl_id = tex_gl_id;
-        } else if (g_game.rendering.batch_slots_used_cnt == g_batch_slot_cnt || tex_gl_id != g_game.rendering.tex_gl_id) {
-            // Flush the batch and then try this same render operation again but on a fresh batch.
-            Flush();
-            Draw(tex_gl_id, tex_coords, pos, size, origin, rot, blend);
-            return;
-        }
-
-        // Write the vertex data to the next slot.
-        const s_static_array<s_v2<t_f32>, 4> vert_coords = {{
-            {0.0f - origin.x, 0.0f - origin.y},
-            {1.0f - origin.x, 0.0f - origin.y},
-            {1.0f - origin.x, 1.0f - origin.y},
-            {0.0f - origin.x, 1.0f - origin.y}
-        }};
-
-        const s_static_array<s_v2<t_f32>, 4> tex_coords_per_vert = {{
-            {RectLeft(tex_coords), RectTop(tex_coords)},
-            {RectRight(tex_coords), RectTop(tex_coords)},
-            {RectRight(tex_coords), RectBottom(tex_coords)},
-            {RectLeft(tex_coords), RectBottom(tex_coords)}
-        }};
-
-        t_batch_slot& slot = g_game.rendering.batch_slots[g_game.rendering.batch_slots_used_cnt];
-
-        for (t_size i = 0; i < slot.g_len; i++) {
-            slot[i] = {
-                .vert_coord = vert_coords[i],
-                .pos = pos,
-                .size = size,
-                .rot = rot,
-                .tex_coord = tex_coords_per_vert[i],
-                .blend = blend
-            };
-        }
-
-        // Update the count - we've used a slot!
-        g_game.rendering.batch_slots_used_cnt++;
-    }
-
-    void DrawTexture(const s_resource* const tex, const s_v2<t_f32> pos, const s_rect<t_s32> src_rect, const s_v2<t_f32> origin, const s_v2<t_f32> scale, const t_f32 rot, const s_color_rgba32f blend) {
-        ZF_ASSERT(tex && tex->type == ek_resource_type_texture);
-        ZF_ASSERT(origin.x >= 0.0f && origin.x <= 1.0f && origin.y >= 0.0f && origin.y <= 1.0f); // @todo: Generic function for this check?
-        // @todo: Add more assertions here!
-
-        const auto tex_size = tex->type_data.tex.size;
-
-        s_rect<t_s32> src_rect_to_use;
-
-        if (src_rect == s_rect<t_s32>()) {
-            // If the source rectangle wasn't set, just go with the whole texture.
-            src_rect_to_use = {0, 0, tex_size.x, tex_size.y};
-        } else {
-            ZF_ASSERT(RectLeft(src_rect) >= 0 && RectTop(src_rect) >= 0 && RectRight(src_rect) <= tex_size.x && RectTop(src_rect) <= tex_size.y);
-            src_rect_to_use = src_rect;
-        }
-
-        const s_rect tex_coords = CalcTextureCoords(src_rect_to_use, tex_size);
-
-        const s_v2<t_f32> size = {
-            static_cast<t_f32>(src_rect_to_use.width) * scale.x, static_cast<t_f32>(src_rect_to_use.height) * scale.y
-        };
-
-        Draw(tex->type_data.tex.gl_id, tex_coords, pos, size, origin, rot, blend);
     }
 }
