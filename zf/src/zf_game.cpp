@@ -2,11 +2,29 @@
 
 #include <GLFW/glfw3.h>
 #include <glad/glad.h>
-#include <zf/zf_gl.h>
+#include <zf_private/zf_gl.h>
 
 namespace zf {
     // ============================================================
     // @section: Types and Constants
+    // ============================================================
+    struct {
+        GLFWwindow* glfw_window;
+
+        s_static_bit_vec<eks_key_code_cnt> keys_down;
+        s_static_bit_vec<eks_mouse_button_code_cnt> mouse_buttons_down;
+
+        struct {
+            s_static_bit_vec<eks_key_code_cnt> keys_pressed;
+            s_static_bit_vec<eks_key_code_cnt> keys_released;
+
+            s_static_bit_vec<eks_mouse_button_code_cnt> mouse_buttons_pressed;
+            s_static_bit_vec<eks_mouse_button_code_cnt> mouse_buttons_released;
+        } input_events;
+    } g_game;
+
+    // ============================================================
+    // @section: GFX Resources
     // ============================================================
     struct s_gfx_resource {
         e_gfx_resource_type type;
@@ -36,6 +54,163 @@ namespace zf {
         s_gfx_resource* next;
     };
 
+    void ReleaseGFXResources(const s_gfx_resource_arena& res_arena) {
+        const s_gfx_resource* res = res_arena.head;
+
+        while (res) {
+            switch (res->type) {
+                case ek_gfx_resource_type_texture:
+                    glDeleteTextures(1, &res->type_data.tex.gl_id);
+                    break;
+
+                case ek_gfx_resource_type_font:
+                    glDeleteTextures(static_cast<GLsizei>(res->type_data.font.atlas_gl_ids.len), res->type_data.font.atlas_gl_ids.buf_raw);
+                    break;
+
+                case ek_gfx_resource_type_surface:
+                    glDeleteTextures(1, &res->type_data.surf.tex_gl_id);
+                    glDeleteFramebuffers(1, &res->type_data.surf.fb_gl_id);
+                    break;
+
+                case ek_gfx_resource_type_surface_shader_prog:
+                    glDeleteProgram(res->type_data.surf_shader_prog.gl_id);
+                    break;
+
+                default:
+                    ZF_ASSERT(false);
+                    break;
+            }
+
+            res = res->next;
+        }
+    }
+
+    static s_gfx_resource* PushGFXResource(s_gfx_resource_arena& res_arena) {
+        const auto res = PushToMemArena<s_gfx_resource>(*res_arena.mem_arena);
+
+        if (!res) {
+            return nullptr;
+        }
+
+        if (!res_arena.head) {
+            res_arena.head = res;
+            res_arena.tail = res;
+        } else {
+            res_arena.tail->next = res;
+            res_arena.tail = res;
+        }
+
+        return res;
+    }
+
+    t_b8 LoadTexture(const s_rgba_texture_data_rdonly& tex_data, s_gfx_resource_arena& res_arena, s_gfx_resource*& o_tex) {
+        const t_gl_id gl_id = MakeGLTexture(tex_data);
+
+        if (!gl_id) {
+            return false;
+        }
+
+        o_tex = PushGFXResource(res_arena);
+
+        if (!o_tex) {
+            return false;
+        }
+
+        o_tex->type = ek_gfx_resource_type_texture;
+        o_tex->type_data.tex = {.gl_id = gl_id, .size = tex_data.size_in_pxs};
+
+        return true;
+    }
+
+    s_v2<t_s32> TextureSize(const s_gfx_resource* const res) {
+        ZF_ASSERT(res);
+        ZF_ASSERT(res->type == ek_gfx_resource_type_texture);
+
+        return res->type_data.tex.size;
+    }
+
+    [[nodiscard]] static t_b8 MakeFontAtlasGLTextures(const s_array_rdonly<t_font_atlas_rgba> atlas_rgbas, s_array<t_gl_id>& o_gl_ids) {
+        o_gl_ids = {
+            .buf_raw = static_cast<t_gl_id*>(malloc(static_cast<size_t>(ZF_SIZE_OF(t_gl_id) * atlas_rgbas.len))),
+            .len = atlas_rgbas.len
+        };
+
+        if (!o_gl_ids.buf_raw) {
+            return false;
+        }
+
+        for (t_size i = 0; i < atlas_rgbas.len; i++) {
+            o_gl_ids[i] = MakeGLTexture({g_font_atlas_size, atlas_rgbas[i]});
+
+            if (!o_gl_ids[i]) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    t_b8 LoadFontFromRaw(const s_str_rdonly file_path, const t_s32 height, const t_unicode_code_pt_bit_vec& code_pts, s_gfx_resource_arena& res_arena, s_mem_arena& temp_mem_arena, s_gfx_resource*& o_font, e_font_load_from_raw_result* const o_load_from_raw_res, t_unicode_code_pt_bit_vec* const o_unsupported_code_pts) {
+        s_font_arrangement arrangement;
+        s_array<t_font_atlas_rgba> atlas_rgbas;
+
+        const auto res = zf::LoadFontFromRaw(file_path, height, code_pts, *res_arena.mem_arena, temp_mem_arena, temp_mem_arena, arrangement, atlas_rgbas, o_unsupported_code_pts);
+
+        if (o_load_from_raw_res) {
+            *o_load_from_raw_res = res;
+        }
+
+        if (res != ek_font_load_from_raw_result_success) {
+            return false;
+        }
+
+        s_array<t_gl_id> atlas_gl_ids;
+
+        if (!MakeFontAtlasGLTextures(atlas_rgbas, atlas_gl_ids)) {
+            return false;
+        }
+
+        o_font = PushGFXResource(res_arena);
+
+        if (!o_font) {
+            return false;
+        }
+
+        o_font->type = ek_gfx_resource_type_font;
+        o_font->type_data.font = {.arrangement = arrangement, .atlas_gl_ids = atlas_gl_ids};
+
+        return true;
+    }
+
+    t_b8 LoadFontFromPacked(const s_str_rdonly file_path, s_gfx_resource_arena& res_arena, s_mem_arena& temp_mem_arena, s_gfx_resource*& o_font) {
+        s_font_arrangement arrangement;
+        s_array<t_font_atlas_rgba> atlas_rgbas;
+
+        if (!zf::UnpackFont(file_path, *res_arena.mem_arena, temp_mem_arena, temp_mem_arena, arrangement, atlas_rgbas)) {
+            return false;
+        }
+
+        s_array<t_gl_id> atlas_gl_ids;
+
+        if (!MakeFontAtlasGLTextures(atlas_rgbas, atlas_gl_ids)) {
+            return false;
+        }
+
+        o_font = PushGFXResource(res_arena);
+
+        if (!o_font) {
+            return false;
+        }
+
+        o_font->type = ek_gfx_resource_type_font;
+        o_font->type_data.font = {.arrangement = arrangement, .atlas_gl_ids = atlas_gl_ids};
+
+        return true;
+    }
+
+    // ============================================================
+    // @section: Rendering
+    // ============================================================
     struct s_batch_vert {
         s_v2<t_f32> vert_coord;
         s_v2<t_f32> pos;
@@ -116,208 +291,95 @@ void main() {
 }
 )";
 
-    // ============================================================
-    // @section: State
-    // ============================================================
-    struct {
-        GLFWwindow* glfw_window;
-
-        s_static_bit_vec<eks_key_code_cnt> keys_down;
-        s_static_bit_vec<eks_mouse_button_code_cnt> mouse_buttons_down;
-
-        struct {
-            s_static_bit_vec<eks_key_code_cnt> keys_pressed;
-            s_static_bit_vec<eks_key_code_cnt> keys_released;
-
-            s_static_bit_vec<eks_mouse_button_code_cnt> mouse_buttons_pressed;
-            s_static_bit_vec<eks_mouse_button_code_cnt> mouse_buttons_released;
-        } input_events;
-
+    struct s_rendering_basis {
         s_mesh_gl_ids batch_mesh_gl_ids;
         t_gl_id batch_shader_prog_gl_id;
 
-        s_mesh_gl_ids surf_mesh_gl_ids;
-        t_gl_id surf_default_shader_prog_gl_id;
+        s_gfx_resource_arena res_arena;
+    };
 
-        s_gfx_resource_arena perm_res_arena;
+    [[nodiscard]] static t_b8 InitRenderingBasis(s_rendering_basis& basis, s_mem_arena& mem_arena, s_mem_arena& temp_mem_arena) {
+        t_b8 clean_up = false;
 
-        struct {
-            s_static_array<t_batch_slot, g_batch_slot_cnt> batch_slots;
-            t_size batch_slots_used_cnt;
+        // Create the batch mesh.
+        {
+            s_array<t_u16> elems;
 
-            s_matrix_4x4 view_mat; // The view matrix to be used when flushing.
-            t_gl_id tex_gl_id; // The texture to be used when flushing.
-
-            s_static_stack<const s_gfx_resource*, 32> surfs;
-        } rendering;
-    } g_game;
-
-    // ============================================================
-    // @section: GFX Resources
-    // ============================================================
-    void ReleaseGFXResources(const s_gfx_resource_arena& res_arena) {
-        const s_gfx_resource* res = res_arena.head;
-
-        while (res) {
-            switch (res->type) {
-                case ek_gfx_resource_type_texture:
-                    glDeleteTextures(1, &res->type_data.tex.gl_id);
-                    break;
-
-                case ek_gfx_resource_type_font:
-                    glDeleteTextures(static_cast<GLsizei>(res->type_data.font.atlas_gl_ids.len), res->type_data.font.atlas_gl_ids.buf_raw);
-                    break;
-
-                case ek_gfx_resource_type_surface:
-                    glDeleteTextures(1, &res->type_data.surf.tex_gl_id);
-                    glDeleteFramebuffers(1, &res->type_data.surf.fb_gl_id);
-                    break;
-
-                case ek_gfx_resource_type_surface_shader_prog:
-                    glDeleteProgram(res->type_data.surf_shader_prog.gl_id);
-                    break;
-
-                default:
-                    ZF_ASSERT(false);
-                    break;
-            }
-
-            res = res->next;
-        }
-    }
-
-    static s_gfx_resource* PushGFXResource(s_gfx_resource_arena& res_arena) {
-        const auto res = PushToMemArena<s_gfx_resource>(*res_arena.mem_arena);
-
-        if (!res) {
-            return nullptr;
-        }
-
-        if (!res_arena.head) {
-            res_arena.head = res;
-            res_arena.tail = res;
-        } else {
-            res_arena.tail->next = res;
-            res_arena.tail = res;
-        }
-
-        return res;
-    }
-
-    t_b8 LoadTexture(const s_rgba_texture_data_rdonly& tex_data, s_gfx_resource*& o_tex, s_gfx_resource_arena* const res_arena) {
-        const t_gl_id gl_id = MakeGLTexture(tex_data);
-
-        if (!gl_id) {
-            return false;
-        }
-
-        o_tex = PushGFXResource(res_arena ? *res_arena : g_game.perm_res_arena);
-
-        if (!o_tex) {
-            return false;
-        }
-
-        o_tex->type = ek_gfx_resource_type_texture;
-        o_tex->type_data.tex = {.gl_id = gl_id, .size = tex_data.size_in_pxs};
-
-        return true;
-    }
-
-    s_v2<t_s32> TextureSize(const s_gfx_resource* const res) {
-        ZF_ASSERT(res);
-        ZF_ASSERT(res->type == ek_gfx_resource_type_texture);
-
-        return res->type_data.tex.size;
-    }
-
-    [[nodiscard]] static t_b8 MakeFontAtlasGLTextures(const s_array_rdonly<t_font_atlas_rgba> atlas_rgbas, s_array<t_gl_id>& o_gl_ids) {
-        o_gl_ids = {
-            .buf_raw = static_cast<t_gl_id*>(malloc(static_cast<size_t>(ZF_SIZE_OF(t_gl_id) * atlas_rgbas.len))),
-            .len = atlas_rgbas.len
-        };
-
-        if (!o_gl_ids.buf_raw) {
-            return false;
-        }
-
-        for (t_size i = 0; i < atlas_rgbas.len; i++) {
-            o_gl_ids[i] = MakeGLTexture({g_font_atlas_size, atlas_rgbas[i]});
-
-            if (!o_gl_ids[i]) {
+            if (!MakeArray(temp_mem_arena, g_batch_slot_elem_cnt * g_batch_slot_cnt, elems)) {
+                ZF_REPORT_ERROR();
+                clean_up = true;
                 return false;
             }
+
+            for (t_size i = 0; i < g_batch_slot_cnt; i++) {
+                elems[(i * 6) + 0] = static_cast<t_u16>((i * 4) + 0);
+                elems[(i * 6) + 1] = static_cast<t_u16>((i * 4) + 1);
+                elems[(i * 6) + 2] = static_cast<t_u16>((i * 4) + 2);
+                elems[(i * 6) + 3] = static_cast<t_u16>((i * 4) + 2);
+                elems[(i * 6) + 4] = static_cast<t_u16>((i * 4) + 3);
+                elems[(i * 6) + 5] = static_cast<t_u16>((i * 4) + 0);
+            }
+
+            constexpr t_size verts_len = g_batch_vert_component_cnt * g_batch_slot_vert_cnt * g_batch_slot_cnt;
+            basis.batch_mesh_gl_ids = MakeGLMesh(nullptr, verts_len, elems, g_batch_vert_attr_lens);
         }
+
+        ZF_DEFER({
+            if (clean_up) {
+                ReleaseGLMesh(basis.batch_mesh_gl_ids);
+            }
+        });
+
+        // Create the batch shader program.
+        basis.batch_shader_prog_gl_id = MakeGLShaderProg(g_batch_vert_shader_src, g_batch_frag_shader_src, temp_mem_arena);
+
+        if (!basis.batch_shader_prog_gl_id) {
+            ZF_REPORT_ERROR();
+            clean_up = true;
+            return false;
+        }
+
+        ZF_DEFER({
+            if (clean_up) {
+                glDeleteProgram(basis.batch_shader_prog_gl_id);
+            }
+        });
+
+        // Set up resource arena.
+        basis.res_arena = MakeGFXResourceArena(mem_arena);
+
+        ZF_DEFER({
+            if (clean_up) {
+                ReleaseGFXResources(basis.res_arena);
+            }
+        });
 
         return true;
     }
 
-    t_b8 LoadFontFromRaw(const s_str_rdonly file_path, const t_s32 height, const t_unicode_code_pt_bit_vec& code_pts, s_mem_arena& temp_mem_arena, s_gfx_resource*& o_font, s_gfx_resource_arena* const res_arena, e_font_load_from_raw_result* const o_load_from_raw_res, t_unicode_code_pt_bit_vec* const o_unsupported_code_pts) {
-        s_gfx_resource_arena& res_arena_to_use = res_arena ? *res_arena : g_game.perm_res_arena;
-
-        s_font_arrangement arrangement;
-        s_array<t_font_atlas_rgba> atlas_rgbas;
-
-        const auto res = zf::LoadFontFromRaw(file_path, height, code_pts, *res_arena_to_use.mem_arena, temp_mem_arena, temp_mem_arena, arrangement, atlas_rgbas, o_unsupported_code_pts);
-
-        if (o_load_from_raw_res) {
-            *o_load_from_raw_res = res;
-        }
-
-        if (res != ek_font_load_from_raw_result_success) {
-            return false;
-        }
-
-        s_array<t_gl_id> atlas_gl_ids;
-
-        if (!MakeFontAtlasGLTextures(atlas_rgbas, atlas_gl_ids)) {
-            return false;
-        }
-
-        o_font = PushGFXResource(res_arena_to_use);
-
-        if (!o_font) {
-            return false;
-        }
-
-        o_font->type = ek_gfx_resource_type_font;
-        o_font->type_data.font = {.arrangement = arrangement, .atlas_gl_ids = atlas_gl_ids};
-
-        return true;
+    void ReleaseRenderingBasis(s_rendering_basis& basis) {
+        ReleaseGFXResources(basis.res_arena);
+        glDeleteProgram(basis.batch_shader_prog_gl_id);
+        ReleaseGLMesh(basis.batch_mesh_gl_ids);
     }
 
-    t_b8 LoadFontFromPacked(const s_str_rdonly file_path, s_mem_arena& temp_mem_arena, s_gfx_resource*& o_font, s_gfx_resource_arena* const res_arena) {
-        s_gfx_resource_arena& res_arena_to_use = res_arena ? *res_arena : g_game.perm_res_arena;
+    struct s_rendering_state {
+        s_static_array<t_batch_slot, g_batch_slot_cnt> batch_slots;
+        t_size batch_slots_used_cnt;
 
-        s_font_arrangement arrangement;
-        s_array<t_font_atlas_rgba> atlas_rgbas;
+        s_matrix_4x4 view_mat; // The view matrix to be used when flushing.
+        t_gl_id tex_gl_id; // The texture to be used when flushing.
 
-        if (!zf::UnpackFont(file_path, *res_arena_to_use.mem_arena, temp_mem_arena, temp_mem_arena, arrangement, atlas_rgbas)) {
-            return false;
-        }
+        s_static_stack<const s_gfx_resource*, 32> surfs;
+    };
 
-        s_array<t_gl_id> atlas_gl_ids;
+    struct s_rendering_context {
+        const s_rendering_basis* basis;
+        s_rendering_state* state;
+    };
 
-        if (!MakeFontAtlasGLTextures(atlas_rgbas, atlas_gl_ids)) {
-            return false;
-        }
-
-        o_font = PushGFXResource(res_arena_to_use);
-
-        if (!o_font) {
-            return false;
-        }
-
-        o_font->type = ek_gfx_resource_type_font;
-        o_font->type_data.font = {.arrangement = arrangement, .atlas_gl_ids = atlas_gl_ids};
-
-        return true;
-    }
-
-    // ============================================================
-    // @section: Rendering
-    // ============================================================
-    static void Flush() {
-        if (g_game.rendering.batch_slots_used_cnt == 0) {
+    static void Flush(const s_rendering_context& rc) {
+        if (rc.state->batch_slots_used_cnt == 0) {
             // Nothing to flush!
             return;
         }
@@ -325,61 +387,61 @@ void main() {
         //
         // Submitting Vertex Data to GPU
         //
-        glBindVertexArray(g_game.batch_mesh_gl_ids.vert_arr);
-        glBindBuffer(GL_ARRAY_BUFFER, g_game.batch_mesh_gl_ids.vert_buf);
+        glBindVertexArray(rc.basis->batch_mesh_gl_ids.vert_arr);
+        glBindBuffer(GL_ARRAY_BUFFER, rc.basis->batch_mesh_gl_ids.vert_buf);
 
         {
-            const t_size write_size = ZF_SIZE_OF(t_batch_slot) * g_game.rendering.batch_slots_used_cnt;
-            glBufferSubData(GL_ARRAY_BUFFER, 0, write_size, g_game.rendering.batch_slots.buf_raw);
+            const t_size write_size = ZF_SIZE_OF(t_batch_slot) * rc.state->batch_slots_used_cnt;
+            glBufferSubData(GL_ARRAY_BUFFER, 0, write_size, rc.state->batch_slots.buf_raw);
         }
 
         //
         // Rendering the Batch
         //
-        glUseProgram(g_game.batch_shader_prog_gl_id);
+        glUseProgram(rc.basis->batch_shader_prog_gl_id);
 
-        const t_s32 view_uniform_loc = glGetUniformLocation(g_game.batch_shader_prog_gl_id, "u_view");
-        glUniformMatrix4fv(view_uniform_loc, 1, false, reinterpret_cast<const t_f32*>(&g_game.rendering.view_mat));
+        const t_s32 view_uniform_loc = glGetUniformLocation(rc.basis->batch_shader_prog_gl_id, "u_view");
+        glUniformMatrix4fv(view_uniform_loc, 1, false, reinterpret_cast<const t_f32*>(&rc.state->view_mat));
 
         const s_rect<t_s32> viewport = []() {
             s_rect<t_s32> vp;
-            glGetIntegerv(GL_VIEWPORT, reinterpret_cast<t_s32*>(&vp));
+            glGetIntegerv(GL_VIEWPORT, reinterpret_cast<t_s32*>(&vp)); // @todo: Cache. This is slow.
             return vp;
         }();
 
         const auto proj_mat = MakeOrthographicMatrix4x4(0.0f, static_cast<t_f32>(viewport.width), static_cast<t_f32>(viewport.height), 0.0f, -1.0f, 1.0f);
-        const t_s32 proj_uniform_loc = glGetUniformLocation(g_game.batch_shader_prog_gl_id, "u_proj");
+        const t_s32 proj_uniform_loc = glGetUniformLocation(rc.basis->batch_shader_prog_gl_id, "u_proj");
         glUniformMatrix4fv(proj_uniform_loc, 1, false, reinterpret_cast<const t_f32*>(&proj_mat));
 
         glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, g_game.rendering.tex_gl_id);
+        glBindTexture(GL_TEXTURE_2D, rc.state->tex_gl_id);
 
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, g_game.batch_mesh_gl_ids.elem_buf);
-        glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(g_batch_slot_elem_cnt * g_game.rendering.batch_slots_used_cnt), GL_UNSIGNED_SHORT, nullptr);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, rc.basis->batch_mesh_gl_ids.elem_buf);
+        glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(g_batch_slot_elem_cnt * rc.state->batch_slots_used_cnt), GL_UNSIGNED_SHORT, nullptr);
 
         glUseProgram(0);
 
-        g_game.rendering.batch_slots_used_cnt = 0;
+        rc.state->batch_slots_used_cnt = 0;
     }
 
-    void Clear(const s_color_rgba32f col) {
+    void Clear(const s_rendering_context& rc, const s_color_rgba32f col) {
         glClearColor(col.r, col.g, col.b, col.a);
         glClear(GL_COLOR_BUFFER_BIT);
     }
 
-    void SetViewMatrix(const s_matrix_4x4& mat) {
-        Flush();
-        g_game.rendering.view_mat = mat;
+    void SetViewMatrix(const s_rendering_context& rc, const s_matrix_4x4& mat) {
+        Flush(rc);
+        rc.state->view_mat = mat;
     }
 
-    static void Draw(const t_gl_id tex_gl_id, const s_rect<t_f32> tex_coords, s_v2<t_f32> pos, s_v2<t_f32> size, s_v2<t_f32> origin, const t_f32 rot, const s_color_rgba32f blend) {
-        if (g_game.rendering.batch_slots_used_cnt == 0) {
+    static void Draw(const s_rendering_context& rc, const t_gl_id tex_gl_id, const s_rect<t_f32> tex_coords, s_v2<t_f32> pos, s_v2<t_f32> size, s_v2<t_f32> origin, const t_f32 rot, const s_color_rgba32f blend) {
+        if (rc.state->batch_slots_used_cnt == 0) {
             // This is the first draw to the batch, so set the texture associated with the batch to the one we're trying to render.
-            g_game.rendering.tex_gl_id = tex_gl_id;
-        } else if (g_game.rendering.batch_slots_used_cnt == g_batch_slot_cnt || tex_gl_id != g_game.rendering.tex_gl_id) {
+            rc.state->tex_gl_id = tex_gl_id;
+        } else if (rc.state->batch_slots_used_cnt == g_batch_slot_cnt || tex_gl_id != rc.state->tex_gl_id) {
             // Flush the batch and then try this same render operation again but on a fresh batch.
-            Flush();
-            Draw(tex_gl_id, tex_coords, pos, size, origin, rot, blend);
+            Flush(rc);
+            Draw(rc, tex_gl_id, tex_coords, pos, size, origin, rot, blend);
             return;
         }
 
@@ -398,7 +460,7 @@ void main() {
             {RectLeft(tex_coords), RectBottom(tex_coords)}
         }};
 
-        t_batch_slot& slot = g_game.rendering.batch_slots[g_game.rendering.batch_slots_used_cnt];
+        t_batch_slot& slot = rc.state->batch_slots[rc.state->batch_slots_used_cnt];
 
         for (t_size i = 0; i < slot.g_len; i++) {
             slot[i] = {
@@ -412,10 +474,10 @@ void main() {
         }
 
         // Update the count - we've used a slot!
-        g_game.rendering.batch_slots_used_cnt++;
+        rc.state->batch_slots_used_cnt++;
     }
 
-    void DrawTexture(const s_gfx_resource* const tex, const s_v2<t_f32> pos, const s_rect<t_s32> src_rect, const s_v2<t_f32> origin, const s_v2<t_f32> scale, const t_f32 rot, const s_color_rgba32f blend) {
+    void DrawTexture(const s_rendering_context& rc, const s_gfx_resource* const tex, const s_v2<t_f32> pos, const s_rect<t_s32> src_rect, const s_v2<t_f32> origin, const s_v2<t_f32> scale, const t_f32 rot, const s_color_rgba32f blend) {
         ZF_ASSERT(tex && tex->type == ek_gfx_resource_type_texture);
         ZF_ASSERT(origin.x >= 0.0f && origin.x <= 1.0f && origin.y >= 0.0f && origin.y <= 1.0f); // @todo: Generic function for this check?
         // @todo: Add more assertions here!
@@ -438,10 +500,10 @@ void main() {
             static_cast<t_f32>(src_rect_to_use.width) * scale.x, static_cast<t_f32>(src_rect_to_use.height) * scale.y
         };
 
-        Draw(tex->type_data.tex.gl_id, tex_coords, pos, size, origin, rot, blend);
+        Draw(rc, tex->type_data.tex.gl_id, tex_coords, pos, size, origin, rot, blend);
     }
 
-    t_b8 DrawStr(const s_str_rdonly str, const s_gfx_resource* const font, const s_v2<t_f32> pos, const s_v2<t_f32> alignment, const s_color_rgba32f blend, s_mem_arena& temp_mem_arena) {
+    t_b8 DrawStr(const s_rendering_context& rc, const s_str_rdonly str, const s_gfx_resource* const font, const s_v2<t_f32> pos, const s_v2<t_f32> alignment, const s_color_rgba32f blend, s_mem_arena& temp_mem_arena) {
         ZF_ASSERT(IsValidUTF8Str(str));
         ZF_ASSERT(font && font->type == ek_gfx_resource_type_font);
         // @todo: Add more assertions here!
@@ -476,7 +538,7 @@ void main() {
 
             const auto chr_tex_coords = CalcTextureCoords(glyph_info.atlas_rect, g_font_atlas_size);
 
-            Draw(font_atlas_gl_ids[glyph_info.atlas_index], chr_tex_coords, chr_positions[chr_index], static_cast<s_v2<t_f32>>(RectSize(glyph_info.atlas_rect)), {}, 0.0f, blend);
+            Draw(rc, font_atlas_gl_ids[glyph_info.atlas_index], chr_tex_coords, chr_positions[chr_index], static_cast<s_v2<t_f32>>(RectSize(glyph_info.atlas_rect)), {}, 0.0f, blend);
 
             chr_index++;
         };
@@ -714,43 +776,14 @@ void main() {
             glEnable(GL_BLEND);
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-            // Create the batch mesh.
-            {
-                s_array<t_u16> elems;
+            s_rendering_basis rendering_basis;
 
-                if (!MakeArray(temp_mem_arena, g_batch_slot_elem_cnt * g_batch_slot_cnt, elems)) {
-                    ZF_REPORT_ERROR();
-                    return false;
-                }
-
-                for (t_size i = 0; i < g_batch_slot_cnt; i++) {
-                    elems[(i * 6) + 0] = static_cast<t_u16>((i * 4) + 0);
-                    elems[(i * 6) + 1] = static_cast<t_u16>((i * 4) + 1);
-                    elems[(i * 6) + 2] = static_cast<t_u16>((i * 4) + 2);
-                    elems[(i * 6) + 3] = static_cast<t_u16>((i * 4) + 2);
-                    elems[(i * 6) + 4] = static_cast<t_u16>((i * 4) + 3);
-                    elems[(i * 6) + 5] = static_cast<t_u16>((i * 4) + 0);
-                }
-
-                constexpr t_size verts_len = g_batch_vert_component_cnt * g_batch_slot_vert_cnt * g_batch_slot_cnt;
-                g_game.batch_mesh_gl_ids = MakeGLMesh(nullptr, verts_len, elems, g_batch_vert_attr_lens);
-            }
-
-            ZF_DEFER({ ReleaseGLMesh(g_game.batch_mesh_gl_ids); });
-
-            // Create the batch shader program.
-            g_game.batch_shader_prog_gl_id = MakeGLShaderProg(g_batch_vert_shader_src, g_batch_frag_shader_src, temp_mem_arena);
-
-            if (!g_game.batch_shader_prog_gl_id) {
+            if (!InitRenderingBasis(rendering_basis, mem_arena, temp_mem_arena)) {
                 ZF_REPORT_ERROR();
                 return false;
             }
 
-            ZF_DEFER({ glDeleteProgram(g_game.batch_shader_prog_gl_id); });
-
-            // Set up permanent resource arena.
-            g_game.perm_res_arena = MakeGFXResourceArena(mem_arena);
-            ZF_DEFER({ ReleaseGFXResources(g_game.perm_res_arena); });
+            ZF_DEFER({ ReleaseRenderingBasis(rendering_basis); });
 
             //
             // Developer Initialisation
@@ -773,7 +806,8 @@ void main() {
                 const s_game_init_context context = {
                     .dev_mem = dev_mem,
                     .mem_arena = &mem_arena,
-                    .temp_mem_arena = &temp_mem_arena
+                    .temp_mem_arena = &temp_mem_arena,
+                    .gfx_res_arena = &rendering_basis.res_arena
                 };
 
                 if (!info.init_func(context)) {
@@ -815,7 +849,8 @@ void main() {
                         const s_game_tick_context context = {
                             .dev_mem = dev_mem,
                             .mem_arena = &mem_arena,
-                            .temp_mem_arena = &temp_mem_arena
+                            .temp_mem_arena = &temp_mem_arena,
+                            .gfx_res_arena = &rendering_basis.res_arena
                         };
 
                         if (!info.tick_func(context)) {
@@ -827,16 +862,26 @@ void main() {
                     } while (frame_dur_accum >= targ_tick_interval);
 
                     // Perform a single render.
-                    ZeroOut(g_game.rendering);
-                    g_game.rendering.view_mat = MakeIdentityMatrix4x4();
+                    const s_rendering_context rc = {
+                        .basis = &rendering_basis,
+                        .state = PushToMemArena<s_rendering_state>(temp_mem_arena)
+                    };
 
-                    Clear(s_color_rgba8(147, 207, 249, 255));
+                    if (!rc.state) {
+                        ZF_REPORT_ERROR();
+                        return false;
+                    }
+
+                    rc.state->view_mat = MakeIdentityMatrix4x4();
+
+                    Clear(rc, s_color_rgba8(147, 207, 249, 255));
 
                     {
                         const s_game_render_context context = {
                             .dev_mem = dev_mem,
                             .mem_arena = &mem_arena,
-                            .temp_mem_arena = &temp_mem_arena
+                            .temp_mem_arena = &temp_mem_arena,
+                            .rendering_context = &rc
                         };
 
                         if (!info.render_func(context)) {
@@ -845,7 +890,7 @@ void main() {
                         }
                     }
 
-                    Flush();
+                    Flush(rc);
 
                     glfwSwapBuffers(g_game.glfw_window);
                 }

@@ -1,4 +1,4 @@
-#include <zf/zf_gl.h>
+#include <zf_private/zf_gl.h>
 
 namespace zf {
     s_mesh_gl_ids MakeGLMesh(const t_f32* const verts_raw, const t_size verts_len, const s_array_rdonly<t_u16> elems, const s_array_rdonly<t_s32> vert_attr_lens) {
