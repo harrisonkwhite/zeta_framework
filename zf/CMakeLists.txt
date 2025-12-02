@@ -1,15 +1,8 @@
 add_library(zf STATIC
-    src/zf_game.cpp
-    src/zf_platform.cpp
-    src/zf_renderer.cpp
-    src/zf_audio_sys.cpp
+    src/zf.cpp
 	../external/glad/src/glad.c
 
     include/zf.h
-    include/zf/zf_game.h
-    include/zf/zf_platform.h
-    include/zf/zf_renderer.h
-    include/zf/zf_audio_sys.h
 )
 
 target_include_directories(zf PUBLIC

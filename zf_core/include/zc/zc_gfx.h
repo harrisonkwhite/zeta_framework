@@ -109,6 +109,15 @@ namespace zf {
     [[nodiscard]] t_b8 PackTexture(const s_str_rdonly dest_file_path, const s_str_rdonly src_file_path, s_mem_arena& temp_mem_arena);
     [[nodiscard]] t_b8 UnpackTexture(const s_str_rdonly file_path, s_mem_arena& mem_arena, s_mem_arena& temp_mem_arena, s_rgba_texture_data& o_tex_data);
 
+    inline s_rect<t_f32> CalcTextureCoords(const s_rect<t_s32> src_rect, const s_v2<t_s32> tex_size) {
+        return {
+            static_cast<t_f32>(src_rect.x) / static_cast<t_f32>(tex_size.x),
+            static_cast<t_f32>(src_rect.y) / static_cast<t_f32>(tex_size.y),
+            static_cast<t_f32>(src_rect.width) / static_cast<t_f32>(tex_size.x),
+            static_cast<t_f32>(src_rect.height) / static_cast<t_f32>(tex_size.y)
+        };
+    }
+
     // ============================================================
     // @section: Fonts
     // ============================================================
