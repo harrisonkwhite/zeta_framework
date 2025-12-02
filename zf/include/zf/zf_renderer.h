@@ -32,38 +32,38 @@ namespace zf::renderer {
 
     void ReleaseResources(const s_resource_arena& res_arena);
 
-     // Returns false iff the load failed. Failure DOES NOT leave the underlying resource system in an invalid state - you are safe to continue.
-    [[nodiscard]] t_b8 LoadTexture(const s_rgba_texture_data_rdonly& tex_data, s_resource_arena& res_arena, s_resource*& o_res);
+    // Returns false iff the load failed. Failure DOES NOT leave the underlying resource system in an invalid state - you are safe to continue.
+    [[nodiscard]] t_b8 LoadTexture(const s_rgba_texture_data_rdonly& tex_data, s_resource*& o_res, s_resource_arena* const res_arena = nullptr);
 
-     // Returns false iff the load failed. Failure DOES NOT leave the underlying resource system in an invalid state - you are safe to continue.
-    [[nodiscard]] inline t_b8 LoadTextureFromRaw(const s_str_rdonly file_path, s_resource_arena& res_arena, s_mem_arena& temp_mem_arena, s_resource*& o_res) {
+    // Returns false iff the load failed. Failure DOES NOT leave the underlying resource system in an invalid state - you are safe to continue.
+    [[nodiscard]] inline t_b8 LoadTextureFromRaw(const s_str_rdonly file_path, s_mem_arena& temp_mem_arena, s_resource*& o_res, s_resource_arena* const res_arena = nullptr) {
         s_rgba_texture_data tex_data;
 
         if (!LoadRGBATextureDataFromRaw(file_path, temp_mem_arena, temp_mem_arena, tex_data)) {
             return false;
         }
 
-        return LoadTexture(tex_data, res_arena, o_res);
+        return LoadTexture(tex_data, o_res, res_arena);
     }
 
-     // Returns false iff the load failed. Failure DOES NOT leave the underlying resource system in an invalid state - you are safe to continue.
-    [[nodiscard]] inline t_b8 LoadTextureFromPacked(const s_str_rdonly file_path, s_resource_arena& res_arena, s_mem_arena& temp_mem_arena, s_resource*& o_res) {
+    // Returns false iff the load failed. Failure DOES NOT leave the underlying resource system in an invalid state - you are safe to continue.
+    [[nodiscard]] inline t_b8 LoadTextureFromPacked(const s_str_rdonly file_path, s_mem_arena& temp_mem_arena, s_resource*& o_res, s_resource_arena* const res_arena = nullptr) {
         s_rgba_texture_data tex_data;
 
         if (!UnpackTexture(file_path, temp_mem_arena, temp_mem_arena, tex_data)) {
             return false;
         }
 
-        return LoadTexture(tex_data, res_arena, o_res);
+        return LoadTexture(tex_data, o_res, res_arena);
     }
 
     s_v2<t_s32> TextureSize(const s_resource* const res);
 
     // Returns false iff the load failed. Failure DOES NOT leave the underlying resource system in an invalid state - you are safe to continue.
-    [[nodiscard]] t_b8 LoadFontFromRaw(const s_str_rdonly file_path, const t_s32 height, const t_unicode_code_pt_bit_vec& code_pts, s_resource_arena& res_arena, s_mem_arena& temp_mem_arena, s_resource*& o_res, e_font_load_from_raw_result* const o_load_from_raw_res = nullptr, t_unicode_code_pt_bit_vec* const o_unsupported_code_pts = nullptr);
+    [[nodiscard]] t_b8 LoadFontFromRaw(const s_str_rdonly file_path, const t_s32 height, const t_unicode_code_pt_bit_vec& code_pts, s_mem_arena& temp_mem_arena, s_resource*& o_res, s_resource_arena* const res_arena = nullptr, e_font_load_from_raw_result* const o_load_from_raw_res = nullptr, t_unicode_code_pt_bit_vec* const o_unsupported_code_pts = nullptr);
 
     // Returns false iff the load failed. Failure DOES NOT leave the underlying resource system in an invalid state - you are safe to continue.
-    [[nodiscard]] t_b8 LoadFontFromPacked(const s_str_rdonly file_path, s_resource_arena& res_arena, s_mem_arena& temp_mem_arena, s_resource*& o_res);
+    [[nodiscard]] t_b8 LoadFontFromPacked(const s_str_rdonly file_path, s_mem_arena& temp_mem_arena, s_resource*& o_res, s_resource_arena* const res_arena = nullptr);
 
     // ============================================================
     // @section: Rendering

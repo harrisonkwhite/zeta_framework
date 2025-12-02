@@ -318,7 +318,7 @@ void main() {
         {
             const s_static_array<t_u8, 4> rgba = {{255, 255, 255, 255}};
 
-            if (!LoadTexture({{1, 1}, rgba}, g_state.perm_res_arena, g_state.px_tex)) {
+            if (!LoadTexture({{1, 1}, rgba}, g_state.px_tex)) {
                 ZF_REPORT_ERROR();
                 clean_up = true;
                 return false;
@@ -407,14 +407,14 @@ void main() {
         return res;
     }
 
-    t_b8 LoadTexture(const s_rgba_texture_data_rdonly& tex_data, s_resource_arena& res_arena, s_resource*& o_res) {
+    t_b8 LoadTexture(const s_rgba_texture_data_rdonly& tex_data, s_resource*& o_res, s_resource_arena* const res_arena) {
         const t_gl_id gl_id = MakeGLTexture(tex_data);
 
         if (!gl_id) {
             return false;
         }
 
-        o_res = PushResource(res_arena);
+        o_res = PushResource(res_arena ? *res_arena : g_state.perm_res_arena);
 
         if (!o_res) {
             return false;
@@ -454,11 +454,13 @@ void main() {
         return true;
     }
 
-    t_b8 LoadFontFromRaw(const s_str_rdonly file_path, const t_s32 height, const t_unicode_code_pt_bit_vec& code_pts, s_resource_arena& res_arena, s_mem_arena& temp_mem_arena, s_resource*& o_res, e_font_load_from_raw_result* const o_load_from_raw_res, t_unicode_code_pt_bit_vec* const o_unsupported_code_pts) {
+    t_b8 LoadFontFromRaw(const s_str_rdonly file_path, const t_s32 height, const t_unicode_code_pt_bit_vec& code_pts, s_mem_arena& temp_mem_arena, s_resource*& o_res, s_resource_arena* const res_arena, e_font_load_from_raw_result* const o_load_from_raw_res, t_unicode_code_pt_bit_vec* const o_unsupported_code_pts) {
+        s_resource_arena& res_arena_to_use = res_arena ? *res_arena : g_state.perm_res_arena;
+
         s_font_arrangement arrangement;
         s_array<t_font_atlas_rgba> atlas_rgbas;
 
-        const auto load_result = zf::LoadFontFromRaw(file_path, height, code_pts, *res_arena.mem_arena, temp_mem_arena, temp_mem_arena, arrangement, atlas_rgbas, o_unsupported_code_pts);
+        const auto load_result = zf::LoadFontFromRaw(file_path, height, code_pts, *res_arena_to_use.mem_arena, temp_mem_arena, temp_mem_arena, arrangement, atlas_rgbas, o_unsupported_code_pts);
 
         if (o_load_from_raw_res) {
             *o_load_from_raw_res = load_result;
@@ -474,7 +476,7 @@ void main() {
             return false;
         }
 
-        o_res = PushResource(res_arena);
+        o_res = PushResource(res_arena_to_use);
 
         if (!o_res) {
             return false;
@@ -486,11 +488,13 @@ void main() {
         return true;
     }
 
-    t_b8 LoadFontFromPacked(const s_str_rdonly file_path, s_resource_arena& res_arena, s_mem_arena& temp_mem_arena, s_resource*& o_res) {
+    t_b8 LoadFontFromPacked(const s_str_rdonly file_path, s_mem_arena& temp_mem_arena, s_resource*& o_res, s_resource_arena* const res_arena) {
+        s_resource_arena& res_arena_to_use = res_arena ? *res_arena : g_state.perm_res_arena;
+
         s_font_arrangement arrangement;
         s_array<t_font_atlas_rgba> atlas_rgbas;
 
-        if (!zf::UnpackFont(file_path, *res_arena.mem_arena, temp_mem_arena, temp_mem_arena, arrangement, atlas_rgbas)) {
+        if (!zf::UnpackFont(file_path, *res_arena_to_use.mem_arena, temp_mem_arena, temp_mem_arena, arrangement, atlas_rgbas)) {
             return false;
         }
 
@@ -500,7 +504,7 @@ void main() {
             return false;
         }
 
-        o_res = PushResource(res_arena);
+        o_res = PushResource(res_arena_to_use);
 
         if (!o_res) {
             return false;
