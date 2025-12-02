@@ -223,6 +223,12 @@ void main() {
                 s_font_arrangement arrangement;
                 s_array<t_gl_id> atlas_gl_ids;
             } font;
+
+            struct {
+                t_gl_id fb_gl_id;
+                t_gl_id tex_gl_id;
+                s_v2<t_s32> size;
+            } surf;
         } type_data;
 
         s_resource* next;
@@ -407,21 +413,21 @@ void main() {
         return res;
     }
 
-    t_b8 LoadTexture(const s_rgba_texture_data_rdonly& tex_data, s_resource*& o_res, s_resource_arena* const res_arena) {
+    t_b8 LoadTexture(const s_rgba_texture_data_rdonly& tex_data, s_resource*& o_tex, s_resource_arena* const res_arena) {
         const t_gl_id gl_id = MakeGLTexture(tex_data);
 
         if (!gl_id) {
             return false;
         }
 
-        o_res = PushResource(res_arena ? *res_arena : g_state.perm_res_arena);
+        o_tex = PushResource(res_arena ? *res_arena : g_state.perm_res_arena);
 
-        if (!o_res) {
+        if (!o_tex) {
             return false;
         }
 
-        o_res->type = ek_resource_type_texture;
-        o_res->type_data.tex = {.gl_id = gl_id, .size = tex_data.size_in_pxs};
+        o_tex->type = ek_resource_type_texture;
+        o_tex->type_data.tex = {.gl_id = gl_id, .size = tex_data.size_in_pxs};
 
         return true;
     }
@@ -454,19 +460,19 @@ void main() {
         return true;
     }
 
-    t_b8 LoadFontFromRaw(const s_str_rdonly file_path, const t_s32 height, const t_unicode_code_pt_bit_vec& code_pts, s_mem_arena& temp_mem_arena, s_resource*& o_res, s_resource_arena* const res_arena, e_font_load_from_raw_result* const o_load_from_raw_res, t_unicode_code_pt_bit_vec* const o_unsupported_code_pts) {
+    t_b8 LoadFontFromRaw(const s_str_rdonly file_path, const t_s32 height, const t_unicode_code_pt_bit_vec& code_pts, s_mem_arena& temp_mem_arena, s_resource*& o_font, s_resource_arena* const res_arena, e_font_load_from_raw_result* const o_load_from_raw_res, t_unicode_code_pt_bit_vec* const o_unsupported_code_pts) {
         s_resource_arena& res_arena_to_use = res_arena ? *res_arena : g_state.perm_res_arena;
 
         s_font_arrangement arrangement;
         s_array<t_font_atlas_rgba> atlas_rgbas;
 
-        const auto load_result = zf::LoadFontFromRaw(file_path, height, code_pts, *res_arena_to_use.mem_arena, temp_mem_arena, temp_mem_arena, arrangement, atlas_rgbas, o_unsupported_code_pts);
+        const auto res = zf::LoadFontFromRaw(file_path, height, code_pts, *res_arena_to_use.mem_arena, temp_mem_arena, temp_mem_arena, arrangement, atlas_rgbas, o_unsupported_code_pts);
 
         if (o_load_from_raw_res) {
-            *o_load_from_raw_res = load_result;
+            *o_load_from_raw_res = res;
         }
 
-        if (load_result != ek_font_load_from_raw_result_success) {
+        if (res != ek_font_load_from_raw_result_success) {
             return false;
         }
 
@@ -476,19 +482,19 @@ void main() {
             return false;
         }
 
-        o_res = PushResource(res_arena_to_use);
+        o_font = PushResource(res_arena_to_use);
 
-        if (!o_res) {
+        if (!o_font) {
             return false;
         }
 
-        o_res->type = ek_resource_type_font;
-        o_res->type_data.font = {.arrangement = arrangement, .atlas_gl_ids = atlas_gl_ids};
+        o_font->type = ek_resource_type_font;
+        o_font->type_data.font = {.arrangement = arrangement, .atlas_gl_ids = atlas_gl_ids};
 
         return true;
     }
 
-    t_b8 LoadFontFromPacked(const s_str_rdonly file_path, s_mem_arena& temp_mem_arena, s_resource*& o_res, s_resource_arena* const res_arena) {
+    t_b8 LoadFontFromPacked(const s_str_rdonly file_path, s_mem_arena& temp_mem_arena, s_resource*& o_font, s_resource_arena* const res_arena) {
         s_resource_arena& res_arena_to_use = res_arena ? *res_arena : g_state.perm_res_arena;
 
         s_font_arrangement arrangement;
@@ -504,14 +510,89 @@ void main() {
             return false;
         }
 
-        o_res = PushResource(res_arena_to_use);
+        o_font = PushResource(res_arena_to_use);
 
-        if (!o_res) {
+        if (!o_font) {
             return false;
         }
 
-        o_res->type = ek_resource_type_font;
-        o_res->type_data.font = {.arrangement = arrangement, .atlas_gl_ids = atlas_gl_ids};
+        o_font->type = ek_resource_type_font;
+        o_font->type_data.font = {.arrangement = arrangement, .atlas_gl_ids = atlas_gl_ids};
+
+        return true;
+    }
+
+    [[nodiscard]] static t_b8 AttachGLFramebufferTexture(const t_gl_id fb_gl_id, const t_gl_id tex_gl_id, const s_v2<t_s32> tex_size) {
+        glBindTexture(GL_TEXTURE_2D, tex_gl_id);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, static_cast<GLsizei>(tex_size.x), static_cast<GLsizei>(tex_size.y), 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+        glBindFramebuffer(GL_FRAMEBUFFER, fb_gl_id);
+
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tex_gl_id, 0);
+
+        const t_b8 success = glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE;
+
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+        return success;
+    }
+
+    t_b8 MakeSurface(const s_v2<t_s32> size, s_resource*& o_surf, s_resource_arena* const res_arena) {
+        t_gl_id fb_gl_id;
+        glGenFramebuffers(1, &fb_gl_id);
+
+        t_gl_id tex_gl_id;
+        glGenTextures(1, &tex_gl_id);
+
+        if (!AttachGLFramebufferTexture(fb_gl_id, tex_gl_id, size)) {
+            return false;
+        }
+
+        o_surf = PushResource(res_arena ? *res_arena : g_state.perm_res_arena);
+
+        if (!o_surf) {
+            glDeleteTextures(1, &tex_gl_id);
+            glDeleteFramebuffers(1, &fb_gl_id);
+            return false;
+        }
+
+        o_surf->type = ek_resource_type_surface;
+
+        o_surf->type_data.surf = {
+            .fb_gl_id = fb_gl_id,
+            .tex_gl_id = tex_gl_id,
+            .size = size
+        };
+
+        return true;
+    }
+
+    t_b8 ResizeSurface(s_resource* const surf, const s_v2<t_s32> size) {
+        ZF_ASSERT(surf && surf->type == ek_resource_type_surface);
+        ZF_ASSERT(surf->type_data.surf.size != size && "Unnecessarily resizing a surface - new surface size is the same.");
+
+        t_gl_id new_fb_gl_id;
+        glGenFramebuffers(1, &new_fb_gl_id);
+
+        t_gl_id new_tex_gl_id;
+        glGenTextures(1, &new_tex_gl_id);
+
+        if (!AttachGLFramebufferTexture(new_fb_gl_id, new_tex_gl_id, size)) {
+            glDeleteTextures(1, &new_tex_gl_id);
+            glDeleteFramebuffers(1, &new_fb_gl_id);
+            return false;
+        }
+
+        glDeleteTextures(1, &surf->type_data.surf.tex_gl_id);
+        glDeleteFramebuffers(1, &surf->type_data.surf.fb_gl_id);
+
+        surf->type_data.surf = {
+            .fb_gl_id = new_fb_gl_id,
+            .tex_gl_id = new_tex_gl_id,
+            .size = size
+        };
 
         return true;
     }

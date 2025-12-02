@@ -33,37 +33,43 @@ namespace zf::renderer {
     void ReleaseResources(const s_resource_arena& res_arena);
 
     // Returns false iff the load failed. Failure DOES NOT leave the underlying resource system in an invalid state - you are safe to continue.
-    [[nodiscard]] t_b8 LoadTexture(const s_rgba_texture_data_rdonly& tex_data, s_resource*& o_res, s_resource_arena* const res_arena = nullptr);
+    [[nodiscard]] t_b8 LoadTexture(const s_rgba_texture_data_rdonly& tex_data, s_resource*& o_tex, s_resource_arena* const res_arena = nullptr);
 
     // Returns false iff the load failed. Failure DOES NOT leave the underlying resource system in an invalid state - you are safe to continue.
-    [[nodiscard]] inline t_b8 LoadTextureFromRaw(const s_str_rdonly file_path, s_mem_arena& temp_mem_arena, s_resource*& o_res, s_resource_arena* const res_arena = nullptr) {
+    [[nodiscard]] inline t_b8 LoadTextureFromRaw(const s_str_rdonly file_path, s_mem_arena& temp_mem_arena, s_resource*& o_tex, s_resource_arena* const res_arena = nullptr) {
         s_rgba_texture_data tex_data;
 
         if (!LoadRGBATextureDataFromRaw(file_path, temp_mem_arena, temp_mem_arena, tex_data)) {
             return false;
         }
 
-        return LoadTexture(tex_data, o_res, res_arena);
+        return LoadTexture(tex_data, o_tex, res_arena);
     }
 
     // Returns false iff the load failed. Failure DOES NOT leave the underlying resource system in an invalid state - you are safe to continue.
-    [[nodiscard]] inline t_b8 LoadTextureFromPacked(const s_str_rdonly file_path, s_mem_arena& temp_mem_arena, s_resource*& o_res, s_resource_arena* const res_arena = nullptr) {
+    [[nodiscard]] inline t_b8 LoadTextureFromPacked(const s_str_rdonly file_path, s_mem_arena& temp_mem_arena, s_resource*& o_tex, s_resource_arena* const res_arena = nullptr) {
         s_rgba_texture_data tex_data;
 
         if (!UnpackTexture(file_path, temp_mem_arena, temp_mem_arena, tex_data)) {
             return false;
         }
 
-        return LoadTexture(tex_data, o_res, res_arena);
+        return LoadTexture(tex_data, o_tex, res_arena);
     }
 
     s_v2<t_s32> TextureSize(const s_resource* const res);
 
     // Returns false iff the load failed. Failure DOES NOT leave the underlying resource system in an invalid state - you are safe to continue.
-    [[nodiscard]] t_b8 LoadFontFromRaw(const s_str_rdonly file_path, const t_s32 height, const t_unicode_code_pt_bit_vec& code_pts, s_mem_arena& temp_mem_arena, s_resource*& o_res, s_resource_arena* const res_arena = nullptr, e_font_load_from_raw_result* const o_load_from_raw_res = nullptr, t_unicode_code_pt_bit_vec* const o_unsupported_code_pts = nullptr);
+    [[nodiscard]] t_b8 LoadFontFromRaw(const s_str_rdonly file_path, const t_s32 height, const t_unicode_code_pt_bit_vec& code_pts, s_mem_arena& temp_mem_arena, s_resource*& o_font, s_resource_arena* const res_arena = nullptr, e_font_load_from_raw_result* const o_load_from_raw_res = nullptr, t_unicode_code_pt_bit_vec* const o_unsupported_code_pts = nullptr);
 
     // Returns false iff the load failed. Failure DOES NOT leave the underlying resource system in an invalid state - you are safe to continue.
-    [[nodiscard]] t_b8 LoadFontFromPacked(const s_str_rdonly file_path, s_mem_arena& temp_mem_arena, s_resource*& o_res, s_resource_arena* const res_arena = nullptr);
+    [[nodiscard]] t_b8 LoadFontFromPacked(const s_str_rdonly file_path, s_mem_arena& temp_mem_arena, s_resource*& o_font, s_resource_arena* const res_arena = nullptr);
+
+    // Returns false on failure. Failure DOES NOT leave the underlying resource system in an invalid state - you are safe to continue.
+    [[nodiscard]] t_b8 MakeSurface(const s_v2<t_s32> size, s_resource*& o_surf, s_resource_arena* const res_arena = nullptr);
+
+    // Returns true iff the operation was successful. If it failed, the old surface state with its old size is left intact.
+    [[nodiscard]] t_b8 ResizeSurface(s_resource* const surf, const s_v2<t_s32> size);
 
     // ============================================================
     // @section: Rendering
