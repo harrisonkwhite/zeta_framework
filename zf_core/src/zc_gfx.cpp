@@ -1,7 +1,5 @@
 #include <zc/zc_gfx.h>
 
-#include <zc/zc_algos.h>
-#include <zc/ds/zc_hash_map.h>
 #include <stb_image.h>
 #include <stb_truetype.h>
 

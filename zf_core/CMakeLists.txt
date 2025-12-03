@@ -19,9 +19,7 @@ add_library(zf_core STATIC
     include/zc/zc_math.h
     include/zc/zc_algos.h
     include/zc/zc_strs.h
-    include/zc/ds/zc_linear.h
-    include/zc/ds/zc_hash_map.h
-    include/zc/ds/zc_heaps.h
+    include/zc/zc_ds.h
 )
 
 target_include_directories(zf_core PUBLIC
