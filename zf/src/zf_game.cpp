@@ -6,8 +6,11 @@
 
 namespace zf {
     // ============================================================
-    // @section: Types and Constants
+    // @section: Declarations and Data
     // ============================================================
+    constexpr e_key_code ConvertGLFWKeyCode(const t_s32 glfw_key);
+    constexpr e_mouse_button_code ConvertGLFWMouseButtonCode(const t_s32 glfw_button);
+
     struct s_gfx_resource {
         e_gfx_resource_type type;
 
@@ -35,6 +38,9 @@ namespace zf {
 
         s_gfx_resource* next;
     };
+
+    static s_gfx_resource* PushGFXResource(s_gfx_resource_arena& res_arena);
+    [[nodiscard]] static t_b8 MakeFontAtlasGLTextures(const s_array_rdonly<t_font_atlas_rgba> atlas_rgbas, s_array<t_gl_id>& o_gl_ids);
 
     struct s_batch_vert {
         s_v2<t_f32> vert_coord;
@@ -121,6 +127,7 @@ void main() {
         t_gl_id batch_shader_prog_gl_id;
 
         s_gfx_resource_arena res_arena;
+        s_gfx_resource* px_tex;
     };
 
     struct s_rendering_state {
@@ -138,43 +145,11 @@ void main() {
         s_rendering_state* state;
     };
 
-    // ============================================================
-    // @section: Functions
-    // ============================================================
-    t_b8 RunGame(const s_game_info& info);
-
-    s_v2<t_s32> WindowSize();
-    s_v2<t_s32> WindowFramebufferSize();
-
-    t_b8 IsKeyDown(const e_key_code kc);
-    t_b8 IsKeyPressed(const e_key_code kc);
-    t_b8 IsKeyReleased(const e_key_code kc);
-    t_b8 IsMouseButtonDown(const e_mouse_button_code mbc);
-    t_b8 IsMouseButtonPressed(const e_mouse_button_code mbc);
-    t_b8 IsMouseButtonReleased(const e_mouse_button_code mbc);
-    s_v2<t_f32> MousePos();
-    constexpr e_key_code ConvertGLFWKeyCode(const t_s32 glfw_key);
-    constexpr e_mouse_button_code ConvertGLFWMouseButtonCode(const t_s32 glfw_button);
-
-    void ReleaseGFXResources(const s_gfx_resource_arena& res_arena);
-    static s_gfx_resource* PushGFXResource(s_gfx_resource_arena& res_arena);
-    t_b8 LoadTexture(const s_rgba_texture_data_rdonly& tex_data, s_gfx_resource_arena& res_arena, s_gfx_resource*& o_tex);
-    s_v2<t_s32> TextureSize(const s_gfx_resource* const res);
-    t_b8 LoadFontFromRaw(const s_str_rdonly file_path, const t_s32 height, const t_unicode_code_pt_bit_vec& code_pts, s_gfx_resource_arena& res_arena, s_mem_arena& temp_mem_arena, s_gfx_resource*& o_font, e_font_load_from_raw_result* const o_load_from_raw_res, t_unicode_code_pt_bit_vec* const o_unsupported_code_pts);
-    t_b8 LoadFontFromPacked(const s_str_rdonly file_path, s_gfx_resource_arena& res_arena, s_mem_arena& temp_mem_arena, s_gfx_resource*& o_font);
-    [[nodiscard]] static t_b8 MakeFontAtlasGLTextures(const s_array_rdonly<t_font_atlas_rgba> atlas_rgbas, s_array<t_gl_id>& o_gl_ids);
-
-    static t_b8 InitRenderingBasis(s_rendering_basis& basis, s_mem_arena& mem_arena, s_mem_arena& temp_mem_arena);
+    [[nodiscard]] static t_b8 MakeRenderingBasis(s_mem_arena& mem_arena, s_mem_arena& temp_mem_arena, s_rendering_basis& o_basis);
     static void ReleaseRenderingBasis(s_rendering_basis& basis);
     static void Flush(const s_rendering_context& rc);
-    void Clear(const s_rendering_context& rc, const s_color_rgba32f col);
-    void SetViewMatrix(const s_rendering_context& rc, const s_matrix_4x4& mat);
     static void Draw(const s_rendering_context& rc, const t_gl_id tex_gl_id, const s_rect<t_f32> tex_coords, s_v2<t_f32> pos, s_v2<t_f32> size, s_v2<t_f32> origin, const t_f32 rot, const s_color_rgba32f blend);
-    void DrawTexture(const s_rendering_context& rc, const t_gl_id tex_gl_id, const s_rect<t_f32> tex_coords, s_v2<t_f32> pos, s_v2<t_f32> size, s_v2<t_f32> origin, const t_f32 rot, const s_color_rgba32f blend);
 
-    // ============================================================
-    // @section: Global State
-    // ============================================================
     struct {
         GLFWwindow* glfw_window;
 
@@ -321,7 +296,7 @@ void main() {
             // Set up rendering basis.
             s_rendering_basis rendering_basis;
 
-            if (!InitRenderingBasis(rendering_basis, mem_arena, temp_mem_arena)) {
+            if (!MakeRenderingBasis(mem_arena, temp_mem_arena, rendering_basis)) {
                 ZF_REPORT_ERROR();
                 return false;
             }
@@ -743,7 +718,9 @@ void main() {
     // ============================================================
     // @section: Rendering
     // ============================================================
-    [[nodiscard]] static t_b8 InitRenderingBasis(s_rendering_basis& basis, s_mem_arena& mem_arena, s_mem_arena& temp_mem_arena) {
+    static t_b8 MakeRenderingBasis(s_mem_arena& mem_arena, s_mem_arena& temp_mem_arena, s_rendering_basis& o_basis) {
+        ZeroOut(o_basis);
+
         t_b8 clean_up = false;
 
         // Create the batch mesh.
@@ -766,19 +743,19 @@ void main() {
             }
 
             constexpr t_size verts_len = g_batch_vert_component_cnt * g_batch_slot_vert_cnt * g_batch_slot_cnt;
-            basis.batch_mesh_gl_ids = MakeGLMesh(nullptr, verts_len, elems, g_batch_vert_attr_lens);
+            o_basis.batch_mesh_gl_ids = MakeGLMesh(nullptr, verts_len, elems, g_batch_vert_attr_lens);
         }
 
         ZF_DEFER({
             if (clean_up) {
-                ReleaseGLMesh(basis.batch_mesh_gl_ids);
+                ReleaseGLMesh(o_basis.batch_mesh_gl_ids);
             }
         });
 
         // Create the batch shader program.
-        basis.batch_shader_prog_gl_id = MakeGLShaderProg(g_batch_vert_shader_src, g_batch_frag_shader_src, temp_mem_arena);
+        o_basis.batch_shader_prog_gl_id = MakeGLShaderProg(g_batch_vert_shader_src, g_batch_frag_shader_src, temp_mem_arena);
 
-        if (!basis.batch_shader_prog_gl_id) {
+        if (!o_basis.batch_shader_prog_gl_id) {
             ZF_REPORT_ERROR();
             clean_up = true;
             return false;
@@ -786,18 +763,29 @@ void main() {
 
         ZF_DEFER({
             if (clean_up) {
-                glDeleteProgram(basis.batch_shader_prog_gl_id);
+                glDeleteProgram(o_basis.batch_shader_prog_gl_id);
             }
         });
 
         // Set up resource arena.
-        basis.res_arena = MakeGFXResourceArena(mem_arena);
+        o_basis.res_arena = MakeGFXResourceArena(mem_arena);
 
         ZF_DEFER({
             if (clean_up) {
-                ReleaseGFXResources(basis.res_arena);
+                ReleaseGFXResources(o_basis.res_arena);
             }
         });
+
+        // Set up pixel texture.
+        {
+            const s_static_array<t_u8, 4> rgba = {{255, 255, 255, 255}};
+
+            if (!LoadTexture({{1, 1}, rgba}, o_basis.res_arena, o_basis.px_tex)) {
+                ZF_REPORT_ERROR();
+                clean_up = true;
+                return false;
+            }
+        }
 
         return true;
     }
@@ -931,6 +919,18 @@ void main() {
         };
 
         Draw(rc, tex->type_data.tex.gl_id, tex_coords, pos, size, origin, rot, blend);
+    }
+
+    void DrawRect(const s_rendering_context& rc, const s_rect<t_f32> rect, const s_color_rgba32f color) {
+        DrawTexture(rc, rc.basis->px_tex, RectPos(rect), {}, {}, RectSize(rect), 0.0f, color);
+    }
+
+    void DrawLine(const s_rendering_context& rc, const s_v2<t_f32> a, const s_v2<t_f32> b, const s_color_rgba32f blend, const t_f32 width) {
+        ZF_ASSERT(width > 0.0f);
+
+        const t_f32 len = CalcDist(a, b);
+        const t_f32 dir = CalcDirInRads(a, b);
+        DrawTexture(rc, rc.basis->px_tex, a, {}, origins::g_centerleft, {len, width}, dir, blend);
     }
 
     t_b8 DrawStr(const s_rendering_context& rc, const s_str_rdonly str, const s_gfx_resource* const font, const s_v2<t_f32> pos, const s_v2<t_f32> alignment, const s_color_rgba32f blend, s_mem_arena& temp_mem_arena) {
