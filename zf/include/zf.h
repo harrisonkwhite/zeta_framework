@@ -331,16 +331,9 @@ namespace zf {
 
     void DestroySoundTypes(s_audio_context& ac, s_sound_type_arena& type_arena);
 
-    [[nodiscard]] t_b8 PlaySound(s_audio_context& ac, const s_sound_type* const type, const t_f32 vol = 1.0f, const t_f32 pan = 0.0f, const t_f32 pitch = 1.0f, const t_b8 loop = false);
+    struct s_sound_id;
 
-#if 0
-    void StopSound(s_audio_context& ac, const s_sound* const snd);
-    void StopAllSounds();
-
-    void PauseSound();
-    void PauseAllSounds();
-
-    void ResumeSound();
-    void ResumeAllSounds();
-#endif
+    [[nodiscard]] t_b8 PlaySound(s_audio_context& ac, s_sound_type* const type, const s_sound_id* const o_id = nullptr, const t_f32 vol = 1.0f, const t_f32 pan = 0.0f, const t_f32 pitch = 1.0f, const t_b8 loop = false);
+    void StopSound(s_audio_context& ac, const s_sound_id id);
+    t_b8 IsSoundPlaying(s_audio_context& ac, const s_sound_id id);
 }

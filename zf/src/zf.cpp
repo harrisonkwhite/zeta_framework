@@ -242,7 +242,13 @@ void main() {
             s_static_array<ma_audio_buffer_ref, g_snd_inst_limit> ma_buf_refs;
             s_static_array<const s_sound_type*, g_snd_inst_limit> types;
             s_static_bit_vec<g_snd_inst_limit> activity;
+            s_static_array<t_size, g_snd_inst_limit> versions;
         } snd_insts;
+    };
+
+    struct s_sound_id {
+        t_size index;
+        t_size version;
     };
 
     [[nodiscard]] static t_b8 InitAudio(s_audio_context& o_ac);
@@ -1562,19 +1568,12 @@ void main() {
     }
 
     void DestroySoundTypes(s_audio_context& ac, s_sound_type_arena& type_arena) {
-        // Ugly O(n^2) thing which stops any sound instances of any sound type in the arena.
-
         const s_sound_type* type = type_arena.head;
 
         while (type) {
             ZF_FOR_EACH_SET_BIT(ac.snd_insts.activity, i) {
                 if (ac.snd_insts.types[i] == type) {
-                    ma_sound_stop(&ac.snd_insts.ma_snds[i]);
-
-                    ma_sound_uninit(&ac.snd_insts.ma_snds[i]);
-                    ma_audio_buffer_ref_uninit(&ac.snd_insts.ma_buf_refs[i]);
-
-                    UnsetBit(ac.snd_insts.activity, i);
+                    StopSound(ac, {i, ac.snd_insts.versions[i]});
                 }
             }
 
@@ -1582,7 +1581,7 @@ void main() {
         }
     }
 
-    t_b8 PlaySound(s_audio_context& ac, const s_sound_type* const type, const t_f32 vol, const t_f32 pan, const t_f32 pitch, const t_b8 loop) {
+    t_b8 PlaySound(s_audio_context& ac, const s_sound_type* const type, s_sound_id* const o_id, const t_f32 vol, const t_f32 pan, const t_f32 pitch, const t_b8 loop) {
         ZF_ASSERT(vol >= 0.0f && vol <= 1.0f);
         ZF_ASSERT(pan >= -1.0f && pan <= 1.0f);
         ZF_ASSERT(pitch > 0.0f);
@@ -1640,8 +1639,33 @@ void main() {
         }
 
         SetBit(ac.snd_insts.activity, index);
+        ac.snd_insts.versions[index]++;
+
+        if (o_id) {
+            *o_id = {index, ac.snd_insts.versions[index]};
+        }
 
         return true;
+    }
+
+    void StopSound(s_audio_context& ac, const s_sound_id id) {
+        ZF_ASSERT(IsBitSet(ac.snd_insts.activity, id.index) && ac.snd_insts.versions[id.index] == id.version);
+
+        ma_sound_stop(&ac.snd_insts.ma_snds[id.index]);
+        ma_sound_uninit(&ac.snd_insts.ma_snds[id.index]);
+        ma_audio_buffer_ref_uninit(&ac.snd_insts.ma_buf_refs[id.index]);
+
+        UnsetBit(ac.snd_insts.activity, id.index);
+    }
+
+    t_b8 IsSoundPlaying(s_audio_context& ac, const s_sound_id id) {
+        ZF_ASSERT(id.version <= ac.snd_insts.versions[id.index]);
+
+        if (!IsBitSet(ac.snd_insts.activity, id.index) || id.version != ac.snd_insts.versions[id.index]) {
+            return false;
+        }
+
+        return ma_sound_is_playing(&ac.snd_insts.ma_snds[id.index]);
     }
 
     void ProcFinishedSounds(s_audio_context& ac) {

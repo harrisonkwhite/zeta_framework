@@ -16,8 +16,3 @@
 - MAYBE use STL type traits, not custom ones. Add safety checking for arena push.
 
 There are a handful of comments marked with "@todo" throughout the codebase that need to be addressed as well.
-
-Fonts, specifically:
-- Add text colouring, scaling (yes), and rotation.
-- Add function for generating string collider.
-- TEST!
