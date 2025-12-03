@@ -179,10 +179,10 @@ void main() {
         t_gl_id batch_shader_prog_gl_id;
 
         s_mesh_gl_ids surf_mesh_gl_ids;
-        t_gl_id surf_default_shader_prog_gl_id;
 
         s_gfx_resource_arena res_arena;
         s_gfx_resource* px_tex;
+        s_gfx_resource* default_surf_shader_prog;
     };
 
     struct s_rendering_state {
@@ -1105,20 +1105,6 @@ void main() {
             }
         });
 
-        // Generate default surface shader program.
-        o_basis.surf_default_shader_prog_gl_id = MakeGLShaderProg(g_surface_default_vert_shader_src, g_surface_default_frag_shader_src, temp_mem_arena);
-
-        if (!o_basis.surf_default_shader_prog_gl_id) {
-            ZF_REPORT_ERROR();
-            return false;
-        }
-
-        ZF_DEFER({
-            if (clean_up) {
-                glDeleteProgram(o_basis.surf_default_shader_prog_gl_id);
-            }
-        });
-
         // Set up resource arena.
         o_basis.res_arena = MakeGFXResourceArena(mem_arena);
 
@@ -1139,11 +1125,19 @@ void main() {
             }
         }
 
+        // Set up default surface shader program.
+        if (!MakeSurfaceShaderProg(g_surface_default_vert_shader_src, g_surface_default_frag_shader_src, o_basis.res_arena, temp_mem_arena, o_basis.default_surf_shader_prog)) {
+            ZF_REPORT_ERROR();
+            clean_up = true;
+            return false;
+        }
+
         return true;
     }
 
     void ReleaseRenderingBasis(s_rendering_basis& basis) {
         ReleaseGFXResources(basis.res_arena);
+        ReleaseGLMesh(basis.surf_mesh_gl_ids);
         glDeleteProgram(basis.batch_shader_prog_gl_id);
         ReleaseGLMesh(basis.batch_mesh_gl_ids);
     }
@@ -1369,6 +1363,7 @@ void main() {
 
     void SetSurfaceShaderProg(const s_rendering_context& rc, const s_gfx_resource* const prog) {
         ZF_ASSERT(CurGLShaderProg() == 0 && "Potential attempted double-assignment of surface shader program?");
+        ZF_ASSERT(prog && prog->type == ek_gfx_resource_type_surface_shader_prog);
         glUseProgram(prog->type_data.surf_shader_prog.gl_id);
     }
 
@@ -1423,7 +1418,7 @@ void main() {
         ZF_ASSERT(surf && surf->type == ek_gfx_resource_type_surface);
 
         if (CurGLShaderProg() == 0) {
-            glUseProgram(rc.basis->surf_default_shader_prog_gl_id);
+            glUseProgram(rc.basis->default_surf_shader_prog->type_data.surf_shader_prog.gl_id);
         }
 
         glBindVertexArray(rc.basis->surf_mesh_gl_ids.vert_arr);
