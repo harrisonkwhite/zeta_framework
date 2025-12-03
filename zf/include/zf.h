@@ -207,6 +207,7 @@ namespace zf {
         s_gfx_resource* tail;
     };
 
+    // The memory lifetime of the given memory arena must encompass that of the GFX resource arena.
     inline s_gfx_resource_arena MakeGFXResourceArena(s_mem_arena& mem_arena) {
         return {
             .mem_arena = &mem_arena
@@ -319,6 +320,7 @@ namespace zf {
         s_sound_type* tail;
     };
 
+    // The memory lifetime of the given memory arena must encompass that of the sound type arena.
     inline s_sound_type_arena MakeSoundTypeArena(s_mem_arena& mem_arena) {
         return {
             .mem_arena = &mem_arena
@@ -326,6 +328,8 @@ namespace zf {
     }
 
     [[nodiscard]] t_b8 CreateSoundTypeFromRaw(const s_str_rdonly file_path, s_sound_type_arena& type_arena, s_mem_arena& temp_mem_arena, s_sound_type*& o_type);
+
+    void DestroySoundTypes(s_audio_context& ac, s_sound_type_arena& type_arena);
 
     [[nodiscard]] t_b8 PlaySound(s_audio_context& ac, const s_sound_type* const type, const t_f32 vol = 1.0f, const t_f32 pan = 0.0f, const t_f32 pitch = 1.0f, const t_b8 loop = false);
 

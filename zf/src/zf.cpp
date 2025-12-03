@@ -247,6 +247,7 @@ void main() {
 
     [[nodiscard]] static t_b8 InitAudio(s_audio_context& o_ac);
     static void ShutdownAudio(s_audio_context& ac);
+    void ProcFinishedSounds(s_audio_context& ac);
 
     // ============================================================
     // @section: Game
@@ -455,6 +456,8 @@ void main() {
                 // Once enough time has passed (i.e. the time accumulator has reached the tick interval), run at least a single tick and update the display.
                 if (frame_dur_accum >= targ_tick_interval) {
                     RewindMemArena(frame_mem_arena, 0);
+
+                    ProcFinishedSounds(audio_context);
 
                     // Run possibly multiple ticks.
                     do {
@@ -1558,6 +1561,27 @@ void main() {
         return true;
     }
 
+    void DestroySoundTypes(s_audio_context& ac, s_sound_type_arena& type_arena) {
+        // Ugly O(n^2) thing which stops any sound instances of any sound type in the arena.
+
+        const s_sound_type* type = type_arena.head;
+
+        while (type) {
+            ZF_FOR_EACH_SET_BIT(ac.snd_insts.activity, i) {
+                if (ac.snd_insts.types[i] == type) {
+                    ma_sound_stop(&ac.snd_insts.ma_snds[i]);
+
+                    ma_sound_uninit(&ac.snd_insts.ma_snds[i]);
+                    ma_audio_buffer_ref_uninit(&ac.snd_insts.ma_buf_refs[i]);
+
+                    UnsetBit(ac.snd_insts.activity, i);
+                }
+            }
+
+            type = type->next;
+        }
+    }
+
     t_b8 PlaySound(s_audio_context& ac, const s_sound_type* const type, const t_f32 vol, const t_f32 pan, const t_f32 pitch, const t_b8 loop) {
         ZF_ASSERT(vol >= 0.0f && vol <= 1.0f);
         ZF_ASSERT(pan >= -1.0f && pan <= 1.0f);
@@ -1618,5 +1642,18 @@ void main() {
         SetBit(ac.snd_insts.activity, index);
 
         return true;
+    }
+
+    void ProcFinishedSounds(s_audio_context& ac) {
+        ZF_FOR_EACH_SET_BIT(ac.snd_insts.activity, i) {
+            ma_sound& snd = ac.snd_insts.ma_snds[i];
+
+            if (!ma_sound_is_playing(&snd)) {
+                ma_sound_uninit(&snd);
+                ma_audio_buffer_ref_uninit(&ac.snd_insts.ma_buf_refs[i]);
+
+                UnsetBit(ac.snd_insts.activity, i);
+            }
+        }
     }
 }
