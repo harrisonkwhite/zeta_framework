@@ -2,11 +2,31 @@
 
 #include <GLFW/glfw3.h>
 #include <glad/glad.h>
+#include <miniaudio.h>
 
 namespace zf {
     // ============================================================
     // @section: Declarations and Data
     // ============================================================
+
+    // This is all global to remove the need for the framework user to have to pass a window pointer or input state around just so they can access READ-ONLY info (changes to window state are never done directly by them and instead can only be requested).
+    struct {
+        GLFWwindow* glfw_window;
+
+        struct {
+            s_static_bit_vec<eks_key_code_cnt> keys_down;
+            s_static_bit_vec<eks_mouse_button_code_cnt> mouse_buttons_down;
+
+            struct {
+                s_static_bit_vec<eks_key_code_cnt> keys_pressed;
+                s_static_bit_vec<eks_key_code_cnt> keys_released;
+
+                s_static_bit_vec<eks_mouse_button_code_cnt> mouse_buttons_pressed;
+                s_static_bit_vec<eks_mouse_button_code_cnt> mouse_buttons_released;
+            } events;
+        } input;
+    } g_game;
+
     constexpr e_key_code ConvertGLFWKeyCode(const t_s32 glfw_key);
     constexpr e_mouse_button_code ConvertGLFWMouseButtonCode(const t_s32 glfw_button);
 
@@ -138,7 +158,7 @@ void main() {
 }
 )";
 
-    static const s_str_rdonly g_surface_default_vert_shader_src = R"(#version 460 core
+    static const s_str_rdonly g_default_surface_vert_shader_src = R"(#version 460 core
 
 layout (location = 0) in vec2 a_vert;
 layout (location = 1) in vec2 a_tex_coord;
@@ -162,7 +182,7 @@ void main() {
 }
 )";
 
-    static const s_str_rdonly g_surface_default_frag_shader_src = R"(#version 460 core
+    static const s_str_rdonly g_default_surface_frag_shader_src = R"(#version 460 core
 
 in vec2 v_tex_coord;
 out vec4 o_frag_color;
@@ -205,23 +225,28 @@ void main() {
     static void Flush(const s_rendering_context& rc);
     static void Draw(const s_rendering_context& rc, const t_gl_id tex_gl_id, const s_rect<t_f32> tex_coords, s_v2<t_f32> pos, s_v2<t_f32> size, s_v2<t_f32> origin, const t_f32 rot, const s_color_rgba32f blend);
 
-    // This is all global to remove the need for the framework user to have to pass a window pointer or input state around just so they can access READ-ONLY info (changes to window state are never done directly by them and instead can only be requested).
-    struct {
-        GLFWwindow* glfw_window;
+    struct s_sound_type {
+        s_sound_meta meta;
+        s_array_rdonly<t_f32> pcm;
+
+        s_sound_type* next;
+    };
+
+    constexpr t_size g_snd_inst_limit = 32;
+
+    struct s_audio_context {
+        ma_engine ma_eng;
 
         struct {
-            s_static_bit_vec<eks_key_code_cnt> keys_down;
-            s_static_bit_vec<eks_mouse_button_code_cnt> mouse_buttons_down;
+            s_static_array<ma_sound, g_snd_inst_limit> ma_snds;
+            s_static_array<ma_audio_buffer_ref, g_snd_inst_limit> ma_buf_refs;
+            s_static_array<const s_sound_type*, g_snd_inst_limit> types;
+            s_static_bit_vec<g_snd_inst_limit> activity;
+        } snd_insts;
+    };
 
-            struct {
-                s_static_bit_vec<eks_key_code_cnt> keys_pressed;
-                s_static_bit_vec<eks_key_code_cnt> keys_released;
-
-                s_static_bit_vec<eks_mouse_button_code_cnt> mouse_buttons_pressed;
-                s_static_bit_vec<eks_mouse_button_code_cnt> mouse_buttons_released;
-            } events;
-        } input;
-    } g_game;
+    [[nodiscard]] static t_b8 InitAudio(s_audio_context& o_ac);
+    static void ShutdownAudio(s_audio_context& ac);
 
     // ============================================================
     // @section: Game
@@ -360,6 +385,18 @@ void main() {
             ZF_DEFER({ ReleaseRenderingBasis(rendering_basis); });
 
             //
+            // Audio Setup
+            //
+            s_audio_context audio_context;
+
+            if (!InitAudio(audio_context)) {
+                ZF_REPORT_ERROR();
+                return false;
+            }
+
+            ZF_DEFER({ ShutdownAudio(audio_context); });
+
+            //
             // Developer Initialisation
             //
 
@@ -381,7 +418,8 @@ void main() {
                     .dev_mem = dev_mem,
                     .mem_arena = &mem_arena,
                     .temp_mem_arena = &temp_mem_arena,
-                    .gfx_res_arena = &rendering_basis.res_arena
+                    .gfx_res_arena = &rendering_basis.res_arena,
+                    .audio_context = &audio_context
                 };
 
                 if (!info.init_func(context)) {
@@ -426,7 +464,8 @@ void main() {
                             .dev_mem = dev_mem,
                             .mem_arena = &mem_arena,
                             .temp_mem_arena = &temp_mem_arena,
-                            .gfx_res_arena = &rendering_basis.res_arena
+                            .gfx_res_arena = &rendering_basis.res_arena,
+                            .audio_context = &audio_context
                         };
 
                         if (!info.tick_func(context)) {
@@ -1126,7 +1165,7 @@ void main() {
         }
 
         // Set up default surface shader program.
-        if (!MakeSurfaceShaderProg(g_surface_default_vert_shader_src, g_surface_default_frag_shader_src, o_basis.res_arena, temp_mem_arena, o_basis.default_surf_shader_prog)) {
+        if (!MakeSurfaceShaderProg(g_default_surface_vert_shader_src, g_default_surface_frag_shader_src, o_basis.res_arena, temp_mem_arena, o_basis.default_surf_shader_prog)) {
             ZF_REPORT_ERROR();
             clean_up = true;
             return false;
@@ -1462,5 +1501,122 @@ void main() {
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, nullptr);
 
         glUseProgram(0);
+    }
+
+    // ============================================================
+    // @section: Audio
+    // ============================================================
+    t_b8 InitAudio(s_audio_context& o_ac) {
+        ZeroOut(o_ac);
+
+        if (ma_engine_init(nullptr, &o_ac.ma_eng) != MA_SUCCESS) {
+            ZF_REPORT_ERROR();
+            return false;
+        }
+
+        return true;
+    }
+
+    void ShutdownAudio(s_audio_context& ac) {
+        ZF_FOR_EACH_SET_BIT(ac.snd_insts.activity, i) {
+            ma_sound_stop(&ac.snd_insts.ma_snds[i]);
+            ma_sound_uninit(&ac.snd_insts.ma_snds[i]);
+
+            ma_audio_buffer_ref_uninit(&ac.snd_insts.ma_buf_refs[i]);
+        }
+
+        ma_engine_uninit(&ac.ma_eng);
+    }
+
+    t_b8 CreateSoundTypeFromRaw(const s_str_rdonly file_path, s_sound_type_arena& type_arena, s_mem_arena& temp_mem_arena, s_sound_type*& o_type) {
+        s_sound_meta meta;
+        s_array<t_f32> pcm;
+
+        if (!LoadSoundFromRaw(file_path, *type_arena.mem_arena, temp_mem_arena, meta, pcm)) {
+            return false;
+        }
+
+        o_type = PushToMemArena<s_sound_type>(*type_arena.mem_arena);
+
+        if (!o_type) {
+            return false;
+        }
+
+        *o_type = {
+            .meta = meta,
+            .pcm = pcm
+        };
+
+        if (!type_arena.head) {
+            type_arena.head = o_type;
+            type_arena.tail = o_type;
+        } else {
+            type_arena.tail->next = o_type;
+            type_arena.tail = o_type;
+        }
+
+        return true;
+    }
+
+    t_b8 PlaySound(s_audio_context& ac, const s_sound_type* const type, const t_f32 vol, const t_f32 pan, const t_f32 pitch, const t_b8 loop) {
+        ZF_ASSERT(vol >= 0.0f && vol <= 1.0f);
+        ZF_ASSERT(pan >= -1.0f && pan <= 1.0f);
+        ZF_ASSERT(pitch > 0.0f);
+
+        t_b8 clean_up = false;
+
+        const t_size index = IndexOfFirstUnsetBit(ac.snd_insts.activity);
+
+        if (index == -1) {
+            ZF_REPORT_ERROR();
+            clean_up = true;
+            return false;
+        }
+
+        ma_sound& ma_snd = ac.snd_insts.ma_snds[index];
+        ma_audio_buffer_ref& ma_buf_ref = ac.snd_insts.ma_buf_refs[index];
+
+        ac.snd_insts.types[index] = type;
+
+        if (ma_audio_buffer_ref_init(ma_format_f32, static_cast<ma_uint32>(type->meta.channel_cnt), type->pcm.buf_raw, static_cast<ma_uint64>(type->meta.frame_cnt), &ma_buf_ref) != MA_SUCCESS) {
+            ZF_REPORT_ERROR();
+            clean_up = true;
+            return false;
+        }
+
+        ZF_DEFER({
+            if (clean_up) {
+                ma_audio_buffer_ref_uninit(&ma_buf_ref);
+            }
+        });
+
+        ma_buf_ref.sampleRate = static_cast<ma_uint32>(type->meta.sample_rate);
+
+        if (ma_sound_init_from_data_source(&ac.ma_eng, &ma_buf_ref, 0, nullptr, &ma_snd) != MA_SUCCESS) {
+            ZF_REPORT_ERROR();
+            clean_up = true;
+            return false;
+        }
+
+        ZF_DEFER({
+            if (clean_up) {
+                ma_sound_uninit(&ma_snd);
+            }
+        });
+
+        ma_sound_set_volume(&ma_snd, vol);
+        ma_sound_set_pan(&ma_snd, pan);
+        ma_sound_set_pitch(&ma_snd, pitch);
+        ma_sound_set_looping(&ma_snd, loop);
+
+        if (ma_sound_start(&ma_snd) != MA_SUCCESS) {
+            ZF_REPORT_ERROR();
+            clean_up = true;
+            return false;
+        }
+
+        SetBit(ac.snd_insts.activity, index);
+
+        return true;
     }
 }
