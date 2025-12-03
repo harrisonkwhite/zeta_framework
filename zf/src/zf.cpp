@@ -1316,16 +1316,30 @@ void main() {
         DrawTexture(rc, rc.basis->px_tex, RectPos(rect), {}, {}, RectSize(rect), 0.0f, color);
     }
 
+    void DrawRectOpaqueOutlined(const s_rendering_context& rc, const s_rect<t_f32> rect, const s_color_rgba24f fill_color, const s_color_rgba32f outline_color, const t_f32 outline_thickness) {
+        ZF_ASSERT(outline_thickness > 0.0f);
+
+        DrawRect(rc, {rect.x - outline_thickness, rect.y - outline_thickness, rect.width + (outline_thickness * 2.0f), rect.height + (outline_thickness * 2.0f)}, fill_color);
+        DrawRect(rc, rect, fill_color);
+    }
+
     void DrawRectRot(const s_rendering_context& rc, const s_v2<t_f32> pos, const s_v2<t_f32> size, const s_v2<t_f32> origin, const t_f32 rot, const s_color_rgba32f color) {
         DrawTexture(rc, rc.basis->px_tex, pos, {}, origin, size, rot, color);
     }
 
-    void DrawLine(const s_rendering_context& rc, const s_v2<t_f32> a, const s_v2<t_f32> b, const s_color_rgba32f blend, const t_f32 width) {
-        ZF_ASSERT(width > 0.0f);
+    void DrawRectRotOpaqueOutlined(const s_rendering_context& rc, const s_v2<t_f32> pos, const s_v2<t_f32> size, const s_v2<t_f32> origin, const t_f32 rot, const s_color_rgba24f fill_color, const s_color_rgba32f outline_color, const t_f32 outline_thickness) {
+        ZF_ASSERT(outline_thickness > 0.0f);
+
+        DrawRectRot(rc, pos, {size.x + (outline_thickness * 2.0f), size.y + (outline_thickness * 2.0f)}, origin, rot, outline_color);
+        DrawRectRot(rc, pos, size, origin, rot, fill_color);
+    }
+
+    void DrawLine(const s_rendering_context& rc, const s_v2<t_f32> a, const s_v2<t_f32> b, const s_color_rgba32f blend, const t_f32 thickness) {
+        ZF_ASSERT(thickness > 0.0f);
 
         const t_f32 len = CalcDist(a, b);
         const t_f32 dir = CalcDirInRads(a, b);
-        DrawTexture(rc, rc.basis->px_tex, a, {}, origins::g_centerleft, {len, width}, dir, blend);
+        DrawTexture(rc, rc.basis->px_tex, a, {}, origins::g_centerleft, {len, thickness}, dir, blend);
     }
 
     t_b8 DrawStr(const s_rendering_context& rc, const s_str_rdonly str, const s_gfx_resource* const font, const s_v2<t_f32> pos, const s_v2<t_f32> alignment, const s_color_rgba32f blend, s_mem_arena& temp_mem_arena) {
