@@ -418,7 +418,7 @@ namespace zf {
 
     t_b8 LoadStrChrDrawPositions(const s_str_rdonly str, const s_font_arrangement& font_arrangement, const s_v2<t_f32> pos, const s_v2<t_f32> alignment, s_mem_arena& mem_arena, s_array<s_v2<t_f32>>& o_positions) {
         ZF_ASSERT(!IsStrEmpty(str) && IsValidUTF8Str(str));
-        ZF_ASSERT(alignment.x >= 0.0f && alignment.y >= 0.0f && alignment.x <= 1.0f && alignment.y <= 1.0f);
+        ZF_ASSERT(IsAlignmentValid(alignment));
 
         // Calculate some useful string metadata.
         struct s_str_meta {

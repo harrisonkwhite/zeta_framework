@@ -13,6 +13,32 @@ namespace zf {
         t_f32 g;
         t_f32 b;
         t_f32 a;
+
+        constexpr s_color_rgba32f() = default;
+        constexpr s_color_rgba32f(const t_f32 r, const t_f32 g, const t_f32 b, const t_f32 a) : r(r), g(g), b(b), a(a) {}
+        constexpr s_color_rgba32f(const s_v4<t_f32> v) : r(v.x), g(v.y), b(v.z), a(v.w) {}
+
+        constexpr operator s_v4<t_f32>() const {
+            return {r, g, b, a};
+        }
+    };
+
+    struct s_color_rgba24f {
+        t_f32 r;
+        t_f32 g;
+        t_f32 b;
+
+        constexpr s_color_rgba24f() = default;
+        constexpr s_color_rgba24f(const t_f32 r, const t_f32 g, const t_f32 b) : r(r), g(g), b(b) {}
+        constexpr s_color_rgba24f(const s_v3<t_f32> v) : r(v.x), g(v.y), b(v.z) {}
+
+        constexpr operator s_color_rgba32f() const {
+            return {r, g, b, 1.0f};
+        }
+
+        constexpr operator s_v3<t_f32>() const {
+            return {r, g, b};
+        }
     };
 
     struct s_color_rgba8 {
@@ -21,10 +47,17 @@ namespace zf {
         t_u8 b;
         t_u8 a;
 
-        constexpr operator s_color_rgba32f() {
+        constexpr operator s_color_rgba32f() const {
             return {r / 255.0f, g / 255.0f, b / 255.0f, a / 255.0f};
         }
     };
+
+    constexpr t_b8 IsColorValid(const s_color_rgba32f color) {
+        return color.r >= 0.0f && color.r <= 1.0f
+            && color.g >= 0.0f && color.g <= 1.0f
+            && color.b >= 0.0f && color.b <= 1.0f
+            && color.a >= 0.0f && color.a <= 1.0f;
+    }
 
     constexpr s_color_rgba32f ColorsMixed(const s_color_rgba32f a, const s_color_rgba32f b, const t_f32 amount) {
         ZF_ASSERT(amount >= 0.0f && amount <= 1.0f);
@@ -56,23 +89,23 @@ namespace zf {
     }
 
     namespace colors {
-        constexpr s_color_rgba32f g_black = {0.0f, 0.0f, 0.0f, 1.0f};
-        constexpr s_color_rgba32f g_dark_gray = {0.25f, 0.25f, 0.25f, 1.0f};
-        constexpr s_color_rgba32f g_gray = {0.5f, 0.5f, 0.5f, 1.0f};
-        constexpr s_color_rgba32f g_light_gray = {0.75f, 0.75f, 0.75f, 1.0f};
-        constexpr s_color_rgba32f g_white = {1.0f, 1.0f, 1.0f, 1.0f};
-        constexpr s_color_rgba32f g_red = {1.0f, 0.0f, 0.0f, 1.0f};
-        constexpr s_color_rgba32f g_orange = {1.0f, 0.5f, 0.0f, 1.0f};
-        constexpr s_color_rgba32f g_yellow = {1.0f, 1.0f, 0.0f, 1.0f};
-        constexpr s_color_rgba32f g_lime = {0.75f, 1.0f, 0.0f, 1.0f};
-        constexpr s_color_rgba32f g_green = {0.0f, 1.0f, 0.0f, 1.0f};
-        constexpr s_color_rgba32f g_teal = {0.0f, 0.5f, 0.5f, 1.0f};
-        constexpr s_color_rgba32f g_cyan = {0.0f, 1.0f, 1.0f, 1.0f};
-        constexpr s_color_rgba32f g_blue = {0.0f, 0.0f, 1.0f, 1.0f};
-        constexpr s_color_rgba32f g_purple = {0.5f, 0.0f, 0.5f, 1.0f};
-        constexpr s_color_rgba32f g_magenta = {1.0f, 0.0f, 1.0f, 1.0f};
-        constexpr s_color_rgba32f g_pink = {1.0f, 0.75f, 0.8f, 1.0f};
-        constexpr s_color_rgba32f g_brown = {0.6f, 0.3f, 0.0f, 1.0f};
+        constexpr s_color_rgba24f g_black = {0.0f, 0.0f, 0.0f};
+        constexpr s_color_rgba24f g_dark_gray = {0.25f, 0.25f, 0.25f};
+        constexpr s_color_rgba24f g_gray = {0.5f, 0.5f, 0.5f};
+        constexpr s_color_rgba24f g_light_gray = {0.75f, 0.75f, 0.75f};
+        constexpr s_color_rgba24f g_white = {1.0f, 1.0f, 1.0f};
+        constexpr s_color_rgba24f g_red = {1.0f, 0.0f, 0.0f};
+        constexpr s_color_rgba24f g_orange = {1.0f, 0.5f, 0.0f};
+        constexpr s_color_rgba24f g_yellow = {1.0f, 1.0f, 0.0f};
+        constexpr s_color_rgba24f g_lime = {0.75f, 1.0f, 0.0f};
+        constexpr s_color_rgba24f g_green = {0.0f, 1.0f, 0.0f};
+        constexpr s_color_rgba24f g_teal = {0.0f, 0.5f, 0.5f};
+        constexpr s_color_rgba24f g_cyan = {0.0f, 1.0f, 1.0f};
+        constexpr s_color_rgba24f g_blue = {0.0f, 0.0f, 1.0f};
+        constexpr s_color_rgba24f g_purple = {0.5f, 0.0f, 0.5f};
+        constexpr s_color_rgba24f g_magenta = {1.0f, 0.0f, 1.0f};
+        constexpr s_color_rgba24f g_pink = {1.0f, 0.75f, 0.8f};
+        constexpr s_color_rgba24f g_brown = {0.6f, 0.3f, 0.0f};
     }
 
     // ============================================================
@@ -88,6 +121,11 @@ namespace zf {
         constexpr s_v2<t_f32> g_bottomleft = {0.0f, 1.0f};
         constexpr s_v2<t_f32> g_bottomcenter = {0.5f, 1.0f};
         constexpr s_v2<t_f32> g_bottomright = {1.0f, 1.0f};
+    }
+
+    constexpr t_b8 IsOriginValid(const s_v2<t_f32> origin) {
+        return origin.x >= 0.0f && origin.x <= 1.0f
+            && origin.y >= 0.0f && origin.y <= 1.0f;
     }
 
     struct s_rgba_texture_data_rdonly {
@@ -131,6 +169,11 @@ namespace zf {
         constexpr s_v2<t_f32> g_bottomleft = {0.0f, 1.0f};
         constexpr s_v2<t_f32> g_bottomcenter = {0.5f, 1.0f};
         constexpr s_v2<t_f32> g_bottomright = {1.0f, 1.0f};
+    }
+
+    constexpr t_b8 IsAlignmentValid(const s_v2<t_f32> alignment) {
+        return alignment.x >= 0.0f && alignment.x <= 1.0f
+            && alignment.y >= 0.0f && alignment.y <= 1.0f;
     }
 
     constexpr s_v2<t_s32> g_font_atlas_size = {1024, 1024};

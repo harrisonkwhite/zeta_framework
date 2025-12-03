@@ -1232,6 +1232,8 @@ void main() {
     }
 
     void Clear(const s_rendering_context& rc, const s_color_rgba32f col) {
+        ZF_ASSERT(IsColorValid(col));
+
         glClearColor(col.r, col.g, col.b, col.a);
         glClear(GL_COLOR_BUFFER_BIT);
     }
@@ -1286,8 +1288,8 @@ void main() {
 
     void DrawTexture(const s_rendering_context& rc, const s_gfx_resource* const tex, const s_v2<t_f32> pos, const s_rect<t_s32> src_rect, const s_v2<t_f32> origin, const s_v2<t_f32> scale, const t_f32 rot, const s_color_rgba32f blend) {
         ZF_ASSERT(tex && tex->type == ek_gfx_resource_type_texture);
-        ZF_ASSERT(origin.x >= 0.0f && origin.x <= 1.0f && origin.y >= 0.0f && origin.y <= 1.0f); // @todo: Generic function for this check?
-        // @todo: Add more assertions here!
+        ZF_ASSERT(IsOriginValid(origin));
+        ZF_ASSERT(IsColorValid(blend));
 
         const auto tex_size = tex->type_data.tex.size;
 
@@ -1329,7 +1331,8 @@ void main() {
     t_b8 DrawStr(const s_rendering_context& rc, const s_str_rdonly str, const s_gfx_resource* const font, const s_v2<t_f32> pos, const s_v2<t_f32> alignment, const s_color_rgba32f blend, s_mem_arena& temp_mem_arena) {
         ZF_ASSERT(IsValidUTF8Str(str));
         ZF_ASSERT(font && font->type == ek_gfx_resource_type_font);
-        // @todo: Add more assertions here!
+        ZF_ASSERT(IsAlignmentValid(alignment));
+        ZF_ASSERT(IsColorValid(blend));
 
         if (IsStrEmpty(str)) {
             return true;
