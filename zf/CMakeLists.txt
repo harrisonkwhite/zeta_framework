@@ -3,7 +3,6 @@ add_library(zf STATIC
 	../external/glad/src/glad.c
 
     include/zf.h
-    include/zf_private/zf_gl.h
 )
 
 target_include_directories(zf PUBLIC
