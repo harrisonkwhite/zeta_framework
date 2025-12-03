@@ -1314,6 +1314,10 @@ void main() {
         DrawTexture(rc, rc.basis->px_tex, RectPos(rect), {}, {}, RectSize(rect), 0.0f, color);
     }
 
+    void DrawRectRot(const s_rendering_context& rc, const s_v2<t_f32> pos, const s_v2<t_f32> size, const s_v2<t_f32> origin, const t_f32 rot, const s_color_rgba32f color) {
+        DrawTexture(rc, rc.basis->px_tex, pos, {}, origin, size, rot, color);
+    }
+
     void DrawLine(const s_rendering_context& rc, const s_v2<t_f32> a, const s_v2<t_f32> b, const s_color_rgba32f blend, const t_f32 width) {
         ZF_ASSERT(width > 0.0f);
 

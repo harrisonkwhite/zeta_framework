@@ -265,6 +265,7 @@ namespace zf {
     void SetViewMatrix(const s_rendering_context& rc, const s_matrix_4x4& mat);
     void DrawTexture(const s_rendering_context& rc, const s_gfx_resource* const tex, const s_v2<t_f32> pos, const s_rect<t_s32> src_rect = {}, const s_v2<t_f32> origin = origins::g_topleft, const s_v2<t_f32> scale = {1.0f, 1.0f}, const t_f32 rot = 0.0f, const s_color_rgba32f blend = colors::g_white);
     void DrawRect(const s_rendering_context& rc, const s_rect<t_f32> rect, const s_color_rgba32f color);
+    void DrawRectRot(const s_rendering_context& rc, const s_v2<t_f32> pos, const s_v2<t_f32> size, const s_v2<t_f32> origin, const t_f32 rot, const s_color_rgba32f color);
     void DrawLine(const s_rendering_context& rc, const s_v2<t_f32> a, const s_v2<t_f32> b, const s_color_rgba32f blend, const t_f32 width = 1.0f);
     [[nodiscard]] t_b8 DrawStr(const s_rendering_context& rc, const s_str_rdonly str, const s_gfx_resource* const font, const s_v2<t_f32> pos, const s_v2<t_f32> alignment, const s_color_rgba32f blend, s_mem_arena& temp_mem_arena);
 
@@ -333,7 +334,7 @@ namespace zf {
 
     struct s_sound_id;
 
-    [[nodiscard]] t_b8 PlaySound(s_audio_context& ac, s_sound_type* const type, const s_sound_id* const o_id = nullptr, const t_f32 vol = 1.0f, const t_f32 pan = 0.0f, const t_f32 pitch = 1.0f, const t_b8 loop = false);
+    [[nodiscard]] t_b8 PlaySound(s_audio_context& ac, const s_sound_type* const type, s_sound_id* const o_id = nullptr, const t_f32 vol = 1.0f, const t_f32 pan = 0.0f, const t_f32 pitch = 1.0f, const t_b8 loop = false);
     void StopSound(s_audio_context& ac, const s_sound_id id);
     t_b8 IsSoundPlaying(s_audio_context& ac, const s_sound_id id);
 }
