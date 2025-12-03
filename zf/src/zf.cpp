@@ -23,6 +23,9 @@ namespace zf {
     static t_gl_id MakeGLShaderProg(const s_str_rdonly vert_src, const s_str_rdonly frag_src, s_mem_arena& temp_mem_arena);
     static t_gl_id MakeGLTexture(const s_rgba_texture_data_rdonly& tex_data);
     static s_v2<t_s32> GLTextureSizeLimit();
+    static s_rect<t_s32> GLViewport();
+    static t_gl_id CurGLShaderProg();
+    [[nodiscard]] static t_b8 AttachGLFramebufferTexture(const t_gl_id fb_gl_id, const t_gl_id tex_gl_id, const s_v2<t_s32> tex_size);
 
     struct s_gfx_resource {
         e_gfx_resource_type type;
@@ -135,9 +138,48 @@ void main() {
 }
 )";
 
+    static const s_str_rdonly g_surface_default_vert_shader_src = R"(#version 460 core
+
+layout (location = 0) in vec2 a_vert;
+layout (location = 1) in vec2 a_tex_coord;
+
+out vec2 v_tex_coord;
+
+uniform vec2 u_pos;
+uniform vec2 u_size;
+uniform mat4 u_proj;
+
+void main() {
+    mat4 model = mat4(
+        vec4(u_size.x, 0.0, 0.0, 0.0),
+        vec4(0.0, u_size.y, 0.0, 0.0),
+        vec4(0.0, 0.0, 1.0, 0.0),
+        vec4(u_pos.x, u_pos.y, 0.0, 1.0)
+    );
+
+    gl_Position = u_proj * model * vec4(a_vert, 0.0, 1.0);
+    v_tex_coord = a_tex_coord;
+}
+)";
+
+    static const s_str_rdonly g_surface_default_frag_shader_src = R"(#version 460 core
+
+in vec2 v_tex_coord;
+out vec4 o_frag_color;
+
+uniform sampler2D u_tex;
+
+void main() {
+    o_frag_color = texture(u_tex, v_tex_coord);
+}
+)";
+
     struct s_rendering_basis {
         s_mesh_gl_ids batch_mesh_gl_ids;
         t_gl_id batch_shader_prog_gl_id;
+
+        s_mesh_gl_ids surf_mesh_gl_ids;
+        t_gl_id surf_default_shader_prog_gl_id;
 
         s_gfx_resource_arena res_arena;
         s_gfx_resource* px_tex;
@@ -723,6 +765,35 @@ void main() {
         return { size, size };
     }
 
+    s_rect<t_s32> GLViewport() {
+        s_rect<t_s32> v;
+        glGetIntegerv(GL_VIEWPORT, reinterpret_cast<t_s32*>(&v));
+        return v;
+    }
+
+    t_gl_id CurGLShaderProg() {
+        t_s32 prog;
+        glGetIntegerv(GL_CURRENT_PROGRAM, &prog);
+        return static_cast<t_gl_id>(prog);
+    }
+
+    t_b8 AttachGLFramebufferTexture(const t_gl_id fb_gl_id, const t_gl_id tex_gl_id, const s_v2<t_s32> tex_size) {
+        glBindTexture(GL_TEXTURE_2D, tex_gl_id);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, static_cast<GLsizei>(tex_size.x), static_cast<GLsizei>(tex_size.y), 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+        glBindFramebuffer(GL_FRAMEBUFFER, fb_gl_id);
+
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tex_gl_id, 0);
+
+        const t_b8 success = glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE;
+
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+        return success;
+    }
+
     // ============================================================
     // @section: GFX Resources
     // ============================================================
@@ -880,6 +951,83 @@ void main() {
         return true;
     }
 
+    t_b8 MakeSurface(const s_v2<t_s32> size, s_gfx_resource_arena& res_arena, s_gfx_resource*& o_surf) {
+        t_gl_id fb_gl_id;
+        glGenFramebuffers(1, &fb_gl_id);
+
+        t_gl_id tex_gl_id;
+        glGenTextures(1, &tex_gl_id);
+
+        if (!AttachGLFramebufferTexture(fb_gl_id, tex_gl_id, size)) {
+            return false;
+        }
+
+        o_surf = PushGFXResource(res_arena);
+
+        if (!o_surf) {
+            glDeleteTextures(1, &tex_gl_id);
+            glDeleteFramebuffers(1, &fb_gl_id);
+            return false;
+        }
+
+        o_surf->type = ek_gfx_resource_type_surface;
+
+        o_surf->type_data.surf = {
+            .fb_gl_id = fb_gl_id,
+            .tex_gl_id = tex_gl_id,
+            .size = size
+        };
+
+        return true;
+    }
+
+    t_b8 ResizeSurface(s_gfx_resource* const surf, const s_v2<t_s32> size) {
+        ZF_ASSERT(surf && surf->type == ek_gfx_resource_type_surface);
+        ZF_ASSERT(surf->type_data.surf.size != size && "Unnecessarily resizing a surface - new surface size is the same.");
+
+        t_gl_id new_fb_gl_id;
+        glGenFramebuffers(1, &new_fb_gl_id);
+
+        t_gl_id new_tex_gl_id;
+        glGenTextures(1, &new_tex_gl_id);
+
+        if (!AttachGLFramebufferTexture(new_fb_gl_id, new_tex_gl_id, size)) {
+            glDeleteTextures(1, &new_tex_gl_id);
+            glDeleteFramebuffers(1, &new_fb_gl_id);
+            return false;
+        }
+
+        glDeleteTextures(1, &surf->type_data.surf.tex_gl_id);
+        glDeleteFramebuffers(1, &surf->type_data.surf.fb_gl_id);
+
+        surf->type_data.surf = {
+            .fb_gl_id = new_fb_gl_id,
+            .tex_gl_id = new_tex_gl_id,
+            .size = size
+        };
+
+        return true;
+    }
+
+    t_b8 MakeSurfaceShaderProg(const s_str_rdonly vert_src, const s_str_rdonly frag_src, s_gfx_resource_arena& res_arena, s_mem_arena& temp_mem_arena, s_gfx_resource*& o_prog) {
+        const t_gl_id gl_id = MakeGLShaderProg(vert_src, frag_src, temp_mem_arena);
+
+        if (!gl_id) {
+            return false;
+        }
+
+        o_prog = PushGFXResource(res_arena);
+
+        if (!o_prog) {
+            return false;
+        }
+
+        o_prog->type = ek_gfx_resource_type_surface_shader_prog;
+        o_prog->type_data.surf_shader_prog = {.gl_id = gl_id};
+
+        return true;
+    }
+
     // ============================================================
     // @section: Rendering
     // ============================================================
@@ -929,6 +1077,45 @@ void main() {
         ZF_DEFER({
             if (clean_up) {
                 glDeleteProgram(o_basis.batch_shader_prog_gl_id);
+            }
+        });
+
+        // Create the surface mesh.
+        {
+            constexpr s_static_array<t_f32, 16> verts = {{
+                0.0f, 1.0f, 0.0f, 0.0f,
+                1.0f, 1.0f, 1.0f, 0.0f,
+                1.0f, 0.0f, 1.0f, 1.0f,
+                0.0f, 0.0f, 0.0f, 1.0f
+            }};
+
+            constexpr s_static_array<t_u16, 6> elems = {{
+                0, 1, 2,
+                2, 3, 0
+            }};
+
+            constexpr s_static_array<t_s32, 2> vert_attr_lens = {{2, 2}};
+
+            o_basis.surf_mesh_gl_ids = MakeGLMesh(verts.buf_raw, verts.g_len, elems, vert_attr_lens);
+        }
+
+        ZF_DEFER({
+            if (clean_up) {
+                ReleaseGLMesh(o_basis.surf_mesh_gl_ids);
+            }
+        });
+
+        // Generate default surface shader program.
+        o_basis.surf_default_shader_prog_gl_id = MakeGLShaderProg(g_surface_default_vert_shader_src, g_surface_default_frag_shader_src, temp_mem_arena);
+
+        if (!o_basis.surf_default_shader_prog_gl_id) {
+            ZF_REPORT_ERROR();
+            return false;
+        }
+
+        ZF_DEFER({
+            if (clean_up) {
+                glDeleteProgram(o_basis.surf_default_shader_prog_gl_id);
             }
         });
 
@@ -986,12 +1173,7 @@ void main() {
         const t_s32 view_uniform_loc = glGetUniformLocation(rc.basis->batch_shader_prog_gl_id, "u_view");
         glUniformMatrix4fv(view_uniform_loc, 1, false, reinterpret_cast<const t_f32*>(&rc.state->view_mat));
 
-        const s_rect<t_s32> viewport = []() {
-            s_rect<t_s32> vp;
-            glGetIntegerv(GL_VIEWPORT, reinterpret_cast<t_s32*>(&vp)); // @todo: Cache. This is slow.
-            return vp;
-        }();
-
+        const s_rect<t_s32> viewport = GLViewport(); // @todo: Cache this.
         const auto proj_mat = MakeOrthographicMatrix4x4(0.0f, static_cast<t_f32>(viewport.width), static_cast<t_f32>(viewport.height), 0.0f, -1.0f, 1.0f);
         const t_s32 proj_uniform_loc = glGetUniformLocation(rc.basis->batch_shader_prog_gl_id, "u_proj");
         glUniformMatrix4fv(proj_uniform_loc, 1, false, reinterpret_cast<const t_f32*>(&proj_mat));
@@ -1139,5 +1321,151 @@ void main() {
         };
 
         return true;
+    }
+
+    void SetSurface(const s_rendering_context& rc, const s_gfx_resource* const surf) {
+        ZF_ASSERT(surf && surf->type == ek_gfx_resource_type_surface);
+
+        if (IsStackFull(rc.state->surfs)) {
+            LogError("Attempting to set a surface even though the limit has been reached!");
+            ZF_REPORT_ERROR();
+            return;
+        }
+
+        Flush(rc);
+
+        glBindFramebuffer(GL_FRAMEBUFFER, surf->type_data.surf.fb_gl_id);
+        glViewport(0, 0, static_cast<GLsizei>(surf->type_data.surf.size.x), static_cast<GLsizei>(surf->type_data.surf.size.y));
+
+        StackPush(rc.state->surfs, surf);
+    }
+
+    void UnsetSurface(const s_rendering_context& rc) {
+        if (IsStackEmpty(rc.state->surfs)) {
+            LogError("Attempting to unset a surface even though none are set!");
+            ZF_REPORT_ERROR();
+            return;
+        }
+
+        Flush(rc);
+
+        StackPop(rc.state->surfs);
+
+        t_gl_id fb_gl_id;
+        s_v2<t_s32> viewport_size;
+
+        if (IsStackEmpty(rc.state->surfs)) {
+            fb_gl_id = 0;
+            viewport_size = WindowFramebufferSize();
+        } else {
+            const auto new_surf = StackTop(rc.state->surfs);
+            fb_gl_id = new_surf->type_data.surf.fb_gl_id;
+            viewport_size = new_surf->type_data.surf.size;
+        }
+
+        glBindFramebuffer(GL_FRAMEBUFFER, fb_gl_id);
+        glViewport(0, 0, static_cast<GLsizei>(viewport_size.x), static_cast<GLsizei>(viewport_size.y));
+    }
+
+    void SetSurfaceShaderProg(const s_rendering_context& rc, const s_gfx_resource* const prog) {
+        ZF_ASSERT(CurGLShaderProg() == 0 && "Potential attempted double-assignment of surface shader program?");
+        glUseProgram(prog->type_data.surf_shader_prog.gl_id);
+    }
+
+    t_b8 SetSurfaceShaderProgUniform(const s_rendering_context& rc, const s_str_rdonly name, const s_surface_shader_prog_uniform_val& val, s_mem_arena& temp_mem_arena) {
+        const t_gl_id cur_prog_gl_id = CurGLShaderProg();
+
+        ZF_ASSERT(cur_prog_gl_id != 0 && "Surface shader program must be set before setting uniforms!");
+
+        s_str name_terminated;
+
+        if (!CloneStrButAddTerminator(name, temp_mem_arena, name_terminated)) {
+            return false;
+        }
+
+        const t_s32 loc = glGetUniformLocation(cur_prog_gl_id, StrRaw(name_terminated));
+        ZF_ASSERT(loc != -1 && "Failed to get location of shader uniform!");
+
+        switch (val.type) {
+            case ek_surface_shader_prog_uniform_val_type_s32:
+                glUniform1i(loc, val.type_data.s32);
+                break;
+
+            case ek_surface_shader_prog_uniform_val_type_u32:
+                glUniform1ui(loc, val.type_data.u32);
+                break;
+
+            case ek_surface_shader_prog_uniform_val_type_f32:
+                glUniform1f(loc, val.type_data.f32);
+                break;
+
+            case ek_surface_shader_prog_uniform_val_type_v2:
+                glUniform2f(loc, val.type_data.v2.x, val.type_data.v2.y);
+                break;
+
+            case ek_surface_shader_prog_uniform_val_type_v3:
+                glUniform3f(loc, val.type_data.v3.x, val.type_data.v3.y, val.type_data.v3.z);
+                break;
+
+            case ek_surface_shader_prog_uniform_val_type_v4:
+                glUniform4f(loc, val.type_data.v4.x, val.type_data.v4.y, val.type_data.v4.z, val.type_data.v4.w);
+                break;
+
+            case ek_surface_shader_prog_uniform_val_type_mat4x4:
+                glUniformMatrix4fv(loc, 1, false, reinterpret_cast<const t_f32*>(&val.type_data.mat4x4));
+                break;
+        }
+
+        return true;
+    }
+
+    void DrawSurface(const s_rendering_context& rc, const s_gfx_resource* const surf, const s_v2<t_f32> pos) {
+        ZF_ASSERT(surf && surf->type == ek_gfx_resource_type_surface);
+
+        if (CurGLShaderProg() == 0) {
+            glUseProgram(rc.basis->surf_default_shader_prog_gl_id);
+        }
+
+        glBindVertexArray(rc.basis->surf_mesh_gl_ids.vert_arr);
+        glBindBuffer(GL_ARRAY_BUFFER, rc.basis->surf_mesh_gl_ids.vert_buf);
+
+        {
+            constexpr s_v2<t_f32> scale = {1.0f, 1.0f}; // @todo: Make this customisable, or remove entirely.
+
+            constexpr s_static_array<t_f32, 16> verts = {{
+                0.0f,    scale.y, 0.0f, 0.0f,
+                scale.x, scale.y, 1.0f, 0.0f,
+                scale.x, 0.0f,    1.0f, 1.0f,
+                0.0f,    0.0f,    0.0f, 1.0f
+            }};
+
+            glBufferSubData(GL_ARRAY_BUFFER, 0, ArraySizeInBytes(verts), verts.buf_raw);
+        }
+
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, surf->type_data.surf.tex_gl_id);
+
+        const t_s32 proj_uniform_loc = glGetUniformLocation(CurGLShaderProg(), "u_proj");
+        ZF_ASSERT(proj_uniform_loc != -1); // @todo: Remove, do at load time.
+
+        const auto viewport = GLViewport();
+        const s_matrix_4x4 proj_mat = MakeOrthographicMatrix4x4(0.0f, static_cast<t_f32>(viewport.width), static_cast<t_f32>(viewport.height), 0.0f, -1.0f, 1.0f);
+        glUniformMatrix4fv(proj_uniform_loc, 1, false, reinterpret_cast<const t_f32*>(&proj_mat));
+
+        const t_s32 pos_uniform_loc = glGetUniformLocation(CurGLShaderProg(), "u_pos");
+        ZF_ASSERT(pos_uniform_loc != -1); // @todo: Remove, do at load time.
+
+        glUniform2fv(pos_uniform_loc, 1, reinterpret_cast<const t_f32*>(&pos));
+
+        const t_s32 size_uniform_loc = glGetUniformLocation(CurGLShaderProg(), "u_size");
+        ZF_ASSERT(size_uniform_loc != -1); // @todo: Remove, do at load time.
+
+        const auto size_f32 = static_cast<s_v2<t_f32>>(surf->type_data.surf.size);
+        glUniform2fv(size_uniform_loc, 1, reinterpret_cast<const t_f32*>(&size_f32));
+
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, rc.basis->surf_mesh_gl_ids.elem_buf);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, nullptr);
+
+        glUseProgram(0);
     }
 }

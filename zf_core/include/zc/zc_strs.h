@@ -57,7 +57,7 @@ namespace zf {
         constexpr s_str_rdonly(const s_array_rdonly<t_u8> bytes) : bytes(bytes) {}
 
         template <t_size tp_len>
-        constexpr s_str_rdonly(const char (&raw)[tp_len]) : bytes({reinterpret_cast<const t_u8*>(raw), tp_len - 1}) {}
+        s_str_rdonly(const char (&raw)[tp_len]) : bytes({reinterpret_cast<const t_u8*>(raw), tp_len - 1}) {}
     };
 
     struct s_str {
