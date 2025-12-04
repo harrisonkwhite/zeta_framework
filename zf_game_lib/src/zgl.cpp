@@ -628,9 +628,6 @@ void main() {
         return e_mouse_button_action::invalid;
     }
 
-    // ============================================================
-    // @section: Window
-    // ============================================================
     void SetWindowTitle(const s_str_rdonly title) {
         ZF_ASSERT(IsValidUTF8Str(title));
 
@@ -650,10 +647,18 @@ void main() {
         glfwSetWindowSize(g_game.glfw_window, size.x, size.y);
     }
 
+    void SetWindowResizability(const t_b8 resizable) {
+        glfwSetWindowAttrib(g_game.glfw_window, GLFW_RESIZABLE, resizable);
+    }
+
     s_v2<t_s32> WindowFramebufferSize() {
         t_s32 w, h;
         glfwGetFramebufferSize(g_game.glfw_window, &w, &h);
         return {w, h};
+    }
+
+    void SetCursorVisibility(const t_b8 visible) {
+        glfwSetInputMode(g_game.glfw_window, GLFW_CURSOR, visible ? GLFW_CURSOR_NORMAL : GLFW_CURSOR_HIDDEN);
     }
 
     // ============================================================

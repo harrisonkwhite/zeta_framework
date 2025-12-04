@@ -45,8 +45,6 @@ namespace zf {
         const s_rendering_context* rendering_context;
     };
 
-    enum class e_window_init_flags : t_u8;
-
     struct s_game_info {
         t_size mem_arena_size;
         t_size temp_mem_arena_size;
@@ -81,21 +79,15 @@ namespace zf {
 
     t_b8 RunGame(const s_game_info& info);
 
-    // ============================================================
-    // @section: Window
-    // ============================================================
-    enum class e_window_init_flags : t_u8 {
-        none = 0,
-        resizable = 1 << 0,
-        hide_cursor = 1 << 1
-    };
-
     void SetWindowTitle(const s_str_rdonly title);
 
     s_v2<t_s32> WindowSize();
     void SetWindowSize(const s_v2<t_s32> size);
+    void SetWindowResizability(const t_b8 resizable);
 
     s_v2<t_s32> WindowFramebufferSize();
+
+    void SetCursorVisibility(const t_b8 visible);
 
     // ============================================================
     // @section: Input
