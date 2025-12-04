@@ -676,15 +676,49 @@ void main() {
             glfwGetWindowPos(window.glfw_hdl, &window.prefullscreen_pos.x, &window.prefullscreen_pos.y);
             glfwGetWindowSize(window.glfw_hdl, &window.prefullscreen_size.x, &window.prefullscreen_size.y);
 
-            const auto monitor = glfwGetPrimaryMonitor();
-            const auto mode = glfwGetVideoMode(monitor);
+            const auto monitor = [window_pos = window.prefullscreen_pos, window_size = window.prefullscreen_size]() {
+                const s_rect<t_s32> window_rect = {window_pos, window_size};
 
+                // Get the monitor containing the most amount of the window.
+                t_f32 max_occupancy_perc = 0.0f;
+                t_size max_occupancy_monitor_index = -1;
+
+                t_s32 monitor_cnt;
+                const auto monitors = glfwGetMonitors(&monitor_cnt);
+
+                for (t_size i = 0; i < monitor_cnt; i++) {
+                    s_v2<t_s32> monitor_pos;
+                    glfwGetMonitorPos(monitors[i], &monitor_pos.x, &monitor_pos.y);
+
+                    const auto mode = glfwGetVideoMode(monitors[i]);
+                    const s_rect<t_s32> monitor_rect = {monitor_pos.x, monitor_pos.y, mode->width, mode->height};
+
+                    const t_f32 occupancy_perc = CalcRectOccupancyPerc(window_rect, monitor_rect);
+
+                    if (occupancy_perc > max_occupancy_perc) {
+                        max_occupancy_perc = occupancy_perc;
+                        max_occupancy_monitor_index = i;
+                    }
+                }
+
+                if (max_occupancy_monitor_index == -1) {
+                    return glfwGetPrimaryMonitor();
+                }
+
+                return monitors[max_occupancy_monitor_index];
+            }();
+
+            if (!monitor) {
+                return;
+            }
+
+            const auto mode = glfwGetVideoMode(monitor);
             glfwSetWindowMonitor(window.glfw_hdl, monitor, 0, 0, mode->width, mode->height, mode->refreshRate);
         } else {
             glfwSetWindowMonitor(window.glfw_hdl, nullptr, window.prefullscreen_pos.x, window.prefullscreen_pos.y, window.prefullscreen_size.x, window.prefullscreen_size.y, 0);
         }
 
-        window.fullscreen_active = !window.fullscreen_active;
+        window.fullscreen_active = fs;
     }
 
     void SetCursorVisibility(const s_window& window, const t_b8 visible) {

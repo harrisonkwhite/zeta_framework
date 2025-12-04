@@ -168,6 +168,28 @@ namespace zf {
     }
 
     // ============================================================
+    // @section: Key Debugging Features
+    // ============================================================
+    void P_ReportAssertError(const char* const cond_raw, const char* const func_name_raw, const char* const file_name_raw, const t_s32 line);
+
+#ifdef ZF_DEBUG
+    #define ZF_ASSERT(cond) \
+        do { \
+            if (!ZF_IN_CONSTEXPR() && !(cond)) { \
+                zf::P_ReportAssertError(#cond, __FUNCTION__, __FILE__, __LINE__); \
+            } \
+        } while(0)
+#else
+    #define ZF_ASSERT(cond) static_cast<void>(0)
+#endif
+
+    void P_ReportError(const char* const func_name_raw, const char* const file_name_raw, const t_s32 line);
+
+#define ZF_REPORT_ERROR() zf::P_ReportError(__FUNCTION__, __FILE__, __LINE__)
+
+    void ShowErrorBox(const char* const title_raw, const char* const contents_raw);
+
+    // ============================================================
     // @section: Essential Utilities
     // ============================================================
 #define ZF_MIN(a, b) ((a) <= (b) ? (a) : (b))
@@ -211,26 +233,4 @@ namespace zf {
     constexpr tp_type Wrap(const tp_type val, const tp_type min, const tp_type max_excl) {
         return min + WrapUpper(val - min, max_excl - min);
     }
-
-    // ============================================================
-    // @section: Key Debugging Features
-    // ============================================================
-    void P_ReportAssertError(const char* const cond_raw, const char* const func_name_raw, const char* const file_name_raw, const t_s32 line);
-
-#ifdef ZF_DEBUG
-    #define ZF_ASSERT(cond) \
-        do { \
-            if (!ZF_IN_CONSTEXPR() && !(cond)) { \
-                zf::P_ReportAssertError(#cond, __FUNCTION__, __FILE__, __LINE__); \
-            } \
-        } while(0)
-#else
-    #define ZF_ASSERT(cond) static_cast<void>(0)
-#endif
-
-    void P_ReportError(const char* const func_name_raw, const char* const file_name_raw, const t_s32 line);
-
-#define ZF_REPORT_ERROR() zf::P_ReportError(__FUNCTION__, __FILE__, __LINE__)
-
-    void ShowErrorBox(const char* const title_raw, const char* const contents_raw);
 }

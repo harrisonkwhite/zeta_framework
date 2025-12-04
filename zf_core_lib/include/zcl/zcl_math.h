@@ -233,6 +233,30 @@ namespace zf {
     template<c_numeric tp_type> tp_type RectTop(const s_rect<tp_type> rect) { return rect.y; }
     template<c_numeric tp_type> tp_type RectRight(const s_rect<tp_type> rect) { return rect.x + rect.width; }
     template<c_numeric tp_type> tp_type RectBottom(const s_rect<tp_type> rect) { return rect.y + rect.height; }
+    template<c_numeric tp_type> tp_type RectArea(const s_rect<tp_type> rect) { return rect.width * rect.height; }
+
+    // Returns a rectangle of the portion of the given inner rectangle WITHIN the given outer rectangle.
+    template<c_numeric tp_type>
+    s_rect<tp_type> ClampedSubrect(const s_rect<tp_type> inner_rect, const s_rect<tp_type> outer_rect) {
+        const s_v2<tp_type> tl = {
+            ZF_MAX(inner_rect.x, outer_rect.x),
+            ZF_MAX(inner_rect.y, outer_rect.y),
+        };
+
+        const s_v2<tp_type> br = {
+            ZF_MIN(RectRight(inner_rect), RectRight(outer_rect)),
+            ZF_MIN(RectBottom(inner_rect), RectBottom(outer_rect))
+        };
+
+        return {tl.x, tl.y, ZF_MAX(br.x - tl.x, 0), ZF_MAX(br.y - tl.y, 0)};
+    }
+
+    // Calculates what percentage of rectangle A is within rectangle B.
+    template<c_numeric tp_type>
+    t_f32 CalcRectOccupancyPerc(const s_rect<tp_type> a, const s_rect<tp_type> b) {
+        const auto subrect = ClampedSubrect(a, b);
+        return Clamp(static_cast<t_f32>(RectArea(subrect)) / RectArea(b), 0.0f, 1.0f);
+    }
 
     template<c_numeric tp_type>
     t_b8 DoesRectContainPoint(const s_rect<tp_type> rect, const s_v2<tp_type> pt) {
@@ -242,6 +266,14 @@ namespace zf {
     template<c_numeric tp_type>
     t_b8 DoRectsIntersect(const s_rect<tp_type> a, const s_rect<tp_type> b) {
         return RectLeft(a) < RectRight(b) && RectTop(a) < RectBottom(b) && RectRight(a) > RectLeft(b) && RectBottom(a) > RectTop(b);
+    }
+
+    template<c_numeric tp_type>
+    s_v2<tp_type> ClampPointInRect(const s_v2<tp_type> pt, const s_rect<tp_type> rect) {
+        return {
+            Clamp(pt.x, RectLeft(rect), RectRight(rect)),
+            Clamp(pt.y, RectTop(rect), RectBottom(rect))
+        };
     }
 
     // Generate a rectangle encompassing all of the provided rectangles. At least a single rectangle must be provided.
