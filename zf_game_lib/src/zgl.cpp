@@ -1,4 +1,4 @@
-#include <zgl.h>
+#include <zgl_private.h>
 
 #include <GLFW/glfw3.h>
 #include <glad/glad.h>
@@ -8,27 +8,14 @@ namespace zf {
     // ============================================================
     // @section: Declarations and Data
     // ============================================================
-
-    // This is all global to remove the need for the framework user to have to pass a window pointer or input state around just so they can access READ-ONLY info (changes to window state are never done directly by them and instead can only be requested).
     struct {
         GLFWwindow* glfw_window;
-
-        struct {
-            s_static_bit_vec<eks_key_code_cnt> keys_down;
-            s_static_bit_vec<eks_mouse_button_code_cnt> mouse_buttons_down;
-
-            struct {
-                s_static_bit_vec<eks_key_code_cnt> keys_pressed;
-                s_static_bit_vec<eks_key_code_cnt> keys_released;
-
-                s_static_bit_vec<eks_mouse_button_code_cnt> mouse_buttons_pressed;
-                s_static_bit_vec<eks_mouse_button_code_cnt> mouse_buttons_released;
-            } events;
-        } input;
     } g_game;
 
     constexpr e_key_code ConvertGLFWKeyCode(const t_s32 glfw_key);
     constexpr e_mouse_button_code ConvertGLFWMouseButtonCode(const t_s32 glfw_button);
+    constexpr e_key_action ConvertGLFWKeyAction(const t_s32 glfw_act);
+    constexpr e_mouse_button_action ConvertGLFWMouseButtonAction(const t_s32 glfw_act);
 
     using t_gl_id = GLuint;
 
@@ -328,42 +315,32 @@ void main() {
 
             glfwMakeContextCurrent(g_game.glfw_window);
 
+            s_input_state input_state = {};
+
+            struct s_glfw_window_user_data {
+                s_input_state* input_state;
+            };
+
+            s_glfw_window_user_data glfw_window_user_data = {
+                .input_state = &input_state
+            };
+
+            glfwSetWindowUserPointer(g_game.glfw_window, &glfw_window_user_data);
+
             //
             // GLFW Callbacks
             //
             glfwSetKeyCallback(g_game.glfw_window,
-                [](GLFWwindow* const, const t_s32 key, const t_s32, const t_s32 action, const t_s32) {
-                    const e_key_code key_code = ConvertGLFWKeyCode(key);
-
-                    if (key_code == eks_key_code_none) {
-                        return;
-                    }
-
-                    if (action == GLFW_PRESS) {
-                        SetBit(g_game.input.keys_down, key_code);
-                        SetBit(g_game.input.events.keys_pressed, key_code);
-                    } else if (action == GLFW_RELEASE) {
-                        UnsetBit(g_game.input.keys_down, key_code);
-                        SetBit(g_game.input.events.keys_released, key_code);
-                    }
+                [](GLFWwindow* const glfw_window, const t_s32 key, const t_s32 scancode, const t_s32 action, const t_s32 mods) {
+                    const auto user_data = static_cast<s_glfw_window_user_data*>(glfwGetWindowUserPointer(glfw_window));
+                    ProcKeyAction(*user_data->input_state, ConvertGLFWKeyCode(key), ConvertGLFWKeyAction(action));
                 }
             );
 
             glfwSetMouseButtonCallback(g_game.glfw_window,
-                [](GLFWwindow* const, const t_s32 button, const t_s32 action, const t_s32) {
-                    const e_mouse_button_code mb_code = ConvertGLFWMouseButtonCode(button);
-
-                    if (mb_code == eks_mouse_button_code_none) {
-                        return;
-                    }
-
-                    if (action == GLFW_PRESS) {
-                        SetBit(g_game.input.mouse_buttons_down, mb_code);
-                        SetBit(g_game.input.events.mouse_buttons_pressed, mb_code);
-                    } else if (action == GLFW_RELEASE) {
-                        UnsetBit(g_game.input.mouse_buttons_down, mb_code);
-                        SetBit(g_game.input.events.mouse_buttons_released, mb_code);
-                    }
+                [](GLFWwindow* const glfw_window, const t_s32 btn, const t_s32 act, const t_s32 mods) {
+                    const auto user_data = static_cast<s_glfw_window_user_data*>(glfwGetWindowUserPointer(glfw_window));
+                    ProcMouseButtonAction(*user_data->input_state, ConvertGLFWMouseButtonCode(btn), ConvertGLFWMouseButtonAction(act));
                 }
             );
 
@@ -467,12 +444,13 @@ void main() {
 
                     // Run possibly multiple ticks.
                     do {
-                        ZF_DEFER({ ZeroOut(g_game.input.events); });
+                        ZF_DEFER({ ZeroOut(input_state.events); });
 
                         const s_game_tick_context context = {
                             .dev_mem = dev_mem,
                             .mem_arena = &mem_arena,
                             .temp_mem_arena = &temp_mem_arena,
+                            .input_state = &input_state,
                             .gfx_res_arena = &rendering_basis.res_arena,
                             .audio_context = &audio_context
                         };
@@ -532,54 +510,6 @@ void main() {
 #endif
 
         return success;
-    }
-
-    // ============================================================
-    // @section: Window
-    // ============================================================
-    s_v2<t_s32> WindowSize() {
-        t_s32 w, h;
-        glfwGetWindowSize(g_game.glfw_window, &w, &h);
-        return {w, h};
-    }
-
-    s_v2<t_s32> WindowFramebufferSize() {
-        t_s32 w, h;
-        glfwGetFramebufferSize(g_game.glfw_window, &w, &h);
-        return {w, h};
-    }
-
-    // ============================================================
-    // @section: Input
-    // ============================================================
-    t_b8 IsKeyDown(const e_key_code kc) {
-        return IsBitSet(g_game.input.keys_down, kc);
-    }
-
-    t_b8 IsKeyPressed(const e_key_code kc) {
-        return IsBitSet(g_game.input.events.keys_pressed, kc);
-    }
-
-    t_b8 IsKeyReleased(const e_key_code kc) {
-        return IsBitSet(g_game.input.events.keys_released, kc);
-    }
-
-    t_b8 IsMouseButtonDown(const e_mouse_button_code mbc) {
-        return IsBitSet(g_game.input.mouse_buttons_down, mbc);
-    }
-
-    t_b8 IsMouseButtonPressed(const e_mouse_button_code mbc) {
-        return IsBitSet(g_game.input.events.mouse_buttons_pressed, mbc);
-    }
-
-    t_b8 IsMouseButtonReleased(const e_mouse_button_code mbc) {
-        return IsBitSet(g_game.input.events.mouse_buttons_released, mbc);
-    }
-
-    s_v2<t_f32> MousePos() {
-        t_f64 mx, my;
-        glfwGetCursorPos(g_game.glfw_window, &mx, &my);
-        return {static_cast<t_f32>(mx), static_cast<t_f32>(my)};
     }
 
     constexpr e_key_code ConvertGLFWKeyCode(const t_s32 glfw_key) {
@@ -660,6 +590,41 @@ void main() {
 
             default: return eks_mouse_button_code_none;
         }
+    }
+
+    constexpr e_key_action ConvertGLFWKeyAction(const t_s32 glfw_act) {
+        switch (glfw_act) {
+            case GLFW_PRESS: return e_key_action::press;
+            case GLFW_RELEASE: return e_key_action::release;
+        }
+
+        ZF_ASSERT(false);
+        return e_key_action::invalid;
+    }
+
+    constexpr e_mouse_button_action ConvertGLFWMouseButtonAction(const t_s32 glfw_act) {
+        switch (glfw_act) {
+            case GLFW_PRESS: return e_mouse_button_action::press;
+            case GLFW_RELEASE: return e_mouse_button_action::release;
+        }
+
+        ZF_ASSERT(false);
+        return e_mouse_button_action::invalid;
+    }
+
+    // ============================================================
+    // @section: Window
+    // ============================================================
+    s_v2<t_s32> WindowSize() {
+        t_s32 w, h;
+        glfwGetWindowSize(g_game.glfw_window, &w, &h);
+        return {w, h};
+    }
+
+    s_v2<t_s32> WindowFramebufferSize() {
+        t_s32 w, h;
+        glfwGetFramebufferSize(g_game.glfw_window, &w, &h);
+        return {w, h};
     }
 
     // ============================================================

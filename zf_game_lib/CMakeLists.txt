@@ -1,5 +1,6 @@
 add_library(zf_game_lib STATIC
     src/zgl.cpp
+    src/zgl_input.cpp
 	../external/glad/src/glad.c
 
     include/zgl.h

@@ -6,6 +6,7 @@ namespace zf {
     // ============================================================
     // @section: Game
     // ============================================================
+    struct s_input_state;
     struct s_gfx_resource_arena;
     struct s_audio_context;
 
@@ -25,6 +26,8 @@ namespace zf {
 
         s_mem_arena* mem_arena;
         s_mem_arena* temp_mem_arena;
+
+        const s_input_state* input_state;
 
         s_gfx_resource_arena* gfx_res_arena;
 
@@ -178,15 +181,17 @@ namespace zf {
         eks_mouse_button_code_cnt
     };
 
-    t_b8 IsKeyDown(const e_key_code kc);
-    t_b8 IsKeyPressed(const e_key_code kc);
-    t_b8 IsKeyReleased(const e_key_code kc);
+    struct s_input_state;
 
-    t_b8 IsMouseButtonDown(const e_mouse_button_code mbc);
-    t_b8 IsMouseButtonPressed(const e_mouse_button_code mbc);
-    t_b8 IsMouseButtonReleased(const e_mouse_button_code mbc);
+    t_b8 IsKeyDown(const s_input_state& is, const e_key_code kc);
+    t_b8 IsKeyPressed(const s_input_state& is, const e_key_code kc);
+    t_b8 IsKeyReleased(const s_input_state& is, const e_key_code kc);
 
-    s_v2<t_f32> MousePos();
+    t_b8 IsMouseButtonDown(const s_input_state& is, const e_mouse_button_code mbc);
+    t_b8 IsMouseButtonPressed(const s_input_state& is, const e_mouse_button_code mbc);
+    t_b8 IsMouseButtonReleased(const s_input_state& is, const e_mouse_button_code mbc);
+
+    s_v2<t_f32> MousePos(const s_input_state& is);
 
     // ============================================================
     // @section: GFX Resources

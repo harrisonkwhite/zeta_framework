@@ -6,11 +6,13 @@ This is a data-oriented framework in C++ for developing small-scale and large-sc
 
 ## Features
 
-- A clear game tick structure to work in
+- A clear game tick structure to work within
 - Input handling for keyboard, mouse, and gamepad
 - 2D batch-based texture and UTF-8 string rendering
+- Surfaces (render targets) that can be displayed using custom shaders
 - Sound playing
 - RNG helpers
+- An optional asset packing tool
 - A core library with procedural-style utilities for memory arenas, UTF-8 strings, math, data structures, and more
 
 ---
