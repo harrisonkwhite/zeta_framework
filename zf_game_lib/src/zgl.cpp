@@ -10,6 +10,7 @@ namespace zf {
     // ============================================================
     struct {
         GLFWwindow* glfw_window;
+        s_v2<t_s32> framebuffer_size;
     } g_game;
 
     constexpr e_key_code ConvertGLFWKeyCode(const t_s32 glfw_key);
@@ -30,7 +31,6 @@ namespace zf {
     static t_gl_id MakeGLShaderProg(const s_str_rdonly vert_src, const s_str_rdonly frag_src, s_mem_arena& temp_mem_arena);
     static t_gl_id MakeGLTexture(const s_rgba_texture_data_rdonly& tex_data);
     static s_v2<t_s32> GLTextureSizeLimit();
-    static s_rect<t_s32> GLViewport();
     static t_gl_id CurGLShaderProg();
     [[nodiscard]] static t_b8 AttachGLFramebufferTexture(const t_gl_id fb_gl_id, const t_gl_id tex_gl_id, const s_v2<t_s32> tex_size);
 
@@ -315,6 +315,9 @@ void main() {
 
             glfwMakeContextCurrent(g_game.glfw_window);
 
+            //
+            // Input Setup
+            //
             s_input_state input_state = {};
 
             struct s_glfw_window_user_data {
@@ -327,13 +330,14 @@ void main() {
 
             glfwSetWindowUserPointer(g_game.glfw_window, &glfw_window_user_data);
 
-            //
-            // GLFW Callbacks
-            //
             glfwSetKeyCallback(g_game.glfw_window,
-                [](GLFWwindow* const glfw_window, const t_s32 key, const t_s32 scancode, const t_s32 action, const t_s32 mods) {
+                [](GLFWwindow* const glfw_window, const t_s32 key, const t_s32 scancode, const t_s32 act, const t_s32 mods) {
+                    if (act == GLFW_REPEAT) {
+                        return;
+                    }
+
                     const auto user_data = static_cast<s_glfw_window_user_data*>(glfwGetWindowUserPointer(glfw_window));
-                    ProcKeyAction(*user_data->input_state, ConvertGLFWKeyCode(key), ConvertGLFWKeyAction(action));
+                    ProcKeyAction(*user_data->input_state, ConvertGLFWKeyCode(key), ConvertGLFWKeyAction(act));
                 }
             );
 
@@ -367,6 +371,19 @@ void main() {
                 ZF_REPORT_ERROR();
                 return false;
             }
+
+            {
+                s_rect<t_s32> v;
+                glGetIntegerv(GL_VIEWPORT, reinterpret_cast<t_s32*>(&v));
+                g_game.framebuffer_size = RectSize(v);
+            }
+
+            glfwSetFramebufferSizeCallback(g_game.glfw_window, 
+                [](GLFWwindow* const glfw_window, const t_s32 width, const t_s32 height) {
+                    glViewport(0, 0, width, height);
+                    g_game.framebuffer_size = {width, height};
+                }
+            );
 
             // Enable blending.
             glEnable(GL_BLEND);
@@ -792,12 +809,6 @@ void main() {
         return { size, size };
     }
 
-    s_rect<t_s32> GLViewport() {
-        s_rect<t_s32> v;
-        glGetIntegerv(GL_VIEWPORT, reinterpret_cast<t_s32*>(&v));
-        return v;
-    }
-
     t_gl_id CurGLShaderProg() {
         t_s32 prog;
         glGetIntegerv(GL_CURRENT_PROGRAM, &prog);
@@ -1194,8 +1205,7 @@ void main() {
         const t_s32 view_uniform_loc = glGetUniformLocation(rc.basis->batch_shader_prog_gl_id, "u_view");
         glUniformMatrix4fv(view_uniform_loc, 1, false, reinterpret_cast<const t_f32*>(&rc.state->view_mat));
 
-        const s_rect<t_s32> viewport = GLViewport(); // @todo: Cache this.
-        const auto proj_mat = MakeOrthographicMatrix4x4(0.0f, static_cast<t_f32>(viewport.width), static_cast<t_f32>(viewport.height), 0.0f, -1.0f, 1.0f);
+        const auto proj_mat = MakeOrthographicMatrix4x4(0.0f, static_cast<t_f32>(g_game.framebuffer_size.x), static_cast<t_f32>(g_game.framebuffer_size.y), 0.0f, -1.0f, 1.0f);
         const t_s32 proj_uniform_loc = glGetUniformLocation(rc.basis->batch_shader_prog_gl_id, "u_proj");
         glUniformMatrix4fv(proj_uniform_loc, 1, false, reinterpret_cast<const t_f32*>(&proj_mat));
 
@@ -1491,8 +1501,7 @@ void main() {
         const t_s32 proj_uniform_loc = glGetUniformLocation(CurGLShaderProg(), "u_proj");
         ZF_ASSERT(proj_uniform_loc != -1); // @todo: Remove, do at load time.
 
-        const auto viewport = GLViewport();
-        const s_matrix_4x4 proj_mat = MakeOrthographicMatrix4x4(0.0f, static_cast<t_f32>(viewport.width), static_cast<t_f32>(viewport.height), 0.0f, -1.0f, 1.0f);
+        const s_matrix_4x4 proj_mat = MakeOrthographicMatrix4x4(0.0f, static_cast<t_f32>(g_game.framebuffer_size.x), static_cast<t_f32>(g_game.framebuffer_size.y), 0.0f, -1.0f, 1.0f);
         glUniformMatrix4fv(proj_uniform_loc, 1, false, reinterpret_cast<const t_f32*>(&proj_mat));
 
         const t_s32 pos_uniform_loc = glGetUniformLocation(CurGLShaderProg(), "u_pos");
