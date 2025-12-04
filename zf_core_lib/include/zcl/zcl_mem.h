@@ -1,6 +1,5 @@
 #pragma once
 
-#include <cstddef>
 #include <cstring>
 #include <zcl/zcl_basic.h>
 
@@ -50,6 +49,7 @@ namespace zf {
 
     template<typename tp_type>
     tp_type* PushToMemArena(s_mem_arena& ma, const t_size cnt = 1) {
+        static_assert(std::is_trivial_v<tp_type>);
         ZF_ASSERT(cnt >= 1);
 
         const auto buf = PushToMemArena(ma, ZF_SIZE_OF(tp_type) * cnt, alignof(tp_type));
@@ -254,29 +254,29 @@ namespace zf {
     }
 
     template<typename tp_dest_type, c_nonstatic_array tp_src_arr_type>
-    constexpr void CopyReverse(const s_array<tp_dest_type> dest, const tp_src_arr_type src) {
+    constexpr void CopyOrTruncate(const s_array<tp_dest_type> dest, const tp_src_arr_type src) {
         static_assert(s_is_same<tp_dest_type, typename tp_src_arr_type::t_elem>::g_val);
 
-        ZF_ASSERT(dest.len >= src.len);
+        const auto min = ZF_MIN(dest.len, src.len);
 
-        for (t_size i = src.len - 1; i >= 0; i--) {
+        for (t_size i = 0; i < min; i++) {
             dest[i] = src[i];
         }
     }
 
     template<typename tp_dest_type, t_size tp_dest_len, c_nonstatic_array tp_src_arr_type>
-    constexpr void CopyReverse(s_static_array<tp_dest_type, tp_dest_len>& dest, const tp_src_arr_type src) {
-        CopyReverse(ToNonstatic(dest), src);
+    constexpr void CopyOrTruncate(s_static_array<tp_dest_type, tp_dest_len>& dest, const tp_src_arr_type src) {
+        CopyOrTruncate(ToNonstatic(dest), src);
     }
 
     template<typename tp_dest_type, typename tp_src_type, t_size tp_src_len>
-    constexpr void CopyReverse(const s_array<tp_dest_type> dest, const s_static_array<tp_src_type, tp_src_len>& src) {
-        CopyReverse(dest, ToNonstatic(src));
+    constexpr void CopyOrTruncate(const s_array<tp_dest_type> dest, const s_static_array<tp_src_type, tp_src_len>& src) {
+        CopyOrTruncate(dest, ToNonstatic(src));
     }
 
     template<typename tp_dest_type, t_size tp_dest_len, typename tp_src_type, t_size tp_src_len>
-    constexpr void CopyReverse(s_static_array<tp_dest_type, tp_dest_len>& dest, const s_static_array<tp_src_type, tp_src_len>& src) {
-        CopyReverse(ToNonstatic(dest), ToNonstatic(src));
+    constexpr void CopyOrTruncate(s_static_array<tp_dest_type, tp_dest_len>& dest, const s_static_array<tp_src_type, tp_src_len>& src) {
+        CopyOrTruncate(ToNonstatic(dest), ToNonstatic(src));
     }
 
     template<typename tp_type>

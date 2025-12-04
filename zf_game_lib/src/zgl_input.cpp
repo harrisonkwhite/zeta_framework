@@ -29,7 +29,7 @@ namespace zf {
         return is.cursor_pos;
     }
 
-    s_v2<t_f32> Scroll(const s_input_state& is) {
+    s_v2<t_f32> GetScroll(const s_input_state& is) {
         return is.events.scroll;
     }
 

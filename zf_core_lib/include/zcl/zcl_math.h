@@ -247,18 +247,18 @@ namespace zf {
     // Generate a rectangle encompassing all of the provided rectangles. At least a single rectangle must be provided.
     template<c_numeric tp_type>
     s_rect<tp_type> CalcSpanningRect(const s_array_rdonly<s_rect<tp_type>> rects) {
-        ZF_ASSERT(!rects.IsEmpty());
+        ZF_ASSERT(!IsArrayEmpty(rects));
 
         tp_type min_left = rects[0].x;
         tp_type min_top = rects[0].y;
-        tp_type max_right = rects[0].Right();
-        tp_type max_bottom = rects[0].Bottom();
+        tp_type max_right = RectRight(rects[0]);
+        tp_type max_bottom = RectBottom(rects[0]);
 
-        for (t_s32 i = 1; i < rects.Len(); i++) {
-            min_left = Min(rects[i].x, min_left);
-            min_top = Min(rects[i].y, min_top);
-            max_right = Max(rects[i].Right(), max_right);
-            max_bottom = Max(rects[i].Bottom(), max_bottom);
+        for (t_s32 i = 1; i < rects.len; i++) {
+            min_left = ZF_MIN(rects[i].x, min_left);
+            min_top = ZF_MIN(rects[i].y, min_top);
+            max_right = ZF_MAX(RectRight(rects[i]), max_right);
+            max_bottom = ZF_MAX(RectBottom(rects[i]), max_bottom);
         }
 
         return {

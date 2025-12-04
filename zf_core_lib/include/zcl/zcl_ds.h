@@ -94,7 +94,9 @@ namespace zf {
         ZF_ASSERT(len >= 0 && len < backing_arr.len);
         ZF_ASSERT(index >= 0 && index <= len);
 
-        CopyReverse(Slice(backing_arr, index + 1, len + 1), Slice(backing_arr, index, len));
+        for (t_size i = len; i > index; i--) {
+            backing_arr[len] = backing_arr[len - 1];
+        }
 
         len++;
         backing_arr[index] = val;

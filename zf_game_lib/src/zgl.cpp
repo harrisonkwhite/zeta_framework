@@ -297,14 +297,7 @@ void main() {
             glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
             glfwWindowHint(GLFW_VISIBLE, false);
 
-            s_str window_init_title_terminated;
-
-            if (!CloneStrButAddTerminator(info.window_init_title, temp_mem_arena, window_init_title_terminated)) {
-                ZF_REPORT_ERROR();
-                return false;
-            }
-
-            g_game.glfw_window = glfwCreateWindow(info.window_init_size.x, info.window_init_size.y, StrRaw(window_init_title_terminated), nullptr, nullptr);
+            g_game.glfw_window = glfwCreateWindow(1280, 720, "", nullptr, nullptr);
 
             if (!g_game.glfw_window) {
                 ZF_REPORT_ERROR();
@@ -320,15 +313,7 @@ void main() {
             //
             s_input_state input_state = {};
 
-            struct s_glfw_window_user_data {
-                s_input_state* input_state;
-            };
-
-            s_glfw_window_user_data glfw_window_user_data = {
-                .input_state = &input_state
-            };
-
-            glfwSetWindowUserPointer(g_game.glfw_window, &glfw_window_user_data);
+            glfwSetWindowUserPointer(g_game.glfw_window, &input_state);
 
             glfwSetKeyCallback(g_game.glfw_window,
                 [](GLFWwindow* const glfw_window, const t_s32 key, const t_s32 scancode, const t_s32 act, const t_s32 mods) {
@@ -336,29 +321,29 @@ void main() {
                         return;
                     }
 
-                    const auto user_data = static_cast<s_glfw_window_user_data*>(glfwGetWindowUserPointer(glfw_window));
-                    ProcKeyAction(*user_data->input_state, ConvertGLFWKeyCode(key), ConvertGLFWKeyAction(act));
+                    const auto input_state = static_cast<s_input_state*>(glfwGetWindowUserPointer(glfw_window));
+                    ProcKeyAction(*input_state, ConvertGLFWKeyCode(key), ConvertGLFWKeyAction(act));
                 }
             );
 
             glfwSetMouseButtonCallback(g_game.glfw_window,
                 [](GLFWwindow* const glfw_window, const t_s32 btn, const t_s32 act, const t_s32 mods) {
-                    const auto user_data = static_cast<s_glfw_window_user_data*>(glfwGetWindowUserPointer(glfw_window));
-                    ProcMouseButtonAction(*user_data->input_state, ConvertGLFWMouseButtonCode(btn), ConvertGLFWMouseButtonAction(act));
+                    const auto input_state = static_cast<s_input_state*>(glfwGetWindowUserPointer(glfw_window));
+                    ProcMouseButtonAction(*input_state, ConvertGLFWMouseButtonCode(btn), ConvertGLFWMouseButtonAction(act));
                 }
             );
 
             glfwSetCursorPosCallback(g_game.glfw_window, 
                 [](GLFWwindow* const glfw_window, const t_f64 x, const t_f64 y) {
-                    const auto user_data = static_cast<s_glfw_window_user_data*>(glfwGetWindowUserPointer(glfw_window));
-                    ProcCursorMove(*user_data->input_state, {static_cast<t_f32>(x), static_cast<t_f32>(y)});
+                    const auto input_state = static_cast<s_input_state*>(glfwGetWindowUserPointer(glfw_window));
+                    ProcCursorMove(*input_state, {static_cast<t_f32>(x), static_cast<t_f32>(y)});
                 }
             );
 
             glfwSetScrollCallback(g_game.glfw_window,
                 [](GLFWwindow* const glfw_window, const t_f64 offs_x, const t_f64 offs_y) {
-                    const auto user_data = static_cast<s_glfw_window_user_data*>(glfwGetWindowUserPointer(glfw_window));
-                    ProcScroll(*user_data->input_state, {static_cast<t_f32>(offs_x), static_cast<t_f32>(offs_y)});
+                    const auto input_state = static_cast<s_input_state*>(glfwGetWindowUserPointer(glfw_window));
+                    ProcScroll(*input_state, {static_cast<t_f32>(offs_x), static_cast<t_f32>(offs_y)});
                 }
             );
 
@@ -646,10 +631,23 @@ void main() {
     // ============================================================
     // @section: Window
     // ============================================================
+    void SetWindowTitle(const s_str_rdonly title) {
+        ZF_ASSERT(IsValidUTF8Str(title));
+
+        s_static_array<t_u8, 256> title_terminated_bytes = {};
+        CopyOrTruncate(Slice(ToNonstatic(title_terminated_bytes), 0, title_terminated_bytes.g_len - 1), title.bytes);
+        glfwSetWindowTitle(g_game.glfw_window, reinterpret_cast<const char*>(title_terminated_bytes.buf_raw));
+    }
+
     s_v2<t_s32> WindowSize() {
         t_s32 w, h;
         glfwGetWindowSize(g_game.glfw_window, &w, &h);
         return {w, h};
+    }
+
+    void SetWindowSize(const s_v2<t_s32> size) {
+        ZF_ASSERT(size.x > 0 && size.y > 0);
+        glfwSetWindowSize(g_game.glfw_window, size.x, size.y);
     }
 
     s_v2<t_s32> WindowFramebufferSize() {
