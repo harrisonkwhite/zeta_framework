@@ -344,6 +344,20 @@ void main() {
                 }
             );
 
+            glfwSetCursorPosCallback(g_game.glfw_window, 
+                [](GLFWwindow* const glfw_window, const t_f64 x, const t_f64 y) {
+                    const auto user_data = static_cast<s_glfw_window_user_data*>(glfwGetWindowUserPointer(glfw_window));
+                    ProcCursorMove(*user_data->input_state, {static_cast<t_f32>(x), static_cast<t_f32>(y)});
+                }
+            );
+
+            glfwSetScrollCallback(g_game.glfw_window,
+                [](GLFWwindow* const glfw_window, const t_f64 offs_x, const t_f64 offs_y) {
+                    const auto user_data = static_cast<s_glfw_window_user_data*>(glfwGetWindowUserPointer(glfw_window));
+                    ProcScroll(*user_data->input_state, {static_cast<t_f32>(offs_x), static_cast<t_f32>(offs_y)});
+                }
+            );
+
             //
             // Rendering Setup
             //

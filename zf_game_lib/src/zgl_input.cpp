@@ -25,8 +25,12 @@ namespace zf {
         return IsBitSet(is.events.mouse_buttons_released, mbc);
     }
 
-    s_v2<t_f32> MousePos(const s_input_state& is) {
-        return is.mouse_pos;
+    s_v2<t_f32> CursorPos(const s_input_state& is) {
+        return is.cursor_pos;
+    }
+
+    s_v2<t_f32> Scroll(const s_input_state& is) {
+        return is.events.scroll;
     }
 
     void ProcKeyAction(s_input_state& is, const e_key_code code, const e_key_action act) {
@@ -71,5 +75,13 @@ namespace zf {
                 SetBit(is.events.mouse_buttons_pressed, code);
                 break;
         }
+    }
+
+    void ProcCursorMove(s_input_state& is, const s_v2<t_f32> pos) {
+        is.cursor_pos = pos;
+    }
+
+    void ProcScroll(s_input_state& is, const s_v2<t_f32> scroll) {
+        is.events.scroll += scroll;
     }
 }

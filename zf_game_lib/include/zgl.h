@@ -191,7 +191,13 @@ namespace zf {
     t_b8 IsMouseButtonPressed(const s_input_state& is, const e_mouse_button_code mbc);
     t_b8 IsMouseButtonReleased(const s_input_state& is, const e_mouse_button_code mbc);
 
-    s_v2<t_f32> MousePos(const s_input_state& is);
+    s_v2<t_f32> CursorPos(const s_input_state& is);
+
+    // +Y: Scroll up / away from you
+    // -Y: Scroll down / towards you
+    // +X: Scroll right
+    // +X: Scroll left
+    s_v2<t_f32> Scroll(const s_input_state& is);
 
     // ============================================================
     // @section: GFX Resources
