@@ -8,14 +8,15 @@ namespace zf {
     // ============================================================
     // @section: Declarations and Data
     // ============================================================
-    struct {
-        GLFWwindow* glfw_window;
-        s_v2<t_s32> framebuffer_size;
+    struct s_window {
+        GLFWwindow* const glfw_hdl;
+
+        s_v2<t_s32> framebuffer_size_cache;
 
         t_b8 fullscreen_active;
-        s_v2<t_s32> fullscreen_window_pos_save;
-        s_v2<t_s32> fullscreen_window_size_save;
-    } g_game;
+        s_v2<t_s32> prefullscreen_pos;
+        s_v2<t_s32> prefullscreen_size;
+    };
 
     constexpr e_key_code ConvertGLFWKeyCode(const t_s32 glfw_key);
     constexpr e_mouse_button_code ConvertGLFWMouseButtonCode(const t_s32 glfw_button);
@@ -209,6 +210,7 @@ void main() {
     struct s_rendering_context {
         const s_rendering_basis* basis;
         s_rendering_state* state;
+        s_v2<t_s32> framebuffer_size_cache;
     };
 
     [[nodiscard]] static t_b8 MakeRenderingBasis(s_mem_arena& mem_arena, s_mem_arena& temp_mem_arena, s_rendering_basis& o_basis);
@@ -252,8 +254,6 @@ void main() {
     t_b8 RunGame(const s_game_info& info) {
         AssertGameInfoValidity(info);
 
-        ZeroOut(g_game);
-
         const t_b8 success = [&info]() {
 #ifndef ZF_DEBUG
             // Redirect stderr to crash log file.
@@ -279,13 +279,6 @@ void main() {
                 return false;
             }
 
-            s_mem_arena frame_mem_arena;
-
-            if (!MakeSubMemArena(mem_arena, info.frame_mem_arena_size, frame_mem_arena)) {
-                ZF_REPORT_ERROR();
-                return false;
-            }
-
             //
             // Window Creation
             //
@@ -301,53 +294,65 @@ void main() {
             glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
             glfwWindowHint(GLFW_VISIBLE, false);
 
-            g_game.glfw_window = glfwCreateWindow(1280, 720, "", nullptr, nullptr);
+            s_window window = {
+                .glfw_hdl = glfwCreateWindow(1280, 720, "", nullptr, nullptr) // @todo: Initial size should be relative to display size.
+            };
 
-            if (!g_game.glfw_window) {
+            if (!window.glfw_hdl) {
                 ZF_REPORT_ERROR();
                 return false;
             }
 
-            ZF_DEFER({ glfwDestroyWindow(g_game.glfw_window); });
+            ZF_DEFER({ glfwDestroyWindow(window.glfw_hdl); });
 
-            glfwMakeContextCurrent(g_game.glfw_window);
+            glfwMakeContextCurrent(window.glfw_hdl);
 
-            //
-            // Input Setup
-            //
             s_input_state input_state = {};
 
-            glfwSetWindowUserPointer(g_game.glfw_window, &input_state);
+            struct s_glfw_window_user_data {
+                s_input_state* const input_state;
+                s_v2<t_s32>* const framebuffer_size_cache;
+            };
 
-            glfwSetKeyCallback(g_game.glfw_window,
+            s_glfw_window_user_data glfw_window_user_data = {
+                .input_state = &input_state,
+                .framebuffer_size_cache = &window.framebuffer_size_cache
+            };
+
+            glfwSetWindowUserPointer(window.glfw_hdl, &glfw_window_user_data);
+
+            //
+            // Input Callbacks
+            //
+            glfwSetKeyCallback(window.glfw_hdl,
                 [](GLFWwindow* const glfw_window, const t_s32 key, const t_s32 scancode, const t_s32 act, const t_s32 mods) {
                     if (act == GLFW_REPEAT) {
                         return;
                     }
 
-                    const auto input_state = static_cast<s_input_state*>(glfwGetWindowUserPointer(glfw_window));
-                    ProcKeyAction(*input_state, ConvertGLFWKeyCode(key), ConvertGLFWKeyAction(act));
+                    const auto user_data = static_cast<s_glfw_window_user_data*>(glfwGetWindowUserPointer(glfw_window));
+                    ProcKeyAction(*user_data->input_state, ConvertGLFWKeyCode(key), ConvertGLFWKeyAction(act));
                 }
             );
 
-            glfwSetMouseButtonCallback(g_game.glfw_window,
+            glfwSetMouseButtonCallback(window.glfw_hdl,
                 [](GLFWwindow* const glfw_window, const t_s32 btn, const t_s32 act, const t_s32 mods) {
-                    const auto input_state = static_cast<s_input_state*>(glfwGetWindowUserPointer(glfw_window));
-                    ProcMouseButtonAction(*input_state, ConvertGLFWMouseButtonCode(btn), ConvertGLFWMouseButtonAction(act));
+                    const auto user_data = static_cast<s_glfw_window_user_data*>(glfwGetWindowUserPointer(glfw_window));
+                    ProcMouseButtonAction(*user_data->input_state, ConvertGLFWMouseButtonCode(btn), ConvertGLFWMouseButtonAction(act));
                 }
             );
 
-            glfwSetCursorPosCallback(g_game.glfw_window, 
+            glfwSetCursorPosCallback(window.glfw_hdl, 
                 [](GLFWwindow* const glfw_window, const t_f64 x, const t_f64 y) {
-                    const auto input_state = static_cast<s_input_state*>(glfwGetWindowUserPointer(glfw_window));
-                    ProcCursorMove(*input_state, {static_cast<t_f32>(x), static_cast<t_f32>(y)});
+                    const auto user_data = static_cast<s_glfw_window_user_data*>(glfwGetWindowUserPointer(glfw_window));
+                    ProcCursorMove(*user_data->input_state, {static_cast<t_f32>(x), static_cast<t_f32>(y)});
                 }
             );
 
-            glfwSetScrollCallback(g_game.glfw_window,
+            glfwSetScrollCallback(window.glfw_hdl,
                 [](GLFWwindow* const glfw_window, const t_f64 offs_x, const t_f64 offs_y) {
-                    const auto input_state = static_cast<s_input_state*>(glfwGetWindowUserPointer(glfw_window));
-                    ProcScroll(*input_state, {static_cast<t_f32>(offs_x), static_cast<t_f32>(offs_y)});
+                    const auto user_data = static_cast<s_glfw_window_user_data*>(glfwGetWindowUserPointer(glfw_window));
+                    ProcScroll(*user_data->input_state, {static_cast<t_f32>(offs_x), static_cast<t_f32>(offs_y)});
                 }
             );
 
@@ -364,14 +369,16 @@ void main() {
             {
                 s_rect<t_s32> v;
                 glGetIntegerv(GL_VIEWPORT, reinterpret_cast<t_s32*>(&v));
-                g_game.framebuffer_size = RectSize(v);
+                window.framebuffer_size_cache = RectSize(v);
             }
 
-            glfwSetFramebufferSizeCallback(g_game.glfw_window, 
+            glfwSetFramebufferSizeCallback(window.glfw_hdl,
                 [](GLFWwindow* const glfw_window, const t_s32 width, const t_s32 height) {
                     if (width > 0 && height > 0) {
                         glViewport(0, 0, width, height);
-                        g_game.framebuffer_size = {width, height};
+
+                        const auto user_data = static_cast<s_glfw_window_user_data*>(glfwGetWindowUserPointer(glfw_window));
+                        *user_data->framebuffer_size_cache = {width, height};
                     }
                 }
             );
@@ -424,6 +431,7 @@ void main() {
                     .dev_mem = dev_mem,
                     .mem_arena = &mem_arena,
                     .temp_mem_arena = &temp_mem_arena,
+                    .window = &window,
                     .gfx_res_arena = &rendering_basis.res_arena,
                     .audio_context = &audio_context
                 };
@@ -443,13 +451,15 @@ void main() {
             //
             // Main Loop
             //
-            glfwShowWindow(g_game.glfw_window);
+            glfwShowWindow(window.glfw_hdl);
 
             t_f64 frame_time_last = glfwGetTime();
             t_f64 frame_dur_accum = 0.0;
 
-            while (!glfwWindowShouldClose(g_game.glfw_window)) {
+            while (!glfwWindowShouldClose(window.glfw_hdl)) {
                 RewindMemArena(temp_mem_arena, 0);
+
+                glfwPollEvents();
 
                 const t_f64 frame_time = glfwGetTime();
                 const t_f64 frame_time_delta = frame_time - frame_time_last;
@@ -460,18 +470,15 @@ void main() {
 
                 // Once enough time has passed (i.e. the time accumulator has reached the tick interval), run at least a single tick and update the display.
                 if (frame_dur_accum >= targ_tick_interval) {
-                    RewindMemArena(frame_mem_arena, 0);
-
                     ProcFinishedSounds(audio_context);
 
                     // Run possibly multiple ticks.
                     do {
-                        ZF_DEFER({ ZeroOut(input_state.events); });
-
                         const s_game_tick_context context = {
                             .dev_mem = dev_mem,
                             .mem_arena = &mem_arena,
                             .temp_mem_arena = &temp_mem_arena,
+                            .window = &window,
                             .input_state = &input_state,
                             .gfx_res_arena = &rendering_basis.res_arena,
                             .audio_context = &audio_context
@@ -482,13 +489,16 @@ void main() {
                             return false;
                         }
 
+                        ZeroOut(input_state.events);
+
                         frame_dur_accum -= targ_tick_interval;
                     } while (frame_dur_accum >= targ_tick_interval);
 
                     // Perform a single render.
                     const s_rendering_context rc = {
                         .basis = &rendering_basis,
-                        .state = PushToMemArena<s_rendering_state>(frame_mem_arena)
+                        .state = PushToMemArena<s_rendering_state>(temp_mem_arena),
+                        .framebuffer_size_cache = window.framebuffer_size_cache
                     };
 
                     if (!rc.state) {
@@ -516,10 +526,8 @@ void main() {
 
                     Flush(rc);
 
-                    glfwSwapBuffers(g_game.glfw_window);
+                    glfwSwapBuffers(window.glfw_hdl);
                 }
-
-                glfwPollEvents();
             }
 
             return true;
@@ -634,61 +642,53 @@ void main() {
         return e_mouse_button_action::invalid;
     }
 
-    void SetWindowTitle(const s_str_rdonly title) {
+    void SetWindowTitle(const s_window& window, const s_str_rdonly title) {
         ZF_ASSERT(IsValidUTF8Str(title));
 
         s_static_array<t_u8, 256> title_terminated_bytes = {};
         CopyOrTruncate(Slice(ToNonstatic(title_terminated_bytes), 0, title_terminated_bytes.g_len - 1), title.bytes);
-        glfwSetWindowTitle(g_game.glfw_window, reinterpret_cast<const char*>(title_terminated_bytes.buf_raw));
+        glfwSetWindowTitle(window.glfw_hdl, reinterpret_cast<const char*>(title_terminated_bytes.buf_raw));
     }
 
-    s_v2<t_s32> WindowSize() {
-        t_s32 w, h;
-        glfwGetWindowSize(g_game.glfw_window, &w, &h);
-        return {w, h};
-    }
-
-    void SetWindowSize(const s_v2<t_s32> size) {
+    void SetWindowSize(const s_window& window, const s_v2<t_s32> size) {
         ZF_ASSERT(size.x > 0 && size.y > 0);
-        glfwSetWindowSize(g_game.glfw_window, size.x, size.y);
+        glfwSetWindowSize(window.glfw_hdl, size.x, size.y);
     }
 
-    void SetWindowResizability(const t_b8 resizable) {
-        glfwSetWindowAttrib(g_game.glfw_window, GLFW_RESIZABLE, resizable);
+    void SetWindowResizability(const s_window& window, const t_b8 resizable) {
+        glfwSetWindowAttrib(window.glfw_hdl, GLFW_RESIZABLE, resizable);
     }
 
-    s_v2<t_s32> WindowFramebufferSize() {
-        t_s32 w, h;
-        glfwGetFramebufferSize(g_game.glfw_window, &w, &h);
-        return {w, h};
+    s_v2<t_s32> WindowFramebufferSizeCache(const s_window& window) {
+        return window.framebuffer_size_cache;
     }
 
-    t_b8 IsFullscreen() {
-        return g_game.fullscreen_active;
+    t_b8 IsFullscreen(const s_window& window) {
+        return window.fullscreen_active;
     }
 
-    void SetFullscreen(const t_b8 fs) {
-        if (fs == g_game.fullscreen_active) {
+    void SetFullscreen(s_window& window, const t_b8 fs) {
+        if (fs == window.fullscreen_active) {
             return;
         }
 
         if (fs) {
-            glfwGetWindowPos(g_game.glfw_window, &g_game.fullscreen_window_pos_save.x, &g_game.fullscreen_window_pos_save.y);
-            glfwGetWindowSize(g_game.glfw_window, &g_game.fullscreen_window_size_save.x, &g_game.fullscreen_window_size_save.y);
+            glfwGetWindowPos(window.glfw_hdl, &window.prefullscreen_pos.x, &window.prefullscreen_pos.y);
+            glfwGetWindowSize(window.glfw_hdl, &window.prefullscreen_size.x, &window.prefullscreen_size.y);
 
             const auto monitor = glfwGetPrimaryMonitor();
             const auto mode = glfwGetVideoMode(monitor);
 
-            glfwSetWindowMonitor(g_game.glfw_window, monitor, 0, 0, mode->width, mode->height, mode->refreshRate);
+            glfwSetWindowMonitor(window.glfw_hdl, monitor, 0, 0, mode->width, mode->height, mode->refreshRate);
         } else {
-            glfwSetWindowMonitor(g_game.glfw_window, nullptr, g_game.fullscreen_window_pos_save.x, g_game.fullscreen_window_pos_save.y, g_game.fullscreen_window_size_save.x, g_game.fullscreen_window_size_save.y, 0);
+            glfwSetWindowMonitor(window.glfw_hdl, nullptr, window.prefullscreen_pos.x, window.prefullscreen_pos.y, window.prefullscreen_size.x, window.prefullscreen_size.y, 0);
         }
 
-        g_game.fullscreen_active = !g_game.fullscreen_active;
+        window.fullscreen_active = !window.fullscreen_active;
     }
 
-    void SetCursorVisibility(const t_b8 visible) {
-        glfwSetInputMode(g_game.glfw_window, GLFW_CURSOR, visible ? GLFW_CURSOR_NORMAL : GLFW_CURSOR_HIDDEN);
+    void SetCursorVisibility(const s_window& window, const t_b8 visible) {
+        glfwSetInputMode(window.glfw_hdl, GLFW_CURSOR, visible ? GLFW_CURSOR_NORMAL : GLFW_CURSOR_HIDDEN);
     }
 
     // ============================================================
@@ -1238,7 +1238,7 @@ void main() {
         const t_s32 view_uniform_loc = glGetUniformLocation(rc.basis->batch_shader_prog_gl_id, "u_view");
         glUniformMatrix4fv(view_uniform_loc, 1, false, reinterpret_cast<const t_f32*>(&rc.state->view_mat));
 
-        const auto proj_mat = MakeOrthographicMatrix4x4(0.0f, static_cast<t_f32>(g_game.framebuffer_size.x), static_cast<t_f32>(g_game.framebuffer_size.y), 0.0f, -1.0f, 1.0f);
+        const auto proj_mat = MakeOrthographicMatrix4x4(0.0f, static_cast<t_f32>(rc.framebuffer_size_cache.x), static_cast<t_f32>(rc.framebuffer_size_cache.y), 0.0f, -1.0f, 1.0f);
         const t_s32 proj_uniform_loc = glGetUniformLocation(rc.basis->batch_shader_prog_gl_id, "u_proj");
         glUniformMatrix4fv(proj_uniform_loc, 1, false, reinterpret_cast<const t_f32*>(&proj_mat));
 
@@ -1251,6 +1251,10 @@ void main() {
         glUseProgram(0);
 
         rc.state->batch_slots_used_cnt = 0;
+    }
+
+    s_v2<t_s32> WindowFramebufferSizeCache(const s_rendering_context& rc) {
+        return rc.framebuffer_size_cache;
     }
 
     void Clear(const s_rendering_context& rc, const s_color_rgba32f col) {
@@ -1441,7 +1445,7 @@ void main() {
 
         if (IsStackEmpty(rc.state->surfs)) {
             fb_gl_id = 0;
-            viewport_size = WindowFramebufferSize();
+            viewport_size = rc.framebuffer_size_cache;
         } else {
             const auto new_surf = StackTop(rc.state->surfs);
             fb_gl_id = new_surf->type_data.surf.fb_gl_id;
@@ -1534,7 +1538,7 @@ void main() {
         const t_s32 proj_uniform_loc = glGetUniformLocation(CurGLShaderProg(), "u_proj");
         ZF_ASSERT(proj_uniform_loc != -1); // @todo: Remove, do at load time.
 
-        const s_matrix_4x4 proj_mat = MakeOrthographicMatrix4x4(0.0f, static_cast<t_f32>(g_game.framebuffer_size.x), static_cast<t_f32>(g_game.framebuffer_size.y), 0.0f, -1.0f, 1.0f);
+        const s_matrix_4x4 proj_mat = MakeOrthographicMatrix4x4(0.0f, static_cast<t_f32>(rc.framebuffer_size_cache.x), static_cast<t_f32>(rc.framebuffer_size_cache.y), 0.0f, -1.0f, 1.0f);
         glUniformMatrix4fv(proj_uniform_loc, 1, false, reinterpret_cast<const t_f32*>(&proj_mat));
 
         const t_s32 pos_uniform_loc = glGetUniformLocation(CurGLShaderProg(), "u_pos");

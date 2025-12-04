@@ -6,6 +6,7 @@ namespace zf {
     // ============================================================
     // @section: Game
     // ============================================================
+    struct s_window;
     struct s_input_state;
     struct s_gfx_resource_arena;
     struct s_audio_context;
@@ -15,6 +16,8 @@ namespace zf {
 
         s_mem_arena* mem_arena;
         s_mem_arena* temp_mem_arena;
+
+        s_window* window;
 
         s_gfx_resource_arena* gfx_res_arena;
 
@@ -27,6 +30,8 @@ namespace zf {
         s_mem_arena* mem_arena;
         s_mem_arena* temp_mem_arena;
 
+        s_window* window;
+
         const s_input_state* input_state;
 
         s_gfx_resource_arena* gfx_res_arena;
@@ -37,7 +42,7 @@ namespace zf {
     struct s_rendering_context;
 
     struct s_game_render_context {
-        const void* dev_mem;
+        void* dev_mem;
 
         s_mem_arena* mem_arena;
         s_mem_arena* temp_mem_arena;
@@ -48,7 +53,6 @@ namespace zf {
     struct s_game_info {
         t_size mem_arena_size;
         t_size temp_mem_arena_size;
-        t_size frame_mem_arena_size;
 
         t_size dev_mem_size;
         t_size dev_mem_alignment;
@@ -65,7 +69,6 @@ namespace zf {
     inline void AssertGameInfoValidity(const s_game_info& info) {
         ZF_ASSERT(info.mem_arena_size > 0);
         ZF_ASSERT(info.temp_mem_arena_size > 0 && info.temp_mem_arena_size <= info.mem_arena_size);
-        ZF_ASSERT(info.frame_mem_arena_size > 0 && info.frame_mem_arena_size <= info.mem_arena_size);
 
         ZF_ASSERT((info.dev_mem_size == 0 && info.dev_mem_alignment == 0)
             || (info.dev_mem_size > 0 && IsAlignmentValid(info.dev_mem_alignment)));
@@ -79,22 +82,20 @@ namespace zf {
 
     t_b8 RunGame(const s_game_info& info);
 
-    void SetWindowTitle(const s_str_rdonly title);
+    void SetWindowTitle(const s_window& window, const s_str_rdonly title);
 
-    s_v2<t_s32> WindowSize();
-    void SetWindowSize(const s_v2<t_s32> size);
-    void SetWindowResizability(const t_b8 resizable);
+    void SetWindowSize(const s_window& window, const s_v2<t_s32> size);
+    void SetWindowResizability(const s_window& window, const t_b8 resizable);
+    s_v2<t_s32> WindowFramebufferSizeCache(const s_window& window);
 
-    s_v2<t_s32> WindowFramebufferSize();
+    t_b8 IsFullscreen(const s_window& window);
+    void SetFullscreen(s_window& window, const t_b8 fs);
 
-    t_b8 IsFullscreen();
-    void SetFullscreen(const t_b8 fs);
-
-    inline void ToggleFullscreen() {
-        SetFullscreen(!IsFullscreen());
+    inline void ToggleFullscreen(s_window& window) {
+        SetFullscreen(window, !IsFullscreen(window));
     }
 
-    void SetCursorVisibility(const t_b8 visible);
+    void SetCursorVisibility(const s_window& window, const t_b8 visible);
 
     // ============================================================
     // @section: Input
@@ -270,6 +271,8 @@ namespace zf {
     // ============================================================
     // @section: Rendering
     // ============================================================
+    s_v2<t_s32> WindowFramebufferSizeCache(const s_rendering_context& rc);
+
     void Clear(const s_rendering_context& rc, const s_color_rgba32f col = {});
     void SetViewMatrix(const s_rendering_context& rc, const s_matrix_4x4& mat);
     void DrawTexture(const s_rendering_context& rc, const s_gfx_resource* const tex, const s_v2<t_f32> pos, const s_rect<t_s32> src_rect = {}, const s_v2<t_f32> origin = origins::g_topleft, const s_v2<t_f32> scale = {1.0f, 1.0f}, const t_f32 rot = 0.0f, const s_color_rgba32f blend = colors::g_white);
