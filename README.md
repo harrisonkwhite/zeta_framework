@@ -1,8 +1,17 @@
 # Zeta Framework
 
-This is a data-oriented framework in C++ for developing 2D PC games.
+This is a data-oriented framework in C++ for developing small-scale and large-scale 2D PC games.
 
-You can find it being put to use in my in-development game [Kaōzeth](https://github.com/harrisonkwhite/kaozeth).
+---
+
+## Features
+
+- A clear game tick structure to work in
+- Input handling for keyboard, mouse, and gamepad
+- 2D batch-based texture and UTF-8 string rendering
+- Sound playing
+- RNG helpers
+- A core library with procedural-style utilities for memory arenas, UTF-8 strings, math, data structures, and more
 
 ---
 
