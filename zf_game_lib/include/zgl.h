@@ -87,6 +87,13 @@ namespace zf {
 
     s_v2<t_s32> WindowFramebufferSize();
 
+    t_b8 IsFullscreen();
+    void SetFullscreen(const t_b8 fs);
+
+    inline void ToggleFullscreen() {
+        SetFullscreen(!IsFullscreen());
+    }
+
     void SetCursorVisibility(const t_b8 visible);
 
     // ============================================================

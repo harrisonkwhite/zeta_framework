@@ -11,6 +11,10 @@ namespace zf {
     struct {
         GLFWwindow* glfw_window;
         s_v2<t_s32> framebuffer_size;
+
+        t_b8 fullscreen_active;
+        s_v2<t_s32> fullscreen_window_pos_save;
+        s_v2<t_s32> fullscreen_window_size_save;
     } g_game;
 
     constexpr e_key_code ConvertGLFWKeyCode(const t_s32 glfw_key);
@@ -365,8 +369,10 @@ void main() {
 
             glfwSetFramebufferSizeCallback(g_game.glfw_window, 
                 [](GLFWwindow* const glfw_window, const t_s32 width, const t_s32 height) {
-                    glViewport(0, 0, width, height);
-                    g_game.framebuffer_size = {width, height};
+                    if (width > 0 && height > 0) {
+                        glViewport(0, 0, width, height);
+                        g_game.framebuffer_size = {width, height};
+                    }
                 }
             );
 
@@ -655,6 +661,30 @@ void main() {
         t_s32 w, h;
         glfwGetFramebufferSize(g_game.glfw_window, &w, &h);
         return {w, h};
+    }
+
+    t_b8 IsFullscreen() {
+        return g_game.fullscreen_active;
+    }
+
+    void SetFullscreen(const t_b8 fs) {
+        if (fs == g_game.fullscreen_active) {
+            return;
+        }
+
+        if (fs) {
+            glfwGetWindowPos(g_game.glfw_window, &g_game.fullscreen_window_pos_save.x, &g_game.fullscreen_window_pos_save.y);
+            glfwGetWindowSize(g_game.glfw_window, &g_game.fullscreen_window_size_save.x, &g_game.fullscreen_window_size_save.y);
+
+            const auto monitor = glfwGetPrimaryMonitor();
+            const auto mode = glfwGetVideoMode(monitor);
+
+            glfwSetWindowMonitor(g_game.glfw_window, monitor, 0, 0, mode->width, mode->height, mode->refreshRate);
+        } else {
+            glfwSetWindowMonitor(g_game.glfw_window, nullptr, g_game.fullscreen_window_pos_save.x, g_game.fullscreen_window_pos_save.y, g_game.fullscreen_window_size_save.x, g_game.fullscreen_window_size_save.y, 0);
+        }
+
+        g_game.fullscreen_active = !g_game.fullscreen_active;
     }
 
     void SetCursorVisibility(const t_b8 visible) {
