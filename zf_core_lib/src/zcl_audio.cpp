@@ -1,6 +1,6 @@
-#include <zc/zc_audio.h>
+#include <zcl/zcl_audio.h>
 
-#include <zc/zc_io.h>
+#include <zcl/zcl_io.h>
 #include <miniaudio.h>
 
 namespace zf {

@@ -1,7 +1,7 @@
 #pragma once
 
-#include <zc/zc_strs.h>
-#include <zc/zc_io.h>
+#include <zcl/zcl_strs.h>
+#include <zcl/zcl_io.h>
 
 namespace zf {
     struct s_sound_meta {
