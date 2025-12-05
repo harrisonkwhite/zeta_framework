@@ -64,7 +64,7 @@ namespace zf {
     // ============================================================
     // @section: Vectors
     // ============================================================
-    template<c_numeric tp_type = t_f32>
+    template<c_numeric tp_type>
     struct s_v2 {
         tp_type x;
         tp_type y;
@@ -177,14 +177,14 @@ namespace zf {
         return s_v2<tp_type>(cos(dir), -sin(dir)) * len;
     }
 
-    template<c_numeric tp_type>
+    template<c_numeric tp_type = t_f32>
     struct s_v3 {
         tp_type x;
         tp_type y;
         tp_type z;
     };
 
-    template<c_numeric tp_type>
+    template<c_numeric tp_type = t_f32>
     struct s_v4 {
         tp_type x;
         tp_type y;

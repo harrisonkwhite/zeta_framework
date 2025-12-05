@@ -2,7 +2,6 @@
 
 #include <GLFW/glfw3.h>
 #include <glad/glad.h>
-#include <miniaudio.h>
 
 namespace zf {
     // ============================================================
@@ -220,36 +219,6 @@ void main() {
     static void Flush(const s_rendering_context& rc);
     static void Draw(const s_rendering_context& rc, const t_gl_id tex_gl_id, const s_rect<t_f32> tex_coords, s_v2<t_f32> pos, s_v2<t_f32> size, s_v2<t_f32> origin, const t_f32 rot, const s_color_rgba32f blend);
 
-    struct s_sound_type {
-        s_sound_meta meta;
-        s_array_rdonly<t_f32> pcm;
-
-        s_sound_type* next;
-    };
-
-    constexpr t_size g_snd_inst_limit = 32;
-
-    struct s_audio_context {
-        ma_engine ma_eng;
-
-        struct {
-            s_static_array<ma_sound, g_snd_inst_limit> ma_snds;
-            s_static_array<ma_audio_buffer_ref, g_snd_inst_limit> ma_buf_refs;
-            s_static_array<const s_sound_type*, g_snd_inst_limit> types;
-            s_static_bit_vec<g_snd_inst_limit> activity;
-            s_static_array<t_size, g_snd_inst_limit> versions;
-        } snd_insts;
-    };
-
-    struct s_sound_id {
-        t_size index;
-        t_size version;
-    };
-
-    [[nodiscard]] static t_b8 InitAudio(s_audio_context& o_ac);
-    static void ShutdownAudio(s_audio_context& ac);
-    void ProcFinishedSounds(s_audio_context& ac);
-
     // ============================================================
     // @section: Game
     // ============================================================
@@ -410,14 +379,14 @@ void main() {
             //
             // Audio Setup
             //
-            s_audio_context audio_context;
+            s_audio_sys* audio_sys;
 
-            if (!InitAudio(audio_context)) {
+            if (!InitAudioSys(mem_arena, audio_sys)) {
                 ZF_REPORT_ERROR();
                 return false;
             }
 
-            ZF_DEFER({ ShutdownAudio(audio_context); });
+            ZF_DEFER({ ShutdownAudioSys(*audio_sys); });
 
             //
             // Developer Initialisation
@@ -443,7 +412,7 @@ void main() {
                     .temp_mem_arena = &temp_mem_arena,
                     .window = &window,
                     .gfx_res_arena = &rendering_basis.res_arena,
-                    .audio_context = &audio_context
+                    .audio_sys = audio_sys
                 };
 
                 if (!info.init_func(context)) {
@@ -480,7 +449,7 @@ void main() {
 
                 // Once enough time has passed (i.e. the time accumulator has reached the tick interval), run at least a single tick and update the display.
                 if (frame_dur_accum >= targ_tick_interval) {
-                    ProcFinishedSounds(audio_context);
+                    ProcFinishedSounds(*audio_sys);
 
                     // Run possibly multiple ticks.
                     do {
@@ -491,7 +460,7 @@ void main() {
                             .window = &window,
                             .input_state = &input_state,
                             .gfx_res_arena = &rendering_basis.res_arena,
-                            .audio_context = &audio_context
+                            .audio_sys = audio_sys
                         };
 
                         if (!info.tick_func(context)) {
@@ -749,7 +718,7 @@ void main() {
 
         const auto mode = glfwGetVideoMode(monitor);
 
-        s_v2 monitor_scale;
+        s_v2<t_f32> monitor_scale;
         glfwGetMonitorContentScale(monitor, &monitor_scale.x, &monitor_scale.y);
 
         return {
@@ -1651,174 +1620,5 @@ void main() {
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, nullptr);
 
         glUseProgram(0);
-    }
-
-    // ============================================================
-    // @section: Audio
-    // ============================================================
-    t_b8 InitAudio(s_audio_context& o_ac) {
-        ZeroOut(o_ac);
-
-        if (ma_engine_init(nullptr, &o_ac.ma_eng) != MA_SUCCESS) {
-            ZF_REPORT_ERROR();
-            return false;
-        }
-
-        return true;
-    }
-
-    void ShutdownAudio(s_audio_context& ac) {
-        ZF_FOR_EACH_SET_BIT(ac.snd_insts.activity, i) {
-            ma_sound_stop(&ac.snd_insts.ma_snds[i]);
-            ma_sound_uninit(&ac.snd_insts.ma_snds[i]);
-
-            ma_audio_buffer_ref_uninit(&ac.snd_insts.ma_buf_refs[i]);
-        }
-
-        ma_engine_uninit(&ac.ma_eng);
-    }
-
-    t_b8 CreateSoundTypeFromRaw(const s_str_rdonly file_path, s_sound_type_arena& type_arena, s_mem_arena& temp_mem_arena, s_sound_type*& o_type) {
-        s_sound_meta meta;
-        s_array<t_f32> pcm;
-
-        if (!LoadSoundFromRaw(file_path, *type_arena.mem_arena, temp_mem_arena, meta, pcm)) {
-            return false;
-        }
-
-        o_type = PushToMemArena<s_sound_type>(*type_arena.mem_arena);
-
-        if (!o_type) {
-            return false;
-        }
-
-        *o_type = {
-            .meta = meta,
-            .pcm = pcm
-        };
-
-        if (!type_arena.head) {
-            type_arena.head = o_type;
-            type_arena.tail = o_type;
-        } else {
-            type_arena.tail->next = o_type;
-            type_arena.tail = o_type;
-        }
-
-        return true;
-    }
-
-    void DestroySoundTypes(s_audio_context& ac, s_sound_type_arena& type_arena) {
-        const s_sound_type* type = type_arena.head;
-
-        while (type) {
-            ZF_FOR_EACH_SET_BIT(ac.snd_insts.activity, i) {
-                if (ac.snd_insts.types[i] == type) {
-                    StopSound(ac, {i, ac.snd_insts.versions[i]});
-                }
-            }
-
-            type = type->next;
-        }
-    }
-
-    t_b8 PlaySound(s_audio_context& ac, const s_sound_type* const type, s_sound_id* const o_id, const t_f32 vol, const t_f32 pan, const t_f32 pitch, const t_b8 loop) {
-        ZF_ASSERT(vol >= 0.0f && vol <= 1.0f);
-        ZF_ASSERT(pan >= -1.0f && pan <= 1.0f);
-        ZF_ASSERT(pitch > 0.0f);
-
-        t_b8 clean_up = false;
-
-        const t_size index = IndexOfFirstUnsetBit(ac.snd_insts.activity);
-
-        if (index == -1) {
-            ZF_REPORT_ERROR();
-            clean_up = true;
-            return false;
-        }
-
-        ma_sound& ma_snd = ac.snd_insts.ma_snds[index];
-        ma_audio_buffer_ref& ma_buf_ref = ac.snd_insts.ma_buf_refs[index];
-
-        ac.snd_insts.types[index] = type;
-
-        if (ma_audio_buffer_ref_init(ma_format_f32, static_cast<ma_uint32>(type->meta.channel_cnt), type->pcm.buf_raw, static_cast<ma_uint64>(type->meta.frame_cnt), &ma_buf_ref) != MA_SUCCESS) {
-            ZF_REPORT_ERROR();
-            clean_up = true;
-            return false;
-        }
-
-        ZF_DEFER({
-            if (clean_up) {
-                ma_audio_buffer_ref_uninit(&ma_buf_ref);
-            }
-        });
-
-        ma_buf_ref.sampleRate = static_cast<ma_uint32>(type->meta.sample_rate);
-
-        if (ma_sound_init_from_data_source(&ac.ma_eng, &ma_buf_ref, 0, nullptr, &ma_snd) != MA_SUCCESS) {
-            ZF_REPORT_ERROR();
-            clean_up = true;
-            return false;
-        }
-
-        ZF_DEFER({
-            if (clean_up) {
-                ma_sound_uninit(&ma_snd);
-            }
-        });
-
-        ma_sound_set_volume(&ma_snd, vol);
-        ma_sound_set_pan(&ma_snd, pan);
-        ma_sound_set_pitch(&ma_snd, pitch);
-        ma_sound_set_looping(&ma_snd, loop);
-
-        if (ma_sound_start(&ma_snd) != MA_SUCCESS) {
-            ZF_REPORT_ERROR();
-            clean_up = true;
-            return false;
-        }
-
-        SetBit(ac.snd_insts.activity, index);
-        ac.snd_insts.versions[index]++;
-
-        if (o_id) {
-            *o_id = {index, ac.snd_insts.versions[index]};
-        }
-
-        return true;
-    }
-
-    void StopSound(s_audio_context& ac, const s_sound_id id) {
-        ZF_ASSERT(IsBitSet(ac.snd_insts.activity, id.index) && ac.snd_insts.versions[id.index] == id.version);
-
-        ma_sound_stop(&ac.snd_insts.ma_snds[id.index]);
-        ma_sound_uninit(&ac.snd_insts.ma_snds[id.index]);
-        ma_audio_buffer_ref_uninit(&ac.snd_insts.ma_buf_refs[id.index]);
-
-        UnsetBit(ac.snd_insts.activity, id.index);
-    }
-
-    t_b8 IsSoundPlaying(s_audio_context& ac, const s_sound_id id) {
-        ZF_ASSERT(id.version <= ac.snd_insts.versions[id.index]);
-
-        if (!IsBitSet(ac.snd_insts.activity, id.index) || id.version != ac.snd_insts.versions[id.index]) {
-            return false;
-        }
-
-        return ma_sound_is_playing(&ac.snd_insts.ma_snds[id.index]);
-    }
-
-    void ProcFinishedSounds(s_audio_context& ac) {
-        ZF_FOR_EACH_SET_BIT(ac.snd_insts.activity, i) {
-            ma_sound& snd = ac.snd_insts.ma_snds[i];
-
-            if (!ma_sound_is_playing(&snd)) {
-                ma_sound_uninit(&snd);
-                ma_audio_buffer_ref_uninit(&ac.snd_insts.ma_buf_refs[i]);
-
-                UnsetBit(ac.snd_insts.activity, i);
-            }
-        }
     }
 }

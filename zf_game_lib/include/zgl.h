@@ -9,7 +9,7 @@ namespace zf {
     struct s_window;
     struct s_input_state;
     struct s_gfx_resource_arena;
-    struct s_audio_context;
+    struct s_audio_sys;
 
     struct s_game_init_context {
         void* dev_mem;
@@ -21,7 +21,7 @@ namespace zf {
 
         s_gfx_resource_arena* gfx_res_arena;
 
-        s_audio_context* audio_context;
+        s_audio_sys* audio_sys;
     };
 
     struct s_game_tick_context {
@@ -36,7 +36,7 @@ namespace zf {
 
         s_gfx_resource_arena* gfx_res_arena;
 
-        s_audio_context* audio_context;
+        s_audio_sys* audio_sys;
     };
 
     struct s_rendering_context;
@@ -356,11 +356,11 @@ namespace zf {
 
     [[nodiscard]] t_b8 CreateSoundTypeFromRaw(const s_str_rdonly file_path, s_sound_type_arena& type_arena, s_mem_arena& temp_mem_arena, s_sound_type*& o_type);
 
-    void DestroySoundTypes(s_audio_context& ac, s_sound_type_arena& type_arena);
+    void DestroySoundTypes(s_audio_sys& as, s_sound_type_arena& type_arena);
 
     struct s_sound_id;
 
-    [[nodiscard]] t_b8 PlaySound(s_audio_context& ac, const s_sound_type* const type, s_sound_id* const o_id = nullptr, const t_f32 vol = 1.0f, const t_f32 pan = 0.0f, const t_f32 pitch = 1.0f, const t_b8 loop = false);
-    void StopSound(s_audio_context& ac, const s_sound_id id);
-    t_b8 IsSoundPlaying(s_audio_context& ac, const s_sound_id id);
+    [[nodiscard]] t_b8 PlaySound(s_audio_sys& as, const s_sound_type* const type, s_sound_id* const o_id = nullptr, const t_f32 vol = 1.0f, const t_f32 pan = 0.0f, const t_f32 pitch = 1.0f, const t_b8 loop = false);
+    void StopSound(s_audio_sys& as, const s_sound_id id);
+    t_b8 IsSoundPlaying(s_audio_sys& as, const s_sound_id id);
 }

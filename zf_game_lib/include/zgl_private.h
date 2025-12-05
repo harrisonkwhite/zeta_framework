@@ -3,6 +3,9 @@
 #include <zgl.h>
 
 namespace zf {
+    // ============================================================
+    // @section: Input
+    // ============================================================
     struct s_input_state {
         s_static_bit_vec<eks_key_code_cnt> keys_down;
         s_static_bit_vec<eks_mouse_button_code_cnt> mouse_buttons_down;
@@ -36,4 +39,11 @@ namespace zf {
     void ProcMouseButtonAction(s_input_state& is, const e_mouse_button_code code, const e_mouse_button_action act);
     void ProcCursorMove(s_input_state& is, const s_v2<t_f32> pos);
     void ProcScroll(s_input_state& is, const s_v2<t_f32> scroll);
+
+    // ============================================================
+    // @section: Audio
+    // ============================================================
+    [[nodiscard]] t_b8 InitAudioSys(s_mem_arena& mem_arena, s_audio_sys*& o_as);
+    void ShutdownAudioSys(s_audio_sys& as);
+    void ProcFinishedSounds(s_audio_sys& as);
 }
