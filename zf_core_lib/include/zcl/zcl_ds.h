@@ -404,7 +404,177 @@ namespace zf {
     // ============================================================
     // @section: Hash Map
     // ============================================================
+    template<typename tp_type>
+    using t_hash_func = t_size (*)(const tp_type& key);
 
+    // This is an FNV-1a implementation.
+    constexpr t_hash_func<s_str_rdonly> g_str_hash_func = [](const s_str_rdonly& key) constexpr {
+        const t_u32 offs_basis = 2166136261u;
+        const t_u32 prime = 16777619u;
+
+        t_u32 hash = offs_basis;
+
+        for (t_size i = 0; i < key.bytes.len; i++) {
+            hash ^= key.bytes[i];
+            hash *= prime;
+        }
+
+        return static_cast<t_size>(static_cast<t_u64>(hash) & 0x7FFFFFFFFFFFFFFFull);
+    };
+
+    template<typename tp_key_type, typename tp_val_type>
+    struct s_hash_map_backing_block {
+        s_array<tp_key_type> keys;
+        s_array<tp_val_type> vals;
+        s_array<t_size> next_indexes;
+
+        s_bit_vec usage;
+
+        s_hash_map_backing_block* next;
+    };
+
+    template<typename tp_key_type, typename tp_val_type>
+    t_size HashMapBackingBlockCap(const s_hash_map_backing_block<tp_key_type, tp_val_type>* const bb) {
+        return bb->keys.len;
+    }
+
+    template<typename tp_key_type, typename tp_val_type>
+    t_b8 HashMapBackingBlockFind(const s_hash_map_backing_block<tp_key_type, tp_val_type>* bb, const t_s32 key, t_size index) {
+        if (index == -1) {
+            return false;
+        }
+
+        ZF_ASSERT(index >= 0);
+
+        while (index >= HashMapBackingBlockCap(bb)) {
+            ZF_ASSERT(bb->next);
+            bb = bb->next;
+            index -= HashMapBackingBlockCap(bb);
+        }
+
+        if (bb->keys[index] == key) {
+            return true;
+        }
+
+        return HashMapBackingBlockFind(bb, key, bb->next_indexes[index]);
+    }
+
+    template<typename tp_key_type, typename tp_val_type>
+    [[nodiscard]] t_b8 HashMapBackingBlockPut(s_hash_map_backing_block<tp_key_type, tp_val_type>* bb, const t_s32 key, const t_s32 val, t_size& index, s_mem_arena& mem_arena) {
+        ZF_ASSERT(index >= -1);
+
+        if (index == -1) {
+            const t_size prospective_index = IndexOfFirstUnsetBit(bb->usage);
+
+            if (prospective_index == -1) {
+                if (!bb->next) {
+                    bb->next = PushToMemArena<s_hash_map_backing_block>(mem_arena);
+
+                    if (!bb->next) {
+                        return false;
+                    }
+                }
+
+                return HashMapBackingBlockPut(bb->next, key, val, index, mem_arena);
+            }
+
+            index = prospective_index;
+
+            bb->keys[index] = key;
+            bb->vals[index] = val;
+            bb->next_indexes[index] = -1;
+            SetBit(bb->usage, index);
+
+            return true;
+        }
+
+        t_size index_copy = index;
+
+        while (index_copy >= HashMapBackingBlockCap(bb)) {
+            ZF_ASSERT(bb->next);
+            bb = bb->next;
+            index_copy -= HashMapBackingBlockCap(bb);
+        }
+
+        if (bb->keys[index_copy] == key) {
+            bb->vals[index_copy] = val;
+            return true;
+        }
+
+        return HashMapBackingBlockPut(bb, key, val, bb->next_indexes[index_copy], mem_arena);
+    }
+
+    template<typename tp_key_type, typename tp_val_type>
+    t_b8 HashMapBackingBlockRemove(s_hash_map_backing_block<tp_key_type, tp_val_type>* bb, const t_s32 key, t_size& index) {
+        ZF_ASSERT(index >= -1);
+
+        if (index == -1) {
+            return false;
+        }
+
+        t_size index_copy = index;
+
+        while (index_copy >= HashMapBackingBlockCap(bb)) {
+            ZF_ASSERT(bb->next);
+            bb = bb->next;
+            index_copy -= HashMapBackingBlockCap(bb);
+        }
+
+        if (bb->keys[index_copy] == key) {
+            index = bb->next_indexes[index_copy];
+            UnsetBit(bb->usage, index_copy);
+            return true;
+        }
+
+        return HashMapBackingBlockRemove(bb, key, bb->next_indexes[index_copy]);
+    }
+
+    template<typename tp_key_type, typename tp_val_type>
+    struct s_hash_map {
+        t_hash_func<tp_key_type> hash_func;
+        t_bin_comparator<tp_key_type> key_comparator;
+
+        t_size kv_pair_cnt;
+
+        s_array<t_size> backing_block_immediate_indexes;
+
+        s_hash_map_backing_block<tp_key_type, tp_val_type>* backing_blocks;
+
+        s_mem_arena* mem_arena;
+    };
+
+    template<typename tp_type>
+    t_size KeyToHashIndex(const tp_type& key, const t_hash_func<tp_type> hash_func, const t_size table_size) {
+        ZF_ASSERT(hash_func);
+        ZF_ASSERT(table_size > 0);
+
+        const t_size val = hash_func(key);
+        ZF_ASSERT(val >= 0);
+
+        return val % table_size;
+    }
+
+    template<typename tp_key_type, typename tp_val_type>
+    t_b8 HashMapFind(const s_hash_map<tp_key_type, tp_val_type>& hm, const tp_key_type& key) {
+        const t_size hash_index = KeyToHashIndex(key, hm.hash_func, hm.backing_block_immediate_indexes.len);
+        return HashMapBackingBlockFind(hm.backing_blocks_head, key, hm.backing_block_immediate_indexes[hash_index]);
+    }
+
+    // Returns true iff no error occurred.
+    template<typename tp_key_type, typename tp_val_type>
+    [[nodiscard]] t_b8 HashMapPut(s_hash_map<tp_key_type, tp_val_type>& hm, const tp_key_type& key, const tp_val_type& val) {
+        const t_size hash_index = KeyToHashIndex(key, hm.hash_func, hm.backing_block_immediate_indexes.len);
+        return HashMapBackingBlockPut(hm.backing_blocks, key, val, hm.backing_block_immediate_indexes[hash_index], *hm.mem_arena);
+    }
+
+    // Returns true iff the key was found and removed.
+    template<typename tp_key_type, typename tp_val_type>
+    t_b8 HashMapRemove(s_hash_map<tp_key_type, tp_val_type>& hm, const t_s32 key) {
+        const t_size hash_index = KeyToHashIndex(key, hm.hash_func, hm.backing_block_immediate_indexes.len);
+        return DudeMapBackingBlockRemove(hm.backing_blocks_head, key, hm.backing_block_immediate_indexes[hash_index]);
+    }
+
+#if 0
 
 
 
@@ -706,153 +876,5 @@ namespace zf {
 
         return true;
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    // Update:
-    // - The immediate backing store indexes array could remain the same, or it can move to a new prime. Consider checking it against the ideal load factor.
-    // - We need to store a pointer memory arena. This COULD be left as null maybe if you don't want resizing.
-    //
-    // For Put():
-    // - If we reach -1 and a backing store block's "usage" is full, we check the backing store's single "next" pointer. If it's null we then push a new block to the memory arena and update the next pointer. We then recurse on that.
-    //
-    // Get() stays exactly the same ONLY IF pointers become non-index-based.
-    //
-    // Remove() stays the same again ONLY IF pointers become non-index-based.
-
-    struct s_dude_map_backing_block {
-        s_array<t_s32> keys;
-        s_array<t_s32> vals;
-        s_array<t_size> next_indexes; // Basically just keep jumping through "next" until the index is within the range 0 to n - 1 inclusive.
-
-        s_bit_vec usage;
-
-        s_dude_map_backing_block* next;
-    };
-
-    inline t_size DudeMapBackingBlockCap(const s_dude_map_backing_block* const bb) {
-        return bb->keys.len;
-    }
-
-    inline t_b8 DudeMapBackingBlockFind(const s_dude_map_backing_block* bb, const t_s32 key, t_size index) {
-        if (index == -1) {
-            return false;
-        }
-
-        ZF_ASSERT(index >= 0);
-
-        while (index >= DudeMapBackingBlockCap(bb)) {
-            ZF_ASSERT(bb->next);
-            bb = bb->next;
-            index -= DudeMapBackingBlockCap(bb);
-        }
-
-        if (bb->keys[index] == key) {
-            return true;
-        }
-
-        return DudeMapBackingBlockFind(bb, key, bb->next_indexes[index]);
-    }
-
-    [[nodiscard]] inline t_b8 DudeMapBackingBlockPut(s_dude_map_backing_block* bb, const t_s32 key, const t_s32 val, t_size& index, s_mem_arena& mem_arena) {
-        ZF_ASSERT(index >= -1);
-
-        if (index == -1) {
-            const t_size prospective_index = IndexOfFirstUnsetBit(bb->usage);
-
-            if (prospective_index == -1) {
-                if (!bb->next) {
-                    bb->next = PushToMemArena<s_dude_map_backing_block>(mem_arena);
-
-                    if (!bb->next) {
-                        return false;
-                    }
-                }
-
-                return DudeMapBackingBlockPut(bb->next, key, val, index, mem_arena);
-            }
-
-            index = prospective_index;
-
-            bb->keys[index] = key;
-            bb->vals[index] = val;
-            bb->next_indexes[index] = -1;
-            SetBit(bb->usage, index);
-
-            return true;
-        }
-
-        t_size index_copy = index;
-
-        while (index_copy >= DudeMapBackingBlockCap(bb)) {
-            ZF_ASSERT(bb->next);
-            bb = bb->next;
-            index_copy -= DudeMapBackingBlockCap(bb);
-        }
-
-        if (bb->keys[index_copy] == key) {
-            bb->vals[index_copy] = val;
-            return true;
-        }
-
-        return DudeMapBackingBlockPut(bb, key, val, bb->next_indexes[index_copy], mem_arena);
-    }
-
-    struct s_dude_map {
-        t_hash_func<t_s32> hash_func;
-
-        s_array<t_size> backing_block_immediate_indexes;
-
-        s_dude_map_backing_block* backing_blocks_head;
-
-        s_mem_arena* mem_arena;
-    };
-
-    inline t_b8 DudeMapFind(const s_dude_map& dm, const t_s32 key) {
-        const t_size hash_index = KeyToHashIndex(key, dm.hash_func, dm.backing_block_immediate_indexes.len);
-
-        const t_size index = dm.backing_block_immediate_indexes[hash_index];
-
-        if (index == -1) {
-            return false;
-        }
-
-        return DudeMapBackingBlockFind(dm.backing_blocks_head, key, index);
-    }
-
-    inline t_b8 DudeMapPut(const s_dude_map& dm, const t_s32 key, const t_s32 val) {
-        const t_size hash_index = KeyToHashIndex(key, dm.hash_func, dm.backing_block_immediate_indexes.len);
-        return DudeMapBackingBlockPut(dm.backing_blocks_head, key, val, dm.backing_block_immediate_indexes[hash_index], *dm.mem_arena);
-    }
+#endif
 }
