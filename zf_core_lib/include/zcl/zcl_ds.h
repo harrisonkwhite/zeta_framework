@@ -785,6 +785,50 @@ namespace zf {
         return DudeMapBackingBlockFind(bb, key, bb->next_indexes[index]);
     }
 
+    [[nodiscard]] inline t_b8 DudeMapBackingBlockPut(s_dude_map_backing_block* bb, const t_s32 key, const t_s32 val, t_size& index, s_mem_arena& mem_arena) {
+        ZF_ASSERT(index >= -1);
+
+        if (index == -1) {
+            const t_size prospective_index = IndexOfFirstUnsetBit(bb->usage);
+
+            if (prospective_index == -1) {
+                if (!bb->next) {
+                    bb->next = PushToMemArena<s_dude_map_backing_block>(mem_arena);
+
+                    if (!bb->next) {
+                        return false;
+                    }
+                }
+
+                return DudeMapBackingBlockPut(bb->next, key, val, index, mem_arena);
+            }
+
+            index = prospective_index;
+
+            bb->keys[index] = key;
+            bb->vals[index] = val;
+            bb->next_indexes[index] = -1;
+            SetBit(bb->usage, index);
+
+            return true;
+        }
+
+        t_size index_copy = index;
+
+        while (index_copy >= DudeMapBackingBlockCap(bb)) {
+            ZF_ASSERT(bb->next);
+            bb = bb->next;
+            index_copy -= DudeMapBackingBlockCap(bb);
+        }
+
+        if (bb->keys[index_copy] == key) {
+            bb->vals[index_copy] = val;
+            return true;
+        }
+
+        return DudeMapBackingBlockPut(bb, key, val, bb->next_indexes[index_copy], mem_arena);
+    }
+
     struct s_dude_map {
         t_hash_func<t_s32> hash_func;
 
@@ -805,5 +849,10 @@ namespace zf {
         }
 
         return DudeMapBackingBlockFind(dm.backing_blocks_head, key, index);
+    }
+
+    inline t_b8 DudeMapPut(const s_dude_map& dm, const t_s32 key, const t_s32 val) {
+        const t_size hash_index = KeyToHashIndex(key, dm.hash_func, dm.backing_block_immediate_indexes.len);
+        return DudeMapBackingBlockPut(dm.backing_blocks_head, key, val, dm.backing_block_immediate_indexes[hash_index], *dm.mem_arena);
     }
 }
