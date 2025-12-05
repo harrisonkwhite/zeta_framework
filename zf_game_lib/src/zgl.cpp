@@ -665,6 +665,15 @@ void main() {
         glfwSetWindowSize(window.glfw_hdl, size.x, size.y);
     }
 
+    void SetWindowSizeLimits(const s_window& window, const t_s32 min_width, const t_s32 min_height, const t_s32 max_width, const t_s32 max_height) {
+        ZF_ASSERT(min_width >= -1 && min_height >= -1);
+        ZF_ASSERT(max_width >= min_width || max_width == -1);
+        ZF_ASSERT(max_height >= min_height || max_height == -1);
+
+        static_assert(GLFW_DONT_CARE == -1);
+        glfwSetWindowSizeLimits(window.glfw_hdl, min_width, min_height, max_width, max_height);
+    }
+
     void SetWindowResizability(const s_window& window, const t_b8 resizable) {
         glfwSetWindowAttrib(window.glfw_hdl, GLFW_RESIZABLE, resizable);
     }
