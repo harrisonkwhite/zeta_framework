@@ -1,6 +1,28 @@
-#include <zgl_private.h>
+#include <zgl/private/zgl_input.h>
 
 namespace zf {
+    struct s_input_state {
+        s_static_bit_vec<eks_key_code_cnt> keys_down;
+        s_static_bit_vec<eks_mouse_button_code_cnt> mouse_buttons_down;
+
+        s_v2<t_f32> cursor_pos;
+
+        struct {
+            s_static_bit_vec<eks_key_code_cnt> keys_pressed;
+            s_static_bit_vec<eks_key_code_cnt> keys_released;
+
+            s_static_bit_vec<eks_mouse_button_code_cnt> mouse_buttons_pressed;
+            s_static_bit_vec<eks_mouse_button_code_cnt> mouse_buttons_released;
+
+            s_v2<t_f32> scroll;
+        } events;
+    };
+
+    [[nodiscard]] t_b8 MakeInputState(s_mem_arena& mem_arena, s_input_state*& o_is) {
+        o_is = PushToMemArena<s_input_state>(mem_arena);
+        return o_is != nullptr;
+    }
+
     t_b8 IsKeyDown(const s_input_state& is, const e_key_code kc) {
         return IsBitSet(is.keys_down, kc);
     }
@@ -31,6 +53,10 @@ namespace zf {
 
     s_v2<t_f32> GetScroll(const s_input_state& is) {
         return is.events.scroll;
+    }
+
+    void ClearInputEvents(s_input_state& is) {
+        ZeroOut(is.events);
     }
 
     void ProcKeyAction(s_input_state& is, const e_key_code code, const e_key_action act) {

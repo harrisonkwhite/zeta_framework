@@ -1,4 +1,4 @@
-#include <zgl_private.h>
+#include <zgl/public/zgl_audio.h>
 
 #include <miniaudio.h>
 

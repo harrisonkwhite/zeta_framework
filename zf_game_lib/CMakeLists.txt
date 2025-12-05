@@ -1,11 +1,10 @@
 add_library(zf_game_lib STATIC
     src/zgl_game.cpp
+    src/zgl_platform.cpp
     src/zgl_input.cpp
+    src/zgl_gfx.cpp
     src/zgl_audio.cpp
 	../external/glad/src/glad.c
-
-    include/zgl.h
-    include/zgl_private.h
 )
 
 target_include_directories(zf_game_lib PUBLIC
