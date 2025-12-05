@@ -1,4 +1,3 @@
-- Make it easier to do dynamic window resizing.
 - Helpers for non-arena allocation.
 - Create a really tight model for SURFACE shader program validation. Check that all necessary uniforms and so on are there.
 - MAYBE update the font system such that the input unicode code point bit vector gets mutated BUT the asset packer gives warnings if the bit vector is mutated. Reasoning being that you might have an "extra chars" file being all game dialogue, and you have all fonts map to it - but you are probably fine with not all glyphs being supported by every single font.

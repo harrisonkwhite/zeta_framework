@@ -404,6 +404,14 @@ namespace zf {
     // ============================================================
     // @section: Hash Map
     // ============================================================
+
+
+
+
+
+
+
+
     template<typename tp_type>
     using t_hash_func = t_size (*)(const tp_type& key);
 
@@ -442,6 +450,15 @@ namespace zf {
             s_bit_vec usage;
         } backing_store;
     };
+
+
+
+
+
+
+
+
+
 
     template<typename tp_type>
     t_size KeyToHashIndex(const tp_type& key, const t_hash_func<tp_type> hash_func, const t_size table_size) {
@@ -688,5 +705,105 @@ namespace zf {
         }
 
         return true;
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    // Update:
+    // - The immediate backing store indexes array could remain the same, or it can move to a new prime. Consider checking it against the ideal load factor.
+    // - We need to store a pointer memory arena. This COULD be left as null maybe if you don't want resizing.
+    //
+    // For Put():
+    // - If we reach -1 and a backing store block's "usage" is full, we check the backing store's single "next" pointer. If it's null we then push a new block to the memory arena and update the next pointer. We then recurse on that.
+    //
+    // Get() stays exactly the same ONLY IF pointers become non-index-based.
+    //
+    // Remove() stays the same again ONLY IF pointers become non-index-based.
+
+    struct s_dude_map_backing_block {
+        s_array<t_s32> keys;
+        s_array<t_s32> vals;
+        s_array<t_size> next_indexes; // Basically just keep jumping through "next" until the index is within the range 0 to n - 1 inclusive.
+
+        s_bit_vec usage;
+
+        s_dude_map_backing_block* next;
+    };
+
+    inline t_size DudeMapBackingBlockCap(const s_dude_map_backing_block* const bb) {
+        return bb->keys.len;
+    }
+
+    inline t_b8 DudeMapBackingBlockFind(const s_dude_map_backing_block* bb, const t_s32 key, t_size index) {
+        if (index == -1) {
+            return false;
+        }
+
+        ZF_ASSERT(index >= 0);
+
+        while (index >= DudeMapBackingBlockCap(bb)) {
+            ZF_ASSERT(bb->next);
+            bb = bb->next;
+            index -= DudeMapBackingBlockCap(bb);
+        }
+
+        if (bb->keys[index] == key) {
+            return true;
+        }
+
+        return DudeMapBackingBlockFind(bb, key, bb->next_indexes[index]);
+    }
+
+    struct s_dude_map {
+        t_hash_func<t_s32> hash_func;
+
+        s_array<t_size> backing_block_immediate_indexes;
+
+        s_dude_map_backing_block* backing_blocks_head;
+
+        s_mem_arena* mem_arena;
+    };
+
+    inline t_b8 DudeMapFind(const s_dude_map& dm, const t_s32 key) {
+        const t_size hash_index = KeyToHashIndex(key, dm.hash_func, dm.backing_block_immediate_indexes.len);
+
+        const t_size index = dm.backing_block_immediate_indexes[hash_index];
+
+        if (index == -1) {
+            return false;
+        }
+
+        return DudeMapBackingBlockFind(dm.backing_blocks_head, key, index);
     }
 }
