@@ -84,9 +84,18 @@ namespace zf {
 
     void SetWindowTitle(const s_window& window, const s_str_rdonly title);
 
+    // Sets the LOGICAL window size. The actual new framebuffer size MIGHT be larger if there is DPI scaling.
     void SetWindowSize(const s_window& window, const s_v2<t_s32> size);
+
     void SetWindowResizability(const s_window& window, const t_b8 resizable);
+
     s_v2<t_s32> WindowFramebufferSizeCache(const s_window& window);
+
+    // Returns the size in pixels of whichever monitor the window most resides in.
+    s_v2<t_s32> CalcMonitorPixelSize(const s_window& window);
+
+    // Returns the size (accounting for DPI scaling) of whichever monitor the window most resides in.
+    s_v2<t_s32> CalcMonitorLogicalSize(const s_window& window);
 
     t_b8 IsFullscreen(const s_window& window);
     void SetFullscreen(s_window& window, const t_b8 fs);

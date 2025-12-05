@@ -64,7 +64,7 @@ namespace zf {
     // ============================================================
     // @section: Vectors
     // ============================================================
-    template<c_numeric tp_type>
+    template<c_numeric tp_type = t_f32>
     struct s_v2 {
         tp_type x;
         tp_type y;
