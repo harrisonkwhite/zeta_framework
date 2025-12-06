@@ -2,8 +2,10 @@
 
 #include <zcl.h>
 
-namespace zf {
-    enum e_key_code : t_s32 {
+namespace zf
+{
+    enum e_key_code : t_s32
+    {
         eks_key_code_none = -1,
 
         ek_key_code_space,
@@ -73,7 +75,8 @@ namespace zf {
         eks_key_code_cnt
     };
 
-    enum e_mouse_button_code : t_s32 {
+    enum e_mouse_button_code : t_s32
+    {
         eks_mouse_button_code_none = -1,
 
         ek_mouse_button_code_left,
@@ -83,7 +86,24 @@ namespace zf {
         eks_mouse_button_code_cnt
     };
 
-    struct s_input_state;
+    struct s_input_state
+    {
+        s_static_bit_vec<eks_key_code_cnt> keys_down;
+        s_static_bit_vec<eks_mouse_button_code_cnt> mouse_buttons_down;
+
+        s_v2<t_f32> cursor_pos;
+
+        struct
+        {
+            s_static_bit_vec<eks_key_code_cnt> keys_pressed;
+            s_static_bit_vec<eks_key_code_cnt> keys_released;
+
+            s_static_bit_vec<eks_mouse_button_code_cnt> mouse_buttons_pressed;
+            s_static_bit_vec<eks_mouse_button_code_cnt> mouse_buttons_released;
+
+            s_v2<t_f32> scroll;
+        } events;
+    };
 
     t_b8 IsKeyDown(const s_input_state& is, const e_key_code kc);
     t_b8 IsKeyPressed(const s_input_state& is, const e_key_code kc);

@@ -1,18 +1,20 @@
-#include <zgl/public/zgl_game.h>
-
-#include <zgl/public/zgl_platform.h>
-#include <zgl/private/zgl_platform.h>
-#include <zgl/private/zgl_input.h>
-#include <zgl/public/zgl_gfx.h>
-#include <zgl/public/zgl_audio.h>
-#include <zgl/private/zgl_audio.h>
 #include <glad/glad.h>
+#include <zgl/private/zgl_audio.h>
+#include <zgl/private/zgl_input.h>
+#include <zgl/private/zgl_platform.h>
+#include <zgl/public/zgl_audio.h>
+#include <zgl/public/zgl_game.h>
+#include <zgl/public/zgl_gfx.h>
+#include <zgl/public/zgl_platform.h>
 
-namespace zf {
-    t_b8 RunGame(const s_game_info& info) {
+namespace zf
+{
+    t_b8 RunGame(const s_game_info& info)
+    {
         AssertGameInfoValidity(info);
 
-        const t_b8 success = [&info]() {
+        const t_b8 success = [&info]()
+        {
 #ifndef ZF_DEBUG
             // Redirect stderr to crash log file.
             freopen("error.log", "w", stderr);
@@ -23,7 +25,8 @@ namespace zf {
             //
             s_mem_arena mem_arena;
 
-            if (!AllocMemArena(info.mem_arena_size, mem_arena)) {
+            if (!AllocMemArena(info.mem_arena_size, mem_arena))
+            {
                 ZF_REPORT_ERROR();
                 return false;
             }
@@ -32,7 +35,8 @@ namespace zf {
 
             s_mem_arena temp_mem_arena;
 
-            if (!MakeSubMemArena(mem_arena, info.temp_mem_arena_size, temp_mem_arena)) {
+            if (!MakeSubMemArena(mem_arena, info.temp_mem_arena_size, temp_mem_arena))
+            {
                 ZF_REPORT_ERROR();
                 return false;
             }
@@ -40,19 +44,15 @@ namespace zf {
             //
             // Input Setup
             //
-            s_input_state* input_state;
-
-            if (!MakeInputState(mem_arena, input_state)) {
-                ZF_REPORT_ERROR();
-                return false;
-            }
+            s_input_state input_state = {};
 
             //
             // Platform Layer Setup
             //
             s_platform_layer* platform_layer;
 
-            if (!InitPlatformLayer(mem_arena, *input_state, platform_layer)) {
+            if (!InitPlatformLayer(mem_arena, input_state, platform_layer))
+            {
                 ZF_REPORT_ERROR();
                 return false;
             }
@@ -62,7 +62,8 @@ namespace zf {
             //
             s_rendering_basis* rendering_basis;
 
-            if (!InitGFX(mem_arena, temp_mem_arena, rendering_basis)) {
+            if (!InitGFX(mem_arena, temp_mem_arena, rendering_basis))
+            {
                 ZF_REPORT_ERROR();
                 return false;
             }
@@ -74,7 +75,8 @@ namespace zf {
             //
             s_audio_sys* audio_sys;
 
-            if (!InitAudioSys(mem_arena, audio_sys)) {
+            if (!InitAudioSys(mem_arena, audio_sys))
+            {
                 ZF_REPORT_ERROR();
                 return false;
             }
@@ -88,10 +90,12 @@ namespace zf {
             // Initialise developer memory.
             void* dev_mem = nullptr;
 
-            if (info.dev_mem_size > 0) {
+            if (info.dev_mem_size > 0)
+            {
                 dev_mem = PushToMemArena(mem_arena, info.dev_mem_size, info.dev_mem_alignment);
 
-                if (!dev_mem) {
+                if (!dev_mem)
+                {
                     ZF_REPORT_ERROR();
                     return false;
                 }
@@ -99,22 +103,22 @@ namespace zf {
 
             // Run the developer's initialisation function.
             {
-                const s_game_init_context context = {
-                    .dev_mem = dev_mem,
+                const s_game_init_context context = {.dev_mem = dev_mem,
                     .mem_arena = &mem_arena,
                     .temp_mem_arena = &temp_mem_arena,
                     .platform_layer = platform_layer,
-                    .audio_sys = audio_sys
-                };
+                    .audio_sys = audio_sys};
 
-                if (!info.init_func(context)) {
+                if (!info.init_func(context))
+                {
                     ZF_REPORT_ERROR();
                     return false;
                 }
             }
 
             ZF_DEFER({
-                if (info.clean_func) {
+                if (info.clean_func)
+                {
                     info.clean_func(dev_mem);
                 }
             });
@@ -127,7 +131,8 @@ namespace zf {
             t_f64 frame_time_last = Time();
             t_f64 frame_dur_accum = 0.0;
 
-            while (!ShouldWindowClose(*platform_layer)) {
+            while (!ShouldWindowClose(*platform_layer))
+            {
                 RewindMemArena(temp_mem_arena, 0);
 
                 PollOSEvents();
@@ -139,27 +144,29 @@ namespace zf {
 
                 const t_f64 targ_tick_interval = 1.0 / info.targ_ticks_per_sec;
 
-                // Once enough time has passed (i.e. the time accumulator has reached the tick interval), run at least a single tick and update the display.
-                if (frame_dur_accum >= targ_tick_interval) {
+                // Once enough time has passed (i.e. the time accumulator has reached the tick
+                // interval), run at least a single tick and update the display.
+                if (frame_dur_accum >= targ_tick_interval)
+                {
                     ProcFinishedSounds(*audio_sys);
 
                     // Run possibly multiple ticks.
-                    do {
-                        const s_game_tick_context context = {
-                            .dev_mem = dev_mem,
+                    do
+                    {
+                        const s_game_tick_context context = {.dev_mem = dev_mem,
                             .mem_arena = &mem_arena,
                             .temp_mem_arena = &temp_mem_arena,
-                            .input_state = input_state,
+                            .input_state = &input_state,
                             .platform_layer = platform_layer,
-                            .audio_sys = audio_sys
-                        };
+                            .audio_sys = audio_sys};
 
-                        if (!info.tick_func(context)) {
+                        if (!info.tick_func(context))
+                        {
                             ZF_REPORT_ERROR();
                             return false;
                         }
 
-                        ClearInputEvents(*input_state);
+                        ClearInputEvents(input_state);
 
                         frame_dur_accum -= targ_tick_interval;
                     } while (frame_dur_accum >= targ_tick_interval);
@@ -167,20 +174,21 @@ namespace zf {
                     // Perform a single render.
                     s_rendering_context rendering_context;
 
-                    if (!BeginFrame(*rendering_basis, WindowFramebufferSizeCache(*platform_layer), mem_arena, rendering_context)) {
+                    if (!BeginFrame(*rendering_basis, WindowFramebufferSizeCache(*platform_layer),
+                            mem_arena, rendering_context))
+                    {
                         ZF_REPORT_ERROR();
                         return false;
                     }
 
                     {
-                        const s_game_render_context context = {
-                            .dev_mem = dev_mem,
+                        const s_game_render_context context = {.dev_mem = dev_mem,
                             .mem_arena = &mem_arena,
                             .temp_mem_arena = &temp_mem_arena,
-                            .rendering_context = &rendering_context
-                        };
+                            .rendering_context = &rendering_context};
 
-                        if (!info.render_func(context)) {
+                        if (!info.render_func(context))
+                        {
                             ZF_REPORT_ERROR();
                             return false;
                         }
@@ -196,8 +204,10 @@ namespace zf {
         }();
 
 #ifndef ZF_DEBUG
-        if (!success) {
-            ShowErrorBox("Error", "A fatal error occurred! Please check \"error.log\" for details.");
+        if (!success)
+        {
+            ShowErrorBox(
+                "Error", "A fatal error occurred! Please check \"error.log\" for details.");
         }
 #endif
 
