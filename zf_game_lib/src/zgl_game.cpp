@@ -1,11 +1,8 @@
-#include <glad/glad.h>
-#include <zgl/private/zgl_audio.h>
-#include <zgl/private/zgl_input.h>
-#include <zgl/private/zgl_platform.h>
-#include <zgl/public/zgl_audio.h>
-#include <zgl/public/zgl_game.h>
-#include <zgl/public/zgl_gfx.h>
-#include <zgl/public/zgl_platform.h>
+#include <zgl/zgl_audio.h>
+#include <zgl/zgl_game.h>
+#include <zgl/zgl_gfx.h>
+#include <zgl/zgl_input.h>
+#include <zgl/zgl_platform.h>
 
 namespace zf
 {
@@ -13,15 +10,15 @@ namespace zf
     {
         AssertGameInfoValidity(info);
 
-        const t_b8 success = [&info]()
-        {
 #ifndef ZF_DEBUG
-            // Redirect stderr to crash log file.
-            freopen("error.log", "w", stderr);
+        // Redirect stderr to crash log file.
+        freopen("error.log", "w", stderr);
 #endif
 
+        const t_b8 success = [&info]()
+        {
             //
-            // Memory Arena Setup
+            // Initialisation
             //
             s_mem_arena mem_arena;
 
@@ -41,15 +38,9 @@ namespace zf
                 return false;
             }
 
-            //
-            // Input Setup
-            //
             s_input_state input_state = {};
 
-            //
-            // Platform Layer Setup
-            //
-            const auto platform_layer_info = InitPlatformLayer(&mem_arena, &input_state);
+            const auto platform_layer_info = P_InitPlatformLayer(&mem_arena, &input_state);
 
             if (!platform_layer_info)
             {
@@ -57,9 +48,6 @@ namespace zf
                 return false;
             }
 
-            //
-            // Rendering Setup
-            //
             s_rendering_basis* rendering_basis;
 
             if (!InitGFX(mem_arena, temp_mem_arena, rendering_basis))
@@ -70,22 +58,15 @@ namespace zf
 
             ZF_DEFER({ ShutdownGFX(*rendering_basis); });
 
-            //
-            // Audio Setup
-            //
             s_audio_sys* audio_sys;
 
-            if (!InitAudioSys(mem_arena, audio_sys))
+            if (!P_InitAudioSys(mem_arena, audio_sys))
             {
                 ZF_REPORT_ERROR();
                 return false;
             }
 
-            ZF_DEFER({ ShutdownAudioSys(*audio_sys); });
-
-            //
-            // Developer Initialisation
-            //
+            ZF_DEFER({ P_ShutdownAudioSys(*audio_sys); });
 
             // Initialise developer memory.
             void* dev_mem = nullptr;
@@ -126,16 +107,16 @@ namespace zf
             //
             // Main Loop
             //
-            ShowWindow(platform_layer_info);
+            P_ShowWindow(platform_layer_info);
 
             t_f64 frame_time_last = Time();
             t_f64 frame_dur_accum = 0.0;
 
-            while (!ShouldWindowClose(platform_layer_info))
+            while (!P_ShouldWindowClose(platform_layer_info))
             {
                 RewindMemArena(temp_mem_arena, 0);
 
-                PollOSEvents();
+                P_PollOSEvents();
 
                 const t_f64 frame_time = Time();
                 const t_f64 frame_time_delta = frame_time - frame_time_last;
@@ -148,7 +129,7 @@ namespace zf
                 // interval), run at least a single tick and update the display.
                 if (frame_dur_accum >= targ_tick_interval)
                 {
-                    ProcFinishedSounds(*audio_sys);
+                    P_ProcFinishedSounds(*audio_sys);
 
                     // Run possibly multiple ticks.
                     do
@@ -166,7 +147,7 @@ namespace zf
                             return false;
                         }
 
-                        ClearInputEvents(input_state);
+                        ZeroOut(&input_state.events);
 
                         frame_dur_accum -= targ_tick_interval;
                     } while (frame_dur_accum >= targ_tick_interval);
@@ -197,7 +178,7 @@ namespace zf
 
                     CompleteFrame(rendering_context);
 
-                    SwapWindowBuffers(platform_layer_info);
+                    P_SwapWindowBuffers(platform_layer_info);
                 }
             }
 

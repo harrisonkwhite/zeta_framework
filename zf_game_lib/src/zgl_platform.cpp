@@ -1,10 +1,8 @@
 #include <GLFW/glfw3.h>
 #include <glad/glad.h>
-#include <zgl/private/zgl_config.h>
-#include <zgl/private/zgl_input.h>
-#include <zgl/private/zgl_platform.h>
-#include <zgl/public/zgl_input.h>
-#include <zgl/public/zgl_platform.h>
+#include <zgl/zgl_config.h>
+#include <zgl/zgl_input.h>
+#include <zgl/zgl_platform.h>
 
 namespace zf
 {
@@ -92,28 +90,28 @@ namespace zf
         }
     }
 
-    constexpr e_key_action ConvertGLFWKeyAction(const t_s32 glfw_act)
+    constexpr p_e_key_action ConvertGLFWKeyAction(const t_s32 glfw_act)
     {
         switch (glfw_act)
         {
-            case GLFW_PRESS: return e_key_action::press;
-            case GLFW_RELEASE: return e_key_action::release;
+            case GLFW_PRESS: return p_e_key_action::press;
+            case GLFW_RELEASE: return p_e_key_action::release;
         }
 
         ZF_ASSERT(false);
-        return e_key_action::invalid;
+        return p_e_key_action::invalid;
     }
 
-    constexpr e_mouse_button_action ConvertGLFWMouseButtonAction(const t_s32 glfw_act)
+    constexpr p_e_mouse_button_action ConvertGLFWMouseButtonAction(const t_s32 glfw_act)
     {
         switch (glfw_act)
         {
-            case GLFW_PRESS: return e_mouse_button_action::press;
-            case GLFW_RELEASE: return e_mouse_button_action::release;
+            case GLFW_PRESS: return p_e_mouse_button_action::press;
+            case GLFW_RELEASE: return p_e_mouse_button_action::release;
         }
 
         ZF_ASSERT(false);
-        return e_mouse_button_action::invalid;
+        return p_e_mouse_button_action::invalid;
     }
 
     static t_b8 g_initted;
@@ -131,7 +129,7 @@ namespace zf
         s_v2<t_s32> prefullscreen_size;
     };
 
-    s_platform_layer_info* InitPlatformLayer(
+    s_platform_layer_info* P_InitPlatformLayer(
         s_mem_arena* const mem_arena, s_input_state* const input_state)
     {
         ZF_ASSERT(!g_initted);
@@ -165,8 +163,8 @@ namespace zf
             }
         });
 
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, g_gl_version_major);
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, g_gl_version_minor);
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, p_g_gl_version_major);
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, p_g_gl_version_minor);
         glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
         glfwWindowHint(GLFW_VISIBLE, false);
 
@@ -224,7 +222,7 @@ namespace zf
 
                 const auto pl =
                     static_cast<s_platform_layer_info*>(glfwGetWindowUserPointer(glfw_window));
-                ProcKeyAction(*pl->input_state, ConvertGLFWKeyCode(key), ConvertGLFWKeyAction(act));
+                P_ProcKeyAction(pl->input_state, ConvertGLFWKeyCode(key), ConvertGLFWKeyAction(act));
             });
 
         glfwSetMouseButtonCallback(info->glfw_window,
@@ -232,7 +230,7 @@ namespace zf
             {
                 const auto pl =
                     static_cast<s_platform_layer_info*>(glfwGetWindowUserPointer(glfw_window));
-                ProcMouseButtonAction(*pl->input_state, ConvertGLFWMouseButtonCode(btn),
+                P_ProcMouseButtonAction(pl->input_state, ConvertGLFWMouseButtonCode(btn),
                     ConvertGLFWMouseButtonAction(act));
             });
 
@@ -241,7 +239,7 @@ namespace zf
             {
                 const auto pl =
                     static_cast<s_platform_layer_info*>(glfwGetWindowUserPointer(glfw_window));
-                ProcCursorMove(*pl->input_state, {static_cast<t_f32>(x), static_cast<t_f32>(y)});
+                P_ProcCursorMove(pl->input_state, {static_cast<t_f32>(x), static_cast<t_f32>(y)});
             });
 
         glfwSetScrollCallback(info->glfw_window,
@@ -249,8 +247,8 @@ namespace zf
             {
                 const auto pl =
                     static_cast<s_platform_layer_info*>(glfwGetWindowUserPointer(glfw_window));
-                ProcScroll(
-                    *pl->input_state, {static_cast<t_f32>(offs_x), static_cast<t_f32>(offs_y)});
+                P_ProcScroll(
+                    pl->input_state, {static_cast<t_f32>(offs_x), static_cast<t_f32>(offs_y)});
             });
 
         g_initted = true;
@@ -258,7 +256,7 @@ namespace zf
         return info;
     }
 
-    void ShutdownPlatformLayer(const s_platform_layer_info* const pli)
+    void P_ShutdownPlatformLayer(const s_platform_layer_info* const pli)
     {
         ZF_ASSERT(g_initted);
 
@@ -269,16 +267,16 @@ namespace zf
 
     t_f64 Time() { return glfwGetTime(); }
 
-    void PollOSEvents() { glfwPollEvents(); }
+    void P_PollOSEvents() { glfwPollEvents(); }
 
-    void ShowWindow(const s_platform_layer_info* const pli) { glfwShowWindow(pli->glfw_window); }
+    void P_ShowWindow(const s_platform_layer_info* const pli) { glfwShowWindow(pli->glfw_window); }
 
-    t_b8 ShouldWindowClose(const s_platform_layer_info* const pli)
+    t_b8 P_ShouldWindowClose(const s_platform_layer_info* const pli)
     {
         return glfwWindowShouldClose(pli->glfw_window);
     }
 
-    void SwapWindowBuffers(const s_platform_layer_info* const pli)
+    void P_SwapWindowBuffers(const s_platform_layer_info* const pli)
     {
         glfwSwapBuffers(pli->glfw_window);
     }

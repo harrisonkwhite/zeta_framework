@@ -1,7 +1,7 @@
 #pragma once
 
-#include <zgl/public/zgl_game.h>
-#include <zgl/public/zgl_platform.h>
-#include <zgl/public/zgl_input.h>
-#include <zgl/public/zgl_gfx.h>
-#include <zgl/public/zgl_audio.h>
+#include <zgl/zgl_audio.h>
+#include <zgl/zgl_game.h>
+#include <zgl/zgl_gfx.h>
+#include <zgl/zgl_input.h>
+#include <zgl/zgl_platform.h>

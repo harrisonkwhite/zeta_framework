@@ -1,44 +1,8 @@
-#include <zgl/private/zgl_input.h>
+#include <zgl/zgl_input.h>
 
 namespace zf
 {
-    t_b8 IsKeyDown(const s_input_state& is, const e_key_code kc)
-    {
-        return IsBitSet(is.keys_down, kc);
-    }
-
-    t_b8 IsKeyPressed(const s_input_state& is, const e_key_code kc)
-    {
-        return IsBitSet(is.events.keys_pressed, kc);
-    }
-
-    t_b8 IsKeyReleased(const s_input_state& is, const e_key_code kc)
-    {
-        return IsBitSet(is.events.keys_released, kc);
-    }
-
-    t_b8 IsMouseButtonDown(const s_input_state& is, const e_mouse_button_code mbc)
-    {
-        return IsBitSet(is.mouse_buttons_down, mbc);
-    }
-
-    t_b8 IsMouseButtonPressed(const s_input_state& is, const e_mouse_button_code mbc)
-    {
-        return IsBitSet(is.events.mouse_buttons_pressed, mbc);
-    }
-
-    t_b8 IsMouseButtonReleased(const s_input_state& is, const e_mouse_button_code mbc)
-    {
-        return IsBitSet(is.events.mouse_buttons_released, mbc);
-    }
-
-    s_v2<t_f32> CursorPos(const s_input_state& is) { return is.cursor_pos; }
-
-    s_v2<t_f32> GetScroll(const s_input_state& is) { return is.events.scroll; }
-
-    void ClearInputEvents(s_input_state& is) { ZeroOut(&is.events); }
-
-    void ProcKeyAction(s_input_state& is, const e_key_code code, const e_key_action act)
+    void P_ProcKeyAction(s_input_state* const is, const e_key_code code, const p_e_key_action act)
     {
         if (code == eks_key_code_none)
         {
@@ -47,24 +11,22 @@ namespace zf
 
         switch (act)
         {
-            case e_key_action::invalid:
-                ZF_ASSERT(false);
+            case p_e_key_action::invalid: ZF_ASSERT(false); break;
+
+            case p_e_key_action::press:
+                SetBit(is->keys_down, code);
+                SetBit(is->events.keys_pressed, code);
                 break;
 
-            case e_key_action::press:
-                SetBit(is.keys_down, code);
-                SetBit(is.events.keys_pressed, code);
-                break;
-
-            case e_key_action::release:
-                UnsetBit(is.keys_down, code);
-                SetBit(is.events.keys_released, code);
+            case p_e_key_action::release:
+                UnsetBit(is->keys_down, code);
+                SetBit(is->events.keys_released, code);
                 break;
         }
     }
 
-    void ProcMouseButtonAction(
-        s_input_state& is, const e_mouse_button_code code, const e_mouse_button_action act)
+    void P_ProcMouseButtonAction(
+        s_input_state* const is, const e_mouse_button_code code, const p_e_mouse_button_action act)
     {
         if (code == eks_mouse_button_code_none)
         {
@@ -73,23 +35,24 @@ namespace zf
 
         switch (act)
         {
-            case e_mouse_button_action::invalid:
-                ZF_ASSERT(false);
+            case p_e_mouse_button_action::invalid: ZF_ASSERT(false); break;
+
+            case p_e_mouse_button_action::press:
+                SetBit(is->mouse_buttons_down, code);
+                SetBit(is->events.mouse_buttons_pressed, code);
                 break;
 
-            case e_mouse_button_action::press:
-                SetBit(is.mouse_buttons_down, code);
-                SetBit(is.events.mouse_buttons_pressed, code);
-                break;
-
-            case e_mouse_button_action::release:
-                SetBit(is.mouse_buttons_down, code);
-                SetBit(is.events.mouse_buttons_pressed, code);
+            case p_e_mouse_button_action::release:
+                SetBit(is->mouse_buttons_down, code);
+                SetBit(is->events.mouse_buttons_pressed, code);
                 break;
         }
     }
 
-    void ProcCursorMove(s_input_state& is, const s_v2<t_f32> pos) { is.cursor_pos = pos; }
+    void P_ProcCursorMove(s_input_state* const is, const s_v2<t_f32> pos) { is->cursor_pos = pos; }
 
-    void ProcScroll(s_input_state& is, const s_v2<t_f32> scroll) { is.events.scroll += scroll; }
+    void P_ProcScroll(s_input_state* const is, const s_v2<t_f32> scroll)
+    {
+        is->events.scroll += scroll;
+    }
 }

@@ -42,4 +42,17 @@ namespace zf
     }
 
     void SetCursorVisibility(const s_platform_layer_info* const pli, const t_b8 visible);
+
+    struct s_input_state;
+
+    [[nodiscard]] s_platform_layer_info* P_InitPlatformLayer(
+        s_mem_arena* const mem_arena, s_input_state* const input_state);
+
+    void P_ShutdownPlatformLayer(const s_platform_layer_info* const pli);
+
+    void P_PollOSEvents();
+
+    void P_ShowWindow(const s_platform_layer_info* const pli);
+    t_b8 P_ShouldWindowClose(const s_platform_layer_info* const pli);
+    void P_SwapWindowBuffers(const s_platform_layer_info* const pli);
 }

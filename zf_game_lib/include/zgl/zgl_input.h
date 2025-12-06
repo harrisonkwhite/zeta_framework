@@ -101,23 +101,61 @@ namespace zf
             s_static_bit_vec<eks_mouse_button_code_cnt> mouse_buttons_pressed;
             s_static_bit_vec<eks_mouse_button_code_cnt> mouse_buttons_released;
 
+            // +Y: Scroll up / away from you
+            // -Y: Scroll down / towards you
+            // +X: Scroll right
+            // +X: Scroll left
             s_v2<t_f32> scroll;
         } events;
     };
 
-    t_b8 IsKeyDown(const s_input_state& is, const e_key_code kc);
-    t_b8 IsKeyPressed(const s_input_state& is, const e_key_code kc);
-    t_b8 IsKeyReleased(const s_input_state& is, const e_key_code kc);
+    inline t_b8 IsKeyDown(const s_input_state* const is, const e_key_code kc)
+    {
+        return IsBitSet(is->keys_down, kc);
+    }
 
-    t_b8 IsMouseButtonDown(const s_input_state& is, const e_mouse_button_code mbc);
-    t_b8 IsMouseButtonPressed(const s_input_state& is, const e_mouse_button_code mbc);
-    t_b8 IsMouseButtonReleased(const s_input_state& is, const e_mouse_button_code mbc);
+    inline t_b8 IsKeyPressed(const s_input_state* const is, const e_key_code kc)
+    {
+        return IsBitSet(is->events.keys_pressed, kc);
+    }
 
-    s_v2<t_f32> CursorPos(const s_input_state& is);
+    inline t_b8 IsKeyReleased(const s_input_state* const is, const e_key_code kc)
+    {
+        return IsBitSet(is->events.keys_released, kc);
+    }
 
-    // +Y: Scroll up / away from you
-    // -Y: Scroll down / towards you
-    // +X: Scroll right
-    // +X: Scroll left
-    s_v2<t_f32> GetScroll(const s_input_state& is);
+    inline t_b8 IsMouseButtonDown(const s_input_state* const is, const e_mouse_button_code mbc)
+    {
+        return IsBitSet(is->mouse_buttons_down, mbc);
+    }
+
+    inline t_b8 IsMouseButtonPressed(const s_input_state* const is, const e_mouse_button_code mbc)
+    {
+        return IsBitSet(is->events.mouse_buttons_pressed, mbc);
+    }
+
+    inline t_b8 IsMouseButtonReleased(const s_input_state* const is, const e_mouse_button_code mbc)
+    {
+        return IsBitSet(is->events.mouse_buttons_released, mbc);
+    }
+
+    enum class p_e_key_action
+    {
+        invalid,
+        press,
+        release
+    };
+
+    enum class p_e_mouse_button_action
+    {
+        invalid,
+        press,
+        release
+    };
+
+    void P_ProcKeyAction(s_input_state* const is, const e_key_code code, const p_e_key_action act);
+    void P_ProcMouseButtonAction(
+        s_input_state* const is, const e_mouse_button_code code, const p_e_mouse_button_action act);
+    void P_ProcCursorMove(s_input_state* const is, const s_v2<t_f32> pos);
+    void P_ProcScroll(s_input_state* const is, const s_v2<t_f32> scroll);
 }
