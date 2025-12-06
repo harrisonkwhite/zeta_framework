@@ -2,35 +2,44 @@
 
 #include <zcl.h>
 
-namespace zf {
-    struct s_platform_layer;
+namespace zf
+{
+    struct s_platform_layer_info;
 
     t_f64 Time();
 
-    void SetWindowTitle(const s_platform_layer& pl, const s_str_rdonly title);
+    void SetWindowTitle(const s_platform_layer_info* const pli, const s_str_rdonly title);
 
-    // Sets the LOGICAL window size. The actual new framebuffer size MIGHT be larger if there is DPI scaling.
-    void SetWindowSize(const s_platform_layer& pl, const s_v2<t_s32> size);
+    // Sets the LOGICAL window size. The actual new framebuffer size MIGHT be larger if there is DPI
+    // scaling.
+    void SetWindowSize(const s_platform_layer_info* const pli, const s_v2<t_s32> size);
 
-    // Set the LOGICAL window size limits. If you don't want to limit a particular dimension, leave -1.
-    void SetWindowSizeLimits(const s_platform_layer& pl, const t_s32 min_width, const t_s32 min_height, const t_s32 max_width, const t_s32 max_height);
+    // Set the LOGICAL window size limits. If you don't want to limit a particular dimension, leave
+    // -1.
+    void SetWindowSizeLimits(const s_platform_layer_info* const pli,
+        const t_s32 min_width,
+        const t_s32 min_height,
+        const t_s32 max_width,
+        const t_s32 max_height);
 
-    void SetWindowResizability(const s_platform_layer& pl, const t_b8 resizable);
+    void SetWindowResizability(const s_platform_layer_info* const pli, const t_b8 resizable);
 
-    s_v2<t_s32> WindowFramebufferSizeCache(const s_platform_layer& pl);
+    s_v2<t_s32> WindowFramebufferSizeCache(const s_platform_layer_info* const pli);
 
     // Returns the size in pixels of whichever monitor the window most resides in.
-    s_v2<t_s32> CalcMonitorPixelSize(const s_platform_layer& pl);
+    s_v2<t_s32> CalcMonitorPixelSize(const s_platform_layer_info* const pli);
 
-    // Returns the size (accounting for DPI scaling) of whichever monitor the window most resides in.
-    s_v2<t_s32> CalcMonitorLogicalSize(const s_platform_layer& pl);
+    // Returns the size (accounting for DPI scaling) of whichever monitor the window most resides
+    // in.
+    s_v2<t_s32> CalcMonitorLogicalSize(const s_platform_layer_info* const pli);
 
-    t_b8 IsFullscreen(const s_platform_layer& pl);
-    void SetFullscreen(s_platform_layer& pl, const t_b8 fs);
+    t_b8 IsFullscreen(const s_platform_layer_info* const pli);
+    void SetFullscreen(s_platform_layer_info* const pli, const t_b8 fs);
 
-    inline void ToggleFullscreen(s_platform_layer& pl) {
-        SetFullscreen(pl, !IsFullscreen(pl));
+    inline void ToggleFullscreen(s_platform_layer_info* const pli)
+    {
+        SetFullscreen(pli, !IsFullscreen(pli));
     }
 
-    void SetCursorVisibility(const s_platform_layer& pl, const t_b8 visible);
+    void SetCursorVisibility(const s_platform_layer_info* const pli, const t_b8 visible);
 }

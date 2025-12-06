@@ -49,9 +49,9 @@ namespace zf
             //
             // Platform Layer Setup
             //
-            s_platform_layer* platform_layer;
+            const auto platform_layer_info = InitPlatformLayer(&mem_arena, &input_state);
 
-            if (!InitPlatformLayer(mem_arena, input_state, platform_layer))
+            if (!platform_layer_info)
             {
                 ZF_REPORT_ERROR();
                 return false;
@@ -106,7 +106,7 @@ namespace zf
                 const s_game_init_context context = {.dev_mem = dev_mem,
                     .mem_arena = &mem_arena,
                     .temp_mem_arena = &temp_mem_arena,
-                    .platform_layer = platform_layer,
+                    .platform_layer_info = platform_layer_info,
                     .audio_sys = audio_sys};
 
                 if (!info.init_func(context))
@@ -126,12 +126,12 @@ namespace zf
             //
             // Main Loop
             //
-            ShowWindow(*platform_layer);
+            ShowWindow(platform_layer_info);
 
             t_f64 frame_time_last = Time();
             t_f64 frame_dur_accum = 0.0;
 
-            while (!ShouldWindowClose(*platform_layer))
+            while (!ShouldWindowClose(platform_layer_info))
             {
                 RewindMemArena(temp_mem_arena, 0);
 
@@ -157,7 +157,7 @@ namespace zf
                             .mem_arena = &mem_arena,
                             .temp_mem_arena = &temp_mem_arena,
                             .input_state = &input_state,
-                            .platform_layer = platform_layer,
+                            .platform_layer_info = platform_layer_info,
                             .audio_sys = audio_sys};
 
                         if (!info.tick_func(context))
@@ -174,8 +174,9 @@ namespace zf
                     // Perform a single render.
                     s_rendering_context rendering_context;
 
-                    if (!BeginFrame(*rendering_basis, WindowFramebufferSizeCache(*platform_layer),
-                            mem_arena, rendering_context))
+                    if (!BeginFrame(*rendering_basis,
+                            WindowFramebufferSizeCache(platform_layer_info), mem_arena,
+                            rendering_context))
                     {
                         ZF_REPORT_ERROR();
                         return false;
@@ -196,7 +197,7 @@ namespace zf
 
                     CompleteFrame(rendering_context);
 
-                    SwapWindowBuffers(*platform_layer);
+                    SwapWindowBuffers(platform_layer_info);
                 }
             }
 

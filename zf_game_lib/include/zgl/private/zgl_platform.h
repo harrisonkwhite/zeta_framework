@@ -2,17 +2,19 @@
 
 #include <zcl.h>
 
-namespace zf {
+namespace zf
+{
     struct s_input_state;
-    struct s_platform_layer;
+    struct s_platform_layer_info;
 
-    [[nodiscard]] t_b8 InitPlatformLayer(s_mem_arena& mem_arena, s_input_state& input_state, s_platform_layer*& o_pl);
+    [[nodiscard]] s_platform_layer_info* InitPlatformLayer(
+        s_mem_arena* const mem_arena, s_input_state* const input_state);
 
-    void ShutdownPlatformLayer(const s_platform_layer& pl);
+    void ShutdownPlatformLayer(const s_platform_layer_info* const pli);
 
     void PollOSEvents();
 
-    void ShowWindow(const s_platform_layer& pl);
-    t_b8 ShouldWindowClose(const s_platform_layer& pl);
-    void SwapWindowBuffers(const s_platform_layer& pl);
+    void ShowWindow(const s_platform_layer_info* const pli);
+    t_b8 ShouldWindowClose(const s_platform_layer_info* const pli);
+    void SwapWindowBuffers(const s_platform_layer_info* const pli);
 }
