@@ -36,7 +36,7 @@ namespace zf
 
     s_v2<t_f32> GetScroll(const s_input_state& is) { return is.events.scroll; }
 
-    void ClearInputEvents(s_input_state& is) { ZeroOut(is.events); }
+    void ClearInputEvents(s_input_state& is) { ZeroOut(&is.events); }
 
     void ProcKeyAction(s_input_state& is, const e_key_code code, const e_key_action act)
     {

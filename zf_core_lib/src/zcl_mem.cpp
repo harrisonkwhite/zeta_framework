@@ -10,7 +10,7 @@ namespace zf {
     t_b8 AllocMemArena(const t_size size, s_mem_arena& o_ma) {
         ZF_ASSERT(size > 0);
 
-        ZeroOut(o_ma);
+        ZeroOut(&o_ma);
 
         const auto buf = calloc(static_cast<size_t>(size), 1);
 

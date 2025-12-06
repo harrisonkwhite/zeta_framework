@@ -513,7 +513,7 @@ namespace zf
     {
         ZF_ASSERT(cap >= 0);
 
-        ZeroOut(*bb);
+        ZeroOut(bb);
 
         if (cap == 0)
         {
@@ -717,7 +717,7 @@ namespace zf
         const t_size backing_block_cap = g_hash_map_backing_block_cap_default,
         const t_bin_comparator<tp_key_type> key_comparator = DefaultBinComparator)
     {
-        ZeroOut(*hm);
+        ZeroOut(hm);
 
         hm->hash_func = hash_func;
         hm->key_comparator = key_comparator;
@@ -844,7 +844,7 @@ namespace zf
         const t_bin_comparator<tp_key_type> key_comparator,
         s_hash_map<tp_key_type, tp_val_type>& o_hm)
     {
-        ZeroOut(o_hm);
+        ZeroOut(&o_hm);
 
         if (!StreamReadItem(stream, o_hm.kv_pair_cnt) &&
             !DeserializeArray(stream, mem_arena, o_hm.immediate_indexes) &&
@@ -875,7 +875,7 @@ namespace zf
 
             *bb_ptr_to_update = bb;
 
-            ZeroOut(*bb);
+            ZeroOut(bb);
 
             if (!DeserializeArray(stream, mem_arena, bb->keys) &&
                 !DeserializeArray(stream, mem_arena, bb->vals) &&

@@ -147,6 +147,8 @@ namespace zf
             return nullptr;
         }
 
+        ZeroOut(info);
+
         info->input_state = input_state;
 
         if (!glfwInit())

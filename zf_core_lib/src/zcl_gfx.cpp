@@ -139,7 +139,7 @@ namespace zf {
         // Check for unsupported code points.
         if (o_unsupported_code_pts) {
             t_b8 any_unsupported = false;
-            ZeroOut(*o_unsupported_code_pts);
+            ZeroOut(o_unsupported_code_pts);
 
             ZF_FOR_EACH_SET_BIT(code_pts, i) {
                 const auto code_pt = static_cast<t_unicode_code_pt>(i);
