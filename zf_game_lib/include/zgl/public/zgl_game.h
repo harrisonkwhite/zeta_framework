@@ -48,14 +48,16 @@ namespace zf {
         const s_rendering_context* rendering_context;
     };
 
+    // @todo: Shouldn't need this. Embed into RunGame() args.
     struct s_game_info {
+        // @todo: Move out.
         t_size mem_arena_size;
         t_size temp_mem_arena_size;
 
         t_size dev_mem_size;
         t_size dev_mem_alignment;
 
-        t_s32 targ_ticks_per_sec;
+        t_s32 targ_ticks_per_sec; // @todo: Move out and default this to 60 fps. Allow runtime adjustment to anything in the range [1, 60].
 
         // Below are pointers to functions that the framework will call for you. The provided struct pointers expose parts of the framework state for you to work with.
         t_b8 (* init_func)(const s_game_init_context& zf_context); // Called once as one of the last steps of the game initialisation phase.
@@ -64,6 +66,7 @@ namespace zf {
         void (* clean_func)(void* const dev_mem); // Optional. Called when the game ends (including if it ends in error). This is not called if your initialisation function failed or hasn't yet been called.
     };
 
+    // @todo: Shouldn't need this.
     inline void AssertGameInfoValidity(const s_game_info& info) {
         ZF_ASSERT(info.mem_arena_size > 0);
         ZF_ASSERT(info.temp_mem_arena_size > 0 && info.temp_mem_arena_size <= info.mem_arena_size);

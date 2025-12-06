@@ -177,7 +177,7 @@ namespace zf {
     }
 
     template<typename tp_type>
-    t_b8 MakeArray(s_mem_arena& mem_arena, const t_size len, s_array<tp_type>& o_arr) {
+    t_b8 InitArray(s_mem_arena& mem_arena, const t_size len, s_array<tp_type>& o_arr) {
         ZF_ASSERT(len > 0);
 
         o_arr = {
@@ -192,7 +192,7 @@ namespace zf {
     t_b8 MakeArrayClone(s_mem_arena& mem_arena, const tp_arr_type arr_to_clone, s_array<typename tp_arr_type::t_elem>& o_arr) {
         ZF_ASSERT(!IsArrayEmpty(arr_to_clone));
 
-        if (!MakeArray(mem_arena, arr_to_clone.len, o_arr)) {
+        if (!InitArray(mem_arena, arr_to_clone.len, o_arr)) {
             return false;
         }
 
@@ -441,7 +441,7 @@ namespace zf {
         o_bv = {};
         o_bv.bit_cnt = bit_cnt;
 
-        return MakeArray(mem_arena, BitsToBytes(o_bv.bit_cnt), o_bv.bytes);
+        return InitArray(mem_arena, BitsToBytes(o_bv.bit_cnt), o_bv.bytes);
     }
 
     constexpr t_b8 IsBitSet(const s_bit_vec_rdonly& bv, const t_size index) {

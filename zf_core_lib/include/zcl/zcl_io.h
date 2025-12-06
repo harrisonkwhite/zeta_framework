@@ -227,7 +227,7 @@ namespace zf {
         }
 
         if (o_arr.len > 0) {
-            if (!MakeArray(mem_arena, o_arr.len, o_arr)) {
+            if (!InitArray(mem_arena, o_arr.len, o_arr)) {
                 return false;
             }
 
@@ -259,7 +259,7 @@ namespace zf {
         }
 
         if (o_bv.bit_cnt > 0) {
-            if (!MakeArray(mem_arena, BitsToBytes(o_bv.bit_cnt), o_bv.bytes)) {
+            if (!InitArray(mem_arena, BitsToBytes(o_bv.bit_cnt), o_bv.bytes)) {
                 return false;
             }
 

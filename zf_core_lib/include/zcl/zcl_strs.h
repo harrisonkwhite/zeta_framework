@@ -116,7 +116,7 @@ namespace zf {
     [[nodiscard]] inline t_b8 CloneStrButAddTerminator(const s_str_rdonly src, s_mem_arena& mem_arena, s_str& o_clone) {
         o_clone = {};
 
-        if (!MakeArray(mem_arena, src.bytes.len + 1, o_clone.bytes)) {
+        if (!InitArray(mem_arena, src.bytes.len + 1, o_clone.bytes)) {
             return false;
         }
 

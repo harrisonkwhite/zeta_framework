@@ -71,7 +71,7 @@ namespace zf {
 
         const t_size file_size = CalcFileSize(fs);
 
-        if (!MakeArray(mem_arena, file_size, o_contents)) {
+        if (!InitArray(mem_arena, file_size, o_contents)) {
             return false;
         }
 

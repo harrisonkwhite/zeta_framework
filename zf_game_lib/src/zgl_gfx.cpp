@@ -91,7 +91,7 @@ namespace zf {
                 if (log_chr_cnt >= 1) {
                     s_array<char> log_chrs;
 
-                    if (MakeArray(temp_mem_arena, log_chr_cnt, log_chrs)) {
+                    if (InitArray(temp_mem_arena, log_chr_cnt, log_chrs)) {
                         glGetShaderInfoLog(shader_gl_id, static_cast<GLsizei>(log_chrs.len), nullptr, log_chrs.buf_raw);
                         LogErrorType("OpenGL Shader Compilation", "%", StrFromRaw(log_chrs.buf_raw));
                     } else {
@@ -614,7 +614,7 @@ void main() {
         {
             s_array<t_u16> elems;
 
-            if (!MakeArray(temp_mem_arena, g_batch_slot_elem_cnt * g_batch_slot_cnt, elems)) {
+            if (!InitArray(temp_mem_arena, g_batch_slot_elem_cnt * g_batch_slot_cnt, elems)) {
                 ZF_REPORT_ERROR();
                 clean_up = true;
                 return false;

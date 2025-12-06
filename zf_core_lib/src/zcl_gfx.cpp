@@ -24,7 +24,7 @@ namespace zf {
 
         const s_array_rdonly<t_u8> stb_px_data_arr = {stb_px_data, 4 * o_tex_data.size_in_pxs.x * o_tex_data.size_in_pxs.y};
 
-        if (!MakeArray(mem_arena, 4 * o_tex_data.size_in_pxs.x * o_tex_data.size_in_pxs.y, o_tex_data.px_data)) {
+        if (!InitArray(mem_arena, 4 * o_tex_data.size_in_pxs.x * o_tex_data.size_in_pxs.y, o_tex_data.px_data)) {
             return false;
         }
 
@@ -78,7 +78,7 @@ namespace zf {
             return false;
         }
 
-        if (!MakeArray(mem_arena, 4 * o_tex_data.size_in_pxs.x * o_tex_data.size_in_pxs.y, o_tex_data.px_data)) {
+        if (!InitArray(mem_arena, 4 * o_tex_data.size_in_pxs.x * o_tex_data.size_in_pxs.y, o_tex_data.px_data)) {
             return false;
         }
 
@@ -178,7 +178,7 @@ namespace zf {
         //
         // Glyph Info
         //
-        if (!MakeHashMap(arrangement_mem_arena, g_code_pt_hash_func, o_arrangement.code_pts_to_glyph_infos, DefaultBinComparator, code_pt_cnt, code_pt_cnt)) {
+        if (!InitHashMap(&o_arrangement.code_pts_to_glyph_infos, g_code_pt_hash_func, arrangement_mem_arena, code_pt_cnt)) {
             return ek_font_load_from_raw_result_other_err;
         }
 
@@ -236,51 +236,26 @@ namespace zf {
         // Kernings
         //
 
-        // Compute kerning count first so we know how much memory to allocate for the hash map.
-        const t_size kern_cnt = [&code_pts, &stb_font_info]() {
-            t_size res = 0;
-
-            ZF_FOR_EACH_SET_BIT(code_pts, i) {
-                ZF_FOR_EACH_SET_BIT(code_pts, j) {
-                    const auto cp_a = static_cast<t_unicode_code_pt>(i);
-                    const auto cp_b = static_cast<t_unicode_code_pt>(j);
-
-                    const auto glyph_a_index = stbtt_FindGlyphIndex(&stb_font_info, static_cast<t_s32>(cp_a));
-                    const auto glyph_b_index = stbtt_FindGlyphIndex(&stb_font_info, static_cast<t_s32>(cp_b));
-
-                    const t_s32 kern = stbtt_GetGlyphKernAdvance(&stb_font_info, glyph_a_index, glyph_b_index);
-
-                    if (kern != 0) {
-                        res++;
-                    }
-                }
-            }
-
-            return res;
-        }();
-
         // If there were any kernings to store, set up the hash map and go through again and store them.
-        if (kern_cnt > 0) {
-            o_arrangement.has_kernings = true;
+        o_arrangement.has_kernings = true;
 
-            if (!MakeHashMap<s_font_code_point_pair, t_s32>(arrangement_mem_arena, g_code_pt_pair_hash_func, o_arrangement.code_pt_pairs_to_kernings, g_code_pt_pair_comparator, kern_cnt, kern_cnt)) {
-                return ek_font_load_from_raw_result_other_err;
-            }
+        if (!InitHashMap(&o_arrangement.code_pt_pairs_to_kernings, g_code_pt_pair_hash_func, arrangement_mem_arena, g_hash_map_immediate_cap_default, g_hash_map_backing_block_cap_default, g_code_pt_pair_comparator)) {
+            return ek_font_load_from_raw_result_other_err;
+        }
 
-            ZF_FOR_EACH_SET_BIT(code_pts, i) {
-                ZF_FOR_EACH_SET_BIT(code_pts, j) {
-                    const auto cp_a = static_cast<t_unicode_code_pt>(i);
-                    const auto cp_b = static_cast<t_unicode_code_pt>(j);
+        ZF_FOR_EACH_SET_BIT(code_pts, i) {
+            ZF_FOR_EACH_SET_BIT(code_pts, j) {
+                const auto cp_a = static_cast<t_unicode_code_pt>(i);
+                const auto cp_b = static_cast<t_unicode_code_pt>(j);
 
-                    const auto glyph_a_index = stbtt_FindGlyphIndex(&stb_font_info, static_cast<t_s32>(cp_a));
-                    const auto glyph_b_index = stbtt_FindGlyphIndex(&stb_font_info, static_cast<t_s32>(cp_b));
+                const auto glyph_a_index = stbtt_FindGlyphIndex(&stb_font_info, static_cast<t_s32>(cp_a));
+                const auto glyph_b_index = stbtt_FindGlyphIndex(&stb_font_info, static_cast<t_s32>(cp_b));
 
-                    const t_s32 kern = stbtt_GetGlyphKernAdvance(&stb_font_info, glyph_a_index, glyph_b_index);
+                const t_s32 kern = stbtt_GetGlyphKernAdvance(&stb_font_info, glyph_a_index, glyph_b_index);
 
-                    if (kern != 0) {
-                        if (HashMapPut(o_arrangement.code_pt_pairs_to_kernings, {cp_a, cp_b}, kern) == ek_hash_map_put_result_error) {
-                            return ek_font_load_from_raw_result_other_err;
-                        }
+                if (kern != 0) {
+                    if (HashMapPut(o_arrangement.code_pt_pairs_to_kernings, {cp_a, cp_b}, kern) == ek_hash_map_put_result_error) {
+                        return ek_font_load_from_raw_result_other_err;
                     }
                 }
             }
@@ -289,7 +264,7 @@ namespace zf {
         //
         // Texture Atlases
         //
-        if (!MakeArray(atlas_rgbas_mem_arena, atlas_cnt, o_atlas_rgbas)) {
+        if (!InitArray(atlas_rgbas_mem_arena, atlas_cnt, o_atlas_rgbas)) {
             return ek_font_load_from_raw_result_other_err;
         }
 
@@ -443,7 +418,7 @@ namespace zf {
         }();
 
         // Reserve memory for the character positions.
-        if (!MakeArray(mem_arena, str_meta.len, o_positions)) {
+        if (!InitArray(mem_arena, str_meta.len, o_positions)) {
             return false;
         }
 

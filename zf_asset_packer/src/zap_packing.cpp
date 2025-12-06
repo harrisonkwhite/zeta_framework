@@ -260,7 +260,7 @@ namespace zf {
 
                             s_array<t_unicode_code_pt_bit_vec> code_pt_bvs; // First is for input code points, second is for output unsupported ones.
 
-                            if (!MakeArray(mem_arena, 2, code_pt_bvs)) {
+                            if (!InitArray(mem_arena, 2, code_pt_bvs)) {
                                 ZF_REPORT_ERROR();
                                 return false;
                             }

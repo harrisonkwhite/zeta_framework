@@ -1,0 +1,12 @@
+BasedOnStyle: Google
+IndentWidth: 4
+NamespaceIndentation: All
+FixNamespaceComments: false
+ColumnLimit: 100
+BreakBeforeBraces: Allman
+SeparateDefinitionBlocks: Always
+SpacesBeforeTrailingComments: 1
+ContinuationIndentWidth: 4
+AlignAfterOpenBracket: DontAlign
+BinPackParameters: false
+IndentWrappedFunctionNames: true
