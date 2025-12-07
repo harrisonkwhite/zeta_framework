@@ -42,42 +42,36 @@ namespace zf
         void* buf;
         t_size size;
         t_size offs;
-
-        s_mem_arena() = default;
-        s_mem_arena(const s_mem_arena&) = delete;
-        s_mem_arena& operator=(const s_mem_arena&) = delete;
     };
 
-    [[nodiscard]] t_b8 AllocMemArena(const t_size size, s_mem_arena& o_ma);
-    void FreeMemArena(s_mem_arena& ma);
-    void* PushToMemArena(s_mem_arena& ma, const t_size size, const t_size alignment);
+    [[nodiscard]] t_b8 InitMemArena(s_mem_arena* const ma, const t_size size);
+    void ReleaseMemArena(s_mem_arena* const ma);
+    void* PushToMemArena(s_mem_arena* const ma, const t_size size, const t_size alignment);
 
     template <typename tp_type>
-    tp_type* PushToMemArena(s_mem_arena& ma, const t_size cnt = 1)
+    tp_type* PushToMemArena(s_mem_arena* const ma, const t_size cnt = 1)
     {
-        static_assert(std::is_trivial_v<tp_type>);
+        static_assert(std::is_trivial_v<tp_type>); // @todo: Create wrapper or just remove.
         ZF_ASSERT(cnt >= 1);
 
         const auto buf = PushToMemArena(ma, ZF_SIZE_OF(tp_type) * cnt, alignof(tp_type));
         return static_cast<tp_type*>(buf);
     }
 
-    inline void RewindMemArena(s_mem_arena& ma, const t_size offs)
+    inline void RewindMemArena(s_mem_arena* const ma, const t_size offs)
     {
-        ZF_ASSERT(offs >= 0 && offs <= ma.offs);
-        memset(static_cast<t_u8*>(ma.buf) + offs, 0, static_cast<size_t>(ma.offs - offs));
-        ma.offs = offs;
+        ZF_ASSERT(offs >= 0 && offs <= ma->offs);
+        memset(static_cast<t_u8*>(ma->buf) + offs, 0, static_cast<size_t>(ma->offs - offs));
+        ma->offs = offs;
     }
 
-    [[nodiscard]] inline t_b8 MakeSubMemArena(
-        s_mem_arena& parent_ma, const t_size size, s_mem_arena& o_ma)
+    [[nodiscard]] inline t_b8 InitChildMemArena(
+        s_mem_arena* const ma, const t_size size, s_mem_arena* const parent_ma)
     {
-        ZeroOut(&o_ma);
-
-        o_ma.buf = PushToMemArena(parent_ma, size, 1);
-        o_ma.size = size;
-
-        return o_ma.buf != nullptr;
+        ZeroOut(ma);
+        ma->buf = PushToMemArena(parent_ma, size, 1);
+        ma->size = size;
+        return ma->buf != nullptr;
     }
 
     // ============================================================
@@ -210,17 +204,19 @@ namespace zf
     }
 
     template <typename tp_type>
-    t_b8 InitArray(s_mem_arena& mem_arena, const t_size len, s_array<tp_type>& o_arr)
+    [[nodiscard]] t_b8 InitArray(
+        s_array<tp_type>* const arr, const t_size len, s_mem_arena* const mem_arena)
     {
         ZF_ASSERT(len > 0);
 
-        o_arr = {.buf_raw = PushToMemArena<tp_type>(mem_arena, len), .len = len};
-
-        return o_arr.buf_raw != nullptr;
+        ZeroOut(arr);
+        arr->buf_raw = PushToMemArena<tp_type>(mem_arena, len);
+        arr->len = len;
+        return arr->buf_raw != nullptr;
     }
 
     template <c_nonstatic_array tp_arr_type>
-    t_b8 MakeArrayClone(s_mem_arena& mem_arena,
+    [[nodiscard]] t_b8 MakeArrayClone(s_mem_arena& mem_arena,
         const tp_arr_type arr_to_clone,
         s_array<typename tp_arr_type::t_elem>& o_arr)
     {
@@ -537,15 +533,14 @@ namespace zf
         return BitmaskRange(0, BitVecLastByteBitCnt(bv));
     }
 
-    [[nodiscard]] inline t_b8 MakeBitVec(
-        s_mem_arena& mem_arena, const t_size bit_cnt, s_bit_vec& o_bv)
+    [[nodiscard]] inline t_b8 InitBitVec(
+        s_bit_vec* const bv, const t_size bit_cnt, s_mem_arena* const mem_arena)
     {
         ZF_ASSERT(bit_cnt > 0);
 
-        o_bv = {};
-        o_bv.bit_cnt = bit_cnt;
-
-        return InitArray(mem_arena, BitsToBytes(o_bv.bit_cnt), o_bv.bytes);
+        ZeroOut(bv);
+        bv->bit_cnt = bit_cnt;
+        return InitArray(&bv->bytes, BitsToBytes(bv->bit_cnt), mem_arena);
     }
 
     constexpr t_b8 IsBitSet(const s_bit_vec_rdonly& bv, const t_size index)

@@ -35,7 +35,7 @@ namespace zf
 
     t_b8 P_InitAudioSys(s_mem_arena& mem_arena, s_audio_sys*& o_as)
     {
-        o_as = PushToMemArena<s_audio_sys>(mem_arena);
+        o_as = PushToMemArena<s_audio_sys>(&mem_arena);
 
         if (!o_as)
         {
@@ -78,7 +78,7 @@ namespace zf
             return false;
         }
 
-        o_type = PushToMemArena<s_sound_type>(*type_arena.mem_arena);
+        o_type = PushToMemArena<s_sound_type>(type_arena.mem_arena);
 
         if (!o_type)
         {

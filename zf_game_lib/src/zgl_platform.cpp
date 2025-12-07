@@ -136,7 +136,7 @@ namespace zf
 
         t_b8 clean_up = false;
 
-        const auto info = PushToMemArena<s_platform_layer_info>(*mem_arena);
+        const auto info = PushToMemArena<s_platform_layer_info>(mem_arena);
 
         if (!info)
         {
@@ -222,7 +222,8 @@ namespace zf
 
                 const auto pl =
                     static_cast<s_platform_layer_info*>(glfwGetWindowUserPointer(glfw_window));
-                P_ProcKeyAction(pl->input_state, ConvertGLFWKeyCode(key), ConvertGLFWKeyAction(act));
+                P_ProcKeyAction(
+                    pl->input_state, ConvertGLFWKeyCode(key), ConvertGLFWKeyAction(act));
             });
 
         glfwSetMouseButtonCallback(info->glfw_window,

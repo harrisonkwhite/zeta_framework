@@ -8,7 +8,17 @@ namespace zf
 {
     t_b8 RunGame(const s_game_info& info)
     {
-        AssertGameInfoValidity(info);
+        ZF_ASSERT(info.mem_arena_size > 0);
+        ZF_ASSERT(info.temp_mem_arena_size > 0 && info.temp_mem_arena_size <= info.mem_arena_size);
+
+        ZF_ASSERT((info.dev_mem_size == 0 && info.dev_mem_alignment == 0) ||
+                  (info.dev_mem_size > 0 && IsAlignmentValid(info.dev_mem_alignment)));
+
+        ZF_ASSERT(info.targ_ticks_per_sec > 0);
+
+        ZF_ASSERT(info.init_func);
+        ZF_ASSERT(info.tick_func);
+        ZF_ASSERT(info.render_func);
 
 #ifndef ZF_DEBUG
         // Redirect stderr to crash log file.
@@ -22,17 +32,17 @@ namespace zf
             //
             s_mem_arena mem_arena;
 
-            if (!AllocMemArena(info.mem_arena_size, mem_arena))
+            if (!InitMemArena(&mem_arena, info.mem_arena_size))
             {
                 ZF_REPORT_ERROR();
                 return false;
             }
 
-            ZF_DEFER({ FreeMemArena(mem_arena); });
+            ZF_DEFER({ ReleaseMemArena(&mem_arena); });
 
             s_mem_arena temp_mem_arena;
 
-            if (!MakeSubMemArena(mem_arena, info.temp_mem_arena_size, temp_mem_arena))
+            if (!InitChildMemArena(&temp_mem_arena, info.temp_mem_arena_size, &mem_arena))
             {
                 ZF_REPORT_ERROR();
                 return false;
@@ -50,13 +60,13 @@ namespace zf
 
             s_rendering_basis* rendering_basis;
 
-            if (!InitGFX(mem_arena, temp_mem_arena, rendering_basis))
+            if (!InitGFX(&rendering_basis, &mem_arena, &temp_mem_arena))
             {
                 ZF_REPORT_ERROR();
                 return false;
             }
 
-            ZF_DEFER({ ShutdownGFX(*rendering_basis); });
+            ZF_DEFER({ ShutdownGFX(rendering_basis); });
 
             s_audio_sys* audio_sys;
 
@@ -73,7 +83,7 @@ namespace zf
 
             if (info.dev_mem_size > 0)
             {
-                dev_mem = PushToMemArena(mem_arena, info.dev_mem_size, info.dev_mem_alignment);
+                dev_mem = PushToMemArena(&mem_arena, info.dev_mem_size, info.dev_mem_alignment);
 
                 if (!dev_mem)
                 {
@@ -114,7 +124,7 @@ namespace zf
 
             while (!P_ShouldWindowClose(platform_layer_info))
             {
-                RewindMemArena(temp_mem_arena, 0);
+                RewindMemArena(&temp_mem_arena, 0);
 
                 P_PollOSEvents();
 
@@ -155,9 +165,8 @@ namespace zf
                     // Perform a single render.
                     s_rendering_context rendering_context;
 
-                    if (!BeginFrame(*rendering_basis,
-                            WindowFramebufferSizeCache(platform_layer_info), mem_arena,
-                            rendering_context))
+                    if (!BeginFrame(&rendering_context, rendering_basis,
+                            WindowFramebufferSizeCache(platform_layer_info), &mem_arena))
                     {
                         ZF_REPORT_ERROR();
                         return false;
@@ -167,7 +176,7 @@ namespace zf
                         const s_game_render_context context = {.dev_mem = dev_mem,
                             .mem_arena = &mem_arena,
                             .temp_mem_arena = &temp_mem_arena,
-                            .rendering_context = &rendering_context};
+                            .rendering_context = rendering_context};
 
                         if (!info.render_func(context))
                         {

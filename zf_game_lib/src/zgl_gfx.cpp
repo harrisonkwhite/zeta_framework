@@ -111,7 +111,7 @@ namespace zf
                 {
                     s_array<char> log_chrs;
 
-                    if (InitArray(temp_mem_arena, log_chr_cnt, log_chrs))
+                    if (InitArray(&log_chrs, log_chr_cnt, &temp_mem_arena))
                     {
                         glGetShaderInfoLog(shader_gl_id, static_cast<GLsizei>(log_chrs.len),
                             nullptr, log_chrs.buf_raw);
@@ -304,7 +304,7 @@ namespace zf
 
     static s_gfx_resource* PushGFXResource(s_gfx_resource_arena& res_arena)
     {
-        const auto res = PushToMemArena<s_gfx_resource>(*res_arena.mem_arena);
+        const auto res = PushToMemArena<s_gfx_resource>(res_arena.mem_arena);
 
         if (!res)
         {
@@ -692,19 +692,22 @@ void main() {
         s_static_stack<const s_gfx_resource*, 32> surfs;
     };
 
-    t_b8 InitGFX(
-        s_mem_arena& mem_arena, s_mem_arena& temp_mem_arena, s_rendering_basis*& o_rendering_basis)
+    t_b8 InitGFX(s_rendering_basis** const rendering_basis,
+        s_mem_arena* const mem_arena,
+        s_mem_arena* const temp_mem_arena)
     {
         t_b8 clean_up = false;
 
-        o_rendering_basis = PushToMemArena<s_rendering_basis>(mem_arena);
+        *rendering_basis = PushToMemArena<s_rendering_basis>(mem_arena);
 
-        if (!o_rendering_basis)
+        if (!*rendering_basis)
         {
             ZF_REPORT_ERROR();
             clean_up = true;
             return false;
         }
+
+        const auto rb = *rendering_basis;
 
         // Enable blending.
         glEnable(GL_BLEND);
@@ -714,7 +717,7 @@ void main() {
         {
             s_array<t_u16> elems;
 
-            if (!InitArray(temp_mem_arena, g_batch_slot_elem_cnt * g_batch_slot_cnt, elems))
+            if (!InitArray(&elems, g_batch_slot_elem_cnt * g_batch_slot_cnt, temp_mem_arena))
             {
                 ZF_REPORT_ERROR();
                 clean_up = true;
@@ -733,22 +736,21 @@ void main() {
 
             constexpr t_size verts_len =
                 g_batch_vert_component_cnt * g_batch_slot_vert_cnt * g_batch_slot_cnt;
-            o_rendering_basis->batch_mesh_gl_ids =
-                MakeGLMesh(nullptr, verts_len, elems, g_batch_vert_attr_lens);
+            rb->batch_mesh_gl_ids = MakeGLMesh(nullptr, verts_len, elems, g_batch_vert_attr_lens);
         }
 
         ZF_DEFER({
             if (clean_up)
             {
-                ReleaseGLMesh(o_rendering_basis->batch_mesh_gl_ids);
+                ReleaseGLMesh(rb->batch_mesh_gl_ids);
             }
         });
 
         // Create the batch shader program.
-        o_rendering_basis->batch_shader_prog_gl_id =
-            MakeGLShaderProg(g_batch_vert_shader_src, g_batch_frag_shader_src, temp_mem_arena);
+        rb->batch_shader_prog_gl_id =
+            MakeGLShaderProg(g_batch_vert_shader_src, g_batch_frag_shader_src, *temp_mem_arena);
 
-        if (!o_rendering_basis->batch_shader_prog_gl_id)
+        if (!rb->batch_shader_prog_gl_id)
         {
             ZF_REPORT_ERROR();
             clean_up = true;
@@ -758,7 +760,7 @@ void main() {
         ZF_DEFER({
             if (clean_up)
             {
-                glDeleteProgram(o_rendering_basis->batch_shader_prog_gl_id);
+                glDeleteProgram(rb->batch_shader_prog_gl_id);
             }
         });
 
@@ -766,29 +768,26 @@ void main() {
         {
             constexpr s_static_array<t_f32, 16> verts = {{0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f,
                 0.0f, 1.0f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f}};
-
             constexpr s_static_array<t_u16, 6> elems = {{0, 1, 2, 2, 3, 0}};
-
             constexpr s_static_array<t_s32, 2> vert_attr_lens = {{2, 2}};
 
-            o_rendering_basis->surf_mesh_gl_ids =
-                MakeGLMesh(verts.buf_raw, verts.g_len, elems, vert_attr_lens);
+            rb->surf_mesh_gl_ids = MakeGLMesh(verts.buf_raw, verts.g_len, elems, vert_attr_lens);
         }
 
         ZF_DEFER({
             if (clean_up)
             {
-                ReleaseGLMesh(o_rendering_basis->surf_mesh_gl_ids);
+                ReleaseGLMesh(rb->surf_mesh_gl_ids);
             }
         });
 
         // Set up resource arena.
-        o_rendering_basis->res_arena = MakeGFXResourceArena(mem_arena);
+        rb->res_arena = MakeGFXResourceArena(*mem_arena);
 
         ZF_DEFER({
             if (clean_up)
             {
-                ReleaseGFXResources(o_rendering_basis->res_arena);
+                ReleaseGFXResources(rb->res_arena);
             }
         });
 
@@ -796,8 +795,7 @@ void main() {
         {
             const s_static_array<t_u8, 4> rgba = {{255, 255, 255, 255}};
 
-            if (!LoadTexture(
-                    {{1, 1}, rgba}, o_rendering_basis->res_arena, o_rendering_basis->px_tex))
+            if (!LoadTexture({{1, 1}, rgba}, rb->res_arena, rb->px_tex))
             {
                 ZF_REPORT_ERROR();
                 clean_up = true;
@@ -807,8 +805,8 @@ void main() {
 
         // Set up default surface shader program.
         if (!MakeSurfaceShaderProg(g_default_surface_vert_shader_src,
-                g_default_surface_frag_shader_src, o_rendering_basis->res_arena, temp_mem_arena,
-                o_rendering_basis->default_surf_shader_prog))
+                g_default_surface_frag_shader_src, rb->res_arena, *temp_mem_arena,
+                rb->default_surf_shader_prog))
         {
             ZF_REPORT_ERROR();
             clean_up = true;
@@ -818,36 +816,38 @@ void main() {
         return true;
     }
 
-    void ShutdownGFX(const s_rendering_basis& rendering_basis)
+    void ShutdownGFX(const s_rendering_basis* const rendering_basis)
     {
-        ReleaseGFXResources(rendering_basis.res_arena);
-        ReleaseGLMesh(rendering_basis.surf_mesh_gl_ids);
-        glDeleteProgram(rendering_basis.batch_shader_prog_gl_id);
-        ReleaseGLMesh(rendering_basis.batch_mesh_gl_ids);
+        ReleaseGFXResources(rendering_basis->res_arena);
+        ReleaseGLMesh(rendering_basis->surf_mesh_gl_ids);
+        glDeleteProgram(rendering_basis->batch_shader_prog_gl_id);
+        ReleaseGLMesh(rendering_basis->batch_mesh_gl_ids);
     }
 
-    t_b8 BeginFrame(const s_rendering_basis& rendering_basis,
+    t_b8 BeginFrame(s_rendering_context* const rendering_context,
+        const s_rendering_basis* const rendering_basis,
         const s_v2<t_s32> framebuffer_size_cache,
-        s_mem_arena& mem_arena,
-        s_rendering_context& o_rendering_context)
+        s_mem_arena* const mem_arena)
     {
-        o_rendering_context = {.framebuffer_size_cache = framebuffer_size_cache,
-            .basis = &rendering_basis,
-            .state = PushToMemArena<s_rendering_state>(mem_arena)};
+        ZeroOut(rendering_context);
+        rendering_context->basis = rendering_basis;
+        rendering_context->framebuffer_size_cache = framebuffer_size_cache;
 
-        if (!o_rendering_context.state)
+        rendering_context->state = PushToMemArena<s_rendering_state>(mem_arena);
+
+        if (!rendering_context->state)
         {
             return false;
         }
 
-        o_rendering_context.state->view_mat = MakeIdentityMatrix4x4();
+        rendering_context->state->view_mat = MakeIdentityMatrix4x4();
         glViewport(0, 0, framebuffer_size_cache.x, framebuffer_size_cache.y);
-        Clear(o_rendering_context, s_color_rgba8(147, 207, 249, 255));
+        Clear(*rendering_context, s_color_rgba8(147, 207, 249, 255));
 
         return true;
     }
 
-    static void Flush(const s_rendering_context& rc)
+    static void Flush(const s_rendering_context rc)
     {
         if (rc.state->batch_slots_used_cnt == 0)
         {
@@ -896,9 +896,12 @@ void main() {
         rc.state->batch_slots_used_cnt = 0;
     }
 
-    void CompleteFrame(const s_rendering_context& rc) { Flush(rc); }
+    void CompleteFrame(const s_rendering_context rc)
+    {
+        Flush(rc);
+    }
 
-    void Clear(const s_rendering_context& rc, const s_color_rgba32f col)
+    void Clear(const s_rendering_context rc, const s_color_rgba32f col)
     {
         ZF_ASSERT(IsColorValid(col));
 
@@ -906,13 +909,13 @@ void main() {
         glClear(GL_COLOR_BUFFER_BIT);
     }
 
-    void SetViewMatrix(const s_rendering_context& rc, const s_matrix_4x4& mat)
+    void SetViewMatrix(const s_rendering_context rc, const s_matrix_4x4& mat)
     {
         Flush(rc);
         rc.state->view_mat = mat;
     }
 
-    void Draw(const s_rendering_context& rc,
+    void Draw(const s_rendering_context rc,
         const t_gl_id tex_gl_id,
         const s_rect<t_f32> tex_coords,
         s_v2<t_f32> pos,
@@ -963,7 +966,7 @@ void main() {
         rc.state->batch_slots_used_cnt++;
     }
 
-    void DrawTexture(const s_rendering_context& rc,
+    void DrawTexture(const s_rendering_context rc,
         const s_gfx_resource* const tex,
         const s_v2<t_f32> pos,
         const s_rect<t_s32> src_rect,
@@ -1001,12 +1004,12 @@ void main() {
     }
 
     void DrawRect(
-        const s_rendering_context& rc, const s_rect<t_f32> rect, const s_color_rgba32f color)
+        const s_rendering_context rc, const s_rect<t_f32> rect, const s_color_rgba32f color)
     {
         DrawTexture(rc, rc.basis->px_tex, RectPos(rect), {}, {}, RectSize(rect), 0.0f, color);
     }
 
-    void DrawRectOpaqueOutlined(const s_rendering_context& rc,
+    void DrawRectOpaqueOutlined(const s_rendering_context rc,
         const s_rect<t_f32> rect,
         const s_color_rgba24f fill_color,
         const s_color_rgba32f outline_color,
@@ -1021,7 +1024,7 @@ void main() {
         DrawRect(rc, rect, fill_color);
     }
 
-    void DrawRectRot(const s_rendering_context& rc,
+    void DrawRectRot(const s_rendering_context rc,
         const s_v2<t_f32> pos,
         const s_v2<t_f32> size,
         const s_v2<t_f32> origin,
@@ -1031,7 +1034,7 @@ void main() {
         DrawTexture(rc, rc.basis->px_tex, pos, {}, origin, size, rot, color);
     }
 
-    void DrawRectRotOpaqueOutlined(const s_rendering_context& rc,
+    void DrawRectRotOpaqueOutlined(const s_rendering_context rc,
         const s_v2<t_f32> pos,
         const s_v2<t_f32> size,
         const s_v2<t_f32> origin,
@@ -1048,7 +1051,7 @@ void main() {
         DrawRectRot(rc, pos, size, origin, rot, fill_color);
     }
 
-    void DrawLine(const s_rendering_context& rc,
+    void DrawLine(const s_rendering_context rc,
         const s_v2<t_f32> a,
         const s_v2<t_f32> b,
         const s_color_rgba32f blend,
@@ -1062,7 +1065,7 @@ void main() {
             rc, rc.basis->px_tex, a, {}, origins::g_centerleft, {len, thickness}, dir, blend);
     }
 
-    t_b8 DrawStr(const s_rendering_context& rc,
+    t_b8 DrawStr(const s_rendering_context rc,
         const s_str_rdonly str,
         const s_gfx_resource* const font,
         const s_v2<t_f32> pos,
@@ -1122,7 +1125,7 @@ void main() {
         return true;
     }
 
-    void SetSurface(const s_rendering_context& rc, const s_gfx_resource* const surf)
+    void SetSurface(const s_rendering_context rc, const s_gfx_resource* const surf)
     {
         ZF_ASSERT(surf && surf->type == ek_gfx_resource_type_surface);
 
@@ -1142,7 +1145,7 @@ void main() {
         StackPush(rc.state->surfs, surf);
     }
 
-    void UnsetSurface(const s_rendering_context& rc)
+    void UnsetSurface(const s_rendering_context rc)
     {
         if (IsStackEmpty(rc.state->surfs))
         {
@@ -1175,7 +1178,7 @@ void main() {
             0, 0, static_cast<GLsizei>(viewport_size.x), static_cast<GLsizei>(viewport_size.y));
     }
 
-    void SetSurfaceShaderProg(const s_rendering_context& rc, const s_gfx_resource* const prog)
+    void SetSurfaceShaderProg(const s_rendering_context rc, const s_gfx_resource* const prog)
     {
         ZF_ASSERT(CurGLShaderProg() == 0 &&
                   "Potential attempted double-assignment of surface shader program?");
@@ -1183,7 +1186,7 @@ void main() {
         glUseProgram(prog->type_data.surf_shader_prog.gl_id);
     }
 
-    t_b8 SetSurfaceShaderProgUniform(const s_rendering_context& rc,
+    t_b8 SetSurfaceShaderProgUniform(const s_rendering_context rc,
         const s_str_rdonly name,
         const s_surface_shader_prog_uniform_val& val,
         s_mem_arena& temp_mem_arena)
@@ -1240,7 +1243,7 @@ void main() {
     }
 
     void DrawSurface(
-        const s_rendering_context& rc, const s_gfx_resource* const surf, const s_v2<t_f32> pos)
+        const s_rendering_context rc, const s_gfx_resource* const surf, const s_v2<t_f32> pos)
     {
         ZF_ASSERT(surf && surf->type == ek_gfx_resource_type_surface);
 

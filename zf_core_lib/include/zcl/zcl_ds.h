@@ -521,22 +521,22 @@ namespace zf
                          // accepts 0.
         }
 
-        if (!InitArray(*mem_arena, cap, bb->keys))
+        if (!InitArray(&bb->keys, cap, mem_arena))
         {
             return false;
         }
 
-        if (!InitArray(*mem_arena, cap, bb->vals))
+        if (!InitArray(&bb->vals, cap, mem_arena))
         {
             return false;
         }
 
-        if (!InitArray(*mem_arena, cap, bb->next_indexes))
+        if (!InitArray(&bb->next_indexes, cap, mem_arena))
         {
             return false;
         }
 
-        if (!MakeBitVec(*mem_arena, cap, bb->usage))
+        if (!InitBitVec(&bb->usage, cap, mem_arena))
         {
             return false;
         }
@@ -608,7 +608,7 @@ namespace zf
         if (!bb)
         {
             bb = PushToMemArena<s_hash_map_backing_block<tp_key_type, tp_val_type>>(
-                new_bb_mem_arena);
+                &new_bb_mem_arena);
 
             if (!bb || !InitHashMapBackingBlock(bb, new_bb_cap, &new_bb_mem_arena))
             {
@@ -622,7 +622,8 @@ namespace zf
 
             if (prospective_index == -1)
             {
-                return HashMapBackingBlockPut(bb->next, key, key_comparator, val, index, new_bb_cap, new_bb_mem_arena);
+                return HashMapBackingBlockPut(
+                    bb->next, key, key_comparator, val, index, new_bb_cap, new_bb_mem_arena);
             }
 
             index = prospective_index;
@@ -650,7 +651,8 @@ namespace zf
             return ek_hash_map_put_result_updated;
         }
 
-        return HashMapBackingBlockPut(bb, key, key_comparator, val, bb->next_indexes[index_copy], new_bb_cap, new_bb_mem_arena);
+        return HashMapBackingBlockPut(bb, key, key_comparator, val, bb->next_indexes[index_copy],
+            new_bb_cap, new_bb_mem_arena);
     }
 
     template <typename tp_key_type, typename tp_val_type>
@@ -724,7 +726,7 @@ namespace zf
         hm->backing_block_cap = backing_block_cap;
         hm->mem_arena = &mem_arena;
 
-        if (!InitArray(mem_arena, immediate_cap, hm->immediate_indexes))
+        if (!InitArray(&hm->immediate_indexes, immediate_cap, &mem_arena))
         {
             return false;
         }
@@ -753,8 +755,8 @@ namespace zf
         tp_val_type* const o_val = nullptr)
     {
         const t_size hash_index = KeyToHashIndex(key, hm.hash_func, hm.immediate_indexes.len);
-        return HashMapBackingBlockGet(
-            hm.backing_blocks_head, key, hm.key_comparator, hm.immediate_indexes[hash_index], o_val);
+        return HashMapBackingBlockGet(hm.backing_blocks_head, key, hm.key_comparator,
+            hm.immediate_indexes[hash_index], o_val);
     }
 
     // Returns true iff no error occurred.
@@ -866,7 +868,7 @@ namespace zf
         for (t_size i = 0; i < bb_cnt; i++)
         {
             const auto bb =
-                PushToMemArena<s_hash_map_backing_block<tp_key_type, tp_val_type>>(mem_arena);
+                PushToMemArena<s_hash_map_backing_block<tp_key_type, tp_val_type>>(&mem_arena);
 
             if (!bb)
             {
