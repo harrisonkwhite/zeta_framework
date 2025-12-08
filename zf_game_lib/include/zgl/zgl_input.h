@@ -3,7 +3,7 @@
 #include <zcl.h>
 
 namespace zf {
-    enum e_key_code : t_s32 {
+    enum e_key_code : t_i32 {
         eks_key_code_none = -1,
 
         ek_key_code_space,
@@ -73,7 +73,7 @@ namespace zf {
         eks_key_code_cnt
     };
 
-    enum e_mouse_button_code : t_s32 {
+    enum e_mouse_button_code : t_i32 {
         eks_mouse_button_code_none = -1,
 
         ek_mouse_button_code_left,
@@ -132,13 +132,13 @@ namespace zf {
     }
 
     namespace internal {
-        enum class e_key_action : t_s32 {
+        enum class e_key_action : t_i32 {
             invalid,
             press,
             release
         };
 
-        enum class e_mouse_button_action : t_s32 {
+        enum class e_mouse_button_action : t_i32 {
             invalid,
             press,
             release

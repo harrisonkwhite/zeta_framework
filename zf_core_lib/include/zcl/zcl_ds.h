@@ -503,7 +503,7 @@ namespace zf {
         return HashMapBackingBlockGet(bb, key, key_comparator, bb->next_indexes[index], o_val);
     }
 
-    enum e_hash_map_put_result : t_s32 {
+    enum e_hash_map_put_result : t_i32 {
         ek_hash_map_put_result_error,
         ek_hash_map_put_result_added,
         ek_hash_map_put_result_updated

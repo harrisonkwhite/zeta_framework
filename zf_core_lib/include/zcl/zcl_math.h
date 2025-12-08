@@ -112,48 +112,48 @@ namespace zf {
         return {v.x * scalar, v.y * scalar};
     }
 
-    struct s_v2i {
-        t_s32 x;
-        t_s32 y;
+    struct s_v2_i {
+        t_i32 x;
+        t_i32 y;
 
-        constexpr s_v2i() = default;
-        constexpr s_v2i(const t_s32 x, const t_s32 y) : x(x), y(y) {}
+        constexpr s_v2_i() = default;
+        constexpr s_v2_i(const t_i32 x, const t_i32 y) : x(x), y(y) {}
 
-        constexpr s_v2i operator+(const s_v2i other) const {
+        constexpr s_v2_i operator+(const s_v2_i other) const {
             return {x + other.x, y + other.y};
         }
 
-        constexpr s_v2i operator-(const s_v2i other) const {
+        constexpr s_v2_i operator-(const s_v2_i other) const {
             return {x - other.x, y - other.y};
         }
 
-        constexpr s_v2i &operator+=(const s_v2i other) {
+        constexpr s_v2_i &operator+=(const s_v2_i other) {
             x += other.x;
             y += other.y;
             return *this;
         }
 
-        constexpr s_v2i &operator-=(const s_v2i other) {
+        constexpr s_v2_i &operator-=(const s_v2_i other) {
             x -= other.x;
             y -= other.y;
             return *this;
         }
 
-        constexpr t_b8 operator==(const s_v2i &other) const {
+        constexpr t_b8 operator==(const s_v2_i &other) const {
             return x == other.x && y == other.y;
         }
 
-        constexpr t_b8 operator!=(const s_v2i &other) const {
+        constexpr t_b8 operator!=(const s_v2_i &other) const {
             return !(*this == other);
         }
     };
 
-    constexpr s_v2 ToV2(const s_v2i v) {
+    constexpr s_v2 ToV2(const s_v2_i v) {
         return {static_cast<t_f32>(v.x), static_cast<t_f32>(v.y)};
     }
 
-    constexpr s_v2i ToV2I(const s_v2 v) {
-        return {static_cast<t_s32>(v.x), static_cast<t_s32>(v.y)};
+    constexpr s_v2_i ToV2I(const s_v2 v) {
+        return {static_cast<t_i32>(v.x), static_cast<t_i32>(v.y)};
     }
 
     constexpr s_v2 CompwiseProd(const s_v2 a, const s_v2 b) {
@@ -210,29 +210,29 @@ namespace zf {
     // ============================================================
     // @section: Rectangles
     // ============================================================
-    struct s_rect {
+    struct s_rect_f {
         t_f32 x;
         t_f32 y;
         t_f32 width;
         t_f32 height;
 
-        constexpr s_rect() = default;
-        constexpr s_rect(const t_f32 x, const t_f32 y, const t_f32 width, const t_f32 height)
+        constexpr s_rect_f() = default;
+        constexpr s_rect_f(const t_f32 x, const t_f32 y, const t_f32 width, const t_f32 height)
             : x(x), y(y), width(width), height(height) {}
-        constexpr s_rect(const s_v2 pos, const s_v2 size)
+        constexpr s_rect_f(const s_v2 pos, const s_v2 size)
             : x(pos.x), y(pos.y), width(size.x), height(size.y) {}
     };
 
     struct s_rect_i {
-        t_s32 x;
-        t_s32 y;
-        t_s32 width;
-        t_s32 height;
+        t_i32 x;
+        t_i32 y;
+        t_i32 width;
+        t_i32 height;
 
         constexpr s_rect_i() = default;
-        constexpr s_rect_i(const t_s32 x, const t_s32 y, const t_s32 width, const t_s32 height)
+        constexpr s_rect_i(const t_i32 x, const t_i32 y, const t_i32 width, const t_i32 height)
             : x(x), y(y), width(width), height(height) {}
-        constexpr s_rect_i(const s_v2i pos, const s_v2i size)
+        constexpr s_rect_i(const s_v2_i pos, const s_v2_i size)
             : x(pos.x), y(pos.y), width(size.x), height(size.y) {}
 
         constexpr t_b8 operator==(const s_rect_i other) const {
@@ -245,109 +245,109 @@ namespace zf {
         }
     };
 
-    constexpr s_rect ToRect(const s_rect_i rect) {
+    constexpr s_rect_f ToRectF(const s_rect_i rect) {
         return {static_cast<t_f32>(rect.x), static_cast<t_f32>(rect.y),
                 static_cast<t_f32>(rect.width), static_cast<t_f32>(rect.height)};
     }
 
-    constexpr s_rect_i ToRectI(const s_rect rect) {
-        return {static_cast<t_s32>(rect.x), static_cast<t_s32>(rect.y),
-                static_cast<t_s32>(rect.width), static_cast<t_s32>(rect.height)};
+    constexpr s_rect_i ToRectI(const s_rect_f rect) {
+        return {static_cast<t_i32>(rect.x), static_cast<t_i32>(rect.y),
+                static_cast<t_i32>(rect.width), static_cast<t_i32>(rect.height)};
     }
 
-    constexpr s_v2 RectPos(const s_rect rect) {
+    constexpr s_v2 RectPos(const s_rect_f rect) {
         return {rect.x, rect.y};
     }
 
-    constexpr s_v2i RectPos(const s_rect_i rect) {
+    constexpr s_v2_i RectPos(const s_rect_i rect) {
         return {rect.x, rect.y};
     }
 
-    constexpr s_v2 RectSize(const s_rect rect) {
+    constexpr s_v2 RectSize(const s_rect_f rect) {
         return {rect.width, rect.height};
     }
 
-    constexpr s_v2 RectCenter(const s_rect rect) {
+    constexpr s_v2 RectCenter(const s_rect_f rect) {
         return {RectPos(rect) + (RectSize(rect) / 2.0f)};
     }
 
-    constexpr s_v2i RectSize(const s_rect_i rect) {
+    constexpr s_v2_i RectSize(const s_rect_i rect) {
         return {rect.width, rect.height};
     }
 
-    constexpr t_f32 RectLeft(const s_rect rect) {
+    constexpr t_f32 RectLeft(const s_rect_f rect) {
         return rect.x;
     }
 
-    constexpr t_s32 RectLeft(const s_rect_i rect) {
+    constexpr t_i32 RectLeft(const s_rect_i rect) {
         return rect.x;
     }
 
-    constexpr t_f32 RectTop(const s_rect rect) {
+    constexpr t_f32 RectTop(const s_rect_f rect) {
         return rect.y;
     }
 
-    constexpr t_s32 RectTop(const s_rect_i rect) {
+    constexpr t_i32 RectTop(const s_rect_i rect) {
         return rect.y;
     }
 
-    constexpr t_f32 RectRight(const s_rect rect) {
+    constexpr t_f32 RectRight(const s_rect_f rect) {
         return rect.x + rect.width;
     }
 
-    constexpr t_s32 RectRight(const s_rect_i rect) {
+    constexpr t_i32 RectRight(const s_rect_i rect) {
         return rect.x + rect.width;
     }
 
-    constexpr t_f32 RectBottom(const s_rect rect) {
+    constexpr t_f32 RectBottom(const s_rect_f rect) {
         return rect.y + rect.height;
     }
 
-    constexpr t_s32 RectBottom(const s_rect_i rect) {
+    constexpr t_i32 RectBottom(const s_rect_i rect) {
         return rect.y + rect.height;
     }
 
-    constexpr t_f32 RectArea(const s_rect rect) {
+    constexpr t_f32 RectArea(const s_rect_f rect) {
         return rect.width * rect.height;
     }
 
-    constexpr t_s32 RectArea(const s_rect_i rect) {
+    constexpr t_i32 RectArea(const s_rect_i rect) {
         return rect.width * rect.height;
     }
 
-    constexpr s_rect RectClamped(const s_rect rect, const s_rect container) {
+    constexpr s_rect_f RectClamped(const s_rect_f rect, const s_rect_f container) {
         const s_v2 tl = {ZF_MAX(rect.x, container.x), ZF_MAX(rect.y, container.y)};
         return {tl.x, tl.y, ZF_MIN(RectRight(rect), RectRight(container)) - tl.x,
                 ZF_MIN(RectBottom(rect), RectBottom(container)) - tl.y};
     }
 
     constexpr s_rect_i RectClamped(const s_rect_i rect, const s_rect_i container) {
-        const s_v2i tl = {ZF_MAX(rect.x, container.x), ZF_MAX(rect.y, container.y)};
+        const s_v2_i tl = {ZF_MAX(rect.x, container.x), ZF_MAX(rect.y, container.y)};
         return {tl.x, tl.y, ZF_MIN(RectRight(rect), RectRight(container)) - tl.x,
                 ZF_MIN(RectBottom(rect), RectBottom(container)) - tl.y};
     }
 
-    constexpr t_f32 CalcRectOccupancyPerc(const s_rect a, const s_rect b) {
+    constexpr t_f32 CalcRectOccupancyPerc(const s_rect_f a, const s_rect_f b) {
         const auto subrect = RectClamped(a, b);
         return Clamp(static_cast<t_f32>(RectArea(subrect)) / RectArea(b), 0.0f, 1.0f);
     }
 
-    constexpr t_s32 CalcRectOccupancyPerc(const s_rect_i a, const s_rect_i b) {
+    constexpr t_i32 CalcRectOccupancyPerc(const s_rect_i a, const s_rect_i b) {
         const auto subrect = RectClamped(a, b);
-        return Clamp(static_cast<t_s32>(RectArea(subrect)) / RectArea(b), 0, 1);
+        return Clamp(static_cast<t_i32>(RectArea(subrect)) / RectArea(b), 0, 1);
     }
 
-    constexpr t_b8 DoesRectContainPoint(const s_rect rect, const s_v2 pt) {
+    constexpr t_b8 DoesRectContainPoint(const s_rect_f rect, const s_v2 pt) {
         return pt.x > RectLeft(rect) && pt.y > RectTop(rect) && pt.x < RectRight(rect) &&
                pt.y < RectBottom(rect);
     }
 
-    constexpr t_b8 DoesRectContainPoint(const s_rect_i rect, const s_v2i pt) {
+    constexpr t_b8 DoesRectContainPoint(const s_rect_i rect, const s_v2_i pt) {
         return pt.x > RectLeft(rect) && pt.y > RectTop(rect) && pt.x < RectRight(rect) &&
                pt.y < RectBottom(rect);
     }
 
-    constexpr t_b8 DoRectsIntersect(const s_rect a, const s_rect b) {
+    constexpr t_b8 DoRectsIntersect(const s_rect_f a, const s_rect_f b) {
         return RectLeft(a) < RectRight(b) && RectTop(a) < RectBottom(b) &&
                RectRight(a) > RectLeft(b) && RectBottom(a) > RectTop(b);
     }
@@ -357,12 +357,12 @@ namespace zf {
                RectRight(a) > RectLeft(b) && RectBottom(a) > RectTop(b);
     }
 
-    constexpr s_v2 ClampPointInRect(const s_v2 pt, const s_rect rect) {
+    constexpr s_v2 ClampPointInRect(const s_v2 pt, const s_rect_f rect) {
         return {Clamp(pt.x, RectLeft(rect), RectRight(rect)),
                 Clamp(pt.y, RectTop(rect), RectBottom(rect))};
     }
 
-    constexpr s_v2i ClampPointInRect(const s_v2i pt, const s_rect_i rect) {
+    constexpr s_v2_i ClampPointInRect(const s_v2_i pt, const s_rect_i rect) {
         return {Clamp(pt.x, RectLeft(rect), RectRight(rect)),
                 Clamp(pt.y, RectTop(rect), RectBottom(rect))};
     }
@@ -370,8 +370,8 @@ namespace zf {
     // Generate a rectangle encompassing all of the provided rectangles. At least a single
     // rectangle must be provided.
     template <c_nonstatic_array tp_type>
-    s_rect CalcSpanningRect(const tp_type rects) {
-        static_assert(s_is_same<typename tp_type::t_elem, s_rect>::g_val ||
+    s_rect_f CalcSpanningRect(const tp_type rects) {
+        static_assert(s_is_same<typename tp_type::t_elem, s_rect_f>::g_val ||
                       s_is_same<typename tp_type::t_elem, s_rect_i>::g_val);
 
         ZF_ASSERT(rects.len > 0);

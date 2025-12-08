@@ -118,7 +118,7 @@ namespace zf {
         };
 
     e_font_load_from_raw_result LoadFontFromRaw(
-        const s_str_rdonly file_path, const t_s32 height,
+        const s_str_rdonly file_path, const t_i32 height,
         const t_unicode_code_pt_bit_vec &code_pts, s_mem_arena &arrangement_mem_arena,
         s_mem_arena &atlas_rgbas_mem_arena, s_mem_arena &temp_mem_arena,
         s_font_arrangement &o_arrangement, s_array<t_font_atlas_rgba> &o_atlas_rgbas,
@@ -143,7 +143,7 @@ namespace zf {
         // Initialise the font through STB.
         stbtt_fontinfo stb_font_info;
 
-        const t_s32 offs = stbtt_GetFontOffsetForIndex(font_file_data.buf_raw, 0);
+        const t_i32 offs = stbtt_GetFontOffsetForIndex(font_file_data.buf_raw, 0);
 
         if (offs == -1) {
             return ek_font_load_from_raw_result_other_err;
@@ -161,8 +161,8 @@ namespace zf {
             ZF_FOR_EACH_SET_BIT(code_pts, i) {
                 const auto code_pt = static_cast<t_unicode_code_pt>(i);
 
-                const t_s32 glyph_index =
-                    stbtt_FindGlyphIndex(&stb_font_info, static_cast<t_s32>(code_pt));
+                const t_i32 glyph_index =
+                    stbtt_FindGlyphIndex(&stb_font_info, static_cast<t_i32>(code_pt));
 
                 if (glyph_index == 0) {
                     SetBit(*o_unsupported_code_pts, i);
@@ -177,8 +177,8 @@ namespace zf {
             ZF_FOR_EACH_SET_BIT(code_pts, i) {
                 const auto code_pt = static_cast<t_unicode_code_pt>(i);
 
-                const t_s32 glyph_index =
-                    stbtt_FindGlyphIndex(&stb_font_info, static_cast<t_s32>(code_pt));
+                const t_i32 glyph_index =
+                    stbtt_FindGlyphIndex(&stb_font_info, static_cast<t_i32>(code_pt));
 
                 if (glyph_index == 0) {
                     return ek_font_load_from_raw_result_unsupported_code_pt;
@@ -190,10 +190,10 @@ namespace zf {
         const t_f32 scale =
             stbtt_ScaleForPixelHeight(&stb_font_info, static_cast<t_f32>(height));
 
-        t_s32 vm_ascent, vm_descent, vm_line_gap;
+        t_i32 vm_ascent, vm_descent, vm_line_gap;
         stbtt_GetFontVMetrics(&stb_font_info, &vm_ascent, &vm_descent, &vm_line_gap);
 
-        o_arrangement.line_height = static_cast<t_s32>(
+        o_arrangement.line_height = static_cast<t_i32>(
             static_cast<t_f32>(vm_ascent - vm_descent + vm_line_gap) * scale);
 
         //
@@ -205,33 +205,33 @@ namespace zf {
         }
 
         t_size atlas_index = 0;
-        s_v2i atlas_pen = {};
+        s_v2_i atlas_pen = {};
 
         ZF_FOR_EACH_SET_BIT(code_pts, i) {
             const auto code_pt = static_cast<t_unicode_code_pt>(i);
 
-            const t_s32 glyph_index =
-                stbtt_FindGlyphIndex(&stb_font_info, static_cast<t_s32>(code_pt));
+            const t_i32 glyph_index =
+                stbtt_FindGlyphIndex(&stb_font_info, static_cast<t_i32>(code_pt));
 
             s_font_glyph_info glyph_info = {};
 
-            t_s32 bm_box_left, bm_box_top, bm_box_right, bm_box_bottom;
+            t_i32 bm_box_left, bm_box_top, bm_box_right, bm_box_bottom;
             stbtt_GetGlyphBitmapBox(&stb_font_info, glyph_index, scale, scale, &bm_box_left,
                                     &bm_box_top, &bm_box_right, &bm_box_bottom);
 
             glyph_info.offs = {bm_box_left,
                                bm_box_top +
-                                   static_cast<t_s32>(static_cast<t_f32>(vm_ascent) * scale)};
+                                   static_cast<t_i32>(static_cast<t_f32>(vm_ascent) * scale)};
 
             glyph_info.size = {bm_box_right - bm_box_left, bm_box_bottom - bm_box_top};
 
             ZF_ASSERT(glyph_info.size.x <= g_font_atlas_size.x &&
                       glyph_info.size.y <= g_font_atlas_size.y);
 
-            t_s32 hm_advance;
+            t_i32 hm_advance;
             stbtt_GetGlyphHMetrics(&stb_font_info, glyph_index, &hm_advance, nullptr);
 
-            glyph_info.adv = static_cast<t_s32>(static_cast<t_f32>(hm_advance) * scale);
+            glyph_info.adv = static_cast<t_i32>(static_cast<t_f32>(hm_advance) * scale);
 
             if (atlas_pen.x + glyph_info.size.x > g_font_atlas_size.x) {
                 atlas_pen.x = 0;
@@ -275,11 +275,11 @@ namespace zf {
                 const auto cp_b = static_cast<t_unicode_code_pt>(j);
 
                 const auto glyph_a_index =
-                    stbtt_FindGlyphIndex(&stb_font_info, static_cast<t_s32>(cp_a));
+                    stbtt_FindGlyphIndex(&stb_font_info, static_cast<t_i32>(cp_a));
                 const auto glyph_b_index =
-                    stbtt_FindGlyphIndex(&stb_font_info, static_cast<t_s32>(cp_b));
+                    stbtt_FindGlyphIndex(&stb_font_info, static_cast<t_i32>(cp_b));
 
-                const t_s32 kern =
+                const t_i32 kern =
                     stbtt_GetGlyphKernAdvance(&stb_font_info, glyph_a_index, glyph_b_index);
 
                 if (kern != 0) {
@@ -330,7 +330,7 @@ namespace zf {
             }
 
             t_u8 *const stb_bitmap = stbtt_GetCodepointBitmap(
-                &stb_font_info, scale, scale, static_cast<t_s32>(code_pt), nullptr, nullptr,
+                &stb_font_info, scale, scale, static_cast<t_i32>(code_pt), nullptr, nullptr,
                 nullptr, nullptr);
 
             if (!stb_bitmap) {
@@ -339,8 +339,8 @@ namespace zf {
 
             ZF_DEFER({ stbtt_FreeBitmap(stb_bitmap, nullptr); });
 
-            for (t_s32 y = RectTop(atlas_rect); y < RectBottom(atlas_rect); y++) {
-                for (t_s32 x = RectLeft(atlas_rect); x < RectRight(atlas_rect); x++) {
+            for (t_i32 y = RectTop(atlas_rect); y < RectBottom(atlas_rect); y++) {
+                for (t_i32 x = RectLeft(atlas_rect); x < RectRight(atlas_rect); x++) {
                     const t_size px_index = (y * 4 * g_font_atlas_size.x) + (x * 4);
                     const t_size stb_bitmap_index =
                         ((y - atlas_rect.y) * atlas_rect.width) + (x - atlas_rect.x);
@@ -353,7 +353,7 @@ namespace zf {
     }
 
     t_b8 PackFont(const s_str_rdonly dest_file_path, const s_str_rdonly src_file_path,
-                  const t_s32 height, const t_unicode_code_pt_bit_vec &code_pts,
+                  const t_i32 height, const t_unicode_code_pt_bit_vec &code_pts,
                   s_mem_arena &temp_mem_arena,
                   e_font_load_from_raw_result &o_font_load_from_raw_res,
                   t_unicode_code_pt_bit_vec *const o_unsupported_code_pts) {
@@ -520,7 +520,7 @@ namespace zf {
             }
 
             if (chr_index > 0 && font_arrangement.has_kernings) {
-                t_s32 kerning;
+                t_i32 kerning;
 
                 if (HashMapGet(font_arrangement.code_pt_pairs_to_kernings,
                                {code_pt_last, chr_info.code_pt}, &kerning)) {

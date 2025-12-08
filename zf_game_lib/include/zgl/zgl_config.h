@@ -3,6 +3,6 @@
 #include <zcl.h>
 
 namespace zf {
-    constexpr t_s32 i_g_gl_version_major = 4;
-    constexpr t_s32 i_g_gl_version_minor = 6;
+    constexpr t_i32 i_g_gl_version_major = 4;
+    constexpr t_i32 i_g_gl_version_minor = 6;
 }

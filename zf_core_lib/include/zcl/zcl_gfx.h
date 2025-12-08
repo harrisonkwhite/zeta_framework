@@ -125,12 +125,12 @@ namespace zf {
     }
 
     struct s_rgba_texture_data_rdonly {
-        s_v2i size_in_pxs;
+        s_v2_i size_in_pxs;
         s_array_rdonly<t_u8> px_data;
     };
 
     struct s_texture_data {
-        s_v2i size_in_pxs;
+        s_v2_i size_in_pxs;
         s_array<t_u8> rgba_px_data;
 
         constexpr operator s_rgba_texture_data_rdonly() const {
@@ -149,7 +149,7 @@ namespace zf {
     [[nodiscard]] t_b8 UnpackTexture(const s_str_rdonly file_path, s_mem_arena &mem_arena,
                                      s_mem_arena &temp_mem_arena, s_texture_data &o_tex_data);
 
-    inline s_rect CalcTextureCoords(const s_rect_i src_rect, const s_v2i tex_size) {
+    inline s_rect_f CalcTextureCoords(const s_rect_i src_rect, const s_v2_i tex_size) {
         return {static_cast<t_f32>(src_rect.x) / static_cast<t_f32>(tex_size.x),
                 static_cast<t_f32>(src_rect.y) / static_cast<t_f32>(tex_size.y),
                 static_cast<t_f32>(src_rect.width) / static_cast<t_f32>(tex_size.x),
@@ -176,16 +176,16 @@ namespace zf {
                alignment.y <= 1.0f;
     }
 
-    constexpr s_v2i g_font_atlas_size = {1024, 1024};
+    constexpr s_v2_i g_font_atlas_size = {1024, 1024};
 
     using t_font_atlas_rgba =
         s_static_array<t_u8, 4 * g_font_atlas_size.x * g_font_atlas_size.y>;
 
     struct s_font_glyph_info {
         // These are for determining positioning relative to other characters.
-        s_v2i offs;
-        s_v2i size;
-        t_s32 adv;
+        s_v2_i offs;
+        s_v2_i size;
+        t_i32 adv;
 
         // In what texture atlas is this glyph, and where?
         t_size atlas_index;
@@ -198,17 +198,17 @@ namespace zf {
     };
 
     struct s_font_arrangement {
-        t_s32 line_height;
+        t_i32 line_height;
 
         s_hash_map<t_unicode_code_pt, s_font_glyph_info>
             code_pts_to_glyph_infos; // Some duplicity here since a single glyph might have
                                      // multiple code points mapped to it.
 
         t_b8 has_kernings;
-        s_hash_map<s_font_code_point_pair, t_s32> code_pt_pairs_to_kernings;
+        s_hash_map<s_font_code_point_pair, t_i32> code_pt_pairs_to_kernings;
     };
 
-    enum e_font_load_from_raw_result : t_s32 {
+    enum e_font_load_from_raw_result : t_i32 {
         ek_font_load_from_raw_result_success,
         ek_font_load_from_raw_result_no_code_pts_given,
         ek_font_load_from_raw_result_unsupported_code_pt,
@@ -216,7 +216,7 @@ namespace zf {
     };
 
     [[nodiscard]] e_font_load_from_raw_result LoadFontFromRaw(
-        const s_str_rdonly file_path, const t_s32 height,
+        const s_str_rdonly file_path, const t_i32 height,
         const t_unicode_code_pt_bit_vec &code_pts, s_mem_arena &arrangement_mem_arena,
         s_mem_arena &atlas_rgbas_mem_arena, s_mem_arena &temp_mem_arena,
         s_font_arrangement &o_arrangement, s_array<t_font_atlas_rgba> &o_atlas_rgbas,
@@ -224,7 +224,7 @@ namespace zf {
 
     [[nodiscard]] t_b8 PackFont(
         const s_str_rdonly dest_file_path, const s_str_rdonly src_file_path,
-        const t_s32 height, const t_unicode_code_pt_bit_vec &code_pts,
+        const t_i32 height, const t_unicode_code_pt_bit_vec &code_pts,
         s_mem_arena &temp_mem_arena, e_font_load_from_raw_result &o_font_load_from_raw_res,
         t_unicode_code_pt_bit_vec *const o_unsupported_code_pts = nullptr);
     [[nodiscard]] t_b8 UnpackFont(const s_str_rdonly file_path,

@@ -95,7 +95,7 @@ namespace zf {
         }
 
 #ifdef ZF_PLATFORM_WINDOWS
-        const t_s32 res = _mkdir(StrRaw(path_terminated));
+        const t_i32 res = _mkdir(StrRaw(path_terminated));
 #else
         const t_s32 res = mkdir(StrRaw(path_terminated), 0755);
 #endif

@@ -25,11 +25,11 @@ namespace zf {
         const HANDLE proc = GetCurrentProcess();
         SymInitialize(proc, nullptr, TRUE);
 
-        constexpr t_s32 stack_len = 32;
+        constexpr t_i32 stack_len = 32;
         void *stack[stack_len];
-        const t_s32 frame_cnt = CaptureStackBackTrace(0, stack_len, stack, nullptr);
+        const t_i32 frame_cnt = CaptureStackBackTrace(0, stack_len, stack, nullptr);
 
-        constexpr t_s32 func_name_buf_size = 256;
+        constexpr t_i32 func_name_buf_size = 256;
         char symbol_buf[ZF_SIZE_OF(SYMBOL_INFO) + func_name_buf_size];
         const auto symbol = reinterpret_cast<SYMBOL_INFO *>(symbol_buf);
         symbol->MaxNameLen = func_name_buf_size - 1;
@@ -38,7 +38,7 @@ namespace zf {
         IMAGEHLP_LINE64 line;
         line.SizeOfStruct = ZF_SIZE_OF(IMAGEHLP_LINE64);
 
-        for (t_s32 i = 0; i < frame_cnt; i++) {
+        for (t_i32 i = 0; i < frame_cnt; i++) {
             const auto addr = static_cast<DWORD64>(reinterpret_cast<uintptr_t>(stack[i]));
 
             if (SymFromAddr(proc, addr, 0, symbol)) {
@@ -73,7 +73,7 @@ namespace zf {
 
     void internal::ReportAssertError(const char *const cond_raw,
                                      const char *const func_name_raw,
-                                     const char *const file_name_raw, const t_s32 line) {
+                                     const char *const file_name_raw, const t_i32 line) {
         fprintf(stderr, "==================== ASSERTION ERROR ====================\n");
         fprintf(stderr, "Condition: %s\n", cond_raw);
         fprintf(stderr, "Function:  %s\n", func_name_raw);
@@ -90,7 +90,7 @@ namespace zf {
     }
 
     void internal::ReportError(const char *const func_name_raw,
-                               const char *const file_name_raw, const t_s32 line) {
+                               const char *const file_name_raw, const t_i32 line) {
         static t_b8 g_reported;
 
         if (g_reported) {

@@ -55,7 +55,7 @@ namespace zf {
         t_size dev_mem_size;
         t_size dev_mem_alignment;
 
-        t_s32 targ_ticks_per_sec; // @todo: Move out and default this to 60 fps. Allow runtime
+        t_i32 targ_ticks_per_sec; // @todo: Move out and default this to 60 fps. Allow runtime
                                   // adjustment to anything in the range [1, 60].
 
         t_b8 (*init_func)(

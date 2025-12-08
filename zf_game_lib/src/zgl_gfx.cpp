@@ -14,7 +14,7 @@ namespace zf {
 
     static s_mesh_gl_ids CreateGLMesh(const t_f32 *const verts_raw, const t_size verts_len,
                                       const s_array_rdonly<t_u16> elems,
-                                      const s_array_rdonly<t_s32> vert_attr_lens) {
+                                      const s_array_rdonly<t_i32> vert_attr_lens) {
         s_mesh_gl_ids gl_ids = {};
 
         glGenVertexArrays(1, &gl_ids.vert_arr);
@@ -40,10 +40,10 @@ namespace zf {
             return res;
         }();
 
-        t_s32 offs = 0;
+        t_i32 offs = 0;
 
         for (t_size i = 0; i < vert_attr_lens.len; i++) {
-            const t_s32 attr_len = vert_attr_lens[i];
+            const t_i32 attr_len = vert_attr_lens[i];
 
             glVertexAttribPointer(static_cast<GLuint>(i), attr_len, GL_FLOAT, false,
                                   static_cast<GLsizei>(stride),
@@ -86,14 +86,14 @@ namespace zf {
 
             glCompileShader(shader_gl_id);
 
-            t_s32 success;
+            t_i32 success;
             glGetShaderiv(shader_gl_id, GL_COMPILE_STATUS, &success);
 
             if (!success) {
                 ZF_DEFER({ glDeleteShader(shader_gl_id); });
 
                 // Try getting the OpenGL compile error message.
-                t_s32 log_chr_cnt;
+                t_i32 log_chr_cnt;
                 glGetShaderiv(shader_gl_id, GL_INFO_LOG_LENGTH, &log_chr_cnt);
 
                 if (log_chr_cnt >= 1) {
@@ -147,19 +147,19 @@ namespace zf {
     }
 
     static t_gl_id CurGLShaderProg() {
-        t_s32 prog;
+        t_i32 prog;
         glGetIntegerv(GL_CURRENT_PROGRAM, &prog);
         return static_cast<t_gl_id>(prog);
     }
 
-    static s_v2i GLTextureSizeLimit() {
-        t_s32 size;
+    static s_v2_i GLTextureSizeLimit() {
+        t_i32 size;
         glGetIntegerv(GL_MAX_TEXTURE_SIZE, &size);
         return {size, size};
     }
 
     static t_gl_id CreateGLTexture(const s_rgba_texture_data_rdonly tex_data) {
-        const s_v2i tex_size_limit = GLTextureSizeLimit();
+        const s_v2_i tex_size_limit = GLTextureSizeLimit();
 
         if (tex_data.size_in_pxs.x > tex_size_limit.x ||
             tex_data.size_in_pxs.y > tex_size_limit.y) {
@@ -184,7 +184,7 @@ namespace zf {
 
     [[nodiscard]] static t_b8 AttachGLFramebufferTexture(const t_gl_id fb_gl_id,
                                                          const t_gl_id tex_gl_id,
-                                                         const s_v2i tex_size) {
+                                                         const s_v2_i tex_size) {
         glBindTexture(GL_TEXTURE_2D, tex_gl_id);
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, static_cast<GLsizei>(tex_size.x),
                      static_cast<GLsizei>(tex_size.y), 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
@@ -221,7 +221,7 @@ namespace zf {
         union {
             struct {
                 t_gl_id gl_id;
-                s_v2i size;
+                s_v2_i size;
             } tex;
 
             struct {
@@ -232,7 +232,7 @@ namespace zf {
             struct {
                 t_gl_id fb_gl_id;
                 t_gl_id tex_gl_id;
-                s_v2i size;
+                s_v2_i size;
             } surf;
 
             struct {
@@ -315,7 +315,7 @@ namespace zf {
         return tex;
     }
 
-    s_v2i TextureSize(const s_gfx_resource *const res) {
+    s_v2_i TextureSize(const s_gfx_resource *const res) {
         ZF_ASSERT(res);
         ZF_ASSERT(res->type == ek_gfx_resource_type_texture);
 
@@ -412,7 +412,7 @@ namespace zf {
     }
 #endif
 
-    s_gfx_resource *CreateSurface(const s_v2i size, s_gfx_resource_arena *const res_arena) {
+    s_gfx_resource *CreateSurface(const s_v2_i size, s_gfx_resource_arena *const res_arena) {
         t_gl_id fb_gl_id;
         glGenFramebuffers(1, &fb_gl_id);
 
@@ -438,7 +438,7 @@ namespace zf {
         return surf;
     }
 
-    t_b8 ResizeSurface(s_gfx_resource *const surf, const s_v2i size) {
+    t_b8 ResizeSurface(s_gfx_resource *const surf, const s_v2_i size) {
         ZF_ASSERT(surf && surf->type == ek_gfx_resource_type_surface);
         ZF_ASSERT(surf->type_data.surf.size != size &&
                   "Unnecessarily resizing a surface - new surface size is the same.");
@@ -498,7 +498,7 @@ namespace zf {
         s_color_rgba32f blend;
     };
 
-    constexpr s_static_array<t_s32, 6> g_batch_vert_attr_lens = {
+    constexpr s_static_array<t_i32, 6> g_batch_vert_attr_lens = {
         {2, 2, 2, 1, 2, 4}}; // This has to match the number of components per attribute above.
 
     constexpr t_size g_batch_vert_component_cnt = ZF_SIZE_OF(s_batch_vert) / ZF_SIZE_OF(t_f32);
@@ -631,7 +631,7 @@ void main() {
 
     t_b8 internal::BeginFrame(s_rendering_context *const rendering_context,
                               const s_rendering_basis *const rendering_basis,
-                              const s_v2i framebuffer_size_cache,
+                              const s_v2_i framebuffer_size_cache,
                               s_mem_arena *const mem_arena) {
         ZeroOut(rendering_context);
         rendering_context->basis = rendering_basis;
@@ -673,7 +673,7 @@ void main() {
         //
         glUseProgram(rc.basis->batch_shader_prog_gl_id);
 
-        const t_s32 view_uniform_loc =
+        const t_i32 view_uniform_loc =
             glGetUniformLocation(rc.basis->batch_shader_prog_gl_id, "u_view");
         glUniformMatrix4fv(view_uniform_loc, 1, false,
                            reinterpret_cast<const t_f32 *>(&rc.state->view_mat));
@@ -681,7 +681,7 @@ void main() {
         const auto proj_mat = CreateOrthographicMatrix(
             0.0f, static_cast<t_f32>(rc.framebuffer_size_cache.x),
             static_cast<t_f32>(rc.framebuffer_size_cache.y), 0.0f, -1.0f, 1.0f);
-        const t_s32 proj_uniform_loc =
+        const t_i32 proj_uniform_loc =
             glGetUniformLocation(rc.basis->batch_shader_prog_gl_id, "u_proj");
 
         glUniformMatrix4fv(proj_uniform_loc, 1, false,
@@ -717,7 +717,7 @@ void main() {
         rc.state->view_mat = mat;
     }
 
-    void Draw(const s_rendering_context rc, const t_gl_id tex_gl_id, const s_rect tex_coords,
+    void Draw(const s_rendering_context rc, const t_gl_id tex_gl_id, const s_rect_f tex_coords,
               s_v2 pos, s_v2 size, s_v2 origin, const t_f32 rot, const s_color_rgba32f blend) {
         if (rc.state->batch_slots_used_cnt == 0) {
             // This is the first draw to the batch, so set the texture associated with the
@@ -779,7 +779,7 @@ void main() {
             src_rect_to_use = src_rect;
         }
 
-        const s_rect tex_coords = CalcTextureCoords(src_rect_to_use, tex_size);
+        const s_rect_f tex_coords = CalcTextureCoords(src_rect_to_use, tex_size);
 
         const s_v2 size = {static_cast<t_f32>(src_rect_to_use.width) * scale.x,
                            static_cast<t_f32>(src_rect_to_use.height) * scale.y};
@@ -787,12 +787,12 @@ void main() {
         Draw(rc, tex->type_data.tex.gl_id, tex_coords, pos, size, origin, rot, blend);
     }
 
-    void DrawRect(const s_rendering_context rc, const s_rect rect,
+    void DrawRect(const s_rendering_context rc, const s_rect_f rect,
                   const s_color_rgba32f color) {
         DrawTexture(rc, rc.basis->px_tex, RectPos(rect), {}, {}, RectSize(rect), 0.0f, color);
     }
 
-    void DrawRectOpaqueOutlined(const s_rendering_context rc, const s_rect rect,
+    void DrawRectOpaqueOutlined(const s_rendering_context rc, const s_rect_f rect,
                                 const s_color_rgba24f fill_color,
                                 const s_color_rgba32f outline_color,
                                 const t_f32 outline_thickness) {
@@ -915,7 +915,7 @@ void main() {
         StackPop(rc.state->surfs);
 
         t_gl_id fb_gl_id;
-        s_v2i viewport_size;
+        s_v2_i viewport_size;
 
         if (IsStackEmpty(rc.state->surfs)) {
             fb_gl_id = 0;
@@ -953,12 +953,12 @@ void main() {
             return false;
         }
 
-        const t_s32 loc = glGetUniformLocation(cur_prog_gl_id, StrRaw(name_terminated));
+        const t_i32 loc = glGetUniformLocation(cur_prog_gl_id, StrRaw(name_terminated));
         ZF_ASSERT(loc != -1 && "Failed to get location of shader uniform!");
 
         switch (val.type) {
-        case ek_surface_shader_prog_uniform_val_type_s32:
-            glUniform1i(loc, val.type_data.s32);
+        case ek_surface_shader_prog_uniform_val_type_i32:
+            glUniform1i(loc, val.type_data.i32);
             break;
 
         case ek_surface_shader_prog_uniform_val_type_u32:
@@ -1020,7 +1020,7 @@ void main() {
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, surf->type_data.surf.tex_gl_id);
 
-        const t_s32 proj_uniform_loc = glGetUniformLocation(CurGLShaderProg(), "u_proj");
+        const t_i32 proj_uniform_loc = glGetUniformLocation(CurGLShaderProg(), "u_proj");
         ZF_ASSERT(proj_uniform_loc != -1); // @todo: Remove, do at load time.
 
         const s_mat4x4 proj_mat = CreateOrthographicMatrix(
@@ -1029,16 +1029,16 @@ void main() {
         glUniformMatrix4fv(proj_uniform_loc, 1, false,
                            reinterpret_cast<const t_f32 *>(&proj_mat));
 
-        const t_s32 pos_uniform_loc = glGetUniformLocation(CurGLShaderProg(), "u_pos");
+        const t_i32 pos_uniform_loc = glGetUniformLocation(CurGLShaderProg(), "u_pos");
         ZF_ASSERT(pos_uniform_loc != -1); // @todo: Remove, do at load time.
 
         glUniform2fv(pos_uniform_loc, 1, reinterpret_cast<const t_f32 *>(&pos));
 
-        const t_s32 size_uniform_loc = glGetUniformLocation(CurGLShaderProg(), "u_size");
+        const t_i32 size_uniform_loc = glGetUniformLocation(CurGLShaderProg(), "u_size");
         ZF_ASSERT(size_uniform_loc != -1); // @todo: Remove, do at load time.
 
-        const auto size_f32 = ToV2(surf->type_data.surf.size);
-        glUniform2fv(size_uniform_loc, 1, reinterpret_cast<const t_f32 *>(&size_f32));
+        const auto size_f = ToV2(surf->type_data.surf.size);
+        glUniform2fv(size_uniform_loc, 1, reinterpret_cast<const t_f32 *>(&size_f));
 
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, rc.basis->surf_mesh_gl_ids.elem_buf);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, nullptr);
@@ -1127,7 +1127,7 @@ void main() {
                                                          2, 3, 0}};
             // clang-format on
 
-            constexpr s_static_array<t_s32, 2> vert_attr_lens = {{2, 2}};
+            constexpr s_static_array<t_i32, 2> vert_attr_lens = {{2, 2}};
 
             rb->surf_mesh_gl_ids =
                 CreateGLMesh(verts.buf_raw, verts.g_len, elems, vert_attr_lens);

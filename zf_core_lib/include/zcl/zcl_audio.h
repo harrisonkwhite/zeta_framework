@@ -5,9 +5,9 @@
 
 namespace zf {
     struct s_sound_meta {
-        t_s32 channel_cnt;
-        t_s32 sample_rate;
-        t_s64 frame_cnt;
+        t_i32 channel_cnt;
+        t_i32 sample_rate;
+        t_i64 frame_cnt;
     };
 
     struct s_sound_data_rdonly {
@@ -24,7 +24,7 @@ namespace zf {
         }
     };
 
-    constexpr t_s64 CalcSampleCount(const s_sound_meta snd_meta) {
+    constexpr t_i64 CalcSampleCount(const s_sound_meta snd_meta) {
         return snd_meta.channel_cnt * snd_meta.frame_cnt;
     }
 

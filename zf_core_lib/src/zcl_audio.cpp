@@ -30,9 +30,9 @@ namespace zf {
 
         ZeroOut(snd_data);
 
-        snd_data->meta.channel_cnt = static_cast<t_s32>(decoder.outputChannels);
-        snd_data->meta.sample_rate = static_cast<t_s32>(decoder.outputSampleRate);
-        snd_data->meta.frame_cnt = static_cast<t_s64>(frame_cnt);
+        snd_data->meta.channel_cnt = static_cast<t_i32>(decoder.outputChannels);
+        snd_data->meta.sample_rate = static_cast<t_i32>(decoder.outputSampleRate);
+        snd_data->meta.frame_cnt = static_cast<t_i64>(frame_cnt);
 
         if (!InitArray(&snd_data->pcm, CalcSampleCount(snd_data->meta), snd_data_mem_arena)) {
             return false;

@@ -10,12 +10,12 @@ namespace zf {
     // ============================================================
     // @section: Streams
     // ============================================================
-    enum e_stream_type : t_s32 {
+    enum e_stream_type : t_i32 {
         ek_stream_type_mem,
         ek_stream_type_file
     };
 
-    enum e_stream_mode : t_s32 {
+    enum e_stream_mode : t_i32 {
         ek_stream_mode_read,
         ek_stream_mode_write
     };
@@ -282,7 +282,7 @@ namespace zf {
     // ============================================================
     // @section: Files and Directories
     // ============================================================
-    enum e_file_access_mode : t_s32 {
+    enum e_file_access_mode : t_i32 {
         ek_file_access_mode_read,
         ek_file_access_mode_write,
         ek_file_access_mode_append
@@ -296,7 +296,7 @@ namespace zf {
                                         s_mem_arena &temp_mem_arena,
                                         s_array<t_u8> &o_contents);
 
-    enum e_directory_creation_result : t_s32 {
+    enum e_directory_creation_result : t_i32 {
         ek_directory_creation_result_success,
         ek_directory_creation_result_already_exists,
         ek_directory_creation_result_permission_denied,
@@ -315,7 +315,7 @@ namespace zf {
         const s_str_rdonly path, s_mem_arena &temp_mem_arena,
         e_directory_creation_result *const o_dir_creation_res = nullptr);
 
-    enum e_path_type : t_s32 {
+    enum e_path_type : t_i32 {
         ek_path_type_not_found,
         ek_path_type_file,
         ek_path_type_directory
@@ -640,7 +640,7 @@ namespace zf {
 
     struct s_v2_i_fmt {
         using t_fmt_tag = void;
-        s_v2i val;
+        s_v2_i val;
     };
 
     constexpr s_v2_fmt FormatV2(const s_v2 val, const t_b8 trim_trailing_zeros = false) {
@@ -651,11 +651,11 @@ namespace zf {
         return FormatV2(val);
     }
 
-    constexpr s_v2_i_fmt FormatV2(const s_v2i val) {
+    constexpr s_v2_i_fmt FormatV2(const s_v2_i val) {
         return {val};
     }
 
-    constexpr s_v2_i_fmt FormatDefault(const s_v2i val) {
+    constexpr s_v2_i_fmt FormatDefault(const s_v2_i val) {
         return FormatV2(val);
     }
 

@@ -5,7 +5,7 @@
 namespace zf {
     constexpr t_size g_mem_arena_size = Megabytes(40);
 
-    enum e_asset_type : t_s32 {
+    enum e_asset_type : t_i32 {
         ek_asset_type_texture,
         ek_asset_type_font,
         ek_asset_type_shader_prog,
@@ -17,7 +17,7 @@ namespace zf {
     static s_static_array<s_str_rdonly, eks_asset_type_cnt> g_asset_type_arr_names = {
         {"textures", "fonts", "shader_progs", "sounds"}};
 
-    enum e_asset_field_type : t_s32 {
+    enum e_asset_field_type : t_i32 {
         ek_asset_field_type_str,
         ek_asset_field_type_num,
 
@@ -33,7 +33,7 @@ namespace zf {
         t_b8 optional;
     };
 
-    enum e_tex_field : t_s32 {
+    enum e_tex_field : t_i32 {
         ek_tex_field_src_file_path,
         ek_tex_field_dest_file_path,
 
@@ -44,7 +44,7 @@ namespace zf {
         {{"src_file_path", ek_asset_field_type_str},
          {"dest_file_path", ek_asset_field_type_str}}};
 
-    enum e_font_field : t_s32 {
+    enum e_font_field : t_i32 {
         ek_font_field_src_file_path,
         ek_font_field_height,
         ek_font_field_extra_chrs_file_path,
@@ -59,7 +59,7 @@ namespace zf {
          {"extra_chrs_file_path", ek_asset_field_type_str, true},
          {"dest_file_path", ek_asset_field_type_str}}};
 
-    enum e_shader_prog_field : t_s32 {
+    enum e_shader_prog_field : t_i32 {
         ek_shader_prog_field_src_vs_file_path,
         ek_shader_prog_field_src_fs_file_path,
         ek_shader_prog_field_dest_file_path,
@@ -72,7 +72,7 @@ namespace zf {
          {"src_fs_file_path", ek_asset_field_type_str},
          {"dest_file_path", ek_asset_field_type_str}}};
 
-    enum e_snd_field : t_s32 {
+    enum e_snd_field : t_i32 {
         ek_snd_field_src_file_path,
         ek_snd_field_dest_file_path,
 
