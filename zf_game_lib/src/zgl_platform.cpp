@@ -425,9 +425,9 @@ namespace zf {
         ZF_ASSERT(IsValidUTF8Str(title));
 
         s_static_array<t_u8, 256> title_terminated_bytes = {};
-        CopyOrTruncate(
-            Slice(ToNonstatic(title_terminated_bytes), 0, title_terminated_bytes.g_len - 1),
-            title.bytes);
+        CopyOrTruncate(Slice(ToNonstaticArray(title_terminated_bytes), 0,
+                             title_terminated_bytes.g_len - 1),
+                       title.bytes);
         glfwSetWindowTitle(pli->glfw_window,
                            reinterpret_cast<const char *>(title_terminated_bytes.buf_raw));
     }

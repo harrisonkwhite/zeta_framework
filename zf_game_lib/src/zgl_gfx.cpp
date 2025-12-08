@@ -1019,7 +1019,7 @@ void main() {
                                                           0.0f,    0.0f,    0.0f, 1.0f}};
             // clang-format on
 
-            glBufferSubData(GL_ARRAY_BUFFER, 0, ArraySizeInBytes(verts), verts.buf_raw);
+            glBufferSubData(GL_ARRAY_BUFFER, 0, ArraySizeInBytes(ToNonstaticArray(verts)), verts.buf_raw);
         }
 
         glActiveTexture(GL_TEXTURE0);

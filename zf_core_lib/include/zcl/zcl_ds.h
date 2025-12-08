@@ -42,12 +42,12 @@ namespace zf {
 
     template <typename tp_type, t_size tp_cap>
     s_array<tp_type> ListAsArray(s_static_list<tp_type, tp_cap> &list) {
-        return Slice(ToNonstatic(list.backing_arr), 0, list.len);
+        return Slice(ToNonstaticArray(list.backing_arr), 0, list.len);
     }
 
     template <typename tp_type, t_size tp_cap>
     s_array_rdonly<tp_type> ListAsArray(const s_static_list<tp_type, tp_cap> &list) {
-        return Slice(ToNonstatic(list.backing_arr), 0, list.len);
+        return Slice(ToNonstaticArray(list.backing_arr), 0, list.len);
     }
 
     template <typename tp_type>
@@ -86,7 +86,7 @@ namespace zf {
 
     template <typename tp_type, t_size tp_cap>
     tp_type &ListAppend(s_static_list<tp_type, tp_cap> &list, const tp_type &val) {
-        return ListAppend(ToNonstatic(list.backing_arr), list.len, val);
+        return ListAppend(ToNonstaticArray(list.backing_arr), list.len, val);
     }
 
     template <typename tp_type>
@@ -111,7 +111,7 @@ namespace zf {
     template <typename tp_type, t_size tp_cap>
     void ListInsert(s_static_list<tp_type, tp_cap> &list, const t_size index,
                     const tp_type &val) {
-        ListInsert(ToNonstatic(list.backing_arr), list.len, index, val);
+        ListInsert(ToNonstaticArray(list.backing_arr), list.len, index, val);
     }
 
     template <typename tp_type>
@@ -129,7 +129,7 @@ namespace zf {
 
     template <typename tp_type, t_size tp_cap>
     tp_type ListRemoveLast(s_static_list<tp_type, tp_cap> &list) {
-        return ListRemoveLast(ToNonstatic(list.backing_arr), list.len);
+        return ListRemoveLast(ToNonstaticArray(list.backing_arr), list.len);
     }
 
     template <typename tp_type>
@@ -149,7 +149,7 @@ namespace zf {
 
     template <typename tp_type, t_size tp_cap>
     void ListRemoveSwapback(s_static_list<tp_type, tp_cap> &list, const t_size index) {
-        ListRemoveSwapback(ToNonstatic(list.backing_arr), list.len, index);
+        ListRemoveSwapback(ToNonstaticArray(list.backing_arr), list.len, index);
     }
 
     template <typename tp_type>
@@ -168,7 +168,7 @@ namespace zf {
 
     template <typename tp_type, t_size tp_cap>
     void ListRemove(s_static_list<tp_type, tp_cap> &list, const t_size index) {
-        ListRemove(ToNonstatic(list.backing_arr), list.len, index);
+        ListRemove(ToNonstaticArray(list.backing_arr), list.len, index);
     }
 
     template <typename tp_type>
@@ -249,7 +249,7 @@ namespace zf {
 
     template <typename tp_type, t_size tp_cap>
     tp_type &StackTop(s_static_stack<tp_type, tp_cap> &stack) {
-        return StackTop(ToNonstatic(stack.backing_arr), stack.height);
+        return StackTop(ToNonstaticArray(stack.backing_arr), stack.height);
     }
 
     template <typename tp_type>
@@ -269,7 +269,7 @@ namespace zf {
 
     template <typename tp_type, t_size tp_cap>
     tp_type &StackPush(s_static_stack<tp_type, tp_cap> &stack, const tp_type &val) {
-        return StackPush(ToNonstatic(stack.backing_arr), stack.height, val);
+        return StackPush(ToNonstaticArray(stack.backing_arr), stack.height, val);
     }
 
     template <typename tp_type>
@@ -287,7 +287,7 @@ namespace zf {
 
     template <typename tp_type, t_size tp_cap>
     tp_type StackPop(s_static_stack<tp_type, tp_cap> &stack) {
-        return StackPop(ToNonstatic(stack.backing_arr), stack.height);
+        return StackPop(ToNonstaticArray(stack.backing_arr), stack.height);
     }
 
     template <typename tp_type>
@@ -370,7 +370,7 @@ namespace zf {
 
     template <typename tp_type, t_size tp_cap>
     tp_type &Enqueue(s_static_queue<tp_type, tp_cap> &queue, const tp_type &val) {
-        return Enqueue(ToNonstatic(queue.backing_arr), queue.begin_index, queue.len, val);
+        return Enqueue(ToNonstaticArray(queue.backing_arr), queue.begin_index, queue.len, val);
     }
 
     template <typename tp_type>
@@ -386,12 +386,12 @@ namespace zf {
 
     template <typename tp_type>
     tp_type Dequeue(s_queue<tp_type> &queue) {
-        return Dequeue(ToNonstatic(queue.backing_arr), queue.begin_index, queue.len);
+        return Dequeue(ToNonstaticArray(queue.backing_arr), queue.begin_index, queue.len);
     }
 
     template <typename tp_type, t_size tp_cap>
     tp_type Dequeue(s_static_queue<tp_type, tp_cap> &queue) {
-        return Dequeue(ToNonstatic(queue.backing_arr), queue.begin_index, queue.len);
+        return Dequeue(ToNonstaticArray(queue.backing_arr), queue.begin_index, queue.len);
     }
 
     template <typename tp_type>

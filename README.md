@@ -15,7 +15,7 @@ It was originally written in C, though has been switched to a strictly procedura
 - Sound playing
 - RNG helpers
 - An optional asset packing tool
-- A core library with procedural-style utilities for memory arenas, UTF-8 strings, math, data structures, and more
+- A core library with procedural-style utilities for memory arenas, UTF-8 strings, 2D math, data structures, and more
 
 ---
 

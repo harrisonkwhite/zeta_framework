@@ -25,13 +25,6 @@ namespace zf {
         return false;
     }
 
-    template <typename tp_type, t_size tp_len>
-    constexpr t_b8 HasDuplicatesSlow(
-        const s_static_array<tp_type, tp_len> &arr,
-        const t_bin_comparator<tp_type> comparator = DefaultBinComparator) {
-        return HasDuplicatesSlow(ToNonstatic(arr), comparator);
-    }
-
     template <c_nonstatic_array tp_type>
     t_b8 BinarySearch(
         const tp_type arr, const typename tp_type::t_elem &elem,
@@ -52,12 +45,6 @@ namespace zf {
         }
     }
 
-    template <typename tp_type, t_size tp_len>
-    t_b8 BinarySearch(const s_static_array<tp_type, tp_len> &arr, const tp_type &elem,
-                      const t_ord_comparator<tp_type> comparator = DefaultOrdComparator) {
-        return BinarySearch(ToNonstatic(arr), elem, comparator);
-    }
-
     // ============================================================
     // @section: Sorting
     // ============================================================
@@ -76,17 +63,10 @@ namespace zf {
         return true;
     }
 
-    template <typename tp_type, t_size tp_len>
-    t_b8 IsSorted(const s_static_array<tp_type, tp_len> &arr,
-                  const t_bin_comparator<tp_type> comparator = DefaultOrdComparator) {
-        return IsSorted(ToNonstatic(arr), comparator);
-    }
-
     // O(n) best-case if array is already sorted, O(n^2) worst-case.
     template <typename tp_type>
-    void BubbleSort(
-        const s_array<tp_type> arr,
-        const t_bin_comparator<typename tp_type::t_elem> comparator = DefaultOrdComparator) {
+    void BubbleSort(const s_array<tp_type> arr,
+                    const t_bin_comparator<tp_type> comparator = DefaultOrdComparator) {
         ZF_ASSERT(comparator);
 
         t_b8 sorted;
@@ -103,17 +83,10 @@ namespace zf {
         } while (!sorted);
     }
 
-    template <typename tp_type, t_size tp_len>
-    void BubbleSort(s_static_array<tp_type, tp_len> &arr,
-                    const t_bin_comparator<tp_type> comparator = DefaultOrdComparator) {
-        BubbleSort(ToNonstatic(arr), comparator);
-    }
-
     // O(n) best-case if array is already sorted, O(n^2) worst-case.
     template <typename tp_type>
-    void InsertionSort(
-        const s_array<tp_type> arr,
-        const t_bin_comparator<typename tp_type::t_elem> comparator = DefaultOrdComparator) {
+    void InsertionSort(const s_array<tp_type> arr,
+                       const t_bin_comparator<tp_type> comparator = DefaultOrdComparator) {
         ZF_ASSERT(comparator);
 
         for (t_size i = 1; i < arr.len; i++) {
@@ -133,17 +106,10 @@ namespace zf {
         }
     }
 
-    template <typename tp_type, t_size tp_len>
-    void InsertionSort(s_static_array<tp_type, tp_len> &arr,
-                       const t_bin_comparator<tp_type> comparator = DefaultOrdComparator) {
-        InsertionSort(ToNonstatic(arr), comparator);
-    }
-
     // O(n^2) in every case.
     template <typename tp_type>
-    void SelectionSort(
-        const s_array<tp_type> arr,
-        const t_bin_comparator<typename tp_type::t_elem> comparator = DefaultOrdComparator) {
+    void SelectionSort(const s_array<tp_type> arr,
+                       const t_bin_comparator<tp_type> comparator = DefaultOrdComparator) {
         ZF_ASSERT(comparator);
 
         for (t_size i = 0; i < arr.len - 1; i++) {
@@ -159,17 +125,11 @@ namespace zf {
         }
     }
 
-    template <typename tp_type, t_size tp_len>
-    void SelectionSort(s_static_array<tp_type, tp_len> &arr,
-                       const t_bin_comparator<tp_type> comparator = DefaultOrdComparator) {
-        SelectionSort(ToNonstatic(arr), comparator);
-    }
-
     // O(n log n) in both time complexity and space complexity in every case. Returns true iff
     // no error occurred.
-    template <typename tp_type>
+    template <c_nonstatic_array tp_type>
     [[nodiscard]] t_b8 MergeSort(
-        const s_array<tp_type> arr, s_mem_arena &temp_mem_arena,
+        const tp_type arr, s_mem_arena *const temp_mem_arena,
         const t_bin_comparator<typename tp_type::t_elem> comparator = DefaultOrdComparator) {
         ZF_ASSERT(comparator);
 
@@ -181,14 +141,14 @@ namespace zf {
         const auto arr_left = Slice(arr, 0, arr.len / 2);
         s_array<typename tp_type::t_elem> arr_left_sorted;
 
-        if (!MakeArrayClone(temp_mem_arena, arr_left, arr_left_sorted)) {
+        if (!InitArrayClone(arr_left_sorted, arr_left, temp_mem_arena)) {
             return false;
         }
 
         const auto arr_right = Slice(arr, arr.len / 2, arr.len);
         s_array<typename tp_type::t_elem> arr_right_sorted;
 
-        if (!MakeArrayClone(temp_mem_arena, arr_right, arr_right_sorted)) {
+        if (!InitArrayClone(arr_right_sorted, arr_right, temp_mem_arena)) {
             return false;
         }
 
@@ -228,21 +188,13 @@ namespace zf {
         return true;
     }
 
-    template <typename tp_type, t_size tp_len>
-    [[nodiscard]] t_b8 MergeSort(
-        s_static_array<tp_type, tp_len> &arr, s_mem_arena &temp_mem_arena,
-        const t_bin_comparator<tp_type> comparator = DefaultOrdComparator) {
-        return MergeSort(ToNonstatic(arr), temp_mem_arena, comparator);
-    }
-
     // Time complexity is O(n log n) best-case and O(n^2) worst-case depending on the pivot.
     // Space complexity is O(1) compared to merge sort.
     // In each recurse, the pivot is selected as the median of the first, middle, and last
     // elements.
     template <typename tp_type>
-    void QuickSort(
-        const s_array<tp_type> arr,
-        const t_bin_comparator<typename tp_type::t_elem> comparator = DefaultOrdComparator) {
+    void QuickSort(const s_array<tp_type> arr,
+                   const t_bin_comparator<tp_type> comparator = DefaultOrdComparator) {
         ZF_ASSERT(comparator);
 
         if (arr.len <= 1) {
@@ -306,11 +258,5 @@ namespace zf {
 
         const auto right = Slice(arr, left_sec_last_index + 1, arr.len);
         QuickSort(right, comparator);
-    }
-
-    template <typename tp_type, t_size tp_len>
-    void QuickSort(s_static_array<tp_type, tp_len> &arr,
-                   const t_bin_comparator<tp_type> comparator = DefaultOrdComparator) {
-        QuickSort(ToNonstatic(arr), comparator);
     }
 }

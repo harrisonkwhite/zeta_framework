@@ -136,7 +136,7 @@ namespace zf {
     }
 
     constexpr t_b8 IsStrEmpty(const s_str_rdonly str) {
-        return IsArrayEmpty(str.bytes);
+        return str.bytes.len == 0;
     }
 
     t_b8 IsValidUTF8Str(const s_str_rdonly str);

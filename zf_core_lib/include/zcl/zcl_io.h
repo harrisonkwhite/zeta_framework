@@ -160,14 +160,14 @@ namespace zf {
                                                 s_static_array<tp_type, tp_len> &arr,
                                                 const t_size cnt) {
         ZF_ASSERT(cnt >= 0 && cnt <= arr.g_len);
-        return StreamReadItemsIntoArray(stream, ToNonstatic(arr), cnt);
+        return StreamReadItemsIntoArray(stream, ToNonstaticArray(arr), cnt);
     }
 
     template <c_nonstatic_array tp_type>
     [[nodiscard]] t_b8 StreamWriteItemsOfArray(s_stream &stream, const tp_type arr) {
         ZF_ASSERT(stream.mode == ek_stream_mode_write);
 
-        if (IsArrayEmpty(arr)) {
+        if (arr.len == 0) {
             return true;
         }
 
@@ -202,7 +202,7 @@ namespace zf {
     template <typename tp_type, t_size tp_len>
     [[nodiscard]] t_b8 StreamWriteItemsOfArray(s_stream &stream,
                                                const s_static_array<tp_type, tp_len> &arr) {
-        return StreamWriteItemsOfArray(stream, ToNonstatic(arr));
+        return StreamWriteItemsOfArray(stream, ToNonstaticArray(arr));
     }
 
     template <c_nonstatic_array tp_type>
@@ -221,7 +221,7 @@ namespace zf {
     template <typename tp_type, t_size tp_len>
     [[nodiscard]] t_b8 SerializeArray(s_stream &stream,
                                       const s_static_array<tp_type, tp_len> &arr) {
-        return SerializeArray(stream, ToNonstatic(arr));
+        return SerializeArray(stream, ToNonstaticArray(arr));
     }
 
     template <typename tp_type>
@@ -421,7 +421,7 @@ namespace zf {
 
         str_bytes_used += dig_cnt;
 
-        const s_str_rdonly str = {Slice(str_bytes, 0, str_bytes_used)};
+        const s_str_rdonly str = {Slice(ToNonstaticArray(str_bytes), 0, str_bytes_used)};
         return Print(stream, str);
     }
 
@@ -537,10 +537,10 @@ namespace zf {
         } while (val_mut != 0);
 
         const auto str_bytes_digits =
-            Slice(str_bytes, str_bytes_digits_begin_index, str_bytes_used);
+            Slice(ToNonstaticArray(str_bytes), str_bytes_digits_begin_index, str_bytes_used);
         Reverse(str_bytes_digits);
 
-        const s_str_rdonly str = {Slice(str_bytes, 0, str_bytes_used)};
+        const s_str_rdonly str = {Slice(ToNonstaticArray(str_bytes), 0, str_bytes_used)};
         return Print(stream, str);
     }
 
@@ -701,7 +701,7 @@ namespace zf {
     template <typename tp_type, t_size tp_len>
     s_array_fmt<s_array_rdonly<tp_type>> FormatArray(
         const s_static_array<tp_type, tp_len> &val, const t_b8 one_per_line = false) {
-        return {ToNonstatic(val), one_per_line};
+        return {ToNonstaticArray(val), one_per_line};
     }
 
     template <c_nonstatic_array tp_arr_type>
@@ -712,7 +712,7 @@ namespace zf {
     template <typename tp_type, t_size tp_len>
     s_array_fmt<s_array_rdonly<tp_type>> FormatDefault(
         const s_static_array<tp_type, tp_len> &val) {
-        return FormatArray(ToNonstatic(val));
+        return FormatArray(ToNonstaticArray(val));
     }
 
     template <typename tp_type>
