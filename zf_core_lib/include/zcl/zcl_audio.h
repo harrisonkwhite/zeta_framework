@@ -1,7 +1,7 @@
 #pragma once
 
-#include <zcl/zcl_strs.h>
 #include <zcl/zcl_io.h>
+#include <zcl/zcl_strs.h>
 
 namespace zf {
     struct s_sound_meta {
@@ -24,13 +24,20 @@ namespace zf {
         }
     };
 
-    inline t_s64 CalcSampleCount(const s_sound_meta& snd_meta) {
+    constexpr t_s64 CalcSampleCount(const s_sound_meta snd_meta) {
         return snd_meta.channel_cnt * snd_meta.frame_cnt;
     }
 
-    [[nodiscard]] t_b8 LoadSoundFromRaw(const s_str_rdonly file_path, s_mem_arena& mem_arena, s_mem_arena& temp_mem_arena, s_sound_meta& o_snd_meta, s_array<t_f32>& o_snd_pcm);
-    [[nodiscard]] t_b8 SerializeSoundData(s_stream& stream, const s_sound_data& snd_data);
-    [[nodiscard]] t_b8 DeserializeSoundData(s_stream& stream, s_mem_arena& mem_arena, s_sound_data& o_snd_data);
-    [[nodiscard]] t_b8 PackSound(const s_str_rdonly dest_file_path, const s_str_rdonly src_file_path, s_mem_arena& temp_mem_arena);
-    [[nodiscard]] t_b8 UnpackSound(const s_str_rdonly file_path, s_mem_arena& mem_arena, s_mem_arena& temp_mem_arena, s_sound_data& o_snd_data);
+    [[nodiscard]] t_b8 LoadSoundFromRaw(const s_str_rdonly file_path,
+                                        s_sound_data *const snd_data,
+                                        s_mem_arena *const snd_data_mem_arena,
+                                        s_mem_arena *const temp_mem_arena);
+    [[nodiscard]] t_b8 PackSound(const s_str_rdonly file_path, const s_sound_data snd_data,
+                                 s_mem_arena *const temp_mem_arena);
+    [[nodiscard]] t_b8 UnpackSound(const s_str_rdonly file_path, s_sound_data *const snd_data,
+                                   s_mem_arena *const mem_arena,
+                                   s_mem_arena *const temp_mem_arena);
+    [[nodiscard]] t_b8 SerializeSound(s_stream *const stream, const s_sound_data snd_data);
+    [[nodiscard]] t_b8 DeserializeSound(s_stream *const stream, s_sound_data *const snd_data,
+                                        s_mem_arena *const snd_data_mem_arena);
 }

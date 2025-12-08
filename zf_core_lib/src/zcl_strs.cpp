@@ -273,7 +273,7 @@ namespace zf {
         ek_utf8_byte_type_invalid, // 1111 1100
         ek_utf8_byte_type_invalid, // 1111 1101
         ek_utf8_byte_type_invalid, // 1111 1110
-        ek_utf8_byte_type_invalid // 1111 1111
+        ek_utf8_byte_type_invalid  // 1111 1111
     }};
 
     t_b8 IsValidUTF8Str(const s_str_rdonly str) {
@@ -283,27 +283,27 @@ namespace zf {
             const auto byte_type = g_utf8_byte_type_table[str.bytes[i]];
 
             switch (byte_type) {
-                case ek_utf8_byte_type_ascii:
-                case ek_utf8_byte_type_2byte_start:
-                case ek_utf8_byte_type_3byte_start:
-                case ek_utf8_byte_type_4byte_start:
-                    if (cost > 0) {
-                        return false;
-                    }
-
-                    cost = byte_type - ek_utf8_byte_type_ascii + 1;
-
-                    break;
-
-                case ek_utf8_byte_type_continuation:
-                    if (cost == 0) {
-                        return false;
-                    }
-
-                    break;
-
-                case ek_utf8_byte_type_invalid:
+            case ek_utf8_byte_type_ascii:
+            case ek_utf8_byte_type_2byte_start:
+            case ek_utf8_byte_type_3byte_start:
+            case ek_utf8_byte_type_4byte_start:
+                if (cost > 0) {
                     return false;
+                }
+
+                cost = byte_type - ek_utf8_byte_type_ascii + 1;
+
+                break;
+
+            case ek_utf8_byte_type_continuation:
+                if (cost == 0) {
+                    return false;
+                }
+
+                break;
+
+            case ek_utf8_byte_type_invalid:
+                return false;
             }
 
             cost--;
@@ -322,17 +322,17 @@ namespace zf {
             const auto byte_type = g_utf8_byte_type_table[str.bytes[i]];
 
             switch (byte_type) {
-                case ek_utf8_byte_type_ascii:
-                case ek_utf8_byte_type_2byte_start:
-                case ek_utf8_byte_type_3byte_start:
-                case ek_utf8_byte_type_4byte_start:
-                    i += byte_type - ek_utf8_byte_type_ascii + 1;
-                    break;
+            case ek_utf8_byte_type_ascii:
+            case ek_utf8_byte_type_2byte_start:
+            case ek_utf8_byte_type_3byte_start:
+            case ek_utf8_byte_type_4byte_start:
+                i += byte_type - ek_utf8_byte_type_ascii + 1;
+                break;
 
-                case ek_utf8_byte_type_continuation:
-                case ek_utf8_byte_type_invalid:
-                    ZF_ASSERT(false);
-                    break;
+            case ek_utf8_byte_type_continuation:
+            case ek_utf8_byte_type_invalid:
+                ZF_ASSERT(false);
+                break;
             }
 
             len++;
@@ -361,7 +361,7 @@ namespace zf {
         } while (true);
     }
 
-    t_b8 WalkStr(const s_str_rdonly str, t_size& byte_index, s_str_chr_info& o_chr_info) {
+    t_b8 WalkStr(const s_str_rdonly str, t_size &byte_index, s_str_chr_info &o_chr_info) {
         ZF_ASSERT(IsValidUTF8Str(str));
         ZF_ASSERT(byte_index >= 0 && byte_index <= str.bytes.len);
 
@@ -372,29 +372,27 @@ namespace zf {
         const auto byte_type = g_utf8_byte_type_table[str.bytes[byte_index]];
 
         switch (byte_type) {
-            case ek_utf8_byte_type_ascii:
-            case ek_utf8_byte_type_2byte_start:
-            case ek_utf8_byte_type_3byte_start:
-            case ek_utf8_byte_type_4byte_start:
-                {
-                    const t_size chr_len = byte_type - ek_utf8_byte_type_ascii + 1;
-                    const auto chr_bytes = Slice(str.bytes, byte_index, byte_index + chr_len);
-                    o_chr_info = {
-                        .code_pt = UTF8ChrBytesToCodePoint(chr_bytes),
-                        .byte_index = byte_index
-                    };
-                    byte_index += chr_len;
+        case ek_utf8_byte_type_ascii:
+        case ek_utf8_byte_type_2byte_start:
+        case ek_utf8_byte_type_3byte_start:
+        case ek_utf8_byte_type_4byte_start: {
+            const t_size chr_len = byte_type - ek_utf8_byte_type_ascii + 1;
+            const auto chr_bytes = Slice(str.bytes, byte_index, byte_index + chr_len);
+            o_chr_info = {.code_pt = UTF8ChrBytesToCodePoint(chr_bytes),
+                          .byte_index = byte_index};
+            byte_index += chr_len;
 
-                    return true;
-                }
+            return true;
+        }
 
-            default:
-                ZF_ASSERT(false);
-                return false;
+        default:
+            ZF_ASSERT(false);
+            return false;
         }
     }
 
-    t_b8 WalkStrReverse(const s_str_rdonly str, t_size& byte_index, s_str_chr_info& o_chr_info) {
+    t_b8 WalkStrReverse(const s_str_rdonly str, t_size &byte_index,
+                        s_str_chr_info &o_chr_info) {
         ZF_ASSERT(IsValidUTF8Str(str));
         ZF_ASSERT(byte_index >= -1 && byte_index < str.bytes.len);
 
@@ -402,31 +400,29 @@ namespace zf {
             return false;
         }
 
-        while (g_utf8_byte_type_table[str.bytes[byte_index]] == ek_utf8_byte_type_continuation) {
+        while (g_utf8_byte_type_table[str.bytes[byte_index]] ==
+               ek_utf8_byte_type_continuation) {
             byte_index--;
         }
 
         const auto byte_type = g_utf8_byte_type_table[str.bytes[byte_index]];
 
         switch (byte_type) {
-            case ek_utf8_byte_type_ascii:
-            case ek_utf8_byte_type_2byte_start:
-            case ek_utf8_byte_type_3byte_start:
-            case ek_utf8_byte_type_4byte_start:
-                {
-                    const t_size chr_len = byte_type - ek_utf8_byte_type_ascii + 1;
-                    const auto chr_bytes = Slice(str.bytes, byte_index, byte_index + chr_len);
-                    o_chr_info = {
-                        .code_pt = UTF8ChrBytesToCodePoint(chr_bytes),
-                        .byte_index = byte_index
-                    };
-                    byte_index--;
-                    return true;
-                }
+        case ek_utf8_byte_type_ascii:
+        case ek_utf8_byte_type_2byte_start:
+        case ek_utf8_byte_type_3byte_start:
+        case ek_utf8_byte_type_4byte_start: {
+            const t_size chr_len = byte_type - ek_utf8_byte_type_ascii + 1;
+            const auto chr_bytes = Slice(str.bytes, byte_index, byte_index + chr_len);
+            o_chr_info = {.code_pt = UTF8ChrBytesToCodePoint(chr_bytes),
+                          .byte_index = byte_index};
+            byte_index--;
+            return true;
+        }
 
-            default:
-                ZF_ASSERT(false);
-                return false;
+        default:
+            ZF_ASSERT(false);
+            return false;
         }
     }
 
@@ -467,7 +463,7 @@ namespace zf {
         return res;
     }
 
-    void MarkStrCodePoints(const s_str_rdonly str, t_unicode_code_pt_bit_vec& code_pts) {
+    void MarkStrCodePoints(const s_str_rdonly str, t_unicode_code_pt_bit_vec &code_pts) {
         ZF_ASSERT(IsValidUTF8Str(str));
 
         ZF_WALK_STR(str, chr_info) {

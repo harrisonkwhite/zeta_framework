@@ -6,11 +6,12 @@
     #ifndef WIN32_LEAN_AND_MEAN
         #define WIN32_LEAN_AND_MEAN
     #endif
+
     #ifndef NOMINMAX
         #define NOMINMAX
     #endif
-    #include <windows.h>
 
+    #include <windows.h>
     #include <dbghelp.h>
 #endif
 
@@ -25,12 +26,12 @@ namespace zf {
         SymInitialize(proc, nullptr, TRUE);
 
         constexpr t_s32 stack_len = 32;
-        void* stack[stack_len];
+        void *stack[stack_len];
         const t_s32 frame_cnt = CaptureStackBackTrace(0, stack_len, stack, nullptr);
 
         constexpr t_s32 func_name_buf_size = 256;
         char symbol_buf[ZF_SIZE_OF(SYMBOL_INFO) + func_name_buf_size];
-        const auto symbol = reinterpret_cast<SYMBOL_INFO*>(symbol_buf);
+        const auto symbol = reinterpret_cast<SYMBOL_INFO *>(symbol_buf);
         symbol->MaxNameLen = func_name_buf_size - 1;
         symbol->SizeOfStruct = ZF_SIZE_OF(SYMBOL_INFO);
 
@@ -44,7 +45,8 @@ namespace zf {
                 DWORD displacement;
 
                 if (SymGetLineFromAddr64(proc, addr, &displacement, &line)) {
-                    fprintf(stderr, "- %s (%s:%lu)\n", symbol->Name, line.FileName, line.LineNumber);
+                    fprintf(stderr, "- %s (%s:%lu)\n", symbol->Name, line.FileName,
+                            line.LineNumber);
                 } else {
                     fprintf(stderr, "- %s\n", symbol->Name);
                 }
@@ -69,7 +71,8 @@ namespace zf {
         return false;
     }
 
-    void P_ReportAssertError(const char* const cond_raw, const char* const func_name_raw, const char* const file_name_raw, const t_s32 line) {
+    void I_ReportAssertError(const char *const cond_raw, const char *const func_name_raw,
+                             const char *const file_name_raw, const t_s32 line) {
         fprintf(stderr, "==================== ASSERTION ERROR ====================\n");
         fprintf(stderr, "Condition: %s\n", cond_raw);
         fprintf(stderr, "Function:  %s\n", func_name_raw);
@@ -85,7 +88,8 @@ namespace zf {
         }
     }
 
-    void P_ReportError(const char* const func_name_raw, const char* const file_name_raw, const t_s32 line) {
+    void I_ReportError(const char *const func_name_raw, const char *const file_name_raw,
+                       const t_s32 line) {
         static t_b8 g_reported;
 
         if (g_reported) {
@@ -113,7 +117,7 @@ namespace zf {
         g_reported = true;
     }
 
-    void ShowErrorBox(const char* const title_raw, const char* const contents_raw) {
+    void ShowErrorBox(const char *const title_raw, const char *const contents_raw) {
 #ifdef ZF_PLATFORM_WINDOWS
         MessageBoxA(nullptr, contents_raw, title_raw, MB_OK | MB_ICONERROR | MB_TOPMOST);
 #endif

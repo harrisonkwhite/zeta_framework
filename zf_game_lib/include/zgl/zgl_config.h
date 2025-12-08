@@ -2,8 +2,7 @@
 
 #include <zcl.h>
 
-namespace zf
-{
-    constexpr t_s32 p_g_gl_version_major = 4;
-    constexpr t_s32 p_g_gl_version_minor = 6;
+namespace zf {
+    constexpr t_s32 i_g_gl_version_major = 4;
+    constexpr t_s32 i_g_gl_version_minor = 6;
 }
