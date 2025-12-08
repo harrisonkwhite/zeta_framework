@@ -205,7 +205,7 @@ namespace zf {
         }
 
         t_size atlas_index = 0;
-        s_v2<t_s32> atlas_pen = {};
+        s_v2i atlas_pen = {};
 
         ZF_FOR_EACH_SET_BIT(code_pts, i) {
             const auto code_pt = static_cast<t_unicode_code_pt>(i);
@@ -437,9 +437,9 @@ namespace zf {
     }
 
     t_b8 LoadStrChrDrawPositions(const s_str_rdonly str,
-                                 const s_font_arrangement &font_arrangement,
-                                 const s_v2<t_f32> pos, const s_v2<t_f32> alignment,
-                                 s_mem_arena &mem_arena, s_array<s_v2<t_f32>> &o_positions) {
+                                 const s_font_arrangement &font_arrangement, const s_v2 pos,
+                                 const s_v2 alignment, s_mem_arena &mem_arena,
+                                 s_array<s_v2> &o_positions) {
         ZF_ASSERT(!IsStrEmpty(str) && IsValidUTF8Str(str));
         ZF_ASSERT(IsAlignmentValid(alignment));
 
@@ -475,7 +475,7 @@ namespace zf {
 
         // Calculate the position of each character.
         t_size chr_index = 0;
-        s_v2<t_f32> chr_pos_pen = {}; // The position of the current character.
+        s_v2 chr_pos_pen = {}; // The position of the current character.
         t_size line_begin_chr_index = 0;
         t_size line_len = 0;
         t_unicode_code_pt code_pt_last;
@@ -528,8 +528,7 @@ namespace zf {
                 }
             }
 
-            o_positions[chr_index] =
-                pos + chr_pos_pen + static_cast<s_v2<t_f32>>(glyph_info.offs);
+            o_positions[chr_index] = pos + chr_pos_pen + ToV2(glyph_info.offs);
             o_positions[chr_index].y += alignment_offs_y;
 
             chr_pos_pen.x += static_cast<t_f32>(glyph_info.adv);

@@ -3,9 +3,6 @@
 #include <zcl.h>
 
 namespace zf {
-    // ============================================================
-    // @section: Public
-    // ============================================================
     enum e_key_code : t_s32 {
         eks_key_code_none = -1,
 
@@ -90,7 +87,7 @@ namespace zf {
         s_static_bit_vec<eks_key_code_cnt> keys_down;
         s_static_bit_vec<eks_mouse_button_code_cnt> mouse_buttons_down;
 
-        s_v2<t_f32> cursor_pos;
+        s_v2 cursor_pos;
 
         struct {
             s_static_bit_vec<eks_key_code_cnt> keys_pressed;
@@ -103,7 +100,7 @@ namespace zf {
             // -Y: Scroll down / towards you
             // +X: Scroll right
             // +X: Scroll left
-            s_v2<t_f32> scroll;
+            s_v2 scroll;
         } events;
     };
 
@@ -134,25 +131,24 @@ namespace zf {
         return IsBitSet(is->events.mouse_buttons_released, mbc);
     }
 
-    // ============================================================
-    // @section: Internal
-    // ============================================================
-    enum class i_e_key_action {
-        invalid,
-        press,
-        release
-    };
+    namespace internal {
+        enum class e_key_action : t_s32 {
+            invalid,
+            press,
+            release
+        };
 
-    enum class i_e_mouse_button_action {
-        invalid,
-        press,
-        release
-    };
+        enum class e_mouse_button_action : t_s32 {
+            invalid,
+            press,
+            release
+        };
 
-    void I_ProcKeyAction(s_input_state *const is, const e_key_code code,
-                         const i_e_key_action act);
-    void I_ProcMouseButtonAction(s_input_state *const is, const e_mouse_button_code code,
-                                 const i_e_mouse_button_action act);
-    void I_ProcCursorMove(s_input_state *const is, const s_v2<t_f32> pos);
-    void I_ProcScroll(s_input_state *const is, const s_v2<t_f32> scroll);
+        void ProcKeyAction(s_input_state *const is, const e_key_code code,
+                           const e_key_action act);
+        void ProcMouseButtonAction(s_input_state *const is, const e_mouse_button_code code,
+                                   const e_mouse_button_action act);
+        void ProcCursorMove(s_input_state *const is, const s_v2 pos);
+        void ProcScroll(s_input_state *const is, const s_v2 scroll);
+    }
 }

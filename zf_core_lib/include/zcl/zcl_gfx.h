@@ -17,9 +17,9 @@ namespace zf {
         constexpr s_color_rgba32f() = default;
         constexpr s_color_rgba32f(const t_f32 r, const t_f32 g, const t_f32 b, const t_f32 a)
             : r(r), g(g), b(b), a(a) {}
-        constexpr s_color_rgba32f(const s_v4<t_f32> v) : r(v.x), g(v.y), b(v.z), a(v.w) {}
+        constexpr s_color_rgba32f(const s_v4 v) : r(v.x), g(v.y), b(v.z), a(v.w) {}
 
-        constexpr operator s_v4<t_f32>() const {
+        constexpr operator s_v4() const {
             return {r, g, b, a};
         }
     };
@@ -32,13 +32,13 @@ namespace zf {
         constexpr s_color_rgba24f() = default;
         constexpr s_color_rgba24f(const t_f32 r, const t_f32 g, const t_f32 b)
             : r(r), g(g), b(b) {}
-        constexpr s_color_rgba24f(const s_v3<t_f32> v) : r(v.x), g(v.y), b(v.z) {}
+        constexpr s_color_rgba24f(const s_v3 v) : r(v.x), g(v.y), b(v.z) {}
 
         constexpr operator s_color_rgba32f() const {
             return {r, g, b, 1.0f};
         }
 
-        constexpr operator s_v3<t_f32>() const {
+        constexpr operator s_v3() const {
             return {r, g, b};
         }
     };
@@ -109,28 +109,28 @@ namespace zf {
     // @section: Textures
     // ============================================================
     namespace origins {
-        constexpr s_v2<t_f32> g_topleft = {0.0f, 0.0f};
-        constexpr s_v2<t_f32> g_topcenter = {0.5f, 0.0f};
-        constexpr s_v2<t_f32> g_topright = {1.0f, 0.0f};
-        constexpr s_v2<t_f32> g_centerleft = {0.0f, 0.5f};
-        constexpr s_v2<t_f32> g_center = {0.5f, 0.5f};
-        constexpr s_v2<t_f32> g_centerright = {1.0f, 0.5f};
-        constexpr s_v2<t_f32> g_bottomleft = {0.0f, 1.0f};
-        constexpr s_v2<t_f32> g_bottomcenter = {0.5f, 1.0f};
-        constexpr s_v2<t_f32> g_bottomright = {1.0f, 1.0f};
+        constexpr s_v2 g_topleft = {0.0f, 0.0f};
+        constexpr s_v2 g_topcenter = {0.5f, 0.0f};
+        constexpr s_v2 g_topright = {1.0f, 0.0f};
+        constexpr s_v2 g_centerleft = {0.0f, 0.5f};
+        constexpr s_v2 g_center = {0.5f, 0.5f};
+        constexpr s_v2 g_centerright = {1.0f, 0.5f};
+        constexpr s_v2 g_bottomleft = {0.0f, 1.0f};
+        constexpr s_v2 g_bottomcenter = {0.5f, 1.0f};
+        constexpr s_v2 g_bottomright = {1.0f, 1.0f};
     }
 
-    constexpr t_b8 IsOriginValid(const s_v2<t_f32> origin) {
+    constexpr t_b8 IsOriginValid(const s_v2 origin) {
         return origin.x >= 0.0f && origin.x <= 1.0f && origin.y >= 0.0f && origin.y <= 1.0f;
     }
 
     struct s_rgba_texture_data_rdonly {
-        s_v2<t_s32> size_in_pxs;
+        s_v2i size_in_pxs;
         s_array_rdonly<t_u8> px_data;
     };
 
     struct s_texture_data {
-        s_v2<t_s32> size_in_pxs;
+        s_v2i size_in_pxs;
         s_array<t_u8> rgba_px_data;
 
         constexpr operator s_rgba_texture_data_rdonly() const {
@@ -149,8 +149,7 @@ namespace zf {
     [[nodiscard]] t_b8 UnpackTexture(const s_str_rdonly file_path, s_mem_arena &mem_arena,
                                      s_mem_arena &temp_mem_arena, s_texture_data &o_tex_data);
 
-    inline s_rect<t_f32> CalcTextureCoords(const s_rect<t_s32> src_rect,
-                                           const s_v2<t_s32> tex_size) {
+    inline s_rect CalcTextureCoords(const s_rect_i src_rect, const s_v2i tex_size) {
         return {static_cast<t_f32>(src_rect.x) / static_cast<t_f32>(tex_size.x),
                 static_cast<t_f32>(src_rect.y) / static_cast<t_f32>(tex_size.y),
                 static_cast<t_f32>(src_rect.width) / static_cast<t_f32>(tex_size.x),
@@ -161,36 +160,36 @@ namespace zf {
     // @section: Fonts
     // ============================================================
     namespace alignments {
-        constexpr s_v2<t_f32> g_topleft = {0.0f, 0.0f};
-        constexpr s_v2<t_f32> g_topcenter = {0.5f, 0.0f};
-        constexpr s_v2<t_f32> g_topright = {1.0f, 0.0f};
-        constexpr s_v2<t_f32> g_centerleft = {0.0f, 0.5f};
-        constexpr s_v2<t_f32> g_center = {0.5f, 0.5f};
-        constexpr s_v2<t_f32> g_centerright = {1.0f, 0.5f};
-        constexpr s_v2<t_f32> g_bottomleft = {0.0f, 1.0f};
-        constexpr s_v2<t_f32> g_bottomcenter = {0.5f, 1.0f};
-        constexpr s_v2<t_f32> g_bottomright = {1.0f, 1.0f};
+        constexpr s_v2 g_topleft = {0.0f, 0.0f};
+        constexpr s_v2 g_topcenter = {0.5f, 0.0f};
+        constexpr s_v2 g_topright = {1.0f, 0.0f};
+        constexpr s_v2 g_centerleft = {0.0f, 0.5f};
+        constexpr s_v2 g_center = {0.5f, 0.5f};
+        constexpr s_v2 g_centerright = {1.0f, 0.5f};
+        constexpr s_v2 g_bottomleft = {0.0f, 1.0f};
+        constexpr s_v2 g_bottomcenter = {0.5f, 1.0f};
+        constexpr s_v2 g_bottomright = {1.0f, 1.0f};
     }
 
-    constexpr t_b8 IsAlignmentValid(const s_v2<t_f32> alignment) {
+    constexpr t_b8 IsAlignmentValid(const s_v2 alignment) {
         return alignment.x >= 0.0f && alignment.x <= 1.0f && alignment.y >= 0.0f &&
                alignment.y <= 1.0f;
     }
 
-    constexpr s_v2<t_s32> g_font_atlas_size = {1024, 1024};
+    constexpr s_v2i g_font_atlas_size = {1024, 1024};
 
     using t_font_atlas_rgba =
         s_static_array<t_u8, 4 * g_font_atlas_size.x * g_font_atlas_size.y>;
 
     struct s_font_glyph_info {
         // These are for determining positioning relative to other characters.
-        s_v2<t_s32> offs;
-        s_v2<t_s32> size;
+        s_v2i offs;
+        s_v2i size;
         t_s32 adv;
 
         // In what texture atlas is this glyph, and where?
         t_size atlas_index;
-        s_rect<t_s32> atlas_rect;
+        s_rect_i atlas_rect;
     };
 
     struct s_font_code_point_pair {
@@ -235,9 +234,9 @@ namespace zf {
                                   s_font_arrangement &o_arrangement,
                                   s_array<t_font_atlas_rgba> &o_atlas_rgbas);
     [[nodiscard]] t_b8 LoadStrChrDrawPositions(
-        const s_str_rdonly str, const s_font_arrangement &font_arrangement,
-        const s_v2<t_f32> pos, const s_v2<t_f32> alignment, s_mem_arena &mem_arena,
-        s_array<s_v2<t_f32>>
+        const s_str_rdonly str, const s_font_arrangement &font_arrangement, const s_v2 pos,
+        const s_v2 alignment, s_mem_arena &mem_arena,
+        s_array<s_v2>
             &o_positions); // Creates an array of length n, where n is the number of CHARACTERS
                            // (not bytes) in the string, including non-printable characters.
                            // Each element is the top-left position of the corresponding

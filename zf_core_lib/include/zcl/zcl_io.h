@@ -460,7 +460,8 @@ namespace zf {
         }
 
         if (fmt.trim_trailing_zeros) {
-            const auto str_bytes_relevant = Slice(str_bytes, 0, str_bytes_used);
+            const auto str_bytes_relevant =
+                Slice(ToNonstaticArray(str_bytes), 0, str_bytes_used);
 
             if (AreAnyEqualTo(str_bytes_relevant, '.')) {
                 for (t_size i = str_bytes_used - 1;; i--) {
@@ -476,7 +477,7 @@ namespace zf {
             }
         }
 
-        const s_str_rdonly str = {Slice(str_bytes, 0, str_bytes_used)};
+        const s_str_rdonly str = {Slice(ToNonstaticArray(str_bytes), 0, str_bytes_used)};
         return Print(stream, str);
     }
 
@@ -630,54 +631,45 @@ namespace zf {
     // ========================================
     // @subsection: V2 Printing
     // ========================================
-    template <c_integral tp_type>
-    struct s_v2_int_fmt {
-        using t_fmt_tag = void;
-        s_v2<tp_type> val;
-    };
-
-    template <c_floating_point tp_type>
-    struct s_v2_float_fmt {
+    struct s_v2_fmt {
         using t_fmt_tag = void;
 
-        s_v2<tp_type> val;
+        s_v2 val;
         t_b8 trim_trailing_zeros;
     };
 
-    template <c_integral tp_type>
-    s_v2_int_fmt<tp_type> FormatV2(const s_v2<tp_type> val) {
+    struct s_v2_i_fmt {
+        using t_fmt_tag = void;
+        s_v2i val;
+    };
+
+    constexpr s_v2_fmt FormatV2(const s_v2 val, const t_b8 trim_trailing_zeros = false) {
         return {val};
     }
 
-    template <c_integral tp_type>
-    s_v2_int_fmt<tp_type> FormatDefault(const s_v2<tp_type> val) {
+    constexpr s_v2_fmt FormatDefault(const s_v2 val) {
         return FormatV2(val);
     }
 
-    template <c_floating_point tp_type>
-    s_v2_float_fmt<tp_type> FormatV2(const s_v2<tp_type> val,
-                                     const t_b8 trim_trailing_zeros = false) {
-        return {val, trim_trailing_zeros};
+    constexpr s_v2_i_fmt FormatV2(const s_v2i val) {
+        return {val};
     }
 
-    template <c_floating_point tp_type>
-    s_v2_float_fmt<tp_type> FormatDefault(const s_v2<tp_type> val) {
+    constexpr s_v2_i_fmt FormatDefault(const s_v2i val) {
         return FormatV2(val);
     }
 
-    template <c_integral tp_type>
-    t_b8 PrintType(s_stream &stream, const s_v2_int_fmt<tp_type> &fmt) {
-        return Print(stream, "(") && PrintType(stream, FormatInt(fmt.val.x)) &&
-               Print(stream, ", ") && PrintType(stream, FormatInt(fmt.val.y)) &&
-               Print(stream, ")");
-    }
-
-    template <c_floating_point tp_type>
-    t_b8 PrintType(s_stream &stream, const s_v2_float_fmt<tp_type> &fmt) {
+    inline t_b8 PrintType(s_stream &stream, const s_v2_fmt fmt) {
         return Print(stream, "(") &&
                PrintType(stream, FormatFloat(fmt.val.x, fmt.trim_trailing_zeros)) &&
                Print(stream, ", ") &&
                PrintType(stream, FormatFloat(fmt.val.y, fmt.trim_trailing_zeros)) &&
+               Print(stream, ")");
+    }
+
+    inline t_b8 PrintType(s_stream &stream, const s_v2_i_fmt fmt) {
+        return Print(stream, "(") && PrintType(stream, FormatInt(fmt.val.x)) &&
+               Print(stream, ", ") && PrintType(stream, FormatInt(fmt.val.y)) &&
                Print(stream, ")");
     }
 

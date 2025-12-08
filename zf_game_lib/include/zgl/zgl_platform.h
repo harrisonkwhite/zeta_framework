@@ -11,7 +11,7 @@ namespace zf {
 
     // Sets the LOGICAL window size. The actual new framebuffer size MIGHT be larger if there
     // is DPI scaling.
-    void SetWindowSize(const s_platform_layer_info *const pli, const s_v2<t_s32> size);
+    void SetWindowSize(const s_platform_layer_info *const pli, const s_v2i size);
 
     // Set the LOGICAL window size limits. If you don't want to limit a particular dimension,
     // leave -1.
@@ -21,14 +21,14 @@ namespace zf {
 
     void SetWindowResizability(const s_platform_layer_info *const pli, const t_b8 resizable);
 
-    s_v2<t_s32> WindowFramebufferSizeCache(const s_platform_layer_info *const pli);
+    s_v2i WindowFramebufferSizeCache(const s_platform_layer_info *const pli);
 
     // Returns the size in pixels of whichever monitor the window most resides in.
-    s_v2<t_s32> CalcMonitorPixelSize(const s_platform_layer_info *const pli);
+    s_v2i CalcMonitorPixelSize(const s_platform_layer_info *const pli);
 
     // Returns the size (accounting for DPI scaling) of whichever monitor the window most
     // resides in.
-    s_v2<t_s32> CalcMonitorLogicalSize(const s_platform_layer_info *const pli);
+    s_v2i CalcMonitorLogicalSize(const s_platform_layer_info *const pli);
 
     t_b8 IsFullscreen(const s_platform_layer_info *const pli);
     void SetFullscreen(s_platform_layer_info *const pli, const t_b8 fs);

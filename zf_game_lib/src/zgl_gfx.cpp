@@ -152,14 +152,14 @@ namespace zf {
         return static_cast<t_gl_id>(prog);
     }
 
-    static s_v2<t_s32> GLTextureSizeLimit() {
+    static s_v2i GLTextureSizeLimit() {
         t_s32 size;
         glGetIntegerv(GL_MAX_TEXTURE_SIZE, &size);
         return {size, size};
     }
 
     static t_gl_id CreateGLTexture(const s_rgba_texture_data_rdonly tex_data) {
-        const s_v2<t_s32> tex_size_limit = GLTextureSizeLimit();
+        const s_v2i tex_size_limit = GLTextureSizeLimit();
 
         if (tex_data.size_in_pxs.x > tex_size_limit.x ||
             tex_data.size_in_pxs.y > tex_size_limit.y) {
@@ -184,7 +184,7 @@ namespace zf {
 
     [[nodiscard]] static t_b8 AttachGLFramebufferTexture(const t_gl_id fb_gl_id,
                                                          const t_gl_id tex_gl_id,
-                                                         const s_v2<t_s32> tex_size) {
+                                                         const s_v2i tex_size) {
         glBindTexture(GL_TEXTURE_2D, tex_gl_id);
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, static_cast<GLsizei>(tex_size.x),
                      static_cast<GLsizei>(tex_size.y), 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
@@ -221,7 +221,7 @@ namespace zf {
         union {
             struct {
                 t_gl_id gl_id;
-                s_v2<t_s32> size;
+                s_v2i size;
             } tex;
 
             struct {
@@ -232,7 +232,7 @@ namespace zf {
             struct {
                 t_gl_id fb_gl_id;
                 t_gl_id tex_gl_id;
-                s_v2<t_s32> size;
+                s_v2i size;
             } surf;
 
             struct {
@@ -315,7 +315,7 @@ namespace zf {
         return tex;
     }
 
-    s_v2<t_s32> TextureSize(const s_gfx_resource *const res) {
+    s_v2i TextureSize(const s_gfx_resource *const res) {
         ZF_ASSERT(res);
         ZF_ASSERT(res->type == ek_gfx_resource_type_texture);
 
@@ -412,8 +412,7 @@ namespace zf {
     }
 #endif
 
-    s_gfx_resource *CreateSurface(const s_v2<t_s32> size,
-                                  s_gfx_resource_arena *const res_arena) {
+    s_gfx_resource *CreateSurface(const s_v2i size, s_gfx_resource_arena *const res_arena) {
         t_gl_id fb_gl_id;
         glGenFramebuffers(1, &fb_gl_id);
 
@@ -439,7 +438,7 @@ namespace zf {
         return surf;
     }
 
-    t_b8 ResizeSurface(s_gfx_resource *const surf, const s_v2<t_s32> size) {
+    t_b8 ResizeSurface(s_gfx_resource *const surf, const s_v2i size) {
         ZF_ASSERT(surf && surf->type == ek_gfx_resource_type_surface);
         ZF_ASSERT(surf->type_data.surf.size != size &&
                   "Unnecessarily resizing a surface - new surface size is the same.");
@@ -491,11 +490,11 @@ namespace zf {
     // @section: Rendering
     // ============================================================
     struct s_batch_vert {
-        s_v2<t_f32> vert_coord;
-        s_v2<t_f32> pos;
-        s_v2<t_f32> size;
+        s_v2 vert_coord;
+        s_v2 pos;
+        s_v2 size;
         t_f32 rot;
-        s_v2<t_f32> tex_coord;
+        s_v2 tex_coord;
         s_color_rgba32f blend;
     };
 
@@ -624,15 +623,15 @@ void main() {
         s_static_array<t_batch_slot, g_batch_slot_cnt> batch_slots;
         t_size batch_slots_used_cnt;
 
-        s_matrix_4x4 view_mat; // The view matrix to be used when flushing.
-        t_gl_id tex_gl_id;     // The texture to be used when flushing.
+        s_mat4x4 view_mat; // The view matrix to be used when flushing.
+        t_gl_id tex_gl_id; // The texture to be used when flushing.
 
         s_static_stack<const s_gfx_resource *, 32> surfs;
     };
 
     t_b8 internal::BeginFrame(s_rendering_context *const rendering_context,
                               const s_rendering_basis *const rendering_basis,
-                              const s_v2<t_s32> framebuffer_size_cache,
+                              const s_v2i framebuffer_size_cache,
                               s_mem_arena *const mem_arena) {
         ZeroOut(rendering_context);
         rendering_context->basis = rendering_basis;
@@ -644,7 +643,7 @@ void main() {
             return false;
         }
 
-        rendering_context->state->view_mat = MakeIdentityMatrix4x4();
+        rendering_context->state->view_mat = CreateIdentityMatrix();
         glViewport(0, 0, framebuffer_size_cache.x, framebuffer_size_cache.y);
         Clear(*rendering_context, s_color_rgba8(147, 207, 249, 255));
 
@@ -679,7 +678,7 @@ void main() {
         glUniformMatrix4fv(view_uniform_loc, 1, false,
                            reinterpret_cast<const t_f32 *>(&rc.state->view_mat));
 
-        const auto proj_mat = MakeOrthographicMatrix4x4(
+        const auto proj_mat = CreateOrthographicMatrix(
             0.0f, static_cast<t_f32>(rc.framebuffer_size_cache.x),
             static_cast<t_f32>(rc.framebuffer_size_cache.y), 0.0f, -1.0f, 1.0f);
         const t_s32 proj_uniform_loc =
@@ -713,14 +712,13 @@ void main() {
         glClear(GL_COLOR_BUFFER_BIT);
     }
 
-    void SetViewMatrix(const s_rendering_context rc, const s_matrix_4x4 &mat) {
+    void SetViewMatrix(const s_rendering_context rc, const s_mat4x4 &mat) {
         Flush(rc);
         rc.state->view_mat = mat;
     }
 
-    void Draw(const s_rendering_context rc, const t_gl_id tex_gl_id,
-              const s_rect<t_f32> tex_coords, s_v2<t_f32> pos, s_v2<t_f32> size,
-              s_v2<t_f32> origin, const t_f32 rot, const s_color_rgba32f blend) {
+    void Draw(const s_rendering_context rc, const t_gl_id tex_gl_id, const s_rect tex_coords,
+              s_v2 pos, s_v2 size, s_v2 origin, const t_f32 rot, const s_color_rgba32f blend) {
         if (rc.state->batch_slots_used_cnt == 0) {
             // This is the first draw to the batch, so set the texture associated with the
             // batch to the one we're trying to render.
@@ -735,13 +733,12 @@ void main() {
         }
 
         // Write the vertex data to the next slot.
-        const s_static_array<s_v2<t_f32>, 4> vert_coords = {
-            {{0.0f - origin.x, 0.0f - origin.y},
-             {1.0f - origin.x, 0.0f - origin.y},
-             {1.0f - origin.x, 1.0f - origin.y},
-             {0.0f - origin.x, 1.0f - origin.y}}};
+        const s_static_array<s_v2, 4> vert_coords = {{{0.0f - origin.x, 0.0f - origin.y},
+                                                      {1.0f - origin.x, 0.0f - origin.y},
+                                                      {1.0f - origin.x, 1.0f - origin.y},
+                                                      {0.0f - origin.x, 1.0f - origin.y}}};
 
-        const s_static_array<s_v2<t_f32>, 4> tex_coords_per_vert = {
+        const s_static_array<s_v2, 4> tex_coords_per_vert = {
             {{RectLeft(tex_coords), RectTop(tex_coords)},
              {RectRight(tex_coords), RectTop(tex_coords)},
              {RectRight(tex_coords), RectBottom(tex_coords)},
@@ -763,18 +760,17 @@ void main() {
     }
 
     void DrawTexture(const s_rendering_context rc, const s_gfx_resource *const tex,
-                     const s_v2<t_f32> pos, const s_rect<t_s32> src_rect,
-                     const s_v2<t_f32> origin, const s_v2<t_f32> scale, const t_f32 rot,
-                     const s_color_rgba32f blend) {
+                     const s_v2 pos, const s_rect_i src_rect, const s_v2 origin,
+                     const s_v2 scale, const t_f32 rot, const s_color_rgba32f blend) {
         ZF_ASSERT(tex && tex->type == ek_gfx_resource_type_texture);
         ZF_ASSERT(IsOriginValid(origin));
         ZF_ASSERT(IsColorValid(blend));
 
         const auto tex_size = tex->type_data.tex.size;
 
-        s_rect<t_s32> src_rect_to_use;
+        s_rect_i src_rect_to_use;
 
-        if (src_rect == s_rect<t_s32>()) {
+        if (src_rect == s_rect_i()) {
             // If the source rectangle wasn't set, just go with the whole texture.
             src_rect_to_use = {0, 0, tex_size.x, tex_size.y};
         } else {
@@ -785,18 +781,18 @@ void main() {
 
         const s_rect tex_coords = CalcTextureCoords(src_rect_to_use, tex_size);
 
-        const s_v2<t_f32> size = {static_cast<t_f32>(src_rect_to_use.width) * scale.x,
-                                  static_cast<t_f32>(src_rect_to_use.height) * scale.y};
+        const s_v2 size = {static_cast<t_f32>(src_rect_to_use.width) * scale.x,
+                           static_cast<t_f32>(src_rect_to_use.height) * scale.y};
 
         Draw(rc, tex->type_data.tex.gl_id, tex_coords, pos, size, origin, rot, blend);
     }
 
-    void DrawRect(const s_rendering_context rc, const s_rect<t_f32> rect,
+    void DrawRect(const s_rendering_context rc, const s_rect rect,
                   const s_color_rgba32f color) {
         DrawTexture(rc, rc.basis->px_tex, RectPos(rect), {}, {}, RectSize(rect), 0.0f, color);
     }
 
-    void DrawRectOpaqueOutlined(const s_rendering_context rc, const s_rect<t_f32> rect,
+    void DrawRectOpaqueOutlined(const s_rendering_context rc, const s_rect rect,
                                 const s_color_rgba24f fill_color,
                                 const s_color_rgba32f outline_color,
                                 const t_f32 outline_thickness) {
@@ -810,15 +806,14 @@ void main() {
         DrawRect(rc, rect, fill_color);
     }
 
-    void DrawRectRot(const s_rendering_context rc, const s_v2<t_f32> pos,
-                     const s_v2<t_f32> size, const s_v2<t_f32> origin, const t_f32 rot,
-                     const s_color_rgba32f color) {
+    void DrawRectRot(const s_rendering_context rc, const s_v2 pos, const s_v2 size,
+                     const s_v2 origin, const t_f32 rot, const s_color_rgba32f color) {
         DrawTexture(rc, rc.basis->px_tex, pos, {}, origin, size, rot, color);
     }
 
-    void DrawRectRotOpaqueOutlined(const s_rendering_context rc, const s_v2<t_f32> pos,
-                                   const s_v2<t_f32> size, const s_v2<t_f32> origin,
-                                   const t_f32 rot, const s_color_rgba24f fill_color,
+    void DrawRectRotOpaqueOutlined(const s_rendering_context rc, const s_v2 pos,
+                                   const s_v2 size, const s_v2 origin, const t_f32 rot,
+                                   const s_color_rgba24f fill_color,
                                    const s_color_rgba32f outline_color,
                                    const t_f32 outline_thickness) {
         ZF_ASSERT(outline_thickness > 0.0f);
@@ -829,7 +824,7 @@ void main() {
         DrawRectRot(rc, pos, size, origin, rot, fill_color);
     }
 
-    void DrawLine(const s_rendering_context rc, const s_v2<t_f32> a, const s_v2<t_f32> b,
+    void DrawLine(const s_rendering_context rc, const s_v2 a, const s_v2 b,
                   const s_color_rgba32f blend, const t_f32 thickness) {
         ZF_ASSERT(thickness > 0.0f);
 
@@ -840,9 +835,8 @@ void main() {
     }
 
     t_b8 DrawStr(const s_rendering_context rc, const s_str_rdonly str,
-                 const s_gfx_resource *const font, const s_v2<t_f32> pos,
-                 const s_v2<t_f32> alignment, const s_color_rgba32f blend,
-                 s_mem_arena &temp_mem_arena) {
+                 const s_gfx_resource *const font, const s_v2 pos, const s_v2 alignment,
+                 const s_color_rgba32f blend, s_mem_arena &temp_mem_arena) {
         ZF_ASSERT(IsValidUTF8Str(str));
         ZF_ASSERT(font && font->type == ek_gfx_resource_type_font);
         ZF_ASSERT(IsAlignmentValid(alignment));
@@ -855,7 +849,7 @@ void main() {
         const auto &font_arrangement = font->type_data.font.arrangement;
         const auto &font_atlas_gl_ids = font->type_data.font.atlas_gl_ids;
 
-        s_array<s_v2<t_f32>> chr_positions;
+        s_array<s_v2> chr_positions;
 
         if (!LoadStrChrDrawPositions(str, font_arrangement, pos, alignment, temp_mem_arena,
                                      chr_positions)) {
@@ -882,8 +876,8 @@ void main() {
                 CalcTextureCoords(glyph_info.atlas_rect, g_font_atlas_size);
 
             Draw(rc, font_atlas_gl_ids[glyph_info.atlas_index], chr_tex_coords,
-                 chr_positions[chr_index],
-                 static_cast<s_v2<t_f32>>(RectSize(glyph_info.atlas_rect)), {}, 0.0f, blend);
+                 chr_positions[chr_index], ToV2(RectSize(glyph_info.atlas_rect)), {}, 0.0f,
+                 blend);
 
             chr_index++;
         };
@@ -921,7 +915,7 @@ void main() {
         StackPop(rc.state->surfs);
 
         t_gl_id fb_gl_id;
-        s_v2<t_s32> viewport_size;
+        s_v2i viewport_size;
 
         if (IsStackEmpty(rc.state->surfs)) {
             fb_gl_id = 0;
@@ -998,7 +992,7 @@ void main() {
     }
 
     void DrawSurface(const s_rendering_context rc, const s_gfx_resource *const surf,
-                     const s_v2<t_f32> pos) {
+                     const s_v2 pos) {
         ZF_ASSERT(surf && surf->type == ek_gfx_resource_type_surface);
 
         if (CurGLShaderProg() == 0) {
@@ -1009,7 +1003,7 @@ void main() {
         glBindBuffer(GL_ARRAY_BUFFER, rc.basis->surf_mesh_gl_ids.vert_buf);
 
         {
-            constexpr s_v2<t_f32> scale = {
+            constexpr s_v2 scale = {
                 1.0f, 1.0f}; // @todo: Make this customisable, or remove entirely.
 
             // clang-format off
@@ -1019,7 +1013,8 @@ void main() {
                                                           0.0f,    0.0f,    0.0f, 1.0f}};
             // clang-format on
 
-            glBufferSubData(GL_ARRAY_BUFFER, 0, ArraySizeInBytes(ToNonstaticArray(verts)), verts.buf_raw);
+            glBufferSubData(GL_ARRAY_BUFFER, 0, ArraySizeInBytes(ToNonstaticArray(verts)),
+                            verts.buf_raw);
         }
 
         glActiveTexture(GL_TEXTURE0);
@@ -1028,7 +1023,7 @@ void main() {
         const t_s32 proj_uniform_loc = glGetUniformLocation(CurGLShaderProg(), "u_proj");
         ZF_ASSERT(proj_uniform_loc != -1); // @todo: Remove, do at load time.
 
-        const s_matrix_4x4 proj_mat = MakeOrthographicMatrix4x4(
+        const s_mat4x4 proj_mat = CreateOrthographicMatrix(
             0.0f, static_cast<t_f32>(rc.framebuffer_size_cache.x),
             static_cast<t_f32>(rc.framebuffer_size_cache.y), 0.0f, -1.0f, 1.0f);
         glUniformMatrix4fv(proj_uniform_loc, 1, false,
@@ -1042,7 +1037,7 @@ void main() {
         const t_s32 size_uniform_loc = glGetUniformLocation(CurGLShaderProg(), "u_size");
         ZF_ASSERT(size_uniform_loc != -1); // @todo: Remove, do at load time.
 
-        const auto size_f32 = static_cast<s_v2<t_f32>>(surf->type_data.surf.size);
+        const auto size_f32 = ToV2(surf->type_data.surf.size);
         glUniform2fv(size_uniform_loc, 1, reinterpret_cast<const t_f32 *>(&size_f32));
 
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, rc.basis->surf_mesh_gl_ids.elem_buf);
