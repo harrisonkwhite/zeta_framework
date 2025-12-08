@@ -35,7 +35,7 @@ namespace zf {
     [[nodiscard]] t_b8 PackSound(const s_str_rdonly file_path, const s_sound_data snd_data,
                                  s_mem_arena *const temp_mem_arena);
     [[nodiscard]] t_b8 UnpackSound(const s_str_rdonly file_path, s_sound_data *const snd_data,
-                                   s_mem_arena *const mem_arena,
+                                   s_mem_arena *const snd_data_mem_arena,
                                    s_mem_arena *const temp_mem_arena);
     [[nodiscard]] t_b8 SerializeSound(s_stream *const stream, const s_sound_data snd_data);
     [[nodiscard]] t_b8 DeserializeSound(s_stream *const stream, s_sound_data *const snd_data,

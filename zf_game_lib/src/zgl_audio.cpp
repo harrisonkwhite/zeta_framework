@@ -23,7 +23,7 @@ namespace zf {
         } snd_insts;
     };
 
-    s_audio_sys *I_CreateAudioSys(s_mem_arena *const mem_arena) {
+    s_audio_sys *internal::CreateAudioSys(s_mem_arena *const mem_arena) {
         const auto as = PushToMemArena<s_audio_sys>(mem_arena);
 
         if (!as) {
@@ -39,7 +39,7 @@ namespace zf {
         return as;
     }
 
-    void I_DestroyAudioSys(s_audio_sys *const as) {
+    void internal::DestroyAudioSys(s_audio_sys *const as) {
         ZF_FOR_EACH_SET_BIT(as->snd_insts.activity, i) {
             ma_sound_stop(&as->snd_insts.ma_snds[i]);
             ma_sound_uninit(&as->snd_insts.ma_snds[i]);
@@ -193,7 +193,7 @@ namespace zf {
         return ma_sound_is_playing(&as->snd_insts.ma_snds[id.index]);
     }
 
-    void I_ProcFinishedSounds(s_audio_sys *const as) {
+    void internal::ProcFinishedSounds(s_audio_sys *const as) {
         ZF_FOR_EACH_SET_BIT(as->snd_insts.activity, i) {
             ma_sound &snd = as->snd_insts.ma_snds[i];
 

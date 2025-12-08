@@ -7,9 +7,8 @@ namespace zf {
     // ============================================================
     // @section: Textures
     // ============================================================
-    t_b8 LoadRGBATextureDataFromRaw(const s_str_rdonly file_path, s_mem_arena &mem_arena,
-                                    s_mem_arena &temp_mem_arena,
-                                    s_rgba_texture_data &o_tex_data) {
+    t_b8 LoadTextureDataFromRaw(const s_str_rdonly file_path, s_mem_arena &mem_arena,
+                                s_mem_arena &temp_mem_arena, s_texture_data &o_tex_data) {
         s_str file_path_terminated;
 
         if (!CloneStrButAddTerminator(file_path, temp_mem_arena, file_path_terminated)) {
@@ -29,22 +28,21 @@ namespace zf {
         const s_array_rdonly<t_u8> stb_px_data_arr = {
             stb_px_data, 4 * o_tex_data.size_in_pxs.x * o_tex_data.size_in_pxs.y};
 
-        if (!InitArray(&o_tex_data.px_data,
+        if (!InitArray(&o_tex_data.rgba_px_data,
                        4 * o_tex_data.size_in_pxs.x * o_tex_data.size_in_pxs.y, &mem_arena)) {
             return false;
         }
 
-        Copy(o_tex_data.px_data, stb_px_data_arr);
+        Copy(o_tex_data.rgba_px_data, stb_px_data_arr);
 
         return true;
     }
 
     t_b8 PackTexture(const s_str_rdonly dest_file_path, const s_str_rdonly src_file_path,
                      s_mem_arena &temp_mem_arena) {
-        s_rgba_texture_data tex_data;
+        s_texture_data tex_data;
 
-        if (!LoadRGBATextureDataFromRaw(src_file_path, temp_mem_arena, temp_mem_arena,
-                                        tex_data)) {
+        if (!LoadTextureDataFromRaw(src_file_path, temp_mem_arena, temp_mem_arena, tex_data)) {
             return false;
         }
 
@@ -64,7 +62,7 @@ namespace zf {
             return false;
         }
 
-        if (!StreamWriteItemsOfArray(fs, tex_data.px_data)) {
+        if (!StreamWriteItemsOfArray(fs, tex_data.rgba_px_data)) {
             return false;
         }
 
@@ -72,7 +70,7 @@ namespace zf {
     }
 
     t_b8 UnpackTexture(const s_str_rdonly file_path, s_mem_arena &mem_arena,
-                       s_mem_arena &temp_mem_arena, s_rgba_texture_data &o_tex_data) {
+                       s_mem_arena &temp_mem_arena, s_texture_data &o_tex_data) {
         o_tex_data = {};
 
         s_stream fs;
@@ -87,12 +85,13 @@ namespace zf {
             return false;
         }
 
-        if (!InitArray(&o_tex_data.px_data,
+        if (!InitArray(&o_tex_data.rgba_px_data,
                        4 * o_tex_data.size_in_pxs.x * o_tex_data.size_in_pxs.y, &mem_arena)) {
             return false;
         }
 
-        if (!StreamReadItemsIntoArray(fs, o_tex_data.px_data, o_tex_data.px_data.len)) {
+        if (!StreamReadItemsIntoArray(fs, o_tex_data.rgba_px_data,
+                                      o_tex_data.rgba_px_data.len)) {
             return false;
         }
 

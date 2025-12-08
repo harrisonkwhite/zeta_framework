@@ -4,13 +4,18 @@
 #include <zcl.h>
 
 namespace zf {
-    // ============================================================
-    // @section: Public
-    // ============================================================
+    struct s_rendering_basis;
 
-    // ========================================
-    // @subsection: GFX Resources
-    // ========================================
+    namespace internal {
+        [[nodiscard]] t_b8 InitGFX(s_rendering_basis **const rendering_basis,
+                                   s_mem_arena *const rendering_basis_mem_arena,
+                                   s_mem_arena *const temp_mem_arena);
+        void ShutdownGFX(s_rendering_basis *const rendering_basis);
+    }
+
+    // ============================================================
+    // @section: Resources
+    // ============================================================
     struct s_gfx_resource;
 
     struct s_gfx_resource_arena {
@@ -21,51 +26,18 @@ namespace zf {
 
     // The memory lifetime of the given memory arena must encompass that of the GFX resource
     // arena.
-    inline s_gfx_resource_arena MakeGFXResourceArena(s_mem_arena &mem_arena) {
-        return {.mem_arena = &mem_arena};
+    inline s_gfx_resource_arena CreateGFXResourceArena(s_mem_arena *const mem_arena) {
+        return {.mem_arena = mem_arena};
     }
 
-    void ReleaseGFXResources(const s_gfx_resource_arena &res_arena);
+    void DestroyGFXResources(s_gfx_resource_arena *const res_arena);
 
-    // Returns false iff the load failed. Failure DOES NOT leave the underlying resource system
-    // in an invalid state - you are safe to continue.
-    [[nodiscard]] t_b8 LoadTexture(const s_rgba_texture_data_rdonly &tex_data,
-                                   s_gfx_resource_arena &res_arena, s_gfx_resource *&o_tex);
-
-    // Returns false iff the load failed. Failure DOES NOT leave the underlying resource system
-    // in an invalid state - you are safe to continue.
-    [[nodiscard]] inline t_b8 LoadTextureFromRaw(const s_str_rdonly file_path,
-                                                 s_gfx_resource_arena &res_arena,
-                                                 s_mem_arena &temp_mem_arena,
-                                                 s_gfx_resource *&o_tex) {
-        s_rgba_texture_data tex_data;
-
-        if (!LoadRGBATextureDataFromRaw(file_path, temp_mem_arena, temp_mem_arena, tex_data)) {
-            return false;
-        }
-
-        return LoadTexture(tex_data, res_arena, o_tex);
-    }
-
-    // Returns false iff the load failed. Failure DOES NOT leave the underlying resource system
-    // in an invalid state - you are safe to continue.
-    [[nodiscard]] inline t_b8 LoadTextureFromPacked(const s_str_rdonly file_path,
-                                                    s_gfx_resource_arena &res_arena,
-                                                    s_mem_arena &temp_mem_arena,
-                                                    s_gfx_resource *&o_tex) {
-        s_rgba_texture_data tex_data;
-
-        if (!UnpackTexture(file_path, temp_mem_arena, temp_mem_arena, tex_data)) {
-            return false;
-        }
-
-        return LoadTexture(tex_data, res_arena, o_tex);
-    }
+    s_gfx_resource *CreateTexture(const s_rgba_texture_data_rdonly tex_data,
+                                  s_gfx_resource_arena *const res_arena);
 
     s_v2<t_s32> TextureSize(const s_gfx_resource *const res);
 
-    // Returns false iff the load failed. Failure DOES NOT leave the underlying resource system
-    // in an invalid state - you are safe to continue.
+#if 0
     [[nodiscard]] t_b8 LoadFontFromRaw(
         const s_str_rdonly file_path, const t_s32 height,
         const t_unicode_code_pt_bit_vec &code_pts, s_gfx_resource_arena &res_arena,
@@ -73,34 +45,24 @@ namespace zf {
         e_font_load_from_raw_result *const o_load_from_raw_res = nullptr,
         t_unicode_code_pt_bit_vec *const o_unsupported_code_pts = nullptr);
 
-    // Returns false iff the load failed. Failure DOES NOT leave the underlying resource system
-    // in an invalid state - you are safe to continue.
     [[nodiscard]] t_b8 LoadFontFromPacked(const s_str_rdonly file_path,
                                           s_gfx_resource_arena &res_arena,
                                           s_mem_arena &temp_mem_arena,
                                           s_gfx_resource *&o_font);
+#endif
 
-    // Returns false on failure. Failure DOES NOT leave the underlying resource system in an
-    // invalid state - you are safe to continue.
-    [[nodiscard]] t_b8 MakeSurface(const s_v2<t_s32> size, s_gfx_resource_arena &res_arena,
-                                   s_gfx_resource *&o_surf);
-
-    // Returns true iff the operation was successful. If it failed, the old surface state with
-    // its old size is left intact.
+    s_gfx_resource *CreateSurface(const s_v2<t_s32> size,
+                                  s_gfx_resource_arena *const res_arena);
     [[nodiscard]] t_b8 ResizeSurface(s_gfx_resource *const surf, const s_v2<t_s32> size);
 
-    // Returns false on failure. Failure DOES NOT leave the underlying resource system in an
-    // invalid state - you are safe to continue.
-    [[nodiscard]] t_b8 MakeSurfaceShaderProg(const s_str_rdonly vert_src,
-                                             const s_str_rdonly frag_src,
-                                             s_gfx_resource_arena &res_arena,
-                                             s_mem_arena &temp_mem_arena,
-                                             s_gfx_resource *&o_prog);
+    s_gfx_resource *CreateSurfaceShaderProg(const s_str_rdonly vert_src,
+                                            const s_str_rdonly frag_src,
+                                            s_gfx_resource_arena *const res_arena,
+                                            s_mem_arena *const temp_mem_arena);
 
-    // ========================================
-    // @subsection: Rendering
-    // ========================================
-    struct s_rendering_basis;
+    // ============================================================
+    // @section: Rendering
+    // ============================================================
     struct s_rendering_state;
 
     struct s_rendering_context {
@@ -190,17 +152,11 @@ namespace zf {
     void DrawSurface(const s_rendering_context rc, const s_gfx_resource *const surf,
                      const s_v2<t_f32> pos);
 
-    // ============================================================
-    // @section: Internal
-    // ============================================================
-    [[nodiscard]] t_b8 I_InitGFX(s_rendering_basis **const rendering_basis,
-                                 s_mem_arena *const mem_arena,
-                                 s_mem_arena *const temp_mem_arena);
-    void I_ShutdownGFX(const s_rendering_basis *const rendering_basis);
-
-    [[nodiscard]] t_b8 I_BeginFrame(s_rendering_context *const rendering_context,
-                                    const s_rendering_basis *const rendering_basis,
-                                    const s_v2<t_s32> framebuffer_size_cache,
-                                    s_mem_arena *const mem_arena);
-    void I_CompleteFrame(const s_rendering_context rc);
+    namespace internal {
+        [[nodiscard]] t_b8 BeginFrame(s_rendering_context *const rendering_context,
+                                      const s_rendering_basis *const rendering_basis,
+                                      const s_v2<t_s32> framebuffer_size_cache,
+                                      s_mem_arena *const mem_arena);
+        void CompleteFrame(const s_rendering_context rc);
+    }
 }

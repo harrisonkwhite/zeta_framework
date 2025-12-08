@@ -3,9 +3,6 @@
 #include <zcl.h>
 
 namespace zf {
-    // ============================================================
-    // @section: Public
-    // ============================================================
     struct s_audio_sys;
 
     struct s_sound_type;
@@ -44,10 +41,9 @@ namespace zf {
     void StopSound(const s_sound_id id);
     t_b8 IsSoundPlaying(const s_sound_id id);
 
-    // ============================================================
-    // @section: Internal
-    // ============================================================
-    s_audio_sys *I_CreateAudioSys(s_mem_arena *const mem_arena);
-    void I_DestroyAudioSys(s_audio_sys *const as);
-    void I_ProcFinishedSounds(s_audio_sys *const as);
+    namespace internal {
+        s_audio_sys *CreateAudioSys(s_mem_arena *const mem_arena);
+        void DestroyAudioSys(s_audio_sys *const as);
+        void ProcFinishedSounds(s_audio_sys *const as);
+    }
 }

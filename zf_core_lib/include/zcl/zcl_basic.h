@@ -285,24 +285,26 @@ namespace zf {
     // ============================================================
     // @section: Key Debugging Features
     // ============================================================
-    void I_ReportAssertError(const char *const cond_raw, const char *const func_name_raw,
-                             const char *const file_name_raw, const t_s32 line);
+    namespace internal {
+        void ReportAssertError(const char *const cond_raw, const char *const func_name_raw,
+                               const char *const file_name_raw, const t_s32 line);
 
 #ifdef ZF_DEBUG
     #define ZF_ASSERT(cond)                                                                   \
         do {                                                                                  \
             if (!ZF_IN_CONSTEXPR() && !(cond)) {                                              \
-                zf::I_ReportAssertError(#cond, __FUNCTION__, __FILE__, __LINE__);             \
+                zf::internal::ReportAssertError(#cond, __FUNCTION__, __FILE__, __LINE__);     \
             }                                                                                 \
         } while (0)
 #else
     #define ZF_ASSERT(cond) static_cast<void>(0)
 #endif
 
-    void I_ReportError(const char *const func_name_raw, const char *const file_name_raw,
-                       const t_s32 line);
+        void ReportError(const char *const func_name_raw, const char *const file_name_raw,
+                         const t_s32 line);
 
-#define ZF_REPORT_ERROR() zf::I_ReportError(__FUNCTION__, __FILE__, __LINE__)
+#define ZF_REPORT_ERROR() zf::internal::ReportError(__FUNCTION__, __FILE__, __LINE__)
+    }
 
     void ShowErrorBox(const char *const title_raw, const char *const contents_raw);
 

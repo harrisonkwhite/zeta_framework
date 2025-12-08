@@ -42,6 +42,8 @@ namespace zf {
 
     template <typename tp_type>
     constexpr void ZeroOut(tp_type *const val) {
+        static_assert(!s_is_ptr<tp_type>::g_val,
+                      "Zeroing out a single pointer? A mistake, possibly?");
         memset(val, 0, sizeof(*val));
     }
 

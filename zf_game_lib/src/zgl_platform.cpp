@@ -258,8 +258,8 @@ namespace zf {
         s_v2<t_s32> prefullscreen_size;
     };
 
-    s_platform_layer_info *I_InitPlatformLayer(s_mem_arena *const mem_arena,
-                                               s_input_state *const input_state) {
+    s_platform_layer_info *internal::InitPlatformLayer(s_mem_arena *const mem_arena,
+                                                       s_input_state *const input_state) {
         ZF_ASSERT(!g_initted);
 
         t_b8 clean_up = false;
@@ -393,7 +393,7 @@ namespace zf {
         return info;
     }
 
-    void I_ShutdownPlatformLayer(const s_platform_layer_info *const pli) {
+    void internal::ShutdownPlatformLayer(const s_platform_layer_info *const pli) {
         ZF_ASSERT(g_initted);
 
         glfwDestroyWindow(pli->glfw_window);
@@ -405,19 +405,19 @@ namespace zf {
         return glfwGetTime();
     }
 
-    void I_PollOSEvents() {
+    void internal::PollOSEvents() {
         glfwPollEvents();
     }
 
-    void I_ShowWindow(const s_platform_layer_info *const pli) {
+    void internal::ShowWindow(const s_platform_layer_info *const pli) {
         glfwShowWindow(pli->glfw_window);
     }
 
-    t_b8 I_ShouldWindowClose(const s_platform_layer_info *const pli) {
+    t_b8 internal::ShouldWindowClose(const s_platform_layer_info *const pli) {
         return glfwWindowShouldClose(pli->glfw_window);
     }
 
-    void I_SwapWindowBuffers(const s_platform_layer_info *const pli) {
+    void internal::SwapWindowBuffers(const s_platform_layer_info *const pli) {
         glfwSwapBuffers(pli->glfw_window);
     }
 

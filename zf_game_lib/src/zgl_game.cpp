@@ -47,7 +47,8 @@ namespace zf {
 
             s_input_state input_state = {};
 
-            const auto platform_layer_info = I_InitPlatformLayer(&mem_arena, &input_state);
+            const auto platform_layer_info =
+                internal::InitPlatformLayer(&mem_arena, &input_state);
 
             if (!platform_layer_info) {
                 ZF_REPORT_ERROR();
@@ -56,21 +57,21 @@ namespace zf {
 
             s_rendering_basis *rendering_basis;
 
-            if (!I_InitGFX(&rendering_basis, &mem_arena, &temp_mem_arena)) {
+            if (!internal::InitGFX(&rendering_basis, &mem_arena, &temp_mem_arena)) {
                 ZF_REPORT_ERROR();
                 return false;
             }
 
-            ZF_DEFER({ I_ShutdownGFX(rendering_basis); });
+            ZF_DEFER({ internal::ShutdownGFX(rendering_basis); });
 
-            s_audio_sys *const audio_sys = I_CreateAudioSys(&mem_arena);
+            s_audio_sys *const audio_sys = internal::CreateAudioSys(&mem_arena);
 
             if (!audio_sys) {
                 ZF_REPORT_ERROR();
                 return false;
             }
 
-            ZF_DEFER({ I_DestroyAudioSys(audio_sys); });
+            ZF_DEFER({ internal::DestroyAudioSys(audio_sys); });
 
             // Initialise developer memory.
             void *dev_mem = nullptr;
@@ -109,15 +110,15 @@ namespace zf {
             //
             // Main Loop
             //
-            I_ShowWindow(platform_layer_info);
+            internal::ShowWindow(platform_layer_info);
 
             t_f64 frame_time_last = Time();
             t_f64 frame_dur_accum = 0.0;
 
-            while (!I_ShouldWindowClose(platform_layer_info)) {
+            while (!internal::ShouldWindowClose(platform_layer_info)) {
                 RewindMemArena(&temp_mem_arena, 0);
 
-                I_PollOSEvents();
+                internal::PollOSEvents();
 
                 const t_f64 frame_time = Time();
                 const t_f64 frame_time_delta = frame_time - frame_time_last;
@@ -129,7 +130,7 @@ namespace zf {
                 // Once enough time has passed (i.e. the time accumulator has reached the tick
                 // interval), run at least a single tick and update the display.
                 if (frame_dur_accum >= targ_tick_interval) {
-                    I_ProcFinishedSounds(audio_sys);
+                    internal::ProcFinishedSounds(audio_sys);
 
                     // Run possibly multiple ticks.
                     do {
@@ -154,9 +155,9 @@ namespace zf {
                     // Perform a single render.
                     s_rendering_context rendering_context;
 
-                    if (!I_BeginFrame(&rendering_context, rendering_basis,
-                                      WindowFramebufferSizeCache(platform_layer_info),
-                                      &mem_arena)) {
+                    if (!internal::BeginFrame(&rendering_context, rendering_basis,
+                                              WindowFramebufferSizeCache(platform_layer_info),
+                                              &mem_arena)) {
                         ZF_REPORT_ERROR();
                         return false;
                     }
@@ -174,9 +175,9 @@ namespace zf {
                         }
                     }
 
-                    I_CompleteFrame(rendering_context);
+                    internal::CompleteFrame(rendering_context);
 
-                    I_SwapWindowBuffers(platform_layer_info);
+                    internal::SwapWindowBuffers(platform_layer_info);
                 }
             }
 

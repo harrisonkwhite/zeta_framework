@@ -71,8 +71,9 @@ namespace zf {
         return false;
     }
 
-    void I_ReportAssertError(const char *const cond_raw, const char *const func_name_raw,
-                             const char *const file_name_raw, const t_s32 line) {
+    void internal::ReportAssertError(const char *const cond_raw,
+                                     const char *const func_name_raw,
+                                     const char *const file_name_raw, const t_s32 line) {
         fprintf(stderr, "==================== ASSERTION ERROR ====================\n");
         fprintf(stderr, "Condition: %s\n", cond_raw);
         fprintf(stderr, "Function:  %s\n", func_name_raw);
@@ -88,8 +89,8 @@ namespace zf {
         }
     }
 
-    void I_ReportError(const char *const func_name_raw, const char *const file_name_raw,
-                       const t_s32 line) {
+    void internal::ReportError(const char *const func_name_raw,
+                               const char *const file_name_raw, const t_s32 line) {
         static t_b8 g_reported;
 
         if (g_reported) {

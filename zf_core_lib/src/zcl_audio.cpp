@@ -1,7 +1,6 @@
 #include <zcl/zcl_audio.h>
 
 #include <miniaudio.h>
-#include <zcl/zcl_io.h>
 
 namespace zf {
     t_b8 LoadSoundFromRaw(const s_str_rdonly file_path, s_sound_data *const snd_data,
@@ -65,7 +64,8 @@ namespace zf {
     }
 
     t_b8 UnpackSound(const s_str_rdonly file_path, s_sound_data *const snd_data,
-                     s_mem_arena *const mem_arena, s_mem_arena *const temp_mem_arena) {
+                     s_mem_arena *const snd_data_mem_arena,
+                     s_mem_arena *const temp_mem_arena) {
         s_stream fs;
 
         if (!OpenFile(file_path, ek_file_access_mode_read, *temp_mem_arena, fs)) {
@@ -78,7 +78,7 @@ namespace zf {
             return false;
         }
 
-        if (!InitArray(&snd_data->pcm, CalcSampleCount(snd_data->meta), mem_arena)) {
+        if (!InitArray(&snd_data->pcm, CalcSampleCount(snd_data->meta), snd_data_mem_arena)) {
             return false;
         }
 

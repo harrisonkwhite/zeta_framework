@@ -3,9 +3,6 @@
 #include <zcl.h>
 
 namespace zf {
-    // ============================================================
-    // @section: Public
-    // ============================================================
     struct s_platform_layer_info;
 
     t_f64 Time();
@@ -42,17 +39,17 @@ namespace zf {
 
     void SetCursorVisibility(const s_platform_layer_info *const pli, const t_b8 visible);
 
-    // ============================================================
-    // @section: Internal
-    // ============================================================
     struct s_input_state;
-    [[nodiscard]] s_platform_layer_info *I_InitPlatformLayer(s_mem_arena *const mem_arena,
-                                                             s_input_state *const input_state);
-    void I_ShutdownPlatformLayer(const s_platform_layer_info *const pli);
 
-    void I_PollOSEvents();
+    namespace internal {
+        [[nodiscard]] s_platform_layer_info *InitPlatformLayer(
+            s_mem_arena *const mem_arena, s_input_state *const input_state);
+        void ShutdownPlatformLayer(const s_platform_layer_info *const pli);
 
-    void I_ShowWindow(const s_platform_layer_info *const pli);
-    t_b8 I_ShouldWindowClose(const s_platform_layer_info *const pli);
-    void I_SwapWindowBuffers(const s_platform_layer_info *const pli);
+        void PollOSEvents();
+
+        void ShowWindow(const s_platform_layer_info *const pli);
+        t_b8 ShouldWindowClose(const s_platform_layer_info *const pli);
+        void SwapWindowBuffers(const s_platform_layer_info *const pli);
+    }
 }

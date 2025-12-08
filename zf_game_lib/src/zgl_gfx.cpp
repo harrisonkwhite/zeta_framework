@@ -12,9 +12,9 @@ namespace zf {
         t_gl_id elem_buf;
     };
 
-    static s_mesh_gl_ids MakeGLMesh(const t_f32 *const verts_raw, const t_size verts_len,
-                                    const s_array_rdonly<t_u16> elems,
-                                    const s_array_rdonly<t_s32> vert_attr_lens) {
+    static s_mesh_gl_ids CreateGLMesh(const t_f32 *const verts_raw, const t_size verts_len,
+                                      const s_array_rdonly<t_u16> elems,
+                                      const s_array_rdonly<t_s32> vert_attr_lens) {
         s_mesh_gl_ids gl_ids = {};
 
         glGenVertexArrays(1, &gl_ids.vert_arr);
@@ -58,25 +58,26 @@ namespace zf {
         return gl_ids;
     }
 
-    static void ReleaseGLMesh(const s_mesh_gl_ids &gl_ids) {
-        glDeleteBuffers(1, &gl_ids.elem_buf);
-        glDeleteBuffers(1, &gl_ids.vert_buf);
-        glDeleteVertexArrays(1, &gl_ids.vert_arr);
+    static void DestroyGLMesh(s_mesh_gl_ids *const gl_ids) {
+        glDeleteBuffers(1, &gl_ids->elem_buf);
+        glDeleteBuffers(1, &gl_ids->vert_buf);
+        glDeleteVertexArrays(1, &gl_ids->vert_arr);
+        ZeroOut(gl_ids);
     }
 
-    static t_gl_id MakeGLShaderProg(const s_str_rdonly vert_src, const s_str_rdonly frag_src,
-                                    s_mem_arena &temp_mem_arena) {
+    static t_gl_id CreateGLShaderProg(const s_str_rdonly vert_src, const s_str_rdonly frag_src,
+                                      s_mem_arena *const temp_mem_arena) {
         s_str vert_src_terminated;
         s_str frag_src_terminated;
 
-        if (!CloneStrButAddTerminator(vert_src, temp_mem_arena, vert_src_terminated) ||
-            !CloneStrButAddTerminator(frag_src, temp_mem_arena, frag_src_terminated)) {
+        if (!CloneStrButAddTerminator(vert_src, *temp_mem_arena, vert_src_terminated) ||
+            !CloneStrButAddTerminator(frag_src, *temp_mem_arena, frag_src_terminated)) {
             return 0;
         }
 
-        // Generate the individual shaders.
-        const auto gen_shader = [&temp_mem_arena](const s_str_rdonly src,
-                                                  const t_b8 is_frag) -> t_gl_id {
+        // Create the individual shaders.
+        const auto create_shader = [&temp_mem_arena](const s_str_rdonly src,
+                                                     const t_b8 is_frag) -> t_gl_id {
             const t_gl_id shader_gl_id =
                 glCreateShader(is_frag ? GL_FRAGMENT_SHADER : GL_VERTEX_SHADER);
 
@@ -98,7 +99,7 @@ namespace zf {
                 if (log_chr_cnt >= 1) {
                     s_array<char> log_chrs;
 
-                    if (InitArray(&log_chrs, log_chr_cnt, &temp_mem_arena)) {
+                    if (InitArray(&log_chrs, log_chr_cnt, temp_mem_arena)) {
                         glGetShaderInfoLog(shader_gl_id, static_cast<GLsizei>(log_chrs.len),
                                            nullptr, log_chrs.buf_raw);
                         LogErrorType("OpenGL Shader Compilation", "%",
@@ -118,7 +119,7 @@ namespace zf {
             return shader_gl_id;
         };
 
-        const t_gl_id vert_gl_id = gen_shader(vert_src_terminated, false);
+        const t_gl_id vert_gl_id = create_shader(vert_src_terminated, false);
 
         if (!vert_gl_id) {
             return 0;
@@ -126,7 +127,7 @@ namespace zf {
 
         ZF_DEFER({ glDeleteShader(vert_gl_id); });
 
-        const t_gl_id frag_gl_id = gen_shader(frag_src_terminated, true);
+        const t_gl_id frag_gl_id = create_shader(frag_src_terminated, true);
 
         if (!frag_gl_id) {
             return 0;
@@ -157,7 +158,7 @@ namespace zf {
         return {size, size};
     }
 
-    static t_gl_id MakeGLTexture(const s_rgba_texture_data_rdonly &tex_data) {
+    static t_gl_id CreateGLTexture(const s_rgba_texture_data_rdonly tex_data) {
         const s_v2<t_s32> tex_size_limit = GLTextureSizeLimit();
 
         if (tex_data.size_in_pxs.x > tex_size_limit.x ||
@@ -242,8 +243,8 @@ namespace zf {
         s_gfx_resource *next;
     };
 
-    void ReleaseGFXResources(const s_gfx_resource_arena &res_arena) {
-        const s_gfx_resource *res = res_arena.head;
+    void DestroyGFXResources(s_gfx_resource_arena *const res_arena) {
+        s_gfx_resource *res = res_arena->head;
 
         while (res) {
             switch (res->type) {
@@ -270,46 +271,48 @@ namespace zf {
                 break;
             }
 
+            ZeroOut(res);
+
             res = res->next;
         }
     }
 
-    static s_gfx_resource *PushGFXResource(s_gfx_resource_arena &res_arena) {
-        const auto res = PushToMemArena<s_gfx_resource>(res_arena.mem_arena);
+    static s_gfx_resource *PushGFXResource(s_gfx_resource_arena *const res_arena) {
+        const auto res = PushToMemArena<s_gfx_resource>(res_arena->mem_arena);
 
         if (!res) {
             return nullptr;
         }
 
-        if (!res_arena.head) {
-            res_arena.head = res;
-            res_arena.tail = res;
+        if (!res_arena->head) {
+            res_arena->head = res;
+            res_arena->tail = res;
         } else {
-            res_arena.tail->next = res;
-            res_arena.tail = res;
+            res_arena->tail->next = res;
+            res_arena->tail = res;
         }
 
         return res;
     }
 
-    t_b8 LoadTexture(const s_rgba_texture_data_rdonly &tex_data,
-                     s_gfx_resource_arena &res_arena, s_gfx_resource *&o_tex) {
-        const t_gl_id gl_id = MakeGLTexture(tex_data);
+    s_gfx_resource *CreateTexture(const s_rgba_texture_data_rdonly tex_data,
+                                  s_gfx_resource_arena *const res_arena) {
+        const t_gl_id gl_id = CreateGLTexture(tex_data);
 
         if (!gl_id) {
-            return false;
+            return nullptr;
         }
 
-        o_tex = PushGFXResource(res_arena);
+        const auto tex = PushGFXResource(res_arena);
 
-        if (!o_tex) {
-            return false;
+        if (!tex) {
+            return nullptr;
         }
 
-        o_tex->type = ek_gfx_resource_type_texture;
-        o_tex->type_data.tex = {.gl_id = gl_id, .size = tex_data.size_in_pxs};
+        tex->type = ek_gfx_resource_type_texture;
+        tex->type_data.tex = {.gl_id = gl_id, .size = tex_data.size_in_pxs};
 
-        return true;
+        return tex;
     }
 
     s_v2<t_s32> TextureSize(const s_gfx_resource *const res) {
@@ -319,20 +322,20 @@ namespace zf {
         return res->type_data.tex.size;
     }
 
-    static t_b8 MakeFontAtlasGLTextures(const s_array_rdonly<t_font_atlas_rgba> atlas_rgbas,
-                                        s_array<t_gl_id> &o_gl_ids) {
-        o_gl_ids = {.buf_raw = static_cast<t_gl_id *>(
-                        malloc(static_cast<size_t>(ZF_SIZE_OF(t_gl_id) * atlas_rgbas.len))),
-                    .len = atlas_rgbas.len};
+    static t_b8 CreateFontAtlasGLTextures(
+        s_array<t_gl_id> *const gl_ids, const s_array_rdonly<t_font_atlas_rgba> atlas_rgbas) {
+        *gl_ids = {.buf_raw = static_cast<t_gl_id *>(
+                       malloc(static_cast<size_t>(ZF_SIZE_OF(t_gl_id) * atlas_rgbas.len))),
+                   .len = atlas_rgbas.len};
 
-        if (!o_gl_ids.buf_raw) {
+        if (!gl_ids->buf_raw) {
             return false;
         }
 
         for (t_size i = 0; i < atlas_rgbas.len; i++) {
-            o_gl_ids[i] = MakeGLTexture({g_font_atlas_size, atlas_rgbas[i]});
+            (*gl_ids)[i] = CreateGLTexture({g_font_atlas_size, atlas_rgbas[i]});
 
-            if (!o_gl_ids[i]) {
+            if (!(*gl_ids)[i]) {
                 return false;
             }
         }
@@ -340,10 +343,11 @@ namespace zf {
         return true;
     }
 
+#if 0
     t_b8 LoadFontFromRaw(const s_str_rdonly file_path, const t_s32 height,
                          const t_unicode_code_pt_bit_vec &code_pts,
-                         s_gfx_resource_arena &res_arena, s_mem_arena &temp_mem_arena,
-                         s_gfx_resource *&o_font,
+                         s_gfx_resource_arena *const res_arena,
+                         s_mem_arena *const temp_mem_arena, s_gfx_resource *&o_font,
                          e_font_load_from_raw_result *const o_load_from_raw_res,
                          t_unicode_code_pt_bit_vec *const o_unsupported_code_pts) {
         s_font_arrangement arrangement;
@@ -363,7 +367,7 @@ namespace zf {
 
         s_array<t_gl_id> atlas_gl_ids;
 
-        if (!MakeFontAtlasGLTextures(atlas_rgbas, atlas_gl_ids)) {
+        if (!CreateFontAtlasGLTextures(&atlas_gl_ids, atlas_rgbas)) {
             return false;
         }
 
@@ -391,7 +395,7 @@ namespace zf {
 
         s_array<t_gl_id> atlas_gl_ids;
 
-        if (!MakeFontAtlasGLTextures(atlas_rgbas, atlas_gl_ids)) {
+        if (!CreateFontAtlasGLTextures(atlas_rgbas, atlas_gl_ids)) {
             return false;
         }
 
@@ -406,9 +410,10 @@ namespace zf {
 
         return true;
     }
+#endif
 
-    t_b8 MakeSurface(const s_v2<t_s32> size, s_gfx_resource_arena &res_arena,
-                     s_gfx_resource *&o_surf) {
+    s_gfx_resource *CreateSurface(const s_v2<t_s32> size,
+                                  s_gfx_resource_arena *const res_arena) {
         t_gl_id fb_gl_id;
         glGenFramebuffers(1, &fb_gl_id);
 
@@ -416,22 +421,22 @@ namespace zf {
         glGenTextures(1, &tex_gl_id);
 
         if (!AttachGLFramebufferTexture(fb_gl_id, tex_gl_id, size)) {
-            return false;
+            return nullptr;
         }
 
-        o_surf = PushGFXResource(res_arena);
+        const auto surf = PushGFXResource(res_arena);
 
-        if (!o_surf) {
+        if (!surf) {
             glDeleteTextures(1, &tex_gl_id);
             glDeleteFramebuffers(1, &fb_gl_id);
-            return false;
+            return nullptr;
         }
 
-        o_surf->type = ek_gfx_resource_type_surface;
+        surf->type = ek_gfx_resource_type_surface;
 
-        o_surf->type_data.surf = {.fb_gl_id = fb_gl_id, .tex_gl_id = tex_gl_id, .size = size};
+        surf->type_data.surf = {.fb_gl_id = fb_gl_id, .tex_gl_id = tex_gl_id, .size = size};
 
-        return true;
+        return surf;
     }
 
     t_b8 ResizeSurface(s_gfx_resource *const surf, const s_v2<t_s32> size) {
@@ -460,25 +465,26 @@ namespace zf {
         return true;
     }
 
-    t_b8 MakeSurfaceShaderProg(const s_str_rdonly vert_src, const s_str_rdonly frag_src,
-                               s_gfx_resource_arena &res_arena, s_mem_arena &temp_mem_arena,
-                               s_gfx_resource *&o_prog) {
-        const t_gl_id gl_id = MakeGLShaderProg(vert_src, frag_src, temp_mem_arena);
+    s_gfx_resource *CreateSurfaceShaderProg(const s_str_rdonly vert_src,
+                                            const s_str_rdonly frag_src,
+                                            s_gfx_resource_arena *const res_arena,
+                                            s_mem_arena *const temp_mem_arena) {
+        const t_gl_id gl_id = CreateGLShaderProg(vert_src, frag_src, temp_mem_arena);
 
         if (!gl_id) {
-            return false;
+            return nullptr;
         }
 
-        o_prog = PushGFXResource(res_arena);
+        const auto prog = PushGFXResource(res_arena);
 
-        if (!o_prog) {
-            return false;
+        if (!prog) {
+            return nullptr;
         }
 
-        o_prog->type = ek_gfx_resource_type_surface_shader_prog;
-        o_prog->type_data.surf_shader_prog = {.gl_id = gl_id};
+        prog->type = ek_gfx_resource_type_surface_shader_prog;
+        prog->type_data.surf_shader_prog = {.gl_id = gl_id};
 
-        return true;
+        return prog;
     }
 
     // ============================================================
@@ -624,9 +630,10 @@ void main() {
         s_static_stack<const s_gfx_resource *, 32> surfs;
     };
 
-    t_b8 I_BeginFrame(s_rendering_context *const rendering_context,
-                      const s_rendering_basis *const rendering_basis,
-                      const s_v2<t_s32> framebuffer_size_cache, s_mem_arena *const mem_arena) {
+    t_b8 internal::BeginFrame(s_rendering_context *const rendering_context,
+                              const s_rendering_basis *const rendering_basis,
+                              const s_v2<t_s32> framebuffer_size_cache,
+                              s_mem_arena *const mem_arena) {
         ZeroOut(rendering_context);
         rendering_context->basis = rendering_basis;
         rendering_context->framebuffer_size_cache = framebuffer_size_cache;
@@ -695,7 +702,7 @@ void main() {
         rc.state->batch_slots_used_cnt = 0;
     }
 
-    void I_CompleteFrame(const s_rendering_context rc) {
+    void internal::CompleteFrame(const s_rendering_context rc) {
         Flush(rc);
     }
 
@@ -1047,11 +1054,12 @@ void main() {
     // ============================================================
     // @section: General
     // ============================================================
-    t_b8 I_InitGFX(s_rendering_basis **const rendering_basis, s_mem_arena *const mem_arena,
-                   s_mem_arena *const temp_mem_arena) {
+    t_b8 internal::InitGFX(s_rendering_basis **const rendering_basis,
+                           s_mem_arena *const rendering_basis_mem_arena,
+                           s_mem_arena *const temp_mem_arena) {
         t_b8 clean_up = false;
 
-        *rendering_basis = PushToMemArena<s_rendering_basis>(mem_arena);
+        *rendering_basis = PushToMemArena<s_rendering_basis>(rendering_basis_mem_arena);
 
         if (!*rendering_basis) {
             ZF_REPORT_ERROR();
@@ -1087,18 +1095,18 @@ void main() {
             constexpr t_size verts_len =
                 g_batch_vert_component_cnt * g_batch_slot_vert_cnt * g_batch_slot_cnt;
             rb->batch_mesh_gl_ids =
-                MakeGLMesh(nullptr, verts_len, elems, g_batch_vert_attr_lens);
+                CreateGLMesh(nullptr, verts_len, elems, g_batch_vert_attr_lens);
         }
 
         ZF_DEFER({
             if (clean_up) {
-                ReleaseGLMesh(rb->batch_mesh_gl_ids);
+                DestroyGLMesh(&rb->batch_mesh_gl_ids);
             }
         });
 
         // Create the batch shader program.
-        rb->batch_shader_prog_gl_id = MakeGLShaderProg(
-            g_batch_vert_shader_src, g_batch_frag_shader_src, *temp_mem_arena);
+        rb->batch_shader_prog_gl_id = CreateGLShaderProg(
+            g_batch_vert_shader_src, g_batch_frag_shader_src, temp_mem_arena);
 
         if (!rb->batch_shader_prog_gl_id) {
             ZF_REPORT_ERROR();
@@ -1127,29 +1135,30 @@ void main() {
             constexpr s_static_array<t_s32, 2> vert_attr_lens = {{2, 2}};
 
             rb->surf_mesh_gl_ids =
-                MakeGLMesh(verts.buf_raw, verts.g_len, elems, vert_attr_lens);
+                CreateGLMesh(verts.buf_raw, verts.g_len, elems, vert_attr_lens);
         }
 
         ZF_DEFER({
             if (clean_up) {
-                ReleaseGLMesh(rb->surf_mesh_gl_ids);
+                DestroyGLMesh(&rb->surf_mesh_gl_ids);
             }
         });
 
         // Set up resource arena.
-        rb->res_arena = MakeGFXResourceArena(*mem_arena);
+        rb->res_arena = CreateGFXResourceArena(rendering_basis_mem_arena);
 
         ZF_DEFER({
             if (clean_up) {
-                ReleaseGFXResources(rb->res_arena);
+                DestroyGFXResources(&rb->res_arena);
             }
         });
 
         // Set up pixel texture.
         {
             const s_static_array<t_u8, 4> rgba = {{255, 255, 255, 255}};
+            rb->px_tex = CreateTexture({{1, 1}, rgba}, &rb->res_arena);
 
-            if (!LoadTexture({{1, 1}, rgba}, rb->res_arena, rb->px_tex)) {
+            if (!rb->px_tex) {
                 ZF_REPORT_ERROR();
                 clean_up = true;
                 return false;
@@ -1157,9 +1166,11 @@ void main() {
         }
 
         // Set up default surface shader program.
-        if (!MakeSurfaceShaderProg(g_default_surface_vert_shader_src,
-                                   g_default_surface_frag_shader_src, rb->res_arena,
-                                   *temp_mem_arena, rb->default_surf_shader_prog)) {
+        rb->default_surf_shader_prog = CreateSurfaceShaderProg(
+            g_default_surface_vert_shader_src, g_default_surface_frag_shader_src,
+            &rb->res_arena, temp_mem_arena);
+
+        if (!rb->default_surf_shader_prog) {
             ZF_REPORT_ERROR();
             clean_up = true;
             return false;
@@ -1168,10 +1179,10 @@ void main() {
         return true;
     }
 
-    void I_ShutdownGFX(const s_rendering_basis *const rendering_basis) {
-        ReleaseGFXResources(rendering_basis->res_arena);
-        ReleaseGLMesh(rendering_basis->surf_mesh_gl_ids);
+    void internal::ShutdownGFX(s_rendering_basis *const rendering_basis) {
+        DestroyGFXResources(&rendering_basis->res_arena);
+        DestroyGLMesh(&rendering_basis->surf_mesh_gl_ids);
         glDeleteProgram(rendering_basis->batch_shader_prog_gl_id);
-        ReleaseGLMesh(rendering_basis->batch_mesh_gl_ids);
+        DestroyGLMesh(&rendering_basis->batch_mesh_gl_ids);
     }
 }
