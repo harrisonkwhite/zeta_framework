@@ -39,6 +39,10 @@ namespace zf {
             return m_backing_arr[index];
         }
 
+        tp_type &Last() const {
+            return operator[](m_len - 1);
+        }
+
         tp_type *Append(const tp_type &val) {
             ZF_ASSERT(!IsFull());
 
@@ -83,7 +87,7 @@ namespace zf {
         }
 
     private:
-        s_array<tp_type> m_backing_arr;
+        s_array<tp_type> m_backing_arr = {};
         t_len m_len = 0;
     };
 

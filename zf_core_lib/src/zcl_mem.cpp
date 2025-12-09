@@ -71,4 +71,61 @@ namespace zf {
         memset(static_cast<t_u8 *>(m_buf) + offs, 0, static_cast<size_t>(m_offs - offs));
         m_offs = offs;
     }
+
+    // ============================================================
+    // @section: Bits
+    // ============================================================
+    static t_len IndexOfFirstSetBitHelper(const s_bit_vec_rdonly bv, const t_len from, const t_u8 xor_mask) {
+        ZF_ASSERT(from >= 0 && from <= bv.BitCount()); // Intentionally allowing the upper bound here for the case of iteration.
+
+        // Map of each possible byte to the index of the first set bit, or -1 for the first case.
+        static constexpr s_static_array<t_len, 256> g_mappings = {{-1, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0, 4, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0, 5, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0, 4, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0, 6, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0, 4, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0, 5, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0, 4, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0, 7, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0, 4, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0, 5, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0, 4, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0, 6, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0, 4, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0, 5, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0, 4, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0}};
+
+        const t_len begin_byte_index = from / 8;
+
+        for (t_len i = begin_byte_index; i < bv.Bytes().Len(); i++) {
+            t_u8 byte = bv.Bytes()[i];
+
+            if (i == begin_byte_index) {
+                byte &= BitmaskRange(from % 8);
+            }
+
+            if (i == bv.Bytes().Len() - 1) {
+                byte &= bv.LastByteMask();
+            }
+
+            const t_len bi = g_mappings[byte ^ xor_mask];
+
+            if (bi != -1) {
+                return (8 * i) + bi;
+            }
+        }
+
+        return -1;
+    }
+
+    t_len IndexOfFirstSetBit(const s_bit_vec_rdonly bv, const t_len from) {
+        return IndexOfFirstSetBitHelper(bv, from, 0);
+    }
+
+    t_len IndexOfFirstUnsetBit(const s_bit_vec_rdonly bv, const t_len from) {
+        return IndexOfFirstSetBitHelper(bv, from, 0xFF);
+    }
+
+    t_len CntSetBits(const s_bit_vec_rdonly bv) {
+        // Map of each possible byte to the number of set bits in it.
+        static constexpr s_static_array<t_len, 256> g_mappings = {{0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4, 1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5, 1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5, 2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6, 1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5, 2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6, 2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6, 3, 4, 4, 5, 4, 5, 5, 6, 4, 5, 5, 6, 5, 6, 6, 7, 1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5, 2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6, 2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6, 2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6, 2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6, 3, 4, 4, 5, 4, 5, 5, 6, 4, 5, 5, 6, 5, 6, 6, 7, 3, 4, 4, 5, 4, 5, 5, 6, 4, 5, 5, 6, 5, 6, 6, 7, 4, 5, 5, 6, 5, 6, 6, 7, 5, 6, 6, 7, 6, 7, 7, 8}};
+
+        t_len res = 0;
+
+        if (bv.Bytes().Len() > 0) {
+            for (t_len i = 0; i < bv.Bytes().Len() - 1; i++) {
+                res += g_mappings[bv.Bytes()[i]];
+            }
+
+            res += g_mappings[bv.Bytes()[bv.Bytes().Len() - 1] & bv.LastByteMask()];
+        }
+
+        return res;
+    }
 }
