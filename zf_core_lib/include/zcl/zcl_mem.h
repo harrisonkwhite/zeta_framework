@@ -106,6 +106,10 @@ namespace zf {
             return {m_raw + beg, end - beg};
         }
 
+        constexpr s_array_rdonly<t_u8> ToBytes() const {
+            return {reinterpret_cast<const t_u8 *>(m_raw), SizeInBytes()};
+        }
+
         constexpr t_b8 DoAllEqual(const tp_type &val, const t_bin_comparator<tp_type> comparator = DefaultBinComparator) const {
             ZF_ASSERT(comparator);
 
@@ -200,6 +204,10 @@ namespace zf {
             ZF_ASSERT(end >= beg && end <= m_len);
 
             return {m_raw + beg, end - beg};
+        }
+
+        constexpr s_array<t_u8> ToBytes() const {
+            return {reinterpret_cast<t_u8 *>(m_raw), SizeInBytes()};
         }
 
         constexpr t_b8 DoAllEqual(const tp_type &val, const t_bin_comparator<tp_type> comparator = DefaultBinComparator) const {
