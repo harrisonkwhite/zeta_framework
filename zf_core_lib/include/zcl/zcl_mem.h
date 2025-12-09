@@ -1,10 +1,9 @@
 #pragma once
 
-#include <cstddef>
-#include <zcl/zcl_basic.h>
-
 #include <cstdlib>
 #include <cstring>
+#include <new>
+#include <zcl/zcl_basic.h>
 
 namespace zf {
     constexpr t_len Kilobytes(const t_len x) {
@@ -61,78 +60,6 @@ namespace zf {
         return (n + alignment - 1) & ~(alignment - 1);
     }
 
-    template <typename tp_type>
-    void Clear(tp_type *const val, const t_u8 byte = 0) {
-        static_assert(!s_is_ptr<tp_type>::g_val);
-        ZF_ASSERT(val);
-        memset(val, byte, sizeof(*val));
-    }
-
-    template <typename tp_type>
-    t_b8 IsClear(const tp_type *const val, const t_u8 byte = 0) {
-        static_assert(!s_is_ptr<tp_type>::g_val);
-        ZF_ASSERT(val);
-
-        const auto val_bytes = reinterpret_cast<const t_u8 *>(val);
-
-        for (t_len i = 0; i < ZF_SIZE_OF(*val); i++) {
-            if (val_bytes[i] != byte) {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-#ifdef ZF_DEBUG
-    constexpr t_u8 g_uninitted_byte = 0xCD;
-    constexpr t_u8 g_freed_byte = 0xDD;
-
-    template <typename tp_type>
-    t_b8 IsUninitted(tp_type *const val) {
-        return IsClear(val, g_uninitted_byte);
-    }
-
-    #define ZF_STACK_GUARD(type, name) \
-        type name;                     \
-        zf::Clear(&name, zf::g_uninitted_byte)
-#else
-    template <typename tp_type>
-    t_b8 IsUninitted(const tp_type *const val) {}
-
-    #define ZF_STACK_GUARD(type, name) type name
-#endif
-
-    inline void *Alloc(const t_len size) {
-        ZF_ASSERT(size >= 0);
-
-#ifdef ZF_DEBUG
-        const auto buf = malloc(static_cast<size_t>(size));
-
-        if (buf) {
-            memset(buf, g_uninitted_byte, static_cast<size_t>(size));
-        }
-
-        return buf;
-#else
-        return malloc(static_cast<size_t>(size));
-#endif
-    }
-
-    inline void Free(void *const buf, const t_len size) {
-        ZF_ASSERT(size >= 0);
-
-        if (!buf) {
-            return;
-        }
-
-#ifdef ZF_DEBUG
-        memset(buf, g_freed_byte, static_cast<size_t>(size));
-#endif
-
-        free(buf);
-    }
-
     struct s_mem_arena {
     public:
         s_mem_arena() = default;
@@ -140,65 +67,16 @@ namespace zf {
         s_mem_arena(const s_mem_arena &) = delete;
         s_mem_arena &operator=(const s_mem_arena &) = delete;
 
-        [[nodiscard]] t_b8 Init(const t_len size) {
-            ZF_ASSERT(!IsInitted());
-            ZF_ASSERT(size > 0);
-
-            const auto buf = calloc(static_cast<size_t>(size), 1);
-
-            if (!buf) {
-                return false;
-            }
-
-            m_buf = buf;
-            m_size = size;
-
-            return true;
-        }
-
-        [[nodiscard]] t_b8 InitAsChild(const t_len size, s_mem_arena *const par) {
-            ZF_ASSERT(!IsInitted());
-            ZF_ASSERT(size > 0);
-
-            const auto buf = par->PushRaw(size, 1);
-
-            if (!buf) {
-                return false;
-            }
-
-            m_buf = buf;
-            m_size = size;
-            m_is_child = true;
-
-            return true;
-        }
+        [[nodiscard]] t_b8 Init(const t_len size);
+        [[nodiscard]] t_b8 InitAsChild(const t_len size, s_mem_arena *const par);
 
         t_b8 IsInitted() const {
             return m_buf;
         }
 
-        void Release() {
-            ZF_ASSERT(IsInitted() && !m_is_child);
-            free(m_buf);
-            *this = {};
-        }
+        void Release();
 
-        void *PushRaw(const t_len size, const t_len alignment) {
-            ZF_ASSERT(IsInitted());
-            ZF_ASSERT(size > 0);
-            ZF_ASSERT(IsAlignmentValid(alignment));
-
-            const t_len offs_aligned = AlignForward(m_offs, alignment);
-            const t_len offs_next = offs_aligned + size;
-
-            if (offs_next > m_size) {
-                return nullptr;
-            }
-
-            m_offs = offs_next;
-
-            return static_cast<t_u8 *>(m_buf) + offs_aligned;
-        }
+        void *PushRaw(const t_len size, const t_len alignment);
 
         template <typename tp_type>
         tp_type *Push(const t_len cnt = 1) {
@@ -208,13 +86,7 @@ namespace zf {
             return static_cast<tp_type *>(buf);
         }
 
-        void Rewind(const t_len offs) {
-            ZF_ASSERT(IsInitted());
-            ZF_ASSERT(offs >= 0 && offs <= m_offs);
-
-            memset(static_cast<t_u8 *>(m_buf) + offs, 0, static_cast<size_t>(m_offs - offs));
-            m_offs = offs;
-        }
+        void Rewind(const t_len offs);
 
     private:
         void *m_buf = nullptr;
@@ -238,6 +110,22 @@ namespace zf {
 
         constexpr s_array_rdonly(const tp_type *const buf, const t_len len) : m_buf(buf), m_len(len) {
             ZF_ASSERT((buf || len == 0) && len >= 0);
+        }
+
+        constexpr const tp_type *Buf() const {
+            return m_buf;
+        }
+
+        constexpr t_len Len() const {
+            return m_len;
+        }
+
+        constexpr t_b8 IsEmpty() const {
+            return m_len == 0;
+        }
+
+        constexpr t_len SizeInBytes() const {
+            return ZF_SIZE_OF(tp_type) * m_len;
         }
 
         constexpr const tp_type &operator[](const t_len index) const {
@@ -312,16 +200,20 @@ namespace zf {
             ZF_ASSERT((buf || len == 0) && len >= 0);
         }
 
-        tp_type *Buf() const {
+        constexpr tp_type *Buf() const {
             return m_buf;
         }
 
-        t_len Len() const {
+        constexpr t_len Len() const {
             return m_len;
         }
 
-        t_b8 IsEmpty() const {
+        constexpr t_b8 IsEmpty() const {
             return m_len == 0;
+        }
+
+        constexpr t_len SizeInBytes() const {
+            return ZF_SIZE_OF(tp_type) * m_len;
         }
 
         constexpr operator s_array_rdonly<tp_type>() const {
@@ -446,11 +338,6 @@ namespace zf {
     template <typename tp_type, t_len tp_len>
     constexpr s_array_rdonly<tp_type> ToNonstaticArray(const s_static_array<tp_type, tp_len> &arr) {
         return static_cast<s_array_rdonly<tp_type>>(arr);
-    }
-
-    template <c_nonstatic_array tp_type>
-    constexpr t_len ArraySizeInBytes(const tp_type arr) {
-        return ZF_SIZE_OF(typename tp_type::t_elem) * arr.len;
     }
 
     template <typename tp_type>

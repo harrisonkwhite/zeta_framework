@@ -48,7 +48,7 @@ namespace zf {
         };
     }
 
-#define ZF_DEFER(x) auto ZF_CONCAT(defer_, ZF_CONCAT(l, __LINE__)) = zf::internal::s_defer([&]() x)
+#define ZF_DEFER(x) const auto ZF_CONCAT(defer_, ZF_CONCAT(l, __LINE__)) = zf::internal::s_defer([&]() x)
 
     // ============================================================
     // @section: Types
