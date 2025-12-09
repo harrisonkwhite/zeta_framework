@@ -16,11 +16,18 @@ add_library(zf_game_lib STATIC
 
 target_include_directories(zf_game_lib PUBLIC
     include
+)
+
+target_include_directories(zf_game_lib PRIVATE
     ../external/glad/include
+    ../external/miniaudio/include
 )
 
 target_link_libraries(zf_game_lib PUBLIC
     zf_core_lib
+)
+
+target_link_libraries(zf_game_lib PRIVATE
     glfw
 )
 
