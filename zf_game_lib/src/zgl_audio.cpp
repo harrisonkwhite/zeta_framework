@@ -3,17 +3,16 @@
 #include <miniaudio.h>
 
 namespace zf {
-#if 0
     struct s_sound_type {
-        s_audio_sys *audio_sys;
-        s_sound_data snd_data;
-        s_sound_type *next;
+        s_audio_sys *audio_sys = nullptr;
+        s_sound_data snd_data = {};
+        s_sound_type *next = nullptr;
     };
 
     constexpr t_len g_snd_inst_limit = 32;
 
     struct s_audio_sys {
-        ma_engine ma_eng;
+        ma_engine ma_eng = {};
 
         struct {
             s_static_array<ma_sound, g_snd_inst_limit> ma_snds;
@@ -21,23 +20,22 @@ namespace zf {
             s_static_array<const s_sound_type *, g_snd_inst_limit> types;
             s_static_bit_vec<g_snd_inst_limit> activity;
             s_static_array<t_len, g_snd_inst_limit> versions;
-        } snd_insts;
+        } snd_insts = {};
     };
 
-    s_audio_sys *internal::CreateAudioSys(s_mem_arena *const mem_arena) {
-        const auto as = PushToMemArena<s_audio_sys>(mem_arena);
+    t_b8 internal::CreateAudioSys(s_mem_arena *const mem_arena, s_audio_sys **const o_as) {
+        *o_as = mem_arena->Push<s_audio_sys>();
+        const auto as = *o_as;
 
         if (!as) {
-            ZF_REPORT_ERROR();
-            return nullptr;
+            return false;
         }
 
         if (ma_engine_init(nullptr, &as->ma_eng) != MA_SUCCESS) {
-            ZF_REPORT_ERROR();
-            return nullptr;
+            return false;
         }
 
-        return as;
+        return true;
     }
 
     void internal::DestroyAudioSys(s_audio_sys *const as) {
@@ -51,18 +49,20 @@ namespace zf {
         ma_engine_uninit(&as->ma_eng);
     }
 
-    s_sound_type *CreateSoundTypeFromRaw(const s_str_rdonly file_path, s_sound_type_arena *const type_arena, s_mem_arena *const temp_mem_arena) {
-        const auto type = PushToMemArena<s_sound_type>(type_arena->mem_arena);
+    t_b8 CreateSoundTypeFromRaw(const s_str_rdonly file_path, s_sound_type_arena *const type_arena, s_mem_arena *const temp_mem_arena, s_sound_type **const o_type) {
+        *o_type = type_arena->mem_arena->Push<s_sound_type>();
+        const auto type = *o_type;
 
         if (!type) {
-            return nullptr;
+            return false;
         }
 
-        ZeroOut(type);
-        type->audio_sys = type_arena->audio_sys;
+        *type = {
+            .audio_sys = type_arena->audio_sys,
+        };
 
-        if (!LoadSoundFromRaw(file_path, &type->snd_data, type_arena->mem_arena, temp_mem_arena)) {
-            return nullptr;
+        if (!LoadSoundFromRaw(file_path, type_arena->mem_arena, &type->snd_data)) {
+            return false;
         }
 
         if (!type_arena->head) {
@@ -73,7 +73,7 @@ namespace zf {
             type_arena->tail = type;
         }
 
-        return type;
+        return true;
     }
 
     void DestroySoundTypes(s_sound_type_arena *const type_arena) {
@@ -104,7 +104,6 @@ namespace zf {
         const t_len index = IndexOfFirstUnsetBit(as->snd_insts.activity);
 
         if (index == -1) {
-            ZF_REPORT_ERROR();
             clean_up = true;
             return false;
         }
@@ -114,8 +113,7 @@ namespace zf {
 
         as->snd_insts.types[index] = type;
 
-        if (ma_audio_buffer_ref_init(ma_format_f32, static_cast<ma_uint32>(type->snd_data.meta.channel_cnt), type->snd_data.pcm.buf, static_cast<ma_uint64>(type->snd_data.meta.frame_cnt), &ma_buf_ref) != MA_SUCCESS) {
-            ZF_REPORT_ERROR();
+        if (ma_audio_buffer_ref_init(ma_format_f32, static_cast<ma_uint32>(type->snd_data.Meta().channel_cnt), type->snd_data.PCM().Raw(), static_cast<ma_uint64>(type->snd_data.Meta().frame_cnt), &ma_buf_ref) != MA_SUCCESS) {
             clean_up = true;
             return false;
         }
@@ -126,10 +124,9 @@ namespace zf {
             }
         });
 
-        ma_buf_ref.sampleRate = static_cast<ma_uint32>(type->snd_data.meta.sample_rate);
+        ma_buf_ref.sampleRate = static_cast<ma_uint32>(type->snd_data.Meta().sample_rate);
 
         if (ma_sound_init_from_data_source(&as->ma_eng, &ma_buf_ref, 0, nullptr, &ma_snd) != MA_SUCCESS) {
-            ZF_REPORT_ERROR();
             clean_up = true;
             return false;
         }
@@ -146,7 +143,6 @@ namespace zf {
         ma_sound_set_looping(&ma_snd, loop);
 
         if (ma_sound_start(&ma_snd) != MA_SUCCESS) {
-            ZF_REPORT_ERROR();
             clean_up = true;
             return false;
         }
@@ -195,5 +191,4 @@ namespace zf {
             }
         }
     }
-#endif
 }

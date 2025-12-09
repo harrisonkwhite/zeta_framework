@@ -25,7 +25,7 @@ namespace zf {
             //
             s_mem_arena mem_arena;
 
-            if (!mem_arena.Init(zf::Megabytes(80))) {
+            if (!mem_arena.Init(Megabytes(80))) {
                 ZF_REPORT_ERROR();
                 return false;
             }
@@ -34,7 +34,7 @@ namespace zf {
 
             s_mem_arena temp_mem_arena;
 
-            if (!temp_mem_arena.InitAsChild(zf::Megabytes(10), &mem_arena)) {
+            if (!temp_mem_arena.InitAsChild(Megabytes(10), &mem_arena)) {
                 ZF_REPORT_ERROR();
                 return false;
             }
@@ -47,6 +47,15 @@ namespace zf {
                 ZF_REPORT_ERROR();
                 return false;
             }
+
+            s_audio_sys *audio_sys;
+
+            if (!internal::CreateAudioSys(&mem_arena, &audio_sys)) {
+                ZF_REPORT_ERROR();
+                return false;
+            }
+
+            ZF_DEFER({ internal::DestroyAudioSys(audio_sys); });
 
             // Initialise developer memory.
             void *dev_mem = nullptr;
@@ -67,6 +76,7 @@ namespace zf {
                     .mem_arena = &mem_arena,
                     .temp_mem_arena = &temp_mem_arena,
                     .platform_layer_info = platform_layer_info,
+                    .audio_sys = audio_sys,
                 };
 
                 if (!info.init_func(context)) {
@@ -106,12 +116,15 @@ namespace zf {
                 if (frame_dur_accum >= targ_tick_interval) {
                     // Run possibly multiple ticks.
                     do {
+                        internal::ProcFinishedSounds(audio_sys);
+
                         const s_game_tick_context context = {
                             .dev_mem = dev_mem,
                             .mem_arena = &mem_arena,
                             .temp_mem_arena = &temp_mem_arena,
                             .input_state = &input_state,
                             .platform_layer_info = platform_layer_info,
+                            .audio_sys = audio_sys,
                         };
 
                         if (!info.tick_func(context)) {
