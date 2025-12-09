@@ -175,7 +175,7 @@ namespace zf {
             return true;
 
         case ek_stream_type_file:
-            return static_cast<t_len>(fwrite(arr.buf_raw, sizeof(arr[0]), static_cast<size_t>(arr.len), stream->type_data.file.raw)) == arr.len;
+            return static_cast<t_len>(fwrite(arr.buf, sizeof(arr[0]), static_cast<size_t>(arr.len), stream->type_data.file.raw)) == arr.len;
         }
 
         ZF_ASSERT(false);
@@ -204,7 +204,7 @@ namespace zf {
         }
 
         if (o_arr->len > 0) {
-            if (!AllocArray(o_arr, o_arr->len, arr_mem_arena)) {
+            if (!AllocArray(o_arr->len, arr_mem_arena, o_arr)) {
                 return false;
             }
 
@@ -417,7 +417,7 @@ namespace zf {
     t_b8 PrintType(s_stream *const stream, const s_float_fmt<tp_type> fmt) {
         s_static_array<char, 400> str_bytes = {}; // Roughly more than how many bytes should ever be needed.
 
-        t_len str_bytes_used = snprintf(str_bytes.buf_raw, str_bytes.g_len, "%f", static_cast<t_f64>(fmt.val));
+        t_len str_bytes_used = snprintf(str_bytes.buf, str_bytes.g_len, "%f", static_cast<t_f64>(fmt.val));
 
         if (str_bytes_used < 0 || str_bytes_used >= str_bytes.g_len) {
             return false;

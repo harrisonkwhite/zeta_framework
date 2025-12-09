@@ -1,6 +1,7 @@
 #include <zgl/zgl_gfx.h>
 
 namespace zf {
+#if 0
     // ============================================================
     // @section: OpenGL Helpers
     // ============================================================
@@ -314,7 +315,7 @@ namespace zf {
         return true;
     }
 
-#if 0
+    #if 0
     t_b8 LoadFontFromRaw(const s_str_rdonly file_path, const t_s32 height,
                          const t_unicode_code_pt_bit_vec &code_pts,
                          s_gfx_resource_arena *const res_arena,
@@ -381,7 +382,7 @@ namespace zf {
 
         return true;
     }
-#endif
+    #endif
 
     s_gfx_resource *CreateSurface(const s_v2_i size, s_gfx_resource_arena *const res_arena) {
         t_gl_id fb_gl_id;
@@ -1066,4 +1067,5 @@ void main() {
         glDeleteProgram(rendering_basis->batch_shader_prog_gl_id);
         DestroyGLMesh(&rendering_basis->batch_mesh_gl_ids);
     }
+#endif
 }

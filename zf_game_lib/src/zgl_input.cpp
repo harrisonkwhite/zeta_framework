@@ -1,8 +1,8 @@
 #include <zgl/zgl_input.h>
 
 namespace zf {
-    void internal::ProcKeyAction(s_input_state *const is, const e_key_code code,
-                                 const e_key_action act) {
+#if 0
+    void internal::ProcKeyAction(s_input_state *const is, const e_key_code code, const e_key_action act) {
         if (code == eks_key_code_none) {
             return;
         }
@@ -24,9 +24,7 @@ namespace zf {
         }
     }
 
-    void internal::ProcMouseButtonAction(s_input_state *const is,
-                                         const e_mouse_button_code code,
-                                         const e_mouse_button_action act) {
+    void internal::ProcMouseButtonAction(s_input_state *const is, const e_mouse_button_code code, const e_mouse_button_action act) {
         if (code == eks_mouse_button_code_none) {
             return;
         }
@@ -55,4 +53,5 @@ namespace zf {
     void internal::ProcScroll(s_input_state *const is, const s_v2 scroll) {
         is->events.scroll += scroll;
     }
+#endif
 }

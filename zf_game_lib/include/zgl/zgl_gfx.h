@@ -4,6 +4,7 @@
 #include <zcl.h>
 
 namespace zf {
+#if 0
     struct s_rendering_basis;
 
     namespace internal {
@@ -33,10 +34,8 @@ namespace zf {
 
     s_v2_i TextureSize(const s_gfx_resource *const res);
 
-#if 0
     [[nodiscard]] t_b8 LoadFontFromRaw(const s_str_rdonly file_path, const t_s32 height, const t_unicode_code_pt_bit_vec &code_pts, s_gfx_resource_arena &res_arena, s_mem_arena &temp_mem_arena, s_gfx_resource *&o_font, e_font_load_from_raw_result *const o_load_from_raw_res = nullptr, t_unicode_code_pt_bit_vec *const o_unsupported_code_pts = nullptr);
     [[nodiscard]] t_b8 LoadFontFromPacked(const s_str_rdonly file_path, s_gfx_resource_arena &res_arena, s_mem_arena &temp_mem_arena, s_gfx_resource *&o_font);
-#endif
 
     s_gfx_resource *CreateSurface(const s_v2_i size, s_gfx_resource_arena *const res_arena);
     [[nodiscard]] t_b8 ResizeSurface(s_gfx_resource *const surf, const s_v2_i size);
@@ -110,4 +109,5 @@ namespace zf {
         [[nodiscard]] t_b8 BeginFrame(s_rendering_context *const rendering_context, const s_rendering_basis *const rendering_basis, const s_v2_i framebuffer_size_cache, s_mem_arena *const mem_arena);
         void CompleteFrame(const s_rendering_context rc);
     }
+#endif
 }

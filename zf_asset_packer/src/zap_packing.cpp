@@ -3,6 +3,7 @@
 #include <cJSON.h>
 
 namespace zf {
+#if 0
     constexpr t_len g_mem_arena_size = Megabytes(40);
 
     enum e_asset_type : t_i32 {
@@ -322,4 +323,5 @@ namespace zf {
 
         return true;
     }
+#endif
 }

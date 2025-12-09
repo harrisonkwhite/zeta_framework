@@ -3,6 +3,7 @@
 #include <zcl.h>
 
 namespace zf {
+#if 0
     enum e_key_code : t_i32 {
         eks_key_code_none = -1,
 
@@ -116,18 +117,15 @@ namespace zf {
         return IsBitSet(is->events.keys_released, kc);
     }
 
-    inline t_b8 IsMouseButtonDown(const s_input_state *const is,
-                                  const e_mouse_button_code mbc) {
+    inline t_b8 IsMouseButtonDown(const s_input_state *const is, const e_mouse_button_code mbc) {
         return IsBitSet(is->mouse_buttons_down, mbc);
     }
 
-    inline t_b8 IsMouseButtonPressed(const s_input_state *const is,
-                                     const e_mouse_button_code mbc) {
+    inline t_b8 IsMouseButtonPressed(const s_input_state *const is, const e_mouse_button_code mbc) {
         return IsBitSet(is->events.mouse_buttons_pressed, mbc);
     }
 
-    inline t_b8 IsMouseButtonReleased(const s_input_state *const is,
-                                      const e_mouse_button_code mbc) {
+    inline t_b8 IsMouseButtonReleased(const s_input_state *const is, const e_mouse_button_code mbc) {
         return IsBitSet(is->events.mouse_buttons_released, mbc);
     }
 
@@ -144,11 +142,10 @@ namespace zf {
             release
         };
 
-        void ProcKeyAction(s_input_state *const is, const e_key_code code,
-                           const e_key_action act);
-        void ProcMouseButtonAction(s_input_state *const is, const e_mouse_button_code code,
-                                   const e_mouse_button_action act);
+        void ProcKeyAction(s_input_state *const is, const e_key_code code, const e_key_action act);
+        void ProcMouseButtonAction(s_input_state *const is, const e_mouse_button_code code, const e_mouse_button_action act);
         void ProcCursorMove(s_input_state *const is, const s_v2 pos);
         void ProcScroll(s_input_state *const is, const s_v2 scroll);
     }
+#endif
 }

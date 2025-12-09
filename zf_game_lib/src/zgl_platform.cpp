@@ -6,6 +6,7 @@
 #include <zgl/zgl_input.h>
 
 namespace zf {
+#if 0
     constexpr e_key_code ConvertGLFWKeyCode(const t_i32 glfw_key) {
         switch (glfw_key) {
         case GLFW_KEY_SPACE:
@@ -529,4 +530,5 @@ namespace zf {
     void SetCursorVisibility(const s_platform_layer_info *const pli, const t_b8 visible) {
         glfwSetInputMode(pli->glfw_window, GLFW_CURSOR, visible ? GLFW_CURSOR_NORMAL : GLFW_CURSOR_HIDDEN);
     }
+#endif
 }

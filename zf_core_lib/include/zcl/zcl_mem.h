@@ -168,12 +168,12 @@ namespace zf {
 
         using t_elem = tp_type;
 
-        const tp_type *buf_raw;
+        const tp_type *buf;
         t_len len;
 
         constexpr const tp_type &operator[](const t_len index) const {
             ZF_ASSERT(index >= 0 && index < len);
-            return buf_raw[index];
+            return buf[index];
         }
     };
 
@@ -202,35 +202,35 @@ namespace zf {
 
         static constexpr t_len g_len = tp_len;
 
-        tp_type buf_raw[tp_len];
+        tp_type buf[tp_len];
 
         constexpr s_static_array() = default;
 
         template <t_len tp_other_len>
-        constexpr s_static_array(const tp_type (&buf_raw)[tp_other_len]) {
+        constexpr s_static_array(const tp_type (&buf)[tp_other_len]) {
             static_assert(tp_other_len == tp_len);
 
             for (t_len i = 0; i < tp_other_len; i++) {
-                this->buf_raw[i] = buf_raw[i];
+                this->buf[i] = buf[i];
             }
         }
 
         constexpr tp_type &operator[](const t_len index) {
             ZF_ASSERT(index >= 0 && index < tp_len);
-            return buf_raw[index];
+            return buf[index];
         }
 
         constexpr const tp_type &operator[](const t_len index) const {
             ZF_ASSERT(index >= 0 && index < tp_len);
-            return buf_raw[index];
+            return buf[index];
         }
 
         constexpr operator s_array<tp_type>() {
-            return {buf_raw, tp_len};
+            return {buf, tp_len};
         }
 
         constexpr operator s_array_rdonly<tp_type>() const {
-            return {buf_raw, tp_len};
+            return {buf, tp_len};
         }
     };
 
@@ -316,7 +316,7 @@ namespace zf {
         ZF_ASSERT(beg >= 0 && beg <= arr.len);
         ZF_ASSERT(end >= beg && end <= arr.len);
 
-        return {arr.buf_raw + beg, end - beg};
+        return {arr.buf + beg, end - beg};
     }
 
     template <c_nonstatic_mut_array tp_dest_type, c_nonstatic_array tp_src_type>
@@ -398,7 +398,7 @@ namespace zf {
 
     template <typename tp_type>
     constexpr s_array_rdonly<t_u8> ToByteArray(const s_array_rdonly<tp_type> arr) {
-        return {reinterpret_cast<const t_u8 *>(arr.buf_raw), ArraySizeInBytes(arr)};
+        return {reinterpret_cast<const t_u8 *>(arr.buf), ArraySizeInBytes(arr)};
     }
 
     // ============================================================
@@ -743,10 +743,8 @@ namespace zf {
         }
     }
 
-    t_len IndexOfFirstSetBit(const s_bit_vec_rdonly bv,
-                             const t_len from = 0); // Returns -1 if all bits are unset.
-    t_len IndexOfFirstUnsetBit(const s_bit_vec_rdonly bv,
-                               const t_len from = 0); // Returns -1 if all bits are set.
+    t_len IndexOfFirstSetBit(const s_bit_vec_rdonly bv, const t_len from = 0);   // Returns -1 if all bits are unset.
+    t_len IndexOfFirstUnsetBit(const s_bit_vec_rdonly bv, const t_len from = 0); // Returns -1 if all bits are set.
 
     t_len CntSetBits(const s_bit_vec_rdonly bv);
 

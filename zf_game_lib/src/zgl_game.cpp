@@ -6,6 +6,7 @@
 #include <zgl/zgl_platform.h>
 
 namespace zf {
+#if 0
     t_b8 RunGame(const s_game_info &info) {
         ZF_ASSERT(info.mem_arena_size > 0);
         ZF_ASSERT(info.temp_mem_arena_size > 0 && info.temp_mem_arena_size <= info.mem_arena_size);
@@ -18,10 +19,10 @@ namespace zf {
         ZF_ASSERT(info.tick_func);
         ZF_ASSERT(info.render_func);
 
-#ifndef ZF_DEBUG
+    #ifndef ZF_DEBUG
         // Redirect stderr to crash log file.
         freopen("error.log", "w", stderr);
-#endif
+    #endif
 
         const t_b8 success = [&info]() {
             //
@@ -163,12 +164,13 @@ namespace zf {
             return true;
         }();
 
-#ifndef ZF_DEBUG
+    #ifndef ZF_DEBUG
         if (!success) {
             ShowErrorBox("Error", "A fatal error occurred! Please check \"error.log\" for details.");
         }
-#endif
+    #endif
 
         return success;
     }
+#endif
 }

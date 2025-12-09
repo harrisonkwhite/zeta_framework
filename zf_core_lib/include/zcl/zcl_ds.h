@@ -125,11 +125,6 @@ namespace zf {
         return ListRemoveLast(list.backing_arr, list.len);
     }
 
-    template <typename tp_type, t_len tp_cap>
-    tp_type ListRemoveLast(s_static_list<tp_type, tp_cap> &list) {
-        return ListRemoveLast(ToNonstaticArray(list.backing_arr), list.len);
-    }
-
     template <typename tp_type>
     void ListRemoveSwapback(const s_array<tp_type> backing_arr, t_len &len, const t_len index) {
         ZF_ASSERT(len > 0 && len <= backing_arr.len);
@@ -688,6 +683,7 @@ namespace zf {
 
     template <typename tp_key_type, typename tp_val_type>
     [[nodiscard]] t_b8 DeserializeHashMap(s_stream *const stream, s_mem_arena *const hm_mem_arena, const t_hash_func<tp_key_type> hm_hash_func, const t_bin_comparator<tp_key_type> hm_key_comparator, s_hash_map<tp_key_type, tp_val_type> *const o_hm) {
+#if 0
         MarkUninitted(o_hm);
 
         if (!StreamReadItem(stream, o_hm->kv_pair_cnt) && !DeserializeArray(stream, hm_mem_arena, o_hm->immediate_indexes) && !StreamReadItem(stream, o_hm->backing_block_cap)) {
@@ -718,6 +714,7 @@ namespace zf {
 
             bb_ptr_to_update = &bb->next;
         }
+#endif
 
         return true;
     }

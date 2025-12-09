@@ -10,6 +10,7 @@ namespace zf {
     t_b8 LoadTextureDataFromRaw(const s_str_rdonly file_path, s_mem_arena &mem_arena, s_mem_arena &temp_mem_arena, s_texture_data *const o_tex_data) {
         ZF_ASSERT(IsStrTerminated(file_path));
 
+#if 0
         t_u8 *const stb_px_data = stbi_load(StrRaw(file_path), &o_tex_data->size_in_pxs.x, &o_tex_data->size_in_pxs.y, nullptr, 4);
 
         if (!stb_px_data) {
@@ -25,11 +26,13 @@ namespace zf {
         }
 
         Copy(o_tex_data.rgba_px_data, stb_px_data_arr);
+#endif
 
         return true;
     }
 
     t_b8 PackTexture(const s_str_rdonly file_path, const s_texture_data tex_data, s_mem_arena *const temp_mem_arena) {
+#if 0
         if (!CreateFileAndParentDirs(file_path, temp_mem_arena)) {
             return false;
         }
@@ -49,6 +52,9 @@ namespace zf {
         if (!StreamWriteItemsOfArray(&fs, tex_data.rgba_px_data)) {
             return false;
         }
+
+        return true;
+#endif
 
         return true;
     }

@@ -3,9 +3,7 @@
 #include <zcl/zcl_mem.h>
 
 namespace zf {
-    // O(n^2) time complexity, but O(1) space complexity. Can also be done at compile-time.
-    // You're usually better off using a hash map and a linear search, or a bit vector if
-    // values are numeric and the range is small.
+    // O(n^2) time complexity, but O(1) space complexity. Can also be done at compile-time. You're usually better off using a hash map and a linear search, or a bit vector if values are numeric and the range is small.
     template <c_nonstatic_array tp_type>
     constexpr t_b8 HasDuplicatesSlow(const tp_type arr, const t_bin_comparator<typename tp_type::t_elem> comparator = DefaultBinComparator) {
         for (t_len i = 0; i < arr.len; i++) {

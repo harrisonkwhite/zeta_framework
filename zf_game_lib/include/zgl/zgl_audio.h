@@ -3,6 +3,7 @@
 #include <zcl.h>
 
 namespace zf {
+#if 0
     struct s_audio_sys;
 
     struct s_sound_type;
@@ -40,4 +41,5 @@ namespace zf {
         void DestroyAudioSys(s_audio_sys *const as);
         void ProcFinishedSounds(s_audio_sys *const as);
     }
+#endif
 }

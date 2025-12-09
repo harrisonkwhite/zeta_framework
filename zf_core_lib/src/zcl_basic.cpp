@@ -45,8 +45,7 @@ namespace zf {
                 DWORD displacement;
 
                 if (SymGetLineFromAddr64(proc, addr, &displacement, &line)) {
-                    fprintf(stderr, "- %s (%s:%lu)\n", symbol->Name, line.FileName,
-                            line.LineNumber);
+                    fprintf(stderr, "- %s (%s:%lu)\n", symbol->Name, line.FileName, line.LineNumber);
                 } else {
                     fprintf(stderr, "- %s\n", symbol->Name);
                 }
@@ -71,9 +70,7 @@ namespace zf {
         return false;
     }
 
-    void internal::ReportAssertError(const char *const cond_raw,
-                                     const char *const func_name_raw,
-                                     const char *const file_name_raw, const t_i32 line) {
+    void internal::ReportAssertError(const char *const cond_raw, const char *const func_name_raw, const char *const file_name_raw, const t_i32 line) {
         fprintf(stderr, "==================== ASSERTION ERROR ====================\n");
         fprintf(stderr, "Condition: %s\n", cond_raw);
         fprintf(stderr, "Function:  %s\n", func_name_raw);
@@ -89,8 +86,7 @@ namespace zf {
         }
     }
 
-    void internal::ReportError(const char *const func_name_raw,
-                               const char *const file_name_raw, const t_i32 line) {
+    void internal::ReportError(const char *const func_name_raw, const char *const file_name_raw, const t_i32 line) {
         static t_b8 g_reported;
 
         if (g_reported) {
