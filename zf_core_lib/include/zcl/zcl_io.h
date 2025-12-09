@@ -209,7 +209,7 @@ namespace zf {
 
     template <c_nonstatic_array tp_type>
     [[nodiscard]] t_b8 SerializeArray(s_stream *const stream, const tp_type arr) {
-        if (!stream->WriteItem(arr.len)) {
+        if (!stream->WriteItem(arr.Len())) {
             return false;
         }
 
