@@ -146,7 +146,7 @@ namespace zf {
         }
 
         template <c_nonstatic_array tp_type>
-        [[nodiscard]] t_b8 WriteItemsOfArray(s_stream &stream, const tp_type arr) {
+        [[nodiscard]] t_b8 WriteItemsOfArray(const tp_type arr) {
             ZF_ASSERT(m_mode == e_stream_mode::write);
 
             if (arr.IsEmpty()) {
@@ -277,277 +277,37 @@ namespace zf {
         return true;
     }
 
-#if 0
-    struct s_stream {
-        e_stream_mode mode;
-
-        e_stream_type type;
-
-        union {
-            struct {
-                s_array<t_u8> bytes;
-                t_size pos;
-            } mem;
-
-            struct {
-                FILE *fs_raw;
-            } file;
-        } type_data;
-    };
-
-    inline s_stream StdIn() {
-        return {.mode = ek_stream_mode_read, .type = ek_stream_type_file, .type_data = {.file = {.fs_raw = stdin}}};
-    }
-
-    inline s_stream StdOut() {
-        return {.mode = ek_stream_mode_write, .type = ek_stream_type_file, .type_data = {.file = {.fs_raw = stdout}}};
-    }
-
-    inline s_stream StdError() {
-        return {.mode = ek_stream_mode_write, .type = ek_stream_type_file, .type_data = {.file = {.fs_raw = stderr}}};
-    }
-
-    template <typename tp_type>
-    [[nodiscard]] t_b8 StreamReadItem(s_stream &stream, tp_type &o_item) {
-        ZF_ASSERT(stream.mode == ek_stream_mode_read);
-
-        constexpr t_size size = ZF_SIZE_OF(tp_type);
-
-        switch (stream.type) {
-        case ek_stream_type_mem:
-            if (stream.type_data.mem.pos + size > stream.type_data.mem.bytes.len) {
-                return false;
-            }
-
-            {
-                const auto dest = ToBytes(o_item);
-                const auto src = Slice(stream.type_data.mem.bytes, stream.type_data.mem.pos, stream.type_data.mem.pos + size);
-                Copy(dest, src);
-
-                stream.type_data.mem.pos += size;
-            }
-
-            return true;
-
-        case ek_stream_type_file:
-            return fread(&o_item, size, 1, stream.type_data.file.fs_raw) == 1;
-        }
-
-        ZF_ASSERT(false);
-        return false;
-    }
-
-    template <typename tp_type>
-    [[nodiscard]] t_b8 StreamWriteItem(s_stream &stream, const tp_type &item) {
-        ZF_ASSERT(stream.mode == ek_stream_mode_write);
-
-        constexpr t_size size = ZF_SIZE_OF(tp_type);
-
-        switch (stream.type) {
-        case ek_stream_type_mem:
-            if (stream.type_data.mem.pos + size > stream.type_data.mem.bytes.len) {
-                return false;
-            }
-
-            {
-                const auto dest = Slice(stream.type_data.mem.bytes, stream.type_data.mem.pos, stream.type_data.mem.pos + size);
-                const auto src = ToBytes(item);
-                Copy(dest, src);
-
-                stream.type_data.mem.pos += size;
-            }
-
-            return true;
-
-        case ek_stream_type_file:
-            return fwrite(&item, size, 1, stream.type_data.file.fs_raw) == 1;
-        }
-
-        ZF_ASSERT(false);
-        return false;
-    }
-
-    template <typename tp_type>
-    [[nodiscard]] t_b8 StreamReadItemsIntoArray(s_stream &stream, const s_array<tp_type> arr, const t_size cnt) {
-        ZF_ASSERT(stream.mode == ek_stream_mode_read);
-        ZF_ASSERT(cnt >= 0 && cnt <= arr.len);
-
-        if (cnt == 0) {
-            return true;
-        }
-
-        switch (stream.type) {
-        case ek_stream_type_mem: {
-            const t_size size = ZF_SIZE_OF(arr[0]) * cnt;
-
-            if (stream.type_data.mem.pos + size > stream.type_data.mem.bytes.len) {
-                return false;
-            }
-
-            const auto dest = Slice(stream.type_data.mem.bytes, stream.type_data.mem.pos, stream.type_data.mem.pos + size);
-            const auto src = ToByteArray(arr);
-            Copy(dest, src);
-
-            stream.type_data.mem.pos += size;
-        }
-
-            return true;
-
-        case ek_stream_type_file:
-            return static_cast<t_size>(fread(arr.buf_raw, sizeof(arr[0]), static_cast<size_t>(cnt), stream.type_data.file.fs_raw)) == cnt;
-        }
-
-        ZF_ASSERT(false);
-        return false;
-    }
-
-    template <typename tp_type, t_size tp_len>
-    [[nodiscard]] t_b8 StreamReadItemsIntoArray(s_stream &stream, s_static_array<tp_type, tp_len> &arr, const t_size cnt) {
-        ZF_ASSERT(cnt >= 0 && cnt <= arr.g_len);
-        return StreamReadItemsIntoArray(stream, ToNonstaticArray(arr), cnt);
-    }
-
-    template <c_nonstatic_array tp_type>
-    [[nodiscard]] t_b8 StreamWriteItemsOfArray(s_stream &stream, const tp_type arr) {
-        ZF_ASSERT(stream.mode == ek_stream_mode_write);
-
-        if (arr.len == 0) {
-            return true;
-        }
-
-        switch (stream.type) {
-        case ek_stream_type_mem: {
-            const t_size size = ArraySizeInBytes(arr);
-
-            if (stream.type_data.mem.pos + size > stream.type_data.mem.bytes.len) {
-                return false;
-            }
-
-            const auto dest = Slice(stream.type_data.mem.bytes, stream.type_data.mem.pos, stream.type_data.mem.pos + size);
-            const auto src = ToByteArray(arr);
-            Copy(dest, src);
-
-            stream.type_data.mem.pos += size;
-        }
-
-            return true;
-
-        case ek_stream_type_file:
-            return static_cast<t_size>(fwrite(arr.buf_raw, sizeof(arr[0]), static_cast<size_t>(arr.len), stream.type_data.file.fs_raw)) == arr.len;
-        }
-
-        ZF_ASSERT(false);
-        return false;
-    }
-
-    template <typename tp_type, t_size tp_len>
-    [[nodiscard]] t_b8 StreamWriteItemsOfArray(s_stream &stream, const s_static_array<tp_type, tp_len> &arr) {
-        return StreamWriteItemsOfArray(stream, ToNonstaticArray(arr));
-    }
-
-    template <c_nonstatic_array tp_type>
-    [[nodiscard]] t_b8 SerializeArray(s_stream &stream, const tp_type arr) {
-        if (!StreamWriteItem(stream, arr.len)) {
-            return false;
-        }
-
-        if (!StreamWriteItemsOfArray(stream, arr)) {
-            return false;
-        }
-
-        return true;
-    }
-
-    template <typename tp_type, t_size tp_len>
-    [[nodiscard]] t_b8 SerializeArray(s_stream &stream, const s_static_array<tp_type, tp_len> &arr) {
-        return SerializeArray(stream, ToNonstaticArray(arr));
-    }
-
-    template <typename tp_type>
-    [[nodiscard]] t_b8 DeserializeArray(s_stream &stream, s_mem_arena &mem_arena, s_array<tp_type> &o_arr) {
-        o_arr = {};
-
-        if (!StreamReadItem(stream, o_arr.len)) {
-            return false;
-        }
-
-        if (o_arr.len > 0) {
-            if (!InitArray(&o_arr, o_arr.len, &mem_arena)) {
-                return false;
-            }
-
-            if (!StreamReadItemsIntoArray(stream, o_arr, o_arr.len)) {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    [[nodiscard]] inline t_b8 SerializeBitVec(s_stream &stream, const s_bit_vec_rdonly &bv) {
-        if (!StreamWriteItem(stream, bv.bit_cnt)) {
-            return false;
-        }
-
-        if (!StreamWriteItemsOfArray(stream, bv.bytes)) {
-            return false;
-        }
-
-        return true;
-    }
-
-    [[nodiscard]] inline t_b8 DeserializeBitVec(s_stream &stream, s_mem_arena &mem_arena, s_bit_vec &o_bv) {
-        o_bv = {};
-
-        if (!StreamReadItem(stream, o_bv.bit_cnt)) {
-            return false;
-        }
-
-        if (o_bv.bit_cnt > 0) {
-            if (!InitArray(&o_bv.bytes, BitsToBytes(o_bv.bit_cnt), &mem_arena)) {
-                return false;
-            }
-
-            if (!StreamReadItemsIntoArray(stream, o_bv.bytes, o_bv.bytes.len)) {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
     // ============================================================
     // @section: Files and Directories
     // ============================================================
-    enum e_file_access_mode : t_i32 {
-        ek_file_access_mode_read,
-        ek_file_access_mode_write,
-        ek_file_access_mode_append
+    enum class e_file_access_mode : t_i32 {
+        read,
+        write,
+        append
     };
 
-    [[nodiscard]] t_b8 OpenFile(const s_str_rdonly file_path, const e_file_access_mode mode, s_mem_arena &temp_mem_arena, s_stream &o_fs);
-    void CloseFile(s_stream &fs);
-    t_size CalcFileSize(const s_stream &fs);
-    [[nodiscard]] t_b8 LoadFileContents(const s_str_rdonly file_path, s_mem_arena &mem_arena, s_mem_arena &temp_mem_arena, s_array<t_u8> &o_contents);
+    [[nodiscard]] t_b8 OpenFile(const s_str_rdonly file_path, const e_file_access_mode mode, s_stream *const o_stream);
+    void CloseFile(s_stream *const stream);
+    t_len CalcFileSize(const s_stream *const stream);
+    [[nodiscard]] t_b8 LoadFileContents(const s_str_rdonly file_path, s_mem_arena *const contents_mem_arena, s_mem_arena *const temp_mem_arena, s_array<t_u8> *const o_contents);
 
-    enum e_directory_creation_result : t_i32 {
-        ek_directory_creation_result_success,
-        ek_directory_creation_result_already_exists,
-        ek_directory_creation_result_permission_denied,
-        ek_directory_creation_result_path_not_found,
-        ek_directory_creation_result_unknown_err
+    enum class e_directory_creation_result : t_i32 {
+        success,
+        already_exists,
+        permission_denied,
+        path_not_found,
+        unknown_err
     };
 
-    [[nodiscard]] t_b8 CreateDirectory(const s_str_rdonly path, s_mem_arena &temp_mem_arena, e_directory_creation_result *const o_creation_res = nullptr); // This DOES NOT create non-existent parent directories.
-    [[nodiscard]] t_b8 CreateDirectoryAndParents(const s_str_rdonly path, s_mem_arena &temp_mem_arena, e_directory_creation_result *const o_dir_creation_res = nullptr);
-    [[nodiscard]] t_b8 CreateFileAndParentDirs(const s_str_rdonly path, s_mem_arena &temp_mem_arena, e_directory_creation_result *const o_dir_creation_res = nullptr);
+    [[nodiscard]] t_b8 CreateDirectory(const s_str_rdonly path, e_directory_creation_result *const o_creation_res = nullptr); // This DOES NOT create non-existent parent directories.
+    [[nodiscard]] t_b8 CreateDirectoryAndParents(const s_str_rdonly path, s_mem_arena *const temp_mem_arena, e_directory_creation_result *const o_dir_creation_res = nullptr);
+    [[nodiscard]] t_b8 CreateFileAndParentDirs(const s_str_rdonly path, s_mem_arena *const temp_mem_arena, e_directory_creation_result *const o_dir_creation_res = nullptr);
 
-    enum e_path_type : t_i32 {
-        ek_path_type_not_found,
-        ek_path_type_file,
-        ek_path_type_directory
+    enum class e_path_type : t_i32 {
+        not_found,
+        file,
+        directory
     };
 
-    [[nodiscard]] t_b8 CheckPathType(const s_str_rdonly path, s_mem_arena &temp_mem_arena, e_path_type &o_type);
-#endif
+    [[nodiscard]] t_b8 CheckPathType(const s_str_rdonly path, e_path_type *const o_type);
 }
