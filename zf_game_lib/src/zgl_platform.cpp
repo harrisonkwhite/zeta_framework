@@ -6,7 +6,6 @@
 #include <zgl/zgl_input.h>
 
 namespace zf {
-#if 0
     constexpr e_key_code ConvertGLFWKeyCode(const t_i32 glfw_key) {
         switch (glfw_key) {
         case GLFW_KEY_SPACE:
@@ -259,27 +258,27 @@ namespace zf {
         s_v2_i prefullscreen_size;
     };
 
-    s_platform_layer_info *internal::InitPlatformLayer(s_mem_arena *const mem_arena, s_input_state *const input_state) {
+    t_b8 internal::InitPlatformLayer(s_mem_arena *const mem_arena, s_input_state *const input_state, s_platform_layer_info **const o_pli) {
         ZF_ASSERT(!g_initted);
 
         t_b8 clean_up = false;
 
-        const auto info = PushToMemArena<s_platform_layer_info>(mem_arena);
+        const auto info = mem_arena->Push<s_platform_layer_info>();
 
         if (!info) {
             ZF_REPORT_ERROR();
             clean_up = true;
-            return nullptr;
+            return false;
         }
 
-        ZeroOut(info);
+        *o_pli = info;
 
         info->input_state = input_state;
 
         if (!glfwInit()) {
             ZF_REPORT_ERROR();
             clean_up = true;
-            return nullptr;
+            return false;
         }
 
         ZF_DEFER({
@@ -288,8 +287,8 @@ namespace zf {
             }
         });
 
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, i_g_gl_version_major);
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, i_g_gl_version_minor);
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, internal::g_gl_version_major);
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, internal::g_gl_version_minor);
         glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
         glfwWindowHint(GLFW_VISIBLE, false);
 
@@ -298,7 +297,7 @@ namespace zf {
         if (!info->glfw_window) {
             ZF_REPORT_ERROR();
             clean_up = true;
-            return nullptr;
+            return false;
         }
 
         ZF_DEFER({
@@ -315,7 +314,7 @@ namespace zf {
         if (!gladLoadGLLoader(reinterpret_cast<GLADloadproc>(glfwGetProcAddress))) {
             ZF_REPORT_ERROR();
             clean_up = true;
-            return nullptr;
+            return false;
         }
 
         // Set up callbacks.
@@ -406,11 +405,8 @@ namespace zf {
     }
 
     void SetWindowTitle(const s_platform_layer_info *const pli, const s_str_rdonly title) {
-        ZF_ASSERT(IsValidUTF8Str(title));
-
-        s_static_array<t_u8, 256> title_terminated_bytes = {};
-        CopyOrTruncate(Slice(ToNonstaticArray(title_terminated_bytes), 0, title_terminated_bytes.g_len - 1), title.bytes);
-        glfwSetWindowTitle(pli->glfw_window, reinterpret_cast<const char *>(title_terminated_bytes.buf_raw));
+        ZF_ASSERT(title.IsValid());
+        glfwSetWindowTitle(pli->glfw_window, title.Raw());
     }
 
     void SetWindowSize(const s_platform_layer_info *const pli, const s_v2_i size) {
@@ -462,7 +458,7 @@ namespace zf {
 
             const s_rect_i monitor_rect = {monitor_pos.x, monitor_pos.y, static_cast<t_i32>(static_cast<t_f32>(mode->width) / monitor_scale.x), static_cast<t_i32>(static_cast<t_f32>(mode->height) / monitor_scale.y)};
 
-            const t_f32 occupancy_perc = CalcRectOccupancyPerc(window_rect, monitor_rect);
+            const t_f32 occupancy_perc = window_rect.CalcOccupancyPerc(monitor_rect);
 
             if (occupancy_perc > max_occupancy_perc) {
                 max_occupancy_perc = occupancy_perc;
@@ -530,5 +526,4 @@ namespace zf {
     void SetCursorVisibility(const s_platform_layer_info *const pli, const t_b8 visible) {
         glfwSetInputMode(pli->glfw_window, GLFW_CURSOR, visible ? GLFW_CURSOR_NORMAL : GLFW_CURSOR_HIDDEN);
     }
-#endif
 }

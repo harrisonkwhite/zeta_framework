@@ -3,7 +3,6 @@
 #include <zcl.h>
 
 namespace zf {
-#if 0
     struct s_platform_layer_info;
 
     t_f64 Time();
@@ -38,7 +37,7 @@ namespace zf {
     struct s_input_state;
 
     namespace internal {
-        [[nodiscard]] s_platform_layer_info *InitPlatformLayer(s_mem_arena *const mem_arena, s_input_state *const input_state);
+        [[nodiscard]] t_b8 InitPlatformLayer(s_mem_arena *const mem_arena, s_input_state *const input_state, s_platform_layer_info **const o_pli);
         void ShutdownPlatformLayer(const s_platform_layer_info *const pli);
 
         void PollOSEvents();
@@ -47,5 +46,4 @@ namespace zf {
         t_b8 ShouldWindowClose(const s_platform_layer_info *const pli);
         void SwapWindowBuffers(const s_platform_layer_info *const pli);
     }
-#endif
 }

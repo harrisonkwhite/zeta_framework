@@ -3,7 +3,6 @@
 #include <zcl.h>
 
 namespace zf {
-#if 0
     enum e_key_code : t_i32 {
         eks_key_code_none = -1,
 
@@ -85,24 +84,24 @@ namespace zf {
     };
 
     struct s_input_state {
-        s_static_bit_vec<eks_key_code_cnt> keys_down;
-        s_static_bit_vec<eks_mouse_button_code_cnt> mouse_buttons_down;
+        s_static_bit_vec<eks_key_code_cnt> keys_down = {};
+        s_static_bit_vec<eks_mouse_button_code_cnt> mouse_buttons_down = {};
 
-        s_v2 cursor_pos;
+        s_v2 cursor_pos = {};
 
         struct {
-            s_static_bit_vec<eks_key_code_cnt> keys_pressed;
-            s_static_bit_vec<eks_key_code_cnt> keys_released;
+            s_static_bit_vec<eks_key_code_cnt> keys_pressed = {};
+            s_static_bit_vec<eks_key_code_cnt> keys_released = {};
 
-            s_static_bit_vec<eks_mouse_button_code_cnt> mouse_buttons_pressed;
-            s_static_bit_vec<eks_mouse_button_code_cnt> mouse_buttons_released;
+            s_static_bit_vec<eks_mouse_button_code_cnt> mouse_buttons_pressed = {};
+            s_static_bit_vec<eks_mouse_button_code_cnt> mouse_buttons_released = {};
 
             // +Y: Scroll up / away from you
             // -Y: Scroll down / towards you
             // +X: Scroll right
             // +X: Scroll left
-            s_v2 scroll;
-        } events;
+            s_v2 scroll = {};
+        } events = {};
     };
 
     inline t_b8 IsKeyDown(const s_input_state *const is, const e_key_code kc) {
@@ -147,5 +146,4 @@ namespace zf {
         void ProcCursorMove(s_input_state *const is, const s_v2 pos);
         void ProcScroll(s_input_state *const is, const s_v2 scroll);
     }
-#endif
 }
