@@ -70,12 +70,12 @@ namespace zf {
     public:
         constexpr s_array_rdonly() = default;
 
-        constexpr s_array_rdonly(const tp_type *const buf, const t_len len) : m_buf(buf), m_len(len) {
+        constexpr s_array_rdonly(const tp_type *const buf, const t_len len) : m_raw(buf), m_len(len) {
             ZF_ASSERT((buf || len == 0) && len >= 0);
         }
 
-        constexpr const tp_type *Buf() const {
-            return m_buf;
+        constexpr const tp_type *Raw() const {
+            return m_raw;
         }
 
         constexpr t_len Len() const {
@@ -92,7 +92,7 @@ namespace zf {
 
         constexpr const tp_type &operator[](const t_len index) const {
             ZF_ASSERT(index >= 0 && index < m_len);
-            return m_buf[index];
+            return m_raw[index];
         }
 
         constexpr const tp_type &Last() const {
@@ -103,7 +103,7 @@ namespace zf {
             ZF_ASSERT(beg >= 0 && beg <= m_len);
             ZF_ASSERT(end >= beg && end <= m_len);
 
-            return {m_buf + beg, end - beg};
+            return {m_raw + beg, end - beg};
         }
 
         constexpr t_b8 DoAllEqual(const tp_type &val, const t_bin_comparator<tp_type> comparator = DefaultBinComparator) const {
@@ -114,7 +114,7 @@ namespace zf {
             }
 
             for (t_len i = 0; i < m_len; i++) {
-                if (!comparator(m_buf[i], val)) {
+                if (!comparator(m_raw[i], val)) {
                     return false;
                 }
             }
@@ -126,7 +126,7 @@ namespace zf {
             ZF_ASSERT(comparator);
 
             for (t_len i = 0; i < m_len; i++) {
-                if (comparator(m_buf[i], val)) {
+                if (comparator(m_raw[i], val)) {
                     return true;
                 }
             }
@@ -139,19 +139,19 @@ namespace zf {
                 ZF_ASSERT(other.Len() >= m_len);
 
                 for (t_len i = 0; i < m_len; i++) {
-                    other[i] = m_buf[i];
+                    other[i] = m_raw[i];
                 }
             } else {
                 const auto min = ZF_MIN(m_len, other.Len());
 
                 for (t_len i = 0; i < min; i++) {
-                    other[i] = m_buf[i];
+                    other[i] = m_raw[i];
                 }
             }
         }
 
     private:
-        const tp_type *m_buf = nullptr;
+        const tp_type *m_raw = nullptr;
         t_len m_len = 0;
     };
 
@@ -162,12 +162,12 @@ namespace zf {
     public:
         constexpr s_array() = default;
 
-        constexpr s_array(tp_type *const buf, const t_len len) : m_buf(buf), m_len(len) {
+        constexpr s_array(tp_type *const buf, const t_len len) : m_raw(buf), m_len(len) {
             ZF_ASSERT((buf || len == 0) && len >= 0);
         }
 
-        constexpr tp_type *Buf() const {
-            return m_buf;
+        constexpr tp_type *Raw() const {
+            return m_raw;
         }
 
         constexpr t_len Len() const {
@@ -183,12 +183,12 @@ namespace zf {
         }
 
         constexpr operator s_array_rdonly<tp_type>() const {
-            return {m_buf, m_len};
+            return {m_raw, m_len};
         }
 
         constexpr tp_type &operator[](const t_len index) const {
             ZF_ASSERT(index >= 0 && index < m_len);
-            return m_buf[index];
+            return m_raw[index];
         }
 
         constexpr tp_type &Last() const {
@@ -199,7 +199,7 @@ namespace zf {
             ZF_ASSERT(beg >= 0 && beg <= m_len);
             ZF_ASSERT(end >= beg && end <= m_len);
 
-            return {m_buf + beg, end - beg};
+            return {m_raw + beg, end - beg};
         }
 
         constexpr t_b8 DoAllEqual(const tp_type &val, const t_bin_comparator<tp_type> comparator = DefaultBinComparator) const {
@@ -212,7 +212,7 @@ namespace zf {
 
         constexpr void SetAllTo(const tp_type &val) const {
             for (t_len i = 0; i < m_len; i++) {
-                m_buf[i] = val;
+                m_raw[i] = val;
             }
         }
 
@@ -222,12 +222,12 @@ namespace zf {
 
         constexpr void Reverse() const {
             for (t_len i = 0; i < m_len / 2; i++) {
-                Swap(m_buf[i], m_buf[m_len - 1 - i]);
+                Swap(m_raw[i], m_raw[m_len - 1 - i]);
             }
         }
 
     private:
-        tp_type *m_buf = nullptr;
+        tp_type *m_raw = nullptr;
         t_len m_len = 0;
     };
 
@@ -238,35 +238,35 @@ namespace zf {
 
         static constexpr t_len g_len = tp_len;
 
-        tp_type buf[tp_len] = {};
+        tp_type raw[tp_len] = {};
 
         constexpr s_static_array() = default;
 
-        template <t_len tp_buf_len>
-        constexpr s_static_array(const tp_type (&buf)[tp_buf_len]) {
-            static_assert(tp_buf_len == tp_len);
+        template <t_len tp_other_len>
+        constexpr s_static_array(const tp_type (&raw)[tp_other_len]) {
+            static_assert(tp_other_len == tp_len);
 
-            for (t_len i = 0; i < tp_buf_len; i++) {
-                this->buf[i] = buf[i];
+            for (t_len i = 0; i < tp_other_len; i++) {
+                this->raw[i] = raw[i];
             }
         }
 
         constexpr operator s_array<tp_type>() {
-            return {buf, tp_len};
+            return {raw, tp_len};
         }
 
         constexpr operator s_array_rdonly<tp_type>() const {
-            return {buf, tp_len};
+            return {raw, tp_len};
         }
 
         constexpr tp_type &operator[](const t_len index) {
             ZF_ASSERT(index >= 0 && index < tp_len);
-            return buf[index];
+            return raw[index];
         }
 
         constexpr const tp_type &operator[](const t_len index) const {
             ZF_ASSERT(index >= 0 && index < tp_len);
-            return buf[index];
+            return raw[index];
         }
     };
 
