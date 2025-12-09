@@ -1,7 +1,5 @@
 #pragma once
 
-#include <cstdlib>
-#include <cstring>
 #include <new>
 #include <zcl/zcl_basic.h>
 
@@ -82,8 +80,15 @@ namespace zf {
         tp_type *Push(const t_len cnt = 1) {
             ZF_ASSERT(IsInitted());
 
-            const auto buf = PushRaw(ZF_SIZE_OF(tp_type) * cnt, ZF_ALIGN_OF(tp_type));
-            return static_cast<tp_type *>(buf);
+            const auto buf = static_cast<tp_type *>(PushRaw(ZF_SIZE_OF(tp_type) * cnt, ZF_ALIGN_OF(tp_type)));
+
+            if (buf) {
+                for (t_len i = 0; i < cnt; i++) {
+                    new (&buf[i]) tp_type();
+                }
+            }
+
+            return buf;
         }
 
         void Rewind(const t_len offs);
@@ -374,15 +379,5 @@ namespace zf {
     template <typename tp_type>
     constexpr s_array_rdonly<t_u8> ToBytes(const tp_type &item) {
         return {reinterpret_cast<const t_u8 *>(&item), ZF_SIZE_OF(item)};
-    }
-
-    template <typename tp_type>
-    constexpr s_array<t_u8> ToByteArray(const s_array<tp_type> arr) {
-        return {reinterpret_cast<t_u8 *>(arr.m_buf), ArraySizeInBytes(arr)};
-    }
-
-    template <typename tp_type>
-    constexpr s_array_rdonly<t_u8> ToByteArray(const s_array_rdonly<tp_type> arr) {
-        return {reinterpret_cast<const t_u8 *>(arr.m_buf), ArraySizeInBytes(arr)};
     }
 }

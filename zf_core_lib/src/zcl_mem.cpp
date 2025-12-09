@@ -1,5 +1,7 @@
 #include <zcl/zcl_mem.h>
 
+#include <cstring>
+
 namespace zf {
     t_b8 s_mem_arena::Init(const t_len size) {
         ZF_ASSERT(!IsInitted());
