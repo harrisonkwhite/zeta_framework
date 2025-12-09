@@ -4,6 +4,7 @@ add_library(zf_core_lib STATIC
     src/zcl_audio.cpp
     src/zcl_math.cpp
     src/zcl_strs.cpp
+    src/zcl_gfx.cpp
     src/zcl_io.cpp
     ../external/stb_image/src/stb_image.c
     ../external/stb_truetype/src/stb_truetype.c
@@ -11,6 +12,7 @@ add_library(zf_core_lib STATIC
 
     include/zcl.h
     include/zcl/zcl_mem.h
+    include/zcl/zcl_gfx.h
     include/zcl/zcl_audio.h
     include/zcl/zcl_strs.h
     include/zcl/zcl_ds.h
