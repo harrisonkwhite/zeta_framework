@@ -49,27 +49,22 @@ namespace zf {
     // @todo: Shouldn't need this. Embed into RunGame() args.
     struct s_game_info {
         // @todo: Move out.
-        t_size mem_arena_size;
-        t_size temp_mem_arena_size;
+        t_len mem_arena_size;
+        t_len temp_mem_arena_size;
 
-        t_size dev_mem_size;
-        t_size dev_mem_alignment;
+        t_len dev_mem_size;
+        t_len dev_mem_alignment;
 
         t_i32 targ_ticks_per_sec; // @todo: Move out and default this to 60 fps. Allow runtime
                                   // adjustment to anything in the range [1, 60].
 
-        t_b8 (*init_func)(
-            const s_game_init_context &context); // Called once as one of the last steps of the
-                                                 // game initialisation phase.
-        t_b8 (*tick_func)(
-            const s_game_tick_context
-                &context); // Called once every tick (which can occur multiple times a frame).
-        t_b8 (*render_func)(const s_game_render_context &
-                                context); // Called after all ticks of the frame have been run.
-        void (*clean_func)(
-            void *const dev_mem); // Optional. Called when the game ends (including if it ends
-                                  // in error). This is not called if your initialisation
-                                  // function failed or hasn't yet been called.
+        t_b8 (*init_func)(const s_game_init_context &context);     // Called once as one of the last steps of the
+                                                                   // game initialisation phase.
+        t_b8 (*tick_func)(const s_game_tick_context &context);     // Called once every tick (which can occur multiple times a frame).
+        t_b8 (*render_func)(const s_game_render_context &context); // Called after all ticks of the frame have been run.
+        void (*clean_func)(void *const dev_mem);                   // Optional. Called when the game ends (including if it ends
+                                                                   // in error). This is not called if your initialisation
+                                                                   // function failed or hasn't yet been called.
     };
 
     t_b8 RunGame(const s_game_info &info);

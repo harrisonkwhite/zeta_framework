@@ -9,7 +9,7 @@ namespace zf {
         s_sound_type *next;
     };
 
-    constexpr t_size g_snd_inst_limit = 32;
+    constexpr t_len g_snd_inst_limit = 32;
 
     struct s_audio_sys {
         ma_engine ma_eng;
@@ -19,7 +19,7 @@ namespace zf {
             s_static_array<ma_audio_buffer_ref, g_snd_inst_limit> ma_buf_refs;
             s_static_array<const s_sound_type *, g_snd_inst_limit> types;
             s_static_bit_vec<g_snd_inst_limit> activity;
-            s_static_array<t_size, g_snd_inst_limit> versions;
+            s_static_array<t_len, g_snd_inst_limit> versions;
         } snd_insts;
     };
 
@@ -50,9 +50,7 @@ namespace zf {
         ma_engine_uninit(&as->ma_eng);
     }
 
-    s_sound_type *CreateSoundTypeFromRaw(const s_str_rdonly file_path,
-                                         s_sound_type_arena *const type_arena,
-                                         s_mem_arena *const temp_mem_arena) {
+    s_sound_type *CreateSoundTypeFromRaw(const s_str_rdonly file_path, s_sound_type_arena *const type_arena, s_mem_arena *const temp_mem_arena) {
         const auto type = PushToMemArena<s_sound_type>(type_arena->mem_arena);
 
         if (!type) {
@@ -62,8 +60,7 @@ namespace zf {
         ZeroOut(type);
         type->audio_sys = type_arena->audio_sys;
 
-        if (!LoadSoundFromRaw(file_path, &type->snd_data, type_arena->mem_arena,
-                              temp_mem_arena)) {
+        if (!LoadSoundFromRaw(file_path, &type->snd_data, type_arena->mem_arena, temp_mem_arena)) {
             return nullptr;
         }
 
@@ -94,8 +91,7 @@ namespace zf {
         }
     }
 
-    t_b8 PlaySound(const s_sound_type *const type, s_sound_id *const o_id, const t_f32 vol,
-                   const t_f32 pan, const t_f32 pitch, const t_b8 loop) {
+    t_b8 PlaySound(const s_sound_type *const type, s_sound_id *const o_id, const t_f32 vol, const t_f32 pan, const t_f32 pitch, const t_b8 loop) {
         ZF_ASSERT(vol >= 0.0f && vol <= 1.0f);
         ZF_ASSERT(pan >= -1.0f && pan <= 1.0f);
         ZF_ASSERT(pitch > 0.0f);
@@ -104,7 +100,7 @@ namespace zf {
 
         s_audio_sys *const as = type->audio_sys;
 
-        const t_size index = IndexOfFirstUnsetBit(as->snd_insts.activity);
+        const t_len index = IndexOfFirstUnsetBit(as->snd_insts.activity);
 
         if (index == -1) {
             ZF_REPORT_ERROR();
@@ -117,11 +113,7 @@ namespace zf {
 
         as->snd_insts.types[index] = type;
 
-        if (ma_audio_buffer_ref_init(ma_format_f32,
-                                     static_cast<ma_uint32>(type->snd_data.meta.channel_cnt),
-                                     type->snd_data.pcm.buf_raw,
-                                     static_cast<ma_uint64>(type->snd_data.meta.frame_cnt),
-                                     &ma_buf_ref) != MA_SUCCESS) {
+        if (ma_audio_buffer_ref_init(ma_format_f32, static_cast<ma_uint32>(type->snd_data.meta.channel_cnt), type->snd_data.pcm.buf, static_cast<ma_uint64>(type->snd_data.meta.frame_cnt), &ma_buf_ref) != MA_SUCCESS) {
             ZF_REPORT_ERROR();
             clean_up = true;
             return false;
@@ -135,8 +127,7 @@ namespace zf {
 
         ma_buf_ref.sampleRate = static_cast<ma_uint32>(type->snd_data.meta.sample_rate);
 
-        if (ma_sound_init_from_data_source(&as->ma_eng, &ma_buf_ref, 0, nullptr, &ma_snd) !=
-            MA_SUCCESS) {
+        if (ma_sound_init_from_data_source(&as->ma_eng, &ma_buf_ref, 0, nullptr, &ma_snd) != MA_SUCCESS) {
             ZF_REPORT_ERROR();
             clean_up = true;
             return false;
@@ -172,8 +163,7 @@ namespace zf {
     void StopSound(const s_sound_id id) {
         const auto as = id.audio_sys;
 
-        ZF_ASSERT(IsBitSet(as->snd_insts.activity, id.index) &&
-                  as->snd_insts.versions[id.index] == id.version);
+        ZF_ASSERT(IsBitSet(as->snd_insts.activity, id.index) && as->snd_insts.versions[id.index] == id.version);
 
         ma_sound_stop(&as->snd_insts.ma_snds[id.index]);
         ma_sound_uninit(&as->snd_insts.ma_snds[id.index]);
@@ -185,8 +175,7 @@ namespace zf {
     t_b8 IsSoundPlaying(s_audio_sys *const as, const s_sound_id id) {
         ZF_ASSERT(id.version <= as->snd_insts.versions[id.index]);
 
-        if (!IsBitSet(as->snd_insts.activity, id.index) ||
-            id.version != as->snd_insts.versions[id.index]) {
+        if (!IsBitSet(as->snd_insts.activity, id.index) || id.version != as->snd_insts.versions[id.index]) {
             return false;
         }
 

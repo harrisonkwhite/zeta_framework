@@ -22,26 +22,28 @@ namespace zf {
 
 #define ZF_IN_CONSTEXPR() std::is_constant_evaluated()
 
-#define ZF_SIZE_OF(x) static_cast<zf::t_size>(sizeof(x))
+#define ZF_SIZE_OF(x) static_cast<zf::t_len>(sizeof(x))
 #define ZF_SIZE_IN_BITS(x) (8 * ZF_SIZE_OF(x))
 
-#define ZF_ALIGN_OF(x) static_cast<zf::t_size>(alignof(x))
+#define ZF_ALIGN_OF(x) static_cast<zf::t_len>(alignof(x))
 
-    template <typename tp_func>
-    struct i_s_defer {
-        tp_func func;
+    namespace internal {
+        template <typename tp_func>
+        struct s_defer {
+            tp_func func;
 
-        i_s_defer(const tp_func f) : func(f) {}
+            s_defer(const tp_func f) : func(f) {}
 
-        ~i_s_defer() {
-            func();
-        }
-    };
+            ~s_defer() {
+                func();
+            }
+        };
+    }
 
 #define ZF_CONCAT_IMPL(a, b) a##b
 #define ZF_CONCAT(a, b) ZF_CONCAT_IMPL(a, b)
 
-#define ZF_DEFER(x) auto ZF_CONCAT(defer_, ZF_CONCAT(l, __LINE__)) = zf::i_s_defer([&]() x)
+#define ZF_DEFER(x) auto ZF_CONCAT(defer_, ZF_CONCAT(l, __LINE__)) = zf::internal::s_defer([&]() x)
 
     // ============================================================
     // @section: Types
@@ -84,13 +86,11 @@ namespace zf {
     using t_uintptr = uintptr_t; // Generally 64 bits EXCEPT for WASM.
 
     // Why signed for this?
-    // 1. Mixing signed and unsigned can lead to strange overflow bugs that cannot always be
-    // caught by warnings. Better to be consistent and have predictability.
+    // 1. Mixing signed and unsigned can lead to strange overflow bugs that cannot always be caught by warnings. Better to be consistent and have predictability.
     // 2. The signed 64-bit range is more than sufficient for realistic use cases.
     // 3. If you want a value to be 0 or greater, ASSERT that it is!
-    // 4. -1 is far more useful as a sentinel than the positive upper bound is since it is more
-    // commonly an outlier.
-    using t_size = intptr_t; // Generally 64 bits EXCEPT for WASM.
+    // 4. -1 is far more useful as a sentinel than the positive upper bound is since it is more commonly an outlier.
+    using t_len = intptr_t; // Generally 64 bits EXCEPT for WASM.
 
     template <typename tp_type_a, typename tp_type_b>
     struct s_is_same {
@@ -286,22 +286,20 @@ namespace zf {
     // @section: Key Debugging Features
     // ============================================================
     namespace internal {
-        void ReportAssertError(const char *const cond_raw, const char *const func_name_raw,
-                               const char *const file_name_raw, const t_i32 line);
+        void ReportAssertError(const char *const cond_raw, const char *const func_name_raw, const char *const file_name_raw, const t_i32 line);
 
 #ifdef ZF_DEBUG
-    #define ZF_ASSERT(cond)                                                                   \
-        do {                                                                                  \
-            if (!ZF_IN_CONSTEXPR() && !(cond)) {                                              \
-                zf::internal::ReportAssertError(#cond, __FUNCTION__, __FILE__, __LINE__);     \
-            }                                                                                 \
+    #define ZF_ASSERT(cond)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            \
+        do {                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           \
+            if (!ZF_IN_CONSTEXPR() && !(cond)) {                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       \
+                zf::internal::ReportAssertError(#cond, __FUNCTION__, __FILE__, __LINE__);                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              \
+            }                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          \
         } while (0)
 #else
     #define ZF_ASSERT(cond) static_cast<void>(0)
 #endif
 
-        void ReportError(const char *const func_name_raw, const char *const file_name_raw,
-                         const t_i32 line);
+        void ReportError(const char *const func_name_raw, const char *const file_name_raw, const t_i32 line);
 
 #define ZF_REPORT_ERROR() zf::internal::ReportError(__FUNCTION__, __FILE__, __LINE__)
     }
@@ -329,7 +327,16 @@ namespace zf {
     template <c_numeric tp_type>
     constexpr tp_type Clamp(const tp_type n, const tp_type min, const tp_type max) {
         ZF_ASSERT(min <= max);
-        return n < 0 ? -n : n;
+
+        if (n < min) {
+            return min;
+        }
+
+        if (n > max) {
+            return max;
+        }
+
+        return n;
     }
 
     template <c_numeric tp_type>

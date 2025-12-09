@@ -15,8 +15,7 @@ namespace zf {
         t_f32 a;
 
         constexpr s_color_rgba32f() = default;
-        constexpr s_color_rgba32f(const t_f32 r, const t_f32 g, const t_f32 b, const t_f32 a)
-            : r(r), g(g), b(b), a(a) {}
+        constexpr s_color_rgba32f(const t_f32 r, const t_f32 g, const t_f32 b, const t_f32 a) : r(r), g(g), b(b), a(a) {}
         constexpr s_color_rgba32f(const s_v4 v) : r(v.x), g(v.y), b(v.z), a(v.w) {}
 
         constexpr operator s_v4() const {
@@ -30,8 +29,7 @@ namespace zf {
         t_f32 b;
 
         constexpr s_color_rgba24f() = default;
-        constexpr s_color_rgba24f(const t_f32 r, const t_f32 g, const t_f32 b)
-            : r(r), g(g), b(b) {}
+        constexpr s_color_rgba24f(const t_f32 r, const t_f32 g, const t_f32 b) : r(r), g(g), b(b) {}
         constexpr s_color_rgba24f(const s_v3 v) : r(v.x), g(v.y), b(v.z) {}
 
         constexpr operator s_color_rgba32f() const {
@@ -55,16 +53,13 @@ namespace zf {
     };
 
     constexpr t_b8 IsColorValid(const s_color_rgba32f color) {
-        return color.r >= 0.0f && color.r <= 1.0f && color.g >= 0.0f && color.g <= 1.0f &&
-               color.b >= 0.0f && color.b <= 1.0f && color.a >= 0.0f && color.a <= 1.0f;
+        return color.r >= 0.0f && color.r <= 1.0f && color.g >= 0.0f && color.g <= 1.0f && color.b >= 0.0f && color.b <= 1.0f && color.a >= 0.0f && color.a <= 1.0f;
     }
 
-    constexpr s_color_rgba32f ColorsMixed(const s_color_rgba32f a, const s_color_rgba32f b,
-                                          const t_f32 amount) {
+    constexpr s_color_rgba32f ColorsMixed(const s_color_rgba32f a, const s_color_rgba32f b, const t_f32 amount) {
         ZF_ASSERT(amount >= 0.0f && amount <= 1.0f);
 
-        return {Lerp(a.r, b.r, amount), Lerp(a.g, b.g, amount), Lerp(a.b, b.b, amount),
-                Lerp(a.a, b.a, amount)};
+        return {Lerp(a.r, b.r, amount), Lerp(a.g, b.g, amount), Lerp(a.b, b.b, amount), Lerp(a.a, b.a, amount)};
     }
 
     constexpr t_f32 ColorLuminance(const s_color_rgba32f col) {
@@ -138,22 +133,13 @@ namespace zf {
         }
     };
 
-    [[nodiscard]] t_b8 LoadTextureDataFromRaw(const s_str_rdonly file_path,
-                                              s_texture_data *const tex_data,
-                                              s_mem_arena *const tex_data_mem_arena,
-                                              s_mem_arena *const temp_mem_arena);
+    [[nodiscard]] t_b8 LoadTextureDataFromRaw(const s_str_rdonly file_path, s_mem_arena *const tex_data_mem_arena, s_mem_arena *const temp_mem_arena, s_texture_data *const o_tex_data);
 
-    [[nodiscard]] t_b8 PackTexture(const s_str_rdonly dest_file_path,
-                                   const s_str_rdonly src_file_path,
-                                   s_mem_arena &temp_mem_arena);
-    [[nodiscard]] t_b8 UnpackTexture(const s_str_rdonly file_path, s_mem_arena &mem_arena,
-                                     s_mem_arena &temp_mem_arena, s_texture_data &o_tex_data);
+    [[nodiscard]] t_b8 PackTexture(const s_str_rdonly file_path, const s_texture_data tex_data, s_mem_arena *const temp_mem_arena);
+    [[nodiscard]] t_b8 UnpackTexture(const s_str_rdonly file_path, s_mem_arena *const tex_data_mem_arena, s_mem_arena *const temp_mem_arena, s_texture_data *const o_tex_data);
 
     inline s_rect_f CalcTextureCoords(const s_rect_i src_rect, const s_v2_i tex_size) {
-        return {static_cast<t_f32>(src_rect.x) / static_cast<t_f32>(tex_size.x),
-                static_cast<t_f32>(src_rect.y) / static_cast<t_f32>(tex_size.y),
-                static_cast<t_f32>(src_rect.width) / static_cast<t_f32>(tex_size.x),
-                static_cast<t_f32>(src_rect.height) / static_cast<t_f32>(tex_size.y)};
+        return {static_cast<t_f32>(src_rect.x) / static_cast<t_f32>(tex_size.x), static_cast<t_f32>(src_rect.y) / static_cast<t_f32>(tex_size.y), static_cast<t_f32>(src_rect.width) / static_cast<t_f32>(tex_size.x), static_cast<t_f32>(src_rect.height) / static_cast<t_f32>(tex_size.y)};
     }
 
     // ============================================================
@@ -172,14 +158,12 @@ namespace zf {
     }
 
     constexpr t_b8 IsAlignmentValid(const s_v2 alignment) {
-        return alignment.x >= 0.0f && alignment.x <= 1.0f && alignment.y >= 0.0f &&
-               alignment.y <= 1.0f;
+        return alignment.x >= 0.0f && alignment.x <= 1.0f && alignment.y >= 0.0f && alignment.y <= 1.0f;
     }
 
     constexpr s_v2_i g_font_atlas_size = {1024, 1024};
 
-    using t_font_atlas_rgba =
-        s_static_array<t_u8, 4 * g_font_atlas_size.x * g_font_atlas_size.y>;
+    using t_font_atlas_rgba = s_static_array<t_u8, 4 * g_font_atlas_size.x * g_font_atlas_size.y>;
 
     struct s_font_glyph_info {
         // These are for determining positioning relative to other characters.
@@ -188,7 +172,7 @@ namespace zf {
         t_i32 adv;
 
         // In what texture atlas is this glyph, and where?
-        t_size atlas_index;
+        t_len atlas_index;
         s_rect_i atlas_rect;
     };
 
@@ -200,9 +184,7 @@ namespace zf {
     struct s_font_arrangement {
         t_i32 line_height;
 
-        s_hash_map<t_unicode_code_pt, s_font_glyph_info>
-            code_pts_to_glyph_infos; // Some duplicity here since a single glyph might have
-                                     // multiple code points mapped to it.
+        s_hash_map<t_unicode_code_pt, s_font_glyph_info> code_pts_to_glyph_infos; // Some duplicity here since a single glyph might have multiple code points mapped to it.
 
         t_b8 has_kernings;
         s_hash_map<s_font_code_point_pair, t_i32> code_pt_pairs_to_kernings;
@@ -215,42 +197,17 @@ namespace zf {
         ek_font_load_from_raw_result_other_err
     };
 
-    [[nodiscard]] e_font_load_from_raw_result LoadFontFromRaw(
-        const s_str_rdonly file_path, const t_i32 height,
-        const t_unicode_code_pt_bit_vec &code_pts, s_mem_arena &arrangement_mem_arena,
-        s_mem_arena &atlas_rgbas_mem_arena, s_mem_arena &temp_mem_arena,
-        s_font_arrangement &o_arrangement, s_array<t_font_atlas_rgba> &o_atlas_rgbas,
-        t_unicode_code_pt_bit_vec *const o_unsupported_code_pts = nullptr);
+    [[nodiscard]] e_font_load_from_raw_result LoadFontFromRaw(const s_str_rdonly file_path, const t_i32 height, const t_unicode_code_pt_bit_vec &code_pts, s_mem_arena *const arrangement_mem_arena, s_mem_arena *const atlas_rgbas_mem_arena, s_mem_arena *const temp_mem_arena, s_font_arrangement *const o_arrangement, s_array<t_font_atlas_rgba> *const o_atlas_rgbas, t_unicode_code_pt_bit_vec *const o_unsupported_code_pts = nullptr);
 
-    [[nodiscard]] t_b8 PackFont(
-        const s_str_rdonly dest_file_path, const s_str_rdonly src_file_path,
-        const t_i32 height, const t_unicode_code_pt_bit_vec &code_pts,
-        s_mem_arena &temp_mem_arena, e_font_load_from_raw_result &o_font_load_from_raw_res,
-        t_unicode_code_pt_bit_vec *const o_unsupported_code_pts = nullptr);
-    [[nodiscard]] t_b8 UnpackFont(const s_str_rdonly file_path,
-                                  s_mem_arena &arrangement_mem_arena,
-                                  s_mem_arena &atlas_rgbas_mem_arena,
-                                  s_mem_arena &temp_mem_arena,
-                                  s_font_arrangement &o_arrangement,
-                                  s_array<t_font_atlas_rgba> &o_atlas_rgbas);
-    [[nodiscard]] t_b8 LoadStrChrDrawPositions(
-        const s_str_rdonly str, const s_font_arrangement &font_arrangement, const s_v2 pos,
-        const s_v2 alignment, s_mem_arena &mem_arena,
-        s_array<s_v2>
-            &o_positions); // Creates an array of length n, where n is the number of CHARACTERS
-                           // (not bytes) in the string, including non-printable characters.
-                           // Each element is the top-left position of the corresponding
-                           // character. Ignore any elements associated with non-printable
-                           // characters, including '\n'.
+    [[nodiscard]] t_b8 PackFont(const s_str_rdonly dest_file_path, const s_str_rdonly src_file_path, const t_i32 height, const t_unicode_code_pt_bit_vec &code_pts, s_mem_arena *const temp_mem_arena, e_font_load_from_raw_result *const o_font_load_from_raw_res, t_unicode_code_pt_bit_vec *const o_unsupported_code_pts = nullptr);
+    [[nodiscard]] t_b8 UnpackFont(const s_str_rdonly file_path, s_mem_arena *const arrangement_mem_arena, s_mem_arena *const atlas_rgbas_mem_arena, s_mem_arena *const temp_mem_arena, s_font_arrangement *const o_arrangement, s_array<t_font_atlas_rgba> *const o_atlas_rgbas);
+
+    // Creates an array of length n, where n is the number of CHARACTERS (not bytes) in the string, including non-printable characters. Each element is the top-left position of the corresponding character. Ignore any elements associated with non-printable characters, including '\n'.
+    [[nodiscard]] t_b8 LoadStrChrDrawPositions(const s_str_rdonly str, const s_font_arrangement &font_arrangement, const s_v2 pos, const s_v2 alignment, s_mem_arena *const positions_mem_arena, s_array<s_v2> *const o_positions);
 
     // ============================================================
     // @section: Shaders
     // ============================================================
-    [[nodiscard]] t_b8 PackShaderProg(const s_str_rdonly dest_file_path,
-                                      const s_str_rdonly vert_file_path,
-                                      const s_str_rdonly frag_file_path,
-                                      s_mem_arena &temp_mem_arena);
-    [[nodiscard]] t_b8 UnpackShaderProg(const s_str_rdonly file_path, s_mem_arena &mem_arena,
-                                        s_mem_arena &temp_mem_arena, s_str &o_vert_src,
-                                        s_str &o_frag_src);
+    [[nodiscard]] t_b8 PackShaderProg(const s_str_rdonly dest_file_path, const s_str_rdonly vert_file_path, const s_str_rdonly frag_file_path, s_mem_arena *const temp_mem_arena);
+    [[nodiscard]] t_b8 UnpackShaderProg(const s_str_rdonly file_path, s_mem_arena *const srcs_mem_arena, s_mem_arena *const temp_mem_arena, s_str *const o_vert_src, s_str *const o_frag_src);
 }

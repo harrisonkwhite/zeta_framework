@@ -17,7 +17,7 @@ namespace zf {
     }
 
     template <c_integral tp_type>
-    constexpr t_size DigitCnt(const tp_type n) {
+    constexpr t_len DigitCnt(const tp_type n) {
         if (n < 0) {
             return DigitCnt(-n);
         }
@@ -32,7 +32,7 @@ namespace zf {
     // Gives the digit at the given index, where the indexes are from the least
     // significant digit to the most.
     template <c_integral tp_type>
-    constexpr tp_type DigitAt(const tp_type n, const t_size index) {
+    constexpr tp_type DigitAt(const tp_type n, const t_len index) {
         ZF_ASSERT(index >= 0 && index < DigitCnt(n));
 
         if (n < 0) {
@@ -51,8 +51,7 @@ namespace zf {
     }
 
     template <c_floating_point tp_type>
-    constexpr t_b8 IsNearlyEqual(const tp_type val, const tp_type targ,
-                                 const tp_type tol = 1e-5) {
+    constexpr t_b8 IsNearlyEqual(const tp_type val, const tp_type targ, const tp_type tol = 1e-5) {
         ZF_ASSERT(tol >= 0);
         return val >= targ - tol && val <= targ + tol;
     }
@@ -217,10 +216,8 @@ namespace zf {
         t_f32 height;
 
         constexpr s_rect_f() = default;
-        constexpr s_rect_f(const t_f32 x, const t_f32 y, const t_f32 width, const t_f32 height)
-            : x(x), y(y), width(width), height(height) {}
-        constexpr s_rect_f(const s_v2 pos, const s_v2 size)
-            : x(pos.x), y(pos.y), width(size.x), height(size.y) {}
+        constexpr s_rect_f(const t_f32 x, const t_f32 y, const t_f32 width, const t_f32 height) : x(x), y(y), width(width), height(height) {}
+        constexpr s_rect_f(const s_v2 pos, const s_v2 size) : x(pos.x), y(pos.y), width(size.x), height(size.y) {}
     };
 
     struct s_rect_i {
@@ -230,14 +227,11 @@ namespace zf {
         t_i32 height;
 
         constexpr s_rect_i() = default;
-        constexpr s_rect_i(const t_i32 x, const t_i32 y, const t_i32 width, const t_i32 height)
-            : x(x), y(y), width(width), height(height) {}
-        constexpr s_rect_i(const s_v2_i pos, const s_v2_i size)
-            : x(pos.x), y(pos.y), width(size.x), height(size.y) {}
+        constexpr s_rect_i(const t_i32 x, const t_i32 y, const t_i32 width, const t_i32 height) : x(x), y(y), width(width), height(height) {}
+        constexpr s_rect_i(const s_v2_i pos, const s_v2_i size) : x(pos.x), y(pos.y), width(size.x), height(size.y) {}
 
         constexpr t_b8 operator==(const s_rect_i other) const {
-            return x == other.x && y == other.y && width == other.width &&
-                   height == other.height;
+            return x == other.x && y == other.y && width == other.width && height == other.height;
         }
 
         constexpr t_b8 operator!=(const s_rect_i other) const {
@@ -246,13 +240,11 @@ namespace zf {
     };
 
     constexpr s_rect_f ToRectF(const s_rect_i rect) {
-        return {static_cast<t_f32>(rect.x), static_cast<t_f32>(rect.y),
-                static_cast<t_f32>(rect.width), static_cast<t_f32>(rect.height)};
+        return {static_cast<t_f32>(rect.x), static_cast<t_f32>(rect.y), static_cast<t_f32>(rect.width), static_cast<t_f32>(rect.height)};
     }
 
     constexpr s_rect_i ToRectI(const s_rect_f rect) {
-        return {static_cast<t_i32>(rect.x), static_cast<t_i32>(rect.y),
-                static_cast<t_i32>(rect.width), static_cast<t_i32>(rect.height)};
+        return {static_cast<t_i32>(rect.x), static_cast<t_i32>(rect.y), static_cast<t_i32>(rect.width), static_cast<t_i32>(rect.height)};
     }
 
     constexpr s_v2 RectPos(const s_rect_f rect) {
@@ -317,14 +309,12 @@ namespace zf {
 
     constexpr s_rect_f RectClamped(const s_rect_f rect, const s_rect_f container) {
         const s_v2 tl = {ZF_MAX(rect.x, container.x), ZF_MAX(rect.y, container.y)};
-        return {tl.x, tl.y, ZF_MIN(RectRight(rect), RectRight(container)) - tl.x,
-                ZF_MIN(RectBottom(rect), RectBottom(container)) - tl.y};
+        return {tl.x, tl.y, ZF_MIN(RectRight(rect), RectRight(container)) - tl.x, ZF_MIN(RectBottom(rect), RectBottom(container)) - tl.y};
     }
 
     constexpr s_rect_i RectClamped(const s_rect_i rect, const s_rect_i container) {
         const s_v2_i tl = {ZF_MAX(rect.x, container.x), ZF_MAX(rect.y, container.y)};
-        return {tl.x, tl.y, ZF_MIN(RectRight(rect), RectRight(container)) - tl.x,
-                ZF_MIN(RectBottom(rect), RectBottom(container)) - tl.y};
+        return {tl.x, tl.y, ZF_MIN(RectRight(rect), RectRight(container)) - tl.x, ZF_MIN(RectBottom(rect), RectBottom(container)) - tl.y};
     }
 
     constexpr t_f32 CalcRectOccupancyPerc(const s_rect_f a, const s_rect_f b) {
@@ -338,41 +328,34 @@ namespace zf {
     }
 
     constexpr t_b8 DoesRectContainPoint(const s_rect_f rect, const s_v2 pt) {
-        return pt.x > RectLeft(rect) && pt.y > RectTop(rect) && pt.x < RectRight(rect) &&
-               pt.y < RectBottom(rect);
+        return pt.x > RectLeft(rect) && pt.y > RectTop(rect) && pt.x < RectRight(rect) && pt.y < RectBottom(rect);
     }
 
     constexpr t_b8 DoesRectContainPoint(const s_rect_i rect, const s_v2_i pt) {
-        return pt.x > RectLeft(rect) && pt.y > RectTop(rect) && pt.x < RectRight(rect) &&
-               pt.y < RectBottom(rect);
+        return pt.x > RectLeft(rect) && pt.y > RectTop(rect) && pt.x < RectRight(rect) && pt.y < RectBottom(rect);
     }
 
     constexpr t_b8 DoRectsIntersect(const s_rect_f a, const s_rect_f b) {
-        return RectLeft(a) < RectRight(b) && RectTop(a) < RectBottom(b) &&
-               RectRight(a) > RectLeft(b) && RectBottom(a) > RectTop(b);
+        return RectLeft(a) < RectRight(b) && RectTop(a) < RectBottom(b) && RectRight(a) > RectLeft(b) && RectBottom(a) > RectTop(b);
     }
 
     constexpr t_b8 DoRectsIntersect(const s_rect_i a, const s_rect_i b) {
-        return RectLeft(a) < RectRight(b) && RectTop(a) < RectBottom(b) &&
-               RectRight(a) > RectLeft(b) && RectBottom(a) > RectTop(b);
+        return RectLeft(a) < RectRight(b) && RectTop(a) < RectBottom(b) && RectRight(a) > RectLeft(b) && RectBottom(a) > RectTop(b);
     }
 
     constexpr s_v2 ClampPointInRect(const s_v2 pt, const s_rect_f rect) {
-        return {Clamp(pt.x, RectLeft(rect), RectRight(rect)),
-                Clamp(pt.y, RectTop(rect), RectBottom(rect))};
+        return {Clamp(pt.x, RectLeft(rect), RectRight(rect)), Clamp(pt.y, RectTop(rect), RectBottom(rect))};
     }
 
     constexpr s_v2_i ClampPointInRect(const s_v2_i pt, const s_rect_i rect) {
-        return {Clamp(pt.x, RectLeft(rect), RectRight(rect)),
-                Clamp(pt.y, RectTop(rect), RectBottom(rect))};
+        return {Clamp(pt.x, RectLeft(rect), RectRight(rect)), Clamp(pt.y, RectTop(rect), RectBottom(rect))};
     }
 
     // Generate a rectangle encompassing all of the provided rectangles. At least a single
     // rectangle must be provided.
     template <c_nonstatic_array tp_type>
     s_rect_f CalcSpanningRect(const tp_type rects) {
-        static_assert(s_is_same<typename tp_type::t_elem, s_rect_f>::g_val ||
-                      s_is_same<typename tp_type::t_elem, s_rect_i>::g_val);
+        static_assert(s_is_same<typename tp_type::t_elem, s_rect_f>::g_val || s_is_same<typename tp_type::t_elem, s_rect_i>::g_val);
 
         ZF_ASSERT(rects.len > 0);
 
@@ -381,7 +364,7 @@ namespace zf {
         auto max_right = RectRight(rects[0]);
         auto max_bottom = RectBottom(rects[0]);
 
-        for (t_size i = 1; i < rects.len; i++) {
+        for (t_len i = 1; i < rects.len; i++) {
             min_left = ZF_MIN(rects[i].x, min_left);
             min_top = ZF_MIN(rects[i].y, min_top);
             max_right = ZF_MAX(RectRight(rects[i]), max_right);
@@ -409,9 +392,7 @@ namespace zf {
         return mat;
     }
 
-    constexpr s_mat4x4 CreateOrthographicMatrix(const t_f32 left, const t_f32 right,
-                                                const t_f32 bottom, const t_f32 top,
-                                                const t_f32 z_near, const t_f32 z_far) {
+    constexpr s_mat4x4 CreateOrthographicMatrix(const t_f32 left, const t_f32 right, const t_f32 bottom, const t_f32 top, const t_f32 z_near, const t_f32 z_far) {
         ZF_ASSERT(right > left);
         ZF_ASSERT(top < bottom);
         ZF_ASSERT(z_far > z_near);

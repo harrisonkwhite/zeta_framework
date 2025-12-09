@@ -8,11 +8,9 @@
 namespace zf {
     t_b8 RunGame(const s_game_info &info) {
         ZF_ASSERT(info.mem_arena_size > 0);
-        ZF_ASSERT(info.temp_mem_arena_size > 0 &&
-                  info.temp_mem_arena_size <= info.mem_arena_size);
+        ZF_ASSERT(info.temp_mem_arena_size > 0 && info.temp_mem_arena_size <= info.mem_arena_size);
 
-        ZF_ASSERT((info.dev_mem_size == 0 && info.dev_mem_alignment == 0) ||
-                  (info.dev_mem_size > 0 && IsAlignmentValid(info.dev_mem_alignment)));
+        ZF_ASSERT((info.dev_mem_size == 0 && info.dev_mem_alignment == 0) || (info.dev_mem_size > 0 && IsAlignmentValid(info.dev_mem_alignment)));
 
         ZF_ASSERT(info.targ_ticks_per_sec > 0);
 
@@ -36,19 +34,18 @@ namespace zf {
                 return false;
             }
 
-            ZF_DEFER({ ReleaseMemArena(&mem_arena); });
+            ZF_DEFER({ DestroyMemArena(&mem_arena); });
 
             s_mem_arena temp_mem_arena;
 
-            if (!InitChildMemArena(&temp_mem_arena, info.temp_mem_arena_size, &mem_arena)) {
+            if (!CreateChildMemArena(&temp_mem_arena, info.temp_mem_arena_size, &mem_arena)) {
                 ZF_REPORT_ERROR();
                 return false;
             }
 
             s_input_state input_state = {};
 
-            const auto platform_layer_info =
-                internal::InitPlatformLayer(&mem_arena, &input_state);
+            const auto platform_layer_info = internal::InitPlatformLayer(&mem_arena, &input_state);
 
             if (!platform_layer_info) {
                 ZF_REPORT_ERROR();
@@ -77,8 +74,7 @@ namespace zf {
             void *dev_mem = nullptr;
 
             if (info.dev_mem_size > 0) {
-                dev_mem =
-                    PushToMemArena(&mem_arena, info.dev_mem_size, info.dev_mem_alignment);
+                dev_mem = PushToMemArena(&mem_arena, info.dev_mem_size, info.dev_mem_alignment);
 
                 if (!dev_mem) {
                     ZF_REPORT_ERROR();
@@ -88,12 +84,7 @@ namespace zf {
 
             // Run the developer's initialisation function.
             {
-                const s_game_init_context context = {.dev_mem = dev_mem,
-                                                     .mem_arena = &mem_arena,
-                                                     .temp_mem_arena = &temp_mem_arena,
-                                                     .platform_layer_info =
-                                                         platform_layer_info,
-                                                     .audio_sys = audio_sys};
+                const s_game_init_context context = {.dev_mem = dev_mem, .mem_arena = &mem_arena, .temp_mem_arena = &temp_mem_arena, .platform_layer_info = platform_layer_info, .audio_sys = audio_sys};
 
                 if (!info.init_func(context)) {
                     ZF_REPORT_ERROR();
@@ -134,13 +125,7 @@ namespace zf {
 
                     // Run possibly multiple ticks.
                     do {
-                        const s_game_tick_context context = {.dev_mem = dev_mem,
-                                                             .mem_arena = &mem_arena,
-                                                             .temp_mem_arena = &temp_mem_arena,
-                                                             .input_state = &input_state,
-                                                             .platform_layer_info =
-                                                                 platform_layer_info,
-                                                             .audio_sys = audio_sys};
+                        const s_game_tick_context context = {.dev_mem = dev_mem, .mem_arena = &mem_arena, .temp_mem_arena = &temp_mem_arena, .input_state = &input_state, .platform_layer_info = platform_layer_info, .audio_sys = audio_sys};
 
                         if (!info.tick_func(context)) {
                             ZF_REPORT_ERROR();
@@ -155,19 +140,13 @@ namespace zf {
                     // Perform a single render.
                     s_rendering_context rendering_context;
 
-                    if (!internal::BeginFrame(&rendering_context, rendering_basis,
-                                              WindowFramebufferSizeCache(platform_layer_info),
-                                              &mem_arena)) {
+                    if (!internal::BeginFrame(&rendering_context, rendering_basis, WindowFramebufferSizeCache(platform_layer_info), &mem_arena)) {
                         ZF_REPORT_ERROR();
                         return false;
                     }
 
                     {
-                        const s_game_render_context context = {
-                            .dev_mem = dev_mem,
-                            .mem_arena = &mem_arena,
-                            .temp_mem_arena = &temp_mem_arena,
-                            .rendering_context = rendering_context};
+                        const s_game_render_context context = {.dev_mem = dev_mem, .mem_arena = &mem_arena, .temp_mem_arena = &temp_mem_arena, .rendering_context = rendering_context};
 
                         if (!info.render_func(context)) {
                             ZF_REPORT_ERROR();
@@ -186,8 +165,7 @@ namespace zf {
 
 #ifndef ZF_DEBUG
         if (!success) {
-            ShowErrorBox("Error",
-                         "A fatal error occurred! Please check \"error.log\" for details.");
+            ShowErrorBox("Error", "A fatal error occurred! Please check \"error.log\" for details.");
         }
 #endif
 

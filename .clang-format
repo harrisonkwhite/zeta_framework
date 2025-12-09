@@ -1,0 +1,14 @@
+BasedOnStyle: Microsoft
+ColumnLimit: 1000
+NamespaceIndentation: All
+FixNamespaceComments: false
+AllowShortBlocksOnASingleLine: Empty
+AllowShortFunctionsOnASingleLine: Empty
+DerivePointerAlignment: false
+PointerAlignment: Right
+IndentPPDirectives: BeforeHash
+BreakTemplateDeclarations: Yes
+AllowShortLambdasOnASingleLine: None
+BreakBeforeBraces: Attach
+SortIncludes:
+  Enabled: false
