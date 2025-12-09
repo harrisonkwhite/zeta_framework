@@ -15,7 +15,7 @@
     #include <dbghelp.h>
 #endif
 
-#include <cstdlib> // Reinclude necessary since abort() gets overwritten.
+#include <cstdlib>
 
 namespace zf {
     static void PrintStackTrace() {

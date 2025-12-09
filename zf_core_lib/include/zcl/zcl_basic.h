@@ -1,7 +1,6 @@
 #pragma once
 
 #include <climits>
-#include <type_traits> // The only permitted use of STL.
 
 namespace zf {
 #ifdef _WIN32
@@ -20,12 +19,21 @@ namespace zf {
     #define ZF_DEBUG
 #endif
 
-#define ZF_IN_CONSTEXPR() std::is_constant_evaluated()
+#if defined(__clang__) || defined(__GNUC__)
+    #define ZF_IN_CONSTEXPR() __builtin_is_constant_evaluated()
+#elif defined(_MSC_VER)
+    #define ZF_IN_CONSTEXPR() __builtin_is_constant_evaluated()
+#else
+    #define ZF_IN_CONSTEXPR() 0
+#endif
 
 #define ZF_SIZE_OF(x) static_cast<zf::t_len>(sizeof(x))
 #define ZF_SIZE_IN_BITS(x) (8 * ZF_SIZE_OF(x))
 
 #define ZF_ALIGN_OF(x) static_cast<zf::t_len>(alignof(x))
+
+#define ZF_CONCAT_IMPL(a, b) a##b
+#define ZF_CONCAT(a, b) ZF_CONCAT_IMPL(a, b)
 
     namespace internal {
         template <typename tp_func>
@@ -39,9 +47,6 @@ namespace zf {
             }
         };
     }
-
-#define ZF_CONCAT_IMPL(a, b) a##b
-#define ZF_CONCAT(a, b) ZF_CONCAT_IMPL(a, b)
 
 #define ZF_DEFER(x) auto ZF_CONCAT(defer_, ZF_CONCAT(l, __LINE__)) = zf::internal::s_defer([&]() x)
 
@@ -266,8 +271,7 @@ namespace zf {
         return a == b;
     }
 
-    // If a < b, return a negative result, if a == b, return 0, and if a > b, return a positive
-    // result.
+    // If a < b, return a negative result, if a == b, return 0, and if a > b, return a positive result.
     template <typename tp_type>
     using t_ord_comparator = t_i32 (*)(const tp_type &a, const tp_type &b);
 
@@ -289,11 +293,11 @@ namespace zf {
         void ReportAssertError(const char *const cond_raw, const char *const func_name_raw, const char *const file_name_raw, const t_i32 line);
 
 #ifdef ZF_DEBUG
-    #define ZF_ASSERT(cond)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            \
-        do {                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           \
-            if (!ZF_IN_CONSTEXPR() && !(cond)) {                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       \
-                zf::internal::ReportAssertError(#cond, __FUNCTION__, __FILE__, __LINE__);                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              \
-            }                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          \
+    #define ZF_ASSERT(cond)                                                               \
+        do {                                                                              \
+            if (!ZF_IN_CONSTEXPR() && !(cond)) {                                          \
+                zf::internal::ReportAssertError(#cond, __FUNCTION__, __FILE__, __LINE__); \
+            }                                                                             \
         } while (0)
 #else
     #define ZF_ASSERT(cond) static_cast<void>(0)

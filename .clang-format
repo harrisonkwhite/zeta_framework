@@ -1,5 +1,5 @@
 BasedOnStyle: Microsoft
-ColumnLimit: 1000
+ColumnLimit: 0
 NamespaceIndentation: All
 FixNamespaceComments: false
 AllowShortBlocksOnASingleLine: Empty
@@ -10,5 +10,6 @@ IndentPPDirectives: BeforeHash
 BreakTemplateDeclarations: Yes
 AllowShortLambdasOnASingleLine: None
 BreakBeforeBraces: Attach
+AccessModifierOffset: -4
 SortIncludes:
   Enabled: false
