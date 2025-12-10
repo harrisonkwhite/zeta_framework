@@ -15,6 +15,231 @@ namespace zf {
         return (n + alignment - 1) & ~(alignment - 1);
     }
 
+    template <typename tp_type>
+    struct s_ptr {
+    public:
+        s_ptr() = default;
+        s_ptr(tp_type *const raw) : m_raw(raw) {}
+
+        constexpr tp_type *Raw() const {
+            return m_raw;
+        }
+
+        constexpr operator tp_type *() const {
+            return m_raw;
+        }
+
+        constexpr operator t_b8() const {
+            return m_raw != nullptr;
+        }
+
+        constexpr tp_type &operator*() const {
+            ZF_ASSERT(m_raw);
+            return *m_raw;
+        }
+
+        constexpr tp_type *operator->() const {
+            ZF_ASSERT(m_raw);
+            return m_raw;
+        }
+
+        constexpr tp_type &operator[](const t_len index) const {
+            ZF_ASSERT(m_raw);
+            return m_raw[index];
+        }
+
+        constexpr s_ptr<tp_type> operator+(const t_len offs) const {
+            return s_ptr<tp_type>(m_raw + offs);
+        }
+
+        constexpr s_ptr<tp_type> operator-(const t_len offs) const {
+            return s_ptr<tp_type>(m_raw - offs);
+        }
+
+        constexpr s_ptr<tp_type> &operator++() {
+            ++m_raw;
+            return *this;
+        }
+
+        constexpr s_ptr<tp_type> &operator--() {
+            --m_raw;
+            return *this;
+        }
+
+        constexpr s_ptr<tp_type> &operator+=(const t_len offs) {
+            m_raw += offs;
+            return *this;
+        }
+
+        constexpr s_ptr<tp_type> &operator-=(const t_len offs) {
+            m_raw -= offs;
+            return *this;
+        }
+
+        constexpr operator s_ptr<const tp_type>() const {
+            return s_ptr<const tp_type>(m_raw);
+        }
+
+        template <typename tp_other_type>
+        explicit constexpr operator s_ptr<tp_other_type>() const {
+            return s_ptr<tp_other_type>(reinterpret_cast<tp_other_type *>(m_raw));
+        }
+
+    private:
+        tp_type *m_raw = nullptr;
+    };
+
+    template <>
+    struct s_ptr<const void> {
+    public:
+        constexpr s_ptr() = default;
+        constexpr s_ptr(const void *const raw) : m_raw(raw) {}
+
+        constexpr const void *Raw() const {
+            return m_raw;
+        }
+
+        constexpr operator const void *() const {
+            return m_raw;
+        }
+
+        constexpr operator t_b8() const {
+            return m_raw != nullptr;
+        }
+
+        template <typename tp_type>
+        explicit constexpr operator s_ptr<const tp_type>() const {
+            return {static_cast<const tp_type *>(m_raw)};
+        }
+
+    private:
+        const void *m_raw = nullptr;
+    };
+
+    template <>
+    struct s_ptr<void> {
+    public:
+        constexpr s_ptr() = default;
+        constexpr s_ptr(void *const raw) : m_raw(raw) {}
+
+        constexpr const void *Raw() const {
+            return m_raw;
+        }
+
+        constexpr operator void *() const {
+            return m_raw;
+        }
+
+        constexpr operator t_b8() const {
+            return m_raw != nullptr;
+        }
+
+        template <typename tp_type>
+        explicit constexpr operator s_ptr<tp_type>() {
+            return {static_cast<tp_type *>(m_raw)};
+        }
+
+        constexpr operator s_ptr<const void>() const {
+            return s_ptr<const void>(m_raw);
+        }
+
+    private:
+        void *m_raw = nullptr;
+    };
+
+#if 0
+    template <typename tp_type>
+    struct s_ptr_nonnull {
+    public:
+        constexpr s_ptr_nonnull(tp_type *const raw) : m_raw(raw) {
+            ZF_ASSERT(raw);
+        }
+
+        constexpr tp_type *Raw() const {
+            return m_raw;
+        }
+
+        constexpr operator tp_type *() const {
+            return m_raw;
+        }
+
+        constexpr operator t_b8() const {
+            return m_raw != nullptr;
+        }
+
+        constexpr tp_type &operator*() const {
+            return *m_raw;
+        }
+
+        constexpr tp_type *operator->() const {
+            return m_raw;
+        }
+
+        constexpr tp_type &operator[](const t_len index) const {
+            return m_raw[index];
+        }
+
+    private:
+        tp_type *m_raw;
+    };
+
+    template <>
+    struct s_ptr_nonnull<const void> {
+    public:
+        constexpr s_ptr_nonnull(const void *const raw) : m_raw(raw) {
+            ZF_ASSERT(raw);
+        }
+
+        constexpr const void *Raw() const {
+            return m_raw;
+        }
+
+        constexpr operator const void *() const {
+            return m_raw;
+        }
+
+        constexpr operator t_b8() const {
+            return m_raw != nullptr;
+        }
+
+        template <typename tp_type>
+        explicit constexpr operator s_ptr_nonnull<const tp_type>() const {
+            return {static_cast<const tp_type *>(m_raw)};
+        }
+
+    private:
+        const void *m_raw;
+    };
+
+    template <>
+    struct s_ptr_nonnull<void> {
+    public:
+        constexpr s_ptr_nonnull(void *const raw) : m_raw(raw) {
+            ZF_ASSERT(raw);
+        }
+
+        constexpr void *Raw() const {
+            return m_raw;
+        }
+
+        constexpr operator void *() const {
+            return m_raw;
+        }
+
+        constexpr operator t_b8() const {
+            return m_raw != nullptr;
+        }
+
+        template <typename tp_type>
+        explicit constexpr operator s_ptr_nonnull<tp_type>() const {
+            return {static_cast<tp_type *>(m_raw)};
+        }
+
+    private:
+        void *m_raw;
+    };
+#endif
+
     struct s_mem_arena {
     public:
         s_mem_arena() = default;
@@ -41,7 +266,7 @@ namespace zf {
         }
 
     private:
-        void *m_buf = nullptr;
+        s_ptr<void> m_buf = nullptr;
         t_len m_size = 0;
         t_len m_offs = 0;
         t_b8 m_is_child = false; // Invalid to free the buffer if it is.
@@ -71,12 +296,12 @@ namespace zf {
     public:
         constexpr s_array_rdonly() = default;
 
-        constexpr s_array_rdonly(const tp_type *const raw, const t_len len) : m_raw(raw), m_len(len) {
-            ZF_ASSERT((raw || len == 0) && len >= 0);
+        constexpr s_array_rdonly(const s_ptr<const tp_type> ptr, const t_len len) : m_ptr(ptr), m_len(len) {
+            ZF_ASSERT((ptr || len == 0) && len >= 0);
         }
 
-        constexpr const tp_type *Raw() const {
-            return m_raw;
+        constexpr const s_ptr<const tp_type> Ptr() const {
+            return m_ptr;
         }
 
         constexpr t_len Len() const {
@@ -93,7 +318,7 @@ namespace zf {
 
         constexpr const tp_type &operator[](const t_len index) const {
             ZF_ASSERT(index >= 0 && index < m_len);
-            return m_raw[index];
+            return m_ptr[index];
         }
 
         constexpr const tp_type &Last() const {
@@ -104,11 +329,11 @@ namespace zf {
             ZF_ASSERT(beg >= 0 && beg <= m_len);
             ZF_ASSERT(end >= beg && end <= m_len);
 
-            return {m_raw + beg, end - beg};
+            return {&m_ptr[beg], end - beg};
         }
 
         constexpr s_array_rdonly<t_u8> ToBytes() const {
-            return {reinterpret_cast<const t_u8 *>(m_raw), SizeInBytes()};
+            return {static_cast<s_ptr<const t_u8>>(m_ptr), SizeInBytes()};
         }
 
         constexpr t_b8 DoAllEqual(const tp_type &val, const t_bin_comparator<tp_type> comparator = DefaultBinComparator) const {
@@ -119,7 +344,7 @@ namespace zf {
             }
 
             for (t_len i = 0; i < m_len; i++) {
-                if (!comparator(m_raw[i], val)) {
+                if (!comparator(m_ptr[i], val)) {
                     return false;
                 }
             }
@@ -131,7 +356,7 @@ namespace zf {
             ZF_ASSERT(comparator);
 
             for (t_len i = 0; i < m_len; i++) {
-                if (comparator(m_raw[i], val)) {
+                if (comparator(m_ptr[i], val)) {
                     return true;
                 }
             }
@@ -144,19 +369,19 @@ namespace zf {
                 ZF_ASSERT(other.Len() >= m_len);
 
                 for (t_len i = 0; i < m_len; i++) {
-                    other[i] = m_raw[i];
+                    other[i] = m_ptr[i];
                 }
             } else {
                 const auto min = ZF_MIN(m_len, other.Len());
 
                 for (t_len i = 0; i < min; i++) {
-                    other[i] = m_raw[i];
+                    other[i] = m_ptr[i];
                 }
             }
         }
 
     private:
-        const tp_type *m_raw = nullptr;
+        s_ptr<const tp_type> m_ptr = nullptr;
         t_len m_len = 0;
     };
 
@@ -167,12 +392,12 @@ namespace zf {
     public:
         constexpr s_array() = default;
 
-        constexpr s_array(tp_type *const raw, const t_len len) : m_raw(raw), m_len(len) {
-            ZF_ASSERT((raw || len == 0) && len >= 0);
+        constexpr s_array(const s_ptr<tp_type> ptr, const t_len len) : m_ptr(ptr), m_len(len) {
+            ZF_ASSERT((ptr || len == 0) && len >= 0);
         }
 
-        constexpr tp_type *Raw() const {
-            return m_raw;
+        constexpr s_ptr<tp_type> Ptr() const {
+            return m_ptr;
         }
 
         constexpr t_len Len() const {
@@ -188,12 +413,12 @@ namespace zf {
         }
 
         constexpr operator s_array_rdonly<tp_type>() const {
-            return {m_raw, m_len};
+            return {m_ptr, m_len};
         }
 
         constexpr tp_type &operator[](const t_len index) const {
             ZF_ASSERT(index >= 0 && index < m_len);
-            return m_raw[index];
+            return m_ptr[index];
         }
 
         constexpr tp_type &Last() const {
@@ -204,11 +429,11 @@ namespace zf {
             ZF_ASSERT(beg >= 0 && beg <= m_len);
             ZF_ASSERT(end >= beg && end <= m_len);
 
-            return {m_raw + beg, end - beg};
+            return {m_ptr + beg, end - beg};
         }
 
         constexpr s_array<t_u8> ToBytes() const {
-            return {reinterpret_cast<t_u8 *>(m_raw), SizeInBytes()};
+            return {static_cast<s_ptr<t_u8>>(m_ptr), SizeInBytes()};
         }
 
         constexpr t_b8 DoAllEqual(const tp_type &val, const t_bin_comparator<tp_type> comparator = DefaultBinComparator) const {
@@ -221,7 +446,7 @@ namespace zf {
 
         constexpr void SetAllTo(const tp_type &val) const {
             for (t_len i = 0; i < m_len; i++) {
-                m_raw[i] = val;
+                m_ptr[i] = val;
             }
         }
 
@@ -231,12 +456,12 @@ namespace zf {
 
         constexpr void Reverse() const {
             for (t_len i = 0; i < m_len / 2; i++) {
-                Swap(m_raw[i], m_raw[m_len - 1 - i]);
+                Swap(m_ptr[i], m_ptr[m_len - 1 - i]);
             }
         }
 
     private:
-        tp_type *m_raw = nullptr;
+        s_ptr<tp_type> m_ptr = nullptr;
         t_len m_len = 0;
     };
 

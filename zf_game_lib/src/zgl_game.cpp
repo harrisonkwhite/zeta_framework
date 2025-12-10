@@ -8,18 +8,13 @@
 namespace zf {
     constexpr t_f64 g_targ_ticks_per_sec = 60.0; // @todo: Make this customisable?
 
-    t_b8 RunGame(const s_game_info &info) {
-        ZF_ASSERT((info.dev_mem_size == 0 && info.dev_mem_alignment == 0) || (info.dev_mem_size > 0 && IsAlignmentValid(info.dev_mem_alignment)));
-        ZF_ASSERT(info.init_func);
-        ZF_ASSERT(info.tick_func);
-        ZF_ASSERT(info.render_func);
-
+    t_b8 RunGame(const t_game_init_func init_func, const t_game_tick_func tick_func, const t_game_render_func render_func, const t_game_cleanup_func cleanup_func) {
 #ifndef ZF_DEBUG
         // Redirect stderr to crash log file.
         freopen("error.log", "w", stderr);
 #endif
 
-        const t_b8 success = [&info]() {
+        const t_b8 success = [init_func, tick_func, render_func, cleanup_func]() {
             //
             // Initialisation
             //
@@ -57,37 +52,24 @@ namespace zf {
 
             ZF_DEFER({ internal::DestroyAudioSys(audio_sys); });
 
-            // Initialise developer memory.
-            void *dev_mem = nullptr;
-
-            if (info.dev_mem_size > 0) {
-                dev_mem = mem_arena.Push(info.dev_mem_size, info.dev_mem_alignment);
-
-                if (!dev_mem) {
-                    ZF_REPORT_ERROR();
-                    return false;
-                }
-            }
-
             // Run the developer's initialisation function.
             {
                 const s_game_init_context context = {
-                    .dev_mem = dev_mem,
                     .mem_arena = &mem_arena,
                     .temp_mem_arena = &temp_mem_arena,
                     .platform_layer_info = platform_layer_info,
                     .audio_sys = audio_sys,
                 };
 
-                if (!info.init_func(context)) {
+                if (!init_func(context)) {
                     ZF_REPORT_ERROR();
                     return false;
                 }
             }
 
             ZF_DEFER({
-                if (info.cleanup_func) {
-                    info.cleanup_func(dev_mem);
+                if (cleanup_func) {
+                    cleanup_func();
                 }
             });
 
@@ -119,7 +101,6 @@ namespace zf {
                         internal::ProcFinishedSounds(audio_sys);
 
                         const s_game_tick_context context = {
-                            .dev_mem = dev_mem,
                             .mem_arena = &mem_arena,
                             .temp_mem_arena = &temp_mem_arena,
                             .input_state = &input_state,
@@ -127,7 +108,7 @@ namespace zf {
                             .audio_sys = audio_sys,
                         };
 
-                        if (!info.tick_func(context)) {
+                        if (!tick_func(context)) {
                             ZF_REPORT_ERROR();
                             return false;
                         }
@@ -148,7 +129,6 @@ namespace zf {
 
                     {
                         const s_game_render_context context = {
-                            .dev_mem = dev_mem,
                             .mem_arena = &mem_arena,
                             .temp_mem_arena = &temp_mem_arena,
                             .rendering_context = rendering_context,
