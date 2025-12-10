@@ -16,12 +16,6 @@ namespace zf {
     }
 
     template <typename tp_type>
-    struct s_ptr;
-
-    template <typename tp_type>
-    struct s_ptr_nonnull;
-
-    template <typename tp_type>
     struct s_ptr {
     public:
         constexpr s_ptr() = default;
@@ -54,21 +48,29 @@ namespace zf {
             return m_raw[index];
         }
 
+        constexpr t_b8 operator==(const s_ptr<tp_type> other) const {
+            return m_raw == other.m_raw;
+        }
+
+        constexpr t_b8 operator!=(const s_ptr<tp_type> other) const {
+            return m_raw != other.m_raw;
+        }
+
         constexpr s_ptr<tp_type> operator+(const t_len offs) const {
-            return m_raw + offs;
+            return {m_raw + offs};
         }
 
         constexpr s_ptr<tp_type> operator-(const t_len offs) const {
-            return m_raw - offs;
+            return {m_raw - offs};
         }
 
         constexpr s_ptr<tp_type> &operator++() {
-            ++m_raw;
+            m_raw++;
             return *this;
         }
 
         constexpr s_ptr<tp_type> &operator--() {
-            --m_raw;
+            m_raw--;
             return *this;
         }
 
@@ -83,12 +85,7 @@ namespace zf {
         }
 
         constexpr operator s_ptr<const tp_type>() const {
-            return m_raw;
-        }
-
-        template <typename tp_other_type>
-        explicit constexpr operator s_ptr<tp_other_type>() const {
-            return reinterpret_cast<tp_other_type *>(m_raw);
+            return {m_raw};
         }
 
     private:
@@ -113,9 +110,17 @@ namespace zf {
             return m_raw != nullptr;
         }
 
+        constexpr t_b8 operator==(const s_ptr<const void> other) const {
+            return m_raw == other.m_raw;
+        }
+
+        constexpr t_b8 operator!=(const s_ptr<const void> other) const {
+            return m_raw != other.m_raw;
+        }
+
         template <typename tp_type>
         explicit constexpr operator s_ptr<const tp_type>() const {
-            return static_cast<const tp_type *>(m_raw);
+            return {static_cast<const tp_type *>(m_raw)};
         }
 
     private:
@@ -140,180 +145,25 @@ namespace zf {
             return m_raw != nullptr;
         }
 
-        template <typename tp_type>
-        explicit constexpr operator s_ptr<tp_type>() const {
-            return static_cast<tp_type *>(m_raw);
+        constexpr t_b8 operator==(const s_ptr<void> other) const {
+            return m_raw == other.m_raw;
+        }
+
+        constexpr t_b8 operator!=(const s_ptr<void> other) const {
+            return m_raw != other.m_raw;
         }
 
         constexpr operator s_ptr<const void>() const {
-            return s_ptr<const void>(m_raw);
+            return {m_raw};
+        }
+
+        template <typename tp_type>
+        explicit constexpr operator s_ptr<tp_type>() const {
+            return {static_cast<tp_type *>(m_raw)};
         }
 
     private:
         void *m_raw = nullptr;
-    };
-
-    template <typename tp_type>
-    struct s_ptr_nonnull {
-    public:
-        constexpr s_ptr_nonnull(tp_type *const raw) : m_raw(raw) {
-            ZF_ASSERT(m_raw);
-        }
-
-        template <typename tp_other_type>
-        constexpr s_ptr_nonnull(const s_ptr<tp_other_type> ptr) : m_raw(ptr.Raw()) {
-            ZF_ASSERT(m_raw);
-        }
-
-        constexpr tp_type *Raw() const {
-            return m_raw;
-        }
-
-        constexpr operator tp_type *() const {
-            return m_raw;
-        }
-
-        constexpr operator t_b8() const {
-            return m_raw != nullptr;
-        }
-
-        constexpr tp_type &operator*() const {
-            return *m_raw;
-        }
-
-        constexpr tp_type *operator->() const {
-            return m_raw;
-        }
-
-        constexpr tp_type &operator[](const t_len index) const {
-            return m_raw[index];
-        }
-
-        constexpr s_ptr_nonnull<tp_type> operator+(const t_len offs) const {
-            return m_raw + offs;
-        }
-
-        constexpr s_ptr_nonnull<tp_type> operator-(const t_len offs) const {
-            return m_raw - offs;
-        }
-
-        constexpr s_ptr_nonnull<tp_type> &operator++() {
-            ++m_raw;
-            return *this;
-        }
-
-        constexpr s_ptr_nonnull<tp_type> &operator--() {
-            --m_raw;
-            return *this;
-        }
-
-        constexpr s_ptr_nonnull<tp_type> &operator+=(const t_len offs) {
-            m_raw += offs;
-            return *this;
-        }
-
-        constexpr s_ptr_nonnull<tp_type> &operator-=(const t_len offs) {
-            m_raw -= offs;
-            return *this;
-        }
-
-        constexpr operator s_ptr<tp_type>() const {
-            return s_ptr<tp_type>(m_raw);
-        }
-
-        constexpr operator s_ptr_nonnull<const tp_type>() const {
-            return s_ptr_nonnull<const tp_type>(m_raw);
-        }
-
-        template <typename tp_other_type>
-        explicit constexpr operator s_ptr_nonnull<tp_other_type>() const {
-            return reinterpret_cast<tp_other_type *>(m_raw);
-        }
-
-    private:
-        tp_type *m_raw;
-    };
-
-    template <>
-    struct s_ptr_nonnull<const void> {
-    public:
-        constexpr s_ptr_nonnull(const void *const raw) : m_raw(raw) {
-            ZF_ASSERT(m_raw);
-        }
-
-        template <typename tp_other_type>
-        constexpr s_ptr_nonnull(const s_ptr<tp_other_type> ptr) : m_raw(ptr.Raw()) {
-            ZF_ASSERT(m_raw);
-        }
-
-        constexpr const void *Raw() const {
-            return m_raw;
-        }
-
-        constexpr operator const void *() const {
-            return m_raw;
-        }
-
-        constexpr operator t_b8() const {
-            return m_raw != nullptr;
-        }
-
-        template <typename tp_other_type>
-        explicit constexpr operator s_ptr_nonnull<const tp_other_type>() const {
-            return static_cast<const tp_other_type *>(m_raw);
-        }
-
-        constexpr operator s_ptr<const void>() const {
-            return s_ptr<const void>(m_raw);
-        }
-
-    private:
-        const void *m_raw;
-    };
-
-    template <>
-    struct s_ptr_nonnull<void> {
-    public:
-        constexpr s_ptr_nonnull(void *const raw) : m_raw(raw) {
-            ZF_ASSERT(m_raw);
-        }
-
-        template <typename tp_other_type>
-        constexpr s_ptr_nonnull(const s_ptr<tp_other_type> ptr) : m_raw(const_cast<void *>(static_cast<const void *>(ptr.Raw()))) {
-            ZF_ASSERT(m_raw);
-        }
-
-        constexpr void *Raw() const {
-            return m_raw;
-        }
-
-        constexpr operator void *() const {
-            return m_raw;
-        }
-
-        constexpr operator t_b8() const {
-            return m_raw != nullptr;
-        }
-
-        template <typename tp_other_type>
-        explicit constexpr operator s_ptr_nonnull<tp_other_type>() const {
-            return static_cast<tp_other_type *>(m_raw);
-        }
-
-        constexpr operator s_ptr<void>() const {
-            return s_ptr<void>(m_raw);
-        }
-
-        constexpr operator s_ptr_nonnull<const void>() const {
-            return s_ptr_nonnull<const void>(m_raw);
-        }
-
-        constexpr operator s_ptr<const void>() const {
-            return s_ptr<const void>(m_raw);
-        }
-
-    private:
-        void *m_raw;
     };
 
     struct s_mem_arena {
@@ -409,7 +259,7 @@ namespace zf {
         }
 
         constexpr s_array_rdonly<t_u8> ToBytes() const {
-            return {static_cast<s_ptr<const t_u8>>(m_ptr), SizeInBytes()};
+            return {{reinterpret_cast<const t_u8*>(m_ptr.Raw())}, SizeInBytes()};
         }
 
         constexpr t_b8 DoAllEqual(const tp_type &val, const t_bin_comparator<tp_type> comparator = DefaultBinComparator) const {
@@ -509,7 +359,7 @@ namespace zf {
         }
 
         constexpr s_array<t_u8> ToBytes() const {
-            return {static_cast<s_ptr<t_u8>>(m_ptr), SizeInBytes()};
+            return {{reinterpret_cast<t_u8*>(m_ptr.Raw())}, SizeInBytes()};
         }
 
         constexpr t_b8 DoAllEqual(const tp_type &val, const t_bin_comparator<tp_type> comparator = DefaultBinComparator) const {

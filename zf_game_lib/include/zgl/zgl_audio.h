@@ -34,7 +34,7 @@ namespace zf {
     t_b8 IsSoundPlaying(const s_sound_id id);
 
     namespace internal {
-        [[nodiscard]] t_b8 CreateAudioSys(s_mem_arena *const mem_arena, s_audio_sys **const o_as);
+        [[nodiscard]] t_b8 CreateAudioSys(const s_ptr<s_mem_arena> mem_arena, const s_ptr<s_ptr<s_audio_sys>> o_as);
         void DestroyAudioSys(s_audio_sys *const as);
         void ProcFinishedSounds(s_audio_sys *const as);
     }

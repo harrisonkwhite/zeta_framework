@@ -23,7 +23,7 @@ namespace zf {
         } snd_insts = {};
     };
 
-    t_b8 internal::CreateAudioSys(s_mem_arena *const mem_arena, s_audio_sys **const o_as) {
+    t_b8 internal::CreateAudioSys(const s_ptr<s_mem_arena> mem_arena, const s_ptr<s_ptr<s_audio_sys>> o_as) {
         *o_as = Alloc<s_audio_sys>(mem_arena);
         const auto as = *o_as;
 

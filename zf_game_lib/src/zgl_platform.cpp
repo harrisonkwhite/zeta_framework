@@ -258,7 +258,7 @@ namespace zf {
         s_v2_i prefullscreen_size = {};
     };
 
-    t_b8 internal::InitPlatformLayer(const s_ptr_nonnull<s_mem_arena> mem_arena, const s_ptr_nonnull<s_input_state> input_state, const s_ptr_nonnull<s_ptr<s_platform_layer_info>> o_pli) {
+    t_b8 internal::InitPlatformLayer(const s_ptr<s_mem_arena> mem_arena, const s_ptr<s_input_state> input_state, const s_ptr<s_ptr<s_platform_layer_info>> o_pli) {
         ZF_ASSERT(!g_initted);
 
         t_b8 clean_up = false;
@@ -381,7 +381,7 @@ namespace zf {
         return info;
     }
 
-    void internal::ShutdownPlatformLayer(const s_ptr_nonnull<const s_platform_layer_info> pli) {
+    void internal::ShutdownPlatformLayer(const s_ptr<const s_platform_layer_info> pli) {
         ZF_ASSERT(g_initted);
 
         glfwDestroyWindow(pli->glfw_window);
@@ -397,29 +397,29 @@ namespace zf {
         glfwPollEvents();
     }
 
-    void internal::ShowWindow(const s_ptr_nonnull<const s_platform_layer_info> pli) {
+    void internal::ShowWindow(const s_ptr<const s_platform_layer_info> pli) {
         glfwShowWindow(pli->glfw_window);
     }
 
-    t_b8 internal::ShouldWindowClose(const s_ptr_nonnull<const s_platform_layer_info> pli) {
+    t_b8 internal::ShouldWindowClose(const s_ptr<const s_platform_layer_info> pli) {
         return glfwWindowShouldClose(pli->glfw_window);
     }
 
-    void internal::SwapWindowBuffers(const s_ptr_nonnull<const s_platform_layer_info> pli) {
+    void internal::SwapWindowBuffers(const s_ptr<const s_platform_layer_info> pli) {
         glfwSwapBuffers(pli->glfw_window);
     }
 
-    void SetWindowTitle(const s_ptr_nonnull<const s_platform_layer_info> pli, const s_str_rdonly title) {
+    void SetWindowTitle(const s_ptr<const s_platform_layer_info> pli, const s_str_rdonly title) {
         ZF_ASSERT(title.IsValid());
         glfwSetWindowTitle(pli->glfw_window, title.Raw());
     }
 
-    void SetWindowSize(const s_ptr_nonnull<const s_platform_layer_info> pli, const s_v2_i size) {
+    void SetWindowSize(const s_ptr<const s_platform_layer_info> pli, const s_v2_i size) {
         ZF_ASSERT(size.x > 0 && size.y > 0);
         glfwSetWindowSize(pli->glfw_window, size.x, size.y);
     }
 
-    void SetWindowSizeLimits(const s_ptr_nonnull<const s_platform_layer_info> pli, const t_i32 min_width, const t_i32 min_height, const t_i32 max_width, const t_i32 max_height) {
+    void SetWindowSizeLimits(const s_ptr<const s_platform_layer_info> pli, const t_i32 min_width, const t_i32 min_height, const t_i32 max_width, const t_i32 max_height) {
         ZF_ASSERT(min_width >= -1 && min_height >= -1);
         ZF_ASSERT(max_width >= min_width || max_width == -1);
         ZF_ASSERT(max_height >= min_height || max_height == -1);
@@ -428,15 +428,15 @@ namespace zf {
         glfwSetWindowSizeLimits(pli->glfw_window, min_width, min_height, max_width, max_height);
     }
 
-    void SetWindowResizability(const s_ptr_nonnull<const s_platform_layer_info> pli, const t_b8 resizable) {
+    void SetWindowResizability(const s_ptr<const s_platform_layer_info> pli, const t_b8 resizable) {
         glfwSetWindowAttrib(pli->glfw_window, GLFW_RESIZABLE, resizable);
     }
 
-    s_v2_i WindowFramebufferSizeCache(const s_ptr_nonnull<const s_platform_layer_info> pli) {
+    s_v2_i WindowFramebufferSizeCache(const s_ptr<const s_platform_layer_info> pli) {
         return pli->framebuffer_size_cache;
     }
 
-    t_b8 IsFullscreen(const s_ptr_nonnull<const s_platform_layer_info> pli) {
+    t_b8 IsFullscreen(const s_ptr<const s_platform_layer_info> pli) {
         return pli->fullscreen_active;
     }
 
@@ -478,7 +478,7 @@ namespace zf {
         return monitors[max_occupancy_monitor_index];
     }
 
-    s_v2_i CalcMonitorPixelSize(const s_ptr_nonnull<const s_platform_layer_info> pli) {
+    s_v2_i CalcMonitorPixelSize(const s_ptr<const s_platform_layer_info> pli) {
         const auto monitor = MonitorOfWindow(pli->glfw_window);
 
         if (!monitor) {
@@ -489,7 +489,7 @@ namespace zf {
         return {mode->width, mode->height};
     }
 
-    s_v2_i CalcMonitorLogicalSize(const s_ptr_nonnull<const s_platform_layer_info> pli) {
+    s_v2_i CalcMonitorLogicalSize(const s_ptr<const s_platform_layer_info> pli) {
         const auto monitor = MonitorOfWindow(pli->glfw_window);
 
         if (!monitor) {
@@ -504,7 +504,7 @@ namespace zf {
         return {static_cast<t_i32>(static_cast<t_f32>(mode->width) / monitor_scale.x), static_cast<t_i32>(static_cast<t_f32>(mode->height) / monitor_scale.y)};
     }
 
-    void SetFullscreen(const s_ptr_nonnull<s_platform_layer_info> pli, const t_b8 fs) {
+    void SetFullscreen(const s_ptr<s_platform_layer_info> pli, const t_b8 fs) {
         if (fs == pli->fullscreen_active) {
             return;
         }
@@ -528,7 +528,7 @@ namespace zf {
         pli->fullscreen_active = fs;
     }
 
-    void SetCursorVisibility(const s_ptr_nonnull<const s_platform_layer_info> pli, const t_b8 visible) {
+    void SetCursorVisibility(const s_ptr<const s_platform_layer_info> pli, const t_b8 visible) {
         glfwSetInputMode(pli->glfw_window, GLFW_CURSOR, visible ? GLFW_CURSOR_NORMAL : GLFW_CURSOR_HIDDEN);
     }
 }

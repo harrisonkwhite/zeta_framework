@@ -43,7 +43,7 @@ namespace zf {
                 return false;
             }
 
-            s_audio_sys *audio_sys;
+            s_ptr<s_audio_sys> audio_sys;
 
             if (!internal::CreateAudioSys(&mem_arena, &audio_sys)) {
                 ZF_REPORT_ERROR();
