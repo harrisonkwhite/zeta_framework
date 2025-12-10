@@ -138,7 +138,7 @@ namespace zf {
             }
 
             case e_stream_type::file:
-                return static_cast<t_len>(fread(arr.Raw(), sizeof(arr[0]), static_cast<size_t>(cnt), m_type_data.file.file)) == cnt;
+                return static_cast<t_len>(fread(arr.Ptr().Raw(), sizeof(arr[0]), static_cast<size_t>(cnt), m_type_data.file.file)) == cnt;
             }
 
             ZF_ASSERT(false);
@@ -171,7 +171,7 @@ namespace zf {
             }
 
             case e_stream_type::file:
-                return static_cast<t_len>(fwrite(arr.Raw(), sizeof(arr[0]), static_cast<size_t>(arr.Len()), m_type_data.file.file)) == arr.Len();
+                return static_cast<t_len>(fwrite(arr.Ptr().Raw(), sizeof(arr[0]), static_cast<size_t>(arr.Len()), m_type_data.file.file)) == arr.Len();
             }
 
             ZF_ASSERT(false);
