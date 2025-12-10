@@ -4,7 +4,7 @@
 
 namespace zf {
     t_b8 s_mem_arena::Init(const t_len size) {
-        ZF_ASSERT(!IsInitted());
+        ZF_ASSERT(!m_initted);
         ZF_ASSERT(size > 0);
 
         const auto buf = malloc(static_cast<size_t>(size));
@@ -16,11 +16,13 @@ namespace zf {
         m_buf = buf;
         m_size = size;
 
+        m_initted = true;
+
         return true;
     }
 
     t_b8 s_mem_arena::InitAsChild(const t_len size, s_mem_arena *const par) {
-        ZF_ASSERT(!IsInitted());
+        ZF_ASSERT(!m_initted);
         ZF_ASSERT(size > 0);
 
         const auto buf = par->PushRaw(size, 1);
@@ -29,26 +31,24 @@ namespace zf {
             return false;
         }
 
+        m_parent = par;
         m_buf = buf;
         m_size = size;
-        m_is_child = true;
+
+        m_initted = true;
 
         return true;
     }
 
     void s_mem_arena::Release() {
-        ZF_ASSERT(IsInitted() && !m_is_child);
+        ZF_ASSERT(IsActive() && !m_parent);
 
         free(m_buf);
         m_buf = nullptr;
-
-        m_size = 0;
-        m_offs = 0;
-        m_is_child = false;
     }
 
     void *s_mem_arena::PushRaw(const t_len size, const t_len alignment) {
-        ZF_ASSERT(IsInitted());
+        ZF_ASSERT(IsActive());
         ZF_ASSERT(size > 0);
         ZF_ASSERT(IsAlignmentValid(alignment));
 

@@ -100,7 +100,7 @@ namespace zf {
             t_f64 frame_dur_accum = 0.0;
 
             while (!internal::ShouldWindowClose(platform_layer_info)) {
-                temp_mem_arena.Rewind(0);
+                temp_mem_arena.Clear();
 
                 internal::PollOSEvents();
 
