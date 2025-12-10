@@ -9,6 +9,10 @@ namespace zf {
     constexpr t_f64 g_targ_ticks_per_sec = 60.0; // @todo: Make this customisable?
 
     t_b8 RunGame(const t_game_init_func init_func, const t_game_tick_func tick_func, const t_game_render_func render_func, const t_game_cleanup_func cleanup_func) {
+        ZF_ASSERT(init_func);
+        ZF_ASSERT(tick_func);
+        ZF_ASSERT(render_func);
+
 #ifndef ZF_DEBUG
         // Redirect stderr to crash log file.
         freopen("error.log", "w", stderr);
@@ -45,12 +49,12 @@ namespace zf {
 
             s_ptr<s_audio_sys> audio_sys;
 
-            if (!internal::CreateAudioSys(&mem_arena, &audio_sys)) {
+            if (!CreateAudioSys(&mem_arena, &audio_sys)) {
                 ZF_REPORT_ERROR();
                 return false;
             }
 
-            ZF_DEFER({ internal::DestroyAudioSys(audio_sys); });
+            ZF_DEFER({ DestroyAudioSys(audio_sys); });
 
             // Run the developer's initialisation function.
             {
@@ -98,7 +102,7 @@ namespace zf {
                 if (frame_dur_accum >= targ_tick_interval) {
                     // Run possibly multiple ticks.
                     do {
-                        internal::ProcFinishedSounds(audio_sys);
+                        ProcFinishedSounds(audio_sys);
 
                         const s_game_tick_context context = {
                             .mem_arena = &mem_arena,

@@ -3,7 +3,7 @@
 #include <miniaudio.h>
 
 namespace zf {
-    t_b8 LoadSoundFromRaw(const s_str_rdonly file_path, s_mem_arena *const snd_data_mem_arena, s_sound_data *const snd_data) {
+    t_b8 LoadSoundFromRaw(const s_str_rdonly file_path, const s_ptr_nonnull<s_mem_arena> snd_data_mem_arena, const s_ptr_nonnull<s_sound_data> snd_data) {
         ZF_ASSERT(file_path.IsValid());
 
         ma_decoder decoder;
@@ -42,7 +42,7 @@ namespace zf {
         return true;
     }
 
-    t_b8 PackSound(const s_str_rdonly file_path, const s_sound_data snd_data, s_mem_arena *const temp_mem_arena) {
+    t_b8 PackSound(const s_str_rdonly file_path, const s_sound_data snd_data, const s_ptr_nonnull<s_mem_arena> temp_mem_arena) {
         if (!CreateFileAndParentDirs(file_path, temp_mem_arena)) {
             return false;
         }
@@ -58,7 +58,7 @@ namespace zf {
         return SerializeSound(&fs, snd_data);
     }
 
-    t_b8 UnpackSound(const s_str_rdonly file_path, s_mem_arena *const snd_data_mem_arena, s_mem_arena *const temp_mem_arena, s_sound_data *const o_snd_data) {
+    t_b8 UnpackSound(const s_str_rdonly file_path, const s_ptr_nonnull<s_mem_arena> snd_data_mem_arena, const s_ptr_nonnull<s_mem_arena> temp_mem_arena, const s_ptr_nonnull<s_sound_data> o_snd_data) {
         s_stream fs;
 
         if (!OpenFile(file_path, e_file_access_mode::read, &fs)) {
@@ -86,7 +86,7 @@ namespace zf {
         return true;
     }
 
-    t_b8 SerializeSound(s_stream *const stream, const s_sound_data snd_data) {
+    t_b8 SerializeSound(const s_ptr_nonnull<s_stream> stream, const s_sound_data snd_data) {
         if (!stream->WriteItem(snd_data.Meta())) {
             return false;
         }
@@ -98,7 +98,7 @@ namespace zf {
         return true;
     }
 
-    t_b8 DeserializeSound(s_stream *const stream, s_mem_arena *const snd_data_mem_arena, s_sound_data *const o_snd_data) {
+    t_b8 DeserializeSound(const s_ptr_nonnull<s_stream> stream, const s_ptr_nonnull<s_mem_arena> snd_data_mem_arena, const s_ptr_nonnull<s_sound_data> o_snd_data) {
         s_sound_meta meta;
 
         if (!stream->ReadItem(&meta)) {
