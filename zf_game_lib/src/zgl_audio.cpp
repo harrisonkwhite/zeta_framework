@@ -24,7 +24,7 @@ namespace zf {
     };
 
     t_b8 internal::CreateAudioSys(s_mem_arena *const mem_arena, s_audio_sys **const o_as) {
-        *o_as = mem_arena->Push<s_audio_sys>();
+        *o_as = Alloc<s_audio_sys>(mem_arena);
         const auto as = *o_as;
 
         if (!as) {
@@ -50,7 +50,7 @@ namespace zf {
     }
 
     t_b8 CreateSoundTypeFromRaw(const s_str_rdonly file_path, s_sound_type_arena *const type_arena, s_mem_arena *const temp_mem_arena, s_sound_type **const o_type) {
-        *o_type = type_arena->mem_arena->Push<s_sound_type>();
+        *o_type = Alloc<s_sound_type>(type_arena->mem_arena);
         const auto type = *o_type;
 
         if (!type) {

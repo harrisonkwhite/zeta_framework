@@ -31,22 +31,7 @@ namespace zf {
 
         void Release();
 
-        void *PushRaw(const t_len size, const t_len alignment);
-
-        template <typename tp_type>
-        tp_type *Push(const t_len cnt = 1) {
-            ZF_ASSERT(IsInitted());
-
-            const auto buf = static_cast<tp_type *>(PushRaw(ZF_SIZE_OF(tp_type) * cnt, ZF_ALIGN_OF(tp_type)));
-
-            if (buf) {
-                for (t_len i = 0; i < cnt; i++) {
-                    new (&buf[i]) tp_type();
-                }
-            }
-
-            return buf;
-        }
+        void *Push(const t_len size, const t_len alignment);
 
         void Rewind(const t_len offs) {
             ZF_ASSERT(IsInitted());
@@ -61,6 +46,17 @@ namespace zf {
         t_len m_offs = 0;
         t_b8 m_is_child = false; // Invalid to free the buffer if it is.
     };
+
+    template <typename tp_type>
+    tp_type *Alloc(s_mem_arena *const mem_arena) {
+        const auto ptr = static_cast<tp_type *>(mem_arena->Push(ZF_SIZE_OF(tp_type), ZF_ALIGN_OF(tp_type)));
+
+        if (ptr) {
+            new (ptr) tp_type();
+        }
+
+        return ptr;
+    }
 
     // ============================================================
     // @section: Arrays
@@ -328,13 +324,17 @@ namespace zf {
     [[nodiscard]] t_b8 AllocArray(const t_len len, s_mem_arena *const mem_arena, s_array<tp_type> *const o_arr) {
         ZF_ASSERT(len > 0);
 
-        const auto buf = mem_arena->Push<tp_type>(len);
+        const auto ptr = static_cast<tp_type *>(mem_arena->Push(ZF_SIZE_OF(tp_type) * len, ZF_ALIGN_OF(tp_type)));
 
-        if (!buf) {
+        if (!ptr) {
             return false;
         }
 
-        *o_arr = {buf, len};
+        for (t_len i = 0; i < len; i++) {
+            new (&ptr[i]) tp_type();
+        }
+
+        *o_arr = {ptr, len};
 
         return true;
     }

@@ -61,7 +61,7 @@ namespace zf {
             void *dev_mem = nullptr;
 
             if (info.dev_mem_size > 0) {
-                dev_mem = mem_arena.PushRaw(info.dev_mem_size, info.dev_mem_alignment);
+                dev_mem = mem_arena.Push(info.dev_mem_size, info.dev_mem_alignment);
 
                 if (!dev_mem) {
                     ZF_REPORT_ERROR();

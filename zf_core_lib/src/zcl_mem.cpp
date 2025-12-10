@@ -23,7 +23,7 @@ namespace zf {
         ZF_ASSERT(!IsInitted());
         ZF_ASSERT(size > 0);
 
-        const auto buf = par->PushRaw(size, 1);
+        const auto buf = par->Push(size, 1);
 
         if (!buf) {
             return false;
@@ -47,7 +47,7 @@ namespace zf {
         m_is_child = false;
     }
 
-    void *s_mem_arena::PushRaw(const t_len size, const t_len alignment) {
+    void *s_mem_arena::Push(const t_len size, const t_len alignment) {
         ZF_ASSERT(IsInitted());
         ZF_ASSERT(size > 0);
         ZF_ASSERT(IsAlignmentValid(alignment));

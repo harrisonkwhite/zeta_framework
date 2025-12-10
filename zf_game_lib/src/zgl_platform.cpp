@@ -263,7 +263,7 @@ namespace zf {
 
         t_b8 clean_up = false;
 
-        const auto info = mem_arena->Push<s_platform_layer_info>();
+        const auto info = Alloc<s_platform_layer_info>(mem_arena);
 
         if (!info) {
             ZF_REPORT_ERROR();

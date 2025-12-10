@@ -109,14 +109,13 @@ namespace zf {
     // ============================================================
     // @section: Hash Map
     // ============================================================
-#if 0
     template <typename tp_type>
     using t_hash_func = t_len (*)(const tp_type &key);
 
-    enum class e_hash_map_put_result : t_i32 {
-        error,
-        added,
-        updated
+    enum e_hash_map_put_result : t_i32 {
+        ek_hash_map_put_result_error,
+        ek_hash_map_put_result_added,
+        ek_hash_map_put_result_updated
     };
 
     template <typename tp_type>
@@ -147,56 +146,124 @@ namespace zf {
                 .m_mem_arena = mem_arena,
             };
 
-    #if 0
-            if (!AllocArray(, immediate_cap, &mem_arena, &m_immediate_indexes)) {
+            if (!AllocArray(immediate_cap, mem_arena, &m_immediate_indexes)) {
                 return false;
             }
 
-            SetAllTo(m_immediate_indexes, static_cast<t_len>(-1));
+            m_immediate_indexes.SetAllTo(-1);
 
             m_initted = true;
-    #endif
 
             return true;
         }
 
+        // Returns true iff an entry with the key was found. Leave o_val as nullptr if you don't care about getting the value. o_val is untouched if the key is not found.
         [[nodiscard]] t_b8 Get(const tp_key_type &key, tp_val_type *const o_val = nullptr) {
-            const t_len hash_index = KeyToHashIndex(key, hm.hash_func, hm.immediate_indexes.len);
-            return HashMapBackingBlockGet(hm.backing_blocks_head, key, hm.key_comparator, hm.immediate_indexes[hash_index], o_val);
-        }
+            const t_len hash_index = KeyToHashIndex(key, m_hash_func, m_immediate_indexes.Len());
 
-    #if 0
-        // Returns true iff no error occurred.
-        [[nodiscard]] e_hash_map_put_result Put(const tp_key_type &key, const tp_val_type &val) {
-            const t_len hash_index = KeyToHashIndex(key, hm.hash_func, hm.immediate_indexes.len);
+            s_backing_block *bb = m_backing_blocks_head;
+            t_len index = m_immediate_indexes[hash_index];
 
-            const auto res = HashMapBackingBlockPut(hm.backing_blocks_head, key, hm.key_comparator, val, hm.immediate_indexes[hash_index], hm.backing_block_cap, *hm.mem_arena);
+            while (bb && index != -1) {
+                while (index >= m_backing_block_cap) {
+                    ZF_ASSERT(bb->next);
+                    bb = bb->next;
+                    index -= m_backing_block_cap;
+                }
 
-            if (res == ek_hash_map_put_result_added) {
-                hm.kv_pair_cnt++;
-            }
+                if (key_comparator(bb->keys[index], key)) {
+                    if (o_val) {
+                        *o_val = bb->vals[index];
+                    }
 
-            return res;
-        }
+                    return true;
+                }
 
-        // Returns true iff the key was found and removed.
-        t_b8 Remove(const tp_key_type key) {
-            const t_len hash_index = KeyToHashIndex(key, hm.hash_func, hm.immediate_indexes.len);
-
-            if (HashMapBackingBlockRemove(hm.backing_blocks_head, key, hm.immediate_indexes[hash_index])) {
-                hm.kv_pair_cnt--;
-                return true;
+                index = bb->next_indexes[index];
             }
 
             return false;
         }
-    #endif
+
+        // Try adding the key-value pair to the hash map or just updating the value if the key is already present.
+        [[nodiscard]] e_hash_map_put_result Put(const tp_key_type &key, const tp_val_type &val) {
+            const t_len hash_index = KeyToHashIndex(key, m_hash_func, m_immediate_indexes.Len());
+
+            s_backing_block *bb = m_backing_blocks_head;
+            t_len index = m_immediate_indexes[hash_index];
+            t_len *const index_to_update = nullptr;
+
+            while (true) {
+                if (!bb) {
+                    // Try creating a new backing block.
+                    bb = Alloc<s_backing_block>(m_mem_arena);
+
+                    if (!bb) {
+                        return ek_hash_map_put_result_error;
+                    }
+
+                    if (!AllocArray(m_backing_block_cap, m_mem_arena, &bb->keys)) {
+                        return ek_hash_map_put_result_error;
+                    }
+
+                    if (!AllocArray(m_backing_block_cap, m_mem_arena, &bb->vals)) {
+                        return ek_hash_map_put_result_error;
+                    }
+
+                    if (!AllocArray(m_backing_block_cap, m_mem_arena, &bb->next_indexes)) {
+                        return ek_hash_map_put_result_error;
+                    }
+
+                    if (!CreateBitVec(m_backing_block_cap, m_mem_arena, &bb->usage)) {
+                        return ek_hash_map_put_result_error;
+                    }
+                }
+
+                if (index == -1) {
+                    // We've reached the end of the chain without finding the key, so we need to create a new pair.
+                    if (!index_to_update) {
+                        index_to_update = &bb->next_indexes[index];
+                    }
+
+                    const t_len prospective_index = IndexOfFirstUnsetBit(bb->usage);
+
+                    if (prospective_index == -1) {
+                        // This block is full, so try again on the next.
+                        bb = bb->next;
+                        continue;
+                    }
+
+                    *index_to_update = prospective_index;
+
+                    bb->keys[prospective_index] = key;
+                    bb->vals[prospective_index] = val;
+                    bb->next_indexes[prospective_index] = -1;
+                    SetBit(bb->usage, prospective_index);
+
+                    m_kv_pair_cnt++;
+
+                    return ek_hash_map_put_result_added;
+                }
+
+                while (index >= m_backing_block_cap) {
+                    bb = bb->next;
+                    index -= m_backing_block_cap;
+                }
+
+                if (key_comparator(bb->keys[index], key)) {
+                    bb->vals[index] = val;
+                    return ek_hash_map_put_result_updated;
+                }
+
+                index = bb->next_indexes[index];
+            }
+        }
 
     private:
         struct s_backing_block {
             s_array<tp_key_type> keys = {};
             s_array<tp_val_type> vals = {};
-            s_array<t_len> next_indexes = {};
+            s_array<t_len> next_indexes = {}; // -1 means no "next", and a number greater than the BB capacity is referencing a pair on a later block.
             s_bit_vec usage = {};
 
             s_backing_block *next = nullptr;
@@ -215,8 +282,7 @@ namespace zf {
         s_backing_block *m_backing_blocks_head = nullptr;
 
         s_mem_arena *m_mem_arena = nullptr;
-    }
-#endif
+    };
 
 #if 0
     template <typename tp_type>
@@ -329,8 +395,7 @@ namespace zf {
         ZF_ASSERT(index >= -1);
 
         if (!bb) {
-            bb = PushToMemArena<s_hash_map_backing_block<tp_key_type, tp_val_type>>(
-                &new_bb_mem_arena);
+            bb = PushToMemArena<s_hash_map_backing_block<tp_key_type, tp_val_type>>( &new_bb_mem_arena);
 
             if (!bb || !InitHashMapBackingBlock(bb, new_bb_cap, &new_bb_mem_arena)) {
                 return ek_hash_map_put_result_error;
@@ -341,8 +406,7 @@ namespace zf {
             const t_len prospective_index = IndexOfFirstUnsetBit(bb->usage);
 
             if (prospective_index == -1) {
-                return HashMapBackingBlockPut(bb->next, key, key_comparator, val, index,
-                                              new_bb_cap, new_bb_mem_arena);
+                return HashMapBackingBlockPut(bb->next, key, key_comparator, val, index, new_bb_cap, new_bb_mem_arena);
             }
 
             index = prospective_index;
@@ -368,9 +432,7 @@ namespace zf {
             return ek_hash_map_put_result_updated;
         }
 
-        return HashMapBackingBlockPut(bb, key, key_comparator, val,
-                                      bb->next_indexes[index_copy], new_bb_cap,
-                                      new_bb_mem_arena);
+        return HashMapBackingBlockPut(bb, key, key_comparator, val, bb->next_indexes[index_copy], new_bb_cap, new_bb_mem_arena);
     }
 
     template <typename tp_key_type, typename tp_val_type>
@@ -469,14 +531,10 @@ namespace zf {
 
     // Returns true iff no error occurred.
     template <typename tp_key_type, typename tp_val_type>
-    [[nodiscard]] e_hash_map_put_result HashMapPut(s_hash_map<tp_key_type, tp_val_type> &hm,
-                                                   const tp_key_type &key,
-                                                   const tp_val_type &val) {
+    [[nodiscard]] e_hash_map_put_result HashMapPut(s_hash_map<tp_key_type, tp_val_type> &hm, const tp_key_type &key, const tp_val_type &val) {
         const t_len hash_index = KeyToHashIndex(key, hm.hash_func, hm.immediate_indexes.len);
 
-        const auto res = HashMapBackingBlockPut(hm.backing_blocks_head, key, hm.key_comparator,
-                                                val, hm.immediate_indexes[hash_index],
-                                                hm.backing_block_cap, *hm.mem_arena);
+        const auto res = HashMapBackingBlockPut(hm.backing_blocks_head, key, hm.key_comparator, val, hm.immediate_indexes[hash_index], hm.backing_block_cap, *hm.mem_arena);
 
         if (res == ek_hash_map_put_result_added) {
             hm.kv_pair_cnt++;
