@@ -7,7 +7,7 @@ namespace zf {
         ZF_ASSERT(!IsInitted());
         ZF_ASSERT(size > 0);
 
-        const auto buf = calloc(static_cast<size_t>(size), 1);
+        const auto buf = malloc(static_cast<size_t>(size));
 
         if (!buf) {
             return false;
@@ -62,14 +62,6 @@ namespace zf {
         m_offs = offs_next;
 
         return static_cast<t_u8 *>(m_buf) + offs_aligned;
-    }
-
-    void s_mem_arena::Rewind(const t_len offs) {
-        ZF_ASSERT(IsInitted());
-        ZF_ASSERT(offs >= 0 && offs <= m_offs);
-
-        memset(static_cast<t_u8 *>(m_buf) + offs, 0, static_cast<size_t>(m_offs - offs));
-        m_offs = offs;
     }
 
     // ============================================================

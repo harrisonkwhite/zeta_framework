@@ -70,13 +70,13 @@ namespace zf {
             return false;
         }
 
-        s_array<t_u8> px_data;
+        s_array<t_u8> rgba_px_data;
 
-        if (!AllocArray(4 * size_in_pxs.x * size_in_pxs.y, tex_data_mem_arena, &px_data)) {
+        if (!AllocArray(4 * size_in_pxs.x * size_in_pxs.y, tex_data_mem_arena, &rgba_px_data)) {
             return false;
         }
 
-        if (!fs.ReadItemsIntoArray(px_data, px_data.Len())) {
+        if (!fs.ReadItemsIntoArray(rgba_px_data, rgba_px_data.Len())) {
             return false;
         }
 

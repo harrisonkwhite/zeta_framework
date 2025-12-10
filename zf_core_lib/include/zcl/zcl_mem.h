@@ -15,6 +15,30 @@ namespace zf {
         return (n + alignment - 1) & ~(alignment - 1);
     }
 
+    template <typename tp_type>
+    struct s_ptr {
+    public:
+        constexpr s_ptr() = default;
+        constexpr s_ptr(tp_type *const raw) : m_raw(raw) {}
+
+        constexpr tp_type *Raw() const {
+            return m_raw;
+        }
+
+        constexpr tp_type &operator*() const {
+            ZF_ASSERT(m_raw);
+            return *m_raw;
+        }
+
+        constexpr tp_type *operator->() const {
+            ZF_ASSERT(m_raw);
+            return m_raw;
+        }
+
+    private:
+        tp_type *m_raw = nullptr;
+    };
+
     struct s_mem_arena {
     public:
         s_mem_arena() = default;
@@ -48,7 +72,12 @@ namespace zf {
             return buf;
         }
 
-        void Rewind(const t_len offs);
+        void Rewind(const t_len offs) {
+            ZF_ASSERT(IsInitted());
+            ZF_ASSERT(offs >= 0 && offs <= m_offs);
+
+            m_offs = offs;
+        }
 
     private:
         void *m_buf = nullptr;
