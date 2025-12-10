@@ -251,14 +251,14 @@ namespace zf {
 
         s_v2_i framebuffer_size_cache = {};
 
-        s_ptr<s_input_state> input_state = nullptr;
+        s_input_state *input_state = nullptr;
 
         t_b8 fullscreen_active = false;
         s_v2_i prefullscreen_pos = {};
         s_v2_i prefullscreen_size = {};
     };
 
-    t_b8 internal::InitPlatformLayer(const s_ptr<s_mem_arena> mem_arena, const s_ptr<s_input_state> input_state, s_platform_layer_info **const o_pli) {
+    t_b8 internal::InitPlatformLayer(s_mem_arena *const mem_arena, s_input_state *const input_state, s_platform_layer_info **const o_pli) {
         ZF_ASSERT(!g_initted);
 
         t_b8 clean_up = false;

@@ -33,7 +33,7 @@ namespace zf {
             return false;
         }
 
-        if (ma_decoder_read_pcm_frames(&decoder, pcm.Ptr().Raw(), frame_cnt, nullptr) != MA_SUCCESS) {
+        if (ma_decoder_read_pcm_frames(&decoder, pcm.Raw(), frame_cnt, nullptr) != MA_SUCCESS) {
             return false;
         }
 

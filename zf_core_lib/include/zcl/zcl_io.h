@@ -138,7 +138,7 @@ namespace zf {
             }
 
             case e_stream_type::file:
-                return static_cast<t_len>(fread(arr.Ptr().Raw(), sizeof(arr[0]), static_cast<size_t>(cnt), m_type_data.file.file)) == cnt;
+                return static_cast<t_len>(fread(arr.Raw(), sizeof(arr[0]), static_cast<size_t>(cnt), m_type_data.file.file)) == cnt;
             }
 
             ZF_ASSERT(false);
@@ -171,7 +171,7 @@ namespace zf {
             }
 
             case e_stream_type::file:
-                return static_cast<t_len>(fwrite(arr.Ptr().Raw(), sizeof(arr[0]), static_cast<size_t>(arr.Len()), m_type_data.file.file)) == arr.Len();
+                return static_cast<t_len>(fwrite(arr.Raw(), sizeof(arr[0]), static_cast<size_t>(arr.Len()), m_type_data.file.file)) == arr.Len();
             }
 
             ZF_ASSERT(false);
@@ -289,7 +289,7 @@ namespace zf {
     [[nodiscard]] t_b8 OpenFile(const s_str_rdonly file_path, const e_file_access_mode mode, s_stream *const o_stream);
     void CloseFile(s_stream *const stream);
     t_len CalcFileSize(const s_stream *const stream);
-    [[nodiscard]] t_b8 LoadFileContents(const s_str_rdonly file_path, s_mem_arena *const contents_mem_arena, s_mem_arena *const temp_mem_arena, s_array<t_u8> *const o_contents);
+    [[nodiscard]] t_b8 LoadFileContents(const s_str_rdonly file_path, s_mem_arena *const contents_mem_arena, s_array<t_u8> *const o_contents, const t_b8 add_terminator = false);
 
     enum class e_directory_creation_result : t_i32 {
         success,

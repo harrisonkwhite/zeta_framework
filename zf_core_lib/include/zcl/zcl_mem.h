@@ -15,16 +15,6 @@ namespace zf {
         return (n + alignment - 1) & ~(alignment - 1);
     }
 
-    struct s_mem_arena;
-
-    struct s_mem_arena_alloc_info {
-        void *ptr = nullptr;
-        t_len size = 0;
-
-        s_mem_arena *arena = nullptr;
-        t_len arena_version = 0;
-    };
-
     struct s_mem_arena {
     public:
         s_mem_arena() = default;
@@ -35,21 +25,17 @@ namespace zf {
         [[nodiscard]] t_b8 Init(const t_len size);
         [[nodiscard]] t_b8 InitAsChild(const t_len size, s_mem_arena *const par);
 
-        void Release();
-
-        t_b8 IsActive() const {
+        t_b8 IsInitted() const {
             return m_buf;
         }
 
-        t_len Version() const {
-            return m_version;
-        }
+        void Release();
 
         void *PushRaw(const t_len size, const t_len alignment);
 
         template <typename tp_type>
         tp_type *Push(const t_len cnt = 1) {
-            ZF_ASSERT(IsActive());
+            ZF_ASSERT(IsInitted());
 
             const auto buf = static_cast<tp_type *>(PushRaw(ZF_SIZE_OF(tp_type) * cnt, ZF_ALIGN_OF(tp_type)));
 
@@ -62,104 +48,18 @@ namespace zf {
             return buf;
         }
 
-        [[nodiscard]] t_b8 Request(const t_len size, const t_len alignment, s_mem_arena_alloc_info *const o_alloc_info) {
-            ZF_ASSERT(size > 0);
-            ZF_ASSERT(IsAlignmentValid(alignment));
+        void Rewind(const t_len offs) {
+            ZF_ASSERT(IsInitted());
+            ZF_ASSERT(offs >= 0 && offs <= m_offs);
 
-            const t_len offs_aligned = AlignForward(m_offs, alignment);
-            const t_len offs_next = offs_aligned + size;
-
-            if (offs_next > m_size) {
-                return false;
-            }
-
-            m_offs = offs_next;
-
-            *o_alloc_info = {
-                .ptr = static_cast<t_u8 *>(m_buf) + offs_aligned,
-                .size = size,
-                .arena = this,
-                .arena_version = m_version,
-            };
-
-            return true;
-        }
-
-        void Clear() {
-            ZF_ASSERT(IsActive());
-            m_offs = 0;
-            m_version++;
+            m_offs = offs;
         }
 
     private:
-        t_b8 m_initted = false;          // Can only do this once.
-        s_mem_arena *m_parent = nullptr; // nullptr if this has no parent.
         void *m_buf = nullptr;
         t_len m_size = 0;
         t_len m_offs = 0;
-        t_len m_version = 0; // Incremented on every clear.
-    };
-
-    inline t_b8 IsMemRegionValid(const t_u8 *const beg, const t_u8 *const end, const s_mem_arena_alloc_info arena_alloc_info) {
-        if (!arena_alloc_info.arena) {
-            return true;
-        }
-
-        if (!arena_alloc_info.arena->IsActive() || arena_alloc_info.arena->Version() != arena_alloc_info.arena_version) {
-            return false;
-        }
-
-        return beg >= static_cast<t_u8 *>(arena_alloc_info.ptr) && end <= static_cast<t_u8 *>(arena_alloc_info.ptr) + arena_alloc_info.size;
-    }
-
-    template <typename tp_type>
-    struct s_ptr {
-    public:
-        constexpr s_ptr() = default;
-
-        constexpr s_ptr(tp_type *const raw, const s_mem_arena_alloc_info arena_alloc_info = {}) : m_raw(raw), m_arena_alloc_info(arena_alloc_info) {
-            ZF_ASSERT(IsMemRegionValid(reinterpret_cast<const t_u8 *>(m_raw), reinterpret_cast<const t_u8 *>(m_raw + 1), m_arena_alloc_info));
-        }
-
-        constexpr tp_type *Raw() const {
-            ZF_ASSERT(IsMemRegionValid(reinterpret_cast<const t_u8 *>(m_raw), reinterpret_cast<const t_u8 *>(m_raw + 1), m_arena_alloc_info));
-            return m_raw;
-        }
-
-        constexpr s_mem_arena_alloc_info ArenaAllocInfo() const {
-            return m_arena_alloc_info;
-        }
-
-        constexpr tp_type &operator[](const t_len index) const {
-            ZF_ASSERT(IsMemRegionValid(reinterpret_cast<const t_u8 *>(m_raw), reinterpret_cast<const t_u8 *>(m_raw + index + 1), m_arena_alloc_info));
-            return m_raw[index];
-        }
-
-        constexpr tp_type &operator*() const {
-            ZF_ASSERT(m_raw);
-            ZF_ASSERT(IsMemRegionValid(reinterpret_cast<const t_u8 *>(m_raw), reinterpret_cast<const t_u8 *>(m_raw + 1), m_arena_alloc_info));
-
-            return *m_raw;
-        }
-
-        constexpr tp_type *operator->() const {
-            ZF_ASSERT(m_raw);
-            ZF_ASSERT(IsMemRegionValid(reinterpret_cast<const t_u8 *>(m_raw), reinterpret_cast<const t_u8 *>(m_raw + 1), m_arena_alloc_info));
-
-            return m_raw;
-        }
-
-        constexpr operator t_b8() const {
-            return m_raw != nullptr;
-        }
-
-        constexpr operator s_ptr<const tp_type>() const {
-            return s_ptr<const tp_type>(m_raw, m_arena_alloc_info);
-        }
-
-    private:
-        tp_type *m_raw = nullptr;
-        s_mem_arena_alloc_info m_arena_alloc_info = {};
+        t_b8 m_is_child = false; // Invalid to free the buffer if it is.
     };
 
     // ============================================================
@@ -175,13 +75,12 @@ namespace zf {
     public:
         constexpr s_array_rdonly() = default;
 
-        constexpr s_array_rdonly(const s_ptr<const tp_type> ptr, const t_len len) : m_ptr(ptr), m_len(len) {
-            ZF_ASSERT((ptr || len == 0) && len >= 0);
-            ZF_ASSERT(IsMemRegionValid(reinterpret_cast<const t_u8 *>(ptr.Raw()), reinterpret_cast<const t_u8 *>(ptr.Raw() + len), ptr.ArenaAllocInfo()));
+        constexpr s_array_rdonly(const tp_type *const raw, const t_len len) : m_raw(raw), m_len(len) {
+            ZF_ASSERT((raw || len == 0) && len >= 0);
         }
 
-        constexpr s_ptr<const tp_type> Ptr() const {
-            return m_ptr;
+        constexpr const tp_type *Raw() const {
+            return m_raw;
         }
 
         constexpr t_len Len() const {
@@ -198,7 +97,7 @@ namespace zf {
 
         constexpr const tp_type &operator[](const t_len index) const {
             ZF_ASSERT(index >= 0 && index < m_len);
-            return m_ptr[index];
+            return m_raw[index];
         }
 
         constexpr const tp_type &Last() const {
@@ -209,11 +108,11 @@ namespace zf {
             ZF_ASSERT(beg >= 0 && beg <= m_len);
             ZF_ASSERT(end >= beg && end <= m_len);
 
-            return {{m_ptr.Raw() + beg, m_ptr.ArenaAllocInfo()}, end - beg};
+            return {m_raw + beg, end - beg};
         }
 
         constexpr s_array_rdonly<t_u8> ToBytes() const {
-            return {reinterpret_cast<const t_u8 *>(m_ptr.Raw()), SizeInBytes()};
+            return {reinterpret_cast<const t_u8 *>(m_raw), SizeInBytes()};
         }
 
         constexpr t_b8 DoAllEqual(const tp_type &val, const t_bin_comparator<tp_type> comparator = DefaultBinComparator) const {
@@ -224,7 +123,7 @@ namespace zf {
             }
 
             for (t_len i = 0; i < m_len; i++) {
-                if (!comparator(operator[](i), val)) {
+                if (!comparator(m_raw[i], val)) {
                     return false;
                 }
             }
@@ -236,7 +135,7 @@ namespace zf {
             ZF_ASSERT(comparator);
 
             for (t_len i = 0; i < m_len; i++) {
-                if (comparator(operator[](i), val)) {
+                if (comparator(m_raw[i], val)) {
                     return true;
                 }
             }
@@ -249,19 +148,19 @@ namespace zf {
                 ZF_ASSERT(other.Len() >= m_len);
 
                 for (t_len i = 0; i < m_len; i++) {
-                    other[i] = operator[](i);
+                    other[i] = m_raw[i];
                 }
             } else {
                 const auto min = ZF_MIN(m_len, other.Len());
 
                 for (t_len i = 0; i < min; i++) {
-                    other[i] = operator[](i);
+                    other[i] = m_raw[i];
                 }
             }
         }
 
     private:
-        s_ptr<const tp_type> m_ptr = {};
+        const tp_type *m_raw = nullptr;
         t_len m_len = 0;
     };
 
@@ -272,13 +171,12 @@ namespace zf {
     public:
         constexpr s_array() = default;
 
-        constexpr s_array(const s_ptr<tp_type> ptr, const t_len len) : m_ptr(ptr), m_len(len) {
-            ZF_ASSERT((ptr || len == 0) && len >= 0);
-            ZF_ASSERT(IsMemRegionValid(reinterpret_cast<const t_u8 *>(ptr.Raw()), reinterpret_cast<const t_u8 *>(ptr.Raw() + len), ptr.ArenaAllocInfo()));
+        constexpr s_array(tp_type *const raw, const t_len len) : m_raw(raw), m_len(len) {
+            ZF_ASSERT((raw || len == 0) && len >= 0);
         }
 
-        constexpr s_ptr<tp_type> Ptr() const {
-            return m_ptr;
+        constexpr tp_type *Raw() const {
+            return m_raw;
         }
 
         constexpr t_len Len() const {
@@ -294,12 +192,12 @@ namespace zf {
         }
 
         constexpr operator s_array_rdonly<tp_type>() const {
-            return {m_ptr, m_len};
+            return {m_raw, m_len};
         }
 
         constexpr tp_type &operator[](const t_len index) const {
             ZF_ASSERT(index >= 0 && index < m_len);
-            return m_ptr[index];
+            return m_raw[index];
         }
 
         constexpr tp_type &Last() const {
@@ -310,11 +208,11 @@ namespace zf {
             ZF_ASSERT(beg >= 0 && beg <= m_len);
             ZF_ASSERT(end >= beg && end <= m_len);
 
-            return {{m_ptr.Raw() + beg, m_ptr.ArenaAllocInfo()}, end - beg};
+            return {m_raw + beg, end - beg};
         }
 
         constexpr s_array<t_u8> ToBytes() const {
-            return {reinterpret_cast<t_u8 *>(m_ptr.Raw()), SizeInBytes()};
+            return {reinterpret_cast<t_u8 *>(m_raw), SizeInBytes()};
         }
 
         constexpr t_b8 DoAllEqual(const tp_type &val, const t_bin_comparator<tp_type> comparator = DefaultBinComparator) const {
@@ -327,7 +225,7 @@ namespace zf {
 
         constexpr void SetAllTo(const tp_type &val) const {
             for (t_len i = 0; i < m_len; i++) {
-                operator[](i) = val;
+                m_raw[i] = val;
             }
         }
 
@@ -337,12 +235,12 @@ namespace zf {
 
         constexpr void Reverse() const {
             for (t_len i = 0; i < m_len / 2; i++) {
-                Swap(operator[](i), m_ptr[m_len - 1 - i]);
+                Swap(m_raw[i], m_raw[m_len - 1 - i]);
             }
         }
 
     private:
-        s_ptr<tp_type> m_ptr = nullptr;
+        tp_type *m_raw = nullptr;
         t_len m_len = 0;
     };
 
@@ -430,19 +328,13 @@ namespace zf {
     [[nodiscard]] t_b8 AllocArray(const t_len len, s_mem_arena *const mem_arena, s_array<tp_type> *const o_arr) {
         ZF_ASSERT(len > 0);
 
-        s_mem_arena_alloc_info arena_alloc_info;
+        const auto buf = mem_arena->Push<tp_type>(len);
 
-        if (!mem_arena->Request(ZF_SIZE_OF(tp_type) * len, ZF_ALIGN_OF(tp_type), &arena_alloc_info)) {
+        if (!buf) {
             return false;
         }
 
-        const auto ptr = static_cast<tp_type *>(arena_alloc_info.ptr);
-
-        for (t_len i = 0; i < len; i++) {
-            new (&ptr[i]) tp_type();
-        }
-
-        *o_arr = {{ptr, arena_alloc_info}, len};
+        *o_arr = {buf, len};
 
         return true;
     }

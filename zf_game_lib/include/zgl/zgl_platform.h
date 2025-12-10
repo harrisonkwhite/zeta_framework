@@ -37,7 +37,7 @@ namespace zf {
     struct s_input_state;
 
     namespace internal {
-        [[nodiscard]] t_b8 InitPlatformLayer(const s_ptr<s_mem_arena> mem_arena, const s_ptr<s_input_state> input_state, s_platform_layer_info **const o_pli);
+        [[nodiscard]] t_b8 InitPlatformLayer(s_mem_arena *const mem_arena, s_input_state *const input_state, s_platform_layer_info **const o_pli);
         void ShutdownPlatformLayer(const s_platform_layer_info *const pli);
 
         void PollOSEvents();

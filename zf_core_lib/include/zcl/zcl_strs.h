@@ -60,7 +60,7 @@ namespace zf {
         consteval s_str_rdonly(const char (&raw)[tp_len]) : bytes({raw, tp_len}) {}
 
         constexpr const char *Raw() const {
-            return bytes.Ptr().Raw();
+            return bytes.Raw();
         }
 
         t_b8 IsValid() const;
@@ -87,7 +87,7 @@ namespace zf {
         }
 
         constexpr char *Raw() const {
-            return bytes.Ptr().Raw();
+            return bytes.Raw();
         }
 
         t_b8 IsValid() const {

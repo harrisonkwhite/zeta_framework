@@ -113,7 +113,7 @@ namespace zf {
 
         as->snd_insts.types[index] = type;
 
-        if (ma_audio_buffer_ref_init(ma_format_f32, static_cast<ma_uint32>(type->snd_data.Meta().channel_cnt), type->snd_data.PCM().Ptr().Raw(), static_cast<ma_uint64>(type->snd_data.Meta().frame_cnt), &ma_buf_ref) != MA_SUCCESS) {
+        if (ma_audio_buffer_ref_init(ma_format_f32, static_cast<ma_uint32>(type->snd_data.Meta().channel_cnt), type->snd_data.PCM().Raw(), static_cast<ma_uint64>(type->snd_data.Meta().frame_cnt), &ma_buf_ref) != MA_SUCCESS) {
             clean_up = true;
             return false;
         }
