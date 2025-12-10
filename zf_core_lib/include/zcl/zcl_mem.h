@@ -16,6 +16,9 @@ namespace zf {
     }
 
     template <typename tp_type>
+    struct s_ptr;
+
+    template <typename tp_type>
     struct s_ptr_nonnull {
     public:
         constexpr s_ptr_nonnull(tp_type *const raw) : m_raw(raw) {
@@ -82,8 +85,12 @@ namespace zf {
             return *this;
         }
 
-        constexpr operator s_ptr_nonnull<const tp_type>() const
-            requires(!s_is_const<tp_type>::g_val)
+        constexpr operator s_ptr_nonnull<const tp_type>() const requires(!s_is_const<tp_type>::g_val)
+        {
+            return {m_raw};
+        }
+
+        constexpr operator s_ptr<const tp_type>() const requires(!s_is_const<tp_type>::g_val)
         {
             return {m_raw};
         }
@@ -159,6 +166,8 @@ namespace zf {
             return {m_raw};
         }
 
+        constexpr operator s_ptr<const void>() const;
+
         template <typename tp_type>
         explicit constexpr operator s_ptr_nonnull<tp_type>() const {
             return {static_cast<tp_type *>(m_raw)};
@@ -174,9 +183,7 @@ namespace zf {
         constexpr s_ptr() = default;
         constexpr s_ptr(tp_type *const raw) : m_raw(raw) {}
         constexpr s_ptr(const s_ptr_nonnull<tp_type> ptr) : m_raw(ptr.Raw()) {}
-        constexpr s_ptr(const s_ptr_nonnull<const tp_type> ptr)
-            requires(!s_is_const<tp_type>::g_val)
-            : m_raw(ptr.Raw()) {}
+        constexpr s_ptr(const s_ptr_nonnull<const tp_type> ptr) requires(!s_is_const<tp_type>::g_val) : m_raw(ptr.Raw()) {}
 
         constexpr tp_type *Raw() const {
             return m_raw;
@@ -241,8 +248,7 @@ namespace zf {
             return *this;
         }
 
-        constexpr operator s_ptr<const tp_type>() const
-            requires(!s_is_const<tp_type>::g_val)
+        constexpr operator s_ptr<const tp_type>() const requires(!s_is_const<tp_type>::g_val)
         {
             return {m_raw};
         }
@@ -251,8 +257,7 @@ namespace zf {
             return {m_raw};
         }
 
-        constexpr operator s_ptr_nonnull<const tp_type>() const
-            requires(!s_is_const<tp_type>::g_val)
+        constexpr operator s_ptr_nonnull<const tp_type>() const requires(!s_is_const<tp_type>::g_val)
         {
             return {m_raw};
         }
@@ -349,6 +354,10 @@ namespace zf {
     private:
         void *m_raw = nullptr;
     };
+
+    constexpr s_ptr_nonnull<void>::operator s_ptr<const void>() const {
+        return {m_raw};
+    }
 
     struct s_mem_arena {
     public:
