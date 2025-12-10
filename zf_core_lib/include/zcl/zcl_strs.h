@@ -46,12 +46,12 @@ namespace zf {
     }
 
     struct s_str_chr_info {
-        t_unicode_code_pt code_pt;
-        t_len byte_index;
+        t_unicode_code_pt code_pt = 0;
+        t_len byte_index = 0;
     };
 
     struct s_str_rdonly {
-        s_array_rdonly<char> bytes;
+        s_array_rdonly<char> bytes = {};
 
         constexpr s_str_rdonly() = default;
         constexpr s_str_rdonly(const s_array_rdonly<char> bytes) : bytes(bytes) {}
@@ -60,7 +60,7 @@ namespace zf {
         consteval s_str_rdonly(const char (&raw)[tp_len]) : bytes({raw, tp_len}) {}
 
         constexpr const char *Raw() const {
-            return bytes.Ptr();
+            return bytes.Ptr().Raw();
         }
 
         t_b8 IsValid() const;
@@ -80,14 +80,14 @@ namespace zf {
     };
 
     struct s_str {
-        s_array<char> bytes;
+        s_array<char> bytes = {};
 
         constexpr operator s_str_rdonly() const {
             return {bytes};
         }
 
         constexpr char *Raw() const {
-            return bytes.Ptr();
+            return bytes.Ptr().Raw();
         }
 
         t_b8 IsValid() const {

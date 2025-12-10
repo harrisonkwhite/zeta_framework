@@ -36,7 +36,7 @@ namespace zf {
 
             s_input_state input_state = {};
 
-            s_platform_layer_info *platform_layer_info;
+            s_ptr<s_platform_layer_info> platform_layer_info;
 
             if (!internal::InitPlatformLayer(&mem_arena, &input_state, &platform_layer_info)) {
                 ZF_REPORT_ERROR();
@@ -140,7 +140,7 @@ namespace zf {
                         }
                     }
 
-                    internal::CompleteFrame(rendering_context);
+                    //internal::CompleteFrame(rendering_context);
 #endif
 
                     internal::SwapWindowBuffers(platform_layer_info);

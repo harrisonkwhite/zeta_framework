@@ -16,10 +16,16 @@ namespace zf {
     }
 
     template <typename tp_type>
+    struct s_ptr;
+
+    template <typename tp_type>
+    struct s_ptr_nonnull;
+
+    template <typename tp_type>
     struct s_ptr {
     public:
-        s_ptr() = default;
-        s_ptr(tp_type *const raw) : m_raw(raw) {}
+        constexpr s_ptr() = default;
+        constexpr s_ptr(tp_type *const raw) : m_raw(raw) {}
 
         constexpr tp_type *Raw() const {
             return m_raw;
@@ -49,11 +55,11 @@ namespace zf {
         }
 
         constexpr s_ptr<tp_type> operator+(const t_len offs) const {
-            return s_ptr<tp_type>(m_raw + offs);
+            return m_raw + offs;
         }
 
         constexpr s_ptr<tp_type> operator-(const t_len offs) const {
-            return s_ptr<tp_type>(m_raw - offs);
+            return m_raw - offs;
         }
 
         constexpr s_ptr<tp_type> &operator++() {
@@ -77,12 +83,12 @@ namespace zf {
         }
 
         constexpr operator s_ptr<const tp_type>() const {
-            return s_ptr<const tp_type>(m_raw);
+            return m_raw;
         }
 
         template <typename tp_other_type>
         explicit constexpr operator s_ptr<tp_other_type>() const {
-            return s_ptr<tp_other_type>(reinterpret_cast<tp_other_type *>(m_raw));
+            return reinterpret_cast<tp_other_type *>(m_raw);
         }
 
     private:
@@ -109,7 +115,7 @@ namespace zf {
 
         template <typename tp_type>
         explicit constexpr operator s_ptr<const tp_type>() const {
-            return {static_cast<const tp_type *>(m_raw)};
+            return static_cast<const tp_type *>(m_raw);
         }
 
     private:
@@ -122,7 +128,7 @@ namespace zf {
         constexpr s_ptr() = default;
         constexpr s_ptr(void *const raw) : m_raw(raw) {}
 
-        constexpr const void *Raw() const {
+        constexpr void *Raw() const {
             return m_raw;
         }
 
@@ -135,8 +141,8 @@ namespace zf {
         }
 
         template <typename tp_type>
-        explicit constexpr operator s_ptr<tp_type>() {
-            return {static_cast<tp_type *>(m_raw)};
+        explicit constexpr operator s_ptr<tp_type>() const {
+            return static_cast<tp_type *>(m_raw);
         }
 
         constexpr operator s_ptr<const void>() const {
@@ -147,12 +153,16 @@ namespace zf {
         void *m_raw = nullptr;
     };
 
-#if 0
     template <typename tp_type>
     struct s_ptr_nonnull {
     public:
         constexpr s_ptr_nonnull(tp_type *const raw) : m_raw(raw) {
-            ZF_ASSERT(raw);
+            ZF_ASSERT(m_raw);
+        }
+
+        template <typename tp_other_type>
+        constexpr s_ptr_nonnull(const s_ptr<tp_other_type> ptr) : m_raw(ptr.Raw()) {
+            ZF_ASSERT(m_raw);
         }
 
         constexpr tp_type *Raw() const {
@@ -179,6 +189,47 @@ namespace zf {
             return m_raw[index];
         }
 
+        constexpr s_ptr_nonnull<tp_type> operator+(const t_len offs) const {
+            return m_raw + offs;
+        }
+
+        constexpr s_ptr_nonnull<tp_type> operator-(const t_len offs) const {
+            return m_raw - offs;
+        }
+
+        constexpr s_ptr_nonnull<tp_type> &operator++() {
+            ++m_raw;
+            return *this;
+        }
+
+        constexpr s_ptr_nonnull<tp_type> &operator--() {
+            --m_raw;
+            return *this;
+        }
+
+        constexpr s_ptr_nonnull<tp_type> &operator+=(const t_len offs) {
+            m_raw += offs;
+            return *this;
+        }
+
+        constexpr s_ptr_nonnull<tp_type> &operator-=(const t_len offs) {
+            m_raw -= offs;
+            return *this;
+        }
+
+        constexpr operator s_ptr<tp_type>() const {
+            return s_ptr<tp_type>(m_raw);
+        }
+
+        constexpr operator s_ptr_nonnull<const tp_type>() const {
+            return s_ptr_nonnull<const tp_type>(m_raw);
+        }
+
+        template <typename tp_other_type>
+        explicit constexpr operator s_ptr_nonnull<tp_other_type>() const {
+            return reinterpret_cast<tp_other_type *>(m_raw);
+        }
+
     private:
         tp_type *m_raw;
     };
@@ -187,7 +238,12 @@ namespace zf {
     struct s_ptr_nonnull<const void> {
     public:
         constexpr s_ptr_nonnull(const void *const raw) : m_raw(raw) {
-            ZF_ASSERT(raw);
+            ZF_ASSERT(m_raw);
+        }
+
+        template <typename tp_other_type>
+        constexpr s_ptr_nonnull(const s_ptr<tp_other_type> ptr) : m_raw(ptr.Raw()) {
+            ZF_ASSERT(m_raw);
         }
 
         constexpr const void *Raw() const {
@@ -202,9 +258,13 @@ namespace zf {
             return m_raw != nullptr;
         }
 
-        template <typename tp_type>
-        explicit constexpr operator s_ptr_nonnull<const tp_type>() const {
-            return {static_cast<const tp_type *>(m_raw)};
+        template <typename tp_other_type>
+        explicit constexpr operator s_ptr_nonnull<const tp_other_type>() const {
+            return static_cast<const tp_other_type *>(m_raw);
+        }
+
+        constexpr operator s_ptr<const void>() const {
+            return s_ptr<const void>(m_raw);
         }
 
     private:
@@ -215,7 +275,12 @@ namespace zf {
     struct s_ptr_nonnull<void> {
     public:
         constexpr s_ptr_nonnull(void *const raw) : m_raw(raw) {
-            ZF_ASSERT(raw);
+            ZF_ASSERT(m_raw);
+        }
+
+        template <typename tp_other_type>
+        constexpr s_ptr_nonnull(const s_ptr<tp_other_type> ptr) : m_raw(const_cast<void *>(static_cast<const void *>(ptr.Raw()))) {
+            ZF_ASSERT(m_raw);
         }
 
         constexpr void *Raw() const {
@@ -230,15 +295,26 @@ namespace zf {
             return m_raw != nullptr;
         }
 
-        template <typename tp_type>
-        explicit constexpr operator s_ptr_nonnull<tp_type>() const {
-            return {static_cast<tp_type *>(m_raw)};
+        template <typename tp_other_type>
+        explicit constexpr operator s_ptr_nonnull<tp_other_type>() const {
+            return static_cast<tp_other_type *>(m_raw);
+        }
+
+        constexpr operator s_ptr<void>() const {
+            return s_ptr<void>(m_raw);
+        }
+
+        constexpr operator s_ptr_nonnull<const void>() const {
+            return s_ptr_nonnull<const void>(m_raw);
+        }
+
+        constexpr operator s_ptr<const void>() const {
+            return s_ptr<const void>(m_raw);
         }
 
     private:
         void *m_raw;
     };
-#endif
 
     struct s_mem_arena {
     public:
