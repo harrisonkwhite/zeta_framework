@@ -42,7 +42,7 @@ namespace zf {
 
         void PollOSEvents();
 
-        void ShowWindow(const s_ptr<const s_platform_layer_info> pli);
+        void ShowWindow(const s_ptr_nonnull<const s_platform_layer_info> pli);
         t_b8 ShouldWindowClose(const s_ptr<const s_platform_layer_info> pli);
         void SwapWindowBuffers(const s_ptr<const s_platform_layer_info> pli);
     }

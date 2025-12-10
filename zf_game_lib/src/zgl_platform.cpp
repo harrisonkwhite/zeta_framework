@@ -397,7 +397,7 @@ namespace zf {
         glfwPollEvents();
     }
 
-    void internal::ShowWindow(const s_ptr<const s_platform_layer_info> pli) {
+    void internal::ShowWindow(const s_ptr_nonnull<const s_platform_layer_info> pli) {
         glfwShowWindow(pli->glfw_window);
     }
 
