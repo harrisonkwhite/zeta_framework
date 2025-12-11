@@ -4,7 +4,7 @@ ColumnLimit: 0
 NamespaceIndentation: All
 FixNamespaceComments: false
 AllowShortBlocksOnASingleLine: Empty
-AllowShortFunctionsOnASingleLine: Empty
+AllowShortFunctionsOnASingleLine: All
 DerivePointerAlignment: false
 PointerAlignment: Right
 IndentPPDirectives: BeforeHash
@@ -15,5 +15,6 @@ ContinuationIndentWidth: 4
 AllowShortLambdasOnASingleLine: None
 BreakBeforeBraces: Attach
 AccessModifierOffset: -4
+
 SortIncludes:
   Enabled: false

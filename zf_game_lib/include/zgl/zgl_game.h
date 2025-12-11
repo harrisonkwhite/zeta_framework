@@ -22,7 +22,7 @@ namespace zf {
         s_mem_arena &mem_arena;
         s_mem_arena &temp_mem_arena;
 
-        s_input_state &input_state;
+        const s_input_state &input_state;
 
         s_platform_layer_info &platform_layer_info;
 
@@ -32,6 +32,8 @@ namespace zf {
     struct s_game_render_context {
         s_mem_arena &mem_arena;
         s_mem_arena &temp_mem_arena;
+
+        s_rendering_context rendering_context;
     };
 
     using t_game_init_func = t_b8 (*)(const s_game_init_context &context);

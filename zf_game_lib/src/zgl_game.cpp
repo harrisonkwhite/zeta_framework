@@ -47,6 +47,12 @@ namespace zf {
                 return false;
             }
 
+            s_ptr<s_rendering_basis> rendering_basis = nullptr;
+
+            if (!internal::InitGFX(mem_arena, temp_mem_arena, rendering_basis)) {
+                return false;
+            }
+
             s_ptr<s_audio_sys> audio_sys = nullptr;
 
             if (!CreateAudioSys(mem_arena, audio_sys)) {
@@ -122,30 +128,28 @@ namespace zf {
                         frame_dur_accum -= targ_tick_interval;
                     } while (frame_dur_accum >= targ_tick_interval);
 
-#if 0
                     // Perform a single render.
-                    s_rendering_context rendering_context;
+                    s_rendering_context rendering_context = {};
 
-                    if (!internal::BeginFrame(&rendering_context, rendering_basis, WindowFramebufferSizeCache(platform_layer_info), &mem_arena)) {
+                    if (!internal::BeginFrame(*rendering_basis, WindowFramebufferSizeCache(*platform_layer_info), temp_mem_arena, rendering_context)) {
                         ZF_REPORT_ERROR();
                         return false;
                     }
 
                     {
                         const s_game_render_context context = {
-                            .mem_arena = &mem_arena,
-                            .temp_mem_arena = &temp_mem_arena,
+                            .mem_arena = mem_arena,
+                            .temp_mem_arena = temp_mem_arena,
                             .rendering_context = rendering_context,
                         };
 
-                        if (!info.render_func(context)) {
+                        if (!render_func(context)) {
                             ZF_REPORT_ERROR();
                             return false;
                         }
                     }
 
-                    //internal::CompleteFrame(rendering_context);
-#endif
+                    internal::CompleteFrame(rendering_context);
 
                     internal::SwapWindowBuffers(*platform_layer_info);
                 }
