@@ -3,7 +3,7 @@
 #include <GLFW/glfw3.h>
 #include <glad/glad.h>
 #include <zgl/zgl_input.h>
-#include <zgl/zgl_rendering.h>
+#include <zgl/zgl_gfx.h>
 
 namespace zf {
     constexpr e_key_code ConvertGLFWKeyCode(const t_i32 glfw_key) {
@@ -316,7 +316,7 @@ namespace zf {
         }
 
         // Set up callbacks.
-        glfwSetWindowUserPointer(o_pli->glfw_window, info);
+        glfwSetWindowUserPointer(o_pli->glfw_window, o_pli);
 
         {
             const auto fb_size_callback =
@@ -337,8 +337,8 @@ namespace zf {
                         return;
                     }
 
-                    const auto pl = static_cast<s_platform_layer_info *>(glfwGetWindowUserPointer(glfw_window));
-                    internal::ProcKeyAction(pl->input_state, ConvertGLFWKeyCode(key), ConvertGLFWKeyAction(act));
+                    const auto pli = static_cast<s_platform_layer_info *>(glfwGetWindowUserPointer(glfw_window));
+                    internal::ProcKeyAction(*pli->input_state, ConvertGLFWKeyCode(key), ConvertGLFWKeyAction(act));
                 };
 
             glfwSetKeyCallback(o_pli->glfw_window, key_callback);
@@ -347,8 +347,8 @@ namespace zf {
         {
             const auto mb_callback =
                 [](GLFWwindow *const glfw_window, const t_i32 btn, const t_i32 act, const t_i32 mods) {
-                    const auto pl = static_cast<s_platform_layer_info *>(glfwGetWindowUserPointer(glfw_window));
-                    internal::ProcMouseButtonAction(pl->input_state, ConvertGLFWMouseButtonCode(btn), ConvertGLFWMouseButtonAction(act));
+                    const auto pli = static_cast<s_platform_layer_info *>(glfwGetWindowUserPointer(glfw_window));
+                    internal::ProcMouseButtonAction(*pli->input_state, ConvertGLFWMouseButtonCode(btn), ConvertGLFWMouseButtonAction(act));
                 };
 
             glfwSetMouseButtonCallback(o_pli->glfw_window, mb_callback);
@@ -357,8 +357,8 @@ namespace zf {
         {
             const auto cursor_pos_callback =
                 [](GLFWwindow *const glfw_window, const t_f64 x, const t_f64 y) {
-                    const auto pl = static_cast<s_platform_layer_info *>(glfwGetWindowUserPointer(glfw_window));
-                    internal::ProcCursorMove(pl->input_state, {static_cast<t_f32>(x), static_cast<t_f32>(y)});
+                    const auto pli = static_cast<s_platform_layer_info *>(glfwGetWindowUserPointer(glfw_window));
+                    internal::ProcCursorMove(*pli->input_state, {static_cast<t_f32>(x), static_cast<t_f32>(y)});
                 };
 
             glfwSetCursorPosCallback(o_pli->glfw_window, cursor_pos_callback);
@@ -367,8 +367,8 @@ namespace zf {
         {
             const auto scroll_callback =
                 [](GLFWwindow *const glfw_window, const t_f64 offs_x, const t_f64 offs_y) {
-                    const auto pl = static_cast<s_platform_layer_info *>(glfwGetWindowUserPointer(glfw_window));
-                    internal::ProcScroll(pl->input_state, {static_cast<t_f32>(offs_x), static_cast<t_f32>(offs_y)});
+                    const auto pli = static_cast<s_platform_layer_info *>(glfwGetWindowUserPointer(glfw_window));
+                    internal::ProcScroll(*pli->input_state, {static_cast<t_f32>(offs_x), static_cast<t_f32>(offs_y)});
                 };
 
             glfwSetScrollCallback(o_pli->glfw_window, scroll_callback);
@@ -379,7 +379,7 @@ namespace zf {
         return true;
     }
 
-    void internal::ShutdownPlatformLayer(const s_ptr_nonnull<const s_platform_layer_info> pli) {
+    void internal::ShutdownPlatformLayer(const s_platform_layer_info &pli) {
         ZF_ASSERT(g_initted);
 
         glfwDestroyWindow(pli.glfw_window);
@@ -395,29 +395,29 @@ namespace zf {
         glfwPollEvents();
     }
 
-    void internal::ShowWindow(const s_ptr_nonnull<const s_platform_layer_info> pli) {
+    void internal::ShowWindow(const s_platform_layer_info &pli) {
         glfwShowWindow(pli.glfw_window);
     }
 
-    t_b8 internal::ShouldWindowClose(const s_ptr_nonnull<const s_platform_layer_info> pli) {
+    t_b8 internal::ShouldWindowClose(const s_platform_layer_info &pli) {
         return glfwWindowShouldClose(pli.glfw_window);
     }
 
-    void internal::SwapWindowBuffers(const s_ptr_nonnull<const s_platform_layer_info> pli) {
+    void internal::SwapWindowBuffers(const s_platform_layer_info &pli) {
         glfwSwapBuffers(pli.glfw_window);
     }
 
-    void SetWindowTitle(const s_ptr_nonnull<const s_platform_layer_info> pli, const s_str_rdonly title) {
+    void SetWindowTitle(const s_platform_layer_info &pli, const s_str_rdonly title) {
         ZF_ASSERT(title.IsValid());
         glfwSetWindowTitle(pli.glfw_window, title.Raw());
     }
 
-    void SetWindowSize(const s_ptr_nonnull<const s_platform_layer_info> pli, const s_v2_i size) {
+    void SetWindowSize(const s_platform_layer_info &pli, const s_v2_i size) {
         ZF_ASSERT(size.x > 0 && size.y > 0);
         glfwSetWindowSize(pli.glfw_window, size.x, size.y);
     }
 
-    void SetWindowSizeLimits(const s_ptr_nonnull<const s_platform_layer_info> pli, const t_i32 min_width, const t_i32 min_height, const t_i32 max_width, const t_i32 max_height) {
+    void SetWindowSizeLimits(const s_platform_layer_info &pli, const t_i32 min_width, const t_i32 min_height, const t_i32 max_width, const t_i32 max_height) {
         ZF_ASSERT(min_width >= -1 && min_height >= -1);
         ZF_ASSERT(max_width >= min_width || max_width == -1);
         ZF_ASSERT(max_height >= min_height || max_height == -1);
@@ -426,15 +426,15 @@ namespace zf {
         glfwSetWindowSizeLimits(pli.glfw_window, min_width, min_height, max_width, max_height);
     }
 
-    void SetWindowResizability(const s_ptr_nonnull<const s_platform_layer_info> pli, const t_b8 resizable) {
+    void SetWindowResizability(const s_platform_layer_info &pli, const t_b8 resizable) {
         glfwSetWindowAttrib(pli.glfw_window, GLFW_RESIZABLE, resizable);
     }
 
-    s_v2_i WindowFramebufferSizeCache(const s_ptr_nonnull<const s_platform_layer_info> pli) {
+    s_v2_i WindowFramebufferSizeCache(const s_platform_layer_info &pli) {
         return pli.framebuffer_size_cache;
     }
 
-    t_b8 IsFullscreen(const s_ptr_nonnull<const s_platform_layer_info> pli) {
+    t_b8 IsFullscreen(const s_platform_layer_info &pli) {
         return pli.fullscreen_active;
     }
 
@@ -481,7 +481,7 @@ namespace zf {
         return monitors[max_occupancy_monitor_index];
     }
 
-    s_v2_i CalcMonitorPixelSize(const s_ptr_nonnull<const s_platform_layer_info> pli) {
+    s_v2_i CalcMonitorPixelSize(const s_platform_layer_info &pli) {
         const auto monitor = MonitorOfWindow(pli.glfw_window);
 
         if (!monitor) {
@@ -492,7 +492,7 @@ namespace zf {
         return {mode->width, mode->height};
     }
 
-    s_v2_i CalcMonitorLogicalSize(const s_ptr_nonnull<const s_platform_layer_info> pli) {
+    s_v2_i CalcMonitorLogicalSize(const s_platform_layer_info &pli) {
         const auto monitor = MonitorOfWindow(pli.glfw_window);
 
         if (!monitor) {
@@ -507,7 +507,7 @@ namespace zf {
         return {static_cast<t_i32>(static_cast<t_f32>(mode->width) / monitor_scale.x), static_cast<t_i32>(static_cast<t_f32>(mode->height) / monitor_scale.y)};
     }
 
-    void SetFullscreen(const s_platform_layer_info &pli, const t_b8 fs) {
+    void SetFullscreen(s_platform_layer_info &pli, const t_b8 fs) {
         if (fs == pli.fullscreen_active) {
             return;
         }
@@ -531,7 +531,7 @@ namespace zf {
         pli.fullscreen_active = fs;
     }
 
-    void SetCursorVisibility(const s_ptr_nonnull<const s_platform_layer_info> pli, const t_b8 visible) {
+    void SetCursorVisibility(const s_platform_layer_info &pli, const t_b8 visible) {
         glfwSetInputMode(pli.glfw_window, GLFW_CURSOR, visible ? GLFW_CURSOR_NORMAL : GLFW_CURSOR_HIDDEN);
     }
 }

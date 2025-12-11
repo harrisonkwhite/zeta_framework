@@ -41,16 +41,16 @@ namespace zf {
         return true;
     }
 
-    void CloseFile(s_stream *const stream) {
-        ZF_ASSERT(stream->Type() == e_stream_type::file);
-        fclose(stream->File());
-        *stream = {};
+    void CloseFile(s_stream &stream) {
+        ZF_ASSERT(stream.Type() == e_stream_type::file);
+        fclose(stream.File());
+        stream = {};
     }
 
-    t_len CalcFileSize(s_stream *const stream) {
-        ZF_ASSERT(stream->Type() == e_stream_type::file);
+    t_len CalcFileSize(s_stream &stream) {
+        ZF_ASSERT(stream.Type() == e_stream_type::file);
 
-        const auto &file = stream->File();
+        const auto &file = stream.File();
         const auto pos_old = ftell(file);
         fseek(file, 0, SEEK_END);
         const auto file_size = ftell(file);
@@ -67,9 +67,9 @@ namespace zf {
             return false;
         }
 
-        ZF_DEFER({ CloseFile(&stream); });
+        ZF_DEFER({ CloseFile(stream); });
 
-        const t_len file_size = CalcFileSize(&stream);
+        const t_len file_size = CalcFileSize(stream);
 
         if (!AllocArray(add_terminator ? file_size + 1 : file_size, contents_mem_arena, o_contents)) {
             return false;
@@ -228,7 +228,7 @@ namespace zf {
             return false;
         }
 
-        CloseFile(&fs);
+        CloseFile(fs);
 
         return true;
     }

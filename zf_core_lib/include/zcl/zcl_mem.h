@@ -16,6 +16,159 @@ namespace zf {
         return (n + alignment - 1) & ~(alignment - 1);
     }
 
+    template <typename tp_type>
+    struct s_ptr {
+    public:
+        constexpr s_ptr() = default;
+        constexpr s_ptr(tp_type *const raw) : m_raw(raw) {}
+
+        constexpr tp_type *Raw() const {
+            return m_raw;
+        }
+
+        constexpr operator tp_type *() const {
+            return m_raw;
+        }
+
+        constexpr operator t_b8() const {
+            return m_raw != nullptr;
+        }
+
+        constexpr tp_type &operator*() const {
+            ZF_ASSERT(m_raw);
+            return *m_raw;
+        }
+
+        constexpr tp_type *operator->() const {
+            ZF_ASSERT(m_raw);
+            return m_raw;
+        }
+
+        constexpr tp_type &operator[](const t_len index) const {
+            ZF_ASSERT(m_raw);
+            return m_raw[index];
+        }
+
+        constexpr t_b8 operator==(const s_ptr<tp_type> other) const {
+            return m_raw == other.m_raw;
+        }
+
+        constexpr t_b8 operator!=(const s_ptr<tp_type> other) const {
+            return m_raw != other.m_raw;
+        }
+
+        constexpr s_ptr<tp_type> operator+(const t_len offs) const {
+            return {m_raw + offs};
+        }
+
+        constexpr s_ptr<tp_type> operator-(const t_len offs) const {
+            return {m_raw - offs};
+        }
+
+        constexpr s_ptr<tp_type> &operator++() {
+            m_raw++;
+            return *this;
+        }
+
+        constexpr s_ptr<tp_type> &operator--() {
+            m_raw--;
+            return *this;
+        }
+
+        constexpr s_ptr<tp_type> &operator+=(const t_len offs) {
+            m_raw += offs;
+            return *this;
+        }
+
+        constexpr s_ptr<tp_type> &operator-=(const t_len offs) {
+            m_raw -= offs;
+            return *this;
+        }
+
+        constexpr operator s_ptr<const tp_type>() const
+            requires(!s_is_const<tp_type>::g_val)
+        {
+            return {m_raw};
+        }
+
+    private:
+        tp_type *m_raw = nullptr;
+    };
+
+    template <>
+    struct s_ptr<const void> {
+    public:
+        constexpr s_ptr() = default;
+        constexpr s_ptr(const void *const raw) : m_raw(raw) {}
+
+        constexpr const void *Raw() const {
+            return m_raw;
+        }
+
+        constexpr operator const void *() const {
+            return m_raw;
+        }
+
+        constexpr operator t_b8() const {
+            return m_raw != nullptr;
+        }
+
+        constexpr t_b8 operator==(const s_ptr<const void> other) const {
+            return m_raw == other.m_raw;
+        }
+
+        constexpr t_b8 operator!=(const s_ptr<const void> other) const {
+            return m_raw != other.m_raw;
+        }
+
+        template <typename tp_type>
+        explicit constexpr operator s_ptr<const tp_type>() const {
+            return {static_cast<const tp_type *>(m_raw)};
+        }
+
+    private:
+        const void *m_raw = nullptr;
+    };
+
+    template <>
+    struct s_ptr<void> {
+    public:
+        constexpr s_ptr() = default;
+        constexpr s_ptr(void *const raw) : m_raw(raw) {}
+
+        constexpr void *Raw() const {
+            return m_raw;
+        }
+
+        constexpr operator void *() const {
+            return m_raw;
+        }
+
+        constexpr operator t_b8() const {
+            return m_raw != nullptr;
+        }
+
+        constexpr t_b8 operator==(const s_ptr<void> other) const {
+            return m_raw == other.m_raw;
+        }
+
+        constexpr t_b8 operator!=(const s_ptr<void> other) const {
+            return m_raw != other.m_raw;
+        }
+
+        constexpr operator s_ptr<const void>() const {
+            return {m_raw};
+        }
+
+        template <typename tp_type>
+        explicit constexpr operator s_ptr<tp_type>() const {
+            return {static_cast<tp_type *>(m_raw)};
+        }
+
+    private:
+        void *m_raw = nullptr;
+    };
+
     struct s_mem_arena {
     public:
         s_mem_arena() = default;
@@ -350,6 +503,16 @@ namespace zf {
         arr_to_clone.CopyTo(*o_arr);
 
         return true;
+    }
+
+    template <typename tp_type>
+    constexpr s_array<t_u8> ToBytes(tp_type &val) {
+        return {reinterpret_cast<t_u8 *>(&val), ZF_SIZE_OF(val)};
+    }
+
+    template <typename tp_type>
+    constexpr s_array_rdonly<t_u8> ToBytes(const tp_type &val) {
+        return {reinterpret_cast<const t_u8 *>(&val), ZF_SIZE_OF(val)};
     }
 
     // ============================================================

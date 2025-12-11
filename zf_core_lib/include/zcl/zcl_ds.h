@@ -159,7 +159,7 @@ namespace zf {
                 .m_mem_arena = mem_arena,
             };
 
-            if (!AllocArray(cap, mem_arena, &m_immediate_indexes)) {
+            if (!AllocArray(cap, mem_arena, m_immediate_indexes)) {
                 return false;
             }
 
@@ -359,19 +359,19 @@ namespace zf {
             s_backing_block *next = nullptr;
 
             [[nodiscard]] t_b8 Init(const t_len cap, s_mem_arena &mem_arena) {
-                if (!AllocArray(cap, mem_arena, &keys)) {
+                if (!AllocArray(cap, mem_arena, keys)) {
                     return false;
                 }
 
-                if (!AllocArray(cap, mem_arena, &vals)) {
+                if (!AllocArray(cap, mem_arena, vals)) {
                     return false;
                 }
 
-                if (!AllocArray(cap, mem_arena, &next_indexes)) {
+                if (!AllocArray(cap, mem_arena, next_indexes)) {
                     return false;
                 }
 
-                if (!CreateBitVec(cap, mem_arena, &usage)) {
+                if (!CreateBitVec(cap, mem_arena, usage)) {
                     return false;
                 }
 

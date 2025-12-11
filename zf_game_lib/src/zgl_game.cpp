@@ -22,7 +22,7 @@ namespace zf {
             //
             // Initialisation
             //
-            s_mem_arena mem_arena;
+            s_mem_arena mem_arena = {};
 
             if (!mem_arena.Init(Megabytes(80))) {
                 ZF_REPORT_ERROR();
@@ -31,7 +31,7 @@ namespace zf {
 
             ZF_DEFER({ mem_arena.Release(); });
 
-            s_mem_arena temp_mem_arena;
+            s_mem_arena temp_mem_arena = {};
 
             if (!temp_mem_arena.InitAsChild(Megabytes(10), mem_arena)) {
                 ZF_REPORT_ERROR();
@@ -40,14 +40,14 @@ namespace zf {
 
             s_input_state input_state = {};
 
-            s_platform_layer_info *platform_layer_info;
+            s_platform_layer_info *platform_layer_info = nullptr;
 
             if (!internal::InitPlatformLayer(mem_arena, input_state, platform_layer_info)) {
                 ZF_REPORT_ERROR();
                 return false;
             }
 
-            s_audio_sys *audio_sys;
+            s_audio_sys *audio_sys = nullptr;
 
             if (!CreateAudioSys(mem_arena, audio_sys)) {
                 ZF_REPORT_ERROR();

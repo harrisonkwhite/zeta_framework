@@ -233,11 +233,11 @@ namespace zf {
                 return false;
             }
 
-            if (!stream.ReadItemsIntoArray(*o_arr, len)) {
+            if (!stream.ReadItemsIntoArray(o_arr, len)) {
                 return false;
             }
         } else {
-            *o_arr = {};
+            o_arr = {};
         }
 
         return true;
