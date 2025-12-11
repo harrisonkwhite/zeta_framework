@@ -11,7 +11,7 @@ namespace zf {
         s_list() = default;
         s_list(const s_list &) = delete;
 
-        s_list(const s_array<tp_type> backing_arr, const t_len len) : m_backing_arr(backing_arr), m_len(len) {
+        s_list(const s_array<tp_type> backing_arr, const t_len len = 0) : m_backing_arr(backing_arr), m_len(len) {
             ZF_ASSERT(len >= 0 && len <= backing_arr.Len());
         }
 
@@ -57,7 +57,7 @@ namespace zf {
             ZF_ASSERT(index >= 0 && index <= m_len);
 
             for (t_len i = m_len; i > index; i--) {
-                m_backing_arr[m_len] = m_backing_arr[m_len - 1];
+                m_backing_arr[i] = m_backing_arr[i - 1];
             }
 
             m_len++;
@@ -73,7 +73,7 @@ namespace zf {
         }
 
         void RemoveSwapback(const t_len index) {
-            ZF_ASSERT(m_len > 0 && m_len <= m_backing_arr.Len());
+            ZF_ASSERT(!IsEmpty());
             ZF_ASSERT(index >= 0 && index < m_len);
 
             m_backing_arr[index] = m_backing_arr[m_len - 1];
@@ -81,7 +81,7 @@ namespace zf {
         }
 
         tp_type RemoveLast() {
-            ZF_ASSERT(m_len > 0 && m_len <= m_backing_arr.Len());
+            ZF_ASSERT(!IsEmpty());
 
             m_len--;
             return m_backing_arr[m_len];
@@ -90,6 +90,15 @@ namespace zf {
     private:
         s_array<tp_type> m_backing_arr = {};
         t_len m_len = 0;
+    };
+
+    template <typename tp_type, t_len tp_cap>
+    struct s_static_list : public s_list<tp_type> {
+    public:
+        s_static_list() : s_list<tp_type>(m_backing_arr) {}
+
+    private:
+        s_static_array<tp_type, tp_cap> m_backing_arr = {};
     };
 
     template <typename tp_type>
@@ -103,6 +112,94 @@ namespace zf {
         }
 
         o_list = {backing_arr, len};
+
+        return true;
+    }
+
+    // ============================================================
+    // @section: Stack
+    // ============================================================
+    template <typename tp_type>
+    struct s_stack {
+        static_assert(!s_is_const<tp_type>::g_val);
+
+    public:
+        s_stack() = default;
+        s_stack(const s_stack &) = delete;
+
+        s_stack(const s_array<tp_type> backing_arr, const t_len height = 0) : m_backing_arr(backing_arr), m_height(height) {
+            ZF_ASSERT(height >= 0 && height <= backing_arr.Len());
+        }
+
+        s_array<tp_type> BackingArray() {
+            return m_backing_arr;
+        }
+
+        t_len Height() const {
+            return m_height;
+        }
+
+        t_len Cap() const {
+            return m_backing_arr.Len();
+        }
+
+        t_b8 IsEmpty() const {
+            return m_height == 0;
+        }
+
+        t_b8 IsFull() const {
+            return m_height == m_backing_arr.Len();
+        }
+
+        tp_type &operator[](const t_len index) const {
+            ZF_ASSERT(index >= 0 && index < m_height);
+            return m_backing_arr[index];
+        }
+
+        tp_type &Peek() const {
+            return operator[](m_height - 1);
+        }
+
+        tp_type &Push(const tp_type &val) {
+            ZF_ASSERT(!IsFull());
+
+            m_backing_arr[m_height] = val;
+            m_height++;
+            return m_backing_arr[m_height - 1];
+        }
+
+        tp_type Pop() {
+            ZF_ASSERT(!IsEmpty());
+
+            m_height--;
+            return m_backing_arr[m_height];
+        }
+
+    private:
+        s_array<tp_type> m_backing_arr = {};
+        t_len m_height = 0;
+    };
+
+    template <typename tp_type, t_len tp_cap>
+    struct s_static_stack : public s_stack<tp_type> {
+    public:
+        s_static_stack() : s_stack<tp_type>(m_backing_arr) {}
+
+    private:
+        s_static_array<tp_type, tp_cap> m_backing_arr = {};
+    };
+
+    template <typename tp_type>
+    [[nodiscard]] t_b8 CreateStack(const t_len cap, s_mem_arena &mem_arena, s_stack<tp_type> &o_stack, const t_len height = 0) {
+        ZF_ASSERT(cap > 0 && height >= 0 && height <= cap);
+
+        s_array<tp_type> backing_arr;
+
+        if (!AllocArray(cap, mem_arena, backing_arr)) {
+            return false;
+        }
+
+        o_stack = {backing_arr, height};
 
         return true;
     }
