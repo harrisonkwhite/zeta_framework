@@ -65,7 +65,7 @@ namespace zf {
         return snd_meta.channel_cnt * snd_meta.frame_cnt;
     }
 
-    [[nodiscard]] t_b8 LoadSoundFromRaw(const s_str_rdonly file_path, s_mem_arena &snd_data_mem_arena, s_sound_data &o_snd_data);
+    [[nodiscard]] t_b8 LoadSoundFromRaw(const s_str_rdonly file_path, s_mem_arena &snd_data_mem_arena, s_mem_arena &temp_mem_arena, s_sound_data &o_snd_data);
     [[nodiscard]] t_b8 PackSound(const s_str_rdonly file_path, const s_sound_data snd_data, s_mem_arena &temp_mem_arena);
     [[nodiscard]] t_b8 UnpackSound(const s_str_rdonly file_path, s_mem_arena &snd_data_mem_arena, s_mem_arena &temp_mem_arena, s_sound_data &o_snd_data);
     [[nodiscard]] t_b8 SerializeSound(s_stream &stream, const s_sound_data snd_data);

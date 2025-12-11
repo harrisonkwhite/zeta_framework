@@ -8,10 +8,14 @@ namespace zf {
     // @section: Textures
     // ============================================================
     t_b8 LoadTextureFromRaw(const s_str_rdonly file_path, s_mem_arena &tex_data_mem_arena, s_mem_arena &temp_mem_arena, s_texture_data &o_tex_data) {
-        ZF_ASSERT(file_path.IsValid());
+        s_str file_path_terminated = {};
+
+        if (!AllocStrCloneWithTerminator(file_path, temp_mem_arena, file_path_terminated)) {
+            return false;
+        }
 
         s_v2_i size_in_pxs = {};
-        const s_ptr<t_u8> stb_px_data = stbi_load(file_path.Raw(), &size_in_pxs.x, &size_in_pxs.y, nullptr, 4);
+        const s_ptr<t_u8> stb_px_data = stbi_load(file_path_terminated.Cstr(), &size_in_pxs.x, &size_in_pxs.y, nullptr, 4);
 
         if (!stb_px_data) {
             return false;
@@ -34,15 +38,13 @@ namespace zf {
     }
 
     t_b8 PackTexture(const s_str_rdonly file_path, const s_texture_data tex_data, s_mem_arena &temp_mem_arena) {
-        ZF_ASSERT(file_path.IsValid());
-
         if (!CreateFileAndParentDirs(file_path, temp_mem_arena)) {
             return false;
         }
 
         s_stream fs = {};
 
-        if (!OpenFile(file_path, ek_file_access_mode_write, fs)) {
+        if (!OpenFile(file_path, ek_file_access_mode_write, temp_mem_arena, fs)) {
             return false;
         }
 
@@ -60,11 +62,9 @@ namespace zf {
     }
 
     t_b8 UnpackTexture(const s_str_rdonly file_path, s_mem_arena &tex_data_mem_arena, s_mem_arena &temp_mem_arena, s_texture_data &o_tex_data) {
-        ZF_ASSERT(file_path.IsValid());
-
         s_stream fs = {};
 
-        if (!OpenFile(file_path, ek_file_access_mode_read, fs)) {
+        if (!OpenFile(file_path, ek_file_access_mode_read, temp_mem_arena, fs)) {
             return false;
         }
 
@@ -92,7 +92,7 @@ namespace zf {
     // ============================================================
     // @section: Fonts
     // ============================================================
-    constexpr t_hash_func<t_unicode_code_pt> g_code_pt_hash_func = [](const t_unicode_code_pt &code_pt) constexpr {
+    constexpr t_hash_func<t_code_pt> g_code_pt_hash_func = [](const t_code_pt &code_pt) constexpr {
         return static_cast<t_len>(code_pt);
     };
 
@@ -106,7 +106,6 @@ namespace zf {
     };
 
     e_font_load_from_raw_result LoadFontFromRaw(const s_str_rdonly file_path, const t_i32 height, const t_unicode_code_pt_bit_vec &code_pts, s_mem_arena &arrangement_mem_arena, s_mem_arena &atlas_rgbas_mem_arena, s_mem_arena &temp_mem_arena, s_font_arrangement &o_arrangement, s_array<t_font_atlas_rgba> &o_atlas_rgbas, const s_ptr<t_unicode_code_pt_bit_vec> o_unsupported_code_pts) {
-        ZF_ASSERT(file_path.IsValid());
         ZF_ASSERT(height > 0);
 
         const t_len code_pt_cnt = CntSetBits(code_pts);
@@ -118,7 +117,7 @@ namespace zf {
         // Get the plain font file data.
         s_array<t_u8> font_file_data = {};
 
-        if (!LoadFileContents(file_path, temp_mem_arena, font_file_data)) {
+        if (!LoadFileContents(file_path, temp_mem_arena, temp_mem_arena, font_file_data)) {
             return ek_font_load_from_raw_result_other_err;
         }
 
@@ -141,7 +140,7 @@ namespace zf {
             UnsetAllBits(*o_unsupported_code_pts);
 
             ZF_FOR_EACH_SET_BIT(code_pts, i) {
-                const auto code_pt = static_cast<t_unicode_code_pt>(i);
+                const auto code_pt = static_cast<t_code_pt>(i);
 
                 const t_i32 glyph_index = stbtt_FindGlyphIndex(&stb_font_info, static_cast<t_i32>(code_pt));
 
@@ -156,7 +155,7 @@ namespace zf {
             }
         } else {
             ZF_FOR_EACH_SET_BIT(code_pts, i) {
-                const auto code_pt = static_cast<t_unicode_code_pt>(i);
+                const auto code_pt = static_cast<t_code_pt>(i);
 
                 const t_i32 glyph_index = stbtt_FindGlyphIndex(&stb_font_info, static_cast<t_i32>(code_pt));
 
@@ -185,7 +184,7 @@ namespace zf {
         s_v2_i atlas_pen = {};
 
         ZF_FOR_EACH_SET_BIT(code_pts, i) {
-            const auto code_pt = static_cast<t_unicode_code_pt>(i);
+            const auto code_pt = static_cast<t_code_pt>(i);
 
             const t_i32 glyph_index = stbtt_FindGlyphIndex(&stb_font_info, static_cast<t_i32>(code_pt));
 
@@ -239,8 +238,8 @@ namespace zf {
 
         ZF_FOR_EACH_SET_BIT(code_pts, i) {
             ZF_FOR_EACH_SET_BIT(code_pts, j) {
-                const auto cp_a = static_cast<t_unicode_code_pt>(i);
-                const auto cp_b = static_cast<t_unicode_code_pt>(j);
+                const auto cp_a = static_cast<t_code_pt>(i);
+                const auto cp_b = static_cast<t_code_pt>(j);
 
                 const auto glyph_a_index = stbtt_FindGlyphIndex(&stb_font_info, static_cast<t_i32>(cp_a));
                 const auto glyph_b_index = stbtt_FindGlyphIndex(&stb_font_info, static_cast<t_i32>(cp_b));
@@ -277,7 +276,7 @@ namespace zf {
 
         // Write pixel data for each individual glyph.
         ZF_FOR_EACH_SET_BIT(code_pts, i) {
-            const auto code_pt = static_cast<t_unicode_code_pt>(i);
+            const auto code_pt = static_cast<t_code_pt>(i);
 
             s_font_glyph_info glyph_info = {};
 
@@ -314,9 +313,6 @@ namespace zf {
     }
 
     t_b8 PackFont(const s_str_rdonly dest_file_path, const s_str_rdonly src_file_path, const t_i32 height, const t_unicode_code_pt_bit_vec &code_pts, s_mem_arena &temp_mem_arena, e_font_load_from_raw_result &o_font_load_from_raw_res, const s_ptr<t_unicode_code_pt_bit_vec> o_unsupported_code_pts) {
-        ZF_ASSERT(dest_file_path.IsValid());
-        ZF_ASSERT(src_file_path.IsValid());
-
         s_font_arrangement arrangement = {};
         s_array<t_font_atlas_rgba> atlas_rgbas = {};
 
@@ -332,7 +328,7 @@ namespace zf {
 
         s_stream fs = {};
 
-        if (!OpenFile(dest_file_path, ek_file_access_mode_write, fs)) {
+        if (!OpenFile(dest_file_path, ek_file_access_mode_write, temp_mem_arena, fs)) {
             return false;
         }
 
@@ -358,14 +354,12 @@ namespace zf {
     }
 
     t_b8 UnpackFont(const s_str_rdonly file_path, s_mem_arena &arrangement_mem_arena, s_mem_arena &atlas_rgbas_mem_arena, s_mem_arena &temp_mem_arena, s_font_arrangement &o_arrangement, s_array<t_font_atlas_rgba> &o_atlas_rgbas) {
-        ZF_ASSERT(file_path.IsValid());
-
         o_arrangement = {};
         o_atlas_rgbas = {};
 
         s_stream fs = {};
 
-        if (!OpenFile(file_path, ek_file_access_mode_read, fs)) {
+        if (!OpenFile(file_path, ek_file_access_mode_read, temp_mem_arena, fs)) {
             return false;
         }
 
@@ -391,7 +385,7 @@ namespace zf {
     }
 
     t_b8 LoadStrChrDrawPositions(const s_str_rdonly str, const s_font_arrangement &font_arrangement, const s_v2 pos, const s_v2 alignment, s_mem_arena &mem_arena, s_array<s_v2> &o_positions) {
-        ZF_ASSERT(str.IsValid());
+        ZF_ASSERT(IsStrValidUTF8(str));
         ZF_ASSERT(IsAlignmentValid(alignment));
 
         // Calculate some useful string metadata.
@@ -427,7 +421,7 @@ namespace zf {
         s_v2 chr_pos_pen = {}; // The position of the current character.
         t_len line_begin_chr_index = 0;
         t_len line_len = 0;
-        t_unicode_code_pt code_pt_last;
+        t_code_pt code_pt_last;
 
         const auto apply_hor_alignment_offs = [&]() {
             if (line_len > 0) {
@@ -492,13 +486,9 @@ namespace zf {
     // @section: Shaders
     // ============================================================
     t_b8 PackShaderProg(const s_str_rdonly file_path, const s_str vert_src, const s_str frag_src, s_mem_arena &temp_mem_arena) {
-        ZF_ASSERT(file_path.IsValid());
-        ZF_ASSERT(vert_src.IsValid());
-        ZF_ASSERT(frag_src.IsValid());
-
         s_stream fs = {};
 
-        if (!OpenFile(file_path, ek_file_access_mode_write, fs)) {
+        if (!OpenFile(file_path, ek_file_access_mode_write, temp_mem_arena, fs)) {
             return false;
         }
 
@@ -516,11 +506,9 @@ namespace zf {
     }
 
     t_b8 UnpackShaderProg(const s_str_rdonly file_path, s_mem_arena &mem_arena, s_mem_arena &temp_mem_arena, s_str &o_vert_src, s_str &o_frag_src) {
-        ZF_ASSERT(file_path.IsValid());
-
         s_stream fs = {};
 
-        if (!OpenFile(file_path, ek_file_access_mode_read, fs)) {
+        if (!OpenFile(file_path, ek_file_access_mode_read, temp_mem_arena, fs)) {
             return false;
         }
 

@@ -26,22 +26,13 @@ namespace zf {
         s_stream() = default;
 
         s_stream(const s_array<t_u8> bytes, const e_stream_mode mode, const t_len pos = 0)
-            : m_type(ek_stream_type_mem), m_type_data({.mem = {.bytes = bytes, .pos = pos}}), m_mode(mode) {
-            ZF_ASSERT(pos >= 0 && pos <= bytes.Len());
-        }
+            : m_type(ek_stream_type_mem), m_type_data({.mem = {.bytes = bytes, .pos = pos}}), m_mode(mode) { ZF_ASSERT(pos >= 0 && pos <= bytes.Len()); }
 
         s_stream(const s_ptr<FILE> file, const e_stream_mode mode)
-            : m_type(ek_stream_type_file), m_type_data({.file = {.file = file}}), m_mode(mode) {
-            ZF_ASSERT(file);
-        }
+            : m_type(ek_stream_type_file), m_type_data({.file = {.file = file}}), m_mode(mode) { ZF_ASSERT(file); }
 
-        e_stream_type Type() const {
-            return m_type;
-        }
-
-        e_stream_mode Mode() const {
-            return m_mode;
-        }
+        e_stream_type Type() const { return m_type; }
+        e_stream_mode Mode() const { return m_mode; }
 
         t_len Pos() const {
             ZF_ASSERT(m_type == ek_stream_type_mem);
@@ -76,10 +67,11 @@ namespace zf {
 
             case ek_stream_type_file:
                 return fread(&o_item, size, 1, m_type_data.file.file) == 1;
-            }
 
-            ZF_ASSERT(false);
-            return false;
+            default:
+                ZF_ASSERT(false);
+                return false;
+            }
         }
 
         template <typename tp_type>
@@ -105,10 +97,11 @@ namespace zf {
 
             case ek_stream_type_file:
                 return fwrite(&item, size, 1, m_type_data.file.file) == 1;
-            }
 
-            ZF_ASSERT(false);
-            return false;
+            default:
+                ZF_ASSERT(false);
+                return false;
+            }
         }
 
         template <c_nonstatic_mut_array tp_type>
@@ -139,10 +132,11 @@ namespace zf {
 
             case ek_stream_type_file:
                 return static_cast<t_len>(fread(arr.Ptr().Raw(), sizeof(arr[0]), static_cast<size_t>(cnt), m_type_data.file.file)) == cnt;
-            }
 
-            ZF_ASSERT(false);
-            return false;
+            default:
+                ZF_ASSERT(false);
+                return false;
+            }
         }
 
         template <c_nonstatic_array tp_type>
@@ -172,10 +166,11 @@ namespace zf {
 
             case ek_stream_type_file:
                 return static_cast<t_len>(fwrite(arr.Ptr().Raw(), sizeof(arr[0]), static_cast<size_t>(arr.Len()), m_type_data.file.file)) == arr.Len();
-            }
 
-            ZF_ASSERT(false);
-            return false;
+            default:
+                ZF_ASSERT(false);
+                return false;
+            }
         }
 
     private:
@@ -188,6 +183,11 @@ namespace zf {
             } mem;
 
             struct {
+                s_array<char> bytes;
+                t_len pos;
+            } str;
+
+            struct {
                 s_ptr<FILE> file;
             } file;
         } m_type_data = {};
@@ -195,17 +195,9 @@ namespace zf {
         e_stream_mode m_mode = {};
     };
 
-    inline s_stream StdIn() {
-        return {stdin, ek_stream_mode_read};
-    }
-
-    inline s_stream StdOut() {
-        return {stdout, ek_stream_mode_write};
-    }
-
-    inline s_stream StdError() {
-        return {stderr, ek_stream_mode_write};
-    }
+    inline s_stream StdIn() { return {stdin, ek_stream_mode_read}; }
+    inline s_stream StdOut() { return {stdout, ek_stream_mode_write}; }
+    inline s_stream StdError() { return {stderr, ek_stream_mode_write}; }
 
     template <c_nonstatic_array tp_type>
     [[nodiscard]] t_b8 SerializeArray(s_stream &stream, const tp_type arr) {
@@ -286,24 +278,10 @@ namespace zf {
         ek_file_access_mode_append
     };
 
-    [[nodiscard]] t_b8 OpenFile(const s_str_rdonly file_path, const e_file_access_mode mode, s_stream &o_stream);
+    [[nodiscard]] t_b8 OpenFile(const s_str_rdonly file_path, const e_file_access_mode mode, s_mem_arena &temp_mem_arena, s_stream &o_stream);
     void CloseFile(s_stream &stream);
     t_len CalcFileSize(const s_stream &stream);
-
-    [[nodiscard]] t_b8 LoadFileContents(const s_str_rdonly file_path, s_mem_arena &contents_mem_arena, s_array<t_u8> &o_contents, const t_b8 add_terminator = false);
-
-    // This DOES NOT check whether the string is valid UTF-8, but it does guarantee termination.
-    [[nodiscard]] inline t_b8 LoadFileContentsAsStr(const s_str_rdonly file_path, s_mem_arena &contents_mem_arena, s_str &o_contents) {
-        s_array<t_u8> contents_u8 = {};
-
-        if (!LoadFileContents(file_path, contents_mem_arena, contents_u8, true)) {
-            return false;
-        }
-
-        o_contents = {{reinterpret_cast<char *>(contents_u8.Ptr().Raw()), contents_u8.Len()}};
-
-        return true;
-    }
+    [[nodiscard]] t_b8 LoadFileContents(const s_str_rdonly file_path, s_mem_arena &contents_mem_arena, s_mem_arena &temp_mem_arena, s_array<t_u8> &o_contents);
 
     enum e_directory_creation_result : t_i32 {
         ek_directory_creation_result_success,
@@ -313,7 +291,7 @@ namespace zf {
         ek_directory_creation_result_unknown_err
     };
 
-    [[nodiscard]] t_b8 CreateDirectory(const s_str_rdonly path, const s_ptr<e_directory_creation_result> o_creation_res = nullptr); // This DOES NOT create non-existent parent directories.
+    [[nodiscard]] t_b8 CreateDirectory(const s_str_rdonly path, s_mem_arena &temp_mem_arena, const s_ptr<e_directory_creation_result> o_creation_res = nullptr); // This DOES NOT create non-existent parent directories.
     [[nodiscard]] t_b8 CreateDirectoryAndParents(const s_str_rdonly path, s_mem_arena &temp_mem_arena, const s_ptr<e_directory_creation_result> o_dir_creation_res = nullptr);
     [[nodiscard]] t_b8 CreateFileAndParentDirs(const s_str_rdonly path, s_mem_arena &temp_mem_arena, const s_ptr<e_directory_creation_result> o_dir_creation_res = nullptr);
 
@@ -323,5 +301,267 @@ namespace zf {
         ek_path_type_directory
     };
 
-    [[nodiscard]] t_b8 CheckPathType(const s_str_rdonly path, e_path_type &o_type);
+    [[nodiscard]] t_b8 CheckPathType(const s_str_rdonly path, s_mem_arena &temp_mem_arena, e_path_type &o_type);
+
+    // ============================================================
+    // @section: Printing
+    // ============================================================
+    inline t_b8 Print(s_stream &stream, const s_str_rdonly str) {
+        return stream.WriteItemsOfArray(str.bytes);
+    }
+
+    inline t_b8 PrintFormat(s_stream &stream, const s_str_rdonly fmt);
+
+    template <typename tp_arg_type, typename... tp_arg_types_leftover>
+    t_b8 PrintFormat(s_stream &stream, const s_str_rdonly fmt, const tp_arg_type &arg, const tp_arg_types_leftover &...args_leftover);
+
+    // Type format structs which are to be accepted as format printing arguments need to meet this (i.e. have the tag).
+    template <typename tp_type>
+    concept c_fmt = requires { typename tp_type::t_fmt_tag; };
+
+    // ========================================
+    // @subsection: Bool Printing
+    // ========================================
+    struct s_bool_fmt {
+        using t_fmt_tag = void;
+        t_b8 val = false;
+    };
+
+    inline s_bool_fmt FormatBool(const t_b8 val) { return {val}; }
+    inline s_bool_fmt FormatDefault(const t_b8 val) { return FormatBool(val); }
+
+    inline t_b8 PrintType(s_stream &stream, const s_bool_fmt &fmt) {
+        return fmt.val ? Print(stream, "true") : Print(stream, "false");
+    }
+
+    // ========================================
+    // @subsection: String Printing
+    // ========================================
+    struct s_str_fmt {
+        using t_fmt_tag = void;
+        s_str_rdonly val = {};
+    };
+
+    inline s_str_fmt FormatStr(const s_str_rdonly val) { return {val}; }
+    inline s_str_fmt FormatDefault(const s_str_rdonly val) { return FormatStr(val); }
+
+    inline t_b8 PrintType(s_stream &stream, const s_str_fmt &fmt) {
+        return Print(stream, fmt.val);
+    }
+
+    // ========================================
+    // @subsection: Array Printing
+    // ========================================
+    template <c_nonstatic_array tp_arr_type>
+    struct s_array_fmt {
+        using t_fmt_tag = void;
+
+        tp_arr_type val = {};
+        t_b8 one_per_line = false;
+    };
+
+    template <c_nonstatic_array tp_arr_type>
+    s_array_fmt<tp_arr_type> FormatArray(const tp_arr_type val, const t_b8 one_per_line = false) {
+        return {val, one_per_line};
+    }
+
+    template <typename tp_type, t_len tp_len>
+    s_array_fmt<s_array_rdonly<tp_type>> FormatArray(const s_static_array<tp_type, tp_len> &val, const t_b8 one_per_line = false) {
+        return {val.ToNonstatic(), one_per_line};
+    }
+
+    template <c_nonstatic_array tp_arr_type>
+    s_array_fmt<tp_arr_type> FormatDefault(const tp_arr_type val) {
+        return FormatArray(val);
+    }
+
+    template <typename tp_type, t_len tp_len>
+    s_array_fmt<s_array_rdonly<tp_type>> FormatDefault(const s_static_array<tp_type, tp_len> &val) {
+        return FormatArray(val.ToNonstatic());
+    }
+
+    template <typename tp_type>
+    t_b8 PrintType(s_stream &stream, const s_array_fmt<tp_type> &fmt) {
+        if (fmt.one_per_line) {
+            for (t_len i = 0; i < fmt.val.len; i++) {
+                if (!PrintFormat(stream, "[%] %%", i, fmt.val[i], i < fmt.val.len - 1 ? s_str_rdonly("\n") : s_str_rdonly(""))) {
+                    return false;
+                }
+            }
+        } else {
+            if (!Print(stream, "[")) {
+                return false;
+            }
+
+            for (t_len i = 0; i < fmt.val.len; i++) {
+                if (!PrintFormat(stream, "%", fmt.val[i])) {
+                    return false;
+                }
+
+                if (i < fmt.val.len - 1) {
+                    if (!Print(stream, ", ")) {
+                        return false;
+                    }
+                }
+            }
+
+            if (!Print(stream, "]")) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    // ========================================
+    // @subsection: Format Printing
+    // ========================================
+    constexpr t_code_pt g_print_fmt_spec = '%';
+    constexpr t_code_pt g_print_fmt_esc = '^';
+
+    constexpr t_len CountFormatSpecifiers(const s_str_rdonly str) {
+        static_assert(IsASCII(g_print_fmt_spec) && IsASCII(g_print_fmt_esc)); // Assuming this for this algorithm.
+
+        t_b8 escaped = false;
+        t_len cnt = 0;
+
+        for (t_len i = 0; i < str.bytes.Len(); i++) {
+            if (!escaped) {
+                if (str.bytes[i] == g_print_fmt_esc) {
+                    escaped = true;
+                } else if (str.bytes[i] == g_print_fmt_spec) {
+                    cnt++;
+                }
+            } else {
+                escaped = false;
+            }
+        }
+
+        return cnt;
+    }
+
+    inline t_b8 PrintFormat(s_stream &stream, const s_str_rdonly fmt) {
+        ZF_ASSERT(CountFormatSpecifiers(fmt) == 0);
+
+        // Just print the rest of the string.
+        return Print(stream, fmt);
+    }
+
+    // Use a single '%' as the format specifier. To actually include a '%' in the output, write "^%". To actually include a '^', write "^^".
+    // Returns true iff the operation was successful.
+    template <typename tp_arg_type, typename... tp_arg_types_leftover>
+    t_b8 PrintFormat(s_stream &stream, const s_str_rdonly fmt, const tp_arg_type &arg, const tp_arg_types_leftover &...args_leftover) {
+        ZF_ASSERT(CountFormatSpecifiers(fmt) == 1 + sizeof...(args_leftover));
+
+        static_assert(IsASCII(g_print_fmt_spec) && IsASCII(g_print_fmt_esc)); // Assuming this for this algorithm.
+
+        t_b8 escaped = false;
+
+        for (t_len i = 0; i < fmt.bytes.Len(); i++) {
+            if (!escaped) {
+                if (fmt.bytes[i] == g_print_fmt_esc) {
+                    escaped = true;
+                    continue;
+                } else if (fmt.bytes[i] == g_print_fmt_spec) {
+                    if constexpr (c_fmt<tp_arg_type>) {
+                        if (!PrintType(stream, arg)) {
+                            return false;
+                        }
+                    } else {
+                        if (!PrintType(stream, FormatDefault(arg))) {
+                            return false;
+                        }
+                    }
+
+                    const s_str_rdonly fmt_leftover = {fmt.bytes.Slice(i + 1, fmt.bytes.Len())}; // The substring of everything after the format specifier.
+                    return PrintFormat(stream, fmt_leftover, args_leftover...);
+                }
+            }
+
+            if (!stream.WriteItem(fmt.bytes[i])) {
+                return false;
+            }
+
+            escaped = false;
+        }
+
+        return true;
+    }
+
+    // ========================================
+    // @subsection: Logging Helpers
+    // ========================================
+    template <typename... tp_arg_types>
+    t_b8 Log(const s_str_rdonly fmt, const tp_arg_types &...args) {
+        s_stream std_err = StdOut();
+
+        if (!PrintFormat(std_err, fmt, args...)) {
+            return false;
+        }
+
+        if (!Print(std_err, "\n")) {
+            return false;
+        }
+
+        return true;
+    }
+
+    template <typename... tp_arg_types>
+    t_b8 LogError(const s_str_rdonly fmt, const tp_arg_types &...args) {
+        s_stream std_err = StdError();
+
+        if (!Print(std_err, "Error: ")) {
+            return false;
+        }
+
+        if (!PrintFormat(std_err, fmt, args...)) {
+            return false;
+        }
+
+        if (!Print(std_err, "\n")) {
+            return false;
+        }
+
+        return true;
+    }
+
+    template <typename... tp_arg_types>
+    t_b8 LogErrorType(const s_str_rdonly type_name, const s_str_rdonly fmt, const tp_arg_types &...args) {
+        ZF_ASSERT(!type_name.IsEmpty());
+
+        s_stream std_err = StdError();
+
+        if (!PrintFormat(std_err, "% Error: ", type_name)) {
+            return false;
+        }
+
+        if (!PrintFormat(std_err, fmt, args...)) {
+            return false;
+        }
+
+        if (!Print(std_err, "\n")) {
+            return false;
+        }
+
+        return true;
+    }
+
+    template <typename... tp_arg_types>
+    t_b8 LogWarning(const s_str_rdonly fmt, const tp_arg_types &...args) {
+        s_stream std_err = StdError();
+
+        if (!Print(std_err, "Warning: ")) {
+            return false;
+        }
+
+        if (!PrintFormat(std_err, fmt, args...)) {
+            return false;
+        }
+
+        if (!Print(std_err, "\n")) {
+            return false;
+        }
+
+        return true;
+    }
 }

@@ -59,7 +59,7 @@ namespace zf {
             .audio_sys = type_arena.audio_sys,
         };
 
-        if (!LoadSoundFromRaw(file_path, *type_arena.mem_arena, o_type->snd_data)) {
+        if (!LoadSoundFromRaw(file_path, *type_arena.mem_arena, temp_mem_arena, o_type->snd_data)) {
             return false;
         }
 

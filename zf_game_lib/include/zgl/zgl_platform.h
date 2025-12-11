@@ -7,7 +7,7 @@ namespace zf {
 
     t_f64 Time();
 
-    void SetWindowTitle(const s_platform_layer_info &pli, const s_str_rdonly title);
+    [[nodiscard]] t_b8 SetWindowTitle(const s_platform_layer_info &pli, const s_str_rdonly title, s_mem_arena &temp_mem_arena);
 
     // Sets the LOGICAL window size. The actual new framebuffer size MIGHT be larger if there is DPI scaling.
     void SetWindowSize(const s_platform_layer_info &pli, const s_v2_i size);

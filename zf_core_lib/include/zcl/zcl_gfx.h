@@ -256,14 +256,14 @@ namespace zf {
     };
 
     struct s_font_code_point_pair {
-        t_unicode_code_pt a = 0;
-        t_unicode_code_pt b = 0;
+        t_code_pt a = 0;
+        t_code_pt b = 0;
     };
 
     struct s_font_arrangement {
         t_i32 line_height = 0;
 
-        s_hash_map<t_unicode_code_pt, s_font_glyph_info> code_pts_to_glyph_infos = {}; // Some duplicity here since a single glyph might have multiple code points mapped to it.
+        s_hash_map<t_code_pt, s_font_glyph_info> code_pts_to_glyph_infos = {}; // Some duplicity here since a single glyph might have multiple code points mapped to it.
 
         t_b8 has_kernings = 0;
         s_hash_map<s_font_code_point_pair, t_i32> code_pt_pairs_to_kernings = {};

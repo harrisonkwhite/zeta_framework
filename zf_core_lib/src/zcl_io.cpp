@@ -9,25 +9,29 @@
 #endif
 
 namespace zf {
-    t_b8 OpenFile(const s_str_rdonly path, const e_file_access_mode mode, s_stream &o_stream) {
-        ZF_ASSERT(path.IsValid());
+    t_b8 OpenFile(const s_str_rdonly path, const e_file_access_mode mode, s_mem_arena &temp_mem_arena, s_stream &o_stream) {
+        s_str path_terminated = {};
+
+        if (!AllocStrCloneWithTerminator(path, temp_mem_arena, path_terminated)) {
+            return false;
+        }
 
         s_ptr<FILE> file = nullptr;
         e_stream_mode stream_mode;
 
         switch (mode) {
         case ek_file_access_mode_read:
-            file = fopen(path.Raw(), "rb");
+            file = fopen(path_terminated.Cstr(), "rb");
             stream_mode = ek_stream_mode_read;
             break;
 
         case ek_file_access_mode_write:
-            file = fopen(path.Raw(), "wb");
+            file = fopen(path_terminated.Cstr(), "wb");
             stream_mode = ek_stream_mode_write;
             break;
 
         case ek_file_access_mode_append:
-            file = fopen(path.Raw(), "ab");
+            file = fopen(path_terminated.Cstr(), "ab");
             stream_mode = ek_stream_mode_write;
             break;
         }
@@ -58,12 +62,10 @@ namespace zf {
         return static_cast<t_len>(file_size);
     }
 
-    t_b8 LoadFileContents(const s_str_rdonly path, s_mem_arena &contents_mem_arena, s_array<t_u8> &o_contents, const t_b8 add_terminator) {
-        ZF_ASSERT(path.IsValid());
+    t_b8 LoadFileContents(const s_str_rdonly path, s_mem_arena &contents_mem_arena, s_mem_arena &temp_mem_arena, s_array<t_u8> &o_contents) {
+        s_stream stream = {};
 
-        s_stream stream;
-
-        if (!OpenFile(path, ek_file_access_mode_read, stream)) {
+        if (!OpenFile(path, ek_file_access_mode_read, temp_mem_arena, stream)) {
             return false;
         }
 
@@ -71,7 +73,7 @@ namespace zf {
 
         const t_len file_size = CalcFileSize(stream);
 
-        if (!AllocArray(add_terminator ? file_size + 1 : file_size, contents_mem_arena, o_contents)) {
+        if (!AllocArray(file_size, contents_mem_arena, o_contents)) {
             return false;
         }
 
@@ -82,17 +84,21 @@ namespace zf {
         return true;
     }
 
-    t_b8 CreateDirectory(const s_str_rdonly path, const s_ptr<e_directory_creation_result> o_creation_res) {
-        ZF_ASSERT(path.IsValid());
-
+    t_b8 CreateDirectory(const s_str_rdonly path, s_mem_arena &temp_mem_arena, const s_ptr<e_directory_creation_result> o_creation_res) {
         if (o_creation_res) {
             *o_creation_res = ek_directory_creation_result_success;
         }
 
+        s_str path_terminated = {};
+
+        if (!AllocStrCloneWithTerminator(path, temp_mem_arena, path_terminated)) {
+            return false;
+        }
+
 #ifdef ZF_PLATFORM_WINDOWS
-        const t_i32 res = _mkdir(path.Raw());
+        const t_i32 res = _mkdir(path_terminated.Cstr());
 #else
-        const t_s32 res = mkdir(path.Raw(), 0755);
+        const t_s32 res = mkdir(path_terminated.Cstr(), 0755);
 #endif
 
         if (res == 0) {
@@ -123,22 +129,20 @@ namespace zf {
         return false;
     }
 
-    static t_b8 CreateDirectoryAndParentsHelper(const s_str path_mut, const s_ptr<e_directory_creation_result> o_dir_creation_res) {
-        ZF_ASSERT(path_mut.IsValid());
-
+    t_b8 CreateDirectoryAndParents(const s_str_rdonly path, s_mem_arena &temp_mem_arena, const s_ptr<e_directory_creation_result> o_dir_creation_res) {
         if (o_dir_creation_res) {
             *o_dir_creation_res = ek_directory_creation_result_success;
         }
 
-        const auto create_dir_if_nonexistent = [o_dir_creation_res, path_mut]() {
-            e_path_type path_type;
+        const auto create_dir_if_nonexistent = [o_dir_creation_res, &temp_mem_arena](const s_str_rdonly path) {
+            e_path_type path_type = {};
 
-            if (!CheckPathType(path_mut, path_type)) {
+            if (!CheckPathType(path, temp_mem_arena, path_type)) {
                 return false;
             }
 
             if (path_type == ek_path_type_not_found) {
-                if (!CreateDirectory(path_mut, o_dir_creation_res)) {
+                if (!CreateDirectory(path, temp_mem_arena, o_dir_creation_res)) {
                     return false;
                 }
             }
@@ -148,17 +152,12 @@ namespace zf {
 
         t_b8 cur_dir_name_is_empty = true;
 
-        ZF_WALK_STR(path_mut, chr_info) {
-            if (chr_info.code_pt == '/' || chr_info.code_pt == '\\') {
+        ZF_WALK_STR(path, info) {
+            if (info.code_pt == '/' || info.code_pt == '\\') {
                 if (!cur_dir_name_is_empty) {
-                    const auto byte_old = path_mut.bytes[chr_info.byte_index];
-                    path_mut.bytes[chr_info.byte_index] = '\0';
-
-                    if (!create_dir_if_nonexistent()) {
+                    if (!create_dir_if_nonexistent({path.bytes.Slice(0, info.byte_index)})) {
                         return false;
                     }
-
-                    path_mut.bytes[chr_info.byte_index] = byte_old;
 
                     cur_dir_name_is_empty = true;
                 }
@@ -168,7 +167,7 @@ namespace zf {
         }
 
         if (!cur_dir_name_is_empty) {
-            if (!create_dir_if_nonexistent()) {
+            if (!create_dir_if_nonexistent(path)) {
                 return false;
             }
         }
@@ -176,55 +175,26 @@ namespace zf {
         return true;
     }
 
-    t_b8 CreateDirectoryAndParents(const s_str_rdonly path, s_mem_arena &temp_mem_arena, const s_ptr<e_directory_creation_result> o_dir_creation_res) {
-        ZF_ASSERT(path.IsValid());
-
-        // Create a mutable copy of the path (so terminators can be put in at different points) and call the helper.
-        s_str path_clone = {};
-
-        if (!AllocArray(path.bytes.Len(), temp_mem_arena, path_clone.bytes)) {
-            return false;
-        }
-
-        path.bytes.CopyTo(path_clone.bytes);
-
-        return CreateDirectoryAndParentsHelper(path_clone, o_dir_creation_res);
-    }
-
     t_b8 CreateFileAndParentDirs(const s_str_rdonly path, s_mem_arena &temp_mem_arena, const s_ptr<e_directory_creation_result> o_dir_creation_res) {
         if (o_dir_creation_res) {
             *o_dir_creation_res = ek_directory_creation_result_success;
         }
 
-        // Create a mutable copy of the path (so a terminator can be put in).
-        s_str path_clone = {};
-
-        if (!AllocArray(path.bytes.Len(), temp_mem_arena, path_clone.bytes)) {
-            return false;
-        }
-
-        path.bytes.CopyTo(path_clone.bytes);
-
         // Get the substring containing all directories and create them.
-        ZF_WALK_STR_REVERSE(path, chr_info) {
-            if (chr_info.code_pt == '/' || chr_info.code_pt == '\\') {
-                const auto byte_old = path_clone.bytes[chr_info.byte_index];
-                path_clone.bytes[chr_info.byte_index] = '\0';
-
-                if (!CreateDirectoryAndParents(path_clone, temp_mem_arena, o_dir_creation_res)) {
+        ZF_WALK_STR_REVERSE(path, info) {
+            if (info.code_pt == '/' || info.code_pt == '\\') {
+                if (!CreateDirectoryAndParents({path.bytes.Slice(0, info.byte_index)}, temp_mem_arena, o_dir_creation_res)) {
                     return false;
                 }
-
-                path_clone.bytes[chr_info.byte_index] = byte_old;
 
                 break;
             }
         }
 
         // Now that directories are created, create the file.
-        s_stream fs;
+        s_stream fs = {};
 
-        if (!OpenFile(path, ek_file_access_mode_write, fs)) {
+        if (!OpenFile(path, ek_file_access_mode_write, temp_mem_arena, fs)) {
             return false;
         }
 
@@ -233,12 +203,16 @@ namespace zf {
         return true;
     }
 
-    t_b8 CheckPathType(const s_str_rdonly path, e_path_type &o_type) {
-        ZF_ASSERT(path.IsValid());
+    t_b8 CheckPathType(const s_str_rdonly path, s_mem_arena &temp_mem_arena, e_path_type &o_type) {
+        s_str path_terminated = {};
 
-        struct stat info;
+        if (!AllocStrCloneWithTerminator(path, temp_mem_arena, path_terminated)) {
+            return false;
+        }
 
-        if (stat(path.Raw(), &info) != 0) {
+        struct stat info = {};
+
+        if (stat(path.Cstr(), &info) != 0) {
             o_type = ek_path_type_not_found;
         } else if (info.st_mode & S_IFDIR) {
             o_type = ek_path_type_directory;

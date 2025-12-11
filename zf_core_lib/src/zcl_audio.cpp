@@ -3,19 +3,23 @@
 #include <miniaudio.h>
 
 namespace zf {
-    t_b8 LoadSoundFromRaw(const s_str_rdonly file_path, s_mem_arena &snd_data_mem_arena, s_sound_data &o_snd_data) {
-        ZF_ASSERT(file_path.IsValid());
+    t_b8 LoadSoundFromRaw(const s_str_rdonly file_path, s_mem_arena &snd_data_mem_arena, s_mem_arena &temp_mem_arena, s_sound_data &o_snd_data) {
+        s_str file_path_terminated = {};
 
-        ma_decoder decoder;
+        if (!AllocStrCloneWithTerminator(file_path, temp_mem_arena, file_path_terminated)) {
+            return false;
+        }
+
+        ma_decoder decoder = {};
         ma_decoder_config decoder_config = ma_decoder_config_init(ma_format_f32, 0, 0);
 
-        if (ma_decoder_init_file(file_path.Raw(), &decoder_config, &decoder) != MA_SUCCESS) {
+        if (ma_decoder_init_file(file_path.Cstr(), &decoder_config, &decoder) != MA_SUCCESS) {
             return false;
         }
 
         ZF_DEFER({ ma_decoder_uninit(&decoder); });
 
-        ma_uint64 frame_cnt;
+        ma_uint64 frame_cnt = 0;
 
         if (ma_decoder_get_length_in_pcm_frames(&decoder, &frame_cnt) != MA_SUCCESS) {
             return false;
@@ -27,7 +31,7 @@ namespace zf {
             .frame_cnt = static_cast<t_i64>(frame_cnt),
         };
 
-        s_array<t_f32> pcm;
+        s_array<t_f32> pcm = {};
 
         if (!AllocArray(CalcSampleCount(meta), snd_data_mem_arena, pcm)) {
             return false;
@@ -47,9 +51,9 @@ namespace zf {
             return false;
         }
 
-        s_stream fs;
+        s_stream fs = {};
 
-        if (!OpenFile(file_path, ek_file_access_mode_write, fs)) {
+        if (!OpenFile(file_path, ek_file_access_mode_write, temp_mem_arena, fs)) {
             return false;
         }
 
@@ -59,21 +63,21 @@ namespace zf {
     }
 
     t_b8 UnpackSound(const s_str_rdonly file_path, s_mem_arena &snd_data_mem_arena, s_mem_arena &temp_mem_arena, s_sound_data &o_snd_data) {
-        s_stream fs;
+        s_stream fs = {};
 
-        if (!OpenFile(file_path, ek_file_access_mode_read, fs)) {
+        if (!OpenFile(file_path, ek_file_access_mode_read, temp_mem_arena, fs)) {
             return false;
         }
 
         ZF_DEFER({ CloseFile(fs); });
 
-        s_sound_meta meta;
+        s_sound_meta meta = {};
 
         if (!fs.ReadItem(meta)) {
             return false;
         }
 
-        s_array<t_f32> pcm;
+        s_array<t_f32> pcm = {};
 
         if (!AllocArray(CalcSampleCount(meta), snd_data_mem_arena, pcm)) {
             return false;
@@ -99,13 +103,13 @@ namespace zf {
     }
 
     t_b8 DeserializeSound(s_stream &stream, s_mem_arena &snd_data_mem_arena, s_sound_data &o_snd_data) {
-        s_sound_meta meta;
+        s_sound_meta meta = {};
 
         if (!stream.ReadItem(meta)) {
             return false;
         }
 
-        s_array<t_f32> pcm;
+        s_array<t_f32> pcm = {};
 
         if (!DeserializeArray(stream, snd_data_mem_arena, pcm)) {
             return false;

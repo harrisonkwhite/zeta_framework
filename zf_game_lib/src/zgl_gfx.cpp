@@ -62,8 +62,13 @@ namespace zf {
     }
 
     static t_gl_id CreateGLShaderProg(const s_str_rdonly vert_src, const s_str_rdonly frag_src, s_mem_arena &temp_mem_arena) {
-        ZF_ASSERT(vert_src.IsValid());
-        ZF_ASSERT(frag_src.IsValid());
+        s_str vert_src_terminated = {};
+        s_str frag_src_terminated = {};
+
+        if (!AllocStrCloneWithTerminator(vert_src, temp_mem_arena, vert_src_terminated)
+            || !AllocStrCloneWithTerminator(frag_src, temp_mem_arena, frag_src_terminated)) {
+            return 0;
+        }
 
         //
         // Shader Creation
@@ -71,7 +76,7 @@ namespace zf {
         const auto create_shader = [&temp_mem_arena](const s_str_rdonly src, const t_b8 is_frag) -> t_gl_id {
             const t_gl_id shader_gl_id = glCreateShader(is_frag ? GL_FRAGMENT_SHADER : GL_VERTEX_SHADER);
 
-            const auto src_raw = src.Raw();
+            const auto src_raw = src.Cstr();
             glShaderSource(shader_gl_id, 1, &src_raw, nullptr);
 
             glCompileShader(shader_gl_id);
@@ -91,12 +96,12 @@ namespace zf {
 
                     if (AllocArray(log_chr_cnt, temp_mem_arena, log_chrs)) {
                         glGetShaderInfoLog(shader_gl_id, static_cast<GLsizei>(log_chrs.Len()), nullptr, log_chrs.Ptr());
-                        /*LogErrorType("OpenGL Shader Compilation", "%", StrFromRaw(log_chrs.buf));*/
+                        LogErrorType("OpenGL Shader Compilation", "%", FormatStr({log_chrs.ToBytes()}));
                     } else {
                         ZF_REPORT_ERROR();
                     }
                 } else {
-                    /*LogError("OpenGL shader compilation failed, but no error message available!");*/
+                    LogError("OpenGL shader compilation failed, but no error message available!");
                 }
 
                 return 0;
@@ -105,7 +110,7 @@ namespace zf {
             return shader_gl_id;
         };
 
-        const t_gl_id vert_gl_id = create_shader(vert_src, false);
+        const t_gl_id vert_gl_id = create_shader(vert_src_terminated, false);
 
         if (!vert_gl_id) {
             return 0;
@@ -113,7 +118,7 @@ namespace zf {
 
         ZF_DEFER({ glDeleteShader(vert_gl_id); });
 
-        const t_gl_id frag_gl_id = create_shader(frag_src, true);
+        const t_gl_id frag_gl_id = create_shader(frag_src_terminated, true);
 
         if (!frag_gl_id) {
             return 0;
@@ -149,12 +154,12 @@ namespace zf {
 
                 if (AllocArray(log_chr_cnt, temp_mem_arena, log_chrs)) {
                     glGetProgramInfoLog(prog_gl_id, static_cast<GLsizei>(log_chrs.Len()), nullptr, log_chrs.Ptr());
-                    /*LogErrorType("OpenGL Program Link", "%", StrFromRaw(log_chrs.buf));*/
+                    LogErrorType("OpenGL Program Link", "%", FormatStr({log_chrs.ToBytes()}));
                 } else {
                     ZF_REPORT_ERROR();
                 }
             } else {
-                /*LogError("OpenGL program link failed, but no error message available!");*/
+                LogError("OpenGL program link failed, but no error message available!");
             }
 
             glDeleteProgram(prog_gl_id);
@@ -181,7 +186,7 @@ namespace zf {
         const s_v2_i tex_size_limit = GLTextureSizeLimit();
 
         if (tex_data.SizeInPixels().x > tex_size_limit.x || tex_data.SizeInPixels().y > tex_size_limit.y) {
-            /*LogError("Texture size % exceeds limits %!", tex_data.size_in_pxs, tex_size_limit);*/
+            /*LogError("Texture size % exceeds limits %!", tex_data.SizeInPixels(), tex_size_limit);*/
             ZF_REPORT_ERROR();
             return 0;
         }
@@ -559,7 +564,7 @@ namespace zf {
 
     using t_batch_slot = s_static_array<s_batch_vert, g_batch_slot_vert_cnt>;
 
-    constexpr s_str_rdonly g_batch_vert_shader_src = R"(#version 460 core
+    static s_str_rdonly g_batch_vert_shader_src = R"(#version 460 core
 
 layout (location = 0) in vec2 a_vert;
 layout (location = 1) in vec2 a_pos;
@@ -591,7 +596,7 @@ void main() {
 }
 )";
 
-    constexpr s_str_rdonly g_batch_frag_shader_src = R"(#version 460 core
+    static s_str_rdonly g_batch_frag_shader_src = R"(#version 460 core
 
 in vec2 v_tex_coord;
 in vec4 v_blend;
@@ -606,7 +611,7 @@ void main() {
 }
 )";
 
-    constexpr s_str_rdonly g_default_surface_vert_shader_src = R"(#version 460 core
+    static s_str_rdonly g_default_surface_vert_shader_src = R"(#version 460 core
 
 layout (location = 0) in vec2 a_vert;
 layout (location = 1) in vec2 a_tex_coord;
@@ -630,7 +635,7 @@ void main() {
 }
 )";
 
-    constexpr s_str_rdonly g_default_surface_frag_shader_src = R"(#version 460 core
+    static s_str_rdonly g_default_surface_frag_shader_src = R"(#version 460 core
 
 in vec2 v_tex_coord;
 out vec4 o_frag_color;
@@ -843,7 +848,7 @@ void main() {
     }
 
     t_b8 DrawStr(const s_rendering_context rc, const s_str_rdonly str, const s_gfx_resource &font, const s_v2 pos, const s_v2 alignment, const s_color_rgba32f blend, s_mem_arena &temp_mem_arena) {
-        ZF_ASSERT(str.IsValid());
+        ZF_ASSERT(IsStrValidUTF8(str));
         ZF_ASSERT(IsAlignmentValid(alignment));
 
         if (str.IsEmpty()) {
@@ -888,7 +893,7 @@ void main() {
         ZF_ASSERT(surf && surf->type == ek_gfx_resource_type_surface);
 
         if (rc.state->surfs.IsFull()) {
-            /*LogError("Attempting to set a surface even though the limit has been reached!");*/
+            LogError("Attempting to set a surface even though the limit has been reached!");
             ZF_REPORT_ERROR();
             return;
         }
@@ -903,7 +908,7 @@ void main() {
 
     void UnsetSurface(const s_rendering_context rc) {
         if (rc.state->surfs.IsEmpty()) {
-            /*LogError("Attempting to unset a surface even though none are set!");*/
+            LogError("Attempting to unset a surface even though none are set!");
             ZF_REPORT_ERROR();
             return;
         }
@@ -934,12 +939,16 @@ void main() {
     }
 
     t_b8 SetSurfaceShaderProgUniform(const s_rendering_context rc, const s_str_rdonly name, const s_surface_shader_prog_uniform_val &val, s_mem_arena &temp_mem_arena) {
-        ZF_ASSERT(name.IsValid());
-
         const t_gl_id cur_prog_gl_id = CurGLShaderProg();
         ZF_ASSERT(cur_prog_gl_id != 0 && "Surface shader program must be set before setting uniforms!");
 
-        const t_i32 loc = glGetUniformLocation(cur_prog_gl_id, name.Raw());
+        s_str name_terminated = {}; // @todo: Might be better to store these in a hash map on shader load.
+
+        if (!AllocStrCloneWithTerminator(name, temp_mem_arena, name_terminated)) {
+            return false;
+        }
+
+        const t_i32 loc = glGetUniformLocation(cur_prog_gl_id, name_terminated.Cstr());
         ZF_ASSERT(loc != -1 && "Failed to get location of shader uniform!");
 
         switch (val.Type()) {

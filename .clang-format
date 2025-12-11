@@ -8,13 +8,14 @@ AllowShortFunctionsOnASingleLine: All
 DerivePointerAlignment: false
 PointerAlignment: Right
 IndentPPDirectives: BeforeHash
-BreakTemplateDeclarations: Yes
+BreakTemplateDeclarations: Leave
 BreakBeforeBinaryOperators: NonAssignment
 AlignOperands: DontAlign
 ContinuationIndentWidth: 4
 AllowShortLambdasOnASingleLine: None
 BreakBeforeBraces: Attach
 AccessModifierOffset: -4
+AllowShortCaseLabelsOnASingleLine: true
 
 SortIncludes:
   Enabled: false
