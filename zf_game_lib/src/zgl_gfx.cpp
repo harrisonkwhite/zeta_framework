@@ -523,20 +523,19 @@ namespace zf {
         return true;
     }
 
-#if 0
     // ============================================================
     // @section: Rendering
     // ============================================================
     struct s_batch_vert {
-        s_v2 vert_coord;
-        s_v2 pos;
-        s_v2 size;
-        t_f32 rot;
-        s_v2 tex_coord;
-        s_color_rgba32f blend;
+        s_v2 vert_coord = {};
+        s_v2 pos = {};
+        s_v2 size = {};
+        t_f32 rot = 0.0f;
+        s_v2 tex_coord = {};
+        s_color_rgba32f blend = {};
     };
 
-    constexpr s_static_array<t_i32, 6> g_batch_vert_attr_lens = {{2, 2, 2, 1, 2, 4}}; // This has to match the number of components per attribute above.
+    constexpr s_static_array<t_i32, 6> g_batch_vert_attr_lens = {2, 2, 2, 1, 2, 4}; // This has to match the number of components per attribute above.
 
     constexpr t_len g_batch_vert_component_cnt = ZF_SIZE_OF(s_batch_vert) / ZF_SIZE_OF(t_f32);
 
@@ -560,7 +559,7 @@ namespace zf {
 
     using t_batch_slot = s_static_array<s_batch_vert, g_batch_slot_vert_cnt>;
 
-    static const s_str_rdonly g_batch_vert_shader_src = R"(#version 460 core
+    constexpr s_str_rdonly g_batch_vert_shader_src = R"(#version 460 core
 
 layout (location = 0) in vec2 a_vert;
 layout (location = 1) in vec2 a_pos;
@@ -592,7 +591,7 @@ void main() {
 }
 )";
 
-    static const s_str_rdonly g_batch_frag_shader_src = R"(#version 460 core
+    constexpr s_str_rdonly g_batch_frag_shader_src = R"(#version 460 core
 
 in vec2 v_tex_coord;
 in vec4 v_blend;
@@ -607,7 +606,7 @@ void main() {
 }
 )";
 
-    static const s_str_rdonly g_default_surface_vert_shader_src = R"(#version 460 core
+    constexpr s_str_rdonly g_default_surface_vert_shader_src = R"(#version 460 core
 
 layout (location = 0) in vec2 a_vert;
 layout (location = 1) in vec2 a_tex_coord;
@@ -631,7 +630,7 @@ void main() {
 }
 )";
 
-    static const s_str_rdonly g_default_surface_frag_shader_src = R"(#version 460 core
+    constexpr s_str_rdonly g_default_surface_frag_shader_src = R"(#version 460 core
 
 in vec2 v_tex_coord;
 out vec4 o_frag_color;
@@ -644,22 +643,23 @@ void main() {
 )";
 
     struct s_rendering_basis {
-        s_mesh_gl_ids batch_mesh_gl_ids;
-        t_gl_id batch_shader_prog_gl_id;
+        s_mesh_gl_ids batch_mesh_gl_ids = {};
+        t_gl_id batch_shader_prog_gl_id = 0;
 
-        s_mesh_gl_ids surf_mesh_gl_ids;
+        s_mesh_gl_ids surf_mesh_gl_ids = {};
 
-        s_gfx_resource_arena res_arena;
-        s_gfx_resource *px_tex;
-        s_gfx_resource *default_surf_shader_prog;
+        s_gfx_resource_arena res_arena = {};
+        s_ptr<s_gfx_resource> px_tex = nullptr;
+        s_ptr<s_gfx_resource> default_surf_shader_prog = nullptr;
     };
 
+#if 0
     struct s_rendering_state {
-        s_static_array<t_batch_slot, g_batch_slot_cnt> batch_slots;
-        t_len batch_slots_used_cnt;
+        s_static_array<t_batch_slot, g_batch_slot_cnt> batch_slots = {};
+        t_len batch_slots_used_cnt = 0;
 
-        s_mat4x4 view_mat; // The view matrix to be used when flushing.
-        t_gl_id tex_gl_id; // The texture to be used when flushing.
+        s_mat4x4 view_mat = {}; // The view matrix to be used when flushing.
+        t_gl_id tex_gl_id = {}; // The texture to be used when flushing.
 
         s_static_stack<const s_gfx_resource *, 32> surfs;
     };
@@ -977,10 +977,12 @@ void main() {
             constexpr s_v2 scale = {1.0f, 1.0f}; // @todo: Make this customisable, or remove entirely.
 
             // clang-format off
-            constexpr s_static_array<t_f32, 16> verts = {{0.0f,    scale.y, 0.0f, 0.0f,
-                                                          scale.x, scale.y, 1.0f, 0.0f,
-                                                          scale.x, 0.0f,    1.0f, 1.0f,
-                                                          0.0f,    0.0f,    0.0f, 1.0f}};
+            constexpr s_static_array<t_f32, 16> verts = {
+                0.0f,    scale.y, 0.0f, 0.0f,
+                scale.x, scale.y, 1.0f, 0.0f,
+                scale.x, 0.0f,    1.0f, 1.0f,
+                0.0f,    0.0f,    0.0f, 1.0f,
+            };
             // clang-format on
 
             glBufferSubData(GL_ARRAY_BUFFER, 0, ArraySizeInBytes(ToNonstaticArray(verts)), verts.buf_raw);
@@ -1011,22 +1013,21 @@ void main() {
 
         glUseProgram(0);
     }
+#endif
 
     // ============================================================
     // @section: General
     // ============================================================
-    t_b8 internal::InitGFX(s_rendering_basis **const rendering_basis, s_mem_arena *const rendering_basis_mem_arena, s_mem_arena *const temp_mem_arena) {
+    t_b8 internal::InitGFX(s_mem_arena &rendering_basis_mem_arena, s_mem_arena &temp_mem_arena, s_ptr<s_rendering_basis> &o_rendering_basis) {
         t_b8 clean_up = false;
 
-        *rendering_basis = PushToMemArena<s_rendering_basis>(rendering_basis_mem_arena);
+        o_rendering_basis = Alloc<s_rendering_basis>(rendering_basis_mem_arena);
 
-        if (!*rendering_basis) {
+        if (!o_rendering_basis) {
             ZF_REPORT_ERROR();
             clean_up = true;
             return false;
         }
-
-        const auto rb = *rendering_basis;
 
         // Enable blending.
         glEnable(GL_BLEND);
@@ -1034,9 +1035,9 @@ void main() {
 
         // Create the batch mesh.
         {
-            s_array<t_u16> elems;
+            s_array<t_u16> elems = {};
 
-            if (!AllocArray(&elems, g_batch_slot_elem_cnt * g_batch_slot_cnt, temp_mem_arena)) {
+            if (!AllocArray(g_batch_slot_elem_cnt * g_batch_slot_cnt, temp_mem_arena, elems)) {
                 ZF_REPORT_ERROR();
                 clean_up = true;
                 return false;
@@ -1052,19 +1053,19 @@ void main() {
             }
 
             constexpr t_len verts_len = g_batch_vert_component_cnt * g_batch_slot_vert_cnt * g_batch_slot_cnt;
-            rb->batch_mesh_gl_ids = CreateGLMesh(nullptr, verts_len, elems, g_batch_vert_attr_lens);
+            o_rendering_basis->batch_mesh_gl_ids = CreateGLMesh(nullptr, verts_len, elems, g_batch_vert_attr_lens);
         }
 
         ZF_DEFER({
             if (clean_up) {
-                DestroyGLMesh(&rb->batch_mesh_gl_ids);
+                DestroyGLMesh(o_rendering_basis->batch_mesh_gl_ids);
             }
         });
 
         // Create the batch shader program.
-        rb->batch_shader_prog_gl_id = CreateGLShaderProg(g_batch_vert_shader_src, g_batch_frag_shader_src, temp_mem_arena);
+        o_rendering_basis->batch_shader_prog_gl_id = CreateGLShaderProg(g_batch_vert_shader_src, g_batch_frag_shader_src, temp_mem_arena);
 
-        if (!rb->batch_shader_prog_gl_id) {
+        if (!o_rendering_basis->batch_shader_prog_gl_id) {
             ZF_REPORT_ERROR();
             clean_up = true;
             return false;
@@ -1072,48 +1073,51 @@ void main() {
 
         ZF_DEFER({
             if (clean_up) {
-                glDeleteProgram(rb->batch_shader_prog_gl_id);
+                glDeleteProgram(o_rendering_basis->batch_shader_prog_gl_id);
             }
         });
 
         // Create the surface mesh.
         {
             // clang-format off
-            constexpr s_static_array<t_f32, 16> verts = {{0.0f, 1.0f, 0.0f, 0.0f,
-                                                          1.0f, 1.0f, 1.0f, 0.0f,
-                                                          1.0f, 0.0f, 1.0f, 1.0f,
-                                                          0.0f, 0.0f, 0.0f, 1.0f}};
+            constexpr s_static_array<t_f32, 16> verts = {
+                0.0f, 1.0f, 0.0f, 0.0f,
+                1.0f, 1.0f, 1.0f, 0.0f,
+                1.0f, 0.0f, 1.0f, 1.0f,
+                0.0f, 0.0f, 0.0f, 1.0f,
+            };
 
-            constexpr s_static_array<t_u16, 6> elems = {{0, 1, 2,
-                                                         2, 3, 0}};
+            constexpr s_static_array<t_u16, 6> elems = {
+                0, 1, 2,
+                2, 3, 0,
+            };
             // clang-format on
 
-            constexpr s_static_array<t_i32, 2> vert_attr_lens = {{2, 2}};
+            constexpr s_static_array<t_i32, 2> vert_attr_lens = {2, 2};
 
-            rb->surf_mesh_gl_ids = CreateGLMesh(verts.buf_raw, verts.g_len, elems, vert_attr_lens);
+            o_rendering_basis->surf_mesh_gl_ids = CreateGLMesh(verts.raw, verts.g_len, elems, vert_attr_lens);
         }
 
         ZF_DEFER({
             if (clean_up) {
-                DestroyGLMesh(&rb->surf_mesh_gl_ids);
+                DestroyGLMesh(o_rendering_basis->surf_mesh_gl_ids);
             }
         });
 
         // Set up resource arena.
-        rb->res_arena = CreateGFXResourceArena(rendering_basis_mem_arena);
+        o_rendering_basis->res_arena = CreateGFXResourceArena(rendering_basis_mem_arena);
 
         ZF_DEFER({
             if (clean_up) {
-                DestroyGFXResources(&rb->res_arena);
+                DestroyGFXResources(o_rendering_basis->res_arena);
             }
         });
 
         // Set up pixel texture.
         {
-            const s_static_array<t_u8, 4> rgba = {{255, 255, 255, 255}};
-            rb->px_tex = CreateTexture({{1, 1}, rgba}, &rb->res_arena);
+            const s_static_array<t_u8, 4> rgba = {255, 255, 255, 255};
 
-            if (!rb->px_tex) {
+            if (!CreateTexture({{1, 1}, rgba}, o_rendering_basis->res_arena, o_rendering_basis->px_tex)) {
                 ZF_REPORT_ERROR();
                 clean_up = true;
                 return false;
@@ -1121,9 +1125,7 @@ void main() {
         }
 
         // Set up default surface shader program.
-        rb->default_surf_shader_prog = CreateSurfaceShaderProg(g_default_surface_vert_shader_src, g_default_surface_frag_shader_src, &rb->res_arena, temp_mem_arena);
-
-        if (!rb->default_surf_shader_prog) {
+        if (!CreateSurfaceShaderProg(g_default_surface_vert_shader_src, g_default_surface_frag_shader_src, o_rendering_basis->res_arena, temp_mem_arena, o_rendering_basis->default_surf_shader_prog)) {
             ZF_REPORT_ERROR();
             clean_up = true;
             return false;
@@ -1132,11 +1134,12 @@ void main() {
         return true;
     }
 
-    void internal::ShutdownGFX(s_rendering_basis *const rendering_basis) {
-        DestroyGFXResources(&rendering_basis->res_arena);
-        DestroyGLMesh(&rendering_basis->surf_mesh_gl_ids);
-        glDeleteProgram(rendering_basis->batch_shader_prog_gl_id);
-        DestroyGLMesh(&rendering_basis->batch_mesh_gl_ids);
+    void internal::ShutdownGFX(s_rendering_basis &rendering_basis) {
+        DestroyGFXResources(rendering_basis.res_arena);
+        DestroyGLMesh(rendering_basis.surf_mesh_gl_ids);
+        glDeleteProgram(rendering_basis.batch_shader_prog_gl_id);
+        DestroyGLMesh(rendering_basis.batch_mesh_gl_ids);
+
+        rendering_basis = {};
     }
-#endif
 }

@@ -53,6 +53,8 @@ namespace zf {
                 return false;
             }
 
+            ZF_DEFER({ internal::ShutdownGFX(*rendering_basis); });
+
             s_ptr<s_audio_sys> audio_sys = nullptr;
 
             if (!CreateAudioSys(mem_arena, audio_sys)) {
@@ -103,8 +105,7 @@ namespace zf {
 
                 const t_f64 targ_tick_interval = 1.0 / g_targ_ticks_per_sec;
 
-                // Once enough time has passed (i.e. the time accumulator has reached the tick
-                // interval), run at least a single tick and update the display.
+                // Once enough time has passed (i.e. the time accumulator has reached the tick interval), run at least a single tick and update the display.
                 if (frame_dur_accum >= targ_tick_interval) {
                     // Run possibly multiple ticks.
                     do {
@@ -128,6 +129,7 @@ namespace zf {
                         frame_dur_accum -= targ_tick_interval;
                     } while (frame_dur_accum >= targ_tick_interval);
 
+#if 0
                     // Perform a single render.
                     s_rendering_context rendering_context = {};
 
@@ -150,6 +152,7 @@ namespace zf {
                     }
 
                     internal::CompleteFrame(rendering_context);
+#endif
 
                     internal::SwapWindowBuffers(*platform_layer_info);
                 }
