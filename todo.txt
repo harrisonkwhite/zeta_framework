@@ -1,17 +1,21 @@
-- Helpers for non-arena allocation.
 - Create a really tight model for SURFACE shader program validation. Check that all necessary uniforms and so on are there.
-- MAYBE update the font system such that the input unicode code point bit vector gets mutated BUT the asset packer gives warnings if the bit vector is mutated. Reasoning being that you might have an "extra chars" file being all game dialogue, and you have all fonts map to it - but you are probably fine with not all glyphs being supported by every single font.
-- MAYBE write a code correctness checker tool. This can make sure prefixes are correct, structs are all trivially constructible, there are no parameter name discrepencies between declaration and definition, etc.
-- Switch to linked block approach for the hash map.
-- Togglable debug overlays with FPS and so on, use some built-in font.
-- RNG system overhaul.
-- Music layering and management.
-- Surfaces.
-- A* pathfinding utilities.
+- Not happy with how unsupported font characters are handled. MAYBE update the font system such that the input unicode code point bit vector gets mutated BUT the asset packer gives warnings if the bit vector is mutated. Reasoning being that you might have an "extra chars" file being all game dialogue, and you have all fonts map to it - but you are probably fine with not all glyphs being supported by every single font.
+- Ability to change target FPS mid-game.
+- Ability to get debug info like FPS.
+- RNG system.
 - Gamepad support.
 - Run proper testing on everything, these tests should be PUBLIC.
-- MAYBE utilities for sprites and animation, but this could be project-specific.
-- MAYBE have more built-in shaders for surfaces, consider putting them in different files and using the zf_bin_to_array tool.
-- MAYBE use STL type traits, not custom ones. Add safety checking for arena push.
+- Bring back polygon code
+- Basic music streaming system at the very least
 
 There are a handful of comments marked with "@todo" throughout the codebase that need to be addressed as well.
+
+Nice to have:
+- Music layering and management.
+- Text rotation and scaling
+- A* pathfinding utilities.
+- Helpers for drawing circles and polygons
+- More built-in shaders
+- Dynamic list DS
+- Queue DS
+- Priority queue DS

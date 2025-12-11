@@ -267,6 +267,11 @@ namespace zf {
             return {&m_ptr[beg], end - beg};
         }
 
+        constexpr s_array_rdonly<tp_type> SliceFrom(const t_len beg) const {
+            ZF_ASSERT(beg >= 0 && beg <= m_len);
+            return {&m_ptr[beg], m_len - beg};
+        }
+
         constexpr s_array_rdonly<t_u8> ToBytes() const {
             return {reinterpret_cast<const t_u8 *>(m_ptr.Raw()), SizeInBytes()};
         }
@@ -365,6 +370,11 @@ namespace zf {
             ZF_ASSERT(end >= beg && end <= m_len);
 
             return {m_ptr + beg, end - beg};
+        }
+
+        constexpr s_array<tp_type> SliceFrom(const t_len beg) const {
+            ZF_ASSERT(beg >= 0 && beg <= m_len);
+            return {&m_ptr[beg], m_len - beg};
         }
 
         constexpr s_array<t_u8> ToBytes() const {

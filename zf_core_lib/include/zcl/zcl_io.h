@@ -1,10 +1,10 @@
 #pragma once
 
+#include <cstdio>
+
 #include <zcl/zcl_math.h>
 #include <zcl/zcl_mem.h>
 #include <zcl/zcl_strs.h>
-
-#include <cstdio>
 
 namespace zf {
     // ============================================================
@@ -37,6 +37,11 @@ namespace zf {
         t_len Pos() const {
             ZF_ASSERT(m_type == ek_stream_type_mem);
             return m_type_data.mem.pos;
+        }
+
+        s_array<t_u8> Written() const {
+            ZF_ASSERT(m_type == ek_stream_type_mem);
+            return m_type_data.mem.bytes.Slice(0, m_type_data.mem.pos);
         }
 
         s_ptr<FILE> File() const {
@@ -330,8 +335,8 @@ namespace zf {
     inline s_bool_fmt FormatBool(const t_b8 val) { return {val}; }
     inline s_bool_fmt FormatDefault(const t_b8 val) { return FormatBool(val); }
 
-    inline t_b8 PrintType(s_stream &stream, const s_bool_fmt &fmt) {
-        return fmt.val ? Print(stream, "true") : Print(stream, "false");
+    inline t_b8 PrintType(s_stream &stream, const s_bool_fmt fmt) {
+        return Print(stream, fmt.val ? s_str_rdonly("true") : s_str_rdonly("false"));
     }
 
     // ========================================
@@ -345,8 +350,188 @@ namespace zf {
     inline s_str_fmt FormatStr(const s_str_rdonly val) { return {val}; }
     inline s_str_fmt FormatDefault(const s_str_rdonly val) { return FormatStr(val); }
 
-    inline t_b8 PrintType(s_stream &stream, const s_str_fmt &fmt) {
+    inline t_b8 PrintType(s_stream &stream, const s_str_fmt fmt) {
         return Print(stream, fmt.val);
+    }
+
+    // ========================================
+    // @subsection: Integer Printing
+    // ========================================
+    template <c_integral tp_type>
+    struct s_integral_fmt {
+        using t_fmt_tag = void;
+        tp_type val = 0;
+    };
+
+    template <c_integral tp_type> s_integral_fmt<tp_type> FormatInt(const tp_type val) { return {val}; }
+    template <c_integral tp_type> s_integral_fmt<tp_type> FormatDefault(const tp_type val) { return FormatInt(val); }
+
+    template <c_integral tp_type>
+    t_b8 PrintType(s_stream &stream, const s_integral_fmt<tp_type> fmt) {
+        s_static_array<t_u8, 20> str_bytes = {}; // Maximum possible number of ASCII characters needed to represent a 64-bit integer.
+        s_stream str_bytes_stream = {str_bytes, ek_stream_mode_write};
+        t_b8 str_bytes_stream_write_success = true;
+
+        if (fmt.val < 0) {
+            str_bytes_stream_write_success = str_bytes_stream.WriteItem('-');
+            ZF_ASSERT(str_bytes_stream_write_success);
+        }
+
+        const t_len dig_cnt = DigitCnt(fmt.val);
+
+        for (t_len i = 0; i < dig_cnt; i++) {
+            const auto chr = static_cast<char>('0' + DigitAt(fmt.val, dig_cnt - 1 - i));
+            str_bytes_stream_write_success = str_bytes_stream.WriteItem(chr);
+            ZF_ASSERT(str_bytes_stream_write_success);
+        }
+
+        return Print(stream, {str_bytes_stream.Written()});
+    }
+
+    // ========================================
+    // @subsection: Float Printing
+    // ========================================
+    template <c_floating_point tp_type>
+    struct s_float_fmt {
+        using t_fmt_tag = void;
+
+        tp_type val = 0;
+        t_b8 trim_trailing_zeros = false;
+    };
+
+    template <c_floating_point tp_type>
+    s_float_fmt<tp_type> FormatFloat(const tp_type val, const t_b8 trim_trailing_zeros = false) {
+        return {val, trim_trailing_zeros};
+    }
+
+    template <c_floating_point tp_type> s_float_fmt<tp_type> FormatDefault(const tp_type val) {
+        return FormatFloat(val);
+    }
+
+    template <c_floating_point tp_type>
+    t_b8 PrintType(s_stream &stream, const s_float_fmt<tp_type> fmt) {
+        s_static_array<t_u8, 400> str_bytes = {}; // Roughly more than how many bytes should ever be needed.
+
+        t_len str_bytes_used = snprintf(reinterpret_cast<char *>(str_bytes.raw), str_bytes.g_len, "%f", static_cast<t_f64>(fmt.val));
+
+        if (str_bytes_used < 0 || str_bytes_used >= str_bytes.g_len) {
+            return false;
+        }
+
+        if (fmt.trim_trailing_zeros) {
+            const auto str_bytes_relevant = str_bytes.ToNonstatic().Slice(0, str_bytes_used);
+
+            if (str_bytes_relevant.DoAnyEqual('.')) {
+                for (t_len i = str_bytes_used - 1;; i--) {
+                    if (str_bytes[i] == '0') {
+                        str_bytes_used--;
+                    } else if (str_bytes[i] == '.') {
+                        str_bytes_used--;
+                        break;
+                    } else {
+                        break;
+                    }
+                }
+            }
+        }
+
+        return Print(stream, {str_bytes.ToNonstatic().Slice(0, str_bytes_used)});
+    }
+
+    // ========================================
+    // @subsection: Hex Printing
+    // ========================================
+    template <c_unsigned_integral tp_type>
+    struct s_hex_fmt {
+        using t_fmt_tag = void;
+
+        tp_type val = 0;
+        t_b8 omit_prefix = false;
+    };
+
+    template <c_unsigned_integral tp_type>
+    s_hex_fmt<tp_type> FormatHex(const tp_type val, const t_b8 omit_prefix = false) {
+        return {val, omit_prefix};
+    }
+
+    inline s_hex_fmt<t_uintptr> FormatHex(const void *const ptr, const t_b8 omit_prefix = false) {
+        return {reinterpret_cast<t_uintptr>(ptr), omit_prefix};
+    }
+
+    // Have pointers implicitly cast to this format.
+    inline s_hex_fmt<t_uintptr> FormatDefault(const void *const ptr) {
+        return FormatHex(ptr);
+    }
+
+    template <c_unsigned_integral tp_type>
+    t_b8 PrintType(s_stream &stream, const s_hex_fmt<tp_type> fmt) {
+        s_static_array<t_u8, 18> str_bytes = {}; // Maximum possible number of ASCII characters needed for hex representation of 64-bit integer.
+        s_stream str_bytes_stream = {str_bytes, ek_stream_mode_write};
+
+        t_b8 str_bytes_stream_write_success = true;
+
+        if (!fmt.omit_prefix) {
+            str_bytes_stream_write_success = str_bytes_stream.WriteItem('0');
+            ZF_ASSERT(str_bytes_stream_write_success);
+
+            str_bytes_stream_write_success = str_bytes_stream.WriteItem('x');
+            ZF_ASSERT(str_bytes_stream_write_success);
+        }
+
+        const t_len str_bytes_digits_begin_pos = str_bytes_stream.Pos();
+
+        auto val_mut = fmt.val;
+
+        do {
+            const auto dig = val_mut % 16;
+            const auto chr = static_cast<char>(dig < 10 ? '0' + dig : 'A' + dig - 10);
+            str_bytes_stream_write_success = str_bytes_stream.WriteItem(chr);
+            ZF_ASSERT(str_bytes_stream_write_success);
+
+            val_mut /= 16;
+        } while (val_mut != 0);
+
+        const auto str_bytes_digits = str_bytes_stream.Written().SliceFrom(str_bytes_digits_begin_pos);
+        str_bytes_digits.Reverse();
+
+        return Print(stream, {str_bytes_stream.Written()});
+    }
+
+    // ========================================
+    // @subsection: V2 Printing
+    // ========================================
+    struct s_v2_fmt {
+        using t_fmt_tag = void;
+
+        s_v2 val = {};
+        t_b8 trim_trailing_zeros = false;
+    };
+
+    constexpr s_v2_fmt FormatV2(const s_v2 val, const t_b8 trim_trailing_zeros = false) { return {val, trim_trailing_zeros}; }
+    constexpr s_v2_fmt FormatDefault(const s_v2 val) { return FormatV2(val); }
+
+    inline t_b8 PrintType(s_stream &stream, const s_v2_fmt fmt) {
+        return Print(stream, "(")
+            && PrintType(stream, FormatFloat(fmt.val.x, fmt.trim_trailing_zeros))
+            && Print(stream, ", ")
+            && PrintType(stream, FormatFloat(fmt.val.y, fmt.trim_trailing_zeros))
+            && Print(stream, ")");
+    }
+
+    struct s_v2_i_fmt {
+        using t_fmt_tag = void;
+        s_v2_i val = {};
+    };
+
+    constexpr s_v2_i_fmt FormatV2(const s_v2_i val) { return {val}; }
+    constexpr s_v2_i_fmt FormatDefault(const s_v2_i val) { return FormatV2(val); }
+
+    inline t_b8 PrintType(s_stream &stream, const s_v2_i_fmt fmt) {
+        return Print(stream, "(")
+            && PrintType(stream, FormatInt(fmt.val.x))
+            && Print(stream, ", ")
+            && PrintType(stream, FormatInt(fmt.val.y))
+            && Print(stream, ")");
     }
 
     // ========================================
@@ -381,7 +566,7 @@ namespace zf {
     }
 
     template <typename tp_type>
-    t_b8 PrintType(s_stream &stream, const s_array_fmt<tp_type> &fmt) {
+    t_b8 PrintType(s_stream &stream, const s_array_fmt<tp_type> fmt) {
         if (fmt.one_per_line) {
             for (t_len i = 0; i < fmt.val.len; i++) {
                 if (!PrintFormat(stream, "[%] %%", i, fmt.val[i], i < fmt.val.len - 1 ? s_str_rdonly("\n") : s_str_rdonly(""))) {
@@ -408,6 +593,79 @@ namespace zf {
             if (!Print(stream, "]")) {
                 return false;
             }
+        }
+
+        return true;
+    }
+
+    // ========================================
+    // @subsection: Bit Vector Printing
+    // ========================================
+    enum e_bit_vec_fmt_style : t_i32 {
+        ek_bit_vec_fmt_style_seq = 0,                // List all bits from LSB to MSB, not divided into bytes.
+        ek_bit_vec_fmt_style_little_endian = 1 << 0, // Split into bytes, ordered in little endian.
+        ek_bit_vec_fmt_style_big_endian = 1 << 1     // Split into bytes, ordered in big endian.
+    };
+
+    struct s_bit_vec_fmt {
+        using t_fmt_tag = void;
+
+        s_bit_vec_rdonly val = {};
+        e_bit_vec_fmt_style style = {};
+    };
+
+    inline s_bit_vec_fmt FormatBitVec(const s_bit_vec_rdonly &val, const e_bit_vec_fmt_style style) { return {val, style}; }
+    inline s_bit_vec_fmt FormatDefault(const s_bit_vec_rdonly &val) { return FormatBitVec(val, ek_bit_vec_fmt_style_seq); }
+
+    inline t_b8 PrintType(s_stream &stream, const s_bit_vec_fmt fmt) {
+        const auto print_bit = [&](const t_len bit_index) {
+            const s_str_rdonly str = IsBitSet(fmt.val, bit_index) ? "1" : "0";
+            return Print(stream, str);
+        };
+
+        const auto print_byte = [&](const t_len index) {
+            const t_len bit_cnt = index == fmt.val.Bytes().Len() - 1 ? fmt.val.LastByteBitCount() : 8;
+
+            for (t_len i = 7; i >= bit_cnt; i--) {
+                Print(stream, "0");
+            }
+
+            for (t_len i = bit_cnt - 1; i >= 0; i--) {
+                print_bit((index * 8) + i);
+            }
+        };
+
+        switch (fmt.style) {
+        case ek_bit_vec_fmt_style_seq:
+            for (t_len i = 0; i < fmt.val.BitCount(); i++) {
+                if (!print_bit(i)) {
+                    return false;
+                }
+            }
+
+            break;
+
+        case ek_bit_vec_fmt_style_little_endian:
+            for (t_len i = 0; i < fmt.val.Bytes().Len(); i++) {
+                if (i > 0) {
+                    Print(stream, " ");
+                }
+
+                print_byte(i);
+            }
+
+            break;
+
+        case ek_bit_vec_fmt_style_big_endian:
+            for (t_len i = fmt.val.Bytes().Len() - 1; i >= 0; i--) {
+                print_byte(i);
+
+                if (i > 0) {
+                    Print(stream, " ");
+                }
+            }
+
+            break;
         }
 
         return true;
