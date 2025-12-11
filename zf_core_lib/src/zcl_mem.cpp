@@ -47,7 +47,7 @@ namespace zf {
         m_is_child = false;
     }
 
-    void *s_mem_arena::Push(const t_len size, const t_len alignment) {
+    s_ptr<void> s_mem_arena::Push(const t_len size, const t_len alignment) {
         ZF_ASSERT(IsInitted());
         ZF_ASSERT(size > 0);
         ZF_ASSERT(IsAlignmentValid(alignment));
@@ -61,7 +61,7 @@ namespace zf {
 
         m_offs = offs_next;
 
-        return static_cast<t_u8 *>(m_buf) + offs_aligned;
+        return {static_cast<s_ptr<t_u8>>(m_buf) + offs_aligned};
     }
 
     // ============================================================

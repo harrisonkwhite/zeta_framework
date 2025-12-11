@@ -9,13 +9,13 @@ namespace zf {
     // ============================================================
     t_b8 LoadTextureFromRaw(const s_str_rdonly file_path, s_mem_arena &tex_data_mem_arena, s_mem_arena &temp_mem_arena, s_texture_data &o_tex_data) {
         s_v2_i size_in_pxs;
-        t_u8 *const stb_px_data_raw = stbi_load(file_path.Raw(), &size_in_pxs.x, &size_in_pxs.y, nullptr, 4);
+        const s_ptr<t_u8> stb_px_data = stbi_load(file_path.Raw(), &size_in_pxs.x, &size_in_pxs.y, nullptr, 4);
 
-        if (!stb_px_data_raw) {
+        if (!stb_px_data) {
             return false;
         }
 
-        ZF_DEFER({ stbi_image_free(stb_px_data_raw); });
+        ZF_DEFER({ stbi_image_free(stb_px_data); });
 
         s_array<t_u8> px_data;
 
@@ -23,8 +23,8 @@ namespace zf {
             return false;
         }
 
-        const s_array_rdonly<t_u8> stb_px_data = {stb_px_data_raw, 4 * size_in_pxs.x * size_in_pxs.y};
-        stb_px_data.CopyTo(px_data);
+        const s_array_rdonly<t_u8> stb_px_data_arr = {stb_px_data, 4 * size_in_pxs.x * size_in_pxs.y};
+        stb_px_data_arr.CopyTo(px_data);
 
         o_tex_data = {size_in_pxs, px_data};
 

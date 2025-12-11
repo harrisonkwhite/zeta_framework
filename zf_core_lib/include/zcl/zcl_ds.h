@@ -151,6 +151,7 @@ namespace zf {
         // The provided hash function has to map a key to an integer 0 or higher. The given memory arena will be saved and used for allocating new memory for entries when needed.
         [[nodiscard]] t_b8 Init(const t_hash_func<tp_key_type> hash_func, s_mem_arena &mem_arena, const t_len cap = 32, const t_bin_comparator<tp_key_type> key_comparator = DefaultBinComparator) {
             ZF_ASSERT(!m_initted);
+            ZF_ASSERT(hash_func);
 
             *this = {
                 .m_hash_func = hash_func,
@@ -185,12 +186,12 @@ namespace zf {
         }
 
         // Returns true iff an entry with the key was found. Leave o_val as nullptr if you don't care about getting the value. o_val is untouched if the key is not found.
-        [[nodiscard]] t_b8 Get(const tp_key_type &key, tp_val_type *const o_val = nullptr) {
+        [[nodiscard]] t_b8 Get(const tp_key_type &key, const s_ptr<tp_val_type> o_val = nullptr) {
             ZF_ASSERT(m_initted);
 
             const t_len hash_index = KeyToHashIndex(key, m_hash_func, Cap());
 
-            s_backing_block *bb = m_backing_blocks_head;
+            s_ptr<s_backing_block> bb = m_backing_blocks_head;
             t_len index = m_immediate_indexes[hash_index];
 
             while (bb && index != -1) {
@@ -219,11 +220,11 @@ namespace zf {
 
             const t_len hash_index = KeyToHashIndex(key, m_hash_func, Cap());
 
-            s_backing_block *bb = m_backing_blocks_head;
-            s_backing_block *bb_prev = nullptr;
+            s_ptr<s_backing_block> bb = m_backing_blocks_head;
+            s_ptr<s_backing_block> bb_prev = nullptr;
 
             t_len index = m_immediate_indexes[hash_index];
-            t_len *const index_to_update = nullptr;
+            s_ptr<t_len> index_to_update = nullptr;
 
             while (true) {
                 if (!bb) {
@@ -287,9 +288,8 @@ namespace zf {
 
             const t_len hash_index = KeyToHashIndex(key, m_hash_func, Cap());
 
-            s_backing_block *bb = m_backing_blocks_head;
-
-            t_len *index = &m_immediate_indexes[hash_index];
+            s_ptr<s_backing_block> bb = m_backing_blocks_head;
+            s_ptr<t_len> index = &m_immediate_indexes[hash_index];
 
             while (bb && *index != -1) {
                 while (*index >= m_backing_block_cap) {
@@ -317,7 +317,7 @@ namespace zf {
             t_len entry_index = 0;
 
             for (t_len i = 0; i < m_immediate_indexes.Len(); i++) {
-                const s_backing_block *bb = m_backing_blocks_head;
+                s_ptr<const s_backing_block> bb = m_backing_blocks_head;
                 t_len index = m_immediate_indexes[i];
 
                 while (index != -1) {
@@ -356,7 +356,7 @@ namespace zf {
             s_array<t_len> next_indexes = {}; // -1 means no "next", and a number greater than the BB capacity is referencing a pair on a later block.
             s_bit_vec usage = {};
 
-            s_backing_block *next = nullptr;
+            s_ptr<s_backing_block> next = nullptr;
 
             [[nodiscard]] t_b8 Init(const t_len cap, s_mem_arena &mem_arena) {
                 if (!AllocArray(cap, mem_arena, keys)) {
@@ -389,9 +389,9 @@ namespace zf {
         s_array<t_len> m_immediate_indexes = {};
 
         t_len m_backing_block_cap = 0;
-        s_backing_block *m_backing_blocks_head = nullptr;
+        s_ptr<s_backing_block> m_backing_blocks_head = nullptr;
 
-        s_mem_arena *m_mem_arena = nullptr;
+        s_ptr<s_mem_arena> m_mem_arena = nullptr;
     };
 
     template <typename tp_key_type, typename tp_val_type>
@@ -428,6 +428,8 @@ namespace zf {
 
     template <typename tp_key_type, typename tp_val_type>
     [[nodiscard]] t_b8 DeserializeHashMap(s_stream &stream, s_mem_arena &hm_mem_arena, const t_hash_func<tp_key_type> hm_hash_func, s_mem_arena &temp_mem_arena, s_hash_map<tp_key_type, tp_val_type> &o_hm, const t_bin_comparator<tp_key_type> hm_key_comparator = DefaultBinComparator) {
+        ZF_ASSERT(hm_hash_func);
+
         t_len cap;
 
         if (!stream.ReadItem(cap)) {

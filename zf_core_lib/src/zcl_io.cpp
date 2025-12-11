@@ -12,23 +12,23 @@ namespace zf {
     t_b8 OpenFile(const s_str_rdonly path, const e_file_access_mode mode, s_stream &o_stream) {
         ZF_ASSERT(path.IsValid());
 
-        FILE *file = nullptr;
+        s_ptr<FILE> file = nullptr;
         e_stream_mode stream_mode;
 
         switch (mode) {
-        case e_file_access_mode::read:
+        case ek_file_access_mode_read:
             file = fopen(path.Raw(), "rb");
-            stream_mode = e_stream_mode::read;
+            stream_mode = ek_stream_mode_read;
             break;
 
-        case e_file_access_mode::write:
+        case ek_file_access_mode_write:
             file = fopen(path.Raw(), "wb");
-            stream_mode = e_stream_mode::write;
+            stream_mode = ek_stream_mode_write;
             break;
 
-        case e_file_access_mode::append:
+        case ek_file_access_mode_append:
             file = fopen(path.Raw(), "ab");
-            stream_mode = e_stream_mode::write;
+            stream_mode = ek_stream_mode_write;
             break;
         }
 
@@ -42,13 +42,13 @@ namespace zf {
     }
 
     void CloseFile(s_stream &stream) {
-        ZF_ASSERT(stream.Type() == e_stream_type::file);
+        ZF_ASSERT(stream.Type() == ek_stream_type_file);
         fclose(stream.File());
         stream = {};
     }
 
     t_len CalcFileSize(s_stream &stream) {
-        ZF_ASSERT(stream.Type() == e_stream_type::file);
+        ZF_ASSERT(stream.Type() == ek_stream_type_file);
 
         const auto &file = stream.File();
         const auto pos_old = ftell(file);
@@ -63,7 +63,7 @@ namespace zf {
 
         s_stream stream;
 
-        if (!OpenFile(path, e_file_access_mode::read, stream)) {
+        if (!OpenFile(path, ek_file_access_mode_read, stream)) {
             return false;
         }
 
@@ -82,11 +82,11 @@ namespace zf {
         return true;
     }
 
-    t_b8 CreateDirectory(const s_str_rdonly path, e_directory_creation_result *const o_creation_res) {
+    t_b8 CreateDirectory(const s_str_rdonly path, const s_ptr<e_directory_creation_result> o_creation_res) {
         ZF_ASSERT(path.IsValid());
 
         if (o_creation_res) {
-            *o_creation_res = e_directory_creation_result::success;
+            *o_creation_res = ek_directory_creation_result_success;
         }
 
 #ifdef ZF_PLATFORM_WINDOWS
@@ -102,20 +102,20 @@ namespace zf {
         if (o_creation_res) {
             switch (errno) {
             case EEXIST:
-                *o_creation_res = e_directory_creation_result::already_exists;
+                *o_creation_res = ek_directory_creation_result_already_exists;
                 break;
 
             case EACCES:
             case EPERM:
-                *o_creation_res = e_directory_creation_result::permission_denied;
+                *o_creation_res = ek_directory_creation_result_permission_denied;
                 break;
 
             case ENOENT:
-                *o_creation_res = e_directory_creation_result::path_not_found;
+                *o_creation_res = ek_directory_creation_result_path_not_found;
                 break;
 
             default:
-                *o_creation_res = e_directory_creation_result::unknown_err;
+                *o_creation_res = ek_directory_creation_result_unknown_err;
                 break;
             }
         }
@@ -123,11 +123,11 @@ namespace zf {
         return false;
     }
 
-    static t_b8 CreateDirectoryAndParentsHelper(const s_str path_mut, e_directory_creation_result *const o_dir_creation_res) {
+    static t_b8 CreateDirectoryAndParentsHelper(const s_str path_mut, const s_ptr<e_directory_creation_result> o_dir_creation_res) {
         ZF_ASSERT(path_mut.IsValid());
 
         if (o_dir_creation_res) {
-            *o_dir_creation_res = e_directory_creation_result::success;
+            *o_dir_creation_res = ek_directory_creation_result_success;
         }
 
         const auto create_dir_if_nonexistent = [o_dir_creation_res, path_mut]() {
@@ -137,7 +137,7 @@ namespace zf {
                 return false;
             }
 
-            if (path_type == e_path_type::not_found) {
+            if (path_type == ek_path_type_not_found) {
                 if (!CreateDirectory(path_mut, o_dir_creation_res)) {
                     return false;
                 }
@@ -176,7 +176,7 @@ namespace zf {
         return true;
     }
 
-    t_b8 CreateDirectoryAndParents(const s_str_rdonly path, s_mem_arena &temp_mem_arena, e_directory_creation_result *const o_dir_creation_res) {
+    t_b8 CreateDirectoryAndParents(const s_str_rdonly path, s_mem_arena &temp_mem_arena, const s_ptr<e_directory_creation_result> o_dir_creation_res) {
         ZF_ASSERT(path.IsValid());
 
         // Create a mutable copy of the path (so terminators can be put in at different points) and call the helper.
@@ -191,9 +191,9 @@ namespace zf {
         return CreateDirectoryAndParentsHelper(path_clone, o_dir_creation_res);
     }
 
-    t_b8 CreateFileAndParentDirs(const s_str_rdonly path, s_mem_arena &temp_mem_arena, e_directory_creation_result *const o_dir_creation_res) {
+    t_b8 CreateFileAndParentDirs(const s_str_rdonly path, s_mem_arena &temp_mem_arena, const s_ptr<e_directory_creation_result> o_dir_creation_res) {
         if (o_dir_creation_res) {
-            *o_dir_creation_res = e_directory_creation_result::success;
+            *o_dir_creation_res = ek_directory_creation_result_success;
         }
 
         // Create a mutable copy of the path (so a terminator can be put in).
@@ -224,7 +224,7 @@ namespace zf {
         // Now that directories are created, create the file.
         s_stream fs;
 
-        if (!OpenFile(path, e_file_access_mode::write, fs)) {
+        if (!OpenFile(path, ek_file_access_mode_write, fs)) {
             return false;
         }
 
@@ -239,11 +239,11 @@ namespace zf {
         struct stat info;
 
         if (stat(path.Raw(), &info) != 0) {
-            o_type = e_path_type::not_found;
+            o_type = ek_path_type_not_found;
         } else if (info.st_mode & S_IFDIR) {
-            o_type = e_path_type::directory;
+            o_type = ek_path_type_directory;
         } else {
-            o_type = e_path_type::file;
+            o_type = ek_path_type_file;
         }
 
         return true;

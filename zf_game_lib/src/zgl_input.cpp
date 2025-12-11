@@ -7,16 +7,16 @@ namespace zf {
         }
 
         switch (act) {
-        case e_key_action::invalid:
+        case ek_key_action_invalid:
             ZF_ASSERT(false);
             break;
 
-        case e_key_action::press:
+        case ek_key_action_press:
             SetBit(is.keys_down, code);
             SetBit(is.events.keys_pressed, code);
             break;
 
-        case e_key_action::release:
+        case ek_key_action_release:
             UnsetBit(is.keys_down, code);
             SetBit(is.events.keys_released, code);
             break;
@@ -29,16 +29,16 @@ namespace zf {
         }
 
         switch (act) {
-        case e_mouse_button_action::invalid:
+        case ek_mouse_button_action_invalid:
             ZF_ASSERT(false);
             break;
 
-        case e_mouse_button_action::press:
+        case ek_mouse_button_action_press:
             SetBit(is.mouse_buttons_down, code);
             SetBit(is.events.mouse_buttons_pressed, code);
             break;
 
-        case e_mouse_button_action::release:
+        case ek_mouse_button_action_release:
             SetBit(is.mouse_buttons_down, code);
             SetBit(is.events.mouse_buttons_pressed, code);
             break;

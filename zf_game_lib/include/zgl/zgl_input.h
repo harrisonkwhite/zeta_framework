@@ -129,16 +129,16 @@ namespace zf {
     }
 
     namespace internal {
-        enum class e_key_action : t_i32 {
-            invalid,
-            press,
-            release
+        enum e_key_action : t_i32 {
+            ek_key_action_invalid,
+            ek_key_action_press,
+            ek_key_action_release
         };
 
-        enum class e_mouse_button_action : t_i32 {
-            invalid,
-            press,
-            release
+        enum e_mouse_button_action : t_i32 {
+            ek_mouse_button_action_invalid,
+            ek_mouse_button_action_press,
+            ek_mouse_button_action_release
         };
 
         void ProcKeyAction(s_input_state &is, const e_key_code code, const e_key_action act);

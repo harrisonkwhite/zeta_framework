@@ -185,7 +185,7 @@ namespace zf {
     // ============================================================
     // @section: Resources
     // ============================================================
-    enum e_gfx_resource_type {
+    enum e_gfx_resource_type : t_i32 {
         ek_gfx_resource_type_texture,
         ek_gfx_resource_type_font,
         ek_gfx_resource_type_surface,
