@@ -88,72 +88,76 @@ namespace zf {
         constexpr s_surface_shader_prog_uniform_val(const s_v4 v) : m_type(ek_surface_shader_prog_uniform_val_type_v4), m_type_data({.v4 = v}) {};
         constexpr s_surface_shader_prog_uniform_val(const s_mat4x4 &v) : m_type(ek_surface_shader_prog_uniform_val_type_mat4x4), m_type_data({.mat4x4 = v}) {};
 
-        t_i32 &I32() {
+        constexpr e_surface_shader_prog_uniform_val_type Type() const {
+            return m_type;
+        }
+
+        constexpr t_i32 &I32() {
             ZF_ASSERT(m_type == ek_surface_shader_prog_uniform_val_type_i32);
             return m_type_data.i32;
         }
 
-        const t_i32 &I32() const {
+        constexpr const t_i32 &I32() const {
             ZF_ASSERT(m_type == ek_surface_shader_prog_uniform_val_type_i32);
             return m_type_data.i32;
         }
 
-        t_u32 &U32() {
+        constexpr t_u32 &U32() {
             ZF_ASSERT(m_type == ek_surface_shader_prog_uniform_val_type_u32);
             return m_type_data.u32;
         }
 
-        const t_u32 &U32() const {
+        constexpr const t_u32 &U32() const {
             ZF_ASSERT(m_type == ek_surface_shader_prog_uniform_val_type_u32);
             return m_type_data.u32;
         }
 
-        t_f32 &F32() {
+        constexpr t_f32 &F32() {
             ZF_ASSERT(m_type == ek_surface_shader_prog_uniform_val_type_f32);
             return m_type_data.f32;
         }
 
-        const t_f32 &F32() const {
+        constexpr const t_f32 &F32() const {
             ZF_ASSERT(m_type == ek_surface_shader_prog_uniform_val_type_f32);
             return m_type_data.f32;
         }
 
-        s_v2 &V2() {
+        constexpr s_v2 &V2() {
             ZF_ASSERT(m_type == ek_surface_shader_prog_uniform_val_type_v2);
             return m_type_data.v2;
         }
 
-        const s_v2 &V2() const {
+        constexpr const s_v2 &V2() const {
             ZF_ASSERT(m_type == ek_surface_shader_prog_uniform_val_type_v2);
             return m_type_data.v2;
         }
 
-        s_v3 &V3() {
+        constexpr s_v3 &V3() {
             ZF_ASSERT(m_type == ek_surface_shader_prog_uniform_val_type_v3);
             return m_type_data.v3;
         }
 
-        const s_v3 &V3() const {
+        constexpr const s_v3 &V3() const {
             ZF_ASSERT(m_type == ek_surface_shader_prog_uniform_val_type_v3);
             return m_type_data.v3;
         }
 
-        s_v4 &V4() {
+        constexpr s_v4 &V4() {
             ZF_ASSERT(m_type == ek_surface_shader_prog_uniform_val_type_v4);
             return m_type_data.v4;
         }
 
-        const s_v4 &V4() const {
+        constexpr const s_v4 &V4() const {
             ZF_ASSERT(m_type == ek_surface_shader_prog_uniform_val_type_v4);
             return m_type_data.v4;
         }
 
-        s_mat4x4 &Mat4x4() {
+        constexpr s_mat4x4 &Mat4x4() {
             ZF_ASSERT(m_type == ek_surface_shader_prog_uniform_val_type_mat4x4);
             return m_type_data.mat4x4;
         }
 
-        const s_mat4x4 &Mat4x4() const {
+        constexpr const s_mat4x4 &Mat4x4() const {
             ZF_ASSERT(m_type == ek_surface_shader_prog_uniform_val_type_mat4x4);
             return m_type_data.mat4x4;
         }

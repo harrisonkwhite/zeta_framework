@@ -653,7 +653,6 @@ void main() {
         s_ptr<s_gfx_resource> default_surf_shader_prog = nullptr;
     };
 
-#if 0
     struct s_rendering_state {
         s_static_array<t_batch_slot, g_batch_slot_cnt> batch_slots = {};
         t_len batch_slots_used_cnt = 0;
@@ -661,23 +660,23 @@ void main() {
         s_mat4x4 view_mat = {}; // The view matrix to be used when flushing.
         t_gl_id tex_gl_id = {}; // The texture to be used when flushing.
 
-        s_static_stack<const s_gfx_resource *, 32> surfs;
+        s_static_stack<s_ptr<const s_gfx_resource>, 32> surfs = {};
     };
 
-    t_b8 internal::BeginFrame(const s_rendering_basis *const rendering_basis, const s_v2_i framebuffer_size_cache, s_mem_arena *const rendering_context_mem_arena, s_rendering_context *const o_rendering_context) {
-        MarkUninitted(o_rendering_context);
-        o_rendering_context->basis = rendering_basis;
-        o_rendering_context->framebuffer_size_cache = framebuffer_size_cache;
+    t_b8 internal::BeginFrame(const s_rendering_basis &rendering_basis, const s_v2_i framebuffer_size_cache, s_mem_arena &mem_arena, s_rendering_context &o_rendering_context) {
+        o_rendering_context = {
+            .basis = &rendering_basis,
+            .state = Alloc<s_rendering_state>(mem_arena),
+            .framebuffer_size_cache = framebuffer_size_cache,
+        };
 
-        o_rendering_context->state = PushToMemArena<s_rendering_state>(rendering_context_mem_arena);
-
-        if (!o_rendering_context->state) {
+        if (!o_rendering_context.state) {
             return false;
         }
 
-        o_rendering_context->state->view_mat = CreateIdentityMatrix();
+        o_rendering_context.state->view_mat = CreateIdentityMatrix();
         glViewport(0, 0, framebuffer_size_cache.x, framebuffer_size_cache.y);
-        Clear(*o_rendering_context, s_color_rgba8(147, 207, 249, 255));
+        Clear(o_rendering_context, s_color_rgba8(147, 207, 249, 255));
 
         return true;
     }
@@ -696,7 +695,7 @@ void main() {
 
         {
             const t_len write_size = ZF_SIZE_OF(t_batch_slot) * rc.state->batch_slots_used_cnt;
-            glBufferSubData(GL_ARRAY_BUFFER, 0, write_size, rc.state->batch_slots.buf_raw);
+            glBufferSubData(GL_ARRAY_BUFFER, 0, write_size, rc.state->batch_slots.raw);
         }
 
         //
@@ -728,9 +727,7 @@ void main() {
     }
 
     void Clear(const s_rendering_context rc, const s_color_rgba32f col) {
-        ZF_ASSERT(IsColorValid(col));
-
-        glClearColor(col.r, col.g, col.b, col.a);
+        glClearColor(col.R(), col.G(), col.B(), col.A());
         glClear(GL_COLOR_BUFFER_BIT);
     }
 
@@ -739,40 +736,53 @@ void main() {
         rc.state->view_mat = mat;
     }
 
-    void Draw(const s_rendering_context rc, const t_gl_id tex_gl_id, const s_rect_f tex_coords, s_v2 pos, s_v2 size, s_v2 origin, const t_f32 rot, const s_color_rgba32f blend) {
+    static void Draw(const s_rendering_context rc, const t_gl_id tex_gl_id, const s_rect_f tex_coords, const s_v2 pos, const s_v2 size, const s_v2 origin, const t_f32 rot, const s_color_rgba32f blend) {
         if (rc.state->batch_slots_used_cnt == 0) {
-            // This is the first draw to the batch, so set the texture associated with the
-            // batch to the one we're trying to render.
+            // This is the first draw to the batch, so set the texture associated with the batch to the one we're trying to render.
             rc.state->tex_gl_id = tex_gl_id;
         } else if (rc.state->batch_slots_used_cnt == g_batch_slot_cnt || tex_gl_id != rc.state->tex_gl_id) {
-            // Flush the batch and then try this same render operation again but on a fresh
-            // batch.
+            // Flush the batch and then try this same render operation again but on a fresh batch.
             Flush(rc);
             Draw(rc, tex_gl_id, tex_coords, pos, size, origin, rot, blend);
             return;
         }
 
         // Write the vertex data to the next slot.
-        const s_static_array<s_v2, 4> vert_coords = {{{0.0f - origin.x, 0.0f - origin.y}, {1.0f - origin.x, 0.0f - origin.y}, {1.0f - origin.x, 1.0f - origin.y}, {0.0f - origin.x, 1.0f - origin.y}}};
+        const s_static_array<s_v2, 4> vert_coords = {
+            {0.0f - origin.x, 0.0f - origin.y},
+            {1.0f - origin.x, 0.0f - origin.y},
+            {1.0f - origin.x, 1.0f - origin.y},
+            {0.0f - origin.x, 1.0f - origin.y},
+        };
 
-        const s_static_array<s_v2, 4> tex_coords_per_vert = {{{RectLeft(tex_coords), RectTop(tex_coords)}, {RectRight(tex_coords), RectTop(tex_coords)}, {RectRight(tex_coords), RectBottom(tex_coords)}, {RectLeft(tex_coords), RectBottom(tex_coords)}}};
+        const s_static_array<s_v2, 4> tex_coords_per_vert = {
+            {tex_coords.Left(), tex_coords.Top()},
+            {tex_coords.Right(), tex_coords.Top()},
+            {tex_coords.Right(), tex_coords.Bottom()},
+            {tex_coords.Left(), tex_coords.Bottom()},
+        };
 
         t_batch_slot &slot = rc.state->batch_slots[rc.state->batch_slots_used_cnt];
 
         for (t_len i = 0; i < slot.g_len; i++) {
-            slot[i] = {.vert_coord = vert_coords[i], .pos = pos, .size = size, .rot = rot, .tex_coord = tex_coords_per_vert[i], .blend = blend};
+            slot[i] = {
+                .vert_coord = vert_coords[i],
+                .pos = pos,
+                .size = size,
+                .rot = rot,
+                .tex_coord = tex_coords_per_vert[i],
+                .blend = blend,
+            };
         }
 
         // Update the count - we've used a slot!
         rc.state->batch_slots_used_cnt++;
     }
 
-    void DrawTexture(const s_rendering_context rc, const s_gfx_resource *const tex, const s_v2 pos, const s_rect_i src_rect, const s_v2 origin, const s_v2 scale, const t_f32 rot, const s_color_rgba32f blend) {
-        ZF_ASSERT(tex && tex->type == ek_gfx_resource_type_texture);
+    void DrawTexture(const s_rendering_context rc, const s_gfx_resource &tex, const s_v2 pos, const s_rect_i src_rect, const s_v2 origin, const s_v2 scale, const t_f32 rot, const s_color_rgba32f blend) {
         ZF_ASSERT(IsOriginValid(origin));
-        ZF_ASSERT(IsColorValid(blend));
 
-        const auto tex_size = tex->type_data.tex.size;
+        const auto tex_size = tex.Texture().size;
 
         s_rect_i src_rect_to_use;
 
@@ -780,33 +790,44 @@ void main() {
             // If the source rectangle wasn't set, just go with the whole texture.
             src_rect_to_use = {0, 0, tex_size.x, tex_size.y};
         } else {
-            ZF_ASSERT(RectLeft(src_rect) >= 0 && RectTop(src_rect) >= 0 && RectRight(src_rect) <= tex_size.x && RectTop(src_rect) <= tex_size.y);
+            ZF_ASSERT(src_rect.Left() >= 0 && src_rect.Top() >= 0 && src_rect.Right() <= tex_size.x && src_rect.Top() <= tex_size.y);
             src_rect_to_use = src_rect;
         }
 
         const s_rect_f tex_coords = CalcTextureCoords(src_rect_to_use, tex_size);
 
-        const s_v2 size = {static_cast<t_f32>(src_rect_to_use.width) * scale.x, static_cast<t_f32>(src_rect_to_use.height) * scale.y};
+        const s_v2 size = {
+            static_cast<t_f32>(src_rect_to_use.width) * scale.x,
+            static_cast<t_f32>(src_rect_to_use.height) * scale.y,
+        };
 
-        Draw(rc, tex->type_data.tex.gl_id, tex_coords, pos, size, origin, rot, blend);
+        Draw(rc, tex.Texture().gl_id, tex_coords, pos, size, origin, rot, blend);
     }
 
     void DrawRect(const s_rendering_context rc, const s_rect_f rect, const s_color_rgba32f color) {
-        DrawTexture(rc, rc.basis->px_tex, RectPos(rect), {}, {}, RectSize(rect), 0.0f, color);
+        DrawTexture(rc, *rc.basis->px_tex, rect.Pos(), {}, {}, rect.Size(), 0.0f, color);
     }
 
-    void DrawRectOpaqueOutlined(const s_rendering_context rc, const s_rect_f rect, const s_color_rgba24f fill_color, const s_color_rgba32f outline_color, const t_f32 outline_thickness) {
+    void DrawRectOpaqueOutlined(const s_rendering_context rc, const s_rect_f rect, const s_color_rgb24f fill_color, const s_color_rgba32f outline_color, const t_f32 outline_thickness) {
         ZF_ASSERT(outline_thickness > 0.0f);
 
-        DrawRect(rc, {rect.x - outline_thickness, rect.y - outline_thickness, rect.width + (outline_thickness * 2.0f), rect.height + (outline_thickness * 2.0f)}, fill_color);
+        const s_rect_f outline_rect = {
+            rect.x - outline_thickness,
+            rect.y - outline_thickness,
+            rect.width + (outline_thickness * 2.0f),
+            rect.height + (outline_thickness * 2.0f),
+        };
+
+        DrawRect(rc, outline_rect, fill_color);
+
         DrawRect(rc, rect, fill_color);
     }
 
     void DrawRectRot(const s_rendering_context rc, const s_v2 pos, const s_v2 size, const s_v2 origin, const t_f32 rot, const s_color_rgba32f color) {
-        DrawTexture(rc, rc.basis->px_tex, pos, {}, origin, size, rot, color);
+        DrawTexture(rc, *rc.basis->px_tex, pos, {}, origin, size, rot, color);
     }
 
-    void DrawRectRotOpaqueOutlined(const s_rendering_context rc, const s_v2 pos, const s_v2 size, const s_v2 origin, const t_f32 rot, const s_color_rgba24f fill_color, const s_color_rgba32f outline_color, const t_f32 outline_thickness) {
+    void DrawRectRotOpaqueOutlined(const s_rendering_context rc, const s_v2 pos, const s_v2 size, const s_v2 origin, const t_f32 rot, const s_color_rgb24f fill_color, const s_color_rgba32f outline_color, const t_f32 outline_thickness) {
         ZF_ASSERT(outline_thickness > 0.0f);
 
         DrawRectRot(rc, pos, {size.x + (outline_thickness * 2.0f), size.y + (outline_thickness * 2.0f)}, origin, rot, outline_color);
@@ -818,23 +839,21 @@ void main() {
 
         const t_f32 len = CalcDist(a, b);
         const t_f32 dir = CalcDirInRads(a, b);
-        DrawTexture(rc, rc.basis->px_tex, a, {}, origins::g_centerleft, {len, thickness}, dir, blend);
+        DrawTexture(rc, *rc.basis->px_tex, a, {}, origins::g_centerleft, {len, thickness}, dir, blend);
     }
 
-    t_b8 DrawStr(const s_rendering_context rc, const s_str_rdonly str, const s_gfx_resource *const font, const s_v2 pos, const s_v2 alignment, const s_color_rgba32f blend, s_mem_arena &temp_mem_arena) {
-        ZF_ASSERT(IsValidUTF8Str(str));
-        ZF_ASSERT(font && font->type == ek_gfx_resource_type_font);
+    t_b8 DrawStr(const s_rendering_context rc, const s_str_rdonly str, const s_gfx_resource &font, const s_v2 pos, const s_v2 alignment, const s_color_rgba32f blend, s_mem_arena &temp_mem_arena) {
+        ZF_ASSERT(str.IsValid());
         ZF_ASSERT(IsAlignmentValid(alignment));
-        ZF_ASSERT(IsColorValid(blend));
 
-        if (IsStrEmpty(str)) {
+        if (str.IsEmpty()) {
             return true;
         }
 
-        const auto &font_arrangement = font->type_data.font.arrangement;
-        const auto &font_atlas_gl_ids = font->type_data.font.atlas_gl_ids;
+        const auto &font_arrangement = font.Font().arrangement;
+        const auto &font_atlas_gl_ids = font.Font().atlas_gl_ids;
 
-        s_array<s_v2> chr_positions;
+        s_array<s_v2> chr_positions = {};
 
         if (!LoadStrChrDrawPositions(str, font_arrangement, pos, alignment, temp_mem_arena, chr_positions)) {
             return false;
@@ -848,16 +867,16 @@ void main() {
                 continue;
             }
 
-            s_font_glyph_info glyph_info;
+            s_font_glyph_info glyph_info = {};
 
-            if (!HashMapGet(font_arrangement.code_pts_to_glyph_infos, chr_info.code_pt, &glyph_info)) {
+            if (!font_arrangement.code_pts_to_glyph_infos.Get(chr_info.code_pt, &glyph_info)) {
                 ZF_ASSERT(false);
                 return false;
             }
 
             const auto chr_tex_coords = CalcTextureCoords(glyph_info.atlas_rect, g_font_atlas_size);
 
-            Draw(rc, font_atlas_gl_ids[glyph_info.atlas_index], chr_tex_coords, chr_positions[chr_index], ToV2(RectSize(glyph_info.atlas_rect)), {}, 0.0f, blend);
+            Draw(rc, font_atlas_gl_ids[glyph_info.atlas_index], chr_tex_coords, chr_positions[chr_index], glyph_info.atlas_rect.Size().ToV2(), {}, 0.0f, blend);
 
             chr_index++;
         };
@@ -865,109 +884,102 @@ void main() {
         return true;
     }
 
-    void SetSurface(const s_rendering_context rc, const s_gfx_resource *const surf) {
+    void SetSurface(const s_rendering_context rc, const s_ptr<const s_gfx_resource> surf) {
         ZF_ASSERT(surf && surf->type == ek_gfx_resource_type_surface);
 
-        if (IsStackFull(rc.state->surfs)) {
-            LogError("Attempting to set a surface even though the limit has been reached!");
+        if (rc.state->surfs.IsFull()) {
+            /*LogError("Attempting to set a surface even though the limit has been reached!");*/
             ZF_REPORT_ERROR();
             return;
         }
 
         Flush(rc);
 
-        glBindFramebuffer(GL_FRAMEBUFFER, surf->type_data.surf.fb_gl_id);
-        glViewport(0, 0, static_cast<GLsizei>(surf->type_data.surf.size.x), static_cast<GLsizei>(surf->type_data.surf.size.y));
+        glBindFramebuffer(GL_FRAMEBUFFER, surf->Surface().fb_gl_id);
+        glViewport(0, 0, static_cast<GLsizei>(surf->Surface().size.x), static_cast<GLsizei>(surf->Surface().size.y));
 
-        StackPush(rc.state->surfs, surf);
+        rc.state->surfs.Push(surf);
     }
 
     void UnsetSurface(const s_rendering_context rc) {
-        if (IsStackEmpty(rc.state->surfs)) {
-            LogError("Attempting to unset a surface even though none are set!");
+        if (rc.state->surfs.IsEmpty()) {
+            /*LogError("Attempting to unset a surface even though none are set!");*/
             ZF_REPORT_ERROR();
             return;
         }
 
         Flush(rc);
 
-        StackPop(rc.state->surfs);
+        rc.state->surfs.Pop();
 
         t_gl_id fb_gl_id;
         s_v2_i viewport_size;
 
-        if (IsStackEmpty(rc.state->surfs)) {
+        if (rc.state->surfs.IsEmpty()) {
             fb_gl_id = 0;
             viewport_size = rc.framebuffer_size_cache;
         } else {
-            const auto new_surf = StackTop(rc.state->surfs);
-            fb_gl_id = new_surf->type_data.surf.fb_gl_id;
-            viewport_size = new_surf->type_data.surf.size;
+            const auto new_surf = rc.state->surfs.Peek();
+            fb_gl_id = new_surf->Surface().fb_gl_id;
+            viewport_size = new_surf->Surface().size;
         }
 
         glBindFramebuffer(GL_FRAMEBUFFER, fb_gl_id);
         glViewport(0, 0, static_cast<GLsizei>(viewport_size.x), static_cast<GLsizei>(viewport_size.y));
     }
 
-    void SetSurfaceShaderProg(const s_rendering_context rc, const s_gfx_resource *const prog) {
+    void SetSurfaceShaderProg(const s_rendering_context rc, const s_gfx_resource &prog) {
         ZF_ASSERT(CurGLShaderProg() == 0 && "Potential attempted double-assignment of surface shader program?");
-        ZF_ASSERT(prog && prog->type == ek_gfx_resource_type_surface_shader_prog);
-
-        glUseProgram(prog->type_data.surf_shader_prog.gl_id);
+        glUseProgram(prog.SurfaceShaderProg().gl_id);
     }
 
     t_b8 SetSurfaceShaderProgUniform(const s_rendering_context rc, const s_str_rdonly name, const s_surface_shader_prog_uniform_val &val, s_mem_arena &temp_mem_arena) {
-        const t_gl_id cur_prog_gl_id = CurGLShaderProg();
+        ZF_ASSERT(name.IsValid());
 
+        const t_gl_id cur_prog_gl_id = CurGLShaderProg();
         ZF_ASSERT(cur_prog_gl_id != 0 && "Surface shader program must be set before setting uniforms!");
 
-        s_str name_terminated;
-
-        if (!CloneStrButAddTerminator(name, temp_mem_arena, name_terminated)) {
-            return false;
-        }
-
-        const t_i32 loc = glGetUniformLocation(cur_prog_gl_id, StrRaw(name_terminated));
+        const t_i32 loc = glGetUniformLocation(cur_prog_gl_id, name.Raw());
         ZF_ASSERT(loc != -1 && "Failed to get location of shader uniform!");
 
-        switch (val.type) {
+        switch (val.Type()) {
         case ek_surface_shader_prog_uniform_val_type_i32:
-            glUniform1i(loc, val.type_data.i32);
+            glUniform1i(loc, val.I32());
             break;
 
         case ek_surface_shader_prog_uniform_val_type_u32:
-            glUniform1ui(loc, val.type_data.u32);
+            glUniform1ui(loc, val.U32());
             break;
 
         case ek_surface_shader_prog_uniform_val_type_f32:
-            glUniform1f(loc, val.type_data.f32);
+            glUniform1f(loc, val.F32());
             break;
 
         case ek_surface_shader_prog_uniform_val_type_v2:
-            glUniform2f(loc, val.type_data.v2.x, val.type_data.v2.y);
+            glUniform2f(loc, val.V2().x, val.V2().y);
             break;
 
         case ek_surface_shader_prog_uniform_val_type_v3:
-            glUniform3f(loc, val.type_data.v3.x, val.type_data.v3.y, val.type_data.v3.z);
+            glUniform3f(loc, val.V3().x, val.V3().y, val.V3().z);
             break;
 
         case ek_surface_shader_prog_uniform_val_type_v4:
-            glUniform4f(loc, val.type_data.v4.x, val.type_data.v4.y, val.type_data.v4.z, val.type_data.v4.w);
+            glUniform4f(loc, val.V4().x, val.V4().y, val.V4().z, val.V4().w);
             break;
 
         case ek_surface_shader_prog_uniform_val_type_mat4x4:
-            glUniformMatrix4fv(loc, 1, false, reinterpret_cast<const t_f32 *>(&val.type_data.mat4x4));
+            glUniformMatrix4fv(loc, 1, false, reinterpret_cast<const t_f32 *>(&val.Mat4x4()));
             break;
         }
 
         return true;
     }
 
-    void DrawSurface(const s_rendering_context rc, const s_gfx_resource *const surf, const s_v2 pos) {
+    void DrawSurface(const s_rendering_context rc, const s_ptr<const s_gfx_resource> surf, const s_v2 pos) {
         ZF_ASSERT(surf && surf->type == ek_gfx_resource_type_surface);
 
         if (CurGLShaderProg() == 0) {
-            glUseProgram(rc.basis->default_surf_shader_prog->type_data.surf_shader_prog.gl_id);
+            glUseProgram(rc.basis->default_surf_shader_prog->SurfaceShaderProg().gl_id);
         }
 
         glBindVertexArray(rc.basis->surf_mesh_gl_ids.vert_arr);
@@ -985,11 +997,11 @@ void main() {
             };
             // clang-format on
 
-            glBufferSubData(GL_ARRAY_BUFFER, 0, ArraySizeInBytes(ToNonstaticArray(verts)), verts.buf_raw);
+            glBufferSubData(GL_ARRAY_BUFFER, 0, verts.ToNonstatic().SizeInBytes(), verts.raw);
         }
 
         glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, surf->type_data.surf.tex_gl_id);
+        glBindTexture(GL_TEXTURE_2D, surf->Surface().tex_gl_id);
 
         const t_i32 proj_uniform_loc = glGetUniformLocation(CurGLShaderProg(), "u_proj");
         ZF_ASSERT(proj_uniform_loc != -1); // @todo: Remove, do at load time.
@@ -1005,7 +1017,7 @@ void main() {
         const t_i32 size_uniform_loc = glGetUniformLocation(CurGLShaderProg(), "u_size");
         ZF_ASSERT(size_uniform_loc != -1); // @todo: Remove, do at load time.
 
-        const auto size_f = ToV2(surf->type_data.surf.size);
+        const auto size_f = surf->Surface().size.ToV2();
         glUniform2fv(size_uniform_loc, 1, reinterpret_cast<const t_f32 *>(&size_f));
 
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, rc.basis->surf_mesh_gl_ids.elem_buf);
@@ -1013,7 +1025,6 @@ void main() {
 
         glUseProgram(0);
     }
-#endif
 
     // ============================================================
     // @section: General

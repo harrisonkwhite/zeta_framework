@@ -129,7 +129,6 @@ namespace zf {
                         frame_dur_accum -= targ_tick_interval;
                     } while (frame_dur_accum >= targ_tick_interval);
 
-#if 0
                     // Perform a single render.
                     s_rendering_context rendering_context = {};
 
@@ -152,7 +151,6 @@ namespace zf {
                     }
 
                     internal::CompleteFrame(rendering_context);
-#endif
 
                     internal::SwapWindowBuffers(*platform_layer_info);
                 }

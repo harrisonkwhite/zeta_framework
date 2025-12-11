@@ -63,6 +63,11 @@ namespace zf {
             return bytes.Ptr();
         }
 
+        // This assumes the string is valid.
+        constexpr t_b8 IsEmpty() const {
+            return !bytes[0];
+        }
+
         t_b8 IsValid() const;
         t_len CalcLen() const;
         t_unicode_code_pt CodePointAtByte(const t_len byte_index) const;
@@ -88,6 +93,11 @@ namespace zf {
 
         constexpr char *Raw() const {
             return bytes.Ptr();
+        }
+
+        // This assumes the string is valid.
+        constexpr t_b8 IsEmpty() const {
+            return !bytes[0];
         }
 
         t_b8 IsValid() const {

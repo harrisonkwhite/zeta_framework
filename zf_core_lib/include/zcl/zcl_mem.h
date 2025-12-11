@@ -439,6 +439,14 @@ namespace zf {
             return {raw, tp_len};
         }
 
+        constexpr s_array<tp_type> ToNonstatic() {
+            return {raw, tp_len};
+        }
+
+        constexpr s_array_rdonly<tp_type> ToNonstatic() const {
+            return {raw, tp_len};
+        }
+
         constexpr tp_type &operator[](const t_len index) {
             ZF_ASSERT(index >= 0 && index < tp_len);
             return raw[index];
