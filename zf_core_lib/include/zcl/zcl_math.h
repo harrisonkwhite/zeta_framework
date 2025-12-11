@@ -215,37 +215,16 @@ namespace zf {
         constexpr s_rect_f(const t_f32 x, const t_f32 y, const t_f32 width, const t_f32 height) : x(x), y(y), width(width), height(height) {}
         constexpr s_rect_f(const s_v2 pos, const s_v2 size) : x(pos.x), y(pos.y), width(size.x), height(size.y) {}
 
-        constexpr s_v2 Pos() const {
-            return {x, y};
-        }
+        constexpr s_v2 Pos() const { return {x, y}; }
+        constexpr s_v2 Size() const { return {width, height}; }
+        constexpr s_v2 Center() const { return {x + (width / 2.0f), y + (height / 2.0f)}; }
 
-        constexpr s_v2 Size() const {
-            return {width, height};
-        }
+        constexpr t_f32 Left() const { return x; }
+        constexpr t_f32 Top() const { return y; }
+        constexpr t_f32 Right() const { return x + width; }
+        constexpr t_f32 Bottom() const { return y + height; }
 
-        constexpr s_v2 Center() const {
-            return {x + (width / 2.0f), y + (height / 2.0f)};
-        }
-
-        constexpr t_f32 Left() const {
-            return x;
-        }
-
-        constexpr t_f32 Top() const {
-            return y;
-        }
-
-        constexpr t_f32 Right() const {
-            return x + width;
-        }
-
-        constexpr t_f32 Bottom() const {
-            return y + height;
-        }
-
-        constexpr t_f32 Area() const {
-            return width * height;
-        }
+        constexpr t_f32 Area() const { return width * height; }
 
         explicit constexpr operator s_rect_i() const;
         constexpr s_rect_i ToRectI() const;
@@ -279,33 +258,15 @@ namespace zf {
         constexpr s_rect_i(const t_i32 x, const t_i32 y, const t_i32 width, const t_i32 height) : x(x), y(y), width(width), height(height) {}
         constexpr s_rect_i(const s_v2_i pos, const s_v2_i size) : x(pos.x), y(pos.y), width(size.x), height(size.y) {}
 
-        constexpr s_v2_i Pos() const {
-            return {x, y};
-        }
+        constexpr s_v2_i Pos() const { return {x, y}; }
+        constexpr s_v2_i Size() const { return {width, height}; }
 
-        constexpr s_v2_i Size() const {
-            return {width, height};
-        }
+        constexpr t_i32 Left() const { return x; }
+        constexpr t_i32 Top() const { return y; }
+        constexpr t_i32 Right() const { return x + width; }
+        constexpr t_i32 Bottom() const { return y + height; }
 
-        constexpr t_i32 Left() const {
-            return x;
-        }
-
-        constexpr t_i32 Top() const {
-            return y;
-        }
-
-        constexpr t_i32 Right() const {
-            return x + width;
-        }
-
-        constexpr t_i32 Bottom() const {
-            return y + height;
-        }
-
-        constexpr t_i32 Area() const {
-            return width * height;
-        }
+        constexpr t_i32 Area() const { return width * height; }
 
         constexpr t_b8 operator==(const s_rect_i other) const {
             return x == other.x && y == other.y && width == other.width && height == other.height;
