@@ -377,21 +377,19 @@ namespace zf {
         return res.Texture().size;
     }
 
-#if 0
-    static t_b8 CreateFontAtlasGLTextures(const s_array_rdonly<t_font_atlas_rgba> atlas_rgbas, s_array<t_gl_id> &o_gl_ids) {
-        /*o_gl_ids = {
-            .buf = static_cast<t_gl_id *>(malloc(static_cast<size_t>(ZF_SIZE_OF(t_gl_id) * atlas_rgbas.Len()))),
-            .len = atlas_rgbas.Len(),
-        };*/
-
-        if (!gl_ids->buf) {
+    [[nodiscard]] static t_b8 CreateFontAtlasGLTextures(const s_array_rdonly<t_font_atlas_rgba> atlas_rgbas, s_mem_arena &gl_ids_mem_arena, s_array<t_gl_id> &o_gl_ids) {
+        if (!AllocArray(atlas_rgbas.Len(), gl_ids_mem_arena, o_gl_ids)) {
             return false;
         }
 
-        for (t_len i = 0; i < atlas_rgbas.len; i++) {
-            (*gl_ids)[i] = CreateGLTexture({g_font_atlas_size, atlas_rgbas[i]});
+        for (t_len i = 0; i < atlas_rgbas.Len(); i++) {
+            o_gl_ids[i] = CreateGLTexture({g_font_atlas_size, atlas_rgbas[i]});
 
-            if (!(*gl_ids)[i]) {
+            if (!o_gl_ids[i]) {
+                if (i > 0) {
+                    glDeleteTextures(static_cast<GLsizei>(i), o_gl_ids.Ptr());
+                }
+
                 return false;
             }
         }
@@ -399,73 +397,50 @@ namespace zf {
         return true;
     }
 
-    t_b8 LoadFontFromRaw(const s_str_rdonly file_path, const t_s32 height,
-                         const t_unicode_code_pt_bit_vec &code_pts,
-                         s_gfx_resource_arena *const res_arena,
-                         s_mem_arena *const temp_mem_arena, s_gfx_resource *&o_font,
-                         e_font_load_from_raw_result *const o_load_from_raw_res,
-                         t_unicode_code_pt_bit_vec *const o_unsupported_code_pts) {
-        s_font_arrangement arrangement;
-        s_array<t_font_atlas_rgba> atlas_rgbas;
+    [[nodiscard]] static t_b8 CreateFont(const s_font_arrangement &arrangement, const s_array<t_font_atlas_rgba> atlas_rgbas, s_gfx_resource_arena &res_arena, s_ptr<s_gfx_resource> &o_font) {
+        s_array<t_gl_id> atlas_gl_ids = {};
 
-        const auto res = zf::LoadFontFromRaw(file_path, height, code_pts, *res_arena.mem_arena,
-                                             temp_mem_arena, temp_mem_arena, arrangement,
-                                             atlas_rgbas, o_unsupported_code_pts);
-
-        if (o_load_from_raw_res) {
-            *o_load_from_raw_res = res;
+        if (!CreateFontAtlasGLTextures(atlas_rgbas, *res_arena.mem_arena, atlas_gl_ids)) {
+            return false;
         }
+
+        o_font = PushGFXResource(res_arena);
+
+        if (!o_font) {
+            glDeleteTextures(static_cast<GLsizei>(atlas_gl_ids.Len()), atlas_gl_ids.Ptr());
+            return false;
+        }
+
+        o_font->type = ek_gfx_resource_type_font;
+        o_font->Font().arrangement = arrangement;
+        o_font->Font().atlas_gl_ids = atlas_gl_ids;
+
+        return true;
+    }
+
+    t_b8 CreateFontFromRaw(const s_str_rdonly file_path, const t_i32 height, const t_unicode_code_pt_bit_vec &code_pts, s_gfx_resource_arena &res_arena, s_mem_arena &temp_mem_arena, s_ptr<s_gfx_resource> &o_font) {
+        s_font_arrangement arrangement = {};
+        s_array<t_font_atlas_rgba> atlas_rgbas = {};
+
+        const auto res = zf::LoadFontFromRaw(file_path, height, code_pts, *res_arena.mem_arena, temp_mem_arena, temp_mem_arena, arrangement, atlas_rgbas);
 
         if (res != ek_font_load_from_raw_result_success) {
             return false;
         }
 
-        s_array<t_gl_id> atlas_gl_ids;
-
-        if (!CreateFontAtlasGLTextures(&atlas_gl_ids, atlas_rgbas)) {
-            return false;
-        }
-
-        o_font = PushGFXResource(res_arena);
-
-        if (!o_font) {
-            return false;
-        }
-
-        o_font->type = ek_gfx_resource_type_font;
-        o_font->type_data.font = {.arrangement = arrangement, .atlas_gl_ids = atlas_gl_ids};
-
-        return true;
+        return CreateFont(arrangement, atlas_rgbas, res_arena, o_font);
     }
 
-    t_b8 LoadFontFromPacked(const s_str_rdonly file_path, s_gfx_resource_arena &res_arena,
-                            s_mem_arena &temp_mem_arena, s_gfx_resource *&o_font) {
-        s_font_arrangement arrangement;
-        s_array<t_font_atlas_rgba> atlas_rgbas;
+    t_b8 CreateFontFromPacked(const s_str_rdonly file_path, s_gfx_resource_arena &res_arena, s_mem_arena &temp_mem_arena, s_ptr<s_gfx_resource> &o_font) {
+        s_font_arrangement arrangement = {};
+        s_array<t_font_atlas_rgba> atlas_rgbas = {};
 
-        if (!zf::UnpackFont(file_path, *res_arena.mem_arena, temp_mem_arena, temp_mem_arena,
-                            arrangement, atlas_rgbas)) {
+        if (!zf::UnpackFont(file_path, *res_arena.mem_arena, temp_mem_arena, temp_mem_arena, arrangement, atlas_rgbas)) {
             return false;
         }
 
-        s_array<t_gl_id> atlas_gl_ids;
-
-        if (!CreateFontAtlasGLTextures(atlas_rgbas, atlas_gl_ids)) {
-            return false;
-        }
-
-        o_font = PushGFXResource(res_arena);
-
-        if (!o_font) {
-            return false;
-        }
-
-        o_font->type = ek_gfx_resource_type_font;
-        o_font->type_data.font = {.arrangement = arrangement, .atlas_gl_ids = atlas_gl_ids};
-
-        return true;
+        return CreateFont(arrangement, atlas_rgbas, res_arena, o_font);
     }
-#endif
 
     t_b8 CreateSurface(const s_v2_i size, s_gfx_resource_arena &res_arena, s_ptr<s_gfx_resource> &o_surf) {
         t_b8 clean_up = false;
