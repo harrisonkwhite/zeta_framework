@@ -289,7 +289,21 @@ namespace zf {
     [[nodiscard]] t_b8 OpenFile(const s_str_rdonly file_path, const e_file_access_mode mode, s_stream &o_stream);
     void CloseFile(s_stream &stream);
     t_len CalcFileSize(const s_stream &stream);
+
     [[nodiscard]] t_b8 LoadFileContents(const s_str_rdonly file_path, s_mem_arena &contents_mem_arena, s_array<t_u8> &o_contents, const t_b8 add_terminator = false);
+
+    // This DOES NOT check whether the string is valid UTF-8, but it does guarantee termination.
+    [[nodiscard]] inline t_b8 LoadFileContentsAsStr(const s_str_rdonly file_path, s_mem_arena &contents_mem_arena, s_str &o_contents) {
+        s_array<t_u8> contents_u8 = {};
+
+        if (!LoadFileContents(file_path, contents_mem_arena, contents_u8, true)) {
+            return false;
+        }
+
+        o_contents = {{reinterpret_cast<char *>(contents_u8.Ptr().Raw()), contents_u8.Len()}};
+
+        return true;
+    }
 
     enum e_directory_creation_result : t_i32 {
         ek_directory_creation_result_success,

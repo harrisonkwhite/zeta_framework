@@ -101,6 +101,9 @@ namespace zf {
         constexpr s_ptr() = default;
         constexpr s_ptr(const void *const raw) : m_raw(raw) {}
 
+        template <typename tp_type>
+        constexpr s_ptr(const s_ptr<const tp_type> ptr) : m_raw(ptr.Raw()) {}
+
         constexpr const void *Raw() const {
             return m_raw;
         }
@@ -135,6 +138,9 @@ namespace zf {
     public:
         constexpr s_ptr() = default;
         constexpr s_ptr(void *const raw) : m_raw(raw) {}
+
+        template <typename tp_type>
+        constexpr s_ptr(const s_ptr<tp_type> ptr) : m_raw(ptr.Raw()) {}
 
         constexpr void *Raw() const {
             return m_raw;
@@ -718,6 +724,28 @@ namespace zf {
         }
 
         return !AreAllBitsSet(bv);
+    }
+
+    constexpr void SetAllBits(const s_bit_vec bv) {
+        if (bv.BitCount() == 0) {
+            return;
+        }
+
+        const auto first_bytes = bv.Bytes().Slice(0, bv.Bytes().Len() - 1);
+        first_bytes.SetAllTo(0xFF);
+
+        bv.Bytes().Last() |= bv.LastByteMask();
+    }
+
+    constexpr void UnsetAllBits(const s_bit_vec bv) {
+        if (bv.BitCount() == 0) {
+            return;
+        }
+
+        const auto first_bytes = bv.Bytes().Slice(0, bv.Bytes().Len() - 1);
+        first_bytes.SetAllTo(0);
+
+        bv.Bytes().Last() &= ~bv.LastByteMask();
     }
 
     // Sets all bits in the range [begin_bit_index, end_bit_index).

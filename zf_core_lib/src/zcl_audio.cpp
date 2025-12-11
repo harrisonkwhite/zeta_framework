@@ -49,7 +49,7 @@ namespace zf {
 
         s_stream fs;
 
-        if (!OpenFile(file_path, e_file_access_mode::write, fs)) {
+        if (!OpenFile(file_path, ek_file_access_mode_write, fs)) {
             return false;
         }
 
@@ -61,7 +61,7 @@ namespace zf {
     t_b8 UnpackSound(const s_str_rdonly file_path, s_mem_arena &snd_data_mem_arena, s_mem_arena &temp_mem_arena, s_sound_data &o_snd_data) {
         s_stream fs;
 
-        if (!OpenFile(file_path, e_file_access_mode::read, fs)) {
+        if (!OpenFile(file_path, ek_file_access_mode_read, fs)) {
             return false;
         }
 

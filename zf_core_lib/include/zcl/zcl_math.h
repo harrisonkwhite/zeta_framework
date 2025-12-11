@@ -58,6 +58,8 @@ namespace zf {
     // ============================================================
     // @section: Vectors
     // ============================================================
+    struct s_v2_i;
+
     struct s_v2 {
         t_f32 x = 0.0f;
         t_f32 y = 0.0f;
@@ -104,6 +106,9 @@ namespace zf {
             y /= scalar;
             return *this;
         }
+
+        explicit constexpr operator s_v2_i() const;
+        constexpr s_v2_i ToV2I() const;
 
         inline t_f32 CalcMag() {
             return sqrt((x * x) + (y * y));
@@ -158,7 +163,23 @@ namespace zf {
         constexpr t_b8 operator!=(const s_v2_i &other) const {
             return !(*this == other);
         }
+
+        explicit constexpr operator s_v2() const {
+            return {static_cast<t_f32>(x), static_cast<t_f32>(y)};
+        }
+
+        constexpr s_v2 ToV2() const {
+            return static_cast<s_v2>(*this);
+        }
     };
+
+    constexpr s_v2::operator s_v2_i() const {
+        return {static_cast<t_i32>(x), static_cast<t_i32>(y)};
+    }
+
+    constexpr s_v2_i s_v2::ToV2I() const {
+        return static_cast<s_v2_i>(*this);
+    }
 
     struct s_v3 {
         t_f32 x = 0.0f;

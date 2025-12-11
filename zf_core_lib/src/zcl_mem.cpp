@@ -7,14 +7,15 @@ namespace zf {
         ZF_ASSERT(!IsInitted());
         ZF_ASSERT(size > 0);
 
-        const auto buf = malloc(static_cast<size_t>(size));
+        m_buf = malloc(static_cast<size_t>(size));
 
-        if (!buf) {
+        if (!m_buf) {
             return false;
         }
 
-        m_buf = buf;
         m_size = size;
+        m_offs = 0;
+        m_is_child = false;
 
         return true;
     }
@@ -23,14 +24,14 @@ namespace zf {
         ZF_ASSERT(!IsInitted());
         ZF_ASSERT(size > 0);
 
-        const auto buf = par.Push(size, 1);
+        m_buf = par.Push(size, 1);
 
-        if (!buf) {
+        if (!m_buf) {
             return false;
         }
 
-        m_buf = buf;
         m_size = size;
+        m_offs = 0;
         m_is_child = true;
 
         return true;
@@ -41,10 +42,6 @@ namespace zf {
 
         free(m_buf);
         m_buf = nullptr;
-
-        m_size = 0;
-        m_offs = 0;
-        m_is_child = false;
     }
 
     s_ptr<void> s_mem_arena::Push(const t_len size, const t_len alignment) {
@@ -61,7 +58,7 @@ namespace zf {
 
         m_offs = offs_next;
 
-        return {static_cast<s_ptr<t_u8>>(m_buf) + offs_aligned};
+        return static_cast<s_ptr<t_u8>>(m_buf) + offs_aligned;
     }
 
     // ============================================================

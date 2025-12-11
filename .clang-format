@@ -1,0 +1,19 @@
+BasedOnStyle: Microsoft
+AlignAfterOpenBracket: false
+ColumnLimit: 0
+NamespaceIndentation: All
+FixNamespaceComments: false
+AllowShortBlocksOnASingleLine: Empty
+AllowShortFunctionsOnASingleLine: Empty
+DerivePointerAlignment: false
+PointerAlignment: Right
+IndentPPDirectives: BeforeHash
+BreakTemplateDeclarations: Yes
+BreakBeforeBinaryOperators: NonAssignment
+AlignOperands: DontAlign
+ContinuationIndentWidth: 4
+AllowShortLambdasOnASingleLine: None
+BreakBeforeBraces: Attach
+AccessModifierOffset: -4
+SortIncludes:
+  Enabled: false
