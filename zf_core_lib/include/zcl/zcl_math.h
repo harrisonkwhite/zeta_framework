@@ -50,8 +50,7 @@ namespace zf {
         return DigitAt(n / 10, index - 1);
     }
 
-    template <c_floating_point tp_type>
-    constexpr t_b8 IsNearlyEqual(const tp_type val, const tp_type targ, const tp_type tol = 1e-5) {
+    constexpr t_b8 IsNearlyEqual(const t_f32 val, const t_f32 targ, const t_f32 tol = 1e-5f) {
         ZF_ASSERT(tol >= 0);
         return val >= targ - tol && val <= targ + tol;
     }
@@ -370,8 +369,7 @@ namespace zf {
 
     // ============================================================
 
-    template <c_floating_point tp_type>
-    constexpr tp_type Lerp(const tp_type a, const tp_type b, const tp_type t) {
+    constexpr t_f32 Lerp(const t_f32 a, const t_f32 b, const t_f32 t) {
         return a + ((b - a) * t);
     }
 

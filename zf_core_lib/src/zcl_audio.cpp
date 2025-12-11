@@ -3,7 +3,7 @@
 #include <miniaudio.h>
 
 namespace zf {
-    t_b8 LoadSoundFromRaw(const s_str_rdonly file_path, const s_ptr_nonnull<s_mem_arena> snd_data_mem_arena, const s_ptr_nonnull<s_sound_data> snd_data) {
+    t_b8 LoadSoundFromRaw(const s_str_rdonly file_path, s_mem_arena &snd_data_mem_arena, s_sound_data &o_snd_data) {
         ZF_ASSERT(file_path.IsValid());
 
         ma_decoder decoder;
@@ -29,53 +29,53 @@ namespace zf {
 
         s_array<t_f32> pcm;
 
-        if (!AllocArray(CalcSampleCount(meta), snd_data_mem_arena, &pcm)) {
+        if (!AllocArray(CalcSampleCount(meta), snd_data_mem_arena, pcm)) {
             return false;
         }
 
-        if (ma_decoder_read_pcm_frames(&decoder, pcm.Ptr(), frame_cnt, nullptr) != MA_SUCCESS) {
+        if (ma_decoder_read_pcm_frames(&decoder, pcm.Raw(), frame_cnt, nullptr) != MA_SUCCESS) {
             return false;
         }
 
-        *snd_data = {meta, pcm};
+        o_snd_data = {meta, pcm};
 
         return true;
     }
 
-    t_b8 PackSound(const s_str_rdonly file_path, const s_sound_data snd_data, const s_ptr_nonnull<s_mem_arena> temp_mem_arena) {
+    t_b8 PackSound(const s_str_rdonly file_path, const s_sound_data snd_data, s_mem_arena &temp_mem_arena) {
         if (!CreateFileAndParentDirs(file_path, temp_mem_arena)) {
             return false;
         }
 
         s_stream fs;
 
-        if (!OpenFile(file_path, e_file_access_mode::write, &fs)) {
+        if (!OpenFile(file_path, e_file_access_mode::write, fs)) {
             return false;
         }
 
-        ZF_DEFER({ CloseFile(&fs); });
+        ZF_DEFER({ CloseFile(fs); });
 
-        return SerializeSound(&fs, snd_data);
+        return SerializeSound(fs, snd_data);
     }
 
-    t_b8 UnpackSound(const s_str_rdonly file_path, const s_ptr_nonnull<s_mem_arena> snd_data_mem_arena, const s_ptr_nonnull<s_mem_arena> temp_mem_arena, const s_ptr_nonnull<s_sound_data> o_snd_data) {
+    t_b8 UnpackSound(const s_str_rdonly file_path, s_mem_arena &snd_data_mem_arena, s_mem_arena &temp_mem_arena, s_sound_data &o_snd_data) {
         s_stream fs;
 
-        if (!OpenFile(file_path, e_file_access_mode::read, &fs)) {
+        if (!OpenFile(file_path, e_file_access_mode::read, fs)) {
             return false;
         }
 
-        ZF_DEFER({ CloseFile(&fs); });
+        ZF_DEFER({ CloseFile(fs); });
 
         s_sound_meta meta;
 
-        if (!fs.ReadItem(&meta)) {
+        if (!fs.ReadItem(meta)) {
             return false;
         }
 
         s_array<t_f32> pcm;
 
-        if (!AllocArray(CalcSampleCount(meta), snd_data_mem_arena, &pcm)) {
+        if (!AllocArray(CalcSampleCount(meta), snd_data_mem_arena, pcm)) {
             return false;
         }
 
@@ -86,8 +86,8 @@ namespace zf {
         return true;
     }
 
-    t_b8 SerializeSound(const s_ptr_nonnull<s_stream> stream, const s_sound_data snd_data) {
-        if (!stream->WriteItem(snd_data.Meta())) {
+    t_b8 SerializeSound(s_stream &stream, const s_sound_data snd_data) {
+        if (!stream.WriteItem(snd_data.Meta())) {
             return false;
         }
 
@@ -98,20 +98,20 @@ namespace zf {
         return true;
     }
 
-    t_b8 DeserializeSound(const s_ptr_nonnull<s_stream> stream, const s_ptr_nonnull<s_mem_arena> snd_data_mem_arena, const s_ptr_nonnull<s_sound_data> o_snd_data) {
+    t_b8 DeserializeSound(s_stream &stream, s_mem_arena &snd_data_mem_arena, s_sound_data &o_snd_data) {
         s_sound_meta meta;
 
-        if (!stream->ReadItem(&meta)) {
+        if (!stream.ReadItem(meta)) {
             return false;
         }
 
         s_array<t_f32> pcm;
 
-        if (!DeserializeArray(stream, snd_data_mem_arena, &pcm)) {
+        if (!DeserializeArray(stream, snd_data_mem_arena, pcm)) {
             return false;
         }
 
-        *o_snd_data = {meta, pcm};
+        o_snd_data = {meta, pcm};
 
         return true;
     }

@@ -33,36 +33,36 @@ namespace zf {
 
             s_mem_arena temp_mem_arena;
 
-            if (!temp_mem_arena.InitAsChild(Megabytes(10), &mem_arena)) {
+            if (!temp_mem_arena.InitAsChild(Megabytes(10), mem_arena)) {
                 ZF_REPORT_ERROR();
                 return false;
             }
 
             s_input_state input_state = {};
 
-            s_ptr<s_platform_layer_info> platform_layer_info;
+            s_platform_layer_info *platform_layer_info;
 
-            if (!internal::InitPlatformLayer(&mem_arena, &input_state, &platform_layer_info)) {
+            if (!internal::InitPlatformLayer(mem_arena, input_state, platform_layer_info)) {
                 ZF_REPORT_ERROR();
                 return false;
             }
 
-            s_ptr<s_audio_sys> audio_sys;
+            s_audio_sys *audio_sys;
 
-            if (!CreateAudioSys(&mem_arena, &audio_sys)) {
+            if (!CreateAudioSys(mem_arena, audio_sys)) {
                 ZF_REPORT_ERROR();
                 return false;
             }
 
-            ZF_DEFER({ DestroyAudioSys(audio_sys); });
+            ZF_DEFER({ DestroyAudioSys(*audio_sys); });
 
             // Run the developer's initialisation function.
             {
                 const s_game_init_context context = {
-                    .mem_arena = &mem_arena,
-                    .temp_mem_arena = &temp_mem_arena,
-                    .platform_layer_info = platform_layer_info,
-                    .audio_sys = audio_sys,
+                    .mem_arena = mem_arena,
+                    .temp_mem_arena = temp_mem_arena,
+                    .platform_layer_info = *platform_layer_info,
+                    .audio_sys = *audio_sys,
                 };
 
                 if (!init_func(context)) {
@@ -80,12 +80,12 @@ namespace zf {
             //
             // Main Loop
             //
-            internal::ShowWindow(platform_layer_info);
+            internal::ShowWindow(*platform_layer_info);
 
             t_f64 frame_time_last = Time();
             t_f64 frame_dur_accum = 0.0;
 
-            while (!internal::ShouldWindowClose(platform_layer_info)) {
+            while (!internal::ShouldWindowClose(*platform_layer_info)) {
                 temp_mem_arena.Rewind(0);
 
                 internal::PollOSEvents();
@@ -102,14 +102,14 @@ namespace zf {
                 if (frame_dur_accum >= targ_tick_interval) {
                     // Run possibly multiple ticks.
                     do {
-                        ProcFinishedSounds(audio_sys);
+                        ProcFinishedSounds(*audio_sys);
 
                         const s_game_tick_context context = {
-                            .mem_arena = &mem_arena,
-                            .temp_mem_arena = &temp_mem_arena,
-                            .input_state = &input_state,
-                            .platform_layer_info = platform_layer_info,
-                            .audio_sys = audio_sys,
+                            .mem_arena = mem_arena,
+                            .temp_mem_arena = temp_mem_arena,
+                            .input_state = input_state,
+                            .platform_layer_info = *platform_layer_info,
+                            .audio_sys = *audio_sys,
                         };
 
                         if (!tick_func(context)) {
@@ -147,7 +147,7 @@ namespace zf {
                     //internal::CompleteFrame(rendering_context);
 #endif
 
-                    internal::SwapWindowBuffers(platform_layer_info);
+                    internal::SwapWindowBuffers(*platform_layer_info);
                 }
             }
 

@@ -8,30 +8,30 @@ namespace zf {
     struct s_audio_sys;
 
     struct s_game_init_context {
-        s_ptr_nonnull<s_mem_arena> mem_arena;
-        s_ptr_nonnull<s_mem_arena> temp_mem_arena;
+        s_mem_arena &mem_arena;
+        s_mem_arena &temp_mem_arena;
 
-        s_ptr_nonnull<s_platform_layer_info> platform_layer_info;
+        s_platform_layer_info &platform_layer_info;
 
-        s_ptr_nonnull<s_audio_sys> audio_sys;
+        s_audio_sys &audio_sys;
     };
 
     struct s_input_state;
 
     struct s_game_tick_context {
-        s_ptr_nonnull<s_mem_arena> mem_arena;
-        s_ptr_nonnull<s_mem_arena> temp_mem_arena;
+        s_mem_arena &mem_arena;
+        s_mem_arena &temp_mem_arena;
 
-        s_ptr_nonnull<s_input_state> input_state;
+        s_input_state &input_state;
 
-        s_ptr_nonnull<s_platform_layer_info> platform_layer_info;
+        s_platform_layer_info &platform_layer_info;
 
-        s_ptr_nonnull<s_audio_sys> audio_sys;
+        s_audio_sys &audio_sys;
     };
 
     struct s_game_render_context {
-        s_ptr_nonnull<s_mem_arena> mem_arena;
-        s_ptr_nonnull<s_mem_arena> temp_mem_arena;
+        s_mem_arena &mem_arena;
+        s_mem_arena &temp_mem_arena;
     };
 
     using t_game_init_func = t_b8 (*)(const s_game_init_context &context);

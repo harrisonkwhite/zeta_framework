@@ -12,16 +12,269 @@ namespace zf {
 
     static_assert(ek_utf8_byte_type_4byte_start - ek_utf8_byte_type_ascii + 1 == 4);
 
-    constexpr s_static_array<e_utf8_byte_type, 256> g_utf8_byte_type_table = {{ek_utf8_byte_type_ascii, ek_utf8_byte_type_ascii, ek_utf8_byte_type_ascii, ek_utf8_byte_type_ascii, ek_utf8_byte_type_ascii, ek_utf8_byte_type_ascii, ek_utf8_byte_type_ascii, ek_utf8_byte_type_ascii, ek_utf8_byte_type_ascii, ek_utf8_byte_type_ascii, ek_utf8_byte_type_ascii, ek_utf8_byte_type_ascii, ek_utf8_byte_type_ascii, ek_utf8_byte_type_ascii, ek_utf8_byte_type_ascii, ek_utf8_byte_type_ascii, ek_utf8_byte_type_ascii, ek_utf8_byte_type_ascii, ek_utf8_byte_type_ascii, ek_utf8_byte_type_ascii, ek_utf8_byte_type_ascii, ek_utf8_byte_type_ascii, ek_utf8_byte_type_ascii, ek_utf8_byte_type_ascii, ek_utf8_byte_type_ascii, ek_utf8_byte_type_ascii,
-                                                                               ek_utf8_byte_type_ascii, ek_utf8_byte_type_ascii, ek_utf8_byte_type_ascii, ek_utf8_byte_type_ascii, ek_utf8_byte_type_ascii, ek_utf8_byte_type_ascii, ek_utf8_byte_type_ascii, ek_utf8_byte_type_ascii, ek_utf8_byte_type_ascii, ek_utf8_byte_type_ascii, ek_utf8_byte_type_ascii, ek_utf8_byte_type_ascii, ek_utf8_byte_type_ascii, ek_utf8_byte_type_ascii, ek_utf8_byte_type_ascii, ek_utf8_byte_type_ascii, ek_utf8_byte_type_ascii, ek_utf8_byte_type_ascii, ek_utf8_byte_type_ascii, ek_utf8_byte_type_ascii, ek_utf8_byte_type_ascii, ek_utf8_byte_type_ascii, ek_utf8_byte_type_ascii, ek_utf8_byte_type_ascii, ek_utf8_byte_type_ascii, ek_utf8_byte_type_ascii,
-                                                                               ek_utf8_byte_type_ascii, ek_utf8_byte_type_ascii, ek_utf8_byte_type_ascii, ek_utf8_byte_type_ascii, ek_utf8_byte_type_ascii, ek_utf8_byte_type_ascii, ek_utf8_byte_type_ascii, ek_utf8_byte_type_ascii, ek_utf8_byte_type_ascii, ek_utf8_byte_type_ascii, ek_utf8_byte_type_ascii, ek_utf8_byte_type_ascii, ek_utf8_byte_type_ascii, ek_utf8_byte_type_ascii, ek_utf8_byte_type_ascii, ek_utf8_byte_type_ascii, ek_utf8_byte_type_ascii, ek_utf8_byte_type_ascii, ek_utf8_byte_type_ascii, ek_utf8_byte_type_ascii, ek_utf8_byte_type_ascii, ek_utf8_byte_type_ascii, ek_utf8_byte_type_ascii, ek_utf8_byte_type_ascii, ek_utf8_byte_type_ascii, ek_utf8_byte_type_ascii,
-                                                                               ek_utf8_byte_type_ascii, ek_utf8_byte_type_ascii, ek_utf8_byte_type_ascii, ek_utf8_byte_type_ascii, ek_utf8_byte_type_ascii, ek_utf8_byte_type_ascii, ek_utf8_byte_type_ascii, ek_utf8_byte_type_ascii, ek_utf8_byte_type_ascii, ek_utf8_byte_type_ascii, ek_utf8_byte_type_ascii, ek_utf8_byte_type_ascii, ek_utf8_byte_type_ascii, ek_utf8_byte_type_ascii, ek_utf8_byte_type_ascii, ek_utf8_byte_type_ascii, ek_utf8_byte_type_ascii, ek_utf8_byte_type_ascii, ek_utf8_byte_type_ascii, ek_utf8_byte_type_ascii, ek_utf8_byte_type_ascii, ek_utf8_byte_type_ascii, ek_utf8_byte_type_ascii, ek_utf8_byte_type_ascii, ek_utf8_byte_type_ascii, ek_utf8_byte_type_ascii,
-                                                                               ek_utf8_byte_type_ascii, ek_utf8_byte_type_ascii, ek_utf8_byte_type_ascii, ek_utf8_byte_type_ascii, ek_utf8_byte_type_ascii, ek_utf8_byte_type_ascii, ek_utf8_byte_type_ascii, ek_utf8_byte_type_ascii, ek_utf8_byte_type_ascii, ek_utf8_byte_type_ascii, ek_utf8_byte_type_ascii, ek_utf8_byte_type_ascii, ek_utf8_byte_type_ascii, ek_utf8_byte_type_ascii, ek_utf8_byte_type_ascii, ek_utf8_byte_type_ascii, ek_utf8_byte_type_ascii, ek_utf8_byte_type_ascii, ek_utf8_byte_type_ascii, ek_utf8_byte_type_ascii, ek_utf8_byte_type_ascii, ek_utf8_byte_type_ascii, ek_utf8_byte_type_ascii, ek_utf8_byte_type_ascii, ek_utf8_byte_type_continuation, ek_utf8_byte_type_continuation,
-                                                                               ek_utf8_byte_type_continuation, ek_utf8_byte_type_continuation, ek_utf8_byte_type_continuation, ek_utf8_byte_type_continuation, ek_utf8_byte_type_continuation, ek_utf8_byte_type_continuation, ek_utf8_byte_type_continuation, ek_utf8_byte_type_continuation, ek_utf8_byte_type_continuation, ek_utf8_byte_type_continuation, ek_utf8_byte_type_continuation, ek_utf8_byte_type_continuation, ek_utf8_byte_type_continuation, ek_utf8_byte_type_continuation, ek_utf8_byte_type_continuation, ek_utf8_byte_type_continuation, ek_utf8_byte_type_continuation, ek_utf8_byte_type_continuation, ek_utf8_byte_type_continuation, ek_utf8_byte_type_continuation, ek_utf8_byte_type_continuation, ek_utf8_byte_type_continuation, ek_utf8_byte_type_continuation, ek_utf8_byte_type_continuation, ek_utf8_byte_type_continuation, ek_utf8_byte_type_continuation,
-                                                                               ek_utf8_byte_type_continuation, ek_utf8_byte_type_continuation, ek_utf8_byte_type_continuation, ek_utf8_byte_type_continuation, ek_utf8_byte_type_continuation, ek_utf8_byte_type_continuation, ek_utf8_byte_type_continuation, ek_utf8_byte_type_continuation, ek_utf8_byte_type_continuation, ek_utf8_byte_type_continuation, ek_utf8_byte_type_continuation, ek_utf8_byte_type_continuation, ek_utf8_byte_type_continuation, ek_utf8_byte_type_continuation, ek_utf8_byte_type_continuation, ek_utf8_byte_type_continuation, ek_utf8_byte_type_continuation, ek_utf8_byte_type_continuation, ek_utf8_byte_type_continuation, ek_utf8_byte_type_continuation, ek_utf8_byte_type_continuation, ek_utf8_byte_type_continuation, ek_utf8_byte_type_continuation, ek_utf8_byte_type_continuation, ek_utf8_byte_type_continuation, ek_utf8_byte_type_continuation,
-                                                                               ek_utf8_byte_type_continuation, ek_utf8_byte_type_continuation, ek_utf8_byte_type_continuation, ek_utf8_byte_type_continuation, ek_utf8_byte_type_continuation, ek_utf8_byte_type_continuation, ek_utf8_byte_type_continuation, ek_utf8_byte_type_continuation, ek_utf8_byte_type_continuation, ek_utf8_byte_type_continuation, ek_utf8_byte_type_2byte_start, ek_utf8_byte_type_2byte_start, ek_utf8_byte_type_2byte_start, ek_utf8_byte_type_2byte_start, ek_utf8_byte_type_2byte_start, ek_utf8_byte_type_2byte_start, ek_utf8_byte_type_2byte_start, ek_utf8_byte_type_2byte_start, ek_utf8_byte_type_2byte_start, ek_utf8_byte_type_2byte_start, ek_utf8_byte_type_2byte_start, ek_utf8_byte_type_2byte_start, ek_utf8_byte_type_2byte_start, ek_utf8_byte_type_2byte_start, ek_utf8_byte_type_2byte_start, ek_utf8_byte_type_2byte_start,
-                                                                               ek_utf8_byte_type_2byte_start, ek_utf8_byte_type_2byte_start, ek_utf8_byte_type_2byte_start, ek_utf8_byte_type_2byte_start, ek_utf8_byte_type_2byte_start, ek_utf8_byte_type_2byte_start, ek_utf8_byte_type_2byte_start, ek_utf8_byte_type_2byte_start, ek_utf8_byte_type_2byte_start, ek_utf8_byte_type_2byte_start, ek_utf8_byte_type_2byte_start, ek_utf8_byte_type_2byte_start, ek_utf8_byte_type_2byte_start, ek_utf8_byte_type_2byte_start, ek_utf8_byte_type_2byte_start, ek_utf8_byte_type_2byte_start, ek_utf8_byte_type_3byte_start, ek_utf8_byte_type_3byte_start, ek_utf8_byte_type_3byte_start, ek_utf8_byte_type_3byte_start, ek_utf8_byte_type_3byte_start, ek_utf8_byte_type_3byte_start, ek_utf8_byte_type_3byte_start, ek_utf8_byte_type_3byte_start, ek_utf8_byte_type_3byte_start, ek_utf8_byte_type_3byte_start,
-                                                                               ek_utf8_byte_type_3byte_start, ek_utf8_byte_type_3byte_start, ek_utf8_byte_type_3byte_start, ek_utf8_byte_type_3byte_start, ek_utf8_byte_type_3byte_start, ek_utf8_byte_type_3byte_start, ek_utf8_byte_type_4byte_start, ek_utf8_byte_type_4byte_start, ek_utf8_byte_type_4byte_start, ek_utf8_byte_type_4byte_start, ek_utf8_byte_type_4byte_start, ek_utf8_byte_type_4byte_start, ek_utf8_byte_type_4byte_start, ek_utf8_byte_type_4byte_start, ek_utf8_byte_type_invalid, ek_utf8_byte_type_invalid, ek_utf8_byte_type_invalid, ek_utf8_byte_type_invalid, ek_utf8_byte_type_invalid, ek_utf8_byte_type_invalid, ek_utf8_byte_type_invalid, ek_utf8_byte_type_invalid}};
+    constexpr s_static_array<e_utf8_byte_type, 256> g_utf8_byte_type_table = {
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+
+        ek_utf8_byte_type_continuation,
+        ek_utf8_byte_type_continuation,
+        ek_utf8_byte_type_continuation,
+        ek_utf8_byte_type_continuation,
+        ek_utf8_byte_type_continuation,
+        ek_utf8_byte_type_continuation,
+        ek_utf8_byte_type_continuation,
+        ek_utf8_byte_type_continuation,
+        ek_utf8_byte_type_continuation,
+        ek_utf8_byte_type_continuation,
+        ek_utf8_byte_type_continuation,
+        ek_utf8_byte_type_continuation,
+        ek_utf8_byte_type_continuation,
+        ek_utf8_byte_type_continuation,
+        ek_utf8_byte_type_continuation,
+        ek_utf8_byte_type_continuation,
+        ek_utf8_byte_type_continuation,
+        ek_utf8_byte_type_continuation,
+        ek_utf8_byte_type_continuation,
+        ek_utf8_byte_type_continuation,
+        ek_utf8_byte_type_continuation,
+        ek_utf8_byte_type_continuation,
+        ek_utf8_byte_type_continuation,
+        ek_utf8_byte_type_continuation,
+        ek_utf8_byte_type_continuation,
+        ek_utf8_byte_type_continuation,
+        ek_utf8_byte_type_continuation,
+        ek_utf8_byte_type_continuation,
+        ek_utf8_byte_type_continuation,
+        ek_utf8_byte_type_continuation,
+        ek_utf8_byte_type_continuation,
+        ek_utf8_byte_type_continuation,
+        ek_utf8_byte_type_continuation,
+        ek_utf8_byte_type_continuation,
+        ek_utf8_byte_type_continuation,
+        ek_utf8_byte_type_continuation,
+        ek_utf8_byte_type_continuation,
+        ek_utf8_byte_type_continuation,
+        ek_utf8_byte_type_continuation,
+        ek_utf8_byte_type_continuation,
+        ek_utf8_byte_type_continuation,
+        ek_utf8_byte_type_continuation,
+        ek_utf8_byte_type_continuation,
+        ek_utf8_byte_type_continuation,
+        ek_utf8_byte_type_continuation,
+        ek_utf8_byte_type_continuation,
+        ek_utf8_byte_type_continuation,
+        ek_utf8_byte_type_continuation,
+        ek_utf8_byte_type_continuation,
+        ek_utf8_byte_type_continuation,
+        ek_utf8_byte_type_continuation,
+        ek_utf8_byte_type_continuation,
+        ek_utf8_byte_type_continuation,
+        ek_utf8_byte_type_continuation,
+        ek_utf8_byte_type_continuation,
+        ek_utf8_byte_type_continuation,
+        ek_utf8_byte_type_continuation,
+        ek_utf8_byte_type_continuation,
+        ek_utf8_byte_type_continuation,
+        ek_utf8_byte_type_continuation,
+        ek_utf8_byte_type_continuation,
+        ek_utf8_byte_type_continuation,
+        ek_utf8_byte_type_continuation,
+        ek_utf8_byte_type_continuation,
+
+        ek_utf8_byte_type_2byte_start,
+        ek_utf8_byte_type_2byte_start,
+        ek_utf8_byte_type_2byte_start,
+        ek_utf8_byte_type_2byte_start,
+        ek_utf8_byte_type_2byte_start,
+        ek_utf8_byte_type_2byte_start,
+        ek_utf8_byte_type_2byte_start,
+        ek_utf8_byte_type_2byte_start,
+        ek_utf8_byte_type_2byte_start,
+        ek_utf8_byte_type_2byte_start,
+        ek_utf8_byte_type_2byte_start,
+        ek_utf8_byte_type_2byte_start,
+        ek_utf8_byte_type_2byte_start,
+        ek_utf8_byte_type_2byte_start,
+        ek_utf8_byte_type_2byte_start,
+        ek_utf8_byte_type_2byte_start,
+        ek_utf8_byte_type_2byte_start,
+        ek_utf8_byte_type_2byte_start,
+        ek_utf8_byte_type_2byte_start,
+        ek_utf8_byte_type_2byte_start,
+        ek_utf8_byte_type_2byte_start,
+        ek_utf8_byte_type_2byte_start,
+        ek_utf8_byte_type_2byte_start,
+        ek_utf8_byte_type_2byte_start,
+        ek_utf8_byte_type_2byte_start,
+        ek_utf8_byte_type_2byte_start,
+        ek_utf8_byte_type_2byte_start,
+        ek_utf8_byte_type_2byte_start,
+        ek_utf8_byte_type_2byte_start,
+        ek_utf8_byte_type_2byte_start,
+        ek_utf8_byte_type_2byte_start,
+        ek_utf8_byte_type_2byte_start,
+
+        ek_utf8_byte_type_3byte_start,
+        ek_utf8_byte_type_3byte_start,
+        ek_utf8_byte_type_3byte_start,
+        ek_utf8_byte_type_3byte_start,
+        ek_utf8_byte_type_3byte_start,
+        ek_utf8_byte_type_3byte_start,
+        ek_utf8_byte_type_3byte_start,
+        ek_utf8_byte_type_3byte_start,
+        ek_utf8_byte_type_3byte_start,
+        ek_utf8_byte_type_3byte_start,
+        ek_utf8_byte_type_3byte_start,
+        ek_utf8_byte_type_3byte_start,
+        ek_utf8_byte_type_3byte_start,
+        ek_utf8_byte_type_3byte_start,
+        ek_utf8_byte_type_3byte_start,
+        ek_utf8_byte_type_3byte_start,
+
+        ek_utf8_byte_type_4byte_start,
+        ek_utf8_byte_type_4byte_start,
+        ek_utf8_byte_type_4byte_start,
+        ek_utf8_byte_type_4byte_start,
+        ek_utf8_byte_type_4byte_start,
+        ek_utf8_byte_type_4byte_start,
+        ek_utf8_byte_type_4byte_start,
+        ek_utf8_byte_type_4byte_start,
+
+        ek_utf8_byte_type_invalid,
+        ek_utf8_byte_type_invalid,
+        ek_utf8_byte_type_invalid,
+        ek_utf8_byte_type_invalid,
+        ek_utf8_byte_type_invalid,
+        ek_utf8_byte_type_invalid,
+        ek_utf8_byte_type_invalid,
+        ek_utf8_byte_type_invalid,
+    };
 
     t_b8 s_str_rdonly::IsValid() const {
         t_len cost = 0;
@@ -156,28 +409,28 @@ namespace zf {
         } while (true);
     }
 
-    void s_str_rdonly::MarkCodePoints(t_unicode_code_pt_bit_vec *const code_pts) const {
+    void s_str_rdonly::MarkCodePoints(t_unicode_code_pt_bit_vec &code_pts) const {
         ZF_ASSERT(IsValid());
 
         ZF_WALK_STR(*this, chr_info) {
-            SetBit(*code_pts, chr_info.code_pt);
+            SetBit(code_pts, chr_info.code_pt);
         }
     }
 
-    t_b8 s_str_rdonly::Walk(t_len *const byte_index, s_str_chr_info *const o_chr_info) const {
+    t_b8 s_str_rdonly::Walk(t_len &byte_index, s_str_chr_info &o_chr_info) const {
         ZF_ASSERT(IsValid());
-        ZF_ASSERT(*byte_index >= 0 && *byte_index <= bytes.Len());
+        ZF_ASSERT(byte_index >= 0 && byte_index <= bytes.Len());
 
-        if (*byte_index == bytes.Len()) {
+        if (byte_index == bytes.Len()) {
             return false;
         }
 
         while (true) {
-            const auto byte_type = g_utf8_byte_type_table[bytes[*byte_index]];
+            const auto byte_type = g_utf8_byte_type_table[bytes[byte_index]];
 
             switch (byte_type) {
             case ek_utf8_byte_type_ascii:
-                if (!bytes[*byte_index]) {
+                if (!bytes[byte_index]) {
                     return false;
                 }
 
@@ -187,34 +440,34 @@ namespace zf {
             case ek_utf8_byte_type_3byte_start:
             case ek_utf8_byte_type_4byte_start: {
                 const t_len chr_len = byte_type - ek_utf8_byte_type_ascii + 1;
-                const auto chr_bytes = bytes.Slice(*byte_index, *byte_index + chr_len);
-                *o_chr_info = {.code_pt = UTF8ChrBytesToCodePoint(chr_bytes), .byte_index = *byte_index};
-                *byte_index += chr_len;
+                const auto chr_bytes = bytes.Slice(byte_index, byte_index + chr_len);
+                o_chr_info = {.code_pt = UTF8ChrBytesToCodePoint(chr_bytes), .byte_index = byte_index};
+                byte_index += chr_len;
 
                 return true;
             }
 
             case ek_utf8_byte_type_continuation:
-                (*byte_index)--;
+                byte_index--;
                 break;
             }
         }
     }
 
-    t_b8 s_str_rdonly::WalkReverse(t_len *const byte_index, s_str_chr_info *const o_chr_info) const {
+    t_b8 s_str_rdonly::WalkReverse(t_len &byte_index, s_str_chr_info &o_chr_info) const {
         ZF_ASSERT(IsValid());
-        ZF_ASSERT(*byte_index >= -1 && *byte_index < bytes.Len());
+        ZF_ASSERT(byte_index >= -1 && byte_index < bytes.Len());
 
-        if (*byte_index == -1) {
+        if (byte_index == -1) {
             return false;
         }
 
         while (true) {
-            const auto byte_type = g_utf8_byte_type_table[bytes[*byte_index]];
+            const auto byte_type = g_utf8_byte_type_table[bytes[byte_index]];
 
             switch (byte_type) {
             case ek_utf8_byte_type_ascii:
-                if (!bytes[*byte_index]) {
+                if (!bytes[byte_index]) {
                     return false;
                 }
 
@@ -224,15 +477,15 @@ namespace zf {
             case ek_utf8_byte_type_3byte_start:
             case ek_utf8_byte_type_4byte_start: {
                 const t_len chr_len = byte_type - ek_utf8_byte_type_ascii + 1;
-                const auto chr_bytes = bytes.Slice(*byte_index, *byte_index + chr_len);
-                *o_chr_info = {.code_pt = UTF8ChrBytesToCodePoint(chr_bytes), .byte_index = *byte_index};
-                (*byte_index)--;
+                const auto chr_bytes = bytes.Slice(byte_index, byte_index + chr_len);
+                o_chr_info = {.code_pt = UTF8ChrBytesToCodePoint(chr_bytes), .byte_index = byte_index};
+                byte_index--;
 
                 return true;
             }
 
             case ek_utf8_byte_type_continuation:
-                (*byte_index)--;
+                byte_index--;
                 break;
             }
         }

@@ -3,6 +3,12 @@
 #include <zcl.h>
 
 namespace zf {
+    namespace internal {
+        constexpr t_i32 g_gl_version_major = 4;
+        constexpr t_i32 g_gl_version_minor = 6;
+        constexpr t_b8 g_gl_core_profile = true;
+    }
+
 #if 0
     struct s_rendering_basis;
 

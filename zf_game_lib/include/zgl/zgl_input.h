@@ -104,28 +104,28 @@ namespace zf {
         } events = {};
     };
 
-    inline t_b8 IsKeyDown(const s_ptr_nonnull<const s_input_state> is, const e_key_code kc) {
-        return IsBitSet(is->keys_down, kc);
+    inline t_b8 IsKeyDown(const s_input_state &is, const e_key_code kc) {
+        return IsBitSet(is.keys_down, kc);
     }
 
-    inline t_b8 IsKeyPressed(const s_ptr_nonnull<const s_input_state> is, const e_key_code kc) {
-        return IsBitSet(is->events.keys_pressed, kc);
+    inline t_b8 IsKeyPressed(const s_input_state &is, const e_key_code kc) {
+        return IsBitSet(is.events.keys_pressed, kc);
     }
 
-    inline t_b8 IsKeyReleased(const s_ptr_nonnull<const s_input_state> is, const e_key_code kc) {
-        return IsBitSet(is->events.keys_released, kc);
+    inline t_b8 IsKeyReleased(const s_input_state &is, const e_key_code kc) {
+        return IsBitSet(is.events.keys_released, kc);
     }
 
-    inline t_b8 IsMouseButtonDown(const s_ptr_nonnull<const s_input_state> is, const e_mouse_button_code mbc) {
-        return IsBitSet(is->mouse_buttons_down, mbc);
+    inline t_b8 IsMouseButtonDown(const s_input_state &is, const e_mouse_button_code mbc) {
+        return IsBitSet(is.mouse_buttons_down, mbc);
     }
 
-    inline t_b8 IsMouseButtonPressed(const s_ptr_nonnull<const s_input_state> is, const e_mouse_button_code mbc) {
-        return IsBitSet(is->events.mouse_buttons_pressed, mbc);
+    inline t_b8 IsMouseButtonPressed(const s_input_state &is, const e_mouse_button_code mbc) {
+        return IsBitSet(is.events.mouse_buttons_pressed, mbc);
     }
 
-    inline t_b8 IsMouseButtonReleased(const s_ptr_nonnull<const s_input_state> is, const e_mouse_button_code mbc) {
-        return IsBitSet(is->events.mouse_buttons_released, mbc);
+    inline t_b8 IsMouseButtonReleased(const s_input_state &is, const e_mouse_button_code mbc) {
+        return IsBitSet(is.events.mouse_buttons_released, mbc);
     }
 
     namespace internal {
@@ -141,9 +141,9 @@ namespace zf {
             release
         };
 
-        void ProcKeyAction(const s_ptr_nonnull<s_input_state> is, const e_key_code code, const e_key_action act);
-        void ProcMouseButtonAction(const s_ptr_nonnull<s_input_state> is, const e_mouse_button_code code, const e_mouse_button_action act);
-        void ProcCursorMove(const s_ptr_nonnull<s_input_state> is, const s_v2 pos);
-        void ProcScroll(const s_ptr_nonnull<s_input_state> is, const s_v2 scroll);
+        void ProcKeyAction(s_input_state &is, const e_key_code code, const e_key_action act);
+        void ProcMouseButtonAction(s_input_state &is, const e_mouse_button_code code, const e_mouse_button_action act);
+        void ProcCursorMove(s_input_state &is, const s_v2 pos);
+        void ProcScroll(s_input_state &is, const s_v2 scroll);
     }
 }

@@ -43,12 +43,12 @@ namespace zf {
             return operator[](m_len - 1);
         }
 
-        tp_type *Append(const tp_type &val) {
+        tp_type &Append(const tp_type &val) {
             ZF_ASSERT(!IsFull());
 
             m_backing_arr[m_len] = val;
             m_len++;
-            return &m_backing_arr[m_len - 1];
+            return m_backing_arr[m_len - 1];
         }
 
         void Insert(const t_len index, const tp_type &val) {
@@ -92,16 +92,16 @@ namespace zf {
     };
 
     template <typename tp_type>
-    [[nodiscard]] t_b8 CreateList(const t_len cap, s_mem_arena *const mem_arena, s_list<tp_type> *const o_list, const t_len len = 0) {
+    [[nodiscard]] t_b8 CreateList(const t_len cap, s_mem_arena &mem_arena, s_list<tp_type> &o_list, const t_len len = 0) {
         ZF_ASSERT(cap > 0 && len >= 0 && len <= cap);
 
         s_array<tp_type> backing_arr;
 
-        if (!AllocArray(cap, mem_arena, &backing_arr)) {
+        if (!AllocArray(cap, mem_arena, backing_arr)) {
             return false;
         }
 
-        *o_list = {backing_arr, len};
+        o_list = {backing_arr, len};
 
         return true;
     }
@@ -149,7 +149,7 @@ namespace zf {
     struct s_hash_map {
     public:
         // The provided hash function has to map a key to an integer 0 or higher. The given memory arena will be saved and used for allocating new memory for entries when needed.
-        [[nodiscard]] t_b8 Init(const t_hash_func<tp_key_type> hash_func, s_mem_arena *const mem_arena, const t_len cap = 32, const t_bin_comparator<tp_key_type> key_comparator = DefaultBinComparator) {
+        [[nodiscard]] t_b8 Init(const t_hash_func<tp_key_type> hash_func, s_mem_arena &mem_arena, const t_len cap = 32, const t_bin_comparator<tp_key_type> key_comparator = DefaultBinComparator) {
             ZF_ASSERT(!m_initted);
 
             *this = {
@@ -289,24 +289,22 @@ namespace zf {
 
             s_backing_block *bb = m_backing_blocks_head;
 
-            t_len index = m_immediate_indexes[hash_index];
-            t_len *index_to_update = &m_immediate_indexes[hash_index];
+            t_len *index = &m_immediate_indexes[hash_index];
 
-            while (bb && index != -1) {
-                while (index >= m_backing_block_cap) {
+            while (bb && *index != -1) {
+                while (*index >= m_backing_block_cap) {
                     bb = bb->next;
                     index -= m_backing_block_cap;
                 }
 
                 if (key_comparator(bb->keys[index], key)) {
-                    *index_to_update = bb->next_indexes[index];
+                    *index = bb->next_indexes[index];
                     UnsetBit(bb->usage, index);
                     m_entry_cnt--;
                     return true;
                 }
 
-                index = bb->next_indexes[index];
-                index_to_update = &bb->next_indexes[index];
+                index = &bb->next_indexes[index];
             }
 
             return false;
@@ -341,14 +339,14 @@ namespace zf {
         }
 
         // Allocates the given arrays with the memory arena and loads key-value pairs into them.
-        [[nodiscard]] t_b8 LoadEntries(s_mem_arena *const mem_arena, s_array<tp_key_type> *const o_keys, s_array<tp_val_type> *const o_vals) const {
+        [[nodiscard]] t_b8 LoadEntries(s_mem_arena &mem_arena, s_array<tp_key_type> &o_keys, s_array<tp_val_type> &o_vals) const {
             ZF_ASSERT(m_initted);
 
             if (!AllocArray(m_entry_cnt, mem_arena, o_keys) || !AllocArray(m_entry_cnt, mem_arena, o_vals)) {
                 return false;
             }
 
-            return LoadEntries(*o_keys, *o_vals);
+            return LoadEntries(o_keys, o_vals);
         }
 
     private:
@@ -360,7 +358,7 @@ namespace zf {
 
             s_backing_block *next = nullptr;
 
-            [[nodiscard]] t_b8 Init(const t_len cap, s_mem_arena *const mem_arena) {
+            [[nodiscard]] t_b8 Init(const t_len cap, s_mem_arena &mem_arena) {
                 if (!AllocArray(cap, mem_arena, &keys)) {
                     return false;
                 }
@@ -397,31 +395,31 @@ namespace zf {
     };
 
     template <typename tp_key_type, typename tp_val_type>
-    [[nodiscard]] t_b8 SerializeHashMap(s_stream *const stream, const s_hash_map<tp_key_type, tp_val_type> &hm, s_mem_arena *const temp_mem_arena) {
+    [[nodiscard]] t_b8 SerializeHashMap(s_stream &stream, const s_hash_map<tp_key_type, tp_val_type> &hm, s_mem_arena &temp_mem_arena) {
         const t_len cap = hm.Cap();
 
-        if (!stream->WriteItem(cap)) {
+        if (!stream.WriteItem(cap)) {
             return false;
         }
 
         const t_len entry_cnt = hm.EntryCount();
 
-        if (!stream->WriteItem(entry_cnt)) {
+        if (!stream.WriteItem(entry_cnt)) {
             return false;
         }
 
         s_array<tp_key_type> keys;
         s_array<tp_val_type> vals;
 
-        if (!hm.LoadEntries(temp_mem_arena, &keys, &vals)) {
+        if (!hm.LoadEntries(temp_mem_arena, keys, vals)) {
             return false;
         }
 
-        if (!stream->WriteItemsOfArray(keys)) {
+        if (!stream.WriteItemsOfArray(keys)) {
             return false;
         }
 
-        if (!stream->WriteItemsOfArray(vals)) {
+        if (!stream.WriteItemsOfArray(vals)) {
             return false;
         }
 
@@ -429,16 +427,16 @@ namespace zf {
     }
 
     template <typename tp_key_type, typename tp_val_type>
-    [[nodiscard]] t_b8 DeserializeHashMap(s_stream *const stream, s_mem_arena *const hm_mem_arena, const t_hash_func<tp_key_type> hm_hash_func, s_mem_arena *const temp_mem_arena, s_hash_map<tp_key_type, tp_val_type> *const o_hm, const t_bin_comparator<tp_key_type> hm_key_comparator = DefaultBinComparator) {
+    [[nodiscard]] t_b8 DeserializeHashMap(s_stream &stream, s_mem_arena &hm_mem_arena, const t_hash_func<tp_key_type> hm_hash_func, s_mem_arena &temp_mem_arena, s_hash_map<tp_key_type, tp_val_type> &o_hm, const t_bin_comparator<tp_key_type> hm_key_comparator = DefaultBinComparator) {
         t_len cap;
 
-        if (!stream->ReadItem(&cap)) {
+        if (!stream.ReadItem(cap)) {
             return false;
         }
 
         t_len entry_cnt;
 
-        if (!stream->ReadItem(&entry_cnt)) {
+        if (!stream.ReadItem(entry_cnt)) {
             return false;
         }
 
@@ -449,15 +447,15 @@ namespace zf {
         s_array<tp_key_type> keys;
         s_array<tp_val_type> vals;
 
-        if (!AllocArray(entry_cnt, temp_mem_arena, &keys) || !AllocArray(entry_cnt, temp_mem_arena, &vals)) {
+        if (!AllocArray(entry_cnt, temp_mem_arena, keys) || !AllocArray(entry_cnt, temp_mem_arena, vals)) {
             return false;
         }
 
-        if (!stream->ReadItemsIntoArray(keys, entry_cnt)) {
+        if (!stream.ReadItemsIntoArray(keys, entry_cnt)) {
             return false;
         }
 
-        if (!stream->ReadItemsIntoArray(vals, entry_cnt)) {
+        if (!stream.ReadItemsIntoArray(vals, entry_cnt)) {
             return false;
         }
 

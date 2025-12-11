@@ -54,7 +54,7 @@ namespace zf {
         }
 
         template <typename tp_type>
-        [[nodiscard]] t_b8 ReadItem(tp_type *const o_item) {
+        [[nodiscard]] t_b8 ReadItem(tp_type &o_item) {
             ZF_ASSERT(m_mode == e_stream_mode::read);
 
             constexpr t_len size = ZF_SIZE_OF(tp_type);
@@ -65,7 +65,7 @@ namespace zf {
                     return false;
                 }
 
-                const auto dest = ToBytes(*o_item);
+                const auto dest = ToBytes(o_item);
                 const auto src = m_type_data.mem.bytes.Slice(m_type_data.mem.pos, m_type_data.mem.pos + size);
                 src.CopyTo(dest);
 
@@ -75,7 +75,7 @@ namespace zf {
             }
 
             case e_stream_type::file:
-                return fread(o_item, size, 1, m_type_data.file.file) == 1;
+                return fread(&o_item, size, 1, m_type_data.file.file) == 1;
             }
 
             ZF_ASSERT(false);
@@ -138,7 +138,7 @@ namespace zf {
             }
 
             case e_stream_type::file:
-                return static_cast<t_len>(fread(arr.Ptr().Raw(), sizeof(arr[0]), static_cast<size_t>(cnt), m_type_data.file.file)) == cnt;
+                return static_cast<t_len>(fread(arr.Raw(), sizeof(arr[0]), static_cast<size_t>(cnt), m_type_data.file.file)) == cnt;
             }
 
             ZF_ASSERT(false);
@@ -171,7 +171,7 @@ namespace zf {
             }
 
             case e_stream_type::file:
-                return static_cast<t_len>(fwrite(arr.Ptr().Raw(), sizeof(arr[0]), static_cast<size_t>(arr.Len()), m_type_data.file.file)) == arr.Len();
+                return static_cast<t_len>(fwrite(arr.Raw(), sizeof(arr[0]), static_cast<size_t>(arr.Len()), m_type_data.file.file)) == arr.Len();
             }
 
             ZF_ASSERT(false);
@@ -208,12 +208,12 @@ namespace zf {
     }
 
     template <c_nonstatic_array tp_type>
-    [[nodiscard]] t_b8 SerializeArray(s_stream *const stream, const tp_type arr) {
-        if (!stream->WriteItem(arr.Len())) {
+    [[nodiscard]] t_b8 SerializeArray(s_stream &stream, const tp_type arr) {
+        if (!stream.WriteItem(arr.Len())) {
             return false;
         }
 
-        if (!stream->WriteItemsOfArray(arr)) {
+        if (!stream.WriteItemsOfArray(arr)) {
             return false;
         }
 
@@ -221,10 +221,10 @@ namespace zf {
     }
 
     template <typename tp_type>
-    [[nodiscard]] t_b8 DeserializeArray(s_stream *const stream, s_mem_arena *const arr_mem_arena, s_array<tp_type> *const o_arr) {
+    [[nodiscard]] t_b8 DeserializeArray(s_stream &stream, s_mem_arena &arr_mem_arena, s_array<tp_type> &o_arr) {
         t_len len;
 
-        if (!stream->ReadItem(&len)) {
+        if (!stream.ReadItem(len)) {
             return false;
         }
 
@@ -233,7 +233,7 @@ namespace zf {
                 return false;
             }
 
-            if (!stream->ReadItemsIntoArray(*o_arr, len)) {
+            if (!stream.ReadItemsIntoArray(*o_arr, len)) {
                 return false;
             }
         } else {
@@ -243,22 +243,22 @@ namespace zf {
         return true;
     }
 
-    [[nodiscard]] inline t_b8 SerializeBitVec(s_stream *const stream, const s_bit_vec_rdonly bv) {
-        if (!stream->WriteItem(bv.BitCount())) {
+    [[nodiscard]] inline t_b8 SerializeBitVec(s_stream &stream, const s_bit_vec_rdonly bv) {
+        if (!stream.WriteItem(bv.BitCount())) {
             return false;
         }
 
-        if (!stream->WriteItemsOfArray(bv.Bytes())) {
+        if (!stream.WriteItemsOfArray(bv.Bytes())) {
             return false;
         }
 
         return true;
     }
 
-    [[nodiscard]] inline t_b8 DeserializeBitVec(s_stream *const stream, s_mem_arena *const bv_mem_arena, s_bit_vec *const o_bv) {
+    [[nodiscard]] inline t_b8 DeserializeBitVec(s_stream &stream, s_mem_arena &bv_mem_arena, s_bit_vec &o_bv) {
         t_len bit_cnt;
 
-        if (!stream->ReadItem(&bit_cnt)) {
+        if (!stream.ReadItem(bit_cnt)) {
             return false;
         }
 
@@ -267,11 +267,11 @@ namespace zf {
                 return false;
             }
 
-            if (!stream->ReadItemsIntoArray(o_bv->Bytes(), o_bv->Bytes().Len())) {
+            if (!stream.ReadItemsIntoArray(o_bv.Bytes(), o_bv.Bytes().Len())) {
                 return false;
             }
         } else {
-            *o_bv = {};
+            o_bv = {};
         }
 
         return true;
@@ -286,10 +286,10 @@ namespace zf {
         append
     };
 
-    [[nodiscard]] t_b8 OpenFile(const s_str_rdonly file_path, const e_file_access_mode mode, s_stream *const o_stream);
-    void CloseFile(s_stream *const stream);
-    t_len CalcFileSize(const s_stream *const stream);
-    [[nodiscard]] t_b8 LoadFileContents(const s_str_rdonly file_path, s_mem_arena *const contents_mem_arena, s_array<t_u8> *const o_contents, const t_b8 add_terminator = false);
+    [[nodiscard]] t_b8 OpenFile(const s_str_rdonly file_path, const e_file_access_mode mode, s_stream &o_stream);
+    void CloseFile(s_stream &stream);
+    t_len CalcFileSize(const s_stream &stream);
+    [[nodiscard]] t_b8 LoadFileContents(const s_str_rdonly file_path, s_mem_arena &contents_mem_arena, s_array<t_u8> &o_contents, const t_b8 add_terminator = false);
 
     enum class e_directory_creation_result : t_i32 {
         success,
@@ -300,8 +300,8 @@ namespace zf {
     };
 
     [[nodiscard]] t_b8 CreateDirectory(const s_str_rdonly path, e_directory_creation_result *const o_creation_res = nullptr); // This DOES NOT create non-existent parent directories.
-    [[nodiscard]] t_b8 CreateDirectoryAndParents(const s_str_rdonly path, s_mem_arena *const temp_mem_arena, e_directory_creation_result *const o_dir_creation_res = nullptr);
-    [[nodiscard]] t_b8 CreateFileAndParentDirs(const s_str_rdonly path, s_mem_arena *const temp_mem_arena, e_directory_creation_result *const o_dir_creation_res = nullptr);
+    [[nodiscard]] t_b8 CreateDirectoryAndParents(const s_str_rdonly path, s_mem_arena &temp_mem_arena, e_directory_creation_result *const o_dir_creation_res = nullptr);
+    [[nodiscard]] t_b8 CreateFileAndParentDirs(const s_str_rdonly path, s_mem_arena &temp_mem_arena, e_directory_creation_result *const o_dir_creation_res = nullptr);
 
     enum class e_path_type : t_i32 {
         not_found,
@@ -309,5 +309,5 @@ namespace zf {
         directory
     };
 
-    [[nodiscard]] t_b8 CheckPathType(const s_str_rdonly path, e_path_type *const o_type);
+    [[nodiscard]] t_b8 CheckPathType(const s_str_rdonly path, e_path_type &o_type);
 }
