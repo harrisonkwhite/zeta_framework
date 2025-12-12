@@ -3,11 +3,12 @@
 #include <zcl.h>
 
 namespace zf {
+    struct s_platform_layer_info;
     struct s_rendering_basis;
 
     namespace internal {
-        [[nodiscard]] t_b8 InitGFX(s_mem_arena &rendering_basis_mem_arena, s_mem_arena &temp_mem_arena, s_ptr<s_rendering_basis> &o_rendering_basis);
-        void ShutdownGFX(s_rendering_basis &rendering_basis);
+        [[nodiscard]] t_b8 InitGFX(const s_platform_layer_info &platform_layer_info);
+        void ShutdownGFX();
     }
 
     // ============================================================
@@ -63,7 +64,10 @@ namespace zf {
     [[nodiscard]] t_b8 DrawStr(const s_rendering_context rc, const s_str_rdonly str, const s_gfx_resource &font, const s_v2 pos, s_mem_arena &temp_mem_arena, const s_v2 alignment = alignments::g_topleft, const s_color_rgba32f blend = colors::g_white);
 
     namespace internal {
-        [[nodiscard]] t_b8 BeginFrame(const s_rendering_basis &rendering_basis, const s_v2_i framebuffer_size_cache, s_mem_arena &mem_arena, s_rendering_context &o_rendering_context);
-        void CompleteFrame(const s_rendering_context rc);
+        void BeginFrame();
+        void EndFrame();
+
+        //[[nodiscard]] t_b8 BeginFrame(const s_rendering_basis &rendering_basis, const s_v2_i framebuffer_size_cache, s_mem_arena &mem_arena, s_rendering_context &o_rendering_context);
+        // void CompleteFrame(const s_rendering_context rc);
     }
 }

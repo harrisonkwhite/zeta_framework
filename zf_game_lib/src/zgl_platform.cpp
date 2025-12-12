@@ -273,6 +273,16 @@ namespace zf {
 #endif
     }
 
+    void *internal::NativeDisplayHandle(const s_platform_layer_info &pli) {
+#if defined(ZF_PLATFORM_WINDOWS)
+        return nullptr;
+#elif defined(ZF_PLATFORM_MACOS)
+        return nullptr;
+#elif defined(ZF_PLATFORM_LINUX)
+        return glfwGetX11Display();
+#endif
+    }
+
     void internal::ShowWindow(const s_platform_layer_info &pli) {
         glfwShowWindow(pli.glfw_window);
     }

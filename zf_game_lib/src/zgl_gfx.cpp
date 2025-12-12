@@ -1,5 +1,8 @@
 #include <zgl/zgl_gfx.h>
 
+#include <bgfx/bgfx.h>
+#include <zgl/zgl_platform.h>
+
 namespace zf {
 #if 0
     // ============================================================
@@ -804,7 +807,26 @@ void main() {
     // ============================================================
     // @section: General
     // ============================================================
-    t_b8 internal::InitGFX(s_mem_arena &rendering_basis_mem_arena, s_mem_arena &temp_mem_arena, s_ptr<s_rendering_basis> &o_rendering_basis) {
+    t_b8 internal::InitGFX(const s_platform_layer_info &platform_layer_info) {
+        bgfx::Init init = {};
+        init.type = bgfx::RendererType::Count;
+
+        init.resolution.reset = BGFX_RESET_VSYNC;
+
+        const auto fb_size_cache = WindowFramebufferSizeCache(platform_layer_info);
+        init.resolution.width = static_cast<uint32_t>(fb_size_cache.x);
+        init.resolution.height = static_cast<uint32_t>(fb_size_cache.y);
+
+        init.platformData.nwh = NativeWindowHandle(platform_layer_info);
+        init.platformData.ndt = NativeDisplayHandle(platform_layer_info);
+        init.platformData.type = bgfx::NativeWindowHandleType::Default;
+
+        if (!bgfx::init(init)) {
+            return false;
+        }
+
+        bgfx::setViewClear(0, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, 0xABABABFF, 1.0f, 0);
+
         return true;
 #if 0
         t_b8 clean_up = false;
@@ -889,7 +911,9 @@ void main() {
 #endif
     }
 
-    void internal::ShutdownGFX(s_rendering_basis &rendering_basis) {
+    void internal::ShutdownGFX() {
+        bgfx::shutdown();
+
 #if 0
         DestroyGFXResources(rendering_basis.res_arena);
         glDeleteProgram(rendering_basis.batch_shader_prog_gl_id);
@@ -897,5 +921,12 @@ void main() {
 
         rendering_basis = {};
 #endif
+    }
+
+    void internal::BeginFrame() {
+    }
+
+    void internal::EndFrame() {
+        bgfx::frame();
     }
 }

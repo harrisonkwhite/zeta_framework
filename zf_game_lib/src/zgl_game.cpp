@@ -47,13 +47,11 @@ namespace zf {
                 return false;
             }
 
-            s_ptr<s_rendering_basis> rendering_basis = nullptr;
-
-            if (!internal::InitGFX(mem_arena, temp_mem_arena, rendering_basis)) {
+            if (!internal::InitGFX(*platform_layer_info)) {
                 return false;
             }
 
-            /*ZF_DEFER({ internal::ShutdownGFX(*rendering_basis); });*/
+            ZF_DEFER({ internal::ShutdownGFX(); });
 
             s_ptr<s_audio_sys> audio_sys = nullptr;
 
@@ -130,6 +128,9 @@ namespace zf {
                     } while (frame_dur_accum >= targ_tick_interval);
 
                     // Perform a single render.
+                    internal::BeginFrame();
+
+                    internal::EndFrame();
 #if 0
                     s_rendering_context rendering_context = {};
 
