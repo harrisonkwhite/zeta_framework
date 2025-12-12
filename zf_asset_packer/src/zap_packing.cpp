@@ -246,14 +246,14 @@ namespace zf {
                     const auto src_fp = ConvertCstr(field_vals[ek_font_field_src_file_path]->valuestring);
                     const auto height = field_vals[ek_font_field_height]->valueint;
 
-                    s_array<t_code_pt_bit_vec> code_pt_bvs = {}; // First is for input code points, second is for output unsupported ones.
+                    const auto code_pt_bv = Alloc<t_code_pt_bit_vec>(mem_arena);
 
-                    if (!AllocArray(2, mem_arena, code_pt_bvs)) {
-                        LogError(s_cstr_literal("Failed to allocate code point bit vectors!"));
+                    if (!code_pt_bv) {
+                        LogError(s_cstr_literal("Failed to allocate code point bit vector!"));
                         return false;
                     }
 
-                    SetBitsInRange(code_pt_bvs[0], g_printable_ascii_range_begin, g_printable_ascii_range_end); // Add the printable ASCII range as a default.
+                    SetBitsInRange(*code_pt_bv, g_printable_ascii_range_begin, g_printable_ascii_range_end); // Add the printable ASCII range as a default.
 
                     if (field_vals[ek_font_field_extra_chrs_file_path]) {
                         const auto extra_chrs_fp = ConvertCstr(field_vals[ek_font_field_extra_chrs_file_path]->valuestring);
@@ -265,30 +265,11 @@ namespace zf {
                             return false;
                         }
 
-                        MarkStrCodePoints({extra_chrs_file_contents}, code_pt_bvs[0]);
-
-                        // Unset irrelevant code points.
-                        // @todo: I hate this! Should be automated!
-                        UnsetBit(code_pt_bvs[0], 10);
+                        MarkStrCodePoints({extra_chrs_file_contents}, *code_pt_bv);
                     }
 
-                    e_font_load_from_raw_result load_from_raw_res = {};
-
-                    if (!PackFont(dest_fp, src_fp, height, code_pt_bvs[0], mem_arena, load_from_raw_res, &code_pt_bvs[1])) {
-                        switch (load_from_raw_res) {
-                        case ek_font_load_from_raw_result_unsupported_code_pt:
-                            LogError(s_cstr_literal("Unsupported code points:"));
-
-                            ZF_FOR_EACH_SET_BIT(code_pt_bvs[1], i) {
-                                Log(s_cstr_literal("- %"), i);
-                            }
-
-                            return false;
-
-                        default:
-                            break;
-                        }
-
+                    if (!PackFont(dest_fp, src_fp, height, *code_pt_bv, mem_arena)) {
+                        LogError(s_cstr_literal("Failed to pack font to file \"%\"!"), dest_fp);
                         return false;
                     }
 

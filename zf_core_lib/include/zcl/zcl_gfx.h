@@ -269,16 +269,9 @@ namespace zf {
         s_hash_map<s_font_code_point_pair, t_i32> code_pt_pairs_to_kernings = {};
     };
 
-    enum e_font_load_from_raw_result : t_i32 {
-        ek_font_load_from_raw_result_success,
-        ek_font_load_from_raw_result_no_code_pts_given,
-        ek_font_load_from_raw_result_unsupported_code_pt,
-        ek_font_load_from_raw_result_other_err
-    };
+    [[nodiscard]] t_b8 LoadFontFromRaw(const s_str_rdonly file_path, const t_i32 height, t_code_pt_bit_vec &code_pts, s_mem_arena &arrangement_mem_arena, s_mem_arena &atlas_rgbas_mem_arena, s_mem_arena &temp_mem_arena, s_font_arrangement &o_arrangement, s_array<t_font_atlas_rgba> &o_atlas_rgbas);
 
-    [[nodiscard]] e_font_load_from_raw_result LoadFontFromRaw(const s_str_rdonly file_path, const t_i32 height, const t_code_pt_bit_vec &code_pts, s_mem_arena &arrangement_mem_arena, s_mem_arena &atlas_rgbas_mem_arena, s_mem_arena &temp_mem_arena, s_font_arrangement &o_arrangement, s_array<t_font_atlas_rgba> &o_atlas_rgbas, const s_ptr<t_code_pt_bit_vec> o_unsupported_code_pts = nullptr);
-
-    [[nodiscard]] t_b8 PackFont(const s_str_rdonly dest_file_path, const s_str_rdonly src_file_path, const t_i32 height, const t_code_pt_bit_vec &code_pts, s_mem_arena &temp_mem_arena, e_font_load_from_raw_result &o_font_load_from_raw_res, const s_ptr<t_code_pt_bit_vec> o_unsupported_code_pts = nullptr);
+    [[nodiscard]] t_b8 PackFont(const s_str_rdonly dest_file_path, const s_str_rdonly src_file_path, const t_i32 height, t_code_pt_bit_vec &code_pts, s_mem_arena &temp_mem_arena);
     [[nodiscard]] t_b8 UnpackFont(const s_str_rdonly file_path, s_mem_arena &arrangement_mem_arena, s_mem_arena &atlas_rgbas_mem_arena, s_mem_arena &temp_mem_arena, s_font_arrangement &o_arrangement, s_array<t_font_atlas_rgba> &o_atlas_rgbas);
 
     // ============================================================

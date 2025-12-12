@@ -105,20 +105,14 @@ namespace zf {
         return pa.a == pb.a && pa.b == pb.b;
     };
 
-    e_font_load_from_raw_result LoadFontFromRaw(const s_str_rdonly file_path, const t_i32 height, const t_code_pt_bit_vec &code_pts, s_mem_arena &arrangement_mem_arena, s_mem_arena &atlas_rgbas_mem_arena, s_mem_arena &temp_mem_arena, s_font_arrangement &o_arrangement, s_array<t_font_atlas_rgba> &o_atlas_rgbas, const s_ptr<t_code_pt_bit_vec> o_unsupported_code_pts) {
+    t_b8 LoadFontFromRaw(const s_str_rdonly file_path, const t_i32 height, t_code_pt_bit_vec &code_pts, s_mem_arena &arrangement_mem_arena, s_mem_arena &atlas_rgbas_mem_arena, s_mem_arena &temp_mem_arena, s_font_arrangement &o_arrangement, s_array<t_font_atlas_rgba> &o_atlas_rgbas) {
         ZF_ASSERT(height > 0);
-
-        const t_len code_pt_cnt = CntSetBits(code_pts);
-
-        if (code_pt_cnt == 0) {
-            return ek_font_load_from_raw_result_no_code_pts_given;
-        }
 
         // Get the plain font file data.
         s_array<t_u8> font_file_data = {};
 
         if (!LoadFileContents(file_path, temp_mem_arena, temp_mem_arena, font_file_data)) {
-            return ek_font_load_from_raw_result_other_err;
+            return false;
         }
 
         // Initialise the font through STB.
@@ -127,42 +121,29 @@ namespace zf {
         const t_i32 offs = stbtt_GetFontOffsetForIndex(font_file_data.Ptr(), 0);
 
         if (offs == -1) {
-            return ek_font_load_from_raw_result_other_err;
+            return false;
         }
 
         if (!stbtt_InitFont(&stb_font_info, font_file_data.Ptr(), offs)) {
-            return ek_font_load_from_raw_result_other_err;
+            return false;
         }
 
-        // Check for unsupported code points.
-        if (o_unsupported_code_pts) {
-            t_b8 any_unsupported = false;
-            UnsetAllBits(*o_unsupported_code_pts);
+        // Filter out unsupported code points.
+        ZF_FOR_EACH_SET_BIT(code_pts, i) {
+            const auto code_pt = static_cast<t_code_pt>(i);
 
-            ZF_FOR_EACH_SET_BIT(code_pts, i) {
-                const auto code_pt = static_cast<t_code_pt>(i);
+            const t_i32 glyph_index = stbtt_FindGlyphIndex(&stb_font_info, static_cast<t_i32>(code_pt));
 
-                const t_i32 glyph_index = stbtt_FindGlyphIndex(&stb_font_info, static_cast<t_i32>(code_pt));
-
-                if (glyph_index == 0) {
-                    SetBit(*o_unsupported_code_pts, i);
-                    any_unsupported = true;
-                }
+            if (glyph_index == 0) {
+                UnsetBit(code_pts, i);
             }
+        }
 
-            if (any_unsupported) {
-                return ek_font_load_from_raw_result_unsupported_code_pt;
-            }
-        } else {
-            ZF_FOR_EACH_SET_BIT(code_pts, i) {
-                const auto code_pt = static_cast<t_code_pt>(i);
+        // Compute number of leftover code points that can actually be supported, return if there are none.
+        const t_len code_pt_cnt = CntSetBits(code_pts);
 
-                const t_i32 glyph_index = stbtt_FindGlyphIndex(&stb_font_info, static_cast<t_i32>(code_pt));
-
-                if (glyph_index == 0) {
-                    return ek_font_load_from_raw_result_unsupported_code_pt;
-                }
-            }
+        if (code_pt_cnt == 0) {
+            return true;
         }
 
         // Compute general info.
@@ -177,7 +158,7 @@ namespace zf {
         // Glyph Info
         //
         if (!o_arrangement.code_pts_to_glyph_infos.Init(g_code_pt_hash_func, arrangement_mem_arena, code_pt_cnt)) {
-            return ek_font_load_from_raw_result_other_err;
+            return false;
         }
 
         t_len atlas_index = 0;
@@ -219,7 +200,7 @@ namespace zf {
             atlas_pen.x += glyph_info.size.x;
 
             if (o_arrangement.code_pts_to_glyph_infos.Put(code_pt, glyph_info) == ek_hash_map_put_result_error) {
-                return ek_font_load_from_raw_result_other_err;
+                return false;
             }
         }
 
@@ -233,7 +214,7 @@ namespace zf {
         o_arrangement.has_kernings = true;
 
         if (!o_arrangement.code_pt_pairs_to_kernings.Init(g_code_pt_pair_hash_func, arrangement_mem_arena, g_hash_map_cap_default, g_code_pt_pair_comparator)) {
-            return ek_font_load_from_raw_result_other_err;
+            return false;
         }
 
         ZF_FOR_EACH_SET_BIT(code_pts, i) {
@@ -248,7 +229,7 @@ namespace zf {
 
                 if (kern != 0) {
                     if (o_arrangement.code_pt_pairs_to_kernings.Put({cp_a, cp_b}, kern) == ek_hash_map_put_result_error) {
-                        return ek_font_load_from_raw_result_other_err;
+                        return false;
                     }
                 }
             }
@@ -258,7 +239,7 @@ namespace zf {
         // Texture Atlases
         //
         if (!AllocArray(atlas_cnt, atlas_rgbas_mem_arena, o_atlas_rgbas)) {
-            return ek_font_load_from_raw_result_other_err;
+            return false;
         }
 
         // Initialise all pixels to transparent white.
@@ -295,7 +276,7 @@ namespace zf {
             const s_ptr<t_u8> stb_bitmap = stbtt_GetCodepointBitmap(&stb_font_info, scale, scale, static_cast<t_i32>(code_pt), nullptr, nullptr, nullptr, nullptr);
 
             if (!stb_bitmap) {
-                return ek_font_load_from_raw_result_other_err;
+                return false;
             }
 
             ZF_DEFER({ stbtt_FreeBitmap(stb_bitmap, nullptr); });
@@ -309,16 +290,14 @@ namespace zf {
             }
         }
 
-        return ek_font_load_from_raw_result_success;
+        return true;
     }
 
-    t_b8 PackFont(const s_str_rdonly dest_file_path, const s_str_rdonly src_file_path, const t_i32 height, const t_code_pt_bit_vec &code_pts, s_mem_arena &temp_mem_arena, e_font_load_from_raw_result &o_font_load_from_raw_res, const s_ptr<t_code_pt_bit_vec> o_unsupported_code_pts) {
+    t_b8 PackFont(const s_str_rdonly dest_file_path, const s_str_rdonly src_file_path, const t_i32 height, t_code_pt_bit_vec &code_pts, s_mem_arena &temp_mem_arena) {
         s_font_arrangement arrangement = {};
         s_array<t_font_atlas_rgba> atlas_rgbas = {};
 
-        o_font_load_from_raw_res = LoadFontFromRaw(src_file_path, height, code_pts, temp_mem_arena, temp_mem_arena, temp_mem_arena, arrangement, atlas_rgbas, o_unsupported_code_pts);
-
-        if (o_font_load_from_raw_res != ek_font_load_from_raw_result_success) {
+        if (!LoadFontFromRaw(src_file_path, height, code_pts, temp_mem_arena, temp_mem_arena, temp_mem_arena, arrangement, atlas_rgbas)) {
             return false;
         }
 

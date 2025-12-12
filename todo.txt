@@ -11,11 +11,11 @@
 There are a handful of comments marked with "@todo" throughout the codebase that need to be addressed as well.
 
 Nice to have:
+- Dynamic list DS
+- Queue DS
 - Music layering and management.
 - Text rotation and scaling
 - A* pathfinding utilities.
 - Helpers for drawing circles and polygons
 - More built-in shaders
-- Dynamic list DS
-- Queue DS
 - Priority queue DS
