@@ -1,7 +1,5 @@
 #include <zgl/zgl_gfx.h>
 
-#include <glad/glad.h>
-
 namespace zf {
 #if 0
     // ============================================================
