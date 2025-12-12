@@ -10,7 +10,14 @@ if (MSVC)
     add_compile_options(/utf-8)
 endif()
 
+add_subdirectory(external/glfw)
+
+set(BGFX_BUILD_TOOLS OFF CACHE BOOL "" FORCE)
+set(BGFX_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+set(BGFX_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+set(BGFX_INSTALL OFF CACHE BOOL "" FORCE)
+add_subdirectory(external/bgfx)
+
+add_subdirectory(zf_core_lib)
 add_subdirectory(zf_game_lib)
 add_subdirectory(zf_asset_packer)
-add_subdirectory(zf_core_lib)
-add_subdirectory(external/glfw)

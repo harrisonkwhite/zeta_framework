@@ -1,3 +1,4 @@
+#include <functional>
 add_library(zf_game_lib STATIC
     src/zgl_game.cpp
     src/zgl_platform.cpp
@@ -27,6 +28,9 @@ target_link_libraries(zf_game_lib PUBLIC
 
 target_link_libraries(zf_game_lib PRIVATE
     glfw
+    bgfx
+    bx
+    bimg
 )
 
 target_compile_definitions(zf_game_lib PRIVATE
