@@ -1,9 +1,19 @@
 #include <zgl/zgl_platform.h>
 
 #include <GLFW/glfw3.h>
-#include <glad/glad.h>
+
+#if defined(ZF_PLATFORM_WINDOWS)
+    #define GLFW_EXPOSE_NATIVE_WIN32
+    #include <GLFW/glfw3native.h>
+#elif defined(ZF_PLATFORM_MACOS)
+    #define GLFW_EXPOSE_NATIVE_COCOA
+    #include <GLFW/glfw3native.h>
+#elif defined(ZF_PLATFORM_LINUX)
+    #define GLFW_EXPOSE_NATIVE_X11
+    #include <GLFW/glfw3native.h>
+#endif
+
 #include <zgl/zgl_input.h>
-#include <zgl/zgl_gfx.h>
 
 namespace zf {
     constexpr e_key_code ConvertGLFWKeyCode(const t_i32 glfw_key) {
@@ -154,9 +164,7 @@ namespace zf {
             }
         });
 
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, internal::g_gl_version_major);
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, internal::g_gl_version_minor);
-        glfwWindowHint(GLFW_OPENGL_PROFILE, internal::g_gl_core_profile ? GLFW_OPENGL_CORE_PROFILE : GLFW_OPENGL_COMPAT_PROFILE);
+        glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
         glfwWindowHint(GLFW_VISIBLE, false);
 
         o_pli->glfw_window = glfwCreateWindow(1280, 720, "", nullptr, nullptr);
@@ -173,16 +181,7 @@ namespace zf {
             }
         });
 
-        glfwMakeContextCurrent(o_pli->glfw_window);
-
         glfwGetFramebufferSize(o_pli->glfw_window, &o_pli->framebuffer_size_cache.x, &o_pli->framebuffer_size_cache.y);
-
-        // Initialise OpenGL function pointers.
-        if (!gladLoadGLLoader(reinterpret_cast<GLADloadproc>(glfwGetProcAddress))) {
-            ZF_REPORT_ERROR();
-            clean_up = true;
-            return false;
-        }
 
         // Set up callbacks.
         glfwSetWindowUserPointer(o_pli->glfw_window, o_pli);
@@ -264,16 +263,22 @@ namespace zf {
         glfwPollEvents();
     }
 
+    void *internal::NativeWindowHandle(const s_platform_layer_info &pli) {
+#if defined(ZF_PLATFORM_WINDOWS)
+        return reinterpret_cast<void *>(glfwGetWin32Window(pli.glfw_window));
+#elif defined(ZF_PLATFORM_MACOS)
+        return glfwGetCocoaWindow(pli.glfw_window);
+#elif defined(ZF_PLATFORM_LINUX)
+        return reinterpret_cast<void *>(static_cast<uintptr_t>(glfwGetX11Window(pli.glfw_window)));
+#endif
+    }
+
     void internal::ShowWindow(const s_platform_layer_info &pli) {
         glfwShowWindow(pli.glfw_window);
     }
 
     t_b8 internal::ShouldWindowClose(const s_platform_layer_info &pli) {
         return glfwWindowShouldClose(pli.glfw_window);
-    }
-
-    void internal::SwapWindowBuffers(const s_platform_layer_info &pli) {
-        glfwSwapBuffers(pli.glfw_window);
     }
 
     t_b8 SetWindowTitle(const s_platform_layer_info &pli, const s_str_rdonly title, s_mem_arena &temp_mem_arena) {

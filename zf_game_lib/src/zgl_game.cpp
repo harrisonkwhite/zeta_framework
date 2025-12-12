@@ -53,7 +53,7 @@ namespace zf {
                 return false;
             }
 
-            ZF_DEFER({ internal::ShutdownGFX(*rendering_basis); });
+            /*ZF_DEFER({ internal::ShutdownGFX(*rendering_basis); });*/
 
             s_ptr<s_audio_sys> audio_sys = nullptr;
 
@@ -130,6 +130,7 @@ namespace zf {
                     } while (frame_dur_accum >= targ_tick_interval);
 
                     // Perform a single render.
+#if 0
                     s_rendering_context rendering_context = {};
 
                     if (!internal::BeginFrame(*rendering_basis, WindowFramebufferSizeCache(*platform_layer_info), temp_mem_arena, rendering_context)) {
@@ -151,8 +152,7 @@ namespace zf {
                     }
 
                     internal::CompleteFrame(rendering_context);
-
-                    internal::SwapWindowBuffers(*platform_layer_info);
+#endif
                 }
             }
 

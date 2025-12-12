@@ -6,10 +6,6 @@ namespace zf {
     struct s_rendering_basis;
 
     namespace internal {
-        constexpr t_i32 g_gl_version_major = 4;
-        constexpr t_i32 g_gl_version_minor = 6;
-        constexpr t_b8 g_gl_core_profile = true;
-
         [[nodiscard]] t_b8 InitGFX(s_mem_arena &rendering_basis_mem_arena, s_mem_arena &temp_mem_arena, s_ptr<s_rendering_basis> &o_rendering_basis);
         void ShutdownGFX(s_rendering_basis &rendering_basis);
     }

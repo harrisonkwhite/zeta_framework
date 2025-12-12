@@ -3,6 +3,7 @@
 #include <glad/glad.h>
 
 namespace zf {
+#if 0
     // ============================================================
     // @section: OpenGL Helpers
     // ============================================================
@@ -800,11 +801,14 @@ void main() {
 
         return true;
     }
+#endif
 
     // ============================================================
     // @section: General
     // ============================================================
     t_b8 internal::InitGFX(s_mem_arena &rendering_basis_mem_arena, s_mem_arena &temp_mem_arena, s_ptr<s_rendering_basis> &o_rendering_basis) {
+        return true;
+#if 0
         t_b8 clean_up = false;
 
         o_rendering_basis = Alloc<s_rendering_basis>(rendering_basis_mem_arena);
@@ -884,13 +888,16 @@ void main() {
         }
 
         return true;
+#endif
     }
 
     void internal::ShutdownGFX(s_rendering_basis &rendering_basis) {
+#if 0
         DestroyGFXResources(rendering_basis.res_arena);
         glDeleteProgram(rendering_basis.batch_shader_prog_gl_id);
         DestroyGLMesh(rendering_basis.batch_mesh_gl_ids);
 
         rendering_basis = {};
+#endif
     }
 }

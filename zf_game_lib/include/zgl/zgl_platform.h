@@ -42,8 +42,8 @@ namespace zf {
 
         void PollOSEvents();
 
+        void *NativeWindowHandle(const s_platform_layer_info &pli);
         void ShowWindow(const s_platform_layer_info &pli);
         t_b8 ShouldWindowClose(const s_platform_layer_info &pli);
-        void SwapWindowBuffers(const s_platform_layer_info &pli);
     }
 }
