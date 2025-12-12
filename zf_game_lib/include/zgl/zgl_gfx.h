@@ -35,7 +35,7 @@ namespace zf {
     [[nodiscard]] t_b8 CreateTexture(const s_texture_data_rdonly tex_data, s_gfx_resource_arena &res_arena, s_ptr<s_gfx_resource> &o_tex);
     s_v2_i TextureSize(const s_gfx_resource &res);
 
-    [[nodiscard]] t_b8 CreateFontFromRaw(const s_str_rdonly file_path, const t_i32 height, const t_unicode_code_pt_bit_vec &code_pts, s_gfx_resource_arena &res_arena, s_mem_arena &temp_mem_arena, s_ptr<s_gfx_resource> &o_font);
+    [[nodiscard]] t_b8 CreateFontFromRaw(const s_str_rdonly file_path, const t_i32 height, const t_code_pt_bit_vec &code_pts, s_gfx_resource_arena &res_arena, s_mem_arena &temp_mem_arena, s_ptr<s_gfx_resource> &o_font);
     [[nodiscard]] t_b8 CreateFontFromPacked(const s_str_rdonly file_path, s_gfx_resource_arena &res_arena, s_mem_arena &temp_mem_arena, s_ptr<s_gfx_resource> &o_font);
 
     [[nodiscard]] t_b8 CreateSurface(const s_v2_i size, s_gfx_resource_arena &res_arena, s_ptr<s_gfx_resource> &o_surf);

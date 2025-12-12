@@ -105,7 +105,7 @@ namespace zf {
         return pa.a == pb.a && pa.b == pb.b;
     };
 
-    e_font_load_from_raw_result LoadFontFromRaw(const s_str_rdonly file_path, const t_i32 height, const t_unicode_code_pt_bit_vec &code_pts, s_mem_arena &arrangement_mem_arena, s_mem_arena &atlas_rgbas_mem_arena, s_mem_arena &temp_mem_arena, s_font_arrangement &o_arrangement, s_array<t_font_atlas_rgba> &o_atlas_rgbas, const s_ptr<t_unicode_code_pt_bit_vec> o_unsupported_code_pts) {
+    e_font_load_from_raw_result LoadFontFromRaw(const s_str_rdonly file_path, const t_i32 height, const t_code_pt_bit_vec &code_pts, s_mem_arena &arrangement_mem_arena, s_mem_arena &atlas_rgbas_mem_arena, s_mem_arena &temp_mem_arena, s_font_arrangement &o_arrangement, s_array<t_font_atlas_rgba> &o_atlas_rgbas, const s_ptr<t_code_pt_bit_vec> o_unsupported_code_pts) {
         ZF_ASSERT(height > 0);
 
         const t_len code_pt_cnt = CntSetBits(code_pts);
@@ -312,7 +312,7 @@ namespace zf {
         return ek_font_load_from_raw_result_success;
     }
 
-    t_b8 PackFont(const s_str_rdonly dest_file_path, const s_str_rdonly src_file_path, const t_i32 height, const t_unicode_code_pt_bit_vec &code_pts, s_mem_arena &temp_mem_arena, e_font_load_from_raw_result &o_font_load_from_raw_res, const s_ptr<t_unicode_code_pt_bit_vec> o_unsupported_code_pts) {
+    t_b8 PackFont(const s_str_rdonly dest_file_path, const s_str_rdonly src_file_path, const t_i32 height, const t_code_pt_bit_vec &code_pts, s_mem_arena &temp_mem_arena, e_font_load_from_raw_result &o_font_load_from_raw_res, const s_ptr<t_code_pt_bit_vec> o_unsupported_code_pts) {
         s_font_arrangement arrangement = {};
         s_array<t_font_atlas_rgba> atlas_rgbas = {};
 
@@ -387,7 +387,7 @@ namespace zf {
     // ============================================================
     // @section: Shaders
     // ============================================================
-    t_b8 PackShaderProg(const s_str_rdonly file_path, const s_str vert_src, const s_str frag_src, s_mem_arena &temp_mem_arena) {
+    t_b8 PackShaderProg(const s_str_rdonly file_path, const s_str vs_src, const s_str fs_src, s_mem_arena &temp_mem_arena) {
         s_stream fs = {};
 
         if (!OpenFile(file_path, ek_file_access_mode_write, temp_mem_arena, fs)) {
@@ -396,18 +396,18 @@ namespace zf {
 
         ZF_DEFER({ CloseFile(fs); });
 
-        if (!SerializeArray(fs, vert_src.bytes)) {
+        if (!SerializeArray(fs, vs_src.bytes)) {
             return false;
         }
 
-        if (!SerializeArray(fs, frag_src.bytes)) {
+        if (!SerializeArray(fs, fs_src.bytes)) {
             return false;
         }
 
         return true;
     }
 
-    t_b8 UnpackShaderProg(const s_str_rdonly file_path, s_mem_arena &mem_arena, s_mem_arena &temp_mem_arena, s_str &o_vert_src, s_str &o_frag_src) {
+    t_b8 UnpackShaderProg(const s_str_rdonly file_path, s_mem_arena &mem_arena, s_mem_arena &temp_mem_arena, s_str &o_vs_src, s_str &o_fs_src) {
         s_stream fs = {};
 
         if (!OpenFile(file_path, ek_file_access_mode_read, temp_mem_arena, fs)) {
@@ -416,15 +416,15 @@ namespace zf {
 
         ZF_DEFER({ CloseFile(fs); });
 
-        o_vert_src = {};
+        o_vs_src = {};
 
-        if (!DeserializeArray(fs, mem_arena, o_vert_src.bytes)) {
+        if (!DeserializeArray(fs, mem_arena, o_vs_src.bytes)) {
             return false;
         }
 
-        o_frag_src = {};
+        o_fs_src = {};
 
-        if (!DeserializeArray(fs, mem_arena, o_frag_src.bytes)) {
+        if (!DeserializeArray(fs, mem_arena, o_fs_src.bytes)) {
             return false;
         }
 

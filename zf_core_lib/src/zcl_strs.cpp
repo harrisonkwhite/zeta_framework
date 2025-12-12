@@ -397,7 +397,7 @@ namespace zf {
         } while (true);
     }
 
-    void MarkStrCodePoints(const s_str_rdonly str, t_unicode_code_pt_bit_vec &code_pts) {
+    void MarkStrCodePoints(const s_str_rdonly str, t_code_pt_bit_vec &code_pts) {
         ZF_ASSERT(IsStrValidUTF8(str));
 
         ZF_WALK_STR(str, info) {

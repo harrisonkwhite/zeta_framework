@@ -423,7 +423,7 @@ namespace zf {
         return true;
     }
 
-    t_b8 CreateFontFromRaw(const s_str_rdonly file_path, const t_i32 height, const t_unicode_code_pt_bit_vec &code_pts, s_gfx_resource_arena &res_arena, s_mem_arena &temp_mem_arena, s_ptr<s_gfx_resource> &o_font) {
+    t_b8 CreateFontFromRaw(const s_str_rdonly file_path, const t_i32 height, const t_code_pt_bit_vec &code_pts, s_gfx_resource_arena &res_arena, s_mem_arena &temp_mem_arena, s_ptr<s_gfx_resource> &o_font) {
         s_font_arrangement arrangement = {};
         s_array<t_font_atlas_rgba> atlas_rgbas = {};
 

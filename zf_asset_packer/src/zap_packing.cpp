@@ -3,7 +3,6 @@
 #include <cJSON.h>
 
 namespace zf {
-#if 0
     constexpr t_len g_mem_arena_size = Megabytes(40);
 
     enum e_asset_type : t_i32 {
@@ -15,7 +14,12 @@ namespace zf {
         eks_asset_type_cnt
     };
 
-    static s_static_array<s_str_rdonly, eks_asset_type_cnt> g_asset_type_arr_names = {{"textures", "fonts", "shader_progs", "sounds"}};
+    constexpr s_static_array<s_cstr_literal, eks_asset_type_cnt> g_asset_type_arr_names = {
+        "textures",
+        "fonts",
+        "shader_progs",
+        "sounds",
+    };
 
     enum e_asset_field_type : t_i32 {
         ek_asset_field_type_str,
@@ -24,12 +28,15 @@ namespace zf {
         eks_asset_field_type_cnt
     };
 
-    static s_static_array<s_str_rdonly, eks_asset_field_type_cnt> g_asset_field_type_names = {{"string", "number"}};
+    constexpr s_static_array<s_cstr_literal, eks_asset_field_type_cnt> g_asset_field_type_names = {
+        "string",
+        "number",
+    };
 
     struct s_asset_field {
-        s_str_rdonly name;
-        e_asset_field_type type;
-        t_b8 optional;
+        s_cstr_literal name = {};
+        e_asset_field_type type = {};
+        t_b8 optional = false;
     };
 
     enum e_tex_field : t_i32 {
@@ -39,7 +46,10 @@ namespace zf {
         eks_tex_field_cnt
     };
 
-    static s_static_array<s_asset_field, eks_tex_field_cnt> g_tex_fields = {{{"src_file_path", ek_asset_field_type_str}, {"dest_file_path", ek_asset_field_type_str}}};
+    constexpr s_static_array<s_asset_field, eks_tex_field_cnt> g_tex_fields = {
+        {"src_file_path", ek_asset_field_type_str},
+        {"dest_file_path", ek_asset_field_type_str},
+    };
 
     enum e_font_field : t_i32 {
         ek_font_field_src_file_path,
@@ -50,7 +60,12 @@ namespace zf {
         eks_font_field_cnt
     };
 
-    static s_static_array<s_asset_field, eks_font_field_cnt> g_font_fields = {{{"src_file_path", ek_asset_field_type_str}, {"height", ek_asset_field_type_num}, {"extra_chrs_file_path", ek_asset_field_type_str, true}, {"dest_file_path", ek_asset_field_type_str}}};
+    constexpr s_static_array<s_asset_field, eks_font_field_cnt> g_font_fields = {
+        {"src_file_path", ek_asset_field_type_str},
+        {"height", ek_asset_field_type_num},
+        {"extra_chrs_file_path", ek_asset_field_type_str, true},
+        {"dest_file_path", ek_asset_field_type_str},
+    };
 
     enum e_shader_prog_field : t_i32 {
         ek_shader_prog_field_src_vs_file_path,
@@ -60,7 +75,11 @@ namespace zf {
         eks_shader_prog_field_cnt
     };
 
-    static s_static_array<s_asset_field, eks_shader_prog_field_cnt> g_shader_prog_fields = {{{"src_vs_file_path", ek_asset_field_type_str}, {"src_fs_file_path", ek_asset_field_type_str}, {"dest_file_path", ek_asset_field_type_str}}};
+    constexpr s_static_array<s_asset_field, eks_shader_prog_field_cnt> g_shader_prog_fields = {
+        {"src_vs_file_path", ek_asset_field_type_str},
+        {"src_fs_file_path", ek_asset_field_type_str},
+        {"dest_file_path", ek_asset_field_type_str},
+    };
 
     enum e_snd_field : t_i32 {
         ek_snd_field_src_file_path,
@@ -69,39 +88,41 @@ namespace zf {
         eks_snd_field_cnt
     };
 
-    static s_static_array<s_asset_field, eks_snd_field_cnt> g_snd_fields = {{{"src_file_path", ek_asset_field_type_str}, {"dest_file_path", ek_asset_field_type_str}}};
+    constexpr static s_static_array<s_asset_field, eks_snd_field_cnt> g_snd_fields = {
+        {"src_file_path", ek_asset_field_type_str},
+        {"dest_file_path", ek_asset_field_type_str},
+    };
 
     t_b8 RunPacker(const s_str_rdonly instrs_json_file_path) {
-        s_mem_arena mem_arena;
-        MarkUninitted(&mem_arena);
+        s_mem_arena mem_arena = {};
 
-        if (!CreateMemArena(g_mem_arena_size, &mem_arena)) {
-            LogError("Failed to allocate memory arena!");
+        if (!mem_arena.Init(g_mem_arena_size)) {
+            LogError(s_cstr_literal("Failed to allocate memory arena!"));
             return false;
         }
 
-        ZF_DEFER({ DestroyMemArena(&mem_arena); });
+        ZF_DEFER({ mem_arena.Release(); });
 
         const auto cj = [instrs_json_file_path, &mem_arena]() -> cJSON * {
-            s_array<t_u8> instrs_json_file_contents;
+            s_array<t_u8> instrs_json_file_contents = {};
 
-            if (!LoadFileContents(instrs_json_file_path, &mem_arena, &instrs_json_file_contents)) {
-                LogError("Failed to load packing instructions JSON file \"%\"!", instrs_json_file_path);
+            if (!LoadFileContents(instrs_json_file_path, mem_arena, mem_arena, instrs_json_file_contents, true)) {
+                LogError(s_cstr_literal("Failed to load packing instructions JSON file \"%\"!"), instrs_json_file_path);
                 return nullptr;
             }
 
-            return cJSON_Parse(StrRaw(instrs_json_str_terminated));
+            return cJSON_Parse(reinterpret_cast<char *>(instrs_json_file_contents.Ptr().Raw()));
         }();
 
         if (!cj) {
-            LogError("Failed to parse packing instructions JSON file");
+            LogError(s_cstr_literal("Failed to parse packing instructions JSON file"));
             return false;
         }
 
         ZF_DEFER({ cJSON_Delete(cj); });
 
         if (!cJSON_IsObject(cj)) {
-            LogError("Packing instructions JSON root is not an object!");
+            LogError(s_cstr_literal("Packing instructions JSON root is not an object!"));
             return false;
         }
 
@@ -112,26 +133,18 @@ namespace zf {
 
         for (t_len asset_type_index = 0; asset_type_index < eks_asset_type_cnt; asset_type_index++) {
             const auto asset_type_arr_name = g_asset_type_arr_names[asset_type_index];
-            s_str asset_type_arr_name_terminated;
 
-            if (!CloneStrButAddTerminator(asset_type_arr_name, mem_arena, asset_type_arr_name_terminated)) {
-                ZF_REPORT_ERROR();
-                return false;
-            }
-
-            cJSON *const cj_assets = cJSON_GetObjectItemCaseSensitive(cj, StrRaw(asset_type_arr_name_terminated));
+            cJSON *const cj_assets = cJSON_GetObjectItemCaseSensitive(cj, asset_type_arr_name.BufPtr());
 
             if (!cJSON_IsArray(cj_assets)) {
-                LogError("Packing instructions JSON \"%\" array does not exist or it is of "
-                         "the wrong type!",
-                         asset_type_arr_name);
+                LogError(s_cstr_literal("Packing instructions JSON \"%\" array does not exist or it is of the wrong type!"), asset_type_arr_name);
                 return false;
             }
 
             cJSON *cj_asset = nullptr;
 
             cJSON_ArrayForEach(cj_asset, cj_assets) {
-                RewindMemArena(&mem_arena, 0);
+                mem_arena.Rewind(0);
 
                 if (!cJSON_IsObject(cj_asset)) {
                     continue;
@@ -173,25 +186,17 @@ namespace zf {
                     return {};
                 }();
 
-                for (t_len fi = 0; fi < fields.len; fi++) {
+                for (t_len fi = 0; fi < fields.Len(); fi++) {
                     const auto field_name = fields[fi].name;
-                    s_str field_name_terminated;
 
-                    if (!CloneStrButAddTerminator(field_name, mem_arena, field_name_terminated)) {
-                        ZF_REPORT_ERROR();
-                        return false;
-                    }
-
-                    field_vals[fi] = cJSON_GetObjectItem(cj_asset, StrRaw(field_name_terminated));
+                    field_vals[fi] = cJSON_GetObjectItem(cj_asset, field_name.BufPtr());
 
                     if (!field_vals[fi]) {
                         if (fields[fi].optional) {
                             continue;
                         }
 
-                        LogError("A packing instructions JSON \"%\" entry is missing required "
-                                 "field \"%\"!",
-                                 asset_type_arr_name, field_name);
+                        LogError(s_cstr_literal("A packing instructions JSON \"%\" entry is missing required field \"%\"!"), asset_type_arr_name, field_name);
                         return false;
                     }
 
@@ -208,20 +213,28 @@ namespace zf {
                     }();
 
                     if (!is_valid) {
-                        LogError("A packing instructions JSON \"%\" entry has field \"%\" as "
-                                 "the wrong type! Expected a %.",
-                                 asset_type_arr_name, field_name, g_asset_field_type_names[fields[fi].type]);
+                        LogError(s_cstr_literal("A packing instructions JSON \"%\" entry has field \"%\" as the wrong type! Expected a %."), asset_type_arr_name, field_name, g_asset_field_type_names[fields[fi].type]);
                         return false;
                     }
                 }
 
                 switch (asset_type_index) {
                 case ek_asset_type_texture: {
-                    const auto dest_fp = StrFromRaw(field_vals[ek_tex_field_dest_file_path]->valuestring);
-                    const auto src_fp = StrFromRaw(field_vals[ek_tex_field_src_file_path]->valuestring);
+                    const auto dest_fp_cstr = field_vals[ek_tex_field_dest_file_path]->valuestring;
+                    const auto dest_fp = ConvertCstr(dest_fp_cstr);
 
-                    if (!PackTexture(dest_fp, src_fp, mem_arena)) {
-                        ZF_REPORT_ERROR();
+                    const auto src_fp_cstr = field_vals[ek_tex_field_src_file_path]->valuestring;
+                    const auto src_fp = ConvertCstr(src_fp_cstr);
+
+                    s_texture_data tex_data = {};
+
+                    if (!LoadTextureFromRaw(src_fp, mem_arena, mem_arena, tex_data)) {
+                        LogError(s_cstr_literal("Failed to load texture from raw file \"%\"!"), src_fp);
+                        return false;
+                    }
+
+                    if (!PackTexture(dest_fp, tex_data, mem_arena)) {
+                        LogError(s_cstr_literal("Failed to pack texture to file \"%\"!"), dest_fp);
                         return false;
                     }
 
@@ -229,46 +242,45 @@ namespace zf {
                 }
 
                 case ek_asset_type_font: {
-                    const auto dest_fp = StrFromRaw(field_vals[ek_font_field_dest_file_path]->valuestring);
-                    const auto src_fp = StrFromRaw(field_vals[ek_font_field_src_file_path]->valuestring);
+                    const auto dest_fp = ConvertCstr(field_vals[ek_font_field_dest_file_path]->valuestring);
+                    const auto src_fp = ConvertCstr(field_vals[ek_font_field_src_file_path]->valuestring);
                     const auto height = field_vals[ek_font_field_height]->valueint;
-                    const auto extra_chrs_fp = StrFromRaw(field_vals[ek_font_field_extra_chrs_file_path]->valuestring);
 
-                    s_array<t_unicode_code_pt_bit_vec> code_pt_bvs; // First is for input code points, second is for output
-                                                                    // unsupported ones.
+                    s_array<t_code_pt_bit_vec> code_pt_bvs = {}; // First is for input code points, second is for output unsupported ones.
 
-                    if (!AllocArray(&code_pt_bvs, 2, &mem_arena)) {
-                        ZF_REPORT_ERROR();
+                    if (!AllocArray(2, mem_arena, code_pt_bvs)) {
+                        LogError(s_cstr_literal("Failed to allocate code point bit vectors!"));
                         return false;
                     }
 
-                    SetBitsInRange(code_pt_bvs[0], g_printable_ascii_range_begin,
-                                   g_printable_ascii_range_end); // Add the printable ASCII
-                                                                 // range as a default.
+                    SetBitsInRange(code_pt_bvs[0], g_printable_ascii_range_begin, g_printable_ascii_range_end); // Add the printable ASCII range as a default.
 
                     if (field_vals[ek_font_field_extra_chrs_file_path]) {
-                        s_array<t_u8> extra_chrs_file_contents;
+                        const auto extra_chrs_fp = ConvertCstr(field_vals[ek_font_field_extra_chrs_file_path]->valuestring);
+
+                        s_array<t_u8> extra_chrs_file_contents = {};
 
                         if (!LoadFileContents(extra_chrs_fp, mem_arena, mem_arena, extra_chrs_file_contents)) {
-                            LogError("Failed to load extra characters file \"%\" for font \"%\"!", extra_chrs_fp, src_fp);
+                            LogError(s_cstr_literal("Failed to load extra characters file \"%\"!"), extra_chrs_fp);
                             return false;
                         }
 
                         MarkStrCodePoints({extra_chrs_file_contents}, code_pt_bvs[0]);
 
                         // Unset irrelevant code points.
+                        // @todo: I hate this! Should be automated!
                         UnsetBit(code_pt_bvs[0], 10);
                     }
 
-                    e_font_load_from_raw_result load_from_raw_res;
+                    e_font_load_from_raw_result load_from_raw_res = {};
 
                     if (!PackFont(dest_fp, src_fp, height, code_pt_bvs[0], mem_arena, load_from_raw_res, &code_pt_bvs[1])) {
                         switch (load_from_raw_res) {
                         case ek_font_load_from_raw_result_unsupported_code_pt:
-                            LogError("Unsupported code points:");
+                            LogError(s_cstr_literal("Unsupported code points:"));
 
                             ZF_FOR_EACH_SET_BIT(code_pt_bvs[1], i) {
-                                Log("- %", i);
+                                Log(s_cstr_literal("- %"), i);
                             }
 
                             return false;
@@ -277,7 +289,6 @@ namespace zf {
                             break;
                         }
 
-                        ZF_REPORT_ERROR();
                         return false;
                     }
 
@@ -285,12 +296,26 @@ namespace zf {
                 }
 
                 case ek_asset_type_shader_prog: {
-                    const auto dest_fp = StrFromRaw(field_vals[ek_shader_prog_field_dest_file_path]->valuestring);
-                    const auto vs_fp = StrFromRaw(field_vals[ek_shader_prog_field_src_vs_file_path]->valuestring);
-                    const auto fs_fp = StrFromRaw(field_vals[ek_shader_prog_field_src_fs_file_path]->valuestring);
+                    const auto dest_fp = ConvertCstr(field_vals[ek_shader_prog_field_dest_file_path]->valuestring);
+                    const auto vs_fp = ConvertCstr(field_vals[ek_shader_prog_field_src_vs_file_path]->valuestring);
+                    const auto fs_fp = ConvertCstr(field_vals[ek_shader_prog_field_src_fs_file_path]->valuestring);
 
-                    if (!PackShaderProg(dest_fp, vs_fp, fs_fp, mem_arena)) {
-                        ZF_REPORT_ERROR();
+                    s_str vs_src = {};
+
+                    if (!LoadFileContents(vs_fp, mem_arena, mem_arena, vs_src.bytes)) {
+                        LogError(s_cstr_literal("Failed to load vertex shader source from file \"%\"!"), vs_fp);
+                        return false;
+                    }
+
+                    s_str fs_src = {};
+
+                    if (!LoadFileContents(fs_fp, mem_arena, mem_arena, fs_src.bytes)) {
+                        LogError(s_cstr_literal("Failed to load fragment shader source from file \"%\"!"), fs_fp);
+                        return false;
+                    }
+
+                    if (!PackShaderProg(dest_fp, vs_src, fs_src, mem_arena)) {
+                        LogError(s_cstr_literal("Failed to pack shader program to file \"%\"!"), dest_fp);
                         return false;
                     }
 
@@ -298,18 +323,18 @@ namespace zf {
                 }
 
                 case ek_asset_type_sound: {
-                    const auto dest_fp = StrFromRaw(field_vals[ek_snd_field_dest_file_path]->valuestring);
-                    const auto src_fp = StrFromRaw(field_vals[ek_snd_field_src_file_path]->valuestring);
+                    const auto dest_fp = ConvertCstr(field_vals[ek_snd_field_dest_file_path]->valuestring);
+                    const auto src_fp = ConvertCstr(field_vals[ek_snd_field_src_file_path]->valuestring);
 
-                    s_sound_data snd_data;
+                    s_sound_data snd_data = {};
 
-                    if (!LoadSoundFromRaw(src_fp, &snd_data, &mem_arena, &mem_arena)) {
-                        ZF_REPORT_ERROR();
+                    if (!LoadSoundFromRaw(src_fp, mem_arena, mem_arena, snd_data)) {
+                        LogError(s_cstr_literal("Failed to load sound from raw file \"%\"!"), src_fp);
                         return false;
                     }
 
-                    if (!PackSound(dest_fp, snd_data, &mem_arena)) {
-                        ZF_REPORT_ERROR();
+                    if (!PackSound(dest_fp, snd_data, mem_arena)) {
+                        LogError(s_cstr_literal("Failed to pack sound to file \"%\"!"), dest_fp);
                         return false;
                     }
 
@@ -319,9 +344,8 @@ namespace zf {
             }
         }
 
-        Log("Asset packing completed!");
+        Log(s_cstr_literal("Asset packing completed!"));
 
         return true;
     }
-#endif
 }

@@ -285,8 +285,8 @@ namespace zf {
 
     [[nodiscard]] t_b8 OpenFile(const s_str_rdonly file_path, const e_file_access_mode mode, s_mem_arena &temp_mem_arena, s_stream &o_stream);
     void CloseFile(s_stream &stream);
-    t_len CalcFileSize(const s_stream &stream);
-    [[nodiscard]] t_b8 LoadFileContents(const s_str_rdonly file_path, s_mem_arena &contents_mem_arena, s_mem_arena &temp_mem_arena, s_array<t_u8> &o_contents);
+    t_len CalcFileSize(s_stream &stream);
+    [[nodiscard]] t_b8 LoadFileContents(const s_str_rdonly file_path, s_mem_arena &contents_mem_arena, s_mem_arena &temp_mem_arena, s_array<t_u8> &o_contents, const t_b8 add_terminator = false);
 
     enum e_directory_creation_result : t_i32 {
         ek_directory_creation_result_success,

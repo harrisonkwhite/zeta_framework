@@ -7,7 +7,7 @@ namespace zf {
 
     constexpr t_len g_unicode_code_pt_cnt = 1114112;
 
-    using t_unicode_code_pt_bit_vec = s_static_bit_vec<g_unicode_code_pt_cnt>;
+    using t_code_pt_bit_vec = s_static_bit_vec<g_unicode_code_pt_cnt>;
 
     constexpr t_len UnicodeCodePointToByteCnt(const t_code_pt cp) {
         if (cp <= 0x7F) {
@@ -61,23 +61,34 @@ namespace zf {
         return false;
     }
 
-    template <t_len tp_buf_size>
     struct s_cstr_literal {
-        const char *buf;
+    public:
+        s_cstr_literal() = default;
 
-        constexpr s_cstr_literal &operator=(const s_cstr_literal &) = delete;
-
-        consteval s_cstr_literal(const char (&buf)[tp_buf_size]) : buf(buf) {
-            if (buf[tp_buf_size - 1]) {
+        template <t_len tp_raw_size>
+        consteval s_cstr_literal(const char (&raw)[tp_raw_size]) : buf(raw), buf_size(tp_raw_size) {
+            if (raw[tp_raw_size - 1]) {
                 throw "Static char array not terminated at end!";
             }
 
-            for (t_len i = 0; i < tp_buf_size; i++) {
-                if (i < tp_buf_size - 1 && !buf[i]) {
+            for (t_len i = 0; i < tp_raw_size; i++) {
+                if (i < tp_raw_size - 1 && !raw[i]) {
                     throw "Terminator found in static char array before end!";
                 }
             }
         }
+
+        constexpr s_ptr<const char> BufPtr() const {
+            return buf;
+        }
+
+        constexpr t_len BufSize() const {
+            return buf_size;
+        }
+
+    private:
+        s_ptr<const char> buf = nullptr;
+        t_len buf_size = 0;
     };
 
     struct s_str_rdonly {
@@ -87,8 +98,9 @@ namespace zf {
         constexpr s_str_rdonly(const s_array_rdonly<t_u8> bytes) : bytes(bytes) {}
 
         // This very intentionally drops the terminator.
-        template <t_len tp_buf_size>
-        s_str_rdonly(const s_cstr_literal<tp_buf_size> lit) : bytes({reinterpret_cast<const t_u8 *>(lit.buf), tp_buf_size - 1}) {}
+        s_str_rdonly(const s_cstr_literal lit) : bytes({reinterpret_cast<const t_u8 *>(lit.BufPtr().Raw()), lit.BufSize() - 1}) {
+            ZF_ASSERT(lit.BufPtr());
+        }
 
         constexpr t_b8 IsEmpty() const {
             return bytes.IsEmpty();
@@ -120,13 +132,13 @@ namespace zf {
         }
     };
 
-    // Creates a string object from the given TERMINATED c-string.
+    // Creates a NON-TERMINATED string object from the given TERMINATED c-string.
     // Does a conventional string walk to calculate length.
     inline s_str ConvertCstr(char *const cstr) {
         return {{reinterpret_cast<t_u8 *>(cstr), CalcCstrLen(cstr)}};
     }
 
-    // Creates a read-only string object from the given TERMINATED c-string.
+    // Creates a read-only NON-TERMINATED string object from the given TERMINATED c-string.
     // Does a conventional string walk to calculate length.
     inline s_str_rdonly ConvertCstr(const char *const cstr) {
         return {{reinterpret_cast<const t_u8 *>(cstr), CalcCstrLen(cstr)}};
@@ -151,7 +163,7 @@ namespace zf {
     t_code_pt StrCodePointAtByte(const s_str_rdonly str, const t_len byte_index);
 
     // Sets the bits associated with each unicode code point that appear in the string. No bits get unset.
-    void MarkStrCodePoints(const s_str_rdonly str, t_unicode_code_pt_bit_vec &code_pts);
+    void MarkStrCodePoints(const s_str_rdonly str, t_code_pt_bit_vec &code_pts);
 
     struct s_str_walk_info {
         t_code_pt code_pt = 0;

@@ -413,20 +413,19 @@ namespace zf {
     template <typename tp_type, t_len tp_len>
     struct s_static_array {
         static_assert(!s_is_const<tp_type>::g_val);
-        static_assert(tp_len > 0);
 
         static constexpr t_len g_len = tp_len;
 
-        tp_type raw[tp_len] = {};
+        tp_type raw[tp_len];
 
         constexpr s_static_array() = default;
 
         template <t_len tp_other_len>
-        constexpr s_static_array(const tp_type (&raw)[tp_other_len]) {
+        constexpr s_static_array(const tp_type (&other_raw)[tp_other_len]) {
             static_assert(tp_other_len == tp_len);
 
             for (t_len i = 0; i < tp_other_len; i++) {
-                this->raw[i] = raw[i];
+                this->raw[i] = other_raw[i];
             }
         }
 
@@ -655,8 +654,6 @@ namespace zf {
 
     template <t_len tp_bit_cnt>
     struct s_static_bit_vec {
-        static_assert(tp_bit_cnt > 0);
-
         static constexpr t_len g_bit_cnt = tp_bit_cnt;
 
         s_static_array<t_u8, BitsToBytes(tp_bit_cnt)> bytes = {};

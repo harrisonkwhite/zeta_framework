@@ -62,7 +62,7 @@ namespace zf {
         return static_cast<t_len>(file_size);
     }
 
-    t_b8 LoadFileContents(const s_str_rdonly path, s_mem_arena &contents_mem_arena, s_mem_arena &temp_mem_arena, s_array<t_u8> &o_contents) {
+    t_b8 LoadFileContents(const s_str_rdonly path, s_mem_arena &contents_mem_arena, s_mem_arena &temp_mem_arena, s_array<t_u8> &o_contents, const t_b8 add_terminator) {
         s_stream stream = {};
 
         if (!OpenFile(path, ek_file_access_mode_read, temp_mem_arena, stream)) {
@@ -73,7 +73,7 @@ namespace zf {
 
         const t_len file_size = CalcFileSize(stream);
 
-        if (!AllocArray(file_size, contents_mem_arena, o_contents)) {
+        if (!AllocArray(add_terminator ? file_size + 1 : file_size, contents_mem_arena, o_contents)) {
             return false;
         }
 

@@ -276,14 +276,14 @@ namespace zf {
         ek_font_load_from_raw_result_other_err
     };
 
-    [[nodiscard]] e_font_load_from_raw_result LoadFontFromRaw(const s_str_rdonly file_path, const t_i32 height, const t_unicode_code_pt_bit_vec &code_pts, s_mem_arena &arrangement_mem_arena, s_mem_arena &atlas_rgbas_mem_arena, s_mem_arena &temp_mem_arena, s_font_arrangement &o_arrangement, s_array<t_font_atlas_rgba> &o_atlas_rgbas, const s_ptr<t_unicode_code_pt_bit_vec> o_unsupported_code_pts = nullptr);
+    [[nodiscard]] e_font_load_from_raw_result LoadFontFromRaw(const s_str_rdonly file_path, const t_i32 height, const t_code_pt_bit_vec &code_pts, s_mem_arena &arrangement_mem_arena, s_mem_arena &atlas_rgbas_mem_arena, s_mem_arena &temp_mem_arena, s_font_arrangement &o_arrangement, s_array<t_font_atlas_rgba> &o_atlas_rgbas, const s_ptr<t_code_pt_bit_vec> o_unsupported_code_pts = nullptr);
 
-    [[nodiscard]] t_b8 PackFont(const s_str_rdonly dest_file_path, const s_str_rdonly src_file_path, const t_i32 height, const t_unicode_code_pt_bit_vec &code_pts, s_mem_arena &temp_mem_arena, e_font_load_from_raw_result &o_font_load_from_raw_res, const s_ptr<t_unicode_code_pt_bit_vec> o_unsupported_code_pts = nullptr);
+    [[nodiscard]] t_b8 PackFont(const s_str_rdonly dest_file_path, const s_str_rdonly src_file_path, const t_i32 height, const t_code_pt_bit_vec &code_pts, s_mem_arena &temp_mem_arena, e_font_load_from_raw_result &o_font_load_from_raw_res, const s_ptr<t_code_pt_bit_vec> o_unsupported_code_pts = nullptr);
     [[nodiscard]] t_b8 UnpackFont(const s_str_rdonly file_path, s_mem_arena &arrangement_mem_arena, s_mem_arena &atlas_rgbas_mem_arena, s_mem_arena &temp_mem_arena, s_font_arrangement &o_arrangement, s_array<t_font_atlas_rgba> &o_atlas_rgbas);
 
     // ============================================================
     // @section: Shaders
     // ============================================================
-    [[nodiscard]] t_b8 PackShaderProg(const s_str_rdonly dest_file_path, const s_str_rdonly vert_file_path, const s_str_rdonly frag_file_path, s_mem_arena &temp_mem_arena);
-    [[nodiscard]] t_b8 UnpackShaderProg(const s_str_rdonly file_path, s_mem_arena &mem_arena, s_mem_arena &temp_mem_arena, s_str &o_vert_src, s_str &o_frag_src);
+    [[nodiscard]] t_b8 PackShaderProg(const s_str_rdonly file_path, const s_str vs_src, const s_str fs_src, s_mem_arena &temp_mem_arena);
+    [[nodiscard]] t_b8 UnpackShaderProg(const s_str_rdonly file_path, s_mem_arena &mem_arena, s_mem_arena &temp_mem_arena, s_str &o_vs_src, s_str &o_fs_src);
 }
