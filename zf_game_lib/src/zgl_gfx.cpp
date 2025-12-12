@@ -1,6 +1,5 @@
 #include <zgl/zgl_gfx.h>
 
-#include <bgfx/bgfx.h>
 #include <zgl/zgl_platform.h>
 
 namespace zf {
@@ -808,6 +807,10 @@ void main() {
     // @section: General
     // ============================================================
     t_b8 internal::InitGFX(const s_platform_layer_info &platform_layer_info) {
+#if 0
+        //
+        // BGFX Initialisation
+        //
         bgfx::Init init = {};
         init.type = bgfx::RendererType::Count;
 
@@ -828,6 +831,7 @@ void main() {
         bgfx::setViewClear(0, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, 0xABABABFF, 1.0f, 0);
 
         return true;
+#endif
 #if 0
         t_b8 clean_up = false;
 
@@ -909,10 +913,14 @@ void main() {
 
         return true;
 #endif
+
+        return true;
     }
 
     void internal::ShutdownGFX() {
+#if 0
         bgfx::shutdown();
+#endif
 
 #if 0
         DestroyGFXResources(rendering_basis.res_arena);
@@ -923,10 +931,16 @@ void main() {
 #endif
     }
 
-    void internal::BeginFrame() {
+    void internal::BeginFrame(const s_v2_i framebuffer_size_cache) {
+#if 0
+        bgfx::setViewRect(0, 0, 0, static_cast<uint16_t>(framebuffer_size_cache.x), static_cast<uint16_t>(framebuffer_size_cache.y));
+        bgfx::touch(0);
+#endif
     }
 
     void internal::EndFrame() {
+#if 0
         bgfx::frame();
+#endif
     }
 }

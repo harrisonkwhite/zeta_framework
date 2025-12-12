@@ -6,6 +6,7 @@ add_library(zf_core_lib STATIC
     src/zcl_strs.cpp
     src/zcl_gfx.cpp
     src/zcl_io.cpp
+    src/zcl_untitled.cpp
     ../external/stb_image/src/stb_image.c
     ../external/stb_truetype/src/stb_truetype.c
 	../external/miniaudio/src/miniaudio.c
@@ -13,6 +14,7 @@ add_library(zf_core_lib STATIC
     include/zcl.h
     include/zcl/zcl_mem.h
     include/zcl/zcl_gfx.h
+    include/zcl/zcl_untitled.h
     include/zcl/zcl_audio.h
     include/zcl/zcl_strs.h
     include/zcl/zcl_ds.h
@@ -29,6 +31,12 @@ target_include_directories(zf_core_lib PRIVATE
     ../external/stb_image/include
     ../external/stb_truetype/include
     ../external/miniaudio/include
+)
+
+target_link_libraries(zf_core_lib PRIVATE
+    bgfx
+    bx
+    bimg
 )
 
 if(WIN32)

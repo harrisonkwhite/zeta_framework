@@ -128,7 +128,7 @@ namespace zf {
                     } while (frame_dur_accum >= targ_tick_interval);
 
                     // Perform a single render.
-                    internal::BeginFrame();
+                    internal::BeginFrame(WindowFramebufferSizeCache(*platform_layer_info));
 
                     internal::EndFrame();
 #if 0

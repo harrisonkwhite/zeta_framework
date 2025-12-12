@@ -64,7 +64,7 @@ namespace zf {
     [[nodiscard]] t_b8 DrawStr(const s_rendering_context rc, const s_str_rdonly str, const s_gfx_resource &font, const s_v2 pos, s_mem_arena &temp_mem_arena, const s_v2 alignment = alignments::g_topleft, const s_color_rgba32f blend = colors::g_white);
 
     namespace internal {
-        void BeginFrame();
+        void BeginFrame(const s_v2_i framebuffer_size_cache);
         void EndFrame();
 
         //[[nodiscard]] t_b8 BeginFrame(const s_rendering_basis &rendering_basis, const s_v2_i framebuffer_size_cache, s_mem_arena &mem_arena, s_rendering_context &o_rendering_context);

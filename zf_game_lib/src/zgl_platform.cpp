@@ -395,7 +395,10 @@ namespace zf {
         s_v2 monitor_scale = {};
         glfwGetMonitorContentScale(monitor, &monitor_scale.x, &monitor_scale.y);
 
-        return {static_cast<t_i32>(static_cast<t_f32>(mode->width) / monitor_scale.x), static_cast<t_i32>(static_cast<t_f32>(mode->height) / monitor_scale.y)};
+        return {
+            static_cast<t_i32>(static_cast<t_f32>(mode->width) / monitor_scale.x),
+            static_cast<t_i32>(static_cast<t_f32>(mode->height) / monitor_scale.y),
+        };
     }
 
     void SetFullscreen(s_platform_layer_info &pli, const t_b8 fs) {
