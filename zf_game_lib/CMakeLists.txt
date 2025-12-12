@@ -1,4 +1,3 @@
-#include <functional>
 add_library(zf_game_lib STATIC
     src/zgl_game.cpp
     src/zgl_platform.cpp

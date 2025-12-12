@@ -16,7 +16,7 @@ set(BGFX_BUILD_TOOLS OFF CACHE BOOL "" FORCE)
 set(BGFX_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 set(BGFX_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(BGFX_INSTALL OFF CACHE BOOL "" FORCE)
-add_subdirectory(external/bgfx)
+add_subdirectory(external/bgfx_cmake)
 
 add_subdirectory(zf_core_lib)
 add_subdirectory(zf_game_lib)
