@@ -336,7 +336,10 @@ namespace zf {
     inline s_bool_fmt FormatDefault(const t_b8 val) { return FormatBool(val); }
 
     inline t_b8 PrintType(s_stream &stream, const s_bool_fmt fmt) {
-        return Print(stream, fmt.val ? s_str_rdonly("true") : s_str_rdonly("false"));
+        const s_str_rdonly true_str = s_cstr_literal("true");
+        const s_str_rdonly false_str = s_cstr_literal("false");
+
+        return Print(stream, fmt.val ? true_str : false_str);
     }
 
     // ========================================
@@ -511,11 +514,11 @@ namespace zf {
     constexpr s_v2_fmt FormatDefault(const s_v2 val) { return FormatV2(val); }
 
     inline t_b8 PrintType(s_stream &stream, const s_v2_fmt fmt) {
-        return Print(stream, "(")
+        return Print(stream, s_cstr_literal("("))
             && PrintType(stream, FormatFloat(fmt.val.x, fmt.trim_trailing_zeros))
-            && Print(stream, ", ")
+            && Print(stream, s_cstr_literal(", "))
             && PrintType(stream, FormatFloat(fmt.val.y, fmt.trim_trailing_zeros))
-            && Print(stream, ")");
+            && Print(stream, s_cstr_literal(")"));
     }
 
     struct s_v2_i_fmt {
@@ -527,11 +530,11 @@ namespace zf {
     constexpr s_v2_i_fmt FormatDefault(const s_v2_i val) { return FormatV2(val); }
 
     inline t_b8 PrintType(s_stream &stream, const s_v2_i_fmt fmt) {
-        return Print(stream, "(")
+        return Print(stream, s_cstr_literal("("))
             && PrintType(stream, FormatInt(fmt.val.x))
-            && Print(stream, ", ")
+            && Print(stream, s_cstr_literal(", "))
             && PrintType(stream, FormatInt(fmt.val.y))
-            && Print(stream, ")");
+            && Print(stream, s_cstr_literal(")"));
     }
 
     // ========================================
@@ -569,28 +572,28 @@ namespace zf {
     t_b8 PrintType(s_stream &stream, const s_array_fmt<tp_type> fmt) {
         if (fmt.one_per_line) {
             for (t_len i = 0; i < fmt.val.len; i++) {
-                if (!PrintFormat(stream, "[%] %%", i, fmt.val[i], i < fmt.val.len - 1 ? s_str_rdonly("\n") : s_str_rdonly(""))) {
+                if (!PrintFormat(stream, s_cstr_literal("[%] %%"), i, fmt.val[i], i < fmt.val.len - 1 ? s_cstr_literal("\n") : s_cstr_literal(""))) {
                     return false;
                 }
             }
         } else {
-            if (!Print(stream, "[")) {
+            if (!Print(stream, s_cstr_literal("["))) {
                 return false;
             }
 
             for (t_len i = 0; i < fmt.val.len; i++) {
-                if (!PrintFormat(stream, "%", fmt.val[i])) {
+                if (!PrintFormat(stream, s_cstr_literal("%"), fmt.val[i])) {
                     return false;
                 }
 
                 if (i < fmt.val.len - 1) {
-                    if (!Print(stream, ", ")) {
+                    if (!Print(stream, s_cstr_literal(", "))) {
                         return false;
                     }
                 }
             }
 
-            if (!Print(stream, "]")) {
+            if (!Print(stream, s_cstr_literal("]"))) {
                 return false;
             }
         }
@@ -619,7 +622,7 @@ namespace zf {
 
     inline t_b8 PrintType(s_stream &stream, const s_bit_vec_fmt fmt) {
         const auto print_bit = [&](const t_len bit_index) {
-            const s_str_rdonly str = IsBitSet(fmt.val, bit_index) ? "1" : "0";
+            const s_str_rdonly str = IsBitSet(fmt.val, bit_index) ? s_cstr_literal("1") : s_cstr_literal("0");
             return Print(stream, str);
         };
 
@@ -627,7 +630,7 @@ namespace zf {
             const t_len bit_cnt = index == fmt.val.Bytes().Len() - 1 ? fmt.val.LastByteBitCount() : 8;
 
             for (t_len i = 7; i >= bit_cnt; i--) {
-                Print(stream, "0");
+                Print(stream, s_cstr_literal("0"));
             }
 
             for (t_len i = bit_cnt - 1; i >= 0; i--) {
@@ -648,7 +651,7 @@ namespace zf {
         case ek_bit_vec_fmt_style_little_endian:
             for (t_len i = 0; i < fmt.val.Bytes().Len(); i++) {
                 if (i > 0) {
-                    Print(stream, " ");
+                    Print(stream, s_cstr_literal(" "));
                 }
 
                 print_byte(i);
@@ -661,7 +664,7 @@ namespace zf {
                 print_byte(i);
 
                 if (i > 0) {
-                    Print(stream, " ");
+                    Print(stream, s_cstr_literal(" "));
                 }
             }
 
@@ -757,7 +760,7 @@ namespace zf {
             return false;
         }
 
-        if (!Print(std_err, "\n")) {
+        if (!Print(std_err, s_cstr_literal("\n"))) {
             return false;
         }
 
@@ -768,7 +771,7 @@ namespace zf {
     t_b8 LogError(const s_str_rdonly fmt, const tp_arg_types &...args) {
         s_stream std_err = StdError();
 
-        if (!Print(std_err, "Error: ")) {
+        if (!Print(std_err, s_cstr_literal("Error: "))) {
             return false;
         }
 
@@ -776,7 +779,7 @@ namespace zf {
             return false;
         }
 
-        if (!Print(std_err, "\n")) {
+        if (!Print(std_err, s_cstr_literal("\n"))) {
             return false;
         }
 
@@ -789,7 +792,7 @@ namespace zf {
 
         s_stream std_err = StdError();
 
-        if (!PrintFormat(std_err, "% Error: ", type_name)) {
+        if (!PrintFormat(std_err, s_cstr_literal("% Error: "), type_name)) {
             return false;
         }
 
@@ -797,7 +800,7 @@ namespace zf {
             return false;
         }
 
-        if (!Print(std_err, "\n")) {
+        if (!Print(std_err, s_cstr_literal("\n"))) {
             return false;
         }
 
@@ -808,7 +811,7 @@ namespace zf {
     t_b8 LogWarning(const s_str_rdonly fmt, const tp_arg_types &...args) {
         s_stream std_err = StdError();
 
-        if (!Print(std_err, "Warning: ")) {
+        if (!Print(std_err, s_cstr_literal("Warning: "))) {
             return false;
         }
 
@@ -816,7 +819,7 @@ namespace zf {
             return false;
         }
 
-        if (!Print(std_err, "\n")) {
+        if (!Print(std_err, s_cstr_literal("\n"))) {
             return false;
         }
 

@@ -96,12 +96,12 @@ namespace zf {
 
                     if (AllocArray(log_chr_cnt, temp_mem_arena, log_chrs)) {
                         glGetShaderInfoLog(shader_gl_id, static_cast<GLsizei>(log_chrs.Len()), nullptr, log_chrs.Ptr());
-                        LogErrorType("OpenGL Shader Compilation", "%", FormatStr({log_chrs.ToBytes()}));
+                        LogErrorType(s_cstr_literal("OpenGL Shader Compilation"), s_cstr_literal("%"), FormatStr({log_chrs.ToBytes()}));
                     } else {
                         ZF_REPORT_ERROR();
                     }
                 } else {
-                    LogError("OpenGL shader compilation failed, but no error message available!");
+                    LogError(s_cstr_literal("OpenGL shader compilation failed, but no error message available!"));
                 }
 
                 return 0;
@@ -154,12 +154,12 @@ namespace zf {
 
                 if (AllocArray(log_chr_cnt, temp_mem_arena, log_chrs)) {
                     glGetProgramInfoLog(prog_gl_id, static_cast<GLsizei>(log_chrs.Len()), nullptr, log_chrs.Ptr());
-                    LogErrorType("OpenGL Program Link", "%", FormatStr({log_chrs.ToBytes()}));
+                    LogErrorType(s_cstr_literal("OpenGL Program Link"), s_cstr_literal("%"), FormatStr({log_chrs.ToBytes()}));
                 } else {
                     ZF_REPORT_ERROR();
                 }
             } else {
-                LogError("OpenGL program link failed, but no error message available!");
+                LogError(s_cstr_literal("OpenGL program link failed, but no error message available!"));
             }
 
             glDeleteProgram(prog_gl_id);
@@ -186,7 +186,7 @@ namespace zf {
         const s_v2_i tex_size_limit = GLTextureSizeLimit();
 
         if (tex_data.SizeInPixels().x > tex_size_limit.x || tex_data.SizeInPixels().y > tex_size_limit.y) {
-            /*LogError("Texture size % exceeds limits %!", tex_data.SizeInPixels(), tex_size_limit);*/
+            LogError(s_cstr_literal("Texture size % exceeds limits %!"), tex_data.SizeInPixels(), tex_size_limit);
             ZF_REPORT_ERROR();
             return 0;
         }
@@ -564,7 +564,7 @@ namespace zf {
 
     using t_batch_slot = s_static_array<s_batch_vert, g_batch_slot_vert_cnt>;
 
-    static s_str_rdonly g_batch_vert_shader_src = R"(#version 460 core
+    static s_str_rdonly g_batch_vert_shader_src = s_cstr_literal(R"(#version 460 core
 
 layout (location = 0) in vec2 a_vert;
 layout (location = 1) in vec2 a_pos;
@@ -594,9 +594,9 @@ void main() {
     v_tex_coord = a_tex_coord;
     v_blend = a_blend;
 }
-)";
+)");
 
-    static s_str_rdonly g_batch_frag_shader_src = R"(#version 460 core
+    static s_str_rdonly g_batch_frag_shader_src = s_cstr_literal(R"(#version 460 core
 
 in vec2 v_tex_coord;
 in vec4 v_blend;
@@ -609,9 +609,9 @@ void main() {
     vec4 tex_color = texture(u_tex, v_tex_coord);
     o_frag_color = tex_color * v_blend;
 }
-)";
+)");
 
-    static s_str_rdonly g_default_surface_vert_shader_src = R"(#version 460 core
+    static s_str_rdonly g_default_surface_vert_shader_src = s_cstr_literal(R"(#version 460 core
 
 layout (location = 0) in vec2 a_vert;
 layout (location = 1) in vec2 a_tex_coord;
@@ -633,9 +633,9 @@ void main() {
     gl_Position = u_proj * model * vec4(a_vert, 0.0, 1.0);
     v_tex_coord = a_tex_coord;
 }
-)";
+)");
 
-    static s_str_rdonly g_default_surface_frag_shader_src = R"(#version 460 core
+    static s_str_rdonly g_default_surface_frag_shader_src = s_cstr_literal(R"(#version 460 core
 
 in vec2 v_tex_coord;
 out vec4 o_frag_color;
@@ -645,7 +645,7 @@ uniform sampler2D u_tex;
 void main() {
     o_frag_color = texture(u_tex, v_tex_coord);
 }
-)";
+)");
 
     struct s_rendering_basis {
         s_mesh_gl_ids batch_mesh_gl_ids = {};
@@ -991,7 +991,7 @@ void main() {
         ZF_ASSERT(surf && surf->type == ek_gfx_resource_type_surface);
 
         if (rc.state->surfs.IsFull()) {
-            LogError("Attempting to set a surface even though the limit has been reached!");
+            LogError(s_cstr_literal("Attempting to set a surface even though the limit has been reached!"));
             ZF_REPORT_ERROR();
             return;
         }
@@ -1006,7 +1006,7 @@ void main() {
 
     void UnsetSurface(const s_rendering_context rc) {
         if (rc.state->surfs.IsEmpty()) {
-            LogError("Attempting to unset a surface even though none are set!");
+            LogError(s_cstr_literal("Attempting to unset a surface even though none are set!"));
             ZF_REPORT_ERROR();
             return;
         }
