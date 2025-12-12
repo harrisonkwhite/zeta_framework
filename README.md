@@ -1,6 +1,6 @@
 # Zeta Framework
 
-This is a data-oriented framework for developing both small-scale and large-scale 2D games.
+This is a data-oriented framework for developing both small-scale and large-scale 2D games for PC.
 
 It was originally written in C, though has been switched to a strictly procedural subset of C++ 20 to leverage useful features like operator overloading, function overloading, constexpr, templates, and more.
 

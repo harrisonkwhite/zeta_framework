@@ -38,11 +38,6 @@ namespace zf {
     [[nodiscard]] t_b8 CreateFontFromRaw(const s_str_rdonly file_path, const t_i32 height, const t_code_pt_bit_vec &code_pts, s_gfx_resource_arena &res_arena, s_mem_arena &temp_mem_arena, s_ptr<s_gfx_resource> &o_font);
     [[nodiscard]] t_b8 CreateFontFromPacked(const s_str_rdonly file_path, s_gfx_resource_arena &res_arena, s_mem_arena &temp_mem_arena, s_ptr<s_gfx_resource> &o_font);
 
-    [[nodiscard]] t_b8 CreateSurface(const s_v2_i size, s_gfx_resource_arena &res_arena, s_ptr<s_gfx_resource> &o_surf);
-    [[nodiscard]] t_b8 ResizeSurface(s_gfx_resource &surf, const s_v2_i size);
-
-    [[nodiscard]] t_b8 CreateSurfaceShaderProg(const s_str_rdonly vert_src, const s_str_rdonly frag_src, s_gfx_resource_arena &res_arena, s_mem_arena &temp_mem_arena, s_ptr<s_gfx_resource> &o_shader_prog);
-
     // ============================================================
     // @section: Rendering
     // ============================================================
@@ -70,122 +65,6 @@ namespace zf {
 
     [[nodiscard]] t_b8 LoadStrChrDrawPositions(const s_str_rdonly str, const s_font_arrangement &font_arrangement, const s_v2 pos, const s_v2 alignment, s_mem_arena &mem_arena, s_array<s_v2> &o_positions);
     [[nodiscard]] t_b8 DrawStr(const s_rendering_context rc, const s_str_rdonly str, const s_gfx_resource &font, const s_v2 pos, s_mem_arena &temp_mem_arena, const s_v2 alignment = alignments::g_topleft, const s_color_rgba32f blend = colors::g_white);
-
-    void SetSurface(const s_rendering_context rc, const s_gfx_resource &surf);
-    void UnsetSurface(const s_rendering_context rc);
-
-    enum e_surface_shader_prog_uniform_val_type : t_i32 {
-        ek_surface_shader_prog_uniform_val_type_i32,
-        ek_surface_shader_prog_uniform_val_type_u32,
-        ek_surface_shader_prog_uniform_val_type_f32,
-        ek_surface_shader_prog_uniform_val_type_v2,
-        ek_surface_shader_prog_uniform_val_type_v3,
-        ek_surface_shader_prog_uniform_val_type_v4,
-        ek_surface_shader_prog_uniform_val_type_mat4x4
-    };
-
-    struct s_surface_shader_prog_uniform_val {
-    public:
-        constexpr s_surface_shader_prog_uniform_val(const t_i32 v) : m_type(ek_surface_shader_prog_uniform_val_type_i32), m_type_data({.i32 = v}) {};
-        constexpr s_surface_shader_prog_uniform_val(const t_u32 v) : m_type(ek_surface_shader_prog_uniform_val_type_u32), m_type_data({.u32 = v}) {};
-        constexpr s_surface_shader_prog_uniform_val(const t_f32 v) : m_type(ek_surface_shader_prog_uniform_val_type_f32), m_type_data({.f32 = v}) {};
-        constexpr s_surface_shader_prog_uniform_val(const s_v2 v) : m_type(ek_surface_shader_prog_uniform_val_type_v2), m_type_data({.v2 = v}) {};
-        constexpr s_surface_shader_prog_uniform_val(const s_v3 v) : m_type(ek_surface_shader_prog_uniform_val_type_v3), m_type_data({.v3 = v}) {};
-        constexpr s_surface_shader_prog_uniform_val(const s_v4 v) : m_type(ek_surface_shader_prog_uniform_val_type_v4), m_type_data({.v4 = v}) {};
-        constexpr s_surface_shader_prog_uniform_val(const s_mat4x4 &v) : m_type(ek_surface_shader_prog_uniform_val_type_mat4x4), m_type_data({.mat4x4 = v}) {};
-
-        constexpr e_surface_shader_prog_uniform_val_type Type() const {
-            return m_type;
-        }
-
-        constexpr t_i32 &I32() {
-            ZF_ASSERT(m_type == ek_surface_shader_prog_uniform_val_type_i32);
-            return m_type_data.i32;
-        }
-
-        constexpr const t_i32 &I32() const {
-            ZF_ASSERT(m_type == ek_surface_shader_prog_uniform_val_type_i32);
-            return m_type_data.i32;
-        }
-
-        constexpr t_u32 &U32() {
-            ZF_ASSERT(m_type == ek_surface_shader_prog_uniform_val_type_u32);
-            return m_type_data.u32;
-        }
-
-        constexpr const t_u32 &U32() const {
-            ZF_ASSERT(m_type == ek_surface_shader_prog_uniform_val_type_u32);
-            return m_type_data.u32;
-        }
-
-        constexpr t_f32 &F32() {
-            ZF_ASSERT(m_type == ek_surface_shader_prog_uniform_val_type_f32);
-            return m_type_data.f32;
-        }
-
-        constexpr const t_f32 &F32() const {
-            ZF_ASSERT(m_type == ek_surface_shader_prog_uniform_val_type_f32);
-            return m_type_data.f32;
-        }
-
-        constexpr s_v2 &V2() {
-            ZF_ASSERT(m_type == ek_surface_shader_prog_uniform_val_type_v2);
-            return m_type_data.v2;
-        }
-
-        constexpr const s_v2 &V2() const {
-            ZF_ASSERT(m_type == ek_surface_shader_prog_uniform_val_type_v2);
-            return m_type_data.v2;
-        }
-
-        constexpr s_v3 &V3() {
-            ZF_ASSERT(m_type == ek_surface_shader_prog_uniform_val_type_v3);
-            return m_type_data.v3;
-        }
-
-        constexpr const s_v3 &V3() const {
-            ZF_ASSERT(m_type == ek_surface_shader_prog_uniform_val_type_v3);
-            return m_type_data.v3;
-        }
-
-        constexpr s_v4 &V4() {
-            ZF_ASSERT(m_type == ek_surface_shader_prog_uniform_val_type_v4);
-            return m_type_data.v4;
-        }
-
-        constexpr const s_v4 &V4() const {
-            ZF_ASSERT(m_type == ek_surface_shader_prog_uniform_val_type_v4);
-            return m_type_data.v4;
-        }
-
-        constexpr s_mat4x4 &Mat4x4() {
-            ZF_ASSERT(m_type == ek_surface_shader_prog_uniform_val_type_mat4x4);
-            return m_type_data.mat4x4;
-        }
-
-        constexpr const s_mat4x4 &Mat4x4() const {
-            ZF_ASSERT(m_type == ek_surface_shader_prog_uniform_val_type_mat4x4);
-            return m_type_data.mat4x4;
-        }
-
-    private:
-        e_surface_shader_prog_uniform_val_type m_type = {};
-
-        union {
-            t_i32 i32;
-            t_u32 u32;
-            t_f32 f32;
-            s_v2 v2;
-            s_v3 v3;
-            s_v4 v4;
-            s_mat4x4 mat4x4;
-        } m_type_data = {};
-    };
-
-    void SetSurfaceShaderProg(const s_rendering_context rc, const s_gfx_resource &prog);
-    [[nodiscard]] t_b8 SetSurfaceShaderProgUniform(const s_rendering_context rc, const s_str_rdonly name, const s_surface_shader_prog_uniform_val &val, s_mem_arena &temp_mem_arena);
-
-    void DrawSurface(const s_rendering_context rc, const s_gfx_resource &surf, const s_v2 pos);
 
     namespace internal {
         [[nodiscard]] t_b8 BeginFrame(const s_rendering_basis &rendering_basis, const s_v2_i framebuffer_size_cache, s_mem_arena &mem_arena, s_rendering_context &o_rendering_context);
