@@ -2,7 +2,6 @@
 
 #include <zgl/zgl_audio.h>
 #include <zgl/zgl_gfx.h>
-#include <zgl/zgl_input.h>
 #include <zgl/zgl_platform.h>
 
 namespace zf {
@@ -39,8 +38,6 @@ namespace zf {
                 return false;
             }
 
-            s_input_state input_state = {};
-
             if (!platform::Init(g_init_window_size)) {
                 ZF_REPORT_ERROR();
                 return false;
@@ -48,13 +45,12 @@ namespace zf {
 
             ZF_DEFER({ platform::Shutdown(); });
 
-#if 0
-            if (!internal::InitGFX(*platform_layer_info)) {
+            if (!gfx::Init()) {
+                ZF_REPORT_ERROR();
                 return false;
             }
 
-            ZF_DEFER({ internal::ShutdownGFX(); });
-#endif
+            ZF_DEFER({ gfx::Shutdown(); });
 
             s_ptr<s_audio_sys> audio_sys = nullptr;
 
@@ -114,8 +110,6 @@ namespace zf {
                         const s_game_tick_context context = {
                             .mem_arena = mem_arena,
                             .temp_mem_arena = temp_mem_arena,
-                            .input_state = input_state,
-                            .platform_layer_info = *platform_layer_info,
                             .audio_sys = *audio_sys,
                         };
 
@@ -124,7 +118,7 @@ namespace zf {
                             return false;
                         }
 
-                        input_state.events = {};
+                        platform::ClearInputEvents();
 
                         frame_dur_accum -= targ_tick_interval;
                     } while (frame_dur_accum >= targ_tick_interval);

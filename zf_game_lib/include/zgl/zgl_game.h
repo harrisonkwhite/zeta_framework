@@ -13,15 +13,11 @@ namespace zf {
         s_audio_sys &audio_sys;
     };
 
-    struct s_input_state;
-
     struct s_game_tick_context {
         s_mem_arena &mem_arena;
         s_mem_arena &temp_mem_arena;
 
-        const s_input_state &input_state;
-
-        s_audio_sys &audio_sys;
+        s_audio_sys &audio_sys; // @todo: I don't think there's any real utility in being able to create multiple audio systems. The problem isn't actually solved because the user can always just create their own audio system within a render function and play audio. It's fake!
     };
 
     struct s_game_render_context {

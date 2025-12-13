@@ -14,115 +14,9 @@
 #endif
 
 namespace zf::platform {
-#if 0
-    constexpr e_key_code ConvertGLFWKeyCode(const t_i32 glfw_key) {
-        switch (glfw_key) {
-        case GLFW_KEY_SPACE: return ek_key_code_space;
-
-        case GLFW_KEY_0: return ek_key_code_0;
-        case GLFW_KEY_1: return ek_key_code_1;
-        case GLFW_KEY_2: return ek_key_code_2;
-        case GLFW_KEY_3: return ek_key_code_3;
-        case GLFW_KEY_4: return ek_key_code_4;
-        case GLFW_KEY_5: return ek_key_code_5;
-        case GLFW_KEY_6: return ek_key_code_6;
-        case GLFW_KEY_7: return ek_key_code_7;
-        case GLFW_KEY_8: return ek_key_code_8;
-        case GLFW_KEY_9: return ek_key_code_9;
-
-        case GLFW_KEY_A: return ek_key_code_a;
-        case GLFW_KEY_B: return ek_key_code_b;
-        case GLFW_KEY_C: return ek_key_code_c;
-        case GLFW_KEY_D: return ek_key_code_d;
-        case GLFW_KEY_E: return ek_key_code_e;
-        case GLFW_KEY_F: return ek_key_code_f;
-        case GLFW_KEY_G: return ek_key_code_g;
-        case GLFW_KEY_H: return ek_key_code_h;
-        case GLFW_KEY_I: return ek_key_code_i;
-        case GLFW_KEY_J: return ek_key_code_j;
-        case GLFW_KEY_K: return ek_key_code_k;
-        case GLFW_KEY_L: return ek_key_code_l;
-        case GLFW_KEY_M: return ek_key_code_m;
-        case GLFW_KEY_N: return ek_key_code_n;
-        case GLFW_KEY_O: return ek_key_code_o;
-        case GLFW_KEY_P: return ek_key_code_p;
-        case GLFW_KEY_Q: return ek_key_code_q;
-        case GLFW_KEY_R: return ek_key_code_r;
-        case GLFW_KEY_S: return ek_key_code_s;
-        case GLFW_KEY_T: return ek_key_code_t;
-        case GLFW_KEY_U: return ek_key_code_u;
-        case GLFW_KEY_V: return ek_key_code_v;
-        case GLFW_KEY_W: return ek_key_code_w;
-        case GLFW_KEY_X: return ek_key_code_x;
-        case GLFW_KEY_Y: return ek_key_code_y;
-        case GLFW_KEY_Z: return ek_key_code_z;
-
-        case GLFW_KEY_ESCAPE: return ek_key_code_escape;
-        case GLFW_KEY_ENTER: return ek_key_code_enter;
-        case GLFW_KEY_BACKSPACE: return ek_key_code_backspace;
-        case GLFW_KEY_TAB: return ek_key_code_tab;
-
-        case GLFW_KEY_RIGHT: return ek_key_code_right;
-        case GLFW_KEY_LEFT: return ek_key_code_left;
-        case GLFW_KEY_DOWN: return ek_key_code_down;
-        case GLFW_KEY_UP: return ek_key_code_up;
-
-        case GLFW_KEY_F1: return ek_key_code_f1;
-        case GLFW_KEY_F2: return ek_key_code_f2;
-        case GLFW_KEY_F3: return ek_key_code_f3;
-        case GLFW_KEY_F4: return ek_key_code_f4;
-        case GLFW_KEY_F5: return ek_key_code_f5;
-        case GLFW_KEY_F6: return ek_key_code_f6;
-        case GLFW_KEY_F7: return ek_key_code_f7;
-        case GLFW_KEY_F8: return ek_key_code_f8;
-        case GLFW_KEY_F9: return ek_key_code_f9;
-        case GLFW_KEY_F10: return ek_key_code_f10;
-        case GLFW_KEY_F11: return ek_key_code_f11;
-        case GLFW_KEY_F12: return ek_key_code_f12;
-
-        case GLFW_KEY_LEFT_SHIFT: return ek_key_code_left_shift;
-        case GLFW_KEY_LEFT_CONTROL: return ek_key_code_left_control;
-        case GLFW_KEY_LEFT_ALT: return ek_key_code_left_alt;
-
-        case GLFW_KEY_RIGHT_SHIFT: return ek_key_code_right_shift;
-        case GLFW_KEY_RIGHT_CONTROL: return ek_key_code_right_control;
-        case GLFW_KEY_RIGHT_ALT: return ek_key_code_right_alt;
-
-        default: return eks_key_code_none;
-        }
-    }
-
-    constexpr e_mouse_button_code ConvertGLFWMouseButtonCode(const t_i32 glfw_button) {
-        switch (glfw_button) {
-        case GLFW_MOUSE_BUTTON_LEFT: return ek_mouse_button_code_left;
-        case GLFW_MOUSE_BUTTON_RIGHT: return ek_mouse_button_code_right;
-        case GLFW_MOUSE_BUTTON_MIDDLE: return ek_mouse_button_code_middle;
-
-        default: return eks_mouse_button_code_none;
-        }
-    }
-
-    constexpr internal::e_key_action ConvertGLFWKeyAction(const t_i32 glfw_act) {
-        switch (glfw_act) {
-        case GLFW_PRESS: return internal::ek_key_action_press;
-        case GLFW_RELEASE: return internal::ek_key_action_release;
-        }
-
-        ZF_ASSERT(false);
-        return internal::ek_key_action_invalid;
-    }
-
-    constexpr internal::e_mouse_button_action ConvertGLFWMouseButtonAction(const t_i32 glfw_act) {
-        switch (glfw_act) {
-        case GLFW_PRESS: return internal::ek_mouse_button_action_press;
-        case GLFW_RELEASE: return internal::ek_mouse_button_action_release;
-        }
-
-        ZF_ASSERT(false);
-        return internal::ek_mouse_button_action_invalid;
-    }
-#endif
-
+    // ============================================================
+    // @section: Types and Declarations
+    // ============================================================
     struct {
         t_b8 initted = false;
 
@@ -133,8 +27,35 @@ namespace zf::platform {
         t_b8 fullscreen_active = false;
         s_v2_i prefullscreen_pos = {};
         s_v2_i prefullscreen_size = {};
+
+        struct {
+            s_static_bit_vec<eks_key_code_cnt> keys_down = {};
+            s_static_bit_vec<eks_mouse_button_code_cnt> mouse_buttons_down = {};
+
+            s_v2 cursor_pos = {};
+
+            struct {
+                s_static_bit_vec<eks_key_code_cnt> keys_pressed;
+                s_static_bit_vec<eks_key_code_cnt> keys_released;
+
+                s_static_bit_vec<eks_mouse_button_code_cnt> mouse_buttons_pressed;
+                s_static_bit_vec<eks_mouse_button_code_cnt> mouse_buttons_released;
+
+                s_v2 scroll;
+            } events = {};
+        } input;
     } g_state;
 
+    static s_ptr<GLFWmonitor> FindGLFWMonitorOfWindow(const s_ptr<GLFWwindow> window);
+
+    static void GLFWKeyCallback(GLFWwindow *const window, const t_i32 key, const t_i32 scancode, const t_i32 act, const t_i32 mods);
+    static void GLFWMouseButtonCallback(GLFWwindow *const window, const t_i32 btn, const t_i32 act, const t_i32 mods);
+    static void GLFWCursorPosCallback(GLFWwindow *const window, const t_f64 x, const t_f64 y);
+    static void GLFWScrollCallback(GLFWwindow *const window, const t_f64 offs_x, const t_f64 offs_y);
+
+    // ============================================================
+    // @section: General
+    // ============================================================
     t_b8 Init(const s_v2_i init_window_size) {
         ZF_ASSERT(!g_state.initted);
         ZF_ASSERT(init_window_size.x > 0 && init_window_size.y > 0);
@@ -178,7 +99,6 @@ namespace zf::platform {
 
         glfwGetFramebufferSize(g_state.glfw_window, &g_state.framebuffer_size_cache.x, &g_state.framebuffer_size_cache.y);
 
-        // Set up callbacks.
         {
             const auto fb_size_callback =
                 [](GLFWwindow *const glfw_window, const t_i32 width, const t_i32 height) {
@@ -190,51 +110,10 @@ namespace zf::platform {
             glfwSetFramebufferSizeCallback(g_state.glfw_window, fb_size_callback);
         }
 
-#if 0
-        {
-            const auto key_callback =
-                [](GLFWwindow *const glfw_window, const t_i32 key, const t_i32 scancode, const t_i32 act, const t_i32 mods) {
-                    if (act == GLFW_REPEAT) {
-                        return;
-                    }
-
-                    const s_ptr<s_platform_layer_info> g_state.= static_cast<s_platform_layer_info *>(glfwGetWindowUserPointer(glfw_window));
-                    internal::ProcKeyAction(*g_state.>input_state, ConvertGLFWKeyCode(key), ConvertGLFWKeyAction(act));
-                };
-
-            glfwSetKeyCallback(o_g_state.>glfw_window, key_callback);
-        }
-
-        {
-            const auto mb_callback =
-                [](GLFWwindow *const glfw_window, const t_i32 btn, const t_i32 act, const t_i32 mods) {
-                    const s_ptr<s_platform_layer_info> g_state.= static_cast<s_platform_layer_info *>(glfwGetWindowUserPointer(glfw_window));
-                    internal::ProcMouseButtonAction(*g_state.>input_state, ConvertGLFWMouseButtonCode(btn), ConvertGLFWMouseButtonAction(act));
-                };
-
-            glfwSetMouseButtonCallback(o_g_state.>glfw_window, mb_callback);
-        }
-
-        {
-            const auto cursor_pos_callback =
-                [](GLFWwindow *const glfw_window, const t_f64 x, const t_f64 y) {
-                    const s_ptr<s_platform_layer_info> g_state.= static_cast<s_platform_layer_info *>(glfwGetWindowUserPointer(glfw_window));
-                    internal::ProcCursorMove(*g_state.>input_state, {static_cast<t_f32>(x), static_cast<t_f32>(y)});
-                };
-
-            glfwSetCursorPosCallback(o_g_state.>glfw_window, cursor_pos_callback);
-        }
-
-        {
-            const auto scroll_callback =
-                [](GLFWwindow *const glfw_window, const t_f64 offs_x, const t_f64 offs_y) {
-                    const s_ptr<s_platform_layer_info> g_state.= static_cast<s_platform_layer_info *>(glfwGetWindowUserPointer(glfw_window));
-                    internal::ProcScroll(*g_state.>input_state, {static_cast<t_f32>(offs_x), static_cast<t_f32>(offs_y)});
-                };
-
-            glfwSetScrollCallback(o_g_state.>glfw_window, scroll_callback);
-        }
-#endif
+        glfwSetKeyCallback(g_state.glfw_window, GLFWKeyCallback);
+        glfwSetMouseButtonCallback(g_state.glfw_window, GLFWMouseButtonCallback);
+        glfwSetCursorPosCallback(g_state.glfw_window, GLFWCursorPosCallback);
+        glfwSetScrollCallback(g_state.glfw_window, GLFWScrollCallback);
 
         g_state.initted = true;
 
@@ -259,6 +138,9 @@ namespace zf::platform {
         glfwPollEvents();
     }
 
+    // ============================================================
+    // @section: Display
+    // ============================================================
     void *NativeWindowHandle() {
         ZF_ASSERT(g_state.initted);
 
@@ -443,7 +325,189 @@ namespace zf::platform {
         g_state.fullscreen_active = fs;
     }
 
+    // ============================================================
+    // @section: Input
+    // ============================================================
+    constexpr e_key_code ConvertGLFWKeyCode(const t_i32 key) {
+        switch (key) {
+        case GLFW_KEY_SPACE: return ek_key_code_space;
+
+        case GLFW_KEY_0: return ek_key_code_0;
+        case GLFW_KEY_1: return ek_key_code_1;
+        case GLFW_KEY_2: return ek_key_code_2;
+        case GLFW_KEY_3: return ek_key_code_3;
+        case GLFW_KEY_4: return ek_key_code_4;
+        case GLFW_KEY_5: return ek_key_code_5;
+        case GLFW_KEY_6: return ek_key_code_6;
+        case GLFW_KEY_7: return ek_key_code_7;
+        case GLFW_KEY_8: return ek_key_code_8;
+        case GLFW_KEY_9: return ek_key_code_9;
+
+        case GLFW_KEY_A: return ek_key_code_a;
+        case GLFW_KEY_B: return ek_key_code_b;
+        case GLFW_KEY_C: return ek_key_code_c;
+        case GLFW_KEY_D: return ek_key_code_d;
+        case GLFW_KEY_E: return ek_key_code_e;
+        case GLFW_KEY_F: return ek_key_code_f;
+        case GLFW_KEY_G: return ek_key_code_g;
+        case GLFW_KEY_H: return ek_key_code_h;
+        case GLFW_KEY_I: return ek_key_code_i;
+        case GLFW_KEY_J: return ek_key_code_j;
+        case GLFW_KEY_K: return ek_key_code_k;
+        case GLFW_KEY_L: return ek_key_code_l;
+        case GLFW_KEY_M: return ek_key_code_m;
+        case GLFW_KEY_N: return ek_key_code_n;
+        case GLFW_KEY_O: return ek_key_code_o;
+        case GLFW_KEY_P: return ek_key_code_p;
+        case GLFW_KEY_Q: return ek_key_code_q;
+        case GLFW_KEY_R: return ek_key_code_r;
+        case GLFW_KEY_S: return ek_key_code_s;
+        case GLFW_KEY_T: return ek_key_code_t;
+        case GLFW_KEY_U: return ek_key_code_u;
+        case GLFW_KEY_V: return ek_key_code_v;
+        case GLFW_KEY_W: return ek_key_code_w;
+        case GLFW_KEY_X: return ek_key_code_x;
+        case GLFW_KEY_Y: return ek_key_code_y;
+        case GLFW_KEY_Z: return ek_key_code_z;
+
+        case GLFW_KEY_ESCAPE: return ek_key_code_escape;
+        case GLFW_KEY_ENTER: return ek_key_code_enter;
+        case GLFW_KEY_BACKSPACE: return ek_key_code_backspace;
+        case GLFW_KEY_TAB: return ek_key_code_tab;
+
+        case GLFW_KEY_RIGHT: return ek_key_code_right;
+        case GLFW_KEY_LEFT: return ek_key_code_left;
+        case GLFW_KEY_DOWN: return ek_key_code_down;
+        case GLFW_KEY_UP: return ek_key_code_up;
+
+        case GLFW_KEY_F1: return ek_key_code_f1;
+        case GLFW_KEY_F2: return ek_key_code_f2;
+        case GLFW_KEY_F3: return ek_key_code_f3;
+        case GLFW_KEY_F4: return ek_key_code_f4;
+        case GLFW_KEY_F5: return ek_key_code_f5;
+        case GLFW_KEY_F6: return ek_key_code_f6;
+        case GLFW_KEY_F7: return ek_key_code_f7;
+        case GLFW_KEY_F8: return ek_key_code_f8;
+        case GLFW_KEY_F9: return ek_key_code_f9;
+        case GLFW_KEY_F10: return ek_key_code_f10;
+        case GLFW_KEY_F11: return ek_key_code_f11;
+        case GLFW_KEY_F12: return ek_key_code_f12;
+
+        case GLFW_KEY_LEFT_SHIFT: return ek_key_code_left_shift;
+        case GLFW_KEY_LEFT_CONTROL: return ek_key_code_left_control;
+        case GLFW_KEY_LEFT_ALT: return ek_key_code_left_alt;
+
+        case GLFW_KEY_RIGHT_SHIFT: return ek_key_code_right_shift;
+        case GLFW_KEY_RIGHT_CONTROL: return ek_key_code_right_control;
+        case GLFW_KEY_RIGHT_ALT: return ek_key_code_right_alt;
+
+        default: return eks_key_code_none;
+        }
+    }
+
+    static void GLFWKeyCallback(GLFWwindow *const window, const t_i32 key, const t_i32 scancode, const t_i32 act, const t_i32 mods) {
+        const auto kc = ConvertGLFWKeyCode(key);
+
+        switch (act) {
+        case GLFW_PRESS:
+            SetBit(g_state.input.keys_down, kc);
+            SetBit(g_state.input.events.keys_pressed, kc);
+            break;
+
+        case GLFW_RELEASE:
+            UnsetBit(g_state.input.keys_down, kc);
+            SetBit(g_state.input.events.keys_released, kc);
+            break;
+
+        case GLFW_REPEAT:
+            break;
+        }
+    }
+
+    constexpr e_mouse_button_code ConvertGLFWMouseButton(const t_i32 btn) {
+        switch (btn) {
+        case GLFW_MOUSE_BUTTON_LEFT: return ek_mouse_button_code_left;
+        case GLFW_MOUSE_BUTTON_RIGHT: return ek_mouse_button_code_right;
+        case GLFW_MOUSE_BUTTON_MIDDLE: return ek_mouse_button_code_middle;
+
+        default: return eks_mouse_button_code_none;
+        }
+    }
+
+    static void GLFWMouseButtonCallback(GLFWwindow *const window, const t_i32 btn, const t_i32 act, const t_i32 mods) {
+        const auto mbc = ConvertGLFWMouseButton(btn);
+
+        switch (act) {
+        case GLFW_PRESS:
+            SetBit(g_state.input.mouse_buttons_down, mbc);
+            SetBit(g_state.input.events.mouse_buttons_pressed, mbc);
+            break;
+
+        case GLFW_RELEASE:
+            UnsetBit(g_state.input.mouse_buttons_down, mbc);
+            SetBit(g_state.input.events.mouse_buttons_pressed, mbc);
+            break;
+        }
+    }
+
+    static void GLFWCursorPosCallback(GLFWwindow *const window, const t_f64 x, const t_f64 y) {
+        g_state.input.cursor_pos = {
+            static_cast<t_f32>(x),
+            static_cast<t_f32>(y),
+        };
+    }
+
+    static void GLFWScrollCallback(GLFWwindow *const window, const t_f64 offs_x, const t_f64 offs_y) {
+        g_state.input.events.scroll += s_v2(static_cast<t_f32>(offs_x), static_cast<t_f32>(offs_y));
+    }
+
+    t_b8 IsKeyDown(const e_key_code kc) {
+        ZF_ASSERT(g_state.initted);
+        return IsBitSet(g_state.input.keys_down, kc);
+    }
+
+    t_b8 IsKeyPressed(const e_key_code kc) {
+        ZF_ASSERT(g_state.initted);
+        return IsBitSet(g_state.input.events.keys_pressed, kc);
+    }
+
+    t_b8 IsKeyReleased(const e_key_code kc) {
+        ZF_ASSERT(g_state.initted);
+        return IsBitSet(g_state.input.events.keys_released, kc);
+    }
+
+    t_b8 IsMouseButtonDown(const e_mouse_button_code mbc) {
+        ZF_ASSERT(g_state.initted);
+        return IsBitSet(g_state.input.mouse_buttons_down, mbc);
+    }
+
+    t_b8 IsMouseButtonPressed(const e_mouse_button_code mbc) {
+        ZF_ASSERT(g_state.initted);
+        return IsBitSet(g_state.input.events.mouse_buttons_pressed, mbc);
+    }
+
+    t_b8 IsMouseButtonReleased(const e_mouse_button_code mbc) {
+        ZF_ASSERT(g_state.initted);
+        return IsBitSet(g_state.input.events.mouse_buttons_released, mbc);
+    }
+
+    s_v2 CursorPos() {
+        ZF_ASSERT(g_state.initted);
+        return g_state.input.cursor_pos;
+    }
+
+    s_v2 ScrollOffset() {
+        ZF_ASSERT(g_state.initted);
+        return g_state.input.events.scroll;
+    }
+
     void SetCursorVisibility(const t_b8 visible) {
+        ZF_ASSERT(g_state.initted);
         glfwSetInputMode(g_state.glfw_window, GLFW_CURSOR, visible ? GLFW_CURSOR_NORMAL : GLFW_CURSOR_HIDDEN);
+    }
+
+    void ClearInputEvents() {
+        ZF_ASSERT(g_state.initted);
+        g_state.input.events = {};
     }
 }
