@@ -1,9 +1,14 @@
 #include <zgl/zgl_gfx.h>
 
+#include <glad/glad.h>
 #include <zgl/zgl_platform.h>
 
 namespace zf::gfx {
     t_b8 Init() {
+        if (!gladLoadGLLoader(reinterpret_cast<GLADloadproc>(platform::internal::GetGLProcAddrFunc()))) {
+            return false;
+        }
+
         return true;
     }
 

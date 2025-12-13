@@ -1,8 +1,10 @@
 # Zeta Framework
 
-This is a data-oriented framework for developing both small-scale and large-scale 2D games for Windows, Mac, and Linux.
+This is a data-oriented framework for developing 2D games for Windows and Linux.
 
 It was originally written in C, though has been switched to a strictly procedural subset of C++ 20 to leverage useful features like operator overloading, function overloading, constexpr, templates, and more.
+
+OpenGL 3.3 is currently used as the backend graphics API, though this is subject to change.
 
 ---
 
@@ -36,7 +38,8 @@ cmake ..
 
 ## Third-Party Projects
 
-- [GLFW](https://github.com/glfw/glfw) for cross-platform windowing and input
+- [GLFW](https://github.com/glfw/glfw) for cross-platform windowing and input (plus an OpenGL context)
+- [glad](https://github.com/Dav1dde/glad) for OpenGL function pointers
 - [cJSON](https://github.com/DaveGamble/cJSON) for JSON parsing in the asset packer
 - [stb](https://github.com/nothings/stb) for raw image and font file loading
 - [miniaudio](https://github.com/mackron/miniaudio) for audio loading and playing

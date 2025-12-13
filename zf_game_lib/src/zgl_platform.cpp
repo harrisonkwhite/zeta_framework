@@ -2,17 +2,6 @@
 
 #include <GLFW/glfw3.h>
 
-#if defined(ZF_PLATFORM_WINDOWS)
-    #define GLFW_EXPOSE_NATIVE_WIN32
-    #include <GLFW/glfw3native.h>
-#elif defined(ZF_PLATFORM_MACOS)
-    #define GLFW_EXPOSE_NATIVE_COCOA
-    #include <GLFW/glfw3native.h>
-#elif defined(ZF_PLATFORM_LINUX)
-    #define GLFW_EXPOSE_NATIVE_X11
-    #include <GLFW/glfw3native.h>
-#endif
-
 namespace zf::platform {
     // ============================================================
     // @section: Types and Declarations
@@ -80,7 +69,9 @@ namespace zf::platform {
             }
         });
 
-        glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, g_gl_version_major);
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, g_gl_version_minor);
+        glfwWindowHint(GLFW_OPENGL_PROFILE, g_gl_core_profile ? GLFW_OPENGL_CORE_PROFILE : GLFW_OPENGL_COMPAT_PROFILE);
         glfwWindowHint(GLFW_VISIBLE, false);
 
         g_state.glfw_window = glfwCreateWindow(init_window_size.x, init_window_size.y, "", nullptr, nullptr);
@@ -96,6 +87,8 @@ namespace zf::platform {
                 glfwDestroyWindow(g_state.glfw_window);
             }
         });
+
+        glfwMakeContextCurrent(g_state.glfw_window);
 
         glfwGetFramebufferSize(g_state.glfw_window, &g_state.framebuffer_size_cache.x, &g_state.framebuffer_size_cache.y);
 
@@ -120,7 +113,7 @@ namespace zf::platform {
         return true;
     }
 
-    void Shutdown() {
+    void internal::Shutdown() {
         ZF_ASSERT(g_state.initted);
 
         glfwDestroyWindow(g_state.glfw_window);
@@ -128,15 +121,16 @@ namespace zf::platform {
         g_state = {};
     }
 
-    using t_get_gl_proc_addr_func = void (*)(const char *const name);
-    t_get_gl_proc_addr_func GetGLProcAddrFunc();
+    internal::t_get_gl_proc_addr_func internal::GetGLProcAddrFunc() {
+        return reinterpret_cast<t_get_gl_proc_addr_func>(glfwGetProcAddress);
+    }
 
     t_f64 Time() {
         ZF_ASSERT(g_state.initted);
         return glfwGetTime();
     }
 
-    void PollOSEvents() {
+    void internal::PollOSEvents() {
         ZF_ASSERT(g_state.initted);
         glfwPollEvents();
     }
@@ -144,36 +138,12 @@ namespace zf::platform {
     // ============================================================
     // @section: Display
     // ============================================================
-    void *NativeWindowHandle() {
-        ZF_ASSERT(g_state.initted);
-
-#if defined(ZF_PLATFORM_WINDOWS)
-        return reinterpret_cast<void *>(glfwGetWin32Window(g_state.glfw_window));
-#elif defined(ZF_PLATFORM_MACOS)
-        return glfwGetCocoaWindow(g_state.glfw_window);
-#elif defined(ZF_PLATFORM_LINUX)
-        return reinterpret_cast<void *>(static_cast<uintptr_t>(glfwGetX11Window(g_state.glfw_window)));
-#endif
-    }
-
-    void *NativeDisplayHandle() {
-        ZF_ASSERT(g_state.initted);
-
-#if defined(ZF_PLATFORM_WINDOWS)
-        return nullptr;
-#elif defined(ZF_PLATFORM_MACOS)
-        return nullptr;
-#elif defined(ZF_PLATFORM_LINUX)
-        return glfwGetX11Display();
-#endif
-    }
-
-    void ShowWindow() {
+    void internal::ShowWindow() {
         ZF_ASSERT(g_state.initted);
         glfwShowWindow(g_state.glfw_window);
     }
 
-    t_b8 ShouldWindowClose() {
+    t_b8 internal::ShouldWindowClose() {
         ZF_ASSERT(g_state.initted);
         return glfwWindowShouldClose(g_state.glfw_window);
     }
@@ -224,12 +194,12 @@ namespace zf::platform {
         return g_state.fullscreen_active;
     }
 
-    static s_ptr<GLFWmonitor> FindMonitorOfWindow(const s_ptr<GLFWwindow> glfw_window) {
+    static s_ptr<GLFWmonitor> FindGLFWMonitorOfWindow(const s_ptr<GLFWwindow> window) {
         ZF_ASSERT(g_state.initted);
 
         s_rect_i window_rect = {};
-        glfwGetWindowPos(glfw_window, &window_rect.x, &window_rect.y);
-        glfwGetWindowSize(glfw_window, &window_rect.width, &window_rect.height);
+        glfwGetWindowPos(window, &window_rect.x, &window_rect.y);
+        glfwGetWindowSize(window, &window_rect.width, &window_rect.height);
 
         // Get the monitor containing the most amount of the window.
         t_f32 max_occupancy_perc = 0.0f;
@@ -272,7 +242,7 @@ namespace zf::platform {
     s_v2_i CalcMonitorPixelSize() {
         ZF_ASSERT(g_state.initted);
 
-        const auto monitor = FindMonitorOfWindow(g_state.glfw_window);
+        const auto monitor = FindGLFWMonitorOfWindow(g_state.glfw_window);
 
         if (!monitor) {
             return {};
@@ -285,7 +255,7 @@ namespace zf::platform {
     s_v2_i CalcMonitorLogicalSize() {
         ZF_ASSERT(g_state.initted);
 
-        const auto monitor = FindMonitorOfWindow(g_state.glfw_window);
+        const auto monitor = FindGLFWMonitorOfWindow(g_state.glfw_window);
 
         if (!monitor) {
             return {};
@@ -313,7 +283,7 @@ namespace zf::platform {
             glfwGetWindowPos(g_state.glfw_window, &g_state.prefullscreen_pos.x, &g_state.prefullscreen_pos.y);
             glfwGetWindowSize(g_state.glfw_window, &g_state.prefullscreen_size.x, &g_state.prefullscreen_size.y);
 
-            const auto monitor = FindMonitorOfWindow(g_state.glfw_window);
+            const auto monitor = FindGLFWMonitorOfWindow(g_state.glfw_window);
 
             if (!monitor) {
                 return;
@@ -509,7 +479,7 @@ namespace zf::platform {
         glfwSetInputMode(g_state.glfw_window, GLFW_CURSOR, visible ? GLFW_CURSOR_NORMAL : GLFW_CURSOR_HIDDEN);
     }
 
-    void ClearInputEvents() {
+    void internal::ClearInputEvents() {
         ZF_ASSERT(g_state.initted);
         g_state.input.events = {};
     }

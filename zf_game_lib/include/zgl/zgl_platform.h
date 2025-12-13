@@ -11,10 +11,16 @@ namespace zf::platform {
     t_f64 Time();
 
     namespace internal {
+        // OpenGL version chosen for maximum compatibility.
+        constexpr t_i32 g_gl_version_major = 3;
+        constexpr t_i32 g_gl_version_minor = 3;
+        constexpr t_b8 g_gl_core_profile = true;
+
         [[nodiscard]] t_b8 Init(const s_v2_i init_window_size);
         void Shutdown();
 
-        using t_get_gl_proc_addr_func = void (*)(const char *const name);
+        using t_gl_proc = void (*)();
+        using t_get_gl_proc_addr_func = t_gl_proc (*)(const char *name);
         t_get_gl_proc_addr_func GetGLProcAddrFunc();
 
         void PollOSEvents();

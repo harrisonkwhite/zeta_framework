@@ -4,6 +4,7 @@ add_library(zf_game_lib STATIC
     src/zgl_gfx.cpp
     src/zgl_rendering.cpp
     src/zgl_audio.cpp
+    ../external/glad/src/glad.c
 
     include/zgl.h
     include/zgl/zgl_game.h
@@ -18,6 +19,7 @@ target_include_directories(zf_game_lib PUBLIC
 )
 
 target_include_directories(zf_game_lib PRIVATE
+    ../external/glad/include
     ../external/miniaudio/include
 )
 

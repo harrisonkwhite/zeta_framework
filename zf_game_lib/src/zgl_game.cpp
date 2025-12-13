@@ -38,12 +38,12 @@ namespace zf {
                 return false;
             }
 
-            if (!platform::Init(g_init_window_size)) {
+            if (!platform::internal::Init(g_init_window_size)) {
                 ZF_REPORT_ERROR();
                 return false;
             }
 
-            ZF_DEFER({ platform::Shutdown(); });
+            ZF_DEFER({ platform::internal::Shutdown(); });
 
             if (!gfx::Init()) {
                 ZF_REPORT_ERROR();
@@ -84,15 +84,15 @@ namespace zf {
             //
             // Main Loop
             //
-            platform::ShowWindow();
+            platform::internal::ShowWindow();
 
             t_f64 frame_time_last = platform::Time();
             t_f64 frame_dur_accum = 0.0;
 
-            while (!platform::ShouldWindowClose()) {
+            while (!platform::internal::ShouldWindowClose()) {
                 temp_mem_arena.Rewind(0);
 
-                platform::PollOSEvents();
+                platform::internal::PollOSEvents();
 
                 const t_f64 frame_time = platform::Time();
                 const t_f64 frame_time_delta = frame_time - frame_time_last;
@@ -118,7 +118,7 @@ namespace zf {
                             return false;
                         }
 
-                        platform::ClearInputEvents();
+                        platform::internal::ClearInputEvents();
 
                         frame_dur_accum -= targ_tick_interval;
                     } while (frame_dur_accum >= targ_tick_interval);
