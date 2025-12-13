@@ -2,11 +2,7 @@
 
 #include <zcl.h>
 
-namespace zf::gfx {
-    // Initialises the GFX module. This depends on the platform module being successfully initialised.
-    [[nodiscard]] t_b8 Init();
-
-    void Shutdown();
+namespace zf {
 
 #if 0
     struct s_platform_layer_info;

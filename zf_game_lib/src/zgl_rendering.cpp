@@ -1,33 +1,8 @@
 #include <zgl/zgl_gfx.h>
 
-#include <bgfx/bgfx.h>
 #include <zgl/zgl_platform.h>
 
 namespace zf {
-    t_b8 Init() {
-        bgfx::Init init = {};
-        init.type = bgfx::RendererType::Count;
-
-        init.resolution.reset = BGFX_RESET_VSYNC;
-
-        const auto fb_size_cache = WindowFramebufferSizeCache(platform_layer_info);
-        init.resolution.width = static_cast<uint32_t>(fb_size_cache.x);
-        init.resolution.height = static_cast<uint32_t>(fb_size_cache.y);
-
-        init.platformData.nwh = NativeWindowHandle(platform_layer_info);
-        init.platformData.ndt = NativeDisplayHandle(platform_layer_info);
-        init.platformData.type = bgfx::NativeWindowHandleType::Default;
-
-        if (!bgfx::init(init)) {
-            return false;
-        }
-
-        return true;
-    }
-
-    void Shutdown() {
-        bgfx::shutdown();
-    }
 
 #if 0
     // ============================================================
@@ -834,7 +809,7 @@ void main() {
     // @section: General
     // ============================================================
     t_b8 internal::InitGFX(const s_platform_layer_info &platform_layer_info) {
-    #if 0
+#if 0
         //
         // BGFX Initialisation
         //
@@ -858,8 +833,8 @@ void main() {
         bgfx::setViewClear(0, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, 0xABABABFF, 1.0f, 0);
 
         return true;
-    #endif
-    #if 0
+#endif
+#if 0
         t_b8 clean_up = false;
 
         o_rendering_basis = Alloc<s_rendering_basis>(rendering_basis_mem_arena);
@@ -939,36 +914,36 @@ void main() {
         }
 
         return true;
-    #endif
+#endif
 
         return true;
     }
 
     void internal::ShutdownGFX() {
-    #if 0
+#if 0
         bgfx::shutdown();
-    #endif
+#endif
 
-    #if 0
+#if 0
         DestroyGFXResources(rendering_basis.res_arena);
         glDeleteProgram(rendering_basis.batch_shader_prog_gl_id);
         DestroyGLMesh(rendering_basis.batch_mesh_gl_ids);
 
         rendering_basis = {};
-    #endif
+#endif
     }
 
     void internal::BeginFrame(const s_v2_i framebuffer_size_cache) {
-    #if 0
+#if 0
         bgfx::setViewRect(0, 0, 0, static_cast<uint16_t>(framebuffer_size_cache.x), static_cast<uint16_t>(framebuffer_size_cache.y));
         bgfx::touch(0);
-    #endif
+#endif
     }
 
     void internal::EndFrame() {
-    #if 0
+#if 0
         bgfx::frame();
-    #endif
+#endif
     }
 #endif
 }

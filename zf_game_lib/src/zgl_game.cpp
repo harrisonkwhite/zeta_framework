@@ -6,6 +6,7 @@
 #include <zgl/zgl_platform.h>
 
 namespace zf {
+    constexpr s_v2_i g_init_window_size = {1280, 720};
     constexpr t_f64 g_targ_ticks_per_sec = 60.0; // @todo: Make this customisable?
 
     t_b8 RunGame(const t_game_init_func init_func, const t_game_tick_func tick_func, const t_game_render_func render_func, const t_game_cleanup_func cleanup_func) {
@@ -40,18 +41,20 @@ namespace zf {
 
             s_input_state input_state = {};
 
-            s_ptr<s_platform_layer_info> platform_layer_info = nullptr;
-
-            if (!internal::InitPlatformLayer(mem_arena, input_state, platform_layer_info)) {
+            if (!platform::Init(g_init_window_size)) {
                 ZF_REPORT_ERROR();
                 return false;
             }
 
+            ZF_DEFER({ platform::Shutdown(); });
+
+#if 0
             if (!internal::InitGFX(*platform_layer_info)) {
                 return false;
             }
 
             ZF_DEFER({ internal::ShutdownGFX(); });
+#endif
 
             s_ptr<s_audio_sys> audio_sys = nullptr;
 
@@ -67,7 +70,6 @@ namespace zf {
                 const s_game_init_context context = {
                     .mem_arena = mem_arena,
                     .temp_mem_arena = temp_mem_arena,
-                    .platform_layer_info = *platform_layer_info,
                     .audio_sys = *audio_sys,
                 };
 
@@ -86,17 +88,17 @@ namespace zf {
             //
             // Main Loop
             //
-            internal::ShowWindow(*platform_layer_info);
+            platform::ShowWindow();
 
-            t_f64 frame_time_last = Time();
+            t_f64 frame_time_last = platform::Time();
             t_f64 frame_dur_accum = 0.0;
 
-            while (!internal::ShouldWindowClose(*platform_layer_info)) {
+            while (!platform::ShouldWindowClose()) {
                 temp_mem_arena.Rewind(0);
 
-                internal::PollOSEvents();
+                platform::PollOSEvents();
 
-                const t_f64 frame_time = Time();
+                const t_f64 frame_time = platform::Time();
                 const t_f64 frame_time_delta = frame_time - frame_time_last;
                 frame_dur_accum += frame_time_delta;
                 frame_time_last = frame_time;
@@ -128,9 +130,11 @@ namespace zf {
                     } while (frame_dur_accum >= targ_tick_interval);
 
                     // Perform a single render.
+#if 0
                     internal::BeginFrame(WindowFramebufferSizeCache(*platform_layer_info));
 
                     internal::EndFrame();
+#endif
 #if 0
                     s_rendering_context rendering_context = {};
 

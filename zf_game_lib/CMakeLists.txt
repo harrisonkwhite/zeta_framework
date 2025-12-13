@@ -3,6 +3,7 @@ add_library(zf_game_lib STATIC
     src/zgl_platform.cpp
     src/zgl_input.cpp
     src/zgl_gfx.cpp
+    src/zgl_rendering.cpp
     src/zgl_audio.cpp
 
     include/zgl.h
@@ -10,6 +11,7 @@ add_library(zf_game_lib STATIC
     include/zgl/zgl_platform.h
     include/zgl/zgl_input.h
     include/zgl/zgl_gfx.h
+    include/zgl/zgl_rendering.h
     include/zgl/zgl_audio.h
 )
 
@@ -27,6 +29,9 @@ target_link_libraries(zf_game_lib PUBLIC
 
 target_link_libraries(zf_game_lib PRIVATE
     glfw
+    bgfx
+    bx
+    bimg
 )
 
 target_compile_definitions(zf_game_lib PRIVATE

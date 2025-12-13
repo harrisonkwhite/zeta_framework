@@ -13,9 +13,8 @@
     #include <GLFW/glfw3native.h>
 #endif
 
-#include <zgl/zgl_input.h>
-
-namespace zf {
+namespace zf::platform {
+#if 0
     constexpr e_key_code ConvertGLFWKeyCode(const t_i32 glfw_key) {
         switch (glfw_key) {
         case GLFW_KEY_SPACE: return ek_key_code_space;
@@ -122,35 +121,31 @@ namespace zf {
         ZF_ASSERT(false);
         return internal::ek_mouse_button_action_invalid;
     }
+#endif
 
-    static t_b8 g_initted;
+    struct {
+        t_b8 initted = false;
 
-    struct s_platform_layer_info {
         s_ptr<GLFWwindow> glfw_window = nullptr;
 
         s_v2_i framebuffer_size_cache = {};
 
-        s_ptr<s_input_state> input_state = nullptr;
-
         t_b8 fullscreen_active = false;
         s_v2_i prefullscreen_pos = {};
         s_v2_i prefullscreen_size = {};
-    };
+    } g_state;
 
-    t_b8 internal::InitPlatformLayer(s_mem_arena &mem_arena, s_input_state &input_state, s_ptr<s_platform_layer_info> &o_pli) {
-        ZF_ASSERT(!g_initted);
+    t_b8 Init(const s_v2_i init_window_size) {
+        ZF_ASSERT(!g_state.initted);
+        ZF_ASSERT(init_window_size.x > 0 && init_window_size.y > 0);
 
         t_b8 clean_up = false;
 
-        o_pli = Alloc<s_platform_layer_info>(mem_arena);
-
-        if (!o_pli) {
-            ZF_REPORT_ERROR();
-            clean_up = true;
-            return false;
-        }
-
-        o_pli->input_state = &input_state;
+        ZF_DEFER({
+            if (clean_up) {
+                g_state = {};
+            }
+        });
 
         if (!glfwInit()) {
             ZF_REPORT_ERROR();
@@ -167,9 +162,9 @@ namespace zf {
         glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
         glfwWindowHint(GLFW_VISIBLE, false);
 
-        o_pli->glfw_window = glfwCreateWindow(1280, 720, "", nullptr, nullptr);
+        g_state.glfw_window = glfwCreateWindow(init_window_size.x, init_window_size.y, "", nullptr, nullptr);
 
-        if (!o_pli->glfw_window) {
+        if (!g_state.glfw_window) {
             ZF_REPORT_ERROR();
             clean_up = true;
             return false;
@@ -177,27 +172,25 @@ namespace zf {
 
         ZF_DEFER({
             if (clean_up) {
-                glfwDestroyWindow(o_pli->glfw_window);
+                glfwDestroyWindow(g_state.glfw_window);
             }
         });
 
-        glfwGetFramebufferSize(o_pli->glfw_window, &o_pli->framebuffer_size_cache.x, &o_pli->framebuffer_size_cache.y);
+        glfwGetFramebufferSize(g_state.glfw_window, &g_state.framebuffer_size_cache.x, &g_state.framebuffer_size_cache.y);
 
         // Set up callbacks.
-        glfwSetWindowUserPointer(o_pli->glfw_window, o_pli);
-
         {
             const auto fb_size_callback =
                 [](GLFWwindow *const glfw_window, const t_i32 width, const t_i32 height) {
                     if (width > 0 && height > 0) {
-                        const s_ptr<s_platform_layer_info> pli = static_cast<s_platform_layer_info *>(glfwGetWindowUserPointer(glfw_window));
-                        pli->framebuffer_size_cache = {width, height};
+                        g_state.framebuffer_size_cache = {width, height};
                     }
                 };
 
-            glfwSetFramebufferSizeCallback(o_pli->glfw_window, fb_size_callback);
+            glfwSetFramebufferSizeCallback(g_state.glfw_window, fb_size_callback);
         }
 
+#if 0
         {
             const auto key_callback =
                 [](GLFWwindow *const glfw_window, const t_i32 key, const t_i32 scancode, const t_i32 act, const t_i32 mods) {
@@ -205,75 +198,82 @@ namespace zf {
                         return;
                     }
 
-                    const s_ptr<s_platform_layer_info> pli = static_cast<s_platform_layer_info *>(glfwGetWindowUserPointer(glfw_window));
-                    internal::ProcKeyAction(*pli->input_state, ConvertGLFWKeyCode(key), ConvertGLFWKeyAction(act));
+                    const s_ptr<s_platform_layer_info> g_state.= static_cast<s_platform_layer_info *>(glfwGetWindowUserPointer(glfw_window));
+                    internal::ProcKeyAction(*g_state.>input_state, ConvertGLFWKeyCode(key), ConvertGLFWKeyAction(act));
                 };
 
-            glfwSetKeyCallback(o_pli->glfw_window, key_callback);
+            glfwSetKeyCallback(o_g_state.>glfw_window, key_callback);
         }
 
         {
             const auto mb_callback =
                 [](GLFWwindow *const glfw_window, const t_i32 btn, const t_i32 act, const t_i32 mods) {
-                    const s_ptr<s_platform_layer_info> pli = static_cast<s_platform_layer_info *>(glfwGetWindowUserPointer(glfw_window));
-                    internal::ProcMouseButtonAction(*pli->input_state, ConvertGLFWMouseButtonCode(btn), ConvertGLFWMouseButtonAction(act));
+                    const s_ptr<s_platform_layer_info> g_state.= static_cast<s_platform_layer_info *>(glfwGetWindowUserPointer(glfw_window));
+                    internal::ProcMouseButtonAction(*g_state.>input_state, ConvertGLFWMouseButtonCode(btn), ConvertGLFWMouseButtonAction(act));
                 };
 
-            glfwSetMouseButtonCallback(o_pli->glfw_window, mb_callback);
+            glfwSetMouseButtonCallback(o_g_state.>glfw_window, mb_callback);
         }
 
         {
             const auto cursor_pos_callback =
                 [](GLFWwindow *const glfw_window, const t_f64 x, const t_f64 y) {
-                    const s_ptr<s_platform_layer_info> pli = static_cast<s_platform_layer_info *>(glfwGetWindowUserPointer(glfw_window));
-                    internal::ProcCursorMove(*pli->input_state, {static_cast<t_f32>(x), static_cast<t_f32>(y)});
+                    const s_ptr<s_platform_layer_info> g_state.= static_cast<s_platform_layer_info *>(glfwGetWindowUserPointer(glfw_window));
+                    internal::ProcCursorMove(*g_state.>input_state, {static_cast<t_f32>(x), static_cast<t_f32>(y)});
                 };
 
-            glfwSetCursorPosCallback(o_pli->glfw_window, cursor_pos_callback);
+            glfwSetCursorPosCallback(o_g_state.>glfw_window, cursor_pos_callback);
         }
 
         {
             const auto scroll_callback =
                 [](GLFWwindow *const glfw_window, const t_f64 offs_x, const t_f64 offs_y) {
-                    const s_ptr<s_platform_layer_info> pli = static_cast<s_platform_layer_info *>(glfwGetWindowUserPointer(glfw_window));
-                    internal::ProcScroll(*pli->input_state, {static_cast<t_f32>(offs_x), static_cast<t_f32>(offs_y)});
+                    const s_ptr<s_platform_layer_info> g_state.= static_cast<s_platform_layer_info *>(glfwGetWindowUserPointer(glfw_window));
+                    internal::ProcScroll(*g_state.>input_state, {static_cast<t_f32>(offs_x), static_cast<t_f32>(offs_y)});
                 };
 
-            glfwSetScrollCallback(o_pli->glfw_window, scroll_callback);
+            glfwSetScrollCallback(o_g_state.>glfw_window, scroll_callback);
         }
+#endif
 
-        g_initted = true;
+        g_state.initted = true;
 
         return true;
     }
 
-    void internal::ShutdownPlatformLayer(const s_platform_layer_info &pli) {
-        ZF_ASSERT(g_initted);
+    void Shutdown() {
+        ZF_ASSERT(g_state.initted);
 
-        glfwDestroyWindow(pli.glfw_window);
+        glfwDestroyWindow(g_state.glfw_window);
         glfwTerminate();
-        g_initted = false;
+        g_state = {};
     }
 
     t_f64 Time() {
+        ZF_ASSERT(g_state.initted);
         return glfwGetTime();
     }
 
-    void internal::PollOSEvents() {
+    void PollOSEvents() {
+        ZF_ASSERT(g_state.initted);
         glfwPollEvents();
     }
 
-    void *internal::NativeWindowHandle(const s_platform_layer_info &pli) {
+    void *NativeWindowHandle() {
+        ZF_ASSERT(g_state.initted);
+
 #if defined(ZF_PLATFORM_WINDOWS)
-        return reinterpret_cast<void *>(glfwGetWin32Window(pli.glfw_window));
+        return reinterpret_cast<void *>(glfwGetWin32Window(g_state.glfw_window));
 #elif defined(ZF_PLATFORM_MACOS)
-        return glfwGetCocoaWindow(pli.glfw_window);
+        return glfwGetCocoaWindow(g_state.glfw_window);
 #elif defined(ZF_PLATFORM_LINUX)
-        return reinterpret_cast<void *>(static_cast<uintptr_t>(glfwGetX11Window(pli.glfw_window)));
+        return reinterpret_cast<void *>(static_cast<uintptr_t>(glfwGetX11Window(g_state.glfw_window)));
 #endif
     }
 
-    void *internal::NativeDisplayHandle(const s_platform_layer_info &pli) {
+    void *NativeDisplayHandle() {
+        ZF_ASSERT(g_state.initted);
+
 #if defined(ZF_PLATFORM_WINDOWS)
         return nullptr;
 #elif defined(ZF_PLATFORM_MACOS)
@@ -283,53 +283,65 @@ namespace zf {
 #endif
     }
 
-    void internal::ShowWindow(const s_platform_layer_info &pli) {
-        glfwShowWindow(pli.glfw_window);
+    void ShowWindow() {
+        ZF_ASSERT(g_state.initted);
+        glfwShowWindow(g_state.glfw_window);
     }
 
-    t_b8 internal::ShouldWindowClose(const s_platform_layer_info &pli) {
-        return glfwWindowShouldClose(pli.glfw_window);
+    t_b8 ShouldWindowClose() {
+        ZF_ASSERT(g_state.initted);
+        return glfwWindowShouldClose(g_state.glfw_window);
     }
 
-    t_b8 SetWindowTitle(const s_platform_layer_info &pli, const s_str_rdonly title, s_mem_arena &temp_mem_arena) {
+    t_b8 SetWindowTitle(const s_str_rdonly title, s_mem_arena &temp_mem_arena) {
+        ZF_ASSERT(g_state.initted);
+
         s_str title_terminated = {};
 
         if (!AllocStrCloneWithTerminator(title, temp_mem_arena, title_terminated)) {
             return false;
         }
 
-        glfwSetWindowTitle(pli.glfw_window, title_terminated.Cstr());
+        glfwSetWindowTitle(g_state.glfw_window, title_terminated.Cstr());
 
         return true;
     }
 
-    void SetWindowSize(const s_platform_layer_info &pli, const s_v2_i size) {
+    void SetWindowSize(const s_v2_i size) {
+        ZF_ASSERT(g_state.initted);
         ZF_ASSERT(size.x > 0 && size.y > 0);
-        glfwSetWindowSize(pli.glfw_window, size.x, size.y);
+
+        glfwSetWindowSize(g_state.glfw_window, size.x, size.y);
     }
 
-    void SetWindowSizeLimits(const s_platform_layer_info &pli, const t_i32 min_width, const t_i32 min_height, const t_i32 max_width, const t_i32 max_height) {
+    void SetWindowSizeLimits(const t_i32 min_width, const t_i32 min_height, const t_i32 max_width, const t_i32 max_height) {
+        ZF_ASSERT(g_state.initted);
         ZF_ASSERT(min_width >= -1 && min_height >= -1);
         ZF_ASSERT(max_width >= min_width || max_width == -1);
         ZF_ASSERT(max_height >= min_height || max_height == -1);
 
         static_assert(GLFW_DONT_CARE == -1);
-        glfwSetWindowSizeLimits(pli.glfw_window, min_width, min_height, max_width, max_height);
+        glfwSetWindowSizeLimits(g_state.glfw_window, min_width, min_height, max_width, max_height);
     }
 
-    void SetWindowResizability(const s_platform_layer_info &pli, const t_b8 resizable) {
-        glfwSetWindowAttrib(pli.glfw_window, GLFW_RESIZABLE, resizable);
+    void SetWindowResizability(const t_b8 resizable) {
+        ZF_ASSERT(g_state.initted);
+        glfwSetWindowAttrib(g_state.glfw_window, GLFW_RESIZABLE, resizable);
     }
 
-    s_v2_i WindowFramebufferSizeCache(const s_platform_layer_info &pli) {
-        return pli.framebuffer_size_cache;
+    s_v2_i WindowFramebufferSizeCache() {
+        ZF_ASSERT(g_state.initted);
+        return g_state.framebuffer_size_cache;
     }
 
-    t_b8 IsFullscreen(const s_platform_layer_info &pli) {
-        return pli.fullscreen_active;
+    t_b8 IsFullscreen() {
+        ZF_ASSERT(g_state.initted);
+        return g_state.fullscreen_active;
     }
 
-    static s_ptr<GLFWmonitor> MonitorOfWindow(const s_ptr<GLFWwindow> glfw_window) {
+    static s_ptr<GLFWmonitor> FindMonitorOfWindow(const s_ptr<GLFWwindow> glfw_window) {
+        ZF_ASSERT(g_state.initted);
+
         s_rect_i window_rect = {};
         glfwGetWindowPos(glfw_window, &window_rect.x, &window_rect.y);
         glfwGetWindowSize(glfw_window, &window_rect.width, &window_rect.height);
@@ -372,8 +384,10 @@ namespace zf {
         return monitors[max_occupancy_monitor_index];
     }
 
-    s_v2_i CalcMonitorPixelSize(const s_platform_layer_info &pli) {
-        const auto monitor = MonitorOfWindow(pli.glfw_window);
+    s_v2_i CalcMonitorPixelSize() {
+        ZF_ASSERT(g_state.initted);
+
+        const auto monitor = FindMonitorOfWindow(g_state.glfw_window);
 
         if (!monitor) {
             return {};
@@ -383,8 +397,10 @@ namespace zf {
         return {mode->width, mode->height};
     }
 
-    s_v2_i CalcMonitorLogicalSize(const s_platform_layer_info &pli) {
-        const auto monitor = MonitorOfWindow(pli.glfw_window);
+    s_v2_i CalcMonitorLogicalSize() {
+        ZF_ASSERT(g_state.initted);
+
+        const auto monitor = FindMonitorOfWindow(g_state.glfw_window);
 
         if (!monitor) {
             return {};
@@ -401,31 +417,33 @@ namespace zf {
         };
     }
 
-    void SetFullscreen(s_platform_layer_info &pli, const t_b8 fs) {
-        if (fs == pli.fullscreen_active) {
+    void SetFullscreen(const t_b8 fs) {
+        ZF_ASSERT(g_state.initted);
+
+        if (fs == g_state.fullscreen_active) {
             return;
         }
 
         if (fs) {
-            glfwGetWindowPos(pli.glfw_window, &pli.prefullscreen_pos.x, &pli.prefullscreen_pos.y);
-            glfwGetWindowSize(pli.glfw_window, &pli.prefullscreen_size.x, &pli.prefullscreen_size.y);
+            glfwGetWindowPos(g_state.glfw_window, &g_state.prefullscreen_pos.x, &g_state.prefullscreen_pos.y);
+            glfwGetWindowSize(g_state.glfw_window, &g_state.prefullscreen_size.x, &g_state.prefullscreen_size.y);
 
-            const auto monitor = MonitorOfWindow(pli.glfw_window);
+            const auto monitor = FindMonitorOfWindow(g_state.glfw_window);
 
             if (!monitor) {
                 return;
             }
 
             const s_ptr<const GLFWvidmode> mode = glfwGetVideoMode(monitor);
-            glfwSetWindowMonitor(pli.glfw_window, monitor, 0, 0, mode->width, mode->height, 0);
+            glfwSetWindowMonitor(g_state.glfw_window, monitor, 0, 0, mode->width, mode->height, 0);
         } else {
-            glfwSetWindowMonitor(pli.glfw_window, nullptr, pli.prefullscreen_pos.x, pli.prefullscreen_pos.y, pli.prefullscreen_size.x, pli.prefullscreen_size.y, 0);
+            glfwSetWindowMonitor(g_state.glfw_window, nullptr, g_state.prefullscreen_pos.x, g_state.prefullscreen_pos.y, g_state.prefullscreen_size.x, g_state.prefullscreen_size.y, 0);
         }
 
-        pli.fullscreen_active = fs;
+        g_state.fullscreen_active = fs;
     }
 
-    void SetCursorVisibility(const s_platform_layer_info &pli, const t_b8 visible) {
-        glfwSetInputMode(pli.glfw_window, GLFW_CURSOR, visible ? GLFW_CURSOR_NORMAL : GLFW_CURSOR_HIDDEN);
+    void SetCursorVisibility(const t_b8 visible) {
+        glfwSetInputMode(g_state.glfw_window, GLFW_CURSOR, visible ? GLFW_CURSOR_NORMAL : GLFW_CURSOR_HIDDEN);
     }
 }
