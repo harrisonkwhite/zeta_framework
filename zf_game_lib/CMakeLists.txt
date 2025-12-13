@@ -27,9 +27,6 @@ target_link_libraries(zf_game_lib PUBLIC
 
 target_link_libraries(zf_game_lib PRIVATE
     glfw
-    bgfx
-    bx
-    bimg
 )
 
 target_compile_definitions(zf_game_lib PRIVATE

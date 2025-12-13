@@ -6,24 +6,23 @@ namespace zf::platform {
     // ============================================================
     // @section: General
     // ============================================================
-    [[nodiscard]] t_b8 Init(const s_v2_i init_window_size);
-    void Shutdown();
 
     // Gives the time in seconds since the platform module was initialised.
     t_f64 Time();
 
-    void PollOSEvents();
+    namespace internal {
+        [[nodiscard]] t_b8 Init(const s_v2_i init_window_size);
+        void Shutdown();
+
+        using t_get_gl_proc_addr_func = void (*)(const char *const name);
+        t_get_gl_proc_addr_func GetGLProcAddrFunc();
+
+        void PollOSEvents();
+    }
 
     // ============================================================
     // @section: Display
     // ============================================================
-    void *NativeWindowHandle();
-
-    void *NativeDisplayHandle();
-
-    void ShowWindow();
-
-    t_b8 ShouldWindowClose();
 
     // Returns true iff the operation succeeded.
     [[nodiscard]] t_b8 SetWindowTitle(const s_str_rdonly title, s_mem_arena &temp_mem_arena);
@@ -49,6 +48,13 @@ namespace zf::platform {
 
     inline void ToggleFullscreen() {
         SetFullscreen(!IsFullscreen());
+    }
+
+    namespace internal {
+        void *NativeWindowHandle();
+        void *NativeDisplayHandle();
+        void ShowWindow();
+        t_b8 ShouldWindowClose();
     }
 
     // ============================================================
@@ -151,5 +157,7 @@ namespace zf::platform {
     // +X: Scroll left
     s_v2 ScrollOffset();
 
-    void ClearInputEvents();
+    namespace internal {
+        void ClearInputEvents();
+    }
 }

@@ -48,15 +48,15 @@ namespace zf::platform {
 
     static s_ptr<GLFWmonitor> FindGLFWMonitorOfWindow(const s_ptr<GLFWwindow> window);
 
-    static void GLFWKeyCallback(GLFWwindow *const window, const t_i32 key, const t_i32 scancode, const t_i32 act, const t_i32 mods);
-    static void GLFWMouseButtonCallback(GLFWwindow *const window, const t_i32 btn, const t_i32 act, const t_i32 mods);
-    static void GLFWCursorPosCallback(GLFWwindow *const window, const t_f64 x, const t_f64 y);
-    static void GLFWScrollCallback(GLFWwindow *const window, const t_f64 offs_x, const t_f64 offs_y);
+    static void GLFWKeyCallback(GLFWwindow *window, int key, int scancode, int act, int mods);
+    static void GLFWMouseButtonCallback(GLFWwindow *window, int btn, int act, int mods);
+    static void GLFWCursorPosCallback(GLFWwindow *window, double x, double y);
+    static void GLFWScrollCallback(GLFWwindow *window, double offs_x, double offs_y);
 
     // ============================================================
     // @section: General
     // ============================================================
-    t_b8 Init(const s_v2_i init_window_size) {
+    t_b8 internal::Init(const s_v2_i init_window_size) {
         ZF_ASSERT(!g_state.initted);
         ZF_ASSERT(init_window_size.x > 0 && init_window_size.y > 0);
 
@@ -101,7 +101,7 @@ namespace zf::platform {
 
         {
             const auto fb_size_callback =
-                [](GLFWwindow *const glfw_window, const t_i32 width, const t_i32 height) {
+                [](GLFWwindow *glfw_window, int width, int height) {
                     if (width > 0 && height > 0) {
                         g_state.framebuffer_size_cache = {width, height};
                     }
@@ -127,6 +127,9 @@ namespace zf::platform {
         glfwTerminate();
         g_state = {};
     }
+
+    using t_get_gl_proc_addr_func = void (*)(const char *const name);
+    t_get_gl_proc_addr_func GetGLProcAddrFunc();
 
     t_f64 Time() {
         ZF_ASSERT(g_state.initted);
@@ -405,7 +408,7 @@ namespace zf::platform {
         }
     }
 
-    static void GLFWKeyCallback(GLFWwindow *const window, const t_i32 key, const t_i32 scancode, const t_i32 act, const t_i32 mods) {
+    static void GLFWKeyCallback(GLFWwindow *window, int key, int scancode, int act, int mods) {
         const auto kc = ConvertGLFWKeyCode(key);
 
         switch (act) {
@@ -434,7 +437,7 @@ namespace zf::platform {
         }
     }
 
-    static void GLFWMouseButtonCallback(GLFWwindow *const window, const t_i32 btn, const t_i32 act, const t_i32 mods) {
+    static void GLFWMouseButtonCallback(GLFWwindow *window, int btn, int act, int mods) {
         const auto mbc = ConvertGLFWMouseButton(btn);
 
         switch (act) {
@@ -450,14 +453,14 @@ namespace zf::platform {
         }
     }
 
-    static void GLFWCursorPosCallback(GLFWwindow *const window, const t_f64 x, const t_f64 y) {
+    static void GLFWCursorPosCallback(GLFWwindow *window, double x, double y) {
         g_state.input.cursor_pos = {
             static_cast<t_f32>(x),
             static_cast<t_f32>(y),
         };
     }
 
-    static void GLFWScrollCallback(GLFWwindow *const window, const t_f64 offs_x, const t_f64 offs_y) {
+    static void GLFWScrollCallback(GLFWwindow *window, double offs_x, double offs_y) {
         g_state.input.events.scroll += s_v2(static_cast<t_f32>(offs_x), static_cast<t_f32>(offs_y));
     }
 

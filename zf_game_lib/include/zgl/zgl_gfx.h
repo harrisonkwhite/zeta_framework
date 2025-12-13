@@ -8,6 +8,13 @@ namespace zf::gfx {
 
     void Shutdown();
 
+    struct s_render_instr {
+    };
+
+    enum e_render_instr {
+        clear,
+    };
+
 #if 0
     struct s_platform_layer_info;
     struct s_rendering_basis;

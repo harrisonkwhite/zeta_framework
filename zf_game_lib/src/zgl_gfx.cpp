@@ -1,32 +1,13 @@
 #include <zgl/zgl_gfx.h>
 
-#include <bgfx/bgfx.h>
 #include <zgl/zgl_platform.h>
 
 namespace zf::gfx {
     t_b8 Init() {
-        bgfx::Init init = {};
-        init.type = bgfx::RendererType::Count;
-
-        init.resolution.reset = BGFX_RESET_VSYNC;
-
-        const auto fb_size_cache = platform::WindowFramebufferSizeCache();
-        init.resolution.width = static_cast<uint32_t>(fb_size_cache.x);
-        init.resolution.height = static_cast<uint32_t>(fb_size_cache.y);
-
-        init.platformData.nwh = platform::NativeWindowHandle();
-        init.platformData.ndt = platform::NativeDisplayHandle();
-        init.platformData.type = bgfx::NativeWindowHandleType::Default;
-
-        if (!bgfx::init(init)) {
-            return false;
-        }
-
         return true;
     }
 
     void Shutdown() {
-        bgfx::shutdown();
     }
 
 #if 0
