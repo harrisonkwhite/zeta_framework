@@ -81,8 +81,11 @@ namespace zf {
         union {
             struct {
                 t_gl_id vert_arr_gl_id;
+
                 t_gl_id vert_buf_gl_id;
+
                 t_gl_id elem_buf_gl_id;
+                t_len elem_cnt;
             } mesh;
 
             struct {
@@ -139,7 +142,10 @@ namespace zf {
         return true;
     }
 
-    t_b8 CreateMesh(const s_array_rdonly<t_f32> verts, const s_array_rdonly<t_u16> elems, const s_array_rdonly<t_i32> vert_attr_lens, s_gfx_resource_arena &arena, s_ptr<s_gfx_resource> &o_mesh) {
+    t_b8 CreateMesh(const s_ptr<t_f32> verts, const t_len verts_len, const s_ptr<t_u16> elems, const t_len elems_len, const s_array_rdonly<t_i32> vert_attr_lens, s_gfx_resource_arena &arena, s_ptr<s_gfx_resource> &o_mesh) {
+        ZF_ASSERT((verts && verts_len > 0) || (!verts && verts_len == 0));
+        ZF_ASSERT((elems && elems_len > 0) || (!elems && elems_len == 0));
+
         if (!PushGFXResource(arena, o_mesh)) {
             return false;
         }
@@ -151,11 +157,13 @@ namespace zf {
 
         glGenBuffers(1, &o_mesh->Mesh().vert_buf_gl_id);
         glBindBuffer(GL_ARRAY_BUFFER, o_mesh->Mesh().vert_buf_gl_id);
-        glBufferData(GL_ARRAY_BUFFER, static_cast<GLsizeiptr>(verts.SizeInBytes()), verts.Ptr(), GL_STATIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, static_cast<GLsizeiptr>(ZF_SIZE_OF(t_f32) * verts_len), verts, GL_DYNAMIC_DRAW); // @todo: Make DYNAMIC customisable.
 
         glGenBuffers(1, &o_mesh->Mesh().elem_buf_gl_id);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, o_mesh->Mesh().elem_buf_gl_id);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, static_cast<GLsizeiptr>(elems.SizeInBytes()), elems.Ptr(), GL_STATIC_DRAW);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, static_cast<GLsizeiptr>(ZF_SIZE_OF(t_u16) * elems_len), elems, GL_STATIC_DRAW); // @todo: Make STATIC customisable.
+
+        o_mesh->Mesh().elem_cnt = elems_len;
 
         const t_len stride = [vert_attr_lens]() {
             t_len res = 0;
@@ -297,6 +305,8 @@ namespace zf {
         o_prog->type = ek_gfx_resource_type_shader_prog;
         o_prog->ShaderProg().gl_id = prog_gl_id;
 
+        static_assert(false, "Need to create hash map!");
+
         return true;
     }
 
@@ -345,21 +355,146 @@ namespace zf {
         instrs.Append(instr);
     }
 
-    void ExecRender(const s_array<s_render_instr> instrs) {
+    void SubmitShaderProgSet(s_list<s_render_instr> &instrs, const s_ptr<s_gfx_resource> prog) {
+        s_render_instr instr = {};
+        instr.type = ek_render_instr_type_shader_prog_set;
+        instr.ShaderProgSet().prog = prog;
+
+        instrs.Append(instr);
+    }
+
+    void SubmitShaderProgUniformSet(s_list<s_render_instr> &instrs, const s_str_rdonly name, const s_shader_prog_uniform_val &val) {
+        s_render_instr instr = {};
+        instr.type = ek_render_instr_type_shader_prog_uniform_set;
+        instr.ShaderProgUniformSet().name = name;
+        instr.ShaderProgUniformSet().val = val;
+
+        instrs.Append(instr);
+    }
+
+    void SubmitMeshUpdate(s_list<s_render_instr> &instrs, const s_ptr<s_gfx_resource> mesh, const s_array<t_f32> verts, const s_array<t_u16> elems) {
+        s_render_instr instr = {};
+        instr.type = ek_render_instr_type_mesh_update;
+        instr.MeshUpdate().mesh = mesh;
+        instr.MeshUpdate().verts = verts;
+        instr.MeshUpdate().elems = elems;
+
+        instrs.Append(instr);
+    }
+
+    void SubmitMeshDraw(s_list<s_render_instr> &instrs, const s_ptr<s_gfx_resource> mesh, const s_ptr<s_gfx_resource> tex) {
+        s_render_instr instr = {};
+        instr.type = ek_render_instr_type_mesh_draw;
+        instr.MeshDraw().mesh = mesh;
+        instr.MeshDraw().tex = tex;
+
+        instrs.Append(instr);
+    }
+
+    t_b8 ExecRender(const s_array<s_render_instr> instrs) {
         const auto fb_size_cache = platform::WindowFramebufferSizeCache();
         glViewport(0, 0, fb_size_cache.x, fb_size_cache.y);
+
+        s_ptr<s_gfx_resource> shader_prog_active = nullptr;
 
         for (t_len i = 0; i < instrs.Len(); i++) {
             const auto &instr = instrs[i];
 
             switch (instr.type) {
-            case ek_render_instr_type_clear:
+            case ek_render_instr_type_clear: {
                 const auto &col = instr.Clear().col;
                 glClearColor(col.R(), col.G(), col.B(), 1.0f);
                 glClear(GL_COLOR_BUFFER_BIT);
                 break;
             }
+
+            case ek_render_instr_type_shader_prog_set: {
+                shader_prog_active = instr.ShaderProgSet().prog;
+                glUseProgram(shader_prog_active->ShaderProg().gl_id);
+                break;
+            }
+
+            case ek_render_instr_type_shader_prog_uniform_set: {
+                ZF_ASSERT(shader_prog_active);
+
+                const auto &val = instr.ShaderProgUniformSet().val;
+
+                t_i32 loc;
+
+                if (!shader_prog_active->ShaderProg().uniform_names_to_locs.Get(instr.ShaderProgUniformSet().name, &loc)) {
+                    return false;
+                }
+
+                switch (val.Type()) {
+                case ek_shader_prog_uniform_val_type_i32:
+                    glUniform1i(loc, val.I32());
+                    break;
+
+                case ek_shader_prog_uniform_val_type_u32:
+                    glUniform1ui(loc, val.U32());
+                    break;
+
+                case ek_shader_prog_uniform_val_type_f32:
+                    glUniform1f(loc, val.F32());
+                    break;
+
+                case ek_shader_prog_uniform_val_type_v2:
+                    glUniform2f(loc, val.V2().x, val.V2().y);
+                    break;
+
+                case ek_shader_prog_uniform_val_type_v3:
+                    glUniform3f(loc, val.V3().x, val.V3().y, val.V3().z);
+                    break;
+
+                case ek_shader_prog_uniform_val_type_v4:
+                    glUniform4f(loc, val.V4().x, val.V4().y, val.V4().z, val.V4().w);
+                    break;
+
+                case ek_shader_prog_uniform_val_type_mat4x4:
+                    glUniformMatrix4fv(loc, 1, false, reinterpret_cast<const t_f32 *>(&val.Mat4x4()));
+                    break;
+                }
+
+                break;
+            }
+
+            case ek_render_instr_type_mesh_update: {
+                const auto &mu = instr.MeshUpdate();
+                glBindVertexArray(mu.mesh->Mesh().vert_arr_gl_id);
+
+                if (!mu.verts.IsEmpty()) {
+                    glBindBuffer(GL_ARRAY_BUFFER, mu.mesh->Mesh().vert_buf_gl_id);
+                    glBufferSubData(GL_ARRAY_BUFFER, 0, mu.verts.SizeInBytes(), mu.verts.Ptr());
+                }
+
+                if (!mu.elems.IsEmpty()) {
+                    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mu.mesh->Mesh().elem_buf_gl_id);
+                    glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, mu.elems.SizeInBytes(), mu.elems.Ptr());
+                }
+
+                break;
+            }
+
+            case ek_render_instr_type_mesh_draw: {
+                const auto &md = instr.MeshDraw();
+
+                if (md.tex) {
+                    glActiveTexture(GL_TEXTURE0);
+                    glBindTexture(GL_TEXTURE_2D, instr.MeshDraw().tex->Texture().gl_id);
+                }
+
+                glBindVertexArray(md.mesh->Mesh().vert_arr_gl_id);
+                glBindBuffer(GL_ARRAY_BUFFER, md.mesh->Mesh().vert_buf_gl_id);
+                glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, md.mesh->Mesh().elem_buf_gl_id);
+
+                glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(md.mesh->Mesh().elem_cnt), GL_UNSIGNED_SHORT, nullptr);
+
+                break;
+            }
+            }
         }
+
+        return true;
     }
 
 #if 0
@@ -436,31 +571,31 @@ namespace zf {
 
     static void Yeah() {
         switch (val.Type()) {
-        case ek_surface_shader_prog_uniform_val_type_i32:
+        case ek_shader_prog_uniform_val_type_i32:
             glUniform1i(loc, val.I32());
             break;
 
-        case ek_surface_shader_prog_uniform_val_type_u32:
+        case ek_shader_prog_uniform_val_type_u32:
             glUniform1ui(loc, val.U32());
             break;
 
-        case ek_surface_shader_prog_uniform_val_type_f32:
+        case ek_shader_prog_uniform_val_type_f32:
             glUniform1f(loc, val.F32());
             break;
 
-        case ek_surface_shader_prog_uniform_val_type_v2:
+        case ek_shader_prog_uniform_val_type_v2:
             glUniform2f(loc, val.V2().x, val.V2().y);
             break;
 
-        case ek_surface_shader_prog_uniform_val_type_v3:
+        case ek_shader_prog_uniform_val_type_v3:
             glUniform3f(loc, val.V3().x, val.V3().y, val.V3().z);
             break;
 
-        case ek_surface_shader_prog_uniform_val_type_v4:
+        case ek_shader_prog_uniform_val_type_v4:
             glUniform4f(loc, val.V4().x, val.V4().y, val.V4().z, val.V4().w);
             break;
 
-        case ek_surface_shader_prog_uniform_val_type_mat4x4:
+        case ek_shader_prog_uniform_val_type_mat4x4:
             glUniformMatrix4fv(loc, 1, false, reinterpret_cast<const t_f32 *>(&val.Mat4x4()));
             break;
         }
