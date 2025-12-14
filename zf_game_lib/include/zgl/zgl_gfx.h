@@ -33,19 +33,42 @@ namespace zf {
     // ============================================================
     // @section: Rendering
     // ============================================================
-    enum e_render_instr {
-        ek_render_instr_clear,
-        ek_render_instr_shader_prog_set,
-        ek_render_instr_shader_prog_uniform_set,
-        ek_render_instr_mesh_draw
+    enum e_render_instr_type {
+        ek_render_instr_type_invalid,
+        ek_render_instr_type_clear,
+        ek_render_instr_type_shader_prog_set,
+        ek_render_instr_type_shader_prog_uniform_set,
+        ek_render_instr_type_mesh_draw
     };
 
-    struct s_render_instr;
+    // @todo: If the list of these is wrapped in a struct, can bypass needing to use pointer and can also encapsulate this implementation within the module.
+    struct s_render_instr {
+    public:
+        e_render_instr_type type = ek_render_instr_type_invalid;
 
-    void SubmitClearInstr(s_list<s_render_instr> &instrs, const s_color_rgba32f col);
+        auto &Clear() {
+            ZF_ASSERT(type == ek_render_instr_type_clear);
+            return type_data.clear;
+        }
 
-    void SubmitSetShaderProgInstr(s_list<s_render_instr> &instrs, const s_gfx_resource *const prog);
+        auto &Clear() const {
+            ZF_ASSERT(type == ek_render_instr_type_clear);
+            return type_data.clear;
+        }
 
+    private:
+        union {
+            struct {
+                s_color_rgb24f col;
+            } clear;
+        } type_data = {};
+    };
+
+    void SubmitClear(s_list<s_render_instr> &instrs, const s_color_rgb24f col);
+
+    void ExecRender(const s_array<s_render_instr> instrs);
+
+#if 0
     enum e_shader_prog_uniform_val_type : t_i32 {
         ek_surface_shader_prog_uniform_val_type_i32,
         ek_surface_shader_prog_uniform_val_type_u32,
@@ -155,8 +178,7 @@ namespace zf {
     };
 
     void SubmitSetShaderProgUniformInstr(s_list<s_render_instr> &instrs, const e_shader_prog_uniform_val_type val_type, const s_shader_prog_uniform_val &val);
-
-    void ExecRender(const s_array<s_render_instr> instrs);
+#endif
 
 #if 0
     struct s_platform_layer_info;

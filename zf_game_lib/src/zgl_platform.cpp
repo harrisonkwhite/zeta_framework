@@ -149,6 +149,11 @@ namespace zf::platform {
         return glfwWindowShouldClose(g_state.glfw_window);
     }
 
+    void internal::SwapWindowBuffers() {
+        ZF_ASSERT(g_state.initted);
+        glfwSwapBuffers(g_state.glfw_window);
+    }
+
     t_b8 SetWindowTitle(const s_str_rdonly title, s_mem_arena &temp_mem_arena) {
         ZF_ASSERT(g_state.initted);
 

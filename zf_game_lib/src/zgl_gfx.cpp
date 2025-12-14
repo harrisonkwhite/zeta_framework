@@ -38,7 +38,7 @@ namespace zf {
                 t_gl_id gl_id;
             } texture;
         } type_data = {};
-    }; // she's a
+    };
 
     [[nodiscard]] static t_b8 PushResource(const s_resource_arena &arena, s_ptr<s_resource> &o_res) {
     }
@@ -65,7 +65,7 @@ namespace zf {
     // ============================================================
     struct s_gfx_resource {
     public:
-        e_gfx_resource_type type = {};
+        e_gfx_resource_type type = ek_gfx_resource_type_invalid;
         s_ptr<s_gfx_resource> next = nullptr;
 
         auto &Mesh() { return type_data.mesh; }
@@ -334,11 +334,36 @@ namespace zf {
         return gl_id;
     }
 
-#if 0
     // ============================================================
     // @section: Rendering
     // ============================================================
-struct s_render_instr {
+    void SubmitClear(s_list<s_render_instr> &instrs, const s_color_rgb24f col) {
+        s_render_instr instr = {};
+        instr.type = ek_render_instr_type_clear;
+        instr.Clear().col = col;
+
+        instrs.Append(instr);
+    }
+
+    void ExecRender(const s_array<s_render_instr> instrs) {
+        const auto fb_size_cache = platform::WindowFramebufferSizeCache();
+        glViewport(0, 0, fb_size_cache.x, fb_size_cache.y);
+
+        for (t_len i = 0; i < instrs.Len(); i++) {
+            const auto &instr = instrs[i];
+
+            switch (instr.type) {
+            case ek_render_instr_type_clear:
+                const auto &col = instr.Clear().col;
+                glClearColor(col.R(), col.G(), col.B(), 1.0f);
+                glClear(GL_COLOR_BUFFER_BIT);
+                break;
+            }
+        }
+    }
+
+#if 0
+    struct s_render_instr {
     public:
         e_render_instr Type() const {
             return type;

@@ -35,6 +35,10 @@ namespace zf {
             return m_len == m_backing_arr.Len();
         }
 
+        s_array<tp_type> ToArray() const {
+            return m_backing_arr.Slice(0, m_len);
+        }
+
         tp_type &operator[](const t_len index) const {
             ZF_ASSERT(index >= 0 && index < m_len);
             return m_backing_arr[index];
@@ -149,6 +153,10 @@ namespace zf {
 
         t_b8 IsFull() const {
             return m_height == m_backing_arr.Len();
+        }
+
+        s_array<tp_type> ToArray() const {
+            return m_backing_arr.Slice(0, m_height);
         }
 
         tp_type &operator[](const t_len index) const {

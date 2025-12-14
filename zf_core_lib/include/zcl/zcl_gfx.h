@@ -88,8 +88,32 @@ namespace zf {
         t_u8 b = 0;
         t_u8 a = 0;
 
+        constexpr s_color_rgba8() = default;
+        constexpr s_color_rgba8(const t_u8 r, const t_u8 g, const t_u8 b, const t_u8 a) : r(r), g(g), b(b), a(a) {}
+
         constexpr operator s_color_rgba32f() const {
             return {r / 255.0f, g / 255.0f, b / 255.0f, a / 255.0f};
+        }
+    };
+
+    struct s_color_rgb8 {
+        t_u8 r = 0;
+        t_u8 g = 0;
+        t_u8 b = 0;
+
+        constexpr s_color_rgb8() = default;
+        constexpr s_color_rgb8(const t_u8 r, const t_u8 g, const t_u8 b) : r(r), g(g), b(b) {}
+
+        constexpr operator s_color_rgba8() const {
+            return {r, g, b, 255};
+        }
+
+        constexpr operator s_color_rgb24f() const {
+            return {r / 255.0f, g / 255.0f, b / 255.0f};
+        }
+
+        constexpr operator s_color_rgba32f() const {
+            return {r / 255.0f, g / 255.0f, b / 255.0f, 1.0f};
         }
     };
 

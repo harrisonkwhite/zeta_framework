@@ -45,12 +45,12 @@ namespace zf {
 
             ZF_DEFER({ platform::internal::Shutdown(); });
 
-            if (!gfx::Init()) {
+            if (!InitGFX()) {
                 ZF_REPORT_ERROR();
                 return false;
             }
 
-            ZF_DEFER({ gfx::Shutdown(); });
+            ZF_DEFER({ ShutdownGFX(); });
 
             s_ptr<s_audio_sys> audio_sys = nullptr;
 
@@ -122,6 +122,19 @@ namespace zf {
 
                         frame_dur_accum -= targ_tick_interval;
                     } while (frame_dur_accum >= targ_tick_interval);
+
+                    s_list<s_render_instr> render_instrs;
+
+                    if (!CreateList(5, temp_mem_arena, render_instrs)) {
+                        ZF_REPORT_ERROR();
+                        return false;
+                    }
+
+                    SubmitClear(render_instrs, s_color_rgb8(255, 0, 0));
+
+                    ExecRender(render_instrs.ToArray());
+
+                    platform::internal::SwapWindowBuffers();
 
                     // Perform a single render.
 #if 0

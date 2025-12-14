@@ -57,10 +57,9 @@ namespace zf::platform {
     }
 
     namespace internal {
-        void *NativeWindowHandle();
-        void *NativeDisplayHandle();
         void ShowWindow();
         t_b8 ShouldWindowClose();
+        void SwapWindowBuffers();
     }
 
     // ============================================================
