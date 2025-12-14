@@ -2,18 +2,151 @@
 
 #include <zcl.h>
 
-namespace zf::gfx {
+namespace zf {
     // Initialises the GFX module. This depends on the platform module being successfully initialised.
-    [[nodiscard]] t_b8 Init();
+    [[nodiscard]] t_b8 InitGFX();
 
-    void Shutdown();
+    void ShutdownGFX();
 
-    struct s_render_instr {
+    // ============================================================
+    // @section: Resources
+    // ============================================================
+    enum e_gfx_resource_type {
+        ek_gfx_resource_type_mesh,
+        ek_gfx_resource_type_shader_prog,
+        ek_gfx_resource_type_texture
     };
 
+    struct s_gfx_resource;
+
+    // ============================================================
+    // @section: Rendering
+    // ============================================================
     enum e_render_instr {
-        clear,
+        ek_render_instr_clear,
+        ek_render_instr_set_shader_prog,
+        ek_render_instr_set_shader_prog_uniform,
+        ek_render_instr_set_texture,
+        ek_render_instr_draw_mesh
     };
+
+    struct s_render_instr;
+
+    void SubmitClearInstr(s_list<s_render_instr> &instrs, const s_color_rgba32f col);
+
+    void SubmitSetShaderProgInstr(s_list<s_render_instr> &instrs, const s_gfx_resource *const prog);
+
+    enum e_shader_prog_uniform_val_type : t_i32 {
+        ek_surface_shader_prog_uniform_val_type_i32,
+        ek_surface_shader_prog_uniform_val_type_u32,
+        ek_surface_shader_prog_uniform_val_type_f32,
+        ek_surface_shader_prog_uniform_val_type_v2,
+        ek_surface_shader_prog_uniform_val_type_v3,
+        ek_surface_shader_prog_uniform_val_type_v4,
+        ek_surface_shader_prog_uniform_val_type_mat4x4
+    };
+
+    struct s_shader_prog_uniform_val {
+    public:
+        constexpr s_shader_prog_uniform_val(const t_i32 v) : m_type(ek_surface_shader_prog_uniform_val_type_i32), m_type_data({.i32 = v}) {};
+        constexpr s_shader_prog_uniform_val(const t_u32 v) : m_type(ek_surface_shader_prog_uniform_val_type_u32), m_type_data({.u32 = v}) {};
+        constexpr s_shader_prog_uniform_val(const t_f32 v) : m_type(ek_surface_shader_prog_uniform_val_type_f32), m_type_data({.f32 = v}) {};
+        constexpr s_shader_prog_uniform_val(const s_v2 v) : m_type(ek_surface_shader_prog_uniform_val_type_v2), m_type_data({.v2 = v}) {};
+        constexpr s_shader_prog_uniform_val(const s_v3 v) : m_type(ek_surface_shader_prog_uniform_val_type_v3), m_type_data({.v3 = v}) {};
+        constexpr s_shader_prog_uniform_val(const s_v4 v) : m_type(ek_surface_shader_prog_uniform_val_type_v4), m_type_data({.v4 = v}) {};
+        constexpr s_shader_prog_uniform_val(const s_mat4x4 &v) : m_type(ek_surface_shader_prog_uniform_val_type_mat4x4), m_type_data({.mat4x4 = v}) {};
+
+        constexpr e_shader_prog_uniform_val_type Type() const {
+            return m_type;
+        }
+
+        constexpr t_i32 &I32() {
+            ZF_ASSERT(m_type == ek_surface_shader_prog_uniform_val_type_i32);
+            return m_type_data.i32;
+        }
+
+        constexpr const t_i32 &I32() const {
+            ZF_ASSERT(m_type == ek_surface_shader_prog_uniform_val_type_i32);
+            return m_type_data.i32;
+        }
+
+        constexpr t_u32 &U32() {
+            ZF_ASSERT(m_type == ek_surface_shader_prog_uniform_val_type_u32);
+            return m_type_data.u32;
+        }
+
+        constexpr const t_u32 &U32() const {
+            ZF_ASSERT(m_type == ek_surface_shader_prog_uniform_val_type_u32);
+            return m_type_data.u32;
+        }
+
+        constexpr t_f32 &F32() {
+            ZF_ASSERT(m_type == ek_surface_shader_prog_uniform_val_type_f32);
+            return m_type_data.f32;
+        }
+
+        constexpr const t_f32 &F32() const {
+            ZF_ASSERT(m_type == ek_surface_shader_prog_uniform_val_type_f32);
+            return m_type_data.f32;
+        }
+
+        constexpr s_v2 &V2() {
+            ZF_ASSERT(m_type == ek_surface_shader_prog_uniform_val_type_v2);
+            return m_type_data.v2;
+        }
+
+        constexpr const s_v2 &V2() const {
+            ZF_ASSERT(m_type == ek_surface_shader_prog_uniform_val_type_v2);
+            return m_type_data.v2;
+        }
+
+        constexpr s_v3 &V3() {
+            ZF_ASSERT(m_type == ek_surface_shader_prog_uniform_val_type_v3);
+            return m_type_data.v3;
+        }
+
+        constexpr const s_v3 &V3() const {
+            ZF_ASSERT(m_type == ek_surface_shader_prog_uniform_val_type_v3);
+            return m_type_data.v3;
+        }
+
+        constexpr s_v4 &V4() {
+            ZF_ASSERT(m_type == ek_surface_shader_prog_uniform_val_type_v4);
+            return m_type_data.v4;
+        }
+
+        constexpr const s_v4 &V4() const {
+            ZF_ASSERT(m_type == ek_surface_shader_prog_uniform_val_type_v4);
+            return m_type_data.v4;
+        }
+
+        constexpr s_mat4x4 &Mat4x4() {
+            ZF_ASSERT(m_type == ek_surface_shader_prog_uniform_val_type_mat4x4);
+            return m_type_data.mat4x4;
+        }
+
+        constexpr const s_mat4x4 &Mat4x4() const {
+            ZF_ASSERT(m_type == ek_surface_shader_prog_uniform_val_type_mat4x4);
+            return m_type_data.mat4x4;
+        }
+
+    private:
+        e_shader_prog_uniform_val_type m_type = {};
+
+        union {
+            t_i32 i32;
+            t_u32 u32;
+            t_f32 f32;
+            s_v2 v2;
+            s_v3 v3;
+            s_v4 v4;
+            s_mat4x4 mat4x4;
+        } m_type_data = {};
+    };
+
+    void SubmitSetShaderProgUniformInstr(s_list<s_render_instr> &instrs, const e_shader_prog_uniform_val_type val_type, const s_shader_prog_uniform_val &val);
+
+    void ExecRender(const s_array<s_render_instr> instrs);
 
 #if 0
     struct s_platform_layer_info;

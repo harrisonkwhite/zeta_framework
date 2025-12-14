@@ -122,6 +122,7 @@ namespace zf::platform {
     }
 
     internal::t_get_gl_proc_addr_func internal::GetGLProcAddrFunc() {
+        ZF_ASSERT(g_state.initted);
         return reinterpret_cast<t_get_gl_proc_addr_func>(glfwGetProcAddress);
     }
 

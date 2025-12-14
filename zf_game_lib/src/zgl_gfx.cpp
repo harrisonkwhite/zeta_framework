@@ -3,16 +3,131 @@
 #include <glad/glad.h>
 #include <zgl/zgl_platform.h>
 
-namespace zf::gfx {
-    t_b8 Init() {
+namespace zf {
+    using t_gl_id = GLuint;
+
+    struct s_gfx_resource {
+    public:
+        auto &Mesh() { return type_data.mesh; }
+        auto &Mesh() const { return type_data.mesh; }
+
+        auto &ShaderProg() { return type_data.shader_prog; }
+        auto &ShaderProg() const { return type_data.shader_prog; }
+
+        auto &Texture() { return type_data.texture; }
+        auto &Texture() const { return type_data.texture; }
+
+    private:
+        union {
+            struct {
+                t_gl_id vert_arr_gl_id;
+                t_gl_id vert_buf_gl_id;
+                t_gl_id elem_buf_gl_id;
+            } mesh;
+
+            struct {
+                t_gl_id gl_id;
+            } shader_prog;
+
+            struct {
+                t_gl_id gl_id;
+            } texture;
+        } type_data = {};
+    };
+
+    struct s_render_instr {
+    public:
+    private:
+        e_render_instr type = {};
+
+        union {
+            struct {
+                s_color_rgb24f col;
+            } clear;
+
+            struct {
+                s_gfx_resource *prog;
+            } set_shader_prog;
+
+            struct {
+                s_gfx_resource *prog;
+            } set_shader_prog_uniform;
+
+            struct {
+                s_gfx_resource *tex;
+            } set_texture;
+        } type_data = {};
+    };
+
+#if 0
+    [[nodiscard]] static t_b8 PushResource(const s_resource_arena &arena, s_ptr<s_resource> &o_res) {
+    }
+
+    // @todo: Discriminated union but just store the vertex buffer handle in here.
+    struct s_render_instr {
+    };
+#endif
+
+#if 0
+    struct s_resource {
+    public:
+        auto &Mesh() const {
+            return type_data.mesh;
+        }
+
+    private:
+        union {
+            struct {
+                t_gl_id vert_arr_gl_id;
+                t_gl_id vert_buf_gl_id;
+                t_gl_id elem_buf_gl_id;
+            } mesh;
+
+            struct {
+                t_gl_id gl_id;
+            } shader_prog;
+
+            struct {
+                t_gl_id gl_id;
+            } texture;
+        } type_data = {};
+    };
+
+    [[nodiscard]] static t_b8 PushResource(const s_resource_arena &arena, s_ptr<s_resource> &o_res) {
+    }
+#endif
+
+    t_b8 InitGFX() {
+        // Load OpenGL function pointers.
         if (!gladLoadGLLoader(reinterpret_cast<GLADloadproc>(platform::internal::GetGLProcAddrFunc()))) {
             return false;
         }
 
+        // Enable blending.
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
         return true;
     }
 
-    void Shutdown() {
+    void ShutdownGFX() {
+    }
+
+    void SubmitClear(s_list<s_render_instr> &instrs, const s_color_rgba32f col) {
+    }
+
+    void ExecRender(const s_array_rdonly<s_render_instr> instrs) {
+        for (t_len i = 0; i < instrs.Len(); i++) {
+            const auto &instr = instrs[i];
+
+            switch (instr.Type()) {
+            case ek_render_instr_clear:
+                glClearColor(col.R(), col.G(), col.B(), col.A());
+                glClear(GL_COLOR_BUFFER_BIT);
+            }
+        }
+#if 0
+#endif
     }
 
 #if 0
