@@ -12,6 +12,7 @@ namespace zf {
     // @section: Resources
     // ============================================================
     enum e_gfx_resource_type {
+        ek_gfx_resource_type_invalid,
         ek_gfx_resource_type_mesh,
         ek_gfx_resource_type_shader_prog,
         ek_gfx_resource_type_texture
@@ -19,15 +20,24 @@ namespace zf {
 
     struct s_gfx_resource;
 
+    struct s_gfx_resource_arena {
+        s_ptr<s_mem_arena> mem_arena = nullptr;
+        s_ptr<s_gfx_resource> head = nullptr;
+        s_ptr<s_gfx_resource> tail = nullptr;
+    };
+
+    [[nodiscard]] t_b8 CreateMesh(const s_array_rdonly<t_f32> verts, const s_array_rdonly<t_u16> elems, const s_array_rdonly<t_i32> vert_attr_lens, s_gfx_resource_arena &arena, s_ptr<s_gfx_resource> &o_mesh);
+    [[nodiscard]] t_b8 CreateShaderProg(const s_str_rdonly vert_src, const s_str_rdonly frag_src, s_gfx_resource_arena &res_arena, s_mem_arena &temp_mem_arena, s_ptr<s_gfx_resource> &o_prog);
+    [[nodiscard]] t_b8 CreateTexture(const s_texture_data_rdonly tex_data, s_gfx_resource_arena &arena, s_ptr<s_gfx_resource> &o_tex);
+
     // ============================================================
     // @section: Rendering
     // ============================================================
     enum e_render_instr {
         ek_render_instr_clear,
-        ek_render_instr_set_shader_prog,
-        ek_render_instr_set_shader_prog_uniform,
-        ek_render_instr_set_texture,
-        ek_render_instr_draw_mesh
+        ek_render_instr_shader_prog_set,
+        ek_render_instr_shader_prog_uniform_set,
+        ek_render_instr_mesh_draw
     };
 
     struct s_render_instr;

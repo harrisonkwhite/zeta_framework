@@ -6,59 +6,6 @@
 namespace zf {
     using t_gl_id = GLuint;
 
-    struct s_gfx_resource {
-    public:
-        auto &Mesh() { return type_data.mesh; }
-        auto &Mesh() const { return type_data.mesh; }
-
-        auto &ShaderProg() { return type_data.shader_prog; }
-        auto &ShaderProg() const { return type_data.shader_prog; }
-
-        auto &Texture() { return type_data.texture; }
-        auto &Texture() const { return type_data.texture; }
-
-    private:
-        union {
-            struct {
-                t_gl_id vert_arr_gl_id;
-                t_gl_id vert_buf_gl_id;
-                t_gl_id elem_buf_gl_id;
-            } mesh;
-
-            struct {
-                t_gl_id gl_id;
-            } shader_prog;
-
-            struct {
-                t_gl_id gl_id;
-            } texture;
-        } type_data = {};
-    };
-
-    struct s_render_instr {
-    public:
-    private:
-        e_render_instr type = {};
-
-        union {
-            struct {
-                s_color_rgb24f col;
-            } clear;
-
-            struct {
-                s_gfx_resource *prog;
-            } set_shader_prog;
-
-            struct {
-                s_gfx_resource *prog;
-            } set_shader_prog_uniform;
-
-            struct {
-                s_gfx_resource *tex;
-            } set_texture;
-        } type_data = {};
-    };
-
 #if 0
     [[nodiscard]] static t_b8 PushResource(const s_resource_arena &arena, s_ptr<s_resource> &o_res) {
     }
@@ -91,7 +38,7 @@ namespace zf {
                 t_gl_id gl_id;
             } texture;
         } type_data = {};
-    };
+    }; // she's a
 
     [[nodiscard]] static t_b8 PushResource(const s_resource_arena &arena, s_ptr<s_resource> &o_res) {
     }
@@ -113,7 +60,385 @@ namespace zf {
     void ShutdownGFX() {
     }
 
+    // ============================================================
+    // @section: Resources
+    // ============================================================
+    struct s_gfx_resource {
+    public:
+        e_gfx_resource_type type = {};
+        s_ptr<s_gfx_resource> next = nullptr;
+
+        auto &Mesh() { return type_data.mesh; }
+        auto &Mesh() const { return type_data.mesh; }
+
+        auto &ShaderProg() { return type_data.shader_prog; }
+        auto &ShaderProg() const { return type_data.shader_prog; }
+
+        auto &Texture() { return type_data.texture; }
+        auto &Texture() const { return type_data.texture; }
+
+    private:
+        union {
+            struct {
+                t_gl_id vert_arr_gl_id;
+                t_gl_id vert_buf_gl_id;
+                t_gl_id elem_buf_gl_id;
+            } mesh;
+
+            struct {
+                t_gl_id gl_id;
+                s_hash_map<s_str_rdonly, t_i32> uniform_names_to_locs;
+            } shader_prog;
+
+            struct {
+                t_gl_id gl_id;
+                s_v2_i size;
+            } texture;
+        } type_data = {};
+    };
+
+    void DestroyGFXResources(const s_gfx_resource_arena arena) {
+        auto res = arena.head;
+
+        while (res) {
+            switch (res->type) {
+            case ek_gfx_resource_type_mesh:
+                glDeleteBuffers(1, &res->Mesh().elem_buf_gl_id);
+                glDeleteBuffers(1, &res->Mesh().vert_buf_gl_id);
+                glDeleteVertexArrays(1, &res->Mesh().vert_arr_gl_id);
+                break;
+
+            case ek_gfx_resource_type_shader_prog:
+                glDeleteProgram(res->ShaderProg().gl_id);
+                break;
+
+            case ek_gfx_resource_type_texture:
+                glDeleteTextures(1, &res->Texture().gl_id);
+                break;
+            }
+
+            res = res->next;
+        }
+    }
+
+    [[nodiscard]] static t_b8 PushGFXResource(s_gfx_resource_arena &arena, s_ptr<s_gfx_resource> &o_res) {
+        o_res = Alloc<s_gfx_resource>(*arena.mem_arena);
+
+        if (!o_res) {
+            return false;
+        }
+
+        if (!arena.head) {
+            arena.head = o_res;
+            arena.tail = o_res;
+        } else {
+            arena.tail->next = o_res;
+            arena.tail = o_res;
+        }
+
+        return true;
+    }
+
+    t_b8 CreateMesh(const s_array_rdonly<t_f32> verts, const s_array_rdonly<t_u16> elems, const s_array_rdonly<t_i32> vert_attr_lens, s_gfx_resource_arena &arena, s_ptr<s_gfx_resource> &o_mesh) {
+        if (!PushGFXResource(arena, o_mesh)) {
+            return false;
+        }
+
+        o_mesh->type = ek_gfx_resource_type_mesh;
+
+        glGenVertexArrays(1, &o_mesh->Mesh().vert_arr_gl_id);
+        glBindVertexArray(o_mesh->Mesh().vert_arr_gl_id);
+
+        glGenBuffers(1, &o_mesh->Mesh().vert_buf_gl_id);
+        glBindBuffer(GL_ARRAY_BUFFER, o_mesh->Mesh().vert_buf_gl_id);
+        glBufferData(GL_ARRAY_BUFFER, static_cast<GLsizeiptr>(verts.SizeInBytes()), verts.Ptr(), GL_STATIC_DRAW);
+
+        glGenBuffers(1, &o_mesh->Mesh().elem_buf_gl_id);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, o_mesh->Mesh().elem_buf_gl_id);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, static_cast<GLsizeiptr>(elems.SizeInBytes()), elems.Ptr(), GL_STATIC_DRAW);
+
+        const t_len stride = [vert_attr_lens]() {
+            t_len res = 0;
+
+            for (t_len i = 0; i < vert_attr_lens.Len(); i++) {
+                res += ZF_SIZE_OF(t_f32) * static_cast<t_len>(vert_attr_lens[i]);
+            }
+
+            return res;
+        }();
+
+        t_i32 offs = 0;
+
+        for (t_len i = 0; i < vert_attr_lens.Len(); i++) {
+            const t_i32 attr_len = vert_attr_lens[i];
+
+            glVertexAttribPointer(static_cast<GLuint>(i), attr_len, GL_FLOAT, false, static_cast<GLsizei>(stride), reinterpret_cast<void *>(ZF_SIZE_OF(t_f32) * offs));
+            glEnableVertexAttribArray(static_cast<GLuint>(i));
+
+            offs += attr_len;
+        }
+
+        glBindVertexArray(0);
+
+        return true;
+    }
+
+    t_b8 CreateShaderProg(const s_str_rdonly vert_src, const s_str_rdonly frag_src, s_gfx_resource_arena &res_arena, s_mem_arena &temp_mem_arena, s_ptr<s_gfx_resource> &o_prog) {
+        s_str vert_src_terminated = {};
+        s_str frag_src_terminated = {};
+
+        if (!AllocStrCloneWithTerminator(vert_src, temp_mem_arena, vert_src_terminated)
+            || !AllocStrCloneWithTerminator(frag_src, temp_mem_arena, frag_src_terminated)) {
+            return false;
+        }
+
+        //
+        // Shader Creation
+        //
+        const auto create_shader = [&temp_mem_arena](const s_str_rdonly src, const t_b8 is_frag) -> t_gl_id {
+            const t_gl_id shader_gl_id = glCreateShader(is_frag ? GL_FRAGMENT_SHADER : GL_VERTEX_SHADER);
+
+            const auto src_raw = src.Cstr();
+            glShaderSource(shader_gl_id, 1, &src_raw, nullptr);
+
+            glCompileShader(shader_gl_id);
+
+            t_i32 success = 0;
+            glGetShaderiv(shader_gl_id, GL_COMPILE_STATUS, &success);
+
+            if (!success) {
+                ZF_DEFER({ glDeleteShader(shader_gl_id); });
+
+                // Try getting the OpenGL compile error message.
+                t_i32 log_chr_cnt = 0;
+                glGetShaderiv(shader_gl_id, GL_INFO_LOG_LENGTH, &log_chr_cnt);
+
+                if (log_chr_cnt > 1) {
+                    s_array<char> log_chrs = {};
+
+                    if (AllocArray(log_chr_cnt, temp_mem_arena, log_chrs)) {
+                        glGetShaderInfoLog(shader_gl_id, static_cast<GLsizei>(log_chrs.Len()), nullptr, log_chrs.Ptr());
+                        LogErrorType(s_cstr_literal("OpenGL Shader Compilation"), s_cstr_literal("%"), FormatStr({log_chrs.ToBytes()}));
+                    } else {
+                        ZF_REPORT_ERROR();
+                    }
+                } else {
+                    LogError(s_cstr_literal("OpenGL shader compilation failed, but no error message available!"));
+                }
+
+                return 0;
+            }
+
+            return shader_gl_id;
+        };
+
+        const t_gl_id vert_gl_id = create_shader(vert_src_terminated, false);
+
+        if (!vert_gl_id) {
+            return false;
+        }
+
+        ZF_DEFER({ glDeleteShader(vert_gl_id); });
+
+        const t_gl_id frag_gl_id = create_shader(frag_src_terminated, true);
+
+        if (!frag_gl_id) {
+            return false;
+        }
+
+        ZF_DEFER({ glDeleteShader(frag_gl_id); });
+
+        //
+        // Program Creation
+        //
+        const t_gl_id prog_gl_id = glCreateProgram();
+
+        if (!prog_gl_id) {
+            return false;
+        }
+
+        glAttachShader(prog_gl_id, vert_gl_id);
+        glAttachShader(prog_gl_id, frag_gl_id);
+
+        glLinkProgram(prog_gl_id);
+
+        // Check link result.
+        t_i32 link_status = 0;
+        glGetProgramiv(prog_gl_id, GL_LINK_STATUS, &link_status);
+
+        if (!link_status) {
+            // Linking failed, try getting an error log.
+            t_i32 log_chr_cnt = 0;
+            glGetProgramiv(prog_gl_id, GL_INFO_LOG_LENGTH, &log_chr_cnt);
+
+            if (log_chr_cnt > 1) {
+                s_array<char> log_chrs = {};
+
+                if (AllocArray(log_chr_cnt, temp_mem_arena, log_chrs)) {
+                    glGetProgramInfoLog(prog_gl_id, static_cast<GLsizei>(log_chrs.Len()), nullptr, log_chrs.Ptr());
+                    LogErrorType(s_cstr_literal("OpenGL Program Link"), s_cstr_literal("%"), FormatStr({log_chrs.ToBytes()}));
+                } else {
+                    ZF_REPORT_ERROR();
+                }
+            } else {
+                LogError(s_cstr_literal("OpenGL program link failed, but no error message available!"));
+            }
+
+            glDeleteProgram(prog_gl_id);
+
+            return false;
+        }
+
+        if (!PushGFXResource(res_arena, o_prog)) {
+            glDeleteProgram(prog_gl_id);
+            return false;
+        }
+
+        o_prog->type = ek_gfx_resource_type_shader_prog;
+        o_prog->ShaderProg().gl_id = prog_gl_id;
+
+        return true;
+    }
+
+    t_b8 CreateTexture(const s_texture_data_rdonly tex_data, s_gfx_resource_arena &arena, s_ptr<s_gfx_resource> &o_tex) {
+        const auto tex_size_limit = []() -> s_v2_i {
+            t_i32 size;
+            glGetIntegerv(GL_MAX_TEXTURE_SIZE, &size);
+            return {size, size};
+        }();
+
+        if (tex_data.SizeInPixels().x > tex_size_limit.x || tex_data.SizeInPixels().y > tex_size_limit.y) {
+            LogError(s_cstr_literal("Texture size % exceeds limits %!"), tex_data.SizeInPixels(), tex_size_limit);
+            ZF_REPORT_ERROR();
+            return 0;
+        }
+
+        t_gl_id gl_id;
+        glGenTextures(1, &gl_id);
+
+        glBindTexture(GL_TEXTURE_2D, gl_id);
+
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, tex_data.SizeInPixels().x, tex_data.SizeInPixels().y, 0, GL_RGBA, GL_UNSIGNED_BYTE, tex_data.RGBAPixelData().Ptr());
+
+        if (!PushGFXResource(arena, o_tex)) {
+            glDeleteTextures(1, &gl_id);
+            return false;
+        }
+
+        o_tex->type = ek_gfx_resource_type_texture;
+        o_tex->Texture().gl_id = gl_id;
+
+        return gl_id;
+    }
+
+#if 0
+    // ============================================================
+    // @section: Rendering
+    // ============================================================
+struct s_render_instr {
+    public:
+        e_render_instr Type() const {
+            return type;
+        }
+
+        auto &Clear() {
+            ZF_ASSERT(type == ek_render_instr_clear);
+            return type_data.clear;
+        }
+
+        auto &Clear() const {
+            ZF_ASSERT(type == ek_render_instr_clear);
+            return type_data.clear;
+        }
+
+        auto &SetShaderProg() {
+            ZF_ASSERT(type == ek_render_instr_shader_prog_set);
+            return type_data.set_shader_prog;
+        }
+
+        auto &SetShaderProg() const {
+            ZF_ASSERT(type == ek_render_instr_shader_prog_set);
+            return type_data.set_shader_prog;
+        }
+
+        auto &SetShaderProgUniform() {
+            ZF_ASSERT(type == ek_render_instr_shader_prog_uniform_set);
+            return type_data.set_shader_prog_uniform;
+        }
+
+        auto &SetShaderProgUniform() const {
+            ZF_ASSERT(type == ek_render_instr_shader_prog_uniform_set);
+            return type_data.set_shader_prog_uniform;
+        }
+
+        auto &SetTexture() {
+            ZF_ASSERT(type == ek_render_instr_set_texture);
+            return type_data.set_texture;
+        }
+
+        auto &SetTexture() const {
+            ZF_ASSERT(type == ek_render_instr_set_texture);
+            return type_data.set_texture;
+        }
+
+    private:
+        e_render_instr type = {};
+
+        union {
+            struct {
+                s_color_rgb24f col;
+            } clear;
+
+            struct {
+                s_ptr<s_gfx_resource> prog;
+            } set_shader_prog;
+
+            struct {
+                s_shader_prog_uniform_val val;
+            } set_shader_prog_uniform;
+
+            struct {
+                s_ptr<s_gfx_resource> tex;
+            } set_texture;
+        } type_data = {};
+    };
+
     void SubmitClear(s_list<s_render_instr> &instrs, const s_color_rgba32f col) {
+    }
+
+    static void Yeah() {
+        switch (val.Type()) {
+        case ek_surface_shader_prog_uniform_val_type_i32:
+            glUniform1i(loc, val.I32());
+            break;
+
+        case ek_surface_shader_prog_uniform_val_type_u32:
+            glUniform1ui(loc, val.U32());
+            break;
+
+        case ek_surface_shader_prog_uniform_val_type_f32:
+            glUniform1f(loc, val.F32());
+            break;
+
+        case ek_surface_shader_prog_uniform_val_type_v2:
+            glUniform2f(loc, val.V2().x, val.V2().y);
+            break;
+
+        case ek_surface_shader_prog_uniform_val_type_v3:
+            glUniform3f(loc, val.V3().x, val.V3().y, val.V3().z);
+            break;
+
+        case ek_surface_shader_prog_uniform_val_type_v4:
+            glUniform4f(loc, val.V4().x, val.V4().y, val.V4().z, val.V4().w);
+            break;
+
+        case ek_surface_shader_prog_uniform_val_type_mat4x4:
+            glUniformMatrix4fv(loc, 1, false, reinterpret_cast<const t_f32 *>(&val.Mat4x4()));
+            break;
+        }
     }
 
     void ExecRender(const s_array_rdonly<s_render_instr> instrs) {
@@ -122,13 +447,32 @@ namespace zf {
 
             switch (instr.Type()) {
             case ek_render_instr_clear:
-                glClearColor(col.R(), col.G(), col.B(), col.A());
+                const auto &col = instr.Clear().col;
+                glClearColor(col.R(), col.G(), col.B(), 1.0f);
                 glClear(GL_COLOR_BUFFER_BIT);
+                break;
+
+            case ek_render_instr_shader_prog_set:
+                glUseProgram(instr.SetShaderProg().prog->ShaderProg().gl_id);
+                break;
+
+            case ek_render_instr_shader_prog_uniform_set:
+                break;
+
+            case ek_render_instr_mesh_draw:
+                glActiveTexture(GL_TEXTURE0);
+                glBindTexture(GL_TEXTURE_2D, instr.SetTexture().tex->Texture().gl_id);
+
+                glBindVertexArray(rc.basis->surf_mesh_gl_ids.vert_arr);
+                glBindBuffer(GL_ARRAY_BUFFER, rc.basis->surf_mesh_gl_ids.vert_buf);
+                glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, rc.basis->surf_mesh_gl_ids.elem_buf);
+
+                glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, nullptr);
+                break;
             }
         }
-#if 0
-#endif
     }
+#endif
 
 #if 0
     // ============================================================
