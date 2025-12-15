@@ -26,9 +26,9 @@ namespace zf {
         s_ptr<s_gfx_resource> tail = nullptr;
     };
 
-    [[nodiscard]] t_b8 CreateMesh(const s_array_rdonly<t_f32> verts, const s_array_rdonly<t_u16> elems, const s_array_rdonly<t_i32> vert_attr_lens, s_gfx_resource_arena &arena, s_ptr<s_gfx_resource> &o_mesh);
-    [[nodiscard]] t_b8 CreateShaderProg(const s_str_rdonly vert_src, const s_str_rdonly frag_src, s_gfx_resource_arena &res_arena, s_mem_arena &temp_mem_arena, s_ptr<s_gfx_resource> &o_prog);
-    [[nodiscard]] t_b8 CreateTexture(const s_texture_data_rdonly tex_data, s_gfx_resource_arena &arena, s_ptr<s_gfx_resource> &o_tex);
+    s_gfx_resource &CreateMesh(const s_array_rdonly<t_f32> verts, const s_array_rdonly<t_u16> elems, const s_array_rdonly<t_i32> vert_attr_lens, s_gfx_resource_arena &arena);
+    [[nodiscard]] t_b8 CreateShaderProg(const s_str_rdonly vert_src, const s_str_rdonly frag_src, s_gfx_resource_arena &res_arena, s_mem_arena &temp_mem_arena, s_ptr<s_gfx_resource> &o_res);
+    [[nodiscard]] t_b8 CreateTexture(const s_texture_data_rdonly tex_data, s_gfx_resource_arena &arena, s_ptr<s_gfx_resource> &o_res);
 
     // ============================================================
     // @section: Rendering
@@ -141,124 +141,35 @@ namespace zf {
         } type_data = {};
     };
 
-    enum e_render_instr_type {
-        ek_render_instr_type_invalid,
-        ek_render_instr_type_clear,
-        ek_render_instr_type_shader_prog_set,
-        ek_render_instr_type_shader_prog_uniform_set,
-        ek_render_instr_type_mesh_update,
-        ek_render_instr_type_mesh_draw
-    };
-
-    // @todo: If the list of these is wrapped in a struct, can bypass needing to use pointer and can also encapsulate this implementation within the module.
-    struct s_render_instr {
-    public:
-        e_render_instr_type type = ek_render_instr_type_invalid;
-
-        auto &Clear() {
-            ZF_ASSERT(type == ek_render_instr_type_clear);
-            return type_data.clear;
-        }
-
-        auto &Clear() const {
-            ZF_ASSERT(type == ek_render_instr_type_clear);
-            return type_data.clear;
-        }
-
-        auto &ShaderProgSet() {
-            ZF_ASSERT(type == ek_render_instr_type_shader_prog_set);
-            return type_data.shader_prog_set;
-        }
-
-        auto &ShaderProgSet() const {
-            ZF_ASSERT(type == ek_render_instr_type_shader_prog_set);
-            return type_data.shader_prog_set;
-        }
-
-        auto &ShaderProgUniformSet() {
-            ZF_ASSERT(type == ek_render_instr_type_shader_prog_uniform_set);
-            return type_data.shader_prog_uniform_set;
-        }
-
-        auto &ShaderProgUniformSet() const {
-            ZF_ASSERT(type == ek_render_instr_type_shader_prog_uniform_set);
-            return type_data.shader_prog_uniform_set;
-        }
-
-        auto &MeshUpdate() {
-            ZF_ASSERT(type == ek_render_instr_type_mesh_update);
-            return type_data.mesh_update;
-        }
-
-        auto &MeshUpdate() const {
-            ZF_ASSERT(type == ek_render_instr_type_mesh_update);
-            return type_data.mesh_update;
-        }
-
-        auto &MeshDraw() {
-            ZF_ASSERT(type == ek_render_instr_type_mesh_draw);
-            return type_data.mesh_draw;
-        }
-
-        auto &MeshDraw() const {
-            ZF_ASSERT(type == ek_render_instr_type_mesh_draw);
-            return type_data.mesh_draw;
-        }
-
-    private:
-        union {
-            struct {
-                s_color_rgb24f col;
-            } clear;
-
-            struct {
-                s_ptr<const s_gfx_resource> prog;
-            } shader_prog_set;
-
-            struct {
-                s_str_rdonly name;
-                s_shader_prog_uniform_val val;
-            } shader_prog_uniform_set;
-
-            struct {
-                s_ptr<const s_gfx_resource> mesh;
-                s_array_rdonly<t_f32> verts;
-                s_array_rdonly<t_u16> elems;
-            } mesh_update;
-
-            struct {
-                s_ptr<const s_gfx_resource> mesh;
-                s_ptr<const s_gfx_resource> tex;
-            } mesh_draw;
-        } type_data = {};
-    };
+    struct s_render_instr;
 
     struct s_render_instr_seq {
     public:
         s_render_instr_seq(s_mem_arena &mem_arena) : blocks_mem_arena(mem_arena) {}
 
-        [[nodiscard]] t_b8 SubmitClear(const s_color_rgb24f col);
+        s_render_instr_seq(const s_render_instr_seq &) = delete;
 
-        [[nodiscard]] t_b8 SubmitShaderProgSet(const s_ptr<const s_gfx_resource> prog);
+        void SubmitClear(const s_color_rgb24f col);
 
-        [[nodiscard]] t_b8 SubmitShaderProgUniformSet(const e_shader_prog_uniform_val_type val_type, const s_shader_prog_uniform_val &val);
+        void SubmitShaderProgSet(const s_gfx_resource &prog);
+
+        void SubmitShaderProgUniformSet(const s_str_rdonly name, const s_shader_prog_uniform_val &val);
 
         // Leave verts as empty if you want to leave the vertices as they are.
         // Leave elems as empty if you want to leave the elements as they are.
-        [[nodiscard]] t_b8 SubmitMeshUpdate(const s_ptr<const s_gfx_resource> mesh, const s_array_rdonly<t_f32> verts, const s_array_rdonly<t_u16> elems);
+        void SubmitMeshUpdate(const s_gfx_resource &mesh, const s_array_rdonly<t_f32> verts, const s_array_rdonly<t_u16> elems);
 
-        [[nodiscard]] t_b8 SubmitMeshDraw(const s_ptr<s_gfx_resource> mesh, const s_ptr<const s_gfx_resource> tex);
+        void SubmitMeshDraw(const s_gfx_resource &mesh, const s_ptr<const s_gfx_resource> tex);
 
+        // Returns true iff the operation was successful.
         [[nodiscard]] t_b8 Exec(s_mem_arena &temp_mem_arena);
 
     private:
-        struct s_render_instr_block {
-            s_static_list<s_render_instr, 32> instrs = {};
-            s_ptr<s_render_instr_block> next = nullptr;
-        };
+        void Submit(const s_render_instr instr);
 
+        struct s_render_instr_block;
         s_mem_arena &blocks_mem_arena;
-        s_ptr<s_render_instr_block> blocks_head = nullptr;
-        s_ptr<s_render_instr_block> blocks_tail = nullptr;
+        s_ptr<s_render_instr_block> blocks_head;
+        s_ptr<s_render_instr_block> blocks_tail;
     };
 }

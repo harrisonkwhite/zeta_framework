@@ -4,16 +4,12 @@
 
 namespace zf {
     t_b8 LoadSoundFromRaw(const s_str_rdonly file_path, s_mem_arena &snd_data_mem_arena, s_mem_arena &temp_mem_arena, s_sound_data &o_snd_data) {
-        s_str file_path_terminated;
-
-        if (!AllocStrCloneWithTerminator(file_path, temp_mem_arena, file_path_terminated)) {
-            return false;
-        }
+        const s_str_rdonly file_path_terminated = AllocStrCloneButAddTerminator(file_path, temp_mem_arena);
 
         ma_decoder decoder = {};
         ma_decoder_config decoder_config = ma_decoder_config_init(ma_format_f32, 0, 0);
 
-        if (ma_decoder_init_file(file_path.Cstr(), &decoder_config, &decoder) != MA_SUCCESS) {
+        if (ma_decoder_init_file(file_path_terminated.Cstr(), &decoder_config, &decoder) != MA_SUCCESS) {
             return false;
         }
 

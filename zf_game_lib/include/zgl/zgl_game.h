@@ -21,9 +21,9 @@ namespace zf {
         s_mem_arena &temp_mem_arena;
     };
 
-    using t_game_init_func = t_b8 (*)(const s_game_init_context &context);
-    using t_game_tick_func = t_b8 (*)(const s_game_tick_context &context);
-    using t_game_render_func = t_b8 (*)(const s_game_render_context &context);
+    using t_game_init_func = void (*)(const s_game_init_context &context);
+    using t_game_tick_func = void (*)(const s_game_tick_context &context);
+    using t_game_render_func = void (*)(const s_game_render_context &context);
     using t_game_cleanup_func = void (*)();
 
     void RunGame(const t_game_init_func init_func, const t_game_tick_func tick_func, const t_game_render_func render_func, const t_game_cleanup_func cleanup_func = nullptr);

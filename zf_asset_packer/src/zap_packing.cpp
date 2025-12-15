@@ -240,14 +240,9 @@ namespace zf {
                     const auto src_fp = ConvertCstr(field_vals[ek_font_field_src_file_path]->valuestring);
                     const auto height = field_vals[ek_font_field_height]->valueint;
 
-                    const auto code_pt_bv = Alloc<t_code_pt_bit_vec>(mem_arena);
+                    auto &code_pt_bv = Alloc<t_code_pt_bit_vec>(mem_arena);
 
-                    if (!code_pt_bv) {
-                        LogError(s_cstr_literal("Failed to allocate code point bit vector!"));
-                        return false;
-                    }
-
-                    SetBitsInRange(*code_pt_bv, g_printable_ascii_range_begin, g_printable_ascii_range_end); // Add the printable ASCII range as a default.
+                    SetBitsInRange(code_pt_bv, g_printable_ascii_range_begin, g_printable_ascii_range_end); // Add the printable ASCII range as a default.
 
                     if (field_vals[ek_font_field_extra_chrs_file_path]) {
                         const auto extra_chrs_fp = ConvertCstr(field_vals[ek_font_field_extra_chrs_file_path]->valuestring);
@@ -259,10 +254,10 @@ namespace zf {
                             return false;
                         }
 
-                        MarkStrCodePoints({extra_chrs_file_contents}, *code_pt_bv);
+                        MarkStrCodePoints({extra_chrs_file_contents}, code_pt_bv);
                     }
 
-                    if (!PackFont(dest_fp, src_fp, height, *code_pt_bv, mem_arena)) {
+                    if (!PackFont(dest_fp, src_fp, height, code_pt_bv, mem_arena)) {
                         LogError(s_cstr_literal("Failed to pack font to file \"%\"!"), dest_fp);
                         return false;
                     }

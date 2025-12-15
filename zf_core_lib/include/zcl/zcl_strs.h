@@ -132,23 +132,23 @@ namespace zf {
         }
     };
 
-    // Creates a NON-TERMINATED string object from the given TERMINATED c-string.
+    // Creates a NON-TERMINATED string object from the given TERMINATED C-string.
     // Does a conventional string walk to calculate length.
     inline s_str ConvertCstr(char *const cstr) {
         return {{reinterpret_cast<t_u8 *>(cstr), CalcCstrLen(cstr)}};
     }
 
-    // Creates a read-only NON-TERMINATED string object from the given TERMINATED c-string.
+    // Creates a read-only NON-TERMINATED string object from the given TERMINATED C-string.
     // Does a conventional string walk to calculate length.
     inline s_str_rdonly ConvertCstr(const char *const cstr) {
         return {{reinterpret_cast<const t_u8 *>(cstr), CalcCstrLen(cstr)}};
     }
 
     // Allocates a clone of the given string using the memory arena, with a null byte added at the end (even if the string was already terminated).
-    [[nodiscard]] inline t_b8 AllocStrCloneWithTerminator(const s_str_rdonly str, s_mem_arena &mem_arena, s_str &o_clone) {
-        o_clone.bytes = AllocArray<t_u8>(str.bytes.Len(), mem_arena);
-        str.bytes.CopyTo(o_clone.bytes);
-        return true;
+    inline s_str AllocStrCloneButAddTerminator(const s_str_rdonly str, s_mem_arena &mem_arena) {
+        const s_str clone = {AllocArray<t_u8>(str.bytes.Len(), mem_arena)};
+        str.bytes.CopyTo(clone.bytes);
+        return clone;
     }
 
     t_b8 IsStrValidUTF8(const s_str_rdonly str);

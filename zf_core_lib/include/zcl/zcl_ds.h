@@ -315,7 +315,7 @@ namespace zf {
             while (true) {
                 if (!bb) {
                     // Try creating a new backing block.
-                    bb = s_backing_block::Alloc(m_backing_block_cap, *m_mem_arena);
+                    bb = &s_backing_block::Alloc(m_backing_block_cap, *m_mem_arena);
 
                     if (bb_prev) {
                         bb_prev->next = bb;
@@ -431,16 +431,12 @@ namespace zf {
         s_hash_map(const s_hash_map &) = default;
 
         struct s_backing_block {
-            static s_ptr<s_backing_block> Alloc(const t_len cap, s_mem_arena &mem_arena) {
-                const auto bb = zf::Alloc<s_backing_block>(mem_arena);
-
-                *bb = {
-                    .keys = AllocArray<tp_key_type>(cap, mem_arena),
-                    .vals = AllocArray<tp_val_type>(cap, mem_arena),
-                    .next_indexes = AllocArray<t_len>(cap, mem_arena),
-                    .usage = AllocBitVec(cap, mem_arena),
-                };
-
+            static s_backing_block &Alloc(const t_len cap, s_mem_arena &mem_arena) {
+                auto &bb = zf::Alloc<s_backing_block>(mem_arena);
+                bb.keys = AllocArray<tp_key_type>(cap, mem_arena);
+                bb.vals = AllocArray<tp_val_type>(cap, mem_arena);
+                bb.next_indexes = AllocArray<t_len>(cap, mem_arena);
+                bb.usage = AllocBitVec(cap, mem_arena);
                 return bb;
             }
 

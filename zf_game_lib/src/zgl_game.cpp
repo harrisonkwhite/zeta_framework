@@ -33,17 +33,10 @@ namespace zf {
         InitGFX();
         ZF_DEFER({ ShutdownGFX(); });
 
-        // Run the developer's initialisation function.
-        {
-            const s_game_init_context context = {
-                .mem_arena = mem_arena,
-                .temp_mem_arena = temp_mem_arena,
-            };
-
-            if (!init_func(context)) {
-                ZF_FATAL();
-            }
-        }
+        init_func({
+            .mem_arena = mem_arena,
+            .temp_mem_arena = temp_mem_arena,
+        });
 
         ZF_DEFER({
             if (cleanup_func) {
@@ -75,14 +68,10 @@ namespace zf {
             if (frame_dur_accum >= targ_tick_interval) {
                 // Run possibly multiple ticks.
                 do {
-                    const s_game_tick_context context = {
+                    tick_func({
                         .mem_arena = mem_arena,
                         .temp_mem_arena = temp_mem_arena,
-                    };
-
-                    if (!tick_func(context)) {
-                        ZF_FATAL();
-                    }
+                    });
 
                     internal::ClearInputEvents();
 

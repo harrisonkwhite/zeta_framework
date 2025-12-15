@@ -3,6 +3,7 @@
 #include <miniaudio.h>
 
 namespace zf {
+#if 0
     struct s_sound_type {
         s_ptr<s_audio_sys> audio_sys = nullptr;
         s_sound_data snd_data = {};
@@ -189,4 +190,5 @@ namespace zf {
             }
         }
     }
+#endif
 }

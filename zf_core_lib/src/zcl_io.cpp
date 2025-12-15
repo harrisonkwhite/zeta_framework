@@ -10,13 +10,9 @@
 
 namespace zf {
     t_b8 OpenFile(const s_str_rdonly path, const e_file_access_mode mode, s_mem_arena &temp_mem_arena, s_stream &o_stream) {
-        s_str path_terminated;
+        const s_str_rdonly path_terminated = AllocStrCloneButAddTerminator(path, temp_mem_arena);
 
-        if (!AllocStrCloneWithTerminator(path, temp_mem_arena, path_terminated)) {
-            return false;
-        }
-
-        s_ptr<FILE> file = nullptr;
+        s_ptr<FILE> file;
         e_stream_mode stream_mode;
 
         switch (mode) {
@@ -87,11 +83,7 @@ namespace zf {
             *o_creation_res = ek_directory_creation_result_success;
         }
 
-        s_str path_terminated;
-
-        if (!AllocStrCloneWithTerminator(path, temp_mem_arena, path_terminated)) {
-            return false;
-        }
+        const s_str_rdonly path_terminated = AllocStrCloneButAddTerminator(path, temp_mem_arena);
 
 #ifdef ZF_PLATFORM_WINDOWS
         const t_i32 res = _mkdir(path_terminated.Cstr());
@@ -202,11 +194,7 @@ namespace zf {
     }
 
     t_b8 CheckPathType(const s_str_rdonly path, s_mem_arena &temp_mem_arena, e_path_type &o_type) {
-        s_str path_terminated;
-
-        if (!AllocStrCloneWithTerminator(path, temp_mem_arena, path_terminated)) {
-            return false;
-        }
+        const s_str_rdonly path_terminated = AllocStrCloneButAddTerminator(path, temp_mem_arena);
 
         struct stat info = {};
 

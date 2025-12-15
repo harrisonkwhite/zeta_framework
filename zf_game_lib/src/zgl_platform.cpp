@@ -128,18 +128,11 @@ namespace zf {
         glfwSwapBuffers(g_state.glfw_window);
     }
 
-    t_b8 SetWindowTitle(const s_str_rdonly title, s_mem_arena &temp_mem_arena) {
+    void SetWindowTitle(const s_str_rdonly title, s_mem_arena &temp_mem_arena) {
         ZF_ASSERT(g_state.initted);
 
-        s_str title_terminated = {};
-
-        if (!AllocStrCloneWithTerminator(title, temp_mem_arena, title_terminated)) {
-            return false;
-        }
-
+        const s_str_rdonly title_terminated = AllocStrCloneButAddTerminator(title, temp_mem_arena);
         glfwSetWindowTitle(g_state.glfw_window, title_terminated.Cstr());
-
-        return true;
     }
 
     void SetWindowSize(const s_v2_i size) {

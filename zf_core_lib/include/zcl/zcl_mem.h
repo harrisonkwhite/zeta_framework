@@ -204,16 +204,16 @@ namespace zf {
             ZF_ASSERT((!buf && size == 0) || (buf && size > 0));
         }
 
-        s_ptr<void> m_buf = nullptr;
+        s_ptr<void> m_buf;
         t_len m_size = 0;
         t_len m_offs = 0;
     };
 
     template <typename tp_type>
-    s_ptr<tp_type> Alloc(s_mem_arena &mem_arena) {
+    tp_type &Alloc(s_mem_arena &mem_arena) {
         const auto ptr = static_cast<s_ptr<tp_type>>(mem_arena.Push(ZF_SIZE_OF(tp_type), ZF_ALIGN_OF(tp_type)));
         new (ptr) tp_type();
-        return ptr;
+        return *ptr;
     }
 
     // ============================================================

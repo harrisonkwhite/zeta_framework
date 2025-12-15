@@ -29,9 +29,7 @@ namespace zf {
     // ============================================================
     // @section: Display
     // ============================================================
-
-    // Returns true iff the operation succeeded.
-    [[nodiscard]] t_b8 SetWindowTitle(const s_str_rdonly title, s_mem_arena &temp_mem_arena);
+    void SetWindowTitle(const s_str_rdonly title, s_mem_arena &temp_mem_arena);
 
     // Sets the LOGICAL window size. The actual new framebuffer size MIGHT be larger if there is DPI scaling.
     void SetWindowSize(const s_v2_i size);

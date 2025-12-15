@@ -8,11 +8,7 @@ namespace zf {
     // @section: Textures
     // ============================================================
     t_b8 LoadTextureFromRaw(const s_str_rdonly file_path, s_mem_arena &tex_data_mem_arena, s_mem_arena &temp_mem_arena, s_texture_data &o_tex_data) {
-        s_str file_path_terminated;
-
-        if (!AllocStrCloneWithTerminator(file_path, temp_mem_arena, file_path_terminated)) {
-            return false;
-        }
+        const s_str_rdonly file_path_terminated = AllocStrCloneButAddTerminator(file_path, temp_mem_arena);
 
         s_v2_i size_in_pxs;
         const s_ptr<t_u8> stb_px_data = stbi_load(file_path_terminated.Cstr(), &size_in_pxs.x, &size_in_pxs.y, nullptr, 4);
