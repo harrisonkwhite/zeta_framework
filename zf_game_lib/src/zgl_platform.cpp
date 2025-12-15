@@ -2,6 +2,17 @@
 
 #include <GLFW/glfw3.h>
 
+#if defined(ZF_PLATFORM_WINDOWS)
+    #define GLFW_EXPOSE_NATIVE_WIN32
+    #include <GLFW/glfw3native.h>
+#elif defined(ZF_PLATFORM_MACOS)
+    #define GLFW_EXPOSE_NATIVE_COCOA
+    #include <GLFW/glfw3native.h>
+#elif defined(ZF_PLATFORM_LINUX)
+    #define GLFW_EXPOSE_NATIVE_X11
+    #include <GLFW/glfw3native.h>
+#endif
+
 namespace zf {
     // ============================================================
     // @section: Types and Declarations
@@ -106,6 +117,30 @@ namespace zf {
     // ============================================================
     // @section: Display
     // ============================================================
+    void *internal::NativeWindowHandle() {
+        ZF_ASSERT(g_state.initted);
+
+#if defined(ZF_PLATFORM_WINDOWS)
+        return reinterpret_cast<void *>(glfwGetWin32Window(g_state.glfw_window));
+#elif defined(ZF_PLATFORM_MACOS)
+        return glfwGetCocoaWindow(g_state.glfw_window);
+#elif defined(ZF_PLATFORM_LINUX)
+        return reinterpret_cast<void *>(static_cast<uintptr_t>(glfwGetX11Window(g_state.glfw_window)));
+#endif
+    }
+
+    void *internal::NativeDisplayHandle() {
+        ZF_ASSERT(g_state.initted);
+
+#if defined(ZF_PLATFORM_WINDOWS)
+        return nullptr;
+#elif defined(ZF_PLATFORM_MACOS)
+        return nullptr;
+#elif defined(ZF_PLATFORM_LINUX)
+        return glfwGetX11Display();
+#endif
+    }
+
     void internal::ShowWindow() {
         ZF_ASSERT(g_state.initted);
         glfwShowWindow(g_state.glfw_window);

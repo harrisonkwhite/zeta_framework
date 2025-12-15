@@ -8,11 +8,30 @@ namespace zf {
 
     void InitGFX() {
         ZF_ASSERT(!g_initted);
+
+        const auto fb_size_cache = WindowFramebufferSizeCache();
+
+        bgfx::Init init;
+        init.type = bgfx::RendererType::Count;
+
+        init.resolution.reset = BGFX_RESET_VSYNC;
+        init.resolution.width = static_cast<uint32_t>(fb_size_cache.x);
+        init.resolution.height = static_cast<uint32_t>(fb_size_cache.y);
+
+        init.platformData.nwh = internal::NativeWindowHandle();
+        init.platformData.ndt = internal::NativeDisplayHandle();
+        init.platformData.type = bgfx::NativeWindowHandleType::Default;
+
+        if (!bgfx::init(init)) {
+            ZF_FATAL();
+        }
+
         g_initted = true;
     }
 
     void ShutdownGFX() {
         ZF_ASSERT(g_initted);
+        bgfx::shutdown();
         g_initted = false;
     }
 
