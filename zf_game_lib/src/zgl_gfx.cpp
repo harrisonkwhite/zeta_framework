@@ -1,9 +1,22 @@
 #include <zgl/zgl_gfx.h>
 
-#include <glad/glad.h>
+#include <bgfx/bgfx.h>
 #include <zgl/zgl_platform.h>
 
 namespace zf {
+    t_b8 g_initted;
+
+    void InitGFX() {
+        ZF_ASSERT(!g_initted);
+        g_initted = true;
+    }
+
+    void ShutdownGFX() {
+        ZF_ASSERT(g_initted);
+        g_initted = false;
+    }
+
+#if 0
     using t_gl_id = GLuint;
 
     t_b8 g_initted;
@@ -544,4 +557,5 @@ namespace zf {
 
         blocks_tail->instrs.Append(instr);
     }
+#endif
 }

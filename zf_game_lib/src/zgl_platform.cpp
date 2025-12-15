@@ -53,9 +53,7 @@ namespace zf {
             ZF_FATAL();
         }
 
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, g_gl_version_major);
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, g_gl_version_minor);
-        glfwWindowHint(GLFW_OPENGL_PROFILE, g_gl_core_profile ? GLFW_OPENGL_CORE_PROFILE : GLFW_OPENGL_COMPAT_PROFILE);
+        glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
         glfwWindowHint(GLFW_VISIBLE, false);
 
         g_state.glfw_window = glfwCreateWindow(init_window_size.x, init_window_size.y, "", nullptr, nullptr);
@@ -93,11 +91,6 @@ namespace zf {
         glfwDestroyWindow(g_state.glfw_window);
         glfwTerminate();
         g_state = {};
-    }
-
-    internal::t_get_gl_proc_addr_func internal::GetGLProcAddrFunc() {
-        ZF_ASSERT(g_state.initted);
-        return reinterpret_cast<t_get_gl_proc_addr_func>(glfwGetProcAddress);
     }
 
     t_f64 Time() {
