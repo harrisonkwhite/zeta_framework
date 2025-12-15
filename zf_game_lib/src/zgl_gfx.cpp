@@ -422,7 +422,7 @@ namespace zf {
         ZF_ASSERT(g_initted);
 
         const auto fb_size_cache = WindowFramebufferSizeCache();
-        glViewport(0, 0, fb_size_cache.x, fb_size_cache.y);
+        glViewport(0, 0, fb_size_cache.x, fb_size_cache.y); // @todo: Possibly make this into an instruction type?
 
         s_ptr<const s_gfx_resource> shader_prog_active;
 

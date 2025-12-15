@@ -30,8 +30,10 @@ layout (location = 1) in vec4 a_blend;
 
 out vec4 v_blend;
 
+uniform mat4 u_proj;
+
 void main() {
-    gl_Position = vec4(a_vert, 0.0, 1.0);
+    gl_Position = u_proj * vec4(a_vert, 0.0, 1.0);
     v_blend = a_blend;
 }
 )";
@@ -83,7 +85,19 @@ void main() {
         // clang-format on
 
         rs.instr_seq.SubmitMeshUpdate(*rs.basis.batch_mesh, rs.verts);
+
         rs.instr_seq.SubmitShaderProgSet(*rs.basis.batch_shader_prog);
+
+        const s_v2_i fb_size_cache = WindowFramebufferSizeCache();
+
+        auto proj_mat = CreateIdentityMatrix();
+        proj_mat.elems[0][0] = 1.0f / (static_cast<t_f32>(fb_size_cache.x) / 2.0f);
+        proj_mat.elems[1][1] = -1.0f / (static_cast<t_f32>(fb_size_cache.y) / 2.0f);
+        proj_mat.elems[3][0] = -1.0f;
+        proj_mat.elems[3][1] = 1.0f;
+
+        rs.instr_seq.SubmitShaderProgUniformSet(s_cstr_literal("u_proj"), proj_mat);
+
         rs.instr_seq.SubmitMeshDraw(*rs.basis.batch_mesh);
     }
 }

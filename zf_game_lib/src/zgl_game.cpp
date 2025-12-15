@@ -88,7 +88,7 @@ namespace zf {
 
                 rs.instr_seq.SubmitClear(s_color_rgb8(0, 255, 0));
 
-                DrawTriangle(rs, {0.0f, 0.0f}, {0.5f, 0.0f}, {0.0f, 0.5f}, colors::g_pink);
+                DrawTriangle(rs, {0.0f, 0.0f}, {100.0f, 0.0f}, {0.0f, 100.0f}, colors::g_orange);
 
                 rs.instr_seq.Exec(temp_mem_arena);
 
