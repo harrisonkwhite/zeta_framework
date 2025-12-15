@@ -2,7 +2,7 @@
 
 #include <zcl.h>
 
-namespace zf::platform {
+namespace zf {
     // ============================================================
     // @section: General
     // ============================================================
@@ -16,8 +16,8 @@ namespace zf::platform {
         constexpr t_i32 g_gl_version_minor = 3;
         constexpr t_b8 g_gl_core_profile = true;
 
-        [[nodiscard]] t_b8 Init(const s_v2_i init_window_size);
-        void Shutdown();
+        void InitPlatform(const s_v2_i init_window_size);
+        void ShutdownPlatform();
 
         using t_gl_proc = void (*)();
         using t_get_gl_proc_addr_func = t_gl_proc (*)(const char *name);

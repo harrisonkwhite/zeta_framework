@@ -2,7 +2,7 @@
 
 #include <GLFW/glfw3.h>
 
-namespace zf::platform {
+namespace zf {
     // ============================================================
     // @section: Types and Declarations
     // ============================================================
@@ -45,7 +45,7 @@ namespace zf::platform {
     // ============================================================
     // @section: General
     // ============================================================
-    t_b8 internal::Init(const s_v2_i init_window_size) {
+    void internal::InitPlatform(const s_v2_i init_window_size) {
         ZF_ASSERT(!g_state.initted);
         ZF_ASSERT(init_window_size.x > 0 && init_window_size.y > 0);
 
@@ -85,11 +85,9 @@ namespace zf::platform {
         glfwSetScrollCallback(g_state.glfw_window, GLFWScrollCallback);
 
         g_state.initted = true;
-
-        return true;
     }
 
-    void internal::Shutdown() {
+    void internal::ShutdownPlatform() {
         ZF_ASSERT(g_state.initted);
 
         glfwDestroyWindow(g_state.glfw_window);

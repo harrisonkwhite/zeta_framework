@@ -27,11 +27,8 @@ namespace zf {
         auto temp_mem_arena = s_mem_arena::Alloc(Megabytes(10));
         ZF_DEFER({ temp_mem_arena.Release(); });
 
-        if (!platform::internal::Init(g_init_window_size)) {
-            ZF_FATAL();
-        }
-
-        ZF_DEFER({ platform::internal::Shutdown(); });
+        internal::InitPlatform(g_init_window_size);
+        ZF_DEFER({ internal::ShutdownPlatform(); });
 
         InitGFX();
         ZF_DEFER({ ShutdownGFX(); });
@@ -57,17 +54,17 @@ namespace zf {
         //
         // Main Loop
         //
-        platform::internal::ShowWindow();
+        internal::ShowWindow();
 
-        t_f64 frame_time_last = platform::Time();
+        t_f64 frame_time_last = Time();
         t_f64 frame_dur_accum = 0.0;
 
-        while (!platform::internal::ShouldWindowClose()) {
+        while (!internal::ShouldWindowClose()) {
             temp_mem_arena.Rewind(0);
 
-            platform::internal::PollOSEvents();
+            internal::PollOSEvents();
 
-            const t_f64 frame_time = platform::Time();
+            const t_f64 frame_time = Time();
             const t_f64 frame_time_delta = frame_time - frame_time_last;
             frame_dur_accum += frame_time_delta;
             frame_time_last = frame_time;
@@ -87,12 +84,12 @@ namespace zf {
                         ZF_FATAL();
                     }
 
-                    platform::internal::ClearInputEvents();
+                    internal::ClearInputEvents();
 
                     frame_dur_accum -= targ_tick_interval;
                 } while (frame_dur_accum >= targ_tick_interval);
 
-                platform::internal::SwapWindowBuffers();
+                internal::SwapWindowBuffers();
             }
         }
     }
