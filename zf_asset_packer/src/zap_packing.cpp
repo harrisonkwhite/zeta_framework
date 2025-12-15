@@ -97,20 +97,22 @@ namespace zf {
         auto mem_arena = CreateMemArena(g_mem_arena_size);
         ZF_DEFER({ mem_arena.Release(); });
 
-        const auto cj = [instrs_json_file_path, &mem_arena]() -> cJSON * {
-            s_array<t_u8> instrs_json_file_contents;
+        cJSON *cj = nullptr;
+
+        {
+            s_array<t_u8> instrs_json_file_contents; // Not needed beyond this scope.
 
             if (!LoadFileContents(instrs_json_file_path, mem_arena, mem_arena, instrs_json_file_contents, true)) {
                 LogError(s_cstr_literal("Failed to load packing instructions JSON file \"%\"!"), instrs_json_file_path);
-                return nullptr;
+                return false;
             }
 
-            return cJSON_Parse(reinterpret_cast<char *>(instrs_json_file_contents.Ptr().Raw()));
-        }();
+            cj = cJSON_Parse(s_str(instrs_json_file_contents).Cstr());
 
-        if (!cj) {
-            LogError(s_cstr_literal("Failed to parse packing instructions JSON file"));
-            return false;
+            if (!cj) {
+                LogError(s_cstr_literal("Failed to parse packing instructions JSON file!"));
+                return false;
+            }
         }
 
         ZF_DEFER({ cJSON_Delete(cj); });

@@ -1,24 +1,31 @@
 #pragma once
 
 #include <zcl.h>
-#include <zgl/zgl_gfx.h>
 
 namespace zf {
-    struct s_audio_sys;
+    struct s_gfx_resource_arena;
 
     struct s_game_init_context {
-        s_mem_arena &mem_arena;
+        s_mem_arena &perm_mem_arena;
         s_mem_arena &temp_mem_arena;
+
+        s_gfx_resource_arena &perm_gfx_res_arena;
     };
 
     struct s_game_tick_context {
         s_mem_arena &perm_mem_arena;
         s_mem_arena &temp_mem_arena;
+
+        s_gfx_resource_arena &perm_gfx_res_arena;
     };
 
+    struct s_rendering_state;
+
     struct s_game_render_context {
-        s_mem_arena &mem_arena;
+        s_mem_arena &perm_mem_arena;
         s_mem_arena &temp_mem_arena;
+
+        s_rendering_state &rendering_state;
     };
 
     using t_game_init_func = void (*)(const s_game_init_context &context);

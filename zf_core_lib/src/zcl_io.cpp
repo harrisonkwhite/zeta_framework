@@ -13,7 +13,7 @@ namespace zf {
         const s_str_rdonly path_terminated = AllocStrCloneButAddTerminator(path, temp_mem_arena);
 
         s_ptr<FILE> file;
-        e_stream_mode stream_mode;
+        e_stream_mode stream_mode = {};
 
         switch (mode) {
         case ek_file_access_mode_read:
@@ -71,11 +71,7 @@ namespace zf {
 
         o_contents = AllocArray<t_u8>(add_terminator ? file_size + 1 : file_size, contents_mem_arena);
 
-        if (stream.ReadItemsIntoArray(o_contents, file_size)) {
-            return false;
-        }
-
-        return true;
+        return stream.ReadItemsIntoArray(o_contents, file_size);
     }
 
     t_b8 CreateDirectory(const s_str_rdonly path, s_mem_arena &temp_mem_arena, const s_ptr<e_directory_creation_result> o_creation_res) {
@@ -125,13 +121,7 @@ namespace zf {
         }
 
         const auto create_dir_if_nonexistent = [o_dir_creation_res, &temp_mem_arena](const s_str_rdonly path) {
-            e_path_type path_type = {};
-
-            if (!CheckPathType(path, temp_mem_arena, path_type)) {
-                return false;
-            }
-
-            if (path_type == ek_path_type_not_found) {
+            if (CheckPathType(path, temp_mem_arena) == ek_path_type_not_found) {
                 if (!CreateDirectory(path, temp_mem_arena, o_dir_creation_res)) {
                     return false;
                 }
@@ -193,19 +183,19 @@ namespace zf {
         return true;
     }
 
-    t_b8 CheckPathType(const s_str_rdonly path, s_mem_arena &temp_mem_arena, e_path_type &o_type) {
+    e_path_type CheckPathType(const s_str_rdonly path, s_mem_arena &temp_mem_arena) {
         const s_str_rdonly path_terminated = AllocStrCloneButAddTerminator(path, temp_mem_arena);
 
         struct stat info = {};
 
-        if (stat(path.Cstr(), &info) != 0) {
-            o_type = ek_path_type_not_found;
-        } else if (info.st_mode & S_IFDIR) {
-            o_type = ek_path_type_directory;
-        } else {
-            o_type = ek_path_type_file;
+        if (stat(path_terminated.Cstr(), &info) != 0) {
+            return ek_path_type_not_found;
         }
 
-        return true;
+        if (info.st_mode & S_IFDIR) {
+            return ek_path_type_directory;
+        }
+
+        return ek_path_type_file;
     }
 }

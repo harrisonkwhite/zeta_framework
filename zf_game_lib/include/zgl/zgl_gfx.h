@@ -31,8 +31,11 @@ namespace zf {
     }
 
     s_gfx_resource &CreateMesh(const s_ptr<const t_f32> verts, const t_len verts_len, const t_b8 verts_dynamic, const s_array_rdonly<t_i32> vert_attr_component_cnts, s_gfx_resource_arena &arena);
+
     [[nodiscard]] t_b8 CreateShaderProg(const s_str_rdonly vert_src, const s_str_rdonly frag_src, s_gfx_resource_arena &res_arena, s_mem_arena &temp_mem_arena, s_ptr<s_gfx_resource> &o_res);
+
     [[nodiscard]] t_b8 CreateTexture(const s_texture_data_rdonly tex_data, s_gfx_resource_arena &arena, s_ptr<s_gfx_resource> &o_res);
+    s_v2_i TextureSize(const s_gfx_resource &res);
 
     // ============================================================
     // @section: Rendering
@@ -153,13 +156,9 @@ namespace zf {
         s_render_instr_seq(s_mem_arena &mem_arena) : blocks_mem_arena(&mem_arena) {}
 
         void SubmitClear(const s_color_rgb24f col);
-
         void SubmitShaderProgSet(const s_gfx_resource &prog);
-
         void SubmitShaderProgUniformSet(const s_str_rdonly name, const s_shader_prog_uniform_val &val);
-
         void SubmitMeshUpdate(const s_gfx_resource &mesh, const s_array_rdonly<t_f32> verts);
-
         void SubmitMeshDraw(const s_gfx_resource &mesh, const s_ptr<const s_gfx_resource> tex = nullptr);
 
         void Exec(s_mem_arena &temp_mem_arena);

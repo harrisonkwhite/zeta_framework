@@ -34,11 +34,12 @@ namespace zf {
         InitGFX();
         ZF_DEFER({ ShutdownGFX(); });
 
-        const auto rendering_basis = CreateRenderingBasis(perm_mem_arena, temp_mem_arena);
+        auto rendering_basis = CreateRenderingBasis(perm_mem_arena, temp_mem_arena);
 
         init_func({
-            .mem_arena = perm_mem_arena,
+            .perm_mem_arena = perm_mem_arena,
             .temp_mem_arena = temp_mem_arena,
+            .perm_gfx_res_arena = rendering_basis.gfx_res_arena,
         });
 
         ZF_DEFER({
@@ -73,6 +74,7 @@ namespace zf {
                     tick_func({
                         .perm_mem_arena = perm_mem_arena,
                         .temp_mem_arena = temp_mem_arena,
+                        .perm_gfx_res_arena = rendering_basis.gfx_res_arena,
                     });
 
                     internal::ClearInputEvents();
@@ -80,11 +82,19 @@ namespace zf {
                     frame_dur_accum -= targ_tick_interval;
                 } while (frame_dur_accum >= targ_tick_interval);
 
-                s_rendering_state &rs = BeginRendering(rendering_basis, temp_mem_arena);
+                // internal::PlatformLock();
 
-                DrawRect(rs, {0.0f, 0.0f, 32.0f, 32.0f}, colors::g_red, colors::g_blue, colors::g_green, colors::g_yellow);
+                s_rendering_state &rs = internal::BeginRendering(rendering_basis, temp_mem_arena);
 
-                EndRendering(rs, temp_mem_arena);
+                render_func({
+                    .perm_mem_arena = perm_mem_arena,
+                    .temp_mem_arena = temp_mem_arena,
+                    .rendering_state = rs,
+                });
+
+                internal::EndRendering(rs, temp_mem_arena);
+
+                // internal::PlatformUnlock();
             }
         }
     }

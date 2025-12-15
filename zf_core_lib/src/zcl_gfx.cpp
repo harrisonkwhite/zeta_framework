@@ -73,6 +73,8 @@ namespace zf {
             return false;
         }
 
+        o_tex_data = {size_in_pxs, rgba_px_data};
+
         return true;
     }
 

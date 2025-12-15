@@ -250,6 +250,7 @@ namespace zf {
 
     t_b8 CreateTexture(const s_texture_data_rdonly tex_data, s_gfx_resource_arena &arena, s_ptr<s_gfx_resource> &o_res) {
         ZF_ASSERT(g_initted);
+        ZF_ASSERT(!tex_data.RGBAPixelData().IsEmpty());
 
         const auto tex_size_limit = []() -> s_v2_i {
             t_i32 size;
@@ -275,8 +276,14 @@ namespace zf {
         o_res = &PushGFXResource(arena);
         o_res->type = ek_gfx_resource_type_texture;
         o_res->Texture().gl_id = gl_id;
+        o_res->Texture().size = tex_data.SizeInPixels();
 
         return true;
+    }
+
+    s_v2_i TextureSize(const s_gfx_resource &res) {
+        ZF_ASSERT(res.type == ek_gfx_resource_type_texture);
+        return res.Texture().size;
     }
 
     // ============================================================

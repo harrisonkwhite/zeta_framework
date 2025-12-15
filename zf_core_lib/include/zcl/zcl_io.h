@@ -302,7 +302,7 @@ namespace zf {
         ek_path_type_directory
     };
 
-    [[nodiscard]] t_b8 CheckPathType(const s_str_rdonly path, s_mem_arena &temp_mem_arena, e_path_type &o_type);
+    e_path_type CheckPathType(const s_str_rdonly path, s_mem_arena &temp_mem_arena);
 
     // ============================================================
     // @section: Printing

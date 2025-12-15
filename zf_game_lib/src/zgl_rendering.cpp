@@ -1,7 +1,6 @@
 #include <zgl/zgl_rendering.h>
 
 #include <zgl/zgl_platform.h>
-#include <zgl/zgl_gfx.h>
 
 namespace zf {
     constexpr s_color_rgb8 g_bg_color_default = {109, 187, 255};
@@ -72,6 +71,12 @@ void main() {
             ZF_FATAL();
         }
 
+        constexpr s_static_array<t_u8, 4> white_px_tex_rgba = {255, 255, 255, 255};
+
+        if (!CreateTexture({{1, 1}, white_px_tex_rgba}, basis.gfx_res_arena, basis.white_px_texture)) {
+            ZF_FATAL();
+        }
+
         return basis;
     }
 
@@ -83,9 +88,10 @@ void main() {
         s_render_instr_seq instr_seq;
 
         s_static_list<s_batch_vert, g_batch_vert_limit> batch_verts;
+        s_ptr<const s_gfx_resource> batch_texture;
     };
 
-    s_rendering_state &BeginRendering(const s_rendering_basis &basis, s_mem_arena &mem_arena) {
+    s_rendering_state &internal::BeginRendering(const s_rendering_basis &basis, s_mem_arena &mem_arena) {
         auto &state = Alloc<s_rendering_state>(mem_arena);
 
         state.basis = &basis;
@@ -104,7 +110,7 @@ void main() {
 
         rs.instr_seq.SubmitShaderProgSet(*rs.basis->batch_shader_prog);
 
-        const s_v2_i fb_size_cache = WindowFramebufferSizeCache();
+        const auto fb_size_cache = WindowFramebufferSizeCache();
 
         auto proj_mat = CreateIdentityMatrix();
         proj_mat.elems[0][0] = 1.0f / (static_cast<t_f32>(fb_size_cache.x) / 2.0f);
@@ -114,17 +120,19 @@ void main() {
 
         rs.instr_seq.SubmitShaderProgUniformSet(s_cstr_literal("u_proj"), proj_mat);
 
-        rs.instr_seq.SubmitMeshDraw(*rs.basis->batch_mesh);
+        rs.instr_seq.SubmitMeshDraw(*rs.basis->batch_mesh, rs.batch_texture ? rs.batch_texture : rs.basis->white_px_texture);
+
+        rs.batch_texture = nullptr;
     }
 
-    void EndRendering(s_rendering_state &rs, s_mem_arena &temp_mem_arena) {
+    void internal::EndRendering(s_rendering_state &rs, s_mem_arena &temp_mem_arena) {
         Flush(rs);
         rs.instr_seq.Exec(temp_mem_arena);
         internal::SwapWindowBuffers();
     }
 
     void DrawClear(s_rendering_state &rs, const s_color_rgb24f col) {
-        rs.instr_seq.SubmitClear(g_bg_color_default);
+        rs.instr_seq.SubmitClear(col);
     }
 
     void DrawTriangle(s_rendering_state &rs, const s_static_array<s_v2, 3> &pts, const s_static_array<s_color_rgba32f, 3> &pt_colors) {
@@ -138,7 +146,7 @@ void main() {
     }
 
     void DrawRect(s_rendering_state &rs, const s_rect_f rect, const s_color_rgba32f color_topleft, const s_color_rgba32f color_topright, const s_color_rgba32f color_bottomright, const s_color_rgba32f color_bottomleft) {
-        if (rs.batch_verts.Len() + 6 > rs.batch_verts.Cap()) {
+        if (rs.batch_verts.Len() + 6 > rs.batch_verts.Cap() || rs.batch_texture) {
             Flush(rs);
         }
 
@@ -149,5 +157,22 @@ void main() {
         rs.batch_verts.Append({rect.BottomRight(), color_bottomright, {}});
         rs.batch_verts.Append({rect.BottomLeft(), color_bottomleft, {}});
         rs.batch_verts.Append({rect.TopLeft(), color_topleft, {}});
+    }
+
+    void DrawTexture(s_rendering_state &rs, const s_gfx_resource &tex, const s_v2 pos, const s_color_rgba32f blend) {
+        if (rs.batch_verts.Len() + 6 > rs.batch_verts.Cap()
+            || (!rs.batch_verts.IsEmpty() && rs.batch_texture != s_ptr<const s_gfx_resource>(&tex))) {
+            Flush(rs);
+        }
+
+        const s_rect_f rect = {pos, TextureSize(tex).ToV2()};
+
+        rs.batch_verts.Append({rect.TopLeft(), blend, {0.0f, 0.0f}});
+        rs.batch_verts.Append({rect.TopRight(), blend, {1.0f, 0.0f}});
+        rs.batch_verts.Append({rect.BottomRight(), blend, {1.0f, 1.0f}});
+
+        rs.batch_verts.Append({rect.BottomRight(), blend, {1.0f, 1.0f}});
+        rs.batch_verts.Append({rect.BottomLeft(), blend, {0.0f, 1.0f}});
+        rs.batch_verts.Append({rect.TopLeft(), blend, {0.0f, 0.0f}});
     }
 }
