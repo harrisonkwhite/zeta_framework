@@ -2,6 +2,7 @@
 
 #include <zgl/zgl_audio.h>
 #include <zgl/zgl_gfx.h>
+#include <zgl/zgl_rendering.h>
 #include <zgl/zgl_platform.h>
 
 namespace zf {
@@ -32,6 +33,8 @@ namespace zf {
 
         InitGFX();
         ZF_DEFER({ ShutdownGFX(); });
+
+        const auto rendering_basis = CreateRenderingBasis(perm_mem_arena, temp_mem_arena);
 
         init_func({
             .mem_arena = perm_mem_arena,
@@ -80,10 +83,9 @@ namespace zf {
                 s_render_instr_seq instr_seq = {temp_mem_arena};
 
                 instr_seq.SubmitClear(s_color_rgb8(0, 255, 0));
-
-                if (!instr_seq.Exec(temp_mem_arena)) {
-                    ZF_FATAL();
-                }
+                instr_seq.SubmitShaderProgSet(*rendering_basis.batch_shader_prog);
+                instr_seq.SubmitMeshDraw(*rendering_basis.batch_mesh);
+                instr_seq.Exec(temp_mem_arena);
 
                 internal::SwapWindowBuffers();
             }

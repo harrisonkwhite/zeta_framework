@@ -26,7 +26,11 @@ namespace zf {
         s_ptr<s_gfx_resource> tail = nullptr;
     };
 
-    s_gfx_resource &CreateMesh(const s_array_rdonly<t_f32> verts, const s_array_rdonly<t_u16> elems, const s_array_rdonly<t_i32> vert_attr_lens, s_gfx_resource_arena &arena);
+    inline s_gfx_resource_arena CreateGFXResourceArena(s_mem_arena &mem_arena) {
+        return {.mem_arena = &mem_arena};
+    }
+
+    s_gfx_resource &CreateMesh(const s_ptr<const t_f32> verts, const t_len verts_len, const s_ptr<const t_u16> elems, const t_len elems_len, const s_array_rdonly<t_i32> vert_attr_component_cnts, s_gfx_resource_arena &arena);
     [[nodiscard]] t_b8 CreateShaderProg(const s_str_rdonly vert_src, const s_str_rdonly frag_src, s_gfx_resource_arena &res_arena, s_mem_arena &temp_mem_arena, s_ptr<s_gfx_resource> &o_res);
     [[nodiscard]] t_b8 CreateTexture(const s_texture_data_rdonly tex_data, s_gfx_resource_arena &arena, s_ptr<s_gfx_resource> &o_res);
 
@@ -157,10 +161,9 @@ namespace zf {
         // Leave elems as empty if you want to leave the elements as they are.
         void SubmitMeshUpdate(const s_gfx_resource &mesh, const s_array_rdonly<t_f32> verts, const s_array_rdonly<t_u16> elems);
 
-        void SubmitMeshDraw(const s_gfx_resource &mesh, const s_ptr<const s_gfx_resource> tex);
+        void SubmitMeshDraw(const s_gfx_resource &mesh, const s_ptr<const s_gfx_resource> tex = nullptr);
 
-        // Returns true iff the operation was successful.
-        [[nodiscard]] t_b8 Exec(s_mem_arena &temp_mem_arena);
+        void Exec(s_mem_arena &temp_mem_arena);
 
     private:
         void Submit(const s_render_instr instr);

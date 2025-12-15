@@ -1,8 +1,16 @@
 #pragma once
 
 #include <zcl.h>
+#include <zgl/zgl_gfx.h>
 
 namespace zf {
+    struct s_rendering_basis {
+        s_gfx_resource_arena gfx_res_arena;
+        s_ptr<s_gfx_resource> batch_mesh;
+        s_ptr<s_gfx_resource> batch_shader_prog;
+    };
+
+    s_rendering_basis CreateRenderingBasis(s_mem_arena &mem_arena, s_mem_arena &temp_mem_arena);
 
 #if 0
     struct s_platform_layer_info;

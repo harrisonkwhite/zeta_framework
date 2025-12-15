@@ -146,7 +146,7 @@ namespace zf {
 
     // Allocates a clone of the given string using the memory arena, with a null byte added at the end (even if the string was already terminated).
     inline s_str AllocStrCloneButAddTerminator(const s_str_rdonly str, s_mem_arena &mem_arena) {
-        const s_str clone = {AllocArray<t_u8>(str.bytes.Len(), mem_arena)};
+        const s_str clone = {AllocArray<t_u8>(str.bytes.Len() + 1, mem_arena)};
         str.bytes.CopyTo(clone.bytes);
         return clone;
     }

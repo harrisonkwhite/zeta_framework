@@ -6,7 +6,11 @@
 namespace zf {
     using t_gl_id = GLuint;
 
+    t_b8 g_initted;
+
     void InitGFX() {
+        ZF_ASSERT(!g_initted);
+
         // Load OpenGL function pointers.
         if (!gladLoadGLLoader(reinterpret_cast<GLADloadproc>(internal::GetGLProcAddrFunc()))) {
             ZF_FATAL();
@@ -15,9 +19,14 @@ namespace zf {
         // Enable blending.
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+        g_initted = true;
     }
 
-    void ShutdownGFX() {}
+    void ShutdownGFX() {
+        ZF_ASSERT(g_initted);
+        g_initted = false;
+    }
 
     // ============================================================
     // @section: Resources
@@ -60,6 +69,8 @@ namespace zf {
     };
 
     void DestroyGFXResources(const s_gfx_resource_arena arena) {
+        ZF_ASSERT(g_initted);
+
         auto res = arena.head;
 
         while (res) {
@@ -83,7 +94,7 @@ namespace zf {
         }
     }
 
-    s_gfx_resource &PushGFXResource(s_gfx_resource_arena &arena) {
+    static s_gfx_resource &PushGFXResource(s_gfx_resource_arena &arena) {
         s_gfx_resource &res = Alloc<s_gfx_resource>(*arena.mem_arena);
 
         if (!arena.head) {
@@ -97,7 +108,8 @@ namespace zf {
         return res;
     }
 
-    s_gfx_resource &CreateMesh(const s_ptr<t_f32> verts, const t_len verts_len, const s_ptr<t_u16> elems, const t_len elems_len, const s_array_rdonly<t_i32> vert_attr_lens, s_gfx_resource_arena &arena) {
+    s_gfx_resource &CreateMesh(const s_ptr<const t_f32> verts, const t_len verts_len, const s_ptr<const t_u16> elems, const t_len elems_len, const s_array_rdonly<t_i32> vert_attr_component_cnts, s_gfx_resource_arena &arena) {
+        ZF_ASSERT(g_initted);
         ZF_ASSERT((verts && verts_len > 0) || (!verts && verts_len == 0));
         ZF_ASSERT((elems && elems_len > 0) || (!elems && elems_len == 0));
 
@@ -118,11 +130,11 @@ namespace zf {
 
         res.Mesh().elem_cnt = elems_len;
 
-        const t_len stride = [vert_attr_lens]() {
+        const t_len stride = [vert_attr_component_cnts]() {
             t_len res = 0;
 
-            for (t_len i = 0; i < vert_attr_lens.Len(); i++) {
-                res += ZF_SIZE_OF(t_f32) * static_cast<t_len>(vert_attr_lens[i]);
+            for (t_len i = 0; i < vert_attr_component_cnts.Len(); i++) {
+                res += ZF_SIZE_OF(t_f32) * static_cast<t_len>(vert_attr_component_cnts[i]);
             }
 
             return res;
@@ -130,13 +142,13 @@ namespace zf {
 
         t_i32 offs = 0;
 
-        for (t_len i = 0; i < vert_attr_lens.Len(); i++) {
-            const t_i32 attr_len = vert_attr_lens[i];
+        for (t_len i = 0; i < vert_attr_component_cnts.Len(); i++) {
+            const t_i32 comp_cnt = vert_attr_component_cnts[i];
 
-            glVertexAttribPointer(static_cast<GLuint>(i), attr_len, GL_FLOAT, false, static_cast<GLsizei>(stride), reinterpret_cast<void *>(ZF_SIZE_OF(t_f32) * offs));
+            glVertexAttribPointer(static_cast<GLuint>(i), comp_cnt, GL_FLOAT, false, static_cast<GLsizei>(stride), reinterpret_cast<void *>(ZF_SIZE_OF(t_f32) * offs));
             glEnableVertexAttribArray(static_cast<GLuint>(i));
 
-            offs += attr_len;
+            offs += comp_cnt;
         }
 
         glBindVertexArray(0);
@@ -145,6 +157,8 @@ namespace zf {
     }
 
     t_b8 CreateShaderProg(const s_str_rdonly vert_src, const s_str_rdonly frag_src, s_gfx_resource_arena &res_arena, s_mem_arena &temp_mem_arena, s_ptr<s_gfx_resource> &o_res) {
+        ZF_ASSERT(g_initted);
+
         const auto vert_src_terminated = AllocStrCloneButAddTerminator(vert_src, temp_mem_arena);
         const auto frag_src_terminated = AllocStrCloneButAddTerminator(frag_src, temp_mem_arena);
 
@@ -154,8 +168,8 @@ namespace zf {
         const auto create_shader = [&temp_mem_arena](const s_str_rdonly src, const t_b8 is_frag) -> t_gl_id {
             const t_gl_id shader_gl_id = glCreateShader(is_frag ? GL_FRAGMENT_SHADER : GL_VERTEX_SHADER);
 
-            const auto src_raw = src.Cstr();
-            glShaderSource(shader_gl_id, 1, &src_raw, nullptr);
+            const auto src_cstr = src.Cstr();
+            glShaderSource(shader_gl_id, 1, &src_cstr, nullptr);
 
             glCompileShader(shader_gl_id);
 
@@ -243,6 +257,8 @@ namespace zf {
     }
 
     t_b8 CreateTexture(const s_texture_data_rdonly tex_data, s_gfx_resource_arena &arena, s_ptr<s_gfx_resource> &o_res) {
+        ZF_ASSERT(g_initted);
+
         const auto tex_size_limit = []() -> s_v2_i {
             t_i32 size;
             glGetIntegerv(GL_MAX_TEXTURE_SIZE, &size);
@@ -414,7 +430,9 @@ namespace zf {
         Submit(instr);
     }
 
-    t_b8 s_render_instr_seq::Exec(s_mem_arena &temp_mem_arena) {
+    void s_render_instr_seq::Exec(s_mem_arena &temp_mem_arena) {
+        ZF_ASSERT(g_initted);
+
         const auto fb_size_cache = WindowFramebufferSizeCache();
         glViewport(0, 0, fb_size_cache.x, fb_size_cache.y);
 
@@ -446,10 +464,7 @@ namespace zf {
                     const s_str_rdonly name_terminated = AllocStrCloneButAddTerminator(instr.ShaderProgUniformSet().name, temp_mem_arena);
 
                     const t_i32 loc = glGetUniformLocation(shader_prog_active->ShaderProg().gl_id, name_terminated.Cstr()); // @todo: Should be using a hash map here!
-
-                    if (loc == -1) {
-                        return false;
-                    }
+                    ZF_ASSERT(loc != -1);
 
                     const auto &val = instr.ShaderProgUniformSet().val;
 
@@ -504,6 +519,8 @@ namespace zf {
                 }
 
                 case ek_render_instr_type_mesh_draw: {
+                    ZF_ASSERT(shader_prog_active);
+
                     const auto &md = instr.MeshDraw();
 
                     if (md.tex) {
@@ -517,6 +534,9 @@ namespace zf {
 
                     glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(md.mesh->Mesh().elem_cnt), GL_UNSIGNED_SHORT, nullptr);
 
+                    glUseProgram(0);
+                    shader_prog_active = nullptr;
+
                     break;
                 }
                 }
@@ -524,8 +544,6 @@ namespace zf {
 
             block = block->next;
         }
-
-        return true;
     }
 
     void s_render_instr_seq::Submit(const s_render_instr instr) {
