@@ -6,59 +6,18 @@
 namespace zf {
     using t_gl_id = GLuint;
 
-#if 0
-    [[nodiscard]] static t_b8 PushResource(const s_resource_arena &arena, s_ptr<s_resource> &o_res) {
-    }
-
-    // @todo: Discriminated union but just store the vertex buffer handle in here.
-    struct s_render_instr {
-    };
-#endif
-
-#if 0
-    struct s_resource {
-    public:
-        auto &Mesh() const {
-            return type_data.mesh;
-        }
-
-    private:
-        union {
-            struct {
-                t_gl_id vert_arr_gl_id;
-                t_gl_id vert_buf_gl_id;
-                t_gl_id elem_buf_gl_id;
-            } mesh;
-
-            struct {
-                t_gl_id gl_id;
-            } shader_prog;
-
-            struct {
-                t_gl_id gl_id;
-            } texture;
-        } type_data = {};
-    };
-
-    [[nodiscard]] static t_b8 PushResource(const s_resource_arena &arena, s_ptr<s_resource> &o_res) {
-    }
-#endif
-
-    t_b8 InitGFX() {
+    void InitGFX() {
         // Load OpenGL function pointers.
         if (!gladLoadGLLoader(reinterpret_cast<GLADloadproc>(platform::internal::GetGLProcAddrFunc()))) {
-            return false;
+            ZF_FATAL();
         }
 
         // Enable blending.
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-        return true;
     }
 
-    void ShutdownGFX() {
-    }
+    void ShutdownGFX() {}
 
     // ============================================================
     // @section: Resources
@@ -90,7 +49,7 @@ namespace zf {
 
             struct {
                 t_gl_id gl_id;
-                s_hash_map<s_str_rdonly, t_i32> uniform_names_to_locs;
+                s_hash_map<s_str_rdonly, t_i32> uniform_names_to_locs; // @todo: Construct and use this!
             } shader_prog;
 
             struct {
@@ -222,14 +181,9 @@ namespace zf {
                 glGetShaderiv(shader_gl_id, GL_INFO_LOG_LENGTH, &log_chr_cnt);
 
                 if (log_chr_cnt > 1) {
-                    s_array<char> log_chrs = {};
-
-                    if (AllocArray(log_chr_cnt, temp_mem_arena, log_chrs)) {
-                        glGetShaderInfoLog(shader_gl_id, static_cast<GLsizei>(log_chrs.Len()), nullptr, log_chrs.Ptr());
-                        LogErrorType(s_cstr_literal("OpenGL Shader Compilation"), s_cstr_literal("%"), FormatStr({log_chrs.ToBytes()}));
-                    } else {
-                        ZF_REPORT_ERROR();
-                    }
+                    const auto log_chrs = AllocArray<char>(log_chr_cnt, temp_mem_arena);
+                    glGetShaderInfoLog(shader_gl_id, static_cast<GLsizei>(log_chrs.Len()), nullptr, log_chrs.Ptr());
+                    LogErrorType(s_cstr_literal("OpenGL Shader Compilation"), s_cstr_literal("%"), FormatStr({log_chrs.ToBytes()}));
                 } else {
                     LogError(s_cstr_literal("OpenGL shader compilation failed, but no error message available!"));
                 }
@@ -280,14 +234,9 @@ namespace zf {
             glGetProgramiv(prog_gl_id, GL_INFO_LOG_LENGTH, &log_chr_cnt);
 
             if (log_chr_cnt > 1) {
-                s_array<char> log_chrs = {};
-
-                if (AllocArray(log_chr_cnt, temp_mem_arena, log_chrs)) {
-                    glGetProgramInfoLog(prog_gl_id, static_cast<GLsizei>(log_chrs.Len()), nullptr, log_chrs.Ptr());
-                    LogErrorType(s_cstr_literal("OpenGL Program Link"), s_cstr_literal("%"), FormatStr({log_chrs.ToBytes()}));
-                } else {
-                    ZF_REPORT_ERROR();
-                }
+                const auto log_chrs = AllocArray<char>(log_chr_cnt, temp_mem_arena);
+                glGetProgramInfoLog(prog_gl_id, static_cast<GLsizei>(log_chrs.Len()), nullptr, log_chrs.Ptr());
+                LogErrorType(s_cstr_literal("OpenGL Program Link"), s_cstr_literal("%"), FormatStr({log_chrs.ToBytes()}));
             } else {
                 LogError(s_cstr_literal("OpenGL program link failed, but no error message available!"));
             }
@@ -305,8 +254,6 @@ namespace zf {
         o_prog->type = ek_gfx_resource_type_shader_prog;
         o_prog->ShaderProg().gl_id = prog_gl_id;
 
-        static_assert(false, "Need to create hash map!");
-
         return true;
     }
 
@@ -319,8 +266,7 @@ namespace zf {
 
         if (tex_data.SizeInPixels().x > tex_size_limit.x || tex_data.SizeInPixels().y > tex_size_limit.y) {
             LogError(s_cstr_literal("Texture size % exceeds limits %!"), tex_data.SizeInPixels(), tex_size_limit);
-            ZF_REPORT_ERROR();
-            return 0;
+            return false;
         }
 
         t_gl_id gl_id;
@@ -341,13 +287,14 @@ namespace zf {
         o_tex->type = ek_gfx_resource_type_texture;
         o_tex->Texture().gl_id = gl_id;
 
-        return gl_id;
+        return true;
     }
 
     // ============================================================
     // @section: Rendering
     // ============================================================
-    void SubmitClear(s_list<s_render_instr> &instrs, const s_color_rgb24f col) {
+#if 0
+    void s_render_instr_seq::SubmitClear(const s_color_rgb24f col) {
         s_render_instr instr = {};
         instr.type = ek_render_instr_type_clear;
         instr.Clear().col = col;
@@ -355,7 +302,7 @@ namespace zf {
         instrs.Append(instr);
     }
 
-    void SubmitShaderProgSet(s_list<s_render_instr> &instrs, const s_ptr<s_gfx_resource> prog) {
+    void s_render_instr_seq::SubmitShaderProgSet(const s_ptr<const s_gfx_resource> prog) {
         s_render_instr instr = {};
         instr.type = ek_render_instr_type_shader_prog_set;
         instr.ShaderProgSet().prog = prog;
@@ -363,7 +310,7 @@ namespace zf {
         instrs.Append(instr);
     }
 
-    void SubmitShaderProgUniformSet(s_list<s_render_instr> &instrs, const s_str_rdonly name, const s_shader_prog_uniform_val &val) {
+    void s_render_instr_seq::SubmitShaderProgUniformSet(const s_str_rdonly name, const s_shader_prog_uniform_val &val) {
         s_render_instr instr = {};
         instr.type = ek_render_instr_type_shader_prog_uniform_set;
         instr.ShaderProgUniformSet().name = name;
@@ -372,7 +319,7 @@ namespace zf {
         instrs.Append(instr);
     }
 
-    void SubmitMeshUpdate(s_list<s_render_instr> &instrs, const s_ptr<s_gfx_resource> mesh, const s_array<t_f32> verts, const s_array<t_u16> elems) {
+    void s_render_instr_seq::SubmitMeshUpdate(const s_ptr<const s_gfx_resource> mesh, const s_array_rdonly<t_f32> verts, const s_array_rdonly<t_u16> elems) {
         s_render_instr instr = {};
         instr.type = ek_render_instr_type_mesh_update;
         instr.MeshUpdate().mesh = mesh;
@@ -382,7 +329,7 @@ namespace zf {
         instrs.Append(instr);
     }
 
-    void SubmitMeshDraw(s_list<s_render_instr> &instrs, const s_ptr<s_gfx_resource> mesh, const s_ptr<s_gfx_resource> tex) {
+    void s_render_instr_seq::SubmitMeshDraw(const s_ptr<const s_gfx_resource> mesh, const s_ptr<const s_gfx_resource> tex) {
         s_render_instr instr = {};
         instr.type = ek_render_instr_type_mesh_draw;
         instr.MeshDraw().mesh = mesh;
@@ -391,11 +338,11 @@ namespace zf {
         instrs.Append(instr);
     }
 
-    t_b8 ExecRender(const s_array<s_render_instr> instrs) {
+    t_b8 s_render_instr_seq::Exec(s_mem_arena &temp_mem_arena) {
         const auto fb_size_cache = platform::WindowFramebufferSizeCache();
         glViewport(0, 0, fb_size_cache.x, fb_size_cache.y);
 
-        s_ptr<s_gfx_resource> shader_prog_active = nullptr;
+        s_ptr<const s_gfx_resource> shader_prog_active = nullptr;
 
         for (t_len i = 0; i < instrs.Len(); i++) {
             const auto &instr = instrs[i];
@@ -417,13 +364,19 @@ namespace zf {
             case ek_render_instr_type_shader_prog_uniform_set: {
                 ZF_ASSERT(shader_prog_active);
 
-                const auto &val = instr.ShaderProgUniformSet().val;
+                s_str name_terminated = {};
 
-                t_i32 loc;
-
-                if (!shader_prog_active->ShaderProg().uniform_names_to_locs.Get(instr.ShaderProgUniformSet().name, &loc)) {
+                if (!AllocStrCloneWithTerminator(instr.ShaderProgUniformSet().name, temp_mem_arena, name_terminated)) {
                     return false;
                 }
+
+                const t_i32 loc = glGetUniformLocation(shader_prog_active->ShaderProg().gl_id, name_terminated.Cstr()); // @todo: Should be using a hash map here!
+
+                if (loc == -1) {
+                    return false;
+                }
+
+                const auto &val = instr.ShaderProgUniformSet().val;
 
                 switch (val.Type()) {
                 case ek_shader_prog_uniform_val_type_i32:
@@ -496,6 +449,7 @@ namespace zf {
 
         return true;
     }
+#endif
 
 #if 0
     struct s_render_instr {

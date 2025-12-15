@@ -8,13 +8,13 @@ namespace zf {
     // @section: Textures
     // ============================================================
     t_b8 LoadTextureFromRaw(const s_str_rdonly file_path, s_mem_arena &tex_data_mem_arena, s_mem_arena &temp_mem_arena, s_texture_data &o_tex_data) {
-        s_str file_path_terminated = {};
+        s_str file_path_terminated;
 
         if (!AllocStrCloneWithTerminator(file_path, temp_mem_arena, file_path_terminated)) {
             return false;
         }
 
-        s_v2_i size_in_pxs = {};
+        s_v2_i size_in_pxs;
         const s_ptr<t_u8> stb_px_data = stbi_load(file_path_terminated.Cstr(), &size_in_pxs.x, &size_in_pxs.y, nullptr, 4);
 
         if (!stb_px_data) {
@@ -23,12 +23,7 @@ namespace zf {
 
         ZF_DEFER({ stbi_image_free(stb_px_data); });
 
-        s_array<t_u8> px_data = {};
-
-        if (!AllocArray(4 * size_in_pxs.x * size_in_pxs.y, tex_data_mem_arena, px_data)) {
-            return false;
-        }
-
+        const auto px_data = AllocArray<t_u8>(4 * size_in_pxs.x * size_in_pxs.y, tex_data_mem_arena);
         const s_array_rdonly<t_u8> stb_px_data_arr = {stb_px_data, 4 * size_in_pxs.x * size_in_pxs.y};
         stb_px_data_arr.CopyTo(px_data);
 
@@ -42,7 +37,7 @@ namespace zf {
             return false;
         }
 
-        s_stream fs = {};
+        s_stream fs;
 
         if (!OpenFile(file_path, ek_file_access_mode_write, temp_mem_arena, fs)) {
             return false;
@@ -62,7 +57,7 @@ namespace zf {
     }
 
     t_b8 UnpackTexture(const s_str_rdonly file_path, s_mem_arena &tex_data_mem_arena, s_mem_arena &temp_mem_arena, s_texture_data &o_tex_data) {
-        s_stream fs = {};
+        s_stream fs;
 
         if (!OpenFile(file_path, ek_file_access_mode_read, temp_mem_arena, fs)) {
             return false;
@@ -70,17 +65,13 @@ namespace zf {
 
         ZF_DEFER({ CloseFile(fs); });
 
-        s_v2_i size_in_pxs = {};
+        s_v2_i size_in_pxs;
 
         if (!fs.ReadItem(size_in_pxs)) {
             return false;
         }
 
-        s_array<t_u8> rgba_px_data = {};
-
-        if (!AllocArray(4 * size_in_pxs.x * size_in_pxs.y, tex_data_mem_arena, rgba_px_data)) {
-            return false;
-        }
+        const auto rgba_px_data = AllocArray<t_u8>(4 * size_in_pxs.x * size_in_pxs.y, tex_data_mem_arena);
 
         if (!fs.ReadItemsIntoArray(rgba_px_data, rgba_px_data.Len())) {
             return false;
@@ -109,7 +100,7 @@ namespace zf {
         ZF_ASSERT(height > 0);
 
         // Get the plain font file data.
-        s_array<t_u8> font_file_data = {};
+        s_array<t_u8> font_file_data;
 
         if (!LoadFileContents(file_path, temp_mem_arena, temp_mem_arena, font_file_data)) {
             return false;
@@ -157,19 +148,17 @@ namespace zf {
         //
         // Glyph Info
         //
-        if (!o_arrangement.code_pts_to_glyph_infos.Init(g_code_pt_hash_func, arrangement_mem_arena, code_pt_cnt)) {
-            return false;
-        }
+        o_arrangement.code_pts_to_glyph_infos = s_hash_map<t_code_pt, s_font_glyph_info>::Alloc(g_code_pt_hash_func, arrangement_mem_arena, code_pt_cnt);
 
         t_len atlas_index = 0;
-        s_v2_i atlas_pen = {};
+        s_v2_i atlas_pen;
 
         ZF_FOR_EACH_SET_BIT(code_pts, i) {
             const auto code_pt = static_cast<t_code_pt>(i);
 
             const t_i32 glyph_index = stbtt_FindGlyphIndex(&stb_font_info, static_cast<t_i32>(code_pt));
 
-            s_font_glyph_info glyph_info = {};
+            s_font_glyph_info glyph_info;
 
             t_i32 bm_box_left, bm_box_top, bm_box_right, bm_box_bottom;
             stbtt_GetGlyphBitmapBox(&stb_font_info, glyph_index, scale, scale, &bm_box_left, &bm_box_top, &bm_box_right, &bm_box_bottom);
@@ -199,9 +188,7 @@ namespace zf {
             glyph_info.atlas_rect = {atlas_pen, glyph_info.size};
             atlas_pen.x += glyph_info.size.x;
 
-            if (o_arrangement.code_pts_to_glyph_infos.Put(code_pt, glyph_info) == ek_hash_map_put_result_error) {
-                return false;
-            }
+            o_arrangement.code_pts_to_glyph_infos.Put(code_pt, glyph_info);
         }
 
         const t_len atlas_cnt = atlas_index + 1;
@@ -212,10 +199,7 @@ namespace zf {
 
         // If there were any kernings to store, set up the hash map and go through again and store them.
         o_arrangement.has_kernings = true;
-
-        if (!o_arrangement.code_pt_pairs_to_kernings.Init(g_code_pt_pair_hash_func, arrangement_mem_arena, g_hash_map_cap_default, g_code_pt_pair_comparator)) {
-            return false;
-        }
+        o_arrangement.code_pt_pairs_to_kernings = s_hash_map<s_font_code_point_pair, t_i32>::Alloc(g_code_pt_pair_hash_func, arrangement_mem_arena, g_hash_map_cap_default, g_code_pt_pair_comparator);
 
         ZF_FOR_EACH_SET_BIT(code_pts, i) {
             ZF_FOR_EACH_SET_BIT(code_pts, j) {
@@ -228,9 +212,7 @@ namespace zf {
                 const t_i32 kern = stbtt_GetGlyphKernAdvance(&stb_font_info, glyph_a_index, glyph_b_index);
 
                 if (kern != 0) {
-                    if (o_arrangement.code_pt_pairs_to_kernings.Put({cp_a, cp_b}, kern) == ek_hash_map_put_result_error) {
-                        return false;
-                    }
+                    return false;
                 }
             }
         }
@@ -238,9 +220,7 @@ namespace zf {
         //
         // Texture Atlases
         //
-        if (!AllocArray(atlas_cnt, atlas_rgbas_mem_arena, o_atlas_rgbas)) {
-            return false;
-        }
+        o_atlas_rgbas = AllocArray<t_font_atlas_rgba>(atlas_cnt, atlas_rgbas_mem_arena);
 
         // Initialise all pixels to transparent white.
         // @todo: Maybe don't use RBGA for this?
@@ -259,7 +239,7 @@ namespace zf {
         ZF_FOR_EACH_SET_BIT(code_pts, i) {
             const auto code_pt = static_cast<t_code_pt>(i);
 
-            s_font_glyph_info glyph_info = {};
+            s_font_glyph_info glyph_info;
 
             if (!o_arrangement.code_pts_to_glyph_infos.Get(code_pt, &glyph_info)) {
                 ZF_ASSERT(false);
@@ -294,8 +274,8 @@ namespace zf {
     }
 
     t_b8 PackFont(const s_str_rdonly dest_file_path, const s_str_rdonly src_file_path, const t_i32 height, t_code_pt_bit_vec &code_pts, s_mem_arena &temp_mem_arena) {
-        s_font_arrangement arrangement = {};
-        s_array<t_font_atlas_rgba> atlas_rgbas = {};
+        s_font_arrangement arrangement;
+        s_array<t_font_atlas_rgba> atlas_rgbas;
 
         if (!LoadFontFromRaw(src_file_path, height, code_pts, temp_mem_arena, temp_mem_arena, temp_mem_arena, arrangement, atlas_rgbas)) {
             return false;
@@ -305,7 +285,7 @@ namespace zf {
             return false;
         }
 
-        s_stream fs = {};
+        s_stream fs;
 
         if (!OpenFile(dest_file_path, ek_file_access_mode_write, temp_mem_arena, fs)) {
             return false;
@@ -336,7 +316,7 @@ namespace zf {
         o_arrangement = {};
         o_atlas_rgbas = {};
 
-        s_stream fs = {};
+        s_stream fs;
 
         if (!OpenFile(file_path, ek_file_access_mode_read, temp_mem_arena, fs)) {
             return false;
@@ -367,7 +347,7 @@ namespace zf {
     // @section: Shaders
     // ============================================================
     t_b8 PackShaderProg(const s_str_rdonly file_path, const s_str vs_src, const s_str fs_src, s_mem_arena &temp_mem_arena) {
-        s_stream fs = {};
+        s_stream fs;
 
         if (!OpenFile(file_path, ek_file_access_mode_write, temp_mem_arena, fs)) {
             return false;
@@ -387,7 +367,7 @@ namespace zf {
     }
 
     t_b8 UnpackShaderProg(const s_str_rdonly file_path, s_mem_arena &mem_arena, s_mem_arena &temp_mem_arena, s_str &o_vs_src, s_str &o_fs_src) {
-        s_stream fs = {};
+        s_stream fs;
 
         if (!OpenFile(file_path, ek_file_access_mode_read, temp_mem_arena, fs)) {
             return false;

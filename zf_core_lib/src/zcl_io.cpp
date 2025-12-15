@@ -10,7 +10,7 @@
 
 namespace zf {
     t_b8 OpenFile(const s_str_rdonly path, const e_file_access_mode mode, s_mem_arena &temp_mem_arena, s_stream &o_stream) {
-        s_str path_terminated = {};
+        s_str path_terminated;
 
         if (!AllocStrCloneWithTerminator(path, temp_mem_arena, path_terminated)) {
             return false;
@@ -63,7 +63,7 @@ namespace zf {
     }
 
     t_b8 LoadFileContents(const s_str_rdonly path, s_mem_arena &contents_mem_arena, s_mem_arena &temp_mem_arena, s_array<t_u8> &o_contents, const t_b8 add_terminator) {
-        s_stream stream = {};
+        s_stream stream;
 
         if (!OpenFile(path, ek_file_access_mode_read, temp_mem_arena, stream)) {
             return false;
@@ -73,9 +73,7 @@ namespace zf {
 
         const t_len file_size = CalcFileSize(stream);
 
-        if (!AllocArray(add_terminator ? file_size + 1 : file_size, contents_mem_arena, o_contents)) {
-            return false;
-        }
+        o_contents = AllocArray<t_u8>(add_terminator ? file_size + 1 : file_size, contents_mem_arena);
 
         if (stream.ReadItemsIntoArray(o_contents, file_size)) {
             return false;
@@ -89,7 +87,7 @@ namespace zf {
             *o_creation_res = ek_directory_creation_result_success;
         }
 
-        s_str path_terminated = {};
+        s_str path_terminated;
 
         if (!AllocStrCloneWithTerminator(path, temp_mem_arena, path_terminated)) {
             return false;
@@ -192,7 +190,7 @@ namespace zf {
         }
 
         // Now that directories are created, create the file.
-        s_stream fs = {};
+        s_stream fs;
 
         if (!OpenFile(path, ek_file_access_mode_write, temp_mem_arena, fs)) {
             return false;
@@ -204,7 +202,7 @@ namespace zf {
     }
 
     t_b8 CheckPathType(const s_str_rdonly path, s_mem_arena &temp_mem_arena, e_path_type &o_type) {
-        s_str path_terminated = {};
+        s_str path_terminated;
 
         if (!AllocStrCloneWithTerminator(path, temp_mem_arena, path_terminated)) {
             return false;

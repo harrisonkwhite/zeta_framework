@@ -70,11 +70,11 @@ namespace zf {
         return false;
     }
 
-    void internal::ReportAssertError(const char *const cond_raw, const char *const func_name_raw, const char *const file_name_raw, const t_i32 line) {
+    void internal::AssertError(const char *const cond, const char *const func_name, const char *const file_name, const t_i32 line) {
         fprintf(stderr, "==================== ASSERTION ERROR ====================\n");
-        fprintf(stderr, "Condition: %s\n", cond_raw);
-        fprintf(stderr, "Function:  %s\n", func_name_raw);
-        fprintf(stderr, "File:      %s\n", file_name_raw);
+        fprintf(stderr, "Condition: %s\n", cond);
+        fprintf(stderr, "Function:  %s\n", func_name);
+        fprintf(stderr, "File:      %s\n", file_name);
         fprintf(stderr, "Line:      %d\n", line);
 
         PrintStackTrace();
@@ -86,22 +86,23 @@ namespace zf {
         }
     }
 
-    void internal::ReportError(const char *const func_name_raw, const char *const file_name_raw, const t_i32 line) {
-        static t_b8 g_reported;
+    void internal::FatalError(const char *const func_name, const char *const file_name, const t_i32 line, const char *const cond) {
+        fprintf(stderr, "==================== FATAL ERROR ====================\n");
 
-        if (g_reported) {
-            return;
+        if (cond) {
+            fprintf(stderr, "Function:  %s\n", func_name);
+            fprintf(stderr, "File:      %s\n", file_name);
+            fprintf(stderr, "Line:      %d\n", line);
+            fprintf(stderr, "Condition: %s\n", cond);
+        } else {
+            fprintf(stderr, "Function: %s\n", func_name);
+            fprintf(stderr, "File:     %s\n", file_name);
+            fprintf(stderr, "Line:     %d\n", line);
         }
-
-        fprintf(stderr, "==================== ERROR ====================\n");
-
-        fprintf(stderr, "Function: %s\n", func_name_raw);
-        fprintf(stderr, "File:     %s\n", file_name_raw);
-        fprintf(stderr, "Line:     %d\n", line);
 
         PrintStackTrace();
 
-        fprintf(stderr, "===============================================\n");
+        fprintf(stderr, "=====================================================\n");
 
         fflush(stderr);
 
@@ -111,12 +112,12 @@ namespace zf {
         }
 #endif
 
-        g_reported = true;
+        abort();
     }
 
-    void ShowErrorBox(const char *const title_raw, const char *const contents_raw) {
+    void ShowErrorBox(const char *const title, const char *const contents) {
 #ifdef ZF_PLATFORM_WINDOWS
-        MessageBoxA(nullptr, contents_raw, title_raw, MB_OK | MB_ICONERROR | MB_TOPMOST);
+        MessageBoxA(nullptr, contents, title, MB_OK | MB_ICONERROR | MB_TOPMOST);
 #endif
     }
 }

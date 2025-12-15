@@ -4,7 +4,7 @@
 
 namespace zf {
     t_b8 LoadSoundFromRaw(const s_str_rdonly file_path, s_mem_arena &snd_data_mem_arena, s_mem_arena &temp_mem_arena, s_sound_data &o_snd_data) {
-        s_str file_path_terminated = {};
+        s_str file_path_terminated;
 
         if (!AllocStrCloneWithTerminator(file_path, temp_mem_arena, file_path_terminated)) {
             return false;
@@ -31,11 +31,7 @@ namespace zf {
             .frame_cnt = static_cast<t_i64>(frame_cnt),
         };
 
-        s_array<t_f32> pcm = {};
-
-        if (!AllocArray(CalcSampleCount(meta), snd_data_mem_arena, pcm)) {
-            return false;
-        }
+        const auto pcm = AllocArray<t_f32>(CalcSampleCount(meta), snd_data_mem_arena);
 
         if (ma_decoder_read_pcm_frames(&decoder, pcm.Ptr(), frame_cnt, nullptr) != MA_SUCCESS) {
             return false;
@@ -51,7 +47,7 @@ namespace zf {
             return false;
         }
 
-        s_stream fs = {};
+        s_stream fs;
 
         if (!OpenFile(file_path, ek_file_access_mode_write, temp_mem_arena, fs)) {
             return false;
@@ -63,7 +59,7 @@ namespace zf {
     }
 
     t_b8 UnpackSound(const s_str_rdonly file_path, s_mem_arena &snd_data_mem_arena, s_mem_arena &temp_mem_arena, s_sound_data &o_snd_data) {
-        s_stream fs = {};
+        s_stream fs;
 
         if (!OpenFile(file_path, ek_file_access_mode_read, temp_mem_arena, fs)) {
             return false;
@@ -71,17 +67,13 @@ namespace zf {
 
         ZF_DEFER({ CloseFile(fs); });
 
-        s_sound_meta meta = {};
+        s_sound_meta meta;
 
         if (!fs.ReadItem(meta)) {
             return false;
         }
 
-        s_array<t_f32> pcm = {};
-
-        if (!AllocArray(CalcSampleCount(meta), snd_data_mem_arena, pcm)) {
-            return false;
-        }
+        const auto pcm = AllocArray<t_f32>(CalcSampleCount(meta), snd_data_mem_arena);
 
         if (!fs.ReadItemsIntoArray(pcm, pcm.Len())) {
             return false;
@@ -103,13 +95,13 @@ namespace zf {
     }
 
     t_b8 DeserializeSound(s_stream &stream, s_mem_arena &snd_data_mem_arena, s_sound_data &o_snd_data) {
-        s_sound_meta meta = {};
+        s_sound_meta meta;
 
         if (!stream.ReadItem(meta)) {
             return false;
         }
 
-        s_array<t_f32> pcm = {};
+        s_array<t_f32> pcm;
 
         if (!DeserializeArray(stream, snd_data_mem_arena, pcm)) {
             return false;

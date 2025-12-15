@@ -3,49 +3,29 @@
 #include <cstring>
 
 namespace zf {
-    t_b8 s_mem_arena::Init(const t_len size) {
-        ZF_ASSERT(!IsInitted());
+    s_mem_arena s_mem_arena::Alloc(const t_len size) {
         ZF_ASSERT(size > 0);
 
-        m_buf = malloc(static_cast<size_t>(size));
+        const s_ptr<void> buf = malloc(static_cast<size_t>(size));
 
-        if (!m_buf) {
-            return false;
+        if (!buf) {
+            ZF_FATAL();
         }
 
-        m_size = size;
-        m_offs = 0;
-        m_is_child = false;
+        memset(buf, 0, static_cast<size_t>(size)); // Touch all pages to make sure we really do have enough memory.
 
-        return true;
-    }
-
-    t_b8 s_mem_arena::InitAsChild(const t_len size, s_mem_arena &par) {
-        ZF_ASSERT(!IsInitted());
-        ZF_ASSERT(size > 0);
-
-        m_buf = par.Push(size, 1);
-
-        if (!m_buf) {
-            return false;
-        }
-
-        m_size = size;
-        m_offs = 0;
-        m_is_child = true;
-
-        return true;
+        return {buf, size};
     }
 
     void s_mem_arena::Release() {
-        ZF_ASSERT(IsInitted() && !m_is_child);
+        ZF_ASSERT(IsActive());
 
         free(m_buf);
         m_buf = nullptr;
     }
 
     s_ptr<void> s_mem_arena::Push(const t_len size, const t_len alignment) {
-        ZF_ASSERT(IsInitted());
+        ZF_ASSERT(IsActive());
         ZF_ASSERT(size > 0);
         ZF_ASSERT(IsAlignmentValid(alignment));
 
@@ -53,7 +33,7 @@ namespace zf {
         const t_len offs_next = offs_aligned + size;
 
         if (offs_next > m_size) {
-            return nullptr;
+            ZF_FATAL();
         }
 
         m_offs = offs_next;

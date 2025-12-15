@@ -49,25 +49,9 @@ namespace zf::platform {
         ZF_ASSERT(!g_state.initted);
         ZF_ASSERT(init_window_size.x > 0 && init_window_size.y > 0);
 
-        t_b8 clean_up = false;
-
-        ZF_DEFER({
-            if (clean_up) {
-                g_state = {};
-            }
-        });
-
         if (!glfwInit()) {
-            ZF_REPORT_ERROR();
-            clean_up = true;
-            return false;
+            ZF_FATAL();
         }
-
-        ZF_DEFER({
-            if (clean_up) {
-                glfwTerminate();
-            }
-        });
 
         glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, g_gl_version_major);
         glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, g_gl_version_minor);
@@ -77,16 +61,8 @@ namespace zf::platform {
         g_state.glfw_window = glfwCreateWindow(init_window_size.x, init_window_size.y, "", nullptr, nullptr);
 
         if (!g_state.glfw_window) {
-            ZF_REPORT_ERROR();
-            clean_up = true;
-            return false;
+            ZF_FATAL();
         }
-
-        ZF_DEFER({
-            if (clean_up) {
-                glfwDestroyWindow(g_state.glfw_window);
-            }
-        });
 
         glfwMakeContextCurrent(g_state.glfw_window);
 

@@ -3,7 +3,7 @@
 #include <zcl.h>
 
 namespace zf {
-    struct s_audio_sys;
+    struct s_audio_sys; // @todo: I don't think there's any real utility in being able to create multiple audio systems. The problem isn't actually solved because the user can always just create their own audio system within a render function and play audio. It's fake!
 
     [[nodiscard]] t_b8 CreateAudioSys(s_mem_arena &mem_arena, s_ptr<s_audio_sys> &o_as);
     void DestroyAudioSys(s_audio_sys &as);

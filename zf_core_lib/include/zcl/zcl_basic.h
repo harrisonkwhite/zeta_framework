@@ -11,10 +11,6 @@ namespace zf {
     #define ZF_PLATFORM_LINUX
 #endif
 
-#if defined(__APPLE__) && defined(__MACH__)
-    #define ZF_PLATFORM_MACOS
-#endif
-
 #ifndef NDEBUG
     #define ZF_DEBUG
 #endif
@@ -88,14 +84,15 @@ namespace zf {
     using t_b8 = bool;
     static_assert(sizeof(t_b8) == 1);
 
-    using t_uintptr = uintptr_t; // Generally 64 bits EXCEPT for WASM.
+    using t_uintptr = uintptr_t;
+    static_assert(sizeof(t_uintptr) == 8);
 
     // Why signed for this?
     // 1. Mixing signed and unsigned can lead to strange overflow bugs that cannot always be caught by warnings. Better to be consistent and have predictability.
     // 2. The signed 64-bit range is more than sufficient for realistic use cases.
     // 3. If you want a value to be 0 or greater, ASSERT that it is!
-    // 4. -1 is far more useful as a sentinel than the positive upper bound is since it is more commonly an outlier.
-    using t_len = intptr_t; // Generally 64 bits EXCEPT for WASM.
+    // 4. -1 is far more useful as a sentinel than the positive upper bound is since it is more commonly a reasonable outlier in algorithms.
+    using t_len = t_i64;
 
     template <typename tp_type_a, typename tp_type_b>
     struct s_is_same {
@@ -290,25 +287,32 @@ namespace zf {
     // @section: Key Debugging Features
     // ============================================================
     namespace internal {
-        void ReportAssertError(const char *const cond_raw, const char *const func_name_raw, const char *const file_name_raw, const t_i32 line);
+        void AssertError(const char *const cond, const char *const func_name, const char *const file_name, const t_i32 line);
 
 #ifdef ZF_DEBUG
-    #define ZF_ASSERT(cond)                                                               \
-        do {                                                                              \
-            if (!ZF_IN_CONSTEXPR() && !(cond)) {                                          \
-                zf::internal::ReportAssertError(#cond, __FUNCTION__, __FILE__, __LINE__); \
-            }                                                                             \
+    #define ZF_ASSERT(cond)                                                         \
+        do {                                                                        \
+            if (!ZF_IN_CONSTEXPR() && !(cond)) {                                    \
+                zf::internal::AssertError(#cond, __FUNCTION__, __FILE__, __LINE__); \
+            }                                                                       \
         } while (0)
 #else
     #define ZF_ASSERT(cond) static_cast<void>(0)
 #endif
 
-        void ReportError(const char *const func_name_raw, const char *const file_name_raw, const t_i32 line);
+        void FatalError(const char *const func_name, const char *const file_name, const t_i32 line, const char *const cond = nullptr);
 
-#define ZF_REPORT_ERROR() zf::internal::ReportError(__FUNCTION__, __FILE__, __LINE__)
+#define ZF_FATAL() zf::internal::FatalError(__FUNCTION__, __FILE__, __LINE__)
+
+#define ZF_REQUIRE(cond)                                                       \
+    do {                                                                       \
+        if (!(cond)) {                                                         \
+            zf::internal::FatalError(__FUNCTION__, __FILE__, __LINE__, #cond); \
+        }                                                                      \
+    } while (0)
     }
 
-    void ShowErrorBox(const char *const title_raw, const char *const contents_raw);
+    void ShowErrorBox(const char *const title, const char *const contents);
 
     // ============================================================
     // @section: Essential Utilities

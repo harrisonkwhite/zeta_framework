@@ -34,7 +34,7 @@ namespace zf {
     };
 
     struct s_asset_field {
-        s_cstr_literal name = {};
+        s_cstr_literal name;
         e_asset_field_type type = {};
         t_b8 optional = false;
     };
@@ -94,17 +94,11 @@ namespace zf {
     };
 
     t_b8 RunPacker(const s_str_rdonly instrs_json_file_path) {
-        s_mem_arena mem_arena = {};
-
-        if (!mem_arena.Init(g_mem_arena_size)) {
-            LogError(s_cstr_literal("Failed to allocate memory arena!"));
-            return false;
-        }
-
+        auto mem_arena = s_mem_arena::Alloc(g_mem_arena_size);
         ZF_DEFER({ mem_arena.Release(); });
 
         const auto cj = [instrs_json_file_path, &mem_arena]() -> cJSON * {
-            s_array<t_u8> instrs_json_file_contents = {};
+            s_array<t_u8> instrs_json_file_contents;
 
             if (!LoadFileContents(instrs_json_file_path, mem_arena, mem_arena, instrs_json_file_contents, true)) {
                 LogError(s_cstr_literal("Failed to load packing instructions JSON file \"%\"!"), instrs_json_file_path);
@@ -126,10 +120,10 @@ namespace zf {
             return false;
         }
 
-        s_static_array<cJSON *, eks_tex_field_cnt> tex_field_cj_ptrs = {};
-        s_static_array<cJSON *, eks_font_field_cnt> font_field_cj_ptrs = {};
-        s_static_array<cJSON *, eks_shader_prog_field_cnt> shader_prog_field_cj_ptrs = {};
-        s_static_array<cJSON *, eks_snd_field_cnt> snd_field_cj_ptrs = {};
+        s_static_array<cJSON *, eks_tex_field_cnt> tex_field_cj_ptrs;
+        s_static_array<cJSON *, eks_font_field_cnt> font_field_cj_ptrs;
+        s_static_array<cJSON *, eks_shader_prog_field_cnt> shader_prog_field_cj_ptrs;
+        s_static_array<cJSON *, eks_snd_field_cnt> snd_field_cj_ptrs;
 
         for (t_len asset_type_index = 0; asset_type_index < eks_asset_type_cnt; asset_type_index++) {
             const auto asset_type_arr_name = g_asset_type_arr_names[asset_type_index];
@@ -226,7 +220,7 @@ namespace zf {
                     const auto src_fp_cstr = field_vals[ek_tex_field_src_file_path]->valuestring;
                     const auto src_fp = ConvertCstr(src_fp_cstr);
 
-                    s_texture_data tex_data = {};
+                    s_texture_data tex_data;
 
                     if (!LoadTextureFromRaw(src_fp, mem_arena, mem_arena, tex_data)) {
                         LogError(s_cstr_literal("Failed to load texture from raw file \"%\"!"), src_fp);
@@ -258,7 +252,7 @@ namespace zf {
                     if (field_vals[ek_font_field_extra_chrs_file_path]) {
                         const auto extra_chrs_fp = ConvertCstr(field_vals[ek_font_field_extra_chrs_file_path]->valuestring);
 
-                        s_array<t_u8> extra_chrs_file_contents = {};
+                        s_array<t_u8> extra_chrs_file_contents;
 
                         if (!LoadFileContents(extra_chrs_fp, mem_arena, mem_arena, extra_chrs_file_contents)) {
                             LogError(s_cstr_literal("Failed to load extra characters file \"%\"!"), extra_chrs_fp);
@@ -281,14 +275,14 @@ namespace zf {
                     const auto vs_fp = ConvertCstr(field_vals[ek_shader_prog_field_src_vs_file_path]->valuestring);
                     const auto fs_fp = ConvertCstr(field_vals[ek_shader_prog_field_src_fs_file_path]->valuestring);
 
-                    s_str vs_src = {};
+                    s_str vs_src;
 
                     if (!LoadFileContents(vs_fp, mem_arena, mem_arena, vs_src.bytes)) {
                         LogError(s_cstr_literal("Failed to load vertex shader source from file \"%\"!"), vs_fp);
                         return false;
                     }
 
-                    s_str fs_src = {};
+                    s_str fs_src;
 
                     if (!LoadFileContents(fs_fp, mem_arena, mem_arena, fs_src.bytes)) {
                         LogError(s_cstr_literal("Failed to load fragment shader source from file \"%\"!"), fs_fp);
@@ -307,7 +301,7 @@ namespace zf {
                     const auto dest_fp = ConvertCstr(field_vals[ek_snd_field_dest_file_path]->valuestring);
                     const auto src_fp = ConvertCstr(field_vals[ek_snd_field_src_file_path]->valuestring);
 
-                    s_sound_data snd_data = {};
+                    s_sound_data snd_data;
 
                     if (!LoadSoundFromRaw(src_fp, mem_arena, mem_arena, snd_data)) {
                         LogError(s_cstr_literal("Failed to load sound from raw file \"%\"!"), src_fp);

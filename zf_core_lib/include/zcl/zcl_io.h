@@ -226,9 +226,7 @@ namespace zf {
         }
 
         if (len > 0) {
-            if (!AllocArray(len, arr_mem_arena, o_arr)) {
-                return false;
-            }
+            o_arr = AllocArray<tp_type>(len, arr_mem_arena);
 
             if (!stream.ReadItemsIntoArray(o_arr, len)) {
                 return false;
@@ -260,9 +258,7 @@ namespace zf {
         }
 
         if (bit_cnt > 0) {
-            if (!CreateBitVec(bit_cnt, bv_mem_arena, o_bv)) {
-                return false;
-            }
+            o_bv = AllocBitVec(bit_cnt, bv_mem_arena);
 
             if (!stream.ReadItemsIntoArray(o_bv.Bytes(), o_bv.Bytes().Len())) {
                 return false;

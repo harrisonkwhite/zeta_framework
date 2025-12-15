@@ -35,17 +35,17 @@ namespace zf {
         }
 
         constexpr tp_type &operator*() const {
-            ZF_ASSERT(m_raw);
+            ZF_REQUIRE(m_raw);
             return *m_raw;
         }
 
         constexpr tp_type *operator->() const {
-            ZF_ASSERT(m_raw);
+            ZF_REQUIRE(m_raw);
             return m_raw;
         }
 
         constexpr tp_type &operator[](const t_len index) const {
-            ZF_ASSERT(m_raw);
+            ZF_REQUIRE(m_raw);
             return m_raw[index];
         }
 
@@ -177,44 +177,42 @@ namespace zf {
 
     struct s_mem_arena {
     public:
+        static s_mem_arena Alloc(const t_len size);
+
         s_mem_arena() = default;
 
         s_mem_arena(const s_mem_arena &) = delete;
         s_mem_arena &operator=(const s_mem_arena &) = delete;
 
-        [[nodiscard]] t_b8 Init(const t_len size);
-        [[nodiscard]] t_b8 InitAsChild(const t_len size, s_mem_arena &par);
+        void Release();
 
-        t_b8 IsInitted() const {
+        t_b8 IsActive() const {
             return m_buf;
         }
-
-        void Release();
 
         s_ptr<void> Push(const t_len size, const t_len alignment);
 
         void Rewind(const t_len offs) {
-            ZF_ASSERT(IsInitted());
+            ZF_ASSERT(IsActive());
             ZF_ASSERT(offs >= 0 && offs <= m_offs);
 
             m_offs = offs;
         }
 
     private:
+        s_mem_arena(const s_ptr<void> buf, const t_len size) : m_buf(buf), m_size(size) {
+            ZF_ASSERT((!buf && size == 0) || (buf && size > 0));
+        }
+
         s_ptr<void> m_buf = nullptr;
         t_len m_size = 0;
         t_len m_offs = 0;
-        t_b8 m_is_child = false; // Invalid to free the buffer if it is.
     };
 
     template <typename tp_type>
     s_ptr<tp_type> Alloc(s_mem_arena &mem_arena) {
         const auto ptr = static_cast<s_ptr<tp_type>>(mem_arena.Push(ZF_SIZE_OF(tp_type), ZF_ALIGN_OF(tp_type)));
-
-        if (ptr) {
-            new (ptr) tp_type();
-        }
-
+        new (ptr) tp_type();
         return ptr;
     }
 
@@ -252,7 +250,7 @@ namespace zf {
         }
 
         constexpr const tp_type &operator[](const t_len index) const {
-            ZF_ASSERT(index >= 0 && index < m_len);
+            ZF_REQUIRE(index >= 0 && index < m_len);
             return m_ptr[index];
         }
 
@@ -357,7 +355,7 @@ namespace zf {
         }
 
         constexpr tp_type &operator[](const t_len index) const {
-            ZF_ASSERT(index >= 0 && index < m_len);
+            ZF_REQUIRE(index >= 0 && index < m_len);
             return m_ptr[index];
         }
 
@@ -457,12 +455,12 @@ namespace zf {
         }
 
         constexpr tp_type &operator[](const t_len index) {
-            ZF_ASSERT(index >= 0 && index < tp_len);
+            ZF_REQUIRE(index >= 0 && index < tp_len);
             return raw[index];
         }
 
         constexpr const tp_type &operator[](const t_len index) const {
-            ZF_ASSERT(index >= 0 && index < tp_len);
+            ZF_REQUIRE(index >= 0 && index < tp_len);
             return raw[index];
         }
     };
@@ -499,31 +497,27 @@ namespace zf {
     concept c_nonstatic_mut_array = s_is_nonstatic_array<tp_type>::g_val;
 
     template <typename tp_type>
-    [[nodiscard]] t_b8 AllocArray(const t_len len, s_mem_arena &mem_arena, s_array<tp_type> &o_arr) {
+    s_array<tp_type> AllocArray(const t_len len, s_mem_arena &mem_arena) {
         ZF_ASSERT(len > 0);
 
         const auto ptr = static_cast<s_ptr<tp_type>>(mem_arena.Push(ZF_SIZE_OF(tp_type) * len, ZF_ALIGN_OF(tp_type)));
-
-        if (!ptr) {
-            return false;
-        }
 
         for (t_len i = 0; i < len; i++) {
             new (&ptr[i]) tp_type();
         }
 
-        o_arr = {ptr, len};
-
-        return true;
+        return {ptr, len};
     }
 
     template <c_nonstatic_array tp_type>
-    [[nodiscard]] t_b8 AllocArrayClone(const tp_type arr_to_clone, s_mem_arena &mem_arena, s_array<typename tp_type::t_elem> &o_arr) {
-        if (!AllocArray(arr_to_clone.Len(), mem_arena, o_arr)) {
+    auto AllocArrayClone(const tp_type arr_to_clone, s_mem_arena &mem_arena) {
+        const auto arr = AllocArray(arr_to_clone.Len(), mem_arena);
+
+        if (!arr) {
             return false;
         }
 
-        arr_to_clone.CopyTo(*o_arr);
+        arr_to_clone.CopyTo(arr);
 
         return true;
     }
@@ -656,7 +650,7 @@ namespace zf {
     struct s_static_bit_vec {
         static constexpr t_len g_bit_cnt = tp_bit_cnt;
 
-        s_static_array<t_u8, BitsToBytes(tp_bit_cnt)> bytes = {};
+        s_static_array<t_u8, BitsToBytes(tp_bit_cnt)> bytes;
 
         constexpr operator s_bit_vec() {
             return {bytes, tp_bit_cnt};
@@ -667,18 +661,9 @@ namespace zf {
         }
     };
 
-    [[nodiscard]] inline t_b8 CreateBitVec(const t_len bit_cnt, s_mem_arena &mem_arena, s_bit_vec &o_bv) {
+    inline s_bit_vec AllocBitVec(const t_len bit_cnt, s_mem_arena &mem_arena) {
         ZF_ASSERT(bit_cnt > 0);
-
-        s_array<t_u8> bytes;
-
-        if (!AllocArray(BitsToBytes(bit_cnt), mem_arena, bytes)) {
-            return false;
-        }
-
-        o_bv = {bytes, bit_cnt};
-
-        return true;
+        return {AllocArray<t_u8>(BitsToBytes(bit_cnt), mem_arena), bit_cnt};
     }
 
     constexpr t_b8 IsBitSet(const s_bit_vec_rdonly bv, const t_len index) {

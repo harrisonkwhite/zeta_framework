@@ -107,7 +107,7 @@ namespace zf {
         }
 
         const char *Cstr() const {
-            ZF_ASSERT(IsTerminated(bytes));
+            ZF_REQUIRE(IsTerminated(bytes));
             return reinterpret_cast<const char *>(bytes.Ptr().Raw());
         }
     };
@@ -123,7 +123,7 @@ namespace zf {
         }
 
         char *Cstr() const {
-            ZF_ASSERT(IsTerminated(bytes));
+            ZF_REQUIRE(IsTerminated(bytes));
             return reinterpret_cast<char *>(bytes.Ptr().Raw());
         }
 
@@ -146,12 +146,8 @@ namespace zf {
 
     // Allocates a clone of the given string using the memory arena, with a null byte added at the end (even if the string was already terminated).
     [[nodiscard]] inline t_b8 AllocStrCloneWithTerminator(const s_str_rdonly str, s_mem_arena &mem_arena, s_str &o_clone) {
-        if (!AllocArray(str.bytes.Len() + 1, mem_arena, o_clone.bytes)) {
-            return false;
-        }
-
+        o_clone.bytes = AllocArray<t_u8>(str.bytes.Len(), mem_arena);
         str.bytes.CopyTo(o_clone.bytes);
-
         return true;
     }
 

@@ -3,8 +3,8 @@
 #include <zcl.h>
 
 namespace zf {
-    // Initialises the GFX module. This depends on the platform module being successfully initialised.
-    [[nodiscard]] t_b8 InitGFX();
+    // Initialises the GFX module. This depends on the platform module being initialised beforehand.
+    void InitGFX();
 
     void ShutdownGFX();
 
@@ -45,90 +45,90 @@ namespace zf {
 
     struct s_shader_prog_uniform_val {
     public:
-        constexpr s_shader_prog_uniform_val(const t_i32 v) : m_type(ek_shader_prog_uniform_val_type_i32), m_type_data({.i32 = v}) {};
-        constexpr s_shader_prog_uniform_val(const t_u32 v) : m_type(ek_shader_prog_uniform_val_type_u32), m_type_data({.u32 = v}) {};
-        constexpr s_shader_prog_uniform_val(const t_f32 v) : m_type(ek_shader_prog_uniform_val_type_f32), m_type_data({.f32 = v}) {};
-        constexpr s_shader_prog_uniform_val(const s_v2 v) : m_type(ek_shader_prog_uniform_val_type_v2), m_type_data({.v2 = v}) {};
-        constexpr s_shader_prog_uniform_val(const s_v3 v) : m_type(ek_shader_prog_uniform_val_type_v3), m_type_data({.v3 = v}) {};
-        constexpr s_shader_prog_uniform_val(const s_v4 v) : m_type(ek_shader_prog_uniform_val_type_v4), m_type_data({.v4 = v}) {};
-        constexpr s_shader_prog_uniform_val(const s_mat4x4 &v) : m_type(ek_shader_prog_uniform_val_type_mat4x4), m_type_data({.mat4x4 = v}) {};
+        constexpr s_shader_prog_uniform_val(const t_i32 v) : type(ek_shader_prog_uniform_val_type_i32), type_data({.i32 = v}) {};
+        constexpr s_shader_prog_uniform_val(const t_u32 v) : type(ek_shader_prog_uniform_val_type_u32), type_data({.u32 = v}) {};
+        constexpr s_shader_prog_uniform_val(const t_f32 v) : type(ek_shader_prog_uniform_val_type_f32), type_data({.f32 = v}) {};
+        constexpr s_shader_prog_uniform_val(const s_v2 v) : type(ek_shader_prog_uniform_val_type_v2), type_data({.v2 = v}) {};
+        constexpr s_shader_prog_uniform_val(const s_v3 v) : type(ek_shader_prog_uniform_val_type_v3), type_data({.v3 = v}) {};
+        constexpr s_shader_prog_uniform_val(const s_v4 v) : type(ek_shader_prog_uniform_val_type_v4), type_data({.v4 = v}) {};
+        constexpr s_shader_prog_uniform_val(const s_mat4x4 &v) : type(ek_shader_prog_uniform_val_type_mat4x4), type_data({.mat4x4 = v}) {};
 
         constexpr e_shader_prog_uniform_val_type Type() const {
-            return m_type;
+            return type;
         }
 
         constexpr t_i32 &I32() {
-            ZF_ASSERT(m_type == ek_shader_prog_uniform_val_type_i32);
-            return m_type_data.i32;
+            ZF_ASSERT(type == ek_shader_prog_uniform_val_type_i32);
+            return type_data.i32;
         }
 
         constexpr const t_i32 &I32() const {
-            ZF_ASSERT(m_type == ek_shader_prog_uniform_val_type_i32);
-            return m_type_data.i32;
+            ZF_ASSERT(type == ek_shader_prog_uniform_val_type_i32);
+            return type_data.i32;
         }
 
         constexpr t_u32 &U32() {
-            ZF_ASSERT(m_type == ek_shader_prog_uniform_val_type_u32);
-            return m_type_data.u32;
+            ZF_ASSERT(type == ek_shader_prog_uniform_val_type_u32);
+            return type_data.u32;
         }
 
         constexpr const t_u32 &U32() const {
-            ZF_ASSERT(m_type == ek_shader_prog_uniform_val_type_u32);
-            return m_type_data.u32;
+            ZF_ASSERT(type == ek_shader_prog_uniform_val_type_u32);
+            return type_data.u32;
         }
 
         constexpr t_f32 &F32() {
-            ZF_ASSERT(m_type == ek_shader_prog_uniform_val_type_f32);
-            return m_type_data.f32;
+            ZF_ASSERT(type == ek_shader_prog_uniform_val_type_f32);
+            return type_data.f32;
         }
 
         constexpr const t_f32 &F32() const {
-            ZF_ASSERT(m_type == ek_shader_prog_uniform_val_type_f32);
-            return m_type_data.f32;
+            ZF_ASSERT(type == ek_shader_prog_uniform_val_type_f32);
+            return type_data.f32;
         }
 
         constexpr s_v2 &V2() {
-            ZF_ASSERT(m_type == ek_shader_prog_uniform_val_type_v2);
-            return m_type_data.v2;
+            ZF_ASSERT(type == ek_shader_prog_uniform_val_type_v2);
+            return type_data.v2;
         }
 
         constexpr const s_v2 &V2() const {
-            ZF_ASSERT(m_type == ek_shader_prog_uniform_val_type_v2);
-            return m_type_data.v2;
+            ZF_ASSERT(type == ek_shader_prog_uniform_val_type_v2);
+            return type_data.v2;
         }
 
         constexpr s_v3 &V3() {
-            ZF_ASSERT(m_type == ek_shader_prog_uniform_val_type_v3);
-            return m_type_data.v3;
+            ZF_ASSERT(type == ek_shader_prog_uniform_val_type_v3);
+            return type_data.v3;
         }
 
         constexpr const s_v3 &V3() const {
-            ZF_ASSERT(m_type == ek_shader_prog_uniform_val_type_v3);
-            return m_type_data.v3;
+            ZF_ASSERT(type == ek_shader_prog_uniform_val_type_v3);
+            return type_data.v3;
         }
 
         constexpr s_v4 &V4() {
-            ZF_ASSERT(m_type == ek_shader_prog_uniform_val_type_v4);
-            return m_type_data.v4;
+            ZF_ASSERT(type == ek_shader_prog_uniform_val_type_v4);
+            return type_data.v4;
         }
 
         constexpr const s_v4 &V4() const {
-            ZF_ASSERT(m_type == ek_shader_prog_uniform_val_type_v4);
-            return m_type_data.v4;
+            ZF_ASSERT(type == ek_shader_prog_uniform_val_type_v4);
+            return type_data.v4;
         }
 
         constexpr s_mat4x4 &Mat4x4() {
-            ZF_ASSERT(m_type == ek_shader_prog_uniform_val_type_mat4x4);
-            return m_type_data.mat4x4;
+            ZF_ASSERT(type == ek_shader_prog_uniform_val_type_mat4x4);
+            return type_data.mat4x4;
         }
 
         constexpr const s_mat4x4 &Mat4x4() const {
-            ZF_ASSERT(m_type == ek_shader_prog_uniform_val_type_mat4x4);
-            return m_type_data.mat4x4;
+            ZF_ASSERT(type == ek_shader_prog_uniform_val_type_mat4x4);
+            return type_data.mat4x4;
         }
 
     private:
-        e_shader_prog_uniform_val_type m_type = {};
+        e_shader_prog_uniform_val_type type = {};
 
         union {
             t_i32 i32;
@@ -138,7 +138,7 @@ namespace zf {
             s_v3 v3;
             s_v4 v4;
             s_mat4x4 mat4x4;
-        } m_type_data = {};
+        } type_data = {};
     };
 
     enum e_render_instr_type {
@@ -212,7 +212,7 @@ namespace zf {
             } clear;
 
             struct {
-                s_ptr<s_gfx_resource> prog;
+                s_ptr<const s_gfx_resource> prog;
             } shader_prog_set;
 
             struct {
@@ -221,27 +221,44 @@ namespace zf {
             } shader_prog_uniform_set;
 
             struct {
-                s_ptr<s_gfx_resource> mesh;
-                s_array<t_f32> verts;
-                s_array<t_u16> elems;
+                s_ptr<const s_gfx_resource> mesh;
+                s_array_rdonly<t_f32> verts;
+                s_array_rdonly<t_u16> elems;
             } mesh_update;
 
             struct {
-                s_ptr<s_gfx_resource> mesh;
-                s_ptr<s_gfx_resource> tex;
+                s_ptr<const s_gfx_resource> mesh;
+                s_ptr<const s_gfx_resource> tex;
             } mesh_draw;
         } type_data = {};
     };
 
-    void SubmitClear(s_list<s_render_instr> &instrs, const s_color_rgb24f col);
+    struct s_render_instr_seq {
+    public:
+        s_render_instr_seq(s_mem_arena &mem_arena) : blocks_mem_arena(mem_arena) {}
 
-    void SubmitShaderProgSet(s_list<s_render_instr> &instrs, const s_ptr<s_gfx_resource> prog);
+        [[nodiscard]] t_b8 SubmitClear(const s_color_rgb24f col);
 
-    void SubmitShaderProgUniformSet(s_list<s_render_instr> &instrs, const e_shader_prog_uniform_val_type val_type, const s_shader_prog_uniform_val &val);
+        [[nodiscard]] t_b8 SubmitShaderProgSet(const s_ptr<const s_gfx_resource> prog);
 
-    void SubmitMeshUpdate(s_list<s_render_instr> &instrs, const s_ptr<s_gfx_resource> mesh, const s_array_rdonly<t_f32> verts, const s_array_rdonly<t_u16> elems);
+        [[nodiscard]] t_b8 SubmitShaderProgUniformSet(const e_shader_prog_uniform_val_type val_type, const s_shader_prog_uniform_val &val);
 
-    void SubmitMeshDraw(s_list<s_render_instr> &instrs, const s_ptr<s_gfx_resource> mesh, const s_ptr<s_gfx_resource> tex);
+        // Leave verts as empty if you want to leave the vertices as they are.
+        // Leave elems as empty if you want to leave the elements as they are.
+        [[nodiscard]] t_b8 SubmitMeshUpdate(const s_ptr<const s_gfx_resource> mesh, const s_array_rdonly<t_f32> verts, const s_array_rdonly<t_u16> elems);
 
-    [[nodiscard]] t_b8 ExecRender(const s_array<s_render_instr> instrs);
+        [[nodiscard]] t_b8 SubmitMeshDraw(const s_ptr<s_gfx_resource> mesh, const s_ptr<const s_gfx_resource> tex);
+
+        [[nodiscard]] t_b8 Exec(s_mem_arena &temp_mem_arena);
+
+    private:
+        struct s_render_instr_block {
+            s_static_list<s_render_instr, 32> instrs = {};
+            s_ptr<s_render_instr_block> next = nullptr;
+        };
+
+        s_mem_arena &blocks_mem_arena;
+        s_ptr<s_render_instr_block> blocks_head = nullptr;
+        s_ptr<s_render_instr_block> blocks_tail = nullptr;
+    };
 }
