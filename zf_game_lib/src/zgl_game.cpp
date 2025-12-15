@@ -82,7 +82,7 @@ namespace zf {
 
                 s_rendering_state &rs = BeginRendering(rendering_basis, temp_mem_arena);
 
-                DrawTriangle(rs, {{}, {100.0f, 0.0f}, {0.0f, 100.0f}}, {colors::g_red, colors::g_blue});
+                DrawRect(rs, {0.0f, 0.0f, 32.0f, 32.0f}, colors::g_red, colors::g_blue, colors::g_green, colors::g_yellow);
 
                 EndRendering(rs, temp_mem_arena);
             }

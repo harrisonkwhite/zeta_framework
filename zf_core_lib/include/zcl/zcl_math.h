@@ -217,12 +217,21 @@ namespace zf {
 
         constexpr s_v2 Pos() const { return {x, y}; }
         constexpr s_v2 Size() const { return {width, height}; }
-        constexpr s_v2 Center() const { return {x + (width / 2.0f), y + (height / 2.0f)}; }
 
         constexpr t_f32 Left() const { return x; }
         constexpr t_f32 Top() const { return y; }
         constexpr t_f32 Right() const { return x + width; }
         constexpr t_f32 Bottom() const { return y + height; }
+
+        constexpr s_v2 TopLeft() const { return {Left(), Top()}; }
+        constexpr s_v2 TopCenter() const { return {x + (width / 2.0f), Top()}; }
+        constexpr s_v2 TopRight() const { return {Right(), Top()}; }
+        constexpr s_v2 CenterLeft() const { return {Left(), y + (height / 2.0f)}; }
+        constexpr s_v2 Center() const { return {x + (width / 2.0f), y + (height / 2.0f)}; }
+        constexpr s_v2 CenterRight() const { return {Right(), y + (height / 2.0f)}; }
+        constexpr s_v2 BottomLeft() const { return {Left(), Bottom()}; }
+        constexpr s_v2 BottomCenter() const { return {x + (width / 2.0f), Bottom()}; }
+        constexpr s_v2 BottomRight() const { return {Right(), Bottom()}; }
 
         constexpr t_f32 Area() const { return width * height; }
 
@@ -265,6 +274,11 @@ namespace zf {
         constexpr t_i32 Top() const { return y; }
         constexpr t_i32 Right() const { return x + width; }
         constexpr t_i32 Bottom() const { return y + height; }
+
+        constexpr s_v2_i TopLeft() const { return {Left(), Top()}; }
+        constexpr s_v2_i TopRight() const { return {Right(), Top()}; }
+        constexpr s_v2_i BottomLeft() const { return {Left(), Bottom()}; }
+        constexpr s_v2_i BottomRight() const { return {Right(), Bottom()}; }
 
         constexpr t_i32 Area() const { return width * height; }
 

@@ -7,11 +7,15 @@ namespace zf {
     constexpr s_color_rgb8 g_bg_color_default = {109, 187, 255};
 
     struct s_batch_vert {
-        s_v2 vert_coord;
+        s_v2 pos;
         s_color_rgba32f blend;
+        s_v2 uv;
+
+        s_batch_vert() = default;
+        s_batch_vert(const s_v2 pos, const s_color_rgba32f blend, const s_v2 uv) : pos(pos), blend(blend), uv(uv) {}
     };
 
-    constexpr s_static_array<t_i32, 2> g_batch_vert_attr_component_cnts = {2, 4}; // This has to match the number of components per attribute above.
+    constexpr s_static_array<t_i32, 3> g_batch_vert_attr_component_cnts = {2, 4, 2}; // This has to match the number of components per attribute above.
 
     constexpr t_len g_batch_vert_component_cnt = ZF_SIZE_OF(s_batch_vert) / ZF_SIZE_OF(t_f32);
 
@@ -31,20 +35,24 @@ namespace zf {
 
 layout (location = 0) in vec2 a_vert;
 layout (location = 1) in vec4 a_blend;
+layout (location = 2) in vec2 a_uv;
 
 out vec4 v_blend;
+out vec2 v_uv;
 
 uniform mat4 u_proj;
 
 void main() {
     gl_Position = u_proj * vec4(a_vert, 0.0, 1.0);
     v_blend = a_blend;
+    v_uv = a_uv;
 }
 )";
 
     constexpr s_cstr_literal g_batch_frag_shader_src = R"(#version 330 core
 
 in vec4 v_blend;
+in vec2 v_uv;
 
 out vec4 o_frag_color;
 
@@ -58,19 +66,7 @@ void main() {
             .gfx_res_arena = CreateGFXResourceArena(mem_arena),
         };
 
-        {
-            // clang-format off
-            constexpr s_static_array<t_f32, 18> verts = {
-                0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f,
-                0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f,
-                0.5f, 0.5f, 1.0f, 0.0f, 0.0f, 1.0f,
-            };
-            // clang-format on
-
-            constexpr s_static_array<t_i32, 2> vert_attr_component_cnts = {2, 4};
-
-            basis.batch_mesh = &CreateMesh(verts.ToNonstatic().Ptr(), verts.ToNonstatic().Len(), true, vert_attr_component_cnts, basis.gfx_res_arena);
-        }
+        basis.batch_mesh = &CreateMesh(nullptr, g_batch_vert_component_cnt * g_batch_vert_limit, true, g_batch_vert_attr_component_cnts, basis.gfx_res_arena);
 
         if (!CreateShaderProg(g_batch_vert_shader_src, g_batch_frag_shader_src, basis.gfx_res_arena, temp_mem_arena, basis.batch_shader_prog)) {
             ZF_FATAL();
@@ -96,7 +92,7 @@ void main() {
         state.mem_arena = &mem_arena;
         state.instr_seq = {mem_arena};
 
-        state.instr_seq.SubmitClear(g_bg_color_default);
+        DrawClear(state, g_bg_color_default);
 
         return state;
     }
@@ -127,13 +123,31 @@ void main() {
         internal::SwapWindowBuffers();
     }
 
+    void DrawClear(s_rendering_state &rs, const s_color_rgb24f col) {
+        rs.instr_seq.SubmitClear(g_bg_color_default);
+    }
+
     void DrawTriangle(s_rendering_state &rs, const s_static_array<s_v2, 3> &pts, const s_static_array<s_color_rgba32f, 3> &pt_colors) {
         if (rs.batch_verts.Len() + pts.g_len > rs.batch_verts.Cap()) {
             Flush(rs);
         }
 
-        for (t_len i = 0; i < pts.g_len; i++) {
-            rs.batch_verts.Append({pts[i], pt_colors[i]});
+        rs.batch_verts.Append({pts[0], pt_colors[0], {}});
+        rs.batch_verts.Append({pts[1], pt_colors[1], {}});
+        rs.batch_verts.Append({pts[2], pt_colors[2], {}});
+    }
+
+    void DrawRect(s_rendering_state &rs, const s_rect_f rect, const s_color_rgba32f color_topleft, const s_color_rgba32f color_topright, const s_color_rgba32f color_bottomright, const s_color_rgba32f color_bottomleft) {
+        if (rs.batch_verts.Len() + 6 > rs.batch_verts.Cap()) {
+            Flush(rs);
         }
+
+        rs.batch_verts.Append({rect.TopLeft(), color_topleft, {}});
+        rs.batch_verts.Append({rect.TopRight(), color_topright, {}});
+        rs.batch_verts.Append({rect.BottomRight(), color_bottomright, {}});
+
+        rs.batch_verts.Append({rect.BottomRight(), color_bottomright, {}});
+        rs.batch_verts.Append({rect.BottomLeft(), color_bottomleft, {}});
+        rs.batch_verts.Append({rect.TopLeft(), color_topleft, {}});
     }
 }

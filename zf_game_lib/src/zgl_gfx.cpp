@@ -106,7 +106,7 @@ namespace zf {
 
     s_gfx_resource &CreateMesh(const s_ptr<const t_f32> verts, const t_len verts_len, const t_b8 verts_dynamic, const s_array_rdonly<t_i32> vert_attr_component_cnts, s_gfx_resource_arena &arena) {
         ZF_ASSERT(g_initted);
-        ZF_ASSERT((verts && verts_len > 0) || (!verts && verts_len == 0));
+        ZF_ASSERT(verts_len > 0);
 
         auto &res = PushGFXResource(arena);
 
@@ -140,6 +140,8 @@ namespace zf {
 
             offs += comp_cnt;
         }
+
+        ZF_ASSERT(verts_len % offs == 0);
 
         glBindVertexArray(0);
 
