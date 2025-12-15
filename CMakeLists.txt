@@ -22,7 +22,7 @@ set(SPIRV_SKIP_EXECUTABLES ON CACHE BOOL "" FORCE)
 set(SHADERC_SKIP_TESTS ON CACHE BOOL "" FORCE)
 set(SHADERC_SKIP_EXAMPLES ON CACHE BOOL "" FORCE)
 set(SHADERC_SKIP_INSTALL ON CACHE BOOL "" FORCE)
-add_subdirectory(external/bgfx)
+add_subdirectory(external/bgfx_cmake)
 
 add_subdirectory(zf_core_lib)
 add_subdirectory(zf_game_lib)

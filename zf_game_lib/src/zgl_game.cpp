@@ -1,8 +1,6 @@
 #include <zgl/zgl_game.h>
 
-#include <zgl/zgl_audio.h>
 #include <zgl/zgl_gfx.h>
-#include <zgl/zgl_rendering.h>
 #include <zgl/zgl_platform.h>
 
 namespace zf {
@@ -34,6 +32,7 @@ namespace zf {
         InitGFX();
         ZF_DEFER({ ShutdownGFX(); });
 
+#if 0
         auto rendering_basis = CreateRenderingBasis(perm_mem_arena, temp_mem_arena);
 
         init_func({
@@ -47,6 +46,7 @@ namespace zf {
                 cleanup_func();
             }
         });
+#endif
 
         //
         // Main Loop
@@ -71,11 +71,13 @@ namespace zf {
             // Once enough time has passed (i.e. the time accumulator has reached the tick interval), run at least a single tick and update the display.
             if (frame_dur_accum >= targ_tick_interval) {
                 do {
+#if 0
                     tick_func({
                         .perm_mem_arena = perm_mem_arena,
                         .temp_mem_arena = temp_mem_arena,
                         .perm_gfx_res_arena = rendering_basis.gfx_res_arena,
                     });
+#endif
 
                     internal::ClearInputEvents();
 
@@ -84,6 +86,7 @@ namespace zf {
 
                 // internal::PlatformLock();
 
+#if 0
                 s_rendering_state &rs = internal::BeginRendering(rendering_basis, temp_mem_arena);
 
                 render_func({
@@ -93,6 +96,7 @@ namespace zf {
                 });
 
                 internal::EndRendering(rs, temp_mem_arena);
+#endif
 
                 // internal::PlatformUnlock();
             }
