@@ -80,19 +80,11 @@ namespace zf {
                     frame_dur_accum -= targ_tick_interval;
                 } while (frame_dur_accum >= targ_tick_interval);
 
-                s_rendering_state rs = {
-                    .basis = rendering_basis,
-                    .mem_arena = temp_mem_arena,
-                    .instr_seq = {temp_mem_arena},
-                };
+                s_rendering_state &rs = BeginRendering(rendering_basis, temp_mem_arena);
 
-                rs.instr_seq.SubmitClear(s_color_rgb8(0, 255, 0));
+                DrawTriangle(rs, {}, {100.0f, 0.0f}, {0.0f, 100.0f}, colors::g_red);
 
-                DrawTriangle(rs, {0.0f, 0.0f}, {100.0f, 0.0f}, {0.0f, 100.0f}, colors::g_orange);
-
-                rs.instr_seq.Exec(temp_mem_arena);
-
-                internal::SwapWindowBuffers();
+                EndRendering(rs, temp_mem_arena);
             }
         }
     }

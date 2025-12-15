@@ -526,10 +526,10 @@ namespace zf {
 
     void s_render_instr_seq::Submit(const s_render_instr instr) {
         if (!blocks_head) {
-            blocks_head = &Alloc<s_render_instr_block>(blocks_mem_arena);
+            blocks_head = &Alloc<s_render_instr_block>(*blocks_mem_arena);
             blocks_tail = blocks_head;
         } else if (blocks_tail->instrs.IsFull()) {
-            blocks_tail->next = &Alloc<s_render_instr_block>(blocks_mem_arena);
+            blocks_tail->next = &Alloc<s_render_instr_block>(*blocks_mem_arena);
             blocks_tail = blocks_tail->next;
         }
 

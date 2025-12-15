@@ -23,6 +23,8 @@ namespace zf {
         return sum == g_batch_vert_component_cnt;
     }());
 
+    constexpr t_len g_batch_vert_limit = 1024;
+
     constexpr s_cstr_literal g_batch_vert_shader_src = R"(#version 330 core
 
 layout (location = 0) in vec2 a_vert;
@@ -75,18 +77,34 @@ void main() {
         return basis;
     }
 
-    void DrawTriangle(s_rendering_state &rs, const s_v2 a, const s_v2 b, const s_v2 c, const s_color_rgba32f color) {
-        // clang-format off
-        rs.verts = {
-            a.x, a.y, color.R(), color.G(), color.B(), color.A(),
-            b.x, b.y, color.R(), color.G(), color.B(), color.A(),
-            c.x, c.y, color.R(), color.G(), color.B(), color.A(),
-        };
-        // clang-format on
+    struct s_rendering_state {
+        s_ptr<const s_rendering_basis> basis;
 
-        rs.instr_seq.SubmitMeshUpdate(*rs.basis.batch_mesh, rs.verts);
+        s_ptr<s_mem_arena> mem_arena;
 
-        rs.instr_seq.SubmitShaderProgSet(*rs.basis.batch_shader_prog);
+        s_render_instr_seq instr_seq;
+
+        s_static_list<s_batch_vert, g_batch_vert_limit> batch_verts;
+    };
+
+    s_rendering_state &BeginRendering(const s_rendering_basis &basis, s_mem_arena &mem_arena) {
+        auto &state = Alloc<s_rendering_state>(mem_arena);
+
+        state.basis = &basis;
+        state.mem_arena = &mem_arena;
+        state.instr_seq = {mem_arena};
+
+        state.instr_seq.SubmitClear(s_color_rgb8(0, 255, 0));
+
+        return state;
+    }
+
+    static void Flush(s_rendering_state &rs) {
+        const auto verts = rs.batch_verts.ToArray();
+        const s_array<t_f32> verts_f32 = {reinterpret_cast<t_f32 *>(verts.Ptr().Raw()), verts.SizeInBytes() / ZF_SIZE_OF(t_f32)};
+        rs.instr_seq.SubmitMeshUpdate(*rs.basis->batch_mesh, verts_f32);
+
+        rs.instr_seq.SubmitShaderProgSet(*rs.basis->batch_shader_prog);
 
         const s_v2_i fb_size_cache = WindowFramebufferSizeCache();
 
@@ -98,6 +116,24 @@ void main() {
 
         rs.instr_seq.SubmitShaderProgUniformSet(s_cstr_literal("u_proj"), proj_mat);
 
-        rs.instr_seq.SubmitMeshDraw(*rs.basis.batch_mesh);
+        rs.instr_seq.SubmitMeshDraw(*rs.basis->batch_mesh);
+    }
+
+    void EndRendering(s_rendering_state &rs, s_mem_arena &temp_mem_arena) {
+        Flush(rs);
+        rs.instr_seq.Exec(temp_mem_arena);
+        internal::SwapWindowBuffers();
+    }
+
+    void DrawPoly(s_rendering_state &rs, const s_array_rdonly<s_v2> pts, const s_color_rgba32f color) {
+        ZF_ASSERT(pts.Len() <= g_batch_vert_limit);
+
+        if (rs.batch_verts.Len() + pts.Len() > rs.batch_verts.Cap()) {
+            Flush(rs);
+        }
+
+        for (t_len i = 0; i < pts.Len(); i++) {
+            rs.batch_verts.Append({pts[i], color});
+        }
     }
 }

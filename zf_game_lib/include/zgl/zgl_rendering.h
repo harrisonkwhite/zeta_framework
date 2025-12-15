@@ -12,14 +12,17 @@ namespace zf {
 
     s_rendering_basis CreateRenderingBasis(s_mem_arena &mem_arena, s_mem_arena &temp_mem_arena);
 
-    struct s_rendering_state {
-        const s_rendering_basis &basis;
-        s_mem_arena &mem_arena;
-        s_render_instr_seq instr_seq;
-        s_static_array<t_f32, 18> verts;
-    };
+    struct s_rendering_state;
 
-    void DrawTriangle(s_rendering_state &rs, const s_v2 a, const s_v2 b, const s_v2 c, const s_color_rgba32f color);
+    s_rendering_state &BeginRendering(const s_rendering_basis &basis, s_mem_arena &mem_arena);
+    void EndRendering(s_rendering_state &rs, s_mem_arena &temp_mem_arena);
+
+    void DrawPoly(s_rendering_state &rs, const s_array_rdonly<s_v2> pts, const s_color_rgba32f color);
+
+    inline void DrawTriangle(s_rendering_state &rs, const s_v2 a, const s_v2 b, const s_v2 c, const s_color_rgba32f color) {
+        const s_static_array<s_v2, 3> pts = {a, b, c};
+        DrawPoly(rs, pts, color);
+    }
 
 #if 0
     struct s_platform_layer_info;

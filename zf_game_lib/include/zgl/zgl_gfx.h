@@ -149,7 +149,8 @@ namespace zf {
 
     struct s_render_instr_seq {
     public:
-        s_render_instr_seq(s_mem_arena &mem_arena) : blocks_mem_arena(mem_arena) {}
+        s_render_instr_seq() = default;
+        s_render_instr_seq(s_mem_arena &mem_arena) : blocks_mem_arena(&mem_arena) {}
 
         void SubmitClear(const s_color_rgb24f col);
 
@@ -167,7 +168,7 @@ namespace zf {
         void Submit(const s_render_instr instr);
 
         struct s_render_instr_block;
-        s_mem_arena &blocks_mem_arena;
+        s_ptr<s_mem_arena> blocks_mem_arena;
         s_ptr<s_render_instr_block> blocks_head;
         s_ptr<s_render_instr_block> blocks_tail;
     };
