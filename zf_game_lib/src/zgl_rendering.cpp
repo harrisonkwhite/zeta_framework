@@ -4,6 +4,8 @@
 #include <zgl/zgl_gfx.h>
 
 namespace zf {
+    constexpr s_color_rgb8 g_bg_color_default = {109, 187, 255};
+
     struct s_batch_vert {
         s_v2 vert_coord;
         s_color_rgba32f blend;
@@ -94,7 +96,7 @@ void main() {
         state.mem_arena = &mem_arena;
         state.instr_seq = {mem_arena};
 
-        state.instr_seq.SubmitClear(s_color_rgb8(0, 255, 0));
+        state.instr_seq.SubmitClear(g_bg_color_default);
 
         return state;
     }
@@ -125,15 +127,13 @@ void main() {
         internal::SwapWindowBuffers();
     }
 
-    void DrawPoly(s_rendering_state &rs, const s_array_rdonly<s_v2> pts, const s_color_rgba32f color) {
-        ZF_ASSERT(pts.Len() <= g_batch_vert_limit);
-
-        if (rs.batch_verts.Len() + pts.Len() > rs.batch_verts.Cap()) {
+    void DrawTriangle(s_rendering_state &rs, const s_static_array<s_v2, 3> &pts, const s_static_array<s_color_rgba32f, 3> &pt_colors) {
+        if (rs.batch_verts.Len() + pts.g_len > rs.batch_verts.Cap()) {
             Flush(rs);
         }
 
-        for (t_len i = 0; i < pts.Len(); i++) {
-            rs.batch_verts.Append({pts[i], color});
+        for (t_len i = 0; i < pts.g_len; i++) {
+            rs.batch_verts.Append({pts[i], pt_colors[i]});
         }
     }
 }

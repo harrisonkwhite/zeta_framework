@@ -17,12 +17,19 @@ namespace zf {
     s_rendering_state &BeginRendering(const s_rendering_basis &basis, s_mem_arena &mem_arena);
     void EndRendering(s_rendering_state &rs, s_mem_arena &temp_mem_arena);
 
-    void DrawPoly(s_rendering_state &rs, const s_array_rdonly<s_v2> pts, const s_color_rgba32f color);
+    void DrawTriangle(s_rendering_state &rs, const s_static_array<s_v2, 3> &pts, const s_static_array<s_color_rgba32f, 3> &pt_colors);
 
-    inline void DrawTriangle(s_rendering_state &rs, const s_v2 a, const s_v2 b, const s_v2 c, const s_color_rgba32f color) {
-        const s_static_array<s_v2, 3> pts = {a, b, c};
-        DrawPoly(rs, pts, color);
+    inline void DrawTriangle(s_rendering_state &rs, const s_static_array<s_v2, 3> &pts, const s_color_rgba32f color) {
+        DrawTriangle(rs, pts, {color, color, color});
     }
+
+#if 0
+    void DrawTriangle(s_rendering_state &rs, const s_v2 pt_a, const s_color_rgba32f pt_a_color, const s_v2 pt_b, const s_color_rgba32f pt_b_color, const s_v2 pt_c, const s_color_rgba32f pt_c_color);
+
+    inline void DrawTriangle(s_rendering_state &rs, const s_v2 pt_a, const s_v2 pt_b, const s_v2 pt_c, const s_color_rgba32f color) {
+        DrawTriangle(rs, pt_a, color, pt_b, color, pt_c, color);
+    }
+#endif
 
 #if 0
     struct s_platform_layer_info;
