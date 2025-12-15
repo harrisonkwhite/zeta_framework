@@ -21,8 +21,8 @@ namespace zf {
         //
         // Initialisation
         //
-        auto mem_arena = CreateMemArena(Megabytes(80));
-        ZF_DEFER({ mem_arena.Release(); });
+        auto perm_mem_arena = CreateMemArena(Megabytes(80));
+        ZF_DEFER({ perm_mem_arena.Release(); });
 
         auto temp_mem_arena = CreateMemArena(Megabytes(10));
         ZF_DEFER({ temp_mem_arena.Release(); });
@@ -34,7 +34,7 @@ namespace zf {
         ZF_DEFER({ ShutdownGFX(); });
 
         init_func({
-            .mem_arena = mem_arena,
+            .mem_arena = perm_mem_arena,
             .temp_mem_arena = temp_mem_arena,
         });
 
@@ -66,10 +66,9 @@ namespace zf {
 
             // Once enough time has passed (i.e. the time accumulator has reached the tick interval), run at least a single tick and update the display.
             if (frame_dur_accum >= targ_tick_interval) {
-                // Run possibly multiple ticks.
                 do {
                     tick_func({
-                        .mem_arena = mem_arena,
+                        .perm_mem_arena = perm_mem_arena,
                         .temp_mem_arena = temp_mem_arena,
                     });
 
@@ -77,6 +76,14 @@ namespace zf {
 
                     frame_dur_accum -= targ_tick_interval;
                 } while (frame_dur_accum >= targ_tick_interval);
+
+                s_render_instr_seq instr_seq = {temp_mem_arena};
+
+                instr_seq.SubmitClear(s_color_rgb8(0, 255, 0));
+
+                if (!instr_seq.Exec(temp_mem_arena)) {
+                    ZF_FATAL();
+                }
 
                 internal::SwapWindowBuffers();
             }

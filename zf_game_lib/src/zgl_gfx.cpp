@@ -529,12 +529,12 @@ namespace zf {
     }
 
     void s_render_instr_seq::Submit(const s_render_instr instr) {
-        if (blocks_tail->instrs.IsFull()) {
-            auto &new_tail = Alloc<s_render_instr_block>(blocks_mem_arena);
-            blocks_tail->next = &new_tail;
-            blocks_tail = &new_tail;
-            Submit(instr);
-            return;
+        if (!blocks_head) {
+            blocks_head = &Alloc<s_render_instr_block>(blocks_mem_arena);
+            blocks_tail = blocks_head;
+        } else if (blocks_tail->instrs.IsFull()) {
+            blocks_tail->next = &Alloc<s_render_instr_block>(blocks_mem_arena);
+            blocks_tail = blocks_tail->next;
         }
 
         blocks_tail->instrs.Append(instr);
