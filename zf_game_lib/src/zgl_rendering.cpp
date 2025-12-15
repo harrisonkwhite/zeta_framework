@@ -215,7 +215,6 @@ namespace zf {
         e_gfx_resource_type type = ek_gfx_resource_type_invalid;
 
         constexpr s_gfx_resource() = default;
-        constexpr s_gfx_resource(const s_gfx_resource &) = delete;
 
         auto &Texture() {
             ZF_ASSERT(type == ek_gfx_resource_type_texture);
@@ -809,7 +808,7 @@ void main() {
     // @section: General
     // ============================================================
     t_b8 internal::InitGFX(const s_platform_layer_info &platform_layer_info) {
-#if 0
+    #if 0
         //
         // BGFX Initialisation
         //
@@ -833,8 +832,8 @@ void main() {
         bgfx::setViewClear(0, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, 0xABABABFF, 1.0f, 0);
 
         return true;
-#endif
-#if 0
+    #endif
+    #if 0
         t_b8 clean_up = false;
 
         o_rendering_basis = Alloc<s_rendering_basis>(rendering_basis_mem_arena);
@@ -914,36 +913,36 @@ void main() {
         }
 
         return true;
-#endif
+    #endif
 
         return true;
     }
 
     void internal::ShutdownGFX() {
-#if 0
+    #if 0
         bgfx::shutdown();
-#endif
+    #endif
 
-#if 0
+    #if 0
         DestroyGFXResources(rendering_basis.res_arena);
         glDeleteProgram(rendering_basis.batch_shader_prog_gl_id);
         DestroyGLMesh(rendering_basis.batch_mesh_gl_ids);
 
         rendering_basis = {};
-#endif
+    #endif
     }
 
     void internal::BeginFrame(const s_v2_i framebuffer_size_cache) {
-#if 0
+    #if 0
         bgfx::setViewRect(0, 0, 0, static_cast<uint16_t>(framebuffer_size_cache.x), static_cast<uint16_t>(framebuffer_size_cache.y));
         bgfx::touch(0);
-#endif
+    #endif
     }
 
     void internal::EndFrame() {
-#if 0
+    #if 0
         bgfx::frame();
-#endif
+    #endif
     }
 #endif
 }

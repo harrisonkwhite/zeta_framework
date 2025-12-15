@@ -177,13 +177,6 @@ namespace zf {
 
     struct s_mem_arena {
     public:
-        static s_mem_arena Alloc(const t_len size);
-
-        s_mem_arena() = default;
-
-        s_mem_arena(const s_mem_arena &) = delete;
-        s_mem_arena &operator=(const s_mem_arena &) = delete;
-
         void Release();
 
         t_b8 IsActive() const {
@@ -200,14 +193,14 @@ namespace zf {
         }
 
     private:
-        s_mem_arena(const s_ptr<void> buf, const t_len size) : m_buf(buf), m_size(size) {
-            ZF_ASSERT((!buf && size == 0) || (buf && size > 0));
-        }
-
         s_ptr<void> m_buf;
         t_len m_size = 0;
         t_len m_offs = 0;
+
+        friend s_mem_arena CreateMemArena(const t_len size);
     };
+
+    s_mem_arena CreateMemArena(const t_len size);
 
     template <typename tp_type>
     tp_type &Alloc(s_mem_arena &mem_arena) {

@@ -30,8 +30,6 @@ namespace zf::gfx {
     struct s_resource_arena {
         s_ptr<s_resource> head = nullptr;
         s_ptr<s_resource> tail = nullptr;
-
-        constexpr s_resource_arena(s_resource_arena &) = delete;
     };
 
     void DestroyResources(const s_resource_arena &arena);
@@ -281,7 +279,6 @@ namespace zf {
         e_gfx_resource_type type = ek_gfx_resource_type_invalid;
 
         constexpr s_gfx_resource() = default;
-        constexpr s_gfx_resource(const s_gfx_resource &) = delete;
 
         auto &Texture() {
             ZF_ASSERT(type == ek_gfx_resource_type_texture);

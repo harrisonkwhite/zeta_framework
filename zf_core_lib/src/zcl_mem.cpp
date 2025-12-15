@@ -3,18 +3,22 @@
 #include <cstring>
 
 namespace zf {
-    s_mem_arena s_mem_arena::Alloc(const t_len size) {
+    s_mem_arena CreateMemArena(const t_len size) {
         ZF_ASSERT(size > 0);
 
-        const s_ptr<void> buf = malloc(static_cast<size_t>(size));
+        s_mem_arena arena;
 
-        if (!buf) {
+        arena.m_buf = malloc(static_cast<size_t>(size));
+
+        if (!arena.m_buf) {
             ZF_FATAL();
         }
 
-        memset(buf, 0, static_cast<size_t>(size)); // Touch all pages to make sure we really do have enough memory.
+        memset(arena.m_buf, 0, static_cast<size_t>(size)); // Touch all pages to make sure we really do have enough memory.
 
-        return {buf, size};
+        arena.m_size = size;
+
+        return arena;
     }
 
     void s_mem_arena::Release() {

@@ -147,8 +147,6 @@ namespace zf {
     public:
         s_render_instr_seq(s_mem_arena &mem_arena) : blocks_mem_arena(mem_arena) {}
 
-        s_render_instr_seq(const s_render_instr_seq &) = delete;
-
         void SubmitClear(const s_color_rgb24f col);
 
         void SubmitShaderProgSet(const s_gfx_resource &prog);

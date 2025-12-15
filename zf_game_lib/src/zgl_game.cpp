@@ -21,10 +21,10 @@ namespace zf {
         //
         // Initialisation
         //
-        auto mem_arena = s_mem_arena::Alloc(Megabytes(80));
+        auto mem_arena = CreateMemArena(Megabytes(80));
         ZF_DEFER({ mem_arena.Release(); });
 
-        auto temp_mem_arena = s_mem_arena::Alloc(Megabytes(10));
+        auto temp_mem_arena = CreateMemArena(Megabytes(10));
         ZF_DEFER({ temp_mem_arena.Release(); });
 
         internal::InitPlatform(g_init_window_size);
