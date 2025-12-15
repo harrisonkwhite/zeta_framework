@@ -49,11 +49,8 @@ namespace zf {
         union {
             struct {
                 t_gl_id vert_arr_gl_id;
-
                 t_gl_id vert_buf_gl_id;
-
-                t_gl_id elem_buf_gl_id;
-                t_len elem_cnt;
+                t_len verts_len;
             } mesh;
 
             struct {
@@ -76,7 +73,6 @@ namespace zf {
         while (res) {
             switch (res->type) {
             case ek_gfx_resource_type_mesh:
-                glDeleteBuffers(1, &res->Mesh().elem_buf_gl_id);
                 glDeleteBuffers(1, &res->Mesh().vert_buf_gl_id);
                 glDeleteVertexArrays(1, &res->Mesh().vert_arr_gl_id);
                 break;
@@ -108,27 +104,21 @@ namespace zf {
         return res;
     }
 
-    s_gfx_resource &CreateMesh(const s_ptr<const t_f32> verts, const t_len verts_len, const s_ptr<const t_u16> elems, const t_len elems_len, const s_array_rdonly<t_i32> vert_attr_component_cnts, s_gfx_resource_arena &arena) {
+    s_gfx_resource &CreateMesh(const s_ptr<const t_f32> verts, const t_len verts_len, const t_b8 verts_dynamic, const s_array_rdonly<t_i32> vert_attr_component_cnts, s_gfx_resource_arena &arena) {
         ZF_ASSERT(g_initted);
         ZF_ASSERT((verts && verts_len > 0) || (!verts && verts_len == 0));
-        ZF_ASSERT((elems && elems_len > 0) || (!elems && elems_len == 0));
 
         auto &res = PushGFXResource(arena);
 
         res.type = ek_gfx_resource_type_mesh;
+        res.Mesh().verts_len = verts_len;
 
         glGenVertexArrays(1, &res.Mesh().vert_arr_gl_id);
         glBindVertexArray(res.Mesh().vert_arr_gl_id);
 
         glGenBuffers(1, &res.Mesh().vert_buf_gl_id);
         glBindBuffer(GL_ARRAY_BUFFER, res.Mesh().vert_buf_gl_id);
-        glBufferData(GL_ARRAY_BUFFER, static_cast<GLsizeiptr>(ZF_SIZE_OF(t_f32) * verts_len), verts, GL_DYNAMIC_DRAW); // @todo: Make DYNAMIC customisable.
-
-        glGenBuffers(1, &res.Mesh().elem_buf_gl_id);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, res.Mesh().elem_buf_gl_id);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, static_cast<GLsizeiptr>(ZF_SIZE_OF(t_u16) * elems_len), elems, GL_STATIC_DRAW); // @todo: Make STATIC customisable.
-
-        res.Mesh().elem_cnt = elems_len;
+        glBufferData(GL_ARRAY_BUFFER, static_cast<GLsizeiptr>(ZF_SIZE_OF(t_f32) * verts_len), verts, verts_dynamic ? GL_DYNAMIC_DRAW : GL_STATIC_DRAW);
 
         const t_len stride = [vert_attr_component_cnts]() {
             t_len res = 0;
@@ -371,7 +361,6 @@ namespace zf {
             struct {
                 s_ptr<const s_gfx_resource> mesh;
                 s_array_rdonly<t_f32> verts;
-                s_array_rdonly<t_u16> elems;
             } mesh_update;
 
             struct {
@@ -411,12 +400,11 @@ namespace zf {
         Submit(instr);
     }
 
-    void s_render_instr_seq::SubmitMeshUpdate(const s_gfx_resource &mesh, const s_array_rdonly<t_f32> verts, const s_array_rdonly<t_u16> elems) {
+    void s_render_instr_seq::SubmitMeshUpdate(const s_gfx_resource &mesh, const s_array_rdonly<t_f32> verts) {
         s_render_instr instr;
         instr.type = ek_render_instr_type_mesh_update;
         instr.MeshUpdate().mesh = &mesh;
         instr.MeshUpdate().verts = verts;
-        instr.MeshUpdate().elems = elems;
 
         Submit(instr);
     }
@@ -504,16 +492,8 @@ namespace zf {
                 case ek_render_instr_type_mesh_update: {
                     const auto &mu = instr.MeshUpdate();
                     glBindVertexArray(mu.mesh->Mesh().vert_arr_gl_id);
-
-                    if (!mu.verts.IsEmpty()) {
-                        glBindBuffer(GL_ARRAY_BUFFER, mu.mesh->Mesh().vert_buf_gl_id);
-                        glBufferSubData(GL_ARRAY_BUFFER, 0, mu.verts.SizeInBytes(), mu.verts.Ptr());
-                    }
-
-                    if (!mu.elems.IsEmpty()) {
-                        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mu.mesh->Mesh().elem_buf_gl_id);
-                        glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, mu.elems.SizeInBytes(), mu.elems.Ptr());
-                    }
+                    glBindBuffer(GL_ARRAY_BUFFER, mu.mesh->Mesh().vert_buf_gl_id);
+                    glBufferSubData(GL_ARRAY_BUFFER, 0, mu.verts.SizeInBytes(), mu.verts.Ptr());
 
                     break;
                 }
@@ -530,9 +510,7 @@ namespace zf {
 
                     glBindVertexArray(md.mesh->Mesh().vert_arr_gl_id);
                     glBindBuffer(GL_ARRAY_BUFFER, md.mesh->Mesh().vert_buf_gl_id);
-                    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, md.mesh->Mesh().elem_buf_gl_id);
-
-                    glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(md.mesh->Mesh().elem_cnt), GL_UNSIGNED_SHORT, nullptr);
+                    glDrawArrays(GL_TRIANGLES, 0, md.mesh->Mesh().verts_len);
 
                     glUseProgram(0);
                     shader_prog_active = nullptr;

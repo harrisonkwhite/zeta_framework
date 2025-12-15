@@ -80,12 +80,17 @@ namespace zf {
                     frame_dur_accum -= targ_tick_interval;
                 } while (frame_dur_accum >= targ_tick_interval);
 
-                s_render_instr_seq instr_seq = {temp_mem_arena};
+                s_rendering_state rs = {
+                    .basis = rendering_basis,
+                    .mem_arena = temp_mem_arena,
+                    .instr_seq = {temp_mem_arena},
+                };
 
-                instr_seq.SubmitClear(s_color_rgb8(0, 255, 0));
-                instr_seq.SubmitShaderProgSet(*rendering_basis.batch_shader_prog);
-                instr_seq.SubmitMeshDraw(*rendering_basis.batch_mesh);
-                instr_seq.Exec(temp_mem_arena);
+                rs.instr_seq.SubmitClear(s_color_rgb8(0, 255, 0));
+
+                DrawTriangle(rs, {0.0f, 0.0f}, {0.5f, 0.0f}, {0.0f, 0.5f}, colors::g_pink);
+
+                rs.instr_seq.Exec(temp_mem_arena);
 
                 internal::SwapWindowBuffers();
             }
