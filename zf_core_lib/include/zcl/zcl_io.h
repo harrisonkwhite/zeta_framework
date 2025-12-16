@@ -440,21 +440,28 @@ namespace zf {
     // ========================================
     // @subsection: Hex Printing
     // ========================================
+    enum e_hex_fmt_flags {
+        ek_hex_fmt_flags_none = 0,
+        ek_hex_fmt_flags_omit_prefix = 1 << 0,
+        ek_hex_fmt_flags_lower_case = 1 << 1,
+        ek_hex_fmt_flags_not_bytewise_grouping = 1 << 2
+    };
+
     template <c_unsigned_integral tp_type>
     struct s_hex_fmt {
         using t_fmt_tag = void;
 
         tp_type val = 0;
-        t_b8 omit_prefix = false;
+        e_hex_fmt_flags flags = {};
     };
 
     template <c_unsigned_integral tp_type>
-    s_hex_fmt<tp_type> FormatHex(const tp_type val, const t_b8 omit_prefix = false) {
-        return {val, omit_prefix};
+    s_hex_fmt<tp_type> FormatHex(const tp_type val, const e_hex_fmt_flags flags = {}) {
+        return {val, flags};
     }
 
-    inline s_hex_fmt<t_uintptr> FormatHex(const void *const ptr, const t_b8 omit_prefix = false) {
-        return {reinterpret_cast<t_uintptr>(ptr), omit_prefix};
+    inline s_hex_fmt<t_uintptr> FormatHex(const void *const ptr, const e_hex_fmt_flags flags = {}) {
+        return {reinterpret_cast<t_uintptr>(ptr), flags};
     }
 
     // Have pointers implicitly go to this format.
@@ -469,7 +476,7 @@ namespace zf {
 
         t_b8 str_bytes_stream_write_success = true;
 
-        if (!fmt.omit_prefix) {
+        if (!(fmt.flags & ek_hex_fmt_flags_omit_prefix)) {
             str_bytes_stream_write_success = str_bytes_stream.WriteItem('0');
             ZF_ASSERT(str_bytes_stream_write_success);
 
@@ -479,15 +486,30 @@ namespace zf {
 
         const t_len str_bytes_digits_begin_pos = str_bytes_stream.Pos();
 
+        const auto dig_to_byte = [flags = fmt.flags](const t_i32 dig) -> t_u8 {
+            if (dig < 10) {
+                return static_cast<t_u8>('0' + dig);
+            } else {
+                if (flags & ek_hex_fmt_flags_lower_case) {
+                    return static_cast<t_u8>('a' + dig - 10);
+                } else {
+                    return static_cast<t_u8>('A' + dig - 10);
+                }
+            }
+        };
+
         auto val_mut = fmt.val;
 
-        do {
-            const auto dig = val_mut % 16;
-            const auto chr = static_cast<char>(dig < 10 ? '0' + dig : 'A' + dig - 10);
-            str_bytes_stream_write_success = str_bytes_stream.WriteItem(chr);
-            ZF_ASSERT(str_bytes_stream_write_success);
+        const t_len inner_loop_cnt = (fmt.flags & ek_hex_fmt_flags_not_bytewise_grouping) ? 1 : 2;
 
-            val_mut /= 16;
+        do {
+            for (t_len i = 0; i < inner_loop_cnt; i++) {
+                const t_u8 byte = dig_to_byte(val_mut % 16);
+                str_bytes_stream_write_success = str_bytes_stream.WriteItem(byte);
+                ZF_ASSERT(str_bytes_stream_write_success);
+
+                val_mut /= 16;
+            }
         } while (val_mut != 0);
 
         const auto str_bytes_digits = str_bytes_stream.Written().SliceFrom(str_bytes_digits_begin_pos);
