@@ -33,10 +33,14 @@ namespace zf {
 
     void DestroyGFXResources(s_gfx_resource_arena &arena);
 
-    [[nodiscard]] t_b8 CreateMesh(const t_len verts_len, s_gfx_resource_arena &arena, s_ptr<s_gfx_resource> &o_res);
-    [[nodiscard]] t_b8 CreateShaderProg(const s_array_rdonly<t_u8> vert_shader_bin, const s_array_rdonly<t_u8> frag_shader_bin, s_gfx_resource_arena &arena, s_ptr<s_gfx_resource> &o_res);
-    [[nodiscard]] t_b8 CreateUniform(const s_str_rdonly name, s_gfx_resource_arena &arena, s_mem_arena &temp_mem_arena, s_ptr<s_gfx_resource> &o_res);
-    [[nodiscard]] t_b8 CreateTexture(const s_texture_data_rdonly tex_data, s_gfx_resource_arena &arena, s_ptr<s_gfx_resource> &o_res);
+    [[nodiscard]] t_b8 CreateMesh(const t_len verts_len, s_gfx_resource_arena &arena, s_ptr<s_gfx_resource> &o_resource);
+
+    [[nodiscard]] t_b8 CreateShaderProg(const s_array_rdonly<t_u8> vert_shader_bin, const s_array_rdonly<t_u8> frag_shader_bin, s_gfx_resource_arena &arena, s_ptr<s_gfx_resource> &o_resource);
+
+    [[nodiscard]] t_b8 CreateUniform(const s_str_rdonly name, s_gfx_resource_arena &arena, s_mem_arena &temp_mem_arena, s_ptr<s_gfx_resource> &o_resource);
+
+    [[nodiscard]] t_b8 CreateTexture(const s_texture_data_rdonly texture_data, s_gfx_resource_arena &arena, s_ptr<s_gfx_resource> &o_resource);
+    s_v2_i TextureSize(const s_gfx_resource &texture_resource);
 
     // ============================================================
     // @section: Rendering

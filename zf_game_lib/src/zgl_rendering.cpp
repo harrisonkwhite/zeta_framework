@@ -97,9 +97,13 @@ namespace zf {
         const s_array<t_f32> verts_f32 = {reinterpret_cast<t_f32 *>(verts.Ptr().Raw()), verts.SizeInBytes() / ZF_SIZE_OF(t_f32)};
         rs.instr_seq.SubmitMeshUpdate(*rs.basis->batch_mesh_resource, verts_f32);
 
+        Log(s_cstr_literal("Dude: %, %"), rs.batch_texture_resource, FormatArray(verts));
+
         rs.instr_seq.SubmitTextureSet(rs.batch_texture_resource ? *rs.batch_texture_resource : *rs.basis->px_texture, *rs.basis->batch_sampler_uniform_resource);
 
         rs.instr_seq.SubmitMeshDraw(*rs.basis->batch_mesh_resource, *rs.basis->batch_shader_prog_resource);
+
+        rs.batch_verts.Clear();
     }
 
     void internal::EndRendering(s_rendering_state &rs, s_mem_arena &temp_mem_arena) {
@@ -108,9 +112,11 @@ namespace zf {
     }
 
     void DrawTriangle(s_rendering_state &rs, const s_static_array<s_v2, 3> &pts, const s_static_array<s_color_rgba32f, 3> &pt_colors) {
-        if (rs.batch_verts.Len() + pts.g_len > rs.batch_verts.Cap()) {
+        if (rs.batch_verts.Len() + pts.g_len > rs.batch_verts.Cap() || rs.batch_texture_resource) {
             Flush(rs);
         }
+
+        rs.batch_texture_resource = nullptr;
 
         rs.batch_verts.Append({pts[0], pt_colors[0], {}});
         rs.batch_verts.Append({pts[1], pt_colors[1], {}});
@@ -118,9 +124,11 @@ namespace zf {
     }
 
     void DrawRect(s_rendering_state &rs, const s_rect_f rect, const s_color_rgba32f color_topleft, const s_color_rgba32f color_topright, const s_color_rgba32f color_bottomright, const s_color_rgba32f color_bottomleft) {
-        if (rs.batch_verts.Len() + 6 > rs.batch_verts.Cap()) {
+        if (rs.batch_verts.Len() + 6 > rs.batch_verts.Cap() || rs.batch_texture_resource) {
             Flush(rs);
         }
+
+        rs.batch_texture_resource = nullptr;
 
         rs.batch_verts.Append({rect.TopLeft(), color_topleft, {0.0f, 0.0f}});
         rs.batch_verts.Append({rect.TopRight(), color_topright, {1.0f, 0.0f}});
@@ -129,5 +137,25 @@ namespace zf {
         rs.batch_verts.Append({rect.BottomRight(), color_bottomright, {1.0f, 1.0f}});
         rs.batch_verts.Append({rect.BottomLeft(), color_bottomleft, {0.0f, 1.0f}});
         rs.batch_verts.Append({rect.TopLeft(), color_topleft, {0.0f, 0.0f}});
+    }
+
+    void DrawTexture(s_rendering_state &rs, const s_v2 pos, const s_gfx_resource &texture_resource) {
+        if (rs.batch_verts.Len() + 6 > rs.batch_verts.Cap()
+            || (!rs.batch_verts.IsEmpty() && &texture_resource != rs.batch_texture_resource)) {
+            Flush(rs);
+        }
+
+        rs.batch_texture_resource = &texture_resource;
+
+        const auto texture_size = TextureSize(texture_resource);
+        const s_rect_f rect = {pos, texture_size.ToV2()};
+
+        rs.batch_verts.Append({rect.TopLeft(), zf::colors::g_white, {0.0f, 0.0f}});
+        rs.batch_verts.Append({rect.TopRight(), zf::colors::g_white, {1.0f, 0.0f}});
+        rs.batch_verts.Append({rect.BottomRight(), zf::colors::g_white, {1.0f, 1.0f}});
+
+        rs.batch_verts.Append({rect.BottomRight(), zf::colors::g_white, {1.0f, 1.0f}});
+        rs.batch_verts.Append({rect.BottomLeft(), zf::colors::g_white, {0.0f, 1.0f}});
+        rs.batch_verts.Append({rect.TopLeft(), zf::colors::g_white, {0.0f, 0.0f}});
     }
 }

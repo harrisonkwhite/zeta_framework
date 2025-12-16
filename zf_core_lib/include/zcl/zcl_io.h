@@ -444,8 +444,11 @@ namespace zf {
         ek_hex_fmt_flags_none = 0,
         ek_hex_fmt_flags_omit_prefix = 1 << 0,
         ek_hex_fmt_flags_lower_case = 1 << 1,
-        ek_hex_fmt_flags_not_bytewise_grouping = 1 << 2
+        ek_hex_fmt_flags_allow_odd_digit_cnt = 1 << 2
     };
+
+    constexpr t_len g_hex_fmt_digit_cnt_min = 1;
+    constexpr t_len g_hex_fmt_digit_cnt_max = 16;
 
     template <c_unsigned_integral tp_type>
     struct s_hex_fmt {
@@ -453,25 +456,29 @@ namespace zf {
 
         tp_type val = 0;
         e_hex_fmt_flags flags = {};
+        t_i32 min_digits = g_hex_fmt_digit_cnt_min; // Will be rounded UP to the next even if this is odd and the flag for allowing an odd digit count is unset.
     };
 
     template <c_unsigned_integral tp_type>
-    s_hex_fmt<tp_type> FormatHex(const tp_type val, const e_hex_fmt_flags flags = {}) {
-        return {val, flags};
+    s_hex_fmt<tp_type> FormatHex(const tp_type val, const e_hex_fmt_flags flags = {}, const t_i32 min_digits = g_hex_fmt_digit_cnt_min) {
+        return {val, flags, min_digits};
     }
 
-    inline s_hex_fmt<t_uintptr> FormatHex(const void *const ptr, const e_hex_fmt_flags flags = {}) {
-        return {reinterpret_cast<t_uintptr>(ptr), flags};
+    inline s_hex_fmt<t_uintptr> FormatHex(const s_ptr<const void> ptr, const e_hex_fmt_flags flags = {}, const t_i32 min_digits = g_hex_fmt_digit_cnt_min) {
+        return {reinterpret_cast<t_uintptr>(ptr.Raw()), flags, min_digits};
     }
 
-    // Have pointers implicitly go to this format.
-    inline s_hex_fmt<t_uintptr> FormatDefault(const void *const ptr) {
-        return FormatHex(ptr);
+    // Have pointers use this format by default.
+    template <typename tp_type>
+    inline s_hex_fmt<t_uintptr> FormatDefault(const s_ptr<const tp_type> ptr) {
+        return FormatHex(ptr, {}, 2 * ZF_SIZE_OF(t_uintptr));
     }
 
     template <c_unsigned_integral tp_type>
     t_b8 PrintType(s_stream &stream, const s_hex_fmt<tp_type> fmt) {
-        s_static_array<t_u8, 18> str_bytes = {}; // Maximum possible number of ASCII characters needed for hex representation of 64-bit integer.
+        ZF_ASSERT(fmt.min_digits >= g_hex_fmt_digit_cnt_min && fmt.min_digits <= g_hex_fmt_digit_cnt_max);
+
+        s_static_array<t_u8, 2 + g_hex_fmt_digit_cnt_max> str_bytes = {}; // Can facilitate max number of digits plus the "0x" prefix.
         s_stream str_bytes_stream = {str_bytes, ek_stream_mode_write};
 
         t_b8 str_bytes_stream_write_success = true;
@@ -500,7 +507,8 @@ namespace zf {
 
         auto val_mut = fmt.val;
 
-        const t_len inner_loop_cnt = (fmt.flags & ek_hex_fmt_flags_not_bytewise_grouping) ? 1 : 2;
+        t_i32 cnter = 0;
+        const t_len inner_loop_cnt = (fmt.flags & ek_hex_fmt_flags_allow_odd_digit_cnt) ? 1 : 2;
 
         do {
             for (t_len i = 0; i < inner_loop_cnt; i++) {
@@ -509,8 +517,10 @@ namespace zf {
                 ZF_ASSERT(str_bytes_stream_write_success);
 
                 val_mut /= 16;
+
+                cnter++;
             }
-        } while (val_mut != 0);
+        } while (val_mut != 0 || cnter < fmt.min_digits);
 
         const auto str_bytes_digits = str_bytes_stream.Written().SliceFrom(str_bytes_digits_begin_pos);
         str_bytes_digits.Reverse();
@@ -558,39 +568,28 @@ namespace zf {
     // ========================================
     // @subsection: Array Printing
     // ========================================
-    template <c_nonstatic_array tp_arr_type>
+    template <typename tp_arr_type>
+    concept c_formattable_array = c_nonstatic_array<tp_arr_type>
+        && requires(const typename tp_arr_type::t_elem &v) { { FormatDefault(v) } -> c_fmt; };
+
+    template <c_formattable_array tp_arr_type>
     struct s_array_fmt {
         using t_fmt_tag = void;
 
-        tp_arr_type val = {};
+        tp_arr_type val;
         t_b8 one_per_line = false;
     };
 
-    template <c_nonstatic_array tp_arr_type>
+    template <c_formattable_array tp_arr_type>
     s_array_fmt<tp_arr_type> FormatArray(const tp_arr_type val, const t_b8 one_per_line = false) {
         return {val, one_per_line};
     }
 
-    template <typename tp_type, t_len tp_len>
-    s_array_fmt<s_array_rdonly<tp_type>> FormatArray(const s_static_array<tp_type, tp_len> &val, const t_b8 one_per_line = false) {
-        return {val.ToNonstatic(), one_per_line};
-    }
-
-    template <c_nonstatic_array tp_arr_type>
-    s_array_fmt<tp_arr_type> FormatDefault(const tp_arr_type val) {
-        return FormatArray(val);
-    }
-
-    template <typename tp_type, t_len tp_len>
-    s_array_fmt<s_array_rdonly<tp_type>> FormatDefault(const s_static_array<tp_type, tp_len> &val) {
-        return FormatArray(val.ToNonstatic());
-    }
-
-    template <typename tp_type>
-    t_b8 PrintType(s_stream &stream, const s_array_fmt<tp_type> fmt) {
+    template <c_formattable_array tp_arr_type>
+    t_b8 PrintType(s_stream &stream, const s_array_fmt<tp_arr_type> fmt) {
         if (fmt.one_per_line) {
-            for (t_len i = 0; i < fmt.val.len; i++) {
-                if (!PrintFormat(stream, s_cstr_literal("[%] %%"), i, fmt.val[i], i < fmt.val.len - 1 ? s_cstr_literal("\n") : s_cstr_literal(""))) {
+            for (t_len i = 0; i < fmt.val.Len(); i++) {
+                if (!PrintFormat(stream, s_cstr_literal("[%] %%"), i, fmt.val[i], i < fmt.val.Len() - 1 ? s_cstr_literal("\n") : s_cstr_literal(""))) {
                     return false;
                 }
             }
@@ -599,12 +598,12 @@ namespace zf {
                 return false;
             }
 
-            for (t_len i = 0; i < fmt.val.len; i++) {
+            for (t_len i = 0; i < fmt.val.Len(); i++) {
                 if (!PrintFormat(stream, s_cstr_literal("%"), fmt.val[i])) {
                     return false;
                 }
 
-                if (i < fmt.val.len - 1) {
+                if (i < fmt.val.Len() - 1) {
                     if (!Print(stream, s_cstr_literal(", "))) {
                         return false;
                     }

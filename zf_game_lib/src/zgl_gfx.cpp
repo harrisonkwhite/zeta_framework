@@ -107,6 +107,7 @@ namespace zf {
 
             struct {
                 bgfx::TextureHandle bgfx_hdl;
+                s_v2_i size;
             } texture;
         } type_data = {};
     };
@@ -122,6 +123,10 @@ namespace zf {
 
             case ek_gfx_resource_type_shader_prog:
                 bgfx::destroy(resource->ShaderProg().bgfx_hdl);
+                break;
+
+            case ek_gfx_resource_type_uniform:
+                bgfx::destroy(resource->Uniform().bgfx_hdl);
                 break;
 
             case ek_gfx_resource_type_texture:
@@ -153,7 +158,7 @@ namespace zf {
         return resource;
     }
 
-    t_b8 CreateMesh(const t_len verts_len, s_gfx_resource_arena &arena, s_ptr<s_gfx_resource> &o_res) {
+    t_b8 CreateMesh(const t_len verts_len, s_gfx_resource_arena &arena, s_ptr<s_gfx_resource> &o_resource) {
         bgfx::VertexLayout layout = {};
         layout.begin().add(bgfx::Attrib::Position, 2, bgfx::AttribType::Float).add(bgfx::Attrib::Color0, 4, bgfx::AttribType::Float).add(bgfx::Attrib::TexCoord0, 2, bgfx::AttribType::Float).end(); // @todo: Allow customs!
 
@@ -163,14 +168,14 @@ namespace zf {
             return false;
         }
 
-        o_res = &PushGFXResource(ek_gfx_resource_type_mesh, arena);
-        o_res->Mesh().vert_buf_bgfx_hdl = vert_buf_bgfx_hdl;
-        o_res->Mesh().verts_len = verts_len;
+        o_resource = &PushGFXResource(ek_gfx_resource_type_mesh, arena);
+        o_resource->Mesh().vert_buf_bgfx_hdl = vert_buf_bgfx_hdl;
+        o_resource->Mesh().verts_len = verts_len;
 
         return true;
     }
 
-    t_b8 CreateShaderProg(const s_array_rdonly<t_u8> vert_shader_bin, const s_array_rdonly<t_u8> frag_shader_bin, s_gfx_resource_arena &arena, s_ptr<s_gfx_resource> &o_res) {
+    t_b8 CreateShaderProg(const s_array_rdonly<t_u8> vert_shader_bin, const s_array_rdonly<t_u8> frag_shader_bin, s_gfx_resource_arena &arena, s_ptr<s_gfx_resource> &o_resource) {
         const bgfx::Memory *const vert_shader_bgfx_mem = bgfx::makeRef(vert_shader_bin.Ptr(), static_cast<uint32_t>(vert_shader_bin.Len()));
         const bgfx::ShaderHandle vert_shader_bgfx_hdl = bgfx::createShader(vert_shader_bgfx_mem);
 
@@ -191,13 +196,13 @@ namespace zf {
             return false;
         }
 
-        o_res = &PushGFXResource(ek_gfx_resource_type_shader_prog, arena);
-        o_res->ShaderProg().bgfx_hdl = prog_bgfx_hdl;
+        o_resource = &PushGFXResource(ek_gfx_resource_type_shader_prog, arena);
+        o_resource->ShaderProg().bgfx_hdl = prog_bgfx_hdl;
 
         return true;
     }
 
-    t_b8 CreateUniform(const s_str_rdonly name, s_gfx_resource_arena &arena, s_mem_arena &temp_mem_arena, s_ptr<s_gfx_resource> &o_res) {
+    t_b8 CreateUniform(const s_str_rdonly name, s_gfx_resource_arena &arena, s_mem_arena &temp_mem_arena, s_ptr<s_gfx_resource> &o_resource) {
         const s_str_rdonly name_terminated = AllocStrCloneButAddTerminator(name, temp_mem_arena);
 
         const bgfx::UniformHandle uniform_bgfx_hdl = bgfx::createUniform(name_terminated.Cstr(), bgfx::UniformType::Sampler); // @todo: Allow different uniform types. BGFX enum on this is strange?
@@ -206,23 +211,28 @@ namespace zf {
             return false;
         }
 
-        o_res = &PushGFXResource(ek_gfx_resource_type_uniform, arena);
-        o_res->Uniform().bgfx_hdl = uniform_bgfx_hdl;
+        o_resource = &PushGFXResource(ek_gfx_resource_type_uniform, arena);
+        o_resource->Uniform().bgfx_hdl = uniform_bgfx_hdl;
 
         return true;
     }
 
-    t_b8 CreateTexture(const s_texture_data_rdonly tex_data, s_gfx_resource_arena &arena, s_ptr<s_gfx_resource> &o_res) {
-        const auto tex_bgfx_hdl = bgfx::createTexture2D(static_cast<uint16_t>(tex_data.SizeInPixels().x), static_cast<uint16_t>(tex_data.SizeInPixels().y), false, 1, bgfx::TextureFormat::RGBA8, 0, bgfx::copy(tex_data.RGBAPixelData().Ptr(), static_cast<uint32_t>(tex_data.RGBAPixelData().SizeInBytes())));
+    t_b8 CreateTexture(const s_texture_data_rdonly texture_data, s_gfx_resource_arena &arena, s_ptr<s_gfx_resource> &o_resource) {
+        const auto texture_bgfx_hdl = bgfx::createTexture2D(static_cast<uint16_t>(texture_data.SizeInPixels().x), static_cast<uint16_t>(texture_data.SizeInPixels().y), false, 1, bgfx::TextureFormat::RGBA8, 0, bgfx::copy(texture_data.RGBAPixelData().Ptr(), static_cast<uint32_t>(texture_data.RGBAPixelData().SizeInBytes())));
 
-        if (!bgfx::isValid(tex_bgfx_hdl)) {
+        if (!bgfx::isValid(texture_bgfx_hdl)) {
             return false;
         }
 
-        o_res = &PushGFXResource(ek_gfx_resource_type_texture, arena);
-        o_res->Texture().bgfx_hdl = tex_bgfx_hdl;
+        o_resource = &PushGFXResource(ek_gfx_resource_type_texture, arena);
+        o_resource->Texture().bgfx_hdl = texture_bgfx_hdl;
+        o_resource->Texture().size = texture_data.SizeInPixels();
 
         return true;
+    }
+
+    s_v2_i TextureSize(const s_gfx_resource &texture_resource) {
+        return texture_resource.Texture().size;
     }
 
     // ============================================================

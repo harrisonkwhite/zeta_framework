@@ -47,6 +47,10 @@ namespace zf {
             return operator[](m_len - 1);
         }
 
+        void Clear() {
+            m_len = 0;
+        }
+
         tp_type &Append(const tp_type &val) {
             ZF_ASSERT(!IsFull());
 
@@ -156,6 +160,10 @@ namespace zf {
 
         tp_type &Peek() const {
             return operator[](m_height - 1);
+        }
+
+        void Clear() {
+            m_height = 0;
         }
 
         tp_type &Push(const tp_type &val) {

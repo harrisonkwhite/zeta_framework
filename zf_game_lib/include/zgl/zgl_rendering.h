@@ -28,6 +28,8 @@ namespace zf {
         DrawRect(rs, rect, color, color, color, color);
     }
 
+    void DrawTexture(s_rendering_state &rs, const s_v2 pos, const s_gfx_resource &texture_resource);
+
     namespace internal {
         s_rendering_state &BeginRendering(const s_rendering_basis &basis, s_mem_arena &mem_arena);
         void EndRendering(s_rendering_state &rs, s_mem_arena &temp_mem_arena);

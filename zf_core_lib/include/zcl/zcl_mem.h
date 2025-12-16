@@ -220,6 +220,8 @@ namespace zf {
         static_assert(!s_is_const<tp_type>::g_val);
 
     public:
+        using t_elem = tp_type;
+
         constexpr s_array_rdonly() = default;
 
         constexpr s_array_rdonly(const s_ptr<const tp_type> ptr, const t_len len) : m_ptr(ptr), m_len(len) {
@@ -321,6 +323,8 @@ namespace zf {
         static_assert(!s_is_const<tp_type>::g_val);
 
     public:
+        using t_elem = tp_type;
+
         constexpr s_array() = default;
 
         constexpr s_array(const s_ptr<tp_type> ptr, const t_len len) : m_ptr(ptr), m_len(len) {
@@ -404,6 +408,8 @@ namespace zf {
     template <typename tp_type, t_len tp_len>
     struct s_static_array {
         static_assert(!s_is_const<tp_type>::g_val);
+
+        using t_elem = tp_type;
 
         static constexpr t_len g_len = tp_len;
 
