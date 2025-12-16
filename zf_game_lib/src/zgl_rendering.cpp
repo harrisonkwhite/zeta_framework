@@ -39,7 +39,7 @@ namespace zf {
             .gfx_res_arena = CreateGFXResourceArena(mem_arena),
         };
 
-        if (!CreateMesh(g_batch_vert_component_cnt * g_batch_vert_limit, basis.gfx_res_arena, basis.batch_mesh_resource)) {
+        if (!CreateMesh(g_batch_vert_limit, basis.gfx_res_arena, basis.batch_mesh_resource)) {
             ZF_FATAL();
         }
 
@@ -95,15 +95,16 @@ namespace zf {
 
         const auto verts = rs.batch_verts.ToArray();
         const s_array<t_f32> verts_f32 = {reinterpret_cast<t_f32 *>(verts.Ptr().Raw()), verts.SizeInBytes() / ZF_SIZE_OF(t_f32)};
-        rs.instr_seq.SubmitMeshUpdate(*rs.basis->batch_mesh_resource, verts_f32);
-
-        Log(s_cstr_literal("Dude: %, %"), rs.batch_texture_resource, FormatArray(verts));
+        const s_array_rdonly<t_f32> verts_f32_clone = AllocArrayClone(verts_f32, *rs.mem_arena);
+        rs.instr_seq.SubmitMeshUpdate(*rs.basis->batch_mesh_resource, verts_f32_clone);
 
         rs.instr_seq.SubmitTextureSet(rs.batch_texture_resource ? *rs.batch_texture_resource : *rs.basis->px_texture, *rs.basis->batch_sampler_uniform_resource);
 
-        rs.instr_seq.SubmitMeshDraw(*rs.basis->batch_mesh_resource, *rs.basis->batch_shader_prog_resource);
+        rs.instr_seq.SubmitMeshDraw(*rs.basis->batch_mesh_resource, *rs.basis->batch_shader_prog_resource, static_cast<t_i32>(rs.batch_verts.Len()));
 
         rs.batch_verts.Clear();
+
+        rs.batch_texture_resource = nullptr;
     }
 
     void internal::EndRendering(s_rendering_state &rs, s_mem_arena &temp_mem_arena) {
@@ -116,8 +117,6 @@ namespace zf {
             Flush(rs);
         }
 
-        rs.batch_texture_resource = nullptr;
-
         rs.batch_verts.Append({pts[0], pt_colors[0], {}});
         rs.batch_verts.Append({pts[1], pt_colors[1], {}});
         rs.batch_verts.Append({pts[2], pt_colors[2], {}});
@@ -127,8 +126,6 @@ namespace zf {
         if (rs.batch_verts.Len() + 6 > rs.batch_verts.Cap() || rs.batch_texture_resource) {
             Flush(rs);
         }
-
-        rs.batch_texture_resource = nullptr;
 
         rs.batch_verts.Append({rect.TopLeft(), color_topleft, {0.0f, 0.0f}});
         rs.batch_verts.Append({rect.TopRight(), color_topright, {1.0f, 0.0f}});
@@ -140,8 +137,7 @@ namespace zf {
     }
 
     void DrawTexture(s_rendering_state &rs, const s_v2 pos, const s_gfx_resource &texture_resource) {
-        if (rs.batch_verts.Len() + 6 > rs.batch_verts.Cap()
-            || (!rs.batch_verts.IsEmpty() && &texture_resource != rs.batch_texture_resource)) {
+        if (rs.batch_verts.Len() + 6 > rs.batch_verts.Cap() || (!rs.batch_verts.IsEmpty() && &texture_resource != rs.batch_texture_resource)) {
             Flush(rs);
         }
 

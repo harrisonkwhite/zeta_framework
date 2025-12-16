@@ -508,17 +508,11 @@ namespace zf {
         return {ptr, len};
     }
 
-    template <c_nonstatic_array tp_type>
-    auto AllocArrayClone(const tp_type arr_to_clone, s_mem_arena &mem_arena) {
-        const auto arr = AllocArray(arr_to_clone.Len(), mem_arena);
-
-        if (!arr) {
-            return false;
-        }
-
+    template <c_nonstatic_array tp_arr_type>
+    auto AllocArrayClone(const tp_arr_type arr_to_clone, s_mem_arena &mem_arena) {
+        const auto arr = AllocArray<typename tp_arr_type::t_elem>(arr_to_clone.Len(), mem_arena);
         arr_to_clone.CopyTo(arr);
-
-        return true;
+        return arr;
     }
 
     template <typename tp_type>

@@ -34,6 +34,7 @@ namespace zf {
         ZF_DEFER({ ShutdownGFX(); });
 
         auto rendering_basis = CreateRenderingBasis(perm_mem_arena, temp_mem_arena);
+        ZF_DEFER({ ReleaseRenderingBasis(rendering_basis); });
 
         init_func({
             .perm_mem_arena = perm_mem_arena,

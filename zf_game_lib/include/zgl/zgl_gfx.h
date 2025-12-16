@@ -33,7 +33,7 @@ namespace zf {
 
     void DestroyGFXResources(s_gfx_resource_arena &arena);
 
-    [[nodiscard]] t_b8 CreateMesh(const t_len verts_len, s_gfx_resource_arena &arena, s_ptr<s_gfx_resource> &o_resource);
+    [[nodiscard]] t_b8 CreateMesh(const t_i32 vert_cnt, s_gfx_resource_arena &arena, s_ptr<s_gfx_resource> &o_resource);
 
     [[nodiscard]] t_b8 CreateShaderProg(const s_array_rdonly<t_u8> vert_shader_bin, const s_array_rdonly<t_u8> frag_shader_bin, s_gfx_resource_arena &arena, s_ptr<s_gfx_resource> &o_resource);
 
@@ -163,7 +163,7 @@ namespace zf {
         void SubmitClear(const s_color_rgb24f col);
         void SubmitMeshUpdate(const s_gfx_resource &mesh, const s_array_rdonly<t_f32> verts);
         void SubmitTextureSet(const s_gfx_resource &tex, const s_gfx_resource &sampler_uniform);
-        void SubmitMeshDraw(const s_gfx_resource &mesh, const s_gfx_resource &prog);
+        void SubmitMeshDraw(const s_gfx_resource &mesh, const s_gfx_resource &prog, const t_i32 vert_cnt);
 
         void Exec(s_mem_arena &temp_mem_arena);
 

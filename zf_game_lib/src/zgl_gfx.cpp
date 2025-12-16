@@ -94,7 +94,6 @@ namespace zf {
         union {
             struct {
                 bgfx::DynamicVertexBufferHandle vert_buf_bgfx_hdl;
-                t_len verts_len;
             } mesh;
 
             struct {
@@ -158,11 +157,11 @@ namespace zf {
         return resource;
     }
 
-    t_b8 CreateMesh(const t_len verts_len, s_gfx_resource_arena &arena, s_ptr<s_gfx_resource> &o_resource) {
+    t_b8 CreateMesh(const t_i32 vert_cnt, s_gfx_resource_arena &arena, s_ptr<s_gfx_resource> &o_resource) {
         bgfx::VertexLayout layout = {};
         layout.begin().add(bgfx::Attrib::Position, 2, bgfx::AttribType::Float).add(bgfx::Attrib::Color0, 4, bgfx::AttribType::Float).add(bgfx::Attrib::TexCoord0, 2, bgfx::AttribType::Float).end(); // @todo: Allow customs!
 
-        const auto vert_buf_bgfx_hdl = bgfx::createDynamicVertexBuffer(static_cast<uint32_t>(verts_len), layout);
+        const auto vert_buf_bgfx_hdl = bgfx::createDynamicVertexBuffer(static_cast<uint32_t>(vert_cnt), layout);
 
         if (!bgfx::isValid(vert_buf_bgfx_hdl)) {
             return false;
@@ -170,7 +169,6 @@ namespace zf {
 
         o_resource = &PushGFXResource(ek_gfx_resource_type_mesh, arena);
         o_resource->Mesh().vert_buf_bgfx_hdl = vert_buf_bgfx_hdl;
-        o_resource->Mesh().verts_len = verts_len;
 
         return true;
     }
@@ -294,6 +292,7 @@ namespace zf {
             struct {
                 s_ptr<const s_gfx_resource> mesh;
                 s_ptr<const s_gfx_resource> prog;
+                t_i32 vert_cnt;
             } mesh_draw;
         } type_data = {};
     };
@@ -321,11 +320,12 @@ namespace zf {
         Submit(instr);
     }
 
-    void s_render_instr_seq::SubmitMeshDraw(const s_gfx_resource &mesh, const s_gfx_resource &prog) {
+    void s_render_instr_seq::SubmitMeshDraw(const s_gfx_resource &mesh, const s_gfx_resource &prog, const t_i32 vert_cnt) {
         s_render_instr instr;
         instr.type = ek_render_instr_type_mesh_draw;
         instr.MeshDraw().mesh = &mesh;
         instr.MeshDraw().prog = &prog;
+        instr.MeshDraw().vert_cnt = vert_cnt;
 
         Submit(instr);
     }
@@ -391,7 +391,7 @@ namespace zf {
                 case ek_render_instr_type_mesh_draw: {
                     const auto &md = instr.MeshDraw();
 
-                    bgfx::setVertexBuffer(0, md.mesh->Mesh().vert_buf_bgfx_hdl, 0, static_cast<uint32_t>(md.mesh->Mesh().verts_len));
+                    bgfx::setVertexBuffer(0, md.mesh->Mesh().vert_buf_bgfx_hdl, 0, static_cast<uint32_t>(md.vert_cnt));
                     bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A | BGFX_STATE_BLEND_ALPHA);
                     bgfx::submit(0, md.prog->ShaderProg().bgfx_hdl);
 
