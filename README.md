@@ -37,7 +37,6 @@ cmake ..
 ## Third-Party Projects
 
 - [GLFW](https://github.com/glfw/glfw) for cross-platform windowing and input (plus an OpenGL context)
-- [glad](https://github.com/Dav1dde/glad) for OpenGL function pointers
 - [cJSON](https://github.com/DaveGamble/cJSON) for JSON parsing in the asset packer
 - [stb](https://github.com/nothings/stb) for raw image and font file loading
 - [miniaudio](https://github.com/mackron/miniaudio) for audio loading and playing
