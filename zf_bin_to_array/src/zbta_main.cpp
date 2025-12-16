@@ -28,19 +28,22 @@ namespace zf {
         PrintFormat(output_file_stream, s_cstr_literal("    extern const t_u8 g_%_raw[] = {"), arr_subname);
 
         t_u8 byte_read;
-        t_b8 is_first_byte = true;
+        t_len byte_read_cnt = 0;
 
         while (input_file_stream.ReadItem(byte_read)) {
-            if (!is_first_byte) {
+            if (byte_read_cnt > 0) {
                 Print(output_file_stream, s_cstr_literal(", "));
             }
 
             PrintFormat(output_file_stream, s_cstr_literal("%"), FormatHex(byte_read));
 
-            is_first_byte = false;
+            byte_read_cnt++;
         }
 
         Print(output_file_stream, s_cstr_literal("};\n"));
+
+        PrintFormat(output_file_stream, s_cstr_literal("    extern const t_len g_%_len = %;\n"), arr_subname, byte_read_cnt);
+
         Print(output_file_stream, s_cstr_literal("}\n"));
 
         return true;

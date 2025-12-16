@@ -25,7 +25,7 @@ namespace zf {
     // Sets the LOGICAL window size. The actual new framebuffer size MIGHT be larger if there is DPI scaling.
     void SetWindowSize(const s_v2_i size);
 
-    // Set the LOGICAL window size limits. If you don't want to limit a particular dimension, leave -1.
+    // Set the LOGICAL window size limits. If you don't want to limit a particular dimension, leave it as -1.
     void SetWindowSizeLimits(const t_i32 min_width, const t_i32 min_height, const t_i32 max_width, const t_i32 max_height);
 
     void SetWindowResizability(const t_b8 resizable);
@@ -52,8 +52,6 @@ namespace zf {
         void ShowWindow();
 
         t_b8 ShouldWindowClose();
-
-        void SwapWindowBuffers();
     }
 
     // ============================================================

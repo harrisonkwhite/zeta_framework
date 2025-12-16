@@ -4,9 +4,10 @@
 
 namespace zf {
     extern const t_u8 g_test_vs_raw[];
-    extern const t_u8 g_test_fs_raw[];
+    extern const t_len g_test_vs_len;
 
-    constexpr s_color_rgb8 g_bg_color_default = {109, 187, 255};
+    extern const t_u8 g_test_fs_raw[];
+    extern const t_len g_test_fs_len;
 
     struct s_batch_vert {
         s_v2 pos;
@@ -32,44 +33,14 @@ namespace zf {
 
     constexpr t_len g_batch_vert_limit = 1024;
 
-    constexpr s_cstr_literal g_batch_vert_shader_src = R"(#version 330 core
-
-layout (location = 0) in vec2 a_vert;
-layout (location = 1) in vec4 a_blend;
-layout (location = 2) in vec2 a_uv;
-
-out vec4 v_blend;
-out vec2 v_uv;
-
-uniform mat4 u_proj;
-
-void main() {
-    gl_Position = u_proj * vec4(a_vert, 0.0, 1.0);
-    v_blend = a_blend;
-    v_uv = a_uv;
-}
-)";
-
-    constexpr s_cstr_literal g_batch_frag_shader_src = R"(#version 330 core
-
-in vec4 v_blend;
-in vec2 v_uv;
-
-out vec4 o_frag_color;
-
-void main() {
-    o_frag_color = v_blend;
-}
-)";
-
     s_rendering_basis CreateRenderingBasis(s_mem_arena &mem_arena, s_mem_arena &temp_mem_arena) {
         s_rendering_basis basis = {
             .gfx_res_arena = CreateGFXResourceArena(mem_arena),
         };
 
-        basis.batch_mesh = &CreateMesh(nullptr, g_batch_vert_component_cnt * g_batch_vert_limit, true, g_batch_vert_attr_component_cnts, basis.gfx_res_arena);
+        basis.batch_mesh = &CreateMesh(g_batch_vert_component_cnt * g_batch_vert_limit, basis.gfx_res_arena);
 
-        if (!CreateShaderProg(g_batch_vert_shader_src, g_batch_frag_shader_src, basis.gfx_res_arena, temp_mem_arena, basis.batch_shader_prog)) {
+        if (!CreateShaderProg({g_test_vs_raw, g_test_vs_len}, {g_test_fs_raw, g_test_fs_len}, basis.gfx_res_arena, basis.batch_shader_prog)) {
             ZF_FATAL();
         }
 
@@ -93,12 +64,14 @@ void main() {
         state.mem_arena = &mem_arena;
         state.instr_seq = {mem_arena};
 
-        DrawClear(state, g_bg_color_default);
-
         return state;
     }
 
     static void Flush(s_rendering_state &rs) {
+        if (rs.batch_verts.IsEmpty()) {
+            return;
+        }
+
         const auto verts = rs.batch_verts.ToArray();
         const s_array<t_f32> verts_f32 = {reinterpret_cast<t_f32 *>(verts.Ptr().Raw()), verts.SizeInBytes() / ZF_SIZE_OF(t_f32)};
         rs.instr_seq.SubmitMeshUpdate(*rs.basis->batch_mesh, verts_f32);
@@ -125,11 +98,6 @@ void main() {
     void internal::EndRendering(s_rendering_state &rs, s_mem_arena &temp_mem_arena) {
         Flush(rs);
         rs.instr_seq.Exec(temp_mem_arena);
-        internal::SwapWindowBuffers();
-    }
-
-    void DrawClear(s_rendering_state &rs, const s_color_rgb24f col) {
-        rs.instr_seq.SubmitClear(col);
     }
 
     void DrawTriangle(s_rendering_state &rs, const s_static_array<s_v2, 3> &pts, const s_static_array<s_color_rgba32f, 3> &pt_colors) {
@@ -154,21 +122,5 @@ void main() {
         rs.batch_verts.Append({rect.BottomRight(), color_bottomright});
         rs.batch_verts.Append({rect.BottomLeft(), color_bottomleft});
         rs.batch_verts.Append({rect.TopLeft(), color_topleft});
-    }
-
-    void DrawTexture(s_rendering_state &rs, const s_gfx_resource &tex, const s_v2 pos, const s_color_rgba32f blend) {
-        if (rs.batch_verts.Len() + 6 > rs.batch_verts.Cap()) {
-            Flush(rs);
-        }
-
-        const s_rect_f rect = {pos, TextureSize(tex).ToV2()};
-
-        rs.batch_verts.Append({rect.TopLeft(), blend});
-        rs.batch_verts.Append({rect.TopRight(), blend});
-        rs.batch_verts.Append({rect.BottomRight(), blend});
-
-        rs.batch_verts.Append({rect.BottomRight(), blend});
-        rs.batch_verts.Append({rect.BottomLeft(), blend});
-        rs.batch_verts.Append({rect.TopLeft(), blend});
     }
 }

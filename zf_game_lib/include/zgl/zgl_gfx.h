@@ -30,12 +30,8 @@ namespace zf {
         return {.mem_arena = &mem_arena};
     }
 
-    s_gfx_resource &CreateMesh(const s_ptr<const t_f32> verts, const t_len verts_len, const t_b8 verts_dynamic, const s_array_rdonly<t_i32> vert_attr_component_cnts, s_gfx_resource_arena &arena);
-
-    [[nodiscard]] t_b8 CreateShaderProg(const s_str_rdonly vert_src, const s_str_rdonly frag_src, s_gfx_resource_arena &res_arena, s_mem_arena &temp_mem_arena, s_ptr<s_gfx_resource> &o_res);
-
-    [[nodiscard]] t_b8 CreateTexture(const s_texture_data_rdonly tex_data, s_gfx_resource_arena &arena, s_ptr<s_gfx_resource> &o_res);
-    s_v2_i TextureSize(const s_gfx_resource &res);
+    s_gfx_resource &CreateMesh(const t_len verts_len, s_gfx_resource_arena &arena);
+    [[nodiscard]] t_b8 CreateShaderProg(const s_array_rdonly<t_u8> vert_shader_bin, const s_array_rdonly<t_u8> frag_shader_bin, s_gfx_resource_arena &arena, s_ptr<s_gfx_resource> &o_res);
 
     // ============================================================
     // @section: Rendering

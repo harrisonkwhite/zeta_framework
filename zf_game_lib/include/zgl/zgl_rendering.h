@@ -1,6 +1,5 @@
 #pragma once
 
-#include <zcl.h>
 #include <zgl/zgl_gfx.h>
 
 namespace zf {
@@ -28,8 +27,6 @@ namespace zf {
     inline void DrawRect(s_rendering_state &rs, const s_rect_f rect, const s_color_rgba32f color) {
         DrawRect(rs, rect, color, color, color, color);
     }
-
-    void DrawTexture(s_rendering_state &rs, const s_gfx_resource &tex, const s_v2 pos, const s_color_rgba32f blend = colors::g_white);
 
     namespace internal {
         s_rendering_state &BeginRendering(const s_rendering_basis &basis, s_mem_arena &mem_arena);

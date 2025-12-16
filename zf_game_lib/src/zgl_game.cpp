@@ -2,6 +2,7 @@
 
 #include <zgl/zgl_gfx.h>
 #include <zgl/zgl_platform.h>
+#include <zgl/zgl_rendering.h>
 
 namespace zf {
     constexpr s_v2_i g_init_window_size = {1280, 720};
@@ -32,7 +33,6 @@ namespace zf {
         InitGFX();
         ZF_DEFER({ ShutdownGFX(); });
 
-#if 0
         auto rendering_basis = CreateRenderingBasis(perm_mem_arena, temp_mem_arena);
 
         init_func({
@@ -46,7 +46,6 @@ namespace zf {
                 cleanup_func();
             }
         });
-#endif
 
         //
         // Main Loop
@@ -86,17 +85,17 @@ namespace zf {
 
                 // internal::PlatformLock();
 
-#if 0
                 s_rendering_state &rs = internal::BeginRendering(rendering_basis, temp_mem_arena);
 
+#if 0
                 render_func({
                     .perm_mem_arena = perm_mem_arena,
                     .temp_mem_arena = temp_mem_arena,
                     .rendering_state = rs,
                 });
+#endif
 
                 internal::EndRendering(rs, temp_mem_arena);
-#endif
 
                 // internal::PlatformUnlock();
             }

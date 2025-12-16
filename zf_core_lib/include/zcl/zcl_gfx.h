@@ -144,7 +144,7 @@ namespace zf {
         t_u32 res = 0;
         res |= static_cast<t_u32>(col.r) << 24;
         res |= static_cast<t_u32>(col.g) << 16;
-        res |= static_cast<t_u32>(col.g) << 8;
+        res |= static_cast<t_u32>(col.b) << 8;
         res |= static_cast<t_u32>(col.a);
 
         return res;
