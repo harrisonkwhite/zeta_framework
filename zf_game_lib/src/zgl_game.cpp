@@ -70,13 +70,11 @@ namespace zf {
             // Once enough time has passed (i.e. the time accumulator has reached the tick interval), run at least a single tick and update the display.
             if (frame_dur_accum >= targ_tick_interval) {
                 do {
-#if 0
                     tick_func({
                         .perm_mem_arena = perm_mem_arena,
                         .temp_mem_arena = temp_mem_arena,
                         .perm_gfx_res_arena = rendering_basis.gfx_res_arena,
                     });
-#endif
 
                     internal::ClearInputEvents();
 
@@ -87,13 +85,11 @@ namespace zf {
 
                 s_rendering_state &rs = internal::BeginRendering(rendering_basis, temp_mem_arena);
 
-#if 0
                 render_func({
                     .perm_mem_arena = perm_mem_arena,
                     .temp_mem_arena = temp_mem_arena,
                     .rendering_state = rs,
                 });
-#endif
 
                 internal::EndRendering(rs, temp_mem_arena);
 

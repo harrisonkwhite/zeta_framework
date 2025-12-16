@@ -5,6 +5,7 @@
 
 namespace zf {
     constexpr s_color_rgb8 g_bg_color_default = {109, 187, 255};
+    s_v2_i g_resolution;
 
     t_b8 g_initted;
 
@@ -17,8 +18,10 @@ namespace zf {
         init.type = bgfx::RendererType::Count;
 
         init.resolution.reset = BGFX_RESET_VSYNC;
-        init.resolution.width = static_cast<uint32_t>(fb_size_cache.x);
-        init.resolution.height = static_cast<uint32_t>(fb_size_cache.y);
+
+        g_resolution = fb_size_cache;
+        init.resolution.width = static_cast<uint32_t>(g_resolution.x);
+        init.resolution.height = static_cast<uint32_t>(g_resolution.y);
 
         init.platformData.nwh = internal::NativeWindowHandle();
         init.platformData.ndt = internal::NativeDisplayHandle();
@@ -193,15 +196,26 @@ namespace zf {
     void s_render_instr_seq::Exec(s_mem_arena &temp_mem_arena) {
         ZF_ASSERT(g_initted);
 
+        const auto fb_size_cache = WindowFramebufferSizeCache();
+
+        if (g_resolution != fb_size_cache) {
+            bgfx::reset(static_cast<uint32_t>(fb_size_cache.x), static_cast<uint32_t>(fb_size_cache.y), BGFX_RESET_VSYNC);
+            g_resolution = fb_size_cache;
+        }
+
         //
         //
         //
         bgfx::setViewMode(0, bgfx::ViewMode::Sequential);
 
-        const auto fb_size_cache = WindowFramebufferSizeCache();
-
         const auto view_mat = CreateIdentityMatrix();
-        const auto proj_mat = CreateIdentityMatrix();
+
+        auto proj_mat = CreateIdentityMatrix();
+        proj_mat.elems[0][0] = 1.0f / (static_cast<t_f32>(fb_size_cache.x) / 2.0f);
+        proj_mat.elems[1][1] = -1.0f / (static_cast<t_f32>(fb_size_cache.y) / 2.0f);
+        proj_mat.elems[3][0] = -1.0f;
+        proj_mat.elems[3][1] = 1.0f;
+
         bgfx::setViewTransform(0, &view_mat, &proj_mat);
 
         bgfx::setViewClear(0, BGFX_CLEAR_COLOR, ColorToHex(g_bg_color_default));
