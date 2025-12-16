@@ -2,10 +2,6 @@
 
 namespace zf {
     t_b8 OutputCode(const s_str_rdonly input_file_path, const s_str_rdonly output_file_path, const s_str_rdonly arr_subname) {
-        ZF_ASSERT(IsTerminated(input_file_path.bytes));
-        ZF_ASSERT(IsTerminated(output_file_path.bytes));
-        ZF_ASSERT(IsTerminated(arr_subname.bytes));
-
         s_mem_arena mem_arena = CreateMemArena(Megabytes(4));
         ZF_DEFER({ mem_arena.Release(); });
 
@@ -35,7 +31,7 @@ namespace zf {
         t_b8 is_first_byte = true;
 
         while (input_file_stream.ReadItem(byte_read)) {
-            if (is_first_byte) {
+            if (!is_first_byte) {
                 Print(output_file_stream, s_cstr_literal(", "));
             }
 
@@ -57,5 +53,5 @@ int main(const int arg_cnt, const char *const *const args) {
         return EXIT_FAILURE;
     }
 
-    return zf::OutputCode(zf::ConvertCstrButKeepTerminator(args[1]), zf::ConvertCstrButKeepTerminator(args[2]), zf::ConvertCstrButKeepTerminator(args[3])) ? EXIT_SUCCESS : EXIT_FAILURE;
+    return zf::OutputCode(zf::ConvertCstr(args[1]), zf::ConvertCstr(args[2]), zf::ConvertCstr(args[3])) ? EXIT_SUCCESS : EXIT_FAILURE;
 }

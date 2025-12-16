@@ -138,7 +138,7 @@ namespace zf {
         return {{reinterpret_cast<t_u8 *>(cstr), CalcCstrLen(cstr)}};
     }
 
-    // Creates a string object from the given TERMINATED C-string.
+    // Creates a string object from the given C-string.
     // Does a conventional string walk to calculate length.
     inline s_str ConvertCstrButKeepTerminator(char *const cstr) {
         return {{reinterpret_cast<t_u8 *>(cstr), CalcCstrLen(cstr) + 1}};
@@ -150,7 +150,7 @@ namespace zf {
         return {{reinterpret_cast<const t_u8 *>(cstr), CalcCstrLen(cstr)}};
     }
 
-    // Creates a string object from the given TERMINATED C-string.
+    // Creates a string object from the given C-string.
     // Does a conventional string walk to calculate length.
     inline s_str_rdonly ConvertCstrButKeepTerminator(const char *const cstr) {
         return {{reinterpret_cast<const t_u8 *>(cstr), CalcCstrLen(cstr) + 1}};

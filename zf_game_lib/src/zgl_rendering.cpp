@@ -3,6 +3,9 @@
 #include <zgl/zgl_platform.h>
 
 namespace zf {
+    extern const t_u8 g_test_vs_raw[];
+    extern const t_u8 g_test_fs_raw[];
+
     constexpr s_color_rgb8 g_bg_color_default = {109, 187, 255};
 
     struct s_batch_vert {
