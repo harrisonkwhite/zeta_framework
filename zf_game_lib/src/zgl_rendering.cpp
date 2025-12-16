@@ -39,13 +39,32 @@ namespace zf {
             .gfx_res_arena = CreateGFXResourceArena(mem_arena),
         };
 
-        basis.batch_mesh = &CreateMesh(g_batch_vert_component_cnt * g_batch_vert_limit, basis.gfx_res_arena);
-
-        if (!CreateShaderProg({g_test_vs_raw, g_test_vs_len}, {g_test_fs_raw, g_test_fs_len}, basis.gfx_res_arena, basis.batch_shader_prog)) {
+        if (!CreateMesh(g_batch_vert_component_cnt * g_batch_vert_limit, basis.gfx_res_arena, basis.batch_mesh_resource)) {
             ZF_FATAL();
         }
 
+        if (!CreateShaderProg({g_test_vs_raw, g_test_vs_len}, {g_test_fs_raw, g_test_fs_len}, basis.gfx_res_arena, basis.batch_shader_prog_resource)) {
+            ZF_FATAL();
+        }
+
+        if (!CreateUniform(s_cstr_literal("u_tex"), basis.gfx_res_arena, temp_mem_arena, basis.batch_sampler_uniform_resource)) {
+            ZF_FATAL();
+        }
+
+        {
+            const s_static_array<t_u8, 4> px_texture_rgba = {255, 255, 255, 255};
+
+            if (!CreateTexture({{1, 1}, px_texture_rgba}, basis.gfx_res_arena, basis.px_texture)) {
+                ZF_FATAL();
+            }
+        }
+
         return basis;
+    }
+
+    void ReleaseRenderingBasis(s_rendering_basis &basis) {
+        DestroyGFXResources(basis.gfx_res_arena);
+        basis = {};
     }
 
     struct s_rendering_state {
@@ -56,6 +75,7 @@ namespace zf {
         s_render_instr_seq instr_seq;
 
         s_static_list<s_batch_vert, g_batch_vert_limit> batch_verts;
+        s_ptr<const s_gfx_resource> batch_texture_resource;
     };
 
     s_rendering_state &internal::BeginRendering(const s_rendering_basis &basis, s_mem_arena &mem_arena) {
@@ -75,25 +95,11 @@ namespace zf {
 
         const auto verts = rs.batch_verts.ToArray();
         const s_array<t_f32> verts_f32 = {reinterpret_cast<t_f32 *>(verts.Ptr().Raw()), verts.SizeInBytes() / ZF_SIZE_OF(t_f32)};
-        rs.instr_seq.SubmitMeshUpdate(*rs.basis->batch_mesh, verts_f32);
+        rs.instr_seq.SubmitMeshUpdate(*rs.basis->batch_mesh_resource, verts_f32);
 
-        rs.instr_seq.SubmitMeshDraw(*rs.basis->batch_mesh, *rs.basis->batch_shader_prog);
+        rs.instr_seq.SubmitTextureSet(rs.batch_texture_resource ? *rs.batch_texture_resource : *rs.basis->px_texture, *rs.basis->batch_sampler_uniform_resource);
 
-#if 0
-        rs.instr_seq.SubmitShaderProgSet(*rs.basis->batch_shader_prog);
-
-        const auto fb_size_cache = WindowFramebufferSizeCache();
-
-        auto proj_mat = CreateIdentityMatrix();
-        proj_mat.elems[0][0] = 1.0f / (static_cast<t_f32>(fb_size_cache.x) / 2.0f);
-        proj_mat.elems[1][1] = -1.0f / (static_cast<t_f32>(fb_size_cache.y) / 2.0f);
-        proj_mat.elems[3][0] = -1.0f;
-        proj_mat.elems[3][1] = 1.0f;
-
-        rs.instr_seq.SubmitShaderProgUniformSet(s_cstr_literal("u_proj"), proj_mat);
-
-        rs.instr_seq.SubmitMeshDraw(*rs.basis->batch_mesh);
-#endif
+        rs.instr_seq.SubmitMeshDraw(*rs.basis->batch_mesh_resource, *rs.basis->batch_shader_prog_resource);
     }
 
     void internal::EndRendering(s_rendering_state &rs, s_mem_arena &temp_mem_arena) {

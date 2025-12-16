@@ -50,14 +50,45 @@ namespace zf {
         e_gfx_resource_type type = ek_gfx_resource_type_invalid;
         s_ptr<s_gfx_resource> next = nullptr;
 
-        auto &Mesh() { return type_data.mesh; }
-        auto &Mesh() const { return type_data.mesh; }
+        auto &Mesh() {
+            ZF_ASSERT(type == ek_gfx_resource_type_mesh);
+            return type_data.mesh;
+        }
 
-        auto &ShaderProg() { return type_data.shader_prog; }
-        auto &ShaderProg() const { return type_data.shader_prog; }
+        auto &Mesh() const {
+            ZF_ASSERT(type == ek_gfx_resource_type_mesh);
+            return type_data.mesh;
+        }
 
-        auto &Texture() { return type_data.texture; }
-        auto &Texture() const { return type_data.texture; }
+        auto &ShaderProg() {
+            ZF_ASSERT(type == ek_gfx_resource_type_shader_prog);
+            return type_data.shader_prog;
+        }
+
+        auto &ShaderProg() const {
+            ZF_ASSERT(type == ek_gfx_resource_type_shader_prog);
+            return type_data.shader_prog;
+        }
+
+        auto &Uniform() {
+            ZF_ASSERT(type == ek_gfx_resource_type_uniform);
+            return type_data.uniform;
+        }
+
+        auto &Uniform() const {
+            ZF_ASSERT(type == ek_gfx_resource_type_uniform);
+            return type_data.uniform;
+        }
+
+        auto &Texture() {
+            ZF_ASSERT(type == ek_gfx_resource_type_texture);
+            return type_data.texture;
+        }
+
+        auto &Texture() const {
+            ZF_ASSERT(type == ek_gfx_resource_type_texture);
+            return type_data.texture;
+        }
 
     private:
         union {
@@ -71,30 +102,34 @@ namespace zf {
             } shader_prog;
 
             struct {
+                bgfx::UniformHandle bgfx_hdl;
+            } uniform;
+
+            struct {
                 bgfx::TextureHandle bgfx_hdl;
             } texture;
         } type_data = {};
     };
 
     void DestroyGFXResources(s_gfx_resource_arena &arena) {
-        s_ptr<const s_gfx_resource> res = arena.head;
+        s_ptr<const s_gfx_resource> resource = arena.head;
 
-        while (res) {
-            switch (res->type) {
+        while (resource) {
+            switch (resource->type) {
             case ek_gfx_resource_type_mesh:
-                bgfx::destroy(res->Mesh().vert_buf_bgfx_hdl);
+                bgfx::destroy(resource->Mesh().vert_buf_bgfx_hdl);
                 break;
 
             case ek_gfx_resource_type_shader_prog:
-                bgfx::destroy(res->ShaderProg().bgfx_hdl);
+                bgfx::destroy(resource->ShaderProg().bgfx_hdl);
                 break;
 
             case ek_gfx_resource_type_texture:
-                bgfx::destroy(res->Texture().bgfx_hdl);
+                bgfx::destroy(resource->Texture().bgfx_hdl);
                 break;
             }
 
-            res = res->next;
+            resource = resource->next;
         }
 
         arena = {};
@@ -103,19 +138,19 @@ namespace zf {
     static s_gfx_resource &PushGFXResource(const e_gfx_resource_type type, s_gfx_resource_arena &arena) {
         ZF_ASSERT(type != ek_gfx_resource_type_invalid);
 
-        s_gfx_resource &res = Alloc<s_gfx_resource>(*arena.mem_arena);
+        s_gfx_resource &resource = Alloc<s_gfx_resource>(*arena.mem_arena);
 
         if (!arena.head) {
-            arena.head = &res;
-            arena.tail = &res;
+            arena.head = &resource;
+            arena.tail = &resource;
         } else {
-            arena.tail->next = &res;
-            arena.tail = &res;
+            arena.tail->next = &resource;
+            arena.tail = &resource;
         }
 
-        res.type = type;
+        resource.type = type;
 
-        return res;
+        return resource;
     }
 
     t_b8 CreateMesh(const t_len verts_len, s_gfx_resource_arena &arena, s_ptr<s_gfx_resource> &o_res) {
@@ -162,6 +197,21 @@ namespace zf {
         return true;
     }
 
+    t_b8 CreateUniform(const s_str_rdonly name, s_gfx_resource_arena &arena, s_mem_arena &temp_mem_arena, s_ptr<s_gfx_resource> &o_res) {
+        const s_str_rdonly name_terminated = AllocStrCloneButAddTerminator(name, temp_mem_arena);
+
+        const bgfx::UniformHandle uniform_bgfx_hdl = bgfx::createUniform(name_terminated.Cstr(), bgfx::UniformType::Sampler); // @todo: Allow different uniform types. BGFX enum on this is strange?
+
+        if (!bgfx::isValid(uniform_bgfx_hdl)) {
+            return false;
+        }
+
+        o_res = &PushGFXResource(ek_gfx_resource_type_uniform, arena);
+        o_res->Uniform().bgfx_hdl = uniform_bgfx_hdl;
+
+        return true;
+    }
+
     t_b8 CreateTexture(const s_texture_data_rdonly tex_data, s_gfx_resource_arena &arena, s_ptr<s_gfx_resource> &o_res) {
         const auto tex_bgfx_hdl = bgfx::createTexture2D(static_cast<uint16_t>(tex_data.SizeInPixels().x), static_cast<uint16_t>(tex_data.SizeInPixels().y), false, 1, bgfx::TextureFormat::RGBA8, 0, bgfx::copy(tex_data.RGBAPixelData().Ptr(), static_cast<uint32_t>(tex_data.RGBAPixelData().SizeInBytes())));
 
@@ -169,8 +219,8 @@ namespace zf {
             return false;
         }
 
-        auto &res = PushGFXResource(ek_gfx_resource_type_texture, arena);
-        res.Texture().bgfx_hdl = tex_bgfx_hdl;
+        o_res = &PushGFXResource(ek_gfx_resource_type_texture, arena);
+        o_res->Texture().bgfx_hdl = tex_bgfx_hdl;
 
         return true;
     }
@@ -181,6 +231,7 @@ namespace zf {
     enum e_render_instr_type {
         ek_render_instr_type_invalid,
         ek_render_instr_type_mesh_update,
+        ek_render_instr_type_texture_set,
         ek_render_instr_type_mesh_draw
     };
 
@@ -196,6 +247,16 @@ namespace zf {
         auto &MeshUpdate() const {
             ZF_ASSERT(type == ek_render_instr_type_mesh_update);
             return type_data.mesh_update;
+        }
+
+        auto &TextureSet() {
+            ZF_ASSERT(type == ek_render_instr_type_texture_set);
+            return type_data.texture_set;
+        }
+
+        auto &TextureSet() const {
+            ZF_ASSERT(type == ek_render_instr_type_texture_set);
+            return type_data.texture_set;
         }
 
         auto &MeshDraw() {
@@ -216,9 +277,13 @@ namespace zf {
             } mesh_update;
 
             struct {
+                s_ptr<const s_gfx_resource> tex;
+                s_ptr<const s_gfx_resource> sampler_uniform;
+            } texture_set;
+
+            struct {
                 s_ptr<const s_gfx_resource> mesh;
                 s_ptr<const s_gfx_resource> prog;
-                s_ptr<const s_gfx_resource> tex;
             } mesh_draw;
         } type_data = {};
     };
@@ -237,12 +302,20 @@ namespace zf {
         Submit(instr);
     }
 
-    void s_render_instr_seq::SubmitMeshDraw(const s_gfx_resource &mesh, const s_gfx_resource &prog, const s_gfx_resource &tex) {
+    void s_render_instr_seq::SubmitTextureSet(const s_gfx_resource &tex, const s_gfx_resource &sampler_uniform) {
+        s_render_instr instr;
+        instr.type = ek_render_instr_type_texture_set;
+        instr.TextureSet().tex = &tex;
+        instr.TextureSet().sampler_uniform = &sampler_uniform;
+
+        Submit(instr);
+    }
+
+    void s_render_instr_seq::SubmitMeshDraw(const s_gfx_resource &mesh, const s_gfx_resource &prog) {
         s_render_instr instr;
         instr.type = ek_render_instr_type_mesh_draw;
         instr.MeshDraw().mesh = &mesh;
         instr.MeshDraw().prog = &prog;
-        instr.MeshDraw().tex = &tex;
 
         Submit(instr);
     }
@@ -300,11 +373,15 @@ namespace zf {
                     break;
                 }
 
+                case ek_render_instr_type_texture_set: {
+                    bgfx::setTexture(0, instr.TextureSet().sampler_uniform->Uniform().bgfx_hdl, instr.TextureSet().tex->Texture().bgfx_hdl);
+                    break;
+                }
+
                 case ek_render_instr_type_mesh_draw: {
                     const auto &md = instr.MeshDraw();
 
                     bgfx::setVertexBuffer(0, md.mesh->Mesh().vert_buf_bgfx_hdl, 0, static_cast<uint32_t>(md.mesh->Mesh().verts_len));
-                    // bgfx::setTexture(0, , );
                     bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A | BGFX_STATE_BLEND_ALPHA);
                     bgfx::submit(0, md.prog->ShaderProg().bgfx_hdl);
 

@@ -15,6 +15,7 @@ namespace zf {
         ek_gfx_resource_type_invalid,
         ek_gfx_resource_type_mesh,
         ek_gfx_resource_type_shader_prog,
+        ek_gfx_resource_type_uniform,
         ek_gfx_resource_type_texture
     };
 
@@ -34,6 +35,7 @@ namespace zf {
 
     [[nodiscard]] t_b8 CreateMesh(const t_len verts_len, s_gfx_resource_arena &arena, s_ptr<s_gfx_resource> &o_res);
     [[nodiscard]] t_b8 CreateShaderProg(const s_array_rdonly<t_u8> vert_shader_bin, const s_array_rdonly<t_u8> frag_shader_bin, s_gfx_resource_arena &arena, s_ptr<s_gfx_resource> &o_res);
+    [[nodiscard]] t_b8 CreateUniform(const s_str_rdonly name, s_gfx_resource_arena &arena, s_mem_arena &temp_mem_arena, s_ptr<s_gfx_resource> &o_res);
     [[nodiscard]] t_b8 CreateTexture(const s_texture_data_rdonly tex_data, s_gfx_resource_arena &arena, s_ptr<s_gfx_resource> &o_res);
 
     // ============================================================
@@ -156,7 +158,8 @@ namespace zf {
 
         void SubmitClear(const s_color_rgb24f col);
         void SubmitMeshUpdate(const s_gfx_resource &mesh, const s_array_rdonly<t_f32> verts);
-        void SubmitMeshDraw(const s_gfx_resource &mesh, const s_gfx_resource &prog, const s_gfx_resource &tex);
+        void SubmitTextureSet(const s_gfx_resource &tex, const s_gfx_resource &sampler_uniform);
+        void SubmitMeshDraw(const s_gfx_resource &mesh, const s_gfx_resource &prog);
 
         void Exec(s_mem_arena &temp_mem_arena);
 

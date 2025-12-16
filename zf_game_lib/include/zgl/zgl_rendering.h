@@ -5,16 +5,16 @@
 namespace zf {
     struct s_rendering_basis {
         s_gfx_resource_arena gfx_res_arena;
-        s_ptr<s_gfx_resource> batch_mesh;
-        s_ptr<s_gfx_resource> batch_shader_prog;
-        s_ptr<s_gfx_resource> white_px_texture;
+        s_ptr<s_gfx_resource> batch_mesh_resource;
+        s_ptr<s_gfx_resource> batch_shader_prog_resource;
+        s_ptr<s_gfx_resource> batch_sampler_uniform_resource;
+        s_ptr<s_gfx_resource> px_texture;
     };
 
     s_rendering_basis CreateRenderingBasis(s_mem_arena &mem_arena, s_mem_arena &temp_mem_arena);
+    void ReleaseRenderingBasis(s_rendering_basis &basis);
 
     struct s_rendering_state;
-
-    void DrawClear(s_rendering_state &rs, const s_color_rgb24f col);
 
     void DrawTriangle(s_rendering_state &rs, const s_static_array<s_v2, 3> &pts, const s_static_array<s_color_rgba32f, 3> &pt_colors);
 
