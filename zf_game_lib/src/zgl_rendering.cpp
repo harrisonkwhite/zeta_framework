@@ -100,6 +100,9 @@ void main() {
         const s_array<t_f32> verts_f32 = {reinterpret_cast<t_f32 *>(verts.Ptr().Raw()), verts.SizeInBytes() / ZF_SIZE_OF(t_f32)};
         rs.instr_seq.SubmitMeshUpdate(*rs.basis->batch_mesh, verts_f32);
 
+        rs.instr_seq.SubmitMeshDraw(*rs.basis->batch_mesh, *rs.basis->batch_shader_prog);
+
+#if 0
         rs.instr_seq.SubmitShaderProgSet(*rs.basis->batch_shader_prog);
 
         const auto fb_size_cache = WindowFramebufferSizeCache();
@@ -113,6 +116,7 @@ void main() {
         rs.instr_seq.SubmitShaderProgUniformSet(s_cstr_literal("u_proj"), proj_mat);
 
         rs.instr_seq.SubmitMeshDraw(*rs.basis->batch_mesh);
+#endif
     }
 
     void internal::EndRendering(s_rendering_state &rs, s_mem_arena &temp_mem_arena) {

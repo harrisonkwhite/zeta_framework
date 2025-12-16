@@ -35,6 +35,203 @@ namespace zf {
         g_initted = false;
     }
 
+    // ============================================================
+    // @section: Resources
+    // ============================================================
+    struct s_gfx_resource {
+    public:
+        e_gfx_resource_type type = ek_gfx_resource_type_invalid;
+        s_ptr<s_gfx_resource> next = nullptr;
+
+        auto &Mesh() { return type_data.mesh; }
+        auto &Mesh() const { return type_data.mesh; }
+
+        auto &ShaderProg() { return type_data.shader_prog; }
+        auto &ShaderProg() const { return type_data.shader_prog; }
+
+    private:
+        union {
+            struct {
+                bgfx::DynamicVertexBufferHandle vert_buf_bgfx_hdl;
+                t_len vert_cnt;
+            } mesh;
+
+            struct {
+                bgfx::ProgramHandle bgfx_hdl;
+            } shader_prog;
+        } type_data = {};
+    };
+
+    // ============================================================
+    // @section: Rendering
+    // ============================================================
+    enum e_render_instr_type {
+        ek_render_instr_type_invalid,
+        ek_render_instr_type_clear,
+        ek_render_instr_type_mesh_update,
+        ek_render_instr_type_mesh_draw
+    };
+
+    struct s_render_instr {
+    public:
+        e_render_instr_type type = ek_render_instr_type_invalid;
+
+        auto &Clear() {
+            ZF_ASSERT(type == ek_render_instr_type_clear);
+            return type_data.clear;
+        }
+
+        auto &Clear() const {
+            ZF_ASSERT(type == ek_render_instr_type_clear);
+            return type_data.clear;
+        }
+
+        auto &MeshUpdate() {
+            ZF_ASSERT(type == ek_render_instr_type_mesh_update);
+            return type_data.mesh_update;
+        }
+
+        auto &MeshUpdate() const {
+            ZF_ASSERT(type == ek_render_instr_type_mesh_update);
+            return type_data.mesh_update;
+        }
+
+        auto &MeshDraw() {
+            ZF_ASSERT(type == ek_render_instr_type_mesh_draw);
+            return type_data.mesh_draw;
+        }
+
+        auto &MeshDraw() const {
+            ZF_ASSERT(type == ek_render_instr_type_mesh_draw);
+            return type_data.mesh_draw;
+        }
+
+    private:
+        union {
+            struct {
+                s_color_rgb24f col;
+            } clear;
+
+            struct {
+                s_ptr<const s_gfx_resource> mesh;
+                s_array_rdonly<t_f32> verts;
+            } mesh_update;
+
+            struct {
+                s_ptr<const s_gfx_resource> mesh;
+                s_ptr<const s_gfx_resource> prog;
+            } mesh_draw;
+        } type_data = {};
+    };
+
+    struct s_render_instr_seq::s_render_instr_block {
+        s_static_list<s_render_instr, 32> instrs;
+        s_ptr<s_render_instr_block> next;
+    };
+
+    void s_render_instr_seq::SubmitClear(const s_color_rgb24f col) {
+        s_render_instr instr;
+        instr.type = ek_render_instr_type_clear;
+        instr.Clear().col = col;
+
+        Submit(instr);
+    }
+
+    void s_render_instr_seq::SubmitMeshUpdate(const s_gfx_resource &mesh, const s_array_rdonly<t_f32> verts) {
+        s_render_instr instr;
+        instr.type = ek_render_instr_type_mesh_update;
+        instr.MeshUpdate().mesh = &mesh;
+        instr.MeshUpdate().verts = verts;
+
+        Submit(instr);
+    }
+
+    void s_render_instr_seq::SubmitMeshDraw(const s_gfx_resource &mesh, const s_gfx_resource &prog) {
+        s_render_instr instr;
+        instr.type = ek_render_instr_type_mesh_draw;
+        instr.MeshDraw().mesh = &mesh;
+        instr.MeshDraw().prog = &prog;
+
+        Submit(instr);
+    }
+
+    void s_render_instr_seq::Exec(s_mem_arena &temp_mem_arena) {
+        ZF_ASSERT(g_initted);
+
+        //
+        //
+        //
+        bgfx::setViewMode(0, bgfx::ViewMode::Sequential);
+
+        const auto fb_size_cache = WindowFramebufferSizeCache();
+
+        const auto view_mat = CreateIdentityMatrix();
+        const auto proj_mat = CreateIdentityMatrix();
+        bgfx::setViewTransform(0, &view_mat, &proj_mat);
+
+        bgfx::setViewRect(0, 0, 0, static_cast<uint16_t>(fb_size_cache.x), static_cast<uint16_t>(fb_size_cache.y));
+
+        bgfx::touch(0);
+
+        //
+        //
+        //
+        s_ptr<const s_gfx_resource> shader_prog_active;
+
+        s_ptr<s_render_instr_block> block = blocks_head;
+
+        while (block) {
+            for (t_len i = 0; i < block->instrs.Len(); i++) {
+                const auto &instr = block->instrs[i];
+
+                switch (instr.type) {
+                case ek_render_instr_type_clear: {
+                    const auto &col = instr.Clear().col;
+                    bgfx::setViewClear(0, BGFX_CLEAR_COLOR, ColorToHex(col));
+                    break;
+                }
+
+                case ek_render_instr_type_mesh_update: {
+                    const auto &mu = instr.MeshUpdate();
+
+                    const auto mem = bgfx::makeRef(mu.verts.Ptr(), static_cast<uint32_t>(mu.verts.SizeInBytes()));
+                    bgfx::update(mu.mesh->Mesh().vert_buf_bgfx_hdl, 0, mem);
+
+                    break;
+                }
+
+                case ek_render_instr_type_mesh_draw: {
+                    ZF_ASSERT(shader_prog_active);
+
+                    const auto &md = instr.MeshDraw();
+
+                    bgfx::setVertexBuffer(0, md.mesh->Mesh().vert_buf_bgfx_hdl, 0, static_cast<uint32_t>(md.mesh->Mesh().vert_cnt));
+                    bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A | BGFX_STATE_BLEND_ALPHA);
+                    bgfx::submit(0, md.prog->ShaderProg().bgfx_hdl);
+
+                    break;
+                }
+                }
+            }
+
+            block = block->next;
+        }
+
+        bgfx::frame();
+    }
+
+    void s_render_instr_seq::Submit(const s_render_instr instr) {
+        if (!blocks_head) {
+            blocks_head = &Alloc<s_render_instr_block>(*blocks_mem_arena);
+            blocks_tail = blocks_head;
+        } else if (blocks_tail->instrs.IsFull()) {
+            blocks_tail->next = &Alloc<s_render_instr_block>(*blocks_mem_arena);
+            blocks_tail = blocks_tail->next;
+        }
+
+        blocks_tail->instrs.Append(instr);
+    }
+
 #if 0
     using t_gl_id = GLuint;
 

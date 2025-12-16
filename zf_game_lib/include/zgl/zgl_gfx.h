@@ -156,10 +156,8 @@ namespace zf {
         s_render_instr_seq(s_mem_arena &mem_arena) : blocks_mem_arena(&mem_arena) {}
 
         void SubmitClear(const s_color_rgb24f col);
-        void SubmitShaderProgSet(const s_gfx_resource &prog);
-        void SubmitShaderProgUniformSet(const s_str_rdonly name, const s_shader_prog_uniform_val &val);
         void SubmitMeshUpdate(const s_gfx_resource &mesh, const s_array_rdonly<t_f32> verts);
-        void SubmitMeshDraw(const s_gfx_resource &mesh, const s_ptr<const s_gfx_resource> tex = nullptr);
+        void SubmitMeshDraw(const s_gfx_resource &mesh, const s_gfx_resource &prog);
 
         void Exec(s_mem_arena &temp_mem_arena);
 

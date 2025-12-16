@@ -90,6 +90,8 @@ namespace zf {
 
         constexpr s_color_rgba8() = default;
         constexpr s_color_rgba8(const t_u8 r, const t_u8 g, const t_u8 b, const t_u8 a) : r(r), g(g), b(b), a(a) {}
+        constexpr s_color_rgba8(const s_color_rgba32f col) : r(static_cast<t_u8>(col.R() * 255.0f)), g(static_cast<t_u8>(col.G() * 255.0f)), b(static_cast<t_u8>(col.B() * 255.0f)), a(static_cast<t_u8>(col.A() * 255.0f)) {}
+        constexpr s_color_rgba8(const s_color_rgb24f col) : r(static_cast<t_u8>(col.R() * 255.0f)), g(static_cast<t_u8>(col.G() * 255.0f)), b(static_cast<t_u8>(col.B() * 255.0f)), a(255) {}
 
         constexpr operator s_color_rgba32f() const {
             return {r / 255.0f, g / 255.0f, b / 255.0f, a / 255.0f};
@@ -103,6 +105,7 @@ namespace zf {
 
         constexpr s_color_rgb8() = default;
         constexpr s_color_rgb8(const t_u8 r, const t_u8 g, const t_u8 b) : r(r), g(g), b(b) {}
+        constexpr s_color_rgb8(const s_color_rgb24f col) : r(static_cast<t_u8>(col.R() * 255.0f)), g(static_cast<t_u8>(col.G() * 255.0f)), b(static_cast<t_u8>(col.B() * 255.0f)) {}
 
         constexpr operator s_color_rgba8() const {
             return {r, g, b, 255};
@@ -135,6 +138,16 @@ namespace zf {
     constexpr s_color_rgba32f ColorAsGrayscale(const s_color_rgba32f col) {
         const t_f32 lum = ColorLuminance(col);
         return {lum, lum, lum, col.A()};
+    }
+
+    constexpr t_u32 ColorToHex(const s_color_rgba8 col) {
+        t_u32 res = 0;
+        res |= static_cast<t_u32>(col.r) << 24;
+        res |= static_cast<t_u32>(col.g) << 16;
+        res |= static_cast<t_u32>(col.g) << 8;
+        res |= static_cast<t_u32>(col.a);
+
+        return res;
     }
 
     constexpr s_color_rgba8 ColorFromHex(const t_u32 hex) {
