@@ -5,12 +5,14 @@
 
 namespace zf {
     constexpr s_color_rgb8 g_bg_color_default = {109, 187, 255};
-    s_v2_i g_resolution;
 
-    t_b8 g_initted;
+    struct {
+        t_b8 initted;
+        s_v2_i resolution_cache;
+    } g_state;
 
     void InitGFX() {
-        ZF_ASSERT(!g_initted);
+        ZF_ASSERT(!g_state.initted);
 
         const auto fb_size_cache = WindowFramebufferSizeCache();
 
@@ -18,10 +20,9 @@ namespace zf {
         init.type = bgfx::RendererType::Count;
 
         init.resolution.reset = BGFX_RESET_VSYNC;
-
-        g_resolution = fb_size_cache;
-        init.resolution.width = static_cast<uint32_t>(g_resolution.x);
-        init.resolution.height = static_cast<uint32_t>(g_resolution.y);
+        init.resolution.width = static_cast<uint32_t>(fb_size_cache.x);
+        init.resolution.height = static_cast<uint32_t>(fb_size_cache.y);
+        g_state.resolution_cache = fb_size_cache;
 
         init.platformData.nwh = internal::NativeWindowHandle();
         init.platformData.ndt = internal::NativeDisplayHandle();
@@ -31,13 +32,14 @@ namespace zf {
             ZF_FATAL();
         }
 
-        g_initted = true;
+        g_state.initted = true;
     }
 
     void ShutdownGFX() {
-        ZF_ASSERT(g_initted);
+        ZF_ASSERT(g_state.initted);
+
         bgfx::shutdown();
-        g_initted = false;
+        g_state = {};
     }
 
     // ============================================================
@@ -54,6 +56,9 @@ namespace zf {
         auto &ShaderProg() { return type_data.shader_prog; }
         auto &ShaderProg() const { return type_data.shader_prog; }
 
+        auto &Texture() { return type_data.texture; }
+        auto &Texture() const { return type_data.texture; }
+
     private:
         union {
             struct {
@@ -64,8 +69,36 @@ namespace zf {
             struct {
                 bgfx::ProgramHandle bgfx_hdl;
             } shader_prog;
+
+            struct {
+                bgfx::TextureHandle bgfx_hdl;
+            } texture;
         } type_data = {};
     };
+
+    void DestroyGFXResources(s_gfx_resource_arena &arena) {
+        s_ptr<const s_gfx_resource> res = arena.head;
+
+        while (res) {
+            switch (res->type) {
+            case ek_gfx_resource_type_mesh:
+                bgfx::destroy(res->Mesh().vert_buf_bgfx_hdl);
+                break;
+
+            case ek_gfx_resource_type_shader_prog:
+                bgfx::destroy(res->ShaderProg().bgfx_hdl);
+                break;
+
+            case ek_gfx_resource_type_texture:
+                bgfx::destroy(res->Texture().bgfx_hdl);
+                break;
+            }
+
+            res = res->next;
+        }
+
+        arena = {};
+    }
 
     static s_gfx_resource &PushGFXResource(const e_gfx_resource_type type, s_gfx_resource_arena &arena) {
         ZF_ASSERT(type != ek_gfx_resource_type_invalid);
@@ -85,40 +118,59 @@ namespace zf {
         return res;
     }
 
-    s_gfx_resource &CreateMesh(const t_len verts_len, s_gfx_resource_arena &arena) {
-        bgfx::VertexLayout layout;
-        layout.begin().add(bgfx::Attrib::Position, 2, bgfx::AttribType::Float).add(bgfx::Attrib::Color0, 4, bgfx::AttribType::Float).end(); // @todo: Allow customs!
+    t_b8 CreateMesh(const t_len verts_len, s_gfx_resource_arena &arena, s_ptr<s_gfx_resource> &o_res) {
+        bgfx::VertexLayout layout = {};
+        layout.begin().add(bgfx::Attrib::Position, 2, bgfx::AttribType::Float).add(bgfx::Attrib::Color0, 4, bgfx::AttribType::Float).add(bgfx::Attrib::TexCoord0, 2, bgfx::AttribType::Float).end(); // @todo: Allow customs!
 
-        auto &res = PushGFXResource(ek_gfx_resource_type_mesh, arena);
-        res.Mesh().vert_buf_bgfx_hdl = bgfx::createDynamicVertexBuffer(static_cast<uint32_t>(verts_len), layout);
-        res.Mesh().verts_len = verts_len;
+        const auto vert_buf_bgfx_hdl = bgfx::createDynamicVertexBuffer(static_cast<uint32_t>(verts_len), layout);
 
-        return res;
+        if (!bgfx::isValid(vert_buf_bgfx_hdl)) {
+            return false;
+        }
+
+        o_res = &PushGFXResource(ek_gfx_resource_type_mesh, arena);
+        o_res->Mesh().vert_buf_bgfx_hdl = vert_buf_bgfx_hdl;
+        o_res->Mesh().verts_len = verts_len;
+
+        return true;
     }
 
     t_b8 CreateShaderProg(const s_array_rdonly<t_u8> vert_shader_bin, const s_array_rdonly<t_u8> frag_shader_bin, s_gfx_resource_arena &arena, s_ptr<s_gfx_resource> &o_res) {
-        const bgfx::Memory *const vert_shader_mem = bgfx::makeRef(vert_shader_bin.Ptr(), static_cast<uint32_t>(vert_shader_bin.Len()));
-        const bgfx::ShaderHandle vert_shader_hdl = bgfx::createShader(vert_shader_mem);
+        const bgfx::Memory *const vert_shader_bgfx_mem = bgfx::makeRef(vert_shader_bin.Ptr(), static_cast<uint32_t>(vert_shader_bin.Len()));
+        const bgfx::ShaderHandle vert_shader_bgfx_hdl = bgfx::createShader(vert_shader_bgfx_mem);
 
-        if (!bgfx::isValid(vert_shader_hdl)) {
+        if (!bgfx::isValid(vert_shader_bgfx_hdl)) {
             return false;
         }
 
-        const bgfx::Memory *const frag_shader_mem = bgfx::makeRef(frag_shader_bin.Ptr(), static_cast<uint32_t>(frag_shader_bin.Len()));
-        const bgfx::ShaderHandle frag_shader_hdl = bgfx::createShader(frag_shader_mem);
+        const bgfx::Memory *const frag_shader_bgfx_mem = bgfx::makeRef(frag_shader_bin.Ptr(), static_cast<uint32_t>(frag_shader_bin.Len()));
+        const bgfx::ShaderHandle frag_shader_bgfx_hdl = bgfx::createShader(frag_shader_bgfx_mem);
 
-        if (!bgfx::isValid(frag_shader_hdl)) {
+        if (!bgfx::isValid(frag_shader_bgfx_hdl)) {
             return false;
         }
 
-        const bgfx::ProgramHandle prog_hdl = bgfx::createProgram(vert_shader_hdl, frag_shader_hdl, true);
+        const bgfx::ProgramHandle prog_bgfx_hdl = bgfx::createProgram(vert_shader_bgfx_hdl, frag_shader_bgfx_hdl, true);
 
-        if (!bgfx::isValid(prog_hdl)) {
+        if (!bgfx::isValid(prog_bgfx_hdl)) {
             return false;
         }
 
         o_res = &PushGFXResource(ek_gfx_resource_type_shader_prog, arena);
-        o_res->ShaderProg().bgfx_hdl = prog_hdl;
+        o_res->ShaderProg().bgfx_hdl = prog_bgfx_hdl;
+
+        return true;
+    }
+
+    t_b8 CreateTexture(const s_texture_data_rdonly tex_data, s_gfx_resource_arena &arena, s_ptr<s_gfx_resource> &o_res) {
+        const auto tex_bgfx_hdl = bgfx::createTexture2D(static_cast<uint16_t>(tex_data.SizeInPixels().x), static_cast<uint16_t>(tex_data.SizeInPixels().y), false, 1, bgfx::TextureFormat::RGBA8, 0, bgfx::copy(tex_data.RGBAPixelData().Ptr(), static_cast<uint32_t>(tex_data.RGBAPixelData().SizeInBytes())));
+
+        if (!bgfx::isValid(tex_bgfx_hdl)) {
+            return false;
+        }
+
+        auto &res = PushGFXResource(ek_gfx_resource_type_texture, arena);
+        res.Texture().bgfx_hdl = tex_bgfx_hdl;
 
         return true;
     }
@@ -166,6 +218,7 @@ namespace zf {
             struct {
                 s_ptr<const s_gfx_resource> mesh;
                 s_ptr<const s_gfx_resource> prog;
+                s_ptr<const s_gfx_resource> tex;
             } mesh_draw;
         } type_data = {};
     };
@@ -184,27 +237,31 @@ namespace zf {
         Submit(instr);
     }
 
-    void s_render_instr_seq::SubmitMeshDraw(const s_gfx_resource &mesh, const s_gfx_resource &prog) {
+    void s_render_instr_seq::SubmitMeshDraw(const s_gfx_resource &mesh, const s_gfx_resource &prog, const s_gfx_resource &tex) {
         s_render_instr instr;
         instr.type = ek_render_instr_type_mesh_draw;
         instr.MeshDraw().mesh = &mesh;
         instr.MeshDraw().prog = &prog;
+        instr.MeshDraw().tex = &tex;
 
         Submit(instr);
     }
 
     void s_render_instr_seq::Exec(s_mem_arena &temp_mem_arena) {
-        ZF_ASSERT(g_initted);
+        ZF_ASSERT(g_state.initted);
 
+        //
+        // Handling Framebuffer Resize
+        //
         const auto fb_size_cache = WindowFramebufferSizeCache();
 
-        if (g_resolution != fb_size_cache) {
+        if (g_state.resolution_cache != fb_size_cache) {
             bgfx::reset(static_cast<uint32_t>(fb_size_cache.x), static_cast<uint32_t>(fb_size_cache.y), BGFX_RESET_VSYNC);
-            g_resolution = fb_size_cache;
+            g_state.resolution_cache = fb_size_cache;
         }
 
         //
-        //
+        // View Setup
         //
         bgfx::setViewMode(0, bgfx::ViewMode::Sequential);
 
@@ -222,11 +279,11 @@ namespace zf {
 
         bgfx::setViewRect(0, 0, 0, static_cast<uint16_t>(fb_size_cache.x), static_cast<uint16_t>(fb_size_cache.y));
 
+        //
+        // Executing Instructions
+        //
         bgfx::touch(0);
 
-        //
-        //
-        //
         s_ptr<s_render_instr_block> block = blocks_head;
 
         while (block) {
@@ -247,6 +304,7 @@ namespace zf {
                     const auto &md = instr.MeshDraw();
 
                     bgfx::setVertexBuffer(0, md.mesh->Mesh().vert_buf_bgfx_hdl, 0, static_cast<uint32_t>(md.mesh->Mesh().verts_len));
+                    // bgfx::setTexture(0, , );
                     bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A | BGFX_STATE_BLEND_ALPHA);
                     bgfx::submit(0, md.prog->ShaderProg().bgfx_hdl);
 

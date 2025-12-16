@@ -12,12 +12,13 @@ namespace zf {
     struct s_batch_vert {
         s_v2 pos;
         s_color_rgba32f blend;
+        s_v2 uv;
 
         s_batch_vert() = default;
-        s_batch_vert(const s_v2 pos, const s_color_rgba32f blend) : pos(pos), blend(blend) {}
+        s_batch_vert(const s_v2 pos, const s_color_rgba32f blend, const s_v2 uv) : pos(pos), blend(blend), uv(uv) {}
     };
 
-    constexpr s_static_array<t_i32, 2> g_batch_vert_attr_component_cnts = {2, 4}; // This has to match the number of components per attribute above.
+    constexpr s_static_array<t_i32, 3> g_batch_vert_attr_component_cnts = {2, 4, 2}; // This has to match the number of components per attribute above.
 
     constexpr t_len g_batch_vert_component_cnt = ZF_SIZE_OF(s_batch_vert) / ZF_SIZE_OF(t_f32);
 
@@ -105,9 +106,9 @@ namespace zf {
             Flush(rs);
         }
 
-        rs.batch_verts.Append({pts[0], pt_colors[0]});
-        rs.batch_verts.Append({pts[1], pt_colors[1]});
-        rs.batch_verts.Append({pts[2], pt_colors[2]});
+        rs.batch_verts.Append({pts[0], pt_colors[0], {}});
+        rs.batch_verts.Append({pts[1], pt_colors[1], {}});
+        rs.batch_verts.Append({pts[2], pt_colors[2], {}});
     }
 
     void DrawRect(s_rendering_state &rs, const s_rect_f rect, const s_color_rgba32f color_topleft, const s_color_rgba32f color_topright, const s_color_rgba32f color_bottomright, const s_color_rgba32f color_bottomleft) {
@@ -115,12 +116,12 @@ namespace zf {
             Flush(rs);
         }
 
-        rs.batch_verts.Append({rect.TopLeft(), color_topleft});
-        rs.batch_verts.Append({rect.TopRight(), color_topright});
-        rs.batch_verts.Append({rect.BottomRight(), color_bottomright});
+        rs.batch_verts.Append({rect.TopLeft(), color_topleft, {0.0f, 0.0f}});
+        rs.batch_verts.Append({rect.TopRight(), color_topright, {1.0f, 0.0f}});
+        rs.batch_verts.Append({rect.BottomRight(), color_bottomright, {1.0f, 1.0f}});
 
-        rs.batch_verts.Append({rect.BottomRight(), color_bottomright});
-        rs.batch_verts.Append({rect.BottomLeft(), color_bottomleft});
-        rs.batch_verts.Append({rect.TopLeft(), color_topleft});
+        rs.batch_verts.Append({rect.BottomRight(), color_bottomright, {1.0f, 1.0f}});
+        rs.batch_verts.Append({rect.BottomLeft(), color_bottomleft, {0.0f, 1.0f}});
+        rs.batch_verts.Append({rect.TopLeft(), color_topleft, {0.0f, 0.0f}});
     }
 }
