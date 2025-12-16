@@ -457,7 +457,7 @@ namespace zf {
         return {reinterpret_cast<t_uintptr>(ptr), omit_prefix};
     }
 
-    // Have pointers implicitly cast to this format.
+    // Have pointers implicitly go to this format.
     inline s_hex_fmt<t_uintptr> FormatDefault(const void *const ptr) {
         return FormatHex(ptr);
     }

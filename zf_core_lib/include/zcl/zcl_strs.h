@@ -138,10 +138,22 @@ namespace zf {
         return {{reinterpret_cast<t_u8 *>(cstr), CalcCstrLen(cstr)}};
     }
 
+    // Creates a string object from the given TERMINATED C-string.
+    // Does a conventional string walk to calculate length.
+    inline s_str ConvertCstrButKeepTerminator(char *const cstr) {
+        return {{reinterpret_cast<t_u8 *>(cstr), CalcCstrLen(cstr) + 1}};
+    }
+
     // Creates a read-only NON-TERMINATED string object from the given TERMINATED C-string.
     // Does a conventional string walk to calculate length.
     inline s_str_rdonly ConvertCstr(const char *const cstr) {
         return {{reinterpret_cast<const t_u8 *>(cstr), CalcCstrLen(cstr)}};
+    }
+
+    // Creates a string object from the given TERMINATED C-string.
+    // Does a conventional string walk to calculate length.
+    inline s_str_rdonly ConvertCstrButKeepTerminator(const char *const cstr) {
+        return {{reinterpret_cast<const t_u8 *>(cstr), CalcCstrLen(cstr) + 1}};
     }
 
     // Allocates a clone of the given string using the memory arena, with a null byte added at the end (even if the string was already terminated).

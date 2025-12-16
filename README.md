@@ -1,10 +1,8 @@
 # Zeta Framework
 
-This is a data-oriented framework for developing 2D games for Windows and Linux.
+This is a data-oriented framework for developing 2D games for PC.
 
 It was originally written in C, though has been switched to a strictly procedural subset of C++ 20 to leverage useful features like operator overloading, function overloading, constexpr, templates, and more.
-
-OpenGL 3.3 is currently used as the backend graphics API, though this is subject to change.
 
 ---
 
