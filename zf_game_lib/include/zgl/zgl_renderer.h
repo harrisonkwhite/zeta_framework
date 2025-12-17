@@ -3,11 +3,13 @@
 #include <zcl.h>
 
 namespace zf {
+    struct s_frame_builder;
+
     // Initialises the renderer module. This depends on the platform module being initialised beforehand.
     // The lifetime of the provided memory arena must encompass that of the renderer module.
-    void InitRenderer(s_mem_arena &mem_arena, const t_i32 frame_vert_limit = 8192);
+    s_frame_builder &InitRenderer(s_mem_arena &mem_arena);
 
-    void ShutdownRenderer();
+    void ShutdownRenderer(s_frame_builder &frame_builder);
 
     // ============================================================
     // @section: Resources
@@ -37,20 +39,38 @@ namespace zf {
     // ============================================================
     // @section: Rendering
     // ============================================================
-    void BeginFrame(const s_color_rgb24f clear_col);
-    void EndFrame();
+    void BeginFrame(s_frame_builder &frame_builder, const s_color_rgb24f clear_col);
+    void EndFrame(s_frame_builder &frame_builder);
 
-    void DrawTriangle(const s_static_array<s_v2, 3> &pts, const s_static_array<s_color_rgba32f, 3> &pt_colors);
+    void DrawTriangle(s_frame_builder &frame_builder, const s_static_array<s_v2, 3> &pts, const s_static_array<s_color_rgba32f, 3> &pt_colors);
+    void DrawRect(s_frame_builder &frame_builder, const s_rect_f rect, const s_color_rgba32f color_topleft, const s_color_rgba32f color_topright, const s_color_rgba32f color_bottomright, const s_color_rgba32f color_bottomleft);
+    void DrawTexture(s_frame_builder &frame_builder, const s_v2 pos, const s_gfx_resource &texture);
 
-    inline void DrawTriangle(const s_static_array<s_v2, 3> &pts, const s_color_rgba32f color) {
-        DrawTriangle(pts, {color, color, color});
-    }
+#if 0
+    struct s_frame_builder {
+    public:
+        void Init(s_mem_arena &mem_arena);
+        void Release();
 
-    void DrawRect(const s_rect_f rect, const s_color_rgba32f color_topleft, const s_color_rgba32f color_topright, const s_color_rgba32f color_bottomright, const s_color_rgba32f color_bottomleft);
+        void Begin(const s_color_rgb24f clear_col);
+        void End();
 
-    inline void DrawRect(const s_rect_f rect, const s_color_rgba32f color) {
-        DrawRect(rect, color, color, color, color);
-    }
+        void DrawTriangle(const s_static_array<s_v2, 3> &pts, const s_static_array<s_color_rgba32f, 3> &pt_colors);
 
-    void DrawTexture(const s_v2 pos, const s_gfx_resource &texture);
+        inline void DrawTriangle(const s_static_array<s_v2, 3> &pts, const s_color_rgba32f color) {
+            DrawTriangle(pts, {color, color, color});
+        }
+
+        void DrawRect(const s_rect_f rect, const s_color_rgba32f color_topleft, const s_color_rgba32f color_topright, const s_color_rgba32f color_bottomright, const s_color_rgba32f color_bottomleft);
+
+        inline void DrawRect(const s_rect_f rect, const s_color_rgba32f color) {
+            DrawRect(rect, color, color, color, color);
+        }
+
+        void DrawTexture(const s_v2 pos, const s_gfx_resource &texture);
+
+    private:
+        void Flush();
+    };
+#endif
 }
