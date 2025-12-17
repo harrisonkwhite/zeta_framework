@@ -20,6 +20,7 @@ namespace zf {
     } g_state;
 
     static bgfx::ProgramHandle CreateBGFXShaderProg(const s_array_rdonly<t_u8> vert_shader_bin, const s_array_rdonly<t_u8> frag_shader_bin);
+    static s_gfx_resource &PushGFXResource(const e_gfx_resource_type type, s_gfx_resource_arena &arena);
 
     struct s_gfx_resource {
     public:
@@ -45,6 +46,7 @@ namespace zf {
         } type_data = {};
     };
 
+    // @todo: "Batch" is probably not the right name for this.
     struct s_batch_vert {
         s_v2 pos;
         s_color_rgba32f blend;
@@ -64,9 +66,10 @@ namespace zf {
         bgfx::ProgramHandle shader_prog_bgfx_hdl;
         bgfx::UniformHandle texture_sampler_uniform_bgfx_hdl;
 
-        s_gfx_resource &px_texture;
+        const s_gfx_resource &px_texture;
 
-        s_rendering_basis(bgfx::DynamicVertexBufferHandle vb_hdl, bgfx::ProgramHandle prog_hdl, bgfx::UniformHandle tex_sampler_uniform_hdl, s_gfx_resource &px_tex) : vert_buf_bgfx_hdl(vb_hdl), shader_prog_bgfx_hdl(prog_hdl), texture_sampler_uniform_bgfx_hdl(tex_sampler_uniform_hdl), px_texture(px_tex) {}
+        s_rendering_basis(bgfx::DynamicVertexBufferHandle vb_hdl, bgfx::ProgramHandle prog_hdl, bgfx::UniformHandle tex_sampler_uniform_hdl, s_gfx_resource &px_tex)
+            : vert_buf_bgfx_hdl(vb_hdl), shader_prog_bgfx_hdl(prog_hdl), texture_sampler_uniform_bgfx_hdl(tex_sampler_uniform_hdl), px_texture(px_tex) {}
     };
 
     struct s_rendering_context {
@@ -85,6 +88,7 @@ namespace zf {
 
     static s_rendering_basis &CreateRenderingBasis(s_mem_arena &mem_arena, s_gfx_resource_arena &resource_arena);
     static void Flush(s_rendering_context &rc);
+    static s_array<s_batch_vert> ReserveBatchVerts(s_rendering_context &rc, const t_i32 cnt, const s_ptr<const s_gfx_resource> texture);
 
     // ============================================================
     // @section: General
@@ -155,24 +159,6 @@ namespace zf {
         return bgfx::createProgram(vert_shader_bgfx_hdl, frag_shader_bgfx_hdl, true);
     }
 
-    void DestroyGFXResources(s_gfx_resource_arena &arena) {
-        ZF_ASSERT(g_state.state == ek_state_initted);
-
-        s_ptr<const s_gfx_resource> resource = arena.head;
-
-        while (resource) {
-            switch (resource->type) {
-            case ek_gfx_resource_type_texture:
-                bgfx::destroy(resource->Texture().bgfx_hdl);
-                break;
-            }
-
-            resource = resource->next;
-        }
-
-        arena = {};
-    }
-
     static s_gfx_resource &PushGFXResource(const e_gfx_resource_type type, s_gfx_resource_arena &arena) {
         ZF_ASSERT(type != ek_gfx_resource_type_invalid);
 
@@ -189,6 +175,24 @@ namespace zf {
         resource.type = type;
 
         return resource;
+    }
+
+    void DestroyGFXResources(s_gfx_resource_arena &arena) {
+        ZF_ASSERT(g_state.state == ek_state_initted);
+
+        s_ptr<s_gfx_resource> resource = arena.head;
+
+        while (resource) {
+            switch (resource->type) {
+            case ek_gfx_resource_type_texture:
+                bgfx::destroy(resource->Texture().bgfx_hdl);
+                break;
+            }
+
+            resource = resource->next;
+        }
+
+        arena = {};
     }
 
     t_b8 CreateTextureResource(const s_texture_data_rdonly texture_data, s_ptr<s_gfx_resource> &o_resource, const s_ptr<s_gfx_resource_arena> arena) {
@@ -312,37 +316,36 @@ namespace zf {
         rc.batch_state.vert_cnt = 0;
     }
 
-#if 0
-    static s_array<s_batch_vert> ReserveBatchVerts(s_rendering_context &rendering_state, const t_i32 cnt, const s_ptr<const s_gfx_resource> texture) {
+    static s_array<s_batch_vert> ReserveBatchVerts(s_rendering_context &rc, const t_i32 cnt, const s_ptr<const s_gfx_resource> texture) {
         ZF_ASSERT(cnt >= 0);
 
-        if (texture != rendering_state.batch_state.texture) {
-            Flush(rendering_state);
-            rendering_state.batch_state.texture = texture;
+        if (texture != rc.batch_state.texture) {
+            Flush(rc);
+            rc.batch_state.texture = texture;
         }
 
-        if (rendering_state.batch_state.vert_offs + rendering_state.batch_state.vert_cnt + cnt > rendering_state.batch_state.verts.Len()) {
+        if (rc.batch_state.vert_offs + rc.batch_state.vert_cnt + cnt > rc.batch_state.verts.g_len) {
             ZF_FATAL();
         }
 
-        rendering_state.batch_state.vert_cnt += cnt;
+        rc.batch_state.vert_cnt += cnt;
 
-        return rendering_state.batch_state.verts.Slice(rendering_state.batch_state.vert_offs + rendering_state.batch_state.vert_cnt - cnt, rendering_state.batch_state.vert_offs + rendering_state.batch_state.vert_cnt);
+        return rc.batch_state.verts.ToNonstatic().Slice(rc.batch_state.vert_offs + rc.batch_state.vert_cnt - cnt, rc.batch_state.vert_offs + rc.batch_state.vert_cnt);
     }
 
-    void DrawTriangle(s_rendering_context &rendering_state, const s_static_array<s_v2, 3> &pts, const s_static_array<s_color_rgba32f, 3> &pt_colors) {
+    void DrawTriangle(s_rendering_context &rc, const s_static_array<s_v2, 3> &pts, const s_static_array<s_color_rgba32f, 3> &pt_colors) {
         ZF_ASSERT(g_state.state == ek_state_rendering);
 
-        const auto verts = ReserveBatchVerts(rendering_state, 3, nullptr);
+        const auto verts = ReserveBatchVerts(rc, 3, nullptr);
         verts[0] = {pts[0], pt_colors[0], {}};
         verts[1] = {pts[1], pt_colors[1], {}};
         verts[2] = {pts[2], pt_colors[2], {}};
     }
 
-    void DrawRect(s_rendering_context &rendering_state, const s_rect_f rect, const s_color_rgba32f color_topleft, const s_color_rgba32f color_topright, const s_color_rgba32f color_bottomright, const s_color_rgba32f color_bottomleft) {
+    void DrawRect(s_rendering_context &rc, const s_rect_f rect, const s_color_rgba32f color_topleft, const s_color_rgba32f color_topright, const s_color_rgba32f color_bottomright, const s_color_rgba32f color_bottomleft) {
         ZF_ASSERT(g_state.state == ek_state_rendering);
 
-        const auto verts = ReserveBatchVerts(rendering_state, 6, nullptr);
+        const auto verts = ReserveBatchVerts(rc, 6, nullptr);
 
         verts[0] = {rect.TopLeft(), color_topleft, {0.0f, 0.0f}};
         verts[1] = {rect.TopRight(), color_topright, {1.0f, 0.0f}};
@@ -353,10 +356,10 @@ namespace zf {
         verts[5] = {rect.TopLeft(), color_topleft, {0.0f, 0.0f}};
     }
 
-    void DrawTexture(s_rendering_context &rendering_state, const s_v2 pos, const s_gfx_resource &texture) {
+    void DrawTexture(s_rendering_context &rc, const s_v2 pos, const s_gfx_resource &texture) {
         ZF_ASSERT(g_state.state == ek_state_rendering);
 
-        const auto verts = ReserveBatchVerts(rendering_state, 6, &texture);
+        const auto verts = ReserveBatchVerts(rc, 6, &texture);
 
         const s_rect_f rect = {pos, texture.Texture().size.ToV2()};
 
@@ -368,5 +371,4 @@ namespace zf {
         verts[4] = {rect.BottomLeft(), colors::g_white, {0.0f, 1.0f}};
         verts[5] = {rect.TopLeft(), colors::g_white, {0.0f, 0.0f}};
     }
-#endif
 }
