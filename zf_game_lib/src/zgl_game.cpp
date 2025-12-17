@@ -1,7 +1,7 @@
 #include <zgl/zgl_game.h>
 
 #include <zgl/zgl_platform.h>
-#include <zgl/zgl_renderer.h>
+#include <zgl/zgl_gfx.h>
 
 namespace zf {
     constexpr s_v2_i g_init_window_size = {1280, 720};
@@ -29,8 +29,8 @@ namespace zf {
         internal::InitPlatform(g_init_window_size);
         ZF_DEFER({ internal::ShutdownPlatform(); });
 
-        InitRenderer(perm_mem_arena);
-        ZF_DEFER({ ShutdownRenderer(); });
+        s_rendering_basis &rendering_basis = InitGFX(perm_mem_arena);
+        ZF_DEFER({ ShutdownGFX(rendering_basis); });
 
         init_func({
             .perm_mem_arena = perm_mem_arena,
@@ -76,14 +76,15 @@ namespace zf {
                     frame_dur_accum -= targ_tick_interval;
                 } while (frame_dur_accum >= targ_tick_interval);
 
-                BeginFrame(s_color_rgb8(109, 187, 255)); // @todo: Make the clear colour customisable?
+                s_rendering_context &rendering_context = internal::BeginFrame(rendering_basis, s_color_rgb8(109, 187, 255), temp_mem_arena); // @todo: Make the clear colour customisable?
 
                 render_func({
                     .perm_mem_arena = perm_mem_arena,
                     .temp_mem_arena = temp_mem_arena,
+                    .rendering_context = rendering_context,
                 });
 
-                EndFrame();
+                internal::EndFrame(rendering_context);
             }
         }
     }
