@@ -31,15 +31,13 @@ embed_shader(test_fs TEST_FS fragment)
 add_library(zf_game_lib STATIC
     src/zgl_game.cpp
     src/zgl_platform.cpp
-    src/zgl_gfx.cpp
-    src/zgl_rendering.cpp
+    src/zgl_renderer.cpp
     src/zgl_audio.cpp
 
     include/zgl.h
     include/zgl/zgl_game.h
     include/zgl/zgl_platform.h
-    include/zgl/zgl_gfx.h
-    include/zgl/zgl_rendering.h
+    include/zgl/zgl_renderer.h
     include/zgl/zgl_audio.h
 
     ${TEST_VS_CPP}

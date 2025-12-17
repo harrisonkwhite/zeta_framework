@@ -1,8 +1,7 @@
 #include <zgl/zgl_game.h>
 
-#include <zgl/zgl_gfx.h>
 #include <zgl/zgl_platform.h>
-#include <zgl/zgl_rendering.h>
+#include <zgl/zgl_renderer.h>
 
 namespace zf {
     constexpr s_v2_i g_init_window_size = {1280, 720};
@@ -30,16 +29,12 @@ namespace zf {
         internal::InitPlatform(g_init_window_size);
         ZF_DEFER({ internal::ShutdownPlatform(); });
 
-        InitGFX();
-        ZF_DEFER({ ShutdownGFX(); });
-
-        auto rendering_basis = CreateRenderingBasis(perm_mem_arena, temp_mem_arena);
-        ZF_DEFER({ ReleaseRenderingBasis(rendering_basis); });
+        renderer::Init();
+        ZF_DEFER({ renderer::Shutdown(); });
 
         init_func({
             .perm_mem_arena = perm_mem_arena,
             .temp_mem_arena = temp_mem_arena,
-            .perm_gfx_res_arena = rendering_basis.gfx_res_arena,
         });
 
         ZF_DEFER({
@@ -74,7 +69,6 @@ namespace zf {
                     tick_func({
                         .perm_mem_arena = perm_mem_arena,
                         .temp_mem_arena = temp_mem_arena,
-                        .perm_gfx_res_arena = rendering_basis.gfx_res_arena,
                     });
 
                     internal::ClearInputEvents();
@@ -82,9 +76,19 @@ namespace zf {
                     frame_dur_accum -= targ_tick_interval;
                 } while (frame_dur_accum >= targ_tick_interval);
 
+                renderer::BeginFrame({109, 187, 255});
+
+                render_func({
+                    .perm_mem_arena = perm_mem_arena,
+                    .temp_mem_arena = temp_mem_arena,
+                });
+
+                renderer::CompleteFrame();
+
+#if 0
                 // internal::PlatformLock();
 
-                s_rendering_state &rs = internal::BeginRendering(rendering_basis, temp_mem_arena);
+                s_frame_state &rs = internal::BeginFrame(rendering_basis, temp_mem_arena);
 
                 render_func({
                     .perm_mem_arena = perm_mem_arena,
@@ -92,9 +96,10 @@ namespace zf {
                     .rendering_state = rs,
                 });
 
-                internal::EndRendering(rs, temp_mem_arena);
+                internal::EndFrame(rs, temp_mem_arena);
 
                 // internal::PlatformUnlock();
+#endif
             }
         }
     }
