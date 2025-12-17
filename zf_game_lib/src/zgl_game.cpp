@@ -1,7 +1,7 @@
 #include <zgl/zgl_game.h>
 
 #include <zgl/zgl_platform.h>
-#include <zgl/zgl_batch_renderer.h>
+#include <zgl/zgl_renderer.h>
 
 namespace zf {
     constexpr s_v2_i g_init_window_size = {1280, 720};
@@ -29,11 +29,8 @@ namespace zf {
         internal::InitPlatform(g_init_window_size);
         ZF_DEFER({ internal::ShutdownPlatform(); });
 
-        renderer::Init();
-        ZF_DEFER({ renderer::Shutdown(); });
-
-        s_batch_renderer_resources batch_renderer_resources = CreateBatchRenderer(perm_mem_arena, temp_mem_arena);
-        ZF_DEFER({ DestroyBatchRenderer(batch_renderer_resources); });
+        InitRenderer();
+        ZF_DEFER({ ShutdownRenderer(); });
 
         init_func({
             .perm_mem_arena = perm_mem_arena,
@@ -79,33 +76,14 @@ namespace zf {
                     frame_dur_accum -= targ_tick_interval;
                 } while (frame_dur_accum >= targ_tick_interval);
 
-                renderer::BeginFrame(s_color_rgb8(109, 187, 255));
-
-                auto &batch_renderer = Alloc<s_batch_renderer>(temp_mem_arena, batch_renderer_resources);
+                BeginFrame(s_color_rgb8(109, 187, 255));
 
                 render_func({
                     .perm_mem_arena = perm_mem_arena,
                     .temp_mem_arena = temp_mem_arena,
-                    .batch_renderer = batch_renderer,
                 });
 
-                renderer::CompleteFrame();
-
-#if 0
-                // internal::PlatformLock();
-
-                s_frame_state &rs = internal::BeginFrame(rendering_basis, temp_mem_arena);
-
-                render_func({
-                    .perm_mem_arena = perm_mem_arena,
-                    .temp_mem_arena = temp_mem_arena,
-                    .rendering_state = rs,
-                });
-
-                internal::EndFrame(rs, temp_mem_arena);
-
-                // internal::PlatformUnlock();
-#endif
+                EndFrame();
             }
         }
     }

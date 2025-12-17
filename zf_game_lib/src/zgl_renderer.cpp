@@ -3,23 +3,72 @@
 #include <bgfx/bgfx.h>
 #include <zgl/zgl_platform.h>
 
-namespace zf::renderer {
-    enum e_state {
-        ek_uninitted,
-        ek_state_initted,
-        ek_state_rendering
+namespace zf {
+    enum e_renderer_state {
+        ek_renderer_state_uninitted,
+        ek_renderer_state_initted,
+        ek_renderer_state_rendering
     };
 
+    struct s_batch_vert {
+        s_v2 pos;
+        s_color_rgba32f blend;
+        s_v2 uv;
+    };
+
+    extern const t_u8 g_batch_vert_shader_src_raw[];
+    extern const t_len g_batch_vert_shader_src_len;
+
+    extern const t_u8 g_batch_frag_shader_src_raw[];
+    extern const t_len g_batch_frag_shader_src_len;
+
     struct {
-        e_state state = ek_uninitted;
+        e_renderer_state state = ek_renderer_state_uninitted;
+
         s_v2_i resolution_cache;
+
+        struct {
+            bgfx::DynamicVertexBufferHandle vert_buf_bgfx_hdl;
+            bgfx::ProgramHandle shader_prog_bgfx_hdl;
+            bgfx::UniformHandle texture_sampler_uniform_bgfx_hdl;
+            bgfx::TextureHandle px_texture_bgfx_hdl;
+        } batch_resources;
+
+        struct {
+            s_static_array<s_batch_vert, 8192> verts;
+            t_i32 vert_offs = 0;
+            t_i32 vert_cnt = 0;
+
+            s_ptr<const s_gfx_resource> texture;
+        } batch_state;
     } g_state;
 
-    void Init() {
-        ZF_ASSERT(g_state.state == ek_uninitted);
+    static bgfx::ProgramHandle CreateShaderProg(const s_array_rdonly<t_u8> vert_shader_bin, const s_array_rdonly<t_u8> frag_shader_bin) {
+        const bgfx::Memory *const vert_shader_bgfx_mem = bgfx::makeRef(vert_shader_bin.Ptr(), static_cast<uint32_t>(vert_shader_bin.Len()));
+        const bgfx::ShaderHandle vert_shader_bgfx_hdl = bgfx::createShader(vert_shader_bgfx_mem);
+
+        if (!bgfx::isValid(vert_shader_bgfx_hdl)) {
+            return BGFX_INVALID_HANDLE;
+        }
+
+        const bgfx::Memory *const frag_shader_bgfx_mem = bgfx::makeRef(frag_shader_bin.Ptr(), static_cast<uint32_t>(frag_shader_bin.Len()));
+        const bgfx::ShaderHandle frag_shader_bgfx_hdl = bgfx::createShader(frag_shader_bgfx_mem);
+
+        if (!bgfx::isValid(frag_shader_bgfx_hdl)) {
+            return BGFX_INVALID_HANDLE;
+        }
+
+        return bgfx::createProgram(vert_shader_bgfx_hdl, frag_shader_bgfx_hdl, true);
+    }
+
+    void InitRenderer() {
+        ZF_ASSERT(g_state.state == ek_renderer_state_uninitted);
 
         const auto fb_size_cache = WindowFramebufferSizeCache();
 
+        //
+        // BGFX Setup
+        //
         bgfx::Init init = {};
         init.type = bgfx::RendererType::Count;
 
@@ -36,11 +85,45 @@ namespace zf::renderer {
             ZF_FATAL();
         }
 
-        g_state.state = ek_state_initted;
+        //
+        // Batch Resources Setup
+        //
+        {
+            bgfx::VertexLayout layout = {};
+            layout.begin().add(bgfx::Attrib::Position, 2, bgfx::AttribType::Float).add(bgfx::Attrib::Color0, 4, bgfx::AttribType::Float).add(bgfx::Attrib::TexCoord0, 2, bgfx::AttribType::Float).end();
+
+            g_state.batch_resources.vert_buf_bgfx_hdl = bgfx::createDynamicVertexBuffer(static_cast<uint32_t>(g_state.batch_state.verts.g_len), layout);
+
+            if (!bgfx::isValid(g_state.batch_resources.vert_buf_bgfx_hdl)) {
+                ZF_FATAL();
+            }
+        }
+
+        g_state.batch_resources.shader_prog_bgfx_hdl = CreateShaderProg({g_batch_vert_shader_src_raw, g_batch_vert_shader_src_len}, {g_batch_frag_shader_src_raw, g_batch_frag_shader_src_len});
+
+        if (!bgfx::isValid(g_state.batch_resources.shader_prog_bgfx_hdl)) {
+            ZF_FATAL();
+        }
+
+        g_state.batch_resources.texture_sampler_uniform_bgfx_hdl = bgfx::createUniform("u_tex", bgfx::UniformType::Sampler);
+
+        if (!bgfx::isValid(g_state.batch_resources.texture_sampler_uniform_bgfx_hdl)) {
+            ZF_FATAL();
+        }
+
+        const s_static_array<t_u8, 4> px_texture_rgba = {255, 255, 255, 255};
+
+        g_state.batch_resources.px_texture_bgfx_hdl = bgfx::createTexture2D(1, 1, false, 1, bgfx::TextureFormat::RGBA8, 0, bgfx::copy(px_texture_rgba.raw, ZF_SIZE_OF(px_texture_rgba)));
+
+        if (!bgfx::isValid(g_state.batch_resources.px_texture_bgfx_hdl)) {
+            ZF_FATAL();
+        }
+
+        g_state.state = ek_renderer_state_initted;
     }
 
-    void Shutdown() {
-        ZF_ASSERT(g_state.state == ek_state_initted);
+    void ShutdownRenderer() {
+        ZF_ASSERT(g_state.state == ek_renderer_state_initted);
 
         bgfx::shutdown();
         g_state = {};
@@ -49,65 +132,23 @@ namespace zf::renderer {
     // ============================================================
     // @section: Resources
     // ============================================================
-    struct s_resource {
+    struct s_gfx_resource {
     public:
-        e_resource_type type = ek_resource_type_invalid;
-        s_ptr<s_resource> next = nullptr;
-
-        auto &Mesh() {
-            ZF_ASSERT(type == ek_resource_type_mesh);
-            return type_data.mesh;
-        }
-
-        auto &Mesh() const {
-            ZF_ASSERT(type == ek_resource_type_mesh);
-            return type_data.mesh;
-        }
-
-        auto &ShaderProg() {
-            ZF_ASSERT(type == ek_resource_type_shader_prog);
-            return type_data.shader_prog;
-        }
-
-        auto &ShaderProg() const {
-            ZF_ASSERT(type == ek_resource_type_shader_prog);
-            return type_data.shader_prog;
-        }
-
-        auto &Uniform() {
-            ZF_ASSERT(type == ek_resource_type_uniform);
-            return type_data.uniform;
-        }
-
-        auto &Uniform() const {
-            ZF_ASSERT(type == ek_resource_type_uniform);
-            return type_data.uniform;
-        }
+        e_gfx_resource_type type = ek_gfx_resource_type_invalid;
+        s_ptr<s_gfx_resource> next = nullptr;
 
         auto &Texture() {
-            ZF_ASSERT(type == ek_resource_type_texture);
+            ZF_ASSERT(type == ek_gfx_resource_type_texture);
             return type_data.texture;
         }
 
         auto &Texture() const {
-            ZF_ASSERT(type == ek_resource_type_texture);
+            ZF_ASSERT(type == ek_gfx_resource_type_texture);
             return type_data.texture;
         }
 
     private:
         union {
-            struct {
-                bgfx::DynamicVertexBufferHandle vert_buf_bgfx_hdl;
-            } mesh;
-
-            struct {
-                bgfx::ProgramHandle bgfx_hdl;
-            } shader_prog;
-
-            struct {
-                bgfx::UniformHandle bgfx_hdl;
-            } uniform;
-
             struct {
                 bgfx::TextureHandle bgfx_hdl;
                 s_v2_i size;
@@ -115,26 +156,14 @@ namespace zf::renderer {
         } type_data = {};
     };
 
-    void DestroyResources(s_resource_arena &arena) {
-        ZF_ASSERT(g_state.state == ek_state_initted);
+    void DestroyGFXResources(s_gfx_resource_arena &arena) {
+        ZF_ASSERT(g_state.state == ek_renderer_state_initted);
 
-        s_ptr<const s_resource> resource = arena.head;
+        s_ptr<const s_gfx_resource> resource = arena.head;
 
         while (resource) {
             switch (resource->type) {
-            case ek_resource_type_mesh:
-                bgfx::destroy(resource->Mesh().vert_buf_bgfx_hdl);
-                break;
-
-            case ek_resource_type_shader_prog:
-                bgfx::destroy(resource->ShaderProg().bgfx_hdl);
-                break;
-
-            case ek_resource_type_uniform:
-                bgfx::destroy(resource->Uniform().bgfx_hdl);
-                break;
-
-            case ek_resource_type_texture:
+            case ek_gfx_resource_type_texture:
                 bgfx::destroy(resource->Texture().bgfx_hdl);
                 break;
             }
@@ -145,10 +174,10 @@ namespace zf::renderer {
         arena = {};
     }
 
-    static s_resource &PushGFXResource(const e_resource_type type, s_resource_arena &arena) {
-        ZF_ASSERT(type != ek_resource_type_invalid);
+    static s_gfx_resource &PushGFXResource(const e_gfx_resource_type type, s_gfx_resource_arena &arena) {
+        ZF_ASSERT(type != ek_gfx_resource_type_invalid);
 
-        s_resource &resource = Alloc<s_resource>(*arena.mem_arena);
+        s_gfx_resource &resource = Alloc<s_gfx_resource>(*arena.mem_arena);
 
         if (!arena.head) {
             arena.head = &resource;
@@ -163,79 +192,8 @@ namespace zf::renderer {
         return resource;
     }
 
-    t_b8 CreateMesh(const t_i32 vert_cnt, s_resource_arena &arena, s_ptr<s_resource> &o_resource) {
-        ZF_ASSERT(g_state.state == ek_state_initted);
-
-        bgfx::VertexLayout layout = {};
-        layout.begin().add(bgfx::Attrib::Position, 2, bgfx::AttribType::Float).add(bgfx::Attrib::Color0, 4, bgfx::AttribType::Float).add(bgfx::Attrib::TexCoord0, 2, bgfx::AttribType::Float).end(); // @todo: Allow customs!
-
-        const auto vert_buf_bgfx_hdl = bgfx::createDynamicVertexBuffer(static_cast<uint32_t>(vert_cnt), layout);
-
-        if (!bgfx::isValid(vert_buf_bgfx_hdl)) {
-            return false;
-        }
-
-        o_resource = &PushGFXResource(ek_resource_type_mesh, arena);
-        o_resource->Mesh().vert_buf_bgfx_hdl = vert_buf_bgfx_hdl;
-
-        return true;
-    }
-
-    void UpdateMeshVerts(const s_resource &mesh, const t_len vert_begin, const s_array_rdonly<t_f32> vert_data) {
-        ZF_ASSERT(g_state.state == ek_state_initted);
-
-        const auto mem = bgfx::makeRef(vert_data.Ptr(), static_cast<uint32_t>(vert_data.SizeInBytes()));
-        bgfx::update(mesh.Mesh().vert_buf_bgfx_hdl, static_cast<uint32_t>(vert_begin), mem);
-    }
-
-    t_b8 CreateShaderProg(const s_array_rdonly<t_u8> vert_shader_bin, const s_array_rdonly<t_u8> frag_shader_bin, s_resource_arena &arena, s_ptr<s_resource> &o_resource) {
-        ZF_ASSERT(g_state.state == ek_state_initted);
-
-        const bgfx::Memory *const vert_shader_bgfx_mem = bgfx::makeRef(vert_shader_bin.Ptr(), static_cast<uint32_t>(vert_shader_bin.Len()));
-        const bgfx::ShaderHandle vert_shader_bgfx_hdl = bgfx::createShader(vert_shader_bgfx_mem);
-
-        if (!bgfx::isValid(vert_shader_bgfx_hdl)) {
-            return false;
-        }
-
-        const bgfx::Memory *const frag_shader_bgfx_mem = bgfx::makeRef(frag_shader_bin.Ptr(), static_cast<uint32_t>(frag_shader_bin.Len()));
-        const bgfx::ShaderHandle frag_shader_bgfx_hdl = bgfx::createShader(frag_shader_bgfx_mem);
-
-        if (!bgfx::isValid(frag_shader_bgfx_hdl)) {
-            return false;
-        }
-
-        const bgfx::ProgramHandle prog_bgfx_hdl = bgfx::createProgram(vert_shader_bgfx_hdl, frag_shader_bgfx_hdl, true);
-
-        if (!bgfx::isValid(prog_bgfx_hdl)) {
-            return false;
-        }
-
-        o_resource = &PushGFXResource(ek_resource_type_shader_prog, arena);
-        o_resource->ShaderProg().bgfx_hdl = prog_bgfx_hdl;
-
-        return true;
-    }
-
-    t_b8 CreateUniform(const s_str_rdonly name, s_resource_arena &arena, s_mem_arena &temp_mem_arena, s_ptr<s_resource> &o_resource) {
-        ZF_ASSERT(g_state.state == ek_state_initted);
-
-        const s_str_rdonly name_terminated = AllocStrCloneButAddTerminator(name, temp_mem_arena);
-
-        const bgfx::UniformHandle uniform_bgfx_hdl = bgfx::createUniform(name_terminated.Cstr(), bgfx::UniformType::Sampler); // @todo: Allow different uniform types. BGFX enum on this is strange?
-
-        if (!bgfx::isValid(uniform_bgfx_hdl)) {
-            return false;
-        }
-
-        o_resource = &PushGFXResource(ek_resource_type_uniform, arena);
-        o_resource->Uniform().bgfx_hdl = uniform_bgfx_hdl;
-
-        return true;
-    }
-
-    t_b8 CreateTexture(const s_texture_data_rdonly texture_data, s_resource_arena &arena, s_ptr<s_resource> &o_resource) {
-        ZF_ASSERT(g_state.state == ek_state_initted);
+    t_b8 CreateTexture(const s_texture_data_rdonly texture_data, s_gfx_resource_arena &arena, s_ptr<s_gfx_resource> &o_resource) {
+        ZF_ASSERT(g_state.state == ek_renderer_state_initted);
 
         const auto texture_bgfx_hdl = bgfx::createTexture2D(static_cast<uint16_t>(texture_data.SizeInPixels().x), static_cast<uint16_t>(texture_data.SizeInPixels().y), false, 1, bgfx::TextureFormat::RGBA8, 0, bgfx::copy(texture_data.RGBAPixelData().Ptr(), static_cast<uint32_t>(texture_data.RGBAPixelData().SizeInBytes())));
 
@@ -243,15 +201,15 @@ namespace zf::renderer {
             return false;
         }
 
-        o_resource = &PushGFXResource(ek_resource_type_texture, arena);
+        o_resource = &PushGFXResource(ek_gfx_resource_type_texture, arena);
         o_resource->Texture().bgfx_hdl = texture_bgfx_hdl;
         o_resource->Texture().size = texture_data.SizeInPixels();
 
         return true;
     }
 
-    s_v2_i TextureSize(const s_resource &texture_resource) {
-        ZF_ASSERT(g_state.state != ek_uninitted);
+    s_v2_i TextureSize(const s_gfx_resource &texture_resource) {
+        ZF_ASSERT(g_state.state != ek_renderer_state_uninitted);
         return texture_resource.Texture().size;
     }
 
@@ -259,7 +217,7 @@ namespace zf::renderer {
     // @section: Rendering
     // ============================================================
     void BeginFrame(const s_color_rgb24f clear_col) {
-        ZF_ASSERT(g_state.state == ek_state_initted);
+        ZF_ASSERT(g_state.state == ek_renderer_state_initted);
 
         const auto fb_size_cache = WindowFramebufferSizeCache();
 
@@ -286,22 +244,65 @@ namespace zf::renderer {
 
         bgfx::touch(0);
 
-        g_state.state = ek_state_rendering;
+        g_state.state = ek_renderer_state_rendering;
     }
 
-    void CompleteFrame() {
-        ZF_ASSERT(g_state.state == ek_state_rendering);
+    static void Flush() {
+        if (g_state.batch_state.vert_cnt == 0) {
+            return;
+        }
+
+        const auto verts = g_state.batch_state.verts.ToNonstatic().Slice(g_state.batch_state.vert_offs, g_state.batch_state.vert_offs + g_state.batch_state.vert_cnt);
+        const auto verts_bgfx_ref = bgfx::makeRef(verts.Ptr(), static_cast<uint32_t>(verts.SizeInBytes()));
+        bgfx::update(g_state.batch_resources.vert_buf_bgfx_hdl, static_cast<uint32_t>(g_state.batch_state.vert_offs), verts_bgfx_ref);
+
+        bgfx::setTexture(0, g_state.batch_resources.texture_sampler_uniform_bgfx_hdl, g_state.batch_resources.px_texture_bgfx_hdl);
+        bgfx::setVertexBuffer(0, g_state.batch_resources.vert_buf_bgfx_hdl, static_cast<uint32_t>(g_state.batch_state.vert_offs), static_cast<uint32_t>(g_state.batch_state.vert_cnt));
+        bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A | BGFX_STATE_BLEND_ALPHA);
+        bgfx::submit(0, g_state.batch_resources.shader_prog_bgfx_hdl);
+
+        g_state.batch_state.vert_offs += g_state.batch_state.vert_cnt;
+        g_state.batch_state.vert_cnt = 0;
+    }
+
+    void EndFrame() {
+        ZF_ASSERT(g_state.state == ek_renderer_state_rendering);
+
+        Flush();
 
         bgfx::frame();
-        g_state.state = ek_state_initted;
+
+        g_state.state = ek_renderer_state_initted;
     }
 
-    void DrawMesh(const s_resource &mesh, const t_len vert_begin, const t_len vert_cnt, const s_resource &shader_prog, const s_resource &texture, const s_resource &texture_sampler_uniform) {
-        ZF_ASSERT(g_state.state == ek_state_rendering);
+    static s_array<s_batch_vert> ReserveBatchVerts(const t_i32 cnt) {
+        ZF_ASSERT(cnt >= 0);
 
-        bgfx::setTexture(0, texture_sampler_uniform.Uniform().bgfx_hdl, texture.Texture().bgfx_hdl);
-        bgfx::setVertexBuffer(0, mesh.Mesh().vert_buf_bgfx_hdl, static_cast<uint32_t>(vert_begin), static_cast<uint32_t>(vert_cnt));
-        bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A | BGFX_STATE_BLEND_ALPHA);
-        bgfx::submit(0, shader_prog.ShaderProg().bgfx_hdl);
+        if (g_state.batch_state.vert_offs + g_state.batch_state.vert_cnt + cnt > g_state.batch_state.verts.g_len) {
+            ZF_FATAL();
+        }
+
+        g_state.batch_state.vert_cnt += cnt;
+
+        return g_state.batch_state.verts.ToNonstatic().Slice(g_state.batch_state.vert_offs + g_state.batch_state.vert_cnt - cnt, g_state.batch_state.vert_offs + g_state.batch_state.vert_cnt);
+    }
+
+    void DrawTriangle(const s_static_array<s_v2, 3> &pts, const s_static_array<s_color_rgba32f, 3> &pt_colors) {
+        const auto verts = ReserveBatchVerts(3);
+        verts[0] = {pts[0], pt_colors[0], {}};
+        verts[1] = {pts[1], pt_colors[1], {}};
+        verts[2] = {pts[2], pt_colors[2], {}};
+    }
+
+    void DrawRect(const s_rect_f rect, const s_color_rgba32f color_topleft, const s_color_rgba32f color_topright, const s_color_rgba32f color_bottomright, const s_color_rgba32f color_bottomleft) {
+        const auto verts = ReserveBatchVerts(6);
+
+        verts[0] = {rect.TopLeft(), color_topleft, {0.0f, 0.0f}};
+        verts[1] = {rect.TopRight(), color_topright, {1.0f, 0.0f}};
+        verts[2] = {rect.BottomRight(), color_bottomright, {1.0f, 1.0f}};
+
+        verts[3] = {rect.BottomRight(), color_bottomright, {1.0f, 1.0f}};
+        verts[4] = {rect.BottomLeft(), color_bottomleft, {0.0f, 1.0f}};
+        verts[5] = {rect.TopLeft(), color_topleft, {0.0f, 0.0f}};
     }
 }
