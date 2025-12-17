@@ -34,6 +34,27 @@ namespace zf {
     void DestroyGFXResources(s_gfx_resource_arena &arena);
 
     [[nodiscard]] t_b8 CreateTextureResource(const s_texture_data_rdonly texture_data, s_ptr<s_gfx_resource> &o_resource, const s_ptr<s_gfx_resource_arena> arena = nullptr);
+
+    [[nodiscard]] inline t_b8 CreateTextureResourceFromRaw(const s_str_rdonly file_path, s_mem_arena &temp_mem_arena, s_ptr<s_gfx_resource> &o_resource, const s_ptr<s_gfx_resource_arena> arena = nullptr) {
+        zf::s_texture_data tex_data;
+
+        if (!zf::LoadTextureFromRaw(file_path, temp_mem_arena, temp_mem_arena, tex_data)) {
+            return false;
+        }
+
+        return zf::CreateTextureResource(tex_data, o_resource, arena);
+    }
+
+    [[nodiscard]] inline t_b8 CreateTextureResourceFromPacked(const s_str_rdonly file_path, s_mem_arena &temp_mem_arena, s_ptr<s_gfx_resource> &o_resource, const s_ptr<s_gfx_resource_arena> arena = nullptr) {
+        zf::s_texture_data tex_data;
+
+        if (!zf::UnpackTexture(file_path, temp_mem_arena, temp_mem_arena, tex_data)) {
+            return false;
+        }
+
+        return zf::CreateTextureResource(tex_data, o_resource, arena);
+    }
+
     s_v2_i TextureSize(const s_gfx_resource &texture);
 
     // ============================================================
