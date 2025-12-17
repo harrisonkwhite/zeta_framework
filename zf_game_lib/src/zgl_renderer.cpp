@@ -30,10 +30,11 @@ namespace zf {
         s_gfx_resource_arena perm_resource_arena;
 
         struct {
-            bgfx::DynamicVertexBufferHandle vert_buf_bgfx_hdl;
-            bgfx::ProgramHandle shader_prog_bgfx_hdl;
-            bgfx::UniformHandle texture_sampler_uniform_bgfx_hdl;
-            bgfx::TextureHandle px_texture_bgfx_hdl;
+            bgfx::DynamicVertexBufferHandle vert_buf_bgfx_hdl = BGFX_INVALID_HANDLE;
+            bgfx::ProgramHandle shader_prog_bgfx_hdl = BGFX_INVALID_HANDLE;
+            bgfx::UniformHandle texture_sampler_uniform_bgfx_hdl = BGFX_INVALID_HANDLE;
+
+            s_ptr<s_gfx_resource> px_texture;
         } batch_resources;
 
         struct {
@@ -41,7 +42,7 @@ namespace zf {
             t_i32 vert_offs = 0;
             t_i32 vert_cnt = 0;
 
-            s_ptr<const s_gfx_resource> texture;
+            s_ptr<const s_gfx_resource> texture = nullptr;
         } batch_state;
     } g_state;
 
@@ -114,9 +115,7 @@ namespace zf {
 
         const s_static_array<t_u8, 4> px_texture_rgba = {255, 255, 255, 255};
 
-        g_state.batch_resources.px_texture_bgfx_hdl = bgfx::createTexture2D(1, 1, false, 1, bgfx::TextureFormat::RGBA8, 0, bgfx::copy(px_texture_rgba.raw, ZF_SIZE_OF(px_texture_rgba)));
-
-        if (!bgfx::isValid(g_state.batch_resources.px_texture_bgfx_hdl)) {
+        if (!CreateTexture({{1, 1}, px_texture_rgba}, g_state.batch_resources.px_texture)) {
             ZF_FATAL();
         }
 
@@ -126,7 +125,6 @@ namespace zf {
     void ShutdownRenderer() {
         ZF_ASSERT(g_state.state == ek_renderer_state_initted);
 
-        bgfx::destroy(g_state.batch_resources.px_texture_bgfx_hdl);
         bgfx::destroy(g_state.batch_resources.texture_sampler_uniform_bgfx_hdl);
         bgfx::destroy(g_state.batch_resources.shader_prog_bgfx_hdl);
         bgfx::destroy(g_state.batch_resources.vert_buf_bgfx_hdl);
@@ -202,8 +200,6 @@ namespace zf {
     }
 
     t_b8 CreateTexture(const s_texture_data_rdonly texture_data, s_ptr<s_gfx_resource> &o_resource, const s_ptr<s_gfx_resource_arena> arena) {
-        ZF_ASSERT(g_state.state == ek_renderer_state_initted);
-
         const auto texture_bgfx_hdl = bgfx::createTexture2D(static_cast<uint16_t>(texture_data.SizeInPixels().x), static_cast<uint16_t>(texture_data.SizeInPixels().y), false, 1, bgfx::TextureFormat::RGBA8, 0, bgfx::copy(texture_data.RGBAPixelData().Ptr(), static_cast<uint32_t>(texture_data.RGBAPixelData().SizeInBytes())));
 
         if (!bgfx::isValid(texture_bgfx_hdl)) {
@@ -217,9 +213,9 @@ namespace zf {
         return true;
     }
 
-    s_v2_i TextureSize(const s_gfx_resource &texture_resource) {
+    s_v2_i TextureSize(const s_gfx_resource &texture) {
         ZF_ASSERT(g_state.state != ek_renderer_state_uninitted);
-        return texture_resource.Texture().size;
+        return texture.Texture().size;
     }
 
     // ============================================================
@@ -265,7 +261,7 @@ namespace zf {
         const auto verts_bgfx_ref = bgfx::makeRef(verts.Ptr(), static_cast<uint32_t>(verts.SizeInBytes()));
         bgfx::update(g_state.batch_resources.vert_buf_bgfx_hdl, static_cast<uint32_t>(g_state.batch_state.vert_offs), verts_bgfx_ref);
 
-        bgfx::setTexture(0, g_state.batch_resources.texture_sampler_uniform_bgfx_hdl, g_state.batch_resources.px_texture_bgfx_hdl);
+        bgfx::setTexture(0, g_state.batch_resources.texture_sampler_uniform_bgfx_hdl, g_state.batch_state.texture ? g_state.batch_state.texture->Texture().bgfx_hdl : g_state.batch_resources.px_texture->Texture().bgfx_hdl);
         bgfx::setVertexBuffer(0, g_state.batch_resources.vert_buf_bgfx_hdl, static_cast<uint32_t>(g_state.batch_state.vert_offs), static_cast<uint32_t>(g_state.batch_state.vert_cnt));
         bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A | BGFX_STATE_BLEND_ALPHA);
         bgfx::submit(0, g_state.batch_resources.shader_prog_bgfx_hdl);
@@ -284,8 +280,13 @@ namespace zf {
         g_state.state = ek_renderer_state_initted;
     }
 
-    static s_array<s_batch_vert> ReserveBatchVerts(const t_i32 cnt) {
+    static s_array<s_batch_vert> ReserveBatchVerts(const t_i32 cnt, const s_ptr<const s_gfx_resource> texture) {
         ZF_ASSERT(cnt >= 0);
+
+        if (texture != g_state.batch_state.texture) {
+            Flush();
+            g_state.batch_state.texture = texture;
+        }
 
         if (g_state.batch_state.vert_offs + g_state.batch_state.vert_cnt + cnt > g_state.batch_state.verts.g_len) {
             ZF_FATAL();
@@ -297,14 +298,14 @@ namespace zf {
     }
 
     void DrawTriangle(const s_static_array<s_v2, 3> &pts, const s_static_array<s_color_rgba32f, 3> &pt_colors) {
-        const auto verts = ReserveBatchVerts(3);
+        const auto verts = ReserveBatchVerts(3, nullptr);
         verts[0] = {pts[0], pt_colors[0], {}};
         verts[1] = {pts[1], pt_colors[1], {}};
         verts[2] = {pts[2], pt_colors[2], {}};
     }
 
     void DrawRect(const s_rect_f rect, const s_color_rgba32f color_topleft, const s_color_rgba32f color_topright, const s_color_rgba32f color_bottomright, const s_color_rgba32f color_bottomleft) {
-        const auto verts = ReserveBatchVerts(6);
+        const auto verts = ReserveBatchVerts(6, nullptr);
 
         verts[0] = {rect.TopLeft(), color_topleft, {0.0f, 0.0f}};
         verts[1] = {rect.TopRight(), color_topright, {1.0f, 0.0f}};
@@ -313,5 +314,19 @@ namespace zf {
         verts[3] = {rect.BottomRight(), color_bottomright, {1.0f, 1.0f}};
         verts[4] = {rect.BottomLeft(), color_bottomleft, {0.0f, 1.0f}};
         verts[5] = {rect.TopLeft(), color_topleft, {0.0f, 0.0f}};
+    }
+
+    void DrawTexture(const s_v2 pos, const s_gfx_resource &texture) {
+        const auto verts = ReserveBatchVerts(6, &texture);
+
+        const s_rect_f rect = {pos, texture.Texture().size.ToV2()};
+
+        verts[0] = {rect.TopLeft(), colors::g_white, {0.0f, 0.0f}};
+        verts[1] = {rect.TopRight(), colors::g_white, {1.0f, 0.0f}};
+        verts[2] = {rect.BottomRight(), colors::g_white, {1.0f, 1.0f}};
+
+        verts[3] = {rect.BottomRight(), colors::g_white, {1.0f, 1.0f}};
+        verts[4] = {rect.BottomLeft(), colors::g_white, {0.0f, 1.0f}};
+        verts[5] = {rect.TopLeft(), colors::g_white, {0.0f, 0.0f}};
     }
 }

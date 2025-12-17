@@ -51,4 +51,6 @@ namespace zf {
     inline void DrawRect(const s_rect_f rect, const s_color_rgba32f color) {
         DrawRect(rect, color, color, color, color);
     }
+
+    void DrawTexture(const s_v2 pos, const s_gfx_resource &texture);
 }
