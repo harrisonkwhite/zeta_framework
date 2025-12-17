@@ -4,7 +4,8 @@
 
 namespace zf {
     // Initialises the renderer module. This depends on the platform module being initialised beforehand.
-    void InitRenderer();
+    // The lifetime of the provided memory arena must encompass that of the renderer module.
+    void InitRenderer(s_mem_arena &mem_arena);
 
     void ShutdownRenderer();
 
@@ -30,7 +31,7 @@ namespace zf {
 
     void DestroyGFXResources(s_gfx_resource_arena &arena);
 
-    [[nodiscard]] t_b8 CreateTexture(const s_texture_data_rdonly texture_data, s_gfx_resource_arena &arena, s_ptr<s_gfx_resource> &o_resource);
+    [[nodiscard]] t_b8 CreateTexture(const s_texture_data_rdonly texture_data, s_ptr<s_gfx_resource> &o_resource, const s_ptr<s_gfx_resource_arena> arena = nullptr);
     s_v2_i TextureSize(const s_gfx_resource &texture);
 
     // ============================================================

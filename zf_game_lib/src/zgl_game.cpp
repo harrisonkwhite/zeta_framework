@@ -29,7 +29,7 @@ namespace zf {
         internal::InitPlatform(g_init_window_size);
         ZF_DEFER({ internal::ShutdownPlatform(); });
 
-        InitRenderer();
+        InitRenderer(perm_mem_arena);
         ZF_DEFER({ ShutdownRenderer(); });
 
         init_func({
@@ -76,7 +76,7 @@ namespace zf {
                     frame_dur_accum -= targ_tick_interval;
                 } while (frame_dur_accum >= targ_tick_interval);
 
-                BeginFrame(s_color_rgb8(109, 187, 255));
+                BeginFrame(s_color_rgb8(109, 187, 255)); // @todo: Make the clear colour customisable?
 
                 render_func({
                     .perm_mem_arena = perm_mem_arena,
