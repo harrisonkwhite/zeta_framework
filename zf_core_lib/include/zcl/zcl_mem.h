@@ -202,10 +202,12 @@ namespace zf {
 
     s_mem_arena CreateMemArena(const t_len size);
 
-    template <typename tp_type>
-    tp_type &Alloc(s_mem_arena &mem_arena) {
-        const auto ptr = static_cast<s_ptr<tp_type>>(mem_arena.Push(ZF_SIZE_OF(tp_type), ZF_ALIGN_OF(tp_type)));
-        new (ptr) tp_type();
+    template <typename tp_type, typename... tp_constructor_args>
+    tp_type &Alloc(s_mem_arena &arena, tp_constructor_args &&...args) {
+        static_assert(std::is_trivially_destructible_v<tp_type>);
+
+        const auto ptr = static_cast<s_ptr<tp_type>>(arena.Push(ZF_SIZE_OF(tp_type), ZF_ALIGN_OF(tp_type)));
+        new (ptr) tp_type(static_cast<tp_constructor_args &&>(args)...);
         return *ptr;
     }
 
@@ -497,6 +499,8 @@ namespace zf {
 
     template <typename tp_type>
     s_array<tp_type> AllocArray(const t_len len, s_mem_arena &mem_arena) {
+        static_assert(std::is_trivially_destructible_v<tp_type>);
+
         ZF_ASSERT(len > 0);
 
         const auto ptr = static_cast<s_ptr<tp_type>>(mem_arena.Push(ZF_SIZE_OF(tp_type) * len, ZF_ALIGN_OF(tp_type)));

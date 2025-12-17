@@ -4,8 +4,6 @@
 #include <zgl/zgl_platform.h>
 
 namespace zf::renderer {
-    constexpr s_color_rgb8 g_bg_color_default = ; // @todo: Remove!
-
     enum e_state {
         ek_uninitted,
         ek_state_initted,

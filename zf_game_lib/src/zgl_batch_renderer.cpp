@@ -1,4 +1,4 @@
-#include <zgl/zgl_rendering.h>
+#include <zgl/zgl_batch_renderer.h>
 
 #include <zgl/zgl_platform.h>
 
@@ -9,8 +9,13 @@ namespace zf {
     extern const t_u8 g_test_fs_raw[];
     extern const t_len g_test_fs_len;
 
-    // This is a system for describing a frame.
+    [[nodiscard]] t_b8 CreateBatchRenderer(s_batch_renderer_resources &o_resources) {
+    }
 
+    void s_batch_renderer::Flush() {
+    }
+
+#if 0
     struct s_batch_vert {
         s_v2 pos;
         s_color_rgba32f blend;
@@ -36,27 +41,27 @@ namespace zf {
 
     constexpr t_len g_frame_vert_limit = 8192;
 
-    s_rendering_basis CreateRenderingBasis(s_mem_arena &mem_arena, s_mem_arena &temp_mem_arena) {
-        s_rendering_basis basis = {
-            .gfx_res_arena = CreateGFXResourceArena(mem_arena),
+    s_batch_renderer_resources CreateRenderingBasis(s_mem_arena &mem_arena, s_mem_arena &temp_mem_arena) {
+        s_batch_renderer_resources basis = {
+            .arena = CreateGFXResourceArena(mem_arena),
         };
 
-        if (!CreateMesh(g_frame_vert_limit, basis.gfx_res_arena, basis.batch_mesh_resource)) {
+        if (!CreateMesh(g_frame_vert_limit, basis.arena, basis.mesh)) {
             ZF_FATAL();
         }
 
-        if (!CreateShaderProg({g_test_vs_raw, g_test_vs_len}, {g_test_fs_raw, g_test_fs_len}, basis.gfx_res_arena, basis.batch_shader_prog_resource)) {
+        if (!CreateShaderProg({g_test_vs_raw, g_test_vs_len}, {g_test_fs_raw, g_test_fs_len}, basis.arena, basis.shader_proh)) {
             ZF_FATAL();
         }
 
-        if (!CreateUniform(s_cstr_literal("u_tex"), basis.gfx_res_arena, temp_mem_arena, basis.batch_sampler_uniform_resource)) {
+        if (!CreateUniform(s_cstr_literal("u_tex"), basis.arena, temp_mem_arena, basis.texture_sampler_uniform)) {
             ZF_FATAL();
         }
 
         {
             const s_static_array<t_u8, 4> px_texture_rgba = {255, 255, 255, 255};
 
-            if (!CreateTexture({{1, 1}, px_texture_rgba}, basis.gfx_res_arena, basis.px_texture)) {
+            if (!CreateTexture({{1, 1}, px_texture_rgba}, basis.arena, basis.px_texture)) {
                 ZF_FATAL();
             }
         }
@@ -64,13 +69,13 @@ namespace zf {
         return basis;
     }
 
-    void ReleaseRenderingBasis(s_rendering_basis &basis) {
-        DestroyGFXResources(basis.gfx_res_arena);
+    void ReleaseRenderingBasis(s_batch_renderer_resources &basis) {
+        DestroyGFXResources(basis.arena);
         basis = {};
     }
 
     struct s_frame_state {
-        s_ptr<const s_rendering_basis> basis;
+        s_ptr<const s_batch_renderer_resources> basis;
 
         s_render_instr_seq instr_seq;
 
@@ -81,7 +86,7 @@ namespace zf {
         s_ptr<const s_gfx_resource> batch_texture_resource;
     };
 
-    s_frame_state &internal::BeginFrame(const s_rendering_basis &basis, s_mem_arena &mem_arena) {
+    s_frame_state &internal::BeginFrame(const s_batch_renderer_resources &basis, s_mem_arena &mem_arena) {
         auto &state = Alloc<s_frame_state>(mem_arena);
 
         state.basis = &basis;
@@ -97,11 +102,11 @@ namespace zf {
 
         const auto verts = rs.batch_verts.ToArray().SliceFrom();
         const s_array<t_f32> verts_f32 = {reinterpret_cast<t_f32 *>(verts.Ptr().Raw()), verts.SizeInBytes() / ZF_SIZE_OF(t_f32)};
-        rs.instr_seq.SubmitMeshUpdate(*rs.basis->batch_mesh_resource, verts_f32);
+        rs.instr_seq.SubmitMeshUpdate(*rs.basis->mesh, verts_f32);
 
-        rs.instr_seq.SubmitTextureSet(rs.batch_texture_resource ? *rs.batch_texture_resource : *rs.basis->px_texture, *rs.basis->batch_sampler_uniform_resource);
+        rs.instr_seq.SubmitTextureSet(rs.batch_texture_resource ? *rs.batch_texture_resource : *rs.basis->px_texture, *rs.basis->texture_sampler_uniform);
 
-        rs.instr_seq.SubmitMeshDraw(*rs.basis->batch_mesh_resource, *rs.basis->batch_shader_prog_resource, static_cast<t_i32>(rs.batch_verts.Len()));
+        rs.instr_seq.SubmitMeshDraw(*rs.basis->mesh, *rs.basis->shader_proh, static_cast<t_i32>(rs.batch_verts.Len()));
 
         rs.batch_verts.Clear();
 
@@ -155,4 +160,5 @@ namespace zf {
         rs.batch_verts.Append({rect.BottomLeft(), zf::colors::g_white, {0.0f, 1.0f}});
         rs.batch_verts.Append({rect.TopLeft(), zf::colors::g_white, {0.0f, 0.0f}});
     }
+#endif
 }

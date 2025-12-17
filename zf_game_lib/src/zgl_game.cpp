@@ -37,6 +37,8 @@ namespace zf {
             .temp_mem_arena = temp_mem_arena,
         });
 
+        auto &test = Alloc<s_game_init_context>(perm_mem_arena, perm_mem_arena, temp_mem_arena);
+
         ZF_DEFER({
             if (cleanup_func) {
                 cleanup_func();
@@ -76,7 +78,7 @@ namespace zf {
                     frame_dur_accum -= targ_tick_interval;
                 } while (frame_dur_accum >= targ_tick_interval);
 
-                renderer::BeginFrame({109, 187, 255});
+                renderer::BeginFrame(s_color_rgb8(109, 187, 255));
 
                 render_func({
                     .perm_mem_arena = perm_mem_arena,
