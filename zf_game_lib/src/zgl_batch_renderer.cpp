@@ -9,7 +9,45 @@ namespace zf {
     extern const t_u8 g_test_fs_raw[];
     extern const t_len g_test_fs_len;
 
-    [[nodiscard]] t_b8 CreateBatchRenderer(s_batch_renderer_resources &o_resources) {
+    s_batch_renderer_resources CreateBatchRenderer(s_mem_arena &mem_arena, s_mem_arena &temp_mem_arena) {
+        renderer::s_resource_arena resource_arena = {&mem_arena};
+
+        s_ptr<renderer::s_resource> mesh;
+
+        if (!CreateMesh(8192, resource_arena, mesh)) {
+            ZF_FATAL();
+        }
+
+        s_ptr<renderer::s_resource> shader_prog;
+
+        if (!CreateShaderProg({g_test_vs_raw, g_test_vs_len}, {g_test_fs_raw, g_test_fs_len}, resource_arena, shader_prog)) {
+            ZF_FATAL();
+        }
+
+        s_ptr<renderer::s_resource> texture_sampler_uniform;
+
+        if (!CreateUniform(s_cstr_literal("u_tex"), resource_arena, temp_mem_arena, texture_sampler_uniform)) {
+            ZF_FATAL();
+        }
+
+        s_ptr<renderer::s_resource> px_texture;
+        constexpr s_static_array<t_u8, 4> px_texture_rgba = {255, 255, 255, 255};
+
+        if (!renderer::CreateTexture({{1, 1}, px_texture_rgba}, resource_arena, px_texture)) {
+            ZF_FATAL();
+        }
+
+        return {
+            .arena = resource_arena,
+            .mesh = *mesh,
+            .shader_prog = *shader_prog,
+            .texture_sampler_uniform = *texture_sampler_uniform,
+            .px_texture = *px_texture,
+        };
+    }
+
+    void DestroyBatchRenderer(s_batch_renderer_resources &resources) {
+        renderer::DestroyResources(resources.arena);
     }
 
     void s_batch_renderer::Flush() {

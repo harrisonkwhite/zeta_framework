@@ -32,12 +32,14 @@ add_library(zf_game_lib STATIC
     src/zgl_game.cpp
     src/zgl_platform.cpp
     src/zgl_renderer.cpp
+    src/zgl_batch_renderer.cpp
     src/zgl_audio.cpp
 
     include/zgl.h
     include/zgl/zgl_game.h
     include/zgl/zgl_platform.h
     include/zgl/zgl_renderer.h
+    include/zgl/zgl_batch_renderer.h
     include/zgl/zgl_audio.h
 
     ${TEST_VS_CPP}

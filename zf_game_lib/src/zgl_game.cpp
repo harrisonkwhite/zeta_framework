@@ -1,7 +1,7 @@
 #include <zgl/zgl_game.h>
 
 #include <zgl/zgl_platform.h>
-#include <zgl/zgl_renderer.h>
+#include <zgl/zgl_batch_renderer.h>
 
 namespace zf {
     constexpr s_v2_i g_init_window_size = {1280, 720};
@@ -32,12 +32,13 @@ namespace zf {
         renderer::Init();
         ZF_DEFER({ renderer::Shutdown(); });
 
+        s_batch_renderer_resources batch_renderer_resources = CreateBatchRenderer(perm_mem_arena, temp_mem_arena);
+        ZF_DEFER({ DestroyBatchRenderer(batch_renderer_resources); });
+
         init_func({
             .perm_mem_arena = perm_mem_arena,
             .temp_mem_arena = temp_mem_arena,
         });
-
-        auto &test = Alloc<s_game_init_context>(perm_mem_arena, perm_mem_arena, temp_mem_arena);
 
         ZF_DEFER({
             if (cleanup_func) {
@@ -80,9 +81,12 @@ namespace zf {
 
                 renderer::BeginFrame(s_color_rgb8(109, 187, 255));
 
+                auto &batch_renderer = Alloc<s_batch_renderer>(temp_mem_arena, batch_renderer_resources);
+
                 render_func({
                     .perm_mem_arena = perm_mem_arena,
                     .temp_mem_arena = temp_mem_arena,
+                    .batch_renderer = batch_renderer,
                 });
 
                 renderer::CompleteFrame();
