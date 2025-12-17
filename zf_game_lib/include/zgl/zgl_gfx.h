@@ -16,7 +16,8 @@ namespace zf {
     // ============================================================
     enum e_gfx_resource_type {
         ek_gfx_resource_type_invalid,
-        ek_gfx_resource_type_texture
+        ek_gfx_resource_type_texture,
+        ek_gfx_resource_type_font,
     };
 
     struct s_gfx_resource;
@@ -56,6 +57,8 @@ namespace zf {
     }
 
     s_v2_i TextureSize(const s_gfx_resource &texture);
+
+    [[nodiscard]] t_b8 CreateFontResource(const s_font_arrangement &arrangement, const s_array<t_font_atlas_rgba> atlas_rgbas, s_ptr<s_gfx_resource> &o_resource, const s_ptr<s_gfx_resource_arena> arena);
 
     // ============================================================
     // @section: Rendering
