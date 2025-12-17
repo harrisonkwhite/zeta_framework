@@ -27,6 +27,9 @@ namespace zf {
         e_gfx_resource_type type = ek_gfx_resource_type_invalid;
         s_ptr<s_gfx_resource> next = nullptr;
 
+        s_gfx_resource() = default;
+        s_gfx_resource(const s_gfx_resource &) = delete;
+
         auto &Texture() {
             ZF_ASSERT(type == ek_gfx_resource_type_texture);
             return type_data.texture;
@@ -195,30 +198,23 @@ namespace zf {
     void DestroyGFXResources(s_gfx_resource_arena &arena) {
         ZF_ASSERT(g_state.state == ek_state_initted);
 
-        const auto destroy_resource = [](const auto self, s_gfx_resource &resource) -> void {
-            switch (resource.type) {
-            case ek_gfx_resource_type_invalid: break;
-
-            case ek_gfx_resource_type_texture:
-                bgfx::destroy(resource.Texture().bgfx_hdl);
-                break;
-
-            case ek_gfx_resource_type_font:
-                for (t_len i = 0; i < resource.Font().atlases.Len(); i++) {
-                    self(self, *resource.Font().atlases[i]);
-                }
-
-                break;
-            }
-
-            resource = {};
-        };
-
         s_ptr<s_gfx_resource> resource = arena.head;
 
         while (resource) {
+            switch (resource->type) {
+            case ek_gfx_resource_type_invalid:
+                break;
+
+            case ek_gfx_resource_type_texture:
+                bgfx::destroy(resource->Texture().bgfx_hdl);
+                break;
+
+            case ek_gfx_resource_type_font:
+                break;
+            }
+
             const auto next = resource->next;
-            destroy_resource(destroy_resource, *resource);
+            *resource = {};
             resource = next;
         }
 
@@ -246,14 +242,17 @@ namespace zf {
         return texture.Texture().size;
     }
 
-    [[nodiscard]] t_b8 CreateFontResource(const s_font_arrangement &arrangement, const s_array<t_font_atlas_rgba> atlas_rgbas, s_ptr<s_gfx_resource> &o_resource, const s_ptr<s_gfx_resource_arena> arena) {
-        o_resource = &PushGFXResource(ek_gfx_resource_type_font, *arena);
+    t_b8 CreateFontResource(const s_font_arrangement &arrangement, const s_array<t_font_atlas_rgba> atlas_rgbas, s_ptr<s_gfx_resource> &o_resource, const s_ptr<s_gfx_resource_arena> arena) {
+        auto &arena_to_use = arena ? *arena : g_state.perm_resource_arena;
+        g_state.perm_resource_arena = *arena;
+
+        o_resource = &PushGFXResource(ek_gfx_resource_type_font, arena_to_use);
         o_resource->Font().arrangement = arrangement;
 
-        o_resource->Font().atlases = AllocArray<s_ptr<s_gfx_resource>>(atlas_rgbas.Len(), *arena->mem_arena);
+        o_resource->Font().atlases = AllocArray<s_ptr<s_gfx_resource>>(atlas_rgbas.Len(), *arena_to_use.mem_arena);
 
         for (t_len i = 0; i < atlas_rgbas.Len(); i++) {
-            if (!CreateTextureResource({g_font_atlas_size, atlas_rgbas[i]}, o_resource->Font().atlases[i], arena)) {
+            if (!CreateTextureResource({g_font_atlas_size, atlas_rgbas[i]}, o_resource->Font().atlases[i], &arena_to_use)) {
                 return false;
             }
         }

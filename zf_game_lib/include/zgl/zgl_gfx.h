@@ -26,10 +26,15 @@ namespace zf {
         s_ptr<s_mem_arena> mem_arena;
         s_ptr<s_gfx_resource> head;
         s_ptr<s_gfx_resource> tail;
+
+        s_gfx_resource_arena() = default;
+        explicit s_gfx_resource_arena(s_mem_arena &mem_arena) : mem_arena(&mem_arena) {}
+
+        s_gfx_resource_arena(const s_gfx_resource_arena &) = delete;
     };
 
-    inline s_gfx_resource_arena CreateGFXResourceArena(s_mem_arena &mem_arena) {
-        return {.mem_arena = &mem_arena};
+    inline auto CreateGFXResourceArena(s_mem_arena &mem_arena) {
+        return s_gfx_resource_arena(mem_arena);
     }
 
     void DestroyGFXResources(s_gfx_resource_arena &arena);
@@ -58,7 +63,29 @@ namespace zf {
 
     s_v2_i TextureSize(const s_gfx_resource &texture);
 
-    [[nodiscard]] t_b8 CreateFontResource(const s_font_arrangement &arrangement, const s_array<t_font_atlas_rgba> atlas_rgbas, s_ptr<s_gfx_resource> &o_resource, const s_ptr<s_gfx_resource_arena> arena);
+    [[nodiscard]] t_b8 CreateFontResource(const s_font_arrangement &arrangement, const s_array<t_font_atlas_rgba> atlas_rgbas, s_ptr<s_gfx_resource> &o_resource, const s_ptr<s_gfx_resource_arena> arena = nullptr);
+
+    [[nodiscard]] inline t_b8 CreateFontResourceFromRaw(const s_str_rdonly file_path, const t_i32 height, t_code_pt_bit_vec &code_pts, s_mem_arena &temp_mem_arena, s_ptr<s_gfx_resource> &o_resource, const s_ptr<s_gfx_resource_arena> resource_arena = nullptr) {
+        s_font_arrangement arrangement;
+        s_array<t_font_atlas_rgba> atlas_rgbas;
+
+        if (!zf::LoadFontFromRaw(file_path, height, code_pts, *resource_arena->mem_arena, temp_mem_arena, temp_mem_arena, arrangement, atlas_rgbas)) {
+            return false;
+        }
+
+        return CreateFontResource(arrangement, atlas_rgbas, o_resource, resource_arena);
+    }
+
+    [[nodiscard]] inline t_b8 CreateFontFromPacked(const s_str_rdonly file_path, s_mem_arena &temp_mem_arena, s_ptr<s_gfx_resource> &o_resource, const s_ptr<s_gfx_resource_arena> resource_arena = nullptr) {
+        s_font_arrangement arrangement = {};
+        s_array<t_font_atlas_rgba> atlas_rgbas = {};
+
+        if (!zf::UnpackFont(file_path, *resource_arena->mem_arena, temp_mem_arena, temp_mem_arena, arrangement, atlas_rgbas)) {
+            return false;
+        }
+
+        return CreateFontResource(arrangement, atlas_rgbas, o_resource, resource_arena);
+    }
 
     // ============================================================
     // @section: Rendering
