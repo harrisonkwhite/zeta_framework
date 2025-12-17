@@ -5,7 +5,7 @@
 namespace zf {
     // Initialises the renderer module. This depends on the platform module being initialised beforehand.
     // The lifetime of the provided memory arena must encompass that of the renderer module.
-    void InitRenderer(s_mem_arena &mem_arena);
+    void InitRenderer(s_mem_arena &mem_arena, const t_i32 frame_vert_limit = 8192);
 
     void ShutdownRenderer();
 
