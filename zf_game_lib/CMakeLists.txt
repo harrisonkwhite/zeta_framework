@@ -1,11 +1,26 @@
-set(BTA_EXE $<TARGET_FILE:zf_bin_to_array>)
-set(SHADERC_EXE $<TARGET_FILE:shaderc>)
-set(SHADERC_PLATFORM $<$<PLATFORM_ID:Windows>:windows>$<$<PLATFORM_ID:Darwin>:osx>$<$<PLATFORM_ID:Linux>:linux>)
-set(SHADERC_PROFILE $<$<PLATFORM_ID:Windows>:s_5_0>$<$<PLATFORM_ID:Darwin>:metal>$<$<PLATFORM_ID:Linux>:glsl>)
-
 function(embed_shader SHADER_NAME_LOWER SHADER_NAME_UPPER SHADER_TYPE)
+    set(BTA_EXE $<TARGET_FILE:zf_bin_to_array>)
+
+    set(SHADERC_PLATFORM
+        $<$<PLATFORM_ID:Windows>:windows>
+        $<$<PLATFORM_ID:Darwin>:osx>
+        $<$<PLATFORM_ID:Linux>:linux>
+    )
+
+    set(SHADERC_PROFILE
+        $<$<PLATFORM_ID:Windows>:s_5_0>
+        $<$<PLATFORM_ID:Darwin>:metal>
+        $<$<PLATFORM_ID:Linux>:glsl>
+    )
+
+    set(SHADERC_EXE
+        $<$<PLATFORM_ID:Windows>:${CMAKE_CURRENT_SOURCE_DIR}/../tools/bgfx/shaderc_windows.exe>
+        $<$<PLATFORM_ID:Darwin>:${CMAKE_CURRENT_SOURCE_DIR}/../tools/bgfx/shaderc_macos>
+        $<$<PLATFORM_ID:Linux>:${CMAKE_CURRENT_SOURCE_DIR}/../tools/bgfx/shaderc_linux>
+    )
+
     set(SRC_FILE ${CMAKE_CURRENT_SOURCE_DIR}/shaders/${SHADER_NAME_LOWER}.sc)
-    set(VD_FILE  ${CMAKE_CURRENT_SOURCE_DIR}/shaders/varying.def.sc)
+    set(VD_FILE ${CMAKE_CURRENT_SOURCE_DIR}/shaders/varying.def.sc)
     set(BIN_FILE ${CMAKE_CURRENT_BINARY_DIR}/${SHADER_NAME_LOWER}.bin)
     set(CPP_FILE ${CMAKE_CURRENT_BINARY_DIR}/${SHADER_NAME_LOWER}.cpp)
 
@@ -34,9 +49,6 @@ add_library(zf_game_lib STATIC
     include/zgl/zgl_platform.h
     include/zgl/zgl_gfx.h
     include/zgl/zgl_audio.h
-
-    ${BATCH_VERT_SHADER_CPP}
-    ${BATCH_FRAG_SHADER_CPP}
 )
 
 target_compile_features(zf_game_lib PUBLIC cxx_std_20)
