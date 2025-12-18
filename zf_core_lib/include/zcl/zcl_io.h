@@ -331,7 +331,6 @@ namespace zf {
     };
 
     inline s_bool_fmt FormatBool(const t_b8 val) { return {val}; }
-    inline s_bool_fmt FormatDefault(const t_b8 val) { return FormatBool(val); }
 
     inline t_b8 PrintType(s_stream &stream, const s_bool_fmt fmt) {
         const s_str_rdonly true_str = s_cstr_literal("true");
@@ -470,8 +469,7 @@ namespace zf {
         return {reinterpret_cast<t_uintptr>(ptr.Raw()), flags, min_digits};
     }
 
-    template <typename tp_type>
-    s_hex_fmt<t_uintptr> FormatDefault(const s_ptr<const tp_type> ptr) {
+    inline s_hex_fmt<t_uintptr> FormatDefault(const s_ptr<const void> ptr) {
         return FormatHex(ptr, {}, 2 * ZF_SIZE_OF(t_uintptr));
     }
 

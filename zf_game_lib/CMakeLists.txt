@@ -1,3 +1,28 @@
+set(BTA_EXE $<TARGET_FILE:zf_bin_to_array>)
+set(SHADERC_EXE $<TARGET_FILE:shaderc>)
+set(SHADERC_PLATFORM $<$<PLATFORM_ID:Windows>:windows>$<$<PLATFORM_ID:Darwin>:osx>$<$<PLATFORM_ID:Linux>:linux>)
+set(SHADERC_PROFILE $<$<PLATFORM_ID:Windows>:s_5_0>$<$<PLATFORM_ID:Darwin>:metal>$<$<PLATFORM_ID:Linux>:glsl>)
+
+function(embed_shader SHADER_NAME_LOWER SHADER_NAME_UPPER SHADER_TYPE)
+    set(SRC_FILE ${CMAKE_CURRENT_SOURCE_DIR}/shaders/${SHADER_NAME_LOWER}.sc)
+    set(VD_FILE  ${CMAKE_CURRENT_SOURCE_DIR}/shaders/varying.def.sc)
+    set(BIN_FILE ${CMAKE_CURRENT_BINARY_DIR}/${SHADER_NAME_LOWER}.bin)
+    set(CPP_FILE ${CMAKE_CURRENT_BINARY_DIR}/${SHADER_NAME_LOWER}.cpp)
+
+    add_custom_command(
+        OUTPUT ${CPP_FILE}
+        COMMAND ${SHADERC_EXE} -f ${SRC_FILE} -o ${BIN_FILE} --type ${SHADER_TYPE} --platform ${SHADERC_PLATFORM} --profile ${SHADERC_PROFILE} --varyingdef ${VD_FILE} -i ${CMAKE_CURRENT_SOURCE_DIR}/../external/bgfx_cmake/bgfx/src
+        COMMAND ${BTA_EXE} ${BIN_FILE} ${CPP_FILE} ${SHADER_NAME_LOWER}_src
+        DEPENDS ${SRC_FILE} ${VD_FILE} shaderc zf_bin_to_array
+        VERBATIM
+    )
+
+    set(${SHADER_NAME_UPPER}_CPP ${CPP_FILE} PARENT_SCOPE)
+endfunction()
+
+embed_shader(batch_vert_shader BATCH_VERT_SHADER vertex)
+embed_shader(batch_frag_shader BATCH_FRAG_SHADER fragment)
+
 add_library(zf_game_lib STATIC
     src/zgl_game.cpp
     src/zgl_platform.cpp
@@ -9,6 +34,9 @@ add_library(zf_game_lib STATIC
     include/zgl/zgl_platform.h
     include/zgl/zgl_gfx.h
     include/zgl/zgl_audio.h
+
+    ${BATCH_VERT_SHADER_CPP}
+    ${BATCH_FRAG_SHADER_CPP}
 )
 
 target_compile_features(zf_game_lib PUBLIC cxx_std_20)

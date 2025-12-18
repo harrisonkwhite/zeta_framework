@@ -8,11 +8,9 @@ namespace zf {
     constexpr t_f64 g_targ_ticks_per_sec = 60.0; // @todo: Make this customisable?
 
     void RunGame(const t_game_init_func init_func, const t_game_tick_func tick_func, const t_game_render_func render_func, const t_game_cleanup_func cleanup_func) {
-#if 0
         ZF_ASSERT(init_func);
         ZF_ASSERT(tick_func);
         ZF_ASSERT(render_func);
-#endif
 
 #if 0
     #ifndef ZF_DEBUG
