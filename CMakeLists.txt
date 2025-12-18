@@ -5,17 +5,14 @@ project(zeta_framework LANGUAGES C CXX)
 add_subdirectory(external/glfw)
 
 set(BGFX_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
-set(BGFX_BUILD_TOOLS OFF CACHE BOOL "" FORCE)
+set(BGFX_BUILD_TOOLS ON CACHE BOOL "" FORCE)
+set(BGFX_BUILD_TOOLS_SHADER ON CACHE BOOL "" FORCE)
+set(BGFX_BUILD_TOOLS_BIN2C OFF CACHE BOOL "" FORCE)
+set(BGFX_BUILD_TOOLS_GEOMETRY OFF CACHE BOOL "" FORCE)
+set(BGFX_BUILD_TOOLS_TEXTURE OFF CACHE BOOL "" FORCE)
 set(BGFX_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(BGFX_INSTALL OFF CACHE BOOL "" FORCE)
 add_subdirectory(external/bgfx_cmake)
-
-# Try to omit BGFX warnings.
-foreach(t bgfx bx bimg)
-    if (TARGET ${t})
-        target_compile_options(${t} PRIVATE $<$<CXX_COMPILER_ID:MSVC>:/w> $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-w>)
-    endif()
-endforeach()
 
 add_subdirectory(zf_core_lib)
 add_subdirectory(zf_bin_to_array)
