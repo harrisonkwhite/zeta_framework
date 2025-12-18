@@ -58,16 +58,15 @@ namespace zf {
 #endif
     }
 
-    // Returns true if successfully managed to break into debugger.
-    static t_b8 BreakIntoDebugger() {
-#ifdef ZF_PLATFORM_WINDOWS
+    static void TryBreakingIntoDebugger() {
+#ifdef ZF_DEBUG
+    #ifdef ZF_PLATFORM_WINDOWS
         if (IsDebuggerPresent()) {
             __debugbreak();
-            return true;
+            return;
         }
+    #endif
 #endif
-
-        return false;
     }
 
     void internal::AssertError(const char *const cond, const char *const func_name, const char *const file_name, const t_i32 line) {
@@ -81,9 +80,11 @@ namespace zf {
 
         fprintf(stderr, "=========================================================\n");
 
-        if (!BreakIntoDebugger()) {
-            abort();
-        }
+        fflush(stderr);
+
+        TryBreakingIntoDebugger();
+
+        abort();
     }
 
     void internal::FatalError(const char *const func_name, const char *const file_name, const t_i32 line, const char *const cond) {
@@ -106,18 +107,8 @@ namespace zf {
 
         fflush(stderr);
 
-#ifdef ZF_DEBUG
-        if (!BreakIntoDebugger()) {
-            getchar();
-        }
-#endif
+        TryBreakingIntoDebugger();
 
         abort();
-    }
-
-    void ShowErrorBox(const char *const title, const char *const contents) {
-#ifdef ZF_PLATFORM_WINDOWS
-        MessageBoxA(nullptr, contents, title, MB_OK | MB_ICONERROR | MB_TOPMOST);
-#endif
     }
 }

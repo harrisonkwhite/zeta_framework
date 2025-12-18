@@ -12,13 +12,6 @@ namespace zf {
         ZF_ASSERT(tick_func);
         ZF_ASSERT(render_func);
 
-#if 0
-    #ifndef ZF_DEBUG
-        // Redirect stderr to crash log file.
-        freopen("error.log", "w", stderr);
-    #endif
-#endif
-
         //
         // Initialisation
         //
@@ -31,12 +24,8 @@ namespace zf {
         internal::InitPlatform(g_init_window_size);
         ZF_DEFER({ internal::ShutdownPlatform(); });
 
-        InitGFX(perm_mem_arena);
-        ZF_DEFER({ ShutdownGFX(); });
-#if 0
         s_rendering_basis &rendering_basis = InitGFX(perm_mem_arena);
         ZF_DEFER({ ShutdownGFX(rendering_basis); });
-#endif
 
         init_func({
             .perm_mem_arena = perm_mem_arena,
@@ -82,7 +71,6 @@ namespace zf {
                     frame_dur_accum -= targ_tick_interval;
                 } while (frame_dur_accum >= targ_tick_interval);
 
-#if 0
                 s_rendering_context &rendering_context = internal::BeginFrame(rendering_basis, s_color_rgb8(109, 187, 255), temp_mem_arena); // @todo: Make the clear colour customisable?
 
                 render_func({
@@ -92,7 +80,6 @@ namespace zf {
                 });
 
                 internal::EndFrame(rendering_context);
-#endif
             }
         }
     }

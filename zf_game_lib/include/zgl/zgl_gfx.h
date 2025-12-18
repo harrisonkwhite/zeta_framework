@@ -5,16 +5,11 @@
 namespace zf {
     struct s_rendering_basis;
 
-    void InitGFX(s_mem_arena &mem_arena);
-    void ShutdownGFX();
-
-#if 0
     // Initialises the GFX module. This depends on the platform module being initialised beforehand.
     // The lifetime of the provided memory arena must encompass that of the GFX module.
     s_rendering_basis &InitGFX(s_mem_arena &mem_arena);
 
     void ShutdownGFX(s_rendering_basis &rendering_basis);
-#endif
 
     // ============================================================
     // @section: Resources

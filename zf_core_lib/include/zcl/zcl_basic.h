@@ -316,8 +316,6 @@ namespace zf {
     } while (0)
     }
 
-    void ShowErrorBox(const char *const title, const char *const contents);
-
     // ============================================================
     // @section: Essential Utilities
     // ============================================================
