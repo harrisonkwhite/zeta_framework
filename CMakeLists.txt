@@ -6,10 +6,6 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-if (MSVC)
-    add_compile_options(/utf-8)
-endif()
-
 add_subdirectory(external/glfw)
 
 set(BGFX_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)

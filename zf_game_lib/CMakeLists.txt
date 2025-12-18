@@ -64,17 +64,3 @@ target_link_libraries(zf_game_lib PRIVATE
     bimg
     bx
 )
-
-target_compile_definitions(zf_game_lib PRIVATE
-	_CRT_SECURE_NO_WARNINGS
-    GLFW_INCLUDE_NONE
-)
-
-if (MSVC)
-    target_compile_options(zf_game_lib PRIVATE
-        $<$<CONFIG:Release>:/Zi /Oy->
-    )
-    target_link_options(zf_game_lib PRIVATE
-        $<$<CONFIG:Release>:/DEBUG>
-    )
-endif()

@@ -13,7 +13,3 @@ target_include_directories(zf_asset_packer PRIVATE
 target_link_libraries(zf_asset_packer PRIVATE
     zf_core_lib
 )
-
-target_compile_definitions(zf_asset_packer PRIVATE
-    _CRT_SECURE_NO_WARNINGS
-)

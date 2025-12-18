@@ -34,17 +34,3 @@ target_include_directories(zf_core_lib PRIVATE
 if(WIN32)
     target_link_libraries(zf_core_lib PRIVATE dbghelp)
 endif()
-
-if (MSVC)
-    target_compile_options(zf_core_lib PRIVATE
-        $<$<CONFIG:Release>:/Zi /Oy->
-    )
-
-    target_link_options(zf_core_lib PRIVATE
-        $<$<CONFIG:Release>:/DEBUG>
-    )
-endif()
-
-target_compile_definitions(zf_core_lib PRIVATE
-    _CRT_SECURE_NO_WARNINGS
-)
