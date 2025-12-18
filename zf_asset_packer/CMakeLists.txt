@@ -6,10 +6,6 @@ add_executable(zf_asset_packer
     src/zap_packing.h
 )
 
-target_include_directories(zf_asset_packer PRIVATE
-    ../external/c_json/include
-)
-
-target_link_libraries(zf_asset_packer PRIVATE
-    zf_core_lib
-)
+target_compile_features(zf_asset_packer PRIVATE cxx_std_20)
+target_include_directories(zf_asset_packer PRIVATE ../external/c_json/include)
+target_link_libraries(zf_asset_packer PRIVATE zf_core_lib)

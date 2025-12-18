@@ -21,16 +21,14 @@ add_library(zf_core_lib STATIC
     include/zcl/zcl_basic.h
 )
 
-target_include_directories(zf_core_lib PUBLIC
-    include
-)
+target_compile_features(zf_core_lib PUBLIC cxx_std_20)
 
-target_include_directories(zf_core_lib PRIVATE
-    ../external/stb_image/include
-    ../external/stb_truetype/include
-    ../external/miniaudio/include
+target_include_directories(zf_core_lib
+    PUBLIC include
+    PRIVATE ../external/stb_image/include ../external/stb_truetype/include ../external/miniaudio/include
 )
 
 if(WIN32)
     target_link_libraries(zf_core_lib PRIVATE dbghelp)
+    target_compile_definitions(zf_core_lib PRIVATE _CRT_SECURE_NO_WARNINGS)
 endif()

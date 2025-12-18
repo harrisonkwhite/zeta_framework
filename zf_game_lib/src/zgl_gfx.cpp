@@ -115,6 +115,42 @@ namespace zf {
     // ============================================================
     // @section: General
     // ============================================================
+    void InitGFX(s_mem_arena &mem_arena) {
+        ZF_ASSERT(g_state.state == ek_state_uninitted);
+
+        g_state.state = ek_state_initted;
+
+        bgfx::Init init;
+
+        init.type = bgfx::RendererType::Count;
+
+        init.resolution.reset = BGFX_RESET_VSYNC;
+
+        const auto fb_size_cache = WindowFramebufferSizeCache();
+
+        init.resolution.width = static_cast<uint32_t>(fb_size_cache.x);
+        init.resolution.height = static_cast<uint32_t>(fb_size_cache.y);
+
+        g_state.resolution_cache = fb_size_cache;
+
+        init.platformData.nwh = internal::NativeWindowHandle();
+        init.platformData.ndt = internal::NativeDisplayHandle();
+        init.platformData.type = bgfx::NativeWindowHandleType::Default;
+
+        Log(s_cstr_literal("native window handle: %"), internal::NativeWindowHandle());
+        Log(s_cstr_literal("native display handle: %"), internal::NativeDisplayHandle());
+
+        if (!bgfx::init(init)) {
+            Log(s_cstr_literal("not here"));
+            ZF_FATAL();
+        }
+
+        Log(s_cstr_literal("not here either"));
+
+        g_state.perm_resource_arena = CreateGFXResourceArena(mem_arena);
+    }
+
+#if 0
     s_rendering_basis &InitGFX(s_mem_arena &mem_arena) {
         ZF_ASSERT(g_state.state == ek_state_uninitted);
 
@@ -145,7 +181,19 @@ namespace zf {
 
         return CreateRenderingBasis(mem_arena, g_state.perm_resource_arena);
     }
+#endif
 
+    void ShutdownGFX() {
+        ZF_ASSERT(g_state.state == ek_state_initted);
+
+        DestroyGFXResources(g_state.perm_resource_arena);
+
+        bgfx::shutdown();
+
+        g_state = {};
+    }
+
+#if 0
     void ShutdownGFX(s_rendering_basis &rendering_state) {
         ZF_ASSERT(g_state.state == ek_state_initted);
 
@@ -159,6 +207,7 @@ namespace zf {
 
         g_state = {};
     }
+#endif
 
     // ============================================================
     // @section: Resources

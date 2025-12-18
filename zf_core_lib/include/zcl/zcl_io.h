@@ -470,9 +470,8 @@ namespace zf {
         return {reinterpret_cast<t_uintptr>(ptr.Raw()), flags, min_digits};
     }
 
-    // Have pointers use this format by default.
     template <typename tp_type>
-    inline s_hex_fmt<t_uintptr> FormatDefault(const s_ptr<const tp_type> ptr) {
+    s_hex_fmt<t_uintptr> FormatDefault(const s_ptr<const tp_type> ptr) {
         return FormatHex(ptr, {}, 2 * ZF_SIZE_OF(t_uintptr));
     }
 

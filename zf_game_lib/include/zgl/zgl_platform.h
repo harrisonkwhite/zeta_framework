@@ -46,8 +46,8 @@ namespace zf {
     }
 
     namespace internal {
-        void *NativeWindowHandle();
-        void *NativeDisplayHandle();
+        s_ptr<void> NativeWindowHandle();
+        s_ptr<void> NativeDisplayHandle();
 
         void ShowWindow();
 

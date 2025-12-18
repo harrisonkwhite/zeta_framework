@@ -117,7 +117,7 @@ namespace zf {
     // ============================================================
     // @section: Display
     // ============================================================
-    void *internal::NativeWindowHandle() {
+    s_ptr<void> internal::NativeWindowHandle() {
         ZF_ASSERT(g_state.initted);
 
 #if defined(ZF_PLATFORM_WINDOWS)
@@ -129,7 +129,7 @@ namespace zf {
 #endif
     }
 
-    void *internal::NativeDisplayHandle() {
+    s_ptr<void> internal::NativeDisplayHandle() {
         ZF_ASSERT(g_state.initted);
 
 #if defined(ZF_PLATFORM_WINDOWS)

@@ -1,7 +1,3 @@
-add_executable(zf_bin_to_array
-    src/zbta_main.cpp
-)
-
-target_link_libraries(zf_bin_to_array PRIVATE
-    zf_core_lib
-)
+add_executable(zf_bin_to_array src/zbta_main.cpp)
+target_compile_features(zf_bin_to_array PRIVATE cxx_std_20)
+target_link_libraries(zf_bin_to_array PRIVATE zf_core_lib)
