@@ -87,12 +87,12 @@ namespace zf {
         }
 
     private:
-        s_ptr<const char> buf = nullptr;
+        s_ptr<const char> buf;
         t_len buf_size = 0;
     };
 
     struct s_str_rdonly {
-        s_array_rdonly<t_u8> bytes = {};
+        s_array_rdonly<t_u8> bytes;
 
         constexpr s_str_rdonly() = default;
         constexpr s_str_rdonly(const s_array_rdonly<t_u8> bytes) : bytes(bytes) {}
@@ -113,7 +113,7 @@ namespace zf {
     };
 
     struct s_str {
-        s_array<t_u8> bytes = {};
+        s_array<t_u8> bytes;
 
         constexpr s_str() = default;
         constexpr s_str(const s_array<t_u8> bytes) : bytes(bytes) {}

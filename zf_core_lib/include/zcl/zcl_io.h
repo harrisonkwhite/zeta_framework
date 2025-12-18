@@ -31,6 +31,8 @@ namespace zf {
         s_stream(const s_ptr<FILE> file, const e_stream_mode mode)
             : m_type(ek_stream_type_file), m_type_data({.file = {.file = file}}), m_mode(mode) { ZF_ASSERT(file); }
 
+        s_stream(const s_stream &) = delete;
+
         e_stream_type Type() const { return m_type; }
         e_stream_mode Mode() const { return m_mode; }
 

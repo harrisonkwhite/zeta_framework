@@ -10,9 +10,11 @@ namespace zf {
     public:
         s_list() = default;
 
-        s_list(const s_array<tp_type> backing_arr, const t_len len = 0) : m_backing_arr(backing_arr), m_len(len) {
+        explicit s_list(const s_array<tp_type> backing_arr, const t_len len = 0) : m_backing_arr(backing_arr), m_len(len) {
             ZF_ASSERT(len >= 0 && len <= backing_arr.Len());
         }
+
+        s_list(const s_list &) = delete;
 
         s_array<tp_type> BackingArray() {
             return m_backing_arr;
@@ -125,9 +127,11 @@ namespace zf {
     public:
         s_stack() = default;
 
-        s_stack(const s_array<tp_type> backing_arr, const t_len height = 0) : m_backing_arr(backing_arr), m_height(height) {
+        explicit s_stack(const s_array<tp_type> backing_arr, const t_len height = 0) : m_backing_arr(backing_arr), m_height(height) {
             ZF_ASSERT(height >= 0 && height <= backing_arr.Len());
         }
+
+        s_stack(const s_stack &) = delete;
 
         s_array<tp_type> BackingArray() {
             return m_backing_arr;
@@ -452,8 +456,8 @@ namespace zf {
 
         s_ptr<s_mem_arena> m_mem_arena;
 
-        template <typename tp_key_type, typename tp_val_type>
-        friend s_hash_map<tp_key_type, tp_val_type> CreateHashMap(const t_hash_func<tp_key_type> hash_func, s_mem_arena &mem_arena, const t_len cap, const t_bin_comparator<tp_key_type> key_comparator);
+        template <typename tp_other_key_type, typename tp_other_val_type>
+        friend s_hash_map<tp_other_key_type, tp_other_val_type> CreateHashMap(const t_hash_func<tp_other_key_type> hash_func, s_mem_arena &mem_arena, const t_len cap, const t_bin_comparator<tp_other_key_type> key_comparator);
     };
 
     // The provided hash function has to map a key to an integer 0 or higher. The given memory arena will be saved and used for allocating new memory for entries when needed.

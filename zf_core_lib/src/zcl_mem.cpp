@@ -4,7 +4,7 @@
 
 namespace zf {
     s_mem_arena CreateMemArena(const t_len size) {
-        ZF_ASSERT(size > 0);
+        ZF_REQUIRE(size > 0);
 
         s_mem_arena arena;
 
@@ -22,16 +22,16 @@ namespace zf {
     }
 
     void s_mem_arena::Release() {
-        ZF_ASSERT(IsActive());
+        ZF_REQUIRE(IsActive());
 
         free(m_buf);
         m_buf = nullptr;
     }
 
     s_ptr<void> s_mem_arena::Push(const t_len size, const t_len alignment) {
-        ZF_ASSERT(IsActive());
-        ZF_ASSERT(size > 0);
-        ZF_ASSERT(IsAlignmentValid(alignment));
+        ZF_REQUIRE(IsActive());
+        ZF_REQUIRE(size > 0);
+        ZF_REQUIRE(IsAlignmentValid(alignment));
 
         const t_len offs_aligned = AlignForward(m_offs, alignment);
         const t_len offs_next = offs_aligned + size;

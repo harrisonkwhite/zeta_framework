@@ -177,6 +177,9 @@ namespace zf {
 
     struct s_mem_arena {
     public:
+        s_mem_arena() = default;
+        s_mem_arena &operator=(const s_mem_arena &) = delete;
+
         void Release();
 
         t_b8 IsActive() const {
@@ -193,6 +196,8 @@ namespace zf {
         }
 
     private:
+        s_mem_arena(const s_mem_arena &) = default;
+
         s_ptr<void> m_buf;
         t_len m_size = 0;
         t_len m_offs = 0;
@@ -603,7 +608,7 @@ namespace zf {
         }
 
     private:
-        s_array_rdonly<t_u8> m_bytes = {};
+        s_array_rdonly<t_u8> m_bytes;
         t_len m_bit_cnt = 0;
     };
 
@@ -639,7 +644,7 @@ namespace zf {
         }
 
     private:
-        s_array<t_u8> m_bytes = {};
+        s_array<t_u8> m_bytes;
         t_len m_bit_cnt = 0;
     };
 
