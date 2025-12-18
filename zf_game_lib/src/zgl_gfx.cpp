@@ -21,6 +21,7 @@ namespace zf {
 
     static bgfx::ProgramHandle CreateBGFXShaderProg(const s_array_rdonly<t_u8> vert_shader_bin, const s_array_rdonly<t_u8> frag_shader_bin);
     static s_gfx_resource &PushGFXResource(const e_gfx_resource_type type, s_gfx_resource_arena &arena);
+    [[nodiscard]] static t_b8 CreateFontResource(const s_font_arrangement &arrangement, const s_array<t_font_atlas_rgba> atlas_rgbas, s_gfx_resource_arena &arena, s_ptr<s_gfx_resource> &o_resource);
 
     struct s_gfx_resource {
     public:
@@ -245,22 +246,45 @@ namespace zf {
         return texture.Texture().size;
     }
 
-    t_b8 CreateFontResource(const s_font_arrangement &arrangement, const s_array<t_font_atlas_rgba> atlas_rgbas, s_ptr<s_gfx_resource> &o_resource, const s_ptr<s_gfx_resource_arena> arena) {
-        auto &arena_to_use = arena ? *arena : g_state.perm_resource_arena;
-        g_state.perm_resource_arena = *arena;
-
-        o_resource = &PushGFXResource(ek_gfx_resource_type_font, arena_to_use);
+    static t_b8 CreateFontResource(const s_font_arrangement &arrangement, const s_array<t_font_atlas_rgba> atlas_rgbas, s_gfx_resource_arena &arena, s_ptr<s_gfx_resource> &o_resource) {
+        o_resource = &PushGFXResource(ek_gfx_resource_type_font, arena);
         o_resource->Font().arrangement = arrangement;
 
-        o_resource->Font().atlases = AllocArray<s_ptr<s_gfx_resource>>(atlas_rgbas.Len(), *arena_to_use.mem_arena);
+        o_resource->Font().atlases = AllocArray<s_ptr<s_gfx_resource>>(atlas_rgbas.Len(), *arena.mem_arena);
 
         for (t_len i = 0; i < atlas_rgbas.Len(); i++) {
-            if (!CreateTextureResource({g_font_atlas_size, atlas_rgbas[i]}, o_resource->Font().atlases[i], &arena_to_use)) {
+            if (!CreateTextureResource({g_font_atlas_size, atlas_rgbas[i]}, o_resource->Font().atlases[i], &arena)) {
                 return false;
             }
         }
 
         return true;
+    }
+
+    t_b8 CreateFontResourceFromRaw(const s_str_rdonly file_path, const t_i32 height, t_code_pt_bit_vec &code_pts, s_mem_arena &temp_mem_arena, s_ptr<s_gfx_resource> &o_resource, const s_ptr<s_gfx_resource_arena> resource_arena) {
+        auto &resource_arena_to_use = resource_arena ? *resource_arena : g_state.perm_resource_arena;
+
+        s_font_arrangement arrangement;
+        s_array<t_font_atlas_rgba> atlas_rgbas;
+
+        if (!zf::LoadFontFromRaw(file_path, height, code_pts, *resource_arena_to_use.mem_arena, temp_mem_arena, temp_mem_arena, arrangement, atlas_rgbas)) {
+            return false;
+        }
+
+        return CreateFontResource(arrangement, atlas_rgbas, resource_arena_to_use, o_resource);
+    }
+
+    t_b8 CreateFontResourceFromPacked(const s_str_rdonly file_path, s_mem_arena &temp_mem_arena, s_ptr<s_gfx_resource> &o_resource, const s_ptr<s_gfx_resource_arena> resource_arena) {
+        auto &resource_arena_to_use = resource_arena ? *resource_arena : g_state.perm_resource_arena;
+
+        s_font_arrangement arrangement;
+        s_array<t_font_atlas_rgba> atlas_rgbas;
+
+        if (!zf::UnpackFont(file_path, *resource_arena_to_use.mem_arena, temp_mem_arena, temp_mem_arena, arrangement, atlas_rgbas)) {
+            return false;
+        }
+
+        return CreateFontResource(arrangement, atlas_rgbas, resource_arena_to_use, o_resource);
     }
 
     // ============================================================
@@ -422,14 +446,15 @@ namespace zf {
         }
 
         const s_rect_f rect = {pos, src_rect_to_use.Size().ToV2()};
+        const s_rect_f uv_rect = UVRect(src_rect_to_use, texture_size);
 
-        verts[0] = {rect.TopLeft(), colors::g_white, {0.0f, 0.0f}};
-        verts[1] = {rect.TopRight(), colors::g_white, {1.0f, 0.0f}};
-        verts[2] = {rect.BottomRight(), colors::g_white, {1.0f, 1.0f}};
+        verts[0] = {rect.TopLeft(), colors::g_white, uv_rect.TopLeft()};
+        verts[1] = {rect.TopRight(), colors::g_white, uv_rect.TopRight()};
+        verts[2] = {rect.BottomRight(), colors::g_white, uv_rect.BottomRight()};
 
-        verts[3] = {rect.BottomRight(), colors::g_white, {1.0f, 1.0f}};
-        verts[4] = {rect.BottomLeft(), colors::g_white, {0.0f, 1.0f}};
-        verts[5] = {rect.TopLeft(), colors::g_white, {0.0f, 0.0f}};
+        verts[3] = {rect.BottomRight(), colors::g_white, uv_rect.BottomRight()};
+        verts[4] = {rect.BottomLeft(), colors::g_white, uv_rect.BottomLeft()};
+        verts[5] = {rect.TopLeft(), colors::g_white, uv_rect.TopLeft()};
     }
 
     s_array<s_v2> LoadStrChrDrawPositions(const s_str_rdonly str, const s_font_arrangement &font_arrangement, const s_v2 pos, const s_v2 alignment, s_mem_arena &mem_arena) {
@@ -528,7 +553,6 @@ namespace zf {
         return positions;
     }
 
-#if 0
     void DrawStr(s_rendering_context &rc, const s_str_rdonly str, const s_gfx_resource &font, const s_v2 pos, const s_v2 alignment, const s_color_rgba32f blend, s_mem_arena &temp_mem_arena) {
         ZF_ASSERT(IsStrValidUTF8(str));
         ZF_ASSERT(IsAlignmentValid(alignment));
@@ -557,15 +581,9 @@ namespace zf {
                 continue;
             }
 
-            const auto chr_uv_coords = UVRect(glyph_info.atlas_rect, g_font_atlas_size);
-
-            Draw();
-            Draw(rc, font_atlas_gl_ids[glyph_info.atlas_index], chr_tex_coords, chr_positions[chr_index], glyph_info.atlas_rect.Size().ToV2(), {}, 0.0f, blend);
+            DrawTexture(rc, *font_atlases[glyph_info.atlas_index], chr_positions[chr_index], glyph_info.atlas_rect);
 
             chr_index++;
         };
-
-        return true;
     }
-#endif
 }

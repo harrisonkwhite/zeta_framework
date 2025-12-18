@@ -195,7 +195,7 @@ namespace zf {
 
         s_v2_i window_pos;
         glfwGetWindowPos(window, &window_pos.x, &window_pos.y);
-        
+
         s_v2_i window_size;
         glfwGetWindowSize(window, &window_size.x, &window_size.y);
 

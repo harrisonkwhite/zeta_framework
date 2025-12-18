@@ -17,7 +17,7 @@ namespace zf {
     enum e_gfx_resource_type {
         ek_gfx_resource_type_invalid,
         ek_gfx_resource_type_texture,
-        ek_gfx_resource_type_font,
+        ek_gfx_resource_type_font
     };
 
     struct s_gfx_resource;
@@ -63,29 +63,8 @@ namespace zf {
 
     s_v2_i TextureSize(const s_gfx_resource &texture);
 
-    [[nodiscard]] t_b8 CreateFontResource(const s_font_arrangement &arrangement, const s_array<t_font_atlas_rgba> atlas_rgbas, s_ptr<s_gfx_resource> &o_resource, const s_ptr<s_gfx_resource_arena> arena = nullptr);
-
-    [[nodiscard]] inline t_b8 CreateFontResourceFromRaw(const s_str_rdonly file_path, const t_i32 height, t_code_pt_bit_vec &code_pts, s_mem_arena &temp_mem_arena, s_ptr<s_gfx_resource> &o_resource, const s_ptr<s_gfx_resource_arena> resource_arena = nullptr) {
-        s_font_arrangement arrangement;
-        s_array<t_font_atlas_rgba> atlas_rgbas;
-
-        if (!zf::LoadFontFromRaw(file_path, height, code_pts, *resource_arena->mem_arena, temp_mem_arena, temp_mem_arena, arrangement, atlas_rgbas)) {
-            return false;
-        }
-
-        return CreateFontResource(arrangement, atlas_rgbas, o_resource, resource_arena);
-    }
-
-    [[nodiscard]] inline t_b8 CreateFontFromPacked(const s_str_rdonly file_path, s_mem_arena &temp_mem_arena, s_ptr<s_gfx_resource> &o_resource, const s_ptr<s_gfx_resource_arena> resource_arena = nullptr) {
-        s_font_arrangement arrangement = {};
-        s_array<t_font_atlas_rgba> atlas_rgbas = {};
-
-        if (!zf::UnpackFont(file_path, *resource_arena->mem_arena, temp_mem_arena, temp_mem_arena, arrangement, atlas_rgbas)) {
-            return false;
-        }
-
-        return CreateFontResource(arrangement, atlas_rgbas, o_resource, resource_arena);
-    }
+    [[nodiscard]] t_b8 CreateFontResourceFromRaw(const s_str_rdonly file_path, const t_i32 height, t_code_pt_bit_vec &code_pts, s_mem_arena &temp_mem_arena, s_ptr<s_gfx_resource> &o_resource, const s_ptr<s_gfx_resource_arena> resource_arena = nullptr);
+    [[nodiscard]] t_b8 CreateFontResourceFromPacked(const s_str_rdonly file_path, s_mem_arena &temp_mem_arena, s_ptr<s_gfx_resource> &o_resource, const s_ptr<s_gfx_resource_arena> resource_arena = nullptr);
 
     // ============================================================
     // @section: Rendering
@@ -97,9 +76,7 @@ namespace zf {
     void DrawTexture(s_rendering_context &rc, const s_gfx_resource &texture, const s_v2 pos, const s_rect_i src_rect = {});
 
     s_array<s_v2> LoadStrChrDrawPositions(const s_str_rdonly str, const s_font_arrangement &font_arrangement, const s_v2 pos, const s_v2 alignment, s_mem_arena &mem_arena);
-#if 0
     void DrawStr(s_rendering_context &rc, const s_str_rdonly str, const s_gfx_resource &font, const s_v2 pos, s_mem_arena &temp_mem_arena, const s_v2 alignment = alignments::g_topleft, const s_color_rgba32f blend = colors::g_white);
-#endif
 
     namespace internal {
         s_rendering_context &BeginFrame(const s_rendering_basis &rendering_basis, const s_color_rgb24f clear_col, s_mem_arena &mem_arena);

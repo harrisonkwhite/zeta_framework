@@ -7,6 +7,10 @@ namespace zf {
     #define ZF_PLATFORM_WINDOWS
 #endif
 
+#if defined(__APPLE__) && defined(__MACH__)
+    #define ZF_PLATFORM_MACOS
+#endif
+
 #ifdef __linux__
     #define ZF_PLATFORM_LINUX
 #endif

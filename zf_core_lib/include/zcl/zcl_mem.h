@@ -189,8 +189,8 @@ namespace zf {
         s_ptr<void> Push(const t_len size, const t_len alignment);
 
         void Rewind(const t_len offs) {
-            ZF_ASSERT(IsActive());
-            ZF_ASSERT(offs >= 0 && offs <= m_offs);
+            ZF_REQUIRE(IsActive());
+            ZF_REQUIRE(offs >= 0 && offs <= m_offs);
 
             m_offs = offs;
         }

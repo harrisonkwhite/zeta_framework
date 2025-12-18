@@ -54,7 +54,7 @@ namespace zf {
 
         SymCleanup(proc);
 #else
-        fprintf(stderr, "Stack trace printing not supported on this platform.\n");
+        fprintf(stderr, "Stack trace printing not yet supported on this platform.\n");
 #endif
     }
 
