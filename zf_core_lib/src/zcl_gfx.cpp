@@ -246,7 +246,7 @@ namespace zf {
             auto &atlas_rgba = o_atlas_rgbas[glyph_info.atlas_index];
             const auto &atlas_rect = glyph_info.atlas_rect;
 
-            if (atlas_rect.width == 0 || atlas_rect.height == 0) {
+            if (atlas_rect.Width() == 0 || atlas_rect.Height() == 0) {
                 // Might be the ' ' character for example.
                 continue;
             }
@@ -262,7 +262,7 @@ namespace zf {
             for (t_i32 y = atlas_rect.Top(); y < atlas_rect.Bottom(); y++) {
                 for (t_i32 x = atlas_rect.Left(); x < atlas_rect.Right(); x++) {
                     const t_len px_index = (y * 4 * g_font_atlas_size.x) + (x * 4);
-                    const t_len stb_bitmap_index = ((y - atlas_rect.y) * atlas_rect.width) + (x - atlas_rect.x);
+                    const t_len stb_bitmap_index = ((y - atlas_rect.y) * atlas_rect.Width()) + (x - atlas_rect.x);
                     atlas_rgba[px_index + 3] = stb_bitmap[stb_bitmap_index];
                 }
             }

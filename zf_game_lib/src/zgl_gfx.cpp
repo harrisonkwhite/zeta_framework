@@ -77,7 +77,7 @@ namespace zf {
     extern const t_u8 g_batch_frag_shader_src_raw[];
     extern const t_len g_batch_frag_shader_src_len;
 
-    constexpr t_i32 g_batch_vert_limit_per_frame = 8192;
+    constexpr t_i32 g_batch_vert_limit_per_frame = 8192; // @todo: This should definitely be modifiable if the user wants.
 
     struct s_rendering_basis {
         bgfx::DynamicVertexBufferHandle vert_buf_bgfx_hdl;
@@ -88,6 +88,8 @@ namespace zf {
 
         s_rendering_basis(bgfx::DynamicVertexBufferHandle vb_hdl, bgfx::ProgramHandle prog_hdl, bgfx::UniformHandle tex_sampler_uniform_hdl, s_gfx_resource &px_tex)
             : vert_buf_bgfx_hdl(vb_hdl), shader_prog_bgfx_hdl(prog_hdl), texture_sampler_uniform_bgfx_hdl(tex_sampler_uniform_hdl), px_texture(px_tex) {}
+
+        s_rendering_basis(const s_rendering_basis &) = delete;
     };
 
     struct s_rendering_context {
@@ -102,6 +104,7 @@ namespace zf {
         } batch_state = {};
 
         s_rendering_context(const s_rendering_basis &basis) : basis(basis) {}
+        s_rendering_context(const s_rendering_context &) = delete;
     };
 
     static s_rendering_basis &CreateRenderingBasis(s_mem_arena &mem_arena, s_gfx_resource_arena &resource_arena);
@@ -377,6 +380,8 @@ namespace zf {
         return rc.batch_state.verts.ToNonstatic().Slice(rc.batch_state.vert_offs + rc.batch_state.vert_cnt - cnt, rc.batch_state.vert_offs + rc.batch_state.vert_cnt);
     }
 
+    // @todo: I think everything beyond this point could be pulled out of here and sandboxed off from the global state.
+
     void DrawTriangle(s_rendering_context &rc, const s_static_array<s_v2, 3> &pts, const s_static_array<s_color_rgba32f, 3> &pt_colors) {
         ZF_ASSERT(g_state.state == ek_state_rendering);
 
@@ -400,12 +405,23 @@ namespace zf {
         verts[5] = {rect.TopLeft(), color_topleft, {0.0f, 0.0f}};
     }
 
-    void DrawTexture(s_rendering_context &rc, const s_v2 pos, const s_gfx_resource &texture) {
+    void DrawTexture(s_rendering_context &rc, const s_gfx_resource &texture, const s_v2 pos, const s_rect_i src_rect) {
         ZF_ASSERT(g_state.state == ek_state_rendering);
 
         const auto verts = ReserveBatchVerts(rc, 6, &texture);
 
-        const s_rect_f rect = {pos, texture.Texture().size.ToV2()};
+        const auto texture_size = texture.Texture().size;
+
+        s_rect_i src_rect_to_use;
+
+        if (src_rect == s_rect_i()) {
+            src_rect_to_use = {{}, texture.Texture().size};
+        } else {
+            ZF_ASSERT(src_rect.x >= 0 && src_rect.y >= 0 && src_rect.Right() <= texture_size.x && src_rect.Bottom() <= texture_size.y);
+            src_rect_to_use = src_rect;
+        }
+
+        const s_rect_f rect = {pos, src_rect_to_use.Size().ToV2()};
 
         verts[0] = {rect.TopLeft(), colors::g_white, {0.0f, 0.0f}};
         verts[1] = {rect.TopRight(), colors::g_white, {1.0f, 0.0f}};
@@ -415,4 +431,141 @@ namespace zf {
         verts[4] = {rect.BottomLeft(), colors::g_white, {0.0f, 1.0f}};
         verts[5] = {rect.TopLeft(), colors::g_white, {0.0f, 0.0f}};
     }
+
+    s_array<s_v2> LoadStrChrDrawPositions(const s_str_rdonly str, const s_font_arrangement &font_arrangement, const s_v2 pos, const s_v2 alignment, s_mem_arena &mem_arena) {
+        ZF_ASSERT(IsStrValidUTF8(str));
+        ZF_ASSERT(IsAlignmentValid(alignment));
+
+        // Calculate some useful string metadata.
+        struct s_str_meta {
+            t_len len = 0;
+            t_len line_cnt = 0;
+        };
+
+        const auto str_meta = [str]() {
+            s_str_meta meta = {.line_cnt = 1};
+
+            ZF_WALK_STR(str, chr_info) {
+                meta.len++;
+
+                if (chr_info.code_pt == '\n') {
+                    meta.line_cnt++;
+                }
+            }
+
+            return meta;
+        }();
+
+        // Reserve memory for the character positions.
+        const auto positions = AllocArray<s_v2>(str_meta.len, mem_arena);
+
+        // From the line count we can determine the vertical alignment offset to apply.
+        const t_f32 alignment_offs_y = static_cast<t_f32>(-(str_meta.line_cnt * font_arrangement.line_height)) * alignment.y;
+
+        // Calculate the position of each character.
+        t_len chr_index = 0;
+        s_v2 chr_pos_pen = {}; // The position of the current character.
+        t_len line_begin_chr_index = 0;
+        t_len line_len = 0;
+        t_code_pt code_pt_last;
+
+        const auto apply_hor_alignment_offs = [&]() {
+            if (line_len > 0) {
+                const auto line_width = chr_pos_pen.x;
+
+                for (t_len i = line_begin_chr_index; i < chr_index; i++) {
+                    positions[i].x -= line_width * alignment.x;
+                }
+            }
+        };
+
+        ZF_WALK_STR(str, chr_info) {
+            ZF_DEFER({
+                chr_index++;
+                code_pt_last = chr_info.code_pt;
+            });
+
+            if (line_len == 0) {
+                line_begin_chr_index = chr_index;
+            }
+
+            if (chr_info.code_pt == '\n') {
+                apply_hor_alignment_offs();
+
+                chr_pos_pen.x = 0.0f;
+                chr_pos_pen.y += static_cast<t_f32>(font_arrangement.line_height);
+
+                line_len = 0;
+
+                continue;
+            }
+
+            s_font_glyph_info glyph_info;
+
+            if (!font_arrangement.code_pts_to_glyph_infos.Get(chr_info.code_pt, &glyph_info)) {
+                ZF_ASSERT(false && "Unsupported code point!");
+                continue;
+            }
+
+            if (chr_index > 0 && font_arrangement.has_kernings) {
+                t_i32 kerning = 0;
+
+                if (font_arrangement.code_pt_pairs_to_kernings.Get({code_pt_last, chr_info.code_pt}, &kerning)) {
+                    chr_pos_pen.x += static_cast<t_f32>(kerning);
+                }
+            }
+
+            positions[chr_index] = pos + chr_pos_pen + glyph_info.offs.ToV2();
+            positions[chr_index].y += alignment_offs_y;
+
+            chr_pos_pen.x += static_cast<t_f32>(glyph_info.adv);
+
+            line_len++;
+        }
+
+        apply_hor_alignment_offs();
+
+        return positions;
+    }
+
+#if 0
+    void DrawStr(s_rendering_context &rc, const s_str_rdonly str, const s_gfx_resource &font, const s_v2 pos, const s_v2 alignment, const s_color_rgba32f blend, s_mem_arena &temp_mem_arena) {
+        ZF_ASSERT(IsStrValidUTF8(str));
+        ZF_ASSERT(IsAlignmentValid(alignment));
+
+        if (str.IsEmpty()) {
+            return;
+        }
+
+        const auto &font_arrangement = font.Font().arrangement;
+        const auto &font_atlases = font.Font().atlases;
+
+        const s_array<s_v2> chr_positions = LoadStrChrDrawPositions(str, font_arrangement, pos, alignment, temp_mem_arena);
+
+        t_len chr_index = 0;
+
+        ZF_WALK_STR(str, chr_info) {
+            if (chr_info.code_pt == ' ' || chr_info.code_pt == '\n') {
+                chr_index++;
+                continue;
+            }
+
+            s_font_glyph_info glyph_info;
+
+            if (!font_arrangement.code_pts_to_glyph_infos.Get(chr_info.code_pt, &glyph_info)) {
+                ZF_ASSERT(false && "Unsupported code point!");
+                continue;
+            }
+
+            const auto chr_uv_coords = UVRect(glyph_info.atlas_rect, g_font_atlas_size);
+
+            Draw();
+            Draw(rc, font_atlas_gl_ids[glyph_info.atlas_index], chr_tex_coords, chr_positions[chr_index], glyph_info.atlas_rect.Size().ToV2(), {}, 0.0f, blend);
+
+            chr_index++;
+        };
+
+        return true;
+    }
+#endif
 }

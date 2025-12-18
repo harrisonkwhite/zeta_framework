@@ -206,14 +206,22 @@ namespace zf {
     struct s_rect_i;
 
     struct s_rect_f {
+    public:
         t_f32 x = 0.0f;
         t_f32 y = 0.0f;
-        t_f32 width = 0.0f;
-        t_f32 height = 0.0f;
 
         constexpr s_rect_f() = default;
-        constexpr s_rect_f(const t_f32 x, const t_f32 y, const t_f32 width, const t_f32 height) : x(x), y(y), width(width), height(height) {}
-        constexpr s_rect_f(const s_v2 pos, const s_v2 size) : x(pos.x), y(pos.y), width(size.x), height(size.y) {}
+
+        constexpr s_rect_f(const t_f32 x, const t_f32 y, const t_f32 width, const t_f32 height) : x(x), y(y), width(width), height(height) {
+            ZF_ASSERT(width >= 0.0f && height >= 0.0f);
+        }
+
+        constexpr s_rect_f(const s_v2 pos, const s_v2 size) : x(pos.x), y(pos.y), width(size.x), height(size.y) {
+            ZF_ASSERT(size.x >= 0.0f && size.y >= 0.0f);
+        }
+
+        constexpr t_f32 Width() const { return width; }
+        constexpr t_f32 Height() const { return height; }
 
         constexpr s_v2 Pos() const { return {x, y}; }
         constexpr s_v2 Size() const { return {width, height}; }
@@ -255,17 +263,29 @@ namespace zf {
             const auto subrect = Clamped(container);
             return Clamp(subrect.Area() / container.Area(), 0.0f, 1.0f);
         }
+
+    private:
+        t_f32 width = 0.0f;
+        t_f32 height = 0.0f;
     };
 
     struct s_rect_i {
+    public:
         t_i32 x = 0;
         t_i32 y = 0;
-        t_i32 width = 0;
-        t_i32 height = 0;
 
         constexpr s_rect_i() = default;
-        constexpr s_rect_i(const t_i32 x, const t_i32 y, const t_i32 width, const t_i32 height) : x(x), y(y), width(width), height(height) {}
-        constexpr s_rect_i(const s_v2_i pos, const s_v2_i size) : x(pos.x), y(pos.y), width(size.x), height(size.y) {}
+
+        constexpr s_rect_i(const t_i32 x, const t_i32 y, const t_i32 width, const t_i32 height) : x(x), y(y), width(width), height(height) {
+            ZF_ASSERT(width >= 0 && height >= 0);
+        }
+
+        constexpr s_rect_i(const s_v2_i pos, const s_v2_i size) : x(pos.x), y(pos.y), width(size.x), height(size.y) {
+            ZF_ASSERT(size.x >= 0 && size.y >= 0);
+        }
+
+        constexpr t_i32 Width() const { return width; }
+        constexpr t_i32 Height() const { return height; }
 
         constexpr s_v2_i Pos() const { return {x, y}; }
         constexpr s_v2_i Size() const { return {width, height}; }
@@ -315,6 +335,10 @@ namespace zf {
             const auto subrect = Clamped(container);
             return Clamp(static_cast<t_f32>(subrect.Area()) / static_cast<t_f32>(container.Area()), 0.0f, 1.0f);
         }
+
+    private:
+        t_i32 width = 0;
+        t_i32 height = 0;
     };
 
     constexpr s_rect_f::operator s_rect_i() const {

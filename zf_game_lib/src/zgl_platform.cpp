@@ -193,9 +193,13 @@ namespace zf {
     static s_ptr<GLFWmonitor> FindGLFWMonitorOfWindow(const s_ptr<GLFWwindow> window) {
         ZF_ASSERT(g_state.initted);
 
-        s_rect_i window_rect = {};
-        glfwGetWindowPos(window, &window_rect.x, &window_rect.y);
-        glfwGetWindowSize(window, &window_rect.width, &window_rect.height);
+        s_v2_i window_pos;
+        glfwGetWindowPos(window, &window_pos.x, &window_pos.y);
+        
+        s_v2_i window_size;
+        glfwGetWindowSize(window, &window_size.x, &window_size.y);
+
+        const s_rect_i window_rect = {window_pos, window_size};
 
         // Get the monitor containing the most amount of the window.
         t_f32 max_occupancy_perc = 0.0f;
