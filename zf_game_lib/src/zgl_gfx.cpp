@@ -135,17 +135,12 @@ namespace zf {
 
         init.platformData.nwh = internal::NativeWindowHandle();
         init.platformData.ndt = internal::NativeDisplayHandle();
+
         init.platformData.type = bgfx::NativeWindowHandleType::Default;
 
-        Log(s_cstr_literal("native window handle: %"), internal::NativeWindowHandle());
-        Log(s_cstr_literal("native display handle: %"), internal::NativeDisplayHandle());
-
         if (!bgfx::init(init)) {
-            Log(s_cstr_literal("not here"));
             ZF_FATAL();
         }
-
-        Log(s_cstr_literal("not here either"));
 
         g_state.perm_resource_arena = CreateGFXResourceArena(mem_arena);
     }

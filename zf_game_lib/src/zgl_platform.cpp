@@ -73,8 +73,6 @@ namespace zf {
             ZF_FATAL();
         }
 
-        glfwMakeContextCurrent(g_state.glfw_window);
-
         glfwGetFramebufferSize(g_state.glfw_window, &g_state.framebuffer_size_cache.x, &g_state.framebuffer_size_cache.y);
 
         {
@@ -418,7 +416,7 @@ namespace zf {
 
         case GLFW_RELEASE:
             UnsetBit(g_state.input.mouse_buttons_down, mbc);
-            SetBit(g_state.input.events.mouse_buttons_pressed, mbc);
+            SetBit(g_state.input.events.mouse_buttons_released, mbc);
             break;
         }
     }
