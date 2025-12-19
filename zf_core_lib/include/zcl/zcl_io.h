@@ -331,6 +331,7 @@ namespace zf {
     };
 
     inline s_bool_fmt FormatBool(const t_b8 val) { return {val}; }
+    inline s_bool_fmt FormatDefault(const t_b8 val) { return {val}; }
 
     inline t_b8 PrintType(s_stream &stream, const s_bool_fmt fmt) {
         const s_str_rdonly true_str = s_cstr_literal("true");
@@ -465,12 +466,18 @@ namespace zf {
         return {val, flags, min_digits};
     }
 
-    inline s_hex_fmt<t_uintptr> FormatHex(const s_ptr<const void> ptr, const e_hex_fmt_flags flags = {}, const t_i32 min_digits = g_hex_fmt_digit_cnt_min) {
+    template <typename tp_type>
+    inline s_hex_fmt<t_uintptr> FormatHex(const s_ptr<tp_type> ptr, const e_hex_fmt_flags flags = {}, const t_i32 min_digits = g_hex_fmt_digit_cnt_min) {
         return {reinterpret_cast<t_uintptr>(ptr.Raw()), flags, min_digits};
     }
 
-    inline s_hex_fmt<t_uintptr> FormatDefault(const s_ptr<const void> ptr) {
+    template <typename tp_type>
+    s_hex_fmt<t_uintptr> FormatDefault(const s_ptr<tp_type> ptr) {
         return FormatHex(ptr, {}, 2 * ZF_SIZE_OF(t_uintptr));
+    }
+
+    inline s_hex_fmt<t_uintptr> FormatDefault(const void *const raw_ptr) {
+        return FormatHex(s_ptr<const void>(raw_ptr), {}, 2 * ZF_SIZE_OF(t_uintptr));
     }
 
     template <c_unsigned_integral tp_type>
@@ -582,6 +589,11 @@ namespace zf {
     template <c_formattable_array tp_arr_type>
     s_array_fmt<tp_arr_type> FormatArray(const tp_arr_type val, const t_b8 one_per_line = false) {
         return {val, one_per_line};
+    }
+
+    template <c_formattable_array tp_arr_type>
+    s_array_fmt<tp_arr_type> FormatDefault(const tp_arr_type val) {
+        return {val};
     }
 
     template <c_formattable_array tp_arr_type>
