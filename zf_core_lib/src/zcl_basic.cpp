@@ -19,15 +19,16 @@
 
 namespace zf {
     static void PrintStackTrace() {
-        fprintf(stderr, "\nStack Trace:\n");
-
 #ifdef ZF_PLATFORM_WINDOWS
-        const HANDLE proc = GetCurrentProcess();
-        SymInitialize(proc, nullptr, TRUE);
-
         constexpr t_i32 stack_len = 32;
         void *stack[stack_len];
         const t_i32 frame_cnt = CaptureStackBackTrace(0, stack_len, stack, nullptr);
+
+        fprintf(stderr, "Stack Trace:\n");
+
+    #ifdef ZF_DEBUG
+        const HANDLE proc = GetCurrentProcess();
+        SymInitialize(proc, nullptr, TRUE);
 
         constexpr t_i32 func_name_buf_size = 256;
         char symbol_buf[ZF_SIZE_OF(SYMBOL_INFO) + func_name_buf_size];
@@ -49,10 +50,18 @@ namespace zf {
                 } else {
                     fprintf(stderr, "- %s\n", symbol->Name);
                 }
+            } else {
+                fprintf(stderr, "- 0x%p\n", stack[i]);
             }
         }
 
         SymCleanup(proc);
+    #else
+        for (t_i32 i = 0; i < frame_cnt; i++) {
+            fprintf(stderr, "- 0x%p\n", stack[i]);
+        }
+    #endif
+
 #else
         fprintf(stderr, "Stack trace printing not yet supported on this platform.\n");
 #endif
@@ -90,16 +99,18 @@ namespace zf {
     void internal::FatalError(const char *const func_name, const char *const file_name, const t_i32 line, const char *const cond) {
         fprintf(stderr, "==================== FATAL ERROR ====================\n");
 
+#ifdef ZF_DEBUG
         if (cond) {
             fprintf(stderr, "Function:  %s\n", func_name);
             fprintf(stderr, "File:      %s\n", file_name);
             fprintf(stderr, "Line:      %d\n", line);
-            fprintf(stderr, "Condition: %s\n", cond);
+            fprintf(stderr, "Condition: %s\n\n", cond);
         } else {
             fprintf(stderr, "Function: %s\n", func_name);
             fprintf(stderr, "File:     %s\n", file_name);
-            fprintf(stderr, "Line:     %d\n", line);
+            fprintf(stderr, "Line:     %d\n\n", line);
         }
+#endif
 
         PrintStackTrace();
 
