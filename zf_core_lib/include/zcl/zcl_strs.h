@@ -132,6 +132,11 @@ namespace zf {
         }
     };
 
+    constexpr t_bin_comparator<s_str_rdonly> g_str_bin_comparator =
+        [](const s_str_rdonly &a, const s_str_rdonly &b) {
+            return g_array_bin_comparator<s_array_rdonly<t_u8>>(a.bytes, b.bytes);
+        };
+
     // Creates a NON-TERMINATED string object from the given TERMINATED C-string.
     // Does a conventional string walk to calculate length.
     inline s_str ConvertCstr(char *const cstr) {

@@ -21,13 +21,15 @@ function(embed_shader SHADER_NAME_LOWER SHADER_NAME_UPPER SHADER_TYPE)
 
     set(SRC_FILE ${CMAKE_CURRENT_SOURCE_DIR}/shaders/${SHADER_NAME_LOWER}.sc)
     set(VD_FILE ${CMAKE_CURRENT_SOURCE_DIR}/shaders/varying.def.sc)
-    set(BIN_FILE ${CMAKE_CURRENT_BINARY_DIR}/${SHADER_NAME_LOWER}.bin)
-    set(CPP_FILE ${CMAKE_CURRENT_BINARY_DIR}/${SHADER_NAME_LOWER}.cpp)
+    set(BIN_FILE ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/${SHADER_NAME_LOWER}.bin)
+    set(CPP_FILE ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/${SHADER_NAME_LOWER}.cpp)
 
     add_custom_command(
         OUTPUT ${CPP_FILE}
+        BYPRODUCTS ${BIN_FILE}
         COMMAND ${SHADERC_EXE} -f ${SRC_FILE} -o ${BIN_FILE} --type ${SHADER_TYPE} --platform ${SHADERC_PLATFORM} --profile ${SHADERC_PROFILE} --varyingdef ${VD_FILE} -i ${CMAKE_CURRENT_SOURCE_DIR}/../external/bgfx_cmake/bgfx/src
         COMMAND ${BTA_EXE} ${BIN_FILE} ${CPP_FILE} ${SHADER_NAME_LOWER}_src
+        COMMAND_EXPAND_LISTS
         DEPENDS ${SRC_FILE} ${VD_FILE} zf_bin_to_array
         VERBATIM
     )
@@ -37,6 +39,12 @@ endfunction()
 
 embed_shader(batch_vert_shader BATCH_VERT_SHADER vertex)
 embed_shader(batch_frag_shader BATCH_FRAG_SHADER fragment)
+
+set_source_files_properties(
+    ${BATCH_VERT_SHADER_CPP}
+    ${BATCH_FRAG_SHADER_CPP}
+    PROPERTIES GENERATED TRUE
+)
 
 add_library(zf_game_lib STATIC
     src/zgl_game.cpp
@@ -49,7 +57,9 @@ add_library(zf_game_lib STATIC
     include/zgl/zgl_platform.h
     include/zgl/zgl_gfx.h
     include/zgl/zgl_audio.h
+)
 
+target_sources(zf_game_lib PRIVATE
     ${BATCH_VERT_SHADER_CPP}
     ${BATCH_FRAG_SHADER_CPP}
 )

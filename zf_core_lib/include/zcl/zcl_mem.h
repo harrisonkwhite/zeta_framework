@@ -502,6 +502,22 @@ namespace zf {
     template <typename tp_type>
     concept c_nonstatic_mut_array = s_is_nonstatic_array<tp_type>::g_val;
 
+    template <c_nonstatic_array tp_arr_type>
+    constexpr t_bin_comparator<tp_arr_type> g_array_bin_comparator =
+        [](const tp_arr_type &a, const tp_arr_type &b) {
+            if (a.Len() != b.Len()) {
+                return false;
+            }
+
+            for (t_len i = 0; i < a.Len(); i++) {
+                if (a[i] != b[i]) {
+                    return false;
+                }
+            }
+
+            return true;
+        };
+
     template <typename tp_type>
     s_array<tp_type> AllocArray(const t_len len, s_mem_arena &mem_arena) {
         static_assert(std::is_trivially_destructible_v<tp_type>);
