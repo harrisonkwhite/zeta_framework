@@ -32,3 +32,15 @@ if(WIN32)
     target_link_libraries(zf_core_lib PRIVATE dbghelp)
     target_compile_definitions(zf_core_lib PRIVATE _CRT_SECURE_NO_WARNINGS)
 endif()
+
+if (ZF_DEBUG_INFO_IN_RELEASE)
+    if (MSVC)
+        target_compile_options(zf_core_lib PUBLIC
+            $<$<CONFIG:Release>:/Zi /Oy->
+        )
+
+        target_link_options(zf_core_lib PUBLIC
+            $<$<CONFIG:Release>:/DEBUG>
+        )
+    endif()
+endif()
