@@ -25,9 +25,24 @@ namespace zf {
         ZF_REQUIRE(hm.EntryCount() == 1);
         ZF_REQUIRE(hm.Cap() == g_hash_map_cap_default);
 
-        t_i32 val;
-        const t_b8 found = hm.Get(2, &val);
-        ZF_REQUIRE(found && val == 3);
+        {
+            t_i32 val;
+            const t_b8 found = hm.Get(2, &val);
+            ZF_REQUIRE(found && val == 3);
+            ZF_REQUIRE(hm.EntryCount() == 1);
+        }
+
+        {
+            const t_b8 removed = hm.Remove(4);
+            ZF_REQUIRE(!removed);
+            ZF_REQUIRE(hm.EntryCount() == 1);
+        }
+
+        {
+            const t_b8 removed = hm.Remove(2);
+            ZF_REQUIRE(removed);
+            ZF_REQUIRE(hm.EntryCount() == 0);
+        }
 
         return true;
     }

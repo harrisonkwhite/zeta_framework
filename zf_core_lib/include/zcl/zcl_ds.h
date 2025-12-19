@@ -363,22 +363,25 @@ namespace zf {
             const t_len hash_index = KeyToHashIndex(key, m_hash_func, Cap());
 
             s_ptr<s_backing_block> bb = m_backing_blocks_head;
-            s_ptr<t_len> index = &m_immediate_indexes[hash_index];
 
-            while (bb && *index != -1) {
-                while (*index >= m_backing_block_cap) {
+            t_len index = m_immediate_indexes[hash_index];
+            s_ptr<t_len> index_to_update = &m_immediate_indexes[hash_index];
+
+            while (bb && index != -1) {
+                while (index >= m_backing_block_cap) {
                     bb = bb->next;
                     index -= m_backing_block_cap;
                 }
 
                 if (m_key_comparator(bb->keys[index], key)) {
-                    *index = bb->next_indexes[index];
+                    *index_to_update = bb->next_indexes[index];
                     UnsetBit(bb->usage, index);
                     m_entry_cnt--;
                     return true;
                 }
 
-                index = &bb->next_indexes[index];
+                index = bb->next_indexes[index];
+                index_to_update = &bb->next_indexes[index];
             }
 
             return false;
@@ -428,6 +431,7 @@ namespace zf {
                 bb.keys = AllocArray<tp_key_type>(cap, mem_arena);
                 bb.vals = AllocArray<tp_val_type>(cap, mem_arena);
                 bb.next_indexes = AllocArray<t_len>(cap, mem_arena);
+                bb.next_indexes.SetAllTo(-1);
                 bb.usage = AllocBitVec(cap, mem_arena);
                 return bb;
             }
