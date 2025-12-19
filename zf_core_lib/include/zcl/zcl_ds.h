@@ -304,24 +304,21 @@ namespace zf {
             s_ptr<s_backing_block> bb_prev = nullptr;
 
             t_len index = m_immediate_indexes[hash_index];
-            s_ptr<t_len> index_to_update = nullptr;
+            s_ptr<t_len> index_to_update = &m_immediate_indexes[hash_index];
 
             while (true) {
                 if (!bb) {
-                    // Try creating a new backing block.
                     bb = &s_backing_block::Alloc(m_backing_block_cap, *m_mem_arena);
 
                     if (bb_prev) {
                         bb_prev->next = bb;
+                    } else {
+                        m_backing_blocks_head = bb;
                     }
                 }
 
                 if (index == -1) {
                     // We've reached the end of the chain without finding the key, so we need to create a new pair.
-                    if (!index_to_update) {
-                        index_to_update = &bb->next_indexes[index];
-                    }
-
                     const t_len prospective_index = IndexOfFirstUnsetBit(bb->usage);
 
                     if (prospective_index == -1) {
@@ -355,6 +352,7 @@ namespace zf {
                 }
 
                 index = bb->next_indexes[index];
+                index_to_update = &bb->next_indexes[index];
             }
         }
 
@@ -470,6 +468,7 @@ namespace zf {
         hm.m_hash_func = hash_func;
         hm.m_key_comparator = key_comparator;
         hm.m_immediate_indexes = AllocArray<t_len>(cap, mem_arena);
+        hm.m_immediate_indexes.SetAllTo(-1);
         hm.m_backing_block_cap = AlignForward(cap, 8);
         hm.m_mem_arena = &mem_arena;
         hm.m_active = true;

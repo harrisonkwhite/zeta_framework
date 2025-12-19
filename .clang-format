@@ -12,7 +12,7 @@ BreakTemplateDeclarations: Leave
 BreakBeforeBinaryOperators: NonAssignment
 AlignOperands: DontAlign
 ContinuationIndentWidth: 4
-AllowShortLambdasOnASingleLine: None
+AllowShortLambdasOnASingleLine: All
 BreakBeforeBraces: Attach
 AccessModifierOffset: -4
 AllowShortCaseLabelsOnASingleLine: true
