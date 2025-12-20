@@ -1,10 +1,9 @@
+- t_len usage is inconsistent and probably overdone.
 - Create a really tight model for SURFACE shader program validation. Check that all necessary uniforms and so on are there.
-- Not happy with how unsupported font characters are handled. MAYBE update the font system such that the input unicode code point bit vector gets mutated BUT the asset packer gives warnings if the bit vector is mutated. Reasoning being that you might have an "extra chars" file being all game dialogue, and you have all fonts map to it - but you are probably fine with not all glyphs being supported by every single font.
 - Ability to change target FPS mid-game.
 - Ability to get debug info like FPS.
 - RNG system.
 - Gamepad support.
-- Run proper testing on everything, these tests should be PUBLIC.
 - Bring back polygon code
 - Basic music streaming system at the very least
 

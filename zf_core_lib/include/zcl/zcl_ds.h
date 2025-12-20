@@ -207,6 +207,135 @@ namespace zf {
     }
 
     // ============================================================
+    // @section: Key-Value Pair Block Chains
+    // ============================================================
+
+    // @todo: Awkward exposing all this - maybe use lambdas?
+    template <typename tp_key_type, typename tp_val_type>
+    struct s_kv_pair_block {
+    public:
+        s_ptr<s_kv_pair_block> next;
+
+        s_kv_pair_block() = default;
+        s_kv_pair_block(const s_array<tp_key_type> keys, const s_array<tp_val_type> vals, const s_array<t_i32> next_indexes, const s_bit_vec usage)
+            : keys(keys), vals(vals), next_indexes(next_indexes), usage(usage) {
+            ZF_ASSERT(keys.Len() == vals.Len() && keys.Len() == next_indexes.Len() && keys.Len() == usage.BitCount());
+        }
+
+        s_kv_pair_block(const s_kv_pair_block &) = delete;
+
+        s_array<tp_key_type> Keys() const { return keys; }
+        s_array<tp_val_type> Values() const { return vals; }
+        s_array<t_i32> NextIndexes() const { return next_indexes; }
+        s_bit_vec Usage() const { return usage; }
+
+        t_len Cap() const {
+            return keys.Len();
+        }
+
+    private:
+        s_array<tp_key_type> keys;
+        s_array<tp_val_type> vals;
+        s_array<t_i32> next_indexes; // -1 means no "next", and a number greater than the capacity is referencing a pair on a later block.
+        s_bit_vec usage;
+    };
+
+    template <typename tp_key_type, typename tp_val_type>
+    s_kv_pair_block<tp_key_type, tp_val_type> CreateKVPairBlock(const t_i32 cap, s_mem_arena &mem_arena) {
+        auto &block = zf::Alloc<s_kv_pair_block>(mem_arena);
+
+        const auto keys = AllocArray<tp_key_type>(cap, mem_arena);
+
+        const auto vals = AllocArray<tp_val_type>(cap, mem_arena);
+
+        const auto next_indexes = AllocArray<t_i32>(cap, mem_arena);
+        next_indexes.SetAllTo(-1);
+
+        const auto usage = AllocBitVec(cap, mem_arena);
+
+        return {keys, vals, next_indexes, usage, nullptr};
+    }
+
+    template <typename tp_key_type, typename tp_val_type>
+    [[nodiscard]] t_b8 FindValueOfKeyInChain(const s_ptr<s_kv_pair_block<tp_key_type, tp_val_type>> block, const t_i32 index, const tp_key_type &key, const s_ptr<s_ptr<tp_val_type>> o_val = nullptr) {
+        ZF_ASSERT(index >= -1);
+
+        if (index == -1) {
+            return false;
+        }
+
+        ZF_ASSERT(block);
+
+        if (index >= block->Cap()) {
+            return FindValueOfKeyInChain(block->next, index - block->Cap(), key);
+        }
+
+        if (block->Keys()[index] == key) {
+            if (o_val) {
+                *o_val = block->Values()[index];
+            }
+
+            return true;
+        }
+
+        return FindValueOfKeyInChain(block, block->NextIndexes()[index], key);
+    }
+
+    // Returns the pair index relative to the given block.
+    template <typename tp_key_type, typename tp_val_type>
+    t_i32 InsertKVPair(const s_ptr<s_kv_pair_block<tp_key_type, tp_val_type>> block, const tp_key_type &key, const tp_val_type &val) {
+        const t_i32 index = IndexOfFirstUnsetBit(block->Usage());
+
+        if (index == -1) {
+            return block->Cap() + InsertKVPair(block->next, key, val);
+        }
+
+        block->Keys()[index] = key;
+        block->Values()[index] = val;
+
+        return index;
+    }
+
+    template <typename tp_key_type, typename tp_val_type>
+    t_b8 RemoveKVPairInChain(const s_ptr<s_kv_pair_block<tp_key_type, tp_val_type>> block, const t_i32 index, t_i32 &index_from, const tp_key_type &key) {
+        ZF_ASSERT(index >= -1);
+
+        if (index == -1) {
+            return false;
+        }
+
+        ZF_ASSERT(block);
+
+        if (index >= block->Cap()) {
+            return RemoveKVPairInChain(block->next, index - block->Cap(), index_from, key);
+        }
+
+        if (block->Keys()[index] == key) {
+            index_from = block->NextIndexes()[index];
+            return true;
+        }
+
+        return RemoveKVPairInChain(block, block->NextIndexes()[index], block->NextIndexes()[index], key);
+    }
+
+    // Loads keys and values into the given PRE-ALLOCATED arrays. Returns the number of pairs loaded.
+    template <typename tp_key_type, typename tp_val_type>
+    t_i32 LoadKVPairsInChain(const s_ptr<s_kv_pair_block<tp_key_type, tp_val_type>> block, const t_i32 index, const s_array<tp_key_type> keys, const s_array<tp_val_type> vals) {
+        if (index == -1) {
+            return 0;
+        }
+
+        if (index >= block->Cap()) {
+            return LoadKVPairsInChain(block->next, index - block->Cap(), keys, vals);
+        }
+
+        keys[0] = block->Keys()[index];
+        vals[0] = block->Values()[index];
+
+        return 1 + LoadKVPairsInChain(block, block->NextIndexes()[index], keys.SliceFrom(1), vals.SliceFrom(1));
+    }
+
+    // ============================================================
     // @section: Hash Map
     // ============================================================
     template <typename tp_type>
@@ -247,87 +376,186 @@ namespace zf {
     constexpr t_i32 g_hash_map_cap_default = 32;
 
     template <typename tp_key_type, typename tp_val_type>
-    struct s_kv_pair_block {
+    struct s_hash_map {
     public:
-        s_ptr<s_kv_pair_block> next;
-
-        s_kv_pair_block() = default;
-        s_kv_pair_block(const s_array<tp_key_type> keys, const s_array<tp_val_type> vals, const s_array<t_i32> next_indexes, const s_bit_vec usage)
-            : keys(keys), vals(vals), next_indexes(next_indexes), usage(usage) {
-            ZF_ASSERT(keys.Len() == vals.Len() && keys.Len() == next_indexes.Len() && keys.Len() == usage.BitCount());
+        t_b8 IsActive() const {
+            return m_active;
         }
 
-        s_kv_pair_block(const s_kv_pair_block &) = delete;
-
-        s_array<tp_key_type> Keys() const { return keys; }
-        s_array<tp_val_type> Values() const { return vals; }
-        s_array<t_i32> NextIndexes() const { return next_indexes; }
-        s_bit_vec Usage() const { return usage; }
-
-        t_len Cap() const {
-            return keys.Len();
+        t_i32 Cap() const {
+            ZF_ASSERT(m_active);
+            return m_immediate_indexes.Len();
         }
 
-    private:
-        s_array<tp_key_type> keys;
-        s_array<tp_val_type> vals;
-        s_array<t_i32> next_indexes; // -1 means no "next", and a number greater than the BB capacity is referencing a pair on a later block.
-        s_bit_vec usage;
-    };
+        t_i32 EntryCount() const {
+            ZF_ASSERT(m_active);
+            return m_entry_cnt;
+        }
 
-    template <typename tp_key_type, typename tp_val_type>
-    static s_kv_pair_block<tp_key_type, tp_val_type> CreateBackingBlock(const t_i32 cap, s_mem_arena &mem_arena) {
-        auto &bb = zf::Alloc<s_kv_pair_block>(mem_arena);
+        // Returns true iff an entry with the key was found. Leave o_val as nullptr if you don't care about getting the value. o_val is untouched if the key is not found.
+        [[nodiscard]] t_b8 Get(const tp_key_type &key, const s_ptr<tp_val_type> o_val = nullptr) const {
+            ZF_ASSERT(m_active);
 
-        const auto keys = AllocArray<tp_key_type>(cap, mem_arena);
+            const t_i32 hash_index = KeyToHashIndex(key, m_hash_func, Cap());
+            return FindValueOfKeyInChain<tp_key_type, tp_val_type>(m_kv_pair_blocks_head, m_immediate_indexes[hash_index], key, o_val);
+        }
 
-        const auto vals = AllocArray<tp_val_type>(cap, mem_arena);
+        // Try adding the key-value pair to the hash map or just updating the value if the key is already present.
+        e_hash_map_put_result Put(const tp_key_type &key, const tp_val_type &val) {
+            ZF_ASSERT(m_active);
 
-        const auto next_indexes = AllocArray<t_i32>(cap, mem_arena);
-        next_indexes.SetAllTo(-1);
+            const t_i32 hash_index = KeyToHashIndex(key, m_hash_func, Cap());
 
-        const auto usage = AllocBitVec(cap, mem_arena);
+            s_ptr<tp_val_type> val_cur;
 
-        return {keys, vals, next_indexes, usage, nullptr};
-    }
+            if (FindValueOfKeyInChain(m_kv_pair_blocks_head, hash_index, key, &val_cur)) {
+                *val_cur = val;
+                return ek_hash_map_put_result_updated;
+            }
 
-    template <typename tp_key_type, typename tp_val_type>
-    [[nodiscard]] t_b8 FindValueOfKey(const s_ptr<s_kv_pair_block<tp_key_type, tp_val_type>> block, const t_i32 index, const tp_key_type &key, const s_ptr<tp_val_type &> o_val = nullptr) {
-        ZF_ASSERT(index >= -1);
+            InsertKVPair(m_kv_pair_blocks_head, key, val);
+            m_entry_cnt++;
+            return ek_hash_map_put_result_added;
+        }
 
-        if (index == -1) {
+        // Returns true iff an entry with the key was found and removed.
+        t_b8 Remove(const tp_key_type &key) {
+            ZF_ASSERT(m_active);
+
+            const t_len hash_index = KeyToHashIndex(key, m_hash_func, Cap());
+
+            if (RemoveKVPairInChain(m_kv_pair_blocks_head, m_immediate_indexes[hash_index], m_immediate_indexes[hash_index], key)) {
+                m_entry_cnt--;
+                return true;
+            }
+
             return false;
         }
 
-        ZF_ASSERT(block);
+        // Loads all key-value pairs into the given PRE-ALLOCATED arrays.
+        void LoadEntries(const s_array<tp_key_type> keys, const s_array<tp_val_type> vals) const {
+            ZF_ASSERT(m_active);
+            ZF_ASSERT(keys.Len() >= m_entry_cnt && vals.Len() >= m_entry_cnt);
 
-        if (index >= block->Cap()) {
-            return FindValueOfKey(block->next, index - block->Cap(), key);
-        }
+            t_i32 loaded_cnt = 0;
 
-        if (block->Keys()[index] == key) {
-            if (o_val) {
-                *o_val = block->Values()[index];
+            for (t_len i = 0; i < m_immediate_indexes.Len(); i++) {
+                loaded_cnt += LoadKVPairsInChain(m_kv_pair_blocks_head, m_immediate_indexes[i], keys.SliceFrom(loaded_cnt), vals.SliceFrom(loaded_cnt));
             }
-
-            return true;
         }
 
-        return FindValueOfKey(block, block->NextIndexes()[index], key);
+        // Allocates the given arrays with the memory arena and loads key-value pairs into them.
+        void LoadEntries(s_mem_arena &mem_arena, s_array<tp_key_type> &o_keys, s_array<tp_val_type> &o_vals) const {
+            ZF_ASSERT(m_active);
+
+            o_keys = AllocArray<tp_key_type>(m_entry_cnt, mem_arena);
+            o_vals = AllocArray<tp_val_type>(m_entry_cnt, mem_arena);
+            return LoadEntries(o_keys, o_vals);
+        }
+
+    private:
+        t_b8 m_active = false;
+
+        t_hash_func<tp_key_type> m_hash_func = nullptr;
+        t_bin_comparator<tp_key_type> m_key_comparator = nullptr;
+
+        t_i32 m_entry_cnt = 0;
+
+        s_array<t_i32> m_immediate_indexes;
+        s_ptr<s_kv_pair_block<tp_key_type, tp_val_type>> m_kv_pair_blocks_head;
+
+        s_ptr<s_mem_arena> m_mem_arena;
+
+        template <typename tp_other_key_type, typename tp_other_val_type>
+        friend s_hash_map<tp_other_key_type, tp_other_val_type> CreateHashMap(const t_hash_func<tp_other_key_type> hash_func, s_mem_arena &mem_arena, const t_len cap, const t_bin_comparator<tp_other_key_type> key_comparator);
+    };
+
+    // The provided hash function has to map a key to an integer 0 or higher. The given memory arena will be saved and used for allocating new memory for entries when needed.
+    template <typename tp_key_type, typename tp_val_type>
+    s_hash_map<tp_key_type, tp_val_type> CreateHashMap(const t_hash_func<tp_key_type> hash_func, s_mem_arena &mem_arena, const t_i32 cap = g_hash_map_cap_default, const t_bin_comparator<tp_key_type> key_comparator = DefaultBinComparator) {
+        ZF_ASSERT(hash_func);
+        ZF_ASSERT(key_comparator);
+
+        static_assert(false);
+        s_hash_map<tp_key_type, tp_val_type> hm;
+#if 0
+        hm.m_hash_func = hash_func;
+        hm.m_key_comparator = key_comparator;
+        hm.m_immediate_indexes = AllocArray<t_i32>(cap, mem_arena);
+        hm.m_immediate_indexes.SetAllTo(-1);
+        hm.m_backing_block_cap = AlignForward(cap, 8);
+        hm.m_mem_arena = &mem_arena;
+        hm.m_active = true;
+#endif
+
+        return hm;
     }
 
     template <typename tp_key_type, typename tp_val_type>
-    t_i32 InsertKVPair(const s_ptr<s_kv_pair_block<tp_key_type, tp_val_type>> block, const tp_key_type &key, const tp_val_type &val) {
-        const t_i32 index = IndexOfFirstUnsetBit(block->Usage());
+    [[nodiscard]] t_b8 SerializeHashMap(s_stream &stream, const s_hash_map<tp_key_type, tp_val_type> &hm, s_mem_arena &temp_mem_arena) {
+        const t_i32 cap = hm.Cap();
 
-        if (index == -1) {
-            return block->Cap() + InsertKVPair(block->next, key, val);
+        if (!stream.WriteItem(cap)) {
+            return false;
         }
 
-        block->Keys()[index] = key;
-        block->Values()[index] = val;
+        const t_i32 entry_cnt = hm.EntryCount();
 
-        return index;
+        if (!stream.WriteItem(entry_cnt)) {
+            return false;
+        }
+
+        s_array<tp_key_type> keys;
+        s_array<tp_val_type> vals;
+        hm.LoadEntries(temp_mem_arena, keys, vals);
+
+        if (!stream.WriteItemsOfArray(keys)) {
+            return false;
+        }
+
+        if (!stream.WriteItemsOfArray(vals)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    template <typename tp_key_type, typename tp_val_type>
+    [[nodiscard]] t_b8 DeserializeHashMap(s_stream &stream, s_mem_arena &hm_mem_arena, const t_hash_func<tp_key_type> hm_hash_func, s_mem_arena &temp_mem_arena, s_hash_map<tp_key_type, tp_val_type> &o_hm, const t_bin_comparator<tp_key_type> hm_key_comparator = DefaultBinComparator) {
+        ZF_ASSERT(hm_hash_func);
+        ZF_ASSERT(hm_key_comparator);
+
+        t_i32 cap = 0;
+
+        if (!stream.ReadItem(cap)) {
+            return false;
+        }
+
+        t_i32 entry_cnt = 0;
+
+        if (!stream.ReadItem(entry_cnt)) {
+            return false;
+        }
+
+        o_hm = CreateHashMap<tp_key_type, tp_val_type>(hm_hash_func, hm_mem_arena, cap, hm_key_comparator);
+
+        const auto keys = AllocArray<tp_key_type>(entry_cnt, temp_mem_arena);
+
+        if (!stream.ReadItemsIntoArray(keys, entry_cnt)) {
+            return false;
+        }
+
+        const auto vals = AllocArray<tp_val_type>(entry_cnt, temp_mem_arena);
+
+        if (!stream.ReadItemsIntoArray(vals, entry_cnt)) {
+            return false;
+        }
+
+        for (t_i32 i = 0; i < entry_cnt; i++) {
+            o_hm.Put(keys[i], vals[i]);
+        }
+
+        return true;
     }
 
 #if 0

@@ -82,12 +82,11 @@ namespace zf {
     // @section: Fonts
     // ============================================================
     constexpr t_hash_func<t_code_pt> g_code_pt_hash_func = [](const t_code_pt &code_pt) constexpr {
-        return static_cast<t_len>(code_pt);
+        return static_cast<t_i32>(code_pt);
     };
 
     constexpr t_hash_func<s_font_code_point_pair> g_code_pt_pair_hash_func = [](const s_font_code_point_pair &pair) constexpr {
-        // Combine the 32-bit pairs into a single 64-bit integer and mask out the sign bit.
-        return ((static_cast<t_len>(pair.a) << 32) & pair.b) & 0x7FFFFFFFFFFFFFFF;
+        static_assert(false, "Implement!");
     };
 
     constexpr t_bin_comparator<s_font_code_point_pair> g_code_pt_pair_comparator = [](const s_font_code_point_pair &pa, const s_font_code_point_pair &pb) constexpr {
