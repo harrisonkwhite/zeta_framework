@@ -210,7 +210,7 @@ namespace zf {
     // @section: Hash Map
     // ============================================================
     template <typename tp_type>
-    using t_hash_func = t_len (*)(const tp_type &key);
+    using t_hash_func = t_i32 (*)(const tp_type &key);
 
     // This is an FNV-1a implementation.
     constexpr t_hash_func<s_str_rdonly> g_str_hash_func =
@@ -220,20 +220,20 @@ namespace zf {
 
             t_u32 hash = offs_basis;
 
-            for (t_len i = 0; i < key.bytes.Len(); i++) {
+            for (t_i32 i = 0; i < key.bytes.Len(); i++) {
                 hash ^= static_cast<t_u8>(key.bytes[i]);
                 hash *= prime;
             }
 
-            return static_cast<t_len>(static_cast<t_u64>(hash) & 0x7FFFFFFFFFFFFFFFull);
+            return static_cast<t_i32>(hash & 0x7FFFFFFFull);
         };
 
     template <typename tp_type>
-    t_len KeyToHashIndex(const tp_type &key, const t_hash_func<tp_type> hash_func, const t_len cap) {
+    t_i32 KeyToHashIndex(const tp_type &key, const t_hash_func<tp_type> hash_func, const t_i32 cap) {
         ZF_ASSERT(hash_func);
         ZF_ASSERT(cap > 0);
 
-        const t_len val = hash_func(key);
+        const t_i32 val = hash_func(key);
         ZF_ASSERT(val >= 0);
 
         return val % cap;
@@ -244,8 +244,93 @@ namespace zf {
         ek_hash_map_put_result_updated
     };
 
-    constexpr t_len g_hash_map_cap_default = 32;
+    constexpr t_i32 g_hash_map_cap_default = 32;
 
+    template <typename tp_key_type, typename tp_val_type>
+    struct s_kv_pair_block {
+    public:
+        s_ptr<s_kv_pair_block> next;
+
+        s_kv_pair_block() = default;
+        s_kv_pair_block(const s_array<tp_key_type> keys, const s_array<tp_val_type> vals, const s_array<t_i32> next_indexes, const s_bit_vec usage)
+            : keys(keys), vals(vals), next_indexes(next_indexes), usage(usage) {
+            ZF_ASSERT(keys.Len() == vals.Len() && keys.Len() == next_indexes.Len() && keys.Len() == usage.BitCount());
+        }
+
+        s_kv_pair_block(const s_kv_pair_block &) = delete;
+
+        s_array<tp_key_type> Keys() const { return keys; }
+        s_array<tp_val_type> Values() const { return vals; }
+        s_array<t_i32> NextIndexes() const { return next_indexes; }
+        s_bit_vec Usage() const { return usage; }
+
+        t_len Cap() const {
+            return keys.Len();
+        }
+
+    private:
+        s_array<tp_key_type> keys;
+        s_array<tp_val_type> vals;
+        s_array<t_i32> next_indexes; // -1 means no "next", and a number greater than the BB capacity is referencing a pair on a later block.
+        s_bit_vec usage;
+    };
+
+    template <typename tp_key_type, typename tp_val_type>
+    static s_kv_pair_block<tp_key_type, tp_val_type> CreateBackingBlock(const t_i32 cap, s_mem_arena &mem_arena) {
+        auto &bb = zf::Alloc<s_kv_pair_block>(mem_arena);
+
+        const auto keys = AllocArray<tp_key_type>(cap, mem_arena);
+
+        const auto vals = AllocArray<tp_val_type>(cap, mem_arena);
+
+        const auto next_indexes = AllocArray<t_i32>(cap, mem_arena);
+        next_indexes.SetAllTo(-1);
+
+        const auto usage = AllocBitVec(cap, mem_arena);
+
+        return {keys, vals, next_indexes, usage, nullptr};
+    }
+
+    template <typename tp_key_type, typename tp_val_type>
+    [[nodiscard]] t_b8 FindValueOfKey(const s_ptr<s_kv_pair_block<tp_key_type, tp_val_type>> block, const t_i32 index, const tp_key_type &key, const s_ptr<tp_val_type &> o_val = nullptr) {
+        ZF_ASSERT(index >= -1);
+
+        if (index == -1) {
+            return false;
+        }
+
+        ZF_ASSERT(block);
+
+        if (index >= block->Cap()) {
+            return FindValueOfKey(block->next, index - block->Cap(), key);
+        }
+
+        if (block->Keys()[index] == key) {
+            if (o_val) {
+                *o_val = block->Values()[index];
+            }
+
+            return true;
+        }
+
+        return FindValueOfKey(block, block->NextIndexes()[index], key);
+    }
+
+    template <typename tp_key_type, typename tp_val_type>
+    t_i32 InsertKVPair(const s_ptr<s_kv_pair_block<tp_key_type, tp_val_type>> block, const tp_key_type &key, const tp_val_type &val) {
+        const t_i32 index = IndexOfFirstUnsetBit(block->Usage());
+
+        if (index == -1) {
+            return block->Cap() + InsertKVPair(block->next, key, val);
+        }
+
+        block->Keys()[index] = key;
+        block->Values()[index] = val;
+
+        return index;
+    }
+
+#if 0
     template <typename tp_key_type, typename tp_val_type>
     struct s_hash_map {
     public:
@@ -255,14 +340,39 @@ namespace zf {
             return m_active;
         }
 
-        t_len Cap() const {
+        t_i32 Cap() const {
             ZF_ASSERT(m_active);
             return m_immediate_indexes.Len();
         }
 
-        t_len EntryCount() const {
+        t_i32 EntryCount() const {
             ZF_ASSERT(m_active);
             return m_entry_cnt;
+        }
+
+        // Returns true iff an entry with the key was found. Leave o_val as nullptr if you don't care about getting the value. o_val is untouched if the key is not found.
+        [[nodiscard]] t_b8 Get(const tp_key_type &key, const s_ptr<tp_val_type> o_val = nullptr) const {
+            ZF_ASSERT(m_active);
+
+            const t_i32 hash_index = KeyToHashIndex(key, m_hash_func, Cap());
+
+            t_i32 index = m_immediate_indexes[hash_index];
+
+            while (index != -1) {
+                const auto bb = FindBackingBlockOf(index);
+
+                if (m_key_comparator(bb->keys[index], key)) {
+                    if (o_val) {
+                        *o_val = bb->vals[index];
+                    }
+
+                    return true;
+                }
+
+                index = bb->next_indexes[index];
+            }
+
+            return false;
         }
 
         // Returns true iff an entry with the key was found. Leave o_val as nullptr if you don't care about getting the value. o_val is untouched if the key is not found.
@@ -304,7 +414,13 @@ namespace zf {
             s_ptr<s_backing_block> bb_prev = nullptr;
 
             t_len index = m_immediate_indexes[hash_index];
-            s_ptr<t_len> index_to_update = &m_immediate_indexes[hash_index];
+            s_ptr<t_len> index_from_ptr = &m_immediate_indexes[hash_index];
+
+            Log(s_cstr_literal("Immediate indexes on Put() start: %"), m_immediate_indexes);
+
+            if (m_backing_blocks_head) {
+                Log(s_cstr_literal("BB head \"nexts\" on Put() start: %"), m_backing_blocks_head->next_indexes);
+            }
 
             while (true) {
                 if (!bb) {
@@ -325,10 +441,11 @@ namespace zf {
                         // This block is full, so try again on the next.
                         bb_prev = bb;
                         bb = bb->next;
+                        index_from_bb_dist = 0;
                         continue;
                     }
 
-                    *index_to_update = prospective_index;
+                    *index_from_ptr = +prospective_index; // @todo: This needs to apply the offset!
 
                     bb->keys[prospective_index] = key;
                     bb->vals[prospective_index] = val;
@@ -351,8 +468,9 @@ namespace zf {
                     return ek_hash_map_put_result_updated;
                 }
 
+                index_from_ptr = &bb->next_indexes[index];
+                index_from_bb_dist = 0;
                 index = bb->next_indexes[index];
-                index_to_update = &bb->next_indexes[index];
             }
         }
 
@@ -365,7 +483,7 @@ namespace zf {
             s_ptr<s_backing_block> bb = m_backing_blocks_head;
 
             t_len index = m_immediate_indexes[hash_index];
-            s_ptr<t_len> index_to_update = &m_immediate_indexes[hash_index];
+            s_ptr<t_len> index_from_ptr = &m_immediate_indexes[hash_index];
 
             while (bb && index != -1) {
                 while (index >= m_backing_block_cap) {
@@ -374,14 +492,14 @@ namespace zf {
                 }
 
                 if (m_key_comparator(bb->keys[index], key)) {
-                    *index_to_update = bb->next_indexes[index];
+                    *index_from_ptr = bb->next_indexes[index];
                     UnsetBit(bb->usage, index);
                     m_entry_cnt--;
                     return true;
                 }
 
+                index_from_ptr = &bb->next_indexes[index];
                 index = bb->next_indexes[index];
-                index_to_update = &bb->next_indexes[index];
             }
 
             return false;
@@ -426,11 +544,11 @@ namespace zf {
         s_hash_map(const s_hash_map &) = default;
 
         struct s_backing_block {
-            static s_backing_block &Alloc(const t_len cap, s_mem_arena &mem_arena) {
+            static s_backing_block &Alloc(const t_i32 cap, s_mem_arena &mem_arena) {
                 auto &bb = zf::Alloc<s_backing_block>(mem_arena);
                 bb.keys = AllocArray<tp_key_type>(cap, mem_arena);
                 bb.vals = AllocArray<tp_val_type>(cap, mem_arena);
-                bb.next_indexes = AllocArray<t_len>(cap, mem_arena);
+                bb.next_indexes = AllocArray<t_i32>(cap, mem_arena);
                 bb.next_indexes.SetAllTo(-1);
                 bb.usage = AllocBitVec(cap, mem_arena);
                 return bb;
@@ -438,22 +556,31 @@ namespace zf {
 
             s_array<tp_key_type> keys;
             s_array<tp_val_type> vals;
-            s_array<t_len> next_indexes; // -1 means no "next", and a number greater than the BB capacity is referencing a pair on a later block.
+            s_array<t_i32> next_indexes; // -1 means no "next", and a number greater than the BB capacity is referencing a pair on a later block.
             s_bit_vec usage;
 
             s_ptr<s_backing_block> next;
         };
+
+        static s_ptr<s_backing_block> FindNextBackingBlockOf(s_ptr<s_backing_block> bb, t_i32 index) {
+            while (index >= m_backing_block_cap) {
+                bb = bb->next;
+                index -= m_backing_block_cap;
+            }
+
+            return bb;
+        }
 
         t_b8 m_active = false;
 
         t_hash_func<tp_key_type> m_hash_func = nullptr;
         t_bin_comparator<tp_key_type> m_key_comparator = nullptr;
 
-        t_len m_entry_cnt = 0;
+        t_i32 m_entry_cnt = 0;
 
-        s_array<t_len> m_immediate_indexes;
+        s_array<t_i32> m_immediate_indexes;
 
-        t_len m_backing_block_cap = 0;
+        t_i32 m_backing_block_cap = 0;
         s_ptr<s_backing_block> m_backing_blocks_head;
 
         s_ptr<s_mem_arena> m_mem_arena;
@@ -464,14 +591,14 @@ namespace zf {
 
     // The provided hash function has to map a key to an integer 0 or higher. The given memory arena will be saved and used for allocating new memory for entries when needed.
     template <typename tp_key_type, typename tp_val_type>
-    s_hash_map<tp_key_type, tp_val_type> CreateHashMap(const t_hash_func<tp_key_type> hash_func, s_mem_arena &mem_arena, const t_len cap = g_hash_map_cap_default, const t_bin_comparator<tp_key_type> key_comparator = DefaultBinComparator) {
+    s_hash_map<tp_key_type, tp_val_type> CreateHashMap(const t_hash_func<tp_key_type> hash_func, s_mem_arena &mem_arena, const t_i32 cap = g_hash_map_cap_default, const t_bin_comparator<tp_key_type> key_comparator = DefaultBinComparator) {
         ZF_ASSERT(hash_func);
         ZF_ASSERT(key_comparator);
 
         s_hash_map<tp_key_type, tp_val_type> hm;
         hm.m_hash_func = hash_func;
         hm.m_key_comparator = key_comparator;
-        hm.m_immediate_indexes = AllocArray<t_len>(cap, mem_arena);
+        hm.m_immediate_indexes = AllocArray<t_i32>(cap, mem_arena);
         hm.m_immediate_indexes.SetAllTo(-1);
         hm.m_backing_block_cap = AlignForward(cap, 8);
         hm.m_mem_arena = &mem_arena;
@@ -482,13 +609,13 @@ namespace zf {
 
     template <typename tp_key_type, typename tp_val_type>
     [[nodiscard]] t_b8 SerializeHashMap(s_stream &stream, const s_hash_map<tp_key_type, tp_val_type> &hm, s_mem_arena &temp_mem_arena) {
-        const t_len cap = hm.Cap();
+        const t_i32 cap = hm.Cap();
 
         if (!stream.WriteItem(cap)) {
             return false;
         }
 
-        const t_len entry_cnt = hm.EntryCount();
+        const t_i32 entry_cnt = hm.EntryCount();
 
         if (!stream.WriteItem(entry_cnt)) {
             return false;
@@ -514,13 +641,13 @@ namespace zf {
         ZF_ASSERT(hm_hash_func);
         ZF_ASSERT(hm_key_comparator);
 
-        t_len cap = 0;
+        t_i32 cap = 0;
 
         if (!stream.ReadItem(cap)) {
             return false;
         }
 
-        t_len entry_cnt = 0;
+        t_i32 entry_cnt = 0;
 
         if (!stream.ReadItem(entry_cnt)) {
             return false;
@@ -540,10 +667,11 @@ namespace zf {
             return false;
         }
 
-        for (t_len i = 0; i < entry_cnt; i++) {
+        for (t_i32 i = 0; i < entry_cnt; i++) {
             o_hm.Put(keys[i], vals[i]);
         }
 
         return true;
     }
+#endif
 }

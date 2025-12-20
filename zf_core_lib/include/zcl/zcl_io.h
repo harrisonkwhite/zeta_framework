@@ -740,6 +740,11 @@ namespace zf {
     // Returns true iff the operation was successful.
     template <typename tp_arg_type, typename... tp_arg_types_leftover>
     t_b8 PrintFormat(s_stream &stream, const s_str_rdonly fmt, const tp_arg_type &arg, const tp_arg_types_leftover &...args_leftover) {
+#if 0
+        static_assert(!(std::is_pointer_v<tp_arg_type> && std::is_same_v<std::remove_cv_t<std::remove_pointer_t<tp_arg_type>>, char>)
+                && !(std::is_array_v<tp_arg_type> && std::is_same_v<std::remove_cv_t<std::remove_extent_t<tp_arg_type>>, char>),
+            "Default-formatting char pointers is prohibited for error prevention.");
+#endif
         ZF_ASSERT(CountFormatSpecifiers(fmt) == 1 + sizeof...(args_leftover));
 
         static_assert(IsASCII(g_print_fmt_spec) && IsASCII(g_print_fmt_esc)); // Assuming this for this algorithm.
