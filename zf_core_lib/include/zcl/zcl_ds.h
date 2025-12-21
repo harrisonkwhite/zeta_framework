@@ -207,14 +207,19 @@ namespace zf {
     }
 
     // ============================================================
-    // @section: Key-Value Pair Block Chains
+    // @section: Key-Value Pair Block Sequences
     // ============================================================
+    enum e_kv_pair_block_seq_put_result {
+        ek_kv_pair_block_seq_put_result_updated,
+        ek_kv_pair_block_seq_put_result_added
+    };
+
     struct s_kv_pair_block_seq {
     public:
-        [[nodiscard]] t_b8 FindInChain(const t_i32 begin_index, const t_i32 &key, const s_ptr<s_ptr<t_i32>> o_val = nullptr) {
-            ZF_ASSERT(begin_index >= -1 && begin_index < m_block_cap * m_block_cnt);
+        [[nodiscard]] t_b8 FindInChain(const t_i32 chain_begin_index, const t_i32 &key, const s_ptr<s_ptr<t_i32>> o_val = nullptr) {
+            ZF_ASSERT(chain_begin_index >= -1 && chain_begin_index < m_block_cap * m_block_cnt);
 
-            t_i32 index = begin_index;
+            t_i32 index = chain_begin_index;
 
             while (index != -1) {
                 const s_block &block = FindBlockOfIndex(index);
@@ -233,6 +238,27 @@ namespace zf {
             }
 
             return false;
+        }
+
+        e_kv_pair_block_seq_put_result PutInChain(t_i32 &chain_begin_index, const t_i32 &key, const t_i32 &val) {
+            s_ptr<t_i32> index = &chain_begin_index;
+
+            while (*index != -1) {
+                const s_block &block = FindBlockOfIndex(*index);
+
+                const t_i32 rel_index = *index % m_block_cap;
+
+                if (block.keys[rel_index] == key) {
+                    block.vals[rel_index] = val;
+                    return ek_kv_pair_block_seq_put_result_updated;
+                }
+
+                index = &block.next_indexes[rel_index];
+            }
+
+            *index = Insert(key, val);
+
+            return ek_kv_pair_block_seq_put_result_added;
         }
 
         t_b8 RemoveInChain(t_i32 &begin_index, const t_i32 &key) {
@@ -266,6 +292,21 @@ namespace zf {
             s_ptr<s_block> next = nullptr;
         };
 
+        static s_block &CreateBlock(const t_i32 cap, s_mem_arena &mem_arena) {
+            auto &block = zf::Alloc<s_block>(mem_arena);
+
+            block.keys = AllocArray<t_i32>(cap, mem_arena);
+
+            block.vals = AllocArray<t_i32>(cap, mem_arena);
+
+            block.next_indexes = AllocArray<t_i32>(cap, mem_arena);
+            block.next_indexes.SetAllTo(-1);
+
+            block.usage = AllocBitVec(cap, mem_arena);
+
+            return block;
+        }
+
         // @todo: Optimise by having this move to a relative block, instead of always from the start.
         s_block &FindBlockOfIndex(t_len index) const {
             ZF_ASSERT(index >= -1 && index < m_block_cap * m_block_cnt);
@@ -280,136 +321,50 @@ namespace zf {
             return *res;
         }
 
+        // Returns the absolute index of the inserted pair.
+        t_i32 Insert(const t_i32 &key, const t_i32 &val) {
+            s_ptr<s_block> block = m_head;
+            s_ptr<s_block> block_previous = nullptr;
+            t_i32 block_index = 0;
+
+            while (block) {
+                const auto possible_rel_index_to_use = IndexOfFirstUnsetBit(block->usage);
+
+                if (possible_rel_index_to_use == -1) {
+                    block_previous = block;
+                    block = block->next;
+                    block_index++;
+                    continue;
+                }
+
+                block->keys[possible_rel_index_to_use] = key;
+                block->vals[possible_rel_index_to_use] = val;
+                SetBit(block->usage, possible_rel_index_to_use);
+                ZF_ASSERT(block->next_indexes[possible_rel_index_to_use] == -1);
+
+                return (block_index * m_block_cap) + possible_rel_index_to_use;
+            }
+
+            // All blocks are full - create a new one.
+            auto &new_block = CreateBlock(m_block_cap, *m_mem_arena);
+            m_block_cnt++;
+
+            if (block_previous) {
+                block_previous->next = &new_block;
+            }
+
+            block->keys[0] = key;
+            block->vals[0] = val;
+            SetBit(block->usage, 0);
+
+            return block_index * m_block_cap;
+        }
+
         s_ptr<s_block> m_head = nullptr;
         t_i32 m_block_cnt = 0;
         t_i32 m_block_cap = 0;
+        s_ptr<s_mem_arena> m_mem_arena = nullptr; // Used for allocating new blocks.
     };
-
-#if 0
-    template <typename tp_key_type, typename tp_val_type>
-    struct s_kv_pair_block {
-    public:
-        s_ptr<s_kv_pair_block> next;
-
-        s_kv_pair_block() = default;
-        s_kv_pair_block(const s_array<tp_key_type> keys, const s_array<tp_val_type> vals, const s_array<t_i32> next_indexes, const s_bit_vec usage)
-            : keys(keys), vals(vals), next_indexes(next_indexes), usage(usage) {
-            ZF_ASSERT(keys.Len() == vals.Len() && keys.Len() == next_indexes.Len() && keys.Len() == usage.BitCount());
-        }
-
-        s_kv_pair_block(const s_kv_pair_block &) = delete;
-
-        s_array<tp_key_type> Keys() const { return keys; }
-        s_array<tp_val_type> Values() const { return vals; }
-        s_array<t_i32> NextIndexes() const { return next_indexes; }
-        s_bit_vec Usage() const { return usage; }
-
-        t_len Cap() const {
-            return keys.Len();
-        }
-
-    private:
-        s_array<tp_key_type> keys;
-        s_array<tp_val_type> vals;
-        s_array<t_i32> next_indexes; // -1 means no "next", and a number greater than the capacity is referencing a pair on a later block.
-        s_bit_vec usage;
-    };
-
-    template <typename tp_key_type, typename tp_val_type>
-    s_kv_pair_block<tp_key_type, tp_val_type> CreateKVPairBlock(const t_i32 cap, s_mem_arena &mem_arena) {
-        auto &block = zf::Alloc<s_kv_pair_block>(mem_arena);
-
-        const auto keys = AllocArray<tp_key_type>(cap, mem_arena);
-
-        const auto vals = AllocArray<tp_val_type>(cap, mem_arena);
-
-        const auto next_indexes = AllocArray<t_i32>(cap, mem_arena);
-        next_indexes.SetAllTo(-1);
-
-        const auto usage = AllocBitVec(cap, mem_arena);
-
-        return {keys, vals, next_indexes, usage, nullptr};
-    }
-
-    template <typename tp_key_type, typename tp_val_type>
-    [[nodiscard]] t_b8 FindValueOfKeyInChain(const s_ptr<s_kv_pair_block<tp_key_type, tp_val_type>> block, const t_i32 index, const tp_key_type &key, const s_ptr<s_ptr<tp_val_type>> o_val = nullptr) {
-        ZF_ASSERT(index >= -1);
-
-        if (index == -1) {
-            return false;
-        }
-
-        ZF_ASSERT(block);
-
-        if (index >= block->Cap()) {
-            return FindValueOfKeyInChain(block->next, index - block->Cap(), key);
-        }
-
-        if (block->Keys()[index] == key) {
-            if (o_val) {
-                *o_val = block->Values()[index];
-            }
-
-            return true;
-        }
-
-        return FindValueOfKeyInChain(block, block->NextIndexes()[index], key);
-    }
-
-    // Returns the inserted pair index relative to the given block.
-    template <typename tp_key_type, typename tp_val_type>
-    t_i32 InsertKVPair(const s_ptr<s_kv_pair_block<tp_key_type, tp_val_type>> block, const tp_key_type &key, const tp_val_type &val) {
-        const t_i32 index = IndexOfFirstUnsetBit(block->Usage());
-
-        if (index == -1) {
-            return block->Cap() + InsertKVPair(block->next, key, val);
-        }
-
-        block->Keys()[index] = key;
-        block->Values()[index] = val;
-
-        return index;
-    }
-
-    template <typename tp_key_type, typename tp_val_type>
-    t_b8 RemoveKVPairInChain(const s_ptr<s_kv_pair_block<tp_key_type, tp_val_type>> block, const t_i32 index, t_i32 &index_from, const tp_key_type &key) {
-        ZF_ASSERT(index >= -1);
-
-        if (index == -1) {
-            return false;
-        }
-
-        ZF_ASSERT(block);
-
-        if (index >= block->Cap()) {
-            return RemoveKVPairInChain(block->next, index - block->Cap(), index_from, key);
-        }
-
-        if (block->Keys()[index] == key) {
-            index_from = block->NextIndexes()[index];
-            return true;
-        }
-
-        return RemoveKVPairInChain(block, block->NextIndexes()[index], block->NextIndexes()[index], key);
-    }
-
-    // Loads keys and values into the given PRE-ALLOCATED arrays. Returns the number of pairs loaded.
-    template <typename tp_key_type, typename tp_val_type>
-    t_i32 LoadKVPairsInChain(const s_ptr<s_kv_pair_block<tp_key_type, tp_val_type>> block, const t_i32 index, const s_array<tp_key_type> keys, const s_array<tp_val_type> vals) {
-        if (index == -1) {
-            return 0;
-        }
-
-        if (index >= block->Cap()) {
-            return LoadKVPairsInChain(block->next, index - block->Cap(), keys, vals);
-        }
-
-        keys[0] = block->Keys()[index];
-        vals[0] = block->Values()[index];
-
-        return 1 + LoadKVPairsInChain(block, block->NextIndexes()[index], keys.SliceFrom(1), vals.SliceFrom(1));
-    }
-#endif
 
     // ============================================================
     // @section: Hash Map
