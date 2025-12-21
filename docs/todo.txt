@@ -1,4 +1,4 @@
-- t_len usage is inconsistent and probably overdone.
+- t_len usage is inconsistent and probably overdone. Replace everywhere with t_i32.
 - Create a really tight model for SURFACE shader program validation. Check that all necessary uniforms and so on are there.
 - Ability to change target FPS mid-game.
 - Ability to get debug info like FPS.

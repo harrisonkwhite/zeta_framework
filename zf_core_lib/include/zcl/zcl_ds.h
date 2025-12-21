@@ -209,8 +209,83 @@ namespace zf {
     // ============================================================
     // @section: Key-Value Pair Block Chains
     // ============================================================
+    struct s_kv_pair_block_seq {
+    public:
+        [[nodiscard]] t_b8 FindInChain(const t_i32 begin_index, const t_i32 &key, const s_ptr<s_ptr<t_i32>> o_val = nullptr) {
+            ZF_ASSERT(begin_index >= -1 && begin_index < m_block_cap * m_block_cnt);
 
-    // @todo: Awkward exposing all this - maybe use lambdas?
+            t_i32 index = begin_index;
+
+            while (index != -1) {
+                const s_block &block = FindBlockOfIndex(index);
+
+                const t_i32 rel_index = index % m_block_cap;
+
+                if (block.keys[rel_index] == key) {
+                    if (o_val) {
+                        *o_val = &block.vals[rel_index];
+                    }
+
+                    return true;
+                }
+
+                index = block.next_indexes[rel_index];
+            }
+
+            return false;
+        }
+
+        t_b8 RemoveInChain(t_i32 &begin_index, const t_i32 &key) {
+            ZF_ASSERT(begin_index >= -1 && begin_index < m_block_cap * m_block_cnt);
+
+            s_ptr<t_i32> index = &begin_index;
+
+            while (*index != -1) {
+                s_block &block = FindBlockOfIndex(index);
+
+                const t_i32 rel_index = *index % m_block_cap;
+
+                if (block.keys[rel_index] == key) {
+                    *index = block.next_indexes[rel_index];
+                    return true;
+                }
+
+                index = &block.next_indexes[rel_index];
+            }
+
+            return false;
+        }
+
+    private:
+        struct s_block {
+            s_array<t_i32> keys = {};
+            s_array<t_i32> vals = {};
+            s_array<t_i32> next_indexes = {}; // -1 means no "next" (i.e. it is the last in the chain).
+            s_bit_vec usage = {};
+
+            s_ptr<s_block> next = nullptr;
+        };
+
+        // @todo: Optimise by having this move to a relative block, instead of always from the start.
+        s_block &FindBlockOfIndex(t_len index) const {
+            ZF_ASSERT(index >= -1 && index < m_block_cap * m_block_cnt);
+
+            s_ptr<s_block> res = m_head;
+
+            while (index >= m_block_cap) {
+                res = m_head->next;
+                index -= m_block_cap;
+            }
+
+            return *res;
+        }
+
+        s_ptr<s_block> m_head = nullptr;
+        t_i32 m_block_cnt = 0;
+        t_i32 m_block_cap = 0;
+    };
+
+#if 0
     template <typename tp_key_type, typename tp_val_type>
     struct s_kv_pair_block {
     public:
@@ -281,7 +356,7 @@ namespace zf {
         return FindValueOfKeyInChain(block, block->NextIndexes()[index], key);
     }
 
-    // Returns the pair index relative to the given block.
+    // Returns the inserted pair index relative to the given block.
     template <typename tp_key_type, typename tp_val_type>
     t_i32 InsertKVPair(const s_ptr<s_kv_pair_block<tp_key_type, tp_val_type>> block, const tp_key_type &key, const tp_val_type &val) {
         const t_i32 index = IndexOfFirstUnsetBit(block->Usage());
@@ -334,6 +409,7 @@ namespace zf {
 
         return 1 + LoadKVPairsInChain(block, block->NextIndexes()[index], keys.SliceFrom(1), vals.SliceFrom(1));
     }
+#endif
 
     // ============================================================
     // @section: Hash Map
