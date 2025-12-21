@@ -3,7 +3,7 @@
 #include <cJSON.h>
 
 namespace zf {
-    constexpr t_len g_mem_arena_size = Megabytes(40);
+    constexpr t_i32 g_mem_arena_size = Megabytes(40);
 
     enum e_asset_type : t_i32 {
         ek_asset_type_texture,
@@ -127,7 +127,7 @@ namespace zf {
         s_static_array<cJSON *, eks_shader_prog_field_cnt> shader_prog_field_cj_ptrs;
         s_static_array<cJSON *, eks_snd_field_cnt> snd_field_cj_ptrs;
 
-        for (t_len asset_type_index = 0; asset_type_index < eks_asset_type_cnt; asset_type_index++) {
+        for (t_i32 asset_type_index = 0; asset_type_index < eks_asset_type_cnt; asset_type_index++) {
             const auto asset_type_arr_name = g_asset_type_arr_names[asset_type_index];
 
             cJSON *const cj_assets = cJSON_GetObjectItemCaseSensitive(cj, asset_type_arr_name.BufPtr());
@@ -182,7 +182,7 @@ namespace zf {
                     return {};
                 }();
 
-                for (t_len fi = 0; fi < fields.Len(); fi++) {
+                for (t_i32 fi = 0; fi < fields.Len(); fi++) {
                     const auto field_name = fields[fi].name;
 
                     field_vals[fi] = cJSON_GetObjectItem(cj_asset, field_name.BufPtr());

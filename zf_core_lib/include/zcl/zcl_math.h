@@ -17,7 +17,7 @@ namespace zf {
     }
 
     template <c_integral tp_type>
-    constexpr t_len DigitCnt(const tp_type n) {
+    constexpr t_i32 DigitCnt(const tp_type n) {
         if (n < 0) {
             return DigitCnt(-n);
         }
@@ -32,7 +32,7 @@ namespace zf {
     // Gives the digit at the given index, where the indexes are from the least
     // significant digit to the most.
     template <c_integral tp_type>
-    constexpr tp_type DigitAt(const tp_type n, const t_len index) {
+    constexpr tp_type DigitAt(const tp_type n, const t_i32 index) {
         ZF_ASSERT(index >= 0 && index < DigitCnt(n));
 
         if (n < 0) {

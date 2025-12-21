@@ -3,7 +3,7 @@
 #include <cstring>
 
 namespace zf {
-    s_mem_arena CreateMemArena(const t_len size) {
+    s_mem_arena CreateMemArena(const t_i32 size) {
         ZF_REQUIRE(size > 0);
 
         s_mem_arena arena;
@@ -28,13 +28,13 @@ namespace zf {
         m_buf = nullptr;
     }
 
-    s_ptr<void> s_mem_arena::Push(const t_len size, const t_len alignment) {
+    s_ptr<void> s_mem_arena::Push(const t_i32 size, const t_i32 alignment) {
         ZF_REQUIRE(IsActive());
         ZF_REQUIRE(size > 0);
         ZF_REQUIRE(IsAlignmentValid(alignment));
 
-        const t_len offs_aligned = AlignForward(m_offs, alignment);
-        const t_len offs_next = offs_aligned + size;
+        const t_i32 offs_aligned = AlignForward(m_offs, alignment);
+        const t_i32 offs_next = offs_aligned + size;
 
         if (offs_next > m_size) {
             ZF_FATAL();
@@ -48,11 +48,11 @@ namespace zf {
     // ============================================================
     // @section: Bits
     // ============================================================
-    static t_len IndexOfFirstSetBitHelper(const s_bit_vec_rdonly bv, const t_len from, const t_u8 xor_mask) {
+    static t_i32 IndexOfFirstSetBitHelper(const s_bit_vec_rdonly bv, const t_i32 from, const t_u8 xor_mask) {
         ZF_ASSERT(from >= 0 && from <= bv.BitCount()); // Intentionally allowing the upper bound here for the case of iteration.
 
         // Map of each possible byte to the index of the first set bit, or -1 for the first case.
-        static constexpr s_static_array<t_len, 256> g_mappings = {
+        static constexpr s_static_array<t_i32, 256> g_mappings = {
             -1, // 0000 0000
             0,  // 0000 0001
             1,  // 0000 0010
@@ -311,9 +311,9 @@ namespace zf {
             0,  // 1111 1111
         };
 
-        const t_len begin_byte_index = from / 8;
+        const t_i32 begin_byte_index = from / 8;
 
-        for (t_len i = begin_byte_index; i < bv.Bytes().Len(); i++) {
+        for (t_i32 i = begin_byte_index; i < bv.Bytes().Len(); i++) {
             t_u8 byte = bv.Bytes()[i];
 
             if (i == begin_byte_index) {
@@ -324,7 +324,7 @@ namespace zf {
                 byte &= bv.LastByteMask();
             }
 
-            const t_len bi = g_mappings[byte ^ xor_mask];
+            const t_i32 bi = g_mappings[byte ^ xor_mask];
 
             if (bi != -1) {
                 return (8 * i) + bi;
@@ -334,17 +334,17 @@ namespace zf {
         return -1;
     }
 
-    t_len IndexOfFirstSetBit(const s_bit_vec_rdonly bv, const t_len from) {
+    t_i32 IndexOfFirstSetBit(const s_bit_vec_rdonly bv, const t_i32 from) {
         return IndexOfFirstSetBitHelper(bv, from, 0);
     }
 
-    t_len IndexOfFirstUnsetBit(const s_bit_vec_rdonly bv, const t_len from) {
+    t_i32 IndexOfFirstUnsetBit(const s_bit_vec_rdonly bv, const t_i32 from) {
         return IndexOfFirstSetBitHelper(bv, from, 0xFF);
     }
 
-    t_len CntSetBits(const s_bit_vec_rdonly bv) {
+    t_i32 CntSetBits(const s_bit_vec_rdonly bv) {
         // Map of each possible byte to the number of set bits in it.
-        static constexpr s_static_array<t_len, 256> g_mappings = {
+        static constexpr s_static_array<t_i32, 256> g_mappings = {
             0, // 0000 0000
             1, // 0000 0001
             1, // 0000 0010
@@ -603,10 +603,10 @@ namespace zf {
             8, // 1111 1111
         };
 
-        t_len res = 0;
+        t_i32 res = 0;
 
         if (bv.Bytes().Len() > 0) {
-            for (t_len i = 0; i < bv.Bytes().Len() - 1; i++) {
+            for (t_i32 i = 0; i < bv.Bytes().Len() - 1; i++) {
                 res += g_mappings[bv.Bytes()[i]];
             }
 

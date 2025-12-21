@@ -10,7 +10,7 @@ namespace zf {
         s_ptr<s_sound_type> next = nullptr;
     };
 
-    constexpr t_len g_snd_inst_limit = 32;
+    constexpr t_i32 g_snd_inst_limit = 32;
 
     struct s_audio_sys {
         ma_engine ma_eng = {};
@@ -20,7 +20,7 @@ namespace zf {
             s_static_array<ma_audio_buffer_ref, g_snd_inst_limit> ma_buf_refs;
             s_static_array<s_ptr<const s_sound_type>, g_snd_inst_limit> types;
             s_static_bit_vec<g_snd_inst_limit> activity;
-            s_static_array<t_len, g_snd_inst_limit> versions;
+            s_static_array<t_i32, g_snd_inst_limit> versions;
         } snd_insts = {};
     };
 
@@ -100,7 +100,7 @@ namespace zf {
 
         const auto as = type.audio_sys;
 
-        const t_len index = IndexOfFirstUnsetBit(as->snd_insts.activity);
+        const t_i32 index = IndexOfFirstUnsetBit(as->snd_insts.activity);
 
         if (index == -1) {
             clean_up = true;

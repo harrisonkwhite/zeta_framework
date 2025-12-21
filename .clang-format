@@ -3,7 +3,7 @@ AlignAfterOpenBracket: false
 ColumnLimit: 0
 NamespaceIndentation: All
 FixNamespaceComments: false
-AllowShortBlocksOnASingleLine: Empty
+AllowShortBlocksOnASingleLine: Always
 AllowShortFunctionsOnASingleLine: All
 DerivePointerAlignment: false
 PointerAlignment: Right

@@ -47,7 +47,7 @@ namespace zf {
         stream = {};
     }
 
-    t_len CalcFileSize(s_stream &stream) {
+    t_i32 CalcFileSize(s_stream &stream) {
         ZF_ASSERT(stream.Type() == ek_stream_type_file);
 
         const auto &file = stream.File();
@@ -55,7 +55,7 @@ namespace zf {
         fseek(file, 0, SEEK_END);
         const auto file_size = ftell(file);
         fseek(file, pos_old, SEEK_SET);
-        return static_cast<t_len>(file_size);
+        return static_cast<t_i32>(file_size);
     }
 
     t_b8 LoadFileContents(const s_str_rdonly path, s_mem_arena &contents_mem_arena, s_mem_arena &temp_mem_arena, s_array<t_u8> &o_contents, const t_b8 add_terminator) {
@@ -67,7 +67,7 @@ namespace zf {
 
         ZF_DEFER({ CloseFile(stream); });
 
-        const t_len file_size = CalcFileSize(stream);
+        const t_i32 file_size = CalcFileSize(stream);
 
         o_contents = AllocArray<t_u8>(add_terminator ? file_size + 1 : file_size, contents_mem_arena);
 

@@ -73,10 +73,10 @@ namespace zf {
     };
 
     extern const t_u8 g_batch_vert_shader_src_raw[];
-    extern const t_len g_batch_vert_shader_src_len;
+    extern const t_i32 g_batch_vert_shader_src_len;
 
     extern const t_u8 g_batch_frag_shader_src_raw[];
-    extern const t_len g_batch_frag_shader_src_len;
+    extern const t_i32 g_batch_frag_shader_src_len;
 
     constexpr t_i32 g_batch_vert_limit_per_frame = 8192; // @todo: This should definitely be modifiable if the user wants.
 
@@ -252,7 +252,7 @@ namespace zf {
 
         o_resource->Font().atlases = AllocArray<s_ptr<s_gfx_resource>>(atlas_rgbas.Len(), *arena.mem_arena);
 
-        for (t_len i = 0; i < atlas_rgbas.Len(); i++) {
+        for (t_i32 i = 0; i < atlas_rgbas.Len(); i++) {
             if (!CreateTextureResource({g_font_atlas_size, atlas_rgbas[i]}, o_resource->Font().atlases[i], &arena)) {
                 return false;
             }
@@ -463,8 +463,8 @@ namespace zf {
 
         // Calculate some useful string metadata.
         struct s_str_meta {
-            t_len len = 0;
-            t_len line_cnt = 0;
+            t_i32 len = 0;
+            t_i32 line_cnt = 0;
         };
 
         const auto str_meta = [str]() {
@@ -488,17 +488,17 @@ namespace zf {
         const t_f32 alignment_offs_y = static_cast<t_f32>(-(str_meta.line_cnt * font_arrangement.line_height)) * alignment.y;
 
         // Calculate the position of each character.
-        t_len chr_index = 0;
+        t_i32 chr_index = 0;
         s_v2 chr_pos_pen = {}; // The position of the current character.
-        t_len line_begin_chr_index = 0;
-        t_len line_len = 0;
+        t_i32 line_begin_chr_index = 0;
+        t_i32 line_len = 0;
         t_code_pt code_pt_last;
 
         const auto apply_hor_alignment_offs = [&]() {
             if (line_len > 0) {
                 const auto line_width = chr_pos_pen.x;
 
-                for (t_len i = line_begin_chr_index; i < chr_index; i++) {
+                for (t_i32 i = line_begin_chr_index; i < chr_index; i++) {
                     positions[i].x -= line_width * alignment.x;
                 }
             }
@@ -566,7 +566,7 @@ namespace zf {
 
         const s_array<s_v2> chr_positions = LoadStrChrDrawPositions(str, font_arrangement, pos, alignment, temp_mem_arena);
 
-        t_len chr_index = 0;
+        t_i32 chr_index = 0;
 
         ZF_WALK_STR(str, chr_info) {
             if (chr_info.code_pt == ' ' || chr_info.code_pt == '\n') {

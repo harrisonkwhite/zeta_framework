@@ -27,10 +27,10 @@ namespace zf {
     #define ZF_IN_CONSTEXPR() 0
 #endif
 
-#define ZF_SIZE_OF(x) static_cast<zf::t_len>(sizeof(x))
+#define ZF_SIZE_OF(x) static_cast<zf::t_i32>(sizeof(x))
 #define ZF_SIZE_IN_BITS(x) (8 * ZF_SIZE_OF(x))
 
-#define ZF_ALIGN_OF(x) static_cast<zf::t_len>(alignof(x))
+#define ZF_ALIGN_OF(x) static_cast<zf::t_i32>(alignof(x))
 
 #define ZF_CONCAT_IMPL(a, b) a##b
 #define ZF_CONCAT(a, b) ZF_CONCAT_IMPL(a, b)
@@ -90,13 +90,6 @@ namespace zf {
 
     using t_uintptr = uintptr_t;
     static_assert(sizeof(t_uintptr) == 8);
-
-    // Why signed for this?
-    // 1. Mixing signed and unsigned can lead to strange overflow bugs that cannot always be caught by warnings. Better to be consistent and have predictability.
-    // 2. The signed 64-bit range is more than sufficient for realistic use cases.
-    // 3. If you want a value to be 0 or greater, ASSERT that it is!
-    // 4. -1 is far more useful as a sentinel than the positive upper bound is since it is more commonly a reasonable outlier in algorithms.
-    using t_len = t_i64;
 
     template <typename tp_type_a, typename tp_type_b>
     struct s_is_same {

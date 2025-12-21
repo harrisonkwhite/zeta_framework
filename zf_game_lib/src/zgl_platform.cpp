@@ -201,12 +201,12 @@ namespace zf {
 
         // Get the monitor containing the most amount of the window.
         t_f32 max_occupancy_perc = 0.0f;
-        t_len max_occupancy_monitor_index = -1;
+        t_i32 max_occupancy_monitor_index = -1;
 
         t_i32 monitor_cnt = 0;
         const auto monitors = glfwGetMonitors(&monitor_cnt);
 
-        for (t_len i = 0; i < monitor_cnt; i++) {
+        for (t_i32 i = 0; i < monitor_cnt; i++) {
             s_v2_i monitor_pos;
             glfwGetMonitorPos(monitors[i], &monitor_pos.x, &monitor_pos.y);
 

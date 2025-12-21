@@ -9,7 +9,7 @@ namespace zf {
         auto max_right = rects[0].Right();
         auto max_bottom = rects[0].Bottom();
 
-        for (t_len i = 1; i < rects.Len(); i++) {
+        for (t_i32 i = 1; i < rects.Len(); i++) {
             min_left = ZF_MIN(rects[i].x, min_left);
             min_top = ZF_MIN(rects[i].y, min_top);
             max_right = ZF_MAX(rects[i].Right(), max_right);
@@ -27,7 +27,7 @@ namespace zf {
         auto max_right = rects[0].Right();
         auto max_bottom = rects[0].Bottom();
 
-        for (t_len i = 1; i < rects.Len(); i++) {
+        for (t_i32 i = 1; i < rects.Len(); i++) {
             min_left = ZF_MIN(rects[i].x, min_left);
             min_top = ZF_MIN(rects[i].y, min_top);
             max_right = ZF_MAX(rects[i].Right(), max_right);

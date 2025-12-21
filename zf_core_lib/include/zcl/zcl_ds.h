@@ -10,7 +10,7 @@ namespace zf {
     public:
         s_list() = default;
 
-        explicit s_list(const s_array<tp_type> backing_arr, const t_len len = 0) : m_backing_arr(backing_arr), m_len(len) {
+        explicit s_list(const s_array<tp_type> backing_arr, const t_i32 len = 0) : m_backing_arr(backing_arr), m_len(len) {
             ZF_ASSERT(len >= 0 && len <= backing_arr.Len());
         }
 
@@ -20,11 +20,11 @@ namespace zf {
             return m_backing_arr;
         }
 
-        t_len Len() const {
+        t_i32 Len() const {
             return m_len;
         }
 
-        t_len Cap() const {
+        t_i32 Cap() const {
             return m_backing_arr.Len();
         }
 
@@ -40,7 +40,7 @@ namespace zf {
             return m_backing_arr.Slice(0, m_len);
         }
 
-        tp_type &operator[](const t_len index) const {
+        tp_type &operator[](const t_i32 index) const {
             ZF_ASSERT(index >= 0 && index < m_len);
             return m_backing_arr[index];
         }
@@ -61,11 +61,11 @@ namespace zf {
             return m_backing_arr[m_len - 1];
         }
 
-        void Insert(const t_len index, const tp_type &val) {
+        void Insert(const t_i32 index, const tp_type &val) {
             ZF_ASSERT(!IsFull());
             ZF_ASSERT(index >= 0 && index <= m_len);
 
-            for (t_len i = m_len; i > index; i--) {
+            for (t_i32 i = m_len; i > index; i--) {
                 m_backing_arr[i] = m_backing_arr[i - 1];
             }
 
@@ -73,7 +73,7 @@ namespace zf {
             m_backing_arr[index] = val;
         }
 
-        void Remove(const t_len index) {
+        void Remove(const t_i32 index) {
             ZF_ASSERT(!IsEmpty());
             ZF_ASSERT(index >= 0 && index < m_len);
 
@@ -81,7 +81,7 @@ namespace zf {
             m_len--;
         }
 
-        void RemoveSwapback(const t_len index) {
+        void RemoveSwapback(const t_i32 index) {
             ZF_ASSERT(!IsEmpty());
             ZF_ASSERT(index >= 0 && index < m_len);
 
@@ -98,10 +98,10 @@ namespace zf {
 
     private:
         s_array<tp_type> m_backing_arr = {};
-        t_len m_len = 0;
+        t_i32 m_len = 0;
     };
 
-    template <typename tp_type, t_len tp_cap>
+    template <typename tp_type, t_i32 tp_cap>
     struct s_static_list : public s_list<tp_type> {
     public:
         s_static_list() : s_list<tp_type>(m_backing_arr) {}
@@ -111,7 +111,7 @@ namespace zf {
     };
 
     template <typename tp_type>
-    [[nodiscard]] t_b8 CreateList(const t_len cap, s_mem_arena &mem_arena, s_list<tp_type> &o_list, const t_len len = 0) {
+    [[nodiscard]] t_b8 CreateList(const t_i32 cap, s_mem_arena &mem_arena, s_list<tp_type> &o_list, const t_i32 len = 0) {
         ZF_ASSERT(cap > 0 && len >= 0 && len <= cap);
         o_list = {AllocArray<tp_type>(cap, mem_arena), len};
         return true;
@@ -127,7 +127,7 @@ namespace zf {
     public:
         s_stack() = default;
 
-        explicit s_stack(const s_array<tp_type> backing_arr, const t_len height = 0) : m_backing_arr(backing_arr), m_height(height) {
+        explicit s_stack(const s_array<tp_type> backing_arr, const t_i32 height = 0) : m_backing_arr(backing_arr), m_height(height) {
             ZF_ASSERT(height >= 0 && height <= backing_arr.Len());
         }
 
@@ -137,11 +137,11 @@ namespace zf {
             return m_backing_arr;
         }
 
-        t_len Height() const {
+        t_i32 Height() const {
             return m_height;
         }
 
-        t_len Cap() const {
+        t_i32 Cap() const {
             return m_backing_arr.Len();
         }
 
@@ -157,7 +157,7 @@ namespace zf {
             return m_backing_arr.Slice(0, m_height);
         }
 
-        tp_type &operator[](const t_len index) const {
+        tp_type &operator[](const t_i32 index) const {
             ZF_ASSERT(index >= 0 && index < m_height);
             return m_backing_arr[index];
         }
@@ -187,10 +187,10 @@ namespace zf {
 
     private:
         s_array<tp_type> m_backing_arr = {};
-        t_len m_height = 0;
+        t_i32 m_height = 0;
     };
 
-    template <typename tp_type, t_len tp_cap>
+    template <typename tp_type, t_i32 tp_cap>
     struct s_static_stack : public s_stack<tp_type> {
     public:
         s_static_stack() : s_stack<tp_type>(m_backing_arr) {}
@@ -200,7 +200,7 @@ namespace zf {
     };
 
     template <typename tp_type>
-    [[nodiscard]] t_b8 CreateStack(const t_len cap, s_mem_arena &mem_arena, s_stack<tp_type> &o_stack, const t_len height = 0) {
+    [[nodiscard]] t_b8 CreateStack(const t_i32 cap, s_mem_arena &mem_arena, s_stack<tp_type> &o_stack, const t_i32 height = 0) {
         ZF_ASSERT(cap > 0 && height >= 0 && height <= cap);
         o_stack = {AllocArray<tp_type>(cap, mem_arena), height};
         return true;
@@ -356,7 +356,7 @@ namespace zf {
         }
 
         // @todo: Optimise by having this move to a relative block, instead of always from the start.
-        s_block &FindBlockOfIndex(t_len index) const {
+        s_block &FindBlockOfIndex(t_i32 index) const {
             ZF_ASSERT(index >= -1 && index < m_block_cap * m_block_cnt);
 
             s_ptr<s_block> res = m_blocks_head;
@@ -488,7 +488,7 @@ namespace zf {
         e_hash_map_put_result Put(const tp_key_type &key, const tp_val_type &val) {
             ZF_ASSERT(m_active);
 
-            const t_len hash_index = KeyToHashIndex(key, m_hash_func, Cap());
+            const t_i32 hash_index = KeyToHashIndex(key, m_hash_func, Cap());
 
             const auto res = m_kv_pair_block_seq.PutInChain(m_immediate_indexes[hash_index], key, val);
 
@@ -502,7 +502,7 @@ namespace zf {
         t_b8 Remove(const tp_key_type &key) {
             ZF_ASSERT(m_active);
 
-            const t_len hash_index = KeyToHashIndex(key, m_hash_func, Cap());
+            const t_i32 hash_index = KeyToHashIndex(key, m_hash_func, Cap());
             return m_kv_pair_block_seq.RemoveInChain(m_immediate_indexes[hash_index], key);
         }
 
@@ -513,7 +513,7 @@ namespace zf {
 
             t_i32 loaded_cnt = 0;
 
-            for (t_len i = 0; i < m_immediate_indexes.Len(); i++) {
+            for (t_i32 i = 0; i < m_immediate_indexes.Len(); i++) {
                 loaded_cnt += m_kv_pair_block_seq.LoadChain(m_immediate_indexes[i], keys.SliceFrom(loaded_cnt), vals.SliceFrom(loaded_cnt));
             }
         }

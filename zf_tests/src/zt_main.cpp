@@ -1,7 +1,7 @@
 #include <zcl.h>
 
 namespace zf {
-    constexpr t_len g_mem_arena_size = zf::Megabytes(20);
+    constexpr t_i32 g_mem_arena_size = zf::Megabytes(20);
 
     static t_b8 TestBits(s_mem_arena &mem_arena) {
         s_bit_vec bv = AllocBitVec(32, mem_arena);
@@ -223,7 +223,7 @@ namespace zf {
         s_mem_arena mem_arena = CreateMemArena(g_mem_arena_size);
         ZF_DEFER({ mem_arena.Release(); });
 
-        for (t_len i = 0; i < g_tests.g_len; i++) {
+        for (t_i32 i = 0; i < g_tests.g_len; i++) {
             Log(s_cstr_literal("Running test \"%\"..."), g_tests[i].title);
             g_tests[i].func(mem_arena);
         }

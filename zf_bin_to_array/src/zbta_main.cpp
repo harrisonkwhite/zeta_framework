@@ -28,7 +28,7 @@ namespace zf {
         PrintFormat(output_file_stream, s_cstr_literal("    extern const t_u8 g_%_raw[] = {"), arr_subname);
 
         t_u8 byte_read;
-        t_len byte_read_cnt = 0;
+        t_i32 byte_read_cnt = 0;
 
         while (input_file_stream.ReadItem(byte_read)) {
             if (byte_read_cnt > 0) {
@@ -42,7 +42,7 @@ namespace zf {
 
         Print(output_file_stream, s_cstr_literal("};\n"));
 
-        PrintFormat(output_file_stream, s_cstr_literal("    extern const t_len g_%_len = %;\n"), arr_subname, byte_read_cnt);
+        PrintFormat(output_file_stream, s_cstr_literal("    extern const t_i32 g_%_len = %;\n"), arr_subname, byte_read_cnt);
 
         Print(output_file_stream, s_cstr_literal("}\n"));
 

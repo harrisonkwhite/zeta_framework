@@ -292,7 +292,7 @@ namespace zf {
         t_i32 adv = 0;
 
         // In what texture atlas is this glyph, and where?
-        t_len atlas_index = 0;
+        t_i32 atlas_index = 0;
         s_rect_i atlas_rect = {};
     };
 
