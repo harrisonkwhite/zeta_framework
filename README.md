@@ -1,8 +1,8 @@
 # Zeta Framework
 
-This is a data-oriented framework for developing 2D games for PC.
+This is a data-oriented framework for developing 2D games for Windows, Mac, and Linux.
 
-It was originally written in C, though has been switched to a strictly procedural subset of C++ 20 to leverage useful features like operator overloading, function overloading, constexpr, templates, and more.
+It was originally written in C, though has been switched to a procedural subset of C++ 20 to leverage useful features like operator overloading, function overloading, constexpr, templates, and more.
 
 ---
 
@@ -33,6 +33,12 @@ cmake ..
 ```
 
 ---
+
+## Noteworthy Design Decisions
+
+Strings are non-terminated and UTF-8:
+
+Add explanation.
 
 ## Third-Party Projects
 
