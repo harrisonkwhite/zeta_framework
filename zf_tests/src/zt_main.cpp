@@ -139,7 +139,7 @@ namespace zf {
 #endif
 
         // Create a hash map that forces collisions.
-        auto hm_collision = CreateHashMap<t_i32, t_i32>([](const t_i32 &) -> t_len { return 0; }, mem_arena, 4);
+        auto hm_collision = CreateHashMap<t_i32, t_i32>([](const t_i32 &) { return 0; }, mem_arena, 4);
 
         // Insert many colliding keys.
         for (t_i32 i = 0; i < 32; i++) {

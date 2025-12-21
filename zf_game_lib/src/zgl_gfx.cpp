@@ -525,25 +525,25 @@ namespace zf {
                 continue;
             }
 
-            s_font_glyph_info glyph_info;
+            s_ptr<s_font_glyph_info> glyph_info;
 
-            if (!font_arrangement.code_pts_to_glyph_infos.Get(chr_info.code_pt, &glyph_info)) {
+            if (!font_arrangement.code_pts_to_glyph_infos.Find(chr_info.code_pt, &glyph_info)) {
                 ZF_ASSERT(false && "Unsupported code point!");
                 continue;
             }
 
             if (chr_index > 0 && font_arrangement.has_kernings) {
-                t_i32 kerning = 0;
+                s_ptr<t_i32> kerning;
 
-                if (font_arrangement.code_pt_pairs_to_kernings.Get({code_pt_last, chr_info.code_pt}, &kerning)) {
-                    chr_pos_pen.x += static_cast<t_f32>(kerning);
+                if (font_arrangement.code_pt_pairs_to_kernings.Find({code_pt_last, chr_info.code_pt}, &kerning)) {
+                    chr_pos_pen.x += static_cast<t_f32>(*kerning);
                 }
             }
 
-            positions[chr_index] = pos + chr_pos_pen + glyph_info.offs.ToV2();
+            positions[chr_index] = pos + chr_pos_pen + glyph_info->offs.ToV2();
             positions[chr_index].y += alignment_offs_y;
 
-            chr_pos_pen.x += static_cast<t_f32>(glyph_info.adv);
+            chr_pos_pen.x += static_cast<t_f32>(glyph_info->adv);
 
             line_len++;
         }
@@ -574,14 +574,14 @@ namespace zf {
                 continue;
             }
 
-            s_font_glyph_info glyph_info;
+            s_ptr<s_font_glyph_info> glyph_info;
 
-            if (!font_arrangement.code_pts_to_glyph_infos.Get(chr_info.code_pt, &glyph_info)) {
+            if (!font_arrangement.code_pts_to_glyph_infos.Find(chr_info.code_pt, &glyph_info)) {
                 ZF_ASSERT(false && "Unsupported code point!");
                 continue;
             }
 
-            DrawTexture(rc, *font_atlases[glyph_info.atlas_index], chr_positions[chr_index], glyph_info.atlas_rect);
+            DrawTexture(rc, *font_atlases[glyph_info->atlas_index], chr_positions[chr_index], glyph_info->atlas_rect);
 
             chr_index++;
         };

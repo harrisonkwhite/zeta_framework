@@ -86,7 +86,7 @@ namespace zf {
     };
 
     constexpr t_hash_func<s_font_code_point_pair> g_code_pt_pair_hash_func = [](const s_font_code_point_pair &pair) constexpr {
-        static_assert(false, "Implement!");
+        return 0; // @todo: Proper hash function!
     };
 
     constexpr t_bin_comparator<s_font_code_point_pair> g_code_pt_pair_comparator = [](const s_font_code_point_pair &pa, const s_font_code_point_pair &pb) constexpr {
@@ -236,14 +236,14 @@ namespace zf {
         ZF_FOR_EACH_SET_BIT(code_pts, i) {
             const auto code_pt = static_cast<t_code_pt>(i);
 
-            s_font_glyph_info glyph_info;
+            s_ptr<s_font_glyph_info> glyph_info;
 
-            if (!o_arrangement.code_pts_to_glyph_infos.Get(code_pt, &glyph_info)) {
+            if (!o_arrangement.code_pts_to_glyph_infos.Find(code_pt, &glyph_info)) {
                 ZF_ASSERT(false);
             }
 
-            auto &atlas_rgba = o_atlas_rgbas[glyph_info.atlas_index];
-            const auto &atlas_rect = glyph_info.atlas_rect;
+            auto &atlas_rgba = o_atlas_rgbas[glyph_info->atlas_index];
+            const auto &atlas_rect = glyph_info->atlas_rect;
 
             if (atlas_rect.Width() == 0 || atlas_rect.Height() == 0) {
                 // Might be the ' ' character for example.
