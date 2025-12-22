@@ -1,4 +1,4 @@
-#include <zgl/zgl_gfx_first.h>
+#include <zgl/zgl_gfx_core.h>
 
 #include <bgfx/bgfx.h>
 #include <zgl/zgl_platform.h>
@@ -19,9 +19,10 @@ namespace zf {
         s_gfx_resource_arena perm_resource_arena;
     } g_state;
 
-    static bgfx::ProgramHandle CreateBGFXShaderProg(const s_array_rdonly<t_u8> vert_shader_bin, const s_array_rdonly<t_u8> frag_shader_bin);
-    static s_gfx_resource &PushGFXResource(const e_gfx_resource_type type, s_gfx_resource_arena &arena);
-    [[nodiscard]] static t_b8 CreateFontResource(const s_font_arrangement &arrangement, const s_array<t_font_atlas_rgba> atlas_rgbas, s_gfx_resource_arena &arena, s_ptr<s_gfx_resource> &o_resource);
+    enum e_gfx_resource_type {
+        ek_gfx_resource_type_invalid,
+        ek_gfx_resource_type_texture
+    };
 
     struct s_gfx_resource {
     public:
@@ -49,6 +50,9 @@ namespace zf {
             } texture;
         } type_data = {};
     };
+
+    static bgfx::ProgramHandle CreateBGFXShaderProg(const s_array_rdonly<t_u8> vert_shader_bin, const s_array_rdonly<t_u8> frag_shader_bin);
+    static s_gfx_resource &PushGFXResource(const e_gfx_resource_type type, s_gfx_resource_arena &arena);
 
     extern const t_u8 g_batch_vert_shader_src_raw[];
     extern const t_i32 g_batch_vert_shader_src_len;
@@ -138,6 +142,9 @@ namespace zf {
         g_state = {};
     }
 
+    // ============================================================
+    // @section: Resources
+    // ============================================================
     static bgfx::ProgramHandle CreateBGFXShaderProg(const s_array_rdonly<t_u8> vert_shader_bin, const s_array_rdonly<t_u8> frag_shader_bin) {
         const bgfx::Memory *const vert_shader_bgfx_mem = bgfx::makeRef(vert_shader_bin.Ptr(), static_cast<uint32_t>(vert_shader_bin.Len()));
         const bgfx::ShaderHandle vert_shader_bgfx_hdl = bgfx::createShader(vert_shader_bgfx_mem);
@@ -218,6 +225,9 @@ namespace zf {
         return texture.Texture().size;
     }
 
+    // ============================================================
+    // @section: Rendering
+    // ============================================================
     static s_rendering_basis &CreateRenderingBasis(s_mem_arena &mem_arena, s_gfx_resource_arena &px_texture_resource_arena) {
         bgfx::VertexLayout vert_layout = {};
         vert_layout.begin().add(bgfx::Attrib::Position, 2, bgfx::AttribType::Float).add(bgfx::Attrib::Color0, 4, bgfx::AttribType::Float).add(bgfx::Attrib::TexCoord0, 2, bgfx::AttribType::Float).end();
@@ -315,18 +325,25 @@ namespace zf {
         rc.batch_state.vert_cnt = 0;
     }
 
-    s_array<s_batch_vert> SubmitTriangles(s_rendering_context &rc, const s_array_rdonly<s_batch_vert> triangles, const s_ptr<const s_gfx_resource> texture) {
+    void SubmitTriangles(s_rendering_context &rc, const s_array_rdonly<s_batch_triangle> triangles, const s_ptr<const s_gfx_resource> texture) {
         if (texture != rc.batch_state.texture) {
             Flush(rc);
             rc.batch_state.texture = texture;
         }
 
-        if (rc.batch_state.vert_offs + rc.batch_state.vert_cnt + triangles.Len() > rc.batch_state.verts.g_len) {
+        const t_i32 num_verts_to_submit = 3 * triangles.Len();
+
+        if (rc.batch_state.vert_offs + rc.batch_state.vert_cnt + num_verts_to_submit > rc.batch_state.verts.g_len) {
             ZF_FATAL();
         }
 
-        rc.batch_state.vert_cnt += triangles.Len();
+        for (t_i32 i = 0; i < triangles.Len(); i++) {
+            const t_i32 offs = rc.batch_state.vert_offs + rc.batch_state.vert_cnt;
+            rc.batch_state.verts[offs + (3 * i) + 0] = triangles[i].verts[0];
+            rc.batch_state.verts[offs + (3 * i) + 1] = triangles[i].verts[1];
+            rc.batch_state.verts[offs + (3 * i) + 2] = triangles[i].verts[2];
+        }
 
-        return rc.batch_state.verts.ToNonstatic().Slice(rc.batch_state.vert_offs + rc.batch_state.vert_cnt - triangles.Len(), rc.batch_state.vert_offs + rc.batch_state.vert_cnt);
+        rc.batch_state.vert_cnt += num_verts_to_submit;
     }
 }

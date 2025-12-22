@@ -3,19 +3,19 @@
 #include <zcl.h>
 
 namespace zf {
+    // ============================================================
+    // @section: General
+    // ============================================================
     struct s_rendering_basis;
 
     // Initialises the GFX module. This depends on the platform module being initialised beforehand.
-    // The lifetime of the provided memory arena must encompass that of the GFX module.
     s_rendering_basis &InitGFX(s_mem_arena &mem_arena);
 
     void ShutdownGFX(s_rendering_basis &rendering_basis);
 
-    enum e_gfx_resource_type {
-        ek_gfx_resource_type_invalid,
-        ek_gfx_resource_type_texture
-    };
-
+    // ============================================================
+    // @section: Resources
+    // ============================================================
     struct s_gfx_resource;
 
     struct s_gfx_resource_arena {
@@ -59,17 +59,19 @@ namespace zf {
 
     s_v2_i TextureSize(const s_gfx_resource &texture);
 
+    // ============================================================
+    // @section: Rendering
+    // ============================================================
     struct s_rendering_context;
 
-    // @todo: "Batch" is probably not the right name for this.
     struct s_batch_vert {
-        s_v2 pos;
-        s_color_rgba32f blend;
-        s_v2 uv;
+        s_v2 pos = {};
+        s_color_rgba32f blend = {};
+        s_v2 uv = {};
     };
 
     struct s_batch_triangle {
-        s_static_array<s_batch_vert, 3> verts;
+        s_static_array<s_batch_vert, 3> verts = {};
     };
 
     void SubmitTriangles(s_rendering_context &rc, const s_array_rdonly<s_batch_triangle> triangles, const s_ptr<const s_gfx_resource> texture);
