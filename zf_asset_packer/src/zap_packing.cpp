@@ -94,7 +94,8 @@ namespace zf {
     };
 
     t_b8 RunPacker(const s_str_rdonly instrs_json_file_path) {
-        auto mem_arena = CreateMemArena(g_mem_arena_size);
+        s_mem_arena mem_arena = {};
+        mem_arena.Init(g_mem_arena_size);
         ZF_DEFER({ mem_arena.Release(); });
 
         cJSON *cj = nullptr;

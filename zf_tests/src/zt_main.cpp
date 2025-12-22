@@ -30,7 +30,8 @@ namespace zf {
     };
 
     static void RunTests() {
-        s_mem_arena mem_arena = CreateMemArena(g_mem_arena_size);
+        s_mem_arena mem_arena = {};
+        mem_arena.Init(g_mem_arena_size);
         ZF_DEFER({ mem_arena.Release(); });
 
         for (t_i32 i = 0; i < g_tests.g_len; i++) {

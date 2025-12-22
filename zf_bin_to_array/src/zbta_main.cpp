@@ -2,7 +2,8 @@
 
 namespace zf {
     static t_b8 OutputCode(const s_str_rdonly input_file_path, const s_str_rdonly output_file_path, const s_str_rdonly arr_subname) {
-        s_mem_arena mem_arena = CreateMemArena(Megabytes(4));
+        s_mem_arena mem_arena = {};
+        mem_arena.Init(Megabytes(4));
         ZF_DEFER({ mem_arena.Release(); });
 
         s_stream input_file_stream;
