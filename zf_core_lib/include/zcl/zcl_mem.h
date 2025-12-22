@@ -526,13 +526,6 @@ namespace zf {
         }
     }
 
-    template <c_nonstatic_array_mut tp_arr_type>
-    constexpr void Reverse(const tp_arr_type arr) {
-        for (t_i32 i = 0; i < arr.Len() / 2; i++) {
-            Swap(arr[i], arr[arr.Len() - 1 - i]);
-        }
-    }
-
     // ============================================================
     // @section: Bits
     // ============================================================

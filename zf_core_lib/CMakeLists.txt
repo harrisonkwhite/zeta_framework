@@ -18,6 +18,7 @@ add_library(zf_core_lib STATIC
     include/zcl/zcl_ds.h
     include/zcl/zcl_math.h
     include/zcl/zcl_io.h
+    include/zcl/zcl_algos.h
     include/zcl/zcl_basic.h
 )
 
