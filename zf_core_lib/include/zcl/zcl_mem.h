@@ -257,12 +257,12 @@ namespace zf {
             ZF_ASSERT(beg >= 0 && beg <= m_len);
             ZF_ASSERT(end >= beg && end <= m_len);
 
-            return {&m_ptr[beg], end - beg};
+            return {m_ptr + beg, end - beg};
         }
 
         constexpr s_array_rdonly<tp_type> SliceFrom(const t_i32 beg) const {
             ZF_ASSERT(beg >= 0 && beg <= m_len);
-            return {&m_ptr[beg], m_len - beg};
+            return {m_ptr + beg, m_len - beg};
         }
 
         constexpr s_array_rdonly<t_u8> ToByteArray() const {
@@ -321,7 +321,7 @@ namespace zf {
 
         constexpr s_array<tp_type> SliceFrom(const t_i32 beg) const {
             ZF_ASSERT(beg >= 0 && beg <= m_len);
-            return {&m_ptr[beg], m_len - beg};
+            return {m_ptr + beg, m_len - beg};
         }
 
         constexpr s_array<t_u8> ToByteArray() const {
@@ -451,7 +451,11 @@ namespace zf {
     s_array<tp_type> AllocArray(const t_i32 len, s_mem_arena &mem_arena) {
         static_assert(std::is_trivially_destructible_v<tp_type>);
 
-        ZF_ASSERT(len > 0);
+        ZF_ASSERT(len >= 0);
+
+        if (len == 0) {
+            return {};
+        }
 
         const auto ptr = static_cast<s_ptr<tp_type>>(mem_arena.Push(ZF_SIZE_OF(tp_type) * len, ZF_ALIGN_OF(tp_type)));
 
@@ -662,7 +666,7 @@ namespace zf {
     };
 
     inline s_bit_vec CreateBitVec(const t_i32 bit_cnt, s_mem_arena &mem_arena) {
-        ZF_ASSERT(bit_cnt > 0);
+        ZF_ASSERT(bit_cnt >= 0);
         return {AllocArray<t_u8>(BitsToBytes(bit_cnt), mem_arena), bit_cnt};
     }
 

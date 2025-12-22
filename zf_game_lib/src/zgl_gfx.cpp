@@ -553,7 +553,7 @@ namespace zf {
         return positions;
     }
 
-    void DrawStr(s_rendering_context &rc, const s_str_rdonly str, const s_gfx_resource &font, const s_v2 pos, const s_v2 alignment, const s_color_rgba32f blend, s_mem_arena &temp_mem_arena) {
+    void DrawStr(s_rendering_context &rc, const s_str_rdonly str, const s_gfx_resource &font, const s_v2 pos, s_mem_arena &temp_mem_arena, const s_v2 alignment, const s_color_rgba32f blend) {
         ZF_ASSERT(IsStrValidUTF8(str));
         ZF_ASSERT(IsAlignmentValid(alignment));
 

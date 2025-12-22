@@ -1,9 +1,8 @@
 #pragma once
 
 #include <cstdio>
-
 #include <zcl/zcl_math.h>
-#include <zcl/zcl_mem.h>
+#include <zcl/zcl_algos.h>
 #include <zcl/zcl_strs.h>
 
 namespace zf {
