@@ -3,33 +3,30 @@
 #include <cstring>
 
 namespace zf {
-    s_mem_arena CreateMemArena(const t_i32 size) {
+    void s_mem_arena::Init(const t_i32 size) {
+        ZF_REQUIRE(!IsInitted());
         ZF_REQUIRE(size > 0);
 
-        s_mem_arena arena;
+        m_buf = malloc(static_cast<size_t>(size));
 
-        arena.m_buf = malloc(static_cast<size_t>(size));
-
-        if (!arena.m_buf) {
+        if (!m_buf) {
             ZF_FATAL();
         }
 
-        memset(arena.m_buf, 0, static_cast<size_t>(size)); // Touch all pages to make sure we really do have enough memory.
+        memset(m_buf, 0, static_cast<size_t>(size)); // Touch all pages to make sure we really do have enough memory.
 
-        arena.m_size = size;
-
-        return arena;
+        m_size = size;
     }
 
     void s_mem_arena::Release() {
-        ZF_REQUIRE(IsActive());
+        ZF_REQUIRE(IsInitted());
 
         free(m_buf);
-        m_buf = nullptr;
+        *this = {};
     }
 
     s_ptr<void> s_mem_arena::Push(const t_i32 size, const t_i32 alignment) {
-        ZF_REQUIRE(IsActive());
+        ZF_REQUIRE(IsInitted());
         ZF_REQUIRE(size > 0);
         ZF_REQUIRE(IsAlignmentValid(alignment));
 

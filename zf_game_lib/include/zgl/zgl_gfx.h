@@ -23,9 +23,9 @@ namespace zf {
     struct s_gfx_resource;
 
     struct s_gfx_resource_arena {
-        s_ptr<s_mem_arena> mem_arena;
-        s_ptr<s_gfx_resource> head;
-        s_ptr<s_gfx_resource> tail;
+        s_ptr<s_mem_arena> mem_arena = nullptr;
+        s_ptr<s_gfx_resource> head = nullptr;
+        s_ptr<s_gfx_resource> tail = nullptr;
 
         s_gfx_resource_arena() = default;
         explicit s_gfx_resource_arena(s_mem_arena &mem_arena) : mem_arena(&mem_arena) {}
