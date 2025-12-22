@@ -178,7 +178,19 @@ namespace zf {
     struct s_mem_arena {
     public:
         s_mem_arena() = default;
+
+        s_mem_arena(const s_mem_arena &) = delete;
         s_mem_arena &operator=(const s_mem_arena &) = delete;
+
+        s_mem_arena(s_mem_arena &&other) noexcept {
+            m_buf = other.m_buf;
+            m_size = other.m_size;
+            m_offs = other.m_offs;
+
+            other.m_buf = nullptr;
+            other.m_size = 0;
+            other.m_offs = 0;
+        }
 
         void Release();
 
@@ -196,8 +208,6 @@ namespace zf {
         }
 
     private:
-        s_mem_arena(const s_mem_arena &) = default;
-
         s_ptr<void> m_buf;
         t_i32 m_size = 0;
         t_i32 m_offs = 0;
