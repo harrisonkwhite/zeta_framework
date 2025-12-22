@@ -33,4 +33,39 @@ namespace zf {
 
         SubmitTriangles(rc, triangles.ToNonstatic(), nullptr);
     }
+
+    void DrawTexture(s_rendering_context &rc, const s_gfx_resource &texture, const s_v2 pos, const s_rect_i src_rect) {
+        const auto texture_size = TextureSize(texture);
+
+        s_rect_i src_rect_to_use;
+
+        if (src_rect == s_rect_i()) {
+            src_rect_to_use = {{}, texture_size};
+        } else {
+            ZF_ASSERT(src_rect.x >= 0 && src_rect.y >= 0 && src_rect.Right() <= texture_size.x && src_rect.Bottom() <= texture_size.y);
+            src_rect_to_use = src_rect;
+        }
+
+        const s_rect_f rect = {pos, src_rect_to_use.Size().ToV2()};
+        const s_rect_f uv_rect = UVRect(src_rect_to_use, texture_size);
+
+        const s_static_array<s_batch_triangle, 2> triangles = {
+            {
+                .verts = {
+                    {.pos = rect.TopLeft(), .blend = colors::g_white, .uv = uv_rect.TopLeft()},
+                    {.pos = rect.TopRight(), .blend = colors::g_white, .uv = uv_rect.TopRight()},
+                    {.pos = rect.BottomRight(), .blend = colors::g_white, .uv = uv_rect.BottomRight()},
+                },
+            },
+            {
+                .verts = {
+                    {.pos = rect.BottomRight(), .blend = colors::g_white, .uv = uv_rect.BottomRight()},
+                    {.pos = rect.BottomLeft(), .blend = colors::g_white, .uv = uv_rect.BottomLeft()},
+                    {.pos = rect.TopLeft(), .blend = colors::g_white, .uv = uv_rect.TopLeft()},
+                },
+            },
+        };
+
+        SubmitTriangles(rc, triangles.ToNonstatic(), &texture);
+    }
 }
