@@ -13,13 +13,13 @@ namespace zf {
         s_mem_arena &temp_mem_arena;
     };
 
-    struct s_rendering_context;
+    struct s_frame_context;
 
     struct s_game_render_context {
         s_mem_arena &perm_mem_arena;
         s_mem_arena &temp_mem_arena;
 
-        s_rendering_context &rendering_context;
+        s_frame_context &rendering_context;
     };
 
     using t_game_init_func = void (*)(const s_game_init_context &context);

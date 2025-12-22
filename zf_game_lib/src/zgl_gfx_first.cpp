@@ -1,4 +1,4 @@
-#include <zgl/zgl_gfx.h>
+#include <zgl/zgl_gfx_first.h>
 
 #include <bgfx/bgfx.h>
 #include <zgl/zgl_platform.h>
@@ -41,35 +41,13 @@ namespace zf {
             return type_data.texture;
         }
 
-        auto &Font() {
-            ZF_ASSERT(type == ek_gfx_resource_type_font);
-            return type_data.font;
-        }
-
-        auto &Font() const {
-            ZF_ASSERT(type == ek_gfx_resource_type_font);
-            return type_data.font;
-        }
-
     private:
         union {
             struct {
                 bgfx::TextureHandle bgfx_hdl;
                 s_v2_i size;
             } texture;
-
-            struct {
-                s_font_arrangement arrangement;
-                s_array<s_ptr<s_gfx_resource>> atlases;
-            } font;
         } type_data = {};
-    };
-
-    // @todo: "Batch" is probably not the right name for this.
-    struct s_batch_vert {
-        s_v2 pos;
-        s_color_rgba32f blend;
-        s_v2 uv;
     };
 
     extern const t_u8 g_batch_vert_shader_src_raw[];
@@ -160,9 +138,6 @@ namespace zf {
         g_state = {};
     }
 
-    // ============================================================
-    // @section: Resources
-    // ============================================================
     static bgfx::ProgramHandle CreateBGFXShaderProg(const s_array_rdonly<t_u8> vert_shader_bin, const s_array_rdonly<t_u8> frag_shader_bin) {
         const bgfx::Memory *const vert_shader_bgfx_mem = bgfx::makeRef(vert_shader_bin.Ptr(), static_cast<uint32_t>(vert_shader_bin.Len()));
         const bgfx::ShaderHandle vert_shader_bgfx_hdl = bgfx::createShader(vert_shader_bgfx_mem);
@@ -212,9 +187,6 @@ namespace zf {
             case ek_gfx_resource_type_texture:
                 bgfx::destroy(resource->Texture().bgfx_hdl);
                 break;
-
-            case ek_gfx_resource_type_font:
-                break;
             }
 
             const auto next = resource->next;
@@ -246,50 +218,6 @@ namespace zf {
         return texture.Texture().size;
     }
 
-    static t_b8 CreateFontResource(const s_font_arrangement &arrangement, const s_array<t_font_atlas_rgba> atlas_rgbas, s_gfx_resource_arena &arena, s_ptr<s_gfx_resource> &o_resource) {
-        o_resource = &PushGFXResource(ek_gfx_resource_type_font, arena);
-        o_resource->Font().arrangement = arrangement;
-
-        o_resource->Font().atlases = AllocArray<s_ptr<s_gfx_resource>>(atlas_rgbas.Len(), *arena.mem_arena);
-
-        for (t_i32 i = 0; i < atlas_rgbas.Len(); i++) {
-            if (!CreateTextureResource({g_font_atlas_size, atlas_rgbas[i]}, o_resource->Font().atlases[i], &arena)) {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    t_b8 CreateFontResourceFromRaw(const s_str_rdonly file_path, const t_i32 height, t_code_pt_bit_vec &code_pts, s_mem_arena &temp_mem_arena, s_ptr<s_gfx_resource> &o_resource, const s_ptr<s_gfx_resource_arena> resource_arena) {
-        auto &resource_arena_to_use = resource_arena ? *resource_arena : g_state.perm_resource_arena;
-
-        s_font_arrangement arrangement;
-        s_array<t_font_atlas_rgba> atlas_rgbas;
-
-        if (!zf::LoadFontFromRaw(file_path, height, code_pts, *resource_arena_to_use.mem_arena, temp_mem_arena, temp_mem_arena, arrangement, atlas_rgbas)) {
-            return false;
-        }
-
-        return CreateFontResource(arrangement, atlas_rgbas, resource_arena_to_use, o_resource);
-    }
-
-    t_b8 CreateFontResourceFromPacked(const s_str_rdonly file_path, s_mem_arena &temp_mem_arena, s_ptr<s_gfx_resource> &o_resource, const s_ptr<s_gfx_resource_arena> resource_arena) {
-        auto &resource_arena_to_use = resource_arena ? *resource_arena : g_state.perm_resource_arena;
-
-        s_font_arrangement arrangement;
-        s_array<t_font_atlas_rgba> atlas_rgbas;
-
-        if (!zf::UnpackFont(file_path, *resource_arena_to_use.mem_arena, temp_mem_arena, temp_mem_arena, arrangement, atlas_rgbas)) {
-            return false;
-        }
-
-        return CreateFontResource(arrangement, atlas_rgbas, resource_arena_to_use, o_resource);
-    }
-
-    // ============================================================
-    // @section: Rendering
-    // ============================================================
     static s_rendering_basis &CreateRenderingBasis(s_mem_arena &mem_arena, s_gfx_resource_arena &px_texture_resource_arena) {
         bgfx::VertexLayout vert_layout = {};
         vert_layout.begin().add(bgfx::Attrib::Position, 2, bgfx::AttribType::Float).add(bgfx::Attrib::Color0, 4, bgfx::AttribType::Float).add(bgfx::Attrib::TexCoord0, 2, bgfx::AttribType::Float).end();
@@ -387,203 +315,18 @@ namespace zf {
         rc.batch_state.vert_cnt = 0;
     }
 
-    static s_array<s_batch_vert> ReserveBatchVerts(s_rendering_context &rc, const t_i32 cnt, const s_ptr<const s_gfx_resource> texture) {
-        ZF_ASSERT(cnt >= 0);
-
+    s_array<s_batch_vert> SubmitTriangles(s_rendering_context &rc, const s_array_rdonly<s_batch_vert> triangles, const s_ptr<const s_gfx_resource> texture) {
         if (texture != rc.batch_state.texture) {
             Flush(rc);
             rc.batch_state.texture = texture;
         }
 
-        if (rc.batch_state.vert_offs + rc.batch_state.vert_cnt + cnt > rc.batch_state.verts.g_len) {
+        if (rc.batch_state.vert_offs + rc.batch_state.vert_cnt + triangles.Len() > rc.batch_state.verts.g_len) {
             ZF_FATAL();
         }
 
-        rc.batch_state.vert_cnt += cnt;
+        rc.batch_state.vert_cnt += triangles.Len();
 
-        return rc.batch_state.verts.ToNonstatic().Slice(rc.batch_state.vert_offs + rc.batch_state.vert_cnt - cnt, rc.batch_state.vert_offs + rc.batch_state.vert_cnt);
-    }
-
-    // @todo: I think everything beyond this point could be pulled out of here and sandboxed off from the global state.
-
-    void DrawTriangle(s_rendering_context &rc, const s_static_array<s_v2, 3> &pts, const s_static_array<s_color_rgba32f, 3> &pt_colors) {
-        ZF_ASSERT(g_state.state == ek_state_rendering);
-
-        const auto verts = ReserveBatchVerts(rc, 3, nullptr);
-        verts[0] = {pts[0], pt_colors[0], {}};
-        verts[1] = {pts[1], pt_colors[1], {}};
-        verts[2] = {pts[2], pt_colors[2], {}};
-    }
-
-    void DrawRect(s_rendering_context &rc, const s_rect_f rect, const s_color_rgba32f color_topleft, const s_color_rgba32f color_topright, const s_color_rgba32f color_bottomright, const s_color_rgba32f color_bottomleft) {
-        ZF_ASSERT(g_state.state == ek_state_rendering);
-
-        const auto verts = ReserveBatchVerts(rc, 6, nullptr);
-
-        verts[0] = {rect.TopLeft(), color_topleft, {0.0f, 0.0f}};
-        verts[1] = {rect.TopRight(), color_topright, {1.0f, 0.0f}};
-        verts[2] = {rect.BottomRight(), color_bottomright, {1.0f, 1.0f}};
-
-        verts[3] = {rect.BottomRight(), color_bottomright, {1.0f, 1.0f}};
-        verts[4] = {rect.BottomLeft(), color_bottomleft, {0.0f, 1.0f}};
-        verts[5] = {rect.TopLeft(), color_topleft, {0.0f, 0.0f}};
-    }
-
-    void DrawTexture(s_rendering_context &rc, const s_gfx_resource &texture, const s_v2 pos, const s_rect_i src_rect) {
-        ZF_ASSERT(g_state.state == ek_state_rendering);
-
-        const auto verts = ReserveBatchVerts(rc, 6, &texture);
-
-        const auto texture_size = texture.Texture().size;
-
-        s_rect_i src_rect_to_use;
-
-        if (src_rect == s_rect_i()) {
-            src_rect_to_use = {{}, texture.Texture().size};
-        } else {
-            ZF_ASSERT(src_rect.x >= 0 && src_rect.y >= 0 && src_rect.Right() <= texture_size.x && src_rect.Bottom() <= texture_size.y);
-            src_rect_to_use = src_rect;
-        }
-
-        const s_rect_f rect = {pos, src_rect_to_use.Size().ToV2()};
-        const s_rect_f uv_rect = UVRect(src_rect_to_use, texture_size);
-
-        verts[0] = {rect.TopLeft(), colors::g_white, uv_rect.TopLeft()};
-        verts[1] = {rect.TopRight(), colors::g_white, uv_rect.TopRight()};
-        verts[2] = {rect.BottomRight(), colors::g_white, uv_rect.BottomRight()};
-
-        verts[3] = {rect.BottomRight(), colors::g_white, uv_rect.BottomRight()};
-        verts[4] = {rect.BottomLeft(), colors::g_white, uv_rect.BottomLeft()};
-        verts[5] = {rect.TopLeft(), colors::g_white, uv_rect.TopLeft()};
-    }
-
-    s_array<s_v2> LoadStrChrDrawPositions(const s_str_rdonly str, const s_font_arrangement &font_arrangement, const s_v2 pos, const s_v2 alignment, s_mem_arena &mem_arena) {
-        ZF_ASSERT(IsStrValidUTF8(str));
-        ZF_ASSERT(IsAlignmentValid(alignment));
-
-        // Calculate some useful string metadata.
-        struct s_str_meta {
-            t_i32 len = 0;
-            t_i32 line_cnt = 0;
-        };
-
-        const auto str_meta = [str]() {
-            s_str_meta meta = {.line_cnt = 1};
-
-            ZF_WALK_STR(str, chr_info) {
-                meta.len++;
-
-                if (chr_info.code_pt == '\n') {
-                    meta.line_cnt++;
-                }
-            }
-
-            return meta;
-        }();
-
-        // Reserve memory for the character positions.
-        const auto positions = AllocArray<s_v2>(str_meta.len, mem_arena);
-
-        // From the line count we can determine the vertical alignment offset to apply.
-        const t_f32 alignment_offs_y = static_cast<t_f32>(-(str_meta.line_cnt * font_arrangement.line_height)) * alignment.y;
-
-        // Calculate the position of each character.
-        t_i32 chr_index = 0;
-        s_v2 chr_pos_pen = {}; // The position of the current character.
-        t_i32 line_begin_chr_index = 0;
-        t_i32 line_len = 0;
-        t_code_pt code_pt_last;
-
-        const auto apply_hor_alignment_offs = [&]() {
-            if (line_len > 0) {
-                const auto line_width = chr_pos_pen.x;
-
-                for (t_i32 i = line_begin_chr_index; i < chr_index; i++) {
-                    positions[i].x -= line_width * alignment.x;
-                }
-            }
-        };
-
-        ZF_WALK_STR(str, chr_info) {
-            ZF_DEFER({
-                chr_index++;
-                code_pt_last = chr_info.code_pt;
-            });
-
-            if (line_len == 0) {
-                line_begin_chr_index = chr_index;
-            }
-
-            if (chr_info.code_pt == '\n') {
-                apply_hor_alignment_offs();
-
-                chr_pos_pen.x = 0.0f;
-                chr_pos_pen.y += static_cast<t_f32>(font_arrangement.line_height);
-
-                line_len = 0;
-
-                continue;
-            }
-
-            s_ptr<s_font_glyph_info> glyph_info;
-
-            if (!font_arrangement.code_pts_to_glyph_infos.Find(chr_info.code_pt, glyph_info)) {
-                ZF_ASSERT(false && "Unsupported code point!");
-                continue;
-            }
-
-            if (chr_index > 0 && font_arrangement.has_kernings) {
-                s_ptr<t_i32> kerning;
-
-                if (font_arrangement.code_pt_pairs_to_kernings.Find({code_pt_last, chr_info.code_pt}, kerning)) {
-                    chr_pos_pen.x += static_cast<t_f32>(*kerning);
-                }
-            }
-
-            positions[chr_index] = pos + chr_pos_pen + glyph_info->offs.ToV2();
-            positions[chr_index].y += alignment_offs_y;
-
-            chr_pos_pen.x += static_cast<t_f32>(glyph_info->adv);
-
-            line_len++;
-        }
-
-        apply_hor_alignment_offs();
-
-        return positions;
-    }
-
-    void DrawStr(s_rendering_context &rc, const s_str_rdonly str, const s_gfx_resource &font, const s_v2 pos, s_mem_arena &temp_mem_arena, const s_v2 alignment, const s_color_rgba32f blend) {
-        ZF_ASSERT(IsStrValidUTF8(str));
-        ZF_ASSERT(IsAlignmentValid(alignment));
-
-        if (IsStrEmpty(str)) {
-            return;
-        }
-
-        const auto &font_arrangement = font.Font().arrangement;
-        const auto &font_atlases = font.Font().atlases;
-
-        const s_array<s_v2> chr_positions = LoadStrChrDrawPositions(str, font_arrangement, pos, alignment, temp_mem_arena);
-
-        t_i32 chr_index = 0;
-
-        ZF_WALK_STR(str, chr_info) {
-            if (chr_info.code_pt == ' ' || chr_info.code_pt == '\n') {
-                chr_index++;
-                continue;
-            }
-
-            s_ptr<s_font_glyph_info> glyph_info;
-
-            if (!font_arrangement.code_pts_to_glyph_infos.Find(chr_info.code_pt, glyph_info)) {
-                ZF_ASSERT(false && "Unsupported code point!");
-                continue;
-            }
-
-            DrawTexture(rc, *font_atlases[glyph_info->atlas_index], chr_positions[chr_index], glyph_info->atlas_rect);
-
-            chr_index++;
-        };
+        return rc.batch_state.verts.ToNonstatic().Slice(rc.batch_state.vert_offs + rc.batch_state.vert_cnt - triangles.Len(), rc.batch_state.vert_offs + rc.batch_state.vert_cnt);
     }
 }

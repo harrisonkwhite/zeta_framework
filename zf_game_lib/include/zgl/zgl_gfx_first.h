@@ -11,13 +11,9 @@ namespace zf {
 
     void ShutdownGFX(s_rendering_basis &rendering_basis);
 
-    // ============================================================
-    // @section: Resources
-    // ============================================================
     enum e_gfx_resource_type {
         ek_gfx_resource_type_invalid,
-        ek_gfx_resource_type_texture,
-        ek_gfx_resource_type_font
+        ek_gfx_resource_type_texture
     };
 
     struct s_gfx_resource;
@@ -63,20 +59,24 @@ namespace zf {
 
     s_v2_i TextureSize(const s_gfx_resource &texture);
 
-    [[nodiscard]] t_b8 CreateFontResourceFromRaw(const s_str_rdonly file_path, const t_i32 height, t_code_pt_bit_vec &code_pts, s_mem_arena &temp_mem_arena, s_ptr<s_gfx_resource> &o_resource, const s_ptr<s_gfx_resource_arena> resource_arena = nullptr);
-    [[nodiscard]] t_b8 CreateFontResourceFromPacked(const s_str_rdonly file_path, s_mem_arena &temp_mem_arena, s_ptr<s_gfx_resource> &o_resource, const s_ptr<s_gfx_resource_arena> resource_arena = nullptr);
-
-    // ============================================================
-    // @section: Rendering
-    // ============================================================
     struct s_rendering_context;
 
-    void DrawTriangle(s_rendering_context &rc, const s_static_array<s_v2, 3> &pts, const s_static_array<s_color_rgba32f, 3> &pt_colors);
-    void DrawRect(s_rendering_context &rc, const s_rect_f rect, const s_color_rgba32f color_topleft, const s_color_rgba32f color_topright, const s_color_rgba32f color_bottomright, const s_color_rgba32f color_bottomleft);
-    void DrawTexture(s_rendering_context &rc, const s_gfx_resource &texture, const s_v2 pos, const s_rect_i src_rect = {});
+    // @todo: "Batch" is probably not the right name for this.
+    struct s_batch_vert {
+        s_v2 pos;
+        s_color_rgba32f blend;
+        s_v2 uv;
+    };
 
-    s_array<s_v2> LoadStrChrDrawPositions(const s_str_rdonly str, const s_font_arrangement &font_arrangement, const s_v2 pos, const s_v2 alignment, s_mem_arena &mem_arena);
-    void DrawStr(s_rendering_context &rc, const s_str_rdonly str, const s_gfx_resource &font, const s_v2 pos, s_mem_arena &temp_mem_arena, const s_v2 alignment = alignments::g_topleft, const s_color_rgba32f blend = colors::g_white);
+    struct s_batch_triangle {
+        s_static_array<s_batch_vert, 3> verts;
+    };
+
+    void SubmitTriangles(s_rendering_context &rc, const s_array_rdonly<s_batch_triangle> triangles, const s_ptr<const s_gfx_resource> texture);
+
+    inline void SubmitTriangle(s_rendering_context &rc, const s_batch_triangle tri, const s_ptr<const s_gfx_resource> texture) {
+        return SubmitTriangles(rc, {&tri, 1}, texture);
+    }
 
     namespace internal {
         s_rendering_context &BeginFrame(const s_rendering_basis &rendering_basis, const s_color_rgb24f clear_col, s_mem_arena &mem_arena);
