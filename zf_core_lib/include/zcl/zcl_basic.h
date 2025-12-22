@@ -284,7 +284,7 @@ namespace zf {
     // @section: Key Debugging Features
     // ============================================================
     namespace internal {
-        void AssertError(const char *const cond, const char *const func_name, const char *const file_name, const t_i32 line);
+        [[noreturn]] void AssertError(const char *const cond, const char *const func_name, const char *const file_name, const t_i32 line);
 
 #ifdef ZF_DEBUG
     #define ZF_ASSERT(cond)                                                         \
@@ -297,7 +297,7 @@ namespace zf {
     #define ZF_ASSERT(cond) static_cast<void>(0)
 #endif
 
-        void FatalError(const char *const func_name, const char *const file_name, const t_i32 line, const char *const cond = nullptr);
+        [[noreturn]] void FatalError(const char *const func_name, const char *const file_name, const t_i32 line, const char *const cond = nullptr);
 
 #define ZF_FATAL() zf::internal::FatalError(__FUNCTION__, __FILE__, __LINE__)
 

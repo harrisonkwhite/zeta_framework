@@ -203,9 +203,12 @@ namespace zf {
 
                         case ek_asset_field_type_num:
                             return cJSON_IsNumber(field_vals[fi]);
+
+                        case eks_asset_field_type_cnt:
+                            ZF_FATAL();
                         }
 
-                        return false;
+                        ZF_FATAL();
                     }();
 
                     if (!is_valid) {

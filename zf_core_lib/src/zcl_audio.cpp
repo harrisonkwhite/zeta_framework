@@ -24,7 +24,7 @@ namespace zf {
         const s_sound_meta meta = {
             .sample_rate = static_cast<t_i32>(decoder.outputSampleRate),
             .channel_cnt = static_cast<t_i32>(decoder.outputChannels),
-            .frame_cnt = static_cast<t_i64>(frame_cnt),
+            .frame_cnt = static_cast<t_i32>(frame_cnt),
         };
 
         const auto pcm = AllocArray<t_f32>(CalcSampleCount(meta), snd_data_mem_arena);
@@ -74,6 +74,8 @@ namespace zf {
         if (!fs.ReadItemsIntoArray(pcm, pcm.Len())) {
             return false;
         }
+
+        o_snd_data = {meta, pcm};
 
         return true;
     }

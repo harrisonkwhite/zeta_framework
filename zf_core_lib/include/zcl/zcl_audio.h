@@ -7,7 +7,7 @@ namespace zf {
     struct s_sound_meta {
         t_i32 sample_rate = 0;
         t_i32 channel_cnt = 0;
-        t_i64 frame_cnt = 0;
+        t_i32 frame_cnt = 0;
 
         constexpr t_b8 IsValid() const {
             return (sample_rate > 0 && channel_cnt > 0 && frame_cnt > 0)
@@ -61,7 +61,7 @@ namespace zf {
         s_array<t_f32> m_pcm = {};
     };
 
-    constexpr t_i64 CalcSampleCount(const s_sound_meta snd_meta) {
+    constexpr t_i32 CalcSampleCount(const s_sound_meta snd_meta) {
         return snd_meta.channel_cnt * snd_meta.frame_cnt;
     }
 

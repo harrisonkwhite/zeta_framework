@@ -223,7 +223,13 @@ namespace zf {
             ZF_ASSERT(key_comparator);
         };
 
-        // s_kv_pair_block_seq(const s_kv_pair_block_seq &) = delete;
+        s_kv_pair_block_seq(const s_kv_pair_block_seq &) = delete;
+        s_kv_pair_block_seq &operator=(const s_kv_pair_block_seq &) = default;
+
+        s_kv_pair_block_seq(s_kv_pair_block_seq &&other) noexcept {
+            *this = other;
+            other = {};
+        }
 
         t_i32 BlockCount() const {
             ZF_ASSERT(m_active);
@@ -469,33 +475,43 @@ namespace zf {
     public:
         s_hash_map() = default;
 
-        // s_hash_map(const s_hash_map &) = delete;
-        // s_hash_map &operator=(const s_hash_map &) = delete;
-        // @todo: What to do for this above?
+        // The provided hash function has to map a key to an integer 0 or higher. The given memory arena will be saved and used for allocating new memory for entries when needed.
+        void Init(const t_hash_func<tp_key_type> hash_func, s_mem_arena &mem_arena, const t_i32 cap = g_hash_map_cap_default, const t_bin_comparator<tp_key_type> key_comparator = DefaultBinComparator) {
+            ZF_ASSERT(!m_initted);
 
-        t_b8 IsActive() const {
-            return m_active;
+            m_initted = true;
+
+            m_hash_func = hash_func;
+
+            m_immediate_indexes = AllocArray<t_i32>(cap, mem_arena);
+            m_immediate_indexes.SetAllTo(-1);
+
+            m_kv_pair_block_seq = {static_cast<t_i32>(AlignForward(cap, 8)), mem_arena, key_comparator};
+        }
+
+        t_b8 IsInitted() const {
+            return m_initted;
         }
 
         t_i32 Cap() const {
-            ZF_ASSERT(m_active);
+            ZF_ASSERT(m_initted);
             return m_immediate_indexes.Len();
         }
 
         t_i32 EntryCount() const {
-            ZF_ASSERT(m_active);
+            ZF_ASSERT(m_initted);
             return m_kv_pair_block_seq.PairCount();
         }
 
         [[nodiscard]] t_b8 Find(const tp_key_type &key, s_ptr<tp_val_type> &o_val) const {
-            ZF_ASSERT(m_active);
+            ZF_ASSERT(m_initted);
 
             const t_i32 hash_index = KeyToHashIndex(key, m_hash_func, Cap());
             return m_kv_pair_block_seq.FindInChain(m_immediate_indexes[hash_index], key, o_val);
         }
 
         t_b8 Exists(const tp_key_type &key) const {
-            ZF_ASSERT(m_active);
+            ZF_ASSERT(m_initted);
 
             const t_i32 hash_index = KeyToHashIndex(key, m_hash_func, Cap());
             return m_kv_pair_block_seq.ExistsInChain(m_immediate_indexes[hash_index], key);
@@ -503,7 +519,7 @@ namespace zf {
 
         // Try adding the key-value pair to the hash map or just updating the value if the key is already present.
         e_hash_map_put_result Put(const tp_key_type &key, const tp_val_type &val) {
-            ZF_ASSERT(m_active);
+            ZF_ASSERT(m_initted);
 
             const t_i32 hash_index = KeyToHashIndex(key, m_hash_func, Cap());
             return m_kv_pair_block_seq.PutInChain(m_immediate_indexes[hash_index], key, val) == ek_kv_pair_block_seq_put_result_updated ? ek_hash_map_put_result_updated : ek_hash_map_put_result_added;
@@ -511,7 +527,7 @@ namespace zf {
 
         // Returns true iff an entry with the key was found and removed.
         t_b8 Remove(const tp_key_type &key) {
-            ZF_ASSERT(m_active);
+            ZF_ASSERT(m_initted);
 
             const t_i32 hash_index = KeyToHashIndex(key, m_hash_func, Cap());
             return m_kv_pair_block_seq.RemoveInChain(m_immediate_indexes[hash_index], key);
@@ -519,7 +535,7 @@ namespace zf {
 
         // Loads all key-value pairs into the given PRE-ALLOCATED arrays.
         void LoadEntries(const s_array<tp_key_type> keys, const s_array<tp_val_type> vals) const {
-            ZF_ASSERT(m_active);
+            ZF_ASSERT(m_initted);
             ZF_ASSERT(keys.Len() >= EntryCount() && vals.Len() >= EntryCount());
 
             t_i32 loaded_cnt = 0;
@@ -531,7 +547,7 @@ namespace zf {
 
         // Allocates the given arrays with the memory arena and loads key-value pairs into them.
         void LoadEntries(s_mem_arena &mem_arena, s_array<tp_key_type> &o_keys, s_array<tp_val_type> &o_vals) const {
-            ZF_ASSERT(m_active);
+            ZF_ASSERT(m_initted);
 
             o_keys = AllocArray<tp_key_type>(EntryCount(), mem_arena);
             o_vals = AllocArray<tp_val_type>(EntryCount(), mem_arena);
@@ -539,32 +555,15 @@ namespace zf {
         }
 
     private:
-        t_b8 m_active = false;
+        s_hash_map(const s_hash_map &) = default;
+
+        t_b8 m_initted = false;
 
         t_hash_func<tp_key_type> m_hash_func = nullptr;
 
         s_array<t_i32> m_immediate_indexes = {};
         s_kv_pair_block_seq<tp_key_type, tp_val_type> m_kv_pair_block_seq = {};
-
-        template <typename tp_other_key_type, typename tp_other_val_type>
-        friend s_hash_map<tp_other_key_type, tp_other_val_type> CreateHashMap(const t_hash_func<tp_other_key_type> hash_func, s_mem_arena &mem_arena, const t_i32 cap, const t_bin_comparator<tp_other_key_type> key_comparator);
     };
-
-    // The provided hash function has to map a key to an integer 0 or higher. The given memory arena will be saved and used for allocating new memory for entries when needed.
-    template <typename tp_key_type, typename tp_val_type>
-    s_hash_map<tp_key_type, tp_val_type> CreateHashMap(const t_hash_func<tp_key_type> hash_func, s_mem_arena &mem_arena, const t_i32 cap = g_hash_map_cap_default, const t_bin_comparator<tp_key_type> key_comparator = DefaultBinComparator) {
-        ZF_ASSERT(hash_func);
-        ZF_ASSERT(key_comparator);
-
-        s_hash_map<tp_key_type, tp_val_type> hm;
-        hm.m_active = true;
-        hm.m_hash_func = hash_func;
-        hm.m_immediate_indexes = AllocArray<t_i32>(cap, mem_arena);
-        hm.m_immediate_indexes.SetAllTo(-1);
-        hm.m_kv_pair_block_seq = {static_cast<t_i32>(AlignForward(cap, 8)), mem_arena, key_comparator};
-
-        return hm;
-    }
 
     template <typename tp_key_type, typename tp_val_type>
     [[nodiscard]] t_b8 SerializeHashMap(s_stream &stream, const s_hash_map<tp_key_type, tp_val_type> &hm, s_mem_arena &temp_mem_arena) {
@@ -612,7 +611,7 @@ namespace zf {
             return false;
         }
 
-        o_hm = CreateHashMap<tp_key_type, tp_val_type>(hm_hash_func, hm_mem_arena, cap, hm_key_comparator);
+        o_hm.Init(hm_hash_func, hm_mem_arena, cap, hm_key_comparator);
 
         const auto keys = AllocArray<tp_key_type>(entry_cnt, temp_mem_arena);
 

@@ -306,7 +306,7 @@ namespace zf {
 
         s_hash_map<t_code_pt, s_font_glyph_info> code_pts_to_glyph_infos = {}; // Some duplicity here since a single glyph might have multiple code points mapped to it.
 
-        t_b8 has_kernings = 0;
+        t_b8 has_kernings = false;
         s_hash_map<s_font_code_point_pair, t_i32> code_pt_pairs_to_kernings = {};
     };
 
