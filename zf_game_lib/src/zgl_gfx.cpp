@@ -527,7 +527,7 @@ namespace zf {
 
             s_ptr<s_font_glyph_info> glyph_info;
 
-            if (!font_arrangement.code_pts_to_glyph_infos.Find(chr_info.code_pt, &glyph_info)) {
+            if (!font_arrangement.code_pts_to_glyph_infos.Find(chr_info.code_pt, glyph_info)) {
                 ZF_ASSERT(false && "Unsupported code point!");
                 continue;
             }
@@ -535,7 +535,7 @@ namespace zf {
             if (chr_index > 0 && font_arrangement.has_kernings) {
                 s_ptr<t_i32> kerning;
 
-                if (font_arrangement.code_pt_pairs_to_kernings.Find({code_pt_last, chr_info.code_pt}, &kerning)) {
+                if (font_arrangement.code_pt_pairs_to_kernings.Find({code_pt_last, chr_info.code_pt}, kerning)) {
                     chr_pos_pen.x += static_cast<t_f32>(*kerning);
                 }
             }
@@ -576,7 +576,7 @@ namespace zf {
 
             s_ptr<s_font_glyph_info> glyph_info;
 
-            if (!font_arrangement.code_pts_to_glyph_infos.Find(chr_info.code_pt, &glyph_info)) {
+            if (!font_arrangement.code_pts_to_glyph_infos.Find(chr_info.code_pt, glyph_info)) {
                 ZF_ASSERT(false && "Unsupported code point!");
                 continue;
             }

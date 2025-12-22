@@ -292,7 +292,7 @@ namespace zf {
             s_ptr<t_i32> index = &chain_begin_index;
 
             while (*index != -1) {
-                s_block &block = FindBlockOfIndex(index);
+                s_block &block = FindBlockOfIndex(*index);
 
                 const t_i32 rel_index = *index % m_block_cap;
 
@@ -467,9 +467,11 @@ namespace zf {
     template <typename tp_key_type, typename tp_val_type>
     struct s_hash_map {
     public:
-        // s_hash_map() = default;
+        s_hash_map() = default;
+
         // s_hash_map(const s_hash_map &) = delete;
-        // @todo: Figure out how to make this error prevention work. Maybe just resort to init/reset functions.
+        // s_hash_map &operator=(const s_hash_map &) = delete;
+        // @todo: What to do for this above?
 
         t_b8 IsActive() const {
             return m_active;
