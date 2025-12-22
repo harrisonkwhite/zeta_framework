@@ -240,10 +240,6 @@ namespace zf {
             return m_len;
         }
 
-        constexpr t_b8 IsEmpty() const {
-            return m_len == 0;
-        }
-
         constexpr t_i32 SizeInBytes() const {
             return ZF_SIZE_OF(tp_type) * m_len;
         }
@@ -269,52 +265,8 @@ namespace zf {
             return {&m_ptr[beg], m_len - beg};
         }
 
-        constexpr s_array_rdonly<t_u8> ToBytes() const {
+        constexpr s_array_rdonly<t_u8> ToByteArray() const {
             return {reinterpret_cast<const t_u8 *>(m_ptr.Raw()), SizeInBytes()};
-        }
-
-        constexpr t_b8 DoAllEqual(const tp_type &val, const t_bin_comparator<tp_type> comparator = DefaultBinComparator) const {
-            ZF_ASSERT(comparator);
-
-            if (m_len == 0) {
-                return false;
-            }
-
-            for (t_i32 i = 0; i < m_len; i++) {
-                if (!comparator(m_ptr[i], val)) {
-                    return false;
-                }
-            }
-
-            return true;
-        }
-
-        constexpr t_b8 DoAnyEqual(const tp_type &val, const t_bin_comparator<tp_type> comparator = DefaultBinComparator) const {
-            ZF_ASSERT(comparator);
-
-            for (t_i32 i = 0; i < m_len; i++) {
-                if (comparator(m_ptr[i], val)) {
-                    return true;
-                }
-            }
-
-            return false;
-        }
-
-        constexpr void CopyTo(const s_array<tp_type> other, const t_b8 truncate = false) const {
-            if (!truncate) {
-                ZF_ASSERT(other.Len() >= m_len);
-
-                for (t_i32 i = 0; i < m_len; i++) {
-                    other[i] = m_ptr[i];
-                }
-            } else {
-                const auto min = ZF_MIN(m_len, other.Len());
-
-                for (t_i32 i = 0; i < min; i++) {
-                    other[i] = m_ptr[i];
-                }
-            }
         }
 
     private:
@@ -341,10 +293,6 @@ namespace zf {
 
         constexpr t_i32 Len() const {
             return m_len;
-        }
-
-        constexpr t_b8 IsEmpty() const {
-            return m_len == 0;
         }
 
         constexpr t_i32 SizeInBytes() const {
@@ -376,32 +324,8 @@ namespace zf {
             return {&m_ptr[beg], m_len - beg};
         }
 
-        constexpr s_array<t_u8> ToBytes() const {
+        constexpr s_array<t_u8> ToByteArray() const {
             return {reinterpret_cast<t_u8 *>(m_ptr.Raw()), SizeInBytes()};
-        }
-
-        constexpr t_b8 DoAllEqual(const tp_type &val, const t_bin_comparator<tp_type> comparator = DefaultBinComparator) const {
-            return static_cast<const s_array_rdonly<tp_type>>(*this).DoAllEqual(val, comparator);
-        }
-
-        constexpr t_b8 DoAnyEqual(const tp_type &val, const t_bin_comparator<tp_type> comparator = DefaultBinComparator) const {
-            return static_cast<const s_array_rdonly<tp_type>>(*this).DoAnyEqual(val, comparator);
-        }
-
-        constexpr void SetAllTo(const tp_type &val) const {
-            for (t_i32 i = 0; i < m_len; i++) {
-                m_ptr[i] = val;
-            }
-        }
-
-        constexpr void CopyTo(const s_array<tp_type> other, const t_b8 truncate = false) const {
-            return static_cast<const s_array_rdonly<tp_type>>(*this).CopyTo(other, truncate);
-        }
-
-        constexpr void Reverse() const {
-            for (t_i32 i = 0; i < m_len / 2; i++) {
-                Swap(m_ptr[i], m_ptr[m_len - 1 - i]);
-            }
         }
 
     private:
@@ -466,6 +390,14 @@ namespace zf {
             ZF_REQUIRE(index >= 0 && index < tp_len);
             return raw[index];
         }
+
+        constexpr tp_type &Last() {
+            return operator[](tp_len - 1);
+        }
+
+        constexpr const tp_type &Last() const {
+            return operator[](tp_len - 1);
+        }
     };
 
     template <typename tp_type>
@@ -497,7 +429,7 @@ namespace zf {
     };
 
     template <typename tp_type>
-    concept c_nonstatic_mut_array = s_is_nonstatic_array<tp_type>::g_val;
+    concept c_nonstatic_array_mut = s_is_nonstatic_array<tp_type>::g_val;
 
     template <c_nonstatic_array tp_arr_type>
     constexpr t_bin_comparator<tp_arr_type> g_array_bin_comparator =
@@ -533,18 +465,72 @@ namespace zf {
     template <c_nonstatic_array tp_arr_type>
     auto AllocArrayClone(const tp_arr_type arr_to_clone, s_mem_arena &mem_arena) {
         const auto arr = AllocArray<typename tp_arr_type::t_elem>(arr_to_clone.Len(), mem_arena);
-        arr_to_clone.CopyTo(arr);
+        Copy(arr, arr_to_clone);
         return arr;
     }
 
-    template <typename tp_type>
-    constexpr s_array<t_u8> ToBytes(tp_type &val) {
-        return {reinterpret_cast<t_u8 *>(&val), ZF_SIZE_OF(val)};
+    // @todo: Move all of this to algos! Where did that module go???
+    template <c_nonstatic_array tp_arr_type>
+    constexpr t_b8 DoAllEqual(const tp_arr_type arr, const typename tp_arr_type::t_elem &val, const t_bin_comparator<typename tp_arr_type::t_elem> comparator = DefaultBinComparator) {
+        ZF_ASSERT(comparator);
+
+        if (arr.Len() == 0) {
+            return false;
+        }
+
+        for (t_i32 i = 0; i < arr.Len(); i++) {
+            if (!comparator(arr[i], val)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
-    template <typename tp_type>
-    constexpr s_array_rdonly<t_u8> ToBytes(const tp_type &val) {
-        return {reinterpret_cast<const t_u8 *>(&val), ZF_SIZE_OF(val)};
+    template <c_nonstatic_array tp_arr_type>
+    constexpr t_b8 DoAnyEqual(const tp_arr_type arr, const typename tp_arr_type::t_elem &val, const t_bin_comparator<typename tp_arr_type::t_elem> comparator = DefaultBinComparator) {
+        ZF_ASSERT(comparator);
+
+        for (t_i32 i = 0; i < arr.Len(); i++) {
+            if (comparator(arr[i], val)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    template <c_nonstatic_array_mut tp_arr_type>
+    constexpr void SetAllTo(const tp_arr_type arr, const typename tp_arr_type::t_elem &val) {
+        for (t_i32 i = 0; i < arr.Len(); i++) {
+            arr[i] = val;
+        }
+    }
+
+    template <c_nonstatic_array_mut tp_dest_arr_type, c_nonstatic_array tp_src_arr_type>
+    constexpr void Copy(const tp_dest_arr_type dest, const tp_src_arr_type src, const t_b8 allow_truncation = false) {
+        static_assert(s_is_same<typename tp_dest_arr_type::t_elem, typename tp_src_arr_type::t_elem>::g_val);
+
+        if (!allow_truncation) {
+            ZF_ASSERT(dest.Len() >= src.Len());
+
+            for (t_i32 i = 0; i < src.Len(); i++) {
+                dest[i] = src[i];
+            }
+        } else {
+            const auto min = ZF_MIN(src.Len(), dest.Len());
+
+            for (t_i32 i = 0; i < min; i++) {
+                dest[i] = src[i];
+            }
+        }
+    }
+
+    template <c_nonstatic_array_mut tp_arr_type>
+    constexpr void Reverse(const tp_arr_type arr) {
+        for (t_i32 i = 0; i < arr.Len() / 2; i++) {
+            Swap(arr[i], arr[arr.Len() - 1 - i]);
+        }
     }
 
     // ============================================================
@@ -568,6 +554,16 @@ namespace zf {
 
     constexpr t_i32 BytesToBits(const t_i32 x) {
         return x * 8;
+    }
+
+    template <typename tp_type>
+    constexpr s_array<t_u8> ToBytes(tp_type &val) {
+        return {reinterpret_cast<t_u8 *>(&val), ZF_SIZE_OF(val)};
+    }
+
+    template <typename tp_type>
+    constexpr s_array_rdonly<t_u8> ToBytes(const tp_type &val) {
+        return {reinterpret_cast<const t_u8 *>(&val), ZF_SIZE_OF(val)};
     }
 
     // Creates a bitmask with only a single bit set.
@@ -699,7 +695,7 @@ namespace zf {
 
         const auto first_bytes = bv.Bytes().Slice(0, bv.Bytes().Len() - 1);
 
-        if (!first_bytes.DoAllEqual(0)) {
+        if (!DoAllEqual(first_bytes, 0)) {
             return true;
         }
 
@@ -713,7 +709,7 @@ namespace zf {
 
         const auto first_bytes = bv.Bytes().Slice(0, bv.Bytes().Len() - 1);
 
-        if (!first_bytes.DoAllEqual(0xFF)) {
+        if (!DoAllEqual(first_bytes, 0xFF)) {
             return false;
         }
 
@@ -743,7 +739,7 @@ namespace zf {
         }
 
         const auto first_bytes = bv.Bytes().Slice(0, bv.Bytes().Len() - 1);
-        first_bytes.SetAllTo(0xFF);
+        SetAllTo(first_bytes, 0xFF);
 
         bv.Bytes().Last() |= bv.LastByteMask();
     }
@@ -754,7 +750,7 @@ namespace zf {
         }
 
         const auto first_bytes = bv.Bytes().Slice(0, bv.Bytes().Len() - 1);
-        first_bytes.SetAllTo(0);
+        SetAllTo(first_bytes, 0);
 
         bv.Bytes().Last() &= ~bv.LastByteMask();
     }

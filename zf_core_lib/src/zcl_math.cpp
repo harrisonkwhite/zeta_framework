@@ -2,7 +2,7 @@
 
 namespace zf {
     s_rect_f CalcSpanningRect(const s_array<s_rect_f> rects) {
-        ZF_ASSERT(!rects.IsEmpty());
+        ZF_ASSERT(rects.Len() > 0);
 
         auto min_left = rects[0].Left();
         auto min_top = rects[0].Top();
@@ -20,7 +20,7 @@ namespace zf {
     }
 
     s_rect_i CalcSpanningRect(const s_array<s_rect_i> rects) {
-        ZF_ASSERT(!rects.IsEmpty());
+        ZF_ASSERT(rects.Len() > 0);
 
         auto min_left = rects[0].Left();
         auto min_top = rects[0].Top();

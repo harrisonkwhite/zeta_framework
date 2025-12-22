@@ -65,7 +65,7 @@ namespace zf {
 
                 const auto dest = ToBytes(o_item);
                 const auto src = m_type_data.mem.bytes.Slice(m_type_data.mem.pos, m_type_data.mem.pos + size);
-                src.CopyTo(dest);
+                Copy(dest, src);
 
                 m_type_data.mem.pos += size;
 
@@ -95,7 +95,7 @@ namespace zf {
 
                 const auto dest = m_type_data.mem.bytes.Slice(m_type_data.mem.pos, m_type_data.mem.pos + size);
                 const auto src = ToBytes(item);
-                src.CopyTo(dest);
+                Copy(dest, src);
 
                 m_type_data.mem.pos += size;
 
@@ -111,7 +111,7 @@ namespace zf {
             }
         }
 
-        template <c_nonstatic_mut_array tp_type>
+        template <c_nonstatic_array_mut tp_type>
         [[nodiscard]] t_b8 ReadItemsIntoArray(const tp_type arr, const t_i32 cnt) {
             ZF_ASSERT(m_mode == ek_stream_mode_read);
             ZF_ASSERT(cnt >= 0 && cnt <= arr.Len());
@@ -128,9 +128,9 @@ namespace zf {
                     return false;
                 }
 
-                const auto dest = arr.ToBytes();
+                const auto dest = arr.ToByteArray();
                 const auto src = m_type_data.mem.bytes.Slice(m_type_data.mem.pos, m_type_data.mem.pos + size);
-                src.CopyTo(dest);
+                Copy(dest, src);
 
                 m_type_data.mem.pos += size;
 
@@ -150,7 +150,7 @@ namespace zf {
         [[nodiscard]] t_b8 WriteItemsOfArray(const tp_type arr) {
             ZF_ASSERT(m_mode == ek_stream_mode_write);
 
-            if (arr.IsEmpty()) {
+            if (arr.Len() == 0) {
                 return true;
             }
 
@@ -163,8 +163,8 @@ namespace zf {
                 }
 
                 const auto dest = m_type_data.mem.bytes.Slice(m_type_data.mem.pos, m_type_data.mem.pos + size);
-                const auto src = arr.ToBytes();
-                src.CopyTo(dest);
+                const auto src = arr.ToByteArray();
+                Copy(dest, src);
 
                 m_type_data.mem.pos += size;
 
@@ -422,7 +422,7 @@ namespace zf {
         if (fmt.trim_trailing_zeros) {
             const auto str_bytes_relevant = str_bytes.ToNonstatic().Slice(0, str_bytes_used);
 
-            if (str_bytes_relevant.DoAnyEqual('.')) {
+            if (DoAnyEqual(str_bytes_relevant, '.')) {
                 for (t_i32 i = str_bytes_used - 1;; i--) {
                     if (str_bytes[i] == '0') {
                         str_bytes_used--;
@@ -529,7 +529,7 @@ namespace zf {
         } while (val_mut != 0 || cnter < fmt.min_digits);
 
         const auto str_bytes_digits = str_bytes_stream.Written().SliceFrom(str_bytes_digits_begin_pos);
-        str_bytes_digits.Reverse();
+        Reverse(str_bytes_digits);
 
         return Print(stream, {str_bytes_stream.Written()});
     }

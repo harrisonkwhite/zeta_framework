@@ -77,7 +77,7 @@ namespace zf {
             ZF_ASSERT(!IsEmpty());
             ZF_ASSERT(index >= 0 && index < m_len);
 
-            m_backing_arr.Slice(index + 1, m_len).CopyTo(m_backing_arr.Slice(index, m_len - 1));
+            Copy(m_backing_arr.Slice(index, m_len - 1), m_backing_arr.Slice(index + 1, m_len));
             m_len--;
         }
 
@@ -350,7 +350,7 @@ namespace zf {
             block.vals = AllocArray<tp_val_type>(cap, mem_arena);
 
             block.next_indexes = AllocArray<t_i32>(cap, mem_arena);
-            block.next_indexes.SetAllTo(-1);
+            SetAllTo(block.next_indexes, -1);
 
             block.usage = CreateBitVec(cap, mem_arena);
 
@@ -523,7 +523,7 @@ namespace zf {
     template <typename tp_key_type, typename tp_val_type>
     s_hash_map<tp_key_type, tp_val_type> CreateHashMap(const t_hash_func<tp_key_type> hash_func, s_mem_arena &mem_arena, const t_i32 cap = g_hash_map_cap_default, const t_bin_comparator<tp_key_type> key_comparator = DefaultBinComparator) {
         const auto immediate_indexes = AllocArray<t_i32>(cap, mem_arena);
-        immediate_indexes.SetAllTo(-1);
+        SetAllTo(immediate_indexes, -1);
 
         return {
             .hash_func = hash_func,

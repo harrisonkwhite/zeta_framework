@@ -21,7 +21,7 @@ namespace zf {
 
         const auto px_data = AllocArray<t_u8>(4 * size_in_pxs.x * size_in_pxs.y, tex_data_mem_arena);
         const s_array_rdonly<t_u8> stb_px_data_arr = {stb_px_data, 4 * size_in_pxs.x * size_in_pxs.y};
-        stb_px_data_arr.CopyTo(px_data);
+        Copy(px_data, stb_px_data_arr);
 
         o_tex_data = {size_in_pxs, px_data};
 
