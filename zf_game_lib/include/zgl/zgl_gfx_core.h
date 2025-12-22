@@ -35,6 +35,8 @@ namespace zf {
 
     void DestroyGFXResources(s_gfx_resource_arena &arena);
 
+    s_gfx_resource_arena &PermGFXResourceArena();
+
     [[nodiscard]] t_b8 CreateTextureResource(const s_texture_data_rdonly texture_data, s_ptr<s_gfx_resource> &o_resource, const s_ptr<s_gfx_resource_arena> arena = nullptr);
 
     [[nodiscard]] inline t_b8 CreateTextureResourceFromRaw(const s_str_rdonly file_path, s_mem_arena &temp_mem_arena, s_ptr<s_gfx_resource> &o_resource, const s_ptr<s_gfx_resource_arena> arena = nullptr) {

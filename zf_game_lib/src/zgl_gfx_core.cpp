@@ -163,6 +163,11 @@ namespace zf {
         return bgfx::createProgram(vert_shader_bgfx_hdl, frag_shader_bgfx_hdl, true);
     }
 
+    s_gfx_resource_arena &PermGFXResourceArena() {
+        ZF_ASSERT(g_state.state == ek_state_initted);
+        return g_state.perm_resource_arena;
+    }
+
     static s_gfx_resource &PushGFXResource(const e_gfx_resource_type type, s_gfx_resource_arena &arena) {
         ZF_ASSERT(type != ek_gfx_resource_type_invalid);
 
