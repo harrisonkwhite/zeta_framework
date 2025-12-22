@@ -235,7 +235,7 @@ namespace zf {
             return m_pair_cnt;
         }
 
-        [[nodiscard]] t_b8 FindInChain(const t_i32 chain_begin_index, const tp_key_type &key, const s_ptr<s_ptr<tp_val_type>> o_val = nullptr) const {
+        [[nodiscard]] t_b8 FindInChain(const t_i32 chain_begin_index, const tp_key_type &key, s_ptr<tp_val_type> &o_val) const {
             ZF_ASSERT(m_active);
             ZF_ASSERT(chain_begin_index >= -1 && chain_begin_index < m_block_cap * m_block_cnt);
 
@@ -247,10 +247,7 @@ namespace zf {
                 const t_i32 rel_index = index % m_block_cap;
 
                 if (m_key_comparator(block.keys[rel_index], key)) {
-                    if (o_val) {
-                        *o_val = &block.vals[rel_index];
-                    }
-
+                    o_val = &block.vals[rel_index];
                     return true;
                 }
 
@@ -258,6 +255,11 @@ namespace zf {
             }
 
             return false;
+        }
+
+        t_b8 ExistsInChain(const t_i32 chain_begin_index, const tp_key_type &key) const {
+            s_ptr<tp_val_type> val_throwaway;
+            return FindInChain(chain_begin_index, key, val_throwaway);
         }
 
         e_kv_pair_block_seq_put_result PutInChain(t_i32 &chain_begin_index, const tp_key_type &key, const tp_val_type &val) {
@@ -296,6 +298,7 @@ namespace zf {
 
                 if (m_key_comparator(block.keys[rel_index], key)) {
                     *index = block.next_indexes[rel_index];
+                    m_pair_cnt--;
                     return true;
                 }
 
@@ -362,7 +365,7 @@ namespace zf {
             s_ptr<s_block> res = m_blocks_head;
 
             while (index >= m_block_cap) {
-                res = m_blocks_head->next;
+                res = res->next;
                 index -= m_block_cap;
             }
 
@@ -374,6 +377,8 @@ namespace zf {
             s_ptr<s_block> block = m_blocks_head;
             s_ptr<s_block> block_previous = nullptr;
             t_i32 block_index = 0;
+
+            m_pair_cnt++;
 
             while (block) {
                 const auto possible_rel_index_to_use = IndexOfFirstUnsetBit(block->usage);
@@ -399,11 +404,13 @@ namespace zf {
 
             if (block_previous) {
                 block_previous->next = &new_block;
+            } else {
+                m_blocks_head = &new_block;
             }
 
-            block->keys[0] = key;
-            block->vals[0] = val;
-            SetBit(block->usage, 0);
+            new_block.keys[0] = key;
+            new_block.vals[0] = val;
+            SetBit(new_block.usage, 0);
 
             return block_index * m_block_cap;
         }
@@ -462,6 +469,7 @@ namespace zf {
     public:
         // s_hash_map() = default;
         // s_hash_map(const s_hash_map &) = delete;
+        // @todo: Figure out how to make this error prevention work. Maybe just resort to init/reset functions.
 
         t_b8 IsActive() const {
             return m_active;
@@ -477,11 +485,18 @@ namespace zf {
             return m_kv_pair_block_seq.PairCount();
         }
 
-        [[nodiscard]] t_b8 Find(const tp_key_type &key, const s_ptr<s_ptr<tp_val_type>> o_val = nullptr) const {
+        [[nodiscard]] t_b8 Find(const tp_key_type &key, s_ptr<tp_val_type> &o_val) const {
             ZF_ASSERT(m_active);
 
             const t_i32 hash_index = KeyToHashIndex(key, m_hash_func, Cap());
             return m_kv_pair_block_seq.FindInChain(m_immediate_indexes[hash_index], key, o_val);
+        }
+
+        t_b8 Exists(const tp_key_type &key) const {
+            ZF_ASSERT(m_active);
+
+            const t_i32 hash_index = KeyToHashIndex(key, m_hash_func, Cap());
+            return m_kv_pair_block_seq.ExistsInChain(m_immediate_indexes[hash_index], key);
         }
 
         // Try adding the key-value pair to the hash map or just updating the value if the key is already present.
@@ -489,13 +504,7 @@ namespace zf {
             ZF_ASSERT(m_active);
 
             const t_i32 hash_index = KeyToHashIndex(key, m_hash_func, Cap());
-
-            const auto res = m_kv_pair_block_seq.PutInChain(m_immediate_indexes[hash_index], key, val);
-
-            switch (res) {
-            case ek_kv_pair_block_seq_put_result_updated: return ek_hash_map_put_result_updated;
-            case ek_kv_pair_block_seq_put_result_added: return ek_hash_map_put_result_added;
-            }
+            return m_kv_pair_block_seq.PutInChain(m_immediate_indexes[hash_index], key, val) == ek_kv_pair_block_seq_put_result_updated ? ek_hash_map_put_result_updated : ek_hash_map_put_result_added;
         }
 
         // Returns true iff an entry with the key was found and removed.

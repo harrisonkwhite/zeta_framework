@@ -16,9 +16,8 @@ namespace zf {
     }
 
     static t_b8 TestHashMap(s_mem_arena &mem_arena) {
-#if 0
         // Create a hash map with an identity hash function.
-        auto hm = CreateHashMap<t_i32, t_i32>([](const t_i32 &key) { return static_cast<t_len>(key); }, mem_arena);
+        auto hm = CreateHashMap<t_i32, t_i32>([](const t_i32 &key) { return key; }, mem_arena);
 
         // The hash map must be active after creation.
         ZF_REQUIRE(hm.IsActive());
@@ -37,10 +36,10 @@ namespace zf {
 
         // Retrieve the inserted value.
         {
-            t_i32 val = 0;
-            const t_b8 found = hm.Get(2, &val);
+            s_ptr<t_i32> val;
+            const t_b8 found = hm.Find(2, val);
             ZF_REQUIRE(found);
-            ZF_REQUIRE(val == 3);
+            ZF_REQUIRE(*val == 3);
         }
 
         // Updating an existing key must not change the entry count.
@@ -49,10 +48,10 @@ namespace zf {
 
         // The value must be updated.
         {
-            t_i32 val = 0;
-            const t_b8 found = hm.Get(2, &val);
+            s_ptr<t_i32> val;
+            const t_b8 found = hm.Find(2, val);
             ZF_REQUIRE(found);
-            ZF_REQUIRE(val == 5);
+            ZF_REQUIRE(*val == 5);
         }
 
         // Removing a non-existent key must fail.
@@ -71,8 +70,8 @@ namespace zf {
 
         // The removed key must no longer be found.
         {
-            t_i32 val = 0;
-            const t_b8 found = hm.Get(2, &val);
+            s_ptr<t_i32> val;
+            const t_b8 found = hm.Find(2, val);
             ZF_REQUIRE(!found);
         }
 
@@ -86,10 +85,10 @@ namespace zf {
 
         // All inserted keys must be retrievable.
         for (t_i32 i = 0; i < 16; i++) {
-            t_i32 val = 0;
-            const t_b8 found = hm.Get(i, &val);
+            s_ptr<t_i32> val;
+            const t_b8 found = hm.Find(i, val);
             ZF_REQUIRE(found);
-            ZF_REQUIRE(val == i * 10);
+            ZF_REQUIRE(*val == i * 10);
         }
 
         // Remove every second key.
@@ -103,17 +102,17 @@ namespace zf {
 
         // Removed keys must not be found.
         for (t_i32 i = 0; i < 16; i += 2) {
-            t_i32 val = 0;
-            const t_b8 found = hm.Get(i, &val);
+            s_ptr<t_i32> val;
+            const t_b8 found = hm.Find(i, val);
             ZF_REQUIRE(!found);
         }
 
         // Remaining keys must still be found.
         for (t_i32 i = 1; i < 16; i += 2) {
-            t_i32 val = 0;
-            const t_b8 found = hm.Get(i, &val);
+            s_ptr<t_i32> val;
+            const t_b8 found = hm.Find(i, val);
             ZF_REQUIRE(found);
-            ZF_REQUIRE(val == i * 10);
+            ZF_REQUIRE(*val == i * 10);
         }
 
         // Re-insert removed keys.
@@ -126,36 +125,34 @@ namespace zf {
 
         // Re-inserted values must be correct.
         for (t_i32 i = 0; i < 16; i++) {
-            t_i32 val = 0;
-            const t_b8 found = hm.Get(i, &val);
+            s_ptr<t_i32> val;
+            const t_b8 found = hm.Find(i, val);
             ZF_REQUIRE(found);
 
             if ((i & 1) == 0) {
-                ZF_REQUIRE(val == i * 100);
+                ZF_REQUIRE(*val == i * 100);
             } else {
-                ZF_REQUIRE(val == i * 10);
+                ZF_REQUIRE(*val == i * 10);
             }
         }
-#endif
 
         // Create a hash map that forces collisions.
-        auto hm_collision = CreateHashMap<t_i32, t_i32>([](const t_i32 &) { return 0; }, mem_arena, 4);
+        auto hm_collision = CreateHashMap<t_i32, t_i32>([](const t_i32 &) { return 0; }, mem_arena, 2);
 
         // Insert many colliding keys.
         for (t_i32 i = 0; i < 32; i++) {
             hm_collision.Put(i, i + 1);
         }
 
-#if 0
         // The entry count must include all colliding keys.
         ZF_REQUIRE(hm_collision.EntryCount() == 32);
 
         // All colliding keys must be retrievable.
         for (t_i32 i = 0; i < 32; i++) {
-            t_i32 val = 0;
-            const t_b8 found = hm_collision.Get(i, &val);
+            s_ptr<t_i32> val;
+            const t_b8 found = hm_collision.Find(i, val);
             ZF_REQUIRE(found);
-            ZF_REQUIRE(val == i + 1);
+            ZF_REQUIRE(*val == i + 1);
         }
 
         // Remove keys from the collision chain.
@@ -169,16 +166,14 @@ namespace zf {
 
         // Removed collision keys must not be found.
         for (t_i32 i = 0; i < 32; i += 3) {
-            t_i32 val = 0;
-            const t_b8 found = hm_collision.Get(i, &val);
-            ZF_REQUIRE(!found);
+            ZF_REQUIRE(!hm_collision.Exists(i));
         }
 
         // Remaining collision keys must still be retrievable.
         for (t_i32 i = 0; i < 32; i++) {
             if ((i % 3) != 0) {
-                t_i32 val = 0;
-                const t_b8 found = hm_collision.Get(i, &val);
+                s_ptr<t_i32> val;
+                const t_b8 found = hm_collision.Find(i, val);
                 ZF_REQUIRE(found);
                 ZF_REQUIRE(val == i + 1);
             }
@@ -196,14 +191,13 @@ namespace zf {
             ZF_REQUIRE(vals.Len() == hm.EntryCount());
 
             // Each loaded key must be retrievable from the map.
-            for (t_len i = 0; i < keys.Len(); i++) {
-                t_i32 val = 0;
-                const t_b8 found = hm.Get(keys[i], &val);
+            for (t_i32 i = 0; i < keys.Len(); i++) {
+                s_ptr<t_i32> val;
+                const t_b8 found = hm.Find(keys[i], val);
                 ZF_REQUIRE(found);
                 ZF_REQUIRE(val == vals[i]);
             }
         }
-#endif
 
         return true;
     }

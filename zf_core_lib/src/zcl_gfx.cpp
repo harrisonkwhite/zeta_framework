@@ -238,7 +238,7 @@ namespace zf {
 
             s_ptr<s_font_glyph_info> glyph_info;
 
-            if (!o_arrangement.code_pts_to_glyph_infos.Find(code_pt, &glyph_info)) {
+            if (!o_arrangement.code_pts_to_glyph_infos.Find(code_pt, glyph_info)) {
                 ZF_ASSERT(false);
             }
 

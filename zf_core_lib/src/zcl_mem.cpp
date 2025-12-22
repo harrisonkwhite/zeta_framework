@@ -314,7 +314,7 @@ namespace zf {
         const t_i32 begin_byte_index = from / 8;
 
         for (t_i32 i = begin_byte_index; i < bv.Bytes().Len(); i++) {
-            t_u8 byte = bv.Bytes()[i];
+            t_u8 byte = bv.Bytes()[i] ^ xor_mask;
 
             if (i == begin_byte_index) {
                 byte &= BitmaskRange(from % 8);
@@ -324,7 +324,7 @@ namespace zf {
                 byte &= bv.LastByteMask();
             }
 
-            const t_i32 bi = g_mappings[byte ^ xor_mask];
+            const t_i32 bi = g_mappings[byte];
 
             if (bi != -1) {
                 return (8 * i) + bi;
