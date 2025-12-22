@@ -108,7 +108,7 @@ namespace zf {
                 return false;
             }
 
-            cj = cJSON_Parse(s_str(instrs_json_file_contents).Cstr());
+            cj = cJSON_Parse(s_str(instrs_json_file_contents).AsCstr());
 
             if (!cj) {
                 LogError(s_cstr_literal("Failed to parse packing instructions JSON file!"));

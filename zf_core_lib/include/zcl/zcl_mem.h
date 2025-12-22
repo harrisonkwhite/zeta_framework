@@ -672,7 +672,7 @@ namespace zf {
         }
     };
 
-    inline s_bit_vec AllocBitVec(const t_i32 bit_cnt, s_mem_arena &mem_arena) {
+    inline s_bit_vec CreateBitVec(const t_i32 bit_cnt, s_mem_arena &mem_arena) {
         ZF_ASSERT(bit_cnt > 0);
         return {AllocArray<t_u8>(BitsToBytes(bit_cnt), mem_arena), bit_cnt};
     }

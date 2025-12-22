@@ -102,11 +102,8 @@ namespace zf {
             ZF_ASSERT(lit.BufPtr());
         }
 
-        constexpr t_b8 IsEmpty() const {
-            return bytes.IsEmpty();
-        }
-
-        const char *Cstr() const {
+        // Requires that there is a terminating byte somewhere.
+        const char *CstrAs() const {
             ZF_REQUIRE(IsTerminated(bytes));
             return reinterpret_cast<const char *>(bytes.Ptr().Raw());
         }
@@ -118,17 +115,14 @@ namespace zf {
         constexpr s_str() = default;
         constexpr s_str(const s_array<t_u8> bytes) : bytes(bytes) {}
 
-        constexpr t_b8 IsEmpty() const {
-            return bytes.IsEmpty();
-        }
-
-        char *Cstr() const {
-            ZF_REQUIRE(IsTerminated(bytes));
-            return reinterpret_cast<char *>(bytes.Ptr().Raw());
-        }
-
         constexpr operator s_str_rdonly() const {
             return {bytes};
+        }
+
+        // Requires that there is a terminating byte somewhere.
+        char *AsCstr() const {
+            ZF_REQUIRE(IsTerminated(bytes));
+            return reinterpret_cast<char *>(bytes.Ptr().Raw());
         }
     };
 
@@ -143,22 +137,10 @@ namespace zf {
         return {{reinterpret_cast<t_u8 *>(cstr), CalcCstrLen(cstr)}};
     }
 
-    // Creates a string object from the given C-string.
-    // Does a conventional string walk to calculate length.
-    inline s_str ConvertCstrButKeepTerminator(char *const cstr) {
-        return {{reinterpret_cast<t_u8 *>(cstr), CalcCstrLen(cstr) + 1}};
-    }
-
     // Creates a read-only NON-TERMINATED string object from the given TERMINATED C-string.
     // Does a conventional string walk to calculate length.
     inline s_str_rdonly ConvertCstr(const char *const cstr) {
         return {{reinterpret_cast<const t_u8 *>(cstr), CalcCstrLen(cstr)}};
-    }
-
-    // Creates a string object from the given C-string.
-    // Does a conventional string walk to calculate length.
-    inline s_str_rdonly ConvertCstrButKeepTerminator(const char *const cstr) {
-        return {{reinterpret_cast<const t_u8 *>(cstr), CalcCstrLen(cstr) + 1}};
     }
 
     // Allocates a clone of the given string using the memory arena, with a null byte added at the end (even if the string was already terminated).
@@ -166,6 +148,10 @@ namespace zf {
         const s_str clone = {AllocArray<t_u8>(str.bytes.Len() + 1, mem_arena)};
         str.bytes.CopyTo(clone.bytes);
         return clone;
+    }
+
+    inline t_b8 IsStrEmpty(const s_str_rdonly str) {
+        return str.bytes.IsEmpty();
     }
 
     t_b8 IsStrValidUTF8(const s_str_rdonly str);

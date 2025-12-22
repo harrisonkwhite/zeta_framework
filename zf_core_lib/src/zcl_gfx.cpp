@@ -11,7 +11,7 @@ namespace zf {
         const s_str_rdonly file_path_terminated = AllocStrCloneButAddTerminator(file_path, temp_mem_arena);
 
         s_v2_i size_in_pxs;
-        const s_ptr<t_u8> stb_px_data = stbi_load(file_path_terminated.Cstr(), &size_in_pxs.x, &size_in_pxs.y, nullptr, 4);
+        const s_ptr<t_u8> stb_px_data = stbi_load(file_path_terminated.CstrAs(), &size_in_pxs.x, &size_in_pxs.y, nullptr, 4);
 
         if (!stb_px_data) {
             return false;
@@ -145,7 +145,7 @@ namespace zf {
         //
         // Glyph Info
         //
-        o_arrangement.code_pts_to_glyph_infos.Init(g_code_pt_hash_func, arrangement_mem_arena, code_pt_cnt);
+        o_arrangement.code_pts_to_glyph_infos = CreateHashMap<t_code_pt, s_font_glyph_info>(g_code_pt_hash_func, arrangement_mem_arena, code_pt_cnt);
 
         t_i32 atlas_index = 0;
         s_v2_i atlas_pen;
@@ -195,7 +195,7 @@ namespace zf {
 
         // If there were any kernings to store, set up the hash map and go through again and store them.
         o_arrangement.has_kernings = true;
-        o_arrangement.code_pt_pairs_to_kernings.Init(g_code_pt_pair_hash_func, arrangement_mem_arena, g_hash_map_cap_default, g_code_pt_pair_comparator);
+        o_arrangement.code_pt_pairs_to_kernings = CreateHashMap<s_font_code_point_pair, t_i32>(g_code_pt_pair_hash_func, arrangement_mem_arena, g_hash_map_cap_default, g_code_pt_pair_comparator);
 
         ZF_FOR_EACH_SET_BIT(code_pts, i) {
             ZF_FOR_EACH_SET_BIT(code_pts, j) {

@@ -29,10 +29,10 @@ namespace zf {
         s_v2_i prefullscreen_size = {};
 
         struct {
-            s_static_bit_vec<eks_key_code_cnt> keys_down = {};
-            s_static_bit_vec<eks_mouse_button_code_cnt> mouse_buttons_down = {};
+            s_static_bit_vec<eks_key_code_cnt> keys_down;
+            s_static_bit_vec<eks_mouse_button_code_cnt> mouse_buttons_down;
 
-            s_v2 cursor_pos = {};
+            s_v2 cursor_pos;
 
             struct {
                 s_static_bit_vec<eks_key_code_cnt> keys_pressed;
@@ -42,8 +42,8 @@ namespace zf {
                 s_static_bit_vec<eks_mouse_button_code_cnt> mouse_buttons_released;
 
                 s_v2 scroll;
-            } events = {};
-        } input;
+            } events;
+        } input = {};
     } g_state;
 
     static s_ptr<GLFWmonitor> FindGLFWMonitorOfWindow(const s_ptr<GLFWwindow> window);
@@ -153,7 +153,7 @@ namespace zf {
         ZF_ASSERT(g_state.initted);
 
         const s_str_rdonly title_terminated = AllocStrCloneButAddTerminator(title, temp_mem_arena);
-        glfwSetWindowTitle(g_state.glfw_window, title_terminated.Cstr());
+        glfwSetWindowTitle(g_state.glfw_window, title_terminated.CstrAs());
     }
 
     void SetWindowSize(const s_v2_i size) {

@@ -260,7 +260,7 @@ namespace zf {
         }
 
         if (bit_cnt > 0) {
-            o_bv = AllocBitVec(bit_cnt, bv_mem_arena);
+            o_bv = CreateBitVec(bit_cnt, bv_mem_arena);
 
             if (!stream.ReadItemsIntoArray(o_bv.Bytes(), o_bv.Bytes().Len())) {
                 return false;
@@ -821,7 +821,7 @@ namespace zf {
 
     template <typename... tp_arg_types>
     t_b8 LogErrorType(const s_str_rdonly type_name, const s_str_rdonly fmt, const tp_arg_types &...args) {
-        ZF_ASSERT(!type_name.IsEmpty());
+        ZF_ASSERT(!IsStrEmpty(type_name));
 
         s_stream std_err = StdError();
 

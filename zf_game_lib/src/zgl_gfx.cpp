@@ -557,7 +557,7 @@ namespace zf {
         ZF_ASSERT(IsStrValidUTF8(str));
         ZF_ASSERT(IsAlignmentValid(alignment));
 
-        if (str.IsEmpty()) {
+        if (IsStrEmpty(str)) {
             return;
         }
 

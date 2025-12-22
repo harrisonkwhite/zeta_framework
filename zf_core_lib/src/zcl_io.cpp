@@ -17,17 +17,17 @@ namespace zf {
 
         switch (mode) {
         case ek_file_access_mode_read:
-            file = fopen(path_terminated.Cstr(), "rb");
+            file = fopen(path_terminated.CstrAs(), "rb");
             stream_mode = ek_stream_mode_read;
             break;
 
         case ek_file_access_mode_write:
-            file = fopen(path_terminated.Cstr(), "wb");
+            file = fopen(path_terminated.CstrAs(), "wb");
             stream_mode = ek_stream_mode_write;
             break;
 
         case ek_file_access_mode_append:
-            file = fopen(path_terminated.Cstr(), "ab");
+            file = fopen(path_terminated.CstrAs(), "ab");
             stream_mode = ek_stream_mode_write;
             break;
         }
@@ -82,7 +82,7 @@ namespace zf {
         const s_str_rdonly path_terminated = AllocStrCloneButAddTerminator(path, temp_mem_arena);
 
 #ifdef ZF_PLATFORM_WINDOWS
-        const t_i32 res = _mkdir(path_terminated.Cstr());
+        const t_i32 res = _mkdir(path_terminated.CstrAs());
 #else
         const t_s32 res = mkdir(path_terminated.Cstr(), 0755);
 #endif
@@ -188,7 +188,7 @@ namespace zf {
 
         struct stat info = {};
 
-        if (stat(path_terminated.Cstr(), &info) != 0) {
+        if (stat(path_terminated.CstrAs(), &info) != 0) {
             return ek_path_type_not_found;
         }
 
