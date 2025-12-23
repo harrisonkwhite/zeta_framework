@@ -13,6 +13,8 @@
     #include <GLFW/glfw3native.h>
 #endif
 
+#include <zgl/zgl_input.h>
+
 namespace zf {
     // ============================================================
     // @section: Types and Declarations
@@ -28,22 +30,7 @@ namespace zf {
         s_v2_i prefullscreen_pos = {};
         s_v2_i prefullscreen_size = {};
 
-        struct {
-            s_static_bit_vec<eks_key_code_cnt> keys_down;
-            s_static_bit_vec<eks_mouse_button_code_cnt> mouse_buttons_down;
-
-            s_v2 cursor_pos;
-
-            struct {
-                s_static_bit_vec<eks_key_code_cnt> keys_pressed;
-                s_static_bit_vec<eks_key_code_cnt> keys_released;
-
-                s_static_bit_vec<eks_mouse_button_code_cnt> mouse_buttons_pressed;
-                s_static_bit_vec<eks_mouse_button_code_cnt> mouse_buttons_released;
-
-                s_v2 scroll;
-            } events;
-        } input = {};
+        s_ptr<s_input_state> input_state = nullptr;
     } g_state;
 
     static s_ptr<GLFWmonitor> FindGLFWMonitorOfWindow(const s_ptr<GLFWwindow> window);
@@ -56,7 +43,7 @@ namespace zf {
     // ============================================================
     // @section: General
     // ============================================================
-    void internal::InitPlatform(const s_v2_i init_window_size) {
+    void InitPlatform(const s_v2_i init_window_size, s_input_state &input_state) {
         ZF_ASSERT(!g_state.initted);
         ZF_ASSERT(init_window_size.x > 0 && init_window_size.y > 0);
 
@@ -94,7 +81,7 @@ namespace zf {
         g_state.initted = true;
     }
 
-    void internal::ShutdownPlatform() {
+    void ShutdownPlatform() {
         ZF_ASSERT(g_state.initted);
 
         glfwDestroyWindow(g_state.glfw_window);
@@ -107,15 +94,18 @@ namespace zf {
         return glfwGetTime();
     }
 
-    void internal::PollOSEvents() {
+    void PollOSEvents(s_input_state &input_state) {
         ZF_ASSERT(g_state.initted);
+
         glfwPollEvents();
+
+        // @todo: Update gamepad state.
     }
 
     // ============================================================
     // @section: Display
     // ============================================================
-    s_ptr<void> internal::NativeWindowHandle() {
+    s_ptr<void> NativeWindowHandle() {
         ZF_ASSERT(g_state.initted);
 
 #if defined(ZF_PLATFORM_WINDOWS)
@@ -127,7 +117,7 @@ namespace zf {
 #endif
     }
 
-    s_ptr<void> internal::NativeDisplayHandle() {
+    s_ptr<void> NativeDisplayHandle() {
         ZF_ASSERT(g_state.initted);
 
 #if defined(ZF_PLATFORM_WINDOWS)
@@ -139,12 +129,12 @@ namespace zf {
 #endif
     }
 
-    void internal::ShowWindow() {
+    void ShowWindow() {
         ZF_ASSERT(g_state.initted);
         glfwShowWindow(g_state.glfw_window);
     }
 
-    t_b8 internal::ShouldWindowClose() {
+    t_b8 ShouldWindowClose() {
         ZF_ASSERT(g_state.initted);
         return glfwWindowShouldClose(g_state.glfw_window);
     }
@@ -377,17 +367,19 @@ namespace zf {
     }
 
     static void GLFWKeyCallback(GLFWwindow *window, int key, int scancode, int act, int mods) {
+        ZF_ASSERT(g_state.input_state);
+
         const auto kc = ConvertGLFWKeyCode(key);
 
         switch (act) {
         case GLFW_PRESS:
-            SetBit(g_state.input.keys_down, kc);
-            SetBit(g_state.input.events.keys_pressed, kc);
+            SetBit(g_state.input_state->keys_down, kc);
+            SetBit(g_state.input_state->events.keys_pressed, kc);
             break;
 
         case GLFW_RELEASE:
-            UnsetBit(g_state.input.keys_down, kc);
-            SetBit(g_state.input.events.keys_released, kc);
+            UnsetBit(g_state.input_state->keys_down, kc);
+            SetBit(g_state.input_state->events.keys_released, kc);
             break;
 
         case GLFW_REPEAT:
@@ -405,80 +397,34 @@ namespace zf {
         }
     }
 
-    static void GLFWMouseButtonCallback(GLFWwindow *window, int btn, int act, int mods) {
-        const auto mbc = ConvertGLFWMouseButton(btn);
-
+    constexpr e_mouse_button_event_type ConvertGLFWMouseButtonAction(const t_i32 act) {
         switch (act) {
-        case GLFW_PRESS:
-            SetBit(g_state.input.mouse_buttons_down, mbc);
-            SetBit(g_state.input.events.mouse_buttons_pressed, mbc);
-            break;
-
-        case GLFW_RELEASE:
-            UnsetBit(g_state.input.mouse_buttons_down, mbc);
-            SetBit(g_state.input.events.mouse_buttons_released, mbc);
-            break;
+        case GLFW_PRESS: return ek_mouse_button_event_type_press;
+        case GLFW_RELEASE: return ek_mouse_button_event_type_release;
         }
+
+        ZF_UNREACHABLE();
+    }
+
+    static void GLFWMouseButtonCallback(GLFWwindow *window, int btn, int act, int mods) {
+        RegMouseButtonEvent(*g_state.input_state, ConvertGLFWMouseButton(btn), ConvertGLFWMouseButtonAction(act));
     }
 
     static void GLFWCursorPosCallback(GLFWwindow *window, double x, double y) {
-        g_state.input.cursor_pos = {
+        ZF_ASSERT(g_state.input_state);
+
+        g_state.input_state->cursor_pos = {
             static_cast<t_f32>(x),
             static_cast<t_f32>(y),
         };
     }
 
     static void GLFWScrollCallback(GLFWwindow *window, double offs_x, double offs_y) {
-        g_state.input.events.scroll += s_v2(static_cast<t_f32>(offs_x), static_cast<t_f32>(offs_y));
-    }
-
-    t_b8 IsKeyDown(const e_key_code kc) {
-        ZF_ASSERT(g_state.initted);
-        return IsBitSet(g_state.input.keys_down, kc);
-    }
-
-    t_b8 IsKeyPressed(const e_key_code kc) {
-        ZF_ASSERT(g_state.initted);
-        return IsBitSet(g_state.input.events.keys_pressed, kc);
-    }
-
-    t_b8 IsKeyReleased(const e_key_code kc) {
-        ZF_ASSERT(g_state.initted);
-        return IsBitSet(g_state.input.events.keys_released, kc);
-    }
-
-    t_b8 IsMouseButtonDown(const e_mouse_button_code mbc) {
-        ZF_ASSERT(g_state.initted);
-        return IsBitSet(g_state.input.mouse_buttons_down, mbc);
-    }
-
-    t_b8 IsMouseButtonPressed(const e_mouse_button_code mbc) {
-        ZF_ASSERT(g_state.initted);
-        return IsBitSet(g_state.input.events.mouse_buttons_pressed, mbc);
-    }
-
-    t_b8 IsMouseButtonReleased(const e_mouse_button_code mbc) {
-        ZF_ASSERT(g_state.initted);
-        return IsBitSet(g_state.input.events.mouse_buttons_released, mbc);
-    }
-
-    s_v2 CursorPos() {
-        ZF_ASSERT(g_state.initted);
-        return g_state.input.cursor_pos;
-    }
-
-    s_v2 ScrollOffset() {
-        ZF_ASSERT(g_state.initted);
-        return g_state.input.events.scroll;
+        RegScrollEvent(*g_state.input_state, {static_cast<t_f32>(offs_x), static_cast<t_f32>(offs_y)});
     }
 
     void SetCursorVisibility(const t_b8 visible) {
         ZF_ASSERT(g_state.initted);
         glfwSetInputMode(g_state.glfw_window, GLFW_CURSOR, visible ? GLFW_CURSOR_NORMAL : GLFW_CURSOR_HIDDEN);
-    }
-
-    void internal::ClearInputEvents() {
-        ZF_ASSERT(g_state.initted);
-        g_state.input.events = {};
     }
 }

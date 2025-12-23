@@ -300,6 +300,7 @@ namespace zf {
         [[noreturn]] void FatalError(const char *const func_name, const char *const file_name, const t_i32 line, const char *const cond = nullptr);
 
 #define ZF_FATAL() zf::internal::FatalError(__FUNCTION__, __FILE__, __LINE__)
+#define ZF_UNREACHABLE() ZF_FATAL()
 
 #define ZF_REQUIRE(cond)                                                       \
     do {                                                                       \
