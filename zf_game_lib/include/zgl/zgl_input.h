@@ -168,7 +168,6 @@ namespace zf {
     };
 
     void UpdateKeyState(s_input_state &input_state, const e_key_code code, const t_b8 is_down);
-    // void RefreshGamepadState(s_input_state &input_state, const t_b8 connected, const s_static_bit_vec<eks_gamepad_button_code_cnt> &btns_down);
 
     inline t_b8 IsKeyDown(const s_input_state &input_state, const e_key_code code) {
         return IsBitSet(input_state.keys_down, code);
@@ -203,6 +202,8 @@ namespace zf {
     inline s_v2 GetScrollOffset(const s_input_state &input_state) {
         return input_state.events.scroll;
     }
+
+    void UpdateGamepadState(s_input_state &input_state, const e_gamepad_id id, const t_b8 connected, const s_static_bit_vec<eks_gamepad_button_code_cnt> &btns_down);
 
     inline t_b8 IsGamepadConnected(const s_input_state &input_state, const e_gamepad_id id) {
         return IsBitSet(input_state.gamepads_connected, id);

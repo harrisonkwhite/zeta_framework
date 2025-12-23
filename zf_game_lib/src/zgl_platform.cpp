@@ -1,3 +1,4 @@
+#include <iterator>
 #include <zgl/zgl_platform.h>
 
 #include <GLFW/glfw3.h>
@@ -199,6 +200,29 @@ namespace zf {
         for (t_i32 i = GLFW_JOYSTICK_1; i <= GLFW_JOYSTICK_LAST; i++) {
             GLFWgamepadstate gamepad_state;
 
+            t_b8 connected = false;
+            s_static_bit_vec<eks_gamepad_button_code_cnt> btns_down = {};
+
+            if (glfwJoystickPresent(i) && glfwJoystickIsGamepad(i) && glfwGetGamepadState(i, &gamepad_state)) {
+                connected = true;
+
+                for (t_i32 j = 0; j <= GLFW_GAMEPAD_BUTTON_LAST; j++) {
+                    if (gamepad_state.buttons[j]) {
+                        SetBit(btns_down, j);
+                    } else {
+                        UnsetBit(btns_down, j);
+                    }
+                }
+            }
+
+            static_assert(GLFW_JOYSTICK_1 == 0);
+            UpdateGamepadState(input_state, static_cast<e_gamepad_id>(i), connected, btns_down);
+        }
+
+#if 0
+        for (t_i32 i = GLFW_JOYSTICK_1; i <= GLFW_JOYSTICK_LAST; i++) {
+            GLFWgamepadstate gamepad_state;
+
             if (glfwJoystickPresent(i) && glfwJoystickIsGamepad(i) && glfwGetGamepadState(i, &gamepad_state)) {
                 if (!IsBitSet(input_state.gamepads_connected, i)) {
                     SetBit(input_state.gamepads_connected, i);
@@ -224,6 +248,7 @@ namespace zf {
                 UnsetBit(input_state.gamepads_connected, i);
             }
         }
+#endif
     }
 
     s_ptr<void> NativeWindowHandle() {

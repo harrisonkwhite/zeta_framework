@@ -28,4 +28,25 @@ namespace zf {
             }
         }
     }
+
+    void UpdateGamepadState(s_input_state &input_state, const e_gamepad_id gamepad_id, const t_b8 connected, const s_static_bit_vec<eks_gamepad_button_code_cnt> &btns_down) {
+        if (!IsBitSet(input_state.gamepads_connected, gamepad_id)) {
+            SetBit(input_state.gamepads_connected, gamepad_id);
+            input_state.gamepads[gamepad_id] = {};
+        }
+
+        for (t_i32 i = 0; i < eks_gamepad_button_code_cnt; i++) {
+            if (IsBitSet(btns_down, i)) {
+                if (!IsBitSet(input_state.gamepads[i].buttons_down, i)) {
+                    SetBit(input_state.gamepads[i].buttons_down, i);
+                    SetBit(input_state.events.gamepads[i].buttons_pressed, i);
+                }
+            } else {
+                if (IsBitSet(input_state.gamepads[i].buttons_down, i)) {
+                    UnsetBit(input_state.gamepads[i].buttons_down, i);
+                    SetBit(input_state.events.gamepads[i].buttons_released, i);
+                }
+            }
+        }
+    }
 }
