@@ -4,8 +4,6 @@
 
 namespace zf {
     enum e_key_code : t_i32 {
-        eks_key_code_none = -1,
-
         ek_key_code_space,
         ek_key_code_0,
         ek_key_code_1,
@@ -74,8 +72,6 @@ namespace zf {
     };
 
     enum e_mouse_button_code : t_i32 {
-        eks_mouse_button_code_none = -1,
-
         ek_mouse_button_code_left,
         ek_mouse_button_code_right,
         ek_mouse_button_code_middle,
@@ -171,22 +167,8 @@ namespace zf {
         } events = {};
     };
 
-    enum e_key_event_type {
-        ek_key_event_type_press,
-        ek_key_event_type_release,
-        ek_key_event_type_repeat
-    };
-
-    void RegKeyEvent(s_input_state &input_state, const e_key_code code, const e_key_event_type type);
-
-    enum e_mouse_button_event_type {
-        ek_mouse_button_event_type_press,
-        ek_mouse_button_event_type_release
-    };
-
-    void RegMouseButtonEvent(s_input_state &input_state, const e_mouse_button_code btn_code, const e_mouse_button_event_type type);
-
-    void RegScrollEvent(s_input_state &input_state, const s_v2 offs);
+    void UpdateKeyState(s_input_state &input_state, const e_key_code code, const t_b8 is_down);
+    // void RefreshGamepadState(s_input_state &input_state, const t_b8 connected, const s_static_bit_vec<eks_gamepad_button_code_cnt> &btns_down);
 
     inline t_b8 IsKeyDown(const s_input_state &input_state, const e_key_code code) {
         return IsBitSet(input_state.keys_down, code);
@@ -199,6 +181,8 @@ namespace zf {
     inline t_b8 IsKeyReleased(const s_input_state &input_state, const e_key_code code) {
         return IsBitSet(input_state.events.keys_released, code);
     }
+
+    void UpdateMouseButtonState(s_input_state &input_state, const e_mouse_button_code code, const t_b8 is_down);
 
     inline t_b8 IsMouseButtonDown(const s_input_state &input_state, const e_mouse_button_code btn_code) {
         return IsBitSet(input_state.mouse_buttons_down, btn_code);

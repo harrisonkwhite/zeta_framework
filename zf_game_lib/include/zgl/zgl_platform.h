@@ -6,14 +6,14 @@ namespace zf {
     struct s_input_state;
 
     // Initialises the platform layer module. The window is not shown by default, you have to manually do this. The given input state is written to as OS events are polled, and needs to exist for the lifetime of this module.
-    void InitPlatform(const s_v2_i init_window_size, s_input_state &input_state);
+    void InitPlatform(const s_v2_i init_window_size);
 
     void ShutdownPlatform();
 
     // Gives the time in seconds since the platform module was initialised.
     t_f64 Time();
 
-    void PollOSEvents();
+    void PollOSEvents(s_input_state &input_state);
 
     s_ptr<void> NativeWindowHandle();
     s_ptr<void> NativeDisplayHandle();

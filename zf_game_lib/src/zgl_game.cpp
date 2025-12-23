@@ -24,10 +24,10 @@ namespace zf {
         temp_mem_arena.Init(Megabytes(10)); // @todo: Make customisable.
         ZF_DEFER({ temp_mem_arena.Release(); });
 
-        s_input_state input_state = {};
-
-        InitPlatform(g_init_window_size, input_state);
+        InitPlatform(g_init_window_size);
         ZF_DEFER({ ShutdownPlatform(); });
+
+        s_input_state input_state = {};
 
         s_rendering_basis &rendering_basis = InitGFX(perm_mem_arena);
         ZF_DEFER({ ShutdownGFX(rendering_basis); });
@@ -54,7 +54,7 @@ namespace zf {
         while (!ShouldWindowClose()) {
             temp_mem_arena.Rewind(0);
 
-            PollOSEvents();
+            PollOSEvents(input_state);
 
             const t_f64 frame_time = Time();
             const t_f64 frame_time_delta = frame_time - frame_time_last;

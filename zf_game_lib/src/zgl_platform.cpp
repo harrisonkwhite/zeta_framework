@@ -26,138 +26,9 @@ namespace zf {
         t_b8 fullscreen_active = false;
         s_v2_i prefullscreen_pos = {};
         s_v2_i prefullscreen_size = {};
-
-        s_ptr<s_input_state> input_state = nullptr;
     } g_state;
 
-    static void GLFWKeyCallback(GLFWwindow *window, int key, int scancode, int act, int mods) {
-        ZF_ASSERT(g_state.input_state);
-
-        const auto kc = [key]() -> e_key_code {
-            switch (key) {
-            case GLFW_KEY_SPACE: return ek_key_code_space;
-
-            case GLFW_KEY_0: return ek_key_code_0;
-            case GLFW_KEY_1: return ek_key_code_1;
-            case GLFW_KEY_2: return ek_key_code_2;
-            case GLFW_KEY_3: return ek_key_code_3;
-            case GLFW_KEY_4: return ek_key_code_4;
-            case GLFW_KEY_5: return ek_key_code_5;
-            case GLFW_KEY_6: return ek_key_code_6;
-            case GLFW_KEY_7: return ek_key_code_7;
-            case GLFW_KEY_8: return ek_key_code_8;
-            case GLFW_KEY_9: return ek_key_code_9;
-
-            case GLFW_KEY_A: return ek_key_code_a;
-            case GLFW_KEY_B: return ek_key_code_b;
-            case GLFW_KEY_C: return ek_key_code_c;
-            case GLFW_KEY_D: return ek_key_code_d;
-            case GLFW_KEY_E: return ek_key_code_e;
-            case GLFW_KEY_F: return ek_key_code_f;
-            case GLFW_KEY_G: return ek_key_code_g;
-            case GLFW_KEY_H: return ek_key_code_h;
-            case GLFW_KEY_I: return ek_key_code_i;
-            case GLFW_KEY_J: return ek_key_code_j;
-            case GLFW_KEY_K: return ek_key_code_k;
-            case GLFW_KEY_L: return ek_key_code_l;
-            case GLFW_KEY_M: return ek_key_code_m;
-            case GLFW_KEY_N: return ek_key_code_n;
-            case GLFW_KEY_O: return ek_key_code_o;
-            case GLFW_KEY_P: return ek_key_code_p;
-            case GLFW_KEY_Q: return ek_key_code_q;
-            case GLFW_KEY_R: return ek_key_code_r;
-            case GLFW_KEY_S: return ek_key_code_s;
-            case GLFW_KEY_T: return ek_key_code_t;
-            case GLFW_KEY_U: return ek_key_code_u;
-            case GLFW_KEY_V: return ek_key_code_v;
-            case GLFW_KEY_W: return ek_key_code_w;
-            case GLFW_KEY_X: return ek_key_code_x;
-            case GLFW_KEY_Y: return ek_key_code_y;
-            case GLFW_KEY_Z: return ek_key_code_z;
-
-            case GLFW_KEY_ESCAPE: return ek_key_code_escape;
-            case GLFW_KEY_ENTER: return ek_key_code_enter;
-            case GLFW_KEY_BACKSPACE: return ek_key_code_backspace;
-            case GLFW_KEY_TAB: return ek_key_code_tab;
-
-            case GLFW_KEY_RIGHT: return ek_key_code_right;
-            case GLFW_KEY_LEFT: return ek_key_code_left;
-            case GLFW_KEY_DOWN: return ek_key_code_down;
-            case GLFW_KEY_UP: return ek_key_code_up;
-
-            case GLFW_KEY_F1: return ek_key_code_f1;
-            case GLFW_KEY_F2: return ek_key_code_f2;
-            case GLFW_KEY_F3: return ek_key_code_f3;
-            case GLFW_KEY_F4: return ek_key_code_f4;
-            case GLFW_KEY_F5: return ek_key_code_f5;
-            case GLFW_KEY_F6: return ek_key_code_f6;
-            case GLFW_KEY_F7: return ek_key_code_f7;
-            case GLFW_KEY_F8: return ek_key_code_f8;
-            case GLFW_KEY_F9: return ek_key_code_f9;
-            case GLFW_KEY_F10: return ek_key_code_f10;
-            case GLFW_KEY_F11: return ek_key_code_f11;
-            case GLFW_KEY_F12: return ek_key_code_f12;
-
-            case GLFW_KEY_LEFT_SHIFT: return ek_key_code_left_shift;
-            case GLFW_KEY_LEFT_CONTROL: return ek_key_code_left_control;
-            case GLFW_KEY_LEFT_ALT: return ek_key_code_left_alt;
-
-            case GLFW_KEY_RIGHT_SHIFT: return ek_key_code_right_shift;
-            case GLFW_KEY_RIGHT_CONTROL: return ek_key_code_right_control;
-            case GLFW_KEY_RIGHT_ALT: return ek_key_code_right_alt;
-            }
-
-            return eks_key_code_none;
-        }();
-
-        const auto ev_type = [act]() -> e_key_event_type {
-            switch (act) {
-            case GLFW_PRESS: return ek_key_event_type_press;
-            case GLFW_RELEASE: return ek_key_event_type_release;
-            case GLFW_REPEAT: return ek_key_event_type_repeat;
-            }
-
-            ZF_UNREACHABLE();
-        }();
-
-        RegKeyEvent(*g_state.input_state, kc, ev_type);
-    }
-
-    static void GLFWMouseButtonCallback(GLFWwindow *window, int btn, int act, int mods) {
-        const auto mbc = [btn]() -> e_mouse_button_code {
-            switch (btn) {
-            case GLFW_MOUSE_BUTTON_LEFT: return ek_mouse_button_code_left;
-            case GLFW_MOUSE_BUTTON_RIGHT: return ek_mouse_button_code_right;
-            case GLFW_MOUSE_BUTTON_MIDDLE: return ek_mouse_button_code_middle;
-            }
-
-            return eks_mouse_button_code_none;
-        }();
-
-        const auto ev_type = [act]() -> e_mouse_button_event_type {
-            switch (act) {
-            case GLFW_PRESS: return ek_mouse_button_event_type_press;
-            case GLFW_RELEASE: return ek_mouse_button_event_type_release;
-            }
-
-            ZF_UNREACHABLE();
-        }();
-
-        RegMouseButtonEvent(*g_state.input_state, mbc, ev_type);
-    }
-
-    static void GLFWCursorPosCallback(GLFWwindow *window, double x, double y) {
-        g_state.input_state->cursor_pos = {
-            static_cast<t_f32>(x),
-            static_cast<t_f32>(y),
-        };
-    }
-
-    static void GLFWScrollCallback(GLFWwindow *window, double offs_x, double offs_y) {
-        RegScrollEvent(*g_state.input_state, {static_cast<t_f32>(offs_x), static_cast<t_f32>(offs_y)});
-    }
-
-    void InitPlatform(const s_v2_i init_window_size, s_input_state &input_state) {
+    void InitPlatform(const s_v2_i init_window_size) {
         ZF_REQUIRE(!g_state.initted);
         ZF_REQUIRE(init_window_size.x > 0 && init_window_size.y > 0);
 
@@ -178,7 +49,7 @@ namespace zf {
 
         {
             const auto fb_size_callback =
-                [](GLFWwindow *glfw_window, int width, int height) {
+                [](GLFWwindow *window, int width, int height) {
                     if (width > 0 && height > 0) {
                         g_state.framebuffer_size_cache = {width, height};
                     }
@@ -187,12 +58,15 @@ namespace zf {
             glfwSetFramebufferSizeCallback(g_state.glfw_window, fb_size_callback);
         }
 
-        g_state.input_state = &input_state;
+        {
+            const auto scroll_callback =
+                [](GLFWwindow *window, double offs_x, double offs_y) {
+                    const s_ptr<s_input_state> input_state = static_cast<s_input_state *>(glfwGetWindowUserPointer(window));
+                    input_state->events.scroll += s_v2(static_cast<t_f32>(offs_x), static_cast<t_f32>(offs_y));
+                };
 
-        glfwSetKeyCallback(g_state.glfw_window, GLFWKeyCallback);
-        glfwSetMouseButtonCallback(g_state.glfw_window, GLFWMouseButtonCallback);
-        glfwSetCursorPosCallback(g_state.glfw_window, GLFWCursorPosCallback);
-        glfwSetScrollCallback(g_state.glfw_window, GLFWScrollCallback);
+            glfwSetScrollCallback(g_state.glfw_window, scroll_callback);
+        }
 
         g_state.initted = true;
     }
@@ -210,38 +84,127 @@ namespace zf {
         return glfwGetTime();
     }
 
-    void PollOSEvents() {
+    void PollOSEvents(s_input_state &input_state) {
         ZF_ASSERT(g_state.initted);
 
         glfwPollEvents();
 
-        // Refresh gamepad states.
+        const auto to_glfw_key = [](const e_key_code key_code) -> t_i32 {
+            switch (key_code) {
+            case ek_key_code_space: return GLFW_KEY_SPACE;
+
+            case ek_key_code_0: return GLFW_KEY_0;
+            case ek_key_code_1: return GLFW_KEY_1;
+            case ek_key_code_2: return GLFW_KEY_2;
+            case ek_key_code_3: return GLFW_KEY_3;
+            case ek_key_code_4: return GLFW_KEY_4;
+            case ek_key_code_5: return GLFW_KEY_5;
+            case ek_key_code_6: return GLFW_KEY_6;
+            case ek_key_code_7: return GLFW_KEY_7;
+            case ek_key_code_8: return GLFW_KEY_8;
+            case ek_key_code_9: return GLFW_KEY_9;
+
+            case ek_key_code_a: return GLFW_KEY_A;
+            case ek_key_code_b: return GLFW_KEY_B;
+            case ek_key_code_c: return GLFW_KEY_C;
+            case ek_key_code_d: return GLFW_KEY_D;
+            case ek_key_code_e: return GLFW_KEY_E;
+            case ek_key_code_f: return GLFW_KEY_F;
+            case ek_key_code_g: return GLFW_KEY_G;
+            case ek_key_code_h: return GLFW_KEY_H;
+            case ek_key_code_i: return GLFW_KEY_I;
+            case ek_key_code_j: return GLFW_KEY_J;
+            case ek_key_code_k: return GLFW_KEY_K;
+            case ek_key_code_l: return GLFW_KEY_L;
+            case ek_key_code_m: return GLFW_KEY_M;
+            case ek_key_code_n: return GLFW_KEY_N;
+            case ek_key_code_o: return GLFW_KEY_O;
+            case ek_key_code_p: return GLFW_KEY_P;
+            case ek_key_code_q: return GLFW_KEY_Q;
+            case ek_key_code_r: return GLFW_KEY_R;
+            case ek_key_code_s: return GLFW_KEY_S;
+            case ek_key_code_t: return GLFW_KEY_T;
+            case ek_key_code_u: return GLFW_KEY_U;
+            case ek_key_code_v: return GLFW_KEY_V;
+            case ek_key_code_w: return GLFW_KEY_W;
+            case ek_key_code_x: return GLFW_KEY_X;
+            case ek_key_code_y: return GLFW_KEY_Y;
+            case ek_key_code_z: return GLFW_KEY_Z;
+
+            case ek_key_code_escape: return GLFW_KEY_ESCAPE;
+            case ek_key_code_enter: return GLFW_KEY_ENTER;
+            case ek_key_code_backspace: return GLFW_KEY_BACKSPACE;
+            case ek_key_code_tab: return GLFW_KEY_TAB;
+
+            case ek_key_code_right: return GLFW_KEY_RIGHT;
+            case ek_key_code_left: return GLFW_KEY_LEFT;
+            case ek_key_code_down: return GLFW_KEY_DOWN;
+            case ek_key_code_up: return GLFW_KEY_UP;
+
+            case ek_key_code_f1: return GLFW_KEY_F1;
+            case ek_key_code_f2: return GLFW_KEY_F2;
+            case ek_key_code_f3: return GLFW_KEY_F3;
+            case ek_key_code_f4: return GLFW_KEY_F4;
+            case ek_key_code_f5: return GLFW_KEY_F5;
+            case ek_key_code_f6: return GLFW_KEY_F6;
+            case ek_key_code_f7: return GLFW_KEY_F7;
+            case ek_key_code_f8: return GLFW_KEY_F8;
+            case ek_key_code_f9: return GLFW_KEY_F9;
+            case ek_key_code_f10: return GLFW_KEY_F10;
+            case ek_key_code_f11: return GLFW_KEY_F11;
+            case ek_key_code_f12: return GLFW_KEY_F12;
+
+            case ek_key_code_left_shift: return GLFW_KEY_LEFT_SHIFT;
+            case ek_key_code_left_control: return GLFW_KEY_LEFT_CONTROL;
+            case ek_key_code_left_alt: return GLFW_KEY_LEFT_ALT;
+
+            case ek_key_code_right_shift: return GLFW_KEY_RIGHT_SHIFT;
+            case ek_key_code_right_control: return GLFW_KEY_RIGHT_CONTROL;
+            case ek_key_code_right_alt: return GLFW_KEY_RIGHT_ALT;
+
+            case eks_key_code_cnt: break;
+            }
+
+            ZF_UNREACHABLE();
+        };
+
+        for (t_i32 i = 0; i < eks_key_code_cnt; i++) {
+            const t_b8 is_down = glfwGetKey(g_state.glfw_window, to_glfw_key(static_cast<e_key_code>(i))) == GLFW_PRESS;
+            UpdateKeyState(input_state, static_cast<e_key_code>(i), is_down);
+        }
+
+        {
+            t_f64 cp_x_f64, cp_y_f64;
+            glfwGetCursorPos(g_state.glfw_window, &cp_x_f64, &cp_y_f64);
+            input_state.cursor_pos = {static_cast<t_f32>(cp_x_f64), static_cast<t_f32>(cp_y_f64)};
+        }
+
         for (t_i32 i = GLFW_JOYSTICK_1; i <= GLFW_JOYSTICK_LAST; i++) {
             GLFWgamepadstate gamepad_state;
 
             if (glfwJoystickPresent(i) && glfwJoystickIsGamepad(i) && glfwGetGamepadState(i, &gamepad_state)) {
-                if (!IsBitSet(g_state.input_state->gamepads_connected, i)) {
-                    SetBit(g_state.input_state->gamepads_connected, i);
-                    g_state.input_state->gamepads[i] = {};
+                if (!IsBitSet(input_state.gamepads_connected, i)) {
+                    SetBit(input_state.gamepads_connected, i);
+                    input_state.gamepads[i] = {};
                 }
 
                 for (t_i32 j = 0; j <= GLFW_GAMEPAD_BUTTON_LAST; j++) {
                     if (gamepad_state.buttons[j]) {
-                        if (!IsBitSet(g_state.input_state->gamepads[i].buttons_down, j)) {
-                            SetBit(g_state.input_state->events.gamepads[i].buttons_pressed, j);
+                        if (!IsBitSet(input_state.gamepads[i].buttons_down, j)) {
+                            SetBit(input_state.events.gamepads[i].buttons_pressed, j);
                         }
 
-                        SetBit(g_state.input_state->gamepads[i].buttons_down, j);
+                        SetBit(input_state.gamepads[i].buttons_down, j);
                     } else {
-                        if (IsBitSet(g_state.input_state->gamepads[i].buttons_down, j)) {
-                            SetBit(g_state.input_state->events.gamepads[i].buttons_released, j);
+                        if (IsBitSet(input_state.gamepads[i].buttons_down, j)) {
+                            SetBit(input_state.events.gamepads[i].buttons_released, j);
                         }
 
-                        UnsetBit(g_state.input_state->gamepads[i].buttons_down, j);
+                        UnsetBit(input_state.gamepads[i].buttons_down, j);
                     }
                 }
             } else {
-                UnsetBit(g_state.input_state->gamepads_connected, i);
+                UnsetBit(input_state.gamepads_connected, i);
             }
         }
     }
