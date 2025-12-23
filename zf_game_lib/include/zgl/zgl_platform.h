@@ -13,6 +13,7 @@ namespace zf {
     // Gives the time in seconds since the platform module was initialised.
     t_f64 Time();
 
+    // Also updates the given input state based on OS events.
     void PollOSEvents(s_input_state &input_state);
 
     s_ptr<void> NativeWindowHandle();
