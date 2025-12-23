@@ -1,4 +1,3 @@
-#include <iterator>
 #include <zgl/zgl_platform.h>
 
 #include <GLFW/glfw3.h>
@@ -198,10 +197,11 @@ namespace zf {
         }
 
         for (t_i32 i = GLFW_JOYSTICK_1; i <= GLFW_JOYSTICK_LAST; i++) {
-            GLFWgamepadstate gamepad_state;
-
             t_b8 connected = false;
             s_static_bit_vec<eks_gamepad_button_code_cnt> btns_down = {};
+            s_static_array<t_f32, eks_gamepad_axis_code_cnt> axes = {};
+
+            GLFWgamepadstate gamepad_state;
 
             if (glfwJoystickPresent(i) && glfwJoystickIsGamepad(i) && glfwGetGamepadState(i, &gamepad_state)) {
                 connected = true;
@@ -213,42 +213,15 @@ namespace zf {
                         UnsetBit(btns_down, j);
                     }
                 }
+
+                for (t_i32 j = 0; j <= GLFW_GAMEPAD_AXIS_LAST; j++) {
+                    axes[j] = gamepad_state.axes[j];
+                }
             }
 
             static_assert(GLFW_JOYSTICK_1 == 0);
-            UpdateGamepadState(input_state, static_cast<e_gamepad_id>(i), connected, btns_down);
+            UpdateGamepadState(input_state, static_cast<e_gamepad_id>(i), connected, btns_down, axes);
         }
-
-#if 0
-        for (t_i32 i = GLFW_JOYSTICK_1; i <= GLFW_JOYSTICK_LAST; i++) {
-            GLFWgamepadstate gamepad_state;
-
-            if (glfwJoystickPresent(i) && glfwJoystickIsGamepad(i) && glfwGetGamepadState(i, &gamepad_state)) {
-                if (!IsBitSet(input_state.gamepads_connected, i)) {
-                    SetBit(input_state.gamepads_connected, i);
-                    input_state.gamepads[i] = {};
-                }
-
-                for (t_i32 j = 0; j <= GLFW_GAMEPAD_BUTTON_LAST; j++) {
-                    if (gamepad_state.buttons[j]) {
-                        if (!IsBitSet(input_state.gamepads[i].buttons_down, j)) {
-                            SetBit(input_state.events.gamepads[i].buttons_pressed, j);
-                        }
-
-                        SetBit(input_state.gamepads[i].buttons_down, j);
-                    } else {
-                        if (IsBitSet(input_state.gamepads[i].buttons_down, j)) {
-                            SetBit(input_state.events.gamepads[i].buttons_released, j);
-                        }
-
-                        UnsetBit(input_state.gamepads[i].buttons_down, j);
-                    }
-                }
-            } else {
-                UnsetBit(input_state.gamepads_connected, i);
-            }
-        }
-#endif
     }
 
     s_ptr<void> NativeWindowHandle() {

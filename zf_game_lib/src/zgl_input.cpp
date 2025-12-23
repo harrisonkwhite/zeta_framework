@@ -29,10 +29,16 @@ namespace zf {
         }
     }
 
-    void UpdateGamepadState(s_input_state &input_state, const e_gamepad_id gamepad_id, const t_b8 connected, const s_static_bit_vec<eks_gamepad_button_code_cnt> &btns_down) {
+    void UpdateGamepadState(s_input_state &input_state, const e_gamepad_id gamepad_id, const t_b8 connected, const s_static_bit_vec<eks_gamepad_button_code_cnt> &btns_down, const s_static_array<t_f32, eks_gamepad_axis_code_cnt> &axes) {
+        if (!connected) {
+            ZF_ASSERT(AreAllBitsUnset(btns_down) && DoAllEqual(axes.ToNonstatic(), 0.0f));
+            return;
+        }
+
         if (!IsBitSet(input_state.gamepads_connected, gamepad_id)) {
             SetBit(input_state.gamepads_connected, gamepad_id);
             input_state.gamepads[gamepad_id] = {};
+            input_state.events.gamepads[gamepad_id] = {};
         }
 
         for (t_i32 i = 0; i < eks_gamepad_button_code_cnt; i++) {
@@ -48,5 +54,7 @@ namespace zf {
                 }
             }
         }
+
+        Copy(input_state.gamepads[gamepad_id].axes.ToNonstatic(), axes.ToNonstatic());
     }
 }

@@ -137,6 +137,7 @@ namespace zf {
 
     struct s_gamepad {
         s_static_bit_vec<eks_gamepad_button_code_cnt> buttons_down = {};
+        s_static_array<t_f32, eks_gamepad_axis_code_cnt> axes = {};
     };
 
     struct s_gamepad_events {
@@ -203,7 +204,7 @@ namespace zf {
         return input_state.events.scroll;
     }
 
-    void UpdateGamepadState(s_input_state &input_state, const e_gamepad_id id, const t_b8 connected, const s_static_bit_vec<eks_gamepad_button_code_cnt> &btns_down);
+    void UpdateGamepadState(s_input_state &input_state, const e_gamepad_id id, const t_b8 connected, const s_static_bit_vec<eks_gamepad_button_code_cnt> &btns_down, const s_static_array<t_f32, eks_gamepad_axis_code_cnt> &axes);
 
     inline t_b8 IsGamepadConnected(const s_input_state &input_state, const e_gamepad_id id) {
         return IsBitSet(input_state.gamepads_connected, id);
@@ -222,5 +223,10 @@ namespace zf {
     inline t_b8 IsGamepadButtonReleased(const s_input_state &input_state, const e_gamepad_id gamepad_id, const e_gamepad_button_code btn_code) {
         ZF_ASSERT(IsGamepadConnected(input_state, gamepad_id));
         return IsBitSet(input_state.events.gamepads[gamepad_id].buttons_released, btn_code);
+    }
+
+    inline t_f32 GetGamepadAxisValue(const s_input_state &input_state, const e_gamepad_id gamepad_id, const e_gamepad_axis_code axis_code) {
+        ZF_ASSERT(IsGamepadConnected(input_state, gamepad_id));
+        return input_state.gamepads[gamepad_id].axes[axis_code];
     }
 }
