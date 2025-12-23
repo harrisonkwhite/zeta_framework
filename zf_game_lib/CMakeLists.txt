@@ -53,6 +53,7 @@ add_library(zf_game_lib STATIC
     src/zgl_gfx_core.cpp
     src/zgl_gfx_helpers.cpp
     src/zgl_audio.cpp
+    src/zgl_rng.cpp
 
     include/zgl.h
     include/zgl/zgl_game.h
@@ -61,6 +62,7 @@ add_library(zf_game_lib STATIC
     include/zgl/zgl_gfx_core.h
     include/zgl/zgl_gfx_helpers.h
     include/zgl/zgl_audio.h
+    include/zgl/zgl_rng.h
 )
 
 target_sources(zf_game_lib PRIVATE
