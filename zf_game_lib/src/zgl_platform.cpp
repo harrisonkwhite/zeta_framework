@@ -215,7 +215,24 @@ namespace zf {
 
         glfwPollEvents();
 
-        // @todo: Update gamepad state.
+        // Refresh gamepad states.
+        for (t_i32 i = GLFW_JOYSTICK_1; i <= GLFW_JOYSTICK_LAST; i++) {
+            GLFWgamepadstate gamepad_state;
+
+            if (glfwJoystickPresent(i) && glfwJoystickIsGamepad(i) && glfwGetGamepadState(i, &gamepad_state)) {
+                SetBit(g_state.input_state->gamepads_connected, i);
+
+                for (t_i32 j = 0; j <= GLFW_GAMEPAD_BUTTON_LAST; j++) {
+                    if (gamepad_state.buttons[j]) {
+                        SetBit(g_state.input_state->gamepad_states[i].buttons_down, j);
+                    } else {
+                        UnsetBit(g_state.input_state->gamepad_states[i].buttons_down, j);
+                    }
+                }
+            } else {
+                UnsetBit(g_state.input_state->gamepads_connected, i);
+            }
+        }
     }
 
     s_ptr<void> NativeWindowHandle() {
