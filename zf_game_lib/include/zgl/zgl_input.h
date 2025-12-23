@@ -139,18 +139,24 @@ namespace zf {
         eks_gamepad_axis_code_cnt
     };
 
-    struct s_gamepad_state {
+    struct s_gamepad {
         s_static_bit_vec<eks_gamepad_button_code_cnt> buttons_down = {};
+    };
+
+    struct s_gamepad_events {
+        s_static_bit_vec<eks_gamepad_button_code_cnt> buttons_pressed = {};
+        s_static_bit_vec<eks_gamepad_button_code_cnt> buttons_released = {};
     };
 
     struct s_input_state {
         s_static_bit_vec<eks_key_code_cnt> keys_down = {};
 
         s_static_bit_vec<eks_mouse_button_code_cnt> mouse_buttons_down = {};
+
         s_v2 cursor_pos = {};
 
         s_static_bit_vec<eks_gamepad_id_cnt> gamepads_connected = {};
-        s_static_array<s_gamepad_state, eks_gamepad_id_cnt> gamepad_states = {};
+        s_static_array<s_gamepad, eks_gamepad_id_cnt> gamepads = {};
 
         struct {
             s_static_bit_vec<eks_key_code_cnt> keys_pressed;
@@ -160,6 +166,8 @@ namespace zf {
             s_static_bit_vec<eks_mouse_button_code_cnt> mouse_buttons_released;
 
             s_v2 scroll;
+
+            s_static_array<s_gamepad_events, eks_gamepad_id_cnt> gamepads;
         } events = {};
     };
 
@@ -218,6 +226,16 @@ namespace zf {
 
     inline t_b8 IsGamepadButtonDown(const s_input_state &input_state, const e_gamepad_id gamepad_id, const e_gamepad_button_code btn_code) {
         ZF_ASSERT(IsGamepadConnected(input_state, gamepad_id));
-        return IsBitSet(input_state.gamepad_states[gamepad_id].buttons_down, btn_code);
+        return IsBitSet(input_state.gamepads[gamepad_id].buttons_down, btn_code);
+    }
+
+    inline t_b8 IsGamepadButtonPressed(const s_input_state &input_state, const e_gamepad_id gamepad_id, const e_gamepad_button_code btn_code) {
+        ZF_ASSERT(IsGamepadConnected(input_state, gamepad_id));
+        return IsBitSet(input_state.events.gamepads[gamepad_id].buttons_pressed, btn_code);
+    }
+
+    inline t_b8 IsGamepadButtonReleased(const s_input_state &input_state, const e_gamepad_id gamepad_id, const e_gamepad_button_code btn_code) {
+        ZF_ASSERT(IsGamepadConnected(input_state, gamepad_id));
+        return IsBitSet(input_state.events.gamepads[gamepad_id].buttons_released, btn_code);
     }
 }

@@ -220,13 +220,24 @@ namespace zf {
             GLFWgamepadstate gamepad_state;
 
             if (glfwJoystickPresent(i) && glfwJoystickIsGamepad(i) && glfwGetGamepadState(i, &gamepad_state)) {
-                SetBit(g_state.input_state->gamepads_connected, i);
+                if (!IsBitSet(g_state.input_state->gamepads_connected, i)) {
+                    SetBit(g_state.input_state->gamepads_connected, i);
+                    g_state.input_state->gamepads[i] = {};
+                }
 
                 for (t_i32 j = 0; j <= GLFW_GAMEPAD_BUTTON_LAST; j++) {
                     if (gamepad_state.buttons[j]) {
-                        SetBit(g_state.input_state->gamepad_states[i].buttons_down, j);
+                        if (!IsBitSet(g_state.input_state->gamepads[i].buttons_down, j)) {
+                            SetBit(g_state.input_state->events.gamepads[i].buttons_pressed, j);
+                        }
+
+                        SetBit(g_state.input_state->gamepads[i].buttons_down, j);
                     } else {
-                        UnsetBit(g_state.input_state->gamepad_states[i].buttons_down, j);
+                        if (IsBitSet(g_state.input_state->gamepads[i].buttons_down, j)) {
+                            SetBit(g_state.input_state->events.gamepads[i].buttons_released, j);
+                        }
+
+                        UnsetBit(g_state.input_state->gamepads[i].buttons_down, j);
                     }
                 }
             } else {
