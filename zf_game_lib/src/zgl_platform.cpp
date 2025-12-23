@@ -220,7 +220,7 @@ namespace zf {
             }
 
             static_assert(GLFW_JOYSTICK_1 == 0);
-            UpdateGamepadState(input_state, static_cast<e_gamepad_id>(i), connected, btns_down, axes);
+            UpdateGamepadState(input_state, i, connected, btns_down, axes);
         }
     }
 

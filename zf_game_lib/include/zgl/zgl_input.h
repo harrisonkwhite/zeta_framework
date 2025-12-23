@@ -79,26 +79,7 @@ namespace zf {
         eks_mouse_button_code_cnt
     };
 
-    enum e_gamepad_id {
-        ek_gamepad_id_0,
-        ek_gamepad_id_1,
-        ek_gamepad_id_2,
-        ek_gamepad_id_3,
-        ek_gamepad_id_4,
-        ek_gamepad_id_5,
-        ek_gamepad_id_6,
-        ek_gamepad_id_7,
-        ek_gamepad_id_8,
-        ek_gamepad_id_9,
-        ek_gamepad_id_10,
-        ek_gamepad_id_11,
-        ek_gamepad_id_12,
-        ek_gamepad_id_13,
-        ek_gamepad_id_14,
-        ek_gamepad_id_15,
-
-        eks_gamepad_id_cnt
-    };
+    constexpr t_i32 g_gamepad_limit = 16;
 
     enum e_gamepad_button_code : t_i32 {
         eks_gamepad_button_code_none = -1,
@@ -152,8 +133,9 @@ namespace zf {
 
         s_v2 cursor_pos = {};
 
-        s_static_bit_vec<eks_gamepad_id_cnt> gamepads_connected = {};
-        s_static_array<s_gamepad, eks_gamepad_id_cnt> gamepads = {};
+        s_static_bit_vec<g_gamepad_limit> gamepads_connected = {};
+        s_static_array<s_gamepad, g_gamepad_limit> gamepads = {};
+        s_static_array<t_f32, eks_gamepad_axis_code_cnt> gamepad_axis_deadzones = {};
 
         struct {
             s_static_bit_vec<eks_key_code_cnt> keys_pressed;
@@ -164,7 +146,7 @@ namespace zf {
 
             s_v2 scroll;
 
-            s_static_array<s_gamepad_events, eks_gamepad_id_cnt> gamepads;
+            s_static_array<s_gamepad_events, g_gamepad_limit> gamepads;
         } events = {};
     };
 
@@ -204,29 +186,56 @@ namespace zf {
         return input_state.events.scroll;
     }
 
-    void UpdateGamepadState(s_input_state &input_state, const e_gamepad_id id, const t_b8 connected, const s_static_bit_vec<eks_gamepad_button_code_cnt> &btns_down, const s_static_array<t_f32, eks_gamepad_axis_code_cnt> &axes);
+    void UpdateGamepadState(s_input_state &input_state, const t_i32 gamepad_index, const t_b8 connected, const s_static_bit_vec<eks_gamepad_button_code_cnt> &btns_down, const s_static_array<t_f32, eks_gamepad_axis_code_cnt> &axes);
 
-    inline t_b8 IsGamepadConnected(const s_input_state &input_state, const e_gamepad_id id) {
-        return IsBitSet(input_state.gamepads_connected, id);
+    inline t_b8 IsGamepadConnected(const s_input_state &input_state, const t_i32 index) {
+        ZF_ASSERT(index >= 0 && index < g_gamepad_limit);
+        return IsBitSet(input_state.gamepads_connected, index);
     }
 
-    inline t_b8 IsGamepadButtonDown(const s_input_state &input_state, const e_gamepad_id gamepad_id, const e_gamepad_button_code btn_code) {
-        ZF_ASSERT(IsGamepadConnected(input_state, gamepad_id));
-        return IsBitSet(input_state.gamepads[gamepad_id].buttons_down, btn_code);
+    inline t_b8 IsGamepadButtonDown(const s_input_state &input_state, const t_i32 gamepad_index, const e_gamepad_button_code btn_code) {
+        ZF_ASSERT(gamepad_index >= 0 && gamepad_index < g_gamepad_limit);
+        ZF_ASSERT(IsGamepadConnected(input_state, gamepad_index));
+
+        return IsBitSet(input_state.gamepads[gamepad_index].buttons_down, btn_code);
     }
 
-    inline t_b8 IsGamepadButtonPressed(const s_input_state &input_state, const e_gamepad_id gamepad_id, const e_gamepad_button_code btn_code) {
-        ZF_ASSERT(IsGamepadConnected(input_state, gamepad_id));
-        return IsBitSet(input_state.events.gamepads[gamepad_id].buttons_pressed, btn_code);
+    inline t_b8 IsGamepadButtonPressed(const s_input_state &input_state, const t_i32 gamepad_index, const e_gamepad_button_code btn_code) {
+        ZF_ASSERT(gamepad_index >= 0 && gamepad_index < g_gamepad_limit);
+        ZF_ASSERT(IsGamepadConnected(input_state, gamepad_index));
+
+        return IsBitSet(input_state.events.gamepads[gamepad_index].buttons_pressed, btn_code);
     }
 
-    inline t_b8 IsGamepadButtonReleased(const s_input_state &input_state, const e_gamepad_id gamepad_id, const e_gamepad_button_code btn_code) {
-        ZF_ASSERT(IsGamepadConnected(input_state, gamepad_id));
-        return IsBitSet(input_state.events.gamepads[gamepad_id].buttons_released, btn_code);
+    inline t_b8 IsGamepadButtonReleased(const s_input_state &input_state, const t_i32 gamepad_index, const e_gamepad_button_code btn_code) {
+        ZF_ASSERT(gamepad_index >= 0 && gamepad_index < g_gamepad_limit);
+        ZF_ASSERT(IsGamepadConnected(input_state, gamepad_index));
+
+        return IsBitSet(input_state.events.gamepads[gamepad_index].buttons_released, btn_code);
     }
 
-    inline t_f32 GetGamepadAxisValue(const s_input_state &input_state, const e_gamepad_id gamepad_id, const e_gamepad_axis_code axis_code) {
-        ZF_ASSERT(IsGamepadConnected(input_state, gamepad_id));
-        return input_state.gamepads[gamepad_id].axes[axis_code];
+    // Gives the gamepad axis value with deadzone applied.
+    inline t_f32 GamepadAxisValue(const s_input_state &input_state, const t_i32 gamepad_index, const e_gamepad_axis_code axis_code) {
+        ZF_ASSERT(gamepad_index >= 0 && gamepad_index < g_gamepad_limit);
+        ZF_ASSERT(IsGamepadConnected(input_state, gamepad_index));
+
+        const t_f32 raw = input_state.gamepads[gamepad_index].axes[axis_code];
+        const t_f32 raw_abs = Abs(raw);
+
+        const t_f32 dz = input_state.gamepad_axis_deadzones[axis_code];
+
+        if (raw_abs <= dz) {
+            return 0.0f;
+        }
+
+        return static_cast<t_f32>(Sign(raw)) * ((raw_abs - dz) / (1.0f - dz));
+    }
+
+    // Gives the gamepad axis value with no deadzone applied.
+    inline t_f32 GamepadAxisValueRaw(const s_input_state &input_state, const t_i32 gamepad_index, const e_gamepad_axis_code axis_code) {
+        ZF_ASSERT(gamepad_index >= 0 && gamepad_index < g_gamepad_limit);
+        ZF_ASSERT(IsGamepadConnected(input_state, gamepad_index));
+
+        return input_state.gamepads[gamepad_index].axes[axis_code];
     }
 }
