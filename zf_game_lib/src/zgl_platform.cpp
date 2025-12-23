@@ -173,6 +173,23 @@ namespace zf {
             UpdateKeyState(input_state, static_cast<e_key_code>(i), is_down);
         }
 
+        const auto to_glfw_mouse_btn = [](const e_mouse_button_code btn_code) -> t_i32 {
+            switch (btn_code) {
+            case ek_mouse_button_code_left: return GLFW_MOUSE_BUTTON_LEFT;
+            case ek_mouse_button_code_right: return GLFW_MOUSE_BUTTON_RIGHT;
+            case ek_mouse_button_code_middle: return GLFW_MOUSE_BUTTON_MIDDLE;
+
+            case eks_mouse_button_code_cnt: break;
+            }
+
+            ZF_UNREACHABLE();
+        };
+
+        for (t_i32 i = 0; i < eks_mouse_button_code_cnt; i++) {
+            const t_b8 is_down = glfwGetMouseButton(g_state.glfw_window, to_glfw_mouse_btn(static_cast<e_mouse_button_code>(i))) == GLFW_PRESS;
+            UpdateMouseButtonState(input_state, static_cast<e_mouse_button_code>(i), is_down);
+        }
+
         {
             t_f64 cp_x_f64, cp_y_f64;
             glfwGetCursorPos(g_state.glfw_window, &cp_x_f64, &cp_y_f64);
