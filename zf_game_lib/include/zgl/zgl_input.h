@@ -182,7 +182,7 @@ namespace zf {
         return IsBitSet(is.events.mouse_buttons_released, mbc);
     }
 
-    inline s_v2 ScrollOffset(const s_input_state &is) {
+    inline s_v2 GetScrollOffset(const s_input_state &is) {
         return is.events.scroll;
     }
 }

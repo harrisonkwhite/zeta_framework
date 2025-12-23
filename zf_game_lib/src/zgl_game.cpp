@@ -1,6 +1,7 @@
 #include <zgl/zgl_game.h>
 
 #include <zgl/zgl_platform.h>
+#include <zgl/zgl_input.h>
 #include <zgl/zgl_gfx_core.h>
 
 namespace zf {
@@ -23,8 +24,10 @@ namespace zf {
         temp_mem_arena.Init(Megabytes(10)); // @todo: Make customisable.
         ZF_DEFER({ temp_mem_arena.Release(); });
 
-        internal::InitPlatform(g_init_window_size);
-        ZF_DEFER({ internal::ShutdownPlatform(); });
+        s_input_state input_state = {};
+
+        InitPlatform(g_init_window_size, input_state);
+        ZF_DEFER({ ShutdownPlatform(); });
 
         s_rendering_basis &rendering_basis = InitGFX(perm_mem_arena);
         ZF_DEFER({ ShutdownGFX(rendering_basis); });
@@ -43,15 +46,15 @@ namespace zf {
         //
         // Main Loop
         //
-        internal::ShowWindow();
+        ShowWindow();
 
         t_f64 frame_time_last = Time();
         t_f64 frame_dur_accum = 0.0;
 
-        while (!internal::ShouldWindowClose()) {
+        while (!ShouldWindowClose()) {
             temp_mem_arena.Rewind(0);
 
-            internal::PollOSEvents();
+            PollOSEvents();
 
             const t_f64 frame_time = Time();
             const t_f64 frame_time_delta = frame_time - frame_time_last;
@@ -66,9 +69,10 @@ namespace zf {
                     tick_func({
                         .perm_mem_arena = perm_mem_arena,
                         .temp_mem_arena = temp_mem_arena,
+                        .input_state = input_state,
                     });
 
-                    internal::ClearInputEvents();
+                    input_state.events = {};
 
                     frame_dur_accum -= targ_tick_interval;
                 } while (frame_dur_accum >= targ_tick_interval);

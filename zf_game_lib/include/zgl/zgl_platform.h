@@ -3,9 +3,6 @@
 #include <zcl.h>
 
 namespace zf {
-    // ============================================================
-    // @section: General
-    // ============================================================
     struct s_input_state;
 
     // Initialises the platform layer module. The window is not shown by default, you have to manually do this. The given input state is written to as OS events are polled, and needs to exist for the lifetime of this module.
@@ -18,9 +15,6 @@ namespace zf {
 
     void PollOSEvents();
 
-    // ============================================================
-    // @section: Display
-    // ============================================================
     s_ptr<void> NativeWindowHandle();
     s_ptr<void> NativeDisplayHandle();
 
@@ -54,8 +48,5 @@ namespace zf {
         SetFullscreen(!IsFullscreen());
     }
 
-    // ============================================================
-    // @section: Input
-    // ============================================================
     void SetCursorVisibility(const t_b8 visible);
 }

@@ -92,7 +92,6 @@ namespace zf {
 
     static s_rendering_basis &CreateRenderingBasis(s_mem_arena &mem_arena, s_gfx_resource_arena &resource_arena);
     static void Flush(s_rendering_context &rc);
-    static s_array<s_batch_vert> ReserveBatchVerts(s_rendering_context &rc, const t_i32 cnt, const s_ptr<const s_gfx_resource> texture);
 
     // ============================================================
     // @section: General
@@ -115,8 +114,8 @@ namespace zf {
 
         g_state.resolution_cache = fb_size_cache;
 
-        init.platformData.nwh = internal::NativeWindowHandle();
-        init.platformData.ndt = internal::NativeDisplayHandle();
+        init.platformData.nwh = NativeWindowHandle();
+        init.platformData.ndt = NativeDisplayHandle();
         init.platformData.type = bgfx::NativeWindowHandleType::Default;
 
         if (!bgfx::init(init)) {

@@ -49,6 +49,7 @@ set_source_files_properties(
 add_library(zf_game_lib STATIC
     src/zgl_game.cpp
     src/zgl_platform.cpp
+    src/zgl_input.cpp
     src/zgl_gfx_core.cpp
     src/zgl_gfx_helpers.cpp
     src/zgl_audio.cpp
@@ -56,6 +57,7 @@ add_library(zf_game_lib STATIC
     include/zgl.h
     include/zgl/zgl_game.h
     include/zgl/zgl_platform.h
+    include/zgl/zgl_input.h
     include/zgl/zgl_gfx_core.h
     include/zgl/zgl_gfx_helpers.h
     include/zgl/zgl_audio.h
