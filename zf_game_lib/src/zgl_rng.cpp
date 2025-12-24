@@ -61,7 +61,6 @@ namespace zf {
 
     static struct {
         t_b8 initted = false;
-        t_u64 seed_cnt = 0;
     } g_state;
 
     void InitRNGModule() {
@@ -78,8 +77,7 @@ namespace zf {
         ZF_ASSERT(g_state.initted);
 
         s_rng &rng = Alloc<s_rng>(mem_arena);
-        rng.pcg32.Seed(seed, g_state.seed_cnt);
-        g_state.seed_cnt++;
+        rng.pcg32.Seed(seed, 0); // @todo: Infer sequence from seed!
         return rng;
     }
 
@@ -87,8 +85,7 @@ namespace zf {
         ZF_ASSERT(g_state.initted);
         ZF_ASSERT(rng.pcg32.IsSeeded());
 
-        rng.pcg32.Seed(seed, g_state.seed_cnt);
-        g_state.seed_cnt++;
+        rng.pcg32.Seed(seed, 0); // @todo: Infer sequence from seed!
     }
 
     t_u32 RandU32(s_rng &rng) {
