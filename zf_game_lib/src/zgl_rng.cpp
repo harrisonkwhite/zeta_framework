@@ -3,17 +3,21 @@
 namespace zf {
     struct s_pcg32 {
     public:
-        void Seed(const t_u64 init_state, const t_u64 init_seq) {
+        void Seed(const t_u64 init_state, const t_u64 seq) {
             m_seeded = true;
 
             m_state = 0;
-            m_inc = (init_seq << 1u) | 1u;
+            m_inc = (seq << 1u) | 1u;
 
             Next();
 
             m_state += init_state;
 
             Next();
+        }
+
+        t_b8 IsSeeded() const {
+            return m_seeded;
         }
 
         // Generates a uniformly distributed random U32.
@@ -57,7 +61,7 @@ namespace zf {
 
     static struct {
         t_b8 initted = false;
-        t_u64 rng_cnt = 0;
+        t_u64 seed_cnt = 0;
     } g_state;
 
     void InitRNGModule() {
@@ -74,9 +78,17 @@ namespace zf {
         ZF_ASSERT(g_state.initted);
 
         s_rng &rng = Alloc<s_rng>(mem_arena);
-        rng.pcg32.Seed(seed, g_state.rng_cnt);
-        g_state.rng_cnt++;
+        rng.pcg32.Seed(seed, g_state.seed_cnt);
+        g_state.seed_cnt++;
         return rng;
+    }
+
+    void ReseedRNG(s_rng &rng, const t_u64 seed) {
+        ZF_ASSERT(g_state.initted);
+        ZF_ASSERT(rng.pcg32.IsSeeded());
+
+        rng.pcg32.Seed(seed, g_state.seed_cnt);
+        g_state.seed_cnt++;
     }
 
     t_u32 RandU32(s_rng &rng) {
@@ -84,11 +96,20 @@ namespace zf {
         return rng.pcg32.Next();
     }
 
-    t_u32 RandU32InRange(s_rng &rng, const t_u32 min, const t_u32 max) {
+    t_u32 RandU32InRange(s_rng &rng, const t_u32 min_incl, const t_u32 max_excl) {
         ZF_ASSERT(g_state.initted);
-        ZF_ASSERT(min < max);
+        ZF_ASSERT(min_incl < max_excl);
 
-        return min + rng.pcg32.NextBounded(max - min);
+        return min_incl + rng.pcg32.NextBounded(max_excl - min_incl);
+    }
+
+    t_i32 RandI32InRange(s_rng &rng, const t_i32 min_incl, const t_i32 max_excl) {
+        ZF_ASSERT(g_state.initted);
+        ZF_ASSERT(min_incl < max_excl);
+
+        const auto min_incl_u = static_cast<t_u32>(min_incl);
+        const auto max_excl_u = static_cast<t_u32>(max_excl);
+        return static_cast<t_i32>(min_incl_u + rng.pcg32.NextBounded(max_excl_u - min_incl_u));
     }
 
     t_f32 RandPerc(s_rng &rng) {
