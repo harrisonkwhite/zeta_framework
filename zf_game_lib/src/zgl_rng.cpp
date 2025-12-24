@@ -85,9 +85,20 @@ namespace zf {
         return rng;
     }
 
-    t_f32 RandPerc(s_rng &rng) {
-        ZF_ASSERT(g_state.initted);
-        return static_cast<t_f32>(rng.pcg32.Next()) / static_cast<t_f32>(g_u32_max); // @todo: Wrong range! Can't include 1!
+    t_u32 RandU32(s_rng &rng) {
+        return rng.pcg32.Next();
     }
 
+    t_u32 RandU32InRange(const t_u32 min, t_u32 max, s_rng &rng) {
+        ZF_ASSERT(min <= max);
+        return min + rng.pcg32.NextBounded(max - min);
+    }
+
+#if 0
+    t_f32 RandPerc(s_rng &rng) {
+        ZF_ASSERT(g_state.initted);
+        ZF_ASSERT(false);
+        return static_cast<t_f32>(rng.pcg32.Next()) / static_cast<t_f32>(g_u32_max); // @todo: Wrong range! Can't include 1!
+    }
+#endif
 }
