@@ -87,6 +87,7 @@ namespace zf {
 
     t_f32 RandPerc(s_rng &rng) {
         ZF_ASSERT(g_state.initted);
-        return static_cast<t_f32>(rng.pcg32.Next()) / static_cast<t_f32>(static_cast<t_u32>(-1));
+        return static_cast<t_f32>(rng.pcg32.Next()) / static_cast<t_f32>(g_u32_max); // @todo: Wrong range! Can't include 1!
     }
+
 }

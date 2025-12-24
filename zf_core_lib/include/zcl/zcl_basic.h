@@ -55,29 +55,37 @@ namespace zf {
     // ============================================================
     static_assert(CHAR_BIT == 8);
 
-    using t_i8 = signed char;
-    static_assert(sizeof(t_i8) == 1);
-
     using t_u8 = unsigned char;
     static_assert(sizeof(t_u8) == 1);
+    constexpr auto g_u8_max = static_cast<t_u8>(-1);
 
-    using t_i16 = signed short;
-    static_assert(sizeof(t_i16) == 2);
+    using t_i8 = signed char;
+    static_assert(sizeof(t_i8) == 1);
+    constexpr t_i8 g_i8_max = g_u8_max & ~(static_cast<t_u8>(1) << 7);
 
     using t_u16 = unsigned short;
     static_assert(sizeof(t_u16) == 2);
+    constexpr auto g_u16_max = static_cast<t_u16>(-1);
 
-    using t_i32 = signed int;
-    static_assert(sizeof(t_i32) == 4);
+    using t_i16 = signed short;
+    static_assert(sizeof(t_i16) == 2);
+    constexpr t_i16 g_i16_max = g_u16_max & ~(static_cast<t_u16>(1) << 15);
 
     using t_u32 = unsigned int;
     static_assert(sizeof(t_u32) == 4);
+    constexpr auto g_u32_max = static_cast<t_u32>(-1);
 
-    using t_i64 = signed long long;
-    static_assert(sizeof(t_i64) == 8);
+    using t_i32 = signed int;
+    static_assert(sizeof(t_i32) == 4);
+    constexpr t_i32 g_i32_max = g_u32_max & ~(static_cast<t_u32>(1) << 31);
 
     using t_u64 = unsigned long long;
     static_assert(sizeof(t_u64) == 8);
+    constexpr auto g_u64_max = static_cast<t_u64>(-1);
+
+    using t_i64 = signed long long;
+    static_assert(sizeof(t_i64) == 8);
+    constexpr t_i64 g_i64_max = g_u64_max & ~(static_cast<t_u64>(1) << 63);
 
     using t_f32 = float;
     static_assert(sizeof(t_f32) == 4);
