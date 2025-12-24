@@ -8,9 +8,14 @@ namespace zf {
 
     struct s_rng;
 
-    s_rng &GlobalRNG();
+    s_rng &CreateRNG(const t_u64 seed, s_mem_arena &mem_arena);
 
-    s_rng &CreateRNG(const t_u64 init_state, const t_u64 init_seq, s_mem_arena &mem_arena);
+    t_u32 RandU32(s_rng &rng);
+    t_u32 RandU32InRange(s_rng &rng, const t_u32 min, const t_u32 max);
+
+    t_f32 RandPerc(s_rng &rng);
+
+#if 0
     void ResetRNGSeed(s_rng &rng);
 
     t_u32 RandU32(s_rng &rng, const t_u64 new_state, const t_u64 new_seq);
@@ -37,4 +42,5 @@ namespace zf {
     inline t_f32 RandPerc(s_rng &rng = GlobalRNG()) {
         return RandF32InRange(0.0f, 1.0f, rng);
     }
+#endif
 }
