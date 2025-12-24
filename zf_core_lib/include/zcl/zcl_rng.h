@@ -3,24 +3,69 @@
 #include <zcl/zcl_mem.h>
 
 namespace zf {
-    struct s_rng;
+    struct s_rng {
+    public:
+        // Reseeds are allowed.
+        void Seed(const t_u64 seed) {
+            m_seeded = true;
+            m_pcg32.Seed(seed, 0); // @todo: Infer sequence from seed!
+        }
 
-    s_rng &CreateRNG(const t_u64 seed, s_mem_arena &mem_arena);
-    void ReseedRNG(s_rng &rng, const t_u64 seed);
+        t_u32 RandU32() {
+            ZF_ASSERT(m_seeded);
+            return m_pcg32.Next();
+        }
 
-    t_u32 RandU32(s_rng &rng);
+        t_i32 RandI32() {
+            ZF_ASSERT(m_seeded);
+            return static_cast<t_i32>(RandU32());
+        }
 
-    inline t_i32 RandI32(s_rng &rng) {
-        return static_cast<t_i32>(RandU32(rng));
-    }
+        t_u32 RandU32InRange(const t_u32 min_incl, const t_u32 max_excl) {
+            ZF_ASSERT(m_seeded);
+            ZF_ASSERT(min_incl < max_excl);
 
-    t_u32 RandU32InRange(s_rng &rng, const t_u32 min_incl, const t_u32 max_excl);
-    t_i32 RandI32InRange(s_rng &rng, const t_i32 min_incl, const t_i32 max_excl);
+            return min_incl + m_pcg32.NextBounded(max_excl - min_incl);
+        }
 
-    // Generates a random F32 in the range [0, 1).
-    t_f32 RandPerc(s_rng &rng);
+        t_i32 RandI32InRange(const t_i32 min_incl, const t_i32 max_excl) {
+            ZF_ASSERT(m_seeded);
+            ZF_ASSERT(min_incl < max_excl);
 
-    inline t_f32 RandF32InRange(s_rng &rng, const t_f32 min_incl, const t_f32 max_excl) {
-        return min_incl + (RandPerc(rng) * (max_excl - min_incl));
-    }
+            const auto min_incl_u = static_cast<t_u32>(min_incl);
+            const auto max_excl_u = static_cast<t_u32>(max_excl);
+            return static_cast<t_i32>(min_incl_u + m_pcg32.NextBounded(max_excl_u - min_incl_u));
+        }
+
+        // Generates a random F32 in the range [0, 1).
+        t_f32 RandPerc() {
+            ZF_ASSERT(m_seeded);
+            return static_cast<t_f32>(m_pcg32.Next()) / 4294967296.0f;
+        }
+
+        t_f32 RandF32InRange(const t_f32 min_incl, const t_f32 max_excl) {
+            ZF_ASSERT(m_seeded);
+            return min_incl + (RandPerc() * (max_excl - min_incl));
+        }
+
+    private:
+        struct s_pcg32 {
+        public:
+            void Seed(const t_u64 init_state, const t_u64 seq);
+
+            // Generates a uniformly distributed random U32.
+            t_u32 Next();
+
+            // Generates a uniformly distributed U32 strictly less than the bound.
+            // The bound must be greater than 0.
+            t_u32 NextBounded(const t_u32 bound);
+
+        private:
+            t_u64 m_state = 0; // RNG state. All values are possible.
+            t_u64 m_inc = 0;   // Controls which RNG sequence (stream) is selected. Must ALWAYS be odd.
+        };
+
+        t_b8 m_seeded = false;
+        s_pcg32 m_pcg32 = {};
+    };
 }
