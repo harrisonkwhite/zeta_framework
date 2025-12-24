@@ -3,6 +3,7 @@
 #include <zgl/zgl_platform.h>
 #include <zgl/zgl_input.h>
 #include <zgl/zgl_gfx_core.h>
+#include <zgl/zgl_rng.h>
 
 namespace zf {
     constexpr s_v2_i g_init_window_size = {1280, 720};
@@ -31,6 +32,9 @@ namespace zf {
 
         s_rendering_basis &rendering_basis = InitGFX(perm_mem_arena);
         ZF_DEFER({ ShutdownGFX(rendering_basis); });
+
+        InitRNGModule();
+        ZF_DEFER({ ShutdownRNGModule(); });
 
         init_func({
             .perm_mem_arena = perm_mem_arena,
