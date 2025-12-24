@@ -178,7 +178,7 @@ namespace zf {
     void PollOSEvents(s_input_state &input_state) {
         ZF_ASSERT(g_state.initted);
 
-        glfwSetWindowUserPointer(g_state.glfw_window, &input_state);
+        glfwSetWindowUserPointer(g_state.glfw_window, &input_state); // Scroll callback needs access to this input state.
 
         glfwPollEvents();
 
@@ -300,8 +300,6 @@ namespace zf {
     }
 
     static s_ptr<GLFWmonitor> FindGLFWMonitorOfWindow(const s_ptr<GLFWwindow> window) {
-        ZF_ASSERT(g_state.initted);
-
         s_v2_i window_pos;
         glfwGetWindowPos(window, &window_pos.x, &window_pos.y);
 

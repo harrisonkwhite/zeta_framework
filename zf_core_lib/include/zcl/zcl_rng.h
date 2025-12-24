@@ -1,11 +1,8 @@
 #pragma once
 
-#include <zcl.h>
+#include <zcl/zcl_mem.h>
 
 namespace zf {
-    void InitRNGModule();
-    void ShutdownRNGModule();
-
     struct s_rng;
 
     s_rng &CreateRNG(const t_u64 seed, s_mem_arena &mem_arena);

@@ -1,4 +1,6 @@
-#include <zgl/zgl_rng.h>
+#include <zcl/zcl_rng.h>
+
+#include <ctime>
 
 namespace zf {
     struct s_pcg32 {
@@ -59,49 +61,31 @@ namespace zf {
         s_pcg32 pcg32 = {};
     };
 
-    static struct {
-        t_b8 initted = false;
-    } g_state;
-
-    void InitRNGModule() {
-        ZF_ASSERT(!g_state.initted);
-        g_state.initted = true;
-    }
-
-    void ShutdownRNGModule() {
-        ZF_ASSERT(g_state.initted);
-        g_state = {};
-    }
-
     s_rng &CreateRNG(const t_u64 seed, s_mem_arena &mem_arena) {
-        ZF_ASSERT(g_state.initted);
-
         s_rng &rng = Alloc<s_rng>(mem_arena);
         rng.pcg32.Seed(seed, 0); // @todo: Infer sequence from seed!
         return rng;
     }
 
     void ReseedRNG(s_rng &rng, const t_u64 seed) {
-        ZF_ASSERT(g_state.initted);
         ZF_ASSERT(rng.pcg32.IsSeeded());
-
         rng.pcg32.Seed(seed, 0); // @todo: Infer sequence from seed!
     }
 
+    t_u64 RandSeed() {
+        return static_cast<t_u64>(time(nullptr));
+    }
+
     t_u32 RandU32(s_rng &rng) {
-        ZF_ASSERT(g_state.initted);
         return rng.pcg32.Next();
     }
 
     t_u32 RandU32InRange(s_rng &rng, const t_u32 min_incl, const t_u32 max_excl) {
-        ZF_ASSERT(g_state.initted);
         ZF_ASSERT(min_incl < max_excl);
-
         return min_incl + rng.pcg32.NextBounded(max_excl - min_incl);
     }
 
     t_i32 RandI32InRange(s_rng &rng, const t_i32 min_incl, const t_i32 max_excl) {
-        ZF_ASSERT(g_state.initted);
         ZF_ASSERT(min_incl < max_excl);
 
         const auto min_incl_u = static_cast<t_u32>(min_incl);
@@ -110,7 +94,6 @@ namespace zf {
     }
 
     t_f32 RandPerc(s_rng &rng) {
-        ZF_ASSERT(g_state.initted);
         return static_cast<t_f32>(rng.pcg32.Next()) / 4294967296.0f;
     }
 }
