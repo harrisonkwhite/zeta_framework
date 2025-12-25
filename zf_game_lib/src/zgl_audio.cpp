@@ -3,7 +3,6 @@
 #include <miniaudio.h>
 
 namespace zf {
-#if 0
     struct s_sound_type {
         s_ptr<s_audio_sys> audio_sys = nullptr;
         s_sound_data snd_data = {};
@@ -25,11 +24,7 @@ namespace zf {
     };
 
     t_b8 CreateAudioSys(s_mem_arena &mem_arena, s_ptr<s_audio_sys> &o_as) {
-        o_as = Alloc<s_audio_sys>(mem_arena);
-
-        if (!o_as) {
-            return false;
-        }
+        o_as = &Alloc<s_audio_sys>(mem_arena);
 
         if (ma_engine_init(nullptr, &o_as->ma_eng) != MA_SUCCESS) {
             return false;
@@ -50,15 +45,8 @@ namespace zf {
     }
 
     t_b8 CreateSoundTypeFromRaw(const s_str_rdonly file_path, s_sound_type_arena &type_arena, s_mem_arena &temp_mem_arena, s_ptr<s_sound_type> &o_type) {
-        o_type = Alloc<s_sound_type>(*type_arena.mem_arena);
-
-        if (!o_type) {
-            return false;
-        }
-
-        *o_type = {
-            .audio_sys = type_arena.audio_sys,
-        };
+        *o_type = Alloc<s_sound_type>(*type_arena.mem_arena);
+        o_type->audio_sys = type_arena.audio_sys;
 
         if (!LoadSoundFromRaw(file_path, *type_arena.mem_arena, temp_mem_arena, o_type->snd_data)) {
             return false;
@@ -190,5 +178,4 @@ namespace zf {
             }
         }
     }
-#endif
 }

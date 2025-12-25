@@ -3,6 +3,7 @@
 #include <zgl/zgl_platform.h>
 #include <zgl/zgl_input.h>
 #include <zgl/zgl_gfx_core.h>
+#include <zgl/zgl_audio.h>
 
 namespace zf {
     constexpr s_v2_i g_init_window_size = {1280, 720};
@@ -31,6 +32,12 @@ namespace zf {
 
         s_rendering_basis &rendering_basis = InitGFX(perm_mem_arena);
         ZF_DEFER({ ShutdownGFX(rendering_basis); });
+
+        s_ptr<s_audio_sys> audio_sys = nullptr;
+
+        if (!CreateAudioSys(perm_mem_arena, audio_sys)) {
+            ZF_FATAL();
+        }
 
         init_func({
             .perm_mem_arena = perm_mem_arena,
@@ -65,6 +72,8 @@ namespace zf {
 
             // Once enough time has passed (i.e. the time accumulator has reached the tick interval), run at least a single tick and update the display.
             if (frame_dur_accum >= targ_tick_interval) {
+                ProcFinishedSounds(*audio_sys);
+
                 do {
                     tick_func({
                         .perm_mem_arena = perm_mem_arena,
