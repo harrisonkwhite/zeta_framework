@@ -50,11 +50,11 @@ namespace zf {
 
     static bgfx::ProgramHandle CreateBGFXShaderProg(const s_array_rdonly<t_u8> vert_shader_bin, const s_array_rdonly<t_u8> frag_shader_bin);
 
-    extern const t_u8 g_batch_vert_shader_src_raw[];
-    extern const t_i32 g_batch_vert_shader_src_len;
+    extern const t_u8 g_batch_triangle_vert_shader_default_src_raw[];
+    extern const t_i32 g_batch_triangle_vert_shader_default_src_len;
 
-    extern const t_u8 g_batch_frag_shader_src_raw[];
-    extern const t_i32 g_batch_frag_shader_src_len;
+    extern const t_u8 g_batch_triangle_frag_shader_default_src_raw[];
+    extern const t_i32 g_batch_triangle_frag_shader_default_src_len;
 
     constexpr t_i32 g_batch_vert_limit_per_frame = 8192; // @todo: This should definitely be modifiable if the user wants.
 
@@ -240,7 +240,7 @@ namespace zf {
             ZF_FATAL();
         }
 
-        const auto shader_prog_bgfx_hdl = CreateBGFXShaderProg({g_batch_vert_shader_src_raw, g_batch_vert_shader_src_len}, {g_batch_frag_shader_src_raw, g_batch_frag_shader_src_len});
+        const auto shader_prog_bgfx_hdl = CreateBGFXShaderProg({g_batch_triangle_vert_shader_default_src_raw, g_batch_triangle_vert_shader_default_src_len}, {g_batch_triangle_frag_shader_default_src_raw, g_batch_triangle_frag_shader_default_src_len});
 
         if (!bgfx::isValid(shader_prog_bgfx_hdl)) {
             ZF_FATAL();
