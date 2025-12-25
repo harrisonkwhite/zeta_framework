@@ -10,8 +10,13 @@ namespace zf {
 
     struct s_sound_type_arena {
     public:
+        s_sound_type_arena() = default;
+        s_sound_type_arena(const s_sound_type_arena &) = delete;
+        s_sound_type &operator=(const s_sound_type_arena &) = delete;
+
         [[nodiscard]] t_b8 AddFromRaw(const s_str_rdonly file_path, s_mem_arena &temp_mem_arena, s_ptr<s_sound_type> &o_type);
         [[nodiscard]] t_b8 AddFromPacked(const s_str_rdonly file_path, s_mem_arena &temp_mem_arena, s_ptr<s_sound_type> &o_type);
+
         void Release();
 
         t_i32 Version() const {
@@ -19,6 +24,8 @@ namespace zf {
         }
 
     private:
+        void Add(const s_sound_data snd_data, s_ptr<s_sound_type> &o_type);
+
         t_i32 m_version = 0;
 
         s_mem_arena m_mem_arena = {};
@@ -27,11 +34,23 @@ namespace zf {
     };
 
     struct s_sound_id {
-        t_i32 index = 0;
-        t_i32 version = 0;
+    public:
+        s_sound_id() = default;
+
+        s_sound_id(const t_i32 index, const t_i32 version) : valid(true), m_index(index), m_version(version) {
+            ZF_ASSERT(index >= 0 && version >= 0);
+        }
+
+        t_i32 Index() const { return m_index; }
+        t_i32 Version() const { return m_version; }
+
+    private:
+        t_b8 valid = false;
+        t_i32 m_index = 0;
+        t_i32 m_version = 0;
     };
 
-    [[nodiscard]] t_b8 PlaySound(const s_sound_type &type, const s_ptr<s_sound_id> o_id = nullptr, const t_f32 vol = 1.0f, const t_f32 pan = 0.0f, const t_f32 pitch = 1.0f, const t_b8 loop = false);
+    s_sound_id PlaySound(const s_sound_type &type, const t_f32 vol = 1.0f, const t_f32 pan = 0.0f, const t_f32 pitch = 1.0f, const t_b8 loop = false);
     void StopSound(const s_sound_id id);
     t_b8 IsSoundPlaying(const s_sound_id id);
 

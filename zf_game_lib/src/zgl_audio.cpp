@@ -62,19 +62,13 @@ namespace zf {
             m_mem_arena.Init(Megabytes(4)); // @todo: This is placeholder until block-based memory arena is back!
         }
 
-        o_type = &Alloc<s_sound_type>(m_mem_arena, *this, m_version);
+        s_sound_data snd_data = {};
 
-        if (!LoadSoundFromRaw(file_path, m_mem_arena, temp_mem_arena, o_type->snd_data)) {
+        if (!LoadSoundFromRaw(file_path, m_mem_arena, temp_mem_arena, snd_data)) {
             return false;
         }
 
-        if (!m_head) {
-            m_head = o_type;
-            m_tail = o_type;
-        } else {
-            m_tail->next = o_type;
-            m_tail = o_type;
-        }
+        Add(snd_data, o_type);
 
         return true;
     }
@@ -86,11 +80,20 @@ namespace zf {
             m_mem_arena.Init(Megabytes(4)); // @todo: This is placeholder until block-based memory arena is back!
         }
 
-        o_type = &Alloc<s_sound_type>(m_mem_arena, *this, m_version);
+        s_sound_data snd_data = {};
 
-        if (!UnpackSound(file_path, m_mem_arena, temp_mem_arena, o_type->snd_data)) {
+        if (!UnpackSound(file_path, m_mem_arena, temp_mem_arena, snd_data)) {
             return false;
         }
+
+        Add(snd_data, o_type);
+
+        return true;
+    }
+
+    void s_sound_type_arena::Add(const s_sound_data snd_data, s_ptr<s_sound_type> &o_type) {
+        o_type = &Alloc<s_sound_type>(m_mem_arena, *this, m_version);
+        o_type->snd_data = snd_data;
 
         if (!m_head) {
             m_head = o_type;
@@ -99,8 +102,6 @@ namespace zf {
             m_tail->next = o_type;
             m_tail = o_type;
         }
-
-        return true;
     }
 
     void s_sound_type_arena::Release() {
@@ -125,20 +126,18 @@ namespace zf {
         m_version++;
     }
 
-    t_b8 PlaySound(const s_sound_type &type, const s_ptr<s_sound_id> o_id, const t_f32 vol, const t_f32 pan, const t_f32 pitch, const t_b8 loop) {
+    s_sound_id PlaySound(const s_sound_type &type, const t_f32 vol, const t_f32 pan, const t_f32 pitch, const t_b8 loop) {
         ZF_ASSERT(g_state.initted);
         ZF_ASSERT(type.group_version == type.group.Version());
         ZF_ASSERT(vol >= 0.0f && vol <= 1.0f);
         ZF_ASSERT(pan >= -1.0f && pan <= 1.0f);
         ZF_ASSERT(pitch > 0.0f);
 
-        t_b8 clean_up = false;
-
         const t_i32 index = IndexOfFirstUnsetBit(g_state.snd_insts.activity);
 
         if (index == -1) {
-            clean_up = true;
-            return false;
+            LogWarning(s_cstr_literal("Trying to play a sound, but the sound instance limit has been reached!"));
+            return {};
         }
 
         ma_sound &ma_snd = g_state.snd_insts.ma_snds[index];
@@ -147,28 +146,14 @@ namespace zf {
         g_state.snd_insts.types[index] = &type;
 
         if (ma_audio_buffer_ref_init(ma_format_f32, static_cast<ma_uint32>(type.snd_data.Meta().channel_cnt), type.snd_data.PCM().Ptr(), static_cast<ma_uint64>(type.snd_data.Meta().frame_cnt), &ma_buf_ref) != MA_SUCCESS) {
-            clean_up = true;
-            return false;
+            ZF_FATAL();
         }
-
-        ZF_DEFER({
-            if (clean_up) {
-                ma_audio_buffer_ref_uninit(&ma_buf_ref);
-            }
-        });
 
         ma_buf_ref.sampleRate = static_cast<ma_uint32>(type.snd_data.Meta().sample_rate);
 
         if (ma_sound_init_from_data_source(&g_state.ma_eng, &ma_buf_ref, 0, nullptr, &ma_snd) != MA_SUCCESS) {
-            clean_up = true;
-            return false;
+            ZF_FATAL();
         }
-
-        ZF_DEFER({
-            if (clean_up) {
-                ma_sound_uninit(&ma_snd);
-            }
-        });
 
         ma_sound_set_volume(&ma_snd, vol);
         ma_sound_set_pan(&ma_snd, pan);
@@ -176,41 +161,36 @@ namespace zf {
         ma_sound_set_looping(&ma_snd, loop);
 
         if (ma_sound_start(&ma_snd) != MA_SUCCESS) {
-            clean_up = true;
-            return false;
+            ZF_FATAL();
         }
 
         SetBit(g_state.snd_insts.activity, index);
         g_state.snd_insts.versions[index]++;
 
-        if (o_id) {
-            *o_id = {index, g_state.snd_insts.versions[index]};
-        }
-
-        return true;
+        return {index, g_state.snd_insts.versions[index]};
     }
 
     void StopSound(const s_sound_id id) {
         ZF_ASSERT(g_state.initted);
 
-        ZF_ASSERT(IsBitSet(g_state.snd_insts.activity, id.index) && g_state.snd_insts.versions[id.index] == id.version);
+        ZF_ASSERT(IsBitSet(g_state.snd_insts.activity, id.Index()) && g_state.snd_insts.versions[id.Index()] == id.Version());
 
-        ma_sound_stop(&g_state.snd_insts.ma_snds[id.index]);
-        ma_sound_uninit(&g_state.snd_insts.ma_snds[id.index]);
-        ma_audio_buffer_ref_uninit(&g_state.snd_insts.ma_buf_refs[id.index]);
+        ma_sound_stop(&g_state.snd_insts.ma_snds[id.Index()]);
+        ma_sound_uninit(&g_state.snd_insts.ma_snds[id.Index()]);
+        ma_audio_buffer_ref_uninit(&g_state.snd_insts.ma_buf_refs[id.Index()]);
 
-        UnsetBit(g_state.snd_insts.activity, id.index);
+        UnsetBit(g_state.snd_insts.activity, id.Index());
     }
 
     t_b8 IsSoundPlaying(const s_sound_id id) {
         ZF_ASSERT(g_state.initted);
-        ZF_ASSERT(id.version <= g_state.snd_insts.versions[id.index]);
+        ZF_ASSERT(id.Version() <= g_state.snd_insts.versions[id.Index()]);
 
-        if (!IsBitSet(g_state.snd_insts.activity, id.index) || id.version != g_state.snd_insts.versions[id.index]) {
+        if (!IsBitSet(g_state.snd_insts.activity, id.Index()) || id.Version() != g_state.snd_insts.versions[id.Index()]) {
             return false;
         }
 
-        return ma_sound_is_playing(&g_state.snd_insts.ma_snds[id.index]);
+        return ma_sound_is_playing(&g_state.snd_insts.ma_snds[id.Index()]);
     }
 
     void ProcFinishedSounds() {
