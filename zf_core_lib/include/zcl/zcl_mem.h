@@ -1,10 +1,32 @@
 #pragma once
 
+#include <cstring> // @todo: Remove!
+
 #include <new>
 #include <initializer_list>
 #include <zcl/zcl_basic.h>
 
 namespace zf {
+    constexpr t_i32 Kilobytes(const t_i32 x) {
+        return (static_cast<t_i32>(1) << 10) * x;
+    }
+
+    constexpr t_i32 Megabytes(const t_i32 x) {
+        return (static_cast<t_i32>(1) << 20) * x;
+    }
+
+    constexpr t_i32 Gigabytes(const t_i32 x) {
+        return (static_cast<t_i32>(1) << 30) * x;
+    }
+
+    constexpr t_i32 BitsToBytes(const t_i32 x) {
+        return (x + 7) / 8;
+    }
+
+    constexpr t_i32 BytesToBits(const t_i32 x) {
+        return x * 8;
+    }
+
     // Is n a power of 2?
     constexpr t_b8 IsAlignmentValid(const t_i32 n) {
         return n > 0 && (n & (n - 1)) == 0;
@@ -173,6 +195,58 @@ namespace zf {
 
     private:
         void *m_raw = nullptr;
+    };
+
+    struct s_yeah_arena {
+    public:
+        s_yeah_arena() = default;
+        s_yeah_arena(const s_yeah_arena &) = delete;
+        s_yeah_arena &operator=(const s_yeah_arena &) = delete;
+
+        s_ptr<void> Push(const t_i32 size, const t_i32 alignment) {
+            if (!m_blocks_head) {
+                m_blocks_head = CreateBlock(ZF_MAX(size, m_block_min_buf_size));
+                m_block_cur = m_blocks_head;
+                return Push(size, alignment);
+            }
+        }
+
+        void Release() {
+        }
+
+    private:
+        struct s_block {
+            s_ptr<void> buf = nullptr;
+            t_i32 buf_size = 0;
+
+            s_ptr<s_block> next = nullptr;
+        };
+
+        static s_ptr<s_block> CreateBlock(const t_i32 buf_size) {
+            const auto res = static_cast<s_block *>(malloc(ZF_SIZE_OF(s_block)));
+
+            if (!res) {
+                ZF_FATAL();
+            }
+
+            new (res) s_block();
+
+            res->buf = malloc(static_cast<size_t>(buf_size));
+            res->buf_size = buf_size;
+
+            if (!res->buf) {
+                ZF_FATAL();
+            }
+
+            memset(res->buf, 0, static_cast<size_t>(res->buf_size));
+
+            return res;
+        }
+
+        s_ptr<s_block> m_blocks_head = nullptr;
+        s_ptr<s_block> m_block_cur = nullptr;
+        t_i32 m_block_cur_offs = 0;
+        t_i32 m_block_min_buf_size = Megabytes(1);
     };
 
     struct s_mem_arena {
@@ -530,29 +604,6 @@ namespace zf {
         }
     }
 
-    // ============================================================
-    // @section: Bits
-    // ============================================================
-    constexpr t_i32 Kilobytes(const t_i32 x) {
-        return (static_cast<t_i32>(1) << 10) * x;
-    }
-
-    constexpr t_i32 Megabytes(const t_i32 x) {
-        return (static_cast<t_i32>(1) << 20) * x;
-    }
-
-    constexpr t_i32 Gigabytes(const t_i32 x) {
-        return (static_cast<t_i32>(1) << 30) * x;
-    }
-
-    constexpr t_i32 BitsToBytes(const t_i32 x) {
-        return (x + 7) / 8;
-    }
-
-    constexpr t_i32 BytesToBits(const t_i32 x) {
-        return x * 8;
-    }
-
     template <typename tp_type>
     constexpr s_array<t_u8> ToBytes(tp_type &val) {
         return {reinterpret_cast<t_u8 *>(&val), ZF_SIZE_OF(val)};
@@ -562,6 +613,10 @@ namespace zf {
     constexpr s_array_rdonly<t_u8> ToBytes(const tp_type &val) {
         return {reinterpret_cast<const t_u8 *>(&val), ZF_SIZE_OF(val)};
     }
+
+    // ============================================================
+    // @section: Bits
+    // ============================================================
 
     // Creates a bitmask with only a single bit set.
     constexpr t_u8 BitmaskSingle(const t_i32 bit_index) {
