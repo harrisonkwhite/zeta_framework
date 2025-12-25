@@ -11,7 +11,7 @@ namespace zf {
         const s_str_rdonly file_path_terminated = AllocStrCloneButAddTerminator(file_path, temp_mem_arena);
 
         s_v2_i size_in_pxs;
-        const s_ptr<t_u8> stb_px_data = stbi_load(file_path_terminated.CstrAs(), &size_in_pxs.x, &size_in_pxs.y, nullptr, 4);
+        const s_ptr<t_u8> stb_px_data = stbi_load(file_path_terminated.AsCstr(), &size_in_pxs.x, &size_in_pxs.y, nullptr, 4);
 
         if (!stb_px_data) {
             return false;

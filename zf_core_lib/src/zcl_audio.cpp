@@ -9,7 +9,7 @@ namespace zf {
         ma_decoder decoder = {};
         ma_decoder_config decoder_config = ma_decoder_config_init(ma_format_f32, 0, 0);
 
-        if (ma_decoder_init_file(file_path_terminated.CstrAs(), &decoder_config, &decoder) != MA_SUCCESS) {
+        if (ma_decoder_init_file(file_path_terminated.AsCstr(), &decoder_config, &decoder) != MA_SUCCESS) {
             return false;
         }
 

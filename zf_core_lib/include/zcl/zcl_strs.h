@@ -103,7 +103,7 @@ namespace zf {
         }
 
         // Requires that there is a terminating byte somewhere.
-        const char *CstrAs() const {
+        const char *AsCstr() const {
             ZF_REQUIRE(IsTerminated(bytes));
             return reinterpret_cast<const char *>(bytes.Ptr().Raw());
         }

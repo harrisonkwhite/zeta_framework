@@ -264,7 +264,7 @@ namespace zf {
         ZF_ASSERT(g_state.initted);
 
         const s_str_rdonly title_terminated = AllocStrCloneButAddTerminator(title, temp_mem_arena);
-        glfwSetWindowTitle(g_state.glfw_window, title_terminated.CstrAs());
+        glfwSetWindowTitle(g_state.glfw_window, title_terminated.AsCstr());
     }
 
     void SetWindowSize(const s_v2_i size) {
