@@ -76,6 +76,10 @@ namespace zf {
     };
 
     t_b8 RunPacker(const s_str_rdonly instrs_json_file_path) {
+        if (!Test()) {
+            return false;
+        }
+
         s_mem_arena mem_arena = {};
         ZF_DEFER({ mem_arena.Release(); });
 
