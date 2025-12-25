@@ -15,8 +15,8 @@ namespace zf {
 
     struct {
         e_state state = ek_state_uninitted;
-        s_v2_i resolution_cache;
-        s_gfx_resource_arena perm_resource_arena;
+        s_v2_i resolution_cache = {};
+        s_gfx_resource_arena perm_resource_arena = {};
     } g_state;
 
     enum e_gfx_resource_type {
@@ -168,7 +168,7 @@ namespace zf {
     }
 
     static s_gfx_resource &PushGFXResource(const e_gfx_resource_type type, s_gfx_resource_arena &arena) {
-        ZF_ASSERT(type != ek_gfx_resource_type_invalid);
+        ZF_ASSERT(g_state.state == ek_state_initted);
 
         s_gfx_resource &resource = Alloc<s_gfx_resource>(*arena.mem_arena);
 
@@ -330,6 +330,8 @@ namespace zf {
     }
 
     void SubmitTriangles(s_rendering_context &rc, const s_array_rdonly<s_batch_triangle> triangles, const s_ptr<const s_gfx_resource> texture) {
+        ZF_ASSERT(g_state.state == ek_state_rendering);
+
         if (texture != rc.batch_state.texture) {
             Flush(rc);
             rc.batch_state.texture = texture;

@@ -13,7 +13,7 @@ It was originally written in C, though has been switched to a procedural subset 
 - 2D batch-based texture and UTF-8 string rendering
 - Sound effect playing
 - An optional asset packing tool
-- A core library with procedural-style utilities for memory arenas, UTF-8 strings, 2D math, data structures, and more
+- A core library with procedural-style utilities for memory arenas, UTF-8 strings, 2D math, data structures, RNG, and more
 
 ---
 

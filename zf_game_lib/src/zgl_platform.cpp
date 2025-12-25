@@ -32,6 +32,8 @@ namespace zf {
         ZF_REQUIRE(!g_state.initted);
         ZF_REQUIRE(init_window_size.x > 0 && init_window_size.y > 0);
 
+        g_state.initted = true;
+
         if (!glfwInit()) {
             ZF_FATAL();
         }
@@ -67,8 +69,6 @@ namespace zf {
 
             glfwSetScrollCallback(g_state.glfw_window, scroll_callback);
         }
-
-        g_state.initted = true;
     }
 
     void ShutdownPlatform() {

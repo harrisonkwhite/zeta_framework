@@ -1,11 +1,12 @@
-- t_len usage is inconsistent and probably overdone. Replace everywhere with t_i32.
-- Create a really tight model for SURFACE shader program validation. Check that all necessary uniforms and so on are there.
 - Ability to change target FPS mid-game.
 - Ability to get debug info like FPS.
-- RNG system.
-- Gamepad support.
+- Ability to change background clear color.
+- RNG system needs mix function and seed should influence stream.
 - Bring back polygon code
 - Basic music streaming system at the very least
+- Unicode text input handling
+- Fill out tests
+- Assets won't get updated unless a recompile is triggered - this is annoying!
 
 There are a handful of comments marked with "@todo" throughout the codebase that need to be addressed as well.
 

@@ -3,31 +3,26 @@
 #include <zcl.h>
 
 namespace zf {
-    struct s_audio_sys;
-
-    [[nodiscard]] t_b8 CreateAudioSys(s_mem_arena &mem_arena, s_ptr<s_audio_sys> &o_as);
-    void DestroyAudioSys(s_audio_sys &as);
+    void InitAudio();
+    void ShutdownAudio();
 
     struct s_sound_type;
 
     struct s_sound_type_arena {
-        s_ptr<s_audio_sys> audio_sys = nullptr;
         s_ptr<s_mem_arena> mem_arena = nullptr;
         s_ptr<s_sound_type> head = nullptr;
         s_ptr<s_sound_type> tail = nullptr;
     };
 
     // The memory lifetime of the given memory arena must encompass that of the sound type arena.
-    inline s_sound_type_arena CreateSoundTypeArena(s_audio_sys &as, s_mem_arena &mem_arena) {
-        return {.audio_sys = &as, .mem_arena = &mem_arena};
+    inline s_sound_type_arena CreateSoundTypeArena(s_mem_arena &mem_arena) {
+        return {.mem_arena = &mem_arena};
     }
 
     [[nodiscard]] t_b8 CreateSoundTypeFromRaw(const s_str_rdonly file_path, s_sound_type_arena &type_arena, s_mem_arena &temp_mem_arena, s_ptr<s_sound_type> &o_type);
     void DestroySoundTypes(s_sound_type_arena &type_arena);
 
     struct s_sound_id {
-        s_ptr<s_audio_sys> audio_sys = nullptr;
-
         t_i32 index = 0;
         t_i32 version = 0;
     };
@@ -36,5 +31,5 @@ namespace zf {
     void StopSound(const s_sound_id id);
     t_b8 IsSoundPlaying(const s_sound_id id);
 
-    void ProcFinishedSounds(s_audio_sys &as);
+    void ProcFinishedSounds();
 }
