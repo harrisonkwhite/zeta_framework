@@ -4,8 +4,14 @@
 
 namespace zf {
     struct s_sound_type {
+        const s_sound_type_arena &group;
+        t_i32 group_version = 0;
+
         s_sound_data snd_data = {};
+
         s_ptr<s_sound_type> next = nullptr;
+
+        s_sound_type(s_sound_type_arena &group, const t_i32 group_version) : group(group), group_version(group_version) {}
     };
 
     constexpr t_i32 g_snd_inst_limit = 32;
@@ -25,7 +31,7 @@ namespace zf {
     } g_state;
 
     void InitAudio() {
-        ZF_ASSERT(!g_state.initted);
+        ZF_REQUIRE(!g_state.initted);
 
         g_state.initted = true;
 
@@ -35,7 +41,7 @@ namespace zf {
     }
 
     void ShutdownAudio() {
-        ZF_ASSERT(g_state.initted);
+        ZF_REQUIRE(g_state.initted);
 
         ZF_FOR_EACH_SET_BIT(g_state.snd_insts.activity, i) {
             ma_sound_stop(&g_state.snd_insts.ma_snds[i]);
@@ -49,30 +55,58 @@ namespace zf {
         g_state = {};
     }
 
-    t_b8 CreateSoundTypeFromRaw(const s_str_rdonly file_path, s_sound_type_arena &type_arena, s_mem_arena &temp_mem_arena, s_ptr<s_sound_type> &o_type) {
+    t_b8 s_sound_type_arena::AddFromRaw(const s_str_rdonly file_path, s_mem_arena &temp_mem_arena, s_ptr<s_sound_type> &o_type) {
         ZF_ASSERT(g_state.initted);
 
-        *o_type = Alloc<s_sound_type>(*type_arena.mem_arena);
+        if (!m_mem_arena.IsInitted()) {
+            m_mem_arena.Init(Megabytes(4)); // @todo: This is placeholder until block-based memory arena is back!
+        }
 
-        if (!LoadSoundFromRaw(file_path, *type_arena.mem_arena, temp_mem_arena, o_type->snd_data)) {
+        o_type = &Alloc<s_sound_type>(m_mem_arena, *this, m_version);
+
+        if (!LoadSoundFromRaw(file_path, m_mem_arena, temp_mem_arena, o_type->snd_data)) {
             return false;
         }
 
-        if (!type_arena.head) {
-            type_arena.head = o_type;
-            type_arena.tail = o_type;
+        if (!m_head) {
+            m_head = o_type;
+            m_tail = o_type;
         } else {
-            type_arena.tail->next = o_type;
-            type_arena.tail = o_type;
+            m_tail->next = o_type;
+            m_tail = o_type;
         }
 
         return true;
     }
 
-    void DestroySoundTypes(const s_sound_type_arena &type_arena) {
+    t_b8 s_sound_type_arena::AddFromPacked(const s_str_rdonly file_path, s_mem_arena &temp_mem_arena, s_ptr<s_sound_type> &o_type) {
         ZF_ASSERT(g_state.initted);
 
-        auto type = type_arena.head;
+        if (!m_mem_arena.IsInitted()) {
+            m_mem_arena.Init(Megabytes(4)); // @todo: This is placeholder until block-based memory arena is back!
+        }
+
+        o_type = &Alloc<s_sound_type>(m_mem_arena, *this, m_version);
+
+        if (!UnpackSound(file_path, m_mem_arena, temp_mem_arena, o_type->snd_data)) {
+            return false;
+        }
+
+        if (!m_head) {
+            m_head = o_type;
+            m_tail = o_type;
+        } else {
+            m_tail->next = o_type;
+            m_tail = o_type;
+        }
+
+        return true;
+    }
+
+    void s_sound_type_arena::Release() {
+        ZF_ASSERT(g_state.initted);
+
+        auto type = m_head;
 
         while (type) {
             ZF_FOR_EACH_SET_BIT(g_state.snd_insts.activity, i) {
@@ -83,11 +117,17 @@ namespace zf {
 
             type = type->next;
         }
+
+        m_mem_arena.Release();
+        m_head = nullptr;
+        m_tail = nullptr;
+
+        m_version++;
     }
 
     t_b8 PlaySound(const s_sound_type &type, const s_ptr<s_sound_id> o_id, const t_f32 vol, const t_f32 pan, const t_f32 pitch, const t_b8 loop) {
         ZF_ASSERT(g_state.initted);
-
+        ZF_ASSERT(type.group_version == type.group.Version());
         ZF_ASSERT(vol >= 0.0f && vol <= 1.0f);
         ZF_ASSERT(pan >= -1.0f && pan <= 1.0f);
         ZF_ASSERT(pitch > 0.0f);
