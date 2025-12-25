@@ -58,10 +58,6 @@ namespace zf {
     t_b8 s_sound_type_arena::AddFromRaw(const s_str_rdonly file_path, s_mem_arena &temp_mem_arena, s_ptr<s_sound_type> &o_type) {
         ZF_ASSERT(g_state.initted);
 
-        if (!m_mem_arena.IsInitted()) {
-            m_mem_arena.Init(Megabytes(4)); // @todo: This is placeholder until block-based memory arena is back!
-        }
-
         s_sound_data snd_data = {};
 
         if (!LoadSoundFromRaw(file_path, m_mem_arena, temp_mem_arena, snd_data)) {
@@ -75,10 +71,6 @@ namespace zf {
 
     t_b8 s_sound_type_arena::AddFromPacked(const s_str_rdonly file_path, s_mem_arena &temp_mem_arena, s_ptr<s_sound_type> &o_type) {
         ZF_ASSERT(g_state.initted);
-
-        if (!m_mem_arena.IsInitted()) {
-            m_mem_arena.Init(Megabytes(4)); // @todo: This is placeholder until block-based memory arena is back!
-        }
 
         s_sound_data snd_data = {};
 

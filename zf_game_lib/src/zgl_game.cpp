@@ -18,11 +18,9 @@ namespace zf {
         // Initialisation
         //
         s_mem_arena perm_mem_arena = {};
-        perm_mem_arena.Init(Megabytes(80)); // @todo: Make customisable.
         ZF_DEFER({ perm_mem_arena.Release(); });
 
         s_mem_arena temp_mem_arena = {};
-        temp_mem_arena.Init(Megabytes(10)); // @todo: Make customisable.
         ZF_DEFER({ temp_mem_arena.Release(); });
 
         InitPlatform(g_init_window_size);
@@ -56,7 +54,7 @@ namespace zf {
         t_f64 frame_dur_accum = 0.0;
 
         while (!ShouldWindowClose()) {
-            temp_mem_arena.Rewind(0);
+            temp_mem_arena.Reset();
 
             PollOSEvents(input_state);
 

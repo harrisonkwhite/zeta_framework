@@ -95,7 +95,6 @@ namespace zf {
 
     t_b8 RunPacker(const s_str_rdonly instrs_json_file_path) {
         s_mem_arena mem_arena = {};
-        mem_arena.Init(g_mem_arena_size);
         ZF_DEFER({ mem_arena.Release(); });
 
         cJSON *cj = nullptr;
@@ -141,7 +140,7 @@ namespace zf {
             cJSON *cj_asset = nullptr;
 
             cJSON_ArrayForEach(cj_asset, cj_assets) {
-                mem_arena.Rewind(0);
+                mem_arena.Reset();
 
                 if (!cJSON_IsObject(cj_asset)) {
                     continue;

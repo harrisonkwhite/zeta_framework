@@ -197,22 +197,15 @@ namespace zf {
         void *m_raw = nullptr;
     };
 
-    struct s_yeah_arena {
+    struct s_mem_arena {
     public:
-        s_yeah_arena() = default;
-        s_yeah_arena(const s_yeah_arena &) = delete;
-        s_yeah_arena &operator=(const s_yeah_arena &) = delete;
+        s_mem_arena() = default;
+        s_mem_arena(const s_mem_arena &) = delete;
+        s_mem_arena &operator=(const s_mem_arena &) = delete;
 
-        s_ptr<void> Push(const t_i32 size, const t_i32 alignment) {
-            if (!m_blocks_head) {
-                m_blocks_head = CreateBlock(ZF_MAX(size, m_block_min_buf_size));
-                m_block_cur = m_blocks_head;
-                return Push(size, alignment);
-            }
-        }
-
-        void Release() {
-        }
+        s_ptr<void> Push(const t_i32 size, const t_i32 alignment);
+        void Release();
+        void Reset();
 
     private:
         struct s_block {
@@ -222,60 +215,12 @@ namespace zf {
             s_ptr<s_block> next = nullptr;
         };
 
-        static s_ptr<s_block> CreateBlock(const t_i32 buf_size) {
-            const auto res = static_cast<s_block *>(malloc(ZF_SIZE_OF(s_block)));
-
-            if (!res) {
-                ZF_FATAL();
-            }
-
-            new (res) s_block();
-
-            res->buf = malloc(static_cast<size_t>(buf_size));
-            res->buf_size = buf_size;
-
-            if (!res->buf) {
-                ZF_FATAL();
-            }
-
-            memset(res->buf, 0, static_cast<size_t>(res->buf_size));
-
-            return res;
-        }
+        static s_ptr<s_block> CreateBlock(const t_i32 buf_size);
 
         s_ptr<s_block> m_blocks_head = nullptr;
         s_ptr<s_block> m_block_cur = nullptr;
         t_i32 m_block_cur_offs = 0;
         t_i32 m_block_min_buf_size = Megabytes(1);
-    };
-
-    struct s_mem_arena {
-    public:
-        s_mem_arena() = default;
-        s_mem_arena(const s_mem_arena &) = delete;
-
-        void Init(const t_i32 size);
-        void Release();
-
-        t_b8 IsInitted() const {
-            return m_buf;
-        }
-
-        s_ptr<void> Push(const t_i32 size, const t_i32 alignment);
-
-        void Rewind(const t_i32 offs) {
-            ZF_REQUIRE(IsInitted());
-            ZF_REQUIRE(offs >= 0 && offs <= m_offs);
-
-            m_offs = offs;
-        }
-
-    private:
-        s_mem_arena &operator=(const s_mem_arena &) = default;
-
-        s_ptr<void> m_buf = nullptr;
-        t_i32 m_size = 0;
-        t_i32 m_offs = 0;
     };
 
     template <typename tp_type, typename... tp_constructor_args>

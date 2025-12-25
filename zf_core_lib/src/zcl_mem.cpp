@@ -3,43 +3,78 @@
 #include <cstring>
 
 namespace zf {
-    void s_mem_arena::Init(const t_i32 size) {
-        ZF_REQUIRE(!IsInitted());
-        ZF_REQUIRE(size > 0);
+    s_ptr<void> s_mem_arena::Push(const t_i32 size, const t_i32 alignment) {
+        ZF_ASSERT(size > 0 && IsAlignmentValid(alignment));
 
-        m_buf = malloc(static_cast<size_t>(size));
-
-        if (!m_buf) {
-            ZF_FATAL();
+        if (!m_blocks_head) {
+            m_blocks_head = CreateBlock(ZF_MAX(size, m_block_min_buf_size));
+            m_block_cur = m_blocks_head;
+            return Push(size, alignment);
         }
 
-        memset(m_buf, 0, static_cast<size_t>(size)); // Touch all pages to make sure we really do have enough memory.
+        const t_i32 offs_aligned = AlignForward(m_block_cur_offs, alignment);
+        const t_i32 offs_next = offs_aligned + size;
 
-        m_size = size;
+        if (offs_next > m_block_cur->buf_size) {
+            if (!m_block_cur->next) {
+                m_block_cur->next = CreateBlock(ZF_MAX(size, m_block_min_buf_size));
+            }
+
+            m_block_cur = m_block_cur->next;
+            m_block_cur_offs = 0;
+
+            return Push(size, alignment);
+        }
+
+        m_block_cur_offs = offs_next;
+
+        return static_cast<s_ptr<t_u8>>(m_block_cur->buf) + offs_aligned;
     }
 
     void s_mem_arena::Release() {
-        ZF_REQUIRE(IsInitted());
+        const auto f = [](const auto self, const s_ptr<s_block> block) {
+            if (!block) {
+                return;
+            }
 
-        free(m_buf);
-        *this = {};
+            self(self, block->next);
+
+            free(block->buf);
+            free(block);
+        };
+
+        f(f, m_blocks_head);
+
+        m_blocks_head = nullptr;
+        m_block_cur = nullptr;
+        m_block_cur_offs = 0;
     }
 
-    s_ptr<void> s_mem_arena::Push(const t_i32 size, const t_i32 alignment) {
-        ZF_REQUIRE(IsInitted());
-        ZF_REQUIRE(size > 0);
-        ZF_REQUIRE(IsAlignmentValid(alignment));
+    void s_mem_arena::Reset() {
+        m_block_cur = m_blocks_head;
+        m_block_cur_offs = 0;
+    }
 
-        const t_i32 offs_aligned = AlignForward(m_offs, alignment);
-        const t_i32 offs_next = offs_aligned + size;
+    s_ptr<s_mem_arena::s_block> s_mem_arena::CreateBlock(const t_i32 buf_size) {
+        const auto res = static_cast<s_block *>(malloc(ZF_SIZE_OF(s_block)));
 
-        if (offs_next > m_size) {
+        if (!res) {
             ZF_FATAL();
         }
 
-        m_offs = offs_next;
+        new (res) s_block();
 
-        return static_cast<s_ptr<t_u8>>(m_buf) + offs_aligned;
+        res->buf = malloc(static_cast<size_t>(buf_size));
+        res->buf_size = buf_size;
+
+        if (!res->buf) {
+            ZF_FATAL();
+        }
+
+        // Touch the whole block so that we really know we have enough memory.
+        memset(res->buf, 0, static_cast<size_t>(res->buf_size));
+
+        return res;
     }
 
     // ============================================================
