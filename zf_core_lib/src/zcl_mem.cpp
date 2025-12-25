@@ -56,6 +56,8 @@ namespace zf {
     }
 
     s_ptr<s_mem_arena::s_block> s_mem_arena::CreateBlock(const t_i32 buf_size) {
+        ZF_ASSERT(buf_size > 0);
+
         const auto res = static_cast<s_block *>(malloc(ZF_SIZE_OF(s_block)));
 
         if (!res) {
@@ -71,7 +73,7 @@ namespace zf {
             ZF_FATAL();
         }
 
-        // Touch the whole block so that we really know we have enough memory.
+        // Touch the whole block to truly reserve the memory.
         memset(res->buf, 0, static_cast<size_t>(res->buf_size));
 
         return res;

@@ -15,14 +15,11 @@ namespace zf {
 
     struct {
         e_state state = ek_state_uninitted;
+
+        // @todo: These 2 below shouldn't need to leak out.
         s_v2_i resolution_cache = {};
         s_gfx_resource_arena perm_resource_arena = {};
     } g_state;
-
-    enum e_gfx_resource_type {
-        ek_gfx_resource_type_invalid,
-        ek_gfx_resource_type_texture
-    };
 
     struct s_gfx_resource {
     public:
@@ -52,7 +49,6 @@ namespace zf {
     };
 
     static bgfx::ProgramHandle CreateBGFXShaderProg(const s_array_rdonly<t_u8> vert_shader_bin, const s_array_rdonly<t_u8> frag_shader_bin);
-    static s_gfx_resource &PushGFXResource(const e_gfx_resource_type type, s_gfx_resource_arena &arena);
 
     extern const t_u8 g_batch_vert_shader_src_raw[];
     extern const t_i32 g_batch_vert_shader_src_len;
@@ -122,7 +118,7 @@ namespace zf {
             ZF_FATAL();
         }
 
-        g_state.perm_resource_arena = CreateGFXResourceArena(mem_arena);
+        g_state.perm_resource_arena = {mem_arena};
 
         return CreateRenderingBasis(mem_arena, g_state.perm_resource_arena);
     }
@@ -134,16 +130,21 @@ namespace zf {
         bgfx::destroy(rendering_state.shader_prog_bgfx_hdl);
         bgfx::destroy(rendering_state.vert_buf_bgfx_hdl);
 
-        DestroyGFXResources(g_state.perm_resource_arena);
+        g_state.perm_resource_arena.Release();
 
         bgfx::shutdown();
 
-        g_state = {};
+        g_state.state = ek_state_uninitted;
     }
 
     // ============================================================
     // @section: Resources
     // ============================================================
+    s_v2_i TextureSize(const s_gfx_resource &texture) {
+        ZF_ASSERT(g_state.state != ek_state_uninitted);
+        return texture.Texture().size;
+    }
+
     static bgfx::ProgramHandle CreateBGFXShaderProg(const s_array_rdonly<t_u8> vert_shader_bin, const s_array_rdonly<t_u8> frag_shader_bin) {
         const bgfx::Memory *const vert_shader_bgfx_mem = bgfx::makeRef(vert_shader_bin.Ptr(), static_cast<uint32_t>(vert_shader_bin.Len()));
         const bgfx::ShaderHandle vert_shader_bgfx_hdl = bgfx::createShader(vert_shader_bgfx_mem);
@@ -162,33 +163,11 @@ namespace zf {
         return bgfx::createProgram(vert_shader_bgfx_hdl, frag_shader_bgfx_hdl, true);
     }
 
-    s_gfx_resource_arena &PermGFXResourceArena() {
-        ZF_ASSERT(g_state.state == ek_state_initted);
-        return g_state.perm_resource_arena;
-    }
-
-    static s_gfx_resource &PushGFXResource(const e_gfx_resource_type type, s_gfx_resource_arena &arena) {
+    void s_gfx_resource_arena::Release() {
+        ZF_ASSERT(IsInitted());
         ZF_ASSERT(g_state.state == ek_state_initted);
 
-        s_gfx_resource &resource = Alloc<s_gfx_resource>(*arena.mem_arena);
-
-        if (!arena.head) {
-            arena.head = &resource;
-            arena.tail = &resource;
-        } else {
-            arena.tail->next = &resource;
-            arena.tail = &resource;
-        }
-
-        resource.type = type;
-
-        return resource;
-    }
-
-    void DestroyGFXResources(s_gfx_resource_arena &arena) {
-        ZF_ASSERT(g_state.state == ek_state_initted);
-
-        s_ptr<s_gfx_resource> resource = arena.head;
+        auto resource = m_head;
 
         while (resource) {
             switch (resource->type) {
@@ -205,10 +184,11 @@ namespace zf {
             resource = next;
         }
 
-        arena = {};
+        *this = {};
     }
 
-    t_b8 CreateTextureResource(const s_texture_data_rdonly texture_data, s_ptr<s_gfx_resource> &o_resource, const s_ptr<s_gfx_resource_arena> arena) {
+    t_b8 s_gfx_resource_arena::AddTexture(const s_texture_data_rdonly texture_data, s_ptr<s_gfx_resource> &o_resource) {
+        ZF_ASSERT(IsInitted());
         ZF_ASSERT(g_state.state == ek_state_initted);
 
         const auto texture_bgfx_hdl = bgfx::createTexture2D(static_cast<uint16_t>(texture_data.SizeInPixels().x), static_cast<uint16_t>(texture_data.SizeInPixels().y), false, 1, bgfx::TextureFormat::RGBA8, 0, bgfx::copy(texture_data.RGBAPixelData().Ptr(), static_cast<uint32_t>(texture_data.RGBAPixelData().SizeInBytes())));
@@ -217,16 +197,34 @@ namespace zf {
             return false;
         }
 
-        o_resource = &PushGFXResource(ek_gfx_resource_type_texture, arena ? *arena : g_state.perm_resource_arena);
+        o_resource = &Add(ek_gfx_resource_type_texture);
         o_resource->Texture().bgfx_hdl = texture_bgfx_hdl;
         o_resource->Texture().size = texture_data.SizeInPixels();
 
         return true;
     }
 
-    s_v2_i TextureSize(const s_gfx_resource &texture) {
+    s_gfx_resource &s_gfx_resource_arena::Add(const e_gfx_resource_type type) {
+        ZF_ASSERT(g_state.state == ek_state_initted);
+
+        auto &resource = Alloc<s_gfx_resource>(*m_mem_arena);
+
+        if (!m_head) {
+            m_head = &resource;
+            m_tail = &resource;
+        } else {
+            m_tail->next = &resource;
+            m_tail = &resource;
+        }
+
+        resource.type = type;
+
+        return resource;
+    }
+
+    s_gfx_resource_arena &PermGFXResourceArena() {
         ZF_ASSERT(g_state.state != ek_state_uninitted);
-        return texture.Texture().size;
+        return g_state.perm_resource_arena;
     }
 
     // ============================================================
@@ -257,7 +255,7 @@ namespace zf {
         s_ptr<s_gfx_resource> px_texture;
         const s_static_array<t_u8, 4> px_texture_rgba = {255, 255, 255, 255};
 
-        if (!CreateTextureResource({{1, 1}, px_texture_rgba}, px_texture, &px_texture_resource_arena)) {
+        if (!px_texture_resource_arena.AddTexture({{1, 1}, px_texture_rgba}, px_texture)) {
             ZF_FATAL();
         }
 

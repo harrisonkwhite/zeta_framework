@@ -16,50 +16,64 @@ namespace zf {
     // ============================================================
     // @section: Resources
     // ============================================================
-    struct s_gfx_resource;
-
-    struct s_gfx_resource_arena {
-        s_ptr<s_mem_arena> mem_arena = nullptr;
-        s_ptr<s_gfx_resource> head = nullptr;
-        s_ptr<s_gfx_resource> tail = nullptr;
-
-        s_gfx_resource_arena() = default;
-        explicit s_gfx_resource_arena(s_mem_arena &mem_arena) : mem_arena(&mem_arena) {}
-
-        s_gfx_resource_arena(const s_gfx_resource_arena &) = delete;
+    enum e_gfx_resource_type {
+        ek_gfx_resource_type_invalid,
+        ek_gfx_resource_type_texture
     };
 
-    inline auto CreateGFXResourceArena(s_mem_arena &mem_arena) {
-        return s_gfx_resource_arena(mem_arena);
-    }
-
-    void DestroyGFXResources(s_gfx_resource_arena &arena);
-
-    s_gfx_resource_arena &PermGFXResourceArena();
-
-    [[nodiscard]] t_b8 CreateTextureResource(const s_texture_data_rdonly texture_data, s_ptr<s_gfx_resource> &o_resource, const s_ptr<s_gfx_resource_arena> arena = nullptr);
-
-    [[nodiscard]] inline t_b8 CreateTextureResourceFromRaw(const s_str_rdonly file_path, s_mem_arena &temp_mem_arena, s_ptr<s_gfx_resource> &o_resource, const s_ptr<s_gfx_resource_arena> arena = nullptr) {
-        zf::s_texture_data tex_data;
-
-        if (!zf::LoadTextureFromRaw(file_path, temp_mem_arena, temp_mem_arena, tex_data)) {
-            return false;
-        }
-
-        return zf::CreateTextureResource(tex_data, o_resource, arena);
-    }
-
-    [[nodiscard]] inline t_b8 CreateTextureResourceFromPacked(const s_str_rdonly file_path, s_mem_arena &temp_mem_arena, s_ptr<s_gfx_resource> &o_resource, const s_ptr<s_gfx_resource_arena> arena = nullptr) {
-        zf::s_texture_data tex_data;
-
-        if (!zf::UnpackTexture(file_path, temp_mem_arena, temp_mem_arena, tex_data)) {
-            return false;
-        }
-
-        return zf::CreateTextureResource(tex_data, o_resource, arena);
-    }
+    struct s_gfx_resource;
 
     s_v2_i TextureSize(const s_gfx_resource &texture);
+
+    struct s_gfx_resource_arena {
+    public:
+        s_gfx_resource_arena() = default;
+        s_gfx_resource_arena(s_mem_arena &mem_arena) : m_mem_arena(&mem_arena) {}
+
+        void Release();
+
+        t_b8 IsInitted() const { return m_mem_arena; }
+
+        s_mem_arena &MemArena() const {
+            ZF_ASSERT(IsInitted());
+            return *m_mem_arena;
+        }
+
+        [[nodiscard]] t_b8 AddTexture(const s_texture_data_rdonly texture_data, s_ptr<s_gfx_resource> &o_resource);
+
+        [[nodiscard]] t_b8 AddTextureFromRaw(const s_str_rdonly file_path, s_mem_arena &temp_mem_arena, s_ptr<s_gfx_resource> &o_resource) {
+            ZF_ASSERT(IsInitted());
+
+            s_texture_data texture_data;
+
+            if (!LoadTextureFromRaw(file_path, temp_mem_arena, temp_mem_arena, texture_data)) {
+                return false;
+            }
+
+            return AddTexture(texture_data, o_resource);
+        }
+
+        [[nodiscard]] t_b8 AddTextureFromPacked(const s_str_rdonly file_path, s_mem_arena &temp_mem_arena, s_ptr<s_gfx_resource> &o_resource) {
+            ZF_ASSERT(IsInitted());
+
+            s_texture_data texture_data;
+
+            if (!UnpackTexture(file_path, temp_mem_arena, temp_mem_arena, texture_data)) {
+                return false;
+            }
+
+            return AddTexture(texture_data, o_resource);
+        }
+
+    private:
+        s_gfx_resource &Add(const e_gfx_resource_type type);
+
+        s_ptr<s_mem_arena> m_mem_arena = nullptr;
+        s_ptr<s_gfx_resource> m_head = nullptr;
+        s_ptr<s_gfx_resource> m_tail = nullptr;
+    };
+
+    s_gfx_resource_arena &PermGFXResourceArena();
 
     // ============================================================
     // @section: Rendering

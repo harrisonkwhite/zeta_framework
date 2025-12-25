@@ -76,14 +76,14 @@ namespace zf {
 
         s_array<t_font_atlas_rgba> atlas_rgbas;
 
-        if (!zf::LoadFontFromRaw(file_path, height, code_pts, *resource_arena_to_use.mem_arena, temp_mem_arena, temp_mem_arena, o_font.arrangement, atlas_rgbas)) {
+        if (!zf::LoadFontFromRaw(file_path, height, code_pts, resource_arena_to_use.MemArena(), temp_mem_arena, temp_mem_arena, o_font.arrangement, atlas_rgbas)) {
             return false;
         }
 
-        o_font.atlases = AllocArray<s_ptr<s_gfx_resource>>(atlas_rgbas.Len(), *resource_arena_to_use.mem_arena);
+        o_font.atlases = AllocArray<s_ptr<s_gfx_resource>>(atlas_rgbas.Len(), resource_arena_to_use.MemArena());
 
         for (t_i32 i = 0; i < atlas_rgbas.Len(); i++) {
-            if (!CreateTextureResource({g_font_atlas_size, atlas_rgbas[i]}, o_font.atlases[i], &resource_arena_to_use)) {
+            if (!resource_arena_to_use.AddTexture({g_font_atlas_size, atlas_rgbas[i]}, o_font.atlases[i])) {
                 return false;
             }
         }
@@ -98,14 +98,14 @@ namespace zf {
 
         s_array<t_font_atlas_rgba> atlas_rgbas;
 
-        if (!zf::UnpackFont(file_path, *resource_arena_to_use.mem_arena, temp_mem_arena, temp_mem_arena, o_font.arrangement, atlas_rgbas)) {
+        if (!zf::UnpackFont(file_path, resource_arena_to_use.MemArena(), temp_mem_arena, temp_mem_arena, o_font.arrangement, atlas_rgbas)) {
             return false;
         }
 
-        o_font.atlases = AllocArray<s_ptr<s_gfx_resource>>(atlas_rgbas.Len(), *resource_arena_to_use.mem_arena);
+        o_font.atlases = AllocArray<s_ptr<s_gfx_resource>>(atlas_rgbas.Len(), resource_arena_to_use.MemArena());
 
         for (t_i32 i = 0; i < atlas_rgbas.Len(); i++) {
-            if (!CreateTextureResource({g_font_atlas_size, atlas_rgbas[i]}, o_font.atlases[i], &resource_arena_to_use)) {
+            if (!resource_arena_to_use.AddTexture({g_font_atlas_size, atlas_rgbas[i]}, o_font.atlases[i])) {
                 return false;
             }
         }
