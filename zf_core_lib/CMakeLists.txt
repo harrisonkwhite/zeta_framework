@@ -31,6 +31,8 @@ target_include_directories(zf_core_lib
     PRIVATE ../external/stb_image/include ../external/stb_truetype/include ../external/miniaudio/include
 )
 
+target_link_libraries(zf_core_lib PUBLIC reproc)
+
 if(WIN32)
     target_link_libraries(zf_core_lib PRIVATE dbghelp)
     target_compile_definitions(zf_core_lib PRIVATE _CRT_SECURE_NO_WARNINGS)

@@ -16,6 +16,8 @@ set(BGFX_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(BGFX_INSTALL OFF CACHE BOOL "" FORCE)
 add_subdirectory(external/bgfx_cmake)
 
+add_subdirectory(external/reproc)
+
 set(CMAKE_FOLDER "zeta_framework")
 add_subdirectory(zf_core_lib)
 add_subdirectory(zf_bin_to_array)

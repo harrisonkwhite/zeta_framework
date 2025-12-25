@@ -342,47 +342,4 @@ namespace zf {
     // ============================================================
     // @section: Shaders
     // ============================================================
-    t_b8 PackShaderProg(const s_str_rdonly file_path, const s_str vs_src, const s_str fs_src, s_mem_arena &temp_mem_arena) {
-        s_stream fs;
-
-        if (!OpenFile(file_path, ek_file_access_mode_write, temp_mem_arena, fs)) {
-            return false;
-        }
-
-        ZF_DEFER({ CloseFile(fs); });
-
-        if (!SerializeArray(fs, vs_src.bytes)) {
-            return false;
-        }
-
-        if (!SerializeArray(fs, fs_src.bytes)) {
-            return false;
-        }
-
-        return true;
-    }
-
-    t_b8 UnpackShaderProg(const s_str_rdonly file_path, s_mem_arena &mem_arena, s_mem_arena &temp_mem_arena, s_str &o_vs_src, s_str &o_fs_src) {
-        s_stream fs;
-
-        if (!OpenFile(file_path, ek_file_access_mode_read, temp_mem_arena, fs)) {
-            return false;
-        }
-
-        ZF_DEFER({ CloseFile(fs); });
-
-        o_vs_src = {};
-
-        if (!DeserializeArray(fs, mem_arena, o_vs_src.bytes)) {
-            return false;
-        }
-
-        o_fs_src = {};
-
-        if (!DeserializeArray(fs, mem_arena, o_fs_src.bytes)) {
-            return false;
-        }
-
-        return true;
-    }
 }
