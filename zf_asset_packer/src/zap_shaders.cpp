@@ -3,8 +3,10 @@
 #include <reproc/reproc.h>
 
 namespace zf {
-    t_b8 CompileShader(const s_str_rdonly shader_file_path, const s_str_rdonly shaderc_file_path, const t_b8 is_frag, s_mem_arena &temp_mem_arena) {
+    t_b8 CompileShader(const s_str_rdonly shader_file_path, const s_str_rdonly varying_def_file_path, const s_str_rdonly include_dir, const s_str_rdonly shaderc_file_path, const t_b8 is_frag, s_mem_arena &temp_mem_arena) {
         const s_str_rdonly shader_file_path_terminated = AllocStrCloneButAddTerminator(shader_file_path, temp_mem_arena);
+        const s_str_rdonly varying_def_file_path_terminated = AllocStrCloneButAddTerminator(varying_def_file_path, temp_mem_arena);
+        const s_str_rdonly include_dir_terminated = AllocStrCloneButAddTerminator(include_dir, temp_mem_arena);
         const s_str_rdonly shaderc_file_path_terminated = AllocStrCloneButAddTerminator(shaderc_file_path, temp_mem_arena);
 
         t_i32 r = 0;
@@ -26,8 +28,32 @@ namespace zf {
             reproc_destroy(proc);
         });
 
-        const s_static_array<const char *, 2> args = {
+#if defined(ZF_PLATFORM_WINDOWS)
+        const s_cstr_literal platform = "windows";
+        const s_cstr_literal profile = "s_5_0";
+#elif defined(ZF_PLATFORM_MACOS)
+        const s_cstr_literal platform = "osx";
+        const s_cstr_literal profile = "metal";
+#elif defined(ZF_PLATFORM_LINUX)
+        const s_cstr_literal platform = "linux";
+        const s_cstr_literal profile = "glsl";
+#endif
+
+        const s_static_array<const char *, 15> args = {
             shaderc_file_path_terminated.AsCstr(),
+            "-f",
+            shader_file_path_terminated.AsCstr(),
+            "--type",
+            is_frag ? "fragment" : "vertex",
+            "--platform",
+            platform.BufPtr(),
+            "--profile",
+            profile.BufPtr(),
+            "--varyingdef",
+            varying_def_file_path_terminated.AsCstr(),
+            "-i",
+            include_dir_terminated.AsCstr(),
+            "--stdout",
             nullptr,
         };
 
@@ -46,10 +72,6 @@ namespace zf {
         do {
             s_static_array<t_u8, 4096> buf;
             r = reproc_read(proc, REPROC_STREAM_OUT, buf.raw, ZF_SIZE_OF(buf));
-
-            if (r >= 0) {
-                Log(s_cstr_literal("Read % bytes from shaderc output!"), r);
-            }
         } while (r >= 0);
 
         if (r != REPROC_EPIPE) {

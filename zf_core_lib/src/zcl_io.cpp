@@ -84,7 +84,7 @@ namespace zf {
 #ifdef ZF_PLATFORM_WINDOWS
         const t_i32 res = _mkdir(path_terminated.AsCstr());
 #else
-        const t_s32 res = mkdir(path_terminated.Cstr(), 0755);
+        const t_s32 res = mkdir(path_terminated.AsCstr(), 0755);
 #endif
 
         if (res == 0) {

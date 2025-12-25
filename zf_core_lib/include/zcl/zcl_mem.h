@@ -372,7 +372,7 @@ namespace zf {
         }
 
         constexpr s_static_array(const std::initializer_list<tp_type> init) {
-            ZF_ASSERT(init.size() == tp_len);
+            ZF_ASSERT(init.size() == tp_len); // @todo: Very annoying this can't be done at compile time, or can't be inferred from input!
 
             t_i32 i = 0;
 

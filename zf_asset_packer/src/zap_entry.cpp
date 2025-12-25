@@ -9,11 +9,5 @@ int main(const int arg_cnt, const char *const *const args_raw) {
         return EXIT_FAILURE;
     }
 
-    zf::s_mem_arena temp_mem_arena = {};
-
-    if (!zf::CompileShader(zf::s_cstr_literal(""), zf::ConvertCstr(args[2]), false, temp_mem_arena)) {
-        return EXIT_FAILURE;
-    }
-
     return zf::RunPacker(zf::ConvertCstr(args[1])) ? EXIT_SUCCESS : EXIT_FAILURE;
 }

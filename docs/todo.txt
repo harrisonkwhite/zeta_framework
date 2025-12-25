@@ -7,7 +7,6 @@
 - Unicode text input handling
 - Fill out tests
 - Assets won't get updated unless a recompile is triggered - this is annoying!
-- Revert back to the block-based memory arena approach. You shouldn't need to specify some arbitrary size. The initial allocation should be done lazily.
 
 There are a handful of comments marked with "@todo" throughout the codebase that need to be addressed as well.
 
