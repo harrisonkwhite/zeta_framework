@@ -3,6 +3,7 @@
 #include <reproc/reproc.h>
 
 namespace zf {
+#if 0
     t_b8 CompileShader(const s_str_rdonly shader_file_path, const s_str_rdonly varying_def_file_path, const t_b8 is_frag, s_mem_arena &temp_mem_arena) {
         const s_str_rdonly shader_file_path_terminated = AllocStrCloneButAddTerminator(shader_file_path, temp_mem_arena);
         const s_str_rdonly varying_def_file_path_terminated = AllocStrCloneButAddTerminator(varying_def_file_path, temp_mem_arena);
@@ -26,19 +27,19 @@ namespace zf {
             reproc_destroy(proc);
         });
 
-#if defined(ZF_PLATFORM_WINDOWS)
+    #if defined(ZF_PLATFORM_WINDOWS)
         const s_cstr_literal shaderc_file_path = "tools/bgfx/shaderc_windows.exe";
         const s_cstr_literal platform = "windows";
         const s_cstr_literal profile = "s_5_0";
-#elif defined(ZF_PLATFORM_MACOS)
+    #elif defined(ZF_PLATFORM_MACOS)
         const s_cstr_literal shaderc_file_path = "tools/bgfx/shaderc_macos";
         const s_cstr_literal platform = "osx";
         const s_cstr_literal profile = "metal";
-#elif defined(ZF_PLATFORM_LINUX)
+    #elif defined(ZF_PLATFORM_LINUX)
         const s_cstr_literal shaderc_file_path = "tools/bgfx/shaderc_linux";
         const s_cstr_literal platform = "linux";
         const s_cstr_literal profile = "glsl";
-#endif
+    #endif
 
         const s_static_array<const char *, 15> args = {
             shaderc_file_path.BufPtr(),
@@ -95,4 +96,5 @@ namespace zf {
 
         return true;
     }
+#endif
 }

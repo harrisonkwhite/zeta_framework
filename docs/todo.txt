@@ -1,3 +1,4 @@
+- Get a frame rendered before showing the window. I hate the white screen on startup.
 - Ability to change target FPS mid-game.
 - Ability to get debug info like FPS.
 - Ability to change background clear color.

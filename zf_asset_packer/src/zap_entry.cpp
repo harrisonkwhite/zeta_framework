@@ -9,5 +9,5 @@ int main(const int arg_cnt, const char *const *const args_raw) {
         return EXIT_FAILURE;
     }
 
-    return zf::RunPacker(zf::ConvertCstr(args[1])) ? EXIT_SUCCESS : EXIT_FAILURE;
+    return zf::PackAssets(zf::ConvertCstr(args[1]), zf::ConvertCstr(args[2])) ? EXIT_SUCCESS : EXIT_FAILURE;
 }
