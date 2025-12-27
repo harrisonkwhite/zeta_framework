@@ -39,17 +39,20 @@ namespace zf {
 
     enum e_texture_field : t_i32 {
         ek_texture_field_file_path,
+        ek_texture_field_out_file_path,
         eks_texture_field_cnt
     };
 
     constexpr s_static_array<s_asset_field, eks_texture_field_cnt> g_texture_fields = {
         {.name = "file_path", .type = ek_asset_field_type_str},
+        {.name = "out_file_path", .type = ek_asset_field_type_str},
     };
 
     enum e_font_field : t_i32 {
         ek_font_field_file_path,
         ek_font_field_height,
         ek_font_field_extra_chrs_file_path,
+        ek_font_field_out_file_path,
 
         eks_font_field_cnt
     };
@@ -58,10 +61,12 @@ namespace zf {
         {.name = "file_path", .type = ek_asset_field_type_str},
         {.name = "height", .type = ek_asset_field_type_num},
         {.name = "extra_chrs_file_path", .type = ek_asset_field_type_str, .optional = true},
+        {.name = "out_file_path", .type = ek_asset_field_type_str},
     };
 
     enum e_shader_field : t_i32 {
         ek_shader_field_file_path,
+        ek_shader_field_out_file_path,
         ek_shader_field_varying_def_file_path,
 
         eks_shader_field_cnt
@@ -70,28 +75,23 @@ namespace zf {
     constexpr s_static_array<s_asset_field, eks_shader_field_cnt> g_shader_fields = {
         {.name = "file_path", .type = ek_asset_field_type_str},
         {.name = "varying_def_file_path", .type = ek_asset_field_type_str},
+        {.name = "out_file_path", .type = ek_asset_field_type_str},
     };
 
     enum e_sound_field : t_i32 {
         ek_sound_field_file_path,
+        ek_sound_field_out_file_path,
         eks_sound_field_cnt
     };
 
     constexpr static s_static_array<s_asset_field, eks_sound_field_cnt> g_sound_fields = {
         {.name = "file_path", .type = ek_asset_field_type_str},
+        {.name = "out_file_path", .type = ek_asset_field_type_str},
     };
 
-    t_b8 PackAssets(const s_str_rdonly instrs_json_file_path, const s_str_rdonly out_file_path) {
+    t_b8 PackAssets(const s_str_rdonly instrs_json_file_path) {
         s_mem_arena mem_arena = {};
         ZF_DEFER({ mem_arena.Release(); });
-
-        s_stream out_file_stream;
-
-        if (!OpenFile(out_file_path, ek_file_access_mode_write, mem_arena, out_file_stream)) {
-            return false;
-        }
-
-        ZF_DEFER({ CloseFile(out_file_stream); });
 
         cJSON *cj = nullptr;
 
@@ -202,23 +202,27 @@ namespace zf {
                 switch (asset_type_index) {
                 case ek_asset_type_texture: {
                     const auto file_path = ConvertCstr(field_vals[ek_texture_field_file_path]->valuestring);
+                    const auto out_file_path = ConvertCstr(field_vals[ek_texture_field_out_file_path]->valuestring);
                     break;
                 }
 
                 case ek_asset_type_font: {
                     const auto file_path = ConvertCstr(field_vals[ek_font_field_file_path]->valuestring);
                     const auto height = field_vals[ek_font_field_height]->valueint;
+                    const auto out_file_path = ConvertCstr(field_vals[ek_font_field_out_file_path]->valuestring);
                     break;
                 }
 
                 case ek_asset_type_shader: {
                     const auto file_path = ConvertCstr(field_vals[ek_shader_field_file_path]->valuestring);
                     const auto varying_def_file_path = ConvertCstr(field_vals[ek_shader_field_varying_def_file_path]->valuestring);
+                    const auto out_file_path = ConvertCstr(field_vals[ek_shader_field_out_file_path]->valuestring);
                     break;
                 }
 
                 case ek_asset_type_sound: {
                     const auto file_path = ConvertCstr(field_vals[ek_sound_field_file_path]->valuestring);
+                    const auto out_file_path = ConvertCstr(field_vals[ek_sound_field_out_file_path]->valuestring);
                     break;
                 }
                 }

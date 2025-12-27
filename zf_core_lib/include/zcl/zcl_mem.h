@@ -528,6 +528,7 @@ namespace zf {
         }
     }
 
+    // @todo: Maybe flip dest and src around?
     template <c_nonstatic_array_mut tp_dest_arr_type, c_nonstatic_array tp_src_arr_type>
     constexpr void Copy(const tp_dest_arr_type dest, const tp_src_arr_type src, const t_b8 allow_truncation = false) {
         static_assert(s_is_same<typename tp_dest_arr_type::t_elem, typename tp_src_arr_type::t_elem>::g_val);

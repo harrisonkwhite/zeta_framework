@@ -1,3 +1,4 @@
+- Properly check for correctness in deserialization and unpacking ops.
 - Get a frame rendered before showing the window. I hate the white screen on startup.
 - Ability to change target FPS mid-game.
 - Ability to get debug info like FPS.
