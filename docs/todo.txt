@@ -11,6 +11,7 @@
 There are a handful of comments marked with "@todo" throughout the codebase that need to be addressed as well.
 
 Nice to have:
+- Static list DS
 - Dynamic list DS
 - Queue DS
 - Music layering and management.

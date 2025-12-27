@@ -53,6 +53,7 @@ namespace zf {
             varying_def_file_path_terminated.AsCstr(),
             "-i",
             include_dir_terminated.AsCstr(),
+            "--reflect",
             "--stdout",
             nullptr,
         };
@@ -69,10 +70,18 @@ namespace zf {
             return false;
         }
 
-        do {
-            s_static_array<t_u8, 4096> buf;
+        s_list<t_u8> blob = {};
+
+        while (true) {
+            s_static_array<t_u8, 4096> buf = {};
             r = reproc_read(proc, REPROC_STREAM_OUT, buf.raw, ZF_SIZE_OF(buf));
-        } while (r >= 0);
+
+            if (r < 0) {
+                break;
+            }
+
+            ListAppendMany(blob, buf.ToNonstatic().Slice(0, r));
+        }
 
         if (r != REPROC_EPIPE) {
             return false;

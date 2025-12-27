@@ -3,62 +3,181 @@
 #include <zcl/zcl_io.h>
 
 namespace zf {
-#if 0
     template <typename tp_type>
-    tp_type &Append(const s_array<tp_type> backing_arr, t_i32 &len, const tp_type &val) {
-        ZF_ASSERT(!IsFull());
+    struct s_list {
+        static_assert(!s_is_const<tp_type>::g_val);
 
-        backing_arr[len] = val;
-        len++;
-        return backing_arr[len - 1];
-    }
+    public:
+        using t_elem = tp_type;
 
-    template <typename tp_type>
-    void Insert(const s_array<tp_type> backing_arr, t_i32 &len, const t_i32 index, const tp_type &val) {
-        ZF_ASSERT(!IsFull());
-        ZF_ASSERT(index >= 0 && index <= len);
+        s_list() = default;
 
-        for (t_i32 i = len; i > index; i--) {
-            backing_arr[i] = backing_arr[i - 1];
+        s_list(const s_array<tp_type> backing_arr, const t_i32 len = 0) : m_backing_arr(backing_arr), m_len(len) {
+            ZF_ASSERT(len >= 0 && len <= backing_arr.Len());
         }
 
-        len++;
-        backing_arr[index] = val;
-    }
+        s_list(const s_list &) = delete;
 
-    template <typename tp_type>
-    void Remove(const s_array<tp_type> backing_arr, t_i32 &len, const t_i32 index) {
-        // ZF_ASSERT(!IsEmpty());
-        ZF_ASSERT(len >= 0);
-        ZF_ASSERT(index >= 0 && index < len);
-
-        Copy(backing_arr.Slice(index, len - 1), backing_arr.Slice(index + 1, len));
-        len--;
-    }
-
-    template <typename tp_type>
-    void Extend(const s_array<tp_type> arr, const t_f32 factor, s_mem_arena &mem_arena) {
-        ZF_ASSERT(factor >= 1.0f);
-
-        const auto new_arr = AllocArray<tp_type>(static_cast<t_i32>(factor * arr.Len()), mem_arena);
-        Copy(new_backing_arr, backing_arr);
-    #if 0
-        if (len == backing_arr.Len()) {
-            const auto new_backing_arr = AllocArray<tp_type>(static_cast<t_i32>(m_resize_factor * m_len), m_mem_arena);
-            Copy(new_backing_arr, backing_arr);
-            backing_arr = new_backing_arr;
+        s_array<tp_type> BackingArray() const {
+            return m_backing_arr;
         }
-    #endif
+
+        t_i32 Len() const {
+            return m_len;
+        }
+
+        void SetLen(const t_i32 len) {
+            ZF_ASSERT(len >= 0 && len <= m_backing_arr.Len());
+            m_len = len;
+        }
+
+        t_i32 Cap() const {
+            return m_backing_arr.Len();
+        }
+
+        tp_type &operator[](const t_i32 index) const {
+            ZF_ASSERT(index >= 0 && index < m_len);
+            return m_backing_arr[index];
+        }
+
+        tp_type &Last() const {
+            return operator[](m_len - 1);
+        }
+
+    private:
+        s_array<tp_type> m_backing_arr = {};
+        t_i32 m_len = 0;
+    };
+
+    template <typename tp_type, t_i32 tp_cap>
+    struct s_static_list {
+        static_assert(!s_is_const<tp_type>::g_val);
+
+    public:
+        using t_elem = tp_type;
+
+        s_static_list() = default;
+
+        s_static_list(const s_array<tp_type> backing_arr, const t_i32 len = 0) : m_backing_arr(backing_arr), m_len(len) {
+            ZF_ASSERT(len >= 0 && len <= backing_arr.Len());
+        }
+
+        s_static_list(const s_static_list &) = delete;
+
+        s_array<tp_type> BackingArray() const {
+            return m_backing_arr.ToNonstatic();
+        }
+
+        t_i32 Len() const {
+            return m_len;
+        }
+
+        void SetLen(const t_i32 len) {
+            ZF_ASSERT(len >= 0 && len <= m_backing_arr.Len());
+            m_len = len;
+        }
+
+        t_i32 Cap() const {
+            return m_backing_arr.Len();
+        }
+
+        tp_type &operator[](const t_i32 index) const {
+            ZF_ASSERT(index >= 0 && index < m_len);
+            return m_backing_arr[index];
+        }
+
+        tp_type &Last() const {
+            return operator[](m_len - 1);
+        }
+
+    private:
+        s_static_array<tp_type, tp_cap> m_backing_arr = {};
+        t_i32 m_len = 0;
+    };
+
+    template <typename tp_type>
+    struct s_is_nonstatic_list {
+        static constexpr t_b8 g_val = false;
+    };
+
+    template <typename tp_type>
+    struct s_is_nonstatic_list<s_list<tp_type>> {
+        static constexpr t_b8 g_val = true;
+    };
+
+    template <typename tp_type>
+    struct s_is_static_list {
+        static constexpr t_b8 g_val = false;
+    };
+
+    template <typename tp_type, t_i32 tp_cap>
+    struct s_is_static_list<s_static_list<tp_type, tp_cap>> {
+        static constexpr t_b8 g_val = true;
+    };
+
+    template <typename tp_type>
+    concept c_nonstatic_list = s_is_nonstatic_list<tp_type>::g_val;
+
+    template <typename tp_type>
+    concept c_static_list = s_is_static_list<tp_type>::g_val;
+
+    template <typename tp_type>
+    concept c_list = c_nonstatic_list<tp_type> || c_static_list<tp_type>;
+
+    template <typename tp_type>
+    s_list<tp_type> ListCreate(const t_i32 cap, s_mem_arena &mem_arena, const t_i32 len = 0) {
+        ZF_ASSERT(cap > 0 && len >= 0 && len <= cap);
+        return {AllocArray<tp_type>(cap, mem_arena), len};
     }
-#endif
 
-    using t_list_extension_cap_calculator = t_i32 (*)(const t_i32 cap_current, const void *const misc_ptr);
-
+    using t_list_extension_cap_calculator = t_i32 (*)(const t_i32 cap_current);
     constexpr t_list_extension_cap_calculator g_default_list_extension_cap_calculator =
-        [](const t_i32 cap_current, const void *const misc_ptr) {
-            return static_cast<t_i32>(static_cast<t_f32>(cap_current) * 1.5f);
+        [](const t_i32 cap_current) {
+            ZF_ASSERT(cap_current >= 0);
+            return cap_current == 0 ? 1 : cap_current * 2;
         };
 
+    template <c_nonstatic_list tp_list_type>
+    void ListExtend(tp_list_type &list, s_mem_arena &mem_arena, const t_list_extension_cap_calculator cap_calculator = g_default_list_extension_cap_calculator) {
+        ZF_ASSERT(cap_calculator);
+
+        const t_i32 new_cap = cap_calculator(list.Cap());
+        ZF_ASSERT(new_cap > list.Cap());
+
+        const auto new_backing_arr = AllocArray<typename tp_list_type::t_elem>(new_cap, mem_arena);
+        Copy(new_backing_arr, list.BackingArray());
+
+        list = {new_backing_arr, list.Len()};
+    }
+
+    template <c_list tp_list_type>
+    typename tp_list_type::t_elem &ListAppend(tp_list_type &list, const typename tp_list_type::t_elem &val) {
+        ZF_ASSERT(list.Len() < list.Cap());
+
+        list.BackingArray()[list.Len()] = val;
+        list.SetLen(list.Len() + 1);
+        return list.Last();
+    }
+
+    template <c_list tp_list_type>
+    typename tp_list_type::t_elem &ListAppendDynamic(tp_list_type &list, const typename tp_list_type::t_elem &val, s_mem_arena &mem_arena, const t_list_extension_cap_calculator cap_calculator = g_default_list_extension_cap_calculator) {
+        if (list.Len() == list.Cap()) {
+            ListExtend(list, mem_arena, cap_calculator);
+        }
+
+        return ListAppend(list, val);
+    }
+
+    template <c_list tp_list_type>
+    s_array<typename tp_list_type::t_elem> ListAppendMany(tp_list_type &list, const s_array_rdonly<typename tp_list_type::t_elem> vals) {
+        ZF_ASSERT(list.Len() + vals.Len() <= list.Cap());
+
+        Copy(list.BackingArray().SliceFrom(list.Len()), vals);
+        list.SetLen(list.Len() + vals.Len());
+        return list.BackingArray().Slice(list.Len() - vals.Len(), list.Len());
+    }
+
+#if 0
     template <typename tp_type>
     struct s_list {
         static_assert(!s_is_const<tp_type>::g_val);
@@ -66,7 +185,7 @@ namespace zf {
     public:
         s_list() = default;
 
-        s_list(const s_array<tp_type> backing_arr, const t_i32 len = 0, const s_ptr<s_mem_arena> extension_mem_arena = nullptr, const t_list_extension_cap_calculator extension_cap_calculator = g_default_list_extension_cap_calculator) : m_backing_arr(backing_arr), m_len(len), m_extension_mem_arena(extension_mem_arena) {
+        s_list(const s_array<tp_type> backing_arr, const t_i32 len = 0, const s_ptr<s_mem_arena> extension_mem_arena = nullptr, const t_list_extension_cap_calculator extension_cap_calculator = g_default_list_extension_cap_calculator) : m_backing_arr(backing_arr), m_len(len), m_extension_mem_arena(extension_mem_arena), m_extension_cap_calculator(extension_cap_calculator) {
             ZF_ASSERT(len >= 0 && len <= backing_arr.Len());
             ZF_ASSERT(extension_cap_calculator);
         }
@@ -97,15 +216,24 @@ namespace zf {
         }
 
         tp_type &Append(const tp_type &val) {
-            if (m_extension_mem_arena && IsFull()) {
+            if (IsFull()) {
+                ZF_ASSERT(m_extension_mem_arena);
                 Extend();
             }
-
-            ZF_ASSERT(!IsFull());
 
             m_backing_arr[m_len] = val;
             m_len++;
             return m_backing_arr[m_len - 1];
+        }
+
+        void AppendMany(const s_array_rdonly<tp_type> vals) {
+            if (m_len + vals.Len() > Cap()) {
+                ZF_ASSERT(m_extension_mem_arena);
+                Extend();
+            }
+
+            Copy(m_backing_arr.SliceFrom(m_len), vals);
+            m_len += vals.Len();
         }
 
         tp_type &Insert(const t_i32 index, const tp_type &val) {
@@ -154,8 +282,13 @@ namespace zf {
         void Extend() {
             ZF_ASSERT(m_extension_mem_arena);
 
-            const t_i32 new_cap = m_extension_cap_calculator(Cap());
-            ZF_ASSERT(new_cap >= Cap());
+            t_i32 new_cap = Cap();
+
+            do {
+                const t_i32 new_cap_temp = m_extension_cap_calculator(Cap());
+                ZF_ASSERT(new_cap_temp > new_cap);
+
+            } while ();
 
             const auto new_backing_arr = AllocArray<tp_type>(new_cap, m_extension_mem_arena);
             Copy(new_backing_arr, m_backing_arr);
@@ -165,9 +298,16 @@ namespace zf {
         s_array<tp_type> m_backing_arr = {};
         t_i32 m_len = 0;
 
-        t_list_extension_cap_calculator m_extension_cap_calculator = g_default_list_extension_cap_calculator;
         s_ptr<s_mem_arena> m_extension_mem_arena = nullptr;
+        t_list_extension_cap_calculator m_extension_cap_calculator = g_default_list_extension_cap_calculator;
     };
+
+    template <typename tp_type>
+    s_list<tp_type> CreateList(const t_i32 cap, s_mem_arena &mem_arena, const t_i32 len = 0) {
+        ZF_ASSERT(cap > 0 && len >= 0 && len <= cap);
+        return {AllocArray<tp_type>(cap, mem_arena), len};
+    }
+#endif
 
     // ============================================================
     // @section: Stack

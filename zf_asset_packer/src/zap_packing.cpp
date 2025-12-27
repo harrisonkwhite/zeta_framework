@@ -30,7 +30,7 @@ namespace zf {
     };
 
     struct s_asset_field {
-        s_cstr_literal name;
+        s_cstr_literal name = {};
         e_asset_field_type type = {};
         t_b8 optional = false;
     };
