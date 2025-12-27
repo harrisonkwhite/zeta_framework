@@ -209,7 +209,7 @@ namespace zf {
             ListExtendToFit(list, min_cap_needed, extension_mem_arena, extension_cap_calculator);
         }
 
-        ListAppendMany(list, vals);
+        return ListAppendMany(list, vals);
     }
 
     template <c_list tp_list_type>

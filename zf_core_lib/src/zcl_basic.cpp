@@ -83,7 +83,7 @@ namespace zf {
         fprintf(stderr, "Condition: %s\n", cond);
         fprintf(stderr, "Function:  %s\n", func_name);
         fprintf(stderr, "File:      %s\n", file_name);
-        fprintf(stderr, "Line:      %d\n", line);
+        fprintf(stderr, "Line:      %d\n\n", line);
 
         PrintStackTrace();
 

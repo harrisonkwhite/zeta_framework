@@ -1,4 +1,4 @@
-#include "zap_packing.h"
+#include "zap.h"
 
 #include <cJSON.h>
 
@@ -78,6 +78,8 @@ namespace zf {
     t_b8 RunPacker(const s_str_rdonly instrs_json_file_path) {
         s_mem_arena mem_arena = {};
         ZF_DEFER({ mem_arena.Release(); });
+
+        CompileShader(s_cstr_literal("assets_raw/shaders/test.sc"), s_cstr_literal("assets_raw/shaders/varying.def.sc"), false, mem_arena);
 
         cJSON *cj = nullptr;
 
