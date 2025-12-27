@@ -207,7 +207,7 @@ namespace zf {
     s_gfx_resource &s_gfx_resource_arena::Add(const e_gfx_resource_type type) {
         ZF_ASSERT(g_state.state == ek_state_initted);
 
-        auto &resource = Alloc<s_gfx_resource>(*mem_arena);
+        auto &resource = Alloc<s_gfx_resource>(*m_mem_arena);
 
         if (!m_head) {
             m_head = &resource;

@@ -262,94 +262,6 @@ namespace zf {
     }
 
     // ============================================================
-    // @section: Stack
-    // ============================================================
-    template <typename tp_type>
-    struct s_stack {
-        static_assert(!s_is_const<tp_type>::g_val);
-
-    public:
-        s_stack() = default;
-
-        s_stack(const s_array<tp_type> backing_arr, const t_i32 height = 0) : m_backing_arr(backing_arr), m_height(height) {
-            ZF_ASSERT(height >= 0 && height <= backing_arr.Len());
-        }
-
-        s_stack(const s_stack &) = delete;
-
-        s_array<tp_type> BackingArray() {
-            return m_backing_arr;
-        }
-
-        t_i32 Height() const {
-            return m_height;
-        }
-
-        t_i32 Cap() const {
-            return m_backing_arr.Len();
-        }
-
-        t_b8 IsEmpty() const {
-            return m_height == 0;
-        }
-
-        t_b8 IsFull() const {
-            return m_height == m_backing_arr.Len();
-        }
-
-        s_array<tp_type> ToArray() const {
-            return m_backing_arr.Slice(0, m_height);
-        }
-
-        tp_type &operator[](const t_i32 index) const {
-            ZF_ASSERT(index >= 0 && index < m_height);
-            return m_backing_arr[index];
-        }
-
-        tp_type &Peek() const {
-            return operator[](m_height - 1);
-        }
-
-        void Clear() {
-            m_height = 0;
-        }
-
-        tp_type &Push(const tp_type &val) {
-            ZF_ASSERT(!IsFull());
-
-            m_backing_arr[m_height] = val;
-            m_height++;
-            return m_backing_arr[m_height - 1];
-        }
-
-        tp_type Pop() {
-            ZF_ASSERT(!IsEmpty());
-
-            m_height--;
-            return m_backing_arr[m_height];
-        }
-
-    private:
-        s_array<tp_type> m_backing_arr = {};
-        t_i32 m_height = 0;
-    };
-
-    template <typename tp_type, t_i32 tp_cap>
-    struct s_static_stack : public s_stack<tp_type> {
-    public:
-        s_static_stack() : s_stack<tp_type>(m_backing_arr) {}
-
-    private:
-        s_static_array<tp_type, tp_cap> m_backing_arr = {};
-    };
-
-    template <typename tp_type>
-    s_stack<tp_type> StackCreate(const t_i32 cap, s_mem_arena &mem_arena, const t_i32 height = 0) {
-        ZF_ASSERT(cap > 0 && height >= 0 && height <= cap);
-        return {AllocArray<tp_type>(cap, mem_arena), height};
-    }
-
-    // ============================================================
     // @section: Hash Map
     // ============================================================
     enum e_kv_pair_block_seq_put_result {
@@ -666,7 +578,7 @@ namespace zf {
 
     // The provided hash function has to map a key to an integer 0 or higher. The given memory arena will be saved and used for allocating new memory for entries when needed.
     template <typename tp_key_type, typename tp_val_type>
-    s_hash_map<tp_key_type, tp_val_type> CreateHashMap(const t_hash_func<tp_key_type> hash_func, s_mem_arena &mem_arena, const t_i32 cap = g_hash_map_cap_default, const t_bin_comparator<tp_key_type> key_comparator = DefaultBinComparator) {
+    s_hash_map<tp_key_type, tp_val_type> HashMapCreate(const t_hash_func<tp_key_type> hash_func, s_mem_arena &mem_arena, const t_i32 cap = g_hash_map_cap_default, const t_bin_comparator<tp_key_type> key_comparator = DefaultBinComparator) {
         const auto immediate_indexes = AllocArray<t_i32>(cap, mem_arena);
         SetAllTo(immediate_indexes, -1);
 
@@ -678,7 +590,7 @@ namespace zf {
     }
 
     template <typename tp_key_type, typename tp_val_type>
-    [[nodiscard]] t_b8 SerializeHashMap(s_stream &stream, const s_hash_map<tp_key_type, tp_val_type> &hm, s_mem_arena &temp_mem_arena) {
+    [[nodiscard]] t_b8 HashMapSerialize(s_stream &stream, const s_hash_map<tp_key_type, tp_val_type> &hm, s_mem_arena &temp_mem_arena) {
         const t_i32 cap = hm.Cap();
 
         if (!stream.WriteItem(cap)) {
@@ -707,7 +619,7 @@ namespace zf {
     }
 
     template <typename tp_key_type, typename tp_val_type>
-    [[nodiscard]] t_b8 DeserializeHashMap(s_stream &stream, s_mem_arena &hm_mem_arena, const t_hash_func<tp_key_type> hm_hash_func, s_mem_arena &temp_mem_arena, s_hash_map<tp_key_type, tp_val_type> &o_hm, const t_bin_comparator<tp_key_type> hm_key_comparator = DefaultBinComparator) {
+    [[nodiscard]] t_b8 HashMapDeserialize(s_stream &stream, s_mem_arena &hm_mem_arena, const t_hash_func<tp_key_type> hm_hash_func, s_mem_arena &temp_mem_arena, s_hash_map<tp_key_type, tp_val_type> &o_hm, const t_bin_comparator<tp_key_type> hm_key_comparator = DefaultBinComparator) {
         ZF_ASSERT(hm_hash_func);
         ZF_ASSERT(hm_key_comparator);
 
@@ -723,7 +635,7 @@ namespace zf {
             return false;
         }
 
-        o_hm = CreateHashMap<tp_key_type, tp_val_type>(hm_hash_func, hm_mem_arena, cap, hm_key_comparator);
+        o_hm = HashMapCreate<tp_key_type, tp_val_type>(hm_hash_func, hm_mem_arena, cap, hm_key_comparator);
 
         const auto keys = AllocArray<tp_key_type>(entry_cnt, temp_mem_arena);
 
