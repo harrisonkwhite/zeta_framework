@@ -313,4 +313,10 @@ namespace zf {
 
     [[nodiscard]] t_b8 PackFont(const s_str_rdonly file_path, const s_font_arrangement &arrangement, const s_array_rdonly<t_font_atlas_rgba> atlas_rgbas, s_mem_arena &temp_mem_arena);
     [[nodiscard]] t_b8 UnpackFont(const s_str_rdonly file_path, s_mem_arena &arrangement_mem_arena, s_mem_arena &atlas_rgbas_mem_arena, s_mem_arena &temp_mem_arena, s_font_arrangement &o_arrangement, s_array<t_font_atlas_rgba> &o_atlas_rgbas);
+
+    // ============================================================
+    // @section: Shaders
+    // ============================================================
+    [[nodiscard]] t_b8 PackShader(const s_str_rdonly file_path, const s_array_rdonly<t_u8> compiled_shader_bin, s_mem_arena &temp_mem_arena);
+    [[nodiscard]] t_b8 UnpackShader(const s_str_rdonly file_path, s_mem_arena &shader_bin_mem_arena, s_mem_arena &temp_mem_arena, s_array<t_u8> &o_shader_bin);
 }

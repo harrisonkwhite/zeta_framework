@@ -334,4 +334,42 @@ namespace zf {
 
         return true;
     }
+
+    t_b8 PackShader(const s_str_rdonly file_path, const s_array_rdonly<t_u8> compiled_shader_bin, s_mem_arena &temp_mem_arena) {
+        if (!CreateFileAndParentDirs(file_path, temp_mem_arena)) {
+            return false;
+        }
+
+        s_stream fs;
+
+        if (!OpenFile(file_path, ek_file_access_mode_write, temp_mem_arena, fs)) {
+            return false;
+        }
+
+        ZF_DEFER({ CloseFile(fs); });
+
+        if (!SerializeArray(fs, compiled_shader_bin)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    t_b8 UnpackShader(const s_str_rdonly file_path, s_mem_arena &shader_bin_mem_arena, s_mem_arena &temp_mem_arena, s_array<t_u8> &o_shader_bin) {
+        o_shader_bin = {};
+
+        s_stream fs;
+
+        if (!OpenFile(file_path, ek_file_access_mode_read, temp_mem_arena, fs)) {
+            return false;
+        }
+
+        ZF_DEFER({ CloseFile(fs); });
+
+        if (!DeserializeArray(fs, shader_bin_mem_arena, o_shader_bin)) {
+            return false;
+        }
+
+        return true;
+    }
 }

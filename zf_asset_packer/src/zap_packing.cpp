@@ -278,10 +278,15 @@ namespace zf {
                         return false;
                     }
 
-                    s_array<t_u8> bin;
+                    s_array<t_u8> compiled_bin;
 
-                    if (!CompileShader(file_path, varying_def_file_path, is_frag, mem_arena, mem_arena, bin)) {
+                    if (!CompileShader(file_path, varying_def_file_path, is_frag, mem_arena, mem_arena, compiled_bin)) {
                         LogError(s_cstr_literal("Failed to compile shader from file \"%\"!"), file_path);
+                        return false;
+                    }
+
+                    if (!PackShader(out_file_path, compiled_bin, mem_arena)) {
+                        LogError(s_cstr_literal("Failed to pack shader to file \"%\"!"), out_file_path);
                         return false;
                     }
 
