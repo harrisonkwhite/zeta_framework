@@ -18,7 +18,8 @@ namespace zf {
     // ============================================================
     enum e_gfx_resource_type {
         ek_gfx_resource_type_invalid,
-        ek_gfx_resource_type_texture
+        ek_gfx_resource_type_texture,
+        ek_gfx_resource_type_shader_prog
     };
 
     struct s_gfx_resource;
@@ -39,7 +40,7 @@ namespace zf {
             return *m_mem_arena;
         }
 
-        [[nodiscard]] t_b8 AddTexture(const s_texture_data_rdonly texture_data, s_ptr<s_gfx_resource> &o_resource);
+        s_gfx_resource &AddTexture(const s_texture_data_rdonly texture_data);
 
         [[nodiscard]] t_b8 AddTextureFromRaw(const s_str_rdonly file_path, s_mem_arena &temp_mem_arena, s_ptr<s_gfx_resource> &o_resource) {
             ZF_ASSERT(IsInitted());
@@ -50,7 +51,9 @@ namespace zf {
                 return false;
             }
 
-            return AddTexture(texture_data, o_resource);
+            o_resource = &AddTexture(texture_data);
+
+            return true;
         }
 
         [[nodiscard]] t_b8 AddTextureFromPacked(const s_str_rdonly file_path, s_mem_arena &temp_mem_arena, s_ptr<s_gfx_resource> &o_resource) {
@@ -62,8 +65,12 @@ namespace zf {
                 return false;
             }
 
-            return AddTexture(texture_data, o_resource);
+            o_resource = &AddTexture(texture_data);
+
+            return true;
         }
+
+        s_gfx_resource &AddShaderProg(const s_array_rdonly<t_u8> vert_shader_compiled_bin, const s_array_rdonly<t_u8> frag_shader_compiled_bin);
 
     private:
         s_gfx_resource &Add(const e_gfx_resource_type type);

@@ -39,12 +39,26 @@ namespace zf {
             return type_data.texture;
         }
 
+        auto &ShaderProg() {
+            ZF_ASSERT(type == ek_gfx_resource_type_shader_prog);
+            return type_data.shader_prog;
+        }
+
+        auto &ShaderProg() const {
+            ZF_ASSERT(type == ek_gfx_resource_type_shader_prog);
+            return type_data.shader_prog;
+        }
+
     private:
         union {
             struct {
                 bgfx::TextureHandle bgfx_hdl;
                 s_v2_i size;
             } texture;
+
+            struct {
+                bgfx::ProgramHandle bgfx_hdl;
+            } shader_prog;
         } type_data = {};
     };
 
@@ -172,10 +186,14 @@ namespace zf {
         while (resource) {
             switch (resource->type) {
             case ek_gfx_resource_type_invalid:
-                break;
+                ZF_UNREACHABLE();
 
             case ek_gfx_resource_type_texture:
                 bgfx::destroy(resource->Texture().bgfx_hdl);
+                break;
+
+            case ek_gfx_resource_type_shader_prog:
+                bgfx::destroy(resource->ShaderProg().bgfx_hdl);
                 break;
             }
 
@@ -187,21 +205,46 @@ namespace zf {
         *this = {};
     }
 
-    t_b8 s_gfx_resource_arena::AddTexture(const s_texture_data_rdonly texture_data, s_ptr<s_gfx_resource> &o_resource) {
+    s_gfx_resource &s_gfx_resource_arena::AddTexture(const s_texture_data_rdonly texture_data) {
         ZF_ASSERT(IsInitted());
         ZF_ASSERT(g_state.state == ek_state_initted);
 
         const auto texture_bgfx_hdl = bgfx::createTexture2D(static_cast<uint16_t>(texture_data.SizeInPixels().x), static_cast<uint16_t>(texture_data.SizeInPixels().y), false, 1, bgfx::TextureFormat::RGBA8, 0, bgfx::copy(texture_data.RGBAPixelData().Ptr(), static_cast<uint32_t>(texture_data.RGBAPixelData().SizeInBytes())));
 
         if (!bgfx::isValid(texture_bgfx_hdl)) {
-            return false;
+            ZF_FATAL();
         }
 
-        o_resource = &Add(ek_gfx_resource_type_texture);
-        o_resource->Texture().bgfx_hdl = texture_bgfx_hdl;
-        o_resource->Texture().size = texture_data.SizeInPixels();
+        auto &res = Add(ek_gfx_resource_type_texture);
+        res.Texture().bgfx_hdl = texture_bgfx_hdl;
+        res.Texture().size = texture_data.SizeInPixels();
+        return res;
+    }
 
-        return true;
+    s_gfx_resource &s_gfx_resource_arena::AddShaderProg(const s_array_rdonly<t_u8> vert_shader_compiled_bin, const s_array_rdonly<t_u8> frag_shader_compiled_bin) {
+        const bgfx::Memory *const vert_shader_bgfx_mem = bgfx::makeRef(vert_shader_compiled_bin.Ptr(), static_cast<uint32_t>(vert_shader_compiled_bin.Len()));
+        const bgfx::ShaderHandle vert_shader_bgfx_hdl = bgfx::createShader(vert_shader_bgfx_mem);
+
+        if (!bgfx::isValid(vert_shader_bgfx_hdl)) {
+            ZF_FATAL();
+        }
+
+        const bgfx::Memory *const frag_shader_bgfx_mem = bgfx::makeRef(frag_shader_compiled_bin.Ptr(), static_cast<uint32_t>(frag_shader_compiled_bin.Len()));
+        const bgfx::ShaderHandle frag_shader_bgfx_hdl = bgfx::createShader(frag_shader_bgfx_mem);
+
+        if (!bgfx::isValid(frag_shader_bgfx_hdl)) {
+            ZF_FATAL();
+        }
+
+        const bgfx::ProgramHandle prog_bgfx_hdl = bgfx::createProgram(vert_shader_bgfx_hdl, frag_shader_bgfx_hdl, true);
+
+        if (!bgfx::isValid(prog_bgfx_hdl)) {
+            ZF_FATAL();
+        }
+
+        auto &res = Add(ek_gfx_resource_type_shader_prog);
+        res.ShaderProg().bgfx_hdl = prog_bgfx_hdl;
+        return res;
     }
 
     s_gfx_resource &s_gfx_resource_arena::Add(const e_gfx_resource_type type) {
@@ -252,14 +295,10 @@ namespace zf {
             ZF_FATAL();
         }
 
-        s_ptr<s_gfx_resource> px_texture;
         const s_static_array<t_u8, 4> px_texture_rgba = {{255, 255, 255, 255}};
+        auto &px_texture = px_texture_resource_arena.AddTexture({{1, 1}, px_texture_rgba});
 
-        if (!px_texture_resource_arena.AddTexture({{1, 1}, px_texture_rgba}, px_texture)) {
-            ZF_FATAL();
-        }
-
-        return Alloc<s_rendering_basis>(mem_arena, vert_buf_bgfx_hdl, shader_prog_bgfx_hdl, texture_sampler_uniform_bgfx_hdl, *px_texture);
+        return Alloc<s_rendering_basis>(mem_arena, vert_buf_bgfx_hdl, shader_prog_bgfx_hdl, texture_sampler_uniform_bgfx_hdl, px_texture);
     }
 
     s_rendering_context &internal::BeginFrame(const s_rendering_basis &rendering_basis, const s_color_rgb24f clear_col, s_mem_arena &mem_arena) {
