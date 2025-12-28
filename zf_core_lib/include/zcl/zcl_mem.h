@@ -528,12 +528,29 @@ namespace zf {
                 dest[i] = src[i];
             }
         } else {
-            const auto min = ZF_MIN(src.Len(), dest.Len());
+            const auto min_len = ZF_MIN(src.Len(), dest.Len());
 
-            for (t_i32 i = 0; i < min; i++) {
+            for (t_i32 i = 0; i < min_len; i++) {
                 dest[i] = src[i];
             }
         }
+    }
+
+    template <c_nonstatic_array tp_arr_a_type, c_nonstatic_array tp_arr_b_type>
+    constexpr t_i32 Compare(const tp_arr_a_type a, const tp_arr_b_type b, const t_ord_comparator<typename tp_arr_a_type::t_elem> comparator = DefaultOrdComparator) {
+        static_assert(s_is_same<typename tp_arr_a_type::t_elem, typename tp_arr_a_type::t_elem>::g_val);
+
+        const auto min_len = ZF_MIN(a.Len(), b.Len());
+
+        for (t_i32 i = 0; i < min_len; i++) {
+            const t_i32 comp = comparator(a[i], b[i]);
+
+            if (comp != 0) {
+                return comp;
+            }
+        }
+
+        return 0;
     }
 
     template <typename tp_type>

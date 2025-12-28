@@ -147,6 +147,10 @@ namespace zf {
         return str.bytes.Len() == 0;
     }
 
+    inline t_b8 AreStrsEqual(const s_str_rdonly a, const s_str_rdonly b) {
+        return Compare(a.bytes, b.bytes) == 0;
+    }
+
     t_b8 IsStrValidUTF8(const s_str_rdonly str);
 
     // Calculates the length in terms of code point count. Note that '\0' is treated just like any other ASCII character.

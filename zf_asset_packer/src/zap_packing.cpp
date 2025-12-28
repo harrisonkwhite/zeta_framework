@@ -66,14 +66,16 @@ namespace zf {
 
     enum e_shader_field : t_i32 {
         ek_shader_field_file_path,
-        ek_shader_field_out_file_path,
+        ek_shader_field_type,
         ek_shader_field_varying_def_file_path,
+        ek_shader_field_out_file_path,
 
         eks_shader_field_cnt
     };
 
     constexpr s_static_array<s_asset_field, eks_shader_field_cnt> g_shader_fields = {{
         {.name = "file_path", .type = ek_asset_field_type_str},
+        {.name = "type", .type = ek_asset_field_type_str},
         {.name = "varying_def_file_path", .type = ek_asset_field_type_str},
         {.name = "out_file_path", .type = ek_asset_field_type_str},
     }};
@@ -261,12 +263,25 @@ namespace zf {
 
                 case ek_asset_type_shader: {
                     const auto file_path = ConvertCstr(field_vals[ek_shader_field_file_path]->valuestring);
+                    const auto type = ConvertCstr(field_vals[ek_shader_field_type]->valuestring);
                     const auto varying_def_file_path = ConvertCstr(field_vals[ek_shader_field_varying_def_file_path]->valuestring);
                     const auto out_file_path = ConvertCstr(field_vals[ek_shader_field_out_file_path]->valuestring);
 
+                    t_b8 is_frag;
+
+                    if (AreStrsEqual(type, s_cstr_literal("vertex"))) {
+                        is_frag = false;
+                    } else if (AreStrsEqual(type, s_cstr_literal("fragment"))) {
+                        is_frag = true;
+                    } else {
+                        LogError(s_cstr_literal("A packing instructions JSON shader entry has an invalid shader type \"%\"! Expected \"vertex\" or \"fragment\"."), type);
+                        return false;
+                    }
+
                     s_array<t_u8> bin;
 
-                    if (!CompileShader(file_path, varying_def_file_path, false, mem_arena, mem_arena, bin)) {
+                    if (!CompileShader(file_path, varying_def_file_path, is_frag, mem_arena, mem_arena, bin)) {
+                        LogError(s_cstr_literal("Failed to compile shader from file \"%\"!"), file_path);
                         return false;
                     }
 

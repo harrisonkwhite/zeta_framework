@@ -61,7 +61,7 @@ namespace zf {
             "--varyingdef",
             varying_def_file_path_terminated.AsCstr(),
             "-i",
-            "tools/bgfx/shaderc_include",
+            "tools/bgfx/shaderc_include", // @todo
             "--stdout",
             nullptr,
         }};
@@ -98,6 +98,12 @@ namespace zf {
         r = reproc_wait(proc, REPROC_INFINITE);
 
         if (r < 0) {
+            return false;
+        }
+
+        if (r > 0) {
+            auto std_err = StdError();
+            PrintFormat(std_err, s_cstr_literal("==================== BGFX SHADERC ERROR ====================\n%============================================================\n"), s_str_rdonly(bin_list.AsArray()));
             return false;
         }
 
