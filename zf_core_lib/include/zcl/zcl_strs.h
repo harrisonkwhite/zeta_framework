@@ -66,7 +66,7 @@ namespace zf {
         s_cstr_literal() = default;
 
         template <t_i32 tp_raw_size>
-        consteval s_cstr_literal(const char (&raw)[tp_raw_size]) : buf(raw), buf_size(tp_raw_size) {
+        consteval s_cstr_literal(const char (&raw)[tp_raw_size]) : buf({raw, tp_raw_size}) {
             if (raw[tp_raw_size - 1]) {
                 throw "Static char array not terminated at end!";
             }
@@ -78,17 +78,12 @@ namespace zf {
             }
         }
 
-        constexpr s_ptr<const char> BufPtr() const {
+        constexpr s_array_rdonly<char> Buf() const {
             return buf;
         }
 
-        constexpr t_i32 BufSize() const {
-            return buf_size;
-        }
-
     private:
-        s_ptr<const char> buf;
-        t_i32 buf_size = 0;
+        s_array_rdonly<char> buf = {};
     };
 
     struct s_str_rdonly {
@@ -98,9 +93,7 @@ namespace zf {
         constexpr s_str_rdonly(const s_array_rdonly<t_u8> bytes) : bytes(bytes) {}
 
         // This very intentionally drops the terminator.
-        s_str_rdonly(const s_cstr_literal lit) : bytes({reinterpret_cast<const t_u8 *>(lit.BufPtr().Raw()), lit.BufSize() - 1}) {
-            ZF_ASSERT(lit.BufPtr());
-        }
+        s_str_rdonly(const s_cstr_literal lit) : bytes({reinterpret_cast<const t_u8 *>(lit.Buf().Ptr().Raw()), lit.Buf().Len() - 1}) {}
 
         // Requires that there is a terminating byte somewhere.
         const char *AsCstr() const {

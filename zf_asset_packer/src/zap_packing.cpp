@@ -126,7 +126,7 @@ namespace zf {
         for (t_i32 asset_type_index = 0; asset_type_index < eks_asset_type_cnt; asset_type_index++) {
             const auto asset_type_arr_name = g_asset_type_arr_names[asset_type_index];
 
-            cJSON *const cj_assets = cJSON_GetObjectItemCaseSensitive(cj, asset_type_arr_name.BufPtr());
+            cJSON *const cj_assets = cJSON_GetObjectItemCaseSensitive(cj, asset_type_arr_name.Buf().Ptr());
 
             if (!cJSON_IsArray(cj_assets)) {
                 LogError(s_cstr_literal("Packing instructions JSON \"%\" array does not exist or it is of the wrong type!"), asset_type_arr_name);
@@ -167,7 +167,7 @@ namespace zf {
                 for (t_i32 fi = 0; fi < fields.Len(); fi++) {
                     const auto field_name = fields[fi].name;
 
-                    field_vals[fi] = cJSON_GetObjectItem(cj_asset, field_name.BufPtr());
+                    field_vals[fi] = cJSON_GetObjectItem(cj_asset, field_name.Buf().Ptr());
 
                     if (!field_vals[fi]) {
                         if (fields[fi].optional) {

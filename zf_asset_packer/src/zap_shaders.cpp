@@ -27,30 +27,39 @@ namespace zf {
         });
 
 #if defined(ZF_PLATFORM_WINDOWS)
-        // const s_cstr_literal shaderc_file_path = "tools/bgfx/shaderc_windows.exe";
-        const s_cstr_literal shaderc_file_path = "C:/code/kaozeth/build/debug/zeta_framework/zf_asset_packer/tools/bgfx/shaderc_windows.exe"; // @todo: Should be relative!
+        const s_cstr_literal shaderc_file_path_rel = "tools/bgfx/shaderc_windows.exe";
         const s_cstr_literal platform = "windows";
         const s_cstr_literal profile = "s_5_0";
 #elif defined(ZF_PLATFORM_MACOS)
-        const s_cstr_literal shaderc_file_path = "tools/bgfx/shaderc_macos";
+    #error "Platform support not complete!" // @todo
+        const s_cstr_literal shaderc_file_path_rel = "tools/bgfx/shaderc_macos";
         const s_cstr_literal platform = "osx";
         const s_cstr_literal profile = "metal";
 #elif defined(ZF_PLATFORM_LINUX)
-        const s_cstr_literal shaderc_file_path = "tools/bgfx/shaderc_linux";
+    #error "Platform support not complete!" // @todo
+        const s_cstr_literal shaderc_file_path_rel = "tools/bgfx/shaderc_linux";
         const s_cstr_literal platform = "linux";
         const s_cstr_literal profile = "glsl";
 #endif
 
+        const auto exe_dir = GetExecutableDir(temp_mem_arena);
+
+        const s_str shaderc_file_path = {AllocArray<t_u8>(exe_dir.bytes.Len() + shaderc_file_path_rel.Buf().Len() + 1, temp_mem_arena)};
+        Copy(shaderc_file_path.bytes, exe_dir.bytes);
+        Copy(shaderc_file_path.bytes.SliceFrom(exe_dir.bytes.Len()), shaderc_file_path_rel.Buf().ToByteArray());
+
+        Log(s_cstr_literal("yeah man at: %"), shaderc_file_path);
+
         const s_static_array<const char *, 15> args = {{
-            shaderc_file_path.BufPtr(),
+            shaderc_file_path.AsCstr(),
             "-f",
             shader_file_path_terminated.AsCstr(),
             "--type",
             is_frag ? "fragment" : "vertex",
             "--platform",
-            platform.BufPtr(),
+            platform.Buf().Ptr(),
             "--profile",
-            profile.BufPtr(),
+            profile.Buf().Ptr(),
             "--varyingdef",
             varying_def_file_path_terminated.AsCstr(),
             "-i",
@@ -74,7 +83,7 @@ namespace zf {
         s_list<t_u8> blob = {};
 
         while (true) {
-            s_static_array<t_u8, 4096> buf = {};
+            s_static_array<t_u8, 4096> buf;
             r = reproc_read(proc, REPROC_STREAM_OUT, buf.raw, ZF_SIZE_OF(buf));
 
             if (r < 0) {
