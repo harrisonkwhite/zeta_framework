@@ -590,7 +590,7 @@ namespace zf {
     }
 
     template <typename tp_key_type, typename tp_val_type>
-    [[nodiscard]] t_b8 HashMapSerialize(s_stream &stream, const s_hash_map<tp_key_type, tp_val_type> &hm, s_mem_arena &temp_mem_arena) {
+    [[nodiscard]] t_b8 SerializeHashMap(s_stream &stream, const s_hash_map<tp_key_type, tp_val_type> &hm, s_mem_arena &temp_mem_arena) {
         const t_i32 cap = hm.Cap();
 
         if (!stream.WriteItem(cap)) {
@@ -619,17 +619,17 @@ namespace zf {
     }
 
     template <typename tp_key_type, typename tp_val_type>
-    [[nodiscard]] t_b8 HashMapDeserialize(s_stream &stream, s_mem_arena &hm_mem_arena, const t_hash_func<tp_key_type> hm_hash_func, s_mem_arena &temp_mem_arena, s_hash_map<tp_key_type, tp_val_type> &o_hm, const t_bin_comparator<tp_key_type> hm_key_comparator = DefaultBinComparator) {
+    [[nodiscard]] t_b8 DeserializeHashMap(s_stream &stream, s_mem_arena &hm_mem_arena, const t_hash_func<tp_key_type> hm_hash_func, s_mem_arena &temp_mem_arena, s_hash_map<tp_key_type, tp_val_type> &o_hm, const t_bin_comparator<tp_key_type> hm_key_comparator = DefaultBinComparator) {
         ZF_ASSERT(hm_hash_func);
         ZF_ASSERT(hm_key_comparator);
 
-        t_i32 cap = 0;
+        t_i32 cap;
 
         if (!stream.ReadItem(cap)) {
             return false;
         }
 
-        t_i32 entry_cnt = 0;
+        t_i32 entry_cnt;
 
         if (!stream.ReadItem(entry_cnt)) {
             return false;

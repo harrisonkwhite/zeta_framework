@@ -203,6 +203,19 @@ namespace zf {
                 case ek_asset_type_texture: {
                     const auto file_path = ConvertCstr(field_vals[ek_texture_field_file_path]->valuestring);
                     const auto out_file_path = ConvertCstr(field_vals[ek_texture_field_out_file_path]->valuestring);
+
+                    s_texture_data texture_data;
+
+                    if (!LoadTextureFromRaw(file_path, mem_arena, mem_arena, texture_data)) {
+                        LogError(s_cstr_literal("Failed to load texture from file \"%\"!"), file_path);
+                        return false;
+                    }
+
+                    if (!PackTexture(out_file_path, texture_data, mem_arena)) {
+                        LogError(s_cstr_literal("Failed to pack texture to file \"%\"!"), out_file_path);
+                        return false;
+                    }
+
                     break;
                 }
 
@@ -210,6 +223,39 @@ namespace zf {
                     const auto file_path = ConvertCstr(field_vals[ek_font_field_file_path]->valuestring);
                     const auto height = field_vals[ek_font_field_height]->valueint;
                     const auto out_file_path = ConvertCstr(field_vals[ek_font_field_out_file_path]->valuestring);
+
+                    auto &code_pt_bv = Alloc<t_code_pt_bit_vec>(mem_arena);
+
+                    SetBitsInRange(code_pt_bv, g_printable_ascii_range_begin, g_printable_ascii_range_end); // Add the printable ASCII range as a default.
+
+                    if (field_vals[ek_font_field_extra_chrs_file_path]) {
+                        const auto extra_chrs_file_path = ConvertCstr(field_vals[ek_font_field_extra_chrs_file_path]->valuestring);
+
+                        s_array<t_u8> extra_chrs_file_contents;
+
+                        if (!LoadFileContents(extra_chrs_file_path, mem_arena, mem_arena, extra_chrs_file_contents)) {
+                            LogError(s_cstr_literal("Failed to load extra characters file \"%\"!"), extra_chrs_file_path);
+                            return false;
+                        }
+
+                        MarkStrCodePoints({extra_chrs_file_contents}, code_pt_bv);
+                    }
+
+                    // @todo: Proper check for invalid height!
+
+                    s_font_arrangement arrangement;
+                    s_array<t_font_atlas_rgba> atlas_rgbas;
+
+                    if (!LoadFontFromRaw(file_path, height, code_pt_bv, mem_arena, mem_arena, mem_arena, arrangement, atlas_rgbas)) {
+                        LogError(s_cstr_literal("Failed to load font from file \"%\"!"), file_path);
+                        return false;
+                    }
+
+                    if (!PackFont(out_file_path, arrangement, atlas_rgbas, mem_arena)) {
+                        LogError(s_cstr_literal("Failed to pack font to file \"%\"!"), out_file_path);
+                        return false;
+                    }
+
                     break;
                 }
 
@@ -223,6 +269,19 @@ namespace zf {
                 case ek_asset_type_sound: {
                     const auto file_path = ConvertCstr(field_vals[ek_sound_field_file_path]->valuestring);
                     const auto out_file_path = ConvertCstr(field_vals[ek_sound_field_out_file_path]->valuestring);
+
+                    s_sound_data snd_data;
+
+                    if (!LoadSoundFromRaw(file_path, mem_arena, mem_arena, snd_data)) {
+                        LogError(s_cstr_literal("Failed to load sound from file \"%\"!"), file_path);
+                        return false;
+                    }
+
+                    if (!PackSound(file_path, snd_data, mem_arena)) {
+                        LogError(s_cstr_literal("Failed to pack sound to file \"%\"!"), out_file_path);
+                        return false;
+                    }
+
                     break;
                 }
                 }

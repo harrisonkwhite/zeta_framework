@@ -81,17 +81,20 @@ namespace zf {
     // ============================================================
     // @section: Fonts
     // ============================================================
-    constexpr t_hash_func<t_code_pt> g_code_pt_hash_func = [](const t_code_pt &code_pt) constexpr {
-        return static_cast<t_i32>(code_pt);
-    };
+    constexpr t_hash_func<t_code_pt> g_code_pt_hash_func =
+        [](const t_code_pt &code_pt) constexpr {
+            return static_cast<t_i32>(code_pt);
+        };
 
-    constexpr t_hash_func<s_font_code_point_pair> g_code_pt_pair_hash_func = [](const s_font_code_point_pair &pair) constexpr {
-        return 0; // @todo: Proper hash function!
-    };
+    constexpr t_hash_func<s_font_code_point_pair> g_code_pt_pair_hash_func =
+        [](const s_font_code_point_pair &pair) constexpr {
+            return 0; // @todo: Proper hash function!
+        };
 
-    constexpr t_bin_comparator<s_font_code_point_pair> g_code_pt_pair_comparator = [](const s_font_code_point_pair &pa, const s_font_code_point_pair &pb) constexpr {
-        return pa.a == pb.a && pa.b == pb.b;
-    };
+    constexpr t_bin_comparator<s_font_code_point_pair> g_code_pt_pair_comparator =
+        [](const s_font_code_point_pair &pa, const s_font_code_point_pair &pb) constexpr {
+            return pa.a == pb.a && pa.b == pb.b;
+        };
 
     t_b8 LoadFontFromRaw(const s_str_rdonly file_path, const t_i32 height, t_code_pt_bit_vec &code_pts, s_mem_arena &arrangement_mem_arena, s_mem_arena &atlas_rgbas_mem_arena, s_mem_arena &temp_mem_arena, s_font_arrangement &o_arrangement, s_array<t_font_atlas_rgba> &o_atlas_rgbas) {
         ZF_ASSERT(height > 0);
@@ -269,21 +272,14 @@ namespace zf {
         return true;
     }
 
-    t_b8 PackFont(const s_str_rdonly dest_file_path, const s_str_rdonly src_file_path, const t_i32 height, t_code_pt_bit_vec &code_pts, s_mem_arena &temp_mem_arena) {
-        s_font_arrangement arrangement;
-        s_array<t_font_atlas_rgba> atlas_rgbas;
-
-        if (!LoadFontFromRaw(src_file_path, height, code_pts, temp_mem_arena, temp_mem_arena, temp_mem_arena, arrangement, atlas_rgbas)) {
-            return false;
-        }
-
-        if (!CreateFileAndParentDirs(dest_file_path, temp_mem_arena)) {
+    t_b8 PackFont(const s_str_rdonly file_path, const s_font_arrangement &arrangement, const s_array_rdonly<t_font_atlas_rgba> atlas_rgbas, s_mem_arena &temp_mem_arena) {
+        if (!CreateFileAndParentDirs(file_path, temp_mem_arena)) {
             return false;
         }
 
         s_stream fs;
 
-        if (!OpenFile(dest_file_path, ek_file_access_mode_write, temp_mem_arena, fs)) {
+        if (!OpenFile(file_path, ek_file_access_mode_write, temp_mem_arena, fs)) {
             return false;
         }
 
@@ -293,11 +289,11 @@ namespace zf {
             return false;
         }
 
-        if (!HashMapSerialize(fs, arrangement.code_pts_to_glyph_infos, temp_mem_arena)) {
+        if (!SerializeHashMap(fs, arrangement.code_pts_to_glyph_infos, temp_mem_arena)) {
             return false;
         }
 
-        if (!HashMapSerialize(fs, arrangement.code_pt_pairs_to_kernings, temp_mem_arena)) {
+        if (!SerializeHashMap(fs, arrangement.code_pt_pairs_to_kernings, temp_mem_arena)) {
             return false;
         }
 
@@ -324,11 +320,11 @@ namespace zf {
             return false;
         }
 
-        if (!HashMapDeserialize(fs, arrangement_mem_arena, g_code_pt_hash_func, temp_mem_arena, o_arrangement.code_pts_to_glyph_infos)) {
+        if (!DeserializeHashMap(fs, arrangement_mem_arena, g_code_pt_hash_func, temp_mem_arena, o_arrangement.code_pts_to_glyph_infos)) {
             return false;
         }
 
-        if (!HashMapDeserialize(fs, arrangement_mem_arena, g_code_pt_pair_hash_func, temp_mem_arena, o_arrangement.code_pt_pairs_to_kernings, g_code_pt_pair_comparator)) {
+        if (!DeserializeHashMap(fs, arrangement_mem_arena, g_code_pt_pair_hash_func, temp_mem_arena, o_arrangement.code_pt_pairs_to_kernings, g_code_pt_pair_comparator)) {
             return false;
         }
 
