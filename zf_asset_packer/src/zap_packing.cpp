@@ -277,7 +277,7 @@ namespace zf {
                         return false;
                     }
 
-                    if (!PackSound(file_path, snd_data, mem_arena)) {
+                    if (!PackSound(out_file_path, snd_data, mem_arena)) {
                         LogError(s_cstr_literal("Failed to pack sound to file \"%\"!"), out_file_path);
                         return false;
                     }
