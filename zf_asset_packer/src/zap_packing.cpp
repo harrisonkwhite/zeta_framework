@@ -12,12 +12,12 @@ namespace zf {
         eks_asset_type_cnt
     };
 
-    constexpr s_static_array<s_cstr_literal, eks_asset_type_cnt> g_asset_type_arr_names = {
+    constexpr s_static_array<s_cstr_literal, eks_asset_type_cnt> g_asset_type_arr_names = {{
         "textures",
         "fonts",
         "shaders",
         "sounds",
-    };
+    }};
 
     enum e_asset_field_type : t_i32 {
         ek_asset_field_type_str,
@@ -26,10 +26,10 @@ namespace zf {
         eks_asset_field_type_cnt
     };
 
-    constexpr s_static_array<s_cstr_literal, eks_asset_field_type_cnt> g_asset_field_type_names = {
+    constexpr s_static_array<s_cstr_literal, eks_asset_field_type_cnt> g_asset_field_type_names = {{
         "string",
         "number",
-    };
+    }};
 
     struct s_asset_field {
         s_cstr_literal name = {};
@@ -43,10 +43,10 @@ namespace zf {
         eks_texture_field_cnt
     };
 
-    constexpr s_static_array<s_asset_field, eks_texture_field_cnt> g_texture_fields = {
+    constexpr s_static_array<s_asset_field, eks_texture_field_cnt> g_texture_fields = {{
         {.name = "file_path", .type = ek_asset_field_type_str},
         {.name = "out_file_path", .type = ek_asset_field_type_str},
-    };
+    }};
 
     enum e_font_field : t_i32 {
         ek_font_field_file_path,
@@ -57,12 +57,12 @@ namespace zf {
         eks_font_field_cnt
     };
 
-    constexpr s_static_array<s_asset_field, eks_font_field_cnt> g_font_fields = {
+    constexpr s_static_array<s_asset_field, eks_font_field_cnt> g_font_fields = {{
         {.name = "file_path", .type = ek_asset_field_type_str},
         {.name = "height", .type = ek_asset_field_type_num},
         {.name = "extra_chrs_file_path", .type = ek_asset_field_type_str, .optional = true},
         {.name = "out_file_path", .type = ek_asset_field_type_str},
-    };
+    }};
 
     enum e_shader_field : t_i32 {
         ek_shader_field_file_path,
@@ -72,11 +72,11 @@ namespace zf {
         eks_shader_field_cnt
     };
 
-    constexpr s_static_array<s_asset_field, eks_shader_field_cnt> g_shader_fields = {
+    constexpr s_static_array<s_asset_field, eks_shader_field_cnt> g_shader_fields = {{
         {.name = "file_path", .type = ek_asset_field_type_str},
         {.name = "varying_def_file_path", .type = ek_asset_field_type_str},
         {.name = "out_file_path", .type = ek_asset_field_type_str},
-    };
+    }};
 
     enum e_sound_field : t_i32 {
         ek_sound_field_file_path,
@@ -84,10 +84,10 @@ namespace zf {
         eks_sound_field_cnt
     };
 
-    constexpr static s_static_array<s_asset_field, eks_sound_field_cnt> g_sound_fields = {
+    constexpr static s_static_array<s_asset_field, eks_sound_field_cnt> g_sound_fields = {{
         {.name = "file_path", .type = ek_asset_field_type_str},
         {.name = "out_file_path", .type = ek_asset_field_type_str},
-    };
+    }};
 
     t_b8 PackAssets(const s_str_rdonly instrs_json_file_path) {
         s_mem_arena mem_arena = {};

@@ -86,7 +86,7 @@ namespace zf {
         ZF_ASSERT(from >= 0 && from <= bv.BitCount()); // Intentionally allowing the upper bound here for the case of iteration.
 
         // Map of each possible byte to the index of the first set bit, or -1 for the first case.
-        static constexpr s_static_array<t_i32, 256> g_mappings = {
+        static constexpr s_static_array<t_i32, 256> g_mappings = {{
             -1, // 0000 0000
             0,  // 0000 0001
             1,  // 0000 0010
@@ -343,7 +343,7 @@ namespace zf {
             0,  // 1111 1101
             1,  // 1111 1110
             0,  // 1111 1111
-        };
+        }};
 
         const t_i32 begin_byte_index = from / 8;
 
@@ -378,7 +378,7 @@ namespace zf {
 
     t_i32 CntSetBits(const s_bit_vec_rdonly bv) {
         // Map of each possible byte to the number of set bits in it.
-        static constexpr s_static_array<t_i32, 256> g_mappings = {
+        static constexpr s_static_array<t_i32, 256> g_mappings = {{
             0, // 0000 0000
             1, // 0000 0001
             1, // 0000 0010
@@ -635,7 +635,7 @@ namespace zf {
             7, // 1111 1101
             7, // 1111 1110
             8, // 1111 1111
-        };
+        }};
 
         t_i32 res = 0;
 

@@ -1,7 +1,6 @@
 #pragma once
 
 #include <new>
-#include <initializer_list>
 #include <zcl/zcl_basic.h>
 
 namespace zf {
@@ -368,17 +367,6 @@ namespace zf {
 
             for (t_i32 i = 0; i < tp_other_len; i++) {
                 this->raw[i] = other_raw[i];
-            }
-        }
-
-        constexpr s_static_array(const std::initializer_list<tp_type> init) {
-            ZF_ASSERT(init.size() == tp_len); // @todo: Very annoying this can't be done at compile time, or can't be inferred from input!
-
-            t_i32 i = 0;
-
-            for (const auto &v : init) {
-                raw[i] = v;
-                i++;
             }
         }
 

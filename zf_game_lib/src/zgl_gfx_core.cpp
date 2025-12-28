@@ -253,7 +253,7 @@ namespace zf {
         }
 
         s_ptr<s_gfx_resource> px_texture;
-        const s_static_array<t_u8, 4> px_texture_rgba = {255, 255, 255, 255};
+        const s_static_array<t_u8, 4> px_texture_rgba = {{255, 255, 255, 255}};
 
         if (!px_texture_resource_arena.AddTexture({{1, 1}, px_texture_rgba}, px_texture)) {
             ZF_FATAL();

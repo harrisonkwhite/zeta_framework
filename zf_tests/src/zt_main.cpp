@@ -26,12 +26,12 @@ namespace zf {
         t_b8 (*func)(s_mem_arena &mem_arena) = nullptr;
     };
 
-    constexpr s_static_array<s_test, 4> g_tests = {
+    constexpr s_static_array<s_test, 4> g_tests = {{
         {.title = "Bits", .func = TestBits},
         {.title = "Sorting", .func = TestSorting},
         {.title = "List", .func = TestList},
         {.title = "Hash Map", .func = TestHashMap},
-    };
+    }};
 
     static void RunTests() {
         s_mem_arena mem_arena = {};

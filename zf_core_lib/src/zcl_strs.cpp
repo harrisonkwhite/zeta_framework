@@ -12,7 +12,7 @@ namespace zf {
 
     static_assert(ek_utf8_byte_type_4byte_start - ek_utf8_byte_type_ascii + 1 == 4); // This is assumed in various algorithms.
 
-    constexpr s_static_array<e_utf8_byte_type, 256> g_utf8_byte_type_table = {
+    constexpr s_static_array<e_utf8_byte_type, 256> g_utf8_byte_type_table = {{
         ek_utf8_byte_type_ascii,
         ek_utf8_byte_type_ascii,
         ek_utf8_byte_type_ascii,
@@ -274,7 +274,7 @@ namespace zf {
         ek_utf8_byte_type_invalid,
         ek_utf8_byte_type_invalid,
         ek_utf8_byte_type_invalid,
-    };
+    }};
 
     t_b8 IsStrValidUTF8(const s_str_rdonly str) {
         t_i32 cost = 0;
