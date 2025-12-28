@@ -5,14 +5,14 @@ namespace zf {
         m_state = 0;
         m_inc = (seq << 1u) | 1u;
 
-        Next();
+        CalcNext();
 
         m_state += init_state;
 
-        Next();
+        CalcNext();
     }
 
-    t_u32 s_rng::s_pcg32::Next() {
+    t_u32 s_rng::s_pcg32::CalcNext() {
         const t_u64 oldstate = m_state;
         m_state = (oldstate * 6364136223846793005ull) + m_inc;
         const auto xorshifted = static_cast<t_u32>(((oldstate >> 18u) ^ oldstate) >> 27u);
@@ -20,13 +20,13 @@ namespace zf {
         return (xorshifted >> rot) | (xorshifted << ((-rot) & 31));
     }
 
-    t_u32 s_rng::s_pcg32::NextBounded(const t_u32 bound) {
+    t_u32 s_rng::s_pcg32::CalcNextBounded(const t_u32 bound) {
         ZF_ASSERT(bound > 0);
 
         const t_u32 threshold = -bound % bound;
 
         while (true) {
-            const t_u32 r = Next();
+            const t_u32 r = CalcNext();
 
             if (r >= threshold) {
                 return r % bound;

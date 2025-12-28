@@ -28,7 +28,7 @@ namespace zf {
         s_v2_i prefullscreen_size = {};
     } g_state;
 
-    void InitPlatform(const s_v2_i init_window_size) {
+    void InitPlatformModule(const s_v2_i init_window_size) {
         ZF_REQUIRE(!g_state.initted);
         ZF_REQUIRE(init_window_size.x > 0 && init_window_size.y > 0);
 
@@ -71,7 +71,7 @@ namespace zf {
         }
     }
 
-    void ShutdownPlatform() {
+    void ShutdownPlatformModule() {
         ZF_REQUIRE(g_state.initted);
 
         glfwDestroyWindow(g_state.glfw_window);
@@ -331,7 +331,7 @@ namespace zf {
                 static_cast<t_i32>(static_cast<t_f32>(mode->height) / monitor_scale.y),
             };
 
-            const t_f32 occupancy_perc = window_rect.CalcOccupancyPerc(monitor_rect);
+            const t_f32 occupancy_perc = CalcPercOfOccupance(window_rect, monitor_rect);
 
             if (occupancy_perc > max_occupancy_perc) {
                 max_occupancy_perc = occupancy_perc;

@@ -32,7 +32,7 @@ namespace zf {
     }
 
     template <c_nonstatic_array tp_arr_type>
-    t_b8 BinarySearch(const tp_arr_type arr, const typename tp_arr_type::t_elem &elem, const t_ord_comparator<typename tp_arr_type::t_elem> comparator = DefaultOrdComparator) {
+    t_b8 RunBinarySearch(const tp_arr_type arr, const typename tp_arr_type::t_elem &elem, const t_ord_comparator<typename tp_arr_type::t_elem> comparator = DefaultOrdComparator) {
         ZF_ASSERT(comparator);
 
         if (arr.Len() == 0) {
@@ -45,9 +45,9 @@ namespace zf {
         if (comp == 0) {
             return true;
         } else if (comp < 0) {
-            return BinarySearch(arr.Slice(0, arr.Len() / 2), elem);
+            return RunBinarySearch(arr.Slice(0, arr.Len() / 2), elem);
         } else {
-            return BinarySearch(arr.SliceFrom((arr.Len() / 2) + 1), elem);
+            return RunBinarySearch(arr.SliceFrom((arr.Len() / 2) + 1), elem);
         }
     }
 
@@ -69,7 +69,7 @@ namespace zf {
 
     // O(n) best-case if array is already sorted, O(n^2) worst-case.
     template <c_nonstatic_array tp_arr_type>
-    void BubbleSort(const tp_arr_type arr, const t_ord_comparator<typename tp_arr_type::t_elem> comparator = DefaultOrdComparator) {
+    void RunBubbleSort(const tp_arr_type arr, const t_ord_comparator<typename tp_arr_type::t_elem> comparator = DefaultOrdComparator) {
         ZF_ASSERT(comparator);
 
         t_b8 sorted;
@@ -88,7 +88,7 @@ namespace zf {
 
     // O(n) best-case if array is already sorted, O(n^2) worst-case.
     template <c_nonstatic_array tp_arr_type>
-    void InsertionSort(const tp_arr_type arr, const t_ord_comparator<typename tp_arr_type::t_elem> comparator = DefaultOrdComparator) {
+    void RunInsertionSort(const tp_arr_type arr, const t_ord_comparator<typename tp_arr_type::t_elem> comparator = DefaultOrdComparator) {
         ZF_ASSERT(comparator);
 
         for (t_i32 i = 1; i < arr.Len(); i++) {
@@ -110,7 +110,7 @@ namespace zf {
 
     // O(n^2) in every case.
     template <c_nonstatic_array tp_arr_type>
-    void SelectionSort(const tp_arr_type arr, const t_ord_comparator<typename tp_arr_type::t_elem> comparator = DefaultOrdComparator) {
+    void RunSelectionSort(const tp_arr_type arr, const t_ord_comparator<typename tp_arr_type::t_elem> comparator = DefaultOrdComparator) {
         ZF_ASSERT(comparator);
 
         for (t_i32 i = 0; i < arr.Len() - 1; i++) {
@@ -128,7 +128,7 @@ namespace zf {
 
     // O(n log n) in both time complexity and space complexity in every case.
     template <typename tp_arr_type>
-    void MergeSort(const tp_arr_type arr, s_mem_arena &temp_mem_arena, const t_ord_comparator<typename tp_arr_type::t_elem> comparator = DefaultOrdComparator) {
+    void RunMergeSort(const tp_arr_type arr, s_mem_arena &temp_mem_arena, const t_ord_comparator<typename tp_arr_type::t_elem> comparator = DefaultOrdComparator) {
         ZF_ASSERT(comparator);
 
         if (arr.Len() <= 1) {
@@ -137,10 +137,10 @@ namespace zf {
 
         // Sort copies of the left and right partitions.
         const auto arr_left_sorted = AllocArrayClone(arr.Slice(0, arr.Len() / 2), temp_mem_arena);
-        MergeSort(arr_left_sorted, temp_mem_arena, comparator);
+        RunMergeSort(arr_left_sorted, temp_mem_arena, comparator);
 
         const auto arr_right_sorted = AllocArrayClone(arr.SliceFrom(arr.Len() / 2), temp_mem_arena);
-        MergeSort(arr_right_sorted, temp_mem_arena, comparator);
+        RunMergeSort(arr_right_sorted, temp_mem_arena, comparator);
 
         // Update this array.
         t_i32 i = 0;
@@ -173,7 +173,7 @@ namespace zf {
     // Space complexity is O(1) compared to merge sort.
     // In each recurse, the pivot is selected as the median of the first, middle, and last elements.
     template <c_nonstatic_array tp_arr_type>
-    void QuickSort(const tp_arr_type arr, const t_ord_comparator<typename tp_arr_type::t_elem> comparator = DefaultOrdComparator) {
+    void RunQuickSort(const tp_arr_type arr, const t_ord_comparator<typename tp_arr_type::t_elem> comparator = DefaultOrdComparator) {
         ZF_ASSERT(comparator);
 
         if (arr.Len() <= 1) {
@@ -232,7 +232,7 @@ namespace zf {
         }
 
         // Sort for each subsection.
-        QuickSort(arr.Slice(0, left_sec_last_index), comparator);
-        QuickSort(arr.SliceFrom(left_sec_last_index + 1), comparator);
+        RunQuickSort(arr.Slice(0, left_sec_last_index), comparator);
+        RunQuickSort(arr.SliceFrom(left_sec_last_index + 1), comparator);
     }
 }

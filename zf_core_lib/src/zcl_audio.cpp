@@ -3,7 +3,7 @@
 #include <miniaudio.h>
 
 namespace zf {
-    t_b8 LoadSoundFromRaw(const s_str_rdonly file_path, s_mem_arena &snd_data_mem_arena, s_mem_arena &temp_mem_arena, s_sound_data &o_snd_data) {
+    t_b8 LoadSoundDataFromRaw(const s_str_rdonly file_path, s_mem_arena &snd_data_mem_arena, s_mem_arena &temp_mem_arena, s_sound_data &o_snd_data) {
         const s_str_rdonly file_path_terminated = AllocStrCloneButAddTerminator(file_path, temp_mem_arena);
 
         ma_decoder decoder = {};

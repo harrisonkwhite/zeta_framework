@@ -42,7 +42,7 @@ namespace zf {
         const s_cstr_literal profile = "glsl";
 #endif
 
-        const auto exe_dir = GetExecutableDir(temp_mem_arena);
+        const auto exe_dir = LoadExecutableDir(temp_mem_arena);
         ZF_ASSERT(exe_dir.bytes.Last() == '/' || exe_dir.bytes.Last() == '\\'); // Assuming this.
 
         const s_str shaderc_file_path = {AllocArray<t_u8>(exe_dir.bytes.Len() + shaderc_file_path_rel.Buf().Len() + 1, temp_mem_arena)};
@@ -94,7 +94,7 @@ namespace zf {
                 break;
             }
 
-            ListAppendManyDynamic(bin_list, buf.ToNonstatic().Slice(0, r), bin_mem_arena);
+            AppendManyToListDynamic(bin_list, buf.ToNonstatic().Slice(0, r), bin_mem_arena);
         }
 
         if (r != REPROC_EPIPE) {

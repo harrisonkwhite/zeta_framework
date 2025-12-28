@@ -4,6 +4,9 @@
 #include <zcl/zcl_basic.h>
 
 namespace zf {
+    // ============================================================
+    // @section: General
+    // ============================================================
     constexpr t_i32 Kilobytes(const t_i32 x) {
         return (static_cast<t_i32>(1) << 10) * x;
     }
@@ -596,13 +599,8 @@ namespace zf {
 
         constexpr s_bit_vec_rdonly(const s_array_rdonly<t_u8> bytes) : m_bytes(bytes), m_bit_cnt(BytesToBits(bytes.Len())) {}
 
-        constexpr s_array_rdonly<t_u8> Bytes() const {
-            return m_bytes;
-        }
-
-        constexpr t_i32 BitCount() const {
-            return m_bit_cnt;
-        }
+        constexpr s_array_rdonly<t_u8> Bytes() const { return m_bytes; }
+        constexpr t_i32 BitCount() const { return m_bit_cnt; }
 
         constexpr t_i32 LastByteBitCount() const {
             return ((m_bit_cnt - 1) % 8) + 1;
@@ -628,17 +626,8 @@ namespace zf {
 
         constexpr s_bit_vec(const s_array<t_u8> bytes) : m_bytes(bytes), m_bit_cnt(BytesToBits(bytes.Len())) {}
 
-        constexpr operator s_bit_vec_rdonly() const {
-            return {m_bytes, m_bit_cnt};
-        }
-
-        constexpr s_array<t_u8> Bytes() const {
-            return m_bytes;
-        }
-
-        constexpr t_i32 BitCount() const {
-            return m_bit_cnt;
-        }
+        constexpr s_array<t_u8> Bytes() const { return m_bytes; }
+        constexpr t_i32 BitCount() const { return m_bit_cnt; }
 
         constexpr t_i32 LastByteBitCount() const {
             return ((m_bit_cnt - 1) % 8) + 1;
@@ -647,6 +636,10 @@ namespace zf {
         // Gives a mask of the last byte in which only excess bits are unset.
         constexpr t_u8 LastByteMask() const {
             return BitmaskRange(0, LastByteBitCount());
+        }
+
+        constexpr operator s_bit_vec_rdonly() const {
+            return {m_bytes, m_bit_cnt};
         }
 
     private:
@@ -931,10 +924,10 @@ namespace zf {
     t_i32 IndexOfFirstSetBit(const s_bit_vec_rdonly bv, const t_i32 from = 0);   // Returns -1 if all bits are unset.
     t_i32 IndexOfFirstUnsetBit(const s_bit_vec_rdonly bv, const t_i32 from = 0); // Returns -1 if all bits are set.
 
-    t_i32 CntSetBits(const s_bit_vec_rdonly bv);
+    t_i32 CountSetBits(const s_bit_vec_rdonly bv);
 
-    inline t_i32 CntUnsetBits(const s_bit_vec_rdonly bv) {
-        return bv.BitCount() - CntSetBits(bv);
+    inline t_i32 CountUnsetBits(const s_bit_vec_rdonly bv) {
+        return bv.BitCount() - CountSetBits(bv);
     }
 
     // pos is the walker state, initialise it to the bit index you want to start from.

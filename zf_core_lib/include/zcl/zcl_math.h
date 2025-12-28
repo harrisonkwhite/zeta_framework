@@ -1,7 +1,6 @@
 #pragma once
 
 #include <cmath>
-
 #include <zcl/zcl_mem.h>
 
 namespace zf {
@@ -17,26 +16,25 @@ namespace zf {
     }
 
     template <c_integral tp_type>
-    constexpr t_i32 DigitCnt(const tp_type n) {
+    constexpr t_i32 CalcDigitCnt(const tp_type n) {
         if (n < 0) {
-            return DigitCnt(-n);
+            return CalcDigitCnt(-n);
         }
 
         if (n < 10) {
             return 1;
         }
 
-        return 1 + DigitCnt(n / 10);
+        return 1 + CalcDigitCnt(n / 10);
     }
 
-    // Gives the digit at the given index, where the indexes are from the least
-    // significant digit to the most.
+    // Gives the digit at the given index, where the indexes are from the least significant digit to the most.
     template <c_integral tp_type>
-    constexpr tp_type DigitAt(const tp_type n, const t_i32 index) {
-        ZF_ASSERT(index >= 0 && index < DigitCnt(n));
+    constexpr tp_type FindDigitAt(const tp_type n, const t_i32 index) {
+        ZF_ASSERT(index >= 0 && index < CalcDigitCnt(n));
 
         if (n < 0) {
-            return DigitAt(-n, index);
+            return FindDigitAt(-n, index);
         }
 
         if (index == 0) {
@@ -47,7 +45,7 @@ namespace zf {
             return 0;
         }
 
-        return DigitAt(n / 10, index - 1);
+        return FindDigitAt(n / 10, index - 1);
     }
 
     constexpr t_b8 IsNearlyEqual(const t_f32 val, const t_f32 targ, const t_f32 tol = 1e-5f) {
@@ -201,6 +199,8 @@ namespace zf {
     };
 
     // ============================================================
+
+    // ============================================================
     // @section: Rectangles
     // ============================================================
     struct s_rect_i;
@@ -252,16 +252,6 @@ namespace zf {
 
         constexpr t_b8 IntersWith(const s_rect_f other) const {
             return Left() < other.Right() && Top() < other.Bottom() && Right() > other.Left() && Bottom() > other.Top();
-        }
-
-        constexpr s_rect_f Clamped(const s_rect_f container) const {
-            const s_v2 tl = {ZF_MAX(x, container.x), ZF_MAX(y, container.y)};
-            return {tl.x, tl.y, ZF_MIN(Right(), container.Right()) - tl.x, ZF_MIN(Bottom(), container.Bottom()) - tl.y};
-        }
-
-        constexpr t_f32 CalcOccupancyPerc(const s_rect_f container) const {
-            const auto subrect = Clamped(container);
-            return Clamp(subrect.Area() / container.Area(), 0.0f, 1.0f);
         }
 
     private:
@@ -326,16 +316,6 @@ namespace zf {
             return Left() < other.Right() && Top() < other.Bottom() && Right() > other.Left() && Bottom() > other.Top();
         }
 
-        constexpr s_rect_i Clamped(const s_rect_i container) const {
-            const s_v2_i tl = {ZF_MAX(x, container.x), ZF_MAX(y, container.y)};
-            return {tl.x, tl.y, ZF_MIN(Right(), container.Right()) - tl.x, ZF_MIN(Bottom(), container.Bottom()) - tl.y};
-        }
-
-        constexpr t_f32 CalcOccupancyPerc(const s_rect_i container) const {
-            const auto subrect = Clamped(container);
-            return Clamp(static_cast<t_f32>(subrect.Area()) / static_cast<t_f32>(container.Area()), 0.0f, 1.0f);
-        }
-
     private:
         t_i32 m_width = 0;
         t_i32 m_height = 0;
@@ -351,6 +331,8 @@ namespace zf {
 
     s_rect_f CalcSpanningRect(const s_array<s_rect_f> rects);
     s_rect_i CalcSpanningRect(const s_array<s_rect_i> rects);
+
+    // ============================================================
 
     // ============================================================
     // @section: Matrices
@@ -403,11 +385,33 @@ namespace zf {
         return s_v2(cos(dir), -sin(dir)) * len;
     }
 
-    constexpr s_v2 ClampPointInRect(const s_v2 pt, const s_rect_f rect) {
+    constexpr s_v2 ClampedWithinContainer(const s_v2 pt, const s_rect_f rect) {
         return {Clamp(pt.x, rect.Left(), rect.Right()), Clamp(pt.y, rect.Top(), rect.Bottom())};
     }
 
-    constexpr s_v2_i ClampPointInRect(const s_v2_i pt, const s_rect_i rect) {
+    constexpr s_v2_i ClampedWithinContainer(const s_v2_i pt, const s_rect_i rect) {
         return {Clamp(pt.x, rect.Left(), rect.Right()), Clamp(pt.y, rect.Top(), rect.Bottom())};
+    }
+
+    constexpr s_rect_f ClampedWithinContainer(const s_rect_f rect, const s_rect_f container) {
+        const s_v2 tl = {ZF_MAX(rect.x, container.x), ZF_MAX(rect.y, container.y)};
+        return {tl.x, tl.y, ZF_MIN(rect.Right(), container.Right()) - tl.x, ZF_MIN(rect.Bottom(), container.Bottom()) - tl.y};
+    }
+
+    constexpr s_rect_i ClampedWithinContainer(const s_rect_i rect, const s_rect_i container) {
+        const s_v2_i tl = {ZF_MAX(rect.x, container.x), ZF_MAX(rect.y, container.y)};
+        return {tl.x, tl.y, ZF_MIN(rect.Right(), container.Right()) - tl.x, ZF_MIN(rect.Bottom(), container.Bottom()) - tl.y};
+    }
+
+    // Returns a value between 0 and 1 indicating what percentage of the rectangle is within the container.
+    constexpr t_f32 CalcPercOfOccupance(const s_rect_f rect, const s_rect_f container) {
+        const auto subrect = ClampedWithinContainer(rect, container);
+        return Clamp(subrect.Area() / container.Area(), 0.0f, 1.0f);
+    }
+
+    // Returns a value between 0 and 1 indicating what percentage of the rectangle is within the container.
+    constexpr t_f32 CalcPercOfOccupance(const s_rect_i rect, const s_rect_i container) {
+        const auto subrect = ClampedWithinContainer(rect, container);
+        return Clamp(static_cast<t_f32>(subrect.Area()) / static_cast<t_f32>(container.Area()), 0.0f, 1.0f);
     }
 }

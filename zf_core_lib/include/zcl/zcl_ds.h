@@ -133,7 +133,7 @@ namespace zf {
     concept c_list = c_nonstatic_list<tp_type> || c_static_list<tp_type>;
 
     template <typename tp_type>
-    s_list<tp_type> ListCreate(const t_i32 cap, s_mem_arena &mem_arena, const t_i32 len = 0) {
+    s_list<tp_type> CreateList(const t_i32 cap, s_mem_arena &mem_arena, const t_i32 len = 0) {
         ZF_ASSERT(cap > 0 && len >= 0 && len <= cap);
         return {AllocArray<tp_type>(cap, mem_arena), len};
     }
@@ -147,7 +147,7 @@ namespace zf {
         };
 
     template <c_nonstatic_list tp_list_type>
-    void ListExtend(tp_list_type &list, s_mem_arena &mem_arena, const t_list_extension_cap_calculator cap_calculator = g_default_list_extension_cap_calculator) {
+    void ExtendList(tp_list_type &list, s_mem_arena &mem_arena, const t_list_extension_cap_calculator cap_calculator = g_default_list_extension_cap_calculator) {
         ZF_ASSERT(cap_calculator);
 
         const t_i32 new_cap = cap_calculator(list.Cap());
@@ -160,7 +160,7 @@ namespace zf {
     }
 
     template <c_nonstatic_list tp_list_type>
-    void ListExtendToFit(tp_list_type &list, const t_i32 min_cap, s_mem_arena &mem_arena, const t_list_extension_cap_calculator cap_calculator = g_default_list_extension_cap_calculator) {
+    void ExtendListToFit(tp_list_type &list, const t_i32 min_cap, s_mem_arena &mem_arena, const t_list_extension_cap_calculator cap_calculator = g_default_list_extension_cap_calculator) {
         ZF_ASSERT(min_cap > list.Cap());
         ZF_ASSERT(cap_calculator);
 
@@ -183,7 +183,7 @@ namespace zf {
     }
 
     template <c_list tp_list_type>
-    typename tp_list_type::t_elem &ListAppend(tp_list_type &list, const typename tp_list_type::t_elem &val) {
+    typename tp_list_type::t_elem &AppendToList(tp_list_type &list, const typename tp_list_type::t_elem &val) {
         ZF_ASSERT(list.Len() < list.Cap());
 
         list.SetLen(list.Len() + 1);
@@ -192,16 +192,16 @@ namespace zf {
     }
 
     template <c_nonstatic_list tp_list_type>
-    typename tp_list_type::t_elem &ListAppendDynamic(tp_list_type &list, const typename tp_list_type::t_elem &val, s_mem_arena &extension_mem_arena, const t_list_extension_cap_calculator extension_cap_calculator = g_default_list_extension_cap_calculator) {
+    typename tp_list_type::t_elem &AppendToListDynamic(tp_list_type &list, const typename tp_list_type::t_elem &val, s_mem_arena &extension_mem_arena, const t_list_extension_cap_calculator extension_cap_calculator = g_default_list_extension_cap_calculator) {
         if (list.Len() == list.Cap()) {
-            ListExtend(list, extension_mem_arena, extension_cap_calculator);
+            ExtendList(list, extension_mem_arena, extension_cap_calculator);
         }
 
-        return ListAppend(list, val);
+        return AppendToList(list, val);
     }
 
     template <c_list tp_list_type>
-    s_array<typename tp_list_type::t_elem> ListAppendMany(tp_list_type &list, const s_array_rdonly<typename tp_list_type::t_elem> vals) {
+    s_array<typename tp_list_type::t_elem> AppendManyToList(tp_list_type &list, const s_array_rdonly<typename tp_list_type::t_elem> vals) {
         ZF_ASSERT(list.Len() + vals.Len() <= list.Cap());
 
         Copy(list.BackingArray().SliceFrom(list.Len()), vals);
@@ -210,18 +210,18 @@ namespace zf {
     }
 
     template <c_nonstatic_list tp_list_type>
-    s_array<typename tp_list_type::t_elem> ListAppendManyDynamic(tp_list_type &list, const s_array_rdonly<typename tp_list_type::t_elem> vals, s_mem_arena &extension_mem_arena, const t_list_extension_cap_calculator extension_cap_calculator = g_default_list_extension_cap_calculator) {
+    s_array<typename tp_list_type::t_elem> AppendManyToListDynamic(tp_list_type &list, const s_array_rdonly<typename tp_list_type::t_elem> vals, s_mem_arena &extension_mem_arena, const t_list_extension_cap_calculator extension_cap_calculator = g_default_list_extension_cap_calculator) {
         const auto min_cap_needed = list.Len() + vals.Len();
 
         if (min_cap_needed > list.Cap()) {
-            ListExtendToFit(list, min_cap_needed, extension_mem_arena, extension_cap_calculator);
+            ExtendListToFit(list, min_cap_needed, extension_mem_arena, extension_cap_calculator);
         }
 
-        return ListAppendMany(list, vals);
+        return AppendManyToList(list, vals);
     }
 
     template <c_list tp_list_type>
-    typename tp_list_type::t_elem &ListInsert(tp_list_type &list, const t_i32 index, const typename tp_list_type::t_elem &val) {
+    typename tp_list_type::t_elem &InsertIntoList(tp_list_type &list, const t_i32 index, const typename tp_list_type::t_elem &val) {
         ZF_ASSERT(list.Len() < list.Cap());
         ZF_ASSERT(index >= 0 && index <= list.Len());
 
@@ -237,16 +237,16 @@ namespace zf {
     }
 
     template <c_list tp_list_type>
-    typename tp_list_type::t_elem &ListInsertDynamic(tp_list_type &list, const t_i32 index, const typename tp_list_type::t_elem &val, s_mem_arena &extension_mem_arena, const t_list_extension_cap_calculator extension_cap_calculator = g_default_list_extension_cap_calculator) {
+    typename tp_list_type::t_elem &InsertIntoListDynamic(tp_list_type &list, const t_i32 index, const typename tp_list_type::t_elem &val, s_mem_arena &extension_mem_arena, const t_list_extension_cap_calculator extension_cap_calculator = g_default_list_extension_cap_calculator) {
         if (list.Len() == list.Cap()) {
-            ListExtend(list, extension_mem_arena, extension_cap_calculator);
+            ExtendList(list, extension_mem_arena, extension_cap_calculator);
         }
 
-        return ListInsert(list, index, val);
+        return InsertIntoList(list, index, val);
     }
 
     template <c_list tp_list_type>
-    void ListRemove(tp_list_type &list, const t_i32 index) {
+    void RemoveAtInList(tp_list_type &list, const t_i32 index) {
         ZF_ASSERT(list.Len() > 0);
         ZF_ASSERT(index >= 0 && index < list.Len());
 
@@ -255,7 +255,7 @@ namespace zf {
     }
 
     template <c_list tp_list_type>
-    void ListRemoveSwapback(tp_list_type &list, const t_i32 index) {
+    void RemoveAtInListSwapback(tp_list_type &list, const t_i32 index) {
         ZF_ASSERT(list.Len() > 0);
         ZF_ASSERT(index >= 0 && index < list.Len());
 
@@ -264,7 +264,7 @@ namespace zf {
     }
 
     template <c_list tp_list_type>
-    void ListRemoveLast(tp_list_type &list) {
+    void RemoveLastInList(tp_list_type &list) {
         ZF_ASSERT(list.Len() > 0);
         list.SetLen(list.Len() - 1);
     }
@@ -586,7 +586,7 @@ namespace zf {
 
     // The provided hash function has to map a key to an integer 0 or higher. The given memory arena will be saved and used for allocating new memory for entries when needed.
     template <typename tp_key_type, typename tp_val_type>
-    s_hash_map<tp_key_type, tp_val_type> HashMapCreate(const t_hash_func<tp_key_type> hash_func, s_mem_arena &mem_arena, const t_i32 cap = g_hash_map_cap_default, const t_bin_comparator<tp_key_type> key_comparator = DefaultBinComparator) {
+    s_hash_map<tp_key_type, tp_val_type> CreateHashMap(const t_hash_func<tp_key_type> hash_func, s_mem_arena &mem_arena, const t_i32 cap = g_hash_map_cap_default, const t_bin_comparator<tp_key_type> key_comparator = DefaultBinComparator) {
         const auto immediate_indexes = AllocArray<t_i32>(cap, mem_arena);
         SetAllTo(immediate_indexes, -1);
 
@@ -643,7 +643,7 @@ namespace zf {
             return false;
         }
 
-        o_hm = HashMapCreate<tp_key_type, tp_val_type>(hm_hash_func, hm_mem_arena, cap, hm_key_comparator);
+        o_hm = CreateHashMap<tp_key_type, tp_val_type>(hm_hash_func, hm_mem_arena, cap, hm_key_comparator);
 
         const auto keys = AllocArray<tp_key_type>(entry_cnt, temp_mem_arena);
 

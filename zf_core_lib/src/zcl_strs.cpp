@@ -377,7 +377,7 @@ namespace zf {
         return res;
     }
 
-    t_code_pt StrCodePointAtByte(const s_str_rdonly str, const t_i32 byte_index) {
+    t_code_pt FindStrCodePointAtByte(const s_str_rdonly str, const t_i32 byte_index) {
         ZF_ASSERT(IsStrValidUTF8(str));
         ZF_ASSERT(byte_index >= 0 && byte_index < str.bytes.Len());
 

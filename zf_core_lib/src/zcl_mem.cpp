@@ -376,7 +376,7 @@ namespace zf {
         return IndexOfFirstSetBitHelper(bv, from, 0xFF);
     }
 
-    t_i32 CntSetBits(const s_bit_vec_rdonly bv) {
+    t_i32 CountSetBits(const s_bit_vec_rdonly bv) {
         // Map of each possible byte to the number of set bits in it.
         static constexpr s_static_array<t_i32, 256> g_mappings = {{
             0, // 0000 0000

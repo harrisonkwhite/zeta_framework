@@ -7,7 +7,7 @@ namespace zf {
     // ============================================================
     // @section: Textures
     // ============================================================
-    t_b8 LoadTextureFromRaw(const s_str_rdonly file_path, s_mem_arena &tex_data_mem_arena, s_mem_arena &temp_mem_arena, s_texture_data &o_tex_data) {
+    t_b8 LoadTextureDataFromRaw(const s_str_rdonly file_path, s_mem_arena &texture_data_mem_arena, s_mem_arena &temp_mem_arena, s_texture_data &o_texture_data) {
         const s_str_rdonly file_path_terminated = AllocStrCloneButAddTerminator(file_path, temp_mem_arena);
 
         s_v2_i size_in_pxs;
@@ -19,16 +19,16 @@ namespace zf {
 
         ZF_DEFER({ stbi_image_free(stb_px_data); });
 
-        const auto px_data = AllocArray<t_u8>(4 * size_in_pxs.x * size_in_pxs.y, tex_data_mem_arena);
+        const auto px_data = AllocArray<t_u8>(4 * size_in_pxs.x * size_in_pxs.y, texture_data_mem_arena);
         const s_array_rdonly<t_u8> stb_px_data_arr = {stb_px_data, 4 * size_in_pxs.x * size_in_pxs.y};
         Copy(px_data, stb_px_data_arr);
 
-        o_tex_data = {size_in_pxs, px_data};
+        o_texture_data = {size_in_pxs, px_data};
 
         return true;
     }
 
-    t_b8 PackTexture(const s_str_rdonly file_path, const s_texture_data tex_data, s_mem_arena &temp_mem_arena) {
+    t_b8 PackTexture(const s_str_rdonly file_path, const s_texture_data texture_data, s_mem_arena &temp_mem_arena) {
         if (!CreateFileAndParentDirs(file_path, temp_mem_arena)) {
             return false;
         }
@@ -41,18 +41,18 @@ namespace zf {
 
         ZF_DEFER({ CloseFile(fs); });
 
-        if (!fs.WriteItem(tex_data.SizeInPixels())) {
+        if (!fs.WriteItem(texture_data.SizeInPixels())) {
             return false;
         }
 
-        if (!fs.WriteItemsOfArray(tex_data.RGBAPixelData())) {
+        if (!fs.WriteItemsOfArray(texture_data.RGBAPixelData())) {
             return false;
         }
 
         return true;
     }
 
-    t_b8 UnpackTexture(const s_str_rdonly file_path, s_mem_arena &tex_data_mem_arena, s_mem_arena &temp_mem_arena, s_texture_data &o_tex_data) {
+    t_b8 UnpackTexture(const s_str_rdonly file_path, s_mem_arena &texture_data_mem_arena, s_mem_arena &temp_mem_arena, s_texture_data &o_texture_data) {
         s_stream fs;
 
         if (!OpenFile(file_path, ek_file_access_mode_read, temp_mem_arena, fs)) {
@@ -67,13 +67,13 @@ namespace zf {
             return false;
         }
 
-        const auto rgba_px_data = AllocArray<t_u8>(4 * size_in_pxs.x * size_in_pxs.y, tex_data_mem_arena);
+        const auto rgba_px_data = AllocArray<t_u8>(4 * size_in_pxs.x * size_in_pxs.y, texture_data_mem_arena);
 
         if (!fs.ReadItemsIntoArray(rgba_px_data, rgba_px_data.Len())) {
             return false;
         }
 
-        o_tex_data = {size_in_pxs, rgba_px_data};
+        o_texture_data = {size_in_pxs, rgba_px_data};
 
         return true;
     }
@@ -96,7 +96,7 @@ namespace zf {
             return pa.a == pb.a && pa.b == pb.b;
         };
 
-    t_b8 LoadFontFromRaw(const s_str_rdonly file_path, const t_i32 height, t_code_pt_bit_vec &code_pts, s_mem_arena &arrangement_mem_arena, s_mem_arena &atlas_rgbas_mem_arena, s_mem_arena &temp_mem_arena, s_font_arrangement &o_arrangement, s_array<t_font_atlas_rgba> &o_atlas_rgbas) {
+    t_b8 LoadFontDataFromRaw(const s_str_rdonly file_path, const t_i32 height, t_code_pt_bit_vec &code_pts, s_mem_arena &arrangement_mem_arena, s_mem_arena &atlas_rgbas_mem_arena, s_mem_arena &temp_mem_arena, s_font_arrangement &o_arrangement, s_array<t_font_atlas_rgba> &o_atlas_rgbas) {
         ZF_ASSERT(height > 0);
 
         // Get the plain font file data.
@@ -131,7 +131,7 @@ namespace zf {
         }
 
         // Compute number of leftover code points that can actually be supported, return if there are none.
-        const t_i32 code_pt_cnt = CntSetBits(code_pts);
+        const t_i32 code_pt_cnt = CountSetBits(code_pts);
 
         if (code_pt_cnt == 0) {
             return true;
@@ -148,7 +148,7 @@ namespace zf {
         //
         // Glyph Info
         //
-        o_arrangement.code_pts_to_glyph_infos = HashMapCreate<t_code_pt, s_font_glyph_info>(g_code_pt_hash_func, arrangement_mem_arena, code_pt_cnt);
+        o_arrangement.code_pts_to_glyph_infos = CreateHashMap<t_code_pt, s_font_glyph_info>(g_code_pt_hash_func, arrangement_mem_arena, code_pt_cnt);
 
         t_i32 atlas_index = 0;
         s_v2_i atlas_pen;
@@ -198,7 +198,7 @@ namespace zf {
 
         // If there were any kernings to store, set up the hash map and go through again and store them.
         o_arrangement.has_kernings = true;
-        o_arrangement.code_pt_pairs_to_kernings = HashMapCreate<s_font_code_point_pair, t_i32>(g_code_pt_pair_hash_func, arrangement_mem_arena, g_hash_map_cap_default, g_code_pt_pair_comparator);
+        o_arrangement.code_pt_pairs_to_kernings = CreateHashMap<s_font_code_point_pair, t_i32>(g_code_pt_pair_hash_func, arrangement_mem_arena, g_hash_map_cap_default, g_code_pt_pair_comparator);
 
         ZF_FOR_EACH_SET_BIT(code_pts, i) {
             ZF_FOR_EACH_SET_BIT(code_pts, j) {

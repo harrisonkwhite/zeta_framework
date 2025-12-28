@@ -305,7 +305,7 @@ namespace zf {
 
     e_path_type CheckPathType(const s_str_rdonly path, s_mem_arena &temp_mem_arena);
 
-    s_str GetExecutableDir(s_mem_arena &mem_arena);
+    s_str LoadExecutableDir(s_mem_arena &mem_arena);
 
     // ============================================================
     // @section: Printing
@@ -379,10 +379,10 @@ namespace zf {
             ZF_ASSERT(str_bytes_stream_write_success);
         }
 
-        const t_i32 dig_cnt = DigitCnt(fmt.val);
+        const t_i32 dig_cnt = CalcDigitCnt(fmt.val);
 
         for (t_i32 i = 0; i < dig_cnt; i++) {
-            const auto chr = static_cast<char>('0' + DigitAt(fmt.val, dig_cnt - 1 - i));
+            const auto chr = static_cast<char>('0' + FindDigitAt(fmt.val, dig_cnt - 1 - i));
             str_bytes_stream_write_success = str_bytes_stream.WriteItem(chr);
             ZF_ASSERT(str_bytes_stream_write_success);
         }

@@ -4,19 +4,19 @@
 #include <zgl/zgl_gfx_core.h>
 
 namespace zf {
-    void DrawTriangle(s_rendering_context &rc, const s_static_array<s_v2, 3> &pts, const s_static_array<s_color_rgba32f, 3> &pt_colors);
+    void RenderTriangle(s_rendering_context &rendering_context, const s_static_array<s_v2, 3> &pts, const s_static_array<s_color_rgba32f, 3> &pt_colors);
 
-    inline void DrawTriangle(s_rendering_context &rc, const s_static_array<s_v2, 3> &pts, const s_color_rgba32f color) {
-        DrawTriangle(rc, pts, {{color, color, color}});
+    inline void RenderTriangle(s_rendering_context &rendering_context, const s_static_array<s_v2, 3> &pts, const s_color_rgba32f color) {
+        RenderTriangle(rendering_context, pts, {{color, color, color}});
     }
 
-    void DrawRect(s_rendering_context &rc, const s_rect_f rect, const s_color_rgba32f color_topleft, const s_color_rgba32f color_topright, const s_color_rgba32f color_bottomright, const s_color_rgba32f color_bottomleft);
+    void RenderRect(s_rendering_context &rendering_context, const s_rect_f rect, const s_color_rgba32f color_topleft, const s_color_rgba32f color_topright, const s_color_rgba32f color_bottomright, const s_color_rgba32f color_bottomleft);
 
-    inline void DrawRect(s_rendering_context &rc, const s_rect_f rect, const s_color_rgba32f color) {
-        DrawRect(rc, rect, color, color, color, color);
+    inline void RenderRect(s_rendering_context &rendering_context, const s_rect_f rect, const s_color_rgba32f color) {
+        RenderRect(rendering_context, rect, color, color, color, color);
     }
 
-    void DrawTexture(s_rendering_context &rc, const s_gfx_resource &texture, const s_v2 pos, const s_rect_i src_rect = {});
+    void RenderTexture(s_rendering_context &rendering_context, const s_gfx_resource &texture, const s_v2 pos, const s_rect_i src_rect = {});
 
     struct s_font {
         s_font_arrangement arrangement = {};
@@ -28,5 +28,5 @@ namespace zf {
 
     s_array<s_v2> LoadStrChrDrawPositions(const s_str_rdonly str, const s_font_arrangement &font_arrangement, const s_v2 pos, const s_v2 alignment, s_mem_arena &mem_arena);
 
-    void DrawStr(s_rendering_context &rc, const s_str_rdonly str, const s_font &font, const s_v2 pos, s_mem_arena &temp_mem_arena, const s_v2 alignment = alignments::g_topleft, const s_color_rgba32f blend = colors::g_white);
+    void RenderStr(s_rendering_context &rendering_context, const s_str_rdonly str, const s_font &font, const s_v2 pos, s_mem_arena &temp_mem_arena, const s_v2 alignment = g_alignment_topleft, const s_color_rgba32f blend = g_color_white);
 }

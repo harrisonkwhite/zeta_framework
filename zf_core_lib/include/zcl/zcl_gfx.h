@@ -19,24 +19,13 @@ namespace zf {
             ZF_ASSERT(a >= 0.0f && a <= 1.0f);
         }
 
+        constexpr t_f32 R() const { return m_r; }
+        constexpr t_f32 G() const { return m_g; }
+        constexpr t_f32 B() const { return m_b; }
+        constexpr t_f32 A() const { return m_a; }
+
         constexpr operator s_v4() const {
             return {m_r, m_g, m_b, m_a};
-        }
-
-        constexpr t_f32 R() const {
-            return m_r;
-        }
-
-        constexpr t_f32 G() const {
-            return m_g;
-        }
-
-        constexpr t_f32 B() const {
-            return m_b;
-        }
-
-        constexpr t_f32 A() const {
-            return m_a;
         }
 
     private:
@@ -56,24 +45,16 @@ namespace zf {
             ZF_ASSERT(b >= 0.0f && b <= 1.0f);
         }
 
+        constexpr t_f32 R() const { return m_r; }
+        constexpr t_f32 G() const { return m_g; }
+        constexpr t_f32 B() const { return m_b; }
+
         constexpr operator s_color_rgba32f() const {
             return {m_r, m_g, m_b, 1.0f};
         }
 
         constexpr operator s_v3() const {
             return {m_r, m_g, m_b};
-        }
-
-        constexpr t_f32 R() const {
-            return m_r;
-        }
-
-        constexpr t_f32 G() const {
-            return m_g;
-        }
-
-        constexpr t_f32 B() const {
-            return m_b;
         }
 
     private:
@@ -120,6 +101,24 @@ namespace zf {
         }
     };
 
+    constexpr s_color_rgb24f g_color_black = {0.0f, 0.0f, 0.0f};
+    constexpr s_color_rgb24f g_color_dark_gray = {0.25f, 0.25f, 0.25f};
+    constexpr s_color_rgb24f g_color_gray = {0.5f, 0.5f, 0.5f};
+    constexpr s_color_rgb24f g_color_light_gray = {0.75f, 0.75f, 0.75f};
+    constexpr s_color_rgb24f g_color_white = {1.0f, 1.0f, 1.0f};
+    constexpr s_color_rgb24f g_color_red = {1.0f, 0.0f, 0.0f};
+    constexpr s_color_rgb24f g_color_orange = {1.0f, 0.5f, 0.0f};
+    constexpr s_color_rgb24f g_color_yellow = {1.0f, 1.0f, 0.0f};
+    constexpr s_color_rgb24f g_color_lime = {0.75f, 1.0f, 0.0f};
+    constexpr s_color_rgb24f g_color_green = {0.0f, 1.0f, 0.0f};
+    constexpr s_color_rgb24f g_color_teal = {0.0f, 0.5f, 0.5f};
+    constexpr s_color_rgb24f g_color_cyan = {0.0f, 1.0f, 1.0f};
+    constexpr s_color_rgb24f g_color_blue = {0.0f, 0.0f, 1.0f};
+    constexpr s_color_rgb24f g_color_purple = {0.5f, 0.0f, 0.5f};
+    constexpr s_color_rgb24f g_color_magenta = {1.0f, 0.0f, 1.0f};
+    constexpr s_color_rgb24f g_color_pink = {1.0f, 0.75f, 0.8f};
+    constexpr s_color_rgb24f g_color_brown = {0.6f, 0.3f, 0.0f};
+
     constexpr s_color_rgba32f ColorsMixed(const s_color_rgba32f a, const s_color_rgba32f b, const t_f32 amount) {
         ZF_ASSERT(amount >= 0.0f && amount <= 1.0f);
 
@@ -159,45 +158,9 @@ namespace zf {
         return {r, g, b, a};
     }
 
-    namespace colors {
-        constexpr s_color_rgb24f g_black = {0.0f, 0.0f, 0.0f};
-        constexpr s_color_rgb24f g_dark_gray = {0.25f, 0.25f, 0.25f};
-        constexpr s_color_rgb24f g_gray = {0.5f, 0.5f, 0.5f};
-        constexpr s_color_rgb24f g_light_gray = {0.75f, 0.75f, 0.75f};
-        constexpr s_color_rgb24f g_white = {1.0f, 1.0f, 1.0f};
-        constexpr s_color_rgb24f g_red = {1.0f, 0.0f, 0.0f};
-        constexpr s_color_rgb24f g_orange = {1.0f, 0.5f, 0.0f};
-        constexpr s_color_rgb24f g_yellow = {1.0f, 1.0f, 0.0f};
-        constexpr s_color_rgb24f g_lime = {0.75f, 1.0f, 0.0f};
-        constexpr s_color_rgb24f g_green = {0.0f, 1.0f, 0.0f};
-        constexpr s_color_rgb24f g_teal = {0.0f, 0.5f, 0.5f};
-        constexpr s_color_rgb24f g_cyan = {0.0f, 1.0f, 1.0f};
-        constexpr s_color_rgb24f g_blue = {0.0f, 0.0f, 1.0f};
-        constexpr s_color_rgb24f g_purple = {0.5f, 0.0f, 0.5f};
-        constexpr s_color_rgb24f g_magenta = {1.0f, 0.0f, 1.0f};
-        constexpr s_color_rgb24f g_pink = {1.0f, 0.75f, 0.8f};
-        constexpr s_color_rgb24f g_brown = {0.6f, 0.3f, 0.0f};
-    }
-
     // ============================================================
     // @section: Textures
     // ============================================================
-    namespace origins {
-        constexpr s_v2 g_topleft = {0.0f, 0.0f};
-        constexpr s_v2 g_topcenter = {0.5f, 0.0f};
-        constexpr s_v2 g_topright = {1.0f, 0.0f};
-        constexpr s_v2 g_centerleft = {0.0f, 0.5f};
-        constexpr s_v2 g_center = {0.5f, 0.5f};
-        constexpr s_v2 g_centerright = {1.0f, 0.5f};
-        constexpr s_v2 g_bottomleft = {0.0f, 1.0f};
-        constexpr s_v2 g_bottomcenter = {0.5f, 1.0f};
-        constexpr s_v2 g_bottomright = {1.0f, 1.0f};
-    }
-
-    constexpr t_b8 IsOriginValid(const s_v2 origin) {
-        return origin.x >= 0.0f && origin.x <= 1.0f && origin.y >= 0.0f && origin.y <= 1.0f;
-    }
-
     struct s_texture_data_rdonly {
     public:
         constexpr s_texture_data_rdonly() = default;
@@ -206,13 +169,8 @@ namespace zf {
             ZF_ASSERT(rgba_px_data.Len() == 4 * size_in_pxs.x * size_in_pxs.y);
         }
 
-        constexpr s_v2_i SizeInPixels() const {
-            return m_size_in_pxs;
-        }
-
-        constexpr s_array_rdonly<t_u8> RGBAPixelData() const {
-            return m_rgba_px_data;
-        }
+        constexpr s_v2_i SizeInPixels() const { return m_size_in_pxs; }
+        constexpr s_array_rdonly<t_u8> RGBAPixelData() const { return m_rgba_px_data; }
 
     private:
         s_v2_i m_size_in_pxs = {};
@@ -231,22 +189,18 @@ namespace zf {
             return {m_size_in_pxs, m_rgba_px_data};
         }
 
-        constexpr s_v2_i SizeInPixels() const {
-            return m_size_in_pxs;
-        }
-
-        constexpr s_array_rdonly<t_u8> RGBAPixelData() const {
-            return m_rgba_px_data;
-        }
+        constexpr s_v2_i SizeInPixels() const { return m_size_in_pxs; }
+        constexpr s_array_rdonly<t_u8> RGBAPixelData() const { return m_rgba_px_data; }
 
     private:
         s_v2_i m_size_in_pxs = {};
         s_array<t_u8> m_rgba_px_data = {};
     };
 
-    [[nodiscard]] t_b8 LoadTextureFromRaw(const s_str_rdonly file_path, s_mem_arena &tex_data_mem_arena, s_mem_arena &temp_mem_arena, s_texture_data &o_tex_data);
-    [[nodiscard]] t_b8 PackTexture(const s_str_rdonly file_path, const s_texture_data tex_data, s_mem_arena &temp_mem_arena);
-    [[nodiscard]] t_b8 UnpackTexture(const s_str_rdonly file_path, s_mem_arena &tex_data_mem_arena, s_mem_arena &temp_mem_arena, s_texture_data &o_tex_data);
+    [[nodiscard]] t_b8 LoadTextureDataFromRaw(const s_str_rdonly file_path, s_mem_arena &texture_data_mem_arena, s_mem_arena &temp_mem_arena, s_texture_data &o_texture_data);
+
+    [[nodiscard]] t_b8 PackTexture(const s_str_rdonly file_path, const s_texture_data texture_data, s_mem_arena &temp_mem_arena);
+    [[nodiscard]] t_b8 UnpackTexture(const s_str_rdonly file_path, s_mem_arena &texture_data_mem_arena, s_mem_arena &temp_mem_arena, s_texture_data &o_texture_data);
 
     constexpr s_rect_f UVRect(const s_rect_i src_rect, const s_v2_i tex_size) {
         ZF_ASSERT(tex_size.x > 0 && tex_size.y > 0);
@@ -261,25 +215,23 @@ namespace zf {
         };
     }
 
+    constexpr s_v2 g_origin_topleft = {0.0f, 0.0f};
+    constexpr s_v2 g_origin_topcenter = {0.5f, 0.0f};
+    constexpr s_v2 g_origin_topright = {1.0f, 0.0f};
+    constexpr s_v2 g_origin_centerleft = {0.0f, 0.5f};
+    constexpr s_v2 g_origin_center = {0.5f, 0.5f};
+    constexpr s_v2 g_origin_centerright = {1.0f, 0.5f};
+    constexpr s_v2 g_origin_bottomleft = {0.0f, 1.0f};
+    constexpr s_v2 g_origin_bottomcenter = {0.5f, 1.0f};
+    constexpr s_v2 g_origin_bottomright = {1.0f, 1.0f};
+
+    constexpr t_b8 IsOriginValid(const s_v2 origin) {
+        return origin.x >= 0.0f && origin.x <= 1.0f && origin.y >= 0.0f && origin.y <= 1.0f;
+    }
+
     // ============================================================
     // @section: Fonts
     // ============================================================
-    namespace alignments {
-        constexpr s_v2 g_topleft = {0.0f, 0.0f};
-        constexpr s_v2 g_topcenter = {0.5f, 0.0f};
-        constexpr s_v2 g_topright = {1.0f, 0.0f};
-        constexpr s_v2 g_centerleft = {0.0f, 0.5f};
-        constexpr s_v2 g_center = {0.5f, 0.5f};
-        constexpr s_v2 g_centerright = {1.0f, 0.5f};
-        constexpr s_v2 g_bottomleft = {0.0f, 1.0f};
-        constexpr s_v2 g_bottomcenter = {0.5f, 1.0f};
-        constexpr s_v2 g_bottomright = {1.0f, 1.0f};
-    }
-
-    constexpr t_b8 IsAlignmentValid(const s_v2 alignment) {
-        return alignment.x >= 0.0f && alignment.x <= 1.0f && alignment.y >= 0.0f && alignment.y <= 1.0f;
-    }
-
     constexpr s_v2_i g_font_atlas_size = {1024, 1024};
 
     using t_font_atlas_rgba = s_static_array<t_u8, 4 * g_font_atlas_size.x * g_font_atlas_size.y>;
@@ -309,10 +261,24 @@ namespace zf {
         s_hash_map<s_font_code_point_pair, t_i32> code_pt_pairs_to_kernings = {};
     };
 
-    [[nodiscard]] t_b8 LoadFontFromRaw(const s_str_rdonly file_path, const t_i32 height, t_code_pt_bit_vec &code_pts, s_mem_arena &arrangement_mem_arena, s_mem_arena &atlas_rgbas_mem_arena, s_mem_arena &temp_mem_arena, s_font_arrangement &o_arrangement, s_array<t_font_atlas_rgba> &o_atlas_rgbas);
+    [[nodiscard]] t_b8 LoadFontDataFromRaw(const s_str_rdonly file_path, const t_i32 height, t_code_pt_bit_vec &code_pts, s_mem_arena &arrangement_mem_arena, s_mem_arena &atlas_rgbas_mem_arena, s_mem_arena &temp_mem_arena, s_font_arrangement &o_arrangement, s_array<t_font_atlas_rgba> &o_atlas_rgbas);
 
     [[nodiscard]] t_b8 PackFont(const s_str_rdonly file_path, const s_font_arrangement &arrangement, const s_array_rdonly<t_font_atlas_rgba> atlas_rgbas, s_mem_arena &temp_mem_arena);
     [[nodiscard]] t_b8 UnpackFont(const s_str_rdonly file_path, s_mem_arena &arrangement_mem_arena, s_mem_arena &atlas_rgbas_mem_arena, s_mem_arena &temp_mem_arena, s_font_arrangement &o_arrangement, s_array<t_font_atlas_rgba> &o_atlas_rgbas);
+
+    constexpr s_v2 g_alignment_topleft = {0.0f, 0.0f};
+    constexpr s_v2 g_alignment_topcenter = {0.5f, 0.0f};
+    constexpr s_v2 g_alignment_topright = {1.0f, 0.0f};
+    constexpr s_v2 g_alignment_centerleft = {0.0f, 0.5f};
+    constexpr s_v2 g_alignment_center = {0.5f, 0.5f};
+    constexpr s_v2 g_alignment_centerright = {1.0f, 0.5f};
+    constexpr s_v2 g_alignment_bottomleft = {0.0f, 1.0f};
+    constexpr s_v2 g_alignment_bottomcenter = {0.5f, 1.0f};
+    constexpr s_v2 g_alignment_bottomright = {1.0f, 1.0f};
+
+    constexpr t_b8 IsAlignmentValid(const s_v2 alignment) {
+        return alignment.x >= 0.0f && alignment.x <= 1.0f && alignment.y >= 0.0f && alignment.y <= 1.0f;
+    }
 
     // ============================================================
     // @section: Shaders

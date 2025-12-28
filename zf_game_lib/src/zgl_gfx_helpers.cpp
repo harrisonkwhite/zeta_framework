@@ -1,8 +1,8 @@
 #include <zgl/zgl_gfx_helpers.h>
 
 namespace zf {
-    void DrawTriangle(s_rendering_context &rc, const s_static_array<s_v2, 3> &pts, const s_static_array<s_color_rgba32f, 3> &pt_colors) {
-        const s_batch_triangle tri = {
+    void RenderTriangle(s_rendering_context &rendering_context, const s_static_array<s_v2, 3> &pts, const s_static_array<s_color_rgba32f, 3> &pt_colors) {
+        const s_render_triangle triangle = {
             .verts = {{
                 {.pos = pts[0], .blend = pt_colors[0], .uv = {}},
                 {.pos = pts[1], .blend = pt_colors[1], .uv = {}},
@@ -10,11 +10,11 @@ namespace zf {
             }},
         };
 
-        SubmitTriangle(rc, tri, nullptr);
+        RenderTriangles(rendering_context, {&triangle, 1}, nullptr);
     }
 
-    void DrawRect(s_rendering_context &rc, const s_rect_f rect, const s_color_rgba32f color_topleft, const s_color_rgba32f color_topright, const s_color_rgba32f color_bottomright, const s_color_rgba32f color_bottomleft) {
-        const s_static_array<s_batch_triangle, 2> triangles = {{
+    void RenderRect(s_rendering_context &rendering_context, const s_rect_f rect, const s_color_rgba32f color_topleft, const s_color_rgba32f color_topright, const s_color_rgba32f color_bottomright, const s_color_rgba32f color_bottomleft) {
+        const s_static_array<s_render_triangle, 2> triangles = {{
             {
                 .verts = {{
                     {.pos = rect.TopLeft(), .blend = color_topleft, .uv = {0.0f, 0.0f}},
@@ -31,10 +31,10 @@ namespace zf {
             },
         }};
 
-        SubmitTriangles(rc, triangles.ToNonstatic(), nullptr);
+        RenderTriangles(rendering_context, triangles.ToNonstatic(), nullptr);
     }
 
-    void DrawTexture(s_rendering_context &rc, const s_gfx_resource &texture, const s_v2 pos, const s_rect_i src_rect) {
+    void RenderTexture(s_rendering_context &rendering_context, const s_gfx_resource &texture, const s_v2 pos, const s_rect_i src_rect) {
         const auto texture_size = TextureSize(texture);
 
         s_rect_i src_rect_to_use;
@@ -49,66 +49,66 @@ namespace zf {
         const s_rect_f rect = {pos, src_rect_to_use.Size().ToV2()};
         const s_rect_f uv_rect = UVRect(src_rect_to_use, texture_size);
 
-        const s_static_array<s_batch_triangle, 2> triangles = {{
+        const s_static_array<s_render_triangle, 2> triangles = {{
             {
                 .verts = {{
-                    {.pos = rect.TopLeft(), .blend = colors::g_white, .uv = uv_rect.TopLeft()},
-                    {.pos = rect.TopRight(), .blend = colors::g_white, .uv = uv_rect.TopRight()},
-                    {.pos = rect.BottomRight(), .blend = colors::g_white, .uv = uv_rect.BottomRight()},
+                    {.pos = rect.TopLeft(), .blend = g_color_white, .uv = uv_rect.TopLeft()},
+                    {.pos = rect.TopRight(), .blend = g_color_white, .uv = uv_rect.TopRight()},
+                    {.pos = rect.BottomRight(), .blend = g_color_white, .uv = uv_rect.BottomRight()},
                 }},
             },
             {
                 .verts = {{
-                    {.pos = rect.BottomRight(), .blend = colors::g_white, .uv = uv_rect.BottomRight()},
-                    {.pos = rect.BottomLeft(), .blend = colors::g_white, .uv = uv_rect.BottomLeft()},
-                    {.pos = rect.TopLeft(), .blend = colors::g_white, .uv = uv_rect.TopLeft()},
+                    {.pos = rect.BottomRight(), .blend = g_color_white, .uv = uv_rect.BottomRight()},
+                    {.pos = rect.BottomLeft(), .blend = g_color_white, .uv = uv_rect.BottomLeft()},
+                    {.pos = rect.TopLeft(), .blend = g_color_white, .uv = uv_rect.TopLeft()},
                 }},
             },
         }};
 
-        SubmitTriangles(rc, triangles.ToNonstatic(), &texture);
+        RenderTriangles(rendering_context, triangles.ToNonstatic(), &texture);
     }
 
     t_b8 CreateFontFromRaw(const s_str_rdonly file_path, const t_i32 height, t_code_pt_bit_vec &code_pts, s_mem_arena &temp_mem_arena, s_font &o_font, const s_ptr<s_gfx_resource_arena> resource_arena) {
+#if 0
         o_font = {};
 
         auto &resource_arena_to_use = resource_arena ? *resource_arena : PermGFXResourceArena();
 
         s_array<t_font_atlas_rgba> atlas_rgbas;
 
-        if (!zf::LoadFontFromRaw(file_path, height, code_pts, resource_arena_to_use.MemArena(), temp_mem_arena, temp_mem_arena, o_font.arrangement, atlas_rgbas)) {
+        if (!zf::LoadFontDataFromRaw(file_path, height, code_pts, resource_arena_to_use.MemArena(), temp_mem_arena, temp_mem_arena, o_font.arrangement, atlas_rgbas)) {
             return false;
         }
 
         o_font.atlases = AllocArray<s_ptr<s_gfx_resource>>(atlas_rgbas.Len(), resource_arena_to_use.MemArena());
 
         for (t_i32 i = 0; i < atlas_rgbas.Len(); i++) {
-            if (!resource_arena_to_use.AddTexture({g_font_atlas_size, atlas_rgbas[i]}, o_font.atlases[i])) {
-                return false;
-            }
+            o_font.atlases[i] = &resource_arena_to_use.AddTexture({g_font_atlas_size, atlas_rgbas[i]});
         }
+#endif
 
         return true;
     }
 
     t_b8 CreateFontFromPacked(const s_str_rdonly file_path, s_mem_arena &temp_mem_arena, s_font &o_font, const s_ptr<s_gfx_resource_arena> resource_arena) {
+#if 0
         o_font = {};
 
         auto &resource_arena_to_use = resource_arena ? *resource_arena : PermGFXResourceArena();
 
         s_array<t_font_atlas_rgba> atlas_rgbas;
 
-        if (!zf::UnpackFont(file_path, resource_arena_to_use.MemArena(), temp_mem_arena, temp_mem_arena, o_font.arrangement, atlas_rgbas)) {
+        if (!zf::UnpackFont(file_path, resource_arena_to_use.mem_arena, temp_mem_arena, temp_mem_arena, o_font.arrangement, atlas_rgbas)) {
             return false;
         }
 
         o_font.atlases = AllocArray<s_ptr<s_gfx_resource>>(atlas_rgbas.Len(), resource_arena_to_use.MemArena());
 
         for (t_i32 i = 0; i < atlas_rgbas.Len(); i++) {
-            if (!resource_arena_to_use.AddTexture({g_font_atlas_size, atlas_rgbas[i]}, o_font.atlases[i])) {
-                return false;
-            }
+            o_font.atlases[i] = &resource_arena_to_use.AddTexture({g_font_atlas_size, atlas_rgbas[i]});
         }
+#endif
 
         return true;
     }
@@ -209,7 +209,7 @@ namespace zf {
         return positions;
     }
 
-    void DrawStr(s_rendering_context &rc, const s_str_rdonly str, const s_font &font, const s_v2 pos, s_mem_arena &temp_mem_arena, const s_v2 alignment, const s_color_rgba32f blend) {
+    void RenderStr(s_rendering_context &rendering_context, const s_str_rdonly str, const s_font &font, const s_v2 pos, s_mem_arena &temp_mem_arena, const s_v2 alignment, const s_color_rgba32f blend) {
         ZF_ASSERT(IsStrValidUTF8(str));
         ZF_ASSERT(IsAlignmentValid(alignment));
 
@@ -237,7 +237,7 @@ namespace zf {
                 continue;
             }
 
-            DrawTexture(rc, *font_atlases[glyph_info->atlas_index], chr_positions[chr_index], glyph_info->atlas_rect);
+            RenderTexture(rendering_context, *font_atlases[glyph_info->atlas_index], chr_positions[chr_index], glyph_info->atlas_rect);
 
             chr_index++;
         };

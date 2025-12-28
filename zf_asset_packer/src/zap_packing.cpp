@@ -208,7 +208,7 @@ namespace zf {
 
                     s_texture_data texture_data;
 
-                    if (!LoadTextureFromRaw(file_path, mem_arena, mem_arena, texture_data)) {
+                    if (!LoadTextureDataFromRaw(file_path, mem_arena, mem_arena, texture_data)) {
                         LogError(s_cstr_literal("Failed to load texture from file \"%\"!"), file_path);
                         return false;
                     }
@@ -248,7 +248,7 @@ namespace zf {
                     s_font_arrangement arrangement;
                     s_array<t_font_atlas_rgba> atlas_rgbas;
 
-                    if (!LoadFontFromRaw(file_path, height, code_pt_bv, mem_arena, mem_arena, mem_arena, arrangement, atlas_rgbas)) {
+                    if (!LoadFontDataFromRaw(file_path, height, code_pt_bv, mem_arena, mem_arena, mem_arena, arrangement, atlas_rgbas)) {
                         LogError(s_cstr_literal("Failed to load font from file \"%\"!"), file_path);
                         return false;
                     }
@@ -299,7 +299,7 @@ namespace zf {
 
                     s_sound_data snd_data;
 
-                    if (!LoadSoundFromRaw(file_path, mem_arena, mem_arena, snd_data)) {
+                    if (!LoadSoundDataFromRaw(file_path, mem_arena, mem_arena, snd_data)) {
                         LogError(s_cstr_literal("Failed to load sound from file \"%\"!"), file_path);
                         return false;
                     }

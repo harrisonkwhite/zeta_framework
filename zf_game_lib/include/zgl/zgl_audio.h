@@ -3,8 +3,8 @@
 #include <zcl.h>
 
 namespace zf {
-    void InitAudio();
-    void ShutdownAudio();
+    void InitAudioModule();
+    void ShutdownAudioModule();
 
     struct s_sound_type;
 

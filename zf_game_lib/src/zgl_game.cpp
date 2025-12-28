@@ -23,16 +23,16 @@ namespace zf {
         s_mem_arena temp_mem_arena = {};
         ZF_DEFER({ temp_mem_arena.Release(); });
 
-        InitPlatform(g_init_window_size);
-        ZF_DEFER({ ShutdownPlatform(); });
+        InitPlatformModule(g_init_window_size);
+        ZF_DEFER({ ShutdownPlatformModule(); });
 
         s_input_state input_state = {};
 
-        s_rendering_basis &rendering_basis = InitGFX(perm_mem_arena);
-        ZF_DEFER({ ShutdownGFX(rendering_basis); });
+        s_rendering_basis &rendering_basis = InitGFXModule(perm_mem_arena);
+        ZF_DEFER({ ShutdownGFXModule(rendering_basis); });
 
-        InitAudio();
-        ZF_DEFER({ ShutdownAudio(); });
+        InitAudioModule();
+        ZF_DEFER({ ShutdownAudioModule(); });
 
         init_func({
             .perm_mem_arena = perm_mem_arena,
@@ -81,7 +81,7 @@ namespace zf {
                     frame_dur_accum -= targ_tick_interval;
                 } while (frame_dur_accum >= targ_tick_interval);
 
-                s_rendering_context &rendering_context = internal::BeginFrame(rendering_basis, s_color_rgb8(109, 187, 255), temp_mem_arena); // @todo: Make the clear colour customisable?
+                s_rendering_context &rendering_context = BeginRendering(rendering_basis, s_color_rgb8(109, 187, 255), temp_mem_arena); // @todo: Make the clear colour customisable?
 
                 render_func({
                     .perm_mem_arena = perm_mem_arena,
@@ -89,7 +89,7 @@ namespace zf {
                     .rendering_context = rendering_context,
                 });
 
-                internal::EndFrame(rendering_context);
+                EndRendering(rendering_context);
             }
         }
     }

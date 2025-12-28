@@ -30,7 +30,7 @@ namespace zf {
         } snd_insts = {};
     } g_state;
 
-    void InitAudio() {
+    void InitAudioModule() {
         ZF_REQUIRE(!g_state.initted);
 
         g_state.initted = true;
@@ -40,7 +40,7 @@ namespace zf {
         }
     }
 
-    void ShutdownAudio() {
+    void ShutdownAudioModule() {
         ZF_REQUIRE(g_state.initted);
 
         ZF_FOR_EACH_SET_BIT(g_state.snd_insts.activity, i) {
@@ -60,7 +60,7 @@ namespace zf {
 
         s_sound_data snd_data = {};
 
-        if (!LoadSoundFromRaw(file_path, m_mem_arena, temp_mem_arena, snd_data)) {
+        if (!LoadSoundDataFromRaw(file_path, m_mem_arena, temp_mem_arena, snd_data)) {
             return false;
         }
 

@@ -200,7 +200,7 @@ namespace zf {
         return ek_path_type_file;
     }
 
-    s_str GetExecutableDir(s_mem_arena &mem_arena) {
+    s_str LoadExecutableDir(s_mem_arena &mem_arena) {
 #if defined(ZF_PLATFORM_WINDOWS)
         s_static_array<char, MAX_PATH> buf;
 

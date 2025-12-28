@@ -51,7 +51,8 @@ namespace zf {
         return len;
     }
 
-    constexpr t_b8 IsTerminated(const s_array_rdonly<t_u8> bytes) {
+    // Does a 0 appear anywhere in the array?
+    constexpr t_b8 AreBytesTerminated(const s_array_rdonly<t_u8> bytes) {
         for (t_i32 i = bytes.Len() - 1; i >= 0; i--) {
             if (!bytes[i]) {
                 return true;
@@ -97,7 +98,7 @@ namespace zf {
 
         // Requires that there is a terminating byte somewhere.
         const char *AsCstr() const {
-            ZF_REQUIRE(IsTerminated(bytes));
+            ZF_REQUIRE(AreBytesTerminated(bytes));
             return reinterpret_cast<const char *>(bytes.Ptr().Raw());
         }
     };
@@ -114,7 +115,7 @@ namespace zf {
 
         // Requires that there is a terminating byte somewhere.
         char *AsCstr() const {
-            ZF_REQUIRE(IsTerminated(bytes));
+            ZF_REQUIRE(AreBytesTerminated(bytes));
             return reinterpret_cast<char *>(bytes.Ptr().Raw());
         }
     };
@@ -156,7 +157,7 @@ namespace zf {
     // Calculates the length in terms of code point count. Note that '\0' is treated just like any other ASCII character.
     t_i32 CalcStrLen(const s_str_rdonly str);
 
-    t_code_pt StrCodePointAtByte(const s_str_rdonly str, const t_i32 byte_index);
+    t_code_pt FindStrCodePointAtByte(const s_str_rdonly str, const t_i32 byte_index);
 
     // Sets the bits associated with each unicode code point that appear in the string. No bits get unset.
     void MarkStrCodePoints(const s_str_rdonly str, t_code_pt_bit_vec &code_pts);
