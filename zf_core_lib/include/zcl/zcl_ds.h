@@ -44,6 +44,10 @@ namespace zf {
             return operator[](m_len - 1);
         }
 
+        s_array<tp_type> AsArray() const {
+            return m_backing_arr.Slice(0, m_len);
+        }
+
     private:
         s_array<tp_type> m_backing_arr = {};
         t_i32 m_len = 0;
@@ -88,6 +92,10 @@ namespace zf {
 
         tp_type &Last() const {
             return operator[](m_len - 1);
+        }
+
+        s_array<tp_type> AsArray() const {
+            return m_backing_arr.ToNonstatic().Slice(0, m_len);
         }
 
     private:

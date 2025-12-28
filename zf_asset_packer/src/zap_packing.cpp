@@ -263,6 +263,13 @@ namespace zf {
                     const auto file_path = ConvertCstr(field_vals[ek_shader_field_file_path]->valuestring);
                     const auto varying_def_file_path = ConvertCstr(field_vals[ek_shader_field_varying_def_file_path]->valuestring);
                     const auto out_file_path = ConvertCstr(field_vals[ek_shader_field_out_file_path]->valuestring);
+
+                    s_array<t_u8> bin;
+
+                    if (!CompileShader(file_path, varying_def_file_path, false, mem_arena, mem_arena, bin)) {
+                        return false;
+                    }
+
                     break;
                 }
 

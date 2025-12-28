@@ -3,7 +3,7 @@
 #include <reproc/reproc.h>
 
 namespace zf {
-    t_b8 CompileShader(const s_str_rdonly shader_file_path, const s_str_rdonly varying_def_file_path, const t_b8 is_frag, s_mem_arena &temp_mem_arena) {
+    t_b8 CompileShader(const s_str_rdonly shader_file_path, const s_str_rdonly varying_def_file_path, const t_b8 is_frag, s_mem_arena &bin_mem_arena, s_mem_arena &temp_mem_arena, s_array<t_u8> &o_bin) {
         const s_str_rdonly shader_file_path_terminated = AllocStrCloneButAddTerminator(shader_file_path, temp_mem_arena);
         const s_str_rdonly varying_def_file_path_terminated = AllocStrCloneButAddTerminator(varying_def_file_path, temp_mem_arena);
 
@@ -48,8 +48,6 @@ namespace zf {
         Copy(shaderc_file_path.bytes, exe_dir.bytes);
         Copy(shaderc_file_path.bytes.SliceFrom(exe_dir.bytes.Len()), shaderc_file_path_rel.Buf().ToByteArray());
 
-        Log(s_cstr_literal("yeah man at: %"), shaderc_file_path);
-
         const s_static_array<const char *, 15> args = {{
             shaderc_file_path.AsCstr(),
             "-f",
@@ -80,7 +78,7 @@ namespace zf {
             return false;
         }
 
-        s_list<t_u8> blob = {};
+        s_list<t_u8> bin_list = {};
 
         while (true) {
             s_static_array<t_u8, 4096> buf;
@@ -90,7 +88,7 @@ namespace zf {
                 break;
             }
 
-            ListAppendManyDynamic(blob, buf.ToNonstatic().Slice(0, r), temp_mem_arena);
+            ListAppendManyDynamic(bin_list, buf.ToNonstatic().Slice(0, r), bin_mem_arena);
         }
 
         if (r != REPROC_EPIPE) {
@@ -102,6 +100,8 @@ namespace zf {
         if (r < 0) {
             return false;
         }
+
+        o_bin = bin_list.AsArray();
 
         return true;
     }
