@@ -305,6 +305,8 @@ namespace zf {
 
     e_path_type CheckPathType(const s_str_rdonly path, s_mem_arena &temp_mem_arena);
 
+    s_str_rdonly GetExecutableDir(s_mem_arena &mem_arena);
+
     // ============================================================
     // @section: Printing
     // ============================================================

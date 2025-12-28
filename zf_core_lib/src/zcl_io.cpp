@@ -4,7 +4,8 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
-#ifdef _WIN32
+#ifdef ZF_PLATFORM_WINDOWS
+    #include <windows.h>
     #include <direct.h>
 #endif
 
@@ -186,7 +187,7 @@ namespace zf {
     e_path_type CheckPathType(const s_str_rdonly path, s_mem_arena &temp_mem_arena) {
         const s_str_rdonly path_terminated = AllocStrCloneButAddTerminator(path, temp_mem_arena);
 
-        struct stat info = {};
+        struct stat info;
 
         if (stat(path_terminated.AsCstr(), &info) != 0) {
             return ek_path_type_not_found;
@@ -197,5 +198,28 @@ namespace zf {
         }
 
         return ek_path_type_file;
+    }
+
+    s_str_rdonly GetExecutableDir(s_mem_arena &mem_arena) {
+#if defined(ZF_PLATFORM_WINDOWS)
+        s_static_array<char, MAX_PATH> buf;
+
+        auto len = static_cast<t_i32>(GetModuleFileNameA(nullptr, buf.raw, MAX_PATH));
+        ZF_REQUIRE(len != 0);
+
+        for (; len > 0; len--) {
+            if (buf[len - 1] == '\\') {
+                break;
+            }
+        }
+
+        const auto res = AllocArray<t_u8>(len, mem_arena);
+        Copy(res, buf.ToNonstatic().Slice(0, len).ToByteArray());
+        return {res};
+#elif defined(ZF_PLATFORM_MACOS)
+    #error "Platform-specific implementation not yet done!"
+#elif defined(ZF_PLATFORM_LINUX)
+    #error "Platform-specific implementation not yet done!"
+#endif
     }
 }

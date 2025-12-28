@@ -27,7 +27,8 @@ namespace zf {
         });
 
 #if defined(ZF_PLATFORM_WINDOWS)
-        const s_cstr_literal shaderc_file_path = "tools/bgfx/shaderc_windows.exe";
+        // const s_cstr_literal shaderc_file_path = "tools/bgfx/shaderc_windows.exe";
+        const s_cstr_literal shaderc_file_path = "C:/code/kaozeth/build/debug/zeta_framework/zf_asset_packer/tools/bgfx/shaderc_windows.exe"; // @todo: Should be relative!
         const s_cstr_literal platform = "windows";
         const s_cstr_literal profile = "s_5_0";
 #elif defined(ZF_PLATFORM_MACOS)
