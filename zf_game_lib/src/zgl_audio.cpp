@@ -30,7 +30,7 @@ namespace zf {
         } snd_insts = {};
     } g_state;
 
-    void InitAudioModule() {
+    void StartupAudioModule() {
         ZF_REQUIRE(!g_state.initted);
 
         g_state.initted = true;
@@ -43,7 +43,7 @@ namespace zf {
     void ShutdownAudioModule() {
         ZF_REQUIRE(g_state.initted);
 
-        ZF_FOR_EACH_SET_BIT(g_state.snd_insts.activity, i) {
+        ZF_WALK_SET_BITS(g_state.snd_insts.activity, i) {
             ma_sound_stop(&g_state.snd_insts.ma_snds[i]);
             ma_sound_uninit(&g_state.snd_insts.ma_snds[i]);
 
@@ -53,6 +53,28 @@ namespace zf {
         ma_engine_uninit(&g_state.ma_eng);
 
         g_state = {};
+    }
+
+    void s_sound_type_arena::Release() {
+        ZF_ASSERT(g_state.initted);
+
+        auto type = m_head;
+
+        while (type) {
+            ZF_WALK_SET_BITS(g_state.snd_insts.activity, i) {
+                if (g_state.snd_insts.types[i] == type) {
+                    StopSound({i, g_state.snd_insts.versions[i]});
+                }
+            }
+
+            type = type->next;
+        }
+
+        m_mem_arena.Release();
+        m_head = nullptr;
+        m_tail = nullptr;
+
+        m_version++;
     }
 
     t_b8 s_sound_type_arena::AddFromRaw(const s_str_rdonly file_path, s_mem_arena &temp_mem_arena, s_ptr<s_sound_type> &o_type) {
@@ -94,28 +116,6 @@ namespace zf {
             m_tail->next = o_type;
             m_tail = o_type;
         }
-    }
-
-    void s_sound_type_arena::Release() {
-        ZF_ASSERT(g_state.initted);
-
-        auto type = m_head;
-
-        while (type) {
-            ZF_FOR_EACH_SET_BIT(g_state.snd_insts.activity, i) {
-                if (g_state.snd_insts.types[i] == type) {
-                    StopSound({i, g_state.snd_insts.versions[i]});
-                }
-            }
-
-            type = type->next;
-        }
-
-        m_mem_arena.Release();
-        m_head = nullptr;
-        m_tail = nullptr;
-
-        m_version++;
     }
 
     s_sound_id PlaySound(const s_sound_type &type, const t_f32 vol, const t_f32 pan, const t_f32 pitch, const t_b8 loop) {
@@ -188,7 +188,7 @@ namespace zf {
     void ProcFinishedSounds() {
         ZF_ASSERT(g_state.initted);
 
-        ZF_FOR_EACH_SET_BIT(g_state.snd_insts.activity, i) {
+        ZF_WALK_SET_BITS(g_state.snd_insts.activity, i) {
             ma_sound &ma_snd = g_state.snd_insts.ma_snds[i];
 
             if (!ma_sound_is_playing(&ma_snd)) {

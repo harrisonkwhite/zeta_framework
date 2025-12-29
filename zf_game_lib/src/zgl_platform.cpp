@@ -28,7 +28,7 @@ namespace zf {
         s_v2_i prefullscreen_size = {};
     } g_state;
 
-    void InitPlatformModule(const s_v2_i init_window_size) {
+    void StartupPlatformModule(const s_v2_i init_window_size) {
         ZF_REQUIRE(!g_state.initted);
         ZF_REQUIRE(init_window_size.x > 0 && init_window_size.y > 0);
 

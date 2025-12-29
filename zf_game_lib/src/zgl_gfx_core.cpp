@@ -15,11 +15,15 @@ namespace zf {
 
     struct {
         e_state state = ek_state_uninitted;
-
-        // @todo: These 2 below shouldn't need to leak out.
         s_v2_i resolution_cache = {};
         s_gfx_resource_arena perm_resource_arena = {};
     } g_state;
+
+    enum e_gfx_resource_type {
+        ek_gfx_resource_type_invalid,
+        ek_gfx_resource_type_texture,
+        ek_gfx_resource_type_shader_prog
+    };
 
     struct s_gfx_resource {
     public:
@@ -107,7 +111,7 @@ namespace zf {
     // ============================================================
     // @section: General
     // ============================================================
-    s_rendering_basis &InitGFXModule(s_mem_arena &mem_arena) {
+    s_rendering_basis &StartupGFXModule(s_mem_arena &mem_arena) {
         ZF_ASSERT(g_state.state == ek_state_uninitted);
 
         g_state.state = ek_state_initted;
@@ -133,7 +137,7 @@ namespace zf {
             ZF_FATAL();
         }
 
-        g_state.perm_resource_arena = {mem_arena};
+        g_state.perm_resource_arena = {.mem_arena = &mem_arena};
 
         return CreateRenderingBasis(mem_arena, g_state.perm_resource_arena);
     }
@@ -145,7 +149,7 @@ namespace zf {
         bgfx::destroy(rendering_state.shader_prog_bgfx_hdl);
         bgfx::destroy(rendering_state.vert_buf_bgfx_hdl);
 
-        g_state.perm_resource_arena.Release();
+        ReleaseGFXResources(g_state.perm_resource_arena);
 
         bgfx::shutdown();
 
@@ -171,6 +175,11 @@ namespace zf {
         }
 
         return bgfx::createProgram(vert_shader_bgfx_hdl, frag_shader_bgfx_hdl, true);
+    }
+
+    s_v2_i TextureSize(const s_gfx_resource &texture) {
+        ZF_ASSERT(g_state.state != ek_state_uninitted);
+        return texture.Texture().size;
     }
 
 #if 0
@@ -286,6 +295,11 @@ namespace zf {
     }
 #endif
 
+    s_gfx_resource_arena &PermGFXResourceArena() {
+        ZF_ASSERT(g_state.state != ek_state_uninitted);
+        return g_state.perm_resource_arena;
+    }
+
     void ReleaseGFXResources(s_gfx_resource_arena &arena) {
         ZF_ASSERT(g_state.state == ek_state_initted);
 
@@ -330,11 +344,6 @@ namespace zf {
         resource.type = type;
 
         return resource;
-    }
-
-    s_gfx_resource_arena &PermGFXResourceArena() {
-        ZF_ASSERT(g_state.state != ek_state_uninitted);
-        return g_state.perm_resource_arena;
     }
 
     s_gfx_resource &CreateTextureResource(const s_texture_data_rdonly texture_data, s_gfx_resource_arena &arena) {

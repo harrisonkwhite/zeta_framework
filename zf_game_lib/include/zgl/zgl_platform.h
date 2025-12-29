@@ -6,7 +6,7 @@ namespace zf {
     struct s_input_state;
 
     // Note that the window is not shown by default, you have to manually do this.
-    void InitPlatformModule(const s_v2_i init_window_size);
+    void StartupPlatformModule(const s_v2_i init_window_size);
 
     void ShutdownPlatformModule();
 

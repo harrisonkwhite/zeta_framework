@@ -120,7 +120,7 @@ namespace zf {
         }
 
         // Filter out unsupported code points.
-        ZF_FOR_EACH_SET_BIT(code_pts, i) {
+        ZF_WALK_SET_BITS(code_pts, i) {
             const auto code_pt = static_cast<t_code_pt>(i);
 
             const t_i32 glyph_index = stbtt_FindGlyphIndex(&stb_font_info, static_cast<t_i32>(code_pt));
@@ -153,7 +153,7 @@ namespace zf {
         t_i32 atlas_index = 0;
         s_v2_i atlas_pen;
 
-        ZF_FOR_EACH_SET_BIT(code_pts, i) {
+        ZF_WALK_SET_BITS(code_pts, i) {
             const auto code_pt = static_cast<t_code_pt>(i);
 
             const t_i32 glyph_index = stbtt_FindGlyphIndex(&stb_font_info, static_cast<t_i32>(code_pt));
@@ -200,8 +200,8 @@ namespace zf {
         o_arrangement.has_kernings = true;
         o_arrangement.code_pt_pairs_to_kernings = CreateHashMap<s_font_code_point_pair, t_i32>(g_code_pt_pair_hash_func, arrangement_mem_arena, g_hash_map_cap_default, g_code_pt_pair_comparator);
 
-        ZF_FOR_EACH_SET_BIT(code_pts, i) {
-            ZF_FOR_EACH_SET_BIT(code_pts, j) {
+        ZF_WALK_SET_BITS(code_pts, i) {
+            ZF_WALK_SET_BITS(code_pts, j) {
                 const auto cp_a = static_cast<t_code_pt>(i);
                 const auto cp_b = static_cast<t_code_pt>(j);
 
@@ -235,7 +235,7 @@ namespace zf {
         }
 
         // Write pixel data for each individual glyph.
-        ZF_FOR_EACH_SET_BIT(code_pts, i) {
+        ZF_WALK_SET_BITS(code_pts, i) {
             const auto code_pt = static_cast<t_code_pt>(i);
 
             s_ptr<s_font_glyph_info> glyph_info;

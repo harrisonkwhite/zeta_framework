@@ -3,7 +3,7 @@
 #include <zcl.h>
 
 namespace zf {
-    void InitAudioModule();
+    void StartupAudioModule();
     void ShutdownAudioModule();
 
     struct s_sound_type;
@@ -14,10 +14,10 @@ namespace zf {
         s_sound_type_arena(const s_sound_type_arena &) = delete;
         s_sound_type &operator=(const s_sound_type_arena &) = delete;
 
+        void Release();
+
         [[nodiscard]] t_b8 AddFromRaw(const s_str_rdonly file_path, s_mem_arena &temp_mem_arena, s_ptr<s_sound_type> &o_type);
         [[nodiscard]] t_b8 AddFromPacked(const s_str_rdonly file_path, s_mem_arena &temp_mem_arena, s_ptr<s_sound_type> &o_type);
-
-        void Release();
 
         t_i32 Version() const {
             return m_version;

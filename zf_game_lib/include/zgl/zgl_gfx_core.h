@@ -9,19 +9,13 @@ namespace zf {
     struct s_rendering_basis;
 
     // This depends on the platform module being initialised beforehand.
-    s_rendering_basis &InitGFXModule(s_mem_arena &mem_arena);
+    s_rendering_basis &StartupGFXModule(s_mem_arena &mem_arena);
 
     void ShutdownGFXModule(s_rendering_basis &rendering_basis);
 
     // ============================================================
     // @section: Resources
     // ============================================================
-    enum e_gfx_resource_type {
-        ek_gfx_resource_type_invalid,
-        ek_gfx_resource_type_texture,
-        ek_gfx_resource_type_shader_prog
-    };
-
     struct s_gfx_resource;
 
     s_v2_i TextureSize(const s_gfx_resource &texture);
@@ -30,14 +24,11 @@ namespace zf {
         s_ptr<s_mem_arena> mem_arena = nullptr;
         s_ptr<s_gfx_resource> head = nullptr;
         s_ptr<s_gfx_resource> tail = nullptr;
-
-        s_gfx_resource_arena() = default;
-        s_gfx_resource_arena(s_mem_arena &mem_arena) : mem_arena(&mem_arena) {}
-
-        void Release();
     };
 
     s_gfx_resource_arena &PermGFXResourceArena();
+
+    void ReleaseGFXResources(s_gfx_resource_arena &arena);
 
     s_gfx_resource &CreateTextureResource(const s_texture_data_rdonly texture_data, s_gfx_resource_arena &arena = PermGFXResourceArena());
 
@@ -98,4 +89,45 @@ namespace zf {
     };
 
     void RenderTriangles(s_rendering_context &rendering_context, const s_array_rdonly<s_render_triangle> triangles, const s_ptr<const s_gfx_resource> texture);
+
+    inline void RenderTriangle(s_rendering_context &rendering_context, const s_static_array<s_v2, 3> &pts, const s_static_array<s_color_rgba32f, 3> &pt_colors) {
+        const s_render_triangle triangle = {
+            .verts = {{
+                {.pos = pts[0], .blend = pt_colors[0], .uv = {}},
+                {.pos = pts[1], .blend = pt_colors[1], .uv = {}},
+                {.pos = pts[2], .blend = pt_colors[2], .uv = {}},
+            }},
+        };
+
+        RenderTriangles(rendering_context, {&triangle, 1}, nullptr);
+    }
+
+    inline void RenderTriangle(s_rendering_context &rendering_context, const s_static_array<s_v2, 3> &pts, const s_color_rgba32f color) {
+        RenderTriangle(rendering_context, pts, {{color, color, color}});
+    }
+
+    inline void RenderRect(s_rendering_context &rendering_context, const s_rect_f rect, const s_color_rgba32f color_topleft, const s_color_rgba32f color_topright, const s_color_rgba32f color_bottomright, const s_color_rgba32f color_bottomleft) {
+        const s_static_array<s_render_triangle, 2> triangles = {{
+            {
+                .verts = {{
+                    {.pos = rect.TopLeft(), .blend = color_topleft, .uv = {0.0f, 0.0f}},
+                    {.pos = rect.TopRight(), .blend = color_topright, .uv = {1.0f, 0.0f}},
+                    {.pos = rect.BottomRight(), .blend = color_bottomright, .uv = {1.0f, 1.0f}},
+                }},
+            },
+            {
+                .verts = {{
+                    {.pos = rect.BottomRight(), .blend = color_bottomright, .uv = {1.0f, 1.0f}},
+                    {.pos = rect.BottomLeft(), .blend = color_bottomleft, .uv = {0.0f, 1.0f}},
+                    {.pos = rect.TopLeft(), .blend = color_topleft, .uv = {0.0f, 0.0f}},
+                }},
+            },
+        }};
+
+        RenderTriangles(rendering_context, triangles.ToNonstatic(), nullptr);
+    }
+
+    inline void RenderRect(s_rendering_context &rendering_context, const s_rect_f rect, const s_color_rgba32f color) {
+        RenderRect(rendering_context, rect, color, color, color, color);
+    }
 }

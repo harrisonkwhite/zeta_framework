@@ -9,7 +9,7 @@ namespace zf {
     constexpr s_v2_i g_init_window_size = {1280, 720};
     constexpr t_f64 g_targ_ticks_per_sec = 60.0; // @todo: Make this customisable?
 
-    void RunGame(const t_game_init_func init_func, const t_game_tick_func tick_func, const t_game_render_func render_func, const t_game_cleanup_func cleanup_func) {
+    void RunGame(const t_game_init_func init_func, const t_game_tick_func tick_func, const t_game_render_func render_func, const t_game_deinit_func deinit_func) {
         ZF_ASSERT(init_func);
         ZF_ASSERT(tick_func);
         ZF_ASSERT(render_func);
@@ -23,15 +23,15 @@ namespace zf {
         s_mem_arena temp_mem_arena = {};
         ZF_DEFER({ temp_mem_arena.Release(); });
 
-        InitPlatformModule(g_init_window_size);
+        StartupPlatformModule(g_init_window_size);
         ZF_DEFER({ ShutdownPlatformModule(); });
 
         s_input_state input_state = {};
 
-        s_rendering_basis &rendering_basis = InitGFXModule(perm_mem_arena);
+        s_rendering_basis &rendering_basis = StartupGFXModule(perm_mem_arena);
         ZF_DEFER({ ShutdownGFXModule(rendering_basis); });
 
-        InitAudioModule();
+        StartupAudioModule();
         ZF_DEFER({ ShutdownAudioModule(); });
 
         init_func({
@@ -40,8 +40,8 @@ namespace zf {
         });
 
         ZF_DEFER({
-            if (cleanup_func) {
-                cleanup_func();
+            if (deinit_func) {
+                deinit_func();
             }
         });
 

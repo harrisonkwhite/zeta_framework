@@ -119,7 +119,7 @@ namespace zf {
     constexpr s_color_rgb24f g_color_pink = {1.0f, 0.75f, 0.8f};
     constexpr s_color_rgb24f g_color_brown = {0.6f, 0.3f, 0.0f};
 
-    constexpr s_color_rgba32f ColorsMixed(const s_color_rgba32f a, const s_color_rgba32f b, const t_f32 amount) {
+    constexpr s_color_rgba32f ColorMix(const s_color_rgba32f a, const s_color_rgba32f b, const t_f32 amount) {
         ZF_ASSERT(amount >= 0.0f && amount <= 1.0f);
 
         return {
