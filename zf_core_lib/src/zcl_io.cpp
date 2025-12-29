@@ -10,7 +10,7 @@
 #endif
 
 namespace zf {
-    t_b8 OpenFile(const s_str_rdonly path, const e_file_access_mode mode, s_mem_arena &temp_mem_arena, s_stream &o_stream) {
+    t_b8 OpenFile(const s_str_rdonly path, const e_file_access_mode mode, c_mem_arena &temp_mem_arena, s_stream &o_stream) {
         const s_str_rdonly path_terminated = AllocStrCloneButAddTerminator(path, temp_mem_arena);
 
         s_ptr<FILE> file;
@@ -62,7 +62,7 @@ namespace zf {
         return static_cast<t_i32>(file_size);
     }
 
-    t_b8 LoadFileContents(const s_str_rdonly path, s_mem_arena &contents_mem_arena, s_mem_arena &temp_mem_arena, s_array<t_u8> &o_contents, const t_b8 add_terminator) {
+    t_b8 LoadFileContents(const s_str_rdonly path, c_mem_arena &contents_mem_arena, c_mem_arena &temp_mem_arena, c_array_mut<t_u8> &o_contents, const t_b8 add_terminator) {
         s_stream stream;
 
         if (!OpenFile(path, ek_file_access_mode_read, temp_mem_arena, stream)) {
@@ -78,7 +78,7 @@ namespace zf {
         return stream.ReadItemsIntoArray(o_contents, file_size);
     }
 
-    t_b8 CreateDirectory(const s_str_rdonly path, s_mem_arena &temp_mem_arena, const s_ptr<e_directory_creation_result> o_creation_res) {
+    t_b8 CreateDirectory(const s_str_rdonly path, c_mem_arena &temp_mem_arena, const s_ptr<e_directory_creation_result> o_creation_res) {
         if (o_creation_res) {
             *o_creation_res = ek_directory_creation_result_success;
         }
@@ -119,7 +119,7 @@ namespace zf {
         return false;
     }
 
-    t_b8 CreateDirectoryAndParents(const s_str_rdonly path, s_mem_arena &temp_mem_arena, const s_ptr<e_directory_creation_result> o_dir_creation_res) {
+    t_b8 CreateDirectoryAndParents(const s_str_rdonly path, c_mem_arena &temp_mem_arena, const s_ptr<e_directory_creation_result> o_dir_creation_res) {
         if (o_dir_creation_res) {
             *o_dir_creation_res = ek_directory_creation_result_success;
         }
@@ -159,7 +159,7 @@ namespace zf {
         return true;
     }
 
-    t_b8 CreateFileAndParentDirs(const s_str_rdonly path, s_mem_arena &temp_mem_arena, const s_ptr<e_directory_creation_result> o_dir_creation_res) {
+    t_b8 CreateFileAndParentDirs(const s_str_rdonly path, c_mem_arena &temp_mem_arena, const s_ptr<e_directory_creation_result> o_dir_creation_res) {
         if (o_dir_creation_res) {
             *o_dir_creation_res = ek_directory_creation_result_success;
         }
@@ -187,7 +187,7 @@ namespace zf {
         return true;
     }
 
-    e_path_type CheckPathType(const s_str_rdonly path, s_mem_arena &temp_mem_arena) {
+    e_path_type CheckPathType(const s_str_rdonly path, c_mem_arena &temp_mem_arena) {
         const s_str_rdonly path_terminated = AllocStrCloneButAddTerminator(path, temp_mem_arena);
 
         struct stat info;
@@ -203,7 +203,7 @@ namespace zf {
         return ek_path_type_file;
     }
 
-    s_str LoadExecutableDir(s_mem_arena &mem_arena) {
+    s_str LoadExecutableDir(c_mem_arena &mem_arena) {
 #if defined(ZF_PLATFORM_WINDOWS)
         s_static_array<char, MAX_PATH> buf;
 

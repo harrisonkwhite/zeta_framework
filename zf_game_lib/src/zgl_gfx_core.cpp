@@ -61,7 +61,7 @@ namespace zf {
         }
     };
 
-    static bgfx::ProgramHandle CreateBGFXShaderProg(const s_array_rdonly<t_u8> vert_shader_bin, const s_array_rdonly<t_u8> frag_shader_bin);
+    static bgfx::ProgramHandle CreateBGFXShaderProg(const c_array_rdonly<t_u8> vert_shader_bin, const c_array_rdonly<t_u8> frag_shader_bin);
     static s_ptr<s_gfx_resource> PushGFXResource(const e_gfx_resource_type type, s_gfx_resource_arena &arena);
 
     extern const t_u8 g_batch_triangle_vert_shader_default_src_raw[];
@@ -92,13 +92,13 @@ namespace zf {
         } state;
     };
 
-    static s_rendering_basis &CreateRenderingBasis(s_mem_arena &mem_arena, s_gfx_resource_arena &resource_arena);
+    static s_rendering_basis &CreateRenderingBasis(c_mem_arena &mem_arena, s_gfx_resource_arena &resource_arena);
     static void Flush(s_rendering_context &rc);
 
     // ============================================================
     // @section: General
     // ============================================================
-    s_rendering_basis &StartupGFXModule(s_mem_arena &mem_arena) {
+    s_rendering_basis &StartupGFXModule(c_mem_arena &mem_arena) {
         ZF_ASSERT(g_state.state == ek_state_uninitted);
 
         g_state.state = ek_state_initted;
@@ -146,7 +146,7 @@ namespace zf {
     // ============================================================
     // @section: Resources
     // ============================================================
-    static bgfx::ProgramHandle CreateBGFXShaderProg(const s_array_rdonly<t_u8> vert_shader_bin, const s_array_rdonly<t_u8> frag_shader_bin) {
+    static bgfx::ProgramHandle CreateBGFXShaderProg(const c_array_rdonly<t_u8> vert_shader_bin, const c_array_rdonly<t_u8> frag_shader_bin) {
         const bgfx::Memory *const vert_shader_bgfx_mem = bgfx::makeRef(vert_shader_bin.Ptr(), static_cast<uint32_t>(vert_shader_bin.Len()));
         const bgfx::ShaderHandle vert_shader_bgfx_hdl = bgfx::createShader(vert_shader_bgfx_mem);
 
@@ -347,7 +347,7 @@ namespace zf {
         return resource;
     }
 
-    s_ptr<s_gfx_resource> CreateShaderProgResource(const s_array_rdonly<t_u8> vert_shader_compiled_bin, const s_array_rdonly<t_u8> frag_shader_compiled_bin, s_gfx_resource_arena &arena) {
+    s_ptr<s_gfx_resource> CreateShaderProgResource(const c_array_rdonly<t_u8> vert_shader_compiled_bin, const c_array_rdonly<t_u8> frag_shader_compiled_bin, s_gfx_resource_arena &arena) {
         const bgfx::Memory *const vert_shader_bgfx_mem = bgfx::makeRef(vert_shader_compiled_bin.Ptr(), static_cast<uint32_t>(vert_shader_compiled_bin.Len()));
         const bgfx::ShaderHandle vert_shader_bgfx_hdl = bgfx::createShader(vert_shader_bgfx_mem);
 
@@ -376,7 +376,7 @@ namespace zf {
     // ============================================================
     // @section: Rendering
     // ============================================================
-    static s_rendering_basis &CreateRenderingBasis(s_mem_arena &mem_arena, s_gfx_resource_arena &px_texture_resource_arena) {
+    static s_rendering_basis &CreateRenderingBasis(c_mem_arena &mem_arena, s_gfx_resource_arena &px_texture_resource_arena) {
         bgfx::VertexLayout vert_layout = {};
         vert_layout.begin().add(bgfx::Attrib::Position, 2, bgfx::AttribType::Float).add(bgfx::Attrib::Color0, 4, bgfx::AttribType::Float).add(bgfx::Attrib::TexCoord0, 2, bgfx::AttribType::Float).end();
 
@@ -404,7 +404,7 @@ namespace zf {
         return Alloc<s_rendering_basis>(mem_arena, vert_buf_bgfx_hdl, shader_prog_bgfx_hdl, texture_sampler_uniform_bgfx_hdl, *px_texture);
     }
 
-    s_rendering_context &BeginRendering(const s_rendering_basis &rendering_basis, const s_color_rgb24f clear_col, s_mem_arena &mem_arena) {
+    s_rendering_context &BeginRendering(const s_rendering_basis &rendering_basis, const s_color_rgb24f clear_col, c_mem_arena &mem_arena) {
         ZF_ASSERT(g_state.state == ek_state_initted);
 
         const auto fb_size_cache = WindowFramebufferSizeCache();
@@ -469,7 +469,7 @@ namespace zf {
         rc.state.vert_cnt = 0;
     }
 
-    void RenderTriangles(s_rendering_context &rc, const s_array_rdonly<s_render_triangle> triangles, const s_ptr<const s_gfx_resource> texture) {
+    void RenderTriangles(s_rendering_context &rc, const c_array_rdonly<s_render_triangle> triangles, const s_ptr<const s_gfx_resource> texture) {
         ZF_ASSERT(g_state.state == ek_state_rendering);
 
         if (texture != rc.state.texture) {

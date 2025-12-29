@@ -3,7 +3,7 @@
 #include <cstring>
 
 namespace zf {
-    void s_mem_arena::Release() {
+    void c_mem_arena::Release() {
         const auto f = [](const auto self, const s_ptr<s_block> block) {
             if (!block) {
                 return;
@@ -17,12 +17,10 @@ namespace zf {
 
         f(f, m_blocks_head);
 
-        m_blocks_head = nullptr;
-        m_block_cur = nullptr;
-        m_block_cur_offs = 0;
+        *this = {};
     }
 
-    s_ptr<void> s_mem_arena::Push(const t_i32 size, const t_i32 alignment) {
+    s_ptr<void> c_mem_arena::Push(const t_i32 size, const t_i32 alignment) {
         ZF_ASSERT(size > 0 && IsAlignmentValid(alignment));
 
         if (!m_blocks_head) {
@@ -50,12 +48,7 @@ namespace zf {
         return static_cast<s_ptr<t_u8>>(m_block_cur->buf) + offs_aligned;
     }
 
-    void s_mem_arena::Reset() {
-        m_block_cur = m_blocks_head;
-        m_block_cur_offs = 0;
-    }
-
-    s_ptr<s_mem_arena::s_block> s_mem_arena::CreateBlock(const t_i32 buf_size) {
+    s_ptr<c_mem_arena::s_block> c_mem_arena::CreateBlock(const t_i32 buf_size) {
         ZF_ASSERT(buf_size > 0);
 
         const auto res = static_cast<s_block *>(malloc(ZF_SIZE_OF(s_block)));

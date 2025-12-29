@@ -1,7 +1,7 @@
 #include <zcl/zcl_math.h>
 
 namespace zf {
-    s_rect_f CalcSpanningRect(const s_array<s_rect_f> rects) {
+    s_rect_f CalcSpanningRect(const c_array_mut<s_rect_f> rects) {
         ZF_ASSERT(rects.Len() > 0);
 
         auto min_left = rects[0].Left();
@@ -19,7 +19,7 @@ namespace zf {
         return {min_left, min_top, max_right - min_left, max_bottom - min_top};
     }
 
-    s_rect_i CalcSpanningRect(const s_array<s_rect_i> rects) {
+    s_rect_i CalcSpanningRect(const c_array_mut<s_rect_i> rects) {
         ZF_ASSERT(rects.Len() > 0);
 
         auto min_left = rects[0].Left();

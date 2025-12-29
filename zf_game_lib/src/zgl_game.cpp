@@ -17,10 +17,10 @@ namespace zf {
         //
         // Initialisation
         //
-        s_mem_arena perm_mem_arena = {};
+        c_mem_arena perm_mem_arena;
         ZF_DEFER({ perm_mem_arena.Release(); });
 
-        s_mem_arena temp_mem_arena = {};
+        c_mem_arena temp_mem_arena;
         ZF_DEFER({ temp_mem_arena.Release(); });
 
         StartupPlatformModule(g_init_window_size);
@@ -54,7 +54,7 @@ namespace zf {
         t_f64 frame_dur_accum = 0.0;
 
         while (!ShouldWindowClose()) {
-            temp_mem_arena.Reset();
+            temp_mem_arena.Rewind();
 
             PollOSEvents(input_state);
 

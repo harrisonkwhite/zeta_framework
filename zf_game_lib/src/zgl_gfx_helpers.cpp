@@ -36,9 +36,9 @@ namespace zf {
         RenderTriangles(rendering_context, triangles.ToNonstatic(), &texture);
     }
 
-    s_font CreateFontFromRaw(const s_str_rdonly file_path, const t_i32 height, t_code_pt_bit_vec &code_pts, s_mem_arena &temp_mem_arena, s_gfx_resource_arena &resource_arena) {
+    s_font CreateFontFromRaw(const s_str_rdonly file_path, const t_i32 height, t_code_pt_bit_vec &code_pts, c_mem_arena &temp_mem_arena, s_gfx_resource_arena &resource_arena) {
         s_font_arrangement arrangement;
-        s_array<t_font_atlas_rgba> atlas_rgbas;
+        c_array_mut<t_font_atlas_rgba> atlas_rgbas;
 
         if (!zf::LoadFontDataFromRaw(file_path, height, code_pts, *resource_arena.mem_arena, temp_mem_arena, temp_mem_arena, arrangement, atlas_rgbas)) {
             ZF_FATAL();
@@ -56,9 +56,9 @@ namespace zf {
         };
     }
 
-    s_font CreateFontFromPacked(const s_str_rdonly file_path, s_mem_arena &temp_mem_arena, s_gfx_resource_arena &resource_arena) {
+    s_font CreateFontFromPacked(const s_str_rdonly file_path, c_mem_arena &temp_mem_arena, s_gfx_resource_arena &resource_arena) {
         s_font_arrangement arrangement;
-        s_array<t_font_atlas_rgba> atlas_rgbas;
+        c_array_mut<t_font_atlas_rgba> atlas_rgbas;
 
         if (!zf::UnpackFont(file_path, *resource_arena.mem_arena, temp_mem_arena, temp_mem_arena, arrangement, atlas_rgbas)) {
             ZF_FATAL();
@@ -76,7 +76,7 @@ namespace zf {
         };
     }
 
-    s_array<s_v2> CalcStrChrRenderPositions(const s_str_rdonly str, const s_font_arrangement &font_arrangement, const s_v2 pos, const s_v2 alignment, s_mem_arena &mem_arena) {
+    c_array_mut<s_v2> CalcStrChrRenderPositions(const s_str_rdonly str, const s_font_arrangement &font_arrangement, const s_v2 pos, const s_v2 alignment, c_mem_arena &mem_arena) {
         ZF_ASSERT(IsStrValidUTF8(str));
         ZF_ASSERT(IsAlignmentValid(alignment));
 
@@ -172,7 +172,7 @@ namespace zf {
         return positions;
     }
 
-    void RenderStr(s_rendering_context &rendering_context, const s_str_rdonly str, const s_font &font, const s_v2 pos, s_mem_arena &temp_mem_arena, const s_v2 alignment, const s_color_rgba32f blend) {
+    void RenderStr(s_rendering_context &rendering_context, const s_str_rdonly str, const s_font &font, const s_v2 pos, c_mem_arena &temp_mem_arena, const s_v2 alignment, const s_color_rgba32f blend) {
         ZF_ASSERT(IsStrValidUTF8(str));
         ZF_ASSERT(IsAlignmentValid(alignment));
 
@@ -183,7 +183,7 @@ namespace zf {
         const auto &font_arrangement = font.arrangement;
         const auto &font_atlases = font.atlases;
 
-        const s_array<s_v2> chr_positions = CalcStrChrRenderPositions(str, font_arrangement, pos, alignment, temp_mem_arena);
+        const c_array_mut<s_v2> chr_positions = CalcStrChrRenderPositions(str, font_arrangement, pos, alignment, temp_mem_arena);
 
         t_i32 chr_index = 0;
 

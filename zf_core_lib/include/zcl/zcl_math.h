@@ -62,6 +62,9 @@ namespace zf {
         t_f32 x;
         t_f32 y;
 
+        constexpr s_v2() = default;
+        constexpr s_v2(const t_f32 x, const t_f32 y) : x(x), y(y) {}
+
         constexpr s_v2 operator+(const s_v2 other) const {
             return {x + other.x, y + other.y};
         }
@@ -128,6 +131,9 @@ namespace zf {
         t_i32 x;
         t_i32 y;
 
+        constexpr s_v2_i() = default;
+        constexpr s_v2_i(const t_i32 x, const t_i32 y) : x(x), y(y) {}
+
         constexpr s_v2_i operator+(const s_v2_i other) const {
             return {x + other.x, y + other.y};
         }
@@ -177,6 +183,9 @@ namespace zf {
         t_f32 x;
         t_f32 y;
         t_f32 z;
+
+        constexpr s_v3() = default;
+        constexpr s_v3(const t_f32 x, const t_f32 y, const t_f32 z) : x(x), y(y), z(z) {}
     };
 
     struct s_v4 {
@@ -184,6 +193,9 @@ namespace zf {
         t_f32 y;
         t_f32 z;
         t_f32 w;
+
+        constexpr s_v4() = default;
+        constexpr s_v4(const t_f32 x, const t_f32 y, const t_f32 z, const t_f32 w) : x(x), y(y), z(z), w(w) {}
     };
 
     // ============================================================
@@ -198,6 +210,10 @@ namespace zf {
         t_f32 y;
         t_f32 width;
         t_f32 height;
+
+        constexpr s_rect_f() = default;
+        constexpr s_rect_f(const t_f32 x, const t_f32 y, const t_f32 width, const t_f32 height) : x(x), y(y), width(width), height(height) {}
+        constexpr s_rect_f(const s_v2 pos, const s_v2 size) : x(pos.x), y(pos.y), width(size.x), height(size.y) {}
 
         constexpr s_v2 Pos() const { return {x, y}; }
         constexpr s_v2 Size() const { return {width, height}; }
@@ -236,6 +252,10 @@ namespace zf {
         t_i32 y;
         t_i32 width;
         t_i32 height;
+
+        constexpr s_rect_i() = default;
+        constexpr s_rect_i(const t_i32 x, const t_i32 y, const t_i32 width, const t_i32 height) : x(x), y(y), width(width), height(height) {}
+        constexpr s_rect_i(const s_v2_i pos, const s_v2_i size) : x(pos.x), y(pos.y), width(size.x), height(size.y) {}
 
         constexpr s_v2_i Pos() const { return {x, y}; }
         constexpr s_v2_i Size() const { return {width, height}; }
@@ -285,8 +305,8 @@ namespace zf {
         return static_cast<s_rect_i>(*this);
     }
 
-    s_rect_f CalcSpanningRect(const s_array<s_rect_f> rects);
-    s_rect_i CalcSpanningRect(const s_array<s_rect_i> rects);
+    s_rect_f CalcSpanningRect(const c_array_mut<s_rect_f> rects);
+    s_rect_i CalcSpanningRect(const c_array_mut<s_rect_i> rects);
 
     // ============================================================
 

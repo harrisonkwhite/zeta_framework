@@ -24,7 +24,7 @@ namespace zf {
     public:
         s_stream() = default;
 
-        s_stream(const s_array<t_u8> bytes, const e_stream_mode mode, const t_i32 pos = 0)
+        s_stream(const c_array_mut<t_u8> bytes, const e_stream_mode mode, const t_i32 pos = 0)
             : m_type(ek_stream_type_mem), m_type_data({.mem = {.bytes = bytes, .pos = pos}}), m_mode(mode) { ZF_ASSERT(pos >= 0 && pos <= bytes.Len()); }
 
         s_stream(const s_ptr<FILE> file, const e_stream_mode mode)
@@ -40,7 +40,7 @@ namespace zf {
             return m_type_data.mem.pos;
         }
 
-        s_array<t_u8> Written() const {
+        c_array_mut<t_u8> Written() const {
             ZF_ASSERT(m_type == ek_stream_type_mem);
             return m_type_data.mem.bytes.Slice(0, m_type_data.mem.pos);
         }
@@ -109,7 +109,7 @@ namespace zf {
             }
         }
 
-        template <c_nonstatic_array_mut tp_type>
+        template <co_array_nonstatic_mut tp_type>
         [[nodiscard]] t_b8 ReadItemsIntoArray(const tp_type arr, const t_i32 cnt) {
             ZF_ASSERT(m_mode == ek_stream_mode_read);
             ZF_ASSERT(cnt >= 0 && cnt <= arr.Len());
@@ -144,7 +144,7 @@ namespace zf {
             }
         }
 
-        template <c_nonstatic_array tp_type>
+        template <co_array_nonstatic tp_type>
         [[nodiscard]] t_b8 WriteItemsOfArray(const tp_type arr) {
             ZF_ASSERT(m_mode == ek_stream_mode_write);
 
@@ -183,12 +183,12 @@ namespace zf {
 
         union {
             struct {
-                s_array<t_u8> bytes;
+                c_array_mut<t_u8> bytes;
                 t_i32 pos;
             } mem;
 
             struct {
-                s_array<char> bytes;
+                c_array_mut<char> bytes;
                 t_i32 pos;
             } str;
 
@@ -204,7 +204,7 @@ namespace zf {
     inline s_stream StdOut() { return {stdout, ek_stream_mode_write}; }
     inline s_stream StdError() { return {stderr, ek_stream_mode_write}; }
 
-    template <c_nonstatic_array tp_type>
+    template <co_array_nonstatic tp_type>
     [[nodiscard]] t_b8 SerializeArray(s_stream &stream, const tp_type arr) {
         if (!stream.WriteItem(arr.Len())) {
             return false;
@@ -218,7 +218,7 @@ namespace zf {
     }
 
     template <typename tp_type>
-    [[nodiscard]] t_b8 DeserializeArray(s_stream &stream, s_mem_arena &arr_mem_arena, s_array<tp_type> &o_arr) {
+    [[nodiscard]] t_b8 DeserializeArray(s_stream &stream, c_mem_arena &arr_mem_arena, c_array_mut<tp_type> &o_arr) {
         t_i32 len;
 
         if (!stream.ReadItem(len)) {
@@ -250,7 +250,7 @@ namespace zf {
         return true;
     }
 
-    [[nodiscard]] inline t_b8 DeserializeBitVec(s_stream &stream, s_mem_arena &bv_mem_arena, c_bit_vec_mut &o_bv) {
+    [[nodiscard]] inline t_b8 DeserializeBitVec(s_stream &stream, c_mem_arena &bv_mem_arena, c_bit_vec_mut &o_bv) {
         t_i32 bit_cnt;
 
         if (!stream.ReadItem(bit_cnt)) {
@@ -279,10 +279,10 @@ namespace zf {
         ek_file_access_mode_append
     };
 
-    [[nodiscard]] t_b8 OpenFile(const s_str_rdonly file_path, const e_file_access_mode mode, s_mem_arena &temp_mem_arena, s_stream &o_stream);
+    [[nodiscard]] t_b8 OpenFile(const s_str_rdonly file_path, const e_file_access_mode mode, c_mem_arena &temp_mem_arena, s_stream &o_stream);
     void CloseFile(s_stream &stream);
     t_i32 CalcFileSize(s_stream &stream);
-    [[nodiscard]] t_b8 LoadFileContents(const s_str_rdonly file_path, s_mem_arena &contents_mem_arena, s_mem_arena &temp_mem_arena, s_array<t_u8> &o_contents, const t_b8 add_terminator = false);
+    [[nodiscard]] t_b8 LoadFileContents(const s_str_rdonly file_path, c_mem_arena &contents_mem_arena, c_mem_arena &temp_mem_arena, c_array_mut<t_u8> &o_contents, const t_b8 add_terminator = false);
 
     enum e_directory_creation_result : t_i32 {
         ek_directory_creation_result_success,
@@ -292,9 +292,9 @@ namespace zf {
         ek_directory_creation_result_unknown_err
     };
 
-    [[nodiscard]] t_b8 CreateDirectory(const s_str_rdonly path, s_mem_arena &temp_mem_arena, const s_ptr<e_directory_creation_result> o_creation_res = nullptr); // This DOES NOT create non-existent parent directories.
-    [[nodiscard]] t_b8 CreateDirectoryAndParents(const s_str_rdonly path, s_mem_arena &temp_mem_arena, const s_ptr<e_directory_creation_result> o_dir_creation_res = nullptr);
-    [[nodiscard]] t_b8 CreateFileAndParentDirs(const s_str_rdonly path, s_mem_arena &temp_mem_arena, const s_ptr<e_directory_creation_result> o_dir_creation_res = nullptr);
+    [[nodiscard]] t_b8 CreateDirectory(const s_str_rdonly path, c_mem_arena &temp_mem_arena, const s_ptr<e_directory_creation_result> o_creation_res = nullptr); // This DOES NOT create non-existent parent directories.
+    [[nodiscard]] t_b8 CreateDirectoryAndParents(const s_str_rdonly path, c_mem_arena &temp_mem_arena, const s_ptr<e_directory_creation_result> o_dir_creation_res = nullptr);
+    [[nodiscard]] t_b8 CreateFileAndParentDirs(const s_str_rdonly path, c_mem_arena &temp_mem_arena, const s_ptr<e_directory_creation_result> o_dir_creation_res = nullptr);
 
     enum e_path_type : t_i32 {
         ek_path_type_not_found,
@@ -302,9 +302,9 @@ namespace zf {
         ek_path_type_directory
     };
 
-    e_path_type CheckPathType(const s_str_rdonly path, s_mem_arena &temp_mem_arena);
+    e_path_type CheckPathType(const s_str_rdonly path, c_mem_arena &temp_mem_arena);
 
-    s_str LoadExecutableDir(s_mem_arena &mem_arena);
+    s_str LoadExecutableDir(c_mem_arena &mem_arena);
 
     // ============================================================
     // @section: Printing
@@ -575,7 +575,7 @@ namespace zf {
     // @subsection: Array Printing
     // ========================================
     template <typename tp_arr_type>
-    concept c_formattable_array = c_nonstatic_array<tp_arr_type>
+    concept c_formattable_array = co_array_nonstatic<tp_arr_type>
         && requires(const typename tp_arr_type::t_elem &v) { { FormatDefault(v) } -> c_fmt; };
 
     template <c_formattable_array tp_arr_type>
