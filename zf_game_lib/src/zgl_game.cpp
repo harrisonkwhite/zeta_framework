@@ -31,8 +31,10 @@ namespace zf {
         s_rendering_basis *const rendering_basis = StartupGFXModule(&perm_mem_arena);
         ZF_DEFER({ ShutdownGFXModule(rendering_basis); });
 
+#if 0
         StartupAudioModule();
         ZF_DEFER({ ShutdownAudioModule(); });
+#endif
 
         init_func({
             .perm_mem_arena = &perm_mem_arena,
@@ -67,7 +69,9 @@ namespace zf {
 
             // Once enough time has passed (i.e. the time accumulator has reached the tick interval), run at least a single tick and update the display.
             if (frame_dur_accum >= targ_tick_interval) {
+#if 0
                 ProcFinishedSounds();
+#endif
 
                 do {
                     tick_func({

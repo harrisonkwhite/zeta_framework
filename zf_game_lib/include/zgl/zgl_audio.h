@@ -3,6 +3,7 @@
 #include <zcl.h>
 
 namespace zf {
+#if 0
     void StartupAudioModule();
     void ShutdownAudioModule();
 
@@ -55,4 +56,5 @@ namespace zf {
     t_b8 IsSoundPlaying(const s_sound_id id);
 
     void ProcFinishedSounds();
+#endif
 }

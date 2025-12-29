@@ -3,13 +3,14 @@
 #include <miniaudio.h>
 
 namespace zf {
+#if 0
     struct s_sound_type {
         const s_sound_type_arena &group;
         t_i32 group_version = 0;
 
         s_sound_data snd_data = {};
 
-        s_ptr<s_sound_type> next = nullptr;
+        s_sound_type *next = nullptr;
 
         s_sound_type(s_sound_type_arena &group, const t_i32 group_version) : group(group), group_version(group_version) {}
     };
@@ -24,7 +25,7 @@ namespace zf {
         struct {
             s_static_array<ma_sound, g_snd_inst_limit> ma_snds;
             s_static_array<ma_audio_buffer_ref, g_snd_inst_limit> ma_buf_refs;
-            s_static_array<s_ptr<const s_sound_type>, g_snd_inst_limit> types;
+            s_static_array<const s_sound_type *, g_snd_inst_limit> types;
             s_static_bit_vec<g_snd_inst_limit> activity;
             s_static_array<t_i32, g_snd_inst_limit> versions;
         } snd_insts = {};
@@ -199,4 +200,5 @@ namespace zf {
             }
         }
     }
+#endif
 }

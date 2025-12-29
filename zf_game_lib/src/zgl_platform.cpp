@@ -17,15 +17,15 @@
 
 namespace zf {
     struct {
-        t_b8 initted = false;
+        t_b8 initted;
 
-        s_ptr<GLFWwindow> glfw_window = nullptr;
+        GLFWwindow *glfw_window;
 
-        s_v2_i framebuffer_size_cache = {};
+        s_v2_i framebuffer_size_cache;
 
-        t_b8 fullscreen_active = false;
-        s_v2_i prefullscreen_pos = {};
-        s_v2_i prefullscreen_size = {};
+        t_b8 fullscreen_active;
+        s_v2_i prefullscreen_pos;
+        s_v2_i prefullscreen_size;
     } g_state;
 
     void StartupPlatformModule(const s_v2_i init_window_size) {
@@ -51,7 +51,7 @@ namespace zf {
 
         {
             const auto fb_size_callback =
-                [](GLFWwindow *window, int width, int height) {
+                [](GLFWwindow *const window, const t_i32 width, const t_i32 height) {
                     if (width > 0 && height > 0) {
                         g_state.framebuffer_size_cache = {width, height};
                     }
@@ -62,8 +62,8 @@ namespace zf {
 
         {
             const auto scroll_callback =
-                [](GLFWwindow *window, double offs_x, double offs_y) {
-                    const s_ptr<s_input_state> input_state = static_cast<s_input_state *>(glfwGetWindowUserPointer(window));
+                [](GLFWwindow *const window, const t_f64 offs_x, const t_f64 offs_y) {
+                    const auto input_state = static_cast<s_input_state *>(glfwGetWindowUserPointer(window));
                     input_state->events.scroll += s_v2(static_cast<t_f32>(offs_x), static_cast<t_f32>(offs_y));
                 };
 
@@ -226,7 +226,7 @@ namespace zf {
         }
     }
 
-    s_ptr<void> NativeWindowHandle() {
+    void *NativeWindowHandle() {
         ZF_ASSERT(g_state.initted);
 
 #if defined(ZF_PLATFORM_WINDOWS)
@@ -238,7 +238,7 @@ namespace zf {
 #endif
     }
 
-    s_ptr<void> NativeDisplayHandle() {
+    void *NativeDisplayHandle() {
         ZF_ASSERT(g_state.initted);
 
 #if defined(ZF_PLATFORM_WINDOWS)
@@ -299,7 +299,7 @@ namespace zf {
         return g_state.fullscreen_active;
     }
 
-    static s_ptr<GLFWmonitor> FindGLFWMonitorOfWindow(const s_ptr<GLFWwindow> window) {
+    static GLFWmonitor *FindGLFWMonitorOfWindow(GLFWwindow *const window) {
         s_v2_i window_pos;
         glfwGetWindowPos(window, &window_pos.x, &window_pos.y);
 
@@ -322,7 +322,7 @@ namespace zf {
             s_v2 monitor_scale;
             glfwGetMonitorContentScale(monitors[i], &monitor_scale.x, &monitor_scale.y);
 
-            const s_ptr<const GLFWvidmode> mode = glfwGetVideoMode(monitors[i]);
+            const GLFWvidmode *const mode = glfwGetVideoMode(monitors[i]);
 
             const s_rect_i monitor_rect = {
                 monitor_pos.x,
@@ -355,7 +355,7 @@ namespace zf {
             return {};
         }
 
-        const s_ptr<const GLFWvidmode> mode = glfwGetVideoMode(monitor);
+        const GLFWvidmode *const mode = glfwGetVideoMode(monitor);
         return {mode->width, mode->height};
     }
 
@@ -368,7 +368,7 @@ namespace zf {
             return {};
         }
 
-        const s_ptr<const GLFWvidmode> mode = glfwGetVideoMode(monitor);
+        const GLFWvidmode *const mode = glfwGetVideoMode(monitor);
 
         s_v2 monitor_scale = {};
         glfwGetMonitorContentScale(monitor, &monitor_scale.x, &monitor_scale.y);
@@ -396,7 +396,7 @@ namespace zf {
                 return;
             }
 
-            const s_ptr<const GLFWvidmode> mode = glfwGetVideoMode(monitor);
+            const GLFWvidmode *const mode = glfwGetVideoMode(monitor);
             glfwSetWindowMonitor(g_state.glfw_window, monitor, 0, 0, mode->width, mode->height, 0);
         } else {
             glfwSetWindowMonitor(g_state.glfw_window, nullptr, g_state.prefullscreen_pos.x, g_state.prefullscreen_pos.y, g_state.prefullscreen_size.x, g_state.prefullscreen_size.y, 0);
