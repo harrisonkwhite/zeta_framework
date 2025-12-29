@@ -325,10 +325,10 @@ namespace zf {
 #define ZF_MAX(a, b) ((a) >= (b) ? (a) : (b))
 
     template <typename tp_type>
-    constexpr void Swap(tp_type &a, tp_type &b) {
-        const tp_type temp = a;
-        a = b;
-        b = temp;
+    constexpr void Swap(tp_type *const a, tp_type *const b) {
+        const tp_type temp = *a;
+        *a = *b;
+        *b = temp;
     }
 
     template <c_numeric tp_type>

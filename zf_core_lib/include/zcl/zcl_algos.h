@@ -6,7 +6,7 @@ namespace zf {
     template <co_array_nonstatic_mut tp_arr_type>
     constexpr void Reverse(const tp_arr_type arr) {
         for (t_i32 i = 0; i < arr.Len() / 2; i++) {
-            Swap(arr[i], arr[arr.Len() - 1 - i]);
+            Swap(&arr[i], &arr[arr.Len() - 1 - i]);
         }
     }
 
@@ -40,11 +40,11 @@ namespace zf {
         }
 
         const auto &mid = arr[arr.Len() / 2];
-        const auto comp = comparator(elem, mid);
+        const auto comp_res = comparator(elem, mid);
 
-        if (comp == 0) {
+        if (comp_res == 0) {
             return true;
-        } else if (comp < 0) {
+        } else if (comp_res < 0) {
             return RunBinarySearch(arr.Slice(0, arr.Len() / 2), elem);
         } else {
             return RunBinarySearch(arr.SliceFrom((arr.Len() / 2) + 1), elem);
@@ -79,7 +79,7 @@ namespace zf {
 
             for (t_i32 i = 0; i < arr.Len() - 1; i++) {
                 if (comparator(arr[i], arr[i + 1]) > 0) {
-                    Swap(arr[i], arr[i + 1]);
+                    Swap(&arr[i], &arr[i + 1]);
                     sorted = false;
                 }
             }
@@ -114,15 +114,15 @@ namespace zf {
         ZF_ASSERT(comparator);
 
         for (t_i32 i = 0; i < arr.Len() - 1; i++) {
-            auto &min = arr[i];
+            const auto min = &arr[i];
 
             for (t_i32 j = i + 1; j < arr.Len(); j++) {
-                if (comparator(arr[j], min) < 0) {
-                    min = arr[j];
+                if (comparator(arr[j], *min) < 0) {
+                    *min = arr[j];
                 }
             }
 
-            Swap(arr[i], min);
+            Swap(&arr[i], &min);
         }
     }
 
@@ -182,7 +182,7 @@ namespace zf {
 
         if (arr.Len() == 2) {
             if (comparator(arr[0], arr[1]) > 0) {
-                Swap(arr[0], arr[1]);
+                Swap(&arr[0], &arr[1]);
             }
 
             return;
@@ -218,7 +218,7 @@ namespace zf {
         }();
 
         // Swap it out to the end to get it out of the way.
-        Swap(arr[pivot_index], arr[arr.Len() - 1]);
+        Swap(&arr[pivot_index], &arr[arr.Len() - 1]);
 
         // Move smaller elements to the left, and decide the final pivot position.
         t_i32 left_sec_last_index = -1;
@@ -227,7 +227,7 @@ namespace zf {
             if (comparator(arr[i], arr[arr.Len() - 1]) <= 0) {
                 // This element is not greater than the pivot, so swap it to the left section.
                 left_sec_last_index++;
-                Swap(arr[left_sec_last_index], arr[i]);
+                Swap(&arr[left_sec_last_index], &arr[i]);
             }
         }
 
