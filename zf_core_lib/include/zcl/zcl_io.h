@@ -136,7 +136,7 @@ namespace zf {
             }
 
             case ek_stream_type_file:
-                return static_cast<t_i32>(fread(arr.Ptr().Raw(), sizeof(arr[0]), static_cast<size_t>(cnt), m_type_data.file.file)) == cnt;
+                return static_cast<t_i32>(fread(arr.Ptr().raw, sizeof(arr[0]), static_cast<size_t>(cnt), m_type_data.file.file)) == cnt;
 
             default:
                 ZF_ASSERT(false);
@@ -170,7 +170,7 @@ namespace zf {
             }
 
             case ek_stream_type_file:
-                return static_cast<t_i32>(fwrite(arr.Ptr().Raw(), sizeof(arr[0]), static_cast<size_t>(arr.Len()), m_type_data.file.file)) == arr.Len();
+                return static_cast<t_i32>(fwrite(arr.Ptr().raw, sizeof(arr[0]), static_cast<size_t>(arr.Len()), m_type_data.file.file)) == arr.Len();
 
             default:
                 ZF_ASSERT(false);
@@ -238,7 +238,7 @@ namespace zf {
         return true;
     }
 
-    [[nodiscard]] inline t_b8 SerializeBitVec(s_stream &stream, const s_bit_vec_rdonly bv) {
+    [[nodiscard]] inline t_b8 SerializeBitVec(s_stream &stream, const c_bit_vec_rdonly bv) {
         if (!stream.WriteItem(bv.BitCount())) {
             return false;
         }
@@ -250,7 +250,7 @@ namespace zf {
         return true;
     }
 
-    [[nodiscard]] inline t_b8 DeserializeBitVec(s_stream &stream, s_mem_arena &bv_mem_arena, s_bit_vec &o_bv) {
+    [[nodiscard]] inline t_b8 DeserializeBitVec(s_stream &stream, s_mem_arena &bv_mem_arena, c_bit_vec_mut &o_bv) {
         t_i32 bit_cnt;
 
         if (!stream.ReadItem(bit_cnt)) {
@@ -468,7 +468,7 @@ namespace zf {
 
     template <typename tp_type>
     inline s_hex_fmt<t_uintptr> FormatHex(const s_ptr<tp_type> ptr, const e_hex_fmt_flags flags = {}, const t_i32 min_digits = g_hex_fmt_digit_cnt_min) {
-        return {reinterpret_cast<t_uintptr>(ptr.Raw()), flags, min_digits};
+        return {reinterpret_cast<t_uintptr>(ptr.raw), flags, min_digits};
     }
 
     template <typename tp_type>
@@ -641,12 +641,12 @@ namespace zf {
     struct s_bit_vec_fmt {
         using t_fmt_tag = void;
 
-        s_bit_vec_rdonly val = {};
+        c_bit_vec_rdonly val = {};
         e_bit_vec_fmt_style style = {};
     };
 
-    inline s_bit_vec_fmt FormatBitVec(const s_bit_vec_rdonly &val, const e_bit_vec_fmt_style style) { return {val, style}; }
-    inline s_bit_vec_fmt FormatDefault(const s_bit_vec_rdonly &val) { return FormatBitVec(val, ek_bit_vec_fmt_style_seq); }
+    inline s_bit_vec_fmt FormatBitVec(const c_bit_vec_rdonly &val, const e_bit_vec_fmt_style style) { return {val, style}; }
+    inline s_bit_vec_fmt FormatDefault(const c_bit_vec_rdonly &val) { return FormatBitVec(val, ek_bit_vec_fmt_style_seq); }
 
     inline t_b8 PrintType(s_stream &stream, const s_bit_vec_fmt fmt) {
         const auto print_bit = [&](const t_i32 bit_index) {

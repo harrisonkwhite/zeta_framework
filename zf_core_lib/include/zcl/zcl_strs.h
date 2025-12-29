@@ -47,7 +47,7 @@ namespace zf {
 
     constexpr t_i32 CalcCstrLen(const char *const cstr) {
         t_i32 len = 0;
-        for (len = 0; cstr[len]; len++) {}
+        for (; cstr[len]; len++) {}
         return len;
     }
 
@@ -63,7 +63,6 @@ namespace zf {
     }
 
     struct s_cstr_literal {
-    public:
         s_cstr_literal() = default;
 
         template <t_i32 tp_raw_size>
@@ -79,48 +78,48 @@ namespace zf {
             }
         }
 
-        constexpr s_array_rdonly<char> Buf() const {
+        s_array_rdonly<char> Buf() const {
             return buf;
         }
 
     private:
-        s_array_rdonly<char> buf = {};
+        s_array_rdonly<char> buf;
     };
 
     struct s_str_rdonly {
         s_array_rdonly<t_u8> bytes;
 
-        constexpr s_str_rdonly() = default;
-        constexpr s_str_rdonly(const s_array_rdonly<t_u8> bytes) : bytes(bytes) {}
+        s_str_rdonly() = default;
+        s_str_rdonly(const s_array_rdonly<t_u8> bytes) : bytes(bytes) {}
 
         // This very intentionally drops the terminator.
-        s_str_rdonly(const s_cstr_literal lit) : bytes({reinterpret_cast<const t_u8 *>(lit.Buf().Ptr().Raw()), lit.Buf().Len() - 1}) {}
+        s_str_rdonly(const s_cstr_literal lit) : bytes({reinterpret_cast<const t_u8 *>(lit.Buf().Ptr().raw), lit.Buf().Len() - 1}) {}
 
         // Requires that there is a terminating byte somewhere.
         const char *AsCstr() const {
             ZF_REQUIRE(AreBytesTerminated(bytes));
-            return reinterpret_cast<const char *>(bytes.Ptr().Raw());
+            return reinterpret_cast<const char *>(bytes.Ptr().raw);
         }
     };
 
     struct s_str {
-        s_array<t_u8> bytes;
+        s_array<t_u8> bytes = {};
 
-        constexpr s_str() = default;
-        constexpr s_str(const s_array<t_u8> bytes) : bytes(bytes) {}
+        s_str() = default;
+        s_str(const s_array<t_u8> bytes) : bytes(bytes) {}
 
-        constexpr operator s_str_rdonly() const {
+        operator s_str_rdonly() const {
             return {bytes};
         }
 
         // Requires that there is a terminating byte somewhere.
         char *AsCstr() const {
             ZF_REQUIRE(AreBytesTerminated(bytes));
-            return reinterpret_cast<char *>(bytes.Ptr().Raw());
+            return reinterpret_cast<char *>(bytes.Ptr().raw);
         }
     };
 
-    constexpr t_bin_comparator<s_str_rdonly> g_str_bin_comparator =
+    inline t_bin_comparator<s_str_rdonly> g_str_bin_comparator =
         [](const s_str_rdonly &a, const s_str_rdonly &b) {
             return g_array_bin_comparator<s_array_rdonly<t_u8>>(a.bytes, b.bytes);
         };

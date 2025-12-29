@@ -9,6 +9,7 @@ DerivePointerAlignment: false
 PointerAlignment: Right
 IndentPPDirectives: BeforeHash
 BreakTemplateDeclarations: Leave
+BreakBeforeConceptDeclarations: Allowed
 BreakBeforeBinaryOperators: NonAssignment
 AlignOperands: DontAlign
 ContinuationIndentWidth: 4

@@ -84,7 +84,7 @@ namespace zf {
             return false;
         }
 
-        s_list<t_u8> bin_list = {};
+        s_list_mut<t_u8> bin_list = {};
 
         while (true) {
             s_static_array<t_u8, 4096> buf;

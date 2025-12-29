@@ -47,7 +47,7 @@ namespace zf {
         const auto atlases = AllocArray<s_ptr<s_gfx_resource>>(atlas_rgbas.Len(), *resource_arena.mem_arena);
 
         for (t_i32 i = 0; i < atlas_rgbas.Len(); i++) {
-            atlases[i] = &CreateTextureResource({g_font_atlas_size, atlas_rgbas[i]}, resource_arena);
+            atlases[i] = CreateTextureResource({g_font_atlas_size, atlas_rgbas[i]}, resource_arena);
         }
 
         return {
@@ -67,7 +67,7 @@ namespace zf {
         const auto atlases = AllocArray<s_ptr<s_gfx_resource>>(atlas_rgbas.Len(), *resource_arena.mem_arena);
 
         for (t_i32 i = 0; i < atlas_rgbas.Len(); i++) {
-            atlases[i] = &CreateTextureResource({g_font_atlas_size, atlas_rgbas[i]}, resource_arena);
+            atlases[i] = CreateTextureResource({g_font_atlas_size, atlas_rgbas[i]}, resource_arena);
         }
 
         return {

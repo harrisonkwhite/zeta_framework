@@ -7,20 +7,20 @@ namespace zf {
     // ============================================================
     // @section: General
     // ============================================================
-    constexpr t_i32 Kilobytes(const t_i32 x) {
-        return (static_cast<t_i32>(1) << 10) * x;
+    constexpr t_i32 KilobytesToBytes(const t_i32 n) {
+        return (1 << 10) * n;
     }
 
-    constexpr t_i32 Megabytes(const t_i32 x) {
-        return (static_cast<t_i32>(1) << 20) * x;
+    constexpr t_i32 MegabytesToBytes(const t_i32 n) {
+        return (1 << 20) * n;
     }
 
-    constexpr t_i32 Gigabytes(const t_i32 x) {
-        return (static_cast<t_i32>(1) << 30) * x;
+    constexpr t_i32 GigabytesToBytes(const t_i32 n) {
+        return (1 << 30) * n;
     }
 
-    constexpr t_i32 BitsToBytes(const t_i32 x) {
-        return (x + 7) / 8;
+    constexpr t_i32 BitsToBytes(const t_i32 n) {
+        return (n + 7) / 8;
     }
 
     constexpr t_i32 BytesToBits(const t_i32 x) {
@@ -40,171 +40,150 @@ namespace zf {
 
     template <typename tp_type>
     struct s_ptr {
-    public:
-        constexpr s_ptr() = default;
-        constexpr s_ptr(tp_type *const raw) : m_raw(raw) {}
+        tp_type *raw = nullptr;
 
-        constexpr tp_type *Raw() const {
-            return m_raw;
-        }
+        constexpr s_ptr() = default;
+        constexpr s_ptr(tp_type *const raw) : raw(raw) {}
 
         constexpr operator tp_type *() const {
-            return m_raw;
+            return raw;
         }
 
         constexpr operator t_b8() const {
-            return m_raw != nullptr;
+            return raw != nullptr;
         }
 
         constexpr tp_type &operator*() const {
-            ZF_REQUIRE(m_raw);
-            return *m_raw;
+            ZF_REQUIRE(raw);
+            return *raw;
         }
 
         constexpr tp_type *operator->() const {
-            ZF_REQUIRE(m_raw);
-            return m_raw;
+            ZF_REQUIRE(raw);
+            return raw;
         }
 
         constexpr tp_type &operator[](const t_i32 index) const {
-            ZF_REQUIRE(m_raw);
-            return m_raw[index];
+            ZF_REQUIRE(raw);
+            return raw[index];
         }
 
         constexpr t_b8 operator==(const s_ptr<tp_type> other) const {
-            return m_raw == other.m_raw;
+            return raw == other.raw;
         }
 
         constexpr t_b8 operator!=(const s_ptr<tp_type> other) const {
-            return m_raw != other.m_raw;
+            return raw != other.raw;
         }
 
         constexpr s_ptr<tp_type> operator+(const t_i32 offs) const {
-            return {m_raw + offs};
+            return {raw + offs};
         }
 
         constexpr s_ptr<tp_type> operator-(const t_i32 offs) const {
-            return {m_raw - offs};
+            return {raw - offs};
         }
 
         constexpr s_ptr<tp_type> &operator++() {
-            m_raw++;
+            raw++;
             return *this;
         }
 
         constexpr s_ptr<tp_type> &operator--() {
-            m_raw--;
+            raw--;
             return *this;
         }
 
         constexpr s_ptr<tp_type> &operator+=(const t_i32 offs) {
-            m_raw += offs;
+            raw += offs;
             return *this;
         }
 
         constexpr s_ptr<tp_type> &operator-=(const t_i32 offs) {
-            m_raw -= offs;
+            raw -= offs;
             return *this;
         }
 
         constexpr operator s_ptr<const tp_type>() const
             requires(!s_is_const<tp_type>::g_val)
         {
-            return {m_raw};
+            return {raw};
         }
-
-    private:
-        tp_type *m_raw = nullptr;
     };
 
     template <>
     struct s_ptr<const void> {
     public:
+        const void *raw = nullptr;
+
         constexpr s_ptr() = default;
-        constexpr s_ptr(const void *const raw) : m_raw(raw) {}
+        constexpr s_ptr(const void *const raw) : raw(raw) {}
 
         template <typename tp_type>
-        constexpr s_ptr(const s_ptr<const tp_type> ptr) : m_raw(ptr.Raw()) {}
-
-        constexpr const void *Raw() const {
-            return m_raw;
-        }
+        constexpr s_ptr(const s_ptr<const tp_type> ptr) : raw(ptr.raw) {}
 
         constexpr operator const void *() const {
-            return m_raw;
+            return raw;
         }
 
         constexpr operator t_b8() const {
-            return m_raw != nullptr;
+            return raw != nullptr;
         }
 
         constexpr t_b8 operator==(const s_ptr<const void> other) const {
-            return m_raw == other.m_raw;
+            return raw == other.raw;
         }
 
         constexpr t_b8 operator!=(const s_ptr<const void> other) const {
-            return m_raw != other.m_raw;
+            return raw != other.raw;
         }
 
         template <typename tp_type>
         explicit constexpr operator s_ptr<const tp_type>() const {
-            return {static_cast<const tp_type *>(m_raw)};
+            return {static_cast<const tp_type *>(raw)};
         }
-
-    private:
-        const void *m_raw = nullptr;
     };
 
     template <>
     struct s_ptr<void> {
-    public:
+        void *raw = nullptr;
+
         constexpr s_ptr() = default;
-        constexpr s_ptr(void *const raw) : m_raw(raw) {}
+        constexpr s_ptr(void *const raw) : raw(raw) {}
 
         template <typename tp_type>
-        constexpr s_ptr(const s_ptr<tp_type> ptr) : m_raw(ptr.Raw()) {}
-
-        constexpr void *Raw() const {
-            return m_raw;
-        }
+        constexpr s_ptr(const s_ptr<tp_type> ptr) : raw(ptr.raw) {}
 
         constexpr operator void *() const {
-            return m_raw;
+            return raw;
         }
 
         constexpr operator t_b8() const {
-            return m_raw != nullptr;
+            return raw != nullptr;
         }
 
         constexpr t_b8 operator==(const s_ptr<void> other) const {
-            return m_raw == other.m_raw;
+            return raw == other.raw;
         }
 
         constexpr t_b8 operator!=(const s_ptr<void> other) const {
-            return m_raw != other.m_raw;
+            return raw != other.raw;
         }
 
         constexpr operator s_ptr<const void>() const {
-            return {m_raw};
+            return {raw};
         }
 
         template <typename tp_type>
         explicit constexpr operator s_ptr<tp_type>() const {
-            return {static_cast<tp_type *>(m_raw)};
+            return {static_cast<tp_type *>(raw)};
         }
-
-    private:
-        void *m_raw = nullptr;
     };
 
     struct s_mem_arena {
     public:
-        s_mem_arena() = default;
-        s_mem_arena(const s_mem_arena &) = delete;
-        s_mem_arena &operator=(const s_mem_arena &) = delete;
-
-        s_ptr<void> Push(const t_i32 size, const t_i32 alignment);
         void Release();
+        s_ptr<void> Push(const t_i32 size, const t_i32 alignment);
         void Reset();
 
     private:
@@ -220,7 +199,7 @@ namespace zf {
         s_ptr<s_block> m_blocks_head = nullptr;
         s_ptr<s_block> m_block_cur = nullptr;
         t_i32 m_block_cur_offs = 0;
-        t_i32 m_block_min_buf_size = Megabytes(1);
+        t_i32 m_block_min_buf_size = MegabytesToBytes(1);
     };
 
     template <typename tp_type, typename... tp_constructor_args>
@@ -235,9 +214,6 @@ namespace zf {
     // ============================================================
     // @section: Arrays
     // ============================================================
-    template <typename tp_type>
-    struct s_array;
-
     template <typename tp_type>
     struct s_array_rdonly {
         static_assert(!s_is_const<tp_type>::g_val);
@@ -285,7 +261,7 @@ namespace zf {
         }
 
         constexpr s_array_rdonly<t_u8> ToByteArray() const {
-            return {reinterpret_cast<const t_u8 *>(m_ptr.Raw()), SizeInBytes()};
+            return {reinterpret_cast<const t_u8 *>(m_ptr.raw), SizeInBytes()};
         }
 
     private:
@@ -344,7 +320,7 @@ namespace zf {
         }
 
         constexpr s_array<t_u8> ToByteArray() const {
-            return {reinterpret_cast<t_u8 *>(m_ptr.Raw()), SizeInBytes()};
+            return {reinterpret_cast<t_u8 *>(m_ptr.raw), SizeInBytes()};
         }
 
     private:
@@ -481,7 +457,6 @@ namespace zf {
         return arr;
     }
 
-    // @todo: Move all of this to algos! Where did that module go???
     template <c_nonstatic_array tp_arr_type>
     constexpr t_b8 DoAllEqual(const tp_arr_type arr, const typename tp_arr_type::t_elem &val, const t_bin_comparator<typename tp_arr_type::t_elem> comparator = DefaultBinComparator) {
         ZF_ASSERT(comparator);
@@ -589,15 +564,15 @@ namespace zf {
         return static_cast<t_u8>(bits_at_bottom << begin_bit_index);
     }
 
-    struct s_bit_vec_rdonly {
+    class c_bit_vec_rdonly {
     public:
-        constexpr s_bit_vec_rdonly() = default;
+        constexpr c_bit_vec_rdonly() = default;
 
-        constexpr s_bit_vec_rdonly(const s_array_rdonly<t_u8> bytes, const t_i32 bit_cnt) : m_bytes(bytes), m_bit_cnt(bit_cnt) {
+        constexpr c_bit_vec_rdonly(const s_array_rdonly<t_u8> bytes, const t_i32 bit_cnt) : m_bytes(bytes), m_bit_cnt(bit_cnt) {
             ZF_ASSERT(BitsToBytes(bit_cnt) == bytes.Len());
         }
 
-        constexpr s_bit_vec_rdonly(const s_array_rdonly<t_u8> bytes) : m_bytes(bytes), m_bit_cnt(BytesToBits(bytes.Len())) {}
+        constexpr c_bit_vec_rdonly(const s_array_rdonly<t_u8> bytes) : m_bytes(bytes), m_bit_cnt(BytesToBits(bytes.Len())) {}
 
         constexpr s_array_rdonly<t_u8> Bytes() const { return m_bytes; }
         constexpr t_i32 BitCount() const { return m_bit_cnt; }
@@ -616,15 +591,15 @@ namespace zf {
         t_i32 m_bit_cnt = 0;
     };
 
-    struct s_bit_vec {
+    class c_bit_vec_mut {
     public:
-        constexpr s_bit_vec() = default;
+        constexpr c_bit_vec_mut() = default;
 
-        constexpr s_bit_vec(const s_array<t_u8> bytes, const t_i32 bit_cnt) : m_bytes(bytes), m_bit_cnt(bit_cnt) {
+        constexpr c_bit_vec_mut(const s_array<t_u8> bytes, const t_i32 bit_cnt) : m_bytes(bytes), m_bit_cnt(bit_cnt) {
             ZF_ASSERT(BitsToBytes(bit_cnt) == bytes.Len());
         }
 
-        constexpr s_bit_vec(const s_array<t_u8> bytes) : m_bytes(bytes), m_bit_cnt(BytesToBits(bytes.Len())) {}
+        constexpr c_bit_vec_mut(const s_array<t_u8> bytes) : m_bytes(bytes), m_bit_cnt(BytesToBits(bytes.Len())) {}
 
         constexpr s_array<t_u8> Bytes() const { return m_bytes; }
         constexpr t_i32 BitCount() const { return m_bit_cnt; }
@@ -638,7 +613,7 @@ namespace zf {
             return BitmaskRange(0, LastByteBitCount());
         }
 
-        constexpr operator s_bit_vec_rdonly() const {
+        constexpr operator c_bit_vec_rdonly() const {
             return {m_bytes, m_bit_cnt};
         }
 
@@ -653,36 +628,36 @@ namespace zf {
 
         s_static_array<t_u8, BitsToBytes(tp_bit_cnt)> bytes;
 
-        constexpr operator s_bit_vec() {
+        constexpr operator c_bit_vec_mut() {
             return {bytes, tp_bit_cnt};
         }
 
-        constexpr operator s_bit_vec_rdonly() const {
+        constexpr operator c_bit_vec_rdonly() const {
             return {bytes, tp_bit_cnt};
         }
     };
 
-    inline s_bit_vec CreateBitVec(const t_i32 bit_cnt, s_mem_arena &mem_arena) {
+    inline c_bit_vec_mut CreateBitVec(const t_i32 bit_cnt, s_mem_arena &mem_arena) {
         ZF_ASSERT(bit_cnt >= 0);
         return {AllocArray<t_u8>(BitsToBytes(bit_cnt), mem_arena), bit_cnt};
     }
 
-    constexpr t_b8 IsBitSet(const s_bit_vec_rdonly bv, const t_i32 index) {
+    constexpr t_b8 IsBitSet(const c_bit_vec_rdonly bv, const t_i32 index) {
         ZF_ASSERT(index >= 0 && index < bv.BitCount());
         return bv.Bytes()[index / 8] & BitmaskSingle(index % 8);
     }
 
-    constexpr void SetBit(const s_bit_vec bv, const t_i32 index) {
+    constexpr void SetBit(const c_bit_vec_mut bv, const t_i32 index) {
         ZF_ASSERT(index >= 0 && index < bv.BitCount());
         bv.Bytes()[index / 8] |= BitmaskSingle(index % 8);
     }
 
-    constexpr void UnsetBit(const s_bit_vec bv, const t_i32 index) {
+    constexpr void UnsetBit(const c_bit_vec_mut bv, const t_i32 index) {
         ZF_ASSERT(index >= 0 && index < bv.BitCount());
         bv.Bytes()[index / 8] &= ~BitmaskSingle(index % 8);
     }
 
-    constexpr t_b8 IsAnyBitSet(const s_bit_vec_rdonly bv) {
+    constexpr t_b8 IsAnyBitSet(const c_bit_vec_rdonly bv) {
         if (bv.BitCount() == 0) {
             return false;
         }
@@ -696,7 +671,7 @@ namespace zf {
         return (bv.Bytes().Last() & bv.LastByteMask()) != 0;
     }
 
-    constexpr t_b8 AreAllBitsSet(const s_bit_vec_rdonly bv) {
+    constexpr t_b8 AreAllBitsSet(const c_bit_vec_rdonly bv) {
         if (bv.BitCount() == 0) {
             return false;
         }
@@ -711,7 +686,7 @@ namespace zf {
         return (bv.Bytes().Last() & last_byte_mask) == last_byte_mask;
     }
 
-    constexpr t_b8 AreAllBitsUnset(const s_bit_vec_rdonly bv) {
+    constexpr t_b8 AreAllBitsUnset(const c_bit_vec_rdonly bv) {
         if (bv.BitCount() == 0) {
             return false;
         }
@@ -719,7 +694,7 @@ namespace zf {
         return !IsAnyBitSet(bv);
     }
 
-    constexpr t_b8 IsAnyBitUnset(const s_bit_vec_rdonly bv) {
+    constexpr t_b8 IsAnyBitUnset(const c_bit_vec_rdonly bv) {
         if (bv.BitCount() == 0) {
             return false;
         }
@@ -727,7 +702,7 @@ namespace zf {
         return !AreAllBitsSet(bv);
     }
 
-    constexpr void SetAllBits(const s_bit_vec bv) {
+    constexpr void SetAllBits(const c_bit_vec_mut bv) {
         if (bv.BitCount() == 0) {
             return;
         }
@@ -738,7 +713,7 @@ namespace zf {
         bv.Bytes().Last() |= bv.LastByteMask();
     }
 
-    constexpr void UnsetAllBits(const s_bit_vec bv) {
+    constexpr void UnsetAllBits(const c_bit_vec_mut bv) {
         if (bv.BitCount() == 0) {
             return;
         }
@@ -750,7 +725,7 @@ namespace zf {
     }
 
     // Sets all bits in the range [begin_bit_index, end_bit_index).
-    constexpr void SetBitsInRange(const s_bit_vec bv, const t_i32 begin_bit_index, const t_i32 end_bit_index) {
+    constexpr void SetBitsInRange(const c_bit_vec_mut bv, const t_i32 begin_bit_index, const t_i32 end_bit_index) {
         ZF_ASSERT(begin_bit_index >= 0 && begin_bit_index < bv.BitCount());
         ZF_ASSERT(end_bit_index >= begin_bit_index && end_bit_index <= bv.BitCount());
 
@@ -776,7 +751,8 @@ namespace zf {
         ek_bitwise_mask_op_andnot
     };
 
-    constexpr void ApplyMask(const s_bit_vec dest, const s_bit_vec_rdonly src, const e_bitwise_mask_op op) {
+    // @todo: Swap dest and src.
+    constexpr void ApplyMaskToBits(const c_bit_vec_mut dest, const c_bit_vec_rdonly src, const e_bitwise_mask_op op) {
         ZF_ASSERT(dest.BitCount() == src.BitCount());
 
         if (dest.BitCount() == 0) {
@@ -817,7 +793,7 @@ namespace zf {
     }
 
     // Shifts left only by 1. Returns the discarded bit as 0 or 1.
-    constexpr t_u8 ShiftBitsLeft(const s_bit_vec bv) {
+    constexpr t_u8 ShiftBitsLeft(const c_bit_vec_mut bv) {
         if (bv.BitCount() == 0) {
             return 0;
         }
@@ -837,7 +813,7 @@ namespace zf {
         return discard;
     }
 
-    constexpr void ShiftBitsLeftBy(const s_bit_vec bv, const t_i32 amount) {
+    constexpr void ShiftBitsLeftBy(const c_bit_vec_mut bv, const t_i32 amount) {
         ZF_ASSERT(amount >= 0);
 
         // @speed: :(
@@ -847,7 +823,7 @@ namespace zf {
         }
     }
 
-    constexpr void RotBitsLeftBy(const s_bit_vec bv, const t_i32 amount) {
+    constexpr void RotBitsLeftBy(const c_bit_vec_mut bv, const t_i32 amount) {
         ZF_ASSERT(amount >= 0);
 
         if (bv.BitCount() == 0) {
@@ -868,7 +844,7 @@ namespace zf {
     }
 
     // Shifts right only by 1. Returns the carry bit.
-    constexpr t_u8 ShiftBitsRight(const s_bit_vec bv) {
+    constexpr t_u8 ShiftBitsRight(const c_bit_vec_mut bv) {
         if (bv.BitCount() == 0) {
             return 0;
         }
@@ -891,7 +867,7 @@ namespace zf {
         return discard;
     }
 
-    constexpr void ShiftBitsRightBy(const s_bit_vec bv, const t_i32 amount) {
+    constexpr void ShiftBitsRightBy(const c_bit_vec_mut bv, const t_i32 amount) {
         ZF_ASSERT(amount >= 0);
 
         // @speed: :(
@@ -901,7 +877,7 @@ namespace zf {
         }
     }
 
-    constexpr void RotBitsRightBy(const s_bit_vec bv, const t_i32 amount) {
+    constexpr void RotBitsRightBy(const c_bit_vec_mut bv, const t_i32 amount) {
         ZF_ASSERT(amount >= 0);
 
         if (bv.BitCount() == 0) {
@@ -921,12 +897,12 @@ namespace zf {
         }
     }
 
-    t_i32 IndexOfFirstSetBit(const s_bit_vec_rdonly bv, const t_i32 from = 0);   // Returns -1 if all bits are unset.
-    t_i32 IndexOfFirstUnsetBit(const s_bit_vec_rdonly bv, const t_i32 from = 0); // Returns -1 if all bits are set.
+    t_i32 IndexOfFirstSetBit(const c_bit_vec_rdonly bv, const t_i32 from = 0);   // Returns -1 if all bits are unset.
+    t_i32 IndexOfFirstUnsetBit(const c_bit_vec_rdonly bv, const t_i32 from = 0); // Returns -1 if all bits are set.
 
-    t_i32 CountSetBits(const s_bit_vec_rdonly bv);
+    t_i32 CountSetBits(const c_bit_vec_rdonly bv);
 
-    inline t_i32 CountUnsetBits(const s_bit_vec_rdonly bv) {
+    inline t_i32 CountUnsetBits(const c_bit_vec_rdonly bv) {
         return bv.BitCount() - CountSetBits(bv);
     }
 
@@ -934,7 +910,7 @@ namespace zf {
     // o_index is assigned the index of the set bit to process.
     // Returns false iff the walk is complete.
     // You can use the ZF_FOR_EACH_SET_BIT macro for more brevity if you like.
-    inline t_b8 WalkSetBits(const s_bit_vec_rdonly bv, t_i32 &pos, t_i32 &o_index) {
+    inline t_b8 WalkSetBits(const c_bit_vec_rdonly bv, t_i32 &pos, t_i32 &o_index) {
         ZF_ASSERT(pos >= 0 && pos < bv.BitCount());
         o_index = IndexOfFirstSetBit(bv, pos);
         pos = o_index + 1;
@@ -945,7 +921,7 @@ namespace zf {
     // o_index is assigned the index of the unset bit to process.
     // Returns false iff the walk is complete.
     // You can use the ZF_FOR_EACH_UNSET_BIT macro for more brevity if you like.
-    inline t_b8 WalkUnsetBits(const s_bit_vec_rdonly bv, t_i32 &pos, t_i32 &o_index) {
+    inline t_b8 WalkUnsetBits(const c_bit_vec_rdonly bv, t_i32 &pos, t_i32 &o_index) {
         ZF_ASSERT(pos >= 0 && pos < bv.BitCount());
         o_index = IndexOfFirstUnsetBit(bv, pos);
         pos = o_index + 1;

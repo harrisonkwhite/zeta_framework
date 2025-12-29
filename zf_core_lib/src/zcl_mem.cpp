@@ -3,6 +3,25 @@
 #include <cstring>
 
 namespace zf {
+    void s_mem_arena::Release() {
+        const auto f = [](const auto self, const s_ptr<s_block> block) {
+            if (!block) {
+                return;
+            }
+
+            self(self, block->next);
+
+            free(block->buf);
+            free(block);
+        };
+
+        f(f, m_blocks_head);
+
+        m_blocks_head = nullptr;
+        m_block_cur = nullptr;
+        m_block_cur_offs = 0;
+    }
+
     s_ptr<void> s_mem_arena::Push(const t_i32 size, const t_i32 alignment) {
         ZF_ASSERT(size > 0 && IsAlignmentValid(alignment));
 
@@ -29,25 +48,6 @@ namespace zf {
         m_block_cur_offs = offs_next;
 
         return static_cast<s_ptr<t_u8>>(m_block_cur->buf) + offs_aligned;
-    }
-
-    void s_mem_arena::Release() {
-        const auto f = [](const auto self, const s_ptr<s_block> block) {
-            if (!block) {
-                return;
-            }
-
-            self(self, block->next);
-
-            free(block->buf);
-            free(block);
-        };
-
-        f(f, m_blocks_head);
-
-        m_blocks_head = nullptr;
-        m_block_cur = nullptr;
-        m_block_cur_offs = 0;
     }
 
     void s_mem_arena::Reset() {
@@ -82,7 +82,7 @@ namespace zf {
     // ============================================================
     // @section: Bits
     // ============================================================
-    static t_i32 IndexOfFirstSetBitHelper(const s_bit_vec_rdonly bv, const t_i32 from, const t_u8 xor_mask) {
+    static t_i32 IndexOfFirstSetBitHelper(const c_bit_vec_rdonly bv, const t_i32 from, const t_u8 xor_mask) {
         ZF_ASSERT(from >= 0 && from <= bv.BitCount()); // Intentionally allowing the upper bound here for the case of iteration.
 
         // Map of each possible byte to the index of the first set bit, or -1 for the first case.
@@ -368,15 +368,15 @@ namespace zf {
         return -1;
     }
 
-    t_i32 IndexOfFirstSetBit(const s_bit_vec_rdonly bv, const t_i32 from) {
+    t_i32 IndexOfFirstSetBit(const c_bit_vec_rdonly bv, const t_i32 from) {
         return IndexOfFirstSetBitHelper(bv, from, 0);
     }
 
-    t_i32 IndexOfFirstUnsetBit(const s_bit_vec_rdonly bv, const t_i32 from) {
+    t_i32 IndexOfFirstUnsetBit(const c_bit_vec_rdonly bv, const t_i32 from) {
         return IndexOfFirstSetBitHelper(bv, from, 0xFF);
     }
 
-    t_i32 CountSetBits(const s_bit_vec_rdonly bv) {
+    t_i32 CountSetBits(const c_bit_vec_rdonly bv) {
         // Map of each possible byte to the number of set bits in it.
         static constexpr s_static_array<t_i32, 256> g_mappings = {{
             0, // 0000 0000

@@ -329,10 +329,8 @@ namespace zf {
                 i += byte_type - ek_utf8_byte_type_ascii + 1;
                 break;
 
-            case ek_utf8_byte_type_continuation:
-            case ek_utf8_byte_type_invalid:
-                ZF_ASSERT(false);
-                break;
+            default:
+                ZF_UNREACHABLE();
             }
 
             len++;
@@ -401,7 +399,7 @@ namespace zf {
         ZF_ASSERT(IsStrValidUTF8(str));
 
         ZF_WALK_STR(str, info) {
-            SetBit(code_pts, info.code_pt);
+            SetBit(code_pts, info.code_pt); // @todo
         }
     }
 
@@ -434,8 +432,7 @@ namespace zf {
                 break;
 
             default:
-                ZF_ASSERT(false);
-                return false;
+                ZF_UNREACHABLE();
             }
         }
     }
@@ -469,8 +466,7 @@ namespace zf {
                 break;
 
             default:
-                ZF_ASSERT(false);
-                return false;
+                ZF_UNREACHABLE();
             }
         }
     }

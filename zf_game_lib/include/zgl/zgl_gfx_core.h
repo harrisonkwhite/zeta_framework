@@ -30,9 +30,9 @@ namespace zf {
 
     void ReleaseGFXResources(s_gfx_resource_arena &arena);
 
-    s_gfx_resource &CreateTextureResource(const s_texture_data_rdonly texture_data, s_gfx_resource_arena &arena = PermGFXResourceArena());
+    s_ptr<s_gfx_resource> CreateTextureResource(const s_texture_data_rdonly texture_data, s_gfx_resource_arena &arena = PermGFXResourceArena());
 
-    inline s_gfx_resource &CreateTextureResourceFromRaw(const s_str_rdonly file_path, s_mem_arena &temp_mem_arena, s_gfx_resource_arena &arena = PermGFXResourceArena()) {
+    inline s_ptr<s_gfx_resource> CreateTextureResourceFromRaw(const s_str_rdonly file_path, s_mem_arena &temp_mem_arena, s_gfx_resource_arena &arena = PermGFXResourceArena()) {
         s_texture_data texture_data;
 
         if (!LoadTextureDataFromRaw(file_path, temp_mem_arena, temp_mem_arena, texture_data)) {
@@ -42,7 +42,7 @@ namespace zf {
         return CreateTextureResource(texture_data, arena);
     }
 
-    inline s_gfx_resource &CreateTextureResourceFromPacked(const s_str_rdonly file_path, s_mem_arena &temp_mem_arena, s_gfx_resource_arena &arena = PermGFXResourceArena()) {
+    inline s_ptr<s_gfx_resource> CreateTextureResourceFromPacked(const s_str_rdonly file_path, s_mem_arena &temp_mem_arena, s_gfx_resource_arena &arena = PermGFXResourceArena()) {
         s_texture_data texture_data;
 
         if (!UnpackTexture(file_path, temp_mem_arena, temp_mem_arena, texture_data)) {
@@ -52,9 +52,9 @@ namespace zf {
         return CreateTextureResource(texture_data, arena);
     }
 
-    s_gfx_resource &CreateShaderProgResource(const s_array_rdonly<t_u8> vert_shader_compiled_bin, const s_array_rdonly<t_u8> frag_shader_compiled_bin, s_gfx_resource_arena &arena = PermGFXResourceArena());
+    s_ptr<s_gfx_resource> CreateShaderProgResource(const s_array_rdonly<t_u8> vert_shader_compiled_bin, const s_array_rdonly<t_u8> frag_shader_compiled_bin, s_gfx_resource_arena &arena = PermGFXResourceArena());
 
-    inline s_gfx_resource &CreateShaderProgResourceFromPacked(const s_str_rdonly vert_shader_file_path, const s_str_rdonly frag_shader_file_path, s_mem_arena &temp_mem_arena, s_gfx_resource_arena &arena = PermGFXResourceArena()) {
+    inline s_ptr<s_gfx_resource> CreateShaderProgResourceFromPacked(const s_str_rdonly vert_shader_file_path, const s_str_rdonly frag_shader_file_path, s_mem_arena &temp_mem_arena, s_gfx_resource_arena &arena = PermGFXResourceArena()) {
         s_array<t_u8> vert_shader_compiled_bin;
 
         if (!UnpackShader(vert_shader_file_path, temp_mem_arena, temp_mem_arena, vert_shader_compiled_bin)) {

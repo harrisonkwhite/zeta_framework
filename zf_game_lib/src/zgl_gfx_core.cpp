@@ -30,9 +30,6 @@ namespace zf {
         e_gfx_resource_type type = ek_gfx_resource_type_invalid;
         s_ptr<s_gfx_resource> next = nullptr;
 
-        s_gfx_resource() = default;
-        s_gfx_resource(const s_gfx_resource &) = delete;
-
         auto &Texture() {
             ZF_ASSERT(type == ek_gfx_resource_type_texture);
             return type_data.texture;
@@ -67,7 +64,7 @@ namespace zf {
     };
 
     static bgfx::ProgramHandle CreateBGFXShaderProg(const s_array_rdonly<t_u8> vert_shader_bin, const s_array_rdonly<t_u8> frag_shader_bin);
-    static s_gfx_resource &PushGFXResource(const e_gfx_resource_type type, s_gfx_resource_arena &arena);
+    static s_ptr<s_gfx_resource> PushGFXResource(const e_gfx_resource_type type, s_gfx_resource_arena &arena);
 
     extern const t_u8 g_batch_triangle_vert_shader_default_src_raw[];
     extern const t_i32 g_batch_triangle_vert_shader_default_src_len;
@@ -327,26 +324,26 @@ namespace zf {
         arena = {};
     }
 
-    static s_gfx_resource &PushGFXResource(const e_gfx_resource_type type, s_gfx_resource_arena &arena) {
+    static s_ptr<s_gfx_resource> PushGFXResource(const e_gfx_resource_type type, s_gfx_resource_arena &arena) {
         ZF_ASSERT(g_state.state == ek_state_initted);
         ZF_ASSERT(type != ek_gfx_resource_type_invalid);
 
-        auto &resource = Alloc<s_gfx_resource>(*arena.mem_arena);
+        const s_ptr<s_gfx_resource> resource = &Alloc<s_gfx_resource>(*arena.mem_arena);
 
         if (!arena.head) {
-            arena.head = &resource;
-            arena.tail = &resource;
+            arena.head = resource;
+            arena.tail = resource;
         } else {
-            arena.tail->next = &resource;
-            arena.tail = &resource;
+            arena.tail->next = resource;
+            arena.tail = resource;
         }
 
-        resource.type = type;
+        resource->type = type;
 
         return resource;
     }
 
-    s_gfx_resource &CreateTextureResource(const s_texture_data_rdonly texture_data, s_gfx_resource_arena &arena) {
+    s_ptr<s_gfx_resource> CreateTextureResource(const s_texture_data_rdonly texture_data, s_gfx_resource_arena &arena) {
         ZF_ASSERT(g_state.state == ek_state_initted);
 
         const auto texture_bgfx_hdl = bgfx::createTexture2D(static_cast<uint16_t>(texture_data.SizeInPixels().x), static_cast<uint16_t>(texture_data.SizeInPixels().y), false, 1, bgfx::TextureFormat::RGBA8, 0, bgfx::copy(texture_data.RGBAPixelData().Ptr(), static_cast<uint32_t>(texture_data.RGBAPixelData().SizeInBytes())));
@@ -355,13 +352,13 @@ namespace zf {
             ZF_FATAL();
         }
 
-        auto &resource = PushGFXResource(ek_gfx_resource_type_texture, arena);
-        resource.Texture().bgfx_hdl = texture_bgfx_hdl;
-        resource.Texture().size = texture_data.SizeInPixels();
+        auto resource = PushGFXResource(ek_gfx_resource_type_texture, arena);
+        resource->Texture().bgfx_hdl = texture_bgfx_hdl;
+        resource->Texture().size = texture_data.SizeInPixels();
         return resource;
     }
 
-    s_gfx_resource &CreateShaderProgResource(const s_array_rdonly<t_u8> vert_shader_compiled_bin, const s_array_rdonly<t_u8> frag_shader_compiled_bin, s_gfx_resource_arena &arena) {
+    s_ptr<s_gfx_resource> CreateShaderProgResource(const s_array_rdonly<t_u8> vert_shader_compiled_bin, const s_array_rdonly<t_u8> frag_shader_compiled_bin, s_gfx_resource_arena &arena) {
         const bgfx::Memory *const vert_shader_bgfx_mem = bgfx::makeRef(vert_shader_compiled_bin.Ptr(), static_cast<uint32_t>(vert_shader_compiled_bin.Len()));
         const bgfx::ShaderHandle vert_shader_bgfx_hdl = bgfx::createShader(vert_shader_bgfx_mem);
 
@@ -382,8 +379,8 @@ namespace zf {
             ZF_FATAL();
         }
 
-        auto &resource = PushGFXResource(ek_gfx_resource_type_shader_prog, arena);
-        resource.ShaderProg().bgfx_hdl = prog_bgfx_hdl;
+        auto resource = PushGFXResource(ek_gfx_resource_type_shader_prog, arena);
+        resource->ShaderProg().bgfx_hdl = prog_bgfx_hdl;
         return resource;
     }
 
@@ -413,9 +410,9 @@ namespace zf {
         }
 
         const s_static_array<t_u8, 4> px_texture_rgba = {{255, 255, 255, 255}};
-        auto &px_texture = CreateTextureResource({{1, 1}, px_texture_rgba}, px_texture_resource_arena);
+        const auto px_texture = CreateTextureResource({{1, 1}, px_texture_rgba}, px_texture_resource_arena);
 
-        return Alloc<s_rendering_basis>(mem_arena, vert_buf_bgfx_hdl, shader_prog_bgfx_hdl, texture_sampler_uniform_bgfx_hdl, px_texture);
+        return Alloc<s_rendering_basis>(mem_arena, vert_buf_bgfx_hdl, shader_prog_bgfx_hdl, texture_sampler_uniform_bgfx_hdl, *px_texture);
     }
 
     s_rendering_context &BeginRendering(const s_rendering_basis &rendering_basis, const s_color_rgb24f clear_col, s_mem_arena &mem_arena) {
