@@ -106,7 +106,7 @@ namespace zf {
     }
 
     void s_sound_type_arena::Add(const s_sound_data snd_data, s_ptr<s_sound_type> &o_type) {
-        o_type = &Alloc<s_sound_type>(m_mem_arena, *this, m_version);
+        o_type = Alloc<s_sound_type>(&m_mem_arena, *this, m_version);
         o_type->snd_data = snd_data;
 
         if (!m_head) {

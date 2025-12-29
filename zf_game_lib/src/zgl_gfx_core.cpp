@@ -77,11 +77,11 @@ namespace zf {
         bgfx::ProgramHandle shader_prog_bgfx_hdl;
         bgfx::UniformHandle texture_sampler_uniform_bgfx_hdl;
 
-        const s_gfx_resource &px_texture;
+        const s_gfx_resource *px_texture;
     };
 
     struct s_rendering_context {
-        const s_rendering_basis &basis;
+        const s_rendering_basis *basis;
 
         struct {
             s_static_array<s_rendering_vert, g_batch_vert_limit_per_frame> verts;
@@ -266,7 +266,7 @@ namespace zf {
     s_gfx_resource &s_gfx_resource_arena::Push(const e_gfx_resource_type type) {
         ZF_ASSERT(g_state.state == ek_state_initted);
 
-        auto &resource = Alloc<s_gfx_resource>(*m_mem_arena);
+        auto resource = Alloc<s_gfx_resource>(*m_mem_arena);
 
         if (!m_head) {
             m_head = &resource;
@@ -317,7 +317,7 @@ namespace zf {
     static s_gfx_resource *PushGFXResource(const e_gfx_resource_type type, s_gfx_resource_arena *const arena) {
         ZF_ASSERT(g_state.state == ek_state_initted);
 
-        s_gfx_resource *const resource = &Alloc<s_gfx_resource>(*arena->mem_arena);
+        const auto resource = Alloc<s_gfx_resource>(arena->mem_arena);
 
         if (!arena->head) {
             arena->head = resource;
@@ -401,7 +401,7 @@ namespace zf {
         const s_static_array<t_u8, 4> px_texture_rgba = {{255, 255, 255, 255}};
         const auto px_texture = CreateTextureResource({{1, 1}, px_texture_rgba}, px_texture_resource_arena);
 
-        return &Alloc<s_rendering_basis>(*mem_arena, vert_buf_bgfx_hdl, shader_prog_bgfx_hdl, texture_sampler_uniform_bgfx_hdl, *px_texture);
+        return Alloc<s_rendering_basis>(mem_arena, vert_buf_bgfx_hdl, shader_prog_bgfx_hdl, texture_sampler_uniform_bgfx_hdl, px_texture);
     }
 
     s_rendering_context *BeginRendering(const s_rendering_basis *const rendering_basis, const s_color_rgb8 clear_col, s_mem_arena *const rendering_context_mem_arena) {
@@ -436,7 +436,7 @@ namespace zf {
 
         g_state.state = ek_state_rendering;
 
-        return &Alloc<s_rendering_context>(*rendering_context_mem_arena, *rendering_basis);
+        return Alloc<s_rendering_context>(rendering_context_mem_arena, rendering_basis);
     }
 
     void EndRendering(s_rendering_context *const rc) {
@@ -460,16 +460,16 @@ namespace zf {
 
         const auto verts = rc->state.verts.ToNonstatic().Slice(rc->state.vert_offs, rc->state.vert_offs + rc->state.vert_cnt);
         const auto verts_bgfx_ref = bgfx::makeRef(verts.Ptr(), static_cast<uint32_t>(verts.SizeInBytes()));
-        bgfx::update(rc->basis.vert_buf_bgfx_hdl, static_cast<uint32_t>(rc->state.vert_offs), verts_bgfx_ref);
+        bgfx::update(rc->basis->vert_buf_bgfx_hdl, static_cast<uint32_t>(rc->state.vert_offs), verts_bgfx_ref);
 
-        const auto texture_bgfx_hdl = rc->state.texture ? rc->state.texture->AsTexture().bgfx_hdl : rc->basis.px_texture.AsTexture().bgfx_hdl;
-        bgfx::setTexture(0, rc->basis.texture_sampler_uniform_bgfx_hdl, texture_bgfx_hdl);
+        const auto texture_bgfx_hdl = rc->state.texture ? rc->state.texture->AsTexture().bgfx_hdl : rc->basis->px_texture->AsTexture().bgfx_hdl;
+        bgfx::setTexture(0, rc->basis->texture_sampler_uniform_bgfx_hdl, texture_bgfx_hdl);
 
-        bgfx::setVertexBuffer(0, rc->basis.vert_buf_bgfx_hdl, static_cast<uint32_t>(rc->state.vert_offs), static_cast<uint32_t>(rc->state.vert_cnt));
+        bgfx::setVertexBuffer(0, rc->basis->vert_buf_bgfx_hdl, static_cast<uint32_t>(rc->state.vert_offs), static_cast<uint32_t>(rc->state.vert_cnt));
 
         bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A | BGFX_STATE_BLEND_ALPHA);
 
-        bgfx::submit(0, rc->basis.shader_prog_bgfx_hdl);
+        bgfx::submit(0, rc->basis->shader_prog_bgfx_hdl);
 
         rc->state.vert_offs += rc->state.vert_cnt;
         rc->state.vert_cnt = 0;

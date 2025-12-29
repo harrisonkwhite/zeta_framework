@@ -396,17 +396,17 @@ namespace zf {
             s_ptr<s_block> next = nullptr;
         };
 
-        static s_block &CreateBlock(const t_i32 cap, s_mem_arena &mem_arena) {
-            auto &block = zf::Alloc<s_block>(mem_arena);
+        static s_block *CreateBlock(const t_i32 cap, s_mem_arena *const mem_arena) {
+            const auto block = Alloc<s_block>(mem_arena);
 
-            block.keys = AllocArray<tp_key_type>(cap, mem_arena);
+            block->keys = AllocArray<tp_key_type>(cap, *mem_arena);
 
-            block.vals = AllocArray<tp_val_type>(cap, mem_arena);
+            block->vals = AllocArray<tp_val_type>(cap, *mem_arena);
 
-            block.next_indexes = AllocArray<t_i32>(cap, mem_arena);
-            SetAllTo(block.next_indexes, -1);
+            block->next_indexes = AllocArray<t_i32>(cap, *mem_arena);
+            SetAllTo(block->next_indexes, -1);
 
-            block.usage = CreateBitVec(cap, mem_arena);
+            block->usage = CreateBitVec(cap, *mem_arena);
 
             return block;
         }
@@ -452,18 +452,18 @@ namespace zf {
             }
 
             // All blocks are full - create a new one.
-            auto &new_block = CreateBlock(m_block_cap, *m_blocks_mem_arena);
+            const auto new_block = CreateBlock(m_block_cap, m_blocks_mem_arena);
             m_block_cnt++;
 
             if (block_previous) {
-                block_previous->next = &new_block;
+                block_previous->next = new_block;
             } else {
-                m_blocks_head = &new_block;
+                m_blocks_head = new_block;
             }
 
-            new_block.keys[0] = key;
-            new_block.vals[0] = val;
-            SetBit(new_block.usage, 0);
+            new_block->keys[0] = key;
+            new_block->vals[0] = val;
+            SetBit(new_block->usage, 0);
 
             return block_index * m_block_cap;
         }

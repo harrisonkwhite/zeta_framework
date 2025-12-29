@@ -1,6 +1,5 @@
 #pragma once
 
-#include <new>
 #include <zcl/zcl_basic.h>
 
 namespace zf {
@@ -182,7 +181,7 @@ namespace zf {
         void Release();
 
         // Will lazily allocate memory as needed. Allocation failure is treated as fatal - you don't need to check for nullptr.
-        s_ptr<void> Push(const t_i32 size, const t_i32 alignment);
+        void *Push(const t_i32 size, const t_i32 alignment);
 
         // DOES NOT FREE ARENA MEMORY. Simply rewinds the arena to the beginning of its memory and overwrites from there.
         void Rewind() {
@@ -192,27 +191,23 @@ namespace zf {
 
     private:
         struct s_block {
-            s_ptr<void> buf = nullptr;
+            void *buf = nullptr;
             t_i32 buf_size = 0;
 
-            s_ptr<s_block> next = nullptr;
+            s_block *next = nullptr;
         };
 
-        static s_ptr<s_block> CreateBlock(const t_i32 buf_size);
+        static s_block *CreateBlock(const t_i32 buf_size);
 
-        s_ptr<s_block> m_blocks_head = nullptr;
-        s_ptr<s_block> m_block_cur = nullptr;
+        s_block *m_blocks_head = nullptr;
+        s_block *m_block_cur = nullptr;
         t_i32 m_block_cur_offs = 0;
         t_i32 m_block_min_buf_size = MegabytesToBytes(1);
     };
 
     template <typename tp_type, typename... tp_constructor_args>
-    tp_type &Alloc(s_mem_arena &arena, tp_constructor_args &&...args) {
-        static_assert(std::is_trivially_destructible_v<tp_type>);
-
-        const auto ptr = static_cast<s_ptr<tp_type>>(arena.Push(ZF_SIZE_OF(tp_type), ZF_ALIGN_OF(tp_type)));
-        new (ptr) tp_type(static_cast<tp_constructor_args &&>(args)...);
-        return *ptr;
+    tp_type *Alloc(s_mem_arena *const arena, tp_constructor_args &&...args) {
+        return static_cast<tp_type *>(arena->Push(ZF_SIZE_OF(tp_type), ZF_ALIGN_OF(tp_type)));
     }
 
     // ============================================================
@@ -418,21 +413,13 @@ namespace zf {
 
     template <typename tp_type>
     s_array_mut<tp_type> AllocArray(const t_i32 len, s_mem_arena &mem_arena) {
-        static_assert(std::is_trivially_destructible_v<tp_type>);
-
         ZF_ASSERT(len >= 0);
 
         if (len == 0) {
             return {};
         }
 
-        const auto ptr = static_cast<s_ptr<tp_type>>(mem_arena.Push(ZF_SIZE_OF(tp_type) * len, ZF_ALIGN_OF(tp_type)));
-
-        for (t_i32 i = 0; i < len; i++) {
-            new (&ptr[i]) tp_type();
-        }
-
-        return {ptr, len};
+        return {static_cast<tp_type *>(mem_arena.Push(ZF_SIZE_OF(tp_type) * len, ZF_ALIGN_OF(tp_type))), len};
     }
 
     template <co_array_nonstatic tp_arr_type>

@@ -226,9 +226,9 @@ namespace zf {
                     const auto height = field_vals[ek_font_field_height]->valueint;
                     const auto out_file_path = ConvertCstr(field_vals[ek_font_field_out_file_path]->valuestring);
 
-                    auto &code_pt_bv = Alloc<t_code_pt_bit_vec>(mem_arena);
+                    const auto code_pt_bv = Alloc<t_code_pt_bit_vec>(&mem_arena);
 
-                    SetBitsInRange(code_pt_bv, g_printable_ascii_range_begin, g_printable_ascii_range_end); // Add the printable ASCII range as a default.
+                    SetBitsInRange(*code_pt_bv, g_printable_ascii_range_begin, g_printable_ascii_range_end); // Add the printable ASCII range as a default.
 
                     if (field_vals[ek_font_field_extra_chrs_file_path]) {
                         const auto extra_chrs_file_path = ConvertCstr(field_vals[ek_font_field_extra_chrs_file_path]->valuestring);
@@ -240,7 +240,7 @@ namespace zf {
                             return false;
                         }
 
-                        MarkStrCodePoints({extra_chrs_file_contents}, code_pt_bv);
+                        MarkStrCodePoints({extra_chrs_file_contents}, *code_pt_bv);
                     }
 
                     // @todo: Proper check for invalid height!
@@ -248,7 +248,7 @@ namespace zf {
                     s_font_arrangement arrangement;
                     s_array_mut<t_font_atlas_rgba> atlas_rgbas;
 
-                    if (!LoadFontDataFromRaw(file_path, height, code_pt_bv, mem_arena, mem_arena, mem_arena, arrangement, atlas_rgbas)) {
+                    if (!LoadFontDataFromRaw(file_path, height, *code_pt_bv, mem_arena, mem_arena, mem_arena, arrangement, atlas_rgbas)) {
                         LogError(s_cstr_literal("Failed to load font from file \"%\"!"), file_path);
                         return false;
                     }

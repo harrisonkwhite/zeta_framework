@@ -1,10 +1,11 @@
 #include <zcl/zcl_mem.h>
 
+#include <cstdlib>
 #include <cstring>
 
 namespace zf {
     void s_mem_arena::Release() {
-        const auto f = [](const auto self, const s_ptr<s_block> block) {
+        const auto f = [](const auto self, s_block *const block) {
             if (!block) {
                 return;
             }
@@ -20,7 +21,7 @@ namespace zf {
         *this = {};
     }
 
-    s_ptr<void> s_mem_arena::Push(const t_i32 size, const t_i32 alignment) {
+    void *s_mem_arena::Push(const t_i32 size, const t_i32 alignment) {
         ZF_ASSERT(size > 0 && IsAlignmentValid(alignment));
 
         if (!m_blocks_head) {
@@ -45,19 +46,22 @@ namespace zf {
 
         m_block_cur_offs = offs_next;
 
-        return static_cast<s_ptr<t_u8>>(m_block_cur->buf) + offs_aligned;
+        void *const res = static_cast<t_u8 *>(m_block_cur->buf) + offs_aligned;
+        memset(res, 0, static_cast<size_t>(size));
+
+        return res;
     }
 
-    s_ptr<s_mem_arena::s_block> s_mem_arena::CreateBlock(const t_i32 buf_size) {
+    s_mem_arena::s_block *s_mem_arena::CreateBlock(const t_i32 buf_size) {
         ZF_ASSERT(buf_size > 0);
 
-        const auto res = static_cast<s_block *>(malloc(ZF_SIZE_OF(s_block)));
+        const auto res = static_cast<s_block *>(malloc(sizeof(s_block)));
 
         if (!res) {
             ZF_FATAL();
         }
 
-        new (res) s_block();
+        memset(res, 0, sizeof(s_block));
 
         res->buf = malloc(static_cast<size_t>(buf_size));
         res->buf_size = buf_size;
@@ -66,7 +70,6 @@ namespace zf {
             ZF_FATAL();
         }
 
-        // Touch the whole block to truly reserve the memory.
         memset(res->buf, 0, static_cast<size_t>(res->buf_size));
 
         return res;
