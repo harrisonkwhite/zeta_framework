@@ -9,7 +9,7 @@ namespace zf {
     struct s_rendering_basis;
 
     // This depends on the platform module being initialised beforehand.
-    s_rendering_basis &StartupGFXModule(c_mem_arena &mem_arena);
+    s_rendering_basis &StartupGFXModule(s_mem_arena &mem_arena);
 
     void ShutdownGFXModule(s_rendering_basis &rendering_basis);
 
@@ -21,7 +21,7 @@ namespace zf {
     s_v2_i TextureSize(const s_gfx_resource &texture);
 
     struct s_gfx_resource_arena {
-        s_ptr<c_mem_arena> mem_arena = nullptr;
+        s_ptr<s_mem_arena> mem_arena = nullptr;
         s_ptr<s_gfx_resource> head = nullptr;
         s_ptr<s_gfx_resource> tail = nullptr;
     };
@@ -32,7 +32,7 @@ namespace zf {
 
     s_ptr<s_gfx_resource> CreateTextureResource(const s_texture_data_rdonly texture_data, s_gfx_resource_arena &arena = PermGFXResourceArena());
 
-    inline s_ptr<s_gfx_resource> CreateTextureResourceFromRaw(const s_str_rdonly file_path, c_mem_arena &temp_mem_arena, s_gfx_resource_arena &arena = PermGFXResourceArena()) {
+    inline s_ptr<s_gfx_resource> CreateTextureResourceFromRaw(const s_str_rdonly file_path, s_mem_arena &temp_mem_arena, s_gfx_resource_arena &arena = PermGFXResourceArena()) {
         s_texture_data texture_data;
 
         if (!LoadTextureDataFromRaw(file_path, temp_mem_arena, temp_mem_arena, texture_data)) {
@@ -42,7 +42,7 @@ namespace zf {
         return CreateTextureResource(texture_data, arena);
     }
 
-    inline s_ptr<s_gfx_resource> CreateTextureResourceFromPacked(const s_str_rdonly file_path, c_mem_arena &temp_mem_arena, s_gfx_resource_arena &arena = PermGFXResourceArena()) {
+    inline s_ptr<s_gfx_resource> CreateTextureResourceFromPacked(const s_str_rdonly file_path, s_mem_arena &temp_mem_arena, s_gfx_resource_arena &arena = PermGFXResourceArena()) {
         s_texture_data texture_data;
 
         if (!UnpackTexture(file_path, temp_mem_arena, temp_mem_arena, texture_data)) {
@@ -52,16 +52,16 @@ namespace zf {
         return CreateTextureResource(texture_data, arena);
     }
 
-    s_ptr<s_gfx_resource> CreateShaderProgResource(const c_array_rdonly<t_u8> vert_shader_compiled_bin, const c_array_rdonly<t_u8> frag_shader_compiled_bin, s_gfx_resource_arena &arena = PermGFXResourceArena());
+    s_ptr<s_gfx_resource> CreateShaderProgResource(const s_array_rdonly<t_u8> vert_shader_compiled_bin, const s_array_rdonly<t_u8> frag_shader_compiled_bin, s_gfx_resource_arena &arena = PermGFXResourceArena());
 
-    inline s_ptr<s_gfx_resource> CreateShaderProgResourceFromPacked(const s_str_rdonly vert_shader_file_path, const s_str_rdonly frag_shader_file_path, c_mem_arena &temp_mem_arena, s_gfx_resource_arena &arena = PermGFXResourceArena()) {
-        c_array_mut<t_u8> vert_shader_compiled_bin;
+    inline s_ptr<s_gfx_resource> CreateShaderProgResourceFromPacked(const s_str_rdonly vert_shader_file_path, const s_str_rdonly frag_shader_file_path, s_mem_arena &temp_mem_arena, s_gfx_resource_arena &arena = PermGFXResourceArena()) {
+        s_array_mut<t_u8> vert_shader_compiled_bin;
 
         if (!UnpackShader(vert_shader_file_path, temp_mem_arena, temp_mem_arena, vert_shader_compiled_bin)) {
             ZF_FATAL();
         }
 
-        c_array_mut<t_u8> frag_shader_compiled_bin;
+        s_array_mut<t_u8> frag_shader_compiled_bin;
 
         if (!UnpackShader(frag_shader_file_path, temp_mem_arena, temp_mem_arena, frag_shader_compiled_bin)) {
             ZF_FATAL();
@@ -75,7 +75,7 @@ namespace zf {
     // ============================================================
     struct s_rendering_context;
 
-    s_rendering_context &BeginRendering(const s_rendering_basis &rendering_basis, const s_color_rgb24f clear_col, c_mem_arena &rendering_context_mem_arena);
+    s_rendering_context &BeginRendering(const s_rendering_basis &rendering_basis, const s_color_rgb24f clear_col, s_mem_arena &rendering_context_mem_arena);
     void EndRendering(s_rendering_context &rendering_context);
 
     struct s_rendering_vert {
@@ -88,7 +88,7 @@ namespace zf {
         s_static_array<s_rendering_vert, 3> verts = {};
     };
 
-    void RenderTriangles(s_rendering_context &rendering_context, const c_array_rdonly<s_render_triangle> triangles, const s_ptr<const s_gfx_resource> texture);
+    void RenderTriangles(s_rendering_context &rendering_context, const s_array_rdonly<s_render_triangle> triangles, const s_ptr<const s_gfx_resource> texture);
 
     inline void RenderTriangle(s_rendering_context &rendering_context, const s_static_array<s_v2, 3> &pts, const s_static_array<s_color_rgba32f, 3> &pt_colors) {
         const s_render_triangle triangle = {

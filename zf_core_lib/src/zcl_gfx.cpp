@@ -7,11 +7,11 @@ namespace zf {
     // ============================================================
     // @section: Textures
     // ============================================================
-    t_b8 LoadTextureDataFromRaw(const s_str_rdonly file_path, c_mem_arena &texture_data_mem_arena, c_mem_arena &temp_mem_arena, s_texture_data &o_texture_data) {
+    t_b8 LoadTextureDataFromRaw(const s_str_rdonly file_path, s_mem_arena &texture_data_mem_arena, s_mem_arena &temp_mem_arena, s_texture_data &o_texture_data) {
         const s_str_rdonly file_path_terminated = AllocStrCloneButAddTerminator(file_path, temp_mem_arena);
 
         s_v2_i size_in_pxs;
-        const s_ptr<t_u8> stb_px_data = stbi_load(file_path_terminated.AsCstr(), &size_in_pxs.x, &size_in_pxs.y, nullptr, 4);
+        const s_ptr<t_u8> stb_px_data = stbi_load(file_path_terminated.Cstr(), &size_in_pxs.x, &size_in_pxs.y, nullptr, 4);
 
         if (!stb_px_data) {
             return false;
@@ -20,7 +20,7 @@ namespace zf {
         ZF_DEFER({ stbi_image_free(stb_px_data); });
 
         const auto px_data = AllocArray<t_u8>(4 * size_in_pxs.x * size_in_pxs.y, texture_data_mem_arena);
-        const c_array_rdonly<t_u8> stb_px_data_arr = {stb_px_data, 4 * size_in_pxs.x * size_in_pxs.y};
+        const s_array_rdonly<t_u8> stb_px_data_arr = {stb_px_data, 4 * size_in_pxs.x * size_in_pxs.y};
         Copy(px_data, stb_px_data_arr);
 
         o_texture_data = {size_in_pxs, px_data};
@@ -28,7 +28,7 @@ namespace zf {
         return true;
     }
 
-    t_b8 PackTexture(const s_str_rdonly file_path, const s_texture_data texture_data, c_mem_arena &temp_mem_arena) {
+    t_b8 PackTexture(const s_str_rdonly file_path, const s_texture_data texture_data, s_mem_arena &temp_mem_arena) {
         if (!CreateFileAndParentDirs(file_path, temp_mem_arena)) {
             return false;
         }
@@ -52,7 +52,7 @@ namespace zf {
         return true;
     }
 
-    t_b8 UnpackTexture(const s_str_rdonly file_path, c_mem_arena &texture_data_mem_arena, c_mem_arena &temp_mem_arena, s_texture_data &o_texture_data) {
+    t_b8 UnpackTexture(const s_str_rdonly file_path, s_mem_arena &texture_data_mem_arena, s_mem_arena &temp_mem_arena, s_texture_data &o_texture_data) {
         s_stream fs;
 
         if (!OpenFile(file_path, ek_file_access_mode_read, temp_mem_arena, fs)) {
@@ -96,11 +96,11 @@ namespace zf {
             return pa.a == pb.a && pa.b == pb.b;
         };
 
-    t_b8 LoadFontDataFromRaw(const s_str_rdonly file_path, const t_i32 height, t_code_pt_bit_vec &code_pts, c_mem_arena &arrangement_mem_arena, c_mem_arena &atlas_rgbas_mem_arena, c_mem_arena &temp_mem_arena, s_font_arrangement &o_arrangement, c_array_mut<t_font_atlas_rgba> &o_atlas_rgbas) {
+    t_b8 LoadFontDataFromRaw(const s_str_rdonly file_path, const t_i32 height, t_code_pt_bit_vec &code_pts, s_mem_arena &arrangement_mem_arena, s_mem_arena &atlas_rgbas_mem_arena, s_mem_arena &temp_mem_arena, s_font_arrangement &o_arrangement, s_array_mut<t_font_atlas_rgba> &o_atlas_rgbas) {
         ZF_ASSERT(height > 0);
 
         // Get the plain font file data.
-        c_array_mut<t_u8> font_file_data;
+        s_array_mut<t_u8> font_file_data;
 
         if (!LoadFileContents(file_path, temp_mem_arena, temp_mem_arena, font_file_data)) {
             return false;
@@ -272,7 +272,7 @@ namespace zf {
         return true;
     }
 
-    t_b8 PackFont(const s_str_rdonly file_path, const s_font_arrangement &arrangement, const c_array_rdonly<t_font_atlas_rgba> atlas_rgbas, c_mem_arena &temp_mem_arena) {
+    t_b8 PackFont(const s_str_rdonly file_path, const s_font_arrangement &arrangement, const s_array_rdonly<t_font_atlas_rgba> atlas_rgbas, s_mem_arena &temp_mem_arena) {
         if (!CreateFileAndParentDirs(file_path, temp_mem_arena)) {
             return false;
         }
@@ -304,7 +304,7 @@ namespace zf {
         return true;
     }
 
-    t_b8 UnpackFont(const s_str_rdonly file_path, c_mem_arena &arrangement_mem_arena, c_mem_arena &atlas_rgbas_mem_arena, c_mem_arena &temp_mem_arena, s_font_arrangement &o_arrangement, c_array_mut<t_font_atlas_rgba> &o_atlas_rgbas) {
+    t_b8 UnpackFont(const s_str_rdonly file_path, s_mem_arena &arrangement_mem_arena, s_mem_arena &atlas_rgbas_mem_arena, s_mem_arena &temp_mem_arena, s_font_arrangement &o_arrangement, s_array_mut<t_font_atlas_rgba> &o_atlas_rgbas) {
         o_arrangement = {};
         o_atlas_rgbas = {};
 
@@ -335,7 +335,7 @@ namespace zf {
         return true;
     }
 
-    t_b8 PackShader(const s_str_rdonly file_path, const c_array_rdonly<t_u8> compiled_shader_bin, c_mem_arena &temp_mem_arena) {
+    t_b8 PackShader(const s_str_rdonly file_path, const s_array_rdonly<t_u8> compiled_shader_bin, s_mem_arena &temp_mem_arena) {
         if (!CreateFileAndParentDirs(file_path, temp_mem_arena)) {
             return false;
         }
@@ -355,7 +355,7 @@ namespace zf {
         return true;
     }
 
-    t_b8 UnpackShader(const s_str_rdonly file_path, c_mem_arena &shader_bin_mem_arena, c_mem_arena &temp_mem_arena, c_array_mut<t_u8> &o_shader_bin) {
+    t_b8 UnpackShader(const s_str_rdonly file_path, s_mem_arena &shader_bin_mem_arena, s_mem_arena &temp_mem_arena, s_array_mut<t_u8> &o_shader_bin) {
         o_shader_bin = {};
 
         s_stream fs;

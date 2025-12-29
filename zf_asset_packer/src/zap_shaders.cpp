@@ -3,7 +3,7 @@
 #include <reproc/reproc.h>
 
 namespace zf {
-    t_b8 CompileShader(const s_str_rdonly shader_file_path, const s_str_rdonly varying_def_file_path, const t_b8 is_frag, c_mem_arena &bin_mem_arena, c_mem_arena &temp_mem_arena, c_array_mut<t_u8> &o_bin) {
+    t_b8 CompileShader(const s_str_rdonly shader_file_path, const s_str_rdonly varying_def_file_path, const t_b8 is_frag, s_mem_arena &bin_mem_arena, s_mem_arena &temp_mem_arena, s_array_mut<t_u8> &o_bin) {
         const s_str_rdonly shader_file_path_terminated = AllocStrCloneButAddTerminator(shader_file_path, temp_mem_arena);
         const s_str_rdonly varying_def_file_path_terminated = AllocStrCloneButAddTerminator(varying_def_file_path, temp_mem_arena);
 
@@ -55,9 +55,9 @@ namespace zf {
         Copy(shaderc_include_dir.bytes.SliceFrom(exe_dir.bytes.Len()), shaderc_include_dir_rel.Buf().ToByteArray());
 
         const s_static_array<const char *, 15> args = {{
-            shaderc_file_path.AsCstr(),
+            shaderc_file_path.Cstr(),
             "-f",
-            shader_file_path_terminated.AsCstr(),
+            shader_file_path_terminated.Cstr(),
             "--type",
             is_frag ? "fragment" : "vertex",
             "--platform",
@@ -65,9 +65,9 @@ namespace zf {
             "--profile",
             profile.Buf().Ptr(),
             "--varyingdef",
-            varying_def_file_path_terminated.AsCstr(),
+            varying_def_file_path_terminated.Cstr(),
             "-i",
-            shaderc_include_dir.AsCstr(),
+            shaderc_include_dir.Cstr(),
             "--stdout",
             nullptr,
         }};

@@ -77,7 +77,7 @@ namespace zf {
         m_version++;
     }
 
-    t_b8 s_sound_type_arena::AddFromRaw(const s_str_rdonly file_path, c_mem_arena &temp_mem_arena, s_ptr<s_sound_type> &o_type) {
+    t_b8 s_sound_type_arena::AddFromRaw(const s_str_rdonly file_path, s_mem_arena &temp_mem_arena, s_ptr<s_sound_type> &o_type) {
         ZF_ASSERT(g_state.initted);
 
         s_sound_data snd_data = {};
@@ -91,7 +91,7 @@ namespace zf {
         return true;
     }
 
-    t_b8 s_sound_type_arena::AddFromPacked(const s_str_rdonly file_path, c_mem_arena &temp_mem_arena, s_ptr<s_sound_type> &o_type) {
+    t_b8 s_sound_type_arena::AddFromPacked(const s_str_rdonly file_path, s_mem_arena &temp_mem_arena, s_ptr<s_sound_type> &o_type) {
         ZF_ASSERT(g_state.initted);
 
         s_sound_data snd_data = {};
