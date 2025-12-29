@@ -3,8 +3,6 @@
 #include <zcl.h>
 
 namespace zf {
-    struct s_input_state;
-
     // Note that the window is not shown by default, you have to manually do this.
     void StartupPlatformModule(const s_v2_i init_window_size);
 
@@ -12,6 +10,8 @@ namespace zf {
 
     // Gives the time in seconds since the platform module was initialised.
     t_f64 Time();
+
+    struct s_input_state;
 
     // Also updates the given input state based on OS events.
     void PollOSEvents(s_input_state *const input_state);

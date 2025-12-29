@@ -36,28 +36,28 @@ namespace zf {
             struct {
                 bgfx::ProgramHandle bgfx_hdl;
             } shader_prog;
-        } r_type_data;
+        } type_data;
 
         s_gfx_resource *next;
 
         auto &AsTexture() {
             ZF_ASSERT(type == ek_gfx_resource_type_texture);
-            return r_type_data.texture;
+            return type_data.texture;
         }
 
         auto &AsTexture() const {
             ZF_ASSERT(type == ek_gfx_resource_type_texture);
-            return r_type_data.texture;
+            return type_data.texture;
         }
 
         auto &AsShaderProg() {
             ZF_ASSERT(type == ek_gfx_resource_type_shader_prog);
-            return r_type_data.shader_prog;
+            return type_data.shader_prog;
         }
 
         auto &AsShaderProg() const {
             ZF_ASSERT(type == ek_gfx_resource_type_shader_prog);
-            return r_type_data.shader_prog;
+            return type_data.shader_prog;
         }
     };
 
