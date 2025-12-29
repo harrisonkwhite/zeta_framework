@@ -11,8 +11,8 @@ namespace zf {
         s_array<s_ptr<s_gfx_resource>> atlases = {};
     };
 
-    [[nodiscard]] t_b8 CreateFontFromRaw(const s_str_rdonly file_path, const t_i32 height, t_code_pt_bit_vec &code_pts, s_mem_arena &temp_mem_arena, s_font &o_font, s_gfx_resource_arena &resource_arena = PermGFXResourceArena());
-    [[nodiscard]] t_b8 CreateFontFromPacked(const s_str_rdonly file_path, s_mem_arena &temp_mem_arena, s_font &o_font, s_gfx_resource_arena &resource_arena = PermGFXResourceArena());
+    s_font CreateFontFromRaw(const s_str_rdonly file_path, const t_i32 height, t_code_pt_bit_vec &code_pts, s_mem_arena &temp_mem_arena, s_gfx_resource_arena &resource_arena = PermGFXResourceArena());
+    s_font CreateFontFromPacked(const s_str_rdonly file_path, s_mem_arena &temp_mem_arena, s_gfx_resource_arena &resource_arena = PermGFXResourceArena());
 
     s_array<s_v2> CalcStrChrRenderPositions(const s_str_rdonly str, const s_font_arrangement &font_arrangement, const s_v2 pos, const s_v2 alignment, s_mem_arena &mem_arena);
 

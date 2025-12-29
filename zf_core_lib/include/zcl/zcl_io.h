@@ -75,8 +75,7 @@ namespace zf {
                 return fread(&o_item, size, 1, m_type_data.file.file) == 1;
 
             default:
-                ZF_ASSERT(false);
-                return false;
+                ZF_UNREACHABLE();
             }
         }
 

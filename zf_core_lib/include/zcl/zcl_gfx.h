@@ -202,7 +202,7 @@ namespace zf {
     [[nodiscard]] t_b8 PackTexture(const s_str_rdonly file_path, const s_texture_data texture_data, s_mem_arena &temp_mem_arena);
     [[nodiscard]] t_b8 UnpackTexture(const s_str_rdonly file_path, s_mem_arena &texture_data_mem_arena, s_mem_arena &temp_mem_arena, s_texture_data &o_texture_data);
 
-    constexpr s_rect_f UVRect(const s_rect_i src_rect, const s_v2_i tex_size) {
+    constexpr s_rect_f CalcUVRect(const s_rect_i src_rect, const s_v2_i tex_size) {
         ZF_ASSERT(tex_size.x > 0 && tex_size.y > 0);
         ZF_ASSERT(src_rect.x >= 0 && src_rect.y >= 0 && src_rect.Width() > 0 && src_rect.Height() > 0
             && src_rect.Right() <= tex_size.x && src_rect.Bottom() <= tex_size.y);

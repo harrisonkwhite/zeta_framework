@@ -14,7 +14,7 @@ namespace zf {
         }
 
         const s_rect_f rect = {pos, src_rect_to_use.Size().ToV2()};
-        const s_rect_f uv_rect = UVRect(src_rect_to_use, texture_size);
+        const s_rect_f uv_rect = CalcUVRect(src_rect_to_use, texture_size);
 
         const s_static_array<s_render_triangle, 2> triangles = {{
             {
@@ -36,40 +36,44 @@ namespace zf {
         RenderTriangles(rendering_context, triangles.ToNonstatic(), &texture);
     }
 
-    t_b8 CreateFontFromRaw(const s_str_rdonly file_path, const t_i32 height, t_code_pt_bit_vec &code_pts, s_mem_arena &temp_mem_arena, s_font &o_font, s_gfx_resource_arena &resource_arena) {
-        o_font = {};
-
+    s_font CreateFontFromRaw(const s_str_rdonly file_path, const t_i32 height, t_code_pt_bit_vec &code_pts, s_mem_arena &temp_mem_arena, s_gfx_resource_arena &resource_arena) {
+        s_font_arrangement arrangement;
         s_array<t_font_atlas_rgba> atlas_rgbas;
 
-        if (!zf::LoadFontDataFromRaw(file_path, height, code_pts, *resource_arena.mem_arena, temp_mem_arena, temp_mem_arena, o_font.arrangement, atlas_rgbas)) {
-            return false;
+        if (!zf::LoadFontDataFromRaw(file_path, height, code_pts, *resource_arena.mem_arena, temp_mem_arena, temp_mem_arena, arrangement, atlas_rgbas)) {
+            ZF_FATAL();
         }
 
-        o_font.atlases = AllocArray<s_ptr<s_gfx_resource>>(atlas_rgbas.Len(), *resource_arena.mem_arena);
+        const auto atlases = AllocArray<s_ptr<s_gfx_resource>>(atlas_rgbas.Len(), *resource_arena.mem_arena);
 
         for (t_i32 i = 0; i < atlas_rgbas.Len(); i++) {
-            o_font.atlases[i] = &CreateTextureResource({g_font_atlas_size, atlas_rgbas[i]}, resource_arena);
+            atlases[i] = &CreateTextureResource({g_font_atlas_size, atlas_rgbas[i]}, resource_arena);
         }
 
-        return true;
+        return {
+            .arrangement = arrangement,
+            .atlases = atlases,
+        };
     }
 
-    t_b8 CreateFontFromPacked(const s_str_rdonly file_path, s_mem_arena &temp_mem_arena, s_font &o_font, s_gfx_resource_arena &resource_arena) {
-        o_font = {};
-
+    s_font CreateFontFromPacked(const s_str_rdonly file_path, s_mem_arena &temp_mem_arena, s_gfx_resource_arena &resource_arena) {
+        s_font_arrangement arrangement;
         s_array<t_font_atlas_rgba> atlas_rgbas;
 
-        if (!zf::UnpackFont(file_path, *resource_arena.mem_arena, temp_mem_arena, temp_mem_arena, o_font.arrangement, atlas_rgbas)) {
-            return false;
+        if (!zf::UnpackFont(file_path, *resource_arena.mem_arena, temp_mem_arena, temp_mem_arena, arrangement, atlas_rgbas)) {
+            ZF_FATAL();
         }
 
-        o_font.atlases = AllocArray<s_ptr<s_gfx_resource>>(atlas_rgbas.Len(), *resource_arena.mem_arena);
+        const auto atlases = AllocArray<s_ptr<s_gfx_resource>>(atlas_rgbas.Len(), *resource_arena.mem_arena);
 
         for (t_i32 i = 0; i < atlas_rgbas.Len(); i++) {
-            o_font.atlases[i] = &CreateTextureResource({g_font_atlas_size, atlas_rgbas[i]}, resource_arena);
+            atlases[i] = &CreateTextureResource({g_font_atlas_size, atlas_rgbas[i]}, resource_arena);
         }
 
-        return true;
+        return {
+            .arrangement = arrangement,
+            .atlases = atlases,
+        };
     }
 
     s_array<s_v2> CalcStrChrRenderPositions(const s_str_rdonly str, const s_font_arrangement &font_arrangement, const s_v2 pos, const s_v2 alignment, s_mem_arena &mem_arena) {

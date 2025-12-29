@@ -7,100 +7,57 @@ namespace zf {
     struct s_list {
         static_assert(!s_is_const<tp_type>::g_val);
 
-    public:
         using t_elem = tp_type;
 
-        s_list() = default;
-
-        s_list(const s_array<tp_type> backing_arr, const t_i32 len = 0) : m_backing_arr(backing_arr), m_len(len) {
-            ZF_ASSERT(len >= 0 && len <= backing_arr.Len());
-        }
-
-        s_list(const s_list &) = delete;
-
-        s_array<tp_type> BackingArray() const {
-            return m_backing_arr;
-        }
-
-        t_i32 Len() const {
-            return m_len;
-        }
-
-        void SetLen(const t_i32 len) {
-            ZF_ASSERT(len >= 0 && len <= m_backing_arr.Len());
-            m_len = len;
-        }
+        s_array<tp_type> backing_arr = {};
+        t_i32 len = 0;
 
         t_i32 Cap() const {
-            return m_backing_arr.Len();
+            return backing_arr.Len();
         }
 
         tp_type &operator[](const t_i32 index) const {
-            ZF_ASSERT(index >= 0 && index < m_len);
-            return m_backing_arr[index];
+            ZF_ASSERT(index >= 0 && index < len);
+            return backing_arr[index];
         }
 
         tp_type &Last() const {
-            return operator[](m_len - 1);
+            return operator[](len - 1);
         }
 
         s_array<tp_type> AsArray() const {
-            return m_backing_arr.Slice(0, m_len);
+            return backing_arr.Slice(0, len);
         }
-
-    private:
-        s_array<tp_type> m_backing_arr = {};
-        t_i32 m_len = 0;
     };
 
     template <typename tp_type, t_i32 tp_cap>
     struct s_static_list {
         static_assert(!s_is_const<tp_type>::g_val);
 
-    public:
         using t_elem = tp_type;
 
-        s_static_list() = default;
-
-        s_static_list(const s_array<tp_type> backing_arr, const t_i32 len = 0) : m_backing_arr(backing_arr), m_len(len) {
-            ZF_ASSERT(len >= 0 && len <= backing_arr.Len());
-        }
-
-        s_static_list(const s_static_list &) = delete;
-
-        s_array<tp_type> BackingArray() const {
-            return m_backing_arr.ToNonstatic();
-        }
-
-        t_i32 Len() const {
-            return m_len;
-        }
-
-        void SetLen(const t_i32 len) {
-            ZF_ASSERT(len >= 0 && len <= m_backing_arr.Len());
-            m_len = len;
-        }
+        s_static_array<tp_type, tp_cap> backing_arr = {};
+        t_i32 len = 0;
 
         t_i32 Cap() const {
-            return m_backing_arr.Len();
+            return backing_arr.Len();
         }
 
-        tp_type &operator[](const t_i32 index) const {
-            ZF_ASSERT(index >= 0 && index < m_len);
-            return m_backing_arr[index];
+        tp_type &operator[](const t_i32 index) {
+            ZF_ASSERT(index >= 0 && index < len);
+            return backing_arr[index];
         }
 
-        tp_type &Last() const {
-            return operator[](m_len - 1);
+        const tp_type &operator[](const t_i32 index) const {
+            ZF_ASSERT(index >= 0 && index < len);
+            return backing_arr[index];
         }
 
-        s_array<tp_type> AsArray() const {
-            return m_backing_arr.ToNonstatic().Slice(0, m_len);
-        }
+        tp_type &Last() { return operator[](len - 1); }
+        const tp_type &Last() const { return operator[](len - 1); }
 
-    private:
-        s_static_array<tp_type, tp_cap> m_backing_arr = {};
-        t_i32 m_len = 0;
+        s_array<tp_type> AsArray() { return backing_arr.ToNonstatic().Slice(0, len); }
+        s_array_rdonly<tp_type> AsArray() const { return backing_arr.ToNonstatic().Slice(0, len); }
     };
 
     template <typename tp_type>
@@ -154,9 +111,9 @@ namespace zf {
         ZF_ASSERT(new_cap > list.Cap());
 
         const auto new_backing_arr = AllocArray<typename tp_list_type::t_elem>(new_cap, mem_arena);
-        Copy(new_backing_arr, list.BackingArray());
+        Copy(new_backing_arr, list.backing_arr);
 
-        list = {new_backing_arr, list.Len()};
+        list = {new_backing_arr, list.len};
     }
 
     template <c_nonstatic_list tp_list_type>
@@ -177,23 +134,23 @@ namespace zf {
         }();
 
         const auto new_backing_arr = AllocArray<typename tp_list_type::t_elem>(new_cap, mem_arena);
-        Copy(new_backing_arr, list.BackingArray());
+        Copy(new_backing_arr, list.backing_arr);
 
-        list = {new_backing_arr, list.Len()};
+        list = {new_backing_arr, list.len};
     }
 
     template <c_list tp_list_type>
     typename tp_list_type::t_elem &AppendToList(tp_list_type &list, const typename tp_list_type::t_elem &val) {
-        ZF_ASSERT(list.Len() < list.Cap());
+        ZF_ASSERT(list.len < list.Cap());
 
-        list.SetLen(list.Len() + 1);
+        list.len++;
         list.Last() = val;
         return list.Last();
     }
 
     template <c_nonstatic_list tp_list_type>
     typename tp_list_type::t_elem &AppendToListDynamic(tp_list_type &list, const typename tp_list_type::t_elem &val, s_mem_arena &extension_mem_arena, const t_list_extension_cap_calculator extension_cap_calculator = g_default_list_extension_cap_calculator) {
-        if (list.Len() == list.Cap()) {
+        if (list.len == list.Cap()) {
             ExtendList(list, extension_mem_arena, extension_cap_calculator);
         }
 
@@ -202,16 +159,16 @@ namespace zf {
 
     template <c_list tp_list_type>
     s_array<typename tp_list_type::t_elem> AppendManyToList(tp_list_type &list, const s_array_rdonly<typename tp_list_type::t_elem> vals) {
-        ZF_ASSERT(list.Len() + vals.Len() <= list.Cap());
+        ZF_ASSERT(list.len + vals.Len() <= list.Cap());
 
-        Copy(list.BackingArray().SliceFrom(list.Len()), vals);
-        list.SetLen(list.Len() + vals.Len());
-        return list.BackingArray().Slice(list.Len() - vals.Len(), list.Len());
+        Copy(list.backing_arr.SliceFrom(list.len), vals);
+        list.len += vals.Len();
+        return list.backing_arr.Slice(list.len - vals.Len(), list.len);
     }
 
     template <c_nonstatic_list tp_list_type>
     s_array<typename tp_list_type::t_elem> AppendManyToListDynamic(tp_list_type &list, const s_array_rdonly<typename tp_list_type::t_elem> vals, s_mem_arena &extension_mem_arena, const t_list_extension_cap_calculator extension_cap_calculator = g_default_list_extension_cap_calculator) {
-        const auto min_cap_needed = list.Len() + vals.Len();
+        const auto min_cap_needed = list.len + vals.Len();
 
         if (min_cap_needed > list.Cap()) {
             ExtendListToFit(list, min_cap_needed, extension_mem_arena, extension_cap_calculator);
@@ -222,12 +179,12 @@ namespace zf {
 
     template <c_list tp_list_type>
     typename tp_list_type::t_elem &InsertIntoList(tp_list_type &list, const t_i32 index, const typename tp_list_type::t_elem &val) {
-        ZF_ASSERT(list.Len() < list.Cap());
-        ZF_ASSERT(index >= 0 && index <= list.Len());
+        ZF_ASSERT(list.len < list.Cap());
+        ZF_ASSERT(index >= 0 && index <= list.len);
 
-        list.SetLen(list.Len() + 1);
+        list.len++;
 
-        for (t_i32 i = list.Len() - 1; i > index; i--) {
+        for (t_i32 i = list.len - 1; i > index; i--) {
             list[i] = list[i - 1];
         }
 
@@ -238,7 +195,7 @@ namespace zf {
 
     template <c_list tp_list_type>
     typename tp_list_type::t_elem &InsertIntoListDynamic(tp_list_type &list, const t_i32 index, const typename tp_list_type::t_elem &val, s_mem_arena &extension_mem_arena, const t_list_extension_cap_calculator extension_cap_calculator = g_default_list_extension_cap_calculator) {
-        if (list.Len() == list.Cap()) {
+        if (list.len == list.Cap()) {
             ExtendList(list, extension_mem_arena, extension_cap_calculator);
         }
 
@@ -246,27 +203,27 @@ namespace zf {
     }
 
     template <c_list tp_list_type>
-    void RemoveAtInList(tp_list_type &list, const t_i32 index) {
-        ZF_ASSERT(list.Len() > 0);
-        ZF_ASSERT(index >= 0 && index < list.Len());
+    void RemoveFromList(tp_list_type &list, const t_i32 index) {
+        ZF_ASSERT(list.len > 0);
+        ZF_ASSERT(index >= 0 && index < list.len);
 
-        Copy(list.BackingArray().Slice(index, list.Len() - 1), list.BackingArray().Slice(index + 1, list.Len()));
-        list.SetLen(list.Len() - 1);
+        Copy(list.backing_arr.Slice(index, list.len - 1), list.backing_arr.Slice(index + 1, list.len));
+        list.len--;
     }
 
     template <c_list tp_list_type>
-    void RemoveAtInListSwapback(tp_list_type &list, const t_i32 index) {
-        ZF_ASSERT(list.Len() > 0);
-        ZF_ASSERT(index >= 0 && index < list.Len());
+    void RemoveFromListSwapback(tp_list_type &list, const t_i32 index) {
+        ZF_ASSERT(list.len > 0);
+        ZF_ASSERT(index >= 0 && index < list.len);
 
         list[index] = list.Last();
-        list.SetLen(list.Len() - 1);
+        list.len--;
     }
 
     template <c_list tp_list_type>
-    void RemoveLastInList(tp_list_type &list) {
-        ZF_ASSERT(list.Len() > 0);
-        list.SetLen(list.Len() - 1);
+    void RemoveFromListEnd(tp_list_type &list) {
+        ZF_ASSERT(list.len > 0);
+        list.len--;
     }
 
     // ============================================================
@@ -286,8 +243,6 @@ namespace zf {
             : m_active(true), m_block_cap(block_cap), m_blocks_mem_arena(&blocks_mem_arena), m_key_comparator(key_comparator) {
             ZF_ASSERT(key_comparator);
         };
-
-        s_kv_pair_block_seq(const s_kv_pair_block_seq &) = delete;
 
         t_i32 BlockCount() const {
             ZF_ASSERT(m_active);

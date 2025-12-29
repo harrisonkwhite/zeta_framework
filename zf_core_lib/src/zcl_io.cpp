@@ -14,7 +14,7 @@ namespace zf {
         const s_str_rdonly path_terminated = AllocStrCloneButAddTerminator(path, temp_mem_arena);
 
         s_ptr<FILE> file;
-        e_stream_mode stream_mode = {};
+        e_stream_mode stream_mode;
 
         switch (mode) {
         case ek_file_access_mode_read:
@@ -31,6 +31,9 @@ namespace zf {
             file = fopen(path_terminated.AsCstr(), "ab");
             stream_mode = ek_stream_mode_write;
             break;
+
+        default:
+            ZF_UNREACHABLE();
         }
 
         if (!file) {

@@ -27,7 +27,7 @@ namespace zf {
             .frame_cnt = static_cast<t_i32>(frame_cnt),
         };
 
-        const auto pcm = AllocArray<t_f32>(CalcSampleCount(meta), snd_data_mem_arena);
+        const auto pcm = AllocArray<t_f32>(SampleCount(meta), snd_data_mem_arena);
 
         if (ma_decoder_read_pcm_frames(&decoder, pcm.Ptr(), frame_cnt, nullptr) != MA_SUCCESS) {
             return false;
@@ -69,7 +69,7 @@ namespace zf {
             return false;
         }
 
-        const auto pcm = AllocArray<t_f32>(CalcSampleCount(meta), snd_data_mem_arena);
+        const auto pcm = AllocArray<t_f32>(SampleCount(meta), snd_data_mem_arena);
 
         if (!fs.ReadItemsIntoArray(pcm, pcm.Len())) {
             return false;
