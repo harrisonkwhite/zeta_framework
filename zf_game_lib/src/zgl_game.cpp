@@ -28,7 +28,7 @@ namespace zf {
 
         s_input_state input_state = {};
 
-        const s_ptr<s_rendering_basis> rendering_basis = StartupGFXModule(&perm_mem_arena);
+        s_rendering_basis *const rendering_basis = StartupGFXModule(&perm_mem_arena);
         ZF_DEFER({ ShutdownGFXModule(rendering_basis); });
 
         StartupAudioModule();

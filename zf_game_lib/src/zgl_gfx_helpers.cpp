@@ -1,12 +1,12 @@
 #include <zgl/zgl_gfx_helpers.h>
 
 namespace zf {
-    void RenderTexture(s_rendering_context &rendering_context, const s_gfx_resource &texture, const s_v2 pos, const s_rect_i src_rect) {
+    void RenderTexture(s_rendering_context *const rc, const s_gfx_resource *const texture, const s_v2 pos, const s_rect_i src_rect) {
         const auto texture_size = TextureSize(texture);
 
         s_rect_i src_rect_to_use;
 
-        if (src_rect == s_rect_i()) {
+        if (src_rect == s_rect_i{}) {
             src_rect_to_use = {0, 0, texture_size.x, texture_size.y};
         } else {
             ZF_ASSERT(src_rect.x >= 0 && src_rect.y >= 0 && src_rect.Right() <= texture_size.x && src_rect.Bottom() <= texture_size.y);
@@ -33,18 +33,18 @@ namespace zf {
             },
         }};
 
-        RenderTriangles(&rendering_context, triangles.ToNonstatic(), &texture);
+        RenderTriangles(rc, triangles.ToNonstatic(), texture);
     }
 
-    s_font CreateFontFromRaw(const s_str_rdonly file_path, const t_i32 height, t_code_pt_bit_vec &code_pts, s_mem_arena &temp_mem_arena, s_gfx_resource_arena &resource_arena) {
+    s_font CreateFontFromRaw(const s_str_rdonly file_path, const t_i32 height, t_code_pt_bit_vec *const code_pts, s_mem_arena *const temp_mem_arena, s_gfx_resource_arena *const resource_arena) {
         s_font_arrangement arrangement;
         s_array_mut<t_font_atlas_rgba> atlas_rgbas;
 
-        if (!zf::LoadFontDataFromRaw(file_path, height, code_pts, *resource_arena.mem_arena, temp_mem_arena, temp_mem_arena, arrangement, atlas_rgbas)) {
+        if (!zf::LoadFontDataFromRaw(file_path, height, *code_pts, *resource_arena->mem_arena, *temp_mem_arena, *temp_mem_arena, arrangement, atlas_rgbas)) {
             ZF_FATAL();
         }
 
-        const auto atlases = AllocArray<s_ptr<s_gfx_resource>>(atlas_rgbas.Len(), *resource_arena.mem_arena);
+        const auto atlases = AllocArray<s_gfx_resource *>(atlas_rgbas.Len(), *resource_arena->mem_arena);
 
         for (t_i32 i = 0; i < atlas_rgbas.Len(); i++) {
             atlases[i] = CreateTextureResource({g_font_atlas_size, atlas_rgbas[i]}, resource_arena);
@@ -56,15 +56,15 @@ namespace zf {
         };
     }
 
-    s_font CreateFontFromPacked(const s_str_rdonly file_path, s_mem_arena &temp_mem_arena, s_gfx_resource_arena &resource_arena) {
+    s_font CreateFontFromPacked(const s_str_rdonly file_path, s_mem_arena *const temp_mem_arena, s_gfx_resource_arena *const resource_arena) {
         s_font_arrangement arrangement;
         s_array_mut<t_font_atlas_rgba> atlas_rgbas;
 
-        if (!zf::UnpackFont(file_path, *resource_arena.mem_arena, temp_mem_arena, temp_mem_arena, arrangement, atlas_rgbas)) {
+        if (!zf::UnpackFont(file_path, *resource_arena->mem_arena, *temp_mem_arena, *temp_mem_arena, arrangement, atlas_rgbas)) {
             ZF_FATAL();
         }
 
-        const auto atlases = AllocArray<s_ptr<s_gfx_resource>>(atlas_rgbas.Len(), *resource_arena.mem_arena);
+        const auto atlases = AllocArray<s_gfx_resource *>(atlas_rgbas.Len(), *resource_arena->mem_arena);
 
         for (t_i32 i = 0; i < atlas_rgbas.Len(); i++) {
             atlases[i] = CreateTextureResource({g_font_atlas_size, atlas_rgbas[i]}, resource_arena);
@@ -76,7 +76,7 @@ namespace zf {
         };
     }
 
-    s_array_mut<s_v2> CalcStrChrRenderPositions(const s_str_rdonly str, const s_font_arrangement &font_arrangement, const s_v2 pos, const s_v2 alignment, s_mem_arena &mem_arena) {
+    s_array_mut<s_v2> CalcStrChrRenderPositions(const s_str_rdonly str, const s_font_arrangement &font_arrangement, const s_v2 pos, const s_v2 alignment, s_mem_arena *const mem_arena) {
         ZF_ASSERT(IsStrValidUTF8(str));
         ZF_ASSERT(IsAlignmentValid(alignment));
 
@@ -101,7 +101,7 @@ namespace zf {
         }();
 
         // Reserve memory for the character positions.
-        const auto positions = AllocArray<s_v2>(str_meta.len, mem_arena);
+        const auto positions = AllocArray<s_v2>(str_meta.len, *mem_arena);
 
         // From the line count we can determine the vertical alignment offset to apply.
         const t_f32 alignment_offs_y = static_cast<t_f32>(-(str_meta.line_cnt * font_arrangement.line_height)) * alignment.y;
@@ -172,7 +172,7 @@ namespace zf {
         return positions;
     }
 
-    void RenderStr(s_rendering_context &rendering_context, const s_str_rdonly str, const s_font &font, const s_v2 pos, s_mem_arena &temp_mem_arena, const s_v2 alignment, const s_color_rgba32f blend) {
+    void RenderStr(s_rendering_context *const rc, const s_str_rdonly str, const s_font &font, const s_v2 pos, s_mem_arena *const temp_mem_arena, const s_v2 alignment, const s_color_rgba32f blend) {
         ZF_ASSERT(IsStrValidUTF8(str));
         ZF_ASSERT(IsAlignmentValid(alignment));
 
@@ -200,7 +200,7 @@ namespace zf {
                 continue;
             }
 
-            RenderTexture(rendering_context, *font_atlases[glyph_info->atlas_index], chr_positions[chr_index], glyph_info->atlas_rect);
+            RenderTexture(rc, font_atlases[glyph_info->atlas_index], chr_positions[chr_index], glyph_info->atlas_rect);
 
             chr_index++;
         };

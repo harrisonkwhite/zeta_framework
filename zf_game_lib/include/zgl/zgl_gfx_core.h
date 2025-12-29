@@ -10,61 +10,61 @@ namespace zf {
 
     // This depends on the platform module being initialised beforehand.
     // Returns a pointer to a rendering basis, needed for all rendering operations.
-    s_ptr<s_rendering_basis> StartupGFXModule(const s_ptr<s_mem_arena> mem_arena);
+    s_rendering_basis *StartupGFXModule(s_mem_arena *const mem_arena);
 
-    void ShutdownGFXModule(const s_ptr<const s_rendering_basis> rendering_basis);
+    void ShutdownGFXModule(const s_rendering_basis *const rendering_basis);
 
     // ============================================================
     // @section: Resources
     // ============================================================
     struct s_gfx_resource;
 
-    s_v2_i TextureSize(const s_gfx_resource &texture);
+    s_v2_i TextureSize(const s_gfx_resource *const texture);
 
     struct s_gfx_resource_arena {
-        s_ptr<s_mem_arena> mem_arena = nullptr;
-        s_ptr<s_gfx_resource> head = nullptr;
-        s_ptr<s_gfx_resource> tail = nullptr;
+        s_mem_arena *mem_arena;
+        s_gfx_resource *head;
+        s_gfx_resource *tail;
     };
 
-    s_gfx_resource_arena &PermGFXResourceArena();
+    s_gfx_resource_arena *PermGFXResourceArena();
 
-    void ReleaseGFXResources(s_gfx_resource_arena &arena);
+    void ReleaseGFXResources(s_gfx_resource_arena *const arena);
 
-    s_ptr<s_gfx_resource> CreateTextureResource(const s_texture_data_rdonly texture_data, s_gfx_resource_arena &arena = PermGFXResourceArena());
+    s_gfx_resource *CreateTextureResource(const s_texture_data_rdonly texture_data, s_gfx_resource_arena *const arena = PermGFXResourceArena());
 
-    inline s_ptr<s_gfx_resource> CreateTextureResourceFromRaw(const s_str_rdonly file_path, s_mem_arena &temp_mem_arena, s_gfx_resource_arena &arena = PermGFXResourceArena()) {
+    inline s_gfx_resource *CreateTextureResourceFromRaw(const s_str_rdonly file_path, s_mem_arena *const temp_mem_arena, s_gfx_resource_arena *const arena = PermGFXResourceArena()) {
         s_texture_data texture_data;
 
-        if (!LoadTextureDataFromRaw(file_path, temp_mem_arena, temp_mem_arena, texture_data)) {
+        if (!LoadTextureDataFromRaw(file_path, *temp_mem_arena, *temp_mem_arena, texture_data)) {
             ZF_FATAL();
         }
 
         return CreateTextureResource(texture_data, arena);
     }
 
-    inline s_ptr<s_gfx_resource> CreateTextureResourceFromPacked(const s_str_rdonly file_path, s_mem_arena &temp_mem_arena, s_gfx_resource_arena &arena = PermGFXResourceArena()) {
+    inline s_gfx_resource *CreateTextureResourceFromPacked(const s_str_rdonly file_path, s_mem_arena *const temp_mem_arena, s_gfx_resource_arena *const arena = PermGFXResourceArena()) {
         s_texture_data texture_data;
 
-        if (!UnpackTexture(file_path, temp_mem_arena, temp_mem_arena, texture_data)) {
+        if (!UnpackTexture(file_path, *temp_mem_arena, *temp_mem_arena, texture_data)) {
             ZF_FATAL();
         }
 
         return CreateTextureResource(texture_data, arena);
     }
 
-    s_ptr<s_gfx_resource> CreateShaderProgResource(const s_array_rdonly<t_u8> vert_shader_compiled_bin, const s_array_rdonly<t_u8> frag_shader_compiled_bin, s_gfx_resource_arena &arena = PermGFXResourceArena());
+    s_gfx_resource *CreateShaderProgResource(const s_array_rdonly<t_u8> vert_shader_compiled_bin, const s_array_rdonly<t_u8> frag_shader_compiled_bin, s_gfx_resource_arena *const arena = PermGFXResourceArena());
 
-    inline s_ptr<s_gfx_resource> CreateShaderProgResourceFromPacked(const s_str_rdonly vert_shader_file_path, const s_str_rdonly frag_shader_file_path, s_mem_arena &temp_mem_arena, s_gfx_resource_arena &arena = PermGFXResourceArena()) {
+    inline s_gfx_resource *CreateShaderProgResourceFromPacked(const s_str_rdonly vert_shader_file_path, const s_str_rdonly frag_shader_file_path, s_mem_arena *const temp_mem_arena, s_gfx_resource_arena *const arena = PermGFXResourceArena()) {
         s_array_mut<t_u8> vert_shader_compiled_bin;
 
-        if (!UnpackShader(vert_shader_file_path, temp_mem_arena, temp_mem_arena, vert_shader_compiled_bin)) {
+        if (!UnpackShader(vert_shader_file_path, *temp_mem_arena, *temp_mem_arena, vert_shader_compiled_bin)) {
             ZF_FATAL();
         }
 
         s_array_mut<t_u8> frag_shader_compiled_bin;
 
-        if (!UnpackShader(frag_shader_file_path, temp_mem_arena, temp_mem_arena, frag_shader_compiled_bin)) {
+        if (!UnpackShader(frag_shader_file_path, *temp_mem_arena, *temp_mem_arena, frag_shader_compiled_bin)) {
             ZF_FATAL();
         }
 
@@ -76,7 +76,7 @@ namespace zf {
     // ============================================================
     struct s_rendering_context;
 
-    s_ptr<s_rendering_context> BeginRendering(const s_rendering_basis *const rendering_basis, const s_color_rgb8 clear_col, s_mem_arena *const rendering_context_mem_arena);
+    s_rendering_context *BeginRendering(const s_rendering_basis *const rendering_basis, const s_color_rgb8 clear_col, s_mem_arena *const rendering_context_mem_arena);
     void EndRendering(s_rendering_context *const rc);
 
     struct s_rendering_vert {
