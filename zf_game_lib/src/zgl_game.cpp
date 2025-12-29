@@ -17,10 +17,10 @@ namespace zf {
         //
         // Initialisation
         //
-        s_mem_arena perm_mem_arena = {};
+        s_arena perm_mem_arena = {};
         ZF_DEFER({ perm_mem_arena.Release(); });
 
-        s_mem_arena temp_mem_arena = {};
+        s_arena temp_mem_arena = {};
         ZF_DEFER({ temp_mem_arena.Release(); });
 
         StartupPlatformModule(g_init_window_size);

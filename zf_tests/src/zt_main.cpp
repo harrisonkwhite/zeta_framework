@@ -1,29 +1,29 @@
 #include <zcl.h>
 
 namespace zf {
-    static t_b8 TestBits(s_mem_arena &mem_arena) {
+    static t_b8 TestBits(s_arena &mem_arena) {
         // @todo
         return true;
     }
 
-    static t_b8 TestSorting(s_mem_arena &mem_arena) {
+    static t_b8 TestSorting(s_arena &mem_arena) {
         // @todo
         return true;
     }
 
-    static t_b8 TestList(s_mem_arena &mem_arena) {
+    static t_b8 TestList(s_arena &mem_arena) {
         // @todo
         return true;
     }
 
-    static t_b8 TestHashMap(s_mem_arena &mem_arena) {
+    static t_b8 TestHashMap(s_arena &mem_arena) {
         // @todo
         return true;
     }
 
     struct s_test {
         s_cstr_literal title;
-        t_b8 (*func)(s_mem_arena &mem_arena) = nullptr;
+        t_b8 (*func)(s_arena &mem_arena) = nullptr;
     };
 
     constexpr s_static_array<s_test, 4> g_tests = {{
@@ -34,7 +34,7 @@ namespace zf {
     }};
 
     static void RunTests() {
-        s_mem_arena mem_arena = {};
+        s_arena mem_arena = {};
         ZF_DEFER({ mem_arena.Release(); });
 
         for (t_i32 i = 0; i < g_tests.g_len; i++) {

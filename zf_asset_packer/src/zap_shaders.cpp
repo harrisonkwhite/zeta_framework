@@ -3,7 +3,7 @@
 #include <reproc/reproc.h>
 
 namespace zf {
-    t_b8 CompileShader(const s_str_rdonly shader_file_path, const s_str_rdonly varying_def_file_path, const t_b8 is_frag, s_mem_arena &bin_mem_arena, s_mem_arena &temp_mem_arena, s_array_mut<t_u8> &o_bin) {
+    t_b8 CompileShader(const s_str_rdonly shader_file_path, const s_str_rdonly varying_def_file_path, const t_b8 is_frag, s_arena &bin_mem_arena, s_arena &temp_mem_arena, s_array_mut<t_u8> &o_bin) {
         const s_str_rdonly shader_file_path_terminated = AllocStrCloneButAddTerminator(shader_file_path, temp_mem_arena);
         const s_str_rdonly varying_def_file_path_terminated = AllocStrCloneButAddTerminator(varying_def_file_path, temp_mem_arena);
 
@@ -47,12 +47,12 @@ namespace zf {
 
         const s_str shaderc_file_path = {AllocArray<t_u8>(exe_dir.bytes.Len() + shaderc_file_path_rel.buf.Len() + 1, temp_mem_arena)};
         Copy(shaderc_file_path.bytes, exe_dir.bytes);
-        Copy(shaderc_file_path.bytes.SliceFrom(exe_dir.bytes.Len()), shaderc_file_path_rel.buf.ToByteArray());
+        Copy(shaderc_file_path.bytes.SliceFrom(exe_dir.bytes.Len()), shaderc_file_path_rel.buf.AsByteArray());
 
         const s_cstr_literal shaderc_include_dir_rel = "tools/bgfx/shaderc_include";
         const s_str shaderc_include_dir = {AllocArray<t_u8>(exe_dir.bytes.Len() + shaderc_include_dir_rel.buf.Len() + 1, temp_mem_arena)};
         Copy(shaderc_include_dir.bytes, exe_dir.bytes);
-        Copy(shaderc_include_dir.bytes.SliceFrom(exe_dir.bytes.Len()), shaderc_include_dir_rel.buf.ToByteArray());
+        Copy(shaderc_include_dir.bytes.SliceFrom(exe_dir.bytes.Len()), shaderc_include_dir_rel.buf.AsByteArray());
 
         const s_static_array<const char *, 15> args = {{
             shaderc_file_path.Cstr(),
@@ -94,7 +94,7 @@ namespace zf {
                 break;
             }
 
-            AppendManyToListDynamic(bin_list, buf.ToNonstatic().Slice(0, r), bin_mem_arena);
+            AppendManyToListDynamic(bin_list, buf.AsNonstatic().Slice(0, r), bin_mem_arena);
         }
 
         if (r != REPROC_EPIPE) {

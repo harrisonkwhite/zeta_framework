@@ -92,13 +92,13 @@ namespace zf {
         } state;
     };
 
-    static s_rendering_basis *CreateRenderingBasis(s_mem_arena *const mem_arena, s_gfx_resource_arena *const resource_arena);
+    static s_rendering_basis *CreateRenderingBasis(s_arena *const mem_arena, s_gfx_resource_arena *const resource_arena);
     static void Flush(s_rendering_context *const rc);
 
     // ============================================================
     // @section: General
     // ============================================================
-    s_rendering_basis *StartupGFXModule(s_mem_arena *const mem_arena) {
+    s_rendering_basis *StartupGFXModule(s_arena *const mem_arena) {
         ZF_ASSERT(g_state.state == ek_state_uninitted);
 
         g_state.state = ek_state_initted;
@@ -376,7 +376,7 @@ namespace zf {
     // ============================================================
     // @section: Rendering
     // ============================================================
-    static s_rendering_basis *CreateRenderingBasis(s_mem_arena *const mem_arena, s_gfx_resource_arena *const px_texture_resource_arena) {
+    static s_rendering_basis *CreateRenderingBasis(s_arena *const mem_arena, s_gfx_resource_arena *const px_texture_resource_arena) {
         bgfx::VertexLayout vert_layout = {};
         vert_layout.begin().add(bgfx::Attrib::Position, 2, bgfx::AttribType::Float).add(bgfx::Attrib::Color0, 4, bgfx::AttribType::Float).add(bgfx::Attrib::TexCoord0, 2, bgfx::AttribType::Float).end();
 
@@ -404,7 +404,7 @@ namespace zf {
         return Alloc<s_rendering_basis>(mem_arena, vert_buf_bgfx_hdl, shader_prog_bgfx_hdl, texture_sampler_uniform_bgfx_hdl, px_texture);
     }
 
-    s_rendering_context *BeginRendering(const s_rendering_basis *const rendering_basis, const s_color_rgb8 clear_col, s_mem_arena *const rendering_context_mem_arena) {
+    s_rendering_context *BeginRendering(const s_rendering_basis *const rendering_basis, const s_color_rgb8 clear_col, s_arena *const rendering_context_mem_arena) {
         ZF_ASSERT(g_state.state == ek_state_initted);
         ZF_ASSERT(rendering_basis);
         ZF_ASSERT(rendering_context_mem_arena);
@@ -458,7 +458,7 @@ namespace zf {
             return;
         }
 
-        const auto verts = rc->state.verts.ToNonstatic().Slice(rc->state.vert_offs, rc->state.vert_offs + rc->state.vert_cnt);
+        const auto verts = rc->state.verts.AsNonstatic().Slice(rc->state.vert_offs, rc->state.vert_offs + rc->state.vert_cnt);
         const auto verts_bgfx_ref = bgfx::makeRef(verts.Ptr(), static_cast<uint32_t>(verts.SizeInBytes()));
         bgfx::update(rc->basis->vert_buf_bgfx_hdl, static_cast<uint32_t>(rc->state.vert_offs), verts_bgfx_ref);
 

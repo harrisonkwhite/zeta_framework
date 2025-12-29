@@ -92,7 +92,7 @@ namespace zf {
     }};
 
     t_b8 PackAssets(const s_str_rdonly instrs_json_file_path) {
-        s_mem_arena mem_arena = {};
+        s_arena mem_arena = {};
         ZF_DEFER({ mem_arena.Release(); });
 
         cJSON *cj = nullptr;

@@ -4,8 +4,8 @@
 #include <cstring>
 
 namespace zf {
-    void s_mem_arena::Release() {
-        const auto f = [](const auto self, s_block *const block) {
+    void ReleaseArena(s_arena *const arena) {
+        const auto f = [](const auto self, s_arena_block *const block) {
             if (!block) {
                 return;
             }
@@ -16,52 +16,21 @@ namespace zf {
             free(block);
         };
 
-        f(f, m_blocks_head);
+        f(f, arena->blocks_head);
 
-        *this = {};
+        *arena = {};
     }
 
-    void *s_mem_arena::Push(const t_i32 size, const t_i32 alignment) {
-        ZF_ASSERT(size > 0 && IsAlignmentValid(alignment));
-
-        if (!m_blocks_head) {
-            m_blocks_head = CreateBlock(ZF_MAX(size, m_block_min_buf_size));
-            m_block_cur = m_blocks_head;
-            return Push(size, alignment);
-        }
-
-        const t_i32 offs_aligned = AlignForward(m_block_cur_offs, alignment);
-        const t_i32 offs_next = offs_aligned + size;
-
-        if (offs_next > m_block_cur->buf_size) {
-            if (!m_block_cur->next) {
-                m_block_cur->next = CreateBlock(ZF_MAX(size, m_block_min_buf_size));
-            }
-
-            m_block_cur = m_block_cur->next;
-            m_block_cur_offs = 0;
-
-            return Push(size, alignment);
-        }
-
-        m_block_cur_offs = offs_next;
-
-        void *const res = static_cast<t_u8 *>(m_block_cur->buf) + offs_aligned;
-        memset(res, 0, static_cast<size_t>(size));
-
-        return res;
-    }
-
-    s_mem_arena::s_block *s_mem_arena::CreateBlock(const t_i32 buf_size) {
+    static s_arena_block *CreateArenaBlock(const t_i32 buf_size) {
         ZF_ASSERT(buf_size > 0);
 
-        const auto res = static_cast<s_block *>(malloc(sizeof(s_block)));
+        const auto res = static_cast<s_arena_block *>(malloc(sizeof(s_arena_block)));
 
         if (!res) {
             ZF_FATAL();
         }
 
-        memset(res, 0, sizeof(s_block));
+        memset(res, 0, sizeof(s_arena_block));
 
         res->buf = malloc(static_cast<size_t>(buf_size));
         res->buf_size = buf_size;
@@ -75,11 +44,44 @@ namespace zf {
         return res;
     }
 
+    void *PushToArena(s_arena *const arena, const t_i32 size, const t_i32 alignment) {
+        ZF_ASSERT(size > 0 && IsAlignmentValid(alignment));
+
+        if (!arena->blocks_head) {
+            arena->blocks_head = CreateArenaBlock(ZF_MAX(size, arena->block_min_buf_size));
+            arena->block_cur = arena->blocks_head;
+            return PushToArena(arena, size, alignment);
+        }
+
+        const t_i32 offs_aligned = AlignForward(arena->block_cur_offs, alignment);
+        const t_i32 offs_next = offs_aligned + size;
+
+        if (offs_next > arena->block_cur->buf_size) {
+            if (!arena->block_cur->next) {
+                arena->block_cur->next = CreateArenaBlock(ZF_MAX(size, arena->block_min_buf_size));
+            }
+
+            arena->block_cur = arena->block_cur->next;
+            arena->block_cur_offs = 0;
+
+            return PushToArena(arena, size, alignment);
+        }
+
+        arena->block_cur_offs = offs_next;
+
+        void *const res = static_cast<t_u8 *>(arena->block_cur->buf) + offs_aligned;
+        memset(res, 0, static_cast<size_t>(size));
+
+        return res;
+    }
+
     // ============================================================
     // @section: Bits
     // ============================================================
+
     static t_i32 IndexOfFirstSetBitHelper(const s_bit_vec_rdonly bv, const t_i32 from, const t_u8 xor_mask) {
-        ZF_ASSERT(from >= 0 && from <= bv.BitCount()); // Intentionally allowing the upper bound here for the case of iteration.
+        ZF_ASSERT(IsValid(bv));
+        ZF_ASSERT(from >= 0 && from <= bv.bit_cnt); // Intentionally allowing the upper bound here for the case of iteration.
 
         // Map of each possible byte to the index of the first set bit, or -1 for the first case.
         static constexpr s_static_array<t_i32, 256> g_mappings = {{
@@ -343,14 +345,14 @@ namespace zf {
 
         const t_i32 begin_byte_index = from / 8;
 
-        for (t_i32 i = begin_byte_index; i < bv.Bytes().Len(); i++) {
-            t_u8 byte = bv.Bytes()[i] ^ xor_mask;
+        for (t_i32 i = begin_byte_index; i < bv.bytes.len; i++) {
+            t_u8 byte = bv.bytes[i] ^ xor_mask;
 
             if (i == begin_byte_index) {
                 byte &= BitmaskRange(from % 8);
             }
 
-            if (i == bv.Bytes().Len() - 1) {
+            if (i == bv.bytes.len - 1) {
                 byte &= bv.LastByteMask();
             }
 
@@ -373,6 +375,8 @@ namespace zf {
     }
 
     t_i32 CountSetBits(const s_bit_vec_rdonly bv) {
+        ZF_ASSERT(IsValid(bv));
+
         // Map of each possible byte to the number of set bits in it.
         static constexpr s_static_array<t_i32, 256> g_mappings = {{
             0, // 0000 0000
@@ -635,14 +639,16 @@ namespace zf {
 
         t_i32 res = 0;
 
-        if (bv.Bytes().Len() > 0) {
-            for (t_i32 i = 0; i < bv.Bytes().Len() - 1; i++) {
-                res += g_mappings[bv.Bytes()[i]];
+        if (bv.bytes.len > 0) {
+            for (t_i32 i = 0; i < bv.bytes.len - 1; i++) {
+                res += g_mappings[bv.bytes[i]];
             }
 
-            res += g_mappings[bv.Bytes()[bv.Bytes().Len() - 1] & bv.LastByteMask()];
+            res += g_mappings[bv.bytes[bv.bytes.len - 1] & bv.LastByteMask()];
         }
 
         return res;
     }
+
+    // ============================================================
 }

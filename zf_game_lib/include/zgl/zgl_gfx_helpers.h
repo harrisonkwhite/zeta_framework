@@ -11,10 +11,10 @@ namespace zf {
         s_array_mut<s_gfx_resource *> atlases;
     };
 
-    s_font CreateFontFromRaw(const s_str_rdonly file_path, const t_i32 height, t_code_pt_bit_vec *const code_pts, s_mem_arena *const temp_mem_arena, s_gfx_resource_arena *const resource_arena = PermGFXResourceArena());
-    s_font CreateFontFromPacked(const s_str_rdonly file_path, s_mem_arena *const temp_mem_arena, s_gfx_resource_arena *const resource_arena = PermGFXResourceArena());
+    s_font CreateFontFromRaw(const s_str_rdonly file_path, const t_i32 height, t_code_pt_bit_vec *const code_pts, s_arena *const temp_mem_arena, s_gfx_resource_arena *const resource_arena = PermGFXResourceArena());
+    s_font CreateFontFromPacked(const s_str_rdonly file_path, s_arena *const temp_mem_arena, s_gfx_resource_arena *const resource_arena = PermGFXResourceArena());
 
-    s_array_mut<s_v2> CalcStrChrRenderPositions(const s_str_rdonly str, const s_font_arrangement &font_arrangement, const s_v2 pos, const s_v2 alignment, s_mem_arena *const mem_arena);
+    s_array_mut<s_v2> CalcStrChrRenderPositions(const s_str_rdonly str, const s_font_arrangement &font_arrangement, const s_v2 pos, const s_v2 alignment, s_arena *const mem_arena);
 
-    void RenderStr(s_rendering_context *const rc, const s_str_rdonly str, const s_font &font, const s_v2 pos, s_mem_arena *const temp_mem_arena, const s_v2 alignment = g_alignment_topleft, const s_color_rgba32f blend = g_color_white);
+    void RenderStr(s_rendering_context *const rc, const s_str_rdonly str, const s_font &font, const s_v2 pos, s_arena *const temp_mem_arena, const s_v2 alignment = g_alignment_topleft, const s_color_rgba32f blend = g_color_white);
 }

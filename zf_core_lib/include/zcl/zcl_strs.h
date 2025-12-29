@@ -53,7 +53,7 @@ namespace zf {
 
     // Does a 0 appear anywhere in the array?
     constexpr t_b8 AreBytesTerminated(const s_array_rdonly<t_u8> bytes) {
-        for (t_i32 i = bytes.Len() - 1; i >= 0; i--) {
+        for (t_i32 i = bytes.len - 1; i >= 0; i--) {
             if (!bytes[i]) {
                 return true;
             }
@@ -88,12 +88,12 @@ namespace zf {
         s_str_rdonly(const s_array_rdonly<t_u8> bytes) : bytes(bytes) {}
 
         // This very intentionally drops the terminator.
-        s_str_rdonly(const s_cstr_literal lit) : bytes({reinterpret_cast<const t_u8 *>(lit.buf.Ptr().raw), lit.buf.Len() - 1}) {}
+        s_str_rdonly(const s_cstr_literal lit) : bytes({reinterpret_cast<const t_u8 *>(lit.buf.raw), lit.buf.len - 1}) {}
 
         // Requires that there is a terminating byte somewhere.
         const char *Cstr() const {
             ZF_REQUIRE(AreBytesTerminated(bytes));
-            return reinterpret_cast<const char *>(bytes.Ptr().raw);
+            return reinterpret_cast<const char *>(bytes.raw);
         }
     };
 
@@ -110,7 +110,7 @@ namespace zf {
         // Requires that there is a terminating byte somewhere.
         char *Cstr() const {
             ZF_REQUIRE(AreBytesTerminated(bytes));
-            return reinterpret_cast<char *>(bytes.Ptr().raw);
+            return reinterpret_cast<char *>(bytes.raw);
         }
     };
 
@@ -132,14 +132,14 @@ namespace zf {
     }
 
     // Allocates a clone of the given string using the memory arena, with a null byte added at the end (even if the string was already terminated).
-    inline s_str AllocStrCloneButAddTerminator(const s_str_rdonly str, s_mem_arena &mem_arena) {
-        const s_str clone = {AllocArray<t_u8>(str.bytes.Len() + 1, mem_arena)};
+    inline s_str AllocStrCloneButAddTerminator(const s_str_rdonly str, s_arena &arena) {
+        const s_str clone = {AllocArray<t_u8>(str.bytes.len + 1, &arena)};
         Copy(clone.bytes, str.bytes);
         return clone;
     }
 
     inline t_b8 IsStrEmpty(const s_str_rdonly str) {
-        return str.bytes.Len() == 0;
+        return str.bytes.len == 0;
     }
 
     inline t_b8 AreStrsEqual(const s_str_rdonly a, const s_str_rdonly b) {
@@ -157,8 +157,8 @@ namespace zf {
     void MarkStrCodePoints(const s_str_rdonly str, t_code_pt_bit_vec &code_pts);
 
     struct s_str_walk_info {
-        t_code_pt code_pt = 0;
-        t_i32 byte_index = 0;
+        t_code_pt code_pt;
+        t_i32 byte_index;
     };
 
     // byte_index should be initialised to the index of ANY byte in the code point to start walking from.
@@ -173,7 +173,7 @@ namespace zf {
     for (t_i32 ZF_CONCAT(bi_l, __LINE__) = 0; ZF_CONCAT(bi_l, __LINE__) != -1; ZF_CONCAT(bi_l, __LINE__) = -1) \
         for (s_str_walk_info info; WalkStr(str, ZF_CONCAT(bi_l, __LINE__), info);)
 
-#define ZF_WALK_STR_REVERSE(str, info)                                                                                                                           \
-    for (t_i32 ZF_CONCAT(bi_l, __LINE__) = (str).bytes.Len() - 1; ZF_CONCAT(bi_l, __LINE__) != (str).bytes.Len(); ZF_CONCAT(bi_l, __LINE__) = (str).bytes.Len()) \
+#define ZF_WALK_STR_REVERSE(str, info)                                                                                                                     \
+    for (t_i32 ZF_CONCAT(bi_l, __LINE__) = (str).bytes.len - 1; ZF_CONCAT(bi_l, __LINE__) != (str).bytes.len; ZF_CONCAT(bi_l, __LINE__) = (str).bytes.len) \
         for (s_str_walk_info info; WalkStrReverse(str, ZF_CONCAT(bi_l, __LINE__), info);)
 }
