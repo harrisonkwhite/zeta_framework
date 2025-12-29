@@ -9,9 +9,10 @@ namespace zf {
     struct s_rendering_basis;
 
     // This depends on the platform module being initialised beforehand.
-    s_rendering_basis &StartupGFXModule(s_mem_arena &mem_arena);
+    // Returns a pointer to a rendering basis, needed for all rendering operations.
+    s_ptr<s_rendering_basis> StartupGFXModule(const s_ptr<s_mem_arena> mem_arena);
 
-    void ShutdownGFXModule(s_rendering_basis &rendering_basis);
+    void ShutdownGFXModule(const s_ptr<const s_rendering_basis> rendering_basis);
 
     // ============================================================
     // @section: Resources
@@ -75,22 +76,26 @@ namespace zf {
     // ============================================================
     struct s_rendering_context;
 
-    s_rendering_context &BeginRendering(const s_rendering_basis &rendering_basis, const s_color_rgb24f clear_col, s_mem_arena &rendering_context_mem_arena);
-    void EndRendering(s_rendering_context &rendering_context);
+    s_ptr<s_rendering_context> BeginRendering(const s_rendering_basis *const rendering_basis, const s_color_rgb8 clear_col, s_mem_arena *const rendering_context_mem_arena);
+    void EndRendering(s_rendering_context *const rc);
 
     struct s_rendering_vert {
-        s_v2 pos = {};
-        s_color_rgba32f blend = {};
-        s_v2 uv = {};
+        s_v2 pos;
+        s_color_rgba32f blend;
+        s_v2 uv;
     };
+
+    inline t_b8 IsValid(const s_rendering_vert &vert) {
+        return vert.blend.IsValid() && vert.uv.x >= 0.0f && vert.uv.x <= 1.0f && vert.uv.y >= 0.0f && vert.uv.y <= 1.0f;
+    }
 
     struct s_render_triangle {
-        s_static_array<s_rendering_vert, 3> verts = {};
+        s_static_array<s_rendering_vert, 3> verts;
     };
 
-    void RenderTriangles(s_rendering_context &rendering_context, const s_array_rdonly<s_render_triangle> triangles, const s_ptr<const s_gfx_resource> texture);
+    void RenderTriangles(s_rendering_context *const rc, const s_array_rdonly<s_render_triangle> triangles, const s_gfx_resource *const texture);
 
-    inline void RenderTriangle(s_rendering_context &rendering_context, const s_static_array<s_v2, 3> &pts, const s_static_array<s_color_rgba32f, 3> &pt_colors) {
+    inline void RenderTriangle(s_rendering_context *const rc, const s_static_array<s_v2, 3> &pts, const s_static_array<s_color_rgba32f, 3> &pt_colors) {
         const s_render_triangle triangle = {
             .verts = {{
                 {.pos = pts[0], .blend = pt_colors[0], .uv = {}},
@@ -99,14 +104,16 @@ namespace zf {
             }},
         };
 
-        RenderTriangles(rendering_context, {&triangle, 1}, nullptr);
+        RenderTriangles(rc, {&triangle, 1}, nullptr);
     }
 
-    inline void RenderTriangle(s_rendering_context &rendering_context, const s_static_array<s_v2, 3> &pts, const s_color_rgba32f color) {
-        RenderTriangle(rendering_context, pts, {{color, color, color}});
+    inline void RenderTriangle(s_rendering_context *const rc, const s_static_array<s_v2, 3> &pts, const s_color_rgba32f color) {
+        RenderTriangle(rc, pts, {{color, color, color}});
     }
 
-    inline void RenderRect(s_rendering_context &rendering_context, const s_rect_f rect, const s_color_rgba32f color_topleft, const s_color_rgba32f color_topright, const s_color_rgba32f color_bottomright, const s_color_rgba32f color_bottomleft) {
+    inline void RenderRect(s_rendering_context *const rc, const s_rect_f rect, const s_color_rgba32f color_topleft, const s_color_rgba32f color_topright, const s_color_rgba32f color_bottomright, const s_color_rgba32f color_bottomleft) {
+        ZF_ASSERT(rect.width > 0.0f && rect.height > 0.0f);
+
         const s_static_array<s_render_triangle, 2> triangles = {{
             {
                 .verts = {{
@@ -124,10 +131,10 @@ namespace zf {
             },
         }};
 
-        RenderTriangles(rendering_context, triangles.ToNonstatic(), nullptr);
+        RenderTriangles(rc, triangles.ToNonstatic(), nullptr);
     }
 
-    inline void RenderRect(s_rendering_context &rendering_context, const s_rect_f rect, const s_color_rgba32f color) {
-        RenderRect(rendering_context, rect, color, color, color, color);
+    inline void RenderRect(s_rendering_context *const rc, const s_rect_f rect, const s_color_rgba32f color) {
+        RenderRect(rc, rect, color, color, color, color);
     }
 }

@@ -92,14 +92,15 @@ namespace zf {
         } state;
     };
 
-    static s_rendering_basis &CreateRenderingBasis(s_mem_arena &mem_arena, s_gfx_resource_arena &resource_arena);
-    static void Flush(s_rendering_context &rc);
+    static s_ptr<s_rendering_basis> CreateRenderingBasis(s_mem_arena &mem_arena, s_gfx_resource_arena &resource_arena);
+    static void Flush(s_rendering_context *const rc);
 
     // ============================================================
     // @section: General
     // ============================================================
-    s_rendering_basis &StartupGFXModule(s_mem_arena &mem_arena) {
+    s_ptr<s_rendering_basis> StartupGFXModule(const s_ptr<s_mem_arena> mem_arena) {
         ZF_ASSERT(g_state.state == ek_state_uninitted);
+        ZF_ASSERT(mem_arena);
 
         g_state.state = ek_state_initted;
 
@@ -124,17 +125,18 @@ namespace zf {
             ZF_FATAL();
         }
 
-        g_state.perm_resource_arena = {.mem_arena = &mem_arena};
+        g_state.perm_resource_arena = {.mem_arena = mem_arena};
 
-        return CreateRenderingBasis(mem_arena, g_state.perm_resource_arena);
+        return CreateRenderingBasis(*mem_arena, g_state.perm_resource_arena);
     }
 
-    void ShutdownGFXModule(s_rendering_basis &rendering_state) {
+    void ShutdownGFXModule(const s_ptr<const s_rendering_basis> rendering_basis) {
         ZF_ASSERT(g_state.state == ek_state_initted);
+        ZF_ASSERT(rendering_basis);
 
-        bgfx::destroy(rendering_state.texture_sampler_uniform_bgfx_hdl);
-        bgfx::destroy(rendering_state.shader_prog_bgfx_hdl);
-        bgfx::destroy(rendering_state.vert_buf_bgfx_hdl);
+        bgfx::destroy(rendering_basis->texture_sampler_uniform_bgfx_hdl);
+        bgfx::destroy(rendering_basis->shader_prog_bgfx_hdl);
+        bgfx::destroy(rendering_basis->vert_buf_bgfx_hdl);
 
         ReleaseGFXResources(g_state.perm_resource_arena);
 
@@ -376,7 +378,7 @@ namespace zf {
     // ============================================================
     // @section: Rendering
     // ============================================================
-    static s_rendering_basis &CreateRenderingBasis(s_mem_arena &mem_arena, s_gfx_resource_arena &px_texture_resource_arena) {
+    static s_ptr<s_rendering_basis> CreateRenderingBasis(s_mem_arena &mem_arena, s_gfx_resource_arena &px_texture_resource_arena) {
         bgfx::VertexLayout vert_layout = {};
         vert_layout.begin().add(bgfx::Attrib::Position, 2, bgfx::AttribType::Float).add(bgfx::Attrib::Color0, 4, bgfx::AttribType::Float).add(bgfx::Attrib::TexCoord0, 2, bgfx::AttribType::Float).end();
 
@@ -401,11 +403,13 @@ namespace zf {
         const s_static_array<t_u8, 4> px_texture_rgba = {{255, 255, 255, 255}};
         const auto px_texture = CreateTextureResource({{1, 1}, px_texture_rgba}, px_texture_resource_arena);
 
-        return Alloc<s_rendering_basis>(mem_arena, vert_buf_bgfx_hdl, shader_prog_bgfx_hdl, texture_sampler_uniform_bgfx_hdl, *px_texture);
+        return &Alloc<s_rendering_basis>(mem_arena, vert_buf_bgfx_hdl, shader_prog_bgfx_hdl, texture_sampler_uniform_bgfx_hdl, *px_texture);
     }
 
-    s_rendering_context &BeginRendering(const s_rendering_basis &rendering_basis, const s_color_rgb24f clear_col, s_mem_arena &mem_arena) {
+    s_ptr<s_rendering_context> BeginRendering(const s_rendering_basis *const rendering_basis, const s_color_rgb8 clear_col, s_mem_arena *const rendering_context_mem_arena) {
         ZF_ASSERT(g_state.state == ek_state_initted);
+        ZF_ASSERT(rendering_basis);
+        ZF_ASSERT(rendering_context_mem_arena);
 
         const auto fb_size_cache = WindowFramebufferSizeCache();
 
@@ -434,11 +438,12 @@ namespace zf {
 
         g_state.state = ek_state_rendering;
 
-        return Alloc<s_rendering_context>(mem_arena, rendering_basis);
+        return &Alloc<s_rendering_context>(*rendering_context_mem_arena, *rendering_basis);
     }
 
-    void EndRendering(s_rendering_context &rc) {
+    void EndRendering(s_rendering_context *const rc) {
         ZF_ASSERT(g_state.state == ek_state_rendering);
+        ZF_ASSERT(rc);
 
         Flush(rc);
 
@@ -447,49 +452,61 @@ namespace zf {
         g_state.state = ek_state_initted;
     }
 
-    static void Flush(s_rendering_context &rc) {
-        if (rc.state.vert_cnt == 0) {
+    static void Flush(s_rendering_context *const rc) {
+        ZF_ASSERT(g_state.state == ek_state_rendering);
+        ZF_ASSERT(rc);
+
+        if (rc->state.vert_cnt == 0) {
             return;
         }
 
-        const auto verts = rc.state.verts.ToNonstatic().Slice(rc.state.vert_offs, rc.state.vert_offs + rc.state.vert_cnt);
+        const auto verts = rc->state.verts.ToNonstatic().Slice(rc->state.vert_offs, rc->state.vert_offs + rc->state.vert_cnt);
         const auto verts_bgfx_ref = bgfx::makeRef(verts.Ptr(), static_cast<uint32_t>(verts.SizeInBytes()));
-        bgfx::update(rc.basis.vert_buf_bgfx_hdl, static_cast<uint32_t>(rc.state.vert_offs), verts_bgfx_ref);
+        bgfx::update(rc->basis.vert_buf_bgfx_hdl, static_cast<uint32_t>(rc->state.vert_offs), verts_bgfx_ref);
 
-        const auto texture_bgfx_hdl = rc.state.texture ? rc.state.texture->Texture().bgfx_hdl : rc.basis.px_texture.Texture().bgfx_hdl;
-        bgfx::setTexture(0, rc.basis.texture_sampler_uniform_bgfx_hdl, texture_bgfx_hdl);
+        const auto texture_bgfx_hdl = rc->state.texture ? rc->state.texture->Texture().bgfx_hdl : rc->basis.px_texture.Texture().bgfx_hdl;
+        bgfx::setTexture(0, rc->basis.texture_sampler_uniform_bgfx_hdl, texture_bgfx_hdl);
 
-        bgfx::setVertexBuffer(0, rc.basis.vert_buf_bgfx_hdl, static_cast<uint32_t>(rc.state.vert_offs), static_cast<uint32_t>(rc.state.vert_cnt));
+        bgfx::setVertexBuffer(0, rc->basis.vert_buf_bgfx_hdl, static_cast<uint32_t>(rc->state.vert_offs), static_cast<uint32_t>(rc->state.vert_cnt));
 
         bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A | BGFX_STATE_BLEND_ALPHA);
 
-        bgfx::submit(0, rc.basis.shader_prog_bgfx_hdl);
+        bgfx::submit(0, rc->basis.shader_prog_bgfx_hdl);
 
-        rc.state.vert_offs += rc.state.vert_cnt;
-        rc.state.vert_cnt = 0;
+        rc->state.vert_offs += rc->state.vert_cnt;
+        rc->state.vert_cnt = 0;
     }
 
-    void RenderTriangles(s_rendering_context &rc, const s_array_rdonly<s_render_triangle> triangles, const s_ptr<const s_gfx_resource> texture) {
+    void RenderTriangles(s_rendering_context *const rc, const s_array_rdonly<s_render_triangle> triangles, const s_gfx_resource *const texture) {
         ZF_ASSERT(g_state.state == ek_state_rendering);
+        ZF_ASSERT(rc);
+        ZF_ASSERT(triangles.Len() > 0);
+        ZF_ASSERT(texture && texture->type == ek_gfx_resource_type_texture);
 
-        if (texture != rc.state.texture) {
+        for (t_i32 i = 0; i < triangles.Len(); i++) {
+            for (t_i32 v = 0; v < 3; v++) {
+                ZF_ASSERT(IsValid(triangles[i].verts[v]));
+            }
+        }
+
+        if (texture != rc->state.texture) {
             Flush(rc);
-            rc.state.texture = texture;
+            rc->state.texture = texture;
         }
 
         const t_i32 num_verts_to_submit = 3 * triangles.Len();
 
-        if (rc.state.vert_offs + rc.state.vert_cnt + num_verts_to_submit > rc.state.verts.g_len) {
+        if (rc->state.vert_offs + rc->state.vert_cnt + num_verts_to_submit > rc->state.verts.g_len) {
             ZF_FATAL();
         }
 
         for (t_i32 i = 0; i < triangles.Len(); i++) {
-            const t_i32 offs = rc.state.vert_offs + rc.state.vert_cnt;
-            rc.state.verts[offs + (3 * i) + 0] = triangles[i].verts[0];
-            rc.state.verts[offs + (3 * i) + 1] = triangles[i].verts[1];
-            rc.state.verts[offs + (3 * i) + 2] = triangles[i].verts[2];
+            const t_i32 offs = rc->state.vert_offs + rc->state.vert_cnt;
+            rc->state.verts[offs + (3 * i) + 0] = triangles[i].verts[0];
+            rc->state.verts[offs + (3 * i) + 1] = triangles[i].verts[1];
+            rc->state.verts[offs + (3 * i) + 2] = triangles[i].verts[2];
         }
 
-        rc.state.vert_cnt += num_verts_to_submit;
+        rc->state.vert_cnt += num_verts_to_submit;
     }
 }

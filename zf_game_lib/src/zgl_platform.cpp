@@ -175,10 +175,10 @@ namespace zf {
         ZF_UNREACHABLE();
     };
 
-    void PollOSEvents(s_input_state &input_state) {
+    void PollOSEvents(s_input_state *const input_state) {
         ZF_ASSERT(g_state.initted);
 
-        glfwSetWindowUserPointer(g_state.glfw_window, &input_state); // Scroll callback needs access to this input state.
+        glfwSetWindowUserPointer(g_state.glfw_window, input_state); // Scroll callback needs access to this input state.
 
         glfwPollEvents();
 
@@ -195,7 +195,7 @@ namespace zf {
         {
             t_f64 cp_x_f64, cp_y_f64;
             glfwGetCursorPos(g_state.glfw_window, &cp_x_f64, &cp_y_f64);
-            input_state.cursor_pos = {static_cast<t_f32>(cp_x_f64), static_cast<t_f32>(cp_y_f64)};
+            input_state->cursor_pos = {static_cast<t_f32>(cp_x_f64), static_cast<t_f32>(cp_y_f64)};
         }
 
         for (t_i32 i = GLFW_JOYSTICK_1; i <= GLFW_JOYSTICK_LAST; i++) {
@@ -222,7 +222,7 @@ namespace zf {
             }
 
             static_assert(GLFW_JOYSTICK_1 == 0);
-            UpdateGamepadState(input_state, i, connected, btns_down, axes);
+            UpdateGamepadState(input_state, i, connected, &btns_down, &axes);
         }
     }
 

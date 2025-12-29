@@ -14,7 +14,7 @@ namespace zf {
     t_f64 Time();
 
     // Also updates the given input state based on OS events.
-    void PollOSEvents(s_input_state &input_state);
+    void PollOSEvents(s_input_state *const input_state);
 
     s_ptr<void> NativeWindowHandle();
     s_ptr<void> NativeDisplayHandle();

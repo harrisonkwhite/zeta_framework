@@ -17,10 +17,10 @@ namespace zf {
         //
         // Initialisation
         //
-        s_mem_arena perm_mem_arena;
+        s_mem_arena perm_mem_arena = {};
         ZF_DEFER({ perm_mem_arena.Release(); });
 
-        s_mem_arena temp_mem_arena;
+        s_mem_arena temp_mem_arena = {};
         ZF_DEFER({ temp_mem_arena.Release(); });
 
         StartupPlatformModule(g_init_window_size);
@@ -28,15 +28,15 @@ namespace zf {
 
         s_input_state input_state = {};
 
-        s_rendering_basis &rendering_basis = StartupGFXModule(perm_mem_arena);
+        const s_ptr<s_rendering_basis> rendering_basis = StartupGFXModule(&perm_mem_arena);
         ZF_DEFER({ ShutdownGFXModule(rendering_basis); });
 
         StartupAudioModule();
         ZF_DEFER({ ShutdownAudioModule(); });
 
         init_func({
-            .perm_mem_arena = perm_mem_arena,
-            .temp_mem_arena = temp_mem_arena,
+            .perm_mem_arena = &perm_mem_arena,
+            .temp_mem_arena = &temp_mem_arena,
         });
 
         ZF_DEFER({
@@ -56,7 +56,7 @@ namespace zf {
         while (!ShouldWindowClose()) {
             temp_mem_arena.Rewind();
 
-            PollOSEvents(input_state);
+            PollOSEvents(&input_state);
 
             const t_f64 frame_time = Time();
             const t_f64 frame_time_delta = frame_time - frame_time_last;
@@ -71,9 +71,9 @@ namespace zf {
 
                 do {
                     tick_func({
-                        .perm_mem_arena = perm_mem_arena,
-                        .temp_mem_arena = temp_mem_arena,
-                        .input_state = input_state,
+                        .perm_mem_arena = &perm_mem_arena,
+                        .temp_mem_arena = &temp_mem_arena,
+                        .input_state = &input_state,
                     });
 
                     input_state.events = {};
@@ -81,11 +81,11 @@ namespace zf {
                     frame_dur_accum -= targ_tick_interval;
                 } while (frame_dur_accum >= targ_tick_interval);
 
-                s_rendering_context &rendering_context = BeginRendering(rendering_basis, s_color_rgb8(109, 187, 255), temp_mem_arena); // @todo: Make the clear colour customisable?
+                s_ptr<s_rendering_context> rendering_context = BeginRendering(rendering_basis, s_color_rgb8(109, 187, 255), &temp_mem_arena); // @todo: Make the clear colour customisable?
 
                 render_func({
-                    .perm_mem_arena = perm_mem_arena,
-                    .temp_mem_arena = temp_mem_arena,
+                    .perm_mem_arena = &perm_mem_arena,
+                    .temp_mem_arena = &temp_mem_arena,
                     .rendering_context = rendering_context,
                 });
 

@@ -63,7 +63,9 @@ namespace zf {
     }
 
     struct s_cstr_literal {
-        s_cstr_literal() = default;
+        const s_array_rdonly<char> buf;
+
+        s_cstr_literal() = delete;
 
         template <t_i32 tp_raw_size>
         consteval s_cstr_literal(const char (&raw)[tp_raw_size]) : buf({raw, tp_raw_size}) {
@@ -77,13 +79,6 @@ namespace zf {
                 }
             }
         }
-
-        s_array_rdonly<char> Buf() const {
-            return buf;
-        }
-
-    private:
-        s_array_rdonly<char> buf;
     };
 
     struct s_str_rdonly {
@@ -93,7 +88,7 @@ namespace zf {
         s_str_rdonly(const s_array_rdonly<t_u8> bytes) : bytes(bytes) {}
 
         // This very intentionally drops the terminator.
-        s_str_rdonly(const s_cstr_literal lit) : bytes({reinterpret_cast<const t_u8 *>(lit.Buf().Ptr().raw), lit.Buf().Len() - 1}) {}
+        s_str_rdonly(const s_cstr_literal lit) : bytes({reinterpret_cast<const t_u8 *>(lit.buf.Ptr().raw), lit.buf.Len() - 1}) {}
 
         // Requires that there is a terminating byte somewhere.
         const char *Cstr() const {

@@ -9,58 +9,69 @@ namespace zf {
     // @section: Colours
     // ============================================================
     struct s_color_rgba32f {
-    public:
+        t_f32 r = 0.0f;
+        t_f32 g = 0.0f;
+        t_f32 b = 0.0f;
+        t_f32 a = 0.0f;
+
         constexpr s_color_rgba32f() = default;
 
-        constexpr s_color_rgba32f(const t_f32 r, const t_f32 g, const t_f32 b, const t_f32 a) : m_r(r), m_g(g), m_b(b), m_a(a) {
+        constexpr s_color_rgba32f(const t_f32 r, const t_f32 g, const t_f32 b, const t_f32 a) : r(r), g(g), b(b), a(a) {
             ZF_ASSERT(r >= 0.0f && r <= 1.0f);
             ZF_ASSERT(g >= 0.0f && g <= 1.0f);
             ZF_ASSERT(b >= 0.0f && b <= 1.0f);
             ZF_ASSERT(a >= 0.0f && a <= 1.0f);
         }
 
-        constexpr t_f32 R() const { return m_r; }
-        constexpr t_f32 G() const { return m_g; }
-        constexpr t_f32 B() const { return m_b; }
-        constexpr t_f32 A() const { return m_a; }
-
-        constexpr operator s_v4() const {
-            return {m_r, m_g, m_b, m_a};
+        constexpr t_b8 IsValid() const {
+            return r >= 0.0f && r <= 1.0f
+                && g >= 0.0f && g <= 1.0f
+                && b >= 0.0f && b <= 1.0f
+                && a >= 0.0f && a <= 1.0f;
         }
 
-    private:
-        t_f32 m_r = 0.0f;
-        t_f32 m_g = 0.0f;
-        t_f32 m_b = 0.0f;
-        t_f32 m_a = 0.0f;
+        // @todo
+        constexpr t_f32 R() const { return r; }
+        constexpr t_f32 G() const { return g; }
+        constexpr t_f32 B() const { return b; }
+        constexpr t_f32 A() const { return a; }
+
+        constexpr operator s_v4() const {
+            return {r, g, b, a};
+        }
     };
 
     struct s_color_rgb24f {
-    public:
+        t_f32 r = 0.0f;
+        t_f32 g = 0.0f;
+        t_f32 b = 0.0f;
+
         constexpr s_color_rgb24f() = default;
 
-        constexpr s_color_rgb24f(const t_f32 r, const t_f32 g, const t_f32 b) : m_r(r), m_g(g), m_b(b) {
+        constexpr s_color_rgb24f(const t_f32 r, const t_f32 g, const t_f32 b) : r(r), g(g), b(b) {
             ZF_ASSERT(r >= 0.0f && r <= 1.0f);
             ZF_ASSERT(g >= 0.0f && g <= 1.0f);
             ZF_ASSERT(b >= 0.0f && b <= 1.0f);
         }
 
-        constexpr t_f32 R() const { return m_r; }
-        constexpr t_f32 G() const { return m_g; }
-        constexpr t_f32 B() const { return m_b; }
+        constexpr t_b8 IsValid() const {
+            return r >= 0.0f && r <= 1.0f
+                && g >= 0.0f && g <= 1.0f
+                && b >= 0.0f && b <= 1.0f;
+        }
+
+        // @todo
+        constexpr t_f32 R() const { return r; }
+        constexpr t_f32 G() const { return g; }
+        constexpr t_f32 B() const { return b; }
 
         constexpr operator s_color_rgba32f() const {
-            return {m_r, m_g, m_b, 1.0f};
+            return {r, g, b, 1.0f};
         }
 
         constexpr operator s_v3() const {
-            return {m_r, m_g, m_b};
+            return {r, g, b};
         }
-
-    private:
-        t_f32 m_r = 0.0f;
-        t_f32 m_g = 0.0f;
-        t_f32 m_b = 0.0f;
     };
 
     struct s_color_rgba8 {

@@ -341,17 +341,6 @@ namespace zf {
 
         tp_type raw[tp_len];
 
-        constexpr s_static_array() = default;
-
-        template <t_i32 tp_other_len>
-        constexpr s_static_array(const tp_type (&other_raw)[tp_other_len]) {
-            static_assert(tp_other_len == tp_len);
-
-            for (t_i32 i = 0; i < tp_other_len; i++) {
-                this->raw[i] = other_raw[i];
-            }
-        }
-
         constexpr operator s_array_mut<tp_type>() {
             return {raw, tp_len};
         }

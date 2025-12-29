@@ -4,26 +4,26 @@
 
 namespace zf {
     struct s_game_init_context {
-        s_mem_arena &perm_mem_arena;
-        s_mem_arena &temp_mem_arena;
+        s_mem_arena *perm_mem_arena;
+        s_mem_arena *temp_mem_arena;
     };
 
     struct s_input_state;
 
     struct s_game_tick_context {
-        s_mem_arena &perm_mem_arena;
-        s_mem_arena &temp_mem_arena;
+        s_mem_arena *perm_mem_arena;
+        s_mem_arena *temp_mem_arena;
 
-        const s_input_state &input_state;
+        const s_input_state *input_state;
     };
 
     struct s_rendering_context;
 
     struct s_game_render_context {
-        s_mem_arena &perm_mem_arena;
-        s_mem_arena &temp_mem_arena;
+        s_mem_arena *perm_mem_arena;
+        s_mem_arena *temp_mem_arena;
 
-        s_rendering_context &rendering_context;
+        s_rendering_context *rendering_context;
     };
 
     using t_game_init_func = void (*)(const s_game_init_context &context);

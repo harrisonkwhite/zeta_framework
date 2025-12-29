@@ -33,7 +33,7 @@ namespace zf {
             },
         }};
 
-        RenderTriangles(rendering_context, triangles.ToNonstatic(), &texture);
+        RenderTriangles(&rendering_context, triangles.ToNonstatic(), &texture);
     }
 
     s_font CreateFontFromRaw(const s_str_rdonly file_path, const t_i32 height, t_code_pt_bit_vec &code_pts, s_mem_arena &temp_mem_arena, s_gfx_resource_arena &resource_arena) {
