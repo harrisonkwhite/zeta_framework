@@ -19,16 +19,26 @@ namespace zf {
         s_gfx_resource_arena perm_resource_arena = {};
     } g_state;
 
-    enum e_gfx_resource_type {
-        ek_gfx_resource_type_invalid,
+    enum e_gfx_resource_type : t_i32 {
         ek_gfx_resource_type_texture,
         ek_gfx_resource_type_shader_prog
     };
 
     struct s_gfx_resource {
-    public:
-        e_gfx_resource_type type = ek_gfx_resource_type_invalid;
-        s_ptr<s_gfx_resource> next = nullptr;
+        e_gfx_resource_type type;
+
+        union {
+            struct {
+                bgfx::TextureHandle bgfx_hdl;
+                s_v2_i size;
+            } texture;
+
+            struct {
+                bgfx::ProgramHandle bgfx_hdl;
+            } shader_prog;
+        } type_data;
+
+        s_ptr<s_gfx_resource> next;
 
         auto &Texture() {
             ZF_ASSERT(type == ek_gfx_resource_type_texture);
@@ -49,18 +59,6 @@ namespace zf {
             ZF_ASSERT(type == ek_gfx_resource_type_shader_prog);
             return type_data.shader_prog;
         }
-
-    private:
-        union {
-            struct {
-                bgfx::TextureHandle bgfx_hdl;
-                s_v2_i size;
-            } texture;
-
-            struct {
-                bgfx::ProgramHandle bgfx_hdl;
-            } shader_prog;
-        } type_data = {};
     };
 
     static bgfx::ProgramHandle CreateBGFXShaderProg(const s_array_rdonly<t_u8> vert_shader_bin, const s_array_rdonly<t_u8> frag_shader_bin);
@@ -80,11 +78,6 @@ namespace zf {
         bgfx::UniformHandle texture_sampler_uniform_bgfx_hdl;
 
         const s_gfx_resource &px_texture;
-
-        s_rendering_basis(bgfx::DynamicVertexBufferHandle vb_hdl, bgfx::ProgramHandle prog_hdl, bgfx::UniformHandle tex_sampler_uniform_hdl, s_gfx_resource &px_tex)
-            : vert_buf_bgfx_hdl(vb_hdl), shader_prog_bgfx_hdl(prog_hdl), texture_sampler_uniform_bgfx_hdl(tex_sampler_uniform_hdl), px_texture(px_tex) {}
-
-        s_rendering_basis(const s_rendering_basis &) = delete;
     };
 
     struct s_rendering_context {
@@ -96,10 +89,7 @@ namespace zf {
             t_i32 vert_cnt;
 
             s_ptr<const s_gfx_resource> texture;
-        } batch_state = {};
-
-        s_rendering_context(const s_rendering_basis &basis) : basis(basis) {}
-        s_rendering_context(const s_rendering_context &) = delete;
+        } state;
     };
 
     static s_rendering_basis &CreateRenderingBasis(s_mem_arena &mem_arena, s_gfx_resource_arena &resource_arena);
@@ -304,9 +294,6 @@ namespace zf {
 
         while (resource) {
             switch (resource->type) {
-            case ek_gfx_resource_type_invalid:
-                ZF_UNREACHABLE();
-
             case ek_gfx_resource_type_texture:
                 bgfx::destroy(resource->Texture().bgfx_hdl);
                 break;
@@ -314,6 +301,9 @@ namespace zf {
             case ek_gfx_resource_type_shader_prog:
                 bgfx::destroy(resource->ShaderProg().bgfx_hdl);
                 break;
+
+            default:
+                ZF_UNREACHABLE();
             }
 
             const auto next = resource->next;
@@ -326,7 +316,6 @@ namespace zf {
 
     static s_ptr<s_gfx_resource> PushGFXResource(const e_gfx_resource_type type, s_gfx_resource_arena &arena) {
         ZF_ASSERT(g_state.state == ek_state_initted);
-        ZF_ASSERT(type != ek_gfx_resource_type_invalid);
 
         const s_ptr<s_gfx_resource> resource = &Alloc<s_gfx_resource>(*arena.mem_arena);
 
@@ -459,48 +448,48 @@ namespace zf {
     }
 
     static void Flush(s_rendering_context &rc) {
-        if (rc.batch_state.vert_cnt == 0) {
+        if (rc.state.vert_cnt == 0) {
             return;
         }
 
-        const auto verts = rc.batch_state.verts.ToNonstatic().Slice(rc.batch_state.vert_offs, rc.batch_state.vert_offs + rc.batch_state.vert_cnt);
+        const auto verts = rc.state.verts.ToNonstatic().Slice(rc.state.vert_offs, rc.state.vert_offs + rc.state.vert_cnt);
         const auto verts_bgfx_ref = bgfx::makeRef(verts.Ptr(), static_cast<uint32_t>(verts.SizeInBytes()));
-        bgfx::update(rc.basis.vert_buf_bgfx_hdl, static_cast<uint32_t>(rc.batch_state.vert_offs), verts_bgfx_ref);
+        bgfx::update(rc.basis.vert_buf_bgfx_hdl, static_cast<uint32_t>(rc.state.vert_offs), verts_bgfx_ref);
 
-        const auto texture_bgfx_hdl = rc.batch_state.texture ? rc.batch_state.texture->Texture().bgfx_hdl : rc.basis.px_texture.Texture().bgfx_hdl;
+        const auto texture_bgfx_hdl = rc.state.texture ? rc.state.texture->Texture().bgfx_hdl : rc.basis.px_texture.Texture().bgfx_hdl;
         bgfx::setTexture(0, rc.basis.texture_sampler_uniform_bgfx_hdl, texture_bgfx_hdl);
 
-        bgfx::setVertexBuffer(0, rc.basis.vert_buf_bgfx_hdl, static_cast<uint32_t>(rc.batch_state.vert_offs), static_cast<uint32_t>(rc.batch_state.vert_cnt));
+        bgfx::setVertexBuffer(0, rc.basis.vert_buf_bgfx_hdl, static_cast<uint32_t>(rc.state.vert_offs), static_cast<uint32_t>(rc.state.vert_cnt));
 
         bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A | BGFX_STATE_BLEND_ALPHA);
 
         bgfx::submit(0, rc.basis.shader_prog_bgfx_hdl);
 
-        rc.batch_state.vert_offs += rc.batch_state.vert_cnt;
-        rc.batch_state.vert_cnt = 0;
+        rc.state.vert_offs += rc.state.vert_cnt;
+        rc.state.vert_cnt = 0;
     }
 
     void RenderTriangles(s_rendering_context &rc, const s_array_rdonly<s_render_triangle> triangles, const s_ptr<const s_gfx_resource> texture) {
         ZF_ASSERT(g_state.state == ek_state_rendering);
 
-        if (texture != rc.batch_state.texture) {
+        if (texture != rc.state.texture) {
             Flush(rc);
-            rc.batch_state.texture = texture;
+            rc.state.texture = texture;
         }
 
         const t_i32 num_verts_to_submit = 3 * triangles.Len();
 
-        if (rc.batch_state.vert_offs + rc.batch_state.vert_cnt + num_verts_to_submit > rc.batch_state.verts.g_len) {
+        if (rc.state.vert_offs + rc.state.vert_cnt + num_verts_to_submit > rc.state.verts.g_len) {
             ZF_FATAL();
         }
 
         for (t_i32 i = 0; i < triangles.Len(); i++) {
-            const t_i32 offs = rc.batch_state.vert_offs + rc.batch_state.vert_cnt;
-            rc.batch_state.verts[offs + (3 * i) + 0] = triangles[i].verts[0];
-            rc.batch_state.verts[offs + (3 * i) + 1] = triangles[i].verts[1];
-            rc.batch_state.verts[offs + (3 * i) + 2] = triangles[i].verts[2];
+            const t_i32 offs = rc.state.vert_offs + rc.state.vert_cnt;
+            rc.state.verts[offs + (3 * i) + 0] = triangles[i].verts[0];
+            rc.state.verts[offs + (3 * i) + 1] = triangles[i].verts[1];
+            rc.state.verts[offs + (3 * i) + 2] = triangles[i].verts[2];
         }
 
-        rc.batch_state.vert_cnt += num_verts_to_submit;
+        rc.state.vert_cnt += num_verts_to_submit;
     }
 }

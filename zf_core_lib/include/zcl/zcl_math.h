@@ -59,11 +59,8 @@ namespace zf {
     struct s_v2_i;
 
     struct s_v2 {
-        t_f32 x = 0.0f;
-        t_f32 y = 0.0f;
-
-        constexpr s_v2() = default;
-        constexpr s_v2(const t_f32 x, const t_f32 y) : x(x), y(y) {}
+        t_f32 x;
+        t_f32 y;
 
         constexpr s_v2 operator+(const s_v2 other) const {
             return {x + other.x, y + other.y};
@@ -128,11 +125,8 @@ namespace zf {
     }
 
     struct s_v2_i {
-        t_i32 x = 0;
-        t_i32 y = 0;
-
-        constexpr s_v2_i() = default;
-        constexpr s_v2_i(const t_i32 x, const t_i32 y) : x(x), y(y) {}
+        t_i32 x;
+        t_i32 y;
 
         constexpr s_v2_i operator+(const s_v2_i other) const {
             return {x + other.x, y + other.y};
@@ -180,22 +174,16 @@ namespace zf {
     }
 
     struct s_v3 {
-        t_f32 x = 0.0f;
-        t_f32 y = 0.0f;
-        t_f32 z = 0.0f;
-
-        constexpr s_v3() = default;
-        constexpr s_v3(const t_f32 x, const t_f32 y, const t_f32 z) : x(x), y(y), z(z) {}
+        t_f32 x;
+        t_f32 y;
+        t_f32 z;
     };
 
     struct s_v4 {
-        t_f32 x = 0.0f;
-        t_f32 y = 0.0f;
-        t_f32 z = 0.0f;
-        t_f32 w = 0.0f;
-
-        constexpr s_v4() = default;
-        constexpr s_v4(const t_f32 x, const t_f32 y, const t_f32 z, const t_f32 w) : x(x), y(y), z(z), w(w) {}
+        t_f32 x;
+        t_f32 y;
+        t_f32 z;
+        t_f32 w;
     };
 
     // ============================================================
@@ -206,42 +194,30 @@ namespace zf {
     struct s_rect_i;
 
     struct s_rect_f {
-    public:
-        t_f32 x = 0.0f;
-        t_f32 y = 0.0f;
-
-        constexpr s_rect_f() = default;
-
-        constexpr s_rect_f(const t_f32 x, const t_f32 y, const t_f32 width, const t_f32 height) : x(x), y(y), m_width(width), m_height(height) {
-            ZF_ASSERT(width >= 0.0f && height >= 0.0f);
-        }
-
-        constexpr s_rect_f(const s_v2 pos, const s_v2 size) : x(pos.x), y(pos.y), m_width(size.x), m_height(size.y) {
-            ZF_ASSERT(size.x >= 0.0f && size.y >= 0.0f);
-        }
-
-        constexpr t_f32 Width() const { return m_width; }
-        constexpr t_f32 Height() const { return m_height; }
+        t_f32 x;
+        t_f32 y;
+        t_f32 width;
+        t_f32 height;
 
         constexpr s_v2 Pos() const { return {x, y}; }
-        constexpr s_v2 Size() const { return {m_width, m_height}; }
+        constexpr s_v2 Size() const { return {width, height}; }
 
         constexpr t_f32 Left() const { return x; }
         constexpr t_f32 Top() const { return y; }
-        constexpr t_f32 Right() const { return x + m_width; }
-        constexpr t_f32 Bottom() const { return y + m_height; }
+        constexpr t_f32 Right() const { return x + width; }
+        constexpr t_f32 Bottom() const { return y + height; }
 
         constexpr s_v2 TopLeft() const { return {Left(), Top()}; }
-        constexpr s_v2 TopCenter() const { return {x + (m_width / 2.0f), Top()}; }
+        constexpr s_v2 TopCenter() const { return {x + (width / 2.0f), Top()}; }
         constexpr s_v2 TopRight() const { return {Right(), Top()}; }
-        constexpr s_v2 CenterLeft() const { return {Left(), y + (m_height / 2.0f)}; }
-        constexpr s_v2 Center() const { return {x + (m_width / 2.0f), y + (m_height / 2.0f)}; }
-        constexpr s_v2 CenterRight() const { return {Right(), y + (m_height / 2.0f)}; }
+        constexpr s_v2 CenterLeft() const { return {Left(), y + (height / 2.0f)}; }
+        constexpr s_v2 Center() const { return {x + (width / 2.0f), y + (height / 2.0f)}; }
+        constexpr s_v2 CenterRight() const { return {Right(), y + (height / 2.0f)}; }
         constexpr s_v2 BottomLeft() const { return {Left(), Bottom()}; }
-        constexpr s_v2 BottomCenter() const { return {x + (m_width / 2.0f), Bottom()}; }
+        constexpr s_v2 BottomCenter() const { return {x + (width / 2.0f), Bottom()}; }
         constexpr s_v2 BottomRight() const { return {Right(), Bottom()}; }
 
-        constexpr t_f32 Area() const { return m_width * m_height; }
+        constexpr t_f32 Area() const { return width * height; }
 
         explicit constexpr operator s_rect_i() const;
         constexpr s_rect_i ToRectI() const;
@@ -253,47 +229,31 @@ namespace zf {
         constexpr t_b8 IntersWith(const s_rect_f other) const {
             return Left() < other.Right() && Top() < other.Bottom() && Right() > other.Left() && Bottom() > other.Top();
         }
-
-    private:
-        t_f32 m_width = 0.0f;
-        t_f32 m_height = 0.0f;
     };
 
     struct s_rect_i {
-    public:
-        t_i32 x = 0;
-        t_i32 y = 0;
-
-        constexpr s_rect_i() = default;
-
-        constexpr s_rect_i(const t_i32 x, const t_i32 y, const t_i32 width, const t_i32 height) : x(x), y(y), m_width(width), m_height(height) {
-            ZF_ASSERT(width >= 0 && height >= 0);
-        }
-
-        constexpr s_rect_i(const s_v2_i pos, const s_v2_i size) : x(pos.x), y(pos.y), m_width(size.x), m_height(size.y) {
-            ZF_ASSERT(size.x >= 0 && size.y >= 0);
-        }
-
-        constexpr t_i32 Width() const { return m_width; }
-        constexpr t_i32 Height() const { return m_height; }
+        t_i32 x;
+        t_i32 y;
+        t_i32 width;
+        t_i32 height;
 
         constexpr s_v2_i Pos() const { return {x, y}; }
-        constexpr s_v2_i Size() const { return {m_width, m_height}; }
+        constexpr s_v2_i Size() const { return {width, height}; }
 
         constexpr t_i32 Left() const { return x; }
         constexpr t_i32 Top() const { return y; }
-        constexpr t_i32 Right() const { return x + m_width; }
-        constexpr t_i32 Bottom() const { return y + m_height; }
+        constexpr t_i32 Right() const { return x + width; }
+        constexpr t_i32 Bottom() const { return y + height; }
 
         constexpr s_v2_i TopLeft() const { return {Left(), Top()}; }
         constexpr s_v2_i TopRight() const { return {Right(), Top()}; }
         constexpr s_v2_i BottomLeft() const { return {Left(), Bottom()}; }
         constexpr s_v2_i BottomRight() const { return {Right(), Bottom()}; }
 
-        constexpr t_i32 Area() const { return m_width * m_height; }
+        constexpr t_i32 Area() const { return width * height; }
 
         constexpr t_b8 operator==(const s_rect_i other) const {
-            return x == other.x && y == other.y && m_width == other.m_width && m_height == other.m_height;
+            return x == other.x && y == other.y && width == other.width && height == other.height;
         }
 
         constexpr t_b8 operator!=(const s_rect_i other) const {
@@ -301,7 +261,7 @@ namespace zf {
         }
 
         explicit constexpr operator s_rect_f() const {
-            return {static_cast<t_f32>(x), static_cast<t_f32>(y), static_cast<t_f32>(m_width), static_cast<t_f32>(m_height)};
+            return {static_cast<t_f32>(x), static_cast<t_f32>(y), static_cast<t_f32>(width), static_cast<t_f32>(height)};
         }
 
         constexpr s_rect_f ToRectF() const {
@@ -315,14 +275,10 @@ namespace zf {
         constexpr t_b8 IntersWith(const s_rect_i other) const {
             return Left() < other.Right() && Top() < other.Bottom() && Right() > other.Left() && Bottom() > other.Top();
         }
-
-    private:
-        t_i32 m_width = 0;
-        t_i32 m_height = 0;
     };
 
     constexpr s_rect_f::operator s_rect_i() const {
-        return {static_cast<t_i32>(x), static_cast<t_i32>(y), static_cast<t_i32>(m_width), static_cast<t_i32>(m_height)};
+        return {static_cast<t_i32>(x), static_cast<t_i32>(y), static_cast<t_i32>(width), static_cast<t_i32>(height)};
     }
 
     constexpr s_rect_i s_rect_f::ToRectI() const {
@@ -385,32 +341,44 @@ namespace zf {
         return s_v2(cos(dir), -sin(dir)) * len;
     }
 
-    constexpr s_v2 ClampedWithinContainer(const s_v2 pt, const s_rect_f rect) {
-        return {Clamp(pt.x, rect.Left(), rect.Right()), Clamp(pt.y, rect.Top(), rect.Bottom())};
+    constexpr s_v2 ClampedWithinContainer(const s_v2 pt, const s_rect_f container) {
+        return {Clamp(pt.x, container.Left(), container.Right()), Clamp(pt.y, container.Top(), container.Bottom())};
     }
 
-    constexpr s_v2_i ClampedWithinContainer(const s_v2_i pt, const s_rect_i rect) {
-        return {Clamp(pt.x, rect.Left(), rect.Right()), Clamp(pt.y, rect.Top(), rect.Bottom())};
+    constexpr s_v2_i ClampedWithinContainer(const s_v2_i pt, const s_rect_i container) {
+        return {Clamp(pt.x, container.Left(), container.Right()), Clamp(pt.y, container.Top(), container.Bottom())};
     }
 
     constexpr s_rect_f ClampedWithinContainer(const s_rect_f rect, const s_rect_f container) {
+        ZF_ASSERT(rect.width >= 0 && rect.height >= 0);
+        ZF_ASSERT(container.width >= 0 && container.height >= 0);
+
         const s_v2 tl = {ZF_MAX(rect.x, container.x), ZF_MAX(rect.y, container.y)};
         return {tl.x, tl.y, ZF_MIN(rect.Right(), container.Right()) - tl.x, ZF_MIN(rect.Bottom(), container.Bottom()) - tl.y};
     }
 
     constexpr s_rect_i ClampedWithinContainer(const s_rect_i rect, const s_rect_i container) {
+        ZF_ASSERT(rect.width >= 0 && rect.height >= 0);
+        ZF_ASSERT(container.width >= 0 && container.height >= 0);
+
         const s_v2_i tl = {ZF_MAX(rect.x, container.x), ZF_MAX(rect.y, container.y)};
         return {tl.x, tl.y, ZF_MIN(rect.Right(), container.Right()) - tl.x, ZF_MIN(rect.Bottom(), container.Bottom()) - tl.y};
     }
 
     // Returns a value between 0 and 1 indicating what percentage of the rectangle is within the container.
     constexpr t_f32 CalcPercOfOccupance(const s_rect_f rect, const s_rect_f container) {
+        ZF_ASSERT(rect.width >= 0 && rect.height >= 0);
+        ZF_ASSERT(container.width > 0 && container.height > 0);
+
         const auto subrect = ClampedWithinContainer(rect, container);
         return Clamp(subrect.Area() / container.Area(), 0.0f, 1.0f);
     }
 
     // Returns a value between 0 and 1 indicating what percentage of the rectangle is within the container.
     constexpr t_f32 CalcPercOfOccupance(const s_rect_i rect, const s_rect_i container) {
+        ZF_ASSERT(rect.width >= 0 && rect.height >= 0);
+        ZF_ASSERT(container.width > 0 && container.height > 0);
+
         const auto subrect = ClampedWithinContainer(rect, container);
         return Clamp(static_cast<t_f32>(subrect.Area()) / static_cast<t_f32>(container.Area()), 0.0f, 1.0f);
     }

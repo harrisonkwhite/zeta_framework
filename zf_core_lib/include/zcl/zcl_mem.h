@@ -40,7 +40,7 @@ namespace zf {
 
     template <typename tp_type>
     struct s_ptr {
-        tp_type *raw = nullptr;
+        tp_type *raw;
 
         constexpr s_ptr() = default;
         constexpr s_ptr(tp_type *const raw) : raw(raw) {}
@@ -114,7 +114,7 @@ namespace zf {
     template <>
     struct s_ptr<const void> {
     public:
-        const void *raw = nullptr;
+        const void *raw;
 
         constexpr s_ptr() = default;
         constexpr s_ptr(const void *const raw) : raw(raw) {}
@@ -146,7 +146,7 @@ namespace zf {
 
     template <>
     struct s_ptr<void> {
-        void *raw = nullptr;
+        void *raw;
 
         constexpr s_ptr() = default;
         constexpr s_ptr(void *const raw) : raw(raw) {}

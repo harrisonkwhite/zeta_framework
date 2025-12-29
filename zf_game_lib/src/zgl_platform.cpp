@@ -306,7 +306,7 @@ namespace zf {
         s_v2_i window_size;
         glfwGetWindowSize(window, &window_size.x, &window_size.y);
 
-        const s_rect_i window_rect = {window_pos, window_size};
+        const s_rect_i window_rect = {window_pos.x, window_pos.y, window_size.x, window_size.y};
 
         // Get the monitor containing the most amount of the window.
         t_f32 max_occupancy_perc = 0.0f;

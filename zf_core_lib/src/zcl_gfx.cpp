@@ -158,7 +158,7 @@ namespace zf {
 
             const t_i32 glyph_index = stbtt_FindGlyphIndex(&stb_font_info, static_cast<t_i32>(code_pt));
 
-            s_font_glyph_info glyph_info;
+            s_font_glyph_info glyph_info = {};
 
             t_i32 bm_box_left, bm_box_top, bm_box_right, bm_box_bottom;
             stbtt_GetGlyphBitmapBox(&stb_font_info, glyph_index, scale, scale, &bm_box_left, &bm_box_top, &bm_box_right, &bm_box_bottom);
@@ -184,7 +184,7 @@ namespace zf {
             }
 
             glyph_info.atlas_index = atlas_index;
-            glyph_info.atlas_rect = {atlas_pen, glyph_info.size};
+            glyph_info.atlas_rect = {atlas_pen.x, atlas_pen.y, glyph_info.size.x, glyph_info.size.y};
             atlas_pen.x += glyph_info.size.x;
 
             o_arrangement.code_pts_to_glyph_infos.Put(code_pt, glyph_info);
@@ -247,7 +247,7 @@ namespace zf {
             auto &atlas_rgba = o_atlas_rgbas[glyph_info->atlas_index];
             const auto &atlas_rect = glyph_info->atlas_rect;
 
-            if (atlas_rect.Width() == 0 || atlas_rect.Height() == 0) {
+            if (atlas_rect.width == 0 || atlas_rect.height == 0) {
                 // Might be the ' ' character for example.
                 continue;
             }
@@ -263,7 +263,7 @@ namespace zf {
             for (t_i32 y = atlas_rect.Top(); y < atlas_rect.Bottom(); y++) {
                 for (t_i32 x = atlas_rect.Left(); x < atlas_rect.Right(); x++) {
                     const t_i32 px_index = (y * 4 * g_font_atlas_size.x) + (x * 4);
-                    const t_i32 stb_bitmap_index = ((y - atlas_rect.y) * atlas_rect.Width()) + (x - atlas_rect.x);
+                    const t_i32 stb_bitmap_index = ((y - atlas_rect.y) * atlas_rect.width) + (x - atlas_rect.x);
                     atlas_rgba[px_index + 3] = stb_bitmap[stb_bitmap_index];
                 }
             }

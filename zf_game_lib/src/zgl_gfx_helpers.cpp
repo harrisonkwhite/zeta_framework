@@ -7,13 +7,13 @@ namespace zf {
         s_rect_i src_rect_to_use;
 
         if (src_rect == s_rect_i()) {
-            src_rect_to_use = {{}, texture_size};
+            src_rect_to_use = {0, 0, texture_size.x, texture_size.y};
         } else {
             ZF_ASSERT(src_rect.x >= 0 && src_rect.y >= 0 && src_rect.Right() <= texture_size.x && src_rect.Bottom() <= texture_size.y);
             src_rect_to_use = src_rect;
         }
 
-        const s_rect_f rect = {pos, src_rect_to_use.Size().ToV2()};
+        const s_rect_f rect = {pos.x, pos.y, static_cast<t_f32>(src_rect_to_use.Size().x), static_cast<t_f32>(src_rect_to_use.Size().y)};
         const s_rect_f uv_rect = CalcUVRect(src_rect_to_use, texture_size);
 
         const s_static_array<s_render_triangle, 2> triangles = {{
