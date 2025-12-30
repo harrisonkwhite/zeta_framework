@@ -4,7 +4,11 @@
 #include <cstring>
 
 namespace zf {
-    void ReleaseArena(s_arena *const arena) {
+    // ============================================================
+    // @section: Arenas
+    // ============================================================
+
+    void DestroyArena(s_arena *const arena) {
         const auto f = [](const auto self, s_arena_block *const block) {
             if (!block) {
                 return;
@@ -12,13 +16,16 @@ namespace zf {
 
             self(self, block->next);
 
+            PoisonFreed(block->buf, block->buf_size);
             free(block->buf);
+
+            PoisonFreedItem(block);
             free(block);
         };
 
         f(f, arena->blocks_head);
 
-        *arena = {};
+        PoisonFreedItem(arena);
     }
 
     static s_arena_block *CreateArenaBlock(const t_i32 buf_size) {
@@ -30,16 +37,17 @@ namespace zf {
             ZF_FATAL();
         }
 
-        memset(res, 0, sizeof(s_arena_block));
+        PoisonUnittedItem(res);
 
         res->buf = malloc(static_cast<size_t>(buf_size));
-        res->buf_size = buf_size;
 
         if (!res->buf) {
             ZF_FATAL();
         }
 
-        memset(res->buf, 0, static_cast<size_t>(res->buf_size));
+        PoisonUnitted(res->buf, res->buf_size);
+
+        res->buf_size = buf_size;
 
         return res;
     }
@@ -48,7 +56,7 @@ namespace zf {
         ZF_ASSERT(size > 0 && IsAlignmentValid(alignment));
 
         if (!arena->blocks_head) {
-            arena->blocks_head = CreateArenaBlock(ZF_MAX(size, arena->block_min_buf_size));
+            arena->blocks_head = CreateArenaBlock(ZF_MAX(size, arena->block_min_size));
             arena->block_cur = arena->blocks_head;
             return PushToArena(arena, size, alignment);
         }
@@ -58,7 +66,7 @@ namespace zf {
 
         if (offs_next > arena->block_cur->buf_size) {
             if (!arena->block_cur->next) {
-                arena->block_cur->next = CreateArenaBlock(ZF_MAX(size, arena->block_min_buf_size));
+                arena->block_cur->next = CreateArenaBlock(ZF_MAX(size, arena->block_min_size));
             }
 
             arena->block_cur = arena->block_cur->next;
@@ -70,10 +78,12 @@ namespace zf {
         arena->block_cur_offs = offs_next;
 
         void *const res = static_cast<t_u8 *>(arena->block_cur->buf) + offs_aligned;
-        memset(res, 0, static_cast<size_t>(size));
+        PoisonUnitted(res, size);
 
         return res;
     }
+
+    // ============================================================
 
     // ============================================================
     // @section: Bits

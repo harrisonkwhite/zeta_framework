@@ -132,8 +132,8 @@ namespace zf {
     }
 
     // Allocates a clone of the given string using the memory arena, with a null byte added at the end (even if the string was already terminated).
-    inline s_str AllocStrCloneButAddTerminator(const s_str_rdonly str, s_arena &arena) {
-        const s_str clone = {AllocArray<t_u8>(str.bytes.len + 1, &arena)};
+    inline s_str AllocStrCloneButAddTerminator(const s_str_rdonly str, s_arena *const arena) {
+        const s_str clone = {AllocArray<t_u8>(str.bytes.len + 1, arena)};
         Copy(clone.bytes, str.bytes);
         return clone;
     }
@@ -154,7 +154,7 @@ namespace zf {
     t_code_pt FindStrCodePointAtByte(const s_str_rdonly str, const t_i32 byte_index);
 
     // Sets the bits associated with each unicode code point that appear in the string. No bits get unset.
-    void MarkStrCodePoints(const s_str_rdonly str, t_code_pt_bit_vec &code_pts);
+    void MarkStrCodePoints(const s_str_rdonly str, t_code_pt_bit_vec *const code_pts);
 
     struct s_str_walk_info {
         t_code_pt code_pt;
@@ -163,17 +163,17 @@ namespace zf {
 
     // byte_index should be initialised to the index of ANY byte in the code point to start walking from.
     // Returns false iff the walk has ended.
-    t_b8 WalkStr(const s_str_rdonly str, t_i32 &byte_index, s_str_walk_info &o_info);
+    t_b8 WalkStr(const s_str_rdonly str, t_i32 *const byte_index, s_str_walk_info *const o_info);
 
     // byte_index should be initialised to the index of ANY byte in the code point to start walking backwards from.
     // Returns false iff the walk has ended.
-    t_b8 WalkStrReverse(const s_str_rdonly str, t_i32 &byte_index, s_str_walk_info &o_info);
+    t_b8 WalkStrReverse(const s_str_rdonly str, t_i32 *const byte_index, s_str_walk_info *const o_info);
 
 #define ZF_WALK_STR(str, info)                                                                                 \
     for (t_i32 ZF_CONCAT(bi_l, __LINE__) = 0; ZF_CONCAT(bi_l, __LINE__) != -1; ZF_CONCAT(bi_l, __LINE__) = -1) \
-        for (s_str_walk_info info; WalkStr(str, ZF_CONCAT(bi_l, __LINE__), info);)
+        for (s_str_walk_info info; WalkStr(str, &ZF_CONCAT(bi_l, __LINE__), &info);)
 
 #define ZF_WALK_STR_REVERSE(str, info)                                                                                                                     \
     for (t_i32 ZF_CONCAT(bi_l, __LINE__) = (str).bytes.len - 1; ZF_CONCAT(bi_l, __LINE__) != (str).bytes.len; ZF_CONCAT(bi_l, __LINE__) = (str).bytes.len) \
-        for (s_str_walk_info info; WalkStrReverse(str, ZF_CONCAT(bi_l, __LINE__), info);)
+        for (s_str_walk_info info; WalkStrReverse(str, &ZF_CONCAT(bi_l, __LINE__), &info);)
 }

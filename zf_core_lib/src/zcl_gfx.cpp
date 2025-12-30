@@ -7,11 +7,11 @@ namespace zf {
     // ============================================================
     // @section: Textures
     // ============================================================
-    t_b8 LoadTextureDataFromRaw(const s_str_rdonly file_path, s_arena &texture_data_mem_arena, s_arena &temp_mem_arena, s_texture_data &o_texture_data) {
+    t_b8 LoadTextureDataFromRaw(const s_str_rdonly file_path, s_arena *const texture_data_mem_arena, s_arena *const temp_mem_arena, s_texture_data *const o_texture_data) {
         const s_str_rdonly file_path_terminated = AllocStrCloneButAddTerminator(file_path, temp_mem_arena);
 
-        s_v2_i size_in_pxs;
-        const s_ptr<t_u8> stb_px_data = stbi_load(file_path_terminated.Cstr(), &size_in_pxs.x, &size_in_pxs.y, nullptr, 4);
+        ZF_DEFINE_UNINITTED(s_v2_i, size_in_pxs);
+        t_u8 *const stb_px_data = stbi_load(file_path_terminated.Cstr(), &size_in_pxs.x, &size_in_pxs.y, nullptr, 4);
 
         if (!stb_px_data) {
             return false;
@@ -23,23 +23,23 @@ namespace zf {
         const s_array_rdonly<t_u8> stb_px_data_arr = {stb_px_data, 4 * size_in_pxs.x * size_in_pxs.y};
         Copy(px_data, stb_px_data_arr);
 
-        o_texture_data = {size_in_pxs, px_data};
+        *o_texture_data = {size_in_pxs, px_data};
 
         return true;
     }
 
-    t_b8 PackTexture(const s_str_rdonly file_path, const s_texture_data texture_data, s_arena &temp_mem_arena) {
+    t_b8 PackTexture(const s_str_rdonly file_path, const s_texture_data texture_data, s_arena *const temp_mem_arena) {
         if (!CreateFileAndParentDirs(file_path, temp_mem_arena)) {
             return false;
         }
 
-        s_stream fs;
+        ZF_DEFINE_UNINITTED(s_stream, fs);
 
-        if (!OpenFile(file_path, ek_file_access_mode_write, temp_mem_arena, fs)) {
+        if (!OpenFile(file_path, ek_file_access_mode_write, temp_mem_arena, &fs)) {
             return false;
         }
 
-        ZF_DEFER({ CloseFile(fs); });
+        ZF_DEFER({ CloseFile(&fs); });
 
         if (!fs.WriteItem(texture_data.SizeInPixels())) {
             return false;
@@ -52,16 +52,16 @@ namespace zf {
         return true;
     }
 
-    t_b8 UnpackTexture(const s_str_rdonly file_path, s_arena &texture_data_mem_arena, s_arena &temp_mem_arena, s_texture_data &o_texture_data) {
-        s_stream fs;
+    t_b8 UnpackTexture(const s_str_rdonly file_path, s_arena *const texture_data_mem_arena, s_arena *const temp_mem_arena, s_texture_data *const o_texture_data) {
+        ZF_DEFINE_UNINITTED(s_stream, fs);
 
-        if (!OpenFile(file_path, ek_file_access_mode_read, temp_mem_arena, fs)) {
+        if (!OpenFile(file_path, ek_file_access_mode_read, temp_mem_arena, &fs)) {
             return false;
         }
 
-        ZF_DEFER({ CloseFile(fs); });
+        ZF_DEFER({ CloseFile(&fs); });
 
-        s_v2_i size_in_pxs;
+        ZF_DEFINE_UNINITTED(s_v2_i, size_in_pxs);
 
         if (!fs.ReadItem(size_in_pxs)) {
             return false;
@@ -69,11 +69,11 @@ namespace zf {
 
         const auto rgba_px_data = AllocArray<t_u8>(4 * size_in_pxs.x * size_in_pxs.y, texture_data_mem_arena);
 
-        if (!fs.ReadItemsIntoArray(rgba_px_data, rgba_px_data.Len())) {
+        if (!fs.ReadItemsIntoArray(rgba_px_data, rgba_px_data.len)) {
             return false;
         }
 
-        o_texture_data = {size_in_pxs, rgba_px_data};
+        *o_texture_data = {size_in_pxs, rgba_px_data};
 
         return true;
     }
@@ -96,42 +96,42 @@ namespace zf {
             return pa.a == pb.a && pa.b == pb.b;
         };
 
-    t_b8 LoadFontDataFromRaw(const s_str_rdonly file_path, const t_i32 height, t_code_pt_bit_vec &code_pts, s_arena &arrangement_mem_arena, s_arena &atlas_rgbas_mem_arena, s_arena &temp_mem_arena, s_font_arrangement &o_arrangement, s_array_mut<t_font_atlas_rgba> &o_atlas_rgbas) {
+    t_b8 LoadFontDataFromRaw(const s_str_rdonly file_path, const t_i32 height, t_code_pt_bit_vec *const code_pts, s_arena *const arrangement_mem_arena, s_arena *const atlas_rgbas_mem_arena, s_arena *const temp_mem_arena, s_font_arrangement *const o_arrangement, s_array_mut<t_font_atlas_rgba> *const o_atlas_rgbas) {
         ZF_ASSERT(height > 0);
 
         // Get the plain font file data.
-        s_array_mut<t_u8> font_file_data;
+        ZF_DEFINE_UNINITTED(s_array_mut<t_u8>, font_file_data);
 
-        if (!LoadFileContents(file_path, temp_mem_arena, temp_mem_arena, font_file_data)) {
+        if (!LoadFileContents(file_path, temp_mem_arena, temp_mem_arena, &font_file_data)) {
             return false;
         }
 
         // Initialise the font through STB.
-        stbtt_fontinfo stb_font_info = {};
+        ZF_DEFINE_UNINITTED(stbtt_fontinfo, stb_font_info);
 
-        const t_i32 offs = stbtt_GetFontOffsetForIndex(font_file_data.Ptr(), 0);
+        const t_i32 offs = stbtt_GetFontOffsetForIndex(font_file_data.raw, 0);
 
         if (offs == -1) {
             return false;
         }
 
-        if (!stbtt_InitFont(&stb_font_info, font_file_data.Ptr(), offs)) {
+        if (!stbtt_InitFont(&stb_font_info, font_file_data.raw, offs)) {
             return false;
         }
 
         // Filter out unsupported code points.
-        ZF_WALK_SET_BITS(code_pts, i) {
+        ZF_WALK_SET_BITS(*code_pts, i) {
             const auto code_pt = static_cast<t_code_pt>(i);
 
             const t_i32 glyph_index = stbtt_FindGlyphIndex(&stb_font_info, static_cast<t_i32>(code_pt));
 
             if (glyph_index == 0) {
-                UnsetBit(code_pts, i);
+                UnsetBit(*code_pts, i);
             }
         }
 
         // Compute number of leftover code points that can actually be supported, return if there are none.
-        const t_i32 code_pt_cnt = CountSetBits(code_pts);
+        const t_i32 code_pt_cnt = CountSetBits(*code_pts);
 
         if (code_pt_cnt == 0) {
             return true;
@@ -140,20 +140,22 @@ namespace zf {
         // Compute general info.
         const t_f32 scale = stbtt_ScaleForPixelHeight(&stb_font_info, static_cast<t_f32>(height));
 
-        t_i32 vm_ascent = 0, vm_descent = 0, vm_line_gap = 0;
+        ZF_DEFINE_UNINITTED(t_i32, vm_ascent);
+        ZF_DEFINE_UNINITTED(t_i32, vm_descent);
+        ZF_DEFINE_UNINITTED(t_i32, vm_line_gap);
         stbtt_GetFontVMetrics(&stb_font_info, &vm_ascent, &vm_descent, &vm_line_gap);
 
-        o_arrangement.line_height = static_cast<t_i32>(static_cast<t_f32>(vm_ascent - vm_descent + vm_line_gap) * scale);
+        o_arrangement->line_height = static_cast<t_i32>(static_cast<t_f32>(vm_ascent - vm_descent + vm_line_gap) * scale);
 
         //
         // Glyph Info
         //
-        o_arrangement.code_pts_to_glyph_infos = CreateHashMap<t_code_pt, s_font_glyph_info>(g_code_pt_hash_func, arrangement_mem_arena, code_pt_cnt);
+        o_arrangement->code_pts_to_glyph_infos = CreateHashMap<t_code_pt, s_font_glyph_info>(g_code_pt_hash_func, arrangement_mem_arena, code_pt_cnt);
 
         t_i32 atlas_index = 0;
-        s_v2_i atlas_pen;
+        s_v2_i atlas_pen = {};
 
-        ZF_WALK_SET_BITS(code_pts, i) {
+        ZF_WALK_SET_BITS(*code_pts, i) {
             const auto code_pt = static_cast<t_code_pt>(i);
 
             const t_i32 glyph_index = stbtt_FindGlyphIndex(&stb_font_info, static_cast<t_i32>(code_pt));
@@ -175,7 +177,7 @@ namespace zf {
 
             if (atlas_pen.x + glyph_info.size.x > g_font_atlas_size.x) {
                 atlas_pen.x = 0;
-                atlas_pen.y += o_arrangement.line_height;
+                atlas_pen.y += o_arrangement->line_height;
             }
 
             if (atlas_pen.y + glyph_info.size.y > g_font_atlas_size.y) {
@@ -187,7 +189,7 @@ namespace zf {
             glyph_info.atlas_rect = {atlas_pen.x, atlas_pen.y, glyph_info.size.x, glyph_info.size.y};
             atlas_pen.x += glyph_info.size.x;
 
-            o_arrangement.code_pts_to_glyph_infos.Put(code_pt, glyph_info);
+            o_arrangement->code_pts_to_glyph_infos.Put(code_pt, glyph_info);
         }
 
         const t_i32 atlas_cnt = atlas_index + 1;
@@ -197,54 +199,56 @@ namespace zf {
         //
 
         // If there were any kernings to store, set up the hash map and go through again and store them.
-        o_arrangement.has_kernings = true;
-        o_arrangement.code_pt_pairs_to_kernings = CreateHashMap<s_font_code_point_pair, t_i32>(g_code_pt_pair_hash_func, arrangement_mem_arena, g_hash_map_cap_default, g_code_pt_pair_comparator);
+        o_arrangement->has_kernings = true;
+        o_arrangement->code_pt_pairs_to_kernings = CreateHashMap<s_font_code_point_pair, t_i32>(g_code_pt_pair_hash_func, arrangement_mem_arena, g_hash_map_cap_default, g_code_pt_pair_comparator);
 
-        ZF_WALK_SET_BITS(code_pts, i) {
-            ZF_WALK_SET_BITS(code_pts, j) {
+#if 0
+        ZF_WALK_SET_BITS(*code_pts, i){
+            ZF_WALK_SET_BITS(*code_pts, j){
                 const auto cp_a = static_cast<t_code_pt>(i);
-                const auto cp_b = static_cast<t_code_pt>(j);
+        const auto cp_b = static_cast<t_code_pt>(j);
 
-                const auto glyph_a_index = stbtt_FindGlyphIndex(&stb_font_info, static_cast<t_i32>(cp_a));
-                const auto glyph_b_index = stbtt_FindGlyphIndex(&stb_font_info, static_cast<t_i32>(cp_b));
+        const auto glyph_a_index = stbtt_FindGlyphIndex(&stb_font_info, static_cast<t_i32>(cp_a));
+        const auto glyph_b_index = stbtt_FindGlyphIndex(&stb_font_info, static_cast<t_i32>(cp_b));
 
-                const t_i32 kern = stbtt_GetGlyphKernAdvance(&stb_font_info, glyph_a_index, glyph_b_index);
+        const t_i32 kern = stbtt_GetGlyphKernAdvance(&stb_font_info, glyph_a_index, glyph_b_index);
 
-                if (kern != 0) {
-                    return false;
-                }
-            }
+        if (kern != 0) {
+            return false;
         }
+    }
+}
+#endif
 
         //
         // Texture Atlases
         //
-        o_atlas_rgbas = AllocArray<t_font_atlas_rgba>(atlas_cnt, atlas_rgbas_mem_arena);
+        *o_atlas_rgbas = AllocArray<t_font_atlas_rgba>(atlas_cnt, atlas_rgbas_mem_arena);
 
         // Initialise all pixels to transparent white.
         // @todo: Maybe don't use RBGA for this?
-        for (t_i32 i = 0; i < o_atlas_rgbas.Len(); i++) {
-            auto &atlas_rgba = o_atlas_rgbas[i];
+        for (t_i32 i = 0; i < o_atlas_rgbas->len; i++) {
+            const auto atlas_rgba = &(*o_atlas_rgbas)[i];
 
-            for (t_i32 j = 0; j < o_atlas_rgbas[i].g_len; j += 4) {
-                atlas_rgba[j + 0] = 255;
-                atlas_rgba[j + 1] = 255;
-                atlas_rgba[j + 2] = 255;
-                atlas_rgba[j + 3] = 0;
+            for (t_i32 j = 0; j < (*o_atlas_rgbas)[i].g_len; j += 4) {
+                (*atlas_rgba)[j + 0] = 255;
+                (*atlas_rgba)[j + 1] = 255;
+                (*atlas_rgba)[j + 2] = 255;
+                (*atlas_rgba)[j + 3] = 0;
             }
         }
 
         // Write pixel data for each individual glyph.
-        ZF_WALK_SET_BITS(code_pts, i) {
+        ZF_WALK_SET_BITS(*code_pts, i) {
             const auto code_pt = static_cast<t_code_pt>(i);
 
-            s_ptr<s_font_glyph_info> glyph_info;
+            ZF_DEFINE_UNINITTED(s_font_glyph_info *, glyph_info);
 
-            if (!o_arrangement.code_pts_to_glyph_infos.Find(code_pt, glyph_info)) {
+            if (!o_arrangement->code_pts_to_glyph_infos.Find(code_pt, &glyph_info)) {
                 ZF_ASSERT(false);
             }
 
-            auto &atlas_rgba = o_atlas_rgbas[glyph_info->atlas_index];
+            const auto atlas_rgba = &(*o_atlas_rgbas)[glyph_info->atlas_index];
             const auto &atlas_rect = glyph_info->atlas_rect;
 
             if (atlas_rect.width == 0 || atlas_rect.height == 0) {
@@ -252,7 +256,7 @@ namespace zf {
                 continue;
             }
 
-            const s_ptr<t_u8> stb_bitmap = stbtt_GetCodepointBitmap(&stb_font_info, scale, scale, static_cast<t_i32>(code_pt), nullptr, nullptr, nullptr, nullptr);
+            t_u8 *const stb_bitmap = stbtt_GetCodepointBitmap(&stb_font_info, scale, scale, static_cast<t_i32>(code_pt), nullptr, nullptr, nullptr, nullptr);
 
             if (!stb_bitmap) {
                 return false;
@@ -264,7 +268,7 @@ namespace zf {
                 for (t_i32 x = atlas_rect.Left(); x < atlas_rect.Right(); x++) {
                     const t_i32 px_index = (y * 4 * g_font_atlas_size.x) + (x * 4);
                     const t_i32 stb_bitmap_index = ((y - atlas_rect.y) * atlas_rect.width) + (x - atlas_rect.x);
-                    atlas_rgba[px_index + 3] = stb_bitmap[stb_bitmap_index];
+                    (*atlas_rgba)[px_index + 3] = stb_bitmap[stb_bitmap_index];
                 }
             }
         }
@@ -272,59 +276,56 @@ namespace zf {
         return true;
     }
 
-    t_b8 PackFont(const s_str_rdonly file_path, const s_font_arrangement &arrangement, const s_array_rdonly<t_font_atlas_rgba> atlas_rgbas, s_arena &temp_mem_arena) {
+    t_b8 PackFont(const s_str_rdonly file_path, const s_font_arrangement &arrangement, const s_array_rdonly<t_font_atlas_rgba> atlas_rgbas, s_arena *const temp_mem_arena) {
         if (!CreateFileAndParentDirs(file_path, temp_mem_arena)) {
             return false;
         }
 
-        s_stream fs;
+        ZF_DEFINE_UNINITTED(s_stream, fs);
 
-        if (!OpenFile(file_path, ek_file_access_mode_write, temp_mem_arena, fs)) {
+        if (!OpenFile(file_path, ek_file_access_mode_write, temp_mem_arena, &fs)) {
             return false;
         }
 
-        ZF_DEFER({ CloseFile(fs); });
+        ZF_DEFER({ CloseFile(&fs); });
 
         if (!fs.WriteItem(arrangement.line_height)) {
             return false;
         }
 
-        if (!SerializeHashMap(fs, arrangement.code_pts_to_glyph_infos, temp_mem_arena)) {
+        if (!SerializeHashMap(&fs, arrangement.code_pts_to_glyph_infos, temp_mem_arena)) {
             return false;
         }
 
-        if (!SerializeHashMap(fs, arrangement.code_pt_pairs_to_kernings, temp_mem_arena)) {
+        if (!SerializeHashMap(&fs, arrangement.code_pt_pairs_to_kernings, temp_mem_arena)) {
             return false;
         }
 
-        if (!SerializeArray(fs, atlas_rgbas)) {
+        if (!SerializeArray(&fs, atlas_rgbas)) {
             return false;
         }
 
         return true;
     }
 
-    t_b8 UnpackFont(const s_str_rdonly file_path, s_arena &arrangement_mem_arena, s_arena &atlas_rgbas_mem_arena, s_arena &temp_mem_arena, s_font_arrangement &o_arrangement, s_array_mut<t_font_atlas_rgba> &o_atlas_rgbas) {
-        o_arrangement = {};
-        o_atlas_rgbas = {};
+    t_b8 UnpackFont(const s_str_rdonly file_path, s_arena *const arrangement_mem_arena, s_arena *const atlas_rgbas_mem_arena, s_arena *const temp_mem_arena, s_font_arrangement *const o_arrangement, s_array_mut<t_font_atlas_rgba> *const o_atlas_rgbas) {
+        ZF_DEFINE_UNINITTED(s_stream, fs);
 
-        s_stream fs;
-
-        if (!OpenFile(file_path, ek_file_access_mode_read, temp_mem_arena, fs)) {
+        if (!OpenFile(file_path, ek_file_access_mode_read, temp_mem_arena, &fs)) {
             return false;
         }
 
-        ZF_DEFER({ CloseFile(fs); });
+        ZF_DEFER({ CloseFile(&fs); });
 
-        if (!fs.ReadItem(o_arrangement.line_height)) {
+        if (!fs.ReadItem(o_arrangement->line_height)) {
             return false;
         }
 
-        if (!DeserializeHashMap(fs, arrangement_mem_arena, g_code_pt_hash_func, temp_mem_arena, o_arrangement.code_pts_to_glyph_infos)) {
+        if (!DeserializeHashMap(fs, arrangement_mem_arena, g_code_pt_hash_func, temp_mem_arena, o_arrangement->code_pts_to_glyph_infos)) {
             return false;
         }
 
-        if (!DeserializeHashMap(fs, arrangement_mem_arena, g_code_pt_pair_hash_func, temp_mem_arena, o_arrangement.code_pt_pairs_to_kernings, g_code_pt_pair_comparator)) {
+        if (!DeserializeHashMap(fs, arrangement_mem_arena, g_code_pt_pair_hash_func, temp_mem_arena, o_arrangement->code_pt_pairs_to_kernings, g_code_pt_pair_comparator)) {
             return false;
         }
 
@@ -335,7 +336,7 @@ namespace zf {
         return true;
     }
 
-    t_b8 PackShader(const s_str_rdonly file_path, const s_array_rdonly<t_u8> compiled_shader_bin, s_arena &temp_mem_arena) {
+    t_b8 PackShader(const s_str_rdonly file_path, const s_array_rdonly<t_u8> compiled_shader_bin, s_arena *const temp_mem_arena) {
         if (!CreateFileAndParentDirs(file_path, temp_mem_arena)) {
             return false;
         }
@@ -355,7 +356,7 @@ namespace zf {
         return true;
     }
 
-    t_b8 UnpackShader(const s_str_rdonly file_path, s_arena &shader_bin_mem_arena, s_arena &temp_mem_arena, s_array_mut<t_u8> &o_shader_bin) {
+    t_b8 UnpackShader(const s_str_rdonly file_path, s_arena *const shader_bin_mem_arena, s_arena *const temp_mem_arena, s_array_mut<t_u8> &o_shader_bin) {
         o_shader_bin = {};
 
         s_stream fs;

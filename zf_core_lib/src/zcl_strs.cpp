@@ -279,7 +279,7 @@ namespace zf {
     t_b8 IsStrValidUTF8(const s_str_rdonly str) {
         t_i32 cost = 0;
 
-        for (t_i32 i = 0; i < str.bytes.Len(); i++) {
+        for (t_i32 i = 0; i < str.bytes.len; i++) {
             const auto byte_type = g_utf8_byte_type_table[str.bytes[i]];
 
             switch (byte_type) {
@@ -318,7 +318,7 @@ namespace zf {
         t_i32 i = 0;
         t_i32 len = 0;
 
-        while (i < str.bytes.Len()) {
+        while (i < str.bytes.len) {
             const auto byte_type = g_utf8_byte_type_table[str.bytes[i]];
 
             switch (byte_type) {
@@ -340,11 +340,11 @@ namespace zf {
     }
 
     static t_code_pt UTF8BytesToCodePoint(const s_array_rdonly<t_u8> bytes) {
-        ZF_ASSERT(bytes.Len() >= 1 && bytes.Len() <= 4);
+        ZF_ASSERT(bytes.len >= 1 && bytes.len <= 4);
 
         t_code_pt res = 0;
 
-        switch (bytes.Len()) {
+        switch (bytes.len) {
         case 1:
             // 0xxxxxxx
             res |= bytes[0] & BitmaskRange(0, 7);
@@ -377,7 +377,7 @@ namespace zf {
 
     t_code_pt FindStrCodePointAtByte(const s_str_rdonly str, const t_i32 byte_index) {
         ZF_ASSERT(IsStrValidUTF8(str));
-        ZF_ASSERT(byte_index >= 0 && byte_index < str.bytes.Len());
+        ZF_ASSERT(byte_index >= 0 && byte_index < str.bytes.len);
 
         t_i32 cp_first_byte_index = byte_index;
 
@@ -395,24 +395,24 @@ namespace zf {
         } while (true);
     }
 
-    void MarkStrCodePoints(const s_str_rdonly str, t_code_pt_bit_vec &code_pts) {
+    void MarkStrCodePoints(const s_str_rdonly str, t_code_pt_bit_vec *const code_pts) {
         ZF_ASSERT(IsStrValidUTF8(str));
 
         ZF_WALK_STR(str, info) {
-            SetBit(code_pts, info.code_pt); // @todo
+            SetBit(*code_pts, info.code_pt); // @todo
         }
     }
 
-    t_b8 WalkStr(const s_str_rdonly str, t_i32 &byte_index, s_str_walk_info &o_info) {
+    t_b8 WalkStr(const s_str_rdonly str, t_i32 *const byte_index, s_str_walk_info *const o_info) {
         ZF_ASSERT(IsStrValidUTF8(str));
-        ZF_ASSERT(byte_index >= 0 && byte_index <= str.bytes.Len());
+        ZF_ASSERT(*byte_index >= 0 && *byte_index <= str.bytes.len);
 
-        if (byte_index == str.bytes.Len()) {
+        if (*byte_index == str.bytes.len) {
             return false;
         }
 
         while (true) {
-            const auto byte_type = g_utf8_byte_type_table[str.bytes[byte_index]];
+            const auto byte_type = g_utf8_byte_type_table[str.bytes[*byte_index]];
 
             switch (byte_type) {
             case ek_utf8_byte_type_ascii:
@@ -420,15 +420,15 @@ namespace zf {
             case ek_utf8_byte_type_3byte_start:
             case ek_utf8_byte_type_4byte_start: {
                 const t_i32 cp_byte_cnt = byte_type - ek_utf8_byte_type_ascii + 1;
-                const auto cp_bytes = str.bytes.Slice(byte_index, byte_index + cp_byte_cnt);
-                o_info = {.code_pt = UTF8BytesToCodePoint(cp_bytes), .byte_index = byte_index};
-                byte_index += cp_byte_cnt;
+                const auto cp_bytes = str.bytes.Slice(*byte_index, *byte_index + cp_byte_cnt);
+                *o_info = {.code_pt = UTF8BytesToCodePoint(cp_bytes), .byte_index = *byte_index};
+                *byte_index += cp_byte_cnt;
 
                 return true;
             }
 
             case ek_utf8_byte_type_continuation:
-                byte_index--;
+                (*byte_index)--;
                 break;
 
             default:
@@ -437,16 +437,16 @@ namespace zf {
         }
     }
 
-    t_b8 WalkStrReverse(const s_str_rdonly str, t_i32 &byte_index, s_str_walk_info &o_info) {
+    t_b8 WalkStrReverse(const s_str_rdonly str, t_i32 *const byte_index, s_str_walk_info *const o_info) {
         ZF_ASSERT(IsStrValidUTF8(str));
-        ZF_ASSERT(byte_index >= -1 && byte_index < str.bytes.Len());
+        ZF_ASSERT(*byte_index >= -1 && *byte_index < str.bytes.len);
 
-        if (byte_index == -1) {
+        if (*byte_index == -1) {
             return false;
         }
 
         while (true) {
-            const auto byte_type = g_utf8_byte_type_table[str.bytes[byte_index]];
+            const auto byte_type = g_utf8_byte_type_table[str.bytes[*byte_index]];
 
             switch (byte_type) {
             case ek_utf8_byte_type_ascii:
@@ -454,15 +454,15 @@ namespace zf {
             case ek_utf8_byte_type_3byte_start:
             case ek_utf8_byte_type_4byte_start: {
                 const t_i32 cp_byte_cnt = byte_type - ek_utf8_byte_type_ascii + 1;
-                const auto cp_bytes = str.bytes.Slice(byte_index, byte_index + cp_byte_cnt);
-                o_info = {.code_pt = UTF8BytesToCodePoint(cp_bytes), .byte_index = byte_index};
-                byte_index--;
+                const auto cp_bytes = str.bytes.Slice(*byte_index, *byte_index + cp_byte_cnt);
+                *o_info = {.code_pt = UTF8BytesToCodePoint(cp_bytes), .byte_index = *byte_index};
+                (*byte_index)--;
 
                 return true;
             }
 
             case ek_utf8_byte_type_continuation:
-                byte_index--;
+                (*byte_index)--;
                 break;
 
             default:

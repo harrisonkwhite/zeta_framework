@@ -10,10 +10,10 @@
 #endif
 
 namespace zf {
-    t_b8 OpenFile(const s_str_rdonly path, const e_file_access_mode mode, s_arena &temp_mem_arena, s_stream &o_stream) {
-        const s_str_rdonly path_terminated = AllocStrCloneButAddTerminator(path, temp_mem_arena);
+    t_b8 OpenFile(const s_str_rdonly path, const e_file_access_mode mode, s_arena *const temp_arena, s_stream *const o_stream) {
+        const s_str_rdonly path_terminated = AllocStrCloneButAddTerminator(path, temp_arena);
 
-        s_ptr<FILE> file;
+        FILE *file;
         e_stream_mode stream_mode;
 
         switch (mode) {
@@ -40,21 +40,21 @@ namespace zf {
             return false;
         }
 
-        o_stream = {file, stream_mode};
+        *o_stream = {file, stream_mode};
 
         return true;
     }
 
-    void CloseFile(s_stream &stream) {
-        ZF_ASSERT(stream.Type() == ek_stream_type_file);
-        fclose(stream.File());
-        stream = {};
+    void CloseFile(s_stream *const stream) {
+        ZF_ASSERT(stream->Type() == ek_stream_type_file);
+        fclose(stream->File());
+        *stream = {};
     }
 
-    t_i32 CalcFileSize(s_stream &stream) {
-        ZF_ASSERT(stream.Type() == ek_stream_type_file);
+    t_i32 CalcFileSize(s_stream *const stream) {
+        ZF_ASSERT(stream->Type() == ek_stream_type_file);
 
-        const auto &file = stream.File();
+        const auto &file = stream->File();
         const auto pos_old = ftell(file);
         fseek(file, 0, SEEK_END);
         const auto file_size = ftell(file);
@@ -62,28 +62,29 @@ namespace zf {
         return static_cast<t_i32>(file_size);
     }
 
-    t_b8 LoadFileContents(const s_str_rdonly path, s_arena &contents_mem_arena, s_arena &temp_mem_arena, s_array_mut<t_u8> &o_contents, const t_b8 add_terminator) {
+    t_b8 LoadFileContents(const s_str_rdonly path, s_arena *const contents_arena, s_arena *const temp_arena, s_array_mut<t_u8> *const o_contents, const t_b8 add_terminator) {
         s_stream stream;
 
-        if (!OpenFile(path, ek_file_access_mode_read, temp_mem_arena, stream)) {
+        if (!OpenFile(path, ek_file_access_mode_read, temp_arena, &stream)) {
             return false;
         }
 
-        ZF_DEFER({ CloseFile(stream); });
+        ZF_DEFER({ CloseFile(&stream); });
 
-        const t_i32 file_size = CalcFileSize(stream);
+        const t_i32 file_size = CalcFileSize(&stream);
 
-        o_contents = AllocArray<t_u8>(add_terminator ? file_size + 1 : file_size, contents_mem_arena);
+        *o_contents = AllocArray<t_u8>(add_terminator ? file_size + 1 : file_size, contents_arena);
 
-        return stream.ReadItemsIntoArray(o_contents, file_size);
+        return stream.ReadItemsIntoArray(*o_contents, file_size);
     }
 
-    t_b8 CreateDirectory(const s_str_rdonly path, s_arena &temp_mem_arena, const s_ptr<e_directory_creation_result> o_creation_res) {
+    // @todo: Rename.
+    t_b8 CreateDirec(const s_str_rdonly path, s_arena *const temp_arena, e_directory_creation_result *const o_creation_res) {
         if (o_creation_res) {
             *o_creation_res = ek_directory_creation_result_success;
         }
 
-        const s_str_rdonly path_terminated = AllocStrCloneButAddTerminator(path, temp_mem_arena);
+        const s_str_rdonly path_terminated = AllocStrCloneButAddTerminator(path, temp_arena);
 
 #ifdef ZF_PLATFORM_WINDOWS
         const t_i32 res = _mkdir(path_terminated.Cstr());
@@ -119,14 +120,14 @@ namespace zf {
         return false;
     }
 
-    t_b8 CreateDirectoryAndParents(const s_str_rdonly path, s_arena &temp_mem_arena, const s_ptr<e_directory_creation_result> o_dir_creation_res) {
+    t_b8 CreateDirectoryAndParents(const s_str_rdonly path, s_arena *const temp_arena, e_directory_creation_result *const o_dir_creation_res) {
         if (o_dir_creation_res) {
             *o_dir_creation_res = ek_directory_creation_result_success;
         }
 
-        const auto create_dir_if_nonexistent = [o_dir_creation_res, &temp_mem_arena](const s_str_rdonly path) {
-            if (CheckPathType(path, temp_mem_arena) == ek_path_type_not_found) {
-                if (!CreateDirectory(path, temp_mem_arena, o_dir_creation_res)) {
+        const auto create_dir_if_nonexistent = [o_dir_creation_res, &temp_arena](const s_str_rdonly path) {
+            if (CheckPathType(path, temp_arena) == ek_path_type_not_found) {
+                if (!CreateDirec(path, temp_arena, o_dir_creation_res)) {
                     return false;
                 }
             }
@@ -159,7 +160,7 @@ namespace zf {
         return true;
     }
 
-    t_b8 CreateFileAndParentDirs(const s_str_rdonly path, s_arena &temp_mem_arena, const s_ptr<e_directory_creation_result> o_dir_creation_res) {
+    t_b8 CreateFileAndParentDirs(const s_str_rdonly path, s_arena *const temp_arena, e_directory_creation_result *const o_dir_creation_res) {
         if (o_dir_creation_res) {
             *o_dir_creation_res = ek_directory_creation_result_success;
         }
@@ -167,7 +168,7 @@ namespace zf {
         // Get the substring containing all directories and create them.
         ZF_WALK_STR_REVERSE(path, info) {
             if (info.code_pt == '/' || info.code_pt == '\\') {
-                if (!CreateDirectoryAndParents({path.bytes.Slice(0, info.byte_index)}, temp_mem_arena, o_dir_creation_res)) {
+                if (!CreateDirectoryAndParents({path.bytes.Slice(0, info.byte_index)}, temp_arena, o_dir_creation_res)) {
                     return false;
                 }
 
@@ -178,17 +179,17 @@ namespace zf {
         // Now that directories are created, create the file.
         s_stream fs;
 
-        if (!OpenFile(path, ek_file_access_mode_write, temp_mem_arena, fs)) {
+        if (!OpenFile(path, ek_file_access_mode_write, temp_arena, &fs)) {
             return false;
         }
 
-        CloseFile(fs);
+        CloseFile(&fs);
 
         return true;
     }
 
-    e_path_type CheckPathType(const s_str_rdonly path, s_arena &temp_mem_arena) {
-        const s_str_rdonly path_terminated = AllocStrCloneButAddTerminator(path, temp_mem_arena);
+    e_path_type CheckPathType(const s_str_rdonly path, s_arena *const temp_arena) {
+        const s_str_rdonly path_terminated = AllocStrCloneButAddTerminator(path, temp_arena);
 
         struct stat info;
 
@@ -203,7 +204,7 @@ namespace zf {
         return ek_path_type_file;
     }
 
-    s_str LoadExecutableDir(s_arena &mem_arena) {
+    s_str LoadExecutableDir(s_arena *const arena) {
 #if defined(ZF_PLATFORM_WINDOWS)
         s_static_array<char, MAX_PATH> buf;
 
@@ -216,7 +217,7 @@ namespace zf {
             }
         }
 
-        const auto res = AllocArray<t_u8>(len, mem_arena);
+        const auto res = AllocArray<t_u8>(len, arena);
         Copy(res, buf.AsNonstatic().Slice(0, len).AsByteArray());
         return {res};
 #elif defined(ZF_PLATFORM_MACOS)

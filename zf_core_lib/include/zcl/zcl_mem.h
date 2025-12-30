@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstring>
 #include <zcl/zcl_basic.h>
 
 namespace zf {
@@ -34,34 +35,89 @@ namespace zf {
         return (n + alignment - 1) & ~(alignment - 1);
     }
 
-    struct s_arena_block {
-        void *buf = nullptr;
-        t_i32 buf_size = 0;
+    inline void Clear(void *const buf, const t_i32 buf_size, const t_u8 val) {
+        ZF_ASSERT(buf_size >= 0);
+        memset(buf, val, static_cast<size_t>(buf_size));
+    }
 
-        s_arena_block *next = nullptr;
+    template <typename tp_type>
+    inline void ClearItem(tp_type *const item, const t_u8 val) {
+        Clear(item, ZF_SIZE_OF(*item), val);
+    }
+
+    constexpr t_u8 g_poison_uninitted = 0xCD;
+    constexpr t_u8 g_poison_freed = 0xDD;
+
+#ifdef ZF_DEBUG
+    inline void PoisonUnitted(void *const buf, const t_i32 buf_size) {
+        Clear(buf, buf_size, g_poison_uninitted);
+    }
+
+    template <typename tp_type>
+    inline void PoisonUnittedItem(tp_type *const item) {
+        ClearItem(item, g_poison_uninitted);
+    }
+
+    inline void PoisonFreed(void *const buf, const t_i32 buf_size) {
+        Clear(buf, buf_size, g_poison_freed);
+    }
+
+    template <typename tp_type>
+    inline void PoisonFreedItem(tp_type *const item) {
+        ClearItem(item, g_poison_freed);
+    }
+
+    #define ZF_DEFINE_UNINITTED(type, name) \
+        type name;                          \
+        PoisonUnittedItem(&name)
+#else
+    inline void PoisonUnitted(void *const buf, const t_i32 buf_size) {}
+    template <typename tp_type> inline void PoisonUnittedItem(tp_type *const item) {}
+    inline void PoisonFreed(void *const buf, const t_i32 buf_size) {}
+    template <typename tp_type> inline void PoisonFreedItem(tp_type *const item) {}
+
+    #define ZF_DEFINE_UNINITTED(type, name) static_cast<void>(0)
+#endif
+
+    // ============================================================
+    // @section: Arenas
+    // ============================================================
+
+    struct s_arena_block {
+        void *buf;
+        t_i32 buf_size;
+
+        s_arena_block *next;
     };
 
     struct s_arena {
-        s_arena_block *blocks_head = nullptr;
-        s_arena_block *block_cur = nullptr;
-        t_i32 block_cur_offs = 0;
-        t_i32 block_min_buf_size = MegabytesToBytes(1);
+        s_arena_block *blocks_head;
+        s_arena_block *block_cur;
+        t_i32 block_cur_offs;
+        t_i32 block_min_size;
     };
 
-    // Frees all arena memory and completely resets the arena state. It is valid to call this even if no pushing was done.
-    void ReleaseArena(s_arena *const arena);
+    s_arena CreateArena(const t_i32 block_min_size = MegabytesToBytes(1)) {
+        ZF_REQUIRE(block_min_size > 0);
+        return {.block_min_size = block_min_size};
+    }
 
-    // DOES NOT FREE ARENA MEMORY. Simply rewinds the arena to the beginning of its allocated memory (if any) to overwrite from there.
+    // Frees all arena memory. It is valid to call this even if no pushing was done.
+    void DestroyArena(s_arena *const arena);
+
+    // DOES NOT FREE ANY ARENA MEMORY. Simply rewinds the arena to the beginning of its allocated memory (if any) to overwrite from there.
     inline void RewindArena(s_arena *const arena) {
         arena->block_cur = arena->blocks_head;
         arena->block_cur_offs = 0;
     }
 
-    // Will lazily allocate memory as needed. Allocation failure is treated as fatal - you don't need to check for nullptr.
+    // Will lazily allocate memory as needed. Allocation failure is treated as fatal and causes an abort - you don't need to check for nullptr.
     void *PushToArena(s_arena *const arena, const t_i32 size, const t_i32 alignment);
 
-    template <typename tp_type, typename... tp_constructor_args>
-    tp_type *Alloc(s_arena *const arena, tp_constructor_args &&...args) {
+    // ============================================================
+
+    template <typename tp_type>
+    tp_type *Alloc(s_arena *const arena) {
         return static_cast<tp_type *>(PushToArena(ZF_SIZE_OF(tp_type), ZF_ALIGN_OF(tp_type)));
     }
 
@@ -251,7 +307,7 @@ namespace zf {
 
     template <co_array_nonstatic tp_arr_type>
     constexpr t_b8 DoAllEqual(const tp_arr_type arr, const typename tp_arr_type::t_elem &val, const t_bin_comparator<typename tp_arr_type::t_elem> comparator = DefaultBinComparator) {
-        ZF_ASSERT(IsArrayValid(arr));
+        ZF_ASSERT(arr.len >= 0);
 
         if (arr.len == 0) {
             return false;
@@ -268,7 +324,7 @@ namespace zf {
 
     template <co_array_nonstatic tp_arr_type>
     constexpr t_b8 DoAnyEqual(const tp_arr_type arr, const typename tp_arr_type::t_elem &val, const t_bin_comparator<typename tp_arr_type::t_elem> comparator = DefaultBinComparator) {
-        ZF_ASSERT(IsArrayValid(arr));
+        ZF_ASSERT(arr.len >= 0);
 
         for (t_i32 i = 0; i < arr.len; i++) {
             if (comparator(arr[i], val)) {
@@ -281,7 +337,7 @@ namespace zf {
 
     template <co_array_nonstatic_mut tp_arr_type>
     constexpr void SetAllTo(const tp_arr_type arr, const typename tp_arr_type::t_elem &val) {
-        ZF_ASSERT(IsArrayValid(arr));
+        ZF_ASSERT(arr.len >= 0);
 
         for (t_i32 i = 0; i < arr.len; i++) {
             arr[i] = val;
@@ -331,6 +387,8 @@ namespace zf {
         return 0;
     }
 
+    // ============================================================
+
     template <typename tp_type>
     constexpr s_array_mut<t_u8> ToBytes(tp_type &val) {
         return {reinterpret_cast<t_u8 *>(&val), ZF_SIZE_OF(val)};
@@ -340,8 +398,6 @@ namespace zf {
     constexpr s_array_rdonly<t_u8> ToBytes(const tp_type &val) {
         return {reinterpret_cast<const t_u8 *>(&val), ZF_SIZE_OF(val)};
     }
-
-    // ============================================================
 
     // ============================================================
     // @section: Bits

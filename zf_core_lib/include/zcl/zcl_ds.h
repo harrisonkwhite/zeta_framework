@@ -9,20 +9,16 @@ namespace zf {
 
         using t_elem = tp_type;
 
-        s_array_mut<tp_type> backing_arr = {};
-        t_i32 len = 0;
+        s_array_mut<tp_type> backing_arr;
+        t_i32 len;
 
         t_i32 Cap() const {
-            return backing_arr.Len();
+            return backing_arr.len;
         }
 
         tp_type &operator[](const t_i32 index) const {
             ZF_ASSERT(index >= 0 && index < len);
             return backing_arr[index];
-        }
-
-        tp_type &Last() const {
-            return operator[](len - 1);
         }
 
         s_array_mut<tp_type> AsArray() const {
@@ -36,20 +32,16 @@ namespace zf {
 
         using t_elem = tp_type;
 
-        s_array_rdonly<tp_type> backing_arr = {};
-        t_i32 len = 0;
+        s_array_rdonly<tp_type> backing_arr;
+        t_i32 len;
 
         t_i32 Cap() const {
-            return backing_arr.Len();
+            return backing_arr.len;
         }
 
         const tp_type &operator[](const t_i32 index) const {
             ZF_ASSERT(index >= 0 && index < len);
             return backing_arr[index];
-        }
-
-        const tp_type &Last() const {
-            return operator[](len - 1);
         }
 
         s_array_rdonly<tp_type> AsArray() const {
@@ -63,11 +55,11 @@ namespace zf {
 
         using t_elem = tp_type;
 
-        s_static_array<tp_type, tp_cap> backing_arr = {};
-        t_i32 len = 0;
+        s_static_array<tp_type, tp_cap> backing_arr;
+        t_i32 len;
 
         t_i32 Cap() const {
-            return backing_arr.Len();
+            return backing_arr.len;
         }
 
         tp_type &operator[](const t_i32 index) {
@@ -79,9 +71,6 @@ namespace zf {
             ZF_ASSERT(index >= 0 && index < len);
             return backing_arr[index];
         }
-
-        tp_type &Last() { return operator[](len - 1); }
-        const tp_type &Last() const { return operator[](len - 1); }
 
         s_array_mut<tp_type> AsArray() { return backing_arr.ToNonstatic().Slice(0, len); }
         s_array_rdonly<tp_type> AsArray() const { return backing_arr.AsNonstatic().Slice(0, len); }
@@ -124,9 +113,9 @@ namespace zf {
     template <typename tp_type> concept c_list = c_list_nonstatic<tp_type> || c_list_static<tp_type>;
 
     template <typename tp_type>
-    s_list_mut<tp_type> CreateList(const t_i32 cap, s_arena &mem_arena, const t_i32 len = 0) {
+    s_list_mut<tp_type> CreateList(const t_i32 cap, s_arena *const arena, const t_i32 len = 0) {
         ZF_ASSERT(cap > 0 && len >= 0 && len <= cap);
-        return {AllocArray<tp_type>(cap, mem_arena), len};
+        return {AllocArray<tp_type>(cap, arena), len};
     }
 
     using t_list_extension_cap_calculator = t_i32 (*)(const t_i32 cap_current);
@@ -138,20 +127,20 @@ namespace zf {
         };
 
     template <c_list_nonstatic_mut tp_list_type>
-    void ExtendList(tp_list_type &list, s_arena &mem_arena, const t_list_extension_cap_calculator cap_calculator = g_default_list_extension_cap_calculator) {
+    void ExtendList(tp_list_type &list, s_arena *const arena, const t_list_extension_cap_calculator cap_calculator = g_default_list_extension_cap_calculator) {
         ZF_ASSERT(cap_calculator);
 
         const t_i32 new_cap = cap_calculator(list.Cap());
         ZF_ASSERT(new_cap > list.Cap());
 
-        const auto new_backing_arr = AllocArray<typename tp_list_type::t_elem>(new_cap, mem_arena);
+        const auto new_backing_arr = AllocArray<typename tp_list_type::t_elem>(new_cap, arena);
         Copy(new_backing_arr, list.backing_arr);
 
         list = {new_backing_arr, list.len};
     }
 
     template <c_list_nonstatic_mut tp_list_type>
-    void ExtendListToFit(tp_list_type &list, const t_i32 min_cap, s_arena &mem_arena, const t_list_extension_cap_calculator cap_calculator = g_default_list_extension_cap_calculator) {
+    void ExtendListToFit(tp_list_type &list, const t_i32 min_cap, s_arena *const arena, const t_list_extension_cap_calculator cap_calculator = g_default_list_extension_cap_calculator) {
         ZF_ASSERT(min_cap > list.Cap());
         ZF_ASSERT(cap_calculator);
 
@@ -167,7 +156,7 @@ namespace zf {
             return res;
         }();
 
-        const auto new_backing_arr = AllocArray<typename tp_list_type::t_elem>(new_cap, mem_arena);
+        const auto new_backing_arr = AllocArray<typename tp_list_type::t_elem>(new_cap, arena);
         Copy(new_backing_arr, list.backing_arr);
 
         list = {new_backing_arr, list.len};
@@ -183,9 +172,9 @@ namespace zf {
     }
 
     template <c_list_nonstatic tp_list_type>
-    typename tp_list_type::t_elem &AppendToListDynamic(tp_list_type &list, const typename tp_list_type::t_elem &val, s_arena &extension_mem_arena, const t_list_extension_cap_calculator extension_cap_calculator = g_default_list_extension_cap_calculator) {
+    typename tp_list_type::t_elem &AppendToListDynamic(tp_list_type &list, const typename tp_list_type::t_elem &val, s_arena *const extension_arena, const t_list_extension_cap_calculator extension_cap_calculator = g_default_list_extension_cap_calculator) {
         if (list.len == list.Cap()) {
-            ExtendList(list, extension_mem_arena, extension_cap_calculator);
+            ExtendList(list, extension_arena, extension_cap_calculator);
         }
 
         return AppendToList(list, val);
@@ -193,19 +182,19 @@ namespace zf {
 
     template <c_list tp_list_type>
     s_array_mut<typename tp_list_type::t_elem> AppendManyToList(tp_list_type &list, const s_array_rdonly<typename tp_list_type::t_elem> vals) {
-        ZF_ASSERT(list.len + vals.Len() <= list.Cap());
+        ZF_ASSERT(list.len + vals.len <= list.Cap());
 
         Copy(list.backing_arr.SliceFrom(list.len), vals);
-        list.len += vals.Len();
-        return list.backing_arr.Slice(list.len - vals.Len(), list.len);
+        list.len += vals.len;
+        return list.backing_arr.Slice(list.len - vals.len, list.len);
     }
 
     template <c_list_nonstatic tp_list_type>
-    s_array_mut<typename tp_list_type::t_elem> AppendManyToListDynamic(tp_list_type &list, const s_array_rdonly<typename tp_list_type::t_elem> vals, s_arena &extension_mem_arena, const t_list_extension_cap_calculator extension_cap_calculator = g_default_list_extension_cap_calculator) {
-        const auto min_cap_needed = list.len + vals.Len();
+    s_array_mut<typename tp_list_type::t_elem> AppendManyToListDynamic(tp_list_type &list, const s_array_rdonly<typename tp_list_type::t_elem> vals, s_arena *const extension_arena, const t_list_extension_cap_calculator extension_cap_calculator = g_default_list_extension_cap_calculator) {
+        const auto min_cap_needed = list.len + vals.len;
 
         if (min_cap_needed > list.Cap()) {
-            ExtendListToFit(list, min_cap_needed, extension_mem_arena, extension_cap_calculator);
+            ExtendListToFit(list, min_cap_needed, extension_arena, extension_cap_calculator);
         }
 
         return AppendManyToList(list, vals);
@@ -228,9 +217,9 @@ namespace zf {
     }
 
     template <c_list tp_list_type>
-    typename tp_list_type::t_elem &InsertIntoListDynamic(tp_list_type &list, const t_i32 index, const typename tp_list_type::t_elem &val, s_arena &extension_mem_arena, const t_list_extension_cap_calculator extension_cap_calculator = g_default_list_extension_cap_calculator) {
+    typename tp_list_type::t_elem &InsertIntoListDynamic(tp_list_type &list, const t_i32 index, const typename tp_list_type::t_elem &val, s_arena *const extension_arena, const t_list_extension_cap_calculator extension_cap_calculator = g_default_list_extension_cap_calculator) {
         if (list.len == list.Cap()) {
-            ExtendList(list, extension_mem_arena, extension_cap_calculator);
+            ExtendList(list, extension_arena, extension_cap_calculator);
         }
 
         return InsertIntoList(list, index, val);
@@ -273,8 +262,8 @@ namespace zf {
     public:
         s_kv_pair_block_seq() = default;
 
-        s_kv_pair_block_seq(const t_i32 block_cap, s_arena &blocks_mem_arena, const t_bin_comparator<tp_key_type> key_comparator = DefaultBinComparator)
-            : m_active(true), m_block_cap(block_cap), m_blocks_mem_arena(&blocks_mem_arena), m_key_comparator(key_comparator) {
+        s_kv_pair_block_seq(const t_i32 block_cap, s_arena *const blocks_arena, const t_bin_comparator<tp_key_type> key_comparator = DefaultBinComparator)
+            : m_active(true), m_block_cap(block_cap), m_blocks_arena(&blocks_arena), m_key_comparator(key_comparator) {
             ZF_ASSERT(key_comparator);
         };
 
@@ -288,7 +277,7 @@ namespace zf {
             return m_pair_cnt;
         }
 
-        [[nodiscard]] t_b8 FindInChain(const t_i32 chain_begin_index, const tp_key_type &key, s_ptr<tp_val_type> &o_val) const {
+        [[nodiscard]] t_b8 FindInChain(const t_i32 chain_begin_index, const tp_key_type &key, tp_val_type **const o_val) const {
             ZF_ASSERT(m_active);
             ZF_ASSERT(chain_begin_index >= -1 && chain_begin_index < m_block_cap * m_block_cnt);
 
@@ -300,7 +289,7 @@ namespace zf {
                 const t_i32 rel_index = index % m_block_cap;
 
                 if (m_key_comparator(block.keys[rel_index], key)) {
-                    o_val = &block.vals[rel_index];
+                    *o_val = &block.vals[rel_index];
                     return true;
                 }
 
@@ -311,14 +300,14 @@ namespace zf {
         }
 
         t_b8 ExistsInChain(const t_i32 chain_begin_index, const tp_key_type &key) const {
-            s_ptr<tp_val_type> val_throwaway;
+            tp_val_type *val_throwaway;
             return FindInChain(chain_begin_index, key, val_throwaway);
         }
 
-        e_kv_pair_block_seq_put_result PutInChain(t_i32 &chain_begin_index, const tp_key_type &key, const tp_val_type &val) {
+        e_kv_pair_block_seq_put_result PutInChain(t_i32 *const chain_begin_index, const tp_key_type &key, const tp_val_type &val) {
             ZF_ASSERT(m_active);
 
-            s_ptr<t_i32> index = &chain_begin_index;
+            t_i32 *const index = chain_begin_index;
 
             while (*index != -1) {
                 const s_block &block = FindBlockOfIndex(*index);
@@ -338,11 +327,11 @@ namespace zf {
             return ek_kv_pair_block_seq_put_result_added;
         }
 
-        t_b8 RemoveInChain(t_i32 &chain_begin_index, const tp_key_type &key) {
+        t_b8 RemoveInChain(t_i32 *const chain_begin_index, const tp_key_type &key) {
             ZF_ASSERT(m_active);
-            ZF_ASSERT(chain_begin_index >= -1 && chain_begin_index < m_block_cap * m_block_cnt);
+            ZF_ASSERT(*chain_begin_index >= -1 && *chain_begin_index < m_block_cap * m_block_cnt);
 
-            s_ptr<t_i32> index = &chain_begin_index;
+            t_i32 *const index = chain_begin_index;
 
             while (*index != -1) {
                 s_block &block = FindBlockOfIndex(*index);
@@ -388,25 +377,25 @@ namespace zf {
 
     private:
         struct s_block {
-            s_array_mut<tp_key_type> keys = {};
-            s_array_mut<tp_val_type> vals = {};
-            s_array_mut<t_i32> next_indexes = {}; // -1 means no "next" (i.e. it is the last in the chain).
-            s_bit_vec_mut usage = {};
+            s_array_mut<tp_key_type> keys;
+            s_array_mut<tp_val_type> vals;
+            s_array_mut<t_i32> next_indexes; // -1 means no "next" (i.e. it is the last in the chain).
+            s_bit_vec_mut usage;
 
-            s_ptr<s_block> next = nullptr;
+            s_block *next;
         };
 
-        static s_block *CreateBlock(const t_i32 cap, s_arena *const mem_arena) {
-            const auto block = Alloc<s_block>(mem_arena);
+        static s_block *CreateBlock(const t_i32 cap, s_arena *const arena) {
+            const auto block = Alloc<s_block>(arena);
 
-            block->keys = AllocArray<tp_key_type>(cap, *mem_arena);
+            block->keys = AllocArray<tp_key_type>(cap, *arena);
 
-            block->vals = AllocArray<tp_val_type>(cap, *mem_arena);
+            block->vals = AllocArray<tp_val_type>(cap, *arena);
 
-            block->next_indexes = AllocArray<t_i32>(cap, *mem_arena);
+            block->next_indexes = AllocArray<t_i32>(cap, *arena);
             SetAllTo(block->next_indexes, -1);
 
-            block->usage = CreateBitVec(cap, *mem_arena);
+            block->usage = CreateBitVec(cap, *arena);
 
             return block;
         }
@@ -415,7 +404,7 @@ namespace zf {
         s_block &FindBlockOfIndex(t_i32 index) const {
             ZF_ASSERT(index >= -1 && index < m_block_cap * m_block_cnt);
 
-            s_ptr<s_block> res = m_blocks_head;
+            s_block *const res = m_blocks_head;
 
             while (index >= m_block_cap) {
                 res = res->next;
@@ -427,8 +416,8 @@ namespace zf {
 
         // Returns the absolute index of the inserted pair.
         t_i32 Insert(const tp_key_type &key, const tp_val_type &val) {
-            s_ptr<s_block> block = m_blocks_head;
-            s_ptr<s_block> block_previous = nullptr;
+            s_block *block = m_blocks_head;
+            s_block *block_previous = nullptr;
             t_i32 block_index = 0;
 
             m_pair_cnt++;
@@ -452,7 +441,7 @@ namespace zf {
             }
 
             // All blocks are full - create a new one.
-            const auto new_block = CreateBlock(m_block_cap, m_blocks_mem_arena);
+            const auto new_block = CreateBlock(m_block_cap, m_blocks_arena);
             m_block_cnt++;
 
             if (block_previous) {
@@ -472,12 +461,12 @@ namespace zf {
 
         t_bin_comparator<tp_key_type> m_key_comparator = nullptr;
 
-        s_ptr<s_block> m_blocks_head = nullptr;
-        s_ptr<s_arena> m_blocks_mem_arena = nullptr;
-        t_i32 m_block_cnt = 0;
-        t_i32 m_block_cap = 0;
+        s_block *m_blocks_head;
+        s_arena *m_blocks_arena;
+        t_i32 m_block_cnt;
+        t_i32 m_block_cap;
 
-        t_i32 m_pair_cnt = 0;
+        t_i32 m_pair_cnt;
     };
 
     template <typename tp_type>
@@ -491,7 +480,7 @@ namespace zf {
 
             t_u32 hash = offs_basis;
 
-            for (t_i32 i = 0; i < key.bytes.Len(); i++) {
+            for (t_i32 i = 0; i < key.bytes.len; i++) {
                 hash ^= static_cast<t_u8>(key.bytes[i]);
                 hash *= prime;
             }
@@ -525,14 +514,14 @@ namespace zf {
         s_kv_pair_block_seq<tp_key_type, tp_val_type> kv_pair_block_seq = {};
 
         t_i32 Cap() const {
-            return immediate_indexes.Len();
+            return immediate_indexes.len;
         }
 
         t_i32 EntryCount() const {
             return kv_pair_block_seq.PairCount();
         }
 
-        [[nodiscard]] t_b8 Find(const tp_key_type &key, s_ptr<tp_val_type> &o_val) const {
+        [[nodiscard]] t_b8 Find(const tp_key_type &key, tp_val_type **const o_val) const {
             const t_i32 hash_index = KeyToHashIndex(key, hash_func, Cap());
             return kv_pair_block_seq.FindInChain(immediate_indexes[hash_index], key, o_val);
         }
@@ -556,59 +545,59 @@ namespace zf {
 
         // Loads all key-value pairs into the given PRE-ALLOCATED arrays.
         void LoadEntries(const s_array_mut<tp_key_type> keys, const s_array_mut<tp_val_type> vals) const {
-            ZF_ASSERT(keys.Len() >= EntryCount() && vals.Len() >= EntryCount());
+            ZF_ASSERT(keys.len >= EntryCount() && vals.len >= EntryCount());
 
             t_i32 loaded_cnt = 0;
 
-            for (t_i32 i = 0; i < immediate_indexes.Len(); i++) {
+            for (t_i32 i = 0; i < immediate_indexes.len; i++) {
                 loaded_cnt += kv_pair_block_seq.LoadChain(immediate_indexes[i], keys.SliceFrom(loaded_cnt), vals.SliceFrom(loaded_cnt));
             }
         }
 
         // Allocates the given arrays with the memory arena and loads key-value pairs into them.
-        void LoadEntries(s_arena &mem_arena, s_array_mut<tp_key_type> &o_keys, s_array_mut<tp_val_type> &o_vals) const {
-            o_keys = AllocArray<tp_key_type>(EntryCount(), mem_arena);
-            o_vals = AllocArray<tp_val_type>(EntryCount(), mem_arena);
-            return LoadEntries(o_keys, o_vals);
+        void LoadEntries(s_arena *const arena, s_array_mut<tp_key_type> *const o_keys, s_array_mut<tp_val_type> *const o_vals) const {
+            *o_keys = AllocArray<tp_key_type>(EntryCount(), arena);
+            *o_vals = AllocArray<tp_val_type>(EntryCount(), arena);
+            return LoadEntries(*o_keys, *o_vals);
         }
     };
 
     // The provided hash function has to map a key to an integer 0 or higher. The given memory arena will be saved and used for allocating new memory for entries when needed.
     template <typename tp_key_type, typename tp_val_type>
-    s_hash_map<tp_key_type, tp_val_type> CreateHashMap(const t_hash_func<tp_key_type> hash_func, s_arena &mem_arena, const t_i32 cap = g_hash_map_cap_default, const t_bin_comparator<tp_key_type> key_comparator = DefaultBinComparator) {
-        const auto immediate_indexes = AllocArray<t_i32>(cap, mem_arena);
+    s_hash_map<tp_key_type, tp_val_type> CreateHashMap(const t_hash_func<tp_key_type> hash_func, s_arena *const arena, const t_i32 cap = g_hash_map_cap_default, const t_bin_comparator<tp_key_type> key_comparator = DefaultBinComparator) {
+        const auto immediate_indexes = AllocArray<t_i32>(cap, arena);
         SetAllTo(immediate_indexes, -1);
 
         return {
             .hash_func = hash_func,
             .immediate_indexes = immediate_indexes,
-            .kv_pair_block_seq = {static_cast<t_i32>(AlignForward(cap, 8)), mem_arena, key_comparator},
+            .kv_pair_block_seq = {static_cast<t_i32>(AlignForward(cap, 8)), arena, key_comparator},
         };
     }
 
     template <typename tp_key_type, typename tp_val_type>
-    [[nodiscard]] t_b8 SerializeHashMap(s_stream &stream, const s_hash_map<tp_key_type, tp_val_type> &hm, s_arena &temp_mem_arena) {
+    [[nodiscard]] t_b8 SerializeHashMap(s_stream *const stream, const s_hash_map<tp_key_type, tp_val_type> &hm, s_arena *const temp_arena) {
         const t_i32 cap = hm.Cap();
 
-        if (!stream.WriteItem(cap)) {
+        if (!stream->WriteItem(cap)) {
             return false;
         }
 
         const t_i32 entry_cnt = hm.EntryCount();
 
-        if (!stream.WriteItem(entry_cnt)) {
+        if (!stream->WriteItem(entry_cnt)) {
             return false;
         }
 
         s_array_mut<tp_key_type> keys;
         s_array_mut<tp_val_type> vals;
-        hm.LoadEntries(temp_mem_arena, keys, vals);
+        hm.LoadEntries(temp_arena, &keys, &vals);
 
-        if (!stream.WriteItemsOfArray(keys)) {
+        if (!stream->WriteItemsOfArray(keys)) {
             return false;
         }
 
-        if (!stream.WriteItemsOfArray(vals)) {
+        if (!stream->WriteItemsOfArray(vals)) {
             return false;
         }
 
@@ -616,33 +605,33 @@ namespace zf {
     }
 
     template <typename tp_key_type, typename tp_val_type>
-    [[nodiscard]] t_b8 DeserializeHashMap(s_stream &stream, s_arena &hm_mem_arena, const t_hash_func<tp_key_type> hm_hash_func, s_arena &temp_mem_arena, s_hash_map<tp_key_type, tp_val_type> &o_hm, const t_bin_comparator<tp_key_type> hm_key_comparator = DefaultBinComparator) {
+    [[nodiscard]] t_b8 DeserializeHashMap(s_stream *const stream, s_arena *const hm_arena, const t_hash_func<tp_key_type> hm_hash_func, s_arena *const temp_arena, s_hash_map<tp_key_type, tp_val_type> &o_hm, const t_bin_comparator<tp_key_type> hm_key_comparator = DefaultBinComparator) {
         ZF_ASSERT(hm_hash_func);
         ZF_ASSERT(hm_key_comparator);
 
         t_i32 cap;
 
-        if (!stream.ReadItem(cap)) {
+        if (!stream->ReadItem(cap)) {
             return false;
         }
 
         t_i32 entry_cnt;
 
-        if (!stream.ReadItem(entry_cnt)) {
+        if (!stream->ReadItem(entry_cnt)) {
             return false;
         }
 
-        o_hm = CreateHashMap<tp_key_type, tp_val_type>(hm_hash_func, hm_mem_arena, cap, hm_key_comparator);
+        o_hm = CreateHashMap<tp_key_type, tp_val_type>(hm_hash_func, hm_arena, cap, hm_key_comparator);
 
-        const auto keys = AllocArray<tp_key_type>(entry_cnt, temp_mem_arena);
+        const auto keys = AllocArray<tp_key_type>(entry_cnt, temp_arena);
 
-        if (!stream.ReadItemsIntoArray(keys, entry_cnt)) {
+        if (!stream->ReadItemsIntoArray(keys, entry_cnt)) {
             return false;
         }
 
-        const auto vals = AllocArray<tp_val_type>(entry_cnt, temp_mem_arena);
+        const auto vals = AllocArray<tp_val_type>(entry_cnt, temp_arena);
 
-        if (!stream.ReadItemsIntoArray(vals, entry_cnt)) {
+        if (!stream->ReadItemsIntoArray(vals, entry_cnt)) {
             return false;
         }
 

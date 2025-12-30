@@ -26,7 +26,7 @@ namespace zf {
         s_stream(const s_array_mut<t_u8> bytes, const e_stream_mode mode, const t_i32 pos = 0)
             : m_type(ek_stream_type_mem), m_type_data({.mem = {.bytes = bytes, .pos = pos}}), m_mode(mode) { ZF_ASSERT(pos >= 0 && pos <= bytes.len); }
 
-        s_stream(const s_ptr<FILE> file, const e_stream_mode mode)
+        s_stream(FILE *const file, const e_stream_mode mode)
             : m_type(ek_stream_type_file), m_type_data({.file = {.file = file}}), m_mode(mode) { ZF_ASSERT(file); }
 
         s_stream(const s_stream &) = delete;
@@ -44,7 +44,7 @@ namespace zf {
             return m_type_data.mem.bytes.Slice(0, m_type_data.mem.pos);
         }
 
-        s_ptr<FILE> File() const {
+        FILE *File() const {
             ZF_ASSERT(m_type == ek_stream_type_file);
             return m_type_data.file.file;
         }
@@ -192,7 +192,7 @@ namespace zf {
             } str;
 
             struct {
-                s_ptr<FILE> file;
+                FILE *file;
             } file;
         } m_type_data = {};
 
@@ -204,12 +204,12 @@ namespace zf {
     inline s_stream StdError() { return {stderr, ek_stream_mode_write}; }
 
     template <co_array_nonstatic tp_type>
-    [[nodiscard]] t_b8 SerializeArray(s_stream &stream, const tp_type arr) {
-        if (!stream.WriteItem(arr.len)) {
+    [[nodiscard]] t_b8 SerializeArray(s_stream *const stream, const tp_type arr) {
+        if (!stream->WriteItem(arr.len)) {
             return false;
         }
 
-        if (!stream.WriteItemsOfArray(arr)) {
+        if (!stream->WriteItemsOfArray(arr)) {
             return false;
         }
 
@@ -217,17 +217,17 @@ namespace zf {
     }
 
     template <typename tp_type>
-    [[nodiscard]] t_b8 DeserializeArray(s_stream &stream, s_arena &arr_mem_arena, s_array_mut<tp_type> &o_arr) {
+    [[nodiscard]] t_b8 DeserializeArray(s_stream *const stream, s_arena *const arr_arena, s_array_mut<tp_type> &o_arr) {
         t_i32 len;
 
-        if (!stream.ReadItem(len)) {
+        if (!stream->ReadItem(len)) {
             return false;
         }
 
         if (len > 0) {
-            o_arr = AllocArray<tp_type>(len, arr_mem_arena);
+            o_arr = AllocArray<tp_type>(len, arr_arena);
 
-            if (!stream.ReadItemsIntoArray(o_arr, len)) {
+            if (!stream->ReadItemsIntoArray(o_arr, len)) {
                 return false;
             }
         } else {
@@ -237,29 +237,29 @@ namespace zf {
         return true;
     }
 
-    [[nodiscard]] inline t_b8 SerializeBitVec(s_stream &stream, const s_bit_vec_rdonly bv) {
-        if (!stream.WriteItem(bv.bit_cnt)) {
+    [[nodiscard]] inline t_b8 SerializeBitVec(s_stream *const stream, const s_bit_vec_rdonly bv) {
+        if (!stream->WriteItem(bv.bit_cnt)) {
             return false;
         }
 
-        if (!stream.WriteItemsOfArray(bv.bytes)) {
+        if (!stream->WriteItemsOfArray(bv.bytes)) {
             return false;
         }
 
         return true;
     }
 
-    [[nodiscard]] inline t_b8 DeserializeBitVec(s_stream &stream, s_arena &bv_mem_arena, s_bit_vec_mut &o_bv) {
+    [[nodiscard]] inline t_b8 DeserializeBitVec(s_stream *const stream, s_arena *const bv_arena, s_bit_vec_mut &o_bv) {
         t_i32 bit_cnt;
 
-        if (!stream.ReadItem(bit_cnt)) {
+        if (!stream->ReadItem(bit_cnt)) {
             return false;
         }
 
         if (bit_cnt > 0) {
-            o_bv = CreateBitVec(bit_cnt, &bv_mem_arena);
+            o_bv = CreateBitVec(bit_cnt, bv_arena);
 
-            if (!stream.ReadItemsIntoArray(o_bv.bytes, o_bv.bytes.len)) {
+            if (!stream->ReadItemsIntoArray(o_bv.bytes, o_bv.bytes.len)) {
                 return false;
             }
         } else {
@@ -278,10 +278,10 @@ namespace zf {
         ek_file_access_mode_append
     };
 
-    [[nodiscard]] t_b8 OpenFile(const s_str_rdonly file_path, const e_file_access_mode mode, s_arena &temp_mem_arena, s_stream &o_stream);
-    void CloseFile(s_stream &stream);
-    t_i32 CalcFileSize(s_stream &stream);
-    [[nodiscard]] t_b8 LoadFileContents(const s_str_rdonly file_path, s_arena &contents_mem_arena, s_arena &temp_mem_arena, s_array_mut<t_u8> &o_contents, const t_b8 add_terminator = false);
+    [[nodiscard]] t_b8 OpenFile(const s_str_rdonly file_path, const e_file_access_mode mode, s_arena *const temp_arena, s_stream *const o_stream);
+    void CloseFile(s_stream *const stream);
+    t_i32 CalcFileSize(s_stream *const stream);
+    [[nodiscard]] t_b8 LoadFileContents(const s_str_rdonly file_path, s_arena *const contents_arena, s_arena *const temp_arena, s_array_mut<t_u8> *const o_contents, const t_b8 add_terminator = false);
 
     enum e_directory_creation_result : t_i32 {
         ek_directory_creation_result_success,
@@ -291,9 +291,9 @@ namespace zf {
         ek_directory_creation_result_unknown_err
     };
 
-    [[nodiscard]] t_b8 CreateDirectory(const s_str_rdonly path, s_arena &temp_mem_arena, const s_ptr<e_directory_creation_result> o_creation_res = nullptr); // This DOES NOT create non-existent parent directories.
-    [[nodiscard]] t_b8 CreateDirectoryAndParents(const s_str_rdonly path, s_arena &temp_mem_arena, const s_ptr<e_directory_creation_result> o_dir_creation_res = nullptr);
-    [[nodiscard]] t_b8 CreateFileAndParentDirs(const s_str_rdonly path, s_arena &temp_mem_arena, const s_ptr<e_directory_creation_result> o_dir_creation_res = nullptr);
+    [[nodiscard]] t_b8 CreateDirec(const s_str_rdonly path, s_arena *const temp_arena, e_directory_creation_result *const o_creation_res = nullptr); // This DOES NOT create non-existent parent directories.
+    [[nodiscard]] t_b8 CreateDirectoryAndParents(const s_str_rdonly path, s_arena *const temp_arena, e_directory_creation_result *const o_dir_creation_res = nullptr);
+    [[nodiscard]] t_b8 CreateFileAndParentDirs(const s_str_rdonly path, s_arena *const temp_arena, e_directory_creation_result *const o_dir_creation_res = nullptr);
 
     enum e_path_type : t_i32 {
         ek_path_type_not_found,
@@ -301,21 +301,21 @@ namespace zf {
         ek_path_type_directory
     };
 
-    e_path_type CheckPathType(const s_str_rdonly path, s_arena &temp_mem_arena);
+    e_path_type CheckPathType(const s_str_rdonly path, s_arena *const temp_arena);
 
-    s_str LoadExecutableDir(s_arena &mem_arena);
+    s_str LoadExecutableDir(s_arena *const arena);
 
     // ============================================================
     // @section: Printing
     // ============================================================
-    inline t_b8 Print(s_stream &stream, const s_str_rdonly str) {
-        return stream.WriteItemsOfArray(str.bytes);
+    inline t_b8 Print(s_stream *const stream, const s_str_rdonly str) {
+        return stream->WriteItemsOfArray(str.bytes);
     }
 
-    inline t_b8 PrintFormat(s_stream &stream, const s_str_rdonly fmt);
+    inline t_b8 PrintFormat(s_stream *const stream, const s_str_rdonly fmt);
 
     template <typename tp_arg_type, typename... tp_arg_types_leftover>
-    t_b8 PrintFormat(s_stream &stream, const s_str_rdonly fmt, const tp_arg_type &arg, const tp_arg_types_leftover &...args_leftover);
+    t_b8 PrintFormat(s_stream *const stream, const s_str_rdonly fmt, const tp_arg_type &arg, const tp_arg_types_leftover &...args_leftover);
 
     // Type format structs which are to be accepted as format printing arguments need to meet this (i.e. have the tag).
     template <typename tp_type>
@@ -332,7 +332,7 @@ namespace zf {
     inline s_bool_fmt FormatBool(const t_b8 val) { return {val}; }
     inline s_bool_fmt FormatDefault(const t_b8 val) { return {val}; }
 
-    inline t_b8 PrintType(s_stream &stream, const s_bool_fmt fmt) {
+    inline t_b8 PrintType(s_stream *const stream, const s_bool_fmt fmt) {
         const s_str_rdonly true_str = s_cstr_literal("true");
         const s_str_rdonly false_str = s_cstr_literal("false");
 
@@ -350,7 +350,7 @@ namespace zf {
     inline s_str_fmt FormatStr(const s_str_rdonly val) { return {val}; }
     inline s_str_fmt FormatDefault(const s_str_rdonly val) { return FormatStr(val); }
 
-    inline t_b8 PrintType(s_stream &stream, const s_str_fmt fmt) {
+    inline t_b8 PrintType(s_stream *const stream, const s_str_fmt fmt) {
         return Print(stream, fmt.val);
     }
 
@@ -367,7 +367,7 @@ namespace zf {
     template <c_integral tp_type> s_integral_fmt<tp_type> FormatDefault(const tp_type val) { return FormatInt(val); }
 
     template <c_integral tp_type>
-    t_b8 PrintType(s_stream &stream, const s_integral_fmt<tp_type> fmt) {
+    t_b8 PrintType(s_stream *const stream, const s_integral_fmt<tp_type> fmt) {
         s_static_array<t_u8, 20> str_bytes = {}; // Maximum possible number of ASCII characters needed to represent a 64-bit integer.
         s_stream str_bytes_stream = {str_bytes, ek_stream_mode_write};
         t_b8 str_bytes_stream_write_success = true;
@@ -409,7 +409,7 @@ namespace zf {
     }
 
     template <c_floating_point tp_type>
-    t_b8 PrintType(s_stream &stream, const s_float_fmt<tp_type> fmt) {
+    t_b8 PrintType(s_stream *const stream, const s_float_fmt<tp_type> fmt) {
         s_static_array<t_u8, 400> str_bytes = {}; // Roughly more than how many bytes should ever be needed.
 
         t_i32 str_bytes_used = snprintf(reinterpret_cast<char *>(str_bytes.raw), str_bytes.g_len, "%f", static_cast<t_f64>(fmt.val));
@@ -465,22 +465,18 @@ namespace zf {
         return {val, flags, min_digits};
     }
 
-    template <typename tp_type>
-    inline s_hex_fmt<t_uintptr> FormatHex(const s_ptr<tp_type> ptr, const e_hex_fmt_flags flags = {}, const t_i32 min_digits = g_hex_fmt_digit_cnt_min) {
-        return {reinterpret_cast<t_uintptr>(ptr.raw), flags, min_digits};
+    // @todo: Check both of these functions below still work.
+
+    inline s_hex_fmt<t_uintptr> FormatHex(const void *const ptr, const e_hex_fmt_flags flags = {}, const t_i32 min_digits = g_hex_fmt_digit_cnt_min) {
+        return {reinterpret_cast<t_uintptr>(ptr), flags, min_digits};
     }
 
-    template <typename tp_type>
-    s_hex_fmt<t_uintptr> FormatDefault(const s_ptr<tp_type> ptr) {
+    inline s_hex_fmt<t_uintptr> FormatDefault(const void *const ptr) {
         return FormatHex(ptr, {}, 2 * ZF_SIZE_OF(t_uintptr));
     }
 
-    inline s_hex_fmt<t_uintptr> FormatDefault(const void *const raw_ptr) {
-        return FormatHex(s_ptr<const void>(raw_ptr), {}, 2 * ZF_SIZE_OF(t_uintptr));
-    }
-
     template <c_unsigned_integral tp_type>
-    t_b8 PrintType(s_stream &stream, const s_hex_fmt<tp_type> fmt) {
+    t_b8 PrintType(s_stream *const stream, const s_hex_fmt<tp_type> fmt) {
         ZF_ASSERT(fmt.min_digits >= g_hex_fmt_digit_cnt_min && fmt.min_digits <= g_hex_fmt_digit_cnt_max);
 
         s_static_array<t_u8, 2 + g_hex_fmt_digit_cnt_max> str_bytes = {}; // Can facilitate max number of digits plus the "0x" prefix.
@@ -546,7 +542,7 @@ namespace zf {
     constexpr s_v2_fmt FormatV2(const s_v2 val, const t_b8 trim_trailing_zeros = false) { return {val, trim_trailing_zeros}; }
     constexpr s_v2_fmt FormatDefault(const s_v2 val) { return FormatV2(val); }
 
-    inline t_b8 PrintType(s_stream &stream, const s_v2_fmt fmt) {
+    inline t_b8 PrintType(s_stream *const stream, const s_v2_fmt fmt) {
         return Print(stream, s_cstr_literal("("))
             && PrintType(stream, FormatFloat(fmt.val.x, fmt.trim_trailing_zeros))
             && Print(stream, s_cstr_literal(", "))
@@ -562,7 +558,7 @@ namespace zf {
     constexpr s_v2_i_fmt FormatV2(const s_v2_i val) { return {val}; }
     constexpr s_v2_i_fmt FormatDefault(const s_v2_i val) { return FormatV2(val); }
 
-    inline t_b8 PrintType(s_stream &stream, const s_v2_i_fmt fmt) {
+    inline t_b8 PrintType(s_stream *const stream, const s_v2_i_fmt fmt) {
         return Print(stream, s_cstr_literal("("))
             && PrintType(stream, FormatInt(fmt.val.x))
             && Print(stream, s_cstr_literal(", "))
@@ -596,7 +592,7 @@ namespace zf {
     }
 
     template <c_formattable_array tp_arr_type>
-    t_b8 PrintType(s_stream &stream, const s_array_fmt<tp_arr_type> fmt) {
+    t_b8 PrintType(s_stream *const stream, const s_array_fmt<tp_arr_type> fmt) {
         if (fmt.one_per_line) {
             for (t_i32 i = 0; i < fmt.val.len; i++) {
                 if (!PrintFormat(stream, s_cstr_literal("[%] %%"), i, fmt.val[i], i < fmt.val.len - 1 ? s_cstr_literal("\n") : s_cstr_literal(""))) {
@@ -647,7 +643,7 @@ namespace zf {
     inline s_bit_vec_fmt FormatBitVec(const s_bit_vec_rdonly &val, const e_bit_vec_fmt_style style) { return {val, style}; }
     inline s_bit_vec_fmt FormatDefault(const s_bit_vec_rdonly &val) { return FormatBitVec(val, ek_bit_vec_fmt_style_seq); }
 
-    inline t_b8 PrintType(s_stream &stream, const s_bit_vec_fmt fmt) {
+    inline t_b8 PrintType(s_stream *const stream, const s_bit_vec_fmt fmt) {
         const auto print_bit = [&](const t_i32 bit_index) {
             const s_str_rdonly str = IsBitSet(fmt.val, bit_index) ? s_cstr_literal("1") : s_cstr_literal("0");
             return Print(stream, str);
@@ -728,7 +724,7 @@ namespace zf {
         return cnt;
     }
 
-    inline t_b8 PrintFormat(s_stream &stream, const s_str_rdonly fmt) {
+    inline t_b8 PrintFormat(s_stream *const stream, const s_str_rdonly fmt) {
         ZF_ASSERT(CountFormatSpecifiers(fmt) == 0);
 
         // Just print the rest of the string.
@@ -738,7 +734,7 @@ namespace zf {
     // Use a single '%' as the format specifier. To actually include a '%' in the output, write "^%". To actually include a '^', write "^^".
     // Returns true iff the operation was successful.
     template <typename tp_arg_type, typename... tp_arg_types_leftover>
-    t_b8 PrintFormat(s_stream &stream, const s_str_rdonly fmt, const tp_arg_type &arg, const tp_arg_types_leftover &...args_leftover) {
+    t_b8 PrintFormat(s_stream *const stream, const s_str_rdonly fmt, const tp_arg_type &arg, const tp_arg_types_leftover &...args_leftover) {
 #if 0
         static_assert(!(std::is_pointer_v<tp_arg_type> && std::is_same_v<std::remove_cv_t<std::remove_pointer_t<tp_arg_type>>, char>)
                 && !(std::is_array_v<tp_arg_type> && std::is_same_v<std::remove_cv_t<std::remove_extent_t<tp_arg_type>>, char>),
@@ -771,7 +767,7 @@ namespace zf {
                 }
             }
 
-            if (!stream.WriteItem(fmt.bytes[i])) {
+            if (!stream->WriteItem(fmt.bytes[i])) {
                 return false;
             }
 
@@ -788,11 +784,11 @@ namespace zf {
     t_b8 Log(const s_str_rdonly fmt, const tp_arg_types &...args) {
         s_stream std_err = StdOut();
 
-        if (!PrintFormat(std_err, fmt, args...)) {
+        if (!PrintFormat(&std_err, fmt, args...)) {
             return false;
         }
 
-        if (!Print(std_err, s_cstr_literal("\n"))) {
+        if (!Print(&std_err, s_cstr_literal("\n"))) {
             return false;
         }
 
@@ -803,15 +799,15 @@ namespace zf {
     t_b8 LogError(const s_str_rdonly fmt, const tp_arg_types &...args) {
         s_stream std_err = StdError();
 
-        if (!Print(std_err, s_cstr_literal("Error: "))) {
+        if (!Print(&std_err, s_cstr_literal("Error: "))) {
             return false;
         }
 
-        if (!PrintFormat(std_err, fmt, args...)) {
+        if (!PrintFormat(&std_err, fmt, args...)) {
             return false;
         }
 
-        if (!Print(std_err, s_cstr_literal("\n"))) {
+        if (!Print(&std_err, s_cstr_literal("\n"))) {
             return false;
         }
 
@@ -824,15 +820,15 @@ namespace zf {
 
         s_stream std_err = StdError();
 
-        if (!PrintFormat(std_err, s_cstr_literal("% Error: "), type_name)) {
+        if (!PrintFormat(&std_err, s_cstr_literal("% Error: "), type_name)) {
             return false;
         }
 
-        if (!PrintFormat(std_err, fmt, args...)) {
+        if (!PrintFormat(&std_err, fmt, args...)) {
             return false;
         }
 
-        if (!Print(std_err, s_cstr_literal("\n"))) {
+        if (!Print(&std_err, s_cstr_literal("\n"))) {
             return false;
         }
 
@@ -843,15 +839,15 @@ namespace zf {
     t_b8 LogWarning(const s_str_rdonly fmt, const tp_arg_types &...args) {
         s_stream std_err = StdError();
 
-        if (!Print(std_err, s_cstr_literal("Warning: "))) {
+        if (!Print(&std_err, s_cstr_literal("Warning: "))) {
             return false;
         }
 
-        if (!PrintFormat(std_err, fmt, args...)) {
+        if (!PrintFormat(&std_err, fmt, args...)) {
             return false;
         }
 
-        if (!Print(std_err, s_cstr_literal("\n"))) {
+        if (!Print(&std_err, s_cstr_literal("\n"))) {
             return false;
         }
 

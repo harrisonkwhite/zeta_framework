@@ -92,15 +92,15 @@ namespace zf {
     }};
 
     t_b8 PackAssets(const s_str_rdonly instrs_json_file_path) {
-        s_arena mem_arena = {};
-        ZF_DEFER({ mem_arena.Release(); });
+        s_arena arena = {};
+        ZF_DEFER({ DestroyArena(&arena); });
 
         cJSON *cj = nullptr;
 
         {
             s_array_mut<t_u8> instrs_json_file_contents; // Not needed beyond this scope.
 
-            if (!LoadFileContents(instrs_json_file_path, mem_arena, mem_arena, instrs_json_file_contents, true)) {
+            if (!LoadFileContents(instrs_json_file_path, &arena, &arena, instrs_json_file_contents, true)) {
                 LogError(s_cstr_literal("Failed to load packing instructions JSON file \"%\"!"), instrs_json_file_path);
                 return false;
             }
@@ -138,7 +138,7 @@ namespace zf {
             cJSON *cj_asset = nullptr;
 
             cJSON_ArrayForEach(cj_asset, cj_assets) {
-                mem_arena.Rewind();
+                arena.Rewind();
 
                 if (!cJSON_IsObject(cj_asset)) {
                     continue;
@@ -208,12 +208,12 @@ namespace zf {
 
                     s_texture_data texture_data;
 
-                    if (!LoadTextureDataFromRaw(file_path, mem_arena, mem_arena, texture_data)) {
+                    if (!LoadTextureDataFromRaw(file_path, arena, arena, texture_data)) {
                         LogError(s_cstr_literal("Failed to load texture from file \"%\"!"), file_path);
                         return false;
                     }
 
-                    if (!PackTexture(out_file_path, texture_data, mem_arena)) {
+                    if (!PackTexture(out_file_path, texture_data, arena)) {
                         LogError(s_cstr_literal("Failed to pack texture to file \"%\"!"), out_file_path);
                         return false;
                     }
@@ -226,7 +226,7 @@ namespace zf {
                     const auto height = field_vals[ek_font_field_height]->valueint;
                     const auto out_file_path = ConvertCstr(field_vals[ek_font_field_out_file_path]->valuestring);
 
-                    const auto code_pt_bv = Alloc<t_code_pt_bit_vec>(&mem_arena);
+                    const auto code_pt_bv = Alloc<t_code_pt_bit_vec>(&arena);
 
                     SetBitsInRange(*code_pt_bv, g_printable_ascii_range_begin, g_printable_ascii_range_end); // Add the printable ASCII range as a default.
 
@@ -235,7 +235,7 @@ namespace zf {
 
                         s_array_mut<t_u8> extra_chrs_file_contents;
 
-                        if (!LoadFileContents(extra_chrs_file_path, mem_arena, mem_arena, extra_chrs_file_contents)) {
+                        if (!LoadFileContents(extra_chrs_file_path, arena, arena, extra_chrs_file_contents)) {
                             LogError(s_cstr_literal("Failed to load extra characters file \"%\"!"), extra_chrs_file_path);
                             return false;
                         }
@@ -248,12 +248,12 @@ namespace zf {
                     s_font_arrangement arrangement;
                     s_array_mut<t_font_atlas_rgba> atlas_rgbas;
 
-                    if (!LoadFontDataFromRaw(file_path, height, *code_pt_bv, mem_arena, mem_arena, mem_arena, arrangement, atlas_rgbas)) {
+                    if (!LoadFontDataFromRaw(file_path, height, *code_pt_bv, arena, arena, arena, arrangement, atlas_rgbas)) {
                         LogError(s_cstr_literal("Failed to load font from file \"%\"!"), file_path);
                         return false;
                     }
 
-                    if (!PackFont(out_file_path, arrangement, atlas_rgbas, mem_arena)) {
+                    if (!PackFont(out_file_path, arrangement, atlas_rgbas, arena)) {
                         LogError(s_cstr_literal("Failed to pack font to file \"%\"!"), out_file_path);
                         return false;
                     }
@@ -280,12 +280,12 @@ namespace zf {
 
                     s_array_mut<t_u8> compiled_bin;
 
-                    if (!CompileShader(file_path, varying_def_file_path, is_frag, mem_arena, mem_arena, compiled_bin)) {
+                    if (!CompileShader(file_path, varying_def_file_path, is_frag, arena, arena, compiled_bin)) {
                         LogError(s_cstr_literal("Failed to compile shader from file \"%\"!"), file_path);
                         return false;
                     }
 
-                    if (!PackShader(out_file_path, compiled_bin, mem_arena)) {
+                    if (!PackShader(out_file_path, compiled_bin, arena)) {
                         LogError(s_cstr_literal("Failed to pack shader to file \"%\"!"), out_file_path);
                         return false;
                     }
@@ -297,14 +297,14 @@ namespace zf {
                     const auto file_path = ConvertCstr(field_vals[ek_sound_field_file_path]->valuestring);
                     const auto out_file_path = ConvertCstr(field_vals[ek_sound_field_out_file_path]->valuestring);
 
-                    s_sound_data snd_data;
+                    s_sound_data_mut snd_data;
 
-                    if (!LoadSoundDataFromRaw(file_path, mem_arena, mem_arena, snd_data)) {
+                    if (!LoadSoundDataFromRaw(file_path, arena, arena, snd_data)) {
                         LogError(s_cstr_literal("Failed to load sound from file \"%\"!"), file_path);
                         return false;
                     }
 
-                    if (!PackSound(out_file_path, snd_data, mem_arena)) {
+                    if (!PackSound(out_file_path, snd_data, arena)) {
                         LogError(s_cstr_literal("Failed to pack sound to file \"%\"!"), out_file_path);
                         return false;
                     }
