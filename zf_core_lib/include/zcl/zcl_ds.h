@@ -582,12 +582,12 @@ namespace zf {
     }
 
     template <typename tp_key_type, typename tp_val_type>
-    [[nodiscard]] t_b8 SerializeHashMap(s_stream *const stream, const s_hash_map<tp_key_type, tp_val_type> &hm, c_arena *const temp_arena) {
-        if (!WriteItemToStream(stream, hm.Cap())) {
+    [[nodiscard]] t_b8 SerializeHashMap(c_stream *const stream, const s_hash_map<tp_key_type, tp_val_type> &hm, c_arena *const temp_arena) {
+        if (!stream->WriteItem(hm.Cap())) {
             return false;
         }
 
-        if (!WriteItemToStream(stream, hm.EntryCount())) {
+        if (!stream->WriteItem(hm.EntryCount())) {
             return false;
         }
 
@@ -595,11 +595,11 @@ namespace zf {
         ZF_DEFINE_UNINITTED(c_array_mut<tp_val_type>, vals);
         hm.LoadEntries(temp_arena, &keys, &vals);
 
-        if (!WriteItemsOfArrayToStream(stream, keys)) {
+        if (!stream->WriteItemsOfArray(keys)) {
             return false;
         }
 
-        if (!WriteItemsOfArrayToStream(stream, vals)) {
+        if (!stream->WriteItemsOfArray(vals)) {
             return false;
         }
 
@@ -607,19 +607,19 @@ namespace zf {
     }
 
     template <typename tp_key_type, typename tp_val_type>
-    [[nodiscard]] t_b8 DeserializeHashMap(s_stream *const stream, c_arena *const hm_arena, const t_hash_func<tp_key_type> hm_hash_func, c_arena *const temp_arena, s_hash_map<tp_key_type, tp_val_type> &o_hm, const t_bin_comparator<tp_key_type> hm_key_comparator = DefaultBinComparator) {
+    [[nodiscard]] t_b8 DeserializeHashMap(c_stream *const stream, c_arena *const hm_arena, const t_hash_func<tp_key_type> hm_hash_func, c_arena *const temp_arena, s_hash_map<tp_key_type, tp_val_type> &o_hm, const t_bin_comparator<tp_key_type> hm_key_comparator = DefaultBinComparator) {
         ZF_ASSERT(hm_hash_func);
         ZF_ASSERT(hm_key_comparator);
 
         ZF_DEFINE_UNINITTED(t_i32, cap);
 
-        if (!ReadItemFromStream(stream, &cap)) {
+        if (!stream->ReadItem(&cap)) {
             return false;
         }
 
         ZF_DEFINE_UNINITTED(t_i32, entry_cnt);
 
-        if (!ReadItemFromStream(stream, &entry_cnt)) {
+        if (!stream->ReadItem(&entry_cnt)) {
             return false;
         }
 
@@ -627,13 +627,13 @@ namespace zf {
 
         const auto keys = AllocArray<tp_key_type>(entry_cnt, temp_arena);
 
-        if (!ReadItemsFromStreamIntoArray(stream, keys, entry_cnt)) {
+        if (!stream->ReadItemsIntoArray(keys, entry_cnt)) {
             return false;
         }
 
         const auto vals = AllocArray<tp_val_type>(entry_cnt, temp_arena);
 
-        if (!ReadItemsFromStreamIntoArray(stream, vals, entry_cnt)) {
+        if (!stream->ReadItemsIntoArray(vals, entry_cnt)) {
             return false;
         }
 

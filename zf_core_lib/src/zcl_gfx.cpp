@@ -33,7 +33,7 @@ namespace zf {
             return false;
         }
 
-        ZF_DEFINE_UNINITTED(s_stream, fs);
+        ZF_DEFINE_UNINITTED(c_stream, fs);
 
         if (!OpenFile(file_path, ek_file_access_mode_write, temp_arena, &fs)) {
             return false;
@@ -41,11 +41,11 @@ namespace zf {
 
         ZF_DEFER({ CloseFile(&fs); });
 
-        if (!WriteItemToStream(&fs, texture_data.size_in_pxs)) {
+        if (!fs.WriteItem(texture_data.size_in_pxs)) {
             return false;
         }
 
-        if (!WriteItemsOfArrayToStream(&fs, texture_data.rgba_px_data)) {
+        if (!fs.WriteItemsOfArray(texture_data.rgba_px_data)) {
             return false;
         }
 
@@ -53,7 +53,7 @@ namespace zf {
     }
 
     t_b8 UnpackTexture(const s_str_rdonly file_path, c_arena *const texture_data_arena, c_arena *const temp_arena, s_texture_data *const o_texture_data) {
-        ZF_DEFINE_UNINITTED(s_stream, fs);
+        ZF_DEFINE_UNINITTED(c_stream, fs);
 
         if (!OpenFile(file_path, ek_file_access_mode_read, temp_arena, &fs)) {
             return false;
@@ -63,13 +63,13 @@ namespace zf {
 
         ZF_DEFINE_UNINITTED(s_v2_i, size_in_pxs);
 
-        if (!ReadItemFromStream(&fs, &size_in_pxs)) {
+        if (!fs.ReadItem(&size_in_pxs)) {
             return false;
         }
 
         const auto rgba_px_data = AllocArray<t_u8>(4 * size_in_pxs.x * size_in_pxs.y, texture_data_arena);
 
-        if (!ReadItemsFromStreamIntoArray(&fs, rgba_px_data, rgba_px_data.Len())) {
+        if (!fs.ReadItemsIntoArray(rgba_px_data, rgba_px_data.Len())) {
             return false;
         }
 
@@ -285,7 +285,7 @@ namespace zf {
             return false;
         }
 
-        ZF_DEFINE_UNINITTED(s_stream, fs);
+        ZF_DEFINE_UNINITTED(c_stream, fs);
 
         if (!OpenFile(file_path, ek_file_access_mode_write, temp_arena, &fs)) {
             return false;
@@ -293,7 +293,7 @@ namespace zf {
 
         ZF_DEFER({ CloseFile(&fs); });
 
-        if (!WriteItemToStream(&fs, arrangement.line_height)) {
+        if (!fs.WriteItem(arrangement.line_height)) {
             return false;
         }
 
@@ -313,7 +313,7 @@ namespace zf {
     }
 
     t_b8 UnpackFont(const s_str_rdonly file_path, c_arena *const arrangement_arena, c_arena *const atlas_rgbas_arena, c_arena *const temp_arena, s_font_arrangement *const o_arrangement, c_array_mut<t_font_atlas_rgba> *const o_atlas_rgbas) {
-        ZF_DEFINE_UNINITTED(s_stream, fs);
+        ZF_DEFINE_UNINITTED(c_stream, fs);
 
         if (!OpenFile(file_path, ek_file_access_mode_read, temp_arena, &fs)) {
             return false;
@@ -321,7 +321,7 @@ namespace zf {
 
         ZF_DEFER({ CloseFile(&fs); });
 
-        if (!ReadItemFromStream(&fs, &o_arrangement->line_height)) {
+        if (!fs.ReadItem(&o_arrangement->line_height)) {
             return false;
         }
 
@@ -351,7 +351,7 @@ namespace zf {
             return false;
         }
 
-        ZF_DEFINE_UNINITTED(s_stream, fs);
+        ZF_DEFINE_UNINITTED(c_stream, fs);
 
         if (!OpenFile(file_path, ek_file_access_mode_write, temp_arena, &fs)) {
             return false;
@@ -367,7 +367,7 @@ namespace zf {
     }
 
     t_b8 UnpackShader(const s_str_rdonly file_path, c_arena *const shader_bin_arena, c_arena *const temp_arena, c_array_mut<t_u8> *const o_shader_bin) {
-        ZF_DEFINE_UNINITTED(s_stream, fs);
+        ZF_DEFINE_UNINITTED(c_stream, fs);
 
         if (!OpenFile(file_path, ek_file_access_mode_read, temp_arena, &fs)) {
             return false;

@@ -10,7 +10,7 @@
 #endif
 
 namespace zf {
-    t_b8 OpenFile(const s_str_rdonly path, const e_file_access_mode mode, c_arena *const temp_arena, s_stream *const o_stream) {
+    t_b8 OpenFile(const s_str_rdonly path, const e_file_access_mode mode, c_arena *const temp_arena, c_stream *const o_stream) {
         const s_str_rdonly path_terminated = AllocStrCloneButAddTerminator(path, temp_arena);
 
         ZF_DEFINE_UNINITTED(FILE *, file);
@@ -45,14 +45,14 @@ namespace zf {
         return true;
     }
 
-    void CloseFile(s_stream *const stream) {
-        ZF_ASSERT(stream->type == ek_stream_type_file);
+    void CloseFile(c_stream *const stream) {
+        ZF_ASSERT(stream->Type() == ek_stream_type_file);
         fclose(stream->File());
         PoisonFreedItem(stream);
     }
 
-    t_i32 CalcFileSize(s_stream *const stream) {
-        ZF_ASSERT(stream->type == ek_stream_type_file);
+    t_i32 CalcFileSize(c_stream *const stream) {
+        ZF_ASSERT(stream->Type() == ek_stream_type_file);
 
         const auto &file = stream->File();
         const auto pos_old = ftell(file);
@@ -63,7 +63,7 @@ namespace zf {
     }
 
     t_b8 LoadFileContents(const s_str_rdonly path, c_arena *const contents_arena, c_arena *const temp_arena, c_array_mut<t_u8> *const o_contents, const t_b8 add_terminator) {
-        ZF_DEFINE_UNINITTED(s_stream, stream);
+        ZF_DEFINE_UNINITTED(c_stream, stream);
 
         if (!OpenFile(path, ek_file_access_mode_read, temp_arena, &stream)) {
             return false;
@@ -80,7 +80,7 @@ namespace zf {
             *o_contents = AllocArray<t_u8>(file_size, contents_arena);
         }
 
-        if (!ReadItemsFromStreamIntoArray(&stream, *o_contents, file_size)) {
+        if (!stream.ReadItemsIntoArray(*o_contents, file_size)) {
             return false;
         }
 
@@ -186,7 +186,7 @@ namespace zf {
         }
 
         // Now that directories are created, create the file.
-        s_stream fs;
+        c_stream fs;
 
         if (!OpenFile(path, ek_file_access_mode_write, temp_arena, &fs)) {
             return false;
