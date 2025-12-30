@@ -4,7 +4,7 @@ namespace zf {
     void RenderTexture(s_rendering_context *const rc, const s_gfx_resource *const texture, const s_v2 pos, const s_rect_i src_rect) {
         const auto texture_size = TextureSize(texture);
 
-        ZF_DEFINE_UNINITTED(s_rect_i, src_rect_to_use);
+        s_rect_i src_rect_to_use;
 
         if (src_rect == s_rect_i{}) {
             src_rect_to_use = {0, 0, texture_size.x, texture_size.y};
@@ -37,8 +37,8 @@ namespace zf {
     }
 
     s_font CreateFontFromRaw(const s_str_rdonly file_path, const t_i32 height, t_code_pt_bit_vec *const code_pts, c_arena *const temp_arena, s_gfx_resource_group *const resource_group) {
-        ZF_DEFINE_UNINITTED(s_font_arrangement, arrangement);
-        ZF_DEFINE_UNINITTED(c_array_mut<t_font_atlas_rgba>, atlas_rgbas);
+        s_font_arrangement arrangement;
+        c_array_mut<t_font_atlas_rgba> atlas_rgbas;
 
         if (!zf::LoadFontDataFromRaw(file_path, height, code_pts, resource_group->arena, temp_arena, temp_arena, &arrangement, &atlas_rgbas)) {
             ZF_FATAL();
@@ -57,8 +57,8 @@ namespace zf {
     }
 
     s_font CreateFontFromPacked(const s_str_rdonly file_path, c_arena *const temp_arena, s_gfx_resource_group *const resource_group) {
-        ZF_DEFINE_UNINITTED(s_font_arrangement, arrangement);
-        ZF_DEFINE_UNINITTED(c_array_mut<t_font_atlas_rgba>, atlas_rgbas);
+        s_font_arrangement arrangement;
+        c_array_mut<t_font_atlas_rgba> atlas_rgbas;
 
         if (!zf::UnpackFont(file_path, resource_group->arena, temp_arena, temp_arena, &arrangement, &atlas_rgbas)) {
             ZF_FATAL();
@@ -89,7 +89,7 @@ namespace zf {
         const auto str_meta = [str]() {
             s_str_meta meta = {.line_cnt = 1};
 
-            ZF_WALK_STR(str, chr_info) {
+            ZF_WALK_STR (str, chr_info) {
                 meta.len++;
 
                 if (chr_info.code_pt == '\n') {
@@ -123,7 +123,7 @@ namespace zf {
             }
         };
 
-        ZF_WALK_STR(str, chr_info) {
+        ZF_WALK_STR (str, chr_info) {
             ZF_DEFER({
                 chr_index++;
                 code_pt_last = chr_info.code_pt;
@@ -144,7 +144,7 @@ namespace zf {
                 continue;
             }
 
-            ZF_DEFINE_UNINITTED(s_font_glyph_info *, glyph_info);
+            s_font_glyph_info *glyph_info;
 
             if (!font_arrangement.code_pts_to_glyph_infos.Find(chr_info.code_pt, &glyph_info)) {
                 ZF_ASSERT(false && "Unsupported code point!");
@@ -152,7 +152,7 @@ namespace zf {
             }
 
             if (chr_index > 0 && font_arrangement.has_kernings) {
-                ZF_DEFINE_UNINITTED(t_i32 *, kerning);
+                t_i32 *kerning;
 
                 if (font_arrangement.code_pt_pairs_to_kernings.Find({code_pt_last, chr_info.code_pt}, &kerning)) {
                     chr_pos_pen.x += static_cast<t_f32>(*kerning);
@@ -187,13 +187,13 @@ namespace zf {
 
         t_i32 chr_index = 0;
 
-        ZF_WALK_STR(str, chr_info) {
+        ZF_WALK_STR (str, chr_info) {
             if (chr_info.code_pt == ' ' || chr_info.code_pt == '\n') {
                 chr_index++;
                 continue;
             }
 
-            ZF_DEFINE_UNINITTED(s_font_glyph_info *, glyph_info);
+            s_font_glyph_info *glyph_info;
 
             if (!font_arrangement.code_pts_to_glyph_infos.Find(chr_info.code_pt, &glyph_info)) {
                 ZF_ASSERT(false && "Unsupported code point!");

@@ -62,13 +62,14 @@ namespace zf {
         return false;
     }
 
-    struct s_cstr_literal {
+    class c_cstr_literal {
+    public:
         const c_array_rdonly<char> buf;
 
-        s_cstr_literal() = delete;
+        c_cstr_literal() = delete;
 
         template <t_i32 tp_raw_size>
-        consteval s_cstr_literal(const char (&raw)[tp_raw_size]) : buf({raw, tp_raw_size}) {
+        consteval c_cstr_literal(const char (&raw)[tp_raw_size]) : buf({raw, tp_raw_size}) {
             if (raw[tp_raw_size - 1]) {
                 throw "Static char array not terminated at end!";
             }
@@ -88,7 +89,7 @@ namespace zf {
         s_str_rdonly(const c_array_rdonly<t_u8> bytes) : bytes(bytes) {}
 
         // This very intentionally drops the terminator.
-        s_str_rdonly(const s_cstr_literal lit) : bytes({reinterpret_cast<const t_u8 *>(lit.buf.Raw()), lit.buf.Len() - 1}) {}
+        s_str_rdonly(const c_cstr_literal lit) : bytes({reinterpret_cast<const t_u8 *>(lit.buf.Raw()), lit.buf.Len() - 1}) {}
 
         // Requires that there is a terminating byte somewhere.
         const char *Cstr() const {

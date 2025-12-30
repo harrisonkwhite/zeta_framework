@@ -191,11 +191,11 @@ namespace zf {
             }
 
             s_gfx_resource *const next = resource->next;
-            PoisonFreedItem(resource);
+            *resource = {};
             resource = next;
         }
 
-        PoisonFreedItem(group);
+        *group = {};
     }
 
     static s_gfx_resource *AddGFXResourceToGroup(s_gfx_resource_group *const group, const e_gfx_resource_type type) {
@@ -368,7 +368,7 @@ namespace zf {
     void RenderTriangles(s_rendering_context *const rc, const c_array_rdonly<s_render_triangle> triangles, const s_gfx_resource *const texture) {
         ZF_ASSERT(g_state.state == ek_state_rendering);
         ZF_ASSERT(triangles.Len() > 0);
-        ZF_ASSERT(texture->type == ek_gfx_resource_type_texture);
+        ZF_ASSERT(!texture || texture->type == ek_gfx_resource_type_texture);
 
         if (texture != rc->state.texture) {
             Flush(rc);

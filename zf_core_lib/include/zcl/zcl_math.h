@@ -15,7 +15,7 @@ namespace zf {
         return rads * (180.0f / g_pi);
     }
 
-    template <c_integral tp_type>
+    template <co_integral tp_type>
     constexpr t_i32 CalcDigitCnt(const tp_type n) {
         if (n < 0) {
             return CalcDigitCnt(-n);
@@ -29,7 +29,7 @@ namespace zf {
     }
 
     // Gives the digit at the given index, where the indexes are from the least significant digit to the most.
-    template <c_integral tp_type>
+    template <co_integral tp_type>
     constexpr tp_type FindDigitAt(const tp_type n, const t_i32 index) {
         ZF_ASSERT(index >= 0 && index < CalcDigitCnt(n));
 

@@ -12,7 +12,7 @@ namespace zf {
         ZF_DEFER({
             if (r < 0) {
                 const auto err = ConvertCstr(reproc_strerror(r));
-                LogError(s_cstr_literal("%"), err);
+                LogError(c_cstr_literal("%"), err);
             }
         });
 
@@ -27,9 +27,9 @@ namespace zf {
         });
 
 #if defined(ZF_PLATFORM_WINDOWS)
-        const s_cstr_literal shaderc_file_path_rel = "tools/bgfx/shaderc_windows.exe";
-        const s_cstr_literal platform = "windows";
-        const s_cstr_literal profile = "s_5_0";
+        const c_cstr_literal shaderc_file_path_rel = "tools/bgfx/shaderc_windows.exe";
+        const c_cstr_literal platform = "windows";
+        const c_cstr_literal profile = "s_5_0";
 #elif defined(ZF_PLATFORM_MACOS)
     #error "Platform support not complete!" // @todo
         const s_cstr_literal shaderc_file_path_rel = "tools/bgfx/shaderc_macos";
@@ -49,7 +49,7 @@ namespace zf {
         Copy(shaderc_file_path.bytes, exe_dir.bytes);
         Copy(shaderc_file_path.bytes.SliceFrom(exe_dir.bytes.Len()), shaderc_file_path_rel.buf.AsByteArray());
 
-        const s_cstr_literal shaderc_include_dir_rel = "tools/bgfx/shaderc_include";
+        const c_cstr_literal shaderc_include_dir_rel = "tools/bgfx/shaderc_include";
         const s_str shaderc_include_dir = {AllocArray<t_u8>(exe_dir.bytes.Len() + shaderc_include_dir_rel.buf.Len() + 1, temp_arena)};
         Copy(shaderc_include_dir.bytes, exe_dir.bytes);
         Copy(shaderc_include_dir.bytes.SliceFrom(exe_dir.bytes.Len()), shaderc_include_dir_rel.buf.AsByteArray());
@@ -84,7 +84,7 @@ namespace zf {
             return false;
         }
 
-        s_list_mut<t_u8> bin_list = {};
+        c_list_mut<t_u8> bin_list = {};
 
         while (true) {
             s_static_array<t_u8, 4096> buf;
@@ -109,7 +109,7 @@ namespace zf {
 
         if (r > 0) {
             auto std_err = StdError();
-            PrintFormat(&std_err, s_cstr_literal("==================== BGFX SHADERC ERROR ====================\n%============================================================\n"), s_str_rdonly(bin_list.AsArray()));
+            PrintFormat(&std_err, c_cstr_literal("==================== BGFX SHADERC ERROR ====================\n%============================================================\n"), s_str_rdonly(bin_list.AsArray()));
             return false;
         }
 

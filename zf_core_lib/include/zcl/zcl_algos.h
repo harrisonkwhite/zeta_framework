@@ -5,8 +5,6 @@
 namespace zf {
     template <co_array_nonstatic_mut tp_arr_type>
     constexpr void Reverse(const tp_arr_type arr) {
-        ZF_ASSERT(IsArrayValid(arr));
-
         for (t_i32 i = 0; i < arr.Len() / 2; i++) {
             Swap(&arr[i], &arr[arr.Len() - 1 - i]);
         }
@@ -16,8 +14,6 @@ namespace zf {
     // You're usually better off using a hash map and a linear search, or a bit vector if values are numeric and the range is small.
     template <co_array_nonstatic tp_arr_type>
     constexpr t_b8 HasDuplicatesSlow(const tp_arr_type arr, const t_bin_comparator<typename tp_arr_type::t_elem> comparator = DefaultBinComparator) {
-        ZF_ASSERT(IsArrayValid(arr));
-
         for (t_i32 i = 0; i < arr.Len(); i++) {
             for (t_i32 j = 0; j < arr.Len(); j++) {
                 if (i == j) {
@@ -35,8 +31,6 @@ namespace zf {
 
     template <co_array_nonstatic tp_arr_type>
     t_b8 RunBinarySearch(const tp_arr_type arr, const typename tp_arr_type::t_elem &elem, const t_ord_comparator<typename tp_arr_type::t_elem> comparator = DefaultOrdComparator) {
-        ZF_ASSERT(IsArrayValid(arr));
-
         if (arr.Len() == 0) {
             return false;
         }
@@ -59,8 +53,6 @@ namespace zf {
 
     template <co_array_nonstatic tp_arr_type>
     t_b8 IsSorted(const tp_arr_type arr, const t_ord_comparator<typename tp_arr_type::t_elem> comparator = DefaultOrdComparator) {
-        ZF_ASSERT(IsArrayValid(arr));
-
         for (t_i32 i = 0; i < arr.Len() - 1; i++) {
             if (comparator(arr[i], arr[i + 1]) > 0) {
                 return false;
@@ -73,8 +65,6 @@ namespace zf {
     // O(n) best-case if array is already sorted, O(n^2) worst-case.
     template <co_array_nonstatic tp_arr_type>
     void RunBubbleSort(const tp_arr_type arr, const t_ord_comparator<typename tp_arr_type::t_elem> comparator = DefaultOrdComparator) {
-        ZF_ASSERT(IsArrayValid(arr));
-
         t_b8 sorted;
 
         do {
@@ -92,8 +82,6 @@ namespace zf {
     // O(n) best-case if array is already sorted, O(n^2) worst-case.
     template <co_array_nonstatic tp_arr_type>
     void RunInsertionSort(const tp_arr_type arr, const t_ord_comparator<typename tp_arr_type::t_elem> comparator = DefaultOrdComparator) {
-        ZF_ASSERT(IsArrayValid(arr));
-
         for (t_i32 i = 1; i < arr.Len(); i++) {
             const auto temp = arr[i];
 
@@ -114,8 +102,6 @@ namespace zf {
     // O(n^2) in every case.
     template <co_array_nonstatic tp_arr_type>
     void RunSelectionSort(const tp_arr_type arr, const t_ord_comparator<typename tp_arr_type::t_elem> comparator = DefaultOrdComparator) {
-        ZF_ASSERT(IsArrayValid(arr));
-
         for (t_i32 i = 0; i < arr.Len() - 1; i++) {
             const auto min = &arr[i];
 
@@ -132,8 +118,6 @@ namespace zf {
     // O(n log n) in both time complexity and space complexity in every case.
     template <typename tp_arr_type>
     void RunMergeSort(const tp_arr_type arr, c_arena *const temp_mem_arena, const t_ord_comparator<typename tp_arr_type::t_elem> comparator = DefaultOrdComparator) {
-        ZF_ASSERT(IsArrayValid(arr));
-
         if (arr.Len() <= 1) {
             return;
         }
@@ -177,8 +161,6 @@ namespace zf {
     // In each recurse, the pivot is selected as the median of the first, middle, and last elements.
     template <co_array_nonstatic tp_arr_type>
     void RunQuickSort(const tp_arr_type arr, const t_ord_comparator<typename tp_arr_type::t_elem> comparator = DefaultOrdComparator) {
-        ZF_ASSERT(IsArrayValid(arr));
-
         if (arr.Len() <= 1) {
             return;
         }

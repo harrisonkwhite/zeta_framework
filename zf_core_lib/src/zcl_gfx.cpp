@@ -10,7 +10,7 @@ namespace zf {
     t_b8 LoadTextureDataFromRaw(const s_str_rdonly file_path, c_arena *const texture_data_arena, c_arena *const temp_arena, s_texture_data *const o_texture_data) {
         const s_str_rdonly file_path_terminated = AllocStrCloneButAddTerminator(file_path, temp_arena);
 
-        ZF_DEFINE_UNINITTED(s_v2_i, size_in_pxs);
+        s_v2_i size_in_pxs;
         t_u8 *const stb_px_data = stbi_load(file_path_terminated.Cstr(), &size_in_pxs.x, &size_in_pxs.y, nullptr, 4);
 
         if (!stb_px_data) {
@@ -33,7 +33,7 @@ namespace zf {
             return false;
         }
 
-        ZF_DEFINE_UNINITTED(c_stream, fs);
+        c_stream fs;
 
         if (!OpenFile(file_path, ek_file_access_mode_write, temp_arena, &fs)) {
             return false;
@@ -53,7 +53,7 @@ namespace zf {
     }
 
     t_b8 UnpackTexture(const s_str_rdonly file_path, c_arena *const texture_data_arena, c_arena *const temp_arena, s_texture_data *const o_texture_data) {
-        ZF_DEFINE_UNINITTED(c_stream, fs);
+        c_stream fs;
 
         if (!OpenFile(file_path, ek_file_access_mode_read, temp_arena, &fs)) {
             return false;
@@ -61,7 +61,7 @@ namespace zf {
 
         ZF_DEFER({ CloseFile(&fs); });
 
-        ZF_DEFINE_UNINITTED(s_v2_i, size_in_pxs);
+        s_v2_i size_in_pxs;
 
         if (!fs.ReadItem(&size_in_pxs)) {
             return false;
@@ -103,14 +103,14 @@ namespace zf {
         ZF_ASSERT(height > 0);
 
         // Get the plain font file data.
-        ZF_DEFINE_UNINITTED(c_array_mut<t_u8>, font_file_data);
+        c_array_mut<t_u8> font_file_data;
 
         if (!LoadFileContents(file_path, temp_arena, temp_arena, &font_file_data)) {
             return false;
         }
 
         // Initialise the font through STB.
-        ZF_DEFINE_UNINITTED(stbtt_fontinfo, stb_font_info);
+        stbtt_fontinfo stb_font_info;
 
         const t_i32 offs = stbtt_GetFontOffsetForIndex(font_file_data.Raw(), 0);
 
@@ -123,7 +123,7 @@ namespace zf {
         }
 
         // Filter out unsupported code points.
-        ZF_WALK_SET_BITS(*code_pts, i) {
+        ZF_WALK_SET_BITS (*code_pts, i) {
             const auto code_pt = static_cast<t_code_pt>(i);
 
             const t_i32 glyph_index = stbtt_FindGlyphIndex(&stb_font_info, static_cast<t_i32>(code_pt));
@@ -143,9 +143,7 @@ namespace zf {
         // Compute general info.
         const t_f32 scale = stbtt_ScaleForPixelHeight(&stb_font_info, static_cast<t_f32>(height));
 
-        ZF_DEFINE_UNINITTED(t_i32, vm_ascent);
-        ZF_DEFINE_UNINITTED(t_i32, vm_descent);
-        ZF_DEFINE_UNINITTED(t_i32, vm_line_gap);
+        t_i32 vm_ascent, vm_descent, vm_line_gap;
         stbtt_GetFontVMetrics(&stb_font_info, &vm_ascent, &vm_descent, &vm_line_gap);
 
         o_arrangement->line_height = static_cast<t_i32>(static_cast<t_f32>(vm_ascent - vm_descent + vm_line_gap) * scale);
@@ -158,7 +156,7 @@ namespace zf {
         t_i32 atlas_index = 0;
         s_v2_i atlas_pen = {};
 
-        ZF_WALK_SET_BITS(*code_pts, i) {
+        ZF_WALK_SET_BITS (*code_pts, i) {
             const auto code_pt = static_cast<t_code_pt>(i);
 
             const t_i32 glyph_index = stbtt_FindGlyphIndex(&stb_font_info, static_cast<t_i32>(code_pt));
@@ -205,24 +203,21 @@ namespace zf {
         o_arrangement->has_kernings = true;
         o_arrangement->code_pt_pairs_to_kernings = CreateHashMap<s_font_code_point_pair, t_i32>(g_code_pt_pair_hash_func, arrangement_arena, g_hash_map_cap_default, g_code_pt_pair_comparator);
 
-        ZF_ASSERT(false);
-#if 0
-        ZF_WALK_SET_BITS(*code_pts, i){
-            ZF_WALK_SET_BITS(*code_pts, j){
+        ZF_WALK_SET_BITS (*code_pts, i) {
+            ZF_WALK_SET_BITS (*code_pts, j) {
                 const auto cp_a = static_cast<t_code_pt>(i);
-        const auto cp_b = static_cast<t_code_pt>(j);
+                const auto cp_b = static_cast<t_code_pt>(j);
 
-        const auto glyph_a_index = stbtt_FindGlyphIndex(&stb_font_info, static_cast<t_i32>(cp_a));
-        const auto glyph_b_index = stbtt_FindGlyphIndex(&stb_font_info, static_cast<t_i32>(cp_b));
+                const auto glyph_a_index = stbtt_FindGlyphIndex(&stb_font_info, static_cast<t_i32>(cp_a));
+                const auto glyph_b_index = stbtt_FindGlyphIndex(&stb_font_info, static_cast<t_i32>(cp_b));
 
-        const t_i32 kern = stbtt_GetGlyphKernAdvance(&stb_font_info, glyph_a_index, glyph_b_index);
+                const t_i32 kern = stbtt_GetGlyphKernAdvance(&stb_font_info, glyph_a_index, glyph_b_index);
 
-        if (kern != 0) {
-            return false;
+                if (kern != 0) {
+                    return false;
+                }
+            }
         }
-    }
-}
-#endif
 
         //
         // Texture Atlases
@@ -243,10 +238,10 @@ namespace zf {
         }
 
         // Write pixel data for each individual glyph.
-        ZF_WALK_SET_BITS(*code_pts, i) {
+        ZF_WALK_SET_BITS (*code_pts, i) {
             const auto code_pt = static_cast<t_code_pt>(i);
 
-            ZF_DEFINE_UNINITTED(s_font_glyph_info *, glyph_info);
+            s_font_glyph_info *glyph_info;
 
             if (!o_arrangement->code_pts_to_glyph_infos.Find(code_pt, &glyph_info)) {
                 ZF_ASSERT(false);
@@ -285,7 +280,7 @@ namespace zf {
             return false;
         }
 
-        ZF_DEFINE_UNINITTED(c_stream, fs);
+        c_stream fs;
 
         if (!OpenFile(file_path, ek_file_access_mode_write, temp_arena, &fs)) {
             return false;
@@ -313,7 +308,7 @@ namespace zf {
     }
 
     t_b8 UnpackFont(const s_str_rdonly file_path, c_arena *const arrangement_arena, c_arena *const atlas_rgbas_arena, c_arena *const temp_arena, s_font_arrangement *const o_arrangement, c_array_mut<t_font_atlas_rgba> *const o_atlas_rgbas) {
-        ZF_DEFINE_UNINITTED(c_stream, fs);
+        c_stream fs;
 
         if (!OpenFile(file_path, ek_file_access_mode_read, temp_arena, &fs)) {
             return false;
@@ -351,7 +346,7 @@ namespace zf {
             return false;
         }
 
-        ZF_DEFINE_UNINITTED(c_stream, fs);
+        c_stream fs;
 
         if (!OpenFile(file_path, ek_file_access_mode_write, temp_arena, &fs)) {
             return false;
@@ -367,7 +362,7 @@ namespace zf {
     }
 
     t_b8 UnpackShader(const s_str_rdonly file_path, c_arena *const shader_bin_arena, c_arena *const temp_arena, c_array_mut<t_u8> *const o_shader_bin) {
-        ZF_DEFINE_UNINITTED(c_stream, fs);
+        c_stream fs;
 
         if (!OpenFile(file_path, ek_file_access_mode_read, temp_arena, &fs)) {
             return false;

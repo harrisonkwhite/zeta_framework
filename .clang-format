@@ -19,5 +19,11 @@ AccessModifierOffset: -4
 AllowShortCaseLabelsOnASingleLine: true
 MaxEmptyLinesToKeep: 2
 
+ForEachMacros:
+  - ZF_WALK_SET_BITS
+  - ZF_WALK_UNSET_BITS
+  - ZF_WALK_STR
+  - ZF_WALK_STR_REVERSE
+
 SortIncludes:
   Enabled: false

@@ -230,20 +230,11 @@ namespace zf {
         static constexpr t_b8 g_val = true;
     };
 
-    template <typename tp_type>
-    concept c_integral = s_is_integral<tp_type>::g_val;
-
-    template <typename tp_type>
-    concept c_signed_integral = s_is_signed_integral<tp_type>::g_val;
-
-    template <typename tp_type>
-    concept c_unsigned_integral = s_is_unsigned_integral<tp_type>::g_val;
-
-    template <typename tp_type>
-    concept c_floating_point = s_is_floating_point<tp_type>::g_val;
-
-    template <typename tp_type>
-    concept c_numeric = s_is_integral<tp_type>::g_val || s_is_floating_point<tp_type>::g_val;
+    template <typename tp_type> concept co_integral = s_is_integral<tp_type>::g_val;
+    template <typename tp_type> concept co_signed_integral = s_is_signed_integral<tp_type>::g_val;
+    template <typename tp_type> concept co_unsigned_integral = s_is_unsigned_integral<tp_type>::g_val;
+    template <typename tp_type> concept co_floating_point = s_is_floating_point<tp_type>::g_val;
+    template <typename tp_type> concept co_numeric = s_is_integral<tp_type>::g_val || s_is_floating_point<tp_type>::g_val;
 
     template <typename tp_type>
     struct s_is_const {
@@ -345,12 +336,12 @@ namespace zf {
         *b = temp;
     }
 
-    template <c_numeric tp_type>
+    template <co_numeric tp_type>
     constexpr tp_type Abs(const tp_type n) {
         return n < 0 ? -n : n;
     }
 
-    template <c_numeric tp_type>
+    template <co_numeric tp_type>
     constexpr tp_type Clamp(const tp_type n, const tp_type min, const tp_type max) {
         ZF_ASSERT(min <= max);
 
@@ -365,7 +356,7 @@ namespace zf {
         return n;
     }
 
-    template <c_numeric tp_type>
+    template <co_numeric tp_type>
     constexpr t_i32 Sign(const tp_type n) {
         if (n > 0) {
             return 1;
@@ -376,12 +367,12 @@ namespace zf {
         return 0;
     }
 
-    template <c_integral tp_type>
+    template <co_integral tp_type>
     constexpr tp_type WrapUpper(const tp_type val, const tp_type max_excl) {
         return ((val % max_excl) + max_excl) % max_excl;
     }
 
-    template <c_integral tp_type>
+    template <co_integral tp_type>
     constexpr tp_type Wrap(const tp_type val, const tp_type min, const tp_type max_excl) {
         return min + WrapUpper(val - min, max_excl - min);
     }

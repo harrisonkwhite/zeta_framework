@@ -13,8 +13,8 @@ namespace zf {
     t_b8 OpenFile(const s_str_rdonly path, const e_file_access_mode mode, c_arena *const temp_arena, c_stream *const o_stream) {
         const s_str_rdonly path_terminated = AllocStrCloneButAddTerminator(path, temp_arena);
 
-        ZF_DEFINE_UNINITTED(FILE *, file);
-        ZF_DEFINE_UNINITTED(e_stream_mode, stream_mode);
+        FILE *file;
+        e_stream_mode stream_mode;
 
         switch (mode) {
         case ek_file_access_mode_read:
@@ -46,15 +46,12 @@ namespace zf {
     }
 
     void CloseFile(c_stream *const stream) {
-        ZF_ASSERT(stream->Type() == ek_stream_type_file);
         fclose(stream->File());
-        PoisonFreedItem(stream);
+        *stream = {};
     }
 
     t_i32 CalcFileSize(c_stream *const stream) {
-        ZF_ASSERT(stream->Type() == ek_stream_type_file);
-
-        const auto &file = stream->File();
+        FILE *const file = stream->File();
         const auto pos_old = ftell(file);
         fseek(file, 0, SEEK_END);
         const auto file_size = ftell(file);
@@ -63,7 +60,7 @@ namespace zf {
     }
 
     t_b8 LoadFileContents(const s_str_rdonly path, c_arena *const contents_arena, c_arena *const temp_arena, c_array_mut<t_u8> *const o_contents, const t_b8 add_terminator) {
-        ZF_DEFINE_UNINITTED(c_stream, stream);
+        c_stream stream;
 
         if (!OpenFile(path, ek_file_access_mode_read, temp_arena, &stream)) {
             return false;

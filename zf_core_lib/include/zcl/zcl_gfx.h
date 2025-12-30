@@ -187,10 +187,10 @@ namespace zf {
     struct s_font_arrangement {
         t_i32 line_height;
 
-        s_hash_map<t_code_pt, s_font_glyph_info> code_pts_to_glyph_infos; // Some duplicity here since a single glyph might have multiple code points mapped to it.
+        c_hash_map<t_code_pt, s_font_glyph_info> code_pts_to_glyph_infos; // Some duplicity here since a single glyph might have multiple code points mapped to it.
 
         t_b8 has_kernings;
-        s_hash_map<s_font_code_point_pair, t_i32> code_pt_pairs_to_kernings;
+        c_hash_map<s_font_code_point_pair, t_i32> code_pt_pairs_to_kernings;
     };
 
     [[nodiscard]] t_b8 LoadFontDataFromRaw(const s_str_rdonly file_path, const t_i32 height, t_code_pt_bit_vec *const code_pts, c_arena *const arrangement_arena, c_arena *const atlas_rgbas_arena, c_arena *const temp_arena, s_font_arrangement *const o_arrangement, c_array_mut<t_font_atlas_rgba> *const o_atlas_rgbas);

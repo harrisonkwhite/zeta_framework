@@ -6,7 +6,7 @@ namespace zf {
     t_b8 LoadSoundDataFromRaw(const s_str_rdonly file_path, c_arena *const snd_data_arena, c_arena *const temp_arena, s_sound_data_mut *const o_snd_data) {
         const s_str_rdonly file_path_terminated = AllocStrCloneButAddTerminator(file_path, temp_arena);
 
-        ZF_DEFINE_UNINITTED(ma_decoder, decoder);
+        ma_decoder decoder;
         ma_decoder_config decoder_config = ma_decoder_config_init(ma_format_f32, 0, 0);
 
         if (ma_decoder_init_file(file_path_terminated.Cstr(), &decoder_config, &decoder) != MA_SUCCESS) {
@@ -15,7 +15,7 @@ namespace zf {
 
         ZF_DEFER({ ma_decoder_uninit(&decoder); });
 
-        ZF_DEFINE_UNINITTED(ma_uint64, frame_cnt);
+        ma_uint64 frame_cnt;
 
         if (ma_decoder_get_length_in_pcm_frames(&decoder, &frame_cnt) != MA_SUCCESS) {
             return false;
@@ -41,7 +41,7 @@ namespace zf {
             return false;
         }
 
-        ZF_DEFINE_UNINITTED(c_stream, fs);
+        c_stream fs;
 
         if (!OpenFile(file_path, ek_file_access_mode_write, temp_arena, &fs)) {
             return false;
@@ -53,7 +53,7 @@ namespace zf {
     }
 
     t_b8 UnpackSound(const s_str_rdonly file_path, c_arena *const snd_data_arena, c_arena *const temp_arena, s_sound_data_mut *const o_snd_data) {
-        ZF_DEFINE_UNINITTED(c_stream, fs);
+        c_stream fs;
 
         if (!OpenFile(file_path, ek_file_access_mode_read, temp_arena, &fs)) {
             return false;

@@ -32,7 +32,7 @@ namespace zf {
     s_gfx_resource *CreateTextureResource(const s_texture_data_rdonly texture_data, s_gfx_resource_group *const group = PermGFXResourceGroup());
 
     inline s_gfx_resource *CreateTextureResourceFromRaw(const s_str_rdonly file_path, c_arena *const temp_arena, s_gfx_resource_group *const group = PermGFXResourceGroup()) {
-        ZF_DEFINE_UNINITTED(s_texture_data, texture_data);
+        s_texture_data texture_data;
 
         if (!LoadTextureDataFromRaw(file_path, temp_arena, temp_arena, &texture_data)) {
             ZF_FATAL();
@@ -42,7 +42,7 @@ namespace zf {
     }
 
     inline s_gfx_resource *CreateTextureResourceFromPacked(const s_str_rdonly file_path, c_arena *const temp_arena, s_gfx_resource_group *const arena = PermGFXResourceGroup()) {
-        ZF_DEFINE_UNINITTED(s_texture_data, texture_data);
+        s_texture_data texture_data;
 
         if (!UnpackTexture(file_path, temp_arena, temp_arena, &texture_data)) {
             ZF_FATAL();
@@ -54,13 +54,13 @@ namespace zf {
     s_gfx_resource *CreateShaderProgResource(const c_array_rdonly<t_u8> vert_shader_compiled_bin, const c_array_rdonly<t_u8> frag_shader_compiled_bin, s_gfx_resource_group *const arena = PermGFXResourceGroup());
 
     inline s_gfx_resource *CreateShaderProgResourceFromPacked(const s_str_rdonly vert_shader_file_path, const s_str_rdonly frag_shader_file_path, c_arena *const temp_arena, s_gfx_resource_group *const arena = PermGFXResourceGroup()) {
-        ZF_DEFINE_UNINITTED(c_array_mut<t_u8>, vert_shader_compiled_bin);
+        c_array_mut<t_u8> vert_shader_compiled_bin;
 
         if (!UnpackShader(vert_shader_file_path, temp_arena, temp_arena, &vert_shader_compiled_bin)) {
             ZF_FATAL();
         }
 
-        ZF_DEFINE_UNINITTED(c_array_mut<t_u8>, frag_shader_compiled_bin);
+        c_array_mut<t_u8> frag_shader_compiled_bin;
 
         if (!UnpackShader(frag_shader_file_path, temp_arena, temp_arena, &frag_shader_compiled_bin)) {
             ZF_FATAL();

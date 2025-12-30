@@ -22,7 +22,7 @@ namespace zf {
     }
 
     struct s_test {
-        s_cstr_literal title;
+        c_cstr_literal title;
         t_b8 (*func)(c_arena *const arena) = nullptr;
     };
 
@@ -38,7 +38,7 @@ namespace zf {
         ZF_DEFER({ arena.Release(); });
 
         for (t_i32 i = 0; i < g_tests.g_len; i++) {
-            Log(s_cstr_literal("Running test \"%\"..."), g_tests[i].title);
+            Log(c_cstr_literal("Running test \"%\"..."), g_tests[i].title);
             g_tests[i].func(&arena);
         }
     }
