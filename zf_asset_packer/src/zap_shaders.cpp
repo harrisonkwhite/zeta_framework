@@ -3,7 +3,7 @@
 #include <reproc/reproc.h>
 
 namespace zf {
-    t_b8 CompileShader(const s_str_rdonly shader_file_path, const s_str_rdonly varying_def_file_path, const t_b8 is_frag, s_arena *const bin_arena, s_arena *const temp_arena, s_array_mut<t_u8> *const o_bin) {
+    t_b8 CompileShader(const s_str_rdonly shader_file_path, const s_str_rdonly varying_def_file_path, const t_b8 is_frag, c_arena *const bin_arena, c_arena *const temp_arena, c_array_mut<t_u8> *const o_bin) {
         const s_str_rdonly shader_file_path_terminated = AllocStrCloneButAddTerminator(shader_file_path, temp_arena);
         const s_str_rdonly varying_def_file_path_terminated = AllocStrCloneButAddTerminator(varying_def_file_path, temp_arena);
 
@@ -43,16 +43,16 @@ namespace zf {
 #endif
 
         const auto exe_dir = LoadExecutableDirectory(temp_arena);
-        ZF_ASSERT(exe_dir.bytes[exe_dir.bytes.len - 1] == '/' || exe_dir.bytes[exe_dir.bytes.len - 1] == '\\'); // Assuming this.
+        ZF_ASSERT(exe_dir.bytes[exe_dir.bytes.Len() - 1] == '/' || exe_dir.bytes[exe_dir.bytes.Len() - 1] == '\\'); // Assuming this.
 
-        const s_str shaderc_file_path = {AllocArray<t_u8>(exe_dir.bytes.len + shaderc_file_path_rel.buf.len + 1, temp_arena)};
+        const s_str shaderc_file_path = {AllocArray<t_u8>(exe_dir.bytes.Len() + shaderc_file_path_rel.buf.Len() + 1, temp_arena)};
         Copy(shaderc_file_path.bytes, exe_dir.bytes);
-        Copy(shaderc_file_path.bytes.SliceFrom(exe_dir.bytes.len), shaderc_file_path_rel.buf.AsByteArray());
+        Copy(shaderc_file_path.bytes.SliceFrom(exe_dir.bytes.Len()), shaderc_file_path_rel.buf.AsByteArray());
 
         const s_cstr_literal shaderc_include_dir_rel = "tools/bgfx/shaderc_include";
-        const s_str shaderc_include_dir = {AllocArray<t_u8>(exe_dir.bytes.len + shaderc_include_dir_rel.buf.len + 1, temp_arena)};
+        const s_str shaderc_include_dir = {AllocArray<t_u8>(exe_dir.bytes.Len() + shaderc_include_dir_rel.buf.Len() + 1, temp_arena)};
         Copy(shaderc_include_dir.bytes, exe_dir.bytes);
-        Copy(shaderc_include_dir.bytes.SliceFrom(exe_dir.bytes.len), shaderc_include_dir_rel.buf.AsByteArray());
+        Copy(shaderc_include_dir.bytes.SliceFrom(exe_dir.bytes.Len()), shaderc_include_dir_rel.buf.AsByteArray());
 
         const s_static_array<const char *, 15> args = {{
             shaderc_file_path.Cstr(),
@@ -61,9 +61,9 @@ namespace zf {
             "--type",
             is_frag ? "fragment" : "vertex",
             "--platform",
-            platform.buf.raw,
+            platform.buf.Raw(),
             "--profile",
-            profile.buf.raw,
+            profile.buf.Raw(),
             "--varyingdef",
             varying_def_file_path_terminated.Cstr(),
             "-i",

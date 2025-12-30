@@ -53,15 +53,15 @@ namespace zf {
         return val >= targ - tol && val <= targ + tol;
     }
 
+
     // ============================================================
     // @section: Vectors
-    // ============================================================
 
     struct s_v2_i;
 
     struct s_v2 {
-        t_f32 x = 0.0f;
-        t_f32 y = 0.0f;
+        t_f32 x;
+        t_f32 y;
 
         constexpr s_v2() = default;
         constexpr s_v2(const t_f32 x, const t_f32 y) : x(x), y(y) {}
@@ -167,19 +167,19 @@ namespace zf {
     }
 
     struct s_v3 {
-        t_f32 x = 0.0f;
-        t_f32 y = 0.0f;
-        t_f32 z = 0.0f;
+        t_f32 x;
+        t_f32 y;
+        t_f32 z;
 
         constexpr s_v3() = default;
         constexpr s_v3(const t_f32 x, const t_f32 y, const t_f32 z) : x(x), y(y), z(z) {}
     };
 
     struct s_v4 {
-        t_f32 x = 0.0f;
-        t_f32 y = 0.0f;
-        t_f32 z = 0.0f;
-        t_f32 w = 0.0f;
+        t_f32 x;
+        t_f32 y;
+        t_f32 z;
+        t_f32 w;
 
         constexpr s_v4() = default;
         constexpr s_v4(const t_f32 x, const t_f32 y, const t_f32 z, const t_f32 w) : x(x), y(y), z(z), w(w) {}
@@ -187,17 +187,17 @@ namespace zf {
 
     // ============================================================
 
+
     // ============================================================
     // @section: Rectangles
-    // ============================================================
 
     struct s_rect_i;
 
     struct s_rect_f {
-        t_f32 x = 0.0f;
-        t_f32 y = 0.0f;
-        t_f32 width = 0.0f;
-        t_f32 height = 0.0f;
+        t_f32 x;
+        t_f32 y;
+        t_f32 width;
+        t_f32 height;
 
         constexpr s_rect_f() = default;
 
@@ -305,10 +305,11 @@ namespace zf {
         return static_cast<s_rect_i>(*this);
     }
 
-    s_rect_f CalcSpanningRect(const s_array_mut<s_rect_f> rects);
-    s_rect_i CalcSpanningRect(const s_array_mut<s_rect_i> rects);
+    s_rect_f CalcSpanningRect(const c_array_mut<s_rect_f> rects);
+    s_rect_i CalcSpanningRect(const c_array_mut<s_rect_i> rects);
 
     // ============================================================
+
 
     // ============================================================
     // @section: Matrices
@@ -329,6 +330,7 @@ namespace zf {
     }
 
     // ============================================================
+
 
     constexpr t_f32 Lerp(const t_f32 a, const t_f32 b, const t_f32 t) {
         return a + ((b - a) * t);

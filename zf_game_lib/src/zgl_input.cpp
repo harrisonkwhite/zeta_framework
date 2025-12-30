@@ -55,6 +55,6 @@ namespace zf {
             }
         }
 
-        Copy(input_state->gamepads[gamepad_index].axes.ToNonstatic(), axes.AsNonstatic());
+        Copy(input_state->gamepads[gamepad_index].axes.AsNonstatic(), axes.AsNonstatic());
     }
 }

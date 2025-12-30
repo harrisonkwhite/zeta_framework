@@ -18,6 +18,21 @@
 #include <cstdlib>
 
 namespace zf {
+    void internal::TryBreakingIntoDebuggerIf(const t_b8 cond) {
+        if (!cond) {
+            return;
+        }
+
+#ifdef ZF_DEBUG
+    #ifdef ZF_PLATFORM_WINDOWS
+        if (IsDebuggerPresent()) {
+            __debugbreak();
+            return;
+        }
+    #endif
+#endif
+    }
+
     static void PrintStackTrace() {
 #ifdef ZF_PLATFORM_WINDOWS
         constexpr t_i32 stack_len = 32;
@@ -67,17 +82,6 @@ namespace zf {
 #endif
     }
 
-    static void TryBreakingIntoDebugger() {
-#ifdef ZF_DEBUG
-    #ifdef ZF_PLATFORM_WINDOWS
-        if (IsDebuggerPresent()) {
-            __debugbreak();
-            return;
-        }
-    #endif
-#endif
-    }
-
     void internal::AssertError(const char *const cond, const char *const func_name, const char *const file_name, const t_i32 line) {
         fprintf(stderr, "==================== ASSERTION ERROR ====================\n");
         fprintf(stderr, "Condition: %s\n", cond);
@@ -91,7 +95,7 @@ namespace zf {
 
         fflush(stderr);
 
-        TryBreakingIntoDebugger();
+        TryBreakingIntoDebuggerIf(true);
 
         abort();
     }
@@ -118,7 +122,7 @@ namespace zf {
 
         fflush(stderr);
 
-        TryBreakingIntoDebugger();
+        TryBreakingIntoDebuggerIf(true);
 
         abort();
     }

@@ -7,37 +7,59 @@ namespace zf {
     // ============================================================
     // @section: Arenas
     // ============================================================
-
-    void DestroyArena(s_arena *const arena) {
-        const auto f = [](const auto self, s_arena_block *const block) {
+    void c_arena::Release() {
+        const auto f = [](const auto self, s_block *const block) {
             if (!block) {
                 return;
             }
 
             self(self, block->next);
 
-            PoisonFreed(block->buf, block->buf_size);
             free(block->buf);
-
-            PoisonFreedItem(block);
             free(block);
         };
 
-        f(f, arena->blocks_head);
-
-        PoisonFreedItem(arena);
+        f(f, m_blocks_head);
     }
 
-    static s_arena_block *CreateArenaBlock(const t_i32 buf_size) {
+    void *c_arena::Push(const t_i32 size, const t_i32 alignment) {
+        ZF_ASSERT(size > 0 && IsAlignmentValid(alignment));
+
+        if (!m_blocks_head) {
+            m_blocks_head = CreateBlock(ZF_MAX(size, g_block_min_size));
+            m_block_cur = m_blocks_head;
+            return Push(size, alignment);
+        }
+
+        const t_i32 offs_aligned = AlignForward(m_block_cur_offs, alignment);
+        const t_i32 offs_next = offs_aligned + size;
+
+        if (offs_next > m_block_cur->buf_size) {
+            if (!m_block_cur->next) {
+                m_block_cur->next = CreateBlock(ZF_MAX(size, g_block_min_size));
+            }
+
+            m_block_cur = m_block_cur->next;
+            m_block_cur_offs = 0;
+
+            return Push(size, alignment);
+        }
+
+        m_block_cur_offs = offs_next;
+
+        return static_cast<t_u8 *>(m_block_cur->buf) + offs_aligned;
+    }
+
+    c_arena::s_block *c_arena::CreateBlock(const t_i32 buf_size) {
         ZF_ASSERT(buf_size > 0);
 
-        const auto res = static_cast<s_arena_block *>(malloc(sizeof(s_arena_block)));
+        const auto res = static_cast<s_block *>(malloc(sizeof(s_block)));
 
         if (!res) {
             ZF_FATAL();
         }
 
-        PoisonUnittedItem(res);
+        memset(res, 0, sizeof(s_block));
 
         res->buf = malloc(static_cast<size_t>(buf_size));
 
@@ -45,40 +67,9 @@ namespace zf {
             ZF_FATAL();
         }
 
-        PoisonUnitted(res->buf, res->buf_size);
+        memset(res->buf, 0, static_cast<size_t>(buf_size)); // Explicitly touch all the memory.
 
         res->buf_size = buf_size;
-
-        return res;
-    }
-
-    void *PushToArena(s_arena *const arena, const t_i32 size, const t_i32 alignment) {
-        ZF_ASSERT(size > 0 && IsAlignmentValid(alignment));
-
-        if (!arena->blocks_head) {
-            arena->blocks_head = CreateArenaBlock(ZF_MAX(size, arena->block_min_size));
-            arena->block_cur = arena->blocks_head;
-            return PushToArena(arena, size, alignment);
-        }
-
-        const t_i32 offs_aligned = AlignForward(arena->block_cur_offs, alignment);
-        const t_i32 offs_next = offs_aligned + size;
-
-        if (offs_next > arena->block_cur->buf_size) {
-            if (!arena->block_cur->next) {
-                arena->block_cur->next = CreateArenaBlock(ZF_MAX(size, arena->block_min_size));
-            }
-
-            arena->block_cur = arena->block_cur->next;
-            arena->block_cur_offs = 0;
-
-            return PushToArena(arena, size, alignment);
-        }
-
-        arena->block_cur_offs = offs_next;
-
-        void *const res = static_cast<t_u8 *>(arena->block_cur->buf) + offs_aligned;
-        PoisonUnitted(res, size);
 
         return res;
     }
@@ -355,14 +346,14 @@ namespace zf {
 
         const t_i32 begin_byte_index = from / 8;
 
-        for (t_i32 i = begin_byte_index; i < bv.bytes.len; i++) {
+        for (t_i32 i = begin_byte_index; i < bv.bytes.Len(); i++) {
             t_u8 byte = bv.bytes[i] ^ xor_mask;
 
             if (i == begin_byte_index) {
                 byte &= BitmaskRange(from % 8);
             }
 
-            if (i == bv.bytes.len - 1) {
+            if (i == bv.bytes.Len() - 1) {
                 byte &= bv.LastByteMask();
             }
 
@@ -649,12 +640,12 @@ namespace zf {
 
         t_i32 res = 0;
 
-        if (bv.bytes.len > 0) {
-            for (t_i32 i = 0; i < bv.bytes.len - 1; i++) {
+        if (bv.bytes.Len() > 0) {
+            for (t_i32 i = 0; i < bv.bytes.Len() - 1; i++) {
                 res += g_mappings[bv.bytes[i]];
             }
 
-            res += g_mappings[bv.bytes[bv.bytes.len - 1] & bv.LastByteMask()];
+            res += g_mappings[bv.bytes[bv.bytes.Len() - 1] & bv.LastByteMask()];
         }
 
         return res;

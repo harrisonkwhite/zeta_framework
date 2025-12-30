@@ -17,6 +17,7 @@ AllowShortLambdasOnASingleLine: All
 BreakBeforeBraces: Attach
 AccessModifierOffset: -4
 AllowShortCaseLabelsOnASingleLine: true
+MaxEmptyLinesToKeep: 2
 
 SortIncludes:
   Enabled: false

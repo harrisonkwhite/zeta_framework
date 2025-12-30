@@ -92,13 +92,13 @@ namespace zf {
     }};
 
     t_b8 PackAssets(const s_str_rdonly instrs_json_file_path) {
-        s_arena arena = CreateArena();
-        ZF_DEFER({ DestroyArena(&arena); });
+        c_arena arena;
+        ZF_DEFER({ arena.Release(); });
 
         ZF_DEFINE_UNINITTED(cJSON *, cj);
 
         {
-            ZF_DEFINE_UNINITTED(s_array_mut<t_u8>, instrs_json_file_contents); // Not needed beyond this scope.
+            ZF_DEFINE_UNINITTED(c_array_mut<t_u8>, instrs_json_file_contents); // Not needed beyond this scope.
 
             if (!LoadFileContents(instrs_json_file_path, &arena, &arena, &instrs_json_file_contents, true)) {
                 LogError(s_cstr_literal("Failed to load packing instructions JSON file \"%\"!"), instrs_json_file_path);
@@ -135,7 +135,7 @@ namespace zf {
         for (t_i32 asset_type_index = 0; asset_type_index < eks_asset_type_cnt; asset_type_index++) {
             const auto asset_type_arr_name = g_asset_type_arr_names[asset_type_index];
 
-            cJSON *const cj_assets = cJSON_GetObjectItemCaseSensitive(cj, asset_type_arr_name.buf.raw);
+            cJSON *const cj_assets = cJSON_GetObjectItemCaseSensitive(cj, asset_type_arr_name.buf.Raw());
 
             if (!cJSON_IsArray(cj_assets)) {
                 LogError(s_cstr_literal("Packing instructions JSON \"%\" array does not exist or it is of the wrong type!"), asset_type_arr_name);
@@ -145,13 +145,13 @@ namespace zf {
             ZF_DEFINE_UNINITTED(cJSON *, cj_asset);
 
             cJSON_ArrayForEach(cj_asset, cj_assets) {
-                RewindArena(&arena);
+                arena.Rewind();
 
                 if (!cJSON_IsObject(cj_asset)) {
                     continue;
                 }
 
-                const auto fields = [asset_type_index]() -> s_array_rdonly<s_asset_field> {
+                const auto fields = [asset_type_index]() -> c_array_rdonly<s_asset_field> {
                     switch (asset_type_index) {
                     case ek_asset_type_texture: return g_texture_fields;
                     case ek_asset_type_font: return g_font_fields;
@@ -162,7 +162,7 @@ namespace zf {
                     return {};
                 }();
 
-                const auto field_vals = [asset_type_index, &texture_field_cj_ptrs, &font_field_cj_ptrs, &shader_field_cj_ptrs, &snd_field_cj_ptrs]() -> s_array_mut<cJSON *> {
+                const auto field_vals = [asset_type_index, &texture_field_cj_ptrs, &font_field_cj_ptrs, &shader_field_cj_ptrs, &snd_field_cj_ptrs]() -> c_array_mut<cJSON *> {
                     switch (asset_type_index) {
                     case ek_asset_type_texture: return texture_field_cj_ptrs;
                     case ek_asset_type_font: return font_field_cj_ptrs;
@@ -173,10 +173,10 @@ namespace zf {
                     return {};
                 }();
 
-                for (t_i32 fi = 0; fi < fields.len; fi++) {
+                for (t_i32 fi = 0; fi < fields.Len(); fi++) {
                     const auto field_name = fields[fi].name;
 
-                    field_vals[fi] = cJSON_GetObjectItem(cj_asset, field_name.buf.raw);
+                    field_vals[fi] = cJSON_GetObjectItem(cj_asset, field_name.buf.Raw());
 
                     if (!field_vals[fi]) {
                         if (fields[fi].optional) {
@@ -241,7 +241,7 @@ namespace zf {
                     if (field_vals[ek_font_field_extra_chrs_file_path]) {
                         const auto extra_chrs_file_path = ConvertCstr(field_vals[ek_font_field_extra_chrs_file_path]->valuestring);
 
-                        ZF_DEFINE_UNINITTED(s_array_mut<t_u8>, extra_chrs_file_contents);
+                        ZF_DEFINE_UNINITTED(c_array_mut<t_u8>, extra_chrs_file_contents);
 
                         if (!LoadFileContents(extra_chrs_file_path, &arena, &arena, &extra_chrs_file_contents)) {
                             LogError(s_cstr_literal("Failed to load extra characters file \"%\"!"), extra_chrs_file_path);
@@ -254,7 +254,7 @@ namespace zf {
                     // @todo: Proper check for invalid height!
 
                     ZF_DEFINE_UNINITTED(s_font_arrangement, arrangement);
-                    ZF_DEFINE_UNINITTED(s_array_mut<t_font_atlas_rgba>, atlas_rgbas);
+                    ZF_DEFINE_UNINITTED(c_array_mut<t_font_atlas_rgba>, atlas_rgbas);
 
                     if (!LoadFontDataFromRaw(file_path, height, code_pt_bv, &arena, &arena, &arena, &arrangement, &atlas_rgbas)) {
                         LogError(s_cstr_literal("Failed to load font from file \"%\"!"), file_path);
@@ -286,7 +286,7 @@ namespace zf {
                         return false;
                     }
 
-                    ZF_DEFINE_UNINITTED(s_array_mut<t_u8>, compiled_bin);
+                    ZF_DEFINE_UNINITTED(c_array_mut<t_u8>, compiled_bin);
 
                     if (!CompileShader(file_path, varying_def_file_path, is_frag, &arena, &arena, &compiled_bin)) {
                         LogError(s_cstr_literal("Failed to compile shader from file \"%\"!"), file_path);

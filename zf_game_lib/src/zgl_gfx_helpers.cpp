@@ -4,7 +4,7 @@ namespace zf {
     void RenderTexture(s_rendering_context *const rc, const s_gfx_resource *const texture, const s_v2 pos, const s_rect_i src_rect) {
         const auto texture_size = TextureSize(texture);
 
-        s_rect_i src_rect_to_use;
+        ZF_DEFINE_UNINITTED(s_rect_i, src_rect_to_use);
 
         if (src_rect == s_rect_i{}) {
             src_rect_to_use = {0, 0, texture_size.x, texture_size.y};
@@ -33,18 +33,18 @@ namespace zf {
             },
         }};
 
-        RenderTriangles(rc, triangles.ToNonstatic(), texture);
+        RenderTriangles(rc, triangles.AsNonstatic(), texture);
     }
 
-    s_font CreateFontFromRaw(const s_str_rdonly file_path, const t_i32 height, t_code_pt_bit_vec *const code_pts, s_arena *const temp_arena, s_gfx_resource_group *const resource_group) {
-        s_font_arrangement arrangement;
-        s_array_mut<t_font_atlas_rgba> atlas_rgbas;
+    s_font CreateFontFromRaw(const s_str_rdonly file_path, const t_i32 height, t_code_pt_bit_vec *const code_pts, c_arena *const temp_arena, s_gfx_resource_group *const resource_group) {
+        ZF_DEFINE_UNINITTED(s_font_arrangement, arrangement);
+        ZF_DEFINE_UNINITTED(c_array_mut<t_font_atlas_rgba>, atlas_rgbas);
 
-        if (!zf::LoadFontDataFromRaw(file_path, height, code_pts, resource_group->arena, *temp_arena, *temp_arena, arrangement, atlas_rgbas)) {
+        if (!zf::LoadFontDataFromRaw(file_path, height, code_pts, resource_group->arena, temp_arena, temp_arena, &arrangement, &atlas_rgbas)) {
             ZF_FATAL();
         }
 
-        const auto atlases = AllocArray<s_gfx_resource *>(atlas_rgbas.Len(), *resource_group->arena);
+        const auto atlases = AllocArray<s_gfx_resource *>(atlas_rgbas.Len(), resource_group->arena);
 
         for (t_i32 i = 0; i < atlas_rgbas.Len(); i++) {
             atlases[i] = CreateTextureResource({g_font_atlas_size, atlas_rgbas[i]}, resource_group);
@@ -56,15 +56,15 @@ namespace zf {
         };
     }
 
-    s_font CreateFontFromPacked(const s_str_rdonly file_path, s_arena *const temp_arena, s_gfx_resource_group *const resource_group) {
-        s_font_arrangement arrangement;
-        s_array_mut<t_font_atlas_rgba> atlas_rgbas;
+    s_font CreateFontFromPacked(const s_str_rdonly file_path, c_arena *const temp_arena, s_gfx_resource_group *const resource_group) {
+        ZF_DEFINE_UNINITTED(s_font_arrangement, arrangement);
+        ZF_DEFINE_UNINITTED(c_array_mut<t_font_atlas_rgba>, atlas_rgbas);
 
-        if (!zf::UnpackFont(file_path, *resource_group->arena, *temp_arena, *temp_arena, arrangement, atlas_rgbas)) {
+        if (!zf::UnpackFont(file_path, resource_group->arena, temp_arena, temp_arena, &arrangement, &atlas_rgbas)) {
             ZF_FATAL();
         }
 
-        const auto atlases = AllocArray<s_gfx_resource *>(atlas_rgbas.Len(), *resource_group->arena);
+        const auto atlases = AllocArray<s_gfx_resource *>(atlas_rgbas.Len(), resource_group->arena);
 
         for (t_i32 i = 0; i < atlas_rgbas.Len(); i++) {
             atlases[i] = CreateTextureResource({g_font_atlas_size, atlas_rgbas[i]}, resource_group);
@@ -76,7 +76,7 @@ namespace zf {
         };
     }
 
-    s_array_mut<s_v2> CalcStrChrRenderPositions(const s_str_rdonly str, const s_font_arrangement &font_arrangement, const s_v2 pos, const s_v2 alignment, s_arena *const arena) {
+    c_array_mut<s_v2> CalcStrChrRenderPositions(const s_str_rdonly str, const s_font_arrangement &font_arrangement, const s_v2 pos, const s_v2 alignment, c_arena *const arena) {
         ZF_ASSERT(IsStrValidUTF8(str));
         ZF_ASSERT(IsAlignmentValid(alignment));
 
@@ -101,7 +101,7 @@ namespace zf {
         }();
 
         // Reserve memory for the character positions.
-        const auto positions = AllocArray<s_v2>(str_meta.len, *arena);
+        const auto positions = AllocArray<s_v2>(str_meta.len, arena);
 
         // From the line count we can determine the vertical alignment offset to apply.
         const t_f32 alignment_offs_y = static_cast<t_f32>(-(str_meta.line_cnt * font_arrangement.line_height)) * alignment.y;
@@ -144,17 +144,17 @@ namespace zf {
                 continue;
             }
 
-            s_ptr<s_font_glyph_info> glyph_info;
+            ZF_DEFINE_UNINITTED(s_font_glyph_info *, glyph_info);
 
-            if (!font_arrangement.code_pts_to_glyph_infos.Find(chr_info.code_pt, glyph_info)) {
+            if (!font_arrangement.code_pts_to_glyph_infos.Find(chr_info.code_pt, &glyph_info)) {
                 ZF_ASSERT(false && "Unsupported code point!");
                 continue;
             }
 
             if (chr_index > 0 && font_arrangement.has_kernings) {
-                s_ptr<t_i32> kerning;
+                ZF_DEFINE_UNINITTED(t_i32 *, kerning);
 
-                if (font_arrangement.code_pt_pairs_to_kernings.Find({code_pt_last, chr_info.code_pt}, kerning)) {
+                if (font_arrangement.code_pt_pairs_to_kernings.Find({code_pt_last, chr_info.code_pt}, &kerning)) {
                     chr_pos_pen.x += static_cast<t_f32>(*kerning);
                 }
             }
@@ -172,7 +172,7 @@ namespace zf {
         return positions;
     }
 
-    void RenderStr(s_rendering_context *const rc, const s_str_rdonly str, const s_font &font, const s_v2 pos, s_arena *const temp_arena, const s_v2 alignment, const s_color_rgba32f blend) {
+    void RenderStr(s_rendering_context *const rc, const s_str_rdonly str, const s_font &font, const s_v2 pos, c_arena *const temp_arena, const s_v2 alignment, const s_color_rgba32f blend) {
         ZF_ASSERT(IsStrValidUTF8(str));
         ZF_ASSERT(IsAlignmentValid(alignment));
 
@@ -183,7 +183,7 @@ namespace zf {
         const auto &font_arrangement = font.arrangement;
         const auto &font_atlases = font.atlases;
 
-        const s_array_mut<s_v2> chr_positions = CalcStrChrRenderPositions(str, font_arrangement, pos, alignment, temp_arena);
+        const c_array_mut<s_v2> chr_positions = CalcStrChrRenderPositions(str, font_arrangement, pos, alignment, temp_arena);
 
         t_i32 chr_index = 0;
 
@@ -193,9 +193,9 @@ namespace zf {
                 continue;
             }
 
-            s_ptr<s_font_glyph_info> glyph_info;
+            ZF_DEFINE_UNINITTED(s_font_glyph_info *, glyph_info);
 
-            if (!font_arrangement.code_pts_to_glyph_infos.Find(chr_info.code_pt, glyph_info)) {
+            if (!font_arrangement.code_pts_to_glyph_infos.Find(chr_info.code_pt, &glyph_info)) {
                 ZF_ASSERT(false && "Unsupported code point!");
                 continue;
             }

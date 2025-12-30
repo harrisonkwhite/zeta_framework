@@ -50,9 +50,10 @@ namespace zf {
 
 #define ZF_DEFER(x) const auto ZF_CONCAT(defer_, ZF_CONCAT(l, __LINE__)) = zf::internal::s_defer([&]() x)
 
+
     // ============================================================
     // @section: Types
-    // ============================================================
+
     static_assert(CHAR_BIT == 8);
 
     using t_u8 = unsigned char;
@@ -289,12 +290,20 @@ namespace zf {
     }
 
     // ============================================================
-    // @section: Key Debugging Features
+
+
     // ============================================================
+    // @section: Key Debugging Features
+
     namespace internal {
+        void TryBreakingIntoDebuggerIf(const t_b8 cond);
+
         [[noreturn]] void AssertError(const char *const cond, const char *const func_name, const char *const file_name, const t_i32 line);
 
 #ifdef ZF_DEBUG
+    #define ZF_DEBUG_BREAK() internal::TryBreakingIntoDebuggerIf(true)
+    #define ZF_DEBUG_BREAK_IF(cond) internal::TryBreakingIntoDebuggerIf(cond)
+
     #define ZF_ASSERT(cond)                                                         \
         do {                                                                        \
             if (!ZF_IN_CONSTEXPR() && !(cond)) {                                    \
@@ -302,6 +311,8 @@ namespace zf {
             }                                                                       \
         } while (0)
 #else
+    #define ZF_DEBUG_BREAK() static_cast<void>(0)
+    #define ZF_DEBUG_BREAK_IF(cond) static_cast<void>(0)
     #define ZF_ASSERT(cond) static_cast<void>(0)
 #endif
 
@@ -319,8 +330,11 @@ namespace zf {
     }
 
     // ============================================================
-    // @section: Essential Utilities
+
+
     // ============================================================
+    // @section: Essential Utilities
+
 #define ZF_MIN(a, b) ((a) <= (b) ? (a) : (b))
 #define ZF_MAX(a, b) ((a) >= (b) ? (a) : (b))
 
@@ -371,4 +385,6 @@ namespace zf {
     constexpr tp_type Wrap(const tp_type val, const tp_type min, const tp_type max_excl) {
         return min + WrapUpper(val - min, max_excl - min);
     }
+
+    // ============================================================
 }
