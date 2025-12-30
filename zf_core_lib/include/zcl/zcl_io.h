@@ -10,7 +10,6 @@ namespace zf {
     // @section: Streams
     // ============================================================
     enum e_stream_type : t_i32 {
-        ek_stream_type_invalid,
         ek_stream_type_mem,
         ek_stream_type_file
     };
@@ -21,164 +20,7 @@ namespace zf {
     };
 
     struct s_stream {
-        s_stream() = default;
-
-        s_stream(const s_array_mut<t_u8> bytes, const e_stream_mode mode, const t_i32 pos = 0)
-            : m_type(ek_stream_type_mem), m_type_data({.mem = {.bytes = bytes, .pos = pos}}), m_mode(mode) { ZF_ASSERT(pos >= 0 && pos <= bytes.len); }
-
-        s_stream(FILE *const file, const e_stream_mode mode)
-            : m_type(ek_stream_type_file), m_type_data({.file = {.file = file}}), m_mode(mode) { ZF_ASSERT(file); }
-
-        s_stream(const s_stream &) = delete;
-
-        e_stream_type Type() const { return m_type; }
-        e_stream_mode Mode() const { return m_mode; }
-
-        t_i32 Pos() const {
-            ZF_ASSERT(m_type == ek_stream_type_mem);
-            return m_type_data.mem.pos;
-        }
-
-        s_array_mut<t_u8> Written() const {
-            ZF_ASSERT(m_type == ek_stream_type_mem);
-            return m_type_data.mem.bytes.Slice(0, m_type_data.mem.pos);
-        }
-
-        FILE *File() const {
-            ZF_ASSERT(m_type == ek_stream_type_file);
-            return m_type_data.file.file;
-        }
-
-        template <typename tp_type>
-        [[nodiscard]] t_b8 ReadItem(tp_type &o_item) {
-            ZF_ASSERT(m_mode == ek_stream_mode_read);
-
-            constexpr t_i32 size = ZF_SIZE_OF(tp_type);
-
-            switch (m_type) {
-            case ek_stream_type_mem: {
-                if (m_type_data.mem.pos + size > m_type_data.mem.bytes.len) {
-                    return false;
-                }
-
-                const auto dest = ToBytes(o_item);
-                const auto src = m_type_data.mem.bytes.Slice(m_type_data.mem.pos, m_type_data.mem.pos + size);
-                Copy(dest, src);
-
-                m_type_data.mem.pos += size;
-
-                return true;
-            }
-
-            case ek_stream_type_file:
-                return fread(&o_item, size, 1, m_type_data.file.file) == 1;
-
-            default:
-                ZF_UNREACHABLE();
-            }
-        }
-
-        template <typename tp_type>
-        [[nodiscard]] t_b8 WriteItem(const tp_type &item) {
-            ZF_ASSERT(m_mode == ek_stream_mode_write);
-
-            constexpr t_i32 size = ZF_SIZE_OF(tp_type);
-
-            switch (m_type) {
-            case ek_stream_type_mem: {
-                if (m_type_data.mem.pos + size > m_type_data.mem.bytes.len) {
-                    return false;
-                }
-
-                const auto dest = m_type_data.mem.bytes.Slice(m_type_data.mem.pos, m_type_data.mem.pos + size);
-                const auto src = ToBytes(item);
-                Copy(dest, src);
-
-                m_type_data.mem.pos += size;
-
-                return true;
-            }
-
-            case ek_stream_type_file:
-                return fwrite(&item, size, 1, m_type_data.file.file) == 1;
-
-            default:
-                ZF_ASSERT(false);
-                return false;
-            }
-        }
-
-        template <co_array_nonstatic_mut tp_type>
-        [[nodiscard]] t_b8 ReadItemsIntoArray(const tp_type arr, const t_i32 cnt) {
-            ZF_ASSERT(m_mode == ek_stream_mode_read);
-            ZF_ASSERT(cnt >= 0 && cnt <= arr.len);
-
-            if (cnt == 0) {
-                return true;
-            }
-
-            switch (m_type) {
-            case ek_stream_type_mem: {
-                const t_i32 size = ZF_SIZE_OF(arr[0]) * cnt;
-
-                if (m_type_data.mem.pos + size > m_type_data.mem.bytes.len) {
-                    return false;
-                }
-
-                const auto dest = arr.AsByteArray();
-                const auto src = m_type_data.mem.bytes.Slice(m_type_data.mem.pos, m_type_data.mem.pos + size);
-                Copy(dest, src);
-
-                m_type_data.mem.pos += size;
-
-                return true;
-            }
-
-            case ek_stream_type_file:
-                return static_cast<t_i32>(fread(arr.raw, sizeof(arr[0]), static_cast<size_t>(cnt), m_type_data.file.file)) == cnt;
-
-            default:
-                ZF_ASSERT(false);
-                return false;
-            }
-        }
-
-        template <co_array_nonstatic tp_type>
-        [[nodiscard]] t_b8 WriteItemsOfArray(const tp_type arr) {
-            ZF_ASSERT(m_mode == ek_stream_mode_write);
-
-            if (arr.len == 0) {
-                return true;
-            }
-
-            switch (m_type) {
-            case ek_stream_type_mem: {
-                const t_i32 size = arr.SizeInBytes();
-
-                if (m_type_data.mem.pos + size > m_type_data.mem.bytes.len) {
-                    return false;
-                }
-
-                const auto dest = m_type_data.mem.bytes.Slice(m_type_data.mem.pos, m_type_data.mem.pos + size);
-                const auto src = arr.AsByteArray();
-                Copy(dest, src);
-
-                m_type_data.mem.pos += size;
-
-                return true;
-            }
-
-            case ek_stream_type_file:
-                return static_cast<t_i32>(fwrite(arr.raw, sizeof(arr[0]), static_cast<size_t>(arr.len), m_type_data.file.file)) == arr.len;
-
-            default:
-                ZF_ASSERT(false);
-                return false;
-            }
-        }
-
-    private:
-        e_stream_type m_type = ek_stream_type_invalid;
+        e_stream_type type;
 
         union {
             struct {
@@ -187,29 +29,172 @@ namespace zf {
             } mem;
 
             struct {
-                s_array_mut<char> bytes;
-                t_i32 pos;
-            } str;
-
-            struct {
                 FILE *file;
             } file;
-        } m_type_data = {};
+        } type_data;
 
-        e_stream_mode m_mode = {};
+        e_stream_mode mode;
+
+        s_stream() = default;
+
+        s_stream(const s_array_mut<t_u8> bytes, const e_stream_mode mode, const t_i32 pos = 0)
+            : type(ek_stream_type_mem), type_data({.mem = {.bytes = bytes, .pos = pos}}), mode(mode) { ZF_ASSERT(pos >= 0 && pos <= bytes.len); }
+
+        s_stream(FILE *const file, const e_stream_mode mode)
+            : type(ek_stream_type_file), type_data({.file = {.file = file}}), mode(mode) { ZF_ASSERT(file); }
+
+        t_i32 Pos() const {
+            ZF_ASSERT(type == ek_stream_type_mem);
+            return type_data.mem.pos;
+        }
+
+        s_array_mut<t_u8> Written() const {
+            ZF_ASSERT(type == ek_stream_type_mem);
+            return type_data.mem.bytes.Slice(0, type_data.mem.pos);
+        }
+
+        FILE *File() const {
+            ZF_ASSERT(type == ek_stream_type_file);
+            return type_data.file.file;
+        }
     };
 
     inline s_stream StdIn() { return {stdin, ek_stream_mode_read}; }
     inline s_stream StdOut() { return {stdout, ek_stream_mode_write}; }
     inline s_stream StdError() { return {stderr, ek_stream_mode_write}; }
 
+    template <typename tp_type>
+    [[nodiscard]] t_b8 ReadItemFromStream(s_stream *const stream, tp_type *const o_item) {
+        ZF_ASSERT(stream->mode == ek_stream_mode_read);
+
+        constexpr t_i32 size = ZF_SIZE_OF(tp_type);
+
+        switch (stream->type) {
+        case ek_stream_type_mem: {
+            if (stream->type_data.mem.pos + size > stream->type_data.mem.bytes.len) {
+                return false;
+            }
+
+            const auto dest = ToBytes(*o_item);
+            const auto src = stream->type_data.mem.bytes.Slice(stream->type_data.mem.pos, stream->type_data.mem.pos + size);
+            Copy(dest, src);
+
+            stream->type_data.mem.pos += size;
+
+            return true;
+        }
+
+        case ek_stream_type_file:
+            return fread(o_item, size, 1, stream->type_data.file.file) == 1;
+
+        default:
+            ZF_UNREACHABLE();
+        }
+    }
+
+    template <typename tp_type>
+    [[nodiscard]] t_b8 WriteItemToStream(s_stream *const stream, const tp_type &item) {
+        ZF_ASSERT(stream->mode == ek_stream_mode_write);
+
+        constexpr t_i32 size = ZF_SIZE_OF(tp_type);
+
+        switch (stream->type) {
+        case ek_stream_type_mem: {
+            if (stream->type_data.mem.pos + size > stream->type_data.mem.bytes.len) {
+                return false;
+            }
+
+            const auto dest = stream->type_data.mem.bytes.Slice(stream->type_data.mem.pos, stream->type_data.mem.pos + size);
+            const auto src = ToBytes(item);
+            Copy(dest, src);
+
+            stream->type_data.mem.pos += size;
+
+            return true;
+        }
+
+        case ek_stream_type_file:
+            return fwrite(&item, size, 1, stream->type_data.file.file) == 1;
+
+        default:
+            ZF_UNREACHABLE();
+        }
+    }
+
+    template <co_array_nonstatic_mut tp_type>
+    [[nodiscard]] t_b8 ReadItemsFromStreamIntoArray(s_stream *const stream, const tp_type arr, const t_i32 cnt) {
+        ZF_ASSERT(stream->mode == ek_stream_mode_read);
+        ZF_ASSERT(cnt >= 0 && cnt <= arr.len);
+
+        if (cnt == 0) {
+            return true;
+        }
+
+        switch (stream->type) {
+        case ek_stream_type_mem: {
+            const t_i32 size = ZF_SIZE_OF(arr[0]) * cnt;
+
+            if (stream->type_data.mem.pos + size > stream->type_data.mem.bytes.len) {
+                return false;
+            }
+
+            const auto dest = arr.AsByteArray();
+            const auto src = stream->type_data.mem.bytes.Slice(stream->type_data.mem.pos, stream->type_data.mem.pos + size);
+            Copy(dest, src);
+
+            stream->type_data.mem.pos += size;
+
+            return true;
+        }
+
+        case ek_stream_type_file:
+            return static_cast<t_i32>(fread(arr.raw, sizeof(arr[0]), static_cast<size_t>(cnt), stream->type_data.file.file)) == cnt;
+
+        default:
+            ZF_UNREACHABLE();
+        }
+    }
+
+    template <co_array_nonstatic tp_type>
+    [[nodiscard]] t_b8 WriteItemsOfArrayToStream(s_stream *const stream, const tp_type arr) {
+        ZF_ASSERT(stream->mode == ek_stream_mode_write);
+
+        if (arr.len == 0) {
+            return true;
+        }
+
+        switch (stream->type) {
+        case ek_stream_type_mem: {
+            const t_i32 size = arr.SizeInBytes();
+
+            if (stream->type_data.mem.pos + size > stream->type_data.mem.bytes.len) {
+                return false;
+            }
+
+            const auto dest = stream->type_data.mem.bytes.Slice(stream->type_data.mem.pos, stream->type_data.mem.pos + size);
+            const auto src = arr.AsByteArray();
+            Copy(dest, src);
+
+            stream->type_data.mem.pos += size;
+
+            return true;
+        }
+
+        case ek_stream_type_file:
+            return static_cast<t_i32>(fwrite(arr.raw, sizeof(arr[0]), static_cast<size_t>(arr.len), stream->type_data.file.file)) == arr.len;
+
+        default:
+            ZF_UNREACHABLE();
+        }
+    }
+
     template <co_array_nonstatic tp_type>
     [[nodiscard]] t_b8 SerializeArray(s_stream *const stream, const tp_type arr) {
-        if (!stream->WriteItem(arr.len)) {
+        if (!WriteItemToStream(stream, &arr.len)) {
             return false;
         }
 
-        if (!stream->WriteItemsOfArray(arr)) {
+        if (!WriteItemsOfArrayToStream(stream, arr)) {
             return false;
         }
 
@@ -217,53 +202,45 @@ namespace zf {
     }
 
     template <typename tp_type>
-    [[nodiscard]] t_b8 DeserializeArray(s_stream *const stream, s_arena *const arr_arena, s_array_mut<tp_type> &o_arr) {
-        t_i32 len;
+    [[nodiscard]] t_b8 DeserializeArray(s_stream *const stream, s_arena *const arr_arena, s_array_mut<tp_type> *const o_arr) {
+        ZF_DEFINE_UNINITTED(t_i32, len);
 
-        if (!stream->ReadItem(len)) {
+        if (!ReadItemFromStream(stream, &len)) {
             return false;
         }
 
-        if (len > 0) {
-            o_arr = AllocArray<tp_type>(len, arr_arena);
+        *o_arr = AllocArray<tp_type>(len, arr_arena);
 
-            if (!stream->ReadItemsIntoArray(o_arr, len)) {
-                return false;
-            }
-        } else {
-            o_arr = {};
+        if (!ReadItemsFromStreamIntoArray(stream, *o_arr, len)) {
+            return false;
         }
 
         return true;
     }
 
     [[nodiscard]] inline t_b8 SerializeBitVec(s_stream *const stream, const s_bit_vec_rdonly bv) {
-        if (!stream->WriteItem(bv.bit_cnt)) {
+        if (!WriteItemToStream(stream, &bv.bit_cnt)) {
             return false;
         }
 
-        if (!stream->WriteItemsOfArray(bv.bytes)) {
+        if (!WriteItemsOfArrayToStream(stream, bv.bytes)) {
             return false;
         }
 
         return true;
     }
 
-    [[nodiscard]] inline t_b8 DeserializeBitVec(s_stream *const stream, s_arena *const bv_arena, s_bit_vec_mut &o_bv) {
-        t_i32 bit_cnt;
+    [[nodiscard]] inline t_b8 DeserializeBitVec(s_stream *const stream, s_arena *const bv_arena, s_bit_vec_mut *const o_bv) {
+        ZF_DEFINE_UNINITTED(t_i32, bit_cnt);
 
-        if (!stream->ReadItem(bit_cnt)) {
+        if (!ReadItemFromStream(stream, &bit_cnt)) {
             return false;
         }
 
-        if (bit_cnt > 0) {
-            o_bv = CreateBitVec(bit_cnt, bv_arena);
+        *o_bv = CreateBitVec(bit_cnt, bv_arena);
 
-            if (!stream->ReadItemsIntoArray(o_bv.bytes, o_bv.bytes.len)) {
-                return false;
-            }
-        } else {
-            o_bv = {};
+        if (!ReadItemsFromStreamIntoArray(stream, o_bv->bytes, o_bv->bytes.len)) {
+            return false;
         }
 
         return true;
@@ -303,13 +280,13 @@ namespace zf {
 
     e_path_type CheckPathType(const s_str_rdonly path, s_arena *const temp_arena);
 
-    s_str LoadExecutableDir(s_arena *const arena);
+    s_str LoadExecutableDirectory(s_arena *const arena);
 
     // ============================================================
     // @section: Printing
     // ============================================================
     inline t_b8 Print(s_stream *const stream, const s_str_rdonly str) {
-        return stream->WriteItemsOfArray(str.bytes);
+        return WriteItemsOfArrayToStream(stream, str.bytes);
     }
 
     inline t_b8 PrintFormat(s_stream *const stream, const s_str_rdonly fmt);
@@ -373,7 +350,7 @@ namespace zf {
         t_b8 str_bytes_stream_write_success = true;
 
         if (fmt.val < 0) {
-            str_bytes_stream_write_success = str_bytes_stream.WriteItem('-');
+            str_bytes_stream_write_success = WriteItemToStream(&str_bytes_stream, '-');
             ZF_ASSERT(str_bytes_stream_write_success);
         }
 
@@ -381,7 +358,7 @@ namespace zf {
 
         for (t_i32 i = 0; i < dig_cnt; i++) {
             const auto chr = static_cast<char>('0' + FindDigitAt(fmt.val, dig_cnt - 1 - i));
-            str_bytes_stream_write_success = str_bytes_stream.WriteItem(chr);
+            str_bytes_stream_write_success = WriteItemToStream(&str_bytes_stream, chr);
             ZF_ASSERT(str_bytes_stream_write_success);
         }
 
@@ -485,10 +462,10 @@ namespace zf {
         t_b8 str_bytes_stream_write_success = true;
 
         if (!(fmt.flags & ek_hex_fmt_flags_omit_prefix)) {
-            str_bytes_stream_write_success = str_bytes_stream.WriteItem('0');
+            str_bytes_stream_write_success = WriteItemToStream(str_bytes_stream, '0');
             ZF_ASSERT(str_bytes_stream_write_success);
 
-            str_bytes_stream_write_success = str_bytes_stream.WriteItem('x');
+            str_bytes_stream_write_success = WriteItemToStream(str_bytes_stream, 'x');
             ZF_ASSERT(str_bytes_stream_write_success);
         }
 
@@ -514,7 +491,7 @@ namespace zf {
         do {
             for (t_i32 i = 0; i < inner_loop_cnt; i++) {
                 const t_u8 byte = dig_to_byte(val_mut % 16);
-                str_bytes_stream_write_success = str_bytes_stream.WriteItem(byte);
+                str_bytes_stream_write_success = WriteItemToStream(str_bytes_stream, byte);
                 ZF_ASSERT(str_bytes_stream_write_success);
 
                 val_mut /= 16;
@@ -767,7 +744,7 @@ namespace zf {
                 }
             }
 
-            if (!stream->WriteItem(fmt.bytes[i])) {
+            if (!WriteItemToStream(stream, fmt.bytes[i])) {
                 return false;
             }
 

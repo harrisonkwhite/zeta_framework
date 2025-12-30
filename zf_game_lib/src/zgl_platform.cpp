@@ -193,7 +193,8 @@ namespace zf {
         }
 
         {
-            t_f64 cp_x_f64, cp_y_f64;
+            ZF_DEFINE_UNINITTED(t_f64, cp_x_f64);
+            ZF_DEFINE_UNINITTED(t_f64, cp_y_f64);
             glfwGetCursorPos(g_state.glfw_window, &cp_x_f64, &cp_y_f64);
             input_state->cursor_pos = {static_cast<t_f32>(cp_x_f64), static_cast<t_f32>(cp_y_f64)};
         }
@@ -203,7 +204,7 @@ namespace zf {
             s_static_bit_vec<eks_gamepad_button_code_cnt> btns_down = {};
             s_static_array<t_f32, eks_gamepad_axis_code_cnt> axes = {};
 
-            GLFWgamepadstate gamepad_state;
+            ZF_DEFINE_UNINITTED(GLFWgamepadstate, gamepad_state);
 
             if (glfwJoystickPresent(i) && glfwJoystickIsGamepad(i) && glfwGetGamepadState(i, &gamepad_state)) {
                 connected = true;
@@ -260,10 +261,10 @@ namespace zf {
         return glfwWindowShouldClose(g_state.glfw_window);
     }
 
-    void SetWindowTitle(const s_str_rdonly title, s_arena &temp_mem_arena) {
+    void SetWindowTitle(const s_str_rdonly title, s_arena *const temp_arena) {
         ZF_ASSERT(g_state.initted);
 
-        const s_str_rdonly title_terminated = AllocStrCloneButAddTerminator(title, temp_mem_arena);
+        const s_str_rdonly title_terminated = AllocStrCloneButAddTerminator(title, temp_arena);
         glfwSetWindowTitle(g_state.glfw_window, title_terminated.Cstr());
     }
 
@@ -300,10 +301,10 @@ namespace zf {
     }
 
     static GLFWmonitor *FindGLFWMonitorOfWindow(GLFWwindow *const window) {
-        s_v2_i window_pos;
+        ZF_DEFINE_UNINITTED(s_v2_i, window_pos);
         glfwGetWindowPos(window, &window_pos.x, &window_pos.y);
 
-        s_v2_i window_size;
+        ZF_DEFINE_UNINITTED(s_v2_i, window_size);
         glfwGetWindowSize(window, &window_size.x, &window_size.y);
 
         const s_rect_i window_rect = {window_pos, window_size};
@@ -312,14 +313,14 @@ namespace zf {
         t_f32 max_occupancy_perc = 0.0f;
         t_i32 max_occupancy_monitor_index = -1;
 
-        t_i32 monitor_cnt = 0;
+        ZF_DEFINE_UNINITTED(t_i32, monitor_cnt);
         const auto monitors = glfwGetMonitors(&monitor_cnt);
 
         for (t_i32 i = 0; i < monitor_cnt; i++) {
-            s_v2_i monitor_pos;
+            ZF_DEFINE_UNINITTED(s_v2_i, monitor_pos);
             glfwGetMonitorPos(monitors[i], &monitor_pos.x, &monitor_pos.y);
 
-            s_v2 monitor_scale;
+            ZF_DEFINE_UNINITTED(s_v2, monitor_scale);
             glfwGetMonitorContentScale(monitors[i], &monitor_scale.x, &monitor_scale.y);
 
             const GLFWvidmode *const mode = glfwGetVideoMode(monitors[i]);
@@ -370,7 +371,7 @@ namespace zf {
 
         const GLFWvidmode *const mode = glfwGetVideoMode(monitor);
 
-        s_v2 monitor_scale = {};
+        ZF_DEFINE_UNINITTED(s_v2, monitor_scale);
         glfwGetMonitorContentScale(monitor, &monitor_scale.x, &monitor_scale.y);
 
         return {

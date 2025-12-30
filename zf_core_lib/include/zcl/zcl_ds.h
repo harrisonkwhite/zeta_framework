@@ -263,7 +263,7 @@ namespace zf {
         s_kv_pair_block_seq() = default;
 
         s_kv_pair_block_seq(const t_i32 block_cap, s_arena *const blocks_arena, const t_bin_comparator<tp_key_type> key_comparator = DefaultBinComparator)
-            : m_active(true), m_block_cap(block_cap), m_blocks_arena(&blocks_arena), m_key_comparator(key_comparator) {
+            : m_active(true), m_block_cap(block_cap), m_blocks_arena(blocks_arena), m_key_comparator(key_comparator) {
             ZF_ASSERT(key_comparator);
         };
 
@@ -300,7 +300,7 @@ namespace zf {
         }
 
         t_b8 ExistsInChain(const t_i32 chain_begin_index, const tp_key_type &key) const {
-            tp_val_type *val_throwaway;
+            ZF_DEFINE_UNINITTED(tp_val_type *, val_throwaway);
             return FindInChain(chain_begin_index, key, val_throwaway);
         }
 
@@ -577,27 +577,23 @@ namespace zf {
 
     template <typename tp_key_type, typename tp_val_type>
     [[nodiscard]] t_b8 SerializeHashMap(s_stream *const stream, const s_hash_map<tp_key_type, tp_val_type> &hm, s_arena *const temp_arena) {
-        const t_i32 cap = hm.Cap();
-
-        if (!stream->WriteItem(cap)) {
+        if (!WriteItemToStream(stream, hm.Cap())) {
             return false;
         }
 
-        const t_i32 entry_cnt = hm.EntryCount();
-
-        if (!stream->WriteItem(entry_cnt)) {
+        if (!WriteItemToStream(stream, hm.EntryCount())) {
             return false;
         }
 
-        s_array_mut<tp_key_type> keys;
-        s_array_mut<tp_val_type> vals;
+        ZF_DEFINE_UNINITTED(s_array_mut<tp_key_type>, keys);
+        ZF_DEFINE_UNINITTED(s_array_mut<tp_val_type>, vals);
         hm.LoadEntries(temp_arena, &keys, &vals);
 
-        if (!stream->WriteItemsOfArray(keys)) {
+        if (!WriteItemsOfArrayToStream(stream, keys)) {
             return false;
         }
 
-        if (!stream->WriteItemsOfArray(vals)) {
+        if (!WriteItemsOfArrayToStream(stream, vals)) {
             return false;
         }
 
@@ -609,15 +605,15 @@ namespace zf {
         ZF_ASSERT(hm_hash_func);
         ZF_ASSERT(hm_key_comparator);
 
-        t_i32 cap;
+        ZF_DEFINE_UNINITTED(t_i32, cap);
 
-        if (!stream->ReadItem(cap)) {
+        if (!ReadItemFromStream(stream, &cap)) {
             return false;
         }
 
-        t_i32 entry_cnt;
+        ZF_DEFINE_UNINITTED(t_i32, entry_cnt);
 
-        if (!stream->ReadItem(entry_cnt)) {
+        if (!ReadItemFromStream(stream, &entry_cnt)) {
             return false;
         }
 
@@ -625,13 +621,13 @@ namespace zf {
 
         const auto keys = AllocArray<tp_key_type>(entry_cnt, temp_arena);
 
-        if (!stream->ReadItemsIntoArray(keys, entry_cnt)) {
+        if (!ReadItemsFromStreamIntoArray(stream, keys, entry_cnt)) {
             return false;
         }
 
         const auto vals = AllocArray<tp_val_type>(entry_cnt, temp_arena);
 
-        if (!stream->ReadItemsIntoArray(vals, entry_cnt)) {
+        if (!ReadItemsFromStreamIntoArray(stream, vals, entry_cnt)) {
             return false;
         }
 

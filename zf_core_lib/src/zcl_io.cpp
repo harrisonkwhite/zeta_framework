@@ -13,8 +13,8 @@ namespace zf {
     t_b8 OpenFile(const s_str_rdonly path, const e_file_access_mode mode, s_arena *const temp_arena, s_stream *const o_stream) {
         const s_str_rdonly path_terminated = AllocStrCloneButAddTerminator(path, temp_arena);
 
-        FILE *file;
-        e_stream_mode stream_mode;
+        ZF_DEFINE_UNINITTED(FILE *, file);
+        ZF_DEFINE_UNINITTED(e_stream_mode, stream_mode);
 
         switch (mode) {
         case ek_file_access_mode_read:
@@ -46,13 +46,13 @@ namespace zf {
     }
 
     void CloseFile(s_stream *const stream) {
-        ZF_ASSERT(stream->Type() == ek_stream_type_file);
+        ZF_ASSERT(stream->type == ek_stream_type_file);
         fclose(stream->File());
-        *stream = {};
+        PoisonFreedItem(stream);
     }
 
     t_i32 CalcFileSize(s_stream *const stream) {
-        ZF_ASSERT(stream->Type() == ek_stream_type_file);
+        ZF_ASSERT(stream->type == ek_stream_type_file);
 
         const auto &file = stream->File();
         const auto pos_old = ftell(file);
@@ -63,7 +63,7 @@ namespace zf {
     }
 
     t_b8 LoadFileContents(const s_str_rdonly path, s_arena *const contents_arena, s_arena *const temp_arena, s_array_mut<t_u8> *const o_contents, const t_b8 add_terminator) {
-        s_stream stream;
+        ZF_DEFINE_UNINITTED(s_stream, stream);
 
         if (!OpenFile(path, ek_file_access_mode_read, temp_arena, &stream)) {
             return false;
@@ -75,7 +75,11 @@ namespace zf {
 
         *o_contents = AllocArray<t_u8>(add_terminator ? file_size + 1 : file_size, contents_arena);
 
-        return stream.ReadItemsIntoArray(*o_contents, file_size);
+        if (!ReadItemsFromStreamIntoArray(&stream, *o_contents, file_size)) {
+            return false;
+        }
+
+        return true;
     }
 
     // @todo: Rename.
@@ -204,7 +208,7 @@ namespace zf {
         return ek_path_type_file;
     }
 
-    s_str LoadExecutableDir(s_arena *const arena) {
+    s_str LoadExecutableDirectory(s_arena *const arena) {
 #if defined(ZF_PLATFORM_WINDOWS)
         s_static_array<char, MAX_PATH> buf;
 
