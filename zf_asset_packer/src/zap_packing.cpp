@@ -120,10 +120,17 @@ namespace zf {
             return false;
         }
 
-        ZF_DEFINE_UNINITTED(s_static_array<cJSON *, eks_texture_field_cnt>, texture_field_cj_ptrs);
-        ZF_DEFINE_UNINITTED(s_static_array<cJSON *, eks_font_field_cnt>, font_field_cj_ptrs);
-        ZF_DEFINE_UNINITTED(s_static_array<cJSON *, eks_shader_field_cnt>, shader_field_cj_ptrs);
-        ZF_DEFINE_UNINITTED(s_static_array<cJSON *, eks_sound_field_cnt>, snd_field_cj_ptrs);
+        s_static_array<cJSON *, eks_texture_field_cnt> texture_field_cj_ptrs;
+        PoisonUnittedItem(&texture_field_cj_ptrs);
+
+        s_static_array<cJSON *, eks_font_field_cnt> font_field_cj_ptrs;
+        PoisonUnittedItem(&font_field_cj_ptrs);
+
+        s_static_array<cJSON *, eks_shader_field_cnt> shader_field_cj_ptrs;
+        PoisonUnittedItem(&shader_field_cj_ptrs);
+
+        s_static_array<cJSON *, eks_sound_field_cnt> snd_field_cj_ptrs;
+        PoisonUnittedItem(&snd_field_cj_ptrs);
 
         for (t_i32 asset_type_index = 0; asset_type_index < eks_asset_type_cnt; asset_type_index++) {
             const auto asset_type_arr_name = g_asset_type_arr_names[asset_type_index];
