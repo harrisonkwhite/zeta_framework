@@ -105,7 +105,7 @@ namespace zf {
                 return false;
             }
 
-            cj = cJSON_Parse(s_str(instrs_json_file_contents).Cstr());
+            cj = cJSON_Parse(s_str(instrs_json_file_contents).AsCstr());
 
             if (!cj) {
                 LogError(c_cstr_literal{"Failed to parse packing instructions JSON file!"});
@@ -128,7 +128,7 @@ namespace zf {
         for (t_i32 asset_type_index = 0; asset_type_index < eks_asset_type_cnt; asset_type_index++) {
             const auto asset_type_arr_name = g_asset_type_arr_names[asset_type_index];
 
-            cJSON *const cj_assets = cJSON_GetObjectItemCaseSensitive(cj, asset_type_arr_name.buf.Raw());
+            cJSON *const cj_assets = cJSON_GetObjectItemCaseSensitive(cj, asset_type_arr_name.Buf().Raw());
 
             if (!cJSON_IsArray(cj_assets)) {
                 LogError(c_cstr_literal{"Packing instructions JSON \"%\" array does not exist or it is of the wrong type!"}, asset_type_arr_name);
@@ -169,7 +169,7 @@ namespace zf {
                 for (t_i32 fi = 0; fi < fields.Len(); fi++) {
                     const auto field_name = fields[fi].name;
 
-                    field_vals[fi] = cJSON_GetObjectItem(cj_asset, field_name.buf.Raw());
+                    field_vals[fi] = cJSON_GetObjectItem(cj_asset, field_name.Buf().Raw());
 
                     if (!field_vals[fi]) {
                         if (fields[fi].optional) {

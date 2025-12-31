@@ -45,12 +45,6 @@ namespace zf {
         return cp >= g_printable_ascii_range_begin && cp < g_printable_ascii_range_end;
     }
 
-    constexpr t_i32 CalcCstrLen(const char *const cstr) {
-        t_i32 len = 0;
-        for (; cstr[len]; len++) {}
-        return len;
-    }
-
     // Does a 0 appear anywhere in the array?
     constexpr t_b8 AreBytesTerminated(const s_array_rdonly<t_u8> bytes) {
         for (t_i32 i = bytes.Len() - 1; i >= 0; i--) {
@@ -62,14 +56,18 @@ namespace zf {
         return false;
     }
 
+    constexpr t_i32 CalcCstrLen(const char *const cstr) {
+        t_i32 len = 0;
+        for (; cstr[len]; len++) {}
+        return len;
+    }
+
     class c_cstr_literal {
     public:
-        const s_array_rdonly<char> buf;
-
         c_cstr_literal() = delete;
 
         template <t_i32 tp_raw_size>
-        consteval c_cstr_literal(const char (&raw)[tp_raw_size]) : buf({raw, tp_raw_size}) {
+        consteval c_cstr_literal(const char (&raw)[tp_raw_size]) : m_buf({raw, tp_raw_size}) {
             if (raw[tp_raw_size - 1]) {
                 throw "Static char array not terminated at end!";
             }
@@ -80,6 +78,13 @@ namespace zf {
                 }
             }
         }
+
+        constexpr s_array_rdonly<char> Buf() const {
+            return m_buf;
+        }
+
+    private:
+        s_array_rdonly<char> m_buf;
     };
 
     struct s_str_rdonly {
@@ -89,11 +94,10 @@ namespace zf {
         s_str_rdonly(const s_array_rdonly<t_u8> bytes) : bytes(bytes) {}
 
         // This very intentionally drops the terminator.
-        s_str_rdonly(const c_cstr_literal lit) : bytes({reinterpret_cast<const t_u8 *>(lit.buf.Raw()), lit.buf.Len() - 1}) {}
+        s_str_rdonly(const c_cstr_literal lit) : bytes({reinterpret_cast<const t_u8 *>(lit.Buf().Raw()), lit.Buf().Len() - 1}) {}
 
-        // Requires that there is a terminating byte somewhere.
-        const char *Cstr() const {
-            ZF_REQUIRE(AreBytesTerminated(bytes));
+        const char *AsCstr() const {
+            ZF_ASSERT(AreBytesTerminated(bytes));
             return reinterpret_cast<const char *>(bytes.Raw());
         }
     };
@@ -108,9 +112,8 @@ namespace zf {
             return {bytes};
         }
 
-        // Requires that there is a terminating byte somewhere.
-        char *Cstr() const {
-            ZF_REQUIRE(AreBytesTerminated(bytes));
+        char *AsCstr() const {
+            ZF_ASSERT(AreBytesTerminated(bytes));
             return reinterpret_cast<char *>(bytes.Raw());
         }
     };
@@ -150,7 +153,7 @@ namespace zf {
 
     t_b8 IsStrValidUTF8(const s_str_rdonly str);
 
-    // Calculates the length in terms of code point count. Note that '\0' is treated just like any other ASCII character.
+    // Calculates the length in terms of code point count. Note that '\0' is treated just like any other ASCII character and does not terminate.
     t_i32 CalcStrLen(const s_str_rdonly str);
 
     t_code_pt FindStrCodePointAtByte(const s_str_rdonly str, const t_i32 byte_index);

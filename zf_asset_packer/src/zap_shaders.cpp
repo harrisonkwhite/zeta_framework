@@ -45,29 +45,29 @@ namespace zf {
         const auto exe_dir = LoadExecutableDirectory(temp_arena);
         ZF_ASSERT(exe_dir.bytes[exe_dir.bytes.Len() - 1] == '/' || exe_dir.bytes[exe_dir.bytes.Len() - 1] == '\\'); // Assuming this.
 
-        const s_str shaderc_file_path = {AllocArray<t_u8>(exe_dir.bytes.Len() + shaderc_file_path_rel.buf.Len() + 1, temp_arena)};
+        const s_str shaderc_file_path = {AllocArray<t_u8>(exe_dir.bytes.Len() + shaderc_file_path_rel.Buf().Len() + 1, temp_arena)};
         Copy(shaderc_file_path.bytes, exe_dir.bytes);
-        Copy(shaderc_file_path.bytes.SliceFrom(exe_dir.bytes.Len()), shaderc_file_path_rel.buf.AsByteArray());
+        Copy(shaderc_file_path.bytes.SliceFrom(exe_dir.bytes.Len()), shaderc_file_path_rel.Buf().AsByteArray());
 
         const c_cstr_literal shaderc_include_dir_rel = "tools/bgfx/shaderc_include";
-        const s_str shaderc_include_dir = {AllocArray<t_u8>(exe_dir.bytes.Len() + shaderc_include_dir_rel.buf.Len() + 1, temp_arena)};
+        const s_str shaderc_include_dir = {AllocArray<t_u8>(exe_dir.bytes.Len() + shaderc_include_dir_rel.Buf().Len() + 1, temp_arena)};
         Copy(shaderc_include_dir.bytes, exe_dir.bytes);
-        Copy(shaderc_include_dir.bytes.SliceFrom(exe_dir.bytes.Len()), shaderc_include_dir_rel.buf.AsByteArray());
+        Copy(shaderc_include_dir.bytes.SliceFrom(exe_dir.bytes.Len()), shaderc_include_dir_rel.Buf().AsByteArray());
 
         const s_static_array<const char *, 15> args = {{
-            shaderc_file_path.Cstr(),
+            shaderc_file_path.AsCstr(),
             "-f",
-            shader_file_path_terminated.Cstr(),
+            shader_file_path_terminated.AsCstr(),
             "--type",
             is_frag ? "fragment" : "vertex",
             "--platform",
-            platform.buf.Raw(),
+            platform.Buf().Raw(),
             "--profile",
-            profile.buf.Raw(),
+            profile.Buf().Raw(),
             "--varyingdef",
-            varying_def_file_path_terminated.Cstr(),
+            varying_def_file_path_terminated.AsCstr(),
             "-i",
-            shaderc_include_dir.Cstr(),
+            shaderc_include_dir.AsCstr(),
             "--stdout",
             nullptr,
         }};
