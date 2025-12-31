@@ -1,7 +1,6 @@
 #include <zcl/zcl_mem.h>
 
 #include <cstdlib>
-#include <cstring>
 
 namespace zf {
     // ============================================================
@@ -15,7 +14,10 @@ namespace zf {
 
             self(self, block->next);
 
+            PoisonFreed(block->buf, block->buf_size);
             free(block->buf);
+
+            PoisonFreedItem(block);
             free(block);
         };
 
@@ -31,7 +33,7 @@ namespace zf {
             ZF_FATAL();
         }
 
-        memset(res, 0, sizeof(s_arena_block));
+        PoisonUnittedItem(res);
 
         res->buf = malloc(static_cast<size_t>(buf_size));
 
@@ -39,9 +41,10 @@ namespace zf {
             ZF_FATAL();
         }
 
-        memset(res->buf, 0, static_cast<size_t>(buf_size)); // Explicitly touch all the memory.
+        PoisonUnitted(res->buf, buf_size);
 
         res->buf_size = buf_size;
+        res->next = nullptr;
 
         return res;
     }
@@ -71,79 +74,24 @@ namespace zf {
 
         arena->block_cur_offs = offs_next;
 
-        return static_cast<t_u8 *>(arena->block_cur->buf) + offs_aligned;
-    }
-
-#if 0
-    void s_arena::Release() {
-        const auto f = [](const auto self, s_arena_block *const block) {
-            if (!block) {
-                return;
-            }
-
-            self(self, block->next);
-
-            free(block->buf);
-            free(block);
-        };
-
-        f(f, blocks_head);
-
-        *this = {};
-    }
-
-    void *s_arena::Push(const t_i32 size, const t_i32 alignment) {
-        ZF_ASSERT(size > 0 && IsAlignmentValid(alignment));
-
-        if (!blocks_head) {
-            blocks_head = CreateBlock(ZF_MAX(size, g_arena_block_min_size));
-            block_cur = blocks_head;
-            return Push(size, alignment);
-        }
-
-        const t_i32 offs_aligned = AlignForward(block_cur_offs, alignment);
-        const t_i32 offs_next = offs_aligned + size;
-
-        if (offs_next > block_cur->buf_size) {
-            if (!block_cur->next) {
-                block_cur->next = CreateBlock(ZF_MAX(size, g_arena_block_min_size));
-            }
-
-            block_cur = block_cur->next;
-            block_cur_offs = 0;
-
-            return Push(size, alignment);
-        }
-
-        block_cur_offs = offs_next;
-
-        return static_cast<t_u8 *>(block_cur->buf) + offs_aligned;
-    }
-
-    s_arena::s_block *s_arena::CreateBlock(const t_i32 buf_size) {
-        ZF_ASSERT(buf_size > 0);
-
-        const auto res = static_cast<s_arena_block *>(malloc(sizeof(s_arena_block)));
-
-        if (!res) {
-            ZF_FATAL();
-        }
-
-        memset(res, 0, sizeof(s_arena_block));
-
-        res->buf = malloc(static_cast<size_t>(buf_size));
-
-        if (!res->buf) {
-            ZF_FATAL();
-        }
-
-        memset(res->buf, 0, static_cast<size_t>(buf_size)); // Explicitly touch all the memory.
-
-        res->buf_size = buf_size;
+        void *const res = static_cast<t_u8 *>(arena->block_cur->buf) + offs_aligned;
+        PoisonUnitted(res, size);
 
         return res;
     }
-#endif
+
+    void RewindArena(s_arena *const arena) {
+        arena->block_cur = arena->blocks_head;
+        arena->block_cur_offs = 0;
+
+        // Poison all block buffers.
+        const s_arena_block *block = arena->blocks_head;
+
+        while (block) {
+            PoisonFreed(block->buf, block->buf_size);
+            block = block->next;
+        }
+    }
 
     // ============================================================
 

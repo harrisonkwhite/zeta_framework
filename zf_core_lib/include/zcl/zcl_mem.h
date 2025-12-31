@@ -1,6 +1,7 @@
 #pragma once
 
 #include <new>
+#include <cstring>
 #include <zcl/zcl_basic.h>
 
 namespace zf {
@@ -35,6 +36,50 @@ namespace zf {
         return (n + alignment - 1) & ~(alignment - 1);
     }
 
+    inline void Clear(void *const buf, const t_i32 buf_size, const t_u8 val) {
+        ZF_ASSERT(buf_size >= 0);
+        memset(buf, val, static_cast<size_t>(buf_size));
+    }
+
+    template <typename tp_type>
+    inline void ClearItem(tp_type *const item, const t_u8 val) {
+        Clear(item, ZF_SIZE_OF(*item), val);
+    }
+
+    constexpr t_u8 g_poison_uninitted = 0xCD;
+    constexpr t_u8 g_poison_freed = 0xDD;
+
+#ifdef ZF_DEBUG
+    inline void PoisonUnitted(void *const buf, const t_i32 buf_size) {
+        Clear(buf, buf_size, g_poison_uninitted);
+    }
+
+    template <typename tp_type>
+    inline void PoisonUnittedItem(tp_type *const item) {
+        ClearItem(item, g_poison_uninitted);
+    }
+
+    inline void PoisonFreed(void *const buf, const t_i32 buf_size) {
+        Clear(buf, buf_size, g_poison_freed);
+    }
+
+    template <typename tp_type>
+    inline void PoisonFreedItem(tp_type *const item) {
+        ClearItem(item, g_poison_freed);
+    }
+
+    #define ZF_DEFINE_UNINITTED(type, name) \
+        type name;                          \
+        PoisonUnittedItem(&name)
+#else
+    inline void PoisonUnitted(void *const buf, const t_i32 buf_size) {}
+    template <typename tp_type> inline void PoisonUnittedItem(tp_type *const item) {}
+    inline void PoisonFreed(void *const buf, const t_i32 buf_size) {}
+    template <typename tp_type> inline void PoisonFreedItem(tp_type *const item) {}
+
+    #define ZF_DEFINE_UNINITTED(type, name) static_cast<void>(0)
+#endif
+
 
     // ============================================================
     // @section: Arenas
@@ -64,17 +109,19 @@ namespace zf {
     // Will lazily allocate memory as needed. Allocation failure is treated as fatal and causes an abort - you don't need to check for nullptr.
     void *PushToArena(s_arena *const arena, const t_i32 size, const t_i32 alignment);
 
-    // DOES NOT FREE ANY ARENA MEMORY. Simply rewinds the arena to the beginning of its allocated memory (if any) to overwrite from there.
-    inline void RewindArena(s_arena *const arena) {
-        arena->block_cur = arena->blocks_head;
-        arena->block_cur_offs = 0;
-    }
+    // Rewinds the arena to the beginning of its allocated memory (if any) to overwrite from there.
+    void RewindArena(s_arena *const arena);
 
     // ============================================================
 
 
     template <typename tp_type>
     tp_type *Alloc(s_arena *const arena) {
+        return PushToArena(arena, ZF_SIZE_OF(tp_type), ZF_ALIGN_OF(tp_type));
+    }
+
+    template <typename tp_type>
+    tp_type *AllocOld(s_arena *const arena) {
         const auto ptr = static_cast<tp_type *>(PushToArena(arena, ZF_SIZE_OF(tp_type), ZF_ALIGN_OF(tp_type)));
         new (ptr) tp_type();
         return ptr;
@@ -249,7 +296,7 @@ namespace zf {
         };
 
     template <typename tp_type>
-    s_array_mut<tp_type> AllocArray(const t_i32 len, s_arena *const arena) {
+    s_array_mut<tp_type> AllocArrayOld(const t_i32 len, s_arena *const arena) {
         ZF_ASSERT(len >= 0);
 
         if (len == 0) {
@@ -266,8 +313,8 @@ namespace zf {
     }
 
     template <co_array_nonstatic tp_arr_type>
-    auto AllocArrayClone(const tp_arr_type arr_to_clone, s_arena *const arena) {
-        const auto arr = AllocArray<typename tp_arr_type::t_elem>(arr_to_clone.Len(), arena);
+    auto AllocArrayCloneOld(const tp_arr_type arr_to_clone, s_arena *const arena) {
+        const auto arr = AllocArrayOld<typename tp_arr_type::t_elem>(arr_to_clone.Len(), arena);
         Copy(arr, arr_to_clone);
         return arr;
     }
@@ -445,7 +492,7 @@ namespace zf {
 
     inline s_bit_vec_mut CreateBitVec(const t_i32 bit_cnt, s_arena *const arena) {
         ZF_ASSERT(bit_cnt >= 0);
-        return {AllocArray<t_u8>(BitsToBytes(bit_cnt), arena).raw, bit_cnt};
+        return {AllocArrayOld<t_u8>(BitsToBytes(bit_cnt), arena).raw, bit_cnt};
     }
 
     constexpr t_b8 IsBitSet(const s_bit_vec_rdonly bv, const t_i32 index) {

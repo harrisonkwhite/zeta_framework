@@ -71,10 +71,10 @@ namespace zf {
         const t_i32 file_size = CalcFileSize(&stream);
 
         if (add_terminator) {
-            *o_contents = AllocArray<t_u8>(file_size + 1, contents_arena);
+            *o_contents = AllocArrayOld<t_u8>(file_size + 1, contents_arena);
             (*o_contents)[file_size] = 0;
         } else {
-            *o_contents = AllocArray<t_u8>(file_size, contents_arena);
+            *o_contents = AllocArrayOld<t_u8>(file_size, contents_arena);
         }
 
         if (!stream.ReadItemsIntoArray(*o_contents, file_size)) {
@@ -223,7 +223,7 @@ namespace zf {
             }
         }
 
-        const auto res = AllocArray<t_u8>(len, arena);
+        const auto res = AllocArrayOld<t_u8>(len, arena);
         Copy(res, buf.AsNonstatic().Slice(0, len).AsByteArray());
         return {res};
 #elif defined(ZF_PLATFORM_MACOS)

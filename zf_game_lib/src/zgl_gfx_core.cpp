@@ -204,7 +204,7 @@ namespace zf {
     static s_gfx_resource *AddGFXResourceToGroup(s_gfx_resource_group *const group, const e_gfx_resource_type type) {
         ZF_ASSERT(g_state.state == ek_state_initted);
 
-        const auto resource = Alloc<s_gfx_resource>(group->arena);
+        const auto resource = AllocOld<s_gfx_resource>(group->arena);
 
         if (!group->head) {
             group->head = resource;
@@ -267,7 +267,7 @@ namespace zf {
     // @section: Rendering
 
     static s_rendering_basis *CreateRenderingBasis(s_arena *const arena, s_gfx_resource_group *const px_texture_resource_group) {
-        const auto res = Alloc<s_rendering_basis>(arena);
+        const auto res = AllocOld<s_rendering_basis>(arena);
 
         {
             bgfx::VertexLayout vert_layout;
@@ -328,7 +328,7 @@ namespace zf {
 
         g_state.state = ek_state_rendering;
 
-        const auto rendering_context = Alloc<s_rendering_context>(rendering_context_arena);
+        const auto rendering_context = AllocOld<s_rendering_context>(rendering_context_arena);
         rendering_context->basis = rendering_basis;
 
         return rendering_context;

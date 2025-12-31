@@ -123,10 +123,10 @@ namespace zf {
         }
 
         // Sort copies of the left and right partitions.
-        const auto arr_left_sorted = AllocArrayClone(arr.Slice(0, arr.Len() / 2), temp_mem_arena);
+        const auto arr_left_sorted = AllocArrayCloneOld(arr.Slice(0, arr.Len() / 2), temp_mem_arena);
         RunMergeSort(arr_left_sorted, temp_mem_arena, comparator);
 
-        const auto arr_right_sorted = AllocArrayClone(arr.SliceFrom(arr.Len() / 2), temp_mem_arena);
+        const auto arr_right_sorted = AllocArrayCloneOld(arr.SliceFrom(arr.Len() / 2), temp_mem_arena);
         RunMergeSort(arr_right_sorted, temp_mem_arena, comparator);
 
         // Update this array.

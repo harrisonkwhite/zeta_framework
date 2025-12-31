@@ -44,7 +44,7 @@ namespace zf {
             ZF_FATAL();
         }
 
-        const auto atlases = AllocArray<s_gfx_resource *>(atlas_rgbas.Len(), resource_group->arena);
+        const auto atlases = AllocArrayOld<s_gfx_resource *>(atlas_rgbas.Len(), resource_group->arena);
 
         for (t_i32 i = 0; i < atlas_rgbas.Len(); i++) {
             atlases[i] = CreateTextureResource({g_font_atlas_size, atlas_rgbas[i]}, resource_group);
@@ -64,7 +64,7 @@ namespace zf {
             ZF_FATAL();
         }
 
-        const auto atlases = AllocArray<s_gfx_resource *>(atlas_rgbas.Len(), resource_group->arena);
+        const auto atlases = AllocArrayOld<s_gfx_resource *>(atlas_rgbas.Len(), resource_group->arena);
 
         for (t_i32 i = 0; i < atlas_rgbas.Len(); i++) {
             atlases[i] = CreateTextureResource({g_font_atlas_size, atlas_rgbas[i]}, resource_group);
@@ -101,7 +101,7 @@ namespace zf {
         }();
 
         // Reserve memory for the character positions.
-        const auto positions = AllocArray<s_v2>(str_meta.len, arena);
+        const auto positions = AllocArrayOld<s_v2>(str_meta.len, arena);
 
         // From the line count we can determine the vertical alignment offset to apply.
         const t_f32 alignment_offs_y = static_cast<t_f32>(-(str_meta.line_cnt * font_arrangement.line_height)) * alignment.y;

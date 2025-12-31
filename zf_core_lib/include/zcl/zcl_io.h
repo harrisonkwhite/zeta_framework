@@ -221,7 +221,7 @@ namespace zf {
             return false;
         }
 
-        *o_arr = AllocArray<tp_type>(len, arr_arena);
+        *o_arr = AllocArrayOld<tp_type>(len, arr_arena);
 
         if (!stream->ReadItemsIntoArray(*o_arr, len)) {
             return false;

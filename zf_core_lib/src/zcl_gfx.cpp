@@ -19,7 +19,7 @@ namespace zf {
 
         ZF_DEFER({ stbi_image_free(stb_px_data); });
 
-        const auto px_data = AllocArray<t_u8>(4 * size_in_pxs.x * size_in_pxs.y, texture_data_arena);
+        const auto px_data = AllocArrayOld<t_u8>(4 * size_in_pxs.x * size_in_pxs.y, texture_data_arena);
         const s_array_rdonly<t_u8> stb_px_data_arr = {stb_px_data, 4 * size_in_pxs.x * size_in_pxs.y};
         Copy(px_data, stb_px_data_arr);
 
@@ -67,7 +67,7 @@ namespace zf {
             return false;
         }
 
-        const auto rgba_px_data = AllocArray<t_u8>(4 * size_in_pxs.x * size_in_pxs.y, texture_data_arena);
+        const auto rgba_px_data = AllocArrayOld<t_u8>(4 * size_in_pxs.x * size_in_pxs.y, texture_data_arena);
 
         if (!fs.ReadItemsIntoArray(rgba_px_data, rgba_px_data.Len())) {
             return false;
@@ -222,7 +222,7 @@ namespace zf {
         //
         // Texture Atlases
         //
-        *o_atlas_rgbas = AllocArray<t_font_atlas_rgba>(atlas_cnt, atlas_rgbas_arena);
+        *o_atlas_rgbas = AllocArrayOld<t_font_atlas_rgba>(atlas_cnt, atlas_rgbas_arena);
 
         // Initialise all pixels to transparent white.
         // @todo: Maybe don't use RBGA for this?

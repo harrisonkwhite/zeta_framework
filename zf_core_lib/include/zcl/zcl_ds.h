@@ -120,7 +120,7 @@ namespace zf {
     template <typename tp_type>
     c_list_mut<tp_type> CreateList(const t_i32 cap, s_arena *const arena, const t_i32 len = 0) {
         ZF_ASSERT(cap > 0 && len >= 0 && len <= cap);
-        return {AllocArray<tp_type>(cap, arena), len};
+        return {AllocArrayOld<tp_type>(cap, arena), len};
     }
 
     using t_list_extension_cap_calculator = t_i32 (*)(const t_i32 cap_current);
@@ -138,7 +138,7 @@ namespace zf {
         const t_i32 new_cap = cap_calculator(list.Cap());
         ZF_ASSERT(new_cap > list.Cap());
 
-        const auto new_backing_arr = AllocArray<typename tp_list_type::t_elem>(new_cap, arena);
+        const auto new_backing_arr = AllocArrayOld<typename tp_list_type::t_elem>(new_cap, arena);
         Copy(new_backing_arr, list.backing_arr);
 
         list = {new_backing_arr, list.len};
@@ -161,7 +161,7 @@ namespace zf {
             return res;
         }();
 
-        const auto new_backing_arr = AllocArray<typename tp_list_type::t_elem>(new_cap, arena);
+        const auto new_backing_arr = AllocArrayOld<typename tp_list_type::t_elem>(new_cap, arena);
         Copy(new_backing_arr, list.backing_arr);
 
         list = {new_backing_arr, list.len};
@@ -395,13 +395,13 @@ namespace zf {
         };
 
         static c_block *CreateBlock(const t_i32 cap, s_arena *const arena) {
-            const auto block = Alloc<c_block>(arena);
+            const auto block = AllocOld<c_block>(arena);
 
-            block->keys = AllocArray<tp_key_type>(cap, arena);
+            block->keys = AllocArrayOld<tp_key_type>(cap, arena);
 
-            block->vals = AllocArray<tp_val_type>(cap, arena);
+            block->vals = AllocArrayOld<tp_val_type>(cap, arena);
 
-            block->next_indexes = AllocArray<t_i32>(cap, arena);
+            block->next_indexes = AllocArrayOld<t_i32>(cap, arena);
             SetAllTo(block->next_indexes, -1);
 
             block->usage = CreateBitVec(cap, arena);
@@ -565,8 +565,8 @@ namespace zf {
 
         // Allocates the given arrays with the memory arena and loads key-value pairs into them.
         void LoadEntries(s_arena *const arena, s_array_mut<tp_key_type> *const o_keys, s_array_mut<tp_val_type> *const o_vals) const {
-            *o_keys = AllocArray<tp_key_type>(EntryCount(), arena);
-            *o_vals = AllocArray<tp_val_type>(EntryCount(), arena);
+            *o_keys = AllocArrayOld<tp_key_type>(EntryCount(), arena);
+            *o_vals = AllocArrayOld<tp_val_type>(EntryCount(), arena);
             return LoadEntries(*o_keys, *o_vals);
         }
     };
@@ -574,7 +574,7 @@ namespace zf {
     // The provided hash function has to map a key to an integer 0 or higher. The given memory arena will be saved and used for allocating new memory for entries when needed.
     template <typename tp_key_type, typename tp_val_type>
     c_hash_map<tp_key_type, tp_val_type> CreateHashMap(const t_hash_func<tp_key_type> hash_func, s_arena *const arena, const t_i32 cap = g_hash_map_cap_default, const t_bin_comparator<tp_key_type> key_comparator = DefaultBinComparator) {
-        const auto immediate_indexes = AllocArray<t_i32>(cap, arena);
+        const auto immediate_indexes = AllocArrayOld<t_i32>(cap, arena);
         SetAllTo(immediate_indexes, -1);
 
         return {
@@ -625,13 +625,13 @@ namespace zf {
 
         o_hm = CreateHashMap<tp_key_type, tp_val_type>(hm_hash_func, hm_arena, cap, hm_key_comparator);
 
-        const auto keys = AllocArray<tp_key_type>(entry_cnt, temp_arena);
+        const auto keys = AllocArrayOld<tp_key_type>(entry_cnt, temp_arena);
 
         if (!stream->ReadItemsIntoArray(keys, entry_cnt)) {
             return false;
         }
 
-        const auto vals = AllocArray<tp_val_type>(entry_cnt, temp_arena);
+        const auto vals = AllocArrayOld<tp_val_type>(entry_cnt, temp_arena);
 
         if (!stream->ReadItemsIntoArray(vals, entry_cnt)) {
             return false;
