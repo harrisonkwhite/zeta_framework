@@ -62,12 +62,13 @@ namespace zf {
         return len;
     }
 
-    class c_cstr_literal {
-    public:
-        c_cstr_literal() = delete;
+    struct s_cstr_literal {
+        s_array_rdonly<char> buf;
+
+        s_cstr_literal() = default;
 
         template <t_i32 tp_raw_size>
-        consteval c_cstr_literal(const char (&raw)[tp_raw_size]) : m_buf({raw, tp_raw_size}) {
+        consteval s_cstr_literal(const char (&raw)[tp_raw_size]) : buf({raw, tp_raw_size}) {
             if (raw[tp_raw_size - 1]) {
                 throw "Static char array not terminated at end!";
             }
@@ -78,13 +79,6 @@ namespace zf {
                 }
             }
         }
-
-        constexpr s_array_rdonly<char> Buf() const {
-            return m_buf;
-        }
-
-    private:
-        s_array_rdonly<char> m_buf;
     };
 
     struct s_str_rdonly {
@@ -94,7 +88,7 @@ namespace zf {
         s_str_rdonly(const s_array_rdonly<t_u8> bytes) : bytes(bytes) {}
 
         // This very intentionally drops the terminator.
-        s_str_rdonly(const c_cstr_literal lit) : bytes({reinterpret_cast<const t_u8 *>(lit.Buf().Raw()), lit.Buf().Len() - 1}) {}
+        s_str_rdonly(const s_cstr_literal lit) : bytes({reinterpret_cast<const t_u8 *>(lit.buf.Raw()), lit.buf.Len() - 1}) {}
 
         const char *AsCstr() const {
             ZF_ASSERT(AreBytesTerminated(bytes));
@@ -136,7 +130,7 @@ namespace zf {
     }
 
     // Allocates a clone of the given string using the memory arena, with a null byte added at the end (even if the string was already terminated).
-    inline s_str AllocStrCloneButAddTerminator(const s_str_rdonly str, c_arena *const arena) {
+    inline s_str AllocStrCloneButAddTerminator(const s_str_rdonly str, s_arena *const arena) {
         const s_str clone = {AllocArray<t_u8>(str.bytes.Len() + 1, arena)};
         Copy(clone.bytes, str.bytes);
         clone.bytes[clone.bytes.Len() - 1] = 0;

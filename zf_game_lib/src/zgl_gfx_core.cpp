@@ -92,9 +92,9 @@ namespace zf {
     // ============================================================
 
 
-    static s_rendering_basis *CreateRenderingBasis(c_arena *const arena, s_gfx_resource_group *const px_texture_resource_group);
+    static s_rendering_basis *CreateRenderingBasis(s_arena *const arena, s_gfx_resource_group *const px_texture_resource_group);
 
-    s_rendering_basis *StartupGFXModule(c_arena *const arena) {
+    s_rendering_basis *StartupGFXModule(s_arena *const arena) {
         ZF_ASSERT(g_state.state == ek_state_uninitted);
 
         g_state = {};
@@ -266,7 +266,7 @@ namespace zf {
     // ============================================================
     // @section: Rendering
 
-    static s_rendering_basis *CreateRenderingBasis(c_arena *const arena, s_gfx_resource_group *const px_texture_resource_group) {
+    static s_rendering_basis *CreateRenderingBasis(s_arena *const arena, s_gfx_resource_group *const px_texture_resource_group) {
         const auto res = Alloc<s_rendering_basis>(arena);
 
         {
@@ -298,7 +298,7 @@ namespace zf {
         return res;
     }
 
-    s_rendering_context *BeginRendering(const s_rendering_basis *const rendering_basis, const s_color_rgb8 clear_col, c_arena *const rendering_context_arena) {
+    s_rendering_context *BeginRendering(const s_rendering_basis *const rendering_basis, const s_color_rgb8 clear_col, s_arena *const rendering_context_arena) {
         ZF_ASSERT(g_state.state == ek_state_initted);
 
         const auto fb_size_cache = WindowFramebufferSizeCache();

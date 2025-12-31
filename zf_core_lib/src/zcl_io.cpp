@@ -10,7 +10,7 @@
 #endif
 
 namespace zf {
-    t_b8 OpenFile(const s_str_rdonly path, const e_file_access_mode mode, c_arena *const temp_arena, c_stream *const o_stream) {
+    t_b8 OpenFile(const s_str_rdonly path, const e_file_access_mode mode, s_arena *const temp_arena, c_stream *const o_stream) {
         const s_str_rdonly path_terminated = AllocStrCloneButAddTerminator(path, temp_arena);
 
         FILE *file;
@@ -59,7 +59,7 @@ namespace zf {
         return static_cast<t_i32>(file_size);
     }
 
-    t_b8 LoadFileContents(const s_str_rdonly path, c_arena *const contents_arena, c_arena *const temp_arena, s_array_mut<t_u8> *const o_contents, const t_b8 add_terminator) {
+    t_b8 LoadFileContents(const s_str_rdonly path, s_arena *const contents_arena, s_arena *const temp_arena, s_array_mut<t_u8> *const o_contents, const t_b8 add_terminator) {
         c_stream stream;
 
         if (!OpenFile(path, ek_file_access_mode_read, temp_arena, &stream)) {
@@ -85,7 +85,7 @@ namespace zf {
     }
 
     // @todo: Rename.
-    t_b8 CreateDirec(const s_str_rdonly path, c_arena *const temp_arena, e_directory_creation_result *const o_creation_res) {
+    t_b8 CreateDirec(const s_str_rdonly path, s_arena *const temp_arena, e_directory_creation_result *const o_creation_res) {
         if (o_creation_res) {
             *o_creation_res = ek_directory_creation_result_success;
         }
@@ -126,7 +126,7 @@ namespace zf {
         return false;
     }
 
-    t_b8 CreateDirectoryAndParents(const s_str_rdonly path, c_arena *const temp_arena, e_directory_creation_result *const o_dir_creation_res) {
+    t_b8 CreateDirectoryAndParents(const s_str_rdonly path, s_arena *const temp_arena, e_directory_creation_result *const o_dir_creation_res) {
         if (o_dir_creation_res) {
             *o_dir_creation_res = ek_directory_creation_result_success;
         }
@@ -166,7 +166,7 @@ namespace zf {
         return true;
     }
 
-    t_b8 CreateFileAndParentDirs(const s_str_rdonly path, c_arena *const temp_arena, e_directory_creation_result *const o_dir_creation_res) {
+    t_b8 CreateFileAndParentDirs(const s_str_rdonly path, s_arena *const temp_arena, e_directory_creation_result *const o_dir_creation_res) {
         if (o_dir_creation_res) {
             *o_dir_creation_res = ek_directory_creation_result_success;
         }
@@ -194,7 +194,7 @@ namespace zf {
         return true;
     }
 
-    e_path_type CheckPathType(const s_str_rdonly path, c_arena *const temp_arena) {
+    e_path_type CheckPathType(const s_str_rdonly path, s_arena *const temp_arena) {
         const s_str_rdonly path_terminated = AllocStrCloneButAddTerminator(path, temp_arena);
 
         struct stat info;
@@ -210,7 +210,7 @@ namespace zf {
         return ek_path_type_file;
     }
 
-    s_str LoadExecutableDirectory(c_arena *const arena) {
+    s_str LoadExecutableDirectory(s_arena *const arena) {
 #if defined(ZF_PLATFORM_WINDOWS)
         s_static_array<char, MAX_PATH> buf;
 

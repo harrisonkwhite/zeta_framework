@@ -7,7 +7,7 @@ namespace zf {
     // ============================================================
     // @section: Textures
 
-    t_b8 LoadTextureDataFromRaw(const s_str_rdonly file_path, c_arena *const texture_data_arena, c_arena *const temp_arena, s_texture_data *const o_texture_data) {
+    t_b8 LoadTextureDataFromRaw(const s_str_rdonly file_path, s_arena *const texture_data_arena, s_arena *const temp_arena, s_texture_data *const o_texture_data) {
         const s_str_rdonly file_path_terminated = AllocStrCloneButAddTerminator(file_path, temp_arena);
 
         s_v2_i size_in_pxs;
@@ -28,7 +28,7 @@ namespace zf {
         return true;
     }
 
-    t_b8 PackTexture(const s_str_rdonly file_path, const s_texture_data texture_data, c_arena *const temp_arena) {
+    t_b8 PackTexture(const s_str_rdonly file_path, const s_texture_data texture_data, s_arena *const temp_arena) {
         if (!CreateFileAndParentDirs(file_path, temp_arena)) {
             return false;
         }
@@ -52,7 +52,7 @@ namespace zf {
         return true;
     }
 
-    t_b8 UnpackTexture(const s_str_rdonly file_path, c_arena *const texture_data_arena, c_arena *const temp_arena, s_texture_data *const o_texture_data) {
+    t_b8 UnpackTexture(const s_str_rdonly file_path, s_arena *const texture_data_arena, s_arena *const temp_arena, s_texture_data *const o_texture_data) {
         c_stream fs;
 
         if (!OpenFile(file_path, ek_file_access_mode_read, temp_arena, &fs)) {
@@ -99,7 +99,7 @@ namespace zf {
             return pa.a == pb.a && pa.b == pb.b;
         };
 
-    t_b8 LoadFontDataFromRaw(const s_str_rdonly file_path, const t_i32 height, t_code_pt_bit_vec *const code_pts, c_arena *const arrangement_arena, c_arena *const atlas_rgbas_arena, c_arena *const temp_arena, s_font_arrangement *const o_arrangement, s_array_mut<t_font_atlas_rgba> *const o_atlas_rgbas) {
+    t_b8 LoadFontDataFromRaw(const s_str_rdonly file_path, const t_i32 height, t_code_pt_bit_vec *const code_pts, s_arena *const arrangement_arena, s_arena *const atlas_rgbas_arena, s_arena *const temp_arena, s_font_arrangement *const o_arrangement, s_array_mut<t_font_atlas_rgba> *const o_atlas_rgbas) {
         ZF_ASSERT(height > 0);
 
         // Get the plain font file data.
@@ -275,7 +275,7 @@ namespace zf {
         return true;
     }
 
-    t_b8 PackFont(const s_str_rdonly file_path, const s_font_arrangement &arrangement, const s_array_rdonly<t_font_atlas_rgba> atlas_rgbas, c_arena *const temp_arena) {
+    t_b8 PackFont(const s_str_rdonly file_path, const s_font_arrangement &arrangement, const s_array_rdonly<t_font_atlas_rgba> atlas_rgbas, s_arena *const temp_arena) {
         if (!CreateFileAndParentDirs(file_path, temp_arena)) {
             return false;
         }
@@ -307,7 +307,7 @@ namespace zf {
         return true;
     }
 
-    t_b8 UnpackFont(const s_str_rdonly file_path, c_arena *const arrangement_arena, c_arena *const atlas_rgbas_arena, c_arena *const temp_arena, s_font_arrangement *const o_arrangement, s_array_mut<t_font_atlas_rgba> *const o_atlas_rgbas) {
+    t_b8 UnpackFont(const s_str_rdonly file_path, s_arena *const arrangement_arena, s_arena *const atlas_rgbas_arena, s_arena *const temp_arena, s_font_arrangement *const o_arrangement, s_array_mut<t_font_atlas_rgba> *const o_atlas_rgbas) {
         c_stream fs;
 
         if (!OpenFile(file_path, ek_file_access_mode_read, temp_arena, &fs)) {
@@ -341,7 +341,7 @@ namespace zf {
     // ============================================================
     // @section: Textures
 
-    t_b8 PackShader(const s_str_rdonly file_path, const s_array_rdonly<t_u8> compiled_shader_bin, c_arena *const temp_arena) {
+    t_b8 PackShader(const s_str_rdonly file_path, const s_array_rdonly<t_u8> compiled_shader_bin, s_arena *const temp_arena) {
         if (!CreateFileAndParentDirs(file_path, temp_arena)) {
             return false;
         }
@@ -361,7 +361,7 @@ namespace zf {
         return true;
     }
 
-    t_b8 UnpackShader(const s_str_rdonly file_path, c_arena *const shader_bin_arena, c_arena *const temp_arena, s_array_mut<t_u8> *const o_shader_bin) {
+    t_b8 UnpackShader(const s_str_rdonly file_path, s_arena *const shader_bin_arena, s_arena *const temp_arena, s_array_mut<t_u8> *const o_shader_bin) {
         c_stream fs;
 
         if (!OpenFile(file_path, ek_file_access_mode_read, temp_arena, &fs)) {

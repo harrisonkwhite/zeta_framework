@@ -214,7 +214,7 @@ namespace zf {
     }
 
     template <typename tp_type>
-    [[nodiscard]] t_b8 DeserializeArray(c_stream *const stream, c_arena *const arr_arena, s_array_mut<tp_type> *const o_arr) {
+    [[nodiscard]] t_b8 DeserializeArray(c_stream *const stream, s_arena *const arr_arena, s_array_mut<tp_type> *const o_arr) {
         t_i32 len;
 
         if (!stream->ReadItem(&len)) {
@@ -242,7 +242,7 @@ namespace zf {
         return true;
     }
 
-    [[nodiscard]] inline t_b8 DeserializeBitVec(c_stream *const stream, c_arena *const bv_arena, s_bit_vec_mut *const o_bv) {
+    [[nodiscard]] inline t_b8 DeserializeBitVec(c_stream *const stream, s_arena *const bv_arena, s_bit_vec_mut *const o_bv) {
         t_i32 bit_cnt;
 
         if (!stream->ReadItem(&bit_cnt)) {
@@ -270,10 +270,10 @@ namespace zf {
         ek_file_access_mode_append
     };
 
-    [[nodiscard]] t_b8 OpenFile(const s_str_rdonly file_path, const e_file_access_mode mode, c_arena *const temp_arena, c_stream *const o_stream);
+    [[nodiscard]] t_b8 OpenFile(const s_str_rdonly file_path, const e_file_access_mode mode, s_arena *const temp_arena, c_stream *const o_stream);
     void CloseFile(c_stream *const stream);
     t_i32 CalcFileSize(c_stream *const stream);
-    [[nodiscard]] t_b8 LoadFileContents(const s_str_rdonly file_path, c_arena *const contents_arena, c_arena *const temp_arena, s_array_mut<t_u8> *const o_contents, const t_b8 add_terminator = false);
+    [[nodiscard]] t_b8 LoadFileContents(const s_str_rdonly file_path, s_arena *const contents_arena, s_arena *const temp_arena, s_array_mut<t_u8> *const o_contents, const t_b8 add_terminator = false);
 
     enum e_directory_creation_result : t_i32 {
         ek_directory_creation_result_success,
@@ -283,9 +283,9 @@ namespace zf {
         ek_directory_creation_result_unknown_err
     };
 
-    [[nodiscard]] t_b8 CreateDirec(const s_str_rdonly path, c_arena *const temp_arena, e_directory_creation_result *const o_creation_res = nullptr); // This DOES NOT create non-existent parent directories.
-    [[nodiscard]] t_b8 CreateDirectoryAndParents(const s_str_rdonly path, c_arena *const temp_arena, e_directory_creation_result *const o_dir_creation_res = nullptr);
-    [[nodiscard]] t_b8 CreateFileAndParentDirs(const s_str_rdonly path, c_arena *const temp_arena, e_directory_creation_result *const o_dir_creation_res = nullptr);
+    [[nodiscard]] t_b8 CreateDirec(const s_str_rdonly path, s_arena *const temp_arena, e_directory_creation_result *const o_creation_res = nullptr); // This DOES NOT create non-existent parent directories.
+    [[nodiscard]] t_b8 CreateDirectoryAndParents(const s_str_rdonly path, s_arena *const temp_arena, e_directory_creation_result *const o_dir_creation_res = nullptr);
+    [[nodiscard]] t_b8 CreateFileAndParentDirs(const s_str_rdonly path, s_arena *const temp_arena, e_directory_creation_result *const o_dir_creation_res = nullptr);
 
     enum e_path_type : t_i32 {
         ek_path_type_not_found,
@@ -293,9 +293,9 @@ namespace zf {
         ek_path_type_directory
     };
 
-    e_path_type CheckPathType(const s_str_rdonly path, c_arena *const temp_arena);
+    e_path_type CheckPathType(const s_str_rdonly path, s_arena *const temp_arena);
 
-    s_str LoadExecutableDirectory(c_arena *const arena);
+    s_str LoadExecutableDirectory(s_arena *const arena);
 
     // ============================================================
 
@@ -329,8 +329,8 @@ namespace zf {
     inline s_bool_fmt FormatDefault(const t_b8 val) { return {val}; }
 
     inline t_b8 PrintType(c_stream *const stream, const s_bool_fmt fmt) {
-        const s_str_rdonly true_str = c_cstr_literal("true");
-        const s_str_rdonly false_str = c_cstr_literal("false");
+        const s_str_rdonly true_str = s_cstr_literal("true");
+        const s_str_rdonly false_str = s_cstr_literal("false");
 
         return Print(stream, fmt.val ? true_str : false_str);
     }
@@ -553,11 +553,11 @@ namespace zf {
     constexpr s_v2_fmt FormatDefault(const s_v2 val) { return FormatV2(val); }
 
     inline t_b8 PrintType(c_stream *const stream, const s_v2_fmt fmt) {
-        return Print(stream, c_cstr_literal("("))
+        return Print(stream, s_cstr_literal("("))
             && PrintType(stream, FormatFloat(fmt.val.x, fmt.trim_trailing_zeros))
-            && Print(stream, c_cstr_literal(", "))
+            && Print(stream, s_cstr_literal(", "))
             && PrintType(stream, FormatFloat(fmt.val.y, fmt.trim_trailing_zeros))
-            && Print(stream, c_cstr_literal(")"));
+            && Print(stream, s_cstr_literal(")"));
     }
 
     struct s_v2_i_fmt {
@@ -570,11 +570,11 @@ namespace zf {
     constexpr s_v2_i_fmt FormatDefault(const s_v2_i val) { return FormatV2(val); }
 
     inline t_b8 PrintType(c_stream *const stream, const s_v2_i_fmt fmt) {
-        return Print(stream, c_cstr_literal("("))
+        return Print(stream, s_cstr_literal("("))
             && PrintType(stream, FormatInt(fmt.val.x))
-            && Print(stream, c_cstr_literal(", "))
+            && Print(stream, s_cstr_literal(", "))
             && PrintType(stream, FormatInt(fmt.val.y))
-            && Print(stream, c_cstr_literal(")"));
+            && Print(stream, s_cstr_literal(")"));
     }
 
     // ========================================
@@ -609,28 +609,28 @@ namespace zf {
     t_b8 PrintType(c_stream *const stream, const s_array_fmt<tp_arr_type> fmt) {
         if (fmt.one_per_line) {
             for (t_i32 i = 0; i < fmt.val.Len(); i++) {
-                if (!PrintFormat(stream, c_cstr_literal("[%] %%"), i, fmt.val[i], i < fmt.val.Len() - 1 ? c_cstr_literal("\n") : c_cstr_literal(""))) {
+                if (!PrintFormat(stream, s_cstr_literal("[%] %%"), i, fmt.val[i], i < fmt.val.Len() - 1 ? s_cstr_literal("\n") : s_cstr_literal(""))) {
                     return false;
                 }
             }
         } else {
-            if (!Print(stream, c_cstr_literal("["))) {
+            if (!Print(stream, s_cstr_literal("["))) {
                 return false;
             }
 
             for (t_i32 i = 0; i < fmt.val.Len(); i++) {
-                if (!PrintFormat(stream, c_cstr_literal("%"), fmt.val[i])) {
+                if (!PrintFormat(stream, s_cstr_literal("%"), fmt.val[i])) {
                     return false;
                 }
 
                 if (i < fmt.val.Len() - 1) {
-                    if (!Print(stream, c_cstr_literal(", "))) {
+                    if (!Print(stream, s_cstr_literal(", "))) {
                         return false;
                     }
                 }
             }
 
-            if (!Print(stream, c_cstr_literal("]"))) {
+            if (!Print(stream, s_cstr_literal("]"))) {
                 return false;
             }
         }
@@ -662,7 +662,7 @@ namespace zf {
 
     inline t_b8 PrintType(c_stream *const stream, const s_bit_vec_fmt fmt) {
         const auto print_bit = [&](const t_i32 bit_index) {
-            const s_str_rdonly str = IsBitSet(fmt.val, bit_index) ? c_cstr_literal("1") : c_cstr_literal("0");
+            const s_str_rdonly str = IsBitSet(fmt.val, bit_index) ? s_cstr_literal("1") : s_cstr_literal("0");
             return Print(stream, str);
         };
 
@@ -670,7 +670,7 @@ namespace zf {
             const t_i32 bit_cnt = index == fmt.val.Bytes().Len() - 1 ? fmt.val.LastByteBitCount() : 8;
 
             for (t_i32 i = 7; i >= bit_cnt; i--) {
-                Print(stream, c_cstr_literal("0"));
+                Print(stream, s_cstr_literal("0"));
             }
 
             for (t_i32 i = bit_cnt - 1; i >= 0; i--) {
@@ -691,7 +691,7 @@ namespace zf {
         case ek_bit_vec_fmt_style_little_endian:
             for (t_i32 i = 0; i < fmt.val.Bytes().Len(); i++) {
                 if (i > 0) {
-                    Print(stream, c_cstr_literal(" "));
+                    Print(stream, s_cstr_literal(" "));
                 }
 
                 print_byte(i);
@@ -704,7 +704,7 @@ namespace zf {
                 print_byte(i);
 
                 if (i > 0) {
-                    Print(stream, c_cstr_literal(" "));
+                    Print(stream, s_cstr_literal(" "));
                 }
             }
 
@@ -806,7 +806,7 @@ namespace zf {
             return false;
         }
 
-        if (!Print(&std_err, c_cstr_literal("\n"))) {
+        if (!Print(&std_err, s_cstr_literal("\n"))) {
             return false;
         }
 
@@ -817,7 +817,7 @@ namespace zf {
     t_b8 LogError(const s_str_rdonly fmt, const tp_arg_types &...args) {
         c_stream std_err = StdError();
 
-        if (!Print(&std_err, c_cstr_literal("Error: "))) {
+        if (!Print(&std_err, s_cstr_literal("Error: "))) {
             return false;
         }
 
@@ -825,7 +825,7 @@ namespace zf {
             return false;
         }
 
-        if (!Print(&std_err, c_cstr_literal("\n"))) {
+        if (!Print(&std_err, s_cstr_literal("\n"))) {
             return false;
         }
 
@@ -838,7 +838,7 @@ namespace zf {
 
         c_stream std_err = StdError();
 
-        if (!PrintFormat(&std_err, c_cstr_literal("% Error: "), type_name)) {
+        if (!PrintFormat(&std_err, s_cstr_literal("% Error: "), type_name)) {
             return false;
         }
 
@@ -846,7 +846,7 @@ namespace zf {
             return false;
         }
 
-        if (!Print(&std_err, c_cstr_literal("\n"))) {
+        if (!Print(&std_err, s_cstr_literal("\n"))) {
             return false;
         }
 
@@ -857,7 +857,7 @@ namespace zf {
     t_b8 LogWarning(const s_str_rdonly fmt, const tp_arg_types &...args) {
         c_stream std_err = StdError();
 
-        if (!Print(&std_err, c_cstr_literal("Warning: "))) {
+        if (!Print(&std_err, s_cstr_literal("Warning: "))) {
             return false;
         }
 
@@ -865,7 +865,7 @@ namespace zf {
             return false;
         }
 
-        if (!Print(&std_err, c_cstr_literal("\n"))) {
+        if (!Print(&std_err, s_cstr_literal("\n"))) {
             return false;
         }
 

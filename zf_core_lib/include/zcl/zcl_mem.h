@@ -39,7 +39,7 @@ namespace zf {
     // ============================================================
     // @section: Arenas
 
-    class c_arena {
+    struct s_arena {
     public:
         // Frees all arena memory and resets object state. It is valid to call this even if no pushing was done.
         void Release();
@@ -74,7 +74,7 @@ namespace zf {
 
 
     template <typename tp_type>
-    tp_type *Alloc(c_arena *const arena) {
+    tp_type *Alloc(s_arena *const arena) {
         const auto ptr = static_cast<tp_type *>(arena->Push(ZF_SIZE_OF(tp_type), ZF_ALIGN_OF(tp_type)));
         new (ptr) tp_type();
         return ptr;
@@ -249,7 +249,7 @@ namespace zf {
         };
 
     template <typename tp_type>
-    s_array_mut<tp_type> AllocArray(const t_i32 len, c_arena *const arena) {
+    s_array_mut<tp_type> AllocArray(const t_i32 len, s_arena *const arena) {
         ZF_ASSERT(len >= 0);
 
         if (len == 0) {
@@ -266,7 +266,7 @@ namespace zf {
     }
 
     template <co_array_nonstatic tp_arr_type>
-    auto AllocArrayClone(const tp_arr_type arr_to_clone, c_arena *const arena) {
+    auto AllocArrayClone(const tp_arr_type arr_to_clone, s_arena *const arena) {
         const auto arr = AllocArray<typename tp_arr_type::t_elem>(arr_to_clone.Len(), arena);
         Copy(arr, arr_to_clone);
         return arr;
@@ -443,7 +443,7 @@ namespace zf {
         }
     };
 
-    inline s_bit_vec_mut CreateBitVec(const t_i32 bit_cnt, c_arena *const arena) {
+    inline s_bit_vec_mut CreateBitVec(const t_i32 bit_cnt, s_arena *const arena) {
         ZF_ASSERT(bit_cnt >= 0);
         return {AllocArray<t_u8>(BitsToBytes(bit_cnt), arena).raw, bit_cnt};
     }

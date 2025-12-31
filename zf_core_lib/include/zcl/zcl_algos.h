@@ -117,7 +117,7 @@ namespace zf {
 
     // O(n log n) in both time complexity and space complexity in every case.
     template <typename tp_arr_type>
-    void RunMergeSort(const tp_arr_type arr, c_arena *const temp_mem_arena, const t_ord_comparator<typename tp_arr_type::t_elem> comparator = DefaultOrdComparator) {
+    void RunMergeSort(const tp_arr_type arr, s_arena *const temp_mem_arena, const t_ord_comparator<typename tp_arr_type::t_elem> comparator = DefaultOrdComparator) {
         if (arr.Len() <= 1) {
             return;
         }

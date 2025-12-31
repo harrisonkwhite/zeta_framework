@@ -7,7 +7,7 @@ namespace zf {
     // ============================================================
     // @section: Arenas
     // ============================================================
-    void c_arena::Release() {
+    void s_arena::Release() {
         const auto f = [](const auto self, s_block *const block) {
             if (!block) {
                 return;
@@ -24,7 +24,7 @@ namespace zf {
         *this = {};
     }
 
-    void *c_arena::Push(const t_i32 size, const t_i32 alignment) {
+    void *s_arena::Push(const t_i32 size, const t_i32 alignment) {
         ZF_ASSERT(size > 0 && IsAlignmentValid(alignment));
 
         if (!m_blocks_head) {
@@ -52,7 +52,7 @@ namespace zf {
         return static_cast<t_u8 *>(m_block_cur->buf) + offs_aligned;
     }
 
-    c_arena::s_block *c_arena::CreateBlock(const t_i32 buf_size) {
+    s_arena::s_block *s_arena::CreateBlock(const t_i32 buf_size) {
         ZF_ASSERT(buf_size > 0);
 
         const auto res = static_cast<s_block *>(malloc(sizeof(s_block)));
