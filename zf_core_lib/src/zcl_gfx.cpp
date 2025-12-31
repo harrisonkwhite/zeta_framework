@@ -69,7 +69,7 @@ namespace zf {
 
         const auto rgba_px_data = AllocArrayOld<t_u8>(4 * size_in_pxs.x * size_in_pxs.y, texture_data_arena);
 
-        if (!fs.ReadItemsIntoArray(rgba_px_data, rgba_px_data.Len())) {
+        if (!fs.ReadItemsIntoArray(rgba_px_data, rgba_px_data.len)) {
             return false;
         }
 
@@ -112,13 +112,13 @@ namespace zf {
         // Initialise the font through STB.
         stbtt_fontinfo stb_font_info;
 
-        const t_i32 offs = stbtt_GetFontOffsetForIndex(font_file_data.Raw(), 0);
+        const t_i32 offs = stbtt_GetFontOffsetForIndex(font_file_data.raw, 0);
 
         if (offs == -1) {
             return false;
         }
 
-        if (!stbtt_InitFont(&stb_font_info, font_file_data.Raw(), offs)) {
+        if (!stbtt_InitFont(&stb_font_info, font_file_data.raw, offs)) {
             return false;
         }
 
@@ -226,7 +226,7 @@ namespace zf {
 
         // Initialise all pixels to transparent white.
         // @todo: Maybe don't use RBGA for this?
-        for (t_i32 i = 0; i < o_atlas_rgbas->Len(); i++) {
+        for (t_i32 i = 0; i < o_atlas_rgbas->len; i++) {
             const auto atlas_rgba = &(*o_atlas_rgbas)[i];
 
             for (t_i32 j = 0; j < (*o_atlas_rgbas)[i].g_len; j += 4) {

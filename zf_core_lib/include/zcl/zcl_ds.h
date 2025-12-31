@@ -17,7 +17,7 @@ namespace zf {
         t_i32 len = 0;
 
         t_i32 Cap() const {
-            return backing_arr.Len();
+            return backing_arr.len;
         }
 
         tp_type &operator[](const t_i32 index) const {
@@ -41,7 +41,7 @@ namespace zf {
         t_i32 len = 0;
 
         t_i32 Cap() const {
-            return backing_arr.Len();
+            return backing_arr.len;
         }
 
         const tp_type &operator[](const t_i32 index) const {
@@ -187,16 +187,16 @@ namespace zf {
 
     template <co_list tp_list_type>
     s_array_mut<typename tp_list_type::t_elem> AppendManyToList(tp_list_type &list, const s_array_rdonly<typename tp_list_type::t_elem> vals) {
-        ZF_ASSERT(list.len + vals.Len() <= list.Cap());
+        ZF_ASSERT(list.len + vals.len <= list.Cap());
 
         Copy(list.backing_arr.SliceFrom(list.len), vals);
-        list.len += vals.Len();
-        return list.backing_arr.Slice(list.len - vals.Len(), list.len);
+        list.len += vals.len;
+        return list.backing_arr.Slice(list.len - vals.len, list.len);
     }
 
     template <co_list_nonstatic tp_list_type>
     s_array_mut<typename tp_list_type::t_elem> AppendManyToListDynamic(tp_list_type &list, const s_array_rdonly<typename tp_list_type::t_elem> vals, s_arena *const extension_arena, const t_list_extension_cap_calculator extension_cap_calculator = g_default_list_extension_cap_calculator) {
-        const auto min_cap_needed = list.len + vals.Len();
+        const auto min_cap_needed = list.len + vals.len;
 
         if (min_cap_needed > list.Cap()) {
             ExtendListToFit(list, min_cap_needed, extension_arena, extension_cap_calculator);
@@ -490,7 +490,7 @@ namespace zf {
 
             t_u32 hash = offs_basis;
 
-            for (t_i32 i = 0; i < key.bytes.Len(); i++) {
+            for (t_i32 i = 0; i < key.bytes.len; i++) {
                 hash ^= static_cast<t_u8>(key.bytes[i]);
                 hash *= prime;
             }
@@ -524,7 +524,7 @@ namespace zf {
         c_kv_pair_block_seq<tp_key_type, tp_val_type> kv_pair_block_seq;
 
         t_i32 Cap() const {
-            return immediate_indexes.Len();
+            return immediate_indexes.len;
         }
 
         t_i32 EntryCount() const {
@@ -555,11 +555,11 @@ namespace zf {
 
         // Loads all key-value pairs into the given PRE-ALLOCATED arrays.
         void LoadEntries(const s_array_mut<tp_key_type> keys, const s_array_mut<tp_val_type> vals) const {
-            ZF_ASSERT(keys.Len() >= EntryCount() && vals.Len() >= EntryCount());
+            ZF_ASSERT(keys.len >= EntryCount() && vals.len >= EntryCount());
 
             t_i32 loaded_cnt = 0;
 
-            for (t_i32 i = 0; i < immediate_indexes.Len(); i++) {
+            for (t_i32 i = 0; i < immediate_indexes.len; i++) {
                 loaded_cnt += kv_pair_block_seq.LoadChain(immediate_indexes[i], keys.SliceFrom(loaded_cnt), vals.SliceFrom(loaded_cnt));
             }
         }

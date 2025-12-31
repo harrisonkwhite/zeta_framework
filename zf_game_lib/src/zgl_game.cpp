@@ -7,7 +7,8 @@
 
 namespace zf {
     constexpr s_v2_i g_init_window_size = {1280, 720};
-    constexpr t_f64 g_targ_ticks_per_sec = 60.0; // @todo: Make this customisable?
+    // constexpr t_f64 g_targ_ticks_per_sec = 60.0; // @todo: Make this customisable?
+    constexpr t_f64 g_targ_ticks_per_sec = 1.0;
 
     void RunGame(const t_game_init_func init_func, const t_game_tick_func tick_func, const t_game_render_func render_func, const t_game_deinit_func deinit_func) {
         ZF_ASSERT(init_func);
@@ -56,6 +57,48 @@ namespace zf {
         t_f64 frame_dur_accum = 0.0;
 
         while (!ShouldWindowClose()) {
+            RewindArena(&temp_arena);
+
+            PollOSEvents(&input_state);
+
+            const t_f64 frame_time = Time();
+            const t_f64 frame_time_delta = frame_time - frame_time_last;
+            frame_dur_accum += frame_time_delta;
+            frame_time_last = frame_time;
+
+            const t_f64 targ_tick_interval = 1.0 / g_targ_ticks_per_sec;
+
+            // Once enough time has passed (i.e. the time accumulator has reached the tick interval), run at least a single tick.
+            if (frame_dur_accum >= targ_tick_interval) {
+                do {
+                    tick_func({
+                        .perm_arena = &perm_arena,
+                        .temp_arena = &temp_arena,
+                        .input_state = &input_state,
+                    });
+
+                    input_state.events = {};
+
+                    frame_dur_accum -= targ_tick_interval;
+                } while (frame_dur_accum >= targ_tick_interval);
+
+                s_rendering_context *const rendering_context = BeginRendering(rendering_basis, s_color_rgb8(109, 187, 255), &temp_arena); // @todo: Make the clear colour customisable?
+
+                render_func({
+                    .perm_arena = &perm_arena,
+                    .temp_arena = &temp_arena,
+                    .rendering_context = rendering_context,
+                });
+
+                EndRendering(rendering_context);
+            }
+        }
+
+#if 0
+        t_f64 frame_time_last = Time();
+        t_f64 frame_dur_accum = 0.0;
+
+        while (!ShouldWindowClose()) {
             PollOSEvents(&input_state);
 
             const t_f64 frame_time = Time();
@@ -80,7 +123,7 @@ namespace zf {
                 frame_dur_accum -= targ_tick_interval;
             }
 
-            RewindArena(&temp_arena);
+            RewindArena(&temp_arena); // @todo: Make sure it's okay to do this and that vertex data given to BGFX is not still needed.
 
             s_rendering_context *const rendering_context = BeginRendering(rendering_basis, s_color_rgb8(109, 187, 255), &temp_arena); // @todo: Make the clear colour customisable?
 
@@ -92,5 +135,6 @@ namespace zf {
 
             EndRendering(rendering_context);
         }
+#endif
     }
 }

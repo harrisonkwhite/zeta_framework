@@ -27,26 +27,26 @@ namespace zf {
     static s_arena_block *CreateArenaBlock(const t_i32 buf_size) {
         ZF_REQUIRE(buf_size > 0);
 
-        const auto result = static_cast<s_arena_block *>(malloc(sizeof(s_arena_block)));
+        const auto block = static_cast<s_arena_block *>(malloc(sizeof(s_arena_block)));
 
-        if (!result) {
+        if (!block) {
             ZF_FATAL();
         }
 
-        PoisonUnittedItem(result);
+        PoisonUnittedItem(block);
 
-        result->buf = malloc(static_cast<size_t>(buf_size));
+        block->buf = malloc(static_cast<size_t>(buf_size));
 
-        if (!result->buf) {
+        if (!block->buf) {
             ZF_FATAL();
         }
 
-        PoisonUnitted(result->buf, buf_size);
+        PoisonUnitted(block->buf, buf_size);
 
-        result->buf_size = buf_size;
-        result->next = nullptr;
+        block->buf_size = buf_size;
+        block->next = nullptr;
 
-        return result;
+        return block;
     }
 
     void *PushToArena(s_arena *const arena, const t_i32 size, const t_i32 alignment) {
@@ -366,14 +366,14 @@ namespace zf {
 
         const t_i32 begin_byte_index = from / 8;
 
-        for (t_i32 i = begin_byte_index; i < bv.Bytes().Len(); i++) {
+        for (t_i32 i = begin_byte_index; i < bv.Bytes().len; i++) {
             t_u8 byte = bv.Bytes()[i] ^ xor_mask;
 
             if (i == begin_byte_index) {
                 byte &= BitmaskRange(from % 8);
             }
 
-            if (i == bv.Bytes().Len() - 1) {
+            if (i == bv.Bytes().len - 1) {
                 byte &= bv.LastByteMask();
             }
 
@@ -658,12 +658,12 @@ namespace zf {
 
         t_i32 result = 0;
 
-        if (bv.Bytes().Len() > 0) {
-            for (t_i32 i = 0; i < bv.Bytes().Len() - 1; i++) {
+        if (bv.Bytes().len > 0) {
+            for (t_i32 i = 0; i < bv.Bytes().len - 1; i++) {
                 result += g_mappings[bv.Bytes()[i]];
             }
 
-            result += g_mappings[bv.Bytes()[bv.Bytes().Len() - 1] & bv.LastByteMask()];
+            result += g_mappings[bv.Bytes()[bv.Bytes().len - 1] & bv.LastByteMask()];
         }
 
         return result;

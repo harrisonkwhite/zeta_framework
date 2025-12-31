@@ -80,21 +80,21 @@ namespace zf {
     s_rendering_context *BeginRendering(const s_rendering_basis *const rendering_basis, const s_color_rgb8 clear_col, s_arena *const rendering_context_arena);
     void EndRendering(s_rendering_context *const rendering_context);
 
-    struct s_rendering_vert {
+    struct s_batch_vert {
         s_v2 pos;
         s_color_rgba32f blend;
         s_v2 uv;
     };
 
-    struct s_render_triangle {
-        s_static_array<s_rendering_vert, 3> verts;
+    struct s_batch_triangle {
+        s_static_array<s_batch_vert, 3> verts;
     };
 
     // Leave texture as nullptr for no texture.
-    void RenderTriangles(s_rendering_context *const rc, const s_array_rdonly<s_render_triangle> triangles, const s_gfx_resource *const texture);
+    void SubmitTrianglesToBatch(s_rendering_context *const rc, const s_array_rdonly<s_batch_triangle> triangles, const s_gfx_resource *const texture);
 
     inline void RenderTriangle(s_rendering_context *const rc, const s_static_array<s_v2, 3> &pts, const s_static_array<s_color_rgba32f, 3> &pt_colors) {
-        const s_render_triangle triangle = {
+        const s_batch_triangle triangle = {
             .verts = {{
                 {.pos = pts[0], .blend = pt_colors[0], .uv = {}},
                 {.pos = pts[1], .blend = pt_colors[1], .uv = {}},
@@ -102,7 +102,7 @@ namespace zf {
             }},
         };
 
-        RenderTriangles(rc, {&triangle, 1}, nullptr);
+        SubmitTrianglesToBatch(rc, {&triangle, 1}, nullptr);
     }
 
     inline void RenderTriangle(s_rendering_context *const rc, const s_static_array<s_v2, 3> &pts, const s_color_rgba32f color) {
@@ -112,7 +112,7 @@ namespace zf {
     inline void RenderRect(s_rendering_context *const rc, const s_rect_f rect, const s_color_rgba32f color_topleft, const s_color_rgba32f color_topright, const s_color_rgba32f color_bottomright, const s_color_rgba32f color_bottomleft) {
         ZF_ASSERT(rect.width > 0.0f && rect.height > 0.0f);
 
-        const s_static_array<s_render_triangle, 2> triangles = {{
+        const s_static_array<s_batch_triangle, 2> triangles = {{
             {
                 .verts = {{
                     {.pos = rect.TopLeft(), .blend = color_topleft, .uv = {0.0f, 0.0f}},
@@ -129,7 +129,7 @@ namespace zf {
             },
         }};
 
-        RenderTriangles(rc, triangles.AsNonstatic(), nullptr);
+        SubmitTrianglesToBatch(rc, triangles.AsNonstatic(), nullptr);
     }
 
     inline void RenderRect(s_rendering_context *const rc, const s_rect_f rect, const s_color_rgba32f color) {

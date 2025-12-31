@@ -67,7 +67,8 @@ namespace zf {
     extern const t_u8 g_batch_triangle_frag_shader_default_src_raw[];
     extern const t_i32 g_batch_triangle_frag_shader_default_src_len;
 
-    constexpr t_i32 g_batch_vert_limit_per_frame = 8192; // @todo: This should definitely be modifiable if the user wants.
+    constexpr t_i32 g_batch_vert_limit = 1024;
+    constexpr t_i32 g_frame_vert_limit = 8192; // @todo: This should definitely be modifiable if the user wants.
 
     struct s_rendering_basis {
         bgfx::DynamicVertexBufferHandle vert_buf_bgfx_hdl;
@@ -80,13 +81,14 @@ namespace zf {
     struct s_rendering_context {
         const s_rendering_basis *basis;
 
+        t_i32 frame_vert_cnt;
+
         struct {
-            s_static_array<s_rendering_vert, g_batch_vert_limit_per_frame> verts;
-            t_i32 vert_offs;
+            s_static_array<s_batch_vert, g_batch_vert_limit> verts;
             t_i32 vert_cnt;
 
             const s_gfx_resource *texture;
-        } state;
+        } batch_state;
     };
 
     // ============================================================
@@ -97,11 +99,11 @@ namespace zf {
     s_rendering_basis *StartupGFXModule(s_arena *const arena) {
         ZF_ASSERT(g_state.state == ek_state_uninitted);
 
-        g_state = {};
+        g_state = {
+            .state = ek_state_initted,
+        };
 
-        g_state.state = ek_state_initted;
-
-        bgfx::Init init;
+        bgfx::Init init = {};
 
         init.type = bgfx::RendererType::Count;
 
@@ -138,7 +140,6 @@ namespace zf {
 
         bgfx::shutdown();
 
-        g_state.state = ek_state_uninitted;
         g_state = {};
     }
 
@@ -147,14 +148,14 @@ namespace zf {
     // @section: Resources
 
     static bgfx::ProgramHandle CreateBGFXShaderProg(const s_array_rdonly<t_u8> vert_shader_bin, const s_array_rdonly<t_u8> frag_shader_bin) {
-        const bgfx::Memory *const vert_shader_bgfx_mem = bgfx::makeRef(vert_shader_bin.Raw(), static_cast<uint32_t>(vert_shader_bin.Len()));
+        const bgfx::Memory *const vert_shader_bgfx_mem = bgfx::copy(vert_shader_bin.raw, static_cast<uint32_t>(vert_shader_bin.len));
         const bgfx::ShaderHandle vert_shader_bgfx_hdl = bgfx::createShader(vert_shader_bgfx_mem);
 
         if (!bgfx::isValid(vert_shader_bgfx_hdl)) {
             return BGFX_INVALID_HANDLE;
         }
 
-        const bgfx::Memory *const frag_shader_bgfx_mem = bgfx::makeRef(frag_shader_bin.Raw(), static_cast<uint32_t>(frag_shader_bin.Len()));
+        const bgfx::Memory *const frag_shader_bgfx_mem = bgfx::copy(frag_shader_bin.raw, static_cast<uint32_t>(frag_shader_bin.len));
         const bgfx::ShaderHandle frag_shader_bgfx_hdl = bgfx::createShader(frag_shader_bgfx_mem);
 
         if (!bgfx::isValid(frag_shader_bgfx_hdl)) {
@@ -222,7 +223,7 @@ namespace zf {
     s_gfx_resource *CreateTextureResource(const s_texture_data_rdonly texture_data, s_gfx_resource_group *const group) {
         ZF_ASSERT(g_state.state == ek_state_initted);
 
-        const auto texture_bgfx_hdl = bgfx::createTexture2D(static_cast<uint16_t>(texture_data.size_in_pxs.x), static_cast<uint16_t>(texture_data.size_in_pxs.y), false, 1, bgfx::TextureFormat::RGBA8, 0, bgfx::copy(texture_data.rgba_px_data.Raw(), static_cast<uint32_t>(texture_data.rgba_px_data.SizeInBytes())));
+        const auto texture_bgfx_hdl = bgfx::createTexture2D(static_cast<uint16_t>(texture_data.size_in_pxs.x), static_cast<uint16_t>(texture_data.size_in_pxs.y), false, 1, bgfx::TextureFormat::RGBA8, 0, bgfx::copy(texture_data.rgba_px_data.raw, static_cast<uint32_t>(texture_data.rgba_px_data.SizeInBytes())));
 
         if (!bgfx::isValid(texture_bgfx_hdl)) {
             ZF_FATAL();
@@ -235,14 +236,14 @@ namespace zf {
     }
 
     s_gfx_resource *CreateShaderProgResource(const s_array_rdonly<t_u8> vert_shader_compiled_bin, const s_array_rdonly<t_u8> frag_shader_compiled_bin, s_gfx_resource_group *const group) {
-        const bgfx::Memory *const vert_shader_bgfx_mem = bgfx::makeRef(vert_shader_compiled_bin.Raw(), static_cast<uint32_t>(vert_shader_compiled_bin.Len()));
+        const bgfx::Memory *const vert_shader_bgfx_mem = bgfx::copy(vert_shader_compiled_bin.raw, static_cast<uint32_t>(vert_shader_compiled_bin.len));
         const bgfx::ShaderHandle vert_shader_bgfx_hdl = bgfx::createShader(vert_shader_bgfx_mem);
 
         if (!bgfx::isValid(vert_shader_bgfx_hdl)) {
             ZF_FATAL();
         }
 
-        const bgfx::Memory *const frag_shader_bgfx_mem = bgfx::makeRef(frag_shader_compiled_bin.Raw(), static_cast<uint32_t>(frag_shader_compiled_bin.Len()));
+        const bgfx::Memory *const frag_shader_bgfx_mem = bgfx::copy(frag_shader_compiled_bin.raw, static_cast<uint32_t>(frag_shader_compiled_bin.len));
         const bgfx::ShaderHandle frag_shader_bgfx_hdl = bgfx::createShader(frag_shader_bgfx_mem);
 
         if (!bgfx::isValid(frag_shader_bgfx_hdl)) {
@@ -273,7 +274,7 @@ namespace zf {
             bgfx::VertexLayout vert_layout;
             vert_layout.begin().add(bgfx::Attrib::Position, 2, bgfx::AttribType::Float).add(bgfx::Attrib::Color0, 4, bgfx::AttribType::Float).add(bgfx::Attrib::TexCoord0, 2, bgfx::AttribType::Float).end();
 
-            result->vert_buf_bgfx_hdl = bgfx::createDynamicVertexBuffer(static_cast<uint32_t>(g_batch_vert_limit_per_frame), vert_layout);
+            result->vert_buf_bgfx_hdl = bgfx::createDynamicVertexBuffer(static_cast<uint32_t>(g_frame_vert_limit), vert_layout);
 
             if (!bgfx::isValid(result->vert_buf_bgfx_hdl)) {
                 ZF_FATAL();
@@ -334,64 +335,69 @@ namespace zf {
         return rendering_context;
     }
 
-    static void Flush(s_rendering_context *const rc) {
+    static void FlushBatch(s_rendering_context *const rc) {
         ZF_ASSERT(g_state.state == ek_state_rendering);
 
-        if (rc->state.vert_cnt == 0) {
+        if (rc->batch_state.vert_cnt == 0) {
             return;
         }
 
-        const auto verts = rc->state.verts.AsNonstatic().Slice(rc->state.vert_offs, rc->state.vert_offs + rc->state.vert_cnt);
-        const auto verts_bgfx_ref = bgfx::makeRef(verts.Raw(), static_cast<uint32_t>(verts.SizeInBytes()));
-        bgfx::update(rc->basis->vert_buf_bgfx_hdl, static_cast<uint32_t>(rc->state.vert_offs), verts_bgfx_ref);
+        if (rc->frame_vert_cnt + rc->batch_state.vert_cnt > g_frame_vert_limit) {
+            ZF_FATAL();
+        }
 
-        const auto texture_bgfx_hdl = rc->state.texture ? rc->state.texture->Texture().bgfx_hdl : rc->basis->px_texture->Texture().bgfx_hdl;
+        const auto verts = rc->batch_state.verts.AsNonstatic().Slice(0, rc->batch_state.vert_cnt);
+        const auto verts_bgfx_mem = bgfx::copy(verts.raw, static_cast<uint32_t>(verts.SizeInBytes()));
+        bgfx::update(rc->basis->vert_buf_bgfx_hdl, static_cast<uint32_t>(rc->frame_vert_cnt), verts_bgfx_mem);
+
+        const auto texture_bgfx_hdl = rc->batch_state.texture ? rc->batch_state.texture->Texture().bgfx_hdl : rc->basis->px_texture->Texture().bgfx_hdl;
         bgfx::setTexture(0, rc->basis->texture_sampler_uniform_bgfx_hdl, texture_bgfx_hdl);
 
-        bgfx::setVertexBuffer(0, rc->basis->vert_buf_bgfx_hdl, static_cast<uint32_t>(rc->state.vert_offs), static_cast<uint32_t>(rc->state.vert_cnt));
+        bgfx::setVertexBuffer(0, rc->basis->vert_buf_bgfx_hdl, static_cast<uint32_t>(rc->frame_vert_cnt), static_cast<uint32_t>(rc->batch_state.vert_cnt));
 
         bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A | BGFX_STATE_BLEND_ALPHA);
 
         bgfx::submit(0, rc->basis->shader_prog_bgfx_hdl);
 
-        rc->state.vert_offs += rc->state.vert_cnt;
-        rc->state.vert_cnt = 0;
+        rc->frame_vert_cnt += rc->batch_state.vert_cnt;
+
+        ClearItem(&rc->batch_state, 0);
     }
 
     void EndRendering(s_rendering_context *const rendering_context) {
         ZF_ASSERT(g_state.state == ek_state_rendering);
 
-        Flush(rendering_context);
+        FlushBatch(rendering_context);
 
         bgfx::frame();
 
         g_state.state = ek_state_initted;
     }
 
-    void RenderTriangles(s_rendering_context *const rc, const s_array_rdonly<s_render_triangle> triangles, const s_gfx_resource *const texture) {
+    void SubmitTrianglesToBatch(s_rendering_context *const rc, const s_array_rdonly<s_batch_triangle> triangles, const s_gfx_resource *const texture) {
         ZF_ASSERT(g_state.state == ek_state_rendering);
-        ZF_ASSERT(triangles.Len() > 0);
+        ZF_ASSERT(triangles.len > 0);
         ZF_ASSERT(!texture || texture->type == ek_gfx_resource_type_texture);
 
-        if (texture != rc->state.texture) {
-            Flush(rc);
-            rc->state.texture = texture;
-        }
+        const t_i32 num_verts_to_submit = 3 * triangles.len;
 
-        const t_i32 num_verts_to_submit = 3 * triangles.Len();
-
-        if (rc->state.vert_offs + rc->state.vert_cnt + num_verts_to_submit > rc->state.verts.g_len) {
+        if (num_verts_to_submit > g_batch_vert_limit) {
             ZF_FATAL();
         }
 
-        for (t_i32 i = 0; i < triangles.Len(); i++) {
-            const t_i32 offs = rc->state.vert_offs + rc->state.vert_cnt;
-            rc->state.verts[offs + (3 * i) + 0] = triangles[i].verts[0];
-            rc->state.verts[offs + (3 * i) + 1] = triangles[i].verts[1];
-            rc->state.verts[offs + (3 * i) + 2] = triangles[i].verts[2];
+        if (texture != rc->batch_state.texture || rc->batch_state.vert_cnt + num_verts_to_submit > g_batch_vert_limit) {
+            FlushBatch(rc);
+            rc->batch_state.texture = texture;
         }
 
-        rc->state.vert_cnt += num_verts_to_submit;
+        for (t_i32 i = 0; i < triangles.len; i++) {
+            const t_i32 offs = rc->batch_state.vert_cnt;
+            rc->batch_state.verts[offs + (3 * i) + 0] = triangles[i].verts[0];
+            rc->batch_state.verts[offs + (3 * i) + 1] = triangles[i].verts[1];
+            rc->batch_state.verts[offs + (3 * i) + 2] = triangles[i].verts[2];
+        }
+
+        rc->batch_state.vert_cnt += num_verts_to_submit;
     }
 
     // ============================================================

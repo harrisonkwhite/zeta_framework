@@ -2,14 +2,14 @@
 
 namespace zf {
     s_rect_f CalcSpanningRect(const s_array_mut<s_rect_f> rects) {
-        ZF_ASSERT(rects.Len() > 0);
+        ZF_ASSERT(rects.len > 0);
 
         auto min_left = rects[0].Left();
         auto min_top = rects[0].Top();
         auto max_right = rects[0].Right();
         auto max_bottom = rects[0].Bottom();
 
-        for (t_i32 i = 1; i < rects.Len(); i++) {
+        for (t_i32 i = 1; i < rects.len; i++) {
             min_left = ZF_MIN(rects[i].x, min_left);
             min_top = ZF_MIN(rects[i].y, min_top);
             max_right = ZF_MAX(rects[i].Right(), max_right);
@@ -20,14 +20,14 @@ namespace zf {
     }
 
     s_rect_i CalcSpanningRect(const s_array_mut<s_rect_i> rects) {
-        ZF_ASSERT(rects.Len() > 0);
+        ZF_ASSERT(rects.len > 0);
 
         auto min_left = rects[0].Left();
         auto min_top = rects[0].Top();
         auto max_right = rects[0].Right();
         auto max_bottom = rects[0].Bottom();
 
-        for (t_i32 i = 1; i < rects.Len(); i++) {
+        for (t_i32 i = 1; i < rects.len; i++) {
             min_left = ZF_MIN(rects[i].x, min_left);
             min_top = ZF_MIN(rects[i].y, min_top);
             max_right = ZF_MAX(rects[i].Right(), max_right);

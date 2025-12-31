@@ -47,7 +47,7 @@ namespace zf {
 
     // Does a 0 appear anywhere in the array?
     constexpr t_b8 AreBytesTerminated(const s_array_rdonly<t_u8> bytes) {
-        for (t_i32 i = bytes.Len() - 1; i >= 0; i--) {
+        for (t_i32 i = bytes.len - 1; i >= 0; i--) {
             if (!bytes[i]) {
                 return true;
             }
@@ -88,11 +88,11 @@ namespace zf {
         s_str_rdonly(const s_array_rdonly<t_u8> bytes) : bytes(bytes) {}
 
         // This very intentionally drops the terminator.
-        s_str_rdonly(const s_cstr_literal lit) : bytes({reinterpret_cast<const t_u8 *>(lit.buf.Raw()), lit.buf.Len() - 1}) {}
+        s_str_rdonly(const s_cstr_literal lit) : bytes({reinterpret_cast<const t_u8 *>(lit.buf.raw), lit.buf.len - 1}) {}
 
         const char *AsCstr() const {
             ZF_ASSERT(AreBytesTerminated(bytes));
-            return reinterpret_cast<const char *>(bytes.Raw());
+            return reinterpret_cast<const char *>(bytes.raw);
         }
     };
 
@@ -108,7 +108,7 @@ namespace zf {
 
         char *AsCstr() const {
             ZF_ASSERT(AreBytesTerminated(bytes));
-            return reinterpret_cast<char *>(bytes.Raw());
+            return reinterpret_cast<char *>(bytes.raw);
         }
     };
 
@@ -131,14 +131,14 @@ namespace zf {
 
     // Allocates a clone of the given string using the memory arena, with a null byte added at the end (even if the string was already terminated).
     inline s_str AllocStrCloneButAddTerminator(const s_str_rdonly str, s_arena *const arena) {
-        const s_str clone = {AllocArrayOld<t_u8>(str.bytes.Len() + 1, arena)};
+        const s_str clone = {AllocArrayOld<t_u8>(str.bytes.len + 1, arena)};
         Copy(clone.bytes, str.bytes);
-        clone.bytes[clone.bytes.Len() - 1] = 0;
+        clone.bytes[clone.bytes.len - 1] = 0;
         return clone;
     }
 
     inline t_b8 IsStrEmpty(const s_str_rdonly str) {
-        return str.bytes.Len() == 0;
+        return str.bytes.len == 0;
     }
 
     inline t_b8 AreStrsEqual(const s_str_rdonly a, const s_str_rdonly b) {
@@ -172,7 +172,7 @@ namespace zf {
     for (t_i32 ZF_CONCAT(bi_l, __LINE__) = 0; ZF_CONCAT(bi_l, __LINE__) != -1; ZF_CONCAT(bi_l, __LINE__) = -1) \
         for (s_str_walk_info info; WalkStr(str, &ZF_CONCAT(bi_l, __LINE__), &info);)
 
-#define ZF_WALK_STR_REVERSE(str, info)                                                                                                                           \
-    for (t_i32 ZF_CONCAT(bi_l, __LINE__) = (str).bytes.Len() - 1; ZF_CONCAT(bi_l, __LINE__) != (str).bytes.Len(); ZF_CONCAT(bi_l, __LINE__) = (str).bytes.Len()) \
+#define ZF_WALK_STR_REVERSE(str, info)                                                                                                                     \
+    for (t_i32 ZF_CONCAT(bi_l, __LINE__) = (str).bytes.len - 1; ZF_CONCAT(bi_l, __LINE__) != (str).bytes.len; ZF_CONCAT(bi_l, __LINE__) = (str).bytes.len) \
         for (s_str_walk_info info; WalkStrReverse(str, &ZF_CONCAT(bi_l, __LINE__), &info);)
 }

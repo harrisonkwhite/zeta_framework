@@ -279,7 +279,7 @@ namespace zf {
     t_b8 IsStrValidUTF8(const s_str_rdonly str) {
         t_i32 cost = 0;
 
-        for (t_i32 i = 0; i < str.bytes.Len(); i++) {
+        for (t_i32 i = 0; i < str.bytes.len; i++) {
             const auto byte_type = g_utf8_byte_type_table[str.bytes[i]];
 
             switch (byte_type) {
@@ -318,7 +318,7 @@ namespace zf {
         t_i32 i = 0;
         t_i32 len = 0;
 
-        while (i < str.bytes.Len()) {
+        while (i < str.bytes.len) {
             const auto byte_type = g_utf8_byte_type_table[str.bytes[i]];
 
             switch (byte_type) {
@@ -340,11 +340,11 @@ namespace zf {
     }
 
     static t_code_pt UTF8BytesToCodePoint(const s_array_rdonly<t_u8> bytes) {
-        ZF_ASSERT(bytes.Len() >= 1 && bytes.Len() <= 4);
+        ZF_ASSERT(bytes.len >= 1 && bytes.len <= 4);
 
         t_code_pt result = 0;
 
-        switch (bytes.Len()) {
+        switch (bytes.len) {
         case 1:
             // 0xxxxxxx
             result |= bytes[0] & BitmaskRange(0, 7);
@@ -377,7 +377,7 @@ namespace zf {
 
     t_code_pt FindStrCodePointAtByte(const s_str_rdonly str, const t_i32 byte_index) {
         ZF_ASSERT(IsStrValidUTF8(str));
-        ZF_ASSERT(byte_index >= 0 && byte_index < str.bytes.Len());
+        ZF_ASSERT(byte_index >= 0 && byte_index < str.bytes.len);
 
         t_i32 cp_first_byte_index = byte_index;
 
@@ -405,9 +405,9 @@ namespace zf {
 
     t_b8 WalkStr(const s_str_rdonly str, t_i32 *const byte_index, s_str_walk_info *const o_info) {
         ZF_ASSERT(IsStrValidUTF8(str));
-        ZF_ASSERT(*byte_index >= 0 && *byte_index <= str.bytes.Len());
+        ZF_ASSERT(*byte_index >= 0 && *byte_index <= str.bytes.len);
 
-        if (*byte_index == str.bytes.Len()) {
+        if (*byte_index == str.bytes.len) {
             return false;
         }
 
@@ -439,7 +439,7 @@ namespace zf {
 
     t_b8 WalkStrReverse(const s_str_rdonly str, t_i32 *const byte_index, s_str_walk_info *const o_info) {
         ZF_ASSERT(IsStrValidUTF8(str));
-        ZF_ASSERT(*byte_index >= -1 && *byte_index < str.bytes.Len());
+        ZF_ASSERT(*byte_index >= -1 && *byte_index < str.bytes.len);
 
         if (*byte_index == -1) {
             return false;

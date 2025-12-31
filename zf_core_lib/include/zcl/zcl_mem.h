@@ -143,9 +143,6 @@ namespace zf {
         constexpr s_array_rdonly() = default;
         constexpr s_array_rdonly(const tp_type *const raw, const t_i32 len) : raw(raw), len(len) {}
 
-        constexpr const tp_type *Raw() const { return raw; }
-        constexpr t_i32 Len() const { return len; }
-
         constexpr t_i32 SizeInBytes() const {
             return ZF_SIZE_OF(tp_type) * len;
         }
@@ -182,11 +179,7 @@ namespace zf {
         t_i32 len;
 
         constexpr s_array_mut() = default;
-
         constexpr s_array_mut(tp_type *const raw, const t_i32 len) : raw(raw), len(len) {}
-
-        constexpr tp_type *Raw() const { return raw; }
-        constexpr t_i32 Len() const { return len; }
 
         constexpr t_i32 SizeInBytes() const {
             return ZF_SIZE_OF(tp_type) * len;
@@ -282,11 +275,11 @@ namespace zf {
     template <co_array_nonstatic tp_arr_type>
     constexpr t_bin_comparator<tp_arr_type> g_array_bin_comparator =
         [](const tp_arr_type &a, const tp_arr_type &b) {
-            if (a.Len() != b.Len()) {
+            if (a.len != b.len) {
                 return false;
             }
 
-            for (t_i32 i = 0; i < a.Len(); i++) {
+            for (t_i32 i = 0; i < a.len; i++) {
                 if (a[i] != b[i]) {
                     return false;
                 }
@@ -314,18 +307,18 @@ namespace zf {
 
     template <co_array_nonstatic tp_arr_type>
     auto AllocArrayCloneOld(const tp_arr_type arr_to_clone, s_arena *const arena) {
-        const auto arr = AllocArrayOld<typename tp_arr_type::t_elem>(arr_to_clone.Len(), arena);
+        const auto arr = AllocArrayOld<typename tp_arr_type::t_elem>(arr_to_clone.len, arena);
         Copy(arr, arr_to_clone);
         return arr;
     }
 
     template <co_array_nonstatic tp_arr_type>
     constexpr t_b8 DoAllEqual(const tp_arr_type arr, const typename tp_arr_type::t_elem &val, const t_bin_comparator<typename tp_arr_type::t_elem> comparator = DefaultBinComparator) {
-        if (arr.Len() == 0) {
+        if (arr.len == 0) {
             return false;
         }
 
-        for (t_i32 i = 0; i < arr.Len(); i++) {
+        for (t_i32 i = 0; i < arr.len; i++) {
             if (!comparator(arr[i], val)) {
                 return false;
             }
@@ -336,7 +329,7 @@ namespace zf {
 
     template <co_array_nonstatic tp_arr_type>
     constexpr t_b8 DoAnyEqual(const tp_arr_type arr, const typename tp_arr_type::t_elem &val, const t_bin_comparator<typename tp_arr_type::t_elem> comparator = DefaultBinComparator) {
-        for (t_i32 i = 0; i < arr.Len(); i++) {
+        for (t_i32 i = 0; i < arr.len; i++) {
             if (comparator(arr[i], val)) {
                 return true;
             }
@@ -347,7 +340,7 @@ namespace zf {
 
     template <co_array_nonstatic_mut tp_arr_type>
     constexpr void SetAllTo(const tp_arr_type arr, const typename tp_arr_type::t_elem &val) {
-        for (t_i32 i = 0; i < arr.Len(); i++) {
+        for (t_i32 i = 0; i < arr.len; i++) {
             arr[i] = val;
         }
     }
@@ -358,13 +351,13 @@ namespace zf {
         static_assert(s_is_same<typename tp_dest_arr_type::t_elem, typename tp_src_arr_type::t_elem>::g_val);
 
         if (!allow_truncation) {
-            ZF_ASSERT(dest.Len() >= src.Len());
+            ZF_ASSERT(dest.len >= src.len);
 
-            for (t_i32 i = 0; i < src.Len(); i++) {
+            for (t_i32 i = 0; i < src.len; i++) {
                 dest[i] = src[i];
             }
         } else {
-            const auto min_len = ZF_MIN(src.Len(), dest.Len());
+            const auto min_len = ZF_MIN(src.len, dest.len);
 
             for (t_i32 i = 0; i < min_len; i++) {
                 dest[i] = src[i];
@@ -376,7 +369,7 @@ namespace zf {
     constexpr t_i32 Compare(const tp_arr_a_type a, const tp_arr_b_type b, const t_ord_comparator<typename tp_arr_a_type::t_elem> comparator = DefaultOrdComparator) {
         static_assert(s_is_same<typename tp_arr_a_type::t_elem, typename tp_arr_a_type::t_elem>::g_val);
 
-        const auto min_len = ZF_MIN(a.Len(), b.Len());
+        const auto min_len = ZF_MIN(a.len, b.len);
 
         for (t_i32 i = 0; i < min_len; i++) {
             const t_i32 comp = comparator(a[i], b[i]);
@@ -433,7 +426,7 @@ namespace zf {
 
         constexpr s_bit_vec_rdonly() = default;
         constexpr s_bit_vec_rdonly(const t_u8 *const bytes_raw, const t_i32 bit_cnt) : bytes_raw(bytes_raw), bit_cnt(bit_cnt) {}
-        constexpr s_bit_vec_rdonly(const s_array_rdonly<t_u8> bytes) : bytes_raw(bytes.raw), bit_cnt(BytesToBits(bytes.Len())) {}
+        constexpr s_bit_vec_rdonly(const s_array_rdonly<t_u8> bytes) : bytes_raw(bytes.raw), bit_cnt(BytesToBits(bytes.len)) {}
 
         constexpr s_array_rdonly<t_u8> Bytes() const {
             return {bytes_raw, BitsToBytes(bit_cnt)};
@@ -455,7 +448,7 @@ namespace zf {
 
         constexpr s_bit_vec_mut() = default;
         constexpr s_bit_vec_mut(t_u8 *const bytes_raw, const t_i32 bit_cnt) : bytes_raw(bytes_raw), bit_cnt(bit_cnt) {}
-        constexpr s_bit_vec_mut(const s_array_mut<t_u8> bytes) : bytes_raw(bytes.raw), bit_cnt(BytesToBits(bytes.Len())) {}
+        constexpr s_bit_vec_mut(const s_array_mut<t_u8> bytes) : bytes_raw(bytes.raw), bit_cnt(BytesToBits(bytes.len)) {}
 
         constexpr s_array_mut<t_u8> Bytes() const {
             return {bytes_raw, BitsToBytes(bit_cnt)};
@@ -515,13 +508,13 @@ namespace zf {
             return false;
         }
 
-        const auto first_bytes = bv.Bytes().Slice(0, bv.Bytes().Len() - 1);
+        const auto first_bytes = bv.Bytes().Slice(0, bv.Bytes().len - 1);
 
         if (!DoAllEqual(first_bytes, 0)) {
             return true;
         }
 
-        return (bv.Bytes()[bv.Bytes().Len() - 1] & bv.LastByteMask()) != 0;
+        return (bv.Bytes()[bv.Bytes().len - 1] & bv.LastByteMask()) != 0;
     }
 
     constexpr t_b8 AreAllBitsSet(const s_bit_vec_rdonly bv) {
@@ -529,14 +522,14 @@ namespace zf {
             return false;
         }
 
-        const auto first_bytes = bv.Bytes().Slice(0, bv.Bytes().Len() - 1);
+        const auto first_bytes = bv.Bytes().Slice(0, bv.Bytes().len - 1);
 
         if (!DoAllEqual(first_bytes, 0xFF)) {
             return false;
         }
 
         const auto last_byte_mask = bv.LastByteMask();
-        return (bv.Bytes()[bv.Bytes().Len() - 1] & last_byte_mask) == last_byte_mask;
+        return (bv.Bytes()[bv.Bytes().len - 1] & last_byte_mask) == last_byte_mask;
     }
 
     constexpr t_b8 AreAllBitsUnset(const s_bit_vec_rdonly bv) {
@@ -560,10 +553,10 @@ namespace zf {
             return;
         }
 
-        const auto first_bytes = bv.Bytes().Slice(0, bv.Bytes().Len() - 1);
+        const auto first_bytes = bv.Bytes().Slice(0, bv.Bytes().len - 1);
         SetAllTo(first_bytes, 0xFF);
 
-        bv.Bytes()[bv.Bytes().Len() - 1] |= bv.LastByteMask();
+        bv.Bytes()[bv.Bytes().len - 1] |= bv.LastByteMask();
     }
 
     constexpr void UnsetAllBits(const s_bit_vec_mut bv) {
@@ -571,10 +564,10 @@ namespace zf {
             return;
         }
 
-        const auto first_bytes = bv.Bytes().Slice(0, bv.Bytes().Len() - 1);
+        const auto first_bytes = bv.Bytes().Slice(0, bv.Bytes().len - 1);
         SetAllTo(first_bytes, 0);
 
-        bv.Bytes()[bv.Bytes().Len() - 1] &= ~bv.LastByteMask();
+        bv.Bytes()[bv.Bytes().len - 1] &= ~bv.LastByteMask();
     }
 
     // Sets all bits in the range [begin_bit_index, end_bit_index).
@@ -614,40 +607,40 @@ namespace zf {
 
         switch (op) {
         case ek_bitwise_mask_op_and:
-            for (t_i32 i = 0; i < targ.Bytes().Len(); i++) {
+            for (t_i32 i = 0; i < targ.Bytes().len; i++) {
                 targ.Bytes()[i] &= mask.Bytes()[i];
             }
 
             break;
 
         case ek_bitwise_mask_op_or:
-            for (t_i32 i = 0; i < targ.Bytes().Len(); i++) {
+            for (t_i32 i = 0; i < targ.Bytes().len; i++) {
                 targ.Bytes()[i] |= mask.Bytes()[i];
             }
 
             break;
 
         case ek_bitwise_mask_op_xor:
-            for (t_i32 i = 0; i < targ.Bytes().Len(); i++) {
+            for (t_i32 i = 0; i < targ.Bytes().len; i++) {
                 targ.Bytes()[i] ^= mask.Bytes()[i];
             }
 
             break;
 
         case ek_bitwise_mask_op_andnot:
-            for (t_i32 i = 0; i < targ.Bytes().Len(); i++) {
+            for (t_i32 i = 0; i < targ.Bytes().len; i++) {
                 targ.Bytes()[i] &= ~mask.Bytes()[i];
             }
 
             break;
         }
 
-        targ.Bytes()[targ.Bytes().Len() - 1] &= targ.LastByteMask();
+        targ.Bytes()[targ.Bytes().len - 1] &= targ.LastByteMask();
     }
 
     // Shifts left only by 1. Returns the discarded bit as 0 or 1.
     constexpr t_u8 ShiftBitsLeft(const s_bit_vec_mut bv) {
-        ZF_ASSERT(BitsToBytes(bv.bit_cnt) == bv.Bytes().Len());
+        ZF_ASSERT(BitsToBytes(bv.bit_cnt) == bv.Bytes().len);
 
         if (bv.bit_cnt == 0) {
             return 0;
@@ -655,15 +648,15 @@ namespace zf {
 
         t_u8 discard = 0;
 
-        for (t_i32 i = 0; i < bv.Bytes().Len(); i++) {
-            const t_i32 bits_in_byte = i == bv.Bytes().Len() - 1 ? bv.LastByteBitCount() : 8;
+        for (t_i32 i = 0; i < bv.Bytes().len; i++) {
+            const t_i32 bits_in_byte = i == bv.Bytes().len - 1 ? bv.LastByteBitCount() : 8;
             const t_u8 discard_last = discard;
             discard = (bv.Bytes()[i] & BitmaskSingle(bits_in_byte - 1)) >> (bits_in_byte - 1);
             bv.Bytes()[i] <<= 1;
             bv.Bytes()[i] |= discard_last;
         }
 
-        bv.Bytes()[bv.Bytes().Len() - 1] &= bv.LastByteMask();
+        bv.Bytes()[bv.Bytes().len - 1] &= bv.LastByteMask();
 
         return discard;
     }
@@ -700,18 +693,18 @@ namespace zf {
 
     // Shifts right only by 1. Returns the carry bit.
     constexpr t_u8 ShiftBitsRight(const s_bit_vec_mut bv) {
-        ZF_ASSERT(BitsToBytes(bv.bit_cnt) == bv.Bytes().Len());
+        ZF_ASSERT(BitsToBytes(bv.bit_cnt) == bv.Bytes().len);
 
         if (bv.bit_cnt == 0) {
             return 0;
         }
 
-        bv.Bytes()[bv.Bytes().Len() - 1] &= bv.LastByteMask(); // Drop any excess bits so we don't accidentally shift a 1 in.
+        bv.Bytes()[bv.Bytes().len - 1] &= bv.LastByteMask(); // Drop any excess bits so we don't accidentally shift a 1 in.
 
         t_u8 discard = 0;
 
-        for (t_i32 i = bv.Bytes().Len() - 1; i >= 0; i--) {
-            const t_i32 bits_in_byte = i == bv.Bytes().Len() - 1 ? bv.LastByteBitCount() : 8;
+        for (t_i32 i = bv.Bytes().len - 1; i >= 0; i--) {
+            const t_i32 bits_in_byte = i == bv.Bytes().len - 1 ? bv.LastByteBitCount() : 8;
             const t_u8 discard_last = discard;
             discard = bv.Bytes()[i] & BitmaskSingle(0);
             bv.Bytes()[i] >>= 1;

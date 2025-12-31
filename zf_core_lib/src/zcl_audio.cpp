@@ -29,7 +29,7 @@ namespace zf {
 
         o_snd_data->pcm = AllocArrayOld<t_f32>(SampleCount(o_snd_data->meta), snd_data_arena);
 
-        if (ma_decoder_read_pcm_frames(&decoder, o_snd_data->pcm.Raw(), frame_cnt, nullptr) != MA_SUCCESS) {
+        if (ma_decoder_read_pcm_frames(&decoder, o_snd_data->pcm.raw, frame_cnt, nullptr) != MA_SUCCESS) {
             return false;
         }
 
@@ -67,7 +67,7 @@ namespace zf {
 
         o_snd_data->pcm = AllocArrayOld<t_f32>(SampleCount(o_snd_data->meta), snd_data_arena);
 
-        if (!fs.ReadItemsIntoArray(o_snd_data->pcm, o_snd_data->pcm.Len())) {
+        if (!fs.ReadItemsIntoArray(o_snd_data->pcm, o_snd_data->pcm.len)) {
             return false;
         }
 

@@ -16,7 +16,7 @@ namespace zf {
         const s_rect_f rect = {pos.x, pos.y, static_cast<t_f32>(src_rect_to_use.Size().x), static_cast<t_f32>(src_rect_to_use.Size().y)};
         const s_rect_f uv_rect = CalcUVRect(src_rect_to_use, texture_size);
 
-        const s_static_array<s_render_triangle, 2> triangles = {{
+        const s_static_array<s_batch_triangle, 2> triangles = {{
             {
                 .verts = {{
                     {.pos = rect.TopLeft(), .blend = g_color_white, .uv = uv_rect.TopLeft()},
@@ -33,7 +33,7 @@ namespace zf {
             },
         }};
 
-        RenderTriangles(rc, triangles.AsNonstatic(), texture);
+        SubmitTrianglesToBatch(rc, triangles.AsNonstatic(), texture);
     }
 
     s_font CreateFontFromRaw(const s_str_rdonly file_path, const t_i32 height, t_code_pt_bit_vec *const code_pts, s_arena *const temp_arena, s_gfx_resource_group *const resource_group) {
@@ -44,9 +44,9 @@ namespace zf {
             ZF_FATAL();
         }
 
-        const auto atlases = AllocArrayOld<s_gfx_resource *>(atlas_rgbas.Len(), resource_group->arena);
+        const auto atlases = AllocArrayOld<s_gfx_resource *>(atlas_rgbas.len, resource_group->arena);
 
-        for (t_i32 i = 0; i < atlas_rgbas.Len(); i++) {
+        for (t_i32 i = 0; i < atlas_rgbas.len; i++) {
             atlases[i] = CreateTextureResource({g_font_atlas_size, atlas_rgbas[i]}, resource_group);
         }
 
@@ -64,9 +64,9 @@ namespace zf {
             ZF_FATAL();
         }
 
-        const auto atlases = AllocArrayOld<s_gfx_resource *>(atlas_rgbas.Len(), resource_group->arena);
+        const auto atlases = AllocArrayOld<s_gfx_resource *>(atlas_rgbas.len, resource_group->arena);
 
-        for (t_i32 i = 0; i < atlas_rgbas.Len(); i++) {
+        for (t_i32 i = 0; i < atlas_rgbas.len; i++) {
             atlases[i] = CreateTextureResource({g_font_atlas_size, atlas_rgbas[i]}, resource_group);
         }
 

@@ -25,7 +25,7 @@ namespace zf {
         c_stream() = default;
 
         c_stream(const s_array_mut<t_u8> bytes, const e_stream_mode mode, const t_i32 pos = 0)
-            : m_type(ek_stream_type_mem), m_type_data({.mem = {.bytes = bytes, .byte_pos = pos}}), m_mode(mode) { ZF_ASSERT(pos >= 0 && pos <= bytes.Len()); }
+            : m_type(ek_stream_type_mem), m_type_data({.mem = {.bytes = bytes, .byte_pos = pos}}), m_mode(mode) { ZF_ASSERT(pos >= 0 && pos <= bytes.len); }
 
         c_stream(FILE *const file, const e_stream_mode mode)
             : m_type(ek_stream_type_file), m_type_data({.file = {.file = file}}), m_mode(mode) { ZF_ASSERT(file); }
@@ -62,7 +62,7 @@ namespace zf {
 
             switch (m_type) {
             case ek_stream_type_mem: {
-                if (m_type_data.mem.byte_pos + size > m_type_data.mem.bytes.Len()) {
+                if (m_type_data.mem.byte_pos + size > m_type_data.mem.bytes.len) {
                     return false;
                 }
 
@@ -91,7 +91,7 @@ namespace zf {
 
             switch (m_type) {
             case ek_stream_type_mem: {
-                if (m_type_data.mem.byte_pos + size > m_type_data.mem.bytes.Len()) {
+                if (m_type_data.mem.byte_pos + size > m_type_data.mem.bytes.len) {
                     return false;
                 }
 
@@ -115,7 +115,7 @@ namespace zf {
         template <co_array_nonstatic_mut tp_type>
         [[nodiscard]] t_b8 ReadItemsIntoArray(const tp_type arr, const t_i32 cnt) {
             ZF_ASSERT(m_mode == ek_stream_mode_read);
-            ZF_ASSERT(cnt >= 0 && cnt <= arr.Len());
+            ZF_ASSERT(cnt >= 0 && cnt <= arr.len);
 
             if (cnt == 0) {
                 return true;
@@ -125,7 +125,7 @@ namespace zf {
             case ek_stream_type_mem: {
                 const t_i32 size = ZF_SIZE_OF(arr[0]) * cnt;
 
-                if (m_type_data.mem.byte_pos + size > m_type_data.mem.bytes.Len()) {
+                if (m_type_data.mem.byte_pos + size > m_type_data.mem.bytes.len) {
                     return false;
                 }
 
@@ -139,7 +139,7 @@ namespace zf {
             }
 
             case ek_stream_type_file:
-                return static_cast<t_i32>(fread(arr.Raw(), sizeof(arr[0]), static_cast<size_t>(cnt), m_type_data.file.file)) == cnt;
+                return static_cast<t_i32>(fread(arr.raw, sizeof(arr[0]), static_cast<size_t>(cnt), m_type_data.file.file)) == cnt;
 
             default:
                 ZF_UNREACHABLE();
@@ -150,7 +150,7 @@ namespace zf {
         [[nodiscard]] t_b8 WriteItemsOfArray(const tp_type arr) {
             ZF_ASSERT(m_mode == ek_stream_mode_write);
 
-            if (arr.Len() == 0) {
+            if (arr.len == 0) {
                 return true;
             }
 
@@ -158,7 +158,7 @@ namespace zf {
             case ek_stream_type_mem: {
                 const t_i32 size = arr.SizeInBytes();
 
-                if (m_type_data.mem.byte_pos + size > m_type_data.mem.bytes.Len()) {
+                if (m_type_data.mem.byte_pos + size > m_type_data.mem.bytes.len) {
                     return false;
                 }
 
@@ -172,7 +172,7 @@ namespace zf {
             }
 
             case ek_stream_type_file:
-                return static_cast<t_i32>(fwrite(arr.Raw(), sizeof(arr[0]), static_cast<size_t>(arr.Len()), m_type_data.file.file)) == arr.Len();
+                return static_cast<t_i32>(fwrite(arr.raw, sizeof(arr[0]), static_cast<size_t>(arr.len), m_type_data.file.file)) == arr.len;
 
             default:
                 ZF_UNREACHABLE();
@@ -202,7 +202,7 @@ namespace zf {
 
     template <co_array_nonstatic tp_type>
     [[nodiscard]] t_b8 SerializeArray(c_stream *const stream, const tp_type arr) {
-        if (!stream->WriteItem(arr.Len())) {
+        if (!stream->WriteItem(arr.len)) {
             return false;
         }
 
@@ -251,7 +251,7 @@ namespace zf {
 
         *o_bv = CreateBitVec(bit_cnt, bv_arena);
 
-        if (!stream->ReadItemsIntoArray(o_bv->Bytes(), o_bv->Bytes().Len())) {
+        if (!stream->ReadItemsIntoArray(o_bv->Bytes(), o_bv->Bytes().len)) {
             return false;
         }
 
@@ -608,8 +608,8 @@ namespace zf {
     template <co_formattable_array tp_arr_type>
     t_b8 PrintType(c_stream *const stream, const s_array_fmt<tp_arr_type> fmt) {
         if (fmt.one_per_line) {
-            for (t_i32 i = 0; i < fmt.val.Len(); i++) {
-                if (!PrintFormat(stream, s_cstr_literal("[%] %%"), i, fmt.val[i], i < fmt.val.Len() - 1 ? s_cstr_literal("\n") : s_cstr_literal(""))) {
+            for (t_i32 i = 0; i < fmt.val.len; i++) {
+                if (!PrintFormat(stream, s_cstr_literal("[%] %%"), i, fmt.val[i], i < fmt.val.len - 1 ? s_cstr_literal("\n") : s_cstr_literal(""))) {
                     return false;
                 }
             }
@@ -618,12 +618,12 @@ namespace zf {
                 return false;
             }
 
-            for (t_i32 i = 0; i < fmt.val.Len(); i++) {
+            for (t_i32 i = 0; i < fmt.val.len; i++) {
                 if (!PrintFormat(stream, s_cstr_literal("%"), fmt.val[i])) {
                     return false;
                 }
 
-                if (i < fmt.val.Len() - 1) {
+                if (i < fmt.val.len - 1) {
                     if (!Print(stream, s_cstr_literal(", "))) {
                         return false;
                     }
@@ -667,7 +667,7 @@ namespace zf {
         };
 
         const auto print_byte = [&](const t_i32 index) {
-            const t_i32 bit_cnt = index == fmt.val.Bytes().Len() - 1 ? fmt.val.LastByteBitCount() : 8;
+            const t_i32 bit_cnt = index == fmt.val.Bytes().len - 1 ? fmt.val.LastByteBitCount() : 8;
 
             for (t_i32 i = 7; i >= bit_cnt; i--) {
                 Print(stream, s_cstr_literal("0"));
@@ -689,7 +689,7 @@ namespace zf {
             break;
 
         case ek_bit_vec_fmt_style_little_endian:
-            for (t_i32 i = 0; i < fmt.val.Bytes().Len(); i++) {
+            for (t_i32 i = 0; i < fmt.val.Bytes().len; i++) {
                 if (i > 0) {
                     Print(stream, s_cstr_literal(" "));
                 }
@@ -700,7 +700,7 @@ namespace zf {
             break;
 
         case ek_bit_vec_fmt_style_big_endian:
-            for (t_i32 i = fmt.val.Bytes().Len() - 1; i >= 0; i--) {
+            for (t_i32 i = fmt.val.Bytes().len - 1; i >= 0; i--) {
                 print_byte(i);
 
                 if (i > 0) {
@@ -729,7 +729,7 @@ namespace zf {
         t_b8 escaped = false;
         t_i32 cnt = 0;
 
-        for (t_i32 i = 0; i < str.bytes.Len(); i++) {
+        for (t_i32 i = 0; i < str.bytes.len; i++) {
             if (!escaped) {
                 if (str.bytes[i] == g_print_fmt_esc) {
                     escaped = true;
@@ -761,7 +761,7 @@ namespace zf {
 
         t_b8 escaped = false;
 
-        for (t_i32 i = 0; i < fmt.bytes.Len(); i++) {
+        for (t_i32 i = 0; i < fmt.bytes.len; i++) {
             if (!escaped) {
                 if (fmt.bytes[i] == g_print_fmt_esc) {
                     escaped = true;
@@ -777,7 +777,7 @@ namespace zf {
                         }
                     }
 
-                    const s_str_rdonly fmt_leftover = {fmt.bytes.Slice(i + 1, fmt.bytes.Len())}; // The substring of everything after the format specifier.
+                    const s_str_rdonly fmt_leftover = {fmt.bytes.Slice(i + 1, fmt.bytes.len)}; // The substring of everything after the format specifier.
                     return PrintFormat(stream, fmt_leftover, args_leftover...);
                 }
             }
