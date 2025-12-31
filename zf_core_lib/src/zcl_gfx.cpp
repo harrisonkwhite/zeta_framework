@@ -19,9 +19,9 @@ namespace zf {
 
         ZF_DEFER({ stbi_image_free(stb_px_data); });
 
-        const auto px_data = AllocArray<t_u8>(4 * size_in_pxs.x * size_in_pxs.y, texture_data_arena);
         const s_array_rdonly<t_u8> stb_px_data_arr = {stb_px_data, 4 * size_in_pxs.x * size_in_pxs.y};
-        Copy(px_data, stb_px_data_arr);
+        const auto px_data = AllocArray<t_u8>(4 * size_in_pxs.x * size_in_pxs.y, texture_data_arena);
+        CopyArray(stb_px_data_arr, px_data);
 
         *o_texture_data = {size_in_pxs, px_data};
 

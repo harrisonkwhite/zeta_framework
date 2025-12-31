@@ -1,8 +1,8 @@
 #include <zgl/zgl_gfx_helpers.h>
 
 namespace zf::gfx {
-    void rendering_submit_texture(s_rendering_context *const rc, const s_resource *const texture, const s_v2 pos, const s_rect_i src_rect) {
-        const auto texture_size = texture_get_size(texture);
+    void RenderTexture(s_rendering_context *const rc, const s_resource *const texture, const s_v2 pos, const s_rect_i src_rect) {
+        const auto texture_size = TextureSize(texture);
 
         s_rect_i src_rect_to_use;
 
@@ -33,10 +33,10 @@ namespace zf::gfx {
             },
         }};
 
-        rendering_submit_triangles(rc, triangles.AsNonstatic(), texture);
+        SubmitTrianglesToBatch(rc, triangles.AsNonstatic(), texture);
     }
 
-    s_font font_create_from_raw(const s_str_rdonly file_path, const t_i32 height, t_code_pt_bit_vec *const code_pts, s_arena *const temp_arena, s_resource_group *const resource_group) {
+    s_font CreateFontFromRaw(const s_str_rdonly file_path, const t_i32 height, t_code_pt_bit_vec *const code_pts, s_arena *const temp_arena, s_resource_group *const resource_group) {
         s_font_arrangement arrangement;
         s_array_mut<t_font_atlas_rgba> atlas_rgbas;
 
@@ -47,7 +47,7 @@ namespace zf::gfx {
         const auto atlases = AllocArray<s_resource *>(atlas_rgbas.len, resource_group->arena);
 
         for (t_i32 i = 0; i < atlas_rgbas.len; i++) {
-            atlases[i] = texture_create({g_font_atlas_size, atlas_rgbas[i]}, resource_group);
+            atlases[i] = CreateTexture({g_font_atlas_size, atlas_rgbas[i]}, resource_group);
         }
 
         return {
@@ -56,7 +56,7 @@ namespace zf::gfx {
         };
     }
 
-    s_font font_create_from_packed(const s_str_rdonly file_path, s_arena *const temp_arena, s_resource_group *const resource_group) {
+    s_font CreateFontFromPacked(const s_str_rdonly file_path, s_arena *const temp_arena, s_resource_group *const resource_group) {
         s_font_arrangement arrangement;
         s_array_mut<t_font_atlas_rgba> atlas_rgbas;
 
@@ -67,7 +67,7 @@ namespace zf::gfx {
         const auto atlases = AllocArray<s_resource *>(atlas_rgbas.len, resource_group->arena);
 
         for (t_i32 i = 0; i < atlas_rgbas.len; i++) {
-            atlases[i] = texture_create({g_font_atlas_size, atlas_rgbas[i]}, resource_group);
+            atlases[i] = CreateTexture({g_font_atlas_size, atlas_rgbas[i]}, resource_group);
         }
 
         return {
@@ -77,8 +77,8 @@ namespace zf::gfx {
     }
 
     s_array_mut<s_v2> CalcStrChrRenderPositions(const s_str_rdonly str, const s_font_arrangement &font_arrangement, const s_v2 pos, const s_v2 alignment, s_arena *const arena) {
-        ZF_ASSERT(str_is_valid_utf8(str));
-        ZF_ASSERT(is_alignment_valid(alignment));
+        ZF_ASSERT(IsStrValidUTF8(str));
+        ZF_ASSERT(IsAlignmentValid(alignment));
 
         // Calculate some useful string metadata.
         struct s_str_meta {
@@ -172,11 +172,11 @@ namespace zf::gfx {
         return positions;
     }
 
-    void rendering_submit_str(s_rendering_context *const rc, const s_str_rdonly str, const s_font &font, const s_v2 pos, s_arena *const temp_arena, const s_v2 alignment, const s_color_rgba32f blend) {
-        ZF_ASSERT(str_is_valid_utf8(str));
-        ZF_ASSERT(is_alignment_valid(alignment));
+    void RenderStr(s_rendering_context *const rc, const s_str_rdonly str, const s_font &font, const s_v2 pos, s_arena *const temp_arena, const s_v2 alignment, const s_color_rgba32f blend) {
+        ZF_ASSERT(IsStrValidUTF8(str));
+        ZF_ASSERT(IsAlignmentValid(alignment));
 
-        if (str_is_empty(str)) {
+        if (IsStrEmpty(str)) {
             return;
         }
 
@@ -200,7 +200,7 @@ namespace zf::gfx {
                 continue;
             }
 
-            rendering_submit_texture(rc, font_atlases[glyph_info->atlas_index], chr_positions[chr_index], glyph_info->atlas_rect);
+            RenderTexture(rc, font_atlases[glyph_info->atlas_index], chr_positions[chr_index], glyph_info->atlas_rect);
 
             chr_index++;
         };

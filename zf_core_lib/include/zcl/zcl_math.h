@@ -16,25 +16,25 @@ namespace zf {
     }
 
     template <co_integral tp_type>
-    constexpr t_i32 CalcDigitCnt(const tp_type n) {
+    constexpr t_i32 CalcDigitCount(const tp_type n) {
         if (n < 0) {
-            return CalcDigitCnt(-n);
+            return CalcDigitCount(-n);
         }
 
         if (n < 10) {
             return 1;
         }
 
-        return 1 + CalcDigitCnt(n / 10);
+        return 1 + CalcDigitCount(n / 10);
     }
 
-    // Gives the digit at the given index, where the indexes are from the least significant digit to the most.
+    // Determines the digit at the given index, where the indexes are from the least significant digit to the most.
     template <co_integral tp_type>
-    constexpr tp_type FindDigitAt(const tp_type n, const t_i32 index) {
-        ZF_ASSERT(index >= 0 && index < CalcDigitCnt(n));
+    constexpr tp_type DetermineDigitAt(const tp_type n, const t_i32 index) {
+        ZF_ASSERT(index >= 0 && index < CalcDigitCount(n));
 
         if (n < 0) {
-            return FindDigitAt(-n, index);
+            return DetermineDigitAt(-n, index);
         }
 
         if (index == 0) {
@@ -45,7 +45,7 @@ namespace zf {
             return 0;
         }
 
-        return FindDigitAt(n / 10, index - 1);
+        return DetermineDigitAt(n / 10, index - 1);
     }
 
     constexpr t_b8 IsNearlyEqual(const t_f32 val, const t_f32 targ, const t_f32 tol = 1e-5f) {
@@ -277,11 +277,11 @@ namespace zf {
         return static_cast<s_rect_i>(*this);
     }
 
-    constexpr t_b8 DoRectsIntersect(const s_rect_i a, const s_rect_i b) {
+    constexpr t_b8 DoRectsInters(const s_rect_i a, const s_rect_i b) {
         return a.Left() < b.Right() && a.Top() < b.Bottom() && a.Right() > b.Left() && a.Bottom() > b.Top();
     }
 
-    constexpr t_b8 DoRectsIntersect(const s_rect_f a, const s_rect_f b) {
+    constexpr t_b8 DoRectsInters(const s_rect_f a, const s_rect_f b) {
         return a.Left() < b.Right() && a.Top() < b.Bottom() && a.Right() > b.Left() && a.Bottom() > b.Top();
     }
 
@@ -299,7 +299,7 @@ namespace zf {
         s_static_array<s_static_array<t_f32, 4>, 4> elems;
     };
 
-    constexpr s_mat4x4 CreateIdentityMatrix() {
+    constexpr s_mat4x4 IdentityMatrix() {
         s_mat4x4 mat = {};
         mat.elems[0][0] = 1.0f;
         mat.elems[1][1] = 1.0f;

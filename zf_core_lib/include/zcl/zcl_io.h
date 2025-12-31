@@ -66,9 +66,9 @@ namespace zf {
                     return false;
                 }
 
-                const auto dest = ToBytes(*o_item);
                 const auto src = m_type_data.mem.bytes.Slice(m_type_data.mem.byte_pos, m_type_data.mem.byte_pos + size);
-                Copy(dest, src);
+                const auto dest = ToBytes(*o_item);
+                CopyArray(src, dest);
 
                 m_type_data.mem.byte_pos += size;
 
@@ -95,9 +95,9 @@ namespace zf {
                     return false;
                 }
 
-                const auto dest = m_type_data.mem.bytes.Slice(m_type_data.mem.byte_pos, m_type_data.mem.byte_pos + size);
                 const auto src = ToBytes(item);
-                Copy(dest, src);
+                const auto dest = m_type_data.mem.bytes.Slice(m_type_data.mem.byte_pos, m_type_data.mem.byte_pos + size);
+                CopyArray(src, dest);
 
                 m_type_data.mem.byte_pos += size;
 
@@ -129,9 +129,9 @@ namespace zf {
                     return false;
                 }
 
-                const auto dest = arr.AsByteArray();
                 const auto src = m_type_data.mem.bytes.Slice(m_type_data.mem.byte_pos, m_type_data.mem.byte_pos + size);
-                Copy(dest, src);
+                const auto dest = arr.AsByteArray();
+                CopyArray(src, dest);
 
                 m_type_data.mem.byte_pos += size;
 
@@ -162,9 +162,9 @@ namespace zf {
                     return false;
                 }
 
-                const auto dest = m_type_data.mem.bytes.Slice(m_type_data.mem.byte_pos, m_type_data.mem.byte_pos + size);
                 const auto src = arr.AsByteArray();
-                Copy(dest, src);
+                const auto dest = m_type_data.mem.bytes.Slice(m_type_data.mem.byte_pos, m_type_data.mem.byte_pos + size);
+                CopyArray(src, dest);
 
                 m_type_data.mem.byte_pos += size;
 
@@ -249,7 +249,7 @@ namespace zf {
             return false;
         }
 
-        *o_bv = CreateBitVec(bit_cnt, bv_arena);
+        *o_bv = BitVecCreate(bit_cnt, bv_arena);
 
         if (!stream->ReadItemsIntoArray(o_bv->Bytes(), o_bv->Bytes().len)) {
             return false;
@@ -283,7 +283,7 @@ namespace zf {
         ek_directory_creation_result_unknown_err
     };
 
-    [[nodiscard]] t_b8 CreateDirec(const s_str_rdonly path, s_arena *const temp_arena, e_directory_creation_result *const o_creation_res = nullptr); // This DOES NOT create non-existent parent directories.
+    [[nodiscard]] t_b8 CreateDir(const s_str_rdonly path, s_arena *const temp_arena, e_directory_creation_result *const o_creation_res = nullptr); // This DOES NOT create non-existent parent directories.
     [[nodiscard]] t_b8 CreateDirectoryAndParents(const s_str_rdonly path, s_arena *const temp_arena, e_directory_creation_result *const o_dir_creation_res = nullptr);
     [[nodiscard]] t_b8 CreateFileAndParentDirs(const s_str_rdonly path, s_arena *const temp_arena, e_directory_creation_result *const o_dir_creation_res = nullptr);
 
@@ -293,7 +293,7 @@ namespace zf {
         ek_path_type_directory
     };
 
-    e_path_type CheckPathType(const s_str_rdonly path, s_arena *const temp_arena);
+    e_path_type DeterminePathType(const s_str_rdonly path, s_arena *const temp_arena);
 
     s_str LoadExecutableDirectory(s_arena *const arena);
 
@@ -378,10 +378,10 @@ namespace zf {
             ZF_ASSERT(str_bytes_stream_write_success);
         }
 
-        const t_i32 dig_cnt = CalcDigitCnt(fmt.val);
+        const t_i32 dig_cnt = CalcDigitCount(fmt.val);
 
         for (t_i32 i = 0; i < dig_cnt; i++) {
-            const auto chr = static_cast<char>('0' + FindDigitAt(fmt.val, dig_cnt - 1 - i));
+            const auto chr = static_cast<char>('0' + DetermineDigitAt(fmt.val, dig_cnt - 1 - i));
             str_bytes_stream_write_success = str_bytes_stream.WriteItem(chr);
             ZF_ASSERT(str_bytes_stream_write_success);
         }
@@ -834,7 +834,7 @@ namespace zf {
 
     template <typename... tp_arg_types>
     t_b8 LogErrorType(const s_str_rdonly type_name, const s_str_rdonly fmt, const tp_arg_types &...args) {
-        ZF_ASSERT(!str_is_empty(type_name));
+        ZF_ASSERT(!IsStrEmpty(type_name));
 
         c_stream std_err = StdError();
 

@@ -84,8 +84,7 @@ namespace zf {
         return true;
     }
 
-    // @todo: Rename.
-    t_b8 CreateDirec(const s_str_rdonly path, s_arena *const temp_arena, e_directory_creation_result *const o_creation_res) {
+    t_b8 CreateDir(const s_str_rdonly path, s_arena *const temp_arena, e_directory_creation_result *const o_creation_res) {
         if (o_creation_res) {
             *o_creation_res = ek_directory_creation_result_success;
         }
@@ -132,8 +131,8 @@ namespace zf {
         }
 
         const auto create_dir_if_nonexistent = [o_dir_creation_res, &temp_arena](const s_str_rdonly path) {
-            if (CheckPathType(path, temp_arena) == ek_path_type_not_found) {
-                if (!CreateDirec(path, temp_arena, o_dir_creation_res)) {
+            if (DeterminePathType(path, temp_arena) == ek_path_type_not_found) {
+                if (!CreateDir(path, temp_arena, o_dir_creation_res)) {
                     return false;
                 }
             }
@@ -194,7 +193,7 @@ namespace zf {
         return true;
     }
 
-    e_path_type CheckPathType(const s_str_rdonly path, s_arena *const temp_arena) {
+    e_path_type DeterminePathType(const s_str_rdonly path, s_arena *const temp_arena) {
         const s_str_rdonly path_terminated = AllocStrCloneButAddTerminator(path, temp_arena);
 
         struct stat info;
@@ -224,7 +223,7 @@ namespace zf {
         }
 
         const auto result_bytes = AllocArray<t_u8>(len, arena);
-        Copy(result_bytes, buf.AsNonstatic().Slice(0, len).AsByteArray());
+        CopyArray(buf.AsNonstatic().Slice(0, len).AsByteArray(), result_bytes);
         return {result_bytes};
 #elif defined(ZF_PLATFORM_MACOS)
     #error "Platform-specific implementation not yet done!"

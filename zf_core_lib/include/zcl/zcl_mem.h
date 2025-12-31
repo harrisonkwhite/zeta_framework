@@ -98,33 +98,32 @@ namespace zf {
     };
 
     // Does not allocate any arena memory (blocks) upfront.
-    inline s_arena arena_create(const t_i32 block_min_size = MegabytesToBytes(1)) {
+    inline s_arena CreateArena(const t_i32 block_min_size = MegabytesToBytes(1)) {
         return {.block_min_size = block_min_size};
     }
 
     // Frees all arena memory. It is valid to call this even if no pushing was done.
-    void arena_destroy(s_arena *const arena);
+    void DestroyArena(s_arena *const arena);
 
     // Will lazily allocate memory as needed. Allocation failure is treated as fatal and causes an abort - you don't need to check for nullptr.
-    void *Push(s_arena *const arena, const t_i32 size, const t_i32 alignment);
+    void *PushToArena(s_arena *const arena, const t_i32 size, const t_i32 alignment);
 
     // Rewinds the arena to the beginning of its allocated memory (if any) to overwrite from there.
-    void arena_rewind(s_arena *const arena);
-
-    // ============================================================
-
+    void RewindArena(s_arena *const arena);
 
     template <typename tp_type>
     tp_type *AllocItem(s_arena *const arena) {
-        return static_cast<tp_type *>(Push(arena, ZF_SIZE_OF(tp_type), ZF_ALIGN_OF(tp_type)));
+        return static_cast<tp_type *>(PushToArena(arena, ZF_SIZE_OF(tp_type), ZF_ALIGN_OF(tp_type)));
     }
 
     template <typename tp_type>
     tp_type *AllocItemZeroed(s_arena *const arena) {
-        const auto result = static_cast<tp_type *>(Push(arena, ZF_SIZE_OF(tp_type), ZF_ALIGN_OF(tp_type)));
+        const auto result = static_cast<tp_type *>(PushToArena(arena, ZF_SIZE_OF(tp_type), ZF_ALIGN_OF(tp_type)));
         ClearItem(result, 0);
         return result;
     }
+
+    // ============================================================
 
 
     // ============================================================
@@ -287,6 +286,42 @@ namespace zf {
             return true;
         };
 
+    template <co_array_nonstatic tp_src_arr_type, co_array_nonstatic_mut tp_dest_arr_type>
+    constexpr void CopyArray(const tp_src_arr_type src, const tp_dest_arr_type dest, const t_b8 allow_truncation = false) {
+        static_assert(s_is_same<typename tp_src_arr_type::t_elem, typename tp_dest_arr_type::t_elem>::g_val);
+
+        if (!allow_truncation) {
+            ZF_ASSERT(dest.len >= src.len);
+
+            for (t_i32 i = 0; i < src.len; i++) {
+                dest[i] = src[i];
+            }
+        } else {
+            const auto min_len = ZF_MIN(src.len, dest.len);
+
+            for (t_i32 i = 0; i < min_len; i++) {
+                dest[i] = src[i];
+            }
+        }
+    }
+
+    template <co_array_nonstatic tp_arr_a_type, co_array_nonstatic tp_arr_b_type>
+    constexpr t_i32 CompareArrays(const tp_arr_a_type a, const tp_arr_b_type b, const t_ord_comparator<typename tp_arr_a_type::t_elem> comparator = DefaultOrdComparator) {
+        static_assert(s_is_same<typename tp_arr_a_type::t_elem, typename tp_arr_a_type::t_elem>::g_val);
+
+        const auto min_len = ZF_MIN(a.len, b.len);
+
+        for (t_i32 i = 0; i < min_len; i++) {
+            const t_i32 comp = comparator(a[i], b[i]);
+
+            if (comp != 0) {
+                return comp;
+            }
+        }
+
+        return 0;
+    }
+
     template <typename tp_type>
     s_array_mut<tp_type> AllocArray(const t_i32 len, s_arena *const arena) {
         ZF_ASSERT(len >= 0);
@@ -295,7 +330,7 @@ namespace zf {
             return {};
         }
 
-        const auto raw = static_cast<tp_type *>(Push(arena, ZF_SIZE_OF(tp_type) * len, ZF_ALIGN_OF(tp_type)));
+        const auto raw = static_cast<tp_type *>(PushToArena(arena, ZF_SIZE_OF(tp_type) * len, ZF_ALIGN_OF(tp_type)));
         return {raw, len};
     }
 
@@ -308,7 +343,7 @@ namespace zf {
         }
 
         const t_i32 size = ZF_SIZE_OF(tp_type) * len;
-        const auto raw = static_cast<tp_type *>(Push(arena, size, ZF_ALIGN_OF(tp_type)));
+        const auto raw = static_cast<tp_type *>(PushToArena(arena, size, ZF_ALIGN_OF(tp_type)));
         Clear(raw, size, 0);
         return {raw, len};
     }
@@ -351,43 +386,6 @@ namespace zf {
         for (t_i32 i = 0; i < arr.len; i++) {
             arr[i] = val;
         }
-    }
-
-    // @todo: Maybe flip dest and src around?
-    template <co_array_nonstatic_mut tp_dest_arr_type, co_array_nonstatic tp_src_arr_type>
-    constexpr void Copy(const tp_dest_arr_type dest, const tp_src_arr_type src, const t_b8 allow_truncation = false) {
-        static_assert(s_is_same<typename tp_dest_arr_type::t_elem, typename tp_src_arr_type::t_elem>::g_val);
-
-        if (!allow_truncation) {
-            ZF_ASSERT(dest.len >= src.len);
-
-            for (t_i32 i = 0; i < src.len; i++) {
-                dest[i] = src[i];
-            }
-        } else {
-            const auto min_len = ZF_MIN(src.len, dest.len);
-
-            for (t_i32 i = 0; i < min_len; i++) {
-                dest[i] = src[i];
-            }
-        }
-    }
-
-    template <co_array_nonstatic tp_arr_a_type, co_array_nonstatic tp_arr_b_type>
-    constexpr t_i32 Compare(const tp_arr_a_type a, const tp_arr_b_type b, const t_ord_comparator<typename tp_arr_a_type::t_elem> comparator = DefaultOrdComparator) {
-        static_assert(s_is_same<typename tp_arr_a_type::t_elem, typename tp_arr_a_type::t_elem>::g_val);
-
-        const auto min_len = ZF_MIN(a.len, b.len);
-
-        for (t_i32 i = 0; i < min_len; i++) {
-            const t_i32 comp = comparator(a[i], b[i]);
-
-            if (comp != 0) {
-                return comp;
-            }
-        }
-
-        return 0;
     }
 
     // ============================================================
@@ -477,7 +475,7 @@ namespace zf {
     };
 
     template <t_i32 tp_bit_cnt>
-    struct s_static_bit_vec {
+    struct s_bit_vec_static {
         static constexpr t_i32 g_bit_cnt = tp_bit_cnt;
 
         s_static_array<t_u8, BitsToBytes(tp_bit_cnt)> bytes;
@@ -491,7 +489,7 @@ namespace zf {
         }
     };
 
-    inline s_bit_vec_mut CreateBitVec(const t_i32 bit_cnt, s_arena *const arena) {
+    inline s_bit_vec_mut BitVecCreate(const t_i32 bit_cnt, s_arena *const arena) {
         ZF_ASSERT(bit_cnt >= 0);
         return {AllocArrayZeroed<t_u8>(BitsToBytes(bit_cnt), arena).raw, bit_cnt};
     }
@@ -755,8 +753,8 @@ namespace zf {
         }
     }
 
-    t_i32 IndexOfFirstSetBit(const s_bit_vec_rdonly bv, const t_i32 from = 0);   // Returns -1 if all bits are unset.
-    t_i32 IndexOfFirstUnsetBit(const s_bit_vec_rdonly bv, const t_i32 from = 0); // Returns -1 if all bits are set.
+    t_i32 FindIndexOfFirstSetBit(const s_bit_vec_rdonly bv, const t_i32 from = 0);   // Returns -1 if all bits are unset.
+    t_i32 FindIndexOfFirstUnsetBit(const s_bit_vec_rdonly bv, const t_i32 from = 0); // Returns -1 if all bits are set.
 
     t_i32 CountSetBits(const s_bit_vec_rdonly bv);
 
@@ -767,11 +765,10 @@ namespace zf {
     // pos is the walker state, initialise it to the bit index you want to start from.
     // o_index is assigned the index of the set bit to process.
     // Returns false iff the walk is complete.
-    // You can use the ZF_FOR_EACH_SET_BIT macro for more brevity if you like.
     inline t_b8 WalkSetBits(const s_bit_vec_rdonly bv, t_i32 *const pos, t_i32 *const o_index) {
         ZF_ASSERT(*pos >= 0 && *pos <= bv.bit_cnt);
 
-        *o_index = IndexOfFirstSetBit(bv, *pos);
+        *o_index = FindIndexOfFirstSetBit(bv, *pos);
 
         if (*o_index == -1) {
             return false;
@@ -785,11 +782,10 @@ namespace zf {
     // pos is the walker state, initialise it to the bit index you want to start from.
     // o_index is assigned the index of the unset bit to process.
     // Returns false iff the walk is complete.
-    // You can use the ZF_FOR_EACH_UNSET_BIT macro for more brevity if you like.
     inline t_b8 WalkUnsetBits(const s_bit_vec_rdonly bv, t_i32 *const pos, t_i32 *const o_index) {
         ZF_ASSERT(*pos >= 0 && *pos <= bv.bit_cnt);
 
-        *o_index = IndexOfFirstUnsetBit(bv, *pos);
+        *o_index = FindIndexOfFirstUnsetBit(bv, *pos);
 
         if (*o_index == -1) {
             return false;

@@ -140,7 +140,7 @@ namespace zf {
 
                 if (i == arr_left_sorted.len) {
                     // Copy over the remainder of the right array.
-                    Copy(arr.SliceFrom(i + j), arr_right_sorted.SliceFrom(j));
+                    CopyArray(arr_right_sorted.SliceFrom(j), arr.SliceFrom(i + j));
                     break;
                 }
             } else {
@@ -149,7 +149,7 @@ namespace zf {
 
                 if (j == arr_right_sorted.len) {
                     // Copy over the remainder of the left array.
-                    Copy(arr.SliceFrom(i + j), arr_left_sorted.SliceFrom(i));
+                    CopyArray(arr_left_sorted.SliceFrom(i), arr.SliceFrom(i + j));
                     break;
                 }
             }
