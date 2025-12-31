@@ -93,12 +93,12 @@ namespace zf {
         const s_str_rdonly path_terminated = AllocStrCloneButAddTerminator(path, temp_arena);
 
 #ifdef ZF_PLATFORM_WINDOWS
-        const t_i32 res = _mkdir(path_terminated.AsCstr());
+        const t_i32 result = _mkdir(path_terminated.AsCstr());
 #else
-        const t_s32 res = mkdir(path_terminated.AsCstr(), 0755);
+        const t_s32 result = mkdir(path_terminated.AsCstr(), 0755);
 #endif
 
-        if (res == 0) {
+        if (result == 0) {
             return true;
         }
 
@@ -223,9 +223,9 @@ namespace zf {
             }
         }
 
-        const auto res = AllocArrayOld<t_u8>(len, arena);
-        Copy(res, buf.AsNonstatic().Slice(0, len).AsByteArray());
-        return {res};
+        const auto result = AllocArrayOld<t_u8>(len, arena);
+        Copy(result, buf.AsNonstatic().Slice(0, len).AsByteArray());
+        return {result};
 #elif defined(ZF_PLATFORM_MACOS)
     #error "Platform-specific implementation not yet done!"
 #elif defined(ZF_PLATFORM_LINUX)

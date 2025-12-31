@@ -43,7 +43,7 @@ namespace zf {
 
     template <typename tp_type>
     inline void ClearItem(tp_type *const item, const t_u8 val) {
-        Clear(item, ZF_SIZE_OF(*item), val);
+        Clear(item, ZF_SIZE_OF(tp_type), val);
     }
 
     constexpr t_u8 g_poison_uninitted = 0xCD;
@@ -116,15 +116,15 @@ namespace zf {
 
 
     template <typename tp_type>
-    tp_type *Alloc(s_arena *const arena) {
-        return PushToArena(arena, ZF_SIZE_OF(tp_type), ZF_ALIGN_OF(tp_type));
+    tp_type *AllocItem(s_arena *const arena) {
+        return static_cast<tp_type *>(PushToArena(arena, ZF_SIZE_OF(tp_type), ZF_ALIGN_OF(tp_type)));
     }
 
     template <typename tp_type>
-    tp_type *AllocOld(s_arena *const arena) {
-        const auto ptr = static_cast<tp_type *>(PushToArena(arena, ZF_SIZE_OF(tp_type), ZF_ALIGN_OF(tp_type)));
-        new (ptr) tp_type();
-        return ptr;
+    tp_type *AllocItemZeroed(s_arena *const arena) {
+        const auto result = static_cast<tp_type *>(PushToArena(arena, ZF_SIZE_OF(tp_type), ZF_ALIGN_OF(tp_type)));
+        ClearItem(result, 0);
+        return result;
     }
 
 

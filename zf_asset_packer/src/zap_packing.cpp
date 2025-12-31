@@ -227,7 +227,7 @@ namespace zf {
                     const auto height = field_vals[ek_font_field_height]->valueint;
                     const auto out_file_path = ConvertCstr(field_vals[ek_font_field_out_file_path]->valuestring);
 
-                    const auto code_pt_bv = AllocOld<t_code_pt_bit_vec>(&arena);
+                    const auto code_pt_bv = AllocItemZeroed<t_code_pt_bit_vec>(&arena);
 
                     SetBitsInRange(*code_pt_bv, g_printable_ascii_range_begin, g_printable_ascii_range_end); // Add the printable ASCII range as a default.
 

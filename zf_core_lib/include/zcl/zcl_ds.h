@@ -150,15 +150,15 @@ namespace zf {
         ZF_ASSERT(cap_calculator);
 
         const t_i32 new_cap = [cap = list.Cap(), min_cap, cap_calculator]() {
-            t_i32 res = cap;
+            t_i32 result = cap;
 
             do {
-                const auto res_last = res;
-                res = cap_calculator(res);
-                ZF_ASSERT(res > res_last);
-            } while (res < min_cap);
+                const auto res_last = result;
+                result = cap_calculator(result);
+                ZF_ASSERT(result > res_last);
+            } while (result < min_cap);
 
-            return res;
+            return result;
         }();
 
         const auto new_backing_arr = AllocArrayOld<typename tp_list_type::t_elem>(new_cap, arena);
@@ -292,7 +292,7 @@ namespace zf {
             t_i32 index = chain_begin_index;
 
             while (index != -1) {
-                const c_block *const block = FindBlockOfIndex(index);
+                const s_block *const block = FindBlockOfIndex(index);
 
                 const t_i32 rel_index = index % m_block_cap;
 
@@ -318,7 +318,7 @@ namespace zf {
             t_i32 *index = chain_begin_index;
 
             while (*index != -1) {
-                const c_block *const block = FindBlockOfIndex(*index);
+                const s_block *const block = FindBlockOfIndex(*index);
 
                 const t_i32 rel_index = *index % m_block_cap;
 
@@ -342,7 +342,7 @@ namespace zf {
             t_i32 *index = chain_begin_index;
 
             while (*index != -1) {
-                const c_block *const block = FindBlockOfIndex(*index);
+                const s_block *const block = FindBlockOfIndex(*index);
 
                 const t_i32 rel_index = *index % m_block_cap;
 
@@ -368,7 +368,7 @@ namespace zf {
             t_i32 index = begin_index;
 
             while (index != -1) {
-                const c_block *const block = FindBlockOfIndex(index);
+                const s_block *const block = FindBlockOfIndex(index);
 
                 const t_i32 rel_index = index % m_block_cap;
 
@@ -384,18 +384,17 @@ namespace zf {
         }
 
     private:
-        class c_block {
-        public:
+        struct s_block {
             s_array_mut<tp_key_type> keys;
             s_array_mut<tp_val_type> vals;
             s_array_mut<t_i32> next_indexes; // -1 means no "next" (i.e. it is the last in the chain).
             s_bit_vec_mut usage;
 
-            c_block *next = nullptr;
+            s_block *next;
         };
 
-        static c_block *CreateBlock(const t_i32 cap, s_arena *const arena) {
-            const auto block = AllocOld<c_block>(arena);
+        static s_block *CreateBlock(const t_i32 cap, s_arena *const arena) {
+            const auto block = AllocItem<s_block>(arena);
 
             block->keys = AllocArrayOld<tp_key_type>(cap, arena);
 
@@ -406,27 +405,29 @@ namespace zf {
 
             block->usage = CreateBitVec(cap, arena);
 
+            block->next = nullptr;
+
             return block;
         }
 
         // @todo: Optimise by having this move to a relative block, instead of always from the start.
-        c_block *FindBlockOfIndex(t_i32 index) const {
+        s_block *FindBlockOfIndex(t_i32 index) const {
             ZF_ASSERT(index >= -1 && index < m_block_cap * m_block_cnt);
 
-            c_block *res = m_blocks_head;
+            s_block *result = m_blocks_head;
 
             while (index >= m_block_cap) {
-                res = res->next;
+                result = result->next;
                 index -= m_block_cap;
             }
 
-            return res;
+            return result;
         }
 
         // Returns the absolute index of the inserted pair.
         t_i32 Insert(const tp_key_type &key, const tp_val_type &val) {
-            c_block *block = m_blocks_head;
-            c_block *block_previous = nullptr;
+            s_block *block = m_blocks_head;
+            s_block *block_previous = nullptr;
             t_i32 block_index = 0;
 
             m_pair_cnt++;
@@ -470,7 +471,7 @@ namespace zf {
 
         t_bin_comparator<tp_key_type> m_key_comparator = nullptr;
 
-        c_block *m_blocks_head = nullptr;
+        s_block *m_blocks_head = nullptr;
         s_arena *m_blocks_arena = nullptr;
         t_i32 m_block_cnt = 0;
         t_i32 m_block_cap = 0;

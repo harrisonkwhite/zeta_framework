@@ -89,13 +89,13 @@ namespace zf {
     }
 
     constexpr t_u32 ColorToHex(const s_color_rgba8 col) {
-        t_u32 res = 0;
-        res |= static_cast<t_u32>(col.r) << 24;
-        res |= static_cast<t_u32>(col.g) << 16;
-        res |= static_cast<t_u32>(col.b) << 8;
-        res |= static_cast<t_u32>(col.a);
+        t_u32 result = 0;
+        result |= static_cast<t_u32>(col.r) << 24;
+        result |= static_cast<t_u32>(col.g) << 16;
+        result |= static_cast<t_u32>(col.b) << 8;
+        result |= static_cast<t_u32>(col.a);
 
-        return res;
+        return result;
     }
 
     constexpr s_color_rgba8 ColorFromHex(const t_u32 hex) {

@@ -342,37 +342,37 @@ namespace zf {
     static t_code_pt UTF8BytesToCodePoint(const s_array_rdonly<t_u8> bytes) {
         ZF_ASSERT(bytes.Len() >= 1 && bytes.Len() <= 4);
 
-        t_code_pt res = 0;
+        t_code_pt result = 0;
 
         switch (bytes.Len()) {
         case 1:
             // 0xxxxxxx
-            res |= bytes[0] & BitmaskRange(0, 7);
+            result |= bytes[0] & BitmaskRange(0, 7);
             break;
 
         case 2:
             // 110xxxxx 10xxxxxx
-            res |= static_cast<t_code_pt>((bytes[0] & BitmaskRange(0, 5)) << 6);
-            res |= bytes[1] & BitmaskRange(0, 6);
+            result |= static_cast<t_code_pt>((bytes[0] & BitmaskRange(0, 5)) << 6);
+            result |= bytes[1] & BitmaskRange(0, 6);
             break;
 
         case 3:
             // 1110xxxx 10xxxxxx 10xxxxxx
-            res |= static_cast<t_code_pt>((bytes[0] & BitmaskRange(0, 4)) << 12);
-            res |= static_cast<t_code_pt>((bytes[1] & BitmaskRange(0, 6)) << 6);
-            res |= bytes[2] & BitmaskRange(0, 6);
+            result |= static_cast<t_code_pt>((bytes[0] & BitmaskRange(0, 4)) << 12);
+            result |= static_cast<t_code_pt>((bytes[1] & BitmaskRange(0, 6)) << 6);
+            result |= bytes[2] & BitmaskRange(0, 6);
             break;
 
         case 4:
             // 11110xxx 10xxxxxx 10xxxxxx 10xxxxxx
-            res |= static_cast<t_code_pt>((bytes[0] & BitmaskRange(0, 3)) << 18);
-            res |= static_cast<t_code_pt>((bytes[1] & BitmaskRange(0, 6)) << 12);
-            res |= static_cast<t_code_pt>((bytes[2] & BitmaskRange(0, 6)) << 6);
-            res |= bytes[3] & BitmaskRange(0, 6);
+            result |= static_cast<t_code_pt>((bytes[0] & BitmaskRange(0, 3)) << 18);
+            result |= static_cast<t_code_pt>((bytes[1] & BitmaskRange(0, 6)) << 12);
+            result |= static_cast<t_code_pt>((bytes[2] & BitmaskRange(0, 6)) << 6);
+            result |= bytes[3] & BitmaskRange(0, 6);
             break;
         }
 
-        return res;
+        return result;
     }
 
     t_code_pt FindStrCodePointAtByte(const s_str_rdonly str, const t_i32 byte_index) {

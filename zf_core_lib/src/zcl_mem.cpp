@@ -27,26 +27,26 @@ namespace zf {
     static s_arena_block *CreateArenaBlock(const t_i32 buf_size) {
         ZF_REQUIRE(buf_size > 0);
 
-        const auto res = static_cast<s_arena_block *>(malloc(sizeof(s_arena_block)));
+        const auto result = static_cast<s_arena_block *>(malloc(sizeof(s_arena_block)));
 
-        if (!res) {
+        if (!result) {
             ZF_FATAL();
         }
 
-        PoisonUnittedItem(res);
+        PoisonUnittedItem(result);
 
-        res->buf = malloc(static_cast<size_t>(buf_size));
+        result->buf = malloc(static_cast<size_t>(buf_size));
 
-        if (!res->buf) {
+        if (!result->buf) {
             ZF_FATAL();
         }
 
-        PoisonUnitted(res->buf, buf_size);
+        PoisonUnitted(result->buf, buf_size);
 
-        res->buf_size = buf_size;
-        res->next = nullptr;
+        result->buf_size = buf_size;
+        result->next = nullptr;
 
-        return res;
+        return result;
     }
 
     void *PushToArena(s_arena *const arena, const t_i32 size, const t_i32 alignment) {
@@ -74,10 +74,10 @@ namespace zf {
 
         arena->block_cur_offs = offs_next;
 
-        void *const res = static_cast<t_u8 *>(arena->block_cur->buf) + offs_aligned;
-        PoisonUnitted(res, size);
+        void *const result = static_cast<t_u8 *>(arena->block_cur->buf) + offs_aligned;
+        PoisonUnitted(result, size);
 
-        return res;
+        return result;
     }
 
     void RewindArena(s_arena *const arena) {
@@ -654,17 +654,17 @@ namespace zf {
             8, // 1111 1111
         }};
 
-        t_i32 res = 0;
+        t_i32 result = 0;
 
         if (bv.Bytes().Len() > 0) {
             for (t_i32 i = 0; i < bv.Bytes().Len() - 1; i++) {
-                res += g_mappings[bv.Bytes()[i]];
+                result += g_mappings[bv.Bytes()[i]];
             }
 
-            res += g_mappings[bv.Bytes()[bv.Bytes().Len() - 1] & bv.LastByteMask()];
+            result += g_mappings[bv.Bytes()[bv.Bytes().Len() - 1] & bv.LastByteMask()];
         }
 
-        return res;
+        return result;
     }
 
     // ============================================================

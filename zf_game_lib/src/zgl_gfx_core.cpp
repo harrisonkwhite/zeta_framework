@@ -204,7 +204,7 @@ namespace zf {
     static s_gfx_resource *AddGFXResourceToGroup(s_gfx_resource_group *const group, const e_gfx_resource_type type) {
         ZF_ASSERT(g_state.state == ek_state_initted);
 
-        const auto resource = AllocOld<s_gfx_resource>(group->arena);
+        const auto resource = AllocItemZeroed<s_gfx_resource>(group->arena);
 
         if (!group->head) {
             group->head = resource;
@@ -267,35 +267,35 @@ namespace zf {
     // @section: Rendering
 
     static s_rendering_basis *CreateRenderingBasis(s_arena *const arena, s_gfx_resource_group *const px_texture_resource_group) {
-        const auto res = AllocOld<s_rendering_basis>(arena);
+        const auto result = AllocItem<s_rendering_basis>(arena);
 
         {
             bgfx::VertexLayout vert_layout;
             vert_layout.begin().add(bgfx::Attrib::Position, 2, bgfx::AttribType::Float).add(bgfx::Attrib::Color0, 4, bgfx::AttribType::Float).add(bgfx::Attrib::TexCoord0, 2, bgfx::AttribType::Float).end();
 
-            res->vert_buf_bgfx_hdl = bgfx::createDynamicVertexBuffer(static_cast<uint32_t>(g_batch_vert_limit_per_frame), vert_layout);
+            result->vert_buf_bgfx_hdl = bgfx::createDynamicVertexBuffer(static_cast<uint32_t>(g_batch_vert_limit_per_frame), vert_layout);
 
-            if (!bgfx::isValid(res->vert_buf_bgfx_hdl)) {
+            if (!bgfx::isValid(result->vert_buf_bgfx_hdl)) {
                 ZF_FATAL();
             }
         }
 
-        res->shader_prog_bgfx_hdl = CreateBGFXShaderProg({g_batch_triangle_vert_shader_default_src_raw, g_batch_triangle_vert_shader_default_src_len}, {g_batch_triangle_frag_shader_default_src_raw, g_batch_triangle_frag_shader_default_src_len});
+        result->shader_prog_bgfx_hdl = CreateBGFXShaderProg({g_batch_triangle_vert_shader_default_src_raw, g_batch_triangle_vert_shader_default_src_len}, {g_batch_triangle_frag_shader_default_src_raw, g_batch_triangle_frag_shader_default_src_len});
 
-        if (!bgfx::isValid(res->shader_prog_bgfx_hdl)) {
+        if (!bgfx::isValid(result->shader_prog_bgfx_hdl)) {
             ZF_FATAL();
         }
 
-        res->texture_sampler_uniform_bgfx_hdl = bgfx::createUniform("u_tex", bgfx::UniformType::Sampler);
+        result->texture_sampler_uniform_bgfx_hdl = bgfx::createUniform("u_tex", bgfx::UniformType::Sampler);
 
-        if (!bgfx::isValid(res->texture_sampler_uniform_bgfx_hdl)) {
+        if (!bgfx::isValid(result->texture_sampler_uniform_bgfx_hdl)) {
             ZF_FATAL();
         }
 
         const s_static_array<t_u8, 4> px_texture_rgba = {{255, 255, 255, 255}};
-        res->px_texture = CreateTextureResource({{1, 1}, px_texture_rgba}, px_texture_resource_group);
+        result->px_texture = CreateTextureResource({{1, 1}, px_texture_rgba}, px_texture_resource_group);
 
-        return res;
+        return result;
     }
 
     s_rendering_context *BeginRendering(const s_rendering_basis *const rendering_basis, const s_color_rgb8 clear_col, s_arena *const rendering_context_arena) {
@@ -328,7 +328,7 @@ namespace zf {
 
         g_state.state = ek_state_rendering;
 
-        const auto rendering_context = AllocOld<s_rendering_context>(rendering_context_arena);
+        const auto rendering_context = AllocItemZeroed<s_rendering_context>(rendering_context_arena);
         rendering_context->basis = rendering_basis;
 
         return rendering_context;
