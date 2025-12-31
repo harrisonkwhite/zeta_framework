@@ -17,8 +17,8 @@ namespace zf {
 
         void Release();
 
-        [[nodiscard]] t_b8 AddFromRaw(const s_str_rdonly file_path, s_mem_arena &temp_mem_arena, s_ptr<s_sound_type> &o_type);
-        [[nodiscard]] t_b8 AddFromPacked(const s_str_rdonly file_path, s_mem_arena &temp_mem_arena, s_ptr<s_sound_type> &o_type);
+        [[nodiscard]] t_b8 AddFromRaw(const s_str_rdonly file_path, s_arena &temp_arena, s_ptr<s_sound_type> &o_type);
+        [[nodiscard]] t_b8 AddFromPacked(const s_str_rdonly file_path, s_arena &temp_arena, s_ptr<s_sound_type> &o_type);
 
         t_i32 Version() const {
             return m_version;
@@ -29,7 +29,7 @@ namespace zf {
 
         t_i32 m_version = 0;
 
-        s_mem_arena m_mem_arena = {};
+        s_arena m_arena = {};
         s_ptr<s_sound_type> m_head = nullptr;
         s_ptr<s_sound_type> m_tail = nullptr;
     };

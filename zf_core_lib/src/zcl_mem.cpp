@@ -84,6 +84,7 @@ namespace zf {
         arena->block_cur = arena->blocks_head;
         arena->block_cur_offs = 0;
 
+#ifdef ZF_DEBUG
         // Poison all block buffers.
         const s_arena_block *block = arena->blocks_head;
 
@@ -91,6 +92,7 @@ namespace zf {
             PoisonFreed(block->buf, block->buf_size);
             block = block->next;
         }
+#endif
     }
 
     // ============================================================

@@ -71,19 +71,19 @@ namespace zf {
             type = type->next;
         }
 
-        m_mem_arena.Release();
+        m_arena.Release();
         m_head = nullptr;
         m_tail = nullptr;
 
         m_version++;
     }
 
-    t_b8 s_sound_type_arena::AddFromRaw(const s_str_rdonly file_path, s_mem_arena &temp_mem_arena, s_ptr<s_sound_type> &o_type) {
+    t_b8 s_sound_type_arena::AddFromRaw(const s_str_rdonly file_path, s_arena &temp_arena, s_ptr<s_sound_type> &o_type) {
         ZF_ASSERT(g_state.initted);
 
         s_sound_data snd_data = {};
 
-        if (!LoadSoundDataFromRaw(file_path, m_mem_arena, temp_mem_arena, snd_data)) {
+        if (!LoadSoundDataFromRaw(file_path, m_arena, temp_arena, snd_data)) {
             return false;
         }
 
@@ -92,12 +92,12 @@ namespace zf {
         return true;
     }
 
-    t_b8 s_sound_type_arena::AddFromPacked(const s_str_rdonly file_path, s_mem_arena &temp_mem_arena, s_ptr<s_sound_type> &o_type) {
+    t_b8 s_sound_type_arena::AddFromPacked(const s_str_rdonly file_path, s_arena &temp_arena, s_ptr<s_sound_type> &o_type) {
         ZF_ASSERT(g_state.initted);
 
         s_sound_data snd_data = {};
 
-        if (!UnpackSound(file_path, m_mem_arena, temp_mem_arena, snd_data)) {
+        if (!UnpackSound(file_path, m_arena, temp_arena, snd_data)) {
             return false;
         }
 
@@ -107,7 +107,7 @@ namespace zf {
     }
 
     void s_sound_type_arena::Add(const s_sound_data snd_data, s_ptr<s_sound_type> &o_type) {
-        o_type = Alloc<s_sound_type>(&m_mem_arena, *this, m_version);
+        o_type = Alloc<s_sound_type>(&m_arena, *this, m_version);
         o_type->snd_data = snd_data;
 
         if (!m_head) {

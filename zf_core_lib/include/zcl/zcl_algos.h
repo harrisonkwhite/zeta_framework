@@ -117,17 +117,17 @@ namespace zf {
 
     // O(n log n) in both time complexity and space complexity in every case.
     template <typename tp_arr_type>
-    void RunMergeSort(const tp_arr_type arr, s_arena *const temp_mem_arena, const t_ord_comparator<typename tp_arr_type::t_elem> comparator = DefaultOrdComparator) {
+    void RunMergeSort(const tp_arr_type arr, s_arena *const temp_arena, const t_ord_comparator<typename tp_arr_type::t_elem> comparator = DefaultOrdComparator) {
         if (arr.Len() <= 1) {
             return;
         }
 
         // Sort copies of the left and right partitions.
-        const auto arr_left_sorted = AllocArrayCloneOld(arr.Slice(0, arr.Len() / 2), temp_mem_arena);
-        RunMergeSort(arr_left_sorted, temp_mem_arena, comparator);
+        const auto arr_left_sorted = AllocArrayCloneOld(arr.Slice(0, arr.Len() / 2), temp_arena);
+        RunMergeSort(arr_left_sorted, temp_arena, comparator);
 
-        const auto arr_right_sorted = AllocArrayCloneOld(arr.SliceFrom(arr.Len() / 2), temp_mem_arena);
-        RunMergeSort(arr_right_sorted, temp_mem_arena, comparator);
+        const auto arr_right_sorted = AllocArrayCloneOld(arr.SliceFrom(arr.Len() / 2), temp_arena);
+        RunMergeSort(arr_right_sorted, temp_arena, comparator);
 
         // Update this array.
         t_i32 i = 0;

@@ -17,18 +17,18 @@ namespace zf {
         //
         // Initialisation
         //
-        s_arena perm_mem_arena = CreateArena();
-        ZF_DEFER({ DestroyArena(&perm_mem_arena); });
+        s_arena perm_arena = CreateArena();
+        ZF_DEFER({ DestroyArena(&perm_arena); });
 
-        s_arena temp_mem_arena = CreateArena();
-        ZF_DEFER({ DestroyArena(&temp_mem_arena); });
+        s_arena temp_arena = CreateArena();
+        ZF_DEFER({ DestroyArena(&temp_arena); });
 
         StartupPlatformModule(g_init_window_size);
         ZF_DEFER({ ShutdownPlatformModule(); });
 
         s_input_state input_state = {};
 
-        s_rendering_basis *const rendering_basis = StartupGFXModule(&perm_mem_arena);
+        s_rendering_basis *const rendering_basis = StartupGFXModule(&perm_arena);
         ZF_DEFER({ ShutdownGFXModule(rendering_basis); });
 
 #if 0
@@ -37,8 +37,8 @@ namespace zf {
 #endif
 
         init_func({
-            .perm_mem_arena = &perm_mem_arena,
-            .temp_mem_arena = &temp_mem_arena,
+            .perm_arena = &perm_arena,
+            .temp_arena = &temp_arena,
         });
 
         ZF_DEFER({
@@ -56,8 +56,6 @@ namespace zf {
         t_f64 frame_dur_accum = 0.0;
 
         while (!ShouldWindowClose()) {
-            RewindArena(&temp_mem_arena);
-
             PollOSEvents(&input_state);
 
             const t_f64 frame_time = Time();
@@ -67,34 +65,32 @@ namespace zf {
 
             const t_f64 targ_tick_interval = 1.0 / g_targ_ticks_per_sec;
 
-            // Once enough time has passed (i.e. the time accumulator has reached the tick interval), run at least a single tick and update the display.
-            if (frame_dur_accum >= targ_tick_interval) {
-#if 0
-                ProcFinishedSounds();
-#endif
+            // Once enough time has passed (i.e. the time accumulator has reached the tick interval), run at least a single tick.
+            while (frame_dur_accum >= targ_tick_interval) {
+                RewindArena(&temp_arena);
 
-                do {
-                    tick_func({
-                        .perm_mem_arena = &perm_mem_arena,
-                        .temp_mem_arena = &temp_mem_arena,
-                        .input_state = &input_state,
-                    });
-
-                    input_state.events = {};
-
-                    frame_dur_accum -= targ_tick_interval;
-                } while (frame_dur_accum >= targ_tick_interval);
-
-                s_rendering_context *const rendering_context = BeginRendering(rendering_basis, s_color_rgb8(109, 187, 255), &temp_mem_arena); // @todo: Make the clear colour customisable?
-
-                render_func({
-                    .perm_mem_arena = &perm_mem_arena,
-                    .temp_mem_arena = &temp_mem_arena,
-                    .rendering_context = rendering_context,
+                tick_func({
+                    .perm_arena = &perm_arena,
+                    .temp_arena = &temp_arena,
+                    .input_state = &input_state,
                 });
 
-                EndRendering(rendering_context);
+                input_state.events = {};
+
+                frame_dur_accum -= targ_tick_interval;
             }
+
+            RewindArena(&temp_arena);
+
+            s_rendering_context *const rendering_context = BeginRendering(rendering_basis, s_color_rgb8(109, 187, 255), &temp_arena); // @todo: Make the clear colour customisable?
+
+            render_func({
+                .perm_arena = &perm_arena,
+                .temp_arena = &temp_arena,
+                .rendering_context = rendering_context,
+            });
+
+            EndRendering(rendering_context);
         }
     }
 }
