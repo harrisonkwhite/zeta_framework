@@ -71,10 +71,10 @@ namespace zf {
         const t_i32 file_size = CalcFileSize(&stream);
 
         if (add_terminator) {
-            *o_contents = AllocArrayOld<t_u8>(file_size + 1, contents_arena);
+            *o_contents = AllocArray<t_u8>(file_size + 1, contents_arena);
             (*o_contents)[file_size] = 0;
         } else {
-            *o_contents = AllocArrayOld<t_u8>(file_size, contents_arena);
+            *o_contents = AllocArray<t_u8>(file_size, contents_arena);
         }
 
         if (!stream.ReadItemsIntoArray(*o_contents, file_size)) {
@@ -223,9 +223,9 @@ namespace zf {
             }
         }
 
-        const auto result = AllocArrayOld<t_u8>(len, arena);
-        Copy(result, buf.AsNonstatic().Slice(0, len).AsByteArray());
-        return {result};
+        const auto result_bytes = AllocArray<t_u8>(len, arena);
+        Copy(result_bytes, buf.AsNonstatic().Slice(0, len).AsByteArray());
+        return {result_bytes};
 #elif defined(ZF_PLATFORM_MACOS)
     #error "Platform-specific implementation not yet done!"
 #elif defined(ZF_PLATFORM_LINUX)

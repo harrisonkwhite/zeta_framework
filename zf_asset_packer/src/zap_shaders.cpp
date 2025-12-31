@@ -45,12 +45,12 @@ namespace zf {
         const auto exe_dir = LoadExecutableDirectory(temp_arena);
         ZF_ASSERT(exe_dir.bytes[exe_dir.bytes.len - 1] == '/' || exe_dir.bytes[exe_dir.bytes.len - 1] == '\\'); // Assuming this.
 
-        const s_str shaderc_file_path = {AllocArrayOld<t_u8>(exe_dir.bytes.len + shaderc_file_path_rel.buf.len + 1, temp_arena)};
+        const s_str shaderc_file_path = {AllocArray<t_u8>(exe_dir.bytes.len + shaderc_file_path_rel.buf.len + 1, temp_arena)};
         Copy(shaderc_file_path.bytes, exe_dir.bytes);
         Copy(shaderc_file_path.bytes.SliceFrom(exe_dir.bytes.len), shaderc_file_path_rel.buf.AsByteArray());
 
         const s_cstr_literal shaderc_include_dir_rel = "tools/bgfx/shaderc_include";
-        const s_str shaderc_include_dir = {AllocArrayOld<t_u8>(exe_dir.bytes.len + shaderc_include_dir_rel.buf.len + 1, temp_arena)};
+        const s_str shaderc_include_dir = {AllocArray<t_u8>(exe_dir.bytes.len + shaderc_include_dir_rel.buf.len + 1, temp_arena)};
         Copy(shaderc_include_dir.bytes, exe_dir.bytes);
         Copy(shaderc_include_dir.bytes.SliceFrom(exe_dir.bytes.len), shaderc_include_dir_rel.buf.AsByteArray());
 

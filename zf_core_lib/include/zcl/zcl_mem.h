@@ -1,6 +1,5 @@
 #pragma once
 
-#include <new>
 #include <cstring>
 #include <zcl/zcl_basic.h>
 
@@ -289,7 +288,7 @@ namespace zf {
         };
 
     template <typename tp_type>
-    s_array_mut<tp_type> AllocArrayOld(const t_i32 len, s_arena *const arena) {
+    s_array_mut<tp_type> AllocArray(const t_i32 len, s_arena *const arena) {
         ZF_ASSERT(len >= 0);
 
         if (len == 0) {
@@ -297,17 +296,26 @@ namespace zf {
         }
 
         const auto raw = static_cast<tp_type *>(PushToArena(arena, ZF_SIZE_OF(tp_type) * len, ZF_ALIGN_OF(tp_type)));
+        return {raw, len};
+    }
 
-        for (t_i32 i = 0; i < len; i++) {
-            new (&raw[i]) tp_type();
+    template <typename tp_type>
+    s_array_mut<tp_type> AllocArrayZeroed(const t_i32 len, s_arena *const arena) {
+        ZF_ASSERT(len >= 0);
+
+        if (len == 0) {
+            return {};
         }
 
+        const t_i32 size = ZF_SIZE_OF(tp_type) * len;
+        const auto raw = static_cast<tp_type *>(PushToArena(arena, size, ZF_ALIGN_OF(tp_type)));
+        Clear(raw, size, 0);
         return {raw, len};
     }
 
     template <co_array_nonstatic tp_arr_type>
-    auto AllocArrayCloneOld(const tp_arr_type arr_to_clone, s_arena *const arena) {
-        const auto arr = AllocArrayOld<typename tp_arr_type::t_elem>(arr_to_clone.len, arena);
+    auto AllocArrayClone(const tp_arr_type arr_to_clone, s_arena *const arena) {
+        const auto arr = AllocArray<typename tp_arr_type::t_elem>(arr_to_clone.len, arena);
         Copy(arr, arr_to_clone);
         return arr;
     }
@@ -485,7 +493,7 @@ namespace zf {
 
     inline s_bit_vec_mut CreateBitVec(const t_i32 bit_cnt, s_arena *const arena) {
         ZF_ASSERT(bit_cnt >= 0);
-        return {AllocArrayOld<t_u8>(BitsToBytes(bit_cnt), arena).raw, bit_cnt};
+        return {AllocArrayZeroed<t_u8>(BitsToBytes(bit_cnt), arena).raw, bit_cnt};
     }
 
     constexpr t_b8 IsBitSet(const s_bit_vec_rdonly bv, const t_i32 index) {
