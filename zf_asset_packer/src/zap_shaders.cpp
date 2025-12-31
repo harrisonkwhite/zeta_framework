@@ -84,7 +84,7 @@ namespace zf {
             return false;
         }
 
-        c_list_mut<t_u8> bin_list = {};
+        s_list_mut<t_u8> bin_list = {};
 
         while (true) {
             s_static_array<t_u8, 4096> buf;
@@ -94,7 +94,7 @@ namespace zf {
                 break;
             }
 
-            AppendManyToListDynamic(bin_list, buf.AsNonstatic().Slice(0, r), bin_arena);
+            List_AppendMany_Dynamic(&bin_list, buf.AsNonstatic().Slice(0, r), bin_arena);
         }
 
         if (r != REPROC_EPIPE) {
