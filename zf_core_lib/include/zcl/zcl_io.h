@@ -230,8 +230,8 @@ namespace zf {
         return true;
     }
 
-    [[nodiscard]] inline t_b8 SerializeBitVec(c_stream *const stream, const c_bit_vec_rdonly bv) {
-        if (!stream->WriteItem(bv.BitCount())) {
+    [[nodiscard]] inline t_b8 SerializeBitVec(c_stream *const stream, const s_bit_vec_rdonly bv) {
+        if (!stream->WriteItem(bv.bit_cnt)) {
             return false;
         }
 
@@ -242,7 +242,7 @@ namespace zf {
         return true;
     }
 
-    [[nodiscard]] inline t_b8 DeserializeBitVec(c_stream *const stream, c_arena *const bv_arena, c_bit_vec_mut *const o_bv) {
+    [[nodiscard]] inline t_b8 DeserializeBitVec(c_stream *const stream, c_arena *const bv_arena, s_bit_vec_mut *const o_bv) {
         t_i32 bit_cnt;
 
         if (!stream->ReadItem(&bit_cnt)) {
@@ -653,12 +653,12 @@ namespace zf {
     struct s_bit_vec_fmt {
         using t_fmt_tag = void;
 
-        c_bit_vec_rdonly val;
+        s_bit_vec_rdonly val;
         e_bit_vec_fmt_style style;
     };
 
-    inline s_bit_vec_fmt FormatBitVec(const c_bit_vec_rdonly &val, const e_bit_vec_fmt_style style) { return {val, style}; }
-    inline s_bit_vec_fmt FormatDefault(const c_bit_vec_rdonly &val) { return FormatBitVec(val, ek_bit_vec_fmt_style_seq); }
+    inline s_bit_vec_fmt FormatBitVec(const s_bit_vec_rdonly &val, const e_bit_vec_fmt_style style) { return {val, style}; }
+    inline s_bit_vec_fmt FormatDefault(const s_bit_vec_rdonly &val) { return FormatBitVec(val, ek_bit_vec_fmt_style_seq); }
 
     inline t_b8 PrintType(c_stream *const stream, const s_bit_vec_fmt fmt) {
         const auto print_bit = [&](const t_i32 bit_index) {
@@ -680,7 +680,7 @@ namespace zf {
 
         switch (fmt.style) {
         case ek_bit_vec_fmt_style_seq:
-            for (t_i32 i = 0; i < fmt.val.BitCount(); i++) {
+            for (t_i32 i = 0; i < fmt.val.bit_cnt; i++) {
                 if (!print_bit(i)) {
                     return false;
                 }

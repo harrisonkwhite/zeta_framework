@@ -389,7 +389,7 @@ namespace zf {
             s_array_mut<tp_key_type> keys;
             s_array_mut<tp_val_type> vals;
             s_array_mut<t_i32> next_indexes; // -1 means no "next" (i.e. it is the last in the chain).
-            c_bit_vec_mut usage;
+            s_bit_vec_mut usage;
 
             c_block *next = nullptr;
         };
