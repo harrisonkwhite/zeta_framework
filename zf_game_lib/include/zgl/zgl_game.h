@@ -6,6 +6,8 @@ namespace zf {
     struct s_game_init_context {
         s_arena *perm_arena;
         s_arena *temp_arena;
+
+        s_rng *rng;
     };
 
     struct s_input_state;
@@ -15,6 +17,8 @@ namespace zf {
         s_arena *temp_arena;
 
         const s_input_state *input_state;
+
+        s_rng *rng;
     };
 
     struct s_rendering_context;
@@ -24,6 +28,8 @@ namespace zf {
         s_arena *temp_arena;
 
         s_rendering_context *rendering_context;
+
+        s_rng *rng;
     };
 
     using t_game_init_func = void (*)(const s_game_init_context &context);

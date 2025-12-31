@@ -36,9 +36,12 @@ namespace zf {
         ZF_DEFER({ ShutdownAudioModule(); });
 #endif
 
+        s_rng *const rng = CreateRNG(0, &perm_arena); // @todo: Proper seed!
+
         init_func({
             .perm_arena = &perm_arena,
             .temp_arena = &temp_arena,
+            .rng = rng,
         });
 
         ZF_DEFER({
@@ -73,6 +76,7 @@ namespace zf {
                     .perm_arena = &perm_arena,
                     .temp_arena = &temp_arena,
                     .input_state = &input_state,
+                    .rng = rng,
                 });
 
                 input_state.events = {};
@@ -88,6 +92,7 @@ namespace zf {
                 .perm_arena = &perm_arena,
                 .temp_arena = &temp_arena,
                 .rendering_context = rendering_context,
+                .rng = rng,
             });
 
             EndRendering(rendering_context);
