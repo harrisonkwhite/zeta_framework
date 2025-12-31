@@ -6,7 +6,7 @@ namespace zf {
     // ============================================================
     // @section: Arenas
 
-    void DestroyArena(s_arena *const arena) {
+    void arena_destroy(s_arena *const arena) {
         const auto f = [](const auto self, s_arena_block *const block) {
             if (!block) {
                 return;
@@ -49,13 +49,13 @@ namespace zf {
         return block;
     }
 
-    void *PushToArena(s_arena *const arena, const t_i32 size, const t_i32 alignment) {
+    void *Push(s_arena *const arena, const t_i32 size, const t_i32 alignment) {
         ZF_ASSERT(size > 0 && IsAlignmentValid(alignment));
 
         if (!arena->blocks_head) {
             arena->blocks_head = CreateArenaBlock(ZF_MAX(size, arena->block_min_size));
             arena->block_cur = arena->blocks_head;
-            return PushToArena(arena, size, alignment);
+            return Push(arena, size, alignment);
         }
 
         const t_i32 offs_aligned = AlignForward(arena->block_cur_offs, alignment);
@@ -69,7 +69,7 @@ namespace zf {
             arena->block_cur = arena->block_cur->next;
             arena->block_cur_offs = 0;
 
-            return PushToArena(arena, size, alignment);
+            return Push(arena, size, alignment);
         }
 
         arena->block_cur_offs = offs_next;
@@ -80,7 +80,7 @@ namespace zf {
         return result;
     }
 
-    void RewindArena(s_arena *const arena) {
+    void arena_rewind(s_arena *const arena) {
         arena->block_cur = arena->blocks_head;
         arena->block_cur_offs = 0;
 

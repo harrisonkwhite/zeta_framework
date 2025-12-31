@@ -46,7 +46,7 @@ namespace zf {
         s_pcg32 pcg32;
     };
 
-    s_rng *CreateRNG(const t_u64 seed, s_arena *const arena) {
+    s_rng *rng_create(const t_u64 seed, s_arena *const arena) {
         const auto rng = AllocItem<s_rng>(arena);
         PCG32_Seed(&rng->pcg32, seed, 0); // @todo: Infer sequence from seed with mixing function!
         return rng;

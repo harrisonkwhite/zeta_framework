@@ -276,7 +276,7 @@ namespace zf {
         ek_utf8_byte_type_invalid,
     }};
 
-    t_b8 IsStrValidUTF8(const s_str_rdonly str) {
+    t_b8 str_is_valid_utf8(const s_str_rdonly str) {
         t_i32 cost = 0;
 
         for (t_i32 i = 0; i < str.bytes.len; i++) {
@@ -313,7 +313,7 @@ namespace zf {
     }
 
     t_i32 CalcStrLen(const s_str_rdonly str) {
-        ZF_ASSERT(IsStrValidUTF8(str));
+        ZF_ASSERT(str_is_valid_utf8(str));
 
         t_i32 i = 0;
         t_i32 len = 0;
@@ -376,7 +376,7 @@ namespace zf {
     }
 
     t_code_pt FindStrCodePointAtByte(const s_str_rdonly str, const t_i32 byte_index) {
-        ZF_ASSERT(IsStrValidUTF8(str));
+        ZF_ASSERT(str_is_valid_utf8(str));
         ZF_ASSERT(byte_index >= 0 && byte_index < str.bytes.len);
 
         t_i32 cp_first_byte_index = byte_index;
@@ -396,7 +396,7 @@ namespace zf {
     }
 
     void MarkStrCodePoints(const s_str_rdonly str, t_code_pt_bit_vec *const code_pts) {
-        ZF_ASSERT(IsStrValidUTF8(str));
+        ZF_ASSERT(str_is_valid_utf8(str));
 
         ZF_WALK_STR (str, info) {
             SetBit(*code_pts, info.code_pt); // @todo
@@ -404,7 +404,7 @@ namespace zf {
     }
 
     t_b8 WalkStr(const s_str_rdonly str, t_i32 *const byte_index, s_str_walk_info *const o_info) {
-        ZF_ASSERT(IsStrValidUTF8(str));
+        ZF_ASSERT(str_is_valid_utf8(str));
         ZF_ASSERT(*byte_index >= 0 && *byte_index <= str.bytes.len);
 
         if (*byte_index == str.bytes.len) {
@@ -438,7 +438,7 @@ namespace zf {
     }
 
     t_b8 WalkStrReverse(const s_str_rdonly str, t_i32 *const byte_index, s_str_walk_info *const o_info) {
-        ZF_ASSERT(IsStrValidUTF8(str));
+        ZF_ASSERT(str_is_valid_utf8(str));
         ZF_ASSERT(*byte_index >= -1 && *byte_index < str.bytes.len);
 
         if (*byte_index == -1) {

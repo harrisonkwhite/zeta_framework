@@ -137,7 +137,7 @@ namespace zf {
         return clone;
     }
 
-    inline t_b8 IsStrEmpty(const s_str_rdonly str) {
+    inline t_b8 str_is_empty(const s_str_rdonly str) {
         return str.bytes.len == 0;
     }
 
@@ -145,7 +145,7 @@ namespace zf {
         return Compare(a.bytes, b.bytes) == 0;
     }
 
-    t_b8 IsStrValidUTF8(const s_str_rdonly str);
+    t_b8 str_is_valid_utf8(const s_str_rdonly str);
 
     // Calculates the length in terms of code point count. Note that '\0' is treated just like any other ASCII character and does not terminate.
     t_i32 CalcStrLen(const s_str_rdonly str);

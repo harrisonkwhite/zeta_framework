@@ -834,7 +834,7 @@ namespace zf {
 
     template <typename... tp_arg_types>
     t_b8 LogErrorType(const s_str_rdonly type_name, const s_str_rdonly fmt, const tp_arg_types &...args) {
-        ZF_ASSERT(!IsStrEmpty(type_name));
+        ZF_ASSERT(!str_is_empty(type_name));
 
         c_stream std_err = StdError();
 

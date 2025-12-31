@@ -62,7 +62,7 @@ namespace zf {
         t_i32 len;
 
         t_i32 Cap() const {
-            return backing_arr.len;
+            return backing_arr.g_len;
         }
 
         tp_type &operator[](const t_i32 index) {
@@ -129,129 +129,127 @@ namespace zf {
             return cap_current == 0 ? 1 : cap_current * 2;
         };
 
-    namespace list {
-        template <co_list_nonstatic_mut tp_list_type>
-        void List_Extend(tp_list_type *const list, s_arena *const arena, const t_list_extension_cap_calculator cap_calculator = g_default_list_extension_cap_calculator) {
-            ZF_ASSERT(cap_calculator);
+    template <co_list_nonstatic_mut tp_list_type>
+    void Extend(tp_list_type *const list, s_arena *const arena, const t_list_extension_cap_calculator cap_calculator = g_default_list_extension_cap_calculator) {
+        ZF_ASSERT(cap_calculator);
 
-            const t_i32 new_cap = cap_calculator(list->Cap());
-            ZF_ASSERT(new_cap > list->Cap());
+        const t_i32 new_cap = cap_calculator(list->Cap());
+        ZF_ASSERT(new_cap > list->Cap());
 
-            const auto new_backing_arr = AllocArray<typename tp_list_type::t_elem>(new_cap, arena);
-            Copy(new_backing_arr, list->backing_arr);
+        const auto new_backing_arr = AllocArray<typename tp_list_type::t_elem>(new_cap, arena);
+        Copy(new_backing_arr, list->backing_arr);
 
-            *list = {new_backing_arr, list->len};
+        *list = {new_backing_arr, list->len};
+    }
+
+    template <co_list_nonstatic_mut tp_list_type>
+    void ExtendToFit(tp_list_type *const list, const t_i32 min_cap, s_arena *const arena, const t_list_extension_cap_calculator cap_calculator = g_default_list_extension_cap_calculator) {
+        ZF_ASSERT(min_cap > list->Cap());
+        ZF_ASSERT(cap_calculator);
+
+        const t_i32 new_cap = [cap = list->Cap(), min_cap, cap_calculator]() {
+            t_i32 result = cap;
+
+            do {
+                const auto res_last = result;
+                result = cap_calculator(result);
+                ZF_ASSERT(result > res_last);
+            } while (result < min_cap);
+
+            return result;
+        }();
+
+        const auto new_backing_arr = AllocArray<typename tp_list_type::t_elem>(new_cap, arena);
+        Copy(new_backing_arr, list->backing_arr);
+
+        *list = {new_backing_arr, list->len};
+    }
+
+    template <co_list tp_list_type>
+    typename tp_list_type::t_elem *Append(tp_list_type *const list, const typename tp_list_type::t_elem &val) {
+        ZF_ASSERT(list->len < list->Cap());
+
+        list->len++;
+        (*list)[list->len - 1] = val;
+        return &(*list)[list->len - 1];
+    }
+
+    template <co_list_nonstatic tp_list_type>
+    typename tp_list_type::t_elem *Append_Dynamic(tp_list_type *const list, const typename tp_list_type::t_elem &val, s_arena *const extension_arena, const t_list_extension_cap_calculator extension_cap_calculator = g_default_list_extension_cap_calculator) {
+        if (list->len == list->Cap()) {
+            Extend(list, extension_arena, extension_cap_calculator);
         }
 
-        template <co_list_nonstatic_mut tp_list_type>
-        void List_ExtendToFit(tp_list_type *const list, const t_i32 min_cap, s_arena *const arena, const t_list_extension_cap_calculator cap_calculator = g_default_list_extension_cap_calculator) {
-            ZF_ASSERT(min_cap > list->Cap());
-            ZF_ASSERT(cap_calculator);
+        return Append(list, val);
+    }
 
-            const t_i32 new_cap = [cap = list->Cap(), min_cap, cap_calculator]() {
-                t_i32 result = cap;
+    template <co_list tp_list_type>
+    s_array_mut<typename tp_list_type::t_elem> AppendMany(tp_list_type *const list, const s_array_rdonly<typename tp_list_type::t_elem> vals) {
+        ZF_ASSERT(list->len + vals.len <= list->Cap());
 
-                do {
-                    const auto res_last = result;
-                    result = cap_calculator(result);
-                    ZF_ASSERT(result > res_last);
-                } while (result < min_cap);
+        Copy(list->backing_arr.SliceFrom(list->len), vals);
+        list->len += vals.len;
+        return list->backing_arr.Slice(list->len - vals.len, list->len);
+    }
 
-                return result;
-            }();
+    template <co_list_nonstatic tp_list_type>
+    s_array_mut<typename tp_list_type::t_elem> AppendMany_Dynamic(tp_list_type *const list, const s_array_rdonly<typename tp_list_type::t_elem> vals, s_arena *const extension_arena, const t_list_extension_cap_calculator extension_cap_calculator = g_default_list_extension_cap_calculator) {
+        const auto min_cap_needed = list->len + vals.len;
 
-            const auto new_backing_arr = AllocArray<typename tp_list_type::t_elem>(new_cap, arena);
-            Copy(new_backing_arr, list->backing_arr);
-
-            *list = {new_backing_arr, list->len};
+        if (min_cap_needed > list->Cap()) {
+            ExtendToFit(list, min_cap_needed, extension_arena, extension_cap_calculator);
         }
 
-        template <co_list tp_list_type>
-        typename tp_list_type::t_elem *List_Append(tp_list_type *const list, const typename tp_list_type::t_elem &val) {
-            ZF_ASSERT(list->len < list->Cap());
+        return AppendMany(list, vals);
+    }
 
-            list->len++;
-            (*list)[list->len - 1] = val;
-            return &(*list)[list->len - 1];
+    template <co_list tp_list_type>
+    typename tp_list_type::t_elem *Insert(tp_list_type *const list, const t_i32 index, const typename tp_list_type::t_elem &val) {
+        ZF_ASSERT(list->len < list->Cap());
+        ZF_ASSERT(index >= 0 && index <= list->len);
+
+        list->len++;
+
+        for (t_i32 i = list->len - 1; i > index; i--) {
+            (*list)[i] = (*list)[i - 1];
         }
 
-        template <co_list_nonstatic tp_list_type>
-        typename tp_list_type::t_elem *List_Append_Dynamic(tp_list_type *const list, const typename tp_list_type::t_elem &val, s_arena *const extension_arena, const t_list_extension_cap_calculator extension_cap_calculator = g_default_list_extension_cap_calculator) {
-            if (list->len == list->Cap()) {
-                List_Extend(list, extension_arena, extension_cap_calculator);
-            }
+        (*list)[index] = val;
 
-            return List_Append(list, val);
+        return &(*list)[index];
+    }
+
+    template <co_list tp_list_type>
+    typename tp_list_type::t_elem *Insert_Dynamic(tp_list_type *const list, const t_i32 index, const typename tp_list_type::t_elem &val, s_arena *const extension_arena, const t_list_extension_cap_calculator extension_cap_calculator = g_default_list_extension_cap_calculator) {
+        if (list->len == list->Cap()) {
+            Extend(list, extension_arena, extension_cap_calculator);
         }
 
-        template <co_list tp_list_type>
-        s_array_mut<typename tp_list_type::t_elem> List_AppendMany(tp_list_type *const list, const s_array_rdonly<typename tp_list_type::t_elem> vals) {
-            ZF_ASSERT(list->len + vals.len <= list->Cap());
+        return Insert(list, index, val);
+    }
 
-            Copy(list->backing_arr.SliceFrom(list->len), vals);
-            list->len += vals.len;
-            return list->backing_arr.Slice(list->len - vals.len, list->len);
-        }
+    template <co_list tp_list_type>
+    void RemoveAt(tp_list_type *const list, const t_i32 index) {
+        ZF_ASSERT(list->len > 0);
+        ZF_ASSERT(index >= 0 && index < list->len);
 
-        template <co_list_nonstatic tp_list_type>
-        s_array_mut<typename tp_list_type::t_elem> List_AppendMany_Dynamic(tp_list_type *const list, const s_array_rdonly<typename tp_list_type::t_elem> vals, s_arena *const extension_arena, const t_list_extension_cap_calculator extension_cap_calculator = g_default_list_extension_cap_calculator) {
-            const auto min_cap_needed = list->len + vals.len;
+        Copy(list->backing_arr.Slice(index, list->len - 1), list->backing_arr.Slice(index + 1, list->len));
+        list->len--;
+    }
 
-            if (min_cap_needed > list->Cap()) {
-                List_ExtendToFit(list, min_cap_needed, extension_arena, extension_cap_calculator);
-            }
+    template <co_list tp_list_type>
+    void RemoveEnd(tp_list_type *const list) {
+        ZF_ASSERT(list->len > 0);
+        list->len--;
+    }
 
-            return List_AppendMany(list, vals);
-        }
+    template <co_list tp_list_type>
+    void SwapbackRemove(tp_list_type *const list, const t_i32 index) {
+        ZF_ASSERT(list->len > 0);
+        ZF_ASSERT(index >= 0 && index < list->len);
 
-        template <co_list tp_list_type>
-        typename tp_list_type::t_elem *List_Insert(tp_list_type *const list, const t_i32 index, const typename tp_list_type::t_elem &val) {
-            ZF_ASSERT(list->len < list->Cap());
-            ZF_ASSERT(index >= 0 && index <= list->len);
-
-            list->len++;
-
-            for (t_i32 i = list->len - 1; i > index; i--) {
-                (*list)[i] = (*list)[i - 1];
-            }
-
-            (*list)[index] = val;
-
-            return &(*list)[index];
-        }
-
-        template <co_list tp_list_type>
-        typename tp_list_type::t_elem *List_InsertDynamic(tp_list_type *const list, const t_i32 index, const typename tp_list_type::t_elem &val, s_arena *const extension_arena, const t_list_extension_cap_calculator extension_cap_calculator = g_default_list_extension_cap_calculator) {
-            if (list->len == list->Cap()) {
-                List_Extend(list, extension_arena, extension_cap_calculator);
-            }
-
-            return List_Insert(list, index, val);
-        }
-
-        template <co_list tp_list_type>
-        void List_RemoveAt(tp_list_type *const list, const t_i32 index) {
-            ZF_ASSERT(list->len > 0);
-            ZF_ASSERT(index >= 0 && index < list->len);
-
-            Copy(list->backing_arr.Slice(index, list->len - 1), list->backing_arr.Slice(index + 1, list->len));
-            list->len--;
-        }
-
-        template <co_list tp_list_type>
-        void List_SwapbackRemove(tp_list_type *const list, const t_i32 index) {
-            ZF_ASSERT(list->len > 0);
-            ZF_ASSERT(index >= 0 && index < list->len);
-
-            (*list)[index] = (*list)[list->len - 1];
-            list->len--;
-        }
-
-        template <co_list tp_list_type>
-        void List_RemoveEnd(tp_list_type *const list) {
-            ZF_ASSERT(list->len > 0);
-            list->len--;
-        }
+        (*list)[index] = (*list)[list->len - 1];
+        list->len--;
     }
 
     // ============================================================

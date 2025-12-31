@@ -92,8 +92,8 @@ namespace zf {
     }};
 
     t_b8 PackAssets(const s_str_rdonly instrs_json_file_path) {
-        s_arena arena = CreateArena();
-        ZF_DEFER({ DestroyArena(&arena); });
+        s_arena arena = arena_create();
+        ZF_DEFER({ arena_destroy(&arena); });
 
         cJSON *cj;
 
@@ -138,7 +138,7 @@ namespace zf {
             cJSON *cj_asset;
 
             cJSON_ArrayForEach(cj_asset, cj_assets) {
-                RewindArena(&arena);
+                arena_rewind(&arena);
 
                 if (!cJSON_IsObject(cj_asset)) {
                     continue;

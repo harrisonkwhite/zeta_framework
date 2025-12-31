@@ -1,7 +1,7 @@
 #include <zgl/zgl_input.h>
 
 namespace zf {
-    void UpdateKeyState(s_input_state *const input_state, const e_key_code code, const t_b8 is_down) {
+    void key_update_state(s_input_state *const input_state, const e_key_code code, const t_b8 is_down) {
         if (is_down) {
             if (!IsBitSet(input_state->keys_down, code)) {
                 SetBit(input_state->keys_down, code);
@@ -15,7 +15,7 @@ namespace zf {
         }
     }
 
-    void UpdateMouseButtonState(s_input_state *const input_state, const e_mouse_button_code code, const t_b8 is_down) {
+    void mouse_button_update_state(s_input_state *const input_state, const e_mouse_button_code code, const t_b8 is_down) {
         if (is_down) {
             if (!IsBitSet(input_state->mouse_buttons_down, code)) {
                 SetBit(input_state->mouse_buttons_down, code);
@@ -29,7 +29,7 @@ namespace zf {
         }
     }
 
-    void UpdateGamepadState(s_input_state *const input_state, const t_i32 gamepad_index, const t_b8 connected, const s_static_bit_vec<eks_gamepad_button_code_cnt> &btns_down, const s_static_array<t_f32, eks_gamepad_axis_code_cnt> &axes) {
+    void gamepad_update_state(s_input_state *const input_state, const t_i32 gamepad_index, const t_b8 connected, const s_static_bit_vec<eks_gamepad_button_code_cnt> &btns_down, const s_static_array<t_f32, eks_gamepad_axis_code_cnt> &axes) {
         if (!connected) {
             ZF_ASSERT(AreAllBitsUnset(btns_down) && DoAllEqual(axes.AsNonstatic(), 0.0f));
             return;

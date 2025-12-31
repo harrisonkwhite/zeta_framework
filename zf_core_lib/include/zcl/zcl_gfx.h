@@ -208,7 +208,7 @@ namespace zf {
     constexpr s_v2 g_alignment_bottomcenter = {0.5f, 1.0f};
     constexpr s_v2 g_alignment_bottomright = {1.0f, 1.0f};
 
-    constexpr t_b8 IsAlignmentValid(const s_v2 alignment) {
+    constexpr t_b8 is_alignment_valid(const s_v2 alignment) {
         return alignment.x >= 0.0f && alignment.x <= 1.0f && alignment.y >= 0.0f && alignment.y <= 1.0f;
     }
 

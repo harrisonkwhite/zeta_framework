@@ -98,30 +98,30 @@ namespace zf {
     };
 
     // Does not allocate any arena memory (blocks) upfront.
-    inline s_arena CreateArena(const t_i32 block_min_size = MegabytesToBytes(1)) {
+    inline s_arena arena_create(const t_i32 block_min_size = MegabytesToBytes(1)) {
         return {.block_min_size = block_min_size};
     }
 
     // Frees all arena memory. It is valid to call this even if no pushing was done.
-    void DestroyArena(s_arena *const arena);
+    void arena_destroy(s_arena *const arena);
 
     // Will lazily allocate memory as needed. Allocation failure is treated as fatal and causes an abort - you don't need to check for nullptr.
-    void *PushToArena(s_arena *const arena, const t_i32 size, const t_i32 alignment);
+    void *Push(s_arena *const arena, const t_i32 size, const t_i32 alignment);
 
     // Rewinds the arena to the beginning of its allocated memory (if any) to overwrite from there.
-    void RewindArena(s_arena *const arena);
+    void arena_rewind(s_arena *const arena);
 
     // ============================================================
 
 
     template <typename tp_type>
     tp_type *AllocItem(s_arena *const arena) {
-        return static_cast<tp_type *>(PushToArena(arena, ZF_SIZE_OF(tp_type), ZF_ALIGN_OF(tp_type)));
+        return static_cast<tp_type *>(Push(arena, ZF_SIZE_OF(tp_type), ZF_ALIGN_OF(tp_type)));
     }
 
     template <typename tp_type>
     tp_type *AllocItemZeroed(s_arena *const arena) {
-        const auto result = static_cast<tp_type *>(PushToArena(arena, ZF_SIZE_OF(tp_type), ZF_ALIGN_OF(tp_type)));
+        const auto result = static_cast<tp_type *>(Push(arena, ZF_SIZE_OF(tp_type), ZF_ALIGN_OF(tp_type)));
         ClearItem(result, 0);
         return result;
     }
@@ -295,7 +295,7 @@ namespace zf {
             return {};
         }
 
-        const auto raw = static_cast<tp_type *>(PushToArena(arena, ZF_SIZE_OF(tp_type) * len, ZF_ALIGN_OF(tp_type)));
+        const auto raw = static_cast<tp_type *>(Push(arena, ZF_SIZE_OF(tp_type) * len, ZF_ALIGN_OF(tp_type)));
         return {raw, len};
     }
 
@@ -308,7 +308,7 @@ namespace zf {
         }
 
         const t_i32 size = ZF_SIZE_OF(tp_type) * len;
-        const auto raw = static_cast<tp_type *>(PushToArena(arena, size, ZF_ALIGN_OF(tp_type)));
+        const auto raw = static_cast<tp_type *>(Push(arena, size, ZF_ALIGN_OF(tp_type)));
         Clear(raw, size, 0);
         return {raw, len};
     }

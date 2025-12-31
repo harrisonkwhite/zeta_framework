@@ -3,51 +3,55 @@
 #include <zcl.h>
 
 namespace zf {
-    // Note that the window is not shown by default, you have to manually do this.
-    void StartupPlatformModule(const s_v2_i init_window_size);
-
-    void ShutdownPlatformModule();
-
-    // Gives the time in seconds since the platform module was initialised.
-    t_f64 Time();
-
     struct s_input_state;
 
-    // Also updates the given input state based on OS events.
-    void PollOSEvents(s_input_state *const input_state);
+    namespace platform {
+        // Note that the window is not shown by default, you have to manually do this.
+        void startup(const s_v2_i init_window_size);
 
-    void *NativeWindowHandle();
-    void *NativeDisplayHandle();
+        void shutdown();
 
-    void ShowWindow();
+        // Gives the time in seconds since the platform module was initialised.
+        t_f64 get_time();
 
-    // Returns whether a window close has been requested.
-    t_b8 ShouldWindowClose();
+        // Also updates the given input state based on OS events.
+        void poll_os_events(s_input_state *const input_state);
 
-    void SetWindowTitle(const s_str_rdonly title, s_arena *const temp_arena);
+        void *display_get_native_handle();
 
-    // Sets the LOGICAL window size. The actual new framebuffer size MIGHT be larger if there is DPI scaling.
-    void SetWindowSize(const s_v2_i size);
+        void *window_get_native_handle();
 
-    // Set the LOGICAL window size limits. If you don't want to limit a particular dimension, leave it as -1.
-    void SetWindowSizeLimits(const t_i32 min_width, const t_i32 min_height, const t_i32 max_width, const t_i32 max_height);
+        void window_show();
 
-    void SetWindowResizability(const t_b8 resizable);
+        // Returns whether a window close has been requested.
+        t_b8 window_get_should_close();
 
-    s_v2_i WindowFramebufferSizeCache();
+        void window_set_title(const s_str_rdonly title, s_arena *const temp_arena);
 
-    // Returns the size in pixels of whichever monitor the window most resides in.
-    s_v2_i CalcMonitorPixelSize();
+        // Sets the LOGICAL window size. The actual new framebuffer size MIGHT be larger if there is DPI scaling.
+        void window_set_size(const s_v2_i size);
 
-    // Returns the size (accounting for DPI scaling) of whichever monitor the window most resides in.
-    s_v2_i CalcMonitorLogicalSize();
+        // Set the LOGICAL window size limits. If you don't want to limit a particular dimension, leave it as -1.
+        void window_set_size_limits(const t_i32 min_width, const t_i32 min_height, const t_i32 max_width, const t_i32 max_height);
 
-    t_b8 IsFullscreen();
-    void SetFullscreen(const t_b8 fs);
+        void window_set_resizability(const t_b8 resizable);
 
-    inline void ToggleFullscreen() {
-        SetFullscreen(!IsFullscreen());
+        s_v2_i window_get_framebuffer_size_cache();
+
+        t_b8 window_is_fullscreen();
+
+        void window_set_fullscreen(const t_b8 fs);
+
+        inline void window_toggle_fullscreen() {
+            window_set_fullscreen(!window_is_fullscreen());
+        }
+
+        // Returns the size in pixels of whichever monitor the window most resides in.
+        s_v2_i monitor_calc_pixel_size();
+
+        // Returns the size (accounting for DPI scaling) of whichever monitor the window most resides in.
+        s_v2_i monitor_calc_logical_size();
+
+        void cursor_set_visible(const t_b8 visible);
     }
-
-    void SetCursorVisibility(const t_b8 visible);
 }

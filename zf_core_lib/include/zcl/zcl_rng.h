@@ -5,7 +5,7 @@
 namespace zf {
     struct s_rng;
 
-    s_rng *CreateRNG(const t_u64 seed, s_arena *const arena);
+    s_rng *rng_create(const t_u64 seed, s_arena *const arena);
 
     t_u32 RandU32(s_rng *const rng);
 
