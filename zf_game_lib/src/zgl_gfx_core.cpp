@@ -223,7 +223,8 @@ namespace zf {
     s_gfx_resource *CreateTextureResource(const s_texture_data_rdonly texture_data, s_gfx_resource_group *const group) {
         ZF_ASSERT(g_state.state == ek_state_initted);
 
-        const auto texture_bgfx_hdl = bgfx::createTexture2D(static_cast<uint16_t>(texture_data.size_in_pxs.x), static_cast<uint16_t>(texture_data.size_in_pxs.y), false, 1, bgfx::TextureFormat::RGBA8, 0, bgfx::copy(texture_data.rgba_px_data.raw, static_cast<uint32_t>(texture_data.rgba_px_data.SizeInBytes())));
+        const uint64_t sampler_flags = BGFX_SAMPLER_MIN_POINT | BGFX_SAMPLER_MAG_POINT | BGFX_SAMPLER_U_CLAMP | BGFX_SAMPLER_V_CLAMP;
+        const auto texture_bgfx_hdl = bgfx::createTexture2D(static_cast<uint16_t>(texture_data.size_in_pxs.x), static_cast<uint16_t>(texture_data.size_in_pxs.y), false, 1, bgfx::TextureFormat::RGBA8, sampler_flags, bgfx::copy(texture_data.rgba_px_data.raw, static_cast<uint32_t>(texture_data.rgba_px_data.SizeInBytes())));
 
         if (!bgfx::isValid(texture_bgfx_hdl)) {
             ZF_FATAL();
