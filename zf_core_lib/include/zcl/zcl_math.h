@@ -231,21 +231,13 @@ namespace zf {
 
         explicit constexpr operator s_rect_i() const;
         constexpr s_rect_i ToRectI() const;
-
-        constexpr t_b8 ContainsPoint(const s_v2 pt) const {
-            return pt.x > Left() && pt.y > Top() && pt.x < Right() && pt.y < Bottom();
-        }
-
-        constexpr t_b8 IntersWith(const s_rect_f other) const {
-            return Left() < other.Right() && Top() < other.Bottom() && Right() > other.Left() && Bottom() > other.Top();
-        }
     };
 
     struct s_rect_i {
-        t_i32 x = 0;
-        t_i32 y = 0;
-        t_i32 width = 0;
-        t_i32 height = 0;
+        t_i32 x;
+        t_i32 y;
+        t_i32 width;
+        t_i32 height;
 
         constexpr s_rect_i() = default;
 
@@ -287,14 +279,6 @@ namespace zf {
         constexpr s_rect_f ToRectF() const {
             return static_cast<s_rect_f>(*this);
         }
-
-        constexpr t_b8 ContainsPoint(const s_v2_i pt) const {
-            return pt.x > Left() && pt.y > Top() && pt.x < Right() && pt.y < Bottom();
-        }
-
-        constexpr t_b8 IntersWith(const s_rect_i other) const {
-            return Left() < other.Right() && Top() < other.Bottom() && Right() > other.Left() && Bottom() > other.Top();
-        }
     };
 
     constexpr s_rect_f::operator s_rect_i() const {
@@ -303,6 +287,14 @@ namespace zf {
 
     constexpr s_rect_i s_rect_f::ToRectI() const {
         return static_cast<s_rect_i>(*this);
+    }
+
+    constexpr t_b8 DoRectsIntersect(const s_rect_i a, const s_rect_i b) {
+        return a.Left() < b.Right() && a.Top() < b.Bottom() && a.Right() > b.Left() && a.Bottom() > b.Top();
+    }
+
+    constexpr t_b8 DoRectsIntersect(const s_rect_f a, const s_rect_f b) {
+        return a.Left() < b.Right() && a.Top() < b.Bottom() && a.Right() > b.Left() && a.Bottom() > b.Top();
     }
 
     s_rect_f CalcSpanningRect(const s_array_mut<s_rect_f> rects);
@@ -385,6 +377,14 @@ namespace zf {
 
     inline s_v2 CalcLenDir(const t_f32 len, const t_f32 dir) {
         return s_v2(cos(dir), -sin(dir)) * len;
+    }
+
+    constexpr t_b8 IsPointInRect(const s_v2 pt, const s_rect_f rect) {
+        return pt.x > rect.Left() && pt.y > rect.Top() && pt.x < rect.Right() && pt.y < rect.Bottom();
+    }
+
+    constexpr t_b8 IsPointInRect(const s_v2_i pt, const s_rect_i rect) {
+        return pt.x > rect.Left() && pt.y > rect.Top() && pt.x < rect.Right() && pt.y < rect.Bottom();
     }
 
     constexpr s_v2 ClampedWithinContainer(const s_v2 pt, const s_rect_f container) {
