@@ -17,11 +17,11 @@ namespace zf {
         //
         // Initialisation
         //
-        s_arena perm_mem_arena;
-        ZF_DEFER({ perm_mem_arena.Release(); });
+        s_arena perm_mem_arena = CreateArena();
+        ZF_DEFER({ DestroyArena(&perm_mem_arena); });
 
-        s_arena temp_mem_arena;
-        ZF_DEFER({ temp_mem_arena.Release(); });
+        s_arena temp_mem_arena = CreateArena();
+        ZF_DEFER({ DestroyArena(&temp_mem_arena); });
 
         StartupPlatformModule(g_init_window_size);
         ZF_DEFER({ ShutdownPlatformModule(); });
@@ -56,7 +56,7 @@ namespace zf {
         t_f64 frame_dur_accum = 0.0;
 
         while (!ShouldWindowClose()) {
-            temp_mem_arena.Rewind();
+            RewindArena(&temp_mem_arena);
 
             PollOSEvents(&input_state);
 

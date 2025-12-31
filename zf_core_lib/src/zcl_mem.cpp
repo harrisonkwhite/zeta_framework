@@ -6,9 +6,9 @@
 namespace zf {
     // ============================================================
     // @section: Arenas
-    // ============================================================
-    void s_arena::Release() {
-        const auto f = [](const auto self, s_block *const block) {
+
+    void DestroyArena(s_arena *const arena) {
+        const auto f = [](const auto self, s_arena_block *const block) {
             if (!block) {
                 return;
             }
@@ -19,49 +19,19 @@ namespace zf {
             free(block);
         };
 
-        f(f, m_blocks_head);
-
-        *this = {};
+        f(f, arena->blocks_head);
     }
 
-    void *s_arena::Push(const t_i32 size, const t_i32 alignment) {
-        ZF_ASSERT(size > 0 && IsAlignmentValid(alignment));
+    static s_arena_block *CreateArenaBlock(const t_i32 buf_size) {
+        ZF_REQUIRE(buf_size > 0);
 
-        if (!m_blocks_head) {
-            m_blocks_head = CreateBlock(ZF_MAX(size, g_block_min_size));
-            m_block_cur = m_blocks_head;
-            return Push(size, alignment);
-        }
-
-        const t_i32 offs_aligned = AlignForward(m_block_cur_offs, alignment);
-        const t_i32 offs_next = offs_aligned + size;
-
-        if (offs_next > m_block_cur->buf_size) {
-            if (!m_block_cur->next) {
-                m_block_cur->next = CreateBlock(ZF_MAX(size, g_block_min_size));
-            }
-
-            m_block_cur = m_block_cur->next;
-            m_block_cur_offs = 0;
-
-            return Push(size, alignment);
-        }
-
-        m_block_cur_offs = offs_next;
-
-        return static_cast<t_u8 *>(m_block_cur->buf) + offs_aligned;
-    }
-
-    s_arena::s_block *s_arena::CreateBlock(const t_i32 buf_size) {
-        ZF_ASSERT(buf_size > 0);
-
-        const auto res = static_cast<s_block *>(malloc(sizeof(s_block)));
+        const auto res = static_cast<s_arena_block *>(malloc(sizeof(s_arena_block)));
 
         if (!res) {
             ZF_FATAL();
         }
 
-        memset(res, 0, sizeof(s_block));
+        memset(res, 0, sizeof(s_arena_block));
 
         res->buf = malloc(static_cast<size_t>(buf_size));
 
@@ -76,11 +46,110 @@ namespace zf {
         return res;
     }
 
+    void *PushToArena(s_arena *const arena, const t_i32 size, const t_i32 alignment) {
+        ZF_ASSERT(size > 0 && IsAlignmentValid(alignment));
+
+        if (!arena->blocks_head) {
+            arena->blocks_head = CreateArenaBlock(ZF_MAX(size, arena->block_min_size));
+            arena->block_cur = arena->blocks_head;
+            return PushToArena(arena, size, alignment);
+        }
+
+        const t_i32 offs_aligned = AlignForward(arena->block_cur_offs, alignment);
+        const t_i32 offs_next = offs_aligned + size;
+
+        if (offs_next > arena->block_cur->buf_size) {
+            if (!arena->block_cur->next) {
+                arena->block_cur->next = CreateArenaBlock(ZF_MAX(size, arena->block_min_size));
+            }
+
+            arena->block_cur = arena->block_cur->next;
+            arena->block_cur_offs = 0;
+
+            return PushToArena(arena, size, alignment);
+        }
+
+        arena->block_cur_offs = offs_next;
+
+        return static_cast<t_u8 *>(arena->block_cur->buf) + offs_aligned;
+    }
+
+#if 0
+    void s_arena::Release() {
+        const auto f = [](const auto self, s_arena_block *const block) {
+            if (!block) {
+                return;
+            }
+
+            self(self, block->next);
+
+            free(block->buf);
+            free(block);
+        };
+
+        f(f, blocks_head);
+
+        *this = {};
+    }
+
+    void *s_arena::Push(const t_i32 size, const t_i32 alignment) {
+        ZF_ASSERT(size > 0 && IsAlignmentValid(alignment));
+
+        if (!blocks_head) {
+            blocks_head = CreateBlock(ZF_MAX(size, g_arena_block_min_size));
+            block_cur = blocks_head;
+            return Push(size, alignment);
+        }
+
+        const t_i32 offs_aligned = AlignForward(block_cur_offs, alignment);
+        const t_i32 offs_next = offs_aligned + size;
+
+        if (offs_next > block_cur->buf_size) {
+            if (!block_cur->next) {
+                block_cur->next = CreateBlock(ZF_MAX(size, g_arena_block_min_size));
+            }
+
+            block_cur = block_cur->next;
+            block_cur_offs = 0;
+
+            return Push(size, alignment);
+        }
+
+        block_cur_offs = offs_next;
+
+        return static_cast<t_u8 *>(block_cur->buf) + offs_aligned;
+    }
+
+    s_arena::s_block *s_arena::CreateBlock(const t_i32 buf_size) {
+        ZF_ASSERT(buf_size > 0);
+
+        const auto res = static_cast<s_arena_block *>(malloc(sizeof(s_arena_block)));
+
+        if (!res) {
+            ZF_FATAL();
+        }
+
+        memset(res, 0, sizeof(s_arena_block));
+
+        res->buf = malloc(static_cast<size_t>(buf_size));
+
+        if (!res->buf) {
+            ZF_FATAL();
+        }
+
+        memset(res->buf, 0, static_cast<size_t>(buf_size)); // Explicitly touch all the memory.
+
+        res->buf_size = buf_size;
+
+        return res;
+    }
+#endif
+
     // ============================================================
+
 
     // ============================================================
     // @section: Bits
-    // ============================================================
 
     static t_i32 IndexOfFirstSetBitHelper(const s_bit_vec_rdonly bv, const t_i32 from, const t_u8 xor_mask) {
         ZF_ASSERT(from >= 0 && from <= bv.bit_cnt); // Intentionally allowing the upper bound here for the case of iteration.

@@ -39,43 +39,43 @@ namespace zf {
     // ============================================================
     // @section: Arenas
 
-    struct s_arena {
-    public:
-        // Frees all arena memory and resets object state. It is valid to call this even if no pushing was done.
-        void Release();
+    struct s_arena_block {
+        void *buf;
+        t_i32 buf_size;
 
-        // Will lazily allocate memory as needed. Allocation failure is treated as fatal and causes an abort - you don't need to check for nullptr.
-        void *Push(const t_i32 size, const t_i32 alignment);
-
-        // DOES NOT FREE ANY ARENA MEMORY. Simply rewinds the arena to the beginning of its allocated memory (if any) to overwrite from there.
-        void Rewind() {
-            m_block_cur = m_blocks_head;
-            m_block_cur_offs = 0;
-        }
-
-    private:
-        static constexpr t_i32 g_block_min_size = MegabytesToBytes(1);
-
-        struct s_block {
-            void *buf;
-            t_i32 buf_size;
-
-            s_block *next;
-        };
-
-        s_block *m_blocks_head = nullptr;
-        s_block *m_block_cur = nullptr;
-        t_i32 m_block_cur_offs = 0;
-
-        static s_block *CreateBlock(const t_i32 buf_size);
+        s_arena_block *next;
     };
+
+    struct s_arena {
+        s_arena_block *blocks_head;
+        s_arena_block *block_cur;
+        t_i32 block_cur_offs;
+        t_i32 block_min_size;
+    };
+
+    // Does not allocate any arena memory (blocks) upfront.
+    inline s_arena CreateArena(const t_i32 block_min_size = MegabytesToBytes(1)) {
+        return {.block_min_size = block_min_size};
+    }
+
+    // Frees all arena memory. It is valid to call this even if no pushing was done.
+    void DestroyArena(s_arena *const arena);
+
+    // Will lazily allocate memory as needed. Allocation failure is treated as fatal and causes an abort - you don't need to check for nullptr.
+    void *PushToArena(s_arena *const arena, const t_i32 size, const t_i32 alignment);
+
+    // DOES NOT FREE ANY ARENA MEMORY. Simply rewinds the arena to the beginning of its allocated memory (if any) to overwrite from there.
+    inline void RewindArena(s_arena *const arena) {
+        arena->block_cur = arena->blocks_head;
+        arena->block_cur_offs = 0;
+    }
 
     // ============================================================
 
 
     template <typename tp_type>
     tp_type *Alloc(s_arena *const arena) {
-        const auto ptr = static_cast<tp_type *>(arena->Push(ZF_SIZE_OF(tp_type), ZF_ALIGN_OF(tp_type)));
+        const auto ptr = static_cast<tp_type *>(PushToArena(arena, ZF_SIZE_OF(tp_type), ZF_ALIGN_OF(tp_type)));
         new (ptr) tp_type();
         return ptr;
     }
@@ -256,7 +256,7 @@ namespace zf {
             return {};
         }
 
-        const auto raw = static_cast<tp_type *>(arena->Push(ZF_SIZE_OF(tp_type) * len, ZF_ALIGN_OF(tp_type)));
+        const auto raw = static_cast<tp_type *>(PushToArena(arena, ZF_SIZE_OF(tp_type) * len, ZF_ALIGN_OF(tp_type)));
 
         for (t_i32 i = 0; i < len; i++) {
             new (&raw[i]) tp_type();
