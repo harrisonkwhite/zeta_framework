@@ -200,14 +200,8 @@ namespace zf {
         t_f32 height;
 
         constexpr s_rect_f() = default;
-
-        constexpr s_rect_f(const t_f32 x, const t_f32 y, const t_f32 width, const t_f32 height) : x(x), y(y), width(width), height(height) {
-            ZF_ASSERT(width >= 0.0f && height >= 0.0f);
-        }
-
-        constexpr s_rect_f(const s_v2 pos, const s_v2 size) : x(pos.x), y(pos.y), width(size.x), height(size.y) {
-            ZF_ASSERT(size.x >= 0.0f && size.y >= 0.0f);
-        }
+        constexpr s_rect_f(const t_f32 x, const t_f32 y, const t_f32 width, const t_f32 height) : x(x), y(y), width(width), height(height) {}
+        constexpr s_rect_f(const s_v2 pos, const s_v2 size) : x(pos.x), y(pos.y), width(size.x), height(size.y) {}
 
         constexpr s_v2 Pos() const { return {x, y}; }
         constexpr s_v2 Size() const { return {width, height}; }
@@ -240,14 +234,8 @@ namespace zf {
         t_i32 height;
 
         constexpr s_rect_i() = default;
-
-        constexpr s_rect_i(const t_i32 x, const t_i32 y, const t_i32 width, const t_i32 height) : x(x), y(y), width(width), height(height) {
-            ZF_ASSERT(width >= 0 && height >= 0);
-        }
-
-        constexpr s_rect_i(const s_v2_i pos, const s_v2_i size) : x(pos.x), y(pos.y), width(size.x), height(size.y) {
-            ZF_ASSERT(size.x >= 0 && size.y >= 0);
-        }
+        constexpr s_rect_i(const t_i32 x, const t_i32 y, const t_i32 width, const t_i32 height) : x(x), y(y), width(width), height(height) {}
+        constexpr s_rect_i(const s_v2_i pos, const s_v2_i size) : x(pos.x), y(pos.y), width(size.x), height(size.y) {}
 
         constexpr s_v2_i Pos() const { return {x, y}; }
         constexpr s_v2_i Size() const { return {width, height}; }
@@ -397,12 +385,12 @@ namespace zf {
 
     constexpr s_rect_f ClampedWithinContainer(const s_rect_f rect, const s_rect_f container) {
         const s_v2 tl = {ZF_MAX(rect.x, container.x), ZF_MAX(rect.y, container.y)};
-        return {tl.x, tl.y, ZF_MIN(rect.Right(), container.Right()) - tl.x, ZF_MIN(rect.Bottom(), container.Bottom()) - tl.y};
+        return {tl.x, tl.y, ZF_MAX(ZF_MIN(rect.Right(), container.Right()) - tl.x, 0), ZF_MAX(ZF_MIN(rect.Bottom(), container.Bottom()) - tl.y, 0)};
     }
 
     constexpr s_rect_i ClampedWithinContainer(const s_rect_i rect, const s_rect_i container) {
         const s_v2_i tl = {ZF_MAX(rect.x, container.x), ZF_MAX(rect.y, container.y)};
-        return {tl.x, tl.y, ZF_MIN(rect.Right(), container.Right()) - tl.x, ZF_MIN(rect.Bottom(), container.Bottom()) - tl.y};
+        return {tl.x, tl.y, ZF_MAX(ZF_MIN(rect.Right(), container.Right()) - tl.x, 0), ZF_MAX(ZF_MIN(rect.Bottom(), container.Bottom()) - tl.y, 0)};
     }
 
     // Returns a value between 0 and 1 indicating what percentage of the rectangle is within the container.
