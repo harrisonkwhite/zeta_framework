@@ -2,7 +2,7 @@
 
 This is a data-oriented framework for developing 2D games for Windows, Mac, and Linux.
 
-It was originally written in C, though has been switched to a procedural subset of C++ 20 to leverage useful features like operator overloading, function overloading, constexpr, templates, and more.
+It was originally written in C, though has been switched to a highly procedural subset of C++ 20 to leverage useful features like templates, operator overloading, function overloading, constexpr, and more.
 
 ---
 
@@ -33,19 +33,14 @@ cmake ..
 
 ---
 
-## Noteworthy Design Decisions
-
-Strings are non-terminated and UTF-8:
-
-Add explanation.
-
 ## Third-Party Projects
 
-- [GLFW](https://github.com/glfw/glfw) for cross-platform windowing and input (plus an OpenGL context)
+- [GLFW](https://github.com/glfw/glfw) for cross-platform windowing and input
 - [BGFX](https://github.com/bkaradzic/bgfx) for a cross-platform graphics backend
 - [cJSON](https://github.com/DaveGamble/cJSON) for JSON parsing in the asset packer
 - [stb](https://github.com/nothings/stb) for raw image and font file loading
 - [miniaudio](https://github.com/mackron/miniaudio) for audio loading and playing
+- [PCG](https://www.pcg-random.org) for random number generation
 
 ---
 
