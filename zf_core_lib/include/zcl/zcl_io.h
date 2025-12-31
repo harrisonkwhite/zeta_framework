@@ -24,8 +24,8 @@ namespace zf {
     public:
         c_stream() = default;
 
-        c_stream(const c_array_mut<t_u8> bytes, const e_stream_mode mode, const t_i32 pos = 0)
-            : m_type(ek_stream_type_mem), m_type_data({.mem = {.bytes_raw = bytes.Raw(), .byte_cnt = bytes.Len(), .byte_index = pos}}), m_mode(mode) { ZF_ASSERT(pos >= 0 && pos <= bytes.Len()); }
+        c_stream(const s_array_mut<t_u8> bytes, const e_stream_mode mode, const t_i32 pos = 0)
+            : m_type(ek_stream_type_mem), m_type_data({.mem = {.bytes = bytes, .byte_pos = pos}}), m_mode(mode) { ZF_ASSERT(pos >= 0 && pos <= bytes.Len()); }
 
         c_stream(FILE *const file, const e_stream_mode mode)
             : m_type(ek_stream_type_file), m_type_data({.file = {.file = file}}), m_mode(mode) { ZF_ASSERT(file); }
@@ -39,14 +39,14 @@ namespace zf {
             return m_mode;
         }
 
-        t_i32 Pos() const {
+        t_i32 BytePos() const {
             ZF_ASSERT(m_type == ek_stream_type_mem);
-            return m_type_data.mem.byte_index;
+            return m_type_data.mem.byte_pos;
         }
 
-        c_array_mut<t_u8> Written() const {
+        s_array_mut<t_u8> BytesWritten() const {
             ZF_ASSERT(m_type == ek_stream_type_mem);
-            return {m_type_data.mem.bytes_raw, m_type_data.mem.byte_index};
+            return m_type_data.mem.bytes.Slice(0, m_type_data.mem.byte_pos);
         }
 
         FILE *File() const {
@@ -62,15 +62,15 @@ namespace zf {
 
             switch (m_type) {
             case ek_stream_type_mem: {
-                if (m_type_data.mem.byte_index + size > m_type_data.mem.byte_cnt) {
+                if (m_type_data.mem.byte_pos + size > m_type_data.mem.bytes.Len()) {
                     return false;
                 }
 
                 const auto dest = ToBytes(*o_item);
-                const auto src = c_array_rdonly<t_u8>{m_type_data.mem.bytes_raw + m_type_data.mem.byte_index, size};
+                const auto src = m_type_data.mem.bytes.Slice(m_type_data.mem.byte_pos, m_type_data.mem.byte_pos + size);
                 Copy(dest, src);
 
-                m_type_data.mem.byte_index += size;
+                m_type_data.mem.byte_pos += size;
 
                 return true;
             }
@@ -91,15 +91,15 @@ namespace zf {
 
             switch (m_type) {
             case ek_stream_type_mem: {
-                if (m_type_data.mem.byte_index + size > m_type_data.mem.byte_cnt) {
+                if (m_type_data.mem.byte_pos + size > m_type_data.mem.bytes.Len()) {
                     return false;
                 }
 
-                const auto dest = c_array_mut<t_u8>{m_type_data.mem.bytes_raw + m_type_data.mem.byte_index, size};
+                const auto dest = m_type_data.mem.bytes.Slice(m_type_data.mem.byte_pos, m_type_data.mem.byte_pos + size);
                 const auto src = ToBytes(item);
                 Copy(dest, src);
 
-                m_type_data.mem.byte_index += size;
+                m_type_data.mem.byte_pos += size;
 
                 return true;
             }
@@ -125,15 +125,15 @@ namespace zf {
             case ek_stream_type_mem: {
                 const t_i32 size = ZF_SIZE_OF(arr[0]) * cnt;
 
-                if (m_type_data.mem.byte_index + size > m_type_data.mem.byte_cnt) {
+                if (m_type_data.mem.byte_pos + size > m_type_data.mem.bytes.Len()) {
                     return false;
                 }
 
                 const auto dest = arr.AsByteArray();
-                const auto src = c_array_rdonly<t_u8>{m_type_data.mem.bytes_raw + m_type_data.mem.byte_index, size};
+                const auto src = m_type_data.mem.bytes.Slice(m_type_data.mem.byte_pos, m_type_data.mem.byte_pos + size);
                 Copy(dest, src);
 
-                m_type_data.mem.byte_index += size;
+                m_type_data.mem.byte_pos += size;
 
                 return true;
             }
@@ -158,15 +158,15 @@ namespace zf {
             case ek_stream_type_mem: {
                 const t_i32 size = arr.SizeInBytes();
 
-                if (m_type_data.mem.byte_index + size > m_type_data.mem.byte_cnt) {
+                if (m_type_data.mem.byte_pos + size > m_type_data.mem.bytes.Len()) {
                     return false;
                 }
 
-                const auto dest = c_array_mut<t_u8>{m_type_data.mem.bytes_raw + m_type_data.mem.byte_index, size};
+                const auto dest = m_type_data.mem.bytes.Slice(m_type_data.mem.byte_pos, m_type_data.mem.byte_pos + size);
                 const auto src = arr.AsByteArray();
                 Copy(dest, src);
 
-                m_type_data.mem.byte_index += size;
+                m_type_data.mem.byte_pos += size;
 
                 return true;
             }
@@ -184,9 +184,8 @@ namespace zf {
 
         union {
             struct {
-                t_u8 *bytes_raw;
-                t_i32 byte_cnt;
-                t_i32 byte_index;
+                s_array_mut<t_u8> bytes;
+                t_i32 byte_pos;
             } mem;
 
             struct {
@@ -215,7 +214,7 @@ namespace zf {
     }
 
     template <typename tp_type>
-    [[nodiscard]] t_b8 DeserializeArray(c_stream *const stream, c_arena *const arr_arena, c_array_mut<tp_type> *const o_arr) {
+    [[nodiscard]] t_b8 DeserializeArray(c_stream *const stream, c_arena *const arr_arena, s_array_mut<tp_type> *const o_arr) {
         t_i32 len;
 
         if (!stream->ReadItem(&len)) {
@@ -274,7 +273,7 @@ namespace zf {
     [[nodiscard]] t_b8 OpenFile(const s_str_rdonly file_path, const e_file_access_mode mode, c_arena *const temp_arena, c_stream *const o_stream);
     void CloseFile(c_stream *const stream);
     t_i32 CalcFileSize(c_stream *const stream);
-    [[nodiscard]] t_b8 LoadFileContents(const s_str_rdonly file_path, c_arena *const contents_arena, c_arena *const temp_arena, c_array_mut<t_u8> *const o_contents, const t_b8 add_terminator = false);
+    [[nodiscard]] t_b8 LoadFileContents(const s_str_rdonly file_path, c_arena *const contents_arena, c_arena *const temp_arena, s_array_mut<t_u8> *const o_contents, const t_b8 add_terminator = false);
 
     enum e_directory_creation_result : t_i32 {
         ek_directory_creation_result_success,
@@ -387,7 +386,7 @@ namespace zf {
             ZF_ASSERT(str_bytes_stream_write_success);
         }
 
-        return Print(stream, {str_bytes_stream.Written()});
+        return Print(stream, {str_bytes_stream.BytesWritten()});
     }
 
     // ========================================
@@ -500,7 +499,7 @@ namespace zf {
             ZF_ASSERT(str_bytes_stream_write_success);
         }
 
-        const t_i32 str_bytes_digits_begin_pos = str_bytes_stream.Pos();
+        const t_i32 str_bytes_digits_begin_pos = str_bytes_stream.BytePos();
 
         const auto dig_to_byte = [flags = fmt.flags](const t_i32 dig) -> t_u8 {
             if (dig < 10) {
@@ -531,10 +530,10 @@ namespace zf {
             }
         } while (val_mut != 0 || cnter < fmt.min_digits);
 
-        const auto str_bytes_digits = str_bytes_stream.Written().SliceFrom(str_bytes_digits_begin_pos);
+        const auto str_bytes_digits = str_bytes_stream.BytesWritten().SliceFrom(str_bytes_digits_begin_pos);
         Reverse(str_bytes_digits);
 
-        return Print(stream, {str_bytes_stream.Written()});
+        return Print(stream, {str_bytes_stream.BytesWritten()});
     }
 
     // ========================================

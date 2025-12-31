@@ -59,7 +59,7 @@ namespace zf {
         return static_cast<t_i32>(file_size);
     }
 
-    t_b8 LoadFileContents(const s_str_rdonly path, c_arena *const contents_arena, c_arena *const temp_arena, c_array_mut<t_u8> *const o_contents, const t_b8 add_terminator) {
+    t_b8 LoadFileContents(const s_str_rdonly path, c_arena *const contents_arena, c_arena *const temp_arena, s_array_mut<t_u8> *const o_contents, const t_b8 add_terminator) {
         c_stream stream;
 
         if (!OpenFile(path, ek_file_access_mode_read, temp_arena, &stream)) {
@@ -143,7 +143,7 @@ namespace zf {
 
         t_b8 cur_dir_name_is_empty = true;
 
-        ZF_WALK_STR(path, info) {
+        ZF_WALK_STR (path, info) {
             if (info.code_pt == '/' || info.code_pt == '\\') {
                 if (!cur_dir_name_is_empty) {
                     if (!create_dir_if_nonexistent({path.bytes.Slice(0, info.byte_index)})) {
@@ -172,7 +172,7 @@ namespace zf {
         }
 
         // Get the substring containing all directories and create them.
-        ZF_WALK_STR_REVERSE(path, info) {
+        ZF_WALK_STR_REVERSE (path, info) {
             if (info.code_pt == '/' || info.code_pt == '\\') {
                 if (!CreateDirectoryAndParents({path.bytes.Slice(0, info.byte_index)}, temp_arena, o_dir_creation_res)) {
                     return false;

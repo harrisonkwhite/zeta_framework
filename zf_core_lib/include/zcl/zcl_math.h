@@ -305,8 +305,8 @@ namespace zf {
         return static_cast<s_rect_i>(*this);
     }
 
-    s_rect_f CalcSpanningRect(const c_array_mut<s_rect_f> rects);
-    s_rect_i CalcSpanningRect(const c_array_mut<s_rect_i> rects);
+    s_rect_f CalcSpanningRect(const s_array_mut<s_rect_f> rects);
+    s_rect_i CalcSpanningRect(const s_array_mut<s_rect_i> rects);
 
     // ============================================================
 

@@ -98,7 +98,7 @@ namespace zf {
         cJSON *cj;
 
         {
-            c_array_mut<t_u8> instrs_json_file_contents; // Not needed beyond this scope.
+            s_array_mut<t_u8> instrs_json_file_contents; // Not needed beyond this scope.
 
             if (!LoadFileContents(instrs_json_file_path, &arena, &arena, &instrs_json_file_contents, true)) {
                 LogError(c_cstr_literal{"Failed to load packing instructions JSON file \"%\"!"}, instrs_json_file_path);
@@ -144,7 +144,7 @@ namespace zf {
                     continue;
                 }
 
-                const auto fields = [asset_type_index]() -> c_array_rdonly<s_asset_field> {
+                const auto fields = [asset_type_index]() -> s_array_rdonly<s_asset_field> {
                     switch (asset_type_index) {
                     case ek_asset_type_texture: return g_texture_fields;
                     case ek_asset_type_font: return g_font_fields;
@@ -155,7 +155,7 @@ namespace zf {
                     return {};
                 }();
 
-                const auto field_vals = [asset_type_index, &texture_field_cj_ptrs, &font_field_cj_ptrs, &shader_field_cj_ptrs, &snd_field_cj_ptrs]() -> c_array_mut<cJSON *> {
+                const auto field_vals = [asset_type_index, &texture_field_cj_ptrs, &font_field_cj_ptrs, &shader_field_cj_ptrs, &snd_field_cj_ptrs]() -> s_array_mut<cJSON *> {
                     switch (asset_type_index) {
                     case ek_asset_type_texture: return texture_field_cj_ptrs;
                     case ek_asset_type_font: return font_field_cj_ptrs;
@@ -234,7 +234,7 @@ namespace zf {
                     if (field_vals[ek_font_field_extra_chrs_file_path]) {
                         const auto extra_chrs_file_path = ConvertCstr(field_vals[ek_font_field_extra_chrs_file_path]->valuestring);
 
-                        c_array_mut<t_u8> extra_chrs_file_contents;
+                        s_array_mut<t_u8> extra_chrs_file_contents;
 
                         if (!LoadFileContents(extra_chrs_file_path, &arena, &arena, &extra_chrs_file_contents)) {
                             LogError(c_cstr_literal{"Failed to load extra characters file \"%\"!"}, extra_chrs_file_path);
@@ -247,7 +247,7 @@ namespace zf {
                     // @todo: Proper check for invalid height!
 
                     s_font_arrangement arrangement;
-                    c_array_mut<t_font_atlas_rgba> atlas_rgbas;
+                    s_array_mut<t_font_atlas_rgba> atlas_rgbas;
 
                     if (!LoadFontDataFromRaw(file_path, height, code_pt_bv, &arena, &arena, &arena, &arrangement, &atlas_rgbas)) {
                         LogError(c_cstr_literal{"Failed to load font from file \"%\"!"}, file_path);
@@ -279,7 +279,7 @@ namespace zf {
                         return false;
                     }
 
-                    c_array_mut<t_u8> compiled_bin;
+                    s_array_mut<t_u8> compiled_bin;
 
                     if (!CompileShader(file_path, varying_def_file_path, is_frag, &arena, &arena, &compiled_bin)) {
                         LogError(c_cstr_literal{"Failed to compile shader from file \"%\"!"}, file_path);

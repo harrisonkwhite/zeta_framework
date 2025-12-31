@@ -52,7 +52,7 @@ namespace zf {
     }
 
     // Does a 0 appear anywhere in the array?
-    constexpr t_b8 AreBytesTerminated(const c_array_rdonly<t_u8> bytes) {
+    constexpr t_b8 AreBytesTerminated(const s_array_rdonly<t_u8> bytes) {
         for (t_i32 i = bytes.Len() - 1; i >= 0; i--) {
             if (!bytes[i]) {
                 return true;
@@ -64,7 +64,7 @@ namespace zf {
 
     class c_cstr_literal {
     public:
-        const c_array_rdonly<char> buf;
+        const s_array_rdonly<char> buf;
 
         c_cstr_literal() = delete;
 
@@ -83,10 +83,10 @@ namespace zf {
     };
 
     struct s_str_rdonly {
-        c_array_rdonly<t_u8> bytes;
+        s_array_rdonly<t_u8> bytes;
 
         s_str_rdonly() = default;
-        s_str_rdonly(const c_array_rdonly<t_u8> bytes) : bytes(bytes) {}
+        s_str_rdonly(const s_array_rdonly<t_u8> bytes) : bytes(bytes) {}
 
         // This very intentionally drops the terminator.
         s_str_rdonly(const c_cstr_literal lit) : bytes({reinterpret_cast<const t_u8 *>(lit.buf.Raw()), lit.buf.Len() - 1}) {}
@@ -99,10 +99,10 @@ namespace zf {
     };
 
     struct s_str {
-        c_array_mut<t_u8> bytes;
+        s_array_mut<t_u8> bytes;
 
         s_str() = default;
-        s_str(const c_array_mut<t_u8> bytes) : bytes(bytes) {}
+        s_str(const s_array_mut<t_u8> bytes) : bytes(bytes) {}
 
         operator s_str_rdonly() const {
             return {bytes};
@@ -117,7 +117,7 @@ namespace zf {
 
     inline t_bin_comparator<s_str_rdonly> g_str_bin_comparator =
         [](const s_str_rdonly &a, const s_str_rdonly &b) {
-            return g_array_bin_comparator<c_array_rdonly<t_u8>>(a.bytes, b.bytes);
+            return g_array_bin_comparator<s_array_rdonly<t_u8>>(a.bytes, b.bytes);
         };
 
     // Creates a NON-TERMINATED string object from the given TERMINATED C-string.

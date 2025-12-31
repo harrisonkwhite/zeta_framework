@@ -12,12 +12,12 @@ namespace zf {
 
     struct s_sound_data_rdonly {
         s_sound_meta meta;
-        c_array_rdonly<t_f32> pcm;
+        s_array_rdonly<t_f32> pcm;
     };
 
     struct s_sound_data_mut {
         s_sound_meta meta;
-        c_array_mut<t_f32> pcm;
+        s_array_mut<t_f32> pcm;
 
         operator s_sound_data_rdonly() const { return {.meta = meta, .pcm = pcm}; }
     };

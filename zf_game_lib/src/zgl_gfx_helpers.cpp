@@ -38,7 +38,7 @@ namespace zf {
 
     s_font CreateFontFromRaw(const s_str_rdonly file_path, const t_i32 height, t_code_pt_bit_vec *const code_pts, c_arena *const temp_arena, s_gfx_resource_group *const resource_group) {
         s_font_arrangement arrangement;
-        c_array_mut<t_font_atlas_rgba> atlas_rgbas;
+        s_array_mut<t_font_atlas_rgba> atlas_rgbas;
 
         if (!zf::LoadFontDataFromRaw(file_path, height, code_pts, resource_group->arena, temp_arena, temp_arena, &arrangement, &atlas_rgbas)) {
             ZF_FATAL();
@@ -58,7 +58,7 @@ namespace zf {
 
     s_font CreateFontFromPacked(const s_str_rdonly file_path, c_arena *const temp_arena, s_gfx_resource_group *const resource_group) {
         s_font_arrangement arrangement;
-        c_array_mut<t_font_atlas_rgba> atlas_rgbas;
+        s_array_mut<t_font_atlas_rgba> atlas_rgbas;
 
         if (!zf::UnpackFont(file_path, resource_group->arena, temp_arena, temp_arena, &arrangement, &atlas_rgbas)) {
             ZF_FATAL();
@@ -76,7 +76,7 @@ namespace zf {
         };
     }
 
-    c_array_mut<s_v2> CalcStrChrRenderPositions(const s_str_rdonly str, const s_font_arrangement &font_arrangement, const s_v2 pos, const s_v2 alignment, c_arena *const arena) {
+    s_array_mut<s_v2> CalcStrChrRenderPositions(const s_str_rdonly str, const s_font_arrangement &font_arrangement, const s_v2 pos, const s_v2 alignment, c_arena *const arena) {
         ZF_ASSERT(IsStrValidUTF8(str));
         ZF_ASSERT(IsAlignmentValid(alignment));
 
@@ -183,7 +183,7 @@ namespace zf {
         const auto &font_arrangement = font.arrangement;
         const auto &font_atlases = font.atlases;
 
-        const c_array_mut<s_v2> chr_positions = CalcStrChrRenderPositions(str, font_arrangement, pos, alignment, temp_arena);
+        const s_array_mut<s_v2> chr_positions = CalcStrChrRenderPositions(str, font_arrangement, pos, alignment, temp_arena);
 
         t_i32 chr_index = 0;
 

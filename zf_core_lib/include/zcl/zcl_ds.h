@@ -13,7 +13,7 @@ namespace zf {
     public:
         using t_elem = tp_type;
 
-        c_array_mut<tp_type> backing_arr;
+        s_array_mut<tp_type> backing_arr;
         t_i32 len = 0;
 
         t_i32 Cap() const {
@@ -25,7 +25,7 @@ namespace zf {
             return backing_arr[index];
         }
 
-        c_array_mut<tp_type> AsArray() const {
+        s_array_mut<tp_type> AsArray() const {
             return backing_arr.Slice(0, len);
         }
     };
@@ -37,7 +37,7 @@ namespace zf {
     public:
         using t_elem = tp_type;
 
-        c_array_rdonly<tp_type> backing_arr;
+        s_array_rdonly<tp_type> backing_arr;
         t_i32 len = 0;
 
         t_i32 Cap() const {
@@ -49,7 +49,7 @@ namespace zf {
             return backing_arr[index];
         }
 
-        c_array_rdonly<tp_type> AsArray() const {
+        s_array_rdonly<tp_type> AsArray() const {
             return backing_arr.Slice(0, len);
         }
     };
@@ -77,8 +77,8 @@ namespace zf {
             return backing_arr[index];
         }
 
-        c_array_mut<tp_type> AsArray() { return backing_arr.AsNonstatic().Slice(0, len); }
-        c_array_rdonly<tp_type> AsArray() const { return backing_arr.AsNonstatic().Slice(0, len); }
+        s_array_mut<tp_type> AsArray() { return backing_arr.AsNonstatic().Slice(0, len); }
+        s_array_rdonly<tp_type> AsArray() const { return backing_arr.AsNonstatic().Slice(0, len); }
     };
 
     template <typename tp_type>
@@ -186,7 +186,7 @@ namespace zf {
     }
 
     template <co_list tp_list_type>
-    c_array_mut<typename tp_list_type::t_elem> AppendManyToList(tp_list_type &list, const c_array_rdonly<typename tp_list_type::t_elem> vals) {
+    s_array_mut<typename tp_list_type::t_elem> AppendManyToList(tp_list_type &list, const s_array_rdonly<typename tp_list_type::t_elem> vals) {
         ZF_ASSERT(list.len + vals.Len() <= list.Cap());
 
         Copy(list.backing_arr.SliceFrom(list.len), vals);
@@ -195,7 +195,7 @@ namespace zf {
     }
 
     template <co_list_nonstatic tp_list_type>
-    c_array_mut<typename tp_list_type::t_elem> AppendManyToListDynamic(tp_list_type &list, const c_array_rdonly<typename tp_list_type::t_elem> vals, c_arena *const extension_arena, const t_list_extension_cap_calculator extension_cap_calculator = g_default_list_extension_cap_calculator) {
+    s_array_mut<typename tp_list_type::t_elem> AppendManyToListDynamic(tp_list_type &list, const s_array_rdonly<typename tp_list_type::t_elem> vals, c_arena *const extension_arena, const t_list_extension_cap_calculator extension_cap_calculator = g_default_list_extension_cap_calculator) {
         const auto min_cap_needed = list.len + vals.Len();
 
         if (min_cap_needed > list.Cap()) {
@@ -359,7 +359,7 @@ namespace zf {
         }
 
         // Loads keys and values of the chain into the given PRE-ALLOCATED arrays.
-        t_i32 LoadChain(const t_i32 begin_index, const c_array_mut<tp_key_type> keys, const c_array_mut<tp_val_type> vals) const {
+        t_i32 LoadChain(const t_i32 begin_index, const s_array_mut<tp_key_type> keys, const s_array_mut<tp_val_type> vals) const {
             ZF_ASSERT(m_active);
             ZF_ASSERT(begin_index >= -1 && begin_index < m_block_cap * m_block_cnt);
 
@@ -386,9 +386,9 @@ namespace zf {
     private:
         class c_block {
         public:
-            c_array_mut<tp_key_type> keys;
-            c_array_mut<tp_val_type> vals;
-            c_array_mut<t_i32> next_indexes; // -1 means no "next" (i.e. it is the last in the chain).
+            s_array_mut<tp_key_type> keys;
+            s_array_mut<tp_val_type> vals;
+            s_array_mut<t_i32> next_indexes; // -1 means no "next" (i.e. it is the last in the chain).
             c_bit_vec_mut usage;
 
             c_block *next = nullptr;
@@ -519,7 +519,7 @@ namespace zf {
     public:
         t_hash_func<tp_key_type> hash_func = nullptr;
 
-        c_array_mut<t_i32> immediate_indexes;
+        s_array_mut<t_i32> immediate_indexes;
         c_kv_pair_block_seq<tp_key_type, tp_val_type> kv_pair_block_seq;
 
         t_i32 Cap() const {
@@ -553,7 +553,7 @@ namespace zf {
         }
 
         // Loads all key-value pairs into the given PRE-ALLOCATED arrays.
-        void LoadEntries(const c_array_mut<tp_key_type> keys, const c_array_mut<tp_val_type> vals) const {
+        void LoadEntries(const s_array_mut<tp_key_type> keys, const s_array_mut<tp_val_type> vals) const {
             ZF_ASSERT(keys.Len() >= EntryCount() && vals.Len() >= EntryCount());
 
             t_i32 loaded_cnt = 0;
@@ -564,7 +564,7 @@ namespace zf {
         }
 
         // Allocates the given arrays with the memory arena and loads key-value pairs into them.
-        void LoadEntries(c_arena *const arena, c_array_mut<tp_key_type> *const o_keys, c_array_mut<tp_val_type> *const o_vals) const {
+        void LoadEntries(c_arena *const arena, s_array_mut<tp_key_type> *const o_keys, s_array_mut<tp_val_type> *const o_vals) const {
             *o_keys = AllocArray<tp_key_type>(EntryCount(), arena);
             *o_vals = AllocArray<tp_val_type>(EntryCount(), arena);
             return LoadEntries(*o_keys, *o_vals);
@@ -594,8 +594,8 @@ namespace zf {
             return false;
         }
 
-        c_array_mut<tp_key_type> keys;
-        c_array_mut<tp_val_type> vals;
+        s_array_mut<tp_key_type> keys;
+        s_array_mut<tp_val_type> vals;
         hm.LoadEntries(temp_arena, &keys, &vals);
 
         if (!stream->WriteItemsOfArray(keys)) {

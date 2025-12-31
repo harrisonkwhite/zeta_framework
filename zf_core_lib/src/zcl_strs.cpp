@@ -339,7 +339,7 @@ namespace zf {
         return len;
     }
 
-    static t_code_pt UTF8BytesToCodePoint(const c_array_rdonly<t_u8> bytes) {
+    static t_code_pt UTF8BytesToCodePoint(const s_array_rdonly<t_u8> bytes) {
         ZF_ASSERT(bytes.Len() >= 1 && bytes.Len() <= 4);
 
         t_code_pt res = 0;
@@ -398,7 +398,7 @@ namespace zf {
     void MarkStrCodePoints(const s_str_rdonly str, t_code_pt_bit_vec *const code_pts) {
         ZF_ASSERT(IsStrValidUTF8(str));
 
-        ZF_WALK_STR(str, info) {
+        ZF_WALK_STR (str, info) {
             SetBit(*code_pts, info.code_pt); // @todo
         }
     }

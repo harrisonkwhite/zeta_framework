@@ -85,99 +85,90 @@ namespace zf {
     // @section: Arrays
 
     template <typename tp_type>
-    class c_array_rdonly {
+    struct s_array_rdonly {
         static_assert(!s_is_const<tp_type>::g_val);
 
-    public:
         using t_elem = tp_type;
 
-        constexpr c_array_rdonly() = default;
+        const tp_type *raw;
+        t_i32 len;
 
-        constexpr c_array_rdonly(const tp_type *const raw, const t_i32 len) : m_raw(raw), m_len(len) {
-            ZF_ASSERT((raw || len == 0) && len >= 0);
-        }
+        constexpr s_array_rdonly() = default;
+        constexpr s_array_rdonly(const tp_type *const raw, const t_i32 len) : raw(raw), len(len) {}
 
-        constexpr const tp_type *Raw() const { return m_raw; }
-        constexpr t_i32 Len() const { return m_len; }
+        constexpr const tp_type *Raw() const { return raw; }
+        constexpr t_i32 Len() const { return len; }
 
         constexpr t_i32 SizeInBytes() const {
-            return ZF_SIZE_OF(tp_type) * m_len;
+            return ZF_SIZE_OF(tp_type) * len;
         }
 
         constexpr const tp_type &operator[](const t_i32 index) const {
-            ZF_REQUIRE(index >= 0 && index < m_len);
-            return m_raw[index];
+            ZF_REQUIRE(index >= 0 && index < len);
+            return raw[index];
         }
 
-        constexpr c_array_rdonly<tp_type> Slice(const t_i32 beg, const t_i32 end) const {
-            ZF_ASSERT(beg >= 0 && beg <= m_len);
-            ZF_ASSERT(end >= beg && end <= m_len);
+        constexpr s_array_rdonly<tp_type> Slice(const t_i32 beg, const t_i32 end) const {
+            ZF_ASSERT(beg >= 0 && beg <= len);
+            ZF_ASSERT(end >= beg && end <= len);
 
-            return {m_raw + beg, end - beg};
+            return {raw + beg, end - beg};
         }
 
-        constexpr c_array_rdonly<tp_type> SliceFrom(const t_i32 beg) const {
-            ZF_ASSERT(beg >= 0 && beg <= m_len);
-            return {m_raw + beg, m_len - beg};
+        constexpr s_array_rdonly<tp_type> SliceFrom(const t_i32 beg) const {
+            ZF_ASSERT(beg >= 0 && beg <= len);
+            return {raw + beg, len - beg};
         }
 
-        constexpr c_array_rdonly<t_u8> AsByteArray() const {
-            return {reinterpret_cast<const t_u8 *>(m_raw), SizeInBytes()};
+        constexpr s_array_rdonly<t_u8> AsByteArray() const {
+            return {reinterpret_cast<const t_u8 *>(raw), SizeInBytes()};
         }
-
-    private:
-        const tp_type *m_raw = nullptr;
-        t_i32 m_len = 0;
     };
 
     template <typename tp_type>
-    class c_array_mut {
+    struct s_array_mut {
         static_assert(!s_is_const<tp_type>::g_val);
 
-    public:
         using t_elem = tp_type;
 
-        constexpr c_array_mut() = default;
+        tp_type *raw;
+        t_i32 len;
 
-        constexpr c_array_mut(tp_type *const raw, const t_i32 len) : m_raw(raw), m_len(len) {
-            ZF_ASSERT((raw || len == 0) && len >= 0);
-        }
+        constexpr s_array_mut() = default;
 
-        constexpr tp_type *Raw() const { return m_raw; }
-        constexpr t_i32 Len() const { return m_len; }
+        constexpr s_array_mut(tp_type *const raw, const t_i32 len) : raw(raw), len(len) {}
+
+        constexpr tp_type *Raw() const { return raw; }
+        constexpr t_i32 Len() const { return len; }
 
         constexpr t_i32 SizeInBytes() const {
-            return ZF_SIZE_OF(tp_type) * m_len;
+            return ZF_SIZE_OF(tp_type) * len;
         }
 
-        constexpr operator c_array_rdonly<tp_type>() const {
-            return {m_raw, m_len};
+        constexpr operator s_array_rdonly<tp_type>() const {
+            return {raw, len};
         }
 
         constexpr tp_type &operator[](const t_i32 index) const {
-            ZF_REQUIRE(index >= 0 && index < m_len);
-            return m_raw[index];
+            ZF_REQUIRE(index >= 0 && index < len);
+            return raw[index];
         }
 
-        constexpr c_array_mut<tp_type> Slice(const t_i32 beg, const t_i32 end) const {
-            ZF_ASSERT(beg >= 0 && beg <= m_len);
-            ZF_ASSERT(end >= beg && end <= m_len);
+        constexpr s_array_mut<tp_type> Slice(const t_i32 beg, const t_i32 end) const {
+            ZF_ASSERT(beg >= 0 && beg <= len);
+            ZF_ASSERT(end >= beg && end <= len);
 
-            return {m_raw + beg, end - beg};
+            return {raw + beg, end - beg};
         }
 
-        constexpr c_array_mut<tp_type> SliceFrom(const t_i32 beg) const {
-            ZF_ASSERT(beg >= 0 && beg <= m_len);
-            return {m_raw + beg, m_len - beg};
+        constexpr s_array_mut<tp_type> SliceFrom(const t_i32 beg) const {
+            ZF_ASSERT(beg >= 0 && beg <= len);
+            return {raw + beg, len - beg};
         }
 
-        constexpr c_array_mut<t_u8> AsByteArray() const {
-            return {reinterpret_cast<t_u8 *>(m_raw), SizeInBytes()};
+        constexpr s_array_mut<t_u8> AsByteArray() const {
+            return {reinterpret_cast<t_u8 *>(raw), SizeInBytes()};
         }
-
-    private:
-        tp_type *m_raw = nullptr;
-        t_i32 m_len = 0;
     };
 
     template <typename tp_type, t_i32 tp_len>
@@ -190,19 +181,19 @@ namespace zf {
 
         tp_type raw[tp_len];
 
-        constexpr operator c_array_mut<tp_type>() {
+        constexpr operator s_array_mut<tp_type>() {
             return {raw, tp_len};
         }
 
-        constexpr operator c_array_rdonly<tp_type>() const {
+        constexpr operator s_array_rdonly<tp_type>() const {
             return {raw, tp_len};
         }
 
-        constexpr c_array_mut<tp_type> AsNonstatic() {
+        constexpr s_array_mut<tp_type> AsNonstatic() {
             return {raw, tp_len};
         }
 
-        constexpr c_array_rdonly<tp_type> AsNonstatic() const {
+        constexpr s_array_rdonly<tp_type> AsNonstatic() const {
             return {raw, tp_len};
         }
 
@@ -223,7 +214,7 @@ namespace zf {
     };
 
     template <typename tp_type>
-    struct s_is_nonstatic_mut_array<c_array_mut<tp_type>> {
+    struct s_is_nonstatic_mut_array<s_array_mut<tp_type>> {
         static constexpr t_b8 g_val = true;
     };
 
@@ -233,7 +224,7 @@ namespace zf {
     };
 
     template <typename tp_type>
-    struct s_is_nonstatic_rdonly_array<c_array_rdonly<tp_type>> {
+    struct s_is_nonstatic_rdonly_array<s_array_rdonly<tp_type>> {
         static constexpr t_b8 g_val = true;
     };
 
@@ -258,7 +249,7 @@ namespace zf {
         };
 
     template <typename tp_type>
-    c_array_mut<tp_type> AllocArray(const t_i32 len, c_arena *const arena) {
+    s_array_mut<tp_type> AllocArray(const t_i32 len, c_arena *const arena) {
         ZF_ASSERT(len >= 0);
 
         if (len == 0) {
@@ -283,8 +274,6 @@ namespace zf {
 
     template <co_array_nonstatic tp_arr_type>
     constexpr t_b8 DoAllEqual(const tp_arr_type arr, const typename tp_arr_type::t_elem &val, const t_bin_comparator<typename tp_arr_type::t_elem> comparator = DefaultBinComparator) {
-        ZF_ASSERT(arr.Len() >= 0);
-
         if (arr.Len() == 0) {
             return false;
         }
@@ -300,8 +289,6 @@ namespace zf {
 
     template <co_array_nonstatic tp_arr_type>
     constexpr t_b8 DoAnyEqual(const tp_arr_type arr, const typename tp_arr_type::t_elem &val, const t_bin_comparator<typename tp_arr_type::t_elem> comparator = DefaultBinComparator) {
-        ZF_ASSERT(arr.Len() >= 0);
-
         for (t_i32 i = 0; i < arr.Len(); i++) {
             if (comparator(arr[i], val)) {
                 return true;
@@ -313,8 +300,6 @@ namespace zf {
 
     template <co_array_nonstatic_mut tp_arr_type>
     constexpr void SetAllTo(const tp_arr_type arr, const typename tp_arr_type::t_elem &val) {
-        ZF_ASSERT(arr.Len() >= 0);
-
         for (t_i32 i = 0; i < arr.Len(); i++) {
             arr[i] = val;
         }
@@ -361,12 +346,12 @@ namespace zf {
 
 
     template <typename tp_type>
-    constexpr c_array_mut<t_u8> ToBytes(tp_type &val) {
+    constexpr s_array_mut<t_u8> ToBytes(tp_type &val) {
         return {reinterpret_cast<t_u8 *>(&val), ZF_SIZE_OF(val)};
     }
 
     template <typename tp_type>
-    constexpr c_array_rdonly<t_u8> ToBytes(const tp_type &val) {
+    constexpr s_array_rdonly<t_u8> ToBytes(const tp_type &val) {
         return {reinterpret_cast<const t_u8 *>(&val), ZF_SIZE_OF(val)};
     }
 
@@ -399,13 +384,13 @@ namespace zf {
     public:
         constexpr c_bit_vec_rdonly() = default;
 
-        constexpr c_bit_vec_rdonly(const c_array_rdonly<t_u8> bytes, const t_i32 bit_cnt) : bytes(bytes), bit_cnt(bit_cnt) {
+        constexpr c_bit_vec_rdonly(const s_array_rdonly<t_u8> bytes, const t_i32 bit_cnt) : bytes(bytes), bit_cnt(bit_cnt) {
             ZF_ASSERT(BitsToBytes(bit_cnt) == bytes.Len());
         }
 
-        constexpr c_bit_vec_rdonly(const c_array_rdonly<t_u8> bytes) : bytes(bytes), bit_cnt(BytesToBits(bytes.Len())) {}
+        constexpr c_bit_vec_rdonly(const s_array_rdonly<t_u8> bytes) : bytes(bytes), bit_cnt(BytesToBits(bytes.Len())) {}
 
-        constexpr c_array_rdonly<t_u8> Bytes() const { return bytes; }
+        constexpr s_array_rdonly<t_u8> Bytes() const { return bytes; }
         constexpr t_i32 BitCount() const { return bit_cnt; }
 
         constexpr t_i32 LastByteBitCount() const {
@@ -418,7 +403,7 @@ namespace zf {
         }
 
     private:
-        c_array_rdonly<t_u8> bytes;
+        s_array_rdonly<t_u8> bytes;
         t_i32 bit_cnt = 0;
     };
 
@@ -426,13 +411,13 @@ namespace zf {
     public:
         constexpr c_bit_vec_mut() = default;
 
-        constexpr c_bit_vec_mut(const c_array_mut<t_u8> bytes, const t_i32 bit_cnt) : bytes(bytes), bit_cnt(bit_cnt) {
+        constexpr c_bit_vec_mut(const s_array_mut<t_u8> bytes, const t_i32 bit_cnt) : bytes(bytes), bit_cnt(bit_cnt) {
             ZF_ASSERT(BitsToBytes(bit_cnt) == bytes.Len());
         }
 
-        constexpr c_bit_vec_mut(const c_array_mut<t_u8> bytes) : bytes(bytes), bit_cnt(BytesToBits(bytes.Len())) {}
+        constexpr c_bit_vec_mut(const s_array_mut<t_u8> bytes) : bytes(bytes), bit_cnt(BytesToBits(bytes.Len())) {}
 
-        constexpr c_array_mut<t_u8> Bytes() const { return bytes; }
+        constexpr s_array_mut<t_u8> Bytes() const { return bytes; }
         constexpr t_i32 BitCount() const { return bit_cnt; }
 
         constexpr t_i32 LastByteBitCount() const {
@@ -449,7 +434,7 @@ namespace zf {
         }
 
     private:
-        c_array_mut<t_u8> bytes;
+        s_array_mut<t_u8> bytes;
         t_i32 bit_cnt = 0;
     };
 
