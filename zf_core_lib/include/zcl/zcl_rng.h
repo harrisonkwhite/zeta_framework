@@ -3,7 +3,7 @@
 #include <zcl/zcl_mem.h>
 
 namespace zf {
-    struct s_rng {
+    class c_rng {
     public:
         // Reseeds are allowed.
         void Seed(const t_u64 seed) {
@@ -49,7 +49,7 @@ namespace zf {
         }
 
     private:
-        struct s_pcg32 {
+        class c_pcg32 {
         public:
             void Seed(const t_u64 init_state, const t_u64 seq);
 
@@ -66,6 +66,6 @@ namespace zf {
         };
 
         t_b8 m_seeded = false;
-        s_pcg32 m_pcg32 = {};
+        c_pcg32 m_pcg32;
     };
 }

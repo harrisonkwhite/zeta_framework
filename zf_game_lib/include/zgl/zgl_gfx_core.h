@@ -90,6 +90,7 @@ namespace zf {
         s_static_array<s_rendering_vert, 3> verts;
     };
 
+    // Leave texture as nullptr for no texture.
     void RenderTriangles(s_rendering_context *const rc, const s_array_rdonly<s_render_triangle> triangles, const s_gfx_resource *const texture);
 
     inline void RenderTriangle(s_rendering_context *const rc, const s_static_array<s_v2, 3> &pts, const s_static_array<s_color_rgba32f, 3> &pt_colors) {

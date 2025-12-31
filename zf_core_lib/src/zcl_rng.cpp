@@ -1,7 +1,7 @@
 #include <zcl/zcl_rng.h>
 
 namespace zf {
-    void s_rng::s_pcg32::Seed(const t_u64 init_state, const t_u64 seq) {
+    void c_rng::c_pcg32::Seed(const t_u64 init_state, const t_u64 seq) {
         m_state = 0;
         m_inc = (seq << 1u) | 1u;
 
@@ -12,7 +12,7 @@ namespace zf {
         CalcNext();
     }
 
-    t_u32 s_rng::s_pcg32::CalcNext() {
+    t_u32 c_rng::c_pcg32::CalcNext() {
         const t_u64 oldstate = m_state;
         m_state = (oldstate * 6364136223846793005ull) + m_inc;
         const auto xorshifted = static_cast<t_u32>(((oldstate >> 18u) ^ oldstate) >> 27u);
@@ -20,7 +20,7 @@ namespace zf {
         return (xorshifted >> rot) | (xorshifted << ((-rot) & 31));
     }
 
-    t_u32 s_rng::s_pcg32::CalcNextBounded(const t_u32 bound) {
+    t_u32 c_rng::c_pcg32::CalcNextBounded(const t_u32 bound) {
         ZF_ASSERT(bound > 0);
 
         const t_u32 threshold = -bound % bound;
