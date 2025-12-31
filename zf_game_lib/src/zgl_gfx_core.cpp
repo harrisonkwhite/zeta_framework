@@ -97,6 +97,8 @@ namespace zf {
     s_rendering_basis *StartupGFXModule(c_arena *const arena) {
         ZF_ASSERT(g_state.state == ek_state_uninitted);
 
+        g_state = {};
+
         g_state.state = ek_state_initted;
 
         bgfx::Init init;
@@ -136,6 +138,7 @@ namespace zf {
 
         bgfx::shutdown();
 
+        g_state.state = ek_state_uninitted;
         g_state = {};
     }
 

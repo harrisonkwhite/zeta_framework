@@ -214,7 +214,7 @@ namespace zf {
                 const t_i32 kern = stbtt_GetGlyphKernAdvance(&stb_font_info, glyph_a_index, glyph_b_index);
 
                 if (kern != 0) {
-                    return false;
+                    o_arrangement->code_pt_pairs_to_kernings.Put({cp_a, cp_b}, kern);
                 }
             }
         }

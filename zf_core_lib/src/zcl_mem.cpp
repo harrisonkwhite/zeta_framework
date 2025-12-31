@@ -20,6 +20,8 @@ namespace zf {
         };
 
         f(f, m_blocks_head);
+
+        *this = {};
     }
 
     void *c_arena::Push(const t_i32 size, const t_i32 alignment) {

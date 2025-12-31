@@ -320,7 +320,7 @@ namespace zf {
     };
 
     constexpr s_mat4x4 CreateIdentityMatrix() {
-        s_mat4x4 mat;
+        s_mat4x4 mat = {};
         mat.elems[0][0] = 1.0f;
         mat.elems[1][1] = 1.0f;
         mat.elems[2][2] = 1.0f;
