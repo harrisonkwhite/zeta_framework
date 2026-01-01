@@ -135,15 +135,15 @@ namespace zf::gfx {
 
         bgfx_init.resolution.reset = BGFX_RESET_VSYNC;
 
-        const auto fb_size_cache = platform::WindowFramebufferSizeCache();
+        const auto fb_size_cache = WindowFramebufferSizeCache();
 
         bgfx_init.resolution.width = static_cast<uint32_t>(fb_size_cache.x);
         bgfx_init.resolution.height = static_cast<uint32_t>(fb_size_cache.y);
 
         g_state.resolution_cache = fb_size_cache;
 
-        bgfx_init.platformData.nwh = platform::NativeWindowHandle();
-        bgfx_init.platformData.ndt = platform::NativeDisplayHandle();
+        bgfx_init.platformData.nwh = NativeWindowHandle();
+        bgfx_init.platformData.ndt = NativeDisplayHandle();
         bgfx_init.platformData.type = bgfx::NativeWindowHandleType::Default;
 
         if (!bgfx::init(bgfx_init)) {
@@ -193,7 +193,7 @@ namespace zf::gfx {
         bgfx::destroy(rendering_basis->shader_prog_bgfx_hdl);
         bgfx::destroy(rendering_basis->vert_buf_bgfx_hdl);
 
-        Destroy(&g_state.perm_resource_group);
+        ResourceGroupDestroy(&g_state.perm_resource_group);
 
         bgfx::shutdown();
 
@@ -205,7 +205,7 @@ namespace zf::gfx {
         return texture->Texture().size;
     }
 
-    void Destroy(s_resource_group *const group) {
+    void ResourceGroupDestroy(s_resource_group *const group) {
         ZF_ASSERT(g_state.state == ek_state_active_but_not_rendering);
 
         s_resource *resource = group->head;
@@ -295,7 +295,7 @@ namespace zf::gfx {
     s_rendering_context *BeginRendering(const s_rendering_basis *const rendering_basis, const s_color_rgb8 clear_col, s_arena *const rendering_context_arena) {
         ZF_ASSERT(g_state.state == ek_state_active_but_not_rendering);
 
-        const auto fb_size_cache = platform::WindowFramebufferSizeCache();
+        const auto fb_size_cache = WindowFramebufferSizeCache();
 
         if (g_state.resolution_cache != fb_size_cache) {
             bgfx::reset(static_cast<uint32_t>(fb_size_cache.x), static_cast<uint32_t>(fb_size_cache.y), BGFX_RESET_VSYNC);

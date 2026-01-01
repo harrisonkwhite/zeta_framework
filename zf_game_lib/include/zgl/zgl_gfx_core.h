@@ -44,7 +44,7 @@ namespace zf::gfx {
         return {.arena = arena};
     }
 
-    void Destroy(s_resource_group *const group);
+    void ResourceGroupDestroy(s_resource_group *const group);
 
     s_resource *CreateTexture(const s_texture_data_rdonly texture_data, s_resource_group *const group);
 

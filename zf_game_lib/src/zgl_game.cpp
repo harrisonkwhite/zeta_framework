@@ -23,15 +23,15 @@ namespace zf {
         s_arena temp_arena = ArenaCreate();
         ZF_DEFER({ ArenaDestroy(&temp_arena); });
 
-        platform::ZF_Platform_StartupModule(g_init_window_size);
-        ZF_DEFER({ platform::ZF_Platform_ShutdownModule(); });
+        PlatformStartup(g_init_window_size);
+        ZF_DEFER({ PlatformShutdown(); });
 
-        s_input_state input_state = {};
+        s_input_state *const input_state = detail::InputStateCreate(&perm_arena);
 
         gfx::s_rendering_basis *const rendering_basis = gfx::StartupModule(&perm_arena);
         ZF_DEFER({ gfx::ShutdownModule(rendering_basis); });
 
-        s_rng *const rng = CreateRNG(0, &perm_arena); // @todo: Proper seed!
+        s_rng *const rng = RNGCreate(0, &perm_arena); // @todo: Proper seed!
 
         init_func({
             .perm_arena = &perm_arena,
@@ -48,15 +48,15 @@ namespace zf {
         //
         // Main Loop
         //
-        platform::ShowWindow();
+        WindowShow();
 
-        t_f64 frame_time_last = platform::Time();
+        t_f64 frame_time_last = Time();
         t_f64 frame_dur_accum = 0.0;
 
-        while (!platform::ShouldWindowClose()) {
-            platform::PollOSEvents(&input_state);
+        while (!WindowShouldClose()) {
+            PollOSEvents(input_state);
 
-            const t_f64 frame_time = platform::Time();
+            const t_f64 frame_time = Time();
             const t_f64 frame_time_delta = frame_time - frame_time_last;
             frame_dur_accum += frame_time_delta;
             frame_time_last = frame_time;
@@ -70,11 +70,11 @@ namespace zf {
                 tick_func({
                     .perm_arena = &perm_arena,
                     .temp_arena = &temp_arena,
-                    .input_state = &input_state,
+                    .input_state = input_state,
                     .rng = rng,
                 });
 
-                input_state.events = {};
+                detail::InputStateClearEvents(input_state);
 
                 frame_dur_accum -= targ_tick_interval;
             }

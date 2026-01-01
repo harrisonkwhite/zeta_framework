@@ -1,6 +1,8 @@
 #pragma once
 
 #include <zcl.h>
+#include <zgl/zgl_input.h>
+#include <zgl/zgl_gfx_core.h>
 
 namespace zf {
     struct s_game_init_context {
@@ -10,8 +12,6 @@ namespace zf {
         s_rng *rng;
     };
 
-    struct s_input_state;
-
     struct s_game_tick_context {
         s_arena *perm_arena;
         s_arena *temp_arena;
@@ -20,10 +20,6 @@ namespace zf {
 
         s_rng *rng;
     };
-
-    namespace gfx {
-        struct s_rendering_context;
-    }
 
     struct s_game_render_context {
         s_arena *perm_arena;
