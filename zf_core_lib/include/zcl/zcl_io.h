@@ -295,7 +295,7 @@ namespace zf {
 
     e_path_type DeterminePathType(const s_str_rdonly path, s_arena *const temp_arena);
 
-    s_str LoadExecutableDirectory(s_arena *const arena);
+    s_str_mut LoadExecutableDirectory(s_arena *const arena);
 
     // ============================================================
 
@@ -724,7 +724,7 @@ namespace zf {
     constexpr t_code_pt g_print_fmt_esc = '^';
 
     constexpr t_i32 CountFormatSpecifiers(const s_str_rdonly str) {
-        static_assert(IsASCII(g_print_fmt_spec) && IsASCII(g_print_fmt_esc)); // Assuming this for this algorithm.
+        static_assert(CodePointIsASCII(g_print_fmt_spec) && CodePointIsASCII(g_print_fmt_esc)); // Assuming this for this algorithm.
 
         t_b8 escaped = false;
         t_i32 cnt = 0;
@@ -757,7 +757,7 @@ namespace zf {
     t_b8 PrintFormat(c_stream *const stream, const s_str_rdonly fmt, const tp_arg_type &arg, const tp_arg_types_leftover &...args_leftover) {
         ZF_ASSERT(CountFormatSpecifiers(fmt) == 1 + sizeof...(args_leftover));
 
-        static_assert(IsASCII(g_print_fmt_spec) && IsASCII(g_print_fmt_esc)); // Assuming this for this algorithm.
+        static_assert(CodePointIsASCII(g_print_fmt_spec) && CodePointIsASCII(g_print_fmt_esc)); // Assuming this for this algorithm.
 
         t_b8 escaped = false;
 
@@ -806,7 +806,7 @@ namespace zf {
             return false;
         }
 
-        if (!Print(&std_err, s_cstr_literal("\n"))) {
+        if (!Print(&std_err, c_cstr_literal("\n"))) {
             return false;
         }
 
@@ -817,7 +817,7 @@ namespace zf {
     t_b8 LogError(const s_str_rdonly fmt, const tp_arg_types &...args) {
         c_stream std_err = StdError();
 
-        if (!Print(&std_err, s_cstr_literal("Error: "))) {
+        if (!Print(&std_err, c_cstr_literal("Error: "))) {
             return false;
         }
 
@@ -825,7 +825,7 @@ namespace zf {
             return false;
         }
 
-        if (!Print(&std_err, s_cstr_literal("\n"))) {
+        if (!Print(&std_err, c_cstr_literal("\n"))) {
             return false;
         }
 
@@ -834,11 +834,11 @@ namespace zf {
 
     template <typename... tp_arg_types>
     t_b8 LogErrorType(const s_str_rdonly type_name, const s_str_rdonly fmt, const tp_arg_types &...args) {
-        ZF_ASSERT(!IsStrEmpty(type_name));
+        ZF_ASSERT(!StrIsEmpty(type_name));
 
         c_stream std_err = StdError();
 
-        if (!PrintFormat(&std_err, s_cstr_literal("% Error: "), type_name)) {
+        if (!PrintFormat(&std_err, c_cstr_literal("% Error: "), type_name)) {
             return false;
         }
 
@@ -846,7 +846,7 @@ namespace zf {
             return false;
         }
 
-        if (!Print(&std_err, s_cstr_literal("\n"))) {
+        if (!Print(&std_err, c_cstr_literal("\n"))) {
             return false;
         }
 
@@ -857,7 +857,7 @@ namespace zf {
     t_b8 LogWarning(const s_str_rdonly fmt, const tp_arg_types &...args) {
         c_stream std_err = StdError();
 
-        if (!Print(&std_err, s_cstr_literal("Warning: "))) {
+        if (!Print(&std_err, c_cstr_literal("Warning: "))) {
             return false;
         }
 
@@ -865,7 +865,7 @@ namespace zf {
             return false;
         }
 
-        if (!Print(&std_err, s_cstr_literal("\n"))) {
+        if (!Print(&std_err, c_cstr_literal("\n"))) {
             return false;
         }
 

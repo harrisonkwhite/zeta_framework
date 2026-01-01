@@ -20,10 +20,10 @@ namespace zf::gfx {
         };
 
     t_b8 LoadTextureDataFromRaw(const s_str_rdonly file_path, s_arena *const texture_data_arena, s_arena *const temp_arena, s_texture_data *const o_texture_data) {
-        const s_str_rdonly file_path_terminated = AllocStrCloneButAddTerminator(file_path, temp_arena);
+        const s_str_rdonly file_path_terminated = StrCloneButAddTerminator(file_path, temp_arena);
 
         s_v2_i size_in_pxs;
-        t_u8 *const stb_px_data = stbi_load(AsCstr(file_path_terminated), &size_in_pxs.x, &size_in_pxs.y, nullptr, 4);
+        t_u8 *const stb_px_data = stbi_load(StrAsCstr(file_path_terminated), &size_in_pxs.x, &size_in_pxs.y, nullptr, 4);
 
         if (!stb_px_data) {
             return false;

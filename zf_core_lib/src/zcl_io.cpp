@@ -11,24 +11,24 @@
 
 namespace zf {
     t_b8 FileOpen(const s_str_rdonly path, const e_file_access_mode mode, s_arena *const temp_arena, c_stream *const o_stream) {
-        const s_str_rdonly path_terminated = AllocStrCloneButAddTerminator(path, temp_arena);
+        const s_str_rdonly path_terminated = StrCloneButAddTerminator(path, temp_arena);
 
         FILE *file;
         e_stream_mode stream_mode;
 
         switch (mode) {
         case ek_file_access_mode_read:
-            file = fopen(AsCstr(path_terminated), "rb");
+            file = fopen(StrAsCstr(path_terminated), "rb");
             stream_mode = ek_stream_mode_read;
             break;
 
         case ek_file_access_mode_write:
-            file = fopen(AsCstr(path_terminated), "wb");
+            file = fopen(StrAsCstr(path_terminated), "wb");
             stream_mode = ek_stream_mode_write;
             break;
 
         case ek_file_access_mode_append:
-            file = fopen(AsCstr(path_terminated), "ab");
+            file = fopen(StrAsCstr(path_terminated), "ab");
             stream_mode = ek_stream_mode_write;
             break;
 
@@ -89,10 +89,10 @@ namespace zf {
             *o_creation_res = ek_directory_creation_result_success;
         }
 
-        const s_str_rdonly path_terminated = AllocStrCloneButAddTerminator(path, temp_arena);
+        const s_str_rdonly path_terminated = StrCloneButAddTerminator(path, temp_arena);
 
 #ifdef ZF_PLATFORM_WINDOWS
-        const t_i32 result = _mkdir(AsCstr(path_terminated));
+        const t_i32 result = _mkdir(StrAsCstr(path_terminated));
 #else
         const t_s32 result = mkdir(AsCstr(path_terminated), 0755);
 #endif
@@ -142,10 +142,10 @@ namespace zf {
 
         t_b8 cur_dir_name_is_empty = true;
 
-        ZF_WALK_STR (path, info) {
-            if (info.code_pt == '/' || info.code_pt == '\\') {
+        ZF_STR_WALK (path, step) {
+            if (step.code_pt == '/' || step.code_pt == '\\') {
                 if (!cur_dir_name_is_empty) {
-                    if (!create_dir_if_nonexistent({Slice(path.bytes, 0, info.byte_index)})) {
+                    if (!create_dir_if_nonexistent({Slice(path.bytes, 0, step.byte_index)})) {
                         return false;
                     }
 
@@ -171,9 +171,9 @@ namespace zf {
         }
 
         // Get the substring containing all directories and create them.
-        ZF_WALK_STR_REVERSE (path, info) {
-            if (info.code_pt == '/' || info.code_pt == '\\') {
-                if (!CreateDirectoryAndParents({Slice(path.bytes, 0, info.byte_index)}, temp_arena, o_dir_creation_res)) {
+        ZF_STR_WALK_REVERSE (path, step) {
+            if (step.code_pt == '/' || step.code_pt == '\\') {
+                if (!CreateDirectoryAndParents({Slice(path.bytes, 0, step.byte_index)}, temp_arena, o_dir_creation_res)) {
                     return false;
                 }
 
@@ -194,11 +194,11 @@ namespace zf {
     }
 
     e_path_type DeterminePathType(const s_str_rdonly path, s_arena *const temp_arena) {
-        const s_str_rdonly path_terminated = AllocStrCloneButAddTerminator(path, temp_arena);
+        const s_str_rdonly path_terminated = StrCloneButAddTerminator(path, temp_arena);
 
         struct stat info;
 
-        if (stat(AsCstr(path_terminated), &info) != 0) {
+        if (stat(StrAsCstr(path_terminated), &info) != 0) {
             return ek_path_type_not_found;
         }
 
@@ -209,7 +209,7 @@ namespace zf {
         return ek_path_type_file;
     }
 
-    s_str LoadExecutableDirectory(s_arena *const arena) {
+    s_str_mut LoadExecutableDirectory(s_arena *const arena) {
 #if defined(ZF_PLATFORM_WINDOWS)
         s_static_array<char, MAX_PATH> buf;
 

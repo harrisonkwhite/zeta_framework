@@ -77,7 +77,7 @@ namespace zf::gfx {
     }
 
     s_array_mut<s_v2> CalcStrChrRenderPositions(const s_str_rdonly str, const s_font_arrangement &font_arrangement, const s_v2 pos, const s_v2 alignment, s_arena *const arena) {
-        ZF_ASSERT(CalcIsStrValidUTF8(str));
+        ZF_ASSERT(StrIsValidUTF8(str));
         ZF_ASSERT(IsStrAlignmentValid(alignment));
 
         // Calculate some useful string metadata.
@@ -89,10 +89,10 @@ namespace zf::gfx {
         const auto str_meta = [str]() {
             s_str_meta meta = {.line_cnt = 1};
 
-            ZF_WALK_STR (str, chr_info) {
+            ZF_STR_WALK (str, step) {
                 meta.len++;
 
-                if (chr_info.code_pt == '\n') {
+                if (step.code_pt == '\n') {
                     meta.line_cnt++;
                 }
             }
@@ -123,17 +123,17 @@ namespace zf::gfx {
             }
         };
 
-        ZF_WALK_STR (str, chr_info) {
+        ZF_STR_WALK (str, step) {
             ZF_DEFER({
                 chr_index++;
-                code_pt_last = chr_info.code_pt;
+                code_pt_last = step.code_pt;
             });
 
             if (line_len == 0) {
                 line_begin_chr_index = chr_index;
             }
 
-            if (chr_info.code_pt == '\n') {
+            if (step.code_pt == '\n') {
                 apply_hor_alignment_offs();
 
                 chr_pos_pen.x = 0.0f;
@@ -146,7 +146,7 @@ namespace zf::gfx {
 
             s_font_glyph_info *glyph_info;
 
-            if (!HashMapFind(&font_arrangement.code_pts_to_glyph_infos, chr_info.code_pt, &glyph_info)) {
+            if (!HashMapFind(&font_arrangement.code_pts_to_glyph_infos, step.code_pt, &glyph_info)) {
                 ZF_ASSERT(false && "Unsupported code point!");
                 continue;
             }
@@ -154,7 +154,7 @@ namespace zf::gfx {
             if (chr_index > 0 && font_arrangement.has_kernings) {
                 t_i32 *kerning;
 
-                if (HashMapFind(&font_arrangement.code_pt_pairs_to_kernings, {code_pt_last, chr_info.code_pt}, &kerning)) {
+                if (HashMapFind(&font_arrangement.code_pt_pairs_to_kernings, {code_pt_last, step.code_pt}, &kerning)) {
                     chr_pos_pen.x += static_cast<t_f32>(*kerning);
                 }
             }
@@ -173,10 +173,10 @@ namespace zf::gfx {
     }
 
     void RenderStr(s_rendering_context *const rc, const s_str_rdonly str, const s_font &font, const s_v2 pos, s_arena *const temp_arena, const s_v2 alignment, const s_color_rgba32f blend) {
-        ZF_ASSERT(CalcIsStrValidUTF8(str));
+        ZF_ASSERT(StrIsValidUTF8(str));
         ZF_ASSERT(IsStrAlignmentValid(alignment));
 
-        if (IsStrEmpty(str)) {
+        if (StrIsEmpty(str)) {
             return;
         }
 
@@ -187,15 +187,15 @@ namespace zf::gfx {
 
         t_i32 chr_index = 0;
 
-        ZF_WALK_STR (str, chr_info) {
-            if (chr_info.code_pt == ' ' || chr_info.code_pt == '\n') {
+        ZF_STR_WALK (str, step) {
+            if (step.code_pt == ' ' || step.code_pt == '\n') {
                 chr_index++;
                 continue;
             }
 
             s_font_glyph_info *glyph_info;
 
-            if (!HashMapFind(&font_arrangement.code_pts_to_glyph_infos, chr_info.code_pt, &glyph_info)) {
+            if (!HashMapFind(&font_arrangement.code_pts_to_glyph_infos, step.code_pt, &glyph_info)) {
                 ZF_ASSERT(false && "Unsupported code point!");
                 continue;
             }

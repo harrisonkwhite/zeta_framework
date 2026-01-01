@@ -56,5 +56,5 @@ int main(const int arg_cnt, const char *const *const args) {
         return EXIT_FAILURE;
     }
 
-    return zf::OutputCode(zf::ConvertCstr(args[1]), zf::ConvertCstr(args[2]), zf::ConvertCstr(args[3])) ? EXIT_SUCCESS : EXIT_FAILURE;
+    return zf::OutputCode(zf::CstrToStr(args[1]), zf::CstrToStr(args[2]), zf::CstrToStr(args[3])) ? EXIT_SUCCESS : EXIT_FAILURE;
 }

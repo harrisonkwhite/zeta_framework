@@ -276,7 +276,7 @@ namespace zf {
         ek_utf8_byte_type_invalid,
     }};
 
-    t_b8 CalcIsStrValidUTF8(const s_str_rdonly str) {
+    t_b8 StrIsValidUTF8(const s_str_rdonly str) {
         t_i32 cost = 0;
 
         for (t_i32 i = 0; i < str.bytes.len; i++) {
@@ -312,8 +312,8 @@ namespace zf {
         return true;
     }
 
-    t_i32 CalcStrLen(const s_str_rdonly str) {
-        ZF_ASSERT(CalcIsStrValidUTF8(str));
+    t_i32 StrCalcLen(const s_str_rdonly str) {
+        ZF_ASSERT(StrIsValidUTF8(str));
 
         t_i32 i = 0;
         t_i32 len = 0;
@@ -339,7 +339,7 @@ namespace zf {
         return len;
     }
 
-    static t_code_pt ConvertUTF8BytesToCodePoint(const s_array_rdonly<t_u8> bytes) {
+    static t_code_pt ConvertUTF8BytesToCodePoint(const s_array_rdonly<char> bytes) {
         ZF_ASSERT(bytes.len >= 1 && bytes.len <= 4);
 
         t_code_pt result = 0;
@@ -375,8 +375,8 @@ namespace zf {
         return result;
     }
 
-    t_code_pt FindStrCodePointAtByte(const s_str_rdonly str, const t_i32 byte_index) {
-        ZF_ASSERT(CalcIsStrValidUTF8(str));
+    t_code_pt StrFindCodePointAtByte(const s_str_rdonly str, const t_i32 byte_index) {
+        ZF_ASSERT(StrIsValidUTF8(str));
         ZF_ASSERT(byte_index >= 0 && byte_index < str.bytes.len);
 
         t_i32 cp_first_byte_index = byte_index;
@@ -395,16 +395,16 @@ namespace zf {
         } while (true);
     }
 
-    void MarkStrCodePoints(const s_str_rdonly str, t_code_pt_bit_vec *const code_pts) {
-        ZF_ASSERT(CalcIsStrValidUTF8(str));
+    void StrMarkCodePoints(const s_str_rdonly str, t_code_pt_bit_vec *const code_pts) {
+        ZF_ASSERT(StrIsValidUTF8(str));
 
-        ZF_WALK_STR (str, info) {
-            SetBit(*code_pts, info.code_pt); // @todo
+        ZF_STR_WALK (str, step) {
+            SetBit(*code_pts, step.code_pt); // @todo
         }
     }
 
-    t_b8 WalkStr(const s_str_rdonly str, t_i32 *const byte_index, s_str_walk_info *const o_info) {
-        ZF_ASSERT(CalcIsStrValidUTF8(str));
+    t_b8 StrWalk(const s_str_rdonly str, t_i32 *const byte_index, s_str_walk_step *const o_step) {
+        ZF_ASSERT(StrIsValidUTF8(str));
         ZF_ASSERT(*byte_index >= 0 && *byte_index <= str.bytes.len);
 
         if (*byte_index == str.bytes.len) {
@@ -421,7 +421,7 @@ namespace zf {
             case ek_utf8_byte_type_4byte_start: {
                 const t_i32 cp_byte_cnt = byte_type - ek_utf8_byte_type_ascii + 1;
                 const auto cp_bytes = Slice(str.bytes, *byte_index, *byte_index + cp_byte_cnt);
-                *o_info = {.code_pt = ConvertUTF8BytesToCodePoint(cp_bytes), .byte_index = *byte_index};
+                *o_step = {.code_pt = ConvertUTF8BytesToCodePoint(cp_bytes), .byte_index = *byte_index};
                 *byte_index += cp_byte_cnt;
 
                 return true;
@@ -437,8 +437,8 @@ namespace zf {
         }
     }
 
-    t_b8 WalkStrReverse(const s_str_rdonly str, t_i32 *const byte_index, s_str_walk_info *const o_info) {
-        ZF_ASSERT(CalcIsStrValidUTF8(str));
+    t_b8 StrWalkReverse(const s_str_rdonly str, t_i32 *const byte_index, s_str_walk_step *const o_step) {
+        ZF_ASSERT(StrIsValidUTF8(str));
         ZF_ASSERT(*byte_index >= -1 && *byte_index < str.bytes.len);
 
         if (*byte_index == -1) {
@@ -455,7 +455,7 @@ namespace zf {
             case ek_utf8_byte_type_4byte_start: {
                 const t_i32 cp_byte_cnt = byte_type - ek_utf8_byte_type_ascii + 1;
                 const auto cp_bytes = Slice(str.bytes, *byte_index, *byte_index + cp_byte_cnt);
-                *o_info = {.code_pt = ConvertUTF8BytesToCodePoint(cp_bytes), .byte_index = *byte_index};
+                *o_step = {.code_pt = ConvertUTF8BytesToCodePoint(cp_bytes), .byte_index = *byte_index};
                 (*byte_index)--;
 
                 return true;
