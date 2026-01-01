@@ -3,6 +3,9 @@
 #include <zcl.h>
 
 namespace zf {
+    // ============================================================
+    // @section: Types and Globals
+
     enum e_key_code : t_i32 {
         ek_key_code_space,
         ek_key_code_0,
@@ -146,7 +149,11 @@ namespace zf {
         } events;
     };
 
-    void UpdateKeyState(s_input_state *const input_state, const e_key_code code, const t_b8 is_down);
+    // ============================================================
+
+
+    // ============================================================
+    // @section: Functions
 
     inline t_b8 IsKeyDown(const s_input_state *const input_state, const e_key_code code) {
         return IsBitSet(input_state->keys_down, code);
@@ -159,8 +166,6 @@ namespace zf {
     inline t_b8 IsKeyReleased(const s_input_state *const input_state, const e_key_code code) {
         return IsBitSet(input_state->events.keys_released, code);
     }
-
-    void UpdateMouseButtonState(s_input_state *const input_state, const e_mouse_button_code code, const t_b8 is_down);
 
     inline t_b8 IsMouseButtonDown(const s_input_state *const input_state, const e_mouse_button_code btn_code) {
         return IsBitSet(input_state->mouse_buttons_down, btn_code);
@@ -181,8 +186,6 @@ namespace zf {
     inline s_v2 ScrollOffset(const s_input_state *const input_state) {
         return input_state->events.scroll;
     }
-
-    void UpdateGamepadState(s_input_state *const input_state, const t_i32 gamepad_index, const t_b8 connected, const s_static_bit_vec<eks_gamepad_button_code_cnt> &btns_down, const s_static_array<t_f32, eks_gamepad_axis_code_cnt> &axes);
 
     inline t_b8 IsGamepadConnected(const s_input_state *const input_state, const t_i32 index) {
         ZF_ASSERT(index >= 0 && index < g_gamepad_limit);
@@ -218,20 +221,12 @@ namespace zf {
         return input_state->gamepads[gamepad_index].axes[axis_code];
     }
 
+    void UpdateKeyState(s_input_state *const input_state, const e_key_code code, const t_b8 is_down);
+    void UpdateMouseButtonState(s_input_state *const input_state, const e_mouse_button_code code, const t_b8 is_down);
+    void UpdateGamepadState(s_input_state *const input_state, const t_i32 gamepad_index, const t_b8 connected, const s_static_bit_vec<eks_gamepad_button_code_cnt> &btns_down, const s_static_array<t_f32, eks_gamepad_axis_code_cnt> &axes);
+
     // Calculates the gamepad axis value with deadzone applied.
-    inline t_f32 CalcGamepadAxisValue(const s_input_state *const input_state, const t_i32 gamepad_index, const e_gamepad_axis_code axis_code) {
-        ZF_ASSERT(gamepad_index >= 0 && gamepad_index < g_gamepad_limit);
-        ZF_ASSERT(IsGamepadConnected(input_state, gamepad_index));
+    t_f32 CalcGamepadAxisValue(const s_input_state *const input_state, const t_i32 gamepad_index, const e_gamepad_axis_code axis_code);
 
-        const t_f32 raw = input_state->gamepads[gamepad_index].axes[axis_code];
-        const t_f32 raw_abs = Abs(raw);
-
-        const t_f32 dz = input_state->gamepad_axis_deadzones[axis_code];
-
-        if (raw_abs <= dz) {
-            return 0.0f;
-        }
-
-        return static_cast<t_f32>(Sign(raw)) * ((raw_abs - dz) / (1.0f - dz));
-    }
+    // ============================================================
 }

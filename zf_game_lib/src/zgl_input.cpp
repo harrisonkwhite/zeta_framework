@@ -57,4 +57,20 @@ namespace zf {
 
         CopyAll(axes.AsNonstatic(), input_state->gamepads[gamepad_index].axes.AsNonstatic());
     }
+
+    t_f32 CalcGamepadAxisValue(const s_input_state *const input_state, const t_i32 gamepad_index, const e_gamepad_axis_code axis_code) {
+        ZF_ASSERT(gamepad_index >= 0 && gamepad_index < g_gamepad_limit);
+        ZF_ASSERT(IsGamepadConnected(input_state, gamepad_index));
+
+        const t_f32 raw = input_state->gamepads[gamepad_index].axes[axis_code];
+        const t_f32 raw_abs = Abs(raw);
+
+        const t_f32 dz = input_state->gamepad_axis_deadzones[axis_code];
+
+        if (raw_abs <= dz) {
+            return 0.0f;
+        }
+
+        return static_cast<t_f32>(Sign(raw)) * ((raw_abs - dz) / (1.0f - dz));
+    }
 }
