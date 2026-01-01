@@ -94,7 +94,7 @@ namespace zf {
                 break;
             }
 
-            AppendMany_Dynamic(&bin_list, Slice(buf.AsNonstatic(), 0, r), bin_arena);
+            AppendManyDynamic(&bin_list, Slice(buf.AsNonstatic(), 0, r), bin_arena);
         }
 
         if (r != REPROC_EPIPE) {
