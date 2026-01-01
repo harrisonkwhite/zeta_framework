@@ -4,58 +4,11 @@
 #include <zcl/zcl_mem.h>
 
 namespace zf {
+    // ============================================================
+    // @section: Types and Globals
+
     constexpr t_f32 g_pi = 3.14159265358979323846f;
     constexpr t_f32 g_tau = 6.28318530717958647692f;
-
-    constexpr t_f32 DegsToRads(const t_f32 degs) {
-        return degs * (g_pi / 180.0f);
-    }
-
-    constexpr t_f32 RadsToDegs(const t_f32 rads) {
-        return rads * (180.0f / g_pi);
-    }
-
-    template <co_integral tp_type>
-    constexpr t_i32 CalcDigitCount(const tp_type n) {
-        if (n < 0) {
-            return CalcDigitCount(-n);
-        }
-
-        if (n < 10) {
-            return 1;
-        }
-
-        return 1 + CalcDigitCount(n / 10);
-    }
-
-    // Determines the digit at the given index, where the indexes are from the least significant digit to the most.
-    template <co_integral tp_type>
-    constexpr tp_type DetermineDigitAt(const tp_type n, const t_i32 index) {
-        ZF_ASSERT(index >= 0 && index < CalcDigitCount(n));
-
-        if (n < 0) {
-            return DetermineDigitAt(-n, index);
-        }
-
-        if (index == 0) {
-            return n % 10;
-        }
-
-        if (n < 10) {
-            return 0;
-        }
-
-        return DetermineDigitAt(n / 10, index - 1);
-    }
-
-    constexpr t_b8 IsNearlyEqual(const t_f32 val, const t_f32 targ, const t_f32 tol = 1e-5f) {
-        ZF_ASSERT(tol >= 0);
-        return val >= targ - tol && val <= targ + tol;
-    }
-
-
-    // ============================================================
-    // @section: Vectors
 
     struct s_v2_i;
 
@@ -66,21 +19,10 @@ namespace zf {
         constexpr s_v2() = default;
         constexpr s_v2(const t_f32 x, const t_f32 y) : x(x), y(y) {}
 
-        constexpr s_v2 operator+(const s_v2 other) const {
-            return {x + other.x, y + other.y};
-        }
-
-        constexpr s_v2 operator-(const s_v2 other) const {
-            return {x - other.x, y - other.y};
-        }
-
-        constexpr s_v2 operator*(const t_f32 scalar) const {
-            return {x * scalar, y * scalar};
-        }
-
-        constexpr s_v2 operator/(const t_f32 scalar) const {
-            return {x / scalar, y / scalar};
-        }
+        constexpr s_v2 operator+(const s_v2 other) const { return {x + other.x, y + other.y}; }
+        constexpr s_v2 operator-(const s_v2 other) const { return {x - other.x, y - other.y}; }
+        constexpr s_v2 operator*(const t_f32 scalar) const { return {x * scalar, y * scalar}; }
+        constexpr s_v2 operator/(const t_f32 scalar) const { return {x / scalar, y / scalar}; }
 
         constexpr s_v2 &operator+=(const s_v2 other) {
             x += other.x;
@@ -121,13 +63,10 @@ namespace zf {
         constexpr s_v2_i() = default;
         constexpr s_v2_i(const t_i32 x, const t_i32 y) : x(x), y(y) {}
 
-        constexpr s_v2_i operator+(const s_v2_i other) const {
-            return {x + other.x, y + other.y};
-        }
-
-        constexpr s_v2_i operator-(const s_v2_i other) const {
-            return {x - other.x, y - other.y};
-        }
+        constexpr t_b8 operator==(const s_v2_i &other) const { return x == other.x && y == other.y; }
+        constexpr t_b8 operator!=(const s_v2_i &other) const { return !(*this == other); }
+        constexpr s_v2_i operator+(const s_v2_i other) const { return {x + other.x, y + other.y}; }
+        constexpr s_v2_i operator-(const s_v2_i other) const { return {x - other.x, y - other.y}; }
 
         constexpr s_v2_i &operator+=(const s_v2_i other) {
             x += other.x;
@@ -139,14 +78,6 @@ namespace zf {
             x -= other.x;
             y -= other.y;
             return *this;
-        }
-
-        constexpr t_b8 operator==(const s_v2_i &other) const {
-            return x == other.x && y == other.y;
-        }
-
-        constexpr t_b8 operator!=(const s_v2_i &other) const {
-            return !(*this == other);
         }
 
         explicit constexpr operator s_v2() const {
@@ -184,12 +115,6 @@ namespace zf {
         constexpr s_v4() = default;
         constexpr s_v4(const t_f32 x, const t_f32 y, const t_f32 z, const t_f32 w) : x(x), y(y), z(z), w(w) {}
     };
-
-    // ============================================================
-
-
-    // ============================================================
-    // @section: Rectangles
 
     struct s_rect_i;
 
@@ -277,6 +202,65 @@ namespace zf {
         return static_cast<s_rect_i>(*this);
     }
 
+    struct s_mat4x4 {
+        s_static_array<s_static_array<t_f32, 4>, 4> elems;
+    };
+
+    // ============================================================
+
+
+    // ============================================================
+    // @section: Functions
+
+    s_rect_f CalcSpanningRect(const s_array_mut<s_rect_f> rects);
+    s_rect_i CalcSpanningRect(const s_array_mut<s_rect_i> rects);
+
+    constexpr t_f32 DegsToRads(const t_f32 degs) {
+        return degs * (g_pi / 180.0f);
+    }
+
+    constexpr t_f32 RadsToDegs(const t_f32 rads) {
+        return rads * (180.0f / g_pi);
+    }
+
+    template <co_integral tp_type>
+    constexpr t_i32 CalcDigitCount(const tp_type n) {
+        if (n < 0) {
+            return CalcDigitCount(-n);
+        }
+
+        if (n < 10) {
+            return 1;
+        }
+
+        return 1 + CalcDigitCount(n / 10);
+    }
+
+    // Determines the digit at the given index, where the indexes are from the least significant digit to the most.
+    template <co_integral tp_type>
+    constexpr tp_type DetermineDigitAt(const tp_type n, const t_i32 index) {
+        ZF_ASSERT(index >= 0 && index < CalcDigitCount(n));
+
+        if (n < 0) {
+            return DetermineDigitAt(-n, index);
+        }
+
+        if (index == 0) {
+            return n % 10;
+        }
+
+        if (n < 10) {
+            return 0;
+        }
+
+        return DetermineDigitAt(n / 10, index - 1);
+    }
+
+    constexpr t_b8 IsNearlyEqual(const t_f32 val, const t_f32 targ, const t_f32 tol = 1e-5f) {
+        ZF_ASSERT(tol >= 0);
+        return val >= targ - tol && val <= targ + tol;
+    }
+
     constexpr t_b8 DoRectsInters(const s_rect_i a, const s_rect_i b) {
         return a.Left() < b.Right() && a.Top() < b.Bottom() && a.Right() > b.Left() && a.Bottom() > b.Top();
     }
@@ -284,20 +268,6 @@ namespace zf {
     constexpr t_b8 DoRectsInters(const s_rect_f a, const s_rect_f b) {
         return a.Left() < b.Right() && a.Top() < b.Bottom() && a.Right() > b.Left() && a.Bottom() > b.Top();
     }
-
-    s_rect_f CalcSpanningRect(const s_array_mut<s_rect_f> rects);
-    s_rect_i CalcSpanningRect(const s_array_mut<s_rect_i> rects);
-
-    // ============================================================
-
-
-    // ============================================================
-    // @section: Matrices
-    // ============================================================
-
-    struct s_mat4x4 {
-        s_static_array<s_static_array<t_f32, 4>, 4> elems;
-    };
 
     constexpr s_mat4x4 IdentityMatrix() {
         s_mat4x4 mat = {};
@@ -308,9 +278,6 @@ namespace zf {
 
         return mat;
     }
-
-    // ============================================================
-
 
     constexpr t_f32 Lerp(const t_f32 a, const t_f32 b, const t_f32 t) {
         return a + ((b - a) * t);
@@ -408,4 +375,6 @@ namespace zf {
         const auto subrect = ClampedWithinContainer(rect, container);
         return Clamp(static_cast<t_f32>(subrect.Area()) / static_cast<t_f32>(container.Area()), 0.0f, 1.0f);
     }
+
+    // ============================================================
 }
