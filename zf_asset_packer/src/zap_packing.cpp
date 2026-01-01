@@ -93,7 +93,7 @@ namespace zf {
 
     t_b8 PackAssets(const s_str_rdonly instrs_json_file_path) {
         s_arena arena = CreateArena();
-        ZF_DEFER({ DestroyArena(&arena); });
+        ZF_DEFER({ Destroy(&arena); });
 
         cJSON *cj;
 
@@ -138,7 +138,7 @@ namespace zf {
             cJSON *cj_asset;
 
             cJSON_ArrayForEach(cj_asset, cj_assets) {
-                RewindArena(&arena);
+                Rewind(&arena);
 
                 if (!cJSON_IsObject(cj_asset)) {
                     continue;
@@ -227,7 +227,7 @@ namespace zf {
                     const auto height = field_vals[ek_font_field_height]->valueint;
                     const auto out_file_path = ConvertCstr(field_vals[ek_font_field_out_file_path]->valuestring);
 
-                    const auto code_pt_bv = AllocItemZeroed<t_code_pt_bit_vec>(&arena);
+                    const auto code_pt_bv = PushItemZeroed<t_code_pt_bit_vec>(&arena);
 
                     SetBitsInRange(*code_pt_bv, g_printable_ascii_range_begin, g_printable_ascii_range_end); // Add the printable ASCII range as a default.
 

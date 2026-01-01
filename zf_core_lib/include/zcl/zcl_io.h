@@ -67,8 +67,8 @@ namespace zf {
                 }
 
                 const auto src = m_type_data.mem.bytes.Slice(m_type_data.mem.byte_pos, m_type_data.mem.byte_pos + size);
-                const auto dest = ToBytes(*o_item);
-                CopyArray(src, dest);
+                const auto dest = AsBytes(*o_item);
+                CopyAll(src, dest);
 
                 m_type_data.mem.byte_pos += size;
 
@@ -95,9 +95,9 @@ namespace zf {
                     return false;
                 }
 
-                const auto src = ToBytes(item);
+                const auto src = AsBytes(item);
                 const auto dest = m_type_data.mem.bytes.Slice(m_type_data.mem.byte_pos, m_type_data.mem.byte_pos + size);
-                CopyArray(src, dest);
+                CopyAll(src, dest);
 
                 m_type_data.mem.byte_pos += size;
 
@@ -112,7 +112,7 @@ namespace zf {
             }
         }
 
-        template <co_array_nonstatic_mut tp_type>
+        template <co_array_mut tp_type>
         [[nodiscard]] t_b8 ReadItemsIntoArray(const tp_type arr, const t_i32 cnt) {
             ZF_ASSERT(m_mode == ek_stream_mode_read);
             ZF_ASSERT(cnt >= 0 && cnt <= arr.len);
@@ -131,7 +131,7 @@ namespace zf {
 
                 const auto src = m_type_data.mem.bytes.Slice(m_type_data.mem.byte_pos, m_type_data.mem.byte_pos + size);
                 const auto dest = arr.AsByteArray();
-                CopyArray(src, dest);
+                CopyAll(src, dest);
 
                 m_type_data.mem.byte_pos += size;
 
@@ -146,7 +146,7 @@ namespace zf {
             }
         }
 
-        template <co_array_nonstatic tp_type>
+        template <co_array tp_type>
         [[nodiscard]] t_b8 WriteItemsOfArray(const tp_type arr) {
             ZF_ASSERT(m_mode == ek_stream_mode_write);
 
@@ -164,7 +164,7 @@ namespace zf {
 
                 const auto src = arr.AsByteArray();
                 const auto dest = m_type_data.mem.bytes.Slice(m_type_data.mem.byte_pos, m_type_data.mem.byte_pos + size);
-                CopyArray(src, dest);
+                CopyAll(src, dest);
 
                 m_type_data.mem.byte_pos += size;
 
@@ -200,7 +200,7 @@ namespace zf {
     inline c_stream StdOut() { return {stdout, ek_stream_mode_write}; }
     inline c_stream StdError() { return {stderr, ek_stream_mode_write}; }
 
-    template <co_array_nonstatic tp_type>
+    template <co_array tp_type>
     [[nodiscard]] t_b8 SerializeArray(c_stream *const stream, const tp_type arr) {
         if (!stream->WriteItem(arr.len)) {
             return false;
@@ -221,7 +221,7 @@ namespace zf {
             return false;
         }
 
-        *o_arr = AllocArray<tp_type>(len, arr_arena);
+        *o_arr = PushArray<tp_type>(arr_arena, len);
 
         if (!stream->ReadItemsIntoArray(*o_arr, len)) {
             return false;
@@ -230,7 +230,7 @@ namespace zf {
         return true;
     }
 
-    [[nodiscard]] inline t_b8 SerializeBitVec(c_stream *const stream, const s_bit_vec_rdonly bv) {
+    [[nodiscard]] inline t_b8 SerializeBitVector(c_stream *const stream, const s_bit_vec_rdonly bv) {
         if (!stream->WriteItem(bv.bit_cnt)) {
             return false;
         }
@@ -242,14 +242,14 @@ namespace zf {
         return true;
     }
 
-    [[nodiscard]] inline t_b8 DeserializeBitVec(c_stream *const stream, s_arena *const bv_arena, s_bit_vec_mut *const o_bv) {
+    [[nodiscard]] inline t_b8 DeserializeBitVector(c_stream *const stream, s_arena *const bv_arena, s_bit_vec_mut *const o_bv) {
         t_i32 bit_cnt;
 
         if (!stream->ReadItem(&bit_cnt)) {
             return false;
         }
 
-        *o_bv = BitVecCreate(bit_cnt, bv_arena);
+        *o_bv = CreateBitVector(bit_cnt, bv_arena);
 
         if (!stream->ReadItemsIntoArray(o_bv->Bytes(), o_bv->Bytes().len)) {
             return false;
@@ -283,9 +283,9 @@ namespace zf {
         ek_directory_creation_result_unknown_err
     };
 
-    [[nodiscard]] t_b8 CreateDir(const s_str_rdonly path, s_arena *const temp_arena, e_directory_creation_result *const o_creation_res = nullptr); // This DOES NOT create non-existent parent directories.
+    [[nodiscard]] t_b8 CreateDirectoryAssumingParentsExist(const s_str_rdonly path, s_arena *const temp_arena, e_directory_creation_result *const o_creation_res = nullptr);
     [[nodiscard]] t_b8 CreateDirectoryAndParents(const s_str_rdonly path, s_arena *const temp_arena, e_directory_creation_result *const o_dir_creation_res = nullptr);
-    [[nodiscard]] t_b8 CreateFileAndParentDirs(const s_str_rdonly path, s_arena *const temp_arena, e_directory_creation_result *const o_dir_creation_res = nullptr);
+    [[nodiscard]] t_b8 CreateFileAndParentDirectories(const s_str_rdonly path, s_arena *const temp_arena, e_directory_creation_result *const o_dir_creation_res = nullptr);
 
     enum e_path_type : t_i32 {
         ek_path_type_not_found,
@@ -584,7 +584,7 @@ namespace zf {
     // @subsection: Array Printing
 
     template <typename tp_arr_type>
-    concept co_formattable_array = co_array_nonstatic<tp_arr_type>
+    concept co_formattable_array = co_array<tp_arr_type>
         && requires(const typename tp_arr_type::t_elem &v) { { FormatDefault(v) } -> co_fmt; };
 
     template <co_formattable_array tp_arr_type>
@@ -667,7 +667,7 @@ namespace zf {
         };
 
         const auto print_byte = [&](const t_i32 index) {
-            const t_i32 bit_cnt = index == fmt.val.Bytes().len - 1 ? fmt.val.LastByteBitCount() : 8;
+            const t_i32 bit_cnt = index == fmt.val.Bytes().len - 1 ? LastByteBitCount(fmt.val) : 8;
 
             for (t_i32 i = 7; i >= bit_cnt; i--) {
                 Print(stream, s_cstr_literal("0"));

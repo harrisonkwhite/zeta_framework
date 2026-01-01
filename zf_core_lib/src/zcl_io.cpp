@@ -71,10 +71,10 @@ namespace zf {
         const t_i32 file_size = CalcFileSize(&stream);
 
         if (add_terminator) {
-            *o_contents = AllocArray<t_u8>(file_size + 1, contents_arena);
+            *o_contents = PushArray<t_u8>(contents_arena, file_size + 1);
             (*o_contents)[file_size] = 0;
         } else {
-            *o_contents = AllocArray<t_u8>(file_size, contents_arena);
+            *o_contents = PushArray<t_u8>(contents_arena, file_size);
         }
 
         if (!stream.ReadItemsIntoArray(*o_contents, file_size)) {
@@ -84,7 +84,7 @@ namespace zf {
         return true;
     }
 
-    t_b8 CreateDir(const s_str_rdonly path, s_arena *const temp_arena, e_directory_creation_result *const o_creation_res) {
+    t_b8 CreateDirectoryAssumingParentsExist(const s_str_rdonly path, s_arena *const temp_arena, e_directory_creation_result *const o_creation_res) {
         if (o_creation_res) {
             *o_creation_res = ek_directory_creation_result_success;
         }
@@ -132,7 +132,7 @@ namespace zf {
 
         const auto create_dir_if_nonexistent = [o_dir_creation_res, &temp_arena](const s_str_rdonly path) {
             if (DeterminePathType(path, temp_arena) == ek_path_type_not_found) {
-                if (!CreateDir(path, temp_arena, o_dir_creation_res)) {
+                if (!CreateDirectoryAssumingParentsExist(path, temp_arena, o_dir_creation_res)) {
                     return false;
                 }
             }
@@ -165,7 +165,7 @@ namespace zf {
         return true;
     }
 
-    t_b8 CreateFileAndParentDirs(const s_str_rdonly path, s_arena *const temp_arena, e_directory_creation_result *const o_dir_creation_res) {
+    t_b8 CreateFileAndParentDirectories(const s_str_rdonly path, s_arena *const temp_arena, e_directory_creation_result *const o_dir_creation_res) {
         if (o_dir_creation_res) {
             *o_dir_creation_res = ek_directory_creation_result_success;
         }
@@ -222,8 +222,8 @@ namespace zf {
             }
         }
 
-        const auto result_bytes = AllocArray<t_u8>(len, arena);
-        CopyArray(buf.AsNonstatic().Slice(0, len).AsByteArray(), result_bytes);
+        const auto result_bytes = PushArray<t_u8>(arena, len);
+        CopyAll(buf.AsNonstatic().Slice(0, len).AsByteArray(), result_bytes);
         return {result_bytes};
 #elif defined(ZF_PLATFORM_MACOS)
     #error "Platform-specific implementation not yet done!"

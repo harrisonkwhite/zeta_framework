@@ -35,7 +35,7 @@ namespace zf {
 
     static void RunTests() {
         s_arena arena = CreateArena();
-        ZF_DEFER({ DestroyArena(&arena); });
+        ZF_DEFER({ Destroy(&arena); });
 
         for (t_i32 i = 0; i < g_tests.g_len; i++) {
             Log(s_cstr_literal("Running test \"%\"..."), g_tests[i].title);

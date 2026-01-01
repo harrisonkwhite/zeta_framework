@@ -27,7 +27,7 @@ namespace zf {
             .frame_cnt = static_cast<t_i32>(frame_cnt),
         };
 
-        o_snd_data->pcm = AllocArray<t_f32>(SampleCount(o_snd_data->meta), snd_data_arena);
+        o_snd_data->pcm = PushArray<t_f32>(snd_data_arena, SampleCount(o_snd_data->meta));
 
         if (ma_decoder_read_pcm_frames(&decoder, o_snd_data->pcm.raw, frame_cnt, nullptr) != MA_SUCCESS) {
             return false;
@@ -37,7 +37,7 @@ namespace zf {
     }
 
     t_b8 PackSound(const s_str_rdonly file_path, const s_sound_data_mut snd_data, s_arena *const temp_arena) {
-        if (!CreateFileAndParentDirs(file_path, temp_arena)) {
+        if (!CreateFileAndParentDirectories(file_path, temp_arena)) {
             return false;
         }
 
@@ -65,7 +65,7 @@ namespace zf {
             return false;
         }
 
-        o_snd_data->pcm = AllocArray<t_f32>(SampleCount(o_snd_data->meta), snd_data_arena);
+        o_snd_data->pcm = PushArray<t_f32>(snd_data_arena, SampleCount(o_snd_data->meta));
 
         if (!fs.ReadItemsIntoArray(o_snd_data->pcm, o_snd_data->pcm.len)) {
             return false;

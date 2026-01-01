@@ -7,7 +7,7 @@ namespace zf {
 
     constexpr t_i32 g_unicode_code_pt_cnt = 1114112;
 
-    using t_code_pt_bit_vec = s_bit_vec_static<g_unicode_code_pt_cnt>;
+    using t_code_pt_bit_vec = s_static_bit_vec<g_unicode_code_pt_cnt>;
 
     constexpr t_i32 UnicodeCodePointToByteCnt(const t_code_pt cp) {
         if (cp <= 0x7F) {
@@ -131,8 +131,8 @@ namespace zf {
 
     // Allocates a clone of the given string using the memory arena, with a null byte added at the end (even if the string was already terminated).
     inline s_str AllocStrCloneButAddTerminator(const s_str_rdonly str, s_arena *const arena) {
-        const s_str clone = {AllocArray<t_u8>(str.bytes.len + 1, arena)};
-        CopyArray(str.bytes, clone.bytes);
+        const s_str clone = {PushArray<t_u8>(arena, str.bytes.len + 1)};
+        CopyAll(str.bytes, clone.bytes);
         clone.bytes[clone.bytes.len - 1] = 0;
         return clone;
     }
@@ -142,10 +142,10 @@ namespace zf {
     }
 
     inline t_b8 AreStrsEqual(const s_str_rdonly a, const s_str_rdonly b) {
-        return CompareArrays(a.bytes, b.bytes) == 0;
+        return CompareAll(a.bytes, b.bytes) == 0;
     }
 
-    t_b8 IsStrValidUTF8(const s_str_rdonly str);
+    t_b8 CalcIsStrValidUTF8(const s_str_rdonly str);
 
     // Calculates the length in terms of code point count. Note that '\0' is treated just like any other ASCII character and does not terminate.
     t_i32 CalcStrLen(const s_str_rdonly str);

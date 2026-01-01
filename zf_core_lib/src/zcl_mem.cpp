@@ -6,7 +6,7 @@ namespace zf {
     // ============================================================
     // @section: Arenas
 
-    void DestroyArena(s_arena *const arena) {
+    void Destroy(s_arena *const arena) {
         const auto f = [](const auto self, s_arena_block *const block) {
             if (!block) {
                 return;
@@ -49,13 +49,13 @@ namespace zf {
         return block;
     }
 
-    void *PushToArena(s_arena *const arena, const t_i32 size, const t_i32 alignment) {
+    void *Push(s_arena *const arena, const t_i32 size, const t_i32 alignment) {
         ZF_ASSERT(size > 0 && IsAlignmentValid(alignment));
 
         if (!arena->blocks_head) {
             arena->blocks_head = CreateArenaBlock(ZF_MAX(size, arena->block_min_size));
             arena->block_cur = arena->blocks_head;
-            return PushToArena(arena, size, alignment);
+            return Push(arena, size, alignment);
         }
 
         const t_i32 offs_aligned = AlignForward(arena->block_cur_offs, alignment);
@@ -69,7 +69,7 @@ namespace zf {
             arena->block_cur = arena->block_cur->next;
             arena->block_cur_offs = 0;
 
-            return PushToArena(arena, size, alignment);
+            return Push(arena, size, alignment);
         }
 
         arena->block_cur_offs = offs_next;
@@ -80,7 +80,7 @@ namespace zf {
         return result;
     }
 
-    void RewindArena(s_arena *const arena) {
+    void Rewind(s_arena *const arena) {
         arena->block_cur = arena->blocks_head;
         arena->block_cur_offs = 0;
 
@@ -99,9 +99,9 @@ namespace zf {
 
 
     // ============================================================
-    // @section: Bits
+    // @section: Binary
 
-    static t_i32 FindIndexOfFirstSetBitHelper(const s_bit_vec_rdonly bv, const t_i32 from, const t_u8 xor_mask) {
+    static t_i32 FindIndexOfFirstSetBit_Helper(const s_bit_vec_rdonly bv, const t_i32 from, const t_u8 xor_mask) {
         ZF_ASSERT(from >= 0 && from <= bv.bit_cnt); // Intentionally allowing the upper bound here for the case of iteration.
 
         // Map of each possible byte to the index of the first set bit, or -1 for the first case.
@@ -370,11 +370,11 @@ namespace zf {
             t_u8 byte = bv.Bytes()[i] ^ xor_mask;
 
             if (i == begin_byte_index) {
-                byte &= BitmaskRange(from % 8);
+                byte &= CalcByteBitmask_Ranged(from % 8);
             }
 
             if (i == bv.Bytes().len - 1) {
-                byte &= bv.LastByteMask();
+                byte &= LastByteMask(bv);
             }
 
             const t_i32 bi = g_mappings[byte];
@@ -388,11 +388,11 @@ namespace zf {
     }
 
     t_i32 FindIndexOfFirstSetBit(const s_bit_vec_rdonly bv, const t_i32 from) {
-        return FindIndexOfFirstSetBitHelper(bv, from, 0);
+        return FindIndexOfFirstSetBit_Helper(bv, from, 0);
     }
 
     t_i32 FindIndexOfFirstUnsetBit(const s_bit_vec_rdonly bv, const t_i32 from) {
-        return FindIndexOfFirstSetBitHelper(bv, from, 0xFF);
+        return FindIndexOfFirstSetBit_Helper(bv, from, 0xFF);
     }
 
     t_i32 CountSetBits(const s_bit_vec_rdonly bv) {
@@ -663,7 +663,7 @@ namespace zf {
                 result += g_mappings[bv.Bytes()[i]];
             }
 
-            result += g_mappings[bv.Bytes()[bv.Bytes().len - 1] & bv.LastByteMask()];
+            result += g_mappings[bv.Bytes()[bv.Bytes().len - 1] & LastByteMask(bv)];
         }
 
         return result;

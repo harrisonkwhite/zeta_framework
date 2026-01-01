@@ -35,53 +35,13 @@ namespace zf {
         return (n + alignment - 1) & ~(alignment - 1);
     }
 
-    inline void Clear(void *const buf, const t_i32 buf_size, const t_u8 val) {
-        ZF_ASSERT(buf_size >= 0);
-        memset(buf, val, static_cast<size_t>(buf_size));
-    }
-
-    template <typename tp_type>
-    inline void ClearItem(tp_type *const item, const t_u8 val) {
-        Clear(item, ZF_SIZE_OF(tp_type), val);
-    }
-
-    constexpr t_u8 g_poison_uninitted = 0xCD;
-    constexpr t_u8 g_poison_freed = 0xDD;
-
-#ifdef ZF_DEBUG
-    inline void PoisonUnitted(void *const buf, const t_i32 buf_size) {
-        Clear(buf, buf_size, g_poison_uninitted);
-    }
-
-    template <typename tp_type>
-    inline void PoisonUnittedItem(tp_type *const item) {
-        ClearItem(item, g_poison_uninitted);
-    }
-
-    inline void PoisonFreed(void *const buf, const t_i32 buf_size) {
-        Clear(buf, buf_size, g_poison_freed);
-    }
-
-    template <typename tp_type>
-    inline void PoisonFreedItem(tp_type *const item) {
-        ClearItem(item, g_poison_freed);
-    }
-
-    #define ZF_DEFINE_UNINITTED(type, name) \
-        type name;                          \
-        PoisonUnittedItem(&name)
-#else
-    inline void PoisonUnitted(void *const buf, const t_i32 buf_size) {}
-    template <typename tp_type> inline void PoisonUnittedItem(tp_type *const item) {}
-    inline void PoisonFreed(void *const buf, const t_i32 buf_size) {}
-    template <typename tp_type> inline void PoisonFreedItem(tp_type *const item) {}
-
-    #define ZF_DEFINE_UNINITTED(type, name) static_cast<void>(0)
-#endif
-
 
     // ============================================================
-    // @section: Arenas
+    // @section: Types and Globals
+
+
+    // ========================================
+    // @subsection: Arenas
 
     struct s_arena_block {
         void *buf;
@@ -97,37 +57,11 @@ namespace zf {
         t_i32 block_min_size;
     };
 
-    // Does not allocate any arena memory (blocks) upfront.
-    inline s_arena CreateArena(const t_i32 block_min_size = MegabytesToBytes(1)) {
-        return {.block_min_size = block_min_size};
-    }
-
-    // Frees all arena memory. It is valid to call this even if no pushing was done.
-    void DestroyArena(s_arena *const arena);
-
-    // Will lazily allocate memory as needed. Allocation failure is treated as fatal and causes an abort - you don't need to check for nullptr.
-    void *PushToArena(s_arena *const arena, const t_i32 size, const t_i32 alignment);
-
-    // Rewinds the arena to the beginning of its allocated memory (if any) to overwrite from there.
-    void RewindArena(s_arena *const arena);
-
-    template <typename tp_type>
-    tp_type *AllocItem(s_arena *const arena) {
-        return static_cast<tp_type *>(PushToArena(arena, ZF_SIZE_OF(tp_type), ZF_ALIGN_OF(tp_type)));
-    }
-
-    template <typename tp_type>
-    tp_type *AllocItemZeroed(s_arena *const arena) {
-        const auto result = static_cast<tp_type *>(PushToArena(arena, ZF_SIZE_OF(tp_type), ZF_ALIGN_OF(tp_type)));
-        ClearItem(result, 0);
-        return result;
-    }
-
-    // ============================================================
+    // ========================================
 
 
-    // ============================================================
-    // @section: Arrays
+    // ========================================
+    // @subsection: Arrays
 
     template <typename tp_type>
     struct s_array_rdonly {
@@ -247,30 +181,15 @@ namespace zf {
     };
 
     template <typename tp_type>
-    struct s_is_nonstatic_mut_array {
-        static constexpr t_b8 g_val = false;
-    };
+    concept co_array_mut = requires { typename tp_type::t_elem; } && s_is_same<tp_type, s_array_mut<typename tp_type::t_elem>>::g_val;
 
     template <typename tp_type>
-    struct s_is_nonstatic_mut_array<s_array_mut<tp_type>> {
-        static constexpr t_b8 g_val = true;
-    };
+    concept co_array_rdonly = requires { typename tp_type::t_elem; } && s_is_same<tp_type, s_array_rdonly<typename tp_type::t_elem>>::g_val;
 
     template <typename tp_type>
-    struct s_is_nonstatic_rdonly_array {
-        static constexpr t_b8 g_val = false;
-    };
+    concept co_array = co_array_mut<tp_type> || co_array_rdonly<tp_type>;
 
-    template <typename tp_type>
-    struct s_is_nonstatic_rdonly_array<s_array_rdonly<tp_type>> {
-        static constexpr t_b8 g_val = true;
-    };
-
-    template <typename tp_type> concept co_array_nonstatic_mut = s_is_nonstatic_mut_array<tp_type>::g_val;
-    template <typename tp_type> concept co_array_nonstatic_rdonly = s_is_nonstatic_rdonly_array<tp_type>::g_val;
-    template <typename tp_type> concept co_array_nonstatic = co_array_nonstatic_mut<tp_type> || co_array_nonstatic_rdonly<tp_type>;
-
-    template <co_array_nonstatic tp_arr_type>
+    template <co_array tp_arr_type>
     constexpr t_bin_comparator<tp_arr_type> g_array_bin_comparator =
         [](const tp_arr_type &a, const tp_arr_type &b) {
             if (a.len != b.len) {
@@ -286,8 +205,171 @@ namespace zf {
             return true;
         };
 
-    template <co_array_nonstatic tp_src_arr_type, co_array_nonstatic_mut tp_dest_arr_type>
-    constexpr void CopyArray(const tp_src_arr_type src, const tp_dest_arr_type dest, const t_b8 allow_truncation = false) {
+    // ========================================
+
+
+    // ========================================
+    // @subsection: Bit Vectors
+
+    struct s_bit_vec_rdonly {
+        const t_u8 *bytes_raw;
+        t_i32 bit_cnt;
+
+        constexpr s_bit_vec_rdonly() = default;
+        constexpr s_bit_vec_rdonly(const t_u8 *const bytes_raw, const t_i32 bit_cnt) : bytes_raw(bytes_raw), bit_cnt(bit_cnt) {}
+        constexpr s_bit_vec_rdonly(const s_array_rdonly<t_u8> bytes) : bytes_raw(bytes.raw), bit_cnt(BytesToBits(bytes.len)) {}
+
+        constexpr s_array_rdonly<t_u8> Bytes() const {
+            return {bytes_raw, BitsToBytes(bit_cnt)};
+        }
+    };
+
+    struct s_bit_vec_mut {
+        t_u8 *bytes_raw;
+        t_i32 bit_cnt;
+
+        constexpr s_bit_vec_mut() = default;
+        constexpr s_bit_vec_mut(t_u8 *const bytes_raw, const t_i32 bit_cnt) : bytes_raw(bytes_raw), bit_cnt(bit_cnt) {}
+        constexpr s_bit_vec_mut(const s_array_mut<t_u8> bytes) : bytes_raw(bytes.raw), bit_cnt(BytesToBits(bytes.len)) {}
+
+        constexpr s_array_mut<t_u8> Bytes() const {
+            return {bytes_raw, BitsToBytes(bit_cnt)};
+        }
+
+        constexpr operator s_bit_vec_rdonly() const {
+            return {bytes_raw, bit_cnt};
+        }
+    };
+
+    template <t_i32 tp_bit_cnt>
+    struct s_static_bit_vec {
+        static constexpr t_i32 g_bit_cnt = tp_bit_cnt;
+
+        s_static_array<t_u8, BitsToBytes(tp_bit_cnt)> bytes;
+
+        constexpr operator s_bit_vec_mut() {
+            return {bytes.raw, tp_bit_cnt};
+        }
+
+        constexpr operator s_bit_vec_rdonly() const {
+            return {bytes.raw, tp_bit_cnt};
+        }
+    };
+
+    // ========================================
+
+
+    // ============================================================
+
+
+    inline void Clear(void *const buf, const t_i32 buf_size, const t_u8 val) {
+        ZF_ASSERT(buf_size >= 0);
+        memset(buf, val, static_cast<size_t>(buf_size));
+    }
+
+    template <typename tp_type>
+    inline void ClearItem(tp_type *const item, const t_u8 val) {
+        Clear(item, ZF_SIZE_OF(tp_type), val);
+    }
+
+    constexpr t_u8 g_poison_uninitted = 0xCD;
+    constexpr t_u8 g_poison_freed = 0xDD;
+
+#ifdef ZF_DEBUG
+    inline void PoisonUnitted(void *const buf, const t_i32 buf_size) {
+        Clear(buf, buf_size, g_poison_uninitted);
+    }
+
+    template <typename tp_type>
+    inline void PoisonUnittedItem(tp_type *const item) {
+        ClearItem(item, g_poison_uninitted);
+    }
+
+    inline void PoisonFreed(void *const buf, const t_i32 buf_size) {
+        Clear(buf, buf_size, g_poison_freed);
+    }
+
+    template <typename tp_type>
+    inline void PoisonFreedItem(tp_type *const item) {
+        ClearItem(item, g_poison_freed);
+    }
+
+    #define ZF_DEFINE_UNINITTED(type, name) \
+        type name;                          \
+        PoisonUnittedItem(&name)
+#else
+    inline void PoisonUnitted(void *const buf, const t_i32 buf_size) {}
+    template <typename tp_type> inline void PoisonUnittedItem(tp_type *const item) {}
+    inline void PoisonFreed(void *const buf, const t_i32 buf_size) {}
+    template <typename tp_type> inline void PoisonFreedItem(tp_type *const item) {}
+
+    #define ZF_DEFINE_UNINITTED(type, name) static_cast<void>(0)
+#endif
+
+
+    // ============================================================
+    // @section: Arenas
+
+    // Does not allocate any arena memory (blocks) upfront.
+    inline s_arena CreateArena(const t_i32 block_min_size = MegabytesToBytes(1)) {
+        return {.block_min_size = block_min_size};
+    }
+
+    // Frees all arena memory. It is valid to call this even if no pushing was done.
+    void Destroy(s_arena *const arena);
+
+    // Will lazily allocate memory as needed. Allocation failure is treated as fatal and causes an abort - you don't need to check for nullptr.
+    void *Push(s_arena *const arena, const t_i32 size, const t_i32 alignment);
+
+    template <typename tp_type>
+    tp_type *PushItem(s_arena *const arena) {
+        return static_cast<tp_type *>(Push(arena, ZF_SIZE_OF(tp_type), ZF_ALIGN_OF(tp_type)));
+    }
+
+    template <typename tp_type>
+    tp_type *PushItemZeroed(s_arena *const arena) {
+        const auto result = static_cast<tp_type *>(Push(arena, ZF_SIZE_OF(tp_type), ZF_ALIGN_OF(tp_type)));
+        ClearItem(result, 0);
+        return result;
+    }
+
+    template <typename tp_type>
+    s_array_mut<tp_type> PushArray(s_arena *const arena, const t_i32 len) {
+        ZF_ASSERT(len >= 0);
+
+        if (len == 0) {
+            return {};
+        }
+
+        const auto raw = static_cast<tp_type *>(Push(arena, ZF_SIZE_OF(tp_type) * len, ZF_ALIGN_OF(tp_type)));
+        return {raw, len};
+    }
+
+    template <typename tp_type>
+    s_array_mut<tp_type> PushArrayZeroed(s_arena *const arena, const t_i32 len) {
+        ZF_ASSERT(len >= 0);
+
+        if (len == 0) {
+            return {};
+        }
+
+        const t_i32 size = ZF_SIZE_OF(tp_type) * len;
+        const auto raw = static_cast<tp_type *>(Push(arena, size, ZF_ALIGN_OF(tp_type)));
+        Clear(raw, size, 0);
+        return {raw, len};
+    }
+
+    // Takes the arena offset to the beginning of its allocated memory (if any) to overwrite from there.
+    void Rewind(s_arena *const arena);
+
+    // ============================================================
+
+
+    // ============================================================
+    // @section: Arrays
+
+    template <co_array tp_src_arr_type, co_array_mut tp_dest_arr_type>
+    constexpr void CopyAll(const tp_src_arr_type src, const tp_dest_arr_type dest, const t_b8 allow_truncation = false) {
         static_assert(s_is_same<typename tp_src_arr_type::t_elem, typename tp_dest_arr_type::t_elem>::g_val);
 
         if (!allow_truncation) {
@@ -305,8 +387,8 @@ namespace zf {
         }
     }
 
-    template <co_array_nonstatic tp_arr_a_type, co_array_nonstatic tp_arr_b_type>
-    constexpr t_i32 CompareArrays(const tp_arr_a_type a, const tp_arr_b_type b, const t_ord_comparator<typename tp_arr_a_type::t_elem> comparator = DefaultOrdComparator) {
+    template <co_array tp_arr_a_type, co_array tp_arr_b_type>
+    constexpr t_i32 CompareAll(const tp_arr_a_type a, const tp_arr_b_type b, const t_ord_comparator<typename tp_arr_a_type::t_elem> comparator = DefaultOrdComparator) {
         static_assert(s_is_same<typename tp_arr_a_type::t_elem, typename tp_arr_a_type::t_elem>::g_val);
 
         const auto min_len = ZF_MIN(a.len, b.len);
@@ -322,40 +404,7 @@ namespace zf {
         return 0;
     }
 
-    template <typename tp_type>
-    s_array_mut<tp_type> AllocArray(const t_i32 len, s_arena *const arena) {
-        ZF_ASSERT(len >= 0);
-
-        if (len == 0) {
-            return {};
-        }
-
-        const auto raw = static_cast<tp_type *>(PushToArena(arena, ZF_SIZE_OF(tp_type) * len, ZF_ALIGN_OF(tp_type)));
-        return {raw, len};
-    }
-
-    template <typename tp_type>
-    s_array_mut<tp_type> AllocArrayZeroed(const t_i32 len, s_arena *const arena) {
-        ZF_ASSERT(len >= 0);
-
-        if (len == 0) {
-            return {};
-        }
-
-        const t_i32 size = ZF_SIZE_OF(tp_type) * len;
-        const auto raw = static_cast<tp_type *>(PushToArena(arena, size, ZF_ALIGN_OF(tp_type)));
-        Clear(raw, size, 0);
-        return {raw, len};
-    }
-
-    template <co_array_nonstatic tp_arr_type>
-    auto AllocArrayClone(const tp_arr_type arr_to_clone, s_arena *const arena) {
-        const auto arr = AllocArray<typename tp_arr_type::t_elem>(arr_to_clone.len, arena);
-        Copy(arr, arr_to_clone);
-        return arr;
-    }
-
-    template <co_array_nonstatic tp_arr_type>
+    template <co_array tp_arr_type>
     constexpr t_b8 DoAllEqual(const tp_arr_type arr, const typename tp_arr_type::t_elem &val, const t_bin_comparator<typename tp_arr_type::t_elem> comparator = DefaultBinComparator) {
         if (arr.len == 0) {
             return false;
@@ -370,7 +419,7 @@ namespace zf {
         return true;
     }
 
-    template <co_array_nonstatic tp_arr_type>
+    template <co_array tp_arr_type>
     constexpr t_b8 DoAnyEqual(const tp_arr_type arr, const typename tp_arr_type::t_elem &val, const t_bin_comparator<typename tp_arr_type::t_elem> comparator = DefaultBinComparator) {
         for (t_i32 i = 0; i < arr.len; i++) {
             if (comparator(arr[i], val)) {
@@ -381,38 +430,44 @@ namespace zf {
         return false;
     }
 
-    template <co_array_nonstatic_mut tp_arr_type>
+    template <co_array_mut tp_arr_type>
     constexpr void SetAllTo(const tp_arr_type arr, const typename tp_arr_type::t_elem &val) {
         for (t_i32 i = 0; i < arr.len; i++) {
             arr[i] = val;
         }
     }
 
+    template <co_array tp_arr_type>
+    auto CreateArrayClone(const tp_arr_type arr_to_clone, s_arena *const arena) {
+        const auto arr = PushArray<typename tp_arr_type::t_elem>(arena, arr_to_clone.len);
+        CopyAll(arr, arr_to_clone);
+        return arr;
+    }
+
     // ============================================================
 
 
+    // ============================================================
+    // @section: Binary
+
     template <typename tp_type>
-    constexpr s_array_mut<t_u8> ToBytes(tp_type &val) {
+    s_array_mut<t_u8> AsBytes(tp_type &val) {
         return {reinterpret_cast<t_u8 *>(&val), ZF_SIZE_OF(val)};
     }
 
     template <typename tp_type>
-    constexpr s_array_rdonly<t_u8> ToBytes(const tp_type &val) {
+    s_array_rdonly<t_u8> AsBytes(const tp_type &val) {
         return {reinterpret_cast<const t_u8 *>(&val), ZF_SIZE_OF(val)};
     }
 
-
-    // ============================================================
-    // @section: Bits
-
-    // Creates a bitmask with only a single bit set.
-    constexpr t_u8 BitmaskSingle(const t_i32 bit_index) {
+    // Creates a byte-sized bitmask with only a single bit set.
+    constexpr t_u8 ByteBitmask_Single(const t_i32 bit_index) {
         ZF_ASSERT(bit_index >= 0 && bit_index < 8);
         return static_cast<t_u8>(1 << bit_index);
     }
 
-    // Creates a bitmask with only bits in the range [begin_bit_index, end_bit_index) set.
-    constexpr t_u8 BitmaskRange(const t_i32 begin_bit_index, const t_i32 end_bit_index = 8) {
+    // Creates a byte-sized bitmask with only bits in the range [begin_bit_index, end_bit_index) set.
+    constexpr t_u8 CalcByteBitmask_Ranged(const t_i32 begin_bit_index, const t_i32 end_bit_index = 8) {
         ZF_ASSERT(begin_bit_index >= 0 && begin_bit_index < 8);
         ZF_ASSERT(end_bit_index >= begin_bit_index && end_bit_index <= 8);
 
@@ -424,92 +479,36 @@ namespace zf {
         return static_cast<t_u8>(bits_at_bottom << begin_bit_index);
     }
 
-    // @todo: Bit vectors could be made non-class if the byte array is replaced with a byte pointer.
-
-    struct s_bit_vec_rdonly {
-        const t_u8 *bytes_raw;
-        t_i32 bit_cnt;
-
-        constexpr s_bit_vec_rdonly() = default;
-        constexpr s_bit_vec_rdonly(const t_u8 *const bytes_raw, const t_i32 bit_cnt) : bytes_raw(bytes_raw), bit_cnt(bit_cnt) {}
-        constexpr s_bit_vec_rdonly(const s_array_rdonly<t_u8> bytes) : bytes_raw(bytes.raw), bit_cnt(BytesToBits(bytes.len)) {}
-
-        constexpr s_array_rdonly<t_u8> Bytes() const {
-            return {bytes_raw, BitsToBytes(bit_cnt)};
-        }
-
-        constexpr t_i32 LastByteBitCount() const {
-            return ((bit_cnt - 1) % 8) + 1;
-        }
-
-        // Gives a mask of the last byte in which only excess bits are unset.
-        constexpr t_u8 LastByteMask() const {
-            return BitmaskRange(0, LastByteBitCount());
-        }
-    };
-
-    struct s_bit_vec_mut {
-        t_u8 *bytes_raw;
-        t_i32 bit_cnt;
-
-        constexpr s_bit_vec_mut() = default;
-        constexpr s_bit_vec_mut(t_u8 *const bytes_raw, const t_i32 bit_cnt) : bytes_raw(bytes_raw), bit_cnt(bit_cnt) {}
-        constexpr s_bit_vec_mut(const s_array_mut<t_u8> bytes) : bytes_raw(bytes.raw), bit_cnt(BytesToBits(bytes.len)) {}
-
-        constexpr s_array_mut<t_u8> Bytes() const {
-            return {bytes_raw, BitsToBytes(bit_cnt)};
-        }
-
-        constexpr t_i32 LastByteBitCount() const {
-            return ((bit_cnt - 1) % 8) + 1;
-        }
-
-        // Gives a mask of the last byte in which only excess bits are unset.
-        constexpr t_u8 LastByteMask() const {
-            return BitmaskRange(0, LastByteBitCount());
-        }
-
-        constexpr operator s_bit_vec_rdonly() const {
-            return {bytes_raw, bit_cnt};
-        }
-    };
-
-    template <t_i32 tp_bit_cnt>
-    struct s_bit_vec_static {
-        static constexpr t_i32 g_bit_cnt = tp_bit_cnt;
-
-        s_static_array<t_u8, BitsToBytes(tp_bit_cnt)> bytes;
-
-        constexpr operator s_bit_vec_mut() {
-            return {bytes.raw, tp_bit_cnt};
-        }
-
-        constexpr operator s_bit_vec_rdonly() const {
-            return {bytes.raw, tp_bit_cnt};
-        }
-    };
-
-    inline s_bit_vec_mut BitVecCreate(const t_i32 bit_cnt, s_arena *const arena) {
+    inline s_bit_vec_mut CreateBitVector(const t_i32 bit_cnt, s_arena *const arena) {
         ZF_ASSERT(bit_cnt >= 0);
-        return {AllocArrayZeroed<t_u8>(BitsToBytes(bit_cnt), arena).raw, bit_cnt};
+        return {PushArrayZeroed<t_u8>(arena, BitsToBytes(bit_cnt)).raw, bit_cnt};
+    }
+
+    constexpr t_i32 LastByteBitCount(const s_bit_vec_rdonly bv) {
+        return ((bv.bit_cnt - 1) % 8) + 1;
+    }
+
+    // Gives a mask of the last byte in which only excess bits are unset.
+    constexpr t_u8 LastByteMask(const s_bit_vec_rdonly bv) {
+        return CalcByteBitmask_Ranged(0, LastByteBitCount(bv));
     }
 
     constexpr t_b8 IsBitSet(const s_bit_vec_rdonly bv, const t_i32 index) {
         ZF_ASSERT(index >= 0 && index < bv.bit_cnt);
-        return bv.Bytes()[index / 8] & BitmaskSingle(index % 8);
+        return bv.Bytes()[index / 8] & ByteBitmask_Single(index % 8);
     }
 
     constexpr void SetBit(const s_bit_vec_mut bv, const t_i32 index) {
         ZF_ASSERT(index >= 0 && index < bv.bit_cnt);
-        bv.Bytes()[index / 8] |= BitmaskSingle(index % 8);
+        bv.Bytes()[index / 8] |= ByteBitmask_Single(index % 8);
     }
 
     constexpr void UnsetBit(const s_bit_vec_mut bv, const t_i32 index) {
         ZF_ASSERT(index >= 0 && index < bv.bit_cnt);
-        bv.Bytes()[index / 8] &= ~BitmaskSingle(index % 8);
+        bv.Bytes()[index / 8] &= ~ByteBitmask_Single(index % 8);
     }
 
-    constexpr t_b8 IsAnyBitSet(const s_bit_vec_rdonly bv) {
+    constexpr t_b8 CalcIsAnyBitSet(const s_bit_vec_rdonly bv) {
         if (bv.bit_cnt == 0) {
             return false;
         }
@@ -520,10 +519,10 @@ namespace zf {
             return true;
         }
 
-        return (bv.Bytes()[bv.Bytes().len - 1] & bv.LastByteMask()) != 0;
+        return (bv.Bytes()[bv.Bytes().len - 1] & LastByteMask(bv)) != 0;
     }
 
-    constexpr t_b8 AreAllBitsSet(const s_bit_vec_rdonly bv) {
+    constexpr t_b8 CalcAreAllBitsSet(const s_bit_vec_rdonly bv) {
         if (bv.bit_cnt == 0) {
             return false;
         }
@@ -534,24 +533,24 @@ namespace zf {
             return false;
         }
 
-        const auto last_byte_mask = bv.LastByteMask();
+        const auto last_byte_mask = LastByteMask(bv);
         return (bv.Bytes()[bv.Bytes().len - 1] & last_byte_mask) == last_byte_mask;
     }
 
-    constexpr t_b8 AreAllBitsUnset(const s_bit_vec_rdonly bv) {
+    constexpr t_b8 CalcAreAllBitsUnset(const s_bit_vec_rdonly bv) {
         if (bv.bit_cnt == 0) {
             return false;
         }
 
-        return !IsAnyBitSet(bv);
+        return !CalcIsAnyBitSet(bv);
     }
 
-    constexpr t_b8 IsAnyBitUnset(const s_bit_vec_rdonly bv) {
+    constexpr t_b8 CalcIsAnyBitUnset(const s_bit_vec_rdonly bv) {
         if (bv.bit_cnt == 0) {
             return false;
         }
 
-        return !AreAllBitsSet(bv);
+        return !CalcAreAllBitsSet(bv);
     }
 
     constexpr void SetAllBits(const s_bit_vec_mut bv) {
@@ -562,7 +561,7 @@ namespace zf {
         const auto first_bytes = bv.Bytes().Slice(0, bv.Bytes().len - 1);
         SetAllTo(first_bytes, 0xFF);
 
-        bv.Bytes()[bv.Bytes().len - 1] |= bv.LastByteMask();
+        bv.Bytes()[bv.Bytes().len - 1] |= LastByteMask(bv);
     }
 
     constexpr void UnsetAllBits(const s_bit_vec_mut bv) {
@@ -573,7 +572,7 @@ namespace zf {
         const auto first_bytes = bv.Bytes().Slice(0, bv.Bytes().len - 1);
         SetAllTo(first_bytes, 0);
 
-        bv.Bytes()[bv.Bytes().len - 1] &= ~bv.LastByteMask();
+        bv.Bytes()[bv.Bytes().len - 1] &= ~LastByteMask(bv);
     }
 
     // Sets all bits in the range [begin_bit_index, end_bit_index).
@@ -592,7 +591,7 @@ namespace zf {
             const t_i32 set_range_begin = ZF_MAX(begin_bit_index_rel, 0);
             const t_i32 set_range_end = ZF_MIN(end_bit_index_rel, 8);
 
-            bv.Bytes()[i] |= BitmaskRange(set_range_begin, set_range_end);
+            bv.Bytes()[i] |= CalcByteBitmask_Ranged(set_range_begin, set_range_end);
         }
     }
 
@@ -641,7 +640,7 @@ namespace zf {
             break;
         }
 
-        targ.Bytes()[targ.Bytes().len - 1] &= targ.LastByteMask();
+        targ.Bytes()[targ.Bytes().len - 1] &= LastByteMask(targ);
     }
 
     // Shifts left only by 1. Returns the discarded bit as 0 or 1.
@@ -655,14 +654,14 @@ namespace zf {
         t_u8 discard = 0;
 
         for (t_i32 i = 0; i < bv.Bytes().len; i++) {
-            const t_i32 bits_in_byte = i == bv.Bytes().len - 1 ? bv.LastByteBitCount() : 8;
+            const t_i32 bits_in_byte = i == bv.Bytes().len - 1 ? LastByteBitCount(bv) : 8;
             const t_u8 discard_last = discard;
-            discard = (bv.Bytes()[i] & BitmaskSingle(bits_in_byte - 1)) >> (bits_in_byte - 1);
+            discard = (bv.Bytes()[i] & ByteBitmask_Single(bits_in_byte - 1)) >> (bits_in_byte - 1);
             bv.Bytes()[i] <<= 1;
             bv.Bytes()[i] |= discard_last;
         }
 
-        bv.Bytes()[bv.Bytes().len - 1] &= bv.LastByteMask();
+        bv.Bytes()[bv.Bytes().len - 1] &= LastByteMask(bv);
 
         return discard;
     }
@@ -705,18 +704,18 @@ namespace zf {
             return 0;
         }
 
-        bv.Bytes()[bv.Bytes().len - 1] &= bv.LastByteMask(); // Drop any excess bits so we don't accidentally shift a 1 in.
+        bv.Bytes()[bv.Bytes().len - 1] &= LastByteMask(bv); // Drop any excess bits so we don't accidentally shift a 1 in.
 
         t_u8 discard = 0;
 
         for (t_i32 i = bv.Bytes().len - 1; i >= 0; i--) {
-            const t_i32 bits_in_byte = i == bv.Bytes().len - 1 ? bv.LastByteBitCount() : 8;
+            const t_i32 bits_in_byte = i == bv.Bytes().len - 1 ? LastByteBitCount(bv) : 8;
             const t_u8 discard_last = discard;
-            discard = bv.Bytes()[i] & BitmaskSingle(0);
+            discard = bv.Bytes()[i] & ByteBitmask_Single(0);
             bv.Bytes()[i] >>= 1;
 
             if (discard_last) {
-                bv.Bytes()[i] |= BitmaskSingle(bits_in_byte - 1);
+                bv.Bytes()[i] |= ByteBitmask_Single(bits_in_byte - 1);
             }
         }
 

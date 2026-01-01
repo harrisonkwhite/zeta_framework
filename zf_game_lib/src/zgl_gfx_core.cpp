@@ -152,7 +152,7 @@ namespace zf::gfx {
         //
         // Rendering Basis Setup
         //
-        const auto rendering_basis = AllocItem<s_rendering_basis>(arena);
+        const auto rendering_basis = PushItem<s_rendering_basis>(arena);
 
         {
             bgfx::VertexLayout vert_layout;
@@ -190,7 +190,7 @@ namespace zf::gfx {
         bgfx::destroy(rendering_basis->shader_prog_bgfx_hdl);
         bgfx::destroy(rendering_basis->vert_buf_bgfx_hdl);
 
-        DestroyResourceGroup(&g_state.perm_resource_group);
+        Destroy(&g_state.perm_resource_group);
 
         bgfx::shutdown();
 
@@ -206,7 +206,7 @@ namespace zf::gfx {
         return texture->Texture().size;
     }
 
-    void DestroyResourceGroup(s_resource_group *const group) {
+    void Destroy(s_resource_group *const group) {
         ZF_ASSERT(g_state.state == ek_state_active_but_not_rendering);
 
         s_resource *resource = group->head;
@@ -236,7 +236,7 @@ namespace zf::gfx {
     static s_resource *AddToResourceGroup(s_resource_group *const group, const e_resource_type type) {
         ZF_ASSERT(g_state.state == ek_state_active_but_not_rendering);
 
-        const auto resource = AllocItemZeroed<s_resource>(group->arena);
+        const auto resource = PushItemZeroed<s_resource>(group->arena);
 
         if (!group->head) {
             group->head = resource;
@@ -329,13 +329,13 @@ namespace zf::gfx {
 
         g_state.state = ek_state_active_and_rendering;
 
-        const auto rendering_context = AllocItemZeroed<s_rendering_context>(rendering_context_arena);
+        const auto rendering_context = PushItemZeroed<s_rendering_context>(rendering_context_arena);
         rendering_context->basis = rendering_basis;
 
         return rendering_context;
     }
 
-    static void RenderingFlush(s_rendering_context *const rc) {
+    static void FlushBatch(s_rendering_context *const rc) {
         ZF_ASSERT(g_state.state == ek_state_active_and_rendering);
 
         if (rc->batch_state.vert_cnt == 0) {
@@ -367,7 +367,7 @@ namespace zf::gfx {
     void EndRendering(s_rendering_context *const rendering_context) {
         ZF_ASSERT(g_state.state == ek_state_active_and_rendering);
 
-        RenderingFlush(rendering_context);
+        FlushBatch(rendering_context);
 
         bgfx::frame();
 
@@ -386,7 +386,7 @@ namespace zf::gfx {
         }
 
         if (texture != rc->batch_state.texture || rc->batch_state.vert_cnt + num_verts_to_submit > g_batch_vert_limit) {
-            RenderingFlush(rc);
+            FlushBatch(rc);
             rc->batch_state.texture = texture;
         }
 

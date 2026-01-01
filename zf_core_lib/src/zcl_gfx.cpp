@@ -20,8 +20,8 @@ namespace zf {
         ZF_DEFER({ stbi_image_free(stb_px_data); });
 
         const s_array_rdonly<t_u8> stb_px_data_arr = {stb_px_data, 4 * size_in_pxs.x * size_in_pxs.y};
-        const auto px_data = AllocArray<t_u8>(4 * size_in_pxs.x * size_in_pxs.y, texture_data_arena);
-        CopyArray(stb_px_data_arr, px_data);
+        const auto px_data = PushArray<t_u8>(texture_data_arena, 4 * size_in_pxs.x * size_in_pxs.y);
+        CopyAll(stb_px_data_arr, px_data);
 
         *o_texture_data = {size_in_pxs, px_data};
 
@@ -29,7 +29,7 @@ namespace zf {
     }
 
     t_b8 PackTexture(const s_str_rdonly file_path, const s_texture_data texture_data, s_arena *const temp_arena) {
-        if (!CreateFileAndParentDirs(file_path, temp_arena)) {
+        if (!CreateFileAndParentDirectories(file_path, temp_arena)) {
             return false;
         }
 
@@ -67,7 +67,7 @@ namespace zf {
             return false;
         }
 
-        const auto rgba_px_data = AllocArray<t_u8>(4 * size_in_pxs.x * size_in_pxs.y, texture_data_arena);
+        const auto rgba_px_data = PushArray<t_u8>(texture_data_arena, 4 * size_in_pxs.x * size_in_pxs.y);
 
         if (!fs.ReadItemsIntoArray(rgba_px_data, rgba_px_data.len)) {
             return false;
@@ -190,7 +190,7 @@ namespace zf {
             glyph_info.atlas_rect = {atlas_pen.x, atlas_pen.y, glyph_info.size.x, glyph_info.size.y};
             atlas_pen.x += glyph_info.size.x;
 
-            o_arrangement->code_pts_to_glyph_infos.Put(code_pt, glyph_info);
+            Put(&o_arrangement->code_pts_to_glyph_infos, code_pt, glyph_info);
         }
 
         const t_i32 atlas_cnt = atlas_index + 1;
@@ -214,7 +214,7 @@ namespace zf {
                 const t_i32 kern = stbtt_GetGlyphKernAdvance(&stb_font_info, glyph_a_index, glyph_b_index);
 
                 if (kern != 0) {
-                    o_arrangement->code_pt_pairs_to_kernings.Put({cp_a, cp_b}, kern);
+                    Put(&o_arrangement->code_pt_pairs_to_kernings, {cp_a, cp_b}, kern);
                 }
             }
         }
@@ -222,7 +222,7 @@ namespace zf {
         //
         // Texture Atlases
         //
-        *o_atlas_rgbas = AllocArray<t_font_atlas_rgba>(atlas_cnt, atlas_rgbas_arena);
+        *o_atlas_rgbas = PushArray<t_font_atlas_rgba>(atlas_rgbas_arena, atlas_cnt);
 
         // Initialise all pixels to transparent white.
         // @todo: Maybe don't use RBGA for this?
@@ -243,7 +243,7 @@ namespace zf {
 
             s_font_glyph_info *glyph_info;
 
-            if (!o_arrangement->code_pts_to_glyph_infos.Find(code_pt, &glyph_info)) {
+            if (!Find(&o_arrangement->code_pts_to_glyph_infos, code_pt, &glyph_info)) {
                 ZF_ASSERT(false);
             }
 
@@ -276,7 +276,7 @@ namespace zf {
     }
 
     t_b8 PackFont(const s_str_rdonly file_path, const s_font_arrangement &arrangement, const s_array_rdonly<t_font_atlas_rgba> atlas_rgbas, s_arena *const temp_arena) {
-        if (!CreateFileAndParentDirs(file_path, temp_arena)) {
+        if (!CreateFileAndParentDirectories(file_path, temp_arena)) {
             return false;
         }
 
@@ -292,11 +292,11 @@ namespace zf {
             return false;
         }
 
-        if (!SerializeHashMap(&fs, arrangement.code_pts_to_glyph_infos, temp_arena)) {
+        if (!SerializeHashMap(&fs, &arrangement.code_pts_to_glyph_infos, temp_arena)) {
             return false;
         }
 
-        if (!SerializeHashMap(&fs, arrangement.code_pt_pairs_to_kernings, temp_arena)) {
+        if (!SerializeHashMap(&fs, &arrangement.code_pt_pairs_to_kernings, temp_arena)) {
             return false;
         }
 
@@ -320,11 +320,11 @@ namespace zf {
             return false;
         }
 
-        if (!DeserializeHashMap(&fs, arrangement_arena, g_code_pt_hash_func, temp_arena, o_arrangement->code_pts_to_glyph_infos)) {
+        if (!DeserializeHashMap(&fs, arrangement_arena, g_code_pt_hash_func, temp_arena, &o_arrangement->code_pts_to_glyph_infos)) {
             return false;
         }
 
-        if (!DeserializeHashMap(&fs, arrangement_arena, g_code_pt_pair_hash_func, temp_arena, o_arrangement->code_pt_pairs_to_kernings, g_code_pt_pair_comparator)) {
+        if (!DeserializeHashMap(&fs, arrangement_arena, g_code_pt_pair_hash_func, temp_arena, &o_arrangement->code_pt_pairs_to_kernings, g_code_pt_pair_comparator)) {
             return false;
         }
 
@@ -342,7 +342,7 @@ namespace zf {
     // @section: Textures
 
     t_b8 PackShader(const s_str_rdonly file_path, const s_array_rdonly<t_u8> compiled_shader_bin, s_arena *const temp_arena) {
-        if (!CreateFileAndParentDirs(file_path, temp_arena)) {
+        if (!CreateFileAndParentDirectories(file_path, temp_arena)) {
             return false;
         }
 

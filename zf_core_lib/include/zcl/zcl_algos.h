@@ -3,7 +3,7 @@
 #include <zcl/zcl_mem.h>
 
 namespace zf {
-    template <co_array_nonstatic_mut tp_arr_type>
+    template <co_array_mut tp_arr_type>
     constexpr void Reverse(const tp_arr_type arr) {
         for (t_i32 i = 0; i < arr.len / 2; i++) {
             Swap(&arr[i], &arr[arr.len - 1 - i]);
@@ -12,7 +12,7 @@ namespace zf {
 
     // O(n^2) time complexity, but O(1) space complexity. Can also be done at compile time.
     // You're usually better off using a hash map and a linear search, or a bit vector if values are numeric and the range is small.
-    template <co_array_nonstatic tp_arr_type>
+    template <co_array tp_arr_type>
     constexpr t_b8 HasDuplicatesSlow(const tp_arr_type arr, const t_bin_comparator<typename tp_arr_type::t_elem> comparator = DefaultBinComparator) {
         for (t_i32 i = 0; i < arr.len; i++) {
             for (t_i32 j = 0; j < arr.len; j++) {
@@ -29,7 +29,7 @@ namespace zf {
         return false;
     }
 
-    template <co_array_nonstatic tp_arr_type>
+    template <co_array tp_arr_type>
     t_b8 RunBinarySearch(const tp_arr_type arr, const typename tp_arr_type::t_elem &elem, const t_ord_comparator<typename tp_arr_type::t_elem> comparator = DefaultOrdComparator) {
         if (arr.len == 0) {
             return false;
@@ -51,7 +51,7 @@ namespace zf {
     // ============================================================
     // @section: Sorting
 
-    template <co_array_nonstatic tp_arr_type>
+    template <co_array tp_arr_type>
     t_b8 IsSorted(const tp_arr_type arr, const t_ord_comparator<typename tp_arr_type::t_elem> comparator = DefaultOrdComparator) {
         for (t_i32 i = 0; i < arr.len - 1; i++) {
             if (comparator(arr[i], arr[i + 1]) > 0) {
@@ -63,7 +63,7 @@ namespace zf {
     }
 
     // O(n) best-case if array is already sorted, O(n^2) worst-case.
-    template <co_array_nonstatic tp_arr_type>
+    template <co_array tp_arr_type>
     void RunBubbleSort(const tp_arr_type arr, const t_ord_comparator<typename tp_arr_type::t_elem> comparator = DefaultOrdComparator) {
         t_b8 sorted;
 
@@ -80,7 +80,7 @@ namespace zf {
     }
 
     // O(n) best-case if array is already sorted, O(n^2) worst-case.
-    template <co_array_nonstatic tp_arr_type>
+    template <co_array tp_arr_type>
     void RunInsertionSort(const tp_arr_type arr, const t_ord_comparator<typename tp_arr_type::t_elem> comparator = DefaultOrdComparator) {
         for (t_i32 i = 1; i < arr.len; i++) {
             const auto temp = arr[i];
@@ -100,7 +100,7 @@ namespace zf {
     }
 
     // O(n^2) in every case.
-    template <co_array_nonstatic tp_arr_type>
+    template <co_array tp_arr_type>
     void RunSelectionSort(const tp_arr_type arr, const t_ord_comparator<typename tp_arr_type::t_elem> comparator = DefaultOrdComparator) {
         for (t_i32 i = 0; i < arr.len - 1; i++) {
             const auto min = &arr[i];
@@ -123,10 +123,10 @@ namespace zf {
         }
 
         // Sort copies of the left and right partitions.
-        const auto arr_left_sorted = AllocArrayClone(arr.Slice(0, arr.len / 2), temp_arena);
+        const auto arr_left_sorted = CreateArrayClone(arr.Slice(0, arr.len / 2), temp_arena);
         RunMergeSort(arr_left_sorted, temp_arena, comparator);
 
-        const auto arr_right_sorted = AllocArrayClone(arr.SliceFrom(arr.len / 2), temp_arena);
+        const auto arr_right_sorted = CreateArrayClone(arr.SliceFrom(arr.len / 2), temp_arena);
         RunMergeSort(arr_right_sorted, temp_arena, comparator);
 
         // Update this array.
@@ -140,7 +140,7 @@ namespace zf {
 
                 if (i == arr_left_sorted.len) {
                     // Copy over the remainder of the right array.
-                    CopyArray(arr_right_sorted.SliceFrom(j), arr.SliceFrom(i + j));
+                    CopyAll(arr_right_sorted.SliceFrom(j), arr.SliceFrom(i + j));
                     break;
                 }
             } else {
@@ -149,7 +149,7 @@ namespace zf {
 
                 if (j == arr_right_sorted.len) {
                     // Copy over the remainder of the left array.
-                    CopyArray(arr_left_sorted.SliceFrom(i), arr.SliceFrom(i + j));
+                    CopyAll(arr_left_sorted.SliceFrom(i), arr.SliceFrom(i + j));
                     break;
                 }
             }
@@ -159,7 +159,7 @@ namespace zf {
     // Time complexity is O(n log n) best-case and O(n^2) worst-case depending on the pivot.
     // Space complexity is O(1) compared to merge sort.
     // In each recurse, the pivot is selected as the median of the first, middle, and last elements.
-    template <co_array_nonstatic tp_arr_type>
+    template <co_array tp_arr_type>
     void RunQuickSort(const tp_arr_type arr, const t_ord_comparator<typename tp_arr_type::t_elem> comparator = DefaultOrdComparator) {
         if (arr.len <= 1) {
             return;

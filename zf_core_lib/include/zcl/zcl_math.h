@@ -351,7 +351,7 @@ namespace zf {
         return CalcNormal(b - a);
     }
 
-    // Returns 0 if the horizontal and vertical difference of the vectors results in 0.
+    // Returns 0 if the horizontal and vertical differences of the vectors are 0.
     inline t_f32 CalcDirInRads(const s_v2 a, const s_v2 b) {
         const t_f32 rise = -(b.y - a.y);
         const t_f32 run = b.x - a.x;
