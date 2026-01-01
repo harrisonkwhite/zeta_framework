@@ -17,11 +17,11 @@ namespace zf {
         //
         // Initialisation
         //
-        s_arena perm_arena = CreateArena();
-        ZF_DEFER({ Destroy(&perm_arena); });
+        s_arena perm_arena = ArenaCreate();
+        ZF_DEFER({ ArenaDestroy(&perm_arena); });
 
-        s_arena temp_arena = CreateArena();
-        ZF_DEFER({ Destroy(&temp_arena); });
+        s_arena temp_arena = ArenaCreate();
+        ZF_DEFER({ ArenaDestroy(&temp_arena); });
 
         platform::ZF_Platform_StartupModule(g_init_window_size);
         ZF_DEFER({ platform::ZF_Platform_ShutdownModule(); });
@@ -65,7 +65,7 @@ namespace zf {
 
             // Once enough time has passed (i.e. the time accumulator has reached the tick interval), run at least a single tick.
             while (frame_dur_accum >= targ_tick_interval) {
-                Rewind(&temp_arena);
+                ArenaRewind(&temp_arena);
 
                 tick_func({
                     .perm_arena = &perm_arena,
@@ -79,7 +79,7 @@ namespace zf {
                 frame_dur_accum -= targ_tick_interval;
             }
 
-            Rewind(&temp_arena);
+            ArenaRewind(&temp_arena);
 
             gfx::s_rendering_context *const rendering_context = gfx::BeginRendering(rendering_basis, gfx::s_color_rgb8(109, 187, 255), &temp_arena); // @todo: Make the clear colour customisable?
 

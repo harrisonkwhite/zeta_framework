@@ -2,24 +2,24 @@
 
 namespace zf {
     static t_b8 OutputCode(const s_str_rdonly input_file_path, const s_str_rdonly output_file_path, const s_str_rdonly arr_subname) {
-        s_arena arena = CreateArena();
-        ZF_DEFER({ Destroy(&arena); });
+        s_arena arena = ArenaCreate();
+        ZF_DEFER({ ArenaDestroy(&arena); });
 
         c_stream input_file_stream;
 
-        if (!OpenFile(input_file_path, ek_file_access_mode_read, &arena, &input_file_stream)) {
+        if (!FileOpen(input_file_path, ek_file_access_mode_read, &arena, &input_file_stream)) {
             return false;
         }
 
-        ZF_DEFER({ CloseFile(&input_file_stream); });
+        ZF_DEFER({ FileClose(&input_file_stream); });
 
         c_stream output_file_stream;
 
-        if (!OpenFile(output_file_path, ek_file_access_mode_write, &arena, &output_file_stream)) {
+        if (!FileOpen(output_file_path, ek_file_access_mode_write, &arena, &output_file_stream)) {
             return false;
         }
 
-        ZF_DEFER({ CloseFile(&output_file_stream); });
+        ZF_DEFER({ FileClose(&output_file_stream); });
 
         Print(&output_file_stream, s_cstr_literal{"#include <zcl/zcl_mem.h>\n"});
         Print(&output_file_stream, s_cstr_literal{"\n"});

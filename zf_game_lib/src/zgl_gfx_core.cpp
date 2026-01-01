@@ -155,7 +155,7 @@ namespace zf::gfx {
         //
         // Rendering Basis Setup
         //
-        const auto rendering_basis = PushItem<s_rendering_basis>(arena);
+        const auto rendering_basis = ArenaPushItem<s_rendering_basis>(arena);
 
         {
             bgfx::VertexLayout vert_layout;
@@ -235,7 +235,7 @@ namespace zf::gfx {
     static s_resource *AddToResourceGroup(s_resource_group *const group, const e_resource_type type) {
         ZF_ASSERT(g_state.state == ek_state_active_but_not_rendering);
 
-        const auto resource = PushItemZeroed<s_resource>(group->arena);
+        const auto resource = ArenaPushItemZeroed<s_resource>(group->arena);
 
         if (!group->head) {
             group->head = resource;
@@ -322,7 +322,7 @@ namespace zf::gfx {
 
         g_state.state = ek_state_active_and_rendering;
 
-        const auto rendering_context = PushItemZeroed<s_rendering_context>(rendering_context_arena);
+        const auto rendering_context = ArenaPushItemZeroed<s_rendering_context>(rendering_context_arena);
         rendering_context->basis = rendering_basis;
 
         return rendering_context;

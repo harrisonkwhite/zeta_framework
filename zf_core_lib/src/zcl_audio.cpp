@@ -27,7 +27,7 @@ namespace zf {
             .frame_cnt = static_cast<t_i32>(frame_cnt),
         };
 
-        o_snd_data->pcm = PushArray<t_f32>(snd_data_arena, SampleCount(o_snd_data->meta));
+        o_snd_data->pcm = ArenaPushArray<t_f32>(snd_data_arena, SampleCount(o_snd_data->meta));
 
         if (ma_decoder_read_pcm_frames(&decoder, o_snd_data->pcm.raw, frame_cnt, nullptr) != MA_SUCCESS) {
             return false;
@@ -43,11 +43,11 @@ namespace zf {
 
         c_stream fs;
 
-        if (!OpenFile(file_path, ek_file_access_mode_write, temp_arena, &fs)) {
+        if (!FileOpen(file_path, ek_file_access_mode_write, temp_arena, &fs)) {
             return false;
         }
 
-        ZF_DEFER({ CloseFile(&fs); });
+        ZF_DEFER({ FileClose(&fs); });
 
         return SerializeSound(&fs, snd_data);
     }
@@ -55,17 +55,17 @@ namespace zf {
     t_b8 UnpackSound(const s_str_rdonly file_path, s_arena *const snd_data_arena, s_arena *const temp_arena, s_sound_data_mut *const o_snd_data) {
         c_stream fs;
 
-        if (!OpenFile(file_path, ek_file_access_mode_read, temp_arena, &fs)) {
+        if (!FileOpen(file_path, ek_file_access_mode_read, temp_arena, &fs)) {
             return false;
         }
 
-        ZF_DEFER({ CloseFile(&fs); });
+        ZF_DEFER({ FileClose(&fs); });
 
         if (!fs.ReadItem(&o_snd_data->meta)) {
             return false;
         }
 
-        o_snd_data->pcm = PushArray<t_f32>(snd_data_arena, SampleCount(o_snd_data->meta));
+        o_snd_data->pcm = ArenaPushArray<t_f32>(snd_data_arena, SampleCount(o_snd_data->meta));
 
         if (!fs.ReadItemsIntoArray(o_snd_data->pcm, o_snd_data->pcm.len)) {
             return false;

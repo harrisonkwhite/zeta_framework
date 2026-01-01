@@ -92,15 +92,15 @@ namespace zf {
     }};
 
     t_b8 PackAssets(const s_str_rdonly instrs_json_file_path) {
-        s_arena arena = CreateArena();
-        ZF_DEFER({ Destroy(&arena); });
+        s_arena arena = ArenaCreate();
+        ZF_DEFER({ ArenaDestroy(&arena); });
 
         cJSON *cj;
 
         {
             s_array_mut<t_u8> instrs_json_file_contents; // Not needed beyond this scope.
 
-            if (!LoadFileContents(instrs_json_file_path, &arena, &arena, &instrs_json_file_contents, true)) {
+            if (!FileLoadContents(instrs_json_file_path, &arena, &arena, &instrs_json_file_contents, true)) {
                 LogError(s_cstr_literal{"Failed to load packing instructions JSON file \"%\"!"}, instrs_json_file_path);
                 return false;
             }
@@ -138,7 +138,7 @@ namespace zf {
             cJSON *cj_asset;
 
             cJSON_ArrayForEach(cj_asset, cj_assets) {
-                Rewind(&arena);
+                ArenaRewind(&arena);
 
                 if (!cJSON_IsObject(cj_asset)) {
                     continue;
@@ -227,7 +227,7 @@ namespace zf {
                     const auto height = field_vals[ek_font_field_height]->valueint;
                     const auto out_file_path = ConvertCstr(field_vals[ek_font_field_out_file_path]->valuestring);
 
-                    const auto code_pt_bv = PushItemZeroed<t_code_pt_bit_vec>(&arena);
+                    const auto code_pt_bv = ArenaPushItemZeroed<t_code_pt_bit_vec>(&arena);
 
                     SetBitsInRange(*code_pt_bv, g_printable_ascii_range_begin, g_printable_ascii_range_end); // Add the printable ASCII range as a default.
 
@@ -236,7 +236,7 @@ namespace zf {
 
                         s_array_mut<t_u8> extra_chrs_file_contents;
 
-                        if (!LoadFileContents(extra_chrs_file_path, &arena, &arena, &extra_chrs_file_contents)) {
+                        if (!FileLoadContents(extra_chrs_file_path, &arena, &arena, &extra_chrs_file_contents)) {
                             LogError(s_cstr_literal{"Failed to load extra characters file \"%\"!"}, extra_chrs_file_path);
                             return false;
                         }

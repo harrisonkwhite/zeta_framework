@@ -124,7 +124,7 @@ namespace zf {
 
     // Allocates a clone of the given string using the memory arena, with a null byte added at the end (even if the string was already terminated).
     inline s_str AllocStrCloneButAddTerminator(const s_str_rdonly str, s_arena *const arena) {
-        const s_str clone = {PushArray<t_u8>(arena, str.bytes.len + 1)};
+        const s_str clone = {ArenaPushArray<t_u8>(arena, str.bytes.len + 1)};
         CopyAll(str.bytes, clone.bytes);
         clone.bytes[clone.bytes.len - 1] = 0;
         return clone;

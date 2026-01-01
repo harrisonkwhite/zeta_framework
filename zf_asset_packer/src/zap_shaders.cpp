@@ -45,12 +45,12 @@ namespace zf {
         const auto exe_dir = LoadExecutableDirectory(temp_arena);
         ZF_ASSERT(exe_dir.bytes[exe_dir.bytes.len - 1] == '/' || exe_dir.bytes[exe_dir.bytes.len - 1] == '\\'); // Assuming this.
 
-        const s_str shaderc_file_path = {PushArray<t_u8>(temp_arena, exe_dir.bytes.len + shaderc_file_path_rel.buf.len + 1)};
+        const s_str shaderc_file_path = {ArenaPushArray<t_u8>(temp_arena, exe_dir.bytes.len + shaderc_file_path_rel.buf.len + 1)};
         CopyAll(exe_dir.bytes, shaderc_file_path.bytes);
         CopyAll(shaderc_file_path_rel.buf.AsByteArray(), SliceFrom(shaderc_file_path.bytes, exe_dir.bytes.len));
 
         const s_cstr_literal shaderc_include_dir_rel = "tools/bgfx/shaderc_include";
-        const s_str shaderc_include_dir = {PushArray<t_u8>(temp_arena, exe_dir.bytes.len + shaderc_include_dir_rel.buf.len + 1)};
+        const s_str shaderc_include_dir = {ArenaPushArray<t_u8>(temp_arena, exe_dir.bytes.len + shaderc_include_dir_rel.buf.len + 1)};
         CopyAll(exe_dir.bytes, shaderc_include_dir.bytes);
         CopyAll(shaderc_include_dir_rel.buf.AsByteArray(), SliceFrom(shaderc_include_dir.bytes, exe_dir.bytes.len));
 
@@ -94,7 +94,7 @@ namespace zf {
                 break;
             }
 
-            AppendManyDynamic(&bin_list, Slice(buf.AsNonstatic(), 0, r), bin_arena);
+            ListAppendManyDynamic(&bin_list, Slice(buf.AsNonstatic(), 0, r), bin_arena);
         }
 
         if (r != REPROC_EPIPE) {

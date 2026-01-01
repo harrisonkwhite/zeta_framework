@@ -347,28 +347,28 @@ namespace zf {
         switch (bytes.len) {
         case 1:
             // 0xxxxxxx
-            result |= bytes[0] & BitRange(0, 7);
+            result |= bytes[0] & ByteBitmaskRanged(0, 7);
             break;
 
         case 2:
             // 110xxxxx 10xxxxxx
-            result |= static_cast<t_code_pt>((bytes[0] & BitRange(0, 5)) << 6);
-            result |= bytes[1] & BitRange(0, 6);
+            result |= static_cast<t_code_pt>((bytes[0] & ByteBitmaskRanged(0, 5)) << 6);
+            result |= bytes[1] & ByteBitmaskRanged(0, 6);
             break;
 
         case 3:
             // 1110xxxx 10xxxxxx 10xxxxxx
-            result |= static_cast<t_code_pt>((bytes[0] & BitRange(0, 4)) << 12);
-            result |= static_cast<t_code_pt>((bytes[1] & BitRange(0, 6)) << 6);
-            result |= bytes[2] & BitRange(0, 6);
+            result |= static_cast<t_code_pt>((bytes[0] & ByteBitmaskRanged(0, 4)) << 12);
+            result |= static_cast<t_code_pt>((bytes[1] & ByteBitmaskRanged(0, 6)) << 6);
+            result |= bytes[2] & ByteBitmaskRanged(0, 6);
             break;
 
         case 4:
             // 11110xxx 10xxxxxx 10xxxxxx 10xxxxxx
-            result |= static_cast<t_code_pt>((bytes[0] & BitRange(0, 3)) << 18);
-            result |= static_cast<t_code_pt>((bytes[1] & BitRange(0, 6)) << 12);
-            result |= static_cast<t_code_pt>((bytes[2] & BitRange(0, 6)) << 6);
-            result |= bytes[3] & BitRange(0, 6);
+            result |= static_cast<t_code_pt>((bytes[0] & ByteBitmaskRanged(0, 3)) << 18);
+            result |= static_cast<t_code_pt>((bytes[1] & ByteBitmaskRanged(0, 6)) << 12);
+            result |= static_cast<t_code_pt>((bytes[2] & ByteBitmaskRanged(0, 6)) << 6);
+            result |= bytes[3] & ByteBitmaskRanged(0, 6);
             break;
         }
 

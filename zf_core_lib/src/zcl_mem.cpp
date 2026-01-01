@@ -3,7 +3,7 @@
 #include <cstdlib>
 
 namespace zf {
-    void Destroy(s_arena *const arena) {
+    void ArenaDestroy(s_arena *const arena) {
         const auto f = [](const auto self, s_arena_block *const block) {
             if (!block) {
                 return;
@@ -46,13 +46,13 @@ namespace zf {
         return block;
     }
 
-    void *Push(s_arena *const arena, const t_i32 size, const t_i32 alignment) {
+    void *ArenaPush(s_arena *const arena, const t_i32 size, const t_i32 alignment) {
         ZF_ASSERT(size > 0 && IsAlignmentValid(alignment));
 
         if (!arena->blocks_head) {
             arena->blocks_head = CreateArenaBlock(ZF_MAX(size, arena->block_min_size));
             arena->block_cur = arena->blocks_head;
-            return Push(arena, size, alignment);
+            return ArenaPush(arena, size, alignment);
         }
 
         const t_i32 offs_aligned = AlignForward(arena->block_cur_offs, alignment);
@@ -66,7 +66,7 @@ namespace zf {
             arena->block_cur = arena->block_cur->next;
             arena->block_cur_offs = 0;
 
-            return Push(arena, size, alignment);
+            return ArenaPush(arena, size, alignment);
         }
 
         arena->block_cur_offs = offs_next;
@@ -77,7 +77,7 @@ namespace zf {
         return result;
     }
 
-    void Rewind(s_arena *const arena) {
+    void ArenaRewind(s_arena *const arena) {
         arena->block_cur = arena->blocks_head;
         arena->block_cur_offs = 0;
 
@@ -361,11 +361,11 @@ namespace zf {
             t_u8 byte = bv.Bytes()[i] ^ xor_mask;
 
             if (i == begin_byte_index) {
-                byte &= BitRange(from % 8);
+                byte &= ByteBitmaskRanged(from % 8);
             }
 
             if (i == bv.Bytes().len - 1) {
-                byte &= LastByteMask(bv);
+                byte &= BitVectorLastByteMask(bv);
             }
 
             const t_i32 bi = g_mappings[byte];
@@ -654,7 +654,7 @@ namespace zf {
                 result += g_mappings[bv.Bytes()[i]];
             }
 
-            result += g_mappings[bv.Bytes()[bv.Bytes().len - 1] & LastByteMask(bv)];
+            result += g_mappings[bv.Bytes()[bv.Bytes().len - 1] & BitVectorLastByteMask(bv)];
         }
 
         return result;

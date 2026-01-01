@@ -10,7 +10,7 @@
 #endif
 
 namespace zf {
-    t_b8 OpenFile(const s_str_rdonly path, const e_file_access_mode mode, s_arena *const temp_arena, c_stream *const o_stream) {
+    t_b8 FileOpen(const s_str_rdonly path, const e_file_access_mode mode, s_arena *const temp_arena, c_stream *const o_stream) {
         const s_str_rdonly path_terminated = AllocStrCloneButAddTerminator(path, temp_arena);
 
         FILE *file;
@@ -45,12 +45,12 @@ namespace zf {
         return true;
     }
 
-    void CloseFile(c_stream *const stream) {
+    void FileClose(c_stream *const stream) {
         fclose(stream->File());
         *stream = {};
     }
 
-    t_i32 CalcFileSize(c_stream *const stream) {
+    t_i32 FileCalcSize(c_stream *const stream) {
         FILE *const file = stream->File();
         const auto pos_old = ftell(file);
         fseek(file, 0, SEEK_END);
@@ -59,22 +59,22 @@ namespace zf {
         return static_cast<t_i32>(file_size);
     }
 
-    t_b8 LoadFileContents(const s_str_rdonly path, s_arena *const contents_arena, s_arena *const temp_arena, s_array_mut<t_u8> *const o_contents, const t_b8 add_terminator) {
+    t_b8 FileLoadContents(const s_str_rdonly path, s_arena *const contents_arena, s_arena *const temp_arena, s_array_mut<t_u8> *const o_contents, const t_b8 add_terminator) {
         c_stream stream;
 
-        if (!OpenFile(path, ek_file_access_mode_read, temp_arena, &stream)) {
+        if (!FileOpen(path, ek_file_access_mode_read, temp_arena, &stream)) {
             return false;
         }
 
-        ZF_DEFER({ CloseFile(&stream); });
+        ZF_DEFER({ FileClose(&stream); });
 
-        const t_i32 file_size = CalcFileSize(&stream);
+        const t_i32 file_size = FileCalcSize(&stream);
 
         if (add_terminator) {
-            *o_contents = PushArray<t_u8>(contents_arena, file_size + 1);
+            *o_contents = ArenaPushArray<t_u8>(contents_arena, file_size + 1);
             (*o_contents)[file_size] = 0;
         } else {
-            *o_contents = PushArray<t_u8>(contents_arena, file_size);
+            *o_contents = ArenaPushArray<t_u8>(contents_arena, file_size);
         }
 
         if (!stream.ReadItemsIntoArray(*o_contents, file_size)) {
@@ -184,11 +184,11 @@ namespace zf {
         // Now that directories are created, create the file.
         c_stream fs;
 
-        if (!OpenFile(path, ek_file_access_mode_write, temp_arena, &fs)) {
+        if (!FileOpen(path, ek_file_access_mode_write, temp_arena, &fs)) {
             return false;
         }
 
-        CloseFile(&fs);
+        FileClose(&fs);
 
         return true;
     }
@@ -222,7 +222,7 @@ namespace zf {
             }
         }
 
-        const auto result_bytes = PushArray<t_u8>(arena, len);
+        const auto result_bytes = ArenaPushArray<t_u8>(arena, len);
         CopyAll(Slice(buf.AsNonstatic(), 0, len).AsByteArray(), result_bytes);
         return {result_bytes};
 #elif defined(ZF_PLATFORM_MACOS)

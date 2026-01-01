@@ -44,7 +44,7 @@ namespace zf::gfx {
             ZF_FATAL();
         }
 
-        const auto atlases = PushArray<s_resource *>(resource_group->arena, atlas_rgbas.len);
+        const auto atlases = ArenaPushArray<s_resource *>(resource_group->arena, atlas_rgbas.len);
 
         for (t_i32 i = 0; i < atlas_rgbas.len; i++) {
             atlases[i] = CreateTexture({g_font_atlas_size, atlas_rgbas[i]}, resource_group);
@@ -64,7 +64,7 @@ namespace zf::gfx {
             ZF_FATAL();
         }
 
-        const auto atlases = PushArray<s_resource *>(resource_group->arena, atlas_rgbas.len);
+        const auto atlases = ArenaPushArray<s_resource *>(resource_group->arena, atlas_rgbas.len);
 
         for (t_i32 i = 0; i < atlas_rgbas.len; i++) {
             atlases[i] = CreateTexture({g_font_atlas_size, atlas_rgbas[i]}, resource_group);
@@ -101,7 +101,7 @@ namespace zf::gfx {
         }();
 
         // Reserve memory for the character positions.
-        const auto positions = PushArray<s_v2>(arena, str_meta.len);
+        const auto positions = ArenaPushArray<s_v2>(arena, str_meta.len);
 
         // From the line count we can determine the vertical alignment offset to apply.
         const t_f32 alignment_offs_y = static_cast<t_f32>(-(str_meta.line_cnt * font_arrangement.line_height)) * alignment.y;
@@ -146,7 +146,7 @@ namespace zf::gfx {
 
             s_font_glyph_info *glyph_info;
 
-            if (!Find(&font_arrangement.code_pts_to_glyph_infos, chr_info.code_pt, &glyph_info)) {
+            if (!HashMapFind(&font_arrangement.code_pts_to_glyph_infos, chr_info.code_pt, &glyph_info)) {
                 ZF_ASSERT(false && "Unsupported code point!");
                 continue;
             }
@@ -154,7 +154,7 @@ namespace zf::gfx {
             if (chr_index > 0 && font_arrangement.has_kernings) {
                 t_i32 *kerning;
 
-                if (Find(&font_arrangement.code_pt_pairs_to_kernings, {code_pt_last, chr_info.code_pt}, &kerning)) {
+                if (HashMapFind(&font_arrangement.code_pt_pairs_to_kernings, {code_pt_last, chr_info.code_pt}, &kerning)) {
                     chr_pos_pen.x += static_cast<t_f32>(*kerning);
                 }
             }
@@ -195,7 +195,7 @@ namespace zf::gfx {
 
             s_font_glyph_info *glyph_info;
 
-            if (!Find(&font_arrangement.code_pts_to_glyph_infos, chr_info.code_pt, &glyph_info)) {
+            if (!HashMapFind(&font_arrangement.code_pts_to_glyph_infos, chr_info.code_pt, &glyph_info)) {
                 ZF_ASSERT(false && "Unsupported code point!");
                 continue;
             }

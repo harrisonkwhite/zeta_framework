@@ -221,7 +221,7 @@ namespace zf {
             return false;
         }
 
-        *o_arr = PushArray<tp_type>(arr_arena, len);
+        *o_arr = ArenaPushArray<tp_type>(arr_arena, len);
 
         if (!stream->ReadItemsIntoArray(*o_arr, len)) {
             return false;
@@ -249,7 +249,7 @@ namespace zf {
             return false;
         }
 
-        *o_bv = CreateBitVector(bit_cnt, bv_arena);
+        *o_bv = BitVectorCreate(bit_cnt, bv_arena);
 
         if (!stream->ReadItemsIntoArray(o_bv->Bytes(), o_bv->Bytes().len)) {
             return false;
@@ -270,10 +270,10 @@ namespace zf {
         ek_file_access_mode_append
     };
 
-    [[nodiscard]] t_b8 OpenFile(const s_str_rdonly file_path, const e_file_access_mode mode, s_arena *const temp_arena, c_stream *const o_stream);
-    void CloseFile(c_stream *const stream);
-    t_i32 CalcFileSize(c_stream *const stream);
-    [[nodiscard]] t_b8 LoadFileContents(const s_str_rdonly file_path, s_arena *const contents_arena, s_arena *const temp_arena, s_array_mut<t_u8> *const o_contents, const t_b8 add_terminator = false);
+    [[nodiscard]] t_b8 FileOpen(const s_str_rdonly file_path, const e_file_access_mode mode, s_arena *const temp_arena, c_stream *const o_stream);
+    void FileClose(c_stream *const stream);
+    t_i32 FileCalcSize(c_stream *const stream);
+    [[nodiscard]] t_b8 FileLoadContents(const s_str_rdonly file_path, s_arena *const contents_arena, s_arena *const temp_arena, s_array_mut<t_u8> *const o_contents, const t_b8 add_terminator = false);
 
     enum e_directory_creation_result : t_i32 {
         ek_directory_creation_result_success,
@@ -667,7 +667,7 @@ namespace zf {
         };
 
         const auto print_byte = [&](const t_i32 index) {
-            const t_i32 bit_cnt = index == fmt.val.Bytes().len - 1 ? LastByteBitCount(fmt.val) : 8;
+            const t_i32 bit_cnt = index == fmt.val.Bytes().len - 1 ? BitVectorLastByteBitCount(fmt.val) : 8;
 
             for (t_i32 i = 7; i >= bit_cnt; i--) {
                 Print(stream, s_cstr_literal("0"));

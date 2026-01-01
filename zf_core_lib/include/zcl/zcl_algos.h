@@ -123,10 +123,10 @@ namespace zf {
         }
 
         // Sort copies of the left and right partitions.
-        const auto arr_left_sorted = Clone(Slice(arr, 0, arr.len / 2), temp_arena);
+        const auto arr_left_sorted = ArrayClone(Slice(arr, 0, arr.len / 2), temp_arena);
         RunMergeSort(arr_left_sorted, temp_arena, comparator);
 
-        const auto arr_right_sorted = Clone(SliceFrom(arr, arr.len / 2), temp_arena);
+        const auto arr_right_sorted = ArrayClone(SliceFrom(arr, arr.len / 2), temp_arena);
         RunMergeSort(arr_right_sorted, temp_arena, comparator);
 
         // Update this array.
