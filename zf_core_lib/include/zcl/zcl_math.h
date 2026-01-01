@@ -212,9 +212,6 @@ namespace zf {
     // ============================================================
     // @section: Functions
 
-    s_rect_f CalcSpanningRect(const s_array_mut<s_rect_f> rects);
-    s_rect_i CalcSpanningRect(const s_array_mut<s_rect_i> rects);
-
     constexpr t_f32 DegsToRads(const t_f32 degs) {
         return degs * (g_pi / 180.0f);
     }
@@ -375,6 +372,9 @@ namespace zf {
         const auto subrect = ClampedWithinContainer(rect, container);
         return Clamp(static_cast<t_f32>(subrect.Area()) / static_cast<t_f32>(container.Area()), 0.0f, 1.0f);
     }
+
+    s_rect_f CalcSpanningRect(const s_array_mut<s_rect_f> rects);
+    s_rect_i CalcSpanningRect(const s_array_mut<s_rect_i> rects);
 
     // ============================================================
 }

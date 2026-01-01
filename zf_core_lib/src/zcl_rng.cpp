@@ -6,6 +6,10 @@ namespace zf {
         t_u64 inc;   // Controls which RNG sequence (stream) is selected. Must ALWAYS be odd.
     };
 
+    struct s_rng {
+        s_pcg32 pcg32;
+    };
+
     // Generates a uniformly distributed random U32.
     static t_u32 CalcNext(s_pcg32 *const pcg32) {
         const t_u64 oldstate = pcg32->state;
@@ -41,10 +45,6 @@ namespace zf {
 
         CalcNext(pcg32);
     }
-
-    struct s_rng {
-        s_pcg32 pcg32;
-    };
 
     s_rng *CreateRNG(const t_u64 seed, s_arena *const arena) {
         const auto rng = PushItem<s_rng>(arena);
