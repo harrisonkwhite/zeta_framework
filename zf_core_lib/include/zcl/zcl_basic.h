@@ -2,6 +2,8 @@
 
 #include <climits>
 
+// @todo: This file is a mess.
+
 namespace zf {
 #ifdef _WIN32
     #define ZF_PLATFORM_WINDOWS
@@ -49,10 +51,6 @@ namespace zf {
     }
 
 #define ZF_DEFER(x) const auto ZF_CONCAT(defer_, ZF_CONCAT(l, __LINE__)) = zf::internal::s_defer([&]() x)
-
-
-    // ============================================================
-    // @section: Types
 
     static_assert(CHAR_BIT == 8);
 
@@ -280,12 +278,6 @@ namespace zf {
         }
     }
 
-    // ============================================================
-
-
-    // ============================================================
-    // @section: Key Debugging Features
-
     namespace internal {
         void TryBreakingIntoDebuggerIf(const t_b8 cond);
 
@@ -320,11 +312,36 @@ namespace zf {
     } while (0)
     }
 
-    // ============================================================
+    constexpr t_i32 KilobytesToBytes(const t_i32 n) {
+        return (1 << 10) * n;
+    }
 
+    constexpr t_i32 MegabytesToBytes(const t_i32 n) {
+        return (1 << 20) * n;
+    }
 
-    // ============================================================
-    // @section: Essential Utilities
+    constexpr t_i32 GigabytesToBytes(const t_i32 n) {
+        return (1 << 30) * n;
+    }
+
+    constexpr t_i32 BitsToBytes(const t_i32 n) {
+        return (n + 7) / 8;
+    }
+
+    constexpr t_i32 BytesToBits(const t_i32 n) {
+        return n * 8;
+    }
+
+    // Is n a power of 2?
+    constexpr t_b8 IsAlignmentValid(const t_i32 n) {
+        return n > 0 && (n & (n - 1)) == 0;
+    }
+
+    // Take n up to the next multiple of the alignment.
+    constexpr t_i32 AlignForward(const t_i32 n, const t_i32 alignment) {
+        ZF_ASSERT(IsAlignmentValid(alignment));
+        return (n + alignment - 1) & ~(alignment - 1);
+    }
 
 #define ZF_MIN(a, b) ((a) <= (b) ? (a) : (b))
 #define ZF_MAX(a, b) ((a) >= (b) ? (a) : (b))
@@ -376,6 +393,4 @@ namespace zf {
     constexpr tp_type Wrap(const tp_type val, const tp_type min, const tp_type max_excl) {
         return min + WrapUpper(val - min, max_excl - min);
     }
-
-    // ============================================================
 }

@@ -347,28 +347,28 @@ namespace zf {
         switch (bytes.len) {
         case 1:
             // 0xxxxxxx
-            result |= bytes[0] & CalcByteBitmask_Ranged(0, 7);
+            result |= bytes[0] & BitRange(0, 7);
             break;
 
         case 2:
             // 110xxxxx 10xxxxxx
-            result |= static_cast<t_code_pt>((bytes[0] & CalcByteBitmask_Ranged(0, 5)) << 6);
-            result |= bytes[1] & CalcByteBitmask_Ranged(0, 6);
+            result |= static_cast<t_code_pt>((bytes[0] & BitRange(0, 5)) << 6);
+            result |= bytes[1] & BitRange(0, 6);
             break;
 
         case 3:
             // 1110xxxx 10xxxxxx 10xxxxxx
-            result |= static_cast<t_code_pt>((bytes[0] & CalcByteBitmask_Ranged(0, 4)) << 12);
-            result |= static_cast<t_code_pt>((bytes[1] & CalcByteBitmask_Ranged(0, 6)) << 6);
-            result |= bytes[2] & CalcByteBitmask_Ranged(0, 6);
+            result |= static_cast<t_code_pt>((bytes[0] & BitRange(0, 4)) << 12);
+            result |= static_cast<t_code_pt>((bytes[1] & BitRange(0, 6)) << 6);
+            result |= bytes[2] & BitRange(0, 6);
             break;
 
         case 4:
             // 11110xxx 10xxxxxx 10xxxxxx 10xxxxxx
-            result |= static_cast<t_code_pt>((bytes[0] & CalcByteBitmask_Ranged(0, 3)) << 18);
-            result |= static_cast<t_code_pt>((bytes[1] & CalcByteBitmask_Ranged(0, 6)) << 12);
-            result |= static_cast<t_code_pt>((bytes[2] & CalcByteBitmask_Ranged(0, 6)) << 6);
-            result |= bytes[3] & CalcByteBitmask_Ranged(0, 6);
+            result |= static_cast<t_code_pt>((bytes[0] & BitRange(0, 3)) << 18);
+            result |= static_cast<t_code_pt>((bytes[1] & BitRange(0, 6)) << 12);
+            result |= static_cast<t_code_pt>((bytes[2] & BitRange(0, 6)) << 6);
+            result |= bytes[3] & BitRange(0, 6);
             break;
         }
 
@@ -390,7 +390,7 @@ namespace zf {
             }
 
             const t_i32 cp_byte_cnt = byte_type - ek_utf8_byte_type_ascii + 1;
-            const auto cp_bytes = str.bytes.Slice(byte_index, byte_index + cp_byte_cnt);
+            const auto cp_bytes = Slice(str.bytes, byte_index, byte_index + cp_byte_cnt);
             return ConvertUTF8BytesToCodePoint(cp_bytes);
         } while (true);
     }
@@ -420,7 +420,7 @@ namespace zf {
             case ek_utf8_byte_type_3byte_start:
             case ek_utf8_byte_type_4byte_start: {
                 const t_i32 cp_byte_cnt = byte_type - ek_utf8_byte_type_ascii + 1;
-                const auto cp_bytes = str.bytes.Slice(*byte_index, *byte_index + cp_byte_cnt);
+                const auto cp_bytes = Slice(str.bytes, *byte_index, *byte_index + cp_byte_cnt);
                 *o_info = {.code_pt = ConvertUTF8BytesToCodePoint(cp_bytes), .byte_index = *byte_index};
                 *byte_index += cp_byte_cnt;
 
@@ -454,7 +454,7 @@ namespace zf {
             case ek_utf8_byte_type_3byte_start:
             case ek_utf8_byte_type_4byte_start: {
                 const t_i32 cp_byte_cnt = byte_type - ek_utf8_byte_type_ascii + 1;
-                const auto cp_bytes = str.bytes.Slice(*byte_index, *byte_index + cp_byte_cnt);
+                const auto cp_bytes = Slice(str.bytes, *byte_index, *byte_index + cp_byte_cnt);
                 *o_info = {.code_pt = ConvertUTF8BytesToCodePoint(cp_bytes), .byte_index = *byte_index};
                 (*byte_index)--;
 

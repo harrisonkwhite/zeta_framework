@@ -41,9 +41,9 @@ namespace zf {
         if (comp_res == 0) {
             return true;
         } else if (comp_res < 0) {
-            return RunBinarySearch(arr.Slice(0, arr.len / 2), elem);
+            return RunBinarySearch(Slice(arr, 0, arr.len / 2), elem);
         } else {
-            return RunBinarySearch(arr.SliceFrom((arr.len / 2) + 1), elem);
+            return RunBinarySearch(SliceFrom(arr, (arr.len / 2) + 1), elem);
         }
     }
 
@@ -123,10 +123,10 @@ namespace zf {
         }
 
         // Sort copies of the left and right partitions.
-        const auto arr_left_sorted = CreateArrayClone(arr.Slice(0, arr.len / 2), temp_arena);
+        const auto arr_left_sorted = Clone(Slice(arr, 0, arr.len / 2), temp_arena);
         RunMergeSort(arr_left_sorted, temp_arena, comparator);
 
-        const auto arr_right_sorted = CreateArrayClone(arr.SliceFrom(arr.len / 2), temp_arena);
+        const auto arr_right_sorted = Clone(SliceFrom(arr, arr.len / 2), temp_arena);
         RunMergeSort(arr_right_sorted, temp_arena, comparator);
 
         // Update this array.
@@ -140,7 +140,7 @@ namespace zf {
 
                 if (i == arr_left_sorted.len) {
                     // Copy over the remainder of the right array.
-                    CopyAll(arr_right_sorted.SliceFrom(j), arr.SliceFrom(i + j));
+                    CopyAll(SliceFrom(arr_right_sorted, j), SliceFrom(arr, i + j));
                     break;
                 }
             } else {
@@ -149,7 +149,7 @@ namespace zf {
 
                 if (j == arr_right_sorted.len) {
                     // Copy over the remainder of the left array.
-                    CopyAll(arr_left_sorted.SliceFrom(i), arr.SliceFrom(i + j));
+                    CopyAll(SliceFrom(arr_left_sorted, i), SliceFrom(arr, i + j));
                     break;
                 }
             }
@@ -217,8 +217,8 @@ namespace zf {
         }
 
         // Sort for each subsection.
-        RunQuickSort(arr.Slice(0, left_sec_last_index), comparator);
-        RunQuickSort(arr.SliceFrom(left_sec_last_index + 1), comparator);
+        RunQuickSort(Slice(arr, 0, left_sec_last_index), comparator);
+        RunQuickSort(SliceFrom(arr, left_sec_last_index + 1), comparator);
     }
 
     // ============================================================

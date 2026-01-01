@@ -3,9 +3,6 @@
 #include <cstdlib>
 
 namespace zf {
-    // ============================================================
-    // @section: Arenas
-
     void Destroy(s_arena *const arena) {
         const auto f = [](const auto self, s_arena_block *const block) {
             if (!block) {
@@ -95,13 +92,7 @@ namespace zf {
 #endif
     }
 
-    // ============================================================
-
-
-    // ============================================================
-    // @section: Binary
-
-    static t_i32 FindIndexOfFirstSetBit_Helper(const s_bit_vec_rdonly bv, const t_i32 from, const t_u8 xor_mask) {
+    static t_i32 FindIndexOfFirstSetBitHelper(const s_bit_vec_rdonly bv, const t_i32 from, const t_u8 xor_mask) {
         ZF_ASSERT(from >= 0 && from <= bv.bit_cnt); // Intentionally allowing the upper bound here for the case of iteration.
 
         // Map of each possible byte to the index of the first set bit, or -1 for the first case.
@@ -370,7 +361,7 @@ namespace zf {
             t_u8 byte = bv.Bytes()[i] ^ xor_mask;
 
             if (i == begin_byte_index) {
-                byte &= CalcByteBitmask_Ranged(from % 8);
+                byte &= BitRange(from % 8);
             }
 
             if (i == bv.Bytes().len - 1) {
@@ -388,11 +379,11 @@ namespace zf {
     }
 
     t_i32 FindIndexOfFirstSetBit(const s_bit_vec_rdonly bv, const t_i32 from) {
-        return FindIndexOfFirstSetBit_Helper(bv, from, 0);
+        return FindIndexOfFirstSetBitHelper(bv, from, 0);
     }
 
     t_i32 FindIndexOfFirstUnsetBit(const s_bit_vec_rdonly bv, const t_i32 from) {
-        return FindIndexOfFirstSetBit_Helper(bv, from, 0xFF);
+        return FindIndexOfFirstSetBitHelper(bv, from, 0xFF);
     }
 
     t_i32 CountSetBits(const s_bit_vec_rdonly bv) {
@@ -668,6 +659,4 @@ namespace zf {
 
         return result;
     }
-
-    // ============================================================
 }

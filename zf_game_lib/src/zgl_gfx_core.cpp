@@ -339,7 +339,7 @@ namespace zf::gfx {
             ZF_FATAL();
         }
 
-        const auto verts = rc->batch_state.verts.AsNonstatic().Slice(0, rc->batch_state.vert_cnt);
+        const auto verts = Slice(rc->batch_state.verts.AsNonstatic(), 0, rc->batch_state.vert_cnt);
         const auto verts_bgfx_mem = bgfx::copy(verts.raw, static_cast<uint32_t>(verts.SizeInBytes()));
         bgfx::update(rc->basis->vert_buf_bgfx_hdl, static_cast<uint32_t>(rc->frame_vert_cnt), verts_bgfx_mem);
 

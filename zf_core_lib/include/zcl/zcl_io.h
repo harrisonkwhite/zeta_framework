@@ -46,7 +46,7 @@ namespace zf {
 
         s_array_mut<t_u8> BytesWritten() const {
             ZF_ASSERT(m_type == ek_stream_type_mem);
-            return m_type_data.mem.bytes.Slice(0, m_type_data.mem.byte_pos);
+            return Slice(m_type_data.mem.bytes, 0, m_type_data.mem.byte_pos);
         }
 
         FILE *File() const {
@@ -66,7 +66,7 @@ namespace zf {
                     return false;
                 }
 
-                const auto src = m_type_data.mem.bytes.Slice(m_type_data.mem.byte_pos, m_type_data.mem.byte_pos + size);
+                const auto src = Slice(m_type_data.mem.bytes, m_type_data.mem.byte_pos, m_type_data.mem.byte_pos + size);
                 const auto dest = AsBytes(*o_item);
                 CopyAll(src, dest);
 
@@ -96,7 +96,7 @@ namespace zf {
                 }
 
                 const auto src = AsBytes(item);
-                const auto dest = m_type_data.mem.bytes.Slice(m_type_data.mem.byte_pos, m_type_data.mem.byte_pos + size);
+                const auto dest = Slice(m_type_data.mem.bytes, m_type_data.mem.byte_pos, m_type_data.mem.byte_pos + size);
                 CopyAll(src, dest);
 
                 m_type_data.mem.byte_pos += size;
@@ -129,7 +129,7 @@ namespace zf {
                     return false;
                 }
 
-                const auto src = m_type_data.mem.bytes.Slice(m_type_data.mem.byte_pos, m_type_data.mem.byte_pos + size);
+                const auto src = Slice(m_type_data.mem.bytes, m_type_data.mem.byte_pos, m_type_data.mem.byte_pos + size);
                 const auto dest = arr.AsByteArray();
                 CopyAll(src, dest);
 
@@ -163,7 +163,7 @@ namespace zf {
                 }
 
                 const auto src = arr.AsByteArray();
-                const auto dest = m_type_data.mem.bytes.Slice(m_type_data.mem.byte_pos, m_type_data.mem.byte_pos + size);
+                const auto dest = Slice(m_type_data.mem.bytes, m_type_data.mem.byte_pos, m_type_data.mem.byte_pos + size);
                 CopyAll(src, dest);
 
                 m_type_data.mem.byte_pos += size;
@@ -423,7 +423,7 @@ namespace zf {
         }
 
         if (fmt.trim_trailing_zeros) {
-            const auto str_bytes_relevant = str_bytes.AsNonstatic().Slice(0, str_bytes_used);
+            const auto str_bytes_relevant = Slice(str_bytes.AsNonstatic(), 0, str_bytes_used);
 
             if (DoAnyEqual(str_bytes_relevant, '.')) {
                 for (t_i32 i = str_bytes_used - 1;; i--) {
@@ -439,7 +439,7 @@ namespace zf {
             }
         }
 
-        return Print(stream, {str_bytes.AsNonstatic().Slice(0, str_bytes_used)});
+        return Print(stream, {Slice(str_bytes.AsNonstatic(), 0, str_bytes_used)});
     }
 
     // ========================================
@@ -530,7 +530,7 @@ namespace zf {
             }
         } while (val_mut != 0 || cnter < fmt.min_digits);
 
-        const auto str_bytes_digits = str_bytes_stream.BytesWritten().SliceFrom(str_bytes_digits_begin_pos);
+        const auto str_bytes_digits = SliceFrom(str_bytes_stream.BytesWritten(), str_bytes_digits_begin_pos);
         Reverse(str_bytes_digits);
 
         return Print(stream, {str_bytes_stream.BytesWritten()});
@@ -777,7 +777,7 @@ namespace zf {
                         }
                     }
 
-                    const s_str_rdonly fmt_leftover = {fmt.bytes.Slice(i + 1, fmt.bytes.len)}; // The substring of everything after the format specifier.
+                    const s_str_rdonly fmt_leftover = {Slice(fmt.bytes, i + 1, fmt.bytes.len)}; // The substring of everything after the format specifier.
                     return PrintFormat(stream, fmt_leftover, args_leftover...);
                 }
             }

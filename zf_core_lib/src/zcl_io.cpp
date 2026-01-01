@@ -145,7 +145,7 @@ namespace zf {
         ZF_WALK_STR (path, info) {
             if (info.code_pt == '/' || info.code_pt == '\\') {
                 if (!cur_dir_name_is_empty) {
-                    if (!create_dir_if_nonexistent({path.bytes.Slice(0, info.byte_index)})) {
+                    if (!create_dir_if_nonexistent({Slice(path.bytes, 0, info.byte_index)})) {
                         return false;
                     }
 
@@ -173,7 +173,7 @@ namespace zf {
         // Get the substring containing all directories and create them.
         ZF_WALK_STR_REVERSE (path, info) {
             if (info.code_pt == '/' || info.code_pt == '\\') {
-                if (!CreateDirectoryAndParents({path.bytes.Slice(0, info.byte_index)}, temp_arena, o_dir_creation_res)) {
+                if (!CreateDirectoryAndParents({Slice(path.bytes, 0, info.byte_index)}, temp_arena, o_dir_creation_res)) {
                     return false;
                 }
 
@@ -223,7 +223,7 @@ namespace zf {
         }
 
         const auto result_bytes = PushArray<t_u8>(arena, len);
-        CopyAll(buf.AsNonstatic().Slice(0, len).AsByteArray(), result_bytes);
+        CopyAll(Slice(buf.AsNonstatic(), 0, len).AsByteArray(), result_bytes);
         return {result_bytes};
 #elif defined(ZF_PLATFORM_MACOS)
     #error "Platform-specific implementation not yet done!"

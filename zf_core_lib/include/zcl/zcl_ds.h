@@ -25,7 +25,7 @@ namespace zf {
         }
 
         s_array_mut<tp_type> AsArray() const {
-            return backing_arr.Slice(0, len);
+            return Slice(backing_arr, 0, len);
         }
     };
 
@@ -48,7 +48,7 @@ namespace zf {
         }
 
         s_array_rdonly<tp_type> AsArray() const {
-            return backing_arr.Slice(0, len);
+            return Slice(backing_arr, 0, len);
         }
     };
 
@@ -75,8 +75,8 @@ namespace zf {
             return backing_arr[index];
         }
 
-        s_array_mut<tp_type> AsArray() { return backing_arr.AsNonstatic().Slice(0, len); }
-        s_array_rdonly<tp_type> AsArray() const { return backing_arr.AsNonstatic().Slice(0, len); }
+        s_array_mut<tp_type> AsArray() { return Slice(backing_arr.AsNonstatic(), 0, len); }
+        s_array_rdonly<tp_type> AsArray() const { return Slice(backing_arr.AsNonstatic(), 0, len); }
     };
 
     template <typename tp_type>
@@ -187,9 +187,9 @@ namespace zf {
     s_array_mut<typename tp_list_type::t_elem> AppendMany(tp_list_type *const list, const s_array_rdonly<typename tp_list_type::t_elem> vals) {
         ZF_ASSERT(list->len + vals.len <= list->Cap());
 
-        CopyAll(vals, list->backing_arr.SliceFrom(list->len));
+        CopyAll(vals, SliceFrom(list->backing_arr, list->len));
         list->len += vals.len;
-        return list->backing_arr.Slice(list->len - vals.len, list->len);
+        return Slice(list->backing_arr, list->len - vals.len, list->len);
     }
 
     template <co_list_nonstatic tp_list_type>
@@ -233,7 +233,7 @@ namespace zf {
         ZF_ASSERT(list->len > 0);
         ZF_ASSERT(index >= 0 && index < list->len);
 
-        CopyAll(list->backing_arr.Slice(index + 1, list->len), list->backing_arr.Slice(index, list->len - 1));
+        CopyAll(Slice(list->backing_arr, index + 1, list->len), Slice(list->backing_arr, index, list->len - 1));
         list->len--;
     }
 
@@ -576,7 +576,7 @@ namespace zf {
         t_i32 loaded_cnt = 0;
 
         for (t_i32 i = 0; i < hm->immediate_indexes.len; i++) {
-            loaded_cnt += hm->kv_pair_block_seq.LoadChain(hm->immediate_indexes[i], keys.SliceFrom(loaded_cnt), vals.SliceFrom(loaded_cnt));
+            loaded_cnt += hm->kv_pair_block_seq.LoadChain(hm->immediate_indexes[i], SliceFrom(keys, loaded_cnt), SliceFrom(vals, loaded_cnt));
         }
     }
 
