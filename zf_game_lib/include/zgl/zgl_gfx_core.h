@@ -3,17 +3,8 @@
 #include <zcl.h>
 
 namespace zf::gfx {
-    struct s_rendering_basis;
-
-    // This depends on the platform module being initialised beforehand.
-    // Returns a pointer to a rendering basis, needed for all rendering operations.
-    s_rendering_basis *StartupModule(s_arena *const arena);
-
-    void ShutdownModule(const s_rendering_basis *const rendering_basis);
-
-
     // ============================================================
-    // @section: Resources
+    // @section: Types and Globals
 
     struct s_resource;
 
@@ -22,6 +13,32 @@ namespace zf::gfx {
         s_resource *head;
         s_resource *tail;
     };
+
+    struct s_rendering_basis;
+
+    struct s_rendering_context;
+
+    struct s_batch_vert {
+        s_v2 pos;
+        s_color_rgba32f blend;
+        s_v2 uv;
+    };
+
+    struct s_batch_triangle {
+        s_static_array<s_batch_vert, 3> verts;
+    };
+
+    // ============================================================
+
+
+    // ============================================================
+    // @section: Functions
+
+    // This depends on the platform module being initialised beforehand.
+    // Returns a pointer to a rendering basis, needed for all rendering operations.
+    s_rendering_basis *StartupModule(s_arena *const arena);
+
+    void ShutdownModule(const s_rendering_basis *const rendering_basis);
 
     inline s_resource_group CreateResourceGroup(s_arena *const arena) {
         return {.arena = arena};
@@ -71,26 +88,8 @@ namespace zf::gfx {
         return CreateShaderProg(vert_shader_compiled_bin, frag_shader_compiled_bin, arena);
     }
 
-    // ============================================================
-
-
-    // ============================================================
-    // @section: Rendering
-
-    struct s_rendering_context;
-
     s_rendering_context *BeginRendering(const s_rendering_basis *const rendering_basis, const s_color_rgb8 clear_col, s_arena *const rendering_context_arena);
     void EndRendering(s_rendering_context *const rendering_context);
-
-    struct s_batch_vert {
-        s_v2 pos;
-        s_color_rgba32f blend;
-        s_v2 uv;
-    };
-
-    struct s_batch_triangle {
-        s_static_array<s_batch_vert, 3> verts;
-    };
 
     // Leave texture as nullptr for no texture.
     void SubmitTrianglesToBatch(s_rendering_context *const rc, const s_array_rdonly<s_batch_triangle> triangles, const s_resource *const texture);

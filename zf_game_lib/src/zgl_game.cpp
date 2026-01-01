@@ -23,8 +23,8 @@ namespace zf {
         s_arena temp_arena = CreateArena();
         ZF_DEFER({ Destroy(&temp_arena); });
 
-        platform::StartupModule(g_init_window_size);
-        ZF_DEFER({ platform::ShutdownModule(); });
+        platform::ZF_Platform_StartupModule(g_init_window_size);
+        ZF_DEFER({ platform::ZF_Platform_ShutdownModule(); });
 
         s_input_state input_state = {};
 
@@ -81,7 +81,7 @@ namespace zf {
 
             Rewind(&temp_arena);
 
-            gfx::s_rendering_context *const rendering_context = gfx::BeginRendering(rendering_basis, s_color_rgb8(109, 187, 255), &temp_arena); // @todo: Make the clear colour customisable?
+            gfx::s_rendering_context *const rendering_context = gfx::BeginRendering(rendering_basis, gfx::s_color_rgb8(109, 187, 255), &temp_arena); // @todo: Make the clear colour customisable?
 
             render_func({
                 .perm_arena = &perm_arena,

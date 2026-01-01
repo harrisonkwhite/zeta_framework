@@ -40,7 +40,7 @@ namespace zf::gfx {
         s_font_arrangement arrangement;
         s_array_mut<t_font_atlas_rgba> atlas_rgbas;
 
-        if (!zf::LoadFontDataFromRaw(file_path, height, code_pts, resource_group->arena, temp_arena, temp_arena, &arrangement, &atlas_rgbas)) {
+        if (!zf::gfx::LoadFontDataFromRaw(file_path, height, code_pts, resource_group->arena, temp_arena, temp_arena, &arrangement, &atlas_rgbas)) {
             ZF_FATAL();
         }
 
@@ -60,7 +60,7 @@ namespace zf::gfx {
         s_font_arrangement arrangement;
         s_array_mut<t_font_atlas_rgba> atlas_rgbas;
 
-        if (!zf::UnpackFont(file_path, resource_group->arena, temp_arena, temp_arena, &arrangement, &atlas_rgbas)) {
+        if (!zf::gfx::UnpackFont(file_path, resource_group->arena, temp_arena, temp_arena, &arrangement, &atlas_rgbas)) {
             ZF_FATAL();
         }
 
@@ -78,7 +78,7 @@ namespace zf::gfx {
 
     s_array_mut<s_v2> CalcStrChrRenderPositions(const s_str_rdonly str, const s_font_arrangement &font_arrangement, const s_v2 pos, const s_v2 alignment, s_arena *const arena) {
         ZF_ASSERT(CalcIsStrValidUTF8(str));
-        ZF_ASSERT(IsAlignmentValid(alignment));
+        ZF_ASSERT(IsStrAlignmentValid(alignment));
 
         // Calculate some useful string metadata.
         struct s_str_meta {
@@ -174,7 +174,7 @@ namespace zf::gfx {
 
     void RenderStr(s_rendering_context *const rc, const s_str_rdonly str, const s_font &font, const s_v2 pos, s_arena *const temp_arena, const s_v2 alignment, const s_color_rgba32f blend) {
         ZF_ASSERT(CalcIsStrValidUTF8(str));
-        ZF_ASSERT(IsAlignmentValid(alignment));
+        ZF_ASSERT(IsStrAlignmentValid(alignment));
 
         if (IsStrEmpty(str)) {
             return;

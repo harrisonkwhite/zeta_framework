@@ -7,9 +7,9 @@ namespace zf {
 
     namespace platform {
         // Note that the window is not shown by default, you have to manually do this.
-        void StartupModule(const s_v2_i init_window_size);
+        void ZF_Platform_StartupModule(const s_v2_i init_window_size);
 
-        void ShutdownModule();
+        void ZF_Platform_ShutdownModule();
 
         // Gives the time in seconds since the platform module was started.
         t_f64 Time();

@@ -3,15 +3,27 @@
 #include <stb_image.h>
 #include <stb_truetype.h>
 
-namespace zf {
-    // ============================================================
-    // @section: Textures
+namespace zf::gfx {
+    constexpr t_hash_func<t_code_pt> g_code_pt_hash_func =
+        [](const t_code_pt &code_pt) constexpr {
+            return static_cast<t_i32>(code_pt);
+        };
+
+    constexpr t_hash_func<s_font_code_point_pair> g_code_pt_pair_hash_func =
+        [](const s_font_code_point_pair &pair) constexpr {
+            return 0; // @todo: Proper hash function!
+        };
+
+    constexpr t_bin_comparator<s_font_code_point_pair> g_code_pt_pair_comparator =
+        [](const s_font_code_point_pair &pa, const s_font_code_point_pair &pb) constexpr {
+            return pa.a == pb.a && pa.b == pb.b;
+        };
 
     t_b8 LoadTextureDataFromRaw(const s_str_rdonly file_path, s_arena *const texture_data_arena, s_arena *const temp_arena, s_texture_data *const o_texture_data) {
         const s_str_rdonly file_path_terminated = AllocStrCloneButAddTerminator(file_path, temp_arena);
 
         s_v2_i size_in_pxs;
-        t_u8 *const stb_px_data = stbi_load(file_path_terminated.AsCstr(), &size_in_pxs.x, &size_in_pxs.y, nullptr, 4);
+        t_u8 *const stb_px_data = stbi_load(AsCstr(file_path_terminated), &size_in_pxs.x, &size_in_pxs.y, nullptr, 4);
 
         if (!stb_px_data) {
             return false;
@@ -77,27 +89,6 @@ namespace zf {
 
         return true;
     }
-
-    // ============================================================
-
-
-    // ============================================================
-    // @section: Fonts
-
-    constexpr t_hash_func<t_code_pt> g_code_pt_hash_func =
-        [](const t_code_pt &code_pt) constexpr {
-            return static_cast<t_i32>(code_pt);
-        };
-
-    constexpr t_hash_func<s_font_code_point_pair> g_code_pt_pair_hash_func =
-        [](const s_font_code_point_pair &pair) constexpr {
-            return 0; // @todo: Proper hash function!
-        };
-
-    constexpr t_bin_comparator<s_font_code_point_pair> g_code_pt_pair_comparator =
-        [](const s_font_code_point_pair &pa, const s_font_code_point_pair &pb) constexpr {
-            return pa.a == pb.a && pa.b == pb.b;
-        };
 
     t_b8 LoadFontDataFromRaw(const s_str_rdonly file_path, const t_i32 height, t_code_pt_bit_vec *const code_pts, s_arena *const arrangement_arena, s_arena *const atlas_rgbas_arena, s_arena *const temp_arena, s_font_arrangement *const o_arrangement, s_array_mut<t_font_atlas_rgba> *const o_atlas_rgbas) {
         ZF_ASSERT(height > 0);
@@ -335,12 +326,6 @@ namespace zf {
         return true;
     }
 
-    // ============================================================
-
-
-    // ============================================================
-    // @section: Textures
-
     t_b8 PackShader(const s_str_rdonly file_path, const s_array_rdonly<t_u8> compiled_shader_bin, s_arena *const temp_arena) {
         if (!CreateFileAndParentDirectories(file_path, temp_arena)) {
             return false;
@@ -376,6 +361,4 @@ namespace zf {
 
         return true;
     }
-
-    // ============================================================
 }

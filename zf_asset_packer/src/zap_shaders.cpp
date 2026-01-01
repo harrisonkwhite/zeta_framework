@@ -55,9 +55,9 @@ namespace zf {
         CopyAll(shaderc_include_dir_rel.buf.AsByteArray(), shaderc_include_dir.bytes.SliceFrom(exe_dir.bytes.len));
 
         const s_static_array<const char *, 15> args = {{
-            shaderc_file_path.AsCstr(),
+            AsCstr(shaderc_file_path),
             "-f",
-            shader_file_path_terminated.AsCstr(),
+            AsCstr(shader_file_path_terminated),
             "--type",
             is_frag ? "fragment" : "vertex",
             "--platform",
@@ -65,9 +65,9 @@ namespace zf {
             "--profile",
             profile.buf.raw,
             "--varyingdef",
-            varying_def_file_path_terminated.AsCstr(),
+            AsCstr(varying_def_file_path_terminated),
             "-i",
-            shaderc_include_dir.AsCstr(),
+            AsCstr(shaderc_include_dir),
             "--stdout",
             nullptr,
         }};

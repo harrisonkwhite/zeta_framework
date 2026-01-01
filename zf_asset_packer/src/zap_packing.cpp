@@ -105,7 +105,7 @@ namespace zf {
                 return false;
             }
 
-            cj = cJSON_Parse(s_str(instrs_json_file_contents).AsCstr());
+            cj = cJSON_Parse(AsCstr(s_str_rdonly{instrs_json_file_contents}));
 
             if (!cj) {
                 LogError(s_cstr_literal{"Failed to parse packing instructions JSON file!"});
@@ -207,7 +207,7 @@ namespace zf {
                     const auto file_path = ConvertCstr(field_vals[ek_texture_field_file_path]->valuestring);
                     const auto out_file_path = ConvertCstr(field_vals[ek_texture_field_out_file_path]->valuestring);
 
-                    s_texture_data texture_data;
+                    gfx::s_texture_data texture_data;
 
                     if (!LoadTextureDataFromRaw(file_path, &arena, &arena, &texture_data)) {
                         LogError(s_cstr_literal{"Failed to load texture from file \"%\"!"}, file_path);
@@ -246,8 +246,8 @@ namespace zf {
 
                     // @todo: Proper check for invalid height!
 
-                    s_font_arrangement arrangement;
-                    s_array_mut<t_font_atlas_rgba> atlas_rgbas;
+                    gfx::s_font_arrangement arrangement;
+                    s_array_mut<gfx::t_font_atlas_rgba> atlas_rgbas;
 
                     if (!LoadFontDataFromRaw(file_path, height, code_pt_bv, &arena, &arena, &arena, &arrangement, &atlas_rgbas)) {
                         LogError(s_cstr_literal{"Failed to load font from file \"%\"!"}, file_path);
@@ -286,7 +286,7 @@ namespace zf {
                         return false;
                     }
 
-                    if (!PackShader(out_file_path, compiled_bin, &arena)) {
+                    if (!gfx::PackShader(out_file_path, compiled_bin, &arena)) {
                         LogError(s_cstr_literal{"Failed to pack shader to file \"%\"!"}, out_file_path);
                         return false;
                     }

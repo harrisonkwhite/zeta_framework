@@ -28,7 +28,7 @@ namespace zf::platform {
         s_v2_i prefullscreen_size;
     } g_state;
 
-    void StartupModule(const s_v2_i init_window_size) {
+    void ZF_Platform_StartupModule(const s_v2_i init_window_size) {
         ZF_REQUIRE(!g_state.active);
         ZF_REQUIRE(init_window_size.x > 0 && init_window_size.y > 0);
 
@@ -71,7 +71,7 @@ namespace zf::platform {
         }
     }
 
-    void ShutdownModule() {
+    void ZF_Platform_ShutdownModule() {
         ZF_REQUIRE(g_state.active);
 
         glfwDestroyWindow(g_state.glfw_window);
@@ -264,7 +264,7 @@ namespace zf::platform {
         ZF_ASSERT(g_state.active);
 
         const s_str_rdonly title_terminated = AllocStrCloneButAddTerminator(title, temp_arena);
-        glfwSetWindowTitle(g_state.glfw_window, title_terminated.AsCstr());
+        glfwSetWindowTitle(g_state.glfw_window, AsCstr(title_terminated));
     }
 
     void SetWindowSize(const s_v2_i size) {

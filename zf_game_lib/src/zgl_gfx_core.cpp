@@ -97,6 +97,9 @@ namespace zf::gfx {
     // ============================================================
 
 
+    // ============================================================
+    // @section: Functions
+
     // @todo: Placeholder!
     static bgfx::ProgramHandle CreateBGFXShaderProg(const s_array_rdonly<t_u8> vert_shader_bin, const s_array_rdonly<t_u8> frag_shader_bin) {
         const bgfx::Memory *const vert_shader_bgfx_mem = bgfx::copy(vert_shader_bin.raw, static_cast<uint32_t>(vert_shader_bin.len));
@@ -197,10 +200,6 @@ namespace zf::gfx {
         g_state = {};
     }
 
-
-    // ============================================================
-    // @section: Resources
-
     s_v2_i TextureSize(const s_resource *const texture) {
         ZF_ASSERT(g_state.state != ek_state_inactive);
         return texture->Texture().size;
@@ -292,12 +291,6 @@ namespace zf::gfx {
         resource->ShaderProg().bgfx_hdl = prog_bgfx_hdl;
         return resource;
     }
-
-    // ============================================================
-
-
-    // ============================================================
-    // @section: Rendering
 
     s_rendering_context *BeginRendering(const s_rendering_basis *const rendering_basis, const s_color_rgb8 clear_col, s_arena *const rendering_context_arena) {
         ZF_ASSERT(g_state.state == ek_state_active_but_not_rendering);
