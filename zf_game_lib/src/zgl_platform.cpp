@@ -248,7 +248,7 @@ namespace zf {
 #endif
     }
 
-    void WindowShow() {
+    void ShowWindow() {
         ZF_ASSERT(g_state.active);
         glfwShowWindow(g_state.glfw_window);
     }

@@ -339,7 +339,7 @@ namespace zf {
         return len;
     }
 
-    static t_code_pt ConvertUTF8BytesToCodePoint(const s_array_rdonly<char> bytes) {
+    static t_code_pt ConvertUTF8BytesToCodePoint(const s_array_rdonly<t_u8> bytes) {
         ZF_ASSERT(bytes.len >= 1 && bytes.len <= 4);
 
         t_code_pt result = 0;

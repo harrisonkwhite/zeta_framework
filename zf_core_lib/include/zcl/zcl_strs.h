@@ -18,39 +18,54 @@ namespace zf {
     constexpr t_i32 g_printable_ascii_range_end = 0x7F;
 
     struct s_str_rdonly {
-        s_array_rdonly<char> bytes;
-
-        s_str_rdonly() = default;
-        s_str_rdonly(const s_array_rdonly<char> bytes) : bytes(bytes) {}
-
-        template <t_i32 tp_raw_size>
-        consteval s_str_rdonly(const char (&raw)[tp_raw_size]) : bytes({raw, tp_raw_size - 1}) {
-            if (raw[tp_raw_size - 1]) {
-                throw "Static char array not terminated at end!";
-            }
-
-            for (t_i32 i = 0; i < tp_raw_size; i++) {
-                if (i < tp_raw_size - 1 && !raw[i]) {
-                    throw "Terminator found in static char array before end!";
-                }
-            }
-        }
+        s_array_rdonly<t_u8> bytes;
     };
 
     struct s_str_mut {
-        s_array_mut<char> bytes;
-
-        s_str_mut() = default;
-        s_str_mut(const s_array_mut<char> bytes) : bytes(bytes) {}
+        s_array_mut<t_u8> bytes;
 
         operator s_str_rdonly() const {
             return {bytes};
         }
     };
 
+    namespace detail {
+        // Hidden object that can only be constructed with a valid string literal at compile time.
+        // Implicit cast to ZF-style string has to be done at runtime due to reinterpret cast.
+        struct s_cstr_literal {
+            s_cstr_literal() = delete;
+
+            template <t_i32 tp_buf_size>
+            consteval s_cstr_literal(const char (&buf)[tp_buf_size]) : buf(buf), buf_size(tp_buf_size) {
+                if (buf[tp_buf_size - 1]) {
+                    throw "Static char array not terminated at end!";
+                }
+
+                // Disabled because sometimes it might be useful to manually insert null characters before end.
+#if 0
+                for (t_i32 i = 0; i < tp_buf_size; i++) {
+                    if (i < tp_buf_size - 1 && !buf[i]) {
+                        throw "Terminator found in static char array before end!";
+                    }
+                }
+#endif
+            }
+
+            operator s_str_rdonly() {
+                return {{reinterpret_cast<const t_u8 *>(buf), buf_size - 1}};
+            }
+
+        private:
+            const char *const buf;
+            const t_i32 buf_size;
+        };
+
+#define ZF_STR_LITERAL(cstr_lit) zf::s_str_rdonly(zf::detail::s_cstr_literal(cstr_lit))
+    }
+
     inline t_bin_comparator<s_str_rdonly> g_str_bin_comparator =
         [](const s_str_rdonly &a, const s_str_rdonly &b) {
-            return g_array_bin_comparator<s_array_rdonly<char>>(a.bytes, b.bytes);
+            return g_array_bin_comparator<s_array_rdonly<t_u8>>(a.bytes, b.bytes);
         };
 
     struct s_str_walk_step {
@@ -72,7 +87,7 @@ namespace zf {
         return cp >= g_printable_ascii_range_begin && cp < g_printable_ascii_range_end;
     }
 
-    inline t_b8 AreStrBytesTerminatedAnywhere(const s_array_rdonly<char> bytes) {
+    inline t_b8 AreBytesTerminatedAnywhere(const s_array_rdonly<t_u8> bytes) {
         for (t_i32 i = bytes.len - 1; i >= 0; i--) {
             if (!bytes[i]) {
                 return true;
@@ -82,7 +97,7 @@ namespace zf {
         return false;
     }
 
-    inline t_b8 AreStrBytesTerminatedOnlyAtEnd(const s_array_rdonly<char> bytes) {
+    inline t_b8 AreBytesTerminatedOnlyAtEnd(const s_array_rdonly<t_u8> bytes) {
         if (bytes.len == 0 || bytes[bytes.len - 1]) {
             return false;
         }
@@ -105,40 +120,31 @@ namespace zf {
     // Creates a NON-TERMINATED string object from the given TERMINATED C-string.
     // Does a conventional string walk to calculate length.
     inline s_str_mut ConvertCstr(char *const cstr) {
-        return {{cstr, CalcCstrLen(cstr)}};
+        return {{reinterpret_cast<t_u8 *>(cstr), CalcCstrLen(cstr)}};
     }
 
     // Creates a read-only NON-TERMINATED string object from the given TERMINATED C-string.
     // Does a conventional string walk to calculate length.
     inline s_str_rdonly ConvertCstr(const char *const cstr) {
-        return {{cstr, CalcCstrLen(cstr)}};
+        return {{reinterpret_cast<const t_u8 *>(cstr), CalcCstrLen(cstr)}};
     }
 
     inline char *AsCstr(const s_str_mut str) {
-        ZF_ASSERT(AreStrBytesTerminatedAnywhere(str.bytes));
-        return str.bytes.raw;
+        ZF_ASSERT(AreBytesTerminatedAnywhere(str.bytes));
+        return reinterpret_cast<char *>(str.bytes.raw);
     }
 
     inline const char *AsCstr(const s_str_rdonly str) {
-        ZF_ASSERT(AreStrBytesTerminatedAnywhere(str.bytes));
-        return str.bytes.raw;
+        ZF_ASSERT(AreBytesTerminatedAnywhere(str.bytes));
+        return reinterpret_cast<const char *>(str.bytes.raw);
     }
 
     // Allocates a clone of the given string using the memory arena, with a null byte added at the end (even if the string was already terminated).
     inline s_str_mut CloneStrButAddTerminator(const s_str_rdonly str, s_arena *const arena) {
-        const s_str_mut clone = {PushArray<char>(arena, str.bytes.len + 1)};
+        const s_str_mut clone = {PushArray<t_u8>(arena, str.bytes.len + 1)};
         CopyAll(str.bytes, clone.bytes);
         clone.bytes[clone.bytes.len - 1] = 0;
         return clone;
-    }
-
-    // @todo: Use this more, add helper for LoadFileContents, etc.
-    inline s_str_mut StrFromU8s(const s_array_mut<t_u8> bytes) {
-        return {{reinterpret_cast<char *>(bytes.raw), bytes.len}};
-    }
-
-    inline s_str_rdonly StrFromU8s(const s_array_rdonly<t_u8> bytes) {
-        return {{reinterpret_cast<const char *>(bytes.raw), bytes.len}};
     }
 
     inline t_b8 IsStrEmpty(const s_str_rdonly str) {

@@ -334,8 +334,8 @@ namespace zf {
     inline s_bool_fmt FormatDefault(const t_b8 val) { return {val}; }
 
     inline t_b8 PrintType(c_stream *const stream, const s_bool_fmt fmt) {
-        const s_str_rdonly true_str = "true";
-        const s_str_rdonly false_str = "false";
+        const s_str_rdonly true_str = ZF_STR_LITERAL("true");
+        const s_str_rdonly false_str = ZF_STR_LITERAL("false");
 
         return Print(stream, fmt.val ? true_str : false_str);
     }
@@ -354,16 +354,12 @@ namespace zf {
     inline s_str_fmt FormatStr(const s_str_rdonly val) { return {val}; }
     inline s_str_fmt FormatDefault(const s_str_rdonly val) { return FormatStr(val); }
 
-    template <t_i32 tp_raw_size>
-    consteval s_str_fmt FormatDefault(const char (&raw)[tp_raw_size]) {
-        return FormatStr(raw);
-    }
-
     inline t_b8 PrintType(c_stream *const stream, const s_str_fmt fmt) {
         return Print(stream, fmt.val);
     }
 
     // ========================================
+
 
     // ========================================
     // @subsection: Integer Printing
@@ -391,18 +387,17 @@ namespace zf {
         const t_i32 dig_cnt = CalcDigitCount(fmt.val);
 
         for (t_i32 i = 0; i < dig_cnt; i++) {
-            const auto byte = static_cast<char>('0' + DetermineDigitAt(fmt.val, dig_cnt - 1 - i));
+            const auto byte = static_cast<t_u8>('0' + DetermineDigitAt(fmt.val, dig_cnt - 1 - i));
             str_bytes_stream_write_success = str_bytes_stream.WriteItem(byte);
             ZF_ASSERT(str_bytes_stream_write_success);
         }
 
-        return Print(stream, StrFromU8s(str_bytes_stream.BytesWritten()));
+        return Print(stream, {str_bytes_stream.BytesWritten()});
     }
 
     // ========================================
 
 
-#if 0
     // ========================================
     // @subsection: Float Printing
 
@@ -454,7 +449,7 @@ namespace zf {
     }
 
     // ========================================
-#endif
+
 
     // ========================================
     // @subsection: Hex Printing
@@ -489,6 +484,7 @@ namespace zf {
         return {reinterpret_cast<t_uintptr>(ptr), flags, min_digits};
     }
 
+    // @todo: Static assert that this wasn't a char pointer.
     inline s_hex_fmt<t_uintptr> FormatDefault(const void *const ptr) {
         return FormatHex(ptr, {}, 2 * ZF_SIZE_OF(t_uintptr));
     }
@@ -512,14 +508,14 @@ namespace zf {
 
         const t_i32 str_bytes_digits_begin_pos = str_bytes_stream.BytePos();
 
-        const auto dig_to_byte = [flags = fmt.flags](const t_i32 dig) -> char {
+        const auto dig_to_byte = [flags = fmt.flags](const t_i32 dig) -> t_u8 {
             if (dig < 10) {
-                return static_cast<char>('0' + dig);
+                return static_cast<t_u8>('0' + dig);
             } else {
                 if (flags & ek_hex_fmt_flags_lower_case) {
-                    return static_cast<char>('a' + dig - 10);
+                    return static_cast<t_u8>('a' + dig - 10);
                 } else {
-                    return static_cast<char>('A' + dig - 10);
+                    return static_cast<t_u8>('A' + dig - 10);
                 }
             }
         };
@@ -531,7 +527,7 @@ namespace zf {
 
         do {
             for (t_i32 i = 0; i < inner_loop_cnt; i++) {
-                const char byte = dig_to_byte(val_mut % 16);
+                const auto byte = dig_to_byte(val_mut % 16);
                 str_bytes_stream_write_success = str_bytes_stream.WriteItem(byte);
                 ZF_ASSERT(str_bytes_stream_write_success);
 
@@ -544,12 +540,12 @@ namespace zf {
         const auto str_bytes_digits = SliceFrom(str_bytes_stream.BytesWritten(), str_bytes_digits_begin_pos);
         Reverse(str_bytes_digits);
 
-        return Print(stream, StrFromU8s(str_bytes_stream.BytesWritten()));
+        return Print(stream, {str_bytes_stream.BytesWritten()});
     }
 
     // ========================================
 
-#if 0
+
     // ========================================
     // @subsection: V2 Printing
 
@@ -564,11 +560,11 @@ namespace zf {
     constexpr s_v2_fmt FormatDefault(const s_v2 val) { return FormatV2(val); }
 
     inline t_b8 PrintType(c_stream *const stream, const s_v2_fmt fmt) {
-        return Print(stream, "(")
+        return Print(stream, ZF_STR_LITERAL("("))
             && PrintType(stream, FormatFloat(fmt.val.x, fmt.trim_trailing_zeros))
-            && Print(stream, ", ")
+            && Print(stream, ZF_STR_LITERAL(", "))
             && PrintType(stream, FormatFloat(fmt.val.y, fmt.trim_trailing_zeros))
-            && Print(stream, ")");
+            && Print(stream, ZF_STR_LITERAL(")"));
     }
 
     struct s_v2_i_fmt {
@@ -581,11 +577,11 @@ namespace zf {
     constexpr s_v2_i_fmt FormatDefault(const s_v2_i val) { return FormatV2(val); }
 
     inline t_b8 PrintType(c_stream *const stream, const s_v2_i_fmt fmt) {
-        return Print(stream, "(")
+        return Print(stream, ZF_STR_LITERAL("("))
             && PrintType(stream, FormatInt(fmt.val.x))
-            && Print(stream, ", ")
+            && Print(stream, ZF_STR_LITERAL(", "))
             && PrintType(stream, FormatInt(fmt.val.y))
-            && Print(stream, ")");
+            && Print(stream, ZF_STR_LITERAL(")"));
     }
 
     // ========================================
@@ -620,28 +616,28 @@ namespace zf {
     t_b8 PrintType(c_stream *const stream, const s_array_fmt<tp_arr_type> fmt) {
         if (fmt.one_per_line) {
             for (t_i32 i = 0; i < fmt.val.len; i++) {
-                if (!PrintFormat(stream, "[%] %%", i, fmt.val[i], i < fmt.val.len - 1 ? "\n" : "")) {
+                if (!PrintFormat(stream, ZF_STR_LITERAL("[%] %%"), i, fmt.val[i], i < fmt.val.len - 1 ? ZF_STR_LITERAL("\n") : ZF_STR_LITERAL(""))) {
                     return false;
                 }
             }
         } else {
-            if (!Print(stream, "[")) {
+            if (!Print(stream, ZF_STR_LITERAL("["))) {
                 return false;
             }
 
             for (t_i32 i = 0; i < fmt.val.len; i++) {
-                if (!PrintFormat(stream, "%", fmt.val[i])) {
+                if (!PrintFormat(stream, ZF_STR_LITERAL("%"), fmt.val[i])) {
                     return false;
                 }
 
                 if (i < fmt.val.len - 1) {
-                    if (!Print(stream, ", ")) {
+                    if (!Print(stream, ZF_STR_LITERAL(", "))) {
                         return false;
                     }
                 }
             }
 
-            if (!Print(stream, "]")) {
+            if (!Print(stream, ZF_STR_LITERAL("]"))) {
                 return false;
             }
         }
@@ -672,10 +668,8 @@ namespace zf {
     inline s_bit_vec_fmt FormatDefault(const s_bit_vec_rdonly &val) { return FormatBitVec(val, ek_bit_vec_fmt_style_seq); }
 
     inline t_b8 PrintType(c_stream *const stream, const s_bit_vec_fmt fmt) {
-        // @todo
-    #if 0
         const auto print_bit = [&](const t_i32 bit_index) {
-            const s_str_rdonly str = IsBitSet(fmt.val, bit_index) ? "1" : "0";
+            const s_str_rdonly str = IsBitSet(fmt.val, bit_index) ? ZF_STR_LITERAL("1") : ZF_STR_LITERAL("0");
             return Print(stream, str);
         };
 
@@ -683,7 +677,7 @@ namespace zf {
             const t_i32 bit_cnt = index == fmt.val.Bytes().len - 1 ? BitVectorLastByteBitCount(fmt.val) : 8;
 
             for (t_i32 i = 7; i >= bit_cnt; i--) {
-                Print(stream, "0");
+                Print(stream, ZF_STR_LITERAL("0"));
             }
 
             for (t_i32 i = bit_cnt - 1; i >= 0; i--) {
@@ -704,7 +698,7 @@ namespace zf {
         case ek_bit_vec_fmt_style_little_endian:
             for (t_i32 i = 0; i < fmt.val.Bytes().len; i++) {
                 if (i > 0) {
-                    Print(stream, " ");
+                    Print(stream, ZF_STR_LITERAL(" "));
                 }
 
                 print_byte(i);
@@ -717,7 +711,7 @@ namespace zf {
                 print_byte(i);
 
                 if (i > 0) {
-                    Print(stream, " ");
+                    Print(stream, ZF_STR_LITERAL(" "));
                 }
             }
 
@@ -725,12 +719,10 @@ namespace zf {
         }
 
         return true;
-    #endif
-        return true;
     }
 
     // ========================================
-#endif
+
 
     // ========================================
     // @subsection: Format Printing
@@ -821,7 +813,7 @@ namespace zf {
             return false;
         }
 
-        if (!Print(&std_err, "\n")) {
+        if (!Print(&std_err, ZF_STR_LITERAL("\n"))) {
             return false;
         }
 
@@ -832,7 +824,7 @@ namespace zf {
     t_b8 LogError(const s_str_rdonly fmt, const tp_arg_types &...args) {
         c_stream std_err = StdError();
 
-        if (!Print(&std_err, "Error: ")) {
+        if (!Print(&std_err, ZF_STR_LITERAL("Error: "))) {
             return false;
         }
 
@@ -840,7 +832,7 @@ namespace zf {
             return false;
         }
 
-        if (!Print(&std_err, "\n")) {
+        if (!Print(&std_err, ZF_STR_LITERAL("\n"))) {
             return false;
         }
 
@@ -853,7 +845,7 @@ namespace zf {
 
         c_stream std_err = StdError();
 
-        if (!PrintFormat(&std_err, "% Error: ", type_name)) {
+        if (!PrintFormat(&std_err, ZF_STR_LITERAL("% Error: "), type_name)) {
             return false;
         }
 
@@ -861,7 +853,7 @@ namespace zf {
             return false;
         }
 
-        if (!Print(&std_err, "\n")) {
+        if (!Print(&std_err, ZF_STR_LITERAL("\n"))) {
             return false;
         }
 
@@ -872,7 +864,7 @@ namespace zf {
     t_b8 LogWarning(const s_str_rdonly fmt, const tp_arg_types &...args) {
         c_stream std_err = StdError();
 
-        if (!Print(&std_err, "Warning: ")) {
+        if (!Print(&std_err, ZF_STR_LITERAL("Warning: "))) {
             return false;
         }
 
@@ -880,7 +872,7 @@ namespace zf {
             return false;
         }
 
-        if (!Print(&std_err, "\n")) {
+        if (!Print(&std_err, ZF_STR_LITERAL("\n"))) {
             return false;
         }
 

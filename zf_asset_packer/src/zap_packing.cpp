@@ -101,14 +101,14 @@ namespace zf {
             s_array_mut<t_u8> instrs_json_file_contents; // Not needed beyond this scope.
 
             if (!LoadFileContents(instrs_json_file_path, &arena, &arena, &instrs_json_file_contents, true)) {
-                LogError("Failed to load packing instructions JSON file \"%\"!", instrs_json_file_path);
+                LogError(ZF_STR_LITERAL("Failed to load packing instructions JSON file \"%\"!"), instrs_json_file_path);
                 return false;
             }
 
-            cj = cJSON_Parse(reinterpret_cast<const char *>(instrs_json_file_contents.raw));
+            cj = cJSON_Parse(AsCstr(s_str_rdonly(instrs_json_file_contents)));
 
             if (!cj) {
-                LogError("Failed to parse packing instructions JSON file!");
+                LogError(ZF_STR_LITERAL("Failed to parse packing instructions JSON file!"));
                 return false;
             }
         }
@@ -116,7 +116,7 @@ namespace zf {
         ZF_DEFER({ cJSON_Delete(cj); });
 
         if (!cJSON_IsObject(cj)) {
-            LogError("Packing instructions JSON root is not an object!");
+            LogError(ZF_STR_LITERAL("Packing instructions JSON root is not an object!"));
             return false;
         }
 
@@ -131,7 +131,7 @@ namespace zf {
             cJSON *const cj_assets = cJSON_GetObjectItemCaseSensitive(cj, asset_type_arr_name_cstr);
 
             if (!cJSON_IsArray(cj_assets)) {
-                LogError("Packing instructions JSON \"%\" array does not exist or it is of the wrong type!", ConvertCstr(asset_type_arr_name_cstr));
+                LogError(ZF_STR_LITERAL("Packing instructions JSON \"%\" array does not exist or it is of the wrong type!"), ConvertCstr(asset_type_arr_name_cstr));
                 return false;
             }
 
@@ -176,7 +176,7 @@ namespace zf {
                             continue;
                         }
 
-                        LogError("A packing instructions JSON \"%\" entry is missing required field \"%\"!", ConvertCstr(asset_type_arr_name_cstr), ConvertCstr(field_name_cstr));
+                        LogError(ZF_STR_LITERAL("A packing instructions JSON \"%\" entry is missing required field \"%\"!"), ConvertCstr(asset_type_arr_name_cstr), ConvertCstr(field_name_cstr));
 
                         return false;
                     }
@@ -197,7 +197,7 @@ namespace zf {
                     }();
 
                     if (!is_valid) {
-                        LogError("A packing instructions JSON \"%\" entry has field \"%\" as the wrong type! Expected a %.", ConvertCstr(asset_type_arr_name_cstr), ConvertCstr(field_name_cstr), ConvertCstr(g_asset_field_type_name_cstrs[fields[fi].type]));
+                        LogError(ZF_STR_LITERAL("A packing instructions JSON \"%\" entry has field \"%\" as the wrong type! Expected a %."), ConvertCstr(asset_type_arr_name_cstr), ConvertCstr(field_name_cstr), ConvertCstr(g_asset_field_type_name_cstrs[fields[fi].type]));
                         return false;
                     }
                 }
@@ -210,12 +210,12 @@ namespace zf {
                     gfx::s_texture_data texture_data;
 
                     if (!LoadTextureDataFromRaw(file_path, &arena, &arena, &texture_data)) {
-                        LogError("Failed to load texture from file \"%\"!", file_path);
+                        LogError(ZF_STR_LITERAL("Failed to load texture from file \"%\"!"), file_path);
                         return false;
                     }
 
                     if (!PackTexture(out_file_path, texture_data, &arena)) {
-                        LogError("Failed to pack texture to file \"%\"!", out_file_path);
+                        LogError(ZF_STR_LITERAL("Failed to pack texture to file \"%\"!"), out_file_path);
                         return false;
                     }
 
@@ -237,11 +237,11 @@ namespace zf {
                         s_array_mut<t_u8> extra_chrs_file_contents;
 
                         if (!LoadFileContents(extra_chrs_file_path, &arena, &arena, &extra_chrs_file_contents)) {
-                            LogError("Failed to load extra characters file \"%\"!", extra_chrs_file_path);
+                            LogError(ZF_STR_LITERAL("Failed to load extra characters file \"%\"!"), extra_chrs_file_path);
                             return false;
                         }
 
-                        MarkCodePoints({{reinterpret_cast<char *>(extra_chrs_file_contents.raw), extra_chrs_file_contents.len}}, code_pt_bv);
+                        MarkCodePoints({extra_chrs_file_contents}, code_pt_bv);
                     }
 
                     // @todo: Proper check for invalid height!
@@ -250,12 +250,12 @@ namespace zf {
                     s_array_mut<gfx::t_font_atlas_rgba> atlas_rgbas;
 
                     if (!LoadFontDataFromRaw(file_path, height, code_pt_bv, &arena, &arena, &arena, &arrangement, &atlas_rgbas)) {
-                        LogError("Failed to load font from file \"%\"!", file_path);
+                        LogError(ZF_STR_LITERAL("Failed to load font from file \"%\"!"), file_path);
                         return false;
                     }
 
                     if (!PackFont(out_file_path, arrangement, atlas_rgbas, &arena)) {
-                        LogError("Failed to pack font to file \"%\"!", out_file_path);
+                        LogError(ZF_STR_LITERAL("Failed to pack font to file \"%\"!"), out_file_path);
                         return false;
                     }
 
@@ -270,24 +270,24 @@ namespace zf {
 
                     t_b8 is_frag;
 
-                    if (AreStrsEqual(type, "vertex")) {
+                    if (AreStrsEqual(type, ZF_STR_LITERAL("vertex"))) {
                         is_frag = false;
-                    } else if (AreStrsEqual(type, "fragment")) {
+                    } else if (AreStrsEqual(type, ZF_STR_LITERAL("fragment"))) {
                         is_frag = true;
                     } else {
-                        LogError("A packing instructions JSON shader entry has an invalid shader type \"%\"! Expected \"vertex\" or \"fragment\".", type);
+                        LogError(ZF_STR_LITERAL("A packing instructions JSON shader entry has an invalid shader type \"%\"! Expected \"vertex\" or \"fragment\"."), type);
                         return false;
                     }
 
                     s_array_mut<t_u8> compiled_bin;
 
                     if (!CompileShader(file_path, varying_def_file_path, is_frag, &arena, &arena, &compiled_bin)) {
-                        LogError("Failed to compile shader from file \"%\"!", file_path);
+                        LogError(ZF_STR_LITERAL("Failed to compile shader from file \"%\"!"), file_path);
                         return false;
                     }
 
                     if (!gfx::PackShader(out_file_path, compiled_bin, &arena)) {
-                        LogError("Failed to pack shader to file \"%\"!", out_file_path);
+                        LogError(ZF_STR_LITERAL("Failed to pack shader to file \"%\"!"), out_file_path);
                         return false;
                     }
 
@@ -301,12 +301,12 @@ namespace zf {
                     s_sound_data_mut snd_data;
 
                     if (!LoadSoundDataFromRaw(file_path, &arena, &arena, &snd_data)) {
-                        LogError("Failed to load sound from file \"%\"!", file_path);
+                        LogError(ZF_STR_LITERAL("Failed to load sound from file \"%\"!"), file_path);
                         return false;
                     }
 
                     if (!PackSound(out_file_path, snd_data, &arena)) {
-                        LogError("Failed to pack sound to file \"%\"!", out_file_path);
+                        LogError(ZF_STR_LITERAL("Failed to pack sound to file \"%\"!"), out_file_path);
                         return false;
                     }
 
@@ -316,7 +316,7 @@ namespace zf {
             }
         }
 
-        Log("Asset packing completed!");
+        Log(ZF_STR_LITERAL("Asset packing completed!"));
 
         return true;
     }

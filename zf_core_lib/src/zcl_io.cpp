@@ -222,8 +222,8 @@ namespace zf {
             }
         }
 
-        const auto result_bytes = PushArray<char>(arena, len);
-        CopyAll(Slice(buf.AsNonstatic(), 0, len), result_bytes);
+        const auto result_bytes = PushArray<t_u8>(arena, len);
+        CopyAll(Slice(buf.AsNonstatic(), 0, len).AsByteArray(), result_bytes);
         return {result_bytes};
 #elif defined(ZF_PLATFORM_MACOS)
     #error "Platform-specific implementation not yet done!"

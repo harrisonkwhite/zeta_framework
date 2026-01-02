@@ -48,7 +48,7 @@ namespace zf {
         //
         // Main Loop
         //
-        WindowShow();
+        ShowWindow();
 
         t_f64 frame_time_last = Time();
         t_f64 frame_dur_accum = 0.0;

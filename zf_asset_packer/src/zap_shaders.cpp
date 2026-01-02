@@ -12,7 +12,7 @@ namespace zf {
         ZF_DEFER({
             if (r < 0) {
                 const auto err = ConvertCstr(reproc_strerror(r));
-                LogError("%", err);
+                LogError(ZF_STR_LITERAL("%"), err);
             }
         });
 
@@ -27,34 +27,34 @@ namespace zf {
         });
 
 #if defined(ZF_PLATFORM_WINDOWS)
-        constexpr char shaderc_file_path_rel_cstr[] = "tools/bgfx/shaderc_windows.exe";
-        constexpr char platform_cstr[] = "windows";
-        constexpr char profile_cstr[] = "s_5_0";
+        const s_str_rdonly shaderc_file_path_rel = ZF_STR_LITERAL("tools/bgfx/shaderc_windows.exe");
+        const char platform_cstr[] = "windows";
+        const char profile_cstr[] = "s_5_0";
 #elif defined(ZF_PLATFORM_MACOS)
     #error "Platform support not complete!" // @todo
-        constexpr char shaderc_file_path_rel_cstr[] = "tools/bgfx/shaderc_macos";
-        constexpr char platform_cstr[] = "osx";
-        constexpr char profile_cstr[] = "metal";
+        const char shaderc_file_path_rel_cstr[] = "tools/bgfx/shaderc_macos";
+        const char platform_cstr[] = "osx";
+        const char profile_cstr[] = "metal";
 #elif defined(ZF_PLATFORM_LINUX)
     #error "Platform support not complete!" // @todo
-        constexpr char shaderc_file_path_rel_cstr[] = "tools/bgfx/shaderc_linux";
-        constexpr char platform_cstr[] = "linux";
-        constexpr char profile_cstr[] = "glsl";
+        const char shaderc_file_path_rel_cstr[] = "tools/bgfx/shaderc_linux";
+        const char platform_cstr[] = "linux";
+        const char profile_cstr[] = "glsl";
 #endif
 
         const s_str_rdonly exe_dir = LoadExecutableDirectory(temp_arena);
         ZF_ASSERT(exe_dir.bytes[exe_dir.bytes.len - 1] == '/' || exe_dir.bytes[exe_dir.bytes.len - 1] == '\\'); // Assuming this.
 
-        const s_str_mut shaderc_file_path_terminated = {PushArray<char>(temp_arena, exe_dir.bytes.len + ZF_SIZE_OF(shaderc_file_path_rel_cstr))};
-        CopyAll(exe_dir.bytes, shaderc_file_path_terminated.bytes);
-        CopyAll(s_array_rdonly<char>{shaderc_file_path_rel_cstr, ZF_SIZE_OF(shaderc_file_path_rel_cstr)}, SliceFrom(shaderc_file_path_terminated.bytes, exe_dir.bytes.len));
-        ZF_ASSERT(!shaderc_file_path_terminated.bytes[shaderc_file_path_terminated.bytes.len - 1]);
+        const auto shaderc_file_path_terminated = s_str_mut(PushArray<t_u8>(temp_arena, exe_dir.bytes.len + shaderc_file_path_rel.bytes.len + 1));
+        c_stream shaderc_file_path_terminated_byte_stream = {shaderc_file_path_terminated.bytes, ek_stream_mode_write};
+        PrintFormat(&shaderc_file_path_terminated_byte_stream, ZF_STR_LITERAL("%%\0"), exe_dir, shaderc_file_path_rel);
+        ZF_ASSERT(AreBytesTerminatedOnlyAtEnd(shaderc_file_path_terminated.bytes));
 
-        const char shaderc_include_dir_rel_cstr[] = "tools/bgfx/shaderc_include";
-        const s_str_mut shaderc_include_dir_terminated = {PushArray<char>(temp_arena, exe_dir.bytes.len + ZF_SIZE_OF(shaderc_include_dir_rel_cstr))};
-        CopyAll(exe_dir.bytes, shaderc_include_dir_terminated.bytes);
-        CopyAll(s_array_rdonly<char>{shaderc_include_dir_rel_cstr, ZF_SIZE_OF(shaderc_include_dir_rel_cstr)}, SliceFrom(shaderc_include_dir_terminated.bytes, exe_dir.bytes.len));
-        ZF_ASSERT(!shaderc_include_dir_terminated.bytes[shaderc_include_dir_terminated.bytes.len - 1]);
+        const s_str_rdonly shaderc_include_dir_rel = ZF_STR_LITERAL("tools/bgfx/shaderc_include");
+        const auto shaderc_include_dir_terminated = s_str_mut(PushArray<t_u8>(temp_arena, exe_dir.bytes.len + shaderc_include_dir_rel.bytes.len + 1));
+        c_stream shaderc_include_dir_terminated_byte_stream = {shaderc_include_dir_terminated.bytes, ek_stream_mode_write};
+        PrintFormat(&shaderc_include_dir_terminated_byte_stream, ZF_STR_LITERAL("%%\0"), exe_dir, shaderc_include_dir_rel);
+        ZF_ASSERT(AreBytesTerminatedOnlyAtEnd(shaderc_include_dir_terminated.bytes));
 
         const s_static_array<const char *, 15> args = {{
             AsCstr(shaderc_file_path_terminated),
@@ -111,8 +111,8 @@ namespace zf {
 
         if (r > 0) {
             c_stream std_err = StdError();
-            const s_str_rdonly err = {{reinterpret_cast<const char *>(bin_list.backing_arr.raw), bin_list.len}};
-            PrintFormat(&std_err, "==================== BGFX SHADERC ERROR ====================\n%============================================================\n", err);
+            const auto err = s_str_rdonly(bin_list.AsArray());
+            PrintFormat(&std_err, ZF_STR_LITERAL("==================== BGFX SHADERC ERROR ====================\n%============================================================\n"), err);
             return false;
         }
 

@@ -328,7 +328,7 @@ namespace zf {
     }
 
     inline s_v2 CalcLenDir(const t_f32 len, const t_f32 dir) {
-        return s_v2{cos(dir), -sin(dir)} * len;
+        return s_v2(cos(dir), -sin(dir)) * len;
     }
 
     constexpr t_b8 IsPointInRect(const s_v2 pt, const s_rect_f rect) {

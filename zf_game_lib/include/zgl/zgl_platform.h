@@ -19,7 +19,7 @@ namespace zf {
 
     void *NativeWindowHandle();
 
-    void WindowShow();
+    void ShowWindow();
 
     // Returns whether a window close has been requested.
     t_b8 ShouldWindowClose();
