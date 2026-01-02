@@ -138,7 +138,7 @@ namespace zf {
             cJSON *cj_asset;
 
             cJSON_ArrayForEach(cj_asset, cj_assets) {
-                ArenaRewind(&arena);
+                Rewind(&arena);
 
                 if (!cJSON_IsObject(cj_asset)) {
                     continue;

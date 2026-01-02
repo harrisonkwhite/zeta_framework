@@ -65,7 +65,7 @@ namespace zf {
 
             // Once enough time has passed (i.e. the time accumulator has reached the tick interval), run at least a single tick.
             while (frame_dur_accum >= targ_tick_interval) {
-                ArenaRewind(&temp_arena);
+                Rewind(&temp_arena);
 
                 tick_func({
                     .perm_arena = &perm_arena,
@@ -79,7 +79,7 @@ namespace zf {
                 frame_dur_accum -= targ_tick_interval;
             }
 
-            ArenaRewind(&temp_arena);
+            Rewind(&temp_arena);
 
             gfx::s_rendering_context *const rendering_context = gfx::BeginRendering(rendering_basis, gfx::s_color_rgb8(109, 187, 255), &temp_arena); // @todo: Make the clear colour customisable?
 

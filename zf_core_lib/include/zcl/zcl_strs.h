@@ -63,9 +63,9 @@ namespace zf {
 #define ZF_STR_LITERAL(cstr_lit) zf::s_str_rdonly(zf::detail::s_cstr_literal(cstr_lit))
     }
 
-    inline t_bin_comparator<s_str_rdonly> g_str_bin_comparator =
+    inline t_comparator_bin<s_str_rdonly> g_str_comparator_bin =
         [](const s_str_rdonly &a, const s_str_rdonly &b) {
-            return g_array_bin_comparator<s_array_rdonly<t_u8>>(a.bytes, b.bytes);
+            return g_array_comparator_bin<s_array_rdonly<t_u8>>(a.bytes, b.bytes);
         };
 
     struct s_str_walk_step {

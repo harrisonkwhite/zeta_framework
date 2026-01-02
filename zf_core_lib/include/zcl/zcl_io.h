@@ -466,7 +466,7 @@ namespace zf {
     constexpr t_i32 g_hex_fmt_digit_cnt_min = 1;
     constexpr t_i32 g_hex_fmt_digit_cnt_max = 16;
 
-    template <co_unsigned_integral tp_type>
+    template <co_integral_unsigned tp_type>
     struct s_hex_fmt {
         using t_fmt_tag = void;
 
@@ -475,7 +475,7 @@ namespace zf {
         t_i32 min_digits; // Will be rounded UP to the next even if this is odd and the flag for allowing an odd digit count is unset.
     };
 
-    template <co_unsigned_integral tp_type>
+    template <co_integral_unsigned tp_type>
     s_hex_fmt<tp_type> FormatHex(const tp_type val, const e_hex_fmt_flags flags = {}, const t_i32 min_digits = g_hex_fmt_digit_cnt_min) {
         return {val, flags, min_digits};
     }
@@ -488,7 +488,7 @@ namespace zf {
         return FormatHex(ptr, {}, 2 * ZF_SIZE_OF(t_uintptr));
     }
 
-    template <co_unsigned_integral tp_type>
+    template <co_integral_unsigned tp_type>
     t_b8 PrintType(c_stream *const stream, const s_hex_fmt<tp_type> fmt) {
         ZF_ASSERT(fmt.min_digits >= g_hex_fmt_digit_cnt_min && fmt.min_digits <= g_hex_fmt_digit_cnt_max);
 

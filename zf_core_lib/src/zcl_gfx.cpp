@@ -14,7 +14,7 @@ namespace zf::gfx {
             return 0; // @todo: Proper hash function!
         };
 
-    constexpr t_bin_comparator<s_font_code_point_pair> g_code_pt_pair_comparator =
+    constexpr t_comparator_bin<s_font_code_point_pair> g_code_pt_pair_comparator =
         [](const s_font_code_point_pair &pa, const s_font_code_point_pair &pb) constexpr {
             return pa.a == pb.a && pa.b == pb.b;
         };

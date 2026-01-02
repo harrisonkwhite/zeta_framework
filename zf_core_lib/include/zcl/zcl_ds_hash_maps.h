@@ -18,7 +18,7 @@ namespace zf {
 
     template <co_simple tp_key_type, co_simple tp_val_type>
     struct s_kv_store {
-        t_bin_comparator<tp_key_type> key_comparator;
+        t_comparator_bin<tp_key_type> key_comparator;
 
         s_kv_store_block<tp_key_type, tp_val_type> *blocks_head;
         s_arena *blocks_arena;
@@ -251,7 +251,7 @@ namespace zf {
 
     // The provided hash function has to map a key to an integer 0 or higher. The given memory arena will be saved and used for allocating new memory for entries when needed.
     template <co_simple tp_key_type, co_simple tp_val_type>
-    s_hash_map<tp_key_type, tp_val_type> HashMapCreate(const t_hash_func<tp_key_type> hash_func, s_arena *const arena, const t_i32 cap = g_hash_map_cap_default, const t_bin_comparator<tp_key_type> key_comparator = DefaultBinComparator) {
+    s_hash_map<tp_key_type, tp_val_type> HashMapCreate(const t_hash_func<tp_key_type> hash_func, s_arena *const arena, const t_i32 cap = g_hash_map_cap_default, const t_comparator_bin<tp_key_type> key_comparator = g_comparator_bin_default) {
         const auto immediate_indexes = PushArray<t_i32>(arena, cap);
         SetAllTo(immediate_indexes, -1);
 
@@ -338,7 +338,7 @@ namespace zf {
     }
 
     template <co_simple tp_key_type, co_simple tp_val_type>
-    [[nodiscard]] t_b8 DeserializeHashMap(c_stream *const stream, s_arena *const hm_arena, const t_hash_func<tp_key_type> hm_hash_func, s_arena *const temp_arena, s_hash_map<tp_key_type, tp_val_type> *const o_hm, const t_bin_comparator<tp_key_type> hm_key_comparator = DefaultBinComparator) {
+    [[nodiscard]] t_b8 DeserializeHashMap(c_stream *const stream, s_arena *const hm_arena, const t_hash_func<tp_key_type> hm_hash_func, s_arena *const temp_arena, s_hash_map<tp_key_type, tp_val_type> *const o_hm, const t_comparator_bin<tp_key_type> hm_key_comparator = g_comparator_bin_default) {
         t_i32 cap;
 
         if (!stream->ReadItem(&cap)) {

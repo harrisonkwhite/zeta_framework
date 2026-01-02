@@ -77,7 +77,7 @@ namespace zf {
         return result;
     }
 
-    void ArenaRewind(s_arena *const arena) {
+    void Rewind(s_arena *const arena) {
         arena->block_cur = arena->blocks_head;
         arena->block_cur_offs = 0;
 
@@ -91,6 +91,229 @@ namespace zf {
         }
 #endif
     }
+
+
+    // ============================================================
+    // @section: Dude
+
+    constexpr t_b8 IsAnyBitSet(const s_bit_vec_rdonly bv) {
+        if (bv.bit_cnt == 0) {
+            return false;
+        }
+
+        const auto first_bytes = Slice(bv.Bytes(), 0, bv.Bytes().len - 1);
+
+        if (!DoAllEqual(first_bytes, 0)) {
+            return true;
+        }
+
+        return (bv.Bytes()[bv.Bytes().len - 1] & BitVectorLastByteMask(bv)) != 0;
+    }
+
+    constexpr t_b8 AreAllBitsSet(const s_bit_vec_rdonly bv) {
+        if (bv.bit_cnt == 0) {
+            return false;
+        }
+
+        const auto first_bytes = Slice(bv.Bytes(), 0, bv.Bytes().len - 1);
+
+        if (!DoAllEqual(first_bytes, 0xFF)) {
+            return false;
+        }
+
+        const auto last_byte_mask = BitVectorLastByteMask(bv);
+        return (bv.Bytes()[bv.Bytes().len - 1] & last_byte_mask) == last_byte_mask;
+    }
+
+    constexpr void SetAllBits(const s_bit_vec_mut bv) {
+        if (bv.bit_cnt == 0) {
+            return;
+        }
+
+        const auto first_bytes = Slice(bv.Bytes(), 0, bv.Bytes().len - 1);
+        SetAllTo(first_bytes, 0xFF);
+
+        bv.Bytes()[bv.Bytes().len - 1] |= BitVectorLastByteMask(bv);
+    }
+
+    constexpr void UnsetAllBits(const s_bit_vec_mut bv) {
+        if (bv.bit_cnt == 0) {
+            return;
+        }
+
+        const auto first_bytes = Slice(bv.Bytes(), 0, bv.Bytes().len - 1);
+        SetAllTo(first_bytes, 0);
+
+        bv.Bytes()[bv.Bytes().len - 1] &= ~BitVectorLastByteMask(bv);
+    }
+
+    constexpr void SetBitsInRange(const s_bit_vec_mut bv, const t_i32 begin_bit_index, const t_i32 end_bit_index) {
+        ZF_ASSERT(begin_bit_index >= 0 && begin_bit_index < bv.bit_cnt);
+        ZF_ASSERT(end_bit_index >= begin_bit_index && end_bit_index <= bv.bit_cnt);
+
+        const t_i32 begin_elem_index = begin_bit_index / 8;
+        const t_i32 end_elem_index = BitsToBytes(end_bit_index);
+
+        for (t_i32 i = begin_elem_index; i < end_elem_index; i++) {
+            const t_i32 bit_offs = i * 8;
+            const t_i32 begin_bit_index_rel = begin_bit_index - bit_offs;
+            const t_i32 end_bit_index_rel = end_bit_index - bit_offs;
+
+            const t_i32 set_range_begin = ZF_MAX(begin_bit_index_rel, 0);
+            const t_i32 set_range_end = ZF_MIN(end_bit_index_rel, 8);
+
+            bv.Bytes()[i] |= ByteBitmaskRanged(set_range_begin, set_range_end);
+        }
+    }
+
+    constexpr void ApplyMaskToBits(const s_bit_vec_mut targ, const s_bit_vec_rdonly mask, const e_bitwise_mask_op op) {
+        ZF_ASSERT(targ.bit_cnt == mask.bit_cnt);
+
+        if (targ.bit_cnt == 0) {
+            return;
+        }
+
+        switch (op) {
+        case ek_bitwise_mask_op_and:
+            for (t_i32 i = 0; i < targ.Bytes().len; i++) {
+                targ.Bytes()[i] &= mask.Bytes()[i];
+            }
+
+            break;
+
+        case ek_bitwise_mask_op_or:
+            for (t_i32 i = 0; i < targ.Bytes().len; i++) {
+                targ.Bytes()[i] |= mask.Bytes()[i];
+            }
+
+            break;
+
+        case ek_bitwise_mask_op_xor:
+            for (t_i32 i = 0; i < targ.Bytes().len; i++) {
+                targ.Bytes()[i] ^= mask.Bytes()[i];
+            }
+
+            break;
+
+        case ek_bitwise_mask_op_andnot:
+            for (t_i32 i = 0; i < targ.Bytes().len; i++) {
+                targ.Bytes()[i] &= ~mask.Bytes()[i];
+            }
+
+            break;
+        }
+
+        targ.Bytes()[targ.Bytes().len - 1] &= BitVectorLastByteMask(targ);
+    }
+
+    constexpr t_u8 ShiftBitsLeft(const s_bit_vec_mut bv) {
+        ZF_ASSERT(BitsToBytes(bv.bit_cnt) == bv.Bytes().len);
+
+        if (bv.bit_cnt == 0) {
+            return 0;
+        }
+
+        t_u8 discard = 0;
+
+        for (t_i32 i = 0; i < bv.Bytes().len; i++) {
+            const t_i32 bits_in_byte = i == bv.Bytes().len - 1 ? BitVectorLastByteBitCount(bv) : 8;
+            const t_u8 discard_last = discard;
+            discard = (bv.Bytes()[i] & ByteBitmaskSingle(bits_in_byte - 1)) >> (bits_in_byte - 1);
+            bv.Bytes()[i] <<= 1;
+            bv.Bytes()[i] |= discard_last;
+        }
+
+        bv.Bytes()[bv.Bytes().len - 1] &= BitVectorLastByteMask(bv);
+
+        return discard;
+    }
+
+    void ShiftBitsLeftBy(const s_bit_vec_mut bv, const t_i32 amount) {
+        ZF_ASSERT(amount >= 0);
+
+        // @speed: :(
+
+        for (t_i32 i = 0; i < amount; i++) {
+            ShiftBitsLeft(bv);
+        }
+    }
+
+    void RotBitsLeftBy(const s_bit_vec_mut bv, const t_i32 amount) {
+        ZF_ASSERT(amount >= 0);
+
+        if (bv.bit_cnt == 0) {
+            return;
+        }
+
+        // @speed: :(
+
+        for (t_i32 i = 0; i < amount; i++) {
+            const auto discard = ShiftBitsLeft(bv);
+
+            if (discard) {
+                SetBit(bv, 0);
+            } else {
+                UnsetBit(bv, 0);
+            }
+        }
+    }
+
+    constexpr t_u8 ShiftBitsRight(const s_bit_vec_mut bv) {
+        ZF_ASSERT(BitsToBytes(bv.bit_cnt) == bv.Bytes().len);
+
+        if (bv.bit_cnt == 0) {
+            return 0;
+        }
+
+        bv.Bytes()[bv.Bytes().len - 1] &= BitVectorLastByteMask(bv); // Drop any excess bits so we don't accidentally shift a 1 in.
+
+        t_u8 discard = 0;
+
+        for (t_i32 i = bv.Bytes().len - 1; i >= 0; i--) {
+            const t_i32 bits_in_byte = i == bv.Bytes().len - 1 ? BitVectorLastByteBitCount(bv) : 8;
+            const t_u8 discard_last = discard;
+            discard = bv.Bytes()[i] & ByteBitmaskSingle(0);
+            bv.Bytes()[i] >>= 1;
+
+            if (discard_last) {
+                bv.Bytes()[i] |= ByteBitmaskSingle(bits_in_byte - 1);
+            }
+        }
+
+        return discard;
+    }
+
+    void ShiftBitsRightBy(const s_bit_vec_mut bv, const t_i32 amount) {
+        ZF_ASSERT(amount >= 0);
+
+        // @speed: :(
+
+        for (t_i32 i = 0; i < amount; i++) {
+            ShiftBitsRight(bv);
+        }
+    }
+
+    void RotBitsRightBy(const s_bit_vec_mut bv, const t_i32 amount) {
+        ZF_ASSERT(amount >= 0);
+
+        if (bv.bit_cnt == 0) {
+            return;
+        }
+
+        // @speed: :(
+
+        for (t_i32 i = 0; i < amount; i++) {
+            const auto discard = ShiftBitsRight(bv);
+
+            if (discard) {
+                SetBit(bv, bv.bit_cnt - 1);
+            } else {
+                UnsetBit(bv, bv.bit_cnt - 1);
+            }
+        }
+    }
+
+    // ============================================================
 
     static t_i32 FindIndexOfFirstSetBitHelper(const s_bit_vec_rdonly bv, const t_i32 from, const t_u8 xor_mask) {
         ZF_ASSERT(from >= 0 && from <= bv.bit_cnt); // Intentionally allowing the upper bound here for the case of iteration.
@@ -658,5 +881,33 @@ namespace zf {
         }
 
         return result;
+    }
+
+    t_b8 WalkSetBits(const s_bit_vec_rdonly bv, t_i32 *const pos, t_i32 *const o_index) {
+        ZF_ASSERT(*pos >= 0 && *pos <= bv.bit_cnt);
+
+        *o_index = FindIndexOfFirstSetBit(bv, *pos);
+
+        if (*o_index == -1) {
+            return false;
+        }
+
+        *pos = *o_index + 1;
+
+        return true;
+    }
+
+    t_b8 WalkUnsetBits(const s_bit_vec_rdonly bv, t_i32 *const pos, t_i32 *const o_index) {
+        ZF_ASSERT(*pos >= 0 && *pos <= bv.bit_cnt);
+
+        *o_index = FindIndexOfFirstUnsetBit(bv, *pos);
+
+        if (*o_index == -1) {
+            return false;
+        }
+
+        *pos = *o_index + 1;
+
+        return true;
     }
 }

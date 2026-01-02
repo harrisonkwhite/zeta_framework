@@ -1,9 +1,8 @@
 #pragma once
 
-#include <climits>
 #include <type_traits>
-
-// @todo: This file is a mess.
+#include <limits>
+#include <concepts>
 
 namespace zf {
 #ifdef _WIN32
@@ -21,13 +20,6 @@ namespace zf {
 #ifndef NDEBUG
     #define ZF_DEBUG
 #endif
-
-#define ZF_IN_CONSTEXPR() std::is_constant_evaluated()
-
-#define ZF_SIZE_OF(x) static_cast<zf::t_i32>(sizeof(x))
-#define ZF_SIZE_IN_BITS(x) (8 * ZF_SIZE_OF(x))
-
-#define ZF_ALIGN_OF(x) static_cast<zf::t_i32>(alignof(x))
 
 #define ZF_CONCAT_IMPL(a, b) a##b
 #define ZF_CONCAT(a, b) ZF_CONCAT_IMPL(a, b)
@@ -47,48 +39,47 @@ namespace zf {
 
 #define ZF_DEFER(x) const auto ZF_CONCAT(defer_, ZF_CONCAT(l, __LINE__)) = zf::detail::s_defer([&]() x)
 
-    template <typename tp_type>
-    concept co_simple = std::is_trivially_default_constructible_v<tp_type> && std::is_trivially_destructible_v<tp_type> && std::is_trivially_copyable_v<tp_type> && std::is_standard_layout_v<tp_type>;
-
     static_assert(CHAR_BIT == 8);
 
     using t_u8 = unsigned char;
     static_assert(sizeof(t_u8) == 1);
-    constexpr auto g_u8_max = static_cast<t_u8>(-1);
+    constexpr t_u8 g_u8_max = std::numeric_limits<t_u8>::max();
 
     using t_i8 = signed char;
     static_assert(sizeof(t_i8) == 1);
-    constexpr t_i8 g_i8_max = g_u8_max & ~(static_cast<t_u8>(1) << 7);
+    constexpr t_i8 g_i8_max = std::numeric_limits<t_i8>::max();
 
     using t_u16 = unsigned short;
     static_assert(sizeof(t_u16) == 2);
-    constexpr auto g_u16_max = static_cast<t_u16>(-1);
+    constexpr t_u16 g_u16_max = std::numeric_limits<t_u16>::max();
 
     using t_i16 = signed short;
     static_assert(sizeof(t_i16) == 2);
-    constexpr t_i16 g_i16_max = g_u16_max & ~(static_cast<t_u16>(1) << 15);
+    constexpr t_i16 g_i16_max = std::numeric_limits<t_i16>::max();
 
     using t_u32 = unsigned int;
     static_assert(sizeof(t_u32) == 4);
-    constexpr auto g_u32_max = static_cast<t_u32>(-1);
+    constexpr t_u32 g_u32_max = std::numeric_limits<t_u32>::max();
 
     using t_i32 = signed int;
     static_assert(sizeof(t_i32) == 4);
-    constexpr t_i32 g_i32_max = g_u32_max & ~(static_cast<t_u32>(1) << 31);
+    constexpr t_i32 g_i32_max = std::numeric_limits<t_i32>::max();
 
     using t_u64 = unsigned long long;
     static_assert(sizeof(t_u64) == 8);
-    constexpr auto g_u64_max = static_cast<t_u64>(-1);
+    constexpr t_u64 g_u64_max = std::numeric_limits<t_u64>::max();
 
     using t_i64 = signed long long;
     static_assert(sizeof(t_i64) == 8);
-    constexpr t_i64 g_i64_max = g_u64_max & ~(static_cast<t_u64>(1) << 63);
+    constexpr t_i64 g_i64_max = std::numeric_limits<t_i64>::max();
 
     using t_f32 = float;
     static_assert(sizeof(t_f32) == 4);
+    constexpr t_f32 g_f32_max = std::numeric_limits<t_f32>::max();
 
     using t_f64 = double;
     static_assert(sizeof(t_f64) == 8);
+    constexpr t_f64 g_f64_max = std::numeric_limits<t_f64>::max();
 
     using t_b8 = bool;
     static_assert(sizeof(t_b8) == 1);
@@ -96,188 +87,12 @@ namespace zf {
     using t_uintptr = uintptr_t;
     static_assert(sizeof(t_uintptr) == 8);
 
-    template <typename tp_type_a, typename tp_type_b>
-    struct s_is_same {
-        static constexpr t_b8 g_val = false;
-    };
+#define ZF_SIZE_OF(x) static_cast<zf::t_i32>(sizeof(x))
+#define ZF_SIZE_IN_BITS(x) (8 * ZF_SIZE_OF(x))
 
-    template <typename tp_type>
-    struct s_is_same<tp_type, tp_type> {
-        static constexpr t_b8 g_val = true;
-    };
+#define ZF_ALIGN_OF(x) static_cast<zf::t_i32>(alignof(x))
 
-    template <t_b8 tp_cond, typename tp_then, typename tp_else>
-    struct s_conditional {
-        using t_type = tp_then;
-    };
-
-    template <typename tp_then, typename tp_else>
-    struct s_conditional<false, tp_then, tp_else> {
-        using t_type = tp_else;
-    };
-
-    template <typename tp_type>
-    struct s_is_integral {
-        static constexpr t_b8 g_val = false;
-    };
-
-    template <>
-    struct s_is_integral<t_i8> {
-        static constexpr t_b8 g_val = true;
-    };
-
-    template <>
-    struct s_is_integral<t_u8> {
-        static constexpr t_b8 g_val = true;
-    };
-
-    template <>
-    struct s_is_integral<t_i16> {
-        static constexpr t_b8 g_val = true;
-    };
-
-    template <>
-    struct s_is_integral<t_u16> {
-        static constexpr t_b8 g_val = true;
-    };
-
-    template <>
-    struct s_is_integral<t_i32> {
-        static constexpr t_b8 g_val = true;
-    };
-
-    template <>
-    struct s_is_integral<t_u32> {
-        static constexpr t_b8 g_val = true;
-    };
-
-    template <>
-    struct s_is_integral<t_i64> {
-        static constexpr t_b8 g_val = true;
-    };
-
-    template <>
-    struct s_is_integral<t_u64> {
-        static constexpr t_b8 g_val = true;
-    };
-
-    template <typename tp_type>
-    struct s_is_signed_integral {
-        static constexpr t_b8 g_val = false;
-    };
-
-    template <>
-    struct s_is_signed_integral<t_i8> {
-        static constexpr t_b8 g_val = true;
-    };
-
-    template <>
-    struct s_is_signed_integral<t_i16> {
-        static constexpr t_b8 g_val = true;
-    };
-
-    template <>
-    struct s_is_signed_integral<t_i32> {
-        static constexpr t_b8 g_val = true;
-    };
-
-    template <>
-    struct s_is_signed_integral<t_i64> {
-        static constexpr t_b8 g_val = true;
-    };
-
-    template <typename tp_type>
-    struct s_is_unsigned_integral {
-        static constexpr t_b8 g_val = false;
-    };
-
-    template <>
-    struct s_is_unsigned_integral<t_u8> {
-        static constexpr t_b8 g_val = true;
-    };
-
-    template <>
-    struct s_is_unsigned_integral<t_u16> {
-        static constexpr t_b8 g_val = true;
-    };
-
-    template <>
-    struct s_is_unsigned_integral<t_u32> {
-        static constexpr t_b8 g_val = true;
-    };
-
-    template <>
-    struct s_is_unsigned_integral<t_u64> {
-        static constexpr t_b8 g_val = true;
-    };
-
-    template <typename tp_type>
-    struct s_is_floating_point {
-        static constexpr t_b8 g_val = false;
-    };
-
-    template <>
-    struct s_is_floating_point<t_f32> {
-        static constexpr t_b8 g_val = true;
-    };
-
-    template <>
-    struct s_is_floating_point<t_f64> {
-        static constexpr t_b8 g_val = true;
-    };
-
-    template <typename tp_type> concept co_integral = s_is_integral<tp_type>::g_val;
-    template <typename tp_type> concept co_signed_integral = s_is_signed_integral<tp_type>::g_val;
-    template <typename tp_type> concept co_unsigned_integral = s_is_unsigned_integral<tp_type>::g_val;
-    template <typename tp_type> concept co_floating_point = s_is_floating_point<tp_type>::g_val;
-    template <typename tp_type> concept co_numeric = s_is_integral<tp_type>::g_val || s_is_floating_point<tp_type>::g_val;
-
-    template <typename tp_type>
-    concept co_cstr = std::is_same_v<std::remove_cv_t<std::remove_pointer_t<std::remove_extent_t<std::remove_reference_t<tp_type>>>>, char>;
-
-    template <typename tp_type>
-    struct s_is_const {
-        static constexpr t_b8 g_val = false;
-    };
-
-    template <typename tp_type>
-    struct s_is_const<tp_type const> {
-        static constexpr t_b8 g_val = true;
-    };
-
-    template <typename tp_type>
-    struct s_is_ptr {
-        static constexpr t_b8 g_val = false;
-    };
-
-    template <typename tp_type>
-    struct s_is_ptr<tp_type *> {
-        static constexpr t_b8 g_val = true;
-    };
-
-    // Return true iff a and b are equal.
-    template <co_simple tp_type>
-    using t_bin_comparator = t_b8 (*)(const tp_type &a, const tp_type &b);
-
-    template <co_simple tp_type>
-    t_b8 DefaultBinComparator(const tp_type &a, const tp_type &b) {
-        return a == b;
-    }
-
-    // If a < b, return a negative result, if a == b, return 0, and if a > b, return a positive result.
-    template <co_simple tp_type>
-    using t_ord_comparator = t_i32 (*)(const tp_type &a, const tp_type &b);
-
-    template <co_simple tp_type>
-    t_i32 DefaultOrdComparator(const tp_type &a, const tp_type &b) {
-        if (a == b) {
-            return 0;
-        } else if (a < b) {
-            return -1;
-        } else {
-            return 1;
-        }
-    }
+#define ZF_IN_CONSTEXPR() std::is_constant_evaluated()
 
     namespace detail {
         void TryBreakingIntoDebuggerIf(const t_b8 cond);
@@ -312,6 +127,56 @@ namespace zf {
         }                                                                    \
     } while (0)
     }
+
+    // "Simple" meaning that it's safe to use with arenas and C-style memory operations.
+    template <typename tp_type>
+    concept co_simple = std::is_trivially_default_constructible_v<tp_type> && std::is_trivially_destructible_v<tp_type> && std::is_trivially_copyable_v<tp_type> && std::is_standard_layout_v<tp_type>;
+
+    template <typename tp_type>
+    concept co_integral = std::is_same_v<tp_type, t_i8> || std::is_same_v<tp_type, t_u8> || std::is_same_v<tp_type, t_i16> || std::is_same_v<tp_type, t_u16> || std::is_same_v<tp_type, t_i32> || std::is_same_v<tp_type, t_u32> || std::is_same_v<tp_type, t_i64> || std::is_same_v<tp_type, t_u64>;
+
+    template <typename tp_type> concept co_integral_unsigned = co_integral<tp_type> && std::is_unsigned_v<tp_type>;
+    template <typename tp_type> concept co_integral_signed = co_integral<tp_type> && std::is_signed_v<tp_type>;
+    template <typename tp_type> concept co_floating_point = std::is_floating_point_v<tp_type>;
+    template <typename tp_type> concept co_numeric = co_integral<tp_type> || co_floating_point<tp_type>;
+
+    template <typename tp_type> concept co_ptr = std::is_pointer_v<tp_type>;
+    template <typename tp_type> concept co_const = std::is_const_v<tp_type>;
+    template <typename tp_type> concept co_union = std::is_union_v<tp_type>;
+    template <typename tp_type> concept co_enum = std::is_enum_v<tp_type>;
+    template <typename tp_type> concept co_scalar = std::is_scalar_v<tp_type>;
+
+    template <typename tp_type_a, typename tp_type_b>
+    concept co_same = std::same_as<tp_type_a, tp_type_b>;
+
+    template <typename tp_type>
+    concept co_cstr = co_same<std::remove_cv_t<std::remove_pointer_t<std::remove_extent_t<std::remove_reference_t<tp_type>>>>, char>; // @todo: Possible edge case of char** not being accounted for?
+
+    // Return true iff a and b are equal.
+    template <co_simple tp_type>
+    using t_comparator_bin = t_b8 (*)(const tp_type &a, const tp_type &b);
+
+    template <co_simple tp_type>
+    constexpr t_comparator_bin<tp_type> g_comparator_bin_default =
+        [](const tp_type &a, const tp_type &b) {
+            return a == b;
+        };
+
+    // Return a negative result if a < b, 0 if a == b, and a positive result if a > b.
+    template <co_simple tp_type>
+    using t_comparator_ord = t_b8 (*)(const tp_type &a, const tp_type &b);
+
+    template <co_simple tp_type>
+    constexpr t_comparator_ord<tp_type> g_comparator_ord_default =
+        [](const tp_type &a, const tp_type &b) {
+            if (a == b) {
+                return 0;
+            } else if (a < b) {
+                return -1;
+            } else {
+                return 1;
+            }
+        };
 
     constexpr t_i32 KilobytesToBytes(const t_i32 n) {
         return (1 << 10) * n;
@@ -394,4 +259,6 @@ namespace zf {
     constexpr tp_type Wrap(const tp_type val, const tp_type min, const tp_type max_excl) {
         return min + WrapUpper(val - min, max_excl - min);
     }
+
+    // ============================================================
 }
