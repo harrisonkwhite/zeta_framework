@@ -358,6 +358,8 @@ namespace zf {
         return Print(stream, fmt.val);
     }
 
+    // @todo: Char printing too?
+
     // ========================================
 
 
@@ -478,13 +480,10 @@ namespace zf {
         return {val, flags, min_digits};
     }
 
-    // @todo: Check both of these functions below still work.
-
     inline s_hex_fmt<t_uintptr> FormatHex(const void *const ptr, const e_hex_fmt_flags flags = {}, const t_i32 min_digits = g_hex_fmt_digit_cnt_min) {
         return {reinterpret_cast<t_uintptr>(ptr), flags, min_digits};
     }
 
-    // @todo: Static assert that this wasn't a char pointer.
     inline s_hex_fmt<t_uintptr> FormatDefault(const void *const ptr) {
         return FormatHex(ptr, {}, 2 * ZF_SIZE_OF(t_uintptr));
     }
@@ -762,6 +761,8 @@ namespace zf {
     // Returns true iff the operation was successful.
     template <typename tp_arg_type, typename... tp_arg_types_leftover>
     t_b8 PrintFormat(c_stream *const stream, const s_str_rdonly fmt, const tp_arg_type &arg, const tp_arg_types_leftover &...args_leftover) {
+        static_assert(!g_is_cstr<tp_arg_type>, "C-strings are prohibited for default formatting as a form of error prevention. Maybe you forgot to use the ZF_STR_LITERAL macro?");
+
         ZF_ASSERT(CountFormatSpecifiers(fmt) == 1 + sizeof...(args_leftover));
 
         static_assert(IsCodePointASCII(g_print_fmt_spec) && IsCodePointASCII(g_print_fmt_esc)); // Assuming this for this algorithm.

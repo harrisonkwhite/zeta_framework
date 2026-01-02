@@ -1,6 +1,7 @@
 #pragma once
 
 #include <climits>
+#include <type_traits>
 
 // @todo: This file is a mess.
 
@@ -21,13 +22,7 @@ namespace zf {
     #define ZF_DEBUG
 #endif
 
-#if defined(__clang__) || defined(__GNUC__)
-    #define ZF_IN_CONSTEXPR() __builtin_is_constant_evaluated()
-#elif defined(_MSC_VER)
-    #define ZF_IN_CONSTEXPR() __builtin_is_constant_evaluated()
-#else
-    #define ZF_IN_CONSTEXPR() 0
-#endif
+#define ZF_IN_CONSTEXPR() std::is_constant_evaluated()
 
 #define ZF_SIZE_OF(x) static_cast<zf::t_i32>(sizeof(x))
 #define ZF_SIZE_IN_BITS(x) (8 * ZF_SIZE_OF(x))
