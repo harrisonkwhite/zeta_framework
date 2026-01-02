@@ -23,7 +23,7 @@ namespace zf {
 
     struct s_test {
         const char *title_cstr;
-        t_b8 (*func)(s_arena *const arena) = nullptr;
+        t_b8 (*func)(s_arena *const arena);
     };
 
     constexpr s_static_array<s_test, 4> g_tests = {{

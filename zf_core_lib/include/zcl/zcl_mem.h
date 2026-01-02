@@ -21,7 +21,7 @@ namespace zf {
         t_i32 block_min_size;
     };
 
-    template <typename tp_type>
+    template <co_simple tp_type>
     struct s_array_rdonly {
         static_assert(!s_is_const<tp_type>::g_val);
 
@@ -47,7 +47,7 @@ namespace zf {
         }
     };
 
-    template <typename tp_type>
+    template <co_simple tp_type>
     struct s_array_mut {
         static_assert(!s_is_const<tp_type>::g_val);
 
@@ -77,7 +77,7 @@ namespace zf {
         }
     };
 
-    template <typename tp_type, t_i32 tp_len>
+    template <co_simple tp_type, t_i32 tp_len>
     struct s_static_array {
         static_assert(!s_is_const<tp_type>::g_val);
 
@@ -202,7 +202,7 @@ namespace zf {
         memset(buf, val, static_cast<size_t>(buf_size));
     }
 
-    template <typename tp_type>
+    template <co_simple tp_type>
     inline void ClearItem(tp_type *const item, const t_u8 val) {
         Clear(item, ZF_SIZE_OF(tp_type), val);
     }
@@ -215,7 +215,7 @@ namespace zf {
         Clear(buf, buf_size, g_poison_uninitted);
     }
 
-    template <typename tp_type>
+    template <co_simple tp_type>
     inline void PoisonUnittedItem(tp_type *const item) {
         ClearItem(item, g_poison_uninitted);
     }
@@ -224,15 +224,15 @@ namespace zf {
         Clear(buf, buf_size, g_poison_freed);
     }
 
-    template <typename tp_type>
+    template <co_simple tp_type>
     inline void PoisonFreedItem(tp_type *const item) {
         ClearItem(item, g_poison_freed);
     }
 #else
     inline void PoisonUnitted(void *const buf, const t_i32 buf_size) {}
-    template <typename tp_type> inline void PoisonUnittedItem(tp_type *const item) {}
+    template <co_simple tp_type> inline void PoisonUnittedItem(tp_type *const item) {}
     inline void PoisonFreed(void *const buf, const t_i32 buf_size) {}
-    template <typename tp_type> inline void PoisonFreedItem(tp_type *const item) {}
+    template <co_simple tp_type> inline void PoisonFreedItem(tp_type *const item) {}
 #endif
 
     // Does not allocate any arena memory (blocks) upfront.
@@ -244,21 +244,21 @@ namespace zf {
     void Destroy(s_arena *const arena);
 
     // Will lazily allocate memory as needed. Allocation failure is treated as fatal and causes an abort - you don't need to check for nullptr.
-    void *ArenaPush(s_arena *const arena, const t_i32 size, const t_i32 alignment);
+    void *Push(s_arena *const arena, const t_i32 size, const t_i32 alignment);
 
-    template <typename tp_type>
-    tp_type *ArenaPushItem(s_arena *const arena) {
-        return static_cast<tp_type *>(ArenaPush(arena, ZF_SIZE_OF(tp_type), ZF_ALIGN_OF(tp_type)));
+    template <co_simple tp_type>
+    tp_type *PushItem(s_arena *const arena) {
+        return static_cast<tp_type *>(Push(arena, ZF_SIZE_OF(tp_type), ZF_ALIGN_OF(tp_type)));
     }
 
-    template <typename tp_type>
-    tp_type *ArenaPushItemZeroed(s_arena *const arena) {
-        const auto result = static_cast<tp_type *>(ArenaPush(arena, ZF_SIZE_OF(tp_type), ZF_ALIGN_OF(tp_type)));
+    template <co_simple tp_type>
+    tp_type *PushItemZeroed(s_arena *const arena) {
+        const auto result = static_cast<tp_type *>(Push(arena, ZF_SIZE_OF(tp_type), ZF_ALIGN_OF(tp_type)));
         ClearItem(result, 0);
         return result;
     }
 
-    template <typename tp_type>
+    template <co_simple tp_type>
     s_array_mut<tp_type> PushArray(s_arena *const arena, const t_i32 len) {
         ZF_ASSERT(len >= 0);
 
@@ -266,11 +266,11 @@ namespace zf {
             return {};
         }
 
-        const auto raw = static_cast<tp_type *>(ArenaPush(arena, ZF_SIZE_OF(tp_type) * len, ZF_ALIGN_OF(tp_type)));
+        const auto raw = static_cast<tp_type *>(Push(arena, ZF_SIZE_OF(tp_type) * len, ZF_ALIGN_OF(tp_type)));
         return {raw, len};
     }
 
-    template <typename tp_type>
+    template <co_simple tp_type>
     s_array_mut<tp_type> ArenaPushArrayZeroed(s_arena *const arena, const t_i32 len) {
         ZF_ASSERT(len >= 0);
 
@@ -279,7 +279,7 @@ namespace zf {
         }
 
         const t_i32 size = ZF_SIZE_OF(tp_type) * len;
-        const auto raw = static_cast<tp_type *>(ArenaPush(arena, size, ZF_ALIGN_OF(tp_type)));
+        const auto raw = static_cast<tp_type *>(Push(arena, size, ZF_ALIGN_OF(tp_type)));
         Clear(raw, size, 0);
         return {raw, len};
     }
@@ -287,7 +287,7 @@ namespace zf {
     // Takes the arena offset to the beginning of its allocated memory (if any) to overwrite from there.
     void ArenaRewind(s_arena *const arena);
 
-    template <typename tp_type>
+    template <co_simple tp_type>
     constexpr s_array_rdonly<tp_type> Slice(const s_array_rdonly<tp_type> arr, const t_i32 beg, const t_i32 end) {
         ZF_ASSERT(beg >= 0 && beg <= arr.len);
         ZF_ASSERT(end >= beg && end <= arr.len);
@@ -295,13 +295,13 @@ namespace zf {
         return {arr.raw + beg, end - beg};
     }
 
-    template <typename tp_type>
+    template <co_simple tp_type>
     constexpr s_array_rdonly<tp_type> SliceFrom(const s_array_rdonly<tp_type> arr, const t_i32 beg) {
         ZF_ASSERT(beg >= 0 && beg <= arr.len);
         return {arr.raw + beg, arr.len - beg};
     }
 
-    template <typename tp_type>
+    template <co_simple tp_type>
     constexpr s_array_mut<tp_type> Slice(const s_array_mut<tp_type> arr, const t_i32 beg, const t_i32 end) {
         ZF_ASSERT(beg >= 0 && beg <= arr.len);
         ZF_ASSERT(end >= beg && end <= arr.len);
@@ -309,7 +309,7 @@ namespace zf {
         return {arr.raw + beg, end - beg};
     }
 
-    template <typename tp_type>
+    template <co_simple tp_type>
     constexpr s_array_mut<tp_type> SliceFrom(const s_array_mut<tp_type> arr, const t_i32 beg) {
         ZF_ASSERT(beg >= 0 && beg <= arr.len);
         return {arr.raw + beg, arr.len - beg};
@@ -391,12 +391,12 @@ namespace zf {
         }
     }
 
-    template <typename tp_type>
+    template <co_simple tp_type>
     s_array_mut<t_u8> AsBytes(tp_type &val) {
         return {reinterpret_cast<t_u8 *>(&val), ZF_SIZE_OF(val)};
     }
 
-    template <typename tp_type>
+    template <co_simple tp_type>
     s_array_rdonly<t_u8> AsBytes(const tp_type &val) {
         return {reinterpret_cast<const t_u8 *>(&val), ZF_SIZE_OF(val)};
     }

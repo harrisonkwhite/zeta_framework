@@ -6,7 +6,7 @@ namespace zf {
     // ============================================================
     // @section: Types and Globals
 
-    template <typename tp_type>
+    template <co_simple tp_type>
     struct s_list_mut {
         static_assert(!s_is_const<tp_type>::g_val);
 
@@ -29,7 +29,7 @@ namespace zf {
         }
     };
 
-    template <typename tp_type>
+    template <co_simple tp_type>
     struct s_list_rdonly {
         static_assert(!s_is_const<tp_type>::g_val);
 
@@ -52,7 +52,7 @@ namespace zf {
         }
     };
 
-    template <typename tp_type, t_i32 tp_cap>
+    template <co_simple tp_type, t_i32 tp_cap>
     struct s_static_list {
         static_assert(!s_is_const<tp_type>::g_val);
 
@@ -84,17 +84,17 @@ namespace zf {
         static constexpr t_b8 g_val = false;
     };
 
-    template <typename tp_type>
+    template <co_simple tp_type>
     struct s_is_nonstatic_mut_list<s_list_mut<tp_type>> {
         static constexpr t_b8 g_val = true;
     };
 
-    template <typename tp_type>
+    template <co_simple tp_type>
     struct s_is_nonstatic_rdonly_list {
         static constexpr t_b8 g_val = false;
     };
 
-    template <typename tp_type>
+    template <co_simple tp_type>
     struct s_is_nonstatic_rdonly_list<s_list_rdonly<tp_type>> {
         static constexpr t_b8 g_val = true;
     };
@@ -104,7 +104,7 @@ namespace zf {
         static constexpr t_b8 g_val = false;
     };
 
-    template <typename tp_type, t_i32 tp_cap>
+    template <co_simple tp_type, t_i32 tp_cap>
     struct s_is_static_list<s_static_list<tp_type, tp_cap>> {
         static constexpr t_b8 g_val = true;
     };
@@ -129,7 +129,9 @@ namespace zf {
     // ============================================================
     // @section: Functions
 
-    template <typename tp_type>
+    // @todo: All the template stuff here is pretty much broken. Concepts above can be dropped too I think.
+
+    template <co_simple tp_type>
     s_list_mut<tp_type> ListCreate(const t_i32 cap, s_arena *const arena, const t_i32 len = 0) {
         ZF_ASSERT(cap > 0 && len >= 0 && len <= cap);
         return {PushArray<tp_type>(arena, cap), len};

@@ -47,6 +47,9 @@ namespace zf {
 
 #define ZF_DEFER(x) const auto ZF_CONCAT(defer_, ZF_CONCAT(l, __LINE__)) = zf::detail::s_defer([&]() x)
 
+    template <typename tp_type>
+    concept co_simple = std::is_trivially_default_constructible_v<tp_type> && std::is_trivially_destructible_v<tp_type> && std::is_trivially_copyable_v<tp_type> && std::is_standard_layout_v<tp_type>;
+
     static_assert(CHAR_BIT == 8);
 
     using t_u8 = unsigned char;
@@ -230,6 +233,9 @@ namespace zf {
     template <typename tp_type> concept co_numeric = s_is_integral<tp_type>::g_val || s_is_floating_point<tp_type>::g_val;
 
     template <typename tp_type>
+    concept co_cstr = std::is_same_v<std::remove_cv_t<std::remove_pointer_t<std::remove_extent_t<std::remove_reference_t<tp_type>>>>, char>;
+
+    template <typename tp_type>
     struct s_is_const {
         static constexpr t_b8 g_val = false;
     };
@@ -250,19 +256,19 @@ namespace zf {
     };
 
     // Return true iff a and b are equal.
-    template <typename tp_type>
+    template <co_simple tp_type>
     using t_bin_comparator = t_b8 (*)(const tp_type &a, const tp_type &b);
 
-    template <typename tp_type>
+    template <co_simple tp_type>
     t_b8 DefaultBinComparator(const tp_type &a, const tp_type &b) {
         return a == b;
     }
 
     // If a < b, return a negative result, if a == b, return 0, and if a > b, return a positive result.
-    template <typename tp_type>
+    template <co_simple tp_type>
     using t_ord_comparator = t_i32 (*)(const tp_type &a, const tp_type &b);
 
-    template <typename tp_type>
+    template <co_simple tp_type>
     t_i32 DefaultOrdComparator(const tp_type &a, const tp_type &b) {
         if (a == b) {
             return 0;
@@ -341,7 +347,7 @@ namespace zf {
 #define ZF_MIN(a, b) ((a) <= (b) ? (a) : (b))
 #define ZF_MAX(a, b) ((a) >= (b) ? (a) : (b))
 
-    template <typename tp_type>
+    template <co_simple tp_type>
     constexpr void Swap(tp_type *const a, tp_type *const b) {
         const tp_type temp = *a;
         *a = *b;

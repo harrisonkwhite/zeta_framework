@@ -59,7 +59,7 @@ namespace zf {
             return m_type_data.file.file;
         }
 
-        template <typename tp_type>
+        template <co_simple tp_type>
         [[nodiscard]] t_b8 ReadItem(tp_type *const o_item) {
             ZF_ASSERT(m_mode == ek_stream_mode_read);
 
@@ -88,7 +88,7 @@ namespace zf {
             }
         }
 
-        template <typename tp_type>
+        template <co_simple tp_type>
         [[nodiscard]] t_b8 WriteItem(const tp_type &item) {
             ZF_ASSERT(m_mode == ek_stream_mode_write);
 
@@ -218,7 +218,7 @@ namespace zf {
         return true;
     }
 
-    template <typename tp_type>
+    template <co_simple tp_type>
     [[nodiscard]] t_b8 DeserializeArray(c_stream *const stream, s_arena *const arr_arena, s_array_mut<tp_type> *const o_arr) {
         t_i32 len;
 
@@ -314,7 +314,7 @@ namespace zf {
 
     inline t_b8 PrintFormat(c_stream *const stream, const s_str_rdonly fmt);
 
-    template <typename tp_arg_type, typename... tp_arg_types_leftover>
+    template <co_simple tp_arg_type, co_simple... tp_arg_types_leftover>
     t_b8 PrintFormat(c_stream *const stream, const s_str_rdonly fmt, const tp_arg_type &arg, const tp_arg_types_leftover &...args_leftover);
 
     // Type format structs which are to be accepted as format printing arguments need to meet this (i.e. have the tag).
@@ -759,9 +759,9 @@ namespace zf {
 
     // Use a single '%' as the format specifier. To actually include a '%' in the output, write "^%". To actually include a '^', write "^^".
     // Returns true iff the operation was successful.
-    template <typename tp_arg_type, typename... tp_arg_types_leftover>
+    template <co_simple tp_arg_type, co_simple... tp_arg_types_leftover>
     t_b8 PrintFormat(c_stream *const stream, const s_str_rdonly fmt, const tp_arg_type &arg, const tp_arg_types_leftover &...args_leftover) {
-        static_assert(!g_is_cstr<tp_arg_type>, "C-strings are prohibited for default formatting as a form of error prevention. Maybe you forgot to use the ZF_STR_LITERAL macro?");
+        static_assert(!co_cstr<tp_arg_type>, "C-strings are prohibited for default formatting as a form of error prevention.");
 
         ZF_ASSERT(CountFormatSpecifiers(fmt) == 1 + sizeof...(args_leftover));
 
@@ -806,7 +806,7 @@ namespace zf {
     // ========================================
     // @subsection: Logging Helpers
 
-    template <typename... tp_arg_types>
+    template <co_simple... tp_arg_types>
     t_b8 Log(const s_str_rdonly fmt, const tp_arg_types &...args) {
         c_stream std_err = StdOut();
 
@@ -821,7 +821,7 @@ namespace zf {
         return true;
     }
 
-    template <typename... tp_arg_types>
+    template <co_simple... tp_arg_types>
     t_b8 LogError(const s_str_rdonly fmt, const tp_arg_types &...args) {
         c_stream std_err = StdError();
 
@@ -840,7 +840,7 @@ namespace zf {
         return true;
     }
 
-    template <typename... tp_arg_types>
+    template <co_simple... tp_arg_types>
     t_b8 LogErrorType(const s_str_rdonly type_name, const s_str_rdonly fmt, const tp_arg_types &...args) {
         ZF_ASSERT(!IsStrEmpty(type_name));
 
@@ -861,7 +861,7 @@ namespace zf {
         return true;
     }
 
-    template <typename... tp_arg_types>
+    template <co_simple... tp_arg_types>
     t_b8 LogWarning(const s_str_rdonly fmt, const tp_arg_types &...args) {
         c_stream std_err = StdError();
 

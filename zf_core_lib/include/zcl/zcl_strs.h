@@ -6,9 +6,6 @@ namespace zf {
     // ============================================================
     // @section: Types and Globals
 
-    template <typename tp_type>
-    constexpr t_b8 g_is_cstr = std::is_same_v<std::remove_cv_t<std::remove_pointer_t<std::remove_extent_t<std::remove_reference_t<tp_type>>>>, char>;
-
     constexpr t_i32 g_unicode_code_pt_cnt = 1114112;
 
     using t_code_pt = char32_t;

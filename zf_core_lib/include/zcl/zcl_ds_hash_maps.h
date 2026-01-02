@@ -6,7 +6,7 @@ namespace zf {
     // ============================================================
     // @section: Types and Globals
 
-    template <typename tp_key_type, typename tp_val_type>
+    template <co_simple tp_key_type, co_simple tp_val_type>
     struct s_kv_store_block {
         s_array_mut<tp_key_type> keys;
         s_array_mut<tp_val_type> vals;
@@ -16,7 +16,7 @@ namespace zf {
         s_kv_store_block *next;
     };
 
-    template <typename tp_key_type, typename tp_val_type>
+    template <co_simple tp_key_type, co_simple tp_val_type>
     struct s_kv_store {
         t_bin_comparator<tp_key_type> key_comparator;
 
@@ -33,7 +33,7 @@ namespace zf {
         ek_kv_store_put_result_added
     };
 
-    template <typename tp_type>
+    template <co_simple tp_type>
     using t_hash_func = t_i32 (*)(const tp_type &key);
 
     // This is an FNV-1a implementation.
@@ -52,7 +52,7 @@ namespace zf {
             return static_cast<t_i32>(hash & 0x7FFFFFFFull);
         };
 
-    template <typename tp_key_type, typename tp_val_type>
+    template <co_simple tp_key_type, co_simple tp_val_type>
     struct s_hash_map {
         t_hash_func<tp_key_type> hash_func;
 
@@ -73,9 +73,9 @@ namespace zf {
     // ============================================================
     // @section: Functions
 
-    template <typename tp_key_type, typename tp_val_type>
+    template <co_simple tp_key_type, co_simple tp_val_type>
     s_kv_store_block<tp_key_type, tp_val_type> *KVStoreBlockCreate(const t_i32 cap, s_arena *const arena) {
-        const auto block = ArenaPushItem<s_kv_store_block<tp_key_type, tp_val_type>>(arena);
+        const auto block = PushItem<s_kv_store_block<tp_key_type, tp_val_type>>(arena);
 
         block->keys = PushArray<tp_key_type>(arena, cap);
 
@@ -92,7 +92,7 @@ namespace zf {
     }
 
     // @todo: Optimise by having this move to a relative block, instead of always from the start.
-    template <typename tp_key_type, typename tp_val_type>
+    template <co_simple tp_key_type, co_simple tp_val_type>
     s_kv_store_block<tp_key_type, tp_val_type> *KVStoreFindBlockOfIndex(const s_kv_store<tp_key_type, tp_val_type> *const store, t_i32 index) {
         ZF_ASSERT(index >= -1 && index < store->block_cap * store->block_cnt);
 
@@ -106,7 +106,7 @@ namespace zf {
         return result;
     }
 
-    template <typename tp_key_type, typename tp_val_type>
+    template <co_simple tp_key_type, co_simple tp_val_type>
     [[nodiscard]] t_b8 KVStoreFindInChain(const s_kv_store<tp_key_type, tp_val_type> *const store, const t_i32 chain_begin_index, const tp_key_type &key, tp_val_type **const o_val) {
         ZF_ASSERT(chain_begin_index >= -1 && chain_begin_index < store->block_cap * store->block_cnt);
 
@@ -128,7 +128,7 @@ namespace zf {
         return false;
     }
 
-    template <typename tp_key_type, typename tp_val_type>
+    template <co_simple tp_key_type, co_simple tp_val_type>
     e_kv_store_put_result KVStorePutInChain(s_kv_store<tp_key_type, tp_val_type> *const store, t_i32 *const chain_begin_index, const tp_key_type &key, const tp_val_type &val) {
         t_i32 *index = chain_begin_index;
 
@@ -191,7 +191,7 @@ namespace zf {
         return ek_kv_store_put_result_added;
     }
 
-    template <typename tp_key_type, typename tp_val_type>
+    template <co_simple tp_key_type, co_simple tp_val_type>
     t_b8 KVStoreRemoveInChain(s_kv_store<tp_key_type, tp_val_type> *const store, t_i32 *const chain_begin_index, const tp_key_type &key) {
         ZF_ASSERT(*chain_begin_index >= -1 && *chain_begin_index < store->block_cap * store->block_cnt);
 
@@ -215,7 +215,7 @@ namespace zf {
     }
 
     // Loads keys and values of the chain into the given PRE-ALLOCATED arrays.
-    template <typename tp_key_type, typename tp_val_type>
+    template <co_simple tp_key_type, co_simple tp_val_type>
     t_i32 KVStoreLoadChain(const s_kv_store<tp_key_type, tp_val_type> *const store, const t_i32 begin_index, const s_array_mut<tp_key_type> keys, const s_array_mut<tp_val_type> vals) {
         ZF_ASSERT(begin_index >= -1 && begin_index < store->block_cap * store->block_cnt);
 
@@ -239,7 +239,7 @@ namespace zf {
         return loaded_cnt;
     }
 
-    template <typename tp_type>
+    template <co_simple tp_type>
     t_i32 KeyToHashIndex(const tp_type &key, const t_hash_func<tp_type> hash_func, const t_i32 cap) {
         ZF_ASSERT(cap > 0);
 
@@ -250,7 +250,7 @@ namespace zf {
     }
 
     // The provided hash function has to map a key to an integer 0 or higher. The given memory arena will be saved and used for allocating new memory for entries when needed.
-    template <typename tp_key_type, typename tp_val_type>
+    template <co_simple tp_key_type, co_simple tp_val_type>
     s_hash_map<tp_key_type, tp_val_type> HashMapCreate(const t_hash_func<tp_key_type> hash_func, s_arena *const arena, const t_i32 cap = g_hash_map_cap_default, const t_bin_comparator<tp_key_type> key_comparator = DefaultBinComparator) {
         const auto immediate_indexes = PushArray<t_i32>(arena, cap);
         SetAllTo(immediate_indexes, -1);
@@ -262,38 +262,38 @@ namespace zf {
         };
     }
 
-    template <typename tp_key_type, typename tp_val_type>
+    template <co_simple tp_key_type, co_simple tp_val_type>
     t_i32 HashMapCap(const s_hash_map<tp_key_type, tp_val_type> *const hm) {
         return hm->immediate_indexes.len;
     }
 
-    template <typename tp_key_type, typename tp_val_type>
+    template <co_simple tp_key_type, co_simple tp_val_type>
     t_i32 HashMapEntryCount(const s_hash_map<tp_key_type, tp_val_type> *const hm) {
         return hm->kv_store.pair_cnt;
     }
 
-    template <typename tp_key_type, typename tp_val_type>
+    template <co_simple tp_key_type, co_simple tp_val_type>
     [[nodiscard]] t_b8 HashMapFind(const s_hash_map<tp_key_type, tp_val_type> *const hm, const tp_key_type &key, tp_val_type **const o_val) {
         const t_i32 hash_index = KeyToHashIndex(key, hm->hash_func, HashMapCap(hm));
         return KVStoreFindInChain(&hm->kv_store, hm->immediate_indexes[hash_index], key, o_val);
     }
 
     // Try adding the key-value pair to the hash map or just updating the value if the key is already present.
-    template <typename tp_key_type, typename tp_val_type>
+    template <co_simple tp_key_type, co_simple tp_val_type>
     e_hash_map_put_result HashMapPut(s_hash_map<tp_key_type, tp_val_type> *const hm, const tp_key_type &key, const tp_val_type &val) {
         const t_i32 hash_index = KeyToHashIndex(key, hm->hash_func, HashMapCap(hm));
         return KVStorePutInChain(&hm->kv_store, &hm->immediate_indexes[hash_index], key, val) == ek_kv_store_put_result_updated ? ek_hash_map_put_result_updated : ek_hash_map_put_result_added;
     }
 
     // Returns true iff an entry with the key was found and removed.
-    template <typename tp_key_type, typename tp_val_type>
+    template <co_simple tp_key_type, co_simple tp_val_type>
     t_b8 HashMapRemove(s_hash_map<tp_key_type, tp_val_type> *const hm, const tp_key_type &key) {
         const t_i32 hash_index = KeyToHashIndex(key, hm->hash_func, HashMapCap(hm));
         return KVStoreRemoveInChain(&hm->kv_store, hm->immediate_indexes[hash_index], key);
     }
 
     // Loads all key-value pairs into the given PRE-ALLOCATED arrays.
-    template <typename tp_key_type, typename tp_val_type>
+    template <co_simple tp_key_type, co_simple tp_val_type>
     void HashMapLoadEntries(const s_hash_map<tp_key_type, tp_val_type> *const hm, const s_array_mut<tp_key_type> keys, const s_array_mut<tp_val_type> vals) {
         ZF_ASSERT(keys.len >= HashMapEntryCount(hm) && vals.len >= HashMapEntryCount(hm));
 
@@ -305,14 +305,14 @@ namespace zf {
     }
 
     // Allocates the given arrays with the memory arena and loads key-value pairs into them.
-    template <typename tp_key_type, typename tp_val_type>
+    template <co_simple tp_key_type, co_simple tp_val_type>
     void HashMapLoadEntries(const s_hash_map<tp_key_type, tp_val_type> *const hm, s_arena *const arena, s_array_mut<tp_key_type> *const o_keys, s_array_mut<tp_val_type> *const o_vals) {
         *o_keys = PushArray<tp_key_type>(arena, HashMapEntryCount(hm));
         *o_vals = PushArray<tp_val_type>(arena, HashMapEntryCount(hm));
         return HashMapLoadEntries(hm, *o_keys, *o_vals);
     }
 
-    template <typename tp_key_type, typename tp_val_type>
+    template <co_simple tp_key_type, co_simple tp_val_type>
     [[nodiscard]] t_b8 SerializeHashMap(c_stream *const stream, const s_hash_map<tp_key_type, tp_val_type> *const hm, s_arena *const temp_arena) {
         if (!stream->WriteItem(HashMapCap(hm))) {
             return false;
@@ -337,7 +337,7 @@ namespace zf {
         return true;
     }
 
-    template <typename tp_key_type, typename tp_val_type>
+    template <co_simple tp_key_type, co_simple tp_val_type>
     [[nodiscard]] t_b8 DeserializeHashMap(c_stream *const stream, s_arena *const hm_arena, const t_hash_func<tp_key_type> hm_hash_func, s_arena *const temp_arena, s_hash_map<tp_key_type, tp_val_type> *const o_hm, const t_bin_comparator<tp_key_type> hm_key_comparator = DefaultBinComparator) {
         t_i32 cap;
 
