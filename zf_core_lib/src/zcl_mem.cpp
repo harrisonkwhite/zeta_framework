@@ -1,6 +1,7 @@
 #include <zcl/zcl_mem.h>
 
 #include <cstdlib>
+#include <zcl/zcl_algos.h>
 
 namespace zf {
     void Destroy(s_arena *const arena) {
@@ -96,7 +97,7 @@ namespace zf {
     // ============================================================
     // @section: Dude
 
-    constexpr t_b8 IsAnyBitSet(const s_bit_vec_rdonly bv) {
+    t_b8 IsAnyBitSet(const s_bit_vec_rdonly bv) {
         if (bv.bit_cnt == 0) {
             return false;
         }
@@ -110,7 +111,7 @@ namespace zf {
         return (bv.Bytes()[bv.Bytes().len - 1] & BitVectorLastByteMask(bv)) != 0;
     }
 
-    constexpr t_b8 AreAllBitsSet(const s_bit_vec_rdonly bv) {
+    t_b8 AreAllBitsSet(const s_bit_vec_rdonly bv) {
         if (bv.bit_cnt == 0) {
             return false;
         }
@@ -125,7 +126,7 @@ namespace zf {
         return (bv.Bytes()[bv.Bytes().len - 1] & last_byte_mask) == last_byte_mask;
     }
 
-    constexpr void SetAllBits(const s_bit_vec_mut bv) {
+    void SetAllBits(const s_bit_vec_mut bv) {
         if (bv.bit_cnt == 0) {
             return;
         }
@@ -136,7 +137,7 @@ namespace zf {
         bv.Bytes()[bv.Bytes().len - 1] |= BitVectorLastByteMask(bv);
     }
 
-    constexpr void UnsetAllBits(const s_bit_vec_mut bv) {
+    void UnsetAllBits(const s_bit_vec_mut bv) {
         if (bv.bit_cnt == 0) {
             return;
         }
@@ -147,7 +148,7 @@ namespace zf {
         bv.Bytes()[bv.Bytes().len - 1] &= ~BitVectorLastByteMask(bv);
     }
 
-    constexpr void SetBitsInRange(const s_bit_vec_mut bv, const t_i32 begin_bit_index, const t_i32 end_bit_index) {
+    void SetBitsInRange(const s_bit_vec_mut bv, const t_i32 begin_bit_index, const t_i32 end_bit_index) {
         ZF_ASSERT(begin_bit_index >= 0 && begin_bit_index < bv.bit_cnt);
         ZF_ASSERT(end_bit_index >= begin_bit_index && end_bit_index <= bv.bit_cnt);
 
@@ -166,7 +167,7 @@ namespace zf {
         }
     }
 
-    constexpr void ApplyMaskToBits(const s_bit_vec_mut targ, const s_bit_vec_rdonly mask, const e_bitwise_mask_op op) {
+    void ApplyMaskToBits(const s_bit_vec_mut targ, const s_bit_vec_rdonly mask, const e_bitwise_mask_op op) {
         ZF_ASSERT(targ.bit_cnt == mask.bit_cnt);
 
         if (targ.bit_cnt == 0) {
@@ -206,7 +207,7 @@ namespace zf {
         targ.Bytes()[targ.Bytes().len - 1] &= BitVectorLastByteMask(targ);
     }
 
-    constexpr t_u8 ShiftBitsLeft(const s_bit_vec_mut bv) {
+    t_u8 ShiftBitsLeft(const s_bit_vec_mut bv) {
         ZF_ASSERT(BitsToBytes(bv.bit_cnt) == bv.Bytes().len);
 
         if (bv.bit_cnt == 0) {
@@ -258,7 +259,7 @@ namespace zf {
         }
     }
 
-    constexpr t_u8 ShiftBitsRight(const s_bit_vec_mut bv) {
+    t_u8 ShiftBitsRight(const s_bit_vec_mut bv) {
         ZF_ASSERT(BitsToBytes(bv.bit_cnt) == bv.Bytes().len);
 
         if (bv.bit_cnt == 0) {

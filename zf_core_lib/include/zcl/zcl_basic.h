@@ -164,7 +164,7 @@ namespace zf {
 
     // Return a negative result if a < b, 0 if a == b, and a positive result if a > b.
     template <co_simple tp_type>
-    using t_comparator_ord = t_b8 (*)(const tp_type &a, const tp_type &b);
+    using t_comparator_ord = t_i32 (*)(const tp_type &a, const tp_type &b);
 
     template <co_simple tp_type>
     constexpr t_comparator_ord<tp_type> g_comparator_ord_default =

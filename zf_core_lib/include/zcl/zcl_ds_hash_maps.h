@@ -251,7 +251,7 @@ namespace zf {
 
     // The provided hash function has to map a key to an integer 0 or higher. The given memory arena will be saved and used for allocating new memory for entries when needed.
     template <co_simple tp_key_type, co_simple tp_val_type>
-    s_hash_map<tp_key_type, tp_val_type> HashMapCreate(const t_hash_func<tp_key_type> hash_func, s_arena *const arena, const t_i32 cap = g_hash_map_cap_default, const t_comparator_bin<tp_key_type> key_comparator = g_comparator_bin_default) {
+    s_hash_map<tp_key_type, tp_val_type> HashMapCreate(const t_hash_func<tp_key_type> hash_func, s_arena *const arena, const t_i32 cap = g_hash_map_cap_default, const t_comparator_bin<tp_key_type> key_comparator = g_comparator_bin_default<tp_key_type>) {
         const auto immediate_indexes = PushArray<t_i32>(arena, cap);
         SetAllTo(immediate_indexes, -1);
 
@@ -294,7 +294,7 @@ namespace zf {
 
     // Loads all key-value pairs into the given PRE-ALLOCATED arrays.
     template <co_simple tp_key_type, co_simple tp_val_type>
-    void HashMapLoadEntries(const s_hash_map<tp_key_type, tp_val_type> *const hm, const s_array_mut<tp_key_type> keys, const s_array_mut<tp_val_type> vals) {
+    void LoadEntries(const s_hash_map<tp_key_type, tp_val_type> *const hm, const s_array_mut<tp_key_type> keys, const s_array_mut<tp_val_type> vals) {
         ZF_ASSERT(keys.len >= HashMapEntryCount(hm) && vals.len >= HashMapEntryCount(hm));
 
         t_i32 loaded_cnt = 0;
@@ -306,10 +306,10 @@ namespace zf {
 
     // Allocates the given arrays with the memory arena and loads key-value pairs into them.
     template <co_simple tp_key_type, co_simple tp_val_type>
-    void HashMapLoadEntries(const s_hash_map<tp_key_type, tp_val_type> *const hm, s_arena *const arena, s_array_mut<tp_key_type> *const o_keys, s_array_mut<tp_val_type> *const o_vals) {
+    void LoadEntries(const s_hash_map<tp_key_type, tp_val_type> *const hm, s_arena *const arena, s_array_mut<tp_key_type> *const o_keys, s_array_mut<tp_val_type> *const o_vals) {
         *o_keys = PushArray<tp_key_type>(arena, HashMapEntryCount(hm));
         *o_vals = PushArray<tp_val_type>(arena, HashMapEntryCount(hm));
-        return HashMapLoadEntries(hm, *o_keys, *o_vals);
+        return LoadEntries(hm, *o_keys, *o_vals);
     }
 
     template <co_simple tp_key_type, co_simple tp_val_type>
@@ -324,7 +324,7 @@ namespace zf {
 
         s_array_mut<tp_key_type> keys;
         s_array_mut<tp_val_type> vals;
-        HashMapLoadEntries(hm, temp_arena, &keys, &vals);
+        LoadEntries(hm, temp_arena, &keys, &vals);
 
         if (!stream->WriteItemsOfArray(keys)) {
             return false;
@@ -338,7 +338,7 @@ namespace zf {
     }
 
     template <co_simple tp_key_type, co_simple tp_val_type>
-    [[nodiscard]] t_b8 DeserializeHashMap(c_stream *const stream, s_arena *const hm_arena, const t_hash_func<tp_key_type> hm_hash_func, s_arena *const temp_arena, s_hash_map<tp_key_type, tp_val_type> *const o_hm, const t_comparator_bin<tp_key_type> hm_key_comparator = g_comparator_bin_default) {
+    [[nodiscard]] t_b8 DeserializeHashMap(c_stream *const stream, s_arena *const hm_arena, const t_hash_func<tp_key_type> hm_hash_func, s_arena *const temp_arena, s_hash_map<tp_key_type, tp_val_type> *const o_hm, const t_comparator_bin<tp_key_type> hm_key_comparator = g_comparator_bin_default<tp_key_type>) {
         t_i32 cap;
 
         if (!stream->ReadItem(&cap)) {

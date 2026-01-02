@@ -90,7 +90,7 @@ namespace zf {
     // ============================================================
     // @section: Functions
 
-    template <co_simple tp_type>
+    template <typename tp_type>
     s_list_mut<tp_type> ListCreate(const t_i32 cap, s_arena *const arena, const t_i32 len = 0) {
         ZF_ASSERT(cap > 0 && len >= 0 && len <= cap);
         return {PushArray<tp_type>(arena, cap), len};
