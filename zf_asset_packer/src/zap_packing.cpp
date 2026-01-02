@@ -12,7 +12,7 @@ namespace zf {
         eks_asset_type_cnt
     };
 
-    constexpr s_static_array<const char *, eks_asset_type_cnt> g_asset_type_arr_name_cstrs = {{
+    static const s_static_array<const char *, eks_asset_type_cnt> g_asset_type_arr_name_cstrs = {{
         "textures",
         "fonts",
         "shaders",
@@ -26,7 +26,7 @@ namespace zf {
         eks_asset_field_type_cnt
     };
 
-    constexpr s_static_array<const char *, eks_asset_field_type_cnt> g_asset_field_type_name_cstrs = {{
+    static const s_static_array<const char *, eks_asset_field_type_cnt> g_asset_field_type_name_cstrs = {{
         "string",
         "number",
     }};
@@ -43,7 +43,7 @@ namespace zf {
         eks_texture_field_cnt
     };
 
-    constexpr s_static_array<s_asset_field, eks_texture_field_cnt> g_texture_fields = {{
+    static const s_static_array<s_asset_field, eks_texture_field_cnt> g_texture_fields = {{
         {.name_cstr = "file_path", .type = ek_asset_field_type_str},
         {.name_cstr = "out_file_path", .type = ek_asset_field_type_str},
     }};
@@ -57,7 +57,7 @@ namespace zf {
         eks_font_field_cnt
     };
 
-    constexpr s_static_array<s_asset_field, eks_font_field_cnt> g_font_fields = {{
+    static const s_static_array<s_asset_field, eks_font_field_cnt> g_font_fields = {{
         {.name_cstr = "file_path", .type = ek_asset_field_type_str},
         {.name_cstr = "height", .type = ek_asset_field_type_num},
         {.name_cstr = "extra_chrs_file_path", .type = ek_asset_field_type_str, .optional = true},
@@ -73,7 +73,7 @@ namespace zf {
         eks_shader_field_cnt
     };
 
-    constexpr s_static_array<s_asset_field, eks_shader_field_cnt> g_shader_fields = {{
+    static const s_static_array<s_asset_field, eks_shader_field_cnt> g_shader_fields = {{
         {.name_cstr = "file_path", .type = ek_asset_field_type_str},
         {.name_cstr = "type", .type = ek_asset_field_type_str},
         {.name_cstr = "varying_def_file_path", .type = ek_asset_field_type_str},
@@ -86,7 +86,7 @@ namespace zf {
         eks_sound_field_cnt
     };
 
-    constexpr static s_static_array<s_asset_field, eks_sound_field_cnt> g_sound_fields = {{
+    static const s_static_array<s_asset_field, eks_sound_field_cnt> g_sound_fields = {{
         {.name_cstr = "file_path", .type = ek_asset_field_type_str},
         {.name_cstr = "out_file_path", .type = ek_asset_field_type_str},
     }};

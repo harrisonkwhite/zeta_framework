@@ -316,11 +316,11 @@ namespace zf {
 
     // ============================================================
 
-    static t_i32 FindIndexOfFirstSetBitHelper(const s_bit_vec_rdonly bv, const t_i32 from, const t_u8 xor_mask) {
+    static t_i32 FindIndexOfFirstSetBit_Helper(const s_bit_vec_rdonly bv, const t_i32 from, const t_u8 xor_mask) {
         ZF_ASSERT(from >= 0 && from <= bv.bit_cnt); // Intentionally allowing the upper bound here for the case of iteration.
 
         // Map of each possible byte to the index of the first set bit, or -1 for the first case.
-        static constexpr s_static_array<t_i32, 256> g_mappings = {{
+        static const s_static_array<t_i32, 256> g_mappings = {{
             -1, // 0000 0000
             0,  // 0000 0001
             1,  // 0000 0010
@@ -603,16 +603,16 @@ namespace zf {
     }
 
     t_i32 FindIndexOfFirstSetBit(const s_bit_vec_rdonly bv, const t_i32 from) {
-        return FindIndexOfFirstSetBitHelper(bv, from, 0);
+        return FindIndexOfFirstSetBit_Helper(bv, from, 0);
     }
 
     t_i32 FindIndexOfFirstUnsetBit(const s_bit_vec_rdonly bv, const t_i32 from) {
-        return FindIndexOfFirstSetBitHelper(bv, from, 0xFF);
+        return FindIndexOfFirstSetBit_Helper(bv, from, 0xFF);
     }
 
     t_i32 CountSetBits(const s_bit_vec_rdonly bv) {
         // Map of each possible byte to the number of set bits in it.
-        static constexpr s_static_array<t_i32, 256> g_mappings = {{
+        static const s_static_array<t_i32, 256> g_mappings = {{
             0, // 0000 0000
             1, // 0000 0001
             1, // 0000 0010

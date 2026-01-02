@@ -35,7 +35,7 @@ namespace zf {
 
     static void PrintStackTrace() {
 #ifdef ZF_PLATFORM_WINDOWS
-        constexpr t_i32 stack_len = 32;
+        const t_i32 stack_len = 32;
         void *stack[stack_len];
         const t_i32 frame_cnt = CaptureStackBackTrace(0, stack_len, stack, nullptr);
 
@@ -45,7 +45,7 @@ namespace zf {
         const HANDLE proc = GetCurrentProcess();
         SymInitialize(proc, nullptr, TRUE);
 
-        constexpr t_i32 func_name_buf_size = 256;
+        const t_i32 func_name_buf_size = 256;
         char symbol_buf[ZF_SIZE_OF(SYMBOL_INFO) + func_name_buf_size];
         const auto symbol = reinterpret_cast<SYMBOL_INFO *>(symbol_buf);
         symbol->MaxNameLen = func_name_buf_size - 1;

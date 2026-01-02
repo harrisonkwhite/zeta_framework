@@ -6,8 +6,8 @@
 #include <zgl/zgl_audio.h>
 
 namespace zf {
-    constexpr s_v2_i g_init_window_size = {1280, 720};
-    constexpr t_f64 g_targ_ticks_per_sec = 60.0; // @todo: Make this customisable?
+    const s_v2_i g_init_window_size = {1280, 720};
+    const t_f64 g_targ_ticks_per_sec = 60.0; // @todo: Make this customisable?
 
     void RunGame(const t_game_init_func init_func, const t_game_tick_func tick_func, const t_game_render_func render_func, const t_game_deinit_func deinit_func) {
         ZF_ASSERT(init_func);

@@ -79,7 +79,7 @@ namespace zf {
 
     using t_list_extension_cap_calculator = t_i32 (*)(const t_i32 cap_current);
 
-    constexpr t_list_extension_cap_calculator g_list_extension_cap_calculator_default =
+    inline const t_list_extension_cap_calculator g_list_extension_cap_calculator_default =
         [](const t_i32 cap_current) {
             ZF_ASSERT(cap_current >= 0);
             return cap_current == 0 ? 1 : cap_current * 2;
@@ -92,21 +92,21 @@ namespace zf {
     // @section: Functions
 
     template <typename tp_type>
-    concept co_list_nonstatic_mut = co_same<t_cvref_removed<tp_type>, s_list_mut<typename tp_type::t_elem>>;
+    concept co_list_nonstatic_mut = requires { typename tp_type::t_elem; } && co_same<t_cvref_removed<tp_type>, s_list_mut<typename tp_type::t_elem>>;
 
     template <typename tp_type>
     struct s_is_mut_list {
-        static constexpr t_b8 g_val = false;
+        static const t_b8 g_val = false;
     };
 
     template <typename tp_type>
     struct s_is_mut_list<s_list_mut<tp_type>> {
-        static constexpr t_b8 g_val = true;
+        static const t_b8 g_val = true;
     };
 
     template <typename tp_type, t_i32 tp_cap>
     struct s_is_mut_list<s_static_list<tp_type, tp_cap>> {
-        static constexpr t_b8 g_val = true;
+        static const t_b8 g_val = true;
     };
 
     template <typename tp_type>

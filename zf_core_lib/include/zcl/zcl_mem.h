@@ -31,19 +31,19 @@ namespace zf {
         const tp_type *raw;
         t_i32 len;
 
-        constexpr s_array_rdonly() = default;
-        constexpr s_array_rdonly(const tp_type *const raw, const t_i32 len) : raw(raw), len(len) {}
+        s_array_rdonly() = default;
+        s_array_rdonly(const tp_type *const raw, const t_i32 len) : raw(raw), len(len) {}
 
-        constexpr t_i32 SizeInBytes() const {
+        t_i32 SizeInBytes() const {
             return ZF_SIZE_OF(tp_type) * len;
         }
 
-        constexpr const tp_type &operator[](const t_i32 index) const {
+        const tp_type &operator[](const t_i32 index) const {
             ZF_REQUIRE(index >= 0 && index < len);
             return raw[index];
         }
 
-        constexpr s_array_rdonly<t_u8> AsByteArray() const {
+        s_array_rdonly<t_u8> AsByteArray() const {
             return {reinterpret_cast<const t_u8 *>(raw), SizeInBytes()};
         }
     };
@@ -55,23 +55,23 @@ namespace zf {
         tp_type *raw;
         t_i32 len;
 
-        constexpr s_array_mut() = default;
-        constexpr s_array_mut(tp_type *const raw, const t_i32 len) : raw(raw), len(len) {}
+        s_array_mut() = default;
+        s_array_mut(tp_type *const raw, const t_i32 len) : raw(raw), len(len) {}
 
-        constexpr t_i32 SizeInBytes() const {
+        t_i32 SizeInBytes() const {
             return ZF_SIZE_OF(tp_type) * len;
         }
 
-        constexpr operator s_array_rdonly<tp_type>() const {
+        operator s_array_rdonly<tp_type>() const {
             return {raw, len};
         }
 
-        constexpr tp_type &operator[](const t_i32 index) const {
+        tp_type &operator[](const t_i32 index) const {
             ZF_REQUIRE(index >= 0 && index < len);
             return raw[index];
         }
 
-        constexpr s_array_mut<t_u8> AsByteArray() const {
+        s_array_mut<t_u8> AsByteArray() const {
             return {reinterpret_cast<t_u8 *>(raw), SizeInBytes()};
         }
     };
@@ -80,48 +80,48 @@ namespace zf {
     struct s_static_array {
         using t_elem = tp_type;
 
-        static constexpr t_i32 g_len = tp_len;
+        static const t_i32 g_len = tp_len;
 
         tp_type raw[tp_len];
 
-        constexpr operator s_array_mut<tp_type>() {
+        operator s_array_mut<tp_type>() {
             return {raw, tp_len};
         }
 
-        constexpr operator s_array_rdonly<tp_type>() const {
+        operator s_array_rdonly<tp_type>() const {
             return {raw, tp_len};
         }
 
-        constexpr s_array_mut<tp_type> AsNonstatic() {
+        s_array_mut<tp_type> AsNonstatic() {
             return {raw, tp_len};
         }
 
-        constexpr s_array_rdonly<tp_type> AsNonstatic() const {
+        s_array_rdonly<tp_type> AsNonstatic() const {
             return {raw, tp_len};
         }
 
-        constexpr tp_type &operator[](const t_i32 index) {
+        tp_type &operator[](const t_i32 index) {
             ZF_REQUIRE(index >= 0 && index < tp_len);
             return raw[index];
         }
 
-        constexpr const tp_type &operator[](const t_i32 index) const {
+        const tp_type &operator[](const t_i32 index) const {
             ZF_REQUIRE(index >= 0 && index < tp_len);
             return raw[index];
         }
     };
 
     template <typename tp_type>
-    concept co_array_mut = requires { typename tp_type::t_elem; } && co_same<tp_type, s_array_mut<typename tp_type::t_elem>>;
+    concept co_array_mut = requires { typename tp_type::t_elem; } && co_same<t_cvref_removed<tp_type>, s_array_mut<typename tp_type::t_elem>>;
 
     template <typename tp_type>
-    concept co_array_rdonly = requires { typename tp_type::t_elem; } && co_same<tp_type, s_array_rdonly<typename tp_type::t_elem>>;
+    concept co_array_rdonly = requires { typename tp_type::t_elem; } && co_same<t_cvref_removed<tp_type>, s_array_rdonly<typename tp_type::t_elem>>;
 
     template <typename tp_type>
     concept co_array = co_array_mut<tp_type> || co_array_rdonly<tp_type>;
 
     template <co_array tp_arr_type>
-    constexpr t_comparator_bin<tp_arr_type> g_array_comparator_bin =
+    inline const t_comparator_bin<tp_arr_type> g_array_comparator_bin =
         [](const tp_arr_type &a, const tp_arr_type &b) {
             if (a.len != b.len) {
                 return false;
@@ -140,11 +140,11 @@ namespace zf {
         const t_u8 *bytes_raw;
         t_i32 bit_cnt;
 
-        constexpr s_bit_vec_rdonly() = default;
-        constexpr s_bit_vec_rdonly(const t_u8 *const bytes_raw, const t_i32 bit_cnt) : bytes_raw(bytes_raw), bit_cnt(bit_cnt) {}
-        constexpr s_bit_vec_rdonly(const s_array_rdonly<t_u8> bytes) : bytes_raw(bytes.raw), bit_cnt(BytesToBits(bytes.len)) {}
+        s_bit_vec_rdonly() = default;
+        s_bit_vec_rdonly(const t_u8 *const bytes_raw, const t_i32 bit_cnt) : bytes_raw(bytes_raw), bit_cnt(bit_cnt) {}
+        s_bit_vec_rdonly(const s_array_rdonly<t_u8> bytes) : bytes_raw(bytes.raw), bit_cnt(BytesToBits(bytes.len)) {}
 
-        constexpr s_array_rdonly<t_u8> Bytes() const {
+        s_array_rdonly<t_u8> Bytes() const {
             return {bytes_raw, BitsToBytes(bit_cnt)};
         }
     };
@@ -153,30 +153,30 @@ namespace zf {
         t_u8 *bytes_raw;
         t_i32 bit_cnt;
 
-        constexpr s_bit_vec_mut() = default;
-        constexpr s_bit_vec_mut(t_u8 *const bytes_raw, const t_i32 bit_cnt) : bytes_raw(bytes_raw), bit_cnt(bit_cnt) {}
-        constexpr s_bit_vec_mut(const s_array_mut<t_u8> bytes) : bytes_raw(bytes.raw), bit_cnt(BytesToBits(bytes.len)) {}
+        s_bit_vec_mut() = default;
+        s_bit_vec_mut(t_u8 *const bytes_raw, const t_i32 bit_cnt) : bytes_raw(bytes_raw), bit_cnt(bit_cnt) {}
+        s_bit_vec_mut(const s_array_mut<t_u8> bytes) : bytes_raw(bytes.raw), bit_cnt(BytesToBits(bytes.len)) {}
 
-        constexpr s_array_mut<t_u8> Bytes() const {
+        s_array_mut<t_u8> Bytes() const {
             return {bytes_raw, BitsToBytes(bit_cnt)};
         }
 
-        constexpr operator s_bit_vec_rdonly() const {
+        operator s_bit_vec_rdonly() const {
             return {bytes_raw, bit_cnt};
         }
     };
 
     template <t_i32 tp_bit_cnt>
     struct s_static_bit_vec {
-        static constexpr t_i32 g_bit_cnt = tp_bit_cnt;
+        static const t_i32 g_bit_cnt = tp_bit_cnt;
 
         s_static_array<t_u8, BitsToBytes(tp_bit_cnt)> bytes;
 
-        constexpr operator s_bit_vec_mut() {
+        operator s_bit_vec_mut() {
             return {bytes.raw, tp_bit_cnt};
         }
 
-        constexpr operator s_bit_vec_rdonly() const {
+        operator s_bit_vec_rdonly() const {
             return {bytes.raw, tp_bit_cnt};
         }
     };
@@ -204,8 +204,8 @@ namespace zf {
         Clear(item, ZF_SIZE_OF(tp_type), val);
     }
 
-    constexpr t_u8 g_poison_uninitted = 0xCD;
-    constexpr t_u8 g_poison_freed = 0xDD;
+    inline const t_u8 g_poison_uninitted = 0xCD;
+    inline const t_u8 g_poison_freed = 0xDD;
 
 #ifdef ZF_DEBUG
     inline void PoisonUnitted(void *const buf, const t_i32 buf_size) {
@@ -284,30 +284,30 @@ namespace zf {
     // Takes the arena offset to the beginning of its allocated memory (if any) to overwrite from there.
     void Rewind(s_arena *const arena);
 
-    template <co_array_elem tp_type>
-    constexpr s_array_rdonly<tp_type> Slice(const s_array_rdonly<tp_type> arr, const t_i32 beg, const t_i32 end) {
+    template <typename tp_type>
+    s_array_rdonly<tp_type> Slice(const s_array_rdonly<tp_type> arr, const t_i32 beg, const t_i32 end) {
         ZF_ASSERT(beg >= 0 && beg <= arr.len);
         ZF_ASSERT(end >= beg && end <= arr.len);
 
         return {arr.raw + beg, end - beg};
     }
 
-    template <co_array_elem tp_type>
-    constexpr s_array_rdonly<tp_type> SliceFrom(const s_array_rdonly<tp_type> arr, const t_i32 beg) {
+    template <typename tp_type>
+    s_array_rdonly<tp_type> SliceFrom(const s_array_rdonly<tp_type> arr, const t_i32 beg) {
         ZF_ASSERT(beg >= 0 && beg <= arr.len);
         return {arr.raw + beg, arr.len - beg};
     }
 
-    template <co_array_elem tp_type>
-    constexpr s_array_mut<tp_type> Slice(const s_array_mut<tp_type> arr, const t_i32 beg, const t_i32 end) {
+    template <typename tp_type>
+    s_array_mut<tp_type> Slice(const s_array_mut<tp_type> arr, const t_i32 beg, const t_i32 end) {
         ZF_ASSERT(beg >= 0 && beg <= arr.len);
         ZF_ASSERT(end >= beg && end <= arr.len);
 
         return {arr.raw + beg, end - beg};
     }
 
-    template <co_array_elem tp_type>
-    constexpr s_array_mut<tp_type> SliceFrom(const s_array_mut<tp_type> arr, const t_i32 beg) {
+    template <typename tp_type>
+    s_array_mut<tp_type> SliceFrom(const s_array_mut<tp_type> arr, const t_i32 beg) {
         ZF_ASSERT(beg >= 0 && beg <= arr.len);
         return {arr.raw + beg, arr.len - beg};
     }
@@ -330,13 +330,13 @@ namespace zf {
     }
 
     // Creates a byte-sized bitmask with only a single bit set.
-    constexpr t_u8 ByteBitmaskSingle(const t_i32 bit_index) {
+    inline t_u8 ByteBitmaskSingle(const t_i32 bit_index) {
         ZF_ASSERT(bit_index >= 0 && bit_index < 8);
         return static_cast<t_u8>(1 << bit_index);
     }
 
     // Creates a byte-sized bitmask with only bits in the range [begin_bit_index, end_bit_index) set.
-    constexpr t_u8 ByteBitmaskRanged(const t_i32 begin_bit_index, const t_i32 end_bit_index = 8) {
+    inline t_u8 ByteBitmaskRanged(const t_i32 begin_bit_index, const t_i32 end_bit_index = 8) {
         ZF_ASSERT(begin_bit_index >= 0 && begin_bit_index < 8);
         ZF_ASSERT(end_bit_index >= begin_bit_index && end_bit_index <= 8);
 
@@ -353,26 +353,26 @@ namespace zf {
         return {PushArrayZeroed<t_u8>(arena, BitsToBytes(bit_cnt)).raw, bit_cnt};
     }
 
-    constexpr t_i32 LastByteBitCount(const s_bit_vec_rdonly bv) {
+    inline t_i32 LastByteBitCount(const s_bit_vec_rdonly bv) {
         return ((bv.bit_cnt - 1) % 8) + 1;
     }
 
     // Gives a mask of the last byte in which only excess bits are unset.
-    constexpr t_u8 LastByteMask(const s_bit_vec_rdonly bv) {
+    inline t_u8 LastByteMask(const s_bit_vec_rdonly bv) {
         return ByteBitmaskRanged(0, LastByteBitCount(bv));
     }
 
-    constexpr t_b8 IsBitSet(const s_bit_vec_rdonly bv, const t_i32 index) {
+    inline t_b8 IsBitSet(const s_bit_vec_rdonly bv, const t_i32 index) {
         ZF_ASSERT(index >= 0 && index < bv.bit_cnt);
         return bv.Bytes()[index / 8] & ByteBitmaskSingle(index % 8);
     }
 
-    constexpr void SetBit(const s_bit_vec_mut bv, const t_i32 index) {
+    inline void SetBit(const s_bit_vec_mut bv, const t_i32 index) {
         ZF_ASSERT(index >= 0 && index < bv.bit_cnt);
         bv.Bytes()[index / 8] |= ByteBitmaskSingle(index % 8);
     }
 
-    constexpr void UnsetBit(const s_bit_vec_mut bv, const t_i32 index) {
+    inline void UnsetBit(const s_bit_vec_mut bv, const t_i32 index) {
         ZF_ASSERT(index >= 0 && index < bv.bit_cnt);
         bv.Bytes()[index / 8] &= ~ByteBitmaskSingle(index % 8);
     }

@@ -19,10 +19,10 @@ namespace zf {
         s_sound_meta meta;
         s_array_mut<t_f32> pcm;
 
-        constexpr operator s_sound_data_rdonly() const { return {.meta = meta, .pcm = pcm}; }
+        operator s_sound_data_rdonly() const { return {.meta = meta, .pcm = pcm}; }
     };
 
-    constexpr t_i32 SampleCount(const s_sound_meta snd_meta) {
+    inline t_i32 SampleCount(const s_sound_meta snd_meta) {
         return snd_meta.channel_cnt * snd_meta.frame_cnt;
     }
 

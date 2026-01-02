@@ -4,18 +4,18 @@
 #include <stb_truetype.h>
 
 namespace zf::gfx {
-    constexpr t_hash_func<t_code_pt> g_code_pt_hash_func =
-        [](const t_code_pt &code_pt) constexpr {
+    static const t_hash_func<t_code_pt> g_code_pt_hash_func =
+        [](const t_code_pt &code_pt) {
             return static_cast<t_i32>(code_pt);
         };
 
-    constexpr t_hash_func<s_font_code_point_pair> g_code_pt_pair_hash_func =
-        [](const s_font_code_point_pair &pair) constexpr {
+    static const t_hash_func<s_font_code_point_pair> g_code_pt_pair_hash_func =
+        [](const s_font_code_point_pair &pair) {
             return 0; // @todo: Proper hash function!
         };
 
-    constexpr t_comparator_bin<s_font_code_point_pair> g_code_pt_pair_comparator =
-        [](const s_font_code_point_pair &pa, const s_font_code_point_pair &pb) constexpr {
+    static const t_comparator_bin<s_font_code_point_pair> g_code_pt_pair_comparator =
+        [](const s_font_code_point_pair &pa, const s_font_code_point_pair &pb) {
             return pa.a == pb.a && pa.b == pb.b;
         };
 
@@ -181,7 +181,7 @@ namespace zf::gfx {
             glyph_info.atlas_rect = {atlas_pen.x, atlas_pen.y, glyph_info.size.x, glyph_info.size.y};
             atlas_pen.x += glyph_info.size.x;
 
-            HashMapPut(&o_arrangement->code_pts_to_glyph_infos, code_pt, glyph_info);
+            Put(&o_arrangement->code_pts_to_glyph_infos, code_pt, glyph_info);
         }
 
         const t_i32 atlas_cnt = atlas_index + 1;
@@ -205,7 +205,7 @@ namespace zf::gfx {
                 const t_i32 kern = stbtt_GetGlyphKernAdvance(&stb_font_info, glyph_a_index, glyph_b_index);
 
                 if (kern != 0) {
-                    HashMapPut(&o_arrangement->code_pt_pairs_to_kernings, {cp_a, cp_b}, kern);
+                    Put(&o_arrangement->code_pt_pairs_to_kernings, {cp_a, cp_b}, kern);
                 }
             }
         }
@@ -234,7 +234,7 @@ namespace zf::gfx {
 
             s_font_glyph_info *glyph_info;
 
-            if (!HashMapFind(&o_arrangement->code_pts_to_glyph_infos, code_pt, &glyph_info)) {
+            if (!Find(&o_arrangement->code_pts_to_glyph_infos, code_pt, &glyph_info)) {
                 ZF_ASSERT(false);
             }
 

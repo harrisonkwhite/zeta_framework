@@ -6,16 +6,16 @@ namespace zf {
     // ============================================================
     // @section: Types and Globals
 
-    constexpr t_i32 g_unicode_code_pt_cnt = 1114112;
+    inline const t_i32 g_unicode_code_pt_cnt = 1114112;
 
     using t_code_pt = char32_t;
     using t_code_pt_bit_vec = s_static_bit_vec<g_unicode_code_pt_cnt>;
 
-    constexpr t_i32 g_ascii_range_begin = 0;
-    constexpr t_i32 g_ascii_range_end = 0x80;
+    inline const t_i32 g_ascii_range_begin = 0;
+    inline const t_i32 g_ascii_range_end = 0x80;
 
-    constexpr t_i32 g_printable_ascii_range_begin = 0x20;
-    constexpr t_i32 g_printable_ascii_range_end = 0x7F;
+    inline const t_i32 g_printable_ascii_range_begin = 0x20;
+    inline const t_i32 g_printable_ascii_range_end = 0x7F;
 
     struct s_str_rdonly {
         s_array_rdonly<t_u8> bytes;
@@ -63,7 +63,7 @@ namespace zf {
 #define ZF_STR_LITERAL(cstr_lit) zf::s_str_rdonly(zf::detail::s_cstr_literal(cstr_lit))
     }
 
-    inline t_comparator_bin<s_str_rdonly> g_str_comparator_bin =
+    inline const t_comparator_bin<s_str_rdonly> g_str_comparator_bin =
         [](const s_str_rdonly &a, const s_str_rdonly &b) {
             return g_array_comparator_bin<s_array_rdonly<t_u8>>(a.bytes, b.bytes);
         };
@@ -79,11 +79,11 @@ namespace zf {
     // ============================================================
     // @section: Functions
 
-    constexpr t_b8 IsCodePointASCII(const t_code_pt cp) {
+    inline t_b8 IsCodePointASCII(const t_code_pt cp) {
         return cp >= g_ascii_range_begin && cp < g_ascii_range_end;
     }
 
-    constexpr t_b8 IsCodePointPrintableASCII(const t_code_pt cp) {
+    inline t_b8 IsCodePointPrintableASCII(const t_code_pt cp) {
         return cp >= g_printable_ascii_range_begin && cp < g_printable_ascii_range_end;
     }
 

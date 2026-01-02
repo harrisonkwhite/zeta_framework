@@ -5,7 +5,7 @@
 namespace zf {
     template <co_array tp_src_arr_type, co_array_mut tp_dest_arr_type>
         requires co_same<typename tp_src_arr_type::t_elem, typename tp_dest_arr_type::t_elem>
-    constexpr void CopyAll(const tp_src_arr_type src, const tp_dest_arr_type dest, const t_b8 allow_truncation = false) {
+    void CopyAll(const tp_src_arr_type src, const tp_dest_arr_type dest, const t_b8 allow_truncation = false) {
         if (!allow_truncation) {
             ZF_ASSERT(dest.len >= src.len);
 
@@ -23,7 +23,7 @@ namespace zf {
 
     template <co_array tp_arr_a_type, co_array tp_arr_b_type>
         requires co_same<typename tp_arr_a_type::t_elem, typename tp_arr_b_type::t_elem>
-    constexpr t_i32 CompareAll(const tp_arr_a_type a, const tp_arr_b_type b, const t_comparator_ord<typename tp_arr_a_type::t_elem> comparator = g_comparator_ord_default<typename tp_arr_a_type::t_elem>) {
+    t_i32 CompareAll(const tp_arr_a_type a, const tp_arr_b_type b, const t_comparator_ord<typename tp_arr_a_type::t_elem> comparator = g_comparator_ord_default<typename tp_arr_a_type::t_elem>) {
         const auto min_len = ZF_MIN(a.len, b.len);
 
         for (t_i32 i = 0; i < min_len; i++) {
@@ -38,7 +38,7 @@ namespace zf {
     }
 
     template <co_array tp_arr_type>
-    constexpr t_b8 DoAllEqual(const tp_arr_type arr, const typename tp_arr_type::t_elem &val, const t_comparator_bin<typename tp_arr_type::t_elem> comparator = g_comparator_bin_default<typename tp_arr_type::t_elem>) {
+    t_b8 DoAllEqual(const tp_arr_type arr, const typename tp_arr_type::t_elem &val, const t_comparator_bin<typename tp_arr_type::t_elem> comparator = g_comparator_bin_default<typename tp_arr_type::t_elem>) {
         if (arr.len == 0) {
             return false;
         }
@@ -53,7 +53,7 @@ namespace zf {
     }
 
     template <co_array tp_arr_type>
-    constexpr t_b8 DoAnyEqual(const tp_arr_type arr, const typename tp_arr_type::t_elem &val, const t_comparator_bin<typename tp_arr_type::t_elem> comparator = g_comparator_bin_default<typename tp_arr_type::t_elem>) {
+    t_b8 DoAnyEqual(const tp_arr_type arr, const typename tp_arr_type::t_elem &val, const t_comparator_bin<typename tp_arr_type::t_elem> comparator = g_comparator_bin_default<typename tp_arr_type::t_elem>) {
         for (t_i32 i = 0; i < arr.len; i++) {
             if (comparator(arr[i], val)) {
                 return true;
@@ -64,23 +64,23 @@ namespace zf {
     }
 
     template <co_array_mut tp_arr_type>
-    constexpr void SetAllTo(const tp_arr_type arr, const typename tp_arr_type::t_elem &val) {
+    void SetAllTo(const tp_arr_type arr, const typename tp_arr_type::t_elem &val) {
         for (t_i32 i = 0; i < arr.len; i++) {
             arr[i] = val;
         }
     }
 
     template <co_array_mut tp_arr_type>
-    constexpr void Reverse(const tp_arr_type arr) {
+    void Reverse(const tp_arr_type arr) {
         for (t_i32 i = 0; i < arr.len / 2; i++) {
             Swap(&arr[i], &arr[arr.len - 1 - i]);
         }
     }
 
-    // O(n^2) time complexity, but O(1) space complexity. Can also be done at compile time.
+    // O(n^2) time complexity, but O(1) space complexity.
     // You're usually better off using a hash map and a linear search, or a bit vector if values are numeric and the range is small.
     template <co_array tp_arr_type>
-    constexpr t_b8 HasDuplicatesSlow(const tp_arr_type arr, const t_comparator_bin<typename tp_arr_type::t_elem> comparator = g_comparator_bin_default<typename tp_arr_type::t_elem>) {
+    t_b8 HasDuplicatesSlow(const tp_arr_type arr, const t_comparator_bin<typename tp_arr_type::t_elem> comparator = g_comparator_bin_default<typename tp_arr_type::t_elem>) {
         for (t_i32 i = 0; i < arr.len; i++) {
             for (t_i32 j = 0; j < arr.len; j++) {
                 if (i == j) {
