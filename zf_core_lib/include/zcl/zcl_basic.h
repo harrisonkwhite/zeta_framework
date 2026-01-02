@@ -87,6 +87,9 @@ namespace zf {
     using t_uintptr = uintptr_t;
     static_assert(sizeof(t_uintptr) == 8);
 
+    template <typename tp_type>
+    using t_cvref_removed = std::remove_cvref_t<tp_type>;
+
 #define ZF_SIZE_OF(x) static_cast<zf::t_i32>(sizeof(x))
 #define ZF_SIZE_IN_BITS(x) (8 * ZF_SIZE_OF(x))
 

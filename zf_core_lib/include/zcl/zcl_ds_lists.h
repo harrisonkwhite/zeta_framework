@@ -92,7 +92,7 @@ namespace zf {
     // @section: Functions
 
     template <typename tp_type>
-    concept co_list_nonstatic_mut = co_same<std::remove_cvref_t<tp_type>, s_list_mut<typename tp_type::t_elem>>;
+    concept co_list_nonstatic_mut = co_same<t_cvref_removed<tp_type>, s_list_mut<typename tp_type::t_elem>>;
 
     template <typename tp_type>
     struct s_is_mut_list {
@@ -110,7 +110,7 @@ namespace zf {
     };
 
     template <typename tp_type>
-    concept co_list_mut = s_is_mut_list<std::remove_cvref_t<tp_type>>::g_val;
+    concept co_list_mut = s_is_mut_list<t_cvref_removed<tp_type>>::g_val;
 
     template <typename tp_type>
     s_list_mut<tp_type> CreateList(const t_i32 cap, s_arena *const arena, const t_i32 len = 0) {
