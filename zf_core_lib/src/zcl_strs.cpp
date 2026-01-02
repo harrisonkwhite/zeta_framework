@@ -276,7 +276,7 @@ namespace zf {
         ek_utf8_byte_type_invalid,
     }};
 
-    t_b8 StrIsValidUTF8(const s_str_rdonly str) {
+    t_b8 IsValidUTF8(const s_str_rdonly str) {
         t_i32 cost = 0;
 
         for (t_i32 i = 0; i < str.bytes.len; i++) {
@@ -312,8 +312,8 @@ namespace zf {
         return true;
     }
 
-    t_i32 StrCalcLen(const s_str_rdonly str) {
-        ZF_ASSERT(StrIsValidUTF8(str));
+    t_i32 CalcStrLen(const s_str_rdonly str) {
+        ZF_ASSERT(IsValidUTF8(str));
 
         t_i32 i = 0;
         t_i32 len = 0;
@@ -370,13 +370,16 @@ namespace zf {
             result |= static_cast<t_code_pt>((bytes[2] & ByteBitmaskRanged(0, 6)) << 6);
             result |= bytes[3] & ByteBitmaskRanged(0, 6);
             break;
+
+        default:
+            ZF_UNREACHABLE();
         }
 
         return result;
     }
 
-    t_code_pt StrFindCodePointAtByte(const s_str_rdonly str, const t_i32 byte_index) {
-        ZF_ASSERT(StrIsValidUTF8(str));
+    t_code_pt FindCodePointAtByte(const s_str_rdonly str, const t_i32 byte_index) {
+        ZF_ASSERT(IsValidUTF8(str));
         ZF_ASSERT(byte_index >= 0 && byte_index < str.bytes.len);
 
         t_i32 cp_first_byte_index = byte_index;
@@ -395,16 +398,16 @@ namespace zf {
         } while (true);
     }
 
-    void StrMarkCodePoints(const s_str_rdonly str, t_code_pt_bit_vec *const code_pts) {
-        ZF_ASSERT(StrIsValidUTF8(str));
+    void MarkCodePoints(const s_str_rdonly str, t_code_pt_bit_vec *const code_pts) {
+        ZF_ASSERT(IsValidUTF8(str));
 
-        ZF_STR_WALK (str, step) {
+        ZF_WALK_STR (str, step) {
             SetBit(*code_pts, step.code_pt); // @todo
         }
     }
 
-    t_b8 StrWalk(const s_str_rdonly str, t_i32 *const byte_index, s_str_walk_step *const o_step) {
-        ZF_ASSERT(StrIsValidUTF8(str));
+    t_b8 Walk(const s_str_rdonly str, t_i32 *const byte_index, s_str_walk_step *const o_step) {
+        ZF_ASSERT(IsValidUTF8(str));
         ZF_ASSERT(*byte_index >= 0 && *byte_index <= str.bytes.len);
 
         if (*byte_index == str.bytes.len) {
@@ -437,8 +440,8 @@ namespace zf {
         }
     }
 
-    t_b8 StrWalkReverse(const s_str_rdonly str, t_i32 *const byte_index, s_str_walk_step *const o_step) {
-        ZF_ASSERT(StrIsValidUTF8(str));
+    t_b8 WalkReverse(const s_str_rdonly str, t_i32 *const byte_index, s_str_walk_step *const o_step) {
+        ZF_ASSERT(IsValidUTF8(str));
         ZF_ASSERT(*byte_index >= -1 && *byte_index < str.bytes.len);
 
         if (*byte_index == -1) {

@@ -236,12 +236,12 @@ namespace zf {
 #endif
 
     // Does not allocate any arena memory (blocks) upfront.
-    inline s_arena ArenaCreate(const t_i32 block_min_size = MegabytesToBytes(1)) {
+    inline s_arena CreateArena(const t_i32 block_min_size = MegabytesToBytes(1)) {
         return {.block_min_size = block_min_size};
     }
 
     // Frees all arena memory. It is valid to call this even if no pushing was done.
-    void ArenaDestroy(s_arena *const arena);
+    void Destroy(s_arena *const arena);
 
     // Will lazily allocate memory as needed. Allocation failure is treated as fatal and causes an abort - you don't need to check for nullptr.
     void *ArenaPush(s_arena *const arena, const t_i32 size, const t_i32 alignment);
@@ -259,7 +259,7 @@ namespace zf {
     }
 
     template <typename tp_type>
-    s_array_mut<tp_type> ArenaPushArray(s_arena *const arena, const t_i32 len) {
+    s_array_mut<tp_type> PushArray(s_arena *const arena, const t_i32 len) {
         ZF_ASSERT(len >= 0);
 
         if (len == 0) {
@@ -317,7 +317,7 @@ namespace zf {
 
     template <co_array tp_arr_type>
     auto ArrayClone(const tp_arr_type arr_to_clone, s_arena *const arena) {
-        const auto arr = ArenaPushArray<typename tp_arr_type::t_elem>(arena, arr_to_clone.len);
+        const auto arr = PushArray<typename tp_arr_type::t_elem>(arena, arr_to_clone.len);
         CopyAll(arr, arr_to_clone);
         return arr;
     }

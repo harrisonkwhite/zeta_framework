@@ -132,7 +132,7 @@ namespace zf {
     template <typename tp_type>
     s_list_mut<tp_type> ListCreate(const t_i32 cap, s_arena *const arena, const t_i32 len = 0) {
         ZF_ASSERT(cap > 0 && len >= 0 && len <= cap);
-        return {ArenaPushArray<tp_type>(arena, cap), len};
+        return {PushArray<tp_type>(arena, cap), len};
     }
 
     template <co_list_nonstatic_mut tp_list_type>
@@ -142,7 +142,7 @@ namespace zf {
         const t_i32 new_cap = cap_calculator(list->Cap());
         ZF_ASSERT(new_cap > list->Cap());
 
-        const auto new_backing_arr = ArenaPushArray<typename tp_list_type::t_elem>(arena, new_cap);
+        const auto new_backing_arr = PushArray<typename tp_list_type::t_elem>(arena, new_cap);
         CopyAll(list->backing_arr, new_backing_arr);
 
         *list = {new_backing_arr, list->len};
@@ -165,7 +165,7 @@ namespace zf {
             return result;
         }();
 
-        const auto new_backing_arr = ArenaPushArray<typename tp_list_type::t_elem>(arena, new_cap);
+        const auto new_backing_arr = PushArray<typename tp_list_type::t_elem>(arena, new_cap);
         CopyAll(list->backing_arr, new_backing_arr);
 
         *list = {new_backing_arr, list->len};
@@ -199,7 +199,7 @@ namespace zf {
     }
 
     template <co_list_nonstatic tp_list_type>
-    s_array_mut<typename tp_list_type::t_elem> ListAppendManyDynamic(tp_list_type *const list, const s_array_rdonly<typename tp_list_type::t_elem> vals, s_arena *const extension_arena, const t_list_extension_cap_calculator extension_cap_calculator = g_default_list_extension_cap_calculator) {
+    s_array_mut<typename tp_list_type::t_elem> AppendManyDynamic(tp_list_type *const list, const s_array_rdonly<typename tp_list_type::t_elem> vals, s_arena *const extension_arena, const t_list_extension_cap_calculator extension_cap_calculator = g_default_list_extension_cap_calculator) {
         const auto min_cap_needed = list->len + vals.len;
 
         if (min_cap_needed > list->Cap()) {

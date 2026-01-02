@@ -11,24 +11,24 @@
 
 namespace zf {
     t_b8 FileOpen(const s_str_rdonly path, const e_file_access_mode mode, s_arena *const temp_arena, c_stream *const o_stream) {
-        const s_str_rdonly path_terminated = StrCloneButAddTerminator(path, temp_arena);
+        const s_str_rdonly path_terminated = CloneStrButAddTerminator(path, temp_arena);
 
         FILE *file;
         e_stream_mode stream_mode;
 
         switch (mode) {
         case ek_file_access_mode_read:
-            file = fopen(StrAsCstr(path_terminated), "rb");
+            file = fopen(AsCstr(path_terminated), "rb");
             stream_mode = ek_stream_mode_read;
             break;
 
         case ek_file_access_mode_write:
-            file = fopen(StrAsCstr(path_terminated), "wb");
+            file = fopen(AsCstr(path_terminated), "wb");
             stream_mode = ek_stream_mode_write;
             break;
 
         case ek_file_access_mode_append:
-            file = fopen(StrAsCstr(path_terminated), "ab");
+            file = fopen(AsCstr(path_terminated), "ab");
             stream_mode = ek_stream_mode_write;
             break;
 
@@ -59,7 +59,7 @@ namespace zf {
         return static_cast<t_i32>(file_size);
     }
 
-    t_b8 FileLoadContents(const s_str_rdonly path, s_arena *const contents_arena, s_arena *const temp_arena, s_array_mut<t_u8> *const o_contents, const t_b8 add_terminator) {
+    t_b8 LoadFileContents(const s_str_rdonly path, s_arena *const contents_arena, s_arena *const temp_arena, s_array_mut<t_u8> *const o_contents, const t_b8 add_terminator) {
         c_stream stream;
 
         if (!FileOpen(path, ek_file_access_mode_read, temp_arena, &stream)) {
@@ -71,10 +71,10 @@ namespace zf {
         const t_i32 file_size = FileCalcSize(&stream);
 
         if (add_terminator) {
-            *o_contents = ArenaPushArray<t_u8>(contents_arena, file_size + 1);
+            *o_contents = PushArray<t_u8>(contents_arena, file_size + 1);
             (*o_contents)[file_size] = 0;
         } else {
-            *o_contents = ArenaPushArray<t_u8>(contents_arena, file_size);
+            *o_contents = PushArray<t_u8>(contents_arena, file_size);
         }
 
         if (!stream.ReadItemsIntoArray(*o_contents, file_size)) {
@@ -89,10 +89,10 @@ namespace zf {
             *o_creation_res = ek_directory_creation_result_success;
         }
 
-        const s_str_rdonly path_terminated = StrCloneButAddTerminator(path, temp_arena);
+        const s_str_rdonly path_terminated = CloneStrButAddTerminator(path, temp_arena);
 
 #ifdef ZF_PLATFORM_WINDOWS
-        const t_i32 result = _mkdir(StrAsCstr(path_terminated));
+        const t_i32 result = _mkdir(AsCstr(path_terminated));
 #else
         const t_s32 result = mkdir(AsCstr(path_terminated), 0755);
 #endif
@@ -142,7 +142,7 @@ namespace zf {
 
         t_b8 cur_dir_name_is_empty = true;
 
-        ZF_STR_WALK (path, step) {
+        ZF_WALK_STR (path, step) {
             if (step.code_pt == '/' || step.code_pt == '\\') {
                 if (!cur_dir_name_is_empty) {
                     if (!create_dir_if_nonexistent({Slice(path.bytes, 0, step.byte_index)})) {
@@ -171,7 +171,7 @@ namespace zf {
         }
 
         // Get the substring containing all directories and create them.
-        ZF_STR_WALK_REVERSE (path, step) {
+        ZF_WALK_STR_REVERSE (path, step) {
             if (step.code_pt == '/' || step.code_pt == '\\') {
                 if (!CreateDirectoryAndParents({Slice(path.bytes, 0, step.byte_index)}, temp_arena, o_dir_creation_res)) {
                     return false;
@@ -194,11 +194,11 @@ namespace zf {
     }
 
     e_path_type DeterminePathType(const s_str_rdonly path, s_arena *const temp_arena) {
-        const s_str_rdonly path_terminated = StrCloneButAddTerminator(path, temp_arena);
+        const s_str_rdonly path_terminated = CloneStrButAddTerminator(path, temp_arena);
 
         struct stat info;
 
-        if (stat(StrAsCstr(path_terminated), &info) != 0) {
+        if (stat(AsCstr(path_terminated), &info) != 0) {
             return ek_path_type_not_found;
         }
 
@@ -222,8 +222,8 @@ namespace zf {
             }
         }
 
-        const auto result_bytes = ArenaPushArray<t_u8>(arena, len);
-        CopyAll(Slice(buf.AsNonstatic(), 0, len).AsByteArray(), result_bytes);
+        const auto result_bytes = PushArray<char>(arena, len);
+        CopyAll(Slice(buf.AsNonstatic(), 0, len), result_bytes);
         return {result_bytes};
 #elif defined(ZF_PLATFORM_MACOS)
     #error "Platform-specific implementation not yet done!"

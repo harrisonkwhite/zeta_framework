@@ -22,7 +22,7 @@ namespace zf {
     void WindowShow();
 
     // Returns whether a window close has been requested.
-    t_b8 WindowShouldClose();
+    t_b8 ShouldWindowClose();
 
     void WindowSetTitle(const s_str_rdonly title, s_arena *const temp_arena);
 

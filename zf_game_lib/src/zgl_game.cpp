@@ -17,21 +17,21 @@ namespace zf {
         //
         // Initialisation
         //
-        s_arena perm_arena = ArenaCreate();
-        ZF_DEFER({ ArenaDestroy(&perm_arena); });
+        s_arena perm_arena = CreateArena();
+        ZF_DEFER({ Destroy(&perm_arena); });
 
-        s_arena temp_arena = ArenaCreate();
-        ZF_DEFER({ ArenaDestroy(&temp_arena); });
+        s_arena temp_arena = CreateArena();
+        ZF_DEFER({ Destroy(&temp_arena); });
 
         PlatformStartup(g_init_window_size);
         ZF_DEFER({ PlatformShutdown(); });
 
-        s_input_state *const input_state = detail::InputStateCreate(&perm_arena);
+        s_input_state *const input_state = detail::CreateInputState(&perm_arena);
 
         gfx::s_rendering_basis *const rendering_basis = gfx::StartupModule(&perm_arena);
         ZF_DEFER({ gfx::ShutdownModule(rendering_basis); });
 
-        s_rng *const rng = RNGCreate(0, &perm_arena); // @todo: Proper seed!
+        s_rng *const rng = CreateRNG(0, &perm_arena); // @todo: Proper seed!
 
         init_func({
             .perm_arena = &perm_arena,
@@ -53,7 +53,7 @@ namespace zf {
         t_f64 frame_time_last = Time();
         t_f64 frame_dur_accum = 0.0;
 
-        while (!WindowShouldClose()) {
+        while (!ShouldWindowClose()) {
             PollOSEvents(input_state);
 
             const t_f64 frame_time = Time();

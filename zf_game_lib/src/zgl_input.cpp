@@ -35,7 +35,7 @@ namespace zf {
         } events;
     };
 
-    s_input_state *detail::InputStateCreate(s_arena *const arena) {
+    s_input_state *detail::CreateInputState(s_arena *const arena) {
         return ArenaPushItemZeroed<s_input_state>(arena);
     }
 

@@ -4,12 +4,12 @@
 
 namespace zf {
     t_b8 LoadSoundDataFromRaw(const s_str_rdonly file_path, s_arena *const snd_data_arena, s_arena *const temp_arena, s_sound_data_mut *const o_snd_data) {
-        const s_str_rdonly file_path_terminated = StrCloneButAddTerminator(file_path, temp_arena);
+        const s_str_rdonly file_path_terminated = CloneStrButAddTerminator(file_path, temp_arena);
 
         ma_decoder decoder;
         ma_decoder_config decoder_config = ma_decoder_config_init(ma_format_f32, 0, 0);
 
-        if (ma_decoder_init_file(StrAsCstr(file_path_terminated), &decoder_config, &decoder) != MA_SUCCESS) {
+        if (ma_decoder_init_file(AsCstr(file_path_terminated), &decoder_config, &decoder) != MA_SUCCESS) {
             return false;
         }
 
@@ -27,7 +27,7 @@ namespace zf {
             .frame_cnt = static_cast<t_i32>(frame_cnt),
         };
 
-        o_snd_data->pcm = ArenaPushArray<t_f32>(snd_data_arena, SampleCount(o_snd_data->meta));
+        o_snd_data->pcm = PushArray<t_f32>(snd_data_arena, SampleCount(o_snd_data->meta));
 
         if (ma_decoder_read_pcm_frames(&decoder, o_snd_data->pcm.raw, frame_cnt, nullptr) != MA_SUCCESS) {
             return false;
@@ -65,7 +65,7 @@ namespace zf {
             return false;
         }
 
-        o_snd_data->pcm = ArenaPushArray<t_f32>(snd_data_arena, SampleCount(o_snd_data->meta));
+        o_snd_data->pcm = PushArray<t_f32>(snd_data_arena, SampleCount(o_snd_data->meta));
 
         if (!fs.ReadItemsIntoArray(o_snd_data->pcm, o_snd_data->pcm.len)) {
             return false;

@@ -20,10 +20,10 @@ namespace zf::gfx {
         };
 
     t_b8 LoadTextureDataFromRaw(const s_str_rdonly file_path, s_arena *const texture_data_arena, s_arena *const temp_arena, s_texture_data *const o_texture_data) {
-        const s_str_rdonly file_path_terminated = StrCloneButAddTerminator(file_path, temp_arena);
+        const s_str_rdonly file_path_terminated = CloneStrButAddTerminator(file_path, temp_arena);
 
         s_v2_i size_in_pxs;
-        t_u8 *const stb_px_data = stbi_load(StrAsCstr(file_path_terminated), &size_in_pxs.x, &size_in_pxs.y, nullptr, 4);
+        t_u8 *const stb_px_data = stbi_load(AsCstr(file_path_terminated), &size_in_pxs.x, &size_in_pxs.y, nullptr, 4);
 
         if (!stb_px_data) {
             return false;
@@ -32,7 +32,7 @@ namespace zf::gfx {
         ZF_DEFER({ stbi_image_free(stb_px_data); });
 
         const s_array_rdonly<t_u8> stb_px_data_arr = {stb_px_data, 4 * size_in_pxs.x * size_in_pxs.y};
-        const auto px_data = ArenaPushArray<t_u8>(texture_data_arena, 4 * size_in_pxs.x * size_in_pxs.y);
+        const auto px_data = PushArray<t_u8>(texture_data_arena, 4 * size_in_pxs.x * size_in_pxs.y);
         CopyAll(stb_px_data_arr, px_data);
 
         *o_texture_data = {size_in_pxs, px_data};
@@ -79,7 +79,7 @@ namespace zf::gfx {
             return false;
         }
 
-        const auto rgba_px_data = ArenaPushArray<t_u8>(texture_data_arena, 4 * size_in_pxs.x * size_in_pxs.y);
+        const auto rgba_px_data = PushArray<t_u8>(texture_data_arena, 4 * size_in_pxs.x * size_in_pxs.y);
 
         if (!fs.ReadItemsIntoArray(rgba_px_data, rgba_px_data.len)) {
             return false;
@@ -96,7 +96,7 @@ namespace zf::gfx {
         // Get the plain font file data.
         s_array_mut<t_u8> font_file_data;
 
-        if (!FileLoadContents(file_path, temp_arena, temp_arena, &font_file_data)) {
+        if (!LoadFileContents(file_path, temp_arena, temp_arena, &font_file_data)) {
             return false;
         }
 
@@ -213,7 +213,7 @@ namespace zf::gfx {
         //
         // Texture Atlases
         //
-        *o_atlas_rgbas = ArenaPushArray<t_font_atlas_rgba>(atlas_rgbas_arena, atlas_cnt);
+        *o_atlas_rgbas = PushArray<t_font_atlas_rgba>(atlas_rgbas_arena, atlas_cnt);
 
         // Initialise all pixels to transparent white.
         // @todo: Maybe don't use RBGA for this?

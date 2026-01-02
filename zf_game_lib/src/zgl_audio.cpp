@@ -129,7 +129,7 @@ namespace zf {
         const t_i32 index = IndexOfFirstUnsetBit(g_state.snd_insts.activity);
 
         if (index == -1) {
-            LogWarning(s_cstr_literal("Trying to play a sound, but the sound instance limit has been reached!"));
+            LogWarning("Trying to play a sound, but the sound instance limit has been reached!");
             return {};
         }
 

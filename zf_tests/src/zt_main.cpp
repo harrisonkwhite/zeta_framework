@@ -22,23 +22,23 @@ namespace zf {
     }
 
     struct s_test {
-        s_cstr_literal title;
+        const char *title_cstr;
         t_b8 (*func)(s_arena *const arena) = nullptr;
     };
 
     constexpr s_static_array<s_test, 4> g_tests = {{
-        {.title = "Bits", .func = TestBits},
-        {.title = "Sorting", .func = TestSorting},
-        {.title = "List", .func = TestList},
-        {.title = "Hash Map", .func = TestHashMap},
+        {.title_cstr = "Bits", .func = TestBits},
+        {.title_cstr = "Sorting", .func = TestSorting},
+        {.title_cstr = "List", .func = TestList},
+        {.title_cstr = "Hash Map", .func = TestHashMap},
     }};
 
     static void RunTests() {
-        s_arena arena = ArenaCreate();
-        ZF_DEFER({ ArenaDestroy(&arena); });
+        s_arena arena = CreateArena();
+        ZF_DEFER({ Destroy(&arena); });
 
         for (t_i32 i = 0; i < g_tests.g_len; i++) {
-            Log(s_cstr_literal("Running test \"%\"..."), g_tests[i].title);
+            Log("Running test \"%\"...", ConvertCstr(g_tests[i].title_cstr));
             g_tests[i].func(&arena);
         }
     }

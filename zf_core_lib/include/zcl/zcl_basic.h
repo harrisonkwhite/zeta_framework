@@ -37,7 +37,7 @@ namespace zf {
 #define ZF_CONCAT_IMPL(a, b) a##b
 #define ZF_CONCAT(a, b) ZF_CONCAT_IMPL(a, b)
 
-    namespace internal {
+    namespace detail {
         template <typename tp_func>
         struct s_defer {
             tp_func func;
@@ -50,7 +50,7 @@ namespace zf {
         };
     }
 
-#define ZF_DEFER(x) const auto ZF_CONCAT(defer_, ZF_CONCAT(l, __LINE__)) = zf::internal::s_defer([&]() x)
+#define ZF_DEFER(x) const auto ZF_CONCAT(defer_, ZF_CONCAT(l, __LINE__)) = zf::detail::s_defer([&]() x)
 
     static_assert(CHAR_BIT == 8);
 
@@ -278,20 +278,20 @@ namespace zf {
         }
     }
 
-    namespace internal {
+    namespace detail {
         void TryBreakingIntoDebuggerIf(const t_b8 cond);
 
-        [[noreturn]] void AssertError(const char *const cond, const char *const func_name, const char *const file_name, const t_i32 line);
+        [[noreturn]] void AssertError(const char *const cond_cstr, const char *const func_name_cstr, const char *const file_name_cstr, const t_i32 line);
 
 #ifdef ZF_DEBUG
-    #define ZF_DEBUG_BREAK() internal::TryBreakingIntoDebuggerIf(true)
-    #define ZF_DEBUG_BREAK_IF(cond) internal::TryBreakingIntoDebuggerIf(cond)
+    #define ZF_DEBUG_BREAK() detail::TryBreakingIntoDebuggerIf(true)
+    #define ZF_DEBUG_BREAK_IF(cond) detail::TryBreakingIntoDebuggerIf(cond)
 
-    #define ZF_ASSERT(cond)                                                         \
-        do {                                                                        \
-            if (!ZF_IN_CONSTEXPR() && !(cond)) {                                    \
-                zf::internal::AssertError(#cond, __FUNCTION__, __FILE__, __LINE__); \
-            }                                                                       \
+    #define ZF_ASSERT(cond)                                                       \
+        do {                                                                      \
+            if (!ZF_IN_CONSTEXPR() && !(cond)) {                                  \
+                zf::detail::AssertError(#cond, __FUNCTION__, __FILE__, __LINE__); \
+            }                                                                     \
         } while (0)
 #else
     #define ZF_DEBUG_BREAK() static_cast<void>(0)
@@ -299,16 +299,16 @@ namespace zf {
     #define ZF_ASSERT(cond) static_cast<void>(0)
 #endif
 
-        [[noreturn]] void FatalError(const char *const func_name, const char *const file_name, const t_i32 line, const char *const cond = nullptr);
+        [[noreturn]] void FatalError(const char *const func_name_cstr, const char *const file_name_cstr, const t_i32 line, const char *const cond_cstr = nullptr);
 
-#define ZF_FATAL() zf::internal::FatalError(__FUNCTION__, __FILE__, __LINE__)
+#define ZF_FATAL() zf::detail::FatalError(__FUNCTION__, __FILE__, __LINE__)
 #define ZF_UNREACHABLE() ZF_FATAL()
 
-#define ZF_REQUIRE(cond)                                                       \
-    do {                                                                       \
-        if (!(cond)) {                                                         \
-            zf::internal::FatalError(__FUNCTION__, __FILE__, __LINE__, #cond); \
-        }                                                                      \
+#define ZF_REQUIRE(cond)                                                     \
+    do {                                                                     \
+        if (!(cond)) {                                                       \
+            zf::detail::FatalError(__FUNCTION__, __FILE__, __LINE__, #cond); \
+        }                                                                    \
     } while (0)
     }
 

@@ -2,8 +2,8 @@
 
 namespace zf {
     static t_b8 OutputCode(const s_str_rdonly input_file_path, const s_str_rdonly output_file_path, const s_str_rdonly arr_subname) {
-        s_arena arena = ArenaCreate();
-        ZF_DEFER({ ArenaDestroy(&arena); });
+        s_arena arena = CreateArena();
+        ZF_DEFER({ Destroy(&arena); });
 
         c_stream input_file_stream;
 
@@ -21,30 +21,30 @@ namespace zf {
 
         ZF_DEFER({ FileClose(&output_file_stream); });
 
-        Print(&output_file_stream, s_cstr_literal{"#include <zcl/zcl_mem.h>\n"});
-        Print(&output_file_stream, s_cstr_literal{"\n"});
-        Print(&output_file_stream, s_cstr_literal{"namespace zf {\n"});
+        Print(&output_file_stream, "#include <zcl/zcl_mem.h>\n");
+        Print(&output_file_stream, "\n");
+        Print(&output_file_stream, "namespace zf {\n");
 
-        PrintFormat(&output_file_stream, s_cstr_literal{"    extern const t_u8 g_%_raw[] = {"}, arr_subname);
+        PrintFormat(&output_file_stream, "    extern const t_u8 g_%_raw[] = {", arr_subname);
 
         t_u8 byte_read;
         t_i32 byte_read_cnt = 0;
 
         while (input_file_stream.ReadItem(&byte_read)) {
             if (byte_read_cnt > 0) {
-                Print(&output_file_stream, s_cstr_literal{", "});
+                Print(&output_file_stream, ", ");
             }
 
-            PrintFormat(&output_file_stream, s_cstr_literal{"%"}, FormatHex(byte_read));
+            PrintFormat(&output_file_stream, "%", FormatHex(byte_read));
 
             byte_read_cnt++;
         }
 
-        Print(&output_file_stream, s_cstr_literal{"};\n"});
+        Print(&output_file_stream, "};\n");
 
-        PrintFormat(&output_file_stream, s_cstr_literal{"    extern const t_i32 g_%_len = %;\n"}, arr_subname, byte_read_cnt);
+        PrintFormat(&output_file_stream, "    extern const t_i32 g_%_len = %;\n", arr_subname, byte_read_cnt);
 
-        Print(&output_file_stream, s_cstr_literal{"}\n"});
+        Print(&output_file_stream, "}\n");
 
         return true;
     }
@@ -52,9 +52,9 @@ namespace zf {
 
 int main(const int arg_cnt, const char *const *const args) {
     if (arg_cnt != 4) {
-        zf::LogError(zf::s_cstr_literal{"Invalid command-line argument count!"});
+        zf::LogError("Invalid command-line argument count!");
         return EXIT_FAILURE;
     }
 
-    return zf::OutputCode(zf::CstrToStr(args[1]), zf::CstrToStr(args[2]), zf::CstrToStr(args[3])) ? EXIT_SUCCESS : EXIT_FAILURE;
+    return zf::OutputCode(zf::ConvertCstr(args[1]), zf::ConvertCstr(args[2]), zf::ConvertCstr(args[3])) ? EXIT_SUCCESS : EXIT_FAILURE;
 }

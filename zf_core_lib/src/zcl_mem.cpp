@@ -3,7 +3,7 @@
 #include <cstdlib>
 
 namespace zf {
-    void ArenaDestroy(s_arena *const arena) {
+    void Destroy(s_arena *const arena) {
         const auto f = [](const auto self, s_arena_block *const block) {
             if (!block) {
                 return;

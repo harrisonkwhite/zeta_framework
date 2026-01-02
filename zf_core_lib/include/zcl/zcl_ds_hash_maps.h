@@ -77,11 +77,11 @@ namespace zf {
     s_kv_store_block<tp_key_type, tp_val_type> *KVStoreBlockCreate(const t_i32 cap, s_arena *const arena) {
         const auto block = ArenaPushItem<s_kv_store_block<tp_key_type, tp_val_type>>(arena);
 
-        block->keys = ArenaPushArray<tp_key_type>(arena, cap);
+        block->keys = PushArray<tp_key_type>(arena, cap);
 
-        block->vals = ArenaPushArray<tp_val_type>(arena, cap);
+        block->vals = PushArray<tp_val_type>(arena, cap);
 
-        block->next_indexes = ArenaPushArray<t_i32>(arena, cap);
+        block->next_indexes = PushArray<t_i32>(arena, cap);
         SetAllTo(block->next_indexes, -1);
 
         block->usage = BitVectorCreate(cap, arena);
@@ -252,7 +252,7 @@ namespace zf {
     // The provided hash function has to map a key to an integer 0 or higher. The given memory arena will be saved and used for allocating new memory for entries when needed.
     template <typename tp_key_type, typename tp_val_type>
     s_hash_map<tp_key_type, tp_val_type> HashMapCreate(const t_hash_func<tp_key_type> hash_func, s_arena *const arena, const t_i32 cap = g_hash_map_cap_default, const t_bin_comparator<tp_key_type> key_comparator = DefaultBinComparator) {
-        const auto immediate_indexes = ArenaPushArray<t_i32>(arena, cap);
+        const auto immediate_indexes = PushArray<t_i32>(arena, cap);
         SetAllTo(immediate_indexes, -1);
 
         return {
@@ -307,8 +307,8 @@ namespace zf {
     // Allocates the given arrays with the memory arena and loads key-value pairs into them.
     template <typename tp_key_type, typename tp_val_type>
     void HashMapLoadEntries(const s_hash_map<tp_key_type, tp_val_type> *const hm, s_arena *const arena, s_array_mut<tp_key_type> *const o_keys, s_array_mut<tp_val_type> *const o_vals) {
-        *o_keys = ArenaPushArray<tp_key_type>(arena, HashMapEntryCount(hm));
-        *o_vals = ArenaPushArray<tp_val_type>(arena, HashMapEntryCount(hm));
+        *o_keys = PushArray<tp_key_type>(arena, HashMapEntryCount(hm));
+        *o_vals = PushArray<tp_val_type>(arena, HashMapEntryCount(hm));
         return HashMapLoadEntries(hm, *o_keys, *o_vals);
     }
 
@@ -353,13 +353,13 @@ namespace zf {
 
         *o_hm = HashMapCreate<tp_key_type, tp_val_type>(hm_hash_func, hm_arena, cap, hm_key_comparator);
 
-        const auto keys = ArenaPushArray<tp_key_type>(temp_arena, entry_cnt);
+        const auto keys = PushArray<tp_key_type>(temp_arena, entry_cnt);
 
         if (!stream->ReadItemsIntoArray(keys, entry_cnt)) {
             return false;
         }
 
-        const auto vals = ArenaPushArray<tp_val_type>(temp_arena, entry_cnt);
+        const auto vals = PushArray<tp_val_type>(temp_arena, entry_cnt);
 
         if (!stream->ReadItemsIntoArray(vals, entry_cnt)) {
             return false;

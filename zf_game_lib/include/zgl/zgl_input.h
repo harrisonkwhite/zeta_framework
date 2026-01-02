@@ -143,7 +143,7 @@ namespace zf {
     t_f32 GamepadAxisValueWithDeadzone(const s_input_state *const input_state, const t_i32 gamepad_index, const e_gamepad_axis_code axis_code);
 
     namespace detail {
-        s_input_state *InputStateCreate(s_arena *const arena);
+        s_input_state *CreateInputState(s_arena *const arena);
         void InputStateClearEvents(s_input_state *const input_state);
 
         void KeyUpdateState(s_input_state *const input_state, const e_key_code code, const t_b8 is_down);

@@ -253,7 +253,7 @@ namespace zf {
         glfwShowWindow(g_state.glfw_window);
     }
 
-    t_b8 WindowShouldClose() {
+    t_b8 ShouldWindowClose() {
         ZF_ASSERT(g_state.active);
         return glfwWindowShouldClose(g_state.glfw_window);
     }
@@ -261,8 +261,8 @@ namespace zf {
     void WindowSetTitle(const s_str_rdonly title, s_arena *const temp_arena) {
         ZF_ASSERT(g_state.active);
 
-        const s_str_rdonly title_terminated = StrCloneButAddTerminator(title, temp_arena);
-        glfwSetWindowTitle(g_state.glfw_window, StrAsCstr(title_terminated));
+        const s_str_rdonly title_terminated = CloneStrButAddTerminator(title, temp_arena);
+        glfwSetWindowTitle(g_state.glfw_window, AsCstr(title_terminated));
     }
 
     void WindowSetSize(const s_v2_i size) {
