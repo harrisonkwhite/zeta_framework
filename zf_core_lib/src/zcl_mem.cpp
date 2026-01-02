@@ -108,7 +108,7 @@ namespace zf {
             return true;
         }
 
-        return (bv.Bytes()[bv.Bytes().len - 1] & BitVectorLastByteMask(bv)) != 0;
+        return (bv.Bytes()[bv.Bytes().len - 1] & LastByteMask(bv)) != 0;
     }
 
     t_b8 AreAllBitsSet(const s_bit_vec_rdonly bv) {
@@ -122,7 +122,7 @@ namespace zf {
             return false;
         }
 
-        const auto last_byte_mask = BitVectorLastByteMask(bv);
+        const auto last_byte_mask = LastByteMask(bv);
         return (bv.Bytes()[bv.Bytes().len - 1] & last_byte_mask) == last_byte_mask;
     }
 
@@ -134,7 +134,7 @@ namespace zf {
         const auto first_bytes = Slice(bv.Bytes(), 0, bv.Bytes().len - 1);
         SetAllTo(first_bytes, 0xFF);
 
-        bv.Bytes()[bv.Bytes().len - 1] |= BitVectorLastByteMask(bv);
+        bv.Bytes()[bv.Bytes().len - 1] |= LastByteMask(bv);
     }
 
     void UnsetAllBits(const s_bit_vec_mut bv) {
@@ -145,7 +145,7 @@ namespace zf {
         const auto first_bytes = Slice(bv.Bytes(), 0, bv.Bytes().len - 1);
         SetAllTo(first_bytes, 0);
 
-        bv.Bytes()[bv.Bytes().len - 1] &= ~BitVectorLastByteMask(bv);
+        bv.Bytes()[bv.Bytes().len - 1] &= ~LastByteMask(bv);
     }
 
     void SetBitsInRange(const s_bit_vec_mut bv, const t_i32 begin_bit_index, const t_i32 end_bit_index) {
@@ -204,7 +204,7 @@ namespace zf {
             break;
         }
 
-        targ.Bytes()[targ.Bytes().len - 1] &= BitVectorLastByteMask(targ);
+        targ.Bytes()[targ.Bytes().len - 1] &= LastByteMask(targ);
     }
 
     t_u8 ShiftBitsLeft(const s_bit_vec_mut bv) {
@@ -217,14 +217,14 @@ namespace zf {
         t_u8 discard = 0;
 
         for (t_i32 i = 0; i < bv.Bytes().len; i++) {
-            const t_i32 bits_in_byte = i == bv.Bytes().len - 1 ? BitVectorLastByteBitCount(bv) : 8;
+            const t_i32 bits_in_byte = i == bv.Bytes().len - 1 ? LastByteBitCount(bv) : 8;
             const t_u8 discard_last = discard;
             discard = (bv.Bytes()[i] & ByteBitmaskSingle(bits_in_byte - 1)) >> (bits_in_byte - 1);
             bv.Bytes()[i] <<= 1;
             bv.Bytes()[i] |= discard_last;
         }
 
-        bv.Bytes()[bv.Bytes().len - 1] &= BitVectorLastByteMask(bv);
+        bv.Bytes()[bv.Bytes().len - 1] &= LastByteMask(bv);
 
         return discard;
     }
@@ -266,12 +266,12 @@ namespace zf {
             return 0;
         }
 
-        bv.Bytes()[bv.Bytes().len - 1] &= BitVectorLastByteMask(bv); // Drop any excess bits so we don't accidentally shift a 1 in.
+        bv.Bytes()[bv.Bytes().len - 1] &= LastByteMask(bv); // Drop any excess bits so we don't accidentally shift a 1 in.
 
         t_u8 discard = 0;
 
         for (t_i32 i = bv.Bytes().len - 1; i >= 0; i--) {
-            const t_i32 bits_in_byte = i == bv.Bytes().len - 1 ? BitVectorLastByteBitCount(bv) : 8;
+            const t_i32 bits_in_byte = i == bv.Bytes().len - 1 ? LastByteBitCount(bv) : 8;
             const t_u8 discard_last = discard;
             discard = bv.Bytes()[i] & ByteBitmaskSingle(0);
             bv.Bytes()[i] >>= 1;
@@ -589,7 +589,7 @@ namespace zf {
             }
 
             if (i == bv.Bytes().len - 1) {
-                byte &= BitVectorLastByteMask(bv);
+                byte &= LastByteMask(bv);
             }
 
             const t_i32 bi = g_mappings[byte];
@@ -878,7 +878,7 @@ namespace zf {
                 result += g_mappings[bv.Bytes()[i]];
             }
 
-            result += g_mappings[bv.Bytes()[bv.Bytes().len - 1] & BitVectorLastByteMask(bv)];
+            result += g_mappings[bv.Bytes()[bv.Bytes().len - 1] & LastByteMask(bv)];
         }
 
         return result;

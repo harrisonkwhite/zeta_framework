@@ -254,7 +254,7 @@ namespace zf {
             return false;
         }
 
-        *o_bv = BitVectorCreate(bit_cnt, bv_arena);
+        *o_bv = CreateBitVector(bit_cnt, bv_arena);
 
         if (!stream->ReadItemsIntoArray(o_bv->Bytes(), o_bv->Bytes().len)) {
             return false;
@@ -673,7 +673,7 @@ namespace zf {
         };
 
         const auto print_byte = [&](const t_i32 index) {
-            const t_i32 bit_cnt = index == fmt.val.Bytes().len - 1 ? BitVectorLastByteBitCount(fmt.val) : 8;
+            const t_i32 bit_cnt = index == fmt.val.Bytes().len - 1 ? LastByteBitCount(fmt.val) : 8;
 
             for (t_i32 i = 7; i >= bit_cnt; i--) {
                 Print(stream, ZF_STR_LITERAL("0"));

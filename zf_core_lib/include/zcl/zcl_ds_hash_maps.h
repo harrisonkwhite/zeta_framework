@@ -84,7 +84,7 @@ namespace zf {
         block->next_indexes = PushArray<t_i32>(arena, cap);
         SetAllTo(block->next_indexes, -1);
 
-        block->usage = BitVectorCreate(cap, arena);
+        block->usage = CreateBitVector(cap, arena);
 
         block->next = nullptr;
 

@@ -348,18 +348,18 @@ namespace zf {
         return static_cast<t_u8>(bits_at_bottom << begin_bit_index);
     }
 
-    inline s_bit_vec_mut BitVectorCreate(const t_i32 bit_cnt, s_arena *const arena) {
+    inline s_bit_vec_mut CreateBitVector(const t_i32 bit_cnt, s_arena *const arena) {
         ZF_ASSERT(bit_cnt >= 0);
         return {PushArrayZeroed<t_u8>(arena, BitsToBytes(bit_cnt)).raw, bit_cnt};
     }
 
-    constexpr t_i32 BitVectorLastByteBitCount(const s_bit_vec_rdonly bv) {
+    constexpr t_i32 LastByteBitCount(const s_bit_vec_rdonly bv) {
         return ((bv.bit_cnt - 1) % 8) + 1;
     }
 
     // Gives a mask of the last byte in which only excess bits are unset.
-    constexpr t_u8 BitVectorLastByteMask(const s_bit_vec_rdonly bv) {
-        return ByteBitmaskRanged(0, BitVectorLastByteBitCount(bv));
+    constexpr t_u8 LastByteMask(const s_bit_vec_rdonly bv) {
+        return ByteBitmaskRanged(0, LastByteBitCount(bv));
     }
 
     constexpr t_b8 IsBitSet(const s_bit_vec_rdonly bv, const t_i32 index) {

@@ -150,7 +150,7 @@ namespace zf {
     concept co_same = std::same_as<tp_type_a, tp_type_b>;
 
     template <typename tp_type>
-    concept co_cstr = co_same<std::remove_cv_t<std::remove_pointer_t<std::remove_extent_t<std::remove_reference_t<tp_type>>>>, char>; // @todo: Possible edge case of char** not being accounted for?
+    concept co_cstr = co_same<std::remove_cv_t<std::remove_pointer_t<std::remove_extent_t<std::remove_reference_t<tp_type>>>>, char>;
 
     // Return true iff a and b are equal.
     template <co_simple tp_type>
