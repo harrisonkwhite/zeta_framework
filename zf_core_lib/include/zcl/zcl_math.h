@@ -49,7 +49,7 @@ namespace zf {
         s_v2_i ToV2I() const;
     };
 
-    s_v2 operator*(const t_f32 scalar, const s_v2 v) {
+    inline s_v2 operator*(const t_f32 scalar, const s_v2 v) {
         return {v.x * scalar, v.y * scalar};
     }
 
@@ -83,11 +83,11 @@ namespace zf {
         }
     };
 
-    s_v2::operator s_v2_i() const {
+    inline s_v2::operator s_v2_i() const {
         return {static_cast<t_i32>(x), static_cast<t_i32>(y)};
     }
 
-    s_v2_i s_v2::ToV2I() const {
+    inline s_v2_i s_v2::ToV2I() const {
         return static_cast<s_v2_i>(*this);
     }
 
@@ -180,11 +180,11 @@ namespace zf {
         }
     };
 
-    s_rect_f::operator s_rect_i() const {
+    inline s_rect_f::operator s_rect_i() const {
         return {static_cast<t_i32>(x), static_cast<t_i32>(y), static_cast<t_i32>(width), static_cast<t_i32>(height)};
     }
 
-    s_rect_i s_rect_f::ToRectI() const {
+    inline s_rect_i s_rect_f::ToRectI() const {
         return static_cast<s_rect_i>(*this);
     }
 
@@ -239,20 +239,32 @@ namespace zf {
         return DetermineDigitAt(n / 10, index - 1);
     }
 
-    t_b8 IsNearlyEqual(const t_f32 val, const t_f32 targ, const t_f32 tol = 1e-5f) {
+    inline t_b8 IsNearlyEqual(const t_f32 val, const t_f32 targ, const t_f32 tol = 1e-5f) {
         ZF_ASSERT(tol >= 0);
         return val >= targ - tol && val <= targ + tol;
     }
 
-    t_b8 DoRectsInters(const s_rect_i a, const s_rect_i b) {
+    constexpr s_rect_f CreateRectF(const s_v2 pos, const s_v2 size) {
+        return {pos.x, pos.y, size.x, size.y};
+    }
+
+    constexpr s_rect_f CreateRectF(const s_v2 pos, const s_v2 size, const s_v2 origin) {
+        return {pos.x - (size.x * origin.x), pos.y - (size.y * origin.y), size.x, size.y};
+    }
+
+    constexpr s_rect_i CreateRectI(const s_v2_i pos, const s_v2_i size) {
+        return {pos.x, pos.y, size.x, size.y};
+    }
+
+    inline t_b8 DoRectsInters(const s_rect_i a, const s_rect_i b) {
         return a.Left() < b.Right() && a.Top() < b.Bottom() && a.Right() > b.Left() && a.Bottom() > b.Top();
     }
 
-    t_b8 DoRectsInters(const s_rect_f a, const s_rect_f b) {
+    inline t_b8 DoRectsInters(const s_rect_f a, const s_rect_f b) {
         return a.Left() < b.Right() && a.Top() < b.Bottom() && a.Right() > b.Left() && a.Bottom() > b.Top();
     }
 
-    s_mat4x4 IdentityMatrix() {
+    inline s_mat4x4 IdentityMatrix() {
         s_mat4x4 mat = {};
         mat.elems[0][0] = 1.0f;
         mat.elems[1][1] = 1.0f;
@@ -262,16 +274,16 @@ namespace zf {
         return mat;
     }
 
-    t_f32 Lerp(const t_f32 a, const t_f32 b, const t_f32 t) { return a + ((b - a) * t); }
-    s_v2 Lerp(const s_v2 a, const s_v2 b, const t_f32 t) { return a + ((b - a) * t); }
+    inline t_f32 Lerp(const t_f32 a, const t_f32 b, const t_f32 t) { return a + ((b - a) * t); }
+    inline s_v2 Lerp(const s_v2 a, const s_v2 b, const t_f32 t) { return a + ((b - a) * t); }
 
-    s_v2 CompwiseProd(const s_v2 a, const s_v2 b) { return {a.x * b.x, a.y * b.y}; }
-    s_v2_i CompwiseProd(const s_v2_i a, const s_v2_i b) { return {a.x * b.x, a.y * b.y}; }
+    inline s_v2 CompwiseProd(const s_v2 a, const s_v2 b) { return {a.x * b.x, a.y * b.y}; }
+    inline s_v2_i CompwiseProd(const s_v2_i a, const s_v2_i b) { return {a.x * b.x, a.y * b.y}; }
 
-    t_f32 DotProd(const s_v2 a, const s_v2 b) { return (a.x * b.x) + (a.y * b.y); }
-    t_i32 DotProd(const s_v2_i a, const s_v2_i b) { return (a.x * b.x) + (a.y * b.y); }
+    inline t_f32 DotProd(const s_v2 a, const s_v2 b) { return (a.x * b.x) + (a.y * b.y); }
+    inline t_i32 DotProd(const s_v2_i a, const s_v2_i b) { return (a.x * b.x) + (a.y * b.y); }
 
-    t_f32 CalcMag(const s_v2 v) {
+    inline t_f32 CalcMag(const s_v2 v) {
         return sqrt((v.x * v.x) + (v.y * v.y));
     }
 
@@ -286,11 +298,11 @@ namespace zf {
         return {v.x / mag, v.y / mag};
     }
 
-    t_f32 CalcDist(const s_v2 a, const s_v2 b) {
+    inline t_f32 CalcDist(const s_v2 a, const s_v2 b) {
         return CalcMag(b - a);
     }
 
-    s_v2 CalcDir(const s_v2 a, const s_v2 b) {
+    inline s_v2 CalcDir(const s_v2 a, const s_v2 b) {
         return CalcNormal(b - a);
     }
 
@@ -310,34 +322,34 @@ namespace zf {
         return s_v2(cos(dir), -sin(dir)) * len;
     }
 
-    t_b8 IsPointInRect(const s_v2 pt, const s_rect_f rect) {
+    inline t_b8 IsPointInRect(const s_v2 pt, const s_rect_f rect) {
         return pt.x > rect.Left() && pt.y > rect.Top() && pt.x < rect.Right() && pt.y < rect.Bottom();
     }
 
-    t_b8 IsPointInRect(const s_v2_i pt, const s_rect_i rect) {
+    inline t_b8 IsPointInRect(const s_v2_i pt, const s_rect_i rect) {
         return pt.x > rect.Left() && pt.y > rect.Top() && pt.x < rect.Right() && pt.y < rect.Bottom();
     }
 
-    s_v2 ClampedWithinContainer(const s_v2 pt, const s_rect_f container) {
+    inline s_v2 ClampedWithinContainer(const s_v2 pt, const s_rect_f container) {
         return {Clamp(pt.x, container.Left(), container.Right()), Clamp(pt.y, container.Top(), container.Bottom())};
     }
 
-    s_v2_i ClampedWithinContainer(const s_v2_i pt, const s_rect_i container) {
+    inline s_v2_i ClampedWithinContainer(const s_v2_i pt, const s_rect_i container) {
         return {Clamp(pt.x, container.Left(), container.Right()), Clamp(pt.y, container.Top(), container.Bottom())};
     }
 
-    s_rect_f ClampedWithinContainer(const s_rect_f rect, const s_rect_f container) {
+    inline s_rect_f ClampedWithinContainer(const s_rect_f rect, const s_rect_f container) {
         const s_v2 tl = {ZF_MAX(rect.x, container.x), ZF_MAX(rect.y, container.y)};
         return {tl.x, tl.y, ZF_MAX(ZF_MIN(rect.Right(), container.Right()) - tl.x, 0), ZF_MAX(ZF_MIN(rect.Bottom(), container.Bottom()) - tl.y, 0)};
     }
 
-    s_rect_i ClampedWithinContainer(const s_rect_i rect, const s_rect_i container) {
+    inline s_rect_i ClampedWithinContainer(const s_rect_i rect, const s_rect_i container) {
         const s_v2_i tl = {ZF_MAX(rect.x, container.x), ZF_MAX(rect.y, container.y)};
         return {tl.x, tl.y, ZF_MAX(ZF_MIN(rect.Right(), container.Right()) - tl.x, 0), ZF_MAX(ZF_MIN(rect.Bottom(), container.Bottom()) - tl.y, 0)};
     }
 
     // Returns a value between 0 and 1 indicating what percentage of the rectangle is within the container.
-    t_f32 CalcPercOfOccupance(const s_rect_f rect, const s_rect_f container) {
+    inline t_f32 CalcPercOfOccupance(const s_rect_f rect, const s_rect_f container) {
         ZF_ASSERT(container.width > 0 && container.height > 0);
 
         const auto subrect = ClampedWithinContainer(rect, container);
@@ -345,7 +357,7 @@ namespace zf {
     }
 
     // Returns a value between 0 and 1 indicating what percentage of the rectangle is within the container.
-    t_f32 CalcPercOfOccupance(const s_rect_i rect, const s_rect_i container) {
+    inline t_f32 CalcPercOfOccupance(const s_rect_i rect, const s_rect_i container) {
         ZF_ASSERT(container.width > 0 && container.height > 0);
 
         const auto subrect = ClampedWithinContainer(rect, container);
