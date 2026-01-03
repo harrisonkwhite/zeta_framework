@@ -36,9 +36,9 @@ namespace zf::gfx {
 
     // This depends on the platform module being initialised beforehand.
     // Returns a pointer to a rendering basis, needed for all rendering operations.
-    s_rendering_basis *StartupModule(s_arena *const arena);
+    s_rendering_basis *StartupGFX(s_arena *const arena);
 
-    void ShutdownModule(const s_rendering_basis *const rendering_basis);
+    void ShutdownGFX(const s_rendering_basis *const rendering_basis);
 
     inline s_resource_group CreateResourceGroup(s_arena *const arena) {
         return {.arena = arena};

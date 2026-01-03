@@ -125,11 +125,13 @@ namespace zf {
 #define ZF_FATAL() zf::detail::FatalError(__FUNCTION__, __FILE__, __LINE__)
 #define ZF_UNREACHABLE() ZF_FATAL()
 
-#define ZF_REQUIRE(cond)                                                     \
-    do {                                                                     \
-        if (!(cond)) {                                                       \
-            zf::detail::FatalError(__FUNCTION__, __FILE__, __LINE__, #cond); \
-        }                                                                    \
+#define ZF_REQUIRE(cond)                                                         \
+    do {                                                                         \
+        if (!ZF_IN_CONSTEXPR()) {                                                \
+            if (!(cond)) {                                                       \
+                zf::detail::FatalError(__FUNCTION__, __FILE__, __LINE__, #cond); \
+            }                                                                    \
+        }                                                                        \
     } while (0)
     }
 
@@ -183,25 +185,11 @@ namespace zf {
             }
         };
 
-    constexpr t_i32 KilobytesToBytes(const t_i32 n) {
-        return (1 << 10) * n;
-    }
-
-    constexpr t_i32 MegabytesToBytes(const t_i32 n) {
-        return (1 << 20) * n;
-    }
-
-    constexpr t_i32 GigabytesToBytes(const t_i32 n) {
-        return (1 << 30) * n;
-    }
-
-    constexpr t_i32 BitsToBytes(const t_i32 n) {
-        return (n + 7) / 8;
-    }
-
-    constexpr t_i32 BytesToBits(const t_i32 n) {
-        return n * 8;
-    }
+    constexpr t_i32 KilobytesToBytes(const t_i32 n) { return (1 << 10) * n; }
+    constexpr t_i32 MegabytesToBytes(const t_i32 n) { return (1 << 20) * n; }
+    constexpr t_i32 GigabytesToBytes(const t_i32 n) { return (1 << 30) * n; }
+    constexpr t_i32 BitsToBytes(const t_i32 n) { return (n + 7) / 8; }
+    constexpr t_i32 BytesToBits(const t_i32 n) { return n * 8; }
 
     // Is n a power of 2?
     constexpr t_b8 IsAlignmentValid(const t_i32 n) {

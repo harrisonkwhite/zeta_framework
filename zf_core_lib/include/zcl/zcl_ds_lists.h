@@ -56,6 +56,8 @@ namespace zf {
     struct s_static_list {
         using t_elem = tp_type;
 
+        static constexpr t_i32 g_cap = tp_cap;
+
         s_static_array<tp_type, tp_cap> backing_arr;
         t_i32 len;
 
@@ -96,17 +98,17 @@ namespace zf {
 
     template <typename tp_type>
     struct s_is_mut_list {
-        static const t_b8 g_val = false;
+        static constexpr t_b8 g_val = false;
     };
 
     template <typename tp_type>
     struct s_is_mut_list<s_list_mut<tp_type>> {
-        static const t_b8 g_val = true;
+        static constexpr t_b8 g_val = true;
     };
 
     template <typename tp_type, t_i32 tp_cap>
     struct s_is_mut_list<s_static_list<tp_type, tp_cap>> {
-        static const t_b8 g_val = true;
+        static constexpr t_b8 g_val = true;
     };
 
     template <typename tp_type>

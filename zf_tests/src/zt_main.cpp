@@ -26,7 +26,7 @@ namespace zf {
         t_b8 (*func)(s_arena *const arena);
     };
 
-    inline const s_static_array<s_test, 4> g_tests = {{
+    static const s_static_array<s_test, 4> g_tests = {{
         {.title_cstr = "Bits", .func = TestBits},
         {.title_cstr = "Sorting", .func = TestSorting},
         {.title_cstr = "List", .func = TestList},

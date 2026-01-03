@@ -81,7 +81,7 @@ namespace zf {
     struct s_static_array {
         using t_elem = tp_type;
 
-        static const t_i32 g_len = tp_len;
+        static constexpr t_i32 g_len = tp_len;
 
         tp_type raw[tp_len];
 
@@ -169,7 +169,7 @@ namespace zf {
 
     template <t_i32 tp_bit_cnt>
     struct s_static_bit_vec {
-        static const t_i32 g_bit_cnt = tp_bit_cnt;
+        static constexpr t_i32 g_bit_cnt = tp_bit_cnt;
 
         s_static_array<t_u8, BitsToBytes(tp_bit_cnt)> bytes;
 
@@ -205,8 +205,8 @@ namespace zf {
         Clear(item, ZF_SIZE_OF(tp_type), val);
     }
 
-    inline const t_u8 g_poison_uninitted = 0xCD;
-    inline const t_u8 g_poison_freed = 0xDD;
+    constexpr t_u8 g_poison_uninitted = 0xCD;
+    constexpr t_u8 g_poison_freed = 0xDD;
 
 #ifdef ZF_DEBUG
     inline void PoisonUnitted(void *const buf, const t_i32 buf_size) {
@@ -380,11 +380,11 @@ namespace zf {
 
     t_b8 IsAnyBitSet(const s_bit_vec_rdonly bv);
 
-    t_b8 AreAllBitsSet(const s_bit_vec_rdonly bv);
-
     inline t_b8 AreAllBitsUnset(const s_bit_vec_rdonly bv) {
         return bv.bit_cnt > 0 && !IsAnyBitSet(bv);
     }
+
+    t_b8 AreAllBitsSet(const s_bit_vec_rdonly bv);
 
     inline t_b8 IsAnyBitUnset(const s_bit_vec_rdonly bv) {
         return bv.bit_cnt > 0 && !AreAllBitsSet(bv);

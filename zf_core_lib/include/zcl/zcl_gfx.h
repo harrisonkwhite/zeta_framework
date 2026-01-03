@@ -14,8 +14,6 @@ namespace zf::gfx {
         t_f32 b;
         t_f32 a;
 
-        s_color_rgba32f() = default;
-        s_color_rgba32f(const t_f32 r, const t_f32 g, const t_f32 b, const t_f32 a) : r(r), g(g), b(b), a(a) {}
         operator s_v4() const { return {r, g, b, a}; }
     };
 
@@ -24,8 +22,6 @@ namespace zf::gfx {
         t_f32 g;
         t_f32 b;
 
-        s_color_rgb24f() = default;
-        s_color_rgb24f(const t_f32 r, const t_f32 g, const t_f32 b) : r(r), g(g), b(b) {}
         operator s_color_rgba32f() const { return {r, g, b, 1.0f}; }
         operator s_v3() const { return {r, g, b}; }
     };
@@ -35,9 +31,6 @@ namespace zf::gfx {
         t_u8 g;
         t_u8 b;
         t_u8 a;
-
-        s_color_rgba8() = default;
-        s_color_rgba8(const t_u8 r, const t_u8 g, const t_u8 b, const t_u8 a) : r(r), g(g), b(b), a(a) {}
     };
 
     struct s_color_rgb8 {
@@ -45,28 +38,26 @@ namespace zf::gfx {
         t_u8 g;
         t_u8 b;
 
-        s_color_rgb8() = default;
-        s_color_rgb8(const t_u8 r, const t_u8 g, const t_u8 b) : r(r), g(g), b(b) {}
         operator s_color_rgba8() const { return {r, g, b, 255}; }
     };
 
-    inline const s_color_rgb24f g_color_black = {0.0f, 0.0f, 0.0f};
-    inline const s_color_rgb24f g_color_dark_gray = {0.25f, 0.25f, 0.25f};
-    inline const s_color_rgb24f g_color_gray = {0.5f, 0.5f, 0.5f};
-    inline const s_color_rgb24f g_color_light_gray = {0.75f, 0.75f, 0.75f};
-    inline const s_color_rgb24f g_color_white = {1.0f, 1.0f, 1.0f};
-    inline const s_color_rgb24f g_color_red = {1.0f, 0.0f, 0.0f};
-    inline const s_color_rgb24f g_color_orange = {1.0f, 0.5f, 0.0f};
-    inline const s_color_rgb24f g_color_yellow = {1.0f, 1.0f, 0.0f};
-    inline const s_color_rgb24f g_color_lime = {0.75f, 1.0f, 0.0f};
-    inline const s_color_rgb24f g_color_green = {0.0f, 1.0f, 0.0f};
-    inline const s_color_rgb24f g_color_teal = {0.0f, 0.5f, 0.5f};
-    inline const s_color_rgb24f g_color_cyan = {0.0f, 1.0f, 1.0f};
-    inline const s_color_rgb24f g_color_blue = {0.0f, 0.0f, 1.0f};
-    inline const s_color_rgb24f g_color_purple = {0.5f, 0.0f, 0.5f};
-    inline const s_color_rgb24f g_color_magenta = {1.0f, 0.0f, 1.0f};
-    inline const s_color_rgb24f g_color_pink = {1.0f, 0.75f, 0.8f};
-    inline const s_color_rgb24f g_color_brown = {0.6f, 0.3f, 0.0f};
+    constexpr s_color_rgb24f g_color_black = {0.0f, 0.0f, 0.0f};
+    constexpr s_color_rgb24f g_color_dark_gray = {0.25f, 0.25f, 0.25f};
+    constexpr s_color_rgb24f g_color_gray = {0.5f, 0.5f, 0.5f};
+    constexpr s_color_rgb24f g_color_light_gray = {0.75f, 0.75f, 0.75f};
+    constexpr s_color_rgb24f g_color_white = {1.0f, 1.0f, 1.0f};
+    constexpr s_color_rgb24f g_color_red = {1.0f, 0.0f, 0.0f};
+    constexpr s_color_rgb24f g_color_orange = {1.0f, 0.5f, 0.0f};
+    constexpr s_color_rgb24f g_color_yellow = {1.0f, 1.0f, 0.0f};
+    constexpr s_color_rgb24f g_color_lime = {0.75f, 1.0f, 0.0f};
+    constexpr s_color_rgb24f g_color_green = {0.0f, 1.0f, 0.0f};
+    constexpr s_color_rgb24f g_color_teal = {0.0f, 0.5f, 0.5f};
+    constexpr s_color_rgb24f g_color_cyan = {0.0f, 1.0f, 1.0f};
+    constexpr s_color_rgb24f g_color_blue = {0.0f, 0.0f, 1.0f};
+    constexpr s_color_rgb24f g_color_purple = {0.5f, 0.0f, 0.5f};
+    constexpr s_color_rgb24f g_color_magenta = {1.0f, 0.0f, 1.0f};
+    constexpr s_color_rgb24f g_color_pink = {1.0f, 0.75f, 0.8f};
+    constexpr s_color_rgb24f g_color_brown = {0.6f, 0.3f, 0.0f};
 
     struct s_texture_data_rdonly {
         s_v2_i size_in_pxs;
@@ -82,15 +73,15 @@ namespace zf::gfx {
         }
     };
 
-    inline const s_v2 g_origin_topleft = {0.0f, 0.0f};
-    inline const s_v2 g_origin_topcenter = {0.5f, 0.0f};
-    inline const s_v2 g_origin_topright = {1.0f, 0.0f};
-    inline const s_v2 g_origin_centerleft = {0.0f, 0.5f};
-    inline const s_v2 g_origin_center = {0.5f, 0.5f};
-    inline const s_v2 g_origin_centerright = {1.0f, 0.5f};
-    inline const s_v2 g_origin_bottomleft = {0.0f, 1.0f};
-    inline const s_v2 g_origin_bottomcenter = {0.5f, 1.0f};
-    inline const s_v2 g_origin_bottomright = {1.0f, 1.0f};
+    constexpr s_v2 g_origin_topleft = {0.0f, 0.0f};
+    constexpr s_v2 g_origin_topcenter = {0.5f, 0.0f};
+    constexpr s_v2 g_origin_topright = {1.0f, 0.0f};
+    constexpr s_v2 g_origin_centerleft = {0.0f, 0.5f};
+    constexpr s_v2 g_origin_center = {0.5f, 0.5f};
+    constexpr s_v2 g_origin_centerright = {1.0f, 0.5f};
+    constexpr s_v2 g_origin_bottomleft = {0.0f, 1.0f};
+    constexpr s_v2 g_origin_bottomcenter = {0.5f, 1.0f};
+    constexpr s_v2 g_origin_bottomright = {1.0f, 1.0f};
 
     constexpr s_v2_i g_font_atlas_size = {1024, 1024};
 
@@ -119,15 +110,15 @@ namespace zf::gfx {
         s_hash_map<s_font_code_point_pair, t_i32> code_pt_pairs_to_kernings;
     };
 
-    inline const s_v2 g_str_alignment_topleft = {0.0f, 0.0f};
-    inline const s_v2 g_str_alignment_topcenter = {0.5f, 0.0f};
-    inline const s_v2 g_str_alignment_topright = {1.0f, 0.0f};
-    inline const s_v2 g_str_alignment_centerleft = {0.0f, 0.5f};
-    inline const s_v2 g_str_alignment_center = {0.5f, 0.5f};
-    inline const s_v2 g_str_alignment_centerright = {1.0f, 0.5f};
-    inline const s_v2 g_str_alignment_bottomleft = {0.0f, 1.0f};
-    inline const s_v2 g_str_alignment_bottomcenter = {0.5f, 1.0f};
-    inline const s_v2 g_str_alignment_bottomright = {1.0f, 1.0f};
+    constexpr s_v2 g_str_alignment_topleft = {0.0f, 0.0f};
+    constexpr s_v2 g_str_alignment_topcenter = {0.5f, 0.0f};
+    constexpr s_v2 g_str_alignment_topright = {1.0f, 0.0f};
+    constexpr s_v2 g_str_alignment_centerleft = {0.0f, 0.5f};
+    constexpr s_v2 g_str_alignment_center = {0.5f, 0.5f};
+    constexpr s_v2 g_str_alignment_centerright = {1.0f, 0.5f};
+    constexpr s_v2 g_str_alignment_bottomleft = {0.0f, 1.0f};
+    constexpr s_v2 g_str_alignment_bottomcenter = {0.5f, 1.0f};
+    constexpr s_v2 g_str_alignment_bottomright = {1.0f, 1.0f};
 
     // ============================================================
 

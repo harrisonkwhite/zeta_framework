@@ -119,7 +119,7 @@ namespace zf::gfx {
         return bgfx::createProgram(vert_shader_bgfx_hdl, frag_shader_bgfx_hdl, true);
     }
 
-    s_rendering_basis *StartupModule(s_arena *const arena) {
+    s_rendering_basis *StartupGFX(s_arena *const arena) {
         ZF_ASSERT(g_state.state == ek_state_inactive);
 
         g_state = {
@@ -186,7 +186,7 @@ namespace zf::gfx {
         return rendering_basis;
     }
 
-    void ShutdownModule(const s_rendering_basis *const rendering_basis) {
+    void ShutdownGFX(const s_rendering_basis *const rendering_basis) {
         ZF_ASSERT(g_state.state == ek_state_active_but_not_rendering);
 
         bgfx::destroy(rendering_basis->texture_sampler_uniform_bgfx_hdl);

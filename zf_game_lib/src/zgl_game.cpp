@@ -6,8 +6,8 @@
 #include <zgl/zgl_audio.h>
 
 namespace zf {
-    const s_v2_i g_init_window_size = {1280, 720};
-    const t_f64 g_targ_ticks_per_sec = 60.0; // @todo: Make this customisable?
+    static const s_v2_i g_init_window_size = {1280, 720};
+    static const t_f64 g_targ_ticks_per_sec = 60.0; // @todo: Make this customisable?
 
     void RunGame(const t_game_init_func init_func, const t_game_tick_func tick_func, const t_game_render_func render_func, const t_game_deinit_func deinit_func) {
         ZF_ASSERT(init_func);
@@ -28,8 +28,8 @@ namespace zf {
 
         s_input_state *const input_state = detail::CreateInputState(&perm_arena);
 
-        gfx::s_rendering_basis *const rendering_basis = gfx::StartupModule(&perm_arena);
-        ZF_DEFER({ gfx::ShutdownModule(rendering_basis); });
+        gfx::s_rendering_basis *const rendering_basis = gfx::StartupGFX(&perm_arena);
+        ZF_DEFER({ gfx::ShutdownGFX(rendering_basis); });
 
         s_rng *const rng = CreateRNG(0, &perm_arena); // @todo: Proper seed!
 

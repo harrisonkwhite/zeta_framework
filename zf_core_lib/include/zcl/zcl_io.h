@@ -463,8 +463,8 @@ namespace zf {
         ek_hex_fmt_flags_allow_odd_digit_cnt = 1 << 2
     };
 
-    inline const t_i32 g_hex_fmt_digit_cnt_min = 1;
-    inline const t_i32 g_hex_fmt_digit_cnt_max = 16;
+    constexpr t_i32 g_hex_fmt_digit_cnt_min = 1;
+    constexpr t_i32 g_hex_fmt_digit_cnt_max = 16;
 
     template <co_integral_unsigned tp_type>
     struct s_hex_fmt {
@@ -555,8 +555,8 @@ namespace zf {
         t_b8 trim_trailing_zeros;
     };
 
-    s_v2_fmt FormatV2(const s_v2 val, const t_b8 trim_trailing_zeros = false) { return {val, trim_trailing_zeros}; }
-    s_v2_fmt FormatDefault(const s_v2 val) { return FormatV2(val); }
+    inline s_v2_fmt FormatV2(const s_v2 val, const t_b8 trim_trailing_zeros = false) { return {val, trim_trailing_zeros}; }
+    inline s_v2_fmt FormatDefault(const s_v2 val) { return FormatV2(val); }
 
     inline t_b8 PrintType(c_stream *const stream, const s_v2_fmt fmt) {
         return Print(stream, ZF_STR_LITERAL("("))
@@ -572,8 +572,8 @@ namespace zf {
         s_v2_i val;
     };
 
-    s_v2_i_fmt FormatV2(const s_v2_i val) { return {val}; }
-    s_v2_i_fmt FormatDefault(const s_v2_i val) { return FormatV2(val); }
+    inline s_v2_i_fmt FormatV2(const s_v2_i val) { return {val}; }
+    inline s_v2_i_fmt FormatDefault(const s_v2_i val) { return FormatV2(val); }
 
     inline t_b8 PrintType(c_stream *const stream, const s_v2_i_fmt fmt) {
         return Print(stream, ZF_STR_LITERAL("("))
@@ -726,8 +726,8 @@ namespace zf {
     // ========================================
     // @subsection: Format Printing
 
-    inline const t_code_pt g_print_fmt_spec = '%';
-    inline const t_code_pt g_print_fmt_esc = '^';
+    constexpr t_code_pt g_print_fmt_spec = '%';
+    constexpr t_code_pt g_print_fmt_esc = '^';
 
     inline t_i32 CountFormatSpecifiers(const s_str_rdonly str) {
         static_assert(IsCodePointASCII(g_print_fmt_spec) && IsCodePointASCII(g_print_fmt_esc)); // Assuming this for this algorithm.

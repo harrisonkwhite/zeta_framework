@@ -6,7 +6,7 @@ namespace zf::gfx {
 
         s_rect_i src_rect_to_use;
 
-        if (src_rect == s_rect_i{}) {
+        if (src_rect == s_rect_i()) {
             src_rect_to_use = {0, 0, texture_size.x, texture_size.y};
         } else {
             ZF_ASSERT(src_rect.x >= 0 && src_rect.y >= 0 && src_rect.Right() <= texture_size.x && src_rect.Bottom() <= texture_size.y);
