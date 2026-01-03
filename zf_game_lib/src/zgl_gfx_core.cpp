@@ -4,15 +4,6 @@
 #include <zgl/zgl_platform.h>
 
 namespace zf {
-    // @todo: These should be in gfx!
-    extern const t_u8 g_batch_triangle_vert_shader_default_src_raw[];
-    extern const t_i32 g_batch_triangle_vert_shader_default_src_len;
-
-    extern const t_u8 g_batch_triangle_frag_shader_default_src_raw[];
-    extern const t_i32 g_batch_triangle_frag_shader_default_src_len;
-}
-
-namespace zf::gfx {
     // ============================================================
     // @section: Types and Globals
 
@@ -25,7 +16,7 @@ namespace zf::gfx {
     struct {
         e_state state;
         s_v2_i resolution_cache;
-        s_resource_group perm_resource_group;
+        s_gfx_resource_group perm_resource_group;
     } g_state;
 
     enum e_resource_type : t_i32 {
@@ -33,7 +24,7 @@ namespace zf::gfx {
         ek_resource_type_shader_prog
     };
 
-    struct s_resource {
+    struct s_gfx_resource {
         e_resource_type type;
 
         union {
@@ -47,7 +38,7 @@ namespace zf::gfx {
             } shader_prog;
         } type_data;
 
-        s_resource *next;
+        s_gfx_resource *next;
 
         auto &Texture() {
             ZF_ASSERT(type == ek_resource_type_texture);
@@ -70,6 +61,12 @@ namespace zf::gfx {
         }
     };
 
+    extern const t_u8 g_batch_triangle_vert_shader_default_src_raw[];
+    extern const t_i32 g_batch_triangle_vert_shader_default_src_len;
+
+    extern const t_u8 g_batch_triangle_frag_shader_default_src_raw[];
+    extern const t_i32 g_batch_triangle_frag_shader_default_src_len;
+
     const t_i32 g_batch_vert_limit = 1024;
     const t_i32 g_frame_vert_limit = 8192; // @todo: This should definitely be modifiable if the user wants.
 
@@ -78,7 +75,7 @@ namespace zf::gfx {
         bgfx::ProgramHandle shader_prog_bgfx_hdl;
         bgfx::UniformHandle texture_sampler_uniform_bgfx_hdl;
 
-        const s_resource *px_texture;
+        const s_gfx_resource *px_texture;
     };
 
     struct s_rendering_context {
@@ -90,7 +87,7 @@ namespace zf::gfx {
             s_static_array<s_batch_vert, g_batch_vert_limit> verts;
             t_i32 vert_cnt;
 
-            const s_resource *texture;
+            const s_gfx_resource *texture;
         } batch_state;
     };
 
@@ -119,7 +116,7 @@ namespace zf::gfx {
         return bgfx::createProgram(vert_shader_bgfx_hdl, frag_shader_bgfx_hdl, true);
     }
 
-    s_rendering_basis *StartupGFX(s_arena *const arena) {
+    s_rendering_basis *StartupGFX(s_arena *const arena, s_gfx_resource_group **const o_perm_resource_group) {
         ZF_ASSERT(g_state.state == ek_state_inactive);
 
         g_state = {
@@ -151,6 +148,7 @@ namespace zf::gfx {
         }
 
         g_state.perm_resource_group = {.arena = arena};
+        *o_perm_resource_group = &g_state.perm_resource_group;
 
         //
         // Rendering Basis Setup
@@ -193,22 +191,22 @@ namespace zf::gfx {
         bgfx::destroy(rendering_basis->shader_prog_bgfx_hdl);
         bgfx::destroy(rendering_basis->vert_buf_bgfx_hdl);
 
-        ResourceGroupDestroy(&g_state.perm_resource_group);
+        DestroyGFXResourceGroup(&g_state.perm_resource_group);
 
         bgfx::shutdown();
 
         g_state = {};
     }
 
-    s_v2_i TextureSize(const s_resource *const texture) {
+    s_v2_i TextureSize(const s_gfx_resource *const texture) {
         ZF_ASSERT(g_state.state != ek_state_inactive);
         return texture->Texture().size;
     }
 
-    void ResourceGroupDestroy(s_resource_group *const group) {
+    void DestroyGFXResourceGroup(s_gfx_resource_group *const group) {
         ZF_ASSERT(g_state.state == ek_state_active_but_not_rendering);
 
-        s_resource *resource = group->head;
+        s_gfx_resource *resource = group->head;
 
         while (resource) {
             switch (resource->type) {
@@ -224,7 +222,7 @@ namespace zf::gfx {
                 ZF_UNREACHABLE();
             }
 
-            s_resource *const next = resource->next;
+            s_gfx_resource *const next = resource->next;
             *resource = {};
             resource = next;
         }
@@ -232,10 +230,10 @@ namespace zf::gfx {
         *group = {};
     }
 
-    static s_resource *AddToResourceGroup(s_resource_group *const group, const e_resource_type type) {
+    static s_gfx_resource *AddToResourceGroup(s_gfx_resource_group *const group, const e_resource_type type) {
         ZF_ASSERT(g_state.state == ek_state_active_but_not_rendering);
 
-        const auto resource = PushItemZeroed<s_resource>(group->arena);
+        const auto resource = PushItemZeroed<s_gfx_resource>(group->arena);
 
         if (!group->head) {
             group->head = resource;
@@ -250,7 +248,7 @@ namespace zf::gfx {
         return resource;
     }
 
-    s_resource *CreateTexture(const s_texture_data_rdonly texture_data, s_resource_group *const group) {
+    s_gfx_resource *CreateTexture(const s_texture_data_rdonly texture_data, s_gfx_resource_group *const group) {
         ZF_ASSERT(g_state.state == ek_state_active_but_not_rendering);
 
         const uint64_t sampler_flags = BGFX_SAMPLER_MIN_POINT | BGFX_SAMPLER_MAG_POINT | BGFX_SAMPLER_U_CLAMP | BGFX_SAMPLER_V_CLAMP;
@@ -266,7 +264,7 @@ namespace zf::gfx {
         return resource;
     }
 
-    s_resource *CreateShaderProg(const s_array_rdonly<t_u8> vert_shader_compiled_bin, const s_array_rdonly<t_u8> frag_shader_compiled_bin, s_resource_group *const group) {
+    s_gfx_resource *CreateShaderProg(const s_array_rdonly<t_u8> vert_shader_compiled_bin, const s_array_rdonly<t_u8> frag_shader_compiled_bin, s_gfx_resource_group *const group) {
         const bgfx::Memory *const vert_shader_bgfx_mem = bgfx::copy(vert_shader_compiled_bin.raw, static_cast<uint32_t>(vert_shader_compiled_bin.len));
         const bgfx::ShaderHandle vert_shader_bgfx_hdl = bgfx::createShader(vert_shader_bgfx_mem);
 
@@ -367,7 +365,7 @@ namespace zf::gfx {
         g_state.state = ek_state_active_but_not_rendering;
     }
 
-    void SubmitTrianglesToBatch(s_rendering_context *const rc, const s_array_rdonly<s_batch_triangle> triangles, const s_resource *const texture) {
+    void SubmitTrianglesToBatch(s_rendering_context *const rc, const s_array_rdonly<s_batch_triangle> triangles, const s_gfx_resource *const texture) {
         ZF_ASSERT(g_state.state == ek_state_active_and_rendering);
         ZF_ASSERT(triangles.len > 0);
         ZF_ASSERT(!texture || texture->type == ek_resource_type_texture);

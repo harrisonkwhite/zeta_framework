@@ -93,7 +93,7 @@ namespace zf {
 
     t_b8 PackAssets(const s_str_rdonly instrs_json_file_path) {
         s_arena arena = CreateArena();
-        ZF_DEFER({ Destroy(&arena); });
+        ZF_DEFER({ DestroyArena(&arena); });
 
         cJSON *cj;
 
@@ -138,7 +138,7 @@ namespace zf {
             cJSON *cj_asset;
 
             cJSON_ArrayForEach(cj_asset, cj_assets) {
-                Rewind(&arena);
+                RewindArena(&arena);
 
                 if (!cJSON_IsObject(cj_asset)) {
                     continue;
@@ -207,7 +207,7 @@ namespace zf {
                     const auto file_path = ConvertCstr(field_vals[ek_texture_field_file_path]->valuestring);
                     const auto out_file_path = ConvertCstr(field_vals[ek_texture_field_out_file_path]->valuestring);
 
-                    gfx::s_texture_data texture_data;
+                    s_texture_data texture_data;
 
                     if (!LoadTextureDataFromRaw(file_path, &arena, &arena, &texture_data)) {
                         LogError(ZF_STR_LITERAL("Failed to load texture from file \"%\"!"), file_path);
@@ -246,8 +246,8 @@ namespace zf {
 
                     // @todo: Proper check for invalid height!
 
-                    gfx::s_font_arrangement arrangement;
-                    s_array_mut<gfx::t_font_atlas_rgba> atlas_rgbas;
+                    s_font_arrangement arrangement;
+                    s_array_mut<t_font_atlas_rgba> atlas_rgbas;
 
                     if (!LoadFontDataFromRaw(file_path, height, code_pt_bv, &arena, &arena, &arena, &arrangement, &atlas_rgbas)) {
                         LogError(ZF_STR_LITERAL("Failed to load font from file \"%\"!"), file_path);
@@ -286,7 +286,7 @@ namespace zf {
                         return false;
                     }
 
-                    if (!gfx::PackShader(out_file_path, compiled_bin, &arena)) {
+                    if (!PackShader(out_file_path, compiled_bin, &arena)) {
                         LogError(ZF_STR_LITERAL("Failed to pack shader to file \"%\"!"), out_file_path);
                         return false;
                     }

@@ -4,7 +4,7 @@
 #include <zcl/zcl_math.h>
 #include <zcl/zcl_ds_hash_maps.h>
 
-namespace zf::gfx {
+namespace zf {
     // ============================================================
     // @section: Types and Globals
 

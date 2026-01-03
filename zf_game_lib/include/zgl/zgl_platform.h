@@ -5,9 +5,9 @@
 
 namespace zf {
     // Note that the window is not shown by default, you have to manually do this.
-    void PlatformStartup(const s_v2_i init_window_size);
+    void StartupPlatform(const s_v2_i init_window_size);
 
-    void PlatformShutdown();
+    void ShutdownPlatform();
 
     // Gives the time in seconds since the platform module was started.
     t_f64 Time();
@@ -24,7 +24,7 @@ namespace zf {
     // Returns whether a window close has been requested.
     t_b8 ShouldWindowClose();
 
-    void WindowSetTitle(const s_str_rdonly title, s_arena *const temp_arena);
+    void SetWindowTitle(const s_str_rdonly title, s_arena *const temp_arena);
 
     // Sets the LOGICAL window size. The actual new framebuffer size MIGHT be larger if there is DPI scaling.
     void WindowSetSize(const s_v2_i size);

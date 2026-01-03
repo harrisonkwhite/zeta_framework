@@ -18,24 +18,26 @@ namespace zf {
         // Initialisation
         //
         s_arena perm_arena = CreateArena();
-        ZF_DEFER({ Destroy(&perm_arena); });
+        ZF_DEFER({ DestroyArena(&perm_arena); });
 
         s_arena temp_arena = CreateArena();
-        ZF_DEFER({ Destroy(&temp_arena); });
+        ZF_DEFER({ DestroyArena(&temp_arena); });
 
-        PlatformStartup(g_init_window_size);
-        ZF_DEFER({ PlatformShutdown(); });
+        StartupPlatform(g_init_window_size);
+        ZF_DEFER({ ShutdownPlatform(); });
 
         s_input_state *const input_state = detail::CreateInputState(&perm_arena);
 
-        gfx::s_rendering_basis *const rendering_basis = gfx::StartupGFX(&perm_arena);
-        ZF_DEFER({ gfx::ShutdownGFX(rendering_basis); });
+        s_gfx_resource_group *perm_gfx_resource_group;
+        s_rendering_basis *const rendering_basis = StartupGFX(&perm_arena, &perm_gfx_resource_group);
+        ZF_DEFER({ ShutdownGFX(rendering_basis); });
 
         s_rng *const rng = CreateRNG(0, &perm_arena); // @todo: Proper seed!
 
         init_func({
             .perm_arena = &perm_arena,
             .temp_arena = &temp_arena,
+            .perm_gfx_resource_group = perm_gfx_resource_group,
             .rng = rng,
         });
 
@@ -65,12 +67,13 @@ namespace zf {
 
             // Once enough time has passed (i.e. the time accumulator has reached the tick interval), run at least a single tick.
             while (frame_dur_accum >= targ_tick_interval) {
-                Rewind(&temp_arena);
+                RewindArena(&temp_arena);
 
                 tick_func({
                     .perm_arena = &perm_arena,
                     .temp_arena = &temp_arena,
                     .input_state = input_state,
+                    .perm_gfx_resource_group = perm_gfx_resource_group,
                     .rng = rng,
                 });
 
@@ -79,9 +82,9 @@ namespace zf {
                 frame_dur_accum -= targ_tick_interval;
             }
 
-            Rewind(&temp_arena);
+            RewindArena(&temp_arena);
 
-            gfx::s_rendering_context *const rendering_context = gfx::BeginRendering(rendering_basis, gfx::s_color_rgb8(109, 187, 255), &temp_arena); // @todo: Make the clear colour customisable?
+            s_rendering_context *const rendering_context = BeginRendering(rendering_basis, s_color_rgb8{109, 187, 255}, &temp_arena); // @todo: Make the clear colour customisable?
 
             render_func({
                 .perm_arena = &perm_arena,
@@ -90,7 +93,7 @@ namespace zf {
                 .rng = rng,
             });
 
-            gfx::EndRendering(rendering_context);
+            EndRendering(rendering_context);
         }
     }
 }

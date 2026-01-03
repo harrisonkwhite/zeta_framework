@@ -201,7 +201,7 @@ namespace zf {
     }
 
     // Frees all arena memory. It is valid to call this even if no pushing was done.
-    void Destroy(s_arena *const arena);
+    void DestroyArena(s_arena *const arena);
 
     // Will lazily allocate memory as needed. Allocation failure is treated as fatal and causes an abort - you don't need to check for nullptr.
     void *Push(s_arena *const arena, const t_i32 size, const t_i32 alignment);
@@ -245,7 +245,7 @@ namespace zf {
     }
 
     // Takes the arena offset to the beginning of its allocated memory (if any) to overwrite from there.
-    void Rewind(s_arena *const arena);
+    void RewindArena(s_arena *const arena);
 
     template <typename tp_type>
     s_array_rdonly<tp_type> Slice(const s_array_rdonly<tp_type> arr, const t_i32 beg, const t_i32 end) {

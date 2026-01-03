@@ -1,7 +1,7 @@
 #include <zgl/zgl_gfx_helpers.h>
 
-namespace zf::gfx {
-    void RenderTexture(s_rendering_context *const rc, const s_resource *const texture, const s_v2 pos, const s_rect_i src_rect) {
+namespace zf {
+    void RenderTexture(s_rendering_context *const rc, const s_gfx_resource *const texture, const s_v2 pos, const s_rect_i src_rect) {
         const auto texture_size = TextureSize(texture);
 
         s_rect_i src_rect_to_use;
@@ -36,15 +36,15 @@ namespace zf::gfx {
         SubmitTrianglesToBatch(rc, AsNonstatic(triangles), texture);
     }
 
-    s_font CreateFontFromRaw(const s_str_rdonly file_path, const t_i32 height, t_code_pt_bit_vec *const code_pts, s_arena *const temp_arena, s_resource_group *const resource_group) {
+    s_font CreateFontFromRaw(const s_str_rdonly file_path, const t_i32 height, t_code_pt_bit_vec *const code_pts, s_arena *const temp_arena, s_gfx_resource_group *const resource_group) {
         s_font_arrangement arrangement;
         s_array_mut<t_font_atlas_rgba> atlas_rgbas;
 
-        if (!zf::gfx::LoadFontDataFromRaw(file_path, height, code_pts, resource_group->arena, temp_arena, temp_arena, &arrangement, &atlas_rgbas)) {
+        if (!zf::LoadFontDataFromRaw(file_path, height, code_pts, resource_group->arena, temp_arena, temp_arena, &arrangement, &atlas_rgbas)) {
             ZF_FATAL();
         }
 
-        const s_array_mut<s_resource *> atlases = PushArray<s_resource *>(resource_group->arena, atlas_rgbas.len);
+        const s_array_mut<s_gfx_resource *> atlases = PushArray<s_gfx_resource *>(resource_group->arena, atlas_rgbas.len);
 
         for (t_i32 i = 0; i < atlas_rgbas.len; i++) {
             atlases[i] = CreateTexture({g_font_atlas_size, atlas_rgbas[i]}, resource_group);
@@ -56,15 +56,15 @@ namespace zf::gfx {
         };
     }
 
-    s_font CreateFontFromPacked(const s_str_rdonly file_path, s_arena *const temp_arena, s_resource_group *const resource_group) {
+    s_font CreateFontFromPacked(const s_str_rdonly file_path, s_arena *const temp_arena, s_gfx_resource_group *const resource_group) {
         s_font_arrangement arrangement;
         s_array_mut<t_font_atlas_rgba> atlas_rgbas;
 
-        if (!zf::gfx::UnpackFont(file_path, resource_group->arena, temp_arena, temp_arena, &arrangement, &atlas_rgbas)) {
+        if (!zf::UnpackFont(file_path, resource_group->arena, temp_arena, temp_arena, &arrangement, &atlas_rgbas)) {
             ZF_FATAL();
         }
 
-        const auto atlases = PushArray<s_resource *>(resource_group->arena, atlas_rgbas.len);
+        const auto atlases = PushArray<s_gfx_resource *>(resource_group->arena, atlas_rgbas.len);
 
         for (t_i32 i = 0; i < atlas_rgbas.len; i++) {
             atlases[i] = CreateTexture({g_font_atlas_size, atlas_rgbas[i]}, resource_group);

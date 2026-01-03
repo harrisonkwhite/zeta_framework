@@ -26,7 +26,7 @@ namespace zf {
         s_v2_i prefullscreen_size;
     } g_state;
 
-    void PlatformStartup(const s_v2_i init_window_size) {
+    void StartupPlatform(const s_v2_i init_window_size) {
         ZF_REQUIRE(!g_state.active);
         ZF_REQUIRE(init_window_size.x > 0 && init_window_size.y > 0);
 
@@ -69,7 +69,7 @@ namespace zf {
         }
     }
 
-    void PlatformShutdown() {
+    void ShutdownPlatform() {
         ZF_REQUIRE(g_state.active);
 
         glfwDestroyWindow(g_state.glfw_window);
@@ -258,7 +258,7 @@ namespace zf {
         return glfwWindowShouldClose(g_state.glfw_window);
     }
 
-    void WindowSetTitle(const s_str_rdonly title, s_arena *const temp_arena) {
+    void SetWindowTitle(const s_str_rdonly title, s_arena *const temp_arena) {
         ZF_ASSERT(g_state.active);
 
         const s_str_rdonly title_terminated = CloneStrButAddTerminator(title, temp_arena);

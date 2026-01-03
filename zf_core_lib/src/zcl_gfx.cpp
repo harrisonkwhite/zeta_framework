@@ -3,7 +3,7 @@
 #include <stb_image.h>
 #include <stb_truetype.h>
 
-namespace zf::gfx {
+namespace zf {
     static const t_hash_func<t_code_pt> g_code_pt_hash_func =
         [](const t_code_pt &code_pt) {
             return static_cast<t_i32>(code_pt);

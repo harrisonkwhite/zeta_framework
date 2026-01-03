@@ -4,7 +4,7 @@
 #include <zcl/zcl_algos.h>
 
 namespace zf {
-    void Destroy(s_arena *const arena) {
+    void DestroyArena(s_arena *const arena) {
         const auto f = [](const auto self, s_arena_block *const block) {
             if (!block) {
                 return;
@@ -78,7 +78,7 @@ namespace zf {
         return result;
     }
 
-    void Rewind(s_arena *const arena) {
+    void RewindArena(s_arena *const arena) {
         arena->block_cur = arena->blocks_head;
         arena->block_cur_offs = 0;
 
