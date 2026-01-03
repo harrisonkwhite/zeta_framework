@@ -70,8 +70,8 @@ namespace zf::gfx {
         }
     };
 
-    constexpr t_i32 g_batch_vert_limit = 1024;
-    constexpr t_i32 g_frame_vert_limit = 8192; // @todo: This should definitely be modifiable if the user wants.
+    const t_i32 g_batch_vert_limit = 1024;
+    const t_i32 g_frame_vert_limit = 8192; // @todo: This should definitely be modifiable if the user wants.
 
     struct s_rendering_basis {
         bgfx::DynamicVertexBufferHandle vert_buf_bgfx_hdl;

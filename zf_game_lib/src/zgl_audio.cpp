@@ -15,7 +15,7 @@ namespace zf {
         s_sound_type(s_sound_type_arena &group, const t_i32 group_version) : group(group), group_version(group_version) {}
     };
 
-    constexpr t_i32 g_snd_inst_limit = 32;
+    const t_i32 g_snd_inst_limit = 32;
 
     struct {
         t_b8 initted = false;

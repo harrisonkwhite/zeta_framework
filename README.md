@@ -2,7 +2,7 @@
 
 This is a data-oriented framework for developing 2D games for Windows, Mac, and Linux.
 
-It was originally written in C, though has been switched to a highly procedural subset of C++ 20 to leverage useful features like templates, operator overloading, function overloading, constexpr, and more.
+It was originally written in C, though has been switched to a highly procedural subset of C++ 20 to leverage useful features like templates, operator overloading, function overloading, and more.
 
 ---
 
