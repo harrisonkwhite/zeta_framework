@@ -14,7 +14,7 @@ namespace zf::gfx {
         t_f32 b;
         t_f32 a;
 
-        operator s_v4() const { return {r, g, b, a}; }
+        constexpr operator s_v4() const { return {r, g, b, a}; }
     };
 
     struct s_color_rgb24f {
@@ -22,8 +22,8 @@ namespace zf::gfx {
         t_f32 g;
         t_f32 b;
 
-        operator s_color_rgba32f() const { return {r, g, b, 1.0f}; }
-        operator s_v3() const { return {r, g, b}; }
+        constexpr operator s_color_rgba32f() const { return {r, g, b, 1.0f}; }
+        constexpr operator s_v3() const { return {r, g, b}; }
     };
 
     struct s_color_rgba8 {
@@ -38,7 +38,7 @@ namespace zf::gfx {
         t_u8 g;
         t_u8 b;
 
-        operator s_color_rgba8() const { return {r, g, b, 255}; }
+        constexpr operator s_color_rgba8() const { return {r, g, b, 255}; }
     };
 
     constexpr s_color_rgb24f g_color_black = {0.0f, 0.0f, 0.0f};

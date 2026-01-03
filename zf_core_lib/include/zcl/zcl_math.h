@@ -14,37 +14,37 @@ namespace zf {
         t_f32 x;
         t_f32 y;
 
-        s_v2 operator+(const s_v2 &other) const { return {x + other.x, y + other.y}; }
-        s_v2 operator-(const s_v2 &other) const { return {x - other.x, y - other.y}; }
-        s_v2 operator*(const t_f32 scalar) const { return {x * scalar, y * scalar}; }
-        s_v2 operator/(const t_f32 scalar) const { return {x / scalar, y / scalar}; }
+        constexpr s_v2 operator+(const s_v2 &other) const { return {x + other.x, y + other.y}; }
+        constexpr s_v2 operator-(const s_v2 &other) const { return {x - other.x, y - other.y}; }
+        constexpr s_v2 operator*(const t_f32 scalar) const { return {x * scalar, y * scalar}; }
+        constexpr s_v2 operator/(const t_f32 scalar) const { return {x / scalar, y / scalar}; }
 
-        s_v2 &operator+=(const s_v2 &other) {
+        constexpr s_v2 &operator+=(const s_v2 &other) {
             x += other.x;
             y += other.y;
             return *this;
         }
 
-        s_v2 &operator-=(const s_v2 &other) {
+        constexpr s_v2 &operator-=(const s_v2 &other) {
             x -= other.x;
             y -= other.y;
             return *this;
         }
 
-        s_v2 &operator*=(const t_f32 scalar) {
+        constexpr s_v2 &operator*=(const t_f32 scalar) {
             x *= scalar;
             y *= scalar;
             return *this;
         }
 
-        s_v2 &operator/=(const t_f32 scalar) {
+        constexpr s_v2 &operator/=(const t_f32 scalar) {
             x /= scalar;
             y /= scalar;
             return *this;
         }
     };
 
-    inline s_v2 operator*(const t_f32 scalar, const s_v2 v) {
+    constexpr s_v2 operator*(const t_f32 scalar, const s_v2 v) {
         return {v.x * scalar, v.y * scalar};
     }
 
@@ -52,18 +52,19 @@ namespace zf {
         t_i32 x;
         t_i32 y;
 
-        t_b8 operator==(const s_v2_i &other) const { return x == other.x && y == other.y; }
-        t_b8 operator!=(const s_v2_i &other) const { return !(*this == other); }
-        s_v2_i operator+(const s_v2_i &other) const { return {x + other.x, y + other.y}; }
-        s_v2_i operator-(const s_v2_i &other) const { return {x - other.x, y - other.y}; }
+        constexpr t_b8 operator==(const s_v2_i &other) const { return x == other.x && y == other.y; }
+        constexpr t_b8 operator!=(const s_v2_i &other) const { return !(*this == other); }
 
-        s_v2_i &operator+=(const s_v2_i &other) {
+        constexpr s_v2_i operator+(const s_v2_i &other) const { return {x + other.x, y + other.y}; }
+        constexpr s_v2_i operator-(const s_v2_i &other) const { return {x - other.x, y - other.y}; }
+
+        constexpr s_v2_i &operator+=(const s_v2_i &other) {
             x += other.x;
             y += other.y;
             return *this;
         }
 
-        s_v2_i &operator-=(const s_v2_i &other) {
+        constexpr s_v2_i &operator-=(const s_v2_i &other) {
             x -= other.x;
             y -= other.y;
             return *this;

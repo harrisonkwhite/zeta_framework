@@ -79,14 +79,6 @@ namespace zf {
 
         tp_type raw[tp_len];
 
-        operator s_array_mut<tp_type>() {
-            return {raw, tp_len};
-        }
-
-        operator s_array_rdonly<tp_type>() const {
-            return {raw, tp_len};
-        }
-
         s_array_mut<tp_type> AsNonstatic() {
             return {raw, tp_len};
         }
@@ -135,10 +127,6 @@ namespace zf {
         const t_u8 *bytes_raw;
         t_i32 bit_cnt;
 
-        s_bit_vec_rdonly() = default;
-        s_bit_vec_rdonly(const t_u8 *const bytes_raw, const t_i32 bit_cnt) : bytes_raw(bytes_raw), bit_cnt(bit_cnt) {}
-        s_bit_vec_rdonly(const s_array_rdonly<t_u8> bytes) : bytes_raw(bytes.raw), bit_cnt(BytesToBits(bytes.len)) {}
-
         s_array_rdonly<t_u8> Bytes() const {
             return {bytes_raw, BitsToBytes(bit_cnt)};
         }
@@ -147,10 +135,6 @@ namespace zf {
     struct s_bit_vec_mut {
         t_u8 *bytes_raw;
         t_i32 bit_cnt;
-
-        s_bit_vec_mut() = default;
-        s_bit_vec_mut(t_u8 *const bytes_raw, const t_i32 bit_cnt) : bytes_raw(bytes_raw), bit_cnt(bit_cnt) {}
-        s_bit_vec_mut(const s_array_mut<t_u8> bytes) : bytes_raw(bytes.raw), bit_cnt(BytesToBits(bytes.len)) {}
 
         s_array_mut<t_u8> Bytes() const {
             return {bytes_raw, BitsToBytes(bit_cnt)};
@@ -166,14 +150,6 @@ namespace zf {
         static constexpr t_i32 g_bit_cnt = tp_bit_cnt;
 
         s_static_array<t_u8, BitsToBytes(tp_bit_cnt)> bytes;
-
-        operator s_bit_vec_mut() {
-            return {bytes.raw, tp_bit_cnt};
-        }
-
-        operator s_bit_vec_rdonly() const {
-            return {bytes.raw, tp_bit_cnt};
-        }
     };
 
     enum e_bitwise_mask_op : t_i32 {
@@ -346,6 +322,16 @@ namespace zf {
     inline s_bit_vec_mut CreateBitVector(const t_i32 bit_cnt, s_arena *const arena) {
         ZF_ASSERT(bit_cnt >= 0);
         return {PushArrayZeroed<t_u8>(arena, BitsToBytes(bit_cnt)).raw, bit_cnt};
+    }
+
+    template <t_i32 tp_bit_cnt>
+    s_bit_vec_mut AsNonstatic(s_static_bit_vec<tp_bit_cnt> &bv) {
+        return {bv.bytes.raw, tp_bit_cnt};
+    }
+
+    template <t_i32 tp_bit_cnt>
+    s_bit_vec_rdonly AsNonstatic(const s_static_bit_vec<tp_bit_cnt> &bv) {
+        return {bv.bytes.raw, tp_bit_cnt};
     }
 
     inline t_i32 LastByteBitCount(const s_bit_vec_rdonly bv) {
