@@ -10,8 +10,6 @@ namespace zf {
     constexpr t_f32 g_pi = 3.14159265358979323846f;
     constexpr t_f32 g_tau = 6.28318530717958647692f;
 
-    struct s_v2_i;
-
     struct s_v2 {
         t_f32 x;
         t_f32 y;
@@ -44,9 +42,6 @@ namespace zf {
             y /= scalar;
             return *this;
         }
-
-        explicit operator s_v2_i() const;
-        s_v2_i ToV2I() const;
     };
 
     inline s_v2 operator*(const t_f32 scalar, const s_v2 v) {
@@ -73,31 +68,12 @@ namespace zf {
             y -= other.y;
             return *this;
         }
-
-        explicit operator s_v2() const {
-            return {static_cast<t_f32>(x), static_cast<t_f32>(y)};
-        }
-
-        s_v2 ToV2() const {
-            return static_cast<s_v2>(*this);
-        }
     };
-
-    inline s_v2::operator s_v2_i() const {
-        return {static_cast<t_i32>(x), static_cast<t_i32>(y)};
-    }
-
-    inline s_v2_i s_v2::ToV2I() const {
-        return static_cast<s_v2_i>(*this);
-    }
 
     struct s_v3 {
         t_f32 x;
         t_f32 y;
         t_f32 z;
-
-        s_v3() = default;
-        s_v3(const t_f32 x, const t_f32 y, const t_f32 z) : x(x), y(y), z(z) {}
     };
 
     struct s_v4 {
@@ -105,41 +81,13 @@ namespace zf {
         t_f32 y;
         t_f32 z;
         t_f32 w;
-
-        s_v4() = default;
-        s_v4(const t_f32 x, const t_f32 y, const t_f32 z, const t_f32 w) : x(x), y(y), z(z), w(w) {}
     };
-
-    struct s_rect_i;
 
     struct s_rect_f {
         t_f32 x;
         t_f32 y;
         t_f32 width;
         t_f32 height;
-
-        s_v2 Pos() const { return {x, y}; }
-        s_v2 Size() const { return {width, height}; }
-
-        t_f32 Left() const { return x; }
-        t_f32 Top() const { return y; }
-        t_f32 Right() const { return x + width; }
-        t_f32 Bottom() const { return y + height; }
-
-        s_v2 TopLeft() const { return {Left(), Top()}; }
-        s_v2 TopCenter() const { return {x + (width / 2.0f), Top()}; }
-        s_v2 TopRight() const { return {Right(), Top()}; }
-        s_v2 CenterLeft() const { return {Left(), y + (height / 2.0f)}; }
-        s_v2 Center() const { return {x + (width / 2.0f), y + (height / 2.0f)}; }
-        s_v2 CenterRight() const { return {Right(), y + (height / 2.0f)}; }
-        s_v2 BottomLeft() const { return {Left(), Bottom()}; }
-        s_v2 BottomCenter() const { return {x + (width / 2.0f), Bottom()}; }
-        s_v2 BottomRight() const { return {Right(), Bottom()}; }
-
-        t_f32 Area() const { return width * height; }
-
-        explicit operator s_rect_i() const;
-        s_rect_i ToRectI() const;
     };
 
     struct s_rect_i {
@@ -147,46 +95,7 @@ namespace zf {
         t_i32 y;
         t_i32 width;
         t_i32 height;
-
-        s_v2_i Pos() const { return {x, y}; }
-        s_v2_i Size() const { return {width, height}; }
-
-        t_i32 Left() const { return x; }
-        t_i32 Top() const { return y; }
-        t_i32 Right() const { return x + width; }
-        t_i32 Bottom() const { return y + height; }
-
-        s_v2_i TopLeft() const { return {Left(), Top()}; }
-        s_v2_i TopRight() const { return {Right(), Top()}; }
-        s_v2_i BottomLeft() const { return {Left(), Bottom()}; }
-        s_v2_i BottomRight() const { return {Right(), Bottom()}; }
-
-        t_i32 Area() const { return width * height; }
-
-        t_b8 operator==(const s_rect_i &other) const {
-            return x == other.x && y == other.y && width == other.width && height == other.height;
-        }
-
-        t_b8 operator!=(const s_rect_i &other) const {
-            return !(*this == other);
-        }
-
-        explicit operator s_rect_f() const {
-            return {static_cast<t_f32>(x), static_cast<t_f32>(y), static_cast<t_f32>(width), static_cast<t_f32>(height)};
-        }
-
-        s_rect_f ToRectF() const {
-            return static_cast<s_rect_f>(*this);
-        }
     };
-
-    inline s_rect_f::operator s_rect_i() const {
-        return {static_cast<t_i32>(x), static_cast<t_i32>(y), static_cast<t_i32>(width), static_cast<t_i32>(height)};
-    }
-
-    inline s_rect_i s_rect_f::ToRectI() const {
-        return static_cast<s_rect_i>(*this);
-    }
 
     struct s_mat4x4 {
         s_static_array<s_static_array<t_f32, 4>, 4> elems;
@@ -244,26 +153,94 @@ namespace zf {
         return val >= targ - tol && val <= targ + tol;
     }
 
-    constexpr s_rect_f CreateRectF(const s_v2 pos, const s_v2 size) {
+    inline s_v2 CreateV2(const t_f32 x, const t_f32 y) {
+        return {x, y};
+    }
+
+    inline s_v2_i CreateV2I(const t_i32 x, const t_i32 y) {
+        return {x, y};
+    }
+
+    inline s_v2 ToV2(const s_v2_i v) {
+        return {static_cast<t_f32>(v.x), static_cast<t_f32>(v.y)};
+    }
+
+    inline s_rect_f CreateRectF(const t_f32 x, const t_f32 y, const t_f32 width, const t_f32 height) {
+        return {x, y, width, height};
+    }
+
+    inline s_rect_f CreateRectF(const s_v2 pos, const s_v2 size) {
         return {pos.x, pos.y, size.x, size.y};
     }
 
-    constexpr s_rect_f CreateRectF(const s_v2 pos, const s_v2 size, const s_v2 origin) {
+    inline s_rect_f CreateRectF(const s_v2 pos, const s_v2 size, const s_v2 origin) {
         return {pos.x - (size.x * origin.x), pos.y - (size.y * origin.y), size.x, size.y};
     }
 
-    constexpr s_rect_i CreateRectI(const s_v2_i pos, const s_v2_i size) {
+    inline s_rect_i CreateRectI(const t_i32 x, const t_i32 y, const t_i32 width, const t_i32 height) {
+        return {x, y, width, height};
+    }
+
+    inline s_rect_i CreateRectI(const s_v2_i pos, const s_v2_i size) {
         return {pos.x, pos.y, size.x, size.y};
     }
 
-    inline t_b8 DoRectsInters(const s_rect_i a, const s_rect_i b) {
-        return a.Left() < b.Right() && a.Top() < b.Bottom() && a.Right() > b.Left() && a.Bottom() > b.Top();
+    inline s_v2 Pos(const s_rect_f rect) { return {rect.x, rect.y}; }
+    inline s_v2_i Pos(const s_rect_i rect) { return {rect.x, rect.y}; }
+
+    inline s_v2 Size(const s_rect_f rect) { return {rect.width, rect.height}; }
+    inline s_v2_i Size(const s_rect_i rect) { return {rect.width, rect.height}; }
+
+    inline s_v2 Center(const s_rect_f rect) { return {rect.x + (rect.width / 2.0f), rect.y + (rect.height / 2.0f)}; }
+
+    inline t_f32 Left(const s_rect_f rect) { return rect.x; }
+    inline t_i32 Left(const s_rect_i rect) { return rect.x; }
+
+    inline t_f32 Top(const s_rect_f rect) { return rect.y; }
+    inline t_i32 Top(const s_rect_i rect) { return rect.y; }
+
+    inline t_f32 Right(const s_rect_f rect) { return rect.x + rect.width; }
+    inline t_i32 Right(const s_rect_i rect) { return rect.x + rect.width; }
+
+    inline t_f32 Bottom(const s_rect_f rect) { return rect.y + rect.height; }
+    inline t_i32 Bottom(const s_rect_i rect) { return rect.y + rect.height; }
+
+    inline s_v2 TopLeft(const s_rect_f rect) { return {Left(rect), Top(rect)}; }
+    inline s_v2_i TopLeft(const s_rect_i rect) { return {Left(rect), Top(rect)}; }
+
+    inline s_v2 TopRight(const s_rect_f rect) { return {Right(rect), Top(rect)}; }
+    inline s_v2_i TopRight(const s_rect_i rect) { return {Right(rect), Top(rect)}; }
+
+    inline s_v2 BottomLeft(const s_rect_f rect) { return {Left(rect), Bottom(rect)}; }
+    inline s_v2_i BottomLeft(const s_rect_i rect) { return {Left(rect), Bottom(rect)}; }
+
+    inline s_v2 BottomRight(const s_rect_f rect) { return {Right(rect), Bottom(rect)}; }
+    inline s_v2_i BottomRight(const s_rect_i rect) { return {Right(rect), Bottom(rect)}; }
+
+    inline t_f32 Area(const s_rect_f rect) { return rect.width * rect.height; }
+    inline t_i32 Area(const s_rect_i rect) { return rect.width * rect.height; }
+
+    inline t_b8 AreEqual(const s_rect_i a, const s_rect_i b) {
+        return a.x == b.x && a.y == b.y && a.width == b.width && a.height == b.height;
+    }
+
+    inline s_rect_f ToRectF(const s_rect_i rect) {
+        return {static_cast<t_f32>(rect.x), static_cast<t_f32>(rect.y), static_cast<t_f32>(rect.width), static_cast<t_f32>(rect.height)};
+    }
+
+    inline s_rect_i ToRectI(const s_rect_f rect) {
+        return {static_cast<t_i32>(rect.x), static_cast<t_i32>(rect.y), static_cast<t_i32>(rect.width), static_cast<t_i32>(rect.height)};
     }
 
     inline t_b8 DoRectsInters(const s_rect_f a, const s_rect_f b) {
-        return a.Left() < b.Right() && a.Top() < b.Bottom() && a.Right() > b.Left() && a.Bottom() > b.Top();
+        return Left(a) < Right(b) && Top(a) < Bottom(b) && Right(a) > Left(b) && Bottom(a) > Top(b);
     }
 
+    inline t_b8 DoRectsInters(const s_rect_i a, const s_rect_i b) {
+        return Left(a) < Right(b) && Top(a) < Bottom(b) && Right(a) > Left(b) && Bottom(a) > Top(b);
+    }
+
+    // @todo: Make a constant.
     inline s_mat4x4 IdentityMatrix() {
         s_mat4x4 mat = {};
         mat.elems[0][0] = 1.0f;
@@ -323,29 +300,29 @@ namespace zf {
     }
 
     inline t_b8 IsPointInRect(const s_v2 pt, const s_rect_f rect) {
-        return pt.x > rect.Left() && pt.y > rect.Top() && pt.x < rect.Right() && pt.y < rect.Bottom();
+        return pt.x > Left(rect) && pt.y > Top(rect) && pt.x < Right(rect) && pt.y < Bottom(rect);
     }
 
     inline t_b8 IsPointInRect(const s_v2_i pt, const s_rect_i rect) {
-        return pt.x > rect.Left() && pt.y > rect.Top() && pt.x < rect.Right() && pt.y < rect.Bottom();
+        return pt.x > Left(rect) && pt.y > Top(rect) && pt.x < Right(rect) && pt.y < Bottom(rect);
     }
 
     inline s_v2 ClampedWithinContainer(const s_v2 pt, const s_rect_f container) {
-        return {Clamp(pt.x, container.Left(), container.Right()), Clamp(pt.y, container.Top(), container.Bottom())};
+        return {Clamp(pt.x, Left(container), Right(container)), Clamp(pt.y, Top(container), Bottom(container))};
     }
 
     inline s_v2_i ClampedWithinContainer(const s_v2_i pt, const s_rect_i container) {
-        return {Clamp(pt.x, container.Left(), container.Right()), Clamp(pt.y, container.Top(), container.Bottom())};
+        return {Clamp(pt.x, Left(container), Right(container)), Clamp(pt.y, Top(container), Bottom(container))};
     }
 
     inline s_rect_f ClampedWithinContainer(const s_rect_f rect, const s_rect_f container) {
         const s_v2 tl = {ZF_MAX(rect.x, container.x), ZF_MAX(rect.y, container.y)};
-        return {tl.x, tl.y, ZF_MAX(ZF_MIN(rect.Right(), container.Right()) - tl.x, 0), ZF_MAX(ZF_MIN(rect.Bottom(), container.Bottom()) - tl.y, 0)};
+        return {tl.x, tl.y, ZF_MAX(ZF_MIN(Right(rect), Right(container)) - tl.x, 0), ZF_MAX(ZF_MIN(Bottom(rect), Bottom(container)) - tl.y, 0)};
     }
 
     inline s_rect_i ClampedWithinContainer(const s_rect_i rect, const s_rect_i container) {
         const s_v2_i tl = {ZF_MAX(rect.x, container.x), ZF_MAX(rect.y, container.y)};
-        return {tl.x, tl.y, ZF_MAX(ZF_MIN(rect.Right(), container.Right()) - tl.x, 0), ZF_MAX(ZF_MIN(rect.Bottom(), container.Bottom()) - tl.y, 0)};
+        return {tl.x, tl.y, ZF_MAX(ZF_MIN(Right(rect), Right(container)) - tl.x, 0), ZF_MAX(ZF_MIN(Bottom(rect), Bottom(container)) - tl.y, 0)};
     }
 
     // Returns a value between 0 and 1 indicating what percentage of the rectangle is within the container.
@@ -353,7 +330,7 @@ namespace zf {
         ZF_ASSERT(container.width > 0 && container.height > 0);
 
         const auto subrect = ClampedWithinContainer(rect, container);
-        return Clamp(subrect.Area() / container.Area(), 0.0f, 1.0f);
+        return Clamp(Area(subrect) / Area(container), 0.0f, 1.0f);
     }
 
     // Returns a value between 0 and 1 indicating what percentage of the rectangle is within the container.
@@ -361,7 +338,7 @@ namespace zf {
         ZF_ASSERT(container.width > 0 && container.height > 0);
 
         const auto subrect = ClampedWithinContainer(rect, container);
-        return Clamp(static_cast<t_f32>(subrect.Area()) / static_cast<t_f32>(container.Area()), 0.0f, 1.0f);
+        return Clamp(static_cast<t_f32>(Area(subrect)) / static_cast<t_f32>(Area(container)), 0.0f, 1.0f);
     }
 
     s_rect_f CalcSpanningRect(const s_array_mut<s_rect_f> rects);

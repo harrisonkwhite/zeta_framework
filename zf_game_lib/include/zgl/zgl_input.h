@@ -144,7 +144,7 @@ namespace zf {
 
     namespace detail {
         s_input_state *CreateInputState(s_arena *const arena);
-        void InputStateClearEvents(s_input_state *const input_state);
+        void ClearInputEvents(s_input_state *const input_state);
 
         void KeyUpdateState(s_input_state *const input_state, const e_key_code code, const t_b8 is_down);
 

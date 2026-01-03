@@ -39,7 +39,7 @@ namespace zf {
         return PushItemZeroed<s_input_state>(arena);
     }
 
-    void detail::InputStateClearEvents(s_input_state *const input_state) {
+    void detail::ClearInputEvents(s_input_state *const input_state) {
         ClearItem(&input_state->events, 0);
     }
 

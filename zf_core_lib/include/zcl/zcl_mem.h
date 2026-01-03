@@ -31,9 +31,6 @@ namespace zf {
         const tp_type *raw;
         t_i32 len;
 
-        s_array_rdonly() = default;
-        s_array_rdonly(const tp_type *const raw, const t_i32 len) : raw(raw), len(len) {}
-
         t_i32 SizeInBytes() const {
             return ZF_SIZE_OF(tp_type) * len;
         }
@@ -55,9 +52,6 @@ namespace zf {
 
         tp_type *raw;
         t_i32 len;
-
-        s_array_mut() = default;
-        s_array_mut(tp_type *const raw, const t_i32 len) : raw(raw), len(len) {}
 
         t_i32 SizeInBytes() const {
             return ZF_SIZE_OF(tp_type) * len;

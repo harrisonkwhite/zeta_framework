@@ -74,7 +74,7 @@ namespace zf {
                     .rng = rng,
                 });
 
-                detail::InputStateClearEvents(input_state);
+                detail::ClearInputEvents(input_state);
 
                 frame_dur_accum -= targ_tick_interval;
             }

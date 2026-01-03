@@ -6,29 +6,29 @@ namespace zf::gfx {
 
         s_rect_i src_rect_to_use;
 
-        if (src_rect == s_rect_i()) {
+        if (AreEqual(src_rect, {})) {
             src_rect_to_use = {0, 0, texture_size.x, texture_size.y};
         } else {
-            ZF_ASSERT(src_rect.x >= 0 && src_rect.y >= 0 && src_rect.Right() <= texture_size.x && src_rect.Bottom() <= texture_size.y);
+            ZF_ASSERT(src_rect.x >= 0 && src_rect.y >= 0 && Right(src_rect) <= texture_size.x && Bottom(src_rect) <= texture_size.y);
             src_rect_to_use = src_rect;
         }
 
-        const s_rect_f rect = {pos.x, pos.y, static_cast<t_f32>(src_rect_to_use.Size().x), static_cast<t_f32>(src_rect_to_use.Size().y)};
+        const s_rect_f rect = CreateRectF(pos, ToV2(Size(src_rect_to_use)));
         const s_rect_f uv_rect = CalcUVRect(src_rect_to_use, texture_size);
 
         const s_static_array<s_batch_triangle, 2> triangles = {{
             {
                 .verts = {{
-                    {.pos = rect.TopLeft(), .blend = g_color_white, .uv = uv_rect.TopLeft()},
-                    {.pos = rect.TopRight(), .blend = g_color_white, .uv = uv_rect.TopRight()},
-                    {.pos = rect.BottomRight(), .blend = g_color_white, .uv = uv_rect.BottomRight()},
+                    {.pos = TopLeft(rect), .blend = g_color_white, .uv = TopLeft(uv_rect)},
+                    {.pos = TopRight(rect), .blend = g_color_white, .uv = TopRight(uv_rect)},
+                    {.pos = BottomRight(rect), .blend = g_color_white, .uv = BottomRight(uv_rect)},
                 }},
             },
             {
                 .verts = {{
-                    {.pos = rect.BottomRight(), .blend = g_color_white, .uv = uv_rect.BottomRight()},
-                    {.pos = rect.BottomLeft(), .blend = g_color_white, .uv = uv_rect.BottomLeft()},
-                    {.pos = rect.TopLeft(), .blend = g_color_white, .uv = uv_rect.TopLeft()},
+                    {.pos = BottomRight(rect), .blend = g_color_white, .uv = BottomRight(uv_rect)},
+                    {.pos = BottomLeft(rect), .blend = g_color_white, .uv = BottomLeft(uv_rect)},
+                    {.pos = TopLeft(rect), .blend = g_color_white, .uv = TopLeft(uv_rect)},
                 }},
             },
         }};
@@ -44,7 +44,7 @@ namespace zf::gfx {
             ZF_FATAL();
         }
 
-        const auto atlases = PushArray<s_resource *>(resource_group->arena, atlas_rgbas.len);
+        const s_array_mut<s_resource *> atlases = PushArray<s_resource *>(resource_group->arena, atlas_rgbas.len);
 
         for (t_i32 i = 0; i < atlas_rgbas.len; i++) {
             atlases[i] = CreateTexture({g_font_atlas_size, atlas_rgbas[i]}, resource_group);
@@ -82,8 +82,8 @@ namespace zf::gfx {
 
         // Calculate some useful string metadata.
         struct s_str_meta {
-            t_i32 len = 0;
-            t_i32 line_cnt = 0;
+            t_i32 len;
+            t_i32 line_cnt;
         };
 
         const auto str_meta = [str]() {
@@ -159,7 +159,7 @@ namespace zf::gfx {
                 }
             }
 
-            positions[chr_index] = pos + chr_pos_pen + glyph_info->offs.ToV2();
+            positions[chr_index] = pos + chr_pos_pen + ToV2(glyph_info->offs);
             positions[chr_index].y += alignment_offs_y;
 
             chr_pos_pen.x += static_cast<t_f32>(glyph_info->adv);
@@ -180,10 +180,7 @@ namespace zf::gfx {
             return;
         }
 
-        const auto &font_arrangement = font.arrangement;
-        const auto &font_atlases = font.atlases;
-
-        const s_array_mut<s_v2> chr_positions = CalcStrChrRenderPositions(str, font_arrangement, pos, alignment, temp_arena);
+        const s_array_mut<s_v2> chr_positions = CalcStrChrRenderPositions(str, font.arrangement, pos, alignment, temp_arena);
 
         t_i32 chr_index = 0;
 
@@ -195,12 +192,12 @@ namespace zf::gfx {
 
             s_font_glyph_info *glyph_info;
 
-            if (!Find(&font_arrangement.code_pts_to_glyph_infos, step.code_pt, &glyph_info)) {
+            if (!Find(&font.arrangement.code_pts_to_glyph_infos, step.code_pt, &glyph_info)) {
                 ZF_ASSERT(false && "Unsupported code point!");
                 continue;
             }
 
-            RenderTexture(rc, font_atlases[glyph_info->atlas_index], chr_positions[chr_index], glyph_info->atlas_rect);
+            RenderTexture(rc, font.atlases[glyph_info->atlas_index], chr_positions[chr_index], glyph_info->atlas_rect);
 
             chr_index++;
         };

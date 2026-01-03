@@ -327,7 +327,7 @@ namespace zf {
 
     struct s_bool_fmt {
         using t_fmt_tag = void;
-        t_b8 val = false;
+        t_b8 val;
     };
 
     inline s_bool_fmt FormatBool(const t_b8 val) { return {val}; }

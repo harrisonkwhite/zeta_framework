@@ -116,16 +116,16 @@ namespace zf::gfx {
         const s_static_array<s_batch_triangle, 2> triangles = {{
             {
                 .verts = {{
-                    {.pos = rect.TopLeft(), .blend = color_topleft, .uv = {0.0f, 0.0f}},
-                    {.pos = rect.TopRight(), .blend = color_topright, .uv = {1.0f, 0.0f}},
-                    {.pos = rect.BottomRight(), .blend = color_bottomright, .uv = {1.0f, 1.0f}},
+                    {.pos = TopLeft(rect), .blend = color_topleft, .uv = {0.0f, 0.0f}},
+                    {.pos = TopRight(rect), .blend = color_topright, .uv = {1.0f, 0.0f}},
+                    {.pos = BottomRight(rect), .blend = color_bottomright, .uv = {1.0f, 1.0f}},
                 }},
             },
             {
                 .verts = {{
-                    {.pos = rect.BottomRight(), .blend = color_bottomright, .uv = {1.0f, 1.0f}},
-                    {.pos = rect.BottomLeft(), .blend = color_bottomleft, .uv = {0.0f, 1.0f}},
-                    {.pos = rect.TopLeft(), .blend = color_topleft, .uv = {0.0f, 0.0f}},
+                    {.pos = BottomRight(rect), .blend = color_bottomright, .uv = {1.0f, 1.0f}},
+                    {.pos = BottomLeft(rect), .blend = color_bottomleft, .uv = {0.0f, 1.0f}},
+                    {.pos = TopLeft(rect), .blend = color_topleft, .uv = {0.0f, 0.0f}},
                 }},
             },
         }};

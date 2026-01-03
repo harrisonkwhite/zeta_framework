@@ -167,7 +167,7 @@ namespace zf::gfx {
 
     inline s_rect_f CalcUVRect(const s_rect_i src_rect, const s_v2_i tex_size) {
         ZF_ASSERT(tex_size.x > 0 && tex_size.y > 0);
-        ZF_ASSERT(src_rect.x >= 0 && src_rect.y >= 0 && src_rect.width > 0 && src_rect.height > 0 && src_rect.Right() <= tex_size.x && src_rect.Bottom() <= tex_size.y);
+        ZF_ASSERT(src_rect.x >= 0 && src_rect.y >= 0 && src_rect.width > 0 && src_rect.height > 0 && Right(src_rect) <= tex_size.x && Bottom(src_rect) <= tex_size.y);
 
         return {
             static_cast<t_f32>(src_rect.x) / static_cast<t_f32>(tex_size.x),
