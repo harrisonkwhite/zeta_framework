@@ -65,7 +65,7 @@ namespace zf {
         ek_hash_map_put_result_updated
     };
 
-    inline const t_i32 g_hash_map_cap_default = 32;
+    constexpr t_i32 g_hash_map_cap_default = 32;
 
     // ============================================================
 

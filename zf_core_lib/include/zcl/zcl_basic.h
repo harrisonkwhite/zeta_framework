@@ -43,43 +43,43 @@ namespace zf {
 
     using t_u8 = unsigned char;
     static_assert(sizeof(t_u8) == 1);
-    inline const t_u8 g_u8_max = std::numeric_limits<t_u8>::max();
+    constexpr t_u8 g_u8_max = std::numeric_limits<t_u8>::max();
 
     using t_i8 = signed char;
     static_assert(sizeof(t_i8) == 1);
-    inline const t_i8 g_i8_max = std::numeric_limits<t_i8>::max();
+    constexpr t_i8 g_i8_max = std::numeric_limits<t_i8>::max();
 
     using t_u16 = unsigned short;
     static_assert(sizeof(t_u16) == 2);
-    inline const t_u16 g_u16_max = std::numeric_limits<t_u16>::max();
+    constexpr t_u16 g_u16_max = std::numeric_limits<t_u16>::max();
 
     using t_i16 = signed short;
     static_assert(sizeof(t_i16) == 2);
-    inline const t_i16 g_i16_max = std::numeric_limits<t_i16>::max();
+    constexpr t_i16 g_i16_max = std::numeric_limits<t_i16>::max();
 
     using t_u32 = unsigned int;
     static_assert(sizeof(t_u32) == 4);
-    inline const t_u32 g_u32_max = std::numeric_limits<t_u32>::max();
+    constexpr t_u32 g_u32_max = std::numeric_limits<t_u32>::max();
 
     using t_i32 = signed int;
     static_assert(sizeof(t_i32) == 4);
-    inline const t_i32 g_i32_max = std::numeric_limits<t_i32>::max();
+    constexpr t_i32 g_i32_max = std::numeric_limits<t_i32>::max();
 
     using t_u64 = unsigned long long;
     static_assert(sizeof(t_u64) == 8);
-    inline const t_u64 g_u64_max = std::numeric_limits<t_u64>::max();
+    constexpr t_u64 g_u64_max = std::numeric_limits<t_u64>::max();
 
     using t_i64 = signed long long;
     static_assert(sizeof(t_i64) == 8);
-    inline const t_i64 g_i64_max = std::numeric_limits<t_i64>::max();
+    constexpr t_i64 g_i64_max = std::numeric_limits<t_i64>::max();
 
     using t_f32 = float;
     static_assert(sizeof(t_f32) == 4);
-    inline const t_f32 g_f32_max = std::numeric_limits<t_f32>::max();
+    constexpr t_f32 g_f32_max = std::numeric_limits<t_f32>::max();
 
     using t_f64 = double;
     static_assert(sizeof(t_f64) == 8);
-    inline const t_f64 g_f64_max = std::numeric_limits<t_f64>::max();
+    constexpr t_f64 g_f64_max = std::numeric_limits<t_f64>::max();
 
     using t_b8 = bool;
     static_assert(sizeof(t_b8) == 1);
@@ -88,7 +88,7 @@ namespace zf {
     static_assert(sizeof(t_uintptr) == 8);
 
     template <typename tp_type>
-    using t_cvref_removed = std::remove_cvref<tp_type>;
+    using t_cvref_removed = std::remove_cvref<tp_type>::type;
 
 #define ZF_SIZE_OF(x) static_cast<zf::t_i32>(sizeof(x))
 #define ZF_SIZE_IN_BITS(x) (8 * ZF_SIZE_OF(x))
@@ -106,11 +106,13 @@ namespace zf {
     #define ZF_DEBUG_BREAK() detail::TryBreakingIntoDebuggerIf(true)
     #define ZF_DEBUG_BREAK_IF(cond) detail::TryBreakingIntoDebuggerIf(cond)
 
-    #define ZF_ASSERT(cond)                                                       \
-        do {                                                                      \
-            if (!ZF_IN_CONSTEXPR() && !(cond)) {                                  \
-                zf::detail::AssertError(#cond, __FUNCTION__, __FILE__, __LINE__); \
-            }                                                                     \
+    #define ZF_ASSERT(cond)                                                           \
+        do {                                                                          \
+            if (!ZF_IN_CONSTEXPR()) {                                                 \
+                if (!(cond)) {                                                        \
+                    zf::detail::AssertError(#cond, __FUNCTION__, __FILE__, __LINE__); \
+                }                                                                     \
+            }                                                                         \
         } while (0)
 #else
     #define ZF_DEBUG_BREAK() static_cast<void>(0)
@@ -181,33 +183,33 @@ namespace zf {
             }
         };
 
-    inline t_i32 KilobytesToBytes(const t_i32 n) {
+    constexpr t_i32 KilobytesToBytes(const t_i32 n) {
         return (1 << 10) * n;
     }
 
-    inline t_i32 MegabytesToBytes(const t_i32 n) {
+    constexpr t_i32 MegabytesToBytes(const t_i32 n) {
         return (1 << 20) * n;
     }
 
-    inline t_i32 GigabytesToBytes(const t_i32 n) {
+    constexpr t_i32 GigabytesToBytes(const t_i32 n) {
         return (1 << 30) * n;
     }
 
-    inline t_i32 BitsToBytes(const t_i32 n) {
+    constexpr t_i32 BitsToBytes(const t_i32 n) {
         return (n + 7) / 8;
     }
 
-    inline t_i32 BytesToBits(const t_i32 n) {
+    constexpr t_i32 BytesToBits(const t_i32 n) {
         return n * 8;
     }
 
     // Is n a power of 2?
-    inline t_b8 IsAlignmentValid(const t_i32 n) {
+    constexpr t_b8 IsAlignmentValid(const t_i32 n) {
         return n > 0 && (n & (n - 1)) == 0;
     }
 
     // Take n up to the next multiple of the alignment.
-    inline t_i32 AlignForward(const t_i32 n, const t_i32 alignment) {
+    constexpr t_i32 AlignForward(const t_i32 n, const t_i32 alignment) {
         ZF_ASSERT(IsAlignmentValid(alignment));
         return (n + alignment - 1) & ~(alignment - 1);
     }
@@ -262,6 +264,4 @@ namespace zf {
     tp_type Wrap(const tp_type val, const tp_type min, const tp_type max_excl) {
         return min + WrapUpper(val - min, max_excl - min);
     }
-
-    // ============================================================
 }

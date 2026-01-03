@@ -92,7 +92,7 @@ namespace zf::gfx {
     inline const s_v2 g_origin_bottomcenter = {0.5f, 1.0f};
     inline const s_v2 g_origin_bottomright = {1.0f, 1.0f};
 
-    inline const s_v2_i g_font_atlas_size = {1024, 1024};
+    constexpr s_v2_i g_font_atlas_size = {1024, 1024};
 
     using t_font_atlas_rgba = s_static_array<t_u8, 4 * g_font_atlas_size.x * g_font_atlas_size.y>;
 

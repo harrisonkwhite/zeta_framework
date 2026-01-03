@@ -38,6 +38,7 @@ namespace zf {
             return ZF_SIZE_OF(tp_type) * len;
         }
 
+        // @todo: Consider replacing with explicit function for safety.
         const tp_type &operator[](const t_i32 index) const {
             ZF_REQUIRE(index >= 0 && index < len);
             return raw[index];

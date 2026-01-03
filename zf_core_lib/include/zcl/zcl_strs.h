@@ -6,16 +6,16 @@ namespace zf {
     // ============================================================
     // @section: Types and Globals
 
-    inline const t_i32 g_unicode_code_pt_cnt = 1114112;
+    constexpr t_i32 g_unicode_code_pt_cnt = 1114112;
 
     using t_code_pt = char32_t;
     using t_code_pt_bit_vec = s_static_bit_vec<g_unicode_code_pt_cnt>;
 
-    inline const t_i32 g_ascii_range_begin = 0;
-    inline const t_i32 g_ascii_range_end = 0x80;
+    constexpr t_i32 g_ascii_range_begin = 0;
+    constexpr t_i32 g_ascii_range_end = 0x80;
 
-    inline const t_i32 g_printable_ascii_range_begin = 0x20;
-    inline const t_i32 g_printable_ascii_range_end = 0x7F;
+    constexpr t_i32 g_printable_ascii_range_begin = 0x20;
+    constexpr t_i32 g_printable_ascii_range_end = 0x7F;
 
     struct s_str_rdonly {
         s_array_rdonly<t_u8> bytes;
@@ -79,11 +79,11 @@ namespace zf {
     // ============================================================
     // @section: Functions
 
-    inline t_b8 IsCodePointASCII(const t_code_pt cp) {
+    constexpr t_b8 IsCodePointASCII(const t_code_pt cp) {
         return cp >= g_ascii_range_begin && cp < g_ascii_range_end;
     }
 
-    inline t_b8 IsCodePointPrintableASCII(const t_code_pt cp) {
+    constexpr t_b8 IsCodePointPrintableASCII(const t_code_pt cp) {
         return cp >= g_printable_ascii_range_begin && cp < g_printable_ascii_range_end;
     }
 
