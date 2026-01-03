@@ -37,7 +37,7 @@ namespace zf {
         e_stream_mode mode;
     };
 
-    inline s_stream MakeMemStream(const s_array_mut<t_u8> bytes, const e_stream_mode mode, const t_i32 pos = 0) {
+    inline s_stream CreateMemStream(const s_array_mut<t_u8> bytes, const e_stream_mode mode, const t_i32 pos = 0) {
         return {.type = ek_stream_type_mem, .type_data = {.mem = {.bytes = bytes, .byte_pos = pos}}, .mode = mode};
     }
 
@@ -46,13 +46,13 @@ namespace zf {
         return Slice(stream->type_data.mem.bytes, 0, stream->type_data.mem.byte_pos);
     }
 
-    inline s_stream MakeFileStream(FILE *const file, const e_stream_mode mode) {
+    inline s_stream CreateFileStream(FILE *const file, const e_stream_mode mode) {
         return {.type = ek_stream_type_file, .type_data = {.file = {.file = file}}, .mode = mode};
     }
 
-    inline s_stream StdIn() { return MakeFileStream(stdin, ek_stream_mode_read); }
-    inline s_stream StdOut() { return MakeFileStream(stdout, ek_stream_mode_write); }
-    inline s_stream StdError() { return MakeFileStream(stderr, ek_stream_mode_write); }
+    inline s_stream StdIn() { return CreateFileStream(stdin, ek_stream_mode_read); }
+    inline s_stream StdOut() { return CreateFileStream(stdout, ek_stream_mode_write); }
+    inline s_stream StdError() { return CreateFileStream(stderr, ek_stream_mode_write); }
 
     template <co_simple tp_type>
     [[nodiscard]] t_b8 ReadItem(s_stream *const stream, tp_type *const o_item) {
@@ -352,7 +352,7 @@ namespace zf {
     template <co_integral tp_type>
     t_b8 PrintType(s_stream *const stream, const s_integral_fmt<tp_type> fmt) {
         s_static_array<t_u8, 20> str_bytes = {}; // Maximum possible number of ASCII characters needed to represent a 64-bit integer.
-        s_stream str_bytes_stream = MakeMemStream(AsNonstatic(str_bytes), ek_stream_mode_write);
+        s_stream str_bytes_stream = CreateMemStream(AsNonstatic(str_bytes), ek_stream_mode_write);
         t_b8 str_bytes_stream_write_success = true;
 
         if (fmt.val < 0) {
@@ -467,7 +467,7 @@ namespace zf {
         ZF_ASSERT(fmt.min_digits >= g_hex_fmt_digit_cnt_min && fmt.min_digits <= g_hex_fmt_digit_cnt_max);
 
         s_static_array<t_u8, 2 + g_hex_fmt_digit_cnt_max> str_bytes = {}; // Can facilitate max number of digits plus the "0x" prefix.
-        s_stream str_bytes_stream = MakeMemStream(AsNonstatic(str_bytes), ek_stream_mode_write);
+        s_stream str_bytes_stream = CreateMemStream(AsNonstatic(str_bytes), ek_stream_mode_write);
 
         t_b8 str_bytes_stream_write_success = true;
 

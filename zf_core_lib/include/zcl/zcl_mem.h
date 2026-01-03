@@ -336,8 +336,23 @@ namespace zf {
         return static_cast<t_u8>(bits_at_bottom << begin_bit_index);
     }
 
-    inline s_bit_vec_mut CreateBitVector(const s_array_mut<t_u8> bytes) { return {bytes.raw, BytesToBits(bytes.len)}; }
-    inline s_bit_vec_rdonly CreateBitVector(const s_array_rdonly<t_u8> bytes) { return {bytes.raw, BytesToBits(bytes.len)}; }
+    inline s_bit_vec_mut CreateBitVector(const s_array_mut<t_u8> bytes) {
+        return {bytes.raw, BytesToBits(bytes.len)};
+    }
+
+    inline s_bit_vec_mut CreateBitVector(const s_array_mut<t_u8> bytes, const t_i32 bit_cnt) {
+        ZF_ASSERT(bit_cnt >= 0 && bit_cnt <= BytesToBits(bytes.len));
+        return {bytes.raw, bit_cnt};
+    }
+
+    inline s_bit_vec_rdonly CreateBitVector(const s_array_rdonly<t_u8> bytes) {
+        return {bytes.raw, BytesToBits(bytes.len)};
+    }
+
+    inline s_bit_vec_rdonly CreateBitVector(const s_array_rdonly<t_u8> bytes, const t_i32 bit_cnt) {
+        ZF_ASSERT(bit_cnt >= 0 && bit_cnt <= BytesToBits(bytes.len));
+        return {bytes.raw, bit_cnt};
+    }
 
     inline s_bit_vec_mut CreateBitVector(const t_i32 bit_cnt, s_arena *const arena) {
         ZF_ASSERT(bit_cnt >= 0);
@@ -352,7 +367,6 @@ namespace zf {
         return {bv.bytes_raw, BitsToBytes(bv.bit_cnt)};
     }
 
-#if 0
     template <t_i32 tp_bit_cnt>
     s_bit_vec_mut AsNonstatic(s_static_bit_vec<tp_bit_cnt> &bv) {
         return {bv.bytes.raw, tp_bit_cnt};
@@ -362,7 +376,6 @@ namespace zf {
     s_bit_vec_rdonly AsNonstatic(const s_static_bit_vec<tp_bit_cnt> &bv) {
         return {bv.bytes.raw, tp_bit_cnt};
     }
-#endif
 
     inline t_i32 LastByteBitCount(const s_bit_vec_rdonly bv) {
         return ((bv.bit_cnt - 1) % 8) + 1;

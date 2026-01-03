@@ -40,7 +40,7 @@ namespace zf {
             return false;
         }
 
-        *o_stream = MakeFileStream(file, stream_mode);
+        *o_stream = CreateFileStream(file, stream_mode);
 
         return true;
     }
