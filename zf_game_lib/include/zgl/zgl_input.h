@@ -123,39 +123,33 @@ namespace zf {
     // ============================================================
     // @section: Functions
 
-    t_b8 KeyIsDown(const s_input_state *const input_state, const e_key_code code);
-    t_b8 KeyIsPressed(const s_input_state *const input_state, const e_key_code code);
-    t_b8 KeyIsReleased(const s_input_state *const input_state, const e_key_code code);
+    s_input_state *CreateInputState(s_arena *const arena);
 
-    t_b8 MouseButtonIsDown(const s_input_state *const input_state, const e_mouse_button_code btn_code);
-    t_b8 MouseButtonIsPressed(const s_input_state *const input_state, const e_mouse_button_code btn_code);
-    t_b8 MouseButtonIsReleased(const s_input_state *const input_state, const e_mouse_button_code btn_code);
+    void ClearInputEvents(s_input_state *const input_state);
+
+    t_b8 IsKeyDown(const s_input_state *const input_state, const e_key_code code);
+    t_b8 IsKeyPressed(const s_input_state *const input_state, const e_key_code code);
+    t_b8 IsKeyReleased(const s_input_state *const input_state, const e_key_code code);
+    void UpdateKeyState(s_input_state *const input_state, const e_key_code code, const t_b8 is_down);
+
+    t_b8 IsMouseButtonDown(const s_input_state *const input_state, const e_mouse_button_code btn_code);
+    t_b8 IsMouseButtonPressed(const s_input_state *const input_state, const e_mouse_button_code btn_code);
+    t_b8 IsMouseButtonReleased(const s_input_state *const input_state, const e_mouse_button_code btn_code);
+    void UpdateMouseButtonState(s_input_state *const input_state, const e_mouse_button_code code, const t_b8 is_down);
 
     s_v2 CursorPos(const s_input_state *const input_state);
+    void UpdateCursorPos(s_input_state *const input_state, const s_v2 val);
 
     s_v2 ScrollOffset(const s_input_state *const input_state);
+    void UpdateScrollOffset(s_input_state *const input_state, const s_v2 offs_to_apply);
 
-    t_b8 GamepadIsConnected(const s_input_state *const input_state, const t_i32 index);
-    t_b8 GamepadIsButtonDown(const s_input_state *const input_state, const t_i32 gamepad_index, const e_gamepad_button_code btn_code);
-    t_b8 GamepadIsButtonPressed(const s_input_state *const input_state, const t_i32 gamepad_index, const e_gamepad_button_code btn_code);
-    t_b8 GamepadIsButtonReleased(const s_input_state *const input_state, const t_i32 gamepad_index, const e_gamepad_button_code btn_code);
+    t_b8 IsGamepadConnected(const s_input_state *const input_state, const t_i32 index);
+    t_b8 IsGamepadButtonDown(const s_input_state *const input_state, const t_i32 gamepad_index, const e_gamepad_button_code btn_code);
+    t_b8 IsGamepadButtonPressed(const s_input_state *const input_state, const t_i32 gamepad_index, const e_gamepad_button_code btn_code);
+    t_b8 IsGamepadButtonReleased(const s_input_state *const input_state, const t_i32 gamepad_index, const e_gamepad_button_code btn_code);
     t_f32 GamepadAxisValueRaw(const s_input_state *const input_state, const t_i32 gamepad_index, const e_gamepad_axis_code axis_code);
-    t_f32 GamepadAxisValueWithDeadzone(const s_input_state *const input_state, const t_i32 gamepad_index, const e_gamepad_axis_code axis_code);
-
-    namespace detail {
-        s_input_state *CreateInputState(s_arena *const arena);
-        void ClearInputEvents(s_input_state *const input_state);
-
-        void KeyUpdateState(s_input_state *const input_state, const e_key_code code, const t_b8 is_down);
-
-        void MouseButtonUpdateState(s_input_state *const input_state, const e_mouse_button_code code, const t_b8 is_down);
-
-        void CursorPosUpdate(s_input_state *const input_state, const s_v2 val);
-
-        void ScrollOffsetUpdate(s_input_state *const input_state, const s_v2 offs_to_apply);
-
-        void GamepadUpdateState(s_input_state *const input_state, const t_i32 gamepad_index, const t_b8 connected, const s_static_bit_vec<eks_gamepad_button_code_cnt> &btns_down, const s_static_array<t_f32, eks_gamepad_axis_code_cnt> &axes);
-    }
+    t_f32 CalcGamepadAxisValueWithDeadzone(const s_input_state *const input_state, const t_i32 gamepad_index, const e_gamepad_axis_code axis_code);
+    void UpdateGamepadState(s_input_state *const input_state, const t_i32 gamepad_index, const t_b8 connected, const s_static_bit_vec<eks_gamepad_button_code_cnt> &btns_down, const s_static_array<t_f32, eks_gamepad_axis_code_cnt> &axes);
 
     // ============================================================
 }

@@ -11,7 +11,7 @@ namespace zf {
     };
 
     // Generates a uniformly distributed random U32.
-    static t_u32 CalcNext(s_pcg32 *const pcg32) {
+    static t_u32 CalcNextPCG32(s_pcg32 *const pcg32) {
         const t_u64 oldstate = pcg32->state;
         pcg32->state = (oldstate * 6364136223846793005ull) + pcg32->inc;
         const auto xorshifted = static_cast<t_u32>(((oldstate >> 18u) ^ oldstate) >> 27u);
@@ -21,13 +21,13 @@ namespace zf {
 
     // Generates a uniformly distributed U32 strictly less than the bound.
     // The bound must be greater than 0.
-    static t_u32 CalcNextBounded(s_pcg32 *const pcg32, const t_u32 bound) {
+    static t_u32 CalcNextPCG32_Bounded(s_pcg32 *const pcg32, const t_u32 bound) {
         ZF_ASSERT(bound > 0);
 
         const t_u32 threshold = -bound % bound;
 
         while (true) {
-            const t_u32 r = CalcNext(pcg32);
+            const t_u32 r = CalcNextPCG32(pcg32);
 
             if (r >= threshold) {
                 return r % bound;
@@ -39,11 +39,11 @@ namespace zf {
         pcg32->state = 0;
         pcg32->inc = (seq << 1u) | 1u;
 
-        CalcNext(pcg32);
+        CalcNextPCG32(pcg32);
 
         pcg32->state += init_state;
 
-        CalcNext(pcg32);
+        CalcNextPCG32(pcg32);
     }
 
     s_rng *CreateRNG(const t_u64 seed, s_arena *const arena) {
@@ -52,24 +52,24 @@ namespace zf {
         return rng;
     }
 
-    t_u32 GenU32(s_rng *const rng) {
-        return CalcNext(&rng->pcg32);
+    t_u32 RandU32(s_rng *const rng) {
+        return CalcNextPCG32(&rng->pcg32);
     }
 
-    t_u32 GenU32InRange(s_rng *const rng, const t_u32 min_incl, const t_u32 max_excl) {
+    t_u32 RandU32InRange(s_rng *const rng, const t_u32 min_incl, const t_u32 max_excl) {
         ZF_ASSERT(min_incl < max_excl);
-        return min_incl + CalcNextBounded(&rng->pcg32, max_excl - min_incl);
+        return min_incl + CalcNextPCG32_Bounded(&rng->pcg32, max_excl - min_incl);
     }
 
-    t_i32 GenI32InRange(s_rng *const rng, const t_i32 min_incl, const t_i32 max_excl) {
+    t_i32 RandI32InRange(s_rng *const rng, const t_i32 min_incl, const t_i32 max_excl) {
         ZF_ASSERT(min_incl < max_excl);
 
         const auto min_incl_u = static_cast<t_u32>(min_incl);
         const auto max_excl_u = static_cast<t_u32>(max_excl);
-        return static_cast<t_i32>(min_incl_u + CalcNextBounded(&rng->pcg32, max_excl_u - min_incl_u));
+        return static_cast<t_i32>(min_incl_u + CalcNextPCG32_Bounded(&rng->pcg32, max_excl_u - min_incl_u));
     }
 
-    t_f32 GenPerc(s_rng *const rng) {
-        return static_cast<t_f32>(CalcNext(&rng->pcg32)) / 4294967296.0f;
+    t_f32 RandPerc(s_rng *const rng) {
+        return static_cast<t_f32>(CalcNextPCG32(&rng->pcg32)) / 4294967296.0f;
     }
 }

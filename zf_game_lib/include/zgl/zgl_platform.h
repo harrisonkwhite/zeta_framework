@@ -27,28 +27,28 @@ namespace zf {
     void SetWindowTitle(const s_str_rdonly title, s_arena *const temp_arena);
 
     // Sets the LOGICAL window size. The actual new framebuffer size MIGHT be larger if there is DPI scaling.
-    void WindowSetSize(const s_v2_i size);
+    void SetWindowSize(const s_v2_i size);
 
     // Set the LOGICAL window size limits. If you don't want to limit a particular dimension, leave it as -1.
-    void WindowSetSizeLimits(const t_i32 min_width, const t_i32 min_height, const t_i32 max_width, const t_i32 max_height);
+    void SetWindowSizeLimits(const t_i32 min_width, const t_i32 min_height, const t_i32 max_width, const t_i32 max_height);
 
-    void WindowSetResizable(const t_b8 val);
+    void SetWindowResizable(const t_b8 val);
 
     s_v2_i WindowFramebufferSizeCache();
 
-    t_b8 WindowIsFullscreen();
+    t_b8 IsFullscreen();
 
-    void WindowSetFullscreen(const t_b8 active);
+    void SetFullscreen(const t_b8 active);
 
-    inline void WindowToggleFullscreen() {
-        WindowSetFullscreen(!WindowIsFullscreen());
+    inline void ToggleFullscreen() {
+        SetFullscreen(!IsFullscreen());
     }
 
     // Returns the size in pixels of whichever monitor the window most resides in.
-    s_v2_i MonitorCalcSizeInPixels();
+    s_v2_i CalcMonitorSize_Pixels();
 
     // Returns the size (accounting for DPI scaling) of whichever monitor the window most resides in.
-    s_v2_i MonitorCalcSizeLogical();
+    s_v2_i CalcMonitorSize_Logical();
 
-    void CursorSetVisibility(const t_b8 visible);
+    void SetCursorVisibility(const t_b8 visible);
 }

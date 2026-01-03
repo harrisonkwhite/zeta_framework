@@ -35,27 +35,27 @@ namespace zf {
         } events;
     };
 
-    s_input_state *detail::CreateInputState(s_arena *const arena) {
+    s_input_state *CreateInputState(s_arena *const arena) {
         return PushItemZeroed<s_input_state>(arena);
     }
 
-    void detail::ClearInputEvents(s_input_state *const input_state) {
+    void ClearInputEvents(s_input_state *const input_state) {
         ClearItem(&input_state->events, 0);
     }
 
-    t_b8 KeyIsDown(const s_input_state *const input_state, const e_key_code code) {
+    t_b8 IsKeyDown(const s_input_state *const input_state, const e_key_code code) {
         return IsBitSet(input_state->keys_down, code);
     }
 
-    t_b8 KeyIsPressed(const s_input_state *const input_state, const e_key_code code) {
+    t_b8 IsKeyPressed(const s_input_state *const input_state, const e_key_code code) {
         return IsBitSet(input_state->events.keys_pressed, code);
     }
 
-    t_b8 KeyIsReleased(const s_input_state *const input_state, const e_key_code code) {
+    t_b8 IsKeyReleased(const s_input_state *const input_state, const e_key_code code) {
         return IsBitSet(input_state->events.keys_released, code);
     }
 
-    void detail::KeyUpdateState(s_input_state *const input_state, const e_key_code code, const t_b8 is_down) {
+    void UpdateKeyState(s_input_state *const input_state, const e_key_code code, const t_b8 is_down) {
         if (is_down) {
             if (!IsBitSet(input_state->keys_down, code)) {
                 SetBit(input_state->keys_down, code);
@@ -69,19 +69,19 @@ namespace zf {
         }
     }
 
-    t_b8 MouseButtonIsDown(const s_input_state *const input_state, const e_mouse_button_code btn_code) {
+    t_b8 IsMouseButtonDown(const s_input_state *const input_state, const e_mouse_button_code btn_code) {
         return IsBitSet(input_state->mouse_buttons_down, btn_code);
     }
 
-    t_b8 MouseButtonIsPressed(const s_input_state *const input_state, const e_mouse_button_code btn_code) {
+    t_b8 IsMouseButtonPressed(const s_input_state *const input_state, const e_mouse_button_code btn_code) {
         return IsBitSet(input_state->events.mouse_buttons_pressed, btn_code);
     }
 
-    t_b8 MouseButtonIsReleased(const s_input_state *const input_state, const e_mouse_button_code btn_code) {
+    t_b8 IsMouseButtonReleased(const s_input_state *const input_state, const e_mouse_button_code btn_code) {
         return IsBitSet(input_state->events.mouse_buttons_released, btn_code);
     }
 
-    void detail::MouseButtonUpdateState(s_input_state *const input_state, const e_mouse_button_code code, const t_b8 is_down) {
+    void UpdateMouseButtonState(s_input_state *const input_state, const e_mouse_button_code code, const t_b8 is_down) {
         if (is_down) {
             if (!IsBitSet(input_state->mouse_buttons_down, code)) {
                 SetBit(input_state->mouse_buttons_down, code);
@@ -99,7 +99,7 @@ namespace zf {
         return input_state->cursor_pos;
     }
 
-    void detail::CursorPosUpdate(s_input_state *const input_state, const s_v2 val) {
+    void UpdateCursorPos(s_input_state *const input_state, const s_v2 val) {
         input_state->cursor_pos = val;
     }
 
@@ -107,37 +107,37 @@ namespace zf {
         return input_state->events.scroll_offs;
     }
 
-    void detail::ScrollOffsetUpdate(s_input_state *const input_state, const s_v2 offs_to_apply) {
+    void UpdateScrollOffset(s_input_state *const input_state, const s_v2 offs_to_apply) {
         input_state->events.scroll_offs += offs_to_apply;
     }
 
-    t_b8 GamepadIsConnected(const s_input_state *const input_state, const t_i32 index) {
+    t_b8 IsGamepadConnected(const s_input_state *const input_state, const t_i32 index) {
         ZF_ASSERT(index >= 0 && index < g_gamepad_limit);
         return IsBitSet(input_state->gamepads_connected, index);
     }
 
-    t_b8 GamepadIsButtonDown(const s_input_state *const input_state, const t_i32 gamepad_index, const e_gamepad_button_code btn_code) {
-        ZF_ASSERT(GamepadIsConnected(input_state, gamepad_index));
+    t_b8 IsGamepadButtonDown(const s_input_state *const input_state, const t_i32 gamepad_index, const e_gamepad_button_code btn_code) {
+        ZF_ASSERT(IsGamepadConnected(input_state, gamepad_index));
         return IsBitSet(input_state->gamepads[gamepad_index].buttons_down, btn_code);
     }
 
-    t_b8 GamepadIsButtonPressed(const s_input_state *const input_state, const t_i32 gamepad_index, const e_gamepad_button_code btn_code) {
-        ZF_ASSERT(GamepadIsConnected(input_state, gamepad_index));
+    t_b8 IsGamepadButtonPressed(const s_input_state *const input_state, const t_i32 gamepad_index, const e_gamepad_button_code btn_code) {
+        ZF_ASSERT(IsGamepadConnected(input_state, gamepad_index));
         return IsBitSet(input_state->events.gamepads[gamepad_index].buttons_pressed, btn_code);
     }
 
-    t_b8 GamepadIsButtonReleased(const s_input_state *const input_state, const t_i32 gamepad_index, const e_gamepad_button_code btn_code) {
-        ZF_ASSERT(GamepadIsConnected(input_state, gamepad_index));
+    t_b8 IsGamepadButtonReleased(const s_input_state *const input_state, const t_i32 gamepad_index, const e_gamepad_button_code btn_code) {
+        ZF_ASSERT(IsGamepadConnected(input_state, gamepad_index));
         return IsBitSet(input_state->events.gamepads[gamepad_index].buttons_released, btn_code);
     }
 
     inline t_f32 GamepadAxisValueRaw(const s_input_state *const input_state, const t_i32 gamepad_index, const e_gamepad_axis_code axis_code) {
-        ZF_ASSERT(GamepadIsConnected(input_state, gamepad_index));
+        ZF_ASSERT(IsGamepadConnected(input_state, gamepad_index));
         return input_state->gamepads[gamepad_index].axes[axis_code];
     }
 
-    t_f32 GamepadAxisValueWithDeadzone(const s_input_state *const input_state, const t_i32 gamepad_index, const e_gamepad_axis_code axis_code) {
-        ZF_ASSERT(GamepadIsConnected(input_state, gamepad_index));
+    t_f32 CalcGamepadAxisValueWithDeadzone(const s_input_state *const input_state, const t_i32 gamepad_index, const e_gamepad_axis_code axis_code) {
+        ZF_ASSERT(IsGamepadConnected(input_state, gamepad_index));
 
         const t_f32 raw = input_state->gamepads[gamepad_index].axes[axis_code];
         const t_f32 raw_abs = Abs(raw);
@@ -151,7 +151,7 @@ namespace zf {
         return static_cast<t_f32>(Sign(raw)) * ((raw_abs - dz) / (1.0f - dz));
     }
 
-    void detail::GamepadUpdateState(s_input_state *const input_state, const t_i32 gamepad_index, const t_b8 connected, const s_static_bit_vec<eks_gamepad_button_code_cnt> &btns_down, const s_static_array<t_f32, eks_gamepad_axis_code_cnt> &axes) {
+    void UpdateGamepadState(s_input_state *const input_state, const t_i32 gamepad_index, const t_b8 connected, const s_static_bit_vec<eks_gamepad_button_code_cnt> &btns_down, const s_static_array<t_f32, eks_gamepad_axis_code_cnt> &axes) {
         if (!connected) {
             ZF_ASSERT(AreAllBitsUnset(btns_down) && DoAllEqual(AsNonstatic(axes), 0.0f));
             return;
