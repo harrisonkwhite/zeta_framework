@@ -46,13 +46,13 @@ namespace zf {
         ZF_ASSERT(exe_dir.bytes[exe_dir.bytes.len - 1] == '/' || exe_dir.bytes[exe_dir.bytes.len - 1] == '\\'); // Assuming this.
 
         const auto shaderc_file_path_terminated = s_str_mut(PushArray<t_u8>(temp_arena, exe_dir.bytes.len + shaderc_file_path_rel.bytes.len + 1));
-        c_stream shaderc_file_path_terminated_byte_stream = {shaderc_file_path_terminated.bytes, ek_stream_mode_write};
+        s_stream shaderc_file_path_terminated_byte_stream = MakeMemStream(shaderc_file_path_terminated.bytes, ek_stream_mode_write);
         PrintFormat(&shaderc_file_path_terminated_byte_stream, ZF_STR_LITERAL("%%\0"), exe_dir, shaderc_file_path_rel);
         ZF_ASSERT(AreBytesTerminatedOnlyAtEnd(shaderc_file_path_terminated.bytes));
 
         const s_str_rdonly shaderc_include_dir_rel = ZF_STR_LITERAL("tools/bgfx/shaderc_include");
         const auto shaderc_include_dir_terminated = s_str_mut(PushArray<t_u8>(temp_arena, exe_dir.bytes.len + shaderc_include_dir_rel.bytes.len + 1));
-        c_stream shaderc_include_dir_terminated_byte_stream = {shaderc_include_dir_terminated.bytes, ek_stream_mode_write};
+        s_stream shaderc_include_dir_terminated_byte_stream = MakeMemStream(shaderc_include_dir_terminated.bytes, ek_stream_mode_write);
         PrintFormat(&shaderc_include_dir_terminated_byte_stream, ZF_STR_LITERAL("%%\0"), exe_dir, shaderc_include_dir_rel);
         ZF_ASSERT(AreBytesTerminatedOnlyAtEnd(shaderc_include_dir_terminated.bytes));
 
@@ -96,7 +96,7 @@ namespace zf {
                 break;
             }
 
-            AppendMany_Dynamic(&bin_list, Slice(buf.AsNonstatic(), 0, r), bin_arena);
+            AppendMany_Dynamic(&bin_list, Slice(AsNonstatic(buf), 0, r), bin_arena);
         }
 
         if (r != REPROC_EPIPE) {
@@ -110,7 +110,7 @@ namespace zf {
         }
 
         if (r > 0) {
-            c_stream std_err = StdError();
+            s_stream std_err = StdError();
             const auto err = s_str_rdonly(bin_list.AsArray());
             PrintFormat(&std_err, ZF_STR_LITERAL("==================== BGFX SHADERC ERROR ====================\n%============================================================\n"), err);
             return false;

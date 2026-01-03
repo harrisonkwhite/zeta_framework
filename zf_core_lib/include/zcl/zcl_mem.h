@@ -31,18 +31,10 @@ namespace zf {
         const tp_type *raw;
         t_i32 len;
 
-        t_i32 SizeInBytes() const {
-            return ZF_SIZE_OF(tp_type) * len;
-        }
-
         // @todo: Consider replacing with explicit function for safety.
-        const tp_type &operator[](const t_i32 index) const {
+        constexpr const tp_type &operator[](const t_i32 index) const {
             ZF_REQUIRE(index >= 0 && index < len);
             return raw[index];
-        }
-
-        s_array_rdonly<t_u8> AsByteArray() const {
-            return {reinterpret_cast<const t_u8 *>(raw), SizeInBytes()};
         }
     };
 
@@ -53,21 +45,13 @@ namespace zf {
         tp_type *raw;
         t_i32 len;
 
-        t_i32 SizeInBytes() const {
-            return ZF_SIZE_OF(tp_type) * len;
-        }
-
-        operator s_array_rdonly<tp_type>() const {
-            return {raw, len};
-        }
-
-        tp_type &operator[](const t_i32 index) const {
+        constexpr tp_type &operator[](const t_i32 index) const {
             ZF_REQUIRE(index >= 0 && index < len);
             return raw[index];
         }
 
-        s_array_mut<t_u8> AsByteArray() const {
-            return {reinterpret_cast<t_u8 *>(raw), SizeInBytes()};
+        constexpr operator s_array_rdonly<tp_type>() const {
+            return {raw, len};
         }
     };
 
@@ -79,22 +63,22 @@ namespace zf {
 
         tp_type raw[tp_len];
 
-        s_array_mut<tp_type> AsNonstatic() {
-            return {raw, tp_len};
-        }
-
-        s_array_rdonly<tp_type> AsNonstatic() const {
-            return {raw, tp_len};
-        }
-
-        tp_type &operator[](const t_i32 index) {
+        constexpr tp_type &operator[](const t_i32 index) {
             ZF_REQUIRE(index >= 0 && index < tp_len);
             return raw[index];
         }
 
-        const tp_type &operator[](const t_i32 index) const {
+        constexpr const tp_type &operator[](const t_i32 index) const {
             ZF_REQUIRE(index >= 0 && index < tp_len);
             return raw[index];
+        }
+
+        constexpr operator s_array_mut<tp_type>() {
+            return {raw, g_len};
+        }
+
+        constexpr operator s_array_rdonly<tp_type>() const {
+            return {raw, g_len};
         }
     };
 
@@ -140,7 +124,7 @@ namespace zf {
             return {bytes_raw, BitsToBytes(bit_cnt)};
         }
 
-        operator s_bit_vec_rdonly() const {
+        constexpr operator s_bit_vec_rdonly() const {
             return {bytes_raw, bit_cnt};
         }
     };
@@ -150,6 +134,14 @@ namespace zf {
         static constexpr t_i32 g_bit_cnt = tp_bit_cnt;
 
         s_static_array<t_u8, BitsToBytes(tp_bit_cnt)> bytes;
+
+        constexpr operator s_bit_vec_mut() {
+            return {bytes.raw, g_bit_cnt};
+        }
+
+        constexpr operator s_bit_vec_rdonly() const {
+            return {bytes.raw, g_bit_cnt};
+        }
     };
 
     enum e_bitwise_mask_op : t_i32 {
@@ -284,10 +276,25 @@ namespace zf {
     }
 
     template <co_array tp_arr_type>
+    t_i32 ArraySizeInBytes(const tp_arr_type arr) {
+        return ZF_SIZE_OF(typename tp_arr_type::t_elem) * arr.len;
+    }
+
+    template <co_array tp_arr_type>
     auto CloneArray(const tp_arr_type arr_to_clone, s_arena *const arena) {
         const auto arr = PushArray<typename tp_arr_type::t_elem>(arena, arr_to_clone.len);
         CopyAll(arr, arr_to_clone);
         return arr;
+    }
+
+    template <typename tp_type, t_i32 tp_len>
+    s_array_mut<tp_type> AsNonstatic(s_static_array<tp_type, tp_len> &arr) {
+        return {arr.raw, arr.g_len};
+    }
+
+    template <typename tp_type, t_i32 tp_len>
+    s_array_rdonly<tp_type> AsNonstatic(const s_static_array<tp_type, tp_len> &arr) {
+        return {arr.raw, arr.g_len};
     }
 
     template <co_simple tp_type>
@@ -298,6 +305,16 @@ namespace zf {
     template <co_simple tp_type>
     s_array_rdonly<t_u8> AsBytes(const tp_type &val) {
         return {reinterpret_cast<const t_u8 *>(&val), ZF_SIZE_OF(val)};
+    }
+
+    template <typename tp_type>
+    s_array_mut<t_u8> AsByteArray(const s_array_mut<tp_type> arr) {
+        return {reinterpret_cast<t_u8 *>(arr.raw), ArraySizeInBytes(arr)};
+    }
+
+    template <typename tp_type>
+    s_array_rdonly<t_u8> AsByteArray(const s_array_rdonly<tp_type> arr) {
+        return {reinterpret_cast<const t_u8 *>(arr.raw), ArraySizeInBytes(arr)};
     }
 
     // Creates a byte-sized bitmask with only a single bit set.
@@ -319,11 +336,23 @@ namespace zf {
         return static_cast<t_u8>(bits_at_bottom << begin_bit_index);
     }
 
+    inline s_bit_vec_mut CreateBitVector(const s_array_mut<t_u8> bytes) { return {bytes.raw, BytesToBits(bytes.len)}; }
+    inline s_bit_vec_rdonly CreateBitVector(const s_array_rdonly<t_u8> bytes) { return {bytes.raw, BytesToBits(bytes.len)}; }
+
     inline s_bit_vec_mut CreateBitVector(const t_i32 bit_cnt, s_arena *const arena) {
         ZF_ASSERT(bit_cnt >= 0);
         return {PushArrayZeroed<t_u8>(arena, BitsToBytes(bit_cnt)).raw, bit_cnt};
     }
 
+    inline s_array_mut<t_u8> BitVectorBytes(const s_bit_vec_mut bv) {
+        return {bv.bytes_raw, BitsToBytes(bv.bit_cnt)};
+    }
+
+    inline s_array_rdonly<t_u8> BitVectorBytes(const s_bit_vec_rdonly bv) {
+        return {bv.bytes_raw, BitsToBytes(bv.bit_cnt)};
+    }
+
+#if 0
     template <t_i32 tp_bit_cnt>
     s_bit_vec_mut AsNonstatic(s_static_bit_vec<tp_bit_cnt> &bv) {
         return {bv.bytes.raw, tp_bit_cnt};
@@ -333,6 +362,7 @@ namespace zf {
     s_bit_vec_rdonly AsNonstatic(const s_static_bit_vec<tp_bit_cnt> &bv) {
         return {bv.bytes.raw, tp_bit_cnt};
     }
+#endif
 
     inline t_i32 LastByteBitCount(const s_bit_vec_rdonly bv) {
         return ((bv.bit_cnt - 1) % 8) + 1;
@@ -414,8 +444,8 @@ namespace zf {
     // Returns false iff the walk is complete.
     t_b8 WalkUnsetBits(const s_bit_vec_rdonly bv, t_i32 *const pos, t_i32 *const o_index);
 
-#define ZF_WALK_SET_BITS(bv, index) for (t_i32 ZF_CONCAT(walk_pos_l, __LINE__) = 0, index; WalkSetBits(bv, &ZF_CONCAT(walk_pos_l, __LINE__), &index);)
-#define ZF_WALK_UNSET_BITS(bv, index) for (t_i32 ZF_CONCAT(walk_pos_l, __LINE__) = 0, index; WalkUnsetBits(bv, &ZF_CONCAT(walk_pos_l, __LINE__), &index);)
+#define ZF_WALK_SET_BITS(bv, index) for (zf::t_i32 ZF_CONCAT(walk_pos_l, __LINE__) = 0, index; zf::WalkSetBits(bv, &ZF_CONCAT(walk_pos_l, __LINE__), &index);)
+#define ZF_WALK_UNSET_BITS(bv, index) for (zf::t_i32 ZF_CONCAT(walk_pos_l, __LINE__) = 0, index; zf::WalkUnsetBits(bv, &ZF_CONCAT(walk_pos_l, __LINE__), &index);)
 
     // ============================================================
 }

@@ -5,7 +5,7 @@ namespace zf {
         s_arena arena = CreateArena();
         ZF_DEFER({ Destroy(&arena); });
 
-        c_stream input_file_stream;
+        s_stream input_file_stream;
 
         if (!FileOpen(input_file_path, ek_file_access_mode_read, &arena, &input_file_stream)) {
             return false;
@@ -13,7 +13,7 @@ namespace zf {
 
         ZF_DEFER({ FileClose(&input_file_stream); });
 
-        c_stream output_file_stream;
+        s_stream output_file_stream;
 
         if (!FileOpen(output_file_path, ek_file_access_mode_write, &arena, &output_file_stream)) {
             return false;
@@ -30,7 +30,7 @@ namespace zf {
         t_u8 byte_read;
         t_i32 byte_read_cnt = 0;
 
-        while (input_file_stream.ReadItem(&byte_read)) {
+        while (ReadItem(&input_file_stream, &byte_read)) {
             if (byte_read_cnt > 0) {
                 Print(&output_file_stream, ZF_STR_LITERAL(", "));
             }

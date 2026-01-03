@@ -181,7 +181,7 @@ namespace zf::gfx {
         }
 
         const s_static_array<t_u8, 4> px_texture_rgba = {{255, 255, 255, 255}};
-        rendering_basis->px_texture = CreateTexture({{1, 1}, px_texture_rgba}, &g_state.perm_resource_group);
+        rendering_basis->px_texture = CreateTexture({{1, 1}, AsNonstatic(px_texture_rgba)}, &g_state.perm_resource_group);
 
         return rendering_basis;
     }
@@ -254,7 +254,7 @@ namespace zf::gfx {
         ZF_ASSERT(g_state.state == ek_state_active_but_not_rendering);
 
         const uint64_t sampler_flags = BGFX_SAMPLER_MIN_POINT | BGFX_SAMPLER_MAG_POINT | BGFX_SAMPLER_U_CLAMP | BGFX_SAMPLER_V_CLAMP;
-        const auto texture_bgfx_hdl = bgfx::createTexture2D(static_cast<uint16_t>(texture_data.size_in_pxs.x), static_cast<uint16_t>(texture_data.size_in_pxs.y), false, 1, bgfx::TextureFormat::RGBA8, sampler_flags, bgfx::copy(texture_data.rgba_px_data.raw, static_cast<uint32_t>(texture_data.rgba_px_data.SizeInBytes())));
+        const auto texture_bgfx_hdl = bgfx::createTexture2D(static_cast<uint16_t>(texture_data.size_in_pxs.x), static_cast<uint16_t>(texture_data.size_in_pxs.y), false, 1, bgfx::TextureFormat::RGBA8, sampler_flags, bgfx::copy(texture_data.rgba_px_data.raw, static_cast<uint32_t>(ArraySizeInBytes(texture_data.rgba_px_data))));
 
         if (!bgfx::isValid(texture_bgfx_hdl)) {
             ZF_FATAL();
@@ -339,8 +339,8 @@ namespace zf::gfx {
             ZF_FATAL();
         }
 
-        const auto verts = Slice(rc->batch_state.verts.AsNonstatic(), 0, rc->batch_state.vert_cnt);
-        const auto verts_bgfx_mem = bgfx::copy(verts.raw, static_cast<uint32_t>(verts.SizeInBytes()));
+        const auto verts = Slice(AsNonstatic(rc->batch_state.verts), 0, rc->batch_state.vert_cnt);
+        const auto verts_bgfx_mem = bgfx::copy(verts.raw, static_cast<uint32_t>(ArraySizeInBytes(verts)));
         bgfx::update(rc->basis->vert_buf_bgfx_hdl, static_cast<uint32_t>(rc->frame_vert_cnt), verts_bgfx_mem);
 
         const auto texture_bgfx_hdl = rc->batch_state.texture ? rc->batch_state.texture->Texture().bgfx_hdl : rc->basis->px_texture->Texture().bgfx_hdl;

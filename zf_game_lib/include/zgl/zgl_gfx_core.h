@@ -130,7 +130,7 @@ namespace zf::gfx {
             },
         }};
 
-        SubmitTrianglesToBatch(rc, triangles.AsNonstatic(), nullptr);
+        SubmitTrianglesToBatch(rc, AsNonstatic(triangles), nullptr);
     }
 
     inline void RenderRect(s_rendering_context *const rc, const s_rect_f rect, const s_color_rgba32f color) {

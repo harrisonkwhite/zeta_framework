@@ -41,7 +41,7 @@ namespace zf {
             return false;
         }
 
-        c_stream fs;
+        s_stream fs;
 
         if (!FileOpen(file_path, ek_file_access_mode_write, temp_arena, &fs)) {
             return false;
@@ -53,7 +53,7 @@ namespace zf {
     }
 
     t_b8 UnpackSound(const s_str_rdonly file_path, s_arena *const snd_data_arena, s_arena *const temp_arena, s_sound_data_mut *const o_snd_data) {
-        c_stream fs;
+        s_stream fs;
 
         if (!FileOpen(file_path, ek_file_access_mode_read, temp_arena, &fs)) {
             return false;
@@ -61,21 +61,21 @@ namespace zf {
 
         ZF_DEFER({ FileClose(&fs); });
 
-        if (!fs.ReadItem(&o_snd_data->meta)) {
+        if (!ReadItem(&fs, &o_snd_data->meta)) {
             return false;
         }
 
         o_snd_data->pcm = PushArray<t_f32>(snd_data_arena, SampleCount(o_snd_data->meta));
 
-        if (!fs.ReadItemsIntoArray(o_snd_data->pcm, o_snd_data->pcm.len)) {
+        if (!ReadItemsIntoArray(&fs, o_snd_data->pcm, o_snd_data->pcm.len)) {
             return false;
         }
 
         return true;
     }
 
-    t_b8 SerializeSound(c_stream *const stream, const s_sound_data_mut snd_data) {
-        if (!stream->WriteItem(snd_data.meta)) {
+    t_b8 SerializeSound(s_stream *const stream, const s_sound_data_mut snd_data) {
+        if (!WriteItem(stream, snd_data.meta)) {
             return false;
         }
 
@@ -86,8 +86,8 @@ namespace zf {
         return true;
     }
 
-    t_b8 DeserializeSound(c_stream *const stream, s_arena *const snd_data_arena, s_sound_data_mut *const o_snd_data) {
-        if (!stream->ReadItem(&o_snd_data->meta)) {
+    t_b8 DeserializeSound(s_stream *const stream, s_arena *const snd_data_arena, s_sound_data_mut *const o_snd_data) {
+        if (!ReadItem(stream, &o_snd_data->meta)) {
             return false;
         }
 

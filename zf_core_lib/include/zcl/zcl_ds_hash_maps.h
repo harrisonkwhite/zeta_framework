@@ -313,12 +313,12 @@ namespace zf {
     }
 
     template <co_simple tp_key_type, co_simple tp_val_type>
-    [[nodiscard]] t_b8 SerializeHashMap(c_stream *const stream, const s_hash_map<tp_key_type, tp_val_type> *const hm, s_arena *const temp_arena) {
-        if (!stream->WriteItem(Cap(hm))) {
+    [[nodiscard]] t_b8 SerializeHashMap(s_stream *const stream, const s_hash_map<tp_key_type, tp_val_type> *const hm, s_arena *const temp_arena) {
+        if (!WriteItem(stream, Cap(hm))) {
             return false;
         }
 
-        if (!stream->WriteItem(EntryCount(hm))) {
+        if (!WriteItem(stream, EntryCount(hm))) {
             return false;
         }
 
@@ -326,11 +326,11 @@ namespace zf {
         s_array_mut<tp_val_type> vals;
         LoadEntries(hm, temp_arena, &keys, &vals);
 
-        if (!stream->WriteItemsOfArray(keys)) {
+        if (!WriteItemsOfArray(stream, keys)) {
             return false;
         }
 
-        if (!stream->WriteItemsOfArray(vals)) {
+        if (!WriteItemsOfArray(stream, vals)) {
             return false;
         }
 
@@ -338,16 +338,16 @@ namespace zf {
     }
 
     template <co_simple tp_key_type, co_simple tp_val_type>
-    [[nodiscard]] t_b8 DeserializeHashMap(c_stream *const stream, s_arena *const hm_arena, const t_hash_func<tp_key_type> hm_hash_func, s_arena *const temp_arena, s_hash_map<tp_key_type, tp_val_type> *const o_hm, const t_comparator_bin<tp_key_type> hm_key_comparator = g_comparator_bin_default<tp_key_type>) {
+    [[nodiscard]] t_b8 DeserializeHashMap(s_stream *const stream, s_arena *const hm_arena, const t_hash_func<tp_key_type> hm_hash_func, s_arena *const temp_arena, s_hash_map<tp_key_type, tp_val_type> *const o_hm, const t_comparator_bin<tp_key_type> hm_key_comparator = g_comparator_bin_default<tp_key_type>) {
         t_i32 cap;
 
-        if (!stream->ReadItem(&cap)) {
+        if (!ReadItem(stream, &cap)) {
             return false;
         }
 
         t_i32 entry_cnt;
 
-        if (!stream->ReadItem(&entry_cnt)) {
+        if (!ReadItem(stream, &entry_cnt)) {
             return false;
         }
 
@@ -355,13 +355,13 @@ namespace zf {
 
         const auto keys = PushArray<tp_key_type>(temp_arena, entry_cnt);
 
-        if (!stream->ReadItemsIntoArray(keys, entry_cnt)) {
+        if (!ReadItemsIntoArray(stream, keys, entry_cnt)) {
             return false;
         }
 
         const auto vals = PushArray<tp_val_type>(temp_arena, entry_cnt);
 
-        if (!stream->ReadItemsIntoArray(vals, entry_cnt)) {
+        if (!ReadItemsIntoArray(stream, vals, entry_cnt)) {
             return false;
         }
 

@@ -45,7 +45,7 @@ namespace zf::gfx {
             return false;
         }
 
-        c_stream fs;
+        s_stream fs;
 
         if (!FileOpen(file_path, ek_file_access_mode_write, temp_arena, &fs)) {
             return false;
@@ -53,11 +53,11 @@ namespace zf::gfx {
 
         ZF_DEFER({ FileClose(&fs); });
 
-        if (!fs.WriteItem(texture_data.size_in_pxs)) {
+        if (!WriteItem(&fs, texture_data.size_in_pxs)) {
             return false;
         }
 
-        if (!fs.WriteItemsOfArray(texture_data.rgba_px_data)) {
+        if (!WriteItemsOfArray(&fs, texture_data.rgba_px_data)) {
             return false;
         }
 
@@ -65,7 +65,7 @@ namespace zf::gfx {
     }
 
     t_b8 UnpackTexture(const s_str_rdonly file_path, s_arena *const texture_data_arena, s_arena *const temp_arena, s_texture_data *const o_texture_data) {
-        c_stream fs;
+        s_stream fs;
 
         if (!FileOpen(file_path, ek_file_access_mode_read, temp_arena, &fs)) {
             return false;
@@ -75,13 +75,13 @@ namespace zf::gfx {
 
         s_v2_i size_in_pxs;
 
-        if (!fs.ReadItem(&size_in_pxs)) {
+        if (!ReadItem(&fs, &size_in_pxs)) {
             return false;
         }
 
         const auto rgba_px_data = PushArray<t_u8>(texture_data_arena, 4 * size_in_pxs.x * size_in_pxs.y);
 
-        if (!fs.ReadItemsIntoArray(rgba_px_data, rgba_px_data.len)) {
+        if (!ReadItemsIntoArray(&fs, rgba_px_data, rgba_px_data.len)) {
             return false;
         }
 
@@ -271,7 +271,7 @@ namespace zf::gfx {
             return false;
         }
 
-        c_stream fs;
+        s_stream fs;
 
         if (!FileOpen(file_path, ek_file_access_mode_write, temp_arena, &fs)) {
             return false;
@@ -279,7 +279,7 @@ namespace zf::gfx {
 
         ZF_DEFER({ FileClose(&fs); });
 
-        if (!fs.WriteItem(arrangement.line_height)) {
+        if (!WriteItem(&fs, arrangement.line_height)) {
             return false;
         }
 
@@ -299,7 +299,7 @@ namespace zf::gfx {
     }
 
     t_b8 UnpackFont(const s_str_rdonly file_path, s_arena *const arrangement_arena, s_arena *const atlas_rgbas_arena, s_arena *const temp_arena, s_font_arrangement *const o_arrangement, s_array_mut<t_font_atlas_rgba> *const o_atlas_rgbas) {
-        c_stream fs;
+        s_stream fs;
 
         if (!FileOpen(file_path, ek_file_access_mode_read, temp_arena, &fs)) {
             return false;
@@ -307,7 +307,7 @@ namespace zf::gfx {
 
         ZF_DEFER({ FileClose(&fs); });
 
-        if (!fs.ReadItem(&o_arrangement->line_height)) {
+        if (!ReadItem(&fs, &o_arrangement->line_height)) {
             return false;
         }
 
@@ -331,7 +331,7 @@ namespace zf::gfx {
             return false;
         }
 
-        c_stream fs;
+        s_stream fs;
 
         if (!FileOpen(file_path, ek_file_access_mode_write, temp_arena, &fs)) {
             return false;
@@ -347,7 +347,7 @@ namespace zf::gfx {
     }
 
     t_b8 UnpackShader(const s_str_rdonly file_path, s_arena *const shader_bin_arena, s_arena *const temp_arena, s_array_mut<t_u8> *const o_shader_bin) {
-        c_stream fs;
+        s_stream fs;
 
         if (!FileOpen(file_path, ek_file_access_mode_read, temp_arena, &fs)) {
             return false;

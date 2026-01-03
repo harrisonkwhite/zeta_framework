@@ -243,5 +243,7 @@ namespace zf {
         list->len--;
     }
 
+    // @todo: Serialisation function!
+
     // ============================================================
 }

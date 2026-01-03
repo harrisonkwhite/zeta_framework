@@ -33,7 +33,7 @@ namespace zf::gfx {
             },
         }};
 
-        SubmitTrianglesToBatch(rc, triangles.AsNonstatic(), texture);
+        SubmitTrianglesToBatch(rc, AsNonstatic(triangles), texture);
     }
 
     s_font CreateFontFromRaw(const s_str_rdonly file_path, const t_i32 height, t_code_pt_bit_vec *const code_pts, s_arena *const temp_arena, s_resource_group *const resource_group) {

@@ -146,10 +146,10 @@ namespace zf {
 
                 const auto fields = [asset_type_index]() -> s_array_rdonly<s_asset_field> {
                     switch (asset_type_index) {
-                    case ek_asset_type_texture: return g_texture_fields;
-                    case ek_asset_type_font: return g_font_fields;
-                    case ek_asset_type_shader: return g_shader_fields;
-                    case ek_asset_type_sound: return g_sound_fields;
+                    case ek_asset_type_texture: return AsNonstatic(g_texture_fields);
+                    case ek_asset_type_font: return AsNonstatic(g_font_fields);
+                    case ek_asset_type_shader: return AsNonstatic(g_shader_fields);
+                    case ek_asset_type_sound: return AsNonstatic(g_sound_fields);
                     }
 
                     return {};
@@ -157,10 +157,10 @@ namespace zf {
 
                 const auto field_vals = [asset_type_index, &texture_field_cj_ptrs, &font_field_cj_ptrs, &shader_field_cj_ptrs, &snd_field_cj_ptrs]() -> s_array_mut<cJSON *> {
                     switch (asset_type_index) {
-                    case ek_asset_type_texture: return texture_field_cj_ptrs;
-                    case ek_asset_type_font: return font_field_cj_ptrs;
-                    case ek_asset_type_shader: return shader_field_cj_ptrs;
-                    case ek_asset_type_sound: return snd_field_cj_ptrs;
+                    case ek_asset_type_texture: return AsNonstatic(texture_field_cj_ptrs);
+                    case ek_asset_type_font: return AsNonstatic(font_field_cj_ptrs);
+                    case ek_asset_type_shader: return AsNonstatic(shader_field_cj_ptrs);
+                    case ek_asset_type_sound: return AsNonstatic(snd_field_cj_ptrs);
                     }
 
                     return {};
