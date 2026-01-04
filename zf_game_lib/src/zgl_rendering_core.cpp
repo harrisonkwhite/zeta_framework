@@ -3,29 +3,29 @@
 #include <bgfx/bgfx.h>
 #include <zgl/zgl_platform.h>
 
-namespace zf::rendering {
+namespace zf {
     // ============================================================
     // @section: Types and Globals
 
-    enum State : I32 {
+    enum t_state : I32 {
         ec_state_inactive,
         ec_state_active_but_not_rendering,
         ec_state_active_and_rendering
     };
 
     struct {
-        State state;
+        t_state state;
         s_v2_i resolution_cache;
-        ResourceGroup perm_resource_group;
+        t_rendering_resource_group perm_resource_group;
     } g_state;
 
-    enum ResourceType : I32 {
-        ec_resource_type_texture,
-        ec_resource_type_shader_prog
+    enum t_rendering_resource_type : I32 {
+        ec_rendering_resource_type_texture,
+        ec_rendering_resource_type_shader_prog
     };
 
-    struct Resource {
-        ResourceType type;
+    struct t_rendering_resource {
+        t_rendering_resource_type type;
 
         union {
             struct {
@@ -38,7 +38,7 @@ namespace zf::rendering {
             } shader_prog;
         } type_data;
 
-        Resource *next;
+        t_rendering_resource *next;
     };
 
     extern const U8 g_batch_triangle_vert_shader_default_src_raw[];
@@ -50,24 +50,24 @@ namespace zf::rendering {
     const I32 g_batch_vert_limit = 1024;
     const I32 g_frame_vert_limit = 8192; // @todo: This should definitely be modifiable if the user wants.
 
-    struct Basis {
+    struct t_rendering_basis {
         bgfx::DynamicVertexBufferHandle vert_buf_bgfx_hdl;
         bgfx::ProgramHandle shader_prog_bgfx_hdl;
         bgfx::UniformHandle texture_sampler_uniform_bgfx_hdl;
 
-        const Resource *px_texture;
+        const t_rendering_resource *px_texture;
     };
 
-    struct Context {
-        const Basis *basis;
+    struct t_rendering_context {
+        const t_rendering_basis *basis;
 
         I32 frame_vert_cnt;
 
         struct {
-            s_static_array<BatchVertex, g_batch_vert_limit> verts;
+            s_static_array<t_batch_vertex, g_batch_vert_limit> verts;
             I32 vert_cnt;
 
-            const Resource *texture;
+            const t_rendering_resource *texture;
         } batch_state;
     };
 
@@ -78,7 +78,7 @@ namespace zf::rendering {
     // @section: Functions
 
     // @todo: Placeholder!
-    static bgfx::ProgramHandle create_bgfx_shader_prog(const s_array_rdonly<U8> vert_shader_bin, const s_array_rdonly<U8> frag_shader_bin) {
+    static bgfx::ProgramHandle f_create_bgfx_shader_prog(const s_array_rdonly<U8> vert_shader_bin, const s_array_rdonly<U8> frag_shader_bin) {
         const bgfx::Memory *const vert_shader_bgfx_mem = bgfx::copy(vert_shader_bin.raw, static_cast<uint32_t>(vert_shader_bin.len));
         const bgfx::ShaderHandle vert_shader_bgfx_hdl = bgfx::createShader(vert_shader_bgfx_mem);
 
@@ -96,7 +96,7 @@ namespace zf::rendering {
         return bgfx::createProgram(vert_shader_bgfx_hdl, frag_shader_bgfx_hdl, true);
     }
 
-    Basis *startup_module(s_arena *const arena, ResourceGroup **const o_perm_resource_group) {
+    t_rendering_basis *f_rendering_startup_module(s_arena *const arena, t_rendering_resource_group **const o_perm_resource_group) {
         ZF_ASSERT(g_state.state == ec_state_inactive);
 
         g_state = {
@@ -112,15 +112,15 @@ namespace zf::rendering {
 
         bgfx_init.resolution.reset = BGFX_RESET_VSYNC;
 
-        const auto fb_size_cache = platform::get_window_framebuffer_size_cache();
+        const auto fb_size_cache = f_platform_get_window_framebuffer_size_cache();
 
         bgfx_init.resolution.width = static_cast<uint32_t>(fb_size_cache.x);
         bgfx_init.resolution.height = static_cast<uint32_t>(fb_size_cache.y);
 
         g_state.resolution_cache = fb_size_cache;
 
-        bgfx_init.platformData.nwh = platform::get_native_window_handle();
-        bgfx_init.platformData.ndt = platform::get_native_display_handle();
+        bgfx_init.platformData.nwh = f_platform_get_native_window_handle();
+        bgfx_init.platformData.ndt = f_platform_get_native_display_handle();
         bgfx_init.platformData.type = bgfx::NativeWindowHandleType::Default;
 
         if (!bgfx::init(bgfx_init)) {
@@ -133,7 +133,7 @@ namespace zf::rendering {
         //
         // Basis Setup
         //
-        const auto basis = ArenaPushItem<Basis>(arena);
+        const auto basis = ArenaPushItem<t_rendering_basis>(arena);
 
         {
             bgfx::VertexLayout vert_layout;
@@ -146,7 +146,7 @@ namespace zf::rendering {
             }
         }
 
-        basis->shader_prog_bgfx_hdl = create_bgfx_shader_prog({g_batch_triangle_vert_shader_default_src_raw, g_batch_triangle_vert_shader_default_src_len}, {g_batch_triangle_frag_shader_default_src_raw, g_batch_triangle_frag_shader_default_src_len});
+        basis->shader_prog_bgfx_hdl = f_create_bgfx_shader_prog({g_batch_triangle_vert_shader_default_src_raw, g_batch_triangle_vert_shader_default_src_len}, {g_batch_triangle_frag_shader_default_src_raw, g_batch_triangle_frag_shader_default_src_len});
 
         if (!bgfx::isValid(basis->shader_prog_bgfx_hdl)) {
             ZF_FATAL();
@@ -159,42 +159,42 @@ namespace zf::rendering {
         }
 
         const s_static_array<U8, 4> px_texture_rgba = {{255, 255, 255, 255}};
-        basis->px_texture = create_texture({{1, 1}, AsNonstatic(px_texture_rgba)}, &g_state.perm_resource_group);
+        basis->px_texture = f_rendering_create_texture({{1, 1}, AsNonstatic(px_texture_rgba)}, &g_state.perm_resource_group);
 
         return basis;
     }
 
-    void shutdown_module(const Basis *const basis) {
+    void f_rendering_shutdown_module(const t_rendering_basis *const basis) {
         ZF_ASSERT(g_state.state == ec_state_active_but_not_rendering);
 
         bgfx::destroy(basis->texture_sampler_uniform_bgfx_hdl);
         bgfx::destroy(basis->shader_prog_bgfx_hdl);
         bgfx::destroy(basis->vert_buf_bgfx_hdl);
 
-        destroy_resource_group(&g_state.perm_resource_group);
+        f_rendering_destroy_resource_group(&g_state.perm_resource_group);
 
         bgfx::shutdown();
 
         g_state = {};
     }
 
-    s_v2_i get_texture_size(const Resource *const texture) {
+    s_v2_i f_rendering_get_texture_size(const t_rendering_resource *const texture) {
         ZF_ASSERT(g_state.state != ec_state_inactive);
         return texture->type_data.texture.size;
     }
 
-    void destroy_resource_group(ResourceGroup *const group) {
+    void f_rendering_destroy_resource_group(t_rendering_resource_group *const group) {
         ZF_ASSERT(g_state.state == ec_state_active_but_not_rendering);
 
-        Resource *resource = group->head;
+        t_rendering_resource *resource = group->head;
 
         while (resource) {
             switch (resource->type) {
-            case ec_resource_type_texture:
+            case ec_rendering_resource_type_texture:
                 bgfx::destroy(resource->type_data.texture.bgfx_hdl);
                 break;
 
-            case ec_resource_type_shader_prog:
+            case ec_rendering_resource_type_shader_prog:
                 bgfx::destroy(resource->type_data.shader_prog.bgfx_hdl);
                 break;
 
@@ -202,7 +202,7 @@ namespace zf::rendering {
                 ZF_UNREACHABLE();
             }
 
-            Resource *const next = resource->next;
+            t_rendering_resource *const next = resource->next;
             *resource = {};
             resource = next;
         }
@@ -210,10 +210,10 @@ namespace zf::rendering {
         *group = {};
     }
 
-    static Resource *add_to_resource_group(ResourceGroup *const group, const ResourceType type) {
+    static t_rendering_resource *f_add_to_resource_group(t_rendering_resource_group *const group, const t_rendering_resource_type type) {
         ZF_ASSERT(g_state.state == ec_state_active_but_not_rendering);
 
-        const auto resource = mem_push_item_zeroed<Resource>(group->arena);
+        const auto resource = mem_push_item_zeroed<t_rendering_resource>(group->arena);
 
         if (!group->head) {
             group->head = resource;
@@ -228,7 +228,7 @@ namespace zf::rendering {
         return resource;
     }
 
-    Resource *create_texture(const gfx::TextureDataRdonly texture_data, ResourceGroup *const group) {
+    t_rendering_resource *f_rendering_create_texture(const gfx::TextureDataRdonly texture_data, t_rendering_resource_group *const group) {
         ZF_ASSERT(g_state.state == ec_state_active_but_not_rendering);
 
         const uint64_t sampler_flags = BGFX_SAMPLER_MIN_POINT | BGFX_SAMPLER_MAG_POINT | BGFX_SAMPLER_U_CLAMP | BGFX_SAMPLER_V_CLAMP;
@@ -238,13 +238,13 @@ namespace zf::rendering {
             ZF_FATAL();
         }
 
-        const auto resource = add_to_resource_group(group, ec_resource_type_texture);
+        const auto resource = f_add_to_resource_group(group, ec_rendering_resource_type_texture);
         resource->type_data.texture.bgfx_hdl = texture_bgfx_hdl;
         resource->type_data.texture.size = texture_data.size_in_pxs;
         return resource;
     }
 
-    Resource *create_shader_prog(const s_array_rdonly<U8> vert_shader_compiled_bin, const s_array_rdonly<U8> frag_shader_compiled_bin, ResourceGroup *const group) {
+    t_rendering_resource *f_rendering_create_shader_prog(const s_array_rdonly<U8> vert_shader_compiled_bin, const s_array_rdonly<U8> frag_shader_compiled_bin, t_rendering_resource_group *const group) {
         const bgfx::Memory *const vert_shader_bgfx_mem = bgfx::copy(vert_shader_compiled_bin.raw, static_cast<uint32_t>(vert_shader_compiled_bin.len));
         const bgfx::ShaderHandle vert_shader_bgfx_hdl = bgfx::createShader(vert_shader_bgfx_mem);
 
@@ -265,15 +265,15 @@ namespace zf::rendering {
             ZF_FATAL();
         }
 
-        const auto resource = add_to_resource_group(group, ec_resource_type_shader_prog);
+        const auto resource = f_add_to_resource_group(group, ec_rendering_resource_type_shader_prog);
         resource->type_data.shader_prog.bgfx_hdl = prog_bgfx_hdl;
         return resource;
     }
 
-    Context *begin_frame(const Basis *const basis, const gfx::ColorRGB8 clear_col, s_arena *const context_arena) {
+    t_rendering_context *f_rendering_begin_frame(const t_rendering_basis *const basis, const gfx::ColorRGB8 clear_col, s_arena *const context_arena) {
         ZF_ASSERT(g_state.state == ec_state_active_but_not_rendering);
 
-        const auto fb_size_cache = platform::get_window_framebuffer_size_cache();
+        const auto fb_size_cache = f_platform_get_window_framebuffer_size_cache();
 
         if (g_state.resolution_cache != fb_size_cache) {
             bgfx::reset(static_cast<uint32_t>(fb_size_cache.x), static_cast<uint32_t>(fb_size_cache.y), BGFX_RESET_VSYNC);
@@ -300,13 +300,13 @@ namespace zf::rendering {
 
         g_state.state = ec_state_active_and_rendering;
 
-        const auto context = mem_push_item_zeroed<Context>(context_arena);
+        const auto context = mem_push_item_zeroed<t_rendering_context>(context_arena);
         context->basis = basis;
 
         return context;
     }
 
-    static void flush_batch(Context *const context) {
+    static void f_flush_batch(t_rendering_context *const context) {
         ZF_ASSERT(g_state.state == ec_state_active_and_rendering);
 
         if (context->batch_state.vert_cnt == 0) {
@@ -335,20 +335,20 @@ namespace zf::rendering {
         ClearItem(&context->batch_state, 0);
     }
 
-    void end_frame(Context *const context) {
+    void f_rendering_end_frame(t_rendering_context *const context) {
         ZF_ASSERT(g_state.state == ec_state_active_and_rendering);
 
-        flush_batch(context);
+        f_flush_batch(context);
 
         bgfx::frame();
 
         g_state.state = ec_state_active_but_not_rendering;
     }
 
-    void submit_triangle(Context *const context, const s_array_rdonly<BatchTriangle> triangles, const Resource *const texture) {
+    void f_rendering_submit_triangle(t_rendering_context *const context, const s_array_rdonly<t_batch_triangle> triangles, const t_rendering_resource *const texture) {
         ZF_ASSERT(g_state.state == ec_state_active_and_rendering);
         ZF_ASSERT(triangles.len > 0);
-        ZF_ASSERT(!texture || texture->type == ec_resource_type_texture);
+        ZF_ASSERT(!texture || texture->type == ec_rendering_resource_type_texture);
 
         const I32 num_verts_to_submit = 3 * triangles.len;
 
@@ -357,7 +357,7 @@ namespace zf::rendering {
         }
 
         if (texture != context->batch_state.texture || context->batch_state.vert_cnt + num_verts_to_submit > g_batch_vert_limit) {
-            flush_batch(context);
+            f_flush_batch(context);
             context->batch_state.texture = texture;
         }
 

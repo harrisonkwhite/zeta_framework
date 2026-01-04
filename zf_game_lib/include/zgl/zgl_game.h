@@ -1,43 +1,47 @@
 #pragma once
 
 #include <zcl.h>
-#include <zgl/zgl_input.h>
-#include <zgl/zgl_rendering.h>
 
 namespace zf {
-    struct s_game_init_context {
+    struct t_rendering_resource_group;
+
+    struct t_game_init_context {
         s_arena *perm_arena;
         s_arena *temp_arena;
 
-        rendering::ResourceGroup *perm_rendering_resource_group;
+        t_rendering_resource_group *perm_rendering_resource_group;
 
         rand::RNG *rng;
     };
 
-    struct s_game_tick_context {
+    struct t_input_state;
+
+    struct t_game_tick_context {
         s_arena *perm_arena;
         s_arena *temp_arena;
 
         const t_input_state *input_state;
 
-        rendering::ResourceGroup *perm_rendering_resource_group;
+        t_rendering_resource_group *perm_rendering_resource_group;
 
         rand::RNG *rng;
     };
 
-    struct s_game_render_context {
+    struct t_rendering_context;
+
+    struct t_game_render_context {
         s_arena *perm_arena;
         s_arena *temp_arena;
 
-        rendering::Context *rendering_context;
+        t_rendering_context *rendering_context;
 
         rand::RNG *rng;
     };
 
-    using t_game_init_func = void (*)(const s_game_init_context &context);
+    using t_game_init_func = void (*)(const t_game_init_context &context);
     using t_game_deinit_func = void (*)();
-    using t_game_tick_func = void (*)(const s_game_tick_context &context);
-    using t_game_render_func = void (*)(const s_game_render_context &context);
+    using t_game_tick_func = void (*)(const t_game_tick_context &context);
+    using t_game_render_func = void (*)(const t_game_render_context &context);
 
-    void RunGame(const t_game_init_func init_func, const t_game_tick_func tick_func, const t_game_render_func render_func, const t_game_deinit_func deinit_func = nullptr);
+    void game_run(const t_game_init_func init_func, const t_game_tick_func tick_func, const t_game_render_func render_func, const t_game_deinit_func deinit_func = nullptr);
 }

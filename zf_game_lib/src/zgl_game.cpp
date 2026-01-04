@@ -1,6 +1,8 @@
 #include <zgl/zgl_game.h>
 
 #include <zgl/zgl_platform.h>
+#include <zgl/zgl_input.h>
+#include <zgl/zgl_rendering.h>
 
 namespace zf {
     static const s_v2_i g_init_window_size = {1280, 720};
@@ -8,7 +10,7 @@ namespace zf {
 
     // @todo: Need a better and more consistent set of verbs. "Is" is too vague - how much calculation is being performed, should I cache the result?
 
-    void RunGame(const t_game_init_func init_func, const t_game_tick_func tick_func, const t_game_render_func render_func, const t_game_deinit_func deinit_func) {
+    void game_run(const t_game_init_func init_func, const t_game_tick_func tick_func, const t_game_render_func render_func, const t_game_deinit_func deinit_func) {
         ZF_ASSERT(init_func);
         ZF_ASSERT(tick_func);
         ZF_ASSERT(render_func);
@@ -22,14 +24,14 @@ namespace zf {
         s_arena temp_arena = CreateArena();
         ZF_DEFER({ ArenaDestroy(&temp_arena); });
 
-        platform_startup(g_init_window_size);
-        ZF_DEFER({ platform_shutdown(); });
+        f_platform_startup(g_init_window_size);
+        ZF_DEFER({ f_platform_shutdown(); });
 
-        t_input_state *const input_state = input_create_state(&perm_arena);
+        t_input_state *const input_state = f_input_create_state(&perm_arena);
 
-        rendering::ResourceGroup *perm_rendering_resource_group;
-        rendering::Basis *const rendering_basis = rendering::startup_module(&perm_arena, &perm_rendering_resource_group);
-        ZF_DEFER({ rendering::shutdown_module(rendering_basis); });
+        t_rendering_resource_group *perm_rendering_resource_group;
+        t_rendering_basis *const rendering_basis = f_rendering_startup_module(&perm_arena, &perm_rendering_resource_group);
+        ZF_DEFER({ f_rendering_shutdown_module(rendering_basis); });
 
         rand::RNG *const rng = rand::create_rng(0, &perm_arena); // @todo: Proper seed!
 
@@ -49,15 +51,15 @@ namespace zf {
         //
         // Main Loop
         //
-        platform_show_window();
+        f_platform_show_window();
 
-        F64 frame_time_last = platform_get_time();
+        F64 frame_time_last = f_platform_get_time();
         F64 frame_dur_accum = 0.0;
 
-        while (!platform_get_window_should_close()) {
-            platform_poll_os_events(input_state);
+        while (!f_platform_should_window_close()) {
+            f_platform_poll_os_events(input_state);
 
-            const F64 frame_time = platform_get_time();
+            const F64 frame_time = f_platform_get_time();
             const F64 frame_time_delta = frame_time - frame_time_last;
             frame_dur_accum += frame_time_delta;
             frame_time_last = frame_time;
@@ -76,14 +78,14 @@ namespace zf {
                     .rng = rng,
                 });
 
-                input_clear_events(input_state);
+                f_input_clear_events(input_state);
 
                 frame_dur_accum -= targ_tick_interval;
             }
 
             zf_mem_rewind_arena(&temp_arena);
 
-            rendering::Context *const rendering_context = rendering::begin_frame(rendering_basis, {109, 187, 255}, &temp_arena); // @todo: Make the clear colour customisable?
+            t_rendering_context *const rendering_context = f_rendering_begin_frame(rendering_basis, {109, 187, 255}, &temp_arena); // @todo: Make the clear colour customisable?
 
             render_func({
                 .perm_arena = &perm_arena,
@@ -92,7 +94,7 @@ namespace zf {
                 .rng = rng,
             });
 
-            rendering::end_frame(rendering_context);
+            f_rendering_end_frame(rendering_context);
         }
     }
 }
