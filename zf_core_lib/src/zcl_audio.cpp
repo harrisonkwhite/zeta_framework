@@ -3,7 +3,7 @@
 #include <miniaudio.h>
 
 namespace zf {
-    t_b8 LoadSoundDataFromRaw(const s_str_rdonly file_path, s_arena *const snd_data_arena, s_arena *const temp_arena, s_sound_data_mut *const o_snd_data) {
+    B8 LoadSoundDataFromRaw(const s_str_rdonly file_path, s_arena *const snd_data_arena, s_arena *const temp_arena, s_sound_data_mut *const o_snd_data) {
         const s_str_rdonly file_path_terminated = CloneStrButAddTerminator(file_path, temp_arena);
 
         ma_decoder decoder;
@@ -27,7 +27,7 @@ namespace zf {
             .frame_cnt = static_cast<t_i32>(frame_cnt),
         };
 
-        o_snd_data->pcm = PushArray<t_f32>(snd_data_arena, SampleCount(o_snd_data->meta));
+        o_snd_data->pcm = ArenaPushArray<t_f32>(snd_data_arena, SampleCount(o_snd_data->meta));
 
         if (ma_decoder_read_pcm_frames(&decoder, o_snd_data->pcm.raw, frame_cnt, nullptr) != MA_SUCCESS) {
             return false;
@@ -36,7 +36,7 @@ namespace zf {
         return true;
     }
 
-    t_b8 PackSound(const s_str_rdonly file_path, const s_sound_data_mut snd_data, s_arena *const temp_arena) {
+    B8 PackSound(const s_str_rdonly file_path, const s_sound_data_mut snd_data, s_arena *const temp_arena) {
         if (!CreateFileAndParentDirectories(file_path, temp_arena)) {
             return false;
         }
@@ -52,7 +52,7 @@ namespace zf {
         return SerializeSound(&fs, snd_data);
     }
 
-    t_b8 UnpackSound(const s_str_rdonly file_path, s_arena *const snd_data_arena, s_arena *const temp_arena, s_sound_data_mut *const o_snd_data) {
+    B8 UnpackSound(const s_str_rdonly file_path, s_arena *const snd_data_arena, s_arena *const temp_arena, s_sound_data_mut *const o_snd_data) {
         s_stream fs;
 
         if (!FileOpen(file_path, ek_file_access_mode_read, temp_arena, &fs)) {
@@ -65,7 +65,7 @@ namespace zf {
             return false;
         }
 
-        o_snd_data->pcm = PushArray<t_f32>(snd_data_arena, SampleCount(o_snd_data->meta));
+        o_snd_data->pcm = ArenaPushArray<t_f32>(snd_data_arena, SampleCount(o_snd_data->meta));
 
         if (!ReadItemsIntoArray(&fs, o_snd_data->pcm, o_snd_data->pcm.len)) {
             return false;
@@ -74,7 +74,7 @@ namespace zf {
         return true;
     }
 
-    t_b8 SerializeSound(s_stream *const stream, const s_sound_data_mut snd_data) {
+    B8 SerializeSound(s_stream *const stream, const s_sound_data_mut snd_data) {
         if (!WriteItem(stream, snd_data.meta)) {
             return false;
         }
@@ -86,7 +86,7 @@ namespace zf {
         return true;
     }
 
-    t_b8 DeserializeSound(s_stream *const stream, s_arena *const snd_data_arena, s_sound_data_mut *const o_snd_data) {
+    B8 DeserializeSound(s_stream *const stream, s_arena *const snd_data_arena, s_sound_data_mut *const o_snd_data) {
         if (!ReadItem(stream, &o_snd_data->meta)) {
             return false;
         }

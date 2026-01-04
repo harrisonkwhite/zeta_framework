@@ -10,7 +10,7 @@
 #endif
 
 namespace zf {
-    t_b8 FileOpen(const s_str_rdonly path, const e_file_access_mode mode, s_arena *const temp_arena, s_stream *const o_stream) {
+    B8 FileOpen(const s_str_rdonly path, const e_file_access_mode mode, s_arena *const temp_arena, s_stream *const o_stream) {
         const s_str_rdonly path_terminated = CloneStrButAddTerminator(path, temp_arena);
 
         FILE *file;
@@ -59,7 +59,7 @@ namespace zf {
         return static_cast<t_i32>(file_size);
     }
 
-    t_b8 LoadFileContents(const s_str_rdonly path, s_arena *const contents_arena, s_arena *const temp_arena, s_array_mut<t_u8> *const o_contents, const t_b8 add_terminator) {
+    B8 LoadFileContents(const s_str_rdonly path, s_arena *const contents_arena, s_arena *const temp_arena, s_array_mut<t_u8> *const o_contents, const B8 add_terminator) {
         s_stream stream;
 
         if (!FileOpen(path, ek_file_access_mode_read, temp_arena, &stream)) {
@@ -71,10 +71,10 @@ namespace zf {
         const t_i32 file_size = FileCalcSize(&stream);
 
         if (add_terminator) {
-            *o_contents = PushArray<t_u8>(contents_arena, file_size + 1);
+            *o_contents = ArenaPushArray<t_u8>(contents_arena, file_size + 1);
             (*o_contents)[file_size] = 0;
         } else {
-            *o_contents = PushArray<t_u8>(contents_arena, file_size);
+            *o_contents = ArenaPushArray<t_u8>(contents_arena, file_size);
         }
 
         if (!ReadItemsIntoArray(&stream, *o_contents, file_size)) {
@@ -84,7 +84,7 @@ namespace zf {
         return true;
     }
 
-    t_b8 CreateDirectoryAssumingParentsExist(const s_str_rdonly path, s_arena *const temp_arena, e_directory_creation_result *const o_creation_res) {
+    B8 CreateDirectoryAssumingParentsExist(const s_str_rdonly path, s_arena *const temp_arena, e_directory_creation_result *const o_creation_res) {
         if (o_creation_res) {
             *o_creation_res = ek_directory_creation_result_success;
         }
@@ -125,7 +125,7 @@ namespace zf {
         return false;
     }
 
-    t_b8 CreateDirectoryAndParents(const s_str_rdonly path, s_arena *const temp_arena, e_directory_creation_result *const o_dir_creation_res) {
+    B8 CreateDirectoryAndParents(const s_str_rdonly path, s_arena *const temp_arena, e_directory_creation_result *const o_dir_creation_res) {
         if (o_dir_creation_res) {
             *o_dir_creation_res = ek_directory_creation_result_success;
         }
@@ -140,12 +140,12 @@ namespace zf {
             return true;
         };
 
-        t_b8 cur_dir_name_is_empty = true;
+        B8 cur_dir_name_is_empty = true;
 
         ZF_WALK_STR (path, step) {
             if (step.code_pt == '/' || step.code_pt == '\\') {
                 if (!cur_dir_name_is_empty) {
-                    if (!create_dir_if_nonexistent({Slice(path.bytes, 0, step.byte_index)})) {
+                    if (!create_dir_if_nonexistent({ArraySlice(path.bytes, 0, step.byte_index)})) {
                         return false;
                     }
 
@@ -165,7 +165,7 @@ namespace zf {
         return true;
     }
 
-    t_b8 CreateFileAndParentDirectories(const s_str_rdonly path, s_arena *const temp_arena, e_directory_creation_result *const o_dir_creation_res) {
+    B8 CreateFileAndParentDirectories(const s_str_rdonly path, s_arena *const temp_arena, e_directory_creation_result *const o_dir_creation_res) {
         if (o_dir_creation_res) {
             *o_dir_creation_res = ek_directory_creation_result_success;
         }
@@ -173,7 +173,7 @@ namespace zf {
         // Get the substring containing all directories and create them.
         ZF_WALK_STR_REVERSE (path, step) {
             if (step.code_pt == '/' || step.code_pt == '\\') {
-                if (!CreateDirectoryAndParents({Slice(path.bytes, 0, step.byte_index)}, temp_arena, o_dir_creation_res)) {
+                if (!CreateDirectoryAndParents({ArraySlice(path.bytes, 0, step.byte_index)}, temp_arena, o_dir_creation_res)) {
                     return false;
                 }
 
@@ -222,8 +222,8 @@ namespace zf {
             }
         }
 
-        const auto result_bytes = PushArray<t_u8>(arena, len);
-        CopyAll(AsByteArray(Slice(AsNonstatic(buf), 0, len)), result_bytes);
+        const auto result_bytes = ArenaPushArray<t_u8>(arena, len);
+        CopyAll(AsByteArray(ArraySlice(AsNonstatic(buf), 0, len)), result_bytes);
         return {result_bytes};
 #elif defined(ZF_PLATFORM_MACOS)
     #error "Platform-specific implementation not yet done!"

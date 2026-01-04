@@ -276,7 +276,7 @@ namespace zf {
         ek_utf8_byte_type_invalid,
     }};
 
-    t_b8 IsValidUTF8(const s_str_rdonly str) {
+    B8 IsValidUTF8(const s_str_rdonly str) {
         t_i32 cost = 0;
 
         for (t_i32 i = 0; i < str.bytes.len; i++) {
@@ -393,7 +393,7 @@ namespace zf {
             }
 
             const t_i32 cp_byte_cnt = byte_type - ek_utf8_byte_type_ascii + 1;
-            const auto cp_bytes = Slice(str.bytes, byte_index, byte_index + cp_byte_cnt);
+            const auto cp_bytes = ArraySlice(str.bytes, byte_index, byte_index + cp_byte_cnt);
             return ConvertUTF8BytesToCodePoint(cp_bytes);
         } while (true);
     }
@@ -406,7 +406,7 @@ namespace zf {
         }
     }
 
-    t_b8 Walk(const s_str_rdonly str, t_i32 *const byte_index, s_str_walk_step *const o_step) {
+    B8 Walk(const s_str_rdonly str, t_i32 *const byte_index, s_str_walk_step *const o_step) {
         ZF_ASSERT(IsValidUTF8(str));
         ZF_ASSERT(*byte_index >= 0 && *byte_index <= str.bytes.len);
 
@@ -423,7 +423,7 @@ namespace zf {
             case ek_utf8_byte_type_3byte_start:
             case ek_utf8_byte_type_4byte_start: {
                 const t_i32 cp_byte_cnt = byte_type - ek_utf8_byte_type_ascii + 1;
-                const auto cp_bytes = Slice(str.bytes, *byte_index, *byte_index + cp_byte_cnt);
+                const auto cp_bytes = ArraySlice(str.bytes, *byte_index, *byte_index + cp_byte_cnt);
                 *o_step = {.code_pt = ConvertUTF8BytesToCodePoint(cp_bytes), .byte_index = *byte_index};
                 *byte_index += cp_byte_cnt;
 
@@ -440,7 +440,7 @@ namespace zf {
         }
     }
 
-    t_b8 WalkReverse(const s_str_rdonly str, t_i32 *const byte_index, s_str_walk_step *const o_step) {
+    B8 WalkReverse(const s_str_rdonly str, t_i32 *const byte_index, s_str_walk_step *const o_step) {
         ZF_ASSERT(IsValidUTF8(str));
         ZF_ASSERT(*byte_index >= -1 && *byte_index < str.bytes.len);
 
@@ -457,7 +457,7 @@ namespace zf {
             case ek_utf8_byte_type_3byte_start:
             case ek_utf8_byte_type_4byte_start: {
                 const t_i32 cp_byte_cnt = byte_type - ek_utf8_byte_type_ascii + 1;
-                const auto cp_bytes = Slice(str.bytes, *byte_index, *byte_index + cp_byte_cnt);
+                const auto cp_bytes = ArraySlice(str.bytes, *byte_index, *byte_index + cp_byte_cnt);
                 *o_step = {.code_pt = ConvertUTF8BytesToCodePoint(cp_bytes), .byte_index = *byte_index};
                 (*byte_index)--;
 

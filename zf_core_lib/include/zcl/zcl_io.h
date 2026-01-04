@@ -43,7 +43,7 @@ namespace zf {
 
     inline s_array_mut<t_u8> MemStreamBytesWritten(const s_stream *const stream) {
         ZF_ASSERT(stream->type == ek_stream_type_mem);
-        return Slice(stream->type_data.mem.bytes, 0, stream->type_data.mem.byte_pos);
+        return ArraySlice(stream->type_data.mem.bytes, 0, stream->type_data.mem.byte_pos);
     }
 
     inline s_stream CreateFileStream(FILE *const file, const e_stream_mode mode) {
@@ -55,7 +55,7 @@ namespace zf {
     inline s_stream StdError() { return CreateFileStream(stderr, ek_stream_mode_write); }
 
     template <co_simple tp_type>
-    [[nodiscard]] t_b8 ReadItem(s_stream *const stream, tp_type *const o_item) {
+    [[nodiscard]] B8 ReadItem(s_stream *const stream, tp_type *const o_item) {
         ZF_ASSERT(stream->mode == ek_stream_mode_read);
 
         const t_i32 size = ZF_SIZE_OF(tp_type);
@@ -66,7 +66,7 @@ namespace zf {
                 return false;
             }
 
-            const auto src = Slice(stream->type_data.mem.bytes, stream->type_data.mem.byte_pos, stream->type_data.mem.byte_pos + size);
+            const auto src = ArraySlice(stream->type_data.mem.bytes, stream->type_data.mem.byte_pos, stream->type_data.mem.byte_pos + size);
             const auto dest = AsBytes(*o_item);
             CopyAll(src, dest);
 
@@ -84,7 +84,7 @@ namespace zf {
     }
 
     template <co_simple tp_type>
-    [[nodiscard]] t_b8 WriteItem(s_stream *const stream, const tp_type &item) {
+    [[nodiscard]] B8 WriteItem(s_stream *const stream, const tp_type &item) {
         ZF_ASSERT(stream->mode == ek_stream_mode_write);
 
         const t_i32 size = ZF_SIZE_OF(tp_type);
@@ -96,7 +96,7 @@ namespace zf {
             }
 
             const auto src = AsBytes(item);
-            const auto dest = Slice(stream->type_data.mem.bytes, stream->type_data.mem.byte_pos, stream->type_data.mem.byte_pos + size);
+            const auto dest = ArraySlice(stream->type_data.mem.bytes, stream->type_data.mem.byte_pos, stream->type_data.mem.byte_pos + size);
             CopyAll(src, dest);
 
             stream->type_data.mem.byte_pos += size;
@@ -113,7 +113,7 @@ namespace zf {
     }
 
     template <co_array_mut tp_type>
-    [[nodiscard]] t_b8 ReadItemsIntoArray(s_stream *const stream, const tp_type arr, const t_i32 cnt) {
+    [[nodiscard]] B8 ReadItemsIntoArray(s_stream *const stream, const tp_type arr, const t_i32 cnt) {
         ZF_ASSERT(stream->mode == ek_stream_mode_read);
         ZF_ASSERT(cnt >= 0 && cnt <= arr.len);
 
@@ -129,7 +129,7 @@ namespace zf {
                 return false;
             }
 
-            const auto src = Slice(stream->type_data.mem.bytes, stream->type_data.mem.byte_pos, stream->type_data.mem.byte_pos + size);
+            const auto src = ArraySlice(stream->type_data.mem.bytes, stream->type_data.mem.byte_pos, stream->type_data.mem.byte_pos + size);
             const auto dest = AsByteArray(arr);
             CopyAll(src, dest);
 
@@ -147,7 +147,7 @@ namespace zf {
     }
 
     template <co_array tp_type>
-    [[nodiscard]] t_b8 WriteItemsOfArray(s_stream *const stream, const tp_type arr) {
+    [[nodiscard]] B8 WriteItemsOfArray(s_stream *const stream, const tp_type arr) {
         ZF_ASSERT(stream->mode == ek_stream_mode_write);
 
         if (arr.len == 0) {
@@ -163,7 +163,7 @@ namespace zf {
             }
 
             const auto src = AsByteArray(arr);
-            const auto dest = Slice(stream->type_data.mem.bytes, stream->type_data.mem.byte_pos, stream->type_data.mem.byte_pos + size);
+            const auto dest = ArraySlice(stream->type_data.mem.bytes, stream->type_data.mem.byte_pos, stream->type_data.mem.byte_pos + size);
             CopyAll(src, dest);
 
             stream->type_data.mem.byte_pos += size;
@@ -180,7 +180,7 @@ namespace zf {
     }
 
     template <co_array tp_type>
-    [[nodiscard]] t_b8 SerializeArray(s_stream *const stream, const tp_type arr) {
+    [[nodiscard]] B8 SerializeArray(s_stream *const stream, const tp_type arr) {
         if (!WriteItem(stream, arr.len)) {
             return false;
         }
@@ -193,14 +193,14 @@ namespace zf {
     }
 
     template <co_simple tp_type>
-    [[nodiscard]] t_b8 DeserializeArray(s_stream *const stream, s_arena *const arr_arena, s_array_mut<tp_type> *const o_arr) {
+    [[nodiscard]] B8 DeserializeArray(s_stream *const stream, s_arena *const arr_arena, s_array_mut<tp_type> *const o_arr) {
         t_i32 len;
 
         if (!ReadItem(stream, &len)) {
             return false;
         }
 
-        *o_arr = PushArray<tp_type>(arr_arena, len);
+        *o_arr = ArenaPushArray<tp_type>(arr_arena, len);
 
         if (!ReadItemsIntoArray(stream, *o_arr, len)) {
             return false;
@@ -209,7 +209,7 @@ namespace zf {
         return true;
     }
 
-    [[nodiscard]] inline t_b8 SerializeBitVector(s_stream *const stream, const s_bit_vec_rdonly bv) {
+    [[nodiscard]] inline B8 SerializeBitVector(s_stream *const stream, const s_bit_vec_rdonly bv) {
         if (!WriteItem(stream, bv.bit_cnt)) {
             return false;
         }
@@ -221,7 +221,7 @@ namespace zf {
         return true;
     }
 
-    [[nodiscard]] inline t_b8 DeserializeBitVector(s_stream *const stream, s_arena *const bv_arena, s_bit_vec_mut *const o_bv) {
+    [[nodiscard]] inline B8 DeserializeBitVector(s_stream *const stream, s_arena *const bv_arena, s_bit_vec_mut *const o_bv) {
         t_i32 bit_cnt;
 
         if (!ReadItem(stream, &bit_cnt)) {
@@ -249,10 +249,10 @@ namespace zf {
         ek_file_access_mode_append
     };
 
-    [[nodiscard]] t_b8 FileOpen(const s_str_rdonly file_path, const e_file_access_mode mode, s_arena *const temp_arena, s_stream *const o_stream);
+    [[nodiscard]] B8 FileOpen(const s_str_rdonly file_path, const e_file_access_mode mode, s_arena *const temp_arena, s_stream *const o_stream);
     void FileClose(s_stream *const stream);
     t_i32 FileCalcSize(s_stream *const stream);
-    [[nodiscard]] t_b8 LoadFileContents(const s_str_rdonly file_path, s_arena *const contents_arena, s_arena *const temp_arena, s_array_mut<t_u8> *const o_contents, const t_b8 add_terminator = false);
+    [[nodiscard]] B8 LoadFileContents(const s_str_rdonly file_path, s_arena *const contents_arena, s_arena *const temp_arena, s_array_mut<t_u8> *const o_contents, const B8 add_terminator = false);
 
     enum e_directory_creation_result : t_i32 {
         ek_directory_creation_result_success,
@@ -262,9 +262,9 @@ namespace zf {
         ek_directory_creation_result_unknown_err
     };
 
-    [[nodiscard]] t_b8 CreateDirectoryAssumingParentsExist(const s_str_rdonly path, s_arena *const temp_arena, e_directory_creation_result *const o_creation_res = nullptr);
-    [[nodiscard]] t_b8 CreateDirectoryAndParents(const s_str_rdonly path, s_arena *const temp_arena, e_directory_creation_result *const o_dir_creation_res = nullptr);
-    [[nodiscard]] t_b8 CreateFileAndParentDirectories(const s_str_rdonly path, s_arena *const temp_arena, e_directory_creation_result *const o_dir_creation_res = nullptr);
+    [[nodiscard]] B8 CreateDirectoryAssumingParentsExist(const s_str_rdonly path, s_arena *const temp_arena, e_directory_creation_result *const o_creation_res = nullptr);
+    [[nodiscard]] B8 CreateDirectoryAndParents(const s_str_rdonly path, s_arena *const temp_arena, e_directory_creation_result *const o_dir_creation_res = nullptr);
+    [[nodiscard]] B8 CreateFileAndParentDirectories(const s_str_rdonly path, s_arena *const temp_arena, e_directory_creation_result *const o_dir_creation_res = nullptr);
 
     enum e_path_type : t_i32 {
         ek_path_type_not_found,
@@ -282,14 +282,14 @@ namespace zf {
     // ============================================================
     // @section: Printing
 
-    inline t_b8 Print(s_stream *const stream, const s_str_rdonly str) {
+    inline B8 Print(s_stream *const stream, const s_str_rdonly str) {
         return WriteItemsOfArray(stream, str.bytes);
     }
 
-    inline t_b8 PrintFormat(s_stream *const stream, const s_str_rdonly fmt);
+    inline B8 PrintFormat(s_stream *const stream, const s_str_rdonly fmt);
 
     template <co_simple tp_arg_type, co_simple... tp_arg_types_leftover>
-    t_b8 PrintFormat(s_stream *const stream, const s_str_rdonly fmt, const tp_arg_type &arg, const tp_arg_types_leftover &...args_leftover);
+    B8 PrintFormat(s_stream *const stream, const s_str_rdonly fmt, const tp_arg_type &arg, const tp_arg_types_leftover &...args_leftover);
 
     // Type format structs which are to be accepted as format printing arguments need to meet this (i.e. have the tag).
     template <typename tp_type>
@@ -301,13 +301,13 @@ namespace zf {
 
     struct s_bool_fmt {
         using t_fmt_tag = void;
-        t_b8 val;
+        B8 val;
     };
 
-    inline s_bool_fmt FormatBool(const t_b8 val) { return {val}; }
-    inline s_bool_fmt FormatDefault(const t_b8 val) { return {val}; }
+    inline s_bool_fmt FormatBool(const B8 val) { return {val}; }
+    inline s_bool_fmt FormatDefault(const B8 val) { return {val}; }
 
-    inline t_b8 PrintType(s_stream *const stream, const s_bool_fmt fmt) {
+    inline B8 PrintType(s_stream *const stream, const s_bool_fmt fmt) {
         const s_str_rdonly true_str = ZF_STR_LITERAL("true");
         const s_str_rdonly false_str = ZF_STR_LITERAL("false");
 
@@ -328,7 +328,7 @@ namespace zf {
     inline s_str_fmt FormatStr(const s_str_rdonly val) { return {val}; }
     inline s_str_fmt FormatDefault(const s_str_rdonly val) { return FormatStr(val); }
 
-    inline t_b8 PrintType(s_stream *const stream, const s_str_fmt fmt) {
+    inline B8 PrintType(s_stream *const stream, const s_str_fmt fmt) {
         return Print(stream, fmt.val);
     }
 
@@ -350,10 +350,10 @@ namespace zf {
     template <co_integral tp_type> s_integral_fmt<tp_type> FormatDefault(const tp_type val) { return FormatInt(val); }
 
     template <co_integral tp_type>
-    t_b8 PrintType(s_stream *const stream, const s_integral_fmt<tp_type> fmt) {
+    B8 PrintType(s_stream *const stream, const s_integral_fmt<tp_type> fmt) {
         s_static_array<t_u8, 20> str_bytes = {}; // Maximum possible number of ASCII characters needed to represent a 64-bit integer.
         s_stream str_bytes_stream = CreateMemStream(AsNonstatic(str_bytes), ek_stream_mode_write);
-        t_b8 str_bytes_stream_write_success = true;
+        B8 str_bytes_stream_write_success = true;
 
         if (fmt.val < 0) {
             str_bytes_stream_write_success = WriteItem(&str_bytes_stream, '-');
@@ -382,11 +382,11 @@ namespace zf {
         using t_fmt_tag = void;
 
         tp_type val;
-        t_b8 trim_trailing_zeros;
+        B8 trim_trailing_zeros;
     };
 
     template <co_floating_point tp_type>
-    s_float_fmt<tp_type> FormatFloat(const tp_type val, const t_b8 trim_trailing_zeros = false) {
+    s_float_fmt<tp_type> FormatFloat(const tp_type val, const B8 trim_trailing_zeros = false) {
         return {val, trim_trailing_zeros};
     }
 
@@ -395,7 +395,7 @@ namespace zf {
     }
 
     template <co_floating_point tp_type>
-    t_b8 PrintType(s_stream *const stream, const s_float_fmt<tp_type> fmt) {
+    B8 PrintType(s_stream *const stream, const s_float_fmt<tp_type> fmt) {
         s_static_array<t_u8, 400> str_bytes = {}; // Roughly more than how many bytes should ever be needed.
 
         t_i32 str_bytes_used = snprintf(reinterpret_cast<char *>(str_bytes.raw), str_bytes.g_len, "%f", static_cast<t_f64>(fmt.val));
@@ -405,7 +405,7 @@ namespace zf {
         }
 
         if (fmt.trim_trailing_zeros) {
-            const auto str_bytes_relevant = Slice(AsNonstatic(str_bytes), 0, str_bytes_used);
+            const auto str_bytes_relevant = ArraySlice(AsNonstatic(str_bytes), 0, str_bytes_used);
 
             if (DoAnyEqual(str_bytes_relevant, '.')) {
                 for (t_i32 i = str_bytes_used - 1;; i--) {
@@ -421,7 +421,7 @@ namespace zf {
             }
         }
 
-        return Print(stream, {Slice(AsNonstatic(str_bytes), 0, str_bytes_used)});
+        return Print(stream, {ArraySlice(AsNonstatic(str_bytes), 0, str_bytes_used)});
     }
 
     // ========================================
@@ -463,13 +463,13 @@ namespace zf {
     }
 
     template <co_integral_unsigned tp_type>
-    t_b8 PrintType(s_stream *const stream, const s_hex_fmt<tp_type> fmt) {
+    B8 PrintType(s_stream *const stream, const s_hex_fmt<tp_type> fmt) {
         ZF_ASSERT(fmt.min_digits >= g_hex_fmt_digit_cnt_min && fmt.min_digits <= g_hex_fmt_digit_cnt_max);
 
         s_static_array<t_u8, 2 + g_hex_fmt_digit_cnt_max> str_bytes = {}; // Can facilitate max number of digits plus the "0x" prefix.
         s_stream str_bytes_stream = CreateMemStream(AsNonstatic(str_bytes), ek_stream_mode_write);
 
-        t_b8 str_bytes_stream_write_success = true;
+        B8 str_bytes_stream_write_success = true;
 
         if (!(fmt.flags & ek_hex_fmt_flags_omit_prefix)) {
             str_bytes_stream_write_success = WriteItem(&str_bytes_stream, '0');
@@ -510,7 +510,7 @@ namespace zf {
             }
         } while (val_mut != 0 || cnter < fmt.min_digits);
 
-        const auto str_bytes_digits = SliceFrom(MemStreamBytesWritten(&str_bytes_stream), str_bytes_digits_begin_pos);
+        const auto str_bytes_digits = ArraySliceFrom(MemStreamBytesWritten(&str_bytes_stream), str_bytes_digits_begin_pos);
         Reverse(str_bytes_digits);
 
         return Print(stream, {MemStreamBytesWritten(&str_bytes_stream)});
@@ -526,13 +526,13 @@ namespace zf {
         using t_fmt_tag = void;
 
         s_v2 val;
-        t_b8 trim_trailing_zeros;
+        B8 trim_trailing_zeros;
     };
 
-    inline s_v2_fmt FormatV2(const s_v2 val, const t_b8 trim_trailing_zeros = false) { return {val, trim_trailing_zeros}; }
+    inline s_v2_fmt FormatV2(const s_v2 val, const B8 trim_trailing_zeros = false) { return {val, trim_trailing_zeros}; }
     inline s_v2_fmt FormatDefault(const s_v2 val) { return FormatV2(val); }
 
-    inline t_b8 PrintType(s_stream *const stream, const s_v2_fmt fmt) {
+    inline B8 PrintType(s_stream *const stream, const s_v2_fmt fmt) {
         return Print(stream, ZF_STR_LITERAL("("))
             && PrintType(stream, FormatFloat(fmt.val.x, fmt.trim_trailing_zeros))
             && Print(stream, ZF_STR_LITERAL(", "))
@@ -549,7 +549,7 @@ namespace zf {
     inline s_v2_i_fmt FormatV2(const s_v2_i val) { return {val}; }
     inline s_v2_i_fmt FormatDefault(const s_v2_i val) { return FormatV2(val); }
 
-    inline t_b8 PrintType(s_stream *const stream, const s_v2_i_fmt fmt) {
+    inline B8 PrintType(s_stream *const stream, const s_v2_i_fmt fmt) {
         return Print(stream, ZF_STR_LITERAL("("))
             && PrintType(stream, FormatInt(fmt.val.x))
             && Print(stream, ZF_STR_LITERAL(", "))
@@ -572,11 +572,11 @@ namespace zf {
         using t_fmt_tag = void;
 
         tp_arr_type val;
-        t_b8 one_per_line;
+        B8 one_per_line;
     };
 
     template <co_formattable_array tp_arr_type>
-    s_array_fmt<tp_arr_type> FormatArray(const tp_arr_type val, const t_b8 one_per_line = false) {
+    s_array_fmt<tp_arr_type> FormatArray(const tp_arr_type val, const B8 one_per_line = false) {
         return {val, one_per_line};
     }
 
@@ -586,7 +586,7 @@ namespace zf {
     }
 
     template <co_formattable_array tp_arr_type>
-    t_b8 PrintType(s_stream *const stream, const s_array_fmt<tp_arr_type> fmt) {
+    B8 PrintType(s_stream *const stream, const s_array_fmt<tp_arr_type> fmt) {
         if (fmt.one_per_line) {
             for (t_i32 i = 0; i < fmt.val.len; i++) {
                 if (!PrintFormat(stream, ZF_STR_LITERAL("[%] %%"), i, fmt.val[i], i < fmt.val.len - 1 ? ZF_STR_LITERAL("\n") : ZF_STR_LITERAL(""))) {
@@ -640,7 +640,7 @@ namespace zf {
     inline s_bit_vec_fmt FormatBitVec(const s_bit_vec_rdonly &val, const e_bit_vec_fmt_style style) { return {val, style}; }
     inline s_bit_vec_fmt FormatDefault(const s_bit_vec_rdonly &val) { return FormatBitVec(val, ek_bit_vec_fmt_style_seq); }
 
-    inline t_b8 PrintType(s_stream *const stream, const s_bit_vec_fmt fmt) {
+    inline B8 PrintType(s_stream *const stream, const s_bit_vec_fmt fmt) {
         const auto print_bit = [&](const t_i32 bit_index) {
             const s_str_rdonly str = IsBitSet(fmt.val, bit_index) ? ZF_STR_LITERAL("1") : ZF_STR_LITERAL("0");
             return Print(stream, str);
@@ -706,7 +706,7 @@ namespace zf {
     inline t_i32 CountFormatSpecifiers(const s_str_rdonly str) {
         static_assert(IsCodePointASCII(g_print_fmt_spec) && IsCodePointASCII(g_print_fmt_esc)); // Assuming this for this algorithm.
 
-        t_b8 escaped = false;
+        B8 escaped = false;
         t_i32 cnt = 0;
 
         for (t_i32 i = 0; i < str.bytes.len; i++) {
@@ -724,7 +724,7 @@ namespace zf {
         return cnt;
     }
 
-    inline t_b8 PrintFormat(s_stream *const stream, const s_str_rdonly fmt) {
+    inline B8 PrintFormat(s_stream *const stream, const s_str_rdonly fmt) {
         ZF_ASSERT(CountFormatSpecifiers(fmt) == 0);
 
         // Just print the rest of the string.
@@ -734,14 +734,14 @@ namespace zf {
     // Use a single '%' as the format specifier. To actually include a '%' in the output, write "^%". To actually include a '^', write "^^".
     // Returns true iff the operation was successful.
     template <co_simple tp_arg_type, co_simple... tp_arg_types_leftover>
-    t_b8 PrintFormat(s_stream *const stream, const s_str_rdonly fmt, const tp_arg_type &arg, const tp_arg_types_leftover &...args_leftover) {
+    B8 PrintFormat(s_stream *const stream, const s_str_rdonly fmt, const tp_arg_type &arg, const tp_arg_types_leftover &...args_leftover) {
         static_assert(!co_cstr<tp_arg_type>, "C-strings are prohibited for default formatting as a form of error prevention.");
 
         ZF_ASSERT(CountFormatSpecifiers(fmt) == 1 + sizeof...(args_leftover));
 
         static_assert(IsCodePointASCII(g_print_fmt_spec) && IsCodePointASCII(g_print_fmt_esc)); // Assuming this for this algorithm.
 
-        t_b8 escaped = false;
+        B8 escaped = false;
 
         for (t_i32 i = 0; i < fmt.bytes.len; i++) {
             if (!escaped) {
@@ -759,7 +759,7 @@ namespace zf {
                         }
                     }
 
-                    const s_str_rdonly fmt_leftover = {Slice(fmt.bytes, i + 1, fmt.bytes.len)}; // The substring of everything after the format specifier.
+                    const s_str_rdonly fmt_leftover = {ArraySlice(fmt.bytes, i + 1, fmt.bytes.len)}; // The substring of everything after the format specifier.
                     return PrintFormat(stream, fmt_leftover, args_leftover...);
                 }
             }
@@ -781,7 +781,7 @@ namespace zf {
     // @subsection: Logging Helpers
 
     template <co_simple... tp_arg_types>
-    t_b8 Log(const s_str_rdonly fmt, const tp_arg_types &...args) {
+    B8 Log(const s_str_rdonly fmt, const tp_arg_types &...args) {
         s_stream std_err = StdOut();
 
         if (!PrintFormat(&std_err, fmt, args...)) {
@@ -796,7 +796,7 @@ namespace zf {
     }
 
     template <co_simple... tp_arg_types>
-    t_b8 LogError(const s_str_rdonly fmt, const tp_arg_types &...args) {
+    B8 LogError(const s_str_rdonly fmt, const tp_arg_types &...args) {
         s_stream std_err = StdError();
 
         if (!Print(&std_err, ZF_STR_LITERAL("Error: "))) {
@@ -815,7 +815,7 @@ namespace zf {
     }
 
     template <co_simple... tp_arg_types>
-    t_b8 LogErrorType(const s_str_rdonly type_name, const s_str_rdonly fmt, const tp_arg_types &...args) {
+    B8 LogErrorType(const s_str_rdonly type_name, const s_str_rdonly fmt, const tp_arg_types &...args) {
         ZF_ASSERT(!IsStrEmpty(type_name));
 
         s_stream std_err = StdError();
@@ -836,7 +836,7 @@ namespace zf {
     }
 
     template <co_simple... tp_arg_types>
-    t_b8 LogWarning(const s_str_rdonly fmt, const tp_arg_types &...args) {
+    B8 LogWarning(const s_str_rdonly fmt, const tp_arg_types &...args) {
         s_stream std_err = StdError();
 
         if (!Print(&std_err, ZF_STR_LITERAL("Warning: "))) {

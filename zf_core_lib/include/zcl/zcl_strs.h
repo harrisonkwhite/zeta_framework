@@ -79,15 +79,15 @@ namespace zf {
     // ============================================================
     // @section: Functions
 
-    constexpr t_b8 IsCodePointASCII(const t_code_pt cp) {
+    constexpr B8 IsCodePointASCII(const t_code_pt cp) {
         return cp >= g_ascii_range_begin && cp < g_ascii_range_end;
     }
 
-    constexpr t_b8 IsCodePointPrintableASCII(const t_code_pt cp) {
+    constexpr B8 IsCodePointPrintableASCII(const t_code_pt cp) {
         return cp >= g_printable_ascii_range_begin && cp < g_printable_ascii_range_end;
     }
 
-    inline t_b8 AreBytesTerminatedAnywhere(const s_array_rdonly<t_u8> bytes) {
+    inline B8 AreBytesTerminatedAnywhere(const s_array_rdonly<t_u8> bytes) {
         for (t_i32 i = bytes.len - 1; i >= 0; i--) {
             if (!bytes[i]) {
                 return true;
@@ -97,7 +97,7 @@ namespace zf {
         return false;
     }
 
-    inline t_b8 AreBytesTerminatedOnlyAtEnd(const s_array_rdonly<t_u8> bytes) {
+    inline B8 AreBytesTerminatedOnlyAtEnd(const s_array_rdonly<t_u8> bytes) {
         if (bytes.len == 0 || bytes[bytes.len - 1]) {
             return false;
         }
@@ -141,21 +141,21 @@ namespace zf {
 
     // Allocates a clone of the given string using the memory arena, with a null byte added at the end (even if the string was already terminated).
     inline s_str_mut CloneStrButAddTerminator(const s_str_rdonly str, s_arena *const arena) {
-        const s_str_mut clone = {PushArray<t_u8>(arena, str.bytes.len + 1)};
+        const s_str_mut clone = {ArenaPushArray<t_u8>(arena, str.bytes.len + 1)};
         CopyAll(str.bytes, clone.bytes);
         clone.bytes[clone.bytes.len - 1] = 0;
         return clone;
     }
 
-    inline t_b8 IsStrEmpty(const s_str_rdonly str) {
+    inline B8 IsStrEmpty(const s_str_rdonly str) {
         return str.bytes.len == 0;
     }
 
-    inline t_b8 AreStrsEqual(const s_str_rdonly a, const s_str_rdonly b) {
+    inline B8 AreStrsEqual(const s_str_rdonly a, const s_str_rdonly b) {
         return CompareAll(a.bytes, b.bytes) == 0;
     }
 
-    t_b8 IsValidUTF8(const s_str_rdonly str);
+    B8 IsValidUTF8(const s_str_rdonly str);
 
     // Calculates the length in terms of code point count. Note that '\0' is treated just like any other ASCII character and does not terminate.
     t_i32 CalcStrLen(const s_str_rdonly str);
@@ -167,11 +167,11 @@ namespace zf {
 
     // byte_index should be initialised to the index of ANY byte in the code point to start walking from.
     // Returns false iff the walk has ended.
-    t_b8 Walk(const s_str_rdonly str, t_i32 *const byte_index, s_str_walk_step *const o_step);
+    B8 Walk(const s_str_rdonly str, t_i32 *const byte_index, s_str_walk_step *const o_step);
 
     // byte_index should be initialised to the index of ANY byte in the code point to start walking backwards from.
     // Returns false iff the walk has ended.
-    t_b8 WalkReverse(const s_str_rdonly str, t_i32 *const byte_index, s_str_walk_step *const o_step);
+    B8 WalkReverse(const s_str_rdonly str, t_i32 *const byte_index, s_str_walk_step *const o_step);
 
 #define ZF_WALK_STR(str, step)                                                                                     \
     for (zf::t_i32 ZF_CONCAT(bi_l, __LINE__) = 0; ZF_CONCAT(bi_l, __LINE__) != -1; ZF_CONCAT(bi_l, __LINE__) = -1) \

@@ -3,7 +3,7 @@
 #include <reproc/reproc.h>
 
 namespace zf {
-    t_b8 CompileShader(const s_str_rdonly shader_file_path, const s_str_rdonly varying_def_file_path, const t_b8 is_frag, s_arena *const bin_arena, s_arena *const temp_arena, s_array_mut<t_u8> *const o_bin) {
+    B8 CompileShader(const s_str_rdonly shader_file_path, const s_str_rdonly varying_def_file_path, const B8 is_frag, s_arena *const bin_arena, s_arena *const temp_arena, s_array_mut<t_u8> *const o_bin) {
         const s_str_rdonly shader_file_path_terminated = CloneStrButAddTerminator(shader_file_path, temp_arena);
         const s_str_rdonly varying_def_file_path_terminated = CloneStrButAddTerminator(varying_def_file_path, temp_arena);
 
@@ -45,13 +45,13 @@ namespace zf {
         const s_str_rdonly exe_dir = LoadExecutableDirectory(temp_arena);
         ZF_ASSERT(exe_dir.bytes[exe_dir.bytes.len - 1] == '/' || exe_dir.bytes[exe_dir.bytes.len - 1] == '\\'); // Assuming this.
 
-        const auto shaderc_file_path_terminated = s_str_mut(PushArray<t_u8>(temp_arena, exe_dir.bytes.len + shaderc_file_path_rel.bytes.len + 1));
+        const auto shaderc_file_path_terminated = s_str_mut(ArenaPushArray<t_u8>(temp_arena, exe_dir.bytes.len + shaderc_file_path_rel.bytes.len + 1));
         s_stream shaderc_file_path_terminated_byte_stream = CreateMemStream(shaderc_file_path_terminated.bytes, ek_stream_mode_write);
         PrintFormat(&shaderc_file_path_terminated_byte_stream, ZF_STR_LITERAL("%%\0"), exe_dir, shaderc_file_path_rel);
         ZF_ASSERT(AreBytesTerminatedOnlyAtEnd(shaderc_file_path_terminated.bytes));
 
         const s_str_rdonly shaderc_include_dir_rel = ZF_STR_LITERAL("tools/bgfx/shaderc_include");
-        const auto shaderc_include_dir_terminated = s_str_mut(PushArray<t_u8>(temp_arena, exe_dir.bytes.len + shaderc_include_dir_rel.bytes.len + 1));
+        const auto shaderc_include_dir_terminated = s_str_mut(ArenaPushArray<t_u8>(temp_arena, exe_dir.bytes.len + shaderc_include_dir_rel.bytes.len + 1));
         s_stream shaderc_include_dir_terminated_byte_stream = CreateMemStream(shaderc_include_dir_terminated.bytes, ek_stream_mode_write);
         PrintFormat(&shaderc_include_dir_terminated_byte_stream, ZF_STR_LITERAL("%%\0"), exe_dir, shaderc_include_dir_rel);
         ZF_ASSERT(AreBytesTerminatedOnlyAtEnd(shaderc_include_dir_terminated.bytes));
@@ -96,7 +96,7 @@ namespace zf {
                 break;
             }
 
-            AppendMany_Dynamic(&bin_list, Slice(AsNonstatic(buf), 0, r), bin_arena);
+            ListAppendManyDynamic(&bin_list, ArraySlice(AsNonstatic(buf), 0, r), bin_arena);
         }
 
         if (r != REPROC_EPIPE) {

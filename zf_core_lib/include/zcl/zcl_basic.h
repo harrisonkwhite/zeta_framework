@@ -81,8 +81,8 @@ namespace zf {
     static_assert(sizeof(t_f64) == 8);
     constexpr t_f64 g_f64_max = std::numeric_limits<t_f64>::max();
 
-    using t_b8 = bool;
-    static_assert(sizeof(t_b8) == 1);
+    using B8 = bool;
+    static_assert(sizeof(B8) == 1);
 
     using t_uintptr = uintptr_t;
     static_assert(sizeof(t_uintptr) == 8);
@@ -98,7 +98,7 @@ namespace zf {
 #define ZF_IN_CONSTEXPR() std::is_constant_evaluated()
 
     namespace detail {
-        void TryBreakingIntoDebuggerIf(const t_b8 cond);
+        void TryBreakingIntoDebuggerIf(const B8 cond);
 
         [[noreturn]] void AssertError(const char *const cond_cstr, const char *const func_name_cstr, const char *const file_name_cstr, const t_i32 line);
 
@@ -161,7 +161,7 @@ namespace zf {
 
     // Return true iff a and b are equal.
     template <co_simple tp_type>
-    using t_comparator_bin = t_b8 (*)(const tp_type &a, const tp_type &b);
+    using t_comparator_bin = B8 (*)(const tp_type &a, const tp_type &b);
 
     template <co_simple tp_type>
     inline const t_comparator_bin<tp_type> g_comparator_bin_default =
@@ -192,7 +192,7 @@ namespace zf {
     constexpr t_i32 BytesToBits(const t_i32 n) { return n * 8; }
 
     // Is n a power of 2?
-    constexpr t_b8 IsAlignmentValid(const t_i32 n) {
+    constexpr B8 IsAlignmentValid(const t_i32 n) {
         return n > 0 && (n & (n - 1)) == 0;
     }
 

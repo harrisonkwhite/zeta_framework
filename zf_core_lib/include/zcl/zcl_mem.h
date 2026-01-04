@@ -201,37 +201,37 @@ namespace zf {
     }
 
     // Frees all arena memory. It is valid to call this even if no pushing was done.
-    void DestroyArena(s_arena *const arena);
+    void ArenaDestroy(s_arena *const arena);
 
     // Will lazily allocate memory as needed. Allocation failure is treated as fatal and causes an abort - you don't need to check for nullptr.
-    void *Push(s_arena *const arena, const t_i32 size, const t_i32 alignment);
+    void *ArenaPush(s_arena *const arena, const t_i32 size, const t_i32 alignment);
 
     template <co_simple tp_type>
-    tp_type *PushItem(s_arena *const arena) {
-        return static_cast<tp_type *>(Push(arena, ZF_SIZE_OF(tp_type), ZF_ALIGN_OF(tp_type)));
+    tp_type *ArenaPushItem(s_arena *const arena) {
+        return static_cast<tp_type *>(ArenaPush(arena, ZF_SIZE_OF(tp_type), ZF_ALIGN_OF(tp_type)));
     }
 
     template <co_simple tp_type>
-    tp_type *PushItemZeroed(s_arena *const arena) {
-        const auto result = static_cast<tp_type *>(Push(arena, ZF_SIZE_OF(tp_type), ZF_ALIGN_OF(tp_type)));
+    tp_type *mem_push_item_zeroed(s_arena *const arena) {
+        const auto result = static_cast<tp_type *>(ArenaPush(arena, ZF_SIZE_OF(tp_type), ZF_ALIGN_OF(tp_type)));
         ClearItem(result, 0);
         return result;
     }
 
     template <co_simple tp_type>
-    s_array_mut<tp_type> PushArray(s_arena *const arena, const t_i32 len) {
+    s_array_mut<tp_type> ArenaPushArray(s_arena *const arena, const t_i32 len) {
         ZF_ASSERT(len >= 0);
 
         if (len == 0) {
             return {};
         }
 
-        const auto raw = static_cast<tp_type *>(Push(arena, ZF_SIZE_OF(tp_type) * len, ZF_ALIGN_OF(tp_type)));
+        const auto raw = static_cast<tp_type *>(ArenaPush(arena, ZF_SIZE_OF(tp_type) * len, ZF_ALIGN_OF(tp_type)));
         return {raw, len};
     }
 
     template <co_simple tp_type>
-    s_array_mut<tp_type> PushArrayZeroed(s_arena *const arena, const t_i32 len) {
+    s_array_mut<tp_type> ArenaPushArrayZeroed(s_arena *const arena, const t_i32 len) {
         ZF_ASSERT(len >= 0);
 
         if (len == 0) {
@@ -239,16 +239,16 @@ namespace zf {
         }
 
         const t_i32 size = ZF_SIZE_OF(tp_type) * len;
-        const auto raw = static_cast<tp_type *>(Push(arena, size, ZF_ALIGN_OF(tp_type)));
+        const auto raw = static_cast<tp_type *>(ArenaPush(arena, size, ZF_ALIGN_OF(tp_type)));
         Clear(raw, size, 0);
         return {raw, len};
     }
 
     // Takes the arena offset to the beginning of its allocated memory (if any) to overwrite from there.
-    void RewindArena(s_arena *const arena);
+    void zf_mem_rewind_arena(s_arena *const arena);
 
     template <typename tp_type>
-    s_array_rdonly<tp_type> Slice(const s_array_rdonly<tp_type> arr, const t_i32 beg, const t_i32 end) {
+    s_array_rdonly<tp_type> ArraySlice(const s_array_rdonly<tp_type> arr, const t_i32 beg, const t_i32 end) {
         ZF_ASSERT(beg >= 0 && beg <= arr.len);
         ZF_ASSERT(end >= beg && end <= arr.len);
 
@@ -256,13 +256,13 @@ namespace zf {
     }
 
     template <typename tp_type>
-    s_array_rdonly<tp_type> SliceFrom(const s_array_rdonly<tp_type> arr, const t_i32 beg) {
+    s_array_rdonly<tp_type> ArraySliceFrom(const s_array_rdonly<tp_type> arr, const t_i32 beg) {
         ZF_ASSERT(beg >= 0 && beg <= arr.len);
         return {arr.raw + beg, arr.len - beg};
     }
 
     template <typename tp_type>
-    s_array_mut<tp_type> Slice(const s_array_mut<tp_type> arr, const t_i32 beg, const t_i32 end) {
+    s_array_mut<tp_type> ArraySlice(const s_array_mut<tp_type> arr, const t_i32 beg, const t_i32 end) {
         ZF_ASSERT(beg >= 0 && beg <= arr.len);
         ZF_ASSERT(end >= beg && end <= arr.len);
 
@@ -270,7 +270,7 @@ namespace zf {
     }
 
     template <typename tp_type>
-    s_array_mut<tp_type> SliceFrom(const s_array_mut<tp_type> arr, const t_i32 beg) {
+    s_array_mut<tp_type> ArraySliceFrom(const s_array_mut<tp_type> arr, const t_i32 beg) {
         ZF_ASSERT(beg >= 0 && beg <= arr.len);
         return {arr.raw + beg, arr.len - beg};
     }
@@ -282,7 +282,7 @@ namespace zf {
 
     template <co_array tp_arr_type>
     auto CloneArray(const tp_arr_type arr_to_clone, s_arena *const arena) {
-        const auto arr = PushArray<typename tp_arr_type::t_elem>(arena, arr_to_clone.len);
+        const auto arr = ArenaPushArray<typename tp_arr_type::t_elem>(arena, arr_to_clone.len);
         CopyAll(arr, arr_to_clone);
         return arr;
     }
@@ -356,7 +356,7 @@ namespace zf {
 
     inline s_bit_vec_mut CreateBitVector(const t_i32 bit_cnt, s_arena *const arena) {
         ZF_ASSERT(bit_cnt >= 0);
-        return {PushArrayZeroed<t_u8>(arena, BitsToBytes(bit_cnt)).raw, bit_cnt};
+        return {ArenaPushArrayZeroed<t_u8>(arena, BitsToBytes(bit_cnt)).raw, bit_cnt};
     }
 
     inline s_array_mut<t_u8> BitVectorBytes(const s_bit_vec_mut bv) {
@@ -386,7 +386,7 @@ namespace zf {
         return ByteBitmaskRanged(0, LastByteBitCount(bv));
     }
 
-    inline t_b8 IsBitSet(const s_bit_vec_rdonly bv, const t_i32 index) {
+    inline B8 IsBitSet(const s_bit_vec_rdonly bv, const t_i32 index) {
         ZF_ASSERT(index >= 0 && index < bv.bit_cnt);
         return bv.Bytes()[index / 8] & ByteBitmaskSingle(index % 8);
     }
@@ -401,15 +401,15 @@ namespace zf {
         bv.Bytes()[index / 8] &= ~ByteBitmaskSingle(index % 8);
     }
 
-    t_b8 IsAnyBitSet(const s_bit_vec_rdonly bv);
+    B8 IsAnyBitSet(const s_bit_vec_rdonly bv);
 
-    inline t_b8 AreAllBitsUnset(const s_bit_vec_rdonly bv) {
+    inline B8 AreAllBitsUnset(const s_bit_vec_rdonly bv) {
         return bv.bit_cnt > 0 && !IsAnyBitSet(bv);
     }
 
-    t_b8 AreAllBitsSet(const s_bit_vec_rdonly bv);
+    B8 AreAllBitsSet(const s_bit_vec_rdonly bv);
 
-    inline t_b8 IsAnyBitUnset(const s_bit_vec_rdonly bv) {
+    inline B8 IsAnyBitUnset(const s_bit_vec_rdonly bv) {
         return bv.bit_cnt > 0 && !AreAllBitsSet(bv);
     }
 
@@ -450,12 +450,12 @@ namespace zf {
     // pos is the walker state, initialise it to the bit index you want to start from.
     // o_index is assigned the index of the set bit to process.
     // Returns false iff the walk is complete.
-    t_b8 WalkSetBits(const s_bit_vec_rdonly bv, t_i32 *const pos, t_i32 *const o_index);
+    B8 WalkSetBits(const s_bit_vec_rdonly bv, t_i32 *const pos, t_i32 *const o_index);
 
     // pos is the walker state, initialise it to the bit index you want to start from.
     // o_index is assigned the index of the unset bit to process.
     // Returns false iff the walk is complete.
-    t_b8 WalkUnsetBits(const s_bit_vec_rdonly bv, t_i32 *const pos, t_i32 *const o_index);
+    B8 WalkUnsetBits(const s_bit_vec_rdonly bv, t_i32 *const pos, t_i32 *const o_index);
 
 #define ZF_WALK_SET_BITS(bv, index) for (zf::t_i32 ZF_CONCAT(walk_pos_l, __LINE__) = 0, index; zf::WalkSetBits(bv, &ZF_CONCAT(walk_pos_l, __LINE__), &index);)
 #define ZF_WALK_UNSET_BITS(bv, index) for (zf::t_i32 ZF_CONCAT(walk_pos_l, __LINE__) = 0, index; zf::WalkUnsetBits(bv, &ZF_CONCAT(walk_pos_l, __LINE__), &index);)

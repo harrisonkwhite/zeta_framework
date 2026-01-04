@@ -20,17 +20,17 @@ namespace zf {
         // Initialisation
         //
         s_arena perm_arena = CreateArena();
-        ZF_DEFER({ DestroyArena(&perm_arena); });
+        ZF_DEFER({ ArenaDestroy(&perm_arena); });
 
         s_arena temp_arena = CreateArena();
-        ZF_DEFER({ DestroyArena(&temp_arena); });
+        ZF_DEFER({ ArenaDestroy(&temp_arena); });
 
-        StartupPlatform(g_init_window_size);
-        ZF_DEFER({ ShutdownPlatform(); });
+        platform::startup(g_init_window_size);
+        ZF_DEFER({ platform::shutdown(); });
 
-        s_input_state *const input_state = CreateInputState(&perm_arena);
+        zf_input_state *const input_state = zf_input_create_state(&perm_arena);
 
-        s_gfx_resource_group *perm_gfx_resource_group;
+        zf_rendering_resource_group *perm_gfx_resource_group;
         s_rendering_basis *const rendering_basis = StartupGFX(&perm_arena, &perm_gfx_resource_group);
         ZF_DEFER({ ShutdownGFX(rendering_basis); });
 
@@ -52,15 +52,15 @@ namespace zf {
         //
         // Main Loop
         //
-        ShowWindow();
+        platform::show_window();
 
-        t_f64 frame_time_last = Time();
+        t_f64 frame_time_last = platform::get_time();
         t_f64 frame_dur_accum = 0.0;
 
-        while (!ShouldWindowClose()) {
-            PollOSEvents(input_state);
+        while (!platform::get_window_should_close()) {
+            platform::poll_os_events(input_state);
 
-            const t_f64 frame_time = Time();
+            const t_f64 frame_time = platform::get_time();
             const t_f64 frame_time_delta = frame_time - frame_time_last;
             frame_dur_accum += frame_time_delta;
             frame_time_last = frame_time;
@@ -69,7 +69,7 @@ namespace zf {
 
             // Once enough time has passed (i.e. the time accumulator has reached the tick interval), run at least a single tick.
             while (frame_dur_accum >= targ_tick_interval) {
-                RewindArena(&temp_arena);
+                zf_mem_rewind_arena(&temp_arena);
 
                 tick_func({
                     .perm_arena = &perm_arena,
@@ -79,14 +79,14 @@ namespace zf {
                     .rng = rng,
                 });
 
-                ClearInputEvents(input_state);
+                zf_input_clear_events(input_state);
 
                 frame_dur_accum -= targ_tick_interval;
             }
 
-            RewindArena(&temp_arena);
+            zf_mem_rewind_arena(&temp_arena);
 
-            s_rendering_context *const rendering_context = BeginRendering(rendering_basis, s_color_rgb8{109, 187, 255}, &temp_arena); // @todo: Make the clear colour customisable?
+            s_rendering_context *const rendering_context = zf_rendering_begin_frame(rendering_basis, s_color_rgb8{109, 187, 255}, &temp_arena); // @todo: Make the clear colour customisable?
 
             render_func({
                 .perm_arena = &perm_arena,
@@ -95,7 +95,7 @@ namespace zf {
                 .rng = rng,
             });
 
-            EndRendering(rendering_context);
+            zf_rendering_end_frame(rendering_context);
         }
     }
 }

@@ -36,7 +36,7 @@ namespace zf {
         SubmitTrianglesToBatch(rc, AsNonstatic(triangles), texture);
     }
 
-    s_font CreateFontFromRaw(const s_str_rdonly file_path, const t_i32 height, t_code_pt_bit_vec *const code_pts, s_arena *const temp_arena, s_gfx_resource_group *const resource_group) {
+    s_font CreateFontFromRaw(const s_str_rdonly file_path, const t_i32 height, t_code_pt_bit_vec *const code_pts, s_arena *const temp_arena, zf_rendering_resource_group *const resource_group) {
         s_font_arrangement arrangement;
         s_array_mut<t_font_atlas_rgba> atlas_rgbas;
 
@@ -44,7 +44,7 @@ namespace zf {
             ZF_FATAL();
         }
 
-        const s_array_mut<s_gfx_resource *> atlases = PushArray<s_gfx_resource *>(resource_group->arena, atlas_rgbas.len);
+        const s_array_mut<s_gfx_resource *> atlases = ArenaPushArray<s_gfx_resource *>(resource_group->arena, atlas_rgbas.len);
 
         for (t_i32 i = 0; i < atlas_rgbas.len; i++) {
             atlases[i] = CreateTexture({g_font_atlas_size, atlas_rgbas[i]}, resource_group);
@@ -56,7 +56,7 @@ namespace zf {
         };
     }
 
-    s_font CreateFontFromPacked(const s_str_rdonly file_path, s_arena *const temp_arena, s_gfx_resource_group *const resource_group) {
+    s_font CreateFontFromPacked(const s_str_rdonly file_path, s_arena *const temp_arena, zf_rendering_resource_group *const resource_group) {
         s_font_arrangement arrangement;
         s_array_mut<t_font_atlas_rgba> atlas_rgbas;
 
@@ -64,7 +64,7 @@ namespace zf {
             ZF_FATAL();
         }
 
-        const auto atlases = PushArray<s_gfx_resource *>(resource_group->arena, atlas_rgbas.len);
+        const auto atlases = ArenaPushArray<s_gfx_resource *>(resource_group->arena, atlas_rgbas.len);
 
         for (t_i32 i = 0; i < atlas_rgbas.len; i++) {
             atlases[i] = CreateTexture({g_font_atlas_size, atlas_rgbas[i]}, resource_group);
@@ -101,7 +101,7 @@ namespace zf {
         }();
 
         // Reserve memory for the character positions.
-        const auto positions = PushArray<s_v2>(arena, str_meta.len);
+        const auto positions = ArenaPushArray<s_v2>(arena, str_meta.len);
 
         // From the line count we can determine the vertical alignment offset to apply.
         const t_f32 alignment_offs_y = static_cast<t_f32>(-(str_meta.line_cnt * font_arrangement.line_height)) * alignment.y;
@@ -146,7 +146,7 @@ namespace zf {
 
             s_font_glyph_info *glyph_info;
 
-            if (!Find(&font_arrangement.code_pts_to_glyph_infos, step.code_pt, &glyph_info)) {
+            if (!HashMapPut(&font_arrangement.code_pts_to_glyph_infos, step.code_pt, &glyph_info)) {
                 ZF_ASSERT(false && "Unsupported code point!");
                 continue;
             }
@@ -154,7 +154,7 @@ namespace zf {
             if (chr_index > 0 && font_arrangement.has_kernings) {
                 t_i32 *kerning;
 
-                if (Find(&font_arrangement.code_pt_pairs_to_kernings, {code_pt_last, step.code_pt}, &kerning)) {
+                if (HashMapPut(&font_arrangement.code_pt_pairs_to_kernings, {code_pt_last, step.code_pt}, &kerning)) {
                     chr_pos_pen.x += static_cast<t_f32>(*kerning);
                 }
             }
@@ -192,7 +192,7 @@ namespace zf {
 
             s_font_glyph_info *glyph_info;
 
-            if (!Find(&font.arrangement.code_pts_to_glyph_infos, step.code_pt, &glyph_info)) {
+            if (!HashMapPut(&font.arrangement.code_pts_to_glyph_infos, step.code_pt, &glyph_info)) {
                 ZF_ASSERT(false && "Unsupported code point!");
                 continue;
             }

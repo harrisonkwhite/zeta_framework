@@ -52,8 +52,8 @@ namespace zf {
         t_i32 x;
         t_i32 y;
 
-        constexpr t_b8 operator==(const s_v2_i &other) const { return x == other.x && y == other.y; }
-        constexpr t_b8 operator!=(const s_v2_i &other) const { return !(*this == other); }
+        constexpr B8 operator==(const s_v2_i &other) const { return x == other.x && y == other.y; }
+        constexpr B8 operator!=(const s_v2_i &other) const { return !(*this == other); }
 
         constexpr s_v2_i operator+(const s_v2_i &other) const { return {x + other.x, y + other.y}; }
         constexpr s_v2_i operator-(const s_v2_i &other) const { return {x - other.x, y - other.y}; }
@@ -149,7 +149,7 @@ namespace zf {
         return DetermineDigitAt(n / 10, index - 1);
     }
 
-    inline t_b8 IsNearlyEqual(const t_f32 val, const t_f32 targ, const t_f32 tol = 1e-5f) {
+    inline B8 IsNearlyEqual(const t_f32 val, const t_f32 targ, const t_f32 tol = 1e-5f) {
         ZF_ASSERT(tol >= 0);
         return val >= targ - tol && val <= targ + tol;
     }
@@ -221,7 +221,7 @@ namespace zf {
     inline t_f32 Area(const s_rect_f rect) { return rect.width * rect.height; }
     inline t_i32 Area(const s_rect_i rect) { return rect.width * rect.height; }
 
-    inline t_b8 AreEqual(const s_rect_i a, const s_rect_i b) {
+    inline B8 AreEqual(const s_rect_i a, const s_rect_i b) {
         return a.x == b.x && a.y == b.y && a.width == b.width && a.height == b.height;
     }
 
@@ -233,11 +233,11 @@ namespace zf {
         return {static_cast<t_i32>(rect.x), static_cast<t_i32>(rect.y), static_cast<t_i32>(rect.width), static_cast<t_i32>(rect.height)};
     }
 
-    inline t_b8 DoRectsInters(const s_rect_f a, const s_rect_f b) {
+    inline B8 DoRectsInters(const s_rect_f a, const s_rect_f b) {
         return Left(a) < Right(b) && Top(a) < Bottom(b) && Right(a) > Left(b) && Bottom(a) > Top(b);
     }
 
-    inline t_b8 DoRectsInters(const s_rect_i a, const s_rect_i b) {
+    inline B8 DoRectsInters(const s_rect_i a, const s_rect_i b) {
         return Left(a) < Right(b) && Top(a) < Bottom(b) && Right(a) > Left(b) && Bottom(a) > Top(b);
     }
 
@@ -300,11 +300,11 @@ namespace zf {
         return s_v2(cos(dir), -sin(dir)) * len;
     }
 
-    inline t_b8 IsPointInRect(const s_v2 pt, const s_rect_f rect) {
+    inline B8 IsPointInRect(const s_v2 pt, const s_rect_f rect) {
         return pt.x > Left(rect) && pt.y > Top(rect) && pt.x < Right(rect) && pt.y < Bottom(rect);
     }
 
-    inline t_b8 IsPointInRect(const s_v2_i pt, const s_rect_i rect) {
+    inline B8 IsPointInRect(const s_v2_i pt, const s_rect_i rect) {
         return pt.x > Left(rect) && pt.y > Top(rect) && pt.x < Right(rect) && pt.y < Bottom(rect);
     }
 

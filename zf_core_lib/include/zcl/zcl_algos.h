@@ -5,7 +5,7 @@
 namespace zf {
     template <co_array tp_src_arr_type, co_array_mut tp_dest_arr_type>
         requires co_same<typename tp_src_arr_type::t_elem, typename tp_dest_arr_type::t_elem>
-    void CopyAll(const tp_src_arr_type src, const tp_dest_arr_type dest, const t_b8 allow_truncation = false) {
+    void CopyAll(const tp_src_arr_type src, const tp_dest_arr_type dest, const B8 allow_truncation = false) {
         if (!allow_truncation) {
             ZF_ASSERT(dest.len >= src.len);
 
@@ -38,7 +38,7 @@ namespace zf {
     }
 
     template <co_array tp_arr_type>
-    t_b8 DoAllEqual(const tp_arr_type arr, const typename tp_arr_type::t_elem &val, const t_comparator_bin<typename tp_arr_type::t_elem> comparator = g_comparator_bin_default<typename tp_arr_type::t_elem>) {
+    B8 DoAllEqual(const tp_arr_type arr, const typename tp_arr_type::t_elem &val, const t_comparator_bin<typename tp_arr_type::t_elem> comparator = g_comparator_bin_default<typename tp_arr_type::t_elem>) {
         if (arr.len == 0) {
             return false;
         }
@@ -53,7 +53,7 @@ namespace zf {
     }
 
     template <co_array tp_arr_type>
-    t_b8 DoAnyEqual(const tp_arr_type arr, const typename tp_arr_type::t_elem &val, const t_comparator_bin<typename tp_arr_type::t_elem> comparator = g_comparator_bin_default<typename tp_arr_type::t_elem>) {
+    B8 DoAnyEqual(const tp_arr_type arr, const typename tp_arr_type::t_elem &val, const t_comparator_bin<typename tp_arr_type::t_elem> comparator = g_comparator_bin_default<typename tp_arr_type::t_elem>) {
         for (t_i32 i = 0; i < arr.len; i++) {
             if (comparator(arr[i], val)) {
                 return true;
@@ -80,7 +80,7 @@ namespace zf {
     // O(n^2) time complexity, but O(1) space complexity.
     // You're usually better off using a hash map and a linear search, or a bit vector if values are numeric and the range is small.
     template <co_array tp_arr_type>
-    t_b8 HasDuplicatesSlow(const tp_arr_type arr, const t_comparator_bin<typename tp_arr_type::t_elem> comparator = g_comparator_bin_default<typename tp_arr_type::t_elem>) {
+    B8 HasDuplicatesSlow(const tp_arr_type arr, const t_comparator_bin<typename tp_arr_type::t_elem> comparator = g_comparator_bin_default<typename tp_arr_type::t_elem>) {
         for (t_i32 i = 0; i < arr.len; i++) {
             for (t_i32 j = 0; j < arr.len; j++) {
                 if (i == j) {
@@ -97,7 +97,7 @@ namespace zf {
     }
 
     template <co_array tp_arr_type>
-    t_b8 RunBinarySearch(const tp_arr_type arr, const typename tp_arr_type::t_elem &elem, const t_comparator_ord<typename tp_arr_type::t_elem> comparator = g_comparator_ord_default<typename tp_arr_type::t_elem>) {
+    B8 RunBinarySearch(const tp_arr_type arr, const typename tp_arr_type::t_elem &elem, const t_comparator_ord<typename tp_arr_type::t_elem> comparator = g_comparator_ord_default<typename tp_arr_type::t_elem>) {
         if (arr.len == 0) {
             return false;
         }
@@ -108,14 +108,14 @@ namespace zf {
         if (comp_res == 0) {
             return true;
         } else if (comp_res < 0) {
-            return RunBinarySearch(Slice(arr, 0, arr.len / 2), elem);
+            return RunBinarySearch(ArraySlice(arr, 0, arr.len / 2), elem);
         } else {
-            return RunBinarySearch(SliceFrom(arr, (arr.len / 2) + 1), elem);
+            return RunBinarySearch(ArraySliceFrom(arr, (arr.len / 2) + 1), elem);
         }
     }
 
     template <co_array tp_arr_type>
-    t_b8 IsSorted(const tp_arr_type arr, const t_comparator_ord<typename tp_arr_type::t_elem> comparator = g_comparator_ord_default<typename tp_arr_type::t_elem>) {
+    B8 IsSorted(const tp_arr_type arr, const t_comparator_ord<typename tp_arr_type::t_elem> comparator = g_comparator_ord_default<typename tp_arr_type::t_elem>) {
         for (t_i32 i = 0; i < arr.len - 1; i++) {
             if (comparator(arr[i], arr[i + 1]) > 0) {
                 return false;
@@ -128,7 +128,7 @@ namespace zf {
     // O(n) best-case if array is already sorted, O(n^2) worst-case.
     template <co_array tp_arr_type>
     void RunBubbleSort(const tp_arr_type arr, const t_comparator_ord<typename tp_arr_type::t_elem> comparator = g_comparator_ord_default<typename tp_arr_type::t_elem>) {
-        t_b8 sorted;
+        B8 sorted;
 
         do {
             sorted = true;
@@ -186,10 +186,10 @@ namespace zf {
         }
 
         // Sort copies of the left and right partitions.
-        const auto arr_left_sorted = CloneArray(Slice(arr, 0, arr.len / 2), temp_arena);
+        const auto arr_left_sorted = CloneArray(ArraySlice(arr, 0, arr.len / 2), temp_arena);
         RunMergeSort(arr_left_sorted, temp_arena, comparator);
 
-        const auto arr_right_sorted = CloneArray(SliceFrom(arr, arr.len / 2), temp_arena);
+        const auto arr_right_sorted = CloneArray(ArraySliceFrom(arr, arr.len / 2), temp_arena);
         RunMergeSort(arr_right_sorted, temp_arena, comparator);
 
         // Update this array.
@@ -203,7 +203,7 @@ namespace zf {
 
                 if (i == arr_left_sorted.len) {
                     // Copy over the remainder of the right array.
-                    CopyAll(SliceFrom(arr_right_sorted, j), SliceFrom(arr, i + j));
+                    CopyAll(ArraySliceFrom(arr_right_sorted, j), ArraySliceFrom(arr, i + j));
                     break;
                 }
             } else {
@@ -212,7 +212,7 @@ namespace zf {
 
                 if (j == arr_right_sorted.len) {
                     // Copy over the remainder of the left array.
-                    CopyAll(SliceFrom(arr_left_sorted, i), SliceFrom(arr, i + j));
+                    CopyAll(ArraySliceFrom(arr_left_sorted, i), ArraySliceFrom(arr, i + j));
                     break;
                 }
             }
@@ -280,7 +280,7 @@ namespace zf {
         }
 
         // Sort for each subsection.
-        RunQuickSort(Slice(arr, 0, left_sec_last_index), comparator);
-        RunQuickSort(SliceFrom(arr, left_sec_last_index + 1), comparator);
+        RunQuickSort(ArraySlice(arr, 0, left_sec_last_index), comparator);
+        RunQuickSort(ArraySliceFrom(arr, left_sec_last_index + 1), comparator);
     }
 }

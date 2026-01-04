@@ -4,7 +4,7 @@
 #include <zcl/zcl_algos.h>
 
 namespace zf {
-    void DestroyArena(s_arena *const arena) {
+    void ArenaDestroy(s_arena *const arena) {
         const auto f = [](const auto self, s_arena_block *const block) {
             if (!block) {
                 return;
@@ -47,13 +47,13 @@ namespace zf {
         return block;
     }
 
-    void *Push(s_arena *const arena, const t_i32 size, const t_i32 alignment) {
+    void *ArenaPush(s_arena *const arena, const t_i32 size, const t_i32 alignment) {
         ZF_ASSERT(size > 0 && IsAlignmentValid(alignment));
 
         if (!arena->blocks_head) {
             arena->blocks_head = CreateArenaBlock(ZF_MAX(size, arena->block_min_size));
             arena->block_cur = arena->blocks_head;
-            return Push(arena, size, alignment);
+            return ArenaPush(arena, size, alignment);
         }
 
         const t_i32 offs_aligned = AlignForward(arena->block_cur_offs, alignment);
@@ -67,7 +67,7 @@ namespace zf {
             arena->block_cur = arena->block_cur->next;
             arena->block_cur_offs = 0;
 
-            return Push(arena, size, alignment);
+            return ArenaPush(arena, size, alignment);
         }
 
         arena->block_cur_offs = offs_next;
@@ -78,7 +78,7 @@ namespace zf {
         return result;
     }
 
-    void RewindArena(s_arena *const arena) {
+    void zf_mem_rewind_arena(s_arena *const arena) {
         arena->block_cur = arena->blocks_head;
         arena->block_cur_offs = 0;
 
@@ -97,12 +97,12 @@ namespace zf {
     // ============================================================
     // @section: Dude
 
-    t_b8 IsAnyBitSet(const s_bit_vec_rdonly bv) {
+    B8 IsAnyBitSet(const s_bit_vec_rdonly bv) {
         if (bv.bit_cnt == 0) {
             return false;
         }
 
-        const auto first_bytes = Slice(bv.Bytes(), 0, bv.Bytes().len - 1);
+        const auto first_bytes = ArraySlice(bv.Bytes(), 0, bv.Bytes().len - 1);
 
         if (!DoAllEqual(first_bytes, 0)) {
             return true;
@@ -111,12 +111,12 @@ namespace zf {
         return (bv.Bytes()[bv.Bytes().len - 1] & LastByteMask(bv)) != 0;
     }
 
-    t_b8 AreAllBitsSet(const s_bit_vec_rdonly bv) {
+    B8 AreAllBitsSet(const s_bit_vec_rdonly bv) {
         if (bv.bit_cnt == 0) {
             return false;
         }
 
-        const auto first_bytes = Slice(bv.Bytes(), 0, bv.Bytes().len - 1);
+        const auto first_bytes = ArraySlice(bv.Bytes(), 0, bv.Bytes().len - 1);
 
         if (!DoAllEqual(first_bytes, 0xFF)) {
             return false;
@@ -131,7 +131,7 @@ namespace zf {
             return;
         }
 
-        const auto first_bytes = Slice(bv.Bytes(), 0, bv.Bytes().len - 1);
+        const auto first_bytes = ArraySlice(bv.Bytes(), 0, bv.Bytes().len - 1);
         SetAllTo(first_bytes, 0xFF);
 
         bv.Bytes()[bv.Bytes().len - 1] |= LastByteMask(bv);
@@ -142,7 +142,7 @@ namespace zf {
             return;
         }
 
-        const auto first_bytes = Slice(bv.Bytes(), 0, bv.Bytes().len - 1);
+        const auto first_bytes = ArraySlice(bv.Bytes(), 0, bv.Bytes().len - 1);
         SetAllTo(first_bytes, 0);
 
         bv.Bytes()[bv.Bytes().len - 1] &= ~LastByteMask(bv);
@@ -884,7 +884,7 @@ namespace zf {
         return result;
     }
 
-    t_b8 WalkSetBits(const s_bit_vec_rdonly bv, t_i32 *const pos, t_i32 *const o_index) {
+    B8 WalkSetBits(const s_bit_vec_rdonly bv, t_i32 *const pos, t_i32 *const o_index) {
         ZF_ASSERT(*pos >= 0 && *pos <= bv.bit_cnt);
 
         *o_index = FindIndexOfFirstSetBit(bv, *pos);
@@ -898,7 +898,7 @@ namespace zf {
         return true;
     }
 
-    t_b8 WalkUnsetBits(const s_bit_vec_rdonly bv, t_i32 *const pos, t_i32 *const o_index) {
+    B8 WalkUnsetBits(const s_bit_vec_rdonly bv, t_i32 *const pos, t_i32 *const o_index) {
         ZF_ASSERT(*pos >= 0 && *pos <= bv.bit_cnt);
 
         *o_index = FindIndexOfFirstUnsetBit(bv, *pos);

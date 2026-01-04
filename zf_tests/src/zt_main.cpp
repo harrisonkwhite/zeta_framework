@@ -1,29 +1,29 @@
 #include <zcl.h>
 
 namespace zf {
-    static t_b8 TestBits(s_arena *const arena) {
+    static B8 TestBits(s_arena *const arena) {
         // @todo
         return true;
     }
 
-    static t_b8 TestSorting(s_arena *const arena) {
+    static B8 TestSorting(s_arena *const arena) {
         // @todo
         return true;
     }
 
-    static t_b8 TestList(s_arena *const arena) {
+    static B8 TestList(s_arena *const arena) {
         // @todo
         return true;
     }
 
-    static t_b8 TestHashMap(s_arena *const arena) {
+    static B8 TestHashMap(s_arena *const arena) {
         // @todo
         return true;
     }
 
     struct s_test {
         const char *title_cstr;
-        t_b8 (*func)(s_arena *const arena);
+        B8 (*func)(s_arena *const arena);
     };
 
     static const s_static_array<s_test, 4> g_tests = {{
@@ -35,7 +35,7 @@ namespace zf {
 
     static void RunTests() {
         s_arena arena = CreateArena();
-        ZF_DEFER({ DestroyArena(&arena); });
+        ZF_DEFER({ ArenaDestroy(&arena); });
 
         for (t_i32 i = 0; i < g_tests.g_len; i++) {
             Log(ZF_STR_LITERAL("Running test \"%\"..."), ConvertCstr(g_tests[i].title_cstr));

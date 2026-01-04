@@ -9,7 +9,7 @@ namespace zf {
         s_arena *perm_arena;
         s_arena *temp_arena;
 
-        s_gfx_resource_group *perm_gfx_resource_group;
+        zf_rendering_resource_group *perm_gfx_resource_group;
 
         s_rng *rng;
     };
@@ -18,9 +18,9 @@ namespace zf {
         s_arena *perm_arena;
         s_arena *temp_arena;
 
-        const s_input_state *input_state;
+        const zf_input_state *input_state;
 
-        s_gfx_resource_group *perm_gfx_resource_group;
+        zf_rendering_resource_group *perm_gfx_resource_group;
 
         s_rng *rng;
     };

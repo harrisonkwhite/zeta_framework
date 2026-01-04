@@ -34,7 +34,7 @@ namespace zf {
     struct s_asset_field {
         const char *name_cstr;
         e_asset_field_type type;
-        t_b8 optional;
+        B8 optional;
     };
 
     enum e_texture_field : t_i32 {
@@ -91,9 +91,9 @@ namespace zf {
         {.name_cstr = "out_file_path", .type = ek_asset_field_type_str},
     }};
 
-    t_b8 PackAssets(const s_str_rdonly instrs_json_file_path) {
+    B8 PackAssets(const s_str_rdonly instrs_json_file_path) {
         s_arena arena = CreateArena();
-        ZF_DEFER({ DestroyArena(&arena); });
+        ZF_DEFER({ ArenaDestroy(&arena); });
 
         cJSON *cj;
 
@@ -138,7 +138,7 @@ namespace zf {
             cJSON *cj_asset;
 
             cJSON_ArrayForEach(cj_asset, cj_assets) {
-                RewindArena(&arena);
+                zf_mem_rewind_arena(&arena);
 
                 if (!cJSON_IsObject(cj_asset)) {
                     continue;
@@ -181,7 +181,7 @@ namespace zf {
                         return false;
                     }
 
-                    const auto is_valid = [fi, fields, field_vals]() -> t_b8 {
+                    const auto is_valid = [fi, fields, field_vals]() -> B8 {
                         switch (fields[fi].type) {
                         case ek_asset_field_type_str:
                             return cJSON_IsString(field_vals[fi]);
@@ -227,7 +227,7 @@ namespace zf {
                     const auto height = field_vals[ek_font_field_height]->valueint;
                     const auto out_file_path = ConvertCstr(field_vals[ek_font_field_out_file_path]->valuestring);
 
-                    const auto code_pt_bv = PushItemZeroed<t_code_pt_bit_vec>(&arena);
+                    const auto code_pt_bv = mem_push_item_zeroed<t_code_pt_bit_vec>(&arena);
 
                     SetBitsInRange(*code_pt_bv, g_printable_ascii_range_begin, g_printable_ascii_range_end); // Add the printable ASCII range as a default.
 
@@ -268,7 +268,7 @@ namespace zf {
                     const auto varying_def_file_path = ConvertCstr(field_vals[ek_shader_field_varying_def_file_path]->valuestring);
                     const auto out_file_path = ConvertCstr(field_vals[ek_shader_field_out_file_path]->valuestring);
 
-                    t_b8 is_frag;
+                    B8 is_frag;
 
                     if (AreStrsEqual(type, ZF_STR_LITERAL("vertex"))) {
                         is_frag = false;

@@ -1,9 +1,9 @@
 #include <zcl.h>
 
 namespace zf {
-    static t_b8 OutputCode(const s_str_rdonly input_file_path, const s_str_rdonly output_file_path, const s_str_rdonly arr_subname) {
+    static B8 OutputCode(const s_str_rdonly input_file_path, const s_str_rdonly output_file_path, const s_str_rdonly arr_subname) {
         s_arena arena = CreateArena();
-        ZF_DEFER({ DestroyArena(&arena); });
+        ZF_DEFER({ ArenaDestroy(&arena); });
 
         s_stream input_file_stream;
 

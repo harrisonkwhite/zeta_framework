@@ -18,7 +18,7 @@
 #include <cstdlib>
 
 namespace zf {
-    void detail::TryBreakingIntoDebuggerIf(const t_b8 cond) {
+    void detail::TryBreakingIntoDebuggerIf(const B8 cond) {
         if (!cond) {
             return;
         }

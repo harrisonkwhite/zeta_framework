@@ -6,74 +6,74 @@ namespace zf {
     // ============================================================
     // @section: Types and Globals
 
-    struct s_input_state;
+    struct zf_input_state;
 
-    enum e_key_code : t_i32 {
-        ek_key_code_space,
-        ek_key_code_0,
-        ek_key_code_1,
-        ek_key_code_2,
-        ek_key_code_3,
-        ek_key_code_4,
-        ek_key_code_5,
-        ek_key_code_6,
-        ek_key_code_7,
-        ek_key_code_8,
-        ek_key_code_9,
-        ek_key_code_a,
-        ek_key_code_b,
-        ek_key_code_c,
-        ek_key_code_d,
-        ek_key_code_e,
-        ek_key_code_f,
-        ek_key_code_g,
-        ek_key_code_h,
-        ek_key_code_i,
-        ek_key_code_j,
-        ek_key_code_k,
-        ek_key_code_l,
-        ek_key_code_m,
-        ek_key_code_n,
-        ek_key_code_o,
-        ek_key_code_p,
-        ek_key_code_q,
-        ek_key_code_r,
-        ek_key_code_s,
-        ek_key_code_t,
-        ek_key_code_u,
-        ek_key_code_v,
-        ek_key_code_w,
-        ek_key_code_x,
-        ek_key_code_y,
-        ek_key_code_z,
-        ek_key_code_escape,
-        ek_key_code_enter,
-        ek_key_code_backspace,
-        ek_key_code_tab,
-        ek_key_code_right,
-        ek_key_code_left,
-        ek_key_code_down,
-        ek_key_code_up,
-        ek_key_code_f1,
-        ek_key_code_f2,
-        ek_key_code_f3,
-        ek_key_code_f4,
-        ek_key_code_f5,
-        ek_key_code_f6,
-        ek_key_code_f7,
-        ek_key_code_f8,
-        ek_key_code_f9,
-        ek_key_code_f10,
-        ek_key_code_f11,
-        ek_key_code_f12,
-        ek_key_code_left_shift,
-        ek_key_code_left_control,
-        ek_key_code_left_alt,
-        ek_key_code_right_shift,
-        ek_key_code_right_control,
-        ek_key_code_right_alt,
+    enum zf_input_key_code : t_i32 {
+        zf_input_key_code_space,
+        zf_input_key_code_0,
+        zf_input_key_code_1,
+        zf_input_key_code_2,
+        zf_input_key_code_3,
+        zf_input_key_code_4,
+        zf_input_key_code_5,
+        zf_input_key_code_6,
+        zf_input_key_code_7,
+        zf_input_key_code_8,
+        zf_input_key_code_9,
+        zf_input_key_code_a,
+        zf_input_key_code_b,
+        zf_input_key_code_c,
+        zf_input_key_code_d,
+        zf_input_key_code_e,
+        zf_input_key_code_f,
+        zf_input_key_code_g,
+        zf_input_key_code_h,
+        zf_input_key_code_i,
+        zf_input_key_code_j,
+        zf_input_key_code_k,
+        zf_input_key_code_l,
+        zf_input_key_code_m,
+        zf_input_key_code_n,
+        zf_input_key_code_o,
+        zf_input_key_code_p,
+        zf_input_key_code_q,
+        zf_input_key_code_r,
+        zf_input_key_code_s,
+        zf_input_key_code_t,
+        zf_input_key_code_u,
+        zf_input_key_code_v,
+        zf_input_key_code_w,
+        zf_input_key_code_x,
+        zf_input_key_code_y,
+        zf_input_key_code_z,
+        zf_input_key_code_escape,
+        zf_input_key_code_enter,
+        zf_input_key_code_backspace,
+        zf_input_key_code_tab,
+        zf_input_key_code_right,
+        zf_input_key_code_left,
+        zf_input_key_code_down,
+        zf_input_key_code_up,
+        zf_input_key_code_f1,
+        zf_input_key_code_f2,
+        zf_input_key_code_f3,
+        zf_input_key_code_f4,
+        zf_input_key_code_f5,
+        zf_input_key_code_f6,
+        zf_input_key_code_f7,
+        zf_input_key_code_f8,
+        zf_input_key_code_f9,
+        zf_input_key_code_f10,
+        zf_input_key_code_f11,
+        zf_input_key_code_f12,
+        zf_input_key_code_left_shift,
+        zf_input_key_code_left_control,
+        zf_input_key_code_left_alt,
+        zf_input_key_code_right_shift,
+        zf_input_key_code_right_control,
+        zf_input_key_code_right_alt,
 
-        eks_key_code_cnt
+        zf_input_key_code_cnt
     };
 
     enum e_mouse_button_code : t_i32 {
@@ -123,33 +123,33 @@ namespace zf {
     // ============================================================
     // @section: Functions
 
-    s_input_state *CreateInputState(s_arena *const arena);
+    zf_input_state *zf_input_create_state(s_arena *const arena);
 
-    void ClearInputEvents(s_input_state *const input_state);
+    void zf_input_clear_events(zf_input_state *const state);
 
-    t_b8 IsKeyDown(const s_input_state *const input_state, const e_key_code code);
-    t_b8 IsKeyPressed(const s_input_state *const input_state, const e_key_code code);
-    t_b8 IsKeyReleased(const s_input_state *const input_state, const e_key_code code);
-    void UpdateKeyState(s_input_state *const input_state, const e_key_code code, const t_b8 is_down);
+    B8 zf_input_get_key_is_down(const zf_input_state *const state, const zf_input_key_code code);
+    B8 zf_input_get_key_is_pressed(const zf_input_state *const state, const zf_input_key_code code);
+    B8 zf_input_get_key_is_released(const zf_input_state *const state, const zf_input_key_code code);
+    void zf_input_update_key_state(zf_input_state *const state, const zf_input_key_code code, const B8 is_down);
 
-    t_b8 IsMouseButtonDown(const s_input_state *const input_state, const e_mouse_button_code btn_code);
-    t_b8 IsMouseButtonPressed(const s_input_state *const input_state, const e_mouse_button_code btn_code);
-    t_b8 IsMouseButtonReleased(const s_input_state *const input_state, const e_mouse_button_code btn_code);
-    void UpdateMouseButtonState(s_input_state *const input_state, const e_mouse_button_code code, const t_b8 is_down);
+    B8 IsMouseButtonDown(const zf_input_state *const state, const e_mouse_button_code btn_code);
+    B8 IsMouseButtonPressed(const zf_input_state *const state, const e_mouse_button_code btn_code);
+    B8 IsMouseButtonReleased(const zf_input_state *const state, const e_mouse_button_code btn_code);
+    void UpdateMouseButtonState(zf_input_state *const state, const e_mouse_button_code code, const B8 is_down);
 
-    s_v2 CursorPos(const s_input_state *const input_state);
-    void UpdateCursorPos(s_input_state *const input_state, const s_v2 val);
+    s_v2 CursorPos(const zf_input_state *const state);
+    void UpdateCursorPos(zf_input_state *const state, const s_v2 val);
 
-    s_v2 ScrollOffset(const s_input_state *const input_state);
-    void UpdateScrollOffset(s_input_state *const input_state, const s_v2 offs_to_apply);
+    s_v2 zf_input_get_scroll_offset(const zf_input_state *const state);
+    void zf_input_update_scroll_offset(zf_input_state *const state, const s_v2 offs_to_apply);
 
-    t_b8 IsGamepadConnected(const s_input_state *const input_state, const t_i32 index);
-    t_b8 IsGamepadButtonDown(const s_input_state *const input_state, const t_i32 gamepad_index, const e_gamepad_button_code btn_code);
-    t_b8 IsGamepadButtonPressed(const s_input_state *const input_state, const t_i32 gamepad_index, const e_gamepad_button_code btn_code);
-    t_b8 IsGamepadButtonReleased(const s_input_state *const input_state, const t_i32 gamepad_index, const e_gamepad_button_code btn_code);
-    t_f32 GamepadAxisValueRaw(const s_input_state *const input_state, const t_i32 gamepad_index, const e_gamepad_axis_code axis_code);
-    t_f32 CalcGamepadAxisValueWithDeadzone(const s_input_state *const input_state, const t_i32 gamepad_index, const e_gamepad_axis_code axis_code);
-    void UpdateGamepadState(s_input_state *const input_state, const t_i32 gamepad_index, const t_b8 connected, const s_static_bit_vec<eks_gamepad_button_code_cnt> &btns_down, const s_static_array<t_f32, eks_gamepad_axis_code_cnt> &axes);
+    B8 IsGamepadConnected(const zf_input_state *const state, const t_i32 index);
+    B8 IsGamepadButtonDown(const zf_input_state *const state, const t_i32 gamepad_index, const e_gamepad_button_code btn_code);
+    B8 IsGamepadButtonPressed(const zf_input_state *const state, const t_i32 gamepad_index, const e_gamepad_button_code btn_code);
+    B8 IsGamepadButtonReleased(const zf_input_state *const state, const t_i32 gamepad_index, const e_gamepad_button_code btn_code);
+    t_f32 zf_input_get_gamepad_axis_value_raw(const zf_input_state *const state, const t_i32 gamepad_index, const e_gamepad_axis_code axis_code);
+    t_f32 zf_input_calc_gamepad_axis_value_with_deadzone(const zf_input_state *const state, const t_i32 gamepad_index, const e_gamepad_axis_code axis_code);
+    void UpdateGamepadState(zf_input_state *const state, const t_i32 gamepad_index, const B8 connected, const s_static_bit_vec<eks_gamepad_button_code_cnt> &btns_down, const s_static_array<t_f32, eks_gamepad_axis_code_cnt> &axes);
 
     // ============================================================
 }
