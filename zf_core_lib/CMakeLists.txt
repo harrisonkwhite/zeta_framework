@@ -6,7 +6,7 @@ add_library(zf_core_lib STATIC
     src/zcl_strs.cpp
     src/zcl_gfx.cpp
     src/zcl_io.cpp
-    src/zcl_rng.cpp
+    src/zcl_rand.cpp
     ../external/stb_image/src/stb_image.c
     ../external/stb_truetype/src/stb_truetype.c
 	../external/miniaudio/src/miniaudio.c
@@ -22,7 +22,7 @@ add_library(zf_core_lib STATIC
     include/zcl/zcl_io.h
     include/zcl/zcl_algos.h
     include/zcl/zcl_basic.h
-    include/zcl/zcl_rng.h
+    include/zcl/zcl_rand.h
 )
 
 target_compile_features(zf_core_lib PUBLIC cxx_std_20)

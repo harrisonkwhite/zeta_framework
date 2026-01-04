@@ -34,7 +34,7 @@ namespace zf {
         s_rendering_basis *const rendering_basis = StartupGFX(&perm_arena, &perm_gfx_resource_group);
         ZF_DEFER({ ShutdownGFX(rendering_basis); });
 
-        s_rng *const rng = CreateRNG(0, &perm_arena); // @todo: Proper seed!
+        rand::RNG *const rng = rand::create_rng(0, &perm_arena); // @todo: Proper seed!
 
         init_func({
             .perm_arena = &perm_arena,
