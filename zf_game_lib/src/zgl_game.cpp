@@ -28,7 +28,7 @@ namespace zf {
         platform::startup(g_init_window_size);
         ZF_DEFER({ platform::shutdown(); });
 
-        zf_input_state *const input_state = zf_input_create_state(&perm_arena);
+        input::State *const input_state = input::create_state(&perm_arena);
 
         zf_rendering_resource_group *perm_gfx_resource_group;
         s_rendering_basis *const rendering_basis = StartupGFX(&perm_arena, &perm_gfx_resource_group);
@@ -79,7 +79,7 @@ namespace zf {
                     .rng = rng,
                 });
 
-                zf_input_clear_events(input_state);
+                clear_events(input_state);
 
                 frame_dur_accum -= targ_tick_interval;
             }

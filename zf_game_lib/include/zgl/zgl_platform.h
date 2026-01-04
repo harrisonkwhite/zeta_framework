@@ -13,7 +13,7 @@ namespace zf::platform {
     t_f64 get_time();
 
     // Also updates the given input state based on OS events.
-    void poll_os_events(zf_input_state *const input_state);
+    void poll_os_events(input::State *const input_state);
 
     void *get_native_display_handle();
 

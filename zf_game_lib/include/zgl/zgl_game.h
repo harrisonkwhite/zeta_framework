@@ -18,7 +18,7 @@ namespace zf {
         s_arena *perm_arena;
         s_arena *temp_arena;
 
-        const zf_input_state *input_state;
+        const input::State *input_state;
 
         zf_rendering_resource_group *perm_gfx_resource_group;
 
