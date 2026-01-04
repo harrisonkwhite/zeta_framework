@@ -1,9 +1,6 @@
 #include <zgl/zgl_game.h>
 
 #include <zgl/zgl_platform.h>
-#include <zgl/zgl_input.h>
-#include <zgl/zgl_gfx_core.h>
-#include <zgl/zgl_audio.h>
 
 namespace zf {
     static const s_v2_i g_init_window_size = {1280, 720};
@@ -30,16 +27,16 @@ namespace zf {
 
         input::State *const input_state = input::create_state(&perm_arena);
 
-        zf_rendering_resource_group *perm_gfx_resource_group;
-        s_rendering_basis *const rendering_basis = StartupGFX(&perm_arena, &perm_gfx_resource_group);
-        ZF_DEFER({ ShutdownGFX(rendering_basis); });
+        rendering::ResourceGroup *perm_rendering_resource_group;
+        rendering::Basis *const rendering_basis = rendering::startup_module(&perm_arena, &perm_rendering_resource_group);
+        ZF_DEFER({ rendering::shutdown_module(rendering_basis); });
 
         rand::RNG *const rng = rand::create_rng(0, &perm_arena); // @todo: Proper seed!
 
         init_func({
             .perm_arena = &perm_arena,
             .temp_arena = &temp_arena,
-            .perm_gfx_resource_group = perm_gfx_resource_group,
+            .perm_rendering_resource_group = perm_rendering_resource_group,
             .rng = rng,
         });
 
@@ -75,7 +72,7 @@ namespace zf {
                     .perm_arena = &perm_arena,
                     .temp_arena = &temp_arena,
                     .input_state = input_state,
-                    .perm_gfx_resource_group = perm_gfx_resource_group,
+                    .perm_rendering_resource_group = perm_rendering_resource_group,
                     .rng = rng,
                 });
 
@@ -86,7 +83,7 @@ namespace zf {
 
             zf_mem_rewind_arena(&temp_arena);
 
-            s_rendering_context *const rendering_context = zf_rendering_begin_frame(rendering_basis, s_color_rgb8{109, 187, 255}, &temp_arena); // @todo: Make the clear colour customisable?
+            rendering::Context *const rendering_context = rendering::begin_frame(rendering_basis, s_color_rgb8{109, 187, 255}, &temp_arena); // @todo: Make the clear colour customisable?
 
             render_func({
                 .perm_arena = &perm_arena,
@@ -95,7 +92,7 @@ namespace zf {
                 .rng = rng,
             });
 
-            zf_rendering_end_frame(rendering_context);
+            rendering::end_frame(rendering_context);
         }
     }
 }

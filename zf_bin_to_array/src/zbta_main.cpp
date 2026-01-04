@@ -1,7 +1,7 @@
 #include <zcl.h>
 
 namespace zf {
-    static B8 OutputCode(const strs::StrRdonly input_file_path, const strs::StrRdonly output_file_path, const strs::StrRdonly arr_subname) {
+    static B8 OutputCode(const strs::StrRdonly input_file_path, const strs::StrRdonly output_file_path, const strs::StrRdonly arr_var_subname, const strs::StrRdonly module_namespace) {
         s_arena arena = CreateArena();
         ZF_DEFER({ ArenaDestroy(&arena); });
 
@@ -23,9 +23,14 @@ namespace zf {
 
         Print(&output_file_stream, ZF_STR_LITERAL("#include <zcl/zcl_mem.h>\n"));
         Print(&output_file_stream, ZF_STR_LITERAL("\n"));
-        Print(&output_file_stream, ZF_STR_LITERAL("namespace zf {\n"));
 
-        PrintFormat(&output_file_stream, ZF_STR_LITERAL("    extern const U8 g_%_raw[] = {"), arr_subname);
+        if (strs::get_is_empty(module_namespace)) {
+            Print(&output_file_stream, ZF_STR_LITERAL("namespace zf {\n"));
+        } else {
+            PrintFormat(&output_file_stream, ZF_STR_LITERAL("namespace zf::% {\n"), module_namespace);
+        }
+
+        PrintFormat(&output_file_stream, ZF_STR_LITERAL("    extern const U8 g_%_raw[] = {"), arr_var_subname);
 
         U8 byte_read;
         I32 byte_read_cnt = 0;
@@ -42,7 +47,7 @@ namespace zf {
 
         Print(&output_file_stream, ZF_STR_LITERAL("};\n"));
 
-        PrintFormat(&output_file_stream, ZF_STR_LITERAL("    extern const I32 g_%_len = %;\n"), arr_subname, byte_read_cnt);
+        PrintFormat(&output_file_stream, ZF_STR_LITERAL("    extern const I32 g_%_len = %;\n"), arr_var_subname, byte_read_cnt);
 
         Print(&output_file_stream, ZF_STR_LITERAL("}\n"));
 
@@ -51,10 +56,11 @@ namespace zf {
 }
 
 int main(const int arg_cnt, const char *const *const args) {
-    if (arg_cnt != 4) {
-        zf::LogError(ZF_STR_LITERAL("Invalid command-line argument count!"));
+    if (arg_cnt != 5) {
+        zf::s_stream std_err = zf::StdError();
+        zf::PrintFormat(&std_err, ZF_STR_LITERAL("Invalid command-line argument count! Usage: zf_bin_to_array <input_file_path> <output_file_path> <array_variable_subname> <module_namespace_name>"));
         return EXIT_FAILURE;
     }
 
-    return zf::OutputCode(zf::strs::convert_cstr(args[1]), zf::strs::convert_cstr(args[2]), zf::strs::convert_cstr(args[3])) ? EXIT_SUCCESS : EXIT_FAILURE;
+    return zf::OutputCode(zf::strs::convert_cstr(args[1]), zf::strs::convert_cstr(args[2]), zf::strs::convert_cstr(args[3]), zf::strs::convert_cstr(args[4])) ? EXIT_SUCCESS : EXIT_FAILURE;
 }

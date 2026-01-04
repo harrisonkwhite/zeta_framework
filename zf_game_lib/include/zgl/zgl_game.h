@@ -2,14 +2,14 @@
 
 #include <zcl.h>
 #include <zgl/zgl_input.h>
-#include <zgl/zgl_gfx_core.h>
+#include <zgl/zgl_rendering.h>
 
 namespace zf {
     struct s_game_init_context {
         s_arena *perm_arena;
         s_arena *temp_arena;
 
-        zf_rendering_resource_group *perm_gfx_resource_group;
+        rendering::ResourceGroup *perm_rendering_resource_group;
 
         rand::RNG *rng;
     };
@@ -20,7 +20,7 @@ namespace zf {
 
         const input::State *input_state;
 
-        zf_rendering_resource_group *perm_gfx_resource_group;
+        rendering::ResourceGroup *perm_rendering_resource_group;
 
         rand::RNG *rng;
     };
@@ -29,7 +29,7 @@ namespace zf {
         s_arena *perm_arena;
         s_arena *temp_arena;
 
-        s_rendering_context *rendering_context;
+        rendering::Context *rendering_context;
 
         rand::RNG *rng;
     };

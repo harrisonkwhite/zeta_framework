@@ -28,7 +28,7 @@ function(embed_shader SHADER_FOLDER SHADER_NAME SHADER_TYPE)
         OUTPUT ${CPP_FILE}
         BYPRODUCTS ${BIN_FILE}
         COMMAND ${SHADERC_EXE} -f ${SRC_FILE} -o ${BIN_FILE} --type ${SHADER_TYPE} --platform ${SHADERC_PLATFORM} --profile ${SHADERC_PROFILE} --varyingdef ${VD_FILE} -i ${CMAKE_CURRENT_SOURCE_DIR}/../tools/bgfx/shaderc_include
-        COMMAND ${BTA_EXE} ${BIN_FILE} ${CPP_FILE} ${SHADER_FOLDER}_${SHADER_NAME}_src
+        COMMAND ${BTA_EXE} ${BIN_FILE} ${CPP_FILE} ${SHADER_FOLDER}_${SHADER_NAME}_src rendering
         COMMAND_EXPAND_LISTS
         DEPENDS ${SRC_FILE} ${VD_FILE} zf_bin_to_array
         VERBATIM
@@ -52,16 +52,15 @@ add_library(zf_game_lib STATIC
     src/zgl_game.cpp
     src/zgl_platform.cpp
     src/zgl_input.cpp
-    src/zgl_gfx_core.cpp
-    src/zgl_gfx_helpers.cpp
+    src/zgl_rendering_core.cpp
+    src/zgl_rendering_helpers.cpp
     src/zgl_audio.cpp
 
     include/zgl.h
     include/zgl/zgl_game.h
     include/zgl/zgl_platform.h
     include/zgl/zgl_input.h
-    include/zgl/zgl_gfx_core.h
-    include/zgl/zgl_gfx_helpers.h
+    include/zgl/zgl_rendering.h
     include/zgl/zgl_audio.h
 )
 
