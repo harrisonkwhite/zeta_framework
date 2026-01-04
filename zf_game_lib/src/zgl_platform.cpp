@@ -163,11 +163,11 @@ namespace zf::platform {
 
     static t_i32 to_glfw_mouse_button(const input::MouseButtonCode btn_code) {
         switch (btn_code) {
-        case input::ec_mouse_button_code_left: return GLFW_MOUSE_BUTTON_LEFT;
-        case input::ec_mouse_button_code_right: return GLFW_MOUSE_BUTTON_RIGHT;
-        case input::ec_mouse_button_code_middle: return GLFW_MOUSE_BUTTON_MIDDLE;
+        case input::MouseButtonCode::Left: return GLFW_MOUSE_BUTTON_LEFT;
+        case input::MouseButtonCode::Right: return GLFW_MOUSE_BUTTON_RIGHT;
+        case input::MouseButtonCode::Middle: return GLFW_MOUSE_BUTTON_MIDDLE;
 
-        case input::ecm_mouse_button_code_cnt: break;
+        case input::MouseButtonCode::MCount: break;
         }
 
         ZF_UNREACHABLE();
@@ -185,7 +185,7 @@ namespace zf::platform {
             input::update_key_state(input_state, static_cast<input::KeyCode>(i), is_down);
         }
 
-        for (t_i32 i = 0; i < input::ecm_mouse_button_code_cnt; i++) {
+        for (t_i32 i = 0; i < static_cast<t_i32>(input::MouseButtonCode::MCount); i++) {
             const B8 is_down = glfwGetMouseButton(g_state.glfw_window, to_glfw_mouse_button(static_cast<input::MouseButtonCode>(i))) == GLFW_PRESS;
             input::update_mouse_button_state(input_state, static_cast<input::MouseButtonCode>(i), is_down);
         }
@@ -258,11 +258,11 @@ namespace zf::platform {
         return glfwWindowShouldClose(g_state.glfw_window);
     }
 
-    void set_window_title(const s_str_rdonly title, s_arena *const temp_arena) {
+    void set_window_title(const strs::StrRdonly title, s_arena *const temp_arena) {
         ZF_ASSERT(g_state.active);
 
-        const s_str_rdonly title_terminated = CloneStrButAddTerminator(title, temp_arena);
-        glfwSetWindowTitle(g_state.glfw_window, AsCstr(title_terminated));
+        const strs::StrRdonly title_terminated = clone_str_but_add_terminator(title, temp_arena);
+        glfwSetWindowTitle(g_state.glfw_window, get_as_cstr(title_terminated));
     }
 
     void set_window_size(const s_v2_i size) {

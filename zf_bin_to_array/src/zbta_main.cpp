@@ -1,7 +1,7 @@
 #include <zcl.h>
 
 namespace zf {
-    static B8 OutputCode(const s_str_rdonly input_file_path, const s_str_rdonly output_file_path, const s_str_rdonly arr_subname) {
+    static B8 OutputCode(const strs::StrRdonly input_file_path, const strs::StrRdonly output_file_path, const strs::StrRdonly arr_subname) {
         s_arena arena = CreateArena();
         ZF_DEFER({ ArenaDestroy(&arena); });
 
@@ -56,5 +56,5 @@ int main(const int arg_cnt, const char *const *const args) {
         return EXIT_FAILURE;
     }
 
-    return zf::OutputCode(zf::ConvertCstr(args[1]), zf::ConvertCstr(args[2]), zf::ConvertCstr(args[3])) ? EXIT_SUCCESS : EXIT_FAILURE;
+    return zf::OutputCode(zf::strs::convert_cstr(args[1]), zf::strs::convert_cstr(args[2]), zf::strs::convert_cstr(args[3])) ? EXIT_SUCCESS : EXIT_FAILURE;
 }

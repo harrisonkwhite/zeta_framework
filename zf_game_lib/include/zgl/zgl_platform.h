@@ -24,7 +24,7 @@ namespace zf::platform {
     // Returns whether a window close has been requested.
     B8 get_window_should_close();
 
-    void set_window_title(const s_str_rdonly title, s_arena *const temp_arena);
+    void set_window_title(const strs::StrRdonly title, s_arena *const temp_arena);
 
     // Sets the LOGICAL window size. The actual new framebuffer size MIGHT be larger if there is DPI scaling.
     void set_window_size(const s_v2_i size);

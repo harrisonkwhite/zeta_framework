@@ -4,8 +4,8 @@
 #include <stb_truetype.h>
 
 namespace zf {
-    static const t_hash_func<t_code_pt> g_code_pt_hash_func =
-        [](const t_code_pt &code_pt) {
+    static const t_hash_func<strs::CodePoint> g_code_pt_hash_func =
+        [](const strs::CodePoint &code_pt) {
             return static_cast<t_i32>(code_pt);
         };
 
@@ -19,11 +19,11 @@ namespace zf {
             return pa.a == pb.a && pa.b == pb.b;
         };
 
-    B8 LoadTextureDataFromRaw(const s_str_rdonly file_path, s_arena *const texture_data_arena, s_arena *const temp_arena, s_texture_data *const o_texture_data) {
-        const s_str_rdonly file_path_terminated = CloneStrButAddTerminator(file_path, temp_arena);
+    B8 LoadTextureDataFromRaw(const strs::StrRdonly file_path, s_arena *const texture_data_arena, s_arena *const temp_arena, s_texture_data *const o_texture_data) {
+        const strs::StrRdonly file_path_terminated = clone_str_but_add_terminator(file_path, temp_arena);
 
         s_v2_i size_in_pxs;
-        t_u8 *const stb_px_data = stbi_load(AsCstr(file_path_terminated), &size_in_pxs.x, &size_in_pxs.y, nullptr, 4);
+        t_u8 *const stb_px_data = stbi_load(get_as_cstr(file_path_terminated), &size_in_pxs.x, &size_in_pxs.y, nullptr, 4);
 
         if (!stb_px_data) {
             return false;
@@ -40,7 +40,7 @@ namespace zf {
         return true;
     }
 
-    B8 PackTexture(const s_str_rdonly file_path, const s_texture_data texture_data, s_arena *const temp_arena) {
+    B8 PackTexture(const strs::StrRdonly file_path, const s_texture_data texture_data, s_arena *const temp_arena) {
         if (!CreateFileAndParentDirectories(file_path, temp_arena)) {
             return false;
         }
@@ -64,7 +64,7 @@ namespace zf {
         return true;
     }
 
-    B8 UnpackTexture(const s_str_rdonly file_path, s_arena *const texture_data_arena, s_arena *const temp_arena, s_texture_data *const o_texture_data) {
+    B8 UnpackTexture(const strs::StrRdonly file_path, s_arena *const texture_data_arena, s_arena *const temp_arena, s_texture_data *const o_texture_data) {
         s_stream fs;
 
         if (!FileOpen(file_path, ek_file_access_mode_read, temp_arena, &fs)) {
@@ -90,7 +90,7 @@ namespace zf {
         return true;
     }
 
-    B8 LoadFontDataFromRaw(const s_str_rdonly file_path, const t_i32 height, t_code_pt_bit_vec *const code_pts, s_arena *const arrangement_arena, s_arena *const atlas_rgbas_arena, s_arena *const temp_arena, s_font_arrangement *const o_arrangement, s_array_mut<t_font_atlas_rgba> *const o_atlas_rgbas) {
+    B8 LoadFontDataFromRaw(const strs::StrRdonly file_path, const t_i32 height, strs::CodePointBitVector *const code_pts, s_arena *const arrangement_arena, s_arena *const atlas_rgbas_arena, s_arena *const temp_arena, s_font_arrangement *const o_arrangement, s_array_mut<t_font_atlas_rgba> *const o_atlas_rgbas) {
         ZF_ASSERT(height > 0);
 
         // Get the plain font file data.
@@ -115,7 +115,7 @@ namespace zf {
 
         // Filter out unsupported code points.
         ZF_WALK_SET_BITS (*code_pts, i) {
-            const auto code_pt = static_cast<t_code_pt>(i);
+            const auto code_pt = static_cast<strs::CodePoint>(i);
 
             const t_i32 glyph_index = stbtt_FindGlyphIndex(&stb_font_info, static_cast<t_i32>(code_pt));
 
@@ -142,13 +142,13 @@ namespace zf {
         //
         // Glyph Info
         //
-        o_arrangement->code_pts_to_glyph_infos = HashMapCreate<t_code_pt, s_font_glyph_info>(g_code_pt_hash_func, arrangement_arena, code_pt_cnt);
+        o_arrangement->code_pts_to_glyph_infos = HashMapCreate<strs::CodePoint, s_font_glyph_info>(g_code_pt_hash_func, arrangement_arena, code_pt_cnt);
 
         t_i32 atlas_index = 0;
         s_v2_i atlas_pen = {};
 
         ZF_WALK_SET_BITS (*code_pts, i) {
-            const auto code_pt = static_cast<t_code_pt>(i);
+            const auto code_pt = static_cast<strs::CodePoint>(i);
 
             const t_i32 glyph_index = stbtt_FindGlyphIndex(&stb_font_info, static_cast<t_i32>(code_pt));
 
@@ -196,8 +196,8 @@ namespace zf {
 
         ZF_WALK_SET_BITS (*code_pts, i) {
             ZF_WALK_SET_BITS (*code_pts, j) {
-                const auto cp_a = static_cast<t_code_pt>(i);
-                const auto cp_b = static_cast<t_code_pt>(j);
+                const auto cp_a = static_cast<strs::CodePoint>(i);
+                const auto cp_b = static_cast<strs::CodePoint>(j);
 
                 const auto glyph_a_index = stbtt_FindGlyphIndex(&stb_font_info, static_cast<t_i32>(cp_a));
                 const auto glyph_b_index = stbtt_FindGlyphIndex(&stb_font_info, static_cast<t_i32>(cp_b));
@@ -230,7 +230,7 @@ namespace zf {
 
         // Write pixel data for each individual glyph.
         ZF_WALK_SET_BITS (*code_pts, i) {
-            const auto code_pt = static_cast<t_code_pt>(i);
+            const auto code_pt = static_cast<strs::CodePoint>(i);
 
             s_font_glyph_info *glyph_info;
 
@@ -266,7 +266,7 @@ namespace zf {
         return true;
     }
 
-    B8 PackFont(const s_str_rdonly file_path, const s_font_arrangement &arrangement, const s_array_rdonly<t_font_atlas_rgba> atlas_rgbas, s_arena *const temp_arena) {
+    B8 PackFont(const strs::StrRdonly file_path, const s_font_arrangement &arrangement, const s_array_rdonly<t_font_atlas_rgba> atlas_rgbas, s_arena *const temp_arena) {
         if (!CreateFileAndParentDirectories(file_path, temp_arena)) {
             return false;
         }
@@ -298,7 +298,7 @@ namespace zf {
         return true;
     }
 
-    B8 UnpackFont(const s_str_rdonly file_path, s_arena *const arrangement_arena, s_arena *const atlas_rgbas_arena, s_arena *const temp_arena, s_font_arrangement *const o_arrangement, s_array_mut<t_font_atlas_rgba> *const o_atlas_rgbas) {
+    B8 UnpackFont(const strs::StrRdonly file_path, s_arena *const arrangement_arena, s_arena *const atlas_rgbas_arena, s_arena *const temp_arena, s_font_arrangement *const o_arrangement, s_array_mut<t_font_atlas_rgba> *const o_atlas_rgbas) {
         s_stream fs;
 
         if (!FileOpen(file_path, ek_file_access_mode_read, temp_arena, &fs)) {
@@ -326,7 +326,7 @@ namespace zf {
         return true;
     }
 
-    B8 PackShader(const s_str_rdonly file_path, const s_array_rdonly<t_u8> compiled_shader_bin, s_arena *const temp_arena) {
+    B8 PackShader(const strs::StrRdonly file_path, const s_array_rdonly<t_u8> compiled_shader_bin, s_arena *const temp_arena) {
         if (!CreateFileAndParentDirectories(file_path, temp_arena)) {
             return false;
         }
@@ -346,7 +346,7 @@ namespace zf {
         return true;
     }
 
-    B8 UnpackShader(const s_str_rdonly file_path, s_arena *const shader_bin_arena, s_arena *const temp_arena, s_array_mut<t_u8> *const o_shader_bin) {
+    B8 UnpackShader(const strs::StrRdonly file_path, s_arena *const shader_bin_arena, s_arena *const temp_arena, s_array_mut<t_u8> *const o_shader_bin) {
         s_stream fs;
 
         if (!FileOpen(file_path, ek_file_access_mode_read, temp_arena, &fs)) {

@@ -36,7 +36,7 @@ namespace zf {
         SubmitTrianglesToBatch(rc, AsNonstatic(triangles), texture);
     }
 
-    s_font CreateFontFromRaw(const s_str_rdonly file_path, const t_i32 height, t_code_pt_bit_vec *const code_pts, s_arena *const temp_arena, zf_rendering_resource_group *const resource_group) {
+    s_font CreateFontFromRaw(const strs::StrRdonly file_path, const t_i32 height, strs::CodePointBitVector *const code_pts, s_arena *const temp_arena, zf_rendering_resource_group *const resource_group) {
         s_font_arrangement arrangement;
         s_array_mut<t_font_atlas_rgba> atlas_rgbas;
 
@@ -56,7 +56,7 @@ namespace zf {
         };
     }
 
-    s_font CreateFontFromPacked(const s_str_rdonly file_path, s_arena *const temp_arena, zf_rendering_resource_group *const resource_group) {
+    s_font CreateFontFromPacked(const strs::StrRdonly file_path, s_arena *const temp_arena, zf_rendering_resource_group *const resource_group) {
         s_font_arrangement arrangement;
         s_array_mut<t_font_atlas_rgba> atlas_rgbas;
 
@@ -76,8 +76,8 @@ namespace zf {
         };
     }
 
-    s_array_mut<s_v2> CalcStrChrRenderPositions(const s_str_rdonly str, const s_font_arrangement &font_arrangement, const s_v2 pos, const s_v2 alignment, s_arena *const arena) {
-        ZF_ASSERT(IsValidUTF8(str));
+    s_array_mut<s_v2> CalcStrChrRenderPositions(const strs::StrRdonly str, const s_font_arrangement &font_arrangement, const s_v2 pos, const s_v2 alignment, s_arena *const arena) {
+        ZF_ASSERT(determine_is_valid_utf8(str));
         ZF_ASSERT(IsStrAlignmentValid(alignment));
 
         // Calculate some useful string metadata.
@@ -111,7 +111,7 @@ namespace zf {
         s_v2 chr_pos_pen = {}; // The position of the current character.
         t_i32 line_begin_chr_index = 0;
         t_i32 line_len = 0;
-        t_code_pt code_pt_last;
+        strs::CodePoint code_pt_last;
 
         const auto apply_hor_alignment_offs = [&]() {
             if (line_len > 0) {
@@ -172,11 +172,11 @@ namespace zf {
         return positions;
     }
 
-    void RenderStr(s_rendering_context *const rc, const s_str_rdonly str, const s_font &font, const s_v2 pos, s_arena *const temp_arena, const s_v2 alignment, const s_color_rgba32f blend) {
-        ZF_ASSERT(IsValidUTF8(str));
+    void RenderStr(s_rendering_context *const rc, const strs::StrRdonly str, const s_font &font, const s_v2 pos, s_arena *const temp_arena, const s_v2 alignment, const s_color_rgba32f blend) {
+        ZF_ASSERT(determine_is_valid_utf8(str));
         ZF_ASSERT(IsStrAlignmentValid(alignment));
 
-        if (IsStrEmpty(str)) {
+        if (strs::get_is_empty(str)) {
             return;
         }
 

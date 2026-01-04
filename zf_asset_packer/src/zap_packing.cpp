@@ -91,7 +91,7 @@ namespace zf {
         {.name_cstr = "out_file_path", .type = ek_asset_field_type_str},
     }};
 
-    B8 PackAssets(const s_str_rdonly instrs_json_file_path) {
+    B8 PackAssets(const strs::StrRdonly instrs_json_file_path) {
         s_arena arena = CreateArena();
         ZF_DEFER({ ArenaDestroy(&arena); });
 
@@ -105,7 +105,7 @@ namespace zf {
                 return false;
             }
 
-            cj = cJSON_Parse(AsCstr(s_str_rdonly(instrs_json_file_contents)));
+            cj = cJSON_Parse(strs::get_as_cstr(strs::StrRdonly{instrs_json_file_contents}));
 
             if (!cj) {
                 LogError(ZF_STR_LITERAL("Failed to parse packing instructions JSON file!"));
@@ -131,7 +131,7 @@ namespace zf {
             cJSON *const cj_assets = cJSON_GetObjectItemCaseSensitive(cj, asset_type_arr_name_cstr);
 
             if (!cJSON_IsArray(cj_assets)) {
-                LogError(ZF_STR_LITERAL("Packing instructions JSON \"%\" array does not exist or it is of the wrong type!"), ConvertCstr(asset_type_arr_name_cstr));
+                LogError(ZF_STR_LITERAL("Packing instructions JSON \"%\" array does not exist or it is of the wrong type!"), strs::convert_cstr(asset_type_arr_name_cstr));
                 return false;
             }
 
@@ -176,7 +176,7 @@ namespace zf {
                             continue;
                         }
 
-                        LogError(ZF_STR_LITERAL("A packing instructions JSON \"%\" entry is missing required field \"%\"!"), ConvertCstr(asset_type_arr_name_cstr), ConvertCstr(field_name_cstr));
+                        LogError(ZF_STR_LITERAL("A packing instructions JSON \"%\" entry is missing required field \"%\"!"), strs::convert_cstr(asset_type_arr_name_cstr), strs::convert_cstr(field_name_cstr));
 
                         return false;
                     }
@@ -197,15 +197,15 @@ namespace zf {
                     }();
 
                     if (!is_valid) {
-                        LogError(ZF_STR_LITERAL("A packing instructions JSON \"%\" entry has field \"%\" as the wrong type! Expected a %."), ConvertCstr(asset_type_arr_name_cstr), ConvertCstr(field_name_cstr), ConvertCstr(g_asset_field_type_name_cstrs[fields[fi].type]));
+                        LogError(ZF_STR_LITERAL("A packing instructions JSON \"%\" entry has field \"%\" as the wrong type! Expected a %."), strs::convert_cstr(asset_type_arr_name_cstr), strs::convert_cstr(field_name_cstr), strs::convert_cstr(g_asset_field_type_name_cstrs[fields[fi].type]));
                         return false;
                     }
                 }
 
                 switch (asset_type_index) {
                 case ek_asset_type_texture: {
-                    const auto file_path = ConvertCstr(field_vals[ek_texture_field_file_path]->valuestring);
-                    const auto out_file_path = ConvertCstr(field_vals[ek_texture_field_out_file_path]->valuestring);
+                    const auto file_path = strs::convert_cstr(field_vals[ek_texture_field_file_path]->valuestring);
+                    const auto out_file_path = strs::convert_cstr(field_vals[ek_texture_field_out_file_path]->valuestring);
 
                     s_texture_data texture_data;
 
@@ -223,16 +223,16 @@ namespace zf {
                 }
 
                 case ek_asset_type_font: {
-                    const auto file_path = ConvertCstr(field_vals[ek_font_field_file_path]->valuestring);
+                    const auto file_path = strs::convert_cstr(field_vals[ek_font_field_file_path]->valuestring);
                     const auto height = field_vals[ek_font_field_height]->valueint;
-                    const auto out_file_path = ConvertCstr(field_vals[ek_font_field_out_file_path]->valuestring);
+                    const auto out_file_path = strs::convert_cstr(field_vals[ek_font_field_out_file_path]->valuestring);
 
-                    const auto code_pt_bv = mem_push_item_zeroed<t_code_pt_bit_vec>(&arena);
+                    const auto code_pt_bv = mem_push_item_zeroed<strs::CodePointBitVector>(&arena);
 
-                    SetBitsInRange(*code_pt_bv, g_printable_ascii_range_begin, g_printable_ascii_range_end); // Add the printable ASCII range as a default.
+                    SetBitsInRange(*code_pt_bv, strs::g_printable_ascii_range_begin, strs::g_printable_ascii_range_end); // Add the printable ASCII range as a default.
 
                     if (field_vals[ek_font_field_extra_chrs_file_path]) {
-                        const auto extra_chrs_file_path = ConvertCstr(field_vals[ek_font_field_extra_chrs_file_path]->valuestring);
+                        const auto extra_chrs_file_path = strs::convert_cstr(field_vals[ek_font_field_extra_chrs_file_path]->valuestring);
 
                         s_array_mut<t_u8> extra_chrs_file_contents;
 
@@ -241,7 +241,7 @@ namespace zf {
                             return false;
                         }
 
-                        MarkCodePoints({extra_chrs_file_contents}, code_pt_bv);
+                        strs::mark_code_points({extra_chrs_file_contents}, code_pt_bv);
                     }
 
                     // @todo: Proper check for invalid height!
@@ -263,16 +263,16 @@ namespace zf {
                 }
 
                 case ek_asset_type_shader: {
-                    const auto file_path = ConvertCstr(field_vals[ek_shader_field_file_path]->valuestring);
-                    const auto type = ConvertCstr(field_vals[ek_shader_field_type]->valuestring);
-                    const auto varying_def_file_path = ConvertCstr(field_vals[ek_shader_field_varying_def_file_path]->valuestring);
-                    const auto out_file_path = ConvertCstr(field_vals[ek_shader_field_out_file_path]->valuestring);
+                    const auto file_path = strs::convert_cstr(field_vals[ek_shader_field_file_path]->valuestring);
+                    const auto type = strs::convert_cstr(field_vals[ek_shader_field_type]->valuestring);
+                    const auto varying_def_file_path = strs::convert_cstr(field_vals[ek_shader_field_varying_def_file_path]->valuestring);
+                    const auto out_file_path = strs::convert_cstr(field_vals[ek_shader_field_out_file_path]->valuestring);
 
                     B8 is_frag;
 
-                    if (AreStrsEqual(type, ZF_STR_LITERAL("vertex"))) {
+                    if (strs::determine_are_equal(type, ZF_STR_LITERAL("vertex"))) {
                         is_frag = false;
-                    } else if (AreStrsEqual(type, ZF_STR_LITERAL("fragment"))) {
+                    } else if (strs::determine_are_equal(type, ZF_STR_LITERAL("fragment"))) {
                         is_frag = true;
                     } else {
                         LogError(ZF_STR_LITERAL("A packing instructions JSON shader entry has an invalid shader type \"%\"! Expected \"vertex\" or \"fragment\"."), type);
@@ -295,8 +295,8 @@ namespace zf {
                 }
 
                 case ek_asset_type_sound: {
-                    const auto file_path = ConvertCstr(field_vals[ek_sound_field_file_path]->valuestring);
-                    const auto out_file_path = ConvertCstr(field_vals[ek_sound_field_out_file_path]->valuestring);
+                    const auto file_path = strs::convert_cstr(field_vals[ek_sound_field_file_path]->valuestring);
+                    const auto out_file_path = strs::convert_cstr(field_vals[ek_sound_field_out_file_path]->valuestring);
 
                     s_sound_data_mut snd_data;
 

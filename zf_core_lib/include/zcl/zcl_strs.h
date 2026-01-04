@@ -2,14 +2,14 @@
 
 #include <zcl/zcl_algos.h>
 
-namespace zf {
+namespace zf::strs {
     // ============================================================
     // @section: Types and Globals
 
-    constexpr t_i32 g_unicode_code_pt_cnt = 1114112;
+    constexpr t_i32 g_code_pt_cnt = 1114112;
 
-    using t_code_pt = char32_t;
-    using t_code_pt_bit_vec = s_static_bit_vec<g_unicode_code_pt_cnt>;
+    using CodePoint = char32_t;
+    using CodePointBitVector = s_static_bit_vec<g_code_pt_cnt>;
 
     constexpr t_i32 g_ascii_range_begin = 0;
     constexpr t_i32 g_ascii_range_end = 0x80;
@@ -17,14 +17,14 @@ namespace zf {
     constexpr t_i32 g_printable_ascii_range_begin = 0x20;
     constexpr t_i32 g_printable_ascii_range_end = 0x7F;
 
-    struct s_str_rdonly {
+    struct StrRdonly {
         s_array_rdonly<t_u8> bytes;
     };
 
-    struct s_str_mut {
+    struct StrMut {
         s_array_mut<t_u8> bytes;
 
-        operator s_str_rdonly() const {
+        operator StrRdonly() const {
             return {bytes};
         }
     };
@@ -32,11 +32,11 @@ namespace zf {
     namespace detail {
         // Hidden object that can only be constructed with a valid string literal at compile time.
         // Implicit cast to ZF-style string has to be done at runtime due to reinterpret cast.
-        struct s_cstr_literal {
-            s_cstr_literal() = delete;
+        struct CstrLiteral {
+            CstrLiteral() = delete;
 
             template <t_i32 tp_buf_size>
-            consteval s_cstr_literal(const char (&buf)[tp_buf_size]) : buf(buf), buf_size(tp_buf_size) {
+            consteval CstrLiteral(const char (&buf)[tp_buf_size]) : buf(buf), buf_size(tp_buf_size) {
                 if (buf[tp_buf_size - 1]) {
                     throw "Static char array not terminated at end!";
                 }
@@ -51,7 +51,7 @@ namespace zf {
 #endif
             }
 
-            operator s_str_rdonly() {
+            operator StrRdonly() {
                 return {{reinterpret_cast<const t_u8 *>(buf), buf_size - 1}};
             }
 
@@ -60,16 +60,16 @@ namespace zf {
             const t_i32 buf_size;
         };
 
-#define ZF_STR_LITERAL(cstr_lit) zf::s_str_rdonly(zf::detail::s_cstr_literal(cstr_lit))
+#define ZF_STR_LITERAL(cstr_lit) zf::strs::StrRdonly(zf::strs::detail::CstrLiteral(cstr_lit))
     }
 
-    inline const t_comparator_bin<s_str_rdonly> g_str_comparator_bin =
-        [](const s_str_rdonly &a, const s_str_rdonly &b) {
+    inline const t_comparator_bin<StrRdonly> g_str_comparator_bin =
+        [](const StrRdonly &a, const StrRdonly &b) {
             return g_array_comparator_bin<s_array_rdonly<t_u8>>(a.bytes, b.bytes);
         };
 
-    struct s_str_walk_step {
-        t_code_pt code_pt;
+    struct StrWalkStep {
+        CodePoint code_pt;
         t_i32 byte_index;
     };
 
@@ -79,15 +79,15 @@ namespace zf {
     // ============================================================
     // @section: Functions
 
-    constexpr B8 IsCodePointASCII(const t_code_pt cp) {
+    constexpr B8 get_code_point_is_ascii(const CodePoint cp) {
         return cp >= g_ascii_range_begin && cp < g_ascii_range_end;
     }
 
-    constexpr B8 IsCodePointPrintableASCII(const t_code_pt cp) {
+    constexpr B8 get_code_point_is_printable_ascii(const CodePoint cp) {
         return cp >= g_printable_ascii_range_begin && cp < g_printable_ascii_range_end;
     }
 
-    inline B8 AreBytesTerminatedAnywhere(const s_array_rdonly<t_u8> bytes) {
+    inline B8 determine_are_bytes_terminated_anywhere(const s_array_rdonly<t_u8> bytes) {
         for (t_i32 i = bytes.len - 1; i >= 0; i--) {
             if (!bytes[i]) {
                 return true;
@@ -97,7 +97,7 @@ namespace zf {
         return false;
     }
 
-    inline B8 AreBytesTerminatedOnlyAtEnd(const s_array_rdonly<t_u8> bytes) {
+    inline B8 determine_are_bytes_terminated_only_at_end(const s_array_rdonly<t_u8> bytes) {
         if (bytes.len == 0 || bytes[bytes.len - 1]) {
             return false;
         }
@@ -111,7 +111,7 @@ namespace zf {
         return true;
     }
 
-    inline t_i32 CalcCstrLen(const char *const cstr) {
+    inline t_i32 calc_cstr_len(const char *const cstr) {
         t_i32 len = 0;
         for (; cstr[len]; len++) {}
         return len;
@@ -119,67 +119,67 @@ namespace zf {
 
     // Creates a NON-TERMINATED string object from the given TERMINATED C-string.
     // Does a conventional string walk to calculate length.
-    inline s_str_mut ConvertCstr(char *const cstr) {
-        return {{reinterpret_cast<t_u8 *>(cstr), CalcCstrLen(cstr)}};
+    inline StrMut convert_cstr(char *const cstr) {
+        return {{reinterpret_cast<t_u8 *>(cstr), calc_cstr_len(cstr)}};
     }
 
     // Creates a read-only NON-TERMINATED string object from the given TERMINATED C-string.
     // Does a conventional string walk to calculate length.
-    inline s_str_rdonly ConvertCstr(const char *const cstr) {
-        return {{reinterpret_cast<const t_u8 *>(cstr), CalcCstrLen(cstr)}};
+    inline StrRdonly convert_cstr(const char *const cstr) {
+        return {{reinterpret_cast<const t_u8 *>(cstr), calc_cstr_len(cstr)}};
     }
 
-    inline char *AsCstr(const s_str_mut str) {
-        ZF_ASSERT(AreBytesTerminatedAnywhere(str.bytes));
+    inline char *get_as_cstr(const StrMut str) {
+        ZF_ASSERT(determine_are_bytes_terminated_anywhere(str.bytes));
         return reinterpret_cast<char *>(str.bytes.raw);
     }
 
-    inline const char *AsCstr(const s_str_rdonly str) {
-        ZF_ASSERT(AreBytesTerminatedAnywhere(str.bytes));
+    inline const char *get_as_cstr(const StrRdonly str) {
+        ZF_ASSERT(determine_are_bytes_terminated_anywhere(str.bytes));
         return reinterpret_cast<const char *>(str.bytes.raw);
     }
 
     // Allocates a clone of the given string using the memory arena, with a null byte added at the end (even if the string was already terminated).
-    inline s_str_mut CloneStrButAddTerminator(const s_str_rdonly str, s_arena *const arena) {
-        const s_str_mut clone = {ArenaPushArray<t_u8>(arena, str.bytes.len + 1)};
+    inline StrMut clone_str_but_add_terminator(const StrRdonly str, s_arena *const arena) {
+        const StrMut clone = {ArenaPushArray<t_u8>(arena, str.bytes.len + 1)};
         CopyAll(str.bytes, clone.bytes);
         clone.bytes[clone.bytes.len - 1] = 0;
         return clone;
     }
 
-    inline B8 IsStrEmpty(const s_str_rdonly str) {
+    inline B8 get_is_empty(const StrRdonly str) {
         return str.bytes.len == 0;
     }
 
-    inline B8 AreStrsEqual(const s_str_rdonly a, const s_str_rdonly b) {
+    inline B8 determine_are_equal(const StrRdonly a, const StrRdonly b) {
         return CompareAll(a.bytes, b.bytes) == 0;
     }
 
-    B8 IsValidUTF8(const s_str_rdonly str);
+    B8 determine_is_valid_utf8(const StrRdonly str);
 
-    // Calculates the length in terms of code point count. Note that '\0' is treated just like any other ASCII character and does not terminate.
-    t_i32 CalcStrLen(const s_str_rdonly str);
+    // Calculates the string length in terms of code point count. Note that '\0' is treated just like any other ASCII character and does not terminate.
+    t_i32 calc_len(const StrRdonly str);
 
-    t_code_pt FindCodePointAtByte(const s_str_rdonly str, const t_i32 byte_index);
+    CodePoint find_code_point_at_byte(const StrRdonly str, const t_i32 byte_index);
 
     // Sets the bits associated with each unicode code point that appear in the string. No bits get unset.
-    void MarkCodePoints(const s_str_rdonly str, t_code_pt_bit_vec *const code_pts);
+    void mark_code_points(const StrRdonly str, CodePointBitVector *const code_pts);
 
     // byte_index should be initialised to the index of ANY byte in the code point to start walking from.
     // Returns false iff the walk has ended.
-    B8 Walk(const s_str_rdonly str, t_i32 *const byte_index, s_str_walk_step *const o_step);
+    B8 walk(const StrRdonly str, t_i32 *const byte_index, StrWalkStep *const o_step);
 
     // byte_index should be initialised to the index of ANY byte in the code point to start walking backwards from.
     // Returns false iff the walk has ended.
-    B8 WalkReverse(const s_str_rdonly str, t_i32 *const byte_index, s_str_walk_step *const o_step);
+    B8 walk_reverse(const StrRdonly str, t_i32 *const byte_index, StrWalkStep *const o_step);
 
 #define ZF_WALK_STR(str, step)                                                                                     \
     for (zf::t_i32 ZF_CONCAT(bi_l, __LINE__) = 0; ZF_CONCAT(bi_l, __LINE__) != -1; ZF_CONCAT(bi_l, __LINE__) = -1) \
-        for (zf::s_str_walk_step step; zf::Walk(str, &ZF_CONCAT(bi_l, __LINE__), &step);)
+        for (zf::strs::StrWalkStep step; zf::strs::walk(str, &ZF_CONCAT(bi_l, __LINE__), &step);)
 
 #define ZF_WALK_STR_REVERSE(str, step)                                                                                                                         \
     for (zf::t_i32 ZF_CONCAT(bi_l, __LINE__) = (str).bytes.len - 1; ZF_CONCAT(bi_l, __LINE__) != (str).bytes.len; ZF_CONCAT(bi_l, __LINE__) = (str).bytes.len) \
-        for (zf::s_str_walk_step step; zf::WalkReverse(str, &ZF_CONCAT(bi_l, __LINE__), &step);)
+        for (zf::strs::StrWalkStep step; zf::strs::walk_reverse(str, &ZF_CONCAT(bi_l, __LINE__), &step);)
 
     // ============================================================
 }

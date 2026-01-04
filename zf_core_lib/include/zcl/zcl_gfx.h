@@ -97,14 +97,14 @@ namespace zf {
     };
 
     struct s_font_code_point_pair {
-        t_code_pt a;
-        t_code_pt b;
+        strs::CodePoint a;
+        strs::CodePoint b;
     };
 
     struct s_font_arrangement {
         t_i32 line_height;
 
-        s_hash_map<t_code_pt, s_font_glyph_info> code_pts_to_glyph_infos;
+        s_hash_map<strs::CodePoint, s_font_glyph_info> code_pts_to_glyph_infos;
 
         B8 has_kernings;
         s_hash_map<s_font_code_point_pair, t_i32> code_pt_pairs_to_kernings;
@@ -185,16 +185,16 @@ namespace zf {
         return alignment.x >= 0.0f && alignment.x <= 1.0f && alignment.y >= 0.0f && alignment.y <= 1.0f;
     }
 
-    [[nodiscard]] B8 LoadTextureDataFromRaw(const s_str_rdonly file_path, s_arena *const texture_data_arena, s_arena *const temp_arena, s_texture_data *const o_texture_data);
-    [[nodiscard]] B8 PackTexture(const s_str_rdonly file_path, const s_texture_data texture_data, s_arena *const temp_arena);
-    [[nodiscard]] B8 UnpackTexture(const s_str_rdonly file_path, s_arena *const texture_data_arena, s_arena *const temp_arena, s_texture_data *const o_texture_data);
+    [[nodiscard]] B8 LoadTextureDataFromRaw(const strs::StrRdonly file_path, s_arena *const texture_data_arena, s_arena *const temp_arena, s_texture_data *const o_texture_data);
+    [[nodiscard]] B8 PackTexture(const strs::StrRdonly file_path, const s_texture_data texture_data, s_arena *const temp_arena);
+    [[nodiscard]] B8 UnpackTexture(const strs::StrRdonly file_path, s_arena *const texture_data_arena, s_arena *const temp_arena, s_texture_data *const o_texture_data);
 
-    [[nodiscard]] B8 LoadFontDataFromRaw(const s_str_rdonly file_path, const t_i32 height, t_code_pt_bit_vec *const code_pts, s_arena *const arrangement_arena, s_arena *const atlas_rgbas_arena, s_arena *const temp_arena, s_font_arrangement *const o_arrangement, s_array_mut<t_font_atlas_rgba> *const o_atlas_rgbas);
-    [[nodiscard]] B8 PackFont(const s_str_rdonly file_path, const s_font_arrangement &arrangement, const s_array_rdonly<t_font_atlas_rgba> atlas_rgbas, s_arena *const temp_arena);
-    [[nodiscard]] B8 UnpackFont(const s_str_rdonly file_path, s_arena *const arrangement_arena, s_arena *const atlas_rgbas_arena, s_arena *const temp_arena, s_font_arrangement *const o_arrangement, s_array_mut<t_font_atlas_rgba> *const o_atlas_rgbas);
+    [[nodiscard]] B8 LoadFontDataFromRaw(const strs::StrRdonly file_path, const t_i32 height, strs::CodePointBitVector *const code_pts, s_arena *const arrangement_arena, s_arena *const atlas_rgbas_arena, s_arena *const temp_arena, s_font_arrangement *const o_arrangement, s_array_mut<t_font_atlas_rgba> *const o_atlas_rgbas);
+    [[nodiscard]] B8 PackFont(const strs::StrRdonly file_path, const s_font_arrangement &arrangement, const s_array_rdonly<t_font_atlas_rgba> atlas_rgbas, s_arena *const temp_arena);
+    [[nodiscard]] B8 UnpackFont(const strs::StrRdonly file_path, s_arena *const arrangement_arena, s_arena *const atlas_rgbas_arena, s_arena *const temp_arena, s_font_arrangement *const o_arrangement, s_array_mut<t_font_atlas_rgba> *const o_atlas_rgbas);
 
-    [[nodiscard]] B8 PackShader(const s_str_rdonly file_path, const s_array_rdonly<t_u8> compiled_shader_bin, s_arena *const temp_arena);
-    [[nodiscard]] B8 UnpackShader(const s_str_rdonly file_path, s_arena *const shader_bin_arena, s_arena *const temp_arena, s_array_mut<t_u8> *const o_shader_bin);
+    [[nodiscard]] B8 PackShader(const strs::StrRdonly file_path, const s_array_rdonly<t_u8> compiled_shader_bin, s_arena *const temp_arena);
+    [[nodiscard]] B8 UnpackShader(const strs::StrRdonly file_path, s_arena *const shader_bin_arena, s_arena *const temp_arena, s_array_mut<t_u8> *const o_shader_bin);
 
     // ============================================================
 }

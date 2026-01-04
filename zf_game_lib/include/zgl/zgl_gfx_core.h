@@ -48,7 +48,7 @@ namespace zf {
 
     s_gfx_resource *CreateTexture(const s_texture_data_rdonly texture_data, zf_rendering_resource_group *const group);
 
-    inline s_gfx_resource *CreateTextureFromRaw(const s_str_rdonly file_path, s_arena *const temp_arena, zf_rendering_resource_group *const group) {
+    inline s_gfx_resource *CreateTextureFromRaw(const strs::StrRdonly file_path, s_arena *const temp_arena, zf_rendering_resource_group *const group) {
         s_texture_data texture_data;
 
         if (!LoadTextureDataFromRaw(file_path, temp_arena, temp_arena, &texture_data)) {
@@ -58,7 +58,7 @@ namespace zf {
         return CreateTexture(texture_data, group);
     }
 
-    inline s_gfx_resource *CreateTextureFromPacked(const s_str_rdonly file_path, s_arena *const temp_arena, zf_rendering_resource_group *const group) {
+    inline s_gfx_resource *CreateTextureFromPacked(const strs::StrRdonly file_path, s_arena *const temp_arena, zf_rendering_resource_group *const group) {
         s_texture_data texture_data;
 
         if (!UnpackTexture(file_path, temp_arena, temp_arena, &texture_data)) {
@@ -72,7 +72,7 @@ namespace zf {
 
     s_gfx_resource *CreateShaderProg(const s_array_rdonly<t_u8> vert_shader_compiled_bin, const s_array_rdonly<t_u8> frag_shader_compiled_bin, zf_rendering_resource_group *const group);
 
-    inline s_gfx_resource *CreateShaderProgFromPacked(const s_str_rdonly vert_shader_file_path, const s_str_rdonly frag_shader_file_path, s_arena *const temp_arena, zf_rendering_resource_group *const arena) {
+    inline s_gfx_resource *CreateShaderProgFromPacked(const strs::StrRdonly vert_shader_file_path, const strs::StrRdonly frag_shader_file_path, s_arena *const temp_arena, zf_rendering_resource_group *const arena) {
         s_array_mut<t_u8> vert_shader_compiled_bin;
 
         if (!UnpackShader(vert_shader_file_path, temp_arena, temp_arena, &vert_shader_compiled_bin)) {

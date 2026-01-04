@@ -3,13 +3,13 @@
 #include <miniaudio.h>
 
 namespace zf {
-    B8 LoadSoundDataFromRaw(const s_str_rdonly file_path, s_arena *const snd_data_arena, s_arena *const temp_arena, s_sound_data_mut *const o_snd_data) {
-        const s_str_rdonly file_path_terminated = CloneStrButAddTerminator(file_path, temp_arena);
+    B8 LoadSoundDataFromRaw(const strs::StrRdonly file_path, s_arena *const snd_data_arena, s_arena *const temp_arena, s_sound_data_mut *const o_snd_data) {
+        const strs::StrRdonly file_path_terminated = clone_str_but_add_terminator(file_path, temp_arena);
 
         ma_decoder decoder;
         ma_decoder_config decoder_config = ma_decoder_config_init(ma_format_f32, 0, 0);
 
-        if (ma_decoder_init_file(AsCstr(file_path_terminated), &decoder_config, &decoder) != MA_SUCCESS) {
+        if (ma_decoder_init_file(get_as_cstr(file_path_terminated), &decoder_config, &decoder) != MA_SUCCESS) {
             return false;
         }
 
@@ -36,7 +36,7 @@ namespace zf {
         return true;
     }
 
-    B8 PackSound(const s_str_rdonly file_path, const s_sound_data_mut snd_data, s_arena *const temp_arena) {
+    B8 PackSound(const strs::StrRdonly file_path, const s_sound_data_mut snd_data, s_arena *const temp_arena) {
         if (!CreateFileAndParentDirectories(file_path, temp_arena)) {
             return false;
         }
@@ -52,7 +52,7 @@ namespace zf {
         return SerializeSound(&fs, snd_data);
     }
 
-    B8 UnpackSound(const s_str_rdonly file_path, s_arena *const snd_data_arena, s_arena *const temp_arena, s_sound_data_mut *const o_snd_data) {
+    B8 UnpackSound(const strs::StrRdonly file_path, s_arena *const snd_data_arena, s_arena *const temp_arena, s_sound_data_mut *const o_snd_data) {
         s_stream fs;
 
         if (!FileOpen(file_path, ek_file_access_mode_read, temp_arena, &fs)) {
