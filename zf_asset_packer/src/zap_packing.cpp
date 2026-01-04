@@ -207,14 +207,14 @@ namespace zf {
                     const auto file_path = strs::convert_cstr(field_vals[ek_texture_field_file_path]->valuestring);
                     const auto out_file_path = strs::convert_cstr(field_vals[ek_texture_field_out_file_path]->valuestring);
 
-                    s_texture_data texture_data;
+                    gfx::TextureDataMut texture_data;
 
-                    if (!LoadTextureDataFromRaw(file_path, &arena, &arena, &texture_data)) {
+                    if (!gfx::load_texture_from_raw(file_path, &arena, &arena, &texture_data)) {
                         LogError(ZF_STR_LITERAL("Failed to load texture from file \"%\"!"), file_path);
                         return false;
                     }
 
-                    if (!PackTexture(out_file_path, texture_data, &arena)) {
+                    if (!gfx::pack_texture(out_file_path, texture_data, &arena)) {
                         LogError(ZF_STR_LITERAL("Failed to pack texture to file \"%\"!"), out_file_path);
                         return false;
                     }
@@ -246,15 +246,15 @@ namespace zf {
 
                     // @todo: Proper check for invalid height!
 
-                    s_font_arrangement arrangement;
-                    s_array_mut<t_font_atlas_rgba> atlas_rgbas;
+                    gfx::FontArrangement arrangement;
+                    s_array_mut<gfx::FontAtlasRGBA> atlas_rgbas;
 
-                    if (!LoadFontDataFromRaw(file_path, height, code_pt_bv, &arena, &arena, &arena, &arrangement, &atlas_rgbas)) {
+                    if (!gfx::load_font_from_raw(file_path, height, code_pt_bv, &arena, &arena, &arena, &arrangement, &atlas_rgbas)) {
                         LogError(ZF_STR_LITERAL("Failed to load font from file \"%\"!"), file_path);
                         return false;
                     }
 
-                    if (!PackFont(out_file_path, arrangement, atlas_rgbas, &arena)) {
+                    if (!gfx::pack_font(out_file_path, arrangement, atlas_rgbas, &arena)) {
                         LogError(ZF_STR_LITERAL("Failed to pack font to file \"%\"!"), out_file_path);
                         return false;
                     }
@@ -281,12 +281,12 @@ namespace zf {
 
                     s_array_mut<U8> compiled_bin;
 
-                    if (!CompileShader(file_path, varying_def_file_path, is_frag, &arena, &arena, &compiled_bin)) {
+                    if (!compile_shader(file_path, varying_def_file_path, is_frag, &arena, &arena, &compiled_bin)) {
                         LogError(ZF_STR_LITERAL("Failed to compile shader from file \"%\"!"), file_path);
                         return false;
                     }
 
-                    if (!PackShader(out_file_path, compiled_bin, &arena)) {
+                    if (!gfx::pack_shader(out_file_path, compiled_bin, &arena)) {
                         LogError(ZF_STR_LITERAL("Failed to pack shader to file \"%\"!"), out_file_path);
                         return false;
                     }

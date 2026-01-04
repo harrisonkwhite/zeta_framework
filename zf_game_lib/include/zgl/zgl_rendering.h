@@ -20,7 +20,7 @@ namespace zf::rendering {
 
     struct BatchVertex {
         s_v2 pos;
-        s_color_rgba32f blend;
+        gfx::ColorRGBA32F blend;
         s_v2 uv;
     };
 
@@ -46,12 +46,12 @@ namespace zf::rendering {
 
     void destroy_resource_group(ResourceGroup *const group);
 
-    Resource *create_texture(const s_texture_data_rdonly texture_data, ResourceGroup *const group);
+    Resource *create_texture(const gfx::TextureDataRdonly texture_data, ResourceGroup *const group);
 
     inline Resource *create_texture_from_raw(const strs::StrRdonly file_path, s_arena *const temp_arena, ResourceGroup *const group) {
-        s_texture_data texture_data;
+        gfx::TextureDataMut texture_data;
 
-        if (!LoadTextureDataFromRaw(file_path, temp_arena, temp_arena, &texture_data)) {
+        if (!gfx::load_texture_from_raw(file_path, temp_arena, temp_arena, &texture_data)) {
             ZF_FATAL();
         }
 
@@ -59,9 +59,9 @@ namespace zf::rendering {
     }
 
     inline Resource *create_texture_from_packed(const strs::StrRdonly file_path, s_arena *const temp_arena, ResourceGroup *const group) {
-        s_texture_data texture_data;
+        gfx::TextureDataMut texture_data;
 
-        if (!UnpackTexture(file_path, temp_arena, temp_arena, &texture_data)) {
+        if (!unpack_texture(file_path, temp_arena, temp_arena, &texture_data)) {
             ZF_FATAL();
         }
 
@@ -75,26 +75,26 @@ namespace zf::rendering {
     inline Resource *create_shader_prog_from_packed(const strs::StrRdonly vert_shader_file_path, const strs::StrRdonly frag_shader_file_path, s_arena *const temp_arena, ResourceGroup *const arena) {
         s_array_mut<U8> vert_shader_compiled_bin;
 
-        if (!UnpackShader(vert_shader_file_path, temp_arena, temp_arena, &vert_shader_compiled_bin)) {
+        if (!gfx::unpack_shader(vert_shader_file_path, temp_arena, temp_arena, &vert_shader_compiled_bin)) {
             ZF_FATAL();
         }
 
         s_array_mut<U8> frag_shader_compiled_bin;
 
-        if (!UnpackShader(frag_shader_file_path, temp_arena, temp_arena, &frag_shader_compiled_bin)) {
+        if (!gfx::unpack_shader(frag_shader_file_path, temp_arena, temp_arena, &frag_shader_compiled_bin)) {
             ZF_FATAL();
         }
 
         return create_shader_prog(vert_shader_compiled_bin, frag_shader_compiled_bin, arena);
     }
 
-    Context *begin_frame(const Basis *const basis, const s_color_rgb8 clear_col, s_arena *const context_arena);
+    Context *begin_frame(const Basis *const basis, const gfx::ColorRGB8 clear_col, s_arena *const context_arena);
     void end_frame(Context *const context);
 
     // Leave texture as nullptr for no texture.
     void submit_triangle(Context *const context, const s_array_rdonly<BatchTriangle> triangles, const Resource *const texture);
 
-    inline void submit_triangle(Context *const context, const s_static_array<s_v2, 3> &pts, const s_static_array<s_color_rgba32f, 3> &pt_colors) {
+    inline void submit_triangle(Context *const context, const s_static_array<s_v2, 3> &pts, const s_static_array<gfx::ColorRGBA32F, 3> &pt_colors) {
         const BatchTriangle triangle = {
             .verts = {{
                 {.pos = pts[0], .blend = pt_colors[0], .uv = {}},
@@ -106,11 +106,11 @@ namespace zf::rendering {
         submit_triangle(context, {&triangle, 1}, nullptr);
     }
 
-    inline void submit_triangle(Context *const context, const s_static_array<s_v2, 3> &pts, const s_color_rgba32f color) {
+    inline void submit_triangle(Context *const context, const s_static_array<s_v2, 3> &pts, const gfx::ColorRGBA32F color) {
         submit_triangle(context, pts, {{color, color, color}});
     }
 
-    inline void submit_rect(Context *const context, const s_rect_f rect, const s_color_rgba32f color_topleft, const s_color_rgba32f color_topright, const s_color_rgba32f color_bottomright, const s_color_rgba32f color_bottomleft) {
+    inline void submit_rect(Context *const context, const s_rect_f rect, const gfx::ColorRGBA32F color_topleft, const gfx::ColorRGBA32F color_topright, const gfx::ColorRGBA32F color_bottomright, const gfx::ColorRGBA32F color_bottomleft) {
         ZF_ASSERT(rect.width > 0.0f && rect.height > 0.0f);
 
         const s_static_array<BatchTriangle, 2> triangles = {{
@@ -133,23 +133,23 @@ namespace zf::rendering {
         submit_triangle(context, AsNonstatic(triangles), nullptr);
     }
 
-    inline void submit_rect(Context *const context, const s_rect_f rect, const s_color_rgba32f color) {
+    inline void submit_rect(Context *const context, const s_rect_f rect, const gfx::ColorRGBA32F color) {
         submit_rect(context, rect, color, color, color, color);
     }
 
     void submit_texture(Context *const context, const Resource *const texture, const s_v2 pos, const s_rect_i src_rect = {});
 
     struct Font {
-        s_font_arrangement arrangement;
+        gfx::FontArrangement arrangement;
         s_array_mut<Resource *> atlases;
     };
 
     Font create_font_from_raw(const strs::StrRdonly file_path, const I32 height, strs::CodePointBitVector *const code_pts, s_arena *const temp_arena, ResourceGroup *const resource_group);
     Font create_font_from_packed(const strs::StrRdonly file_path, s_arena *const temp_arena, ResourceGroup *const resource_group);
 
-    s_array_mut<s_v2> calc_str_chr_render_positions(const strs::StrRdonly str, const s_font_arrangement &font_arrangement, const s_v2 pos, const s_v2 alignment, s_arena *const arena);
+    s_array_mut<s_v2> calc_str_chr_render_positions(const strs::StrRdonly str, const gfx::FontArrangement &font_arrangement, const s_v2 pos, const s_v2 alignment, s_arena *const arena);
 
-    void submit_str(Context *const context, const strs::StrRdonly str, const Font &font, const s_v2 pos, s_arena *const temp_arena, const s_v2 alignment = g_str_alignment_topleft, const s_color_rgba32f blend = g_color_white);
+    void submit_str(Context *const context, const strs::StrRdonly str, const Font &font, const s_v2 pos, s_arena *const temp_arena, const s_v2 alignment = gfx::g_alignment_topleft, const gfx::ColorRGBA32F blend = gfx::g_color_white);
 
     // ============================================================
 }

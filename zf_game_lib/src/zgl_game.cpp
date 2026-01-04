@@ -83,7 +83,7 @@ namespace zf {
 
             zf_mem_rewind_arena(&temp_arena);
 
-            rendering::Context *const rendering_context = rendering::begin_frame(rendering_basis, s_color_rgb8{109, 187, 255}, &temp_arena); // @todo: Make the clear colour customisable?
+            rendering::Context *const rendering_context = rendering::begin_frame(rendering_basis, {109, 187, 255}, &temp_arena); // @todo: Make the clear colour customisable?
 
             render_func({
                 .perm_arena = &perm_arena,

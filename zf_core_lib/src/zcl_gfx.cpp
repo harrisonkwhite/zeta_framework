@@ -3,23 +3,23 @@
 #include <stb_image.h>
 #include <stb_truetype.h>
 
-namespace zf {
+namespace zf::gfx {
     static const t_hash_func<strs::CodePoint> g_code_pt_hash_func =
         [](const strs::CodePoint &code_pt) {
             return static_cast<I32>(code_pt);
         };
 
-    static const t_hash_func<s_font_code_point_pair> g_code_pt_pair_hash_func =
-        [](const s_font_code_point_pair &pair) {
+    static const t_hash_func<FontCodePointPair> g_code_pt_pair_hash_func =
+        [](const FontCodePointPair &pair) {
             return 0; // @todo: Proper hash function!
         };
 
-    static const t_comparator_bin<s_font_code_point_pair> g_code_pt_pair_comparator =
-        [](const s_font_code_point_pair &pa, const s_font_code_point_pair &pb) {
+    static const t_comparator_bin<FontCodePointPair> g_code_pt_pair_comparator =
+        [](const FontCodePointPair &pa, const FontCodePointPair &pb) {
             return pa.a == pb.a && pa.b == pb.b;
         };
 
-    B8 LoadTextureDataFromRaw(const strs::StrRdonly file_path, s_arena *const texture_data_arena, s_arena *const temp_arena, s_texture_data *const o_texture_data) {
+    B8 load_texture_from_raw(const strs::StrRdonly file_path, s_arena *const texture_data_arena, s_arena *const temp_arena, TextureDataMut *const o_texture_data) {
         const strs::StrRdonly file_path_terminated = clone_str_but_add_terminator(file_path, temp_arena);
 
         s_v2_i size_in_pxs;
@@ -40,7 +40,7 @@ namespace zf {
         return true;
     }
 
-    B8 PackTexture(const strs::StrRdonly file_path, const s_texture_data texture_data, s_arena *const temp_arena) {
+    B8 pack_texture(const strs::StrRdonly file_path, const TextureDataMut texture_data, s_arena *const temp_arena) {
         if (!CreateFileAndParentDirectories(file_path, temp_arena)) {
             return false;
         }
@@ -64,7 +64,7 @@ namespace zf {
         return true;
     }
 
-    B8 UnpackTexture(const strs::StrRdonly file_path, s_arena *const texture_data_arena, s_arena *const temp_arena, s_texture_data *const o_texture_data) {
+    B8 unpack_texture(const strs::StrRdonly file_path, s_arena *const texture_data_arena, s_arena *const temp_arena, TextureDataMut *const o_texture_data) {
         s_stream fs;
 
         if (!FileOpen(file_path, ek_file_access_mode_read, temp_arena, &fs)) {
@@ -90,7 +90,7 @@ namespace zf {
         return true;
     }
 
-    B8 LoadFontDataFromRaw(const strs::StrRdonly file_path, const I32 height, strs::CodePointBitVector *const code_pts, s_arena *const arrangement_arena, s_arena *const atlas_rgbas_arena, s_arena *const temp_arena, s_font_arrangement *const o_arrangement, s_array_mut<t_font_atlas_rgba> *const o_atlas_rgbas) {
+    B8 load_font_from_raw(const strs::StrRdonly file_path, const I32 height, strs::CodePointBitVector *const code_pts, s_arena *const arrangement_arena, s_arena *const atlas_rgbas_arena, s_arena *const temp_arena, FontArrangement *const o_arrangement, s_array_mut<FontAtlasRGBA> *const o_atlas_rgbas) {
         ZF_ASSERT(height > 0);
 
         // Get the plain font file data.
@@ -142,7 +142,7 @@ namespace zf {
         //
         // Glyph Info
         //
-        o_arrangement->code_pts_to_glyph_infos = HashMapCreate<strs::CodePoint, s_font_glyph_info>(g_code_pt_hash_func, arrangement_arena, code_pt_cnt);
+        o_arrangement->code_pts_to_glyph_infos = HashMapCreate<strs::CodePoint, FontGlyphInfo>(g_code_pt_hash_func, arrangement_arena, code_pt_cnt);
 
         I32 atlas_index = 0;
         s_v2_i atlas_pen = {};
@@ -152,7 +152,7 @@ namespace zf {
 
             const I32 glyph_index = stbtt_FindGlyphIndex(&stb_font_info, static_cast<I32>(code_pt));
 
-            s_font_glyph_info glyph_info = {};
+            FontGlyphInfo glyph_info = {};
 
             I32 bm_box_left, bm_box_top, bm_box_right, bm_box_bottom;
             stbtt_GetGlyphBitmapBox(&stb_font_info, glyph_index, scale, scale, &bm_box_left, &bm_box_top, &bm_box_right, &bm_box_bottom);
@@ -192,7 +192,7 @@ namespace zf {
 
         // If there were any kernings to store, set up the hash map and go through again and store them.
         o_arrangement->has_kernings = true;
-        o_arrangement->code_pt_pairs_to_kernings = HashMapCreate<s_font_code_point_pair, I32>(g_code_pt_pair_hash_func, arrangement_arena, g_hash_map_cap_default, g_code_pt_pair_comparator);
+        o_arrangement->code_pt_pairs_to_kernings = HashMapCreate<FontCodePointPair, I32>(g_code_pt_pair_hash_func, arrangement_arena, g_hash_map_cap_default, g_code_pt_pair_comparator);
 
         ZF_WALK_SET_BITS (*code_pts, i) {
             ZF_WALK_SET_BITS (*code_pts, j) {
@@ -213,7 +213,7 @@ namespace zf {
         //
         // Texture Atlases
         //
-        *o_atlas_rgbas = ArenaPushArray<t_font_atlas_rgba>(atlas_rgbas_arena, atlas_cnt);
+        *o_atlas_rgbas = ArenaPushArray<FontAtlasRGBA>(atlas_rgbas_arena, atlas_cnt);
 
         // Initialise all pixels to transparent white.
         // @todo: Maybe don't use RBGA for this?
@@ -232,7 +232,7 @@ namespace zf {
         ZF_WALK_SET_BITS (*code_pts, i) {
             const auto code_pt = static_cast<strs::CodePoint>(i);
 
-            s_font_glyph_info *glyph_info;
+            FontGlyphInfo *glyph_info;
 
             if (!HashMapPut(&o_arrangement->code_pts_to_glyph_infos, code_pt, &glyph_info)) {
                 ZF_ASSERT(false);
@@ -266,7 +266,7 @@ namespace zf {
         return true;
     }
 
-    B8 PackFont(const strs::StrRdonly file_path, const s_font_arrangement &arrangement, const s_array_rdonly<t_font_atlas_rgba> atlas_rgbas, s_arena *const temp_arena) {
+    B8 pack_font(const strs::StrRdonly file_path, const FontArrangement &arrangement, const s_array_rdonly<FontAtlasRGBA> atlas_rgbas, s_arena *const temp_arena) {
         if (!CreateFileAndParentDirectories(file_path, temp_arena)) {
             return false;
         }
@@ -298,7 +298,7 @@ namespace zf {
         return true;
     }
 
-    B8 UnpackFont(const strs::StrRdonly file_path, s_arena *const arrangement_arena, s_arena *const atlas_rgbas_arena, s_arena *const temp_arena, s_font_arrangement *const o_arrangement, s_array_mut<t_font_atlas_rgba> *const o_atlas_rgbas) {
+    B8 unpack_font(const strs::StrRdonly file_path, s_arena *const arrangement_arena, s_arena *const atlas_rgbas_arena, s_arena *const temp_arena, FontArrangement *const o_arrangement, s_array_mut<FontAtlasRGBA> *const o_atlas_rgbas) {
         s_stream fs;
 
         if (!FileOpen(file_path, ek_file_access_mode_read, temp_arena, &fs)) {
@@ -326,7 +326,7 @@ namespace zf {
         return true;
     }
 
-    B8 PackShader(const strs::StrRdonly file_path, const s_array_rdonly<U8> compiled_shader_bin, s_arena *const temp_arena) {
+    B8 pack_shader(const strs::StrRdonly file_path, const s_array_rdonly<U8> compiled_shader_bin, s_arena *const temp_arena) {
         if (!CreateFileAndParentDirectories(file_path, temp_arena)) {
             return false;
         }
@@ -346,7 +346,7 @@ namespace zf {
         return true;
     }
 
-    B8 UnpackShader(const strs::StrRdonly file_path, s_arena *const shader_bin_arena, s_arena *const temp_arena, s_array_mut<U8> *const o_shader_bin) {
+    B8 unpack_shader(const strs::StrRdonly file_path, s_arena *const shader_bin_arena, s_arena *const temp_arena, s_array_mut<U8> *const o_shader_bin) {
         s_stream fs;
 
         if (!FileOpen(file_path, ek_file_access_mode_read, temp_arena, &fs)) {
