@@ -28,7 +28,7 @@ function(embed_shader SHADER_FOLDER SHADER_NAME SHADER_TYPE)
         OUTPUT ${CPP_FILE}
         BYPRODUCTS ${BIN_FILE}
         COMMAND ${SHADERC_EXE} -f ${SRC_FILE} -o ${BIN_FILE} --type ${SHADER_TYPE} --platform ${SHADERC_PLATFORM} --profile ${SHADERC_PROFILE} --varyingdef ${VD_FILE} -i ${CMAKE_CURRENT_SOURCE_DIR}/../tools/bgfx/shaderc_include
-        COMMAND ${BTA_EXE} ${BIN_FILE} ${CPP_FILE} ${SHADER_FOLDER}_${SHADER_NAME}_src rendering
+        COMMAND ${BTA_EXE} ${BIN_FILE} ${CPP_FILE} ${SHADER_FOLDER}_${SHADER_NAME}_src
         COMMAND_EXPAND_LISTS
         DEPENDS ${SRC_FILE} ${VD_FILE} zf_bin_to_array
         VERBATIM

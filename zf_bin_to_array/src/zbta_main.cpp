@@ -1,7 +1,7 @@
 #include <zcl.h>
 
 namespace zf {
-    static B8 OutputCode(const strs::StrRdonly input_file_path, const strs::StrRdonly output_file_path, const strs::StrRdonly arr_var_subname, const strs::StrRdonly module_namespace) {
+    static B8 OutputCode(const strs::StrRdonly input_file_path, const strs::StrRdonly output_file_path, const strs::StrRdonly arr_var_subname) {
         s_arena arena = CreateArena();
         ZF_DEFER({ ArenaDestroy(&arena); });
 
@@ -24,12 +24,7 @@ namespace zf {
         Print(&output_file_stream, ZF_STR_LITERAL("#include <zcl/zcl_mem.h>\n"));
         Print(&output_file_stream, ZF_STR_LITERAL("\n"));
 
-        if (strs::get_is_empty(module_namespace)) {
-            Print(&output_file_stream, ZF_STR_LITERAL("namespace zf {\n"));
-        } else {
-            PrintFormat(&output_file_stream, ZF_STR_LITERAL("namespace zf::% {\n"), module_namespace);
-        }
-
+        Print(&output_file_stream, ZF_STR_LITERAL("namespace zf {\n"));
         PrintFormat(&output_file_stream, ZF_STR_LITERAL("    extern const U8 g_%_raw[] = {"), arr_var_subname);
 
         U8 byte_read;
@@ -56,11 +51,11 @@ namespace zf {
 }
 
 int main(const int arg_cnt, const char *const *const args) {
-    if (arg_cnt != 5) {
+    if (arg_cnt != 4) {
         zf::s_stream std_err = zf::StdError();
-        zf::PrintFormat(&std_err, ZF_STR_LITERAL("Invalid command-line argument count! Usage: zf_bin_to_array <input_file_path> <output_file_path> <array_variable_subname> <module_namespace_name>"));
+        zf::PrintFormat(&std_err, ZF_STR_LITERAL("Invalid command-line argument count! Usage: zf_bin_to_array <input_file_path> <output_file_path> <array_variable_subname>"));
         return EXIT_FAILURE;
     }
 
-    return zf::OutputCode(zf::strs::convert_cstr(args[1]), zf::strs::convert_cstr(args[2]), zf::strs::convert_cstr(args[3]), zf::strs::convert_cstr(args[4])) ? EXIT_SUCCESS : EXIT_FAILURE;
+    return zf::OutputCode(zf::strs::convert_cstr(args[1]), zf::strs::convert_cstr(args[2]), zf::strs::convert_cstr(args[3])) ? EXIT_SUCCESS : EXIT_FAILURE;
 }
