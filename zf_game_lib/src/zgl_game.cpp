@@ -22,8 +22,8 @@ namespace zf {
         s_arena temp_arena = CreateArena();
         ZF_DEFER({ ArenaDestroy(&temp_arena); });
 
-        platform::startup(g_init_window_size);
-        ZF_DEFER({ platform::shutdown(); });
+        platform_startup(g_init_window_size);
+        ZF_DEFER({ platform_shutdown(); });
 
         t_input_state *const input_state = input_create_state(&perm_arena);
 
@@ -49,15 +49,15 @@ namespace zf {
         //
         // Main Loop
         //
-        platform::show_window();
+        platform_show_window();
 
-        F64 frame_time_last = platform::get_time();
+        F64 frame_time_last = platform_get_time();
         F64 frame_dur_accum = 0.0;
 
-        while (!platform::get_window_should_close()) {
-            platform::poll_os_events(input_state);
+        while (!platform_get_window_should_close()) {
+            platform_poll_os_events(input_state);
 
-            const F64 frame_time = platform::get_time();
+            const F64 frame_time = platform_get_time();
             const F64 frame_time_delta = frame_time - frame_time_last;
             frame_dur_accum += frame_time_delta;
             frame_time_last = frame_time;

@@ -13,7 +13,7 @@
     #include <GLFW/glfw3native.h>
 #endif
 
-namespace zf::platform {
+namespace zf {
     struct {
         B8 active;
 
@@ -26,7 +26,7 @@ namespace zf::platform {
         s_v2_i prefullscreen_size;
     } g_state;
 
-    void startup(const s_v2_i init_window_size) {
+    void platform_startup(const s_v2_i init_window_size) {
         ZF_REQUIRE(!g_state.active);
         ZF_REQUIRE(init_window_size.x > 0 && init_window_size.y > 0);
 
@@ -69,7 +69,7 @@ namespace zf::platform {
         }
     }
 
-    void shutdown() {
+    void platform_shutdown() {
         ZF_REQUIRE(g_state.active);
 
         glfwDestroyWindow(g_state.glfw_window);
@@ -77,7 +77,7 @@ namespace zf::platform {
         g_state = {};
     }
 
-    F64 get_time() {
+    F64 platform_get_time() {
         ZF_ASSERT(g_state.active);
         return glfwGetTime();
     }
@@ -173,7 +173,7 @@ namespace zf::platform {
         ZF_UNREACHABLE();
     };
 
-    void poll_os_events(t_input_state *const input_state) {
+    void platform_poll_os_events(t_input_state *const input_state) {
         ZF_ASSERT(g_state.active);
 
         glfwSetWindowUserPointer(g_state.glfw_window, input_state); // Scroll callback needs access to this input state.
@@ -224,7 +224,7 @@ namespace zf::platform {
         }
     }
 
-    void *get_native_display_handle() {
+    void *platform_get_native_display_handle() {
         ZF_ASSERT(g_state.active);
 
 #if defined(ZF_PLATFORM_WINDOWS)
@@ -236,7 +236,7 @@ namespace zf::platform {
 #endif
     }
 
-    void *get_native_window_handle() {
+    void *platform_get_native_window_handle() {
         ZF_ASSERT(g_state.active);
 
 #if defined(ZF_PLATFORM_WINDOWS)
@@ -248,31 +248,31 @@ namespace zf::platform {
 #endif
     }
 
-    void show_window() {
+    void platform_show_window() {
         ZF_ASSERT(g_state.active);
         glfwShowWindow(g_state.glfw_window);
     }
 
-    B8 get_window_should_close() {
+    B8 platform_get_window_should_close() {
         ZF_ASSERT(g_state.active);
         return glfwWindowShouldClose(g_state.glfw_window);
     }
 
-    void set_window_title(const strs::StrRdonly title, s_arena *const temp_arena) {
+    void platform_set_window_title(const strs::StrRdonly title, s_arena *const temp_arena) {
         ZF_ASSERT(g_state.active);
 
         const strs::StrRdonly title_terminated = clone_str_but_add_terminator(title, temp_arena);
         glfwSetWindowTitle(g_state.glfw_window, get_as_cstr(title_terminated));
     }
 
-    void set_window_size(const s_v2_i size) {
+    void platform_set_window_size(const s_v2_i size) {
         ZF_ASSERT(g_state.active);
         ZF_ASSERT(size.x > 0 && size.y > 0);
 
         glfwSetWindowSize(g_state.glfw_window, size.x, size.y);
     }
 
-    void set_window_size_limits(const I32 min_width, const I32 min_height, const I32 max_width, const I32 max_height) {
+    void platform_set_window_size_limits(const I32 min_width, const I32 min_height, const I32 max_width, const I32 max_height) {
         ZF_ASSERT(g_state.active);
         ZF_ASSERT(min_width >= -1 && min_height >= -1);
         ZF_ASSERT(max_width >= min_width || max_width == -1);
@@ -282,17 +282,17 @@ namespace zf::platform {
         glfwSetWindowSizeLimits(g_state.glfw_window, min_width, min_height, max_width, max_height);
     }
 
-    void set_window_resizable(const B8 resizable) {
+    void platform_set_window_resizable(const B8 resizable) {
         ZF_ASSERT(g_state.active);
         glfwSetWindowAttrib(g_state.glfw_window, GLFW_RESIZABLE, resizable);
     }
 
-    s_v2_i get_window_framebuffer_size_cache() {
+    s_v2_i platform_get_window_framebuffer_size_cache() {
         ZF_ASSERT(g_state.active);
         return g_state.framebuffer_size_cache;
     }
 
-    B8 get_fullscreen_active() {
+    B8 platform_get_fullscreen_active() {
         ZF_ASSERT(g_state.active);
         return g_state.fullscreen_active;
     }
@@ -344,7 +344,7 @@ namespace zf::platform {
         return monitors[max_occupancy_monitor_index];
     }
 
-    void set_fullscreen_active(const B8 active) {
+    void platform_set_fullscreen_active(const B8 active) {
         ZF_ASSERT(g_state.active);
 
         if (active == g_state.fullscreen_active) {
@@ -370,7 +370,7 @@ namespace zf::platform {
         g_state.fullscreen_active = active;
     }
 
-    s_v2_i calc_monitor_size_pixels() {
+    s_v2_i platform_calc_monitor_size_pixels() {
         ZF_ASSERT(g_state.active);
 
         const auto monitor = find_glfw_monitor_of_window(g_state.glfw_window);
@@ -383,7 +383,7 @@ namespace zf::platform {
         return {mode->width, mode->height};
     }
 
-    s_v2_i calc_monitor_size_logical() {
+    s_v2_i platform_calc_monitor_size_logical() {
         ZF_ASSERT(g_state.active);
 
         const auto monitor = find_glfw_monitor_of_window(g_state.glfw_window);
@@ -403,7 +403,7 @@ namespace zf::platform {
         };
     }
 
-    void set_cursor_visibility(const B8 visible) {
+    void platform_set_cursor_visibility(const B8 visible) {
         ZF_ASSERT(g_state.active);
         glfwSetInputMode(g_state.glfw_window, GLFW_CURSOR, visible ? GLFW_CURSOR_NORMAL : GLFW_CURSOR_HIDDEN);
     }
