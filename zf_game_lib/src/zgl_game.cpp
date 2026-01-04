@@ -7,7 +7,7 @@
 
 namespace zf {
     static const s_v2_i g_init_window_size = {1280, 720};
-    static const t_f64 g_targ_ticks_per_sec = 60.0; // @todo: Make this customisable?
+    static const F64 g_targ_ticks_per_sec = 60.0; // @todo: Make this customisable?
 
     // @todo: Need a better and more consistent set of verbs. "Is" is too vague - how much calculation is being performed, should I cache the result?
 
@@ -54,18 +54,18 @@ namespace zf {
         //
         platform::show_window();
 
-        t_f64 frame_time_last = platform::get_time();
-        t_f64 frame_dur_accum = 0.0;
+        F64 frame_time_last = platform::get_time();
+        F64 frame_dur_accum = 0.0;
 
         while (!platform::get_window_should_close()) {
             platform::poll_os_events(input_state);
 
-            const t_f64 frame_time = platform::get_time();
-            const t_f64 frame_time_delta = frame_time - frame_time_last;
+            const F64 frame_time = platform::get_time();
+            const F64 frame_time_delta = frame_time - frame_time_last;
             frame_dur_accum += frame_time_delta;
             frame_time_last = frame_time;
 
-            const t_f64 targ_tick_interval = 1.0 / g_targ_ticks_per_sec;
+            const F64 targ_tick_interval = 1.0 / g_targ_ticks_per_sec;
 
             // Once enough time has passed (i.e. the time accumulator has reached the tick interval), run at least a single tick.
             while (frame_dur_accum >= targ_tick_interval) {

@@ -7,7 +7,7 @@ namespace zf {
     // ============================================================
     // @section: Types and Globals
 
-    enum e_state : t_i32 {
+    enum e_state : I32 {
         ek_state_inactive,
         ek_state_active_but_not_rendering,
         ek_state_active_and_rendering
@@ -19,7 +19,7 @@ namespace zf {
         zf_rendering_resource_group perm_resource_group;
     } g_state;
 
-    enum e_resource_type : t_i32 {
+    enum e_resource_type : I32 {
         ek_resource_type_texture,
         ek_resource_type_shader_prog
     };
@@ -61,14 +61,14 @@ namespace zf {
         }
     };
 
-    extern const t_u8 g_batch_triangle_vert_shader_default_src_raw[];
-    extern const t_i32 g_batch_triangle_vert_shader_default_src_len;
+    extern const U8 g_batch_triangle_vert_shader_default_src_raw[];
+    extern const I32 g_batch_triangle_vert_shader_default_src_len;
 
-    extern const t_u8 g_batch_triangle_frag_shader_default_src_raw[];
-    extern const t_i32 g_batch_triangle_frag_shader_default_src_len;
+    extern const U8 g_batch_triangle_frag_shader_default_src_raw[];
+    extern const I32 g_batch_triangle_frag_shader_default_src_len;
 
-    const t_i32 g_batch_vert_limit = 1024;
-    const t_i32 g_frame_vert_limit = 8192; // @todo: This should definitely be modifiable if the user wants.
+    const I32 g_batch_vert_limit = 1024;
+    const I32 g_frame_vert_limit = 8192; // @todo: This should definitely be modifiable if the user wants.
 
     struct s_rendering_basis {
         bgfx::DynamicVertexBufferHandle vert_buf_bgfx_hdl;
@@ -81,11 +81,11 @@ namespace zf {
     struct s_rendering_context {
         const s_rendering_basis *basis;
 
-        t_i32 frame_vert_cnt;
+        I32 frame_vert_cnt;
 
         struct {
             s_static_array<s_batch_vert, g_batch_vert_limit> verts;
-            t_i32 vert_cnt;
+            I32 vert_cnt;
 
             const s_gfx_resource *texture;
         } batch_state;
@@ -98,7 +98,7 @@ namespace zf {
     // @section: Functions
 
     // @todo: Placeholder!
-    static bgfx::ProgramHandle CreateBGFXShaderProg(const s_array_rdonly<t_u8> vert_shader_bin, const s_array_rdonly<t_u8> frag_shader_bin) {
+    static bgfx::ProgramHandle CreateBGFXShaderProg(const s_array_rdonly<U8> vert_shader_bin, const s_array_rdonly<U8> frag_shader_bin) {
         const bgfx::Memory *const vert_shader_bgfx_mem = bgfx::copy(vert_shader_bin.raw, static_cast<uint32_t>(vert_shader_bin.len));
         const bgfx::ShaderHandle vert_shader_bgfx_hdl = bgfx::createShader(vert_shader_bgfx_mem);
 
@@ -178,7 +178,7 @@ namespace zf {
             ZF_FATAL();
         }
 
-        const s_static_array<t_u8, 4> px_texture_rgba = {{255, 255, 255, 255}};
+        const s_static_array<U8, 4> px_texture_rgba = {{255, 255, 255, 255}};
         rendering_basis->px_texture = CreateTexture({{1, 1}, AsNonstatic(px_texture_rgba)}, &g_state.perm_resource_group);
 
         return rendering_basis;
@@ -264,7 +264,7 @@ namespace zf {
         return resource;
     }
 
-    s_gfx_resource *CreateShaderProg(const s_array_rdonly<t_u8> vert_shader_compiled_bin, const s_array_rdonly<t_u8> frag_shader_compiled_bin, zf_rendering_resource_group *const group) {
+    s_gfx_resource *CreateShaderProg(const s_array_rdonly<U8> vert_shader_compiled_bin, const s_array_rdonly<U8> frag_shader_compiled_bin, zf_rendering_resource_group *const group) {
         const bgfx::Memory *const vert_shader_bgfx_mem = bgfx::copy(vert_shader_compiled_bin.raw, static_cast<uint32_t>(vert_shader_compiled_bin.len));
         const bgfx::ShaderHandle vert_shader_bgfx_hdl = bgfx::createShader(vert_shader_bgfx_mem);
 
@@ -305,8 +305,8 @@ namespace zf {
         const auto view_mat = IdentityMatrix();
 
         auto proj_mat = IdentityMatrix();
-        proj_mat.elems[0][0] = 1.0f / (static_cast<t_f32>(fb_size_cache.x) / 2.0f);
-        proj_mat.elems[1][1] = -1.0f / (static_cast<t_f32>(fb_size_cache.y) / 2.0f);
+        proj_mat.elems[0][0] = 1.0f / (static_cast<F32>(fb_size_cache.x) / 2.0f);
+        proj_mat.elems[1][1] = -1.0f / (static_cast<F32>(fb_size_cache.y) / 2.0f);
         proj_mat.elems[3][0] = -1.0f;
         proj_mat.elems[3][1] = 1.0f;
 
@@ -370,7 +370,7 @@ namespace zf {
         ZF_ASSERT(triangles.len > 0);
         ZF_ASSERT(!texture || texture->type == ek_resource_type_texture);
 
-        const t_i32 num_verts_to_submit = 3 * triangles.len;
+        const I32 num_verts_to_submit = 3 * triangles.len;
 
         if (num_verts_to_submit > g_batch_vert_limit) {
             ZF_FATAL();
@@ -381,8 +381,8 @@ namespace zf {
             rc->batch_state.texture = texture;
         }
 
-        for (t_i32 i = 0; i < triangles.len; i++) {
-            const t_i32 offs = rc->batch_state.vert_cnt;
+        for (I32 i = 0; i < triangles.len; i++) {
+            const I32 offs = rc->batch_state.vert_cnt;
             rc->batch_state.verts[offs + (3 * i) + 0] = triangles[i].verts[0];
             rc->batch_state.verts[offs + (3 * i) + 1] = triangles[i].verts[1];
             rc->batch_state.verts[offs + (3 * i) + 2] = triangles[i].verts[2];

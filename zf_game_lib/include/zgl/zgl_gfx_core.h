@@ -70,16 +70,16 @@ namespace zf {
 
     s_v2_i TextureSize(const s_gfx_resource *const texture);
 
-    s_gfx_resource *CreateShaderProg(const s_array_rdonly<t_u8> vert_shader_compiled_bin, const s_array_rdonly<t_u8> frag_shader_compiled_bin, zf_rendering_resource_group *const group);
+    s_gfx_resource *CreateShaderProg(const s_array_rdonly<U8> vert_shader_compiled_bin, const s_array_rdonly<U8> frag_shader_compiled_bin, zf_rendering_resource_group *const group);
 
     inline s_gfx_resource *CreateShaderProgFromPacked(const strs::StrRdonly vert_shader_file_path, const strs::StrRdonly frag_shader_file_path, s_arena *const temp_arena, zf_rendering_resource_group *const arena) {
-        s_array_mut<t_u8> vert_shader_compiled_bin;
+        s_array_mut<U8> vert_shader_compiled_bin;
 
         if (!UnpackShader(vert_shader_file_path, temp_arena, temp_arena, &vert_shader_compiled_bin)) {
             ZF_FATAL();
         }
 
-        s_array_mut<t_u8> frag_shader_compiled_bin;
+        s_array_mut<U8> frag_shader_compiled_bin;
 
         if (!UnpackShader(frag_shader_file_path, temp_arena, temp_arena, &frag_shader_compiled_bin)) {
             ZF_FATAL();

@@ -50,16 +50,16 @@ namespace zf {
         *stream = {};
     }
 
-    t_i32 FileCalcSize(s_stream *const stream) {
+    I32 FileCalcSize(s_stream *const stream) {
         FILE *const file = stream->type_data.file.file;
         const auto pos_old = ftell(file);
         fseek(file, 0, SEEK_END);
         const auto file_size = ftell(file);
         fseek(file, pos_old, SEEK_SET);
-        return static_cast<t_i32>(file_size);
+        return static_cast<I32>(file_size);
     }
 
-    B8 LoadFileContents(const strs::StrRdonly path, s_arena *const contents_arena, s_arena *const temp_arena, s_array_mut<t_u8> *const o_contents, const B8 add_terminator) {
+    B8 LoadFileContents(const strs::StrRdonly path, s_arena *const contents_arena, s_arena *const temp_arena, s_array_mut<U8> *const o_contents, const B8 add_terminator) {
         s_stream stream;
 
         if (!FileOpen(path, ek_file_access_mode_read, temp_arena, &stream)) {
@@ -68,13 +68,13 @@ namespace zf {
 
         ZF_DEFER({ FileClose(&stream); });
 
-        const t_i32 file_size = FileCalcSize(&stream);
+        const I32 file_size = FileCalcSize(&stream);
 
         if (add_terminator) {
-            *o_contents = ArenaPushArray<t_u8>(contents_arena, file_size + 1);
+            *o_contents = ArenaPushArray<U8>(contents_arena, file_size + 1);
             (*o_contents)[file_size] = 0;
         } else {
-            *o_contents = ArenaPushArray<t_u8>(contents_arena, file_size);
+            *o_contents = ArenaPushArray<U8>(contents_arena, file_size);
         }
 
         if (!ReadItemsIntoArray(&stream, *o_contents, file_size)) {
@@ -92,7 +92,7 @@ namespace zf {
         const strs::StrRdonly path_terminated = clone_str_but_add_terminator(path, temp_arena);
 
 #ifdef ZF_PLATFORM_WINDOWS
-        const t_i32 result = _mkdir(get_as_cstr(path_terminated));
+        const I32 result = _mkdir(get_as_cstr(path_terminated));
 #else
         const t_s32 result = mkdir(AsCstr(path_terminated), 0755);
 #endif
@@ -213,7 +213,7 @@ namespace zf {
 #if defined(ZF_PLATFORM_WINDOWS)
         s_static_array<char, MAX_PATH> buf;
 
-        auto len = static_cast<t_i32>(GetModuleFileNameA(nullptr, buf.raw, MAX_PATH));
+        auto len = static_cast<I32>(GetModuleFileNameA(nullptr, buf.raw, MAX_PATH));
         ZF_REQUIRE(len != 0);
 
         for (; len > 0; len--) {
@@ -222,7 +222,7 @@ namespace zf {
             }
         }
 
-        const auto result_bytes = ArenaPushArray<t_u8>(arena, len);
+        const auto result_bytes = ArenaPushArray<U8>(arena, len);
         CopyAll(AsByteArray(ArraySlice(AsNonstatic(buf), 0, len)), result_bytes);
         return {result_bytes};
 #elif defined(ZF_PLATFORM_MACOS)

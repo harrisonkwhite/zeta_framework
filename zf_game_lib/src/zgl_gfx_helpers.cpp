@@ -36,7 +36,7 @@ namespace zf {
         SubmitTrianglesToBatch(rc, AsNonstatic(triangles), texture);
     }
 
-    s_font CreateFontFromRaw(const strs::StrRdonly file_path, const t_i32 height, strs::CodePointBitVector *const code_pts, s_arena *const temp_arena, zf_rendering_resource_group *const resource_group) {
+    s_font CreateFontFromRaw(const strs::StrRdonly file_path, const I32 height, strs::CodePointBitVector *const code_pts, s_arena *const temp_arena, zf_rendering_resource_group *const resource_group) {
         s_font_arrangement arrangement;
         s_array_mut<t_font_atlas_rgba> atlas_rgbas;
 
@@ -46,7 +46,7 @@ namespace zf {
 
         const s_array_mut<s_gfx_resource *> atlases = ArenaPushArray<s_gfx_resource *>(resource_group->arena, atlas_rgbas.len);
 
-        for (t_i32 i = 0; i < atlas_rgbas.len; i++) {
+        for (I32 i = 0; i < atlas_rgbas.len; i++) {
             atlases[i] = CreateTexture({g_font_atlas_size, atlas_rgbas[i]}, resource_group);
         }
 
@@ -66,7 +66,7 @@ namespace zf {
 
         const auto atlases = ArenaPushArray<s_gfx_resource *>(resource_group->arena, atlas_rgbas.len);
 
-        for (t_i32 i = 0; i < atlas_rgbas.len; i++) {
+        for (I32 i = 0; i < atlas_rgbas.len; i++) {
             atlases[i] = CreateTexture({g_font_atlas_size, atlas_rgbas[i]}, resource_group);
         }
 
@@ -82,8 +82,8 @@ namespace zf {
 
         // Calculate some useful string metadata.
         struct s_str_meta {
-            t_i32 len;
-            t_i32 line_cnt;
+            I32 len;
+            I32 line_cnt;
         };
 
         const auto str_meta = [str]() {
@@ -104,20 +104,20 @@ namespace zf {
         const auto positions = ArenaPushArray<s_v2>(arena, str_meta.len);
 
         // From the line count we can determine the vertical alignment offset to apply.
-        const t_f32 alignment_offs_y = static_cast<t_f32>(-(str_meta.line_cnt * font_arrangement.line_height)) * alignment.y;
+        const F32 alignment_offs_y = static_cast<F32>(-(str_meta.line_cnt * font_arrangement.line_height)) * alignment.y;
 
         // Calculate the position of each character.
-        t_i32 chr_index = 0;
+        I32 chr_index = 0;
         s_v2 chr_pos_pen = {}; // The position of the current character.
-        t_i32 line_begin_chr_index = 0;
-        t_i32 line_len = 0;
+        I32 line_begin_chr_index = 0;
+        I32 line_len = 0;
         strs::CodePoint code_pt_last;
 
         const auto apply_hor_alignment_offs = [&]() {
             if (line_len > 0) {
                 const auto line_width = chr_pos_pen.x;
 
-                for (t_i32 i = line_begin_chr_index; i < chr_index; i++) {
+                for (I32 i = line_begin_chr_index; i < chr_index; i++) {
                     positions[i].x -= line_width * alignment.x;
                 }
             }
@@ -137,7 +137,7 @@ namespace zf {
                 apply_hor_alignment_offs();
 
                 chr_pos_pen.x = 0.0f;
-                chr_pos_pen.y += static_cast<t_f32>(font_arrangement.line_height);
+                chr_pos_pen.y += static_cast<F32>(font_arrangement.line_height);
 
                 line_len = 0;
 
@@ -152,17 +152,17 @@ namespace zf {
             }
 
             if (chr_index > 0 && font_arrangement.has_kernings) {
-                t_i32 *kerning;
+                I32 *kerning;
 
                 if (HashMapPut(&font_arrangement.code_pt_pairs_to_kernings, {code_pt_last, step.code_pt}, &kerning)) {
-                    chr_pos_pen.x += static_cast<t_f32>(*kerning);
+                    chr_pos_pen.x += static_cast<F32>(*kerning);
                 }
             }
 
             positions[chr_index] = pos + chr_pos_pen + ToV2(glyph_info->offs);
             positions[chr_index].y += alignment_offs_y;
 
-            chr_pos_pen.x += static_cast<t_f32>(glyph_info->adv);
+            chr_pos_pen.x += static_cast<F32>(glyph_info->adv);
 
             line_len++;
         }
@@ -182,7 +182,7 @@ namespace zf {
 
         const s_array_mut<s_v2> chr_positions = CalcStrChrRenderPositions(str, font.arrangement, pos, alignment, temp_arena);
 
-        t_i32 chr_index = 0;
+        I32 chr_index = 0;
 
         ZF_WALK_STR (str, step) {
             if (step.code_pt == ' ' || step.code_pt == '\n') {

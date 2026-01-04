@@ -37,7 +37,7 @@ namespace zf {
         s_arena arena = CreateArena();
         ZF_DEFER({ ArenaDestroy(&arena); });
 
-        for (t_i32 i = 0; i < g_tests.g_len; i++) {
+        for (I32 i = 0; i < g_tests.g_len; i++) {
             Log(ZF_STR_LITERAL("Running test \"%\"..."), strs::convert_cstr(g_tests[i].title_cstr));
             g_tests[i].func(&arena);
         }

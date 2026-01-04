@@ -3,34 +3,34 @@
 #include <zcl/zcl_io.h>
 #include <zcl/zcl_strs.h>
 
-namespace zf {
-    struct s_sound_meta {
-        t_i32 sample_rate;
-        t_i32 channel_cnt;
-        t_i32 frame_cnt;
+namespace zf::audio {
+    struct SoundMeta {
+        I32 sample_rate;
+        I32 channel_cnt;
+        I32 frame_cnt;
     };
 
-    struct s_sound_data_rdonly {
-        s_sound_meta meta;
-        s_array_rdonly<t_f32> pcm;
+    struct SoundDataRdonly {
+        SoundMeta meta;
+        s_array_rdonly<F32> pcm;
     };
 
-    struct s_sound_data_mut {
-        s_sound_meta meta;
-        s_array_mut<t_f32> pcm;
+    struct SoundDataMut {
+        SoundMeta meta;
+        s_array_mut<F32> pcm;
 
-        operator s_sound_data_rdonly() const { return {.meta = meta, .pcm = pcm}; }
+        operator SoundDataRdonly() const { return {.meta = meta, .pcm = pcm}; }
     };
 
-    inline t_i32 SampleCount(const s_sound_meta snd_meta) {
+    inline I32 get_sample_cnt(const SoundMeta snd_meta) {
         return snd_meta.channel_cnt * snd_meta.frame_cnt;
     }
 
-    [[nodiscard]] B8 LoadSoundDataFromRaw(const strs::StrRdonly file_path, s_arena *const snd_data_arena, s_arena *const temp_arena, s_sound_data_mut *const o_snd_data);
+    [[nodiscard]] B8 load_sound_data_from_raw(const strs::StrRdonly file_path, s_arena *const snd_data_arena, s_arena *const temp_arena, SoundDataMut *const o_snd_data);
 
-    [[nodiscard]] B8 PackSound(const strs::StrRdonly file_path, const s_sound_data_mut snd_data, s_arena *const temp_arena);
-    [[nodiscard]] B8 UnpackSound(const strs::StrRdonly file_path, s_arena *const snd_data_arena, s_arena *const temp_arena, s_sound_data_mut *const o_snd_data);
+    [[nodiscard]] B8 pack_sound(const strs::StrRdonly file_path, const SoundDataMut snd_data, s_arena *const temp_arena);
+    [[nodiscard]] B8 unpack_sound(const strs::StrRdonly file_path, s_arena *const snd_data_arena, s_arena *const temp_arena, SoundDataMut *const o_snd_data);
 
-    [[nodiscard]] B8 SerializeSound(s_stream *const stream, const s_sound_data_mut snd_data);
-    [[nodiscard]] B8 DeserializeSound(s_stream *const stream, s_arena *const snd_data_arena, s_sound_data_mut *const o_snd_data);
+    [[nodiscard]] B8 serialize_sound(s_stream *const stream, const SoundDataMut snd_data);
+    [[nodiscard]] B8 deserialize_sound(s_stream *const stream, s_arena *const snd_data_arena, SoundDataMut *const o_snd_data);
 }

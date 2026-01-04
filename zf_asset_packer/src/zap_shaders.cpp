@@ -3,11 +3,11 @@
 #include <reproc/reproc.h>
 
 namespace zf {
-    B8 CompileShader(const strs::StrRdonly shader_file_path, const strs::StrRdonly varying_def_file_path, const B8 is_frag, s_arena *const bin_arena, s_arena *const temp_arena, s_array_mut<t_u8> *const o_bin) {
+    B8 CompileShader(const strs::StrRdonly shader_file_path, const strs::StrRdonly varying_def_file_path, const B8 is_frag, s_arena *const bin_arena, s_arena *const temp_arena, s_array_mut<U8> *const o_bin) {
         const strs::StrRdonly shader_file_path_terminated = clone_str_but_add_terminator(shader_file_path, temp_arena);
         const strs::StrRdonly varying_def_file_path_terminated = clone_str_but_add_terminator(varying_def_file_path, temp_arena);
 
-        t_i32 r = 0;
+        I32 r = 0;
 
         ZF_DEFER({
             if (r < 0) {
@@ -45,13 +45,13 @@ namespace zf {
         const strs::StrRdonly exe_dir = LoadExecutableDirectory(temp_arena);
         ZF_ASSERT(exe_dir.bytes[exe_dir.bytes.len - 1] == '/' || exe_dir.bytes[exe_dir.bytes.len - 1] == '\\'); // Assuming this.
 
-        const strs::StrMut shaderc_file_path_terminated = {ArenaPushArray<t_u8>(temp_arena, exe_dir.bytes.len + shaderc_file_path_rel.bytes.len + 1)};
+        const strs::StrMut shaderc_file_path_terminated = {ArenaPushArray<U8>(temp_arena, exe_dir.bytes.len + shaderc_file_path_rel.bytes.len + 1)};
         s_stream shaderc_file_path_terminated_byte_stream = CreateMemStream(shaderc_file_path_terminated.bytes, ek_stream_mode_write);
         PrintFormat(&shaderc_file_path_terminated_byte_stream, ZF_STR_LITERAL("%%\0"), exe_dir, shaderc_file_path_rel);
         ZF_ASSERT(strs::determine_are_bytes_terminated_only_at_end(shaderc_file_path_terminated.bytes));
 
         const strs::StrRdonly shaderc_include_dir_rel = ZF_STR_LITERAL("tools/bgfx/shaderc_include");
-        const strs::StrMut shaderc_include_dir_terminated = {ArenaPushArray<t_u8>(temp_arena, exe_dir.bytes.len + shaderc_include_dir_rel.bytes.len + 1)};
+        const strs::StrMut shaderc_include_dir_terminated = {ArenaPushArray<U8>(temp_arena, exe_dir.bytes.len + shaderc_include_dir_rel.bytes.len + 1)};
         s_stream shaderc_include_dir_terminated_byte_stream = CreateMemStream(shaderc_include_dir_terminated.bytes, ek_stream_mode_write);
         PrintFormat(&shaderc_include_dir_terminated_byte_stream, ZF_STR_LITERAL("%%\0"), exe_dir, shaderc_include_dir_rel);
         ZF_ASSERT(strs::determine_are_bytes_terminated_only_at_end(shaderc_include_dir_terminated.bytes));
@@ -86,10 +86,10 @@ namespace zf {
             return false;
         }
 
-        s_list_mut<t_u8> bin_list = {};
+        s_list_mut<U8> bin_list = {};
 
         while (true) {
-            s_static_array<t_u8, 4096> buf;
+            s_static_array<U8, 4096> buf;
             r = reproc_read(proc, REPROC_STREAM_OUT, buf.raw, ZF_SIZE_OF(buf));
 
             if (r < 0) {

@@ -10,7 +10,7 @@ namespace zf::platform {
     void shutdown();
 
     // Gives the time in seconds since the platform module was started.
-    t_f64 get_time();
+    F64 get_time();
 
     // Also updates the given input state based on OS events.
     void poll_os_events(input::State *const input_state);
@@ -30,7 +30,7 @@ namespace zf::platform {
     void set_window_size(const s_v2_i size);
 
     // Set the LOGICAL window size limits. If you don't want to limit a particular dimension, leave it as -1.
-    void set_window_size_limits(const t_i32 min_width, const t_i32 min_height, const t_i32 max_width, const t_i32 max_height);
+    void set_window_size_limits(const I32 min_width, const I32 min_height, const I32 max_width, const I32 max_height);
 
     void set_window_resizable(const B8 resizable);
 

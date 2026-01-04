@@ -22,7 +22,7 @@ namespace zf {
         f(f, arena->blocks_head);
     }
 
-    static s_arena_block *CreateArenaBlock(const t_i32 buf_size) {
+    static s_arena_block *CreateArenaBlock(const I32 buf_size) {
         ZF_REQUIRE(buf_size > 0);
 
         const auto block = static_cast<s_arena_block *>(malloc(sizeof(s_arena_block)));
@@ -47,8 +47,8 @@ namespace zf {
         return block;
     }
 
-    void *ArenaPush(s_arena *const arena, const t_i32 size, const t_i32 alignment) {
-        ZF_ASSERT(size > 0 && IsAlignmentValid(alignment));
+    void *ArenaPush(s_arena *const arena, const I32 size, const I32 alignment) {
+        ZF_ASSERT(size > 0 && get_is_alignment_valid(alignment));
 
         if (!arena->blocks_head) {
             arena->blocks_head = CreateArenaBlock(ZF_MAX(size, arena->block_min_size));
@@ -56,8 +56,8 @@ namespace zf {
             return ArenaPush(arena, size, alignment);
         }
 
-        const t_i32 offs_aligned = AlignForward(arena->block_cur_offs, alignment);
-        const t_i32 offs_next = offs_aligned + size;
+        const I32 offs_aligned = get_aligned_forward(arena->block_cur_offs, alignment);
+        const I32 offs_next = offs_aligned + size;
 
         if (offs_next > arena->block_cur->buf_size) {
             if (!arena->block_cur->next) {
@@ -72,7 +72,7 @@ namespace zf {
 
         arena->block_cur_offs = offs_next;
 
-        void *const result = static_cast<t_u8 *>(arena->block_cur->buf) + offs_aligned;
+        void *const result = static_cast<U8 *>(arena->block_cur->buf) + offs_aligned;
         PoisonUnitted(result, size);
 
         return result;
@@ -148,20 +148,20 @@ namespace zf {
         bv.Bytes()[bv.Bytes().len - 1] &= ~LastByteMask(bv);
     }
 
-    void SetBitsInRange(const s_bit_vec_mut bv, const t_i32 begin_bit_index, const t_i32 end_bit_index) {
+    void SetBitsInRange(const s_bit_vec_mut bv, const I32 begin_bit_index, const I32 end_bit_index) {
         ZF_ASSERT(begin_bit_index >= 0 && begin_bit_index < bv.bit_cnt);
         ZF_ASSERT(end_bit_index >= begin_bit_index && end_bit_index <= bv.bit_cnt);
 
-        const t_i32 begin_elem_index = begin_bit_index / 8;
-        const t_i32 end_elem_index = BitsToBytes(end_bit_index);
+        const I32 begin_elem_index = begin_bit_index / 8;
+        const I32 end_elem_index = get_bits_to_bytes(end_bit_index);
 
-        for (t_i32 i = begin_elem_index; i < end_elem_index; i++) {
-            const t_i32 bit_offs = i * 8;
-            const t_i32 begin_bit_index_rel = begin_bit_index - bit_offs;
-            const t_i32 end_bit_index_rel = end_bit_index - bit_offs;
+        for (I32 i = begin_elem_index; i < end_elem_index; i++) {
+            const I32 bit_offs = i * 8;
+            const I32 begin_bit_index_rel = begin_bit_index - bit_offs;
+            const I32 end_bit_index_rel = end_bit_index - bit_offs;
 
-            const t_i32 set_range_begin = ZF_MAX(begin_bit_index_rel, 0);
-            const t_i32 set_range_end = ZF_MIN(end_bit_index_rel, 8);
+            const I32 set_range_begin = ZF_MAX(begin_bit_index_rel, 0);
+            const I32 set_range_end = ZF_MIN(end_bit_index_rel, 8);
 
             bv.Bytes()[i] |= ByteBitmaskRanged(set_range_begin, set_range_end);
         }
@@ -176,28 +176,28 @@ namespace zf {
 
         switch (op) {
         case ek_bitwise_mask_op_and:
-            for (t_i32 i = 0; i < targ.Bytes().len; i++) {
+            for (I32 i = 0; i < targ.Bytes().len; i++) {
                 targ.Bytes()[i] &= mask.Bytes()[i];
             }
 
             break;
 
         case ek_bitwise_mask_op_or:
-            for (t_i32 i = 0; i < targ.Bytes().len; i++) {
+            for (I32 i = 0; i < targ.Bytes().len; i++) {
                 targ.Bytes()[i] |= mask.Bytes()[i];
             }
 
             break;
 
         case ek_bitwise_mask_op_xor:
-            for (t_i32 i = 0; i < targ.Bytes().len; i++) {
+            for (I32 i = 0; i < targ.Bytes().len; i++) {
                 targ.Bytes()[i] ^= mask.Bytes()[i];
             }
 
             break;
 
         case ek_bitwise_mask_op_andnot:
-            for (t_i32 i = 0; i < targ.Bytes().len; i++) {
+            for (I32 i = 0; i < targ.Bytes().len; i++) {
                 targ.Bytes()[i] &= ~mask.Bytes()[i];
             }
 
@@ -207,18 +207,18 @@ namespace zf {
         targ.Bytes()[targ.Bytes().len - 1] &= LastByteMask(targ);
     }
 
-    t_u8 ShiftBitsLeft(const s_bit_vec_mut bv) {
-        ZF_ASSERT(BitsToBytes(bv.bit_cnt) == bv.Bytes().len);
+    U8 ShiftBitsLeft(const s_bit_vec_mut bv) {
+        ZF_ASSERT(get_bits_to_bytes(bv.bit_cnt) == bv.Bytes().len);
 
         if (bv.bit_cnt == 0) {
             return 0;
         }
 
-        t_u8 discard = 0;
+        U8 discard = 0;
 
-        for (t_i32 i = 0; i < bv.Bytes().len; i++) {
-            const t_i32 bits_in_byte = i == bv.Bytes().len - 1 ? LastByteBitCount(bv) : 8;
-            const t_u8 discard_last = discard;
+        for (I32 i = 0; i < bv.Bytes().len; i++) {
+            const I32 bits_in_byte = i == bv.Bytes().len - 1 ? LastByteBitCount(bv) : 8;
+            const U8 discard_last = discard;
             discard = (bv.Bytes()[i] & ByteBitmaskSingle(bits_in_byte - 1)) >> (bits_in_byte - 1);
             bv.Bytes()[i] <<= 1;
             bv.Bytes()[i] |= discard_last;
@@ -229,17 +229,17 @@ namespace zf {
         return discard;
     }
 
-    void ShiftBitsLeftBy(const s_bit_vec_mut bv, const t_i32 amount) {
+    void ShiftBitsLeftBy(const s_bit_vec_mut bv, const I32 amount) {
         ZF_ASSERT(amount >= 0);
 
         // @speed: :(
 
-        for (t_i32 i = 0; i < amount; i++) {
+        for (I32 i = 0; i < amount; i++) {
             ShiftBitsLeft(bv);
         }
     }
 
-    void RotBitsLeftBy(const s_bit_vec_mut bv, const t_i32 amount) {
+    void RotBitsLeftBy(const s_bit_vec_mut bv, const I32 amount) {
         ZF_ASSERT(amount >= 0);
 
         if (bv.bit_cnt == 0) {
@@ -248,7 +248,7 @@ namespace zf {
 
         // @speed: :(
 
-        for (t_i32 i = 0; i < amount; i++) {
+        for (I32 i = 0; i < amount; i++) {
             const auto discard = ShiftBitsLeft(bv);
 
             if (discard) {
@@ -259,8 +259,8 @@ namespace zf {
         }
     }
 
-    t_u8 ShiftBitsRight(const s_bit_vec_mut bv) {
-        ZF_ASSERT(BitsToBytes(bv.bit_cnt) == bv.Bytes().len);
+    U8 ShiftBitsRight(const s_bit_vec_mut bv) {
+        ZF_ASSERT(get_bits_to_bytes(bv.bit_cnt) == bv.Bytes().len);
 
         if (bv.bit_cnt == 0) {
             return 0;
@@ -268,11 +268,11 @@ namespace zf {
 
         bv.Bytes()[bv.Bytes().len - 1] &= LastByteMask(bv); // Drop any excess bits so we don't accidentally shift a 1 in.
 
-        t_u8 discard = 0;
+        U8 discard = 0;
 
-        for (t_i32 i = bv.Bytes().len - 1; i >= 0; i--) {
-            const t_i32 bits_in_byte = i == bv.Bytes().len - 1 ? LastByteBitCount(bv) : 8;
-            const t_u8 discard_last = discard;
+        for (I32 i = bv.Bytes().len - 1; i >= 0; i--) {
+            const I32 bits_in_byte = i == bv.Bytes().len - 1 ? LastByteBitCount(bv) : 8;
+            const U8 discard_last = discard;
             discard = bv.Bytes()[i] & ByteBitmaskSingle(0);
             bv.Bytes()[i] >>= 1;
 
@@ -284,17 +284,17 @@ namespace zf {
         return discard;
     }
 
-    void ShiftBitsRightBy(const s_bit_vec_mut bv, const t_i32 amount) {
+    void ShiftBitsRightBy(const s_bit_vec_mut bv, const I32 amount) {
         ZF_ASSERT(amount >= 0);
 
         // @speed: :(
 
-        for (t_i32 i = 0; i < amount; i++) {
+        for (I32 i = 0; i < amount; i++) {
             ShiftBitsRight(bv);
         }
     }
 
-    void RotBitsRightBy(const s_bit_vec_mut bv, const t_i32 amount) {
+    void RotBitsRightBy(const s_bit_vec_mut bv, const I32 amount) {
         ZF_ASSERT(amount >= 0);
 
         if (bv.bit_cnt == 0) {
@@ -303,7 +303,7 @@ namespace zf {
 
         // @speed: :(
 
-        for (t_i32 i = 0; i < amount; i++) {
+        for (I32 i = 0; i < amount; i++) {
             const auto discard = ShiftBitsRight(bv);
 
             if (discard) {
@@ -316,11 +316,11 @@ namespace zf {
 
     // ============================================================
 
-    static t_i32 FindIndexOfFirstSetBit_Helper(const s_bit_vec_rdonly bv, const t_i32 from, const t_u8 xor_mask) {
+    static I32 FindIndexOfFirstSetBit_Helper(const s_bit_vec_rdonly bv, const I32 from, const U8 xor_mask) {
         ZF_ASSERT(from >= 0 && from <= bv.bit_cnt); // Intentionally allowing the upper bound here for the case of iteration.
 
         // Map of each possible byte to the index of the first set bit, or -1 for the first case.
-        static const s_static_array<t_i32, 256> g_mappings = {{
+        static const s_static_array<I32, 256> g_mappings = {{
             -1, // 0000 0000
             0,  // 0000 0001
             1,  // 0000 0010
@@ -579,10 +579,10 @@ namespace zf {
             0,  // 1111 1111
         }};
 
-        const t_i32 begin_byte_index = from / 8;
+        const I32 begin_byte_index = from / 8;
 
-        for (t_i32 i = begin_byte_index; i < bv.Bytes().len; i++) {
-            t_u8 byte = bv.Bytes()[i] ^ xor_mask;
+        for (I32 i = begin_byte_index; i < bv.Bytes().len; i++) {
+            U8 byte = bv.Bytes()[i] ^ xor_mask;
 
             if (i == begin_byte_index) {
                 byte &= ByteBitmaskRanged(from % 8);
@@ -592,7 +592,7 @@ namespace zf {
                 byte &= LastByteMask(bv);
             }
 
-            const t_i32 bi = g_mappings[byte];
+            const I32 bi = g_mappings[byte];
 
             if (bi != -1) {
                 return (8 * i) + bi;
@@ -602,17 +602,17 @@ namespace zf {
         return -1;
     }
 
-    t_i32 FindIndexOfFirstSetBit(const s_bit_vec_rdonly bv, const t_i32 from) {
+    I32 FindIndexOfFirstSetBit(const s_bit_vec_rdonly bv, const I32 from) {
         return FindIndexOfFirstSetBit_Helper(bv, from, 0);
     }
 
-    t_i32 FindIndexOfFirstUnsetBit(const s_bit_vec_rdonly bv, const t_i32 from) {
+    I32 FindIndexOfFirstUnsetBit(const s_bit_vec_rdonly bv, const I32 from) {
         return FindIndexOfFirstSetBit_Helper(bv, from, 0xFF);
     }
 
-    t_i32 CountSetBits(const s_bit_vec_rdonly bv) {
+    I32 CountSetBits(const s_bit_vec_rdonly bv) {
         // Map of each possible byte to the number of set bits in it.
-        static const s_static_array<t_i32, 256> g_mappings = {{
+        static const s_static_array<I32, 256> g_mappings = {{
             0, // 0000 0000
             1, // 0000 0001
             1, // 0000 0010
@@ -871,10 +871,10 @@ namespace zf {
             8, // 1111 1111
         }};
 
-        t_i32 result = 0;
+        I32 result = 0;
 
         if (bv.Bytes().len > 0) {
-            for (t_i32 i = 0; i < bv.Bytes().len - 1; i++) {
+            for (I32 i = 0; i < bv.Bytes().len - 1; i++) {
                 result += g_mappings[bv.Bytes()[i]];
             }
 
@@ -884,7 +884,7 @@ namespace zf {
         return result;
     }
 
-    B8 WalkSetBits(const s_bit_vec_rdonly bv, t_i32 *const pos, t_i32 *const o_index) {
+    B8 WalkSetBits(const s_bit_vec_rdonly bv, I32 *const pos, I32 *const o_index) {
         ZF_ASSERT(*pos >= 0 && *pos <= bv.bit_cnt);
 
         *o_index = FindIndexOfFirstSetBit(bv, *pos);
@@ -898,7 +898,7 @@ namespace zf {
         return true;
     }
 
-    B8 WalkUnsetBits(const s_bit_vec_rdonly bv, t_i32 *const pos, t_i32 *const o_index) {
+    B8 WalkUnsetBits(const s_bit_vec_rdonly bv, I32 *const pos, I32 *const o_index) {
         ZF_ASSERT(*pos >= 0 && *pos <= bv.bit_cnt);
 
         *o_index = FindIndexOfFirstUnsetBit(bv, *pos);

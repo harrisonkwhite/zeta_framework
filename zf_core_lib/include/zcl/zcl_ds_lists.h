@@ -7,7 +7,7 @@ namespace zf {
     // @section: Types and Globals
 
     template <typename tp_type>
-    concept co_list_elem = co_simple<tp_type> && !co_const<tp_type>;
+    concept co_list_elem = Simple<tp_type> && !Const<tp_type>;
 
     template <co_list_elem tp_type>
     struct s_list_mut {
@@ -15,13 +15,13 @@ namespace zf {
         using t_mut_tag = tp_type;
 
         s_array_mut<tp_type> backing_arr;
-        t_i32 len;
+        I32 len;
 
-        t_i32 Cap() const {
+        I32 Cap() const {
             return backing_arr.len;
         }
 
-        tp_type &operator[](const t_i32 index) const {
+        tp_type &operator[](const I32 index) const {
             ZF_ASSERT(index >= 0 && index < len);
             return backing_arr[index];
         }
@@ -36,13 +36,13 @@ namespace zf {
         using t_elem = tp_type;
 
         s_array_rdonly<tp_type> backing_arr;
-        t_i32 len;
+        I32 len;
 
-        t_i32 Cap() const {
+        I32 Cap() const {
             return backing_arr.len;
         }
 
-        const tp_type &operator[](const t_i32 index) const {
+        const tp_type &operator[](const I32 index) const {
             ZF_ASSERT(index >= 0 && index < len);
             return backing_arr[index];
         }
@@ -52,25 +52,25 @@ namespace zf {
         }
     };
 
-    template <co_list_elem tp_type, t_i32 tp_cap>
+    template <co_list_elem tp_type, I32 tp_cap>
     struct s_static_list {
         using t_elem = tp_type;
 
-        static constexpr t_i32 g_cap = tp_cap;
+        static constexpr I32 g_cap = tp_cap;
 
         s_static_array<tp_type, tp_cap> backing_arr;
-        t_i32 len;
+        I32 len;
 
-        t_i32 Cap() const {
+        I32 Cap() const {
             return backing_arr.g_len;
         }
 
-        tp_type &operator[](const t_i32 index) {
+        tp_type &operator[](const I32 index) {
             ZF_ASSERT(index >= 0 && index < len);
             return backing_arr[index];
         }
 
-        const tp_type &operator[](const t_i32 index) const {
+        const tp_type &operator[](const I32 index) const {
             ZF_ASSERT(index >= 0 && index < len);
             return backing_arr[index];
         }
@@ -79,10 +79,10 @@ namespace zf {
         s_array_rdonly<tp_type> AsArray() const { return ArraySlice(backing_arr.AsNonstatic(), 0, len); }
     };
 
-    using t_list_extension_cap_calculator = t_i32 (*)(const t_i32 cap_current);
+    using t_list_extension_cap_calculator = I32 (*)(const I32 cap_current);
 
     inline const t_list_extension_cap_calculator g_list_extension_cap_calculator_default =
-        [](const t_i32 cap_current) {
+        [](const I32 cap_current) {
             ZF_ASSERT(cap_current >= 0);
             return cap_current == 0 ? 1 : cap_current * 2;
         };
@@ -94,7 +94,7 @@ namespace zf {
     // @section: Functions
 
     template <typename tp_type>
-    concept co_list_nonstatic_mut = requires { typename tp_type::t_elem; } && co_same<t_cvref_removed<tp_type>, s_list_mut<typename tp_type::t_elem>>;
+    concept co_list_nonstatic_mut = requires { typename tp_type::t_elem; } && co_same<CVRefRemoved<tp_type>, s_list_mut<typename tp_type::t_elem>>;
 
     template <typename tp_type>
     struct s_is_mut_list {
@@ -106,16 +106,16 @@ namespace zf {
         static constexpr B8 g_val = true;
     };
 
-    template <typename tp_type, t_i32 tp_cap>
+    template <typename tp_type, I32 tp_cap>
     struct s_is_mut_list<s_static_list<tp_type, tp_cap>> {
         static constexpr B8 g_val = true;
     };
 
     template <typename tp_type>
-    concept co_list_mut = s_is_mut_list<t_cvref_removed<tp_type>>::g_val;
+    concept co_list_mut = s_is_mut_list<CVRefRemoved<tp_type>>::g_val;
 
     template <typename tp_type>
-    s_list_mut<tp_type> CreateList(const t_i32 cap, s_arena *const arena, const t_i32 len = 0) {
+    s_list_mut<tp_type> CreateList(const I32 cap, s_arena *const arena, const I32 len = 0) {
         ZF_ASSERT(cap > 0 && len >= 0 && len <= cap);
         return {ArenaPushArray<tp_type>(arena, cap), len};
     }
@@ -124,7 +124,7 @@ namespace zf {
     void ListExtend(tp_list_type *const list, s_arena *const arena, const t_list_extension_cap_calculator cap_calculator = g_list_extension_cap_calculator_default) {
         ZF_ASSERT(cap_calculator);
 
-        const t_i32 new_cap = cap_calculator(list->Cap());
+        const I32 new_cap = cap_calculator(list->Cap());
         ZF_ASSERT(new_cap > list->Cap());
 
         const auto new_backing_arr = ArenaPushArray<tp_list_type>(arena, new_cap);
@@ -134,12 +134,12 @@ namespace zf {
     }
 
     template <co_list_nonstatic_mut tp_list_type>
-    void ListExtendToFit(tp_list_type *const list, const t_i32 min_cap, s_arena *const arena, const t_list_extension_cap_calculator cap_calculator = g_list_extension_cap_calculator_default) {
+    void ListExtendToFit(tp_list_type *const list, const I32 min_cap, s_arena *const arena, const t_list_extension_cap_calculator cap_calculator = g_list_extension_cap_calculator_default) {
         ZF_ASSERT(min_cap > list->Cap());
         ZF_ASSERT(cap_calculator);
 
-        const t_i32 new_cap = [cap = list->Cap(), min_cap, cap_calculator]() {
-            t_i32 result = cap;
+        const I32 new_cap = [cap = list->Cap(), min_cap, cap_calculator]() {
+            I32 result = cap;
 
             do {
                 const auto res_last = result;
@@ -195,13 +195,13 @@ namespace zf {
     }
 
     template <co_list_mut tp_list_type>
-    typename tp_list_type::t_elem *ListInsertAt(tp_list_type *const list, const t_i32 index, const typename tp_list_type::t_elem &val) {
+    typename tp_list_type::t_elem *ListInsertAt(tp_list_type *const list, const I32 index, const typename tp_list_type::t_elem &val) {
         ZF_ASSERT(list->len < list->Cap());
         ZF_ASSERT(index >= 0 && index <= list->len);
 
         list->len++;
 
-        for (t_i32 i = list->len - 1; i > index; i--) {
+        for (I32 i = list->len - 1; i > index; i--) {
             (*list)[i] = (*list)[i - 1];
         }
 
@@ -211,7 +211,7 @@ namespace zf {
     }
 
     template <co_list_mut tp_list_type>
-    typename tp_list_type::t_elem *ListInsertAtDynamic(tp_list_type *const list, const t_i32 index, const typename tp_list_type::t_elem &val, s_arena *const extension_arena, const t_list_extension_cap_calculator extension_cap_calculator = g_list_extension_cap_calculator_default) {
+    typename tp_list_type::t_elem *ListInsertAtDynamic(tp_list_type *const list, const I32 index, const typename tp_list_type::t_elem &val, s_arena *const extension_arena, const t_list_extension_cap_calculator extension_cap_calculator = g_list_extension_cap_calculator_default) {
         if (list->len == list->Cap()) {
             ListExtend(list, extension_arena, extension_cap_calculator);
         }
@@ -220,7 +220,7 @@ namespace zf {
     }
 
     template <co_list_mut tp_list_type>
-    void ListRemoveAtShift(tp_list_type *const list, const t_i32 index) {
+    void ListRemoveAtShift(tp_list_type *const list, const I32 index) {
         ZF_ASSERT(list->len > 0);
         ZF_ASSERT(index >= 0 && index < list->len);
 
@@ -229,7 +229,7 @@ namespace zf {
     }
 
     template <co_list_mut tp_list_type>
-    void ListRemoveAtSwapback(tp_list_type *const list, const t_i32 index) {
+    void ListRemoveAtSwapback(tp_list_type *const list, const I32 index) {
         ZF_ASSERT(list->len > 0);
         ZF_ASSERT(index >= 0 && index < list->len);
 

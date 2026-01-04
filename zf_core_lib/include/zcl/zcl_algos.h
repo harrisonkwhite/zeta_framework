@@ -9,13 +9,13 @@ namespace zf {
         if (!allow_truncation) {
             ZF_ASSERT(dest.len >= src.len);
 
-            for (t_i32 i = 0; i < src.len; i++) {
+            for (I32 i = 0; i < src.len; i++) {
                 dest[i] = src[i];
             }
         } else {
             const auto min_len = ZF_MIN(src.len, dest.len);
 
-            for (t_i32 i = 0; i < min_len; i++) {
+            for (I32 i = 0; i < min_len; i++) {
                 dest[i] = src[i];
             }
         }
@@ -23,11 +23,11 @@ namespace zf {
 
     template <co_array tp_arr_a_type, co_array tp_arr_b_type>
         requires co_same<typename tp_arr_a_type::t_elem, typename tp_arr_b_type::t_elem>
-    t_i32 CompareAll(const tp_arr_a_type a, const tp_arr_b_type b, const t_comparator_ord<typename tp_arr_a_type::t_elem> comparator = g_comparator_ord_default<typename tp_arr_a_type::t_elem>) {
+    I32 CompareAll(const tp_arr_a_type a, const tp_arr_b_type b, const t_comparator_ord<typename tp_arr_a_type::t_elem> comparator = g_comparator_ord_default<typename tp_arr_a_type::t_elem>) {
         const auto min_len = ZF_MIN(a.len, b.len);
 
-        for (t_i32 i = 0; i < min_len; i++) {
-            const t_i32 comp = comparator(a[i], b[i]);
+        for (I32 i = 0; i < min_len; i++) {
+            const I32 comp = comparator(a[i], b[i]);
 
             if (comp != 0) {
                 return comp;
@@ -43,7 +43,7 @@ namespace zf {
             return false;
         }
 
-        for (t_i32 i = 0; i < arr.len; i++) {
+        for (I32 i = 0; i < arr.len; i++) {
             if (!comparator(arr[i], val)) {
                 return false;
             }
@@ -54,7 +54,7 @@ namespace zf {
 
     template <co_array tp_arr_type>
     B8 DoAnyEqual(const tp_arr_type arr, const typename tp_arr_type::t_elem &val, const t_comparator_bin<typename tp_arr_type::t_elem> comparator = g_comparator_bin_default<typename tp_arr_type::t_elem>) {
-        for (t_i32 i = 0; i < arr.len; i++) {
+        for (I32 i = 0; i < arr.len; i++) {
             if (comparator(arr[i], val)) {
                 return true;
             }
@@ -65,15 +65,15 @@ namespace zf {
 
     template <co_array_mut tp_arr_type>
     void SetAllTo(const tp_arr_type arr, const typename tp_arr_type::t_elem &val) {
-        for (t_i32 i = 0; i < arr.len; i++) {
+        for (I32 i = 0; i < arr.len; i++) {
             arr[i] = val;
         }
     }
 
     template <co_array_mut tp_arr_type>
     void Reverse(const tp_arr_type arr) {
-        for (t_i32 i = 0; i < arr.len / 2; i++) {
-            Swap(&arr[i], &arr[arr.len - 1 - i]);
+        for (I32 i = 0; i < arr.len / 2; i++) {
+            swap(&arr[i], &arr[arr.len - 1 - i]);
         }
     }
 
@@ -81,8 +81,8 @@ namespace zf {
     // You're usually better off using a hash map and a linear search, or a bit vector if values are numeric and the range is small.
     template <co_array tp_arr_type>
     B8 HasDuplicatesSlow(const tp_arr_type arr, const t_comparator_bin<typename tp_arr_type::t_elem> comparator = g_comparator_bin_default<typename tp_arr_type::t_elem>) {
-        for (t_i32 i = 0; i < arr.len; i++) {
-            for (t_i32 j = 0; j < arr.len; j++) {
+        for (I32 i = 0; i < arr.len; i++) {
+            for (I32 j = 0; j < arr.len; j++) {
                 if (i == j) {
                     continue;
                 }
@@ -116,7 +116,7 @@ namespace zf {
 
     template <co_array tp_arr_type>
     B8 IsSorted(const tp_arr_type arr, const t_comparator_ord<typename tp_arr_type::t_elem> comparator = g_comparator_ord_default<typename tp_arr_type::t_elem>) {
-        for (t_i32 i = 0; i < arr.len - 1; i++) {
+        for (I32 i = 0; i < arr.len - 1; i++) {
             if (comparator(arr[i], arr[i + 1]) > 0) {
                 return false;
             }
@@ -133,9 +133,9 @@ namespace zf {
         do {
             sorted = true;
 
-            for (t_i32 i = 0; i < arr.len - 1; i++) {
+            for (I32 i = 0; i < arr.len - 1; i++) {
                 if (comparator(arr[i], arr[i + 1]) > 0) {
-                    Swap(&arr[i], &arr[i + 1]);
+                    swap(&arr[i], &arr[i + 1]);
                     sorted = false;
                 }
             }
@@ -145,10 +145,10 @@ namespace zf {
     // O(n) best-case if array is already sorted, O(n^2) worst-case.
     template <co_array tp_arr_type>
     void RunInsertionSort(const tp_arr_type arr, const t_comparator_ord<typename tp_arr_type::t_elem> comparator = g_comparator_ord_default<typename tp_arr_type::t_elem>) {
-        for (t_i32 i = 1; i < arr.len; i++) {
+        for (I32 i = 1; i < arr.len; i++) {
             const auto temp = arr[i];
 
-            t_i32 j = i - 1;
+            I32 j = i - 1;
 
             for (; j >= 0; j--) {
                 if (comparator(arr[j], temp) <= 0) {
@@ -165,16 +165,16 @@ namespace zf {
     // O(n^2) in every case.
     template <co_array tp_arr_type>
     void RunSelectionSort(const tp_arr_type arr, const t_comparator_ord<typename tp_arr_type::t_elem> comparator = g_comparator_ord_default<typename tp_arr_type::t_elem>) {
-        for (t_i32 i = 0; i < arr.len - 1; i++) {
+        for (I32 i = 0; i < arr.len - 1; i++) {
             const auto min = &arr[i];
 
-            for (t_i32 j = i + 1; j < arr.len; j++) {
+            for (I32 j = i + 1; j < arr.len; j++) {
                 if (comparator(arr[j], *min) < 0) {
                     *min = arr[j];
                 }
             }
 
-            Swap(&arr[i], &min);
+            swap(&arr[i], &min);
         }
     }
 
@@ -193,8 +193,8 @@ namespace zf {
         RunMergeSort(arr_right_sorted, temp_arena, comparator);
 
         // Update this array.
-        t_i32 i = 0;
-        t_i32 j = 0;
+        I32 i = 0;
+        I32 j = 0;
 
         do {
             if (comparator(arr_left_sorted[i], arr_right_sorted[j]) <= 0) {
@@ -230,17 +230,17 @@ namespace zf {
 
         if (arr.len == 2) {
             if (comparator(arr[0], arr[1]) > 0) {
-                Swap(&arr[0], &arr[1]);
+                swap(&arr[0], &arr[1]);
             }
 
             return;
         }
 
         // Determine the pivot - median of the first, middle, and last elements.
-        const t_i32 pivot_index = [arr, comparator]() {
-            const t_i32 ia = 0;
-            const t_i32 ib = arr.len / 2;
-            const t_i32 ic = arr.len - 1;
+        const I32 pivot_index = [arr, comparator]() {
+            const I32 ia = 0;
+            const I32 ib = arr.len / 2;
+            const I32 ic = arr.len - 1;
 
             if (comparator(arr[ia], arr[ib]) <= 0) {
                 if (comparator(arr[ib], arr[ic]) <= 0) {
@@ -266,16 +266,16 @@ namespace zf {
         }();
 
         // Swap it out to the end to get it out of the way.
-        Swap(&arr[pivot_index], &arr[arr.len - 1]);
+        swap(&arr[pivot_index], &arr[arr.len - 1]);
 
         // Move smaller elements to the left, and decide the final pivot position.
-        t_i32 left_sec_last_index = -1;
+        I32 left_sec_last_index = -1;
 
-        for (t_i32 i = 0; i < arr.len; i++) {
+        for (I32 i = 0; i < arr.len; i++) {
             if (comparator(arr[i], arr[arr.len - 1]) <= 0) {
                 // This element is not greater than the pivot, so swap it to the left section.
                 left_sec_last_index++;
-                Swap(&arr[left_sec_last_index], &arr[i]);
+                swap(&arr[left_sec_last_index], &arr[i]);
             }
         }
 

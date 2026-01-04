@@ -9,34 +9,34 @@ namespace zf {
     // @section: Types and Globals
 
     struct s_color_rgba32f {
-        t_f32 r;
-        t_f32 g;
-        t_f32 b;
-        t_f32 a;
+        F32 r;
+        F32 g;
+        F32 b;
+        F32 a;
 
         constexpr operator s_v4() const { return {r, g, b, a}; }
     };
 
     struct s_color_rgb24f {
-        t_f32 r;
-        t_f32 g;
-        t_f32 b;
+        F32 r;
+        F32 g;
+        F32 b;
 
         constexpr operator s_color_rgba32f() const { return {r, g, b, 1.0f}; }
         constexpr operator s_v3() const { return {r, g, b}; }
     };
 
     struct s_color_rgba8 {
-        t_u8 r;
-        t_u8 g;
-        t_u8 b;
-        t_u8 a;
+        U8 r;
+        U8 g;
+        U8 b;
+        U8 a;
     };
 
     struct s_color_rgb8 {
-        t_u8 r;
-        t_u8 g;
-        t_u8 b;
+        U8 r;
+        U8 g;
+        U8 b;
 
         constexpr operator s_color_rgba8() const { return {r, g, b, 255}; }
     };
@@ -61,12 +61,12 @@ namespace zf {
 
     struct s_texture_data_rdonly {
         s_v2_i size_in_pxs;
-        s_array_rdonly<t_u8> rgba_px_data;
+        s_array_rdonly<U8> rgba_px_data;
     };
 
     struct s_texture_data {
         s_v2_i size_in_pxs;
-        s_array_mut<t_u8> rgba_px_data;
+        s_array_mut<U8> rgba_px_data;
 
         operator s_texture_data_rdonly() const {
             return {.size_in_pxs = size_in_pxs, .rgba_px_data = rgba_px_data};
@@ -85,14 +85,14 @@ namespace zf {
 
     constexpr s_v2_i g_font_atlas_size = {1024, 1024};
 
-    using t_font_atlas_rgba = s_static_array<t_u8, 4 * g_font_atlas_size.x * g_font_atlas_size.y>;
+    using t_font_atlas_rgba = s_static_array<U8, 4 * g_font_atlas_size.x * g_font_atlas_size.y>;
 
     struct s_font_glyph_info {
         s_v2_i offs;
         s_v2_i size;
-        t_i32 adv;
+        I32 adv;
 
-        t_i32 atlas_index;
+        I32 atlas_index;
         s_rect_i atlas_rect;
     };
 
@@ -102,12 +102,12 @@ namespace zf {
     };
 
     struct s_font_arrangement {
-        t_i32 line_height;
+        I32 line_height;
 
         s_hash_map<strs::CodePoint, s_font_glyph_info> code_pts_to_glyph_infos;
 
         B8 has_kernings;
-        s_hash_map<s_font_code_point_pair, t_i32> code_pt_pairs_to_kernings;
+        s_hash_map<s_font_code_point_pair, I32> code_pt_pairs_to_kernings;
     };
 
     constexpr s_v2 g_str_alignment_topleft = {0.0f, 0.0f};
@@ -126,7 +126,7 @@ namespace zf {
     // ============================================================
     // @section: Functions
 
-    inline s_color_rgba32f ColorMix(const s_color_rgba32f a, const s_color_rgba32f b, const t_f32 amount) {
+    inline s_color_rgba32f ColorMix(const s_color_rgba32f a, const s_color_rgba32f b, const F32 amount) {
         ZF_ASSERT(amount >= 0.0f && amount <= 1.0f);
 
         return {
@@ -137,30 +137,30 @@ namespace zf {
         };
     }
 
-    inline t_f32 ColorLuminance(const s_color_rgba32f col) {
+    inline F32 ColorLuminance(const s_color_rgba32f col) {
         return (0.2126f * col.r) + (0.7152f * col.g) + (0.0722f * col.b);
     }
 
     inline s_color_rgba32f ColorAsGrayscale(const s_color_rgba32f col) {
-        const t_f32 lum = ColorLuminance(col);
+        const F32 lum = ColorLuminance(col);
         return {lum, lum, lum, col.a};
     }
 
-    inline t_u32 ColorToHex(const s_color_rgba8 col) {
-        t_u32 result = 0;
-        result |= static_cast<t_u32>(col.r) << 24;
-        result |= static_cast<t_u32>(col.g) << 16;
-        result |= static_cast<t_u32>(col.b) << 8;
-        result |= static_cast<t_u32>(col.a);
+    inline U32 ColorToHex(const s_color_rgba8 col) {
+        U32 result = 0;
+        result |= static_cast<U32>(col.r) << 24;
+        result |= static_cast<U32>(col.g) << 16;
+        result |= static_cast<U32>(col.b) << 8;
+        result |= static_cast<U32>(col.a);
 
         return result;
     }
 
-    inline s_color_rgba8 ColorFromHex(const t_u32 hex) {
-        const auto r = static_cast<t_u8>((hex & 0xFF000000) >> 24);
-        const auto g = static_cast<t_u8>((hex & 0x00FF0000) >> 16);
-        const auto b = static_cast<t_u8>((hex & 0x0000FF00) >> 8);
-        const auto a = static_cast<t_u8>(hex & 0x000000FF);
+    inline s_color_rgba8 ColorFromHex(const U32 hex) {
+        const auto r = static_cast<U8>((hex & 0xFF000000) >> 24);
+        const auto g = static_cast<U8>((hex & 0x00FF0000) >> 16);
+        const auto b = static_cast<U8>((hex & 0x0000FF00) >> 8);
+        const auto a = static_cast<U8>(hex & 0x000000FF);
 
         return {r, g, b, a};
     }
@@ -170,10 +170,10 @@ namespace zf {
         ZF_ASSERT(src_rect.x >= 0 && src_rect.y >= 0 && src_rect.width > 0 && src_rect.height > 0 && Right(src_rect) <= tex_size.x && Bottom(src_rect) <= tex_size.y);
 
         return {
-            static_cast<t_f32>(src_rect.x) / static_cast<t_f32>(tex_size.x),
-            static_cast<t_f32>(src_rect.y) / static_cast<t_f32>(tex_size.y),
-            static_cast<t_f32>(src_rect.width) / static_cast<t_f32>(tex_size.x),
-            static_cast<t_f32>(src_rect.height) / static_cast<t_f32>(tex_size.y),
+            static_cast<F32>(src_rect.x) / static_cast<F32>(tex_size.x),
+            static_cast<F32>(src_rect.y) / static_cast<F32>(tex_size.y),
+            static_cast<F32>(src_rect.width) / static_cast<F32>(tex_size.x),
+            static_cast<F32>(src_rect.height) / static_cast<F32>(tex_size.y),
         };
     }
 
@@ -189,12 +189,12 @@ namespace zf {
     [[nodiscard]] B8 PackTexture(const strs::StrRdonly file_path, const s_texture_data texture_data, s_arena *const temp_arena);
     [[nodiscard]] B8 UnpackTexture(const strs::StrRdonly file_path, s_arena *const texture_data_arena, s_arena *const temp_arena, s_texture_data *const o_texture_data);
 
-    [[nodiscard]] B8 LoadFontDataFromRaw(const strs::StrRdonly file_path, const t_i32 height, strs::CodePointBitVector *const code_pts, s_arena *const arrangement_arena, s_arena *const atlas_rgbas_arena, s_arena *const temp_arena, s_font_arrangement *const o_arrangement, s_array_mut<t_font_atlas_rgba> *const o_atlas_rgbas);
+    [[nodiscard]] B8 LoadFontDataFromRaw(const strs::StrRdonly file_path, const I32 height, strs::CodePointBitVector *const code_pts, s_arena *const arrangement_arena, s_arena *const atlas_rgbas_arena, s_arena *const temp_arena, s_font_arrangement *const o_arrangement, s_array_mut<t_font_atlas_rgba> *const o_atlas_rgbas);
     [[nodiscard]] B8 PackFont(const strs::StrRdonly file_path, const s_font_arrangement &arrangement, const s_array_rdonly<t_font_atlas_rgba> atlas_rgbas, s_arena *const temp_arena);
     [[nodiscard]] B8 UnpackFont(const strs::StrRdonly file_path, s_arena *const arrangement_arena, s_arena *const atlas_rgbas_arena, s_arena *const temp_arena, s_font_arrangement *const o_arrangement, s_array_mut<t_font_atlas_rgba> *const o_atlas_rgbas);
 
-    [[nodiscard]] B8 PackShader(const strs::StrRdonly file_path, const s_array_rdonly<t_u8> compiled_shader_bin, s_arena *const temp_arena);
-    [[nodiscard]] B8 UnpackShader(const strs::StrRdonly file_path, s_arena *const shader_bin_arena, s_arena *const temp_arena, s_array_mut<t_u8> *const o_shader_bin);
+    [[nodiscard]] B8 PackShader(const strs::StrRdonly file_path, const s_array_rdonly<U8> compiled_shader_bin, s_arena *const temp_arena);
+    [[nodiscard]] B8 UnpackShader(const strs::StrRdonly file_path, s_arena *const shader_bin_arena, s_arena *const temp_arena, s_array_mut<U8> *const o_shader_bin);
 
     // ============================================================
 }

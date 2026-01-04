@@ -3,7 +3,7 @@
 #include <cJSON.h>
 
 namespace zf {
-    enum e_asset_type : t_i32 {
+    enum e_asset_type : I32 {
         ek_asset_type_texture,
         ek_asset_type_font,
         ek_asset_type_shader,
@@ -19,7 +19,7 @@ namespace zf {
         "sounds",
     }};
 
-    enum e_asset_field_type : t_i32 {
+    enum e_asset_field_type : I32 {
         ek_asset_field_type_str,
         ek_asset_field_type_num,
 
@@ -37,7 +37,7 @@ namespace zf {
         B8 optional;
     };
 
-    enum e_texture_field : t_i32 {
+    enum e_texture_field : I32 {
         ek_texture_field_file_path,
         ek_texture_field_out_file_path,
         eks_texture_field_cnt
@@ -48,7 +48,7 @@ namespace zf {
         {.name_cstr = "out_file_path", .type = ek_asset_field_type_str},
     }};
 
-    enum e_font_field : t_i32 {
+    enum e_font_field : I32 {
         ek_font_field_file_path,
         ek_font_field_height,
         ek_font_field_extra_chrs_file_path,
@@ -64,7 +64,7 @@ namespace zf {
         {.name_cstr = "out_file_path", .type = ek_asset_field_type_str},
     }};
 
-    enum e_shader_field : t_i32 {
+    enum e_shader_field : I32 {
         ek_shader_field_file_path,
         ek_shader_field_type,
         ek_shader_field_varying_def_file_path,
@@ -80,7 +80,7 @@ namespace zf {
         {.name_cstr = "out_file_path", .type = ek_asset_field_type_str},
     }};
 
-    enum e_sound_field : t_i32 {
+    enum e_sound_field : I32 {
         ek_sound_field_file_path,
         ek_sound_field_out_file_path,
         eks_sound_field_cnt
@@ -98,7 +98,7 @@ namespace zf {
         cJSON *cj;
 
         {
-            s_array_mut<t_u8> instrs_json_file_contents; // Not needed beyond this scope.
+            s_array_mut<U8> instrs_json_file_contents; // Not needed beyond this scope.
 
             if (!LoadFileContents(instrs_json_file_path, &arena, &arena, &instrs_json_file_contents, true)) {
                 LogError(ZF_STR_LITERAL("Failed to load packing instructions JSON file \"%\"!"), instrs_json_file_path);
@@ -125,7 +125,7 @@ namespace zf {
         s_static_array<cJSON *, eks_shader_field_cnt> shader_field_cj_ptrs = {};
         s_static_array<cJSON *, eks_sound_field_cnt> snd_field_cj_ptrs = {};
 
-        for (t_i32 asset_type_index = 0; asset_type_index < eks_asset_type_cnt; asset_type_index++) {
+        for (I32 asset_type_index = 0; asset_type_index < eks_asset_type_cnt; asset_type_index++) {
             const auto asset_type_arr_name_cstr = g_asset_type_arr_name_cstrs[asset_type_index];
 
             cJSON *const cj_assets = cJSON_GetObjectItemCaseSensitive(cj, asset_type_arr_name_cstr);
@@ -166,7 +166,7 @@ namespace zf {
                     return {};
                 }();
 
-                for (t_i32 fi = 0; fi < fields.len; fi++) {
+                for (I32 fi = 0; fi < fields.len; fi++) {
                     const auto field_name_cstr = fields[fi].name_cstr;
 
                     field_vals[fi] = cJSON_GetObjectItem(cj_asset, field_name_cstr);
@@ -234,7 +234,7 @@ namespace zf {
                     if (field_vals[ek_font_field_extra_chrs_file_path]) {
                         const auto extra_chrs_file_path = strs::convert_cstr(field_vals[ek_font_field_extra_chrs_file_path]->valuestring);
 
-                        s_array_mut<t_u8> extra_chrs_file_contents;
+                        s_array_mut<U8> extra_chrs_file_contents;
 
                         if (!LoadFileContents(extra_chrs_file_path, &arena, &arena, &extra_chrs_file_contents)) {
                             LogError(ZF_STR_LITERAL("Failed to load extra characters file \"%\"!"), extra_chrs_file_path);
@@ -279,7 +279,7 @@ namespace zf {
                         return false;
                     }
 
-                    s_array_mut<t_u8> compiled_bin;
+                    s_array_mut<U8> compiled_bin;
 
                     if (!CompileShader(file_path, varying_def_file_path, is_frag, &arena, &arena, &compiled_bin)) {
                         LogError(ZF_STR_LITERAL("Failed to compile shader from file \"%\"!"), file_path);
@@ -298,14 +298,14 @@ namespace zf {
                     const auto file_path = strs::convert_cstr(field_vals[ek_sound_field_file_path]->valuestring);
                     const auto out_file_path = strs::convert_cstr(field_vals[ek_sound_field_out_file_path]->valuestring);
 
-                    s_sound_data_mut snd_data;
+                    audio::SoundDataMut snd_data;
 
-                    if (!LoadSoundDataFromRaw(file_path, &arena, &arena, &snd_data)) {
+                    if (!load_sound_data_from_raw(file_path, &arena, &arena, &snd_data)) {
                         LogError(ZF_STR_LITERAL("Failed to load sound from file \"%\"!"), file_path);
                         return false;
                     }
 
-                    if (!PackSound(out_file_path, snd_data, &arena)) {
+                    if (!pack_sound(out_file_path, snd_data, &arena)) {
                         LogError(ZF_STR_LITERAL("Failed to pack sound to file \"%\"!"), out_file_path);
                         return false;
                     }

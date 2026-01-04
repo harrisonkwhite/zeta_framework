@@ -25,10 +25,10 @@ namespace zf {
         Print(&output_file_stream, ZF_STR_LITERAL("\n"));
         Print(&output_file_stream, ZF_STR_LITERAL("namespace zf {\n"));
 
-        PrintFormat(&output_file_stream, ZF_STR_LITERAL("    extern const t_u8 g_%_raw[] = {"), arr_subname);
+        PrintFormat(&output_file_stream, ZF_STR_LITERAL("    extern const U8 g_%_raw[] = {"), arr_subname);
 
-        t_u8 byte_read;
-        t_i32 byte_read_cnt = 0;
+        U8 byte_read;
+        I32 byte_read_cnt = 0;
 
         while (ReadItem(&input_file_stream, &byte_read)) {
             if (byte_read_cnt > 0) {
@@ -42,7 +42,7 @@ namespace zf {
 
         Print(&output_file_stream, ZF_STR_LITERAL("};\n"));
 
-        PrintFormat(&output_file_stream, ZF_STR_LITERAL("    extern const t_i32 g_%_len = %;\n"), arr_subname, byte_read_cnt);
+        PrintFormat(&output_file_stream, ZF_STR_LITERAL("    extern const I32 g_%_len = %;\n"), arr_subname, byte_read_cnt);
 
         Print(&output_file_stream, ZF_STR_LITERAL("}\n"));
 
