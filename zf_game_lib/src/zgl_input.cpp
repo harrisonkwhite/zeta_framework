@@ -153,7 +153,7 @@ namespace zf::input {
 
     void f_update_gamepad_state(t_state *const state, const t_i32 gamepad_index, const t_b8 connected, const mem::t_static_bitset<ecm_gamepad_button_code_cnt> &btns_down, const t_static_array<t_f32, ecm_gamepad_axis_code_cnt> &axes) {
         if (!connected) {
-            ZF_ASSERT(mem::f_are_all_bits_unset(btns_down) && f_algos_do_all_equal(f_array_get_as_nonstatic(axes), 0.0f));
+            ZF_ASSERT(mem::f_are_all_bits_unset(btns_down) && f_array_do_all_equal(f_array_get_as_nonstatic(axes), 0.0f));
             return;
         }
 
@@ -177,6 +177,6 @@ namespace zf::input {
             }
         }
 
-        f_algos_copy_all(f_array_get_as_nonstatic(axes), f_array_get_as_nonstatic(state->gamepads[gamepad_index].axes));
+        f_array_copy(f_array_get_as_nonstatic(axes), f_array_get_as_nonstatic(state->gamepads[gamepad_index].axes));
     }
 }

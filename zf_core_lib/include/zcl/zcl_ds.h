@@ -81,7 +81,7 @@ namespace zf::ds {
         ZF_ASSERT(new_cap > f_list_get_cap(list));
 
         const auto new_backing_arr = mem::f_arena_push_array<tp_list_type>(arena, new_cap);
-        f_algos_copy_all(list->backing_arr, new_backing_arr);
+        f_array_copy(list->backing_arr, new_backing_arr);
 
         *list = {new_backing_arr, list->len};
     }
@@ -104,7 +104,7 @@ namespace zf::ds {
         }();
 
         const auto new_backing_arr = mem::f_arena_push_array<typename tp_list_type::t_elem>(arena, new_cap);
-        f_algos_copy_all(list->backing_arr, new_backing_arr);
+        f_array_copy(list->backing_arr, new_backing_arr);
 
         *list = {new_backing_arr, list->len};
     }
@@ -131,7 +131,7 @@ namespace zf::ds {
     t_array_mut<typename tp_list_type::t_elem> f_list_append_many(tp_list_type *const list, const t_array_rdonly<typename tp_list_type::t_elem> vals) {
         ZF_ASSERT(list->len + vals.len <= f_list_get_cap(list));
 
-        f_algos_copy_all(vals, f_array_slice_from(list->backing_arr, list->len));
+        f_array_copy(vals, f_array_slice_from(list->backing_arr, list->len));
         list->len += vals.len;
         return f_array_slice(list->backing_arr, list->len - vals.len, list->len);
     }
@@ -177,7 +177,7 @@ namespace zf::ds {
         ZF_ASSERT(list->len > 0);
         ZF_ASSERT(index >= 0 && index < list->len);
 
-        f_algos_copy_all(f_array_slice(list->backing_arr, index + 1, list->len), f_array_slice(list->backing_arr, index, list->len - 1));
+        f_array_copy(f_array_slice(list->backing_arr, index + 1, list->len), f_array_slice(list->backing_arr, index, list->len - 1));
         list->len--;
     }
 
@@ -235,7 +235,7 @@ namespace zf::ds {
         block->vals = mem::f_arena_push_array<tp_val_type>(arena, cap);
 
         block->next_indexes = mem::f_arena_push_array<t_i32>(arena, cap);
-        f_algos_set_all_to(block->next_indexes, -1);
+        f_array_set_all_to(block->next_indexes, -1);
 
         block->usage = mem::f_bitset_create(cap, arena);
 
@@ -436,7 +436,7 @@ namespace zf::ds {
     template <c_simple tp_key_type, c_simple tp_val_type>
     t_hash_map<tp_key_type, tp_val_type> f_hash_map_create(const t_hash_func<tp_key_type> hash_func, mem::t_arena *const arena, const t_i32 cap = g_hash_map_cap_default, const t_comparator_bin<tp_key_type> key_comparator = g_comparator_bin_default<tp_key_type>) {
         const auto immediate_indexes = mem::f_arena_push_array<t_i32>(arena, cap);
-        f_algos_set_all_to(immediate_indexes, -1);
+        f_array_set_all_to(immediate_indexes, -1);
 
         return {
             .hash_func = hash_func,

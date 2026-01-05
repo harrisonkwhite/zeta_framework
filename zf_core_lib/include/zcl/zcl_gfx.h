@@ -41,23 +41,23 @@ namespace zf::gfx {
         constexpr operator t_color_rgba8() const { return {r, g, b, 255}; }
     };
 
-    constexpr t_color_rgb24f g_gfx_color_black = {0.0f, 0.0f, 0.0f};
-    constexpr t_color_rgb24f g_gfx_color_dark_gray = {0.25f, 0.25f, 0.25f};
-    constexpr t_color_rgb24f g_gfx_color_gray = {0.5f, 0.5f, 0.5f};
-    constexpr t_color_rgb24f g_gfx_color_light_gray = {0.75f, 0.75f, 0.75f};
-    constexpr t_color_rgb24f g_gfx_color_white = {1.0f, 1.0f, 1.0f};
-    constexpr t_color_rgb24f g_gfx_color_red = {1.0f, 0.0f, 0.0f};
-    constexpr t_color_rgb24f g_gfx_color_orange = {1.0f, 0.5f, 0.0f};
-    constexpr t_color_rgb24f g_gfx_color_yellow = {1.0f, 1.0f, 0.0f};
-    constexpr t_color_rgb24f g_gfx_color_lime = {0.75f, 1.0f, 0.0f};
-    constexpr t_color_rgb24f g_gfx_color_green = {0.0f, 1.0f, 0.0f};
-    constexpr t_color_rgb24f g_gfx_color_teal = {0.0f, 0.5f, 0.5f};
-    constexpr t_color_rgb24f g_gfx_color_cyan = {0.0f, 1.0f, 1.0f};
-    constexpr t_color_rgb24f g_gfx_color_blue = {0.0f, 0.0f, 1.0f};
-    constexpr t_color_rgb24f g_gfx_color_purple = {0.5f, 0.0f, 0.5f};
-    constexpr t_color_rgb24f g_gfx_color_magenta = {1.0f, 0.0f, 1.0f};
-    constexpr t_color_rgb24f g_gfx_color_pink = {1.0f, 0.75f, 0.8f};
-    constexpr t_color_rgb24f g_gfx_color_brown = {0.6f, 0.3f, 0.0f};
+    constexpr t_color_rgb24f g_color_black = {0.0f, 0.0f, 0.0f};
+    constexpr t_color_rgb24f g_color_dark_gray = {0.25f, 0.25f, 0.25f};
+    constexpr t_color_rgb24f g_color_gray = {0.5f, 0.5f, 0.5f};
+    constexpr t_color_rgb24f g_color_light_gray = {0.75f, 0.75f, 0.75f};
+    constexpr t_color_rgb24f g_color_white = {1.0f, 1.0f, 1.0f};
+    constexpr t_color_rgb24f g_color_red = {1.0f, 0.0f, 0.0f};
+    constexpr t_color_rgb24f g_color_orange = {1.0f, 0.5f, 0.0f};
+    constexpr t_color_rgb24f g_color_yellow = {1.0f, 1.0f, 0.0f};
+    constexpr t_color_rgb24f g_color_lime = {0.75f, 1.0f, 0.0f};
+    constexpr t_color_rgb24f g_color_green = {0.0f, 1.0f, 0.0f};
+    constexpr t_color_rgb24f g_color_teal = {0.0f, 0.5f, 0.5f};
+    constexpr t_color_rgb24f g_color_cyan = {0.0f, 1.0f, 1.0f};
+    constexpr t_color_rgb24f g_color_blue = {0.0f, 0.0f, 1.0f};
+    constexpr t_color_rgb24f g_color_purple = {0.5f, 0.0f, 0.5f};
+    constexpr t_color_rgb24f g_color_magenta = {1.0f, 0.0f, 1.0f};
+    constexpr t_color_rgb24f g_color_pink = {1.0f, 0.75f, 0.8f};
+    constexpr t_color_rgb24f g_color_brown = {0.6f, 0.3f, 0.0f};
 
     struct t_texture_data_rdonly {
         math::t_v2_i size_in_pxs;
@@ -73,19 +73,19 @@ namespace zf::gfx {
         }
     };
 
-    constexpr math::t_v2 g_gfx_origin_topleft = {0.0f, 0.0f};
-    constexpr math::t_v2 g_gfx_origin_topcenter = {0.5f, 0.0f};
-    constexpr math::t_v2 g_gfx_origin_topright = {1.0f, 0.0f};
-    constexpr math::t_v2 g_gfx_origin_centerleft = {0.0f, 0.5f};
-    constexpr math::t_v2 g_gfx_origin_center = {0.5f, 0.5f};
-    constexpr math::t_v2 g_gfx_origin_centerright = {1.0f, 0.5f};
-    constexpr math::t_v2 g_gfx_origin_bottomleft = {0.0f, 1.0f};
-    constexpr math::t_v2 g_gfx_origin_bottomcenter = {0.5f, 1.0f};
-    constexpr math::t_v2 g_gfx_origin_bottomright = {1.0f, 1.0f};
+    constexpr math::t_v2 g_origin_topleft = {0.0f, 0.0f};
+    constexpr math::t_v2 g_origin_topcenter = {0.5f, 0.0f};
+    constexpr math::t_v2 g_origin_topright = {1.0f, 0.0f};
+    constexpr math::t_v2 g_origin_centerleft = {0.0f, 0.5f};
+    constexpr math::t_v2 g_origin_center = {0.5f, 0.5f};
+    constexpr math::t_v2 g_origin_centerright = {1.0f, 0.5f};
+    constexpr math::t_v2 g_origin_bottomleft = {0.0f, 1.0f};
+    constexpr math::t_v2 g_origin_bottomcenter = {0.5f, 1.0f};
+    constexpr math::t_v2 g_origin_bottomright = {1.0f, 1.0f};
 
-    constexpr math::t_v2_i g_gfx_font_atlas_size = {1024, 1024};
+    constexpr math::t_v2_i g_font_atlas_size = {1024, 1024};
 
-    using t_font_atlas_rgba = t_static_array<t_u8, 4 * g_gfx_font_atlas_size.x * g_gfx_font_atlas_size.y>;
+    using t_font_atlas_rgba = t_static_array<t_u8, 4 * g_font_atlas_size.x * g_font_atlas_size.y>;
 
     struct t_font_glyph_info {
         math::t_v2_i offs;
@@ -110,15 +110,15 @@ namespace zf::gfx {
         ds::t_hash_map<t_font_code_pt_pair, t_i32> code_pt_pairs_to_kernings;
     };
 
-    constexpr math::t_v2 g_gfx_alignment_topleft = {0.0f, 0.0f};
-    constexpr math::t_v2 g_gfx_alignment_topcenter = {0.5f, 0.0f};
-    constexpr math::t_v2 g_gfx_alignment_topright = {1.0f, 0.0f};
-    constexpr math::t_v2 g_gfx_alignment_centerleft = {0.0f, 0.5f};
-    constexpr math::t_v2 g_gfx_alignment_center = {0.5f, 0.5f};
-    constexpr math::t_v2 g_gfx_alignment_centerright = {1.0f, 0.5f};
-    constexpr math::t_v2 g_gfx_alignment_bottomleft = {0.0f, 1.0f};
-    constexpr math::t_v2 g_gfx_alignment_bottomcenter = {0.5f, 1.0f};
-    constexpr math::t_v2 g_gfx_alignment_bottomright = {1.0f, 1.0f};
+    constexpr math::t_v2 g_alignment_topleft = {0.0f, 0.0f};
+    constexpr math::t_v2 g_alignment_topcenter = {0.5f, 0.0f};
+    constexpr math::t_v2 g_alignment_topright = {1.0f, 0.0f};
+    constexpr math::t_v2 g_alignment_centerleft = {0.0f, 0.5f};
+    constexpr math::t_v2 g_alignment_center = {0.5f, 0.5f};
+    constexpr math::t_v2 g_alignment_centerright = {1.0f, 0.5f};
+    constexpr math::t_v2 g_alignment_bottomleft = {0.0f, 1.0f};
+    constexpr math::t_v2 g_alignment_bottomcenter = {0.5f, 1.0f};
+    constexpr math::t_v2 g_alignment_bottomright = {1.0f, 1.0f};
 
     // ============================================================
 

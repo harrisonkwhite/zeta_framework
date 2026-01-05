@@ -68,7 +68,7 @@ namespace zf::io {
 
             const auto src = f_array_slice(stream->type_data.mem.bytes, stream->type_data.mem.byte_pos, stream->type_data.mem.byte_pos + size);
             const auto dest = mem::f_get_as_bytes(*o_item);
-            f_algos_copy_all(src, dest);
+            f_array_copy(src, dest);
 
             stream->type_data.mem.byte_pos += size;
 
@@ -97,7 +97,7 @@ namespace zf::io {
 
             const auto src = mem::f_get_as_bytes(item);
             const auto dest = f_array_slice(stream->type_data.mem.bytes, stream->type_data.mem.byte_pos, stream->type_data.mem.byte_pos + size);
-            f_algos_copy_all(src, dest);
+            f_array_copy(src, dest);
 
             stream->type_data.mem.byte_pos += size;
 
@@ -131,7 +131,7 @@ namespace zf::io {
 
             const auto src = f_array_slice(stream->type_data.mem.bytes, stream->type_data.mem.byte_pos, stream->type_data.mem.byte_pos + size);
             const auto dest = mem::f_get_array_as_byte_array(arr);
-            f_algos_copy_all(src, dest);
+            f_array_copy(src, dest);
 
             stream->type_data.mem.byte_pos += size;
 
@@ -164,7 +164,7 @@ namespace zf::io {
 
             const auto src = mem::f_get_array_as_byte_array(arr);
             const auto dest = f_array_slice(stream->type_data.mem.bytes, stream->type_data.mem.byte_pos, stream->type_data.mem.byte_pos + size);
-            f_algos_copy_all(src, dest);
+            f_array_copy(src, dest);
 
             stream->type_data.mem.byte_pos += size;
 
@@ -408,7 +408,7 @@ namespace zf::io {
         if (fmt.trim_trailing_zeros) {
             const auto str_bytes_relevant = f_array_slice(f_array_get_as_nonstatic(str_bytes), 0, str_bytes_used);
 
-            if (f_algos_do_any_equal(str_bytes_relevant, '.')) {
+            if (f_array_do_any_equal(str_bytes_relevant, '.')) {
                 for (t_i32 i = str_bytes_used - 1;; i--) {
                     if (str_bytes[i] == '0') {
                         str_bytes_used--;
@@ -512,7 +512,7 @@ namespace zf::io {
         } while (value_mut != 0 || cnter < fmt.min_digits);
 
         const auto str_bytes_digits = f_array_slice_from(f_get_mem_stream_bytes_written(&str_bytes_stream), str_bytes_digits_begin_pos);
-        f_algos_reverse(str_bytes_digits);
+        f_array_reverse(str_bytes_digits);
 
         return f_print(stream, {f_get_mem_stream_bytes_written(&str_bytes_stream)});
     }

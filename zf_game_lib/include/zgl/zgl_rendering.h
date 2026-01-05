@@ -149,7 +149,7 @@ namespace zf {
 
     t_array_mut<math::t_v2> f_rendering_get_str_chr_render_positions(const t_str_rdonly str, const gfx::t_font_arrangement &font_arrangement, const math::t_v2 pos, const math::t_v2 alignment, mem::t_arena *const arena);
 
-    void f_rendering_submit_str(t_rendering_context *const context, const t_str_rdonly str, const t_font &font, const math::t_v2 pos, mem::t_arena *const temp_arena, const math::t_v2 alignment = gfx::g_gfx_alignment_topleft, const gfx::t_color_rgba32f blend = gfx::g_gfx_color_white);
+    void f_rendering_submit_str(t_rendering_context *const context, const t_str_rdonly str, const t_font &font, const math::t_v2 pos, mem::t_arena *const temp_arena, const math::t_v2 alignment = gfx::g_alignment_topleft, const gfx::t_color_rgba32f blend = gfx::g_color_white);
 
     // ============================================================
 }

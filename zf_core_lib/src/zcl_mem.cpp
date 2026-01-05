@@ -100,7 +100,7 @@ namespace zf::mem {
 
         const auto first_bytes = f_array_slice(f_bitset_get_bytes(bs), 0, f_bitset_get_bytes(bs).len - 1);
 
-        if (!f_algos_do_all_equal(first_bytes, 0)) {
+        if (!f_array_do_all_equal(first_bytes, 0)) {
             return true;
         }
 
@@ -114,7 +114,7 @@ namespace zf::mem {
 
         const auto first_bytes = f_array_slice(f_bitset_get_bytes(bs), 0, f_bitset_get_bytes(bs).len - 1);
 
-        if (!f_algos_do_all_equal(first_bytes, 0xFF)) {
+        if (!f_array_do_all_equal(first_bytes, 0xFF)) {
             return false;
         }
 
@@ -128,7 +128,7 @@ namespace zf::mem {
         }
 
         const auto first_bytes = f_array_slice(f_bitset_get_bytes(bs), 0, f_bitset_get_bytes(bs).len - 1);
-        f_algos_set_all_to(first_bytes, 0xFF);
+        f_array_set_all_to(first_bytes, 0xFF);
 
         f_bitset_get_bytes(bs)[f_bitset_get_bytes(bs).len - 1] |= f_bitset_get_last_byte_mask(bs);
     }
@@ -139,7 +139,7 @@ namespace zf::mem {
         }
 
         const auto first_bytes = f_array_slice(f_bitset_get_bytes(bs), 0, f_bitset_get_bytes(bs).len - 1);
-        f_algos_set_all_to(first_bytes, 0);
+        f_array_set_all_to(first_bytes, 0);
 
         f_bitset_get_bytes(bs)[f_bitset_get_bytes(bs).len - 1] &= ~f_bitset_get_last_byte_mask(bs);
     }

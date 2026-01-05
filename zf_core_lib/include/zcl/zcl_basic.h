@@ -393,7 +393,7 @@ namespace zf {
                 dest[i] = src[i];
             }
         } else {
-            const auto min_len = ZF_MIN(src.len, dest.len);
+            const auto min_len = f_min(src.len, dest.len);
 
             for (t_i32 i = 0; i < min_len; i++) {
                 dest[i] = src[i];
@@ -404,7 +404,7 @@ namespace zf {
     template <c_array tp_arr_a_type, c_array tp_arr_b_type>
         requires c_same<typename tp_arr_a_type::t_elem, typename tp_arr_b_type::t_elem>
     t_i32 f_array_compare(const tp_arr_a_type a, const tp_arr_b_type b, const t_comparator_ord<typename tp_arr_a_type::t_elem> comparator = g_comparator_ord_default<typename tp_arr_a_type::t_elem>) {
-        const auto min_len = ZF_MIN(a.len, b.len);
+        const auto min_len = f_min(a.len, b.len);
 
         for (t_i32 i = 0; i < min_len; i++) {
             const t_i32 comp = comparator(a[i], b[i]);
