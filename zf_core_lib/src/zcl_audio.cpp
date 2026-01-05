@@ -2,8 +2,8 @@
 
 #include <miniaudio.h>
 
-namespace zf::audio {
-    t_b8 load_sound_data_from_raw(const t_str_rdonly file_path, t_arena *const snd_data_arena, t_arena *const temp_arena, SoundDataMut *const o_snd_data) {
+namespace zf {
+    t_b8 f_audio_load_sound_data_from_raw(const t_str_rdonly file_path, t_arena *const snd_data_arena, t_arena *const temp_arena, t_sound_data_mut *const o_snd_data) {
         const t_str_rdonly file_path_terminated = f_strs_clone_but_add_terminator(file_path, temp_arena);
 
         ma_decoder decoder;
@@ -27,7 +27,7 @@ namespace zf::audio {
             .frame_cnt = static_cast<t_i32>(frame_cnt),
         };
 
-        o_snd_data->pcm = f_mem_push_array<t_f32>(snd_data_arena, get_sample_cnt(o_snd_data->meta));
+        o_snd_data->pcm = f_mem_push_array<t_f32>(snd_data_arena, f_audio_get_sample_cnt(o_snd_data->meta));
 
         if (ma_decoder_read_pcm_frames(&decoder, o_snd_data->pcm.raw, frame_cnt, nullptr) != MA_SUCCESS) {
             return false;
@@ -36,7 +36,7 @@ namespace zf::audio {
         return true;
     }
 
-    t_b8 pack_sound(const t_str_rdonly file_path, const SoundDataMut snd_data, t_arena *const temp_arena) {
+    t_b8 f_audio_pack_sound(const t_str_rdonly file_path, const t_sound_data_mut snd_data, t_arena *const temp_arena) {
         if (!CreateFileAndParentDirectories(file_path, temp_arena)) {
             return false;
         }
@@ -49,10 +49,10 @@ namespace zf::audio {
 
         ZF_DEFER({ FileClose(&fs); });
 
-        return serialize_sound(&fs, snd_data);
+        return f_audio_serialize_sound(&fs, snd_data);
     }
 
-    t_b8 unpack_sound(const t_str_rdonly file_path, t_arena *const snd_data_arena, t_arena *const temp_arena, SoundDataMut *const o_snd_data) {
+    t_b8 f_audio_unpack_sound(const t_str_rdonly file_path, t_arena *const snd_data_arena, t_arena *const temp_arena, t_sound_data_mut *const o_snd_data) {
         s_stream fs;
 
         if (!FileOpen(file_path, ek_file_access_mode_read, temp_arena, &fs)) {
@@ -65,7 +65,7 @@ namespace zf::audio {
             return false;
         }
 
-        o_snd_data->pcm = f_mem_push_array<t_f32>(snd_data_arena, get_sample_cnt(o_snd_data->meta));
+        o_snd_data->pcm = f_mem_push_array<t_f32>(snd_data_arena, f_audio_get_sample_cnt(o_snd_data->meta));
 
         if (!ReadItemsIntoArray(&fs, o_snd_data->pcm, o_snd_data->pcm.len)) {
             return false;
@@ -74,7 +74,7 @@ namespace zf::audio {
         return true;
     }
 
-    t_b8 serialize_sound(s_stream *const stream, const SoundDataMut snd_data) {
+    t_b8 f_audio_serialize_sound(s_stream *const stream, const t_sound_data_mut snd_data) {
         if (!WriteItem(stream, snd_data.meta)) {
             return false;
         }
@@ -86,7 +86,7 @@ namespace zf::audio {
         return true;
     }
 
-    t_b8 deserialize_sound(s_stream *const stream, t_arena *const snd_data_arena, SoundDataMut *const o_snd_data) {
+    t_b8 f_audio_deserialize_sound(s_stream *const stream, t_arena *const snd_data_arena, t_sound_data_mut *const o_snd_data) {
         if (!ReadItem(stream, &o_snd_data->meta)) {
             return false;
         }
