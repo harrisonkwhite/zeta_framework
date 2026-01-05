@@ -1,22 +1,22 @@
 #include <zcl.h>
 
 namespace zf {
-    static t_b8 TestBits(mem::t_arena *const arena) {
+    static t_b8 f_test_bits(mem::t_arena *const arena) {
         // @todo
         return true;
     }
 
-    static t_b8 TestSorting(mem::t_arena *const arena) {
+    static t_b8 f_test_sorting(mem::t_arena *const arena) {
         // @todo
         return true;
     }
 
-    static t_b8 TestList(mem::t_arena *const arena) {
+    static t_b8 f_test_list(mem::t_arena *const arena) {
         // @todo
         return true;
     }
 
-    static t_b8 TestHashMap(mem::t_arena *const arena) {
+    static t_b8 f_test_hash_map(mem::t_arena *const arena) {
         // @todo
         return true;
     }
@@ -27,13 +27,13 @@ namespace zf {
     };
 
     static const t_static_array<t_test, 4> g_tests = {{
-        {.title_cstr = "Bits", .func = TestBits},
-        {.title_cstr = "Sorting", .func = TestSorting},
-        {.title_cstr = "List", .func = TestList},
-        {.title_cstr = "Hash Map", .func = TestHashMap},
+        {.title_cstr = "Bits", .func = f_test_bits},
+        {.title_cstr = "Sorting", .func = f_test_sorting},
+        {.title_cstr = "List", .func = f_test_list},
+        {.title_cstr = "Hash Map", .func = f_test_hash_map},
     }};
 
-    static void RunTests() {
+    static void run_tests() {
         mem::t_arena arena = mem::f_arena_create();
         ZF_DEFER({ mem::f_arena_destroy(&arena); });
 
@@ -45,5 +45,5 @@ namespace zf {
 }
 
 int main(const int arg_cnt, const char *const *const args) {
-    zf::RunTests();
+    zf::run_tests();
 }

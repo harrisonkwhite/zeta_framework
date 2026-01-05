@@ -2,13 +2,13 @@
 
 #include <zgl/zgl_platform.h>
 
-namespace zf {
+namespace zf::game {
     static const math::t_v2_i g_init_window_size = {1280, 720};
     static const t_f64 g_targ_ticks_per_sec = 60.0; // @todo: Make this customisable?
 
     // @todo: Need a better and more consistent set of verbs. "Is" is too vague - how much calculation is being performed, should I cache the result?
 
-    void game_run(const t_game_init_func init_func, const t_game_tick_func tick_func, const t_game_render_func render_func, const t_game_deinit_func deinit_func) {
+    void run(const t_init_func init_func, const t_tick_func tick_func, const t_render_func render_func, const t_deinit_func deinit_func) {
         ZF_ASSERT(init_func);
         ZF_ASSERT(tick_func);
         ZF_ASSERT(render_func);

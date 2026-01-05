@@ -3,7 +3,7 @@
 #include <reproc/reproc.h>
 
 namespace zf {
-    t_b8 compile_shader(const strs::t_str_rdonly shader_file_path, const strs::t_str_rdonly varying_def_file_path, const t_b8 is_frag, mem::t_arena *const bin_arena, mem::t_arena *const temp_arena, t_array_mut<t_u8> *const o_bin) {
+    t_b8 f_compile_shader(const strs::t_str_rdonly shader_file_path, const strs::t_str_rdonly varying_def_file_path, const t_b8 is_frag, mem::t_arena *const bin_arena, mem::t_arena *const temp_arena, t_array_mut<t_u8> *const o_bin) {
         const strs::t_str_rdonly shader_file_path_terminated = strs::f_clone_but_add_terminator(shader_file_path, temp_arena);
         const strs::t_str_rdonly varying_def_file_path_terminated = strs::f_clone_but_add_terminator(varying_def_file_path, temp_arena);
 
