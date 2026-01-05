@@ -5,7 +5,7 @@
 namespace zf {
     template <c_array tp_src_arr_type, c_array_mut tp_dest_arr_type>
         requires c_same<typename tp_src_arr_type::t_elem, typename tp_dest_arr_type::t_elem>
-    void CopyAll(const tp_src_arr_type src, const tp_dest_arr_type dest, const t_b8 allow_truncation = false) {
+    void f_algos_copy_all(const tp_src_arr_type src, const tp_dest_arr_type dest, const t_b8 allow_truncation = false) {
         if (!allow_truncation) {
             ZF_ASSERT(dest.len >= src.len);
 
@@ -23,7 +23,7 @@ namespace zf {
 
     template <c_array tp_arr_a_type, c_array tp_arr_b_type>
         requires c_same<typename tp_arr_a_type::t_elem, typename tp_arr_b_type::t_elem>
-    t_i32 CompareAll(const tp_arr_a_type a, const tp_arr_b_type b, const t_comparator_ord<typename tp_arr_a_type::t_elem> comparator = g_comparator_ord_default<typename tp_arr_a_type::t_elem>) {
+    t_i32 f_algos_compare_all(const tp_arr_a_type a, const tp_arr_b_type b, const t_comparator_ord<typename tp_arr_a_type::t_elem> comparator = g_comparator_ord_default<typename tp_arr_a_type::t_elem>) {
         const auto min_len = ZF_MIN(a.len, b.len);
 
         for (t_i32 i = 0; i < min_len; i++) {
@@ -38,7 +38,7 @@ namespace zf {
     }
 
     template <c_array tp_arr_type>
-    t_b8 DoAllEqual(const tp_arr_type arr, const typename tp_arr_type::t_elem &val, const t_comparator_bin<typename tp_arr_type::t_elem> comparator = g_comparator_bin_default<typename tp_arr_type::t_elem>) {
+    t_b8 f_algos_do_all_equal(const tp_arr_type arr, const typename tp_arr_type::t_elem &val, const t_comparator_bin<typename tp_arr_type::t_elem> comparator = g_comparator_bin_default<typename tp_arr_type::t_elem>) {
         if (arr.len == 0) {
             return false;
         }
@@ -53,7 +53,7 @@ namespace zf {
     }
 
     template <c_array tp_arr_type>
-    t_b8 DoAnyEqual(const tp_arr_type arr, const typename tp_arr_type::t_elem &val, const t_comparator_bin<typename tp_arr_type::t_elem> comparator = g_comparator_bin_default<typename tp_arr_type::t_elem>) {
+    t_b8 f_algos_do_any_equal(const tp_arr_type arr, const typename tp_arr_type::t_elem &val, const t_comparator_bin<typename tp_arr_type::t_elem> comparator = g_comparator_bin_default<typename tp_arr_type::t_elem>) {
         for (t_i32 i = 0; i < arr.len; i++) {
             if (comparator(arr[i], val)) {
                 return true;
@@ -64,14 +64,14 @@ namespace zf {
     }
 
     template <c_array_mut tp_arr_type>
-    void SetAllTo(const tp_arr_type arr, const typename tp_arr_type::t_elem &val) {
+    void f_algos_set_all_to(const tp_arr_type arr, const typename tp_arr_type::t_elem &val) {
         for (t_i32 i = 0; i < arr.len; i++) {
             arr[i] = val;
         }
     }
 
     template <c_array_mut tp_arr_type>
-    void Reverse(const tp_arr_type arr) {
+    void f_algos_reverse(const tp_arr_type arr) {
         for (t_i32 i = 0; i < arr.len / 2; i++) {
             f_swap(&arr[i], &arr[arr.len - 1 - i]);
         }
@@ -80,7 +80,7 @@ namespace zf {
     // O(n^2) time complexity, but O(1) space complexity.
     // You're usually better off using a hash map and a linear search, or a bit vector if values are numeric and the range is small.
     template <c_array tp_arr_type>
-    t_b8 HasDuplicatesSlow(const tp_arr_type arr, const t_comparator_bin<typename tp_arr_type::t_elem> comparator = g_comparator_bin_default<typename tp_arr_type::t_elem>) {
+    t_b8 f_algos_has_duplicates_slow(const tp_arr_type arr, const t_comparator_bin<typename tp_arr_type::t_elem> comparator = g_comparator_bin_default<typename tp_arr_type::t_elem>) {
         for (t_i32 i = 0; i < arr.len; i++) {
             for (t_i32 j = 0; j < arr.len; j++) {
                 if (i == j) {
@@ -97,7 +97,7 @@ namespace zf {
     }
 
     template <c_array tp_arr_type>
-    t_b8 RunBinarySearch(const tp_arr_type arr, const typename tp_arr_type::t_elem &elem, const t_comparator_ord<typename tp_arr_type::t_elem> comparator = g_comparator_ord_default<typename tp_arr_type::t_elem>) {
+    t_b8 f_algos_binary_search(const tp_arr_type arr, const typename tp_arr_type::t_elem &elem, const t_comparator_ord<typename tp_arr_type::t_elem> comparator = g_comparator_ord_default<typename tp_arr_type::t_elem>) {
         if (arr.len == 0) {
             return false;
         }
@@ -108,14 +108,14 @@ namespace zf {
         if (comp_res == 0) {
             return true;
         } else if (comp_res < 0) {
-            return RunBinarySearch(f_mem_slice_array(arr, 0, arr.len / 2), elem);
+            return f_algos_binary_search(f_mem_slice_array(arr, 0, arr.len / 2), elem);
         } else {
-            return RunBinarySearch(f_mem_slice_array_from(arr, (arr.len / 2) + 1), elem);
+            return f_algos_binary_search(f_mem_slice_array_from(arr, (arr.len / 2) + 1), elem);
         }
     }
 
     template <c_array tp_arr_type>
-    t_b8 IsSorted(const tp_arr_type arr, const t_comparator_ord<typename tp_arr_type::t_elem> comparator = g_comparator_ord_default<typename tp_arr_type::t_elem>) {
+    t_b8 f_algos_is_sorted(const tp_arr_type arr, const t_comparator_ord<typename tp_arr_type::t_elem> comparator = g_comparator_ord_default<typename tp_arr_type::t_elem>) {
         for (t_i32 i = 0; i < arr.len - 1; i++) {
             if (comparator(arr[i], arr[i + 1]) > 0) {
                 return false;
@@ -127,7 +127,7 @@ namespace zf {
 
     // O(n) best-case if array is already sorted, O(n^2) worst-case.
     template <c_array tp_arr_type>
-    void RunBubbleSort(const tp_arr_type arr, const t_comparator_ord<typename tp_arr_type::t_elem> comparator = g_comparator_ord_default<typename tp_arr_type::t_elem>) {
+    void f_algos_bubble_sort(const tp_arr_type arr, const t_comparator_ord<typename tp_arr_type::t_elem> comparator = g_comparator_ord_default<typename tp_arr_type::t_elem>) {
         t_b8 sorted;
 
         do {
@@ -144,7 +144,7 @@ namespace zf {
 
     // O(n) best-case if array is already sorted, O(n^2) worst-case.
     template <c_array tp_arr_type>
-    void RunInsertionSort(const tp_arr_type arr, const t_comparator_ord<typename tp_arr_type::t_elem> comparator = g_comparator_ord_default<typename tp_arr_type::t_elem>) {
+    void f_algos_insertion_sort(const tp_arr_type arr, const t_comparator_ord<typename tp_arr_type::t_elem> comparator = g_comparator_ord_default<typename tp_arr_type::t_elem>) {
         for (t_i32 i = 1; i < arr.len; i++) {
             const auto temp = arr[i];
 
@@ -164,7 +164,7 @@ namespace zf {
 
     // O(n^2) in every case.
     template <c_array tp_arr_type>
-    void RunSelectionSort(const tp_arr_type arr, const t_comparator_ord<typename tp_arr_type::t_elem> comparator = g_comparator_ord_default<typename tp_arr_type::t_elem>) {
+    void f_algos_selection_sort(const tp_arr_type arr, const t_comparator_ord<typename tp_arr_type::t_elem> comparator = g_comparator_ord_default<typename tp_arr_type::t_elem>) {
         for (t_i32 i = 0; i < arr.len - 1; i++) {
             const auto min = &arr[i];
 
@@ -180,17 +180,17 @@ namespace zf {
 
     // O(n log n) in both time complexity and space complexity in every case.
     template <typename tp_arr_type>
-    void RunMergeSort(const tp_arr_type arr, t_arena *const temp_arena, const t_comparator_ord<typename tp_arr_type::t_elem> comparator = g_comparator_ord_default<typename tp_arr_type::t_elem>) {
+    void f_algos_merge_sort(const tp_arr_type arr, t_arena *const temp_arena, const t_comparator_ord<typename tp_arr_type::t_elem> comparator = g_comparator_ord_default<typename tp_arr_type::t_elem>) {
         if (arr.len <= 1) {
             return;
         }
 
         // Sort copies of the left and right partitions.
         const auto arr_left_sorted = f_mem_clone_array(f_mem_slice_array(arr, 0, arr.len / 2), temp_arena);
-        RunMergeSort(arr_left_sorted, temp_arena, comparator);
+        f_algos_merge_sort(arr_left_sorted, temp_arena, comparator);
 
         const auto arr_right_sorted = f_mem_clone_array(f_mem_slice_array_from(arr, arr.len / 2), temp_arena);
-        RunMergeSort(arr_right_sorted, temp_arena, comparator);
+        f_algos_merge_sort(arr_right_sorted, temp_arena, comparator);
 
         // Update this array.
         t_i32 i = 0;
@@ -203,7 +203,7 @@ namespace zf {
 
                 if (i == arr_left_sorted.len) {
                     // Copy over the remainder of the right array.
-                    CopyAll(f_mem_slice_array_from(arr_right_sorted, j), f_mem_slice_array_from(arr, i + j));
+                    f_algos_copy_all(f_mem_slice_array_from(arr_right_sorted, j), f_mem_slice_array_from(arr, i + j));
                     break;
                 }
             } else {
@@ -212,7 +212,7 @@ namespace zf {
 
                 if (j == arr_right_sorted.len) {
                     // Copy over the remainder of the left array.
-                    CopyAll(f_mem_slice_array_from(arr_left_sorted, i), f_mem_slice_array_from(arr, i + j));
+                    f_algos_copy_all(f_mem_slice_array_from(arr_left_sorted, i), f_mem_slice_array_from(arr, i + j));
                     break;
                 }
             }
@@ -223,7 +223,7 @@ namespace zf {
     // Space complexity is O(1) compared to merge sort.
     // In each recurse, the pivot is selected as the median of the first, middle, and last elements.
     template <c_array tp_arr_type>
-    void RunQuickSort(const tp_arr_type arr, const t_comparator_ord<typename tp_arr_type::t_elem> comparator = g_comparator_ord_default<typename tp_arr_type::t_elem>) {
+    void f_algos_quick_sort(const tp_arr_type arr, const t_comparator_ord<typename tp_arr_type::t_elem> comparator = g_comparator_ord_default<typename tp_arr_type::t_elem>) {
         if (arr.len <= 1) {
             return;
         }
@@ -280,7 +280,7 @@ namespace zf {
         }
 
         // Sort for each subsection.
-        RunQuickSort(f_mem_slice_array(arr, 0, left_sec_last_index), comparator);
-        RunQuickSort(f_mem_slice_array_from(arr, left_sec_last_index + 1), comparator);
+        f_algos_quick_sort(f_mem_slice_array(arr, 0, left_sec_last_index), comparator);
+        f_algos_quick_sort(f_mem_slice_array_from(arr, left_sec_last_index + 1), comparator);
     }
 }

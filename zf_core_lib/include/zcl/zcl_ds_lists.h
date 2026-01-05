@@ -128,7 +128,7 @@ namespace zf {
         ZF_ASSERT(new_cap > list->Cap());
 
         const auto new_backing_arr = f_mem_push_array<tp_list_type>(arena, new_cap);
-        CopyAll(list->backing_arr, new_backing_arr);
+        f_algos_copy_all(list->backing_arr, new_backing_arr);
 
         *list = {new_backing_arr, list->len};
     }
@@ -151,7 +151,7 @@ namespace zf {
         }();
 
         const auto new_backing_arr = f_mem_push_array<typename tp_list_type::t_elem>(arena, new_cap);
-        CopyAll(list->backing_arr, new_backing_arr);
+        f_algos_copy_all(list->backing_arr, new_backing_arr);
 
         *list = {new_backing_arr, list->len};
     }
@@ -178,7 +178,7 @@ namespace zf {
     t_array_mut<typename tp_list_type::t_elem> ListAppendMany(tp_list_type *const list, const t_array_rdonly<typename tp_list_type::t_elem> vals) {
         ZF_ASSERT(list->len + vals.len <= list->Cap());
 
-        CopyAll(vals, f_mem_slice_array_from(list->backing_arr, list->len));
+        f_algos_copy_all(vals, f_mem_slice_array_from(list->backing_arr, list->len));
         list->len += vals.len;
         return f_mem_slice_array(list->backing_arr, list->len - vals.len, list->len);
     }
@@ -224,7 +224,7 @@ namespace zf {
         ZF_ASSERT(list->len > 0);
         ZF_ASSERT(index >= 0 && index < list->len);
 
-        CopyAll(f_mem_slice_array(list->backing_arr, index + 1, list->len), f_mem_slice_array(list->backing_arr, index, list->len - 1));
+        f_algos_copy_all(f_mem_slice_array(list->backing_arr, index + 1, list->len), f_mem_slice_array(list->backing_arr, index, list->len - 1));
         list->len--;
     }
 

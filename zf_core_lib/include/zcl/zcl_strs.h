@@ -142,7 +142,7 @@ namespace zf {
     // Allocates a clone of the given string using the memory arena, with a null byte added at the end (even if the string was already terminated).
     inline t_str_mut f_strs_clone_but_add_terminator(const t_str_rdonly str, t_arena *const arena) {
         const t_str_mut clone = {f_mem_push_array<t_u8>(arena, str.bytes.len + 1)};
-        CopyAll(str.bytes, clone.bytes);
+        f_algos_copy_all(str.bytes, clone.bytes);
         clone.bytes[clone.bytes.len - 1] = 0;
         return clone;
     }
@@ -152,7 +152,7 @@ namespace zf {
     }
 
     inline t_b8 f_strs_are_equal(const t_str_rdonly a, const t_str_rdonly b) {
-        return CompareAll(a.bytes, b.bytes) == 0;
+        return f_algos_compare_all(a.bytes, b.bytes) == 0;
     }
 
     t_b8 f_strs_is_valid_utf8(const t_str_rdonly str);

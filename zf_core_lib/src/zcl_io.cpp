@@ -223,7 +223,7 @@ namespace zf {
         }
 
         const auto result_bytes = f_mem_push_array<t_u8>(arena, len);
-        CopyAll(f_mem_array_as_byte_array(f_mem_slice_array(f_mem_as_nonstatic_array(buf), 0, len)), result_bytes);
+        f_algos_copy_all(f_mem_array_as_byte_array(f_mem_slice_array(f_mem_as_nonstatic_array(buf), 0, len)), result_bytes);
         return {result_bytes};
 #elif defined(ZF_PLATFORM_MACOS)
     #error "Platform-specific implementation not yet done!"

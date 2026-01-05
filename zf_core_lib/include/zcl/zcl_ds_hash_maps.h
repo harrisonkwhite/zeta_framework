@@ -82,7 +82,7 @@ namespace zf {
         block->vals = f_mem_push_array<tp_val_type>(arena, cap);
 
         block->next_indexes = f_mem_push_array<t_i32>(arena, cap);
-        SetAllTo(block->next_indexes, -1);
+        f_algos_set_all_to(block->next_indexes, -1);
 
         block->usage = f_mem_create_bit_vector(cap, arena);
 
@@ -253,7 +253,7 @@ namespace zf {
     template <c_simple tp_key_type, c_simple tp_val_type>
     s_hash_map<tp_key_type, tp_val_type> HashMapCreate(const t_hash_func<tp_key_type> hash_func, t_arena *const arena, const t_i32 cap = g_hash_map_cap_default, const t_comparator_bin<tp_key_type> key_comparator = g_comparator_bin_default<tp_key_type>) {
         const auto immediate_indexes = f_mem_push_array<t_i32>(arena, cap);
-        SetAllTo(immediate_indexes, -1);
+        f_algos_set_all_to(immediate_indexes, -1);
 
         return {
             .hash_func = hash_func,

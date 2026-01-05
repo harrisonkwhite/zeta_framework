@@ -33,7 +33,7 @@ namespace zf {
 
         const t_array_rdonly<t_u8> stb_px_data_arr = {stb_px_data, 4 * size_in_pxs.x * size_in_pxs.y};
         const auto px_data = f_mem_push_array<t_u8>(texture_data_arena, 4 * size_in_pxs.x * size_in_pxs.y);
-        CopyAll(stb_px_data_arr, px_data);
+        f_algos_copy_all(stb_px_data_arr, px_data);
 
         *o_texture_data = {size_in_pxs, px_data};
 

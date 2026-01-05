@@ -104,7 +104,7 @@ namespace zf {
 
         const auto first_bytes = f_mem_slice_array(f_mem_bit_vector_bytes(bv), 0, f_mem_bit_vector_bytes(bv).len - 1);
 
-        if (!DoAllEqual(first_bytes, 0)) {
+        if (!f_algos_do_all_equal(first_bytes, 0)) {
             return true;
         }
 
@@ -118,7 +118,7 @@ namespace zf {
 
         const auto first_bytes = f_mem_slice_array(f_mem_bit_vector_bytes(bv), 0, f_mem_bit_vector_bytes(bv).len - 1);
 
-        if (!DoAllEqual(first_bytes, 0xFF)) {
+        if (!f_algos_do_all_equal(first_bytes, 0xFF)) {
             return false;
         }
 
@@ -132,7 +132,7 @@ namespace zf {
         }
 
         const auto first_bytes = f_mem_slice_array(f_mem_bit_vector_bytes(bv), 0, f_mem_bit_vector_bytes(bv).len - 1);
-        SetAllTo(first_bytes, 0xFF);
+        f_algos_set_all_to(first_bytes, 0xFF);
 
         f_mem_bit_vector_bytes(bv)[f_mem_bit_vector_bytes(bv).len - 1] |= f_mem_bit_vector_last_byte_mask(bv);
     }
@@ -143,7 +143,7 @@ namespace zf {
         }
 
         const auto first_bytes = f_mem_slice_array(f_mem_bit_vector_bytes(bv), 0, f_mem_bit_vector_bytes(bv).len - 1);
-        SetAllTo(first_bytes, 0);
+        f_algos_set_all_to(first_bytes, 0);
 
         f_mem_bit_vector_bytes(bv)[f_mem_bit_vector_bytes(bv).len - 1] &= ~f_mem_bit_vector_last_byte_mask(bv);
     }
