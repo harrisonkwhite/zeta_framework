@@ -2,32 +2,32 @@
 
 namespace zf {
     struct t_gamepad {
-        t_static_bit_vec<ecm_gamepad_button_code_cnt> buttons_down;
+        t_static_bitset<ecm_gamepad_button_code_cnt> buttons_down;
         t_static_array<t_f32, ecm_gamepad_axis_code_cnt> axes;
     };
 
     struct t_gamepad_events {
-        t_static_bit_vec<ecm_gamepad_button_code_cnt> buttons_pressed;
-        t_static_bit_vec<ecm_gamepad_button_code_cnt> buttons_released;
+        t_static_bitset<ecm_gamepad_button_code_cnt> buttons_pressed;
+        t_static_bitset<ecm_gamepad_button_code_cnt> buttons_released;
     };
 
     struct t_input_state {
-        t_static_bit_vec<ecm_key_code_cnt> keys_down;
+        t_static_bitset<ecm_key_code_cnt> keys_down;
 
-        t_static_bit_vec<ecm_mouse_button_code_cnt> mouse_buttons_down;
+        t_static_bitset<ecm_mouse_button_code_cnt> mouse_buttons_down;
 
         t_v2 cursor_pos;
 
-        t_static_bit_vec<g_gamepad_limit> gamepads_connected;
+        t_static_bitset<g_gamepad_limit> gamepads_connected;
         t_static_array<t_gamepad, g_gamepad_limit> gamepads;
         t_static_array<t_f32, ecm_gamepad_axis_code_cnt> gamepad_axis_deadzones;
 
         struct {
-            t_static_bit_vec<ecm_key_code_cnt> keys_pressed;
-            t_static_bit_vec<ecm_key_code_cnt> keys_released;
+            t_static_bitset<ecm_key_code_cnt> keys_pressed;
+            t_static_bitset<ecm_key_code_cnt> keys_released;
 
-            t_static_bit_vec<ecm_mouse_button_code_cnt> mouse_buttons_pressed;
-            t_static_bit_vec<ecm_mouse_button_code_cnt> mouse_buttons_released;
+            t_static_bitset<ecm_mouse_button_code_cnt> mouse_buttons_pressed;
+            t_static_bitset<ecm_mouse_button_code_cnt> mouse_buttons_released;
 
             t_v2 scroll_offs;
 
@@ -36,7 +36,7 @@ namespace zf {
     };
 
     t_input_state *f_input_create_state(t_arena *const arena) {
-        return f_mem_push_item_zeroed<t_input_state>(arena);
+        return f_mem_arena_push_item_zeroed<t_input_state>(arena);
     }
 
     void f_input_clear_events(t_input_state *const state) {
@@ -151,9 +151,9 @@ namespace zf {
         return static_cast<t_f32>(f_sign(raw)) * ((raw_abs - dz) / (1.0f - dz));
     }
 
-    void f_input_update_gamepad_state(t_input_state *const state, const t_i32 gamepad_index, const t_b8 connected, const t_static_bit_vec<ecm_gamepad_button_code_cnt> &btns_down, const t_static_array<t_f32, ecm_gamepad_axis_code_cnt> &axes) {
+    void f_input_update_gamepad_state(t_input_state *const state, const t_i32 gamepad_index, const t_b8 connected, const t_static_bitset<ecm_gamepad_button_code_cnt> &btns_down, const t_static_array<t_f32, ecm_gamepad_axis_code_cnt> &axes) {
         if (!connected) {
-            ZF_ASSERT(f_mem_are_all_bits_unset(btns_down) && f_algos_do_all_equal(f_mem_as_nonstatic_array(axes), 0.0f));
+            ZF_ASSERT(f_mem_are_all_bits_unset(btns_down) && f_algos_do_all_equal(f_array_get_as_nonstatic(axes), 0.0f));
             return;
         }
 
@@ -177,6 +177,6 @@ namespace zf {
             }
         }
 
-        f_algos_copy_all(f_mem_as_nonstatic_array(axes), f_mem_as_nonstatic_array(state->gamepads[gamepad_index].axes));
+        f_algos_copy_all(f_array_get_as_nonstatic(axes), f_array_get_as_nonstatic(state->gamepads[gamepad_index].axes));
     }
 }

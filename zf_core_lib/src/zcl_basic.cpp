@@ -18,7 +18,7 @@
 #include <cstdlib>
 
 namespace zf {
-    void detail::f_try_breaking_into_debugger_if(const t_b8 cond) {
+    void detail::f_try_breaking_into_debugger_if(const bool cond) {
         if (!cond) {
             return;
         }
@@ -35,9 +35,9 @@ namespace zf {
 
     static void PrintStackTrace() {
 #ifdef ZF_PLATFORM_WINDOWS
-        constexpr t_i32 stack_len = 32;
+        constexpr int stack_len = 32;
         void *stack[stack_len];
-        const t_i32 frame_cnt = CaptureStackBackTrace(0, stack_len, stack, nullptr);
+        const int frame_cnt = CaptureStackBackTrace(0, stack_len, stack, nullptr);
 
         fprintf(stderr, "Stack Trace:\n");
 
@@ -45,7 +45,7 @@ namespace zf {
         const HANDLE proc = GetCurrentProcess();
         SymInitialize(proc, nullptr, TRUE);
 
-        const t_i32 func_name_buf_size = 256;
+        const int func_name_buf_size = 256;
         char symbol_buf[ZF_SIZE_OF(SYMBOL_INFO) + func_name_buf_size];
         const auto symbol = reinterpret_cast<SYMBOL_INFO *>(symbol_buf);
         symbol->MaxNameLen = func_name_buf_size - 1;
@@ -54,7 +54,7 @@ namespace zf {
         IMAGEHLP_LINE64 line;
         line.SizeOfStruct = ZF_SIZE_OF(IMAGEHLP_LINE64);
 
-        for (t_i32 i = 0; i < frame_cnt; i++) {
+        for (int i = 0; i < frame_cnt; i++) {
             const auto addr = static_cast<DWORD64>(reinterpret_cast<uintptr_t>(stack[i]));
 
             if (SymFromAddr(proc, addr, 0, symbol)) {
@@ -72,7 +72,7 @@ namespace zf {
 
         SymCleanup(proc);
     #else
-        for (t_i32 i = 0; i < frame_cnt; i++) {
+        for (int i = 0; i < frame_cnt; i++) {
             fprintf(stderr, "- 0x%p\n", stack[i]);
         }
     #endif
@@ -82,7 +82,7 @@ namespace zf {
 #endif
     }
 
-    void detail::f_handle_assert_error(const char *const cond_cstr, const char *const func_name_cstr, const char *const file_name_cstr, const t_i32 line) {
+    void detail::f_handle_assert_error(const char *const cond_cstr, const char *const func_name_cstr, const char *const file_name_cstr, const int line) {
         fprintf(stderr, "==================== ASSERTION ERROR ====================\n");
         fprintf(stderr, "Condition: %s\n", cond_cstr);
         fprintf(stderr, "Function:  %s\n", func_name_cstr);
@@ -100,7 +100,7 @@ namespace zf {
         abort();
     }
 
-    void detail::f_handle_fatal_error(const char *const func_name_cstr, const char *const file_name_cstr, const t_i32 line, const char *const cond_cstr) {
+    void detail::f_handle_fatal_error(const char *const func_name_cstr, const char *const file_name_cstr, const int line, const char *const cond_cstr) {
         fprintf(stderr, "==================== FATAL ERROR ====================\n");
 
 #ifdef ZF_DEBUG

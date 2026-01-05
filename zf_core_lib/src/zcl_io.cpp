@@ -71,10 +71,10 @@ namespace zf {
         const t_i32 file_size = f_io_calc_file_size(&stream);
 
         if (add_terminator) {
-            *o_contents = f_mem_push_array<t_u8>(contents_arena, file_size + 1);
+            *o_contents = f_mem_arena_push_array<t_u8>(contents_arena, file_size + 1);
             (*o_contents)[file_size] = 0;
         } else {
-            *o_contents = f_mem_push_array<t_u8>(contents_arena, file_size);
+            *o_contents = f_mem_arena_push_array<t_u8>(contents_arena, file_size);
         }
 
         if (!f_io_read_items_into_array(&stream, *o_contents, file_size)) {
@@ -145,7 +145,7 @@ namespace zf {
         ZF_WALK_STR (path, step) {
             if (step.code_pt == '/' || step.code_pt == '\\') {
                 if (!cur_dir_name_is_empty) {
-                    if (!create_dir_if_nonexistent({f_mem_slice_array(path.bytes, 0, step.byte_index)})) {
+                    if (!create_dir_if_nonexistent({f_array_slice(path.bytes, 0, step.byte_index)})) {
                         return false;
                     }
 
@@ -173,7 +173,7 @@ namespace zf {
         // Get the substring containing all directories and create them.
         ZF_WALK_STR_REVERSE (path, step) {
             if (step.code_pt == '/' || step.code_pt == '\\') {
-                if (!f_io_create_directory_and_parents({f_mem_slice_array(path.bytes, 0, step.byte_index)}, temp_arena, o_dir_creation_res)) {
+                if (!f_io_create_directory_and_parents({f_array_slice(path.bytes, 0, step.byte_index)}, temp_arena, o_dir_creation_res)) {
                     return false;
                 }
 
@@ -222,8 +222,8 @@ namespace zf {
             }
         }
 
-        const auto result_bytes = f_mem_push_array<t_u8>(arena, len);
-        f_algos_copy_all(f_mem_array_as_byte_array(f_mem_slice_array(f_mem_as_nonstatic_array(buf), 0, len)), result_bytes);
+        const auto result_bytes = f_mem_arena_push_array<t_u8>(arena, len);
+        f_algos_copy_all(f_mem_get_array_as_byte_array(f_array_slice(f_array_get_as_nonstatic(buf), 0, len)), result_bytes);
         return {result_bytes};
 #elif defined(ZF_PLATFORM_MACOS)
     #error "Platform-specific implementation not yet done!"

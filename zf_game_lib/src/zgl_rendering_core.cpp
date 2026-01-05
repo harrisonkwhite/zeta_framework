@@ -133,7 +133,7 @@ namespace zf {
         //
         // Basis Setup
         //
-        const auto basis = f_mem_push_item<t_rendering_basis>(arena);
+        const auto basis = f_mem_arena_push_item<t_rendering_basis>(arena);
 
         {
             bgfx::VertexLayout vert_layout;
@@ -159,7 +159,7 @@ namespace zf {
         }
 
         const t_static_array<t_u8, 4> px_texture_rgba = {{255, 255, 255, 255}};
-        basis->px_texture = f_rendering_create_texture({{1, 1}, f_mem_as_nonstatic_array(px_texture_rgba)}, &g_state.perm_resource_group);
+        basis->px_texture = f_rendering_create_texture({{1, 1}, f_array_get_as_nonstatic(px_texture_rgba)}, &g_state.perm_resource_group);
 
         return basis;
     }
@@ -213,7 +213,7 @@ namespace zf {
     static t_rendering_resource *f_rendering_add_to_resource_group(t_rendering_resource_group *const group, const t_rendering_resource_type type) {
         ZF_ASSERT(g_state.state == ec_state_active_but_not_rendering);
 
-        const auto resource = f_mem_push_item_zeroed<t_rendering_resource>(group->arena);
+        const auto resource = f_mem_arena_push_item_zeroed<t_rendering_resource>(group->arena);
 
         if (!group->head) {
             group->head = resource;
@@ -232,7 +232,7 @@ namespace zf {
         ZF_ASSERT(g_state.state == ec_state_active_but_not_rendering);
 
         const uint64_t sampler_flags = BGFX_SAMPLER_MIN_POINT | BGFX_SAMPLER_MAG_POINT | BGFX_SAMPLER_U_CLAMP | BGFX_SAMPLER_V_CLAMP;
-        const auto texture_bgfx_hdl = bgfx::createTexture2D(static_cast<uint16_t>(texture_data.size_in_pxs.x), static_cast<uint16_t>(texture_data.size_in_pxs.y), false, 1, bgfx::TextureFormat::RGBA8, sampler_flags, bgfx::copy(texture_data.rgba_px_data.raw, static_cast<uint32_t>(f_mem_array_size_in_bytes(texture_data.rgba_px_data))));
+        const auto texture_bgfx_hdl = bgfx::createTexture2D(static_cast<uint16_t>(texture_data.size_in_pxs.x), static_cast<uint16_t>(texture_data.size_in_pxs.y), false, 1, bgfx::TextureFormat::RGBA8, sampler_flags, bgfx::copy(texture_data.rgba_px_data.raw, static_cast<uint32_t>(f_array_get_size_in_bytes(texture_data.rgba_px_data))));
 
         if (!bgfx::isValid(texture_bgfx_hdl)) {
             ZF_FATAL();
@@ -300,7 +300,7 @@ namespace zf {
 
         g_state.state = ec_state_active_and_rendering;
 
-        const auto context = f_mem_push_item_zeroed<t_rendering_context>(context_arena);
+        const auto context = f_mem_arena_push_item_zeroed<t_rendering_context>(context_arena);
         context->basis = basis;
 
         return context;
@@ -317,8 +317,8 @@ namespace zf {
             ZF_FATAL();
         }
 
-        const auto verts = f_mem_slice_array(f_mem_as_nonstatic_array(context->batch_state.verts), 0, context->batch_state.vert_cnt);
-        const auto verts_bgfx_mem = bgfx::copy(verts.raw, static_cast<uint32_t>(f_mem_array_size_in_bytes(verts)));
+        const auto verts = f_array_slice(f_array_get_as_nonstatic(context->batch_state.verts), 0, context->batch_state.vert_cnt);
+        const auto verts_bgfx_mem = bgfx::copy(verts.raw, static_cast<uint32_t>(f_array_get_size_in_bytes(verts)));
         bgfx::update(context->basis->vert_buf_bgfx_hdl, static_cast<uint32_t>(context->frame_vert_cnt), verts_bgfx_mem);
 
         const auto texture_bgfx_hdl = context->batch_state.texture ? context->batch_state.texture->type_data.texture.bgfx_hdl : context->basis->px_texture->type_data.texture.bgfx_hdl;

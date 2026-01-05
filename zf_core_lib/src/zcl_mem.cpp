@@ -4,7 +4,7 @@
 #include <zcl/zcl_algos.h>
 
 namespace zf {
-    void f_mem_destroy_arena(t_arena *const arena) {
+    void f_mem_arena_destroy(t_arena *const arena) {
         const auto f = [](const auto self, t_arena_block *const block) {
             if (!block) {
                 return;
@@ -22,7 +22,7 @@ namespace zf {
         f(f, arena->blocks_head);
     }
 
-    static t_arena_block *f_mem_create_arena_block(const t_i32 buf_size) {
+    static t_arena_block *f_mem_arena_create_block(const t_i32 buf_size) {
         ZF_REQUIRE(buf_size > 0);
 
         const auto block = static_cast<t_arena_block *>(malloc(sizeof(t_arena_block)));
@@ -47,27 +47,27 @@ namespace zf {
         return block;
     }
 
-    void *f_mem_push(t_arena *const arena, const t_i32 size, const t_i32 alignment) {
-        ZF_ASSERT(size > 0 && f_is_alignment_valid(alignment));
+    void *f_mem_arena_push(t_arena *const arena, const t_i32 size, const t_i32 alignment) {
+        ZF_ASSERT(size > 0 && f_mem_is_alignment_valid(alignment));
 
         if (!arena->blocks_head) {
-            arena->blocks_head = f_mem_create_arena_block(ZF_MAX(size, arena->block_min_size));
+            arena->blocks_head = f_mem_arena_create_block(f_max(size, arena->block_min_size));
             arena->block_cur = arena->blocks_head;
-            return f_mem_push(arena, size, alignment);
+            return f_mem_arena_push(arena, size, alignment);
         }
 
-        const t_i32 offs_aligned = f_align_forward(arena->block_cur_offs, alignment);
+        const t_i32 offs_aligned = f_mem_align_forward(arena->block_cur_offs, alignment);
         const t_i32 offs_next = offs_aligned + size;
 
         if (offs_next > arena->block_cur->buf_size) {
             if (!arena->block_cur->next) {
-                arena->block_cur->next = f_mem_create_arena_block(ZF_MAX(size, arena->block_min_size));
+                arena->block_cur->next = f_mem_arena_create_block(f_max(size, arena->block_min_size));
             }
 
             arena->block_cur = arena->block_cur->next;
             arena->block_cur_offs = 0;
 
-            return f_mem_push(arena, size, alignment);
+            return f_mem_arena_push(arena, size, alignment);
         }
 
         arena->block_cur_offs = offs_next;
@@ -78,7 +78,7 @@ namespace zf {
         return result;
     }
 
-    void f_mem_rewind_arena(t_arena *const arena) {
+    void f_mem_arena_rewind(t_arena *const arena) {
         arena->block_cur = arena->blocks_head;
         arena->block_cur_offs = 0;
 
@@ -93,81 +93,77 @@ namespace zf {
 #endif
     }
 
-
-    // ============================================================
-    // @section: Dude
-
-    t_b8 f_mem_is_any_bit_set(const t_bit_vec_rdonly bv) {
-        if (bv.bit_cnt == 0) {
+    t_b8 f_mem_is_any_bit_set(const t_bitset_rdonly bs) {
+        if (bs.bit_cnt == 0) {
             return false;
         }
 
-        const auto first_bytes = f_mem_slice_array(f_mem_bit_vector_bytes(bv), 0, f_mem_bit_vector_bytes(bv).len - 1);
+        const auto first_bytes = f_array_slice(f_mem_bitset_get_bytes(bs), 0, f_mem_bitset_get_bytes(bs).len - 1);
 
         if (!f_algos_do_all_equal(first_bytes, 0)) {
             return true;
         }
 
-        return (f_mem_bit_vector_bytes(bv)[f_mem_bit_vector_bytes(bv).len - 1] & f_mem_bit_vector_last_byte_mask(bv)) != 0;
+        return (f_mem_bitset_get_bytes(bs)[f_mem_bitset_get_bytes(bs).len - 1] & f_mem_bitset_get_last_byte_mask(bs)) != 0;
     }
 
-    t_b8 f_mem_are_all_bits_set(const t_bit_vec_rdonly bv) {
-        if (bv.bit_cnt == 0) {
+    t_b8 f_mem_are_all_bits_set(const t_bitset_rdonly bs) {
+        if (bs.bit_cnt == 0) {
             return false;
         }
 
-        const auto first_bytes = f_mem_slice_array(f_mem_bit_vector_bytes(bv), 0, f_mem_bit_vector_bytes(bv).len - 1);
+        const auto first_bytes = f_array_slice(f_mem_bitset_get_bytes(bs), 0, f_mem_bitset_get_bytes(bs).len - 1);
 
         if (!f_algos_do_all_equal(first_bytes, 0xFF)) {
             return false;
         }
 
-        const auto last_byte_mask = f_mem_bit_vector_last_byte_mask(bv);
-        return (f_mem_bit_vector_bytes(bv)[f_mem_bit_vector_bytes(bv).len - 1] & last_byte_mask) == last_byte_mask;
+        const auto last_byte_mask = f_mem_bitset_get_last_byte_mask(bs);
+        return (f_mem_bitset_get_bytes(bs)[f_mem_bitset_get_bytes(bs).len - 1] & last_byte_mask) == last_byte_mask;
     }
 
-    void f_mem_set_all_bits(const t_bit_vec_mut bv) {
-        if (bv.bit_cnt == 0) {
+    void f_mem_set_all_bits(const t_bitset_mut bs) {
+        if (bs.bit_cnt == 0) {
             return;
         }
 
-        const auto first_bytes = f_mem_slice_array(f_mem_bit_vector_bytes(bv), 0, f_mem_bit_vector_bytes(bv).len - 1);
+        const auto first_bytes = f_array_slice(f_mem_bitset_get_bytes(bs), 0, f_mem_bitset_get_bytes(bs).len - 1);
         f_algos_set_all_to(first_bytes, 0xFF);
 
-        f_mem_bit_vector_bytes(bv)[f_mem_bit_vector_bytes(bv).len - 1] |= f_mem_bit_vector_last_byte_mask(bv);
+        f_mem_bitset_get_bytes(bs)[f_mem_bitset_get_bytes(bs).len - 1] |= f_mem_bitset_get_last_byte_mask(bs);
     }
 
-    void f_mem_unset_all_bits(const t_bit_vec_mut bv) {
-        if (bv.bit_cnt == 0) {
+    void f_mem_unset_all_bits(const t_bitset_mut bs) {
+        if (bs.bit_cnt == 0) {
             return;
         }
 
-        const auto first_bytes = f_mem_slice_array(f_mem_bit_vector_bytes(bv), 0, f_mem_bit_vector_bytes(bv).len - 1);
+        const auto first_bytes = f_array_slice(f_mem_bitset_get_bytes(bs), 0, f_mem_bitset_get_bytes(bs).len - 1);
         f_algos_set_all_to(first_bytes, 0);
 
-        f_mem_bit_vector_bytes(bv)[f_mem_bit_vector_bytes(bv).len - 1] &= ~f_mem_bit_vector_last_byte_mask(bv);
+        f_mem_bitset_get_bytes(bs)[f_mem_bitset_get_bytes(bs).len - 1] &= ~f_mem_bitset_get_last_byte_mask(bs);
     }
 
-    void f_mem_set_bits_in_range(const t_bit_vec_mut bv, const t_i32 begin_bit_index, const t_i32 end_bit_index) {
-        ZF_ASSERT(begin_bit_index >= 0 && begin_bit_index < bv.bit_cnt);
-        ZF_ASSERT(end_bit_index >= begin_bit_index && end_bit_index <= bv.bit_cnt);
+    void f_mem_set_bits_in_range(const t_bitset_mut bs, const t_i32 begin_bit_index, const t_i32 end_bit_index) {
+        ZF_ASSERT(begin_bit_index >= 0 && begin_bit_index < bs.bit_cnt);
+        ZF_ASSERT(end_bit_index >= begin_bit_index && end_bit_index <= bs.bit_cnt);
 
         const t_i32 begin_elem_index = begin_bit_index / 8;
-        const t_i32 end_elem_index = f_bits_to_bytes(end_bit_index);
+        const t_i32 end_elem_index = f_mem_bits_to_bytes(end_bit_index);
 
         for (t_i32 i = begin_elem_index; i < end_elem_index; i++) {
             const t_i32 bit_offs = i * 8;
             const t_i32 begin_bit_index_rel = begin_bit_index - bit_offs;
             const t_i32 end_bit_index_rel = end_bit_index - bit_offs;
 
-            const t_i32 set_range_begin = ZF_MAX(begin_bit_index_rel, 0);
-            const t_i32 set_range_end = ZF_MIN(end_bit_index_rel, 8);
+            const t_i32 set_range_begin = f_max(begin_bit_index_rel, 0);
+            const t_i32 set_range_end = f_min(end_bit_index_rel, 8);
 
-            f_mem_bit_vector_bytes(bv)[i] |= f_mem_byte_bitmask_range(set_range_begin, set_range_end);
+            f_mem_bitset_get_bytes(bs)[i] |= f_mem_make_byte_bitmask_range(set_range_begin, set_range_end);
         }
     }
 
-    void f_mem_apply_mask_to_bits(const t_bit_vec_mut targ, const t_bit_vec_rdonly mask, const t_bitwise_mask_op op) {
+    void f_mem_apply_mask_to_bits(const t_bitset_mut targ, const t_bitset_rdonly mask, const t_bitwise_mask_op op) {
         ZF_ASSERT(targ.bit_cnt == mask.bit_cnt);
 
         if (targ.bit_cnt == 0) {
@@ -176,148 +172,148 @@ namespace zf {
 
         switch (op) {
         case ec_bitwise_mask_op_and:
-            for (t_i32 i = 0; i < f_mem_bit_vector_bytes(targ).len; i++) {
-                f_mem_bit_vector_bytes(targ)[i] &= f_mem_bit_vector_bytes(mask)[i];
+            for (t_i32 i = 0; i < f_mem_bitset_get_bytes(targ).len; i++) {
+                f_mem_bitset_get_bytes(targ)[i] &= f_mem_bitset_get_bytes(mask)[i];
             }
 
             break;
 
         case ec_bitwise_mask_op_or:
-            for (t_i32 i = 0; i < f_mem_bit_vector_bytes(targ).len; i++) {
-                f_mem_bit_vector_bytes(targ)[i] |= f_mem_bit_vector_bytes(mask)[i];
+            for (t_i32 i = 0; i < f_mem_bitset_get_bytes(targ).len; i++) {
+                f_mem_bitset_get_bytes(targ)[i] |= f_mem_bitset_get_bytes(mask)[i];
             }
 
             break;
 
         case ec_bitwise_mask_op_xor:
-            for (t_i32 i = 0; i < f_mem_bit_vector_bytes(targ).len; i++) {
-                f_mem_bit_vector_bytes(targ)[i] ^= f_mem_bit_vector_bytes(mask)[i];
+            for (t_i32 i = 0; i < f_mem_bitset_get_bytes(targ).len; i++) {
+                f_mem_bitset_get_bytes(targ)[i] ^= f_mem_bitset_get_bytes(mask)[i];
             }
 
             break;
 
         case ec_bitwise_mask_op_andnot:
-            for (t_i32 i = 0; i < f_mem_bit_vector_bytes(targ).len; i++) {
-                f_mem_bit_vector_bytes(targ)[i] &= ~f_mem_bit_vector_bytes(mask)[i];
+            for (t_i32 i = 0; i < f_mem_bitset_get_bytes(targ).len; i++) {
+                f_mem_bitset_get_bytes(targ)[i] &= ~f_mem_bitset_get_bytes(mask)[i];
             }
 
             break;
         }
 
-        f_mem_bit_vector_bytes(targ)[f_mem_bit_vector_bytes(targ).len - 1] &= f_mem_bit_vector_last_byte_mask(targ);
+        f_mem_bitset_get_bytes(targ)[f_mem_bitset_get_bytes(targ).len - 1] &= f_mem_bitset_get_last_byte_mask(targ);
     }
 
-    t_u8 f_mem_shift_bits_left(const t_bit_vec_mut bv) {
-        ZF_ASSERT(f_bits_to_bytes(bv.bit_cnt) == f_mem_bit_vector_bytes(bv).len);
+    static t_u8 f_mem_shift_bits_left(const t_bitset_mut bs) {
+        ZF_ASSERT(f_mem_bits_to_bytes(bs.bit_cnt) == f_mem_bitset_get_bytes(bs).len);
 
-        if (bv.bit_cnt == 0) {
+        if (bs.bit_cnt == 0) {
             return 0;
         }
 
         t_u8 discard = 0;
 
-        for (t_i32 i = 0; i < f_mem_bit_vector_bytes(bv).len; i++) {
-            const t_i32 bits_in_byte = i == f_mem_bit_vector_bytes(bv).len - 1 ? f_mem_bit_vector_last_byte_bit_cnt(bv) : 8;
+        for (t_i32 i = 0; i < f_mem_bitset_get_bytes(bs).len; i++) {
+            const t_i32 bits_in_byte = i == f_mem_bitset_get_bytes(bs).len - 1 ? f_mem_bitset_get_last_byte_bit_cnt(bs) : 8;
             const t_u8 discard_last = discard;
-            discard = (f_mem_bit_vector_bytes(bv)[i] & f_mem_byte_bitmask_single(bits_in_byte - 1)) >> (bits_in_byte - 1);
-            f_mem_bit_vector_bytes(bv)[i] <<= 1;
-            f_mem_bit_vector_bytes(bv)[i] |= discard_last;
+            discard = (f_mem_bitset_get_bytes(bs)[i] & f_mem_make_byte_bitmask_single(bits_in_byte - 1)) >> (bits_in_byte - 1);
+            f_mem_bitset_get_bytes(bs)[i] <<= 1;
+            f_mem_bitset_get_bytes(bs)[i] |= discard_last;
         }
 
-        f_mem_bit_vector_bytes(bv)[f_mem_bit_vector_bytes(bv).len - 1] &= f_mem_bit_vector_last_byte_mask(bv);
+        f_mem_bitset_get_bytes(bs)[f_mem_bitset_get_bytes(bs).len - 1] &= f_mem_bitset_get_last_byte_mask(bs);
 
         return discard;
     }
 
-    void f_mem_shift_bits_left_by(const t_bit_vec_mut bv, const t_i32 amount) {
+    void f_mem_shift_bits_left_by(const t_bitset_mut bs, const t_i32 amount) {
         ZF_ASSERT(amount >= 0);
 
         // @speed: :(
 
         for (t_i32 i = 0; i < amount; i++) {
-            f_mem_shift_bits_left(bv);
+            f_mem_shift_bits_left(bs);
         }
     }
 
-    void f_mem_rot_bits_left_by(const t_bit_vec_mut bv, const t_i32 amount) {
+    void f_mem_rot_bits_left_by(const t_bitset_mut bs, const t_i32 amount) {
         ZF_ASSERT(amount >= 0);
 
-        if (bv.bit_cnt == 0) {
+        if (bs.bit_cnt == 0) {
             return;
         }
 
         // @speed: :(
 
         for (t_i32 i = 0; i < amount; i++) {
-            const auto discard = f_mem_shift_bits_left(bv);
+            const auto discard = f_mem_shift_bits_left(bs);
 
             if (discard) {
-                f_mem_set_bit(bv, 0);
+                f_mem_set_bit(bs, 0);
             } else {
-                f_mem_unset_bit(bv, 0);
+                f_mem_unset_bit(bs, 0);
             }
         }
     }
 
-    t_u8 f_mem_shift_bits_right(const t_bit_vec_mut bv) {
-        ZF_ASSERT(f_bits_to_bytes(bv.bit_cnt) == f_mem_bit_vector_bytes(bv).len);
+    static t_u8 f_mem_shift_bits_right(const t_bitset_mut bs) {
+        ZF_ASSERT(f_mem_bits_to_bytes(bs.bit_cnt) == f_mem_bitset_get_bytes(bs).len);
 
-        if (bv.bit_cnt == 0) {
+        if (bs.bit_cnt == 0) {
             return 0;
         }
 
-        f_mem_bit_vector_bytes(bv)[f_mem_bit_vector_bytes(bv).len - 1] &= f_mem_bit_vector_last_byte_mask(bv); // Drop any excess bits so we don't accidentally shift a 1 in.
+        f_mem_bitset_get_bytes(bs)[f_mem_bitset_get_bytes(bs).len - 1] &= f_mem_bitset_get_last_byte_mask(bs); // Drop any excess bits so we don't accidentally shift a 1 in.
 
         t_u8 discard = 0;
 
-        for (t_i32 i = f_mem_bit_vector_bytes(bv).len - 1; i >= 0; i--) {
-            const t_i32 bits_in_byte = i == f_mem_bit_vector_bytes(bv).len - 1 ? f_mem_bit_vector_last_byte_bit_cnt(bv) : 8;
+        for (t_i32 i = f_mem_bitset_get_bytes(bs).len - 1; i >= 0; i--) {
+            const t_i32 bits_in_byte = i == f_mem_bitset_get_bytes(bs).len - 1 ? f_mem_bitset_get_last_byte_bit_cnt(bs) : 8;
             const t_u8 discard_last = discard;
-            discard = f_mem_bit_vector_bytes(bv)[i] & f_mem_byte_bitmask_single(0);
-            f_mem_bit_vector_bytes(bv)[i] >>= 1;
+            discard = f_mem_bitset_get_bytes(bs)[i] & f_mem_make_byte_bitmask_single(0);
+            f_mem_bitset_get_bytes(bs)[i] >>= 1;
 
             if (discard_last) {
-                f_mem_bit_vector_bytes(bv)[i] |= f_mem_byte_bitmask_single(bits_in_byte - 1);
+                f_mem_bitset_get_bytes(bs)[i] |= f_mem_make_byte_bitmask_single(bits_in_byte - 1);
             }
         }
 
         return discard;
     }
 
-    void f_mem_shift_bits_right_by(const t_bit_vec_mut bv, const t_i32 amount) {
+    void f_mem_shift_bits_right_by(const t_bitset_mut bs, const t_i32 amount) {
         ZF_ASSERT(amount >= 0);
 
         // @speed: :(
 
         for (t_i32 i = 0; i < amount; i++) {
-            f_mem_shift_bits_right(bv);
+            f_mem_shift_bits_right(bs);
         }
     }
 
-    void f_mem_rot_bits_right_by(const t_bit_vec_mut bv, const t_i32 amount) {
+    void f_mem_rot_bits_right_by(const t_bitset_mut bs, const t_i32 amount) {
         ZF_ASSERT(amount >= 0);
 
-        if (bv.bit_cnt == 0) {
+        if (bs.bit_cnt == 0) {
             return;
         }
 
         // @speed: :(
 
         for (t_i32 i = 0; i < amount; i++) {
-            const auto discard = f_mem_shift_bits_right(bv);
+            const auto discard = f_mem_shift_bits_right(bs);
 
             if (discard) {
-                f_mem_set_bit(bv, bv.bit_cnt - 1);
+                f_mem_set_bit(bs, bs.bit_cnt - 1);
             } else {
-                f_mem_unset_bit(bv, bv.bit_cnt - 1);
+                f_mem_unset_bit(bs, bs.bit_cnt - 1);
             }
         }
     }
 
     // ============================================================
 
-    static t_i32 f_mem_index_of_first_set_bit_helper(const t_bit_vec_rdonly bv, const t_i32 from, const t_u8 xor_mask) {
-        ZF_ASSERT(from >= 0 && from <= bv.bit_cnt); // Intentionally allowing the upper bound here for the case of iteration.
+    static t_i32 f_mem_get_index_of_first_set_bit_helper(const t_bitset_rdonly bs, const t_i32 from, const t_u8 xor_mask) {
+        ZF_ASSERT(from >= 0 && from <= bs.bit_cnt); // Intentionally allowing the upper bound here for the case of iteration.
 
         // Map of each possible byte to the index of the first set bit, or -1 for the first case.
         static const t_static_array<t_i32, 256> g_mappings = {{
@@ -581,15 +577,15 @@ namespace zf {
 
         const t_i32 begin_byte_index = from / 8;
 
-        for (t_i32 i = begin_byte_index; i < f_mem_bit_vector_bytes(bv).len; i++) {
-            t_u8 byte = f_mem_bit_vector_bytes(bv)[i] ^ xor_mask;
+        for (t_i32 i = begin_byte_index; i < f_mem_bitset_get_bytes(bs).len; i++) {
+            t_u8 byte = f_mem_bitset_get_bytes(bs)[i] ^ xor_mask;
 
             if (i == begin_byte_index) {
-                byte &= f_mem_byte_bitmask_range(from % 8);
+                byte &= f_mem_make_byte_bitmask_range(from % 8);
             }
 
-            if (i == f_mem_bit_vector_bytes(bv).len - 1) {
-                byte &= f_mem_bit_vector_last_byte_mask(bv);
+            if (i == f_mem_bitset_get_bytes(bs).len - 1) {
+                byte &= f_mem_bitset_get_last_byte_mask(bs);
             }
 
             const t_i32 bi = g_mappings[byte];
@@ -602,15 +598,15 @@ namespace zf {
         return -1;
     }
 
-    t_i32 f_mem_index_of_first_set_bit(const t_bit_vec_rdonly bv, const t_i32 from) {
-        return f_mem_index_of_first_set_bit_helper(bv, from, 0);
+    t_i32 f_mem_get_index_of_first_set_bit(const t_bitset_rdonly bs, const t_i32 from) {
+        return f_mem_get_index_of_first_set_bit_helper(bs, from, 0);
     }
 
-    t_i32 f_mem_index_of_first_unset_bit(const t_bit_vec_rdonly bv, const t_i32 from) {
-        return f_mem_index_of_first_set_bit_helper(bv, from, 0xFF);
+    t_i32 f_mem_get_index_of_first_unset_bit(const t_bitset_rdonly bs, const t_i32 from) {
+        return f_mem_get_index_of_first_set_bit_helper(bs, from, 0xFF);
     }
 
-    t_i32 f_mem_count_set_bits(const t_bit_vec_rdonly bv) {
+    t_i32 f_mem_count_set_bits(const t_bitset_rdonly bs) {
         // Map of each possible byte to the number of set bits in it.
         static const t_static_array<t_i32, 256> g_mappings = {{
             0, // 0000 0000
@@ -873,21 +869,21 @@ namespace zf {
 
         t_i32 result = 0;
 
-        if (f_mem_bit_vector_bytes(bv).len > 0) {
-            for (t_i32 i = 0; i < f_mem_bit_vector_bytes(bv).len - 1; i++) {
-                result += g_mappings[f_mem_bit_vector_bytes(bv)[i]];
+        if (f_mem_bitset_get_bytes(bs).len > 0) {
+            for (t_i32 i = 0; i < f_mem_bitset_get_bytes(bs).len - 1; i++) {
+                result += g_mappings[f_mem_bitset_get_bytes(bs)[i]];
             }
 
-            result += g_mappings[f_mem_bit_vector_bytes(bv)[f_mem_bit_vector_bytes(bv).len - 1] & f_mem_bit_vector_last_byte_mask(bv)];
+            result += g_mappings[f_mem_bitset_get_bytes(bs)[f_mem_bitset_get_bytes(bs).len - 1] & f_mem_bitset_get_last_byte_mask(bs)];
         }
 
         return result;
     }
 
-    t_b8 f_mem_walk_set_bits(const t_bit_vec_rdonly bv, t_i32 *const pos, t_i32 *const o_index) {
-        ZF_ASSERT(*pos >= 0 && *pos <= bv.bit_cnt);
+    t_b8 f_mem_walk_set_bits(const t_bitset_rdonly bs, t_i32 *const pos, t_i32 *const o_index) {
+        ZF_ASSERT(*pos >= 0 && *pos <= bs.bit_cnt);
 
-        *o_index = f_mem_index_of_first_set_bit(bv, *pos);
+        *o_index = f_mem_get_index_of_first_set_bit(bs, *pos);
 
         if (*o_index == -1) {
             return false;
@@ -898,10 +894,10 @@ namespace zf {
         return true;
     }
 
-    t_b8 f_mem_walk_unset_bits(const t_bit_vec_rdonly bv, t_i32 *const pos, t_i32 *const o_index) {
-        ZF_ASSERT(*pos >= 0 && *pos <= bv.bit_cnt);
+    t_b8 f_mem_walk_unset_bits(const t_bitset_rdonly bs, t_i32 *const pos, t_i32 *const o_index) {
+        ZF_ASSERT(*pos >= 0 && *pos <= bs.bit_cnt);
 
-        *o_index = f_mem_index_of_first_unset_bit(bv, *pos);
+        *o_index = f_mem_get_index_of_first_unset_bit(bs, *pos);
 
         if (*o_index == -1) {
             return false;

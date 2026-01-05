@@ -2,8 +2,8 @@
 
 namespace zf {
     static t_b8 OutputCode(const t_str_rdonly input_file_path, const t_str_rdonly output_file_path, const t_str_rdonly arr_var_subname) {
-        t_arena arena = f_mem_create_arena();
-        ZF_DEFER({ f_mem_destroy_arena(&arena); });
+        t_arena arena = f_mem_arena_create();
+        ZF_DEFER({ f_mem_arena_destroy(&arena); });
 
         t_stream input_file_stream;
 

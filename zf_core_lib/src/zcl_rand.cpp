@@ -47,7 +47,7 @@ namespace zf {
     }
 
     t_rng *f_rand_create_rng(const t_u64 seed, t_arena *const arena) {
-        const auto rng = f_mem_push_item<t_rng>(arena);
+        const auto rng = f_mem_arena_push_item<t_rng>(arena);
         f_rand_seed_pcg32(&rng->pcg32, seed, 0); // @todo: Infer sequence from seed with mixing function!
         return rng;
     }

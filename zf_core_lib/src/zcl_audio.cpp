@@ -27,7 +27,7 @@ namespace zf {
             .frame_cnt = static_cast<t_i32>(frame_cnt),
         };
 
-        o_snd_data->pcm = f_mem_push_array<t_f32>(snd_data_arena, f_audio_get_sample_cnt(o_snd_data->meta));
+        o_snd_data->pcm = f_mem_arena_push_array<t_f32>(snd_data_arena, f_audio_get_sample_cnt(o_snd_data->meta));
 
         if (ma_decoder_read_pcm_frames(&decoder, o_snd_data->pcm.raw, frame_cnt, nullptr) != MA_SUCCESS) {
             return false;
@@ -65,7 +65,7 @@ namespace zf {
             return false;
         }
 
-        o_snd_data->pcm = f_mem_push_array<t_f32>(snd_data_arena, f_audio_get_sample_cnt(o_snd_data->meta));
+        o_snd_data->pcm = f_mem_arena_push_array<t_f32>(snd_data_arena, f_audio_get_sample_cnt(o_snd_data->meta));
 
         if (!f_io_read_items_into_array(&fs, o_snd_data->pcm, o_snd_data->pcm.len)) {
             return false;

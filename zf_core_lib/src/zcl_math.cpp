@@ -10,10 +10,10 @@ namespace zf {
         t_f32 max_bottom = f_math_get_rect_bottom(rects[0]);
 
         for (t_i32 i = 1; i < rects.len; i++) {
-            min_left = ZF_MIN(f_math_get_rect_left(rects[i]), min_left);
-            min_top = ZF_MIN(f_math_get_rect_top(rects[i]), min_top);
-            max_right = ZF_MAX(f_math_get_rect_right(rects[i]), max_right);
-            max_bottom = ZF_MAX(f_math_get_rect_bottom(rects[i]), max_bottom);
+            min_left = f_min(f_math_get_rect_left(rects[i]), min_left);
+            min_top = f_min(f_math_get_rect_top(rects[i]), min_top);
+            max_right = f_max(f_math_get_rect_right(rects[i]), max_right);
+            max_bottom = f_max(f_math_get_rect_bottom(rects[i]), max_bottom);
         }
 
         return {min_left, min_top, max_right - min_left, max_bottom - min_top};
@@ -28,10 +28,10 @@ namespace zf {
         t_i32 max_bottom = f_math_get_rect_bottom(rects[0]);
 
         for (t_i32 i = 1; i < rects.len; i++) {
-            min_left = ZF_MIN(f_math_get_rect_left(rects[i]), min_left);
-            min_top = ZF_MIN(f_math_get_rect_top(rects[i]), min_top);
-            max_right = ZF_MAX(f_math_get_rect_right(rects[i]), max_right);
-            max_bottom = ZF_MAX(f_math_get_rect_bottom(rects[i]), max_bottom);
+            min_left = f_min(f_math_get_rect_left(rects[i]), min_left);
+            min_top = f_min(f_math_get_rect_top(rects[i]), min_top);
+            max_right = f_max(f_math_get_rect_right(rects[i]), max_right);
+            max_bottom = f_max(f_math_get_rect_bottom(rects[i]), max_bottom);
         }
 
         return {min_left, min_top, max_right - min_left, max_bottom - min_top};

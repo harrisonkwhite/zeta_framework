@@ -32,7 +32,7 @@ namespace zf {
         ZF_DEFER({ stbi_image_free(stb_px_data); });
 
         const t_array_rdonly<t_u8> stb_px_data_arr = {stb_px_data, 4 * size_in_pxs.x * size_in_pxs.y};
-        const auto px_data = f_mem_push_array<t_u8>(texture_data_arena, 4 * size_in_pxs.x * size_in_pxs.y);
+        const auto px_data = f_mem_arena_push_array<t_u8>(texture_data_arena, 4 * size_in_pxs.x * size_in_pxs.y);
         f_algos_copy_all(stb_px_data_arr, px_data);
 
         *o_texture_data = {size_in_pxs, px_data};
@@ -79,7 +79,7 @@ namespace zf {
             return false;
         }
 
-        const auto rgba_px_data = f_mem_push_array<t_u8>(texture_data_arena, 4 * size_in_pxs.x * size_in_pxs.y);
+        const auto rgba_px_data = f_mem_arena_push_array<t_u8>(texture_data_arena, 4 * size_in_pxs.x * size_in_pxs.y);
 
         if (!f_io_read_items_into_array(&fs, rgba_px_data, rgba_px_data.len)) {
             return false;
@@ -213,7 +213,7 @@ namespace zf {
         //
         // Texture Atlases
         //
-        *o_atlas_rgbas = f_mem_push_array<t_font_atlas_rgba>(atlas_rgbas_arena, atlas_cnt);
+        *o_atlas_rgbas = f_mem_arena_push_array<t_font_atlas_rgba>(atlas_rgbas_arena, atlas_cnt);
 
         // Initialise all pixels to transparent white.
         // @todo: Maybe don't use RBGA for this?

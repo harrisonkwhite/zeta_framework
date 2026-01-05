@@ -200,7 +200,7 @@ namespace zf {
 
         for (t_i32 i = GLFW_JOYSTICK_1; i <= GLFW_JOYSTICK_LAST; i++) {
             t_b8 connected = false;
-            t_static_bit_vec<ecm_gamepad_button_code_cnt> btns_down = {};
+            t_static_bitset<ecm_gamepad_button_code_cnt> btns_down = {};
             t_static_array<t_f32, ecm_gamepad_axis_code_cnt> axes = {};
 
             GLFWgamepadstate gamepad_state;

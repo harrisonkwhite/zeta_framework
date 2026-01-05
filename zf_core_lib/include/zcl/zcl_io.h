@@ -43,7 +43,7 @@ namespace zf {
 
     inline t_array_mut<t_u8> f_io_get_mem_stream_bytes_written(const t_stream *const stream) {
         ZF_ASSERT(stream->type == ec_stream_type_mem);
-        return f_mem_slice_array(stream->type_data.mem.bytes, 0, stream->type_data.mem.byte_pos);
+        return f_array_slice(stream->type_data.mem.bytes, 0, stream->type_data.mem.byte_pos);
     }
 
     inline t_stream f_io_create_file_stream(FILE *const file, const t_stream_mode mode) {
@@ -66,8 +66,8 @@ namespace zf {
                 return false;
             }
 
-            const auto src = f_mem_slice_array(stream->type_data.mem.bytes, stream->type_data.mem.byte_pos, stream->type_data.mem.byte_pos + size);
-            const auto dest = f_mem_as_bytes(*o_item);
+            const auto src = f_array_slice(stream->type_data.mem.bytes, stream->type_data.mem.byte_pos, stream->type_data.mem.byte_pos + size);
+            const auto dest = f_mem_get_as_bytes(*o_item);
             f_algos_copy_all(src, dest);
 
             stream->type_data.mem.byte_pos += size;
@@ -95,8 +95,8 @@ namespace zf {
                 return false;
             }
 
-            const auto src = f_mem_as_bytes(item);
-            const auto dest = f_mem_slice_array(stream->type_data.mem.bytes, stream->type_data.mem.byte_pos, stream->type_data.mem.byte_pos + size);
+            const auto src = f_mem_get_as_bytes(item);
+            const auto dest = f_array_slice(stream->type_data.mem.bytes, stream->type_data.mem.byte_pos, stream->type_data.mem.byte_pos + size);
             f_algos_copy_all(src, dest);
 
             stream->type_data.mem.byte_pos += size;
@@ -129,8 +129,8 @@ namespace zf {
                 return false;
             }
 
-            const auto src = f_mem_slice_array(stream->type_data.mem.bytes, stream->type_data.mem.byte_pos, stream->type_data.mem.byte_pos + size);
-            const auto dest = f_mem_array_as_byte_array(arr);
+            const auto src = f_array_slice(stream->type_data.mem.bytes, stream->type_data.mem.byte_pos, stream->type_data.mem.byte_pos + size);
+            const auto dest = f_mem_get_array_as_byte_array(arr);
             f_algos_copy_all(src, dest);
 
             stream->type_data.mem.byte_pos += size;
@@ -156,14 +156,14 @@ namespace zf {
 
         switch (stream->type) {
         case ec_stream_type_mem: {
-            const t_i32 size = f_mem_array_size_in_bytes(arr);
+            const t_i32 size = f_array_get_size_in_bytes(arr);
 
             if (stream->type_data.mem.byte_pos + size > stream->type_data.mem.bytes.len) {
                 return false;
             }
 
-            const auto src = f_mem_array_as_byte_array(arr);
-            const auto dest = f_mem_slice_array(stream->type_data.mem.bytes, stream->type_data.mem.byte_pos, stream->type_data.mem.byte_pos + size);
+            const auto src = f_mem_get_array_as_byte_array(arr);
+            const auto dest = f_array_slice(stream->type_data.mem.bytes, stream->type_data.mem.byte_pos, stream->type_data.mem.byte_pos + size);
             f_algos_copy_all(src, dest);
 
             stream->type_data.mem.byte_pos += size;
@@ -200,7 +200,7 @@ namespace zf {
             return false;
         }
 
-        *o_arr = f_mem_push_array<tp_type>(arr_arena, len);
+        *o_arr = f_mem_arena_push_array<tp_type>(arr_arena, len);
 
         if (!f_io_read_items_into_array(stream, *o_arr, len)) {
             return false;
@@ -209,28 +209,28 @@ namespace zf {
         return true;
     }
 
-    [[nodiscard]] inline t_b8 f_io_serialize_bit_vec(t_stream *const stream, const t_bit_vec_rdonly bv) {
+    [[nodiscard]] inline t_b8 f_io_serialize_bit_vec(t_stream *const stream, const t_bitset_rdonly bv) {
         if (!f_io_write_item(stream, bv.bit_cnt)) {
             return false;
         }
 
-        if (!f_io_write_items_of_array(stream, f_mem_bit_vector_bytes(bv))) {
+        if (!f_io_write_items_of_array(stream, f_mem_bitset_get_bytes(bv))) {
             return false;
         }
 
         return true;
     }
 
-    [[nodiscard]] inline t_b8 f_io_deserialize_bit_vec(t_stream *const stream, t_arena *const bv_arena, t_bit_vec_mut *const o_bv) {
+    [[nodiscard]] inline t_b8 f_io_deserialize_bit_vec(t_stream *const stream, t_arena *const bv_arena, t_bitset_mut *const o_bv) {
         t_i32 bit_cnt;
 
         if (!f_io_read_item(stream, &bit_cnt)) {
             return false;
         }
 
-        *o_bv = f_mem_create_bit_vector(bit_cnt, bv_arena);
+        *o_bv = f_mem_bitset_create(bit_cnt, bv_arena);
 
-        if (!f_io_read_items_into_array(stream, f_mem_bit_vector_bytes(*o_bv), f_mem_bit_vector_bytes(*o_bv).len)) {
+        if (!f_io_read_items_into_array(stream, f_mem_bitset_get_bytes(*o_bv), f_mem_bitset_get_bytes(*o_bv).len)) {
             return false;
         }
 
@@ -352,7 +352,7 @@ namespace zf {
     template <c_integral tp_type>
     t_b8 f_io_print_type(t_stream *const stream, const t_integral_fmt<tp_type> fmt) {
         t_static_array<t_u8, 20> str_bytes = {}; // Maximum possible number of ASCII characters needed to represent a 64-bit integer.
-        t_stream str_bytes_stream = f_io_create_mem_stream(f_mem_as_nonstatic_array(str_bytes), ec_stream_mode_write);
+        t_stream str_bytes_stream = f_io_create_mem_stream(f_array_get_as_nonstatic(str_bytes), ec_stream_mode_write);
         t_b8 str_bytes_stream_write_success = true;
 
         if (fmt.value < 0) {
@@ -406,7 +406,7 @@ namespace zf {
         }
 
         if (fmt.trim_trailing_zeros) {
-            const auto str_bytes_relevant = f_mem_slice_array(f_mem_as_nonstatic_array(str_bytes), 0, str_bytes_used);
+            const auto str_bytes_relevant = f_array_slice(f_array_get_as_nonstatic(str_bytes), 0, str_bytes_used);
 
             if (f_algos_do_any_equal(str_bytes_relevant, '.')) {
                 for (t_i32 i = str_bytes_used - 1;; i--) {
@@ -422,7 +422,7 @@ namespace zf {
             }
         }
 
-        return f_io_print(stream, {f_mem_slice_array(f_mem_as_nonstatic_array(str_bytes), 0, str_bytes_used)});
+        return f_io_print(stream, {f_array_slice(f_array_get_as_nonstatic(str_bytes), 0, str_bytes_used)});
     }
 
     // ========================================
@@ -468,7 +468,7 @@ namespace zf {
         ZF_ASSERT(fmt.min_digits >= g_hex_fmt_digit_cnt_min && fmt.min_digits <= g_hex_fmt_digit_cnt_max);
 
         t_static_array<t_u8, 2 + g_hex_fmt_digit_cnt_max> str_bytes = {}; // Can facilitate max number of digits plus the "0x" prefix.
-        t_stream str_bytes_stream = f_io_create_mem_stream(f_mem_as_nonstatic_array(str_bytes), ec_stream_mode_write);
+        t_stream str_bytes_stream = f_io_create_mem_stream(f_array_get_as_nonstatic(str_bytes), ec_stream_mode_write);
 
         t_b8 str_bytes_stream_write_success = true;
 
@@ -511,7 +511,7 @@ namespace zf {
             }
         } while (value_mut != 0 || cnter < fmt.min_digits);
 
-        const auto str_bytes_digits = f_mem_slice_array_from(f_io_get_mem_stream_bytes_written(&str_bytes_stream), str_bytes_digits_begin_pos);
+        const auto str_bytes_digits = f_array_slice_from(f_io_get_mem_stream_bytes_written(&str_bytes_stream), str_bytes_digits_begin_pos);
         f_algos_reverse(str_bytes_digits);
 
         return f_io_print(stream, {f_io_get_mem_stream_bytes_written(&str_bytes_stream)});
@@ -634,12 +634,12 @@ namespace zf {
     struct t_bit_vec_fmt {
         using t_fmt_tag = void;
 
-        t_bit_vec_rdonly value;
+        t_bitset_rdonly value;
         t_bit_vec_fmt_style style;
     };
 
-    inline t_bit_vec_fmt f_io_fmt_bit_vec(const t_bit_vec_rdonly &value, const t_bit_vec_fmt_style style) { return {value, style}; }
-    inline t_bit_vec_fmt f_io_fmt_default(const t_bit_vec_rdonly &value) { return f_io_fmt_bit_vec(value, ec_bit_vec_fmt_style_seq); }
+    inline t_bit_vec_fmt f_io_fmt_bit_vec(const t_bitset_rdonly &value, const t_bit_vec_fmt_style style) { return {value, style}; }
+    inline t_bit_vec_fmt f_io_fmt_default(const t_bitset_rdonly &value) { return f_io_fmt_bit_vec(value, ec_bit_vec_fmt_style_seq); }
 
     inline t_b8 f_io_print_type(t_stream *const stream, const t_bit_vec_fmt fmt) {
         const auto print_bit = [&](const t_i32 bit_index) {
@@ -648,7 +648,7 @@ namespace zf {
         };
 
         const auto print_byte = [&](const t_i32 index) {
-            const t_i32 bit_cnt = index == f_mem_bit_vector_bytes(fmt.value).len - 1 ? f_mem_bit_vector_last_byte_bit_cnt(fmt.value) : 8;
+            const t_i32 bit_cnt = index == f_mem_bitset_get_bytes(fmt.value).len - 1 ? f_mem_bitset_get_last_byte_bit_cnt(fmt.value) : 8;
 
             for (t_i32 i = 7; i >= bit_cnt; i--) {
                 f_io_print(stream, ZF_STR_LITERAL("0"));
@@ -670,7 +670,7 @@ namespace zf {
             break;
 
         case ec_bit_vec_fmt_style_little_endian:
-            for (t_i32 i = 0; i < f_mem_bit_vector_bytes(fmt.value).len; i++) {
+            for (t_i32 i = 0; i < f_mem_bitset_get_bytes(fmt.value).len; i++) {
                 if (i > 0) {
                     f_io_print(stream, ZF_STR_LITERAL(" "));
                 }
@@ -681,7 +681,7 @@ namespace zf {
             break;
 
         case ec_bit_vec_fmt_style_big_endian:
-            for (t_i32 i = f_mem_bit_vector_bytes(fmt.value).len - 1; i >= 0; i--) {
+            for (t_i32 i = f_mem_bitset_get_bytes(fmt.value).len - 1; i >= 0; i--) {
                 print_byte(i);
 
                 if (i > 0) {
@@ -760,7 +760,7 @@ namespace zf {
                         }
                     }
 
-                    const t_str_rdonly fmt_leftover = {f_mem_slice_array(fmt.bytes, i + 1, fmt.bytes.len)}; // The substring of everything after the format specifier.
+                    const t_str_rdonly fmt_leftover = {f_array_slice(fmt.bytes, i + 1, fmt.bytes.len)}; // The substring of everything after the format specifier.
                     return f_io_print_fmt(stream, fmt_leftover, args_leftover...);
                 }
             }

@@ -82,7 +82,7 @@ namespace zf {
         block->vals = f_mem_arena_push_array<tp_val_type>(arena, cap);
 
         block->next_indexes = f_mem_arena_push_array<t_i32>(arena, cap);
-        f_algos_set_all_to(block->next_indexes, -1);
+        f_set_all_to(block->next_indexes, -1);
 
         block->usage = f_mem_bitset_create(cap, arena);
 
@@ -253,12 +253,12 @@ namespace zf {
     template <c_simple tp_key_type, c_simple tp_val_type>
     s_hash_map<tp_key_type, tp_val_type> HashMapCreate(const t_hash_func<tp_key_type> hash_func, t_arena *const arena, const t_i32 cap = g_hash_map_cap_default, const t_comparator_bin<tp_key_type> key_comparator = g_comparator_bin_default<tp_key_type>) {
         const auto immediate_indexes = f_mem_arena_push_array<t_i32>(arena, cap);
-        f_algos_set_all_to(immediate_indexes, -1);
+        f_set_all_to(immediate_indexes, -1);
 
         return {
             .hash_func = hash_func,
             .immediate_indexes = immediate_indexes,
-            .kv_store = {.key_comparator = key_comparator, .blocks_arena = arena, .block_cap = static_cast<t_i32>(f_mem_align_forward(cap, 8))},
+            .kv_store = {.key_comparator = key_comparator, .blocks_arena = arena, .block_cap = static_cast<t_i32>(f_align_forward(cap, 8))},
         };
     }
 
@@ -300,7 +300,7 @@ namespace zf {
         t_i32 loaded_cnt = 0;
 
         for (t_i32 i = 0; i < hash_map->immediate_indexes.len; i++) {
-            loaded_cnt += LoadChain(&hash_map->kv_store, hash_map->immediate_indexes[i], f_array_slice_from(keys, loaded_cnt), f_array_slice_from(vals, loaded_cnt));
+            loaded_cnt += LoadChain(&hash_map->kv_store, hash_map->immediate_indexes[i], f_slice_array_from(keys, loaded_cnt), f_slice_array_from(vals, loaded_cnt));
         }
     }
 

@@ -45,13 +45,13 @@ namespace zf {
         const t_str_rdonly exe_dir = f_io_get_executable_directory(temp_arena);
         ZF_ASSERT(exe_dir.bytes[exe_dir.bytes.len - 1] == '/' || exe_dir.bytes[exe_dir.bytes.len - 1] == '\\'); // Assuming this.
 
-        const t_str_mut shaderc_file_path_terminated = {f_mem_push_array<t_u8>(temp_arena, exe_dir.bytes.len + shaderc_file_path_rel.bytes.len + 1)};
+        const t_str_mut shaderc_file_path_terminated = {f_mem_arena_push_array<t_u8>(temp_arena, exe_dir.bytes.len + shaderc_file_path_rel.bytes.len + 1)};
         t_stream shaderc_file_path_terminated_byte_stream = f_io_create_mem_stream(shaderc_file_path_terminated.bytes, ec_stream_mode_write);
         f_io_print_fmt(&shaderc_file_path_terminated_byte_stream, ZF_STR_LITERAL("%%\0"), exe_dir, shaderc_file_path_rel);
         ZF_ASSERT(f_strs_are_bytes_terminated_only_at_end(shaderc_file_path_terminated.bytes));
 
         const t_str_rdonly shaderc_include_dir_rel = ZF_STR_LITERAL("tools/bgfx/shaderc_include");
-        const t_str_mut shaderc_include_dir_terminated = {f_mem_push_array<t_u8>(temp_arena, exe_dir.bytes.len + shaderc_include_dir_rel.bytes.len + 1)};
+        const t_str_mut shaderc_include_dir_terminated = {f_mem_arena_push_array<t_u8>(temp_arena, exe_dir.bytes.len + shaderc_include_dir_rel.bytes.len + 1)};
         t_stream shaderc_include_dir_terminated_byte_stream = f_io_create_mem_stream(shaderc_include_dir_terminated.bytes, ec_stream_mode_write);
         f_io_print_fmt(&shaderc_include_dir_terminated_byte_stream, ZF_STR_LITERAL("%%\0"), exe_dir, shaderc_include_dir_rel);
         ZF_ASSERT(f_strs_are_bytes_terminated_only_at_end(shaderc_include_dir_terminated.bytes));
@@ -96,7 +96,7 @@ namespace zf {
                 break;
             }
 
-            ListAppendManyDynamic(&bin_list, f_mem_slice_array(f_mem_as_nonstatic_array(buf), 0, r), bin_arena);
+            ListAppendManyDynamic(&bin_list, f_array_slice(f_array_get_as_nonstatic(buf), 0, r), bin_arena);
         }
 
         if (r != REPROC_EPIPE) {

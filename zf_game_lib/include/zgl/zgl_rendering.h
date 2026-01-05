@@ -130,7 +130,7 @@ namespace zf {
             },
         }};
 
-        f_rendering_submit_triangle(context, f_mem_as_nonstatic_array(triangles), nullptr);
+        f_rendering_submit_triangle(context, f_array_get_as_nonstatic(triangles), nullptr);
     }
 
     inline void f_rendering_submit_rect(t_rendering_context *const context, const t_rect_f rect, const t_color_rgba32f color) {

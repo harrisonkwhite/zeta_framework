@@ -317,13 +317,13 @@ namespace zf {
     }
 
     inline t_rect_f f_math_clamp_within_container(const t_rect_f rect, const t_rect_f container) {
-        const t_v2 tl = {ZF_MAX(rect.x, container.x), ZF_MAX(rect.y, container.y)};
-        return {tl.x, tl.y, ZF_MAX(ZF_MIN(f_math_get_rect_right(rect), f_math_get_rect_right(container)) - tl.x, 0), ZF_MAX(ZF_MIN(f_math_get_rect_bottom(rect), f_math_get_rect_bottom(container)) - tl.y, 0)};
+        const t_v2 tl = {f_max(rect.x, container.x), f_max(rect.y, container.y)};
+        return {tl.x, tl.y, f_max(f_min(f_math_get_rect_right(rect), f_math_get_rect_right(container)) - tl.x, 0.0f), f_max(f_min(f_math_get_rect_bottom(rect), f_math_get_rect_bottom(container)) - tl.y, 0.0f)};
     }
 
     inline t_rect_i f_math_clamp_within_container(const t_rect_i rect, const t_rect_i container) {
-        const t_v2_i tl = {ZF_MAX(rect.x, container.x), ZF_MAX(rect.y, container.y)};
-        return {tl.x, tl.y, ZF_MAX(ZF_MIN(f_math_get_rect_right(rect), f_math_get_rect_right(container)) - tl.x, 0), ZF_MAX(ZF_MIN(f_math_get_rect_bottom(rect), f_math_get_rect_bottom(container)) - tl.y, 0)};
+        const t_v2_i tl = {f_max(rect.x, container.x), f_max(rect.y, container.y)};
+        return {tl.x, tl.y, f_max(f_min(f_math_get_rect_right(rect), f_math_get_rect_right(container)) - tl.x, 0), f_max(f_min(f_math_get_rect_bottom(rect), f_math_get_rect_bottom(container)) - tl.y, 0)};
     }
 
     // Returns a value between 0 and 1 indicating what percentage of the rectangle is within the container.

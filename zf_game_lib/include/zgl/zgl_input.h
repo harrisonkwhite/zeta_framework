@@ -149,7 +149,7 @@ namespace zf {
     t_b8 f_input_is_gamepad_button_released(const t_input_state *const state, const t_i32 gamepad_index, const t_gamepad_button_code btn_code);
     t_f32 f_input_get_gamepad_axis_value_raw(const t_input_state *const state, const t_i32 gamepad_index, const t_gamepad_axis_code axis_code);
     t_f32 f_input_get_gamepad_axis_value_with_deadzone(const t_input_state *const state, const t_i32 gamepad_index, const t_gamepad_axis_code axis_code);
-    void f_input_update_gamepad_state(t_input_state *const state, const t_i32 gamepad_index, const t_b8 connected, const t_static_bit_vec<ecm_gamepad_button_code_cnt> &btns_down, const t_static_array<t_f32, ecm_gamepad_axis_code_cnt> &axes);
+    void f_input_update_gamepad_state(t_input_state *const state, const t_i32 gamepad_index, const t_b8 connected, const t_static_bitset<ecm_gamepad_button_code_cnt> &btns_down, const t_static_array<t_f32, ecm_gamepad_axis_code_cnt> &axes);
 
     // ============================================================
 }
