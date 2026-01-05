@@ -4,11 +4,58 @@
 #include <zcl/zcl_mem.h>
 
 namespace zf::math {
-    // ============================================================
-    // @section: Types and Globals
+    constexpr t_f32 g_pi = 3.14159265358979323846f;
+    constexpr t_f32 g_tau = 6.28318530717958647692f;
 
-    constexpr t_f32 g_math_pi = 3.14159265358979323846f;
-    constexpr t_f32 g_math_tau = 6.28318530717958647692f;
+    constexpr t_f32 get_degs_to_rads(const t_f32 degs) {
+        return degs * (g_pi / 180.0f);
+    }
+
+    constexpr t_f32 get_rads_to_degs(const t_f32 rads) {
+        return rads * (180.0f / g_pi);
+    }
+
+    template <c_integral tp_type>
+    t_i32 get_digit_cnt(const tp_type n) {
+        if (n < 0) {
+            return get_digit_cnt(-n);
+        }
+
+        if (n < 10) {
+            return 1;
+        }
+
+        return 1 + get_digit_cnt(n / 10);
+    }
+
+    // Determines the digit at the given index, where the indexes are from the least significant digit to the most.
+    template <c_integral tp_type>
+    tp_type get_digit_at(const tp_type n, const t_i32 index) {
+        ZF_ASSERT(index >= 0 && index < get_digit_cnt(n));
+
+        if (n < 0) {
+            return get_digit_at(-n, index);
+        }
+
+        if (index == 0) {
+            return n % 10;
+        }
+
+        if (n < 10) {
+            return 0;
+        }
+
+        return get_digit_at(n / 10, index - 1);
+    }
+
+    inline t_b8 f_is_nearly_equal(const t_f32 val, const t_f32 targ, const t_f32 tol = 1e-5f) {
+        ZF_ASSERT(tol >= 0);
+        return val >= targ - tol && val <= targ + tol;
+    }
+
+
+    // ============================================================
+    // @section: Vectors
 
     struct t_v2 {
         t_f32 x;
@@ -84,6 +131,19 @@ namespace zf::math {
         t_f32 w;
     };
 
+    inline t_v2 v2_create_f32(const t_f32 x, const t_f32 y) { return {x, y}; }
+    inline t_v2_i v2_create_i32(const t_i32 x, const t_i32 y) { return {x, y}; }
+
+    inline t_v2 v2_convert_to_f32(const t_v2_i v) {
+        return {static_cast<t_f32>(v.x), static_cast<t_f32>(v.y)};
+    }
+
+    // ============================================================
+
+
+    // ============================================================
+    // @section: Rectangles
+
     struct t_rect_f {
         t_f32 x;
         t_f32 y;
@@ -98,176 +158,127 @@ namespace zf::math {
         t_i32 height;
     };
 
+    inline t_rect_f rect_create_f32(const t_f32 x, const t_f32 y, const t_f32 width, const t_f32 height) {
+        ZF_ASSERT(width >= 0.0f && height >= 0.0f);
+        return {x, y, width, height};
+    }
+
+    inline t_rect_f rect_create_f32(const t_v2 pos, const t_v2 size) {
+        ZF_ASSERT(size.x >= 0.0f && size.y >= 0.0f);
+        return {pos.x, pos.y, size.x, size.y};
+    }
+
+    inline t_rect_f rect_create_f32(const t_v2 pos, const t_v2 size, const t_v2 origin) {
+        ZF_ASSERT(size.x >= 0.0f && size.y >= 0.0f);
+        return {pos.x - (size.x * origin.x), pos.y - (size.y * origin.y), size.x, size.y};
+    }
+
+    inline t_rect_i rect_create_i32(const t_i32 x, const t_i32 y, const t_i32 width, const t_i32 height) {
+        ZF_ASSERT(width >= 0 && height >= 0);
+        return {x, y, width, height};
+    }
+
+    inline t_rect_i rect_create_i32(const t_v2_i pos, const t_v2_i size) {
+        ZF_ASSERT(size.x >= 0 && size.y >= 0);
+        return {pos.x, pos.y, size.x, size.y};
+    }
+
+    inline t_v2 rect_get_pos(const t_rect_f rect) { return {rect.x, rect.y}; }
+    inline t_v2_i rect_get_pos(const t_rect_i rect) { return {rect.x, rect.y}; }
+
+    inline t_v2 rect_get_size(const t_rect_f rect) { return {rect.width, rect.height}; }
+    inline t_v2_i rect_get_size(const t_rect_i rect) { return {rect.width, rect.height}; }
+
+    inline t_v2 rect_get_center(const t_rect_f rect) { return {rect.x + (rect.width / 2.0f), rect.y + (rect.height / 2.0f)}; }
+
+    inline t_f32 rect_get_left(const t_rect_f rect) { return rect.x; }
+    inline t_i32 rect_get_left(const t_rect_i rect) { return rect.x; }
+
+    inline t_f32 rect_get_top(const t_rect_f rect) { return rect.y; }
+    inline t_i32 rect_get_top(const t_rect_i rect) { return rect.y; }
+
+    inline t_f32 rect_get_right(const t_rect_f rect) { return rect.x + rect.width; }
+    inline t_i32 rect_get_right(const t_rect_i rect) { return rect.x + rect.width; }
+
+    inline t_f32 rect_get_bottom(const t_rect_f rect) { return rect.y + rect.height; }
+    inline t_i32 rect_get_bottom(const t_rect_i rect) { return rect.y + rect.height; }
+
+    inline t_v2 rect_get_topleft(const t_rect_f rect) { return {rect_get_left(rect), rect_get_top(rect)}; }
+    inline t_v2_i rect_get_topleft(const t_rect_i rect) { return {rect_get_left(rect), rect_get_top(rect)}; }
+
+    inline t_v2 rect_get_topright(const t_rect_f rect) { return {rect_get_right(rect), rect_get_top(rect)}; }
+    inline t_v2_i rect_get_topright(const t_rect_i rect) { return {rect_get_right(rect), rect_get_top(rect)}; }
+
+    inline t_v2 rect_get_bottomleft(const t_rect_f rect) { return {rect_get_left(rect), rect_get_bottom(rect)}; }
+    inline t_v2_i rect_get_bottomleft(const t_rect_i rect) { return {rect_get_left(rect), rect_get_bottom(rect)}; }
+
+    inline t_v2 rect_get_bottomright(const t_rect_f rect) { return {rect_get_right(rect), rect_get_bottom(rect)}; }
+    inline t_v2_i rect_get_bottomright(const t_rect_i rect) { return {rect_get_right(rect), rect_get_bottom(rect)}; }
+
+    inline t_f32 rect_get_area(const t_rect_f rect) { return rect.width * rect.height; }
+    inline t_i32 rect_get_area(const t_rect_i rect) { return rect.width * rect.height; }
+
+    inline t_rect_f rect_convert_to_f32(const t_rect_i rect) {
+        return {static_cast<t_f32>(rect.x), static_cast<t_f32>(rect.y), static_cast<t_f32>(rect.width), static_cast<t_f32>(rect.height)};
+    }
+
+    inline t_rect_i rect_convert_to_i32(const t_rect_f rect) {
+        return {static_cast<t_i32>(rect.x), static_cast<t_i32>(rect.y), static_cast<t_i32>(rect.width), static_cast<t_i32>(rect.height)};
+    }
+
+    inline t_b8 rects_are_equal(const t_rect_i rect, const t_rect_i other) {
+        return rect.x == other.x && rect.y == other.y && rect.width == other.width && rect.height == other.height;
+    }
+
+    inline t_b8 rects_do_inters(const t_rect_f a, const t_rect_f b) {
+        return rect_get_left(a) < rect_get_right(b) && rect_get_top(a) < rect_get_bottom(b) && rect_get_right(a) > rect_get_left(b) && rect_get_bottom(a) > rect_get_top(b);
+    }
+
+    inline t_b8 rects_do_inters(const t_rect_i a, const t_rect_i b) {
+        return rect_get_left(a) < rect_get_right(b) && rect_get_top(a) < rect_get_bottom(b) && rect_get_right(a) > rect_get_left(b) && rect_get_bottom(a) > rect_get_top(b);
+    }
+
+    t_rect_f rects_get_span(const t_array_mut<t_rect_f> rects);
+    t_rect_i rects_get_span(const t_array_mut<t_rect_i> rects);
+
+    // ============================================================
+
+
+    // ============================================================
+    // @section: Matrices
+
     struct t_mat4x4 {
         t_static_array<t_static_array<t_f32, 4>, 4> elems;
+    };
+
+    constexpr t_mat4x4 g_mat4x4_identity = {
+        .elems = {{
+            {{1.0f, 0.0f, 0.0f, 0.0f}},
+            {{1.0f, 0.0f, 0.0f, 0.0f}},
+            {{1.0f, 0.0f, 0.0f, 0.0f}},
+            {{1.0f, 0.0f, 0.0f, 0.0f}},
+        }},
     };
 
     // ============================================================
 
 
-    // ============================================================
-    // @section: Functions
+    inline t_f32 lerp(const t_f32 a, const t_f32 b, const t_f32 t) { return a + ((b - a) * t); }
+    inline t_v2 lerp(const t_v2 a, const t_v2 b, const t_f32 t) { return a + ((b - a) * t); }
 
-    constexpr t_f32 f_degs_to_rads(const t_f32 degs) {
-        return degs * (g_math_pi / 180.0f);
-    }
+    inline t_v2 get_compwise_prod(const t_v2 a, const t_v2 b) { return {a.x * b.x, a.y * b.y}; }
+    inline t_v2_i get_compwise_prod(const t_v2_i a, const t_v2_i b) { return {a.x * b.x, a.y * b.y}; }
 
-    constexpr t_f32 f_rads_to_degs(const t_f32 rads) {
-        return rads * (180.0f / g_math_pi);
-    }
+    inline t_f32 get_dot_prod(const t_v2 a, const t_v2 b) { return (a.x * b.x) + (a.y * b.y); }
+    inline t_i32 get_dot_prod(const t_v2_i a, const t_v2_i b) { return (a.x * b.x) + (a.y * b.y); }
 
-    template <c_integral tp_type>
-    t_i32 f_calc_digit_cnt(const tp_type n) {
-        if (n < 0) {
-            return f_calc_digit_cnt(-n);
-        }
-
-        if (n < 10) {
-            return 1;
-        }
-
-        return 1 + f_calc_digit_cnt(n / 10);
-    }
-
-    // Determines the digit at the given index, where the indexes are from the least significant digit to the most.
-    template <c_integral tp_type>
-    tp_type f_determine_digit_at(const tp_type n, const t_i32 index) {
-        ZF_ASSERT(index >= 0 && index < f_calc_digit_cnt(n));
-
-        if (n < 0) {
-            return f_determine_digit_at(-n, index);
-        }
-
-        if (index == 0) {
-            return n % 10;
-        }
-
-        if (n < 10) {
-            return 0;
-        }
-
-        return f_determine_digit_at(n / 10, index - 1);
-    }
-
-    inline t_b8 f_is_nearly_equal(const t_f32 val, const t_f32 targ, const t_f32 tol = 1e-5f) {
-        ZF_ASSERT(tol >= 0);
-        return val >= targ - tol && val <= targ + tol;
-    }
-
-    inline t_v2 f_create_v2(const t_f32 x, const t_f32 y) {
-        return {x, y};
-    }
-
-    inline t_v2_i f_create_v2_i(const t_i32 x, const t_i32 y) {
-        return {x, y};
-    }
-
-    inline t_v2 f_convert_to_v2(const t_v2_i v) {
-        return {static_cast<t_f32>(v.x), static_cast<t_f32>(v.y)};
-    }
-
-    inline t_rect_f f_create_f(const t_f32 x, const t_f32 y, const t_f32 width, const t_f32 height) {
-        return {x, y, width, height};
-    }
-
-    inline t_rect_f f_create_rect_f(const t_v2 pos, const t_v2 size) {
-        return {pos.x, pos.y, size.x, size.y};
-    }
-
-    inline t_rect_f f_create_rect_f(const t_v2 pos, const t_v2 size, const t_v2 origin) {
-        return {pos.x - (size.x * origin.x), pos.y - (size.y * origin.y), size.x, size.y};
-    }
-
-    inline t_rect_i f_create_rect_i(const t_i32 x, const t_i32 y, const t_i32 width, const t_i32 height) {
-        return {x, y, width, height};
-    }
-
-    inline t_rect_i f_create_rect_i(const t_v2_i pos, const t_v2_i size) {
-        return {pos.x, pos.y, size.x, size.y};
-    }
-
-    inline t_v2 f_get_rect_pos(const t_rect_f rect) { return {rect.x, rect.y}; }
-    inline t_v2_i f_get_rect_pos(const t_rect_i rect) { return {rect.x, rect.y}; }
-
-    inline t_v2 f_get_rect_size(const t_rect_f rect) { return {rect.width, rect.height}; }
-    inline t_v2_i f_get_rect_size(const t_rect_i rect) { return {rect.width, rect.height}; }
-
-    inline t_v2 f_get_rect_center(const t_rect_f rect) { return {rect.x + (rect.width / 2.0f), rect.y + (rect.height / 2.0f)}; }
-
-    inline t_f32 f_get_rect_left(const t_rect_f rect) { return rect.x; }
-    inline t_i32 f_get_rect_left(const t_rect_i rect) { return rect.x; }
-
-    inline t_f32 f_get_rect_top(const t_rect_f rect) { return rect.y; }
-    inline t_i32 f_get_rect_top(const t_rect_i rect) { return rect.y; }
-
-    inline t_f32 f_get_rect_right(const t_rect_f rect) { return rect.x + rect.width; }
-    inline t_i32 f_get_rect_right(const t_rect_i rect) { return rect.x + rect.width; }
-
-    inline t_f32 f_get_rect_bottom(const t_rect_f rect) { return rect.y + rect.height; }
-    inline t_i32 f_get_rect_bottom(const t_rect_i rect) { return rect.y + rect.height; }
-
-    inline t_v2 f_get_rect_topleft(const t_rect_f rect) { return {f_get_rect_left(rect), f_get_rect_top(rect)}; }
-    inline t_v2_i f_get_rect_topleft(const t_rect_i rect) { return {f_get_rect_left(rect), f_get_rect_top(rect)}; }
-
-    inline t_v2 f_get_rect_topright(const t_rect_f rect) { return {f_get_rect_right(rect), f_get_rect_top(rect)}; }
-    inline t_v2_i f_get_rect_topright(const t_rect_i rect) { return {f_get_rect_right(rect), f_get_rect_top(rect)}; }
-
-    inline t_v2 f_get_rect_bottomleft(const t_rect_f rect) { return {f_get_rect_left(rect), f_get_rect_bottom(rect)}; }
-    inline t_v2_i f_get_rect_bottomleft(const t_rect_i rect) { return {f_get_rect_left(rect), f_get_rect_bottom(rect)}; }
-
-    inline t_v2 f_get_rect_bottomright(const t_rect_f rect) { return {f_get_rect_right(rect), f_get_rect_bottom(rect)}; }
-    inline t_v2_i f_get_rect_bottomright(const t_rect_i rect) { return {f_get_rect_right(rect), f_get_rect_bottom(rect)}; }
-
-    inline t_f32 f_get_rect_area(const t_rect_f rect) { return rect.width * rect.height; }
-    inline t_i32 f_get_rect_area(const t_rect_i rect) { return rect.width * rect.height; }
-
-    inline t_b8 f_are_rects_equal(const t_rect_i a, const t_rect_i b) {
-        return a.x == b.x && a.y == b.y && a.width == b.width && a.height == b.height;
-    }
-
-    inline t_rect_f f_convert_to_rect_f(const t_rect_i rect) {
-        return {static_cast<t_f32>(rect.x), static_cast<t_f32>(rect.y), static_cast<t_f32>(rect.width), static_cast<t_f32>(rect.height)};
-    }
-
-    inline t_rect_i t_math_convert_to_rect_i(const t_rect_f rect) {
-        return {static_cast<t_i32>(rect.x), static_cast<t_i32>(rect.y), static_cast<t_i32>(rect.width), static_cast<t_i32>(rect.height)};
-    }
-
-    inline t_b8 f_do_rects_inters(const t_rect_f a, const t_rect_f b) {
-        return f_get_rect_left(a) < f_get_rect_right(b) && f_get_rect_top(a) < f_get_rect_bottom(b) && f_get_rect_right(a) > f_get_rect_left(b) && f_get_rect_bottom(a) > f_get_rect_top(b);
-    }
-
-    inline t_b8 f_do_rects_inters(const t_rect_i a, const t_rect_i b) {
-        return f_get_rect_left(a) < f_get_rect_right(b) && f_get_rect_top(a) < f_get_rect_bottom(b) && f_get_rect_right(a) > f_get_rect_left(b) && f_get_rect_bottom(a) > f_get_rect_top(b);
-    }
-
-    // @todo: Make a constant.
-    inline t_mat4x4 f_create_identity_matrix() {
-        t_mat4x4 mat = {};
-        mat.elems[0][0] = 1.0f;
-        mat.elems[1][1] = 1.0f;
-        mat.elems[2][2] = 1.0f;
-        mat.elems[3][3] = 1.0f;
-
-        return mat;
-    }
-
-    inline t_f32 f_lerp(const t_f32 a, const t_f32 b, const t_f32 t) { return a + ((b - a) * t); }
-    inline t_v2 f_lerp(const t_v2 a, const t_v2 b, const t_f32 t) { return a + ((b - a) * t); }
-
-    inline t_v2 f_compwise_prod(const t_v2 a, const t_v2 b) { return {a.x * b.x, a.y * b.y}; }
-    inline t_v2_i f_compwise_prod(const t_v2_i a, const t_v2_i b) { return {a.x * b.x, a.y * b.y}; }
-
-    inline t_f32 f_dot_prod(const t_v2 a, const t_v2 b) { return (a.x * b.x) + (a.y * b.y); }
-    inline t_i32 f_dot_prod(const t_v2_i a, const t_v2_i b) { return (a.x * b.x) + (a.y * b.y); }
-
-    inline t_f32 f_calc_mag(const t_v2 v) {
+    inline t_f32 get_mag(const t_v2 v) {
         return sqrt((v.x * v.x) + (v.y * v.y));
     }
 
     // Returns {} if a divide by 0 is attempted.
-    inline t_v2 f_calc_normal(const t_v2 v) {
-        const t_f32 mag = f_calc_mag(v);
+    inline t_v2 get_normal(const t_v2 v) {
+        const t_f32 mag = get_mag(v);
 
         if (mag == 0.0f) {
             return {};
@@ -276,16 +287,16 @@ namespace zf::math {
         return {v.x / mag, v.y / mag};
     }
 
-    inline t_f32 f_calc_dist(const t_v2 a, const t_v2 b) {
-        return f_calc_mag(b - a);
+    inline t_f32 get_dist(const t_v2 a, const t_v2 b) {
+        return get_mag(b - a);
     }
 
-    inline t_v2 f_calc_dir(const t_v2 a, const t_v2 b) {
-        return f_calc_normal(b - a);
+    inline t_v2 get_dir(const t_v2 a, const t_v2 b) {
+        return get_normal(b - a);
     }
 
     // Returns 0 if the horizontal and vertical differences of the vectors are 0.
-    inline t_f32 f_calc_dir_in_rads(const t_v2 a, const t_v2 b) {
+    inline t_f32 get_dir_in_rads(const t_v2 a, const t_v2 b) {
         const t_f32 rise = -(b.y - a.y);
         const t_f32 run = b.x - a.x;
 
@@ -296,54 +307,49 @@ namespace zf::math {
         return atan2(rise, run);
     }
 
-    inline t_v2 f_calc_len_dir(const t_f32 len, const t_f32 dir) {
+    inline t_v2 get_len_dir(const t_f32 len, const t_f32 dir) {
         return t_v2(cos(dir), -sin(dir)) * len;
     }
 
-    inline t_b8 f_is_pt_in_rect(const t_v2 pt, const t_rect_f rect) {
-        return pt.x > f_get_rect_left(rect) && pt.y > f_get_rect_top(rect) && pt.x < f_get_rect_right(rect) && pt.y < f_get_rect_bottom(rect);
+    inline t_b8 is_pt_in_rect(const t_v2 pt, const t_rect_f rect) {
+        return pt.x > rect_get_left(rect) && pt.y > rect_get_top(rect) && pt.x < rect_get_right(rect) && pt.y < rect_get_bottom(rect);
     }
 
-    inline t_b8 f_is_pt_in_rect(const t_v2_i pt, const t_rect_i rect) {
-        return pt.x > f_get_rect_left(rect) && pt.y > f_get_rect_top(rect) && pt.x < f_get_rect_right(rect) && pt.y < f_get_rect_bottom(rect);
+    inline t_b8 is_pt_in_rect(const t_v2_i pt, const t_rect_i rect) {
+        return pt.x > rect_get_left(rect) && pt.y > rect_get_top(rect) && pt.x < rect_get_right(rect) && pt.y < rect_get_bottom(rect);
     }
 
-    inline t_v2 f_clamp_within_container(const t_v2 pt, const t_rect_f container) {
-        return {f_clamp(pt.x, f_get_rect_left(container), f_get_rect_right(container)), f_clamp(pt.y, f_get_rect_top(container), f_get_rect_bottom(container))};
+    inline t_v2 clamp_within_container(const t_v2 pt, const t_rect_f container) {
+        return {clamp(pt.x, rect_get_left(container), rect_get_right(container)), clamp(pt.y, rect_get_top(container), rect_get_bottom(container))};
     }
 
-    inline t_v2_i f_clamp_within_container(const t_v2_i pt, const t_rect_i container) {
-        return {f_clamp(pt.x, f_get_rect_left(container), f_get_rect_right(container)), f_clamp(pt.y, f_get_rect_top(container), f_get_rect_bottom(container))};
+    inline t_v2_i clamp_within_container(const t_v2_i pt, const t_rect_i container) {
+        return {clamp(pt.x, rect_get_left(container), rect_get_right(container)), clamp(pt.y, rect_get_top(container), rect_get_bottom(container))};
     }
 
-    inline t_rect_f f_clamp_within_container(const t_rect_f rect, const t_rect_f container) {
-        const t_v2 tl = {f_max(rect.x, container.x), f_max(rect.y, container.y)};
-        return {tl.x, tl.y, f_max(f_min(f_get_rect_right(rect), f_get_rect_right(container)) - tl.x, 0.0f), f_max(f_min(f_get_rect_bottom(rect), f_get_rect_bottom(container)) - tl.y, 0.0f)};
+    inline t_rect_f clamp_within_container(const t_rect_f rect, const t_rect_f container) {
+        const t_v2 tl = {max(rect.x, container.x), max(rect.y, container.y)};
+        return {tl.x, tl.y, max(min(rect_get_right(rect), rect_get_right(container)) - tl.x, 0.0f), max(min(rect_get_bottom(rect), rect_get_bottom(container)) - tl.y, 0.0f)};
     }
 
-    inline t_rect_i f_clamp_within_container(const t_rect_i rect, const t_rect_i container) {
-        const t_v2_i tl = {f_max(rect.x, container.x), f_max(rect.y, container.y)};
-        return {tl.x, tl.y, f_max(f_min(f_get_rect_right(rect), f_get_rect_right(container)) - tl.x, 0), f_max(f_min(f_get_rect_bottom(rect), f_get_rect_bottom(container)) - tl.y, 0)};
-    }
-
-    // Returns a value between 0 and 1 indicating what percentage of the rectangle is within the container.
-    inline t_f32 f_calc_perc_of_occupance(const t_rect_f rect, const t_rect_f container) {
-        ZF_ASSERT(container.width > 0 && container.height > 0);
-
-        const auto subrect = f_clamp_within_container(rect, container);
-        return f_clamp(f_get_rect_area(subrect) / f_get_rect_area(container), 0.0f, 1.0f);
+    inline t_rect_i clamp_within_container(const t_rect_i rect, const t_rect_i container) {
+        const t_v2_i tl = {max(rect.x, container.x), max(rect.y, container.y)};
+        return {tl.x, tl.y, max(min(rect_get_right(rect), rect_get_right(container)) - tl.x, 0), max(min(rect_get_bottom(rect), rect_get_bottom(container)) - tl.y, 0)};
     }
 
     // Returns a value between 0 and 1 indicating what percentage of the rectangle is within the container.
-    inline t_f32 f_calc_perc_of_occupance(const t_rect_i rect, const t_rect_i container) {
+    inline t_f32 get_perc_of_occupance(const t_rect_f rect, const t_rect_f container) {
         ZF_ASSERT(container.width > 0 && container.height > 0);
 
-        const auto subrect = f_clamp_within_container(rect, container);
-        return f_clamp(static_cast<t_f32>(f_get_rect_area(subrect)) / static_cast<t_f32>(f_get_rect_area(container)), 0.0f, 1.0f);
+        const auto subrect = clamp_within_container(rect, container);
+        return clamp(rect_get_area(subrect) / rect_get_area(container), 0.0f, 1.0f);
     }
 
-    t_rect_f f_calc_spanning_rect(const t_array_mut<t_rect_f> rects);
-    t_rect_i f_calc_spanning_rect(const t_array_mut<t_rect_i> rects);
+    // Returns a value between 0 and 1 indicating what percentage of the rectangle is within the container.
+    inline t_f32 get_perc_of_occupance(const t_rect_i rect, const t_rect_i container) {
+        ZF_ASSERT(container.width > 0 && container.height > 0);
 
-    // ============================================================
+        const auto subrect = clamp_within_container(rect, container);
+        return clamp(static_cast<t_f32>(rect_get_area(subrect)) / static_cast<t_f32>(rect_get_area(container)), 0.0f, 1.0f);
+    }
 }

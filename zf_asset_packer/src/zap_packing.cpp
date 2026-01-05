@@ -94,8 +94,8 @@ namespace zf {
     }};
 
     t_b8 f_pack_assets(const strs::t_str_rdonly instrs_json_file_path) {
-        mem::t_arena arena = mem::f_arena_create();
-        ZF_DEFER({ mem::f_arena_destroy(&arena); });
+        mem::t_arena arena = mem::arena_create();
+        ZF_DEFER({ mem::arena_destroy(&arena); });
 
         cJSON *cj;
 
@@ -140,7 +140,7 @@ namespace zf {
             cJSON *cj_asset;
 
             cJSON_ArrayForEach(cj_asset, cj_assets) {
-                mem::f_arena_rewind(&arena);
+                mem::arena_rewind(&arena);
 
                 if (!cJSON_IsObject(cj_asset)) {
                     continue;
@@ -229,9 +229,9 @@ namespace zf {
                     const auto height = field_vals[ec_font_field_height]->valueint;
                     const auto out_file_path = strs::f_convert_cstr(field_vals[ec_font_field_out_file_path]->valuestring);
 
-                    const auto code_pt_bv = mem::f_arena_push_item_zeroed<strs::t_code_pt_bit_vec>(&arena);
+                    const auto code_pt_bv = mem::arena_push_item_zeroed<strs::t_code_pt_bit_vec>(&arena);
 
-                    mem::f_set_bits_in_range(*code_pt_bv, strs::g_printable_ascii_range_begin, strs::g_printable_ascii_range_end); // Add the printable ASCII range as a default.
+                    mem::set_bits_in_range(*code_pt_bv, strs::g_printable_ascii_range_begin, strs::g_printable_ascii_range_end); // Add the printable ASCII range as a default.
 
                     if (field_vals[ec_font_field_extra_chrs_file_path]) {
                         const auto extra_chrs_file_path = strs::f_convert_cstr(field_vals[ec_font_field_extra_chrs_file_path]->valuestring);
@@ -302,12 +302,12 @@ namespace zf {
 
                     audio::t_sound_data_mut snd_data;
 
-                    if (!f_sound_load_from_raw(file_path, &arena, &arena, &snd_data)) {
+                    if (!sound_load_from_raw(file_path, &arena, &arena, &snd_data)) {
                         io::f_log_error(ZF_STR_LITERAL("Failed to load sound from file \"%\"!"), file_path);
                         return false;
                     }
 
-                    if (!f_sound_pack(out_file_path, snd_data, &arena)) {
+                    if (!sound_pack(out_file_path, snd_data, &arena)) {
                         io::f_log_error(ZF_STR_LITERAL("Failed to pack sound to file \"%\"!"), out_file_path);
                         return false;
                     }

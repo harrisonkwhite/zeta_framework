@@ -71,10 +71,10 @@ namespace zf::io {
         const t_i32 file_size = f_calc_file_size(&stream);
 
         if (add_terminator) {
-            *o_contents = mem::f_arena_push_array<t_u8>(contents_arena, file_size + 1);
+            *o_contents = mem::arena_push_array<t_u8>(contents_arena, file_size + 1);
             (*o_contents)[file_size] = 0;
         } else {
-            *o_contents = mem::f_arena_push_array<t_u8>(contents_arena, file_size);
+            *o_contents = mem::arena_push_array<t_u8>(contents_arena, file_size);
         }
 
         if (!f_read_items_into_array(&stream, *o_contents, file_size)) {
@@ -222,8 +222,8 @@ namespace zf::io {
             }
         }
 
-        const auto result_bytes = mem::f_arena_push_array<t_u8>(arena, len);
-        array_copy(mem::f_array_as_byte_array(array_slice(array_get_as_nonstatic(buf), 0, len)), result_bytes);
+        const auto result_bytes = mem::arena_push_array<t_u8>(arena, len);
+        array_copy(mem::get_array_as_byte_array(array_slice(array_get_as_nonstatic(buf), 0, len)), result_bytes);
         return {result_bytes};
 #elif defined(ZF_PLATFORM_MACOS)
     #error "Platform-specific implementation not yet done!"

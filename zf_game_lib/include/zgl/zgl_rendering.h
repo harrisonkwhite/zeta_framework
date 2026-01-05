@@ -116,16 +116,16 @@ namespace zf::rendering {
         const t_static_array<t_batch_triangle, 2> triangles = {{
             {
                 .verts = {{
-                    {.pos = math::f_get_rect_topleft(rect), .blend = color_topleft, .uv = {0.0f, 0.0f}},
-                    {.pos = math::f_get_rect_topright(rect), .blend = color_topright, .uv = {1.0f, 0.0f}},
-                    {.pos = math::f_get_rect_bottomleft(rect), .blend = color_bottomright, .uv = {1.0f, 1.0f}},
+                    {.pos = math::rect_get_topleft(rect), .blend = color_topleft, .uv = {0.0f, 0.0f}},
+                    {.pos = math::rect_get_topright(rect), .blend = color_topright, .uv = {1.0f, 0.0f}},
+                    {.pos = math::rect_get_bottomleft(rect), .blend = color_bottomright, .uv = {1.0f, 1.0f}},
                 }},
             },
             {
                 .verts = {{
-                    {.pos = math::f_get_rect_bottomleft(rect), .blend = color_bottomright, .uv = {1.0f, 1.0f}},
-                    {.pos = math::f_get_rect_bottomleft(rect), .blend = color_bottomleft, .uv = {0.0f, 1.0f}},
-                    {.pos = math::f_get_rect_topleft(rect), .blend = color_topleft, .uv = {0.0f, 0.0f}},
+                    {.pos = math::rect_get_bottomleft(rect), .blend = color_bottomright, .uv = {1.0f, 1.0f}},
+                    {.pos = math::rect_get_bottomleft(rect), .blend = color_bottomleft, .uv = {0.0f, 1.0f}},
+                    {.pos = math::rect_get_topleft(rect), .blend = color_topleft, .uv = {0.0f, 0.0f}},
                 }},
             },
         }};

@@ -130,10 +130,10 @@ namespace zf::gfx {
         ZF_ASSERT(amount >= 0.0f && amount <= 1.0f);
 
         return {
-            math::f_lerp(a.r, b.r, amount),
-            math::f_lerp(a.g, b.g, amount),
-            math::f_lerp(a.b, b.b, amount),
-            math::f_lerp(a.a, b.a, amount),
+            math::lerp(a.r, b.r, amount),
+            math::lerp(a.g, b.g, amount),
+            math::lerp(a.b, b.b, amount),
+            math::lerp(a.a, b.a, amount),
         };
     }
 
@@ -167,7 +167,7 @@ namespace zf::gfx {
 
     inline math::t_rect_f f_calc_uv_rect(const math::t_rect_i src_rect, const math::t_v2_i tex_size) {
         ZF_ASSERT(tex_size.x > 0 && tex_size.y > 0);
-        ZF_ASSERT(src_rect.x >= 0 && src_rect.y >= 0 && src_rect.width > 0 && src_rect.height > 0 && math::f_get_rect_right(src_rect) <= tex_size.x && math::f_get_rect_bottom(src_rect) <= tex_size.y);
+        ZF_ASSERT(src_rect.x >= 0 && src_rect.y >= 0 && src_rect.width > 0 && src_rect.height > 0 && math::rect_get_right(src_rect) <= tex_size.x && math::rect_get_bottom(src_rect) <= tex_size.y);
 
         return {
             static_cast<t_f32>(src_rect.x) / static_cast<t_f32>(tex_size.x),

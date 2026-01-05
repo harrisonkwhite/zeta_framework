@@ -16,11 +16,11 @@ namespace zf::game {
         //
         // Initialisation
         //
-        mem::t_arena perm_arena = mem::f_arena_create();
-        ZF_DEFER({ mem::f_arena_destroy(&perm_arena); });
+        mem::t_arena perm_arena = mem::arena_create();
+        ZF_DEFER({ mem::arena_destroy(&perm_arena); });
 
-        mem::t_arena temp_arena = mem::f_arena_create();
-        ZF_DEFER({ mem::f_arena_destroy(&temp_arena); });
+        mem::t_arena temp_arena = mem::arena_create();
+        ZF_DEFER({ mem::arena_destroy(&temp_arena); });
 
         platform::module_startup(g_init_window_size);
         ZF_DEFER({ platform::module_shutdown(); });
@@ -31,7 +31,7 @@ namespace zf::game {
         rendering::t_basis *const rendering_basis = rendering::module_startup(&perm_arena, &perm_rendering_resource_group);
         ZF_DEFER({ rendering::module_shutdown(rendering_basis); });
 
-        rand::t_rng *const rng = rand::f_create_rng(0, &perm_arena); // @todo: Proper seed!
+        rand::t_rng *const rng = rand::rng_create(0, &perm_arena); // @todo: Proper seed!
 
         init_func({
             .perm_arena = &perm_arena,
@@ -66,7 +66,7 @@ namespace zf::game {
 
             // Once enough time has passed (i.e. the time accumulator has reached the tick interval), run at least a single tick.
             while (frame_dur_accum >= targ_tick_interval) {
-                mem::f_arena_rewind(&temp_arena);
+                mem::arena_rewind(&temp_arena);
 
                 tick_func({
                     .perm_arena = &perm_arena,
@@ -81,7 +81,7 @@ namespace zf::game {
                 frame_dur_accum -= targ_tick_interval;
             }
 
-            mem::f_arena_rewind(&temp_arena);
+            mem::arena_rewind(&temp_arena);
 
             rendering::t_context *const rendering_context = rendering::frame_begin(rendering_basis, {109, 187, 255}, &temp_arena); // @todo: Make the clear colour customisable?
 

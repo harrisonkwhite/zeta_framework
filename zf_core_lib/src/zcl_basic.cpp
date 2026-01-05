@@ -18,7 +18,7 @@
 #include <cstdlib>
 
 namespace zf {
-    void detail::f_try_breaking_into_debugger_if(const bool cond) {
+    void detail::try_breaking_into_debugger_if(const bool cond) {
         if (!cond) {
             return;
         }
@@ -82,7 +82,7 @@ namespace zf {
 #endif
     }
 
-    void detail::f_handle_assert_error(const char *const cond_cstr, const char *const func_name_cstr, const char *const file_name_cstr, const int line) {
+    void detail::handle_assert_error(const char *const cond_cstr, const char *const func_name_cstr, const char *const file_name_cstr, const int line) {
         fprintf(stderr, "==================== ASSERTION ERROR ====================\n");
         fprintf(stderr, "Condition: %s\n", cond_cstr);
         fprintf(stderr, "Function:  %s\n", func_name_cstr);
@@ -95,12 +95,12 @@ namespace zf {
 
         fflush(stderr);
 
-        f_try_breaking_into_debugger_if(true);
+        try_breaking_into_debugger_if(true);
 
         abort();
     }
 
-    void detail::f_handle_fatal_error(const char *const func_name_cstr, const char *const file_name_cstr, const int line, const char *const cond_cstr) {
+    void detail::handle_fatal_error(const char *const func_name_cstr, const char *const file_name_cstr, const int line, const char *const cond_cstr) {
         fprintf(stderr, "==================== FATAL ERROR ====================\n");
 
 #ifdef ZF_DEBUG
@@ -122,7 +122,7 @@ namespace zf {
 
         fflush(stderr);
 
-        f_try_breaking_into_debugger_if(true);
+        try_breaking_into_debugger_if(true);
 
         abort();
     }

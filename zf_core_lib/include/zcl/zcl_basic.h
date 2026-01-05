@@ -47,21 +47,21 @@ namespace zf {
 #define ZF_DEFER(x) const auto ZF_CONCAT(defer_, ZF_CONCAT(l, __LINE__)) = zf::detail::t_defer([&]() x)
 
     namespace detail {
-        void f_try_breaking_into_debugger_if(const bool cond);
+        void try_breaking_into_debugger_if(const bool cond);
 
-        [[noreturn]] void f_handle_assert_error(const char *const cond_cstr, const char *const func_name_cstr, const char *const file_name_cstr, const int line);
+        [[noreturn]] void handle_assert_error(const char *const cond_cstr, const char *const func_name_cstr, const char *const file_name_cstr, const int line);
 
 #ifdef ZF_DEBUG
-    #define ZF_DEBUG_BREAK() detail::f_try_breaking_into_debugger_if(true)
-    #define ZF_DEBUG_BREAK_IF(cond) detail::f_try_breaking_into_debugger_if(cond)
+    #define ZF_DEBUG_BREAK() detail::try_breaking_into_debugger_if(true)
+    #define ZF_DEBUG_BREAK_IF(cond) detail::try_breaking_into_debugger_if(cond)
 
-    #define ZF_ASSERT(cond)                                                                     \
-        do {                                                                                    \
-            if (!ZF_IN_CONSTEXPR()) {                                                           \
-                if (!(cond)) {                                                                  \
-                    zf::detail::f_handle_assert_error(#cond, __FUNCTION__, __FILE__, __LINE__); \
-                }                                                                               \
-            }                                                                                   \
+    #define ZF_ASSERT(cond)                                                                   \
+        do {                                                                                  \
+            if (!ZF_IN_CONSTEXPR()) {                                                         \
+                if (!(cond)) {                                                                \
+                    zf::detail::handle_assert_error(#cond, __FUNCTION__, __FILE__, __LINE__); \
+                }                                                                             \
+            }                                                                                 \
         } while (0)
 #else
     #define ZF_DEBUG_BREAK() static_cast<void>(0)
@@ -69,18 +69,18 @@ namespace zf {
     #define ZF_ASSERT(cond) static_cast<void>(0)
 #endif
 
-        [[noreturn]] void f_handle_fatal_error(const char *const func_name_cstr, const char *const file_name_cstr, const int line, const char *const cond_cstr = nullptr);
+        [[noreturn]] void handle_fatal_error(const char *const func_name_cstr, const char *const file_name_cstr, const int line, const char *const cond_cstr = nullptr);
 
-#define ZF_FATAL() zf::detail::f_handle_fatal_error(__FUNCTION__, __FILE__, __LINE__)
+#define ZF_FATAL() zf::detail::handle_fatal_error(__FUNCTION__, __FILE__, __LINE__)
 #define ZF_UNREACHABLE() ZF_FATAL()
 
-#define ZF_REQUIRE(cond)                                                                   \
-    do {                                                                                   \
-        if (!ZF_IN_CONSTEXPR()) {                                                          \
-            if (!(cond)) {                                                                 \
-                zf::detail::f_handle_fatal_error(__FUNCTION__, __FILE__, __LINE__, #cond); \
-            }                                                                              \
-        }                                                                                  \
+#define ZF_REQUIRE(cond)                                                                 \
+    do {                                                                                 \
+        if (!ZF_IN_CONSTEXPR()) {                                                        \
+            if (!(cond)) {                                                               \
+                zf::detail::handle_fatal_error(__FUNCTION__, __FILE__, __LINE__, #cond); \
+            }                                                                            \
+        }                                                                                \
     } while (0)
     }
 
@@ -193,29 +193,29 @@ namespace zf {
         };
 
     template <c_numeric tp_type>
-    tp_type f_min(const tp_type a, const tp_type b) {
+    tp_type min(const tp_type a, const tp_type b) {
         return a <= b ? a : b;
     }
 
     template <c_numeric tp_type>
-    tp_type f_max(const tp_type a, const tp_type b) {
+    tp_type max(const tp_type a, const tp_type b) {
         return a >= b ? a : b;
     }
 
     template <c_simple tp_type>
-    void f_swap(tp_type *const a, tp_type *const b) {
+    void swap(tp_type *const a, tp_type *const b) {
         const tp_type temp = *a;
         *a = *b;
         *b = temp;
     }
 
     template <c_numeric tp_type>
-    tp_type f_abs(const tp_type n) {
+    tp_type abs(const tp_type n) {
         return n < 0 ? -n : n;
     }
 
     template <c_numeric tp_type>
-    tp_type f_clamp(const tp_type n, const tp_type min, const tp_type max) {
+    tp_type clamp(const tp_type n, const tp_type min, const tp_type max) {
         ZF_ASSERT(min <= max);
 
         if (n < min) {
@@ -230,7 +230,7 @@ namespace zf {
     }
 
     template <c_numeric tp_type>
-    t_i32 f_sign(const tp_type n) {
+    t_i32 sign(const tp_type n) {
         if (n > 0) {
             return 1;
         } else if (n < 0) {
@@ -241,13 +241,13 @@ namespace zf {
     }
 
     template <c_integral tp_type>
-    tp_type f_wrap(const tp_type val, const tp_type max_excl) {
+    tp_type wrap(const tp_type val, const tp_type max_excl) {
         return ((val % max_excl) + max_excl) % max_excl;
     }
 
     template <c_integral tp_type>
-    tp_type f_wrap(const tp_type val, const tp_type min, const tp_type max_excl) {
-        return min + f_wrap(val - min, max_excl - min);
+    tp_type wrap(const tp_type val, const tp_type min, const tp_type max_excl) {
+        return min + wrap(val - min, max_excl - min);
     }
 
 
@@ -393,7 +393,7 @@ namespace zf {
                 dest[i] = src[i];
             }
         } else {
-            const auto min_len = f_min(src.len, dest.len);
+            const auto min_len = min(src.len, dest.len);
 
             for (t_i32 i = 0; i < min_len; i++) {
                 dest[i] = src[i];
@@ -403,8 +403,8 @@ namespace zf {
 
     template <c_array tp_arr_a_type, c_array tp_arr_b_type>
         requires c_same<typename tp_arr_a_type::t_elem, typename tp_arr_b_type::t_elem>
-    t_i32 f_array_compare(const tp_arr_a_type a, const tp_arr_b_type b, const t_comparator_ord<typename tp_arr_a_type::t_elem> comparator = g_comparator_ord_default<typename tp_arr_a_type::t_elem>) {
-        const auto min_len = f_min(a.len, b.len);
+    t_i32 array_compare(const tp_arr_a_type a, const tp_arr_b_type b, const t_comparator_ord<typename tp_arr_a_type::t_elem> comparator = g_comparator_ord_default<typename tp_arr_a_type::t_elem>) {
+        const auto min_len = min(a.len, b.len);
 
         for (t_i32 i = 0; i < min_len; i++) {
             const t_i32 comp = comparator(a[i], b[i]);
@@ -418,7 +418,7 @@ namespace zf {
     }
 
     template <c_array tp_arr_type>
-    t_b8 f_array_do_all_equal(const tp_arr_type arr, const typename tp_arr_type::t_elem &val, const t_comparator_bin<typename tp_arr_type::t_elem> comparator = g_comparator_bin_default<typename tp_arr_type::t_elem>) {
+    t_b8 array_do_all_equal(const tp_arr_type arr, const typename tp_arr_type::t_elem &val, const t_comparator_bin<typename tp_arr_type::t_elem> comparator = g_comparator_bin_default<typename tp_arr_type::t_elem>) {
         if (arr.len == 0) {
             return false;
         }
@@ -433,7 +433,7 @@ namespace zf {
     }
 
     template <c_array tp_arr_type>
-    t_b8 f_array_do_any_equal(const tp_arr_type arr, const typename tp_arr_type::t_elem &val, const t_comparator_bin<typename tp_arr_type::t_elem> comparator = g_comparator_bin_default<typename tp_arr_type::t_elem>) {
+    t_b8 array_do_any_equal(const tp_arr_type arr, const typename tp_arr_type::t_elem &val, const t_comparator_bin<typename tp_arr_type::t_elem> comparator = g_comparator_bin_default<typename tp_arr_type::t_elem>) {
         for (t_i32 i = 0; i < arr.len; i++) {
             if (comparator(arr[i], val)) {
                 return true;
@@ -444,16 +444,16 @@ namespace zf {
     }
 
     template <c_array_mut tp_arr_type>
-    void f_array_set_all_to(const tp_arr_type arr, const typename tp_arr_type::t_elem &val) {
+    void array_set_all_to(const tp_arr_type arr, const typename tp_arr_type::t_elem &val) {
         for (t_i32 i = 0; i < arr.len; i++) {
             arr[i] = val;
         }
     }
 
     template <c_array_mut tp_arr_type>
-    void f_array_reverse(const tp_arr_type arr) {
+    void array_reverse(const tp_arr_type arr) {
         for (t_i32 i = 0; i < arr.len / 2; i++) {
-            f_swap(&arr[i], &arr[arr.len - 1 - i]);
+            swap(&arr[i], &arr[arr.len - 1 - i]);
         }
     }
 

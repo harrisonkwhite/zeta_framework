@@ -32,7 +32,7 @@ namespace zf::gfx {
         ZF_DEFER({ stbi_image_free(stb_px_data); });
 
         const t_array_rdonly<t_u8> stb_px_data_arr = {stb_px_data, 4 * size_in_pxs.x * size_in_pxs.y};
-        const auto px_data = mem::f_arena_push_array<t_u8>(texture_data_arena, 4 * size_in_pxs.x * size_in_pxs.y);
+        const auto px_data = mem::arena_push_array<t_u8>(texture_data_arena, 4 * size_in_pxs.x * size_in_pxs.y);
         array_copy(stb_px_data_arr, px_data);
 
         *o_texture_data = {size_in_pxs, px_data};
@@ -79,7 +79,7 @@ namespace zf::gfx {
             return false;
         }
 
-        const auto rgba_px_data = mem::f_arena_push_array<t_u8>(texture_data_arena, 4 * size_in_pxs.x * size_in_pxs.y);
+        const auto rgba_px_data = mem::arena_push_array<t_u8>(texture_data_arena, 4 * size_in_pxs.x * size_in_pxs.y);
 
         if (!io::f_read_items_into_array(&fs, rgba_px_data, rgba_px_data.len)) {
             return false;
@@ -120,12 +120,12 @@ namespace zf::gfx {
             const t_i32 glyph_index = stbtt_FindGlyphIndex(&stb_font_info, static_cast<t_i32>(code_pt));
 
             if (glyph_index == 0) {
-                mem::f_unset_bit(*code_pts, i);
+                mem::unset_bit(*code_pts, i);
             }
         }
 
         // Compute number of leftover code points that can actually be supported, return if there are none.
-        const t_i32 code_pt_cnt = mem::f_count_set_bits(*code_pts);
+        const t_i32 code_pt_cnt = mem::count_set_bits(*code_pts);
 
         if (code_pt_cnt == 0) {
             return true;
@@ -142,7 +142,7 @@ namespace zf::gfx {
         //
         // Glyph Info
         //
-        o_arrangement->code_pts_to_glyph_infos = ds::f_hash_map_create<strs::t_code_pt, t_font_glyph_info>(g_code_pt_hash_func, arrangement_arena, code_pt_cnt);
+        o_arrangement->code_pts_to_glyph_infos = ds::hash_map_create<strs::t_code_pt, t_font_glyph_info>(g_code_pt_hash_func, arrangement_arena, code_pt_cnt);
 
         t_i32 atlas_index = 0;
         math::t_v2_i atlas_pen = {};
@@ -181,7 +181,7 @@ namespace zf::gfx {
             glyph_info.atlas_rect = {atlas_pen.x, atlas_pen.y, glyph_info.size.x, glyph_info.size.y};
             atlas_pen.x += glyph_info.size.x;
 
-            ds::f_hash_map_put(&o_arrangement->code_pts_to_glyph_infos, code_pt, glyph_info);
+            ds::hash_map_put(&o_arrangement->code_pts_to_glyph_infos, code_pt, glyph_info);
         }
 
         const t_i32 atlas_cnt = atlas_index + 1;
@@ -192,7 +192,7 @@ namespace zf::gfx {
 
         // If there were any kernings to store, set up the hash map and go through again and store them.
         o_arrangement->has_kernings = true;
-        o_arrangement->code_pt_pairs_to_kernings = ds::f_hash_map_create<t_font_code_pt_pair, t_i32>(g_code_pt_pair_hash_func, arrangement_arena, ds::g_hash_map_cap_default, g_code_pt_pair_comparator);
+        o_arrangement->code_pt_pairs_to_kernings = ds::hash_map_create<t_font_code_pt_pair, t_i32>(g_code_pt_pair_hash_func, arrangement_arena, ds::g_hash_map_cap_default, g_code_pt_pair_comparator);
 
         ZF_WALK_SET_BITS (*code_pts, i) {
             ZF_WALK_SET_BITS (*code_pts, j) {
@@ -205,7 +205,7 @@ namespace zf::gfx {
                 const t_i32 kern = stbtt_GetGlyphKernAdvance(&stb_font_info, glyph_a_index, glyph_b_index);
 
                 if (kern != 0) {
-                    ds::f_hash_map_put(&o_arrangement->code_pt_pairs_to_kernings, {cp_a, cp_b}, kern);
+                    ds::hash_map_put(&o_arrangement->code_pt_pairs_to_kernings, {cp_a, cp_b}, kern);
                 }
             }
         }
@@ -213,7 +213,7 @@ namespace zf::gfx {
         //
         // Texture Atlases
         //
-        *o_atlas_rgbas = mem::f_arena_push_array<t_font_atlas_rgba>(atlas_rgbas_arena, atlas_cnt);
+        *o_atlas_rgbas = mem::arena_push_array<t_font_atlas_rgba>(atlas_rgbas_arena, atlas_cnt);
 
         // Initialise all pixels to transparent white.
         // @todo: Maybe don't use RBGA for this?
@@ -234,7 +234,7 @@ namespace zf::gfx {
 
             t_font_glyph_info *glyph_info;
 
-            if (!ds::f_hash_map_find(&o_arrangement->code_pts_to_glyph_infos, code_pt, &glyph_info)) {
+            if (!ds::hash_map_find(&o_arrangement->code_pts_to_glyph_infos, code_pt, &glyph_info)) {
                 ZF_ASSERT(false);
             }
 
@@ -254,8 +254,8 @@ namespace zf::gfx {
 
             ZF_DEFER({ stbtt_FreeBitmap(stb_bitmap, nullptr); });
 
-            for (t_i32 y = math::f_get_rect_top(atlas_rect); y < math::f_get_rect_bottom(atlas_rect); y++) {
-                for (t_i32 x = math::f_get_rect_left(atlas_rect); x < math::f_get_rect_right(atlas_rect); x++) {
+            for (t_i32 y = math::rect_get_top(atlas_rect); y < math::rect_get_bottom(atlas_rect); y++) {
+                for (t_i32 x = math::rect_get_left(atlas_rect); x < math::rect_get_right(atlas_rect); x++) {
                     const t_i32 px_index = (y * 4 * g_font_atlas_size.x) + (x * 4);
                     const t_i32 stb_bitmap_index = ((y - atlas_rect.y) * atlas_rect.width) + (x - atlas_rect.x);
                     (*atlas_rgba)[px_index + 3] = stb_bitmap[stb_bitmap_index];
@@ -283,11 +283,11 @@ namespace zf::gfx {
             return false;
         }
 
-        if (!ds::f_hash_map_serialize(&arrangement.code_pts_to_glyph_infos, &fs, temp_arena)) {
+        if (!ds::hash_map_serialize(&arrangement.code_pts_to_glyph_infos, &fs, temp_arena)) {
             return false;
         }
 
-        if (!ds::f_hash_map_serialize(&arrangement.code_pt_pairs_to_kernings, &fs, temp_arena)) {
+        if (!ds::hash_map_serialize(&arrangement.code_pt_pairs_to_kernings, &fs, temp_arena)) {
             return false;
         }
 
@@ -311,11 +311,11 @@ namespace zf::gfx {
             return false;
         }
 
-        if (!ds::f_hash_map_deserialize(&fs, arrangement_arena, g_code_pt_hash_func, temp_arena, &o_arrangement->code_pts_to_glyph_infos)) {
+        if (!ds::hash_map_deserialize(&fs, arrangement_arena, g_code_pt_hash_func, temp_arena, &o_arrangement->code_pts_to_glyph_infos)) {
             return false;
         }
 
-        if (!ds::f_hash_map_deserialize(&fs, arrangement_arena, g_code_pt_pair_hash_func, temp_arena, &o_arrangement->code_pt_pairs_to_kernings, g_code_pt_pair_comparator)) {
+        if (!ds::hash_map_deserialize(&fs, arrangement_arena, g_code_pt_pair_hash_func, temp_arena, &o_arrangement->code_pt_pairs_to_kernings, g_code_pt_pair_comparator)) {
             return false;
         }
 

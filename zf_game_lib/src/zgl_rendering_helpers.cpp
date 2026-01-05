@@ -6,29 +6,29 @@ namespace zf::rendering {
 
         math::t_rect_i src_rect_to_use;
 
-        if (math::f_are_rects_equal(src_rect, {})) {
+        if (math::rects_are_equal(src_rect, {})) {
             src_rect_to_use = {0, 0, texture_size.x, texture_size.y};
         } else {
-            ZF_ASSERT(src_rect.x >= 0 && src_rect.y >= 0 && math::f_get_rect_right(src_rect) <= texture_size.x && math::f_get_rect_bottom(src_rect) <= texture_size.y);
+            ZF_ASSERT(src_rect.x >= 0 && src_rect.y >= 0 && math::rect_get_right(src_rect) <= texture_size.x && math::rect_get_bottom(src_rect) <= texture_size.y);
             src_rect_to_use = src_rect;
         }
 
-        const math::t_rect_f rect = math::f_create_rect_f(pos, math::f_convert_to_v2(math::f_get_rect_size(src_rect_to_use)));
+        const math::t_rect_f rect = math::rect_create_f32(pos, math::v2_convert_to_f32(math::rect_get_size(src_rect_to_use)));
         const math::t_rect_f uv_rect = gfx::f_calc_uv_rect(src_rect_to_use, texture_size);
 
         const t_static_array<t_batch_triangle, 2> triangles = {{
             {
                 .verts = {{
-                    {.pos = math::f_get_rect_topleft(rect), .blend = gfx::g_color_white, .uv = math::f_get_rect_topleft(uv_rect)},
-                    {.pos = math::f_get_rect_topright(rect), .blend = gfx::g_color_white, .uv = math::f_get_rect_topright(uv_rect)},
-                    {.pos = math::f_get_rect_bottomleft(rect), .blend = gfx::g_color_white, .uv = math::f_get_rect_bottomleft(uv_rect)},
+                    {.pos = math::rect_get_topleft(rect), .blend = gfx::g_color_white, .uv = math::rect_get_topleft(uv_rect)},
+                    {.pos = math::rect_get_topright(rect), .blend = gfx::g_color_white, .uv = math::rect_get_topright(uv_rect)},
+                    {.pos = math::rect_get_bottomleft(rect), .blend = gfx::g_color_white, .uv = math::rect_get_bottomleft(uv_rect)},
                 }},
             },
             {
                 .verts = {{
-                    {.pos = math::f_get_rect_bottomleft(rect), .blend = gfx::g_color_white, .uv = math::f_get_rect_bottomleft(uv_rect)},
-                    {.pos = math::f_get_rect_bottomleft(rect), .blend = gfx::g_color_white, .uv = math::f_get_rect_bottomleft(uv_rect)},
-                    {.pos = math::f_get_rect_topleft(rect), .blend = gfx::g_color_white, .uv = math::f_get_rect_topleft(uv_rect)},
+                    {.pos = math::rect_get_bottomleft(rect), .blend = gfx::g_color_white, .uv = math::rect_get_bottomleft(uv_rect)},
+                    {.pos = math::rect_get_bottomleft(rect), .blend = gfx::g_color_white, .uv = math::rect_get_bottomleft(uv_rect)},
+                    {.pos = math::rect_get_topleft(rect), .blend = gfx::g_color_white, .uv = math::rect_get_topleft(uv_rect)},
                 }},
             },
         }};
@@ -44,7 +44,7 @@ namespace zf::rendering {
             ZF_FATAL();
         }
 
-        const t_array_mut<t_resource *> atlases = mem::f_arena_push_array<t_resource *>(resource_group->arena, atlas_rgbas.len);
+        const t_array_mut<t_resource *> atlases = mem::arena_push_array<t_resource *>(resource_group->arena, atlas_rgbas.len);
 
         for (t_i32 i = 0; i < atlas_rgbas.len; i++) {
             atlases[i] = texture_create({gfx::g_font_atlas_size, atlas_rgbas[i]}, resource_group);
@@ -64,7 +64,7 @@ namespace zf::rendering {
             ZF_FATAL();
         }
 
-        const auto atlases = mem::f_arena_push_array<t_resource *>(resource_group->arena, atlas_rgbas.len);
+        const auto atlases = mem::arena_push_array<t_resource *>(resource_group->arena, atlas_rgbas.len);
 
         for (t_i32 i = 0; i < atlas_rgbas.len; i++) {
             atlases[i] = texture_create({gfx::g_font_atlas_size, atlas_rgbas[i]}, resource_group);
@@ -101,7 +101,7 @@ namespace zf::rendering {
         }();
 
         // Reserve memory for the character positions.
-        const auto positions = mem::f_arena_push_array<math::t_v2>(arena, str_meta.len);
+        const auto positions = mem::arena_push_array<math::t_v2>(arena, str_meta.len);
 
         // From the line count we can determine the vertical alignment offset to apply.
         const t_f32 alignment_offs_y = static_cast<t_f32>(-(str_meta.line_cnt * font_arrangement.line_height)) * alignment.y;
@@ -146,7 +146,7 @@ namespace zf::rendering {
 
             gfx::t_font_glyph_info *glyph_info;
 
-            if (!ds::f_hash_map_find(&font_arrangement.code_pts_to_glyph_infos, step.code_pt, &glyph_info)) {
+            if (!ds::hash_map_find(&font_arrangement.code_pts_to_glyph_infos, step.code_pt, &glyph_info)) {
                 ZF_ASSERT(false && "Unsupported code point!");
                 continue;
             }
@@ -154,12 +154,12 @@ namespace zf::rendering {
             if (chr_index > 0 && font_arrangement.has_kernings) {
                 t_i32 *kerning;
 
-                if (ds::f_hash_map_find(&font_arrangement.code_pt_pairs_to_kernings, {code_pt_last, step.code_pt}, &kerning)) {
+                if (ds::hash_map_find(&font_arrangement.code_pt_pairs_to_kernings, {code_pt_last, step.code_pt}, &kerning)) {
                     chr_pos_pen.x += static_cast<t_f32>(*kerning);
                 }
             }
 
-            positions[chr_index] = pos + chr_pos_pen + math::f_convert_to_v2(glyph_info->offs);
+            positions[chr_index] = pos + chr_pos_pen + math::v2_convert_to_f32(glyph_info->offs);
             positions[chr_index].y += alignment_offs_y;
 
             chr_pos_pen.x += static_cast<t_f32>(glyph_info->adv);
@@ -192,7 +192,7 @@ namespace zf::rendering {
 
             gfx::t_font_glyph_info *glyph_info;
 
-            if (!ds::f_hash_map_find(&font.arrangement.code_pts_to_glyph_infos, step.code_pt, &glyph_info)) {
+            if (!ds::hash_map_find(&font.arrangement.code_pts_to_glyph_infos, step.code_pt, &glyph_info)) {
                 ZF_ASSERT(false && "Unsupported code point!");
                 continue;
             }

@@ -6,7 +6,7 @@ namespace zf::algos {
     // O(n^2) time complexity, but O(1) space complexity.
     // You're usually better off using a hash map and a linear search, or a bitset if values are numeric and the range is small.
     template <c_array tp_arr_type>
-    t_b8 f_has_duplicates_slow(const tp_arr_type arr, const t_comparator_bin<typename tp_arr_type::t_elem> comparator = g_comparator_bin_default<typename tp_arr_type::t_elem>) {
+    t_b8 has_duplicates_slow(const tp_arr_type arr, const t_comparator_bin<typename tp_arr_type::t_elem> comparator = g_comparator_bin_default<typename tp_arr_type::t_elem>) {
         for (t_i32 i = 0; i < arr.len; i++) {
             for (t_i32 j = 0; j < arr.len; j++) {
                 if (i == j) {
@@ -23,7 +23,7 @@ namespace zf::algos {
     }
 
     template <c_array tp_arr_type>
-    t_b8 f_binary_search(const tp_arr_type arr, const typename tp_arr_type::t_elem &elem, const t_comparator_ord<typename tp_arr_type::t_elem> comparator = g_comparator_ord_default<typename tp_arr_type::t_elem>) {
+    t_b8 run_binary_search(const tp_arr_type arr, const typename tp_arr_type::t_elem &elem, const t_comparator_ord<typename tp_arr_type::t_elem> comparator = g_comparator_ord_default<typename tp_arr_type::t_elem>) {
         if (arr.len == 0) {
             return false;
         }
@@ -34,14 +34,14 @@ namespace zf::algos {
         if (comp_res == 0) {
             return true;
         } else if (comp_res < 0) {
-            return f_binary_search(array_slice(arr, 0, arr.len / 2), elem);
+            return run_binary_search(array_slice(arr, 0, arr.len / 2), elem);
         } else {
-            return f_binary_search(array_slice_from(arr, (arr.len / 2) + 1), elem);
+            return run_binary_search(array_slice_from(arr, (arr.len / 2) + 1), elem);
         }
     }
 
     template <c_array tp_arr_type>
-    t_b8 f_is_sorted(const tp_arr_type arr, const t_comparator_ord<typename tp_arr_type::t_elem> comparator = g_comparator_ord_default<typename tp_arr_type::t_elem>) {
+    t_b8 is_sorted(const tp_arr_type arr, const t_comparator_ord<typename tp_arr_type::t_elem> comparator = g_comparator_ord_default<typename tp_arr_type::t_elem>) {
         for (t_i32 i = 0; i < arr.len - 1; i++) {
             if (comparator(arr[i], arr[i + 1]) > 0) {
                 return false;
@@ -53,7 +53,7 @@ namespace zf::algos {
 
     // O(n) best-case if array is already sorted, O(n^2) worst-case.
     template <c_array tp_arr_type>
-    void f_bubble_sort(const tp_arr_type arr, const t_comparator_ord<typename tp_arr_type::t_elem> comparator = g_comparator_ord_default<typename tp_arr_type::t_elem>) {
+    void run_bubble_sort(const tp_arr_type arr, const t_comparator_ord<typename tp_arr_type::t_elem> comparator = g_comparator_ord_default<typename tp_arr_type::t_elem>) {
         t_b8 sorted;
 
         do {
@@ -61,7 +61,7 @@ namespace zf::algos {
 
             for (t_i32 i = 0; i < arr.len - 1; i++) {
                 if (comparator(arr[i], arr[i + 1]) > 0) {
-                    f_swap(&arr[i], &arr[i + 1]);
+                    swap(&arr[i], &arr[i + 1]);
                     sorted = false;
                 }
             }
@@ -70,7 +70,7 @@ namespace zf::algos {
 
     // O(n) best-case if array is already sorted, O(n^2) worst-case.
     template <c_array tp_arr_type>
-    void f_insertion_sort(const tp_arr_type arr, const t_comparator_ord<typename tp_arr_type::t_elem> comparator = g_comparator_ord_default<typename tp_arr_type::t_elem>) {
+    void run_insertion_sort(const tp_arr_type arr, const t_comparator_ord<typename tp_arr_type::t_elem> comparator = g_comparator_ord_default<typename tp_arr_type::t_elem>) {
         for (t_i32 i = 1; i < arr.len; i++) {
             const auto temp = arr[i];
 
@@ -90,7 +90,7 @@ namespace zf::algos {
 
     // O(n^2) in every case.
     template <c_array tp_arr_type>
-    void f_selection_sort(const tp_arr_type arr, const t_comparator_ord<typename tp_arr_type::t_elem> comparator = g_comparator_ord_default<typename tp_arr_type::t_elem>) {
+    void run_selection_sort(const tp_arr_type arr, const t_comparator_ord<typename tp_arr_type::t_elem> comparator = g_comparator_ord_default<typename tp_arr_type::t_elem>) {
         for (t_i32 i = 0; i < arr.len - 1; i++) {
             const auto min = &arr[i];
 
@@ -100,23 +100,23 @@ namespace zf::algos {
                 }
             }
 
-            f_swap(&arr[i], &min);
+            swap(&arr[i], &min);
         }
     }
 
     // O(n log n) in both time complexity and space complexity in every case.
     template <typename tp_arr_type>
-    void f_merge_sort(const tp_arr_type arr, mem::t_arena *const temp_arena, const t_comparator_ord<typename tp_arr_type::t_elem> comparator = g_comparator_ord_default<typename tp_arr_type::t_elem>) {
+    void run_merge_sort(const tp_arr_type arr, mem::t_arena *const temp_arena, const t_comparator_ord<typename tp_arr_type::t_elem> comparator = g_comparator_ord_default<typename tp_arr_type::t_elem>) {
         if (arr.len <= 1) {
             return;
         }
 
         // Sort copies of the left and right partitions.
-        const auto arr_left_sorted = mem::f_arena_push_array_clone(array_slice(arr, 0, arr.len / 2), temp_arena);
-        f_merge_sort(arr_left_sorted, temp_arena, comparator);
+        const auto arr_left_sorted = mem::arena_push_array_clone(array_slice(arr, 0, arr.len / 2), temp_arena);
+        run_merge_sort(arr_left_sorted, temp_arena, comparator);
 
-        const auto arr_right_sorted = mem::f_arena_push_array_clone(array_slice_from(arr, arr.len / 2), temp_arena);
-        f_merge_sort(arr_right_sorted, temp_arena, comparator);
+        const auto arr_right_sorted = mem::arena_push_array_clone(array_slice_from(arr, arr.len / 2), temp_arena);
+        run_merge_sort(arr_right_sorted, temp_arena, comparator);
 
         // Update this array.
         t_i32 i = 0;
@@ -149,14 +149,14 @@ namespace zf::algos {
     // Space complexity is O(1) compared to merge sort.
     // In each recurse, the pivot is selected as the median of the first, middle, and last elements.
     template <c_array tp_arr_type>
-    void f_quick_sort(const tp_arr_type arr, const t_comparator_ord<typename tp_arr_type::t_elem> comparator = g_comparator_ord_default<typename tp_arr_type::t_elem>) {
+    void run_quick_sort(const tp_arr_type arr, const t_comparator_ord<typename tp_arr_type::t_elem> comparator = g_comparator_ord_default<typename tp_arr_type::t_elem>) {
         if (arr.len <= 1) {
             return;
         }
 
         if (arr.len == 2) {
             if (comparator(arr[0], arr[1]) > 0) {
-                f_swap(&arr[0], &arr[1]);
+                swap(&arr[0], &arr[1]);
             }
 
             return;
@@ -192,7 +192,7 @@ namespace zf::algos {
         }();
 
         // Swap it out to the end to get it out of the way.
-        f_swap(&arr[pivot_index], &arr[arr.len - 1]);
+        swap(&arr[pivot_index], &arr[arr.len - 1]);
 
         // Move smaller elements to the left, and decide the final pivot position.
         t_i32 left_sec_last_index = -1;
@@ -201,12 +201,12 @@ namespace zf::algos {
             if (comparator(arr[i], arr[arr.len - 1]) <= 0) {
                 // This element is not greater than the pivot, so swap it to the left section.
                 left_sec_last_index++;
-                f_swap(&arr[left_sec_last_index], &arr[i]);
+                swap(&arr[left_sec_last_index], &arr[i]);
             }
         }
 
         // Sort for each subsection.
-        f_quick_sort(array_slice(arr, 0, left_sec_last_index), comparator);
-        f_quick_sort(array_slice_from(arr, left_sec_last_index + 1), comparator);
+        run_quick_sort(array_slice(arr, 0, left_sec_last_index), comparator);
+        run_quick_sort(array_slice_from(arr, left_sec_last_index + 1), comparator);
     }
 }

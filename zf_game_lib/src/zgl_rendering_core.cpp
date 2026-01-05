@@ -78,7 +78,7 @@ namespace zf::rendering {
     // @section: Functions
 
     // @todo: Placeholder!
-    static bgfx::ProgramHandle f_create_bgfx_shader_prog(const t_array_rdonly<t_u8> vert_shader_bin, const t_array_rdonly<t_u8> frag_shader_bin) {
+    static bgfx::ProgramHandle create_bgfx_shader_prog(const t_array_rdonly<t_u8> vert_shader_bin, const t_array_rdonly<t_u8> frag_shader_bin) {
         const bgfx::Memory *const vert_shader_bgfx_mem = bgfx::copy(vert_shader_bin.raw, static_cast<uint32_t>(vert_shader_bin.len));
         const bgfx::ShaderHandle vert_shader_bgfx_hdl = bgfx::createShader(vert_shader_bgfx_mem);
 
@@ -133,7 +133,7 @@ namespace zf::rendering {
         //
         // Basis Setup
         //
-        const auto basis = mem::f_arena_push_item<t_basis>(arena);
+        const auto basis = mem::arena_push_item<t_basis>(arena);
 
         {
             bgfx::VertexLayout vert_layout;
@@ -146,7 +146,7 @@ namespace zf::rendering {
             }
         }
 
-        basis->shader_prog_bgfx_hdl = f_create_bgfx_shader_prog({g_batch_triangle_vert_shader_default_src_raw, g_batch_triangle_vert_shader_default_src_len}, {g_batch_triangle_frag_shader_default_src_raw, g_batch_triangle_frag_shader_default_src_len});
+        basis->shader_prog_bgfx_hdl = create_bgfx_shader_prog({g_batch_triangle_vert_shader_default_src_raw, g_batch_triangle_vert_shader_default_src_len}, {g_batch_triangle_frag_shader_default_src_raw, g_batch_triangle_frag_shader_default_src_len});
 
         if (!bgfx::isValid(basis->shader_prog_bgfx_hdl)) {
             ZF_FATAL();
@@ -213,7 +213,7 @@ namespace zf::rendering {
     static t_resource *resource_group_add(t_resource_group *const group, const t_resource_type type) {
         ZF_ASSERT(g_module_state.state == ec_module_state_active_but_not_midframe);
 
-        const auto resource = mem::f_arena_push_item_zeroed<t_resource>(group->arena);
+        const auto resource = mem::arena_push_item_zeroed<t_resource>(group->arena);
 
         if (!group->head) {
             group->head = resource;
@@ -282,9 +282,9 @@ namespace zf::rendering {
 
         bgfx::setViewMode(0, bgfx::ViewMode::Sequential);
 
-        const auto view_mat = math::f_create_identity_matrix();
+        const auto view_mat = math::g_mat4x4_identity;
 
-        auto proj_mat = math::f_create_identity_matrix();
+        auto proj_mat = math::g_mat4x4_identity;
         proj_mat.elems[0][0] = 1.0f / (static_cast<t_f32>(fb_size_cache.x) / 2.0f);
         proj_mat.elems[1][1] = -1.0f / (static_cast<t_f32>(fb_size_cache.y) / 2.0f);
         proj_mat.elems[3][0] = -1.0f;
@@ -300,7 +300,7 @@ namespace zf::rendering {
 
         g_module_state.state = ec_module_state_active_and_midframe;
 
-        const auto context = mem::f_arena_push_item_zeroed<t_context>(context_arena);
+        const auto context = mem::arena_push_item_zeroed<t_context>(context_arena);
         context->basis = basis;
 
         return context;
@@ -332,7 +332,7 @@ namespace zf::rendering {
 
         context->frame_vert_cnt += context->batch_state.vert_cnt;
 
-        mem::f_clear_item(&context->batch_state, 0);
+        mem::clear_item(&context->batch_state, 0);
     }
 
     void frame_end(t_context *const context) {

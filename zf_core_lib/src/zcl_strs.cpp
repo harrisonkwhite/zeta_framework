@@ -347,28 +347,28 @@ namespace zf::strs {
         switch (bytes.len) {
         case 1:
             // 0xxxxxxx
-            result |= bytes[0] & mem::f_byte_bitmask_range(0, 7);
+            result |= bytes[0] & mem::create_byte_bitmask_range(0, 7);
             break;
 
         case 2:
             // 110xxxxx 10xxxxxx
-            result |= static_cast<t_code_pt>((bytes[0] & mem::f_byte_bitmask_range(0, 5)) << 6);
-            result |= bytes[1] & mem::f_byte_bitmask_range(0, 6);
+            result |= static_cast<t_code_pt>((bytes[0] & mem::create_byte_bitmask_range(0, 5)) << 6);
+            result |= bytes[1] & mem::create_byte_bitmask_range(0, 6);
             break;
 
         case 3:
             // 1110xxxx 10xxxxxx 10xxxxxx
-            result |= static_cast<t_code_pt>((bytes[0] & mem::f_byte_bitmask_range(0, 4)) << 12);
-            result |= static_cast<t_code_pt>((bytes[1] & mem::f_byte_bitmask_range(0, 6)) << 6);
-            result |= bytes[2] & mem::f_byte_bitmask_range(0, 6);
+            result |= static_cast<t_code_pt>((bytes[0] & mem::create_byte_bitmask_range(0, 4)) << 12);
+            result |= static_cast<t_code_pt>((bytes[1] & mem::create_byte_bitmask_range(0, 6)) << 6);
+            result |= bytes[2] & mem::create_byte_bitmask_range(0, 6);
             break;
 
         case 4:
             // 11110xxx 10xxxxxx 10xxxxxx 10xxxxxx
-            result |= static_cast<t_code_pt>((bytes[0] & mem::f_byte_bitmask_range(0, 3)) << 18);
-            result |= static_cast<t_code_pt>((bytes[1] & mem::f_byte_bitmask_range(0, 6)) << 12);
-            result |= static_cast<t_code_pt>((bytes[2] & mem::f_byte_bitmask_range(0, 6)) << 6);
-            result |= bytes[3] & mem::f_byte_bitmask_range(0, 6);
+            result |= static_cast<t_code_pt>((bytes[0] & mem::create_byte_bitmask_range(0, 3)) << 18);
+            result |= static_cast<t_code_pt>((bytes[1] & mem::create_byte_bitmask_range(0, 6)) << 12);
+            result |= static_cast<t_code_pt>((bytes[2] & mem::create_byte_bitmask_range(0, 6)) << 6);
+            result |= bytes[3] & mem::create_byte_bitmask_range(0, 6);
             break;
 
         default:
@@ -402,7 +402,7 @@ namespace zf::strs {
         ZF_ASSERT(f_is_valid_utf8(str));
 
         ZF_WALK_STR (str, step) {
-            mem::f_set_bit(*code_pts, step.code_pt); // @todo
+            mem::set_bit(*code_pts, step.code_pt); // @todo
         }
     }
 
