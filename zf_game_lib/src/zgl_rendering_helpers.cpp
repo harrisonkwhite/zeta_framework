@@ -36,7 +36,7 @@ namespace zf {
         f_rendering_submit_triangle(context, f_array_get_as_nonstatic(triangles), texture);
     }
 
-    t_font f_rendering_create_font_from_raw(const t_str_rdonly file_path, const t_i32 height, t_code_pt_bit_vec *const code_pts, mem::t_arena *const temp_arena, t_rendering_resource_group *const resource_group) {
+    t_font f_rendering_create_font_from_raw(const strs::t_str_rdonly file_path, const t_i32 height, strs::t_code_pt_bit_vec *const code_pts, mem::t_arena *const temp_arena, t_rendering_resource_group *const resource_group) {
         gfx::t_font_arrangement arrangement;
         t_array_mut<gfx::t_font_atlas_rgba> atlas_rgbas;
 
@@ -56,7 +56,7 @@ namespace zf {
         };
     }
 
-    t_font f_rendering_create_font_from_packed(const t_str_rdonly file_path, mem::t_arena *const temp_arena, t_rendering_resource_group *const resource_group) {
+    t_font f_rendering_create_font_from_packed(const strs::t_str_rdonly file_path, mem::t_arena *const temp_arena, t_rendering_resource_group *const resource_group) {
         gfx::t_font_arrangement arrangement;
         t_array_mut<gfx::t_font_atlas_rgba> atlas_rgbas;
 
@@ -76,18 +76,18 @@ namespace zf {
         };
     }
 
-    t_array_mut<math::t_v2> f_rendering_get_str_chr_render_positions(const t_str_rdonly str, const gfx::t_font_arrangement &font_arrangement, const math::t_v2 pos, const math::t_v2 alignment, mem::t_arena *const arena) {
-        ZF_ASSERT(f_strs_is_valid_utf8(str));
+    t_array_mut<math::t_v2> f_rendering_get_str_chr_render_positions(const strs::t_str_rdonly str, const gfx::t_font_arrangement &font_arrangement, const math::t_v2 pos, const math::t_v2 alignment, mem::t_arena *const arena) {
+        ZF_ASSERT(strs::f_is_valid_utf8(str));
         ZF_ASSERT(gfx::f_is_alignment_valid(alignment));
 
         // Calculate some useful string metadata.
-        struct s_str_meta {
+        struct t_str_meta {
             t_i32 len;
             t_i32 line_cnt;
         };
 
         const auto str_meta = [str]() {
-            s_str_meta meta = {.line_cnt = 1};
+            t_str_meta meta = {.line_cnt = 1};
 
             ZF_WALK_STR (str, step) {
                 meta.len++;
@@ -111,7 +111,7 @@ namespace zf {
         math::t_v2 chr_pos_pen = {}; // The position of the current character.
         t_i32 line_begin_chr_index = 0;
         t_i32 line_len = 0;
-        t_code_pt code_pt_last;
+        strs::t_code_pt code_pt_last;
 
         const auto apply_hor_alignment_offs = [&]() {
             if (line_len > 0) {
@@ -172,11 +172,11 @@ namespace zf {
         return positions;
     }
 
-    void f_rendering_submit_str(t_rendering_context *const context, const t_str_rdonly str, const t_font &font, const math::t_v2 pos, mem::t_arena *const temp_arena, const math::t_v2 alignment, const gfx::t_color_rgba32f blend) {
-        ZF_ASSERT(f_strs_is_valid_utf8(str));
+    void f_rendering_submit_str(t_rendering_context *const context, const strs::t_str_rdonly str, const t_font &font, const math::t_v2 pos, mem::t_arena *const temp_arena, const math::t_v2 alignment, const gfx::t_color_rgba32f blend) {
+        ZF_ASSERT(strs::f_is_valid_utf8(str));
         ZF_ASSERT(gfx::f_is_alignment_valid(alignment));
 
-        if (f_strs_is_empty(str)) {
+        if (strs::f_is_empty(str)) {
             return;
         }
 

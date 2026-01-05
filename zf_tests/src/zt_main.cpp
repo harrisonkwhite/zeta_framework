@@ -21,12 +21,12 @@ namespace zf {
         return true;
     }
 
-    struct s_test {
+    struct t_test {
         const char *title_cstr;
         t_b8 (*func)(mem::t_arena *const arena);
     };
 
-    static const t_static_array<s_test, 4> g_tests = {{
+    static const t_static_array<t_test, 4> g_tests = {{
         {.title_cstr = "Bits", .func = TestBits},
         {.title_cstr = "Sorting", .func = TestSorting},
         {.title_cstr = "List", .func = TestList},
@@ -38,7 +38,7 @@ namespace zf {
         ZF_DEFER({ mem::f_arena_destroy(&arena); });
 
         for (t_i32 i = 0; i < g_tests.g_len; i++) {
-            io::f_log(ZF_STR_LITERAL("Running test \"%\"..."), f_strs_convert_cstr(g_tests[i].title_cstr));
+            io::f_log(ZF_STR_LITERAL("Running test \"%\"..."), strs::f_convert_cstr(g_tests[i].title_cstr));
             g_tests[i].func(&arena);
         }
     }

@@ -1,6 +1,6 @@
 #include <zcl/zcl_strs.h>
 
-namespace zf {
+namespace zf::strs {
     enum t_utf8_byte_type : t_i32 {
         ec_utf8_byte_type_ascii,
         ec_utf8_byte_type_2byte_start,
@@ -276,7 +276,7 @@ namespace zf {
         ec_utf8_byte_type_invalid,
     }};
 
-    t_b8 f_strs_is_valid_utf8(const t_str_rdonly str) {
+    t_b8 f_is_valid_utf8(const t_str_rdonly str) {
         t_i32 cost = 0;
 
         for (t_i32 i = 0; i < str.bytes.len; i++) {
@@ -312,8 +312,8 @@ namespace zf {
         return true;
     }
 
-    t_i32 f_strs_get_len(const t_str_rdonly str) {
-        ZF_ASSERT(f_strs_is_valid_utf8(str));
+    t_i32 f_get_len(const t_str_rdonly str) {
+        ZF_ASSERT(f_is_valid_utf8(str));
 
         t_i32 i = 0;
         t_i32 len = 0;
@@ -339,7 +339,7 @@ namespace zf {
         return len;
     }
 
-    static t_code_pt f_strs_convert_utf8_bytes_to_code_pt(const t_array_rdonly<t_u8> bytes) {
+    static t_code_pt f_convert_utf8_bytes_to_code_pt(const t_array_rdonly<t_u8> bytes) {
         ZF_ASSERT(bytes.len >= 1 && bytes.len <= 4);
 
         t_code_pt result = 0;
@@ -378,8 +378,8 @@ namespace zf {
         return result;
     }
 
-    t_code_pt f_strs_find_code_pt_at_byte(const t_str_rdonly str, const t_i32 byte_index) {
-        ZF_ASSERT(f_strs_is_valid_utf8(str));
+    t_code_pt f_find_code_pt_at_byte(const t_str_rdonly str, const t_i32 byte_index) {
+        ZF_ASSERT(f_is_valid_utf8(str));
         ZF_ASSERT(byte_index >= 0 && byte_index < str.bytes.len);
 
         t_i32 cp_first_byte_index = byte_index;
@@ -394,20 +394,20 @@ namespace zf {
 
             const t_i32 cp_byte_cnt = byte_type - ec_utf8_byte_type_ascii + 1;
             const auto cp_bytes = f_array_slice(str.bytes, byte_index, byte_index + cp_byte_cnt);
-            return f_strs_convert_utf8_bytes_to_code_pt(cp_bytes);
+            return f_convert_utf8_bytes_to_code_pt(cp_bytes);
         } while (true);
     }
 
-    void f_strs_mark_code_points(const t_str_rdonly str, t_code_pt_bit_vec *const code_pts) {
-        ZF_ASSERT(f_strs_is_valid_utf8(str));
+    void f_mark_code_points(const t_str_rdonly str, t_code_pt_bit_vec *const code_pts) {
+        ZF_ASSERT(f_is_valid_utf8(str));
 
         ZF_WALK_STR (str, step) {
             mem::f_set_bit(*code_pts, step.code_pt); // @todo
         }
     }
 
-    t_b8 f_strs_walk(const t_str_rdonly str, t_i32 *const byte_index, t_str_walk_step *const o_step) {
-        ZF_ASSERT(f_strs_is_valid_utf8(str));
+    t_b8 f_walk(const t_str_rdonly str, t_i32 *const byte_index, t_str_walk_step *const o_step) {
+        ZF_ASSERT(f_is_valid_utf8(str));
         ZF_ASSERT(*byte_index >= 0 && *byte_index <= str.bytes.len);
 
         if (*byte_index == str.bytes.len) {
@@ -424,7 +424,7 @@ namespace zf {
             case ec_utf8_byte_type_4byte_start: {
                 const t_i32 cp_byte_cnt = byte_type - ec_utf8_byte_type_ascii + 1;
                 const auto cp_bytes = f_array_slice(str.bytes, *byte_index, *byte_index + cp_byte_cnt);
-                *o_step = {.code_pt = f_strs_convert_utf8_bytes_to_code_pt(cp_bytes), .byte_index = *byte_index};
+                *o_step = {.code_pt = f_convert_utf8_bytes_to_code_pt(cp_bytes), .byte_index = *byte_index};
                 *byte_index += cp_byte_cnt;
 
                 return true;
@@ -440,8 +440,8 @@ namespace zf {
         }
     }
 
-    t_b8 f_strs_walk_reverse(const t_str_rdonly str, t_i32 *const byte_index, t_str_walk_step *const o_step) {
-        ZF_ASSERT(f_strs_is_valid_utf8(str));
+    t_b8 f_walk_reverse(const t_str_rdonly str, t_i32 *const byte_index, t_str_walk_step *const o_step) {
+        ZF_ASSERT(f_is_valid_utf8(str));
         ZF_ASSERT(*byte_index >= -1 && *byte_index < str.bytes.len);
 
         if (*byte_index == -1) {
@@ -458,7 +458,7 @@ namespace zf {
             case ec_utf8_byte_type_4byte_start: {
                 const t_i32 cp_byte_cnt = byte_type - ec_utf8_byte_type_ascii + 1;
                 const auto cp_bytes = f_array_slice(str.bytes, *byte_index, *byte_index + cp_byte_cnt);
-                *o_step = {.code_pt = f_strs_convert_utf8_bytes_to_code_pt(cp_bytes), .byte_index = *byte_index};
+                *o_step = {.code_pt = f_convert_utf8_bytes_to_code_pt(cp_bytes), .byte_index = *byte_index};
                 (*byte_index)--;
 
                 return true;

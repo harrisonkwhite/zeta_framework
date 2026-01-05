@@ -260,11 +260,11 @@ namespace zf::platform {
         return glfwWindowShouldClose(g_state.glfw_window);
     }
 
-    void f_set_window_title(const t_str_rdonly title, mem::t_arena *const temp_arena) {
+    void f_set_window_title(const strs::t_str_rdonly title, mem::t_arena *const temp_arena) {
         ZF_ASSERT(g_state.active);
 
-        const t_str_rdonly title_terminated = f_strs_clone_but_add_terminator(title, temp_arena);
-        glfwSetWindowTitle(g_state.glfw_window, f_strs_get_as_cstr(title_terminated));
+        const strs::t_str_rdonly title_terminated = strs::f_clone_but_add_terminator(title, temp_arena);
+        glfwSetWindowTitle(g_state.glfw_window, strs::f_get_as_cstr(title_terminated));
     }
 
     void f_set_window_size(const math::t_v2_i size) {

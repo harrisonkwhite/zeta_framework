@@ -97,14 +97,14 @@ namespace zf::gfx {
     };
 
     struct t_font_code_pt_pair {
-        t_code_pt a;
-        t_code_pt b;
+        strs::t_code_pt a;
+        strs::t_code_pt b;
     };
 
     struct t_font_arrangement {
         t_i32 line_height;
 
-        ds::t_hash_map<t_code_pt, t_font_glyph_info> code_pts_to_glyph_infos;
+        ds::t_hash_map<strs::t_code_pt, t_font_glyph_info> code_pts_to_glyph_infos;
 
         t_b8 has_kernings;
         ds::t_hash_map<t_font_code_pt_pair, t_i32> code_pt_pairs_to_kernings;
@@ -185,16 +185,16 @@ namespace zf::gfx {
         return alignment.x >= 0.0f && alignment.x <= 1.0f && alignment.y >= 0.0f && alignment.y <= 1.0f;
     }
 
-    [[nodiscard]] t_b8 f_load_texture_from_raw(const t_str_rdonly file_path, mem::t_arena *const texture_data_arena, mem::t_arena *const temp_arena, t_texture_data_mut *const o_texture_data);
-    [[nodiscard]] t_b8 f_pack_texture(const t_str_rdonly file_path, const t_texture_data_mut texture_data, mem::t_arena *const temp_arena);
-    [[nodiscard]] t_b8 f_unpack_texture(const t_str_rdonly file_path, mem::t_arena *const texture_data_arena, mem::t_arena *const temp_arena, t_texture_data_mut *const o_texture_data);
+    [[nodiscard]] t_b8 f_load_texture_from_raw(const strs::t_str_rdonly file_path, mem::t_arena *const texture_data_arena, mem::t_arena *const temp_arena, t_texture_data_mut *const o_texture_data);
+    [[nodiscard]] t_b8 f_pack_texture(const strs::t_str_rdonly file_path, const t_texture_data_mut texture_data, mem::t_arena *const temp_arena);
+    [[nodiscard]] t_b8 f_unpack_texture(const strs::t_str_rdonly file_path, mem::t_arena *const texture_data_arena, mem::t_arena *const temp_arena, t_texture_data_mut *const o_texture_data);
 
-    [[nodiscard]] t_b8 f_load_font_from_raw(const t_str_rdonly file_path, const t_i32 height, t_code_pt_bit_vec *const code_pts, mem::t_arena *const arrangement_arena, mem::t_arena *const atlas_rgbas_arena, mem::t_arena *const temp_arena, t_font_arrangement *const o_arrangement, t_array_mut<t_font_atlas_rgba> *const o_atlas_rgbas);
-    [[nodiscard]] t_b8 f_pack_font(const t_str_rdonly file_path, const t_font_arrangement &arrangement, const t_array_rdonly<t_font_atlas_rgba> atlas_rgbas, mem::t_arena *const temp_arena);
-    [[nodiscard]] t_b8 f_unpack_font(const t_str_rdonly file_path, mem::t_arena *const arrangement_arena, mem::t_arena *const atlas_rgbas_arena, mem::t_arena *const temp_arena, t_font_arrangement *const o_arrangement, t_array_mut<t_font_atlas_rgba> *const o_atlas_rgbas);
+    [[nodiscard]] t_b8 f_load_font_from_raw(const strs::t_str_rdonly file_path, const t_i32 height, strs::t_code_pt_bit_vec *const code_pts, mem::t_arena *const arrangement_arena, mem::t_arena *const atlas_rgbas_arena, mem::t_arena *const temp_arena, t_font_arrangement *const o_arrangement, t_array_mut<t_font_atlas_rgba> *const o_atlas_rgbas);
+    [[nodiscard]] t_b8 f_pack_font(const strs::t_str_rdonly file_path, const t_font_arrangement &arrangement, const t_array_rdonly<t_font_atlas_rgba> atlas_rgbas, mem::t_arena *const temp_arena);
+    [[nodiscard]] t_b8 f_unpack_font(const strs::t_str_rdonly file_path, mem::t_arena *const arrangement_arena, mem::t_arena *const atlas_rgbas_arena, mem::t_arena *const temp_arena, t_font_arrangement *const o_arrangement, t_array_mut<t_font_atlas_rgba> *const o_atlas_rgbas);
 
-    [[nodiscard]] t_b8 f_pack_shader(const t_str_rdonly file_path, const t_array_rdonly<t_u8> compiled_shader_bin, mem::t_arena *const temp_arena);
-    [[nodiscard]] t_b8 f_unpack_shader(const t_str_rdonly file_path, mem::t_arena *const shader_bin_arena, mem::t_arena *const temp_arena, t_array_mut<t_u8> *const o_shader_bin);
+    [[nodiscard]] t_b8 f_pack_shader(const strs::t_str_rdonly file_path, const t_array_rdonly<t_u8> compiled_shader_bin, mem::t_arena *const temp_arena);
+    [[nodiscard]] t_b8 f_unpack_shader(const strs::t_str_rdonly file_path, mem::t_arena *const shader_bin_arena, mem::t_arena *const temp_arena, t_array_mut<t_u8> *const o_shader_bin);
 
     // ============================================================
 }
