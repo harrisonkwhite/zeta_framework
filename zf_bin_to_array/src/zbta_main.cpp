@@ -5,17 +5,17 @@ namespace zf {
         mem::t_arena arena = mem::f_arena_create();
         ZF_DEFER({ mem::f_arena_destroy(&arena); });
 
-        t_stream input_file_stream;
+        t_io_stream input_file_stream;
 
-        if (!f_io_open_file(input_file_path, ec_file_access_mode_read, &arena, &input_file_stream)) {
+        if (!f_io_open_file(input_file_path, ec_io_file_access_mode_read, &arena, &input_file_stream)) {
             return false;
         }
 
         ZF_DEFER({ f_io_close_file(&input_file_stream); });
 
-        t_stream output_file_stream;
+        t_io_stream output_file_stream;
 
-        if (!f_io_open_file(output_file_path, ec_file_access_mode_write, &arena, &output_file_stream)) {
+        if (!f_io_open_file(output_file_path, ec_io_file_access_mode_write, &arena, &output_file_stream)) {
             return false;
         }
 
@@ -52,7 +52,7 @@ namespace zf {
 
 int main(const int arg_cnt, const char *const *const args) {
     if (arg_cnt != 4) {
-        zf::t_stream std_err = zf::f_io_get_std_error();
+        zf::t_io_stream std_err = zf::f_io_get_std_error();
         zf::f_io_print_fmt(&std_err, ZF_STR_LITERAL("Invalid command-line argument count! Usage: zf_bin_to_array <input_file_path> <output_file_path> <array_variable_subname>"));
         return EXIT_FAILURE;
     }

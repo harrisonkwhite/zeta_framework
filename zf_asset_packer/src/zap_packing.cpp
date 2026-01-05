@@ -298,14 +298,14 @@ namespace zf {
                     const auto file_path = f_strs_convert_cstr(field_vals[ek_sound_field_file_path]->valuestring);
                     const auto out_file_path = f_strs_convert_cstr(field_vals[ek_sound_field_out_file_path]->valuestring);
 
-                    t_sound_data_mut snd_data;
+                    audio::t_sound_data_mut snd_data;
 
-                    if (!f_audio_load_sound_data_from_raw(file_path, &arena, &arena, &snd_data)) {
+                    if (!f_sound_load_from_raw(file_path, &arena, &arena, &snd_data)) {
                         f_io_log_error(ZF_STR_LITERAL("Failed to load sound from file \"%\"!"), file_path);
                         return false;
                     }
 
-                    if (!f_audio_pack_sound(out_file_path, snd_data, &arena)) {
+                    if (!f_sound_pack(out_file_path, snd_data, &arena)) {
                         f_io_log_error(ZF_STR_LITERAL("Failed to pack sound to file \"%\"!"), out_file_path);
                         return false;
                     }

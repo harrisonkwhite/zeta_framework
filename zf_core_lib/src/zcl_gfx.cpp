@@ -45,9 +45,9 @@ namespace zf {
             return false;
         }
 
-        t_stream fs;
+        t_io_stream fs;
 
-        if (!f_io_open_file(file_path, ec_file_access_mode_write, temp_arena, &fs)) {
+        if (!f_io_open_file(file_path, ec_io_file_access_mode_write, temp_arena, &fs)) {
             return false;
         }
 
@@ -65,9 +65,9 @@ namespace zf {
     }
 
     t_b8 f_gfx_unpack_texture(const t_str_rdonly file_path, mem::t_arena *const texture_data_arena, mem::t_arena *const temp_arena, t_texture_data_mut *const o_texture_data) {
-        t_stream fs;
+        t_io_stream fs;
 
-        if (!f_io_open_file(file_path, ec_file_access_mode_read, temp_arena, &fs)) {
+        if (!f_io_open_file(file_path, ec_io_file_access_mode_read, temp_arena, &fs)) {
             return false;
         }
 
@@ -271,9 +271,9 @@ namespace zf {
             return false;
         }
 
-        t_stream fs;
+        t_io_stream fs;
 
-        if (!f_io_open_file(file_path, ec_file_access_mode_write, temp_arena, &fs)) {
+        if (!f_io_open_file(file_path, ec_io_file_access_mode_write, temp_arena, &fs)) {
             return false;
         }
 
@@ -299,9 +299,9 @@ namespace zf {
     }
 
     t_b8 f_gfx_unpack_font(const t_str_rdonly file_path, mem::t_arena *const arrangement_arena, mem::t_arena *const atlas_rgbas_arena, mem::t_arena *const temp_arena, t_font_arrangement *const o_arrangement, t_array_mut<t_font_atlas_rgba> *const o_atlas_rgbas) {
-        t_stream fs;
+        t_io_stream fs;
 
-        if (!f_io_open_file(file_path, ec_file_access_mode_read, temp_arena, &fs)) {
+        if (!f_io_open_file(file_path, ec_io_file_access_mode_read, temp_arena, &fs)) {
             return false;
         }
 
@@ -331,9 +331,9 @@ namespace zf {
             return false;
         }
 
-        t_stream fs;
+        t_io_stream fs;
 
-        if (!f_io_open_file(file_path, ec_file_access_mode_write, temp_arena, &fs)) {
+        if (!f_io_open_file(file_path, ec_io_file_access_mode_write, temp_arena, &fs)) {
             return false;
         }
 
@@ -347,9 +347,9 @@ namespace zf {
     }
 
     t_b8 f_gfx_unpack_shader(const t_str_rdonly file_path, mem::t_arena *const shader_bin_arena, mem::t_arena *const temp_arena, t_array_mut<t_u8> *const o_shader_bin) {
-        t_stream fs;
+        t_io_stream fs;
 
-        if (!f_io_open_file(file_path, ec_file_access_mode_read, temp_arena, &fs)) {
+        if (!f_io_open_file(file_path, ec_io_file_access_mode_read, temp_arena, &fs)) {
             return false;
         }
 

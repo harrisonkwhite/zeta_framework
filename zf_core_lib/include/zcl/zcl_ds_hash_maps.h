@@ -313,7 +313,7 @@ namespace zf {
     }
 
     template <c_simple tp_key_type, c_simple tp_val_type>
-    [[nodiscard]] t_b8 SerializeHashMap(t_stream *const stream, const s_hash_map<tp_key_type, tp_val_type> *const hm, mem::t_arena *const temp_arena) {
+    [[nodiscard]] t_b8 SerializeHashMap(t_io_stream *const stream, const s_hash_map<tp_key_type, tp_val_type> *const hm, mem::t_arena *const temp_arena) {
         if (!f_io_write_item(stream, HashMapCap(hm))) {
             return false;
         }
@@ -338,7 +338,7 @@ namespace zf {
     }
 
     template <c_simple tp_key_type, c_simple tp_val_type>
-    [[nodiscard]] t_b8 DeserializeHashMap(t_stream *const stream, mem::t_arena *const hm_arena, const t_hash_func<tp_key_type> hm_hash_func, mem::t_arena *const temp_arena, s_hash_map<tp_key_type, tp_val_type> *const o_hm, const t_comparator_bin<tp_key_type> hm_key_comparator = g_comparator_bin_default<tp_key_type>) {
+    [[nodiscard]] t_b8 DeserializeHashMap(t_io_stream *const stream, mem::t_arena *const hm_arena, const t_hash_func<tp_key_type> hm_hash_func, mem::t_arena *const temp_arena, s_hash_map<tp_key_type, tp_val_type> *const o_hm, const t_comparator_bin<tp_key_type> hm_key_comparator = g_comparator_bin_default<tp_key_type>) {
         t_i32 cap;
 
         if (!f_io_read_item(stream, &cap)) {
