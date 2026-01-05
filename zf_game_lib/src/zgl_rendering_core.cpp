@@ -96,7 +96,7 @@ namespace zf {
         return bgfx::createProgram(vert_shader_bgfx_hdl, frag_shader_bgfx_hdl, true);
     }
 
-    t_rendering_basis *f_rendering_startup_module(t_arena *const arena, t_rendering_resource_group **const o_perm_resource_group) {
+    t_rendering_basis *f_rendering_startup_module(mem::t_arena *const arena, t_rendering_resource_group **const o_perm_resource_group) {
         ZF_ASSERT(g_state.state == ec_state_inactive);
 
         g_state = {
@@ -133,7 +133,7 @@ namespace zf {
         //
         // Basis Setup
         //
-        const auto basis = f_mem_arena_push_item<t_rendering_basis>(arena);
+        const auto basis = mem::f_arena_push_item<t_rendering_basis>(arena);
 
         {
             bgfx::VertexLayout vert_layout;
@@ -213,7 +213,7 @@ namespace zf {
     static t_rendering_resource *f_rendering_add_to_resource_group(t_rendering_resource_group *const group, const t_rendering_resource_type type) {
         ZF_ASSERT(g_state.state == ec_state_active_but_not_rendering);
 
-        const auto resource = f_mem_arena_push_item_zeroed<t_rendering_resource>(group->arena);
+        const auto resource = mem::f_arena_push_item_zeroed<t_rendering_resource>(group->arena);
 
         if (!group->head) {
             group->head = resource;
@@ -270,7 +270,7 @@ namespace zf {
         return resource;
     }
 
-    t_rendering_context *f_rendering_begin_frame(const t_rendering_basis *const basis, const t_color_rgb8 clear_col, t_arena *const context_arena) {
+    t_rendering_context *f_rendering_begin_frame(const t_rendering_basis *const basis, const t_color_rgb8 clear_col, mem::t_arena *const context_arena) {
         ZF_ASSERT(g_state.state == ec_state_active_but_not_rendering);
 
         const auto fb_size_cache = platform::f_get_window_framebuffer_size_cache();
@@ -300,7 +300,7 @@ namespace zf {
 
         g_state.state = ec_state_active_and_rendering;
 
-        const auto context = f_mem_arena_push_item_zeroed<t_rendering_context>(context_arena);
+        const auto context = mem::f_arena_push_item_zeroed<t_rendering_context>(context_arena);
         context->basis = basis;
 
         return context;
@@ -332,7 +332,7 @@ namespace zf {
 
         context->frame_vert_cnt += context->batch_state.vert_cnt;
 
-        f_mem_clear_item(&context->batch_state, 0);
+        mem::f_clear_item(&context->batch_state, 0);
     }
 
     void f_rendering_end_frame(t_rendering_context *const context) {

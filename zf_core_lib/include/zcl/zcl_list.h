@@ -68,7 +68,7 @@ namespace zf {
     template <c_list_elem tp_elem_type>
     t_list_mut<tp_elem_type> f_ds_list_create(const t_i32 cap, t_arena *const arena, const t_i32 len = 0) {
         ZF_ASSERT(cap > 0 && len >= 0 && len <= cap);
-        return {f_mem_arena_push_array<tp_elem_type>(arena, cap), len};
+        return {mem::f_arena_push_array<tp_elem_type>(arena, cap), len};
     }
 
     template <c_list_mut tp_list_type>
@@ -86,7 +86,7 @@ namespace zf {
         const t_i32 new_cap = cap_calculator(list->Cap());
         ZF_ASSERT(new_cap > list->Cap());
 
-        const auto new_backing_arr = f_mem_arena_push_array<tp_list_type>(arena, new_cap);
+        const auto new_backing_arr = mem::f_arena_push_array<tp_list_type>(arena, new_cap);
         f_array_copy(list->backing_arr, new_backing_arr);
 
         *list = {new_backing_arr, list->len};
@@ -108,7 +108,7 @@ namespace zf {
             return result;
         }();
 
-        const auto new_backing_arr = f_mem_arena_push_array<typename tp_list_type::t_elem>(arena, new_cap);
+        const auto new_backing_arr = mem::f_arena_push_array<typename tp_list_type::t_elem>(arena, new_cap);
         f_array_copy(list->backing_arr, new_backing_arr);
 
         *list = {new_backing_arr, list->len};

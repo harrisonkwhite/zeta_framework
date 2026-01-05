@@ -123,7 +123,7 @@ namespace zf::input {
     // ============================================================
     // @section: Functions
 
-    t_state *f_create_state(t_arena *const arena);
+    t_state *f_create_state(mem::t_arena *const arena);
 
     void f_clear_events(t_state *const state);
 
@@ -149,7 +149,7 @@ namespace zf::input {
     t_b8 f_is_gamepad_button_released(const t_state *const state, const t_i32 gamepad_index, const t_gamepad_button_code btn_code);
     t_f32 f_get_gamepad_axis_value_raw(const t_state *const state, const t_i32 gamepad_index, const t_gamepad_axis_code axis_code);
     t_f32 f_get_gamepad_axis_value_with_deadzone(const t_state *const state, const t_i32 gamepad_index, const t_gamepad_axis_code axis_code);
-    void f_update_gamepad_state(t_state *const state, const t_i32 gamepad_index, const t_b8 connected, const t_static_bitset<ecm_gamepad_button_code_cnt> &btns_down, const t_static_array<t_f32, ecm_gamepad_axis_code_cnt> &axes);
+    void f_update_gamepad_state(t_state *const state, const t_i32 gamepad_index, const t_b8 connected, const mem::t_static_bitset<ecm_gamepad_button_code_cnt> &btns_down, const t_static_array<t_f32, ecm_gamepad_axis_code_cnt> &axes);
 
     // ============================================================
 }

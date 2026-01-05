@@ -115,26 +115,26 @@ namespace zf {
     concept co_list_mut = s_is_mut_list<t_cvref_removed<tp_type>>::g_val;
 
     template <typename tp_type>
-    s_list_mut<tp_type> CreateList(const t_i32 cap, t_arena *const arena, const t_i32 len = 0) {
+    s_list_mut<tp_type> CreateList(const t_i32 cap, mem::t_arena *const arena, const t_i32 len = 0) {
         ZF_ASSERT(cap > 0 && len >= 0 && len <= cap);
-        return {f_mem_arena_push_array<tp_type>(arena, cap), len};
+        return {mem::f_arena_push_array<tp_type>(arena, cap), len};
     }
 
     template <co_list_nonstatic_mut tp_list_type>
-    void ListExtend(tp_list_type *const list, t_arena *const arena, const t_list_extension_cap_calculator cap_calculator = g_list_extension_cap_calculator_default) {
+    void ListExtend(tp_list_type *const list, mem::t_arena *const arena, const t_list_extension_cap_calculator cap_calculator = g_list_extension_cap_calculator_default) {
         ZF_ASSERT(cap_calculator);
 
         const t_i32 new_cap = cap_calculator(list->Cap());
         ZF_ASSERT(new_cap > list->Cap());
 
-        const auto new_backing_arr = f_mem_arena_push_array<tp_list_type>(arena, new_cap);
+        const auto new_backing_arr = mem::f_arena_push_array<tp_list_type>(arena, new_cap);
         f_algos_copy_all(list->backing_arr, new_backing_arr);
 
         *list = {new_backing_arr, list->len};
     }
 
     template <co_list_nonstatic_mut tp_list_type>
-    void ListExtendToFit(tp_list_type *const list, const t_i32 min_cap, t_arena *const arena, const t_list_extension_cap_calculator cap_calculator = g_list_extension_cap_calculator_default) {
+    void ListExtendToFit(tp_list_type *const list, const t_i32 min_cap, mem::t_arena *const arena, const t_list_extension_cap_calculator cap_calculator = g_list_extension_cap_calculator_default) {
         ZF_ASSERT(min_cap > list->Cap());
         ZF_ASSERT(cap_calculator);
 
@@ -150,7 +150,7 @@ namespace zf {
             return result;
         }();
 
-        const auto new_backing_arr = f_mem_arena_push_array<typename tp_list_type::t_elem>(arena, new_cap);
+        const auto new_backing_arr = mem::f_arena_push_array<typename tp_list_type::t_elem>(arena, new_cap);
         f_algos_copy_all(list->backing_arr, new_backing_arr);
 
         *list = {new_backing_arr, list->len};
@@ -166,7 +166,7 @@ namespace zf {
     }
 
     template <co_list_mut tp_list_type>
-    typename tp_list_type::t_elem *ListAppendDynamic(tp_list_type *const list, const typename tp_list_type::t_elem &val, t_arena *const extension_arena, const t_list_extension_cap_calculator extension_cap_calculator = g_list_extension_cap_calculator_default) {
+    typename tp_list_type::t_elem *ListAppendDynamic(tp_list_type *const list, const typename tp_list_type::t_elem &val, mem::t_arena *const extension_arena, const t_list_extension_cap_calculator extension_cap_calculator = g_list_extension_cap_calculator_default) {
         if (list->len == list->Cap()) {
             ListExtend(list, extension_arena, extension_cap_calculator);
         }
@@ -184,7 +184,7 @@ namespace zf {
     }
 
     template <co_list_mut tp_list_type>
-    t_array_mut<typename tp_list_type::t_elem> ListAppendManyDynamic(tp_list_type *const list, const t_array_rdonly<typename tp_list_type::t_elem> vals, t_arena *const extension_arena, const t_list_extension_cap_calculator extension_cap_calculator = g_list_extension_cap_calculator_default) {
+    t_array_mut<typename tp_list_type::t_elem> ListAppendManyDynamic(tp_list_type *const list, const t_array_rdonly<typename tp_list_type::t_elem> vals, mem::t_arena *const extension_arena, const t_list_extension_cap_calculator extension_cap_calculator = g_list_extension_cap_calculator_default) {
         const auto min_cap_needed = list->len + vals.len;
 
         if (min_cap_needed > list->Cap()) {
@@ -211,7 +211,7 @@ namespace zf {
     }
 
     template <co_list_mut tp_list_type>
-    typename tp_list_type::t_elem *ListInsertAtDynamic(tp_list_type *const list, const t_i32 index, const typename tp_list_type::t_elem &val, t_arena *const extension_arena, const t_list_extension_cap_calculator extension_cap_calculator = g_list_extension_cap_calculator_default) {
+    typename tp_list_type::t_elem *ListInsertAtDynamic(tp_list_type *const list, const t_i32 index, const typename tp_list_type::t_elem &val, mem::t_arena *const extension_arena, const t_list_extension_cap_calculator extension_cap_calculator = g_list_extension_cap_calculator_default) {
         if (list->len == list->Cap()) {
             ListExtend(list, extension_arena, extension_cap_calculator);
         }

@@ -36,7 +36,7 @@ namespace zf {
         f_rendering_submit_triangle(context, f_array_get_as_nonstatic(triangles), texture);
     }
 
-    t_font f_rendering_create_font_from_raw(const t_str_rdonly file_path, const t_i32 height, t_code_pt_bit_vec *const code_pts, t_arena *const temp_arena, t_rendering_resource_group *const resource_group) {
+    t_font f_rendering_create_font_from_raw(const t_str_rdonly file_path, const t_i32 height, t_code_pt_bit_vec *const code_pts, mem::t_arena *const temp_arena, t_rendering_resource_group *const resource_group) {
         t_font_arrangement arrangement;
         t_array_mut<t_font_atlas_rgba> atlas_rgbas;
 
@@ -44,7 +44,7 @@ namespace zf {
             ZF_FATAL();
         }
 
-        const t_array_mut<t_rendering_resource *> atlases = f_mem_arena_push_array<t_rendering_resource *>(resource_group->arena, atlas_rgbas.len);
+        const t_array_mut<t_rendering_resource *> atlases = mem::f_arena_push_array<t_rendering_resource *>(resource_group->arena, atlas_rgbas.len);
 
         for (t_i32 i = 0; i < atlas_rgbas.len; i++) {
             atlases[i] = f_rendering_create_texture({g_gfx_font_atlas_size, atlas_rgbas[i]}, resource_group);
@@ -56,7 +56,7 @@ namespace zf {
         };
     }
 
-    t_font f_rendering_create_font_from_packed(const t_str_rdonly file_path, t_arena *const temp_arena, t_rendering_resource_group *const resource_group) {
+    t_font f_rendering_create_font_from_packed(const t_str_rdonly file_path, mem::t_arena *const temp_arena, t_rendering_resource_group *const resource_group) {
         t_font_arrangement arrangement;
         t_array_mut<t_font_atlas_rgba> atlas_rgbas;
 
@@ -64,7 +64,7 @@ namespace zf {
             ZF_FATAL();
         }
 
-        const auto atlases = f_mem_arena_push_array<t_rendering_resource *>(resource_group->arena, atlas_rgbas.len);
+        const auto atlases = mem::f_arena_push_array<t_rendering_resource *>(resource_group->arena, atlas_rgbas.len);
 
         for (t_i32 i = 0; i < atlas_rgbas.len; i++) {
             atlases[i] = f_rendering_create_texture({g_gfx_font_atlas_size, atlas_rgbas[i]}, resource_group);
@@ -76,7 +76,7 @@ namespace zf {
         };
     }
 
-    t_array_mut<t_v2> f_rendering_get_str_chr_render_positions(const t_str_rdonly str, const t_font_arrangement &font_arrangement, const t_v2 pos, const t_v2 alignment, t_arena *const arena) {
+    t_array_mut<t_v2> f_rendering_get_str_chr_render_positions(const t_str_rdonly str, const t_font_arrangement &font_arrangement, const t_v2 pos, const t_v2 alignment, mem::t_arena *const arena) {
         ZF_ASSERT(f_strs_is_valid_utf8(str));
         ZF_ASSERT(f_gfx_is_alignment_valid(alignment));
 
@@ -101,7 +101,7 @@ namespace zf {
         }();
 
         // Reserve memory for the character positions.
-        const auto positions = f_mem_arena_push_array<t_v2>(arena, str_meta.len);
+        const auto positions = mem::f_arena_push_array<t_v2>(arena, str_meta.len);
 
         // From the line count we can determine the vertical alignment offset to apply.
         const t_f32 alignment_offs_y = static_cast<t_f32>(-(str_meta.line_cnt * font_arrangement.line_height)) * alignment.y;
@@ -172,7 +172,7 @@ namespace zf {
         return positions;
     }
 
-    void f_rendering_submit_str(t_rendering_context *const context, const t_str_rdonly str, const t_font &font, const t_v2 pos, t_arena *const temp_arena, const t_v2 alignment, const t_color_rgba32f blend) {
+    void f_rendering_submit_str(t_rendering_context *const context, const t_str_rdonly str, const t_font &font, const t_v2 pos, mem::t_arena *const temp_arena, const t_v2 alignment, const t_color_rgba32f blend) {
         ZF_ASSERT(f_strs_is_valid_utf8(str));
         ZF_ASSERT(f_gfx_is_alignment_valid(alignment));
 

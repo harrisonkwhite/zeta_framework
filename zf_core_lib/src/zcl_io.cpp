@@ -10,7 +10,7 @@
 #endif
 
 namespace zf {
-    t_b8 f_io_open_file(const t_str_rdonly path, const t_file_access_mode mode, t_arena *const temp_arena, t_stream *const o_stream) {
+    t_b8 f_io_open_file(const t_str_rdonly path, const t_file_access_mode mode, mem::t_arena *const temp_arena, t_stream *const o_stream) {
         const t_str_rdonly path_terminated = f_strs_clone_but_add_terminator(path, temp_arena);
 
         FILE *file;
@@ -59,7 +59,7 @@ namespace zf {
         return static_cast<t_i32>(file_size);
     }
 
-    t_b8 f_io_load_file_contents(const t_str_rdonly path, t_arena *const contents_arena, t_arena *const temp_arena, t_array_mut<t_u8> *const o_contents, const t_b8 add_terminator) {
+    t_b8 f_io_load_file_contents(const t_str_rdonly path, mem::t_arena *const contents_arena, mem::t_arena *const temp_arena, t_array_mut<t_u8> *const o_contents, const t_b8 add_terminator) {
         t_stream stream;
 
         if (!f_io_open_file(path, ec_file_access_mode_read, temp_arena, &stream)) {
@@ -71,10 +71,10 @@ namespace zf {
         const t_i32 file_size = f_io_calc_file_size(&stream);
 
         if (add_terminator) {
-            *o_contents = f_mem_arena_push_array<t_u8>(contents_arena, file_size + 1);
+            *o_contents = mem::f_arena_push_array<t_u8>(contents_arena, file_size + 1);
             (*o_contents)[file_size] = 0;
         } else {
-            *o_contents = f_mem_arena_push_array<t_u8>(contents_arena, file_size);
+            *o_contents = mem::f_arena_push_array<t_u8>(contents_arena, file_size);
         }
 
         if (!f_io_read_items_into_array(&stream, *o_contents, file_size)) {
@@ -84,7 +84,7 @@ namespace zf {
         return true;
     }
 
-    t_b8 f_io_create_directory(const t_str_rdonly path, t_arena *const temp_arena, t_directory_creation_result *const o_creation_res) {
+    t_b8 f_io_create_directory(const t_str_rdonly path, mem::t_arena *const temp_arena, t_directory_creation_result *const o_creation_res) {
         if (o_creation_res) {
             *o_creation_res = ec_directory_creation_result_success;
         }
@@ -125,7 +125,7 @@ namespace zf {
         return false;
     }
 
-    t_b8 f_io_create_directory_and_parents(const t_str_rdonly path, t_arena *const temp_arena, t_directory_creation_result *const o_dir_creation_res) {
+    t_b8 f_io_create_directory_and_parents(const t_str_rdonly path, mem::t_arena *const temp_arena, t_directory_creation_result *const o_dir_creation_res) {
         if (o_dir_creation_res) {
             *o_dir_creation_res = ec_directory_creation_result_success;
         }
@@ -165,7 +165,7 @@ namespace zf {
         return true;
     }
 
-    t_b8 f_io_create_file_and_parent_directories(const t_str_rdonly path, t_arena *const temp_arena, t_directory_creation_result *const o_dir_creation_res) {
+    t_b8 f_io_create_file_and_parent_directories(const t_str_rdonly path, mem::t_arena *const temp_arena, t_directory_creation_result *const o_dir_creation_res) {
         if (o_dir_creation_res) {
             *o_dir_creation_res = ec_directory_creation_result_success;
         }
@@ -193,7 +193,7 @@ namespace zf {
         return true;
     }
 
-    t_path_type f_io_get_path_type(const t_str_rdonly path, t_arena *const temp_arena) {
+    t_path_type f_io_get_path_type(const t_str_rdonly path, mem::t_arena *const temp_arena) {
         const t_str_rdonly path_terminated = f_strs_clone_but_add_terminator(path, temp_arena);
 
         struct stat info;
@@ -209,7 +209,7 @@ namespace zf {
         return ec_path_type_file;
     }
 
-    t_str_mut f_io_get_executable_directory(t_arena *const arena) {
+    t_str_mut f_io_get_executable_directory(mem::t_arena *const arena) {
 #if defined(ZF_PLATFORM_WINDOWS)
         t_static_array<char, MAX_PATH> buf;
 
@@ -222,8 +222,8 @@ namespace zf {
             }
         }
 
-        const auto result_bytes = f_mem_arena_push_array<t_u8>(arena, len);
-        f_algos_copy_all(f_mem_get_array_as_byte_array(f_array_slice(f_array_get_as_nonstatic(buf), 0, len)), result_bytes);
+        const auto result_bytes = mem::f_arena_push_array<t_u8>(arena, len);
+        f_algos_copy_all(mem::f_get_array_as_byte_array(f_array_slice(f_array_get_as_nonstatic(buf), 0, len)), result_bytes);
         return {result_bytes};
 #elif defined(ZF_PLATFORM_MACOS)
     #error "Platform-specific implementation not yet done!"

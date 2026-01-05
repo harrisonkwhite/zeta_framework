@@ -19,7 +19,7 @@ namespace zf {
             return pa.a == pb.a && pa.b == pb.b;
         };
 
-    t_b8 f_gfx_load_texture_from_raw(const t_str_rdonly file_path, t_arena *const texture_data_arena, t_arena *const temp_arena, t_texture_data_mut *const o_texture_data) {
+    t_b8 f_gfx_load_texture_from_raw(const t_str_rdonly file_path, mem::t_arena *const texture_data_arena, mem::t_arena *const temp_arena, t_texture_data_mut *const o_texture_data) {
         const t_str_rdonly file_path_terminated = f_strs_clone_but_add_terminator(file_path, temp_arena);
 
         t_v2_i size_in_pxs;
@@ -32,7 +32,7 @@ namespace zf {
         ZF_DEFER({ stbi_image_free(stb_px_data); });
 
         const t_array_rdonly<t_u8> stb_px_data_arr = {stb_px_data, 4 * size_in_pxs.x * size_in_pxs.y};
-        const auto px_data = f_mem_arena_push_array<t_u8>(texture_data_arena, 4 * size_in_pxs.x * size_in_pxs.y);
+        const auto px_data = mem::f_arena_push_array<t_u8>(texture_data_arena, 4 * size_in_pxs.x * size_in_pxs.y);
         f_algos_copy_all(stb_px_data_arr, px_data);
 
         *o_texture_data = {size_in_pxs, px_data};
@@ -40,7 +40,7 @@ namespace zf {
         return true;
     }
 
-    t_b8 f_gfx_pack_texture(const t_str_rdonly file_path, const t_texture_data_mut texture_data, t_arena *const temp_arena) {
+    t_b8 f_gfx_pack_texture(const t_str_rdonly file_path, const t_texture_data_mut texture_data, mem::t_arena *const temp_arena) {
         if (!f_io_create_file_and_parent_directories(file_path, temp_arena)) {
             return false;
         }
@@ -64,7 +64,7 @@ namespace zf {
         return true;
     }
 
-    t_b8 f_gfx_unpack_texture(const t_str_rdonly file_path, t_arena *const texture_data_arena, t_arena *const temp_arena, t_texture_data_mut *const o_texture_data) {
+    t_b8 f_gfx_unpack_texture(const t_str_rdonly file_path, mem::t_arena *const texture_data_arena, mem::t_arena *const temp_arena, t_texture_data_mut *const o_texture_data) {
         t_stream fs;
 
         if (!f_io_open_file(file_path, ec_file_access_mode_read, temp_arena, &fs)) {
@@ -79,7 +79,7 @@ namespace zf {
             return false;
         }
 
-        const auto rgba_px_data = f_mem_arena_push_array<t_u8>(texture_data_arena, 4 * size_in_pxs.x * size_in_pxs.y);
+        const auto rgba_px_data = mem::f_arena_push_array<t_u8>(texture_data_arena, 4 * size_in_pxs.x * size_in_pxs.y);
 
         if (!f_io_read_items_into_array(&fs, rgba_px_data, rgba_px_data.len)) {
             return false;
@@ -90,7 +90,7 @@ namespace zf {
         return true;
     }
 
-    t_b8 f_gfx_load_font_from_raw(const t_str_rdonly file_path, const t_i32 height, t_code_pt_bit_vec *const code_pts, t_arena *const arrangement_arena, t_arena *const atlas_rgbas_arena, t_arena *const temp_arena, t_font_arrangement *const o_arrangement, t_array_mut<t_font_atlas_rgba> *const o_atlas_rgbas) {
+    t_b8 f_gfx_load_font_from_raw(const t_str_rdonly file_path, const t_i32 height, t_code_pt_bit_vec *const code_pts, mem::t_arena *const arrangement_arena, mem::t_arena *const atlas_rgbas_arena, mem::t_arena *const temp_arena, t_font_arrangement *const o_arrangement, t_array_mut<t_font_atlas_rgba> *const o_atlas_rgbas) {
         ZF_ASSERT(height > 0);
 
         // Get the plain font file data.
@@ -120,12 +120,12 @@ namespace zf {
             const t_i32 glyph_index = stbtt_FindGlyphIndex(&stb_font_info, static_cast<t_i32>(code_pt));
 
             if (glyph_index == 0) {
-                f_mem_unset_bit(*code_pts, i);
+                mem::f_unset_bit(*code_pts, i);
             }
         }
 
         // Compute number of leftover code points that can actually be supported, return if there are none.
-        const t_i32 code_pt_cnt = f_mem_count_set_bits(*code_pts);
+        const t_i32 code_pt_cnt = mem::f_count_set_bits(*code_pts);
 
         if (code_pt_cnt == 0) {
             return true;
@@ -213,7 +213,7 @@ namespace zf {
         //
         // Texture Atlases
         //
-        *o_atlas_rgbas = f_mem_arena_push_array<t_font_atlas_rgba>(atlas_rgbas_arena, atlas_cnt);
+        *o_atlas_rgbas = mem::f_arena_push_array<t_font_atlas_rgba>(atlas_rgbas_arena, atlas_cnt);
 
         // Initialise all pixels to transparent white.
         // @todo: Maybe don't use RBGA for this?
@@ -266,7 +266,7 @@ namespace zf {
         return true;
     }
 
-    t_b8 f_gfx_pack_font(const t_str_rdonly file_path, const t_font_arrangement &arrangement, const t_array_rdonly<t_font_atlas_rgba> atlas_rgbas, t_arena *const temp_arena) {
+    t_b8 f_gfx_pack_font(const t_str_rdonly file_path, const t_font_arrangement &arrangement, const t_array_rdonly<t_font_atlas_rgba> atlas_rgbas, mem::t_arena *const temp_arena) {
         if (!f_io_create_file_and_parent_directories(file_path, temp_arena)) {
             return false;
         }
@@ -298,7 +298,7 @@ namespace zf {
         return true;
     }
 
-    t_b8 f_gfx_unpack_font(const t_str_rdonly file_path, t_arena *const arrangement_arena, t_arena *const atlas_rgbas_arena, t_arena *const temp_arena, t_font_arrangement *const o_arrangement, t_array_mut<t_font_atlas_rgba> *const o_atlas_rgbas) {
+    t_b8 f_gfx_unpack_font(const t_str_rdonly file_path, mem::t_arena *const arrangement_arena, mem::t_arena *const atlas_rgbas_arena, mem::t_arena *const temp_arena, t_font_arrangement *const o_arrangement, t_array_mut<t_font_atlas_rgba> *const o_atlas_rgbas) {
         t_stream fs;
 
         if (!f_io_open_file(file_path, ec_file_access_mode_read, temp_arena, &fs)) {
@@ -326,7 +326,7 @@ namespace zf {
         return true;
     }
 
-    t_b8 f_gfx_pack_shader(const t_str_rdonly file_path, const t_array_rdonly<t_u8> compiled_shader_bin, t_arena *const temp_arena) {
+    t_b8 f_gfx_pack_shader(const t_str_rdonly file_path, const t_array_rdonly<t_u8> compiled_shader_bin, mem::t_arena *const temp_arena) {
         if (!f_io_create_file_and_parent_directories(file_path, temp_arena)) {
             return false;
         }
@@ -346,7 +346,7 @@ namespace zf {
         return true;
     }
 
-    t_b8 f_gfx_unpack_shader(const t_str_rdonly file_path, t_arena *const shader_bin_arena, t_arena *const temp_arena, t_array_mut<t_u8> *const o_shader_bin) {
+    t_b8 f_gfx_unpack_shader(const t_str_rdonly file_path, mem::t_arena *const shader_bin_arena, mem::t_arena *const temp_arena, t_array_mut<t_u8> *const o_shader_bin) {
         t_stream fs;
 
         if (!f_io_open_file(file_path, ec_file_access_mode_read, temp_arena, &fs)) {

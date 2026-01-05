@@ -185,16 +185,16 @@ namespace zf {
         return alignment.x >= 0.0f && alignment.x <= 1.0f && alignment.y >= 0.0f && alignment.y <= 1.0f;
     }
 
-    [[nodiscard]] t_b8 f_gfx_load_texture_from_raw(const t_str_rdonly file_path, t_arena *const texture_data_arena, t_arena *const temp_arena, t_texture_data_mut *const o_texture_data);
-    [[nodiscard]] t_b8 f_gfx_pack_texture(const t_str_rdonly file_path, const t_texture_data_mut texture_data, t_arena *const temp_arena);
-    [[nodiscard]] t_b8 f_gfx_unpack_texture(const t_str_rdonly file_path, t_arena *const texture_data_arena, t_arena *const temp_arena, t_texture_data_mut *const o_texture_data);
+    [[nodiscard]] t_b8 f_gfx_load_texture_from_raw(const t_str_rdonly file_path, mem::t_arena *const texture_data_arena, mem::t_arena *const temp_arena, t_texture_data_mut *const o_texture_data);
+    [[nodiscard]] t_b8 f_gfx_pack_texture(const t_str_rdonly file_path, const t_texture_data_mut texture_data, mem::t_arena *const temp_arena);
+    [[nodiscard]] t_b8 f_gfx_unpack_texture(const t_str_rdonly file_path, mem::t_arena *const texture_data_arena, mem::t_arena *const temp_arena, t_texture_data_mut *const o_texture_data);
 
-    [[nodiscard]] t_b8 f_gfx_load_font_from_raw(const t_str_rdonly file_path, const t_i32 height, t_code_pt_bit_vec *const code_pts, t_arena *const arrangement_arena, t_arena *const atlas_rgbas_arena, t_arena *const temp_arena, t_font_arrangement *const o_arrangement, t_array_mut<t_font_atlas_rgba> *const o_atlas_rgbas);
-    [[nodiscard]] t_b8 f_gfx_pack_font(const t_str_rdonly file_path, const t_font_arrangement &arrangement, const t_array_rdonly<t_font_atlas_rgba> atlas_rgbas, t_arena *const temp_arena);
-    [[nodiscard]] t_b8 f_gfx_unpack_font(const t_str_rdonly file_path, t_arena *const arrangement_arena, t_arena *const atlas_rgbas_arena, t_arena *const temp_arena, t_font_arrangement *const o_arrangement, t_array_mut<t_font_atlas_rgba> *const o_atlas_rgbas);
+    [[nodiscard]] t_b8 f_gfx_load_font_from_raw(const t_str_rdonly file_path, const t_i32 height, t_code_pt_bit_vec *const code_pts, mem::t_arena *const arrangement_arena, mem::t_arena *const atlas_rgbas_arena, mem::t_arena *const temp_arena, t_font_arrangement *const o_arrangement, t_array_mut<t_font_atlas_rgba> *const o_atlas_rgbas);
+    [[nodiscard]] t_b8 f_gfx_pack_font(const t_str_rdonly file_path, const t_font_arrangement &arrangement, const t_array_rdonly<t_font_atlas_rgba> atlas_rgbas, mem::t_arena *const temp_arena);
+    [[nodiscard]] t_b8 f_gfx_unpack_font(const t_str_rdonly file_path, mem::t_arena *const arrangement_arena, mem::t_arena *const atlas_rgbas_arena, mem::t_arena *const temp_arena, t_font_arrangement *const o_arrangement, t_array_mut<t_font_atlas_rgba> *const o_atlas_rgbas);
 
-    [[nodiscard]] t_b8 f_gfx_pack_shader(const t_str_rdonly file_path, const t_array_rdonly<t_u8> compiled_shader_bin, t_arena *const temp_arena);
-    [[nodiscard]] t_b8 f_gfx_unpack_shader(const t_str_rdonly file_path, t_arena *const shader_bin_arena, t_arena *const temp_arena, t_array_mut<t_u8> *const o_shader_bin);
+    [[nodiscard]] t_b8 f_gfx_pack_shader(const t_str_rdonly file_path, const t_array_rdonly<t_u8> compiled_shader_bin, mem::t_arena *const temp_arena);
+    [[nodiscard]] t_b8 f_gfx_unpack_shader(const t_str_rdonly file_path, mem::t_arena *const shader_bin_arena, mem::t_arena *const temp_arena, t_array_mut<t_u8> *const o_shader_bin);
 
     // ============================================================
 }

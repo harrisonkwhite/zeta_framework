@@ -180,16 +180,16 @@ namespace zf {
 
     // O(n log n) in both time complexity and space complexity in every case.
     template <typename tp_arr_type>
-    void f_algos_merge_sort(const tp_arr_type arr, t_arena *const temp_arena, const t_comparator_ord<typename tp_arr_type::t_elem> comparator = g_comparator_ord_default<typename tp_arr_type::t_elem>) {
+    void f_algos_merge_sort(const tp_arr_type arr, mem::t_arena *const temp_arena, const t_comparator_ord<typename tp_arr_type::t_elem> comparator = g_comparator_ord_default<typename tp_arr_type::t_elem>) {
         if (arr.len <= 1) {
             return;
         }
 
         // Sort copies of the left and right partitions.
-        const auto arr_left_sorted = f_mem_clone_array(f_array_slice(arr, 0, arr.len / 2), temp_arena);
+        const auto arr_left_sorted = mem::f_arena_push_array_clone(f_array_slice(arr, 0, arr.len / 2), temp_arena);
         f_algos_merge_sort(arr_left_sorted, temp_arena, comparator);
 
-        const auto arr_right_sorted = f_mem_clone_array(f_mem_slice_array_from(arr, arr.len / 2), temp_arena);
+        const auto arr_right_sorted = mem::f_arena_push_array_clone(f_array_slice_from(arr, arr.len / 2), temp_arena);
         f_algos_merge_sort(arr_right_sorted, temp_arena, comparator);
 
         // Update this array.
@@ -203,7 +203,7 @@ namespace zf {
 
                 if (i == arr_left_sorted.len) {
                     // Copy over the remainder of the right array.
-                    f_algos_copy_all(f_mem_slice_array_from(arr_right_sorted, j), f_mem_slice_array_from(arr, i + j));
+                    f_algos_copy_all(f_array_slice_from(arr_right_sorted, j), f_array_slice_from(arr, i + j));
                     break;
                 }
             } else {
@@ -212,7 +212,7 @@ namespace zf {
 
                 if (j == arr_right_sorted.len) {
                     // Copy over the remainder of the left array.
-                    f_algos_copy_all(f_mem_slice_array_from(arr_left_sorted, i), f_mem_slice_array_from(arr, i + j));
+                    f_algos_copy_all(f_array_slice_from(arr_left_sorted, i), f_array_slice_from(arr, i + j));
                     break;
                 }
             }
@@ -281,6 +281,6 @@ namespace zf {
 
         // Sort for each subsection.
         f_algos_quick_sort(f_array_slice(arr, 0, left_sec_last_index), comparator);
-        f_algos_quick_sort(f_mem_slice_array_from(arr, left_sec_last_index + 1), comparator);
+        f_algos_quick_sort(f_array_slice_from(arr, left_sec_last_index + 1), comparator);
     }
 }

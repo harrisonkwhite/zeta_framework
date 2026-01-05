@@ -200,7 +200,7 @@ namespace zf::platform {
 
         for (t_i32 i = GLFW_JOYSTICK_1; i <= GLFW_JOYSTICK_LAST; i++) {
             t_b8 connected = false;
-            t_static_bitset<input::ecm_gamepad_button_code_cnt> btns_down = {};
+            mem::t_static_bitset<input::ecm_gamepad_button_code_cnt> btns_down = {};
             t_static_array<t_f32, input::ecm_gamepad_axis_code_cnt> axes = {};
 
             GLFWgamepadstate gamepad_state;
@@ -210,9 +210,9 @@ namespace zf::platform {
 
                 for (t_i32 j = 0; j <= GLFW_GAMEPAD_BUTTON_LAST; j++) {
                     if (gamepad_state.buttons[j]) {
-                        f_mem_set_bit(btns_down, j);
+                        mem::f_set_bit(btns_down, j);
                     } else {
-                        f_mem_unset_bit(btns_down, j);
+                        mem::f_unset_bit(btns_down, j);
                     }
                 }
 
@@ -260,7 +260,7 @@ namespace zf::platform {
         return glfwWindowShouldClose(g_state.glfw_window);
     }
 
-    void f_set_window_title(const t_str_rdonly title, t_arena *const temp_arena) {
+    void f_set_window_title(const t_str_rdonly title, mem::t_arena *const temp_arena) {
         ZF_ASSERT(g_state.active);
 
         const t_str_rdonly title_terminated = f_strs_clone_but_add_terminator(title, temp_arena);

@@ -92,8 +92,8 @@ namespace zf {
     }};
 
     t_b8 PackAssets(const t_str_rdonly instrs_json_file_path) {
-        t_arena arena = f_mem_arena_create();
-        ZF_DEFER({ f_mem_arena_destroy(&arena); });
+        mem::t_arena arena = mem::f_arena_create();
+        ZF_DEFER({ mem::f_arena_destroy(&arena); });
 
         cJSON *cj;
 
@@ -138,7 +138,7 @@ namespace zf {
             cJSON *cj_asset;
 
             cJSON_ArrayForEach(cj_asset, cj_assets) {
-                f_mem_arena_rewind(&arena);
+                mem::f_arena_rewind(&arena);
 
                 if (!cJSON_IsObject(cj_asset)) {
                     continue;
@@ -227,9 +227,9 @@ namespace zf {
                     const auto height = field_vals[ek_font_field_height]->valueint;
                     const auto out_file_path = f_strs_convert_cstr(field_vals[ek_font_field_out_file_path]->valuestring);
 
-                    const auto code_pt_bv = f_mem_arena_push_item_zeroed<t_code_pt_bit_vec>(&arena);
+                    const auto code_pt_bv = mem::f_arena_push_item_zeroed<t_code_pt_bit_vec>(&arena);
 
-                    f_mem_set_bits_in_range(*code_pt_bv, g_printable_ascii_range_begin, g_printable_ascii_range_end); // Add the printable ASCII range as a default.
+                    mem::f_set_bits_in_range(*code_pt_bv, g_printable_ascii_range_begin, g_printable_ascii_range_end); // Add the printable ASCII range as a default.
 
                     if (field_vals[ek_font_field_extra_chrs_file_path]) {
                         const auto extra_chrs_file_path = f_strs_convert_cstr(field_vals[ek_font_field_extra_chrs_file_path]->valuestring);

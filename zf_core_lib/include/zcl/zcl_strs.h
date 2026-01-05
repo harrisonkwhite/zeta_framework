@@ -9,7 +9,7 @@ namespace zf {
     constexpr t_i32 g_code_pt_cnt = 1114112;
 
     using t_code_pt = char32_t;
-    using t_code_pt_bit_vec = t_static_bitset<g_code_pt_cnt>;
+    using t_code_pt_bit_vec = mem::t_static_bitset<g_code_pt_cnt>;
 
     constexpr t_i32 g_ascii_range_begin = 0;
     constexpr t_i32 g_ascii_range_end = 0x80;
@@ -140,8 +140,8 @@ namespace zf {
     }
 
     // Allocates a clone of the given string using the memory arena, with a null byte added at the end (even if the string was already terminated).
-    inline t_str_mut f_strs_clone_but_add_terminator(const t_str_rdonly str, t_arena *const arena) {
-        const t_str_mut clone = {f_mem_arena_push_array<t_u8>(arena, str.bytes.len + 1)};
+    inline t_str_mut f_strs_clone_but_add_terminator(const t_str_rdonly str, mem::t_arena *const arena) {
+        const t_str_mut clone = {mem::f_arena_push_array<t_u8>(arena, str.bytes.len + 1)};
         f_algos_copy_all(str.bytes, clone.bytes);
         clone.bytes[clone.bytes.len - 1] = 0;
         return clone;

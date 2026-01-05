@@ -67,7 +67,7 @@ namespace zf {
             }
 
             const auto src = f_array_slice(stream->type_data.mem.bytes, stream->type_data.mem.byte_pos, stream->type_data.mem.byte_pos + size);
-            const auto dest = f_mem_get_as_bytes(*o_item);
+            const auto dest = mem::f_get_as_bytes(*o_item);
             f_algos_copy_all(src, dest);
 
             stream->type_data.mem.byte_pos += size;
@@ -95,7 +95,7 @@ namespace zf {
                 return false;
             }
 
-            const auto src = f_mem_get_as_bytes(item);
+            const auto src = mem::f_get_as_bytes(item);
             const auto dest = f_array_slice(stream->type_data.mem.bytes, stream->type_data.mem.byte_pos, stream->type_data.mem.byte_pos + size);
             f_algos_copy_all(src, dest);
 
@@ -130,7 +130,7 @@ namespace zf {
             }
 
             const auto src = f_array_slice(stream->type_data.mem.bytes, stream->type_data.mem.byte_pos, stream->type_data.mem.byte_pos + size);
-            const auto dest = f_mem_get_array_as_byte_array(arr);
+            const auto dest = mem::f_get_array_as_byte_array(arr);
             f_algos_copy_all(src, dest);
 
             stream->type_data.mem.byte_pos += size;
@@ -162,7 +162,7 @@ namespace zf {
                 return false;
             }
 
-            const auto src = f_mem_get_array_as_byte_array(arr);
+            const auto src = mem::f_get_array_as_byte_array(arr);
             const auto dest = f_array_slice(stream->type_data.mem.bytes, stream->type_data.mem.byte_pos, stream->type_data.mem.byte_pos + size);
             f_algos_copy_all(src, dest);
 
@@ -193,14 +193,14 @@ namespace zf {
     }
 
     template <c_simple tp_type>
-    [[nodiscard]] t_b8 f_io_deserialize_array(t_stream *const stream, t_arena *const arr_arena, t_array_mut<tp_type> *const o_arr) {
+    [[nodiscard]] t_b8 f_io_deserialize_array(t_stream *const stream, mem::t_arena *const arr_arena, t_array_mut<tp_type> *const o_arr) {
         t_i32 len;
 
         if (!f_io_read_item(stream, &len)) {
             return false;
         }
 
-        *o_arr = f_mem_arena_push_array<tp_type>(arr_arena, len);
+        *o_arr = mem::f_arena_push_array<tp_type>(arr_arena, len);
 
         if (!f_io_read_items_into_array(stream, *o_arr, len)) {
             return false;
@@ -209,28 +209,28 @@ namespace zf {
         return true;
     }
 
-    [[nodiscard]] inline t_b8 f_io_serialize_bit_vec(t_stream *const stream, const t_bitset_rdonly bv) {
+    [[nodiscard]] inline t_b8 f_io_serialize_bit_vec(t_stream *const stream, const mem::t_bitset_rdonly bv) {
         if (!f_io_write_item(stream, bv.bit_cnt)) {
             return false;
         }
 
-        if (!f_io_write_items_of_array(stream, f_mem_bitset_get_bytes(bv))) {
+        if (!f_io_write_items_of_array(stream, mem::f_bitset_get_bytes(bv))) {
             return false;
         }
 
         return true;
     }
 
-    [[nodiscard]] inline t_b8 f_io_deserialize_bit_vec(t_stream *const stream, t_arena *const bv_arena, t_bitset_mut *const o_bv) {
+    [[nodiscard]] inline t_b8 f_io_deserialize_bit_vec(t_stream *const stream, mem::t_arena *const bv_arena, mem::t_bitset_mut *const o_bv) {
         t_i32 bit_cnt;
 
         if (!f_io_read_item(stream, &bit_cnt)) {
             return false;
         }
 
-        *o_bv = f_mem_bitset_create(bit_cnt, bv_arena);
+        *o_bv = mem::f_bitset_create(bit_cnt, bv_arena);
 
-        if (!f_io_read_items_into_array(stream, f_mem_bitset_get_bytes(*o_bv), f_mem_bitset_get_bytes(*o_bv).len)) {
+        if (!f_io_read_items_into_array(stream, mem::f_bitset_get_bytes(*o_bv), mem::f_bitset_get_bytes(*o_bv).len)) {
             return false;
         }
 
@@ -249,10 +249,10 @@ namespace zf {
         ec_file_access_mode_append
     };
 
-    [[nodiscard]] t_b8 f_io_open_file(const t_str_rdonly file_path, const t_file_access_mode mode, t_arena *const temp_arena, t_stream *const o_stream);
+    [[nodiscard]] t_b8 f_io_open_file(const t_str_rdonly file_path, const t_file_access_mode mode, mem::t_arena *const temp_arena, t_stream *const o_stream);
     void f_io_close_file(t_stream *const stream);
     t_i32 f_io_calc_file_size(t_stream *const stream);
-    [[nodiscard]] t_b8 f_io_load_file_contents(const t_str_rdonly file_path, t_arena *const contents_arena, t_arena *const temp_arena, t_array_mut<t_u8> *const o_contents, const t_b8 add_terminator = false);
+    [[nodiscard]] t_b8 f_io_load_file_contents(const t_str_rdonly file_path, mem::t_arena *const contents_arena, mem::t_arena *const temp_arena, t_array_mut<t_u8> *const o_contents, const t_b8 add_terminator = false);
 
     enum t_directory_creation_result : t_i32 {
         ec_directory_creation_result_success,
@@ -262,9 +262,9 @@ namespace zf {
         ec_directory_creation_result_unknown_err
     };
 
-    [[nodiscard]] t_b8 f_io_create_directory(const t_str_rdonly path, t_arena *const temp_arena, t_directory_creation_result *const o_creation_res = nullptr);
-    [[nodiscard]] t_b8 f_io_create_directory_and_parents(const t_str_rdonly path, t_arena *const temp_arena, t_directory_creation_result *const o_dir_creation_res = nullptr);
-    [[nodiscard]] t_b8 f_io_create_file_and_parent_directories(const t_str_rdonly path, t_arena *const temp_arena, t_directory_creation_result *const o_dir_creation_res = nullptr);
+    [[nodiscard]] t_b8 f_io_create_directory(const t_str_rdonly path, mem::t_arena *const temp_arena, t_directory_creation_result *const o_creation_res = nullptr);
+    [[nodiscard]] t_b8 f_io_create_directory_and_parents(const t_str_rdonly path, mem::t_arena *const temp_arena, t_directory_creation_result *const o_dir_creation_res = nullptr);
+    [[nodiscard]] t_b8 f_io_create_file_and_parent_directories(const t_str_rdonly path, mem::t_arena *const temp_arena, t_directory_creation_result *const o_dir_creation_res = nullptr);
 
     enum t_path_type : t_i32 {
         ec_path_type_not_found,
@@ -272,9 +272,9 @@ namespace zf {
         ec_path_type_directory
     };
 
-    t_path_type f_io_get_path_type(const t_str_rdonly path, t_arena *const temp_arena);
+    t_path_type f_io_get_path_type(const t_str_rdonly path, mem::t_arena *const temp_arena);
 
-    t_str_mut f_io_get_executable_directory(t_arena *const arena);
+    t_str_mut f_io_get_executable_directory(mem::t_arena *const arena);
 
     // ============================================================
 
@@ -634,21 +634,21 @@ namespace zf {
     struct t_bit_vec_fmt {
         using t_fmt_tag = void;
 
-        t_bitset_rdonly value;
+        mem::t_bitset_rdonly value;
         t_bit_vec_fmt_style style;
     };
 
-    inline t_bit_vec_fmt f_io_fmt_bit_vec(const t_bitset_rdonly &value, const t_bit_vec_fmt_style style) { return {value, style}; }
-    inline t_bit_vec_fmt f_io_fmt_default(const t_bitset_rdonly &value) { return f_io_fmt_bit_vec(value, ec_bit_vec_fmt_style_seq); }
+    inline t_bit_vec_fmt f_io_fmt_bit_vec(const mem::t_bitset_rdonly &value, const t_bit_vec_fmt_style style) { return {value, style}; }
+    inline t_bit_vec_fmt f_io_fmt_default(const mem::t_bitset_rdonly &value) { return f_io_fmt_bit_vec(value, ec_bit_vec_fmt_style_seq); }
 
     inline t_b8 f_io_print_type(t_stream *const stream, const t_bit_vec_fmt fmt) {
         const auto print_bit = [&](const t_i32 bit_index) {
-            const t_str_rdonly str = f_mem_is_bit_set(fmt.value, bit_index) ? ZF_STR_LITERAL("1") : ZF_STR_LITERAL("0");
+            const t_str_rdonly str = mem::f_is_bit_set(fmt.value, bit_index) ? ZF_STR_LITERAL("1") : ZF_STR_LITERAL("0");
             return f_io_print(stream, str);
         };
 
         const auto print_byte = [&](const t_i32 index) {
-            const t_i32 bit_cnt = index == f_mem_bitset_get_bytes(fmt.value).len - 1 ? f_mem_bitset_get_last_byte_bit_cnt(fmt.value) : 8;
+            const t_i32 bit_cnt = index == mem::f_bitset_get_bytes(fmt.value).len - 1 ? mem::f_bitset_get_last_byte_bit_cnt(fmt.value) : 8;
 
             for (t_i32 i = 7; i >= bit_cnt; i--) {
                 f_io_print(stream, ZF_STR_LITERAL("0"));
@@ -670,7 +670,7 @@ namespace zf {
             break;
 
         case ec_bit_vec_fmt_style_little_endian:
-            for (t_i32 i = 0; i < f_mem_bitset_get_bytes(fmt.value).len; i++) {
+            for (t_i32 i = 0; i < mem::f_bitset_get_bytes(fmt.value).len; i++) {
                 if (i > 0) {
                     f_io_print(stream, ZF_STR_LITERAL(" "));
                 }
@@ -681,7 +681,7 @@ namespace zf {
             break;
 
         case ec_bit_vec_fmt_style_big_endian:
-            for (t_i32 i = f_mem_bitset_get_bytes(fmt.value).len - 1; i >= 0; i--) {
+            for (t_i32 i = mem::f_bitset_get_bytes(fmt.value).len - 1; i >= 0; i--) {
                 print_byte(i);
 
                 if (i > 0) {

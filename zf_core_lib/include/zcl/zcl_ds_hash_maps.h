@@ -11,7 +11,7 @@ namespace zf {
         t_array_mut<tp_key_type> keys;
         t_array_mut<tp_val_type> vals;
         t_array_mut<t_i32> next_indexes;
-        t_bitset_mut usage;
+        mem::t_bitset_mut usage;
 
         s_kv_store_block *next;
     };
@@ -21,7 +21,7 @@ namespace zf {
         t_comparator_bin<tp_key_type> key_comparator;
 
         s_kv_store_block<tp_key_type, tp_val_type> *blocks_head;
-        t_arena *blocks_arena;
+        mem::t_arena *blocks_arena;
         t_i32 block_cnt;
         t_i32 block_cap;
 
@@ -74,17 +74,17 @@ namespace zf {
     // @section: Functions
 
     template <c_simple tp_key_type, c_simple tp_val_type>
-    s_kv_store_block<tp_key_type, tp_val_type> *CreateKVStoreBlock(const t_i32 cap, t_arena *const arena) {
-        const auto block = f_mem_arena_push_item<s_kv_store_block<tp_key_type, tp_val_type>>(arena);
+    s_kv_store_block<tp_key_type, tp_val_type> *CreateKVStoreBlock(const t_i32 cap, mem::t_arena *const arena) {
+        const auto block = mem::f_arena_push_item<s_kv_store_block<tp_key_type, tp_val_type>>(arena);
 
-        block->keys = f_mem_arena_push_array<tp_key_type>(arena, cap);
+        block->keys = mem::f_arena_push_array<tp_key_type>(arena, cap);
 
-        block->vals = f_mem_arena_push_array<tp_val_type>(arena, cap);
+        block->vals = mem::f_arena_push_array<tp_val_type>(arena, cap);
 
-        block->next_indexes = f_mem_arena_push_array<t_i32>(arena, cap);
+        block->next_indexes = mem::f_arena_push_array<t_i32>(arena, cap);
         f_algos_set_all_to(block->next_indexes, -1);
 
-        block->usage = f_mem_bitset_create(cap, arena);
+        block->usage = mem::f_bitset_create(cap, arena);
 
         block->next = nullptr;
 
@@ -154,7 +154,7 @@ namespace zf {
             kv_store->pair_cnt++;
 
             while (block) {
-                const auto possible_rel_index_to_use = f_mem_get_index_of_first_unset_bit(block->usage);
+                const auto possible_rel_index_to_use = mem::f_get_index_of_first_unset_bit(block->usage);
 
                 if (possible_rel_index_to_use == -1) {
                     block_previous = block;
@@ -165,7 +165,7 @@ namespace zf {
 
                 block->keys[possible_rel_index_to_use] = key;
                 block->vals[possible_rel_index_to_use] = val;
-                f_mem_set_bit(block->usage, possible_rel_index_to_use);
+                mem::f_set_bit(block->usage, possible_rel_index_to_use);
                 ZF_ASSERT(block->next_indexes[possible_rel_index_to_use] == -1);
 
                 return (block_index * kv_store->block_cap) + possible_rel_index_to_use;
@@ -183,7 +183,7 @@ namespace zf {
 
             new_block->keys[0] = key;
             new_block->vals[0] = val;
-            f_mem_set_bit(new_block->usage, 0);
+            mem::f_set_bit(new_block->usage, 0);
 
             return block_index * kv_store->block_cap;
         }();
@@ -251,14 +251,14 @@ namespace zf {
 
     // The provided hash function has to map a key to an integer 0 or higher. The given memory arena will be saved and used for allocating new memory for entries when needed.
     template <c_simple tp_key_type, c_simple tp_val_type>
-    s_hash_map<tp_key_type, tp_val_type> HashMapCreate(const t_hash_func<tp_key_type> hash_func, t_arena *const arena, const t_i32 cap = g_hash_map_cap_default, const t_comparator_bin<tp_key_type> key_comparator = g_comparator_bin_default<tp_key_type>) {
-        const auto immediate_indexes = f_mem_arena_push_array<t_i32>(arena, cap);
+    s_hash_map<tp_key_type, tp_val_type> HashMapCreate(const t_hash_func<tp_key_type> hash_func, mem::t_arena *const arena, const t_i32 cap = g_hash_map_cap_default, const t_comparator_bin<tp_key_type> key_comparator = g_comparator_bin_default<tp_key_type>) {
+        const auto immediate_indexes = mem::f_arena_push_array<t_i32>(arena, cap);
         f_algos_set_all_to(immediate_indexes, -1);
 
         return {
             .hash_func = hash_func,
             .immediate_indexes = immediate_indexes,
-            .kv_store = {.key_comparator = key_comparator, .blocks_arena = arena, .block_cap = static_cast<t_i32>(f_mem_align_forward(cap, 8))},
+            .kv_store = {.key_comparator = key_comparator, .blocks_arena = arena, .block_cap = static_cast<t_i32>(mem::f_align_forward(cap, 8))},
         };
     }
 
@@ -306,14 +306,14 @@ namespace zf {
 
     // Allocates the given arrays with the memory arena and loads key-value pairs into them.
     template <c_simple tp_key_type, c_simple tp_val_type>
-    void HashMapLoadEntries(const s_hash_map<tp_key_type, tp_val_type> *const hash_map, t_arena *const arena, t_array_mut<tp_key_type> *const o_keys, t_array_mut<tp_val_type> *const o_vals) {
-        *o_keys = f_mem_arena_push_array<tp_key_type>(arena, HashMapEntryCount(hash_map));
-        *o_vals = f_mem_arena_push_array<tp_val_type>(arena, HashMapEntryCount(hash_map));
+    void HashMapLoadEntries(const s_hash_map<tp_key_type, tp_val_type> *const hash_map, mem::t_arena *const arena, t_array_mut<tp_key_type> *const o_keys, t_array_mut<tp_val_type> *const o_vals) {
+        *o_keys = mem::f_arena_push_array<tp_key_type>(arena, HashMapEntryCount(hash_map));
+        *o_vals = mem::f_arena_push_array<tp_val_type>(arena, HashMapEntryCount(hash_map));
         return HashMapLoadEntries(hash_map, *o_keys, *o_vals);
     }
 
     template <c_simple tp_key_type, c_simple tp_val_type>
-    [[nodiscard]] t_b8 SerializeHashMap(t_stream *const stream, const s_hash_map<tp_key_type, tp_val_type> *const hm, t_arena *const temp_arena) {
+    [[nodiscard]] t_b8 SerializeHashMap(t_stream *const stream, const s_hash_map<tp_key_type, tp_val_type> *const hm, mem::t_arena *const temp_arena) {
         if (!f_io_write_item(stream, HashMapCap(hm))) {
             return false;
         }
@@ -338,7 +338,7 @@ namespace zf {
     }
 
     template <c_simple tp_key_type, c_simple tp_val_type>
-    [[nodiscard]] t_b8 DeserializeHashMap(t_stream *const stream, t_arena *const hm_arena, const t_hash_func<tp_key_type> hm_hash_func, t_arena *const temp_arena, s_hash_map<tp_key_type, tp_val_type> *const o_hm, const t_comparator_bin<tp_key_type> hm_key_comparator = g_comparator_bin_default<tp_key_type>) {
+    [[nodiscard]] t_b8 DeserializeHashMap(t_stream *const stream, mem::t_arena *const hm_arena, const t_hash_func<tp_key_type> hm_hash_func, mem::t_arena *const temp_arena, s_hash_map<tp_key_type, tp_val_type> *const o_hm, const t_comparator_bin<tp_key_type> hm_key_comparator = g_comparator_bin_default<tp_key_type>) {
         t_i32 cap;
 
         if (!f_io_read_item(stream, &cap)) {
@@ -353,13 +353,13 @@ namespace zf {
 
         *o_hm = HashMapCreate<tp_key_type, tp_val_type>(hm_hash_func, hm_arena, cap, hm_key_comparator);
 
-        const auto keys = f_mem_arena_push_array<tp_key_type>(temp_arena, entry_cnt);
+        const auto keys = mem::f_arena_push_array<tp_key_type>(temp_arena, entry_cnt);
 
         if (!f_io_read_items_into_array(stream, keys, entry_cnt)) {
             return false;
         }
 
-        const auto vals = f_mem_arena_push_array<tp_val_type>(temp_arena, entry_cnt);
+        const auto vals = mem::f_arena_push_array<tp_val_type>(temp_arena, entry_cnt);
 
         if (!f_io_read_items_into_array(stream, vals, entry_cnt)) {
             return false;
