@@ -15,7 +15,7 @@ namespace zf {
 
     struct {
         t_state state;
-        s_v2_i resolution_cache;
+        t_v2_i resolution_cache;
         t_rendering_resource_group perm_resource_group;
     } g_state;
 
@@ -30,7 +30,7 @@ namespace zf {
         union {
             struct {
                 bgfx::TextureHandle bgfx_hdl;
-                s_v2_i size;
+                t_v2_i size;
             } texture;
 
             struct {
@@ -178,7 +178,7 @@ namespace zf {
         g_state = {};
     }
 
-    s_v2_i f_rendering_get_texture_size(const t_rendering_resource *const texture) {
+    t_v2_i f_rendering_get_texture_size(const t_rendering_resource *const texture) {
         ZF_ASSERT(g_state.state != ec_state_inactive);
         return texture->type_data.texture.size;
     }
@@ -282,9 +282,9 @@ namespace zf {
 
         bgfx::setViewMode(0, bgfx::ViewMode::Sequential);
 
-        const auto view_mat = IdentityMatrix();
+        const auto view_mat = f_math_create_identity_matrix();
 
-        auto proj_mat = IdentityMatrix();
+        auto proj_mat = f_math_create_identity_matrix();
         proj_mat.elems[0][0] = 1.0f / (static_cast<t_f32>(fb_size_cache.x) / 2.0f);
         proj_mat.elems[1][1] = -1.0f / (static_cast<t_f32>(fb_size_cache.y) / 2.0f);
         proj_mat.elems[3][0] = -1.0f;

@@ -14,7 +14,7 @@ namespace zf {
         t_f32 b;
         t_f32 a;
 
-        constexpr operator s_v4() const { return {r, g, b, a}; }
+        constexpr operator t_v4() const { return {r, g, b, a}; }
     };
 
     struct t_color_rgb24f {
@@ -23,7 +23,7 @@ namespace zf {
         t_f32 b;
 
         constexpr operator t_color_rgba32f() const { return {r, g, b, 1.0f}; }
-        constexpr operator s_v3() const { return {r, g, b}; }
+        constexpr operator t_v3() const { return {r, g, b}; }
     };
 
     struct t_color_rgba8 {
@@ -60,12 +60,12 @@ namespace zf {
     constexpr t_color_rgb24f g_gfx_color_brown = {0.6f, 0.3f, 0.0f};
 
     struct t_texture_data_rdonly {
-        s_v2_i size_in_pxs;
+        t_v2_i size_in_pxs;
         t_array_rdonly<t_u8> rgba_px_data;
     };
 
     struct t_texture_data_mut {
-        s_v2_i size_in_pxs;
+        t_v2_i size_in_pxs;
         t_array_mut<t_u8> rgba_px_data;
 
         constexpr operator t_texture_data_rdonly() const {
@@ -73,27 +73,27 @@ namespace zf {
         }
     };
 
-    constexpr s_v2 g_gfx_origin_topleft = {0.0f, 0.0f};
-    constexpr s_v2 g_gfx_origin_topcenter = {0.5f, 0.0f};
-    constexpr s_v2 g_gfx_origin_topright = {1.0f, 0.0f};
-    constexpr s_v2 g_gfx_origin_centerleft = {0.0f, 0.5f};
-    constexpr s_v2 g_gfx_origin_center = {0.5f, 0.5f};
-    constexpr s_v2 g_gfx_origin_centerright = {1.0f, 0.5f};
-    constexpr s_v2 g_gfx_origin_bottomleft = {0.0f, 1.0f};
-    constexpr s_v2 g_gfx_origin_bottomcenter = {0.5f, 1.0f};
-    constexpr s_v2 g_gfx_origin_bottomright = {1.0f, 1.0f};
+    constexpr t_v2 g_gfx_origin_topleft = {0.0f, 0.0f};
+    constexpr t_v2 g_gfx_origin_topcenter = {0.5f, 0.0f};
+    constexpr t_v2 g_gfx_origin_topright = {1.0f, 0.0f};
+    constexpr t_v2 g_gfx_origin_centerleft = {0.0f, 0.5f};
+    constexpr t_v2 g_gfx_origin_center = {0.5f, 0.5f};
+    constexpr t_v2 g_gfx_origin_centerright = {1.0f, 0.5f};
+    constexpr t_v2 g_gfx_origin_bottomleft = {0.0f, 1.0f};
+    constexpr t_v2 g_gfx_origin_bottomcenter = {0.5f, 1.0f};
+    constexpr t_v2 g_gfx_origin_bottomright = {1.0f, 1.0f};
 
-    constexpr s_v2_i g_gfx_font_atlas_size = {1024, 1024};
+    constexpr t_v2_i g_gfx_font_atlas_size = {1024, 1024};
 
     using t_font_atlas_rgba = t_static_array<t_u8, 4 * g_gfx_font_atlas_size.x * g_gfx_font_atlas_size.y>;
 
     struct t_font_glyph_info {
-        s_v2_i offs;
-        s_v2_i size;
+        t_v2_i offs;
+        t_v2_i size;
         t_i32 adv;
 
         t_i32 atlas_index;
-        s_rect_i atlas_rect;
+        t_rect_i atlas_rect;
     };
 
     struct t_font_code_pt_pair {
@@ -110,15 +110,15 @@ namespace zf {
         s_hash_map<t_font_code_pt_pair, t_i32> code_pt_pairs_to_kernings;
     };
 
-    constexpr s_v2 g_gfx_alignment_topleft = {0.0f, 0.0f};
-    constexpr s_v2 g_gfx_alignment_topcenter = {0.5f, 0.0f};
-    constexpr s_v2 g_gfx_alignment_topright = {1.0f, 0.0f};
-    constexpr s_v2 g_gfx_alignment_centerleft = {0.0f, 0.5f};
-    constexpr s_v2 g_gfx_alignment_center = {0.5f, 0.5f};
-    constexpr s_v2 g_gfx_alignment_centerright = {1.0f, 0.5f};
-    constexpr s_v2 g_gfx_alignment_bottomleft = {0.0f, 1.0f};
-    constexpr s_v2 g_gfx_alignment_bottomcenter = {0.5f, 1.0f};
-    constexpr s_v2 g_gfx_alignment_bottomright = {1.0f, 1.0f};
+    constexpr t_v2 g_gfx_alignment_topleft = {0.0f, 0.0f};
+    constexpr t_v2 g_gfx_alignment_topcenter = {0.5f, 0.0f};
+    constexpr t_v2 g_gfx_alignment_topright = {1.0f, 0.0f};
+    constexpr t_v2 g_gfx_alignment_centerleft = {0.0f, 0.5f};
+    constexpr t_v2 g_gfx_alignment_center = {0.5f, 0.5f};
+    constexpr t_v2 g_gfx_alignment_centerright = {1.0f, 0.5f};
+    constexpr t_v2 g_gfx_alignment_bottomleft = {0.0f, 1.0f};
+    constexpr t_v2 g_gfx_alignment_bottomcenter = {0.5f, 1.0f};
+    constexpr t_v2 g_gfx_alignment_bottomright = {1.0f, 1.0f};
 
     // ============================================================
 
@@ -130,10 +130,10 @@ namespace zf {
         ZF_ASSERT(amount >= 0.0f && amount <= 1.0f);
 
         return {
-            Lerp(a.r, b.r, amount),
-            Lerp(a.g, b.g, amount),
-            Lerp(a.b, b.b, amount),
-            Lerp(a.a, b.a, amount),
+            f_math_lerp(a.r, b.r, amount),
+            f_math_lerp(a.g, b.g, amount),
+            f_math_lerp(a.b, b.b, amount),
+            f_math_lerp(a.a, b.a, amount),
         };
     }
 
@@ -165,9 +165,9 @@ namespace zf {
         return {r, g, b, a};
     }
 
-    inline s_rect_f f_gfx_calc_uv_rect(const s_rect_i src_rect, const s_v2_i tex_size) {
+    inline t_rect_f f_gfx_calc_uv_rect(const t_rect_i src_rect, const t_v2_i tex_size) {
         ZF_ASSERT(tex_size.x > 0 && tex_size.y > 0);
-        ZF_ASSERT(src_rect.x >= 0 && src_rect.y >= 0 && src_rect.width > 0 && src_rect.height > 0 && Right(src_rect) <= tex_size.x && Bottom(src_rect) <= tex_size.y);
+        ZF_ASSERT(src_rect.x >= 0 && src_rect.y >= 0 && src_rect.width > 0 && src_rect.height > 0 && f_math_get_rect_right(src_rect) <= tex_size.x && f_math_get_rect_bottom(src_rect) <= tex_size.y);
 
         return {
             static_cast<t_f32>(src_rect.x) / static_cast<t_f32>(tex_size.x),
@@ -177,11 +177,11 @@ namespace zf {
         };
     }
 
-    inline t_b8 f_gfx_is_origin_valid(const s_v2 origin) {
+    inline t_b8 f_gfx_is_origin_valid(const t_v2 origin) {
         return origin.x >= 0.0f && origin.x <= 1.0f && origin.y >= 0.0f && origin.y <= 1.0f;
     }
 
-    inline t_b8 f_gfx_is_alignment_valid(const s_v2 alignment) {
+    inline t_b8 f_gfx_is_alignment_valid(const t_v2 alignment) {
         return alignment.x >= 0.0f && alignment.x <= 1.0f && alignment.y >= 0.0f && alignment.y <= 1.0f;
     }
 

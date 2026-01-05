@@ -22,7 +22,7 @@ namespace zf {
     t_b8 f_gfx_load_texture_from_raw(const t_str_rdonly file_path, t_arena *const texture_data_arena, t_arena *const temp_arena, t_texture_data_mut *const o_texture_data) {
         const t_str_rdonly file_path_terminated = f_strs_clone_but_add_terminator(file_path, temp_arena);
 
-        s_v2_i size_in_pxs;
+        t_v2_i size_in_pxs;
         t_u8 *const stb_px_data = stbi_load(f_strs_get_as_cstr(file_path_terminated), &size_in_pxs.x, &size_in_pxs.y, nullptr, 4);
 
         if (!stb_px_data) {
@@ -73,7 +73,7 @@ namespace zf {
 
         ZF_DEFER({ FileClose(&fs); });
 
-        s_v2_i size_in_pxs;
+        t_v2_i size_in_pxs;
 
         if (!ReadItem(&fs, &size_in_pxs)) {
             return false;
@@ -145,7 +145,7 @@ namespace zf {
         o_arrangement->code_pts_to_glyph_infos = HashMapCreate<t_code_pt, t_font_glyph_info>(g_code_pt_hash_func, arrangement_arena, code_pt_cnt);
 
         t_i32 atlas_index = 0;
-        s_v2_i atlas_pen = {};
+        t_v2_i atlas_pen = {};
 
         ZF_WALK_SET_BITS (*code_pts, i) {
             const auto code_pt = static_cast<t_code_pt>(i);
@@ -254,8 +254,8 @@ namespace zf {
 
             ZF_DEFER({ stbtt_FreeBitmap(stb_bitmap, nullptr); });
 
-            for (t_i32 y = Top(atlas_rect); y < Bottom(atlas_rect); y++) {
-                for (t_i32 x = Left(atlas_rect); x < Right(atlas_rect); x++) {
+            for (t_i32 y = f_math_get_rect_top(atlas_rect); y < f_math_get_rect_bottom(atlas_rect); y++) {
+                for (t_i32 x = f_math_get_rect_left(atlas_rect); x < f_math_get_rect_right(atlas_rect); x++) {
                     const t_i32 px_index = (y * 4 * g_gfx_font_atlas_size.x) + (x * 4);
                     const t_i32 stb_bitmap_index = ((y - atlas_rect.y) * atlas_rect.width) + (x - atlas_rect.x);
                     (*atlas_rgba)[px_index + 3] = stb_bitmap[stb_bitmap_index];

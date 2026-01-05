@@ -360,10 +360,10 @@ namespace zf {
             ZF_ASSERT(str_bytes_stream_write_success);
         }
 
-        const t_i32 dig_cnt = CalcDigitCount(fmt.value);
+        const t_i32 dig_cnt = f_math_calc_digit_cnt(fmt.value);
 
         for (t_i32 i = 0; i < dig_cnt; i++) {
-            const auto byte = static_cast<t_u8>('0' + DetermineDigitAt(fmt.value, dig_cnt - 1 - i));
+            const auto byte = static_cast<t_u8>('0' + f_math_determine_digit_at(fmt.value, dig_cnt - 1 - i));
             str_bytes_stream_write_success = WriteItem(&str_bytes_stream, byte);
             ZF_ASSERT(str_bytes_stream_write_success);
         }
@@ -525,12 +525,12 @@ namespace zf {
     struct s_v2_fmt {
         using t_fmt_tag = void;
 
-        s_v2 value;
+        t_v2 value;
         t_b8 trim_trailing_zeros;
     };
 
-    inline s_v2_fmt FormatV2(const s_v2 value, const t_b8 trim_trailing_zeros = false) { return {value, trim_trailing_zeros}; }
-    inline s_v2_fmt FormatDefault(const s_v2 value) { return FormatV2(value); }
+    inline s_v2_fmt FormatV2(const t_v2 value, const t_b8 trim_trailing_zeros = false) { return {value, trim_trailing_zeros}; }
+    inline s_v2_fmt FormatDefault(const t_v2 value) { return FormatV2(value); }
 
     inline t_b8 PrintType(s_stream *const stream, const s_v2_fmt fmt) {
         return Print(stream, ZF_STR_LITERAL("("))
@@ -543,11 +543,11 @@ namespace zf {
     struct s_v2_i_fmt {
         using t_fmt_tag = void;
 
-        s_v2_i value;
+        t_v2_i value;
     };
 
-    inline s_v2_i_fmt FormatV2(const s_v2_i value) { return {value}; }
-    inline s_v2_i_fmt FormatDefault(const s_v2_i value) { return FormatV2(value); }
+    inline s_v2_i_fmt FormatV2(const t_v2_i value) { return {value}; }
+    inline s_v2_i_fmt FormatDefault(const t_v2_i value) { return FormatV2(value); }
 
     inline t_b8 PrintType(s_stream *const stream, const s_v2_i_fmt fmt) {
         return Print(stream, ZF_STR_LITERAL("("))

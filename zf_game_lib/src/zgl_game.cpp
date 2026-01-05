@@ -5,7 +5,7 @@
 #include <zgl/zgl_rendering.h>
 
 namespace zf {
-    static const s_v2_i g_init_window_size = {1280, 720};
+    static const t_v2_i g_init_window_size = {1280, 720};
     static const t_f64 g_targ_ticks_per_sec = 60.0; // @todo: Make this customisable?
 
     // @todo: Need a better and more consistent set of verbs. "Is" is too vague - how much calculation is being performed, should I cache the result?

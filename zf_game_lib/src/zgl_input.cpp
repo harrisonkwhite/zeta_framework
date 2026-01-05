@@ -16,7 +16,7 @@ namespace zf {
 
         t_static_bit_vec<ecm_mouse_button_code_cnt> mouse_buttons_down;
 
-        s_v2 cursor_pos;
+        t_v2 cursor_pos;
 
         t_static_bit_vec<g_gamepad_limit> gamepads_connected;
         t_static_array<t_gamepad, g_gamepad_limit> gamepads;
@@ -29,7 +29,7 @@ namespace zf {
             t_static_bit_vec<ecm_mouse_button_code_cnt> mouse_buttons_pressed;
             t_static_bit_vec<ecm_mouse_button_code_cnt> mouse_buttons_released;
 
-            s_v2 scroll_offs;
+            t_v2 scroll_offs;
 
             t_static_array<t_gamepad_events, g_gamepad_limit> gamepads;
         } events;
@@ -95,19 +95,19 @@ namespace zf {
         }
     }
 
-    s_v2 f_input_get_cursor_pos(const t_input_state *const state) {
+    t_v2 f_input_get_cursor_pos(const t_input_state *const state) {
         return state->cursor_pos;
     }
 
-    void f_input_update_cursor_pos(t_input_state *const state, const s_v2 val) {
+    void f_input_update_cursor_pos(t_input_state *const state, const t_v2 val) {
         state->cursor_pos = val;
     }
 
-    s_v2 f_input_get_scroll_offs(const t_input_state *const state) {
+    t_v2 f_input_get_scroll_offs(const t_input_state *const state) {
         return state->events.scroll_offs;
     }
 
-    void f_input_update_scroll_offs(t_input_state *const state, const s_v2 offs_to_apply) {
+    void f_input_update_scroll_offs(t_input_state *const state, const t_v2 offs_to_apply) {
         state->events.scroll_offs += offs_to_apply;
     }
 
