@@ -341,17 +341,17 @@ namespace zf {
         };
 
     template <c_array_elem tp_elem_type, t_i32 tp_len>
-    t_array_mut<tp_elem_type> f_array_get_as_nonstatic(t_static_array<tp_elem_type, tp_len> &arr) {
+    t_array_mut<tp_elem_type> array_get_as_nonstatic(t_static_array<tp_elem_type, tp_len> &arr) {
         return {arr.raw, arr.g_len};
     }
 
     template <c_array_elem tp_elem_type, t_i32 tp_len>
-    t_array_rdonly<tp_elem_type> f_array_get_as_nonstatic(const t_static_array<tp_elem_type, tp_len> &arr) {
+    t_array_rdonly<tp_elem_type> array_get_as_nonstatic(const t_static_array<tp_elem_type, tp_len> &arr) {
         return {arr.raw, arr.g_len};
     }
 
     template <c_array_elem tp_elem_type>
-    t_array_mut<tp_elem_type> f_array_slice(const t_array_mut<tp_elem_type> arr, const t_i32 beg, const t_i32 end) {
+    t_array_mut<tp_elem_type> array_slice(const t_array_mut<tp_elem_type> arr, const t_i32 beg, const t_i32 end) {
         ZF_ASSERT(beg >= 0 && beg <= arr.len);
         ZF_ASSERT(end >= beg && end <= arr.len);
 
@@ -359,7 +359,7 @@ namespace zf {
     }
 
     template <c_array_elem tp_elem_type>
-    t_array_rdonly<tp_elem_type> f_array_slice(const t_array_rdonly<tp_elem_type> arr, const t_i32 beg, const t_i32 end) {
+    t_array_rdonly<tp_elem_type> array_slice(const t_array_rdonly<tp_elem_type> arr, const t_i32 beg, const t_i32 end) {
         ZF_ASSERT(beg >= 0 && beg <= arr.len);
         ZF_ASSERT(end >= beg && end <= arr.len);
 
@@ -367,25 +367,25 @@ namespace zf {
     }
 
     template <c_array_elem tp_elem_type>
-    t_array_mut<tp_elem_type> f_array_slice_from(const t_array_mut<tp_elem_type> arr, const t_i32 beg) {
+    t_array_mut<tp_elem_type> array_slice_from(const t_array_mut<tp_elem_type> arr, const t_i32 beg) {
         ZF_ASSERT(beg >= 0 && beg <= arr.len);
         return {arr.raw + beg, arr.len - beg};
     }
 
     template <c_array_elem tp_elem_type>
-    t_array_rdonly<tp_elem_type> f_array_slice_from(const t_array_rdonly<tp_elem_type> arr, const t_i32 beg) {
+    t_array_rdonly<tp_elem_type> array_slice_from(const t_array_rdonly<tp_elem_type> arr, const t_i32 beg) {
         ZF_ASSERT(beg >= 0 && beg <= arr.len);
         return {arr.raw + beg, arr.len - beg};
     }
 
     template <c_array tp_arr_type>
-    t_i32 f_array_get_size_in_bytes(const tp_arr_type arr) {
+    t_i32 array_get_size_in_bytes(const tp_arr_type arr) {
         return ZF_SIZE_OF(typename tp_arr_type::t_elem) * arr.len;
     }
 
     template <c_array tp_src_arr_type, c_array_mut tp_dest_arr_type>
         requires c_same<typename tp_src_arr_type::t_elem, typename tp_dest_arr_type::t_elem>
-    void f_array_copy(const tp_src_arr_type src, const tp_dest_arr_type dest, const t_b8 allow_truncation = false) {
+    void array_copy(const tp_src_arr_type src, const tp_dest_arr_type dest, const t_b8 allow_truncation = false) {
         if (!allow_truncation) {
             ZF_ASSERT(dest.len >= src.len);
 

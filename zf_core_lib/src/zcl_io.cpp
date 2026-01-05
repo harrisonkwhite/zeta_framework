@@ -145,7 +145,7 @@ namespace zf::io {
         ZF_WALK_STR (path, step) {
             if (step.code_pt == '/' || step.code_pt == '\\') {
                 if (!cur_dir_name_is_empty) {
-                    if (!create_dir_if_nonexistent({f_array_slice(path.bytes, 0, step.byte_index)})) {
+                    if (!create_dir_if_nonexistent({array_slice(path.bytes, 0, step.byte_index)})) {
                         return false;
                     }
 
@@ -173,7 +173,7 @@ namespace zf::io {
         // Get the substring containing all directories and create them.
         ZF_WALK_STR_REVERSE (path, step) {
             if (step.code_pt == '/' || step.code_pt == '\\') {
-                if (!f_create_directory_and_parents({f_array_slice(path.bytes, 0, step.byte_index)}, temp_arena, o_dir_creation_res)) {
+                if (!f_create_directory_and_parents({array_slice(path.bytes, 0, step.byte_index)}, temp_arena, o_dir_creation_res)) {
                     return false;
                 }
 
@@ -223,7 +223,7 @@ namespace zf::io {
         }
 
         const auto result_bytes = mem::f_arena_push_array<t_u8>(arena, len);
-        f_array_copy(mem::f_get_array_as_byte_array(f_array_slice(f_array_get_as_nonstatic(buf), 0, len)), result_bytes);
+        array_copy(mem::f_array_as_byte_array(array_slice(array_get_as_nonstatic(buf), 0, len)), result_bytes);
         return {result_bytes};
 #elif defined(ZF_PLATFORM_MACOS)
     #error "Platform-specific implementation not yet done!"

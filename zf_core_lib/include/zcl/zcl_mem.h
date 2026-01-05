@@ -21,33 +21,33 @@ namespace zf::mem {
     }
 
     template <c_simple tp_type>
-    t_array_mut<t_u8> f_get_as_bytes(tp_type &val) {
+    t_array_mut<t_u8> f_as_bytes(tp_type &val) {
         return {reinterpret_cast<t_u8 *>(&val), ZF_SIZE_OF(val)};
     }
 
     template <c_simple tp_type>
-    t_array_rdonly<t_u8> f_get_as_bytes(const tp_type &val) {
+    t_array_rdonly<t_u8> f_as_bytes(const tp_type &val) {
         return {reinterpret_cast<const t_u8 *>(&val), ZF_SIZE_OF(val)};
     }
 
     template <c_array_elem tp_elem_type>
-    t_array_mut<t_u8> f_get_array_as_byte_array(const t_array_mut<tp_elem_type> arr) {
-        return {reinterpret_cast<t_u8 *>(arr.raw), f_array_get_size_in_bytes(arr)};
+    t_array_mut<t_u8> f_array_as_byte_array(const t_array_mut<tp_elem_type> arr) {
+        return {reinterpret_cast<t_u8 *>(arr.raw), array_get_size_in_bytes(arr)};
     }
 
     template <c_array_elem tp_elem_type>
-    t_array_rdonly<t_u8> f_get_array_as_byte_array(const t_array_rdonly<tp_elem_type> arr) {
-        return {reinterpret_cast<const t_u8 *>(arr.raw), f_array_get_size_in_bytes(arr)};
+    t_array_rdonly<t_u8> f_array_as_byte_array(const t_array_rdonly<tp_elem_type> arr) {
+        return {reinterpret_cast<const t_u8 *>(arr.raw), array_get_size_in_bytes(arr)};
     }
 
     // Creates a byte-sized bitmask with only a single bit set.
-    inline t_u8 f_make_byte_bitmask_single(const t_i32 bit_index) {
+    inline t_u8 f_byte_bitmask_single(const t_i32 bit_index) {
         ZF_ASSERT(bit_index >= 0 && bit_index < 8);
         return static_cast<t_u8>(1 << bit_index);
     }
 
     // Creates a byte-sized bitmask with only bits in the range [begin_bit_index, end_bit_index) set.
-    inline t_u8 f_make_byte_bitmask_range(const t_i32 begin_bit_index, const t_i32 end_bit_index = 8) {
+    inline t_u8 f_byte_bitmask_range(const t_i32 begin_bit_index, const t_i32 end_bit_index = 8) {
         ZF_ASSERT(begin_bit_index >= 0 && begin_bit_index < 8);
         ZF_ASSERT(end_bit_index >= begin_bit_index && end_bit_index <= 8);
 
@@ -167,7 +167,7 @@ namespace zf::mem {
     template <c_array tp_arr_type>
     auto f_arena_push_array_clone(t_arena *const arena, const tp_arr_type arr_to_clone) {
         const auto arr = f_arena_push_array<typename tp_arr_type::t_elem>(arena, arr_to_clone.len);
-        f_array_copy(arr, arr_to_clone);
+        array_copy(arr, arr_to_clone);
         return arr;
     }
 
@@ -227,21 +227,21 @@ namespace zf::mem {
         return {f_arena_push_array_zeroed<t_u8>(arena, f_bits_to_bytes(bit_cnt)).raw, bit_cnt};
     }
 
-    inline t_array_mut<t_u8> f_bitset_get_bytes(const t_bitset_mut bs) {
+    inline t_array_mut<t_u8> f_bitset_bytes(const t_bitset_mut bs) {
         return {bs.bytes_raw, f_bits_to_bytes(bs.bit_cnt)};
     }
 
-    inline t_array_rdonly<t_u8> f_bitset_get_bytes(const t_bitset_rdonly bs) {
+    inline t_array_rdonly<t_u8> f_bitset_bytes(const t_bitset_rdonly bs) {
         return {bs.bytes_raw, f_bits_to_bytes(bs.bit_cnt)};
     }
 
-    inline t_i32 f_bitset_get_last_byte_bit_cnt(const t_bitset_rdonly bs) {
+    inline t_i32 f_bitset_last_byte_bit_cnt(const t_bitset_rdonly bs) {
         return ((bs.bit_cnt - 1) % 8) + 1;
     }
 
     // Gives a mask of the last byte in which only excess bits are unset.
-    inline t_u8 f_bitset_get_last_byte_mask(const t_bitset_rdonly bs) {
-        return f_make_byte_bitmask_range(0, f_bitset_get_last_byte_bit_cnt(bs));
+    inline t_u8 f_bitset_last_byte_mask(const t_bitset_rdonly bs) {
+        return f_byte_bitmask_range(0, f_bitset_last_byte_bit_cnt(bs));
     }
 
     // ============================================================
@@ -249,17 +249,17 @@ namespace zf::mem {
 
     inline t_b8 f_is_bit_set(const t_bitset_rdonly bs, const t_i32 index) {
         ZF_ASSERT(index >= 0 && index < bs.bit_cnt);
-        return f_bitset_get_bytes(bs)[index / 8] & f_make_byte_bitmask_single(index % 8);
+        return f_bitset_bytes(bs)[index / 8] & f_byte_bitmask_single(index % 8);
     }
 
     inline void f_set_bit(const t_bitset_mut bs, const t_i32 index) {
         ZF_ASSERT(index >= 0 && index < bs.bit_cnt);
-        f_bitset_get_bytes(bs)[index / 8] |= f_make_byte_bitmask_single(index % 8);
+        f_bitset_bytes(bs)[index / 8] |= f_byte_bitmask_single(index % 8);
     }
 
     inline void f_unset_bit(const t_bitset_mut bs, const t_i32 index) {
         ZF_ASSERT(index >= 0 && index < bs.bit_cnt);
-        f_bitset_get_bytes(bs)[index / 8] &= ~f_make_byte_bitmask_single(index % 8);
+        f_bitset_bytes(bs)[index / 8] &= ~f_byte_bitmask_single(index % 8);
     }
 
     t_b8 f_is_any_bit_set(const t_bitset_rdonly bs);
@@ -296,10 +296,10 @@ namespace zf::mem {
     void f_rot_bits_right_by(const t_bitset_mut bs, const t_i32 amount = 1);
 
     // Returns -1 if all bits are unset.
-    t_i32 f_get_index_of_first_set_bit(const t_bitset_rdonly bs, const t_i32 from = 0);
+    t_i32 f_index_of_first_set_bit(const t_bitset_rdonly bs, const t_i32 from = 0);
 
     // Returns -1 if all bits are set.
-    t_i32 f_get_index_of_first_unset_bit(const t_bitset_rdonly bs, const t_i32 from = 0);
+    t_i32 f_index_of_first_unset_bit(const t_bitset_rdonly bs, const t_i32 from = 0);
 
     t_i32 f_count_set_bits(const t_bitset_rdonly bs);
 

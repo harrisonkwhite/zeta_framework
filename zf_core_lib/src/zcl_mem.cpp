@@ -98,13 +98,13 @@ namespace zf::mem {
             return false;
         }
 
-        const auto first_bytes = f_array_slice(f_bitset_get_bytes(bs), 0, f_bitset_get_bytes(bs).len - 1);
+        const auto first_bytes = array_slice(f_bitset_bytes(bs), 0, f_bitset_bytes(bs).len - 1);
 
         if (!f_array_do_all_equal(first_bytes, 0)) {
             return true;
         }
 
-        return (f_bitset_get_bytes(bs)[f_bitset_get_bytes(bs).len - 1] & f_bitset_get_last_byte_mask(bs)) != 0;
+        return (f_bitset_bytes(bs)[f_bitset_bytes(bs).len - 1] & f_bitset_last_byte_mask(bs)) != 0;
     }
 
     t_b8 f_are_all_bits_set(const t_bitset_rdonly bs) {
@@ -112,14 +112,14 @@ namespace zf::mem {
             return false;
         }
 
-        const auto first_bytes = f_array_slice(f_bitset_get_bytes(bs), 0, f_bitset_get_bytes(bs).len - 1);
+        const auto first_bytes = array_slice(f_bitset_bytes(bs), 0, f_bitset_bytes(bs).len - 1);
 
         if (!f_array_do_all_equal(first_bytes, 0xFF)) {
             return false;
         }
 
-        const auto last_byte_mask = f_bitset_get_last_byte_mask(bs);
-        return (f_bitset_get_bytes(bs)[f_bitset_get_bytes(bs).len - 1] & last_byte_mask) == last_byte_mask;
+        const auto last_byte_mask = f_bitset_last_byte_mask(bs);
+        return (f_bitset_bytes(bs)[f_bitset_bytes(bs).len - 1] & last_byte_mask) == last_byte_mask;
     }
 
     void f_set_all_bits(const t_bitset_mut bs) {
@@ -127,10 +127,10 @@ namespace zf::mem {
             return;
         }
 
-        const auto first_bytes = f_array_slice(f_bitset_get_bytes(bs), 0, f_bitset_get_bytes(bs).len - 1);
+        const auto first_bytes = array_slice(f_bitset_bytes(bs), 0, f_bitset_bytes(bs).len - 1);
         f_array_set_all_to(first_bytes, 0xFF);
 
-        f_bitset_get_bytes(bs)[f_bitset_get_bytes(bs).len - 1] |= f_bitset_get_last_byte_mask(bs);
+        f_bitset_bytes(bs)[f_bitset_bytes(bs).len - 1] |= f_bitset_last_byte_mask(bs);
     }
 
     void f_unset_all_bits(const t_bitset_mut bs) {
@@ -138,10 +138,10 @@ namespace zf::mem {
             return;
         }
 
-        const auto first_bytes = f_array_slice(f_bitset_get_bytes(bs), 0, f_bitset_get_bytes(bs).len - 1);
+        const auto first_bytes = array_slice(f_bitset_bytes(bs), 0, f_bitset_bytes(bs).len - 1);
         f_array_set_all_to(first_bytes, 0);
 
-        f_bitset_get_bytes(bs)[f_bitset_get_bytes(bs).len - 1] &= ~f_bitset_get_last_byte_mask(bs);
+        f_bitset_bytes(bs)[f_bitset_bytes(bs).len - 1] &= ~f_bitset_last_byte_mask(bs);
     }
 
     void f_set_bits_in_range(const t_bitset_mut bs, const t_i32 begin_bit_index, const t_i32 end_bit_index) {
@@ -159,7 +159,7 @@ namespace zf::mem {
             const t_i32 set_range_begin = f_max(begin_bit_index_rel, 0);
             const t_i32 set_range_end = f_min(end_bit_index_rel, 8);
 
-            f_bitset_get_bytes(bs)[i] |= f_make_byte_bitmask_range(set_range_begin, set_range_end);
+            f_bitset_bytes(bs)[i] |= f_byte_bitmask_range(set_range_begin, set_range_end);
         }
     }
 
@@ -172,39 +172,39 @@ namespace zf::mem {
 
         switch (op) {
         case ec_bitwise_mask_op_and:
-            for (t_i32 i = 0; i < f_bitset_get_bytes(targ).len; i++) {
-                f_bitset_get_bytes(targ)[i] &= f_bitset_get_bytes(mask)[i];
+            for (t_i32 i = 0; i < f_bitset_bytes(targ).len; i++) {
+                f_bitset_bytes(targ)[i] &= f_bitset_bytes(mask)[i];
             }
 
             break;
 
         case ec_bitwise_mask_op_or:
-            for (t_i32 i = 0; i < f_bitset_get_bytes(targ).len; i++) {
-                f_bitset_get_bytes(targ)[i] |= f_bitset_get_bytes(mask)[i];
+            for (t_i32 i = 0; i < f_bitset_bytes(targ).len; i++) {
+                f_bitset_bytes(targ)[i] |= f_bitset_bytes(mask)[i];
             }
 
             break;
 
         case ec_bitwise_mask_op_xor:
-            for (t_i32 i = 0; i < f_bitset_get_bytes(targ).len; i++) {
-                f_bitset_get_bytes(targ)[i] ^= f_bitset_get_bytes(mask)[i];
+            for (t_i32 i = 0; i < f_bitset_bytes(targ).len; i++) {
+                f_bitset_bytes(targ)[i] ^= f_bitset_bytes(mask)[i];
             }
 
             break;
 
         case ec_bitwise_mask_op_andnot:
-            for (t_i32 i = 0; i < f_bitset_get_bytes(targ).len; i++) {
-                f_bitset_get_bytes(targ)[i] &= ~f_bitset_get_bytes(mask)[i];
+            for (t_i32 i = 0; i < f_bitset_bytes(targ).len; i++) {
+                f_bitset_bytes(targ)[i] &= ~f_bitset_bytes(mask)[i];
             }
 
             break;
         }
 
-        f_bitset_get_bytes(targ)[f_bitset_get_bytes(targ).len - 1] &= f_bitset_get_last_byte_mask(targ);
+        f_bitset_bytes(targ)[f_bitset_bytes(targ).len - 1] &= f_bitset_last_byte_mask(targ);
     }
 
     static t_u8 f_shift_bits_left(const t_bitset_mut bs) {
-        ZF_ASSERT(f_bits_to_bytes(bs.bit_cnt) == f_bitset_get_bytes(bs).len);
+        ZF_ASSERT(f_bits_to_bytes(bs.bit_cnt) == f_bitset_bytes(bs).len);
 
         if (bs.bit_cnt == 0) {
             return 0;
@@ -212,15 +212,15 @@ namespace zf::mem {
 
         t_u8 discard = 0;
 
-        for (t_i32 i = 0; i < f_bitset_get_bytes(bs).len; i++) {
-            const t_i32 bits_in_byte = i == f_bitset_get_bytes(bs).len - 1 ? f_bitset_get_last_byte_bit_cnt(bs) : 8;
+        for (t_i32 i = 0; i < f_bitset_bytes(bs).len; i++) {
+            const t_i32 bits_in_byte = i == f_bitset_bytes(bs).len - 1 ? f_bitset_last_byte_bit_cnt(bs) : 8;
             const t_u8 discard_last = discard;
-            discard = (f_bitset_get_bytes(bs)[i] & f_make_byte_bitmask_single(bits_in_byte - 1)) >> (bits_in_byte - 1);
-            f_bitset_get_bytes(bs)[i] <<= 1;
-            f_bitset_get_bytes(bs)[i] |= discard_last;
+            discard = (f_bitset_bytes(bs)[i] & f_byte_bitmask_single(bits_in_byte - 1)) >> (bits_in_byte - 1);
+            f_bitset_bytes(bs)[i] <<= 1;
+            f_bitset_bytes(bs)[i] |= discard_last;
         }
 
-        f_bitset_get_bytes(bs)[f_bitset_get_bytes(bs).len - 1] &= f_bitset_get_last_byte_mask(bs);
+        f_bitset_bytes(bs)[f_bitset_bytes(bs).len - 1] &= f_bitset_last_byte_mask(bs);
 
         return discard;
     }
@@ -256,24 +256,24 @@ namespace zf::mem {
     }
 
     static t_u8 f_shift_bits_right(const t_bitset_mut bs) {
-        ZF_ASSERT(f_bits_to_bytes(bs.bit_cnt) == f_bitset_get_bytes(bs).len);
+        ZF_ASSERT(f_bits_to_bytes(bs.bit_cnt) == f_bitset_bytes(bs).len);
 
         if (bs.bit_cnt == 0) {
             return 0;
         }
 
-        f_bitset_get_bytes(bs)[f_bitset_get_bytes(bs).len - 1] &= f_bitset_get_last_byte_mask(bs); // Drop any excess bits so we don't accidentally shift a 1 in.
+        f_bitset_bytes(bs)[f_bitset_bytes(bs).len - 1] &= f_bitset_last_byte_mask(bs); // Drop any excess bits so we don't accidentally shift a 1 in.
 
         t_u8 discard = 0;
 
-        for (t_i32 i = f_bitset_get_bytes(bs).len - 1; i >= 0; i--) {
-            const t_i32 bits_in_byte = i == f_bitset_get_bytes(bs).len - 1 ? f_bitset_get_last_byte_bit_cnt(bs) : 8;
+        for (t_i32 i = f_bitset_bytes(bs).len - 1; i >= 0; i--) {
+            const t_i32 bits_in_byte = i == f_bitset_bytes(bs).len - 1 ? f_bitset_last_byte_bit_cnt(bs) : 8;
             const t_u8 discard_last = discard;
-            discard = f_bitset_get_bytes(bs)[i] & f_make_byte_bitmask_single(0);
-            f_bitset_get_bytes(bs)[i] >>= 1;
+            discard = f_bitset_bytes(bs)[i] & f_byte_bitmask_single(0);
+            f_bitset_bytes(bs)[i] >>= 1;
 
             if (discard_last) {
-                f_bitset_get_bytes(bs)[i] |= f_make_byte_bitmask_single(bits_in_byte - 1);
+                f_bitset_bytes(bs)[i] |= f_byte_bitmask_single(bits_in_byte - 1);
             }
         }
 
@@ -312,7 +312,7 @@ namespace zf::mem {
 
     // ============================================================
 
-    static t_i32 f_get_index_of_first_set_bit_helper(const t_bitset_rdonly bs, const t_i32 from, const t_u8 xor_mask) {
+    static t_i32 f_index_of_first_set_bit_helper(const t_bitset_rdonly bs, const t_i32 from, const t_u8 xor_mask) {
         ZF_ASSERT(from >= 0 && from <= bs.bit_cnt); // Intentionally allowing the upper bound here for the case of iteration.
 
         // Map of each possible byte to the index of the first set bit, or -1 for the first case.
@@ -577,15 +577,15 @@ namespace zf::mem {
 
         const t_i32 begin_byte_index = from / 8;
 
-        for (t_i32 i = begin_byte_index; i < f_bitset_get_bytes(bs).len; i++) {
-            t_u8 byte = f_bitset_get_bytes(bs)[i] ^ xor_mask;
+        for (t_i32 i = begin_byte_index; i < f_bitset_bytes(bs).len; i++) {
+            t_u8 byte = f_bitset_bytes(bs)[i] ^ xor_mask;
 
             if (i == begin_byte_index) {
-                byte &= f_make_byte_bitmask_range(from % 8);
+                byte &= f_byte_bitmask_range(from % 8);
             }
 
-            if (i == f_bitset_get_bytes(bs).len - 1) {
-                byte &= f_bitset_get_last_byte_mask(bs);
+            if (i == f_bitset_bytes(bs).len - 1) {
+                byte &= f_bitset_last_byte_mask(bs);
             }
 
             const t_i32 bi = g_mappings[byte];
@@ -598,12 +598,12 @@ namespace zf::mem {
         return -1;
     }
 
-    t_i32 f_get_index_of_first_set_bit(const t_bitset_rdonly bs, const t_i32 from) {
-        return f_get_index_of_first_set_bit_helper(bs, from, 0);
+    t_i32 f_index_of_first_set_bit(const t_bitset_rdonly bs, const t_i32 from) {
+        return f_index_of_first_set_bit_helper(bs, from, 0);
     }
 
-    t_i32 f_get_index_of_first_unset_bit(const t_bitset_rdonly bs, const t_i32 from) {
-        return f_get_index_of_first_set_bit_helper(bs, from, 0xFF);
+    t_i32 f_index_of_first_unset_bit(const t_bitset_rdonly bs, const t_i32 from) {
+        return f_index_of_first_set_bit_helper(bs, from, 0xFF);
     }
 
     t_i32 f_count_set_bits(const t_bitset_rdonly bs) {
@@ -869,12 +869,12 @@ namespace zf::mem {
 
         t_i32 result = 0;
 
-        if (f_bitset_get_bytes(bs).len > 0) {
-            for (t_i32 i = 0; i < f_bitset_get_bytes(bs).len - 1; i++) {
-                result += g_mappings[f_bitset_get_bytes(bs)[i]];
+        if (f_bitset_bytes(bs).len > 0) {
+            for (t_i32 i = 0; i < f_bitset_bytes(bs).len - 1; i++) {
+                result += g_mappings[f_bitset_bytes(bs)[i]];
             }
 
-            result += g_mappings[f_bitset_get_bytes(bs)[f_bitset_get_bytes(bs).len - 1] & f_bitset_get_last_byte_mask(bs)];
+            result += g_mappings[f_bitset_bytes(bs)[f_bitset_bytes(bs).len - 1] & f_bitset_last_byte_mask(bs)];
         }
 
         return result;
@@ -883,7 +883,7 @@ namespace zf::mem {
     t_b8 f_walk_set_bits(const t_bitset_rdonly bs, t_i32 *const pos, t_i32 *const o_index) {
         ZF_ASSERT(*pos >= 0 && *pos <= bs.bit_cnt);
 
-        *o_index = f_get_index_of_first_set_bit(bs, *pos);
+        *o_index = f_index_of_first_set_bit(bs, *pos);
 
         if (*o_index == -1) {
             return false;
@@ -897,7 +897,7 @@ namespace zf::mem {
     t_b8 f_walk_unset_bits(const t_bitset_rdonly bs, t_i32 *const pos, t_i32 *const o_index) {
         ZF_ASSERT(*pos >= 0 && *pos <= bs.bit_cnt);
 
-        *o_index = f_get_index_of_first_unset_bit(bs, *pos);
+        *o_index = f_index_of_first_unset_bit(bs, *pos);
 
         if (*o_index == -1) {
             return false;

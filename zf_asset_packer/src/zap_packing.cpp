@@ -148,10 +148,10 @@ namespace zf {
 
                 const auto fields = [asset_type_index]() -> t_array_rdonly<t_asset_field> {
                     switch (asset_type_index) {
-                    case ec_asset_type_texture: return f_array_get_as_nonstatic(g_texture_fields);
-                    case ec_asset_type_font: return f_array_get_as_nonstatic(g_font_fields);
-                    case ec_asset_type_shader: return f_array_get_as_nonstatic(g_shader_fields);
-                    case ec_asset_type_sound: return f_array_get_as_nonstatic(g_sound_fields);
+                    case ec_asset_type_texture: return array_get_as_nonstatic(g_texture_fields);
+                    case ec_asset_type_font: return array_get_as_nonstatic(g_font_fields);
+                    case ec_asset_type_shader: return array_get_as_nonstatic(g_shader_fields);
+                    case ec_asset_type_sound: return array_get_as_nonstatic(g_sound_fields);
                     }
 
                     return {};
@@ -159,10 +159,10 @@ namespace zf {
 
                 const auto field_vals = [asset_type_index, &texture_field_cj_ptrs, &font_field_cj_ptrs, &shader_field_cj_ptrs, &snd_field_cj_ptrs]() -> t_array_mut<cJSON *> {
                     switch (asset_type_index) {
-                    case ec_asset_type_texture: return f_array_get_as_nonstatic(texture_field_cj_ptrs);
-                    case ec_asset_type_font: return f_array_get_as_nonstatic(font_field_cj_ptrs);
-                    case ec_asset_type_shader: return f_array_get_as_nonstatic(shader_field_cj_ptrs);
-                    case ec_asset_type_sound: return f_array_get_as_nonstatic(snd_field_cj_ptrs);
+                    case ec_asset_type_texture: return array_get_as_nonstatic(texture_field_cj_ptrs);
+                    case ec_asset_type_font: return array_get_as_nonstatic(font_field_cj_ptrs);
+                    case ec_asset_type_shader: return array_get_as_nonstatic(shader_field_cj_ptrs);
+                    case ec_asset_type_sound: return array_get_as_nonstatic(snd_field_cj_ptrs);
                     }
 
                     return {};

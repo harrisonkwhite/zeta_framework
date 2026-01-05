@@ -142,7 +142,7 @@ namespace zf::strs {
     // Allocates a clone of the given string using the memory arena, with a null byte added at the end (even if the string was already terminated).
     inline t_str_mut f_clone_but_add_terminator(const t_str_rdonly str, mem::t_arena *const arena) {
         const t_str_mut clone = {mem::f_arena_push_array<t_u8>(arena, str.bytes.len + 1)};
-        f_array_copy(str.bytes, clone.bytes);
+        array_copy(str.bytes, clone.bytes);
         clone.bytes[clone.bytes.len - 1] = 0;
         return clone;
     }

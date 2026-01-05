@@ -5,50 +5,50 @@
 
 namespace zf::platform {
     // Note that the window is not shown by default, you have to manually do this.
-    void f_startup(const math::t_v2_i init_window_size);
+    void module_startup(const math::t_v2_i init_window_size);
 
-    void f_shutdown();
+    void module_shutdown();
 
     // Gives the time in seconds since the platform module was started.
-    t_f64 f_get_time();
+    t_f64 get_time();
 
     // Also updates the given input state based on OS events.
-    void f_poll_os_events(input::t_state *const input_state);
+    void poll_os_events(input::t_state *const input_state);
 
-    void *f_get_native_display_handle();
+    void *display_get_native_handle();
 
-    void *f_get_native_window_handle();
+    void *window_get_native_handle();
 
-    void f_show_window();
+    void window_show();
 
     // Returns whether a window close has been requested.
-    t_b8 f_should_window_close();
+    t_b8 window_should_close();
 
-    void f_set_window_title(const strs::t_str_rdonly title, mem::t_arena *const temp_arena);
+    void window_set_title(const strs::t_str_rdonly title, mem::t_arena *const temp_arena);
 
     // Sets the LOGICAL window size. The actual new framebuffer size MIGHT be larger if there is DPI scaling.
-    void f_set_window_size(const math::t_v2_i size);
+    void window_set_size(const math::t_v2_i size);
 
     // Set the LOGICAL window size limits. If you don't want to limit a particular dimension, leave it as -1.
-    void f_set_window_size_limits(const t_i32 min_width, const t_i32 min_height, const t_i32 max_width, const t_i32 max_height);
+    void window_set_size_limits(const t_i32 min_width, const t_i32 min_height, const t_i32 max_width, const t_i32 max_height);
 
-    void f_set_window_resizable(const t_b8 resizable);
+    void window_set_resizable(const t_b8 resizable);
 
-    math::t_v2_i f_get_window_framebuffer_size_cache();
+    math::t_v2_i window_get_framebuffer_size_cache();
 
-    t_b8 f_get_fullscreen();
+    t_b8 window_is_fullscreen();
 
-    void f_set_fullscreen(const t_b8 active);
+    void window_set_fullscreen(const t_b8 active);
 
-    inline void f_toggle_fullscreen() {
-        f_set_fullscreen(!f_get_fullscreen());
+    inline void window_toggle_fullscreen() {
+        window_set_fullscreen(!window_is_fullscreen());
     }
 
     // Calculates the size in pixels of whichever monitor the window most resides in.
-    math::t_v2_i f_get_monitor_size_pixels();
+    math::t_v2_i monitor_get_size_pixels();
 
     // Calculates the size (accounting for DPI scaling) of whichever monitor the window most resides in.
-    math::t_v2_i f_get_monitor_size_logical();
+    math::t_v2_i monitor_get_size_logical();
 
-    void f_set_cursor_visibility(const t_b8 visible);
+    void cursor_set_visible(const t_b8 visible);
 }

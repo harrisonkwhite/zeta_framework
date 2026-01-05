@@ -96,7 +96,7 @@ namespace zf {
                 break;
             }
 
-            ds::f_list_append_many_dynamic(&bin_list, f_array_slice(f_array_get_as_nonstatic(buf), 0, r), bin_arena);
+            ds::f_list_append_many_dynamic(&bin_list, array_slice(array_get_as_nonstatic(buf), 0, r), bin_arena);
         }
 
         if (r != REPROC_EPIPE) {

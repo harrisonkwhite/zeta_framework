@@ -65,12 +65,12 @@ namespace zf::ds {
 
     template <c_list_elem tp_elem_type>
     t_array_mut<tp_elem_type> f_list_get_as_array(const t_list_mut<tp_elem_type> *const list) {
-        return f_array_slice(list->backing_arr, 0, list->len);
+        return array_slice(list->backing_arr, 0, list->len);
     }
 
     template <c_list_elem tp_elem_type>
     t_array_rdonly<tp_elem_type> f_list_get_as_array(const t_list_rdonly<tp_elem_type> *const list) {
-        return f_array_slice(list->backing_arr, 0, list->len);
+        return array_slice(list->backing_arr, 0, list->len);
     }
 
     template <c_list_mut tp_list_type>
@@ -81,7 +81,7 @@ namespace zf::ds {
         ZF_ASSERT(new_cap > f_list_get_cap(list));
 
         const auto new_backing_arr = mem::f_arena_push_array<tp_list_type>(arena, new_cap);
-        f_array_copy(list->backing_arr, new_backing_arr);
+        array_copy(list->backing_arr, new_backing_arr);
 
         *list = {new_backing_arr, list->len};
     }
@@ -104,7 +104,7 @@ namespace zf::ds {
         }();
 
         const auto new_backing_arr = mem::f_arena_push_array<typename tp_list_type::t_elem>(arena, new_cap);
-        f_array_copy(list->backing_arr, new_backing_arr);
+        array_copy(list->backing_arr, new_backing_arr);
 
         *list = {new_backing_arr, list->len};
     }
@@ -131,9 +131,9 @@ namespace zf::ds {
     t_array_mut<typename tp_list_type::t_elem> f_list_append_many(tp_list_type *const list, const t_array_rdonly<typename tp_list_type::t_elem> vals) {
         ZF_ASSERT(list->len + vals.len <= f_list_get_cap(list));
 
-        f_array_copy(vals, f_array_slice_from(list->backing_arr, list->len));
+        array_copy(vals, array_slice_from(list->backing_arr, list->len));
         list->len += vals.len;
-        return f_array_slice(list->backing_arr, list->len - vals.len, list->len);
+        return array_slice(list->backing_arr, list->len - vals.len, list->len);
     }
 
     template <c_list_mut tp_list_type>
@@ -177,7 +177,7 @@ namespace zf::ds {
         ZF_ASSERT(list->len > 0);
         ZF_ASSERT(index >= 0 && index < list->len);
 
-        f_array_copy(f_array_slice(list->backing_arr, index + 1, list->len), f_array_slice(list->backing_arr, index, list->len - 1));
+        array_copy(array_slice(list->backing_arr, index + 1, list->len), array_slice(list->backing_arr, index, list->len - 1));
         list->len--;
     }
 
@@ -312,7 +312,7 @@ namespace zf::ds {
             kv_store->pair_cnt++;
 
             while (block) {
-                const auto possible_rel_index_to_use = mem::f_get_index_of_first_unset_bit(block->usage);
+                const auto possible_rel_index_to_use = mem::f_index_of_first_unset_bit(block->usage);
 
                 if (possible_rel_index_to_use == -1) {
                     block_previous = block;
@@ -498,7 +498,7 @@ namespace zf::ds {
         t_i32 loaded_cnt = 0;
 
         for (t_i32 i = 0; i < hash_map->immediate_indexes.len; i++) {
-            loaded_cnt += f_kv_store_load_chain(&hash_map->kv_store, hash_map->immediate_indexes[i], f_array_slice_from(keys, loaded_cnt), f_array_slice_from(vals, loaded_cnt));
+            loaded_cnt += f_kv_store_load_chain(&hash_map->kv_store, hash_map->immediate_indexes[i], array_slice_from(keys, loaded_cnt), array_slice_from(vals, loaded_cnt));
         }
     }
 
