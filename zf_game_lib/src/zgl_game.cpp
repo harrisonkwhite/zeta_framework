@@ -33,7 +33,7 @@ namespace zf {
         t_rendering_basis *const rendering_basis = f_rendering_startup_module(&perm_arena, &perm_rendering_resource_group);
         ZF_DEFER({ f_rendering_shutdown_module(rendering_basis); });
 
-        t_rng *const rng = f_rand_create_rng(0, &perm_arena); // @todo: Proper seed!
+        rand::t_rng *const rng = rand::f_create_rng(0, &perm_arena); // @todo: Proper seed!
 
         init_func({
             .perm_arena = &perm_arena,

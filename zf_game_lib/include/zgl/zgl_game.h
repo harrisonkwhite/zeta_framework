@@ -12,7 +12,7 @@ namespace zf {
 
         t_rendering_resource_group *perm_rendering_resource_group;
 
-        t_rng *rng;
+        rand::t_rng *rng;
     };
 
     struct t_game_tick_context {
@@ -23,7 +23,7 @@ namespace zf {
 
         t_rendering_resource_group *perm_rendering_resource_group;
 
-        t_rng *rng;
+        rand::t_rng *rng;
     };
 
     struct t_rendering_context;
@@ -34,7 +34,7 @@ namespace zf {
 
         t_rendering_context *rendering_context;
 
-        t_rng *rng;
+        rand::t_rng *rng;
     };
 
     using t_game_init_func = void (*)(const t_game_init_context &context);
