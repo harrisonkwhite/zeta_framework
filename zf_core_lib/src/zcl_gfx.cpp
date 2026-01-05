@@ -3,23 +3,23 @@
 #include <stb_image.h>
 #include <stb_truetype.h>
 
-namespace zf::gfx {
+namespace zf {
     static const t_hash_func<t_code_pt> g_code_pt_hash_func =
         [](const t_code_pt &code_pt) {
             return static_cast<t_i32>(code_pt);
         };
 
-    static const t_hash_func<FontCodePointPair> g_code_pt_pair_hash_func =
-        [](const FontCodePointPair &pair) {
+    static const t_hash_func<t_font_code_pt_pair> g_code_pt_pair_hash_func =
+        [](const t_font_code_pt_pair &pair) {
             return 0; // @todo: Proper hash function!
         };
 
-    static const t_comparator_bin<FontCodePointPair> g_code_pt_pair_comparator =
-        [](const FontCodePointPair &pa, const FontCodePointPair &pb) {
+    static const t_comparator_bin<t_font_code_pt_pair> g_code_pt_pair_comparator =
+        [](const t_font_code_pt_pair &pa, const t_font_code_pt_pair &pb) {
             return pa.a == pb.a && pa.b == pb.b;
         };
 
-    t_b8 load_texture_from_raw(const t_str_rdonly file_path, t_arena *const texture_data_arena, t_arena *const temp_arena, TextureDataMut *const o_texture_data) {
+    t_b8 f_gfx_load_texture_from_raw(const t_str_rdonly file_path, t_arena *const texture_data_arena, t_arena *const temp_arena, t_texture_data_mut *const o_texture_data) {
         const t_str_rdonly file_path_terminated = f_strs_clone_but_add_terminator(file_path, temp_arena);
 
         s_v2_i size_in_pxs;
@@ -40,7 +40,7 @@ namespace zf::gfx {
         return true;
     }
 
-    t_b8 pack_texture(const t_str_rdonly file_path, const TextureDataMut texture_data, t_arena *const temp_arena) {
+    t_b8 f_gfx_pack_texture(const t_str_rdonly file_path, const t_texture_data_mut texture_data, t_arena *const temp_arena) {
         if (!CreateFileAndParentDirectories(file_path, temp_arena)) {
             return false;
         }
@@ -64,7 +64,7 @@ namespace zf::gfx {
         return true;
     }
 
-    t_b8 unpack_texture(const t_str_rdonly file_path, t_arena *const texture_data_arena, t_arena *const temp_arena, TextureDataMut *const o_texture_data) {
+    t_b8 f_gfx_unpack_texture(const t_str_rdonly file_path, t_arena *const texture_data_arena, t_arena *const temp_arena, t_texture_data_mut *const o_texture_data) {
         s_stream fs;
 
         if (!FileOpen(file_path, ek_file_access_mode_read, temp_arena, &fs)) {
@@ -90,7 +90,7 @@ namespace zf::gfx {
         return true;
     }
 
-    t_b8 load_font_from_raw(const t_str_rdonly file_path, const t_i32 height, t_code_pt_bit_vec *const code_pts, t_arena *const arrangement_arena, t_arena *const atlas_rgbas_arena, t_arena *const temp_arena, FontArrangement *const o_arrangement, t_array_mut<FontAtlasRGBA> *const o_atlas_rgbas) {
+    t_b8 f_gfx_load_font_from_raw(const t_str_rdonly file_path, const t_i32 height, t_code_pt_bit_vec *const code_pts, t_arena *const arrangement_arena, t_arena *const atlas_rgbas_arena, t_arena *const temp_arena, t_font_arrangement *const o_arrangement, t_array_mut<t_font_atlas_rgba> *const o_atlas_rgbas) {
         ZF_ASSERT(height > 0);
 
         // Get the plain font file data.
@@ -142,7 +142,7 @@ namespace zf::gfx {
         //
         // Glyph Info
         //
-        o_arrangement->code_pts_to_glyph_infos = HashMapCreate<t_code_pt, FontGlyphInfo>(g_code_pt_hash_func, arrangement_arena, code_pt_cnt);
+        o_arrangement->code_pts_to_glyph_infos = HashMapCreate<t_code_pt, t_font_glyph_info>(g_code_pt_hash_func, arrangement_arena, code_pt_cnt);
 
         t_i32 atlas_index = 0;
         s_v2_i atlas_pen = {};
@@ -152,7 +152,7 @@ namespace zf::gfx {
 
             const t_i32 glyph_index = stbtt_FindGlyphIndex(&stb_font_info, static_cast<t_i32>(code_pt));
 
-            FontGlyphInfo glyph_info = {};
+            t_font_glyph_info glyph_info = {};
 
             t_i32 bm_box_left, bm_box_top, bm_box_right, bm_box_bottom;
             stbtt_GetGlyphBitmapBox(&stb_font_info, glyph_index, scale, scale, &bm_box_left, &bm_box_top, &bm_box_right, &bm_box_bottom);
@@ -160,19 +160,19 @@ namespace zf::gfx {
             glyph_info.offs = {bm_box_left, bm_box_top + static_cast<t_i32>(static_cast<t_f32>(vm_ascent) * scale)};
             glyph_info.size = {bm_box_right - bm_box_left, bm_box_bottom - bm_box_top};
 
-            ZF_ASSERT(glyph_info.size.x <= g_font_atlas_size.x && glyph_info.size.y <= g_font_atlas_size.y);
+            ZF_ASSERT(glyph_info.size.x <= g_gfx_font_atlas_size.x && glyph_info.size.y <= g_gfx_font_atlas_size.y);
 
             t_i32 hm_advance;
             stbtt_GetGlyphHMetrics(&stb_font_info, glyph_index, &hm_advance, nullptr);
 
             glyph_info.adv = static_cast<t_i32>(static_cast<t_f32>(hm_advance) * scale);
 
-            if (atlas_pen.x + glyph_info.size.x > g_font_atlas_size.x) {
+            if (atlas_pen.x + glyph_info.size.x > g_gfx_font_atlas_size.x) {
                 atlas_pen.x = 0;
                 atlas_pen.y += o_arrangement->line_height;
             }
 
-            if (atlas_pen.y + glyph_info.size.y > g_font_atlas_size.y) {
+            if (atlas_pen.y + glyph_info.size.y > g_gfx_font_atlas_size.y) {
                 atlas_pen = {};
                 atlas_index++;
             }
@@ -192,7 +192,7 @@ namespace zf::gfx {
 
         // If there were any kernings to store, set up the hash map and go through again and store them.
         o_arrangement->has_kernings = true;
-        o_arrangement->code_pt_pairs_to_kernings = HashMapCreate<FontCodePointPair, t_i32>(g_code_pt_pair_hash_func, arrangement_arena, g_hash_map_cap_default, g_code_pt_pair_comparator);
+        o_arrangement->code_pt_pairs_to_kernings = HashMapCreate<t_font_code_pt_pair, t_i32>(g_code_pt_pair_hash_func, arrangement_arena, g_hash_map_cap_default, g_code_pt_pair_comparator);
 
         ZF_WALK_SET_BITS (*code_pts, i) {
             ZF_WALK_SET_BITS (*code_pts, j) {
@@ -213,7 +213,7 @@ namespace zf::gfx {
         //
         // Texture Atlases
         //
-        *o_atlas_rgbas = f_mem_push_array<FontAtlasRGBA>(atlas_rgbas_arena, atlas_cnt);
+        *o_atlas_rgbas = f_mem_push_array<t_font_atlas_rgba>(atlas_rgbas_arena, atlas_cnt);
 
         // Initialise all pixels to transparent white.
         // @todo: Maybe don't use RBGA for this?
@@ -232,7 +232,7 @@ namespace zf::gfx {
         ZF_WALK_SET_BITS (*code_pts, i) {
             const auto code_pt = static_cast<t_code_pt>(i);
 
-            FontGlyphInfo *glyph_info;
+            t_font_glyph_info *glyph_info;
 
             if (!HashMapPut(&o_arrangement->code_pts_to_glyph_infos, code_pt, &glyph_info)) {
                 ZF_ASSERT(false);
@@ -256,7 +256,7 @@ namespace zf::gfx {
 
             for (t_i32 y = Top(atlas_rect); y < Bottom(atlas_rect); y++) {
                 for (t_i32 x = Left(atlas_rect); x < Right(atlas_rect); x++) {
-                    const t_i32 px_index = (y * 4 * g_font_atlas_size.x) + (x * 4);
+                    const t_i32 px_index = (y * 4 * g_gfx_font_atlas_size.x) + (x * 4);
                     const t_i32 stb_bitmap_index = ((y - atlas_rect.y) * atlas_rect.width) + (x - atlas_rect.x);
                     (*atlas_rgba)[px_index + 3] = stb_bitmap[stb_bitmap_index];
                 }
@@ -266,7 +266,7 @@ namespace zf::gfx {
         return true;
     }
 
-    t_b8 pack_font(const t_str_rdonly file_path, const FontArrangement &arrangement, const t_array_rdonly<FontAtlasRGBA> atlas_rgbas, t_arena *const temp_arena) {
+    t_b8 f_gfx_pack_font(const t_str_rdonly file_path, const t_font_arrangement &arrangement, const t_array_rdonly<t_font_atlas_rgba> atlas_rgbas, t_arena *const temp_arena) {
         if (!CreateFileAndParentDirectories(file_path, temp_arena)) {
             return false;
         }
@@ -298,7 +298,7 @@ namespace zf::gfx {
         return true;
     }
 
-    t_b8 unpack_font(const t_str_rdonly file_path, t_arena *const arrangement_arena, t_arena *const atlas_rgbas_arena, t_arena *const temp_arena, FontArrangement *const o_arrangement, t_array_mut<FontAtlasRGBA> *const o_atlas_rgbas) {
+    t_b8 f_gfx_unpack_font(const t_str_rdonly file_path, t_arena *const arrangement_arena, t_arena *const atlas_rgbas_arena, t_arena *const temp_arena, t_font_arrangement *const o_arrangement, t_array_mut<t_font_atlas_rgba> *const o_atlas_rgbas) {
         s_stream fs;
 
         if (!FileOpen(file_path, ek_file_access_mode_read, temp_arena, &fs)) {
@@ -326,7 +326,7 @@ namespace zf::gfx {
         return true;
     }
 
-    t_b8 pack_shader(const t_str_rdonly file_path, const t_array_rdonly<t_u8> compiled_shader_bin, t_arena *const temp_arena) {
+    t_b8 f_gfx_pack_shader(const t_str_rdonly file_path, const t_array_rdonly<t_u8> compiled_shader_bin, t_arena *const temp_arena) {
         if (!CreateFileAndParentDirectories(file_path, temp_arena)) {
             return false;
         }
@@ -346,7 +346,7 @@ namespace zf::gfx {
         return true;
     }
 
-    t_b8 unpack_shader(const t_str_rdonly file_path, t_arena *const shader_bin_arena, t_arena *const temp_arena, t_array_mut<t_u8> *const o_shader_bin) {
+    t_b8 f_gfx_unpack_shader(const t_str_rdonly file_path, t_arena *const shader_bin_arena, t_arena *const temp_arena, t_array_mut<t_u8> *const o_shader_bin) {
         s_stream fs;
 
         if (!FileOpen(file_path, ek_file_access_mode_read, temp_arena, &fs)) {

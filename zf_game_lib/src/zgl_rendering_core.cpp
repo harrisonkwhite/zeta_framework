@@ -228,7 +228,7 @@ namespace zf {
         return resource;
     }
 
-    t_rendering_resource *f_rendering_create_texture(const gfx::TextureDataRdonly texture_data, t_rendering_resource_group *const group) {
+    t_rendering_resource *f_rendering_create_texture(const t_texture_data_rdonly texture_data, t_rendering_resource_group *const group) {
         ZF_ASSERT(g_state.state == ec_state_active_but_not_rendering);
 
         const uint64_t sampler_flags = BGFX_SAMPLER_MIN_POINT | BGFX_SAMPLER_MAG_POINT | BGFX_SAMPLER_U_CLAMP | BGFX_SAMPLER_V_CLAMP;
@@ -270,7 +270,7 @@ namespace zf {
         return resource;
     }
 
-    t_rendering_context *f_rendering_begin_frame(const t_rendering_basis *const basis, const gfx::ColorRGB8 clear_col, t_arena *const context_arena) {
+    t_rendering_context *f_rendering_begin_frame(const t_rendering_basis *const basis, const t_color_rgb8 clear_col, t_arena *const context_arena) {
         ZF_ASSERT(g_state.state == ec_state_active_but_not_rendering);
 
         const auto fb_size_cache = f_platform_get_window_framebuffer_size_cache();
@@ -292,7 +292,7 @@ namespace zf {
 
         bgfx::setViewTransform(0, &view_mat, &proj_mat);
 
-        bgfx::setViewClear(0, BGFX_CLEAR_COLOR, convert_color_to_hex(clear_col));
+        bgfx::setViewClear(0, BGFX_CLEAR_COLOR, f_gfx_convert_color_to_hex(clear_col));
 
         bgfx::setViewRect(0, 0, 0, static_cast<uint16_t>(fb_size_cache.x), static_cast<uint16_t>(fb_size_cache.y));
 

@@ -4,11 +4,11 @@
 #include <zcl/zcl_math.h>
 #include <zcl/zcl_ds_hash_maps.h>
 
-namespace zf::gfx {
+namespace zf {
     // ============================================================
     // @section: Types and Globals
 
-    struct ColorRGBA32F {
+    struct t_color_rgba32f {
         t_f32 r;
         t_f32 g;
         t_f32 b;
@@ -17,77 +17,77 @@ namespace zf::gfx {
         constexpr operator s_v4() const { return {r, g, b, a}; }
     };
 
-    struct ColorRGB24F {
+    struct t_color_rgb24f {
         t_f32 r;
         t_f32 g;
         t_f32 b;
 
-        constexpr operator ColorRGBA32F() const { return {r, g, b, 1.0f}; }
+        constexpr operator t_color_rgba32f() const { return {r, g, b, 1.0f}; }
         constexpr operator s_v3() const { return {r, g, b}; }
     };
 
-    struct ColorRGBA8 {
+    struct t_color_rgba8 {
         t_u8 r;
         t_u8 g;
         t_u8 b;
         t_u8 a;
     };
 
-    struct ColorRGB8 {
+    struct t_color_rgb8 {
         t_u8 r;
         t_u8 g;
         t_u8 b;
 
-        constexpr operator ColorRGBA8() const { return {r, g, b, 255}; }
+        constexpr operator t_color_rgba8() const { return {r, g, b, 255}; }
     };
 
-    constexpr ColorRGB24F g_color_black = {0.0f, 0.0f, 0.0f};
-    constexpr ColorRGB24F g_color_dark_gray = {0.25f, 0.25f, 0.25f};
-    constexpr ColorRGB24F g_color_gray = {0.5f, 0.5f, 0.5f};
-    constexpr ColorRGB24F g_color_light_gray = {0.75f, 0.75f, 0.75f};
-    constexpr ColorRGB24F g_color_white = {1.0f, 1.0f, 1.0f};
-    constexpr ColorRGB24F g_color_red = {1.0f, 0.0f, 0.0f};
-    constexpr ColorRGB24F g_color_orange = {1.0f, 0.5f, 0.0f};
-    constexpr ColorRGB24F g_color_yellow = {1.0f, 1.0f, 0.0f};
-    constexpr ColorRGB24F g_color_lime = {0.75f, 1.0f, 0.0f};
-    constexpr ColorRGB24F g_color_green = {0.0f, 1.0f, 0.0f};
-    constexpr ColorRGB24F g_color_teal = {0.0f, 0.5f, 0.5f};
-    constexpr ColorRGB24F g_color_cyan = {0.0f, 1.0f, 1.0f};
-    constexpr ColorRGB24F g_color_blue = {0.0f, 0.0f, 1.0f};
-    constexpr ColorRGB24F g_color_purple = {0.5f, 0.0f, 0.5f};
-    constexpr ColorRGB24F g_color_magenta = {1.0f, 0.0f, 1.0f};
-    constexpr ColorRGB24F g_color_pink = {1.0f, 0.75f, 0.8f};
-    constexpr ColorRGB24F g_color_brown = {0.6f, 0.3f, 0.0f};
+    constexpr t_color_rgb24f g_gfx_color_black = {0.0f, 0.0f, 0.0f};
+    constexpr t_color_rgb24f g_gfx_color_dark_gray = {0.25f, 0.25f, 0.25f};
+    constexpr t_color_rgb24f g_gfx_color_gray = {0.5f, 0.5f, 0.5f};
+    constexpr t_color_rgb24f g_gfx_color_light_gray = {0.75f, 0.75f, 0.75f};
+    constexpr t_color_rgb24f g_gfx_color_white = {1.0f, 1.0f, 1.0f};
+    constexpr t_color_rgb24f g_gfx_color_red = {1.0f, 0.0f, 0.0f};
+    constexpr t_color_rgb24f g_gfx_color_orange = {1.0f, 0.5f, 0.0f};
+    constexpr t_color_rgb24f g_gfx_color_yellow = {1.0f, 1.0f, 0.0f};
+    constexpr t_color_rgb24f g_gfx_color_lime = {0.75f, 1.0f, 0.0f};
+    constexpr t_color_rgb24f g_gfx_color_green = {0.0f, 1.0f, 0.0f};
+    constexpr t_color_rgb24f g_gfx_color_teal = {0.0f, 0.5f, 0.5f};
+    constexpr t_color_rgb24f g_gfx_color_cyan = {0.0f, 1.0f, 1.0f};
+    constexpr t_color_rgb24f g_gfx_color_blue = {0.0f, 0.0f, 1.0f};
+    constexpr t_color_rgb24f g_gfx_color_purple = {0.5f, 0.0f, 0.5f};
+    constexpr t_color_rgb24f g_gfx_color_magenta = {1.0f, 0.0f, 1.0f};
+    constexpr t_color_rgb24f g_gfx_color_pink = {1.0f, 0.75f, 0.8f};
+    constexpr t_color_rgb24f g_gfx_color_brown = {0.6f, 0.3f, 0.0f};
 
-    struct TextureDataRdonly {
+    struct t_texture_data_rdonly {
         s_v2_i size_in_pxs;
         t_array_rdonly<t_u8> rgba_px_data;
     };
 
-    struct TextureDataMut {
+    struct t_texture_data_mut {
         s_v2_i size_in_pxs;
         t_array_mut<t_u8> rgba_px_data;
 
-        constexpr operator TextureDataRdonly() const {
+        constexpr operator t_texture_data_rdonly() const {
             return {.size_in_pxs = size_in_pxs, .rgba_px_data = rgba_px_data};
         }
     };
 
-    constexpr s_v2 g_origin_topleft = {0.0f, 0.0f};
-    constexpr s_v2 g_origin_topcenter = {0.5f, 0.0f};
-    constexpr s_v2 g_origin_topright = {1.0f, 0.0f};
-    constexpr s_v2 g_origin_centerleft = {0.0f, 0.5f};
-    constexpr s_v2 g_origin_center = {0.5f, 0.5f};
-    constexpr s_v2 g_origin_centerright = {1.0f, 0.5f};
-    constexpr s_v2 g_origin_bottomleft = {0.0f, 1.0f};
-    constexpr s_v2 g_origin_bottomcenter = {0.5f, 1.0f};
-    constexpr s_v2 g_origin_bottomright = {1.0f, 1.0f};
+    constexpr s_v2 g_gfx_origin_topleft = {0.0f, 0.0f};
+    constexpr s_v2 g_gfx_origin_topcenter = {0.5f, 0.0f};
+    constexpr s_v2 g_gfx_origin_topright = {1.0f, 0.0f};
+    constexpr s_v2 g_gfx_origin_centerleft = {0.0f, 0.5f};
+    constexpr s_v2 g_gfx_origin_center = {0.5f, 0.5f};
+    constexpr s_v2 g_gfx_origin_centerright = {1.0f, 0.5f};
+    constexpr s_v2 g_gfx_origin_bottomleft = {0.0f, 1.0f};
+    constexpr s_v2 g_gfx_origin_bottomcenter = {0.5f, 1.0f};
+    constexpr s_v2 g_gfx_origin_bottomright = {1.0f, 1.0f};
 
-    constexpr s_v2_i g_font_atlas_size = {1024, 1024};
+    constexpr s_v2_i g_gfx_font_atlas_size = {1024, 1024};
 
-    using FontAtlasRGBA = t_static_array<t_u8, 4 * g_font_atlas_size.x * g_font_atlas_size.y>;
+    using t_font_atlas_rgba = t_static_array<t_u8, 4 * g_gfx_font_atlas_size.x * g_gfx_font_atlas_size.y>;
 
-    struct FontGlyphInfo {
+    struct t_font_glyph_info {
         s_v2_i offs;
         s_v2_i size;
         t_i32 adv;
@@ -96,29 +96,29 @@ namespace zf::gfx {
         s_rect_i atlas_rect;
     };
 
-    struct FontCodePointPair {
+    struct t_font_code_pt_pair {
         t_code_pt a;
         t_code_pt b;
     };
 
-    struct FontArrangement {
+    struct t_font_arrangement {
         t_i32 line_height;
 
-        s_hash_map<t_code_pt, FontGlyphInfo> code_pts_to_glyph_infos;
+        s_hash_map<t_code_pt, t_font_glyph_info> code_pts_to_glyph_infos;
 
         t_b8 has_kernings;
-        s_hash_map<FontCodePointPair, t_i32> code_pt_pairs_to_kernings;
+        s_hash_map<t_font_code_pt_pair, t_i32> code_pt_pairs_to_kernings;
     };
 
-    constexpr s_v2 g_alignment_topleft = {0.0f, 0.0f};
-    constexpr s_v2 g_alignment_topcenter = {0.5f, 0.0f};
-    constexpr s_v2 g_alignment_topright = {1.0f, 0.0f};
-    constexpr s_v2 g_alignment_centerleft = {0.0f, 0.5f};
-    constexpr s_v2 g_alignment_center = {0.5f, 0.5f};
-    constexpr s_v2 g_alignment_centerright = {1.0f, 0.5f};
-    constexpr s_v2 g_alignment_bottomleft = {0.0f, 1.0f};
-    constexpr s_v2 g_alignment_bottomcenter = {0.5f, 1.0f};
-    constexpr s_v2 g_alignment_bottomright = {1.0f, 1.0f};
+    constexpr s_v2 g_gfx_alignment_topleft = {0.0f, 0.0f};
+    constexpr s_v2 g_gfx_alignment_topcenter = {0.5f, 0.0f};
+    constexpr s_v2 g_gfx_alignment_topright = {1.0f, 0.0f};
+    constexpr s_v2 g_gfx_alignment_centerleft = {0.0f, 0.5f};
+    constexpr s_v2 g_gfx_alignment_center = {0.5f, 0.5f};
+    constexpr s_v2 g_gfx_alignment_centerright = {1.0f, 0.5f};
+    constexpr s_v2 g_gfx_alignment_bottomleft = {0.0f, 1.0f};
+    constexpr s_v2 g_gfx_alignment_bottomcenter = {0.5f, 1.0f};
+    constexpr s_v2 g_gfx_alignment_bottomright = {1.0f, 1.0f};
 
     // ============================================================
 
@@ -126,7 +126,7 @@ namespace zf::gfx {
     // ============================================================
     // @section: Functions
 
-    inline ColorRGBA32F calc_color_mix(const ColorRGBA32F a, const ColorRGBA32F b, const t_f32 amount) {
+    inline t_color_rgba32f f_gfx_calc_color_mix(const t_color_rgba32f a, const t_color_rgba32f b, const t_f32 amount) {
         ZF_ASSERT(amount >= 0.0f && amount <= 1.0f);
 
         return {
@@ -137,16 +137,16 @@ namespace zf::gfx {
         };
     }
 
-    inline t_f32 get_color_luminance(const ColorRGBA32F col) {
+    inline t_f32 f_gfx_get_color_luminance(const t_color_rgba32f col) {
         return (0.2126f * col.r) + (0.7152f * col.g) + (0.0722f * col.b);
     }
 
-    inline ColorRGBA32F get_color_as_grayscale(const ColorRGBA32F col) {
-        const t_f32 lum = get_color_luminance(col);
+    inline t_color_rgba32f f_gfx_get_color_as_grayscale(const t_color_rgba32f col) {
+        const t_f32 lum = f_gfx_get_color_luminance(col);
         return {lum, lum, lum, col.a};
     }
 
-    inline t_u32 convert_color_to_hex(const ColorRGBA8 col) {
+    inline t_u32 f_gfx_convert_color_to_hex(const t_color_rgba8 col) {
         t_u32 result = 0;
         result |= static_cast<t_u32>(col.r) << 24;
         result |= static_cast<t_u32>(col.g) << 16;
@@ -156,7 +156,7 @@ namespace zf::gfx {
         return result;
     }
 
-    inline ColorRGBA8 convert_hex_to_color(const t_u32 hex) {
+    inline t_color_rgba8 f_gfx_convert_hex_to_color(const t_u32 hex) {
         const auto r = static_cast<t_u8>((hex & 0xFF000000) >> 24);
         const auto g = static_cast<t_u8>((hex & 0x00FF0000) >> 16);
         const auto b = static_cast<t_u8>((hex & 0x0000FF00) >> 8);
@@ -165,7 +165,7 @@ namespace zf::gfx {
         return {r, g, b, a};
     }
 
-    inline s_rect_f calc_uv_rect(const s_rect_i src_rect, const s_v2_i tex_size) {
+    inline s_rect_f f_gfx_calc_uv_rect(const s_rect_i src_rect, const s_v2_i tex_size) {
         ZF_ASSERT(tex_size.x > 0 && tex_size.y > 0);
         ZF_ASSERT(src_rect.x >= 0 && src_rect.y >= 0 && src_rect.width > 0 && src_rect.height > 0 && Right(src_rect) <= tex_size.x && Bottom(src_rect) <= tex_size.y);
 
@@ -177,24 +177,24 @@ namespace zf::gfx {
         };
     }
 
-    inline t_b8 get_is_origin_valid(const s_v2 origin) {
+    inline t_b8 f_gfx_is_origin_valid(const s_v2 origin) {
         return origin.x >= 0.0f && origin.x <= 1.0f && origin.y >= 0.0f && origin.y <= 1.0f;
     }
 
-    inline t_b8 get_is_alignment_valid(const s_v2 alignment) {
+    inline t_b8 f_gfx_is_alignment_valid(const s_v2 alignment) {
         return alignment.x >= 0.0f && alignment.x <= 1.0f && alignment.y >= 0.0f && alignment.y <= 1.0f;
     }
 
-    [[nodiscard]] t_b8 load_texture_from_raw(const t_str_rdonly file_path, t_arena *const texture_data_arena, t_arena *const temp_arena, TextureDataMut *const o_texture_data);
-    [[nodiscard]] t_b8 pack_texture(const t_str_rdonly file_path, const TextureDataMut texture_data, t_arena *const temp_arena);
-    [[nodiscard]] t_b8 unpack_texture(const t_str_rdonly file_path, t_arena *const texture_data_arena, t_arena *const temp_arena, TextureDataMut *const o_texture_data);
+    [[nodiscard]] t_b8 f_gfx_load_texture_from_raw(const t_str_rdonly file_path, t_arena *const texture_data_arena, t_arena *const temp_arena, t_texture_data_mut *const o_texture_data);
+    [[nodiscard]] t_b8 f_gfx_pack_texture(const t_str_rdonly file_path, const t_texture_data_mut texture_data, t_arena *const temp_arena);
+    [[nodiscard]] t_b8 f_gfx_unpack_texture(const t_str_rdonly file_path, t_arena *const texture_data_arena, t_arena *const temp_arena, t_texture_data_mut *const o_texture_data);
 
-    [[nodiscard]] t_b8 load_font_from_raw(const t_str_rdonly file_path, const t_i32 height, t_code_pt_bit_vec *const code_pts, t_arena *const arrangement_arena, t_arena *const atlas_rgbas_arena, t_arena *const temp_arena, FontArrangement *const o_arrangement, t_array_mut<FontAtlasRGBA> *const o_atlas_rgbas);
-    [[nodiscard]] t_b8 pack_font(const t_str_rdonly file_path, const FontArrangement &arrangement, const t_array_rdonly<FontAtlasRGBA> atlas_rgbas, t_arena *const temp_arena);
-    [[nodiscard]] t_b8 unpack_font(const t_str_rdonly file_path, t_arena *const arrangement_arena, t_arena *const atlas_rgbas_arena, t_arena *const temp_arena, FontArrangement *const o_arrangement, t_array_mut<FontAtlasRGBA> *const o_atlas_rgbas);
+    [[nodiscard]] t_b8 f_gfx_load_font_from_raw(const t_str_rdonly file_path, const t_i32 height, t_code_pt_bit_vec *const code_pts, t_arena *const arrangement_arena, t_arena *const atlas_rgbas_arena, t_arena *const temp_arena, t_font_arrangement *const o_arrangement, t_array_mut<t_font_atlas_rgba> *const o_atlas_rgbas);
+    [[nodiscard]] t_b8 f_gfx_pack_font(const t_str_rdonly file_path, const t_font_arrangement &arrangement, const t_array_rdonly<t_font_atlas_rgba> atlas_rgbas, t_arena *const temp_arena);
+    [[nodiscard]] t_b8 f_gfx_unpack_font(const t_str_rdonly file_path, t_arena *const arrangement_arena, t_arena *const atlas_rgbas_arena, t_arena *const temp_arena, t_font_arrangement *const o_arrangement, t_array_mut<t_font_atlas_rgba> *const o_atlas_rgbas);
 
-    [[nodiscard]] t_b8 pack_shader(const t_str_rdonly file_path, const t_array_rdonly<t_u8> compiled_shader_bin, t_arena *const temp_arena);
-    [[nodiscard]] t_b8 unpack_shader(const t_str_rdonly file_path, t_arena *const shader_bin_arena, t_arena *const temp_arena, t_array_mut<t_u8> *const o_shader_bin);
+    [[nodiscard]] t_b8 f_gfx_pack_shader(const t_str_rdonly file_path, const t_array_rdonly<t_u8> compiled_shader_bin, t_arena *const temp_arena);
+    [[nodiscard]] t_b8 f_gfx_unpack_shader(const t_str_rdonly file_path, t_arena *const shader_bin_arena, t_arena *const temp_arena, t_array_mut<t_u8> *const o_shader_bin);
 
     // ============================================================
 }

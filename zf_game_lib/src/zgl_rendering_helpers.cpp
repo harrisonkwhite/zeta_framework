@@ -14,21 +14,21 @@ namespace zf {
         }
 
         const s_rect_f rect = CreateRectF(pos, ToV2(Size(src_rect_to_use)));
-        const s_rect_f uv_rect = gfx::calc_uv_rect(src_rect_to_use, texture_size);
+        const s_rect_f uv_rect = f_gfx_calc_uv_rect(src_rect_to_use, texture_size);
 
         const t_static_array<t_batch_triangle, 2> triangles = {{
             {
                 .verts = {{
-                    {.pos = TopLeft(rect), .blend = gfx::g_color_white, .uv = TopLeft(uv_rect)},
-                    {.pos = TopRight(rect), .blend = gfx::g_color_white, .uv = TopRight(uv_rect)},
-                    {.pos = BottomRight(rect), .blend = gfx::g_color_white, .uv = BottomRight(uv_rect)},
+                    {.pos = TopLeft(rect), .blend = g_color_white, .uv = TopLeft(uv_rect)},
+                    {.pos = TopRight(rect), .blend = g_color_white, .uv = TopRight(uv_rect)},
+                    {.pos = BottomRight(rect), .blend = g_color_white, .uv = BottomRight(uv_rect)},
                 }},
             },
             {
                 .verts = {{
-                    {.pos = BottomRight(rect), .blend = gfx::g_color_white, .uv = BottomRight(uv_rect)},
-                    {.pos = BottomLeft(rect), .blend = gfx::g_color_white, .uv = BottomLeft(uv_rect)},
-                    {.pos = TopLeft(rect), .blend = gfx::g_color_white, .uv = TopLeft(uv_rect)},
+                    {.pos = BottomRight(rect), .blend = g_color_white, .uv = BottomRight(uv_rect)},
+                    {.pos = BottomLeft(rect), .blend = g_color_white, .uv = BottomLeft(uv_rect)},
+                    {.pos = TopLeft(rect), .blend = g_color_white, .uv = TopLeft(uv_rect)},
                 }},
             },
         }};
@@ -37,17 +37,17 @@ namespace zf {
     }
 
     t_font f_rendering_create_font_from_raw(const t_str_rdonly file_path, const t_i32 height, t_code_pt_bit_vec *const code_pts, t_arena *const temp_arena, t_rendering_resource_group *const resource_group) {
-        gfx::FontArrangement arrangement;
-        t_array_mut<gfx::FontAtlasRGBA> atlas_rgbas;
+        t_font_arrangement arrangement;
+        t_array_mut<t_font_atlas_rgba> atlas_rgbas;
 
-        if (!gfx::load_font_from_raw(file_path, height, code_pts, resource_group->arena, temp_arena, temp_arena, &arrangement, &atlas_rgbas)) {
+        if (!f_gfx_load_font_from_raw(file_path, height, code_pts, resource_group->arena, temp_arena, temp_arena, &arrangement, &atlas_rgbas)) {
             ZF_FATAL();
         }
 
         const t_array_mut<t_rendering_resource *> atlases = f_mem_push_array<t_rendering_resource *>(resource_group->arena, atlas_rgbas.len);
 
         for (t_i32 i = 0; i < atlas_rgbas.len; i++) {
-            atlases[i] = f_rendering_create_texture({gfx::g_font_atlas_size, atlas_rgbas[i]}, resource_group);
+            atlases[i] = f_rendering_create_texture({g_gfx_font_atlas_size, atlas_rgbas[i]}, resource_group);
         }
 
         return {
@@ -57,17 +57,17 @@ namespace zf {
     }
 
     t_font f_rendering_create_font_from_packed(const t_str_rdonly file_path, t_arena *const temp_arena, t_rendering_resource_group *const resource_group) {
-        gfx::FontArrangement arrangement;
-        t_array_mut<gfx::FontAtlasRGBA> atlas_rgbas;
+        t_font_arrangement arrangement;
+        t_array_mut<t_font_atlas_rgba> atlas_rgbas;
 
-        if (!gfx::unpack_font(file_path, resource_group->arena, temp_arena, temp_arena, &arrangement, &atlas_rgbas)) {
+        if (!f_gfx_unpack_font(file_path, resource_group->arena, temp_arena, temp_arena, &arrangement, &atlas_rgbas)) {
             ZF_FATAL();
         }
 
         const auto atlases = f_mem_push_array<t_rendering_resource *>(resource_group->arena, atlas_rgbas.len);
 
         for (t_i32 i = 0; i < atlas_rgbas.len; i++) {
-            atlases[i] = f_rendering_create_texture({gfx::g_font_atlas_size, atlas_rgbas[i]}, resource_group);
+            atlases[i] = f_rendering_create_texture({g_gfx_font_atlas_size, atlas_rgbas[i]}, resource_group);
         }
 
         return {
@@ -76,9 +76,9 @@ namespace zf {
         };
     }
 
-    t_array_mut<s_v2> f_rendering_get_str_chr_render_positions(const t_str_rdonly str, const gfx::FontArrangement &font_arrangement, const s_v2 pos, const s_v2 alignment, t_arena *const arena) {
+    t_array_mut<s_v2> f_rendering_get_str_chr_render_positions(const t_str_rdonly str, const t_font_arrangement &font_arrangement, const s_v2 pos, const s_v2 alignment, t_arena *const arena) {
         ZF_ASSERT(f_strs_is_valid_utf8(str));
-        ZF_ASSERT(gfx::get_is_alignment_valid(alignment));
+        ZF_ASSERT(f_gfx_is_alignment_valid(alignment));
 
         // Calculate some useful string metadata.
         struct s_str_meta {
@@ -144,7 +144,7 @@ namespace zf {
                 continue;
             }
 
-            gfx::FontGlyphInfo *glyph_info;
+            t_font_glyph_info *glyph_info;
 
             if (!HashMapPut(&font_arrangement.code_pts_to_glyph_infos, step.code_pt, &glyph_info)) {
                 ZF_ASSERT(false && "Unsupported code point!");
@@ -172,9 +172,9 @@ namespace zf {
         return positions;
     }
 
-    void f_rendering_submit_str(t_rendering_context *const context, const t_str_rdonly str, const t_font &font, const s_v2 pos, t_arena *const temp_arena, const s_v2 alignment, const gfx::ColorRGBA32F blend) {
+    void f_rendering_submit_str(t_rendering_context *const context, const t_str_rdonly str, const t_font &font, const s_v2 pos, t_arena *const temp_arena, const s_v2 alignment, const t_color_rgba32f blend) {
         ZF_ASSERT(f_strs_is_valid_utf8(str));
-        ZF_ASSERT(gfx::get_is_alignment_valid(alignment));
+        ZF_ASSERT(f_gfx_is_alignment_valid(alignment));
 
         if (f_strs_is_empty(str)) {
             return;
@@ -190,7 +190,7 @@ namespace zf {
                 continue;
             }
 
-            gfx::FontGlyphInfo *glyph_info;
+            t_font_glyph_info *glyph_info;
 
             if (!HashMapPut(&font.arrangement.code_pts_to_glyph_infos, step.code_pt, &glyph_info)) {
                 ZF_ASSERT(false && "Unsupported code point!");
