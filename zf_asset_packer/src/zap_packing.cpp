@@ -100,15 +100,15 @@ namespace zf {
         {
             t_array_mut<t_u8> instrs_json_file_contents; // Not needed beyond this scope.
 
-            if (!f_io_load_file_contents(instrs_json_file_path, &arena, &arena, &instrs_json_file_contents, true)) {
-                f_io_log_error(ZF_STR_LITERAL("Failed to load packing instructions JSON file \"%\"!"), instrs_json_file_path);
+            if (!io::f_load_file_contents(instrs_json_file_path, &arena, &arena, &instrs_json_file_contents, true)) {
+                io::f_log_error(ZF_STR_LITERAL("Failed to load packing instructions JSON file \"%\"!"), instrs_json_file_path);
                 return false;
             }
 
             cj = cJSON_Parse(f_strs_get_as_cstr(t_str_rdonly{instrs_json_file_contents}));
 
             if (!cj) {
-                f_io_log_error(ZF_STR_LITERAL("Failed to parse packing instructions JSON file!"));
+                io::f_log_error(ZF_STR_LITERAL("Failed to parse packing instructions JSON file!"));
                 return false;
             }
         }
@@ -116,7 +116,7 @@ namespace zf {
         ZF_DEFER({ cJSON_Delete(cj); });
 
         if (!cJSON_IsObject(cj)) {
-            f_io_log_error(ZF_STR_LITERAL("Packing instructions JSON root is not an object!"));
+            io::f_log_error(ZF_STR_LITERAL("Packing instructions JSON root is not an object!"));
             return false;
         }
 
@@ -131,7 +131,7 @@ namespace zf {
             cJSON *const cj_assets = cJSON_GetObjectItemCaseSensitive(cj, asset_type_arr_name_cstr);
 
             if (!cJSON_IsArray(cj_assets)) {
-                f_io_log_error(ZF_STR_LITERAL("Packing instructions JSON \"%\" array does not exist or it is of the wrong type!"), f_strs_convert_cstr(asset_type_arr_name_cstr));
+                io::f_log_error(ZF_STR_LITERAL("Packing instructions JSON \"%\" array does not exist or it is of the wrong type!"), f_strs_convert_cstr(asset_type_arr_name_cstr));
                 return false;
             }
 
@@ -176,7 +176,7 @@ namespace zf {
                             continue;
                         }
 
-                        f_io_log_error(ZF_STR_LITERAL("A packing instructions JSON \"%\" entry is missing required field \"%\"!"), f_strs_convert_cstr(asset_type_arr_name_cstr), f_strs_convert_cstr(field_name_cstr));
+                        io::f_log_error(ZF_STR_LITERAL("A packing instructions JSON \"%\" entry is missing required field \"%\"!"), f_strs_convert_cstr(asset_type_arr_name_cstr), f_strs_convert_cstr(field_name_cstr));
 
                         return false;
                     }
@@ -197,7 +197,7 @@ namespace zf {
                     }();
 
                     if (!is_valid) {
-                        f_io_log_error(ZF_STR_LITERAL("A packing instructions JSON \"%\" entry has field \"%\" as the wrong type! Expected a %."), f_strs_convert_cstr(asset_type_arr_name_cstr), f_strs_convert_cstr(field_name_cstr), f_strs_convert_cstr(g_asset_field_type_name_cstrs[fields[fi].type]));
+                        io::f_log_error(ZF_STR_LITERAL("A packing instructions JSON \"%\" entry has field \"%\" as the wrong type! Expected a %."), f_strs_convert_cstr(asset_type_arr_name_cstr), f_strs_convert_cstr(field_name_cstr), f_strs_convert_cstr(g_asset_field_type_name_cstrs[fields[fi].type]));
                         return false;
                     }
                 }
@@ -210,12 +210,12 @@ namespace zf {
                     t_texture_data_mut texture_data;
 
                     if (!f_gfx_load_texture_from_raw(file_path, &arena, &arena, &texture_data)) {
-                        f_io_log_error(ZF_STR_LITERAL("Failed to load texture from file \"%\"!"), file_path);
+                        io::f_log_error(ZF_STR_LITERAL("Failed to load texture from file \"%\"!"), file_path);
                         return false;
                     }
 
                     if (!f_gfx_pack_texture(out_file_path, texture_data, &arena)) {
-                        f_io_log_error(ZF_STR_LITERAL("Failed to pack texture to file \"%\"!"), out_file_path);
+                        io::f_log_error(ZF_STR_LITERAL("Failed to pack texture to file \"%\"!"), out_file_path);
                         return false;
                     }
 
@@ -236,8 +236,8 @@ namespace zf {
 
                         t_array_mut<t_u8> extra_chrs_file_contents;
 
-                        if (!f_io_load_file_contents(extra_chrs_file_path, &arena, &arena, &extra_chrs_file_contents)) {
-                            f_io_log_error(ZF_STR_LITERAL("Failed to load extra characters file \"%\"!"), extra_chrs_file_path);
+                        if (!io::f_load_file_contents(extra_chrs_file_path, &arena, &arena, &extra_chrs_file_contents)) {
+                            io::f_log_error(ZF_STR_LITERAL("Failed to load extra characters file \"%\"!"), extra_chrs_file_path);
                             return false;
                         }
 
@@ -250,12 +250,12 @@ namespace zf {
                     t_array_mut<t_font_atlas_rgba> atlas_rgbas;
 
                     if (!f_gfx_load_font_from_raw(file_path, height, code_pt_bv, &arena, &arena, &arena, &arrangement, &atlas_rgbas)) {
-                        f_io_log_error(ZF_STR_LITERAL("Failed to load font from file \"%\"!"), file_path);
+                        io::f_log_error(ZF_STR_LITERAL("Failed to load font from file \"%\"!"), file_path);
                         return false;
                     }
 
                     if (!f_gfx_pack_font(out_file_path, arrangement, atlas_rgbas, &arena)) {
-                        f_io_log_error(ZF_STR_LITERAL("Failed to pack font to file \"%\"!"), out_file_path);
+                        io::f_log_error(ZF_STR_LITERAL("Failed to pack font to file \"%\"!"), out_file_path);
                         return false;
                     }
 
@@ -275,19 +275,19 @@ namespace zf {
                     } else if (f_strs_are_equal(type, ZF_STR_LITERAL("fragment"))) {
                         is_frag = true;
                     } else {
-                        f_io_log_error(ZF_STR_LITERAL("A packing instructions JSON shader entry has an invalid shader type \"%\"! Expected \"vertex\" or \"fragment\"."), type);
+                        io::f_log_error(ZF_STR_LITERAL("A packing instructions JSON shader entry has an invalid shader type \"%\"! Expected \"vertex\" or \"fragment\"."), type);
                         return false;
                     }
 
                     t_array_mut<t_u8> compiled_bin;
 
                     if (!compile_shader(file_path, varying_def_file_path, is_frag, &arena, &arena, &compiled_bin)) {
-                        f_io_log_error(ZF_STR_LITERAL("Failed to compile shader from file \"%\"!"), file_path);
+                        io::f_log_error(ZF_STR_LITERAL("Failed to compile shader from file \"%\"!"), file_path);
                         return false;
                     }
 
                     if (!f_gfx_pack_shader(out_file_path, compiled_bin, &arena)) {
-                        f_io_log_error(ZF_STR_LITERAL("Failed to pack shader to file \"%\"!"), out_file_path);
+                        io::f_log_error(ZF_STR_LITERAL("Failed to pack shader to file \"%\"!"), out_file_path);
                         return false;
                     }
 
@@ -301,12 +301,12 @@ namespace zf {
                     audio::t_sound_data_mut snd_data;
 
                     if (!f_sound_load_from_raw(file_path, &arena, &arena, &snd_data)) {
-                        f_io_log_error(ZF_STR_LITERAL("Failed to load sound from file \"%\"!"), file_path);
+                        io::f_log_error(ZF_STR_LITERAL("Failed to load sound from file \"%\"!"), file_path);
                         return false;
                     }
 
                     if (!f_sound_pack(out_file_path, snd_data, &arena)) {
-                        f_io_log_error(ZF_STR_LITERAL("Failed to pack sound to file \"%\"!"), out_file_path);
+                        io::f_log_error(ZF_STR_LITERAL("Failed to pack sound to file \"%\"!"), out_file_path);
                         return false;
                     }
 
@@ -316,7 +316,7 @@ namespace zf {
             }
         }
 
-        f_io_log(ZF_STR_LITERAL("Asset packing completed!"));
+        io::f_log(ZF_STR_LITERAL("Asset packing completed!"));
 
         return true;
     }

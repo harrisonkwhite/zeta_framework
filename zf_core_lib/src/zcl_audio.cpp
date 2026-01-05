@@ -37,61 +37,61 @@ namespace zf::audio {
     }
 
     t_b8 f_sound_pack(const t_str_rdonly file_path, const t_sound_data_rdonly snd_data, mem::t_arena *const temp_arena) {
-        if (!f_io_create_file_and_parent_directories(file_path, temp_arena)) {
+        if (!io::f_create_file_and_parent_directories(file_path, temp_arena)) {
             return false;
         }
 
-        t_io_stream fs;
+        io::t_stream fs;
 
-        if (!f_io_open_file(file_path, ec_io_file_access_mode_write, temp_arena, &fs)) {
+        if (!io::f_open_file(file_path, io::ec_file_access_mode_write, temp_arena, &fs)) {
             return false;
         }
 
-        ZF_DEFER({ f_io_close_file(&fs); });
+        ZF_DEFER({ io::f_close_file(&fs); });
 
         return f_sound_serialize(snd_data, &fs);
     }
 
     t_b8 f_sound_unpack(const t_str_rdonly file_path, mem::t_arena *const snd_data_arena, mem::t_arena *const temp_arena, t_sound_data_mut *const o_snd_data) {
-        t_io_stream fs;
+        io::t_stream fs;
 
-        if (!f_io_open_file(file_path, ec_io_file_access_mode_read, temp_arena, &fs)) {
+        if (!io::f_open_file(file_path, io::ec_file_access_mode_read, temp_arena, &fs)) {
             return false;
         }
 
-        ZF_DEFER({ f_io_close_file(&fs); });
+        ZF_DEFER({ io::f_close_file(&fs); });
 
-        if (!f_io_read_item(&fs, &o_snd_data->meta)) {
+        if (!io::f_read_item(&fs, &o_snd_data->meta)) {
             return false;
         }
 
         o_snd_data->pcm = mem::f_arena_push_array<t_f32>(snd_data_arena, f_sound_get_sample_cnt(o_snd_data->meta));
 
-        if (!f_io_read_items_into_array(&fs, o_snd_data->pcm, o_snd_data->pcm.len)) {
+        if (!io::f_read_items_into_array(&fs, o_snd_data->pcm, o_snd_data->pcm.len)) {
             return false;
         }
 
         return true;
     }
 
-    t_b8 f_sound_serialize(const t_sound_data_rdonly snd_data, t_io_stream *const stream) {
-        if (!f_io_write_item(stream, snd_data.meta)) {
+    t_b8 f_sound_serialize(const t_sound_data_rdonly snd_data, io::t_stream *const stream) {
+        if (!io::f_write_item(stream, snd_data.meta)) {
             return false;
         }
 
-        if (!f_io_serialize_array(stream, snd_data.pcm)) {
+        if (!io::f_serialize_array(stream, snd_data.pcm)) {
             return false;
         }
 
         return true;
     }
 
-    t_b8 f_sound_deserialize(t_io_stream *const stream, mem::t_arena *const snd_data_arena, t_sound_data_mut *const o_snd_data) {
-        if (!f_io_read_item(stream, &o_snd_data->meta)) {
+    t_b8 f_sound_deserialize(io::t_stream *const stream, mem::t_arena *const snd_data_arena, t_sound_data_mut *const o_snd_data) {
+        if (!io::f_read_item(stream, &o_snd_data->meta)) {
             return false;
         }
 
-        if (!f_io_deserialize_array(stream, snd_data_arena, &o_snd_data->pcm)) {
+        if (!io::f_deserialize_array(stream, snd_data_arena, &o_snd_data->pcm)) {
             return false;
         }
 

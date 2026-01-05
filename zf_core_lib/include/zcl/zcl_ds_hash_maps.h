@@ -313,12 +313,12 @@ namespace zf {
     }
 
     template <c_simple tp_key_type, c_simple tp_val_type>
-    [[nodiscard]] t_b8 SerializeHashMap(t_io_stream *const stream, const s_hash_map<tp_key_type, tp_val_type> *const hm, mem::t_arena *const temp_arena) {
-        if (!f_io_write_item(stream, HashMapCap(hm))) {
+    [[nodiscard]] t_b8 SerializeHashMap(io::t_stream *const stream, const s_hash_map<tp_key_type, tp_val_type> *const hm, mem::t_arena *const temp_arena) {
+        if (!io::f_write_item(stream, HashMapCap(hm))) {
             return false;
         }
 
-        if (!f_io_write_item(stream, HashMapEntryCount(hm))) {
+        if (!io::f_write_item(stream, HashMapEntryCount(hm))) {
             return false;
         }
 
@@ -326,11 +326,11 @@ namespace zf {
         t_array_mut<tp_val_type> vals;
         HashMapLoadEntries(hm, temp_arena, &keys, &vals);
 
-        if (!f_io_write_items_of_array(stream, keys)) {
+        if (!io::f_write_items_of_array(stream, keys)) {
             return false;
         }
 
-        if (!f_io_write_items_of_array(stream, vals)) {
+        if (!io::f_write_items_of_array(stream, vals)) {
             return false;
         }
 
@@ -338,16 +338,16 @@ namespace zf {
     }
 
     template <c_simple tp_key_type, c_simple tp_val_type>
-    [[nodiscard]] t_b8 DeserializeHashMap(t_io_stream *const stream, mem::t_arena *const hm_arena, const t_hash_func<tp_key_type> hm_hash_func, mem::t_arena *const temp_arena, s_hash_map<tp_key_type, tp_val_type> *const o_hm, const t_comparator_bin<tp_key_type> hm_key_comparator = g_comparator_bin_default<tp_key_type>) {
+    [[nodiscard]] t_b8 DeserializeHashMap(io::t_stream *const stream, mem::t_arena *const hm_arena, const t_hash_func<tp_key_type> hm_hash_func, mem::t_arena *const temp_arena, s_hash_map<tp_key_type, tp_val_type> *const o_hm, const t_comparator_bin<tp_key_type> hm_key_comparator = g_comparator_bin_default<tp_key_type>) {
         t_i32 cap;
 
-        if (!f_io_read_item(stream, &cap)) {
+        if (!io::f_read_item(stream, &cap)) {
             return false;
         }
 
         t_i32 entry_cnt;
 
-        if (!f_io_read_item(stream, &entry_cnt)) {
+        if (!io::f_read_item(stream, &entry_cnt)) {
             return false;
         }
 
@@ -355,13 +355,13 @@ namespace zf {
 
         const auto keys = mem::f_arena_push_array<tp_key_type>(temp_arena, entry_cnt);
 
-        if (!f_io_read_items_into_array(stream, keys, entry_cnt)) {
+        if (!io::f_read_items_into_array(stream, keys, entry_cnt)) {
             return false;
         }
 
         const auto vals = mem::f_arena_push_array<tp_val_type>(temp_arena, entry_cnt);
 
-        if (!f_io_read_items_into_array(stream, vals, entry_cnt)) {
+        if (!io::f_read_items_into_array(stream, vals, entry_cnt)) {
             return false;
         }
 

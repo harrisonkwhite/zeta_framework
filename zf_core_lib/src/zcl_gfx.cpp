@@ -41,23 +41,23 @@ namespace zf {
     }
 
     t_b8 f_gfx_pack_texture(const t_str_rdonly file_path, const t_texture_data_mut texture_data, mem::t_arena *const temp_arena) {
-        if (!f_io_create_file_and_parent_directories(file_path, temp_arena)) {
+        if (!io::f_create_file_and_parent_directories(file_path, temp_arena)) {
             return false;
         }
 
-        t_io_stream fs;
+        io::t_stream fs;
 
-        if (!f_io_open_file(file_path, ec_io_file_access_mode_write, temp_arena, &fs)) {
+        if (!io::f_open_file(file_path, io::ec_file_access_mode_write, temp_arena, &fs)) {
             return false;
         }
 
-        ZF_DEFER({ f_io_close_file(&fs); });
+        ZF_DEFER({ io::f_close_file(&fs); });
 
-        if (!f_io_write_item(&fs, texture_data.size_in_pxs)) {
+        if (!io::f_write_item(&fs, texture_data.size_in_pxs)) {
             return false;
         }
 
-        if (!f_io_write_items_of_array(&fs, texture_data.rgba_px_data)) {
+        if (!io::f_write_items_of_array(&fs, texture_data.rgba_px_data)) {
             return false;
         }
 
@@ -65,23 +65,23 @@ namespace zf {
     }
 
     t_b8 f_gfx_unpack_texture(const t_str_rdonly file_path, mem::t_arena *const texture_data_arena, mem::t_arena *const temp_arena, t_texture_data_mut *const o_texture_data) {
-        t_io_stream fs;
+        io::t_stream fs;
 
-        if (!f_io_open_file(file_path, ec_io_file_access_mode_read, temp_arena, &fs)) {
+        if (!io::f_open_file(file_path, io::ec_file_access_mode_read, temp_arena, &fs)) {
             return false;
         }
 
-        ZF_DEFER({ f_io_close_file(&fs); });
+        ZF_DEFER({ io::f_close_file(&fs); });
 
         t_v2_i size_in_pxs;
 
-        if (!f_io_read_item(&fs, &size_in_pxs)) {
+        if (!io::f_read_item(&fs, &size_in_pxs)) {
             return false;
         }
 
         const auto rgba_px_data = mem::f_arena_push_array<t_u8>(texture_data_arena, 4 * size_in_pxs.x * size_in_pxs.y);
 
-        if (!f_io_read_items_into_array(&fs, rgba_px_data, rgba_px_data.len)) {
+        if (!io::f_read_items_into_array(&fs, rgba_px_data, rgba_px_data.len)) {
             return false;
         }
 
@@ -96,7 +96,7 @@ namespace zf {
         // Get the plain font file data.
         t_array_mut<t_u8> font_file_data;
 
-        if (!f_io_load_file_contents(file_path, temp_arena, temp_arena, &font_file_data)) {
+        if (!io::f_load_file_contents(file_path, temp_arena, temp_arena, &font_file_data)) {
             return false;
         }
 
@@ -267,19 +267,19 @@ namespace zf {
     }
 
     t_b8 f_gfx_pack_font(const t_str_rdonly file_path, const t_font_arrangement &arrangement, const t_array_rdonly<t_font_atlas_rgba> atlas_rgbas, mem::t_arena *const temp_arena) {
-        if (!f_io_create_file_and_parent_directories(file_path, temp_arena)) {
+        if (!io::f_create_file_and_parent_directories(file_path, temp_arena)) {
             return false;
         }
 
-        t_io_stream fs;
+        io::t_stream fs;
 
-        if (!f_io_open_file(file_path, ec_io_file_access_mode_write, temp_arena, &fs)) {
+        if (!io::f_open_file(file_path, io::ec_file_access_mode_write, temp_arena, &fs)) {
             return false;
         }
 
-        ZF_DEFER({ f_io_close_file(&fs); });
+        ZF_DEFER({ io::f_close_file(&fs); });
 
-        if (!f_io_write_item(&fs, arrangement.line_height)) {
+        if (!io::f_write_item(&fs, arrangement.line_height)) {
             return false;
         }
 
@@ -291,7 +291,7 @@ namespace zf {
             return false;
         }
 
-        if (!f_io_serialize_array(&fs, atlas_rgbas)) {
+        if (!io::f_serialize_array(&fs, atlas_rgbas)) {
             return false;
         }
 
@@ -299,15 +299,15 @@ namespace zf {
     }
 
     t_b8 f_gfx_unpack_font(const t_str_rdonly file_path, mem::t_arena *const arrangement_arena, mem::t_arena *const atlas_rgbas_arena, mem::t_arena *const temp_arena, t_font_arrangement *const o_arrangement, t_array_mut<t_font_atlas_rgba> *const o_atlas_rgbas) {
-        t_io_stream fs;
+        io::t_stream fs;
 
-        if (!f_io_open_file(file_path, ec_io_file_access_mode_read, temp_arena, &fs)) {
+        if (!io::f_open_file(file_path, io::ec_file_access_mode_read, temp_arena, &fs)) {
             return false;
         }
 
-        ZF_DEFER({ f_io_close_file(&fs); });
+        ZF_DEFER({ io::f_close_file(&fs); });
 
-        if (!f_io_read_item(&fs, &o_arrangement->line_height)) {
+        if (!io::f_read_item(&fs, &o_arrangement->line_height)) {
             return false;
         }
 
@@ -319,7 +319,7 @@ namespace zf {
             return false;
         }
 
-        if (!f_io_deserialize_array(&fs, atlas_rgbas_arena, o_atlas_rgbas)) {
+        if (!io::f_deserialize_array(&fs, atlas_rgbas_arena, o_atlas_rgbas)) {
             return false;
         }
 
@@ -327,19 +327,19 @@ namespace zf {
     }
 
     t_b8 f_gfx_pack_shader(const t_str_rdonly file_path, const t_array_rdonly<t_u8> compiled_shader_bin, mem::t_arena *const temp_arena) {
-        if (!f_io_create_file_and_parent_directories(file_path, temp_arena)) {
+        if (!io::f_create_file_and_parent_directories(file_path, temp_arena)) {
             return false;
         }
 
-        t_io_stream fs;
+        io::t_stream fs;
 
-        if (!f_io_open_file(file_path, ec_io_file_access_mode_write, temp_arena, &fs)) {
+        if (!io::f_open_file(file_path, io::ec_file_access_mode_write, temp_arena, &fs)) {
             return false;
         }
 
-        ZF_DEFER({ f_io_close_file(&fs); });
+        ZF_DEFER({ io::f_close_file(&fs); });
 
-        if (!f_io_serialize_array(&fs, compiled_shader_bin)) {
+        if (!io::f_serialize_array(&fs, compiled_shader_bin)) {
             return false;
         }
 
@@ -347,15 +347,15 @@ namespace zf {
     }
 
     t_b8 f_gfx_unpack_shader(const t_str_rdonly file_path, mem::t_arena *const shader_bin_arena, mem::t_arena *const temp_arena, t_array_mut<t_u8> *const o_shader_bin) {
-        t_io_stream fs;
+        io::t_stream fs;
 
-        if (!f_io_open_file(file_path, ec_io_file_access_mode_read, temp_arena, &fs)) {
+        if (!io::f_open_file(file_path, io::ec_file_access_mode_read, temp_arena, &fs)) {
             return false;
         }
 
-        ZF_DEFER({ f_io_close_file(&fs); });
+        ZF_DEFER({ io::f_close_file(&fs); });
 
-        if (!f_io_deserialize_array(&fs, shader_bin_arena, o_shader_bin)) {
+        if (!io::f_deserialize_array(&fs, shader_bin_arena, o_shader_bin)) {
             return false;
         }
 
