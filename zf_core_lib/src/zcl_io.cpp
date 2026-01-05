@@ -10,26 +10,26 @@
 #endif
 
 namespace zf {
-    t_b8 FileOpen(const t_str_rdonly path, const e_file_access_mode mode, t_arena *const temp_arena, s_stream *const o_stream) {
+    t_b8 f_io_open_file(const t_str_rdonly path, const t_file_access_mode mode, t_arena *const temp_arena, t_stream *const o_stream) {
         const t_str_rdonly path_terminated = f_strs_clone_but_add_terminator(path, temp_arena);
 
         FILE *file;
-        e_stream_mode stream_mode;
+        t_stream_mode stream_mode;
 
         switch (mode) {
-        case ek_file_access_mode_read:
+        case ec_file_access_mode_read:
             file = fopen(f_strs_get_as_cstr(path_terminated), "rb");
-            stream_mode = ek_stream_mode_read;
+            stream_mode = ec_stream_mode_read;
             break;
 
-        case ek_file_access_mode_write:
+        case ec_file_access_mode_write:
             file = fopen(f_strs_get_as_cstr(path_terminated), "wb");
-            stream_mode = ek_stream_mode_write;
+            stream_mode = ec_stream_mode_write;
             break;
 
-        case ek_file_access_mode_append:
+        case ec_file_access_mode_append:
             file = fopen(f_strs_get_as_cstr(path_terminated), "ab");
-            stream_mode = ek_stream_mode_write;
+            stream_mode = ec_stream_mode_write;
             break;
 
         default:
@@ -40,17 +40,17 @@ namespace zf {
             return false;
         }
 
-        *o_stream = CreateFileStream(file, stream_mode);
+        *o_stream = f_io_create_file_stream(file, stream_mode);
 
         return true;
     }
 
-    void FileClose(s_stream *const stream) {
+    void f_io_close_file(t_stream *const stream) {
         fclose(stream->type_data.file.file);
         *stream = {};
     }
 
-    t_i32 FileCalcSize(s_stream *const stream) {
+    t_i32 f_io_calc_file_size(t_stream *const stream) {
         FILE *const file = stream->type_data.file.file;
         const auto pos_old = ftell(file);
         fseek(file, 0, SEEK_END);
@@ -59,16 +59,16 @@ namespace zf {
         return static_cast<t_i32>(file_size);
     }
 
-    t_b8 LoadFileContents(const t_str_rdonly path, t_arena *const contents_arena, t_arena *const temp_arena, t_array_mut<t_u8> *const o_contents, const t_b8 add_terminator) {
-        s_stream stream;
+    t_b8 f_io_load_file_contents(const t_str_rdonly path, t_arena *const contents_arena, t_arena *const temp_arena, t_array_mut<t_u8> *const o_contents, const t_b8 add_terminator) {
+        t_stream stream;
 
-        if (!FileOpen(path, ek_file_access_mode_read, temp_arena, &stream)) {
+        if (!f_io_open_file(path, ec_file_access_mode_read, temp_arena, &stream)) {
             return false;
         }
 
-        ZF_DEFER({ FileClose(&stream); });
+        ZF_DEFER({ f_io_close_file(&stream); });
 
-        const t_i32 file_size = FileCalcSize(&stream);
+        const t_i32 file_size = f_io_calc_file_size(&stream);
 
         if (add_terminator) {
             *o_contents = f_mem_push_array<t_u8>(contents_arena, file_size + 1);
@@ -77,16 +77,16 @@ namespace zf {
             *o_contents = f_mem_push_array<t_u8>(contents_arena, file_size);
         }
 
-        if (!ReadItemsIntoArray(&stream, *o_contents, file_size)) {
+        if (!f_io_read_items_into_array(&stream, *o_contents, file_size)) {
             return false;
         }
 
         return true;
     }
 
-    t_b8 CreateDirectoryAssumingParentsExist(const t_str_rdonly path, t_arena *const temp_arena, e_directory_creation_result *const o_creation_res) {
+    t_b8 f_io_create_directory(const t_str_rdonly path, t_arena *const temp_arena, t_directory_creation_result *const o_creation_res) {
         if (o_creation_res) {
-            *o_creation_res = ek_directory_creation_result_success;
+            *o_creation_res = ec_directory_creation_result_success;
         }
 
         const t_str_rdonly path_terminated = f_strs_clone_but_add_terminator(path, temp_arena);
@@ -104,20 +104,20 @@ namespace zf {
         if (o_creation_res) {
             switch (errno) {
             case EEXIST:
-                *o_creation_res = ek_directory_creation_result_already_exists;
+                *o_creation_res = ec_directory_creation_result_already_exists;
                 break;
 
             case EACCES:
             case EPERM:
-                *o_creation_res = ek_directory_creation_result_permission_denied;
+                *o_creation_res = ec_directory_creation_result_permission_denied;
                 break;
 
             case ENOENT:
-                *o_creation_res = ek_directory_creation_result_path_not_found;
+                *o_creation_res = ec_directory_creation_result_path_not_found;
                 break;
 
             default:
-                *o_creation_res = ek_directory_creation_result_unknown_err;
+                *o_creation_res = ec_directory_creation_result_unknown_err;
                 break;
             }
         }
@@ -125,14 +125,14 @@ namespace zf {
         return false;
     }
 
-    t_b8 CreateDirectoryAndParents(const t_str_rdonly path, t_arena *const temp_arena, e_directory_creation_result *const o_dir_creation_res) {
+    t_b8 f_io_create_directory_and_parents(const t_str_rdonly path, t_arena *const temp_arena, t_directory_creation_result *const o_dir_creation_res) {
         if (o_dir_creation_res) {
-            *o_dir_creation_res = ek_directory_creation_result_success;
+            *o_dir_creation_res = ec_directory_creation_result_success;
         }
 
         const auto create_dir_if_nonexistent = [o_dir_creation_res, &temp_arena](const t_str_rdonly path) {
-            if (DeterminePathType(path, temp_arena) == ek_path_type_not_found) {
-                if (!CreateDirectoryAssumingParentsExist(path, temp_arena, o_dir_creation_res)) {
+            if (f_io_get_path_type(path, temp_arena) == ec_path_type_not_found) {
+                if (!f_io_create_directory(path, temp_arena, o_dir_creation_res)) {
                     return false;
                 }
             }
@@ -165,15 +165,15 @@ namespace zf {
         return true;
     }
 
-    t_b8 CreateFileAndParentDirectories(const t_str_rdonly path, t_arena *const temp_arena, e_directory_creation_result *const o_dir_creation_res) {
+    t_b8 f_io_create_file_and_parent_directories(const t_str_rdonly path, t_arena *const temp_arena, t_directory_creation_result *const o_dir_creation_res) {
         if (o_dir_creation_res) {
-            *o_dir_creation_res = ek_directory_creation_result_success;
+            *o_dir_creation_res = ec_directory_creation_result_success;
         }
 
         // Get the substring containing all directories and create them.
         ZF_WALK_STR_REVERSE (path, step) {
             if (step.code_pt == '/' || step.code_pt == '\\') {
-                if (!CreateDirectoryAndParents({f_mem_slice_array(path.bytes, 0, step.byte_index)}, temp_arena, o_dir_creation_res)) {
+                if (!f_io_create_directory_and_parents({f_mem_slice_array(path.bytes, 0, step.byte_index)}, temp_arena, o_dir_creation_res)) {
                     return false;
                 }
 
@@ -182,34 +182,34 @@ namespace zf {
         }
 
         // Now that directories are created, create the file.
-        s_stream fs;
+        t_stream fs;
 
-        if (!FileOpen(path, ek_file_access_mode_write, temp_arena, &fs)) {
+        if (!f_io_open_file(path, ec_file_access_mode_write, temp_arena, &fs)) {
             return false;
         }
 
-        FileClose(&fs);
+        f_io_close_file(&fs);
 
         return true;
     }
 
-    e_path_type DeterminePathType(const t_str_rdonly path, t_arena *const temp_arena) {
+    t_path_type f_io_get_path_type(const t_str_rdonly path, t_arena *const temp_arena) {
         const t_str_rdonly path_terminated = f_strs_clone_but_add_terminator(path, temp_arena);
 
         struct stat info;
 
         if (stat(f_strs_get_as_cstr(path_terminated), &info) != 0) {
-            return ek_path_type_not_found;
+            return ec_path_type_not_found;
         }
 
         if (info.st_mode & S_IFDIR) {
-            return ek_path_type_directory;
+            return ec_path_type_directory;
         }
 
-        return ek_path_type_file;
+        return ec_path_type_file;
     }
 
-    t_str_mut LoadExecutableDirectory(t_arena *const arena) {
+    t_str_mut f_io_get_executable_directory(t_arena *const arena) {
 #if defined(ZF_PLATFORM_WINDOWS)
         t_static_array<char, MAX_PATH> buf;
 

@@ -37,61 +37,61 @@ namespace zf {
     }
 
     t_b8 f_audio_pack_sound(const t_str_rdonly file_path, const t_sound_data_mut snd_data, t_arena *const temp_arena) {
-        if (!CreateFileAndParentDirectories(file_path, temp_arena)) {
+        if (!f_io_create_file_and_parent_directories(file_path, temp_arena)) {
             return false;
         }
 
-        s_stream fs;
+        t_stream fs;
 
-        if (!FileOpen(file_path, ek_file_access_mode_write, temp_arena, &fs)) {
+        if (!f_io_open_file(file_path, ec_file_access_mode_write, temp_arena, &fs)) {
             return false;
         }
 
-        ZF_DEFER({ FileClose(&fs); });
+        ZF_DEFER({ f_io_close_file(&fs); });
 
         return f_audio_serialize_sound(&fs, snd_data);
     }
 
     t_b8 f_audio_unpack_sound(const t_str_rdonly file_path, t_arena *const snd_data_arena, t_arena *const temp_arena, t_sound_data_mut *const o_snd_data) {
-        s_stream fs;
+        t_stream fs;
 
-        if (!FileOpen(file_path, ek_file_access_mode_read, temp_arena, &fs)) {
+        if (!f_io_open_file(file_path, ec_file_access_mode_read, temp_arena, &fs)) {
             return false;
         }
 
-        ZF_DEFER({ FileClose(&fs); });
+        ZF_DEFER({ f_io_close_file(&fs); });
 
-        if (!ReadItem(&fs, &o_snd_data->meta)) {
+        if (!f_io_read_item(&fs, &o_snd_data->meta)) {
             return false;
         }
 
         o_snd_data->pcm = f_mem_push_array<t_f32>(snd_data_arena, f_audio_get_sample_cnt(o_snd_data->meta));
 
-        if (!ReadItemsIntoArray(&fs, o_snd_data->pcm, o_snd_data->pcm.len)) {
+        if (!f_io_read_items_into_array(&fs, o_snd_data->pcm, o_snd_data->pcm.len)) {
             return false;
         }
 
         return true;
     }
 
-    t_b8 f_audio_serialize_sound(s_stream *const stream, const t_sound_data_mut snd_data) {
-        if (!WriteItem(stream, snd_data.meta)) {
+    t_b8 f_audio_serialize_sound(t_stream *const stream, const t_sound_data_mut snd_data) {
+        if (!f_io_write_item(stream, snd_data.meta)) {
             return false;
         }
 
-        if (!SerializeArray(stream, snd_data.pcm)) {
+        if (!f_io_serialize_array(stream, snd_data.pcm)) {
             return false;
         }
 
         return true;
     }
 
-    t_b8 f_audio_deserialize_sound(s_stream *const stream, t_arena *const snd_data_arena, t_sound_data_mut *const o_snd_data) {
-        if (!ReadItem(stream, &o_snd_data->meta)) {
+    t_b8 f_audio_deserialize_sound(t_stream *const stream, t_arena *const snd_data_arena, t_sound_data_mut *const o_snd_data) {
+        if (!f_io_read_item(stream, &o_snd_data->meta)) {
             return false;
         }
 
-        if (!DeserializeArray(stream, snd_data_arena, &o_snd_data->pcm)) {
+        if (!f_io_deserialize_array(stream, snd_data_arena, &o_snd_data->pcm)) {
             return false;
         }
 
