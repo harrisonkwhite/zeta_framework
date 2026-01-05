@@ -21,14 +21,14 @@ namespace zf::platform {
 
         GLFWwindow *glfw_window;
 
-        t_v2_i framebuffer_size_cache;
+        math::t_v2_i framebuffer_size_cache;
 
         t_b8 fullscreen_active;
-        t_v2_i prefullscreen_pos;
-        t_v2_i prefullscreen_size;
+        math::t_v2_i prefullscreen_pos;
+        math::t_v2_i prefullscreen_size;
     } g_state;
 
-    void f_startup(const t_v2_i init_window_size) {
+    void f_startup(const math::t_v2_i init_window_size) {
         ZF_REQUIRE(!g_state.active);
         ZF_REQUIRE(init_window_size.x > 0 && init_window_size.y > 0);
 
@@ -267,7 +267,7 @@ namespace zf::platform {
         glfwSetWindowTitle(g_state.glfw_window, f_strs_get_as_cstr(title_terminated));
     }
 
-    void f_set_window_size(const t_v2_i size) {
+    void f_set_window_size(const math::t_v2_i size) {
         ZF_ASSERT(g_state.active);
         ZF_ASSERT(size.x > 0 && size.y > 0);
 
@@ -289,7 +289,7 @@ namespace zf::platform {
         glfwSetWindowAttrib(g_state.glfw_window, GLFW_RESIZABLE, resizable);
     }
 
-    t_v2_i f_get_window_framebuffer_size_cache() {
+    math::t_v2_i f_get_window_framebuffer_size_cache() {
         ZF_ASSERT(g_state.active);
         return g_state.framebuffer_size_cache;
     }
@@ -300,13 +300,13 @@ namespace zf::platform {
     }
 
     static GLFWmonitor *f_find_glfw_monitor_of_window(GLFWwindow *const window) {
-        t_v2_i window_pos;
+        math::t_v2_i window_pos;
         glfwGetWindowPos(window, &window_pos.x, &window_pos.y);
 
-        t_v2_i window_size;
+        math::t_v2_i window_size;
         glfwGetWindowSize(window, &window_size.x, &window_size.y);
 
-        const auto window_rect = f_math_create_rect_i(window_pos, window_size);
+        const auto window_rect = math::f_create_rect_i(window_pos, window_size);
 
         // Get the monitor containing the most amount of the window.
         t_f32 max_occupancy_perc = 0.0f;
@@ -316,22 +316,22 @@ namespace zf::platform {
         const auto monitors = glfwGetMonitors(&monitor_cnt);
 
         for (t_i32 i = 0; i < monitor_cnt; i++) {
-            t_v2_i monitor_pos;
+            math::t_v2_i monitor_pos;
             glfwGetMonitorPos(monitors[i], &monitor_pos.x, &monitor_pos.y);
 
-            t_v2 monitor_scale;
+            math::t_v2 monitor_scale;
             glfwGetMonitorContentScale(monitors[i], &monitor_scale.x, &monitor_scale.y);
 
             const GLFWvidmode *const mode = glfwGetVideoMode(monitors[i]);
 
-            const t_rect_i monitor_rect = {
+            const math::t_rect_i monitor_rect = {
                 monitor_pos.x,
                 monitor_pos.y,
                 static_cast<t_i32>(static_cast<t_f32>(mode->width) / monitor_scale.x),
                 static_cast<t_i32>(static_cast<t_f32>(mode->height) / monitor_scale.y),
             };
 
-            const t_f32 occupancy_perc = f_math_calc_perc_of_occupance(window_rect, monitor_rect);
+            const t_f32 occupancy_perc = math::f_calc_perc_of_occupance(window_rect, monitor_rect);
 
             if (occupancy_perc > max_occupancy_perc) {
                 max_occupancy_perc = occupancy_perc;
@@ -372,7 +372,7 @@ namespace zf::platform {
         g_state.fullscreen_active = active;
     }
 
-    t_v2_i f_get_monitor_size_pixels() {
+    math::t_v2_i f_get_monitor_size_pixels() {
         ZF_ASSERT(g_state.active);
 
         const auto monitor = f_find_glfw_monitor_of_window(g_state.glfw_window);
@@ -385,7 +385,7 @@ namespace zf::platform {
         return {mode->width, mode->height};
     }
 
-    t_v2_i f_get_monitor_size_logical() {
+    math::t_v2_i f_get_monitor_size_logical() {
         ZF_ASSERT(g_state.active);
 
         const auto monitor = f_find_glfw_monitor_of_window(g_state.glfw_window);
@@ -396,7 +396,7 @@ namespace zf::platform {
 
         const GLFWvidmode *const mode = glfwGetVideoMode(monitor);
 
-        t_v2 monitor_scale;
+        math::t_v2 monitor_scale;
         glfwGetMonitorContentScale(monitor, &monitor_scale.x, &monitor_scale.y);
 
         return {

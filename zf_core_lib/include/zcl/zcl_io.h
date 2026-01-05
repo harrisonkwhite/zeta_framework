@@ -360,10 +360,10 @@ namespace zf::io {
             ZF_ASSERT(str_bytes_stream_write_success);
         }
 
-        const t_i32 dig_cnt = f_math_calc_digit_cnt(fmt.value);
+        const t_i32 dig_cnt = math::f_calc_digit_cnt(fmt.value);
 
         for (t_i32 i = 0; i < dig_cnt; i++) {
-            const auto byte = static_cast<t_u8>('0' + f_math_determine_digit_at(fmt.value, dig_cnt - 1 - i));
+            const auto byte = static_cast<t_u8>('0' + math::f_determine_digit_at(fmt.value, dig_cnt - 1 - i));
             str_bytes_stream_write_success = f_write_item(&str_bytes_stream, byte);
             ZF_ASSERT(str_bytes_stream_write_success);
         }
@@ -526,12 +526,12 @@ namespace zf::io {
     struct t_v2_fmt {
         using t_fmt_tag = void;
 
-        t_v2 value;
+        math::t_v2 value;
         t_b8 trim_trailing_zeros;
     };
 
-    inline t_v2_fmt f_fmt_v2(const t_v2 value, const t_b8 trim_trailing_zeros = false) { return {value, trim_trailing_zeros}; }
-    inline t_v2_fmt f_fmt_default(const t_v2 value) { return f_fmt_v2(value); }
+    inline t_v2_fmt f_fmt_v2(const math::t_v2 value, const t_b8 trim_trailing_zeros = false) { return {value, trim_trailing_zeros}; }
+    inline t_v2_fmt f_fmt_default(const math::t_v2 value) { return f_fmt_v2(value); }
 
     inline t_b8 f_print_type(t_stream *const stream, const t_v2_fmt fmt) {
         return f_print(stream, ZF_STR_LITERAL("("))
@@ -544,11 +544,11 @@ namespace zf::io {
     struct t_v2_i_fmt {
         using t_fmt_tag = void;
 
-        t_v2_i value;
+        math::t_v2_i value;
     };
 
-    inline t_v2_i_fmt f_fmt_v2(const t_v2_i value) { return {value}; }
-    inline t_v2_i_fmt f_fmt_default(const t_v2_i value) { return f_fmt_v2(value); }
+    inline t_v2_i_fmt f_fmt_v2(const math::t_v2_i value) { return {value}; }
+    inline t_v2_i_fmt f_fmt_default(const math::t_v2_i value) { return f_fmt_v2(value); }
 
     inline t_b8 f_print_type(t_stream *const stream, const t_v2_i_fmt fmt) {
         return f_print(stream, ZF_STR_LITERAL("("))

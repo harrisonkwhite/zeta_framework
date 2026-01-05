@@ -1,34 +1,34 @@
 #include <zgl/zgl_rendering.h>
 
 namespace zf {
-    void f_rendering_submit_texture(t_rendering_context *const context, const t_rendering_resource *const texture, const t_v2 pos, const t_rect_i src_rect) {
+    void f_rendering_submit_texture(t_rendering_context *const context, const t_rendering_resource *const texture, const math::t_v2 pos, const math::t_rect_i src_rect) {
         const auto texture_size = f_rendering_get_texture_size(texture);
 
-        t_rect_i src_rect_to_use;
+        math::t_rect_i src_rect_to_use;
 
-        if (f_math_are_rects_equal(src_rect, {})) {
+        if (math::f_are_rects_equal(src_rect, {})) {
             src_rect_to_use = {0, 0, texture_size.x, texture_size.y};
         } else {
-            ZF_ASSERT(src_rect.x >= 0 && src_rect.y >= 0 && f_math_get_rect_right(src_rect) <= texture_size.x && f_math_get_rect_bottom(src_rect) <= texture_size.y);
+            ZF_ASSERT(src_rect.x >= 0 && src_rect.y >= 0 && math::f_get_rect_right(src_rect) <= texture_size.x && math::f_get_rect_bottom(src_rect) <= texture_size.y);
             src_rect_to_use = src_rect;
         }
 
-        const t_rect_f rect = f_math_create_rect_f(pos, f_math_convert_to_v2(f_math_get_rect_size(src_rect_to_use)));
-        const t_rect_f uv_rect = gfx::f_calc_uv_rect(src_rect_to_use, texture_size);
+        const math::t_rect_f rect = math::f_create_rect_f(pos, math::f_convert_to_v2(math::f_get_rect_size(src_rect_to_use)));
+        const math::t_rect_f uv_rect = gfx::f_calc_uv_rect(src_rect_to_use, texture_size);
 
         const t_static_array<t_batch_triangle, 2> triangles = {{
             {
                 .verts = {{
-                    {.pos = f_math_get_rect_topleft(rect), .blend = gfx::g_gfx_color_white, .uv = f_math_get_rect_topleft(uv_rect)},
-                    {.pos = f_math_get_rect_topright(rect), .blend = gfx::g_gfx_color_white, .uv = f_math_get_rect_topright(uv_rect)},
-                    {.pos = f_math_get_rect_bottomleft(rect), .blend = gfx::g_gfx_color_white, .uv = f_math_get_rect_bottomleft(uv_rect)},
+                    {.pos = math::f_get_rect_topleft(rect), .blend = gfx::g_gfx_color_white, .uv = math::f_get_rect_topleft(uv_rect)},
+                    {.pos = math::f_get_rect_topright(rect), .blend = gfx::g_gfx_color_white, .uv = math::f_get_rect_topright(uv_rect)},
+                    {.pos = math::f_get_rect_bottomleft(rect), .blend = gfx::g_gfx_color_white, .uv = math::f_get_rect_bottomleft(uv_rect)},
                 }},
             },
             {
                 .verts = {{
-                    {.pos = f_math_get_rect_bottomleft(rect), .blend = gfx::g_gfx_color_white, .uv = f_math_get_rect_bottomleft(uv_rect)},
-                    {.pos = f_math_get_rect_bottomleft(rect), .blend = gfx::g_gfx_color_white, .uv = f_math_get_rect_bottomleft(uv_rect)},
-                    {.pos = f_math_get_rect_topleft(rect), .blend = gfx::g_gfx_color_white, .uv = f_math_get_rect_topleft(uv_rect)},
+                    {.pos = math::f_get_rect_bottomleft(rect), .blend = gfx::g_gfx_color_white, .uv = math::f_get_rect_bottomleft(uv_rect)},
+                    {.pos = math::f_get_rect_bottomleft(rect), .blend = gfx::g_gfx_color_white, .uv = math::f_get_rect_bottomleft(uv_rect)},
+                    {.pos = math::f_get_rect_topleft(rect), .blend = gfx::g_gfx_color_white, .uv = math::f_get_rect_topleft(uv_rect)},
                 }},
             },
         }};
@@ -76,7 +76,7 @@ namespace zf {
         };
     }
 
-    t_array_mut<t_v2> f_rendering_get_str_chr_render_positions(const t_str_rdonly str, const gfx::t_font_arrangement &font_arrangement, const t_v2 pos, const t_v2 alignment, mem::t_arena *const arena) {
+    t_array_mut<math::t_v2> f_rendering_get_str_chr_render_positions(const t_str_rdonly str, const gfx::t_font_arrangement &font_arrangement, const math::t_v2 pos, const math::t_v2 alignment, mem::t_arena *const arena) {
         ZF_ASSERT(f_strs_is_valid_utf8(str));
         ZF_ASSERT(gfx::f_is_alignment_valid(alignment));
 
@@ -101,14 +101,14 @@ namespace zf {
         }();
 
         // Reserve memory for the character positions.
-        const auto positions = mem::f_arena_push_array<t_v2>(arena, str_meta.len);
+        const auto positions = mem::f_arena_push_array<math::t_v2>(arena, str_meta.len);
 
         // From the line count we can determine the vertical alignment offset to apply.
         const t_f32 alignment_offs_y = static_cast<t_f32>(-(str_meta.line_cnt * font_arrangement.line_height)) * alignment.y;
 
         // Calculate the position of each character.
         t_i32 chr_index = 0;
-        t_v2 chr_pos_pen = {}; // The position of the current character.
+        math::t_v2 chr_pos_pen = {}; // The position of the current character.
         t_i32 line_begin_chr_index = 0;
         t_i32 line_len = 0;
         t_code_pt code_pt_last;
@@ -159,7 +159,7 @@ namespace zf {
                 }
             }
 
-            positions[chr_index] = pos + chr_pos_pen + f_math_convert_to_v2(glyph_info->offs);
+            positions[chr_index] = pos + chr_pos_pen + math::f_convert_to_v2(glyph_info->offs);
             positions[chr_index].y += alignment_offs_y;
 
             chr_pos_pen.x += static_cast<t_f32>(glyph_info->adv);
@@ -172,7 +172,7 @@ namespace zf {
         return positions;
     }
 
-    void f_rendering_submit_str(t_rendering_context *const context, const t_str_rdonly str, const t_font &font, const t_v2 pos, mem::t_arena *const temp_arena, const t_v2 alignment, const gfx::t_color_rgba32f blend) {
+    void f_rendering_submit_str(t_rendering_context *const context, const t_str_rdonly str, const t_font &font, const math::t_v2 pos, mem::t_arena *const temp_arena, const math::t_v2 alignment, const gfx::t_color_rgba32f blend) {
         ZF_ASSERT(f_strs_is_valid_utf8(str));
         ZF_ASSERT(gfx::f_is_alignment_valid(alignment));
 
@@ -180,7 +180,7 @@ namespace zf {
             return;
         }
 
-        const t_array_mut<t_v2> chr_positions = f_rendering_get_str_chr_render_positions(str, font.arrangement, pos, alignment, temp_arena);
+        const t_array_mut<math::t_v2> chr_positions = f_rendering_get_str_chr_render_positions(str, font.arrangement, pos, alignment, temp_arena);
 
         t_i32 chr_index = 0;
 

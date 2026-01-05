@@ -5,7 +5,7 @@
 
 namespace zf::platform {
     // Note that the window is not shown by default, you have to manually do this.
-    void f_startup(const t_v2_i init_window_size);
+    void f_startup(const math::t_v2_i init_window_size);
 
     void f_shutdown();
 
@@ -27,14 +27,14 @@ namespace zf::platform {
     void f_set_window_title(const t_str_rdonly title, mem::t_arena *const temp_arena);
 
     // Sets the LOGICAL window size. The actual new framebuffer size MIGHT be larger if there is DPI scaling.
-    void f_set_window_size(const t_v2_i size);
+    void f_set_window_size(const math::t_v2_i size);
 
     // Set the LOGICAL window size limits. If you don't want to limit a particular dimension, leave it as -1.
     void f_set_window_size_limits(const t_i32 min_width, const t_i32 min_height, const t_i32 max_width, const t_i32 max_height);
 
     void f_set_window_resizable(const t_b8 resizable);
 
-    t_v2_i f_get_window_framebuffer_size_cache();
+    math::t_v2_i f_get_window_framebuffer_size_cache();
 
     t_b8 f_get_fullscreen();
 
@@ -45,10 +45,10 @@ namespace zf::platform {
     }
 
     // Calculates the size in pixels of whichever monitor the window most resides in.
-    t_v2_i f_get_monitor_size_pixels();
+    math::t_v2_i f_get_monitor_size_pixels();
 
     // Calculates the size (accounting for DPI scaling) of whichever monitor the window most resides in.
-    t_v2_i f_get_monitor_size_logical();
+    math::t_v2_i f_get_monitor_size_logical();
 
     void f_set_cursor_visibility(const t_b8 visible);
 }

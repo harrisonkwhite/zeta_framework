@@ -19,9 +19,9 @@ namespace zf {
     struct t_rendering_context;
 
     struct t_batch_vertex {
-        t_v2 pos;
+        math::t_v2 pos;
         gfx::t_color_rgba32f blend;
-        t_v2 uv;
+        math::t_v2 uv;
     };
 
     struct t_batch_triangle {
@@ -68,7 +68,7 @@ namespace zf {
         return f_rendering_create_texture(texture_data, group);
     }
 
-    t_v2_i f_rendering_get_texture_size(const t_rendering_resource *const texture);
+    math::t_v2_i f_rendering_get_texture_size(const t_rendering_resource *const texture);
 
     t_rendering_resource *f_rendering_create_shader_prog(const t_array_rdonly<t_u8> vert_shader_compiled_bin, const t_array_rdonly<t_u8> frag_shader_compiled_bin, t_rendering_resource_group *const group);
 
@@ -94,7 +94,7 @@ namespace zf {
     // Leave texture as nullptr for no texture.
     void f_rendering_submit_triangle(t_rendering_context *const context, const t_array_rdonly<t_batch_triangle> triangles, const t_rendering_resource *const texture);
 
-    inline void f_rendering_submit_triangle(t_rendering_context *const context, const t_static_array<t_v2, 3> &pts, const t_static_array<gfx::t_color_rgba32f, 3> &pt_colors) {
+    inline void f_rendering_submit_triangle(t_rendering_context *const context, const t_static_array<math::t_v2, 3> &pts, const t_static_array<gfx::t_color_rgba32f, 3> &pt_colors) {
         const t_batch_triangle triangle = {
             .verts = {{
                 {.pos = pts[0], .blend = pt_colors[0], .uv = {}},
@@ -106,26 +106,26 @@ namespace zf {
         f_rendering_submit_triangle(context, {&triangle, 1}, nullptr);
     }
 
-    inline void f_rendering_submit_triangle(t_rendering_context *const context, const t_static_array<t_v2, 3> &pts, const gfx::t_color_rgba32f color) {
+    inline void f_rendering_submit_triangle(t_rendering_context *const context, const t_static_array<math::t_v2, 3> &pts, const gfx::t_color_rgba32f color) {
         f_rendering_submit_triangle(context, pts, {{color, color, color}});
     }
 
-    inline void f_rendering_submit_rect(t_rendering_context *const context, const t_rect_f rect, const gfx::t_color_rgba32f color_topleft, const gfx::t_color_rgba32f color_topright, const gfx::t_color_rgba32f color_bottomright, const gfx::t_color_rgba32f color_bottomleft) {
+    inline void f_rendering_submit_rect(t_rendering_context *const context, const math::t_rect_f rect, const gfx::t_color_rgba32f color_topleft, const gfx::t_color_rgba32f color_topright, const gfx::t_color_rgba32f color_bottomright, const gfx::t_color_rgba32f color_bottomleft) {
         ZF_ASSERT(rect.width > 0.0f && rect.height > 0.0f);
 
         const t_static_array<t_batch_triangle, 2> triangles = {{
             {
                 .verts = {{
-                    {.pos = f_math_get_rect_topleft(rect), .blend = color_topleft, .uv = {0.0f, 0.0f}},
-                    {.pos = f_math_get_rect_topright(rect), .blend = color_topright, .uv = {1.0f, 0.0f}},
-                    {.pos = f_math_get_rect_bottomleft(rect), .blend = color_bottomright, .uv = {1.0f, 1.0f}},
+                    {.pos = math::f_get_rect_topleft(rect), .blend = color_topleft, .uv = {0.0f, 0.0f}},
+                    {.pos = math::f_get_rect_topright(rect), .blend = color_topright, .uv = {1.0f, 0.0f}},
+                    {.pos = math::f_get_rect_bottomleft(rect), .blend = color_bottomright, .uv = {1.0f, 1.0f}},
                 }},
             },
             {
                 .verts = {{
-                    {.pos = f_math_get_rect_bottomleft(rect), .blend = color_bottomright, .uv = {1.0f, 1.0f}},
-                    {.pos = f_math_get_rect_bottomleft(rect), .blend = color_bottomleft, .uv = {0.0f, 1.0f}},
-                    {.pos = f_math_get_rect_topleft(rect), .blend = color_topleft, .uv = {0.0f, 0.0f}},
+                    {.pos = math::f_get_rect_bottomleft(rect), .blend = color_bottomright, .uv = {1.0f, 1.0f}},
+                    {.pos = math::f_get_rect_bottomleft(rect), .blend = color_bottomleft, .uv = {0.0f, 1.0f}},
+                    {.pos = math::f_get_rect_topleft(rect), .blend = color_topleft, .uv = {0.0f, 0.0f}},
                 }},
             },
         }};
@@ -133,11 +133,11 @@ namespace zf {
         f_rendering_submit_triangle(context, f_array_get_as_nonstatic(triangles), nullptr);
     }
 
-    inline void f_rendering_submit_rect(t_rendering_context *const context, const t_rect_f rect, const gfx::t_color_rgba32f color) {
+    inline void f_rendering_submit_rect(t_rendering_context *const context, const math::t_rect_f rect, const gfx::t_color_rgba32f color) {
         f_rendering_submit_rect(context, rect, color, color, color, color);
     }
 
-    void f_rendering_submit_texture(t_rendering_context *const context, const t_rendering_resource *const texture, const t_v2 pos, const t_rect_i src_rect = {});
+    void f_rendering_submit_texture(t_rendering_context *const context, const t_rendering_resource *const texture, const math::t_v2 pos, const math::t_rect_i src_rect = {});
 
     struct t_font {
         gfx::t_font_arrangement arrangement;
@@ -147,9 +147,9 @@ namespace zf {
     t_font f_rendering_create_font_from_raw(const t_str_rdonly file_path, const t_i32 height, t_code_pt_bit_vec *const code_pts, mem::t_arena *const temp_arena, t_rendering_resource_group *const resource_group);
     t_font f_rendering_create_font_from_packed(const t_str_rdonly file_path, mem::t_arena *const temp_arena, t_rendering_resource_group *const resource_group);
 
-    t_array_mut<t_v2> f_rendering_get_str_chr_render_positions(const t_str_rdonly str, const gfx::t_font_arrangement &font_arrangement, const t_v2 pos, const t_v2 alignment, mem::t_arena *const arena);
+    t_array_mut<math::t_v2> f_rendering_get_str_chr_render_positions(const t_str_rdonly str, const gfx::t_font_arrangement &font_arrangement, const math::t_v2 pos, const math::t_v2 alignment, mem::t_arena *const arena);
 
-    void f_rendering_submit_str(t_rendering_context *const context, const t_str_rdonly str, const t_font &font, const t_v2 pos, mem::t_arena *const temp_arena, const t_v2 alignment = gfx::g_gfx_alignment_topleft, const gfx::t_color_rgba32f blend = gfx::g_gfx_color_white);
+    void f_rendering_submit_str(t_rendering_context *const context, const t_str_rdonly str, const t_font &font, const math::t_v2 pos, mem::t_arena *const temp_arena, const math::t_v2 alignment = gfx::g_gfx_alignment_topleft, const gfx::t_color_rgba32f blend = gfx::g_gfx_color_white);
 
     // ============================================================
 }

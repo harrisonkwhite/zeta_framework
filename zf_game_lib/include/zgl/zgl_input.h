@@ -137,11 +137,11 @@ namespace zf::input {
     t_b8 f_is_mouse_button_released(const t_state *const state, const t_mouse_button_code btn_code);
     void f_update_mouse_button_state(t_state *const state, const t_mouse_button_code code, const t_b8 is_down);
 
-    t_v2 f_get_cursor_pos(const t_state *const state);
-    void f_update_cursor_pos(t_state *const state, const t_v2 val);
+    math::t_v2 f_get_cursor_pos(const t_state *const state);
+    void f_update_cursor_pos(t_state *const state, const math::t_v2 val);
 
-    t_v2 f_get_scroll_offs(const t_state *const state);
-    void f_update_scroll_offs(t_state *const state, const t_v2 offs_to_apply);
+    math::t_v2 f_get_scroll_offs(const t_state *const state);
+    void f_update_scroll_offs(t_state *const state, const math::t_v2 offs_to_apply);
 
     t_b8 f_is_gamepad_connected(const t_state *const state, const t_i32 index);
     t_b8 f_is_gamepad_button_down(const t_state *const state, const t_i32 gamepad_index, const t_gamepad_button_code btn_code);
