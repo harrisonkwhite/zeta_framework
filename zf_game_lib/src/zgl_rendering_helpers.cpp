@@ -27,8 +27,8 @@ namespace zf::rendering {
             {
                 .verts = {{
                     {.pos = math::rect_get_bottomleft(rect), .blend = gfx::g_color_white, .uv = math::rect_get_bottomleft(uv_rect)},
-                    {.pos = math::rect_get_bottomleft(rect), .blend = gfx::g_color_white, .uv = math::rect_get_bottomleft(uv_rect)},
-                    {.pos = math::rect_get_topleft(rect), .blend = gfx::g_color_white, .uv = math::rect_get_topleft(uv_rect)},
+                    {.pos = math::rect_get_topright(rect), .blend = gfx::g_color_white, .uv = math::rect_get_topright(uv_rect)},
+                    {.pos = math::rect_get_bottomright(rect), .blend = gfx::g_color_white, .uv = math::rect_get_bottomright(uv_rect)},
                 }},
             },
         }};

@@ -113,14 +113,14 @@ namespace zf::rendering {
                 .verts = {{
                     {.pos = math::rect_get_topleft(rect), .blend = color_topleft, .uv = {0.0f, 0.0f}},
                     {.pos = math::rect_get_topright(rect), .blend = color_topright, .uv = {1.0f, 0.0f}},
-                    {.pos = math::rect_get_bottomleft(rect), .blend = color_bottomright, .uv = {1.0f, 1.0f}},
+                    {.pos = math::rect_get_bottomleft(rect), .blend = color_bottomleft, .uv = {1.0f, 1.0f}},
                 }},
             },
             {
                 .verts = {{
-                    {.pos = math::rect_get_bottomleft(rect), .blend = color_bottomright, .uv = {1.0f, 1.0f}},
-                    {.pos = math::rect_get_bottomleft(rect), .blend = color_bottomleft, .uv = {0.0f, 1.0f}},
-                    {.pos = math::rect_get_topleft(rect), .blend = color_topleft, .uv = {0.0f, 0.0f}},
+                    {.pos = math::rect_get_bottomleft(rect), .blend = color_bottomleft, .uv = {1.0f, 1.0f}},
+                    {.pos = math::rect_get_topright(rect), .blend = color_topright, .uv = {0.0f, 1.0f}},
+                    {.pos = math::rect_get_bottomright(rect), .blend = color_bottomright, .uv = {0.0f, 0.0f}},
                 }},
             },
         }};
