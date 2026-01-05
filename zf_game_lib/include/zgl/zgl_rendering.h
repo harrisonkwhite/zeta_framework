@@ -144,7 +144,7 @@ namespace zf::rendering {
         t_array_mut<t_resource *> atlases;
     };
 
-    t_font font_create_from_raw(const strs::t_str_rdonly file_path, const t_i32 height, strs::t_code_pt_bit_vec *const code_pts, mem::t_arena *const temp_arena, t_resource_group *const resource_group);
+    t_font font_create_from_raw(const strs::t_str_rdonly file_path, const t_i32 height, strs::t_code_pt_bitset *const code_pts, mem::t_arena *const temp_arena, t_resource_group *const resource_group);
     t_font font_create_from_packed(const strs::t_str_rdonly file_path, mem::t_arena *const temp_arena, t_resource_group *const resource_group);
 
     void frame_submit_str(t_context *const context, const strs::t_str_rdonly str, const t_font &font, const math::t_v2 pos, mem::t_arena *const temp_arena, const math::t_v2 alignment = gfx::g_alignment_topleft, const gfx::t_color_rgba32f blend = gfx::g_color_white);

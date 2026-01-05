@@ -9,7 +9,7 @@ namespace zf::strs {
     constexpr t_i32 g_code_pt_cnt = 1114112;
 
     using t_code_pt = char32_t;
-    using t_code_pt_bit_vec = mem::t_static_bitset<g_code_pt_cnt>;
+    using t_code_pt_bitset = mem::t_static_bitset<g_code_pt_cnt>;
 
     constexpr t_i32 g_ascii_range_begin = 0;
     constexpr t_i32 g_ascii_range_end = 0x80;
@@ -163,7 +163,7 @@ namespace zf::strs {
     t_code_pt f_find_code_pt_at_byte(const t_str_rdonly str, const t_i32 byte_index);
 
     // Sets the bits associated with each unicode code point that appear in the string. No bits get unset.
-    void f_mark_code_points(const t_str_rdonly str, t_code_pt_bit_vec *const code_pts);
+    void f_mark_code_points(const t_str_rdonly str, t_code_pt_bitset *const code_pts);
 
     // byte_index should be initialised to the index of ANY byte in the code point to start walking from.
     // Returns false iff the walk has ended.

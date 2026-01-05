@@ -10,7 +10,7 @@
 #endif
 
 namespace zf::io {
-    t_b8 f_open_file(const strs::t_str_rdonly path, const t_file_access_mode mode, mem::t_arena *const temp_arena, t_stream *const o_stream) {
+    t_b8 file_open(const strs::t_str_rdonly path, const t_file_access_mode mode, mem::t_arena *const temp_arena, t_stream *const o_stream) {
         const strs::t_str_rdonly path_terminated = strs::f_clone_but_add_terminator(path, temp_arena);
 
         FILE *file;
@@ -40,17 +40,17 @@ namespace zf::io {
             return false;
         }
 
-        *o_stream = f_create_file_stream(file, stream_mode);
+        *o_stream = file_stream_create(file, stream_mode);
 
         return true;
     }
 
-    void f_close_file(t_stream *const stream) {
+    void file_close(t_stream *const stream) {
         fclose(stream->type_data.file.file);
         *stream = {};
     }
 
-    t_i32 f_calc_file_size(t_stream *const stream) {
+    t_i32 file_get_size(t_stream *const stream) {
         FILE *const file = stream->type_data.file.file;
         const auto pos_old = ftell(file);
         fseek(file, 0, SEEK_END);
@@ -59,16 +59,16 @@ namespace zf::io {
         return static_cast<t_i32>(file_size);
     }
 
-    t_b8 f_load_file_contents(const strs::t_str_rdonly path, mem::t_arena *const contents_arena, mem::t_arena *const temp_arena, t_array_mut<t_u8> *const o_contents, const t_b8 add_terminator) {
+    t_b8 file_load_contents(const strs::t_str_rdonly path, mem::t_arena *const contents_arena, mem::t_arena *const temp_arena, t_array_mut<t_u8> *const o_contents, const t_b8 add_terminator) {
         t_stream stream;
 
-        if (!f_open_file(path, ec_file_access_mode_read, temp_arena, &stream)) {
+        if (!file_open(path, ec_file_access_mode_read, temp_arena, &stream)) {
             return false;
         }
 
-        ZF_DEFER({ f_close_file(&stream); });
+        ZF_DEFER({ file_close(&stream); });
 
-        const t_i32 file_size = f_calc_file_size(&stream);
+        const t_i32 file_size = file_get_size(&stream);
 
         if (add_terminator) {
             *o_contents = mem::arena_push_array<t_u8>(contents_arena, file_size + 1);
@@ -77,14 +77,14 @@ namespace zf::io {
             *o_contents = mem::arena_push_array<t_u8>(contents_arena, file_size);
         }
 
-        if (!f_read_items_into_array(&stream, *o_contents, file_size)) {
+        if (!stream_read_items_into_array(&stream, *o_contents, file_size)) {
             return false;
         }
 
         return true;
     }
 
-    t_b8 f_create_directory(const strs::t_str_rdonly path, mem::t_arena *const temp_arena, t_directory_creation_result *const o_creation_res) {
+    t_b8 create_directory(const strs::t_str_rdonly path, mem::t_arena *const temp_arena, t_directory_creation_result *const o_creation_res) {
         if (o_creation_res) {
             *o_creation_res = ec_directory_creation_result_success;
         }
@@ -125,14 +125,14 @@ namespace zf::io {
         return false;
     }
 
-    t_b8 f_create_directory_and_parents(const strs::t_str_rdonly path, mem::t_arena *const temp_arena, t_directory_creation_result *const o_dir_creation_res) {
+    t_b8 create_directory_and_parents(const strs::t_str_rdonly path, mem::t_arena *const temp_arena, t_directory_creation_result *const o_dir_creation_res) {
         if (o_dir_creation_res) {
             *o_dir_creation_res = ec_directory_creation_result_success;
         }
 
         const auto create_dir_if_nonexistent = [o_dir_creation_res, &temp_arena](const strs::t_str_rdonly path) {
-            if (f_get_path_type(path, temp_arena) == ec_path_type_not_found) {
-                if (!f_create_directory(path, temp_arena, o_dir_creation_res)) {
+            if (path_get_type(path, temp_arena) == ec_path_type_not_found) {
+                if (!create_directory(path, temp_arena, o_dir_creation_res)) {
                     return false;
                 }
             }
@@ -165,7 +165,7 @@ namespace zf::io {
         return true;
     }
 
-    t_b8 f_create_file_and_parent_directories(const strs::t_str_rdonly path, mem::t_arena *const temp_arena, t_directory_creation_result *const o_dir_creation_res) {
+    t_b8 create_file_and_parent_directories(const strs::t_str_rdonly path, mem::t_arena *const temp_arena, t_directory_creation_result *const o_dir_creation_res) {
         if (o_dir_creation_res) {
             *o_dir_creation_res = ec_directory_creation_result_success;
         }
@@ -173,7 +173,7 @@ namespace zf::io {
         // Get the substring containing all directories and create them.
         ZF_WALK_STR_REVERSE (path, step) {
             if (step.code_pt == '/' || step.code_pt == '\\') {
-                if (!f_create_directory_and_parents({array_slice(path.bytes, 0, step.byte_index)}, temp_arena, o_dir_creation_res)) {
+                if (!create_directory_and_parents({array_slice(path.bytes, 0, step.byte_index)}, temp_arena, o_dir_creation_res)) {
                     return false;
                 }
 
@@ -184,16 +184,16 @@ namespace zf::io {
         // Now that directories are created, create the file.
         t_stream fs;
 
-        if (!f_open_file(path, ec_file_access_mode_write, temp_arena, &fs)) {
+        if (!file_open(path, ec_file_access_mode_write, temp_arena, &fs)) {
             return false;
         }
 
-        f_close_file(&fs);
+        file_close(&fs);
 
         return true;
     }
 
-    t_path_type f_get_path_type(const strs::t_str_rdonly path, mem::t_arena *const temp_arena) {
+    t_path_type path_get_type(const strs::t_str_rdonly path, mem::t_arena *const temp_arena) {
         const strs::t_str_rdonly path_terminated = strs::f_clone_but_add_terminator(path, temp_arena);
 
         struct stat info;
@@ -209,7 +209,7 @@ namespace zf::io {
         return ec_path_type_file;
     }
 
-    strs::t_str_mut f_get_executable_directory(mem::t_arena *const arena) {
+    strs::t_str_mut get_executable_directory(mem::t_arena *const arena) {
 #if defined(ZF_PLATFORM_WINDOWS)
         t_static_array<char, MAX_PATH> buf;
 

@@ -3,7 +3,7 @@
 #include <reproc/reproc.h>
 
 namespace zf {
-    t_b8 f_compile_shader(const strs::t_str_rdonly shader_file_path, const strs::t_str_rdonly varying_def_file_path, const t_b8 is_frag, mem::t_arena *const bin_arena, mem::t_arena *const temp_arena, t_array_mut<t_u8> *const o_bin) {
+    t_b8 compile_shader(const strs::t_str_rdonly shader_file_path, const strs::t_str_rdonly varying_def_file_path, const t_b8 is_frag, mem::t_arena *const bin_arena, mem::t_arena *const temp_arena, t_array_mut<t_u8> *const o_bin) {
         const strs::t_str_rdonly shader_file_path_terminated = strs::f_clone_but_add_terminator(shader_file_path, temp_arena);
         const strs::t_str_rdonly varying_def_file_path_terminated = strs::f_clone_but_add_terminator(varying_def_file_path, temp_arena);
 
@@ -12,7 +12,7 @@ namespace zf {
         ZF_DEFER({
             if (r < 0) {
                 const auto err = strs::f_convert_cstr(reproc_strerror(r));
-                io::f_log_error(ZF_STR_LITERAL("%"), err);
+                io::log_error(ZF_STR_LITERAL("%"), err);
             }
         });
 
@@ -42,18 +42,18 @@ namespace zf {
         const char profile_cstr[] = "glsl";
 #endif
 
-        const strs::t_str_rdonly exe_dir = io::f_get_executable_directory(temp_arena);
+        const strs::t_str_rdonly exe_dir = io::get_executable_directory(temp_arena);
         ZF_ASSERT(exe_dir.bytes[exe_dir.bytes.len - 1] == '/' || exe_dir.bytes[exe_dir.bytes.len - 1] == '\\'); // Assuming this.
 
         const strs::t_str_mut shaderc_file_path_terminated = {mem::arena_push_array<t_u8>(temp_arena, exe_dir.bytes.len + shaderc_file_path_rel.bytes.len + 1)};
-        io::t_stream shaderc_file_path_terminated_byte_stream = io::f_create_mem_stream(shaderc_file_path_terminated.bytes, io::ec_stream_mode_write);
-        io::f_print_fmt(&shaderc_file_path_terminated_byte_stream, ZF_STR_LITERAL("%%\0"), exe_dir, shaderc_file_path_rel);
+        io::t_stream shaderc_file_path_terminated_byte_stream = io::mem_stream_create(shaderc_file_path_terminated.bytes, io::ec_stream_mode_write);
+        io::print_format(&shaderc_file_path_terminated_byte_stream, ZF_STR_LITERAL("%%\0"), exe_dir, shaderc_file_path_rel);
         ZF_ASSERT(strs::f_are_bytes_terminated_only_at_end(shaderc_file_path_terminated.bytes));
 
         const strs::t_str_rdonly shaderc_include_dir_rel = ZF_STR_LITERAL("tools/bgfx/shaderc_include");
         const strs::t_str_mut shaderc_include_dir_terminated = {mem::arena_push_array<t_u8>(temp_arena, exe_dir.bytes.len + shaderc_include_dir_rel.bytes.len + 1)};
-        io::t_stream shaderc_include_dir_terminated_byte_stream = io::f_create_mem_stream(shaderc_include_dir_terminated.bytes, io::ec_stream_mode_write);
-        io::f_print_fmt(&shaderc_include_dir_terminated_byte_stream, ZF_STR_LITERAL("%%\0"), exe_dir, shaderc_include_dir_rel);
+        io::t_stream shaderc_include_dir_terminated_byte_stream = io::mem_stream_create(shaderc_include_dir_terminated.bytes, io::ec_stream_mode_write);
+        io::print_format(&shaderc_include_dir_terminated_byte_stream, ZF_STR_LITERAL("%%\0"), exe_dir, shaderc_include_dir_rel);
         ZF_ASSERT(strs::f_are_bytes_terminated_only_at_end(shaderc_include_dir_terminated.bytes));
 
         const t_static_array<const char *, 15> args = {{
@@ -110,9 +110,9 @@ namespace zf {
         }
 
         if (r > 0) {
-            io::t_stream std_err = io::f_get_std_error();
+            io::t_stream std_err = io::get_std_error();
             const auto err = strs::t_str_rdonly(ds::list_get_as_array(&bin_list));
-            io::f_print_fmt(&std_err, ZF_STR_LITERAL("==================== BGFX SHADERC ERROR ====================\n%============================================================\n"), err);
+            io::print_format(&std_err, ZF_STR_LITERAL("==================== BGFX SHADERC ERROR ====================\n%============================================================\n"), err);
             return false;
         }
 

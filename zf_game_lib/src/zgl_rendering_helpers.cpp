@@ -36,7 +36,7 @@ namespace zf::rendering {
         frame_submit_triangle(context, array_get_as_nonstatic(triangles), texture);
     }
 
-    t_font font_create_from_raw(const strs::t_str_rdonly file_path, const t_i32 height, strs::t_code_pt_bit_vec *const code_pts, mem::t_arena *const temp_arena, t_resource_group *const resource_group) {
+    t_font font_create_from_raw(const strs::t_str_rdonly file_path, const t_i32 height, strs::t_code_pt_bitset *const code_pts, mem::t_arena *const temp_arena, t_resource_group *const resource_group) {
         gfx::t_font_arrangement arrangement;
         t_array_mut<gfx::t_font_atlas_rgba> atlas_rgbas;
 

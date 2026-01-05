@@ -398,7 +398,7 @@ namespace zf::strs {
         } while (true);
     }
 
-    void f_mark_code_points(const t_str_rdonly str, t_code_pt_bit_vec *const code_pts) {
+    void f_mark_code_points(const t_str_rdonly str, t_code_pt_bitset *const code_pts) {
         ZF_ASSERT(f_is_valid_utf8(str));
 
         ZF_WALK_STR (str, step) {

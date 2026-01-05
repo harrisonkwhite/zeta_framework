@@ -26,7 +26,7 @@ namespace zf {
             s_static_array<ma_sound, g_snd_inst_limit> ma_snds;
             s_static_array<ma_audio_buffer_ref, g_snd_inst_limit> ma_buf_refs;
             s_static_array<const s_sound_type *, g_snd_inst_limit> types;
-            s_static_bit_vec<g_snd_inst_limit> activity;
+            s_static_bitset<g_snd_inst_limit> activity;
             s_static_array<t_i32, g_snd_inst_limit> versions;
         } snd_insts = {};
     } g_state;
