@@ -8,5 +8,5 @@ int main(const int arg_cnt, const char *const *const args_raw) {
         return EXIT_FAILURE;
     }
 
-    return zf::pack_assets(zf::strs::f_convert_cstr(args[1])) ? EXIT_SUCCESS : EXIT_FAILURE;
+    return zf::pack_assets(zf::strs::cstr_convert(args[1])) ? EXIT_SUCCESS : EXIT_FAILURE;
 }

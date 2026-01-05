@@ -4,12 +4,12 @@
 
 namespace zf::audio {
     t_b8 sound_load_from_raw(const strs::t_str_rdonly file_path, mem::t_arena *const snd_data_arena, mem::t_arena *const temp_arena, t_sound_data_mut *const o_snd_data) {
-        const strs::t_str_rdonly file_path_terminated = strs::f_clone_but_add_terminator(file_path, temp_arena);
+        const strs::t_str_rdonly file_path_terminated = strs::str_clone_but_add_terminator(file_path, temp_arena);
 
         ma_decoder decoder;
         ma_decoder_config decoder_config = ma_decoder_config_init(ma_format_f32, 0, 0);
 
-        if (ma_decoder_init_file(strs::f_get_as_cstr(file_path_terminated), &decoder_config, &decoder) != MA_SUCCESS) {
+        if (ma_decoder_init_file(strs::str_get_as_cstr(file_path_terminated), &decoder_config, &decoder) != MA_SUCCESS) {
             return false;
         }
 

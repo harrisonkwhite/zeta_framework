@@ -19,11 +19,11 @@ namespace zf::gfx {
             return pa.a == pb.a && pa.b == pb.b;
         };
 
-    t_b8 f_load_texture_from_raw(const strs::t_str_rdonly file_path, mem::t_arena *const texture_data_arena, mem::t_arena *const temp_arena, t_texture_data_mut *const o_texture_data) {
-        const strs::t_str_rdonly file_path_terminated = strs::f_clone_but_add_terminator(file_path, temp_arena);
+    t_b8 texture_load_from_raw(const strs::t_str_rdonly file_path, mem::t_arena *const texture_data_arena, mem::t_arena *const temp_arena, t_texture_data_mut *const o_texture_data) {
+        const strs::t_str_rdonly file_path_terminated = strs::str_clone_but_add_terminator(file_path, temp_arena);
 
         math::t_v2_i size_in_pxs;
-        t_u8 *const stb_px_data = stbi_load(strs::f_get_as_cstr(file_path_terminated), &size_in_pxs.x, &size_in_pxs.y, nullptr, 4);
+        t_u8 *const stb_px_data = stbi_load(strs::str_get_as_cstr(file_path_terminated), &size_in_pxs.x, &size_in_pxs.y, nullptr, 4);
 
         if (!stb_px_data) {
             return false;
@@ -40,7 +40,7 @@ namespace zf::gfx {
         return true;
     }
 
-    t_b8 f_pack_texture(const strs::t_str_rdonly file_path, const t_texture_data_mut texture_data, mem::t_arena *const temp_arena) {
+    t_b8 texture_pack(const strs::t_str_rdonly file_path, const t_texture_data_mut texture_data, mem::t_arena *const temp_arena) {
         if (!io::create_file_and_parent_directories(file_path, temp_arena)) {
             return false;
         }
@@ -64,7 +64,7 @@ namespace zf::gfx {
         return true;
     }
 
-    t_b8 f_unpack_texture(const strs::t_str_rdonly file_path, mem::t_arena *const texture_data_arena, mem::t_arena *const temp_arena, t_texture_data_mut *const o_texture_data) {
+    t_b8 texture_unpack(const strs::t_str_rdonly file_path, mem::t_arena *const texture_data_arena, mem::t_arena *const temp_arena, t_texture_data_mut *const o_texture_data) {
         io::t_stream fs;
 
         if (!io::file_open(file_path, io::ec_file_access_mode_read, temp_arena, &fs)) {
@@ -90,7 +90,7 @@ namespace zf::gfx {
         return true;
     }
 
-    t_b8 f_load_font_from_raw(const strs::t_str_rdonly file_path, const t_i32 height, strs::t_code_pt_bitset *const code_pts, mem::t_arena *const arrangement_arena, mem::t_arena *const atlas_rgbas_arena, mem::t_arena *const temp_arena, t_font_arrangement *const o_arrangement, t_array_mut<t_font_atlas_rgba> *const o_atlas_rgbas) {
+    t_b8 font_load_from_raw(const strs::t_str_rdonly file_path, const t_i32 height, strs::t_code_pt_bitset *const code_pts, mem::t_arena *const arrangement_arena, mem::t_arena *const atlas_rgbas_arena, mem::t_arena *const temp_arena, t_font_arrangement *const o_arrangement, t_array_mut<t_font_atlas_rgba> *const o_atlas_rgbas) {
         ZF_ASSERT(height > 0);
 
         // Get the plain font file data.
@@ -266,7 +266,7 @@ namespace zf::gfx {
         return true;
     }
 
-    t_b8 f_pack_font(const strs::t_str_rdonly file_path, const t_font_arrangement &arrangement, const t_array_rdonly<t_font_atlas_rgba> atlas_rgbas, mem::t_arena *const temp_arena) {
+    t_b8 font_pack(const strs::t_str_rdonly file_path, const t_font_arrangement &arrangement, const t_array_rdonly<t_font_atlas_rgba> atlas_rgbas, mem::t_arena *const temp_arena) {
         if (!io::create_file_and_parent_directories(file_path, temp_arena)) {
             return false;
         }
@@ -298,7 +298,7 @@ namespace zf::gfx {
         return true;
     }
 
-    t_b8 f_unpack_font(const strs::t_str_rdonly file_path, mem::t_arena *const arrangement_arena, mem::t_arena *const atlas_rgbas_arena, mem::t_arena *const temp_arena, t_font_arrangement *const o_arrangement, t_array_mut<t_font_atlas_rgba> *const o_atlas_rgbas) {
+    t_b8 font_unpack(const strs::t_str_rdonly file_path, mem::t_arena *const arrangement_arena, mem::t_arena *const atlas_rgbas_arena, mem::t_arena *const temp_arena, t_font_arrangement *const o_arrangement, t_array_mut<t_font_atlas_rgba> *const o_atlas_rgbas) {
         io::t_stream fs;
 
         if (!io::file_open(file_path, io::ec_file_access_mode_read, temp_arena, &fs)) {
@@ -326,7 +326,7 @@ namespace zf::gfx {
         return true;
     }
 
-    t_b8 f_pack_shader(const strs::t_str_rdonly file_path, const t_array_rdonly<t_u8> compiled_shader_bin, mem::t_arena *const temp_arena) {
+    t_b8 shader_pack(const strs::t_str_rdonly file_path, const t_array_rdonly<t_u8> compiled_shader_bin, mem::t_arena *const temp_arena) {
         if (!io::create_file_and_parent_directories(file_path, temp_arena)) {
             return false;
         }
@@ -346,7 +346,7 @@ namespace zf::gfx {
         return true;
     }
 
-    t_b8 f_unpack_shader(const strs::t_str_rdonly file_path, mem::t_arena *const shader_bin_arena, mem::t_arena *const temp_arena, t_array_mut<t_u8> *const o_shader_bin) {
+    t_b8 shader_unpack(const strs::t_str_rdonly file_path, mem::t_arena *const shader_bin_arena, mem::t_arena *const temp_arena, t_array_mut<t_u8> *const o_shader_bin) {
         io::t_stream fs;
 
         if (!io::file_open(file_path, io::ec_file_access_mode_read, temp_arena, &fs)) {

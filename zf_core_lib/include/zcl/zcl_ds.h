@@ -504,10 +504,10 @@ namespace zf::ds {
 
     // Allocates the given arrays with the memory arena and loads key-value pairs into them.
     template <c_simple tp_key_type, c_simple tp_val_type>
-    void hash_map_load_entries(const t_hash_map<tp_key_type, tp_val_type> *const hash_map, mem::t_arena *const arena, t_array_mut<tp_key_type> *const o_keys, t_array_mut<tp_val_type> *const o_vals) {
+    void hash_map_load_entries(const t_hash_map<tp_key_type, tp_val_type> *const hash_map, mem::t_arena *const arena, t_array_mut<tp_key_type> *const o_keys, t_array_mut<tp_val_type> *const o_values) {
         *o_keys = mem::arena_push_array<tp_key_type>(arena, hash_map_get_entry_count(hash_map));
-        *o_vals = mem::arena_push_array<tp_val_type>(arena, hash_map_get_entry_count(hash_map));
-        return hash_map_load_entries(hash_map, *o_keys, *o_vals);
+        *o_values = mem::arena_push_array<tp_val_type>(arena, hash_map_get_entry_count(hash_map));
+        return hash_map_load_entries(hash_map, *o_keys, *o_values);
     }
 
     template <c_simple tp_key_type, c_simple tp_val_type>

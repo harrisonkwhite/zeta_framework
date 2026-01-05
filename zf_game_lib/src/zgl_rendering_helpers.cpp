@@ -14,7 +14,7 @@ namespace zf::rendering {
         }
 
         const math::t_rect_f rect = math::rect_create_f32(pos, math::v2_convert_to_f32(math::rect_get_size(src_rect_to_use)));
-        const math::t_rect_f uv_rect = gfx::f_calc_uv_rect(src_rect_to_use, texture_size);
+        const math::t_rect_f uv_rect = gfx::texture_calc_uv_rect(src_rect_to_use, texture_size);
 
         const t_static_array<t_batch_triangle, 2> triangles = {{
             {
@@ -40,7 +40,7 @@ namespace zf::rendering {
         gfx::t_font_arrangement arrangement;
         t_array_mut<gfx::t_font_atlas_rgba> atlas_rgbas;
 
-        if (!gfx::f_load_font_from_raw(file_path, height, code_pts, resource_group->arena, temp_arena, temp_arena, &arrangement, &atlas_rgbas)) {
+        if (!gfx::font_load_from_raw(file_path, height, code_pts, resource_group->arena, temp_arena, temp_arena, &arrangement, &atlas_rgbas)) {
             ZF_FATAL();
         }
 
@@ -60,7 +60,7 @@ namespace zf::rendering {
         gfx::t_font_arrangement arrangement;
         t_array_mut<gfx::t_font_atlas_rgba> atlas_rgbas;
 
-        if (!gfx::f_unpack_font(file_path, resource_group->arena, temp_arena, temp_arena, &arrangement, &atlas_rgbas)) {
+        if (!gfx::font_unpack(file_path, resource_group->arena, temp_arena, temp_arena, &arrangement, &atlas_rgbas)) {
             ZF_FATAL();
         }
 
@@ -77,8 +77,8 @@ namespace zf::rendering {
     }
 
     static t_array_mut<math::t_v2> get_str_chr_render_positions(const strs::t_str_rdonly str, const gfx::t_font_arrangement &font_arrangement, const math::t_v2 pos, const math::t_v2 alignment, mem::t_arena *const arena) {
-        ZF_ASSERT(strs::f_is_valid_utf8(str));
-        ZF_ASSERT(gfx::f_is_alignment_valid(alignment));
+        ZF_ASSERT(strs::str_is_valid_utf8(str));
+        ZF_ASSERT(is_str_alignment_valid(alignment));
 
         // Calculate some useful string metadata.
         struct t_str_meta {
@@ -173,10 +173,10 @@ namespace zf::rendering {
     }
 
     void frame_submit_str(t_context *const context, const strs::t_str_rdonly str, const t_font &font, const math::t_v2 pos, mem::t_arena *const temp_arena, const math::t_v2 alignment, const gfx::t_color_rgba32f blend) {
-        ZF_ASSERT(strs::f_is_valid_utf8(str));
-        ZF_ASSERT(gfx::f_is_alignment_valid(alignment));
+        ZF_ASSERT(strs::str_is_valid_utf8(str));
+        ZF_ASSERT(is_str_alignment_valid(alignment));
 
-        if (strs::f_is_empty(str)) {
+        if (strs::str_is_empty(str)) {
             return;
         }
 

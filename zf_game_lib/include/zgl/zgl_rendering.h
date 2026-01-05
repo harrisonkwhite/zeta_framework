@@ -3,9 +3,6 @@
 #include <zcl.h>
 
 namespace zf::rendering {
-    // ============================================================
-    // @section: Types and Globals
-
     struct t_resource;
 
     struct t_resource_group {
@@ -15,24 +12,6 @@ namespace zf::rendering {
     };
 
     struct t_basis;
-
-    struct t_context;
-
-    struct t_batch_vertex {
-        math::t_v2 pos;
-        gfx::t_color_rgba32f blend;
-        math::t_v2 uv;
-    };
-
-    struct t_batch_triangle {
-        t_static_array<t_batch_vertex, 3> verts;
-    };
-
-    // ============================================================
-
-
-    // ============================================================
-    // @section: Functions
 
     // This depends on the platform module being initialised beforehand.
     // Returns a pointer to a rendering basis, needed for all rendering operations.
@@ -51,7 +30,7 @@ namespace zf::rendering {
     inline t_resource *texture_create_from_raw(const strs::t_str_rdonly file_path, mem::t_arena *const temp_arena, t_resource_group *const group) {
         gfx::t_texture_data_mut texture_data;
 
-        if (!gfx::f_load_texture_from_raw(file_path, temp_arena, temp_arena, &texture_data)) {
+        if (!gfx::texture_load_from_raw(file_path, temp_arena, temp_arena, &texture_data)) {
             ZF_FATAL();
         }
 
@@ -61,7 +40,7 @@ namespace zf::rendering {
     inline t_resource *texture_create_from_packed(const strs::t_str_rdonly file_path, mem::t_arena *const temp_arena, t_resource_group *const group) {
         gfx::t_texture_data_mut texture_data;
 
-        if (!gfx::f_unpack_texture(file_path, temp_arena, temp_arena, &texture_data)) {
+        if (!gfx::texture_unpack(file_path, temp_arena, temp_arena, &texture_data)) {
             ZF_FATAL();
         }
 
@@ -75,18 +54,34 @@ namespace zf::rendering {
     inline t_resource *shader_prog_create_from_packed(const strs::t_str_rdonly vert_shader_file_path, const strs::t_str_rdonly frag_shader_file_path, mem::t_arena *const temp_arena, t_resource_group *const arena) {
         t_array_mut<t_u8> vert_shader_compiled_bin;
 
-        if (!gfx::f_unpack_shader(vert_shader_file_path, temp_arena, temp_arena, &vert_shader_compiled_bin)) {
+        if (!gfx::shader_unpack(vert_shader_file_path, temp_arena, temp_arena, &vert_shader_compiled_bin)) {
             ZF_FATAL();
         }
 
         t_array_mut<t_u8> frag_shader_compiled_bin;
 
-        if (!gfx::f_unpack_shader(frag_shader_file_path, temp_arena, temp_arena, &frag_shader_compiled_bin)) {
+        if (!gfx::shader_unpack(frag_shader_file_path, temp_arena, temp_arena, &frag_shader_compiled_bin)) {
             ZF_FATAL();
         }
 
         return shader_prog_create(vert_shader_compiled_bin, frag_shader_compiled_bin, arena);
     }
+
+
+    // ============================================================
+    // @section: Frame
+
+    struct t_context;
+
+    struct t_batch_vertex {
+        math::t_v2 pos;
+        gfx::t_color_rgba32f blend;
+        math::t_v2 uv;
+    };
+
+    struct t_batch_triangle {
+        t_static_array<t_batch_vertex, 3> verts;
+    };
 
     t_context *frame_begin(const t_basis *const basis, const gfx::t_color_rgb8 clear_col, mem::t_arena *const context_arena);
     void frame_end(t_context *const context);
@@ -137,6 +132,20 @@ namespace zf::rendering {
         frame_submit_rect(context, rect, color, color, color, color);
     }
 
+    constexpr math::t_v2 g_origin_topleft = {0.0f, 0.0f};
+    constexpr math::t_v2 g_origin_topcenter = {0.5f, 0.0f};
+    constexpr math::t_v2 g_origin_topright = {1.0f, 0.0f};
+    constexpr math::t_v2 g_origin_centerleft = {0.0f, 0.5f};
+    constexpr math::t_v2 g_origin_center = {0.5f, 0.5f};
+    constexpr math::t_v2 g_origin_centerright = {1.0f, 0.5f};
+    constexpr math::t_v2 g_origin_bottomleft = {0.0f, 1.0f};
+    constexpr math::t_v2 g_origin_bottomcenter = {0.5f, 1.0f};
+    constexpr math::t_v2 g_origin_bottomright = {1.0f, 1.0f};
+
+    inline t_b8 is_origin_valid(const math::t_v2 origin) {
+        return origin.x >= 0.0f && origin.x <= 1.0f && origin.y >= 0.0f && origin.y <= 1.0f;
+    }
+
     void frame_submit_texture(t_context *const context, const t_resource *const texture, const math::t_v2 pos, const math::t_rect_i src_rect = {});
 
     struct t_font {
@@ -147,7 +156,21 @@ namespace zf::rendering {
     t_font font_create_from_raw(const strs::t_str_rdonly file_path, const t_i32 height, strs::t_code_pt_bitset *const code_pts, mem::t_arena *const temp_arena, t_resource_group *const resource_group);
     t_font font_create_from_packed(const strs::t_str_rdonly file_path, mem::t_arena *const temp_arena, t_resource_group *const resource_group);
 
-    void frame_submit_str(t_context *const context, const strs::t_str_rdonly str, const t_font &font, const math::t_v2 pos, mem::t_arena *const temp_arena, const math::t_v2 alignment = gfx::g_alignment_topleft, const gfx::t_color_rgba32f blend = gfx::g_color_white);
+    constexpr math::t_v2 g_str_alignment_topleft = {0.0f, 0.0f};
+    constexpr math::t_v2 g_str_alignment_topcenter = {0.5f, 0.0f};
+    constexpr math::t_v2 g_str_alignment_topright = {1.0f, 0.0f};
+    constexpr math::t_v2 g_str_alignment_centerleft = {0.0f, 0.5f};
+    constexpr math::t_v2 g_str_alignment_center = {0.5f, 0.5f};
+    constexpr math::t_v2 g_str_alignment_centerright = {1.0f, 0.5f};
+    constexpr math::t_v2 g_str_alignment_bottomleft = {0.0f, 1.0f};
+    constexpr math::t_v2 g_str_alignment_bottomcenter = {0.5f, 1.0f};
+    constexpr math::t_v2 g_str_alignment_bottomright = {1.0f, 1.0f};
+
+    inline t_b8 is_str_alignment_valid(const math::t_v2 alignment) {
+        return alignment.x >= 0.0f && alignment.x <= 1.0f && alignment.y >= 0.0f && alignment.y <= 1.0f;
+    }
+
+    void frame_submit_str(t_context *const context, const strs::t_str_rdonly str, const t_font &font, const math::t_v2 pos, mem::t_arena *const temp_arena, const math::t_v2 alignment = g_str_alignment_topleft, const gfx::t_color_rgba32f blend = gfx::g_color_white);
 
     // ============================================================
 }

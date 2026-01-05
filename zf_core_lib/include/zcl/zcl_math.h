@@ -168,11 +168,6 @@ namespace zf::math {
         return {pos.x, pos.y, size.x, size.y};
     }
 
-    inline t_rect_f rect_create_f32(const t_v2 pos, const t_v2 size, const t_v2 origin) {
-        ZF_ASSERT(size.x >= 0.0f && size.y >= 0.0f);
-        return {pos.x - (size.x * origin.x), pos.y - (size.y * origin.y), size.x, size.y};
-    }
-
     inline t_rect_i rect_create_i32(const t_i32 x, const t_i32 y, const t_i32 width, const t_i32 height) {
         ZF_ASSERT(width >= 0 && height >= 0);
         return {x, y, width, height};

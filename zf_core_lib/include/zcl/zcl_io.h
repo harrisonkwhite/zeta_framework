@@ -112,8 +112,8 @@ namespace zf::io {
         }
     }
 
-    template <c_array_mut tp_type>
-    [[nodiscard]] t_b8 stream_read_items_into_array(t_stream *const stream, const tp_type arr, const t_i32 cnt) {
+    template <c_array_mut tp_arr_type>
+    [[nodiscard]] t_b8 stream_read_items_into_array(t_stream *const stream, const tp_arr_type arr, const t_i32 cnt) {
         ZF_ASSERT(stream->mode == ec_stream_mode_read);
         ZF_ASSERT(cnt >= 0 && cnt <= arr.len);
 
@@ -146,8 +146,8 @@ namespace zf::io {
         }
     }
 
-    template <c_array tp_type>
-    [[nodiscard]] t_b8 stream_write_items_of_array(t_stream *const stream, const tp_type arr) {
+    template <c_array tp_arr_type>
+    [[nodiscard]] t_b8 stream_write_items_of_array(t_stream *const stream, const tp_arr_type arr) {
         ZF_ASSERT(stream->mode == ec_stream_mode_write);
 
         if (arr.len == 0) {
@@ -179,8 +179,8 @@ namespace zf::io {
         }
     }
 
-    template <c_array tp_type>
-    [[nodiscard]] t_b8 stream_serialize_array(t_stream *const stream, const tp_type arr) {
+    template <c_array tp_arr_type>
+    [[nodiscard]] t_b8 stream_serialize_array(t_stream *const stream, const tp_arr_type arr) {
         if (!stream_write_item(stream, arr.len)) {
             return false;
         }
@@ -192,15 +192,15 @@ namespace zf::io {
         return true;
     }
 
-    template <c_simple tp_type>
-    [[nodiscard]] t_b8 stream_deserialize_array(t_stream *const stream, mem::t_arena *const arr_arena, t_array_mut<tp_type> *const o_arr) {
+    template <c_array_elem tp_elem_type>
+    [[nodiscard]] t_b8 stream_deserialize_array(t_stream *const stream, mem::t_arena *const arr_arena, t_array_mut<tp_elem_type> *const o_arr) {
         t_i32 len;
 
         if (!stream_read_item(stream, &len)) {
             return false;
         }
 
-        *o_arr = mem::arena_push_array<tp_type>(arr_arena, len);
+        *o_arr = mem::arena_push_array<tp_elem_type>(arr_arena, len);
 
         if (!stream_read_items_into_array(stream, *o_arr, len)) {
             return false;
@@ -288,7 +288,7 @@ namespace zf::io {
 
     inline t_b8 print_format(t_stream *const stream, const strs::t_str_rdonly format);
 
-    template <c_simple tp_arg_type, c_simple... tp_arg_types_leftover>
+    template <typename tp_arg_type, typename... tp_arg_types_leftover>
     t_b8 print_format(t_stream *const stream, const strs::t_str_rdonly format, const tp_arg_type &arg, const tp_arg_types_leftover &...args_leftover);
 
     // Type format structs which are to be accepted as format printing arguments need to meet this (i.e. have the tag).
@@ -705,7 +705,7 @@ namespace zf::io {
     constexpr strs::t_code_pt g_print_format_esc = '^';
 
     inline t_i32 count_format_specs(const strs::t_str_rdonly str) {
-        static_assert(strs::f_is_code_pt_ascii(g_print_format_spec) && strs::f_is_code_pt_ascii(g_print_format_esc)); // Assuming this for this algorithm.
+        static_assert(strs::code_pt_is_ascii(g_print_format_spec) && strs::code_pt_is_ascii(g_print_format_esc)); // Assuming this for this algorithm.
 
         t_b8 escaped = false;
         t_i32 cnt = 0;
@@ -734,13 +734,13 @@ namespace zf::io {
 
     // Use a single '%' as the format specifier. To actually include a '%' in the output, write "^%". To actually include a '^', write "^^".
     // Returns true iff the operation was successful.
-    template <c_simple tp_arg_type, c_simple... tp_arg_types_leftover>
+    template <typename tp_arg_type, typename... tp_arg_types_leftover>
     t_b8 print_format(t_stream *const stream, const strs::t_str_rdonly format, const tp_arg_type &arg, const tp_arg_types_leftover &...args_leftover) {
         static_assert(!c_cstr<tp_arg_type>, "C-strings are prohibited for default formatting as a form of error prevention.");
 
         ZF_ASSERT(count_format_specs(format) == 1 + sizeof...(args_leftover));
 
-        static_assert(strs::f_is_code_pt_ascii(g_print_format_spec) && strs::f_is_code_pt_ascii(g_print_format_esc)); // Assuming this for this algorithm.
+        static_assert(strs::code_pt_is_ascii(g_print_format_spec) && strs::code_pt_is_ascii(g_print_format_esc)); // Assuming this for this algorithm.
 
         t_b8 escaped = false;
 
@@ -781,7 +781,7 @@ namespace zf::io {
     // ========================================
     // @subsection: Logging Helpers
 
-    template <c_simple... tp_arg_types>
+    template <typename... tp_arg_types>
     t_b8 log(const strs::t_str_rdonly format, const tp_arg_types &...args) {
         t_stream std_err = get_std_out();
 
@@ -796,7 +796,7 @@ namespace zf::io {
         return true;
     }
 
-    template <c_simple... tp_arg_types>
+    template <typename... tp_arg_types>
     t_b8 log_error(const strs::t_str_rdonly format, const tp_arg_types &...args) {
         t_stream std_err = get_std_error();
 
@@ -815,9 +815,9 @@ namespace zf::io {
         return true;
     }
 
-    template <c_simple... tp_arg_types>
+    template <typename... tp_arg_types>
     t_b8 log_error_type(const strs::t_str_rdonly type_name, const strs::t_str_rdonly format, const tp_arg_types &...args) {
-        ZF_ASSERT(!strs::f_is_empty(type_name));
+        ZF_ASSERT(!strs::str_is_empty(type_name));
 
         t_stream std_err = get_std_error();
 
@@ -836,7 +836,7 @@ namespace zf::io {
         return true;
     }
 
-    template <c_simple... tp_arg_types>
+    template <typename... tp_arg_types>
     t_b8 log_warning(const strs::t_str_rdonly format, const tp_arg_types &...args) {
         t_stream std_err = get_std_error();
 

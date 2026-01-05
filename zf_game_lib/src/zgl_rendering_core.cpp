@@ -4,9 +4,6 @@
 #include <zgl/zgl_platform.h>
 
 namespace zf::rendering {
-    // ============================================================
-    // @section: Types and Globals
-
     enum t_module_state : t_i32 {
         ec_module_state_inactive,
         ec_module_state_active_but_not_midframe,
@@ -70,12 +67,6 @@ namespace zf::rendering {
             const t_resource *texture;
         } batch_state;
     };
-
-    // ============================================================
-
-
-    // ============================================================
-    // @section: Functions
 
     // @todo: Placeholder!
     static bgfx::ProgramHandle create_bgfx_shader_prog(const t_array_rdonly<t_u8> vert_shader_bin, const t_array_rdonly<t_u8> frag_shader_bin) {
@@ -292,7 +283,7 @@ namespace zf::rendering {
 
         bgfx::setViewTransform(0, &view_mat, &proj_mat);
 
-        bgfx::setViewClear(0, BGFX_CLEAR_COLOR, gfx::f_convert_color_to_hex(clear_col));
+        bgfx::setViewClear(0, BGFX_CLEAR_COLOR, gfx::color_convert_to_hex(clear_col));
 
         bgfx::setViewRect(0, 0, 0, static_cast<uint16_t>(fb_size_cache.x), static_cast<uint16_t>(fb_size_cache.y));
 
@@ -370,6 +361,4 @@ namespace zf::rendering {
 
         context->batch_state.vert_cnt += num_verts_to_submit;
     }
-
-    // ============================================================
 }
