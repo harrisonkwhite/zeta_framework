@@ -4,12 +4,12 @@
 #include <stb_truetype.h>
 
 namespace zf::gfx {
-    static const t_hash_func<t_code_pt> g_code_pt_hash_func =
+    static const ds::t_hash_func<t_code_pt> g_code_pt_hash_func =
         [](const t_code_pt &code_pt) {
             return static_cast<t_i32>(code_pt);
         };
 
-    static const t_hash_func<t_font_code_pt_pair> g_code_pt_pair_hash_func =
+    static const ds::t_hash_func<t_font_code_pt_pair> g_code_pt_pair_hash_func =
         [](const t_font_code_pt_pair &pair) {
             return 0; // @todo: Proper hash function!
         };
@@ -142,7 +142,7 @@ namespace zf::gfx {
         //
         // Glyph Info
         //
-        o_arrangement->code_pts_to_glyph_infos = HashMapCreate<t_code_pt, t_font_glyph_info>(g_code_pt_hash_func, arrangement_arena, code_pt_cnt);
+        o_arrangement->code_pts_to_glyph_infos = ds::f_hash_map_create<t_code_pt, t_font_glyph_info>(g_code_pt_hash_func, arrangement_arena, code_pt_cnt);
 
         t_i32 atlas_index = 0;
         math::t_v2_i atlas_pen = {};
@@ -181,7 +181,7 @@ namespace zf::gfx {
             glyph_info.atlas_rect = {atlas_pen.x, atlas_pen.y, glyph_info.size.x, glyph_info.size.y};
             atlas_pen.x += glyph_info.size.x;
 
-            HashMapPut(&o_arrangement->code_pts_to_glyph_infos, code_pt, glyph_info);
+            ds::f_hash_map_put(&o_arrangement->code_pts_to_glyph_infos, code_pt, glyph_info);
         }
 
         const t_i32 atlas_cnt = atlas_index + 1;
@@ -192,7 +192,7 @@ namespace zf::gfx {
 
         // If there were any kernings to store, set up the hash map and go through again and store them.
         o_arrangement->has_kernings = true;
-        o_arrangement->code_pt_pairs_to_kernings = HashMapCreate<t_font_code_pt_pair, t_i32>(g_code_pt_pair_hash_func, arrangement_arena, g_hash_map_cap_default, g_code_pt_pair_comparator);
+        o_arrangement->code_pt_pairs_to_kernings = ds::f_hash_map_create<t_font_code_pt_pair, t_i32>(g_code_pt_pair_hash_func, arrangement_arena, ds::g_hash_map_cap_default, g_code_pt_pair_comparator);
 
         ZF_WALK_SET_BITS (*code_pts, i) {
             ZF_WALK_SET_BITS (*code_pts, j) {
@@ -205,7 +205,7 @@ namespace zf::gfx {
                 const t_i32 kern = stbtt_GetGlyphKernAdvance(&stb_font_info, glyph_a_index, glyph_b_index);
 
                 if (kern != 0) {
-                    HashMapPut(&o_arrangement->code_pt_pairs_to_kernings, {cp_a, cp_b}, kern);
+                    ds::f_hash_map_put(&o_arrangement->code_pt_pairs_to_kernings, {cp_a, cp_b}, kern);
                 }
             }
         }
@@ -234,7 +234,7 @@ namespace zf::gfx {
 
             t_font_glyph_info *glyph_info;
 
-            if (!HashMapPut(&o_arrangement->code_pts_to_glyph_infos, code_pt, &glyph_info)) {
+            if (!ds::f_hash_map_find(&o_arrangement->code_pts_to_glyph_infos, code_pt, &glyph_info)) {
                 ZF_ASSERT(false);
             }
 
@@ -283,11 +283,11 @@ namespace zf::gfx {
             return false;
         }
 
-        if (!SerializeHashMap(&fs, &arrangement.code_pts_to_glyph_infos, temp_arena)) {
+        if (!ds::f_hash_map_serialize(&arrangement.code_pts_to_glyph_infos, &fs, temp_arena)) {
             return false;
         }
 
-        if (!SerializeHashMap(&fs, &arrangement.code_pt_pairs_to_kernings, temp_arena)) {
+        if (!ds::f_hash_map_serialize(&arrangement.code_pt_pairs_to_kernings, &fs, temp_arena)) {
             return false;
         }
 
@@ -311,11 +311,11 @@ namespace zf::gfx {
             return false;
         }
 
-        if (!DeserializeHashMap(&fs, arrangement_arena, g_code_pt_hash_func, temp_arena, &o_arrangement->code_pts_to_glyph_infos)) {
+        if (!ds::f_hash_map_deserialize(&fs, arrangement_arena, g_code_pt_hash_func, temp_arena, &o_arrangement->code_pts_to_glyph_infos)) {
             return false;
         }
 
-        if (!DeserializeHashMap(&fs, arrangement_arena, g_code_pt_pair_hash_func, temp_arena, &o_arrangement->code_pt_pairs_to_kernings, g_code_pt_pair_comparator)) {
+        if (!ds::f_hash_map_deserialize(&fs, arrangement_arena, g_code_pt_pair_hash_func, temp_arena, &o_arrangement->code_pt_pairs_to_kernings, g_code_pt_pair_comparator)) {
             return false;
         }
 

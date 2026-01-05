@@ -2,7 +2,7 @@
 
 #include <zcl/zcl_io.h>
 #include <zcl/zcl_math.h>
-#include <zcl/zcl_ds_hash_maps.h>
+#include <zcl/zcl_ds.h>
 
 namespace zf::gfx {
     // ============================================================
@@ -104,10 +104,10 @@ namespace zf::gfx {
     struct t_font_arrangement {
         t_i32 line_height;
 
-        s_hash_map<t_code_pt, t_font_glyph_info> code_pts_to_glyph_infos;
+        ds::t_hash_map<t_code_pt, t_font_glyph_info> code_pts_to_glyph_infos;
 
         t_b8 has_kernings;
-        s_hash_map<t_font_code_pt_pair, t_i32> code_pt_pairs_to_kernings;
+        ds::t_hash_map<t_font_code_pt_pair, t_i32> code_pt_pairs_to_kernings;
     };
 
     constexpr math::t_v2 g_gfx_alignment_topleft = {0.0f, 0.0f};
