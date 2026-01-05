@@ -1,6 +1,7 @@
 #pragma once
 
 #include <zcl.h>
+#include <zgl/zgl_input.h>
 
 namespace zf {
     struct t_rendering_resource_group;
@@ -14,13 +15,11 @@ namespace zf {
         t_rng *rng;
     };
 
-    struct t_input_state;
-
     struct t_game_tick_context {
         t_arena *perm_arena;
         t_arena *temp_arena;
 
-        const t_input_state *input_state;
+        const input::t_state *input_state;
 
         t_rendering_resource_group *perm_rendering_resource_group;
 

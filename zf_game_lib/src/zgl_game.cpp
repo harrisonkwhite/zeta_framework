@@ -24,10 +24,10 @@ namespace zf {
         t_arena temp_arena = f_mem_arena_create();
         ZF_DEFER({ f_mem_arena_destroy(&temp_arena); });
 
-        f_platform_startup(g_init_window_size);
-        ZF_DEFER({ f_platform_shutdown(); });
+        platform::f_startup(g_init_window_size);
+        ZF_DEFER({ platform::f_shutdown(); });
 
-        t_input_state *const input_state = f_input_create_state(&perm_arena);
+        input::t_state *const input_state = input::f_create_state(&perm_arena);
 
         t_rendering_resource_group *perm_rendering_resource_group;
         t_rendering_basis *const rendering_basis = f_rendering_startup_module(&perm_arena, &perm_rendering_resource_group);
@@ -51,15 +51,15 @@ namespace zf {
         //
         // Main Loop
         //
-        f_platform_show_window();
+        platform::f_show_window();
 
-        t_f64 frame_time_last = f_platform_get_time();
+        t_f64 frame_time_last = platform::f_get_time();
         t_f64 frame_dur_accum = 0.0;
 
-        while (!f_platform_should_window_close()) {
-            f_platform_poll_os_events(input_state);
+        while (!platform::f_should_window_close()) {
+            platform::f_poll_os_events(input_state);
 
-            const t_f64 frame_time = f_platform_get_time();
+            const t_f64 frame_time = platform::f_get_time();
             const t_f64 frame_time_delta = frame_time - frame_time_last;
             frame_dur_accum += frame_time_delta;
             frame_time_last = frame_time;
@@ -78,7 +78,7 @@ namespace zf {
                     .rng = rng,
                 });
 
-                f_input_clear_events(input_state);
+                input::f_clear_events(input_state);
 
                 frame_dur_accum -= targ_tick_interval;
             }

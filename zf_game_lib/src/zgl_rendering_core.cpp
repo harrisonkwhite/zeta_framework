@@ -112,15 +112,15 @@ namespace zf {
 
         bgfx_init.resolution.reset = BGFX_RESET_VSYNC;
 
-        const auto fb_size_cache = f_platform_get_window_framebuffer_size_cache();
+        const auto fb_size_cache = platform::f_get_window_framebuffer_size_cache();
 
         bgfx_init.resolution.width = static_cast<uint32_t>(fb_size_cache.x);
         bgfx_init.resolution.height = static_cast<uint32_t>(fb_size_cache.y);
 
         g_state.resolution_cache = fb_size_cache;
 
-        bgfx_init.platformData.nwh = f_platform_get_native_window_handle();
-        bgfx_init.platformData.ndt = f_platform_get_native_display_handle();
+        bgfx_init.platformData.nwh = platform::f_get_native_window_handle();
+        bgfx_init.platformData.ndt = platform::f_get_native_display_handle();
         bgfx_init.platformData.type = bgfx::NativeWindowHandleType::Default;
 
         if (!bgfx::init(bgfx_init)) {
@@ -273,7 +273,7 @@ namespace zf {
     t_rendering_context *f_rendering_begin_frame(const t_rendering_basis *const basis, const t_color_rgb8 clear_col, t_arena *const context_arena) {
         ZF_ASSERT(g_state.state == ec_state_active_but_not_rendering);
 
-        const auto fb_size_cache = f_platform_get_window_framebuffer_size_cache();
+        const auto fb_size_cache = platform::f_get_window_framebuffer_size_cache();
 
         if (g_state.resolution_cache != fb_size_cache) {
             bgfx::reset(static_cast<uint32_t>(fb_size_cache.x), static_cast<uint32_t>(fb_size_cache.y), BGFX_RESET_VSYNC);
