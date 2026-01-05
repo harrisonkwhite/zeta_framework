@@ -1,7 +1,7 @@
 #include <zcl/zcl_strs.h>
 
-namespace zf::strs {
-    enum e_utf8_byte_type : t_i32 {
+namespace zf {
+    enum t_utf8_byte_type : t_i32 {
         ec_utf8_byte_type_ascii,
         ec_utf8_byte_type_2byte_start,
         ec_utf8_byte_type_3byte_start,
@@ -12,7 +12,7 @@ namespace zf::strs {
 
     static_assert(ec_utf8_byte_type_4byte_start - ec_utf8_byte_type_ascii + 1 == 4); // This is assumed in various algorithms.
 
-    static const t_static_array<e_utf8_byte_type, 256> g_utf8_byte_type_table = {{
+    static const t_static_array<t_utf8_byte_type, 256> g_utf8_byte_type_table = {{
         ec_utf8_byte_type_ascii,
         ec_utf8_byte_type_ascii,
         ec_utf8_byte_type_ascii,
@@ -276,7 +276,7 @@ namespace zf::strs {
         ec_utf8_byte_type_invalid,
     }};
 
-    t_b8 determine_is_valid_utf8(const StrRdonly str) {
+    t_b8 f_strs_is_valid_utf8(const t_str_rdonly str) {
         t_i32 cost = 0;
 
         for (t_i32 i = 0; i < str.bytes.len; i++) {
@@ -312,8 +312,8 @@ namespace zf::strs {
         return true;
     }
 
-    t_i32 calc_len(const StrRdonly str) {
-        ZF_ASSERT(determine_is_valid_utf8(str));
+    t_i32 f_strs_get_len(const t_str_rdonly str) {
+        ZF_ASSERT(f_strs_is_valid_utf8(str));
 
         t_i32 i = 0;
         t_i32 len = 0;
@@ -339,10 +339,10 @@ namespace zf::strs {
         return len;
     }
 
-    static CodePoint convert_utf8_bytes_to_code_point(const t_array_rdonly<t_u8> bytes) {
+    static t_code_pt f_strs_convert_utf8_bytes_to_code_pt(const t_array_rdonly<t_u8> bytes) {
         ZF_ASSERT(bytes.len >= 1 && bytes.len <= 4);
 
-        CodePoint result = 0;
+        t_code_pt result = 0;
 
         switch (bytes.len) {
         case 1:
@@ -352,22 +352,22 @@ namespace zf::strs {
 
         case 2:
             // 110xxxxx 10xxxxxx
-            result |= static_cast<CodePoint>((bytes[0] & f_mem_byte_bitmask_range(0, 5)) << 6);
+            result |= static_cast<t_code_pt>((bytes[0] & f_mem_byte_bitmask_range(0, 5)) << 6);
             result |= bytes[1] & f_mem_byte_bitmask_range(0, 6);
             break;
 
         case 3:
             // 1110xxxx 10xxxxxx 10xxxxxx
-            result |= static_cast<CodePoint>((bytes[0] & f_mem_byte_bitmask_range(0, 4)) << 12);
-            result |= static_cast<CodePoint>((bytes[1] & f_mem_byte_bitmask_range(0, 6)) << 6);
+            result |= static_cast<t_code_pt>((bytes[0] & f_mem_byte_bitmask_range(0, 4)) << 12);
+            result |= static_cast<t_code_pt>((bytes[1] & f_mem_byte_bitmask_range(0, 6)) << 6);
             result |= bytes[2] & f_mem_byte_bitmask_range(0, 6);
             break;
 
         case 4:
             // 11110xxx 10xxxxxx 10xxxxxx 10xxxxxx
-            result |= static_cast<CodePoint>((bytes[0] & f_mem_byte_bitmask_range(0, 3)) << 18);
-            result |= static_cast<CodePoint>((bytes[1] & f_mem_byte_bitmask_range(0, 6)) << 12);
-            result |= static_cast<CodePoint>((bytes[2] & f_mem_byte_bitmask_range(0, 6)) << 6);
+            result |= static_cast<t_code_pt>((bytes[0] & f_mem_byte_bitmask_range(0, 3)) << 18);
+            result |= static_cast<t_code_pt>((bytes[1] & f_mem_byte_bitmask_range(0, 6)) << 12);
+            result |= static_cast<t_code_pt>((bytes[2] & f_mem_byte_bitmask_range(0, 6)) << 6);
             result |= bytes[3] & f_mem_byte_bitmask_range(0, 6);
             break;
 
@@ -378,8 +378,8 @@ namespace zf::strs {
         return result;
     }
 
-    CodePoint find_code_point_at_byte(const StrRdonly str, const t_i32 byte_index) {
-        ZF_ASSERT(determine_is_valid_utf8(str));
+    t_code_pt f_strs_find_code_pt_at_byte(const t_str_rdonly str, const t_i32 byte_index) {
+        ZF_ASSERT(f_strs_is_valid_utf8(str));
         ZF_ASSERT(byte_index >= 0 && byte_index < str.bytes.len);
 
         t_i32 cp_first_byte_index = byte_index;
@@ -394,20 +394,20 @@ namespace zf::strs {
 
             const t_i32 cp_byte_cnt = byte_type - ec_utf8_byte_type_ascii + 1;
             const auto cp_bytes = f_mem_slice_array(str.bytes, byte_index, byte_index + cp_byte_cnt);
-            return convert_utf8_bytes_to_code_point(cp_bytes);
+            return f_strs_convert_utf8_bytes_to_code_pt(cp_bytes);
         } while (true);
     }
 
-    void mark_code_points(const StrRdonly str, CodePointBitVector *const code_pts) {
-        ZF_ASSERT(determine_is_valid_utf8(str));
+    void f_strs_mark_code_points(const t_str_rdonly str, t_code_pt_bit_vec *const code_pts) {
+        ZF_ASSERT(f_strs_is_valid_utf8(str));
 
         ZF_WALK_STR (str, step) {
             f_mem_set_bit(*code_pts, step.code_pt); // @todo
         }
     }
 
-    t_b8 walk(const StrRdonly str, t_i32 *const byte_index, StrWalkStep *const o_step) {
-        ZF_ASSERT(determine_is_valid_utf8(str));
+    t_b8 f_strs_walk(const t_str_rdonly str, t_i32 *const byte_index, t_str_walk_step *const o_step) {
+        ZF_ASSERT(f_strs_is_valid_utf8(str));
         ZF_ASSERT(*byte_index >= 0 && *byte_index <= str.bytes.len);
 
         if (*byte_index == str.bytes.len) {
@@ -424,7 +424,7 @@ namespace zf::strs {
             case ec_utf8_byte_type_4byte_start: {
                 const t_i32 cp_byte_cnt = byte_type - ec_utf8_byte_type_ascii + 1;
                 const auto cp_bytes = f_mem_slice_array(str.bytes, *byte_index, *byte_index + cp_byte_cnt);
-                *o_step = {.code_pt = convert_utf8_bytes_to_code_point(cp_bytes), .byte_index = *byte_index};
+                *o_step = {.code_pt = f_strs_convert_utf8_bytes_to_code_pt(cp_bytes), .byte_index = *byte_index};
                 *byte_index += cp_byte_cnt;
 
                 return true;
@@ -440,8 +440,8 @@ namespace zf::strs {
         }
     }
 
-    t_b8 walk_reverse(const StrRdonly str, t_i32 *const byte_index, StrWalkStep *const o_step) {
-        ZF_ASSERT(determine_is_valid_utf8(str));
+    t_b8 f_strs_walk_reverse(const t_str_rdonly str, t_i32 *const byte_index, t_str_walk_step *const o_step) {
+        ZF_ASSERT(f_strs_is_valid_utf8(str));
         ZF_ASSERT(*byte_index >= -1 && *byte_index < str.bytes.len);
 
         if (*byte_index == -1) {
@@ -458,7 +458,7 @@ namespace zf::strs {
             case ec_utf8_byte_type_4byte_start: {
                 const t_i32 cp_byte_cnt = byte_type - ec_utf8_byte_type_ascii + 1;
                 const auto cp_bytes = f_mem_slice_array(str.bytes, *byte_index, *byte_index + cp_byte_cnt);
-                *o_step = {.code_pt = convert_utf8_bytes_to_code_point(cp_bytes), .byte_index = *byte_index};
+                *o_step = {.code_pt = f_strs_convert_utf8_bytes_to_code_pt(cp_bytes), .byte_index = *byte_index};
                 (*byte_index)--;
 
                 return true;

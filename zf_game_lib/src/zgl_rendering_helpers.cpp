@@ -36,7 +36,7 @@ namespace zf {
         f_rendering_submit_triangle(context, f_mem_as_nonstatic_array(triangles), texture);
     }
 
-    t_font f_rendering_create_font_from_raw(const strs::StrRdonly file_path, const t_i32 height, strs::CodePointBitVector *const code_pts, t_arena *const temp_arena, t_rendering_resource_group *const resource_group) {
+    t_font f_rendering_create_font_from_raw(const t_str_rdonly file_path, const t_i32 height, t_code_pt_bit_vec *const code_pts, t_arena *const temp_arena, t_rendering_resource_group *const resource_group) {
         gfx::FontArrangement arrangement;
         t_array_mut<gfx::FontAtlasRGBA> atlas_rgbas;
 
@@ -56,7 +56,7 @@ namespace zf {
         };
     }
 
-    t_font f_rendering_create_font_from_packed(const strs::StrRdonly file_path, t_arena *const temp_arena, t_rendering_resource_group *const resource_group) {
+    t_font f_rendering_create_font_from_packed(const t_str_rdonly file_path, t_arena *const temp_arena, t_rendering_resource_group *const resource_group) {
         gfx::FontArrangement arrangement;
         t_array_mut<gfx::FontAtlasRGBA> atlas_rgbas;
 
@@ -76,8 +76,8 @@ namespace zf {
         };
     }
 
-    t_array_mut<s_v2> f_rendering_get_str_chr_render_positions(const strs::StrRdonly str, const gfx::FontArrangement &font_arrangement, const s_v2 pos, const s_v2 alignment, t_arena *const arena) {
-        ZF_ASSERT(determine_is_valid_utf8(str));
+    t_array_mut<s_v2> f_rendering_get_str_chr_render_positions(const t_str_rdonly str, const gfx::FontArrangement &font_arrangement, const s_v2 pos, const s_v2 alignment, t_arena *const arena) {
+        ZF_ASSERT(f_strs_is_valid_utf8(str));
         ZF_ASSERT(gfx::get_is_alignment_valid(alignment));
 
         // Calculate some useful string metadata.
@@ -111,7 +111,7 @@ namespace zf {
         s_v2 chr_pos_pen = {}; // The position of the current character.
         t_i32 line_begin_chr_index = 0;
         t_i32 line_len = 0;
-        strs::CodePoint code_pt_last;
+        t_code_pt code_pt_last;
 
         const auto apply_hor_alignment_offs = [&]() {
             if (line_len > 0) {
@@ -172,11 +172,11 @@ namespace zf {
         return positions;
     }
 
-    void f_rendering_submit_str(t_rendering_context *const context, const strs::StrRdonly str, const t_font &font, const s_v2 pos, t_arena *const temp_arena, const s_v2 alignment, const gfx::ColorRGBA32F blend) {
-        ZF_ASSERT(determine_is_valid_utf8(str));
+    void f_rendering_submit_str(t_rendering_context *const context, const t_str_rdonly str, const t_font &font, const s_v2 pos, t_arena *const temp_arena, const s_v2 alignment, const gfx::ColorRGBA32F blend) {
+        ZF_ASSERT(f_strs_is_valid_utf8(str));
         ZF_ASSERT(gfx::get_is_alignment_valid(alignment));
 
-        if (strs::get_is_empty(str)) {
+        if (f_strs_is_empty(str)) {
             return;
         }
 

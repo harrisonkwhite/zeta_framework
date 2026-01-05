@@ -249,10 +249,10 @@ namespace zf {
         ek_file_access_mode_append
     };
 
-    [[nodiscard]] t_b8 FileOpen(const strs::StrRdonly file_path, const e_file_access_mode mode, t_arena *const temp_arena, s_stream *const o_stream);
+    [[nodiscard]] t_b8 FileOpen(const t_str_rdonly file_path, const e_file_access_mode mode, t_arena *const temp_arena, s_stream *const o_stream);
     void FileClose(s_stream *const stream);
     t_i32 FileCalcSize(s_stream *const stream);
-    [[nodiscard]] t_b8 LoadFileContents(const strs::StrRdonly file_path, t_arena *const contents_arena, t_arena *const temp_arena, t_array_mut<t_u8> *const o_contents, const t_b8 add_terminator = false);
+    [[nodiscard]] t_b8 LoadFileContents(const t_str_rdonly file_path, t_arena *const contents_arena, t_arena *const temp_arena, t_array_mut<t_u8> *const o_contents, const t_b8 add_terminator = false);
 
     enum e_directory_creation_result : t_i32 {
         ek_directory_creation_result_success,
@@ -262,9 +262,9 @@ namespace zf {
         ek_directory_creation_result_unknown_err
     };
 
-    [[nodiscard]] t_b8 CreateDirectoryAssumingParentsExist(const strs::StrRdonly path, t_arena *const temp_arena, e_directory_creation_result *const o_creation_res = nullptr);
-    [[nodiscard]] t_b8 CreateDirectoryAndParents(const strs::StrRdonly path, t_arena *const temp_arena, e_directory_creation_result *const o_dir_creation_res = nullptr);
-    [[nodiscard]] t_b8 CreateFileAndParentDirectories(const strs::StrRdonly path, t_arena *const temp_arena, e_directory_creation_result *const o_dir_creation_res = nullptr);
+    [[nodiscard]] t_b8 CreateDirectoryAssumingParentsExist(const t_str_rdonly path, t_arena *const temp_arena, e_directory_creation_result *const o_creation_res = nullptr);
+    [[nodiscard]] t_b8 CreateDirectoryAndParents(const t_str_rdonly path, t_arena *const temp_arena, e_directory_creation_result *const o_dir_creation_res = nullptr);
+    [[nodiscard]] t_b8 CreateFileAndParentDirectories(const t_str_rdonly path, t_arena *const temp_arena, e_directory_creation_result *const o_dir_creation_res = nullptr);
 
     enum e_path_type : t_i32 {
         ek_path_type_not_found,
@@ -272,9 +272,9 @@ namespace zf {
         ek_path_type_directory
     };
 
-    e_path_type DeterminePathType(const strs::StrRdonly path, t_arena *const temp_arena);
+    e_path_type DeterminePathType(const t_str_rdonly path, t_arena *const temp_arena);
 
-    strs::StrMut LoadExecutableDirectory(t_arena *const arena);
+    t_str_mut LoadExecutableDirectory(t_arena *const arena);
 
     // ============================================================
 
@@ -282,14 +282,14 @@ namespace zf {
     // ============================================================
     // @section: Printing
 
-    inline t_b8 Print(s_stream *const stream, const strs::StrRdonly str) {
+    inline t_b8 Print(s_stream *const stream, const t_str_rdonly str) {
         return WriteItemsOfArray(stream, str.bytes);
     }
 
-    inline t_b8 PrintFormat(s_stream *const stream, const strs::StrRdonly fmt);
+    inline t_b8 PrintFormat(s_stream *const stream, const t_str_rdonly fmt);
 
     template <c_simple tp_arg_type, c_simple... tp_arg_types_leftover>
-    t_b8 PrintFormat(s_stream *const stream, const strs::StrRdonly fmt, const tp_arg_type &arg, const tp_arg_types_leftover &...args_leftover);
+    t_b8 PrintFormat(s_stream *const stream, const t_str_rdonly fmt, const tp_arg_type &arg, const tp_arg_types_leftover &...args_leftover);
 
     // Type format structs which are to be accepted as format printing arguments need to meet this (i.e. have the tag).
     template <typename tp_type>
@@ -308,8 +308,8 @@ namespace zf {
     inline s_bool_fmt FormatDefault(const t_b8 value) { return {value}; }
 
     inline t_b8 PrintType(s_stream *const stream, const s_bool_fmt fmt) {
-        const strs::StrRdonly true_str = ZF_STR_LITERAL("true");
-        const strs::StrRdonly false_str = ZF_STR_LITERAL("false");
+        const t_str_rdonly true_str = ZF_STR_LITERAL("true");
+        const t_str_rdonly false_str = ZF_STR_LITERAL("false");
 
         return Print(stream, fmt.value ? true_str : false_str);
     }
@@ -322,11 +322,11 @@ namespace zf {
 
     struct s_str_fmt {
         using t_fmt_tag = void;
-        strs::StrRdonly value;
+        t_str_rdonly value;
     };
 
-    inline s_str_fmt FormatStr(const strs::StrRdonly value) { return {value}; }
-    inline s_str_fmt FormatDefault(const strs::StrRdonly value) { return FormatStr(value); }
+    inline s_str_fmt FormatStr(const t_str_rdonly value) { return {value}; }
+    inline s_str_fmt FormatDefault(const t_str_rdonly value) { return FormatStr(value); }
 
     inline t_b8 PrintType(s_stream *const stream, const s_str_fmt fmt) {
         return Print(stream, fmt.value);
@@ -642,7 +642,7 @@ namespace zf {
 
     inline t_b8 PrintType(s_stream *const stream, const s_bit_vec_fmt fmt) {
         const auto print_bit = [&](const t_i32 bit_index) {
-            const strs::StrRdonly str = f_mem_is_bit_set(fmt.value, bit_index) ? ZF_STR_LITERAL("1") : ZF_STR_LITERAL("0");
+            const t_str_rdonly str = f_mem_is_bit_set(fmt.value, bit_index) ? ZF_STR_LITERAL("1") : ZF_STR_LITERAL("0");
             return Print(stream, str);
         };
 
@@ -700,11 +700,11 @@ namespace zf {
     // ========================================
     // @subsection: Format Printing
 
-    constexpr strs::CodePoint g_print_fmt_spec = '%';
-    constexpr strs::CodePoint g_print_fmt_esc = '^';
+    constexpr t_code_pt g_print_fmt_spec = '%';
+    constexpr t_code_pt g_print_fmt_esc = '^';
 
-    inline t_i32 CountFormatSpecifiers(const strs::StrRdonly str) {
-        static_assert(strs::get_code_point_is_ascii(g_print_fmt_spec) && strs::get_code_point_is_ascii(g_print_fmt_esc)); // Assuming this for this algorithm.
+    inline t_i32 CountFormatSpecifiers(const t_str_rdonly str) {
+        static_assert(f_strs_is_code_pt_ascii(g_print_fmt_spec) && f_strs_is_code_pt_ascii(g_print_fmt_esc)); // Assuming this for this algorithm.
 
         t_b8 escaped = false;
         t_i32 cnt = 0;
@@ -724,7 +724,7 @@ namespace zf {
         return cnt;
     }
 
-    inline t_b8 PrintFormat(s_stream *const stream, const strs::StrRdonly fmt) {
+    inline t_b8 PrintFormat(s_stream *const stream, const t_str_rdonly fmt) {
         ZF_ASSERT(CountFormatSpecifiers(fmt) == 0);
 
         // Just print the rest of the string.
@@ -734,12 +734,12 @@ namespace zf {
     // Use a single '%' as the format specifier. To actually include a '%' in the output, write "^%". To actually include a '^', write "^^".
     // Returns true iff the operation was successful.
     template <c_simple tp_arg_type, c_simple... tp_arg_types_leftover>
-    t_b8 PrintFormat(s_stream *const stream, const strs::StrRdonly fmt, const tp_arg_type &arg, const tp_arg_types_leftover &...args_leftover) {
+    t_b8 PrintFormat(s_stream *const stream, const t_str_rdonly fmt, const tp_arg_type &arg, const tp_arg_types_leftover &...args_leftover) {
         static_assert(!c_cstr<tp_arg_type>, "C-strings are prohibited for default formatting as a form of error prevention.");
 
         ZF_ASSERT(CountFormatSpecifiers(fmt) == 1 + sizeof...(args_leftover));
 
-        static_assert(strs::get_code_point_is_ascii(g_print_fmt_spec) && strs::get_code_point_is_ascii(g_print_fmt_esc)); // Assuming this for this algorithm.
+        static_assert(f_strs_is_code_pt_ascii(g_print_fmt_spec) && f_strs_is_code_pt_ascii(g_print_fmt_esc)); // Assuming this for this algorithm.
 
         t_b8 escaped = false;
 
@@ -759,7 +759,7 @@ namespace zf {
                         }
                     }
 
-                    const strs::StrRdonly fmt_leftover = {f_mem_slice_array(fmt.bytes, i + 1, fmt.bytes.len)}; // The substring of everything after the format specifier.
+                    const t_str_rdonly fmt_leftover = {f_mem_slice_array(fmt.bytes, i + 1, fmt.bytes.len)}; // The substring of everything after the format specifier.
                     return PrintFormat(stream, fmt_leftover, args_leftover...);
                 }
             }
@@ -781,7 +781,7 @@ namespace zf {
     // @subsection: Logging Helpers
 
     template <c_simple... tp_arg_types>
-    t_b8 Log(const strs::StrRdonly fmt, const tp_arg_types &...args) {
+    t_b8 Log(const t_str_rdonly fmt, const tp_arg_types &...args) {
         s_stream std_err = StdOut();
 
         if (!PrintFormat(&std_err, fmt, args...)) {
@@ -796,7 +796,7 @@ namespace zf {
     }
 
     template <c_simple... tp_arg_types>
-    t_b8 LogError(const strs::StrRdonly fmt, const tp_arg_types &...args) {
+    t_b8 LogError(const t_str_rdonly fmt, const tp_arg_types &...args) {
         s_stream std_err = StdError();
 
         if (!Print(&std_err, ZF_STR_LITERAL("Error: "))) {
@@ -815,8 +815,8 @@ namespace zf {
     }
 
     template <c_simple... tp_arg_types>
-    t_b8 LogErrorType(const strs::StrRdonly type_name, const strs::StrRdonly fmt, const tp_arg_types &...args) {
-        ZF_ASSERT(!strs::get_is_empty(type_name));
+    t_b8 LogErrorType(const t_str_rdonly type_name, const t_str_rdonly fmt, const tp_arg_types &...args) {
+        ZF_ASSERT(!f_strs_is_empty(type_name));
 
         s_stream std_err = StdError();
 
@@ -836,7 +836,7 @@ namespace zf {
     }
 
     template <c_simple... tp_arg_types>
-    t_b8 LogWarning(const strs::StrRdonly fmt, const tp_arg_types &...args) {
+    t_b8 LogWarning(const t_str_rdonly fmt, const tp_arg_types &...args) {
         s_stream std_err = StdError();
 
         if (!Print(&std_err, ZF_STR_LITERAL("Warning: "))) {

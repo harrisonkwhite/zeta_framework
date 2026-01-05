@@ -48,7 +48,7 @@ namespace zf {
 
     t_rendering_resource *f_rendering_create_texture(const gfx::TextureDataRdonly texture_data, t_rendering_resource_group *const group);
 
-    inline t_rendering_resource *f_rendering_create_texture_from_raw(const strs::StrRdonly file_path, t_arena *const temp_arena, t_rendering_resource_group *const group) {
+    inline t_rendering_resource *f_rendering_create_texture_from_raw(const t_str_rdonly file_path, t_arena *const temp_arena, t_rendering_resource_group *const group) {
         gfx::TextureDataMut texture_data;
 
         if (!gfx::load_texture_from_raw(file_path, temp_arena, temp_arena, &texture_data)) {
@@ -58,7 +58,7 @@ namespace zf {
         return f_rendering_create_texture(texture_data, group);
     }
 
-    inline t_rendering_resource *f_rendering_create_texture_from_packed(const strs::StrRdonly file_path, t_arena *const temp_arena, t_rendering_resource_group *const group) {
+    inline t_rendering_resource *f_rendering_create_texture_from_packed(const t_str_rdonly file_path, t_arena *const temp_arena, t_rendering_resource_group *const group) {
         gfx::TextureDataMut texture_data;
 
         if (!unpack_texture(file_path, temp_arena, temp_arena, &texture_data)) {
@@ -72,7 +72,7 @@ namespace zf {
 
     t_rendering_resource *f_rendering_create_shader_prog(const t_array_rdonly<t_u8> vert_shader_compiled_bin, const t_array_rdonly<t_u8> frag_shader_compiled_bin, t_rendering_resource_group *const group);
 
-    inline t_rendering_resource *f_rendering_create_shader_prog_from_packed(const strs::StrRdonly vert_shader_file_path, const strs::StrRdonly frag_shader_file_path, t_arena *const temp_arena, t_rendering_resource_group *const arena) {
+    inline t_rendering_resource *f_rendering_create_shader_prog_from_packed(const t_str_rdonly vert_shader_file_path, const t_str_rdonly frag_shader_file_path, t_arena *const temp_arena, t_rendering_resource_group *const arena) {
         t_array_mut<t_u8> vert_shader_compiled_bin;
 
         if (!gfx::unpack_shader(vert_shader_file_path, temp_arena, temp_arena, &vert_shader_compiled_bin)) {
@@ -144,12 +144,12 @@ namespace zf {
         t_array_mut<t_rendering_resource *> atlases;
     };
 
-    t_font f_rendering_create_font_from_raw(const strs::StrRdonly file_path, const t_i32 height, strs::CodePointBitVector *const code_pts, t_arena *const temp_arena, t_rendering_resource_group *const resource_group);
-    t_font f_rendering_create_font_from_packed(const strs::StrRdonly file_path, t_arena *const temp_arena, t_rendering_resource_group *const resource_group);
+    t_font f_rendering_create_font_from_raw(const t_str_rdonly file_path, const t_i32 height, t_code_pt_bit_vec *const code_pts, t_arena *const temp_arena, t_rendering_resource_group *const resource_group);
+    t_font f_rendering_create_font_from_packed(const t_str_rdonly file_path, t_arena *const temp_arena, t_rendering_resource_group *const resource_group);
 
-    t_array_mut<s_v2> f_rendering_get_str_chr_render_positions(const strs::StrRdonly str, const gfx::FontArrangement &font_arrangement, const s_v2 pos, const s_v2 alignment, t_arena *const arena);
+    t_array_mut<s_v2> f_rendering_get_str_chr_render_positions(const t_str_rdonly str, const gfx::FontArrangement &font_arrangement, const s_v2 pos, const s_v2 alignment, t_arena *const arena);
 
-    void f_rendering_submit_str(t_rendering_context *const context, const strs::StrRdonly str, const t_font &font, const s_v2 pos, t_arena *const temp_arena, const s_v2 alignment = gfx::g_alignment_topleft, const gfx::ColorRGBA32F blend = gfx::g_color_white);
+    void f_rendering_submit_str(t_rendering_context *const context, const t_str_rdonly str, const t_font &font, const s_v2 pos, t_arena *const temp_arena, const s_v2 alignment = gfx::g_alignment_topleft, const gfx::ColorRGBA32F blend = gfx::g_color_white);
 
     // ============================================================
 }

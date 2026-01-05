@@ -37,8 +37,8 @@ namespace zf {
     using t_hash_func = t_i32 (*)(const tp_type &key);
 
     // This is an FNV-1a implementation.
-    inline const t_hash_func<strs::StrRdonly> g_str_hash_func =
-        [](const strs::StrRdonly &key) {
+    inline const t_hash_func<t_str_rdonly> g_str_hash_func =
+        [](const t_str_rdonly &key) {
             const t_u32 offs_basis = 2166136261u;
             const t_u32 prime = 16777619u;
 

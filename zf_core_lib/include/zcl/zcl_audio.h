@@ -26,10 +26,10 @@ namespace zf::audio {
         return snd_meta.channel_cnt * snd_meta.frame_cnt;
     }
 
-    [[nodiscard]] t_b8 load_sound_data_from_raw(const strs::StrRdonly file_path, t_arena *const snd_data_arena, t_arena *const temp_arena, SoundDataMut *const o_snd_data);
+    [[nodiscard]] t_b8 load_sound_data_from_raw(const t_str_rdonly file_path, t_arena *const snd_data_arena, t_arena *const temp_arena, SoundDataMut *const o_snd_data);
 
-    [[nodiscard]] t_b8 pack_sound(const strs::StrRdonly file_path, const SoundDataMut snd_data, t_arena *const temp_arena);
-    [[nodiscard]] t_b8 unpack_sound(const strs::StrRdonly file_path, t_arena *const snd_data_arena, t_arena *const temp_arena, SoundDataMut *const o_snd_data);
+    [[nodiscard]] t_b8 pack_sound(const t_str_rdonly file_path, const SoundDataMut snd_data, t_arena *const temp_arena);
+    [[nodiscard]] t_b8 unpack_sound(const t_str_rdonly file_path, t_arena *const snd_data_arena, t_arena *const temp_arena, SoundDataMut *const o_snd_data);
 
     [[nodiscard]] t_b8 serialize_sound(s_stream *const stream, const SoundDataMut snd_data);
     [[nodiscard]] t_b8 deserialize_sound(s_stream *const stream, t_arena *const snd_data_arena, SoundDataMut *const o_snd_data);
