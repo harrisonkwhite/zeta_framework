@@ -6,8 +6,8 @@ namespace zf {
     struct t_rendering_resource_group;
 
     struct t_game_init_context {
-        s_arena *perm_arena;
-        s_arena *temp_arena;
+        t_arena *perm_arena;
+        t_arena *temp_arena;
 
         t_rendering_resource_group *perm_rendering_resource_group;
 
@@ -17,8 +17,8 @@ namespace zf {
     struct t_input_state;
 
     struct t_game_tick_context {
-        s_arena *perm_arena;
-        s_arena *temp_arena;
+        t_arena *perm_arena;
+        t_arena *temp_arena;
 
         const t_input_state *input_state;
 
@@ -30,8 +30,8 @@ namespace zf {
     struct t_rendering_context;
 
     struct t_game_render_context {
-        s_arena *perm_arena;
-        s_arena *temp_arena;
+        t_arena *perm_arena;
+        t_arena *temp_arena;
 
         t_rendering_context *rendering_context;
 

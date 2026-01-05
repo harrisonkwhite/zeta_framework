@@ -17,13 +17,13 @@
 
 namespace zf {
     struct {
-        B8 active;
+        t_b8 active;
 
         GLFWwindow *glfw_window;
 
         s_v2_i framebuffer_size_cache;
 
-        B8 fullscreen_active;
+        t_b8 fullscreen_active;
         s_v2_i prefullscreen_pos;
         s_v2_i prefullscreen_size;
     } g_state;
@@ -51,7 +51,7 @@ namespace zf {
 
         {
             const auto fb_size_callback =
-                [](GLFWwindow *const window, const I32 width, const I32 height) {
+                [](GLFWwindow *const window, const t_i32 width, const t_i32 height) {
                     if (width > 0 && height > 0) {
                         g_state.framebuffer_size_cache = {width, height};
                     }
@@ -62,9 +62,9 @@ namespace zf {
 
         {
             const auto scroll_callback =
-                [](GLFWwindow *const window, const F64 offs_x, const F64 offs_y) {
+                [](GLFWwindow *const window, const t_f64 offs_x, const t_f64 offs_y) {
                     const auto input_state = static_cast<t_input_state *>(glfwGetWindowUserPointer(window));
-                    f_input_update_scroll_offs(input_state, {static_cast<F32>(offs_x), static_cast<F32>(offs_y)});
+                    f_input_update_scroll_offs(input_state, {static_cast<t_f32>(offs_x), static_cast<t_f32>(offs_y)});
                 };
 
             glfwSetScrollCallback(g_state.glfw_window, scroll_callback);
@@ -79,12 +79,12 @@ namespace zf {
         g_state = {};
     }
 
-    F64 f_platform_get_time() {
+    t_f64 f_platform_get_time() {
         ZF_ASSERT(g_state.active);
         return glfwGetTime();
     }
 
-    static I32 f_to_glfw_key(const t_key_code key_code) {
+    static t_i32 f_platform_to_glfw_key(const t_key_code key_code) {
         switch (key_code) {
         case ec_key_code_space: return GLFW_KEY_SPACE;
 
@@ -163,7 +163,7 @@ namespace zf {
         ZF_UNREACHABLE();
     }
 
-    static I32 f_to_glfw_mouse_button(const t_mouse_button_code btn_code) {
+    static t_i32 f_platform_to_glfw_mouse_button(const t_mouse_button_code btn_code) {
         switch (btn_code) {
         case ec_mouse_button_code_left: return GLFW_MOUSE_BUTTON_LEFT;
         case ec_mouse_button_code_right: return GLFW_MOUSE_BUTTON_RIGHT;
@@ -182,41 +182,41 @@ namespace zf {
 
         glfwPollEvents();
 
-        for (I32 i = 0; i < ecm_key_code_cnt; i++) {
-            const B8 is_down = glfwGetKey(g_state.glfw_window, f_to_glfw_key(static_cast<t_key_code>(i))) == GLFW_PRESS;
+        for (t_i32 i = 0; i < ecm_key_code_cnt; i++) {
+            const t_b8 is_down = glfwGetKey(g_state.glfw_window, f_platform_to_glfw_key(static_cast<t_key_code>(i))) == GLFW_PRESS;
             f_input_update_key_state(input_state, static_cast<t_key_code>(i), is_down);
         }
 
-        for (I32 i = 0; i < ecm_mouse_button_code_cnt; i++) {
-            const B8 is_down = glfwGetMouseButton(g_state.glfw_window, f_to_glfw_mouse_button(static_cast<t_mouse_button_code>(i))) == GLFW_PRESS;
+        for (t_i32 i = 0; i < ecm_mouse_button_code_cnt; i++) {
+            const t_b8 is_down = glfwGetMouseButton(g_state.glfw_window, f_platform_to_glfw_mouse_button(static_cast<t_mouse_button_code>(i))) == GLFW_PRESS;
             f_input_update_mouse_button_state(input_state, static_cast<t_mouse_button_code>(i), is_down);
         }
 
         {
-            F64 cp_x_f64, cp_y_f64;
+            t_f64 cp_x_f64, cp_y_f64;
             glfwGetCursorPos(g_state.glfw_window, &cp_x_f64, &cp_y_f64);
-            f_input_update_cursor_pos(input_state, {static_cast<F32>(cp_x_f64), static_cast<F32>(cp_y_f64)});
+            f_input_update_cursor_pos(input_state, {static_cast<t_f32>(cp_x_f64), static_cast<t_f32>(cp_y_f64)});
         }
 
-        for (I32 i = GLFW_JOYSTICK_1; i <= GLFW_JOYSTICK_LAST; i++) {
-            B8 connected = false;
-            s_static_bit_vec<ecm_gamepad_button_code_cnt> btns_down = {};
-            s_static_array<F32, ecm_gamepad_axis_code_cnt> axes = {};
+        for (t_i32 i = GLFW_JOYSTICK_1; i <= GLFW_JOYSTICK_LAST; i++) {
+            t_b8 connected = false;
+            t_static_bit_vec<ecm_gamepad_button_code_cnt> btns_down = {};
+            t_static_array<t_f32, ecm_gamepad_axis_code_cnt> axes = {};
 
             GLFWgamepadstate gamepad_state;
 
             if (glfwJoystickPresent(i) && glfwJoystickIsGamepad(i) && glfwGetGamepadState(i, &gamepad_state)) {
                 connected = true;
 
-                for (I32 j = 0; j <= GLFW_GAMEPAD_BUTTON_LAST; j++) {
+                for (t_i32 j = 0; j <= GLFW_GAMEPAD_BUTTON_LAST; j++) {
                     if (gamepad_state.buttons[j]) {
-                        SetBit(btns_down, j);
+                        f_mem_set_bit(btns_down, j);
                     } else {
-                        UnsetBit(btns_down, j);
+                        f_mem_unset_bit(btns_down, j);
                     }
                 }
 
-                for (I32 j = 0; j <= GLFW_GAMEPAD_AXIS_LAST; j++) {
+                for (t_i32 j = 0; j <= GLFW_GAMEPAD_AXIS_LAST; j++) {
                     axes[j] = gamepad_state.axes[j];
                 }
             }
@@ -255,12 +255,12 @@ namespace zf {
         glfwShowWindow(g_state.glfw_window);
     }
 
-    B8 f_platform_should_window_close() {
+    t_b8 f_platform_should_window_close() {
         ZF_ASSERT(g_state.active);
         return glfwWindowShouldClose(g_state.glfw_window);
     }
 
-    void f_platform_set_window_title(const strs::StrRdonly title, s_arena *const temp_arena) {
+    void f_platform_set_window_title(const strs::StrRdonly title, t_arena *const temp_arena) {
         ZF_ASSERT(g_state.active);
 
         const strs::StrRdonly title_terminated = clone_str_but_add_terminator(title, temp_arena);
@@ -274,7 +274,7 @@ namespace zf {
         glfwSetWindowSize(g_state.glfw_window, size.x, size.y);
     }
 
-    void f_platform_set_window_size_limits(const I32 min_width, const I32 min_height, const I32 max_width, const I32 max_height) {
+    void f_platform_set_window_size_limits(const t_i32 min_width, const t_i32 min_height, const t_i32 max_width, const t_i32 max_height) {
         ZF_ASSERT(g_state.active);
         ZF_ASSERT(min_width >= -1 && min_height >= -1);
         ZF_ASSERT(max_width >= min_width || max_width == -1);
@@ -284,7 +284,7 @@ namespace zf {
         glfwSetWindowSizeLimits(g_state.glfw_window, min_width, min_height, max_width, max_height);
     }
 
-    void f_platform_set_window_resizable(const B8 resizable) {
+    void f_platform_set_window_resizable(const t_b8 resizable) {
         ZF_ASSERT(g_state.active);
         glfwSetWindowAttrib(g_state.glfw_window, GLFW_RESIZABLE, resizable);
     }
@@ -294,12 +294,12 @@ namespace zf {
         return g_state.framebuffer_size_cache;
     }
 
-    B8 f_platform_get_fullscreen() {
+    t_b8 f_platform_get_fullscreen() {
         ZF_ASSERT(g_state.active);
         return g_state.fullscreen_active;
     }
 
-    static GLFWmonitor *f_find_glfw_monitor_of_window(GLFWwindow *const window) {
+    static GLFWmonitor *f_platform_find_glfw_monitor_of_window(GLFWwindow *const window) {
         s_v2_i window_pos;
         glfwGetWindowPos(window, &window_pos.x, &window_pos.y);
 
@@ -309,13 +309,13 @@ namespace zf {
         const auto window_rect = CreateRectI(window_pos, window_size);
 
         // Get the monitor containing the most amount of the window.
-        F32 max_occupancy_perc = 0.0f;
-        I32 max_occupancy_monitor_index = -1;
+        t_f32 max_occupancy_perc = 0.0f;
+        t_i32 max_occupancy_monitor_index = -1;
 
-        I32 monitor_cnt;
+        t_i32 monitor_cnt;
         const auto monitors = glfwGetMonitors(&monitor_cnt);
 
-        for (I32 i = 0; i < monitor_cnt; i++) {
+        for (t_i32 i = 0; i < monitor_cnt; i++) {
             s_v2_i monitor_pos;
             glfwGetMonitorPos(monitors[i], &monitor_pos.x, &monitor_pos.y);
 
@@ -327,11 +327,11 @@ namespace zf {
             const s_rect_i monitor_rect = {
                 monitor_pos.x,
                 monitor_pos.y,
-                static_cast<I32>(static_cast<F32>(mode->width) / monitor_scale.x),
-                static_cast<I32>(static_cast<F32>(mode->height) / monitor_scale.y),
+                static_cast<t_i32>(static_cast<t_f32>(mode->width) / monitor_scale.x),
+                static_cast<t_i32>(static_cast<t_f32>(mode->height) / monitor_scale.y),
             };
 
-            const F32 occupancy_perc = CalcPercOfOccupance(window_rect, monitor_rect);
+            const t_f32 occupancy_perc = CalcPercOfOccupance(window_rect, monitor_rect);
 
             if (occupancy_perc > max_occupancy_perc) {
                 max_occupancy_perc = occupancy_perc;
@@ -346,7 +346,7 @@ namespace zf {
         return monitors[max_occupancy_monitor_index];
     }
 
-    void f_platform_set_fullscreen(const B8 active) {
+    void f_platform_set_fullscreen(const t_b8 active) {
         ZF_ASSERT(g_state.active);
 
         if (active == g_state.fullscreen_active) {
@@ -357,7 +357,7 @@ namespace zf {
             glfwGetWindowPos(g_state.glfw_window, &g_state.prefullscreen_pos.x, &g_state.prefullscreen_pos.y);
             glfwGetWindowSize(g_state.glfw_window, &g_state.prefullscreen_size.x, &g_state.prefullscreen_size.y);
 
-            const auto monitor = f_find_glfw_monitor_of_window(g_state.glfw_window);
+            const auto monitor = f_platform_find_glfw_monitor_of_window(g_state.glfw_window);
 
             if (!monitor) {
                 return;
@@ -375,7 +375,7 @@ namespace zf {
     s_v2_i f_platform_get_monitor_size_pixels() {
         ZF_ASSERT(g_state.active);
 
-        const auto monitor = f_find_glfw_monitor_of_window(g_state.glfw_window);
+        const auto monitor = f_platform_find_glfw_monitor_of_window(g_state.glfw_window);
 
         if (!monitor) {
             return {};
@@ -388,7 +388,7 @@ namespace zf {
     s_v2_i f_platform_get_monitor_size_logical() {
         ZF_ASSERT(g_state.active);
 
-        const auto monitor = f_find_glfw_monitor_of_window(g_state.glfw_window);
+        const auto monitor = f_platform_find_glfw_monitor_of_window(g_state.glfw_window);
 
         if (!monitor) {
             return {};
@@ -400,12 +400,12 @@ namespace zf {
         glfwGetMonitorContentScale(monitor, &monitor_scale.x, &monitor_scale.y);
 
         return {
-            static_cast<I32>(static_cast<F32>(mode->width) / monitor_scale.x),
-            static_cast<I32>(static_cast<F32>(mode->height) / monitor_scale.y),
+            static_cast<t_i32>(static_cast<t_f32>(mode->width) / monitor_scale.x),
+            static_cast<t_i32>(static_cast<t_f32>(mode->height) / monitor_scale.y),
         };
     }
 
-    void f_platform_set_cursor_visibility(const B8 visible) {
+    void f_platform_set_cursor_visibility(const t_b8 visible) {
         ZF_ASSERT(g_state.active);
         glfwSetInputMode(g_state.glfw_window, GLFW_CURSOR, visible ? GLFW_CURSOR_NORMAL : GLFW_CURSOR_HIDDEN);
     }

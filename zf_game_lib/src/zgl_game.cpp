@@ -6,7 +6,7 @@
 
 namespace zf {
     static const s_v2_i g_init_window_size = {1280, 720};
-    static const F64 g_targ_ticks_per_sec = 60.0; // @todo: Make this customisable?
+    static const t_f64 g_targ_ticks_per_sec = 60.0; // @todo: Make this customisable?
 
     // @todo: Need a better and more consistent set of verbs. "Is" is too vague - how much calculation is being performed, should I cache the result?
 
@@ -18,11 +18,11 @@ namespace zf {
         //
         // Initialisation
         //
-        s_arena perm_arena = CreateArena();
-        ZF_DEFER({ ArenaDestroy(&perm_arena); });
+        t_arena perm_arena = f_mem_create_arena();
+        ZF_DEFER({ f_mem_destroy_arena(&perm_arena); });
 
-        s_arena temp_arena = CreateArena();
-        ZF_DEFER({ ArenaDestroy(&temp_arena); });
+        t_arena temp_arena = f_mem_create_arena();
+        ZF_DEFER({ f_mem_destroy_arena(&temp_arena); });
 
         f_platform_startup(g_init_window_size);
         ZF_DEFER({ f_platform_shutdown(); });
@@ -53,22 +53,22 @@ namespace zf {
         //
         f_platform_show_window();
 
-        F64 frame_time_last = f_platform_get_time();
-        F64 frame_dur_accum = 0.0;
+        t_f64 frame_time_last = f_platform_get_time();
+        t_f64 frame_dur_accum = 0.0;
 
         while (!f_platform_should_window_close()) {
             f_platform_poll_os_events(input_state);
 
-            const F64 frame_time = f_platform_get_time();
-            const F64 frame_time_delta = frame_time - frame_time_last;
+            const t_f64 frame_time = f_platform_get_time();
+            const t_f64 frame_time_delta = frame_time - frame_time_last;
             frame_dur_accum += frame_time_delta;
             frame_time_last = frame_time;
 
-            const F64 targ_tick_interval = 1.0 / g_targ_ticks_per_sec;
+            const t_f64 targ_tick_interval = 1.0 / g_targ_ticks_per_sec;
 
             // Once enough time has passed (i.e. the time accumulator has reached the tick interval), run at least a single tick.
             while (frame_dur_accum >= targ_tick_interval) {
-                zf_mem_rewind_arena(&temp_arena);
+                f_mem_rewind_arena(&temp_arena);
 
                 tick_func({
                     .perm_arena = &perm_arena,
@@ -83,7 +83,7 @@ namespace zf {
                 frame_dur_accum -= targ_tick_interval;
             }
 
-            zf_mem_rewind_arena(&temp_arena);
+            f_mem_rewind_arena(&temp_arena);
 
             t_rendering_context *const rendering_context = f_rendering_begin_frame(rendering_basis, {109, 187, 255}, &temp_arena); // @todo: Make the clear colour customisable?
 

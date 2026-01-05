@@ -1,9 +1,9 @@
 #include <zcl.h>
 
 namespace zf {
-    static B8 OutputCode(const strs::StrRdonly input_file_path, const strs::StrRdonly output_file_path, const strs::StrRdonly arr_var_subname) {
-        s_arena arena = CreateArena();
-        ZF_DEFER({ ArenaDestroy(&arena); });
+    static t_b8 OutputCode(const strs::StrRdonly input_file_path, const strs::StrRdonly output_file_path, const strs::StrRdonly arr_var_subname) {
+        t_arena arena = f_mem_create_arena();
+        ZF_DEFER({ f_mem_destroy_arena(&arena); });
 
         s_stream input_file_stream;
 
@@ -25,10 +25,10 @@ namespace zf {
         Print(&output_file_stream, ZF_STR_LITERAL("\n"));
 
         Print(&output_file_stream, ZF_STR_LITERAL("namespace zf {\n"));
-        PrintFormat(&output_file_stream, ZF_STR_LITERAL("    extern const U8 g_%_raw[] = {"), arr_var_subname);
+        PrintFormat(&output_file_stream, ZF_STR_LITERAL("    extern const t_u8 g_%_raw[] = {"), arr_var_subname);
 
-        U8 byte_read;
-        I32 byte_read_cnt = 0;
+        t_u8 byte_read;
+        t_i32 byte_read_cnt = 0;
 
         while (ReadItem(&input_file_stream, &byte_read)) {
             if (byte_read_cnt > 0) {
@@ -42,7 +42,7 @@ namespace zf {
 
         Print(&output_file_stream, ZF_STR_LITERAL("};\n"));
 
-        PrintFormat(&output_file_stream, ZF_STR_LITERAL("    extern const I32 g_%_len = %;\n"), arr_var_subname, byte_read_cnt);
+        PrintFormat(&output_file_stream, ZF_STR_LITERAL("    extern const t_i32 g_%_len = %;\n"), arr_var_subname, byte_read_cnt);
 
         Print(&output_file_stream, ZF_STR_LITERAL("}\n"));
 

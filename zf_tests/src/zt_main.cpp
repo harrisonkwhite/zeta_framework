@@ -1,32 +1,32 @@
 #include <zcl.h>
 
 namespace zf {
-    static B8 TestBits(s_arena *const arena) {
+    static t_b8 TestBits(t_arena *const arena) {
         // @todo
         return true;
     }
 
-    static B8 TestSorting(s_arena *const arena) {
+    static t_b8 TestSorting(t_arena *const arena) {
         // @todo
         return true;
     }
 
-    static B8 TestList(s_arena *const arena) {
+    static t_b8 TestList(t_arena *const arena) {
         // @todo
         return true;
     }
 
-    static B8 TestHashMap(s_arena *const arena) {
+    static t_b8 TestHashMap(t_arena *const arena) {
         // @todo
         return true;
     }
 
     struct s_test {
         const char *title_cstr;
-        B8 (*func)(s_arena *const arena);
+        t_b8 (*func)(t_arena *const arena);
     };
 
-    static const s_static_array<s_test, 4> g_tests = {{
+    static const t_static_array<s_test, 4> g_tests = {{
         {.title_cstr = "Bits", .func = TestBits},
         {.title_cstr = "Sorting", .func = TestSorting},
         {.title_cstr = "List", .func = TestList},
@@ -34,10 +34,10 @@ namespace zf {
     }};
 
     static void RunTests() {
-        s_arena arena = CreateArena();
-        ZF_DEFER({ ArenaDestroy(&arena); });
+        t_arena arena = f_mem_create_arena();
+        ZF_DEFER({ f_mem_destroy_arena(&arena); });
 
-        for (I32 i = 0; i < g_tests.g_len; i++) {
+        for (t_i32 i = 0; i < g_tests.g_len; i++) {
             Log(ZF_STR_LITERAL("Running test \"%\"..."), strs::convert_cstr(g_tests[i].title_cstr));
             g_tests[i].func(&arena);
         }

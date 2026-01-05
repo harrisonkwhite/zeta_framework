@@ -4,34 +4,34 @@
 #include <zcl/zcl_algos.h>
 
 namespace zf {
-    void ArenaDestroy(s_arena *const arena) {
-        const auto f = [](const auto self, s_arena_block *const block) {
+    void f_mem_destroy_arena(t_arena *const arena) {
+        const auto f = [](const auto self, t_arena_block *const block) {
             if (!block) {
                 return;
             }
 
             self(self, block->next);
 
-            PoisonFreed(block->buf, block->buf_size);
+            f_poison_freed(block->buf, block->buf_size);
             free(block->buf);
 
-            PoisonFreedItem(block);
+            f_poison_freed_item(block);
             free(block);
         };
 
         f(f, arena->blocks_head);
     }
 
-    static s_arena_block *CreateArenaBlock(const I32 buf_size) {
+    static t_arena_block *f_mem_create_arena_block(const t_i32 buf_size) {
         ZF_REQUIRE(buf_size > 0);
 
-        const auto block = static_cast<s_arena_block *>(malloc(sizeof(s_arena_block)));
+        const auto block = static_cast<t_arena_block *>(malloc(sizeof(t_arena_block)));
 
         if (!block) {
             ZF_FATAL();
         }
 
-        PoisonUnittedItem(block);
+        f_poison_uninitted_item(block);
 
         block->buf = malloc(static_cast<size_t>(buf_size));
 
@@ -39,7 +39,7 @@ namespace zf {
             ZF_FATAL();
         }
 
-        PoisonUnitted(block->buf, buf_size);
+        f_mem_poison_uninitted(block->buf, buf_size);
 
         block->buf_size = buf_size;
         block->next = nullptr;
@@ -47,47 +47,47 @@ namespace zf {
         return block;
     }
 
-    void *ArenaPush(s_arena *const arena, const I32 size, const I32 alignment) {
-        ZF_ASSERT(size > 0 && get_is_alignment_valid(alignment));
+    void *f_mem_push(t_arena *const arena, const t_i32 size, const t_i32 alignment) {
+        ZF_ASSERT(size > 0 && f_is_alignment_valid(alignment));
 
         if (!arena->blocks_head) {
-            arena->blocks_head = CreateArenaBlock(ZF_MAX(size, arena->block_min_size));
+            arena->blocks_head = f_mem_create_arena_block(ZF_MAX(size, arena->block_min_size));
             arena->block_cur = arena->blocks_head;
-            return ArenaPush(arena, size, alignment);
+            return f_mem_push(arena, size, alignment);
         }
 
-        const I32 offs_aligned = get_aligned_forward(arena->block_cur_offs, alignment);
-        const I32 offs_next = offs_aligned + size;
+        const t_i32 offs_aligned = f_align_forward(arena->block_cur_offs, alignment);
+        const t_i32 offs_next = offs_aligned + size;
 
         if (offs_next > arena->block_cur->buf_size) {
             if (!arena->block_cur->next) {
-                arena->block_cur->next = CreateArenaBlock(ZF_MAX(size, arena->block_min_size));
+                arena->block_cur->next = f_mem_create_arena_block(ZF_MAX(size, arena->block_min_size));
             }
 
             arena->block_cur = arena->block_cur->next;
             arena->block_cur_offs = 0;
 
-            return ArenaPush(arena, size, alignment);
+            return f_mem_push(arena, size, alignment);
         }
 
         arena->block_cur_offs = offs_next;
 
-        void *const result = static_cast<U8 *>(arena->block_cur->buf) + offs_aligned;
-        PoisonUnitted(result, size);
+        void *const result = static_cast<t_u8 *>(arena->block_cur->buf) + offs_aligned;
+        f_mem_poison_uninitted(result, size);
 
         return result;
     }
 
-    void zf_mem_rewind_arena(s_arena *const arena) {
+    void f_mem_rewind_arena(t_arena *const arena) {
         arena->block_cur = arena->blocks_head;
         arena->block_cur_offs = 0;
 
 #ifdef ZF_DEBUG
         // Poison all block buffers.
-        const s_arena_block *block = arena->blocks_head;
+        const t_arena_block *block = arena->blocks_head;
 
         while (block) {
-            PoisonFreed(block->buf, block->buf_size);
+            f_poison_freed(block->buf, block->buf_size);
             block = block->next;
         }
 #endif
@@ -97,77 +97,77 @@ namespace zf {
     // ============================================================
     // @section: Dude
 
-    B8 IsAnyBitSet(const s_bit_vec_rdonly bv) {
+    t_b8 f_mem_is_any_bit_set(const t_bit_vec_rdonly bv) {
         if (bv.bit_cnt == 0) {
             return false;
         }
 
-        const auto first_bytes = ArraySlice(bv.Bytes(), 0, bv.Bytes().len - 1);
+        const auto first_bytes = f_mem_slice_array(f_mem_bit_vector_bytes(bv), 0, f_mem_bit_vector_bytes(bv).len - 1);
 
         if (!DoAllEqual(first_bytes, 0)) {
             return true;
         }
 
-        return (bv.Bytes()[bv.Bytes().len - 1] & LastByteMask(bv)) != 0;
+        return (f_mem_bit_vector_bytes(bv)[f_mem_bit_vector_bytes(bv).len - 1] & f_mem_bit_vector_last_byte_mask(bv)) != 0;
     }
 
-    B8 AreAllBitsSet(const s_bit_vec_rdonly bv) {
+    t_b8 f_mem_are_all_bits_set(const t_bit_vec_rdonly bv) {
         if (bv.bit_cnt == 0) {
             return false;
         }
 
-        const auto first_bytes = ArraySlice(bv.Bytes(), 0, bv.Bytes().len - 1);
+        const auto first_bytes = f_mem_slice_array(f_mem_bit_vector_bytes(bv), 0, f_mem_bit_vector_bytes(bv).len - 1);
 
         if (!DoAllEqual(first_bytes, 0xFF)) {
             return false;
         }
 
-        const auto last_byte_mask = LastByteMask(bv);
-        return (bv.Bytes()[bv.Bytes().len - 1] & last_byte_mask) == last_byte_mask;
+        const auto last_byte_mask = f_mem_bit_vector_last_byte_mask(bv);
+        return (f_mem_bit_vector_bytes(bv)[f_mem_bit_vector_bytes(bv).len - 1] & last_byte_mask) == last_byte_mask;
     }
 
-    void SetAllBits(const s_bit_vec_mut bv) {
+    void f_mem_set_all_bits(const t_bit_vec_mut bv) {
         if (bv.bit_cnt == 0) {
             return;
         }
 
-        const auto first_bytes = ArraySlice(bv.Bytes(), 0, bv.Bytes().len - 1);
+        const auto first_bytes = f_mem_slice_array(f_mem_bit_vector_bytes(bv), 0, f_mem_bit_vector_bytes(bv).len - 1);
         SetAllTo(first_bytes, 0xFF);
 
-        bv.Bytes()[bv.Bytes().len - 1] |= LastByteMask(bv);
+        f_mem_bit_vector_bytes(bv)[f_mem_bit_vector_bytes(bv).len - 1] |= f_mem_bit_vector_last_byte_mask(bv);
     }
 
-    void UnsetAllBits(const s_bit_vec_mut bv) {
+    void f_mem_unset_all_bits(const t_bit_vec_mut bv) {
         if (bv.bit_cnt == 0) {
             return;
         }
 
-        const auto first_bytes = ArraySlice(bv.Bytes(), 0, bv.Bytes().len - 1);
+        const auto first_bytes = f_mem_slice_array(f_mem_bit_vector_bytes(bv), 0, f_mem_bit_vector_bytes(bv).len - 1);
         SetAllTo(first_bytes, 0);
 
-        bv.Bytes()[bv.Bytes().len - 1] &= ~LastByteMask(bv);
+        f_mem_bit_vector_bytes(bv)[f_mem_bit_vector_bytes(bv).len - 1] &= ~f_mem_bit_vector_last_byte_mask(bv);
     }
 
-    void SetBitsInRange(const s_bit_vec_mut bv, const I32 begin_bit_index, const I32 end_bit_index) {
+    void f_mem_set_bits_in_range(const t_bit_vec_mut bv, const t_i32 begin_bit_index, const t_i32 end_bit_index) {
         ZF_ASSERT(begin_bit_index >= 0 && begin_bit_index < bv.bit_cnt);
         ZF_ASSERT(end_bit_index >= begin_bit_index && end_bit_index <= bv.bit_cnt);
 
-        const I32 begin_elem_index = begin_bit_index / 8;
-        const I32 end_elem_index = get_bits_to_bytes(end_bit_index);
+        const t_i32 begin_elem_index = begin_bit_index / 8;
+        const t_i32 end_elem_index = f_bits_to_bytes(end_bit_index);
 
-        for (I32 i = begin_elem_index; i < end_elem_index; i++) {
-            const I32 bit_offs = i * 8;
-            const I32 begin_bit_index_rel = begin_bit_index - bit_offs;
-            const I32 end_bit_index_rel = end_bit_index - bit_offs;
+        for (t_i32 i = begin_elem_index; i < end_elem_index; i++) {
+            const t_i32 bit_offs = i * 8;
+            const t_i32 begin_bit_index_rel = begin_bit_index - bit_offs;
+            const t_i32 end_bit_index_rel = end_bit_index - bit_offs;
 
-            const I32 set_range_begin = ZF_MAX(begin_bit_index_rel, 0);
-            const I32 set_range_end = ZF_MIN(end_bit_index_rel, 8);
+            const t_i32 set_range_begin = ZF_MAX(begin_bit_index_rel, 0);
+            const t_i32 set_range_end = ZF_MIN(end_bit_index_rel, 8);
 
-            bv.Bytes()[i] |= ByteBitmaskRanged(set_range_begin, set_range_end);
+            f_mem_bit_vector_bytes(bv)[i] |= f_mem_byte_bitmask_range(set_range_begin, set_range_end);
         }
     }
 
-    void ApplyMaskToBits(const s_bit_vec_mut targ, const s_bit_vec_rdonly mask, const e_bitwise_mask_op op) {
+    void f_mem_apply_mask_to_bits(const t_bit_vec_mut targ, const t_bit_vec_rdonly mask, const t_bitwise_mask_op op) {
         ZF_ASSERT(targ.bit_cnt == mask.bit_cnt);
 
         if (targ.bit_cnt == 0) {
@@ -175,71 +175,71 @@ namespace zf {
         }
 
         switch (op) {
-        case ek_bitwise_mask_op_and:
-            for (I32 i = 0; i < targ.Bytes().len; i++) {
-                targ.Bytes()[i] &= mask.Bytes()[i];
+        case ec_bitwise_mask_op_and:
+            for (t_i32 i = 0; i < f_mem_bit_vector_bytes(targ).len; i++) {
+                f_mem_bit_vector_bytes(targ)[i] &= f_mem_bit_vector_bytes(mask)[i];
             }
 
             break;
 
-        case ek_bitwise_mask_op_or:
-            for (I32 i = 0; i < targ.Bytes().len; i++) {
-                targ.Bytes()[i] |= mask.Bytes()[i];
+        case ec_bitwise_mask_op_or:
+            for (t_i32 i = 0; i < f_mem_bit_vector_bytes(targ).len; i++) {
+                f_mem_bit_vector_bytes(targ)[i] |= f_mem_bit_vector_bytes(mask)[i];
             }
 
             break;
 
-        case ek_bitwise_mask_op_xor:
-            for (I32 i = 0; i < targ.Bytes().len; i++) {
-                targ.Bytes()[i] ^= mask.Bytes()[i];
+        case ec_bitwise_mask_op_xor:
+            for (t_i32 i = 0; i < f_mem_bit_vector_bytes(targ).len; i++) {
+                f_mem_bit_vector_bytes(targ)[i] ^= f_mem_bit_vector_bytes(mask)[i];
             }
 
             break;
 
-        case ek_bitwise_mask_op_andnot:
-            for (I32 i = 0; i < targ.Bytes().len; i++) {
-                targ.Bytes()[i] &= ~mask.Bytes()[i];
+        case ec_bitwise_mask_op_andnot:
+            for (t_i32 i = 0; i < f_mem_bit_vector_bytes(targ).len; i++) {
+                f_mem_bit_vector_bytes(targ)[i] &= ~f_mem_bit_vector_bytes(mask)[i];
             }
 
             break;
         }
 
-        targ.Bytes()[targ.Bytes().len - 1] &= LastByteMask(targ);
+        f_mem_bit_vector_bytes(targ)[f_mem_bit_vector_bytes(targ).len - 1] &= f_mem_bit_vector_last_byte_mask(targ);
     }
 
-    U8 ShiftBitsLeft(const s_bit_vec_mut bv) {
-        ZF_ASSERT(get_bits_to_bytes(bv.bit_cnt) == bv.Bytes().len);
+    t_u8 f_mem_shift_bits_left(const t_bit_vec_mut bv) {
+        ZF_ASSERT(f_bits_to_bytes(bv.bit_cnt) == f_mem_bit_vector_bytes(bv).len);
 
         if (bv.bit_cnt == 0) {
             return 0;
         }
 
-        U8 discard = 0;
+        t_u8 discard = 0;
 
-        for (I32 i = 0; i < bv.Bytes().len; i++) {
-            const I32 bits_in_byte = i == bv.Bytes().len - 1 ? LastByteBitCount(bv) : 8;
-            const U8 discard_last = discard;
-            discard = (bv.Bytes()[i] & ByteBitmaskSingle(bits_in_byte - 1)) >> (bits_in_byte - 1);
-            bv.Bytes()[i] <<= 1;
-            bv.Bytes()[i] |= discard_last;
+        for (t_i32 i = 0; i < f_mem_bit_vector_bytes(bv).len; i++) {
+            const t_i32 bits_in_byte = i == f_mem_bit_vector_bytes(bv).len - 1 ? f_mem_bit_vector_last_byte_bit_cnt(bv) : 8;
+            const t_u8 discard_last = discard;
+            discard = (f_mem_bit_vector_bytes(bv)[i] & f_mem_byte_bitmask_single(bits_in_byte - 1)) >> (bits_in_byte - 1);
+            f_mem_bit_vector_bytes(bv)[i] <<= 1;
+            f_mem_bit_vector_bytes(bv)[i] |= discard_last;
         }
 
-        bv.Bytes()[bv.Bytes().len - 1] &= LastByteMask(bv);
+        f_mem_bit_vector_bytes(bv)[f_mem_bit_vector_bytes(bv).len - 1] &= f_mem_bit_vector_last_byte_mask(bv);
 
         return discard;
     }
 
-    void ShiftBitsLeftBy(const s_bit_vec_mut bv, const I32 amount) {
+    void f_mem_shift_bits_left_by(const t_bit_vec_mut bv, const t_i32 amount) {
         ZF_ASSERT(amount >= 0);
 
         // @speed: :(
 
-        for (I32 i = 0; i < amount; i++) {
-            ShiftBitsLeft(bv);
+        for (t_i32 i = 0; i < amount; i++) {
+            f_mem_shift_bits_left(bv);
         }
     }
 
-    void RotBitsLeftBy(const s_bit_vec_mut bv, const I32 amount) {
+    void f_mem_rot_bits_left_by(const t_bit_vec_mut bv, const t_i32 amount) {
         ZF_ASSERT(amount >= 0);
 
         if (bv.bit_cnt == 0) {
@@ -248,53 +248,53 @@ namespace zf {
 
         // @speed: :(
 
-        for (I32 i = 0; i < amount; i++) {
-            const auto discard = ShiftBitsLeft(bv);
+        for (t_i32 i = 0; i < amount; i++) {
+            const auto discard = f_mem_shift_bits_left(bv);
 
             if (discard) {
-                SetBit(bv, 0);
+                f_mem_set_bit(bv, 0);
             } else {
-                UnsetBit(bv, 0);
+                f_mem_unset_bit(bv, 0);
             }
         }
     }
 
-    U8 ShiftBitsRight(const s_bit_vec_mut bv) {
-        ZF_ASSERT(get_bits_to_bytes(bv.bit_cnt) == bv.Bytes().len);
+    t_u8 f_mem_shift_bits_right(const t_bit_vec_mut bv) {
+        ZF_ASSERT(f_bits_to_bytes(bv.bit_cnt) == f_mem_bit_vector_bytes(bv).len);
 
         if (bv.bit_cnt == 0) {
             return 0;
         }
 
-        bv.Bytes()[bv.Bytes().len - 1] &= LastByteMask(bv); // Drop any excess bits so we don't accidentally shift a 1 in.
+        f_mem_bit_vector_bytes(bv)[f_mem_bit_vector_bytes(bv).len - 1] &= f_mem_bit_vector_last_byte_mask(bv); // Drop any excess bits so we don't accidentally shift a 1 in.
 
-        U8 discard = 0;
+        t_u8 discard = 0;
 
-        for (I32 i = bv.Bytes().len - 1; i >= 0; i--) {
-            const I32 bits_in_byte = i == bv.Bytes().len - 1 ? LastByteBitCount(bv) : 8;
-            const U8 discard_last = discard;
-            discard = bv.Bytes()[i] & ByteBitmaskSingle(0);
-            bv.Bytes()[i] >>= 1;
+        for (t_i32 i = f_mem_bit_vector_bytes(bv).len - 1; i >= 0; i--) {
+            const t_i32 bits_in_byte = i == f_mem_bit_vector_bytes(bv).len - 1 ? f_mem_bit_vector_last_byte_bit_cnt(bv) : 8;
+            const t_u8 discard_last = discard;
+            discard = f_mem_bit_vector_bytes(bv)[i] & f_mem_byte_bitmask_single(0);
+            f_mem_bit_vector_bytes(bv)[i] >>= 1;
 
             if (discard_last) {
-                bv.Bytes()[i] |= ByteBitmaskSingle(bits_in_byte - 1);
+                f_mem_bit_vector_bytes(bv)[i] |= f_mem_byte_bitmask_single(bits_in_byte - 1);
             }
         }
 
         return discard;
     }
 
-    void ShiftBitsRightBy(const s_bit_vec_mut bv, const I32 amount) {
+    void f_mem_shift_bits_right_by(const t_bit_vec_mut bv, const t_i32 amount) {
         ZF_ASSERT(amount >= 0);
 
         // @speed: :(
 
-        for (I32 i = 0; i < amount; i++) {
-            ShiftBitsRight(bv);
+        for (t_i32 i = 0; i < amount; i++) {
+            f_mem_shift_bits_right(bv);
         }
     }
 
-    void RotBitsRightBy(const s_bit_vec_mut bv, const I32 amount) {
+    void f_mem_rot_bits_right_by(const t_bit_vec_mut bv, const t_i32 amount) {
         ZF_ASSERT(amount >= 0);
 
         if (bv.bit_cnt == 0) {
@@ -303,24 +303,24 @@ namespace zf {
 
         // @speed: :(
 
-        for (I32 i = 0; i < amount; i++) {
-            const auto discard = ShiftBitsRight(bv);
+        for (t_i32 i = 0; i < amount; i++) {
+            const auto discard = f_mem_shift_bits_right(bv);
 
             if (discard) {
-                SetBit(bv, bv.bit_cnt - 1);
+                f_mem_set_bit(bv, bv.bit_cnt - 1);
             } else {
-                UnsetBit(bv, bv.bit_cnt - 1);
+                f_mem_unset_bit(bv, bv.bit_cnt - 1);
             }
         }
     }
 
     // ============================================================
 
-    static I32 FindIndexOfFirstSetBit_Helper(const s_bit_vec_rdonly bv, const I32 from, const U8 xor_mask) {
+    static t_i32 f_mem_index_of_first_set_bit_helper(const t_bit_vec_rdonly bv, const t_i32 from, const t_u8 xor_mask) {
         ZF_ASSERT(from >= 0 && from <= bv.bit_cnt); // Intentionally allowing the upper bound here for the case of iteration.
 
         // Map of each possible byte to the index of the first set bit, or -1 for the first case.
-        static const s_static_array<I32, 256> g_mappings = {{
+        static const t_static_array<t_i32, 256> g_mappings = {{
             -1, // 0000 0000
             0,  // 0000 0001
             1,  // 0000 0010
@@ -579,20 +579,20 @@ namespace zf {
             0,  // 1111 1111
         }};
 
-        const I32 begin_byte_index = from / 8;
+        const t_i32 begin_byte_index = from / 8;
 
-        for (I32 i = begin_byte_index; i < bv.Bytes().len; i++) {
-            U8 byte = bv.Bytes()[i] ^ xor_mask;
+        for (t_i32 i = begin_byte_index; i < f_mem_bit_vector_bytes(bv).len; i++) {
+            t_u8 byte = f_mem_bit_vector_bytes(bv)[i] ^ xor_mask;
 
             if (i == begin_byte_index) {
-                byte &= ByteBitmaskRanged(from % 8);
+                byte &= f_mem_byte_bitmask_range(from % 8);
             }
 
-            if (i == bv.Bytes().len - 1) {
-                byte &= LastByteMask(bv);
+            if (i == f_mem_bit_vector_bytes(bv).len - 1) {
+                byte &= f_mem_bit_vector_last_byte_mask(bv);
             }
 
-            const I32 bi = g_mappings[byte];
+            const t_i32 bi = g_mappings[byte];
 
             if (bi != -1) {
                 return (8 * i) + bi;
@@ -602,17 +602,17 @@ namespace zf {
         return -1;
     }
 
-    I32 FindIndexOfFirstSetBit(const s_bit_vec_rdonly bv, const I32 from) {
-        return FindIndexOfFirstSetBit_Helper(bv, from, 0);
+    t_i32 f_mem_index_of_first_set_bit(const t_bit_vec_rdonly bv, const t_i32 from) {
+        return f_mem_index_of_first_set_bit_helper(bv, from, 0);
     }
 
-    I32 FindIndexOfFirstUnsetBit(const s_bit_vec_rdonly bv, const I32 from) {
-        return FindIndexOfFirstSetBit_Helper(bv, from, 0xFF);
+    t_i32 f_mem_index_of_first_unset_bit(const t_bit_vec_rdonly bv, const t_i32 from) {
+        return f_mem_index_of_first_set_bit_helper(bv, from, 0xFF);
     }
 
-    I32 CountSetBits(const s_bit_vec_rdonly bv) {
+    t_i32 f_mem_count_set_bits(const t_bit_vec_rdonly bv) {
         // Map of each possible byte to the number of set bits in it.
-        static const s_static_array<I32, 256> g_mappings = {{
+        static const t_static_array<t_i32, 256> g_mappings = {{
             0, // 0000 0000
             1, // 0000 0001
             1, // 0000 0010
@@ -871,23 +871,23 @@ namespace zf {
             8, // 1111 1111
         }};
 
-        I32 result = 0;
+        t_i32 result = 0;
 
-        if (bv.Bytes().len > 0) {
-            for (I32 i = 0; i < bv.Bytes().len - 1; i++) {
-                result += g_mappings[bv.Bytes()[i]];
+        if (f_mem_bit_vector_bytes(bv).len > 0) {
+            for (t_i32 i = 0; i < f_mem_bit_vector_bytes(bv).len - 1; i++) {
+                result += g_mappings[f_mem_bit_vector_bytes(bv)[i]];
             }
 
-            result += g_mappings[bv.Bytes()[bv.Bytes().len - 1] & LastByteMask(bv)];
+            result += g_mappings[f_mem_bit_vector_bytes(bv)[f_mem_bit_vector_bytes(bv).len - 1] & f_mem_bit_vector_last_byte_mask(bv)];
         }
 
         return result;
     }
 
-    B8 WalkSetBits(const s_bit_vec_rdonly bv, I32 *const pos, I32 *const o_index) {
+    t_b8 f_mem_walk_set_bits(const t_bit_vec_rdonly bv, t_i32 *const pos, t_i32 *const o_index) {
         ZF_ASSERT(*pos >= 0 && *pos <= bv.bit_cnt);
 
-        *o_index = FindIndexOfFirstSetBit(bv, *pos);
+        *o_index = f_mem_index_of_first_set_bit(bv, *pos);
 
         if (*o_index == -1) {
             return false;
@@ -898,10 +898,10 @@ namespace zf {
         return true;
     }
 
-    B8 WalkUnsetBits(const s_bit_vec_rdonly bv, I32 *const pos, I32 *const o_index) {
+    t_b8 f_mem_walk_unset_bits(const t_bit_vec_rdonly bv, t_i32 *const pos, t_i32 *const o_index) {
         ZF_ASSERT(*pos >= 0 && *pos <= bv.bit_cnt);
 
-        *o_index = FindIndexOfFirstUnsetBit(bv, *pos);
+        *o_index = f_mem_index_of_first_unset_bit(bv, *pos);
 
         if (*o_index == -1) {
             return false;

@@ -7,17 +7,17 @@ namespace zf {
     // ============================================================
     // @section: Types and Globals
 
-    constexpr F32 g_pi = 3.14159265358979323846f;
-    constexpr F32 g_tau = 6.28318530717958647692f;
+    constexpr t_f32 g_pi = 3.14159265358979323846f;
+    constexpr t_f32 g_tau = 6.28318530717958647692f;
 
     struct s_v2 {
-        F32 x;
-        F32 y;
+        t_f32 x;
+        t_f32 y;
 
         constexpr s_v2 operator+(const s_v2 &other) const { return {x + other.x, y + other.y}; }
         constexpr s_v2 operator-(const s_v2 &other) const { return {x - other.x, y - other.y}; }
-        constexpr s_v2 operator*(const F32 scalar) const { return {x * scalar, y * scalar}; }
-        constexpr s_v2 operator/(const F32 scalar) const { return {x / scalar, y / scalar}; }
+        constexpr s_v2 operator*(const t_f32 scalar) const { return {x * scalar, y * scalar}; }
+        constexpr s_v2 operator/(const t_f32 scalar) const { return {x / scalar, y / scalar}; }
 
         constexpr s_v2 &operator+=(const s_v2 &other) {
             x += other.x;
@@ -31,29 +31,29 @@ namespace zf {
             return *this;
         }
 
-        constexpr s_v2 &operator*=(const F32 scalar) {
+        constexpr s_v2 &operator*=(const t_f32 scalar) {
             x *= scalar;
             y *= scalar;
             return *this;
         }
 
-        constexpr s_v2 &operator/=(const F32 scalar) {
+        constexpr s_v2 &operator/=(const t_f32 scalar) {
             x /= scalar;
             y /= scalar;
             return *this;
         }
     };
 
-    constexpr s_v2 operator*(const F32 scalar, const s_v2 v) {
+    constexpr s_v2 operator*(const t_f32 scalar, const s_v2 v) {
         return {v.x * scalar, v.y * scalar};
     }
 
     struct s_v2_i {
-        I32 x;
-        I32 y;
+        t_i32 x;
+        t_i32 y;
 
-        constexpr B8 operator==(const s_v2_i &other) const { return x == other.x && y == other.y; }
-        constexpr B8 operator!=(const s_v2_i &other) const { return !(*this == other); }
+        constexpr t_b8 operator==(const s_v2_i &other) const { return x == other.x && y == other.y; }
+        constexpr t_b8 operator!=(const s_v2_i &other) const { return !(*this == other); }
 
         constexpr s_v2_i operator+(const s_v2_i &other) const { return {x + other.x, y + other.y}; }
         constexpr s_v2_i operator-(const s_v2_i &other) const { return {x - other.x, y - other.y}; }
@@ -72,34 +72,34 @@ namespace zf {
     };
 
     struct s_v3 {
-        F32 x;
-        F32 y;
-        F32 z;
+        t_f32 x;
+        t_f32 y;
+        t_f32 z;
     };
 
     struct s_v4 {
-        F32 x;
-        F32 y;
-        F32 z;
-        F32 w;
+        t_f32 x;
+        t_f32 y;
+        t_f32 z;
+        t_f32 w;
     };
 
     struct s_rect_f {
-        F32 x;
-        F32 y;
-        F32 width;
-        F32 height;
+        t_f32 x;
+        t_f32 y;
+        t_f32 width;
+        t_f32 height;
     };
 
     struct s_rect_i {
-        I32 x;
-        I32 y;
-        I32 width;
-        I32 height;
+        t_i32 x;
+        t_i32 y;
+        t_i32 width;
+        t_i32 height;
     };
 
     struct s_mat4x4 {
-        s_static_array<s_static_array<F32, 4>, 4> elems;
+        t_static_array<t_static_array<t_f32, 4>, 4> elems;
     };
 
     // ============================================================
@@ -108,16 +108,16 @@ namespace zf {
     // ============================================================
     // @section: Functions
 
-    constexpr F32 DegsToRads(const F32 degs) {
+    constexpr t_f32 DegsToRads(const t_f32 degs) {
         return degs * (g_pi / 180.0f);
     }
 
-    constexpr F32 RadsToDegs(const F32 rads) {
+    constexpr t_f32 RadsToDegs(const t_f32 rads) {
         return rads * (180.0f / g_pi);
     }
 
-    template <Integral tp_type>
-    I32 CalcDigitCount(const tp_type n) {
+    template <c_integral tp_type>
+    t_i32 CalcDigitCount(const tp_type n) {
         if (n < 0) {
             return CalcDigitCount(-n);
         }
@@ -130,8 +130,8 @@ namespace zf {
     }
 
     // Determines the digit at the given index, where the indexes are from the least significant digit to the most.
-    template <Integral tp_type>
-    tp_type DetermineDigitAt(const tp_type n, const I32 index) {
+    template <c_integral tp_type>
+    tp_type DetermineDigitAt(const tp_type n, const t_i32 index) {
         ZF_ASSERT(index >= 0 && index < CalcDigitCount(n));
 
         if (n < 0) {
@@ -149,24 +149,24 @@ namespace zf {
         return DetermineDigitAt(n / 10, index - 1);
     }
 
-    inline B8 IsNearlyEqual(const F32 val, const F32 targ, const F32 tol = 1e-5f) {
+    inline t_b8 IsNearlyEqual(const t_f32 val, const t_f32 targ, const t_f32 tol = 1e-5f) {
         ZF_ASSERT(tol >= 0);
         return val >= targ - tol && val <= targ + tol;
     }
 
-    inline s_v2 CreateV2(const F32 x, const F32 y) {
+    inline s_v2 CreateV2(const t_f32 x, const t_f32 y) {
         return {x, y};
     }
 
-    inline s_v2_i CreateV2I(const I32 x, const I32 y) {
+    inline s_v2_i CreateV2I(const t_i32 x, const t_i32 y) {
         return {x, y};
     }
 
     inline s_v2 ToV2(const s_v2_i v) {
-        return {static_cast<F32>(v.x), static_cast<F32>(v.y)};
+        return {static_cast<t_f32>(v.x), static_cast<t_f32>(v.y)};
     }
 
-    inline s_rect_f CreateRectF(const F32 x, const F32 y, const F32 width, const F32 height) {
+    inline s_rect_f CreateRectF(const t_f32 x, const t_f32 y, const t_f32 width, const t_f32 height) {
         return {x, y, width, height};
     }
 
@@ -178,7 +178,7 @@ namespace zf {
         return {pos.x - (size.x * origin.x), pos.y - (size.y * origin.y), size.x, size.y};
     }
 
-    inline s_rect_i CreateRectI(const I32 x, const I32 y, const I32 width, const I32 height) {
+    inline s_rect_i CreateRectI(const t_i32 x, const t_i32 y, const t_i32 width, const t_i32 height) {
         return {x, y, width, height};
     }
 
@@ -194,17 +194,17 @@ namespace zf {
 
     inline s_v2 Center(const s_rect_f rect) { return {rect.x + (rect.width / 2.0f), rect.y + (rect.height / 2.0f)}; }
 
-    inline F32 Left(const s_rect_f rect) { return rect.x; }
-    inline I32 Left(const s_rect_i rect) { return rect.x; }
+    inline t_f32 Left(const s_rect_f rect) { return rect.x; }
+    inline t_i32 Left(const s_rect_i rect) { return rect.x; }
 
-    inline F32 Top(const s_rect_f rect) { return rect.y; }
-    inline I32 Top(const s_rect_i rect) { return rect.y; }
+    inline t_f32 Top(const s_rect_f rect) { return rect.y; }
+    inline t_i32 Top(const s_rect_i rect) { return rect.y; }
 
-    inline F32 Right(const s_rect_f rect) { return rect.x + rect.width; }
-    inline I32 Right(const s_rect_i rect) { return rect.x + rect.width; }
+    inline t_f32 Right(const s_rect_f rect) { return rect.x + rect.width; }
+    inline t_i32 Right(const s_rect_i rect) { return rect.x + rect.width; }
 
-    inline F32 Bottom(const s_rect_f rect) { return rect.y + rect.height; }
-    inline I32 Bottom(const s_rect_i rect) { return rect.y + rect.height; }
+    inline t_f32 Bottom(const s_rect_f rect) { return rect.y + rect.height; }
+    inline t_i32 Bottom(const s_rect_i rect) { return rect.y + rect.height; }
 
     inline s_v2 TopLeft(const s_rect_f rect) { return {Left(rect), Top(rect)}; }
     inline s_v2_i TopLeft(const s_rect_i rect) { return {Left(rect), Top(rect)}; }
@@ -218,26 +218,26 @@ namespace zf {
     inline s_v2 BottomRight(const s_rect_f rect) { return {Right(rect), Bottom(rect)}; }
     inline s_v2_i BottomRight(const s_rect_i rect) { return {Right(rect), Bottom(rect)}; }
 
-    inline F32 Area(const s_rect_f rect) { return rect.width * rect.height; }
-    inline I32 Area(const s_rect_i rect) { return rect.width * rect.height; }
+    inline t_f32 Area(const s_rect_f rect) { return rect.width * rect.height; }
+    inline t_i32 Area(const s_rect_i rect) { return rect.width * rect.height; }
 
-    inline B8 AreEqual(const s_rect_i a, const s_rect_i b) {
+    inline t_b8 AreEqual(const s_rect_i a, const s_rect_i b) {
         return a.x == b.x && a.y == b.y && a.width == b.width && a.height == b.height;
     }
 
     inline s_rect_f ToRectF(const s_rect_i rect) {
-        return {static_cast<F32>(rect.x), static_cast<F32>(rect.y), static_cast<F32>(rect.width), static_cast<F32>(rect.height)};
+        return {static_cast<t_f32>(rect.x), static_cast<t_f32>(rect.y), static_cast<t_f32>(rect.width), static_cast<t_f32>(rect.height)};
     }
 
     inline s_rect_i ToRectI(const s_rect_f rect) {
-        return {static_cast<I32>(rect.x), static_cast<I32>(rect.y), static_cast<I32>(rect.width), static_cast<I32>(rect.height)};
+        return {static_cast<t_i32>(rect.x), static_cast<t_i32>(rect.y), static_cast<t_i32>(rect.width), static_cast<t_i32>(rect.height)};
     }
 
-    inline B8 DoRectsInters(const s_rect_f a, const s_rect_f b) {
+    inline t_b8 DoRectsInters(const s_rect_f a, const s_rect_f b) {
         return Left(a) < Right(b) && Top(a) < Bottom(b) && Right(a) > Left(b) && Bottom(a) > Top(b);
     }
 
-    inline B8 DoRectsInters(const s_rect_i a, const s_rect_i b) {
+    inline t_b8 DoRectsInters(const s_rect_i a, const s_rect_i b) {
         return Left(a) < Right(b) && Top(a) < Bottom(b) && Right(a) > Left(b) && Bottom(a) > Top(b);
     }
 
@@ -252,22 +252,22 @@ namespace zf {
         return mat;
     }
 
-    inline F32 Lerp(const F32 a, const F32 b, const F32 t) { return a + ((b - a) * t); }
-    inline s_v2 Lerp(const s_v2 a, const s_v2 b, const F32 t) { return a + ((b - a) * t); }
+    inline t_f32 Lerp(const t_f32 a, const t_f32 b, const t_f32 t) { return a + ((b - a) * t); }
+    inline s_v2 Lerp(const s_v2 a, const s_v2 b, const t_f32 t) { return a + ((b - a) * t); }
 
     inline s_v2 CompwiseProd(const s_v2 a, const s_v2 b) { return {a.x * b.x, a.y * b.y}; }
     inline s_v2_i CompwiseProd(const s_v2_i a, const s_v2_i b) { return {a.x * b.x, a.y * b.y}; }
 
-    inline F32 DotProd(const s_v2 a, const s_v2 b) { return (a.x * b.x) + (a.y * b.y); }
-    inline I32 DotProd(const s_v2_i a, const s_v2_i b) { return (a.x * b.x) + (a.y * b.y); }
+    inline t_f32 DotProd(const s_v2 a, const s_v2 b) { return (a.x * b.x) + (a.y * b.y); }
+    inline t_i32 DotProd(const s_v2_i a, const s_v2_i b) { return (a.x * b.x) + (a.y * b.y); }
 
-    inline F32 CalcMag(const s_v2 v) {
+    inline t_f32 CalcMag(const s_v2 v) {
         return sqrt((v.x * v.x) + (v.y * v.y));
     }
 
     // Returns {} if a divide by 0 is attempted.
     inline s_v2 CalcNormal(const s_v2 v) {
-        const F32 mag = CalcMag(v);
+        const t_f32 mag = CalcMag(v);
 
         if (mag == 0.0f) {
             return {};
@@ -276,7 +276,7 @@ namespace zf {
         return {v.x / mag, v.y / mag};
     }
 
-    inline F32 CalcDist(const s_v2 a, const s_v2 b) {
+    inline t_f32 CalcDist(const s_v2 a, const s_v2 b) {
         return CalcMag(b - a);
     }
 
@@ -285,9 +285,9 @@ namespace zf {
     }
 
     // Returns 0 if the horizontal and vertical differences of the vectors are 0.
-    inline F32 CalcDirInRads(const s_v2 a, const s_v2 b) {
-        const F32 rise = -(b.y - a.y);
-        const F32 run = b.x - a.x;
+    inline t_f32 CalcDirInRads(const s_v2 a, const s_v2 b) {
+        const t_f32 rise = -(b.y - a.y);
+        const t_f32 run = b.x - a.x;
 
         if (rise == 0.0f && run == 0.0f) {
             return 0.0f;
@@ -296,24 +296,24 @@ namespace zf {
         return atan2(rise, run);
     }
 
-    inline s_v2 CalcLenDir(const F32 len, const F32 dir) {
+    inline s_v2 CalcLenDir(const t_f32 len, const t_f32 dir) {
         return s_v2(cos(dir), -sin(dir)) * len;
     }
 
-    inline B8 IsPointInRect(const s_v2 pt, const s_rect_f rect) {
+    inline t_b8 IsPointInRect(const s_v2 pt, const s_rect_f rect) {
         return pt.x > Left(rect) && pt.y > Top(rect) && pt.x < Right(rect) && pt.y < Bottom(rect);
     }
 
-    inline B8 IsPointInRect(const s_v2_i pt, const s_rect_i rect) {
+    inline t_b8 IsPointInRect(const s_v2_i pt, const s_rect_i rect) {
         return pt.x > Left(rect) && pt.y > Top(rect) && pt.x < Right(rect) && pt.y < Bottom(rect);
     }
 
     inline s_v2 ClampedWithinContainer(const s_v2 pt, const s_rect_f container) {
-        return {clamp(pt.x, Left(container), Right(container)), clamp(pt.y, Top(container), Bottom(container))};
+        return {f_clamp(pt.x, Left(container), Right(container)), f_clamp(pt.y, Top(container), Bottom(container))};
     }
 
     inline s_v2_i ClampedWithinContainer(const s_v2_i pt, const s_rect_i container) {
-        return {clamp(pt.x, Left(container), Right(container)), clamp(pt.y, Top(container), Bottom(container))};
+        return {f_clamp(pt.x, Left(container), Right(container)), f_clamp(pt.y, Top(container), Bottom(container))};
     }
 
     inline s_rect_f ClampedWithinContainer(const s_rect_f rect, const s_rect_f container) {
@@ -327,23 +327,23 @@ namespace zf {
     }
 
     // Returns a value between 0 and 1 indicating what percentage of the rectangle is within the container.
-    inline F32 CalcPercOfOccupance(const s_rect_f rect, const s_rect_f container) {
+    inline t_f32 CalcPercOfOccupance(const s_rect_f rect, const s_rect_f container) {
         ZF_ASSERT(container.width > 0 && container.height > 0);
 
         const auto subrect = ClampedWithinContainer(rect, container);
-        return clamp(Area(subrect) / Area(container), 0.0f, 1.0f);
+        return f_clamp(Area(subrect) / Area(container), 0.0f, 1.0f);
     }
 
     // Returns a value between 0 and 1 indicating what percentage of the rectangle is within the container.
-    inline F32 CalcPercOfOccupance(const s_rect_i rect, const s_rect_i container) {
+    inline t_f32 CalcPercOfOccupance(const s_rect_i rect, const s_rect_i container) {
         ZF_ASSERT(container.width > 0 && container.height > 0);
 
         const auto subrect = ClampedWithinContainer(rect, container);
-        return clamp(static_cast<F32>(Area(subrect)) / static_cast<F32>(Area(container)), 0.0f, 1.0f);
+        return f_clamp(static_cast<t_f32>(Area(subrect)) / static_cast<t_f32>(Area(container)), 0.0f, 1.0f);
     }
 
-    s_rect_f CalcSpanningRect(const s_array_mut<s_rect_f> rects);
-    s_rect_i CalcSpanningRect(const s_array_mut<s_rect_i> rects);
+    s_rect_f CalcSpanningRect(const t_array_mut<s_rect_f> rects);
+    s_rect_i CalcSpanningRect(const t_array_mut<s_rect_i> rects);
 
     // ============================================================
 }
