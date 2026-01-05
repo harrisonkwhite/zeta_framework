@@ -1,7 +1,6 @@
 #include <zgl/zgl_game.h>
 
 #include <zgl/zgl_platform.h>
-#include <zgl/zgl_rendering.h>
 
 namespace zf {
     static const math::t_v2_i g_init_window_size = {1280, 720};
@@ -28,9 +27,9 @@ namespace zf {
 
         input::t_state *const input_state = input::f_create_state(&perm_arena);
 
-        t_rendering_resource_group *perm_rendering_resource_group;
-        t_rendering_basis *const rendering_basis = f_rendering_startup_module(&perm_arena, &perm_rendering_resource_group);
-        ZF_DEFER({ f_rendering_shutdown_module(rendering_basis); });
+        rendering::t_resource_group *perm_rendering_resource_group;
+        rendering::t_basis *const rendering_basis = rendering::f_startup_module(&perm_arena, &perm_rendering_resource_group);
+        ZF_DEFER({ rendering::f_shutdown_module(rendering_basis); });
 
         rand::t_rng *const rng = rand::f_create_rng(0, &perm_arena); // @todo: Proper seed!
 
@@ -84,7 +83,7 @@ namespace zf {
 
             mem::f_arena_rewind(&temp_arena);
 
-            t_rendering_context *const rendering_context = f_rendering_begin_frame(rendering_basis, {109, 187, 255}, &temp_arena); // @todo: Make the clear colour customisable?
+            rendering::t_context *const rendering_context = rendering::f_begin_frame(rendering_basis, {109, 187, 255}, &temp_arena); // @todo: Make the clear colour customisable?
 
             render_func({
                 .perm_arena = &perm_arena,
@@ -93,7 +92,7 @@ namespace zf {
                 .rng = rng,
             });
 
-            f_rendering_end_frame(rendering_context);
+            rendering::f_end_frame(rendering_context);
         }
     }
 }

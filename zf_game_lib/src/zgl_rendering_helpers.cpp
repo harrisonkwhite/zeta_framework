@@ -1,8 +1,8 @@
 #include <zgl/zgl_rendering.h>
 
-namespace zf {
-    void f_rendering_submit_texture(t_rendering_context *const context, const t_rendering_resource *const texture, const math::t_v2 pos, const math::t_rect_i src_rect) {
-        const auto texture_size = f_rendering_get_texture_size(texture);
+namespace zf::rendering {
+    void f_submit_texture(t_context *const context, const t_resource *const texture, const math::t_v2 pos, const math::t_rect_i src_rect) {
+        const auto texture_size = f_get_texture_size(texture);
 
         math::t_rect_i src_rect_to_use;
 
@@ -33,10 +33,10 @@ namespace zf {
             },
         }};
 
-        f_rendering_submit_triangle(context, f_array_get_as_nonstatic(triangles), texture);
+        f_submit_triangle(context, f_array_get_as_nonstatic(triangles), texture);
     }
 
-    t_font f_rendering_create_font_from_raw(const strs::t_str_rdonly file_path, const t_i32 height, strs::t_code_pt_bit_vec *const code_pts, mem::t_arena *const temp_arena, t_rendering_resource_group *const resource_group) {
+    t_font f_create_font_from_raw(const strs::t_str_rdonly file_path, const t_i32 height, strs::t_code_pt_bit_vec *const code_pts, mem::t_arena *const temp_arena, t_resource_group *const resource_group) {
         gfx::t_font_arrangement arrangement;
         t_array_mut<gfx::t_font_atlas_rgba> atlas_rgbas;
 
@@ -44,10 +44,10 @@ namespace zf {
             ZF_FATAL();
         }
 
-        const t_array_mut<t_rendering_resource *> atlases = mem::f_arena_push_array<t_rendering_resource *>(resource_group->arena, atlas_rgbas.len);
+        const t_array_mut<t_resource *> atlases = mem::f_arena_push_array<t_resource *>(resource_group->arena, atlas_rgbas.len);
 
         for (t_i32 i = 0; i < atlas_rgbas.len; i++) {
-            atlases[i] = f_rendering_create_texture({gfx::g_font_atlas_size, atlas_rgbas[i]}, resource_group);
+            atlases[i] = f_create_texture({gfx::g_font_atlas_size, atlas_rgbas[i]}, resource_group);
         }
 
         return {
@@ -56,7 +56,7 @@ namespace zf {
         };
     }
 
-    t_font f_rendering_create_font_from_packed(const strs::t_str_rdonly file_path, mem::t_arena *const temp_arena, t_rendering_resource_group *const resource_group) {
+    t_font f_create_font_from_packed(const strs::t_str_rdonly file_path, mem::t_arena *const temp_arena, t_resource_group *const resource_group) {
         gfx::t_font_arrangement arrangement;
         t_array_mut<gfx::t_font_atlas_rgba> atlas_rgbas;
 
@@ -64,10 +64,10 @@ namespace zf {
             ZF_FATAL();
         }
 
-        const auto atlases = mem::f_arena_push_array<t_rendering_resource *>(resource_group->arena, atlas_rgbas.len);
+        const auto atlases = mem::f_arena_push_array<t_resource *>(resource_group->arena, atlas_rgbas.len);
 
         for (t_i32 i = 0; i < atlas_rgbas.len; i++) {
-            atlases[i] = f_rendering_create_texture({gfx::g_font_atlas_size, atlas_rgbas[i]}, resource_group);
+            atlases[i] = f_create_texture({gfx::g_font_atlas_size, atlas_rgbas[i]}, resource_group);
         }
 
         return {
@@ -76,7 +76,7 @@ namespace zf {
         };
     }
 
-    t_array_mut<math::t_v2> f_rendering_get_str_chr_render_positions(const strs::t_str_rdonly str, const gfx::t_font_arrangement &font_arrangement, const math::t_v2 pos, const math::t_v2 alignment, mem::t_arena *const arena) {
+    t_array_mut<math::t_v2> f_get_str_chr_render_positions(const strs::t_str_rdonly str, const gfx::t_font_arrangement &font_arrangement, const math::t_v2 pos, const math::t_v2 alignment, mem::t_arena *const arena) {
         ZF_ASSERT(strs::f_is_valid_utf8(str));
         ZF_ASSERT(gfx::f_is_alignment_valid(alignment));
 
@@ -172,7 +172,7 @@ namespace zf {
         return positions;
     }
 
-    void f_rendering_submit_str(t_rendering_context *const context, const strs::t_str_rdonly str, const t_font &font, const math::t_v2 pos, mem::t_arena *const temp_arena, const math::t_v2 alignment, const gfx::t_color_rgba32f blend) {
+    void f_submit_str(t_context *const context, const strs::t_str_rdonly str, const t_font &font, const math::t_v2 pos, mem::t_arena *const temp_arena, const math::t_v2 alignment, const gfx::t_color_rgba32f blend) {
         ZF_ASSERT(strs::f_is_valid_utf8(str));
         ZF_ASSERT(gfx::f_is_alignment_valid(alignment));
 
@@ -180,7 +180,7 @@ namespace zf {
             return;
         }
 
-        const t_array_mut<math::t_v2> chr_positions = f_rendering_get_str_chr_render_positions(str, font.arrangement, pos, alignment, temp_arena);
+        const t_array_mut<math::t_v2> chr_positions = f_get_str_chr_render_positions(str, font.arrangement, pos, alignment, temp_arena);
 
         t_i32 chr_index = 0;
 
@@ -197,7 +197,7 @@ namespace zf {
                 continue;
             }
 
-            f_rendering_submit_texture(context, font.atlases[glyph_info->atlas_index], chr_positions[chr_index], glyph_info->atlas_rect);
+            f_submit_texture(context, font.atlases[glyph_info->atlas_index], chr_positions[chr_index], glyph_info->atlas_rect);
 
             chr_index++;
         };
