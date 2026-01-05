@@ -86,7 +86,7 @@ namespace zf {
             return false;
         }
 
-        s_list_mut<t_u8> bin_list = {};
+        ds::s_list_mut<t_u8> bin_list = {};
 
         while (true) {
             t_static_array<t_u8, 4096> buf;
@@ -96,7 +96,7 @@ namespace zf {
                 break;
             }
 
-            ListAppendManyDynamic(&bin_list, f_array_slice(f_array_get_as_nonstatic(buf), 0, r), bin_arena);
+            ds::f_list_append_many_dynamic(&bin_list, f_array_slice(f_array_get_as_nonstatic(buf), 0, r), bin_arena);
         }
 
         if (r != REPROC_EPIPE) {
@@ -111,12 +111,12 @@ namespace zf {
 
         if (r > 0) {
             io::t_stream std_err = io::f_get_std_error();
-            const auto err = t_str_rdonly(bin_list.AsArray());
+            const auto err = t_str_rdonly(ds::f_list_get_as_array(&bin_list));
             io::f_print_fmt(&std_err, ZF_STR_LITERAL("==================== BGFX SHADERC ERROR ====================\n%============================================================\n"), err);
             return false;
         }
 
-        *o_bin = bin_list.AsArray();
+        *o_bin = ds::f_list_get_as_array(&bin_list);
 
         return true;
     }

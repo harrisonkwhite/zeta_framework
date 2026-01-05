@@ -38,7 +38,7 @@ cmake ..
 - [GLFW](https://github.com/glfw/glfw) for cross-platform windowing and input
 - [BGFX](https://github.com/bkaradzic/bgfx) for a cross-platform graphics backend
 - [cJSON](https://github.com/DaveGamble/cJSON) for JSON parsing in the asset packer
-- [stb](https://github.com/nothings/stb) for raw image and font file loading
+- [stb](https://github.com/nothings/stb) for image and font file loading
 - [miniaudio](https://github.com/mackron/miniaudio) for audio loading and playing
 - [PCG](https://www.pcg-random.org) for random number generation
 
