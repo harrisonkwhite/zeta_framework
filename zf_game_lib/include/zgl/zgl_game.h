@@ -11,7 +11,7 @@ namespace zf {
 
         t_rendering_resource_group *perm_rendering_resource_group;
 
-        rand::RNG *rng;
+        t_rng *rng;
     };
 
     struct t_input_state;
@@ -24,7 +24,7 @@ namespace zf {
 
         t_rendering_resource_group *perm_rendering_resource_group;
 
-        rand::RNG *rng;
+        t_rng *rng;
     };
 
     struct t_rendering_context;
@@ -35,7 +35,7 @@ namespace zf {
 
         t_rendering_context *rendering_context;
 
-        rand::RNG *rng;
+        t_rng *rng;
     };
 
     using t_game_init_func = void (*)(const t_game_init_context &context);
