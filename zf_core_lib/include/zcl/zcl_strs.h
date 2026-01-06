@@ -72,12 +72,12 @@ namespace zf::strs {
         return true;
     }
 
-    inline char *str_get_as_cstr(const t_str_mut str) {
+    inline char *str_to_cstr(const t_str_mut str) {
         ZF_ASSERT(are_bytes_terminated_anywhere(str.bytes));
         return reinterpret_cast<char *>(str.bytes.raw);
     }
 
-    inline const char *str_get_as_cstr(const t_str_rdonly str) {
+    inline const char *str_to_cstr(const t_str_rdonly str) {
         ZF_ASSERT(are_bytes_terminated_anywhere(str.bytes));
         return reinterpret_cast<const char *>(str.bytes.raw);
     }

@@ -57,9 +57,9 @@ namespace zf {
         ZF_ASSERT(strs::are_bytes_terminated_only_at_end(shaderc_include_dir_terminated.bytes));
 
         const t_static_array<const char *, 15> args = {{
-            strs::str_get_as_cstr(shaderc_file_path_terminated),
+            strs::str_to_cstr(shaderc_file_path_terminated),
             "-f",
-            strs::str_get_as_cstr(shader_file_path_terminated),
+            strs::str_to_cstr(shader_file_path_terminated),
             "--type",
             is_frag ? "fragment" : "vertex",
             "--platform",
@@ -67,9 +67,9 @@ namespace zf {
             "--profile",
             profile_cstr,
             "--varyingdef",
-            strs::str_get_as_cstr(varying_def_file_path_terminated),
+            strs::str_to_cstr(varying_def_file_path_terminated),
             "-i",
-            strs::str_get_as_cstr(shaderc_include_dir_terminated),
+            strs::str_to_cstr(shaderc_include_dir_terminated),
             "--stdout",
             nullptr,
         }};
@@ -96,7 +96,7 @@ namespace zf {
                 break;
             }
 
-            ds::list_append_many_dynamic(&bin_list, array_slice(array_get_as_nonstatic(buf), 0, r), bin_arena);
+            ds::list_append_many_dynamic(&bin_list, array_slice(array_to_nonstatic(buf), 0, r), bin_arena);
         }
 
         if (r != REPROC_EPIPE) {
@@ -111,12 +111,12 @@ namespace zf {
 
         if (r > 0) {
             io::t_stream std_err = io::get_std_error();
-            const auto err = strs::t_str_rdonly(ds::list_get_as_array(&bin_list));
+            const auto err = strs::t_str_rdonly(ds::list_to_array(&bin_list));
             io::print_format(&std_err, ZF_STR_LITERAL("==================== BGFX SHADERC ERROR ====================\n%============================================================\n"), err);
             return false;
         }
 
-        *o_bin = ds::list_get_as_array(&bin_list);
+        *o_bin = ds::list_to_array(&bin_list);
 
         return true;
     }

@@ -264,7 +264,7 @@ namespace zf::platform {
         ZF_ASSERT(g_module_state.active);
 
         const strs::t_str_rdonly title_terminated = strs::str_clone_but_add_terminator(title, temp_arena);
-        glfwSetWindowTitle(g_module_state.glfw_window, strs::str_get_as_cstr(title_terminated));
+        glfwSetWindowTitle(g_module_state.glfw_window, strs::str_to_cstr(title_terminated));
     }
 
     void window_set_size(const math::t_v2_i size) {

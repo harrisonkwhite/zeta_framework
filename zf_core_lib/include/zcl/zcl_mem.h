@@ -21,15 +21,16 @@ namespace zf::mem {
     }
 
     template <c_simple tp_type>
-    t_array_mut<t_u8> get_as_bytes(tp_type &val) {
+    t_array_mut<t_u8> to_bytes(tp_type &val) {
         return {reinterpret_cast<t_u8 *>(&val), ZF_SIZE_OF(val)};
     }
 
     template <c_simple tp_type>
-    t_array_rdonly<t_u8> get_as_bytes(const tp_type &val) {
+    t_array_rdonly<t_u8> to_bytes(const tp_type &val) {
         return {reinterpret_cast<const t_u8 *>(&val), ZF_SIZE_OF(val)};
     }
 
+    // @todo: Fix stupid name.
     template <c_array_elem tp_elem_type>
     t_array_mut<t_u8> get_array_as_byte_array(const t_array_mut<tp_elem_type> arr) {
         return {reinterpret_cast<t_u8 *>(arr.raw), array_get_size_in_bytes(arr)};
@@ -108,19 +109,51 @@ namespace zf::mem {
         t_arena_block *next;
     };
 
+    enum t_arena_type {
+        ec_arena_type_invalid,
+        ec_arena_type_blockbased, // Owns its memory, which is organised as a linked list of dynamically allocated blocks. New blocks are allocated as needed. @todo: Probably should not expose implementation details.
+        ec_arena_type_wrapping,   // Non-owning and non-reallocating. Useful if you want to leverage a stack-allocated buffer for example. @todo: Probably not a good name.
+    };
+
     struct t_arena {
-        t_arena_block *blocks_head;
-        t_arena_block *block_cur;
-        t_i32 block_cur_offs;
-        t_i32 block_min_size;
+        t_arena_type type;
+
+        union {
+            struct {
+                t_arena_block *blocks_head;
+                t_arena_block *block_cur;
+                t_i32 block_cur_offs;
+                t_i32 block_min_size;
+            } blockbased;
+
+            struct {
+                void *buf;
+                t_i32 buf_size;
+                t_i32 buf_offs;
+            } wrapping;
+        } type_data;
     };
 
     // Does not allocate any arena memory (blocks) upfront.
-    inline t_arena arena_create(const t_i32 block_min_size = convert_megabytes_to_bytes(1)) {
-        return {.block_min_size = block_min_size};
+    inline t_arena arena_create_blockbased(const t_i32 block_min_size = convert_megabytes_to_bytes(1)) {
+        ZF_ASSERT(block_min_size > 0);
+
+        return {
+            .type = ec_arena_type_blockbased,
+            .type_data = {.blockbased = {.block_min_size = block_min_size}},
+        };
     }
 
-    // Frees all arena memory. It is valid to call this even if no pushing was done.
+    inline t_arena arena_create_wrapping(const t_array_mut<t_u8> bytes) {
+        poison_uninitted(bytes.raw, bytes.len);
+
+        return {
+            .type = ec_arena_type_wrapping,
+            .type_data = {.wrapping = {.buf = bytes.raw, .buf_size = bytes.len}},
+        };
+    }
+
+    // Frees all arena memory. Only valid for block-based arenas. This can be called even if no pushing was done.
     void arena_destroy(t_arena *const arena);
 
     // Will lazily allocate memory as needed. Allocation failure is treated as fatal and causes an abort - you don't need to check for nullptr.
@@ -171,7 +204,7 @@ namespace zf::mem {
         return arr;
     }
 
-    // Takes the arena offset to the beginning of its allocated memory (if any) to overwrite from there.
+    // Takes the arena offset to the beginning of its memory (if any) to overwrite from there.
     void arena_rewind(t_arena *const arena);
 
     // ============================================================

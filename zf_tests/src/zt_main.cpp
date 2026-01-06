@@ -34,7 +34,7 @@ namespace zf {
     }};
 
     static void run_tests() {
-        mem::t_arena arena = mem::arena_create();
+        mem::t_arena arena = mem::arena_create_blockbased();
         ZF_DEFER({ mem::arena_destroy(&arena); });
 
         for (t_i32 i = 0; i < g_tests.g_len; i++) {

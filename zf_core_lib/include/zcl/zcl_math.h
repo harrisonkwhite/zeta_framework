@@ -131,11 +131,12 @@ namespace zf::math {
         t_f32 w;
     };
 
-    inline t_v2 v2_create_f32(const t_f32 x, const t_f32 y) { return {x, y}; }
-    inline t_v2_i v2_create_i32(const t_i32 x, const t_i32 y) { return {x, y}; }
-
-    inline t_v2 v2_convert_to_f32(const t_v2_i v) {
+    inline t_v2 v2_i_to_f(const t_v2_i v) {
         return {static_cast<t_f32>(v.x), static_cast<t_f32>(v.y)};
+    }
+
+    inline t_v2_i v2_f_to_i(const t_v2 v) {
+        return {static_cast<t_i32>(v.x), static_cast<t_i32>(v.y)};
     }
 
     // ============================================================
@@ -213,23 +214,23 @@ namespace zf::math {
     inline t_f32 rect_get_area(const t_rect_f rect) { return rect.width * rect.height; }
     inline t_i32 rect_get_area(const t_rect_i rect) { return rect.width * rect.height; }
 
-    inline t_rect_f rect_convert_to_f32(const t_rect_i rect) {
+    inline t_rect_f rect_i_to_f(const t_rect_i rect) {
         return {static_cast<t_f32>(rect.x), static_cast<t_f32>(rect.y), static_cast<t_f32>(rect.width), static_cast<t_f32>(rect.height)};
     }
 
-    inline t_rect_i rect_convert_to_i32(const t_rect_f rect) {
+    inline t_rect_i rect_f_to_i(const t_rect_f rect) {
         return {static_cast<t_i32>(rect.x), static_cast<t_i32>(rect.y), static_cast<t_i32>(rect.width), static_cast<t_i32>(rect.height)};
     }
 
-    inline t_b8 rects_are_equal(const t_rect_i rect, const t_rect_i other) {
-        return rect.x == other.x && rect.y == other.y && rect.width == other.width && rect.height == other.height;
+    inline t_b8 rects_check_equal(const t_rect_i a, const t_rect_i b) {
+        return a.x == b.x && a.y == b.y && a.width == b.width && a.height == b.height;
     }
 
-    inline t_b8 rects_do_inters(const t_rect_f a, const t_rect_f b) {
+    inline t_b8 rects_check_inters(const t_rect_f a, const t_rect_f b) {
         return rect_get_left(a) < rect_get_right(b) && rect_get_top(a) < rect_get_bottom(b) && rect_get_right(a) > rect_get_left(b) && rect_get_bottom(a) > rect_get_top(b);
     }
 
-    inline t_b8 rects_do_inters(const t_rect_i a, const t_rect_i b) {
+    inline t_b8 rects_check_inters(const t_rect_i a, const t_rect_i b) {
         return rect_get_left(a) < rect_get_right(b) && rect_get_top(a) < rect_get_bottom(b) && rect_get_right(a) > rect_get_left(b) && rect_get_bottom(a) > rect_get_top(b);
     }
 
@@ -273,13 +274,17 @@ namespace zf::math {
         }
     };
 
+    // Points are guaranteed to be in this order: top-left, top-right, bottom-right, bottom-left.
     t_poly_mut poly_create_quad(const t_v2 pos, const t_v2 size, const t_v2 origin, mem::t_arena *const arena);
+
+    // Points are guaranteed to be in this order: top-left, top-right, bottom-right, bottom-left.
     t_poly_mut poly_create_quad_rotated(const t_v2 pos, const t_v2 size, const t_v2 origin, const t_f32 rot, mem::t_arena *const arena);
 
-    t_b8 poly_check_inters(const t_poly_rdonly a, const t_poly_rdonly b);
     t_b8 poly_check_inters_with_rect(const t_poly_rdonly poly, const t_rect_f rect);
 
     t_rect_f poly_get_span(const t_poly_rdonly poly);
+
+    t_b8 polys_check_inters(const t_poly_rdonly a, const t_poly_rdonly b);
 
     // ============================================================
 

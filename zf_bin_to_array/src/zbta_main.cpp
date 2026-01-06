@@ -2,7 +2,7 @@
 
 namespace zf {
     [[nodiscard]] static t_b8 output_code(const strs::t_str_rdonly input_file_path, const strs::t_str_rdonly output_file_path, const strs::t_str_rdonly arr_var_subname, const strs::t_str_rdonly module_namespace_name) {
-        mem::t_arena arena = mem::arena_create();
+        mem::t_arena arena = mem::arena_create_blockbased();
         ZF_DEFER({ mem::arena_destroy(&arena); });
 
         io::t_stream input_file_stream;

@@ -82,8 +82,6 @@ namespace zf::math {
     }
 
     t_poly_mut poly_create_quad(const t_v2 pos, const t_v2 size, const t_v2 origin, mem::t_arena *const arena) {
-        ZF_ASSERT(origin.x >= 0.0f && origin.x <= 1.0f && origin.y >= 0.0f && origin.y <= 1.0f); // @todo: Should this exist?
-
         const t_poly_mut poly = {
             .pts = mem::arena_push_array<t_v2>(arena, 4),
         };
@@ -103,10 +101,10 @@ namespace zf::math {
             .pts = mem::arena_push_array<t_v2>(arena, 4),
         };
 
-        const t_v2 offs_left = get_lengthdir(size.x * origin.x, rot + g_pi);
-        const t_v2 offs_up = get_lengthdir(size.y * origin.y, rot + (g_pi * 0.5f));
+        const t_v2 offs_left = get_lengthdir(size.x * origin.x, rot - g_pi);
+        const t_v2 offs_up = get_lengthdir(size.y * origin.y, rot - (g_pi * 0.5f));
         const t_v2 offs_right = get_lengthdir(size.x * (1.0f - origin.x), rot);
-        const t_v2 offs_down = get_lengthdir(size.y * (1.0f - origin.y), rot - (g_pi * 0.5f));
+        const t_v2 offs_down = get_lengthdir(size.y * (1.0f - origin.y), rot + (g_pi * 0.5f));
 
         poly.pts[0] = pos + offs_left + offs_up;
         poly.pts[1] = pos + offs_right + offs_up;
@@ -114,10 +112,6 @@ namespace zf::math {
         poly.pts[3] = pos + offs_left + offs_down;
 
         return poly;
-    }
-
-    t_b8 poly_check_inters(const t_poly_rdonly a, const t_poly_rdonly b) {
-        return poly_check_separation(a, b) && poly_check_separation(b, a);
     }
 
     t_b8 poly_check_inters_with_rect(const t_poly_rdonly poly, const t_rect_f rect) {
@@ -128,12 +122,10 @@ namespace zf::math {
             {rect.x, rect.y + rect.height},
         }};
 
-        return poly_check_inters(poly, {.pts = rect_poly_pts});
+        return polys_check_inters(poly, {.pts = rect_poly_pts});
     }
 
     t_rect_f poly_get_span(const t_poly_rdonly poly) {
-        ZF_ASSERT(poly.pts.len >= 3);
-
         t_f32 min_left = poly.pts[0].x;
         t_f32 min_top = poly.pts[0].y;
         t_f32 max_right = poly.pts[0].x;
@@ -149,5 +141,9 @@ namespace zf::math {
         }
 
         return rect_create_f32(min_left, min_top, max_right - min_left, max_bottom - min_top);
+    }
+
+    t_b8 polys_check_inters(const t_poly_rdonly a, const t_poly_rdonly b) {
+        return poly_check_separation(a, b) && poly_check_separation(b, a);
     }
 }

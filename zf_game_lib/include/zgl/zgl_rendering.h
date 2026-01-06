@@ -158,7 +158,7 @@ namespace zf::rendering {
             },
         }};
 
-        frame_submit_triangles(context, array_get_as_nonstatic(triangles), nullptr);
+        frame_submit_triangles(context, array_to_nonstatic(triangles), nullptr);
     }
 
     inline void frame_submit_rect(t_frame_context *const context, const math::t_rect_f rect, const gfx::t_color_rgba32f color) {
@@ -179,7 +179,7 @@ namespace zf::rendering {
         return origin.x >= 0.0f && origin.x <= 1.0f && origin.y >= 0.0f && origin.y <= 1.0f;
     }
 
-    void frame_submit_texture(t_frame_context *const context, const t_resource *const texture, const math::t_v2 pos, const math::t_rect_i src_rect = {}, const t_f32 rot = 0.0f);
+    void frame_submit_texture(t_frame_context *const context, const t_resource *const texture, const math::t_v2 pos, const math::t_rect_i src_rect = {}, const math::t_v2 origin = {}, const t_f32 rot = 0.0f);
 
     struct t_font {
         gfx::t_font_arrangement arrangement;

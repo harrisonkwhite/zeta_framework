@@ -341,12 +341,12 @@ namespace zf {
         };
 
     template <c_array_elem tp_elem_type, t_i32 tp_len>
-    t_array_mut<tp_elem_type> array_get_as_nonstatic(t_static_array<tp_elem_type, tp_len> &arr) {
+    t_array_mut<tp_elem_type> array_to_nonstatic(t_static_array<tp_elem_type, tp_len> &arr) {
         return {arr.raw, arr.g_len};
     }
 
     template <c_array_elem tp_elem_type, t_i32 tp_len>
-    t_array_rdonly<tp_elem_type> array_get_as_nonstatic(const t_static_array<tp_elem_type, tp_len> &arr) {
+    t_array_rdonly<tp_elem_type> array_to_nonstatic(const t_static_array<tp_elem_type, tp_len> &arr) {
         return {arr.raw, arr.g_len};
     }
 

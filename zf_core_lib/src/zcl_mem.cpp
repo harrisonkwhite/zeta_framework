@@ -5,6 +5,8 @@
 
 namespace zf::mem {
     void arena_destroy(t_arena *const arena) {
+        ZF_REQUIRE(arena->type == ec_arena_type_blockbased);
+
         const auto f = [](const auto self, t_arena_block *const block) {
             if (!block) {
                 return;
@@ -19,7 +21,7 @@ namespace zf::mem {
             free(block);
         };
 
-        f(f, arena->blocks_head);
+        f(f, arena->type_data.blockbased.blocks_head);
 
         *arena = {};
     }
@@ -52,47 +54,96 @@ namespace zf::mem {
     void *arena_push(t_arena *const arena, const t_i32 size, const t_i32 alignment) {
         ZF_ASSERT(size > 0 && is_alignment_valid(alignment));
 
-        if (!arena->blocks_head) {
-            arena->blocks_head = arena_create_block(max(size, arena->block_min_size));
-            arena->block_cur = arena->blocks_head;
-            return arena_push(arena, size, alignment);
-        }
+        switch (arena->type) {
+        case ec_arena_type_blockbased: {
+            const auto blockbased = &arena->type_data.blockbased;
 
-        const t_i32 offs_aligned = align_forward(arena->block_cur_offs, alignment);
-        const t_i32 offs_next = offs_aligned + size;
-
-        if (offs_next > arena->block_cur->buf_size) {
-            if (!arena->block_cur->next) {
-                arena->block_cur->next = arena_create_block(max(size, arena->block_min_size));
+            if (!blockbased->blocks_head) {
+                blockbased->blocks_head = arena_create_block(max(size, blockbased->block_min_size));
+                blockbased->block_cur = blockbased->blocks_head;
+                return arena_push(arena, size, alignment);
             }
 
-            arena->block_cur = arena->block_cur->next;
-            arena->block_cur_offs = 0;
+            const t_i32 offs_aligned = align_forward(blockbased->block_cur_offs, alignment);
+            const t_i32 offs_next = offs_aligned + size;
 
-            return arena_push(arena, size, alignment);
+            if (offs_next > blockbased->block_cur->buf_size) {
+                if (!blockbased->block_cur->next) {
+                    blockbased->block_cur->next = arena_create_block(max(size, blockbased->block_min_size));
+                }
+
+                blockbased->block_cur = blockbased->block_cur->next;
+                blockbased->block_cur_offs = 0;
+
+                return arena_push(arena, size, alignment);
+            }
+
+            blockbased->block_cur_offs = offs_next;
+
+            void *const result = static_cast<t_u8 *>(blockbased->block_cur->buf) + offs_aligned;
+            poison_uninitted(result, size);
+
+            return result;
         }
 
-        arena->block_cur_offs = offs_next;
+        case ec_arena_type_wrapping: {
+            const auto wrapping = &arena->type_data.wrapping;
 
-        void *const result = static_cast<t_u8 *>(arena->block_cur->buf) + offs_aligned;
-        poison_uninitted(result, size);
+            const t_i32 offs_aligned = align_forward(wrapping->buf_offs, alignment);
+            const t_i32 offs_next = offs_aligned + size;
 
-        return result;
+            if (offs_next > wrapping->buf_size) {
+                ZF_FATAL();
+            }
+
+            wrapping->buf_offs = offs_next;
+
+            void *const result = static_cast<t_u8 *>(wrapping->buf) + offs_aligned;
+            poison_uninitted(result, size);
+
+            return result;
+        }
+
+        default:
+            ZF_UNREACHABLE();
+        }
     }
 
     void arena_rewind(t_arena *const arena) {
-        arena->block_cur = arena->blocks_head;
-        arena->block_cur_offs = 0;
+        switch (arena->type) {
+        case ec_arena_type_blockbased: {
+            const auto blockbased = &arena->type_data.blockbased;
 
 #ifdef ZF_DEBUG
-        // Poison all block buffers.
-        const t_arena_block *block = arena->blocks_head;
+            // Poison all used block buffers.
+            if (blockbased->block_cur) {
+                const t_arena_block *block = blockbased->blocks_head;
 
-        while (block) {
-            poison_freed(block->buf, block->buf_size);
-            block = block->next;
-        }
+                while (block != blockbased->block_cur) {
+                    poison_freed(block->buf, block->buf_size);
+                    block = block->next;
+                }
+
+                poison_freed(blockbased->block_cur->buf, blockbased->block_cur_offs);
+            }
 #endif
+
+            blockbased->block_cur = blockbased->blocks_head;
+            blockbased->block_cur_offs = 0;
+
+            break;
+        }
+
+        case ec_arena_type_wrapping: {
+            const auto wrapping = &arena->type_data.wrapping;
+            poison_freed(wrapping->buf, wrapping->buf_offs);
+            wrapping->buf_offs = 0;
+            break;
+        }
+
+        default:
+            ZF_UNREACHABLE();
+        }
     }
 
     t_b8 is_any_bit_set(const t_bitset_rdonly bs) {

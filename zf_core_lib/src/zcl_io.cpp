@@ -18,17 +18,17 @@ namespace zf::io {
 
         switch (mode) {
         case ec_file_access_mode_read:
-            file = fopen(strs::str_get_as_cstr(path_terminated), "rb");
+            file = fopen(strs::str_to_cstr(path_terminated), "rb");
             stream_mode = ec_stream_mode_read;
             break;
 
         case ec_file_access_mode_write:
-            file = fopen(strs::str_get_as_cstr(path_terminated), "wb");
+            file = fopen(strs::str_to_cstr(path_terminated), "wb");
             stream_mode = ec_stream_mode_write;
             break;
 
         case ec_file_access_mode_append:
-            file = fopen(strs::str_get_as_cstr(path_terminated), "ab");
+            file = fopen(strs::str_to_cstr(path_terminated), "ab");
             stream_mode = ec_stream_mode_write;
             break;
 
@@ -92,7 +92,7 @@ namespace zf::io {
         const strs::t_str_rdonly path_terminated = strs::str_clone_but_add_terminator(path, temp_arena);
 
 #ifdef ZF_PLATFORM_WINDOWS
-        const t_i32 result = _mkdir(strs::str_get_as_cstr(path_terminated));
+        const t_i32 result = _mkdir(strs::str_to_cstr(path_terminated));
 #else
         const t_s32 result = mkdir(AsCstr(path_terminated), 0755);
 #endif
@@ -198,7 +198,7 @@ namespace zf::io {
 
         struct stat info;
 
-        if (stat(strs::str_get_as_cstr(path_terminated), &info) != 0) {
+        if (stat(strs::str_to_cstr(path_terminated), &info) != 0) {
             return ec_path_type_not_found;
         }
 
@@ -223,7 +223,7 @@ namespace zf::io {
         }
 
         const auto result_bytes = mem::arena_push_array<t_u8>(arena, len);
-        array_copy(mem::get_array_as_byte_array(array_slice(array_get_as_nonstatic(buf), 0, len)), result_bytes);
+        array_copy(mem::get_array_as_byte_array(array_slice(array_to_nonstatic(buf), 0, len)), result_bytes);
         return {result_bytes};
 #elif defined(ZF_PLATFORM_MACOS)
     #error "Platform-specific implementation not yet done!"

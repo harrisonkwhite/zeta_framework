@@ -28,10 +28,10 @@ namespace zf::game {
         //
         // Initialisation
         //
-        mem::t_arena perm_arena = mem::arena_create();
+        mem::t_arena perm_arena = mem::arena_create_blockbased();
         ZF_DEFER({ mem::arena_destroy(&perm_arena); });
 
-        mem::t_arena temp_arena = mem::arena_create();
+        mem::t_arena temp_arena = mem::arena_create_blockbased();
         ZF_DEFER({ mem::arena_destroy(&temp_arena); });
 
         platform::module_startup(g_init_window_size);

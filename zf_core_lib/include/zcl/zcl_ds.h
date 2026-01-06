@@ -64,12 +64,12 @@ namespace zf::ds {
     }
 
     template <c_list_elem tp_elem_type>
-    t_array_mut<tp_elem_type> list_get_as_array(const t_list_mut<tp_elem_type> *const list) {
+    t_array_mut<tp_elem_type> list_to_array(const t_list_mut<tp_elem_type> *const list) {
         return array_slice(list->backing_arr, 0, list->len);
     }
 
     template <c_list_elem tp_elem_type>
-    t_array_rdonly<tp_elem_type> list_get_as_array(const t_list_rdonly<tp_elem_type> *const list) {
+    t_array_rdonly<tp_elem_type> list_to_array(const t_list_rdonly<tp_elem_type> *const list) {
         return array_slice(list->backing_arr, 0, list->len);
     }
 

@@ -94,7 +94,7 @@ namespace zf {
     }};
 
     t_b8 pack_assets(const strs::t_str_rdonly instrs_json_file_path) {
-        mem::t_arena arena = mem::arena_create();
+        mem::t_arena arena = mem::arena_create_blockbased();
         ZF_DEFER({ mem::arena_destroy(&arena); });
 
         cJSON *cj;
@@ -107,7 +107,7 @@ namespace zf {
                 return false;
             }
 
-            cj = cJSON_Parse(strs::str_get_as_cstr(strs::t_str_rdonly{instrs_json_file_contents}));
+            cj = cJSON_Parse(strs::str_to_cstr(strs::t_str_rdonly{instrs_json_file_contents}));
 
             if (!cj) {
                 io::log_error(ZF_STR_LITERAL("Failed to parse packing instructions JSON file!"));
@@ -148,10 +148,10 @@ namespace zf {
 
                 const auto fields = [asset_type_index]() -> t_array_rdonly<t_asset_field> {
                     switch (asset_type_index) {
-                    case ec_asset_type_texture: return array_get_as_nonstatic(g_texture_fields);
-                    case ec_asset_type_font: return array_get_as_nonstatic(g_font_fields);
-                    case ec_asset_type_shader: return array_get_as_nonstatic(g_shader_fields);
-                    case ec_asset_type_sound: return array_get_as_nonstatic(g_sound_fields);
+                    case ec_asset_type_texture: return array_to_nonstatic(g_texture_fields);
+                    case ec_asset_type_font: return array_to_nonstatic(g_font_fields);
+                    case ec_asset_type_shader: return array_to_nonstatic(g_shader_fields);
+                    case ec_asset_type_sound: return array_to_nonstatic(g_sound_fields);
                     }
 
                     return {};
@@ -159,10 +159,10 @@ namespace zf {
 
                 const auto field_vals = [asset_type_index, &texture_field_cj_ptrs, &font_field_cj_ptrs, &shader_field_cj_ptrs, &snd_field_cj_ptrs]() -> t_array_mut<cJSON *> {
                     switch (asset_type_index) {
-                    case ec_asset_type_texture: return array_get_as_nonstatic(texture_field_cj_ptrs);
-                    case ec_asset_type_font: return array_get_as_nonstatic(font_field_cj_ptrs);
-                    case ec_asset_type_shader: return array_get_as_nonstatic(shader_field_cj_ptrs);
-                    case ec_asset_type_sound: return array_get_as_nonstatic(snd_field_cj_ptrs);
+                    case ec_asset_type_texture: return array_to_nonstatic(texture_field_cj_ptrs);
+                    case ec_asset_type_font: return array_to_nonstatic(font_field_cj_ptrs);
+                    case ec_asset_type_shader: return array_to_nonstatic(shader_field_cj_ptrs);
+                    case ec_asset_type_sound: return array_to_nonstatic(snd_field_cj_ptrs);
                     }
 
                     return {};

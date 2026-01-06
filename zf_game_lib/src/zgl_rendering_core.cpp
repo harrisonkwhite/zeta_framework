@@ -139,7 +139,7 @@ namespace zf::rendering {
         basis->blend_uniform = uniform_create(ZF_STR_LITERAL("u_blend"), ec_uniform_type_v4, &g_module_state.perm_resource_group, temp_arena);
 
         const t_static_array<t_u8, 4> batch_px_texture_rgba = {{255, 255, 255, 255}};
-        basis->px_texture = texture_create({{1, 1}, array_get_as_nonstatic(batch_px_texture_rgba)}, &g_module_state.perm_resource_group);
+        basis->px_texture = texture_create({{1, 1}, array_to_nonstatic(batch_px_texture_rgba)}, &g_module_state.perm_resource_group);
 
         return basis;
     }
@@ -267,7 +267,7 @@ namespace zf::rendering {
             ZF_UNREACHABLE();
         }();
 
-        const bgfx::UniformHandle bgfx_hdl = bgfx::createUniform(strs::str_get_as_cstr(name_terminated), bgfx_type);
+        const bgfx::UniformHandle bgfx_hdl = bgfx::createUniform(strs::str_to_cstr(name_terminated), bgfx_type);
 
         if (!bgfx::isValid(bgfx_hdl)) {
             ZF_FATAL();
@@ -334,7 +334,7 @@ namespace zf::rendering {
             ZF_FATAL();
         }
 
-        const auto verts = array_slice(array_get_as_nonstatic(context->batch_state.verts), 0, context->batch_state.vert_cnt);
+        const auto verts = array_slice(array_to_nonstatic(context->batch_state.verts), 0, context->batch_state.vert_cnt);
         const auto verts_bgfx_mem = bgfx::copy(verts.raw, static_cast<uint32_t>(array_get_size_in_bytes(verts)));
         bgfx::update(context->basis->vert_buf_bgfx_hdl, static_cast<uint32_t>(context->frame_vert_cnt), verts_bgfx_mem);
 

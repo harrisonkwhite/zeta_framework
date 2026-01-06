@@ -15,7 +15,7 @@ namespace zf::audio_sys {
     };
 
     inline t_sound_type_group sound_type_group_create() {
-        return {.arena = mem::arena_create()};
+        return {.arena = mem::arena_create_blockbased()};
     }
 
     void sound_type_group_destroy(t_sound_type_group *const group);

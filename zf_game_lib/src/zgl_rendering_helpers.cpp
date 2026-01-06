@@ -1,63 +1,42 @@
 #include <zgl/zgl_rendering.h>
 
 namespace zf::rendering {
-    void frame_submit_texture(t_frame_context *const context, const t_resource *const texture, const math::t_v2 pos, const math::t_rect_i src_rect, const t_f32 rot) {
+    void frame_submit_texture(t_frame_context *const context, const t_resource *const texture, const math::t_v2 pos, const math::t_rect_i src_rect, const math::t_v2 origin, const t_f32 rot) {
         const auto texture_size = texture_get_size(texture);
 
         math::t_rect_i src_rect_to_use;
 
-        if (math::rects_are_equal(src_rect, {})) {
+        if (math::rects_check_equal(src_rect, {})) {
             src_rect_to_use = {0, 0, texture_size.x, texture_size.y};
         } else {
             ZF_ASSERT(src_rect.x >= 0 && src_rect.y >= 0 && math::rect_get_right(src_rect) <= texture_size.x && math::rect_get_bottom(src_rect) <= texture_size.y);
             src_rect_to_use = src_rect;
         }
 
-        const math::t_rect_f rect = math::rect_create_f32(pos, math::v2_convert_to_f32(math::rect_get_size(src_rect_to_use)));
         const math::t_rect_f uv_rect = gfx::texture_calc_uv_rect(src_rect_to_use, texture_size);
 
-#if 0
-        const t_static_array<t_triangle, 2> triangles = {{
-            {
-                .verts = {{
-                    {.pos = math::rect_get_topleft(rect), .blend = gfx::g_color_white, .uv = math::rect_get_topleft(uv_rect)},
-                    {.pos = math::rect_get_topright(rect), .blend = gfx::g_color_white, .uv = math::rect_get_topright(uv_rect)},
-                    {.pos = math::rect_get_bottomleft(rect), .blend = gfx::g_color_white, .uv = math::rect_get_bottomleft(uv_rect)},
-                }},
-            },
-            {
-                .verts = {{
-                    {.pos = math::rect_get_bottomleft(rect), .blend = gfx::g_color_white, .uv = math::rect_get_bottomleft(uv_rect)},
-                    {.pos = math::rect_get_topright(rect), .blend = gfx::g_color_white, .uv = math::rect_get_topright(uv_rect)},
-                    {.pos = math::rect_get_bottomright(rect), .blend = gfx::g_color_white, .uv = math::rect_get_bottomright(uv_rect)},
-                }},
-            },
-        }};
-#else
-        const math::t_v2 topleft = pos;
-        const math::t_v2 topright = topleft + math::get_lengthdir(rect.width, rot);
-        const math::t_v2 bottomright = topright + math::get_lengthdir(rect.height, rot + (math::g_pi / 2.0f));
-        const math::t_v2 bottomleft = bottomright + math::get_lengthdir(rect.width, rot + math::g_pi);
+        t_static_array<math::t_v2, 4> quad_pts;
+        mem::t_arena quad_pts_arena = mem::arena_create_wrapping(mem::to_bytes(quad_pts));
+        const math::t_poly_mut quad_poly = math::poly_create_quad_rotated(pos, math::v2_i_to_f(math::rect_get_size(src_rect_to_use)), origin, rot, &quad_pts_arena);
 
         const t_static_array<t_triangle, 2> triangles = {{
             {
                 .verts = {{
-                    {.pos = topleft, .blend = gfx::g_color_white, .uv = math::rect_get_topleft(uv_rect)},
-                    {.pos = topright, .blend = gfx::g_color_white, .uv = math::rect_get_topright(uv_rect)},
-                    {.pos = bottomleft, .blend = gfx::g_color_white, .uv = math::rect_get_bottomleft(uv_rect)},
+                    {.pos = quad_poly.pts[0], .blend = gfx::g_color_white, .uv = math::rect_get_topleft(uv_rect)},
+                    {.pos = quad_poly.pts[1], .blend = gfx::g_color_white, .uv = math::rect_get_topright(uv_rect)},
+                    {.pos = quad_poly.pts[3], .blend = gfx::g_color_white, .uv = math::rect_get_bottomleft(uv_rect)},
                 }},
             },
             {
                 .verts = {{
-                    {.pos = bottomleft, .blend = gfx::g_color_white, .uv = math::rect_get_bottomleft(uv_rect)},
-                    {.pos = topright, .blend = gfx::g_color_white, .uv = math::rect_get_topright(uv_rect)},
-                    {.pos = bottomright, .blend = gfx::g_color_white, .uv = math::rect_get_bottomright(uv_rect)},
+                    {.pos = quad_poly.pts[3], .blend = gfx::g_color_white, .uv = math::rect_get_bottomleft(uv_rect)},
+                    {.pos = quad_poly.pts[1], .blend = gfx::g_color_white, .uv = math::rect_get_topright(uv_rect)},
+                    {.pos = quad_poly.pts[2], .blend = gfx::g_color_white, .uv = math::rect_get_bottomright(uv_rect)},
                 }},
             },
         }};
-#endif
 
-        frame_submit_triangles(context, array_get_as_nonstatic(triangles), texture);
+        frame_submit_triangles(context, array_to_nonstatic(triangles), texture);
     }
 
     t_font font_create_from_raw(const strs::t_str_rdonly file_path, const t_i32 height, strs::t_code_pt_bitset *const code_pts, mem::t_arena *const temp_arena, t_resource_group *const resource_group) {
@@ -183,7 +162,7 @@ namespace zf::rendering {
                 }
             }
 
-            positions[chr_index] = pos + chr_pos_pen + math::v2_convert_to_f32(glyph_info->offs);
+            positions[chr_index] = pos + chr_pos_pen + math::v2_i_to_f(glyph_info->offs);
             positions[chr_index].y += alignment_offs_y;
 
             chr_pos_pen.x += static_cast<t_f32>(glyph_info->adv);
