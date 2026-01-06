@@ -35,9 +35,9 @@ namespace zf::rendering {
         }};
 #else
         const math::t_v2 topleft = pos;
-        const math::t_v2 topright = topleft + math::get_lendir(rect.width, rot);
-        const math::t_v2 bottomright = topright + math::get_lendir(rect.height, rot + (math::g_pi / 2.0f));
-        const math::t_v2 bottomleft = bottomright + math::get_lendir(rect.width, rot + math::g_pi);
+        const math::t_v2 topright = topleft + math::get_lengthdir(rect.width, rot);
+        const math::t_v2 bottomright = topright + math::get_lengthdir(rect.height, rot + (math::g_pi / 2.0f));
+        const math::t_v2 bottomleft = bottomright + math::get_lengthdir(rect.width, rot + math::g_pi);
 
         const t_static_array<t_triangle, 2> triangles = {{
             {

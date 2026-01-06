@@ -258,6 +258,32 @@ namespace zf::math {
     // ============================================================
 
 
+    // ============================================================
+    // @section: Polygons
+
+    struct t_poly_rdonly {
+        t_array_rdonly<t_v2> pts;
+    };
+
+    struct t_poly_mut {
+        t_array_mut<t_v2> pts;
+
+        constexpr operator t_poly_rdonly() const {
+            return {.pts = pts};
+        }
+    };
+
+    t_poly_mut poly_create_quad(const t_v2 pos, const t_v2 size, const t_v2 origin, mem::t_arena *const arena);
+    t_poly_mut poly_create_quad_rotated(const t_v2 pos, const t_v2 size, const t_v2 origin, const t_f32 rot, mem::t_arena *const arena);
+
+    t_b8 poly_check_inters(const t_poly_rdonly a, const t_poly_rdonly b);
+    t_b8 poly_check_inters_with_rect(const t_poly_rdonly poly, const t_rect_f rect);
+
+    t_rect_f poly_get_span(const t_poly_rdonly poly);
+
+    // ============================================================
+
+
     inline t_f32 lerp(const t_f32 a, const t_f32 b, const t_f32 t) { return a + ((b - a) * t); }
     inline t_v2 lerp(const t_v2 a, const t_v2 b, const t_f32 t) { return a + ((b - a) * t); }
 
@@ -302,7 +328,7 @@ namespace zf::math {
         return atan2(rise, run);
     }
 
-    inline t_v2 get_lendir(const t_f32 len, const t_f32 dir) {
+    inline t_v2 get_lengthdir(const t_f32 len, const t_f32 dir) {
         return t_v2{cos(dir), sin(dir)} * len;
     }
 
