@@ -1,6 +1,7 @@
 #include <zgl/zgl_game.h>
 
 #include <zgl/zgl_platform.h>
+#include <zgl/zgl_audio.h>
 
 namespace zf::game {
     static const t_f64 g_init_target_tps = 60.0;
@@ -41,6 +42,9 @@ namespace zf::game {
         rendering::t_resource_group *perm_rendering_resource_group;
         rendering::t_basis *const rendering_basis = rendering::module_startup(&perm_arena, &perm_rendering_resource_group);
         ZF_DEFER({ rendering::module_shutdown(rendering_basis); });
+
+        audio_sys::module_startup();
+        ZF_DEFER({ audio_sys::module_shutdown(); });
 
         rand::t_rng *const rng = rand::rng_create(0, &perm_arena); // @todo: Proper seed!
 

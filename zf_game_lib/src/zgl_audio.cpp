@@ -2,7 +2,57 @@
 
 #include <miniaudio.h>
 
-namespace zf {
+namespace zf::audio_sys {
+    struct t_sound_type {
+        const t_sound_type_group *group;
+        t_i32 group_version;
+
+        audio::t_sound_data_mut snd_data;
+
+        t_sound_type *next;
+    };
+
+    const t_i32 g_sound_inst_limit = 32;
+
+    struct {
+        t_b8 active;
+
+        ma_engine ma_eng;
+
+        struct {
+            t_static_array<ma_sound, g_sound_inst_limit> ma_snds;
+            t_static_array<ma_audio_buffer_ref, g_sound_inst_limit> ma_buf_refs;
+            t_static_array<const t_sound_type *, g_sound_inst_limit> types;
+            mem::t_static_bitset<g_sound_inst_limit> activity;
+            t_static_array<t_i32, g_sound_inst_limit> versions;
+        } snd_insts;
+    } g_module_state;
+
+    void module_startup() {
+        ZF_REQUIRE(!g_module_state.active);
+
+        g_module_state.active = true;
+
+        if (ma_engine_init(nullptr, &g_module_state.ma_eng) != MA_SUCCESS) {
+            ZF_FATAL();
+        }
+    }
+
+    void module_shutdown() {
+        ZF_REQUIRE(g_module_state.active);
+
+        ZF_WALK_SET_BITS (g_module_state.snd_insts.activity, i) {
+            ma_sound_stop(&g_module_state.snd_insts.ma_snds[i]);
+            ma_sound_uninit(&g_module_state.snd_insts.ma_snds[i]);
+
+            ma_audio_buffer_ref_uninit(&g_module_state.snd_insts.ma_buf_refs[i]);
+        }
+
+        ma_engine_uninit(&g_module_state.ma_eng);
+
+        g_module_state = {};
+    }
+
 #if 0
     struct s_sound_type {
         const s_sound_type_arena &group;
@@ -29,42 +79,42 @@ namespace zf {
             s_static_bitset<g_snd_inst_limit> activity;
             s_static_array<t_i32, g_snd_inst_limit> versions;
         } snd_insts = {};
-    } g_state;
+    } g_module_state;
 
     void StartupAudioModule() {
-        ZF_REQUIRE(!g_state.initted);
+        ZF_REQUIRE(!g_module_state.initted);
 
-        g_state.initted = true;
+        g_module_state.initted = true;
 
-        if (ma_engine_init(nullptr, &g_state.ma_eng) != MA_SUCCESS) {
+        if (ma_engine_init(nullptr, &g_module_state.ma_eng) != MA_SUCCESS) {
             ZF_FATAL();
         }
     }
 
     void ShutdownAudioModule() {
-        ZF_REQUIRE(g_state.initted);
+        ZF_REQUIRE(g_module_state.initted);
 
-        ZF_WALK_SET_BITS(g_state.snd_insts.activity, i) {
-            ma_sound_stop(&g_state.snd_insts.ma_snds[i]);
-            ma_sound_uninit(&g_state.snd_insts.ma_snds[i]);
+        ZF_WALK_SET_BITS(g_module_state.snd_insts.activity, i) {
+            ma_sound_stop(&g_module_state.snd_insts.ma_snds[i]);
+            ma_sound_uninit(&g_module_state.snd_insts.ma_snds[i]);
 
-            ma_audio_buffer_ref_uninit(&g_state.snd_insts.ma_buf_refs[i]);
+            ma_audio_buffer_ref_uninit(&g_module_state.snd_insts.ma_buf_refs[i]);
         }
 
-        ma_engine_uninit(&g_state.ma_eng);
+        ma_engine_uninit(&g_module_state.ma_eng);
 
-        g_state = {};
+        g_module_state = {};
     }
 
     void s_sound_type_arena::Release() {
-        ZF_ASSERT(g_state.initted);
+        ZF_ASSERT(g_module_state.initted);
 
         auto type = m_head;
 
         while (type) {
-            ZF_WALK_SET_BITS(g_state.snd_insts.activity, i) {
-                if (g_state.snd_insts.types[i] == type) {
-                    StopSound({i, g_state.snd_insts.versions[i]});
+            ZF_WALK_SET_BITS(g_module_state.snd_insts.activity, i) {
+                if (g_module_state.snd_insts.types[i] == type) {
+                    StopSound({i, g_module_state.snd_insts.versions[i]});
                 }
             }
 
@@ -79,7 +129,7 @@ namespace zf {
     }
 
     t_b8 s_sound_type_arena::AddFromRaw(const s_str_rdonly file_path, s_arena &temp_arena, s_ptr<s_sound_type> &o_type) {
-        ZF_ASSERT(g_state.initted);
+        ZF_ASSERT(g_module_state.initted);
 
         s_sound_data snd_data = {};
 
@@ -93,7 +143,7 @@ namespace zf {
     }
 
     t_b8 s_sound_type_arena::AddFromPacked(const s_str_rdonly file_path, s_arena &temp_arena, s_ptr<s_sound_type> &o_type) {
-        ZF_ASSERT(g_state.initted);
+        ZF_ASSERT(g_module_state.initted);
 
         s_sound_data snd_data = {};
 
@@ -120,23 +170,23 @@ namespace zf {
     }
 
     s_sound_id PlaySound(const s_sound_type &type, const t_f32 vol, const t_f32 pan, const t_f32 pitch, const t_b8 loop) {
-        ZF_ASSERT(g_state.initted);
+        ZF_ASSERT(g_module_state.initted);
         ZF_ASSERT(type.group_version == type.group.Version());
         ZF_ASSERT(vol >= 0.0f && vol <= 1.0f);
         ZF_ASSERT(pan >= -1.0f && pan <= 1.0f);
         ZF_ASSERT(pitch > 0.0f);
 
-        const t_i32 index = IndexOfFirstUnsetBit(g_state.snd_insts.activity);
+        const t_i32 index = IndexOfFirstUnsetBit(g_module_state.snd_insts.activity);
 
         if (index == -1) {
             LogWarning("Trying to play a sound, but the sound instance limit has been reached!");
             return {};
         }
 
-        ma_sound &ma_snd = g_state.snd_insts.ma_snds[index];
-        ma_audio_buffer_ref &ma_buf_ref = g_state.snd_insts.ma_buf_refs[index];
+        ma_sound &ma_snd = g_module_state.snd_insts.ma_snds[index];
+        ma_audio_buffer_ref &ma_buf_ref = g_module_state.snd_insts.ma_buf_refs[index];
 
-        g_state.snd_insts.types[index] = &type;
+        g_module_state.snd_insts.types[index] = &type;
 
         if (ma_audio_buffer_ref_init(ma_format_f32, static_cast<ma_uint32>(type.snd_data.Meta().channel_cnt), type.snd_data.PCM().Ptr(), static_cast<ma_uint64>(type.snd_data.Meta().frame_cnt), &ma_buf_ref) != MA_SUCCESS) {
             ZF_FATAL();
@@ -144,7 +194,7 @@ namespace zf {
 
         ma_buf_ref.sampleRate = static_cast<ma_uint32>(type.snd_data.Meta().sample_rate);
 
-        if (ma_sound_init_from_data_source(&g_state.ma_eng, &ma_buf_ref, 0, nullptr, &ma_snd) != MA_SUCCESS) {
+        if (ma_sound_init_from_data_source(&g_module_state.ma_eng, &ma_buf_ref, 0, nullptr, &ma_snd) != MA_SUCCESS) {
             ZF_FATAL();
         }
 
@@ -157,46 +207,46 @@ namespace zf {
             ZF_FATAL();
         }
 
-        SetBit(g_state.snd_insts.activity, index);
-        g_state.snd_insts.versions[index]++;
+        SetBit(g_module_state.snd_insts.activity, index);
+        g_module_state.snd_insts.versions[index]++;
 
-        return {index, g_state.snd_insts.versions[index]};
+        return {index, g_module_state.snd_insts.versions[index]};
     }
 
     void StopSound(const s_sound_id id) {
-        ZF_ASSERT(g_state.initted);
+        ZF_ASSERT(g_module_state.initted);
 
-        ZF_ASSERT(IsBitSet(g_state.snd_insts.activity, id.Index()) && g_state.snd_insts.versions[id.Index()] == id.Version());
+        ZF_ASSERT(IsBitSet(g_module_state.snd_insts.activity, id.Index()) && g_module_state.snd_insts.versions[id.Index()] == id.Version());
 
-        ma_sound_stop(&g_state.snd_insts.ma_snds[id.Index()]);
-        ma_sound_uninit(&g_state.snd_insts.ma_snds[id.Index()]);
-        ma_audio_buffer_ref_uninit(&g_state.snd_insts.ma_buf_refs[id.Index()]);
+        ma_sound_stop(&g_module_state.snd_insts.ma_snds[id.Index()]);
+        ma_sound_uninit(&g_module_state.snd_insts.ma_snds[id.Index()]);
+        ma_audio_buffer_ref_uninit(&g_module_state.snd_insts.ma_buf_refs[id.Index()]);
 
-        UnsetBit(g_state.snd_insts.activity, id.Index());
+        UnsetBit(g_module_state.snd_insts.activity, id.Index());
     }
 
     t_b8 IsSoundPlaying(const s_sound_id id) {
-        ZF_ASSERT(g_state.initted);
-        ZF_ASSERT(id.Version() <= g_state.snd_insts.versions[id.Index()]);
+        ZF_ASSERT(g_module_state.initted);
+        ZF_ASSERT(id.Version() <= g_module_state.snd_insts.versions[id.Index()]);
 
-        if (!IsBitSet(g_state.snd_insts.activity, id.Index()) || id.Version() != g_state.snd_insts.versions[id.Index()]) {
+        if (!IsBitSet(g_module_state.snd_insts.activity, id.Index()) || id.Version() != g_module_state.snd_insts.versions[id.Index()]) {
             return false;
         }
 
-        return ma_sound_is_playing(&g_state.snd_insts.ma_snds[id.Index()]);
+        return ma_sound_is_playing(&g_module_state.snd_insts.ma_snds[id.Index()]);
     }
 
     void ProcFinishedSounds() {
-        ZF_ASSERT(g_state.initted);
+        ZF_ASSERT(g_module_state.initted);
 
-        ZF_WALK_SET_BITS(g_state.snd_insts.activity, i) {
-            ma_sound &ma_snd = g_state.snd_insts.ma_snds[i];
+        ZF_WALK_SET_BITS(g_module_state.snd_insts.activity, i) {
+            ma_sound &ma_snd = g_module_state.snd_insts.ma_snds[i];
 
             if (!ma_sound_is_playing(&ma_snd)) {
                 ma_sound_uninit(&ma_snd);
-                ma_audio_buffer_ref_uninit(&g_state.snd_insts.ma_buf_refs[i]);
+                ma_audio_buffer_ref_uninit(&g_module_state.snd_insts.ma_buf_refs[i]);
 
-                UnsetBit(g_state.snd_insts.activity, i);
+                UnsetBit(g_module_state.snd_insts.activity, i);
             }
         }
     }
