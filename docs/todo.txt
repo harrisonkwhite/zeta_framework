@@ -1,22 +1,19 @@
+- Consider having distinct namespace for zgl and zcl
+- Consider replacing [] overloads with array_get etc.
 - Make sure the licensing is all fine. Check whether BGFX license is needed in game dist.
 - Properly check for correctness in deserialization and unpacking ops.
 - Get a frame rendered before showing the window. I hate the white screen on startup.
-- Ability to change target FPS mid-game.
 - Ability to get debug info like FPS.
-- Ability to change background clear color.
 - RNG system needs mix function and seed should influence stream.
 - Bring back polygon code
 - Basic music streaming system at the very least
 - Unicode text input handling
 - Fill out tests
-- Assets won't get updated unless a recompile is triggered - this is annoying!
 
 There are a handful of comments marked with "@todo" throughout the codebase that need to be addressed as well.
 
 Nice to have:
-- Static list DS
-- Dynamic list DS
-- Queue DS
+- Stack and queue DS
 - Music layering and management.
 - Text rotation and scaling
 - A* pathfinding utilities.

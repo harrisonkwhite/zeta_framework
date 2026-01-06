@@ -83,6 +83,8 @@ namespace zf::game {
             while (frame_dur_accum >= targ_tick_interval) {
                 mem::arena_rewind(&temp_arena);
 
+                audio_sys::proc_finished_sounds();
+
                 tick_func({
                     .perm_arena = &perm_arena,
                     .temp_arena = &temp_arena,
