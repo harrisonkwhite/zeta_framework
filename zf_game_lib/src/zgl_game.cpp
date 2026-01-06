@@ -6,12 +6,12 @@
 namespace zf::game {
     static const t_f64 g_init_target_tps = 60.0;
     static const math::t_v2_i g_init_window_size = {1280, 720};
-    static const gfx::t_color_rgb24f g_init_clear_color = gfx::color_rgb8_to_rgb24f(gfx::color_create_rgb8(109, 187, 255));
+    static const gfx::t_color_rgba32f g_init_clear_color = gfx::color_create_rgba32f(0.43f, 0.73f, 1.0f);
 
     static struct {
         t_b8 running;
         t_f64 targ_tps;
-        gfx::t_color_rgb24f clear_color;
+        gfx::t_color_rgba32f clear_color;
     } g_module_state;
 
     void run(const t_init_func init_func, const t_tick_func tick_func, const t_render_func render_func, const t_deinit_func deinit_func) {
@@ -120,9 +120,9 @@ namespace zf::game {
         g_module_state.targ_tps = tps;
     }
 
-    void set_clear_color(const gfx::t_color_rgb24f col) {
+    void set_clear_color(const gfx::t_color_rgba32f col) {
         ZF_ASSERT(g_module_state.running);
-        ZF_ASSERT(gfx::color_check_valid(col));
+        ZF_ASSERT(gfx::color_check_normalized(col));
 
         g_module_state.clear_color = col;
     }

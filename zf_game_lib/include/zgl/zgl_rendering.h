@@ -90,7 +90,7 @@ namespace zf::rendering {
     };
 
     inline t_b8 vertex_check_valid(const t_vertex vert) {
-        return gfx::color_check_valid(vert.blend)
+        return gfx::color_check_normalized(vert.blend)
             && vert.uv.x >= 0.0f && vert.uv.y >= 0.0f && vert.uv.x <= 1.0f && vert.uv.y <= 1.0f;
     }
 
@@ -104,7 +104,7 @@ namespace zf::rendering {
             && vertex_check_valid(tri.verts[2]);
     }
 
-    t_frame_context *frame_begin(const t_basis *const basis, const gfx::t_color_rgb24f clear_col, mem::t_arena *const context_arena);
+    t_frame_context *frame_begin(const t_basis *const basis, const gfx::t_color_rgba32f clear_col, mem::t_arena *const context_arena);
     void frame_end(t_frame_context *const context);
 
     // Set prog as nullptr to just assign the default shader program.

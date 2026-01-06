@@ -42,5 +42,5 @@ namespace zf::game {
     void run(const t_init_func init_func, const t_tick_func tick_func, const t_render_func render_func, const t_deinit_func deinit_func = nullptr);
 
     void set_target_tps(const t_f64 tps);
-    void set_clear_color(const gfx::t_color_rgb24f col);
+    void set_clear_color(const gfx::t_color_rgba32f col);
 }

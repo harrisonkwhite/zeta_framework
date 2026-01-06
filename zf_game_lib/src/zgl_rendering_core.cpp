@@ -286,9 +286,9 @@ namespace zf::rendering {
         return uniform->type_data.uniform.type;
     }
 
-    t_frame_context *frame_begin(const t_basis *const basis, const gfx::t_color_rgb24f clear_col, mem::t_arena *const context_arena) {
+    t_frame_context *frame_begin(const t_basis *const basis, const gfx::t_color_rgba32f clear_col, mem::t_arena *const context_arena) {
         ZF_ASSERT(g_module_state.phase == ec_module_phase_active_but_not_midframe);
-        ZF_ASSERT(gfx::color_check_valid(clear_col));
+        ZF_ASSERT(gfx::color_check_normalized(clear_col));
 
         const auto fb_size_cache = platform::window_get_framebuffer_size_cache();
 
