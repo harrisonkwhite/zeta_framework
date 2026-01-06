@@ -15,7 +15,7 @@ namespace zf::rendering {
 
     // This depends on the platform module being initialised beforehand.
     // Returns a pointer to a rendering basis, needed for all rendering operations.
-    t_basis *module_startup(mem::t_arena *const arena, t_resource_group **const o_perm_resource_group);
+    t_basis *module_startup(mem::t_arena *const arena, mem::t_arena *const temp_arena, t_resource_group **const o_perm_resource_group);
 
     void module_shutdown(const t_basis *const basis);
 
@@ -110,21 +110,9 @@ namespace zf::rendering {
     // Leave texture as nullptr for no texture.
     void frame_submit_triangles_to_batch(t_frame_context *const context, const t_array_rdonly<t_batch_triangle> triangles, const t_resource *const texture);
 
-    struct t_uniform_data {
-        t_uniform_type type;
-
-        union {
-            struct {
-                const t_resource *texture;
-            } sampler;
-
-            math::t_v4 v4;
-
-            math::t_mat4x4 mat4x4;
-        } type_data;
-    };
-
-    void frame_set_uniform(t_frame_context *const context, t_resource *const uniform, const t_uniform_data &uniform_data);
+    void frame_set_uniform_sampler(t_frame_context *const context, const t_resource *const uniform, const t_resource *const sampler_texture);
+    void frame_set_uniform_v4(t_frame_context *const context, const t_resource *const uniform, const math::t_v4 v4);
+    void frame_set_uniform_mat4x4(t_frame_context *const context, const t_resource *const uniform, const math::t_mat4x4 &mat4x4);
 
     inline void frame_submit_triangle(t_frame_context *const context, const t_static_array<math::t_v2, 3> &pts, const t_static_array<gfx::t_color_rgba32f, 3> &pt_colors) {
         const t_batch_triangle triangle = {

@@ -40,7 +40,7 @@ namespace zf::game {
         input::t_state *const input_state = input::create_state(&perm_arena);
 
         rendering::t_resource_group *perm_rendering_resource_group;
-        rendering::t_basis *const rendering_basis = rendering::module_startup(&perm_arena, &perm_rendering_resource_group);
+        rendering::t_basis *const rendering_basis = rendering::module_startup(&perm_arena, &temp_arena, &perm_rendering_resource_group);
         ZF_DEFER({ rendering::module_shutdown(rendering_basis); });
 
         audio_sys::module_startup();

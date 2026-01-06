@@ -13,7 +13,7 @@ namespace zf::rendering {
     static struct {
         t_module_phase phase;
         math::t_v2_i resolution_cache;
-        t_resource_group perm_resource_group;
+        t_resource_group perm_resource_group; // @todo: Probably not needed as global anymore.
     } g_module_state;
 
     enum t_resource_type : t_i32 {
@@ -55,10 +55,10 @@ namespace zf::rendering {
 
     struct t_basis {
         bgfx::DynamicVertexBufferHandle vert_buf_bgfx_hdl;
-        bgfx::ProgramHandle shader_prog_bgfx_hdl;
-        bgfx::UniformHandle texture_sampler_uniform_bgfx_hdl;
 
-        const t_resource *px_texture;
+        const t_resource *batch_triangle_shader_prog;
+        const t_resource *batch_texture_sampler_uniform;
+        const t_resource *batch_px_texture;
     };
 
     struct t_frame_context {
@@ -74,26 +74,7 @@ namespace zf::rendering {
         } batch_state;
     };
 
-    // @todo: Placeholder!
-    static bgfx::ProgramHandle create_bgfx_shader_prog(const t_array_rdonly<t_u8> vert_shader_bin, const t_array_rdonly<t_u8> frag_shader_bin) {
-        const bgfx::Memory *const vert_shader_bgfx_mem = bgfx::copy(vert_shader_bin.raw, static_cast<uint32_t>(vert_shader_bin.len));
-        const bgfx::ShaderHandle vert_shader_bgfx_hdl = bgfx::createShader(vert_shader_bgfx_mem);
-
-        if (!bgfx::isValid(vert_shader_bgfx_hdl)) {
-            return BGFX_INVALID_HANDLE;
-        }
-
-        const bgfx::Memory *const frag_shader_bgfx_mem = bgfx::copy(frag_shader_bin.raw, static_cast<uint32_t>(frag_shader_bin.len));
-        const bgfx::ShaderHandle frag_shader_bgfx_hdl = bgfx::createShader(frag_shader_bgfx_mem);
-
-        if (!bgfx::isValid(frag_shader_bgfx_hdl)) {
-            return BGFX_INVALID_HANDLE;
-        }
-
-        return bgfx::createProgram(vert_shader_bgfx_hdl, frag_shader_bgfx_hdl, true);
-    }
-
-    t_basis *module_startup(mem::t_arena *const arena, t_resource_group **const o_perm_resource_group) {
+    t_basis *module_startup(mem::t_arena *const arena, mem::t_arena *const temp_arena, t_resource_group **const o_perm_resource_group) {
         ZF_ASSERT(g_module_state.phase == ec_module_phase_inactive);
 
         g_module_state = {
@@ -143,20 +124,12 @@ namespace zf::rendering {
             }
         }
 
-        basis->shader_prog_bgfx_hdl = create_bgfx_shader_prog({g_batch_triangle_vert_shader_default_src_raw, g_batch_triangle_vert_shader_default_src_len}, {g_batch_triangle_frag_shader_default_src_raw, g_batch_triangle_frag_shader_default_src_len});
+        basis->batch_triangle_shader_prog = shader_prog_create({g_batch_triangle_vert_shader_default_src_raw, g_batch_triangle_vert_shader_default_src_len}, {g_batch_triangle_frag_shader_default_src_raw, g_batch_triangle_frag_shader_default_src_len}, &g_module_state.perm_resource_group);
 
-        if (!bgfx::isValid(basis->shader_prog_bgfx_hdl)) {
-            ZF_FATAL();
-        }
+        basis->batch_texture_sampler_uniform = uniform_create(ZF_STR_LITERAL("u_tex"), ec_uniform_type_sampler, &g_module_state.perm_resource_group, temp_arena);
 
-        basis->texture_sampler_uniform_bgfx_hdl = bgfx::createUniform("u_tex", bgfx::UniformType::Sampler);
-
-        if (!bgfx::isValid(basis->texture_sampler_uniform_bgfx_hdl)) {
-            ZF_FATAL();
-        }
-
-        const t_static_array<t_u8, 4> px_texture_rgba = {{255, 255, 255, 255}};
-        basis->px_texture = texture_create({{1, 1}, array_get_as_nonstatic(px_texture_rgba)}, &g_module_state.perm_resource_group);
+        const t_static_array<t_u8, 4> batch_px_texture_rgba = {{255, 255, 255, 255}};
+        basis->batch_px_texture = texture_create({{1, 1}, array_get_as_nonstatic(batch_px_texture_rgba)}, &g_module_state.perm_resource_group);
 
         return basis;
     }
@@ -164,8 +137,6 @@ namespace zf::rendering {
     void module_shutdown(const t_basis *const basis) {
         ZF_ASSERT(g_module_state.phase == ec_module_phase_active_but_not_midframe);
 
-        bgfx::destroy(basis->texture_sampler_uniform_bgfx_hdl);
-        bgfx::destroy(basis->shader_prog_bgfx_hdl);
         bgfx::destroy(basis->vert_buf_bgfx_hdl);
 
         resource_group_destroy(&g_module_state.perm_resource_group);
@@ -343,6 +314,7 @@ namespace zf::rendering {
     }
 
     static void frame_flush(t_frame_context *const context) {
+#if 0
         ZF_ASSERT(g_module_state.phase == ec_module_phase_active_and_midframe);
 
         if (context->batch_state.vert_cnt == 0) {
@@ -357,7 +329,7 @@ namespace zf::rendering {
         const auto verts_bgfx_mem = bgfx::copy(verts.raw, static_cast<uint32_t>(array_get_size_in_bytes(verts)));
         bgfx::update(context->basis->vert_buf_bgfx_hdl, static_cast<uint32_t>(context->frame_vert_cnt), verts_bgfx_mem);
 
-        const auto texture_bgfx_hdl = context->batch_state.texture ? context->batch_state.texture->type_data.texture.bgfx_hdl : context->basis->px_texture->type_data.texture.bgfx_hdl;
+        const auto texture_bgfx_hdl = context->batch_state.texture ? context->batch_state.texture->type_data.texture.bgfx_hdl : context->basis->batch_px_texture->type_data.texture.bgfx_hdl;
         bgfx::setTexture(0, context->basis->texture_sampler_uniform_bgfx_hdl, texture_bgfx_hdl);
 
         bgfx::setVertexBuffer(0, context->basis->vert_buf_bgfx_hdl, static_cast<uint32_t>(context->frame_vert_cnt), static_cast<uint32_t>(context->batch_state.vert_cnt));
@@ -365,6 +337,32 @@ namespace zf::rendering {
         bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A | BGFX_STATE_BLEND_ALPHA);
 
         bgfx::submit(0, context->basis->shader_prog_bgfx_hdl);
+
+        context->frame_vert_cnt += context->batch_state.vert_cnt;
+
+        mem::clear_item(&context->batch_state, 0);
+#endif
+        ZF_ASSERT(g_module_state.phase == ec_module_phase_active_and_midframe);
+
+        if (context->batch_state.vert_cnt == 0) {
+            return;
+        }
+
+        if (context->frame_vert_cnt + context->batch_state.vert_cnt > g_frame_vert_limit) {
+            ZF_FATAL();
+        }
+
+        const auto verts = array_slice(array_get_as_nonstatic(context->batch_state.verts), 0, context->batch_state.vert_cnt);
+        const auto verts_bgfx_mem = bgfx::copy(verts.raw, static_cast<uint32_t>(array_get_size_in_bytes(verts)));
+        bgfx::update(context->basis->vert_buf_bgfx_hdl, static_cast<uint32_t>(context->frame_vert_cnt), verts_bgfx_mem);
+
+        frame_set_uniform_sampler(context, context->basis->batch_texture_sampler_uniform, context->batch_state.texture ? context->batch_state.texture : context->basis->batch_px_texture);
+
+        bgfx::setVertexBuffer(0, context->basis->vert_buf_bgfx_hdl, static_cast<uint32_t>(context->frame_vert_cnt), static_cast<uint32_t>(context->batch_state.vert_cnt));
+
+        bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A | BGFX_STATE_BLEND_ALPHA);
+
+        bgfx::submit(0, context->basis->batch_triangle_shader_prog->type_data.shader_prog.bgfx_hdl);
 
         context->frame_vert_cnt += context->batch_state.vert_cnt;
 
@@ -413,7 +411,25 @@ namespace zf::rendering {
         context->batch_state.vert_cnt += num_verts_to_submit;
     }
 
-    void frame_set_uniform(t_frame_context *const context, t_resource *const uniform, const t_uniform_data &uniform_data) {
+    struct t_uniform_data {
+        t_uniform_type type;
+
+        union {
+            struct {
+                const t_resource *texture;
+            } sampler;
+
+            struct {
+                const math::t_v4 *ptr;
+            } v4;
+
+            struct {
+                const math::t_mat4x4 *ptr;
+            } mat4x4;
+        } type_data;
+    };
+
+    static void frame_set_uniform(t_frame_context *const context, const t_resource *const uniform, const t_uniform_data &uniform_data) {
         ZF_ASSERT(uniform->type == ec_resource_type_uniform);
         ZF_ASSERT(uniform->type_data.uniform.type == uniform_data.type);
 
@@ -428,14 +444,41 @@ namespace zf::rendering {
         }
 
         case ec_uniform_type_v4: {
-            bgfx::setUniform(uniform_bgfx_hdl, &uniform_data.type_data.v4);
+            bgfx::setUniform(uniform_bgfx_hdl, uniform_data.type_data.v4.ptr);
             break;
         }
 
         case ec_uniform_type_mat4x4: {
-            bgfx::setUniform(uniform_bgfx_hdl, &uniform_data.type_data.mat4x4);
+            bgfx::setUniform(uniform_bgfx_hdl, uniform_data.type_data.mat4x4.ptr);
             break;
         }
         }
+    }
+
+    void frame_set_uniform_sampler(t_frame_context *const context, const t_resource *const uniform, const t_resource *const sampler_texture) {
+        const t_uniform_data uniform_data = {
+            .type = ec_uniform_type_sampler,
+            .type_data = {.sampler = {.texture = sampler_texture}},
+        };
+
+        frame_set_uniform(context, uniform, uniform_data);
+    }
+
+    void frame_set_uniform_v4(t_frame_context *const context, const t_resource *const uniform, const math::t_v4 v4) {
+        const t_uniform_data uniform_data = {
+            .type = ec_uniform_type_v4,
+            .type_data = {.v4 = {.ptr = &v4}},
+        };
+
+        frame_set_uniform(context, uniform, uniform_data);
+    }
+
+    void frame_set_uniform_mat4x4(t_frame_context *const context, const t_resource *const uniform, const math::t_mat4x4 &mat4x4) {
+        const t_uniform_data uniform_data = {
+            .type = ec_uniform_type_mat4x4,
+            .type_data = {.mat4x4 = {.ptr = &mat4x4}},
+        };
+
+        frame_set_uniform(context, uniform, uniform_data);
     }
 }
