@@ -16,7 +16,7 @@ namespace zf::rendering {
         const math::t_rect_f rect = math::rect_create_f32(pos, math::v2_convert_to_f32(math::rect_get_size(src_rect_to_use)));
         const math::t_rect_f uv_rect = gfx::texture_calc_uv_rect(src_rect_to_use, texture_size);
 
-        const t_static_array<t_batch_triangle, 2> triangles = {{
+        const t_static_array<t_triangle, 2> triangles = {{
             {
                 .verts = {{
                     {.pos = math::rect_get_topleft(rect), .blend = gfx::g_color_white, .uv = math::rect_get_topleft(uv_rect)},
@@ -33,7 +33,7 @@ namespace zf::rendering {
             },
         }};
 
-        frame_submit_triangles_to_batch(context, array_get_as_nonstatic(triangles), texture);
+        frame_submit_triangles(context, array_get_as_nonstatic(triangles), texture);
     }
 
     t_font font_create_from_raw(const strs::t_str_rdonly file_path, const t_i32 height, strs::t_code_pt_bitset *const code_pts, mem::t_arena *const temp_arena, t_resource_group *const resource_group) {

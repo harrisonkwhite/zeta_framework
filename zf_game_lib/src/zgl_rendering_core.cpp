@@ -19,7 +19,7 @@ namespace zf::rendering {
     enum t_resource_type : t_i32 {
         ec_resource_type_texture,
         ec_resource_type_shader_prog,
-        ec_resource_type_uniform,
+        ec_resource_type_uniform
     };
 
     struct t_resource {
@@ -44,11 +44,14 @@ namespace zf::rendering {
         t_resource *next;
     };
 
-    extern const t_u8 g_batch_triangle_vert_shader_default_src_raw[];
-    extern const t_i32 g_batch_triangle_vert_shader_default_src_len;
+    extern const t_u8 g_vert_shader_default_src_raw[];
+    extern const t_i32 g_vert_shader_default_src_len;
 
-    extern const t_u8 g_batch_triangle_frag_shader_default_src_raw[];
-    extern const t_i32 g_batch_triangle_frag_shader_default_src_len;
+    extern const t_u8 g_frag_shader_default_src_raw[];
+    extern const t_i32 g_frag_shader_default_src_len;
+
+    extern const t_u8 g_frag_shader_tint_src_raw[];
+    extern const t_i32 g_frag_shader_tint_src_len;
 
     const t_i32 g_batch_vert_limit = 1024;
     const t_i32 g_frame_vert_limit = 8192; // @todo: This should definitely be modifiable if the user wants.
@@ -56,9 +59,12 @@ namespace zf::rendering {
     struct t_basis {
         bgfx::DynamicVertexBufferHandle vert_buf_bgfx_hdl;
 
-        const t_resource *batch_triangle_shader_prog;
-        const t_resource *batch_texture_sampler_uniform;
-        const t_resource *batch_px_texture;
+        const t_resource *shader_prog_default;
+        const t_resource *shader_prog_tint;
+
+        const t_resource *sampler_uniform;
+
+        const t_resource *px_texture;
     };
 
     struct t_frame_context {
@@ -67,9 +73,10 @@ namespace zf::rendering {
         t_i32 frame_vert_cnt;
 
         struct {
-            t_static_array<t_batch_vertex, g_batch_vert_limit> verts;
+            t_static_array<t_vertex, g_batch_vert_limit> verts;
             t_i32 vert_cnt;
 
+            const t_resource *shader_prog;
             const t_resource *texture;
         } batch_state;
     };
@@ -124,12 +131,13 @@ namespace zf::rendering {
             }
         }
 
-        basis->batch_triangle_shader_prog = shader_prog_create({g_batch_triangle_vert_shader_default_src_raw, g_batch_triangle_vert_shader_default_src_len}, {g_batch_triangle_frag_shader_default_src_raw, g_batch_triangle_frag_shader_default_src_len}, &g_module_state.perm_resource_group);
+        basis->shader_prog_default = shader_prog_create({g_vert_shader_default_src_raw, g_vert_shader_default_src_len}, {g_frag_shader_default_src_raw, g_frag_shader_default_src_len}, &g_module_state.perm_resource_group);
+        basis->shader_prog_tint = shader_prog_create({g_vert_shader_default_src_raw, g_vert_shader_default_src_len}, {g_frag_shader_tint_src_raw, g_frag_shader_tint_src_len}, &g_module_state.perm_resource_group);
 
-        basis->batch_texture_sampler_uniform = uniform_create(ZF_STR_LITERAL("u_tex"), ec_uniform_type_sampler, &g_module_state.perm_resource_group, temp_arena);
+        basis->sampler_uniform = uniform_create(ZF_STR_LITERAL("u_tex"), ec_uniform_type_sampler, &g_module_state.perm_resource_group, temp_arena);
 
         const t_static_array<t_u8, 4> batch_px_texture_rgba = {{255, 255, 255, 255}};
-        basis->batch_px_texture = texture_create({{1, 1}, array_get_as_nonstatic(batch_px_texture_rgba)}, &g_module_state.perm_resource_group);
+        basis->px_texture = texture_create({{1, 1}, array_get_as_nonstatic(batch_px_texture_rgba)}, &g_module_state.perm_resource_group);
 
         return basis;
     }
@@ -314,7 +322,6 @@ namespace zf::rendering {
     }
 
     static void frame_flush(t_frame_context *const context) {
-#if 0
         ZF_ASSERT(g_module_state.phase == ec_module_phase_active_and_midframe);
 
         if (context->batch_state.vert_cnt == 0) {
@@ -329,40 +336,14 @@ namespace zf::rendering {
         const auto verts_bgfx_mem = bgfx::copy(verts.raw, static_cast<uint32_t>(array_get_size_in_bytes(verts)));
         bgfx::update(context->basis->vert_buf_bgfx_hdl, static_cast<uint32_t>(context->frame_vert_cnt), verts_bgfx_mem);
 
-        const auto texture_bgfx_hdl = context->batch_state.texture ? context->batch_state.texture->type_data.texture.bgfx_hdl : context->basis->batch_px_texture->type_data.texture.bgfx_hdl;
-        bgfx::setTexture(0, context->basis->texture_sampler_uniform_bgfx_hdl, texture_bgfx_hdl);
+        frame_set_uniform_sampler(context, context->basis->sampler_uniform, context->batch_state.texture ? context->batch_state.texture : context->basis->px_texture);
 
         bgfx::setVertexBuffer(0, context->basis->vert_buf_bgfx_hdl, static_cast<uint32_t>(context->frame_vert_cnt), static_cast<uint32_t>(context->batch_state.vert_cnt));
 
         bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A | BGFX_STATE_BLEND_ALPHA);
 
-        bgfx::submit(0, context->basis->shader_prog_bgfx_hdl);
-
-        context->frame_vert_cnt += context->batch_state.vert_cnt;
-
-        mem::clear_item(&context->batch_state, 0);
-#endif
-        ZF_ASSERT(g_module_state.phase == ec_module_phase_active_and_midframe);
-
-        if (context->batch_state.vert_cnt == 0) {
-            return;
-        }
-
-        if (context->frame_vert_cnt + context->batch_state.vert_cnt > g_frame_vert_limit) {
-            ZF_FATAL();
-        }
-
-        const auto verts = array_slice(array_get_as_nonstatic(context->batch_state.verts), 0, context->batch_state.vert_cnt);
-        const auto verts_bgfx_mem = bgfx::copy(verts.raw, static_cast<uint32_t>(array_get_size_in_bytes(verts)));
-        bgfx::update(context->basis->vert_buf_bgfx_hdl, static_cast<uint32_t>(context->frame_vert_cnt), verts_bgfx_mem);
-
-        frame_set_uniform_sampler(context, context->basis->batch_texture_sampler_uniform, context->batch_state.texture ? context->batch_state.texture : context->basis->batch_px_texture);
-
-        bgfx::setVertexBuffer(0, context->basis->vert_buf_bgfx_hdl, static_cast<uint32_t>(context->frame_vert_cnt), static_cast<uint32_t>(context->batch_state.vert_cnt));
-
-        bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A | BGFX_STATE_BLEND_ALPHA);
-
-        bgfx::submit(0, context->basis->batch_triangle_shader_prog->type_data.shader_prog.bgfx_hdl);
+        const t_resource *const prog = context->batch_state.shader_prog ? context->batch_state.shader_prog : context->basis->shader_prog_default;
+        bgfx::submit(0, prog->type_data.shader_prog.bgfx_hdl);
 
         context->frame_vert_cnt += context->batch_state.vert_cnt;
 
@@ -379,7 +360,27 @@ namespace zf::rendering {
         g_module_state.phase = ec_module_phase_active_but_not_midframe;
     }
 
-    void frame_submit_triangles_to_batch(t_frame_context *const context, const t_array_rdonly<t_batch_triangle> triangles, const t_resource *const texture) {
+    void frame_set_shader_prog(t_frame_context *const context, const t_resource *const prog) {
+        ZF_ASSERT(g_module_state.phase == ec_module_phase_active_and_midframe);
+        ZF_ASSERT(!prog || prog->type == ec_resource_type_shader_prog);
+
+        if (prog != context->batch_state.shader_prog) {
+            frame_flush(context);
+            context->batch_state.shader_prog = prog;
+        }
+    }
+
+    const t_resource *frame_get_shader_prog_default(t_frame_context *const context) {
+        ZF_ASSERT(g_module_state.phase == ec_module_phase_active_and_midframe);
+        return context->basis->shader_prog_default;
+    }
+
+    const t_resource *frame_get_shader_prog_tint(t_frame_context *const context) {
+        ZF_ASSERT(g_module_state.phase == ec_module_phase_active_and_midframe);
+        return context->basis->shader_prog_tint;
+    }
+
+    void frame_submit_triangles(t_frame_context *const context, const t_array_rdonly<t_triangle> triangles, const t_resource *const texture) {
         ZF_ASSERT(g_module_state.phase == ec_module_phase_active_and_midframe);
         ZF_ASSERT(triangles.len > 0);
         ZF_ASSERT(!texture || texture->type == ec_resource_type_texture);
@@ -392,7 +393,7 @@ namespace zf::rendering {
 
 #ifdef ZF_DEBUG
         for (t_i32 i = 0; i < triangles.len; i++) {
-            ZF_ASSERT(is_batch_triangle_valid(triangles[i]));
+            ZF_ASSERT(is_triangle_valid(triangles[i]));
         }
 #endif
 

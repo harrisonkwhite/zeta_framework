@@ -83,39 +83,45 @@ namespace zf::rendering {
 
     struct t_frame_context;
 
-    struct t_batch_vertex {
+    struct t_vertex {
         math::t_v2 pos;
         gfx::t_color_rgba32f blend;
         math::t_v2 uv;
     };
 
-    inline t_b8 is_batch_vertex_valid(const t_batch_vertex vert) {
+    inline t_b8 is_vertex_valid(const t_vertex vert) {
         return gfx::color_is_valid(vert.blend)
             && vert.uv.x >= 0.0f && vert.uv.y >= 0.0f && vert.uv.x <= 1.0f && vert.uv.y <= 1.0f;
     }
 
-    struct t_batch_triangle {
-        t_static_array<t_batch_vertex, 3> verts;
+    struct t_triangle {
+        t_static_array<t_vertex, 3> verts;
     };
 
-    inline t_b8 is_batch_triangle_valid(const t_batch_triangle tri) {
-        return is_batch_vertex_valid(tri.verts[0])
-            && is_batch_vertex_valid(tri.verts[1])
-            && is_batch_vertex_valid(tri.verts[2]);
+    inline t_b8 is_triangle_valid(const t_triangle tri) {
+        return is_vertex_valid(tri.verts[0])
+            && is_vertex_valid(tri.verts[1])
+            && is_vertex_valid(tri.verts[2]);
     }
 
     t_frame_context *frame_begin(const t_basis *const basis, const gfx::t_color_rgb24f clear_col, mem::t_arena *const context_arena);
     void frame_end(t_frame_context *const context);
 
+    // Set prog as nullptr to just assign the default shader program.
+    void frame_set_shader_prog(t_frame_context *const context, const t_resource *const prog);
+
+    const t_resource *frame_get_shader_prog_default(t_frame_context *const context);
+    const t_resource *frame_get_shader_prog_tint(t_frame_context *const context);
+
     // Leave texture as nullptr for no texture.
-    void frame_submit_triangles_to_batch(t_frame_context *const context, const t_array_rdonly<t_batch_triangle> triangles, const t_resource *const texture);
+    void frame_submit_triangles(t_frame_context *const context, const t_array_rdonly<t_triangle> triangles, const t_resource *const texture = nullptr);
 
     void frame_set_uniform_sampler(t_frame_context *const context, const t_resource *const uniform, const t_resource *const sampler_texture);
     void frame_set_uniform_v4(t_frame_context *const context, const t_resource *const uniform, const math::t_v4 v4);
     void frame_set_uniform_mat4x4(t_frame_context *const context, const t_resource *const uniform, const math::t_mat4x4 &mat4x4);
 
     inline void frame_submit_triangle(t_frame_context *const context, const t_static_array<math::t_v2, 3> &pts, const t_static_array<gfx::t_color_rgba32f, 3> &pt_colors) {
-        const t_batch_triangle triangle = {
+        const t_triangle triangle = {
             .verts = {{
                 {.pos = pts[0], .blend = pt_colors[0], .uv = {}},
                 {.pos = pts[1], .blend = pt_colors[1], .uv = {}},
@@ -123,7 +129,7 @@ namespace zf::rendering {
             }},
         };
 
-        frame_submit_triangles_to_batch(context, {&triangle, 1}, nullptr);
+        frame_submit_triangles(context, {&triangle, 1}, nullptr);
     }
 
     inline void frame_submit_triangle(t_frame_context *const context, const t_static_array<math::t_v2, 3> &pts, const gfx::t_color_rgba32f color) {
@@ -133,7 +139,7 @@ namespace zf::rendering {
     inline void frame_submit_rect(t_frame_context *const context, const math::t_rect_f rect, const gfx::t_color_rgba32f color_topleft, const gfx::t_color_rgba32f color_topright, const gfx::t_color_rgba32f color_bottomright, const gfx::t_color_rgba32f color_bottomleft) {
         ZF_ASSERT(rect.width > 0.0f && rect.height > 0.0f);
 
-        const t_static_array<t_batch_triangle, 2> triangles = {{
+        const t_static_array<t_triangle, 2> triangles = {{
             {
                 .verts = {{
                     {.pos = math::rect_get_topleft(rect), .blend = color_topleft, .uv = {0.0f, 0.0f}},
@@ -150,7 +156,7 @@ namespace zf::rendering {
             },
         }};
 
-        frame_submit_triangles_to_batch(context, array_get_as_nonstatic(triangles), nullptr);
+        frame_submit_triangles(context, array_get_as_nonstatic(triangles), nullptr);
     }
 
     inline void frame_submit_rect(t_frame_context *const context, const math::t_rect_f rect, const gfx::t_color_rgba32f color) {
