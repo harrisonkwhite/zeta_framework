@@ -79,15 +79,26 @@ namespace zf::rendering {
         math::t_v2 uv;
     };
 
+    inline t_b8 batch_vertex_is_valid(const t_batch_vertex vert) {
+        return gfx::color_is_valid(vert.blend)
+            && vert.uv.x >= 0.0f && vert.uv.y >= 0.0f && vert.uv.x <= 1.0f && vert.uv.y <= 1.0f;
+    }
+
     struct t_batch_triangle {
         t_static_array<t_batch_vertex, 3> verts;
     };
 
-    t_context *frame_begin(const t_basis *const basis, const gfx::t_color_rgb8 clear_col, mem::t_arena *const context_arena);
+    inline t_b8 batch_triangle_is_valid(const t_batch_triangle tri) {
+        return batch_vertex_is_valid(tri.verts[0])
+            && batch_vertex_is_valid(tri.verts[1])
+            && batch_vertex_is_valid(tri.verts[2]);
+    }
+
+    t_context *frame_begin(const t_basis *const basis, const gfx::t_color_rgb24f clear_col, mem::t_arena *const context_arena);
     void frame_end(t_context *const context);
 
     // Leave texture as nullptr for no texture.
-    void frame_submit_triangle(t_context *const context, const t_array_rdonly<t_batch_triangle> triangles, const t_resource *const texture);
+    void frame_submit_triangles(t_context *const context, const t_array_rdonly<t_batch_triangle> triangles, const t_resource *const texture);
 
     inline void frame_submit_triangle(t_context *const context, const t_static_array<math::t_v2, 3> &pts, const t_static_array<gfx::t_color_rgba32f, 3> &pt_colors) {
         const t_batch_triangle triangle = {
@@ -98,7 +109,7 @@ namespace zf::rendering {
             }},
         };
 
-        frame_submit_triangle(context, {&triangle, 1}, nullptr);
+        frame_submit_triangles(context, {&triangle, 1}, nullptr);
     }
 
     inline void frame_submit_triangle(t_context *const context, const t_static_array<math::t_v2, 3> &pts, const gfx::t_color_rgba32f color) {
@@ -125,7 +136,7 @@ namespace zf::rendering {
             },
         }};
 
-        frame_submit_triangle(context, array_get_as_nonstatic(triangles), nullptr);
+        frame_submit_triangles(context, array_get_as_nonstatic(triangles), nullptr);
     }
 
     inline void frame_submit_rect(t_context *const context, const math::t_rect_f rect, const gfx::t_color_rgba32f color) {

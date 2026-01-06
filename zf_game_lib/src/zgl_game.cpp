@@ -3,13 +3,26 @@
 #include <zgl/zgl_platform.h>
 
 namespace zf::game {
+    static const t_f64 g_init_target_tps = 60.0;
     static const math::t_v2_i g_init_window_size = {1280, 720};
-    static const t_f64 g_targ_ticks_per_sec = 60.0; // @todo: Make this customisable?
+    static const gfx::t_color_rgb24f g_init_clear_color = gfx::color_convert_to_rgb24f(gfx::color_create_rgb8(109, 187, 255));
+
+    static struct {
+        t_b8 running;
+        t_f64 targ_tps;
+        gfx::t_color_rgb24f clear_color;
+    } g_module_state;
 
     void run(const t_init_func init_func, const t_tick_func tick_func, const t_render_func render_func, const t_deinit_func deinit_func) {
-        ZF_ASSERT(init_func);
-        ZF_ASSERT(tick_func);
-        ZF_ASSERT(render_func);
+        ZF_REQUIRE(!g_module_state.running);
+
+        g_module_state = {
+            .running = true,
+            .targ_tps = g_init_target_tps,
+            .clear_color = g_init_clear_color,
+        };
+
+        ZF_DEFER({ g_module_state = {}; });
 
         //
         // Initialisation
@@ -60,9 +73,9 @@ namespace zf::game {
             frame_dur_accum += frame_time_delta;
             frame_time_last = frame_time;
 
-            const t_f64 targ_tick_interval = 1.0 / g_targ_ticks_per_sec;
+            const t_f64 targ_tick_interval = 1.0 / g_module_state.targ_tps;
 
-            // Once enough time has passed (i.e. the time accumulator has reached the tick interval), run at least a single tick.
+            // Once enough time has passed (i.e. the time accumulator has reached the target tick interval), run at least a single tick.
             while (frame_dur_accum >= targ_tick_interval) {
                 mem::arena_rewind(&temp_arena);
 
@@ -81,7 +94,7 @@ namespace zf::game {
 
             mem::arena_rewind(&temp_arena);
 
-            rendering::t_context *const rendering_context = rendering::frame_begin(rendering_basis, {109, 187, 255}, &temp_arena); // @todo: Make the clear colour customisable?
+            rendering::t_context *const rendering_context = rendering::frame_begin(rendering_basis, g_module_state.clear_color, &temp_arena);
 
             render_func({
                 .perm_arena = &perm_arena,
@@ -92,5 +105,19 @@ namespace zf::game {
 
             rendering::frame_end(rendering_context);
         }
+    }
+
+    void set_target_tps(const t_f64 tps) {
+        ZF_ASSERT(g_module_state.running);
+        ZF_ASSERT(tps > 0.0);
+
+        g_module_state.targ_tps = tps;
+    }
+
+    void set_clear_color(const gfx::t_color_rgb24f col) {
+        ZF_ASSERT(g_module_state.running);
+        ZF_ASSERT(gfx::color_is_valid(col));
+
+        g_module_state.clear_color = col;
     }
 }

@@ -4,14 +4,14 @@
 #include <zgl/zgl_platform.h>
 
 namespace zf::rendering {
-    enum t_module_state : t_i32 {
-        ec_module_state_inactive,
-        ec_module_state_active_but_not_midframe,
-        ec_module_state_active_and_midframe
+    enum t_module_phase : t_i32 {
+        ec_module_phase_inactive,
+        ec_module_phase_active_but_not_midframe,
+        ec_module_phase_active_and_midframe
     };
 
-    struct {
-        t_module_state state;
+    static struct {
+        t_module_phase phase;
         math::t_v2_i resolution_cache;
         t_resource_group perm_resource_group;
     } g_module_state;
@@ -88,10 +88,10 @@ namespace zf::rendering {
     }
 
     t_basis *module_startup(mem::t_arena *const arena, t_resource_group **const o_perm_resource_group) {
-        ZF_ASSERT(g_module_state.state == ec_module_state_inactive);
+        ZF_ASSERT(g_module_state.phase == ec_module_phase_inactive);
 
         g_module_state = {
-            .state = ec_module_state_active_but_not_midframe,
+            .phase = ec_module_phase_active_but_not_midframe,
         };
 
         //
@@ -156,7 +156,7 @@ namespace zf::rendering {
     }
 
     void module_shutdown(const t_basis *const basis) {
-        ZF_ASSERT(g_module_state.state == ec_module_state_active_but_not_midframe);
+        ZF_ASSERT(g_module_state.phase == ec_module_phase_active_but_not_midframe);
 
         bgfx::destroy(basis->texture_sampler_uniform_bgfx_hdl);
         bgfx::destroy(basis->shader_prog_bgfx_hdl);
@@ -170,12 +170,12 @@ namespace zf::rendering {
     }
 
     math::t_v2_i texture_get_size(const t_resource *const texture) {
-        ZF_ASSERT(g_module_state.state != ec_module_state_inactive);
+        ZF_ASSERT(g_module_state.phase != ec_module_phase_inactive);
         return texture->type_data.texture.size;
     }
 
     void resource_group_destroy(t_resource_group *const group) {
-        ZF_ASSERT(g_module_state.state == ec_module_state_active_but_not_midframe);
+        ZF_ASSERT(g_module_state.phase == ec_module_phase_active_but_not_midframe);
 
         t_resource *resource = group->head;
 
@@ -202,7 +202,7 @@ namespace zf::rendering {
     }
 
     static t_resource *resource_group_add(t_resource_group *const group, const t_resource_type type) {
-        ZF_ASSERT(g_module_state.state == ec_module_state_active_but_not_midframe);
+        ZF_ASSERT(g_module_state.phase == ec_module_phase_active_but_not_midframe);
 
         const auto resource = mem::arena_push_item_zeroed<t_resource>(group->arena);
 
@@ -220,7 +220,7 @@ namespace zf::rendering {
     }
 
     t_resource *texture_create(const gfx::t_texture_data_rdonly texture_data, t_resource_group *const group) {
-        ZF_ASSERT(g_module_state.state == ec_module_state_active_but_not_midframe);
+        ZF_ASSERT(g_module_state.phase == ec_module_phase_active_but_not_midframe);
 
         const uint64_t sampler_flags = BGFX_SAMPLER_MIN_POINT | BGFX_SAMPLER_MAG_POINT | BGFX_SAMPLER_U_CLAMP | BGFX_SAMPLER_V_CLAMP;
         const auto texture_bgfx_hdl = bgfx::createTexture2D(static_cast<uint16_t>(texture_data.size_in_pxs.x), static_cast<uint16_t>(texture_data.size_in_pxs.y), false, 1, bgfx::TextureFormat::RGBA8, sampler_flags, bgfx::copy(texture_data.rgba_px_data.raw, static_cast<uint32_t>(array_get_size_in_bytes(texture_data.rgba_px_data))));
@@ -261,8 +261,9 @@ namespace zf::rendering {
         return resource;
     }
 
-    t_context *frame_begin(const t_basis *const basis, const gfx::t_color_rgb8 clear_col, mem::t_arena *const context_arena) {
-        ZF_ASSERT(g_module_state.state == ec_module_state_active_but_not_midframe);
+    t_context *frame_begin(const t_basis *const basis, const gfx::t_color_rgb24f clear_col, mem::t_arena *const context_arena) {
+        ZF_ASSERT(g_module_state.phase == ec_module_phase_active_but_not_midframe);
+        ZF_ASSERT(gfx::color_is_valid(clear_col));
 
         const auto fb_size_cache = platform::window_get_framebuffer_size_cache();
 
@@ -283,13 +284,13 @@ namespace zf::rendering {
 
         bgfx::setViewTransform(0, &view_mat, &proj_mat);
 
-        bgfx::setViewClear(0, BGFX_CLEAR_COLOR, gfx::color_convert_to_hex(clear_col));
+        bgfx::setViewClear(0, BGFX_CLEAR_COLOR, gfx::color_convert_to_hex(gfx::color_convert_to_rgba8(clear_col)));
 
         bgfx::setViewRect(0, 0, 0, static_cast<uint16_t>(fb_size_cache.x), static_cast<uint16_t>(fb_size_cache.y));
 
         bgfx::touch(0);
 
-        g_module_state.state = ec_module_state_active_and_midframe;
+        g_module_state.phase = ec_module_phase_active_and_midframe;
 
         const auto context = mem::arena_push_item_zeroed<t_context>(context_arena);
         context->basis = basis;
@@ -298,7 +299,7 @@ namespace zf::rendering {
     }
 
     static void frame_flush(t_context *const context) {
-        ZF_ASSERT(g_module_state.state == ec_module_state_active_and_midframe);
+        ZF_ASSERT(g_module_state.phase == ec_module_phase_active_and_midframe);
 
         if (context->batch_state.vert_cnt == 0) {
             return;
@@ -327,17 +328,17 @@ namespace zf::rendering {
     }
 
     void frame_end(t_context *const context) {
-        ZF_ASSERT(g_module_state.state == ec_module_state_active_and_midframe);
+        ZF_ASSERT(g_module_state.phase == ec_module_phase_active_and_midframe);
 
         frame_flush(context);
 
         bgfx::frame();
 
-        g_module_state.state = ec_module_state_active_but_not_midframe;
+        g_module_state.phase = ec_module_phase_active_but_not_midframe;
     }
 
-    void frame_submit_triangle(t_context *const context, const t_array_rdonly<t_batch_triangle> triangles, const t_resource *const texture) {
-        ZF_ASSERT(g_module_state.state == ec_module_state_active_and_midframe);
+    void frame_submit_triangles(t_context *const context, const t_array_rdonly<t_batch_triangle> triangles, const t_resource *const texture) {
+        ZF_ASSERT(g_module_state.phase == ec_module_phase_active_and_midframe);
         ZF_ASSERT(triangles.len > 0);
         ZF_ASSERT(!texture || texture->type == ec_resource_type_texture);
 
@@ -346,6 +347,12 @@ namespace zf::rendering {
         if (num_verts_to_submit > g_batch_vert_limit) {
             ZF_FATAL();
         }
+
+#ifdef ZF_DEBUG
+        for (t_i32 i = 0; i < triangles.len; i++) {
+            ZF_ASSERT(batch_triangle_is_valid(triangles[i]));
+        }
+#endif
 
         if (texture != context->batch_state.texture || context->batch_state.vert_cnt + num_verts_to_submit > g_batch_vert_limit) {
             frame_flush(context);

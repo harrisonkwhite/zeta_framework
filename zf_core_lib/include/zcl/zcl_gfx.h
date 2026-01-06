@@ -14,7 +14,7 @@ namespace zf::gfx {
         t_f32 b;
         t_f32 a;
 
-        constexpr operator math::t_v4() const { return {r, g, b, a}; }
+        operator math::t_v4() const { return {r, g, b, a}; }
     };
 
     struct t_color_rgb24f {
@@ -22,8 +22,8 @@ namespace zf::gfx {
         t_f32 g;
         t_f32 b;
 
-        constexpr operator t_color_rgba32f() const { return {r, g, b, 1.0f}; }
-        constexpr operator math::t_v3() const { return {r, g, b}; }
+        operator t_color_rgba32f() const { return {r, g, b, 1.0f}; }
+        operator math::t_v3() const { return {r, g, b}; }
     };
 
     struct t_color_rgba8 {
@@ -38,26 +38,78 @@ namespace zf::gfx {
         t_u8 g;
         t_u8 b;
 
-        constexpr operator t_color_rgba8() const { return {r, g, b, 255}; }
+        operator t_color_rgba8() const { return {r, g, b, 255}; }
     };
 
-    constexpr t_color_rgb24f g_color_black = {0.0f, 0.0f, 0.0f};
-    constexpr t_color_rgb24f g_color_dark_gray = {0.25f, 0.25f, 0.25f};
-    constexpr t_color_rgb24f g_color_gray = {0.5f, 0.5f, 0.5f};
-    constexpr t_color_rgb24f g_color_light_gray = {0.75f, 0.75f, 0.75f};
-    constexpr t_color_rgb24f g_color_white = {1.0f, 1.0f, 1.0f};
-    constexpr t_color_rgb24f g_color_red = {1.0f, 0.0f, 0.0f};
-    constexpr t_color_rgb24f g_color_orange = {1.0f, 0.5f, 0.0f};
-    constexpr t_color_rgb24f g_color_yellow = {1.0f, 1.0f, 0.0f};
-    constexpr t_color_rgb24f g_color_lime = {0.75f, 1.0f, 0.0f};
-    constexpr t_color_rgb24f g_color_green = {0.0f, 1.0f, 0.0f};
-    constexpr t_color_rgb24f g_color_teal = {0.0f, 0.5f, 0.5f};
-    constexpr t_color_rgb24f g_color_cyan = {0.0f, 1.0f, 1.0f};
-    constexpr t_color_rgb24f g_color_blue = {0.0f, 0.0f, 1.0f};
-    constexpr t_color_rgb24f g_color_purple = {0.5f, 0.0f, 0.5f};
-    constexpr t_color_rgb24f g_color_magenta = {1.0f, 0.0f, 1.0f};
-    constexpr t_color_rgb24f g_color_pink = {1.0f, 0.75f, 0.8f};
-    constexpr t_color_rgb24f g_color_brown = {0.6f, 0.3f, 0.0f};
+    inline t_color_rgb24f color_create_rgb24f(const t_f32 r, const t_f32 g, const t_f32 b) {
+        ZF_ASSERT(r >= 0.0f && r <= 1.0f);
+        ZF_ASSERT(g >= 0.0f && g <= 1.0f);
+        ZF_ASSERT(b >= 0.0f && b <= 1.0f);
+
+        return {r, g, b};
+    }
+
+    inline t_color_rgba32f color_create_rgba32f(const t_f32 r, const t_f32 g, const t_f32 b, const t_f32 a) {
+        ZF_ASSERT(r >= 0.0f && r <= 1.0f);
+        ZF_ASSERT(g >= 0.0f && g <= 1.0f);
+        ZF_ASSERT(b >= 0.0f && b <= 1.0f);
+        ZF_ASSERT(a >= 0.0f && a <= 1.0f);
+
+        return {r, g, b, a};
+    }
+
+    inline t_color_rgb8 color_create_rgb8(const t_u8 r, const t_u8 g, const t_u8 b) {
+        return {r, g, b};
+    }
+
+    inline t_color_rgba8 color_create_rgba8(const t_u8 r, const t_u8 g, const t_u8 b, const t_u8 a) {
+        return {r, g, b, a};
+    }
+
+    inline t_b8 color_is_valid(const t_color_rgba8 col) {
+        return true;
+    }
+
+    inline t_b8 color_is_valid(const t_color_rgba32f col) {
+        return col.r >= 0.0f && col.r <= 1.0f
+            && col.g >= 0.0f && col.g <= 1.0f
+            && col.b >= 0.0f && col.b <= 1.0f
+            && col.a >= 0.0f && col.a <= 1.0f;
+    }
+
+    inline const t_color_rgb24f g_color_black = color_create_rgb24f(0.0f, 0.0f, 0.0f);
+    inline const t_color_rgb24f g_color_dark_gray = color_create_rgb24f(0.25f, 0.25f, 0.25f);
+    inline const t_color_rgb24f g_color_gray = color_create_rgb24f(0.5f, 0.5f, 0.5f);
+    inline const t_color_rgb24f g_color_light_gray = color_create_rgb24f(0.75f, 0.75f, 0.75f);
+    inline const t_color_rgb24f g_color_white = color_create_rgb24f(1.0f, 1.0f, 1.0f);
+    inline const t_color_rgb24f g_color_red = color_create_rgb24f(1.0f, 0.0f, 0.0f);
+    inline const t_color_rgb24f g_color_orange = color_create_rgb24f(1.0f, 0.5f, 0.0f);
+    inline const t_color_rgb24f g_color_yellow = color_create_rgb24f(1.0f, 1.0f, 0.0f);
+    inline const t_color_rgb24f g_color_lime = color_create_rgb24f(0.75f, 1.0f, 0.0f);
+    inline const t_color_rgb24f g_color_green = color_create_rgb24f(0.0f, 1.0f, 0.0f);
+    inline const t_color_rgb24f g_color_teal = color_create_rgb24f(0.0f, 0.5f, 0.5f);
+    inline const t_color_rgb24f g_color_cyan = color_create_rgb24f(0.0f, 1.0f, 1.0f);
+    inline const t_color_rgb24f g_color_blue = color_create_rgb24f(0.0f, 0.0f, 1.0f);
+    inline const t_color_rgb24f g_color_purple = color_create_rgb24f(0.5f, 0.0f, 0.5f);
+    inline const t_color_rgb24f g_color_magenta = color_create_rgb24f(1.0f, 0.0f, 1.0f);
+    inline const t_color_rgb24f g_color_pink = color_create_rgb24f(1.0f, 0.75f, 0.8f);
+    inline const t_color_rgb24f g_color_brown = color_create_rgb24f(0.6f, 0.3f, 0.0f);
+
+    inline t_color_rgb8 color_convert_to_rgb8(const t_color_rgb24f col) {
+        return color_create_rgb8(static_cast<t_u8>(255.0f * col.r), static_cast<t_u8>(255.0f * col.g), static_cast<t_u8>(255.0f * col.b));
+    }
+
+    inline t_color_rgba8 color_convert_to_rgba8(const t_color_rgba32f col) {
+        return color_create_rgba8(static_cast<t_u8>(255.0f * col.r), static_cast<t_u8>(255.0f * col.g), static_cast<t_u8>(255.0f * col.b), static_cast<t_u8>(255.0f * col.a));
+    }
+
+    inline t_color_rgb24f color_convert_to_rgb24f(const t_color_rgb8 col) {
+        return color_create_rgb24f(static_cast<t_f32>(col.r) / 255.0f, static_cast<t_f32>(col.g) / 255.0f, static_cast<t_f32>(col.b) / 255.0f);
+    }
+
+    inline t_color_rgba32f color_convert_to_rgba32f(const t_color_rgba8 col) {
+        return color_create_rgba32f(static_cast<t_f32>(col.r) / 255.0f, static_cast<t_f32>(col.g) / 255.0f, static_cast<t_f32>(col.b) / 255.0f, static_cast<t_f32>(col.a) / 255.0f);
+    }
 
     inline t_color_rgba32f color_get_mix(const t_color_rgba32f a, const t_color_rgba32f b, const t_f32 amount) {
         ZF_ASSERT(amount >= 0.0f && amount <= 1.0f);
@@ -74,7 +126,7 @@ namespace zf::gfx {
         return (0.2126f * col.r) + (0.7152f * col.g) + (0.0722f * col.b);
     }
 
-    inline t_color_rgba32f color_get_as_grayscale(const t_color_rgba32f col) {
+    inline t_color_rgba32f color_get_grayscale(const t_color_rgba32f col) {
         const t_f32 lum = color_get_luminance(col);
         return {lum, lum, lum, col.a};
     }
