@@ -100,16 +100,16 @@ namespace zf::game {
 
             mem::arena_rewind(&temp_arena);
 
-            rendering::t_context *const rendering_context = rendering::frame_begin(rendering_basis, g_module_state.clear_color, &temp_arena);
+            rendering::t_frame_context *const frame_context = rendering::frame_begin(rendering_basis, g_module_state.clear_color, &temp_arena);
 
             render_func({
                 .perm_arena = &perm_arena,
                 .temp_arena = &temp_arena,
-                .rendering_context = rendering_context,
+                .frame_context = frame_context,
                 .rng = rng,
             });
 
-            rendering::frame_end(rendering_context);
+            rendering::frame_end(frame_context);
         }
     }
 

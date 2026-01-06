@@ -29,7 +29,7 @@ namespace zf::game {
         mem::t_arena *perm_arena;
         mem::t_arena *temp_arena;
 
-        rendering::t_context *rendering_context;
+        rendering::t_frame_context *frame_context;
 
         rand::t_rng *rng;
     };

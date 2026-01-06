@@ -61,7 +61,7 @@ namespace zf::rendering {
         const t_resource *px_texture;
     };
 
-    struct t_context {
+    struct t_frame_context {
         const t_basis *basis;
 
         t_i32 frame_vert_cnt;
@@ -305,7 +305,7 @@ namespace zf::rendering {
         return uniform->type_data.uniform.type;
     }
 
-    t_context *frame_begin(const t_basis *const basis, const gfx::t_color_rgb24f clear_col, mem::t_arena *const context_arena) {
+    t_frame_context *frame_begin(const t_basis *const basis, const gfx::t_color_rgb24f clear_col, mem::t_arena *const context_arena) {
         ZF_ASSERT(g_module_state.phase == ec_module_phase_active_but_not_midframe);
         ZF_ASSERT(gfx::color_is_valid(clear_col));
 
@@ -336,13 +336,13 @@ namespace zf::rendering {
 
         g_module_state.phase = ec_module_phase_active_and_midframe;
 
-        const auto context = mem::arena_push_item_zeroed<t_context>(context_arena);
+        const auto context = mem::arena_push_item_zeroed<t_frame_context>(context_arena);
         context->basis = basis;
 
         return context;
     }
 
-    static void frame_flush(t_context *const context) {
+    static void frame_flush(t_frame_context *const context) {
         ZF_ASSERT(g_module_state.phase == ec_module_phase_active_and_midframe);
 
         if (context->batch_state.vert_cnt == 0) {
@@ -371,7 +371,7 @@ namespace zf::rendering {
         mem::clear_item(&context->batch_state, 0);
     }
 
-    void frame_end(t_context *const context) {
+    void frame_end(t_frame_context *const context) {
         ZF_ASSERT(g_module_state.phase == ec_module_phase_active_and_midframe);
 
         frame_flush(context);
@@ -381,7 +381,7 @@ namespace zf::rendering {
         g_module_state.phase = ec_module_phase_active_but_not_midframe;
     }
 
-    void frame_submit_triangles(t_context *const context, const t_array_rdonly<t_batch_triangle> triangles, const t_resource *const texture) {
+    void frame_submit_triangles_to_batch(t_frame_context *const context, const t_array_rdonly<t_batch_triangle> triangles, const t_resource *const texture) {
         ZF_ASSERT(g_module_state.phase == ec_module_phase_active_and_midframe);
         ZF_ASSERT(triangles.len > 0);
         ZF_ASSERT(!texture || texture->type == ec_resource_type_texture);
@@ -394,7 +394,7 @@ namespace zf::rendering {
 
 #ifdef ZF_DEBUG
         for (t_i32 i = 0; i < triangles.len; i++) {
-            ZF_ASSERT(batch_triangle_is_valid(triangles[i]));
+            ZF_ASSERT(is_batch_triangle_valid(triangles[i]));
         }
 #endif
 
@@ -411,5 +411,31 @@ namespace zf::rendering {
         }
 
         context->batch_state.vert_cnt += num_verts_to_submit;
+    }
+
+    void frame_set_uniform(t_frame_context *const context, t_resource *const uniform, const t_uniform_data &uniform_data) {
+        ZF_ASSERT(uniform->type == ec_resource_type_uniform);
+        ZF_ASSERT(uniform->type_data.uniform.type == uniform_data.type);
+
+        const auto uniform_bgfx_hdl = uniform->type_data.uniform.bgfx_hdl;
+
+        switch (uniform->type_data.uniform.type) {
+        case ec_uniform_type_sampler: {
+            const t_resource *const texture = uniform_data.type_data.sampler.texture;
+            ZF_ASSERT(texture->type == ec_resource_type_texture);
+            bgfx::setTexture(0, uniform_bgfx_hdl, texture->type_data.texture.bgfx_hdl);
+            break;
+        }
+
+        case ec_uniform_type_v4: {
+            bgfx::setUniform(uniform_bgfx_hdl, &uniform_data.type_data.v4);
+            break;
+        }
+
+        case ec_uniform_type_mat4x4: {
+            bgfx::setUniform(uniform_bgfx_hdl, &uniform_data.type_data.mat4x4);
+            break;
+        }
+        }
     }
 }

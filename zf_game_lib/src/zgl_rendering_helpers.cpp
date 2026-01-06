@@ -1,7 +1,7 @@
 #include <zgl/zgl_rendering.h>
 
 namespace zf::rendering {
-    void frame_submit_texture(t_context *const context, const t_resource *const texture, const math::t_v2 pos, const math::t_rect_i src_rect) {
+    void frame_submit_texture(t_frame_context *const context, const t_resource *const texture, const math::t_v2 pos, const math::t_rect_i src_rect) {
         const auto texture_size = texture_get_size(texture);
 
         math::t_rect_i src_rect_to_use;
@@ -33,7 +33,7 @@ namespace zf::rendering {
             },
         }};
 
-        frame_submit_triangles(context, array_get_as_nonstatic(triangles), texture);
+        frame_submit_triangles_to_batch(context, array_get_as_nonstatic(triangles), texture);
     }
 
     t_font font_create_from_raw(const strs::t_str_rdonly file_path, const t_i32 height, strs::t_code_pt_bitset *const code_pts, mem::t_arena *const temp_arena, t_resource_group *const resource_group) {
@@ -172,7 +172,7 @@ namespace zf::rendering {
         return positions;
     }
 
-    void frame_submit_str(t_context *const context, const strs::t_str_rdonly str, const t_font &font, const math::t_v2 pos, mem::t_arena *const temp_arena, const math::t_v2 alignment, const gfx::t_color_rgba32f blend) {
+    void frame_submit_str(t_frame_context *const context, const strs::t_str_rdonly str, const t_font &font, const math::t_v2 pos, mem::t_arena *const temp_arena, const math::t_v2 alignment, const gfx::t_color_rgba32f blend) {
         ZF_ASSERT(strs::str_is_valid_utf8(str));
         ZF_ASSERT(str_alignment_is_valid(alignment));
 
