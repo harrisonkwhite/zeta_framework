@@ -114,7 +114,7 @@ namespace zf::math {
         return poly;
     }
 
-    t_b8 poly_check_inters(const t_poly_rdonly a, const t_poly_rdonly b) {
+    t_b8 polys_check_inters(const t_poly_rdonly a, const t_poly_rdonly b) {
         return poly_check_separation(a, b) && poly_check_separation(b, a);
     }
 
@@ -126,7 +126,7 @@ namespace zf::math {
             {rect.x, rect.y + rect.height},
         }};
 
-        return poly_check_inters(poly, {.pts = rect_poly_pts});
+        return polys_check_inters(poly, {.pts = rect_poly_pts});
     }
 
     t_rect_f poly_calc_span(const t_poly_rdonly poly) {

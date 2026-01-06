@@ -372,51 +372,19 @@ namespace zf::rendering {
         }
     }
 
-    const t_resource *frame_get_shader_prog_default(t_frame_context *const context) {
+    const t_resource *frame_get_builtin_shader_prog_default(t_frame_context *const context) {
         ZF_ASSERT(g_module_state.phase == ec_module_phase_active_and_midframe);
         return context->basis->shader_prog_default;
     }
 
-    const t_resource *frame_get_shader_prog_blend(t_frame_context *const context) {
+    const t_resource *frame_get_builtin_shader_prog_blend(t_frame_context *const context) {
         ZF_ASSERT(g_module_state.phase == ec_module_phase_active_and_midframe);
         return context->basis->shader_prog_blend;
     }
 
-    const t_resource *frame_get_uniform_blend(t_frame_context *const context) {
+    const t_resource *frame_get_builtin_uniform_blend(t_frame_context *const context) {
         ZF_ASSERT(g_module_state.phase == ec_module_phase_active_and_midframe);
         return context->basis->blend_uniform;
-    }
-
-    void frame_submit_triangles(t_frame_context *const context, const t_array_rdonly<t_triangle> triangles, const t_resource *const texture) {
-        ZF_ASSERT(g_module_state.phase == ec_module_phase_active_and_midframe);
-        ZF_ASSERT(triangles.len > 0);
-        ZF_ASSERT(!texture || texture->type == ec_resource_type_texture);
-
-        const t_i32 num_verts_to_submit = 3 * triangles.len;
-
-        if (num_verts_to_submit > g_batch_vert_limit) {
-            ZF_FATAL();
-        }
-
-#ifdef ZF_DEBUG
-        for (t_i32 i = 0; i < triangles.len; i++) {
-            ZF_ASSERT(triangle_check_valid(triangles[i]));
-        }
-#endif
-
-        if (texture != context->batch_state.texture || context->batch_state.vert_cnt + num_verts_to_submit > g_batch_vert_limit) {
-            frame_flush(context);
-            context->batch_state.texture = texture;
-        }
-
-        for (t_i32 i = 0; i < triangles.len; i++) {
-            const t_i32 offs = context->batch_state.vert_cnt;
-            context->batch_state.verts[offs + (3 * i) + 0] = triangles[i].verts[0];
-            context->batch_state.verts[offs + (3 * i) + 1] = triangles[i].verts[1];
-            context->batch_state.verts[offs + (3 * i) + 2] = triangles[i].verts[2];
-        }
-
-        context->batch_state.vert_cnt += num_verts_to_submit;
     }
 
     struct t_uniform_data {
@@ -488,5 +456,37 @@ namespace zf::rendering {
         };
 
         frame_set_uniform(context, uniform, uniform_data);
+    }
+
+    void frame_submit_triangles(t_frame_context *const context, const t_array_rdonly<t_triangle> triangles, const t_resource *const texture) {
+        ZF_ASSERT(g_module_state.phase == ec_module_phase_active_and_midframe);
+        ZF_ASSERT(triangles.len > 0);
+        ZF_ASSERT(!texture || texture->type == ec_resource_type_texture);
+
+        const t_i32 num_verts_to_submit = 3 * triangles.len;
+
+        if (num_verts_to_submit > g_batch_vert_limit) {
+            ZF_FATAL();
+        }
+
+#ifdef ZF_DEBUG
+        for (t_i32 i = 0; i < triangles.len; i++) {
+            ZF_ASSERT(triangle_check_valid(triangles[i]));
+        }
+#endif
+
+        if (texture != context->batch_state.texture || context->batch_state.vert_cnt + num_verts_to_submit > g_batch_vert_limit) {
+            frame_flush(context);
+            context->batch_state.texture = texture;
+        }
+
+        for (t_i32 i = 0; i < triangles.len; i++) {
+            const t_i32 offs = context->batch_state.vert_cnt;
+            context->batch_state.verts[offs + (3 * i) + 0] = triangles[i].verts[0];
+            context->batch_state.verts[offs + (3 * i) + 1] = triangles[i].verts[1];
+            context->batch_state.verts[offs + (3 * i) + 2] = triangles[i].verts[2];
+        }
+
+        context->batch_state.vert_cnt += num_verts_to_submit;
     }
 }

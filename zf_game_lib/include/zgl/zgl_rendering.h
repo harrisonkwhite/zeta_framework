@@ -110,17 +110,17 @@ namespace zf::rendering {
     // Set prog as nullptr to just assign the default shader program.
     void frame_set_shader_prog(t_frame_context *const context, const t_resource *const prog);
 
-    const t_resource *frame_get_shader_prog_default(t_frame_context *const context);
-    const t_resource *frame_get_shader_prog_blend(t_frame_context *const context);
+    const t_resource *frame_get_builtin_shader_prog_default(t_frame_context *const context);
+    const t_resource *frame_get_builtin_shader_prog_blend(t_frame_context *const context);
 
-    const t_resource *frame_get_uniform_blend(t_frame_context *const context);
-
-    // Leave texture as nullptr for no texture.
-    void frame_submit_triangles(t_frame_context *const context, const t_array_rdonly<t_triangle> triangles, const t_resource *const texture = nullptr);
+    const t_resource *frame_get_builtin_uniform_blend(t_frame_context *const context);
 
     void frame_set_uniform_sampler(t_frame_context *const context, const t_resource *const uniform, const t_resource *const sampler_texture);
     void frame_set_uniform_v4(t_frame_context *const context, const t_resource *const uniform, const math::t_v4 v4);
     void frame_set_uniform_mat4x4(t_frame_context *const context, const t_resource *const uniform, const math::t_mat4x4 &mat4x4);
+
+    // Leave texture as nullptr for no texture.
+    void frame_submit_triangles(t_frame_context *const context, const t_array_rdonly<t_triangle> triangles, const t_resource *const texture = nullptr);
 
     inline void frame_submit_triangle(t_frame_context *const context, const t_static_array<math::t_v2, 3> &pts, const t_static_array<gfx::t_color_rgba32f, 3> &pt_colors) {
         const t_triangle triangle = {
@@ -165,6 +165,12 @@ namespace zf::rendering {
         frame_submit_rect(context, rect, color, color, color, color);
     }
 
+    void frame_submit_rect_rotated(t_frame_context *const context, const math::t_v2 pos, const math::t_v2 size, const math::t_v2 origin, const t_f32 rot, const gfx::t_color_rgba32f color_topleft, const gfx::t_color_rgba32f color_topright, const gfx::t_color_rgba32f color_bottomright, const gfx::t_color_rgba32f color_bottomleft);
+
+    inline void frame_submit_rect_rotated(t_frame_context *const context, const math::t_v2 pos, const math::t_v2 size, const math::t_v2 origin, const t_f32 rot, const gfx::t_color_rgba32f color) {
+        frame_submit_rect_rotated(context, pos, size, origin, rot, color, color, color, color);
+    }
+
     constexpr math::t_v2 g_origin_topleft = {0.0f, 0.0f};
     constexpr math::t_v2 g_origin_topcenter = {0.5f, 0.0f};
     constexpr math::t_v2 g_origin_topright = {1.0f, 0.0f};
@@ -179,7 +185,7 @@ namespace zf::rendering {
         return origin.x >= 0.0f && origin.x <= 1.0f && origin.y >= 0.0f && origin.y <= 1.0f;
     }
 
-    void frame_submit_texture(t_frame_context *const context, const t_resource *const texture, const math::t_v2 pos, const math::t_rect_i src_rect = {}, const math::t_v2 origin = {}, const t_f32 rot = 0.0f);
+    void frame_submit_texture(t_frame_context *const context, const t_resource *const texture, const math::t_v2 pos, const math::t_rect_i src_rect = {}, const math::t_v2 origin = g_origin_topleft, const t_f32 rot = 0.0f);
 
     struct t_font {
         gfx::t_font_arrangement arrangement;

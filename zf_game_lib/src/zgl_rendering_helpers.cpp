@@ -1,12 +1,39 @@
 #include <zgl/zgl_rendering.h>
 
 namespace zf::rendering {
+    void frame_submit_rect_rotated(t_frame_context *const context, const math::t_v2 pos, const math::t_v2 size, const math::t_v2 origin, const t_f32 rot, const gfx::t_color_rgba32f color_topleft, const gfx::t_color_rgba32f color_topright, const gfx::t_color_rgba32f color_bottomright, const gfx::t_color_rgba32f color_bottomleft) {
+        ZF_ASSERT(origin_check_valid(origin));
+
+        t_static_array<math::t_v2, 4> quad_pts;
+        mem::t_arena quad_pts_arena = mem::arena_create_wrapping(mem::to_bytes(quad_pts));
+        const math::t_poly_mut quad_poly = math::poly_create_quad_rotated(pos, size, origin, rot, &quad_pts_arena);
+
+        const t_static_array<t_triangle, 2> triangles = {{
+            {
+                .verts = {{
+                    {.pos = quad_poly.pts[0], .blend = color_topleft, .uv = {}},
+                    {.pos = quad_poly.pts[1], .blend = color_topright, .uv = {}},
+                    {.pos = quad_poly.pts[3], .blend = color_bottomleft, .uv = {}},
+                }},
+            },
+            {
+                .verts = {{
+                    {.pos = quad_poly.pts[3], .blend = color_bottomleft, .uv = {}},
+                    {.pos = quad_poly.pts[1], .blend = color_topright, .uv = {}},
+                    {.pos = quad_poly.pts[2], .blend = color_bottomright, .uv = {}},
+                }},
+            },
+        }};
+
+        frame_submit_triangles(context, array_to_nonstatic(triangles));
+    }
+
     void frame_submit_texture(t_frame_context *const context, const t_resource *const texture, const math::t_v2 pos, const math::t_rect_i src_rect, const math::t_v2 origin, const t_f32 rot) {
         const auto texture_size = texture_get_size(texture);
 
         math::t_rect_i src_rect_to_use;
 
-        if (math::rect_check_equal(src_rect, {})) {
+        if (math::rects_check_equal(src_rect, {})) {
             src_rect_to_use = {0, 0, texture_size.x, texture_size.y};
         } else {
             ZF_ASSERT(src_rect.x >= 0 && src_rect.y >= 0 && math::rect_get_right(src_rect) <= texture_size.x && math::rect_get_bottom(src_rect) <= texture_size.y);

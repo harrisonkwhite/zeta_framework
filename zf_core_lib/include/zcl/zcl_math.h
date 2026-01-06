@@ -243,15 +243,15 @@ namespace zf::math {
         return {static_cast<t_i32>(rect.x), static_cast<t_i32>(rect.y), static_cast<t_i32>(rect.width), static_cast<t_i32>(rect.height)};
     }
 
-    inline t_b8 rect_check_equal(const t_rect_i a, const t_rect_i b) {
+    inline t_b8 rects_check_equal(const t_rect_i a, const t_rect_i b) {
         return a.x == b.x && a.y == b.y && a.width == b.width && a.height == b.height;
     }
 
-    inline t_b8 rect_check_inters(const t_rect_f a, const t_rect_f b) {
+    inline t_b8 rects_check_inters(const t_rect_f a, const t_rect_f b) {
         return rect_get_left(a) < rect_get_right(b) && rect_get_top(a) < rect_get_bottom(b) && rect_get_right(a) > rect_get_left(b) && rect_get_bottom(a) > rect_get_top(b);
     }
 
-    inline t_b8 rect_check_inters(const t_rect_i a, const t_rect_i b) {
+    inline t_b8 rects_check_inters(const t_rect_i a, const t_rect_i b) {
         return rect_get_left(a) < rect_get_right(b) && rect_get_top(a) < rect_get_bottom(b) && rect_get_right(a) > rect_get_left(b) && rect_get_bottom(a) > rect_get_top(b);
     }
 
@@ -301,7 +301,7 @@ namespace zf::math {
     // Points are guaranteed to be in this order: top-left, top-right, bottom-right, bottom-left.
     t_poly_mut poly_create_quad_rotated(const t_v2 pos, const t_v2 size, const t_v2 origin, const t_f32 rot, mem::t_arena *const arena);
 
-    t_b8 poly_check_inters(const t_poly_rdonly a, const t_poly_rdonly b);
+    t_b8 polys_check_inters(const t_poly_rdonly a, const t_poly_rdonly b);
     t_b8 poly_check_inters_with_rect(const t_poly_rdonly poly, const t_rect_f rect);
 
     t_rect_f poly_calc_span(const t_poly_rdonly poly);

@@ -403,7 +403,7 @@ namespace zf {
 
     template <c_array tp_arr_a_type, c_array tp_arr_b_type>
         requires c_same<typename tp_arr_a_type::t_elem, typename tp_arr_b_type::t_elem>
-    t_b8 array_check_equal(const tp_arr_a_type a, const tp_arr_b_type b, const t_comparator_bin<typename tp_arr_a_type::t_elem> comparator = g_comparator_ord_default<typename tp_arr_a_type::t_elem>) {
+    t_b8 arrays_check_equal(const tp_arr_a_type a, const tp_arr_b_type b, const t_comparator_bin<typename tp_arr_a_type::t_elem> comparator = g_comparator_ord_default<typename tp_arr_a_type::t_elem>) {
         if (a.len != b.len) {
             return false;
         }
