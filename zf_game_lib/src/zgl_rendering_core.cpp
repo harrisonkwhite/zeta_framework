@@ -19,7 +19,8 @@ namespace zf::rendering {
     enum t_resource_type : t_i32 {
         ec_resource_type_texture,
         ec_resource_type_shader_prog,
-        ec_resource_type_uniform
+        ec_resource_type_uniform,
+        ec_resource_type_surface
     };
 
     struct t_resource {
@@ -39,6 +40,10 @@ namespace zf::rendering {
                 bgfx::UniformHandle bgfx_hdl;
                 t_uniform_type type;
             } uniform;
+
+            struct {
+                bgfx::FrameBufferHandle fb_bgfx_hdl;
+            } surface;
         } type_data;
 
         t_resource *next;
@@ -156,13 +161,6 @@ namespace zf::rendering {
         g_module_state = {};
     }
 
-    math::t_v2_i texture_get_size(const t_resource *const texture) {
-        ZF_ASSERT(g_module_state.phase != ec_module_phase_inactive);
-        ZF_ASSERT(texture->type == ec_resource_type_texture);
-
-        return texture->type_data.texture.size;
-    }
-
     void resource_group_destroy(t_resource_group *const group) {
         ZF_ASSERT(g_module_state.phase == ec_module_phase_active_but_not_midframe);
 
@@ -182,6 +180,10 @@ namespace zf::rendering {
                 bgfx::destroy(resource->type_data.uniform.bgfx_hdl);
                 break;
 
+            case ec_resource_type_surface:
+                bgfx::destroy(resource->type_data.surface.fb_bgfx_hdl);
+                break;
+
             default:
                 ZF_UNREACHABLE();
             }
@@ -195,8 +197,6 @@ namespace zf::rendering {
     }
 
     static t_resource *resource_group_add(t_resource_group *const group, const t_resource_type type) {
-        ZF_ASSERT(g_module_state.phase == ec_module_phase_active_but_not_midframe);
-
         const auto resource = mem::arena_push_item_zeroed<t_resource>(group->arena);
 
         if (!group->head) {
@@ -213,10 +213,10 @@ namespace zf::rendering {
     }
 
     t_resource *texture_create(const gfx::t_texture_data_rdonly texture_data, t_resource_group *const group) {
-        ZF_ASSERT(g_module_state.phase == ec_module_phase_active_but_not_midframe);
+        ZF_ASSERT(g_module_state.phase != ec_module_phase_inactive);
 
-        const uint64_t sampler_flags = BGFX_SAMPLER_MIN_POINT | BGFX_SAMPLER_MAG_POINT | BGFX_SAMPLER_U_CLAMP | BGFX_SAMPLER_V_CLAMP;
-        const auto texture_bgfx_hdl = bgfx::createTexture2D(static_cast<uint16_t>(texture_data.size_in_pxs.x), static_cast<uint16_t>(texture_data.size_in_pxs.y), false, 1, bgfx::TextureFormat::RGBA8, sampler_flags, bgfx::copy(texture_data.rgba_px_data.raw, static_cast<uint32_t>(array_get_size_in_bytes(texture_data.rgba_px_data))));
+        const uint64_t flags = BGFX_SAMPLER_MIN_POINT | BGFX_SAMPLER_MAG_POINT | BGFX_SAMPLER_U_CLAMP | BGFX_SAMPLER_V_CLAMP;
+        const auto texture_bgfx_hdl = bgfx::createTexture2D(static_cast<uint16_t>(texture_data.size_in_pxs.x), static_cast<uint16_t>(texture_data.size_in_pxs.y), false, 1, bgfx::TextureFormat::RGBA8, flags, bgfx::copy(texture_data.rgba_px_data.raw, static_cast<uint32_t>(array_get_size_in_bytes(texture_data.rgba_px_data))));
 
         if (!bgfx::isValid(texture_bgfx_hdl)) {
             ZF_FATAL();
@@ -228,7 +228,16 @@ namespace zf::rendering {
         return resource;
     }
 
+    math::t_v2_i texture_get_size(const t_resource *const texture) {
+        ZF_ASSERT(g_module_state.phase != ec_module_phase_inactive);
+        ZF_ASSERT(texture->type == ec_resource_type_texture);
+
+        return texture->type_data.texture.size;
+    }
+
     t_resource *shader_prog_create(const t_array_rdonly<t_u8> vert_shader_compiled_bin, const t_array_rdonly<t_u8> frag_shader_compiled_bin, t_resource_group *const group) {
+        ZF_ASSERT(g_module_state.phase != ec_module_phase_inactive);
+
         const bgfx::Memory *const vert_shader_bgfx_mem = bgfx::copy(vert_shader_compiled_bin.raw, static_cast<uint32_t>(vert_shader_compiled_bin.len));
         const bgfx::ShaderHandle vert_shader_bgfx_hdl = bgfx::createShader(vert_shader_bgfx_mem);
 
@@ -255,6 +264,8 @@ namespace zf::rendering {
     }
 
     t_resource *uniform_create(const strs::t_str_rdonly name, const t_uniform_type type, t_resource_group *const group, mem::t_arena *const temp_arena) {
+        ZF_ASSERT(g_module_state.phase != ec_module_phase_inactive);
+
         const strs::t_str_rdonly name_terminated = strs::str_clone_but_add_terminator(name, temp_arena);
 
         const auto bgfx_type = [type]() -> bgfx::UniformType::Enum {
@@ -284,6 +295,22 @@ namespace zf::rendering {
         ZF_ASSERT(uniform->type == ec_resource_type_uniform);
 
         return uniform->type_data.uniform.type;
+    }
+
+    t_resource *surface_create(const math::t_v2_i size, t_resource_group *const group) {
+        ZF_ASSERT(g_module_state.phase != ec_module_phase_inactive);
+        ZF_ASSERT(size.x > 0 && size.y > 0);
+
+        const uint64_t flags = BGFX_SAMPLER_MIN_POINT | BGFX_SAMPLER_MAG_POINT | BGFX_SAMPLER_U_CLAMP | BGFX_SAMPLER_V_CLAMP;
+        const bgfx::FrameBufferHandle fb_bgfx_hdl = bgfx::createFrameBuffer(static_cast<uint16_t>(size.x), static_cast<uint16_t>(size.y), bgfx::TextureFormat::RGBA8, flags);
+
+        if (!bgfx::isValid(fb_bgfx_hdl)) {
+            ZF_FATAL();
+        }
+
+        const auto resource = resource_group_add(group, ec_resource_type_surface);
+        resource->type_data.surface.fb_bgfx_hdl = fb_bgfx_hdl;
+        return resource;
     }
 
     t_frame_context *frame_begin(const t_basis *const basis, const gfx::t_color_rgba32f clear_col, mem::t_arena *const context_arena) {

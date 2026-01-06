@@ -77,6 +77,8 @@ namespace zf::rendering {
 
     t_uniform_type uniform_get_type(const t_resource *const uniform);
 
+    t_resource *surface_create(const math::t_v2_i size, t_resource_group *const group);
+
 
     // ============================================================
     // @section: Frame
