@@ -6,7 +6,7 @@ namespace zf::rendering {
 
         math::t_rect_i src_rect_to_use;
 
-        if (math::rects_check_equal(src_rect, {})) {
+        if (math::rect_check_equal(src_rect, {})) {
             src_rect_to_use = {0, 0, texture_size.x, texture_size.y};
         } else {
             ZF_ASSERT(src_rect.x >= 0 && src_rect.y >= 0 && math::rect_get_right(src_rect) <= texture_size.x && math::rect_get_bottom(src_rect) <= texture_size.y);
@@ -80,8 +80,8 @@ namespace zf::rendering {
     }
 
     static t_array_mut<math::t_v2> get_str_chr_render_positions(const strs::t_str_rdonly str, const gfx::t_font_arrangement &font_arrangement, const math::t_v2 pos, const math::t_v2 alignment, mem::t_arena *const arena) {
-        ZF_ASSERT(strs::str_is_valid_utf8(str));
-        ZF_ASSERT(str_alignment_is_valid(alignment));
+        ZF_ASSERT(strs::str_check_valid_utf8(str));
+        ZF_ASSERT(str_alignment_check_valid(alignment));
 
         // Calculate some useful string metadata.
         struct t_str_meta {
@@ -176,10 +176,10 @@ namespace zf::rendering {
     }
 
     void frame_submit_str(t_frame_context *const context, const strs::t_str_rdonly str, const t_font &font, const math::t_v2 pos, mem::t_arena *const temp_arena, const math::t_v2 alignment, const gfx::t_color_rgba32f blend) {
-        ZF_ASSERT(strs::str_is_valid_utf8(str));
-        ZF_ASSERT(str_alignment_is_valid(alignment));
+        ZF_ASSERT(strs::str_check_valid_utf8(str));
+        ZF_ASSERT(str_alignment_check_valid(alignment));
 
-        if (strs::str_is_empty(str)) {
+        if (strs::str_check_empty(str)) {
             return;
         }
 

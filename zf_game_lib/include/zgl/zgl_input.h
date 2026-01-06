@@ -127,14 +127,14 @@ namespace zf::input {
 
     void clear_events(t_state *const state);
 
-    t_b8 key_is_down(const t_state *const state, const t_key_code code);
-    t_b8 key_is_pressed(const t_state *const state, const t_key_code code);
-    t_b8 key_is_released(const t_state *const state, const t_key_code code);
+    t_b8 key_check_down(const t_state *const state, const t_key_code code);
+    t_b8 key_check_pressed(const t_state *const state, const t_key_code code);
+    t_b8 key_check_released(const t_state *const state, const t_key_code code);
     void key_update_state(t_state *const state, const t_key_code code, const t_b8 is_down);
 
-    t_b8 mouse_button_is_down(const t_state *const state, const t_mouse_button_code btn_code);
-    t_b8 mouse_button_is_pressed(const t_state *const state, const t_mouse_button_code btn_code);
-    t_b8 mouse_button_is_released(const t_state *const state, const t_mouse_button_code btn_code);
+    t_b8 mouse_button_check_down(const t_state *const state, const t_mouse_button_code btn_code);
+    t_b8 mouse_button_check_pressed(const t_state *const state, const t_mouse_button_code btn_code);
+    t_b8 mouse_button_check_released(const t_state *const state, const t_mouse_button_code btn_code);
     void mouse_button_update_state(t_state *const state, const t_mouse_button_code code, const t_b8 is_down);
 
     math::t_v2 cursor_get_pos(const t_state *const state);
@@ -143,10 +143,10 @@ namespace zf::input {
     math::t_v2 scroll_get_offset(const t_state *const state);
     void scroll_update_state(t_state *const state, const math::t_v2 offs_to_apply);
 
-    t_b8 gamepad_is_connected(const t_state *const state, const t_i32 index);
-    t_b8 gamepad_is_button_down(const t_state *const state, const t_i32 gamepad_index, const t_gamepad_button_code btn_code);
-    t_b8 gamepad_is_button_pressed(const t_state *const state, const t_i32 gamepad_index, const t_gamepad_button_code btn_code);
-    t_b8 gamepad_is_button_released(const t_state *const state, const t_i32 gamepad_index, const t_gamepad_button_code btn_code);
+    t_b8 gamepad_check_connected(const t_state *const state, const t_i32 index);
+    t_b8 gamepad_check_button_down(const t_state *const state, const t_i32 gamepad_index, const t_gamepad_button_code btn_code);
+    t_b8 gamepad_check_button_pressed(const t_state *const state, const t_i32 gamepad_index, const t_gamepad_button_code btn_code);
+    t_b8 gamepad_check_button_released(const t_state *const state, const t_i32 gamepad_index, const t_gamepad_button_code btn_code);
     t_f32 gamepad_get_axis_value_raw(const t_state *const state, const t_i32 gamepad_index, const t_gamepad_axis_code axis_code);
     t_f32 gamepad_get_axis_value_with_deadzone(const t_state *const state, const t_i32 gamepad_index, const t_gamepad_axis_code axis_code);
     void gamepad_update_state(t_state *const state, const t_i32 gamepad_index, const t_b8 connected, const mem::t_static_bitset<ecm_gamepad_button_code_cnt> &btns_down, const t_static_array<t_f32, ecm_gamepad_axis_code_cnt> &axes);

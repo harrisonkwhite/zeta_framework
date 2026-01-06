@@ -403,10 +403,28 @@ namespace zf {
 
     template <c_array tp_arr_a_type, c_array tp_arr_b_type>
         requires c_same<typename tp_arr_a_type::t_elem, typename tp_arr_b_type::t_elem>
-    t_i32 array_compare(const tp_arr_a_type a, const tp_arr_b_type b, const t_comparator_ord<typename tp_arr_a_type::t_elem> comparator = g_comparator_ord_default<typename tp_arr_a_type::t_elem>) {
-        const auto min_len = min(a.len, b.len);
+    t_b8 array_check_equal(const tp_arr_a_type a, const tp_arr_b_type b, const t_comparator_bin<typename tp_arr_a_type::t_elem> comparator = g_comparator_ord_default<typename tp_arr_a_type::t_elem>) {
+        if (a.len != b.len) {
+            return false;
+        }
 
-        for (t_i32 i = 0; i < min_len; i++) {
+        for (t_i32 i = 0; i < a.len; i++) {
+            if (!comparator(a[i], b[i])) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    template <c_array tp_arr_a_type, c_array tp_arr_b_type>
+        requires c_same<typename tp_arr_a_type::t_elem, typename tp_arr_b_type::t_elem>
+    t_i32 array_compare(const tp_arr_a_type a, const tp_arr_b_type b, const t_comparator_ord<typename tp_arr_a_type::t_elem> comparator = g_comparator_ord_default<typename tp_arr_a_type::t_elem>) {
+        if (a.len != b.len) {
+            return a.len < b.len ? -1 : 1;
+        }
+
+        for (t_i32 i = 0; i < a.len; i++) {
             const t_i32 comp = comparator(a[i], b[i]);
 
             if (comp != 0) {
@@ -418,7 +436,7 @@ namespace zf {
     }
 
     template <c_array tp_arr_type>
-    t_b8 array_do_all_equal(const tp_arr_type arr, const typename tp_arr_type::t_elem &val, const t_comparator_bin<typename tp_arr_type::t_elem> comparator = g_comparator_bin_default<typename tp_arr_type::t_elem>) {
+    t_b8 array_check_all_equal(const tp_arr_type arr, const typename tp_arr_type::t_elem &val, const t_comparator_bin<typename tp_arr_type::t_elem> comparator = g_comparator_bin_default<typename tp_arr_type::t_elem>) {
         if (arr.len == 0) {
             return false;
         }
@@ -433,7 +451,7 @@ namespace zf {
     }
 
     template <c_array tp_arr_type>
-    t_b8 array_do_any_equal(const tp_arr_type arr, const typename tp_arr_type::t_elem &val, const t_comparator_bin<typename tp_arr_type::t_elem> comparator = g_comparator_bin_default<typename tp_arr_type::t_elem>) {
+    t_b8 array_check_any_equal(const tp_arr_type arr, const typename tp_arr_type::t_elem &val, const t_comparator_bin<typename tp_arr_type::t_elem> comparator = g_comparator_bin_default<typename tp_arr_type::t_elem>) {
         for (t_i32 i = 0; i < arr.len; i++) {
             if (comparator(arr[i], val)) {
                 return true;

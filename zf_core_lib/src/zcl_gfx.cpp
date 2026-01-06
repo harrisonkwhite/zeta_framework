@@ -120,12 +120,12 @@ namespace zf::gfx {
             const t_i32 glyph_index = stbtt_FindGlyphIndex(&stb_font_info, static_cast<t_i32>(code_pt));
 
             if (glyph_index == 0) {
-                mem::unset_bit(*code_pts, i);
+                mem::bitset_unset(*code_pts, i);
             }
         }
 
         // Compute number of leftover code points that can actually be supported, return if there are none.
-        const t_i32 code_pt_cnt = mem::count_set_bits(*code_pts);
+        const t_i32 code_pt_cnt = mem::bitset_count_set(*code_pts);
 
         if (code_pt_cnt == 0) {
             return true;

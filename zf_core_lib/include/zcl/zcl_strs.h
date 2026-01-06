@@ -17,11 +17,11 @@ namespace zf::strs {
     constexpr t_i32 g_printable_ascii_range_begin = 0x20;
     constexpr t_i32 g_printable_ascii_range_end = 0x7F;
 
-    constexpr t_b8 code_pt_is_ascii(const t_code_pt cp) {
+    constexpr t_b8 code_pt_check_ascii(const t_code_pt cp) {
         return cp >= g_ascii_range_begin && cp < g_ascii_range_end;
     }
 
-    constexpr t_b8 code_pt_is_printable_ascii(const t_code_pt cp) {
+    constexpr t_b8 code_pt_check_printable_ascii(const t_code_pt cp) {
         return cp >= g_printable_ascii_range_begin && cp < g_printable_ascii_range_end;
     }
 
@@ -48,7 +48,7 @@ namespace zf::strs {
             return g_array_comparator_bin<t_array_rdonly<t_u8>>(a.bytes, b.bytes);
         };
 
-    inline t_b8 are_bytes_terminated_anywhere(const t_array_rdonly<t_u8> bytes) {
+    inline t_b8 bytes_check_terminated_anywhere(const t_array_rdonly<t_u8> bytes) {
         for (t_i32 i = bytes.len - 1; i >= 0; i--) {
             if (!bytes[i]) {
                 return true;
@@ -58,7 +58,7 @@ namespace zf::strs {
         return false;
     }
 
-    inline t_b8 are_bytes_terminated_only_at_end(const t_array_rdonly<t_u8> bytes) {
+    inline t_b8 bytes_check_terminated_only_at_end(const t_array_rdonly<t_u8> bytes) {
         if (bytes.len == 0 || bytes[bytes.len - 1]) {
             return false;
         }
@@ -73,12 +73,12 @@ namespace zf::strs {
     }
 
     inline char *str_to_cstr(const t_str_mut str) {
-        ZF_ASSERT(are_bytes_terminated_anywhere(str.bytes));
+        ZF_ASSERT(bytes_check_terminated_anywhere(str.bytes));
         return reinterpret_cast<char *>(str.bytes.raw);
     }
 
     inline const char *str_to_cstr(const t_str_rdonly str) {
-        ZF_ASSERT(are_bytes_terminated_anywhere(str.bytes));
+        ZF_ASSERT(bytes_check_terminated_anywhere(str.bytes));
         return reinterpret_cast<const char *>(str.bytes.raw);
     }
 
@@ -90,18 +90,18 @@ namespace zf::strs {
         return clone;
     }
 
-    inline t_b8 str_is_empty(const t_str_rdonly str) {
+    inline t_b8 str_check_empty(const t_str_rdonly str) {
         return str.bytes.len == 0;
     }
 
-    inline t_b8 strs_are_equal(const t_str_rdonly a, const t_str_rdonly b) {
+    inline t_b8 strs_check_equal(const t_str_rdonly a, const t_str_rdonly b) {
         return array_compare(a.bytes, b.bytes) == 0;
     }
 
-    t_b8 str_is_valid_utf8(const t_str_rdonly str);
+    t_b8 str_check_valid_utf8(const t_str_rdonly str);
 
     // Calculates the string length in terms of code point count. Note that '\0' is treated just like any other ASCII character and does not terminate.
-    t_i32 str_get_len(const t_str_rdonly str);
+    t_i32 str_calc_len(const t_str_rdonly str);
 
     t_code_pt str_find_code_pt_at_byte(const t_str_rdonly str, const t_i32 byte_index);
 
@@ -135,7 +135,7 @@ namespace zf::strs {
     // ============================================================
     // @section: C-Strings
 
-    inline t_i32 cstr_get_len(const char *const cstr) {
+    inline t_i32 cstr_calc_len(const char *const cstr) {
         t_i32 len = 0;
         for (; cstr[len]; len++) {}
         return len;
@@ -143,14 +143,14 @@ namespace zf::strs {
 
     // Creates a NON-TERMINATED string object from the given TERMINATED C-string.
     // Does a conventional string walk to calculate length.
-    inline t_str_mut cstr_convert(char *const cstr) {
-        return {{reinterpret_cast<t_u8 *>(cstr), cstr_get_len(cstr)}};
+    inline t_str_mut cstr_to_str(char *const cstr) {
+        return {{reinterpret_cast<t_u8 *>(cstr), cstr_calc_len(cstr)}};
     }
 
     // Creates a read-only NON-TERMINATED string object from the given TERMINATED C-string.
     // Does a conventional string walk to calculate length.
-    inline t_str_rdonly cstr_convert(const char *const cstr) {
-        return {{reinterpret_cast<const t_u8 *>(cstr), cstr_get_len(cstr)}};
+    inline t_str_rdonly cstr_to_str(const char *const cstr) {
+        return {{reinterpret_cast<const t_u8 *>(cstr), cstr_calc_len(cstr)}};
     }
 
     namespace detail {

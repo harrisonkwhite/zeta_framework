@@ -39,7 +39,7 @@ namespace zf::audio_sys {
 
     void sound_stop(const t_sound_id id);
 
-    t_b8 sound_is_playing(const t_sound_id id);
+    t_b8 sound_check_playing(const t_sound_id id);
 
     void proc_finished_sounds();
 }

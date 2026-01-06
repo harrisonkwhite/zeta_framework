@@ -130,7 +130,7 @@ namespace zf::io {
             }
 
             const auto src = array_slice(stream->type_data.mem.bytes, stream->type_data.mem.byte_pos, stream->type_data.mem.byte_pos + size);
-            const auto dest = mem::get_array_as_byte_array(arr);
+            const auto dest = mem::array_to_byte_array(arr);
             array_copy(src, dest);
 
             stream->type_data.mem.byte_pos += size;
@@ -162,7 +162,7 @@ namespace zf::io {
                 return false;
             }
 
-            const auto src = mem::get_array_as_byte_array(arr);
+            const auto src = mem::array_to_byte_array(arr);
             const auto dest = array_slice(stream->type_data.mem.bytes, stream->type_data.mem.byte_pos, stream->type_data.mem.byte_pos + size);
             array_copy(src, dest);
 
@@ -251,7 +251,7 @@ namespace zf::io {
 
     [[nodiscard]] t_b8 file_open(const strs::t_str_rdonly file_path, const t_file_access_mode mode, mem::t_arena *const temp_arena, t_stream *const o_stream);
     void file_close(t_stream *const stream);
-    t_i32 file_get_size(t_stream *const stream);
+    t_i32 file_calc_size(t_stream *const stream);
     [[nodiscard]] t_b8 file_load_contents(const strs::t_str_rdonly file_path, mem::t_arena *const contents_arena, mem::t_arena *const temp_arena, t_array_mut<t_u8> *const o_contents, const t_b8 add_terminator = false);
 
     enum t_directory_creation_result : t_i32 {
@@ -360,10 +360,10 @@ namespace zf::io {
             ZF_ASSERT(str_bytes_stream_write_success);
         }
 
-        const t_i32 dig_cnt = math::get_digit_cnt(format.value);
+        const t_i32 dig_cnt = math::calc_digit_cnt(format.value);
 
         for (t_i32 i = 0; i < dig_cnt; i++) {
-            const auto byte = static_cast<t_u8>('0' + math::get_digit_at(format.value, dig_cnt - 1 - i));
+            const auto byte = static_cast<t_u8>('0' + math::calc_digit_at(format.value, dig_cnt - 1 - i));
             str_bytes_stream_write_success = stream_write_item(&str_bytes_stream, byte);
             ZF_ASSERT(str_bytes_stream_write_success);
         }
@@ -408,7 +408,7 @@ namespace zf::io {
         if (format.trim_trailing_zeros) {
             const auto str_bytes_relevant = array_slice(array_to_nonstatic(str_bytes), 0, str_bytes_used);
 
-            if (array_do_any_equal(str_bytes_relevant, '.')) {
+            if (array_check_any_equal(str_bytes_relevant, '.')) {
                 for (t_i32 i = str_bytes_used - 1;; i--) {
                     if (str_bytes[i] == '0') {
                         str_bytes_used--;
@@ -643,7 +643,7 @@ namespace zf::io {
 
     inline t_b8 print_type(t_stream *const stream, const t_bitset_format format) {
         const auto print_bit = [&](const t_i32 bit_index) {
-            const strs::t_str_rdonly str = mem::is_bit_set(format.value, bit_index) ? ZF_STR_LITERAL("1") : ZF_STR_LITERAL("0");
+            const strs::t_str_rdonly str = mem::bitset_check_set(format.value, bit_index) ? ZF_STR_LITERAL("1") : ZF_STR_LITERAL("0");
             return print(stream, str);
         };
 
@@ -705,7 +705,7 @@ namespace zf::io {
     constexpr strs::t_code_pt g_print_format_esc = '^';
 
     inline t_i32 count_format_specs(const strs::t_str_rdonly str) {
-        static_assert(strs::code_pt_is_ascii(g_print_format_spec) && strs::code_pt_is_ascii(g_print_format_esc)); // Assuming this for this algorithm.
+        static_assert(strs::code_pt_check_ascii(g_print_format_spec) && strs::code_pt_check_ascii(g_print_format_esc)); // Assuming this for this algorithm.
 
         t_b8 escaped = false;
         t_i32 cnt = 0;
@@ -740,7 +740,7 @@ namespace zf::io {
 
         ZF_ASSERT(count_format_specs(format) == 1 + sizeof...(args_leftover));
 
-        static_assert(strs::code_pt_is_ascii(g_print_format_spec) && strs::code_pt_is_ascii(g_print_format_esc)); // Assuming this for this algorithm.
+        static_assert(strs::code_pt_check_ascii(g_print_format_spec) && strs::code_pt_check_ascii(g_print_format_esc)); // Assuming this for this algorithm.
 
         t_b8 escaped = false;
 
@@ -817,7 +817,7 @@ namespace zf::io {
 
     template <typename... tp_arg_types>
     t_b8 log_error_type(const strs::t_str_rdonly type_name, const strs::t_str_rdonly format, const tp_arg_types &...args) {
-        ZF_ASSERT(!strs::str_is_empty(type_name));
+        ZF_ASSERT(!strs::str_check_empty(type_name));
 
         t_stream std_err = get_std_error();
 

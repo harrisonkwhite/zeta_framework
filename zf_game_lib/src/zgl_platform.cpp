@@ -210,9 +210,9 @@ namespace zf::platform {
 
                 for (t_i32 j = 0; j <= GLFW_GAMEPAD_BUTTON_LAST; j++) {
                     if (gamepad_state.buttons[j]) {
-                        mem::set_bit(btns_down, j);
+                        mem::bitset_set(btns_down, j);
                     } else {
-                        mem::unset_bit(btns_down, j);
+                        mem::bitset_unset(btns_down, j);
                     }
                 }
 
@@ -294,7 +294,7 @@ namespace zf::platform {
         return g_module_state.framebuffer_size_cache;
     }
 
-    t_b8 window_is_fullscreen() {
+    t_b8 window_check_fullscreen() {
         ZF_ASSERT(g_module_state.active);
         return g_module_state.fullscreen_active;
     }
@@ -331,7 +331,7 @@ namespace zf::platform {
                 static_cast<t_i32>(static_cast<t_f32>(mode->height) / monitor_scale.y),
             };
 
-            const t_f32 occupancy_perc = math::get_perc_of_occupance(window_rect, monitor_rect);
+            const t_f32 occupancy_perc = math::calc_perc_of_occupance(window_rect, monitor_rect);
 
             if (occupancy_perc > max_occupancy_perc) {
                 max_occupancy_perc = occupancy_perc;
@@ -372,7 +372,7 @@ namespace zf::platform {
         g_module_state.fullscreen_active = active;
     }
 
-    math::t_v2_i monitor_get_size_pixels() {
+    math::t_v2_i monitor_calc_size_pixels() {
         ZF_ASSERT(g_module_state.active);
 
         const auto monitor = find_glfw_monitor_of_window(g_module_state.glfw_window);
@@ -385,7 +385,7 @@ namespace zf::platform {
         return {mode->width, mode->height};
     }
 
-    math::t_v2_i monitor_get_size_logical() {
+    math::t_v2_i monitor_calc_size_logical() {
         ZF_ASSERT(g_module_state.active);
 
         const auto monitor = find_glfw_monitor_of_window(g_module_state.glfw_window);

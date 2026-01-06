@@ -1,7 +1,7 @@
 #include <zcl/zcl_math.h>
 
 namespace zf::math {
-    t_rect_f rects_get_span(const t_array_mut<t_rect_f> rects) {
+    t_rect_f rects_calc_span(const t_array_mut<t_rect_f> rects) {
         ZF_ASSERT(rects.len > 0);
 
         t_f32 min_left = rect_get_left(rects[0]);
@@ -19,7 +19,7 @@ namespace zf::math {
         return rect_create_f32(min_left, min_top, max_right - min_left, max_bottom - min_top);
     }
 
-    t_rect_i rects_get_span(const t_array_mut<t_rect_i> rects) {
+    t_rect_i rects_calc_span(const t_array_mut<t_rect_i> rects) {
         ZF_ASSERT(rects.len > 0);
 
         t_i32 min_left = rect_get_left(rects[0]);
@@ -49,7 +49,7 @@ namespace zf::math {
         };
 
         for (t_i32 i = 0; i < pts.len; ++i) {
-            const t_f32 dot = get_dot_prod(pts[i], edge);
+            const t_f32 dot = v2_calc_dot_prod(pts[i], edge);
 
             if (dot < interval.min) {
                 interval.min = dot;
@@ -86,7 +86,7 @@ namespace zf::math {
             .pts = mem::arena_push_array<t_v2>(arena, 4),
         };
 
-        const t_v2 pos_base = pos - get_compwise_prod(size, origin);
+        const t_v2 pos_base = pos - v2_calc_compwise_prod(size, origin);
 
         poly.pts[0] = pos_base;
         poly.pts[1] = pos_base + t_v2{size.x, 0.0f};
@@ -101,10 +101,10 @@ namespace zf::math {
             .pts = mem::arena_push_array<t_v2>(arena, 4),
         };
 
-        const t_v2 offs_left = get_lengthdir(size.x * origin.x, rot - g_pi);
-        const t_v2 offs_up = get_lengthdir(size.y * origin.y, rot - (g_pi * 0.5f));
-        const t_v2 offs_right = get_lengthdir(size.x * (1.0f - origin.x), rot);
-        const t_v2 offs_down = get_lengthdir(size.y * (1.0f - origin.y), rot + (g_pi * 0.5f));
+        const t_v2 offs_left = calc_lengthdir(size.x * origin.x, rot - g_pi);
+        const t_v2 offs_up = calc_lengthdir(size.y * origin.y, rot - (g_pi * 0.5f));
+        const t_v2 offs_right = calc_lengthdir(size.x * (1.0f - origin.x), rot);
+        const t_v2 offs_down = calc_lengthdir(size.y * (1.0f - origin.y), rot + (g_pi * 0.5f));
 
         poly.pts[0] = pos + offs_left + offs_up;
         poly.pts[1] = pos + offs_right + offs_up;
@@ -112,6 +112,10 @@ namespace zf::math {
         poly.pts[3] = pos + offs_left + offs_down;
 
         return poly;
+    }
+
+    t_b8 poly_check_inters(const t_poly_rdonly a, const t_poly_rdonly b) {
+        return poly_check_separation(a, b) && poly_check_separation(b, a);
     }
 
     t_b8 poly_check_inters_with_rect(const t_poly_rdonly poly, const t_rect_f rect) {
@@ -122,10 +126,10 @@ namespace zf::math {
             {rect.x, rect.y + rect.height},
         }};
 
-        return polys_check_inters(poly, {.pts = rect_poly_pts});
+        return poly_check_inters(poly, {.pts = rect_poly_pts});
     }
 
-    t_rect_f poly_get_span(const t_poly_rdonly poly) {
+    t_rect_f poly_calc_span(const t_poly_rdonly poly) {
         t_f32 min_left = poly.pts[0].x;
         t_f32 min_top = poly.pts[0].y;
         t_f32 max_right = poly.pts[0].x;
@@ -141,9 +145,5 @@ namespace zf::math {
         }
 
         return rect_create_f32(min_left, min_top, max_right - min_left, max_bottom - min_top);
-    }
-
-    t_b8 polys_check_inters(const t_poly_rdonly a, const t_poly_rdonly b) {
-        return poly_check_separation(a, b) && poly_check_separation(b, a);
     }
 }

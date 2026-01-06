@@ -36,19 +36,19 @@ namespace zf::platform {
 
     math::t_v2_i window_get_framebuffer_size_cache();
 
-    t_b8 window_is_fullscreen();
+    t_b8 window_check_fullscreen();
 
     void window_set_fullscreen(const t_b8 active);
 
     inline void window_toggle_fullscreen() {
-        window_set_fullscreen(!window_is_fullscreen());
+        window_set_fullscreen(!window_check_fullscreen());
     }
 
     // Calculates the size in pixels of whichever monitor the window most resides in.
-    math::t_v2_i monitor_get_size_pixels();
+    math::t_v2_i monitor_calc_size_pixels();
 
     // Calculates the size (accounting for DPI scaling) of whichever monitor the window most resides in.
-    math::t_v2_i monitor_get_size_logical();
+    math::t_v2_i monitor_calc_size_logical();
 
     void cursor_set_visible(const t_b8 visible);
 }

@@ -3,20 +3,20 @@
 #include <zcl/zcl_basic.h>
 
 namespace zf::mem {
-    constexpr t_i32 convert_kilobytes_to_bytes(const t_i32 n) { return (1 << 10) * n; }
-    constexpr t_i32 convert_megabytes_to_bytes(const t_i32 n) { return (1 << 20) * n; }
-    constexpr t_i32 convert_gigabytes_to_bytes(const t_i32 n) { return (1 << 30) * n; }
-    constexpr t_i32 convert_bits_to_bytes(const t_i32 n) { return (n + 7) / 8; }
-    constexpr t_i32 convert_bytes_to_bits(const t_i32 n) { return n * 8; }
+    constexpr t_i32 kilobytes_to_bytes(const t_i32 n) { return (1 << 10) * n; }
+    constexpr t_i32 megabytes_to_bytes(const t_i32 n) { return (1 << 20) * n; }
+    constexpr t_i32 gigabytes_to_bytes(const t_i32 n) { return (1 << 30) * n; }
+    constexpr t_i32 bits_to_bytes(const t_i32 n) { return (n + 7) / 8; }
+    constexpr t_i32 bytes_to_bits(const t_i32 n) { return n * 8; }
 
     // Is n a power of 2?
-    constexpr t_b8 is_alignment_valid(const t_i32 n) {
+    constexpr t_b8 alignment_check_valid(const t_i32 n) {
         return n > 0 && (n & (n - 1)) == 0;
     }
 
     // Take n up to the next multiple of the alignment.
     constexpr t_i32 align_forward(const t_i32 n, const t_i32 alignment) {
-        ZF_ASSERT(is_alignment_valid(alignment));
+        ZF_ASSERT(alignment_check_valid(alignment));
         return (n + alignment - 1) & ~(alignment - 1);
     }
 
@@ -30,14 +30,13 @@ namespace zf::mem {
         return {reinterpret_cast<const t_u8 *>(&val), ZF_SIZE_OF(val)};
     }
 
-    // @todo: Fix stupid name.
     template <c_array_elem tp_elem_type>
-    t_array_mut<t_u8> get_array_as_byte_array(const t_array_mut<tp_elem_type> arr) {
+    t_array_mut<t_u8> array_to_byte_array(const t_array_mut<tp_elem_type> arr) {
         return {reinterpret_cast<t_u8 *>(arr.raw), array_get_size_in_bytes(arr)};
     }
 
     template <c_array_elem tp_elem_type>
-    t_array_rdonly<t_u8> get_array_as_byte_array(const t_array_rdonly<tp_elem_type> arr) {
+    t_array_rdonly<t_u8> array_to_byte_array(const t_array_rdonly<tp_elem_type> arr) {
         return {reinterpret_cast<const t_u8 *>(arr.raw), array_get_size_in_bytes(arr)};
     }
 
@@ -135,7 +134,7 @@ namespace zf::mem {
     };
 
     // Does not allocate any arena memory (blocks) upfront.
-    inline t_arena arena_create_blockbased(const t_i32 block_min_size = convert_megabytes_to_bytes(1)) {
+    inline t_arena arena_create_blockbased(const t_i32 block_min_size = megabytes_to_bytes(1)) {
         ZF_ASSERT(block_min_size > 0);
 
         return {
@@ -231,41 +230,41 @@ namespace zf::mem {
     struct t_static_bitset {
         static constexpr t_i32 g_bit_cnt = tp_bit_cnt;
 
-        t_static_array<t_u8, convert_bits_to_bytes(tp_bit_cnt)> bytes;
+        t_static_array<t_u8, bits_to_bytes(tp_bit_cnt)> bytes;
 
         constexpr operator t_bitset_mut() { return {bytes.raw, g_bit_cnt}; }
         constexpr operator t_bitset_rdonly() const { return {bytes.raw, g_bit_cnt}; }
     };
 
     inline t_bitset_mut bitset_create(const t_array_mut<t_u8> bytes) {
-        return {bytes.raw, convert_bytes_to_bits(bytes.len)};
+        return {bytes.raw, bytes_to_bits(bytes.len)};
     }
 
     inline t_bitset_mut bitset_create(const t_array_mut<t_u8> bytes, const t_i32 bit_cnt) {
-        ZF_ASSERT(bit_cnt >= 0 && bit_cnt <= convert_bytes_to_bits(bytes.len));
+        ZF_ASSERT(bit_cnt >= 0 && bit_cnt <= bytes_to_bits(bytes.len));
         return {bytes.raw, bit_cnt};
     }
 
     inline t_bitset_rdonly bitset_create(const t_array_rdonly<t_u8> bytes) {
-        return {bytes.raw, convert_bytes_to_bits(bytes.len)};
+        return {bytes.raw, bytes_to_bits(bytes.len)};
     }
 
     inline t_bitset_rdonly bitset_create(const t_array_rdonly<t_u8> bytes, const t_i32 bit_cnt) {
-        ZF_ASSERT(bit_cnt >= 0 && bit_cnt <= convert_bytes_to_bits(bytes.len));
+        ZF_ASSERT(bit_cnt >= 0 && bit_cnt <= bytes_to_bits(bytes.len));
         return {bytes.raw, bit_cnt};
     }
 
     inline t_bitset_mut bitset_create(const t_i32 bit_cnt, t_arena *const arena) {
         ZF_ASSERT(bit_cnt >= 0);
-        return {arena_push_array_zeroed<t_u8>(arena, convert_bits_to_bytes(bit_cnt)).raw, bit_cnt};
+        return {arena_push_array_zeroed<t_u8>(arena, bits_to_bytes(bit_cnt)).raw, bit_cnt};
     }
 
     inline t_array_mut<t_u8> bitset_get_bytes(const t_bitset_mut bs) {
-        return {bs.bytes_raw, convert_bits_to_bytes(bs.bit_cnt)};
+        return {bs.bytes_raw, bits_to_bytes(bs.bit_cnt)};
     }
 
     inline t_array_rdonly<t_u8> bitset_get_bytes(const t_bitset_rdonly bs) {
-        return {bs.bytes_raw, convert_bits_to_bytes(bs.bit_cnt)};
+        return {bs.bytes_raw, bits_to_bytes(bs.bit_cnt)};
     }
 
     inline t_i32 bitset_get_last_byte_bit_cnt(const t_bitset_rdonly bs) {
@@ -277,41 +276,38 @@ namespace zf::mem {
         return create_byte_bitmask_range(0, bitset_get_last_byte_bit_cnt(bs));
     }
 
-    // ============================================================
-
-
-    inline t_b8 is_bit_set(const t_bitset_rdonly bs, const t_i32 index) {
+    inline t_b8 bitset_check_set(const t_bitset_rdonly bs, const t_i32 index) {
         ZF_ASSERT(index >= 0 && index < bs.bit_cnt);
         return bitset_get_bytes(bs)[index / 8] & create_byte_bitmask_single(index % 8);
     }
 
-    inline void set_bit(const t_bitset_mut bs, const t_i32 index) {
+    inline void bitset_set(const t_bitset_mut bs, const t_i32 index) {
         ZF_ASSERT(index >= 0 && index < bs.bit_cnt);
         bitset_get_bytes(bs)[index / 8] |= create_byte_bitmask_single(index % 8);
     }
 
-    inline void unset_bit(const t_bitset_mut bs, const t_i32 index) {
+    inline void bitset_unset(const t_bitset_mut bs, const t_i32 index) {
         ZF_ASSERT(index >= 0 && index < bs.bit_cnt);
         bitset_get_bytes(bs)[index / 8] &= ~create_byte_bitmask_single(index % 8);
     }
 
-    t_b8 is_any_bit_set(const t_bitset_rdonly bs);
+    t_b8 bitset_check_any_set(const t_bitset_rdonly bs);
 
-    inline t_b8 are_all_bits_unset(const t_bitset_rdonly bs) {
-        return bs.bit_cnt > 0 && !is_any_bit_set(bs);
+    inline t_b8 bitset_check_all_unset(const t_bitset_rdonly bs) {
+        return bs.bit_cnt > 0 && !bitset_check_any_set(bs);
     }
 
-    t_b8 are_all_bits_set(const t_bitset_rdonly bs);
+    t_b8 bitset_check_all_set(const t_bitset_rdonly bs);
 
-    inline t_b8 is_any_bit_unset(const t_bitset_rdonly bs) {
-        return bs.bit_cnt > 0 && !are_all_bits_set(bs);
+    inline t_b8 bitset_check_any_unset(const t_bitset_rdonly bs) {
+        return bs.bit_cnt > 0 && !bitset_check_all_set(bs);
     }
 
-    void set_all_bits(const t_bitset_mut bs);
-    void unset_all_bits(const t_bitset_mut bs);
+    void bitset_set_all(const t_bitset_mut bs);
+    void bitset_unset_all(const t_bitset_mut bs);
 
     // Sets all bits in the range [begin_bit_index, end_bit_index).
-    void set_bits_in_range(const t_bitset_mut bs, const t_i32 begin_bit_index, const t_i32 end_bit_index);
+    void bitset_set_range(const t_bitset_mut bs, const t_i32 begin_bit_index, const t_i32 end_bit_index);
 
     enum t_bitwise_mask_op : t_i32 {
         ec_bitwise_mask_op_and,
@@ -320,36 +316,38 @@ namespace zf::mem {
         ec_bitwise_mask_op_andnot
     };
 
-    void apply_mask_to_bits(const t_bitset_mut targ, const t_bitset_rdonly mask, const t_bitwise_mask_op op);
+    void bitset_apply_mask(const t_bitset_mut bs, const t_bitset_rdonly mask, const t_bitwise_mask_op op);
 
-    void shift_bits_left_by(const t_bitset_mut bs, const t_i32 amount = 1);
-    void rot_bits_left_by(const t_bitset_mut bs, const t_i32 amount = 1);
+    void bitset_shift_left(const t_bitset_mut bs, const t_i32 amount = 1);
+    void bitset_rot_left(const t_bitset_mut bs, const t_i32 amount = 1);
 
-    void shift_bits_right_by(const t_bitset_mut bs, const t_i32 amount = 1);
-    void rot_bits_right_by(const t_bitset_mut bs, const t_i32 amount = 1);
+    void bitset_shift_right(const t_bitset_mut bs, const t_i32 amount = 1);
+    void bitset_rot_right(const t_bitset_mut bs, const t_i32 amount = 1);
 
-    // Returns -1 if all bits are unset.
-    t_i32 get_index_of_first_set_bit(const t_bitset_rdonly bs, const t_i32 from = 0);
+    // Returns the index of the found set bit, or -1 if all bits are unset.
+    t_i32 bitset_find_first_set_bit(const t_bitset_rdonly bs, const t_i32 from = 0);
 
-    // Returns -1 if all bits are set.
-    t_i32 get_index_of_first_unset_bit(const t_bitset_rdonly bs, const t_i32 from = 0);
+    // Returns the index of the found unset bit, or -1 if all bits are unset.
+    t_i32 bitset_find_first_unset_bit(const t_bitset_rdonly bs, const t_i32 from = 0);
 
-    t_i32 count_set_bits(const t_bitset_rdonly bs);
+    t_i32 bitset_count_set(const t_bitset_rdonly bs);
 
-    inline t_i32 count_unset_bits(const t_bitset_rdonly bs) {
-        return bs.bit_cnt - count_set_bits(bs);
+    inline t_i32 bitset_count_unset(const t_bitset_rdonly bs) {
+        return bs.bit_cnt - bitset_count_set(bs);
     }
 
     // pos is the walker state, initialise it to the bit index you want to start from.
     // o_index is assigned the index of the set bit to process.
     // Returns false iff the walk is complete.
-    t_b8 walk_set_bits(const t_bitset_rdonly bs, t_i32 *const pos, t_i32 *const o_index);
+    t_b8 bitset_walk_all_set(const t_bitset_rdonly bs, t_i32 *const pos, t_i32 *const o_index);
 
     // pos is the walker state, initialise it to the bit index you want to start from.
     // o_index is assigned the index of the unset bit to process.
     // Returns false iff the walk is complete.
-    t_b8 walk_unset_bits(const t_bitset_rdonly bs, t_i32 *const pos, t_i32 *const o_index);
+    t_b8 bitset_walk_all_unset(const t_bitset_rdonly bs, t_i32 *const pos, t_i32 *const o_index);
 
-#define ZF_WALK_SET_BITS(bs, index) for (t_i32 ZF_CONCAT(walk_pos_l, __LINE__) = 0, index; zf::mem::walk_set_bits(bs, &ZF_CONCAT(walk_pos_l, __LINE__), &index);)
-#define ZF_WALK_UNSET_BITS(bs, index) for (t_i32 ZF_CONCAT(walk_pos_l, __LINE__) = 0, index; zf::mem::walk_unset_bits(bs, &ZF_CONCAT(walk_pos_l, __LINE__), &index);)
+#define ZF_WALK_SET_BITS(bs, index) for (t_i32 ZF_CONCAT(walk_pos_l, __LINE__) = 0, index; zf::mem::bitset_walk_all_set(bs, &ZF_CONCAT(walk_pos_l, __LINE__), &index);)
+#define ZF_WALK_UNSET_BITS(bs, index) for (t_i32 ZF_CONCAT(walk_pos_l, __LINE__) = 0, index; zf::mem::bitset_walk_all_unset(bs, &ZF_CONCAT(walk_pos_l, __LINE__), &index);)
+
+    // ============================================================
 }

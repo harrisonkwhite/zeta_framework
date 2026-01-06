@@ -6,7 +6,7 @@ namespace zf::algos {
     // O(n^2) time complexity, but O(1) space complexity.
     // You're usually better off using a hash map and a linear search, or a bitset if values are numeric and the range is small.
     template <c_array tp_arr_type>
-    t_b8 has_duplicates_slow(const tp_arr_type arr, const t_comparator_bin<typename tp_arr_type::t_elem> comparator = g_comparator_bin_default<typename tp_arr_type::t_elem>) {
+    t_b8 check_duplicates_slow(const tp_arr_type arr, const t_comparator_bin<typename tp_arr_type::t_elem> comparator = g_comparator_bin_default<typename tp_arr_type::t_elem>) {
         for (t_i32 i = 0; i < arr.len; i++) {
             for (t_i32 j = 0; j < arr.len; j++) {
                 if (i == j) {
@@ -41,7 +41,7 @@ namespace zf::algos {
     }
 
     template <c_array tp_arr_type>
-    t_b8 is_sorted(const tp_arr_type arr, const t_comparator_ord<typename tp_arr_type::t_elem> comparator = g_comparator_ord_default<typename tp_arr_type::t_elem>) {
+    t_b8 check_sorted(const tp_arr_type arr, const t_comparator_ord<typename tp_arr_type::t_elem> comparator = g_comparator_ord_default<typename tp_arr_type::t_elem>) {
         for (t_i32 i = 0; i < arr.len - 1; i++) {
             if (comparator(arr[i], arr[i + 1]) > 0) {
                 return false;

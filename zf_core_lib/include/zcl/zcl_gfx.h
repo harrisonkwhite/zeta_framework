@@ -66,11 +66,11 @@ namespace zf::gfx {
         return {r, g, b, a};
     }
 
-    inline t_b8 color_is_valid(const t_color_rgba8 col) {
+    inline t_b8 color_check_valid(const t_color_rgba8 col) {
         return true;
     }
 
-    inline t_b8 color_is_valid(const t_color_rgba32f col) {
+    inline t_b8 color_check_valid(const t_color_rgba32f col) {
         return col.r >= 0.0f && col.r <= 1.0f
             && col.g >= 0.0f && col.g <= 1.0f
             && col.b >= 0.0f && col.b <= 1.0f
@@ -95,19 +95,19 @@ namespace zf::gfx {
     inline const t_color_rgb24f g_color_pink = color_create_rgb24f(1.0f, 0.75f, 0.8f);
     inline const t_color_rgb24f g_color_brown = color_create_rgb24f(0.6f, 0.3f, 0.0f);
 
-    inline t_color_rgb8 color_convert_to_rgb8(const t_color_rgb24f col) {
+    inline t_color_rgb8 color_rgb24f_to_rgb8(const t_color_rgb24f col) {
         return color_create_rgb8(static_cast<t_u8>(255.0f * col.r), static_cast<t_u8>(255.0f * col.g), static_cast<t_u8>(255.0f * col.b));
     }
 
-    inline t_color_rgba8 color_convert_to_rgba8(const t_color_rgba32f col) {
+    inline t_color_rgba8 color_rgba32f_to_rgba8(const t_color_rgba32f col) {
         return color_create_rgba8(static_cast<t_u8>(255.0f * col.r), static_cast<t_u8>(255.0f * col.g), static_cast<t_u8>(255.0f * col.b), static_cast<t_u8>(255.0f * col.a));
     }
 
-    inline t_color_rgb24f color_convert_to_rgb24f(const t_color_rgb8 col) {
+    inline t_color_rgb24f color_rgb8_to_rgb24f(const t_color_rgb8 col) {
         return color_create_rgb24f(static_cast<t_f32>(col.r) / 255.0f, static_cast<t_f32>(col.g) / 255.0f, static_cast<t_f32>(col.b) / 255.0f);
     }
 
-    inline t_color_rgba32f color_convert_to_rgba32f(const t_color_rgba8 col) {
+    inline t_color_rgba32f color_rgba8_to_rgba32f(const t_color_rgba8 col) {
         return color_create_rgba32f(static_cast<t_f32>(col.r) / 255.0f, static_cast<t_f32>(col.g) / 255.0f, static_cast<t_f32>(col.b) / 255.0f, static_cast<t_f32>(col.a) / 255.0f);
     }
 
@@ -131,7 +131,7 @@ namespace zf::gfx {
         return {lum, lum, lum, col.a};
     }
 
-    inline t_u32 color_convert_to_hex(const t_color_rgba8 col) {
+    inline t_u32 color_rgba8_to_hex(const t_color_rgba8 col) {
         t_u32 result = 0;
         result |= static_cast<t_u32>(col.r) << 24;
         result |= static_cast<t_u32>(col.g) << 16;
@@ -141,7 +141,7 @@ namespace zf::gfx {
         return result;
     }
 
-    inline t_color_rgba8 color_convert_from_hex(const t_u32 hex) {
+    inline t_color_rgba8 color_hex_to_rgba8(const t_u32 hex) {
         const auto r = static_cast<t_u8>((hex & 0xFF000000) >> 24);
         const auto g = static_cast<t_u8>((hex & 0x00FF0000) >> 16);
         const auto b = static_cast<t_u8>((hex & 0x0000FF00) >> 8);

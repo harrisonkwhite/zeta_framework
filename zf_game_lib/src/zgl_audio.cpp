@@ -120,7 +120,7 @@ namespace zf::audio_sys {
         ZF_ASSERT(pan >= -1.0f && pan <= 1.0f);
         ZF_ASSERT(pitch > 0.0f);
 
-        const t_i32 index = mem::get_index_of_first_unset_bit(g_module_state.snd_insts.activity);
+        const t_i32 index = mem::bitset_find_first_unset_bit(g_module_state.snd_insts.activity);
 
         if (index == -1) {
             io::log_warning(ZF_STR_LITERAL("Trying to play a sound, but the sound instance limit has been reached!"));
@@ -151,7 +151,7 @@ namespace zf::audio_sys {
             ZF_FATAL();
         }
 
-        mem::set_bit(g_module_state.snd_insts.activity, index);
+        mem::bitset_set(g_module_state.snd_insts.activity, index);
         g_module_state.snd_insts.versions[index]++;
 
         *o_id = {index, g_module_state.snd_insts.versions[index]};
@@ -161,20 +161,20 @@ namespace zf::audio_sys {
 
     void sound_stop(const t_sound_id id) {
         ZF_ASSERT(g_module_state.active);
-        ZF_ASSERT(mem::is_bit_set(g_module_state.snd_insts.activity, id.index) && g_module_state.snd_insts.versions[id.index] == id.version);
+        ZF_ASSERT(mem::bitset_check_set(g_module_state.snd_insts.activity, id.index) && g_module_state.snd_insts.versions[id.index] == id.version);
 
         ma_sound_stop(&g_module_state.snd_insts.ma_snds[id.index]);
         ma_sound_uninit(&g_module_state.snd_insts.ma_snds[id.index]);
         ma_audio_buffer_ref_uninit(&g_module_state.snd_insts.ma_buf_refs[id.index]);
 
-        mem::unset_bit(g_module_state.snd_insts.activity, id.index);
+        mem::bitset_unset(g_module_state.snd_insts.activity, id.index);
     }
 
-    t_b8 sound_is_playing(const t_sound_id id) {
+    t_b8 sound_check_playing(const t_sound_id id) {
         ZF_ASSERT(g_module_state.active);
         ZF_ASSERT(id.version <= g_module_state.snd_insts.versions[id.index]);
 
-        if (!mem::is_bit_set(g_module_state.snd_insts.activity, id.index) || id.version != g_module_state.snd_insts.versions[id.index]) {
+        if (!mem::bitset_check_set(g_module_state.snd_insts.activity, id.index) || id.version != g_module_state.snd_insts.versions[id.index]) {
             return false;
         }
 
@@ -191,7 +191,7 @@ namespace zf::audio_sys {
                 ma_sound_uninit(ma_snd);
                 ma_audio_buffer_ref_uninit(&g_module_state.snd_insts.ma_buf_refs[i]);
 
-                mem::unset_bit(g_module_state.snd_insts.activity, i);
+                mem::bitset_unset(g_module_state.snd_insts.activity, i);
             }
         }
     }

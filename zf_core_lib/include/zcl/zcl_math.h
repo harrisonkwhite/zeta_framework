@@ -7,34 +7,34 @@ namespace zf::math {
     constexpr t_f32 g_pi = 3.14159265358979323846f;
     constexpr t_f32 g_tau = 6.28318530717958647692f;
 
-    constexpr t_f32 get_degs_to_rads(const t_f32 degs) {
+    constexpr t_f32 degs_to_rads(const t_f32 degs) {
         return degs * (g_pi / 180.0f);
     }
 
-    constexpr t_f32 get_rads_to_degs(const t_f32 rads) {
+    constexpr t_f32 rads_to_degs(const t_f32 rads) {
         return rads * (180.0f / g_pi);
     }
 
     template <c_integral tp_type>
-    t_i32 get_digit_cnt(const tp_type n) {
+    t_i32 calc_digit_cnt(const tp_type n) {
         if (n < 0) {
-            return get_digit_cnt(-n);
+            return calc_digit_cnt(-n);
         }
 
         if (n < 10) {
             return 1;
         }
 
-        return 1 + get_digit_cnt(n / 10);
+        return 1 + calc_digit_cnt(n / 10);
     }
 
     // Determines the digit at the given index, where the indexes are from the least significant digit to the most.
     template <c_integral tp_type>
-    tp_type get_digit_at(const tp_type n, const t_i32 index) {
-        ZF_ASSERT(index >= 0 && index < get_digit_cnt(n));
+    tp_type calc_digit_at(const tp_type n, const t_i32 index) {
+        ZF_ASSERT(index >= 0 && index < calc_digit_cnt(n));
 
         if (n < 0) {
-            return get_digit_at(-n, index);
+            return calc_digit_at(-n, index);
         }
 
         if (index == 0) {
@@ -45,10 +45,10 @@ namespace zf::math {
             return 0;
         }
 
-        return get_digit_at(n / 10, index - 1);
+        return calc_digit_at(n / 10, index - 1);
     }
 
-    inline t_b8 f_is_nearly_equal(const t_f32 val, const t_f32 targ, const t_f32 tol = 1e-5f) {
+    inline t_b8 check_nearly_equal(const t_f32 val, const t_f32 targ, const t_f32 tol = 1e-5f) {
         ZF_ASSERT(tol >= 0);
         return val >= targ - tol && val <= targ + tol;
     }
@@ -139,6 +139,27 @@ namespace zf::math {
         return {static_cast<t_i32>(v.x), static_cast<t_i32>(v.y)};
     }
 
+    inline t_v2 v2_calc_compwise_prod(const t_v2 a, const t_v2 b) { return {a.x * b.x, a.y * b.y}; }
+    inline t_v2_i v2_calc_compwise_prod(const t_v2_i a, const t_v2_i b) { return {a.x * b.x, a.y * b.y}; }
+
+    inline t_f32 v2_calc_dot_prod(const t_v2 a, const t_v2 b) { return (a.x * b.x) + (a.y * b.y); }
+    inline t_i32 v2_calc_dot_prod(const t_v2_i a, const t_v2_i b) { return (a.x * b.x) + (a.y * b.y); }
+
+    inline t_f32 v2_calc_mag(const t_v2 v) {
+        return sqrt((v.x * v.x) + (v.y * v.y));
+    }
+
+    // Returns {} if a divide by 0 is attempted.
+    inline t_v2 v2_calc_normal(const t_v2 v) {
+        const t_f32 mag = v2_calc_mag(v);
+
+        if (mag == 0.0f) {
+            return {};
+        }
+
+        return {v.x / mag, v.y / mag};
+    }
+
     // ============================================================
 
 
@@ -222,20 +243,20 @@ namespace zf::math {
         return {static_cast<t_i32>(rect.x), static_cast<t_i32>(rect.y), static_cast<t_i32>(rect.width), static_cast<t_i32>(rect.height)};
     }
 
-    inline t_b8 rects_check_equal(const t_rect_i a, const t_rect_i b) {
+    inline t_b8 rect_check_equal(const t_rect_i a, const t_rect_i b) {
         return a.x == b.x && a.y == b.y && a.width == b.width && a.height == b.height;
     }
 
-    inline t_b8 rects_check_inters(const t_rect_f a, const t_rect_f b) {
+    inline t_b8 rect_check_inters(const t_rect_f a, const t_rect_f b) {
         return rect_get_left(a) < rect_get_right(b) && rect_get_top(a) < rect_get_bottom(b) && rect_get_right(a) > rect_get_left(b) && rect_get_bottom(a) > rect_get_top(b);
     }
 
-    inline t_b8 rects_check_inters(const t_rect_i a, const t_rect_i b) {
+    inline t_b8 rect_check_inters(const t_rect_i a, const t_rect_i b) {
         return rect_get_left(a) < rect_get_right(b) && rect_get_top(a) < rect_get_bottom(b) && rect_get_right(a) > rect_get_left(b) && rect_get_bottom(a) > rect_get_top(b);
     }
 
-    t_rect_f rects_get_span(const t_array_mut<t_rect_f> rects);
-    t_rect_i rects_get_span(const t_array_mut<t_rect_i> rects);
+    t_rect_f rects_calc_span(const t_array_mut<t_rect_f> rects);
+    t_rect_i rects_calc_span(const t_array_mut<t_rect_i> rects);
 
     // ============================================================
 
@@ -280,11 +301,10 @@ namespace zf::math {
     // Points are guaranteed to be in this order: top-left, top-right, bottom-right, bottom-left.
     t_poly_mut poly_create_quad_rotated(const t_v2 pos, const t_v2 size, const t_v2 origin, const t_f32 rot, mem::t_arena *const arena);
 
+    t_b8 poly_check_inters(const t_poly_rdonly a, const t_poly_rdonly b);
     t_b8 poly_check_inters_with_rect(const t_poly_rdonly poly, const t_rect_f rect);
 
-    t_rect_f poly_get_span(const t_poly_rdonly poly);
-
-    t_b8 polys_check_inters(const t_poly_rdonly a, const t_poly_rdonly b);
+    t_rect_f poly_calc_span(const t_poly_rdonly poly);
 
     // ============================================================
 
@@ -292,37 +312,16 @@ namespace zf::math {
     inline t_f32 lerp(const t_f32 a, const t_f32 b, const t_f32 t) { return a + ((b - a) * t); }
     inline t_v2 lerp(const t_v2 a, const t_v2 b, const t_f32 t) { return a + ((b - a) * t); }
 
-    inline t_v2 get_compwise_prod(const t_v2 a, const t_v2 b) { return {a.x * b.x, a.y * b.y}; }
-    inline t_v2_i get_compwise_prod(const t_v2_i a, const t_v2_i b) { return {a.x * b.x, a.y * b.y}; }
-
-    inline t_f32 get_dot_prod(const t_v2 a, const t_v2 b) { return (a.x * b.x) + (a.y * b.y); }
-    inline t_i32 get_dot_prod(const t_v2_i a, const t_v2_i b) { return (a.x * b.x) + (a.y * b.y); }
-
-    inline t_f32 get_mag(const t_v2 v) {
-        return sqrt((v.x * v.x) + (v.y * v.y));
+    inline t_f32 calc_dist(const t_v2 a, const t_v2 b) {
+        return v2_calc_mag(b - a);
     }
 
-    // Returns {} if a divide by 0 is attempted.
-    inline t_v2 get_normal(const t_v2 v) {
-        const t_f32 mag = get_mag(v);
-
-        if (mag == 0.0f) {
-            return {};
-        }
-
-        return {v.x / mag, v.y / mag};
-    }
-
-    inline t_f32 get_dist(const t_v2 a, const t_v2 b) {
-        return get_mag(b - a);
-    }
-
-    inline t_v2 get_dir(const t_v2 a, const t_v2 b) {
-        return get_normal(b - a);
+    inline t_v2 calc_dir(const t_v2 a, const t_v2 b) {
+        return v2_calc_normal(b - a);
     }
 
     // Returns 0 if the horizontal and vertical differences of the vectors are 0.
-    inline t_f32 get_dir_in_rads(const t_v2 a, const t_v2 b) {
+    inline t_f32 calc_dir_in_rads(const t_v2 a, const t_v2 b) {
         const t_f32 rise = b.y - a.y;
         const t_f32 run = b.x - a.x;
 
@@ -333,15 +332,15 @@ namespace zf::math {
         return atan2(rise, run);
     }
 
-    inline t_v2 get_lengthdir(const t_f32 len, const t_f32 dir) {
+    inline t_v2 calc_lengthdir(const t_f32 len, const t_f32 dir) {
         return t_v2{cos(dir), sin(dir)} * len;
     }
 
-    inline t_b8 is_pt_in_rect(const t_v2 pt, const t_rect_f rect) {
+    inline t_b8 check_pt_in_rect(const t_v2 pt, const t_rect_f rect) {
         return pt.x > rect_get_left(rect) && pt.y > rect_get_top(rect) && pt.x < rect_get_right(rect) && pt.y < rect_get_bottom(rect);
     }
 
-    inline t_b8 is_pt_in_rect(const t_v2_i pt, const t_rect_i rect) {
+    inline t_b8 check_pt_in_rect(const t_v2_i pt, const t_rect_i rect) {
         return pt.x > rect_get_left(rect) && pt.y > rect_get_top(rect) && pt.x < rect_get_right(rect) && pt.y < rect_get_bottom(rect);
     }
 
@@ -364,7 +363,7 @@ namespace zf::math {
     }
 
     // Returns a value between 0 and 1 indicating what percentage of the rectangle is within the container.
-    inline t_f32 get_perc_of_occupance(const t_rect_f rect, const t_rect_f container) {
+    inline t_f32 calc_perc_of_occupance(const t_rect_f rect, const t_rect_f container) {
         ZF_ASSERT(container.width > 0 && container.height > 0);
 
         const auto subrect = clamp_within_container(rect, container);
@@ -372,7 +371,7 @@ namespace zf::math {
     }
 
     // Returns a value between 0 and 1 indicating what percentage of the rectangle is within the container.
-    inline t_f32 get_perc_of_occupance(const t_rect_i rect, const t_rect_i container) {
+    inline t_f32 calc_perc_of_occupance(const t_rect_i rect, const t_rect_i container) {
         ZF_ASSERT(container.width > 0 && container.height > 0);
 
         const auto subrect = clamp_within_container(rect, container);

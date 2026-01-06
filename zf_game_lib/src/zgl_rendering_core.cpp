@@ -288,7 +288,7 @@ namespace zf::rendering {
 
     t_frame_context *frame_begin(const t_basis *const basis, const gfx::t_color_rgb24f clear_col, mem::t_arena *const context_arena) {
         ZF_ASSERT(g_module_state.phase == ec_module_phase_active_but_not_midframe);
-        ZF_ASSERT(gfx::color_is_valid(clear_col));
+        ZF_ASSERT(gfx::color_check_valid(clear_col));
 
         const auto fb_size_cache = platform::window_get_framebuffer_size_cache();
 
@@ -309,7 +309,7 @@ namespace zf::rendering {
 
         bgfx::setViewTransform(0, &view_mat, &proj_mat);
 
-        bgfx::setViewClear(0, BGFX_CLEAR_COLOR, gfx::color_convert_to_hex(gfx::color_convert_to_rgba8(clear_col)));
+        bgfx::setViewClear(0, BGFX_CLEAR_COLOR, gfx::color_rgba8_to_hex(gfx::color_rgba32f_to_rgba8(clear_col)));
 
         bgfx::setViewRect(0, 0, 0, static_cast<uint16_t>(fb_size_cache.x), static_cast<uint16_t>(fb_size_cache.y));
 
@@ -400,7 +400,7 @@ namespace zf::rendering {
 
 #ifdef ZF_DEBUG
         for (t_i32 i = 0; i < triangles.len; i++) {
-            ZF_ASSERT(is_triangle_valid(triangles[i]));
+            ZF_ASSERT(triangle_check_valid(triangles[i]));
         }
 #endif
 

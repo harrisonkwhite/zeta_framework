@@ -89,8 +89,8 @@ namespace zf::rendering {
         math::t_v2 uv;
     };
 
-    inline t_b8 is_vertex_valid(const t_vertex vert) {
-        return gfx::color_is_valid(vert.blend)
+    inline t_b8 vertex_check_valid(const t_vertex vert) {
+        return gfx::color_check_valid(vert.blend)
             && vert.uv.x >= 0.0f && vert.uv.y >= 0.0f && vert.uv.x <= 1.0f && vert.uv.y <= 1.0f;
     }
 
@@ -98,10 +98,10 @@ namespace zf::rendering {
         t_static_array<t_vertex, 3> verts;
     };
 
-    inline t_b8 is_triangle_valid(const t_triangle tri) {
-        return is_vertex_valid(tri.verts[0])
-            && is_vertex_valid(tri.verts[1])
-            && is_vertex_valid(tri.verts[2]);
+    inline t_b8 triangle_check_valid(const t_triangle tri) {
+        return vertex_check_valid(tri.verts[0])
+            && vertex_check_valid(tri.verts[1])
+            && vertex_check_valid(tri.verts[2]);
     }
 
     t_frame_context *frame_begin(const t_basis *const basis, const gfx::t_color_rgb24f clear_col, mem::t_arena *const context_arena);
@@ -175,7 +175,7 @@ namespace zf::rendering {
     constexpr math::t_v2 g_origin_bottomcenter = {0.5f, 1.0f};
     constexpr math::t_v2 g_origin_bottomright = {1.0f, 1.0f};
 
-    inline t_b8 origin_is_valid(const math::t_v2 origin) {
+    inline t_b8 origin_check_valid(const math::t_v2 origin) {
         return origin.x >= 0.0f && origin.x <= 1.0f && origin.y >= 0.0f && origin.y <= 1.0f;
     }
 
@@ -199,7 +199,7 @@ namespace zf::rendering {
     constexpr math::t_v2 g_str_alignment_bottomcenter = {0.5f, 1.0f};
     constexpr math::t_v2 g_str_alignment_bottomright = {1.0f, 1.0f};
 
-    inline t_b8 str_alignment_is_valid(const math::t_v2 alignment) {
+    inline t_b8 str_alignment_check_valid(const math::t_v2 alignment) {
         return alignment.x >= 0.0f && alignment.x <= 1.0f && alignment.y >= 0.0f && alignment.y <= 1.0f;
     }
 

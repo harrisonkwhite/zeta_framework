@@ -24,7 +24,7 @@ namespace zf {
         io::print(&output_file_stream, ZF_STR_LITERAL("#include <zcl/zcl_mem.h>\n"));
         io::print(&output_file_stream, ZF_STR_LITERAL("\n"));
 
-        if (strs::str_is_empty(module_namespace_name)) {
+        if (strs::str_check_empty(module_namespace_name)) {
             io::print(&output_file_stream, ZF_STR_LITERAL("namespace zf {\n"));
         } else {
             io::print_format(&output_file_stream, ZF_STR_LITERAL("namespace zf::% {\n"), module_namespace_name);
@@ -62,5 +62,5 @@ int main(const int arg_cnt, const char *const *const args) {
         return EXIT_FAILURE;
     }
 
-    return zf::output_code(zf::strs::cstr_convert(args[1]), zf::strs::cstr_convert(args[2]), zf::strs::cstr_convert(args[3]), zf::strs::cstr_convert(args[4])) ? EXIT_SUCCESS : EXIT_FAILURE;
+    return zf::output_code(zf::strs::cstr_to_str(args[1]), zf::strs::cstr_to_str(args[2]), zf::strs::cstr_to_str(args[3]), zf::strs::cstr_to_str(args[4])) ? EXIT_SUCCESS : EXIT_FAILURE;
 }

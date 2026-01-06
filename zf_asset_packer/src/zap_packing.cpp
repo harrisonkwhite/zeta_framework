@@ -133,7 +133,7 @@ namespace zf {
             cJSON *const cj_assets = cJSON_GetObjectItemCaseSensitive(cj, asset_type_arr_name_cstr);
 
             if (!cJSON_IsArray(cj_assets)) {
-                io::log_error(ZF_STR_LITERAL("Packing instructions JSON \"%\" array does not exist or it is of the wrong type!"), strs::cstr_convert(asset_type_arr_name_cstr));
+                io::log_error(ZF_STR_LITERAL("Packing instructions JSON \"%\" array does not exist or it is of the wrong type!"), strs::cstr_to_str(asset_type_arr_name_cstr));
                 return false;
             }
 
@@ -178,7 +178,7 @@ namespace zf {
                             continue;
                         }
 
-                        io::log_error(ZF_STR_LITERAL("A packing instructions JSON \"%\" entry is missing required field \"%\"!"), strs::cstr_convert(asset_type_arr_name_cstr), strs::cstr_convert(field_name_cstr));
+                        io::log_error(ZF_STR_LITERAL("A packing instructions JSON \"%\" entry is missing required field \"%\"!"), strs::cstr_to_str(asset_type_arr_name_cstr), strs::cstr_to_str(field_name_cstr));
 
                         return false;
                     }
@@ -199,15 +199,15 @@ namespace zf {
                     }();
 
                     if (!is_valid) {
-                        io::log_error(ZF_STR_LITERAL("A packing instructions JSON \"%\" entry has field \"%\" as the wrong type! Expected a %."), strs::cstr_convert(asset_type_arr_name_cstr), strs::cstr_convert(field_name_cstr), strs::cstr_convert(g_asset_field_type_name_cstrs[fields[fi].type]));
+                        io::log_error(ZF_STR_LITERAL("A packing instructions JSON \"%\" entry has field \"%\" as the wrong type! Expected a %."), strs::cstr_to_str(asset_type_arr_name_cstr), strs::cstr_to_str(field_name_cstr), strs::cstr_to_str(g_asset_field_type_name_cstrs[fields[fi].type]));
                         return false;
                     }
                 }
 
                 switch (asset_type_index) {
                 case ec_asset_type_texture: {
-                    const auto file_path = strs::cstr_convert(field_vals[ec_texture_field_file_path]->valuestring);
-                    const auto out_file_path = strs::cstr_convert(field_vals[ec_texture_field_out_file_path]->valuestring);
+                    const auto file_path = strs::cstr_to_str(field_vals[ec_texture_field_file_path]->valuestring);
+                    const auto out_file_path = strs::cstr_to_str(field_vals[ec_texture_field_out_file_path]->valuestring);
 
                     gfx::t_texture_data_mut texture_data;
 
@@ -225,16 +225,16 @@ namespace zf {
                 }
 
                 case ec_asset_type_font: {
-                    const auto file_path = strs::cstr_convert(field_vals[ec_font_field_file_path]->valuestring);
+                    const auto file_path = strs::cstr_to_str(field_vals[ec_font_field_file_path]->valuestring);
                     const auto height = field_vals[ec_font_field_height]->valueint;
-                    const auto out_file_path = strs::cstr_convert(field_vals[ec_font_field_out_file_path]->valuestring);
+                    const auto out_file_path = strs::cstr_to_str(field_vals[ec_font_field_out_file_path]->valuestring);
 
                     const auto code_pt_bv = mem::arena_push_item_zeroed<strs::t_code_pt_bitset>(&arena);
 
-                    mem::set_bits_in_range(*code_pt_bv, strs::g_printable_ascii_range_begin, strs::g_printable_ascii_range_end); // Add the printable ASCII range as a default.
+                    mem::bitset_set_range(*code_pt_bv, strs::g_printable_ascii_range_begin, strs::g_printable_ascii_range_end); // Add the printable ASCII range as a default.
 
                     if (field_vals[ec_font_field_extra_chrs_file_path]) {
-                        const auto extra_chrs_file_path = strs::cstr_convert(field_vals[ec_font_field_extra_chrs_file_path]->valuestring);
+                        const auto extra_chrs_file_path = strs::cstr_to_str(field_vals[ec_font_field_extra_chrs_file_path]->valuestring);
 
                         t_array_mut<t_u8> extra_chrs_file_contents;
 
@@ -265,16 +265,16 @@ namespace zf {
                 }
 
                 case ec_asset_type_shader: {
-                    const auto file_path = strs::cstr_convert(field_vals[ec_shader_field_file_path]->valuestring);
-                    const auto type = strs::cstr_convert(field_vals[ec_shader_field_type]->valuestring);
-                    const auto varying_def_file_path = strs::cstr_convert(field_vals[ec_shader_field_varying_def_file_path]->valuestring);
-                    const auto out_file_path = strs::cstr_convert(field_vals[ec_shader_field_out_file_path]->valuestring);
+                    const auto file_path = strs::cstr_to_str(field_vals[ec_shader_field_file_path]->valuestring);
+                    const auto type = strs::cstr_to_str(field_vals[ec_shader_field_type]->valuestring);
+                    const auto varying_def_file_path = strs::cstr_to_str(field_vals[ec_shader_field_varying_def_file_path]->valuestring);
+                    const auto out_file_path = strs::cstr_to_str(field_vals[ec_shader_field_out_file_path]->valuestring);
 
                     t_b8 is_frag;
 
-                    if (strs::strs_are_equal(type, ZF_STR_LITERAL("vertex"))) {
+                    if (strs::strs_check_equal(type, ZF_STR_LITERAL("vertex"))) {
                         is_frag = false;
-                    } else if (strs::strs_are_equal(type, ZF_STR_LITERAL("fragment"))) {
+                    } else if (strs::strs_check_equal(type, ZF_STR_LITERAL("fragment"))) {
                         is_frag = true;
                     } else {
                         io::log_error(ZF_STR_LITERAL("A packing instructions JSON shader entry has an invalid shader type \"%\"! Expected \"vertex\" or \"fragment\"."), type);
@@ -297,8 +297,8 @@ namespace zf {
                 }
 
                 case ec_asset_type_sound: {
-                    const auto file_path = strs::cstr_convert(field_vals[ec_sound_field_file_path]->valuestring);
-                    const auto out_file_path = strs::cstr_convert(field_vals[ec_sound_field_out_file_path]->valuestring);
+                    const auto file_path = strs::cstr_to_str(field_vals[ec_sound_field_file_path]->valuestring);
+                    const auto out_file_path = strs::cstr_to_str(field_vals[ec_sound_field_out_file_path]->valuestring);
 
                     audio::t_sound_data_mut snd_data;
 

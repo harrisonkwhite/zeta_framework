@@ -312,7 +312,7 @@ namespace zf::ds {
             kv_store->pair_cnt++;
 
             while (block) {
-                const auto possible_rel_index_to_use = mem::get_index_of_first_unset_bit(block->usage);
+                const auto possible_rel_index_to_use = mem::bitset_find_first_unset_bit(block->usage);
 
                 if (possible_rel_index_to_use == -1) {
                     block_previous = block;
@@ -323,7 +323,7 @@ namespace zf::ds {
 
                 block->keys[possible_rel_index_to_use] = key;
                 block->values[possible_rel_index_to_use] = value;
-                mem::set_bit(block->usage, possible_rel_index_to_use);
+                mem::bitset_set(block->usage, possible_rel_index_to_use);
                 ZF_ASSERT(block->next_indexes[possible_rel_index_to_use] == -1);
 
                 return (block_index * kv_store->block_cap) + possible_rel_index_to_use;
@@ -341,7 +341,7 @@ namespace zf::ds {
 
             new_block->keys[0] = key;
             new_block->values[0] = value;
-            mem::set_bit(new_block->usage, 0);
+            mem::bitset_set(new_block->usage, 0);
 
             return block_index * kv_store->block_cap;
         }();
@@ -456,7 +456,7 @@ namespace zf::ds {
     }
 
     template <c_simple tp_type>
-    t_i32 hash_map_convert_key_to_hash_index(const tp_type &key, const t_hash_func<tp_type> hash_func, const t_i32 cap) {
+    t_i32 hash_map_key_to_hash_index(const tp_type &key, const t_hash_func<tp_type> hash_func, const t_i32 cap) {
         ZF_ASSERT(cap > 0);
 
         const t_i32 value = hash_func(key);
@@ -467,7 +467,7 @@ namespace zf::ds {
 
     template <c_simple tp_key_type, c_simple tp_val_type>
     [[nodiscard]] t_b8 hash_map_find(const t_hash_map<tp_key_type, tp_val_type> *const hash_map, const tp_key_type &key, tp_val_type **const o_val) {
-        const t_i32 hash_index = hash_map_convert_key_to_hash_index(key, hash_map->hash_func, hash_map_get_cap(hash_map));
+        const t_i32 hash_index = hash_map_key_to_hash_index(key, hash_map->hash_func, hash_map_get_cap(hash_map));
         return kv_store_find_in_chain(&hash_map->kv_store, hash_map->immediate_indexes[hash_index], key, o_val);
     }
 
@@ -479,14 +479,14 @@ namespace zf::ds {
     // Try adding the key-value pair to the hash map or just updating the value if the key is already present.
     template <c_simple tp_key_type, c_simple tp_val_type>
     t_hash_map_put_result hash_map_put(t_hash_map<tp_key_type, tp_val_type> *const hash_map, const tp_key_type &key, const tp_val_type &value) {
-        const t_i32 hash_index = hash_map_convert_key_to_hash_index(key, hash_map->hash_func, hash_map_get_cap(hash_map));
+        const t_i32 hash_index = hash_map_key_to_hash_index(key, hash_map->hash_func, hash_map_get_cap(hash_map));
         return kv_store_put_in_chain(&hash_map->kv_store, &hash_map->immediate_indexes[hash_index], key, value) == ec_kv_store_put_result_updated ? ec_hash_map_put_result_updated : ec_hash_map_put_result_added;
     }
 
     // Returns true iff an entry with the key was found and removed.
     template <c_simple tp_key_type, c_simple tp_val_type>
     t_b8 hash_map_remove(t_hash_map<tp_key_type, tp_val_type> *const hash_map, const tp_key_type &key) {
-        const t_i32 hash_index = hash_map_convert_key_to_hash_index(key, hash_map->hash_func, hash_map_get_cap(hash_map));
+        const t_i32 hash_index = hash_map_key_to_hash_index(key, hash_map->hash_func, hash_map_get_cap(hash_map));
         return kv_store_remove_in_chain(&hash_map->kv_store, hash_map->immediate_indexes[hash_index], key);
     }
 
