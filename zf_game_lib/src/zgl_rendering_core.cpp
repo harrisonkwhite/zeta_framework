@@ -18,7 +18,8 @@ namespace zf::rendering {
 
     enum t_resource_type : t_i32 {
         ec_resource_type_texture,
-        ec_resource_type_shader_prog
+        ec_resource_type_shader_prog,
+        ec_resource_type_uniform,
     };
 
     struct t_resource {
@@ -33,6 +34,11 @@ namespace zf::rendering {
             struct {
                 bgfx::ProgramHandle bgfx_hdl;
             } shader_prog;
+
+            struct {
+                bgfx::UniformHandle bgfx_hdl;
+                t_uniform_type type;
+            } uniform;
         } type_data;
 
         t_resource *next;
@@ -171,6 +177,8 @@ namespace zf::rendering {
 
     math::t_v2_i texture_get_size(const t_resource *const texture) {
         ZF_ASSERT(g_module_state.phase != ec_module_phase_inactive);
+        ZF_ASSERT(texture->type == ec_resource_type_texture);
+
         return texture->type_data.texture.size;
     }
 
@@ -187,6 +195,10 @@ namespace zf::rendering {
 
             case ec_resource_type_shader_prog:
                 bgfx::destroy(resource->type_data.shader_prog.bgfx_hdl);
+                break;
+
+            case ec_resource_type_uniform:
+                bgfx::destroy(resource->type_data.uniform.bgfx_hdl);
                 break;
 
             default:
@@ -259,6 +271,38 @@ namespace zf::rendering {
         const auto resource = resource_group_add(group, ec_resource_type_shader_prog);
         resource->type_data.shader_prog.bgfx_hdl = prog_bgfx_hdl;
         return resource;
+    }
+
+    t_resource *uniform_create(const strs::t_str_rdonly name, const t_uniform_type type, t_resource_group *const group, mem::t_arena *const temp_arena) {
+        const strs::t_str_rdonly name_terminated = strs::str_clone_but_add_terminator(name, temp_arena);
+
+        const auto bgfx_type = [type]() -> bgfx::UniformType::Enum {
+            switch (type) {
+            case ec_uniform_type_sampler: return bgfx::UniformType::Sampler;
+            case ec_uniform_type_v4: return bgfx::UniformType::Vec4;
+            case ec_uniform_type_mat4x4: return bgfx::UniformType::Mat4;
+            }
+
+            ZF_UNREACHABLE();
+        }();
+
+        const bgfx::UniformHandle bgfx_hdl = bgfx::createUniform(strs::str_get_as_cstr(name_terminated), bgfx_type);
+
+        if (!bgfx::isValid(bgfx_hdl)) {
+            ZF_FATAL();
+        }
+
+        const auto resource = resource_group_add(group, ec_resource_type_uniform);
+        resource->type_data.uniform.bgfx_hdl = bgfx_hdl;
+        resource->type_data.uniform.type = type;
+        return resource;
+    }
+
+    t_uniform_type uniform_get_type(const t_resource *const uniform) {
+        ZF_ASSERT(g_module_state.phase != ec_module_phase_inactive);
+        ZF_ASSERT(uniform->type == ec_resource_type_uniform);
+
+        return uniform->type_data.uniform.type;
     }
 
     t_context *frame_begin(const t_basis *const basis, const gfx::t_color_rgb24f clear_col, mem::t_arena *const context_arena) {

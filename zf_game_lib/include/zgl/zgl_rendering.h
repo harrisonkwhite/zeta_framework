@@ -67,6 +67,16 @@ namespace zf::rendering {
         return shader_prog_create(vert_shader_compiled_bin, frag_shader_compiled_bin, arena);
     }
 
+    enum t_uniform_type {
+        ec_uniform_type_sampler,
+        ec_uniform_type_v4,
+        ec_uniform_type_mat4x4
+    };
+
+    t_resource *uniform_create(const strs::t_str_rdonly name, const t_uniform_type type, t_resource_group *const group, mem::t_arena *const temp_arena);
+
+    t_uniform_type uniform_get_type(const t_resource *const uniform);
+
 
     // ============================================================
     // @section: Frame
