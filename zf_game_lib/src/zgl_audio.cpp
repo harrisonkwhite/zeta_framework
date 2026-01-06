@@ -113,6 +113,52 @@ namespace zf::audio_sys {
         return sound_type_group_add(group, snd_data);
     }
 
+    t_b8 sound_play_and_get_id(const t_sound_type *const type, t_sound_id *const o_id, const t_f32 vol, const t_f32 pan, const t_f32 pitch, const t_b8 loop) {
+        ZF_ASSERT(g_module_state.active);
+        ZF_ASSERT(type->valid);
+        ZF_ASSERT(vol >= 0.0f && vol <= 1.0f);
+        ZF_ASSERT(pan >= -1.0f && pan <= 1.0f);
+        ZF_ASSERT(pitch > 0.0f);
+
+        const t_i32 index = mem::get_index_of_first_unset_bit(g_module_state.snd_insts.activity);
+
+        if (index == -1) {
+            io::log_warning(ZF_STR_LITERAL("Trying to play a sound, but the sound instance limit has been reached!"));
+            return false;
+        }
+
+        ma_sound *const ma_snd = &g_module_state.snd_insts.ma_snds[index];
+        ma_audio_buffer_ref *const ma_buf_ref = &g_module_state.snd_insts.ma_buf_refs[index];
+
+        g_module_state.snd_insts.types[index] = type;
+
+        if (ma_audio_buffer_ref_init(ma_format_f32, static_cast<ma_uint32>(type->snd_data.meta.channel_cnt), type->snd_data.pcm.raw, static_cast<ma_uint64>(type->snd_data.meta.frame_cnt), ma_buf_ref) != MA_SUCCESS) {
+            ZF_FATAL();
+        }
+
+        ma_buf_ref->sampleRate = static_cast<ma_uint32>(type->snd_data.meta.sample_rate);
+
+        if (ma_sound_init_from_data_source(&g_module_state.ma_eng, ma_buf_ref, 0, nullptr, ma_snd) != MA_SUCCESS) {
+            ZF_FATAL();
+        }
+
+        ma_sound_set_volume(ma_snd, vol);
+        ma_sound_set_pan(ma_snd, pan);
+        ma_sound_set_pitch(ma_snd, pitch);
+        ma_sound_set_looping(ma_snd, loop);
+
+        if (ma_sound_start(ma_snd) != MA_SUCCESS) {
+            ZF_FATAL();
+        }
+
+        mem::set_bit(g_module_state.snd_insts.activity, index);
+        g_module_state.snd_insts.versions[index]++;
+
+        *o_id = {index, g_module_state.snd_insts.versions[index]};
+
+        return true;
+    }
+
 #if 0
     struct s_sound_type {
         const s_sound_type_arena &group;

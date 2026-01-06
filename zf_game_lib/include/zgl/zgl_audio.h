@@ -28,8 +28,17 @@ namespace zf::audio_sys {
         t_i32 version;
     };
 
-    t_sound_id sound_play(const t_sound_type *const type, const t_f32 vol = 1.0f, const t_f32 pan = 0.0f, const t_f32 pitch = 1.0f, const t_b8 loop = false);
+    // Returns true iff the play succeeded. Note that some failure cases will trigger a fatal error instead.
+    [[nodiscard]] t_b8 sound_play_and_get_id(const t_sound_type *const type, t_sound_id *const o_id, const t_f32 vol = 1.0f, const t_f32 pan = 0.0f, const t_f32 pitch = 1.0f, const t_b8 loop = false);
+
+    // Returns true iff the play succeeded. Note that some failure cases will trigger a fatal error instead.
+    inline t_b8 sound_play(const t_sound_type *const type, const t_f32 vol = 1.0f, const t_f32 pan = 0.0f, const t_f32 pitch = 1.0f, const t_b8 loop = false) {
+        t_sound_id id_throwaway;
+        return sound_play_and_get_id(type, &id_throwaway, vol, pan, pitch, loop);
+    }
+
     void sound_stop(const t_sound_id id);
+
     t_b8 sound_is_playing(const t_sound_id id);
 
 #if 0
