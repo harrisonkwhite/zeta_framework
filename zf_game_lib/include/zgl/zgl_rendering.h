@@ -111,7 +111,9 @@ namespace zf::rendering {
     void frame_set_shader_prog(t_frame_context *const context, const t_resource *const prog);
 
     const t_resource *frame_get_shader_prog_default(t_frame_context *const context);
-    const t_resource *frame_get_shader_prog_tint(t_frame_context *const context);
+    const t_resource *frame_get_shader_prog_blend(t_frame_context *const context);
+
+    const t_resource *frame_get_uniform_blend(t_frame_context *const context);
 
     // Leave texture as nullptr for no texture.
     void frame_submit_triangles(t_frame_context *const context, const t_array_rdonly<t_triangle> triangles, const t_resource *const texture = nullptr);
@@ -177,7 +179,7 @@ namespace zf::rendering {
         return origin.x >= 0.0f && origin.x <= 1.0f && origin.y >= 0.0f && origin.y <= 1.0f;
     }
 
-    void frame_submit_texture(t_frame_context *const context, const t_resource *const texture, const math::t_v2 pos, const math::t_rect_i src_rect = {});
+    void frame_submit_texture(t_frame_context *const context, const t_resource *const texture, const math::t_v2 pos, const math::t_rect_i src_rect = {}, const t_f32 rot = 0.0f);
 
     struct t_font {
         gfx::t_font_arrangement arrangement;

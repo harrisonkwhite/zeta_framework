@@ -292,7 +292,7 @@ namespace zf::math {
 
     // Returns 0 if the horizontal and vertical differences of the vectors are 0.
     inline t_f32 get_dir_in_rads(const t_v2 a, const t_v2 b) {
-        const t_f32 rise = -(b.y - a.y);
+        const t_f32 rise = b.y - a.y;
         const t_f32 run = b.x - a.x;
 
         if (rise == 0.0f && run == 0.0f) {
@@ -302,8 +302,8 @@ namespace zf::math {
         return atan2(rise, run);
     }
 
-    inline t_v2 get_len_dir(const t_f32 len, const t_f32 dir) {
-        return t_v2(cos(dir), -sin(dir)) * len;
+    inline t_v2 get_lendir(const t_f32 len, const t_f32 dir) {
+        return t_v2{cos(dir), sin(dir)} * len;
     }
 
     inline t_b8 is_pt_in_rect(const t_v2 pt, const t_rect_f rect) {

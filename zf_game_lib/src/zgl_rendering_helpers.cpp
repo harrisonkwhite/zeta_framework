@@ -1,7 +1,7 @@
 #include <zgl/zgl_rendering.h>
 
 namespace zf::rendering {
-    void frame_submit_texture(t_frame_context *const context, const t_resource *const texture, const math::t_v2 pos, const math::t_rect_i src_rect) {
+    void frame_submit_texture(t_frame_context *const context, const t_resource *const texture, const math::t_v2 pos, const math::t_rect_i src_rect, const t_f32 rot) {
         const auto texture_size = texture_get_size(texture);
 
         math::t_rect_i src_rect_to_use;
@@ -16,6 +16,7 @@ namespace zf::rendering {
         const math::t_rect_f rect = math::rect_create_f32(pos, math::v2_convert_to_f32(math::rect_get_size(src_rect_to_use)));
         const math::t_rect_f uv_rect = gfx::texture_calc_uv_rect(src_rect_to_use, texture_size);
 
+#if 0
         const t_static_array<t_triangle, 2> triangles = {{
             {
                 .verts = {{
@@ -32,6 +33,29 @@ namespace zf::rendering {
                 }},
             },
         }};
+#else
+        const math::t_v2 topleft = pos;
+        const math::t_v2 topright = topleft + math::get_lendir(rect.width, rot);
+        const math::t_v2 bottomright = topright + math::get_lendir(rect.height, rot + (math::g_pi / 2.0f));
+        const math::t_v2 bottomleft = bottomright + math::get_lendir(rect.width, rot + math::g_pi);
+
+        const t_static_array<t_triangle, 2> triangles = {{
+            {
+                .verts = {{
+                    {.pos = topleft, .blend = gfx::g_color_white, .uv = math::rect_get_topleft(uv_rect)},
+                    {.pos = topright, .blend = gfx::g_color_white, .uv = math::rect_get_topright(uv_rect)},
+                    {.pos = bottomleft, .blend = gfx::g_color_white, .uv = math::rect_get_bottomleft(uv_rect)},
+                }},
+            },
+            {
+                .verts = {{
+                    {.pos = bottomleft, .blend = gfx::g_color_white, .uv = math::rect_get_bottomleft(uv_rect)},
+                    {.pos = topright, .blend = gfx::g_color_white, .uv = math::rect_get_topright(uv_rect)},
+                    {.pos = bottomright, .blend = gfx::g_color_white, .uv = math::rect_get_bottomright(uv_rect)},
+                }},
+            },
+        }};
+#endif
 
         frame_submit_triangles(context, array_get_as_nonstatic(triangles), texture);
     }

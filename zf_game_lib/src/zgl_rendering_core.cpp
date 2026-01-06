@@ -50,8 +50,8 @@ namespace zf::rendering {
     extern const t_u8 g_frag_shader_default_src_raw[];
     extern const t_i32 g_frag_shader_default_src_len;
 
-    extern const t_u8 g_frag_shader_tint_src_raw[];
-    extern const t_i32 g_frag_shader_tint_src_len;
+    extern const t_u8 g_frag_shader_blend_src_raw[];
+    extern const t_i32 g_frag_shader_blend_src_len;
 
     const t_i32 g_batch_vert_limit = 1024;
     const t_i32 g_frame_vert_limit = 8192; // @todo: This should definitely be modifiable if the user wants.
@@ -60,9 +60,10 @@ namespace zf::rendering {
         bgfx::DynamicVertexBufferHandle vert_buf_bgfx_hdl;
 
         const t_resource *shader_prog_default;
-        const t_resource *shader_prog_tint;
+        const t_resource *shader_prog_blend;
 
         const t_resource *sampler_uniform;
+        const t_resource *blend_uniform;
 
         const t_resource *px_texture;
     };
@@ -132,9 +133,10 @@ namespace zf::rendering {
         }
 
         basis->shader_prog_default = shader_prog_create({g_vert_shader_default_src_raw, g_vert_shader_default_src_len}, {g_frag_shader_default_src_raw, g_frag_shader_default_src_len}, &g_module_state.perm_resource_group);
-        basis->shader_prog_tint = shader_prog_create({g_vert_shader_default_src_raw, g_vert_shader_default_src_len}, {g_frag_shader_tint_src_raw, g_frag_shader_tint_src_len}, &g_module_state.perm_resource_group);
+        basis->shader_prog_blend = shader_prog_create({g_vert_shader_default_src_raw, g_vert_shader_default_src_len}, {g_frag_shader_blend_src_raw, g_frag_shader_blend_src_len}, &g_module_state.perm_resource_group);
 
-        basis->sampler_uniform = uniform_create(ZF_STR_LITERAL("u_tex"), ec_uniform_type_sampler, &g_module_state.perm_resource_group, temp_arena);
+        basis->sampler_uniform = uniform_create(ZF_STR_LITERAL("u_texture"), ec_uniform_type_sampler, &g_module_state.perm_resource_group, temp_arena);
+        basis->blend_uniform = uniform_create(ZF_STR_LITERAL("u_blend"), ec_uniform_type_v4, &g_module_state.perm_resource_group, temp_arena);
 
         const t_static_array<t_u8, 4> batch_px_texture_rgba = {{255, 255, 255, 255}};
         basis->px_texture = texture_create({{1, 1}, array_get_as_nonstatic(batch_px_texture_rgba)}, &g_module_state.perm_resource_group);
@@ -375,9 +377,14 @@ namespace zf::rendering {
         return context->basis->shader_prog_default;
     }
 
-    const t_resource *frame_get_shader_prog_tint(t_frame_context *const context) {
+    const t_resource *frame_get_shader_prog_blend(t_frame_context *const context) {
         ZF_ASSERT(g_module_state.phase == ec_module_phase_active_and_midframe);
-        return context->basis->shader_prog_tint;
+        return context->basis->shader_prog_blend;
+    }
+
+    const t_resource *frame_get_uniform_blend(t_frame_context *const context) {
+        ZF_ASSERT(g_module_state.phase == ec_module_phase_active_and_midframe);
+        return context->basis->blend_uniform;
     }
 
     void frame_submit_triangles(t_frame_context *const context, const t_array_rdonly<t_triangle> triangles, const t_resource *const texture) {

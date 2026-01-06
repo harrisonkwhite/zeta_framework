@@ -22,7 +22,7 @@ function(embed_shader SHADER_NAME SHADER_NAME_UPPER SHADER_TYPE)
     set(SRC_FILE ${CMAKE_CURRENT_SOURCE_DIR}/shaders/${SHADER_NAME}.sc)
     set(VD_FILE ${CMAKE_CURRENT_SOURCE_DIR}/shaders/varying.def.sc)
     set(BIN_FILE ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/${SHADER_NAME}.bin)
-    set(CPP_FILE ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/${SHADER_NAME}.cpp)
+    set(CPP_FILE ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/zgl_rendering_${SHADER_NAME}.cpp)
 
     add_custom_command(
         OUTPUT ${CPP_FILE}
@@ -39,7 +39,7 @@ endfunction()
 
 embed_shader(vert_shader_default VERT_SHADER_DEFAULT vertex)
 embed_shader(frag_shader_default FRAG_SHADER_DEFAULT fragment)
-embed_shader(frag_shader_tint FRAG_SHADER_TINT fragment)
+embed_shader(frag_shader_blend FRAG_SHADER_TINT fragment)
 
 set_source_files_properties(
     ${VERT_SHADER_DEFAULT_CPP}
