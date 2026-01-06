@@ -78,7 +78,7 @@ namespace zf::rendering {
 
     static t_array_mut<math::t_v2> get_str_chr_render_positions(const strs::t_str_rdonly str, const gfx::t_font_arrangement &font_arrangement, const math::t_v2 pos, const math::t_v2 alignment, mem::t_arena *const arena) {
         ZF_ASSERT(strs::str_is_valid_utf8(str));
-        ZF_ASSERT(is_str_alignment_valid(alignment));
+        ZF_ASSERT(str_alignment_is_valid(alignment));
 
         // Calculate some useful string metadata.
         struct t_str_meta {
@@ -174,7 +174,7 @@ namespace zf::rendering {
 
     void frame_submit_str(t_context *const context, const strs::t_str_rdonly str, const t_font &font, const math::t_v2 pos, mem::t_arena *const temp_arena, const math::t_v2 alignment, const gfx::t_color_rgba32f blend) {
         ZF_ASSERT(strs::str_is_valid_utf8(str));
-        ZF_ASSERT(is_str_alignment_valid(alignment));
+        ZF_ASSERT(str_alignment_is_valid(alignment));
 
         if (strs::str_is_empty(str)) {
             return;

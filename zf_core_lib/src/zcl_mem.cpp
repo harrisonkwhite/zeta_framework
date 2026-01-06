@@ -20,6 +20,8 @@ namespace zf::mem {
         };
 
         f(f, arena->blocks_head);
+
+        *arena = {};
     }
 
     static t_arena_block *arena_create_block(const t_i32 buf_size) {

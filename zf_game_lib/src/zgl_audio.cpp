@@ -4,11 +4,8 @@
 
 namespace zf::audio_sys {
     struct t_sound_type {
-        const t_sound_type_group *group;
-        t_i32 group_version;
-
-        audio::t_sound_data_mut snd_data;
-
+        t_b8 valid;
+        audio::t_sound_data_rdonly snd_data;
         t_sound_type *next;
     };
 
@@ -51,6 +48,69 @@ namespace zf::audio_sys {
         ma_engine_uninit(&g_module_state.ma_eng);
 
         g_module_state = {};
+    }
+
+    void sound_type_group_destroy(t_sound_type_group *const group) {
+        ZF_ASSERT(g_module_state.active);
+
+        t_sound_type *snd_type = group->head;
+
+        while (snd_type) {
+            ZF_WALK_SET_BITS (g_module_state.snd_insts.activity, i) {
+                if (g_module_state.snd_insts.types[i] == snd_type) {
+                    sound_stop({i, g_module_state.snd_insts.versions[i]});
+                }
+            }
+
+            const auto snd_type_next = snd_type->next;
+            *snd_type = {};
+            snd_type = snd_type_next;
+        }
+
+        mem::arena_destroy(&group->arena);
+        group->head = nullptr;
+        group->tail = nullptr;
+    }
+
+    static t_sound_type *sound_type_group_add(t_sound_type_group *const group, const audio::t_sound_data_rdonly snd_data) {
+        const auto result = mem::arena_push_item<t_sound_type>(&group->arena);
+        result->valid = true;
+        result->snd_data = snd_data;
+        result->next = nullptr;
+
+        if (!group->head) {
+            group->head = result;
+            group->tail = result;
+        } else {
+            group->tail->next = result;
+            group->tail = result;
+        }
+
+        return result;
+    }
+
+    t_sound_type *sound_type_create_from_raw(const strs::t_str_rdonly file_path, t_sound_type_group *const group, mem::t_arena *const temp_arena) {
+        ZF_ASSERT(g_module_state.active);
+
+        audio::t_sound_data_mut snd_data;
+
+        if (!audio::sound_load_from_raw(file_path, &group->arena, temp_arena, &snd_data)) {
+            ZF_FATAL();
+        }
+
+        return sound_type_group_add(group, snd_data);
+    }
+
+    t_sound_type *sound_type_create_from_packed(const strs::t_str_rdonly file_path, t_sound_type_group *const group, mem::t_arena *const temp_arena) {
+        ZF_ASSERT(g_module_state.active);
+
+        audio::t_sound_data_mut snd_data;
+
+        if (!audio::sound_unpack(file_path, &group->arena, temp_arena, &snd_data)) {
+            ZF_FATAL();
+        }
+
+        return sound_type_group_add(group, snd_data);
     }
 
 #if 0

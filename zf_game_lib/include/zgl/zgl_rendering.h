@@ -153,7 +153,7 @@ namespace zf::rendering {
     constexpr math::t_v2 g_origin_bottomcenter = {0.5f, 1.0f};
     constexpr math::t_v2 g_origin_bottomright = {1.0f, 1.0f};
 
-    inline t_b8 is_origin_valid(const math::t_v2 origin) {
+    inline t_b8 origin_is_valid(const math::t_v2 origin) {
         return origin.x >= 0.0f && origin.x <= 1.0f && origin.y >= 0.0f && origin.y <= 1.0f;
     }
 
@@ -177,7 +177,7 @@ namespace zf::rendering {
     constexpr math::t_v2 g_str_alignment_bottomcenter = {0.5f, 1.0f};
     constexpr math::t_v2 g_str_alignment_bottomright = {1.0f, 1.0f};
 
-    inline t_b8 is_str_alignment_valid(const math::t_v2 alignment) {
+    inline t_b8 str_alignment_is_valid(const math::t_v2 alignment) {
         return alignment.x >= 0.0f && alignment.x <= 1.0f && alignment.y >= 0.0f && alignment.y <= 1.0f;
     }
 
