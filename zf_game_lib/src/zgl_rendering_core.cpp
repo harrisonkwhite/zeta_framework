@@ -188,6 +188,8 @@ namespace zf::rendering {
     }
 
     static t_resource *resource_group_add(t_resource_group *const group, const t_resource_type type) {
+        ZF_ASSERT(g_module_state.phase == ec_module_phase_active_but_not_midframe);
+
         const auto resource = mem::arena_push_item_zeroed<t_resource>(group->arena);
 
         if (!group->head) {
@@ -204,7 +206,7 @@ namespace zf::rendering {
     }
 
     t_resource *texture_create(const gfx::t_texture_data_rdonly texture_data, t_resource_group *const group) {
-        ZF_ASSERT(g_module_state.phase != ec_module_phase_inactive);
+        ZF_ASSERT(g_module_state.phase == ec_module_phase_active_but_not_midframe);
 
         const uint64_t flags = BGFX_SAMPLER_MIN_POINT | BGFX_SAMPLER_MAG_POINT | BGFX_SAMPLER_U_CLAMP | BGFX_SAMPLER_V_CLAMP;
         const auto texture_bgfx_hdl = bgfx::createTexture2D(static_cast<uint16_t>(texture_data.size_in_pxs.x), static_cast<uint16_t>(texture_data.size_in_pxs.y), false, 1, bgfx::TextureFormat::RGBA8, flags, bgfx::copy(texture_data.rgba_px_data.raw, static_cast<uint32_t>(array_get_size_in_bytes(texture_data.rgba_px_data))));
@@ -227,7 +229,7 @@ namespace zf::rendering {
     }
 
     t_resource *shader_prog_create(const t_array_rdonly<t_u8> vert_shader_compiled_bin, const t_array_rdonly<t_u8> frag_shader_compiled_bin, t_resource_group *const group) {
-        ZF_ASSERT(g_module_state.phase != ec_module_phase_inactive);
+        ZF_ASSERT(g_module_state.phase == ec_module_phase_active_but_not_midframe);
 
         const bgfx::Memory *const vert_shader_bgfx_mem = bgfx::copy(vert_shader_compiled_bin.raw, static_cast<uint32_t>(vert_shader_compiled_bin.len));
         const bgfx::ShaderHandle vert_shader_bgfx_hdl = bgfx::createShader(vert_shader_bgfx_mem);
@@ -255,7 +257,7 @@ namespace zf::rendering {
     }
 
     t_resource *uniform_create(const strs::t_str_rdonly name, const t_uniform_type type, t_resource_group *const group, mem::t_arena *const temp_arena) {
-        ZF_ASSERT(g_module_state.phase != ec_module_phase_inactive);
+        ZF_ASSERT(g_module_state.phase == ec_module_phase_active_but_not_midframe);
 
         const strs::t_str_rdonly name_terminated = strs::str_clone_but_add_terminator(name, temp_arena);
 
@@ -426,6 +428,7 @@ namespace zf::rendering {
     };
 
     static void frame_set_uniform(t_frame_context *const context, const t_resource *const uniform, const t_uniform_data &uniform_data) {
+        ZF_ASSERT(g_module_state.phase == ec_module_phase_active_and_midframe);
         ZF_ASSERT(uniform->type == ec_resource_type_uniform);
         ZF_ASSERT(uniform->type_data.uniform.type == uniform_data.type);
 
