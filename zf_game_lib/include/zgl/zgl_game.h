@@ -67,5 +67,4 @@ namespace zf::game {
     void run(const t_config &config);
 
     void set_target_tps(const t_f64 tps);
-    void set_clear_color(const gfx::t_color_rgba32f col);
 }

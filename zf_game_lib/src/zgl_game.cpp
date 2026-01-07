@@ -6,12 +6,10 @@
 namespace zf::game {
     static const t_f64 g_init_target_tps = 60.0;
     static const math::t_v2_i g_init_window_size = {1280, 720};
-    static const gfx::t_color_rgba32f g_init_clear_color = gfx::color_create_rgba32f(0.43f, 0.73f, 1.0f);
 
     static struct {
         t_b8 running;
         t_f64 targ_tps;
-        gfx::t_color_rgba32f clear_color;
     } g_module_state;
 
     void run(const t_config &config) {
@@ -21,7 +19,6 @@ namespace zf::game {
         g_module_state = {
             .running = true,
             .targ_tps = g_init_target_tps,
-            .clear_color = g_init_clear_color,
         };
 
         ZF_DEFER({ g_module_state = {}; });
@@ -102,7 +99,7 @@ namespace zf::game {
 
             mem::arena_rewind(&temp_arena);
 
-            rendering::t_frame_context *const frame_context = rendering::frame_begin(rendering_basis, g_module_state.clear_color, &temp_arena);
+            rendering::t_frame_context *const frame_context = rendering::frame_begin(rendering_basis, &temp_arena);
 
             config.render_func({
                 .perm_arena = &perm_arena,
@@ -126,12 +123,5 @@ namespace zf::game {
         ZF_ASSERT(tps > 0.0);
 
         g_module_state.targ_tps = tps;
-    }
-
-    void set_clear_color(const gfx::t_color_rgba32f col) {
-        ZF_ASSERT(g_module_state.running);
-        ZF_ASSERT(gfx::color_check_normalized(col));
-
-        g_module_state.clear_color = col;
     }
 }

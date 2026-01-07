@@ -3,8 +3,6 @@
 #include <bgfx/bgfx.h>
 #include <zgl/zgl_platform.h>
 
-#define BGFX_CONFIG_MAX_VIEWS 256
-
 namespace zf::rendering {
     enum t_module_phase : t_i32 {
         ec_module_phase_inactive,
@@ -77,6 +75,7 @@ namespace zf::rendering {
         const t_basis *basis;
 
         t_i32 pass_index;
+        mem::t_static_bitset<g_frame_pass_limit> passes_configured;
 
         t_i32 frame_vert_cnt;
 
@@ -297,9 +296,8 @@ namespace zf::rendering {
         return uniform->type_data.uniform.type;
     }
 
-    t_frame_context *frame_begin(const t_basis *const basis, const gfx::t_color_rgba32f clear_col, mem::t_arena *const context_arena) {
+    t_frame_context *frame_begin(const t_basis *const basis, mem::t_arena *const context_arena) {
         ZF_ASSERT(g_module_state.phase == ec_module_phase_active_but_not_midframe);
-        ZF_ASSERT(gfx::color_check_normalized(clear_col));
 
         g_module_state.phase = ec_module_phase_active_and_midframe;
 
@@ -312,11 +310,10 @@ namespace zf::rendering {
 
         const auto context = mem::arena_push_item<t_frame_context>(context_arena);
         context->basis = basis;
-        context->pass_index = 0;
+        context->pass_index = -1;
+        mem::clear_item(&context->passes_configured, 0);
         context->frame_vert_cnt = 0;
         mem::clear_item(&context->batch_state, 0);
-
-        // frame_configure_pass(context, 0, fb_size_cache, math::g_mat4x4_identity, clear_col);
 
         return context;
     }
@@ -360,9 +357,12 @@ namespace zf::rendering {
         g_module_state.phase = ec_module_phase_active_but_not_midframe;
     }
 
-    void frame_configure_pass(t_frame_context *const context, const t_i32 pass_index, const math::t_v2_i size, const math::t_mat4x4 &view_mat, const gfx::t_color_rgba32f clear_col) {
-        ZF_ASSERT(pass_index >= 0 && pass_index < BGFX_CONFIG_MAX_VIEWS);
+    void frame_pass_configure(t_frame_context *const context, const t_i32 pass_index, const math::t_v2_i size, const math::t_mat4x4 &view_mat, const gfx::t_color_rgba32f clear_col) {
+        ZF_ASSERT(g_module_state.phase == ec_module_phase_active_and_midframe);
+        ZF_ASSERT(pass_index >= 0 && pass_index < g_frame_pass_limit);
+        ZF_ASSERT(!mem::bitset_check_set(context->passes_configured, pass_index));
         ZF_ASSERT(size.x > 0 && size.y > 0);
+        ZF_ASSERT(gfx::color_check_normalized(clear_col));
 
         const auto bgfx_view_id = static_cast<bgfx::ViewId>(pass_index);
 
@@ -381,6 +381,18 @@ namespace zf::rendering {
         bgfx::setViewClear(bgfx_view_id, BGFX_CLEAR_COLOR, gfx::color_rgba8_to_hex(gfx::color_rgba32f_to_rgba8(clear_col)));
 
         bgfx::touch(bgfx_view_id);
+
+        mem::bitset_set(context->passes_configured, pass_index);
+    }
+
+    void frame_pass_set(t_frame_context *const context, const t_i32 pass_index) {
+        ZF_ASSERT(g_module_state.phase == ec_module_phase_active_and_midframe);
+        ZF_ASSERT(pass_index >= 0 && pass_index < g_frame_pass_limit);
+        ZF_ASSERT(pass_index != context->pass_index);
+        ZF_ASSERT(mem::bitset_check_set(context->passes_configured, pass_index));
+
+        frame_flush(context);
+        context->pass_index = pass_index;
     }
 
     void frame_set_shader_prog(t_frame_context *const context, const t_resource *const prog) {
@@ -487,6 +499,7 @@ namespace zf::rendering {
 
     void frame_submit_triangles(t_frame_context *const context, const t_array_rdonly<t_triangle> triangles, const t_resource *const texture) {
         ZF_ASSERT(g_module_state.phase == ec_module_phase_active_and_midframe);
+        ZF_ASSERT(context->pass_index != -1 && "A pass must be set before submitting primitives!");
         ZF_ASSERT(triangles.len > 0);
         ZF_ASSERT(!texture || texture->type == ec_resource_type_texture);
 
