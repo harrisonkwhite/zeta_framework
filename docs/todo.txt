@@ -1,3 +1,4 @@
+- min, max, and abs should have calc_ prefixes.
 - Validation barriers need to be made more clear. Make sure validity for colours, origins, alignment, rectangles, etc. are in place. Only worry about reasonable things.
 - Consider having distinct namespace for zgl and zcl
 - Consider replacing [] overloads with array_get etc.

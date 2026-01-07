@@ -62,9 +62,8 @@ namespace zf::audio_sys {
                 }
             }
 
-            const auto snd_type_next = snd_type->next;
-            *snd_type = {};
-            snd_type = snd_type_next;
+            snd_type->valid = false;
+            snd_type = snd_type->next;
         }
 
         mem::arena_destroy(&group->arena);
