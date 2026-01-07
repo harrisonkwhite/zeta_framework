@@ -47,20 +47,7 @@ namespace zf::rendering {
         return texture_create(texture_data, group);
     }
 
-    t_resource *texture_create_target(const math::t_v2_i size, t_resource_group *const group);
-
-    void texture_resize_target(t_resource *const texture, const math::t_v2_i size);
-
     math::t_v2_i texture_get_size(const t_resource *const texture);
-
-    // Resizes only if the given size is actually different to the current.
-    inline void texture_resize_target_if_needed(t_resource *const texture, const math::t_v2_i size) {
-        const math::t_v2_i size_cur = texture_get_size(texture);
-
-        if (size != size_cur) {
-            texture_resize_target(texture, size);
-        }
-    }
 
     t_resource *shader_prog_create(const t_array_rdonly<t_u8> vert_shader_compiled_bin, const t_array_rdonly<t_u8> frag_shader_compiled_bin, t_resource_group *const group);
 
@@ -128,8 +115,7 @@ namespace zf::rendering {
     t_frame_context *frame_begin(const t_basis *const basis, const gfx::t_color_rgba32f clear_col, mem::t_arena *const context_arena);
     void frame_end(t_frame_context *const context);
 
-    void frame_set_texture_target(t_frame_context *const context, const t_resource *const texture);
-    void frame_unset_texture_target(t_frame_context *const context);
+    void frame_set_camera(t_frame_context *const context, const t_i32 view_index);
 
     // Set prog as nullptr to just assign the default shader program.
     void frame_set_shader_prog(t_frame_context *const context, const t_resource *const prog);

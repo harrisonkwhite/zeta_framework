@@ -32,9 +32,7 @@ namespace zf::rendering {
 
         union {
             struct {
-                t_b8 is_target;
-                bgfx::TextureHandle nontarget_texture_bgfx_hdl;
-                bgfx::FrameBufferHandle target_fb_bgfx_hdl;
+                bgfx::TextureHandle bgfx_hdl;
                 math::t_v2_i size;
             } texture;
 
@@ -175,12 +173,7 @@ namespace zf::rendering {
         while (resource) {
             switch (resource->type) {
             case ec_resource_type_texture:
-                if (resource->type_data.texture.is_target) {
-                    bgfx::destroy(resource->type_data.texture.target_fb_bgfx_hdl);
-                } else {
-                    bgfx::destroy(resource->type_data.texture.nontarget_texture_bgfx_hdl);
-                }
-
+                bgfx::destroy(resource->type_data.texture.bgfx_hdl);
                 break;
 
             case ec_resource_type_shader_prog:
@@ -232,48 +225,9 @@ namespace zf::rendering {
         }
 
         const auto resource = resource_group_add(group, ec_resource_type_texture);
-        resource->type_data.texture.is_target = false;
-        resource->type_data.texture.nontarget_texture_bgfx_hdl = texture_bgfx_hdl;
+        resource->type_data.texture.bgfx_hdl = texture_bgfx_hdl;
         resource->type_data.texture.size = texture_data.size_in_pxs;
         return resource;
-    }
-
-    static bgfx::FrameBufferHandle bgfx_create_framebuffer(const math::t_v2_i size) {
-        const uint64_t flags = BGFX_SAMPLER_MIN_POINT | BGFX_SAMPLER_MAG_POINT | BGFX_SAMPLER_U_CLAMP | BGFX_SAMPLER_V_CLAMP;
-        return bgfx::createFrameBuffer(static_cast<uint16_t>(size.x), static_cast<uint16_t>(size.y), bgfx::TextureFormat::RGBA8, flags);
-    }
-
-    t_resource *texture_create_target(const math::t_v2_i size, t_resource_group *const group) {
-        ZF_ASSERT(g_module_state.phase == ec_module_phase_active_but_not_midframe);
-        ZF_ASSERT(size.x > 0 && size.y > 0);
-
-        const bgfx::FrameBufferHandle fb_bgfx_hdl = bgfx_create_framebuffer(size);
-
-        if (!bgfx::isValid(fb_bgfx_hdl)) {
-            ZF_FATAL();
-        }
-
-        const auto resource = resource_group_add(group, ec_resource_type_texture);
-        resource->type_data.texture.is_target = true;
-        resource->type_data.texture.target_fb_bgfx_hdl = fb_bgfx_hdl;
-        resource->type_data.texture.size = size;
-        return resource;
-    }
-
-    void texture_resize_target(t_resource *const texture, const math::t_v2_i size) {
-        ZF_ASSERT(g_module_state.phase == ec_module_phase_active_but_not_midframe);
-        ZF_ASSERT(texture->type == ec_resource_type_texture && texture->type_data.texture.is_target);
-        ZF_ASSERT(size.x > 0 && size.y > 0);
-        ZF_ASSERT(size != texture->type_data.texture.size);
-
-        const bgfx::FrameBufferHandle fb_bgfx_hdl = bgfx_create_framebuffer(size);
-
-        if (!bgfx::isValid(fb_bgfx_hdl)) {
-            ZF_FATAL();
-        }
-
-        texture->type_data.texture.target_fb_bgfx_hdl = fb_bgfx_hdl;
-        texture->type_data.texture.size = size;
     }
 
     math::t_v2_i texture_get_size(const t_resource *const texture) {
@@ -437,39 +391,6 @@ namespace zf::rendering {
         g_module_state.phase = ec_module_phase_active_but_not_midframe;
     }
 
-    void frame_set_texture_target(t_frame_context *const context, const t_resource *const texture) {
-        ZF_ASSERT(g_module_state.phase == ec_module_phase_active_and_midframe);
-        ZF_ASSERT(texture->type == ec_resource_type_texture && texture->type_data.texture.is_target);
-
-        frame_flush(context);
-
-        // View 0 is never a texture target, ignore it.
-        for (t_i32 i = 1; i < context->view_cnt; i++) {
-            if (texture->type_data.texture.target_fb_bgfx_hdl.idx == context->view_bgfx_fb_hdls[i].idx) {
-                context->view_index = i;
-                return;
-            }
-        }
-
-        if (context->view_cnt == BGFX_CONFIG_MAX_VIEWS) {
-            ZF_FATAL();
-        }
-
-        context->view_index = context->view_cnt;
-        context->view_cnt++;
-        context->view_bgfx_fb_hdls[context->view_index] = texture->type_data.texture.target_fb_bgfx_hdl;
-
-        bgfx_configure_view(context->view_index, texture->type_data.texture.target_fb_bgfx_hdl, gfx::g_color_transparent_black, texture->type_data.texture.size);
-    }
-
-    void frame_unset_texture_target(t_frame_context *const context) {
-        ZF_ASSERT(g_module_state.phase == ec_module_phase_active_and_midframe);
-        ZF_ASSERT(context->view_index != 0 && "Trying to unset texture target, but none is set!");
-
-        frame_flush(context);
-        context->view_index = 0;
-    }
-
     void frame_set_shader_prog(t_frame_context *const context, const t_resource *const prog) {
         ZF_ASSERT(g_module_state.phase == ec_module_phase_active_and_midframe);
         ZF_ASSERT(!prog || prog->type == ec_resource_type_shader_prog);
@@ -526,7 +447,7 @@ namespace zf::rendering {
             ZF_ASSERT(texture->type == ec_resource_type_texture);
 
             const auto texture_type_data = &texture->type_data.texture;
-            const bgfx::TextureHandle bgfx_texture_hdl = texture_type_data->is_target ? bgfx::getTexture(texture_type_data->target_fb_bgfx_hdl) : texture_type_data->nontarget_texture_bgfx_hdl;
+            const bgfx::TextureHandle bgfx_texture_hdl = texture_type_data->bgfx_hdl;
 
             bgfx::setTexture(0, uniform_bgfx_hdl, bgfx_texture_hdl);
 
