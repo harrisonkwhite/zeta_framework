@@ -14,8 +14,9 @@ namespace zf::game {
         gfx::t_color_rgba32f clear_color;
     } g_module_state;
 
-    void run(const t_init_func init_func, const t_tick_func tick_func, const t_render_func render_func, const t_deinit_func deinit_func) {
+    void run(const t_config &config) {
         ZF_REQUIRE(!g_module_state.running);
+        config_assert_valid(config);
 
         g_module_state = {
             .running = true,
@@ -48,17 +49,18 @@ namespace zf::game {
 
         rand::t_rng *const rng = rand::rng_create(0, &perm_arena); // @todo: Proper seed!
 
-        init_func({
+        void *const user_mem = config.user_mem_size > 0 ? mem::arena_push(&perm_arena, config.user_mem_size, config.user_mem_alignment) : nullptr;
+
+        config.init_func({
             .perm_arena = &perm_arena,
             .temp_arena = &temp_arena,
             .perm_rendering_resource_group = perm_rendering_resource_group,
             .rng = rng,
+            .user_mem = user_mem,
         });
 
         ZF_DEFER({
-            if (deinit_func) {
-                deinit_func();
-            }
+            config.deinit_func(user_mem);
         });
 
         //
@@ -85,12 +87,13 @@ namespace zf::game {
 
                 audio_sys::proc_finished_sounds();
 
-                tick_func({
+                config.tick_func({
                     .perm_arena = &perm_arena,
                     .temp_arena = &temp_arena,
                     .input_state = input_state,
                     .perm_rendering_resource_group = perm_rendering_resource_group,
                     .rng = rng,
+                    .user_mem = user_mem,
                 });
 
                 input::clear_events(input_state);
@@ -102,11 +105,12 @@ namespace zf::game {
 
             rendering::t_frame_context *const frame_context = rendering::frame_begin(rendering_basis, g_module_state.clear_color, &temp_arena);
 
-            render_func({
+            config.render_func({
                 .perm_arena = &perm_arena,
                 .temp_arena = &temp_arena,
                 .frame_context = frame_context,
                 .rng = rng,
+                .user_mem = user_mem,
             });
 
             rendering::frame_end(frame_context);
