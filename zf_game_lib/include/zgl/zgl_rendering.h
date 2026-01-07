@@ -120,6 +120,7 @@ namespace zf::rendering {
     void frame_end(t_frame_context *const context);
 
     void frame_set_texture_target(t_frame_context *const context, const t_resource *const texture);
+    void frame_unset_texture_target(t_frame_context *const context);
 
     // Set prog as nullptr to just assign the default shader program.
     void frame_set_shader_prog(t_frame_context *const context, const t_resource *const prog);

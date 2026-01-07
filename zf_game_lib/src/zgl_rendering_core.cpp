@@ -3,6 +3,8 @@
 #include <bgfx/bgfx.h>
 #include <zgl/zgl_platform.h>
 
+#define BGFX_CONFIG_MAX_VIEWS 256
+
 namespace zf::rendering {
     enum t_module_phase : t_i32 {
         ec_module_phase_inactive,
@@ -77,6 +79,8 @@ namespace zf::rendering {
         const t_basis *basis;
 
         t_i32 view_index;
+        t_i32 view_cnt;
+        t_static_array<bgfx::FrameBufferHandle, BGFX_CONFIG_MAX_VIEWS> view_bgfx_fb_hdls;
 
         t_i32 frame_vert_cnt;
 
@@ -341,9 +345,8 @@ namespace zf::rendering {
         return uniform->type_data.uniform.type;
     }
 
-    static void bgfx_configure_view(const t_i32 view_index, const gfx::t_color_rgba32f clear_col) {
-        ZF_ASSERT(view_index >= 0); // @todo: Where the hell is the upper bound?
-        // ZF_ASSERT(view_index >= 0 && view_index < BGFX_CONFIG_MAX_VIEWS);
+    static void bgfx_configure_view(const t_i32 view_index, const bgfx::FrameBufferHandle bgfx_fb_hdl, const gfx::t_color_rgba32f clear_col) {
+        ZF_ASSERT(view_index >= 0 && view_index < BGFX_CONFIG_MAX_VIEWS);
 
         const auto bgfx_view_id = static_cast<bgfx::ViewId>(view_index);
 
@@ -365,6 +368,8 @@ namespace zf::rendering {
 
         bgfx::setViewRect(bgfx_view_id, 0, 0, static_cast<uint16_t>(fb_size_cache.x), static_cast<uint16_t>(fb_size_cache.y));
 
+        bgfx::setViewFrameBuffer(bgfx_view_id, bgfx_fb_hdl);
+
         bgfx::touch(bgfx_view_id);
     }
 
@@ -384,10 +389,11 @@ namespace zf::rendering {
         const auto context = mem::arena_push_item<t_frame_context>(context_arena);
         context->basis = basis;
         context->view_index = 0;
+        context->view_cnt = 1;
         context->frame_vert_cnt = 0;
         mem::clear_item(&context->batch_state, 0);
 
-        bgfx_configure_view(0, clear_col);
+        bgfx_configure_view(0, BGFX_INVALID_HANDLE, clear_col);
 
         return context;
     }
@@ -434,6 +440,32 @@ namespace zf::rendering {
     void frame_set_texture_target(t_frame_context *const context, const t_resource *const texture) {
         ZF_ASSERT(g_module_state.phase == ec_module_phase_active_and_midframe);
         ZF_ASSERT(texture->type == ec_resource_type_texture && texture->type_data.texture.is_target);
+
+        frame_flush(context);
+
+        for (t_i32 i = 1; i < context->view_cnt; i++) {
+            if (texture->type_data.texture.target_fb_bgfx_hdl.idx == context->view_bgfx_fb_hdls[i].idx) {
+                context->view_index = i;
+                return;
+            }
+        }
+
+        if (context->view_cnt == BGFX_CONFIG_MAX_VIEWS) {
+            ZF_FATAL();
+        }
+
+        context->view_index = context->view_cnt;
+        context->view_cnt++;
+        context->view_bgfx_fb_hdls[context->view_index] = texture->type_data.texture.target_fb_bgfx_hdl;
+
+        bgfx_configure_view(context->view_index, texture->type_data.texture.target_fb_bgfx_hdl, gfx::g_color_transparent_black);
+    }
+
+    void frame_unset_texture_target(t_frame_context *const context) {
+        ZF_ASSERT(g_module_state.phase == ec_module_phase_active_and_midframe);
+
+        frame_flush(context);
+        context->view_index = 0;
     }
 
     void frame_set_shader_prog(t_frame_context *const context, const t_resource *const prog) {

@@ -41,6 +41,7 @@ namespace zf::gfx {
         return {r, g, b, a};
     }
 
+    inline const t_color_rgba32f g_color_transparent_black = color_create_rgba32f(0.0f, 0.0f, 0.0f, 0.0f);
     inline const t_color_rgba32f g_color_black = color_create_rgba32f(0.0f, 0.0f, 0.0f);
     inline const t_color_rgba32f g_color_dark_gray = color_create_rgba32f(0.25f, 0.25f, 0.25f);
     inline const t_color_rgba32f g_color_gray = color_create_rgba32f(0.5f, 0.5f, 0.5f);
