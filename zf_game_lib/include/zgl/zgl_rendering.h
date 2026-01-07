@@ -19,7 +19,7 @@ namespace zf::rendering {
 
     void module_shutdown(const t_basis *const basis);
 
-    inline t_resource_group resource_group_create(mem::t_arena *const arena, t_resource_group **const o_perm_group) {
+    inline t_resource_group resource_group_create(mem::t_arena *const arena) {
         return {.arena = arena};
     }
 

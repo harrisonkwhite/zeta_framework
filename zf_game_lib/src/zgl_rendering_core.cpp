@@ -124,7 +124,7 @@ namespace zf::rendering {
             ZF_FATAL();
         }
 
-        g_module_state.perm_resource_group = {.arena = arena};
+        g_module_state.perm_resource_group = resource_group_create(arena);
         *o_perm_resource_group = &g_module_state.perm_resource_group;
 
         //
