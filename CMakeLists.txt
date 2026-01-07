@@ -28,9 +28,7 @@ unset(CMAKE_FOLDER)
 
 foreach(t bgfx bx bimg bimg_decode bimg_encode)
     if (TARGET ${t})
-        set_target_properties(${t} PROPERTIES
-            FOLDER "zeta_framework/external/bgfx"
-        )
+        set_target_properties(${t} PROPERTIES FOLDER "zeta_framework/external/bgfx")
     endif()
 endforeach()
 
@@ -43,8 +41,8 @@ endif()
 
 foreach(t glfw uninstall update_mappings)
     if (TARGET ${t})
-        set_target_properties(${t} PROPERTIES
-            FOLDER "zeta_framework/external/GLFW3"
-        )
+        set_target_properties(${t} PROPERTIES FOLDER "zeta_framework/external/GLFW3")
     endif()
 endforeach()
+
+set_target_properties(reproc PROPERTIES FOLDER "zeta_framework/external/reproc")

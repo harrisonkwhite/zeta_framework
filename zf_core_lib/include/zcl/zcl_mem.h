@@ -108,7 +108,7 @@ namespace zf::mem {
         t_arena_block *next;
     };
 
-    enum t_arena_type {
+    enum t_arena_type : t_i32 {
         ec_arena_type_invalid,
         ec_arena_type_blockbased, // Owns its memory, which is organised as a linked list of dynamically allocated blocks. New blocks are allocated as needed. @todo: Probably should not expose implementation details.
         ec_arena_type_wrapping,   // Non-owning and non-reallocating. Useful if you want to leverage a stack-allocated buffer for example. @todo: Probably not a good name.

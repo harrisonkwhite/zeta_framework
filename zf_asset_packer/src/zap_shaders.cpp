@@ -111,7 +111,7 @@ namespace zf {
 
         if (r > 0) {
             io::t_stream std_err = io::get_std_error();
-            const auto err = strs::t_str_rdonly(ds::list_to_array(&bin_list));
+            const auto err = strs::t_str_rdonly{ds::list_to_array(&bin_list)};
             io::print_format(&std_err, ZF_STR_LITERAL("==================== BGFX SHADERC ERROR ====================\n%============================================================\n"), err);
             return false;
         }
