@@ -66,16 +66,15 @@ namespace zf::game {
         //
         // Main Loop
         //
-        platform::window_show();
-
-        t_f64 frame_time_last = platform::get_time();
+        t_f64 frame_time_last = 0.0;
         t_f64 frame_dur_accum = 0.0;
+        t_b8 first_frame_completed = false;
 
         while (!platform::window_should_close()) {
             platform::poll_os_events(input_state);
 
             const t_f64 frame_time = platform::get_time();
-            const t_f64 frame_time_delta = frame_time - frame_time_last;
+            const t_f64 frame_time_delta = first_frame_completed ? frame_time - frame_time_last : 0.0;
             frame_dur_accum += frame_time_delta;
             frame_time_last = frame_time;
 
@@ -114,6 +113,11 @@ namespace zf::game {
             });
 
             rendering::frame_end(frame_context);
+
+            if (!first_frame_completed) {
+                platform::window_show();
+                first_frame_completed = true;
+            }
         }
     }
 
