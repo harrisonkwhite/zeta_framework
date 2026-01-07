@@ -76,9 +76,7 @@ namespace zf::rendering {
     struct t_frame_context {
         const t_basis *basis;
 
-        t_i32 view_index;
-        t_i32 view_cnt; // Always at least 1.
-        t_static_array<bgfx::FrameBufferHandle, BGFX_CONFIG_MAX_VIEWS> view_bgfx_fb_hdls;
+        t_i32 pass_index;
 
         t_i32 frame_vert_cnt;
 
@@ -299,34 +297,6 @@ namespace zf::rendering {
         return uniform->type_data.uniform.type;
     }
 
-    // Only for when the view is first used.
-    static void bgfx_configure_view(const t_i32 view_index, const bgfx::FrameBufferHandle bgfx_fb_hdl, const gfx::t_color_rgba32f clear_col, const math::t_v2_i size) {
-        ZF_ASSERT(view_index >= 0 && view_index < BGFX_CONFIG_MAX_VIEWS);
-        ZF_ASSERT(size.x > 0 && size.y > 0);
-
-        const auto bgfx_view_id = static_cast<bgfx::ViewId>(view_index);
-
-        bgfx::setViewMode(bgfx_view_id, bgfx::ViewMode::Sequential);
-
-        const auto view_mat = math::g_mat4x4_identity;
-
-        auto proj_mat = math::g_mat4x4_identity;
-        proj_mat.elems[0][0] = 1.0f / (static_cast<t_f32>(size.x) / 2.0f);
-        proj_mat.elems[1][1] = -1.0f / (static_cast<t_f32>(size.y) / 2.0f);
-        proj_mat.elems[3][0] = -1.0f;
-        proj_mat.elems[3][1] = 1.0f;
-
-        bgfx::setViewTransform(bgfx_view_id, &view_mat, &proj_mat);
-
-        bgfx::setViewClear(bgfx_view_id, BGFX_CLEAR_COLOR, gfx::color_rgba8_to_hex(gfx::color_rgba32f_to_rgba8(clear_col)));
-
-        bgfx::setViewRect(bgfx_view_id, 0, 0, static_cast<uint16_t>(size.x), static_cast<uint16_t>(size.y));
-
-        bgfx::setViewFrameBuffer(bgfx_view_id, bgfx_fb_hdl);
-
-        bgfx::touch(bgfx_view_id);
-    }
-
     t_frame_context *frame_begin(const t_basis *const basis, const gfx::t_color_rgba32f clear_col, mem::t_arena *const context_arena) {
         ZF_ASSERT(g_module_state.phase == ec_module_phase_active_but_not_midframe);
         ZF_ASSERT(gfx::color_check_normalized(clear_col));
@@ -342,12 +312,11 @@ namespace zf::rendering {
 
         const auto context = mem::arena_push_item<t_frame_context>(context_arena);
         context->basis = basis;
-        context->view_index = 0;
-        context->view_cnt = 1;
+        context->pass_index = 0;
         context->frame_vert_cnt = 0;
         mem::clear_item(&context->batch_state, 0);
 
-        bgfx_configure_view(0, BGFX_INVALID_HANDLE, clear_col, fb_size_cache);
+        // frame_configure_pass(context, 0, fb_size_cache, math::g_mat4x4_identity, clear_col);
 
         return context;
     }
@@ -374,7 +343,7 @@ namespace zf::rendering {
         bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A | BGFX_STATE_BLEND_ALPHA);
 
         const t_resource *const prog = context->batch_state.shader_prog ? context->batch_state.shader_prog : context->basis->shader_prog_default;
-        bgfx::submit(static_cast<bgfx::ViewId>(context->view_index), prog->type_data.shader_prog.bgfx_hdl);
+        bgfx::submit(static_cast<bgfx::ViewId>(context->pass_index), prog->type_data.shader_prog.bgfx_hdl);
 
         context->frame_vert_cnt += context->batch_state.vert_cnt;
 
@@ -389,6 +358,29 @@ namespace zf::rendering {
         bgfx::frame();
 
         g_module_state.phase = ec_module_phase_active_but_not_midframe;
+    }
+
+    void frame_configure_pass(t_frame_context *const context, const t_i32 pass_index, const math::t_v2_i size, const math::t_mat4x4 &view_mat, const gfx::t_color_rgba32f clear_col) {
+        ZF_ASSERT(pass_index >= 0 && pass_index < BGFX_CONFIG_MAX_VIEWS);
+        ZF_ASSERT(size.x > 0 && size.y > 0);
+
+        const auto bgfx_view_id = static_cast<bgfx::ViewId>(pass_index);
+
+        bgfx::setViewMode(bgfx_view_id, bgfx::ViewMode::Sequential);
+
+        bgfx::setViewRect(bgfx_view_id, 0, 0, static_cast<uint16_t>(size.x), static_cast<uint16_t>(size.y));
+
+        auto proj_mat = math::g_mat4x4_identity;
+        proj_mat.elems[0][0] = 1.0f / (static_cast<t_f32>(size.x) / 2.0f);
+        proj_mat.elems[1][1] = -1.0f / (static_cast<t_f32>(size.y) / 2.0f);
+        proj_mat.elems[3][0] = -1.0f;
+        proj_mat.elems[3][1] = 1.0f;
+
+        bgfx::setViewTransform(bgfx_view_id, &view_mat, &proj_mat);
+
+        bgfx::setViewClear(bgfx_view_id, BGFX_CLEAR_COLOR, gfx::color_rgba8_to_hex(gfx::color_rgba32f_to_rgba8(clear_col)));
+
+        bgfx::touch(bgfx_view_id);
     }
 
     void frame_set_shader_prog(t_frame_context *const context, const t_resource *const prog) {
