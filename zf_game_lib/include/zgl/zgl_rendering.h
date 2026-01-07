@@ -49,6 +49,8 @@ namespace zf::rendering {
 
     t_resource *texture_create_target(const math::t_v2_i size, t_resource_group *const group);
 
+    void texture_resize_target(t_resource *const texture, const math::t_v2_i size);
+
     math::t_v2_i texture_get_size(const t_resource *const texture);
 
     t_resource *shader_prog_create(const t_array_rdonly<t_u8> vert_shader_compiled_bin, const t_array_rdonly<t_u8> frag_shader_compiled_bin, t_resource_group *const group);

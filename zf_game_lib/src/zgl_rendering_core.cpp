@@ -230,12 +230,16 @@ namespace zf::rendering {
         return resource;
     }
 
+    static bgfx::FrameBufferHandle bgfx_framebuffer_create(const math::t_v2_i size) {
+        const uint64_t flags = BGFX_SAMPLER_MIN_POINT | BGFX_SAMPLER_MAG_POINT | BGFX_SAMPLER_U_CLAMP | BGFX_SAMPLER_V_CLAMP;
+        return bgfx::createFrameBuffer(static_cast<uint16_t>(size.x), static_cast<uint16_t>(size.y), bgfx::TextureFormat::RGBA8, flags);
+    }
+
     t_resource *texture_create_target(const math::t_v2_i size, t_resource_group *const group) {
         ZF_ASSERT(g_module_state.phase == ec_module_phase_active_but_not_midframe);
         ZF_ASSERT(size.x > 0 && size.y > 0);
 
-        const uint64_t flags = BGFX_SAMPLER_MIN_POINT | BGFX_SAMPLER_MAG_POINT | BGFX_SAMPLER_U_CLAMP | BGFX_SAMPLER_V_CLAMP;
-        const bgfx::FrameBufferHandle fb_bgfx_hdl = bgfx::createFrameBuffer(static_cast<uint16_t>(size.x), static_cast<uint16_t>(size.y), bgfx::TextureFormat::RGBA8, flags);
+        const bgfx::FrameBufferHandle fb_bgfx_hdl = bgfx_framebuffer_create(size);
 
         if (!bgfx::isValid(fb_bgfx_hdl)) {
             ZF_FATAL();
@@ -246,6 +250,22 @@ namespace zf::rendering {
         resource->type_data.texture.target_fb_bgfx_hdl = fb_bgfx_hdl;
         resource->type_data.texture.size = size;
         return resource;
+    }
+
+    void texture_resize_target(t_resource *const texture, const math::t_v2_i size) {
+        ZF_ASSERT(g_module_state.phase == ec_module_phase_active_but_not_midframe);
+        ZF_ASSERT(texture->type == ec_resource_type_texture && texture->type_data.texture.is_target);
+        ZF_ASSERT(size.x > 0 && size.y > 0);
+        ZF_ASSERT(size != texture->type_data.texture.size);
+
+        const bgfx::FrameBufferHandle fb_bgfx_hdl = bgfx_framebuffer_create(size);
+
+        if (!bgfx::isValid(fb_bgfx_hdl)) {
+            ZF_FATAL();
+        }
+
+        texture->type_data.texture.target_fb_bgfx_hdl = fb_bgfx_hdl;
+        texture->type_data.texture.size = size;
     }
 
     math::t_v2_i texture_get_size(const t_resource *const texture) {
