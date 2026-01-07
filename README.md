@@ -11,6 +11,7 @@ It was originally written in C, though has been switched to a highly procedural 
 - A well-defined init-tick-render-cleanup structure to work within
 - Input handling for keyboard, mouse, and gamepad
 - 2D batch-based texture and UTF-8 string rendering
+- The ability to render using custom shaders and assign textures as render targets
 - Sound effect playing
 - An optional asset packing tool
 - A core library with procedural-style utilities for memory arenas, UTF-8 strings, 2D math, data structures, RNG, and more
@@ -46,5 +47,6 @@ cmake ..
 
 ## Future Plans
 
+- Music playing
 - Networking features
 - A* pathfinding helpers

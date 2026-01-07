@@ -79,7 +79,7 @@ namespace zf::rendering {
         const t_basis *basis;
 
         t_i32 view_index;
-        t_i32 view_cnt;
+        t_i32 view_cnt; // Always at least 1.
         t_static_array<bgfx::FrameBufferHandle, BGFX_CONFIG_MAX_VIEWS> view_bgfx_fb_hdls;
 
         t_i32 frame_vert_cnt;
@@ -345,6 +345,7 @@ namespace zf::rendering {
         return uniform->type_data.uniform.type;
     }
 
+    // Only for when the view is first used.
     static void bgfx_configure_view(const t_i32 view_index, const bgfx::FrameBufferHandle bgfx_fb_hdl, const gfx::t_color_rgba32f clear_col, const math::t_v2_i size) {
         ZF_ASSERT(view_index >= 0 && view_index < BGFX_CONFIG_MAX_VIEWS);
         ZF_ASSERT(size.x > 0 && size.y > 0);
@@ -442,6 +443,7 @@ namespace zf::rendering {
 
         frame_flush(context);
 
+        // View 0 is never a texture target, ignore it.
         for (t_i32 i = 1; i < context->view_cnt; i++) {
             if (texture->type_data.texture.target_fb_bgfx_hdl.idx == context->view_bgfx_fb_hdls[i].idx) {
                 context->view_index = i;
