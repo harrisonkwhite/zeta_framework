@@ -447,8 +447,12 @@ namespace zf::rendering {
         case ec_uniform_type_sampler: {
             const t_resource *const texture = uniform_data.type_data.sampler.texture;
             ZF_ASSERT(texture->type == ec_resource_type_texture);
-            ZF_REQUIRE(!texture->type_data.texture.is_target); // @todo
-            bgfx::setTexture(0, uniform_bgfx_hdl, texture->type_data.texture.nontarget_texture_bgfx_hdl);
+
+            const auto texture_type_data = &texture->type_data.texture;
+            const bgfx::TextureHandle bgfx_texture_hdl = texture_type_data->is_target ? bgfx::getTexture(texture_type_data->target_fb_bgfx_hdl) : texture_type_data->nontarget_texture_bgfx_hdl;
+
+            bgfx::setTexture(0, uniform_bgfx_hdl, bgfx_texture_hdl);
+
             break;
         }
 
