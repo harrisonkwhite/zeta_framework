@@ -19,8 +19,7 @@ namespace zf::rendering {
     enum t_resource_type : t_i32 {
         ec_resource_type_texture,
         ec_resource_type_shader_prog,
-        ec_resource_type_uniform,
-        ec_resource_type_surface
+        ec_resource_type_uniform
     };
 
     struct t_resource {
@@ -40,10 +39,6 @@ namespace zf::rendering {
                 bgfx::UniformHandle bgfx_hdl;
                 t_uniform_type type;
             } uniform;
-
-            struct {
-                bgfx::FrameBufferHandle fb_bgfx_hdl;
-            } surface;
         } type_data;
 
         t_resource *next;
@@ -180,10 +175,6 @@ namespace zf::rendering {
                 bgfx::destroy(resource->type_data.uniform.bgfx_hdl);
                 break;
 
-            case ec_resource_type_surface:
-                bgfx::destroy(resource->type_data.surface.fb_bgfx_hdl);
-                break;
-
             default:
                 ZF_UNREACHABLE();
             }
@@ -297,6 +288,7 @@ namespace zf::rendering {
         return uniform->type_data.uniform.type;
     }
 
+#if 0
     t_resource *surface_create(const math::t_v2_i size, t_resource_group *const group) {
         ZF_ASSERT(g_module_state.phase != ec_module_phase_inactive);
         ZF_ASSERT(size.x > 0 && size.y > 0);
@@ -312,6 +304,7 @@ namespace zf::rendering {
         resource->type_data.surface.fb_bgfx_hdl = fb_bgfx_hdl;
         return resource;
     }
+#endif
 
     t_frame_context *frame_begin(const t_basis *const basis, const gfx::t_color_rgba32f clear_col, mem::t_arena *const context_arena) {
         ZF_ASSERT(g_module_state.phase == ec_module_phase_active_but_not_midframe);
