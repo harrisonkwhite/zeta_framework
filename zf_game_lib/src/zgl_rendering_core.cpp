@@ -345,20 +345,19 @@ namespace zf::rendering {
         return uniform->type_data.uniform.type;
     }
 
-    static void bgfx_configure_view(const t_i32 view_index, const bgfx::FrameBufferHandle bgfx_fb_hdl, const gfx::t_color_rgba32f clear_col) {
+    static void bgfx_configure_view(const t_i32 view_index, const bgfx::FrameBufferHandle bgfx_fb_hdl, const gfx::t_color_rgba32f clear_col, const math::t_v2_i size) {
         ZF_ASSERT(view_index >= 0 && view_index < BGFX_CONFIG_MAX_VIEWS);
+        ZF_ASSERT(size.x > 0 && size.y > 0);
 
         const auto bgfx_view_id = static_cast<bgfx::ViewId>(view_index);
 
         bgfx::setViewMode(bgfx_view_id, bgfx::ViewMode::Sequential);
 
-        const auto fb_size_cache = platform::window_get_framebuffer_size_cache();
-
         const auto view_mat = math::g_mat4x4_identity;
 
         auto proj_mat = math::g_mat4x4_identity;
-        proj_mat.elems[0][0] = 1.0f / (static_cast<t_f32>(fb_size_cache.x) / 2.0f);
-        proj_mat.elems[1][1] = -1.0f / (static_cast<t_f32>(fb_size_cache.y) / 2.0f);
+        proj_mat.elems[0][0] = 1.0f / (static_cast<t_f32>(size.x) / 2.0f);
+        proj_mat.elems[1][1] = -1.0f / (static_cast<t_f32>(size.y) / 2.0f);
         proj_mat.elems[3][0] = -1.0f;
         proj_mat.elems[3][1] = 1.0f;
 
@@ -366,7 +365,7 @@ namespace zf::rendering {
 
         bgfx::setViewClear(bgfx_view_id, BGFX_CLEAR_COLOR, gfx::color_rgba8_to_hex(gfx::color_rgba32f_to_rgba8(clear_col)));
 
-        bgfx::setViewRect(bgfx_view_id, 0, 0, static_cast<uint16_t>(fb_size_cache.x), static_cast<uint16_t>(fb_size_cache.y));
+        bgfx::setViewRect(bgfx_view_id, 0, 0, static_cast<uint16_t>(size.x), static_cast<uint16_t>(size.y));
 
         bgfx::setViewFrameBuffer(bgfx_view_id, bgfx_fb_hdl);
 
@@ -393,7 +392,7 @@ namespace zf::rendering {
         context->frame_vert_cnt = 0;
         mem::clear_item(&context->batch_state, 0);
 
-        bgfx_configure_view(0, BGFX_INVALID_HANDLE, clear_col);
+        bgfx_configure_view(0, BGFX_INVALID_HANDLE, clear_col, fb_size_cache);
 
         return context;
     }
@@ -458,11 +457,12 @@ namespace zf::rendering {
         context->view_cnt++;
         context->view_bgfx_fb_hdls[context->view_index] = texture->type_data.texture.target_fb_bgfx_hdl;
 
-        bgfx_configure_view(context->view_index, texture->type_data.texture.target_fb_bgfx_hdl, gfx::g_color_transparent_black);
+        bgfx_configure_view(context->view_index, texture->type_data.texture.target_fb_bgfx_hdl, gfx::g_color_transparent_black, texture->type_data.texture.size);
     }
 
     void frame_unset_texture_target(t_frame_context *const context) {
         ZF_ASSERT(g_module_state.phase == ec_module_phase_active_and_midframe);
+        ZF_ASSERT(context->view_index != 0 && "Trying to unset texture target, but none is set!");
 
         frame_flush(context);
         context->view_index = 0;
