@@ -12,6 +12,8 @@ namespace zf::rendering {
 
     static struct {
         t_module_phase phase;
+
+        // @todo: Try and drop both of these.
         math::t_v2_i resolution_cache;
         t_resource_group perm_resource_group; // @todo: Probably not needed as global anymore.
     } g_module_state;
@@ -73,6 +75,8 @@ namespace zf::rendering {
 
     struct t_frame_context {
         const t_basis *basis;
+
+        t_i32 view_index;
 
         t_i32 frame_vert_cnt;
 
@@ -230,7 +234,7 @@ namespace zf::rendering {
         return resource;
     }
 
-    static bgfx::FrameBufferHandle bgfx_framebuffer_create(const math::t_v2_i size) {
+    static bgfx::FrameBufferHandle bgfx_create_framebuffer(const math::t_v2_i size) {
         const uint64_t flags = BGFX_SAMPLER_MIN_POINT | BGFX_SAMPLER_MAG_POINT | BGFX_SAMPLER_U_CLAMP | BGFX_SAMPLER_V_CLAMP;
         return bgfx::createFrameBuffer(static_cast<uint16_t>(size.x), static_cast<uint16_t>(size.y), bgfx::TextureFormat::RGBA8, flags);
     }
@@ -239,7 +243,7 @@ namespace zf::rendering {
         ZF_ASSERT(g_module_state.phase == ec_module_phase_active_but_not_midframe);
         ZF_ASSERT(size.x > 0 && size.y > 0);
 
-        const bgfx::FrameBufferHandle fb_bgfx_hdl = bgfx_framebuffer_create(size);
+        const bgfx::FrameBufferHandle fb_bgfx_hdl = bgfx_create_framebuffer(size);
 
         if (!bgfx::isValid(fb_bgfx_hdl)) {
             ZF_FATAL();
@@ -258,7 +262,7 @@ namespace zf::rendering {
         ZF_ASSERT(size.x > 0 && size.y > 0);
         ZF_ASSERT(size != texture->type_data.texture.size);
 
-        const bgfx::FrameBufferHandle fb_bgfx_hdl = bgfx_framebuffer_create(size);
+        const bgfx::FrameBufferHandle fb_bgfx_hdl = bgfx_create_framebuffer(size);
 
         if (!bgfx::isValid(fb_bgfx_hdl)) {
             ZF_FATAL();
@@ -337,18 +341,15 @@ namespace zf::rendering {
         return uniform->type_data.uniform.type;
     }
 
-    t_frame_context *frame_begin(const t_basis *const basis, const gfx::t_color_rgba32f clear_col, mem::t_arena *const context_arena) {
-        ZF_ASSERT(g_module_state.phase == ec_module_phase_active_but_not_midframe);
-        ZF_ASSERT(gfx::color_check_normalized(clear_col));
+    static void bgfx_configure_view(const t_i32 view_index, const gfx::t_color_rgba32f clear_col) {
+        ZF_ASSERT(view_index >= 0); // @todo: Where the hell is the upper bound?
+        // ZF_ASSERT(view_index >= 0 && view_index < BGFX_CONFIG_MAX_VIEWS);
+
+        const auto bgfx_view_id = static_cast<bgfx::ViewId>(view_index);
+
+        bgfx::setViewMode(bgfx_view_id, bgfx::ViewMode::Sequential);
 
         const auto fb_size_cache = platform::window_get_framebuffer_size_cache();
-
-        if (g_module_state.resolution_cache != fb_size_cache) {
-            bgfx::reset(static_cast<uint32_t>(fb_size_cache.x), static_cast<uint32_t>(fb_size_cache.y), BGFX_RESET_VSYNC);
-            g_module_state.resolution_cache = fb_size_cache;
-        }
-
-        bgfx::setViewMode(0, bgfx::ViewMode::Sequential);
 
         const auto view_mat = math::g_mat4x4_identity;
 
@@ -358,18 +359,35 @@ namespace zf::rendering {
         proj_mat.elems[3][0] = -1.0f;
         proj_mat.elems[3][1] = 1.0f;
 
-        bgfx::setViewTransform(0, &view_mat, &proj_mat);
+        bgfx::setViewTransform(bgfx_view_id, &view_mat, &proj_mat);
 
-        bgfx::setViewClear(0, BGFX_CLEAR_COLOR, gfx::color_rgba8_to_hex(gfx::color_rgba32f_to_rgba8(clear_col)));
+        bgfx::setViewClear(bgfx_view_id, BGFX_CLEAR_COLOR, gfx::color_rgba8_to_hex(gfx::color_rgba32f_to_rgba8(clear_col)));
 
-        bgfx::setViewRect(0, 0, 0, static_cast<uint16_t>(fb_size_cache.x), static_cast<uint16_t>(fb_size_cache.y));
+        bgfx::setViewRect(bgfx_view_id, 0, 0, static_cast<uint16_t>(fb_size_cache.x), static_cast<uint16_t>(fb_size_cache.y));
 
-        bgfx::touch(0);
+        bgfx::touch(bgfx_view_id);
+    }
+
+    t_frame_context *frame_begin(const t_basis *const basis, const gfx::t_color_rgba32f clear_col, mem::t_arena *const context_arena) {
+        ZF_ASSERT(g_module_state.phase == ec_module_phase_active_but_not_midframe);
+        ZF_ASSERT(gfx::color_check_normalized(clear_col));
 
         g_module_state.phase = ec_module_phase_active_and_midframe;
 
-        const auto context = mem::arena_push_item_zeroed<t_frame_context>(context_arena);
+        const auto fb_size_cache = platform::window_get_framebuffer_size_cache();
+
+        if (g_module_state.resolution_cache != fb_size_cache) {
+            bgfx::reset(static_cast<uint32_t>(fb_size_cache.x), static_cast<uint32_t>(fb_size_cache.y), BGFX_RESET_VSYNC);
+            g_module_state.resolution_cache = fb_size_cache;
+        }
+
+        const auto context = mem::arena_push_item<t_frame_context>(context_arena);
         context->basis = basis;
+        context->view_index = 0;
+        context->frame_vert_cnt = 0;
+        mem::clear_item(&context->batch_state, 0);
+
+        bgfx_configure_view(0, clear_col);
 
         return context;
     }
@@ -396,7 +414,7 @@ namespace zf::rendering {
         bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A | BGFX_STATE_BLEND_ALPHA);
 
         const t_resource *const prog = context->batch_state.shader_prog ? context->batch_state.shader_prog : context->basis->shader_prog_default;
-        bgfx::submit(0, prog->type_data.shader_prog.bgfx_hdl);
+        bgfx::submit(static_cast<bgfx::ViewId>(context->view_index), prog->type_data.shader_prog.bgfx_hdl);
 
         context->frame_vert_cnt += context->batch_state.vert_cnt;
 
@@ -411,6 +429,11 @@ namespace zf::rendering {
         bgfx::frame();
 
         g_module_state.phase = ec_module_phase_active_but_not_midframe;
+    }
+
+    void frame_set_texture_target(t_frame_context *const context, const t_resource *const texture) {
+        ZF_ASSERT(g_module_state.phase == ec_module_phase_active_and_midframe);
+        ZF_ASSERT(texture->type == ec_resource_type_texture && texture->type_data.texture.is_target);
     }
 
     void frame_set_shader_prog(t_frame_context *const context, const t_resource *const prog) {

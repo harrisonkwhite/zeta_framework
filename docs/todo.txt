@@ -1,3 +1,4 @@
+- zero init vs {} init vs poison are inconsistent, especially look at the global structs
 - min, max, and abs should have calc_ prefixes.
 - Validation barriers need to be made more clear. Make sure validity for colours, origins, alignment, rectangles, etc. are in place. Only worry about reasonable things.
 - Consider having distinct namespace for zgl and zcl

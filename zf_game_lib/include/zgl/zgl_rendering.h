@@ -81,6 +81,14 @@ namespace zf::rendering {
 
     t_uniform_type uniform_get_type(const t_resource *const uniform);
 
+    struct t_font {
+        gfx::t_font_arrangement arrangement;
+        t_array_mut<t_resource *> atlases;
+    };
+
+    t_font font_create_from_raw(const strs::t_str_rdonly file_path, const t_i32 height, strs::t_code_pt_bitset *const code_pts, mem::t_arena *const temp_arena, t_resource_group *const resource_group);
+    t_font font_create_from_packed(const strs::t_str_rdonly file_path, mem::t_arena *const temp_arena, t_resource_group *const resource_group);
+
 
     // ============================================================
     // @section: Frame
@@ -110,6 +118,8 @@ namespace zf::rendering {
 
     t_frame_context *frame_begin(const t_basis *const basis, const gfx::t_color_rgba32f clear_col, mem::t_arena *const context_arena);
     void frame_end(t_frame_context *const context);
+
+    void frame_set_texture_target(t_frame_context *const context, const t_resource *const texture);
 
     // Set prog as nullptr to just assign the default shader program.
     void frame_set_shader_prog(t_frame_context *const context, const t_resource *const prog);
@@ -190,14 +200,6 @@ namespace zf::rendering {
     }
 
     void frame_submit_texture(t_frame_context *const context, const t_resource *const texture, const math::t_v2 pos, const math::t_rect_i src_rect = {}, const math::t_v2 origin = g_origin_topleft, const t_f32 rot = 0.0f);
-
-    struct t_font {
-        gfx::t_font_arrangement arrangement;
-        t_array_mut<t_resource *> atlases;
-    };
-
-    t_font font_create_from_raw(const strs::t_str_rdonly file_path, const t_i32 height, strs::t_code_pt_bitset *const code_pts, mem::t_arena *const temp_arena, t_resource_group *const resource_group);
-    t_font font_create_from_packed(const strs::t_str_rdonly file_path, mem::t_arena *const temp_arena, t_resource_group *const resource_group);
 
     constexpr math::t_v2 g_str_alignment_topleft = {0.0f, 0.0f};
     constexpr math::t_v2 g_str_alignment_topcenter = {0.5f, 0.0f};
