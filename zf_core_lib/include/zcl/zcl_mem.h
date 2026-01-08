@@ -3,19 +3,19 @@
 #include <zcl/zcl_basic.h>
 
 namespace zf::mem {
-    inline t_i32 kilobytes_to_bytes(const t_i32 n) { return (1 << 10) * n; }
-    inline t_i32 megabytes_to_bytes(const t_i32 n) { return (1 << 20) * n; }
-    inline t_i32 gigabytes_to_bytes(const t_i32 n) { return (1 << 30) * n; }
-    inline t_i32 bits_to_bytes(const t_i32 n) { return (n + 7) / 8; }
-    inline t_i32 bytes_to_bits(const t_i32 n) { return n * 8; }
+    constexpr t_i32 kilobytes_to_bytes(const t_i32 n) { return (1 << 10) * n; }
+    constexpr t_i32 megabytes_to_bytes(const t_i32 n) { return (1 << 20) * n; }
+    constexpr t_i32 gigabytes_to_bytes(const t_i32 n) { return (1 << 30) * n; }
+    constexpr t_i32 bits_to_bytes(const t_i32 n) { return (n + 7) / 8; }
+    constexpr t_i32 bytes_to_bits(const t_i32 n) { return n * 8; }
 
     // Is n a power of 2?
-    inline t_b8 alignment_check_valid(const t_i32 n) {
+    constexpr t_b8 alignment_check_valid(const t_i32 n) {
         return n > 0 && (n & (n - 1)) == 0;
     }
 
     // Take n up to the next multiple of the alignment.
-    inline t_i32 align_forward(const t_i32 n, const t_i32 alignment) {
+    constexpr t_i32 align_forward(const t_i32 n, const t_i32 alignment) {
         ZF_ASSERT(alignment_check_valid(alignment));
         return (n + alignment - 1) & ~(alignment - 1);
     }
@@ -41,13 +41,13 @@ namespace zf::mem {
     }
 
     // Creates a byte-sized bitmask with only a single bit set.
-    inline t_u8 create_byte_bitmask_single(const t_i32 bit_index) {
+    constexpr t_u8 create_byte_bitmask_single(const t_i32 bit_index) {
         ZF_ASSERT(bit_index >= 0 && bit_index < 8);
         return static_cast<t_u8>(1 << bit_index);
     }
 
     // Creates a byte-sized bitmask with only bits in the range [begin_bit_index, end_bit_index) set.
-    inline t_u8 create_byte_bitmask_range(const t_i32 begin_bit_index, const t_i32 end_bit_index = 8) {
+    constexpr t_u8 create_byte_bitmask_range(const t_i32 begin_bit_index, const t_i32 end_bit_index = 8) {
         ZF_ASSERT(begin_bit_index >= 0 && begin_bit_index < 8);
         ZF_ASSERT(end_bit_index >= begin_bit_index && end_bit_index <= 8);
 
@@ -221,7 +221,7 @@ namespace zf::mem {
         t_u8 *bytes_raw;
         t_i32 bit_cnt;
 
-        operator t_bitset_rdonly() const {
+        constexpr operator t_bitset_rdonly() const {
             return {bytes_raw, bit_cnt};
         }
     };
@@ -232,24 +232,24 @@ namespace zf::mem {
 
         t_static_array<t_u8, bits_to_bytes(tp_bit_cnt)> bytes;
 
-        operator t_bitset_mut() { return {bytes.raw, k_bit_cnt}; }
-        operator t_bitset_rdonly() const { return {bytes.raw, k_bit_cnt}; }
+        constexpr operator t_bitset_mut() { return {bytes.raw, k_bit_cnt}; }
+        constexpr operator t_bitset_rdonly() const { return {bytes.raw, k_bit_cnt}; }
     };
 
-    inline t_bitset_mut bitset_create(const t_array_mut<t_u8> bytes) {
+    constexpr t_bitset_mut bitset_create(const t_array_mut<t_u8> bytes) {
         return {bytes.raw, bytes_to_bits(bytes.len)};
     }
 
-    inline t_bitset_mut bitset_create(const t_array_mut<t_u8> bytes, const t_i32 bit_cnt) {
+    constexpr t_bitset_mut bitset_create(const t_array_mut<t_u8> bytes, const t_i32 bit_cnt) {
         ZF_ASSERT(bit_cnt >= 0 && bit_cnt <= bytes_to_bits(bytes.len));
         return {bytes.raw, bit_cnt};
     }
 
-    inline t_bitset_rdonly bitset_create(const t_array_rdonly<t_u8> bytes) {
+    constexpr t_bitset_rdonly bitset_create(const t_array_rdonly<t_u8> bytes) {
         return {bytes.raw, bytes_to_bits(bytes.len)};
     }
 
-    inline t_bitset_rdonly bitset_create(const t_array_rdonly<t_u8> bytes, const t_i32 bit_cnt) {
+    constexpr t_bitset_rdonly bitset_create(const t_array_rdonly<t_u8> bytes, const t_i32 bit_cnt) {
         ZF_ASSERT(bit_cnt >= 0 && bit_cnt <= bytes_to_bits(bytes.len));
         return {bytes.raw, bit_cnt};
     }
@@ -259,34 +259,34 @@ namespace zf::mem {
         return {arena_push_array_zeroed<t_u8>(arena, bits_to_bytes(bit_cnt)).raw, bit_cnt};
     }
 
-    inline t_array_mut<t_u8> bitset_get_bytes(const t_bitset_mut bs) {
+    constexpr t_array_mut<t_u8> bitset_get_bytes(const t_bitset_mut bs) {
         return {bs.bytes_raw, bits_to_bytes(bs.bit_cnt)};
     }
 
-    inline t_array_rdonly<t_u8> bitset_get_bytes(const t_bitset_rdonly bs) {
+    constexpr t_array_rdonly<t_u8> bitset_get_bytes(const t_bitset_rdonly bs) {
         return {bs.bytes_raw, bits_to_bytes(bs.bit_cnt)};
     }
 
-    inline t_i32 bitset_get_last_byte_bit_cnt(const t_bitset_rdonly bs) {
+    constexpr t_i32 bitset_get_last_byte_bit_cnt(const t_bitset_rdonly bs) {
         return ((bs.bit_cnt - 1) % 8) + 1;
     }
 
     // Gives a mask of the last byte in which only excess bits are unset.
-    inline t_u8 bitset_get_last_byte_mask(const t_bitset_rdonly bs) {
+    constexpr t_u8 bitset_get_last_byte_mask(const t_bitset_rdonly bs) {
         return create_byte_bitmask_range(0, bitset_get_last_byte_bit_cnt(bs));
     }
 
-    inline t_b8 bitset_check_set(const t_bitset_rdonly bs, const t_i32 index) {
+    constexpr t_b8 bitset_check_set(const t_bitset_rdonly bs, const t_i32 index) {
         ZF_ASSERT(index >= 0 && index < bs.bit_cnt);
         return bitset_get_bytes(bs)[index / 8] & create_byte_bitmask_single(index % 8);
     }
 
-    inline void bitset_set(const t_bitset_mut bs, const t_i32 index) {
+    constexpr void bitset_set(const t_bitset_mut bs, const t_i32 index) {
         ZF_ASSERT(index >= 0 && index < bs.bit_cnt);
         bitset_get_bytes(bs)[index / 8] |= create_byte_bitmask_single(index % 8);
     }
 
-    inline void bitset_unset(const t_bitset_mut bs, const t_i32 index) {
+    constexpr void bitset_unset(const t_bitset_mut bs, const t_i32 index) {
         ZF_ASSERT(index >= 0 && index < bs.bit_cnt);
         bitset_get_bytes(bs)[index / 8] &= ~create_byte_bitmask_single(index % 8);
     }

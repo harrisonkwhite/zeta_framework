@@ -22,7 +22,7 @@ namespace zf::audio {
         operator t_sound_data_rdonly() const { return {.meta = meta, .pcm = pcm}; }
     };
 
-    inline t_i32 sound_get_sample_cnt(const t_sound_meta snd_meta) {
+    constexpr t_i32 sound_get_sample_cnt(const t_sound_meta snd_meta) {
         return snd_meta.channel_cnt * snd_meta.frame_cnt;
     }
 

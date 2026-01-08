@@ -75,7 +75,7 @@ namespace zf::rendering {
         const t_basis *basis;
 
         t_i32 pass_index;
-        mem::t_static_bitset<g_frame_pass_limit> passes_configured;
+        mem::t_static_bitset<k_frame_pass_limit> passes_configured;
 
         t_i32 frame_vert_cnt;
 
@@ -362,7 +362,7 @@ namespace zf::rendering {
 
     void frame_pass_configure(t_frame_context *const context, const t_i32 pass_index, const math::t_v2_i size, const math::t_mat4x4 &view_mat, const t_b8 clear, const gfx::t_color_rgba32f clear_col) {
         ZF_ASSERT(g_module_state.phase == ec_module_phase_active_and_midframe);
-        ZF_ASSERT(pass_index >= 0 && pass_index < g_frame_pass_limit);
+        ZF_ASSERT(pass_index >= 0 && pass_index < k_frame_pass_limit);
         ZF_ASSERT(!mem::bitset_check_set(context->passes_configured, pass_index));
         ZF_ASSERT(size.x > 0 && size.y > 0);
         ZF_ASSERT(gfx::color_check_normalized(clear_col));
@@ -392,7 +392,7 @@ namespace zf::rendering {
 
     void frame_pass_set(t_frame_context *const context, const t_i32 pass_index) {
         ZF_ASSERT(g_module_state.phase == ec_module_phase_active_and_midframe);
-        ZF_ASSERT(pass_index >= 0 && pass_index < g_frame_pass_limit);
+        ZF_ASSERT(pass_index >= 0 && pass_index < k_frame_pass_limit);
         ZF_ASSERT(pass_index != context->pass_index);
         ZF_ASSERT(mem::bitset_check_set(context->passes_configured, pass_index));
 

@@ -44,8 +44,8 @@ namespace zf::math {
 
     static t_proj_interval project_pts(const t_array_rdonly<t_v2> pts, const t_v2 edge) {
         t_proj_interval interval = {
-            .min = g_f32_max,
-            .max = -g_f32_max,
+            .min = k_f32_max,
+            .max = -k_f32_max,
         };
 
         for (t_i32 i = 0; i < pts.len; ++i) {

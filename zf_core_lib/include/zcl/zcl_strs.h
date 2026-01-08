@@ -135,7 +135,7 @@ namespace zf::strs {
     // ============================================================
     // @section: C-Strings
 
-    inline t_i32 cstr_calc_len(const char *const cstr) {
+    constexpr t_i32 cstr_calc_len(const char *const cstr) {
         t_i32 len = 0;
         for (; cstr[len]; len++) {}
         return len;

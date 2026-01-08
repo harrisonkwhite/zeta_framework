@@ -193,29 +193,29 @@ namespace zf {
         };
 
     template <c_numeric tp_type>
-    tp_type min(const tp_type a, const tp_type b) {
+    constexpr tp_type min(const tp_type a, const tp_type b) {
         return a <= b ? a : b;
     }
 
     template <c_numeric tp_type>
-    tp_type max(const tp_type a, const tp_type b) {
+    constexpr tp_type max(const tp_type a, const tp_type b) {
         return a >= b ? a : b;
     }
 
     template <c_simple tp_type>
-    void swap(tp_type *const a, tp_type *const b) {
+    constexpr void swap(tp_type *const a, tp_type *const b) {
         const tp_type temp = *a;
         *a = *b;
         *b = temp;
     }
 
     template <c_numeric tp_type>
-    tp_type abs(const tp_type n) {
+    constexpr tp_type abs(const tp_type n) {
         return n < 0 ? -n : n;
     }
 
     template <c_numeric tp_type>
-    tp_type clamp(const tp_type n, const tp_type min, const tp_type max) {
+    constexpr tp_type clamp(const tp_type n, const tp_type min, const tp_type max) {
         ZF_ASSERT(min <= max);
 
         if (n < min) {
@@ -230,7 +230,7 @@ namespace zf {
     }
 
     template <c_numeric tp_type>
-    t_i32 sign(const tp_type n) {
+    constexpr t_i32 sign(const tp_type n) {
         if (n > 0) {
             return 1;
         } else if (n < 0) {
@@ -241,12 +241,12 @@ namespace zf {
     }
 
     template <c_integral tp_type>
-    tp_type wrap(const tp_type val, const tp_type max_excl) {
+    constexpr tp_type wrap(const tp_type val, const tp_type max_excl) {
         return ((val % max_excl) + max_excl) % max_excl;
     }
 
     template <c_integral tp_type>
-    tp_type wrap(const tp_type val, const tp_type min, const tp_type max_excl) {
+    constexpr tp_type wrap(const tp_type val, const tp_type min, const tp_type max_excl) {
         return min + wrap(val - min, max_excl - min);
     }
 
@@ -265,7 +265,7 @@ namespace zf {
         t_i32 len;
 
         // @todo: Consider replacing with explicit function for safety.
-        const tp_elem_type &operator[](const t_i32 index) const {
+        constexpr const tp_elem_type &operator[](const t_i32 index) const {
             ZF_REQUIRE(index >= 0 && index < len);
             return raw[index];
         }
@@ -278,12 +278,12 @@ namespace zf {
         tp_elem_type *raw;
         t_i32 len;
 
-        tp_elem_type &operator[](const t_i32 index) const {
+        constexpr tp_elem_type &operator[](const t_i32 index) const {
             ZF_REQUIRE(index >= 0 && index < len);
             return raw[index];
         }
 
-        operator t_array_rdonly<tp_elem_type>() const {
+        constexpr operator t_array_rdonly<tp_elem_type>() const {
             return {raw, len};
         }
     };
@@ -296,21 +296,21 @@ namespace zf {
 
         tp_elem_type raw[tp_len];
 
-        tp_elem_type &operator[](const t_i32 index) {
+        constexpr tp_elem_type &operator[](const t_i32 index) {
             ZF_REQUIRE(index >= 0 && index < tp_len);
             return raw[index];
         }
 
-        const tp_elem_type &operator[](const t_i32 index) const {
+        constexpr const tp_elem_type &operator[](const t_i32 index) const {
             ZF_REQUIRE(index >= 0 && index < tp_len);
             return raw[index];
         }
 
-        operator t_array_mut<tp_elem_type>() {
+        constexpr operator t_array_mut<tp_elem_type>() {
             return {raw, k_len};
         }
 
-        operator t_array_rdonly<tp_elem_type>() const {
+        constexpr operator t_array_rdonly<tp_elem_type>() const {
             return {raw, k_len};
         }
     };
@@ -341,17 +341,17 @@ namespace zf {
         };
 
     template <c_array_elem tp_elem_type, t_i32 tp_len>
-    t_array_mut<tp_elem_type> array_to_nonstatic(t_static_array<tp_elem_type, tp_len> &arr) {
+    constexpr t_array_mut<tp_elem_type> array_to_nonstatic(t_static_array<tp_elem_type, tp_len> &arr) {
         return {arr.raw, arr.k_len};
     }
 
     template <c_array_elem tp_elem_type, t_i32 tp_len>
-    t_array_rdonly<tp_elem_type> array_to_nonstatic(const t_static_array<tp_elem_type, tp_len> &arr) {
+    constexpr t_array_rdonly<tp_elem_type> array_to_nonstatic(const t_static_array<tp_elem_type, tp_len> &arr) {
         return {arr.raw, arr.k_len};
     }
 
     template <c_array_elem tp_elem_type>
-    t_array_mut<tp_elem_type> array_slice(const t_array_mut<tp_elem_type> arr, const t_i32 beg, const t_i32 end) {
+    constexpr t_array_mut<tp_elem_type> array_slice(const t_array_mut<tp_elem_type> arr, const t_i32 beg, const t_i32 end) {
         ZF_ASSERT(beg >= 0 && beg <= arr.len);
         ZF_ASSERT(end >= beg && end <= arr.len);
 
@@ -359,7 +359,7 @@ namespace zf {
     }
 
     template <c_array_elem tp_elem_type>
-    t_array_rdonly<tp_elem_type> array_slice(const t_array_rdonly<tp_elem_type> arr, const t_i32 beg, const t_i32 end) {
+    constexpr t_array_rdonly<tp_elem_type> array_slice(const t_array_rdonly<tp_elem_type> arr, const t_i32 beg, const t_i32 end) {
         ZF_ASSERT(beg >= 0 && beg <= arr.len);
         ZF_ASSERT(end >= beg && end <= arr.len);
 
@@ -367,25 +367,25 @@ namespace zf {
     }
 
     template <c_array_elem tp_elem_type>
-    t_array_mut<tp_elem_type> array_slice_from(const t_array_mut<tp_elem_type> arr, const t_i32 beg) {
+    constexpr t_array_mut<tp_elem_type> array_slice_from(const t_array_mut<tp_elem_type> arr, const t_i32 beg) {
         ZF_ASSERT(beg >= 0 && beg <= arr.len);
         return {arr.raw + beg, arr.len - beg};
     }
 
     template <c_array_elem tp_elem_type>
-    t_array_rdonly<tp_elem_type> array_slice_from(const t_array_rdonly<tp_elem_type> arr, const t_i32 beg) {
+    constexpr t_array_rdonly<tp_elem_type> array_slice_from(const t_array_rdonly<tp_elem_type> arr, const t_i32 beg) {
         ZF_ASSERT(beg >= 0 && beg <= arr.len);
         return {arr.raw + beg, arr.len - beg};
     }
 
     template <c_array tp_arr_type>
-    t_i32 array_get_size_in_bytes(const tp_arr_type arr) {
+    constexpr t_i32 array_get_size_in_bytes(const tp_arr_type arr) {
         return ZF_SIZE_OF(typename tp_arr_type::t_elem) * arr.len;
     }
 
     template <c_array tp_src_arr_type, c_array_mut tp_dest_arr_type>
         requires c_same<typename tp_src_arr_type::t_elem, typename tp_dest_arr_type::t_elem>
-    void array_copy(const tp_src_arr_type src, const tp_dest_arr_type dest, const t_b8 allow_truncation = false) {
+    constexpr void array_copy(const tp_src_arr_type src, const tp_dest_arr_type dest, const t_b8 allow_truncation = false) {
         if (!allow_truncation) {
             ZF_ASSERT(dest.len >= src.len);
 
@@ -462,14 +462,14 @@ namespace zf {
     }
 
     template <c_array_mut tp_arr_type>
-    void array_set_all_to(const tp_arr_type arr, const typename tp_arr_type::t_elem &val) {
+    constexpr void array_set_all_to(const tp_arr_type arr, const typename tp_arr_type::t_elem &val) {
         for (t_i32 i = 0; i < arr.len; i++) {
             arr[i] = val;
         }
     }
 
     template <c_array_mut tp_arr_type>
-    void array_reverse(const tp_arr_type arr) {
+    constexpr void array_reverse(const tp_arr_type arr) {
         for (t_i32 i = 0; i < arr.len / 2; i++) {
             swap(&arr[i], &arr[arr.len - 1 - i]);
         }

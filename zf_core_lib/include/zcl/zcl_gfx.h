@@ -14,7 +14,7 @@ namespace zf::gfx {
         t_f32 b;
         t_f32 a;
 
-        operator math::t_v4() const { return {r, g, b, a}; }
+        constexpr operator math::t_v4() const { return {r, g, b, a}; }
     };
 
     struct t_color_rgba8 {
@@ -24,52 +24,52 @@ namespace zf::gfx {
         t_u8 a;
     };
 
-    inline t_b8 color_check_normalized(const t_color_rgba32f col) {
+    constexpr t_b8 color_check_normalized(const t_color_rgba32f col) {
         return col.r >= 0.0f && col.r <= 1.0f
             && col.g >= 0.0f && col.g <= 1.0f
             && col.b >= 0.0f && col.b <= 1.0f
             && col.a >= 0.0f && col.a <= 1.0f;
     }
 
-    inline t_color_rgba32f color_create_rgba32f(const t_f32 r, const t_f32 g, const t_f32 b, const t_f32 a = 1.0f) {
+    constexpr t_color_rgba32f color_create_rgba32f(const t_f32 r, const t_f32 g, const t_f32 b, const t_f32 a = 1.0f) {
         const t_color_rgba32f result = {r, g, b, a};
         ZF_ASSERT(color_check_normalized(result));
         return result;
     }
 
-    inline t_color_rgba8 color_create_rgba8(const t_u8 r, const t_u8 g, const t_u8 b, const t_u8 a = 255) {
+    constexpr t_color_rgba8 color_create_rgba8(const t_u8 r, const t_u8 g, const t_u8 b, const t_u8 a = 255) {
         return {r, g, b, a};
     }
 
-    constexpr t_color_rgba32f k_color_transparent_black = {0.0f, 0.0f, 0.0f, 0.0f};
-    constexpr t_color_rgba32f k_color_black = {0.0f, 0.0f, 0.0f, 1.0f};
-    constexpr t_color_rgba32f k_color_dark_gray = {0.25f, 0.25f, 0.25f, 1.0f};
-    constexpr t_color_rgba32f k_color_gray = {0.5f, 0.5f, 0.5f, 1.0f};
-    constexpr t_color_rgba32f k_color_light_gray = {0.75f, 0.75f, 0.75f, 1.0f};
-    constexpr t_color_rgba32f k_color_white = {1.0f, 1.0f, 1.0f, 1.0f};
-    constexpr t_color_rgba32f k_color_red = {1.0f, 0.0f, 0.0f, 1.0f};
-    constexpr t_color_rgba32f k_color_orange = {1.0f, 0.5f, 0.0f, 1.0f};
-    constexpr t_color_rgba32f k_color_yellow = {1.0f, 1.0f, 0.0f, 1.0f};
-    constexpr t_color_rgba32f k_color_lime = {0.75f, 1.0f, 0.0f, 1.0f};
-    constexpr t_color_rgba32f k_color_green = {0.0f, 1.0f, 0.0f, 1.0f};
-    constexpr t_color_rgba32f k_color_teal = {0.0f, 0.5f, 0.5f, 1.0f};
-    constexpr t_color_rgba32f k_color_cyan = {0.0f, 1.0f, 1.0f, 1.0f};
-    constexpr t_color_rgba32f k_color_blue = {0.0f, 0.0f, 1.0f, 1.0f};
-    constexpr t_color_rgba32f k_color_purple = {0.5f, 0.0f, 0.5f, 1.0f};
-    constexpr t_color_rgba32f k_color_magenta = {1.0f, 0.0f, 1.0f, 1.0f};
-    constexpr t_color_rgba32f k_color_pink = {1.0f, 0.75f, 0.8f, 1.0f};
-    constexpr t_color_rgba32f k_color_brown = {0.6f, 0.3f, 0.0f, 1.0f};
+    constexpr t_color_rgba32f k_color_transparent_black = color_create_rgba32f(0.0f, 0.0f, 0.0f);
+    constexpr t_color_rgba32f k_color_black = color_create_rgba32f(0.0f, 0.0f, 0.0f);
+    constexpr t_color_rgba32f k_color_dark_gray = color_create_rgba32f(0.25f, 0.25f, 0.25f);
+    constexpr t_color_rgba32f k_color_gray = color_create_rgba32f(0.5f, 0.5f, 0.5f);
+    constexpr t_color_rgba32f k_color_light_gray = color_create_rgba32f(0.75f, 0.75f, 0.75f);
+    constexpr t_color_rgba32f k_color_white = color_create_rgba32f(1.0f, 1.0f, 1.0f);
+    constexpr t_color_rgba32f k_color_red = color_create_rgba32f(1.0f, 0.0f, 0.0f);
+    constexpr t_color_rgba32f k_color_orange = color_create_rgba32f(1.0f, 0.5f, 0.0f);
+    constexpr t_color_rgba32f k_color_yellow = color_create_rgba32f(1.0f, 1.0f, 0.0f);
+    constexpr t_color_rgba32f k_color_lime = color_create_rgba32f(0.75f, 1.0f, 0.0f);
+    constexpr t_color_rgba32f k_color_green = color_create_rgba32f(0.0f, 1.0f, 0.0f);
+    constexpr t_color_rgba32f k_color_teal = color_create_rgba32f(0.0f, 0.5f, 0.5f);
+    constexpr t_color_rgba32f k_color_cyan = color_create_rgba32f(0.0f, 1.0f, 1.0f);
+    constexpr t_color_rgba32f k_color_blue = color_create_rgba32f(0.0f, 0.0f, 1.0f);
+    constexpr t_color_rgba32f k_color_purple = color_create_rgba32f(0.5f, 0.0f, 0.5f);
+    constexpr t_color_rgba32f k_color_magenta = color_create_rgba32f(1.0f, 0.0f, 1.0f);
+    constexpr t_color_rgba32f k_color_pink = color_create_rgba32f(1.0f, 0.75f, 0.8f);
+    constexpr t_color_rgba32f k_color_brown = color_create_rgba32f(0.6f, 0.3f, 0.0f);
 
-    inline t_color_rgba8 color_rgba32f_to_rgba8(const t_color_rgba32f col) {
+    constexpr t_color_rgba8 color_rgba32f_to_rgba8(const t_color_rgba32f col) {
         ZF_ASSERT(color_check_normalized(col));
         return color_create_rgba8(static_cast<t_u8>(255.0f * col.r), static_cast<t_u8>(255.0f * col.g), static_cast<t_u8>(255.0f * col.b), static_cast<t_u8>(255.0f * col.a));
     }
 
-    inline t_color_rgba32f color_rgba8_to_rgba32f(const t_color_rgba8 col) {
+    constexpr t_color_rgba32f color_rgba8_to_rgba32f(const t_color_rgba8 col) {
         return color_create_rgba32f(static_cast<t_f32>(col.r) / 255.0f, static_cast<t_f32>(col.g) / 255.0f, static_cast<t_f32>(col.b) / 255.0f, static_cast<t_f32>(col.a) / 255.0f);
     }
 
-    inline t_color_rgba32f color_get_mix(const t_color_rgba32f a, const t_color_rgba32f b, const t_f32 amount) {
+    constexpr t_color_rgba32f color_get_mix(const t_color_rgba32f a, const t_color_rgba32f b, const t_f32 amount) {
         ZF_ASSERT(amount >= 0.0f && amount <= 1.0f);
 
         return {
@@ -80,16 +80,16 @@ namespace zf::gfx {
         };
     }
 
-    inline t_f32 color_calc_luminance(const t_color_rgba32f col) {
+    constexpr t_f32 color_calc_luminance(const t_color_rgba32f col) {
         return (0.2126f * col.r) + (0.7152f * col.g) + (0.0722f * col.b);
     }
 
-    inline t_color_rgba32f color_to_grayscale(const t_color_rgba32f col) {
+    constexpr t_color_rgba32f color_to_grayscale(const t_color_rgba32f col) {
         const t_f32 lum = color_calc_luminance(col);
         return {lum, lum, lum, col.a};
     }
 
-    inline t_u32 color_rgba8_to_hex(const t_color_rgba8 col) {
+    constexpr t_u32 color_rgba8_to_hex(const t_color_rgba8 col) {
         t_u32 result = 0;
         result |= static_cast<t_u32>(col.r) << 24;
         result |= static_cast<t_u32>(col.g) << 16;
@@ -99,7 +99,7 @@ namespace zf::gfx {
         return result;
     }
 
-    inline t_color_rgba8 color_hex_to_rgba8(const t_u32 hex) {
+    constexpr t_color_rgba8 color_hex_to_rgba8(const t_u32 hex) {
         const auto r = static_cast<t_u8>((hex & 0xFF000000) >> 24);
         const auto g = static_cast<t_u8>((hex & 0x00FF0000) >> 16);
         const auto b = static_cast<t_u8>((hex & 0x0000FF00) >> 8);
@@ -128,7 +128,7 @@ namespace zf::gfx {
         }
     };
 
-    inline math::t_rect_f texture_calc_uv_rect(const math::t_rect_i src_rect, const math::t_v2_i tex_size) {
+    constexpr math::t_rect_f texture_calc_uv_rect(const math::t_rect_i src_rect, const math::t_v2_i tex_size) {
         ZF_ASSERT(tex_size.x > 0 && tex_size.y > 0);
         ZF_ASSERT(src_rect.x >= 0 && src_rect.y >= 0 && src_rect.width > 0 && src_rect.height > 0 && math::rect_get_right(src_rect) <= tex_size.x && math::rect_get_bottom(src_rect) <= tex_size.y);
 

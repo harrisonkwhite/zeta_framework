@@ -16,7 +16,7 @@ namespace zf::ds {
         t_array_mut<tp_elem_type> backing_arr;
         t_i32 len;
 
-        tp_elem_type &operator[](const t_i32 index) const {
+        constexpr tp_elem_type &operator[](const t_i32 index) const {
             ZF_ASSERT(index >= 0 && index < len);
             return backing_arr[index];
         }
@@ -29,7 +29,7 @@ namespace zf::ds {
         t_array_rdonly<tp_elem_type> backing_arr;
         t_i32 len;
 
-        const tp_elem_type &operator[](const t_i32 index) const {
+        constexpr const tp_elem_type &operator[](const t_i32 index) const {
             ZF_ASSERT(index >= 0 && index < len);
             return backing_arr[index];
         }
@@ -59,17 +59,17 @@ namespace zf::ds {
     }
 
     template <c_list tp_list_type>
-    t_i32 list_get_cap(const tp_list_type *const list) {
+    constexpr t_i32 list_get_cap(const tp_list_type *const list) {
         return list->backing_arr.len;
     }
 
     template <c_list_elem tp_elem_type>
-    t_array_mut<tp_elem_type> list_to_array(const t_list_mut<tp_elem_type> *const list) {
+    constexpr t_array_mut<tp_elem_type> list_to_array(const t_list_mut<tp_elem_type> *const list) {
         return array_slice(list->backing_arr, 0, list->len);
     }
 
     template <c_list_elem tp_elem_type>
-    t_array_rdonly<tp_elem_type> list_to_array(const t_list_rdonly<tp_elem_type> *const list) {
+    constexpr t_array_rdonly<tp_elem_type> list_to_array(const t_list_rdonly<tp_elem_type> *const list) {
         return array_slice(list->backing_arr, 0, list->len);
     }
 
@@ -110,7 +110,7 @@ namespace zf::ds {
     }
 
     template <c_list_mut tp_list_type>
-    typename tp_list_type::t_elem *list_append(tp_list_type *const list, const typename tp_list_type::t_elem &value) {
+    constexpr typename tp_list_type::t_elem *list_append(tp_list_type *const list, const typename tp_list_type::t_elem &value) {
         ZF_ASSERT(list->len < list_get_cap(list));
 
         list->len++;
@@ -128,7 +128,7 @@ namespace zf::ds {
     }
 
     template <c_list_mut tp_list_type>
-    t_array_mut<typename tp_list_type::t_elem> list_append_many(tp_list_type *const list, const t_array_rdonly<typename tp_list_type::t_elem> values) {
+    constexpr t_array_mut<typename tp_list_type::t_elem> list_append_many(tp_list_type *const list, const t_array_rdonly<typename tp_list_type::t_elem> values) {
         ZF_ASSERT(list->len + values.len <= list_get_cap(list));
 
         array_copy(values, array_slice_from(list->backing_arr, list->len));
@@ -148,7 +148,7 @@ namespace zf::ds {
     }
 
     template <c_list_mut tp_list_type>
-    typename tp_list_type::t_elem *list_insert_at(tp_list_type *const list, const t_i32 index, const typename tp_list_type::t_elem &value) {
+    constexpr typename tp_list_type::t_elem *list_insert_at(tp_list_type *const list, const t_i32 index, const typename tp_list_type::t_elem &value) {
         ZF_ASSERT(list->len < list_get_cap(list));
         ZF_ASSERT(index >= 0 && index <= list->len);
 
@@ -173,7 +173,7 @@ namespace zf::ds {
     }
 
     template <c_list_mut tp_list_type>
-    void list_remove_at_shift(tp_list_type *const list, const t_i32 index) {
+    constexpr void list_remove_at_shift(tp_list_type *const list, const t_i32 index) {
         ZF_ASSERT(list->len > 0);
         ZF_ASSERT(index >= 0 && index < list->len);
 
@@ -182,7 +182,7 @@ namespace zf::ds {
     }
 
     template <c_list_mut tp_list_type>
-    void list_remove_at_swapback(tp_list_type *const list, const t_i32 index) {
+    constexpr void list_remove_at_swapback(tp_list_type *const list, const t_i32 index) {
         ZF_ASSERT(list->len > 0);
         ZF_ASSERT(index >= 0 && index < list->len);
 
@@ -191,7 +191,7 @@ namespace zf::ds {
     }
 
     template <c_list_mut tp_list_type>
-    void list_remove_end(tp_list_type *const list) {
+    constexpr void list_remove_end(tp_list_type *const list) {
         ZF_ASSERT(list->len > 0);
         list->len--;
     }
