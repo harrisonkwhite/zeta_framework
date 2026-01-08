@@ -43,7 +43,7 @@ namespace zf::audio {
 
         io::t_stream fs;
 
-        if (!io::file_open(file_path, io::ec_file_access_mode_write, temp_arena, &fs)) {
+        if (!io::file_open(file_path, io::ek_file_access_mode_write, temp_arena, &fs)) {
             return false;
         }
 
@@ -55,7 +55,7 @@ namespace zf::audio {
     t_b8 sound_unpack(const strs::t_str_rdonly file_path, mem::t_arena *const snd_data_arena, mem::t_arena *const temp_arena, t_sound_data_mut *const o_snd_data) {
         io::t_stream fs;
 
-        if (!io::file_open(file_path, io::ec_file_access_mode_read, temp_arena, &fs)) {
+        if (!io::file_open(file_path, io::ek_file_access_mode_read, temp_arena, &fs)) {
             return false;
         }
 

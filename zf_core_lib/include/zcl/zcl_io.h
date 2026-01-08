@@ -10,14 +10,14 @@ namespace zf::io {
     // @section: Streams
 
     enum t_stream_type : t_i32 {
-        ec_stream_type_invalid,
-        ec_stream_type_mem,
-        ec_stream_type_file
+        ek_stream_type_invalid,
+        ek_stream_type_mem,
+        ek_stream_type_file
     };
 
     enum t_stream_mode : t_i32 {
-        ec_stream_mode_read,
-        ec_stream_mode_write
+        ek_stream_mode_read,
+        ek_stream_mode_write
     };
 
     struct t_stream {
@@ -38,30 +38,30 @@ namespace zf::io {
     };
 
     inline t_stream mem_stream_create(const t_array_mut<t_u8> bytes, const t_stream_mode mode, const t_i32 pos = 0) {
-        return {.type = ec_stream_type_mem, .type_data = {.mem = {.bytes = bytes, .byte_pos = pos}}, .mode = mode};
+        return {.type = ek_stream_type_mem, .type_data = {.mem = {.bytes = bytes, .byte_pos = pos}}, .mode = mode};
     }
 
     inline t_array_mut<t_u8> mem_stream_get_bytes_written(const t_stream *const stream) {
-        ZF_ASSERT(stream->type == ec_stream_type_mem);
+        ZF_ASSERT(stream->type == ek_stream_type_mem);
         return array_slice(stream->type_data.mem.bytes, 0, stream->type_data.mem.byte_pos);
     }
 
     inline t_stream file_stream_create(FILE *const file, const t_stream_mode mode) {
-        return {.type = ec_stream_type_file, .type_data = {.file = {.file = file}}, .mode = mode};
+        return {.type = ek_stream_type_file, .type_data = {.file = {.file = file}}, .mode = mode};
     }
 
-    inline t_stream get_std_in() { return file_stream_create(stdin, ec_stream_mode_read); }
-    inline t_stream get_std_out() { return file_stream_create(stdout, ec_stream_mode_write); }
-    inline t_stream get_std_error() { return file_stream_create(stderr, ec_stream_mode_write); }
+    inline t_stream get_std_in() { return file_stream_create(stdin, ek_stream_mode_read); }
+    inline t_stream get_std_out() { return file_stream_create(stdout, ek_stream_mode_write); }
+    inline t_stream get_std_error() { return file_stream_create(stderr, ek_stream_mode_write); }
 
     template <c_simple tp_type>
     [[nodiscard]] t_b8 stream_read_item(t_stream *const stream, tp_type *const o_item) {
-        ZF_ASSERT(stream->mode == ec_stream_mode_read);
+        ZF_ASSERT(stream->mode == ek_stream_mode_read);
 
         const t_i32 size = ZF_SIZE_OF(tp_type);
 
         switch (stream->type) {
-        case ec_stream_type_mem: {
+        case ek_stream_type_mem: {
             if (stream->type_data.mem.byte_pos + size > stream->type_data.mem.bytes.len) {
                 return false;
             }
@@ -75,7 +75,7 @@ namespace zf::io {
             return true;
         }
 
-        case ec_stream_type_file:
+        case ek_stream_type_file:
             return fread(o_item, size, 1, stream->type_data.file.file) == 1;
 
         default:
@@ -85,12 +85,12 @@ namespace zf::io {
 
     template <c_simple tp_type>
     [[nodiscard]] t_b8 stream_write_item(t_stream *const stream, const tp_type &item) {
-        ZF_ASSERT(stream->mode == ec_stream_mode_write);
+        ZF_ASSERT(stream->mode == ek_stream_mode_write);
 
         const t_i32 size = ZF_SIZE_OF(tp_type);
 
         switch (stream->type) {
-        case ec_stream_type_mem: {
+        case ek_stream_type_mem: {
             if (stream->type_data.mem.byte_pos + size > stream->type_data.mem.bytes.len) {
                 return false;
             }
@@ -104,7 +104,7 @@ namespace zf::io {
             return true;
         }
 
-        case ec_stream_type_file:
+        case ek_stream_type_file:
             return fwrite(&item, size, 1, stream->type_data.file.file) == 1;
 
         default:
@@ -114,7 +114,7 @@ namespace zf::io {
 
     template <c_array_mut tp_arr_type>
     [[nodiscard]] t_b8 stream_read_items_into_array(t_stream *const stream, const tp_arr_type arr, const t_i32 cnt) {
-        ZF_ASSERT(stream->mode == ec_stream_mode_read);
+        ZF_ASSERT(stream->mode == ek_stream_mode_read);
         ZF_ASSERT(cnt >= 0 && cnt <= arr.len);
 
         if (cnt == 0) {
@@ -122,7 +122,7 @@ namespace zf::io {
         }
 
         switch (stream->type) {
-        case ec_stream_type_mem: {
+        case ek_stream_type_mem: {
             const t_i32 size = ZF_SIZE_OF(arr[0]) * cnt;
 
             if (stream->type_data.mem.byte_pos + size > stream->type_data.mem.bytes.len) {
@@ -138,7 +138,7 @@ namespace zf::io {
             return true;
         }
 
-        case ec_stream_type_file:
+        case ek_stream_type_file:
             return static_cast<t_i32>(fread(arr.raw, sizeof(arr[0]), static_cast<size_t>(cnt), stream->type_data.file.file)) == cnt;
 
         default:
@@ -148,14 +148,14 @@ namespace zf::io {
 
     template <c_array tp_arr_type>
     [[nodiscard]] t_b8 stream_write_items_of_array(t_stream *const stream, const tp_arr_type arr) {
-        ZF_ASSERT(stream->mode == ec_stream_mode_write);
+        ZF_ASSERT(stream->mode == ek_stream_mode_write);
 
         if (arr.len == 0) {
             return true;
         }
 
         switch (stream->type) {
-        case ec_stream_type_mem: {
+        case ek_stream_type_mem: {
             const t_i32 size = array_get_size_in_bytes(arr);
 
             if (stream->type_data.mem.byte_pos + size > stream->type_data.mem.bytes.len) {
@@ -171,7 +171,7 @@ namespace zf::io {
             return true;
         }
 
-        case ec_stream_type_file:
+        case ek_stream_type_file:
             return static_cast<t_i32>(fwrite(arr.raw, sizeof(arr[0]), static_cast<size_t>(arr.len), stream->type_data.file.file)) == arr.len;
 
         default:
@@ -244,9 +244,9 @@ namespace zf::io {
     // @section: Files and Directories
 
     enum t_file_access_mode : t_i32 {
-        ec_file_access_mode_read,
-        ec_file_access_mode_write,
-        ec_file_access_mode_append
+        ek_file_access_mode_read,
+        ek_file_access_mode_write,
+        ek_file_access_mode_append
     };
 
     [[nodiscard]] t_b8 file_open(const strs::t_str_rdonly file_path, const t_file_access_mode mode, mem::t_arena *const temp_arena, t_stream *const o_stream);
@@ -255,11 +255,11 @@ namespace zf::io {
     [[nodiscard]] t_b8 file_load_contents(const strs::t_str_rdonly file_path, mem::t_arena *const contents_arena, mem::t_arena *const temp_arena, t_array_mut<t_u8> *const o_contents, const t_b8 add_terminator = false);
 
     enum t_directory_creation_result : t_i32 {
-        ec_directory_creation_result_success,
-        ec_directory_creation_result_already_exists,
-        ec_directory_creation_result_permission_denied,
-        ec_directory_creation_result_path_not_found,
-        ec_directory_creation_result_unknown_err
+        ek_directory_creation_result_success,
+        ek_directory_creation_result_already_exists,
+        ek_directory_creation_result_permission_denied,
+        ek_directory_creation_result_path_not_found,
+        ek_directory_creation_result_unknown_err
     };
 
     [[nodiscard]] t_b8 create_directory(const strs::t_str_rdonly path, mem::t_arena *const temp_arena, t_directory_creation_result *const o_creation_res = nullptr);
@@ -267,9 +267,9 @@ namespace zf::io {
     [[nodiscard]] t_b8 create_file_and_parent_directories(const strs::t_str_rdonly path, mem::t_arena *const temp_arena, t_directory_creation_result *const o_dir_creation_res = nullptr);
 
     enum t_path_type : t_i32 {
-        ec_path_type_not_found,
-        ec_path_type_file,
-        ec_path_type_directory
+        ek_path_type_not_found,
+        ek_path_type_file,
+        ek_path_type_directory
     };
 
     t_path_type path_get_type(const strs::t_str_rdonly path, mem::t_arena *const temp_arena);
@@ -352,7 +352,7 @@ namespace zf::io {
     template <c_integral tp_type>
     t_b8 print_type(t_stream *const stream, const t_integral_format<tp_type> format) {
         t_static_array<t_u8, 20> str_bytes = {}; // Maximum possible number of ASCII characters needed to represent a 64-bit integer.
-        t_stream str_bytes_stream = mem_stream_create(array_to_nonstatic(str_bytes), ec_stream_mode_write);
+        t_stream str_bytes_stream = mem_stream_create(array_to_nonstatic(str_bytes), ek_stream_mode_write);
         t_b8 str_bytes_stream_write_success = true;
 
         if (format.value < 0) {
@@ -432,10 +432,10 @@ namespace zf::io {
     // @subsection: Hex Printing
 
     enum t_hex_format_flags : t_i32 {
-        ec_hex_format_flags_none = 0,
-        ec_hex_format_flags_omit_prefix = 1 << 0,
-        ec_hex_format_flags_lower_case = 1 << 1,
-        ec_hex_format_flags_allow_odd_digit_cnt = 1 << 2
+        ek_hex_format_flags_none = 0,
+        ek_hex_format_flags_omit_prefix = 1 << 0,
+        ek_hex_format_flags_lower_case = 1 << 1,
+        ek_hex_format_flags_allow_odd_digit_cnt = 1 << 2
     };
 
     constexpr t_i32 k_hex_format_digit_cnt_min = 1;
@@ -468,11 +468,11 @@ namespace zf::io {
         ZF_ASSERT(format.min_digits >= k_hex_format_digit_cnt_min && format.min_digits <= k_hex_format_digit_cnt_max);
 
         t_static_array<t_u8, 2 + k_hex_format_digit_cnt_max> str_bytes = {}; // Can facilitate max number of digits plus the "0x" prefix.
-        t_stream str_bytes_stream = mem_stream_create(array_to_nonstatic(str_bytes), ec_stream_mode_write);
+        t_stream str_bytes_stream = mem_stream_create(array_to_nonstatic(str_bytes), ek_stream_mode_write);
 
         t_b8 str_bytes_stream_write_success = true;
 
-        if (!(format.flags & ec_hex_format_flags_omit_prefix)) {
+        if (!(format.flags & ek_hex_format_flags_omit_prefix)) {
             str_bytes_stream_write_success = stream_write_item(&str_bytes_stream, '0');
             ZF_ASSERT(str_bytes_stream_write_success);
 
@@ -486,7 +486,7 @@ namespace zf::io {
             if (dig < 10) {
                 return static_cast<t_u8>('0' + dig);
             } else {
-                if (flags & ec_hex_format_flags_lower_case) {
+                if (flags & ek_hex_format_flags_lower_case) {
                     return static_cast<t_u8>('a' + dig - 10);
                 } else {
                     return static_cast<t_u8>('A' + dig - 10);
@@ -497,7 +497,7 @@ namespace zf::io {
         auto value_mut = format.value;
 
         t_i32 cnter = 0;
-        const t_i32 inner_loop_cnt = (format.flags & ec_hex_format_flags_allow_odd_digit_cnt) ? 1 : 2;
+        const t_i32 inner_loop_cnt = (format.flags & ek_hex_format_flags_allow_odd_digit_cnt) ? 1 : 2;
 
         do {
             for (t_i32 i = 0; i < inner_loop_cnt; i++) {
@@ -626,9 +626,9 @@ namespace zf::io {
     // @subsection: Bit Vector Printing
 
     enum t_bitset_format_style : t_i32 {
-        ec_bitset_format_style_seq = 0,                // List all bits from LSB to MSB, not divided into bytes.
-        ec_bitset_format_style_little_endian = 1 << 0, // Split into bytes, ordered in little endian.
-        ec_bitset_format_style_big_endian = 1 << 1     // Split into bytes, ordered in big endian.
+        ek_bitset_format_style_seq = 0,                // List all bits from LSB to MSB, not divided into bytes.
+        ek_bitset_format_style_little_endian = 1 << 0, // Split into bytes, ordered in little endian.
+        ek_bitset_format_style_big_endian = 1 << 1     // Split into bytes, ordered in big endian.
     };
 
     struct t_bitset_format {
@@ -639,7 +639,7 @@ namespace zf::io {
     };
 
     inline t_bitset_format format_bitset(const mem::t_bitset_rdonly &value, const t_bitset_format_style style) { return {value, style}; }
-    inline t_bitset_format format_default(const mem::t_bitset_rdonly &value) { return format_bitset(value, ec_bitset_format_style_seq); }
+    inline t_bitset_format format_default(const mem::t_bitset_rdonly &value) { return format_bitset(value, ek_bitset_format_style_seq); }
 
     inline t_b8 print_type(t_stream *const stream, const t_bitset_format format) {
         const auto print_bit = [&](const t_i32 bit_index) {
@@ -660,7 +660,7 @@ namespace zf::io {
         };
 
         switch (format.style) {
-        case ec_bitset_format_style_seq:
+        case ek_bitset_format_style_seq:
             for (t_i32 i = 0; i < format.value.bit_cnt; i++) {
                 if (!print_bit(i)) {
                     return false;
@@ -669,7 +669,7 @@ namespace zf::io {
 
             break;
 
-        case ec_bitset_format_style_little_endian:
+        case ek_bitset_format_style_little_endian:
             for (t_i32 i = 0; i < mem::bitset_get_bytes(format.value).len; i++) {
                 if (i > 0) {
                     print(stream, ZF_STR_LITERAL(" "));
@@ -680,7 +680,7 @@ namespace zf::io {
 
             break;
 
-        case ec_bitset_format_style_big_endian:
+        case ek_bitset_format_style_big_endian:
             for (t_i32 i = mem::bitset_get_bytes(format.value).len - 1; i >= 0; i--) {
                 print_byte(i);
 

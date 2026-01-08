@@ -7,7 +7,7 @@ namespace zf {
 
         io::t_stream input_file_stream;
 
-        if (!io::file_open(input_file_path, io::ec_file_access_mode_read, &arena, &input_file_stream)) {
+        if (!io::file_open(input_file_path, io::ek_file_access_mode_read, &arena, &input_file_stream)) {
             return false;
         }
 
@@ -15,7 +15,7 @@ namespace zf {
 
         io::t_stream output_file_stream;
 
-        if (!io::file_open(output_file_path, io::ec_file_access_mode_write, &arena, &output_file_stream)) {
+        if (!io::file_open(output_file_path, io::ek_file_access_mode_write, &arena, &output_file_stream)) {
             return false;
         }
 

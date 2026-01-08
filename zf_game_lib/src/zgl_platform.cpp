@@ -86,78 +86,78 @@ namespace zf::platform {
 
     static t_i32 f_to_glfw_key(const input::t_key_code key_code) {
         switch (key_code) {
-        case input::ec_key_code_space: return GLFW_KEY_SPACE;
+        case input::ek_key_code_space: return GLFW_KEY_SPACE;
 
-        case input::ec_key_code_0: return GLFW_KEY_0;
-        case input::ec_key_code_1: return GLFW_KEY_1;
-        case input::ec_key_code_2: return GLFW_KEY_2;
-        case input::ec_key_code_3: return GLFW_KEY_3;
-        case input::ec_key_code_4: return GLFW_KEY_4;
-        case input::ec_key_code_5: return GLFW_KEY_5;
-        case input::ec_key_code_6: return GLFW_KEY_6;
-        case input::ec_key_code_7: return GLFW_KEY_7;
-        case input::ec_key_code_8: return GLFW_KEY_8;
-        case input::ec_key_code_9: return GLFW_KEY_9;
+        case input::ek_key_code_0: return GLFW_KEY_0;
+        case input::ek_key_code_1: return GLFW_KEY_1;
+        case input::ek_key_code_2: return GLFW_KEY_2;
+        case input::ek_key_code_3: return GLFW_KEY_3;
+        case input::ek_key_code_4: return GLFW_KEY_4;
+        case input::ek_key_code_5: return GLFW_KEY_5;
+        case input::ek_key_code_6: return GLFW_KEY_6;
+        case input::ek_key_code_7: return GLFW_KEY_7;
+        case input::ek_key_code_8: return GLFW_KEY_8;
+        case input::ek_key_code_9: return GLFW_KEY_9;
 
-        case input::ec_key_code_a: return GLFW_KEY_A;
-        case input::ec_key_code_b: return GLFW_KEY_B;
-        case input::ec_key_code_c: return GLFW_KEY_C;
-        case input::ec_key_code_d: return GLFW_KEY_D;
-        case input::ec_key_code_e: return GLFW_KEY_E;
-        case input::ec_key_code_f: return GLFW_KEY_F;
-        case input::ec_key_code_g: return GLFW_KEY_G;
-        case input::ec_key_code_h: return GLFW_KEY_H;
-        case input::ec_key_code_i: return GLFW_KEY_I;
-        case input::ec_key_code_j: return GLFW_KEY_J;
-        case input::ec_key_code_k: return GLFW_KEY_K;
-        case input::ec_key_code_l: return GLFW_KEY_L;
-        case input::ec_key_code_m: return GLFW_KEY_M;
-        case input::ec_key_code_n: return GLFW_KEY_N;
-        case input::ec_key_code_o: return GLFW_KEY_O;
-        case input::ec_key_code_p: return GLFW_KEY_P;
-        case input::ec_key_code_q: return GLFW_KEY_Q;
-        case input::ec_key_code_r: return GLFW_KEY_R;
-        case input::ec_key_code_s: return GLFW_KEY_S;
-        case input::ec_key_code_t: return GLFW_KEY_T;
-        case input::ec_key_code_u: return GLFW_KEY_U;
-        case input::ec_key_code_v: return GLFW_KEY_V;
-        case input::ec_key_code_w: return GLFW_KEY_W;
-        case input::ec_key_code_x: return GLFW_KEY_X;
-        case input::ec_key_code_y: return GLFW_KEY_Y;
-        case input::ec_key_code_z: return GLFW_KEY_Z;
+        case input::ek_key_code_a: return GLFW_KEY_A;
+        case input::ek_key_code_b: return GLFW_KEY_B;
+        case input::ek_key_code_c: return GLFW_KEY_C;
+        case input::ek_key_code_d: return GLFW_KEY_D;
+        case input::ek_key_code_e: return GLFW_KEY_E;
+        case input::ek_key_code_f: return GLFW_KEY_F;
+        case input::ek_key_code_g: return GLFW_KEY_G;
+        case input::ek_key_code_h: return GLFW_KEY_H;
+        case input::ek_key_code_i: return GLFW_KEY_I;
+        case input::ek_key_code_j: return GLFW_KEY_J;
+        case input::ek_key_code_k: return GLFW_KEY_K;
+        case input::ek_key_code_l: return GLFW_KEY_L;
+        case input::ek_key_code_m: return GLFW_KEY_M;
+        case input::ek_key_code_n: return GLFW_KEY_N;
+        case input::ek_key_code_o: return GLFW_KEY_O;
+        case input::ek_key_code_p: return GLFW_KEY_P;
+        case input::ek_key_code_q: return GLFW_KEY_Q;
+        case input::ek_key_code_r: return GLFW_KEY_R;
+        case input::ek_key_code_s: return GLFW_KEY_S;
+        case input::ek_key_code_t: return GLFW_KEY_T;
+        case input::ek_key_code_u: return GLFW_KEY_U;
+        case input::ek_key_code_v: return GLFW_KEY_V;
+        case input::ek_key_code_w: return GLFW_KEY_W;
+        case input::ek_key_code_x: return GLFW_KEY_X;
+        case input::ek_key_code_y: return GLFW_KEY_Y;
+        case input::ek_key_code_z: return GLFW_KEY_Z;
 
-        case input::ec_key_code_escape: return GLFW_KEY_ESCAPE;
-        case input::ec_key_code_enter: return GLFW_KEY_ENTER;
-        case input::ec_key_code_backspace: return GLFW_KEY_BACKSPACE;
-        case input::ec_key_code_tab: return GLFW_KEY_TAB;
+        case input::ek_key_code_escape: return GLFW_KEY_ESCAPE;
+        case input::ek_key_code_enter: return GLFW_KEY_ENTER;
+        case input::ek_key_code_backspace: return GLFW_KEY_BACKSPACE;
+        case input::ek_key_code_tab: return GLFW_KEY_TAB;
 
-        case input::ec_key_code_right: return GLFW_KEY_RIGHT;
-        case input::ec_key_code_left: return GLFW_KEY_LEFT;
-        case input::ec_key_code_down: return GLFW_KEY_DOWN;
-        case input::ec_key_code_up: return GLFW_KEY_UP;
+        case input::ek_key_code_right: return GLFW_KEY_RIGHT;
+        case input::ek_key_code_left: return GLFW_KEY_LEFT;
+        case input::ek_key_code_down: return GLFW_KEY_DOWN;
+        case input::ek_key_code_up: return GLFW_KEY_UP;
 
-        case input::ec_key_code_f1: return GLFW_KEY_F1;
-        case input::ec_key_code_f2: return GLFW_KEY_F2;
-        case input::ec_key_code_f3: return GLFW_KEY_F3;
-        case input::ec_key_code_f4: return GLFW_KEY_F4;
-        case input::ec_key_code_f5: return GLFW_KEY_F5;
-        case input::ec_key_code_f6: return GLFW_KEY_F6;
-        case input::ec_key_code_f7: return GLFW_KEY_F7;
-        case input::ec_key_code_f8: return GLFW_KEY_F8;
-        case input::ec_key_code_f9: return GLFW_KEY_F9;
-        case input::ec_key_code_f10: return GLFW_KEY_F10;
-        case input::ec_key_code_f11: return GLFW_KEY_F11;
-        case input::ec_key_code_f12: return GLFW_KEY_F12;
+        case input::ek_key_code_f1: return GLFW_KEY_F1;
+        case input::ek_key_code_f2: return GLFW_KEY_F2;
+        case input::ek_key_code_f3: return GLFW_KEY_F3;
+        case input::ek_key_code_f4: return GLFW_KEY_F4;
+        case input::ek_key_code_f5: return GLFW_KEY_F5;
+        case input::ek_key_code_f6: return GLFW_KEY_F6;
+        case input::ek_key_code_f7: return GLFW_KEY_F7;
+        case input::ek_key_code_f8: return GLFW_KEY_F8;
+        case input::ek_key_code_f9: return GLFW_KEY_F9;
+        case input::ek_key_code_f10: return GLFW_KEY_F10;
+        case input::ek_key_code_f11: return GLFW_KEY_F11;
+        case input::ek_key_code_f12: return GLFW_KEY_F12;
 
-        case input::ec_key_code_left_shift: return GLFW_KEY_LEFT_SHIFT;
-        case input::ec_key_code_left_control: return GLFW_KEY_LEFT_CONTROL;
-        case input::ec_key_code_left_alt: return GLFW_KEY_LEFT_ALT;
+        case input::ek_key_code_left_shift: return GLFW_KEY_LEFT_SHIFT;
+        case input::ek_key_code_left_control: return GLFW_KEY_LEFT_CONTROL;
+        case input::ek_key_code_left_alt: return GLFW_KEY_LEFT_ALT;
 
-        case input::ec_key_code_right_shift: return GLFW_KEY_RIGHT_SHIFT;
-        case input::ec_key_code_right_control: return GLFW_KEY_RIGHT_CONTROL;
-        case input::ec_key_code_right_alt: return GLFW_KEY_RIGHT_ALT;
+        case input::ek_key_code_right_shift: return GLFW_KEY_RIGHT_SHIFT;
+        case input::ek_key_code_right_control: return GLFW_KEY_RIGHT_CONTROL;
+        case input::ek_key_code_right_alt: return GLFW_KEY_RIGHT_ALT;
 
-        case input::ecm_key_code_cnt: break;
+        case input::ekm_key_code_cnt: break;
         }
 
         ZF_UNREACHABLE();
@@ -165,11 +165,11 @@ namespace zf::platform {
 
     static t_i32 f_to_glfw_mouse_button(const input::t_mouse_button_code btn_code) {
         switch (btn_code) {
-        case input::ec_mouse_button_code_left: return GLFW_MOUSE_BUTTON_LEFT;
-        case input::ec_mouse_button_code_right: return GLFW_MOUSE_BUTTON_RIGHT;
-        case input::ec_mouse_button_code_middle: return GLFW_MOUSE_BUTTON_MIDDLE;
+        case input::ek_mouse_button_code_left: return GLFW_MOUSE_BUTTON_LEFT;
+        case input::ek_mouse_button_code_right: return GLFW_MOUSE_BUTTON_RIGHT;
+        case input::ek_mouse_button_code_middle: return GLFW_MOUSE_BUTTON_MIDDLE;
 
-        case input::ecm_mouse_button_code_cnt: break;
+        case input::ekm_mouse_button_code_cnt: break;
         }
 
         ZF_UNREACHABLE();
@@ -182,12 +182,12 @@ namespace zf::platform {
 
         glfwPollEvents();
 
-        for (t_i32 i = 0; i < input::ecm_key_code_cnt; i++) {
+        for (t_i32 i = 0; i < input::ekm_key_code_cnt; i++) {
             const t_b8 is_down = glfwGetKey(g_module_state.glfw_window, f_to_glfw_key(static_cast<input::t_key_code>(i))) == GLFW_PRESS;
             input::key_update_state(input_state, static_cast<input::t_key_code>(i), is_down);
         }
 
-        for (t_i32 i = 0; i < input::ecm_mouse_button_code_cnt; i++) {
+        for (t_i32 i = 0; i < input::ekm_mouse_button_code_cnt; i++) {
             const t_b8 is_down = glfwGetMouseButton(g_module_state.glfw_window, f_to_glfw_mouse_button(static_cast<input::t_mouse_button_code>(i))) == GLFW_PRESS;
             input::mouse_button_update_state(input_state, static_cast<input::t_mouse_button_code>(i), is_down);
         }
@@ -200,8 +200,8 @@ namespace zf::platform {
 
         for (t_i32 i = GLFW_JOYSTICK_1; i <= GLFW_JOYSTICK_LAST; i++) {
             t_b8 connected = false;
-            mem::t_static_bitset<input::ecm_gamepad_button_code_cnt> btns_down = {};
-            t_static_array<t_f32, input::ecm_gamepad_axis_code_cnt> axes = {};
+            mem::t_static_bitset<input::ekm_gamepad_button_code_cnt> btns_down = {};
+            t_static_array<t_f32, input::ekm_gamepad_axis_code_cnt> axes = {};
 
             GLFWgamepadstate gamepad_state;
 

@@ -17,19 +17,19 @@ namespace zf::io {
         t_stream_mode stream_mode;
 
         switch (mode) {
-        case ec_file_access_mode_read:
+        case ek_file_access_mode_read:
             file = fopen(strs::str_to_cstr(path_terminated), "rb");
-            stream_mode = ec_stream_mode_read;
+            stream_mode = ek_stream_mode_read;
             break;
 
-        case ec_file_access_mode_write:
+        case ek_file_access_mode_write:
             file = fopen(strs::str_to_cstr(path_terminated), "wb");
-            stream_mode = ec_stream_mode_write;
+            stream_mode = ek_stream_mode_write;
             break;
 
-        case ec_file_access_mode_append:
+        case ek_file_access_mode_append:
             file = fopen(strs::str_to_cstr(path_terminated), "ab");
-            stream_mode = ec_stream_mode_write;
+            stream_mode = ek_stream_mode_write;
             break;
 
         default:
@@ -62,7 +62,7 @@ namespace zf::io {
     t_b8 file_load_contents(const strs::t_str_rdonly path, mem::t_arena *const contents_arena, mem::t_arena *const temp_arena, t_array_mut<t_u8> *const o_contents, const t_b8 add_terminator) {
         t_stream stream;
 
-        if (!file_open(path, ec_file_access_mode_read, temp_arena, &stream)) {
+        if (!file_open(path, ek_file_access_mode_read, temp_arena, &stream)) {
             return false;
         }
 
@@ -86,7 +86,7 @@ namespace zf::io {
 
     t_b8 create_directory(const strs::t_str_rdonly path, mem::t_arena *const temp_arena, t_directory_creation_result *const o_creation_res) {
         if (o_creation_res) {
-            *o_creation_res = ec_directory_creation_result_success;
+            *o_creation_res = ek_directory_creation_result_success;
         }
 
         const strs::t_str_rdonly path_terminated = strs::str_clone_but_add_terminator(path, temp_arena);
@@ -104,20 +104,20 @@ namespace zf::io {
         if (o_creation_res) {
             switch (errno) {
             case EEXIST:
-                *o_creation_res = ec_directory_creation_result_already_exists;
+                *o_creation_res = ek_directory_creation_result_already_exists;
                 break;
 
             case EACCES:
             case EPERM:
-                *o_creation_res = ec_directory_creation_result_permission_denied;
+                *o_creation_res = ek_directory_creation_result_permission_denied;
                 break;
 
             case ENOENT:
-                *o_creation_res = ec_directory_creation_result_path_not_found;
+                *o_creation_res = ek_directory_creation_result_path_not_found;
                 break;
 
             default:
-                *o_creation_res = ec_directory_creation_result_unknown_err;
+                *o_creation_res = ek_directory_creation_result_unknown_err;
                 break;
             }
         }
@@ -127,11 +127,11 @@ namespace zf::io {
 
     t_b8 create_directory_and_parents(const strs::t_str_rdonly path, mem::t_arena *const temp_arena, t_directory_creation_result *const o_dir_creation_res) {
         if (o_dir_creation_res) {
-            *o_dir_creation_res = ec_directory_creation_result_success;
+            *o_dir_creation_res = ek_directory_creation_result_success;
         }
 
         const auto create_dir_if_nonexistent = [o_dir_creation_res, &temp_arena](const strs::t_str_rdonly path) {
-            if (path_get_type(path, temp_arena) == ec_path_type_not_found) {
+            if (path_get_type(path, temp_arena) == ek_path_type_not_found) {
                 if (!create_directory(path, temp_arena, o_dir_creation_res)) {
                     return false;
                 }
@@ -167,7 +167,7 @@ namespace zf::io {
 
     t_b8 create_file_and_parent_directories(const strs::t_str_rdonly path, mem::t_arena *const temp_arena, t_directory_creation_result *const o_dir_creation_res) {
         if (o_dir_creation_res) {
-            *o_dir_creation_res = ec_directory_creation_result_success;
+            *o_dir_creation_res = ek_directory_creation_result_success;
         }
 
         // Get the substring containing all directories and create them.
@@ -184,7 +184,7 @@ namespace zf::io {
         // Now that directories are created, create the file.
         t_stream fs;
 
-        if (!file_open(path, ec_file_access_mode_write, temp_arena, &fs)) {
+        if (!file_open(path, ek_file_access_mode_write, temp_arena, &fs)) {
             return false;
         }
 
@@ -199,14 +199,14 @@ namespace zf::io {
         struct stat info;
 
         if (stat(strs::str_to_cstr(path_terminated), &info) != 0) {
-            return ec_path_type_not_found;
+            return ek_path_type_not_found;
         }
 
         if (info.st_mode & S_IFDIR) {
-            return ec_path_type_directory;
+            return ek_path_type_directory;
         }
 
-        return ec_path_type_file;
+        return ek_path_type_file;
     }
 
     strs::t_str_mut get_executable_directory(mem::t_arena *const arena) {

@@ -2,32 +2,32 @@
 
 namespace zf::input {
     struct t_gamepad {
-        mem::t_static_bitset<ecm_gamepad_button_code_cnt> buttons_down;
-        t_static_array<t_f32, ecm_gamepad_axis_code_cnt> axes;
+        mem::t_static_bitset<ekm_gamepad_button_code_cnt> buttons_down;
+        t_static_array<t_f32, ekm_gamepad_axis_code_cnt> axes;
     };
 
     struct t_gamepad_events {
-        mem::t_static_bitset<ecm_gamepad_button_code_cnt> buttons_pressed;
-        mem::t_static_bitset<ecm_gamepad_button_code_cnt> buttons_released;
+        mem::t_static_bitset<ekm_gamepad_button_code_cnt> buttons_pressed;
+        mem::t_static_bitset<ekm_gamepad_button_code_cnt> buttons_released;
     };
 
     struct t_state {
-        mem::t_static_bitset<ecm_key_code_cnt> keys_down;
+        mem::t_static_bitset<ekm_key_code_cnt> keys_down;
 
-        mem::t_static_bitset<ecm_mouse_button_code_cnt> mouse_buttons_down;
+        mem::t_static_bitset<ekm_mouse_button_code_cnt> mouse_buttons_down;
 
         math::t_v2 cursor_pos;
 
         mem::t_static_bitset<k_gamepad_limit> gamepads_connected;
         t_static_array<t_gamepad, k_gamepad_limit> gamepads;
-        t_static_array<t_f32, ecm_gamepad_axis_code_cnt> gamepad_axis_deadzones;
+        t_static_array<t_f32, ekm_gamepad_axis_code_cnt> gamepad_axis_deadzones;
 
         struct {
-            mem::t_static_bitset<ecm_key_code_cnt> keys_pressed;
-            mem::t_static_bitset<ecm_key_code_cnt> keys_released;
+            mem::t_static_bitset<ekm_key_code_cnt> keys_pressed;
+            mem::t_static_bitset<ekm_key_code_cnt> keys_released;
 
-            mem::t_static_bitset<ecm_mouse_button_code_cnt> mouse_buttons_pressed;
-            mem::t_static_bitset<ecm_mouse_button_code_cnt> mouse_buttons_released;
+            mem::t_static_bitset<ekm_mouse_button_code_cnt> mouse_buttons_pressed;
+            mem::t_static_bitset<ekm_mouse_button_code_cnt> mouse_buttons_released;
 
             math::t_v2 scroll_offs;
 
@@ -151,7 +151,7 @@ namespace zf::input {
         return static_cast<t_f32>(sign(raw)) * ((raw_abs - dz) / (1.0f - dz));
     }
 
-    void gamepad_update_state(t_state *const state, const t_i32 gamepad_index, const t_b8 connected, const mem::t_static_bitset<ecm_gamepad_button_code_cnt> &btns_down, const t_static_array<t_f32, ecm_gamepad_axis_code_cnt> &axes) {
+    void gamepad_update_state(t_state *const state, const t_i32 gamepad_index, const t_b8 connected, const mem::t_static_bitset<ekm_gamepad_button_code_cnt> &btns_down, const t_static_array<t_f32, ekm_gamepad_axis_code_cnt> &axes) {
         if (!connected) {
             ZF_ASSERT(mem::bitset_check_all_unset(btns_down) && array_check_all_equal(array_to_nonstatic(axes), 0.0f));
             return;
@@ -163,7 +163,7 @@ namespace zf::input {
             state->events.gamepads[gamepad_index] = {};
         }
 
-        for (t_i32 i = 0; i < ecm_gamepad_button_code_cnt; i++) {
+        for (t_i32 i = 0; i < ekm_gamepad_button_code_cnt; i++) {
             if (mem::bitset_check_set(btns_down, i)) {
                 if (!mem::bitset_check_set(state->gamepads[i].buttons_down, i)) {
                     mem::bitset_set(state->gamepads[i].buttons_down, i);

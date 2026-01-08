@@ -47,7 +47,7 @@ namespace zf::gfx {
 
         io::t_stream fs;
 
-        if (!io::file_open(file_path, io::ec_file_access_mode_write, temp_arena, &fs)) {
+        if (!io::file_open(file_path, io::ek_file_access_mode_write, temp_arena, &fs)) {
             return false;
         }
 
@@ -67,7 +67,7 @@ namespace zf::gfx {
     t_b8 texture_unpack(const strs::t_str_rdonly file_path, mem::t_arena *const texture_data_arena, mem::t_arena *const temp_arena, t_texture_data_mut *const o_texture_data) {
         io::t_stream fs;
 
-        if (!io::file_open(file_path, io::ec_file_access_mode_read, temp_arena, &fs)) {
+        if (!io::file_open(file_path, io::ek_file_access_mode_read, temp_arena, &fs)) {
             return false;
         }
 
@@ -273,7 +273,7 @@ namespace zf::gfx {
 
         io::t_stream fs;
 
-        if (!io::file_open(file_path, io::ec_file_access_mode_write, temp_arena, &fs)) {
+        if (!io::file_open(file_path, io::ek_file_access_mode_write, temp_arena, &fs)) {
             return false;
         }
 
@@ -301,7 +301,7 @@ namespace zf::gfx {
     t_b8 font_unpack(const strs::t_str_rdonly file_path, mem::t_arena *const arrangement_arena, mem::t_arena *const atlas_rgbas_arena, mem::t_arena *const temp_arena, t_font_arrangement *const o_arrangement, t_array_mut<t_font_atlas_rgba> *const o_atlas_rgbas) {
         io::t_stream fs;
 
-        if (!io::file_open(file_path, io::ec_file_access_mode_read, temp_arena, &fs)) {
+        if (!io::file_open(file_path, io::ek_file_access_mode_read, temp_arena, &fs)) {
             return false;
         }
 
@@ -333,7 +333,7 @@ namespace zf::gfx {
 
         io::t_stream fs;
 
-        if (!io::file_open(file_path, io::ec_file_access_mode_write, temp_arena, &fs)) {
+        if (!io::file_open(file_path, io::ek_file_access_mode_write, temp_arena, &fs)) {
             return false;
         }
 
@@ -349,7 +349,7 @@ namespace zf::gfx {
     t_b8 shader_unpack(const strs::t_str_rdonly file_path, mem::t_arena *const shader_bin_arena, mem::t_arena *const temp_arena, t_array_mut<t_u8> *const o_shader_bin) {
         io::t_stream fs;
 
-        if (!io::file_open(file_path, io::ec_file_access_mode_read, temp_arena, &fs)) {
+        if (!io::file_open(file_path, io::ek_file_access_mode_read, temp_arena, &fs)) {
             return false;
         }
 

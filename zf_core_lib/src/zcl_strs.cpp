@@ -2,278 +2,278 @@
 
 namespace zf::strs {
     enum t_utf8_byte_type : t_i32 {
-        ec_utf8_byte_type_ascii,
-        ec_utf8_byte_type_2byte_start,
-        ec_utf8_byte_type_3byte_start,
-        ec_utf8_byte_type_4byte_start,
-        ec_utf8_byte_type_continuation,
-        ec_utf8_byte_type_invalid
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_2byte_start,
+        ek_utf8_byte_type_3byte_start,
+        ek_utf8_byte_type_4byte_start,
+        ek_utf8_byte_type_continuation,
+        ek_utf8_byte_type_invalid
     };
 
-    static_assert(ec_utf8_byte_type_4byte_start - ec_utf8_byte_type_ascii + 1 == 4); // This is assumed in various algorithms.
+    static_assert(ek_utf8_byte_type_4byte_start - ek_utf8_byte_type_ascii + 1 == 4); // This is assumed in various algorithms.
 
     constexpr t_static_array<t_utf8_byte_type, 256> k_utf8_byte_type_table = {{
-        ec_utf8_byte_type_ascii,
-        ec_utf8_byte_type_ascii,
-        ec_utf8_byte_type_ascii,
-        ec_utf8_byte_type_ascii,
-        ec_utf8_byte_type_ascii,
-        ec_utf8_byte_type_ascii,
-        ec_utf8_byte_type_ascii,
-        ec_utf8_byte_type_ascii,
-        ec_utf8_byte_type_ascii,
-        ec_utf8_byte_type_ascii,
-        ec_utf8_byte_type_ascii,
-        ec_utf8_byte_type_ascii,
-        ec_utf8_byte_type_ascii,
-        ec_utf8_byte_type_ascii,
-        ec_utf8_byte_type_ascii,
-        ec_utf8_byte_type_ascii,
-        ec_utf8_byte_type_ascii,
-        ec_utf8_byte_type_ascii,
-        ec_utf8_byte_type_ascii,
-        ec_utf8_byte_type_ascii,
-        ec_utf8_byte_type_ascii,
-        ec_utf8_byte_type_ascii,
-        ec_utf8_byte_type_ascii,
-        ec_utf8_byte_type_ascii,
-        ec_utf8_byte_type_ascii,
-        ec_utf8_byte_type_ascii,
-        ec_utf8_byte_type_ascii,
-        ec_utf8_byte_type_ascii,
-        ec_utf8_byte_type_ascii,
-        ec_utf8_byte_type_ascii,
-        ec_utf8_byte_type_ascii,
-        ec_utf8_byte_type_ascii,
-        ec_utf8_byte_type_ascii,
-        ec_utf8_byte_type_ascii,
-        ec_utf8_byte_type_ascii,
-        ec_utf8_byte_type_ascii,
-        ec_utf8_byte_type_ascii,
-        ec_utf8_byte_type_ascii,
-        ec_utf8_byte_type_ascii,
-        ec_utf8_byte_type_ascii,
-        ec_utf8_byte_type_ascii,
-        ec_utf8_byte_type_ascii,
-        ec_utf8_byte_type_ascii,
-        ec_utf8_byte_type_ascii,
-        ec_utf8_byte_type_ascii,
-        ec_utf8_byte_type_ascii,
-        ec_utf8_byte_type_ascii,
-        ec_utf8_byte_type_ascii,
-        ec_utf8_byte_type_ascii,
-        ec_utf8_byte_type_ascii,
-        ec_utf8_byte_type_ascii,
-        ec_utf8_byte_type_ascii,
-        ec_utf8_byte_type_ascii,
-        ec_utf8_byte_type_ascii,
-        ec_utf8_byte_type_ascii,
-        ec_utf8_byte_type_ascii,
-        ec_utf8_byte_type_ascii,
-        ec_utf8_byte_type_ascii,
-        ec_utf8_byte_type_ascii,
-        ec_utf8_byte_type_ascii,
-        ec_utf8_byte_type_ascii,
-        ec_utf8_byte_type_ascii,
-        ec_utf8_byte_type_ascii,
-        ec_utf8_byte_type_ascii,
-        ec_utf8_byte_type_ascii,
-        ec_utf8_byte_type_ascii,
-        ec_utf8_byte_type_ascii,
-        ec_utf8_byte_type_ascii,
-        ec_utf8_byte_type_ascii,
-        ec_utf8_byte_type_ascii,
-        ec_utf8_byte_type_ascii,
-        ec_utf8_byte_type_ascii,
-        ec_utf8_byte_type_ascii,
-        ec_utf8_byte_type_ascii,
-        ec_utf8_byte_type_ascii,
-        ec_utf8_byte_type_ascii,
-        ec_utf8_byte_type_ascii,
-        ec_utf8_byte_type_ascii,
-        ec_utf8_byte_type_ascii,
-        ec_utf8_byte_type_ascii,
-        ec_utf8_byte_type_ascii,
-        ec_utf8_byte_type_ascii,
-        ec_utf8_byte_type_ascii,
-        ec_utf8_byte_type_ascii,
-        ec_utf8_byte_type_ascii,
-        ec_utf8_byte_type_ascii,
-        ec_utf8_byte_type_ascii,
-        ec_utf8_byte_type_ascii,
-        ec_utf8_byte_type_ascii,
-        ec_utf8_byte_type_ascii,
-        ec_utf8_byte_type_ascii,
-        ec_utf8_byte_type_ascii,
-        ec_utf8_byte_type_ascii,
-        ec_utf8_byte_type_ascii,
-        ec_utf8_byte_type_ascii,
-        ec_utf8_byte_type_ascii,
-        ec_utf8_byte_type_ascii,
-        ec_utf8_byte_type_ascii,
-        ec_utf8_byte_type_ascii,
-        ec_utf8_byte_type_ascii,
-        ec_utf8_byte_type_ascii,
-        ec_utf8_byte_type_ascii,
-        ec_utf8_byte_type_ascii,
-        ec_utf8_byte_type_ascii,
-        ec_utf8_byte_type_ascii,
-        ec_utf8_byte_type_ascii,
-        ec_utf8_byte_type_ascii,
-        ec_utf8_byte_type_ascii,
-        ec_utf8_byte_type_ascii,
-        ec_utf8_byte_type_ascii,
-        ec_utf8_byte_type_ascii,
-        ec_utf8_byte_type_ascii,
-        ec_utf8_byte_type_ascii,
-        ec_utf8_byte_type_ascii,
-        ec_utf8_byte_type_ascii,
-        ec_utf8_byte_type_ascii,
-        ec_utf8_byte_type_ascii,
-        ec_utf8_byte_type_ascii,
-        ec_utf8_byte_type_ascii,
-        ec_utf8_byte_type_ascii,
-        ec_utf8_byte_type_ascii,
-        ec_utf8_byte_type_ascii,
-        ec_utf8_byte_type_ascii,
-        ec_utf8_byte_type_ascii,
-        ec_utf8_byte_type_ascii,
-        ec_utf8_byte_type_ascii,
-        ec_utf8_byte_type_ascii,
-        ec_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
+        ek_utf8_byte_type_ascii,
 
-        ec_utf8_byte_type_continuation,
-        ec_utf8_byte_type_continuation,
-        ec_utf8_byte_type_continuation,
-        ec_utf8_byte_type_continuation,
-        ec_utf8_byte_type_continuation,
-        ec_utf8_byte_type_continuation,
-        ec_utf8_byte_type_continuation,
-        ec_utf8_byte_type_continuation,
-        ec_utf8_byte_type_continuation,
-        ec_utf8_byte_type_continuation,
-        ec_utf8_byte_type_continuation,
-        ec_utf8_byte_type_continuation,
-        ec_utf8_byte_type_continuation,
-        ec_utf8_byte_type_continuation,
-        ec_utf8_byte_type_continuation,
-        ec_utf8_byte_type_continuation,
-        ec_utf8_byte_type_continuation,
-        ec_utf8_byte_type_continuation,
-        ec_utf8_byte_type_continuation,
-        ec_utf8_byte_type_continuation,
-        ec_utf8_byte_type_continuation,
-        ec_utf8_byte_type_continuation,
-        ec_utf8_byte_type_continuation,
-        ec_utf8_byte_type_continuation,
-        ec_utf8_byte_type_continuation,
-        ec_utf8_byte_type_continuation,
-        ec_utf8_byte_type_continuation,
-        ec_utf8_byte_type_continuation,
-        ec_utf8_byte_type_continuation,
-        ec_utf8_byte_type_continuation,
-        ec_utf8_byte_type_continuation,
-        ec_utf8_byte_type_continuation,
-        ec_utf8_byte_type_continuation,
-        ec_utf8_byte_type_continuation,
-        ec_utf8_byte_type_continuation,
-        ec_utf8_byte_type_continuation,
-        ec_utf8_byte_type_continuation,
-        ec_utf8_byte_type_continuation,
-        ec_utf8_byte_type_continuation,
-        ec_utf8_byte_type_continuation,
-        ec_utf8_byte_type_continuation,
-        ec_utf8_byte_type_continuation,
-        ec_utf8_byte_type_continuation,
-        ec_utf8_byte_type_continuation,
-        ec_utf8_byte_type_continuation,
-        ec_utf8_byte_type_continuation,
-        ec_utf8_byte_type_continuation,
-        ec_utf8_byte_type_continuation,
-        ec_utf8_byte_type_continuation,
-        ec_utf8_byte_type_continuation,
-        ec_utf8_byte_type_continuation,
-        ec_utf8_byte_type_continuation,
-        ec_utf8_byte_type_continuation,
-        ec_utf8_byte_type_continuation,
-        ec_utf8_byte_type_continuation,
-        ec_utf8_byte_type_continuation,
-        ec_utf8_byte_type_continuation,
-        ec_utf8_byte_type_continuation,
-        ec_utf8_byte_type_continuation,
-        ec_utf8_byte_type_continuation,
-        ec_utf8_byte_type_continuation,
-        ec_utf8_byte_type_continuation,
-        ec_utf8_byte_type_continuation,
-        ec_utf8_byte_type_continuation,
+        ek_utf8_byte_type_continuation,
+        ek_utf8_byte_type_continuation,
+        ek_utf8_byte_type_continuation,
+        ek_utf8_byte_type_continuation,
+        ek_utf8_byte_type_continuation,
+        ek_utf8_byte_type_continuation,
+        ek_utf8_byte_type_continuation,
+        ek_utf8_byte_type_continuation,
+        ek_utf8_byte_type_continuation,
+        ek_utf8_byte_type_continuation,
+        ek_utf8_byte_type_continuation,
+        ek_utf8_byte_type_continuation,
+        ek_utf8_byte_type_continuation,
+        ek_utf8_byte_type_continuation,
+        ek_utf8_byte_type_continuation,
+        ek_utf8_byte_type_continuation,
+        ek_utf8_byte_type_continuation,
+        ek_utf8_byte_type_continuation,
+        ek_utf8_byte_type_continuation,
+        ek_utf8_byte_type_continuation,
+        ek_utf8_byte_type_continuation,
+        ek_utf8_byte_type_continuation,
+        ek_utf8_byte_type_continuation,
+        ek_utf8_byte_type_continuation,
+        ek_utf8_byte_type_continuation,
+        ek_utf8_byte_type_continuation,
+        ek_utf8_byte_type_continuation,
+        ek_utf8_byte_type_continuation,
+        ek_utf8_byte_type_continuation,
+        ek_utf8_byte_type_continuation,
+        ek_utf8_byte_type_continuation,
+        ek_utf8_byte_type_continuation,
+        ek_utf8_byte_type_continuation,
+        ek_utf8_byte_type_continuation,
+        ek_utf8_byte_type_continuation,
+        ek_utf8_byte_type_continuation,
+        ek_utf8_byte_type_continuation,
+        ek_utf8_byte_type_continuation,
+        ek_utf8_byte_type_continuation,
+        ek_utf8_byte_type_continuation,
+        ek_utf8_byte_type_continuation,
+        ek_utf8_byte_type_continuation,
+        ek_utf8_byte_type_continuation,
+        ek_utf8_byte_type_continuation,
+        ek_utf8_byte_type_continuation,
+        ek_utf8_byte_type_continuation,
+        ek_utf8_byte_type_continuation,
+        ek_utf8_byte_type_continuation,
+        ek_utf8_byte_type_continuation,
+        ek_utf8_byte_type_continuation,
+        ek_utf8_byte_type_continuation,
+        ek_utf8_byte_type_continuation,
+        ek_utf8_byte_type_continuation,
+        ek_utf8_byte_type_continuation,
+        ek_utf8_byte_type_continuation,
+        ek_utf8_byte_type_continuation,
+        ek_utf8_byte_type_continuation,
+        ek_utf8_byte_type_continuation,
+        ek_utf8_byte_type_continuation,
+        ek_utf8_byte_type_continuation,
+        ek_utf8_byte_type_continuation,
+        ek_utf8_byte_type_continuation,
+        ek_utf8_byte_type_continuation,
+        ek_utf8_byte_type_continuation,
 
-        ec_utf8_byte_type_2byte_start,
-        ec_utf8_byte_type_2byte_start,
-        ec_utf8_byte_type_2byte_start,
-        ec_utf8_byte_type_2byte_start,
-        ec_utf8_byte_type_2byte_start,
-        ec_utf8_byte_type_2byte_start,
-        ec_utf8_byte_type_2byte_start,
-        ec_utf8_byte_type_2byte_start,
-        ec_utf8_byte_type_2byte_start,
-        ec_utf8_byte_type_2byte_start,
-        ec_utf8_byte_type_2byte_start,
-        ec_utf8_byte_type_2byte_start,
-        ec_utf8_byte_type_2byte_start,
-        ec_utf8_byte_type_2byte_start,
-        ec_utf8_byte_type_2byte_start,
-        ec_utf8_byte_type_2byte_start,
-        ec_utf8_byte_type_2byte_start,
-        ec_utf8_byte_type_2byte_start,
-        ec_utf8_byte_type_2byte_start,
-        ec_utf8_byte_type_2byte_start,
-        ec_utf8_byte_type_2byte_start,
-        ec_utf8_byte_type_2byte_start,
-        ec_utf8_byte_type_2byte_start,
-        ec_utf8_byte_type_2byte_start,
-        ec_utf8_byte_type_2byte_start,
-        ec_utf8_byte_type_2byte_start,
-        ec_utf8_byte_type_2byte_start,
-        ec_utf8_byte_type_2byte_start,
-        ec_utf8_byte_type_2byte_start,
-        ec_utf8_byte_type_2byte_start,
-        ec_utf8_byte_type_2byte_start,
-        ec_utf8_byte_type_2byte_start,
+        ek_utf8_byte_type_2byte_start,
+        ek_utf8_byte_type_2byte_start,
+        ek_utf8_byte_type_2byte_start,
+        ek_utf8_byte_type_2byte_start,
+        ek_utf8_byte_type_2byte_start,
+        ek_utf8_byte_type_2byte_start,
+        ek_utf8_byte_type_2byte_start,
+        ek_utf8_byte_type_2byte_start,
+        ek_utf8_byte_type_2byte_start,
+        ek_utf8_byte_type_2byte_start,
+        ek_utf8_byte_type_2byte_start,
+        ek_utf8_byte_type_2byte_start,
+        ek_utf8_byte_type_2byte_start,
+        ek_utf8_byte_type_2byte_start,
+        ek_utf8_byte_type_2byte_start,
+        ek_utf8_byte_type_2byte_start,
+        ek_utf8_byte_type_2byte_start,
+        ek_utf8_byte_type_2byte_start,
+        ek_utf8_byte_type_2byte_start,
+        ek_utf8_byte_type_2byte_start,
+        ek_utf8_byte_type_2byte_start,
+        ek_utf8_byte_type_2byte_start,
+        ek_utf8_byte_type_2byte_start,
+        ek_utf8_byte_type_2byte_start,
+        ek_utf8_byte_type_2byte_start,
+        ek_utf8_byte_type_2byte_start,
+        ek_utf8_byte_type_2byte_start,
+        ek_utf8_byte_type_2byte_start,
+        ek_utf8_byte_type_2byte_start,
+        ek_utf8_byte_type_2byte_start,
+        ek_utf8_byte_type_2byte_start,
+        ek_utf8_byte_type_2byte_start,
 
-        ec_utf8_byte_type_3byte_start,
-        ec_utf8_byte_type_3byte_start,
-        ec_utf8_byte_type_3byte_start,
-        ec_utf8_byte_type_3byte_start,
-        ec_utf8_byte_type_3byte_start,
-        ec_utf8_byte_type_3byte_start,
-        ec_utf8_byte_type_3byte_start,
-        ec_utf8_byte_type_3byte_start,
-        ec_utf8_byte_type_3byte_start,
-        ec_utf8_byte_type_3byte_start,
-        ec_utf8_byte_type_3byte_start,
-        ec_utf8_byte_type_3byte_start,
-        ec_utf8_byte_type_3byte_start,
-        ec_utf8_byte_type_3byte_start,
-        ec_utf8_byte_type_3byte_start,
-        ec_utf8_byte_type_3byte_start,
+        ek_utf8_byte_type_3byte_start,
+        ek_utf8_byte_type_3byte_start,
+        ek_utf8_byte_type_3byte_start,
+        ek_utf8_byte_type_3byte_start,
+        ek_utf8_byte_type_3byte_start,
+        ek_utf8_byte_type_3byte_start,
+        ek_utf8_byte_type_3byte_start,
+        ek_utf8_byte_type_3byte_start,
+        ek_utf8_byte_type_3byte_start,
+        ek_utf8_byte_type_3byte_start,
+        ek_utf8_byte_type_3byte_start,
+        ek_utf8_byte_type_3byte_start,
+        ek_utf8_byte_type_3byte_start,
+        ek_utf8_byte_type_3byte_start,
+        ek_utf8_byte_type_3byte_start,
+        ek_utf8_byte_type_3byte_start,
 
-        ec_utf8_byte_type_4byte_start,
-        ec_utf8_byte_type_4byte_start,
-        ec_utf8_byte_type_4byte_start,
-        ec_utf8_byte_type_4byte_start,
-        ec_utf8_byte_type_4byte_start,
-        ec_utf8_byte_type_4byte_start,
-        ec_utf8_byte_type_4byte_start,
-        ec_utf8_byte_type_4byte_start,
+        ek_utf8_byte_type_4byte_start,
+        ek_utf8_byte_type_4byte_start,
+        ek_utf8_byte_type_4byte_start,
+        ek_utf8_byte_type_4byte_start,
+        ek_utf8_byte_type_4byte_start,
+        ek_utf8_byte_type_4byte_start,
+        ek_utf8_byte_type_4byte_start,
+        ek_utf8_byte_type_4byte_start,
 
-        ec_utf8_byte_type_invalid,
-        ec_utf8_byte_type_invalid,
-        ec_utf8_byte_type_invalid,
-        ec_utf8_byte_type_invalid,
-        ec_utf8_byte_type_invalid,
-        ec_utf8_byte_type_invalid,
-        ec_utf8_byte_type_invalid,
-        ec_utf8_byte_type_invalid,
+        ek_utf8_byte_type_invalid,
+        ek_utf8_byte_type_invalid,
+        ek_utf8_byte_type_invalid,
+        ek_utf8_byte_type_invalid,
+        ek_utf8_byte_type_invalid,
+        ek_utf8_byte_type_invalid,
+        ek_utf8_byte_type_invalid,
+        ek_utf8_byte_type_invalid,
     }};
 
     t_b8 str_check_valid_utf8(const t_str_rdonly str) {
@@ -283,26 +283,26 @@ namespace zf::strs {
             const auto byte_type = k_utf8_byte_type_table[str.bytes[i]];
 
             switch (byte_type) {
-            case ec_utf8_byte_type_ascii:
-            case ec_utf8_byte_type_2byte_start:
-            case ec_utf8_byte_type_3byte_start:
-            case ec_utf8_byte_type_4byte_start:
+            case ek_utf8_byte_type_ascii:
+            case ek_utf8_byte_type_2byte_start:
+            case ek_utf8_byte_type_3byte_start:
+            case ek_utf8_byte_type_4byte_start:
                 if (cost > 0) {
                     return false;
                 }
 
-                cost = byte_type - ec_utf8_byte_type_ascii + 1;
+                cost = byte_type - ek_utf8_byte_type_ascii + 1;
 
                 break;
 
-            case ec_utf8_byte_type_continuation:
+            case ek_utf8_byte_type_continuation:
                 if (cost == 0) {
                     return false;
                 }
 
                 break;
 
-            case ec_utf8_byte_type_invalid:
+            case ek_utf8_byte_type_invalid:
                 return false;
             }
 
@@ -322,11 +322,11 @@ namespace zf::strs {
             const auto byte_type = k_utf8_byte_type_table[str.bytes[i]];
 
             switch (byte_type) {
-            case ec_utf8_byte_type_ascii:
-            case ec_utf8_byte_type_2byte_start:
-            case ec_utf8_byte_type_3byte_start:
-            case ec_utf8_byte_type_4byte_start:
-                i += byte_type - ec_utf8_byte_type_ascii + 1;
+            case ek_utf8_byte_type_ascii:
+            case ek_utf8_byte_type_2byte_start:
+            case ek_utf8_byte_type_3byte_start:
+            case ek_utf8_byte_type_4byte_start:
+                i += byte_type - ek_utf8_byte_type_ascii + 1;
                 break;
 
             default:
@@ -387,12 +387,12 @@ namespace zf::strs {
         do {
             const auto byte_type = k_utf8_byte_type_table[str.bytes[cp_first_byte_index]];
 
-            if (byte_type == ec_utf8_byte_type_continuation) {
+            if (byte_type == ek_utf8_byte_type_continuation) {
                 cp_first_byte_index--;
                 continue;
             }
 
-            const t_i32 cp_byte_cnt = byte_type - ec_utf8_byte_type_ascii + 1;
+            const t_i32 cp_byte_cnt = byte_type - ek_utf8_byte_type_ascii + 1;
             const auto cp_bytes = array_slice(str.bytes, byte_index, byte_index + cp_byte_cnt);
             return utf8_bytes_to_code_pt(cp_bytes);
         } while (true);
@@ -418,11 +418,11 @@ namespace zf::strs {
             const auto byte_type = k_utf8_byte_type_table[str.bytes[*byte_index]];
 
             switch (byte_type) {
-            case ec_utf8_byte_type_ascii:
-            case ec_utf8_byte_type_2byte_start:
-            case ec_utf8_byte_type_3byte_start:
-            case ec_utf8_byte_type_4byte_start: {
-                const t_i32 cp_byte_cnt = byte_type - ec_utf8_byte_type_ascii + 1;
+            case ek_utf8_byte_type_ascii:
+            case ek_utf8_byte_type_2byte_start:
+            case ek_utf8_byte_type_3byte_start:
+            case ek_utf8_byte_type_4byte_start: {
+                const t_i32 cp_byte_cnt = byte_type - ek_utf8_byte_type_ascii + 1;
                 const auto cp_bytes = array_slice(str.bytes, *byte_index, *byte_index + cp_byte_cnt);
                 *o_step = {.code_pt = utf8_bytes_to_code_pt(cp_bytes), .byte_index = *byte_index};
                 *byte_index += cp_byte_cnt;
@@ -430,7 +430,7 @@ namespace zf::strs {
                 return true;
             }
 
-            case ec_utf8_byte_type_continuation:
+            case ek_utf8_byte_type_continuation:
                 (*byte_index)--;
                 break;
 
@@ -452,11 +452,11 @@ namespace zf::strs {
             const auto byte_type = k_utf8_byte_type_table[str.bytes[*byte_index]];
 
             switch (byte_type) {
-            case ec_utf8_byte_type_ascii:
-            case ec_utf8_byte_type_2byte_start:
-            case ec_utf8_byte_type_3byte_start:
-            case ec_utf8_byte_type_4byte_start: {
-                const t_i32 cp_byte_cnt = byte_type - ec_utf8_byte_type_ascii + 1;
+            case ek_utf8_byte_type_ascii:
+            case ek_utf8_byte_type_2byte_start:
+            case ek_utf8_byte_type_3byte_start:
+            case ek_utf8_byte_type_4byte_start: {
+                const t_i32 cp_byte_cnt = byte_type - ek_utf8_byte_type_ascii + 1;
                 const auto cp_bytes = array_slice(str.bytes, *byte_index, *byte_index + cp_byte_cnt);
                 *o_step = {.code_pt = utf8_bytes_to_code_pt(cp_bytes), .byte_index = *byte_index};
                 (*byte_index)--;
@@ -464,7 +464,7 @@ namespace zf::strs {
                 return true;
             }
 
-            case ec_utf8_byte_type_continuation:
+            case ek_utf8_byte_type_continuation:
                 (*byte_index)--;
                 break;
 

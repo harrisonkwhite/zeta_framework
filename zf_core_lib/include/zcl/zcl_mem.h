@@ -104,9 +104,9 @@ namespace zf::mem {
     };
 
     enum t_arena_type : t_i32 {
-        ec_arena_type_invalid,
-        ec_arena_type_blockbased, // Owns its memory, which is organised as a linked list of dynamically allocated blocks. New blocks are allocated as needed.
-        ec_arena_type_wrapping    // Non-owning and non-reallocating. Useful if you want to leverage a stack-allocated buffer for example. @todo: Probably not a good name.
+        ek_arena_type_invalid,
+        ek_arena_type_blockbased, // Owns its memory, which is organised as a linked list of dynamically allocated blocks. New blocks are allocated as needed.
+        ek_arena_type_wrapping    // Non-owning and non-reallocating. Useful if you want to leverage a stack-allocated buffer for example. @todo: Probably not a good name.
     };
 
     struct t_arena {
@@ -133,7 +133,7 @@ namespace zf::mem {
         ZF_ASSERT(block_min_size > 0);
 
         return {
-            .type = ec_arena_type_blockbased,
+            .type = ek_arena_type_blockbased,
             .type_data = {.blockbased = {.block_min_size = block_min_size}},
         };
     }
@@ -142,7 +142,7 @@ namespace zf::mem {
         array_set_all_to(bytes, 0);
 
         return {
-            .type = ec_arena_type_wrapping,
+            .type = ek_arena_type_wrapping,
             .type_data = {.wrapping = {.buf = bytes.raw, .buf_size = bytes.len}},
         };
     }
@@ -287,10 +287,10 @@ namespace zf::mem {
     void bitset_set_range(const t_bitset_mut bs, const t_i32 begin_bit_index, const t_i32 end_bit_index);
 
     enum t_bitwise_mask_op : t_i32 {
-        ec_bitwise_mask_op_and,
-        ec_bitwise_mask_op_or,
-        ec_bitwise_mask_op_xor,
-        ec_bitwise_mask_op_andnot
+        ek_bitwise_mask_op_and,
+        ek_bitwise_mask_op_or,
+        ek_bitwise_mask_op_xor,
+        ek_bitwise_mask_op_andnot
     };
 
     void bitset_apply_mask(const t_bitset_mut bs, const t_bitset_rdonly mask, const t_bitwise_mask_op op);

@@ -81,9 +81,9 @@ namespace zf::rendering {
     }
 
     enum t_uniform_type {
-        ec_uniform_type_sampler,
-        ec_uniform_type_v4,
-        ec_uniform_type_mat4x4
+        ek_uniform_type_sampler,
+        ek_uniform_type_v4,
+        ek_uniform_type_mat4x4
     };
 
     t_resource *uniform_create(const strs::t_str_rdonly name, const t_uniform_type type, t_resource_group *const group, mem::t_arena *const temp_arena);

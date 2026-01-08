@@ -280,8 +280,8 @@ namespace zf::ds {
     }
 
     enum t_kv_store_put_result : t_i32 {
-        ec_kv_store_put_result_updated,
-        ec_kv_store_put_result_added
+        ek_kv_store_put_result_updated,
+        ek_kv_store_put_result_added
     };
 
     template <c_simple tp_key_type, c_simple tp_val_type>
@@ -295,7 +295,7 @@ namespace zf::ds {
 
             if (kv_store->key_comparator(block->keys[rel_index], key)) {
                 block->values[rel_index] = value;
-                return ec_kv_store_put_result_updated;
+                return ek_kv_store_put_result_updated;
             }
 
             index = &block->next_indexes[rel_index];
@@ -344,7 +344,7 @@ namespace zf::ds {
             return block_index * kv_store->block_cap;
         }();
 
-        return ec_kv_store_put_result_added;
+        return ek_kv_store_put_result_added;
     }
 
     template <c_simple tp_key_type, c_simple tp_val_type>
@@ -470,15 +470,15 @@ namespace zf::ds {
     }
 
     enum t_hash_map_put_result : t_i32 {
-        ec_hash_map_put_result_added,
-        ec_hash_map_put_result_updated
+        ek_hash_map_put_result_added,
+        ek_hash_map_put_result_updated
     };
 
     // Try adding the key-value pair to the hash map or just updating the value if the key is already present.
     template <c_simple tp_key_type, c_simple tp_val_type>
     t_hash_map_put_result hash_map_put(t_hash_map<tp_key_type, tp_val_type> *const hash_map, const tp_key_type &key, const tp_val_type &value) {
         const t_i32 hash_index = hash_map_key_to_hash_index(key, hash_map->hash_func, hash_map_get_cap(hash_map));
-        return kv_store_put_in_chain(&hash_map->kv_store, &hash_map->immediate_indexes[hash_index], key, value) == ec_kv_store_put_result_updated ? ec_hash_map_put_result_updated : ec_hash_map_put_result_added;
+        return kv_store_put_in_chain(&hash_map->kv_store, &hash_map->immediate_indexes[hash_index], key, value) == ek_kv_store_put_result_updated ? ek_hash_map_put_result_updated : ek_hash_map_put_result_added;
     }
 
     // Returns true iff an entry with the key was found and removed.

@@ -5,7 +5,7 @@
 
 namespace zf::mem {
     void arena_destroy(t_arena *const arena) {
-        ZF_REQUIRE(arena->type == ec_arena_type_blockbased);
+        ZF_REQUIRE(arena->type == ek_arena_type_blockbased);
 
         const auto f = [](const auto self, t_arena_block *const block) {
             if (!block) {
@@ -56,7 +56,7 @@ namespace zf::mem {
         ZF_ASSERT(size > 0 && alignment_check_valid(alignment));
 
         switch (arena->type) {
-        case ec_arena_type_blockbased: {
+        case ek_arena_type_blockbased: {
             const auto blockbased = &arena->type_data.blockbased;
 
             if (!blockbased->blocks_head) {
@@ -87,7 +87,7 @@ namespace zf::mem {
             return result;
         }
 
-        case ec_arena_type_wrapping: {
+        case ek_arena_type_wrapping: {
             const auto wrapping = &arena->type_data.wrapping;
 
             const t_i32 offs_aligned = align_forward(wrapping->buf_offs, alignment);
@@ -112,7 +112,7 @@ namespace zf::mem {
 
     void arena_rewind(t_arena *const arena) {
         switch (arena->type) {
-        case ec_arena_type_blockbased: {
+        case ek_arena_type_blockbased: {
             const auto blockbased = &arena->type_data.blockbased;
 
 #ifdef ZF_DEBUG
@@ -135,7 +135,7 @@ namespace zf::mem {
             break;
         }
 
-        case ec_arena_type_wrapping: {
+        case ek_arena_type_wrapping: {
             const auto wrapping = &arena->type_data.wrapping;
             zero_clear(wrapping->buf, wrapping->buf_offs);
             wrapping->buf_offs = 0;
@@ -225,28 +225,28 @@ namespace zf::mem {
         }
 
         switch (op) {
-        case ec_bitwise_mask_op_and:
+        case ek_bitwise_mask_op_and:
             for (t_i32 i = 0; i < bitset_get_bytes(bs).len; i++) {
                 bitset_get_bytes(bs)[i] &= bitset_get_bytes(mask)[i];
             }
 
             break;
 
-        case ec_bitwise_mask_op_or:
+        case ek_bitwise_mask_op_or:
             for (t_i32 i = 0; i < bitset_get_bytes(bs).len; i++) {
                 bitset_get_bytes(bs)[i] |= bitset_get_bytes(mask)[i];
             }
 
             break;
 
-        case ec_bitwise_mask_op_xor:
+        case ek_bitwise_mask_op_xor:
             for (t_i32 i = 0; i < bitset_get_bytes(bs).len; i++) {
                 bitset_get_bytes(bs)[i] ^= bitset_get_bytes(mask)[i];
             }
 
             break;
 
-        case ec_bitwise_mask_op_andnot:
+        case ek_bitwise_mask_op_andnot:
             for (t_i32 i = 0; i < bitset_get_bytes(bs).len; i++) {
                 bitset_get_bytes(bs)[i] &= ~bitset_get_bytes(mask)[i];
             }
