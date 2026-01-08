@@ -89,7 +89,7 @@ namespace zf::rendering {
     // ============================================================
     // @section: Frame
 
-    inline const t_i16 g_frame_pass_limit = 16;
+    constexpr t_i16 k_frame_pass_limit = 16;
 
     struct t_frame_context;
 
@@ -117,7 +117,7 @@ namespace zf::rendering {
     t_frame_context *frame_begin(const t_basis *const basis, mem::t_arena *const context_arena);
     void frame_end(t_frame_context *const context);
 
-    void frame_pass_configure(t_frame_context *const context, const t_i32 pass_index, const math::t_v2_i size, const math::t_mat4x4 &view_mat = math::g_mat4x4_identity, const gfx::t_color_rgba32f clear_col = {});
+    void frame_pass_configure(t_frame_context *const context, const t_i32 pass_index, const math::t_v2_i size, const math::t_mat4x4 &view_mat = math::k_mat4x4_identity, const t_b8 clear = false, const gfx::t_color_rgba32f clear_col = gfx::k_color_black);
     void frame_pass_set(t_frame_context *const context, const t_i32 pass_index);
 
     // Set prog as nullptr to just assign the default shader program.
@@ -184,37 +184,37 @@ namespace zf::rendering {
         frame_submit_rect_rotated(context, pos, size, origin, rot, color, color, color, color);
     }
 
-    constexpr math::t_v2 g_origin_topleft = {0.0f, 0.0f};
-    constexpr math::t_v2 g_origin_topcenter = {0.5f, 0.0f};
-    constexpr math::t_v2 g_origin_topright = {1.0f, 0.0f};
-    constexpr math::t_v2 g_origin_centerleft = {0.0f, 0.5f};
-    constexpr math::t_v2 g_origin_center = {0.5f, 0.5f};
-    constexpr math::t_v2 g_origin_centerright = {1.0f, 0.5f};
-    constexpr math::t_v2 g_origin_bottomleft = {0.0f, 1.0f};
-    constexpr math::t_v2 g_origin_bottomcenter = {0.5f, 1.0f};
-    constexpr math::t_v2 g_origin_bottomright = {1.0f, 1.0f};
+    constexpr math::t_v2 k_origin_topleft = {0.0f, 0.0f};
+    constexpr math::t_v2 k_origin_topcenter = {0.5f, 0.0f};
+    constexpr math::t_v2 k_origin_topright = {1.0f, 0.0f};
+    constexpr math::t_v2 k_origin_centerleft = {0.0f, 0.5f};
+    constexpr math::t_v2 k_origin_center = {0.5f, 0.5f};
+    constexpr math::t_v2 k_origin_centerright = {1.0f, 0.5f};
+    constexpr math::t_v2 k_origin_bottomleft = {0.0f, 1.0f};
+    constexpr math::t_v2 k_origin_bottomcenter = {0.5f, 1.0f};
+    constexpr math::t_v2 k_origin_bottomright = {1.0f, 1.0f};
 
     inline t_b8 origin_check_valid(const math::t_v2 origin) {
         return origin.x >= 0.0f && origin.x <= 1.0f && origin.y >= 0.0f && origin.y <= 1.0f;
     }
 
-    void frame_submit_texture(t_frame_context *const context, const t_resource *const texture, const math::t_v2 pos, const math::t_rect_i src_rect = {}, const math::t_v2 origin = g_origin_topleft, const t_f32 rot = 0.0f);
+    void frame_submit_texture(t_frame_context *const context, const t_resource *const texture, const math::t_v2 pos, const math::t_rect_i src_rect = {}, const math::t_v2 origin = k_origin_topleft, const t_f32 rot = 0.0f);
 
-    constexpr math::t_v2 g_str_alignment_topleft = {0.0f, 0.0f};
-    constexpr math::t_v2 g_str_alignment_topcenter = {0.5f, 0.0f};
-    constexpr math::t_v2 g_str_alignment_topright = {1.0f, 0.0f};
-    constexpr math::t_v2 g_str_alignment_centerleft = {0.0f, 0.5f};
-    constexpr math::t_v2 g_str_alignment_center = {0.5f, 0.5f};
-    constexpr math::t_v2 g_str_alignment_centerright = {1.0f, 0.5f};
-    constexpr math::t_v2 g_str_alignment_bottomleft = {0.0f, 1.0f};
-    constexpr math::t_v2 g_str_alignment_bottomcenter = {0.5f, 1.0f};
-    constexpr math::t_v2 g_str_alignment_bottomright = {1.0f, 1.0f};
+    constexpr math::t_v2 k_str_alignment_topleft = {0.0f, 0.0f};
+    constexpr math::t_v2 k_str_alignment_topcenter = {0.5f, 0.0f};
+    constexpr math::t_v2 k_str_alignment_topright = {1.0f, 0.0f};
+    constexpr math::t_v2 k_str_alignment_centerleft = {0.0f, 0.5f};
+    constexpr math::t_v2 k_str_alignment_center = {0.5f, 0.5f};
+    constexpr math::t_v2 k_str_alignment_centerright = {1.0f, 0.5f};
+    constexpr math::t_v2 k_str_alignment_bottomleft = {0.0f, 1.0f};
+    constexpr math::t_v2 k_str_alignment_bottomcenter = {0.5f, 1.0f};
+    constexpr math::t_v2 k_str_alignment_bottomright = {1.0f, 1.0f};
 
     inline t_b8 str_alignment_check_valid(const math::t_v2 alignment) {
         return alignment.x >= 0.0f && alignment.x <= 1.0f && alignment.y >= 0.0f && alignment.y <= 1.0f;
     }
 
-    void frame_submit_str(t_frame_context *const context, const strs::t_str_rdonly str, const t_font &font, const math::t_v2 pos, mem::t_arena *const temp_arena, const math::t_v2 alignment = g_str_alignment_topleft, const gfx::t_color_rgba32f blend = gfx::g_color_white);
+    void frame_submit_str(t_frame_context *const context, const strs::t_str_rdonly str, const t_font &font, const math::t_v2 pos, mem::t_arena *const temp_arena, const math::t_v2 alignment = k_str_alignment_topleft, const gfx::t_color_rgba32f blend = gfx::k_color_white);
 
     // ============================================================
 }

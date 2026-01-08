@@ -35,9 +35,9 @@ namespace zf {
 
     static void PrintStackTrace() {
 #ifdef ZF_PLATFORM_WINDOWS
-        constexpr int stack_len = 32;
-        void *stack[stack_len];
-        const int frame_cnt = CaptureStackBackTrace(0, stack_len, stack, nullptr);
+        constexpr int k_stack_len = 32;
+        void *stack[k_stack_len];
+        const int frame_cnt = CaptureStackBackTrace(0, k_stack_len, stack, nullptr);
 
         fprintf(stderr, "Stack Trace:\n");
 

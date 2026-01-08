@@ -101,10 +101,10 @@ namespace zf::math {
             .pts = mem::arena_push_array<t_v2>(arena, 4),
         };
 
-        const t_v2 offs_left = calc_lengthdir(size.x * origin.x, rot - g_pi);
-        const t_v2 offs_up = calc_lengthdir(size.y * origin.y, rot - (g_pi * 0.5f));
+        const t_v2 offs_left = calc_lengthdir(size.x * origin.x, rot - k_pi);
+        const t_v2 offs_up = calc_lengthdir(size.y * origin.y, rot - (k_pi * 0.5f));
         const t_v2 offs_right = calc_lengthdir(size.x * (1.0f - origin.x), rot);
-        const t_v2 offs_down = calc_lengthdir(size.y * (1.0f - origin.y), rot + (g_pi * 0.5f));
+        const t_v2 offs_down = calc_lengthdir(size.y * (1.0f - origin.y), rot + (k_pi * 0.5f));
 
         poly.pts[0] = pos + offs_left + offs_up;
         poly.pts[1] = pos + offs_right + offs_up;

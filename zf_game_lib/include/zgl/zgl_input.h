@@ -84,7 +84,7 @@ namespace zf::input {
         ecm_mouse_button_code_cnt
     };
 
-    constexpr t_i32 g_gamepad_limit = 16;
+    constexpr t_i32 k_gamepad_limit = 16;
 
     enum t_gamepad_button_code : t_i32 {
         ec_gamepad_button_code_a,

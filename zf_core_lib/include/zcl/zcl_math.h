@@ -4,15 +4,15 @@
 #include <zcl/zcl_mem.h>
 
 namespace zf::math {
-    constexpr t_f32 g_pi = 3.14159265358979323846f;
-    constexpr t_f32 g_tau = 6.28318530717958647692f;
+    constexpr t_f32 k_pi = 3.14159265358979323846f;
+    constexpr t_f32 k_tau = 6.28318530717958647692f;
 
-    constexpr t_f32 degs_to_rads(const t_f32 degs) {
-        return degs * (g_pi / 180.0f);
+    inline t_f32 degs_to_rads(const t_f32 degs) {
+        return degs * (k_pi / 180.0f);
     }
 
-    constexpr t_f32 rads_to_degs(const t_f32 rads) {
-        return rads * (180.0f / g_pi);
+    inline t_f32 rads_to_degs(const t_f32 rads) {
+        return rads * (180.0f / k_pi);
     }
 
     template <c_integral tp_type>
@@ -61,37 +61,37 @@ namespace zf::math {
         t_f32 x;
         t_f32 y;
 
-        constexpr t_v2 operator+(const t_v2 &other) const { return {x + other.x, y + other.y}; }
-        constexpr t_v2 operator-(const t_v2 &other) const { return {x - other.x, y - other.y}; }
-        constexpr t_v2 operator*(const t_f32 scalar) const { return {x * scalar, y * scalar}; }
-        constexpr t_v2 operator/(const t_f32 scalar) const { return {x / scalar, y / scalar}; }
+        t_v2 operator+(const t_v2 &other) const { return {x + other.x, y + other.y}; }
+        t_v2 operator-(const t_v2 &other) const { return {x - other.x, y - other.y}; }
+        t_v2 operator*(const t_f32 scalar) const { return {x * scalar, y * scalar}; }
+        t_v2 operator/(const t_f32 scalar) const { return {x / scalar, y / scalar}; }
 
-        constexpr t_v2 &operator+=(const t_v2 &other) {
+        t_v2 &operator+=(const t_v2 &other) {
             x += other.x;
             y += other.y;
             return *this;
         }
 
-        constexpr t_v2 &operator-=(const t_v2 &other) {
+        t_v2 &operator-=(const t_v2 &other) {
             x -= other.x;
             y -= other.y;
             return *this;
         }
 
-        constexpr t_v2 &operator*=(const t_f32 scalar) {
+        t_v2 &operator*=(const t_f32 scalar) {
             x *= scalar;
             y *= scalar;
             return *this;
         }
 
-        constexpr t_v2 &operator/=(const t_f32 scalar) {
+        t_v2 &operator/=(const t_f32 scalar) {
             x /= scalar;
             y /= scalar;
             return *this;
         }
     };
 
-    constexpr t_v2 operator*(const t_f32 scalar, const t_v2 v) {
+    inline t_v2 operator*(const t_f32 scalar, const t_v2 v) {
         return {v.x * scalar, v.y * scalar};
     }
 
@@ -99,19 +99,19 @@ namespace zf::math {
         t_i32 x;
         t_i32 y;
 
-        constexpr t_b8 operator==(const t_v2_i &other) const { return x == other.x && y == other.y; }
-        constexpr t_b8 operator!=(const t_v2_i &other) const { return !(*this == other); }
+        t_b8 operator==(const t_v2_i &other) const { return x == other.x && y == other.y; }
+        t_b8 operator!=(const t_v2_i &other) const { return !(*this == other); }
 
-        constexpr t_v2_i operator+(const t_v2_i &other) const { return {x + other.x, y + other.y}; }
-        constexpr t_v2_i operator-(const t_v2_i &other) const { return {x - other.x, y - other.y}; }
+        t_v2_i operator+(const t_v2_i &other) const { return {x + other.x, y + other.y}; }
+        t_v2_i operator-(const t_v2_i &other) const { return {x - other.x, y - other.y}; }
 
-        constexpr t_v2_i &operator+=(const t_v2_i &other) {
+        t_v2_i &operator+=(const t_v2_i &other) {
             x += other.x;
             y += other.y;
             return *this;
         }
 
-        constexpr t_v2_i &operator-=(const t_v2_i &other) {
+        t_v2_i &operator-=(const t_v2_i &other) {
             x -= other.x;
             y -= other.y;
             return *this;
@@ -268,7 +268,7 @@ namespace zf::math {
         t_static_array<t_static_array<t_f32, 4>, 4> elems;
     };
 
-    constexpr t_mat4x4 g_mat4x4_identity = {
+    constexpr t_mat4x4 k_mat4x4_identity = {
         .elems = {{
             {{1.0f, 0.0f, 0.0f, 0.0f}},
             {{0.0f, 1.0f, 0.0f, 0.0f}},
@@ -276,6 +276,24 @@ namespace zf::math {
             {{0.0f, 0.0f, 0.0f, 1.0f}},
         }},
     };
+
+    inline void matrix_scale(t_mat4x4 *const mat, const t_v2 scalar) {
+        mat->elems[0][0] *= scalar.x;
+        mat->elems[1][1] *= scalar.y;
+    }
+
+    inline void matrix_scale(t_mat4x4 *const mat, const t_v3 scalar) {
+        mat->elems[0][0] *= scalar.x;
+        mat->elems[1][1] *= scalar.y;
+        mat->elems[2][2] *= scalar.z;
+    }
+
+    inline void matrix_scale(t_mat4x4 *const mat, const t_v4 scalar) {
+        mat->elems[0][0] *= scalar.x;
+        mat->elems[1][1] *= scalar.y;
+        mat->elems[2][2] *= scalar.z;
+        mat->elems[3][3] *= scalar.w;
+    }
 
     // ============================================================
 
@@ -290,7 +308,7 @@ namespace zf::math {
     struct t_poly_mut {
         t_array_mut<t_v2> pts;
 
-        constexpr operator t_poly_rdonly() const {
+        operator t_poly_rdonly() const {
             return {.pts = pts};
         }
     };

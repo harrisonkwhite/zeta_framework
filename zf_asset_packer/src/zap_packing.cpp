@@ -12,7 +12,7 @@ namespace zf {
         ecm_asset_type_cnt
     };
 
-    static const t_static_array<const char *, ecm_asset_type_cnt> g_asset_type_array_name_cstrs = {{
+    constexpr t_static_array<const char *, ecm_asset_type_cnt> k_asset_type_array_name_cstrs = {{
         "textures",
         "fonts",
         "shaders",
@@ -26,7 +26,7 @@ namespace zf {
         ecm_asset_field_type_cnt
     };
 
-    static const t_static_array<const char *, ecm_asset_field_type_cnt> g_asset_field_type_name_cstrs = {{
+    constexpr t_static_array<const char *, ecm_asset_field_type_cnt> k_asset_field_type_name_cstrs = {{
         "string",
         "number",
     }};
@@ -44,7 +44,7 @@ namespace zf {
         ecm_texture_field_cnt
     };
 
-    static const t_static_array<t_asset_field, ecm_texture_field_cnt> g_texture_fields = {{
+    constexpr t_static_array<t_asset_field, ecm_texture_field_cnt> k_texture_fields = {{
         {.name_cstr = "file_path", .type = ec_asset_field_type_str},
         {.name_cstr = "out_file_path", .type = ec_asset_field_type_str},
     }};
@@ -58,7 +58,7 @@ namespace zf {
         ecm_font_field_cnt
     };
 
-    static const t_static_array<t_asset_field, ecm_font_field_cnt> g_font_fields = {{
+    constexpr t_static_array<t_asset_field, ecm_font_field_cnt> k_font_fields = {{
         {.name_cstr = "file_path", .type = ec_asset_field_type_str},
         {.name_cstr = "height", .type = ec_asset_field_type_num},
         {.name_cstr = "extra_chrs_file_path", .type = ec_asset_field_type_str, .optional = true},
@@ -74,7 +74,7 @@ namespace zf {
         ecm_shader_field_cnt
     };
 
-    static const t_static_array<t_asset_field, ecm_shader_field_cnt> g_shader_fields = {{
+    constexpr t_static_array<t_asset_field, ecm_shader_field_cnt> k_shader_fields = {{
         {.name_cstr = "file_path", .type = ec_asset_field_type_str},
         {.name_cstr = "type", .type = ec_asset_field_type_str},
         {.name_cstr = "varying_def_file_path", .type = ec_asset_field_type_str},
@@ -88,7 +88,7 @@ namespace zf {
         ecm_sound_field_cnt
     };
 
-    static const t_static_array<t_asset_field, ecm_sound_field_cnt> g_sound_fields = {{
+    constexpr t_static_array<t_asset_field, ecm_sound_field_cnt> k_sound_fields = {{
         {.name_cstr = "file_path", .type = ec_asset_field_type_str},
         {.name_cstr = "out_file_path", .type = ec_asset_field_type_str},
     }};
@@ -128,7 +128,7 @@ namespace zf {
         t_static_array<cJSON *, ecm_sound_field_cnt> snd_field_cj_ptrs = {};
 
         for (t_i32 asset_type_index = 0; asset_type_index < ecm_asset_type_cnt; asset_type_index++) {
-            const auto asset_type_arr_name_cstr = g_asset_type_array_name_cstrs[asset_type_index];
+            const auto asset_type_arr_name_cstr = k_asset_type_array_name_cstrs[asset_type_index];
 
             cJSON *const cj_assets = cJSON_GetObjectItemCaseSensitive(cj, asset_type_arr_name_cstr);
 
@@ -148,10 +148,10 @@ namespace zf {
 
                 const auto fields = [asset_type_index]() -> t_array_rdonly<t_asset_field> {
                     switch (asset_type_index) {
-                    case ec_asset_type_texture: return array_to_nonstatic(g_texture_fields);
-                    case ec_asset_type_font: return array_to_nonstatic(g_font_fields);
-                    case ec_asset_type_shader: return array_to_nonstatic(g_shader_fields);
-                    case ec_asset_type_sound: return array_to_nonstatic(g_sound_fields);
+                    case ec_asset_type_texture: return array_to_nonstatic(k_texture_fields);
+                    case ec_asset_type_font: return array_to_nonstatic(k_font_fields);
+                    case ec_asset_type_shader: return array_to_nonstatic(k_shader_fields);
+                    case ec_asset_type_sound: return array_to_nonstatic(k_sound_fields);
                     }
 
                     return {};
@@ -199,7 +199,7 @@ namespace zf {
                     }();
 
                     if (!is_valid) {
-                        io::log_error(ZF_STR_LITERAL("A packing instructions JSON \"%\" entry has field \"%\" as the wrong type! Expected a %."), strs::cstr_to_str(asset_type_arr_name_cstr), strs::cstr_to_str(field_name_cstr), strs::cstr_to_str(g_asset_field_type_name_cstrs[fields[fi].type]));
+                        io::log_error(ZF_STR_LITERAL("A packing instructions JSON \"%\" entry has field \"%\" as the wrong type! Expected a %."), strs::cstr_to_str(asset_type_arr_name_cstr), strs::cstr_to_str(field_name_cstr), strs::cstr_to_str(k_asset_field_type_name_cstrs[fields[fi].type]));
                         return false;
                     }
                 }
@@ -231,7 +231,7 @@ namespace zf {
 
                     const auto code_pt_bv = mem::arena_push_item_zeroed<strs::t_code_pt_bitset>(&arena);
 
-                    mem::bitset_set_range(*code_pt_bv, strs::g_printable_ascii_range_begin, strs::g_printable_ascii_range_end); // Add the printable ASCII range as a default.
+                    mem::bitset_set_range(*code_pt_bv, strs::k_printable_ascii_range_begin, strs::k_printable_ascii_range_end); // Add the printable ASCII range as a default.
 
                     if (field_vals[ec_font_field_extra_chrs_file_path]) {
                         const auto extra_chrs_file_path = strs::cstr_to_str(field_vals[ec_font_field_extra_chrs_file_path]->valuestring);

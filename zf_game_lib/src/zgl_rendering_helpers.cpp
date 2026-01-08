@@ -49,16 +49,16 @@ namespace zf::rendering {
         const t_static_array<t_triangle, 2> triangles = {{
             {
                 .verts = {{
-                    {.pos = quad_poly.pts[0], .blend = gfx::g_color_white, .uv = math::rect_get_topleft(uv_rect)},
-                    {.pos = quad_poly.pts[1], .blend = gfx::g_color_white, .uv = math::rect_get_topright(uv_rect)},
-                    {.pos = quad_poly.pts[3], .blend = gfx::g_color_white, .uv = math::rect_get_bottomleft(uv_rect)},
+                    {.pos = quad_poly.pts[0], .blend = gfx::k_color_white, .uv = math::rect_get_topleft(uv_rect)},
+                    {.pos = quad_poly.pts[1], .blend = gfx::k_color_white, .uv = math::rect_get_topright(uv_rect)},
+                    {.pos = quad_poly.pts[3], .blend = gfx::k_color_white, .uv = math::rect_get_bottomleft(uv_rect)},
                 }},
             },
             {
                 .verts = {{
-                    {.pos = quad_poly.pts[3], .blend = gfx::g_color_white, .uv = math::rect_get_bottomleft(uv_rect)},
-                    {.pos = quad_poly.pts[1], .blend = gfx::g_color_white, .uv = math::rect_get_topright(uv_rect)},
-                    {.pos = quad_poly.pts[2], .blend = gfx::g_color_white, .uv = math::rect_get_bottomright(uv_rect)},
+                    {.pos = quad_poly.pts[3], .blend = gfx::k_color_white, .uv = math::rect_get_bottomleft(uv_rect)},
+                    {.pos = quad_poly.pts[1], .blend = gfx::k_color_white, .uv = math::rect_get_topright(uv_rect)},
+                    {.pos = quad_poly.pts[2], .blend = gfx::k_color_white, .uv = math::rect_get_bottomright(uv_rect)},
                 }},
             },
         }};
@@ -77,7 +77,7 @@ namespace zf::rendering {
         const t_array_mut<t_resource *> atlases = mem::arena_push_array<t_resource *>(resource_group->arena, atlas_rgbas.len);
 
         for (t_i32 i = 0; i < atlas_rgbas.len; i++) {
-            atlases[i] = texture_create({gfx::g_font_atlas_size, atlas_rgbas[i]}, resource_group);
+            atlases[i] = texture_create({gfx::k_font_atlas_size, atlas_rgbas[i]}, resource_group);
         }
 
         return {
@@ -97,7 +97,7 @@ namespace zf::rendering {
         const auto atlases = mem::arena_push_array<t_resource *>(resource_group->arena, atlas_rgbas.len);
 
         for (t_i32 i = 0; i < atlas_rgbas.len; i++) {
-            atlases[i] = texture_create({gfx::g_font_atlas_size, atlas_rgbas[i]}, resource_group);
+            atlases[i] = texture_create({gfx::k_font_atlas_size, atlas_rgbas[i]}, resource_group);
         }
 
         return {

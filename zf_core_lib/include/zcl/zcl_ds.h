@@ -37,7 +37,7 @@ namespace zf::ds {
 
     using t_list_extension_cap_calculator = t_i32 (*)(const t_i32 cap_current);
 
-    inline const t_list_extension_cap_calculator g_list_extension_cap_calculator_default =
+    constexpr t_list_extension_cap_calculator k_list_extension_cap_calculator_default =
         [](const t_i32 cap_current) {
             ZF_ASSERT(cap_current >= 0);
             return cap_current == 0 ? 1 : cap_current * 2;
@@ -74,7 +74,7 @@ namespace zf::ds {
     }
 
     template <c_list_mut tp_list_type>
-    void list_extend(tp_list_type *const list, mem::t_arena *const arena, const t_list_extension_cap_calculator cap_calculator = g_list_extension_cap_calculator_default) {
+    void list_extend(tp_list_type *const list, mem::t_arena *const arena, const t_list_extension_cap_calculator cap_calculator = k_list_extension_cap_calculator_default) {
         ZF_ASSERT(cap_calculator);
 
         const t_i32 new_cap = cap_calculator(list_get_cap(list));
@@ -87,7 +87,7 @@ namespace zf::ds {
     }
 
     template <c_list_mut tp_list_type>
-    void list_extend_to_fit(tp_list_type *const list, const t_i32 min_cap, mem::t_arena *const arena, const t_list_extension_cap_calculator cap_calculator = g_list_extension_cap_calculator_default) {
+    void list_extend_to_fit(tp_list_type *const list, const t_i32 min_cap, mem::t_arena *const arena, const t_list_extension_cap_calculator cap_calculator = k_list_extension_cap_calculator_default) {
         ZF_ASSERT(min_cap > list_get_cap(list));
         ZF_ASSERT(cap_calculator);
 
@@ -119,7 +119,7 @@ namespace zf::ds {
     }
 
     template <c_list_mut tp_list_type>
-    typename tp_list_type::t_elem *list_append_dynamic(tp_list_type *const list, const typename tp_list_type::t_elem &value, mem::t_arena *const extension_arena, const t_list_extension_cap_calculator extension_cap_calculator = g_list_extension_cap_calculator_default) {
+    typename tp_list_type::t_elem *list_append_dynamic(tp_list_type *const list, const typename tp_list_type::t_elem &value, mem::t_arena *const extension_arena, const t_list_extension_cap_calculator extension_cap_calculator = k_list_extension_cap_calculator_default) {
         if (list->len == list_get_cap(list)) {
             list_extend(list, extension_arena, extension_cap_calculator);
         }
@@ -137,7 +137,7 @@ namespace zf::ds {
     }
 
     template <c_list_mut tp_list_type>
-    t_array_mut<typename tp_list_type::t_elem> list_append_many_dynamic(tp_list_type *const list, const t_array_rdonly<typename tp_list_type::t_elem> values, mem::t_arena *const extension_arena, const t_list_extension_cap_calculator extension_cap_calculator = g_list_extension_cap_calculator_default) {
+    t_array_mut<typename tp_list_type::t_elem> list_append_many_dynamic(tp_list_type *const list, const t_array_rdonly<typename tp_list_type::t_elem> values, mem::t_arena *const extension_arena, const t_list_extension_cap_calculator extension_cap_calculator = k_list_extension_cap_calculator_default) {
         const auto min_cap_needed = list->len + values.len;
 
         if (min_cap_needed > list_get_cap(list)) {
@@ -164,7 +164,7 @@ namespace zf::ds {
     }
 
     template <c_list_mut tp_list_type>
-    typename tp_list_type::t_elem *list_insert_at_dynamic(tp_list_type *const list, const t_i32 index, const typename tp_list_type::t_elem &value, mem::t_arena *const extension_arena, const t_list_extension_cap_calculator extension_cap_calculator = g_list_extension_cap_calculator_default) {
+    typename tp_list_type::t_elem *list_insert_at_dynamic(tp_list_type *const list, const t_i32 index, const typename tp_list_type::t_elem &value, mem::t_arena *const extension_arena, const t_list_extension_cap_calculator extension_cap_calculator = k_list_extension_cap_calculator_default) {
         if (list->len == list_get_cap(list)) {
             list_extend(list, extension_arena, extension_cap_calculator);
         }
@@ -407,7 +407,7 @@ namespace zf::ds {
     using t_hash_func = t_i32 (*)(const tp_type &key);
 
     // This is an FNV-1a implementation.
-    inline const t_hash_func<strs::t_str_rdonly> g_str_hash_func =
+    constexpr t_hash_func<strs::t_str_rdonly> k_str_hash_func =
         [](const strs::t_str_rdonly &key) {
             const t_u32 offs_basis = 2166136261u;
             const t_u32 prime = 16777619u;
@@ -430,11 +430,11 @@ namespace zf::ds {
         t_kv_store<tp_key_type, tp_val_type> kv_store;
     };
 
-    constexpr t_i32 g_hash_map_cap_default = 32;
+    constexpr t_i32 k_hash_map_cap_default = 32;
 
     // The provided hash function has to map a key to an integer 0 or higher. The given memory arena will be saved and used for allocating new memory for entries when needed.
     template <c_simple tp_key_type, c_simple tp_val_type>
-    t_hash_map<tp_key_type, tp_val_type> hash_map_create(const t_hash_func<tp_key_type> hash_func, mem::t_arena *const arena, const t_i32 cap = g_hash_map_cap_default, const t_comparator_bin<tp_key_type> key_comparator = g_comparator_bin_default<tp_key_type>) {
+    t_hash_map<tp_key_type, tp_val_type> hash_map_create(const t_hash_func<tp_key_type> hash_func, mem::t_arena *const arena, const t_i32 cap = k_hash_map_cap_default, const t_comparator_bin<tp_key_type> key_comparator = k_comparator_bin_default<tp_key_type>) {
         const auto immediate_indexes = mem::arena_push_array<t_i32>(arena, cap);
         array_set_all_to(immediate_indexes, -1);
 
@@ -536,7 +536,7 @@ namespace zf::ds {
     }
 
     template <c_simple tp_key_type, c_simple tp_val_type>
-    [[nodiscard]] t_b8 hash_map_deserialize(io::t_stream *const stream, mem::t_arena *const hm_arena, const t_hash_func<tp_key_type> hm_hash_func, mem::t_arena *const temp_arena, t_hash_map<tp_key_type, tp_val_type> *const o_hm, const t_comparator_bin<tp_key_type> hm_key_comparator = g_comparator_bin_default<tp_key_type>) {
+    [[nodiscard]] t_b8 hash_map_deserialize(io::t_stream *const stream, mem::t_arena *const hm_arena, const t_hash_func<tp_key_type> hm_hash_func, mem::t_arena *const temp_arena, t_hash_map<tp_key_type, tp_val_type> *const o_hm, const t_comparator_bin<tp_key_type> hm_key_comparator = k_comparator_bin_default<tp_key_type>) {
         t_i32 cap;
 
         if (!io::stream_read_item(stream, &cap)) {

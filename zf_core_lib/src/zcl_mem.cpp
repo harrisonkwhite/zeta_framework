@@ -369,7 +369,7 @@ namespace zf::mem {
         ZF_ASSERT(from >= 0 && from <= bs.bit_cnt); // Intentionally allowing the upper bound here for the case of iteration.
 
         // Map of each possible byte to the index of the first set bit, or -1 for the first case.
-        static const t_static_array<t_i32, 256> g_mappings = {{
+        constexpr t_static_array<t_i32, 256> k_mappings = {{
             -1, // 0000 0000
             0,  // 0000 0001
             1,  // 0000 0010
@@ -641,7 +641,7 @@ namespace zf::mem {
                 byte &= bitset_get_last_byte_mask(bs);
             }
 
-            const t_i32 bi = g_mappings[byte];
+            const t_i32 bi = k_mappings[byte];
 
             if (bi != -1) {
                 return (8 * i) + bi;
@@ -661,7 +661,7 @@ namespace zf::mem {
 
     t_i32 bitset_count_set(const t_bitset_rdonly bs) {
         // Map of each possible byte to the number of set bits in it.
-        static const t_static_array<t_i32, 256> g_mappings = {{
+        constexpr t_static_array<t_i32, 256> k_mappings = {{
             0, // 0000 0000
             1, // 0000 0001
             1, // 0000 0010
@@ -924,10 +924,10 @@ namespace zf::mem {
 
         if (bitset_get_bytes(bs).len > 0) {
             for (t_i32 i = 0; i < bitset_get_bytes(bs).len - 1; i++) {
-                result += g_mappings[bitset_get_bytes(bs)[i]];
+                result += k_mappings[bitset_get_bytes(bs)[i]];
             }
 
-            result += g_mappings[bitset_get_bytes(bs)[bitset_get_bytes(bs).len - 1] & bitset_get_last_byte_mask(bs)];
+            result += k_mappings[bitset_get_bytes(bs)[bitset_get_bytes(bs).len - 1] & bitset_get_last_byte_mask(bs)];
         }
 
         return result;

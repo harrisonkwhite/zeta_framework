@@ -41,24 +41,24 @@ namespace zf::gfx {
         return {r, g, b, a};
     }
 
-    inline const t_color_rgba32f g_color_transparent_black = color_create_rgba32f(0.0f, 0.0f, 0.0f, 0.0f);
-    inline const t_color_rgba32f g_color_black = color_create_rgba32f(0.0f, 0.0f, 0.0f);
-    inline const t_color_rgba32f g_color_dark_gray = color_create_rgba32f(0.25f, 0.25f, 0.25f);
-    inline const t_color_rgba32f g_color_gray = color_create_rgba32f(0.5f, 0.5f, 0.5f);
-    inline const t_color_rgba32f g_color_light_gray = color_create_rgba32f(0.75f, 0.75f, 0.75f);
-    inline const t_color_rgba32f g_color_white = color_create_rgba32f(1.0f, 1.0f, 1.0f);
-    inline const t_color_rgba32f g_color_red = color_create_rgba32f(1.0f, 0.0f, 0.0f);
-    inline const t_color_rgba32f g_color_orange = color_create_rgba32f(1.0f, 0.5f, 0.0f);
-    inline const t_color_rgba32f g_color_yellow = color_create_rgba32f(1.0f, 1.0f, 0.0f);
-    inline const t_color_rgba32f g_color_lime = color_create_rgba32f(0.75f, 1.0f, 0.0f);
-    inline const t_color_rgba32f g_color_green = color_create_rgba32f(0.0f, 1.0f, 0.0f);
-    inline const t_color_rgba32f g_color_teal = color_create_rgba32f(0.0f, 0.5f, 0.5f);
-    inline const t_color_rgba32f g_color_cyan = color_create_rgba32f(0.0f, 1.0f, 1.0f);
-    inline const t_color_rgba32f g_color_blue = color_create_rgba32f(0.0f, 0.0f, 1.0f);
-    inline const t_color_rgba32f g_color_purple = color_create_rgba32f(0.5f, 0.0f, 0.5f);
-    inline const t_color_rgba32f g_color_magenta = color_create_rgba32f(1.0f, 0.0f, 1.0f);
-    inline const t_color_rgba32f g_color_pink = color_create_rgba32f(1.0f, 0.75f, 0.8f);
-    inline const t_color_rgba32f g_color_brown = color_create_rgba32f(0.6f, 0.3f, 0.0f);
+    constexpr t_color_rgba32f k_color_transparent_black = {0.0f, 0.0f, 0.0f, 0.0f};
+    constexpr t_color_rgba32f k_color_black = {0.0f, 0.0f, 0.0f, 1.0f};
+    constexpr t_color_rgba32f k_color_dark_gray = {0.25f, 0.25f, 0.25f, 1.0f};
+    constexpr t_color_rgba32f k_color_gray = {0.5f, 0.5f, 0.5f, 1.0f};
+    constexpr t_color_rgba32f k_color_light_gray = {0.75f, 0.75f, 0.75f, 1.0f};
+    constexpr t_color_rgba32f k_color_white = {1.0f, 1.0f, 1.0f, 1.0f};
+    constexpr t_color_rgba32f k_color_red = {1.0f, 0.0f, 0.0f, 1.0f};
+    constexpr t_color_rgba32f k_color_orange = {1.0f, 0.5f, 0.0f, 1.0f};
+    constexpr t_color_rgba32f k_color_yellow = {1.0f, 1.0f, 0.0f, 1.0f};
+    constexpr t_color_rgba32f k_color_lime = {0.75f, 1.0f, 0.0f, 1.0f};
+    constexpr t_color_rgba32f k_color_green = {0.0f, 1.0f, 0.0f, 1.0f};
+    constexpr t_color_rgba32f k_color_teal = {0.0f, 0.5f, 0.5f, 1.0f};
+    constexpr t_color_rgba32f k_color_cyan = {0.0f, 1.0f, 1.0f, 1.0f};
+    constexpr t_color_rgba32f k_color_blue = {0.0f, 0.0f, 1.0f, 1.0f};
+    constexpr t_color_rgba32f k_color_purple = {0.5f, 0.0f, 0.5f, 1.0f};
+    constexpr t_color_rgba32f k_color_magenta = {1.0f, 0.0f, 1.0f, 1.0f};
+    constexpr t_color_rgba32f k_color_pink = {1.0f, 0.75f, 0.8f, 1.0f};
+    constexpr t_color_rgba32f k_color_brown = {0.6f, 0.3f, 0.0f, 1.0f};
 
     inline t_color_rgba8 color_rgba32f_to_rgba8(const t_color_rgba32f col) {
         ZF_ASSERT(color_check_normalized(col));
@@ -123,7 +123,7 @@ namespace zf::gfx {
         math::t_v2_i size_in_pxs;
         t_array_mut<t_u8> rgba_px_data;
 
-        constexpr operator t_texture_data_rdonly() const {
+        operator t_texture_data_rdonly() const {
             return {.size_in_pxs = size_in_pxs, .rgba_px_data = rgba_px_data};
         }
     };
@@ -151,9 +151,9 @@ namespace zf::gfx {
     // ============================================================
     // @section: Fonts
 
-    constexpr math::t_v2_i g_font_atlas_size = {1024, 1024};
+    constexpr math::t_v2_i k_font_atlas_size = {1024, 1024};
 
-    using t_font_atlas_rgba = t_static_array<t_u8, 4 * g_font_atlas_size.x * g_font_atlas_size.y>;
+    using t_font_atlas_rgba = t_static_array<t_u8, 4 * k_font_atlas_size.x * k_font_atlas_size.y>;
 
     struct t_font_glyph_info {
         math::t_v2_i offs;

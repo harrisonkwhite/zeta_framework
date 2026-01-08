@@ -6,7 +6,7 @@ namespace zf::algos {
     // O(n^2) time complexity, but O(1) space complexity.
     // You're usually better off using a hash map and a linear search, or a bitset if values are numeric and the range is small.
     template <c_array tp_arr_type>
-    t_b8 check_duplicates_slow(const tp_arr_type arr, const t_comparator_bin<typename tp_arr_type::t_elem> comparator = g_comparator_bin_default<typename tp_arr_type::t_elem>) {
+    t_b8 check_duplicates_slow(const tp_arr_type arr, const t_comparator_bin<typename tp_arr_type::t_elem> comparator = k_comparator_bin_default<typename tp_arr_type::t_elem>) {
         for (t_i32 i = 0; i < arr.len; i++) {
             for (t_i32 j = 0; j < arr.len; j++) {
                 if (i == j) {
@@ -23,7 +23,7 @@ namespace zf::algos {
     }
 
     template <c_array tp_arr_type>
-    t_b8 run_binary_search(const tp_arr_type arr, const typename tp_arr_type::t_elem &elem, const t_comparator_ord<typename tp_arr_type::t_elem> comparator = g_comparator_ord_default<typename tp_arr_type::t_elem>) {
+    t_b8 run_binary_search(const tp_arr_type arr, const typename tp_arr_type::t_elem &elem, const t_comparator_ord<typename tp_arr_type::t_elem> comparator = k_comparator_ord_default<typename tp_arr_type::t_elem>) {
         if (arr.len == 0) {
             return false;
         }
@@ -41,7 +41,7 @@ namespace zf::algos {
     }
 
     template <c_array tp_arr_type>
-    t_b8 check_sorted(const tp_arr_type arr, const t_comparator_ord<typename tp_arr_type::t_elem> comparator = g_comparator_ord_default<typename tp_arr_type::t_elem>) {
+    t_b8 check_sorted(const tp_arr_type arr, const t_comparator_ord<typename tp_arr_type::t_elem> comparator = k_comparator_ord_default<typename tp_arr_type::t_elem>) {
         for (t_i32 i = 0; i < arr.len - 1; i++) {
             if (comparator(arr[i], arr[i + 1]) > 0) {
                 return false;
@@ -53,7 +53,7 @@ namespace zf::algos {
 
     // O(n) best-case if array is already sorted, O(n^2) worst-case.
     template <c_array tp_arr_type>
-    void run_bubble_sort(const tp_arr_type arr, const t_comparator_ord<typename tp_arr_type::t_elem> comparator = g_comparator_ord_default<typename tp_arr_type::t_elem>) {
+    void run_bubble_sort(const tp_arr_type arr, const t_comparator_ord<typename tp_arr_type::t_elem> comparator = k_comparator_ord_default<typename tp_arr_type::t_elem>) {
         t_b8 sorted;
 
         do {
@@ -70,7 +70,7 @@ namespace zf::algos {
 
     // O(n) best-case if array is already sorted, O(n^2) worst-case.
     template <c_array tp_arr_type>
-    void run_insertion_sort(const tp_arr_type arr, const t_comparator_ord<typename tp_arr_type::t_elem> comparator = g_comparator_ord_default<typename tp_arr_type::t_elem>) {
+    void run_insertion_sort(const tp_arr_type arr, const t_comparator_ord<typename tp_arr_type::t_elem> comparator = k_comparator_ord_default<typename tp_arr_type::t_elem>) {
         for (t_i32 i = 1; i < arr.len; i++) {
             const auto temp = arr[i];
 
@@ -90,7 +90,7 @@ namespace zf::algos {
 
     // O(n^2) in every case.
     template <c_array tp_arr_type>
-    void run_selection_sort(const tp_arr_type arr, const t_comparator_ord<typename tp_arr_type::t_elem> comparator = g_comparator_ord_default<typename tp_arr_type::t_elem>) {
+    void run_selection_sort(const tp_arr_type arr, const t_comparator_ord<typename tp_arr_type::t_elem> comparator = k_comparator_ord_default<typename tp_arr_type::t_elem>) {
         for (t_i32 i = 0; i < arr.len - 1; i++) {
             const auto min = &arr[i];
 
@@ -106,7 +106,7 @@ namespace zf::algos {
 
     // O(n log n) in both time complexity and space complexity in every case.
     template <typename tp_arr_type>
-    void run_merge_sort(const tp_arr_type arr, mem::t_arena *const temp_arena, const t_comparator_ord<typename tp_arr_type::t_elem> comparator = g_comparator_ord_default<typename tp_arr_type::t_elem>) {
+    void run_merge_sort(const tp_arr_type arr, mem::t_arena *const temp_arena, const t_comparator_ord<typename tp_arr_type::t_elem> comparator = k_comparator_ord_default<typename tp_arr_type::t_elem>) {
         if (arr.len <= 1) {
             return;
         }
@@ -149,7 +149,7 @@ namespace zf::algos {
     // Space complexity is O(1) compared to merge sort.
     // In each recurse, the pivot is selected as the median of the first, middle, and last elements.
     template <c_array tp_arr_type>
-    void run_quick_sort(const tp_arr_type arr, const t_comparator_ord<typename tp_arr_type::t_elem> comparator = g_comparator_ord_default<typename tp_arr_type::t_elem>) {
+    void run_quick_sort(const tp_arr_type arr, const t_comparator_ord<typename tp_arr_type::t_elem> comparator = k_comparator_ord_default<typename tp_arr_type::t_elem>) {
         if (arr.len <= 1) {
             return;
         }

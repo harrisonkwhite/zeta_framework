@@ -399,9 +399,9 @@ namespace zf::io {
     t_b8 print_type(t_stream *const stream, const t_float_format<tp_type> format) {
         t_static_array<t_u8, 400> str_bytes = {}; // Roughly more than how many bytes should ever be needed.
 
-        t_i32 str_bytes_used = snprintf(reinterpret_cast<char *>(str_bytes.raw), str_bytes.g_len, "%f", static_cast<t_f64>(format.value));
+        t_i32 str_bytes_used = snprintf(reinterpret_cast<char *>(str_bytes.raw), str_bytes.k_len, "%f", static_cast<t_f64>(format.value));
 
-        if (str_bytes_used < 0 || str_bytes_used >= str_bytes.g_len) {
+        if (str_bytes_used < 0 || str_bytes_used >= str_bytes.k_len) {
             return false;
         }
 
@@ -438,8 +438,8 @@ namespace zf::io {
         ec_hex_format_flags_allow_odd_digit_cnt = 1 << 2
     };
 
-    constexpr t_i32 g_hex_format_digit_cnt_min = 1;
-    constexpr t_i32 g_hex_format_digit_cnt_max = 16;
+    constexpr t_i32 k_hex_format_digit_cnt_min = 1;
+    constexpr t_i32 k_hex_format_digit_cnt_max = 16;
 
     template <c_integral_unsigned tp_type>
     struct t_hex_format {
@@ -451,11 +451,11 @@ namespace zf::io {
     };
 
     template <c_integral_unsigned tp_type>
-    t_hex_format<tp_type> format_hex(const tp_type value, const t_hex_format_flags flags = {}, const t_i32 min_digits = g_hex_format_digit_cnt_min) {
+    t_hex_format<tp_type> format_hex(const tp_type value, const t_hex_format_flags flags = {}, const t_i32 min_digits = k_hex_format_digit_cnt_min) {
         return {value, flags, min_digits};
     }
 
-    inline t_hex_format<t_uintptr> format_hex(const void *const ptr, const t_hex_format_flags flags = {}, const t_i32 min_digits = g_hex_format_digit_cnt_min) {
+    inline t_hex_format<t_uintptr> format_hex(const void *const ptr, const t_hex_format_flags flags = {}, const t_i32 min_digits = k_hex_format_digit_cnt_min) {
         return {reinterpret_cast<t_uintptr>(ptr), flags, min_digits};
     }
 
@@ -465,9 +465,9 @@ namespace zf::io {
 
     template <c_integral_unsigned tp_type>
     t_b8 print_type(t_stream *const stream, const t_hex_format<tp_type> format) {
-        ZF_ASSERT(format.min_digits >= g_hex_format_digit_cnt_min && format.min_digits <= g_hex_format_digit_cnt_max);
+        ZF_ASSERT(format.min_digits >= k_hex_format_digit_cnt_min && format.min_digits <= k_hex_format_digit_cnt_max);
 
-        t_static_array<t_u8, 2 + g_hex_format_digit_cnt_max> str_bytes = {}; // Can facilitate max number of digits plus the "0x" prefix.
+        t_static_array<t_u8, 2 + k_hex_format_digit_cnt_max> str_bytes = {}; // Can facilitate max number of digits plus the "0x" prefix.
         t_stream str_bytes_stream = mem_stream_create(array_to_nonstatic(str_bytes), ec_stream_mode_write);
 
         t_b8 str_bytes_stream_write_success = true;
@@ -701,20 +701,20 @@ namespace zf::io {
     // ========================================
     // @subsection: Format Printing
 
-    constexpr strs::t_code_pt g_print_format_spec = '%';
-    constexpr strs::t_code_pt g_print_format_esc = '^';
+    constexpr strs::t_code_pt k_print_format_spec = '%';
+    constexpr strs::t_code_pt k_print_format_esc = '^';
 
     inline t_i32 count_format_specs(const strs::t_str_rdonly str) {
-        static_assert(strs::code_pt_check_ascii(g_print_format_spec) && strs::code_pt_check_ascii(g_print_format_esc)); // Assuming this for this algorithm.
+        static_assert(strs::code_pt_check_ascii(k_print_format_spec) && strs::code_pt_check_ascii(k_print_format_esc)); // Assuming this for this algorithm.
 
         t_b8 escaped = false;
         t_i32 cnt = 0;
 
         for (t_i32 i = 0; i < str.bytes.len; i++) {
             if (!escaped) {
-                if (str.bytes[i] == g_print_format_esc) {
+                if (str.bytes[i] == k_print_format_esc) {
                     escaped = true;
-                } else if (str.bytes[i] == g_print_format_spec) {
+                } else if (str.bytes[i] == k_print_format_spec) {
                     cnt++;
                 }
             } else {
@@ -740,16 +740,16 @@ namespace zf::io {
 
         ZF_ASSERT(count_format_specs(format) == 1 + sizeof...(args_leftover));
 
-        static_assert(strs::code_pt_check_ascii(g_print_format_spec) && strs::code_pt_check_ascii(g_print_format_esc)); // Assuming this for this algorithm.
+        static_assert(strs::code_pt_check_ascii(k_print_format_spec) && strs::code_pt_check_ascii(k_print_format_esc)); // Assuming this for this algorithm.
 
         t_b8 escaped = false;
 
         for (t_i32 i = 0; i < format.bytes.len; i++) {
             if (!escaped) {
-                if (format.bytes[i] == g_print_format_esc) {
+                if (format.bytes[i] == k_print_format_esc) {
                     escaped = true;
                     continue;
-                } else if (format.bytes[i] == g_print_format_spec) {
+                } else if (format.bytes[i] == k_print_format_spec) {
                     if constexpr (c_format<tp_arg_type>) {
                         if (!print_type(stream, arg)) {
                             return false;

@@ -6,23 +6,23 @@ namespace zf::strs {
     // ============================================================
     // @section: Code Points
 
-    constexpr t_i32 g_code_pt_cnt = 1114112;
+    constexpr t_i32 k_code_pt_cnt = 1114112;
 
     using t_code_pt = char32_t;
-    using t_code_pt_bitset = mem::t_static_bitset<g_code_pt_cnt>;
+    using t_code_pt_bitset = mem::t_static_bitset<k_code_pt_cnt>;
 
-    constexpr t_i32 g_ascii_range_begin = 0;
-    constexpr t_i32 g_ascii_range_end = 0x80;
+    constexpr t_i32 k_ascii_range_begin = 0;
+    constexpr t_i32 k_ascii_range_end = 0x80;
 
-    constexpr t_i32 g_printable_ascii_range_begin = 0x20;
-    constexpr t_i32 g_printable_ascii_range_end = 0x7F;
+    constexpr t_i32 k_printable_ascii_range_begin = 0x20;
+    constexpr t_i32 k_printable_ascii_range_end = 0x7F;
 
     constexpr t_b8 code_pt_check_ascii(const t_code_pt cp) {
-        return cp >= g_ascii_range_begin && cp < g_ascii_range_end;
+        return cp >= k_ascii_range_begin && cp < k_ascii_range_end;
     }
 
     constexpr t_b8 code_pt_check_printable_ascii(const t_code_pt cp) {
-        return cp >= g_printable_ascii_range_begin && cp < g_printable_ascii_range_end;
+        return cp >= k_printable_ascii_range_begin && cp < k_printable_ascii_range_end;
     }
 
     // ============================================================
@@ -43,9 +43,9 @@ namespace zf::strs {
         }
     };
 
-    inline const t_comparator_bin<t_str_rdonly> g_str_comparator_bin =
+    constexpr t_comparator_bin<t_str_rdonly> k_str_comparator_bin =
         [](const t_str_rdonly &a, const t_str_rdonly &b) {
-            return g_array_comparator_bin<t_array_rdonly<t_u8>>(a.bytes, b.bytes);
+            return k_array_comparator_bin<t_array_rdonly<t_u8>>(a.bytes, b.bytes);
         };
 
     inline t_b8 bytes_check_terminated_anywhere(const t_array_rdonly<t_u8> bytes) {

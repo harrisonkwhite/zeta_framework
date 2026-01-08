@@ -4,17 +4,17 @@
 #include <stb_truetype.h>
 
 namespace zf::gfx {
-    static const ds::t_hash_func<strs::t_code_pt> g_code_pt_hash_func =
+    constexpr ds::t_hash_func<strs::t_code_pt> k_code_pt_hash_func =
         [](const strs::t_code_pt &code_pt) {
             return static_cast<t_i32>(code_pt);
         };
 
-    static const ds::t_hash_func<t_font_code_pt_pair> g_code_pt_pair_hash_func =
+    constexpr ds::t_hash_func<t_font_code_pt_pair> k_code_pt_pair_hash_func =
         [](const t_font_code_pt_pair &pair) {
             return 0; // @todo: Proper hash function!
         };
 
-    static const t_comparator_bin<t_font_code_pt_pair> g_code_pt_pair_comparator =
+    constexpr t_comparator_bin<t_font_code_pt_pair> k_code_pt_pair_comparator =
         [](const t_font_code_pt_pair &pa, const t_font_code_pt_pair &pb) {
             return pa.a == pb.a && pa.b == pb.b;
         };
@@ -142,7 +142,7 @@ namespace zf::gfx {
         //
         // Glyph Info
         //
-        o_arrangement->code_pts_to_glyph_infos = ds::hash_map_create<strs::t_code_pt, t_font_glyph_info>(g_code_pt_hash_func, arrangement_arena, code_pt_cnt);
+        o_arrangement->code_pts_to_glyph_infos = ds::hash_map_create<strs::t_code_pt, t_font_glyph_info>(k_code_pt_hash_func, arrangement_arena, code_pt_cnt);
 
         t_i32 atlas_index = 0;
         math::t_v2_i atlas_pen = {};
@@ -160,19 +160,19 @@ namespace zf::gfx {
             glyph_info.offs = {bm_box_left, bm_box_top + static_cast<t_i32>(static_cast<t_f32>(vm_ascent) * scale)};
             glyph_info.size = {bm_box_right - bm_box_left, bm_box_bottom - bm_box_top};
 
-            ZF_ASSERT(glyph_info.size.x <= g_font_atlas_size.x && glyph_info.size.y <= g_font_atlas_size.y);
+            ZF_ASSERT(glyph_info.size.x <= k_font_atlas_size.x && glyph_info.size.y <= k_font_atlas_size.y);
 
             t_i32 hm_advance;
             stbtt_GetGlyphHMetrics(&stb_font_info, glyph_index, &hm_advance, nullptr);
 
             glyph_info.adv = static_cast<t_i32>(static_cast<t_f32>(hm_advance) * scale);
 
-            if (atlas_pen.x + glyph_info.size.x > g_font_atlas_size.x) {
+            if (atlas_pen.x + glyph_info.size.x > k_font_atlas_size.x) {
                 atlas_pen.x = 0;
                 atlas_pen.y += o_arrangement->line_height;
             }
 
-            if (atlas_pen.y + glyph_info.size.y > g_font_atlas_size.y) {
+            if (atlas_pen.y + glyph_info.size.y > k_font_atlas_size.y) {
                 atlas_pen = {};
                 atlas_index++;
             }
@@ -192,7 +192,7 @@ namespace zf::gfx {
 
         // If there were any kernings to store, set up the hash map and go through again and store them.
         o_arrangement->has_kernings = true;
-        o_arrangement->code_pt_pairs_to_kernings = ds::hash_map_create<t_font_code_pt_pair, t_i32>(g_code_pt_pair_hash_func, arrangement_arena, ds::g_hash_map_cap_default, g_code_pt_pair_comparator);
+        o_arrangement->code_pt_pairs_to_kernings = ds::hash_map_create<t_font_code_pt_pair, t_i32>(k_code_pt_pair_hash_func, arrangement_arena, ds::k_hash_map_cap_default, k_code_pt_pair_comparator);
 
         ZF_WALK_SET_BITS (*code_pts, i) {
             ZF_WALK_SET_BITS (*code_pts, j) {
@@ -220,7 +220,7 @@ namespace zf::gfx {
         for (t_i32 i = 0; i < o_atlas_rgbas->len; i++) {
             const auto atlas_rgba = &(*o_atlas_rgbas)[i];
 
-            for (t_i32 j = 0; j < (*o_atlas_rgbas)[i].g_len; j += 4) {
+            for (t_i32 j = 0; j < (*o_atlas_rgbas)[i].k_len; j += 4) {
                 (*atlas_rgba)[j + 0] = 255;
                 (*atlas_rgba)[j + 1] = 255;
                 (*atlas_rgba)[j + 2] = 255;
@@ -256,7 +256,7 @@ namespace zf::gfx {
 
             for (t_i32 y = math::rect_get_top(atlas_rect); y < math::rect_get_bottom(atlas_rect); y++) {
                 for (t_i32 x = math::rect_get_left(atlas_rect); x < math::rect_get_right(atlas_rect); x++) {
-                    const t_i32 px_index = (y * 4 * g_font_atlas_size.x) + (x * 4);
+                    const t_i32 px_index = (y * 4 * k_font_atlas_size.x) + (x * 4);
                     const t_i32 stb_bitmap_index = ((y - atlas_rect.y) * atlas_rect.width) + (x - atlas_rect.x);
                     (*atlas_rgba)[px_index + 3] = stb_bitmap[stb_bitmap_index];
                 }
@@ -311,11 +311,11 @@ namespace zf::gfx {
             return false;
         }
 
-        if (!ds::hash_map_deserialize(&fs, arrangement_arena, g_code_pt_hash_func, temp_arena, &o_arrangement->code_pts_to_glyph_infos)) {
+        if (!ds::hash_map_deserialize(&fs, arrangement_arena, k_code_pt_hash_func, temp_arena, &o_arrangement->code_pts_to_glyph_infos)) {
             return false;
         }
 
-        if (!ds::hash_map_deserialize(&fs, arrangement_arena, g_code_pt_pair_hash_func, temp_arena, &o_arrangement->code_pt_pairs_to_kernings, g_code_pt_pair_comparator)) {
+        if (!ds::hash_map_deserialize(&fs, arrangement_arena, k_code_pt_pair_hash_func, temp_arena, &o_arrangement->code_pt_pairs_to_kernings, k_code_pt_pair_comparator)) {
             return false;
         }
 

@@ -18,8 +18,8 @@ namespace zf::input {
 
         math::t_v2 cursor_pos;
 
-        mem::t_static_bitset<g_gamepad_limit> gamepads_connected;
-        t_static_array<t_gamepad, g_gamepad_limit> gamepads;
+        mem::t_static_bitset<k_gamepad_limit> gamepads_connected;
+        t_static_array<t_gamepad, k_gamepad_limit> gamepads;
         t_static_array<t_f32, ecm_gamepad_axis_code_cnt> gamepad_axis_deadzones;
 
         struct {
@@ -31,7 +31,7 @@ namespace zf::input {
 
             math::t_v2 scroll_offs;
 
-            t_static_array<t_gamepad_events, g_gamepad_limit> gamepads;
+            t_static_array<t_gamepad_events, k_gamepad_limit> gamepads;
         } events;
     };
 
@@ -112,7 +112,7 @@ namespace zf::input {
     }
 
     t_b8 gamepad_check_connected(const t_state *const state, const t_i32 index) {
-        ZF_ASSERT(index >= 0 && index < g_gamepad_limit);
+        ZF_ASSERT(index >= 0 && index < k_gamepad_limit);
         return mem::bitset_check_set(state->gamepads_connected, index);
     }
 
@@ -131,7 +131,7 @@ namespace zf::input {
         return mem::bitset_check_set(state->events.gamepads[gamepad_index].buttons_released, btn_code);
     }
 
-    inline t_f32 gamepad_get_axis_value_raw(const t_state *const state, const t_i32 gamepad_index, const t_gamepad_axis_code axis_code) {
+    t_f32 gamepad_get_axis_value_raw(const t_state *const state, const t_i32 gamepad_index, const t_gamepad_axis_code axis_code) {
         ZF_ASSERT(gamepad_check_connected(state, gamepad_index));
         return state->gamepads[gamepad_index].axes[axis_code];
     }

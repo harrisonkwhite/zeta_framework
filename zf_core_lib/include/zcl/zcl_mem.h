@@ -3,19 +3,19 @@
 #include <zcl/zcl_basic.h>
 
 namespace zf::mem {
-    constexpr t_i32 kilobytes_to_bytes(const t_i32 n) { return (1 << 10) * n; }
-    constexpr t_i32 megabytes_to_bytes(const t_i32 n) { return (1 << 20) * n; }
-    constexpr t_i32 gigabytes_to_bytes(const t_i32 n) { return (1 << 30) * n; }
-    constexpr t_i32 bits_to_bytes(const t_i32 n) { return (n + 7) / 8; }
-    constexpr t_i32 bytes_to_bits(const t_i32 n) { return n * 8; }
+    inline t_i32 kilobytes_to_bytes(const t_i32 n) { return (1 << 10) * n; }
+    inline t_i32 megabytes_to_bytes(const t_i32 n) { return (1 << 20) * n; }
+    inline t_i32 gigabytes_to_bytes(const t_i32 n) { return (1 << 30) * n; }
+    inline t_i32 bits_to_bytes(const t_i32 n) { return (n + 7) / 8; }
+    inline t_i32 bytes_to_bits(const t_i32 n) { return n * 8; }
 
     // Is n a power of 2?
-    constexpr t_b8 alignment_check_valid(const t_i32 n) {
+    inline t_b8 alignment_check_valid(const t_i32 n) {
         return n > 0 && (n & (n - 1)) == 0;
     }
 
     // Take n up to the next multiple of the alignment.
-    constexpr t_i32 align_forward(const t_i32 n, const t_i32 alignment) {
+    inline t_i32 align_forward(const t_i32 n, const t_i32 alignment) {
         ZF_ASSERT(alignment_check_valid(alignment));
         return (n + alignment - 1) & ~(alignment - 1);
     }
@@ -70,25 +70,25 @@ namespace zf::mem {
     }
 
 #ifdef ZF_DEBUG
-    constexpr t_u8 g_poison_uninitted = 0xCD;
-    constexpr t_u8 g_poison_freed = 0xDD;
+    constexpr t_u8 k_poison_uninitted = 0xCD;
+    constexpr t_u8 k_poison_freed = 0xDD;
 
     inline void poison_uninitted(void *const buf, const t_i32 buf_size) {
-        clear(buf, buf_size, g_poison_uninitted);
+        clear(buf, buf_size, k_poison_uninitted);
     }
 
     template <c_simple tp_type>
     inline void poison_uninitted_item(tp_type *const item) {
-        clear_item(item, g_poison_uninitted);
+        clear_item(item, k_poison_uninitted);
     }
 
     inline void poison_freed(void *const buf, const t_i32 buf_size) {
-        clear(buf, buf_size, g_poison_freed);
+        clear(buf, buf_size, k_poison_freed);
     }
 
     template <c_simple tp_type>
     inline void poison_freed_item(tp_type *const item) {
-        clear_item(item, g_poison_freed);
+        clear_item(item, k_poison_freed);
     }
 #else
     inline void poison_uninitted(void *const buf, const t_i32 buf_size) {}
@@ -221,19 +221,19 @@ namespace zf::mem {
         t_u8 *bytes_raw;
         t_i32 bit_cnt;
 
-        constexpr operator t_bitset_rdonly() const {
+        operator t_bitset_rdonly() const {
             return {bytes_raw, bit_cnt};
         }
     };
 
     template <t_i32 tp_bit_cnt>
     struct t_static_bitset {
-        static constexpr t_i32 g_bit_cnt = tp_bit_cnt;
+        static constexpr t_i32 k_bit_cnt = tp_bit_cnt;
 
         t_static_array<t_u8, bits_to_bytes(tp_bit_cnt)> bytes;
 
-        constexpr operator t_bitset_mut() { return {bytes.raw, g_bit_cnt}; }
-        constexpr operator t_bitset_rdonly() const { return {bytes.raw, g_bit_cnt}; }
+        operator t_bitset_mut() { return {bytes.raw, k_bit_cnt}; }
+        operator t_bitset_rdonly() const { return {bytes.raw, k_bit_cnt}; }
     };
 
     inline t_bitset_mut bitset_create(const t_array_mut<t_u8> bytes) {

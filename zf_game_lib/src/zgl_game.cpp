@@ -4,8 +4,8 @@
 #include <zgl/zgl_audio.h>
 
 namespace zf::game {
-    static const t_f64 g_init_target_tps = 60.0;
-    static const math::t_v2_i g_init_window_size = {1280, 720};
+    constexpr t_f64 k_init_target_tps = 60.0;
+    constexpr math::t_v2_i k_init_window_size = {1280, 720};
 
     static struct {
         t_b8 running;
@@ -18,7 +18,7 @@ namespace zf::game {
 
         g_module_state = {
             .running = true,
-            .targ_tps = g_init_target_tps,
+            .targ_tps = k_init_target_tps,
         };
 
         ZF_DEFER({ g_module_state = {}; });
@@ -32,7 +32,7 @@ namespace zf::game {
         mem::t_arena temp_arena = mem::arena_create_blockbased();
         ZF_DEFER({ mem::arena_destroy(&temp_arena); });
 
-        platform::module_startup(g_init_window_size);
+        platform::module_startup(k_init_window_size);
         ZF_DEFER({ platform::module_shutdown(); });
 
         input::t_state *const input_state = input::create_state(&perm_arena);

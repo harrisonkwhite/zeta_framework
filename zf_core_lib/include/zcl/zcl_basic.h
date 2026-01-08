@@ -88,43 +88,43 @@ namespace zf {
 
     using t_u8 = unsigned char;
     static_assert(sizeof(t_u8) == 1);
-    constexpr t_u8 g_u8_max = std::numeric_limits<t_u8>::max();
+    constexpr t_u8 k_u8_max = std::numeric_limits<t_u8>::max();
 
     using t_i8 = signed char;
     static_assert(sizeof(t_i8) == 1);
-    constexpr t_i8 g_i8_max = std::numeric_limits<t_i8>::max();
+    constexpr t_i8 k_i8_max = std::numeric_limits<t_i8>::max();
 
     using t_u16 = unsigned short;
     static_assert(sizeof(t_u16) == 2);
-    constexpr t_u16 g_u16_max = std::numeric_limits<t_u16>::max();
+    constexpr t_u16 k_u16_max = std::numeric_limits<t_u16>::max();
 
     using t_i16 = signed short;
     static_assert(sizeof(t_i16) == 2);
-    constexpr t_i16 g_i16_max = std::numeric_limits<t_i16>::max();
+    constexpr t_i16 k_i16_max = std::numeric_limits<t_i16>::max();
 
     using t_u32 = unsigned int;
     static_assert(sizeof(t_u32) == 4);
-    constexpr t_u32 g_u32_max = std::numeric_limits<t_u32>::max();
+    constexpr t_u32 k_u32_max = std::numeric_limits<t_u32>::max();
 
     using t_i32 = signed int;
     static_assert(sizeof(t_i32) == 4);
-    constexpr t_i32 g_i32_max = std::numeric_limits<t_i32>::max();
+    constexpr t_i32 k_i32_max = std::numeric_limits<t_i32>::max();
 
     using t_u64 = unsigned long long;
     static_assert(sizeof(t_u64) == 8);
-    constexpr t_u64 g_u64_max = std::numeric_limits<t_u64>::max();
+    constexpr t_u64 k_u64_max = std::numeric_limits<t_u64>::max();
 
     using t_i64 = signed long long;
     static_assert(sizeof(t_i64) == 8);
-    constexpr t_i64 g_i64_max = std::numeric_limits<t_i64>::max();
+    constexpr t_i64 k_i64_max = std::numeric_limits<t_i64>::max();
 
     using t_f32 = float;
     static_assert(sizeof(t_f32) == 4);
-    constexpr t_f32 g_f32_max = std::numeric_limits<t_f32>::max();
+    constexpr t_f32 k_f32_max = std::numeric_limits<t_f32>::max();
 
     using t_f64 = double;
     static_assert(sizeof(t_f64) == 8);
-    constexpr t_f64 g_f64_max = std::numeric_limits<t_f64>::max();
+    constexpr t_f64 k_f64_max = std::numeric_limits<t_f64>::max();
 
     using t_b8 = bool;
     static_assert(sizeof(t_b8) == 1);
@@ -171,7 +171,7 @@ namespace zf {
     using t_comparator_bin = t_b8 (*)(const tp_type &a, const tp_type &b);
 
     template <c_simple tp_type>
-    inline const t_comparator_bin<tp_type> g_comparator_bin_default =
+    constexpr t_comparator_bin<tp_type> k_comparator_bin_default =
         [](const tp_type &a, const tp_type &b) {
             return a == b;
         };
@@ -181,7 +181,7 @@ namespace zf {
     using t_comparator_ord = t_i32 (*)(const tp_type &a, const tp_type &b);
 
     template <c_simple tp_type>
-    inline const t_comparator_ord<tp_type> g_comparator_ord_default =
+    constexpr t_comparator_ord<tp_type> k_comparator_ord_default =
         [](const tp_type &a, const tp_type &b) {
             if (a == b) {
                 return 0;
@@ -265,7 +265,7 @@ namespace zf {
         t_i32 len;
 
         // @todo: Consider replacing with explicit function for safety.
-        constexpr const tp_elem_type &operator[](const t_i32 index) const {
+        const tp_elem_type &operator[](const t_i32 index) const {
             ZF_REQUIRE(index >= 0 && index < len);
             return raw[index];
         }
@@ -278,12 +278,12 @@ namespace zf {
         tp_elem_type *raw;
         t_i32 len;
 
-        constexpr tp_elem_type &operator[](const t_i32 index) const {
+        tp_elem_type &operator[](const t_i32 index) const {
             ZF_REQUIRE(index >= 0 && index < len);
             return raw[index];
         }
 
-        constexpr operator t_array_rdonly<tp_elem_type>() const {
+        operator t_array_rdonly<tp_elem_type>() const {
             return {raw, len};
         }
     };
@@ -292,26 +292,26 @@ namespace zf {
     struct t_static_array {
         using t_elem = tp_elem_type;
 
-        static constexpr t_i32 g_len = tp_len;
+        static constexpr t_i32 k_len = tp_len;
 
         tp_elem_type raw[tp_len];
 
-        constexpr tp_elem_type &operator[](const t_i32 index) {
+        tp_elem_type &operator[](const t_i32 index) {
             ZF_REQUIRE(index >= 0 && index < tp_len);
             return raw[index];
         }
 
-        constexpr const tp_elem_type &operator[](const t_i32 index) const {
+        const tp_elem_type &operator[](const t_i32 index) const {
             ZF_REQUIRE(index >= 0 && index < tp_len);
             return raw[index];
         }
 
-        constexpr operator t_array_mut<tp_elem_type>() {
-            return {raw, g_len};
+        operator t_array_mut<tp_elem_type>() {
+            return {raw, k_len};
         }
 
-        constexpr operator t_array_rdonly<tp_elem_type>() const {
-            return {raw, g_len};
+        operator t_array_rdonly<tp_elem_type>() const {
+            return {raw, k_len};
         }
     };
 
@@ -325,7 +325,7 @@ namespace zf {
     concept c_array = c_array_mut<tp_type> || c_array_rdonly<tp_type>;
 
     template <c_array tp_arr_type>
-    inline const t_comparator_bin<tp_arr_type> g_array_comparator_bin =
+    constexpr t_comparator_bin<tp_arr_type> k_array_comparator_bin =
         [](const tp_arr_type &a, const tp_arr_type &b) {
             if (a.len != b.len) {
                 return false;
@@ -342,12 +342,12 @@ namespace zf {
 
     template <c_array_elem tp_elem_type, t_i32 tp_len>
     t_array_mut<tp_elem_type> array_to_nonstatic(t_static_array<tp_elem_type, tp_len> &arr) {
-        return {arr.raw, arr.g_len};
+        return {arr.raw, arr.k_len};
     }
 
     template <c_array_elem tp_elem_type, t_i32 tp_len>
     t_array_rdonly<tp_elem_type> array_to_nonstatic(const t_static_array<tp_elem_type, tp_len> &arr) {
-        return {arr.raw, arr.g_len};
+        return {arr.raw, arr.k_len};
     }
 
     template <c_array_elem tp_elem_type>
@@ -403,7 +403,7 @@ namespace zf {
 
     template <c_array tp_arr_a_type, c_array tp_arr_b_type>
         requires c_same<typename tp_arr_a_type::t_elem, typename tp_arr_b_type::t_elem>
-    t_b8 arrays_check_equal(const tp_arr_a_type a, const tp_arr_b_type b, const t_comparator_bin<typename tp_arr_a_type::t_elem> comparator = g_comparator_ord_default<typename tp_arr_a_type::t_elem>) {
+    t_b8 arrays_check_equal(const tp_arr_a_type a, const tp_arr_b_type b, const t_comparator_bin<typename tp_arr_a_type::t_elem> comparator = k_comparator_ord_default<typename tp_arr_a_type::t_elem>) {
         if (a.len != b.len) {
             return false;
         }
@@ -419,7 +419,7 @@ namespace zf {
 
     template <c_array tp_arr_a_type, c_array tp_arr_b_type>
         requires c_same<typename tp_arr_a_type::t_elem, typename tp_arr_b_type::t_elem>
-    t_i32 array_compare(const tp_arr_a_type a, const tp_arr_b_type b, const t_comparator_ord<typename tp_arr_a_type::t_elem> comparator = g_comparator_ord_default<typename tp_arr_a_type::t_elem>) {
+    t_i32 array_compare(const tp_arr_a_type a, const tp_arr_b_type b, const t_comparator_ord<typename tp_arr_a_type::t_elem> comparator = k_comparator_ord_default<typename tp_arr_a_type::t_elem>) {
         if (a.len != b.len) {
             return a.len < b.len ? -1 : 1;
         }
@@ -436,7 +436,7 @@ namespace zf {
     }
 
     template <c_array tp_arr_type>
-    t_b8 array_check_all_equal(const tp_arr_type arr, const typename tp_arr_type::t_elem &val, const t_comparator_bin<typename tp_arr_type::t_elem> comparator = g_comparator_bin_default<typename tp_arr_type::t_elem>) {
+    t_b8 array_check_all_equal(const tp_arr_type arr, const typename tp_arr_type::t_elem &val, const t_comparator_bin<typename tp_arr_type::t_elem> comparator = k_comparator_bin_default<typename tp_arr_type::t_elem>) {
         if (arr.len == 0) {
             return false;
         }
@@ -451,7 +451,7 @@ namespace zf {
     }
 
     template <c_array tp_arr_type>
-    t_b8 array_check_any_equal(const tp_arr_type arr, const typename tp_arr_type::t_elem &val, const t_comparator_bin<typename tp_arr_type::t_elem> comparator = g_comparator_bin_default<typename tp_arr_type::t_elem>) {
+    t_b8 array_check_any_equal(const tp_arr_type arr, const typename tp_arr_type::t_elem &val, const t_comparator_bin<typename tp_arr_type::t_elem> comparator = k_comparator_bin_default<typename tp_arr_type::t_elem>) {
         for (t_i32 i = 0; i < arr.len; i++) {
             if (comparator(arr[i], val)) {
                 return true;

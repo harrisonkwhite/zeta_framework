@@ -12,7 +12,7 @@ namespace zf::strs {
 
     static_assert(ec_utf8_byte_type_4byte_start - ec_utf8_byte_type_ascii + 1 == 4); // This is assumed in various algorithms.
 
-    static const t_static_array<t_utf8_byte_type, 256> g_utf8_byte_type_table = {{
+    constexpr t_static_array<t_utf8_byte_type, 256> k_utf8_byte_type_table = {{
         ec_utf8_byte_type_ascii,
         ec_utf8_byte_type_ascii,
         ec_utf8_byte_type_ascii,
@@ -280,7 +280,7 @@ namespace zf::strs {
         t_i32 cost = 0;
 
         for (t_i32 i = 0; i < str.bytes.len; i++) {
-            const auto byte_type = g_utf8_byte_type_table[str.bytes[i]];
+            const auto byte_type = k_utf8_byte_type_table[str.bytes[i]];
 
             switch (byte_type) {
             case ec_utf8_byte_type_ascii:
@@ -319,7 +319,7 @@ namespace zf::strs {
         t_i32 len = 0;
 
         while (i < str.bytes.len) {
-            const auto byte_type = g_utf8_byte_type_table[str.bytes[i]];
+            const auto byte_type = k_utf8_byte_type_table[str.bytes[i]];
 
             switch (byte_type) {
             case ec_utf8_byte_type_ascii:
@@ -385,7 +385,7 @@ namespace zf::strs {
         t_i32 cp_first_byte_index = byte_index;
 
         do {
-            const auto byte_type = g_utf8_byte_type_table[str.bytes[cp_first_byte_index]];
+            const auto byte_type = k_utf8_byte_type_table[str.bytes[cp_first_byte_index]];
 
             if (byte_type == ec_utf8_byte_type_continuation) {
                 cp_first_byte_index--;
@@ -415,7 +415,7 @@ namespace zf::strs {
         }
 
         while (true) {
-            const auto byte_type = g_utf8_byte_type_table[str.bytes[*byte_index]];
+            const auto byte_type = k_utf8_byte_type_table[str.bytes[*byte_index]];
 
             switch (byte_type) {
             case ec_utf8_byte_type_ascii:
@@ -449,7 +449,7 @@ namespace zf::strs {
         }
 
         while (true) {
-            const auto byte_type = g_utf8_byte_type_table[str.bytes[*byte_index]];
+            const auto byte_type = k_utf8_byte_type_table[str.bytes[*byte_index]];
 
             switch (byte_type) {
             case ec_utf8_byte_type_ascii:

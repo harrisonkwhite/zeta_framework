@@ -26,7 +26,7 @@ namespace zf {
         t_b8 (*func)(mem::t_arena *const arena);
     };
 
-    static const t_static_array<t_test, 4> g_tests = {{
+    constexpr t_static_array<t_test, 4> k_tests = {{
         {.title_cstr = "Bits", .func = test_bits},
         {.title_cstr = "Sorting", .func = test_sorting},
         {.title_cstr = "List", .func = test_list},
@@ -37,9 +37,9 @@ namespace zf {
         mem::t_arena arena = mem::arena_create_blockbased();
         ZF_DEFER({ mem::arena_destroy(&arena); });
 
-        for (t_i32 i = 0; i < g_tests.g_len; i++) {
-            io::log(ZF_STR_LITERAL("Running test \"%\"..."), strs::cstr_to_str(g_tests[i].title_cstr));
-            g_tests[i].func(&arena);
+        for (t_i32 i = 0; i < k_tests.k_len; i++) {
+            io::log(ZF_STR_LITERAL("Running test \"%\"..."), strs::cstr_to_str(k_tests[i].title_cstr));
+            k_tests[i].func(&arena);
         }
     }
 }

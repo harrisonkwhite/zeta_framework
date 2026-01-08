@@ -315,6 +315,9 @@ namespace zf::rendering {
         context->frame_vert_cnt = 0;
         mem::clear_item(&context->batch_state, 0);
 
+        // @todo: CONSIDER just having the first view reserved as a "clear" view, since no other view needs clearing.
+        // Though this might not be a good idea because with different framebuffers you might want different things. Keep it flexible but simple.
+
         return context;
     }
 
@@ -357,7 +360,7 @@ namespace zf::rendering {
         g_module_state.phase = ec_module_phase_active_but_not_midframe;
     }
 
-    void frame_pass_configure(t_frame_context *const context, const t_i32 pass_index, const math::t_v2_i size, const math::t_mat4x4 &view_mat, const gfx::t_color_rgba32f clear_col) {
+    void frame_pass_configure(t_frame_context *const context, const t_i32 pass_index, const math::t_v2_i size, const math::t_mat4x4 &view_mat, const t_b8 clear, const gfx::t_color_rgba32f clear_col) {
         ZF_ASSERT(g_module_state.phase == ec_module_phase_active_and_midframe);
         ZF_ASSERT(pass_index >= 0 && pass_index < g_frame_pass_limit);
         ZF_ASSERT(!mem::bitset_check_set(context->passes_configured, pass_index));
@@ -370,7 +373,7 @@ namespace zf::rendering {
 
         bgfx::setViewRect(bgfx_view_id, 0, 0, static_cast<uint16_t>(size.x), static_cast<uint16_t>(size.y));
 
-        auto proj_mat = math::g_mat4x4_identity;
+        auto proj_mat = math::k_mat4x4_identity;
         proj_mat.elems[0][0] = 1.0f / (static_cast<t_f32>(size.x) / 2.0f);
         proj_mat.elems[1][1] = -1.0f / (static_cast<t_f32>(size.y) / 2.0f);
         proj_mat.elems[3][0] = -1.0f;
@@ -378,7 +381,9 @@ namespace zf::rendering {
 
         bgfx::setViewTransform(bgfx_view_id, &view_mat, &proj_mat);
 
-        bgfx::setViewClear(bgfx_view_id, BGFX_CLEAR_COLOR, gfx::color_rgba8_to_hex(gfx::color_rgba32f_to_rgba8(clear_col)));
+        if (clear) {
+            bgfx::setViewClear(bgfx_view_id, BGFX_CLEAR_COLOR, gfx::color_rgba8_to_hex(gfx::color_rgba32f_to_rgba8(clear_col)));
+        }
 
         bgfx::touch(bgfx_view_id);
 
