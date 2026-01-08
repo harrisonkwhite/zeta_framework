@@ -67,15 +67,13 @@ namespace zf::audio_sys {
         }
 
         mem::arena_destroy(&group->arena);
-        group->head = nullptr;
-        group->tail = nullptr;
+        *group = {};
     }
 
     static t_sound_type *sound_type_group_add(t_sound_type_group *const group, const audio::t_sound_data_rdonly snd_data) {
         const auto result = mem::arena_push_item<t_sound_type>(&group->arena);
         result->valid = true;
         result->snd_data = snd_data;
-        result->next = nullptr;
 
         if (!group->head) {
             group->head = result;

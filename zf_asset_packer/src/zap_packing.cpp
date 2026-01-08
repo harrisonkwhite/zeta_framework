@@ -229,7 +229,7 @@ namespace zf {
                     const auto height = field_vals[ec_font_field_height]->valueint;
                     const auto out_file_path = strs::cstr_to_str(field_vals[ec_font_field_out_file_path]->valuestring);
 
-                    const auto code_pt_bv = mem::arena_push_item_zeroed<strs::t_code_pt_bitset>(&arena);
+                    const auto code_pt_bv = mem::arena_push_item<strs::t_code_pt_bitset>(&arena);
 
                     mem::bitset_set_range(*code_pt_bv, strs::k_printable_ascii_range_begin, strs::k_printable_ascii_range_end); // Add the printable ASCII range as a default.
 

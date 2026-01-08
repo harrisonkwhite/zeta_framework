@@ -91,9 +91,7 @@ namespace zf::rendering {
     t_basis *module_startup(mem::t_arena *const arena, mem::t_arena *const temp_arena, t_resource_group **const o_perm_resource_group) {
         ZF_ASSERT(g_module_state.phase == ec_module_phase_inactive);
 
-        g_module_state = {
-            .phase = ec_module_phase_active_but_not_midframe,
-        };
+        g_module_state.phase = ec_module_phase_active_but_not_midframe;
 
         //
         // BGFX Setup
@@ -185,8 +183,9 @@ namespace zf::rendering {
                 ZF_UNREACHABLE();
             }
 
-            resource->type = ec_resource_type_invalid;
-            resource = resource->next;
+            t_resource *const resource_next = resource->next;
+            *resource = {};
+            resource = resource_next;
         }
 
         *group = {};
@@ -206,7 +205,6 @@ namespace zf::rendering {
         }
 
         resource->type = type;
-        resource->next = nullptr;
 
         return resource;
     }
@@ -311,9 +309,6 @@ namespace zf::rendering {
         const auto context = mem::arena_push_item<t_frame_context>(context_arena);
         context->basis = basis;
         context->pass_index = -1;
-        mem::clear_item(&context->passes_configured, 0);
-        context->frame_vert_cnt = 0;
-        mem::clear_item(&context->batch_state, 0);
 
         // @todo: CONSIDER just having the first view reserved as a "clear" view, since no other view needs clearing.
         // Though this might not be a good idea because with different framebuffers you might want different things. Keep it flexible but simple.
@@ -347,7 +342,7 @@ namespace zf::rendering {
 
         context->frame_vert_cnt += context->batch_state.vert_cnt;
 
-        mem::clear_item(&context->batch_state, 0);
+        mem::zero_clear_item(&context->batch_state);
     }
 
     void frame_end(t_frame_context *const context) {

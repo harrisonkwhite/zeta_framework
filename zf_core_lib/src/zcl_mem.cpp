@@ -14,10 +14,7 @@ namespace zf::mem {
 
             self(self, block->next);
 
-            poison_freed(block->buf, block->buf_size);
             free(block->buf);
-
-            poison_freed_item(block);
             free(block);
         };
 
@@ -35,7 +32,7 @@ namespace zf::mem {
             ZF_FATAL();
         }
 
-        poison_uninitted_item(block);
+        zero_clear_item(block);
 
         block->buf = malloc(static_cast<size_t>(buf_size));
 
@@ -43,10 +40,9 @@ namespace zf::mem {
             ZF_FATAL();
         }
 
-        poison_uninitted(block->buf, buf_size);
+        zero_clear(block->buf, buf_size);
 
         block->buf_size = buf_size;
-        block->next = nullptr;
 
         return block;
     }
@@ -81,7 +77,7 @@ namespace zf::mem {
             blockbased->block_cur_offs = offs_next;
 
             void *const result = static_cast<t_u8 *>(blockbased->block_cur->buf) + offs_aligned;
-            poison_uninitted(result, size);
+            ZF_ASSERT(zero_check(result, size));
 
             return result;
         }
@@ -99,7 +95,7 @@ namespace zf::mem {
             wrapping->buf_offs = offs_next;
 
             void *const result = static_cast<t_u8 *>(wrapping->buf) + offs_aligned;
-            poison_uninitted(result, size);
+            ZF_ASSERT(zero_check(result, size));
 
             return result;
         }
@@ -114,19 +110,16 @@ namespace zf::mem {
         case ec_arena_type_blockbased: {
             const auto blockbased = &arena->type_data.blockbased;
 
-#ifdef ZF_DEBUG
-            // Poison all used block buffers.
             if (blockbased->block_cur) {
                 const t_arena_block *block = blockbased->blocks_head;
 
                 while (block != blockbased->block_cur) {
-                    poison_freed(block->buf, block->buf_size);
+                    zero_clear(block->buf, block->buf_size);
                     block = block->next;
                 }
 
-                poison_freed(blockbased->block_cur->buf, blockbased->block_cur_offs);
+                zero_clear(blockbased->block_cur->buf, blockbased->block_cur_offs);
             }
-#endif
 
             blockbased->block_cur = blockbased->blocks_head;
             blockbased->block_cur_offs = 0;
@@ -136,7 +129,7 @@ namespace zf::mem {
 
         case ec_arena_type_wrapping: {
             const auto wrapping = &arena->type_data.wrapping;
-            poison_freed(wrapping->buf, wrapping->buf_offs);
+            zero_clear(wrapping->buf, wrapping->buf_offs);
             wrapping->buf_offs = 0;
             break;
         }
@@ -212,7 +205,7 @@ namespace zf::mem {
             const t_i32 set_range_begin = max(begin_bit_index_rel, 0);
             const t_i32 set_range_end = min(end_bit_index_rel, 8);
 
-            bitset_get_bytes(bs)[i] |= create_byte_bitmask_range(set_range_begin, set_range_end);
+            bitset_get_bytes(bs)[i] |= byte_bitmask_create_range(set_range_begin, set_range_end);
         }
     }
 
@@ -268,7 +261,7 @@ namespace zf::mem {
         for (t_i32 i = 0; i < bitset_get_bytes(bs).len; i++) {
             const t_i32 bits_in_byte = i == bitset_get_bytes(bs).len - 1 ? bitset_get_last_byte_bit_cnt(bs) : 8;
             const t_u8 discard_last = discard;
-            discard = (bitset_get_bytes(bs)[i] & create_byte_bitmask_single(bits_in_byte - 1)) >> (bits_in_byte - 1);
+            discard = (bitset_get_bytes(bs)[i] & byte_bitmask_create_single(bits_in_byte - 1)) >> (bits_in_byte - 1);
             bitset_get_bytes(bs)[i] <<= 1;
             bitset_get_bytes(bs)[i] |= discard_last;
         }
@@ -322,11 +315,11 @@ namespace zf::mem {
         for (t_i32 i = bitset_get_bytes(bs).len - 1; i >= 0; i--) {
             const t_i32 bits_in_byte = i == bitset_get_bytes(bs).len - 1 ? bitset_get_last_byte_bit_cnt(bs) : 8;
             const t_u8 discard_last = discard;
-            discard = bitset_get_bytes(bs)[i] & create_byte_bitmask_single(0);
+            discard = bitset_get_bytes(bs)[i] & byte_bitmask_create_single(0);
             bitset_get_bytes(bs)[i] >>= 1;
 
             if (discard_last) {
-                bitset_get_bytes(bs)[i] |= create_byte_bitmask_single(bits_in_byte - 1);
+                bitset_get_bytes(bs)[i] |= byte_bitmask_create_single(bits_in_byte - 1);
             }
         }
 
@@ -634,7 +627,7 @@ namespace zf::mem {
             t_u8 byte = bitset_get_bytes(bs)[i] ^ xor_mask;
 
             if (i == begin_byte_index) {
-                byte &= create_byte_bitmask_range(from % 8);
+                byte &= byte_bitmask_create_range(from % 8);
             }
 
             if (i == bitset_get_bytes(bs).len - 1) {

@@ -36,11 +36,11 @@ namespace zf::input {
     };
 
     t_state *create_state(mem::t_arena *const arena) {
-        return mem::arena_push_item_zeroed<t_state>(arena);
+        return mem::arena_push_item<t_state>(arena);
     }
 
     void clear_events(t_state *const state) {
-        mem::clear_item(&state->events, 0);
+        mem::zero_clear_item(&state->events);
     }
 
     t_b8 key_check_down(const t_state *const state, const t_key_code code) {

@@ -41,13 +41,13 @@ namespace zf::mem {
     }
 
     // Creates a byte-sized bitmask with only a single bit set.
-    constexpr t_u8 create_byte_bitmask_single(const t_i32 bit_index) {
+    constexpr t_u8 byte_bitmask_create_single(const t_i32 bit_index) {
         ZF_ASSERT(bit_index >= 0 && bit_index < 8);
         return static_cast<t_u8>(1 << bit_index);
     }
 
     // Creates a byte-sized bitmask with only bits in the range [begin_bit_index, end_bit_index) set.
-    constexpr t_u8 create_byte_bitmask_range(const t_i32 begin_bit_index, const t_i32 end_bit_index = 8) {
+    constexpr t_u8 byte_bitmask_create_range(const t_i32 begin_bit_index, const t_i32 end_bit_index = 8) {
         ZF_ASSERT(begin_bit_index >= 0 && begin_bit_index < 8);
         ZF_ASSERT(end_bit_index >= begin_bit_index && end_bit_index <= 8);
 
@@ -59,43 +59,34 @@ namespace zf::mem {
         return static_cast<t_u8>(bits_at_bottom << begin_bit_index);
     }
 
-    inline void clear(void *const buf, const t_i32 buf_size, const t_u8 val) {
+    inline void zero_clear(void *const buf, const t_i32 buf_size) {
         ZF_ASSERT(buf_size >= 0);
-        memset(buf, val, static_cast<size_t>(buf_size));
+        memset(buf, 0, static_cast<size_t>(buf_size));
     }
 
     template <c_simple tp_type>
-    inline void clear_item(tp_type *const item, const t_u8 val) {
-        clear(item, ZF_SIZE_OF(tp_type), val);
+    void zero_clear_item(tp_type *const item) {
+        zero_clear(item, ZF_SIZE_OF(tp_type));
     }
 
-#ifdef ZF_DEBUG
-    constexpr t_u8 k_poison_uninitted = 0xCD;
-    constexpr t_u8 k_poison_freed = 0xDD;
+    constexpr t_b8 zero_check(void *const buf, const t_i32 buf_size) {
+        ZF_ASSERT(buf_size >= 0);
 
-    inline void poison_uninitted(void *const buf, const t_i32 buf_size) {
-        clear(buf, buf_size, k_poison_uninitted);
-    }
+        const auto buf_bytes = static_cast<t_u8 *>(buf);
 
-    template <c_simple tp_type>
-    inline void poison_uninitted_item(tp_type *const item) {
-        clear_item(item, k_poison_uninitted);
-    }
+        for (t_i32 i = 0; i < buf_size; i++) {
+            if (buf_bytes[i]) {
+                return false;
+            }
+        }
 
-    inline void poison_freed(void *const buf, const t_i32 buf_size) {
-        clear(buf, buf_size, k_poison_freed);
+        return true;
     }
 
     template <c_simple tp_type>
-    inline void poison_freed_item(tp_type *const item) {
-        clear_item(item, k_poison_freed);
+    constexpr t_b8 zero_check_item(tp_type *const item) {
+        return zero_check(item, ZF_SIZE_OF(tp_type));
     }
-#else
-    inline void poison_uninitted(void *const buf, const t_i32 buf_size) {}
-    template <co_simple tp_type> inline void poison_uninitted_item(tp_type *const item) {}
-    inline void poison_freed(void *const buf, const t_i32 buf_size) {}
-    template <co_simple tp_type> inline void poison_freed_item(tp_type *const item) {}
-#endif
 
 
     // ============================================================
@@ -111,7 +102,7 @@ namespace zf::mem {
     enum t_arena_type : t_i32 {
         ec_arena_type_invalid,
         ec_arena_type_blockbased, // Owns its memory, which is organised as a linked list of dynamically allocated blocks. New blocks are allocated as needed. @todo: Probably should not expose implementation details.
-        ec_arena_type_wrapping,   // Non-owning and non-reallocating. Useful if you want to leverage a stack-allocated buffer for example. @todo: Probably not a good name.
+        ec_arena_type_wrapping    // Non-owning and non-reallocating. Useful if you want to leverage a stack-allocated buffer for example. @todo: Probably not a good name.
     };
 
     struct t_arena {
@@ -144,7 +135,7 @@ namespace zf::mem {
     }
 
     inline t_arena arena_create_wrapping(const t_array_mut<t_u8> bytes) {
-        poison_uninitted(bytes.raw, bytes.len);
+        array_set_all_to(bytes, 0);
 
         return {
             .type = ec_arena_type_wrapping,
@@ -156,18 +147,14 @@ namespace zf::mem {
     void arena_destroy(t_arena *const arena);
 
     // Will lazily allocate memory as needed. Allocation failure is treated as fatal and causes an abort - you don't need to check for nullptr.
+    // Returned buffer is guaranteed to be zeroed.
     void *arena_push(t_arena *const arena, const t_i32 size, const t_i32 alignment);
 
+    // Will lazily allocate memory as needed. Allocation failure is treated as fatal and causes an abort - you don't need to check for nullptr.
+    // Returned item is guaranteed to be zeroed.
     template <c_simple tp_type>
     tp_type *arena_push_item(t_arena *const arena) {
         return static_cast<tp_type *>(arena_push(arena, ZF_SIZE_OF(tp_type), ZF_ALIGN_OF(tp_type)));
-    }
-
-    template <c_simple tp_type>
-    tp_type *arena_push_item_zeroed(t_arena *const arena) {
-        const auto result = static_cast<tp_type *>(arena_push(arena, ZF_SIZE_OF(tp_type), ZF_ALIGN_OF(tp_type)));
-        clear_item(result, 0);
-        return result;
     }
 
     template <c_array_elem tp_elem_type>
@@ -178,22 +165,8 @@ namespace zf::mem {
             return {};
         }
 
-        const auto raw = static_cast<tp_elem_type *>(arena_push(arena, ZF_SIZE_OF(tp_elem_type) * len, ZF_ALIGN_OF(tp_elem_type)));
-        return {raw, len};
-    }
-
-    template <c_array_elem tp_elem_type>
-    t_array_mut<tp_elem_type> arena_push_array_zeroed(t_arena *const arena, const t_i32 len) {
-        ZF_ASSERT(len >= 0);
-
-        if (len == 0) {
-            return {};
-        }
-
         const t_i32 size = ZF_SIZE_OF(tp_elem_type) * len;
-        const auto raw = static_cast<tp_elem_type *>(arena_push(arena, size, ZF_ALIGN_OF(tp_elem_type)));
-        clear(raw, size, 0);
-        return {raw, len};
+        return {static_cast<tp_elem_type *>(arena_push(arena, size, ZF_ALIGN_OF(tp_elem_type))), len};
     }
 
     template <c_array tp_arr_type>
@@ -256,7 +229,7 @@ namespace zf::mem {
 
     inline t_bitset_mut bitset_create(const t_i32 bit_cnt, t_arena *const arena) {
         ZF_ASSERT(bit_cnt >= 0);
-        return {arena_push_array_zeroed<t_u8>(arena, bits_to_bytes(bit_cnt)).raw, bit_cnt};
+        return {arena_push_array<t_u8>(arena, bits_to_bytes(bit_cnt)).raw, bit_cnt};
     }
 
     constexpr t_array_mut<t_u8> bitset_get_bytes(const t_bitset_mut bs) {
@@ -273,22 +246,22 @@ namespace zf::mem {
 
     // Gives a mask of the last byte in which only excess bits are unset.
     constexpr t_u8 bitset_get_last_byte_mask(const t_bitset_rdonly bs) {
-        return create_byte_bitmask_range(0, bitset_get_last_byte_bit_cnt(bs));
+        return byte_bitmask_create_range(0, bitset_get_last_byte_bit_cnt(bs));
     }
 
     constexpr t_b8 bitset_check_set(const t_bitset_rdonly bs, const t_i32 index) {
         ZF_ASSERT(index >= 0 && index < bs.bit_cnt);
-        return bitset_get_bytes(bs)[index / 8] & create_byte_bitmask_single(index % 8);
+        return bitset_get_bytes(bs)[index / 8] & byte_bitmask_create_single(index % 8);
     }
 
     constexpr void bitset_set(const t_bitset_mut bs, const t_i32 index) {
         ZF_ASSERT(index >= 0 && index < bs.bit_cnt);
-        bitset_get_bytes(bs)[index / 8] |= create_byte_bitmask_single(index % 8);
+        bitset_get_bytes(bs)[index / 8] |= byte_bitmask_create_single(index % 8);
     }
 
     constexpr void bitset_unset(const t_bitset_mut bs, const t_i32 index) {
         ZF_ASSERT(index >= 0 && index < bs.bit_cnt);
-        bitset_get_bytes(bs)[index / 8] &= ~create_byte_bitmask_single(index % 8);
+        bitset_get_bytes(bs)[index / 8] &= ~byte_bitmask_create_single(index % 8);
     }
 
     t_b8 bitset_check_any_set(const t_bitset_rdonly bs);

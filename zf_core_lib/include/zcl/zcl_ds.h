@@ -239,8 +239,6 @@ namespace zf::ds {
 
         block->usage = mem::bitset_create(cap, arena);
 
-        block->next = nullptr;
-
         return block;
     }
 
