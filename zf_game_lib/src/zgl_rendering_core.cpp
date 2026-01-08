@@ -30,7 +30,9 @@ namespace zf::rendering {
 
         union {
             struct {
-                bgfx::TextureHandle bgfx_hdl;
+                t_b8 is_target;
+                bgfx::TextureHandle nontarget_texture_bgfx_hdl;
+                bgfx::FrameBufferHandle target_fb_bgfx_hdl;
                 math::t_v2_i size;
             } texture;
 
@@ -168,7 +170,12 @@ namespace zf::rendering {
         while (resource) {
             switch (resource->type) {
             case ec_resource_type_texture:
-                bgfx::destroy(resource->type_data.texture.bgfx_hdl);
+                if (resource->type_data.texture.is_target) {
+                    bgfx::destroy(resource->type_data.texture.target_fb_bgfx_hdl);
+                } else {
+                    bgfx::destroy(resource->type_data.texture.nontarget_texture_bgfx_hdl);
+                }
+
                 break;
 
             case ec_resource_type_shader_prog:
@@ -220,9 +227,46 @@ namespace zf::rendering {
         }
 
         const auto resource = resource_group_add(group, ec_resource_type_texture);
-        resource->type_data.texture.bgfx_hdl = texture_bgfx_hdl;
+        resource->type_data.texture.nontarget_texture_bgfx_hdl = texture_bgfx_hdl;
         resource->type_data.texture.size = texture_data.size_in_pxs;
         return resource;
+    }
+
+    static bgfx::FrameBufferHandle bgfx_create_framebuffer(const math::t_v2_i size) {
+        return bgfx::createFrameBuffer(static_cast<uint16_t>(size.x), static_cast<uint16_t>(size.y), bgfx::TextureFormat::RGBA8, BGFX_SAMPLER_MIN_POINT | BGFX_SAMPLER_MAG_POINT | BGFX_SAMPLER_U_CLAMP | BGFX_SAMPLER_V_CLAMP);
+    }
+
+    t_resource *texture_create_target(const math::t_v2_i size, t_resource_group *const group) {
+        ZF_ASSERT(g_module_state.phase == ec_module_phase_active_but_not_midframe);
+        ZF_ASSERT(size.x > 0 && size.y > 0);
+
+        const bgfx::FrameBufferHandle fb_bgfx_hdl = bgfx_create_framebuffer(size);
+
+        if (!bgfx::isValid(fb_bgfx_hdl)) {
+            ZF_FATAL();
+        }
+
+        const auto resource = resource_group_add(group, ec_resource_type_texture);
+        resource->type_data.texture.is_target = true;
+        resource->type_data.texture.target_fb_bgfx_hdl = fb_bgfx_hdl;
+        resource->type_data.texture.size = size;
+        return resource;
+    }
+
+    void texture_resize_target(t_resource *const texture, const math::t_v2_i size) {
+        ZF_ASSERT(g_module_state.phase == ec_module_phase_active_but_not_midframe);
+        ZF_ASSERT(texture->type == ec_resource_type_texture && texture->type_data.texture.is_target);
+        ZF_ASSERT(size.x > 0 && size.y > 0);
+        ZF_ASSERT(size != texture->type_data.texture.size);
+
+        const bgfx::FrameBufferHandle fb_bgfx_hdl = bgfx_create_framebuffer(size);
+
+        if (!bgfx::isValid(fb_bgfx_hdl)) {
+            ZF_FATAL();
+        }
+
+        texture->type_data.texture.target_fb_bgfx_hdl = fb_bgfx_hdl;
+        texture->type_data.texture.size = size;
     }
 
     math::t_v2_i texture_get_size(const t_resource *const texture) {
@@ -451,7 +495,7 @@ namespace zf::rendering {
             ZF_ASSERT(texture->type == ec_resource_type_texture);
 
             const auto texture_type_data = &texture->type_data.texture;
-            const bgfx::TextureHandle bgfx_texture_hdl = texture_type_data->bgfx_hdl;
+            const bgfx::TextureHandle bgfx_texture_hdl = texture_type_data->is_target ? bgfx::getTexture(texture_type_data->target_fb_bgfx_hdl) : texture_type_data->nontarget_texture_bgfx_hdl;
 
             bgfx::setTexture(0, uniform_bgfx_hdl, bgfx_texture_hdl);
 

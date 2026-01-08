@@ -2,6 +2,8 @@
 
 #include <zcl.h>
 
+#define BGFX_CONFIG_MAX_VIEWS k_frame_pass_limit
+
 namespace zf::rendering {
     struct t_resource;
 
@@ -47,7 +49,20 @@ namespace zf::rendering {
         return texture_create(texture_data, group);
     }
 
+    t_resource *texture_create_target(const math::t_v2_i size, t_resource_group *const group);
+
+    void texture_resize_target(t_resource *const texture, const math::t_v2_i size);
+
     math::t_v2_i texture_get_size(const t_resource *const texture);
+
+    // Resizes only if the given size is actually different to the current.
+    inline void texture_resize_target_if_needed(t_resource *const texture, const math::t_v2_i size) {
+        const math::t_v2_i size_cur = texture_get_size(texture);
+
+        if (size != size_cur) {
+            texture_resize_target(texture, size);
+        }
+    }
 
     t_resource *shader_prog_create(const t_array_rdonly<t_u8> vert_shader_compiled_bin, const t_array_rdonly<t_u8> frag_shader_compiled_bin, t_resource_group *const group);
 
