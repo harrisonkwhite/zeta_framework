@@ -139,11 +139,14 @@ namespace zf::math {
         return {static_cast<t_i32>(v.x), static_cast<t_i32>(v.y)};
     }
 
-    constexpr t_v2 v2_calc_compwise_prod(const t_v2 a, const t_v2 b) { return {a.x * b.x, a.y * b.y}; }
-    constexpr t_v2_i v2_calc_compwise_prod(const t_v2_i a, const t_v2_i b) { return {a.x * b.x, a.y * b.y}; }
-
     constexpr t_f32 v2_calc_dot_prod(const t_v2 a, const t_v2 b) { return (a.x * b.x) + (a.y * b.y); }
     constexpr t_i32 v2_calc_dot_prod(const t_v2_i a, const t_v2_i b) { return (a.x * b.x) + (a.y * b.y); }
+
+    constexpr t_f32 v2_calc_cross_prod(const t_v2 a, const t_v2 b) { return (a.x * b.y) - (a.y * b.x); }
+    constexpr t_i32 v2_calc_cross_prod(const t_v2_i a, const t_v2_i b) { return (a.x * b.y) - (a.y * b.x); }
+
+    constexpr t_v2 v2_calc_compwise_prod(const t_v2 a, const t_v2 b) { return {a.x * b.x, a.y * b.y}; }
+    constexpr t_v2_i v2_calc_compwise_prod(const t_v2_i a, const t_v2_i b) { return {a.x * b.x, a.y * b.y}; }
 
     inline t_f32 v2_calc_mag(const t_v2 v) {
         return sqrt((v.x * v.x) + (v.y * v.y));
@@ -268,14 +271,79 @@ namespace zf::math {
         t_static_array<t_static_array<t_f32, 4>, 4> elems;
     };
 
-    constexpr t_mat4x4 k_mat4x4_identity = {
-        .elems = {{
-            {{1.0f, 0.0f, 0.0f, 0.0f}},
-            {{0.0f, 1.0f, 0.0f, 0.0f}},
-            {{0.0f, 0.0f, 1.0f, 0.0f}},
-            {{0.0f, 0.0f, 0.0f, 1.0f}},
-        }},
-    };
+    constexpr t_mat4x4 matrix_create_identity() {
+        t_mat4x4 result = {};
+        result.elems[0][0] = 1.0f;
+        result.elems[1][1] = 1.0f;
+        result.elems[2][2] = 1.0f;
+        result.elems[3][3] = 1.0f;
+
+        return result;
+    }
+
+    constexpr t_mat4x4 matrix_create_translated(const t_v2 offs) {
+        t_mat4x4 result = matrix_create_identity();
+        result.elems[0][3] = offs.x;
+        result.elems[1][3] = offs.y;
+
+        return result;
+    }
+
+    inline t_mat4x4 matrix_create_rotated(const t_f32 rot) {
+        t_mat4x4 result = matrix_create_identity();
+        result.elems[0][0] = cos(rot);
+        result.elems[0][1] = -sin(rot);
+        result.elems[1][0] = sin(rot);
+        result.elems[1][1] = cos(rot);
+
+        return result;
+    }
+
+    constexpr t_mat4x4 matrix_create_scaled(const t_v2 scalar) {
+        t_mat4x4 result = matrix_create_identity();
+        result.elems[0][0] *= scalar.x;
+        result.elems[1][1] *= scalar.y;
+
+        return result;
+    }
+
+    constexpr t_mat4x4 matrix_add(const t_mat4x4 &a, const t_mat4x4 &b) {
+        t_mat4x4 result;
+
+        for (t_i32 i = 0; i < 4; i++) {
+            for (t_i32 j = 0; j < 4; j++) {
+                result.elems[i][j] = a.elems[i][j] + b.elems[i][j];
+            }
+        }
+
+        return result;
+    }
+
+    constexpr t_mat4x4 matrix_subtract(const t_mat4x4 &a, const t_mat4x4 &b) {
+        t_mat4x4 result;
+
+        for (t_i32 i = 0; i < 4; i++) {
+            for (t_i32 j = 0; j < 4; j++) {
+                result.elems[i][j] = a.elems[i][j] - b.elems[i][j];
+            }
+        }
+
+        return result;
+    }
+
+    constexpr t_mat4x4 matrix_multiply(const t_mat4x4 &a, const t_mat4x4 &b) {
+        t_mat4x4 result = {};
+
+        for (t_i32 i = 0; i < 4; i++) {
+            for (t_i32 j = 0; j < 4; j++) {
+                for (t_i32 k = 0; k < 4; k++) {
+                    result.elems[i][j] += (a.elems[i][k] * b.elems[k][j]);
+                }
+            }
+        }
+
+        return result;
+    }
 
     // ============================================================
 
