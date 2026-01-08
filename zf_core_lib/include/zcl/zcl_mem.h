@@ -92,6 +92,10 @@ namespace zf::mem {
     // ============================================================
     // @section: Arenas
 
+#ifdef ZF_DEBUG
+    constexpr t_u8 k_arena_poison = 0xCD; // Memory outside the arena's valid "scope" is set to this for easier debugging.
+#endif
+
     struct t_arena_block {
         void *buf;
         t_i32 buf_size;
@@ -101,7 +105,7 @@ namespace zf::mem {
 
     enum t_arena_type : t_i32 {
         ec_arena_type_invalid,
-        ec_arena_type_blockbased, // Owns its memory, which is organised as a linked list of dynamically allocated blocks. New blocks are allocated as needed. @todo: Probably should not expose implementation details.
+        ec_arena_type_blockbased, // Owns its memory, which is organised as a linked list of dynamically allocated blocks. New blocks are allocated as needed.
         ec_arena_type_wrapping    // Non-owning and non-reallocating. Useful if you want to leverage a stack-allocated buffer for example. @todo: Probably not a good name.
     };
 
@@ -147,11 +151,11 @@ namespace zf::mem {
     void arena_destroy(t_arena *const arena);
 
     // Will lazily allocate memory as needed. Allocation failure is treated as fatal and causes an abort - you don't need to check for nullptr.
-    // Returned buffer is guaranteed to be zeroed.
+    // The returned buffer is guaranteed to be zeroed.
     void *arena_push(t_arena *const arena, const t_i32 size, const t_i32 alignment);
 
     // Will lazily allocate memory as needed. Allocation failure is treated as fatal and causes an abort - you don't need to check for nullptr.
-    // Returned item is guaranteed to be zeroed.
+    // The returned item is guaranteed to be zeroed.
     template <c_simple tp_type>
     tp_type *arena_push_item(t_arena *const arena) {
         return static_cast<tp_type *>(arena_push(arena, ZF_SIZE_OF(tp_type), ZF_ALIGN_OF(tp_type)));

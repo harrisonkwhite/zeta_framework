@@ -40,7 +40,12 @@ namespace zf::mem {
             ZF_FATAL();
         }
 
+#ifdef ZF_DEBUG
+        memset(block->buf, k_arena_poison, static_cast<size_t>(block->buf_size));
+#elif
+        // Explicitly touch the memory to trigger page faults NOW.
         zero_clear(block->buf, buf_size);
+#endif
 
         block->buf_size = buf_size;
 
@@ -77,7 +82,7 @@ namespace zf::mem {
             blockbased->block_cur_offs = offs_next;
 
             void *const result = static_cast<t_u8 *>(blockbased->block_cur->buf) + offs_aligned;
-            ZF_ASSERT(zero_check(result, size));
+            zero_clear(result, size);
 
             return result;
         }
@@ -95,7 +100,7 @@ namespace zf::mem {
             wrapping->buf_offs = offs_next;
 
             void *const result = static_cast<t_u8 *>(wrapping->buf) + offs_aligned;
-            ZF_ASSERT(zero_check(result, size));
+            zero_clear(result, size);
 
             return result;
         }
@@ -110,16 +115,19 @@ namespace zf::mem {
         case ec_arena_type_blockbased: {
             const auto blockbased = &arena->type_data.blockbased;
 
+#ifdef ZF_DEBUG
+            // Poison all memory to be rewinded.
             if (blockbased->block_cur) {
                 const t_arena_block *block = blockbased->blocks_head;
 
                 while (block != blockbased->block_cur) {
-                    zero_clear(block->buf, block->buf_size);
+                    memset(block->buf, k_arena_poison, static_cast<size_t>(block->buf_size));
                     block = block->next;
                 }
 
-                zero_clear(blockbased->block_cur->buf, blockbased->block_cur_offs);
+                memset(blockbased->block_cur->buf, k_arena_poison, static_cast<size_t>(blockbased->block_cur_offs));
             }
+#endif
 
             blockbased->block_cur = blockbased->blocks_head;
             blockbased->block_cur_offs = 0;
