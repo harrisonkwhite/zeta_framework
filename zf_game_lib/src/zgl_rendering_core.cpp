@@ -413,7 +413,7 @@ namespace zf::rendering {
 
         bgfx::setViewRect(bgfx_view_id, 0, 0, static_cast<uint16_t>(size.x), static_cast<uint16_t>(size.y));
 
-        auto proj_mat = math::k_mat4x4_identity;
+        auto proj_mat = math::matrix_create_identity();
         proj_mat.elems[0][0] = 1.0f / (static_cast<t_f32>(size.x) / 2.0f);
         proj_mat.elems[1][1] = -1.0f / (static_cast<t_f32>(size.y) / 2.0f);
         proj_mat.elems[3][0] = -1.0f;

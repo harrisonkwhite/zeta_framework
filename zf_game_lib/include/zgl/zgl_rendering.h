@@ -130,8 +130,8 @@ namespace zf::rendering {
     t_frame_context *frame_begin(const t_basis *const basis, mem::t_arena *const context_arena);
     void frame_end(t_frame_context *const context);
 
-    void frame_pass_configure(t_frame_context *const context, const t_i32 pass_index, const math::t_v2_i size, const math::t_mat4x4 &view_mat = math::k_mat4x4_identity, const t_b8 clear = false, const gfx::t_color_rgba32f clear_col = gfx::k_color_black);
-    void frame_pass_configure_texture_target(t_frame_context *const context, const t_i32 pass_index, const t_resource *const texture_target, const math::t_mat4x4 &view_mat = math::k_mat4x4_identity, const t_b8 clear = false, const gfx::t_color_rgba32f clear_col = gfx::k_color_black);
+    void frame_pass_configure(t_frame_context *const context, const t_i32 pass_index, const math::t_v2_i size, const math::t_mat4x4 &view_mat = math::matrix_create_identity(), const t_b8 clear = false, const gfx::t_color_rgba32f clear_col = gfx::k_color_black);
+    void frame_pass_configure_texture_target(t_frame_context *const context, const t_i32 pass_index, const t_resource *const texture_target, const math::t_mat4x4 &view_mat = math::matrix_create_identity(), const t_b8 clear = false, const gfx::t_color_rgba32f clear_col = gfx::k_color_black);
 
     void frame_pass_set(t_frame_context *const context, const t_i32 pass_index);
 
