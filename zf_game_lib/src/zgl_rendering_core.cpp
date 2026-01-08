@@ -91,7 +91,7 @@ namespace zf::rendering {
     t_basis *module_startup(mem::t_arena *const arena, mem::t_arena *const temp_arena, t_resource_group **const o_perm_resource_group) {
         ZF_ASSERT(g_module_state.phase == ec_module_phase_inactive);
 
-        g_module_state.phase = ec_module_phase_active_but_not_midframe;
+        g_module_state = {.phase = ec_module_phase_active_but_not_midframe};
 
         //
         // BGFX Setup

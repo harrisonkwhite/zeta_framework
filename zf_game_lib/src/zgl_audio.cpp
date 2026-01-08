@@ -28,7 +28,7 @@ namespace zf::audio_sys {
     void module_startup() {
         ZF_REQUIRE(!g_module_state.active);
 
-        g_module_state.active = true;
+        g_module_state = {.active = true};
 
         if (ma_engine_init(nullptr, &g_module_state.ma_eng) != MA_SUCCESS) {
             ZF_FATAL();
@@ -62,8 +62,9 @@ namespace zf::audio_sys {
                 }
             }
 
-            snd_type->valid = false;
-            snd_type = snd_type->next;
+            t_sound_type *const snd_type_next = snd_type->next;
+            *snd_type = {};
+            snd_type = snd_type_next;
         }
 
         mem::arena_destroy(&group->arena);

@@ -32,7 +32,7 @@ namespace zf::platform {
         ZF_REQUIRE(!g_module_state.active);
         ZF_REQUIRE(init_window_size.x > 0 && init_window_size.y > 0);
 
-        g_module_state.active = true;
+        g_module_state = {.active = true};
 
         if (!glfwInit()) {
             ZF_FATAL();
