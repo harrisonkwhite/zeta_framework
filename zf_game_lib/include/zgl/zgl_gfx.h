@@ -11,13 +11,12 @@ namespace zgl::gfx {
         t_resource *tail;
     };
 
-    struct t_rendering_basis;
+    struct t_frame_basis;
 
     // This depends on the platform module being initialised beforehand.
-    // Returns a pointer to a rendering basis, needed for all rendering operations.
-    t_rendering_basis *module_startup(zf::mem::t_arena *const arena, zf::mem::t_arena *const temp_arena, t_resource_group **const o_perm_resource_group);
+    t_frame_basis *module_startup(zf::mem::t_arena *const arena, zf::mem::t_arena *const temp_arena, t_resource_group **const o_perm_resource_group);
 
-    void module_shutdown(const t_rendering_basis *const basis);
+    void module_shutdown(const t_frame_basis *const frame_basis);
 
     inline t_resource_group resource_group_create(zf::mem::t_arena *const arena) {
         return {.arena = arena};
@@ -127,7 +126,7 @@ namespace zgl::gfx {
             && vertex_check_valid(tri.verts[2]);
     }
 
-    t_frame_context *frame_begin(const t_rendering_basis *const basis, zf::mem::t_arena *const context_arena);
+    t_frame_context *frame_begin(const t_frame_basis *const basis, zf::mem::t_arena *const context_arena);
     void frame_end(t_frame_context *const context);
 
     void frame_pass_begin(t_frame_context *const context, const zf::math::t_v2_i size, const zf::math::t_mat4x4 &view_mat = zf::math::matrix_create_identity(), const zf::t_b8 clear = false, const zf::gfx::t_color_rgba32f clear_col = zf::gfx::k_color_black);
@@ -137,13 +136,6 @@ namespace zgl::gfx {
 
     zf::t_b8 frame_pass_check_active(const t_frame_context *const context);
     zf::t_i32 frame_pass_get_index(const t_frame_context *const context);
-
-#if 0
-    void frame_pass_configure(t_frame_context *const context, const zf::t_i32 pass_index, const zf::math::t_v2_i size, const zf::math::t_mat4x4 &view_mat = zf::math::matrix_create_identity(), const zf::t_b8 clear = false, const zf::gfx::t_color_rgba32f clear_col = zf::gfx::k_color_black);
-    void frame_pass_configure_texture_target(t_frame_context *const context, const zf::t_i32 pass_index, const t_resource *const texture_target, const zf::math::t_mat4x4 &view_mat = zf::math::matrix_create_identity(), const zf::t_b8 clear = false, const zf::gfx::t_color_rgba32f clear_col = zf::gfx::k_color_black);
-
-    void frame_pass_set(t_frame_context *const context, const zf::t_i32 pass_index);
-#endif
 
     // Set prog as nullptr to just assign the default shader program.
     void frame_set_shader_prog(t_frame_context *const context, const t_resource *const prog);

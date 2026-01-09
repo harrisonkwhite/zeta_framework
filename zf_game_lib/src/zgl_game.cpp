@@ -38,8 +38,8 @@ namespace zgl::game {
         input::t_state *const input_state = input::create_state(&perm_arena);
 
         gfx::t_resource_group *perm_gfx_resource_group;
-        gfx::t_rendering_basis *const rendering_basis = gfx::module_startup(&perm_arena, &temp_arena, &perm_gfx_resource_group);
-        ZF_DEFER({ gfx::module_shutdown(rendering_basis); });
+        gfx::t_frame_basis *const frame_basis = gfx::module_startup(&perm_arena, &temp_arena, &perm_gfx_resource_group);
+        ZF_DEFER({ gfx::module_shutdown(frame_basis); });
 
         audio::module_startup();
         ZF_DEFER({ audio::module_shutdown(); });
@@ -87,7 +87,7 @@ namespace zgl::game {
                     .perm_arena = &perm_arena,
                     .temp_arena = &temp_arena,
                     .input_state = input_state,
-                    .perm_rendering_resource_group = perm_gfx_resource_group,
+                    .perm_gfx_resource_group = perm_gfx_resource_group,
                     .rng = rng,
                     .user_mem = user_mem,
                 });
@@ -99,7 +99,7 @@ namespace zgl::game {
 
             zf::mem::arena_rewind(&temp_arena);
 
-            gfx::t_frame_context *const frame_context = gfx::frame_begin(rendering_basis, &temp_arena);
+            gfx::t_frame_context *const frame_context = gfx::frame_begin(frame_basis, &temp_arena);
 
             config.render_func({
                 .perm_arena = &perm_arena,

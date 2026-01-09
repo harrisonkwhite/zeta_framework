@@ -1,7 +1,7 @@
 #include <zcl.h>
 
 namespace zf {
-    [[nodiscard]] static t_b8 output_code(const strs::t_str_rdonly input_file_path, const strs::t_str_rdonly output_file_path, const strs::t_str_rdonly arr_var_subname, const strs::t_str_rdonly module_namespace_name) {
+    [[nodiscard]] static t_b8 output_code(const strs::t_str_rdonly input_file_path, const strs::t_str_rdonly output_file_path, const strs::t_str_rdonly arr_var_subname, const strs::t_str_rdonly namespace_name) {
         mem::t_arena arena = mem::arena_create_blockbased();
         ZF_DEFER({ mem::arena_destroy(&arena); });
 
@@ -24,13 +24,14 @@ namespace zf {
         io::print(&output_file_stream, ZF_STR_LITERAL("#include <zcl/zcl_mem.h>\n"));
         io::print(&output_file_stream, ZF_STR_LITERAL("\n"));
 
-        if (strs::str_check_empty(module_namespace_name)) {
-            io::print(&output_file_stream, ZF_STR_LITERAL("namespace zf {\n"));
-        } else {
-            io::print_format(&output_file_stream, ZF_STR_LITERAL("namespace zf::% {\n"), module_namespace_name);
+        strs::t_str_rdonly indent = {};
+
+        if (!strs::str_check_empty(namespace_name)) {
+            io::print_format(&output_file_stream, ZF_STR_LITERAL("namespace % {\n"), namespace_name);
+            indent = ZF_STR_LITERAL("    ");
         }
 
-        io::print_format(&output_file_stream, ZF_STR_LITERAL("    extern const t_u8 g_%_raw[] = {"), arr_var_subname);
+        io::print_format(&output_file_stream, ZF_STR_LITERAL("%extern const zf::t_u8 g_%_raw[] = {"), indent, arr_var_subname);
 
         t_u8 byte_read;
         t_i32 byte_read_cnt = 0;
@@ -47,9 +48,11 @@ namespace zf {
 
         io::print(&output_file_stream, ZF_STR_LITERAL("};\n"));
 
-        io::print_format(&output_file_stream, ZF_STR_LITERAL("    extern const t_i32 g_%_len = %;\n"), arr_var_subname, byte_read_cnt);
+        io::print_format(&output_file_stream, ZF_STR_LITERAL("%extern const zf::t_i32 g_%_len = %;\n"), indent, arr_var_subname, byte_read_cnt);
 
-        io::print(&output_file_stream, ZF_STR_LITERAL("}\n"));
+        if (!strs::str_check_empty(namespace_name)) {
+            io::print(&output_file_stream, ZF_STR_LITERAL("}\n"));
+        }
 
         return true;
     }
@@ -58,7 +61,7 @@ namespace zf {
 int main(const int arg_cnt, const char *const *const args) {
     if (arg_cnt != 5) {
         zf::io::t_stream std_err = zf::io::get_std_error();
-        zf::io::print_format(&std_err, ZF_STR_LITERAL("Invalid command-line argument count!\nUsage: zf_bin_to_array <input_file_path> <output_file_path> <array_variable_subname> <module_namespace_name>\nNote that the given module namespace name can be empty to just use the base namespace.\n"));
+        zf::io::print_format(&std_err, ZF_STR_LITERAL("Invalid command-line argument count!\nUsage: zf_bin_to_array <input_file_path> <output_file_path> <array_variable_subname> <namespace>\nNote that the given namespace can be empty for no namespace.\n"));
         return EXIT_FAILURE;
     }
 

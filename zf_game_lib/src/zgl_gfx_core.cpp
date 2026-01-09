@@ -63,7 +63,7 @@ namespace zgl::gfx {
     const zf::t_i32 g_batch_vert_limit = 1024;
     const zf::t_i32 g_frame_vert_limit = 8192; // @todo: This should definitely be modifiable if the user wants.
 
-    struct t_rendering_basis {
+    struct t_frame_basis {
         bgfx::DynamicVertexBufferHandle vert_buf_bgfx_hdl;
 
         const t_resource *shader_prog_default;
@@ -76,7 +76,7 @@ namespace zgl::gfx {
     };
 
     struct t_frame_context {
-        const t_rendering_basis *basis;
+        const t_frame_basis *basis;
 
         zf::t_b8 pass_active;
         zf::t_i32 pass_index; // Maps directly to BGFX view ID.
@@ -92,7 +92,7 @@ namespace zgl::gfx {
         } batch_state;
     };
 
-    t_rendering_basis *module_startup(zf::mem::t_arena *const arena, zf::mem::t_arena *const temp_arena, t_resource_group **const o_perm_resource_group) {
+    t_frame_basis *module_startup(zf::mem::t_arena *const arena, zf::mem::t_arena *const temp_arena, t_resource_group **const o_perm_resource_group) {
         ZF_ASSERT(g_module_state.phase == ek_module_phase_inactive);
 
         g_module_state = {.phase = ek_module_phase_active_but_not_midframe};
@@ -125,37 +125,37 @@ namespace zgl::gfx {
         *o_perm_resource_group = &g_module_state.perm_resource_group;
 
         //
-        // Basis Setup
+        // Frame Basis Setup
         //
-        const auto basis = zf::mem::arena_push_item<t_rendering_basis>(arena);
+        const auto frame_basis = zf::mem::arena_push_item<t_frame_basis>(arena);
 
         {
             bgfx::VertexLayout vert_layout;
             vert_layout.begin().add(bgfx::Attrib::Position, 2, bgfx::AttribType::Float).add(bgfx::Attrib::Color0, 4, bgfx::AttribType::Float).add(bgfx::Attrib::TexCoord0, 2, bgfx::AttribType::Float).end();
 
-            basis->vert_buf_bgfx_hdl = bgfx::createDynamicVertexBuffer(static_cast<uint32_t>(g_frame_vert_limit), vert_layout);
+            frame_basis->vert_buf_bgfx_hdl = bgfx::createDynamicVertexBuffer(static_cast<uint32_t>(g_frame_vert_limit), vert_layout);
 
-            if (!bgfx::isValid(basis->vert_buf_bgfx_hdl)) {
+            if (!bgfx::isValid(frame_basis->vert_buf_bgfx_hdl)) {
                 ZF_FATAL();
             }
         }
 
-        basis->shader_prog_default = shader_prog_create({g_vert_shader_default_src_raw, g_vert_shader_default_src_len}, {g_frag_shader_default_src_raw, g_frag_shader_default_src_len}, &g_module_state.perm_resource_group);
-        basis->shader_prog_blend = shader_prog_create({g_vert_shader_default_src_raw, g_vert_shader_default_src_len}, {g_frag_shader_blend_src_raw, g_frag_shader_blend_src_len}, &g_module_state.perm_resource_group);
+        frame_basis->shader_prog_default = shader_prog_create({g_vert_shader_default_src_raw, g_vert_shader_default_src_len}, {g_frag_shader_default_src_raw, g_frag_shader_default_src_len}, &g_module_state.perm_resource_group);
+        frame_basis->shader_prog_blend = shader_prog_create({g_vert_shader_default_src_raw, g_vert_shader_default_src_len}, {g_frag_shader_blend_src_raw, g_frag_shader_blend_src_len}, &g_module_state.perm_resource_group);
 
-        basis->sampler_uniform = uniform_create(ZF_STR_LITERAL("u_texture"), ek_uniform_type_sampler, &g_module_state.perm_resource_group, temp_arena);
-        basis->blend_uniform = uniform_create(ZF_STR_LITERAL("u_blend"), ek_uniform_type_v4, &g_module_state.perm_resource_group, temp_arena);
+        frame_basis->sampler_uniform = uniform_create(ZF_STR_LITERAL("u_texture"), ek_uniform_type_sampler, &g_module_state.perm_resource_group, temp_arena);
+        frame_basis->blend_uniform = uniform_create(ZF_STR_LITERAL("u_blend"), ek_uniform_type_v4, &g_module_state.perm_resource_group, temp_arena);
 
         const zf::t_static_array<zf::t_u8, 4> batch_px_texture_rgba = {{255, 255, 255, 255}};
-        basis->px_texture = texture_create({{1, 1}, zf::array_to_nonstatic(batch_px_texture_rgba)}, &g_module_state.perm_resource_group);
+        frame_basis->px_texture = texture_create({{1, 1}, zf::array_to_nonstatic(batch_px_texture_rgba)}, &g_module_state.perm_resource_group);
 
-        return basis;
+        return frame_basis;
     }
 
-    void module_shutdown(const t_rendering_basis *const basis) {
+    void module_shutdown(const t_frame_basis *const frame_basis) {
         ZF_ASSERT(g_module_state.phase == ek_module_phase_active_but_not_midframe);
 
-        bgfx::destroy(basis->vert_buf_bgfx_hdl);
+        bgfx::destroy(frame_basis->vert_buf_bgfx_hdl);
 
         resource_group_destroy(&g_module_state.perm_resource_group);
 
@@ -340,7 +340,7 @@ namespace zgl::gfx {
         return uniform->type_data.uniform.type;
     }
 
-    t_frame_context *frame_begin(const t_rendering_basis *const basis, zf::mem::t_arena *const context_arena) {
+    t_frame_context *frame_begin(const t_frame_basis *const basis, zf::mem::t_arena *const context_arena) {
         ZF_ASSERT(g_module_state.phase == ek_module_phase_active_but_not_midframe);
 
         g_module_state.phase = ek_module_phase_active_and_midframe;
