@@ -435,6 +435,16 @@ namespace zf::rendering {
         bgfx_view_configure(static_cast<bgfx::ViewId>(context->pass_index), size, view_mat, clear, clear_col, BGFX_INVALID_HANDLE);
     }
 
+    void frame_pass_begin_offscreen(t_frame_context *const context, const t_resource *const texture_target, const math::t_mat4x4 &view_mat, const t_b8 clear, const gfx::t_color_rgba32f clear_col) {
+        ZF_ASSERT(!context->pass_active);
+        ZF_ASSERT(texture_target->type == ek_resource_type_texture && texture_target->type_data.texture.is_target);
+
+        context->pass_active = true;
+        ZF_REQUIRE(context->pass_index < k_frame_pass_limit && "Trying to begin a new frame pass, but the limit has been reached!");
+
+        bgfx_view_configure(static_cast<bgfx::ViewId>(context->pass_index), texture_target->type_data.texture.size, view_mat, clear, clear_col, texture_target->type_data.texture.target_fb_bgfx_hdl);
+    }
+
     void frame_pass_end(t_frame_context *const context) {
         ZF_ASSERT(context->pass_active);
 
@@ -448,65 +458,9 @@ namespace zf::rendering {
         return context->pass_active;
     }
 
-    t_i32 frame_pass_check_index(const t_frame_context *const context) {
+    t_i32 frame_pass_get_index(const t_frame_context *const context) {
         return context->pass_index;
     }
-
-#if 0
-    static void bgfx_view_configure(const bgfx::ViewId view_id, const math::t_v2_i size, const math::t_mat4x4 &view_mat, const t_b8 clear, const gfx::t_color_rgba32f clear_col, const bgfx::FrameBufferHandle fb_hdl) {
-        ZF_ASSERT(g_module_state.phase == ek_module_phase_active_and_midframe);
-        ZF_ASSERT(view_id >= 0 && view_id < BGFX_CONFIG_MAX_VIEWS);
-        ZF_ASSERT(size.x > 0 && size.y > 0);
-        ZF_ASSERT(!clear || gfx::color_check_normalized(clear_col));
-
-        const auto bgfx_view_id = static_cast<bgfx::ViewId>(view_id);
-
-        bgfx::setViewMode(bgfx_view_id, bgfx::ViewMode::Sequential);
-
-        bgfx::setViewRect(bgfx_view_id, 0, 0, static_cast<uint16_t>(size.x), static_cast<uint16_t>(size.y));
-
-        auto proj_mat = math::matrix_create_identity();
-        proj_mat.elems[0][0] = 1.0f / (static_cast<t_f32>(size.x) / 2.0f);
-        proj_mat.elems[1][1] = -1.0f / (static_cast<t_f32>(size.y) / 2.0f);
-        proj_mat.elems[3][0] = -1.0f;
-        proj_mat.elems[3][1] = 1.0f;
-
-        bgfx::setViewTransform(bgfx_view_id, &view_mat, &proj_mat);
-
-        if (clear) {
-            bgfx::setViewClear(bgfx_view_id, BGFX_CLEAR_COLOR, gfx::color_rgba8_to_hex(gfx::color_rgba32f_to_rgba8(clear_col)));
-        }
-
-        bgfx::setViewFrameBuffer(bgfx_view_id, fb_hdl);
-
-        bgfx::touch(bgfx_view_id);
-    }
-
-    void frame_pass_configure(t_frame_context *const context, const t_i32 pass_index, const math::t_v2_i size, const math::t_mat4x4 &view_mat, const t_b8 clear, const gfx::t_color_rgba32f clear_col) {
-        ZF_ASSERT(!mem::bitset_check_set(context->passes_configured, pass_index));
-
-        bgfx_view_configure(static_cast<bgfx::ViewId>(pass_index), size, view_mat, clear, clear_col, BGFX_INVALID_HANDLE);
-        mem::bitset_set(context->passes_configured, pass_index);
-    }
-
-    void frame_pass_configure_texture_target(t_frame_context *const context, const t_i32 pass_index, const t_resource *const texture_target, const math::t_mat4x4 &view_mat, const t_b8 clear, const gfx::t_color_rgba32f clear_col) {
-        ZF_ASSERT(!mem::bitset_check_set(context->passes_configured, pass_index));
-        ZF_ASSERT(texture_target->type == ek_resource_type_texture && texture_target->type_data.texture.is_target);
-
-        bgfx_view_configure(static_cast<bgfx::ViewId>(pass_index), texture_target->type_data.texture.size, view_mat, clear, clear_col, texture_target->type_data.texture.target_fb_bgfx_hdl);
-        mem::bitset_set(context->passes_configured, pass_index);
-    }
-
-    void frame_pass_set(t_frame_context *const context, const t_i32 pass_index) {
-        ZF_ASSERT(g_module_state.phase == ek_module_phase_active_and_midframe);
-        ZF_ASSERT(pass_index >= 0 && pass_index < k_frame_pass_limit);
-        ZF_ASSERT(pass_index != context->pass_index);
-        ZF_ASSERT(mem::bitset_check_set(context->passes_configured, pass_index));
-
-        frame_flush(context);
-        context->pass_index = pass_index;
-    }
-#endif
 
     void frame_set_shader_prog(t_frame_context *const context, const t_resource *const prog) {
         ZF_ASSERT(g_module_state.phase == ek_module_phase_active_and_midframe);

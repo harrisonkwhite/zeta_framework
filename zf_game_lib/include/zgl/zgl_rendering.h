@@ -131,9 +131,12 @@ namespace zf::rendering {
     void frame_end(t_frame_context *const context);
 
     void frame_pass_begin(t_frame_context *const context, const math::t_v2_i size, const math::t_mat4x4 &view_mat = math::matrix_create_identity(), const t_b8 clear = false, const gfx::t_color_rgba32f clear_col = gfx::k_color_black);
+    void frame_pass_begin_offscreen(t_frame_context *const context, const t_resource *const texture_target, const math::t_mat4x4 &view_mat = math::matrix_create_identity(), const t_b8 clear = false, const gfx::t_color_rgba32f clear_col = gfx::k_color_black);
+
     void frame_pass_end(t_frame_context *const context); // @todo: Maybe not necessary, though it does make the user code easier to read.
+
     t_b8 frame_pass_check_active(const t_frame_context *const context);
-    t_i32 frame_pass_check_index(const t_frame_context *const context);
+    t_i32 frame_pass_get_index(const t_frame_context *const context);
 
 #if 0
     void frame_pass_configure(t_frame_context *const context, const t_i32 pass_index, const math::t_v2_i size, const math::t_mat4x4 &view_mat = math::matrix_create_identity(), const t_b8 clear = false, const gfx::t_color_rgba32f clear_col = gfx::k_color_black);
