@@ -17,7 +17,7 @@
 
 #include <cstdlib>
 
-namespace zf {
+namespace zcl {
     void detail::try_breaking_into_debugger_if(const bool cond) {
         if (!cond) {
             return;

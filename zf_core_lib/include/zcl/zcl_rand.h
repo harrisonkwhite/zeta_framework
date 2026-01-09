@@ -2,7 +2,7 @@
 
 #include <zcl/zcl_mem.h>
 
-namespace zf::rand {
+namespace zcl::rand {
     struct t_rng;
 
     t_rng *rng_create(const t_u64 seed, mem::t_arena *const arena);

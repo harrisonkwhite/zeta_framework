@@ -2,7 +2,7 @@
 
 #include <zcl/zcl_algos.h>
 
-namespace zf::strs {
+namespace zcl::strs {
     // ============================================================
     // @section: Code Points
 
@@ -121,13 +121,13 @@ namespace zf::strs {
     // Returns false iff the walk has ended.
     t_b8 str_walk_reverse(const t_str_rdonly str, t_i32 *const byte_index, t_str_walk_step *const o_step);
 
-#define ZF_WALK_STR(str, step)                                                                                     \
-    for (zf::t_i32 ZF_CONCAT(bi_l, __LINE__) = 0; ZF_CONCAT(bi_l, __LINE__) != -1; ZF_CONCAT(bi_l, __LINE__) = -1) \
-        for (zf::strs::t_str_walk_step step; zf::strs::str_walk(str, &ZF_CONCAT(bi_l, __LINE__), &step);)
+#define ZF_WALK_STR(str, step)                                                                                      \
+    for (zcl::t_i32 ZF_CONCAT(bi_l, __LINE__) = 0; ZF_CONCAT(bi_l, __LINE__) != -1; ZF_CONCAT(bi_l, __LINE__) = -1) \
+        for (zcl::strs::t_str_walk_step step; zcl::strs::str_walk(str, &ZF_CONCAT(bi_l, __LINE__), &step);)
 
-#define ZF_WALK_STR_REVERSE(str, step)                                                                                                                         \
-    for (zf::t_i32 ZF_CONCAT(bi_l, __LINE__) = (str).bytes.len - 1; ZF_CONCAT(bi_l, __LINE__) != (str).bytes.len; ZF_CONCAT(bi_l, __LINE__) = (str).bytes.len) \
-        for (zf::strs::t_str_walk_step step; zf::strs::str_walk_reverse(str, &ZF_CONCAT(bi_l, __LINE__), &step);)
+#define ZF_WALK_STR_REVERSE(str, step)                                                                                                                          \
+    for (zcl::t_i32 ZF_CONCAT(bi_l, __LINE__) = (str).bytes.len - 1; ZF_CONCAT(bi_l, __LINE__) != (str).bytes.len; ZF_CONCAT(bi_l, __LINE__) = (str).bytes.len) \
+        for (zcl::strs::t_str_walk_step step; zcl::strs::str_walk_reverse(str, &ZF_CONCAT(bi_l, __LINE__), &step);)
 
     // ============================================================
 
@@ -184,7 +184,7 @@ namespace zf::strs {
             const t_i32 buf_size;
         };
 
-#define ZF_STR_LITERAL(cstr_lit) zf::strs::t_str_rdonly(zf::strs::detail::t_cstr_literal(cstr_lit))
+#define ZF_STR_LITERAL(cstr_lit) zcl::strs::t_str_rdonly(zcl::strs::detail::t_cstr_literal(cstr_lit))
     }
 
     // ============================================================

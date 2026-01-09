@@ -2,7 +2,7 @@
 
 #include <zcl/zcl_basic.h>
 
-namespace zf::mem {
+namespace zcl::mem {
     constexpr t_i32 kilobytes_to_bytes(const t_i32 n) { return (1 << 10) * n; }
     constexpr t_i32 megabytes_to_bytes(const t_i32 n) { return (1 << 20) * n; }
     constexpr t_i32 gigabytes_to_bytes(const t_i32 n) { return (1 << 30) * n; }
@@ -323,8 +323,8 @@ namespace zf::mem {
     // Returns false iff the walk is complete.
     t_b8 bitset_walk_all_unset(const t_bitset_rdonly bs, t_i32 *const pos, t_i32 *const o_index);
 
-#define ZF_WALK_SET_BITS(bs, index) for (zf::t_i32 ZF_CONCAT(walk_pos_l, __LINE__) = 0, index; zf::mem::bitset_walk_all_set(bs, &ZF_CONCAT(walk_pos_l, __LINE__), &index);)
-#define ZF_WALK_UNSET_BITS(bs, index) for (zf::t_i32 ZF_CONCAT(walk_pos_l, __LINE__) = 0, index; zf::mem::bitset_walk_all_unset(bs, &ZF_CONCAT(walk_pos_l, __LINE__), &index);)
+#define ZF_WALK_SET_BITS(bs, index) for (zcl::t_i32 ZF_CONCAT(walk_pos_l, __LINE__) = 0, index; zcl::mem::bitset_walk_all_set(bs, &ZF_CONCAT(walk_pos_l, __LINE__), &index);)
+#define ZF_WALK_UNSET_BITS(bs, index) for (zcl::t_i32 ZF_CONCAT(walk_pos_l, __LINE__) = 0, index; zcl::mem::bitset_walk_all_unset(bs, &ZF_CONCAT(walk_pos_l, __LINE__), &index);)
 
     // ============================================================
 }

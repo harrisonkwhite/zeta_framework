@@ -3,7 +3,7 @@
 #include <cstdlib>
 #include <zcl/zcl_algos.h>
 
-namespace zf::mem {
+namespace zcl::mem {
     void arena_destroy(t_arena *const arena) {
         ZF_REQUIRE(arena->type == ek_arena_type_blockbased);
 

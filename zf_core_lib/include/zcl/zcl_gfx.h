@@ -4,7 +4,7 @@
 #include <zcl/zcl_math.h>
 #include <zcl/zcl_ds.h>
 
-namespace zf::gfx {
+namespace zcl::gfx {
     // ============================================================
     // @section: Colours
 

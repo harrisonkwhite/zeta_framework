@@ -4,11 +4,11 @@
 #include <limits>
 #include <concepts>
 
-namespace zf {
-#define ZF_SIZE_OF(x) static_cast<zf::t_i32>(sizeof(x))
+namespace zcl {
+#define ZF_SIZE_OF(x) static_cast<zcl::t_i32>(sizeof(x))
 #define ZF_SIZE_IN_BITS(x) (8 * ZF_SIZE_OF(x))
 
-#define ZF_ALIGN_OF(x) static_cast<zf::t_i32>(alignof(x))
+#define ZF_ALIGN_OF(x) static_cast<zcl::t_i32>(alignof(x))
 
 #define ZF_IN_CONSTEXPR() std::is_constant_evaluated()
 
@@ -44,7 +44,7 @@ namespace zf {
         };
     }
 
-#define ZF_DEFER(x) const auto ZF_CONCAT(defer_, ZF_CONCAT(l, __LINE__)) = zf::detail::t_defer([&]() x)
+#define ZF_DEFER(x) const auto ZF_CONCAT(defer_, ZF_CONCAT(l, __LINE__)) = zcl::detail::t_defer([&]() x)
 
     namespace detail {
         void try_breaking_into_debugger_if(const bool cond);
@@ -55,13 +55,13 @@ namespace zf {
     #define ZF_DEBUG_BREAK() detail::try_breaking_into_debugger_if(true)
     #define ZF_DEBUG_BREAK_IF(cond) detail::try_breaking_into_debugger_if(cond)
 
-    #define ZF_ASSERT(cond)                                                                   \
-        do {                                                                                  \
-            if (!ZF_IN_CONSTEXPR()) {                                                         \
-                if (!(cond)) {                                                                \
-                    zf::detail::handle_assert_error(#cond, __FUNCTION__, __FILE__, __LINE__); \
-                }                                                                             \
-            }                                                                                 \
+    #define ZF_ASSERT(cond)                                                                    \
+        do {                                                                                   \
+            if (!ZF_IN_CONSTEXPR()) {                                                          \
+                if (!(cond)) {                                                                 \
+                    zcl::detail::handle_assert_error(#cond, __FUNCTION__, __FILE__, __LINE__); \
+                }                                                                              \
+            }                                                                                  \
         } while (0)
 #else
     #define ZF_DEBUG_BREAK() static_cast<void>(0)
@@ -71,16 +71,16 @@ namespace zf {
 
         [[noreturn]] void handle_fatal_error(const char *const func_name_cstr, const char *const file_name_cstr, const int line, const char *const cond_cstr = nullptr);
 
-#define ZF_FATAL() zf::detail::handle_fatal_error(__FUNCTION__, __FILE__, __LINE__)
+#define ZF_FATAL() zcl::detail::handle_fatal_error(__FUNCTION__, __FILE__, __LINE__)
 #define ZF_UNREACHABLE() ZF_FATAL() // @todo: This should probably have some helper message to differentiate it from normal fatal errors.
 
-#define ZF_REQUIRE(cond)                                                                 \
-    do {                                                                                 \
-        if (!ZF_IN_CONSTEXPR()) {                                                        \
-            if (!(cond)) {                                                               \
-                zf::detail::handle_fatal_error(__FUNCTION__, __FILE__, __LINE__, #cond); \
-            }                                                                            \
-        }                                                                                \
+#define ZF_REQUIRE(cond)                                                                  \
+    do {                                                                                  \
+        if (!ZF_IN_CONSTEXPR()) {                                                         \
+            if (!(cond)) {                                                                \
+                zcl::detail::handle_fatal_error(__FUNCTION__, __FILE__, __LINE__, #cond); \
+            }                                                                             \
+        }                                                                                 \
     } while (0)
     }
 

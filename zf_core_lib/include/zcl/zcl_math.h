@@ -3,7 +3,7 @@
 #include <cmath>
 #include <zcl/zcl_mem.h>
 
-namespace zf::math {
+namespace zcl::math {
     constexpr t_f32 k_pi = 3.14159265358979323846f;
     constexpr t_f32 k_tau = 6.28318530717958647692f;
 

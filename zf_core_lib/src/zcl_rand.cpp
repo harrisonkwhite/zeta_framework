@@ -1,6 +1,6 @@
 #include <zcl/zcl_rand.h>
 
-namespace zf::rand {
+namespace zcl::rand {
     struct t_pcg32 {
         t_u64 state; // RNG state. All values are possible.
         t_u64 inc;   // Controls which RNG sequence (stream) is selected. Must ALWAYS be odd.
