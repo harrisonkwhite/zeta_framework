@@ -25,7 +25,7 @@
 
     zcl::strs::t_str_rdonly indent = {};
 
-    if (!zcl::strs::str_check_empty(namespace_name)) {
+    if (!zcl::strs::check_empty(namespace_name)) {
         zcl::io::print_format(&output_file_stream, ZF_STR_LITERAL("namespace % {\n"), namespace_name);
         indent = ZF_STR_LITERAL("    ");
     }
@@ -49,7 +49,7 @@
 
     zcl::io::print_format(&output_file_stream, ZF_STR_LITERAL("%extern const zcl::t_i32 g_%_len = %;\n"), indent, arr_var_subname, byte_read_cnt);
 
-    if (!zcl::strs::str_check_empty(namespace_name)) {
+    if (!zcl::strs::check_empty(namespace_name)) {
         zcl::io::print(&output_file_stream, ZF_STR_LITERAL("}\n"));
     }
 

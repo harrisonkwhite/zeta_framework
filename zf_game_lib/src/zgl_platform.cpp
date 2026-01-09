@@ -69,6 +69,12 @@ namespace zgl::platform {
 
             glfwSetScrollCallback(g_module_state.glfw_window, scroll_callback);
         }
+
+        {
+            const auto chr_callback =
+                [](GLFWwindow *const window, const zcl::t_u32 codepoint) {
+                };
+        }
     }
 
     void module_shutdown() {
@@ -269,8 +275,8 @@ namespace zgl::platform {
     void window_set_title(const zcl::strs::t_str_rdonly title, zcl::mem::t_arena *const temp_arena) {
         ZF_ASSERT(g_module_state.active);
 
-        const zcl::strs::t_str_rdonly title_terminated = zcl::strs::str_clone_but_add_terminator(title, temp_arena);
-        glfwSetWindowTitle(g_module_state.glfw_window, zcl::strs::str_to_cstr(title_terminated));
+        const zcl::strs::t_str_rdonly title_terminated = zcl::strs::clone_but_add_terminator(title, temp_arena);
+        glfwSetWindowTitle(g_module_state.glfw_window, zcl::strs::to_cstr(title_terminated));
     }
 
     void window_set_size(const zcl::math::t_v2_i size) {

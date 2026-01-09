@@ -20,10 +20,10 @@ namespace zcl::gfx {
         };
 
     t_b8 texture_load_from_raw(const strs::t_str_rdonly file_path, mem::t_arena *const texture_data_arena, mem::t_arena *const temp_arena, t_texture_data_mut *const o_texture_data) {
-        const strs::t_str_rdonly file_path_terminated = strs::str_clone_but_add_terminator(file_path, temp_arena);
+        const strs::t_str_rdonly file_path_terminated = strs::clone_but_add_terminator(file_path, temp_arena);
 
         math::t_v2_i size_in_pxs;
-        t_u8 *const stb_px_data = stbi_load(strs::str_to_cstr(file_path_terminated), &size_in_pxs.x, &size_in_pxs.y, nullptr, 4);
+        t_u8 *const stb_px_data = stbi_load(strs::to_cstr(file_path_terminated), &size_in_pxs.x, &size_in_pxs.y, nullptr, 4);
 
         if (!stb_px_data) {
             return false;

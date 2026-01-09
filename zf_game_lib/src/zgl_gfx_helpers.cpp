@@ -107,7 +107,7 @@ namespace zgl::gfx {
     }
 
     static zcl::t_array_mut<zcl::math::t_v2> get_str_chr_render_positions(const zcl::strs::t_str_rdonly str, const zcl::gfx::t_font_arrangement &font_arrangement, const zcl::math::t_v2 pos, const zcl::math::t_v2 alignment, zcl::mem::t_arena *const arena) {
-        ZF_ASSERT(zcl::strs::str_check_valid_utf8(str));
+        ZF_ASSERT(zcl::strs::check_valid_utf8(str));
         ZF_ASSERT(alignment_check_valid(alignment));
 
         // Calculate some useful string metadata.
@@ -203,10 +203,10 @@ namespace zgl::gfx {
     }
 
     void frame_submit_str(t_frame_context *const context, const zcl::strs::t_str_rdonly str, const t_font &font, const zcl::math::t_v2 pos, zcl::mem::t_arena *const temp_arena, const zcl::math::t_v2 alignment, const zcl::gfx::t_color_rgba32f blend) {
-        ZF_ASSERT(zcl::strs::str_check_valid_utf8(str));
+        ZF_ASSERT(zcl::strs::check_valid_utf8(str));
         ZF_ASSERT(alignment_check_valid(alignment));
 
-        if (zcl::strs::str_check_empty(str)) {
+        if (zcl::strs::check_empty(str)) {
             return;
         }
 

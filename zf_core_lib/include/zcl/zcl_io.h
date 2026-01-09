@@ -817,7 +817,7 @@ namespace zcl::io {
 
     template <typename... tp_arg_types>
     t_b8 log_error_type(const strs::t_str_rdonly type_name, const strs::t_str_rdonly format, const tp_arg_types &...args) {
-        ZF_ASSERT(!strs::str_check_empty(type_name));
+        ZF_ASSERT(!strs::check_empty(type_name));
 
         t_stream std_err = get_std_error();
 

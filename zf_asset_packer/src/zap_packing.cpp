@@ -106,7 +106,7 @@ zcl::t_b8 pack_assets(const zcl::strs::t_str_rdonly instrs_json_file_path) {
             return false;
         }
 
-        cj = cJSON_Parse(zcl::strs::str_to_cstr(zcl::strs::t_str_rdonly{instrs_json_file_contents}));
+        cj = cJSON_Parse(zcl::strs::to_cstr(zcl::strs::t_str_rdonly{instrs_json_file_contents}));
 
         if (!cj) {
             zcl::io::log_error(ZF_STR_LITERAL("Failed to parse packing instructions JSON file!"));
@@ -242,7 +242,7 @@ zcl::t_b8 pack_assets(const zcl::strs::t_str_rdonly instrs_json_file_path) {
                         return false;
                     }
 
-                    zcl::strs::str_mark_code_points({extra_chrs_file_contents}, code_pt_bv);
+                    zcl::strs::mark_code_points({extra_chrs_file_contents}, code_pt_bv);
                 }
 
                 // @todo: Proper check for invalid height!
@@ -271,9 +271,9 @@ zcl::t_b8 pack_assets(const zcl::strs::t_str_rdonly instrs_json_file_path) {
 
                 zcl::t_b8 is_frag;
 
-                if (zcl::strs::strs_check_equal(type, ZF_STR_LITERAL("vertex"))) {
+                if (zcl::strs::check_equal(type, ZF_STR_LITERAL("vertex"))) {
                     is_frag = false;
-                } else if (zcl::strs::strs_check_equal(type, ZF_STR_LITERAL("fragment"))) {
+                } else if (zcl::strs::check_equal(type, ZF_STR_LITERAL("fragment"))) {
                     is_frag = true;
                 } else {
                     zcl::io::log_error(ZF_STR_LITERAL("A packing instructions JSON shader entry has an invalid shader type \"%\"! Expected \"vertex\" or \"fragment\"."), type);

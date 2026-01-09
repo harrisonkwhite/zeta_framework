@@ -3,8 +3,8 @@
 #include <reproc/reproc.h>
 
 zcl::t_b8 compile_shader(const zcl::strs::t_str_rdonly shader_file_path, const zcl::strs::t_str_rdonly varying_def_file_path, const zcl::t_b8 is_frag, zcl::mem::t_arena *const bin_arena, zcl::mem::t_arena *const temp_arena, zcl::t_array_mut<zcl::t_u8> *const o_bin) {
-    const zcl::strs::t_str_rdonly shader_file_path_terminated = zcl::strs::str_clone_but_add_terminator(shader_file_path, temp_arena);
-    const zcl::strs::t_str_rdonly varying_def_file_path_terminated = zcl::strs::str_clone_but_add_terminator(varying_def_file_path, temp_arena);
+    const zcl::strs::t_str_rdonly shader_file_path_terminated = zcl::strs::clone_but_add_terminator(shader_file_path, temp_arena);
+    const zcl::strs::t_str_rdonly varying_def_file_path_terminated = zcl::strs::clone_but_add_terminator(varying_def_file_path, temp_arena);
 
     zcl::t_i32 r = 0;
 
@@ -56,9 +56,9 @@ zcl::t_b8 compile_shader(const zcl::strs::t_str_rdonly shader_file_path, const z
     ZF_ASSERT(zcl::strs::bytes_check_terminated_only_at_end(shaderc_include_dir_terminated.bytes));
 
     const zcl::t_static_array<const char *, 15> args = {{
-        zcl::strs::str_to_cstr(shaderc_file_path_terminated),
+        zcl::strs::to_cstr(shaderc_file_path_terminated),
         "-f",
-        zcl::strs::str_to_cstr(shader_file_path_terminated),
+        zcl::strs::to_cstr(shader_file_path_terminated),
         "--type",
         is_frag ? "fragment" : "vertex",
         "--platform",
@@ -66,9 +66,9 @@ zcl::t_b8 compile_shader(const zcl::strs::t_str_rdonly shader_file_path, const z
         "--profile",
         profile_cstr,
         "--varyingdef",
-        zcl::strs::str_to_cstr(varying_def_file_path_terminated),
+        zcl::strs::to_cstr(varying_def_file_path_terminated),
         "-i",
-        zcl::strs::str_to_cstr(shaderc_include_dir_terminated),
+        zcl::strs::to_cstr(shaderc_include_dir_terminated),
         "--stdout",
         nullptr,
     }};

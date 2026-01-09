@@ -309,7 +309,7 @@ namespace zgl::gfx {
     t_resource *uniform_create(const zcl::strs::t_str_rdonly name, const t_uniform_type type, t_resource_group *const group, zcl::mem::t_arena *const temp_arena) {
         ZF_ASSERT(g_module_state.phase == ek_module_phase_active_but_not_midframe);
 
-        const zcl::strs::t_str_rdonly name_terminated = zcl::strs::str_clone_but_add_terminator(name, temp_arena);
+        const zcl::strs::t_str_rdonly name_terminated = zcl::strs::clone_but_add_terminator(name, temp_arena);
 
         const auto bgfx_type = [type]() -> bgfx::UniformType::Enum {
             switch (type) {
@@ -321,7 +321,7 @@ namespace zgl::gfx {
             ZF_UNREACHABLE();
         }();
 
-        const bgfx::UniformHandle bgfx_hdl = bgfx::createUniform(zcl::strs::str_to_cstr(name_terminated), bgfx_type);
+        const bgfx::UniformHandle bgfx_hdl = bgfx::createUniform(zcl::strs::to_cstr(name_terminated), bgfx_type);
 
         if (!bgfx::isValid(bgfx_hdl)) {
             ZF_FATAL();

@@ -33,6 +33,8 @@ namespace zgl::input {
 
             zcl::t_static_array<t_gamepad_events, k_gamepad_limit> gamepads;
         } events;
+
+        zcl::t_static_array<zcl::t_u8, 32> code_pts;
     };
 
     t_state *create_state(zcl::mem::t_arena *const arena) {
