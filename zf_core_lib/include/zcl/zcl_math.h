@@ -61,6 +61,8 @@ namespace zcl::math {
         t_f32 x;
         t_f32 y;
 
+        constexpr t_v2 operator-() const { return {-x, -y}; }
+
         constexpr t_v2 operator+(const t_v2 &other) const { return {x + other.x, y + other.y}; }
         constexpr t_v2 operator-(const t_v2 &other) const { return {x - other.x, y - other.y}; }
         constexpr t_v2 operator*(const t_f32 scalar) const { return {x * scalar, y * scalar}; }
@@ -99,6 +101,8 @@ namespace zcl::math {
         t_i32 x;
         t_i32 y;
 
+        constexpr t_v2_i operator-() const { return {-x, -y}; }
+
         constexpr t_b8 operator==(const t_v2_i &other) const { return x == other.x && y == other.y; }
         constexpr t_b8 operator!=(const t_v2_i &other) const { return !(*this == other); }
 
@@ -136,6 +140,41 @@ namespace zcl::math {
         t_f32 x;
         t_f32 y;
         t_f32 z;
+
+        constexpr t_v3 operator-() const { return {-x, -y, -z}; }
+
+        constexpr t_v3 operator+(const t_v3 &other) const { return {x + other.x, y + other.y, z + other.z}; }
+        constexpr t_v3 operator-(const t_v3 &other) const { return {x - other.x, y - other.y, z - other.z}; }
+        constexpr t_v3 operator*(const t_f32 scalar) const { return {x * scalar, y * scalar, z * scalar}; }
+        constexpr t_v3 operator/(const t_f32 divisor) const { return {x / divisor, y / divisor, z / divisor}; }
+
+        constexpr t_v3 &operator+=(const t_v3 &other) {
+            x += other.x;
+            y += other.y;
+            z += other.z;
+            return *this;
+        }
+
+        constexpr t_v3 &operator-=(const t_v3 &other) {
+            x -= other.x;
+            y -= other.y;
+            z -= other.z;
+            return *this;
+        }
+
+        constexpr t_v3 &operator*=(const t_f32 scalar) {
+            x *= scalar;
+            y *= scalar;
+            z *= scalar;
+            return *this;
+        }
+
+        constexpr t_v3 &operator/=(const t_f32 divisor) {
+            x /= divisor;
+            y /= divisor;
+            z /= divisor;
+            return *this;
+        }
     };
 
     struct t_v4 {
@@ -143,6 +182,45 @@ namespace zcl::math {
         t_f32 y;
         t_f32 z;
         t_f32 w;
+
+        constexpr t_v4 operator-() const { return {-x, -y, -z, -w}; }
+
+        constexpr t_v4 operator+(const t_v4 &other) const { return {x + other.x, y + other.y, z + other.z, w + other.w}; }
+        constexpr t_v4 operator-(const t_v4 &other) const { return {x - other.x, y - other.y, z - other.z, w - other.w}; }
+        constexpr t_v4 operator*(const t_f32 scalar) const { return {x * scalar, y * scalar, z * scalar, w * scalar}; }
+        constexpr t_v4 operator/(const t_f32 divisor) const { return {x / divisor, y / divisor, z / divisor, w / divisor}; }
+
+        constexpr t_v4 &operator+=(const t_v4 &other) {
+            x += other.x;
+            y += other.y;
+            z += other.y;
+            w += other.y;
+            return *this;
+        }
+
+        constexpr t_v4 &operator-=(const t_v4 &other) {
+            x -= other.x;
+            y -= other.y;
+            z -= other.y;
+            w -= other.y;
+            return *this;
+        }
+
+        constexpr t_v4 &operator*=(const t_f32 scalar) {
+            x *= scalar;
+            y *= scalar;
+            z *= scalar;
+            w *= scalar;
+            return *this;
+        }
+
+        constexpr t_v4 &operator/=(const t_f32 divisor) {
+            x /= divisor;
+            y /= divisor;
+            z /= divisor;
+            w /= divisor;
+            return *this;
+        }
     };
 
     constexpr t_v2 v2_i_to_f(const t_v2_i v) {
