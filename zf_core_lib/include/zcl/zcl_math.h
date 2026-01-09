@@ -64,7 +64,7 @@ namespace zf::math {
         constexpr t_v2 operator+(const t_v2 &other) const { return {x + other.x, y + other.y}; }
         constexpr t_v2 operator-(const t_v2 &other) const { return {x - other.x, y - other.y}; }
         constexpr t_v2 operator*(const t_f32 scalar) const { return {x * scalar, y * scalar}; }
-        constexpr t_v2 operator/(const t_f32 scalar) const { return {x / scalar, y / scalar}; }
+        constexpr t_v2 operator/(const t_f32 divisor) const { return {x / divisor, y / divisor}; }
 
         constexpr t_v2 &operator+=(const t_v2 &other) {
             x += other.x;
@@ -84,9 +84,9 @@ namespace zf::math {
             return *this;
         }
 
-        constexpr t_v2 &operator/=(const t_f32 scalar) {
-            x /= scalar;
-            y /= scalar;
+        constexpr t_v2 &operator/=(const t_f32 divisor) {
+            x /= divisor;
+            y /= divisor;
             return *this;
         }
     };
@@ -104,6 +104,8 @@ namespace zf::math {
 
         constexpr t_v2_i operator+(const t_v2_i &other) const { return {x + other.x, y + other.y}; }
         constexpr t_v2_i operator-(const t_v2_i &other) const { return {x - other.x, y - other.y}; }
+        constexpr t_v2_i operator*(const t_i32 scalar) const { return {x * scalar, y * scalar}; }
+        constexpr t_v2_i operator/(const t_i32 divisor) const { return {x / divisor, y / divisor}; }
 
         constexpr t_v2_i &operator+=(const t_v2_i &other) {
             x += other.x;
@@ -114,6 +116,18 @@ namespace zf::math {
         constexpr t_v2_i &operator-=(const t_v2_i &other) {
             x -= other.x;
             y -= other.y;
+            return *this;
+        }
+
+        constexpr t_v2_i &operator*=(const t_i32 scalar) {
+            x *= scalar;
+            y *= scalar;
+            return *this;
+        }
+
+        constexpr t_v2_i &operator/=(const t_i32 divisor) {
+            x /= divisor;
+            y /= divisor;
             return *this;
         }
     };
