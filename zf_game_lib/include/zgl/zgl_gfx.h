@@ -3,6 +3,29 @@
 #include <zcl.h>
 
 namespace zgl::gfx {
+    // ============================================================
+    // @section: Types and Constants
+
+    constexpr zf::math::t_v2 k_origin_topleft = {0.0f, 0.0f};
+    constexpr zf::math::t_v2 k_origin_topcenter = {0.5f, 0.0f};
+    constexpr zf::math::t_v2 k_origin_topright = {1.0f, 0.0f};
+    constexpr zf::math::t_v2 k_origin_centerleft = {0.0f, 0.5f};
+    constexpr zf::math::t_v2 k_origin_center = {0.5f, 0.5f};
+    constexpr zf::math::t_v2 k_origin_centerright = {1.0f, 0.5f};
+    constexpr zf::math::t_v2 k_origin_bottomleft = {0.0f, 1.0f};
+    constexpr zf::math::t_v2 k_origin_bottomcenter = {0.5f, 1.0f};
+    constexpr zf::math::t_v2 k_origin_bottomright = {1.0f, 1.0f};
+
+    constexpr zf::math::t_v2 k_alignment_topleft = {0.0f, 0.0f};
+    constexpr zf::math::t_v2 k_alignment_topcenter = {0.5f, 0.0f};
+    constexpr zf::math::t_v2 k_alignment_topright = {1.0f, 0.0f};
+    constexpr zf::math::t_v2 k_alignment_centerleft = {0.0f, 0.5f};
+    constexpr zf::math::t_v2 k_alignment_center = {0.5f, 0.5f};
+    constexpr zf::math::t_v2 k_alignment_centerright = {1.0f, 0.5f};
+    constexpr zf::math::t_v2 k_alignment_bottomleft = {0.0f, 1.0f};
+    constexpr zf::math::t_v2 k_alignment_bottomcenter = {0.5f, 1.0f};
+    constexpr zf::math::t_v2 k_alignment_bottomright = {1.0f, 1.0f};
+
     struct t_resource;
 
     struct t_resource_group {
@@ -11,12 +34,49 @@ namespace zgl::gfx {
         t_resource *tail;
     };
 
+    enum t_uniform_type {
+        ek_uniform_type_sampler,
+        ek_uniform_type_v4,
+        ek_uniform_type_mat4x4
+    };
+
     struct t_frame_basis;
+    struct t_frame_context;
+
+    constexpr zf::t_i16 k_frame_pass_limit = 256;
+
+    struct t_vertex {
+        zf::math::t_v2 pos;
+        zf::gfx::t_color_rgba32f blend;
+        zf::math::t_v2 uv;
+    };
+
+    struct t_triangle {
+        zf::t_static_array<t_vertex, 3> verts;
+    };
+
+    // ============================================================
+
+
+    // ============================================================
+    // @section: Functions
 
     // This depends on the platform module being initialised beforehand.
     t_frame_basis *module_startup(zf::mem::t_arena *const arena, zf::mem::t_arena *const temp_arena, t_resource_group **const o_perm_resource_group);
 
     void module_shutdown(const t_frame_basis *const frame_basis);
+
+    constexpr zf::t_b8 origin_check_valid(const zf::math::t_v2 origin) {
+        return origin.x >= 0.0f && origin.x <= 1.0f && origin.y >= 0.0f && origin.y <= 1.0f;
+    }
+
+    constexpr zf::t_b8 alignment_check_valid(const zf::math::t_v2 alignment) {
+        return alignment.x >= 0.0f && alignment.x <= 1.0f && alignment.y >= 0.0f && alignment.y <= 1.0f;
+    }
+
+
+    // ========================================
+    // @subsection: Resources
 
     inline t_resource_group resource_group_create(zf::mem::t_arena *const arena) {
         return {.arena = arena};
@@ -79,11 +139,6 @@ namespace zgl::gfx {
         return shader_prog_create(vert_shader_compiled_bin, frag_shader_compiled_bin, arena);
     }
 
-    enum t_uniform_type {
-        ek_uniform_type_sampler,
-        ek_uniform_type_v4,
-        ek_uniform_type_mat4x4
-    };
 
     t_resource *uniform_create(const zf::strs::t_str_rdonly name, const t_uniform_type type, t_resource_group *const group, zf::mem::t_arena *const temp_arena);
 
@@ -97,28 +152,16 @@ namespace zgl::gfx {
     t_font font_create_from_raw(const zf::strs::t_str_rdonly file_path, const zf::t_i32 height, zf::strs::t_code_pt_bitset *const code_pts, zf::mem::t_arena *const temp_arena, t_resource_group *const resource_group);
     t_font font_create_from_packed(const zf::strs::t_str_rdonly file_path, zf::mem::t_arena *const temp_arena, t_resource_group *const resource_group);
 
+    // ========================================
 
-    // ============================================================
-    // @section: Frame
 
-    constexpr zf::t_i16 k_frame_pass_limit = 256;
-
-    struct t_frame_context;
-
-    struct t_vertex {
-        zf::math::t_v2 pos;
-        zf::gfx::t_color_rgba32f blend;
-        zf::math::t_v2 uv;
-    };
+    // ========================================
+    // @subsection: Frame
 
     constexpr zf::t_b8 vertex_check_valid(const t_vertex vert) {
         return zf::gfx::color_check_normalized(vert.blend)
             && vert.uv.x >= 0.0f && vert.uv.y >= 0.0f && vert.uv.x <= 1.0f && vert.uv.y <= 1.0f;
     }
-
-    struct t_triangle {
-        zf::t_static_array<t_vertex, 3> verts;
-    };
 
     constexpr zf::t_b8 triangle_check_valid(const t_triangle tri) {
         return vertex_check_valid(tri.verts[0])
@@ -132,7 +175,7 @@ namespace zgl::gfx {
     void frame_pass_begin(t_frame_context *const context, const zf::math::t_v2_i size, const zf::math::t_mat4x4 &view_mat = zf::math::matrix_create_identity(), const zf::t_b8 clear = false, const zf::gfx::t_color_rgba32f clear_col = zf::gfx::k_color_black);
     void frame_pass_begin_offscreen(t_frame_context *const context, const t_resource *const texture_target, const zf::math::t_mat4x4 &view_mat = zf::math::matrix_create_identity(), const zf::t_b8 clear = false, const zf::gfx::t_color_rgba32f clear_col = zf::gfx::k_color_black);
 
-    void frame_pass_end(t_frame_context *const context); // @todo: Maybe not necessary, though it does make the user code easier to read.
+    void frame_pass_end(t_frame_context *const context);
 
     zf::t_b8 frame_pass_check_active(const t_frame_context *const context);
     zf::t_i32 frame_pass_get_index(const t_frame_context *const context);
@@ -201,37 +244,11 @@ namespace zgl::gfx {
         frame_submit_rect_rotated(context, pos, size, origin, rot, color, color, color, color);
     }
 
-    constexpr zf::math::t_v2 k_origin_topleft = {0.0f, 0.0f};
-    constexpr zf::math::t_v2 k_origin_topcenter = {0.5f, 0.0f};
-    constexpr zf::math::t_v2 k_origin_topright = {1.0f, 0.0f};
-    constexpr zf::math::t_v2 k_origin_centerleft = {0.0f, 0.5f};
-    constexpr zf::math::t_v2 k_origin_center = {0.5f, 0.5f};
-    constexpr zf::math::t_v2 k_origin_centerright = {1.0f, 0.5f};
-    constexpr zf::math::t_v2 k_origin_bottomleft = {0.0f, 1.0f};
-    constexpr zf::math::t_v2 k_origin_bottomcenter = {0.5f, 1.0f};
-    constexpr zf::math::t_v2 k_origin_bottomright = {1.0f, 1.0f};
-
-    constexpr zf::t_b8 origin_check_valid(const zf::math::t_v2 origin) {
-        return origin.x >= 0.0f && origin.x <= 1.0f && origin.y >= 0.0f && origin.y <= 1.0f;
-    }
-
     void frame_submit_texture(t_frame_context *const context, const t_resource *const texture, const zf::math::t_v2 pos, const zf::math::t_rect_i src_rect = {}, const zf::math::t_v2 origin = k_origin_topleft, const zf::t_f32 rot = 0.0f);
 
-    constexpr zf::math::t_v2 k_str_alignment_topleft = {0.0f, 0.0f};
-    constexpr zf::math::t_v2 k_str_alignment_topcenter = {0.5f, 0.0f};
-    constexpr zf::math::t_v2 k_str_alignment_topright = {1.0f, 0.0f};
-    constexpr zf::math::t_v2 k_str_alignment_centerleft = {0.0f, 0.5f};
-    constexpr zf::math::t_v2 k_str_alignment_center = {0.5f, 0.5f};
-    constexpr zf::math::t_v2 k_str_alignment_centerright = {1.0f, 0.5f};
-    constexpr zf::math::t_v2 k_str_alignment_bottomleft = {0.0f, 1.0f};
-    constexpr zf::math::t_v2 k_str_alignment_bottomcenter = {0.5f, 1.0f};
-    constexpr zf::math::t_v2 k_str_alignment_bottomright = {1.0f, 1.0f};
+    void frame_submit_str(t_frame_context *const context, const zf::strs::t_str_rdonly str, const t_font &font, const zf::math::t_v2 pos, zf::mem::t_arena *const temp_arena, const zf::math::t_v2 alignment = k_alignment_topleft, const zf::gfx::t_color_rgba32f blend = zf::gfx::k_color_white);
 
-    constexpr zf::t_b8 str_alignment_check_valid(const zf::math::t_v2 alignment) {
-        return alignment.x >= 0.0f && alignment.x <= 1.0f && alignment.y >= 0.0f && alignment.y <= 1.0f;
-    }
-
-    void frame_submit_str(t_frame_context *const context, const zf::strs::t_str_rdonly str, const t_font &font, const zf::math::t_v2 pos, zf::mem::t_arena *const temp_arena, const zf::math::t_v2 alignment = k_str_alignment_topleft, const zf::gfx::t_color_rgba32f blend = zf::gfx::k_color_white);
+    // ========================================
 
     // ============================================================
 }

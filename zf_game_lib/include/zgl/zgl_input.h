@@ -2,9 +2,12 @@
 
 #include <zcl.h>
 
+// @todo: Consider making global.
+// @todo: Also consider bringing back detail subnamespace, it's actually useful.
+
 namespace zgl::input {
     // ============================================================
-    // @section: Types and Globals
+    // @section: Types and Constants
 
     struct t_state;
 

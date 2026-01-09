@@ -5,6 +5,9 @@
 #include <zgl/zgl_gfx.h>
 
 namespace zgl::game {
+    // ============================================================
+    // @section: Types and Constants
+
     struct t_init_func_context {
         zf::mem::t_arena *perm_arena;
         zf::mem::t_arena *temp_arena;
@@ -55,6 +58,14 @@ namespace zgl::game {
         zf::t_i32 user_mem_alignment;
     };
 
+    // ============================================================
+
+
+    // ============================================================
+    // @section: Functions
+
+    void run(const t_config &config);
+
     inline void config_assert_valid(const t_config &config) {
         ZF_ASSERT(config.init_func);
         ZF_ASSERT(config.deinit_func);
@@ -64,7 +75,7 @@ namespace zgl::game {
         ZF_ASSERT((config.user_mem_size == 0 && config.user_mem_alignment == 0) || (config.user_mem_size > 0 && zf::mem::alignment_check_valid(config.user_mem_alignment)));
     }
 
-    void run(const t_config &config);
-
     void set_target_tps(const zf::t_f64 tps);
+
+    // ============================================================
 }
