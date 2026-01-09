@@ -72,7 +72,7 @@ namespace zf {
         [[noreturn]] void handle_fatal_error(const char *const func_name_cstr, const char *const file_name_cstr, const int line, const char *const cond_cstr = nullptr);
 
 #define ZF_FATAL() zf::detail::handle_fatal_error(__FUNCTION__, __FILE__, __LINE__)
-#define ZF_UNREACHABLE() ZF_FATAL()
+#define ZF_UNREACHABLE() ZF_FATAL() // @todo: This should probably have some helper message to differentiate it from normal fatal errors.
 
 #define ZF_REQUIRE(cond)                                                                 \
     do {                                                                                 \
