@@ -67,7 +67,7 @@ namespace zgl::game {
         zf::t_f64 frame_dur_accum = 0.0;
         zf::t_b8 first_frame_completed = false;
 
-        while (!platform::window_should_close()) {
+        while (!platform::window_check_close_requested()) {
             platform::poll_os_events(input_state);
 
             const zf::t_f64 frame_time = platform::get_time();

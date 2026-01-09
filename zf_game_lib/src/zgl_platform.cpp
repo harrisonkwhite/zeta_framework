@@ -255,7 +255,13 @@ namespace zgl::platform {
         glfwShowWindow(g_module_state.glfw_window);
     }
 
-    zf::t_b8 window_should_close() {
+    void window_request_close() {
+        ZF_ASSERT(g_module_state.active);
+        zf::io::log(ZF_STR_LITERAL("Window close explicitly requested..."));
+        return glfwSetWindowShouldClose(g_module_state.glfw_window, true);
+    }
+
+    zf::t_b8 window_check_close_requested() {
         ZF_ASSERT(g_module_state.active);
         return glfwWindowShouldClose(g_module_state.glfw_window);
     }

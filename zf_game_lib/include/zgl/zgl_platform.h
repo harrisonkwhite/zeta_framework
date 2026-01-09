@@ -21,8 +21,8 @@ namespace zgl::platform {
 
     void window_show();
 
-    // Returns whether a window close has been requested.
-    zf::t_b8 window_should_close();
+    void window_request_close();
+    zf::t_b8 window_check_close_requested();
 
     void window_set_title(const zf::strs::t_str_rdonly title, zf::mem::t_arena *const temp_arena);
 
