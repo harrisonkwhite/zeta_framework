@@ -147,6 +147,8 @@ namespace zf::gfx {
         t_i32 atlas_index = 0;
         math::t_v2_i atlas_pen = {};
 
+        constexpr t_i32 k_glyph_padding = 4;
+
         ZF_WALK_SET_BITS (*code_pts, i) {
             const auto code_pt = static_cast<strs::t_code_pt>(i);
 
@@ -167,19 +169,19 @@ namespace zf::gfx {
 
             glyph_info.adv = static_cast<t_i32>(static_cast<t_f32>(hm_advance) * scale);
 
-            if (atlas_pen.x + glyph_info.size.x > k_font_atlas_size.x) {
+            if (atlas_pen.x + glyph_info.size.x + (k_glyph_padding * 2) > k_font_atlas_size.x) {
                 atlas_pen.x = 0;
-                atlas_pen.y += o_arrangement->line_height;
+                atlas_pen.y += o_arrangement->line_height + (k_glyph_padding * 2);
             }
 
-            if (atlas_pen.y + glyph_info.size.y > k_font_atlas_size.y) {
+            if (atlas_pen.y + glyph_info.size.y + (k_glyph_padding * 2) > k_font_atlas_size.y) {
                 atlas_pen = {};
                 atlas_index++;
             }
 
             glyph_info.atlas_index = atlas_index;
-            glyph_info.atlas_rect = {atlas_pen.x, atlas_pen.y, glyph_info.size.x, glyph_info.size.y};
-            atlas_pen.x += glyph_info.size.x;
+            glyph_info.atlas_rect = math::rect_create_i32(atlas_pen + math::t_v2_i{k_glyph_padding, k_glyph_padding}, glyph_info.size);
+            atlas_pen.x += glyph_info.size.x + (k_glyph_padding * 2);
 
             ds::hash_map_put(&o_arrangement->code_pts_to_glyph_infos, code_pt, glyph_info);
         }
