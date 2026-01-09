@@ -78,8 +78,8 @@ namespace zf::rendering {
     struct t_frame_context {
         const t_basis *basis;
 
-        t_i32 pass_index;
-        mem::t_static_bitset<k_frame_pass_limit> passes_configured;
+        t_b8 pass_active;
+        t_i32 pass_index; // Maps directly to BGFX view ID.
 
         t_i32 frame_vert_cnt;
 
@@ -354,16 +354,13 @@ namespace zf::rendering {
 
         const auto context = mem::arena_push_item<t_frame_context>(context_arena);
         context->basis = basis;
-        context->pass_index = -1;
-
-        // @todo: CONSIDER just having the first view reserved as a "clear" view, since no other view needs clearing.
-        // Though this might not be a good idea because with different framebuffers you might want different things. Keep it flexible but simple.
 
         return context;
     }
 
     static void frame_flush(t_frame_context *const context) {
         ZF_ASSERT(g_module_state.phase == ek_module_phase_active_and_midframe);
+        ZF_ASSERT(context->pass_active);
 
         if (context->batch_state.vert_cnt == 0) {
             return;
@@ -393,14 +390,69 @@ namespace zf::rendering {
 
     void frame_end(t_frame_context *const context) {
         ZF_ASSERT(g_module_state.phase == ek_module_phase_active_and_midframe);
-
-        frame_flush(context);
+        ZF_ASSERT(!context->pass_active);
 
         bgfx::frame();
 
         g_module_state.phase = ek_module_phase_active_but_not_midframe;
     }
 
+    static void bgfx_view_configure(const bgfx::ViewId view_id, const math::t_v2_i size, const math::t_mat4x4 &view_mat, const t_b8 clear, const gfx::t_color_rgba32f clear_col, const bgfx::FrameBufferHandle fb_hdl) {
+        ZF_ASSERT(g_module_state.phase == ek_module_phase_active_and_midframe);
+        ZF_ASSERT(view_id >= 0 && view_id < BGFX_CONFIG_MAX_VIEWS);
+        ZF_ASSERT(size.x > 0 && size.y > 0);
+        ZF_ASSERT(!clear || gfx::color_check_normalized(clear_col));
+
+        const auto bgfx_view_id = static_cast<bgfx::ViewId>(view_id);
+
+        bgfx::setViewMode(bgfx_view_id, bgfx::ViewMode::Sequential);
+
+        bgfx::setViewRect(bgfx_view_id, 0, 0, static_cast<uint16_t>(size.x), static_cast<uint16_t>(size.y));
+
+        auto proj_mat = math::matrix_create_identity();
+        proj_mat.elems[0][0] = 1.0f / (static_cast<t_f32>(size.x) / 2.0f);
+        proj_mat.elems[1][1] = -1.0f / (static_cast<t_f32>(size.y) / 2.0f);
+        proj_mat.elems[3][0] = -1.0f;
+        proj_mat.elems[3][1] = 1.0f;
+
+        bgfx::setViewTransform(bgfx_view_id, &view_mat, &proj_mat);
+
+        if (clear) {
+            bgfx::setViewClear(bgfx_view_id, BGFX_CLEAR_COLOR, gfx::color_rgba8_to_hex(gfx::color_rgba32f_to_rgba8(clear_col)));
+        }
+
+        bgfx::setViewFrameBuffer(bgfx_view_id, fb_hdl);
+
+        bgfx::touch(bgfx_view_id);
+    }
+
+    void frame_pass_begin(t_frame_context *const context, const math::t_v2_i size, const math::t_mat4x4 &view_mat, const t_b8 clear, const gfx::t_color_rgba32f clear_col) {
+        ZF_ASSERT(!context->pass_active);
+
+        context->pass_active = true;
+        ZF_REQUIRE(context->pass_index < k_frame_pass_limit && "Trying to begin a new frame pass, but the limit has been reached!");
+
+        bgfx_view_configure(static_cast<bgfx::ViewId>(context->pass_index), size, view_mat, clear, clear_col, BGFX_INVALID_HANDLE);
+    }
+
+    void frame_pass_end(t_frame_context *const context) {
+        ZF_ASSERT(context->pass_active);
+
+        frame_flush(context);
+
+        context->pass_active = false;
+        context->pass_index++;
+    }
+
+    t_b8 frame_pass_check_active(const t_frame_context *const context) {
+        return context->pass_active;
+    }
+
+    t_i32 frame_pass_check_index(const t_frame_context *const context) {
+        return context->pass_index;
+    }
+
+#if 0
     static void bgfx_view_configure(const bgfx::ViewId view_id, const math::t_v2_i size, const math::t_mat4x4 &view_mat, const t_b8 clear, const gfx::t_color_rgba32f clear_col, const bgfx::FrameBufferHandle fb_hdl) {
         ZF_ASSERT(g_module_state.phase == ek_module_phase_active_and_midframe);
         ZF_ASSERT(view_id >= 0 && view_id < BGFX_CONFIG_MAX_VIEWS);
@@ -454,6 +506,7 @@ namespace zf::rendering {
         frame_flush(context);
         context->pass_index = pass_index;
     }
+#endif
 
     void frame_set_shader_prog(t_frame_context *const context, const t_resource *const prog) {
         ZF_ASSERT(g_module_state.phase == ek_module_phase_active_and_midframe);
