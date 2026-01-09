@@ -6,7 +6,7 @@
 #define BGFX_CONFIG_MAX_VIEWS k_frame_pass_limit
 
 namespace zgl::gfx {
-    enum t_module_phase : zf::t_i32 {
+    enum t_module_phase : zcl::t_i32 {
         ek_module_phase_inactive,
         ek_module_phase_active_but_not_midframe,
         ek_module_phase_active_and_midframe
@@ -16,11 +16,11 @@ namespace zgl::gfx {
         t_module_phase phase;
 
         // @todo: Try and drop both of these.
-        zf::math::t_v2_i resolution_cache;
+        zcl::math::t_v2_i resolution_cache;
         t_resource_group perm_resource_group; // @todo: Probably not needed as global anymore.
     } g_module_state;
 
-    enum t_resource_type : zf::t_i32 {
+    enum t_resource_type : zcl::t_i32 {
         ek_resource_type_invalid,
         ek_resource_type_texture,
         ek_resource_type_shader_prog,
@@ -32,10 +32,10 @@ namespace zgl::gfx {
 
         union {
             struct {
-                zf::t_b8 is_target;
+                zcl::t_b8 is_target;
                 bgfx::TextureHandle nontarget_texture_bgfx_hdl;
                 bgfx::FrameBufferHandle target_fb_bgfx_hdl;
-                zf::math::t_v2_i size;
+                zcl::math::t_v2_i size;
             } texture;
 
             struct {
@@ -51,17 +51,17 @@ namespace zgl::gfx {
         t_resource *next;
     };
 
-    extern const zf::t_u8 g_vert_shader_default_src_raw[];
-    extern const zf::t_i32 g_vert_shader_default_src_len;
+    extern const zcl::t_u8 g_vert_shader_default_src_raw[];
+    extern const zcl::t_i32 g_vert_shader_default_src_len;
 
-    extern const zf::t_u8 g_frag_shader_default_src_raw[];
-    extern const zf::t_i32 g_frag_shader_default_src_len;
+    extern const zcl::t_u8 g_frag_shader_default_src_raw[];
+    extern const zcl::t_i32 g_frag_shader_default_src_len;
 
-    extern const zf::t_u8 g_frag_shader_blend_src_raw[];
-    extern const zf::t_i32 g_frag_shader_blend_src_len;
+    extern const zcl::t_u8 g_frag_shader_blend_src_raw[];
+    extern const zcl::t_i32 g_frag_shader_blend_src_len;
 
-    const zf::t_i32 g_batch_vert_limit = 1024;
-    const zf::t_i32 g_frame_vert_limit = 8192; // @todo: This should definitely be modifiable if the user wants.
+    const zcl::t_i32 g_batch_vert_limit = 1024;
+    const zcl::t_i32 g_frame_vert_limit = 8192; // @todo: This should definitely be modifiable if the user wants.
 
     struct t_frame_basis {
         bgfx::DynamicVertexBufferHandle vert_buf_bgfx_hdl;
@@ -78,21 +78,21 @@ namespace zgl::gfx {
     struct t_frame_context {
         const t_frame_basis *basis;
 
-        zf::t_b8 pass_active;
-        zf::t_i32 pass_index; // Maps directly to BGFX view ID.
+        zcl::t_b8 pass_active;
+        zcl::t_i32 pass_index; // Maps directly to BGFX view ID.
 
-        zf::t_i32 frame_vert_cnt;
+        zcl::t_i32 frame_vert_cnt;
 
         struct {
-            zf::t_static_array<t_vertex, g_batch_vert_limit> verts;
-            zf::t_i32 vert_cnt;
+            zcl::t_static_array<t_vertex, g_batch_vert_limit> verts;
+            zcl::t_i32 vert_cnt;
 
             const t_resource *shader_prog;
             const t_resource *texture;
         } batch_state;
     };
 
-    t_frame_basis *module_startup(zf::mem::t_arena *const arena, zf::mem::t_arena *const temp_arena, t_resource_group **const o_perm_resource_group) {
+    t_frame_basis *module_startup(zcl::mem::t_arena *const arena, zcl::mem::t_arena *const temp_arena, t_resource_group **const o_perm_resource_group) {
         ZF_ASSERT(g_module_state.phase == ek_module_phase_inactive);
 
         g_module_state = {.phase = ek_module_phase_active_but_not_midframe};
@@ -127,7 +127,7 @@ namespace zgl::gfx {
         //
         // Frame Basis Setup
         //
-        const auto frame_basis = zf::mem::arena_push_item<t_frame_basis>(arena);
+        const auto frame_basis = zcl::mem::arena_push_item<t_frame_basis>(arena);
 
         {
             bgfx::VertexLayout vert_layout;
@@ -146,8 +146,8 @@ namespace zgl::gfx {
         frame_basis->sampler_uniform = uniform_create(ZF_STR_LITERAL("u_texture"), ek_uniform_type_sampler, &g_module_state.perm_resource_group, temp_arena);
         frame_basis->blend_uniform = uniform_create(ZF_STR_LITERAL("u_blend"), ek_uniform_type_v4, &g_module_state.perm_resource_group, temp_arena);
 
-        const zf::t_static_array<zf::t_u8, 4> batch_px_texture_rgba = {{255, 255, 255, 255}};
-        frame_basis->px_texture = texture_create({{1, 1}, zf::array_to_nonstatic(batch_px_texture_rgba)}, &g_module_state.perm_resource_group);
+        const zcl::t_static_array<zcl::t_u8, 4> batch_px_texture_rgba = {{255, 255, 255, 255}};
+        frame_basis->px_texture = texture_create({{1, 1}, zcl::array_to_nonstatic(batch_px_texture_rgba)}, &g_module_state.perm_resource_group);
 
         return frame_basis;
     }
@@ -203,7 +203,7 @@ namespace zgl::gfx {
     static t_resource *resource_group_add(t_resource_group *const group, const t_resource_type type) {
         ZF_ASSERT(g_module_state.phase == ek_module_phase_active_but_not_midframe);
 
-        const auto resource = zf::mem::arena_push_item<t_resource>(group->arena);
+        const auto resource = zcl::mem::arena_push_item<t_resource>(group->arena);
 
         if (!group->head) {
             group->head = resource;
@@ -218,11 +218,11 @@ namespace zgl::gfx {
         return resource;
     }
 
-    t_resource *texture_create(const zf::gfx::t_texture_data_rdonly texture_data, t_resource_group *const group) {
+    t_resource *texture_create(const zcl::gfx::t_texture_data_rdonly texture_data, t_resource_group *const group) {
         ZF_ASSERT(g_module_state.phase == ek_module_phase_active_but_not_midframe);
 
         const uint64_t flags = BGFX_SAMPLER_MIN_POINT | BGFX_SAMPLER_MAG_POINT | BGFX_SAMPLER_U_CLAMP | BGFX_SAMPLER_V_CLAMP;
-        const auto texture_bgfx_hdl = bgfx::createTexture2D(static_cast<uint16_t>(texture_data.size_in_pxs.x), static_cast<uint16_t>(texture_data.size_in_pxs.y), false, 1, bgfx::TextureFormat::RGBA8, flags, bgfx::copy(texture_data.rgba_px_data.raw, static_cast<uint32_t>(zf::array_get_size_in_bytes(texture_data.rgba_px_data))));
+        const auto texture_bgfx_hdl = bgfx::createTexture2D(static_cast<uint16_t>(texture_data.size_in_pxs.x), static_cast<uint16_t>(texture_data.size_in_pxs.y), false, 1, bgfx::TextureFormat::RGBA8, flags, bgfx::copy(texture_data.rgba_px_data.raw, static_cast<uint32_t>(zcl::array_get_size_in_bytes(texture_data.rgba_px_data))));
 
         if (!bgfx::isValid(texture_bgfx_hdl)) {
             ZF_FATAL();
@@ -234,11 +234,11 @@ namespace zgl::gfx {
         return resource;
     }
 
-    static bgfx::FrameBufferHandle bgfx_create_framebuffer(const zf::math::t_v2_i size) {
+    static bgfx::FrameBufferHandle bgfx_create_framebuffer(const zcl::math::t_v2_i size) {
         return bgfx::createFrameBuffer(static_cast<uint16_t>(size.x), static_cast<uint16_t>(size.y), bgfx::TextureFormat::RGBA8, BGFX_SAMPLER_MIN_POINT | BGFX_SAMPLER_MAG_POINT | BGFX_SAMPLER_U_CLAMP | BGFX_SAMPLER_V_CLAMP);
     }
 
-    t_resource *texture_create_target(const zf::math::t_v2_i size, t_resource_group *const group) {
+    t_resource *texture_create_target(const zcl::math::t_v2_i size, t_resource_group *const group) {
         ZF_ASSERT(g_module_state.phase == ek_module_phase_active_but_not_midframe);
         ZF_ASSERT(size.x > 0 && size.y > 0);
 
@@ -255,7 +255,7 @@ namespace zgl::gfx {
         return resource;
     }
 
-    void texture_resize_target(t_resource *const texture, const zf::math::t_v2_i size) {
+    void texture_resize_target(t_resource *const texture, const zcl::math::t_v2_i size) {
         ZF_ASSERT(g_module_state.phase == ek_module_phase_active_but_not_midframe);
         ZF_ASSERT(texture->type == ek_resource_type_texture && texture->type_data.texture.is_target);
         ZF_ASSERT(size.x > 0 && size.y > 0);
@@ -271,14 +271,14 @@ namespace zgl::gfx {
         texture->type_data.texture.size = size;
     }
 
-    zf::math::t_v2_i texture_get_size(const t_resource *const texture) {
+    zcl::math::t_v2_i texture_get_size(const t_resource *const texture) {
         ZF_ASSERT(g_module_state.phase != ek_module_phase_inactive);
         ZF_ASSERT(texture->type == ek_resource_type_texture);
 
         return texture->type_data.texture.size;
     }
 
-    t_resource *shader_prog_create(const zf::t_array_rdonly<zf::t_u8> vert_shader_compiled_bin, const zf::t_array_rdonly<zf::t_u8> frag_shader_compiled_bin, t_resource_group *const group) {
+    t_resource *shader_prog_create(const zcl::t_array_rdonly<zcl::t_u8> vert_shader_compiled_bin, const zcl::t_array_rdonly<zcl::t_u8> frag_shader_compiled_bin, t_resource_group *const group) {
         ZF_ASSERT(g_module_state.phase == ek_module_phase_active_but_not_midframe);
 
         const bgfx::Memory *const vert_shader_bgfx_mem = bgfx::copy(vert_shader_compiled_bin.raw, static_cast<uint32_t>(vert_shader_compiled_bin.len));
@@ -306,10 +306,10 @@ namespace zgl::gfx {
         return resource;
     }
 
-    t_resource *uniform_create(const zf::strs::t_str_rdonly name, const t_uniform_type type, t_resource_group *const group, zf::mem::t_arena *const temp_arena) {
+    t_resource *uniform_create(const zcl::strs::t_str_rdonly name, const t_uniform_type type, t_resource_group *const group, zcl::mem::t_arena *const temp_arena) {
         ZF_ASSERT(g_module_state.phase == ek_module_phase_active_but_not_midframe);
 
-        const zf::strs::t_str_rdonly name_terminated = zf::strs::str_clone_but_add_terminator(name, temp_arena);
+        const zcl::strs::t_str_rdonly name_terminated = zcl::strs::str_clone_but_add_terminator(name, temp_arena);
 
         const auto bgfx_type = [type]() -> bgfx::UniformType::Enum {
             switch (type) {
@@ -321,7 +321,7 @@ namespace zgl::gfx {
             ZF_UNREACHABLE();
         }();
 
-        const bgfx::UniformHandle bgfx_hdl = bgfx::createUniform(zf::strs::str_to_cstr(name_terminated), bgfx_type);
+        const bgfx::UniformHandle bgfx_hdl = bgfx::createUniform(zcl::strs::str_to_cstr(name_terminated), bgfx_type);
 
         if (!bgfx::isValid(bgfx_hdl)) {
             ZF_FATAL();
@@ -340,7 +340,7 @@ namespace zgl::gfx {
         return uniform->type_data.uniform.type;
     }
 
-    t_frame_context *frame_begin(const t_frame_basis *const basis, zf::mem::t_arena *const context_arena) {
+    t_frame_context *frame_begin(const t_frame_basis *const basis, zcl::mem::t_arena *const context_arena) {
         ZF_ASSERT(g_module_state.phase == ek_module_phase_active_but_not_midframe);
 
         g_module_state.phase = ek_module_phase_active_and_midframe;
@@ -352,7 +352,7 @@ namespace zgl::gfx {
             g_module_state.resolution_cache = fb_size_cache;
         }
 
-        const auto context = zf::mem::arena_push_item<t_frame_context>(context_arena);
+        const auto context = zcl::mem::arena_push_item<t_frame_context>(context_arena);
         context->basis = basis;
 
         return context;
@@ -370,8 +370,8 @@ namespace zgl::gfx {
             ZF_FATAL();
         }
 
-        const auto verts = zf::array_slice(array_to_nonstatic(context->batch_state.verts), 0, context->batch_state.vert_cnt);
-        const auto verts_bgfx_mem = bgfx::copy(verts.raw, static_cast<uint32_t>(zf::array_get_size_in_bytes(verts)));
+        const auto verts = zcl::array_slice(array_to_nonstatic(context->batch_state.verts), 0, context->batch_state.vert_cnt);
+        const auto verts_bgfx_mem = bgfx::copy(verts.raw, static_cast<uint32_t>(zcl::array_get_size_in_bytes(verts)));
         bgfx::update(context->basis->vert_buf_bgfx_hdl, static_cast<uint32_t>(context->frame_vert_cnt), verts_bgfx_mem);
 
         frame_set_uniform_sampler(context, context->basis->sampler_uniform, context->batch_state.texture ? context->batch_state.texture : context->basis->px_texture);
@@ -385,7 +385,7 @@ namespace zgl::gfx {
 
         context->frame_vert_cnt += context->batch_state.vert_cnt;
 
-        zf::mem::zero_clear_item(&context->batch_state);
+        zcl::mem::zero_clear_item(&context->batch_state);
     }
 
     void frame_end(t_frame_context *const context) {
@@ -397,11 +397,11 @@ namespace zgl::gfx {
         g_module_state.phase = ek_module_phase_active_but_not_midframe;
     }
 
-    static void bgfx_view_configure(const bgfx::ViewId view_id, const zf::math::t_v2_i size, const zf::math::t_mat4x4 &view_mat, const zf::t_b8 clear, const zf::gfx::t_color_rgba32f clear_col, const bgfx::FrameBufferHandle fb_hdl) {
+    static void bgfx_view_configure(const bgfx::ViewId view_id, const zcl::math::t_v2_i size, const zcl::math::t_mat4x4 &view_mat, const zcl::t_b8 clear, const zcl::gfx::t_color_rgba32f clear_col, const bgfx::FrameBufferHandle fb_hdl) {
         ZF_ASSERT(g_module_state.phase == ek_module_phase_active_and_midframe);
         ZF_ASSERT(view_id >= 0 && view_id < BGFX_CONFIG_MAX_VIEWS);
         ZF_ASSERT(size.x > 0 && size.y > 0);
-        ZF_ASSERT(!clear || zf::gfx::color_check_normalized(clear_col));
+        ZF_ASSERT(!clear || zcl::gfx::color_check_normalized(clear_col));
 
         const auto bgfx_view_id = static_cast<bgfx::ViewId>(view_id);
 
@@ -409,16 +409,16 @@ namespace zgl::gfx {
 
         bgfx::setViewRect(bgfx_view_id, 0, 0, static_cast<uint16_t>(size.x), static_cast<uint16_t>(size.y));
 
-        auto proj_mat = zf::math::matrix_create_identity();
-        proj_mat.elems[0][0] = 1.0f / (static_cast<zf::t_f32>(size.x) / 2.0f);
-        proj_mat.elems[1][1] = -1.0f / (static_cast<zf::t_f32>(size.y) / 2.0f);
+        auto proj_mat = zcl::math::matrix_create_identity();
+        proj_mat.elems[0][0] = 1.0f / (static_cast<zcl::t_f32>(size.x) / 2.0f);
+        proj_mat.elems[1][1] = -1.0f / (static_cast<zcl::t_f32>(size.y) / 2.0f);
         proj_mat.elems[3][0] = -1.0f;
         proj_mat.elems[3][1] = 1.0f;
 
         bgfx::setViewTransform(bgfx_view_id, &view_mat, &proj_mat);
 
         if (clear) {
-            bgfx::setViewClear(bgfx_view_id, BGFX_CLEAR_COLOR, zf::gfx::color_rgba8_to_hex(zf::gfx::color_rgba32f_to_rgba8(clear_col)));
+            bgfx::setViewClear(bgfx_view_id, BGFX_CLEAR_COLOR, zcl::gfx::color_rgba8_to_hex(zcl::gfx::color_rgba32f_to_rgba8(clear_col)));
         }
 
         bgfx::setViewFrameBuffer(bgfx_view_id, fb_hdl);
@@ -426,7 +426,7 @@ namespace zgl::gfx {
         bgfx::touch(bgfx_view_id);
     }
 
-    void frame_pass_begin(t_frame_context *const context, const zf::math::t_v2_i size, const zf::math::t_mat4x4 &view_mat, const zf::t_b8 clear, const zf::gfx::t_color_rgba32f clear_col) {
+    void frame_pass_begin(t_frame_context *const context, const zcl::math::t_v2_i size, const zcl::math::t_mat4x4 &view_mat, const zcl::t_b8 clear, const zcl::gfx::t_color_rgba32f clear_col) {
         ZF_ASSERT(!context->pass_active);
 
         context->pass_active = true;
@@ -435,7 +435,7 @@ namespace zgl::gfx {
         bgfx_view_configure(static_cast<bgfx::ViewId>(context->pass_index), size, view_mat, clear, clear_col, BGFX_INVALID_HANDLE);
     }
 
-    void frame_pass_begin_offscreen(t_frame_context *const context, const t_resource *const texture_target, const zf::math::t_mat4x4 &view_mat, const zf::t_b8 clear, const zf::gfx::t_color_rgba32f clear_col) {
+    void frame_pass_begin_offscreen(t_frame_context *const context, const t_resource *const texture_target, const zcl::math::t_mat4x4 &view_mat, const zcl::t_b8 clear, const zcl::gfx::t_color_rgba32f clear_col) {
         ZF_ASSERT(!context->pass_active);
         ZF_ASSERT(texture_target->type == ek_resource_type_texture && texture_target->type_data.texture.is_target);
 
@@ -454,11 +454,11 @@ namespace zgl::gfx {
         context->pass_index++;
     }
 
-    zf::t_b8 frame_pass_check_active(const t_frame_context *const context) {
+    zcl::t_b8 frame_pass_check_active(const t_frame_context *const context) {
         return context->pass_active;
     }
 
-    zf::t_i32 frame_pass_get_index(const t_frame_context *const context) {
+    zcl::t_i32 frame_pass_get_index(const t_frame_context *const context) {
         return context->pass_index;
     }
 
@@ -496,11 +496,11 @@ namespace zgl::gfx {
             } sampler;
 
             struct {
-                const zf::math::t_v4 *ptr;
+                const zcl::math::t_v4 *ptr;
             } v4;
 
             struct {
-                const zf::math::t_mat4x4 *ptr;
+                const zcl::math::t_mat4x4 *ptr;
             } mat4x4;
         } type_data;
     };
@@ -546,7 +546,7 @@ namespace zgl::gfx {
         frame_set_uniform(context, uniform, uniform_data);
     }
 
-    void frame_set_uniform_v4(t_frame_context *const context, const t_resource *const uniform, const zf::math::t_v4 v4) {
+    void frame_set_uniform_v4(t_frame_context *const context, const t_resource *const uniform, const zcl::math::t_v4 v4) {
         const t_uniform_data uniform_data = {
             .type = ek_uniform_type_v4,
             .type_data = {.v4 = {.ptr = &v4}},
@@ -555,7 +555,7 @@ namespace zgl::gfx {
         frame_set_uniform(context, uniform, uniform_data);
     }
 
-    void frame_set_uniform_mat4x4(t_frame_context *const context, const t_resource *const uniform, const zf::math::t_mat4x4 &mat4x4) {
+    void frame_set_uniform_mat4x4(t_frame_context *const context, const t_resource *const uniform, const zcl::math::t_mat4x4 &mat4x4) {
         const t_uniform_data uniform_data = {
             .type = ek_uniform_type_mat4x4,
             .type_data = {.mat4x4 = {.ptr = &mat4x4}},
@@ -564,20 +564,20 @@ namespace zgl::gfx {
         frame_set_uniform(context, uniform, uniform_data);
     }
 
-    void frame_submit_triangles(t_frame_context *const context, const zf::t_array_rdonly<t_triangle> triangles, const t_resource *const texture) {
+    void frame_submit_triangles(t_frame_context *const context, const zcl::t_array_rdonly<t_triangle> triangles, const t_resource *const texture) {
         ZF_ASSERT(g_module_state.phase == ek_module_phase_active_and_midframe);
         ZF_ASSERT(context->pass_index != -1 && "A pass must be set before submitting primitives!");
         ZF_ASSERT(triangles.len > 0);
         ZF_ASSERT(!texture || texture->type == ek_resource_type_texture);
 
-        const zf::t_i32 num_verts_to_submit = 3 * triangles.len;
+        const zcl::t_i32 num_verts_to_submit = 3 * triangles.len;
 
         if (num_verts_to_submit > g_batch_vert_limit) {
             ZF_FATAL();
         }
 
 #ifdef ZF_DEBUG
-        for (zf::t_i32 i = 0; i < triangles.len; i++) {
+        for (zcl::t_i32 i = 0; i < triangles.len; i++) {
             ZF_ASSERT(triangle_check_valid(triangles[i]));
         }
 #endif
@@ -587,8 +587,8 @@ namespace zgl::gfx {
             context->batch_state.texture = texture;
         }
 
-        for (zf::t_i32 i = 0; i < triangles.len; i++) {
-            const zf::t_i32 offs = context->batch_state.vert_cnt;
+        for (zcl::t_i32 i = 0; i < triangles.len; i++) {
+            const zcl::t_i32 offs = context->batch_state.vert_cnt;
             context->batch_state.verts[offs + (3 * i) + 0] = triangles[i].verts[0];
             context->batch_state.verts[offs + (3 * i) + 1] = triangles[i].verts[1];
             context->batch_state.verts[offs + (3 * i) + 2] = triangles[i].verts[2];

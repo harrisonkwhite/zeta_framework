@@ -4,12 +4,12 @@
 #include <zgl/zgl_audio.h>
 
 namespace zgl::game {
-    constexpr zf::t_f64 k_init_target_tps = 60.0;
-    constexpr zf::math::t_v2_i k_init_window_size = {1280, 720};
+    constexpr zcl::t_f64 k_init_target_tps = 60.0;
+    constexpr zcl::math::t_v2_i k_init_window_size = {1280, 720};
 
     static struct {
-        zf::t_b8 running;
-        zf::t_f64 targ_tps;
+        zcl::t_b8 running;
+        zcl::t_f64 targ_tps;
     } g_module_state;
 
     void run(const t_config &config) {
@@ -26,11 +26,11 @@ namespace zgl::game {
         //
         // Initialisation
         //
-        zf::mem::t_arena perm_arena = zf::mem::arena_create_blockbased();
-        ZF_DEFER({ zf::mem::arena_destroy(&perm_arena); });
+        zcl::mem::t_arena perm_arena = zcl::mem::arena_create_blockbased();
+        ZF_DEFER({ zcl::mem::arena_destroy(&perm_arena); });
 
-        zf::mem::t_arena temp_arena = zf::mem::arena_create_blockbased();
-        ZF_DEFER({ zf::mem::arena_destroy(&temp_arena); });
+        zcl::mem::t_arena temp_arena = zcl::mem::arena_create_blockbased();
+        ZF_DEFER({ zcl::mem::arena_destroy(&temp_arena); });
 
         platform::module_startup(k_init_window_size);
         ZF_DEFER({ platform::module_shutdown(); });
@@ -44,9 +44,9 @@ namespace zgl::game {
         audio::module_startup();
         ZF_DEFER({ audio::module_shutdown(); });
 
-        zf::rand::t_rng *const rng = zf::rand::rng_create(0, &perm_arena); // @todo: Proper seed!
+        zcl::rand::t_rng *const rng = zcl::rand::rng_create(0, &perm_arena); // @todo: Proper seed!
 
-        void *const user_mem = config.user_mem_size > 0 ? zf::mem::arena_push(&perm_arena, config.user_mem_size, config.user_mem_alignment) : nullptr;
+        void *const user_mem = config.user_mem_size > 0 ? zcl::mem::arena_push(&perm_arena, config.user_mem_size, config.user_mem_alignment) : nullptr;
 
         config.init_func({
             .perm_arena = &perm_arena,
@@ -63,23 +63,23 @@ namespace zgl::game {
         //
         // Main Loop
         //
-        zf::t_f64 frame_time_last = 0.0;
-        zf::t_f64 frame_dur_accum = 0.0;
-        zf::t_b8 first_frame_completed = false;
+        zcl::t_f64 frame_time_last = 0.0;
+        zcl::t_f64 frame_dur_accum = 0.0;
+        zcl::t_b8 first_frame_completed = false;
 
         while (!platform::window_check_close_requested()) {
             platform::poll_os_events(input_state);
 
-            const zf::t_f64 frame_time = platform::get_time();
-            const zf::t_f64 frame_time_delta = first_frame_completed ? frame_time - frame_time_last : 0.0;
+            const zcl::t_f64 frame_time = platform::get_time();
+            const zcl::t_f64 frame_time_delta = first_frame_completed ? frame_time - frame_time_last : 0.0;
             frame_dur_accum += frame_time_delta;
             frame_time_last = frame_time;
 
-            const zf::t_f64 targ_tick_interval = 1.0 / g_module_state.targ_tps;
+            const zcl::t_f64 targ_tick_interval = 1.0 / g_module_state.targ_tps;
 
             // Once enough time has passed (i.e. the time accumulator has reached the target tick interval), run at least a single tick.
             while (frame_dur_accum >= targ_tick_interval) {
-                zf::mem::arena_rewind(&temp_arena);
+                zcl::mem::arena_rewind(&temp_arena);
 
                 audio::proc_finished_sounds();
 
@@ -97,7 +97,7 @@ namespace zgl::game {
                 frame_dur_accum -= targ_tick_interval;
             }
 
-            zf::mem::arena_rewind(&temp_arena);
+            zcl::mem::arena_rewind(&temp_arena);
 
             gfx::t_frame_context *const frame_context = gfx::frame_begin(frame_basis, &temp_arena);
 
@@ -118,7 +118,7 @@ namespace zgl::game {
         }
     }
 
-    void set_target_tps(const zf::t_f64 tps) {
+    void set_target_tps(const zcl::t_f64 tps) {
         ZF_ASSERT(g_module_state.running);
         ZF_ASSERT(tps > 0.0);
 

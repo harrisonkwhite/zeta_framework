@@ -9,36 +9,36 @@ namespace zgl::game {
     // @section: Types and Constants
 
     struct t_init_func_context {
-        zf::mem::t_arena *perm_arena;
-        zf::mem::t_arena *temp_arena;
+        zcl::mem::t_arena *perm_arena;
+        zcl::mem::t_arena *temp_arena;
 
         gfx::t_resource_group *perm_gfx_resource_group;
 
-        zf::rand::t_rng *rng;
+        zcl::rand::t_rng *rng;
 
         void *user_mem;
     };
 
     struct t_tick_func_context {
-        zf::mem::t_arena *perm_arena;
-        zf::mem::t_arena *temp_arena;
+        zcl::mem::t_arena *perm_arena;
+        zcl::mem::t_arena *temp_arena;
 
         const input::t_state *input_state;
 
         gfx::t_resource_group *perm_gfx_resource_group;
 
-        zf::rand::t_rng *rng;
+        zcl::rand::t_rng *rng;
 
         void *user_mem;
     };
 
     struct t_render_func_context {
-        zf::mem::t_arena *perm_arena;
-        zf::mem::t_arena *temp_arena;
+        zcl::mem::t_arena *perm_arena;
+        zcl::mem::t_arena *temp_arena;
 
         gfx::t_frame_context *frame_context;
 
-        zf::rand::t_rng *rng;
+        zcl::rand::t_rng *rng;
 
         void *user_mem;
     };
@@ -54,8 +54,8 @@ namespace zgl::game {
         t_tick_func tick_func;
         t_render_func render_func;
 
-        zf::t_i32 user_mem_size;
-        zf::t_i32 user_mem_alignment;
+        zcl::t_i32 user_mem_size;
+        zcl::t_i32 user_mem_alignment;
     };
 
     // ============================================================
@@ -72,10 +72,10 @@ namespace zgl::game {
         ZF_ASSERT(config.tick_func);
         ZF_ASSERT(config.render_func);
 
-        ZF_ASSERT((config.user_mem_size == 0 && config.user_mem_alignment == 0) || (config.user_mem_size > 0 && zf::mem::alignment_check_valid(config.user_mem_alignment)));
+        ZF_ASSERT((config.user_mem_size == 0 && config.user_mem_alignment == 0) || (config.user_mem_size > 0 && zcl::mem::alignment_check_valid(config.user_mem_alignment)));
     }
 
-    void set_target_tps(const zf::t_f64 tps);
+    void set_target_tps(const zcl::t_f64 tps);
 
     // ============================================================
 }
