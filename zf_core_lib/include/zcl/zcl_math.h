@@ -297,8 +297,8 @@ namespace zcl::math {
 
     constexpr t_mat4x4 matrix_create_translated(const t_v2 offs) {
         t_mat4x4 result = matrix_create_identity();
-        result.elems[0][3] = offs.x;
-        result.elems[1][3] = offs.y;
+        result.elems[3][0] = offs.x;
+        result.elems[3][1] = offs.y;
 
         return result;
     }
@@ -306,8 +306,8 @@ namespace zcl::math {
     inline t_mat4x4 matrix_create_rotated(const t_f32 rot) {
         t_mat4x4 result = matrix_create_identity();
         result.elems[0][0] = cos(rot);
-        result.elems[0][1] = -sin(rot);
-        result.elems[1][0] = sin(rot);
+        result.elems[0][1] = sin(rot);
+        result.elems[1][0] = -sin(rot);
         result.elems[1][1] = cos(rot);
 
         return result;
