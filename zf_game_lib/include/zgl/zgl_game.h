@@ -29,6 +29,9 @@ namespace zgl::game {
 
         zcl::rand::t_rng *rng;
 
+        zcl::t_f64 fps;
+        zcl::t_f64 tps; // @todo
+
         void *user_mem;
     };
 
@@ -39,6 +42,9 @@ namespace zgl::game {
         gfx::t_frame_context *frame_context;
 
         zcl::rand::t_rng *rng;
+
+        zcl::t_f64 fps;
+        zcl::t_f64 tps; // @todo
 
         void *user_mem;
     };
@@ -75,7 +81,7 @@ namespace zgl::game {
         ZF_ASSERT((config.user_mem_size == 0 && config.user_mem_alignment == 0) || (config.user_mem_size > 0 && zcl::mem::alignment_check_valid(config.user_mem_alignment)));
     }
 
-    void set_target_tps(const zcl::t_f64 tps);
+    void tps_set_target(const zcl::t_f64 tps);
 
     // ============================================================
 }

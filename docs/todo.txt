@@ -1,7 +1,6 @@
 - Subnamespaces are kind of annoying for the user and don't add that much value I don't think.
 
 - Properly check correctness of packed asset binary files
-- min, max, and abs should have calc_ prefixes.
 - Validation barriers need to be made more clear. Make sure validity for colours, origins, alignment, rectangles, etc. are in place. Only worry about reasonable things.
 - Make sure the licensing is all fine. Check whether BGFX license is needed in game dist.
 - Properly check for correctness in deserialization and unpacking ops.

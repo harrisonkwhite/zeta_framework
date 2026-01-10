@@ -4,12 +4,12 @@
 #include <zgl/zgl_audio.h>
 
 namespace zgl::game {
-    constexpr zcl::t_f64 k_init_target_tps = 60.0;
+    constexpr zcl::t_f64 k_init_tps_target = 60.0;
     constexpr zcl::math::t_v2_i k_init_window_size = {1280, 720};
 
     static struct {
         zcl::t_b8 running;
-        zcl::t_f64 targ_tps;
+        zcl::t_f64 tps_targ;
     } g_module_state;
 
     void run(const t_config &config) {
@@ -18,7 +18,7 @@ namespace zgl::game {
 
         g_module_state = {
             .running = true,
-            .targ_tps = k_init_target_tps,
+            .tps_targ = k_init_tps_target,
         };
 
         ZF_DEFER({ g_module_state = {}; });
@@ -65,36 +65,46 @@ namespace zgl::game {
         //
         zcl::t_f64 frame_time_last = 0.0;
         zcl::t_f64 frame_dur_accum = 0.0;
-        zcl::t_b8 first_frame_completed = false;
+        zcl::t_i32 frame_cnt = 0;
+
+        zcl::t_f64 fps_accum = 0.0;
+        zcl::t_f64 fps_avg = 0.0;
 
         while (!platform::window_check_close_requested()) {
             platform::poll_os_events(input_state);
 
-            const zcl::t_f64 frame_time = platform::get_time();
-            const zcl::t_f64 frame_time_delta = first_frame_completed ? frame_time - frame_time_last : 0.0;
-            frame_dur_accum += frame_time_delta;
-            frame_time_last = frame_time;
+            if (frame_cnt > 0) {
+                const zcl::t_f64 frame_time = platform::get_time();
+                const zcl::t_f64 frame_time_delta = frame_time - frame_time_last;
 
-            const zcl::t_f64 targ_tick_interval = 1.0 / g_module_state.targ_tps;
+                frame_dur_accum += frame_time_delta;
+                frame_time_last = frame_time;
 
-            // Once enough time has passed (i.e. the time accumulator has reached the target tick interval), run at least a single tick.
-            while (frame_dur_accum >= targ_tick_interval) {
-                zcl::mem::arena_rewind(&temp_arena);
+                fps_accum += 1.0 / frame_time_delta;
+                fps_avg = fps_accum / frame_cnt;
 
-                audio::proc_finished_sounds();
+                const zcl::t_f64 targ_tick_interval = 1.0 / g_module_state.tps_targ;
 
-                config.tick_func({
-                    .perm_arena = &perm_arena,
-                    .temp_arena = &temp_arena,
-                    .input_state = input_state,
-                    .perm_gfx_resource_group = perm_gfx_resource_group,
-                    .rng = rng,
-                    .user_mem = user_mem,
-                });
+                // Once enough time has passed (i.e. the time accumulator has reached the target tick interval), run at least a single tick.
+                while (frame_dur_accum >= targ_tick_interval) {
+                    zcl::mem::arena_rewind(&temp_arena);
 
-                input::clear_events(input_state);
+                    audio::proc_finished_sounds();
 
-                frame_dur_accum -= targ_tick_interval;
+                    config.tick_func({
+                        .perm_arena = &perm_arena,
+                        .temp_arena = &temp_arena,
+                        .input_state = input_state,
+                        .perm_gfx_resource_group = perm_gfx_resource_group,
+                        .rng = rng,
+                        .fps = fps_avg,
+                        .user_mem = user_mem,
+                    });
+
+                    input::clear_events(input_state);
+
+                    frame_dur_accum -= targ_tick_interval;
+                }
             }
 
             zcl::mem::arena_rewind(&temp_arena);
@@ -106,22 +116,24 @@ namespace zgl::game {
                 .temp_arena = &temp_arena,
                 .frame_context = frame_context,
                 .rng = rng,
+                .fps = fps_avg,
                 .user_mem = user_mem,
             });
 
             gfx::frame_end(frame_context);
 
-            if (!first_frame_completed) {
+            if (frame_cnt == 0) {
                 platform::window_show();
-                first_frame_completed = true;
             }
+
+            frame_cnt++;
         }
     }
 
-    void set_target_tps(const zcl::t_f64 tps) {
+    void tps_set_target(const zcl::t_f64 tps) {
         ZF_ASSERT(g_module_state.running);
         ZF_ASSERT(tps > 0.0);
 
-        g_module_state.targ_tps = tps;
+        g_module_state.tps_targ = tps;
     }
 }
