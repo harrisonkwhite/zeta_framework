@@ -75,9 +75,14 @@ namespace zcl::ds {
         return {mem::arena_push_array<tp_elem_type>(arena, cap), len};
     }
 
-    template <c_list tp_list_type>
+    template <c_list_nonstatic tp_list_type>
     constexpr t_i32 list_get_cap(const tp_list_type *const list) {
         return list->backing_arr.len;
+    }
+
+    template <c_list_static tp_list_type>
+    constexpr t_i32 list_get_cap(const tp_list_type *const list) {
+        return list->backing_arr.k_len;
     }
 
     template <c_list_nonstatic tp_list_type>
@@ -87,12 +92,12 @@ namespace zcl::ds {
 
     template <c_list_static tp_list_type>
     constexpr t_array_mut<typename tp_list_type::t_elem> list_to_array(tp_list_type *const list) {
-        return array_slice(list->backing_arr, 0, list->len);
+        return array_slice(array_to_nonstatic(list->backing_arr), 0, list->len);
     }
 
     template <c_list_static tp_list_type>
     constexpr t_array_rdonly<typename tp_list_type::t_elem> list_to_array(const tp_list_type *const list) {
-        return array_slice(list->backing_arr, 0, list->len);
+        return array_slice(array_to_nonstatic(list->backing_arr), 0, list->len);
     }
 
     template <c_list_nonstatic tp_list_type>

@@ -72,8 +72,15 @@ namespace zgl::platform {
 
         {
             const auto chr_callback =
-                [](GLFWwindow *const window, const zcl::t_u32 codepoint) {
+                [](GLFWwindow *const window, const zcl::t_u32 code_pt) {
+                    const auto input_state = static_cast<input::t_state *>(glfwGetWindowUserPointer(window));
+
+                    if (!input::text_submit_code_point(input_state, code_pt)) {
+                        zcl::io::log_warning(ZF_STR_LITERAL("Tried to submit input code point, but there is insufficient space!"));
+                    }
                 };
+
+            glfwSetCharCallback(g_module_state.glfw_window, chr_callback);
         }
     }
 
