@@ -63,12 +63,19 @@ namespace zgl::game {
         //
         // Main Loop
         //
+
+        // @todo: Need to properly handle overflow cases!
+
         zcl::t_f64 frame_time_last = 0.0;
         zcl::t_f64 frame_dur_accum = 0.0;
         zcl::t_i32 frame_cnt = 0;
 
         zcl::t_f64 fps_accum = 0.0;
         zcl::t_f64 fps_avg = 0.0;
+
+        zcl::t_i32 tick_cnt = 0;
+        zcl::t_f64 tps_accum = 0.0;
+        zcl::t_f64 tps_avg = 0.0;
 
         while (!platform::window_check_close_requested()) {
             platform::poll_os_events(input_state);
@@ -85,6 +92,15 @@ namespace zgl::game {
 
                 const zcl::t_f64 targ_tick_interval = 1.0 / g_module_state.tps_targ;
 
+                // @cleanup
+                if (frame_dur_accum >= targ_tick_interval) {
+                    static_assert(false, "Wrong results!");
+                    const zcl::t_i32 num_ticks_to_proc = static_cast<zcl::t_i32>(frame_dur_accum / targ_tick_interval);
+                    tick_cnt += num_ticks_to_proc;
+                    tps_accum += static_cast<zcl::t_f64>(num_ticks_to_proc) / frame_dur_accum;
+                    tps_avg = tps_accum / tick_cnt;
+                }
+
                 // Once enough time has passed (i.e. the time accumulator has reached the target tick interval), run at least a single tick.
                 while (frame_dur_accum >= targ_tick_interval) {
                     zcl::mem::arena_rewind(&temp_arena);
@@ -98,6 +114,7 @@ namespace zgl::game {
                         .perm_gfx_resource_group = perm_gfx_resource_group,
                         .rng = rng,
                         .fps = fps_avg,
+                        .tps = tps_avg,
                         .user_mem = user_mem,
                     });
 
@@ -117,6 +134,7 @@ namespace zgl::game {
                 .frame_context = frame_context,
                 .rng = rng,
                 .fps = fps_avg,
+                .tps = tps_avg,
                 .user_mem = user_mem,
             });
 
