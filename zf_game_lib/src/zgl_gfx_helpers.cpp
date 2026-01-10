@@ -25,7 +25,7 @@ namespace zgl::gfx {
             },
         }};
 
-        frame_submit_triangles(context, zcl::array_to_nonstatic(triangles));
+        frame_submit_triangles(context, zcl::array_to_nonstatic(&triangles));
     }
 
     void frame_submit_texture(t_frame_context *const context, const t_resource *const texture, const zcl::math::t_v2 pos, const zcl::math::t_rect_i src_rect, const zcl::math::t_v2 origin, const zcl::t_f32 rot) {
@@ -63,7 +63,7 @@ namespace zgl::gfx {
             },
         }};
 
-        frame_submit_triangles(context, zcl::array_to_nonstatic(triangles), texture);
+        frame_submit_triangles(context, zcl::array_to_nonstatic(&triangles), texture);
     }
 
     t_font font_create_from_raw(const zcl::strs::t_str_rdonly file_path, const zcl::t_i32 height, zcl::strs::t_code_pt_bitset *const code_pts, zcl::mem::t_arena *const temp_arena, t_resource_group *const resource_group) {

@@ -231,7 +231,7 @@ namespace zgl::gfx {
             },
         }};
 
-        frame_submit_triangles(context, zcl::array_to_nonstatic(triangles), nullptr);
+        frame_submit_triangles(context, zcl::array_to_nonstatic(&triangles), nullptr);
     }
 
     inline void frame_submit_rect(t_frame_context *const context, const zcl::math::t_rect_f rect, const zcl::gfx::t_color_rgba32f color) {

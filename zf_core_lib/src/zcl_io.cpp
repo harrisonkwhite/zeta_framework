@@ -223,7 +223,7 @@ namespace zcl::io {
         }
 
         const auto result_bytes = mem::arena_push_array<t_u8>(arena, len);
-        array_copy(mem::array_to_byte_array(array_slice(array_to_nonstatic(buf), 0, len)), result_bytes);
+        array_copy(mem::array_to_byte_array(array_slice(array_to_nonstatic(&buf), 0, len)), result_bytes);
         return {result_bytes};
 #elif defined(ZF_PLATFORM_MACOS)
     #error "Platform-specific implementation not yet done!"

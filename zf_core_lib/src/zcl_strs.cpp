@@ -461,7 +461,7 @@ namespace zcl::strs {
         ZF_ASSERT(check_valid_utf8(str));
 
         ZF_WALK_STR (str, step) {
-            mem::bitset_set(*code_pts, step.code_pt); // @todo
+            mem::bitset_set(*code_pts, static_cast<t_i32>(step.code_pt));
         }
     }
 

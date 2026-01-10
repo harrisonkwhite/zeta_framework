@@ -147,10 +147,10 @@ zcl::t_b8 pack_assets(const zcl::strs::t_str_rdonly instrs_json_file_path) {
 
             const auto fields = [asset_type_index]() -> zcl::t_array_rdonly<t_asset_field> {
                 switch (asset_type_index) {
-                case ek_asset_type_texture: return array_to_nonstatic(k_texture_fields);
-                case ek_asset_type_font: return array_to_nonstatic(k_font_fields);
-                case ek_asset_type_shader: return array_to_nonstatic(k_shader_fields);
-                case ek_asset_type_sound: return array_to_nonstatic(k_sound_fields);
+                case ek_asset_type_texture: return array_to_nonstatic(&k_texture_fields);
+                case ek_asset_type_font: return array_to_nonstatic(&k_font_fields);
+                case ek_asset_type_shader: return array_to_nonstatic(&k_shader_fields);
+                case ek_asset_type_sound: return array_to_nonstatic(&k_sound_fields);
                 }
 
                 return {};
@@ -158,10 +158,10 @@ zcl::t_b8 pack_assets(const zcl::strs::t_str_rdonly instrs_json_file_path) {
 
             const auto field_vals = [asset_type_index, &texture_field_cj_ptrs, &font_field_cj_ptrs, &shader_field_cj_ptrs, &snd_field_cj_ptrs]() -> zcl::t_array_mut<cJSON *> {
                 switch (asset_type_index) {
-                case ek_asset_type_texture: return array_to_nonstatic(texture_field_cj_ptrs);
-                case ek_asset_type_font: return array_to_nonstatic(font_field_cj_ptrs);
-                case ek_asset_type_shader: return array_to_nonstatic(shader_field_cj_ptrs);
-                case ek_asset_type_sound: return array_to_nonstatic(snd_field_cj_ptrs);
+                case ek_asset_type_texture: return array_to_nonstatic(&texture_field_cj_ptrs);
+                case ek_asset_type_font: return array_to_nonstatic(&font_field_cj_ptrs);
+                case ek_asset_type_shader: return array_to_nonstatic(&shader_field_cj_ptrs);
+                case ek_asset_type_sound: return array_to_nonstatic(&snd_field_cj_ptrs);
                 }
 
                 return {};

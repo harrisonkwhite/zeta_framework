@@ -338,6 +338,32 @@ namespace zcl::io {
 
 
     // ========================================
+    // @subsection: String Printing
+
+    struct t_code_pt_format {
+        using t_format_tag = void;
+        strs::t_code_pt value;
+    };
+
+    inline t_code_pt_format format_code_pt(const strs::t_code_pt value) { return {value}; }
+    inline t_code_pt_format format_default(const strs::t_code_pt value) { return format_code_pt(value); }
+
+    inline t_b8 print_type(t_stream *const stream, const t_code_pt_format format) {
+        t_static_array<t_u8, 4> code_pt_bytes;
+        t_i32 code_pt_byte_cnt;
+        strs::code_pt_to_utf8_bytes(format.value, &code_pt_bytes, &code_pt_byte_cnt);
+
+        const strs::t_str_rdonly code_pt_str = {array_slice(array_to_nonstatic(&code_pt_bytes), 0, code_pt_byte_cnt)};
+
+        return print(stream, code_pt_str);
+    }
+
+    // @todo: Char printing too?
+
+    // ========================================
+
+
+    // ========================================
     // @subsection: Integer Printing
 
     template <c_integral tp_type>
@@ -352,7 +378,7 @@ namespace zcl::io {
     template <c_integral tp_type>
     t_b8 print_type(t_stream *const stream, const t_integral_format<tp_type> format) {
         t_static_array<t_u8, 20> str_bytes = {}; // Maximum possible number of ASCII characters needed to represent a 64-bit integer.
-        t_stream str_bytes_stream = mem_stream_create(array_to_nonstatic(str_bytes), ek_stream_mode_write);
+        t_stream str_bytes_stream = mem_stream_create(array_to_nonstatic(&str_bytes), ek_stream_mode_write);
         t_b8 str_bytes_stream_write_success = true;
 
         if (format.value < 0) {
@@ -406,7 +432,7 @@ namespace zcl::io {
         }
 
         if (format.trim_trailing_zeros) {
-            const auto str_bytes_relevant = array_slice(array_to_nonstatic(str_bytes), 0, str_bytes_used);
+            const auto str_bytes_relevant = array_slice(array_to_nonstatic(&str_bytes), 0, str_bytes_used);
 
             if (array_check_any_equal(str_bytes_relevant, '.')) {
                 for (t_i32 i = str_bytes_used - 1;; i--) {
@@ -422,7 +448,7 @@ namespace zcl::io {
             }
         }
 
-        return print(stream, {array_slice(array_to_nonstatic(str_bytes), 0, str_bytes_used)});
+        return print(stream, {array_slice(array_to_nonstatic(&str_bytes), 0, str_bytes_used)});
     }
 
     // ========================================
@@ -468,7 +494,7 @@ namespace zcl::io {
         ZF_ASSERT(format.min_digits >= k_hex_format_digit_cnt_min && format.min_digits <= k_hex_format_digit_cnt_max);
 
         t_static_array<t_u8, 2 + k_hex_format_digit_cnt_max> str_bytes = {}; // Can facilitate max number of digits plus the "0x" prefix.
-        t_stream str_bytes_stream = mem_stream_create(array_to_nonstatic(str_bytes), ek_stream_mode_write);
+        t_stream str_bytes_stream = mem_stream_create(array_to_nonstatic(&str_bytes), ek_stream_mode_write);
 
         t_b8 str_bytes_stream_write_success = true;
 

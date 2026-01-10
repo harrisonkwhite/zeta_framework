@@ -155,7 +155,7 @@ namespace zgl::input {
 
     void gamepad_update_state(t_state *const state, const zcl::t_i32 gamepad_index, const zcl::t_b8 connected, const zcl::mem::t_static_bitset<ekm_gamepad_button_code_cnt> &btns_down, const zcl::t_static_array<zcl::t_f32, ekm_gamepad_axis_code_cnt> &axes) {
         if (!connected) {
-            ZF_ASSERT(zcl::mem::bitset_check_all_unset(btns_down) && zcl::array_check_all_equal(zcl::array_to_nonstatic(axes), 0.0f));
+            ZF_ASSERT(zcl::mem::bitset_check_all_unset(btns_down) && zcl::array_check_all_equal(zcl::array_to_nonstatic(&axes), 0.0f));
             return;
         }
 
@@ -179,7 +179,7 @@ namespace zgl::input {
             }
         }
 
-        zcl::array_copy(zcl::array_to_nonstatic(axes), zcl::array_to_nonstatic(state->gamepads[gamepad_index].axes));
+        zcl::array_copy(zcl::array_to_nonstatic(&axes), zcl::array_to_nonstatic(&state->gamepads[gamepad_index].axes));
     }
 
     zcl::t_array_rdonly<zcl::strs::t_code_pt> text_get_code_pts(const t_state *const state) {

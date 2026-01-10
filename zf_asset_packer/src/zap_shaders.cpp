@@ -95,7 +95,7 @@ zcl::t_b8 compile_shader(const zcl::strs::t_str_rdonly shader_file_path, const z
             break;
         }
 
-        zcl::ds::list_append_many_dynamic(&bin_list, zcl::array_slice(zcl::array_to_nonstatic(buf), 0, r), bin_arena);
+        zcl::ds::list_append_many_dynamic(&bin_list, zcl::array_slice(zcl::array_to_nonstatic(&buf), 0, r), bin_arena);
     }
 
     if (r != REPROC_EPIPE) {
