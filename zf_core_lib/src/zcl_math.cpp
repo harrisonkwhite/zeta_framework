@@ -10,10 +10,10 @@ namespace zcl::math {
         t_f32 max_bottom = rect_get_bottom(rects[0]);
 
         for (t_i32 i = 1; i < rects.len; i++) {
-            min_left = min(rect_get_left(rects[i]), min_left);
-            min_top = min(rect_get_top(rects[i]), min_top);
-            max_right = max(rect_get_right(rects[i]), max_right);
-            max_bottom = max(rect_get_bottom(rects[i]), max_bottom);
+            min_left = calc_min(rect_get_left(rects[i]), min_left);
+            min_top = calc_min(rect_get_top(rects[i]), min_top);
+            max_right = calc_max(rect_get_right(rects[i]), max_right);
+            max_bottom = calc_max(rect_get_bottom(rects[i]), max_bottom);
         }
 
         return rect_create_f32(min_left, min_top, max_right - min_left, max_bottom - min_top);
@@ -28,10 +28,10 @@ namespace zcl::math {
         t_i32 max_bottom = rect_get_bottom(rects[0]);
 
         for (t_i32 i = 1; i < rects.len; i++) {
-            min_left = min(rect_get_left(rects[i]), min_left);
-            min_top = min(rect_get_top(rects[i]), min_top);
-            max_right = max(rect_get_right(rects[i]), max_right);
-            max_bottom = max(rect_get_bottom(rects[i]), max_bottom);
+            min_left = calc_min(rect_get_left(rects[i]), min_left);
+            min_top = calc_min(rect_get_top(rects[i]), min_top);
+            max_right = calc_max(rect_get_right(rects[i]), max_right);
+            max_bottom = calc_max(rect_get_bottom(rects[i]), max_bottom);
         }
 
         return {min_left, min_top, max_right - min_left, max_bottom - min_top};
@@ -138,10 +138,10 @@ namespace zcl::math {
         for (t_i32 i = 0; i < poly.pts.len; i++) {
             const t_v2 pt = poly.pts[i];
 
-            min_left = min(pt.x, min_left);
-            min_top = min(pt.y, min_top);
-            max_right = max(pt.x, max_right);
-            max_bottom = max(pt.y, max_bottom);
+            min_left = calc_min(pt.x, min_left);
+            min_top = calc_min(pt.y, min_top);
+            max_right = calc_max(pt.x, max_right);
+            max_bottom = calc_max(pt.y, max_bottom);
         }
 
         return rect_create_f32(min_left, min_top, max_right - min_left, max_bottom - min_top);

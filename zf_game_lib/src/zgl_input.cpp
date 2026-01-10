@@ -150,7 +150,7 @@ namespace zgl::input {
             return 0.0f;
         }
 
-        return static_cast<zcl::t_f32>(zcl::sign(raw)) * ((raw_abs - dz) / (1.0f - dz));
+        return static_cast<zcl::t_f32>(zcl::calc_sign(raw)) * ((raw_abs - dz) / (1.0f - dz));
     }
 
     void gamepad_update_state(t_state *const state, const zcl::t_i32 gamepad_index, const zcl::t_b8 connected, const zcl::mem::t_static_bitset<ekm_gamepad_button_code_cnt> &btns_down, const zcl::t_static_array<zcl::t_f32, ekm_gamepad_axis_code_cnt> &axes) {

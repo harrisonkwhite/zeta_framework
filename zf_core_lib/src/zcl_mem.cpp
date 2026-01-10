@@ -60,7 +60,7 @@ namespace zcl::mem {
             const auto blockbased = &arena->type_data.blockbased;
 
             if (!blockbased->blocks_head) {
-                blockbased->blocks_head = arena_create_block(max(size, blockbased->block_min_size));
+                blockbased->blocks_head = arena_create_block(calc_max(size, blockbased->block_min_size));
                 blockbased->block_cur = blockbased->blocks_head;
                 return arena_push(arena, size, alignment);
             }
@@ -70,7 +70,7 @@ namespace zcl::mem {
 
             if (offs_next > blockbased->block_cur->buf_size) {
                 if (!blockbased->block_cur->next) {
-                    blockbased->block_cur->next = arena_create_block(max(size, blockbased->block_min_size));
+                    blockbased->block_cur->next = arena_create_block(calc_max(size, blockbased->block_min_size));
                 }
 
                 blockbased->block_cur = blockbased->block_cur->next;
@@ -210,8 +210,8 @@ namespace zcl::mem {
             const t_i32 begin_bit_index_rel = begin_bit_index - bit_offs;
             const t_i32 end_bit_index_rel = end_bit_index - bit_offs;
 
-            const t_i32 set_range_begin = max(begin_bit_index_rel, 0);
-            const t_i32 set_range_end = min(end_bit_index_rel, 8);
+            const t_i32 set_range_begin = calc_max(begin_bit_index_rel, 0);
+            const t_i32 set_range_end = calc_min(end_bit_index_rel, 8);
 
             bitset_get_bytes(bs)[i] |= byte_bitmask_create_range(set_range_begin, set_range_end);
         }

@@ -1,5 +1,3 @@
-- First up: Unicode input stuff. Then figure out from that whether to make input global.
-
 - Subnamespaces are kind of annoying for the user and don't add that much value I don't think.
 
 - Properly check correctness of packed asset binary files

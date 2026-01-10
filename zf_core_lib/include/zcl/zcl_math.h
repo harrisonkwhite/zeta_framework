@@ -513,13 +513,13 @@ namespace zcl::math {
     }
 
     constexpr t_rect_f clamp_within_container(const t_rect_f rect, const t_rect_f container) {
-        const t_v2 tl = {max(rect.x, container.x), max(rect.y, container.y)};
-        return {tl.x, tl.y, max(min(rect_get_right(rect), rect_get_right(container)) - tl.x, 0.0f), max(min(rect_get_bottom(rect), rect_get_bottom(container)) - tl.y, 0.0f)};
+        const t_v2 tl = {calc_max(rect.x, container.x), calc_max(rect.y, container.y)};
+        return {tl.x, tl.y, calc_max(calc_min(rect_get_right(rect), rect_get_right(container)) - tl.x, 0.0f), calc_max(calc_min(rect_get_bottom(rect), rect_get_bottom(container)) - tl.y, 0.0f)};
     }
 
     constexpr t_rect_i clamp_within_container(const t_rect_i rect, const t_rect_i container) {
-        const t_v2_i tl = {max(rect.x, container.x), max(rect.y, container.y)};
-        return {tl.x, tl.y, max(min(rect_get_right(rect), rect_get_right(container)) - tl.x, 0), max(min(rect_get_bottom(rect), rect_get_bottom(container)) - tl.y, 0)};
+        const t_v2_i tl = {calc_max(rect.x, container.x), calc_max(rect.y, container.y)};
+        return {tl.x, tl.y, calc_max(calc_min(rect_get_right(rect), rect_get_right(container)) - tl.x, 0), calc_max(calc_min(rect_get_bottom(rect), rect_get_bottom(container)) - tl.y, 0)};
     }
 
     // Returns a value between 0 and 1 indicating what percentage of the rectangle is within the container.

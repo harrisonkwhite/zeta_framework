@@ -197,12 +197,12 @@ namespace zcl {
         };
 
     template <c_numeric tp_type>
-    constexpr tp_type min(const tp_type a, const tp_type b) {
+    constexpr tp_type calc_min(const tp_type a, const tp_type b) {
         return a <= b ? a : b;
     }
 
     template <c_numeric tp_type>
-    constexpr tp_type max(const tp_type a, const tp_type b) {
+    constexpr tp_type calc_max(const tp_type a, const tp_type b) {
         return a >= b ? a : b;
     }
 
@@ -214,7 +214,7 @@ namespace zcl {
     }
 
     template <c_numeric tp_type>
-    constexpr tp_type abs(const tp_type n) {
+    constexpr tp_type calc_abs(const tp_type n) {
         return n < 0 ? -n : n;
     }
 
@@ -234,7 +234,7 @@ namespace zcl {
     }
 
     template <c_numeric tp_type>
-    constexpr t_i32 sign(const tp_type n) {
+    constexpr t_i32 calc_sign(const tp_type n) {
         if (n > 0) {
             return 1;
         } else if (n < 0) {
@@ -397,7 +397,7 @@ namespace zcl {
                 dest[i] = src[i];
             }
         } else {
-            const auto min_len = min(src.len, dest.len);
+            const auto min_len = calc_min(src.len, dest.len);
 
             for (t_i32 i = 0; i < min_len; i++) {
                 dest[i] = src[i];
