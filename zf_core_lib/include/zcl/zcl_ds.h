@@ -49,7 +49,7 @@ namespace zcl::ds {
         };
 
     template <typename tp_type>
-    concept c_list = requires { typename tp_type::t_elem; } && c_same<t_cvref_removed<tp_type>, t_list<typename tp_type::t_elem>>;
+    concept c_list = c_same<t_cvref_removed<tp_type>, t_list<typename tp_type::t_elem>>;
 
     template <c_list_elem tp_elem_type>
     t_list<tp_elem_type> list_create(const t_i32 cap, mem::t_arena *const arena, const t_i32 len = 0) {
@@ -210,8 +210,7 @@ namespace zcl::ds {
     };
 
     template <typename tp_type>
-    concept c_kv_store_block = requires { typename tp_type::t_key; typename tp_type::t_value; }
-        && c_same<t_cvref_removed<tp_type>, t_kv_store_block<typename tp_type::t_key, typename tp_type::t_value>>;
+    concept c_kv_store_block = c_same<t_cvref_removed<tp_type>, t_kv_store_block<typename tp_type::t_key, typename tp_type::t_value>>;
 
     template <c_simple tp_key_type, c_simple tp_value_type>
     struct t_kv_store {
@@ -229,8 +228,7 @@ namespace zcl::ds {
     };
 
     template <typename tp_type>
-    concept c_kv_store = requires { typename tp_type::t_key; typename tp_type::t_value; }
-        && c_same<t_cvref_removed<tp_type>, t_kv_store<typename tp_type::t_key, typename tp_type::t_value>>;
+    concept c_kv_store = c_same<t_cvref_removed<tp_type>, t_kv_store<typename tp_type::t_key, typename tp_type::t_value>>;
 
     enum t_kv_store_put_result : t_i32 {
         ek_kv_store_put_result_updated,
@@ -428,6 +426,9 @@ namespace zcl::ds {
 
     template <c_simple tp_key_type, c_simple tp_value_type>
     struct t_hash_map {
+        using t_key = tp_key_type;
+        using t_value = tp_value_type;
+
         t_hash_func<tp_key_type> hash_func;
 
         t_array_mut<t_i32> immediate_indexes;
@@ -435,6 +436,14 @@ namespace zcl::ds {
     };
 
     constexpr t_i32 k_hash_map_cap_default = 32;
+
+    template <typename tp_type>
+    concept c_hash_map = c_same<t_cvref_removed<tp_type>, t_hash_map<typename tp_type::t_key, typename tp_type::t_value>>;
+
+    enum t_hash_map_put_result : t_i32 {
+        ek_hash_map_put_result_added,
+        ek_hash_map_put_result_updated
+    };
 
     // The provided hash function has to map a key to an integer 0 or higher. The given memory arena will be saved and used for allocating new memory for entries when needed.
     template <c_simple tp_key_type, c_simple tp_value_type>
@@ -449,18 +458,18 @@ namespace zcl::ds {
         };
     }
 
-    template <c_simple tp_key_type, c_simple tp_value_type>
-    t_i32 hash_map_get_cap(const t_hash_map<tp_key_type, tp_value_type> *const hash_map) {
+    template <c_hash_map tp_hash_map_type>
+    t_i32 hash_map_get_cap(const tp_hash_map_type *const hash_map) {
         return hash_map->immediate_indexes.len;
     }
 
-    template <c_simple tp_key_type, c_simple tp_value_type>
-    t_i32 hash_map_get_entry_count(const t_hash_map<tp_key_type, tp_value_type> *const hash_map) {
+    template <c_hash_map tp_hash_map_type>
+    t_i32 hash_map_get_entry_count(const tp_hash_map_type *const hash_map) {
         return hash_map->kv_store.pair_cnt;
     }
 
-    template <c_simple tp_type>
-    t_i32 hash_map_key_to_hash_index(const tp_type &key, const t_hash_func<tp_type> hash_func, const t_i32 cap) {
+    template <c_simple tp_key_type>
+    t_i32 hash_map_key_to_hash_index(const tp_key_type &key, const t_hash_func<tp_key_type> hash_func, const t_i32 cap) {
         ZF_ASSERT(cap > 0);
 
         const t_i32 value = hash_func(key);
@@ -469,34 +478,29 @@ namespace zcl::ds {
         return value % cap;
     }
 
-    template <c_simple tp_key_type, c_simple tp_value_type>
-    [[nodiscard]] t_b8 hash_map_find(const t_hash_map<tp_key_type, tp_value_type> *const hash_map, const tp_key_type &key, tp_value_type **const o_val) {
+    template <c_hash_map tp_hash_map_type>
+    [[nodiscard]] t_b8 hash_map_find(const tp_hash_map_type *const hash_map, const typename tp_hash_map_type::t_key &key, typename tp_hash_map_type::t_value **const o_val) {
         const t_i32 hash_index = hash_map_key_to_hash_index(key, hash_map->hash_func, hash_map_get_cap(hash_map));
         return kv_store_find_in_chain(&hash_map->kv_store, hash_map->immediate_indexes[hash_index], key, o_val);
     }
 
-    enum t_hash_map_put_result : t_i32 {
-        ek_hash_map_put_result_added,
-        ek_hash_map_put_result_updated
-    };
-
     // Try adding the key-value pair to the hash map or just updating the value if the key is already present.
-    template <c_simple tp_key_type, c_simple tp_value_type>
-    t_hash_map_put_result hash_map_put(t_hash_map<tp_key_type, tp_value_type> *const hash_map, const tp_key_type &key, const tp_value_type &value) {
+    template <c_hash_map tp_hash_map_type>
+    t_hash_map_put_result hash_map_put(tp_hash_map_type *const hash_map, const typename tp_hash_map_type::t_key &key, const typename tp_hash_map_type::t_value &value) {
         const t_i32 hash_index = hash_map_key_to_hash_index(key, hash_map->hash_func, hash_map_get_cap(hash_map));
         return kv_store_put_in_chain(&hash_map->kv_store, &hash_map->immediate_indexes[hash_index], key, value) == ek_kv_store_put_result_updated ? ek_hash_map_put_result_updated : ek_hash_map_put_result_added;
     }
 
     // Returns true iff an entry with the key was found and removed.
-    template <c_simple tp_key_type, c_simple tp_value_type>
-    t_b8 hash_map_remove(t_hash_map<tp_key_type, tp_value_type> *const hash_map, const tp_key_type &key) {
+    template <c_hash_map tp_hash_map_type>
+    t_b8 hash_map_remove(tp_hash_map_type *const hash_map, const typename tp_hash_map_type::t_key &key) {
         const t_i32 hash_index = hash_map_key_to_hash_index(key, hash_map->hash_func, hash_map_get_cap(hash_map));
         return kv_store_remove_in_chain(&hash_map->kv_store, hash_map->immediate_indexes[hash_index], key);
     }
 
     // Loads all key-value pairs into the given PRE-ALLOCATED arrays.
-    template <c_simple tp_key_type, c_simple tp_value_type>
-    void hash_map_load_entries(const t_hash_map<tp_key_type, tp_value_type> *const hash_map, const t_array_mut<tp_key_type> keys, const t_array_mut<tp_value_type> values) {
+    template <c_hash_map tp_hash_map_type>
+    void hash_map_load_entries(const tp_hash_map_type *const hash_map, const t_array_mut<typename tp_hash_map_type::t_key> keys, const t_array_mut<typename tp_hash_map_type::t_value> values) {
         ZF_ASSERT(keys.len >= hash_map_get_entry_count(hash_map) && values.len >= hash_map_get_entry_count(hash_map));
 
         t_i32 loaded_cnt = 0;
@@ -506,16 +510,16 @@ namespace zcl::ds {
         }
     }
 
-    // Allocates the given arrays with the memory arena and loads key-value pairs into them.
-    template <c_simple tp_key_type, c_simple tp_value_type>
-    void hash_map_load_entries(const t_hash_map<tp_key_type, tp_value_type> *const hash_map, mem::t_arena *const arena, t_array_mut<tp_key_type> *const o_keys, t_array_mut<tp_value_type> *const o_values) {
-        *o_keys = mem::arena_push_array<tp_key_type>(arena, hash_map_get_entry_count(hash_map));
-        *o_values = mem::arena_push_array<tp_value_type>(arena, hash_map_get_entry_count(hash_map));
+    // Allocates the given arrays with the arena and loads key-value pairs into them.
+    template <c_hash_map tp_hash_map_type>
+    void hash_map_load_entries(const tp_hash_map_type *const hash_map, mem::t_arena *const arena, t_array_mut<typename tp_hash_map_type::t_key> *const o_keys, t_array_mut<typename tp_hash_map_type::t_value> *const o_values) {
+        *o_keys = mem::arena_push_array<typename tp_hash_map_type::t_key>(arena, hash_map_get_entry_count(hash_map));
+        *o_values = mem::arena_push_array<typename tp_hash_map_type::t_value>(arena, hash_map_get_entry_count(hash_map));
         return hash_map_load_entries(hash_map, *o_keys, *o_values);
     }
 
-    template <c_simple tp_key_type, c_simple tp_value_type>
-    [[nodiscard]] t_b8 hash_map_serialize(const t_hash_map<tp_key_type, tp_value_type> *const hm, io::t_stream *const stream, mem::t_arena *const temp_arena) {
+    template <c_hash_map tp_hash_map_type>
+    [[nodiscard]] t_b8 hash_map_serialize(const tp_hash_map_type *const hm, io::t_stream *const stream, mem::t_arena *const temp_arena) {
         if (!io::stream_write_item(stream, hash_map_get_cap(hm))) {
             return false;
         }
@@ -524,8 +528,8 @@ namespace zcl::ds {
             return false;
         }
 
-        t_array_mut<tp_key_type> keys;
-        t_array_mut<tp_value_type> values;
+        t_array_mut<typename tp_hash_map_type::t_key> keys;
+        t_array_mut<typename tp_hash_map_type::t_value> values;
         hash_map_load_entries(hm, temp_arena, &keys, &values);
 
         if (!io::stream_write_items_of_array(stream, keys)) {
@@ -539,8 +543,8 @@ namespace zcl::ds {
         return true;
     }
 
-    template <c_simple tp_key_type, c_simple tp_value_type>
-    [[nodiscard]] t_b8 hash_map_deserialize(io::t_stream *const stream, mem::t_arena *const hm_arena, const t_hash_func<tp_key_type> hm_hash_func, mem::t_arena *const temp_arena, t_hash_map<tp_key_type, tp_value_type> *const o_hm, const t_comparator_bin<tp_key_type> hm_key_comparator = k_comparator_bin_default<tp_key_type>) {
+    template <c_hash_map tp_hash_map_type>
+    [[nodiscard]] t_b8 hash_map_deserialize(io::t_stream *const stream, mem::t_arena *const hm_arena, const t_hash_func<typename tp_hash_map_type::t_key> hm_hash_func, mem::t_arena *const temp_arena, tp_hash_map_type *const o_hm, const t_comparator_bin<typename tp_hash_map_type::t_key> hm_key_comparator = k_comparator_bin_default<typename tp_hash_map_type::t_key>) {
         t_i32 cap;
 
         if (!io::stream_read_item(stream, &cap)) {
@@ -553,15 +557,15 @@ namespace zcl::ds {
             return false;
         }
 
-        *o_hm = hash_map_create<tp_key_type, tp_value_type>(hm_hash_func, hm_arena, cap, hm_key_comparator);
+        *o_hm = hash_map_create<typename tp_hash_map_type::t_key, typename tp_hash_map_type::t_value>(hm_hash_func, hm_arena, cap, hm_key_comparator);
 
-        const auto keys = mem::arena_push_array<tp_key_type>(temp_arena, entry_cnt);
+        const auto keys = mem::arena_push_array<typename tp_hash_map_type::t_key>(temp_arena, entry_cnt);
 
         if (!io::stream_read_items_into_array(stream, keys, entry_cnt)) {
             return false;
         }
 
-        const auto values = mem::arena_push_array<tp_value_type>(temp_arena, entry_cnt);
+        const auto values = mem::arena_push_array<typename tp_hash_map_type::t_value>(temp_arena, entry_cnt);
 
         if (!io::stream_read_items_into_array(stream, values, entry_cnt)) {
             return false;
