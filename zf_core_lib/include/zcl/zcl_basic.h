@@ -166,7 +166,9 @@ namespace zcl {
     concept c_same = std::same_as<tp_type_a, tp_type_b>;
 
     template <typename tp_type>
-    concept c_cstr = c_same<std::remove_cv_t<std::remove_pointer_t<std::remove_extent_t<std::remove_reference_t<tp_type>>>>, char>;
+    concept c_cstr = c_same<t_cvref_removed<tp_type>, char *>
+        || c_same<t_cvref_removed<tp_type>, const char *>
+        || c_same<t_cvref_removed<tp_type>, char[]>;
 
     // Return true iff a and b are equal.
     template <c_simple tp_type>

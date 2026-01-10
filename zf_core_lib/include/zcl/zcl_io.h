@@ -305,7 +305,12 @@ namespace zcl::io {
     };
 
     inline t_bool_format format_bool(const t_b8 value) { return {value}; }
-    inline t_bool_format format_default(const t_b8 value) { return {value}; }
+
+    template <typename tp_type>
+        requires c_same<t_cvref_removed<tp_type>, t_b8>
+    inline t_bool_format format_default(const tp_type value) {
+        return {value};
+    }
 
     inline t_b8 print_type(t_stream *const stream, const t_bool_format format) {
         const strs::t_str_rdonly true_str = ZF_STR_LITERAL("true");
