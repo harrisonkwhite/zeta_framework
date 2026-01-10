@@ -7,7 +7,7 @@ namespace zcl::ds {
     // @section: Lists
 
     template <typename tp_type>
-    concept c_list_elem = c_simple<tp_type> && !c_const<tp_type>;
+    concept c_list_elem = c_simple<tp_type> && c_same<tp_type, t_cvref_removed<tp_type>>;
 
     template <c_list_elem tp_elem_type>
     struct t_list {
@@ -49,7 +49,25 @@ namespace zcl::ds {
         };
 
     template <typename tp_type>
-    concept c_list = c_same<t_cvref_removed<tp_type>, t_list<typename tp_type::t_elem>>;
+    concept c_list_nonstatic = c_same<t_cvref_removed<tp_type>, t_list<typename tp_type::t_elem>>;
+
+    namespace detail {
+        template <typename tp_type>
+        struct t_is_list_static {
+            static constexpr t_b8 k_value = false;
+        };
+
+        template <c_list_elem tp_elem_type, t_i32 tp_cap>
+        struct t_is_list_static<t_static_list<tp_elem_type, tp_cap>> {
+            static constexpr t_b8 k_value = true;
+        };
+    }
+
+    template <typename tp_type>
+    concept c_list_static = detail::t_is_list_static<t_cvref_removed<tp_type>>::k_value;
+
+    template <typename tp_type>
+    concept c_list = c_list_nonstatic<tp_type> || c_list_static<tp_type>;
 
     template <c_list_elem tp_elem_type>
     t_list<tp_elem_type> list_create(const t_i32 cap, mem::t_arena *const arena, const t_i32 len = 0) {
@@ -62,12 +80,22 @@ namespace zcl::ds {
         return list->backing_arr.len;
     }
 
-    template <c_list_elem tp_elem_type>
-    constexpr t_array_mut<tp_elem_type> list_to_array(const t_list<tp_elem_type> *const list) {
+    template <c_list_nonstatic tp_list_type>
+    constexpr t_array_mut<typename tp_list_type::t_elem> list_to_array(const tp_list_type *const list) {
         return array_slice(list->backing_arr, 0, list->len);
     }
 
-    template <c_list tp_list_type>
+    template <c_list_static tp_list_type>
+    constexpr t_array_mut<typename tp_list_type::t_elem> list_to_array(tp_list_type *const list) {
+        return array_slice(list->backing_arr, 0, list->len);
+    }
+
+    template <c_list_static tp_list_type>
+    constexpr t_array_rdonly<typename tp_list_type::t_elem> list_to_array(const tp_list_type *const list) {
+        return array_slice(list->backing_arr, 0, list->len);
+    }
+
+    template <c_list_nonstatic tp_list_type>
     void list_extend(tp_list_type *const list, mem::t_arena *const arena, const t_list_extension_cap_calculator cap_calculator = k_list_extension_cap_calculator_default) {
         ZF_ASSERT(cap_calculator);
 
@@ -80,7 +108,7 @@ namespace zcl::ds {
         *list = {new_backing_arr, list->len};
     }
 
-    template <c_list tp_list_type>
+    template <c_list_nonstatic tp_list_type>
     void list_extend_to_fit(tp_list_type *const list, const t_i32 min_cap, mem::t_arena *const arena, const t_list_extension_cap_calculator cap_calculator = k_list_extension_cap_calculator_default) {
         ZF_ASSERT(min_cap > list_get_cap(list));
         ZF_ASSERT(cap_calculator);
@@ -112,7 +140,7 @@ namespace zcl::ds {
         return &(*list)[list->len - 1];
     }
 
-    template <c_list tp_list_type>
+    template <c_list_nonstatic tp_list_type>
     typename tp_list_type::t_elem *list_append_dynamic(tp_list_type *const list, const typename tp_list_type::t_elem &value, mem::t_arena *const extension_arena, const t_list_extension_cap_calculator extension_cap_calculator = k_list_extension_cap_calculator_default) {
         if (list->len == list_get_cap(list)) {
             list_extend(list, extension_arena, extension_cap_calculator);
@@ -130,7 +158,7 @@ namespace zcl::ds {
         return array_slice(list->backing_arr, list->len - values.len, list->len);
     }
 
-    template <c_list tp_list_type>
+    template <c_list_nonstatic tp_list_type>
     t_array_mut<typename tp_list_type::t_elem> list_append_many_dynamic(tp_list_type *const list, const t_array_rdonly<typename tp_list_type::t_elem> values, mem::t_arena *const extension_arena, const t_list_extension_cap_calculator extension_cap_calculator = k_list_extension_cap_calculator_default) {
         const auto min_cap_needed = list->len + values.len;
 
@@ -157,7 +185,7 @@ namespace zcl::ds {
         return &(*list)[index];
     }
 
-    template <c_list tp_list_type>
+    template <c_list_nonstatic tp_list_type>
     typename tp_list_type::t_elem *list_insert_at_dynamic(tp_list_type *const list, const t_i32 index, const typename tp_list_type::t_elem &value, mem::t_arena *const extension_arena, const t_list_extension_cap_calculator extension_cap_calculator = k_list_extension_cap_calculator_default) {
         if (list->len == list_get_cap(list)) {
             list_extend(list, extension_arena, extension_cap_calculator);
@@ -196,7 +224,10 @@ namespace zcl::ds {
     // ============================================================
     // @section: Key-Value Pair Stores
 
-    template <c_simple tp_key_type, c_simple tp_value_type>
+    template <typename tp_type> concept c_kv_store_key = c_simple<tp_type> && c_same<tp_type, t_cvref_removed<tp_type>>;
+    template <typename tp_type> concept c_kv_store_value = c_simple<tp_type> && c_same<tp_type, t_cvref_removed<tp_type>>;
+
+    template <c_kv_store_key tp_key_type, c_kv_store_value tp_value_type>
     struct t_kv_store_block {
         using t_key = tp_key_type;
         using t_value = tp_value_type;
@@ -212,7 +243,7 @@ namespace zcl::ds {
     template <typename tp_type>
     concept c_kv_store_block = c_same<t_cvref_removed<tp_type>, t_kv_store_block<typename tp_type::t_key, typename tp_type::t_value>>;
 
-    template <c_simple tp_key_type, c_simple tp_value_type>
+    template <c_kv_store_key tp_key_type, c_kv_store_value tp_value_type>
     struct t_kv_store {
         using t_key = tp_key_type;
         using t_value = tp_value_type;
@@ -235,7 +266,7 @@ namespace zcl::ds {
         ek_kv_store_put_result_added
     };
 
-    template <c_simple tp_key_type, c_simple tp_value_type>
+    template <c_kv_store_key tp_key_type, c_kv_store_value tp_value_type>
     t_kv_store_block<tp_key_type, tp_value_type> *kv_store_create_block(const t_i32 cap, mem::t_arena *const arena) {
         const auto block = mem::arena_push_item<t_kv_store_block<tp_key_type, tp_value_type>>(arena);
 
@@ -405,6 +436,9 @@ namespace zcl::ds {
     // ============================================================
     // @section: Hash Maps
 
+    template <typename tp_type> concept c_hash_map_key = c_simple<tp_type> && c_same<tp_type, t_cvref_removed<tp_type>>;
+    template <typename tp_type> concept c_hash_map_value = c_simple<tp_type> && c_same<tp_type, t_cvref_removed<tp_type>>;
+
     template <c_simple tp_type>
     using t_hash_func = t_i32 (*)(const tp_type &key);
 
@@ -424,7 +458,7 @@ namespace zcl::ds {
             return static_cast<t_i32>(hash & 0x7FFFFFFFull);
         };
 
-    template <c_simple tp_key_type, c_simple tp_value_type>
+    template <c_hash_map_key tp_key_type, c_hash_map_value tp_value_type>
     struct t_hash_map {
         using t_key = tp_key_type;
         using t_value = tp_value_type;
@@ -446,7 +480,7 @@ namespace zcl::ds {
     };
 
     // The provided hash function has to map a key to an integer 0 or higher. The given memory arena will be saved and used for allocating new memory for entries when needed.
-    template <c_simple tp_key_type, c_simple tp_value_type>
+    template <c_hash_map_key tp_key_type, c_hash_map_value tp_value_type>
     t_hash_map<tp_key_type, tp_value_type> hash_map_create(const t_hash_func<tp_key_type> hash_func, mem::t_arena *const arena, const t_i32 cap = k_hash_map_cap_default, const t_comparator_bin<tp_key_type> key_comparator = k_comparator_bin_default<tp_key_type>) {
         const auto immediate_indexes = mem::arena_push_array<t_i32>(arena, cap);
         array_set_all_to(immediate_indexes, -1);
@@ -468,7 +502,7 @@ namespace zcl::ds {
         return hash_map->kv_store.pair_cnt;
     }
 
-    template <c_simple tp_key_type>
+    template <c_hash_map_key tp_key_type>
     t_i32 hash_map_key_to_hash_index(const tp_key_type &key, const t_hash_func<tp_key_type> hash_func, const t_i32 cap) {
         ZF_ASSERT(cap > 0);
 
