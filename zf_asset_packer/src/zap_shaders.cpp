@@ -85,7 +85,7 @@ zcl::t_b8 compile_shader(const zcl::strs::t_str_rdonly shader_file_path, const z
         return false;
     }
 
-    zcl::ds::t_list_mut<zcl::t_u8> bin_list = {};
+    zcl::ds::t_list<zcl::t_u8> bin_list = {};
 
     while (true) {
         zcl::t_static_array<zcl::t_u8, 4096> buf;

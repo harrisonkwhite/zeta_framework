@@ -132,8 +132,10 @@ namespace zcl {
     using t_uintptr = uintptr_t;
     static_assert(sizeof(t_uintptr) == 8);
 
-    template <typename tp_type>
-    using t_cvref_removed = std::remove_cvref<tp_type>::type;
+    template <typename tp_type> using t_const_removed = std::remove_const<tp_type>::type;
+    template <typename tp_type> using t_volatile_removed = std::remove_volatile<tp_type>::type;
+    template <typename tp_type> using t_ref_removed = std::remove_reference<tp_type>::type;
+    template <typename tp_type> using t_cvref_removed = std::remove_cvref<tp_type>::type;
 
     // "Simple" meaning that it's safe to use with arenas and C-style memory operations.
     template <typename tp_type>
