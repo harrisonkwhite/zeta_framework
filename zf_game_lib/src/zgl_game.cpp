@@ -66,61 +66,63 @@ namespace zgl::game {
 
         // @todo: Need to properly handle overflow cases!
 
+        zcl::t_i32 frame_cnt = 0;
         zcl::t_f64 frame_time_last = 0.0;
         zcl::t_f64 frame_dur_accum = 0.0;
-        zcl::t_i32 frame_cnt = 0;
-
         zcl::t_f64 fps_accum = 0.0;
         zcl::t_f64 fps_avg = 0.0;
 
         zcl::t_i32 tick_cnt = 0;
+        zcl::t_f64 tick_time_last = 0.0;
         zcl::t_f64 tps_accum = 0.0;
         zcl::t_f64 tps_avg = 0.0;
 
         while (!platform::window_check_close_requested()) {
             platform::poll_os_events(input_state);
 
+            const zcl::t_f64 frame_time = platform::get_time();
+
             if (frame_cnt > 0) {
-                const zcl::t_f64 frame_time = platform::get_time();
                 const zcl::t_f64 frame_time_delta = frame_time - frame_time_last;
-
                 frame_dur_accum += frame_time_delta;
-                frame_time_last = frame_time;
-
                 fps_accum += 1.0 / frame_time_delta;
                 fps_avg = fps_accum / frame_cnt;
 
                 const zcl::t_f64 targ_tick_interval = 1.0 / g_module_state.tps_targ;
 
-                // @cleanup
                 if (frame_dur_accum >= targ_tick_interval) {
-                    static_assert(false, "Wrong results!");
-                    const zcl::t_i32 num_ticks_to_proc = static_cast<zcl::t_i32>(frame_dur_accum / targ_tick_interval);
-                    tick_cnt += num_ticks_to_proc;
-                    tps_accum += static_cast<zcl::t_f64>(num_ticks_to_proc) / frame_dur_accum;
-                    tps_avg = tps_accum / tick_cnt;
-                }
+                    const zcl::t_f64 tick_time = platform::get_time();
+                    const zcl::t_i32 ticks_to_proc_cnt = static_cast<zcl::t_i32>(frame_dur_accum / targ_tick_interval);
 
-                // Once enough time has passed (i.e. the time accumulator has reached the target tick interval), run at least a single tick.
-                while (frame_dur_accum >= targ_tick_interval) {
-                    zcl::mem::arena_rewind(&temp_arena);
+                    if (tick_cnt > 0) {
+                        const zcl::t_f64 tick_time_delta = tick_time - tick_time_last;
+                        tps_accum += static_cast<zcl::t_f64>(ticks_to_proc_cnt) / tick_time_delta;
+                        tps_avg = tps_accum / tick_cnt;
+                    }
 
-                    audio::proc_finished_sounds();
+                    do {
+                        zcl::mem::arena_rewind(&temp_arena);
 
-                    config.tick_func({
-                        .perm_arena = &perm_arena,
-                        .temp_arena = &temp_arena,
-                        .input_state = input_state,
-                        .perm_gfx_resource_group = perm_gfx_resource_group,
-                        .rng = rng,
-                        .fps = fps_avg,
-                        .tps = tps_avg,
-                        .user_mem = user_mem,
-                    });
+                        audio::proc_finished_sounds();
 
-                    input::clear_events(input_state);
+                        config.tick_func({
+                            .perm_arena = &perm_arena,
+                            .temp_arena = &temp_arena,
+                            .input_state = input_state,
+                            .perm_gfx_resource_group = perm_gfx_resource_group,
+                            .rng = rng,
+                            .fps = fps_avg,
+                            .tps = tps_avg,
+                            .user_mem = user_mem,
+                        });
 
-                    frame_dur_accum -= targ_tick_interval;
+                        input::clear_events(input_state);
+
+                        frame_dur_accum -= targ_tick_interval;
+                    } while (frame_dur_accum >= targ_tick_interval);
+
+                    tick_cnt += ticks_to_proc_cnt;
+                    tick_time_last = tick_time;
                 }
             }
 
@@ -145,6 +147,7 @@ namespace zgl::game {
             }
 
             frame_cnt++;
+            frame_time_last = frame_time;
         }
     }
 
