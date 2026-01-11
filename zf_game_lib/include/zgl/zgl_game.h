@@ -30,6 +30,7 @@ namespace zgl::game {
         zcl::rand::t_rng *rng;
 
         zcl::t_f64 fps;
+        zcl::t_f64 tps;
 
         void *user_mem;
     };

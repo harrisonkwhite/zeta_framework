@@ -63,58 +63,58 @@ namespace zgl::game {
         //
         // Main Loop
         //
-
-        // @todo: Need to properly handle overflow cases!
-
-        zcl::t_i32 frame_cnt = 0;
+        zcl::t_b8 frame_first = true;
         zcl::t_f64 frame_time_last = 0.0;
-        zcl::t_f64 frame_dur_accum = 0.0;
+        zcl::t_f64 frame_time_accum = 0.0;
 
         zcl::t_f64 fps = 0.0;
-        zcl::t_i32 fps_frame_cnt = 0;
         zcl::t_f64 fps_time_accum = 0.0;
+        zcl::t_i32 fps_frame_cnt_accum = 0;
+        constexpr zcl::t_f64 k_fps_refresh_time = 1.0;
 
         while (!platform::window_check_close_requested()) {
             platform::poll_os_events(input_state);
 
             const zcl::t_f64 frame_time = platform::get_time();
 
-            if (frame_cnt > 0) {
+            if (!frame_first) {
                 const zcl::t_f64 frame_time_delta = frame_time - frame_time_last;
-                frame_dur_accum += frame_time_delta;
+
+                frame_time_accum += frame_time_delta;
 
                 fps_time_accum += frame_time_delta;
-                fps = fps_frame_cnt / fps_time_accum;
+                fps_frame_cnt_accum++;
 
-                if (fps_time_accum >= 1.0) {
-                    fps_frame_cnt = 0;
+                if (fps_time_accum >= k_fps_refresh_time) {
+                    fps = fps_frame_cnt_accum / fps_time_accum;
                     fps_time_accum = 0.0;
+                    fps_frame_cnt_accum = 0;
                 }
 
-                const zcl::t_f64 targ_tick_interval = 1.0 / g_module_state.tps_targ;
+                const zcl::t_f64 tick_targ_interval = 1.0 / g_module_state.tps_targ;
 
-                while (frame_dur_accum >= targ_tick_interval) {
-                    zcl::mem::arena_rewind(&temp_arena);
+                if (frame_time_accum >= tick_targ_interval) {
+                    do {
+                        zcl::mem::arena_rewind(&temp_arena);
 
-                    audio::proc_finished_sounds();
+                        audio::proc_finished_sounds();
 
-                    config.tick_func({
-                        .perm_arena = &perm_arena,
-                        .temp_arena = &temp_arena,
-                        .input_state = input_state,
-                        .perm_gfx_resource_group = perm_gfx_resource_group,
-                        .rng = rng,
-                        .fps = fps,
-                        .user_mem = user_mem,
-                    });
+                        config.tick_func({
+                            .perm_arena = &perm_arena,
+                            .temp_arena = &temp_arena,
+                            .input_state = input_state,
+                            .perm_gfx_resource_group = perm_gfx_resource_group,
+                            .rng = rng,
+                            .fps = fps,
+                            .user_mem = user_mem,
+                        });
 
-                    input::clear_events(input_state);
+                        input::clear_events(input_state);
 
-                    frame_dur_accum -= targ_tick_interval;
+                        frame_time_accum -= tick_targ_interval;
+                    } while (frame_time_accum >= tick_targ_interval);
                 }
             }
-
-            zcl::mem::arena_rewind(&temp_arena);
 
             gfx::t_frame_context *const frame_context = gfx::frame_begin(frame_basis, &temp_arena);
 
@@ -129,14 +129,12 @@ namespace zgl::game {
 
             gfx::frame_end(frame_context);
 
-            if (frame_cnt == 0) {
+            if (frame_first) {
                 platform::window_show();
+                frame_first = false;
             }
 
-            frame_cnt++;
             frame_time_last = frame_time;
-
-            fps_frame_cnt++;
         }
     }
 
