@@ -94,7 +94,11 @@ namespace zgl::platform {
 
     zcl::t_f64 get_time() {
         ZF_ASSERT(g_module_state.active);
-        return glfwGetTime();
+
+        const zcl::t_f64 result = glfwGetTime();
+        ZF_REQUIRE(result != 0.0);
+
+        return result;
     }
 
     static zcl::t_i32 f_to_glfw_key(const input::t_key_code key_code) {

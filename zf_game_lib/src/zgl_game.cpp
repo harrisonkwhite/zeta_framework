@@ -46,6 +46,8 @@ namespace zgl::game {
 
         zcl::rand::t_rng *const rng = zcl::rand::rng_create(0, &perm_arena); // @todo: Proper seed!
 
+        zcl::mem::arena_rewind(&temp_arena);
+
         void *const user_mem = config.user_mem_size > 0 ? zcl::mem::arena_push(&perm_arena, config.user_mem_size, config.user_mem_alignment) : nullptr;
 
         config.init_func({
@@ -65,7 +67,8 @@ namespace zgl::game {
         //
         zcl::t_b8 frame_first = true;
         zcl::t_f64 frame_time_last = 0.0;
-        zcl::t_f64 frame_time_accum = 0.0;
+
+        zcl::t_f64 tick_interval_accum = 0.0;
 
         zcl::t_f64 fps = 0.0;
         zcl::t_f64 fps_time_accum = 0.0;
@@ -77,44 +80,51 @@ namespace zgl::game {
 
             const zcl::t_f64 frame_time = platform::get_time();
 
+            const zcl::t_f64 tick_interval_targ = 1.0 / g_module_state.tps_targ;
+            const zcl::t_f64 tick_interval_limit = tick_interval_targ * 8.0;
+
             if (!frame_first) {
-                const zcl::t_f64 frame_time_delta = frame_time - frame_time_last;
+                const zcl::t_f64 frame_time_delta_raw = frame_time - frame_time_last;
+                constexpr zcl::t_f64 k_frame_time_delta_limit = 1.0;
+                const zcl::t_f64 frame_time_delta_capped = zcl::calc_min(frame_time_delta_raw, k_frame_time_delta_limit);
 
-                frame_time_accum += frame_time_delta;
+                tick_interval_accum += frame_time_delta_capped;
 
-                fps_time_accum += frame_time_delta;
+                if (tick_interval_accum > tick_interval_limit) {
+                    tick_interval_accum = tick_interval_limit;
+                }
+
+                fps_time_accum += frame_time_delta_capped;
                 fps_frame_cnt_accum++;
 
                 if (fps_time_accum >= k_fps_refresh_time) {
                     fps = fps_frame_cnt_accum / fps_time_accum;
-                    fps_time_accum = 0.0;
+                    fps_time_accum -= k_fps_refresh_time;
                     fps_frame_cnt_accum = 0;
                 }
 
-                const zcl::t_f64 tick_targ_interval = 1.0 / g_module_state.tps_targ;
+                while (tick_interval_accum >= tick_interval_targ) {
+                    zcl::mem::arena_rewind(&temp_arena);
 
-                if (frame_time_accum >= tick_targ_interval) {
-                    do {
-                        zcl::mem::arena_rewind(&temp_arena);
+                    audio::proc_finished_sounds();
 
-                        audio::proc_finished_sounds();
+                    config.tick_func({
+                        .perm_arena = &perm_arena,
+                        .temp_arena = &temp_arena,
+                        .input_state = input_state,
+                        .perm_gfx_resource_group = perm_gfx_resource_group,
+                        .rng = rng,
+                        .fps = fps,
+                        .user_mem = user_mem,
+                    });
 
-                        config.tick_func({
-                            .perm_arena = &perm_arena,
-                            .temp_arena = &temp_arena,
-                            .input_state = input_state,
-                            .perm_gfx_resource_group = perm_gfx_resource_group,
-                            .rng = rng,
-                            .fps = fps,
-                            .user_mem = user_mem,
-                        });
+                    input::clear_events(input_state);
 
-                        input::clear_events(input_state);
-
-                        frame_time_accum -= tick_targ_interval;
-                    } while (frame_time_accum >= tick_targ_interval);
+                    tick_interval_accum -= tick_interval_targ;
                 }
             }
+
+            zcl::mem::arena_rewind(&temp_arena);
 
             gfx::t_frame_context *const frame_context = gfx::frame_begin(frame_basis, &temp_arena);
 
