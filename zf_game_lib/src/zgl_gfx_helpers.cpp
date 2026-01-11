@@ -106,7 +106,7 @@ namespace zgl::gfx {
         };
     }
 
-    static zcl::t_array_mut<zcl::math::t_v2> get_str_chr_render_positions(const zcl::strs::t_str_rdonly str, const zcl::gfx::t_font_arrangement &font_arrangement, const zcl::math::t_v2 pos, const zcl::math::t_v2 alignment, zcl::mem::t_arena *const arena) {
+    static zcl::t_array_mut<zcl::math::t_v2> calc_str_chr_render_positions(const zcl::strs::t_str_rdonly str, const zcl::gfx::t_font_arrangement &font_arrangement, const zcl::math::t_v2 pos, const zcl::math::t_v2 alignment, zcl::mem::t_arena *const arena) {
         ZF_ASSERT(zcl::strs::check_valid_utf8(str));
         ZF_ASSERT(alignment_check_valid(alignment));
 
@@ -210,7 +210,7 @@ namespace zgl::gfx {
             return;
         }
 
-        const zcl::t_array_mut<zcl::math::t_v2> chr_positions = get_str_chr_render_positions(str, font.arrangement, pos, alignment, temp_arena);
+        const zcl::t_array_mut<zcl::math::t_v2> chr_positions = calc_str_chr_render_positions(str, font.arrangement, pos, alignment, temp_arena);
 
         zcl::t_i32 chr_index = 0;
 

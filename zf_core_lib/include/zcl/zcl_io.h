@@ -37,6 +37,7 @@ namespace zcl::io {
         t_stream_mode mode;
     };
 
+    // @todo: Not sure how I feel about this function naming.
     inline t_stream mem_stream_create(const t_array_mut<t_u8> bytes, const t_stream_mode mode, const t_i32 pos = 0) {
         return {.type = ek_stream_type_mem, .type_data = {.mem = {.bytes = bytes, .byte_pos = pos}}, .mode = mode};
     }
@@ -301,16 +302,15 @@ namespace zcl::io {
 
     struct t_bool_format {
         using t_format_tag = void;
+
         t_b8 value;
     };
 
-    inline t_bool_format format_bool(const t_b8 value) { return {value}; }
+    inline t_bool_format format_bool(const t_b8 value) { return {.value = value}; }
 
     template <typename tp_type>
         requires c_same<t_cvref_removed<tp_type>, t_b8>
-    inline t_bool_format format_default(const tp_type value) {
-        return {value};
-    }
+    inline t_bool_format format_default(const tp_type value) { return format_bool(value); }
 
     inline t_b8 print_type(t_stream *const stream, const t_bool_format format) {
         const strs::t_str_rdonly true_str = ZF_STR_LITERAL("true");
@@ -327,10 +327,11 @@ namespace zcl::io {
 
     struct t_str_format {
         using t_format_tag = void;
+
         strs::t_str_rdonly value;
     };
 
-    inline t_str_format format_str(const strs::t_str_rdonly value) { return {value}; }
+    inline t_str_format format_str(const strs::t_str_rdonly value) { return {.value = value}; }
     inline t_str_format format_default(const strs::t_str_rdonly value) { return format_str(value); }
 
     inline t_b8 print_type(t_stream *const stream, const t_str_format format) {
@@ -347,10 +348,11 @@ namespace zcl::io {
 
     struct t_code_pt_format {
         using t_format_tag = void;
+
         strs::t_code_pt value;
     };
 
-    inline t_code_pt_format format_code_pt(const strs::t_code_pt value) { return {value}; }
+    inline t_code_pt_format format_code_pt(const strs::t_code_pt value) { return {.value = value}; }
     inline t_code_pt_format format_default(const strs::t_code_pt value) { return format_code_pt(value); }
 
     inline t_b8 print_type(t_stream *const stream, const t_code_pt_format format) {
@@ -374,10 +376,11 @@ namespace zcl::io {
     template <c_integral tp_type>
     struct t_integral_format {
         using t_format_tag = void;
+
         tp_type value;
     };
 
-    template <c_integral tp_type> t_integral_format<tp_type> format_int(const tp_type value) { return {value}; }
+    template <c_integral tp_type> t_integral_format<tp_type> format_int(const tp_type value) { return {.value = value}; }
     template <c_integral tp_type> t_integral_format<tp_type> format_default(const tp_type value) { return format_int(value); }
 
     template <c_integral tp_type>
@@ -413,24 +416,29 @@ namespace zcl::io {
         using t_format_tag = void;
 
         tp_type value;
+        t_i32 precision;
         t_b8 trim_trailing_zeros;
     };
 
     template <c_floating_point tp_type>
-    t_float_format<tp_type> format_float(const tp_type value, const t_b8 trim_trailing_zeros = false) {
-        return {value, trim_trailing_zeros};
+    t_float_format<tp_type> format_float(const tp_type value, const t_i32 precision = 6, const t_b8 trim_trailing_zeros = false) {
+        return {
+            .value = value,
+            .precision = precision,
+            .trim_trailing_zeros = trim_trailing_zeros,
+        };
     }
 
     template <c_floating_point tp_type>
-    t_float_format<tp_type> format_default(const tp_type value) {
-        return format_float(value);
-    }
+    t_float_format<tp_type> format_default(const tp_type value) { return format_float(value); }
 
     template <c_floating_point tp_type>
     t_b8 print_type(t_stream *const stream, const t_float_format<tp_type> format) {
+        ZF_ASSERT(format.precision > 0);
+
         t_static_array<t_u8, 400> str_bytes = {}; // Roughly more than how many bytes should ever be needed.
 
-        t_i32 str_bytes_used = snprintf(reinterpret_cast<char *>(str_bytes.raw), str_bytes.k_len, "%f", static_cast<t_f64>(format.value));
+        t_i32 str_bytes_used = snprintf(reinterpret_cast<char *>(str_bytes.raw), str_bytes.k_len, "%.*f", format.precision, static_cast<t_f64>(format.value));
 
         if (str_bytes_used < 0 || str_bytes_used >= str_bytes.k_len) {
             return false;
@@ -483,11 +491,19 @@ namespace zcl::io {
 
     template <c_integral_unsigned tp_type>
     t_hex_format<tp_type> format_hex(const tp_type value, const t_hex_format_flags flags = {}, const t_i32 min_digits = k_hex_format_digit_cnt_min) {
-        return {value, flags, min_digits};
+        return {
+            .value = value,
+            .flags = flags,
+            .min_digits = min_digits,
+        };
     }
 
     inline t_hex_format<t_uintptr> format_hex(const void *const ptr, const t_hex_format_flags flags = {}, const t_i32 min_digits = k_hex_format_digit_cnt_min) {
-        return {reinterpret_cast<t_uintptr>(ptr), flags, min_digits};
+        return {
+            .value = reinterpret_cast<t_uintptr>(ptr),
+            .flags = flags,
+            .min_digits = min_digits,
+        };
     }
 
     inline t_hex_format<t_uintptr> format_default(const void *const ptr) {
@@ -561,7 +577,10 @@ namespace zcl::io {
         t_b8 trim_trailing_zeros;
     };
 
-    inline t_v2_format format_v2(const math::t_v2 value, const t_b8 trim_trailing_zeros = false) { return {value, trim_trailing_zeros}; }
+    inline t_v2_format format_v2(const math::t_v2 value, const t_b8 trim_trailing_zeros = false) {
+        return {.value = value, .trim_trailing_zeros = trim_trailing_zeros};
+    }
+
     inline t_v2_format format_default(const math::t_v2 value) { return format_v2(value); }
 
     inline t_b8 print_type(t_stream *const stream, const t_v2_format format) {
@@ -578,7 +597,7 @@ namespace zcl::io {
         math::t_v2_i value;
     };
 
-    inline t_v2_i_format format_v2(const math::t_v2_i value) { return {value}; }
+    inline t_v2_i_format format_v2(const math::t_v2_i value) { return {.value = value}; }
     inline t_v2_i_format format_default(const math::t_v2_i value) { return format_v2(value); }
 
     inline t_b8 print_type(t_stream *const stream, const t_v2_i_format format) {
@@ -609,13 +628,11 @@ namespace zcl::io {
 
     template <c_formattable_array tp_arr_type>
     t_array_format<tp_arr_type> format_array(const tp_arr_type value, const t_b8 one_per_line = false) {
-        return {value, one_per_line};
+        return {.value = value, .one_per_line = one_per_line};
     }
 
     template <c_formattable_array tp_arr_type>
-    t_array_format<tp_arr_type> format_default(const tp_arr_type value) {
-        return {value};
-    }
+    t_array_format<tp_arr_type> format_default(const tp_arr_type value) { return format_array(value); }
 
     template <c_formattable_array tp_arr_type>
     t_b8 print_type(t_stream *const stream, const t_array_format<tp_arr_type> format) {
@@ -669,7 +686,10 @@ namespace zcl::io {
         t_bitset_format_style style;
     };
 
-    inline t_bitset_format format_bitset(const mem::t_bitset_rdonly &value, const t_bitset_format_style style) { return {value, style}; }
+    inline t_bitset_format format_bitset(const mem::t_bitset_rdonly &value, const t_bitset_format_style style) {
+        return {.value = value, .style = style};
+    }
+
     inline t_bitset_format format_default(const mem::t_bitset_rdonly &value) { return format_bitset(value, ek_bitset_format_style_seq); }
 
     inline t_b8 print_type(t_stream *const stream, const t_bitset_format format) {

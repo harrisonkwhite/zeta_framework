@@ -1,11 +1,16 @@
+Tomorrow:
+- RNG system needs mix function and seed should influence stream.
+- Start on basic music streaming
+
+
+
 - Subnamespaces are kind of annoying for the user and don't add that much value I don't think.
 
+- Maybe be more consistent about how templates are used for t_f32 and t_f64
 - Properly check correctness of packed asset binary files
 - Validation barriers need to be made more clear. Make sure validity for colours, origins, alignment, rectangles, etc. are in place. Only worry about reasonable things.
 - Make sure the licensing is all fine. Check whether BGFX license is needed in game dist.
 - Properly check for correctness in deserialization and unpacking ops.
-- Ability to get debug info like FPS.
-- RNG system needs mix function and seed should influence stream.
 - Basic music streaming system at the very least
 - Fill out tests
 
