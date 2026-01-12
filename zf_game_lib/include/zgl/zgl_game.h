@@ -2,7 +2,7 @@
 
 #include <zcl.h>
 
-namespace zgl::game {
+namespace zgl {
     namespace input {
         struct t_state;
     }
