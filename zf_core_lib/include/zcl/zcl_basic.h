@@ -66,10 +66,10 @@ namespace zcl {
     using t_uintptr = uintptr_t;
     static_assert(sizeof(t_uintptr) == 8);
 
-    template <typename tp_type> using t_const_removed = std::remove_const<tp_type>::type;
-    template <typename tp_type> using t_volatile_removed = std::remove_volatile<tp_type>::type;
-    template <typename tp_type> using t_ref_removed = std::remove_reference<tp_type>::type;
-    template <typename tp_type> using t_cvref_removed = std::remove_cvref<tp_type>::type;
+    template <typename tp_type> using t_const_removed = typename std::remove_const<tp_type>::type;
+    template <typename tp_type> using t_volatile_removed = typename std::remove_volatile<tp_type>::type;
+    template <typename tp_type> using t_ref_removed = typename std::remove_reference<tp_type>::type;
+    template <typename tp_type> using t_cvref_removed = typename std::remove_cvref<tp_type>::type;
 
     // "Simple" meaning that it's safe to use with arenas and C-style memory operations.
     template <typename tp_type>
@@ -510,6 +510,123 @@ namespace zcl {
         for (t_i32 i = 0; i < arr.len / 2; i++) {
             swap(&arr[i], &arr[arr.len - 1 - i]);
         }
+    }
+
+    // ============================================================
+
+
+    template <c_simple tp_type>
+    t_array_mut<t_u8> to_bytes(tp_type &val) {
+        return {reinterpret_cast<t_u8 *>(&val), ZF_SIZE_OF(val)};
+    }
+
+    template <c_simple tp_type>
+    t_array_rdonly<t_u8> to_bytes(const tp_type &val) {
+        return {reinterpret_cast<const t_u8 *>(&val), ZF_SIZE_OF(val)};
+    }
+
+    template <c_array_elem tp_elem_type>
+    t_array_mut<t_u8> array_to_byte_array(const t_array_mut<tp_elem_type> arr) {
+        return {reinterpret_cast<t_u8 *>(arr.raw), array_get_size_in_bytes(arr)};
+    }
+
+    template <c_array_elem tp_elem_type>
+    t_array_rdonly<t_u8> array_to_byte_array(const t_array_rdonly<tp_elem_type> arr) {
+        return {reinterpret_cast<const t_u8 *>(arr.raw), array_get_size_in_bytes(arr)};
+    }
+
+
+    // ============================================================
+    // @section: Streams
+
+    enum t_stream_mode : t_i32 {
+        ek_stream_mode_read,
+        ek_stream_mode_write
+    };
+
+    struct t_stream {
+        void *data;
+
+        t_b8 (*read_func)(t_stream *const stream, const t_array_mut<t_i8> dest_bytes);
+        t_b8 (*write_func)(t_stream *const stream, const t_array_rdonly<t_i8> src_bytes);
+
+        t_stream_mode mode;
+    };
+
+    template <c_simple tp_type>
+    [[nodiscard]] t_b8 stream_read_item(const t_stream stream, tp_type *const o_item) {
+        ZF_ASSERT(stream.mode == ek_stream_mode_read);
+        return stream.read_func(stream, to_bytes(o_item));
+    }
+
+    template <c_simple tp_type>
+    [[nodiscard]] t_b8 stream_write_item(const t_stream stream, const tp_type &item) {
+        ZF_ASSERT(stream.mode == ek_stream_mode_write);
+        return stream.write_func(stream, to_bytes(&item));
+    }
+
+    template <c_array_mut tp_arr_type>
+    [[nodiscard]] t_b8 stream_read_items_into_array(const t_stream stream, const tp_arr_type arr, const t_i32 cnt) {
+        ZF_ASSERT(stream.mode == ek_stream_mode_read);
+        ZF_ASSERT(cnt >= 0 && cnt <= arr.len);
+
+        if (cnt == 0) {
+            return true;
+        }
+
+        return stream.read_func(stream, array_to_byte_array(array_slice(arr, 0, cnt)));
+    }
+
+    template <c_array tp_arr_type>
+    [[nodiscard]] t_b8 stream_write_items_of_array(const t_stream stream, const tp_arr_type arr) {
+        ZF_ASSERT(stream.mode == ek_stream_mode_write);
+
+        if (arr.len == 0) {
+            return true;
+        }
+
+        return stream.write_func(stream, array_to_byte_array(arr));
+    }
+
+    struct t_mem_stream {
+        t_array_mut<t_u8> bytes;
+        t_i32 byte_pos;
+
+        t_stream_mode mode;
+
+        operator t_stream() {
+            const auto read_func = [](t_stream *const stream, const t_array_mut<t_i8> dest_bytes) {
+                ZF_ASSERT(stream->mode == ek_stream_mode_read);
+
+                const auto state = static_cast<t_mem_stream *>(stream->data);
+                return false;
+                // return static_cast<t_i32>(fread(dest_bytes.raw, 1, static_cast<size_t>(dest_bytes.len), state->file)) == dest_bytes.len;
+            };
+
+            const auto write_func = [](t_stream *const stream, const t_array_rdonly<t_i8> src_bytes) {
+                ZF_ASSERT(stream->mode == ek_stream_mode_read);
+
+                const auto state = static_cast<t_mem_stream *>(stream->data);
+                return false;
+                // return static_cast<t_i32>(fwrite(src_bytes.raw, 1, static_cast<size_t>(src_bytes.len), state->file)) == src_bytes.len;
+            };
+
+            return {
+                .data = this,
+                .read_func = read_func,
+                .write_func = write_func,
+                .mode = mode,
+            };
+        }
+    };
+
+    inline t_mem_stream mem_stream_create(const t_array_mut<t_u8> bytes, const t_stream_mode mode, const t_i32 pos = 0) {
+        return {.bytes = bytes, .byte_pos = pos, .mode = mode};
+    }
+
+    inline t_array_mut<t_u8> mem_stream_get_bytes_written(const t_mem_stream *const stream) {
+        ZF_ASSERT(stream->mode == ek_stream_mode_write);
+        return array_slice(stream->bytes, 0, stream->byte_pos);
     }
 
     // ============================================================

@@ -6,6 +6,7 @@ add_library(zf_core_lib STATIC
     src/zcl_strs.cpp
     src/zcl_gfx.cpp
     src/zcl_io.cpp
+    src/zcl_file_sys.cpp
     src/zcl_rand.cpp
     ../external/stb_image/src/stb_image.c
     ../external/stb_truetype/src/stb_truetype.c
@@ -20,6 +21,7 @@ add_library(zf_core_lib STATIC
     include/zcl/zcl_math.h
     include/zcl/zcl_io.h
     include/zcl/zcl_printing.h
+    include/zcl/zcl_file_sys.h
     include/zcl/zcl_algos.h
     include/zcl/zcl_basic.h
     include/zcl/zcl_rand.h

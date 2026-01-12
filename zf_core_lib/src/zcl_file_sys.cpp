@@ -1,21 +1,20 @@
-#include <zcl/zcl_io.h>
+#include <zcl/zcl_file_sys.h>
 
-#if 0
-    #ifdef ZF_PLATFORM_WINDOWS
-        #ifndef WIN32_LEAN_AND_MEAN
-            #define WIN32_LEAN_AND_MEAN
-        #endif
-
-        #ifndef NOMINMAX
-            #define NOMINMAX
-        #endif
-
-        #include <windows.h>
-        #include <direct.h>
+#ifdef ZF_PLATFORM_WINDOWS
+    #ifndef WIN32_LEAN_AND_MEAN
+        #define WIN32_LEAN_AND_MEAN
     #endif
 
-namespace zcl::io {
-    t_b8 file_open(const strs::t_str_rdonly path, const t_file_access_mode mode, mem::t_arena *const temp_arena, t_stream *const o_stream) {
+    #ifndef NOMINMAX
+        #define NOMINMAX
+    #endif
+
+    #include <windows.h>
+    #include <direct.h>
+#endif
+
+namespace zcl::file_sys {
+    t_b8 file_open(const strs::t_str_rdonly path, const t_file_access_mode mode, mem::t_arena *const temp_arena, t_file_stream *const o_stream) {
         const strs::t_str_rdonly path_terminated = strs::clone_but_add_terminator(path, temp_arena);
 
         FILE *file;
@@ -50,22 +49,21 @@ namespace zcl::io {
         return true;
     }
 
-    void file_close(t_stream *const stream) {
-        fclose(stream->type_data.file.file);
+    void file_close(t_file_stream *const stream) {
+        fclose(stream->file);
         *stream = {};
     }
 
-    t_i32 file_calc_size(t_stream *const stream) {
-        FILE *const file = stream->type_data.file.file;
-        const auto pos_old = ftell(file);
-        fseek(file, 0, SEEK_END);
-        const auto file_size = ftell(file);
-        fseek(file, pos_old, SEEK_SET);
+    t_i32 file_calc_size(t_file_stream *const stream) {
+        const auto pos_old = ftell(stream->file);
+        fseek(stream->file, 0, SEEK_END);
+        const auto file_size = ftell(stream->file);
+        fseek(stream->file, pos_old, SEEK_SET);
         return static_cast<t_i32>(file_size);
     }
 
     t_b8 file_load_contents(const strs::t_str_rdonly path, mem::t_arena *const contents_arena, mem::t_arena *const temp_arena, t_array_mut<t_u8> *const o_contents, const t_b8 add_terminator) {
-        t_stream stream;
+        t_file_stream stream;
 
         if (!file_open(path, ek_file_access_mode_read, temp_arena, &stream)) {
             return false;
@@ -82,7 +80,7 @@ namespace zcl::io {
             *o_contents = mem::arena_push_array<t_u8>(contents_arena, file_size);
         }
 
-        if (!stream_read_items_into_array(&stream, *o_contents, file_size)) {
+        if (!stream_read_items_into_array(stream, *o_contents, file_size)) {
             return false;
         }
 
@@ -96,13 +94,13 @@ namespace zcl::io {
 
         const strs::t_str_rdonly path_terminated = strs::clone_but_add_terminator(path, temp_arena);
 
-    #ifdef ZF_PLATFORM_WINDOWS
+#ifdef ZF_PLATFORM_WINDOWS
         const t_i32 result = _mkdir(strs::to_cstr(path_terminated));
-    #elif defined(ZF_PLATFORM_MACOS)
-        #error "Platform-specific implementation not yet done!" // @todo
-    #elif defined(ZF_PLATFORM_LINUX)
-        #error "Platform-specific implementation not yet done!" // @todo
-    #endif
+#elif defined(ZF_PLATFORM_MACOS)
+    #error "Platform-specific implementation not yet done!" // @todo
+#elif defined(ZF_PLATFORM_LINUX)
+    #error "Platform-specific implementation not yet done!" // @todo
+#endif
 
         if (result == 0) {
             return true;
@@ -189,7 +187,7 @@ namespace zcl::io {
         }
 
         // Now that directories are created, create the file.
-        t_stream fs;
+        t_file_stream fs;
 
         if (!file_open(path, ek_file_access_mode_write, temp_arena, &fs)) {
             return false;
@@ -217,7 +215,7 @@ namespace zcl::io {
     }
 
     strs::t_str_mut get_executable_directory(mem::t_arena *const arena) {
-    #if defined(ZF_PLATFORM_WINDOWS)
+#if defined(ZF_PLATFORM_WINDOWS)
         t_static_array<char, MAX_PATH> buf;
 
         auto len = static_cast<t_i32>(GetModuleFileNameA(nullptr, buf.raw, MAX_PATH));
@@ -232,11 +230,10 @@ namespace zcl::io {
         const auto result_bytes = mem::arena_push_array<t_u8>(arena, len);
         array_copy(mem::array_to_byte_array(array_slice(array_to_nonstatic(&buf), 0, len)), result_bytes);
         return {result_bytes};
-    #elif defined(ZF_PLATFORM_MACOS)
-        #error "Platform-specific implementation not yet done!" // @todo
-    #elif defined(ZF_PLATFORM_LINUX)
-        #error "Platform-specific implementation not yet done!" // @todo
-    #endif
+#elif defined(ZF_PLATFORM_MACOS)
+    #error "Platform-specific implementation not yet done!" // @todo
+#elif defined(ZF_PLATFORM_LINUX)
+    #error "Platform-specific implementation not yet done!" // @todo
+#endif
     }
 }
-#endif

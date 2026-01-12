@@ -1,11 +1,10 @@
 #pragma once
 
 #include <cstdio>
-#include <zcl/zcl_math.h>
-#include <zcl/zcl_algos.h>
 #include <zcl/zcl_strs.h>
 
 namespace zcl::io {
+#if 0
     // ============================================================
     // @section: Streams
 
@@ -278,4 +277,5 @@ namespace zcl::io {
     strs::t_str_mut get_executable_directory(mem::t_arena *const arena);
 
     // ============================================================
+#endif
 }

@@ -41,11 +41,11 @@ zcl::t_b8 compile_shader(const zcl::strs::t_str_rdonly shader_file_path, const z
     const char profile_cstr[] = "glsl";
 #endif
 
-    const zcl::strs::t_str_rdonly exe_dir = zcl::io::get_executable_directory(temp_arena);
+    const zcl::strs::t_str_rdonly exe_dir = zcl::file_sys::get_executable_directory(temp_arena);
     ZF_ASSERT(exe_dir.bytes[exe_dir.bytes.len - 1] == '/' || exe_dir.bytes[exe_dir.bytes.len - 1] == '\\'); // Assuming this.
 
     const zcl::strs::t_str_mut shaderc_file_path_terminated = {zcl::mem::arena_push_array<zcl::t_u8>(temp_arena, exe_dir.bytes.len + shaderc_file_path_rel.bytes.len + 1)};
-    zcl::io::t_stream shaderc_file_path_terminated_byte_stream = zcl::io::mem_stream_create(shaderc_file_path_terminated.bytes, zcl::io::ek_stream_mode_write);
+    zcl::t_stream shaderc_file_path_terminated_byte_stream = zcl::io::mem_stream_create(shaderc_file_path_terminated.bytes, zcl::io::ek_stream_mode_write);
     zcl::io::print_format(&shaderc_file_path_terminated_byte_stream, ZF_STR_LITERAL("%%\0"), exe_dir, shaderc_file_path_rel);
     ZF_ASSERT(zcl::strs::bytes_check_terminated_only_at_end(shaderc_file_path_terminated.bytes));
 

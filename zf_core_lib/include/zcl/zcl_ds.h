@@ -1,6 +1,6 @@
 #pragma once
 
-#include <zcl/zcl_io.h>
+#include <zcl/zcl_mem.h>
 
 namespace zcl::ds {
     // ============================================================
@@ -447,6 +447,7 @@ namespace zcl::ds {
     template <c_simple tp_type>
     using t_hash_func = t_i32 (*)(const tp_type &key);
 
+#if 0
     // This is an FNV-1a implementation.
     constexpr t_hash_func<strs::t_str_rdonly> k_str_hash_func =
         [](const strs::t_str_rdonly &key) {
@@ -462,6 +463,7 @@ namespace zcl::ds {
 
             return static_cast<t_i32>(hash & 0x7FFFFFFFull);
         };
+#endif
 
     template <c_hash_map_key tp_key_type, c_hash_map_value tp_value_type>
     struct t_hash_map {
