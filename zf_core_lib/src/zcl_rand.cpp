@@ -67,12 +67,11 @@ namespace zcl::rand {
         return min_incl + pcg32_calc_next_bounded(&rng->pcg32, max_excl - min_incl);
     }
 
-    t_i32 gen_i32_in_range(t_rng *const rng, const t_i32 min_incl, const t_i32 max_excl) {
+    t_i32 gen_i32_in_range(t_rng *const rng, const t_i16 min_incl, const t_i16 max_excl) {
         ZF_ASSERT(min_incl < max_excl);
 
-        const auto min_incl_u = static_cast<t_u32>(min_incl);
-        const auto max_excl_u = static_cast<t_u32>(max_excl);
-        return static_cast<t_i32>(min_incl_u + pcg32_calc_next_bounded(&rng->pcg32, max_excl_u - min_incl_u));
+        const auto diff = static_cast<t_u32>(max_excl - min_incl);
+        return min_incl + static_cast<t_i32>(pcg32_calc_next_bounded(&rng->pcg32, diff));
     }
 
     t_f32 gen_perc(t_rng *const rng) {

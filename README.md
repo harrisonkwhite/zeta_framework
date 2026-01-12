@@ -44,7 +44,7 @@ cmake ..
 - [stb](https://github.com/nothings/stb) for image and font file loading
 - [miniaudio](https://github.com/mackron/miniaudio) for audio loading and playing
 - [PCG](https://www.pcg-random.org) for random number generation
-- [SplitMix64](https://prng.di.unimi.it/splitmix64.c) for simple scrambling
+- [SplitMix64](https://prng.di.unimi.it/splitmix64.c) for simple U64 scrambling
 
 ---
 
