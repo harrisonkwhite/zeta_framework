@@ -1,6 +1,6 @@
 #pragma once
 
-#include <zcl/zcl_algos.h>
+#include <zcl/zcl_mem.h>
 
 namespace zcl::strs {
     // ============================================================

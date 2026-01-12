@@ -5,79 +5,8 @@
 #include <concepts>
 
 namespace zcl {
-#define ZF_IN_CONSTEXPR() std::is_constant_evaluated()
-
-#ifdef _WIN32
-    #define ZF_PLATFORM_WINDOWS
-#endif
-
-#if defined(__APPLE__) && defined(__MACH__)
-    #define ZF_PLATFORM_MACOS
-#endif
-
-#ifdef __linux__
-    #define ZF_PLATFORM_LINUX
-#endif
-
-#ifndef NDEBUG
-    #define ZF_DEBUG
-#endif
-
-#define ZF_CONCAT_IMPL(a, b) a##b
-#define ZF_CONCAT(a, b) ZF_CONCAT_IMPL(a, b)
-
-    namespace detail {
-        template <typename tp_type>
-        struct t_defer {
-            tp_type func;
-
-            t_defer(const tp_type f) : func(f) {}
-
-            ~t_defer() {
-                func();
-            }
-        };
-    }
-
-#define ZF_DEFER(x) const auto ZF_CONCAT(defer_, ZF_CONCAT(l, __LINE__)) = zcl::detail::t_defer([&]() x)
-
-    namespace detail {
-        void try_breaking_into_debugger_if(const bool cond);
-
-        [[noreturn]] void handle_assert_error(const char *const cond_cstr, const char *const func_name_cstr, const char *const file_name_cstr, const int line);
-
-#ifdef ZF_DEBUG
-    #define ZF_DEBUG_BREAK() detail::try_breaking_into_debugger_if(true)
-    #define ZF_DEBUG_BREAK_IF(cond) detail::try_breaking_into_debugger_if(cond)
-
-    #define ZF_ASSERT(cond)                                                                    \
-        do {                                                                                   \
-            if (!ZF_IN_CONSTEXPR()) {                                                          \
-                if (!(cond)) {                                                                 \
-                    zcl::detail::handle_assert_error(#cond, __FUNCTION__, __FILE__, __LINE__); \
-                }                                                                              \
-            }                                                                                  \
-        } while (0)
-#else
-    #define ZF_DEBUG_BREAK() static_cast<void>(0)
-    #define ZF_DEBUG_BREAK_IF(cond) static_cast<void>(0)
-    #define ZF_ASSERT(cond) static_cast<void>(0)
-#endif
-
-        [[noreturn]] void handle_fatal_error(const char *const func_name_cstr, const char *const file_name_cstr, const int line, const char *const cond_cstr = nullptr);
-
-#define ZF_FATAL() zcl::detail::handle_fatal_error(__FUNCTION__, __FILE__, __LINE__)
-#define ZF_UNREACHABLE() ZF_FATAL() // @todo: This should probably have some helper message to differentiate it from normal fatal errors.
-
-#define ZF_REQUIRE(cond)                                                                  \
-    do {                                                                                  \
-        if (!ZF_IN_CONSTEXPR()) {                                                         \
-            if (!(cond)) {                                                                \
-                zcl::detail::handle_fatal_error(__FUNCTION__, __FILE__, __LINE__, #cond); \
-            }                                                                             \
-        }                                                                                 \
-    } while (0)
-    }
+    // ============================================================
+    // @section: Foundational Types and Concepts
 
     static_assert(CHAR_BIT == 8);
 
@@ -137,11 +66,6 @@ namespace zcl {
     using t_uintptr = uintptr_t;
     static_assert(sizeof(t_uintptr) == 8);
 
-#define ZF_SIZE_OF(x) static_cast<zcl::t_i32>(sizeof(x))
-#define ZF_SIZE_IN_BITS(x) (8 * ZF_SIZE_OF(x))
-
-#define ZF_ALIGN_OF(x) static_cast<zcl::t_i32>(alignof(x))
-
     template <typename tp_type> using t_const_removed = std::remove_const<tp_type>::type;
     template <typename tp_type> using t_volatile_removed = std::remove_volatile<tp_type>::type;
     template <typename tp_type> using t_ref_removed = std::remove_reference<tp_type>::type;
@@ -180,7 +104,7 @@ namespace zcl {
         || c_same<t_cvref_removed<tp_type>, const char *>
         || c_same<t_cvref_removed<tp_type>, char[]>;
 
-    // Return true iff a and b are equal.
+    // Should return true iff a and b are equal.
     template <c_simple tp_type>
     using t_comparator_bin = t_b8 (*)(const tp_type &a, const tp_type &b);
 
@@ -190,7 +114,7 @@ namespace zcl {
             return a == b;
         };
 
-    // Return a negative result if a < b, 0 if a == b, and a positive result if a > b.
+    // Should return a negative result if a < b, 0 if a == b, and a positive result if a > b.
     template <c_simple tp_type>
     using t_comparator_ord = t_i32 (*)(const tp_type &a, const tp_type &b);
 
@@ -205,6 +129,103 @@ namespace zcl {
                 return 1;
             }
         };
+
+    // ============================================================
+
+
+    // ============================================================
+    // @section: Essential Macros
+
+#define ZF_IN_CONSTEXPR() std::is_constant_evaluated()
+
+#ifdef _WIN32
+    #define ZF_PLATFORM_WINDOWS
+#endif
+
+#if defined(__APPLE__) && defined(__MACH__)
+    #define ZF_PLATFORM_MACOS
+#endif
+
+#ifdef __linux__
+    #define ZF_PLATFORM_LINUX
+#endif
+
+#ifndef NDEBUG
+    #define ZF_DEBUG
+#endif
+
+#define ZF_SIZE_OF(x) static_cast<zcl::t_i32>(sizeof(x))
+#define ZF_SIZE_IN_BITS(x) (8 * ZF_SIZE_OF(x))
+
+#define ZF_ALIGN_OF(x) static_cast<zcl::t_i32>(alignof(x))
+
+#define ZF_CONCAT_IMPL(a, b) a##b
+#define ZF_CONCAT(a, b) ZF_CONCAT_IMPL(a, b)
+
+    namespace detail {
+        template <typename tp_type>
+        struct t_defer {
+            tp_type func;
+
+            t_defer(const tp_type f) : func(f) {}
+
+            ~t_defer() {
+                func();
+            }
+        };
+    }
+
+#define ZF_DEFER(x) const auto ZF_CONCAT(defer_, ZF_CONCAT(l, __LINE__)) = zcl::detail::t_defer([&]() x)
+
+    // ============================================================
+
+
+    // ============================================================
+    // @section: Error Handling
+
+    namespace detail {
+        void try_breaking_into_debugger_if(const bool cond);
+
+        [[noreturn]] void handle_assert_error(const char *const cond_cstr, const char *const func_name_cstr, const char *const file_name_cstr, const int line);
+
+#ifdef ZF_DEBUG
+    #define ZF_DEBUG_BREAK() detail::try_breaking_into_debugger_if(true)
+    #define ZF_DEBUG_BREAK_IF(cond) detail::try_breaking_into_debugger_if(cond)
+
+    #define ZF_ASSERT(cond)                                                                    \
+        do {                                                                                   \
+            if (!ZF_IN_CONSTEXPR()) {                                                          \
+                if (!(cond)) {                                                                 \
+                    zcl::detail::handle_assert_error(#cond, __FUNCTION__, __FILE__, __LINE__); \
+                }                                                                              \
+            }                                                                                  \
+        } while (0)
+#else
+    #define ZF_DEBUG_BREAK() static_cast<void>(0)
+    #define ZF_DEBUG_BREAK_IF(cond) static_cast<void>(0)
+    #define ZF_ASSERT(cond) static_cast<void>(0)
+#endif
+
+        [[noreturn]] void handle_fatal_error(const char *const func_name_cstr, const char *const file_name_cstr, const int line, const char *const cond_cstr = nullptr);
+
+#define ZF_FATAL() zcl::detail::handle_fatal_error(__FUNCTION__, __FILE__, __LINE__)
+#define ZF_UNREACHABLE() ZF_FATAL() // @todo: This should probably have some helper message to differentiate it from normal fatal errors.
+
+#define ZF_REQUIRE(cond)                                                                  \
+    do {                                                                                  \
+        if (!ZF_IN_CONSTEXPR()) {                                                         \
+            if (!(cond)) {                                                                \
+                zcl::detail::handle_fatal_error(__FUNCTION__, __FILE__, __LINE__, #cond); \
+            }                                                                             \
+        }                                                                                 \
+    } while (0)
+    }
+
+    // ============================================================
+
+
+    // ============================================================
+    // @section: Essential Helpers
 
     template <c_numeric tp_type>
     constexpr tp_type calc_min(const tp_type a, const tp_type b) {
@@ -263,6 +284,8 @@ namespace zcl {
     constexpr tp_type wrap(const tp_type val, const tp_type min, const tp_type max_excl) {
         return min + wrap(val - min, max_excl - min);
     }
+
+    // ============================================================
 
 
     // ============================================================
