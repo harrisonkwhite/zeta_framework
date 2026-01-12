@@ -48,7 +48,13 @@ namespace zcl::rand {
 
     t_rng *rng_create(const t_u64 seed, mem::t_arena *const arena) {
         const auto rng = mem::arena_push_item<t_rng>(arena);
-        pcg32_seed(&rng->pcg32, seed, 0); // @todo: Infer sequence from seed with mixing function!
+
+        t_u64 x = seed;
+        const t_u64 init_state = scramble(&x);
+        const t_u64 seq = scramble(&x);
+
+        pcg32_seed(&rng->pcg32, init_state, seq);
+
         return rng;
     }
 
@@ -71,5 +77,16 @@ namespace zcl::rand {
 
     t_f32 gen_perc(t_rng *const rng) {
         return static_cast<t_f32>(pcg32_calc_next(&rng->pcg32)) / 4294967296.0f;
+    }
+
+    static t_u64 split_mix_64_next(t_u64 *const x) {
+        t_u64 z = (*x += 0x9E3779B97F4A7C15ull);
+        z = (z ^ (z >> 30)) * 0xBF58476D1CE4E5B9ull;
+        z = (z ^ (z >> 27)) * 0x94D049BB133111EBull;
+        return z ^ (z >> 31);
+    }
+
+    t_u64 scramble(t_u64 *const x) {
+        return split_mix_64_next(x);
     }
 }

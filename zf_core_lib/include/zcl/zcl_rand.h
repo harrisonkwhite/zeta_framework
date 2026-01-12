@@ -23,4 +23,8 @@ namespace zcl::rand {
     inline t_f32 gen_f32_in_range(t_rng *const rng, const t_f32 min_incl, const t_f32 max_excl) {
         return min_incl + (gen_perc(rng) * (max_excl - min_incl));
     }
+
+    // Returns a seemingly random value from x, and updates x to a new seemingly random value.
+    // This is useful for seed generation.
+    t_u64 scramble(t_u64 *const x);
 }
