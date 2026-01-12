@@ -5,11 +5,6 @@
 #include <concepts>
 
 namespace zcl {
-#define ZF_SIZE_OF(x) static_cast<zcl::t_i32>(sizeof(x))
-#define ZF_SIZE_IN_BITS(x) (8 * ZF_SIZE_OF(x))
-
-#define ZF_ALIGN_OF(x) static_cast<zcl::t_i32>(alignof(x))
-
 #define ZF_IN_CONSTEXPR() std::is_constant_evaluated()
 
 #ifdef _WIN32
@@ -141,6 +136,11 @@ namespace zcl {
 
     using t_uintptr = uintptr_t;
     static_assert(sizeof(t_uintptr) == 8);
+
+#define ZF_SIZE_OF(x) static_cast<zcl::t_i32>(sizeof(x))
+#define ZF_SIZE_IN_BITS(x) (8 * ZF_SIZE_OF(x))
+
+#define ZF_ALIGN_OF(x) static_cast<zcl::t_i32>(alignof(x))
 
     template <typename tp_type> using t_const_removed = std::remove_const<tp_type>::type;
     template <typename tp_type> using t_volatile_removed = std::remove_volatile<tp_type>::type;

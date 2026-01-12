@@ -192,7 +192,7 @@ namespace zgl::platform {
         ZF_UNREACHABLE();
     };
 
-    void poll_os_events(input::t_state *const input_state) {
+    void poll_events(input::t_state *const input_state) {
         ZF_ASSERT(g_module_state.active);
 
         glfwSetWindowUserPointer(g_module_state.glfw_window, input_state); // Scroll callback needs access to this input state.

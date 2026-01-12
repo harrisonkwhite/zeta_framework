@@ -1,5 +1,20 @@
 #include <zcl/zcl_rand.h>
 
+#ifdef ZF_PLATFORM_WINDOWS
+    #ifndef WIN32_LEAN_AND_MEAN
+        #define WIN32_LEAN_AND_MEAN
+    #endif
+
+    #ifndef NOMINMAX
+        #define NOMINMAX
+    #endif
+
+    #include <windows.h>
+
+    #include <bcrypt.h>
+    #pragma comment(lib, "bcrypt.lib")
+#endif
+
 namespace zcl::rand {
     struct t_pcg32 {
         t_u64 state; // RNG state. All values are possible.
@@ -76,6 +91,23 @@ namespace zcl::rand {
 
     t_f32 gen_perc(t_rng *const rng) {
         return static_cast<t_f32>(pcg32_calc_next(&rng->pcg32)) / 4294967296.0f;
+    }
+
+    static t_u64 get_os_entropy() {
+#ifdef ZF_PLATFORM_WINDOWS
+        zcl::t_u64 result = 0;
+
+        const NTSTATUS status = BCryptGenRandom(nullptr, reinterpret_cast<UCHAR *>(&result), static_cast<ULONG>(ZF_SIZE_OF(result)), BCRYPT_USE_SYSTEM_PREFERRED_RNG);
+        ZF_REQUIRE(status >= 0);
+
+        return result;
+#else
+    #error "Platform support not complete!" // @todo
+#endif
+    }
+
+    t_u64 gen_seed() {
+        return get_os_entropy();
     }
 
     static t_u64 split_mix_64_next(t_u64 *const x) {

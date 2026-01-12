@@ -12,8 +12,8 @@ namespace zgl::platform {
     // Gives the time in seconds since the platform module was started.
     zcl::t_f64 get_time();
 
-    // Also updates the given input state based on OS events.
-    void poll_os_events(input::t_state *const input_state);
+    // Also updates the given input state based on events.
+    void poll_events(input::t_state *const input_state);
 
     void *display_get_native_handle();
 

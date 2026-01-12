@@ -24,6 +24,8 @@ namespace zcl::rand {
         return min_incl + (gen_perc(rng) * (max_excl - min_incl));
     }
 
+    t_u64 gen_seed();
+
     // Returns a seemingly random value from x, and updates x to a new seemingly random value.
     // This is useful for seed generation.
     t_u64 scramble(t_u64 *const x);

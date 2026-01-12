@@ -1,10 +1,14 @@
 #include <zcl/zcl_io.h>
 
-#include <errno.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-
 #ifdef ZF_PLATFORM_WINDOWS
+    #ifndef WIN32_LEAN_AND_MEAN
+        #define WIN32_LEAN_AND_MEAN
+    #endif
+
+    #ifndef NOMINMAX
+        #define NOMINMAX
+    #endif
+
     #include <windows.h>
     #include <direct.h>
 #endif
@@ -93,8 +97,10 @@ namespace zcl::io {
 
 #ifdef ZF_PLATFORM_WINDOWS
         const t_i32 result = _mkdir(strs::to_cstr(path_terminated));
-#else
-        const t_s32 result = mkdir(AsCstr(path_terminated), 0755);
+#elif defined(ZF_PLATFORM_MACOS)
+    #error "Platform-specific implementation not yet done!" // @todo
+#elif defined(ZF_PLATFORM_LINUX)
+    #error "Platform-specific implementation not yet done!" // @todo
 #endif
 
         if (result == 0) {
@@ -226,9 +232,9 @@ namespace zcl::io {
         array_copy(mem::array_to_byte_array(array_slice(array_to_nonstatic(&buf), 0, len)), result_bytes);
         return {result_bytes};
 #elif defined(ZF_PLATFORM_MACOS)
-    #error "Platform-specific implementation not yet done!"
+    #error "Platform-specific implementation not yet done!" // @todo
 #elif defined(ZF_PLATFORM_LINUX)
-    #error "Platform-specific implementation not yet done!"
+    #error "Platform-specific implementation not yet done!" // @todo
 #endif
     }
 }

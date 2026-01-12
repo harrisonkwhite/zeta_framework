@@ -44,7 +44,7 @@ namespace zgl::game {
         audio::module_startup();
         ZF_DEFER({ audio::module_shutdown(); });
 
-        zcl::rand::t_rng *const rng = zcl::rand::rng_create(0, &perm_arena); // @todo: Proper seed!
+        zcl::rand::t_rng *const rng = zcl::rand::rng_create(zcl::rand::gen_seed(), &perm_arena);
 
         zcl::mem::arena_rewind(&temp_arena);
 
@@ -76,7 +76,7 @@ namespace zgl::game {
         constexpr zcl::t_f64 k_fps_refresh_time = 1.0;
 
         while (!platform::window_check_close_requested()) {
-            platform::poll_os_events(input_state);
+            platform::poll_events(input_state);
 
             const zcl::t_f64 frame_time = platform::get_time();
 
