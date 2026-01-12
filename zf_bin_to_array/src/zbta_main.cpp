@@ -4,53 +4,53 @@
     zcl::mem::t_arena arena = zcl::mem::arena_create_blockbased();
     ZF_DEFER({ zcl::mem::arena_destroy(&arena); });
 
-    zcl::io::t_stream input_file_stream;
+    zcl::file_sys::t_file_stream input_file_stream;
 
-    if (!zcl::io::file_open(input_file_path, zcl::io::ek_file_access_mode_read, &arena, &input_file_stream)) {
+    if (!zcl::file_sys::file_open(input_file_path, zcl::file_sys::ek_file_access_mode_read, &arena, &input_file_stream)) {
         return false;
     }
 
-    ZF_DEFER({ zcl::io::file_close(&input_file_stream); });
+    ZF_DEFER({ zcl::file_sys::file_close(&input_file_stream); });
 
-    zcl::io::t_stream output_file_stream;
+    zcl::file_sys::t_file_stream output_file_stream;
 
-    if (!zcl::io::file_open(output_file_path, zcl::io::ek_file_access_mode_write, &arena, &output_file_stream)) {
+    if (!zcl::file_sys::file_open(output_file_path, zcl::file_sys::ek_file_access_mode_write, &arena, &output_file_stream)) {
         return false;
     }
 
-    ZF_DEFER({ zcl::io::file_close(&output_file_stream); });
+    ZF_DEFER({ zcl::file_sys::file_close(&output_file_stream); });
 
-    zcl::io::print(&output_file_stream, ZF_STR_LITERAL("#include <zcl/zcl_mem.h>\n"));
-    zcl::io::print(&output_file_stream, ZF_STR_LITERAL("\n"));
+    zcl::io::print(output_file_stream, ZF_STR_LITERAL("#include <zcl/zcl_mem.h>\n"));
+    zcl::io::print(output_file_stream, ZF_STR_LITERAL("\n"));
 
     zcl::strs::t_str_rdonly indent = {};
 
     if (!zcl::strs::check_empty(namespace_name)) {
-        zcl::io::print_format(&output_file_stream, ZF_STR_LITERAL("namespace % {\n"), namespace_name);
+        zcl::io::print_format(output_file_stream, ZF_STR_LITERAL("namespace % {\n"), namespace_name);
         indent = ZF_STR_LITERAL("    ");
     }
 
-    zcl::io::print_format(&output_file_stream, ZF_STR_LITERAL("%extern const zcl::t_u8 g_%_raw[] = {"), indent, arr_var_subname);
+    zcl::io::print_format(output_file_stream, ZF_STR_LITERAL("%extern const zcl::t_u8 g_%_raw[] = {"), indent, arr_var_subname);
 
     zcl::t_u8 byte_read;
     zcl::t_i32 byte_read_cnt = 0;
 
-    while (zcl::io::stream_read_item(&input_file_stream, &byte_read)) {
+    while (zcl::stream_read_item(input_file_stream, &byte_read)) {
         if (byte_read_cnt > 0) {
-            zcl::io::print(&output_file_stream, ZF_STR_LITERAL(", "));
+            zcl::io::print(output_file_stream, ZF_STR_LITERAL(", "));
         }
 
-        zcl::io::print_format(&output_file_stream, ZF_STR_LITERAL("%"), zcl::io::format_hex(byte_read));
+        zcl::io::print_format(output_file_stream, ZF_STR_LITERAL("%"), zcl::io::format_hex(byte_read));
 
         byte_read_cnt++;
     }
 
-    zcl::io::print(&output_file_stream, ZF_STR_LITERAL("};\n"));
+    zcl::io::print(output_file_stream, ZF_STR_LITERAL("};\n"));
 
-    zcl::io::print_format(&output_file_stream, ZF_STR_LITERAL("%extern const zcl::t_i32 g_%_len = %;\n"), indent, arr_var_subname, byte_read_cnt);
+    zcl::io::print_format(output_file_stream, ZF_STR_LITERAL("%extern const zcl::t_i32 g_%_len = %;\n"), indent, arr_var_subname, byte_read_cnt);
 
     if (!zcl::strs::check_empty(namespace_name)) {
-        zcl::io::print(&output_file_stream, ZF_STR_LITERAL("}\n"));
+        zcl::io::print(output_file_stream, ZF_STR_LITERAL("}\n"));
     }
 
     return true;
@@ -58,8 +58,8 @@
 
 int main(const int arg_cnt, const char *const *const args) {
     if (arg_cnt != 5) {
-        zcl::io::t_stream std_err = zcl::io::get_std_error();
-        zcl::io::print_format(&std_err, ZF_STR_LITERAL("Invalid command-line argument count!\nUsage: zf_bin_to_array <input_file_path> <output_file_path> <array_variable_subname> <namespace>\nNote that the given namespace can be empty for no namespace.\n"));
+        zcl::file_sys::t_file_stream std_err = zcl::file_sys::get_std_error();
+        zcl::io::print_format(std_err, ZF_STR_LITERAL("Invalid command-line argument count!\nUsage: zf_bin_to_array <input_file_path> <output_file_path> <array_variable_subname> <namespace>\nNote that the given namespace can be empty for no namespace.\n"));
         return EXIT_FAILURE;
     }
 

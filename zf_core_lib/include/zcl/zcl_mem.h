@@ -328,3 +328,64 @@ namespace zcl::mem {
 
     // ============================================================
 }
+
+// @temp
+namespace zcl {
+    template <c_array tp_arr_type>
+    [[nodiscard]] t_b8 stream_serialize_array(const t_stream stream, const tp_arr_type arr) {
+        if (!stream_write_item(stream, arr.len)) {
+            return false;
+        }
+
+        if (!stream_write_items_of_array(stream, arr)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    template <c_array_elem tp_elem_type>
+    [[nodiscard]] t_b8 stream_deserialize_array(const t_stream stream, mem::t_arena *const arr_arena, t_array_mut<tp_elem_type> *const o_arr) {
+        t_i32 len;
+
+        if (!stream_read_item(stream, &len)) {
+            return false;
+        }
+
+        *o_arr = mem::arena_push_array<tp_elem_type>(arr_arena, len);
+
+        if (!stream_read_items_into_array(stream, *o_arr, len)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    [[nodiscard]] inline t_b8 stream_serialize_bitset(const t_stream stream, const mem::t_bitset_rdonly bv) {
+        if (!stream_write_item(stream, bv.bit_cnt)) {
+            return false;
+        }
+
+        if (!stream_write_items_of_array(stream, mem::bitset_get_bytes(bv))) {
+            return false;
+        }
+
+        return true;
+    }
+
+    [[nodiscard]] inline t_b8 stream_deserialize_bitset(const t_stream stream, mem::t_arena *const bv_arena, mem::t_bitset_mut *const o_bv) {
+        t_i32 bit_cnt;
+
+        if (!stream_read_item(stream, &bit_cnt)) {
+            return false;
+        }
+
+        *o_bv = mem::bitset_create(bit_cnt, bv_arena);
+
+        if (!stream_read_items_into_array(stream, mem::bitset_get_bytes(*o_bv), mem::bitset_get_bytes(*o_bv).len)) {
+            return false;
+        }
+
+        return true;
+    }
+}

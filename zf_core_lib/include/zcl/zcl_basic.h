@@ -516,13 +516,13 @@ namespace zcl {
 
 
     template <c_simple tp_type>
-    t_array_mut<t_u8> to_bytes(tp_type &val) {
-        return {reinterpret_cast<t_u8 *>(&val), ZF_SIZE_OF(val)};
+    t_array_mut<t_u8> to_bytes(tp_type *const val) {
+        return {reinterpret_cast<t_u8 *>(val), ZF_SIZE_OF(*val)};
     }
 
     template <c_simple tp_type>
-    t_array_rdonly<t_u8> to_bytes(const tp_type &val) {
-        return {reinterpret_cast<const t_u8 *>(&val), ZF_SIZE_OF(val)};
+    t_array_rdonly<t_u8> to_bytes(const tp_type *const val) {
+        return {reinterpret_cast<const t_u8 *>(val), ZF_SIZE_OF(*val)};
     }
 
     template <c_array_elem tp_elem_type>
@@ -547,8 +547,8 @@ namespace zcl {
     struct t_stream {
         void *data;
 
-        t_b8 (*read_func)(t_stream *const stream, const t_array_mut<t_i8> dest_bytes);
-        t_b8 (*write_func)(t_stream *const stream, const t_array_rdonly<t_i8> src_bytes);
+        t_b8 (*read_func)(const t_stream stream, const t_array_mut<t_u8> dest_bytes);
+        t_b8 (*write_func)(const t_stream stream, const t_array_rdonly<t_u8> src_bytes);
 
         t_stream_mode mode;
     };
@@ -595,20 +595,38 @@ namespace zcl {
         t_stream_mode mode;
 
         operator t_stream() {
-            const auto read_func = [](t_stream *const stream, const t_array_mut<t_i8> dest_bytes) {
-                ZF_ASSERT(stream->mode == ek_stream_mode_read);
+            const auto read_func = [](const t_stream stream, const t_array_mut<t_u8> dest_bytes) {
+                ZF_ASSERT(stream.mode == ek_stream_mode_read);
 
-                const auto state = static_cast<t_mem_stream *>(stream->data);
-                return false;
-                // return static_cast<t_i32>(fread(dest_bytes.raw, 1, static_cast<size_t>(dest_bytes.len), state->file)) == dest_bytes.len;
+                const auto mem_stream = static_cast<t_mem_stream *>(stream.data);
+
+                if (mem_stream->byte_pos + dest_bytes.len > mem_stream->bytes.len) {
+                    return false;
+                }
+
+                const t_array_rdonly<t_u8> src_bytes = array_slice_from(mem_stream->bytes, mem_stream->byte_pos);
+                array_copy(src_bytes, dest_bytes, true);
+
+                mem_stream->byte_pos += dest_bytes.len;
+
+                return true;
             };
 
-            const auto write_func = [](t_stream *const stream, const t_array_rdonly<t_i8> src_bytes) {
-                ZF_ASSERT(stream->mode == ek_stream_mode_read);
+            const auto write_func = [](const t_stream stream, const t_array_rdonly<t_u8> src_bytes) {
+                ZF_ASSERT(stream.mode == ek_stream_mode_write);
 
-                const auto state = static_cast<t_mem_stream *>(stream->data);
-                return false;
-                // return static_cast<t_i32>(fwrite(src_bytes.raw, 1, static_cast<size_t>(src_bytes.len), state->file)) == src_bytes.len;
+                const auto mem_stream = static_cast<t_mem_stream *>(stream.data);
+
+                if (mem_stream->byte_pos + src_bytes.len > mem_stream->bytes.len) {
+                    return false;
+                }
+
+                const t_array_mut<t_u8> dest_bytes = array_slice_from(mem_stream->bytes, mem_stream->byte_pos);
+                array_copy(src_bytes, dest_bytes);
+
+                mem_stream->byte_pos += src_bytes.len;
+
+                return true;
             };
 
             return {

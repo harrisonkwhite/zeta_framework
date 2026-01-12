@@ -45,14 +45,14 @@ zcl::t_b8 compile_shader(const zcl::strs::t_str_rdonly shader_file_path, const z
     ZF_ASSERT(exe_dir.bytes[exe_dir.bytes.len - 1] == '/' || exe_dir.bytes[exe_dir.bytes.len - 1] == '\\'); // Assuming this.
 
     const zcl::strs::t_str_mut shaderc_file_path_terminated = {zcl::mem::arena_push_array<zcl::t_u8>(temp_arena, exe_dir.bytes.len + shaderc_file_path_rel.bytes.len + 1)};
-    zcl::t_stream shaderc_file_path_terminated_byte_stream = zcl::io::mem_stream_create(shaderc_file_path_terminated.bytes, zcl::io::ek_stream_mode_write);
-    zcl::io::print_format(&shaderc_file_path_terminated_byte_stream, ZF_STR_LITERAL("%%\0"), exe_dir, shaderc_file_path_rel);
+    zcl::t_mem_stream shaderc_file_path_terminated_byte_stream = zcl::mem_stream_create(shaderc_file_path_terminated.bytes, zcl::ek_stream_mode_write);
+    zcl::io::print_format(shaderc_file_path_terminated_byte_stream, ZF_STR_LITERAL("%%\0"), exe_dir, shaderc_file_path_rel);
     ZF_ASSERT(zcl::strs::bytes_check_terminated_only_at_end(shaderc_file_path_terminated.bytes));
 
     const zcl::strs::t_str_rdonly shaderc_include_dir_rel = ZF_STR_LITERAL("tools/bgfx/shaderc_include");
     const zcl::strs::t_str_mut shaderc_include_dir_terminated = {zcl::mem::arena_push_array<zcl::t_u8>(temp_arena, exe_dir.bytes.len + shaderc_include_dir_rel.bytes.len + 1)};
-    zcl::io::t_stream shaderc_include_dir_terminated_byte_stream = zcl::io::mem_stream_create(shaderc_include_dir_terminated.bytes, zcl::io::ek_stream_mode_write);
-    zcl::io::print_format(&shaderc_include_dir_terminated_byte_stream, ZF_STR_LITERAL("%%\0"), exe_dir, shaderc_include_dir_rel);
+    zcl::t_mem_stream shaderc_include_dir_terminated_byte_stream = zcl::mem_stream_create(shaderc_include_dir_terminated.bytes, zcl::ek_stream_mode_write);
+    zcl::io::print_format(shaderc_include_dir_terminated_byte_stream, ZF_STR_LITERAL("%%\0"), exe_dir, shaderc_include_dir_rel);
     ZF_ASSERT(zcl::strs::bytes_check_terminated_only_at_end(shaderc_include_dir_terminated.bytes));
 
     const zcl::t_static_array<const char *, 15> args = {{
@@ -109,9 +109,9 @@ zcl::t_b8 compile_shader(const zcl::strs::t_str_rdonly shader_file_path, const z
     }
 
     if (r > 0) {
-        zcl::io::t_stream std_err = zcl::io::get_std_error();
+        zcl::file_sys::t_file_stream std_err = zcl::file_sys::get_std_error();
         const auto err = zcl::strs::t_str_rdonly{zcl::ds::list_to_array(&bin_list)};
-        zcl::io::print_format(&std_err, ZF_STR_LITERAL("==================== BGFX SHADERC ERROR ====================\n%============================================================\n"), err);
+        zcl::io::print_format(std_err, ZF_STR_LITERAL("==================== BGFX SHADERC ERROR ====================\n%============================================================\n"), err);
         return false;
     }
 

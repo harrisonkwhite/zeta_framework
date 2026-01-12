@@ -2,6 +2,7 @@
 
 #include <stb_image.h>
 #include <stb_truetype.h>
+#include <zcl/zcl_file_sys.h>
 
 namespace zcl::gfx {
     constexpr ds::t_hash_func<strs::t_code_pt> k_code_pt_hash_func =
@@ -41,23 +42,23 @@ namespace zcl::gfx {
     }
 
     t_b8 texture_pack(const strs::t_str_rdonly file_path, const t_texture_data_mut texture_data, mem::t_arena *const temp_arena) {
-        if (!io::create_file_and_parent_directories(file_path, temp_arena)) {
+        if (!file_sys::create_file_and_parent_directories(file_path, temp_arena)) {
             return false;
         }
 
-        io::t_stream fs;
+        file_sys::t_file_stream fs;
 
-        if (!io::file_open(file_path, io::ek_file_access_mode_write, temp_arena, &fs)) {
+        if (!file_sys::file_open(file_path, file_sys::ek_file_access_mode_write, temp_arena, &fs)) {
             return false;
         }
 
-        ZF_DEFER({ io::file_close(&fs); });
+        ZF_DEFER({ file_sys::file_close(&fs); });
 
-        if (!io::stream_write_item(&fs, texture_data.size_in_pxs)) {
+        if (!stream_write_item(fs, texture_data.size_in_pxs)) {
             return false;
         }
 
-        if (!io::stream_write_items_of_array(&fs, texture_data.rgba_px_data)) {
+        if (!stream_write_items_of_array(fs, texture_data.rgba_px_data)) {
             return false;
         }
 
@@ -65,23 +66,23 @@ namespace zcl::gfx {
     }
 
     t_b8 texture_unpack(const strs::t_str_rdonly file_path, mem::t_arena *const texture_data_arena, mem::t_arena *const temp_arena, t_texture_data_mut *const o_texture_data) {
-        io::t_stream fs;
+        file_sys::t_file_stream fs;
 
-        if (!io::file_open(file_path, io::ek_file_access_mode_read, temp_arena, &fs)) {
+        if (!file_sys::file_open(file_path, file_sys::ek_file_access_mode_read, temp_arena, &fs)) {
             return false;
         }
 
-        ZF_DEFER({ io::file_close(&fs); });
+        ZF_DEFER({ file_sys::file_close(&fs); });
 
         math::t_v2_i size_in_pxs;
 
-        if (!io::stream_read_item(&fs, &size_in_pxs)) {
+        if (!stream_read_item(fs, &size_in_pxs)) {
             return false;
         }
 
         const auto rgba_px_data = mem::arena_push_array<t_u8>(texture_data_arena, 4 * size_in_pxs.x * size_in_pxs.y);
 
-        if (!io::stream_read_items_into_array(&fs, rgba_px_data, rgba_px_data.len)) {
+        if (!stream_read_items_into_array(fs, rgba_px_data, rgba_px_data.len)) {
             return false;
         }
 
@@ -96,7 +97,7 @@ namespace zcl::gfx {
         // Get the plain font file data.
         t_array_mut<t_u8> font_file_data;
 
-        if (!io::file_load_contents(file_path, temp_arena, temp_arena, &font_file_data)) {
+        if (!file_sys::file_load_contents(file_path, temp_arena, temp_arena, &font_file_data)) {
             return false;
         }
 
@@ -269,31 +270,31 @@ namespace zcl::gfx {
     }
 
     t_b8 font_pack(const strs::t_str_rdonly file_path, const t_font_arrangement &arrangement, const t_array_rdonly<t_font_atlas_rgba> atlas_rgbas, mem::t_arena *const temp_arena) {
-        if (!io::create_file_and_parent_directories(file_path, temp_arena)) {
+        if (!file_sys::create_file_and_parent_directories(file_path, temp_arena)) {
             return false;
         }
 
-        io::t_stream fs;
+        file_sys::t_file_stream fs;
 
-        if (!io::file_open(file_path, io::ek_file_access_mode_write, temp_arena, &fs)) {
+        if (!file_sys::file_open(file_path, file_sys::ek_file_access_mode_write, temp_arena, &fs)) {
             return false;
         }
 
-        ZF_DEFER({ io::file_close(&fs); });
+        ZF_DEFER({ file_sys::file_close(&fs); });
 
-        if (!io::stream_write_item(&fs, arrangement.line_height)) {
+        if (!stream_write_item(fs, arrangement.line_height)) {
             return false;
         }
 
-        if (!ds::hash_map_serialize(&arrangement.code_pts_to_glyph_infos, &fs, temp_arena)) {
+        if (!ds::hash_map_serialize(&arrangement.code_pts_to_glyph_infos, fs, temp_arena)) {
             return false;
         }
 
-        if (!ds::hash_map_serialize(&arrangement.code_pt_pairs_to_kernings, &fs, temp_arena)) {
+        if (!ds::hash_map_serialize(&arrangement.code_pt_pairs_to_kernings, fs, temp_arena)) {
             return false;
         }
 
-        if (!io::stream_serialize_array(&fs, atlas_rgbas)) {
+        if (!stream_serialize_array(fs, atlas_rgbas)) {
             return false;
         }
 
@@ -301,27 +302,27 @@ namespace zcl::gfx {
     }
 
     t_b8 font_unpack(const strs::t_str_rdonly file_path, mem::t_arena *const arrangement_arena, mem::t_arena *const atlas_rgbas_arena, mem::t_arena *const temp_arena, t_font_arrangement *const o_arrangement, t_array_mut<t_font_atlas_rgba> *const o_atlas_rgbas) {
-        io::t_stream fs;
+        file_sys::t_file_stream fs;
 
-        if (!io::file_open(file_path, io::ek_file_access_mode_read, temp_arena, &fs)) {
+        if (!file_sys::file_open(file_path, file_sys::ek_file_access_mode_read, temp_arena, &fs)) {
             return false;
         }
 
-        ZF_DEFER({ io::file_close(&fs); });
+        ZF_DEFER({ file_sys::file_close(&fs); });
 
-        if (!io::stream_read_item(&fs, &o_arrangement->line_height)) {
+        if (!stream_read_item(fs, &o_arrangement->line_height)) {
             return false;
         }
 
-        if (!ds::hash_map_deserialize(&fs, arrangement_arena, k_code_pt_hash_func, temp_arena, &o_arrangement->code_pts_to_glyph_infos)) {
+        if (!ds::hash_map_deserialize(fs, arrangement_arena, k_code_pt_hash_func, temp_arena, &o_arrangement->code_pts_to_glyph_infos)) {
             return false;
         }
 
-        if (!ds::hash_map_deserialize(&fs, arrangement_arena, k_code_pt_pair_hash_func, temp_arena, &o_arrangement->code_pt_pairs_to_kernings, k_code_pt_pair_comparator)) {
+        if (!ds::hash_map_deserialize(fs, arrangement_arena, k_code_pt_pair_hash_func, temp_arena, &o_arrangement->code_pt_pairs_to_kernings, k_code_pt_pair_comparator)) {
             return false;
         }
 
-        if (!io::stream_deserialize_array(&fs, atlas_rgbas_arena, o_atlas_rgbas)) {
+        if (!stream_deserialize_array(fs, atlas_rgbas_arena, o_atlas_rgbas)) {
             return false;
         }
 
@@ -329,19 +330,19 @@ namespace zcl::gfx {
     }
 
     t_b8 shader_pack(const strs::t_str_rdonly file_path, const t_array_rdonly<t_u8> compiled_shader_bin, mem::t_arena *const temp_arena) {
-        if (!io::create_file_and_parent_directories(file_path, temp_arena)) {
+        if (!file_sys::create_file_and_parent_directories(file_path, temp_arena)) {
             return false;
         }
 
-        io::t_stream fs;
+        file_sys::t_file_stream fs;
 
-        if (!io::file_open(file_path, io::ek_file_access_mode_write, temp_arena, &fs)) {
+        if (!file_sys::file_open(file_path, file_sys::ek_file_access_mode_write, temp_arena, &fs)) {
             return false;
         }
 
-        ZF_DEFER({ io::file_close(&fs); });
+        ZF_DEFER({ file_sys::file_close(&fs); });
 
-        if (!io::stream_serialize_array(&fs, compiled_shader_bin)) {
+        if (!stream_serialize_array(fs, compiled_shader_bin)) {
             return false;
         }
 
@@ -349,15 +350,15 @@ namespace zcl::gfx {
     }
 
     t_b8 shader_unpack(const strs::t_str_rdonly file_path, mem::t_arena *const shader_bin_arena, mem::t_arena *const temp_arena, t_array_mut<t_u8> *const o_shader_bin) {
-        io::t_stream fs;
+        file_sys::t_file_stream fs;
 
-        if (!io::file_open(file_path, io::ek_file_access_mode_read, temp_arena, &fs)) {
+        if (!file_sys::file_open(file_path, file_sys::ek_file_access_mode_read, temp_arena, &fs)) {
             return false;
         }
 
-        ZF_DEFER({ io::file_close(&fs); });
+        ZF_DEFER({ file_sys::file_close(&fs); });
 
-        if (!io::stream_deserialize_array(&fs, shader_bin_arena, o_shader_bin)) {
+        if (!stream_deserialize_array(fs, shader_bin_arena, o_shader_bin)) {
             return false;
         }
 

@@ -560,12 +560,12 @@ namespace zcl::ds {
     }
 
     template <c_hash_map tp_hash_map_type>
-    [[nodiscard]] t_b8 hash_map_serialize(const tp_hash_map_type *const hm, io::t_stream *const stream, mem::t_arena *const temp_arena) {
-        if (!io::stream_write_item(stream, hash_map_get_cap(hm))) {
+    [[nodiscard]] t_b8 hash_map_serialize(const tp_hash_map_type *const hm, const t_stream stream, mem::t_arena *const temp_arena) {
+        if (!stream_write_item(stream, hash_map_get_cap(hm))) {
             return false;
         }
 
-        if (!io::stream_write_item(stream, hash_map_get_entry_count(hm))) {
+        if (!stream_write_item(stream, hash_map_get_entry_count(hm))) {
             return false;
         }
 
@@ -573,11 +573,11 @@ namespace zcl::ds {
         t_array_mut<typename tp_hash_map_type::t_value> values;
         hash_map_load_entries(hm, temp_arena, &keys, &values);
 
-        if (!io::stream_write_items_of_array(stream, keys)) {
+        if (!stream_write_items_of_array(stream, keys)) {
             return false;
         }
 
-        if (!io::stream_write_items_of_array(stream, values)) {
+        if (!stream_write_items_of_array(stream, values)) {
             return false;
         }
 
@@ -585,16 +585,16 @@ namespace zcl::ds {
     }
 
     template <c_hash_map tp_hash_map_type>
-    [[nodiscard]] t_b8 hash_map_deserialize(io::t_stream *const stream, mem::t_arena *const hm_arena, const t_hash_func<typename tp_hash_map_type::t_key> hm_hash_func, mem::t_arena *const temp_arena, tp_hash_map_type *const o_hm, const t_comparator_bin<typename tp_hash_map_type::t_key> hm_key_comparator = k_comparator_bin_default<typename tp_hash_map_type::t_key>) {
+    [[nodiscard]] t_b8 hash_map_deserialize(const t_stream stream, mem::t_arena *const hm_arena, const t_hash_func<typename tp_hash_map_type::t_key> hm_hash_func, mem::t_arena *const temp_arena, tp_hash_map_type *const o_hm, const t_comparator_bin<typename tp_hash_map_type::t_key> hm_key_comparator = k_comparator_bin_default<typename tp_hash_map_type::t_key>) {
         t_i32 cap;
 
-        if (!io::stream_read_item(stream, &cap)) {
+        if (!stream_read_item(stream, &cap)) {
             return false;
         }
 
         t_i32 entry_cnt;
 
-        if (!io::stream_read_item(stream, &entry_cnt)) {
+        if (!stream_read_item(stream, &entry_cnt)) {
             return false;
         }
 
@@ -602,13 +602,13 @@ namespace zcl::ds {
 
         const auto keys = mem::arena_push_array<typename tp_hash_map_type::t_key>(temp_arena, entry_cnt);
 
-        if (!io::stream_read_items_into_array(stream, keys, entry_cnt)) {
+        if (!stream_read_items_into_array(stream, keys, entry_cnt)) {
             return false;
         }
 
         const auto values = mem::arena_push_array<typename tp_hash_map_type::t_value>(temp_arena, entry_cnt);
 
-        if (!io::stream_read_items_into_array(stream, values, entry_cnt)) {
+        if (!stream_read_items_into_array(stream, values, entry_cnt)) {
             return false;
         }
 

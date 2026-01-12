@@ -237,7 +237,7 @@ zcl::t_b8 pack_assets(const zcl::strs::t_str_rdonly instrs_json_file_path) {
 
                     zcl::t_array_mut<zcl::t_u8> extra_chrs_file_contents;
 
-                    if (!zcl::io::file_load_contents(extra_chrs_file_path, &arena, &arena, &extra_chrs_file_contents)) {
+                    if (!zcl::file_sys::file_load_contents(extra_chrs_file_path, &arena, &arena, &extra_chrs_file_contents)) {
                         zcl::io::log_error(ZF_STR_LITERAL("Failed to load extra characters file \"%\"!"), extra_chrs_file_path);
                         return false;
                     }

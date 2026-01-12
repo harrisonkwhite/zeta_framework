@@ -1,7 +1,7 @@
 #include <zcl/zcl_audio.h>
 
 #include <miniaudio.h>
-#include <zcl/zcl_io.h>
+#include <zcl/zcl_file_sys.h>
 
 namespace zcl::audio {
     t_b8 sound_load_from_raw(const strs::t_str_rdonly file_path, mem::t_arena *const snd_data_arena, mem::t_arena *const temp_arena, t_sound_data_mut *const o_snd_data) {
@@ -38,61 +38,61 @@ namespace zcl::audio {
     }
 
     t_b8 sound_pack(const strs::t_str_rdonly file_path, const t_sound_data_rdonly snd_data, mem::t_arena *const temp_arena) {
-        if (!io::create_file_and_parent_directories(file_path, temp_arena)) {
+        if (!file_sys::create_file_and_parent_directories(file_path, temp_arena)) {
             return false;
         }
 
-        io::t_stream fs;
+        file_sys::t_file_stream fs;
 
-        if (!io::file_open(file_path, io::ek_file_access_mode_write, temp_arena, &fs)) {
+        if (!file_sys::file_open(file_path, file_sys::ek_file_access_mode_write, temp_arena, &fs)) {
             return false;
         }
 
-        ZF_DEFER({ io::file_close(&fs); });
+        ZF_DEFER({ file_sys::file_close(&fs); });
 
-        return sound_serialize(snd_data, &fs);
+        return sound_serialize(snd_data, fs);
     }
 
     t_b8 sound_unpack(const strs::t_str_rdonly file_path, mem::t_arena *const snd_data_arena, mem::t_arena *const temp_arena, t_sound_data_mut *const o_snd_data) {
-        io::t_stream fs;
+        file_sys::t_file_stream fs;
 
-        if (!io::file_open(file_path, io::ek_file_access_mode_read, temp_arena, &fs)) {
+        if (!file_sys::file_open(file_path, file_sys::ek_file_access_mode_read, temp_arena, &fs)) {
             return false;
         }
 
-        ZF_DEFER({ io::file_close(&fs); });
+        ZF_DEFER({ file_sys::file_close(&fs); });
 
-        if (!io::stream_read_item(&fs, &o_snd_data->meta)) {
+        if (!stream_read_item(fs, &o_snd_data->meta)) {
             return false;
         }
 
         o_snd_data->pcm = mem::arena_push_array<t_f32>(snd_data_arena, sound_get_sample_cnt(o_snd_data->meta));
 
-        if (!io::stream_read_items_into_array(&fs, o_snd_data->pcm, o_snd_data->pcm.len)) {
+        if (!stream_read_items_into_array(fs, o_snd_data->pcm, o_snd_data->pcm.len)) {
             return false;
         }
 
         return true;
     }
 
-    t_b8 sound_serialize(const t_sound_data_rdonly snd_data, io::t_stream *const stream) {
-        if (!io::stream_write_item(stream, snd_data.meta)) {
+    t_b8 sound_serialize(const t_sound_data_rdonly snd_data, const t_stream stream) {
+        if (!stream_write_item(stream, snd_data.meta)) {
             return false;
         }
 
-        if (!io::stream_serialize_array(stream, snd_data.pcm)) {
+        if (!stream_serialize_array(stream, snd_data.pcm)) {
             return false;
         }
 
         return true;
     }
 
-    t_b8 sound_deserialize(io::t_stream *const stream, mem::t_arena *const snd_data_arena, t_sound_data_mut *const o_snd_data) {
-        if (!io::stream_read_item(stream, &o_snd_data->meta)) {
+    t_b8 sound_deserialize(const t_stream stream, mem::t_arena *const snd_data_arena, t_sound_data_mut *const o_snd_data) {
+        if (!stream_read_item(stream, &o_snd_data->meta)) {
             return false;
         }
 
-        if (!io::stream_deserialize_array(stream, snd_data_arena, &o_snd_data->pcm)) {
+        if (!stream_deserialize_array(stream, snd_data_arena, &o_snd_data->pcm)) {
             return false;
         }
 

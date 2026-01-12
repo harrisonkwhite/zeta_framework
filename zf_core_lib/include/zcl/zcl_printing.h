@@ -1,6 +1,7 @@
 #pragma once
 
 #include <zcl/zcl_io.h>
+#include <zcl/zcl_math.h>
 
 namespace zcl::io {
     // ============================================================
@@ -110,14 +111,14 @@ namespace zcl::io {
     // ============================================================
     // @section: Functions
 
-    inline t_b8 print(t_stream *const stream, const strs::t_str_rdonly str) {
+    inline t_b8 print(const t_stream stream, const strs::t_str_rdonly str) {
         return stream_write_items_of_array(stream, str.bytes);
     }
 
-    inline t_b8 print_format(t_stream *const stream, const strs::t_str_rdonly format);
+    inline t_b8 print_format(const t_stream stream, const strs::t_str_rdonly format);
 
     template <typename tp_arg_type, typename... tp_arg_types_leftover>
-    t_b8 print_format(t_stream *const stream, const strs::t_str_rdonly format, const tp_arg_type &arg, const tp_arg_types_leftover &...args_leftover);
+    t_b8 print_format(const t_stream stream, const strs::t_str_rdonly format, const tp_arg_type &arg, const tp_arg_types_leftover &...args_leftover);
 
     inline t_bool_format format_bool(const t_b8 value) {
         return {.value = value};
@@ -129,7 +130,7 @@ namespace zcl::io {
         return format_bool(value);
     }
 
-    inline t_b8 print_type(t_stream *const stream, const t_bool_format format) {
+    inline t_b8 print_type(const t_stream stream, const t_bool_format format) {
         const strs::t_str_rdonly true_str = ZF_STR_LITERAL("true");
         const strs::t_str_rdonly false_str = ZF_STR_LITERAL("false");
 
@@ -139,14 +140,14 @@ namespace zcl::io {
     inline t_str_format format_str(const strs::t_str_rdonly value) { return {.value = value}; }
     inline t_str_format format_default(const strs::t_str_rdonly value) { return format_str(value); }
 
-    inline t_b8 print_type(t_stream *const stream, const t_str_format format) {
+    inline t_b8 print_type(const t_stream stream, const t_str_format format) {
         return print(stream, format.value);
     }
 
     inline t_code_pt_format format_code_pt(const strs::t_code_pt value) { return {.value = value}; }
     inline t_code_pt_format format_default(const strs::t_code_pt value) { return format_code_pt(value); }
 
-    inline t_b8 print_type(t_stream *const stream, const t_code_pt_format format) {
+    inline t_b8 print_type(const t_stream stream, const t_code_pt_format format) {
         t_static_array<t_u8, 4> code_pt_bytes;
         t_i32 code_pt_byte_cnt;
         strs::code_pt_to_utf8_bytes(format.value, &code_pt_bytes, &code_pt_byte_cnt);
@@ -160,13 +161,13 @@ namespace zcl::io {
     template <c_integral tp_type> t_integral_format<tp_type> format_default(const tp_type value) { return format_int(value); }
 
     template <c_integral tp_type>
-    t_b8 print_type(t_stream *const stream, const t_integral_format<tp_type> format) {
+    t_b8 print_type(const t_stream stream, const t_integral_format<tp_type> format) {
         t_static_array<t_u8, 20> str_bytes = {}; // Maximum possible number of ASCII characters needed to represent a 64-bit integer.
-        t_stream str_bytes_stream = mem_stream_create(array_to_nonstatic(&str_bytes), ek_stream_mode_write);
+        t_mem_stream str_bytes_stream = mem_stream_create(array_to_nonstatic(&str_bytes), ek_stream_mode_write);
         t_b8 str_bytes_stream_write_success = true;
 
         if (format.value < 0) {
-            str_bytes_stream_write_success = stream_write_item(&str_bytes_stream, '-');
+            str_bytes_stream_write_success = stream_write_item(str_bytes_stream, '-');
             ZF_ASSERT(str_bytes_stream_write_success);
         }
 
@@ -174,7 +175,7 @@ namespace zcl::io {
 
         for (t_i32 i = 0; i < dig_cnt; i++) {
             const auto byte = static_cast<t_u8>('0' + math::calc_digit_at(format.value, dig_cnt - 1 - i));
-            str_bytes_stream_write_success = stream_write_item(&str_bytes_stream, byte);
+            str_bytes_stream_write_success = stream_write_item(str_bytes_stream, byte);
             ZF_ASSERT(str_bytes_stream_write_success);
         }
 
@@ -194,7 +195,7 @@ namespace zcl::io {
     t_float_format<tp_type> format_default(const tp_type value) { return format_float(value); }
 
     template <c_floating_point tp_type>
-    t_b8 print_type(t_stream *const stream, const t_float_format<tp_type> format) {
+    t_b8 print_type(const t_stream stream, const t_float_format<tp_type> format) {
         ZF_ASSERT(format.precision > 0);
 
         t_static_array<t_u8, 400> str_bytes = {}; // Roughly more than how many bytes should ever be needed.
@@ -247,23 +248,23 @@ namespace zcl::io {
     }
 
     template <c_integral_unsigned tp_type>
-    t_b8 print_type(t_stream *const stream, const t_hex_format<tp_type> format) {
+    t_b8 print_type(const t_stream stream, const t_hex_format<tp_type> format) {
         ZF_ASSERT(format.min_digits >= k_hex_format_digit_cnt_min && format.min_digits <= k_hex_format_digit_cnt_max);
 
         t_static_array<t_u8, 2 + k_hex_format_digit_cnt_max> str_bytes = {}; // Can facilitate max number of digits plus the "0x" prefix.
-        t_stream str_bytes_stream = mem_stream_create(array_to_nonstatic(&str_bytes), ek_stream_mode_write);
+        t_mem_stream str_bytes_stream = mem_stream_create(array_to_nonstatic(&str_bytes), ek_stream_mode_write);
 
         t_b8 str_bytes_stream_write_success = true;
 
         if (!(format.flags & ek_hex_format_flags_omit_prefix)) {
-            str_bytes_stream_write_success = stream_write_item(&str_bytes_stream, '0');
+            str_bytes_stream_write_success = stream_write_item(str_bytes_stream, '0');
             ZF_ASSERT(str_bytes_stream_write_success);
 
-            str_bytes_stream_write_success = stream_write_item(&str_bytes_stream, 'x');
+            str_bytes_stream_write_success = stream_write_item(str_bytes_stream, 'x');
             ZF_ASSERT(str_bytes_stream_write_success);
         }
 
-        const t_i32 str_bytes_digits_begin_pos = str_bytes_stream.type_data.mem.byte_pos;
+        const t_i32 str_bytes_digits_begin_pos = str_bytes_stream.byte_pos;
 
         const auto dig_to_byte = [flags = format.flags](const t_i32 dig) -> t_u8 {
             if (dig < 10) {
@@ -285,7 +286,7 @@ namespace zcl::io {
         do {
             for (t_i32 i = 0; i < inner_loop_cnt; i++) {
                 const auto byte = dig_to_byte(value_mut % 16);
-                str_bytes_stream_write_success = stream_write_item(&str_bytes_stream, byte);
+                str_bytes_stream_write_success = stream_write_item(str_bytes_stream, byte);
                 ZF_ASSERT(str_bytes_stream_write_success);
 
                 value_mut /= 16;
@@ -307,7 +308,7 @@ namespace zcl::io {
 
     inline t_v2_format format_default(const math::t_v2 value) { return format_v2(value); }
 
-    inline t_b8 print_type(t_stream *const stream, const t_v2_format format) {
+    inline t_b8 print_type(const t_stream stream, const t_v2_format format) {
         return print(stream, ZF_STR_LITERAL("("))
             && print_type(stream, format_float(format.value.x, format.trim_trailing_zeros))
             && print(stream, ZF_STR_LITERAL(", "))
@@ -319,7 +320,7 @@ namespace zcl::io {
     inline t_v2_i_format format_v2(const math::t_v2_i value) { return {.value = value}; }
     inline t_v2_i_format format_default(const math::t_v2_i value) { return format_v2(value); }
 
-    inline t_b8 print_type(t_stream *const stream, const t_v2_i_format format) {
+    inline t_b8 print_type(const t_stream stream, const t_v2_i_format format) {
         return print(stream, ZF_STR_LITERAL("("))
             && print_type(stream, format_int(format.value.x))
             && print(stream, ZF_STR_LITERAL(", "))
@@ -336,7 +337,7 @@ namespace zcl::io {
     t_array_format<tp_arr_type> format_default(const tp_arr_type value) { return format_array(value); }
 
     template <c_formattable_array tp_arr_type>
-    t_b8 print_type(t_stream *const stream, const t_array_format<tp_arr_type> format) {
+    t_b8 print_type(const t_stream stream, const t_array_format<tp_arr_type> format) {
         if (format.one_per_line) {
             for (t_i32 i = 0; i < format.value.len; i++) {
                 if (!print_format(stream, ZF_STR_LITERAL("[%] %%"), i, format.value[i], i < format.value.len - 1 ? ZF_STR_LITERAL("\n") : ZF_STR_LITERAL(""))) {
@@ -374,7 +375,7 @@ namespace zcl::io {
 
     inline t_bitset_format format_default(const mem::t_bitset_rdonly &value) { return format_bitset(value, ek_bitset_format_style_seq); }
 
-    inline t_b8 print_type(t_stream *const stream, const t_bitset_format format) {
+    inline t_b8 print_type(const t_stream stream, const t_bitset_format format) {
         const auto print_bit = [&](const t_i32 bit_index) {
             const strs::t_str_rdonly str = mem::bitset_check_set(format.value, bit_index) ? ZF_STR_LITERAL("1") : ZF_STR_LITERAL("0");
             return print(stream, str);
@@ -449,7 +450,7 @@ namespace zcl::io {
         return cnt;
     }
 
-    inline t_b8 print_format(t_stream *const stream, const strs::t_str_rdonly format) {
+    inline t_b8 print_format(const t_stream stream, const strs::t_str_rdonly format) {
         ZF_ASSERT(count_format_specs(format) == 0);
 
         // Just print the rest of the string.
@@ -459,7 +460,7 @@ namespace zcl::io {
     // Use a single '%' as the format specifier. To actually include a '%' in the output, write "^%". To actually include a '^', write "^^".
     // Returns true iff the operation was successful.
     template <typename tp_arg_type, typename... tp_arg_types_leftover>
-    t_b8 print_format(t_stream *const stream, const strs::t_str_rdonly format, const tp_arg_type &arg, const tp_arg_types_leftover &...args_leftover) {
+    t_b8 print_format(const t_stream stream, const strs::t_str_rdonly format, const tp_arg_type &arg, const tp_arg_types_leftover &...args_leftover) {
         static_assert(!c_cstr<tp_arg_type>, "C-strings are prohibited for default formatting as a form of error prevention.");
 
         ZF_ASSERT(count_format_specs(format) == 1 + sizeof...(args_leftover));
@@ -501,7 +502,8 @@ namespace zcl::io {
 
     template <typename... tp_arg_types>
     t_b8 log(const strs::t_str_rdonly format, const tp_arg_types &...args) {
-        t_stream std_err = get_std_out();
+#if 0
+        file_sys::t_file_stream std_err = get_std_out();
 
         if (!print_format(&std_err, format, args...)) {
             return false;
@@ -510,12 +512,14 @@ namespace zcl::io {
         if (!print(&std_err, ZF_STR_LITERAL("\n"))) {
             return false;
         }
+#endif
 
         return true;
     }
 
     template <typename... tp_arg_types>
     t_b8 log_error(const strs::t_str_rdonly format, const tp_arg_types &...args) {
+#if 0
         t_stream std_err = get_std_error();
 
         if (!print(&std_err, ZF_STR_LITERAL("Error: "))) {
@@ -529,12 +533,14 @@ namespace zcl::io {
         if (!print(&std_err, ZF_STR_LITERAL("\n"))) {
             return false;
         }
+#endif
 
         return true;
     }
 
     template <typename... tp_arg_types>
     t_b8 log_error_type(const strs::t_str_rdonly type_name, const strs::t_str_rdonly format, const tp_arg_types &...args) {
+#if 0
         ZF_ASSERT(!strs::check_empty(type_name));
 
         t_stream std_err = get_std_error();
@@ -550,12 +556,14 @@ namespace zcl::io {
         if (!print(&std_err, ZF_STR_LITERAL("\n"))) {
             return false;
         }
+#endif
 
         return true;
     }
 
     template <typename... tp_arg_types>
     t_b8 log_warning(const strs::t_str_rdonly format, const tp_arg_types &...args) {
+#if 0
         t_stream std_err = get_std_error();
 
         if (!print(&std_err, ZF_STR_LITERAL("Warning: "))) {
@@ -569,6 +577,7 @@ namespace zcl::io {
         if (!print(&std_err, ZF_STR_LITERAL("\n"))) {
             return false;
         }
+#endif
 
         return true;
     }

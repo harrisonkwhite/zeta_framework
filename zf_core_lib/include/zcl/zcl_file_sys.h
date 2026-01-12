@@ -38,17 +38,17 @@ namespace zcl::file_sys {
         t_stream_mode mode;
 
         operator t_stream() {
-            const auto read_func = [](t_stream *const stream, const t_array_mut<t_i8> dest_bytes) {
-                ZF_ASSERT(stream->mode == ek_stream_mode_read);
+            const auto read_func = [](const t_stream stream, const t_array_mut<t_u8> dest_bytes) {
+                ZF_ASSERT(stream.mode == ek_stream_mode_read);
 
-                const auto state = static_cast<t_file_stream *>(stream->data);
+                const auto state = static_cast<t_file_stream *>(stream.data);
                 return static_cast<t_i32>(fread(dest_bytes.raw, 1, static_cast<size_t>(dest_bytes.len), state->file)) == dest_bytes.len;
             };
 
-            const auto write_func = [](t_stream *const stream, const t_array_rdonly<t_i8> src_bytes) {
-                ZF_ASSERT(stream->mode == ek_stream_mode_read);
+            const auto write_func = [](const t_stream stream, const t_array_rdonly<t_u8> src_bytes) {
+                ZF_ASSERT(stream.mode == ek_stream_mode_write);
 
-                const auto state = static_cast<t_file_stream *>(stream->data);
+                const auto state = static_cast<t_file_stream *>(stream.data);
                 return static_cast<t_i32>(fwrite(src_bytes.raw, 1, static_cast<size_t>(src_bytes.len), state->file)) == src_bytes.len;
             };
 
@@ -69,9 +69,9 @@ namespace zcl::file_sys {
     inline t_file_stream get_std_out() { return file_stream_create(stdout, ek_stream_mode_write); }
     inline t_file_stream get_std_error() { return file_stream_create(stderr, ek_stream_mode_write); }
 
-    [[nodiscard]] t_b8 file_open(const strs::t_str_rdonly file_path, const t_file_access_mode mode, mem::t_arena *const temp_arena, t_stream *const o_stream);
-    void file_close(t_stream *const stream);
-    t_i32 file_calc_size(t_stream *const stream);
+    [[nodiscard]] t_b8 file_open(const strs::t_str_rdonly file_path, const t_file_access_mode mode, mem::t_arena *const temp_arena, t_file_stream *const o_stream);
+    void file_close(t_file_stream *const stream);
+    t_i32 file_calc_size(t_file_stream *const stream);
     [[nodiscard]] t_b8 file_load_contents(const strs::t_str_rdonly file_path, mem::t_arena *const contents_arena, mem::t_arena *const temp_arena, t_array_mut<t_u8> *const o_contents, const t_b8 add_terminator = false);
 
     [[nodiscard]] t_b8 create_directory(const strs::t_str_rdonly path, mem::t_arena *const temp_arena, t_directory_creation_result *const o_creation_res = nullptr);
