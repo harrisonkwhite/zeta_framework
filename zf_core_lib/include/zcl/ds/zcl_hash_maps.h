@@ -2,7 +2,7 @@
 
 #include <zcl/ds/zcl_kv_stores.h>
 
-namespace zcl::ds {
+namespace zcl {
     template <typename tp_type> concept c_hash_map_key = c_simple<tp_type> && c_same<tp_type, t_cvref_removed<tp_type>>;
     template <typename tp_type> concept c_hash_map_value = c_simple<tp_type> && c_same<tp_type, t_cvref_removed<tp_type>>;
 

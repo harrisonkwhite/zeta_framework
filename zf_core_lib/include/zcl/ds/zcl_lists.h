@@ -2,7 +2,7 @@
 
 #include <zcl/zcl_basic.h>
 
-namespace zcl::ds {
+namespace zcl {
     template <typename tp_type>
     concept c_list_elem = c_simple<tp_type> && c_same<tp_type, t_cvref_removed<tp_type>>;
 
