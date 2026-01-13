@@ -28,7 +28,7 @@ namespace zcl {
             .frame_cnt = static_cast<t_i32>(frame_cnt),
         };
 
-        o_snd_data->pcm = arena_push_array<t_f32>(snd_data_arena, sound_get_sample_cnt(o_snd_data->meta));
+        o_snd_data->pcm = arena_push_array<t_f32>(snd_data_arena, sound_calc_sample_cnt(o_snd_data->meta));
 
         if (ma_decoder_read_pcm_frames(&decoder, o_snd_data->pcm.raw, frame_cnt, nullptr) != MA_SUCCESS) {
             return false;
@@ -66,7 +66,7 @@ namespace zcl {
             return false;
         }
 
-        o_snd_data->pcm = arena_push_array<t_f32>(snd_data_arena, sound_get_sample_cnt(o_snd_data->meta));
+        o_snd_data->pcm = arena_push_array<t_f32>(snd_data_arena, sound_calc_sample_cnt(o_snd_data->meta));
 
         if (!stream_read_items_into_array(fs, o_snd_data->pcm, o_snd_data->pcm.len)) {
             return false;

@@ -15,7 +15,7 @@
     #pragma comment(lib, "bcrypt.lib")
 #endif
 
-namespace zcl::rand {
+namespace zcl {
     struct t_pcg32 {
         t_u64 state; // RNG state. All values are possible.
         t_u64 inc;   // Controls which RNG sequence (stream) is selected. Must ALWAYS be odd.
@@ -73,23 +73,23 @@ namespace zcl::rand {
         return rng;
     }
 
-    t_u32 gen_u32(t_rng *const rng) {
+    t_u32 rand_gen_u32(t_rng *const rng) {
         return pcg32_calc_next(&rng->pcg32);
     }
 
-    t_u32 gen_u32_in_range(t_rng *const rng, const t_u32 min_incl, const t_u32 max_excl) {
+    t_u32 rand_gen_u32_in_range(t_rng *const rng, const t_u32 min_incl, const t_u32 max_excl) {
         ZF_ASSERT(min_incl < max_excl);
         return min_incl + pcg32_calc_next_bounded(&rng->pcg32, max_excl - min_incl);
     }
 
-    t_i32 gen_i32_in_range(t_rng *const rng, const t_i16 min_incl, const t_i16 max_excl) {
+    t_i32 rand_gen_i32_in_range(t_rng *const rng, const t_i16 min_incl, const t_i16 max_excl) {
         ZF_ASSERT(min_incl < max_excl);
 
         const auto diff = static_cast<t_u32>(max_excl - min_incl);
         return min_incl + static_cast<t_i32>(pcg32_calc_next_bounded(&rng->pcg32, diff));
     }
 
-    t_f32 gen_perc(t_rng *const rng) {
+    t_f32 rand_gen_perc(t_rng *const rng) {
         return static_cast<t_f32>(pcg32_calc_next(&rng->pcg32)) / 4294967296.0f;
     }
 
@@ -106,7 +106,7 @@ namespace zcl::rand {
 #endif
     }
 
-    t_u64 gen_seed() {
+    t_u64 rand_gen_seed() {
         return get_os_entropy();
     }
 
