@@ -4,7 +4,7 @@
 #include <zcl/zcl_basic.h>
 #include <zcl/zcl_strs.h>
 
-namespace zcl::file_sys {
+namespace zcl {
     struct t_file_stream {
         FILE *file;
         t_stream_mode mode;
@@ -37,9 +37,9 @@ namespace zcl::file_sys {
         return {.file = file, .mode = mode};
     }
 
-    inline t_file_stream get_std_in() { return file_stream_create(stdin, ek_stream_mode_read); }
-    inline t_file_stream get_std_out() { return file_stream_create(stdout, ek_stream_mode_write); }
-    inline t_file_stream get_std_error() { return file_stream_create(stderr, ek_stream_mode_write); }
+    inline t_file_stream file_stream_create_std_in() { return file_stream_create(stdin, ek_stream_mode_read); }
+    inline t_file_stream file_stream_create_std_out() { return file_stream_create(stdout, ek_stream_mode_write); }
+    inline t_file_stream file_stream_create_std_error() { return file_stream_create(stderr, ek_stream_mode_write); }
 
     enum t_file_access_mode : t_i32 {
         ek_file_access_mode_read,

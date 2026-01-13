@@ -45,17 +45,17 @@ namespace zcl::gfx {
     }
 
     t_b8 texture_pack(const t_str_rdonly file_path, const t_texture_data_mut texture_data, t_arena *const temp_arena) {
-        if (!file_sys::create_file_and_parent_directories(file_path, temp_arena)) {
+        if (!create_file_and_parent_directories(file_path, temp_arena)) {
             return false;
         }
 
-        file_sys::t_file_stream fs;
+        t_file_stream fs;
 
-        if (!file_sys::file_open(file_path, file_sys::ek_file_access_mode_write, temp_arena, &fs)) {
+        if (!file_open(file_path, ek_file_access_mode_write, temp_arena, &fs)) {
             return false;
         }
 
-        ZF_DEFER({ file_sys::file_close(&fs); });
+        ZF_DEFER({ file_close(&fs); });
 
         if (!stream_write_item(fs, texture_data.size_in_pxs)) {
             return false;
@@ -69,13 +69,13 @@ namespace zcl::gfx {
     }
 
     t_b8 texture_unpack(const t_str_rdonly file_path, t_arena *const texture_data_arena, t_arena *const temp_arena, t_texture_data_mut *const o_texture_data) {
-        file_sys::t_file_stream fs;
+        t_file_stream fs;
 
-        if (!file_sys::file_open(file_path, file_sys::ek_file_access_mode_read, temp_arena, &fs)) {
+        if (!file_open(file_path, ek_file_access_mode_read, temp_arena, &fs)) {
             return false;
         }
 
-        ZF_DEFER({ file_sys::file_close(&fs); });
+        ZF_DEFER({ file_close(&fs); });
 
         t_v2_i size_in_pxs;
 
@@ -100,7 +100,7 @@ namespace zcl::gfx {
         // Get the plain font file data.
         t_array_mut<t_u8> font_file_data;
 
-        if (!file_sys::file_load_contents(file_path, temp_arena, temp_arena, &font_file_data)) {
+        if (!file_load_contents(file_path, temp_arena, temp_arena, &font_file_data)) {
             return false;
         }
 
@@ -273,17 +273,17 @@ namespace zcl::gfx {
     }
 
     t_b8 font_pack(const t_str_rdonly file_path, const t_font_arrangement &arrangement, const t_array_rdonly<t_font_atlas_rgba> atlas_rgbas, t_arena *const temp_arena) {
-        if (!file_sys::create_file_and_parent_directories(file_path, temp_arena)) {
+        if (!create_file_and_parent_directories(file_path, temp_arena)) {
             return false;
         }
 
-        file_sys::t_file_stream fs;
+        t_file_stream fs;
 
-        if (!file_sys::file_open(file_path, file_sys::ek_file_access_mode_write, temp_arena, &fs)) {
+        if (!file_open(file_path, ek_file_access_mode_write, temp_arena, &fs)) {
             return false;
         }
 
-        ZF_DEFER({ file_sys::file_close(&fs); });
+        ZF_DEFER({ file_close(&fs); });
 
         if (!stream_write_item(fs, arrangement.line_height)) {
             return false;
@@ -305,13 +305,13 @@ namespace zcl::gfx {
     }
 
     t_b8 font_unpack(const t_str_rdonly file_path, t_arena *const arrangement_arena, t_arena *const atlas_rgbas_arena, t_arena *const temp_arena, t_font_arrangement *const o_arrangement, t_array_mut<t_font_atlas_rgba> *const o_atlas_rgbas) {
-        file_sys::t_file_stream fs;
+        t_file_stream fs;
 
-        if (!file_sys::file_open(file_path, file_sys::ek_file_access_mode_read, temp_arena, &fs)) {
+        if (!file_open(file_path, ek_file_access_mode_read, temp_arena, &fs)) {
             return false;
         }
 
-        ZF_DEFER({ file_sys::file_close(&fs); });
+        ZF_DEFER({ file_close(&fs); });
 
         if (!stream_read_item(fs, &o_arrangement->line_height)) {
             return false;
@@ -333,17 +333,17 @@ namespace zcl::gfx {
     }
 
     t_b8 shader_pack(const t_str_rdonly file_path, const t_array_rdonly<t_u8> compiled_shader_bin, t_arena *const temp_arena) {
-        if (!file_sys::create_file_and_parent_directories(file_path, temp_arena)) {
+        if (!create_file_and_parent_directories(file_path, temp_arena)) {
             return false;
         }
 
-        file_sys::t_file_stream fs;
+        t_file_stream fs;
 
-        if (!file_sys::file_open(file_path, file_sys::ek_file_access_mode_write, temp_arena, &fs)) {
+        if (!file_open(file_path, ek_file_access_mode_write, temp_arena, &fs)) {
             return false;
         }
 
-        ZF_DEFER({ file_sys::file_close(&fs); });
+        ZF_DEFER({ file_close(&fs); });
 
         if (!stream_serialize_array(fs, compiled_shader_bin)) {
             return false;
@@ -353,13 +353,13 @@ namespace zcl::gfx {
     }
 
     t_b8 shader_unpack(const t_str_rdonly file_path, t_arena *const shader_bin_arena, t_arena *const temp_arena, t_array_mut<t_u8> *const o_shader_bin) {
-        file_sys::t_file_stream fs;
+        t_file_stream fs;
 
-        if (!file_sys::file_open(file_path, file_sys::ek_file_access_mode_read, temp_arena, &fs)) {
+        if (!file_open(file_path, ek_file_access_mode_read, temp_arena, &fs)) {
             return false;
         }
 
-        ZF_DEFER({ file_sys::file_close(&fs); });
+        ZF_DEFER({ file_close(&fs); });
 
         if (!stream_deserialize_array(fs, shader_bin_arena, o_shader_bin)) {
             return false;

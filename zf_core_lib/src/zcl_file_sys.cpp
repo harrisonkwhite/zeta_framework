@@ -13,7 +13,7 @@
     #include <direct.h>
 #endif
 
-namespace zcl::file_sys {
+namespace zcl {
     t_b8 file_open(const t_str_rdonly path, const t_file_access_mode mode, t_arena *const temp_arena, t_file_stream *const o_stream) {
         const t_str_rdonly path_terminated = str_clone_but_add_terminator(path, temp_arena);
 

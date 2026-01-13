@@ -504,7 +504,7 @@ namespace zcl::io {
     template <typename... tp_arg_types>
     t_b8 log(const t_str_rdonly format, const tp_arg_types &...args) {
 #if 0
-        file_sys::t_file_stream std_err = get_std_out();
+        t_file_stream std_err = get_std_out();
 
         if (!print_format(&std_err, format, args...)) {
             return false;

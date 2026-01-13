@@ -41,7 +41,7 @@ zcl::t_b8 compile_shader(const zcl::t_str_rdonly shader_file_path, const zcl::t_
     const char profile_cstr[] = "glsl";
 #endif
 
-    const zcl::t_str_rdonly exe_dir = zcl::file_sys::get_executable_directory(temp_arena);
+    const zcl::t_str_rdonly exe_dir = zcl::get_executable_directory(temp_arena);
     ZF_ASSERT(exe_dir.bytes[exe_dir.bytes.len - 1] == '/' || exe_dir.bytes[exe_dir.bytes.len - 1] == '\\'); // Assuming this.
 
     const zcl::t_str_mut shaderc_file_path_terminated = {zcl::arena_push_array<zcl::t_u8>(temp_arena, exe_dir.bytes.len + shaderc_file_path_rel.bytes.len + 1)};
@@ -109,7 +109,7 @@ zcl::t_b8 compile_shader(const zcl::t_str_rdonly shader_file_path, const zcl::t_
     }
 
     if (r > 0) {
-        zcl::file_sys::t_file_stream std_err = zcl::file_sys::get_std_error();
+        zcl::t_file_stream std_err = zcl::file_stream_create_std_error();
         const auto err = zcl::t_str_rdonly{zcl::ds::list_to_array(&bin_list)};
         zcl::io::print_format(std_err, ZCL_STR_LITERAL("==================== BGFX SHADERC ERROR ====================\n%============================================================\n"), err);
         return false;
