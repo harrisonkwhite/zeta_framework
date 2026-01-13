@@ -1,6 +1,8 @@
 #pragma once
 
 #include <zcl/zcl_basic.h>
+#include <zcl/zcl_arenas.h>
+#include <zcl/zcl_streams.h>
 
 namespace zcl {
     // Creates a byte-sized bitmask with only a single bit set.

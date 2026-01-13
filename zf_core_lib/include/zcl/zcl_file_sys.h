@@ -2,6 +2,8 @@
 
 #include <cstdio>
 #include <zcl/zcl_basic.h>
+#include <zcl/zcl_streams.h>
+#include <zcl/zcl_arenas.h>
 #include <zcl/zcl_strs.h>
 
 namespace zcl {
