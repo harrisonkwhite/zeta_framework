@@ -4,7 +4,7 @@
 #include <zcl/ds/zcl_hash_maps.h>
 #include <zcl/zcl_strs.h>
 
-namespace zcl::gfx {
+namespace zcl {
     struct t_color_rgba32f {
         t_f32 r;
         t_f32 g;

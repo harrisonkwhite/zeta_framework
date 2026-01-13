@@ -218,7 +218,7 @@ namespace zgl::gfx {
         return resource;
     }
 
-    t_resource *texture_create(const zcl::gfx::t_texture_data_rdonly texture_data, t_resource_group *const group) {
+    t_resource *texture_create(const zcl::t_texture_data_rdonly texture_data, t_resource_group *const group) {
         ZF_ASSERT(g_module_state.phase == ek_module_phase_active_but_not_midframe);
 
         const uint64_t flags = BGFX_SAMPLER_MIN_POINT | BGFX_SAMPLER_MAG_POINT | BGFX_SAMPLER_U_CLAMP | BGFX_SAMPLER_V_CLAMP;
@@ -397,11 +397,11 @@ namespace zgl::gfx {
         g_module_state.phase = ek_module_phase_active_but_not_midframe;
     }
 
-    static void bgfx_view_configure(const bgfx::ViewId view_id, const zcl::t_v2_i size, const zcl::t_mat4x4 &view_mat, const zcl::t_b8 clear, const zcl::gfx::t_color_rgba32f clear_col, const bgfx::FrameBufferHandle fb_hdl) {
+    static void bgfx_view_configure(const bgfx::ViewId view_id, const zcl::t_v2_i size, const zcl::t_mat4x4 &view_mat, const zcl::t_b8 clear, const zcl::t_color_rgba32f clear_col, const bgfx::FrameBufferHandle fb_hdl) {
         ZF_ASSERT(g_module_state.phase == ek_module_phase_active_and_midframe);
         ZF_ASSERT(view_id >= 0 && view_id < BGFX_CONFIG_MAX_VIEWS);
         ZF_ASSERT(size.x > 0 && size.y > 0);
-        ZF_ASSERT(!clear || zcl::gfx::color_check_normalized(clear_col));
+        ZF_ASSERT(!clear || zcl::color_check_normalized(clear_col));
 
         const auto bgfx_view_id = static_cast<bgfx::ViewId>(view_id);
 
@@ -418,7 +418,7 @@ namespace zgl::gfx {
         bgfx::setViewTransform(bgfx_view_id, &view_mat, &proj_mat);
 
         if (clear) {
-            bgfx::setViewClear(bgfx_view_id, BGFX_CLEAR_COLOR, zcl::gfx::color_rgba8_to_hex(zcl::gfx::color_rgba32f_to_rgba8(clear_col)));
+            bgfx::setViewClear(bgfx_view_id, BGFX_CLEAR_COLOR, zcl::color_rgba8_to_hex(zcl::color_rgba32f_to_rgba8(clear_col)));
         }
 
         bgfx::setViewFrameBuffer(bgfx_view_id, fb_hdl);
@@ -426,7 +426,7 @@ namespace zgl::gfx {
         bgfx::touch(bgfx_view_id);
     }
 
-    void frame_pass_begin(t_frame_context *const context, const zcl::t_v2_i size, const zcl::t_mat4x4 &view_mat, const zcl::t_b8 clear, const zcl::gfx::t_color_rgba32f clear_col) {
+    void frame_pass_begin(t_frame_context *const context, const zcl::t_v2_i size, const zcl::t_mat4x4 &view_mat, const zcl::t_b8 clear, const zcl::t_color_rgba32f clear_col) {
         ZF_ASSERT(!context->pass_active);
 
         context->pass_active = true;
@@ -435,7 +435,7 @@ namespace zgl::gfx {
         bgfx_view_configure(static_cast<bgfx::ViewId>(context->pass_index), size, view_mat, clear, clear_col, BGFX_INVALID_HANDLE);
     }
 
-    void frame_pass_begin_offscreen(t_frame_context *const context, const t_resource *const texture_target, const zcl::t_mat4x4 &view_mat, const zcl::t_b8 clear, const zcl::gfx::t_color_rgba32f clear_col) {
+    void frame_pass_begin_offscreen(t_frame_context *const context, const t_resource *const texture_target, const zcl::t_mat4x4 &view_mat, const zcl::t_b8 clear, const zcl::t_color_rgba32f clear_col) {
         ZF_ASSERT(!context->pass_active);
         ZF_ASSERT(texture_target->type == ek_resource_type_texture && texture_target->type_data.texture.is_target);
 

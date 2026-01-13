@@ -7,7 +7,7 @@
 #include <stb_truetype.h>
 #include <zcl/zcl_file_sys.h>
 
-namespace zcl::gfx {
+namespace zcl {
     constexpr t_hash_func<t_code_pt> k_code_pt_hash_func =
         [](const t_code_pt &code_pt) {
             return static_cast<t_i32>(code_pt);

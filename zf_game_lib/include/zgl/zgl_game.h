@@ -22,7 +22,7 @@ namespace zgl {
 
             gfx::t_resource_group *perm_gfx_resource_group;
 
-            zcl::rand::t_rng *rng;
+            zcl::t_rng *rng;
 
             void *user_mem;
         };
@@ -35,7 +35,7 @@ namespace zgl {
 
             gfx::t_resource_group *perm_gfx_resource_group;
 
-            zcl::rand::t_rng *rng;
+            zcl::t_rng *rng;
 
             zcl::t_f64 fps;
 
@@ -48,7 +48,7 @@ namespace zgl {
 
             gfx::t_frame_context *frame_context;
 
-            zcl::rand::t_rng *rng;
+            zcl::t_rng *rng;
 
             zcl::t_f64 fps;
 

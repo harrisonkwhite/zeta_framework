@@ -47,7 +47,7 @@ namespace zgl::gfx {
 
     struct t_vertex {
         zcl::t_v2 pos;
-        zcl::gfx::t_color_rgba32f blend;
+        zcl::t_color_rgba32f blend;
         zcl::t_v2 uv;
     };
 
@@ -84,12 +84,12 @@ namespace zgl::gfx {
 
     void resource_group_destroy(t_resource_group *const group);
 
-    t_resource *texture_create(const zcl::gfx::t_texture_data_rdonly texture_data, t_resource_group *const group);
+    t_resource *texture_create(const zcl::t_texture_data_rdonly texture_data, t_resource_group *const group);
 
     inline t_resource *texture_create_from_raw(const zcl::t_str_rdonly file_path, zcl::t_arena *const temp_arena, t_resource_group *const group) {
-        zcl::gfx::t_texture_data_mut texture_data;
+        zcl::t_texture_data_mut texture_data;
 
-        if (!zcl::gfx::texture_load_from_raw(file_path, temp_arena, temp_arena, &texture_data)) {
+        if (!zcl::texture_load_from_raw(file_path, temp_arena, temp_arena, &texture_data)) {
             ZF_FATAL();
         }
 
@@ -97,9 +97,9 @@ namespace zgl::gfx {
     }
 
     inline t_resource *texture_create_from_packed(const zcl::t_str_rdonly file_path, zcl::t_arena *const temp_arena, t_resource_group *const group) {
-        zcl::gfx::t_texture_data_mut texture_data;
+        zcl::t_texture_data_mut texture_data;
 
-        if (!zcl::gfx::texture_unpack(file_path, temp_arena, temp_arena, &texture_data)) {
+        if (!zcl::texture_unpack(file_path, temp_arena, temp_arena, &texture_data)) {
             ZF_FATAL();
         }
 
@@ -126,13 +126,13 @@ namespace zgl::gfx {
     inline t_resource *shader_prog_create_from_packed(const zcl::t_str_rdonly vert_shader_file_path, const zcl::t_str_rdonly frag_shader_file_path, zcl::t_arena *const temp_arena, t_resource_group *const arena) {
         zcl::t_array_mut<zcl::t_u8> vert_shader_compiled_bin;
 
-        if (!zcl::gfx::shader_unpack(vert_shader_file_path, temp_arena, temp_arena, &vert_shader_compiled_bin)) {
+        if (!zcl::shader_unpack(vert_shader_file_path, temp_arena, temp_arena, &vert_shader_compiled_bin)) {
             ZF_FATAL();
         }
 
         zcl::t_array_mut<zcl::t_u8> frag_shader_compiled_bin;
 
-        if (!zcl::gfx::shader_unpack(frag_shader_file_path, temp_arena, temp_arena, &frag_shader_compiled_bin)) {
+        if (!zcl::shader_unpack(frag_shader_file_path, temp_arena, temp_arena, &frag_shader_compiled_bin)) {
             ZF_FATAL();
         }
 
@@ -145,7 +145,7 @@ namespace zgl::gfx {
     t_uniform_type uniform_get_type(const t_resource *const uniform);
 
     struct t_font {
-        zcl::gfx::t_font_arrangement arrangement;
+        zcl::t_font_arrangement arrangement;
         zcl::t_array_mut<t_resource *> atlases;
     };
 
@@ -159,7 +159,7 @@ namespace zgl::gfx {
     // @subsection: Frame
 
     constexpr zcl::t_b8 vertex_check_valid(const t_vertex vert) {
-        return zcl::gfx::color_check_normalized(vert.blend)
+        return zcl::color_check_normalized(vert.blend)
             && vert.uv.x >= 0.0f && vert.uv.y >= 0.0f && vert.uv.x <= 1.0f && vert.uv.y <= 1.0f;
     }
 
@@ -172,8 +172,8 @@ namespace zgl::gfx {
     t_frame_context *frame_begin(const t_frame_basis *const basis, zcl::t_arena *const context_arena);
     void frame_end(t_frame_context *const context);
 
-    void frame_pass_begin(t_frame_context *const context, const zcl::t_v2_i size, const zcl::t_mat4x4 &view_mat = zcl::matrix_create_identity(), const zcl::t_b8 clear = false, const zcl::gfx::t_color_rgba32f clear_col = zcl::gfx::k_color_black);
-    void frame_pass_begin_offscreen(t_frame_context *const context, const t_resource *const texture_target, const zcl::t_mat4x4 &view_mat = zcl::matrix_create_identity(), const zcl::t_b8 clear = false, const zcl::gfx::t_color_rgba32f clear_col = zcl::gfx::k_color_black);
+    void frame_pass_begin(t_frame_context *const context, const zcl::t_v2_i size, const zcl::t_mat4x4 &view_mat = zcl::matrix_create_identity(), const zcl::t_b8 clear = false, const zcl::t_color_rgba32f clear_col = zcl::k_color_black);
+    void frame_pass_begin_offscreen(t_frame_context *const context, const t_resource *const texture_target, const zcl::t_mat4x4 &view_mat = zcl::matrix_create_identity(), const zcl::t_b8 clear = false, const zcl::t_color_rgba32f clear_col = zcl::k_color_black);
 
     void frame_pass_end(t_frame_context *const context);
 
@@ -195,7 +195,7 @@ namespace zgl::gfx {
     // Leave texture as nullptr for no texture.
     void frame_submit_triangles(t_frame_context *const context, const zcl::t_array_rdonly<t_triangle> triangles, const t_resource *const texture = nullptr);
 
-    inline void frame_submit_triangle(t_frame_context *const context, const zcl::t_static_array<zcl::t_v2, 3> &pts, const zcl::t_static_array<zcl::gfx::t_color_rgba32f, 3> &pt_colors) {
+    inline void frame_submit_triangle(t_frame_context *const context, const zcl::t_static_array<zcl::t_v2, 3> &pts, const zcl::t_static_array<zcl::t_color_rgba32f, 3> &pt_colors) {
         const t_triangle triangle = {
             .verts = {{
                 {.pos = pts[0], .blend = pt_colors[0], .uv = {}},
@@ -207,11 +207,11 @@ namespace zgl::gfx {
         frame_submit_triangles(context, {&triangle, 1}, nullptr);
     }
 
-    inline void frame_submit_triangle(t_frame_context *const context, const zcl::t_static_array<zcl::t_v2, 3> &pts, const zcl::gfx::t_color_rgba32f color) {
+    inline void frame_submit_triangle(t_frame_context *const context, const zcl::t_static_array<zcl::t_v2, 3> &pts, const zcl::t_color_rgba32f color) {
         frame_submit_triangle(context, pts, {{color, color, color}});
     }
 
-    inline void frame_submit_rect(t_frame_context *const context, const zcl::t_rect_f rect, const zcl::gfx::t_color_rgba32f color_topleft, const zcl::gfx::t_color_rgba32f color_topright, const zcl::gfx::t_color_rgba32f color_bottomright, const zcl::gfx::t_color_rgba32f color_bottomleft) {
+    inline void frame_submit_rect(t_frame_context *const context, const zcl::t_rect_f rect, const zcl::t_color_rgba32f color_topleft, const zcl::t_color_rgba32f color_topright, const zcl::t_color_rgba32f color_bottomright, const zcl::t_color_rgba32f color_bottomleft) {
         ZF_ASSERT(rect.width > 0.0f && rect.height > 0.0f);
 
         const zcl::t_static_array<t_triangle, 2> triangles = {{
@@ -234,19 +234,19 @@ namespace zgl::gfx {
         frame_submit_triangles(context, zcl::array_to_nonstatic(&triangles), nullptr);
     }
 
-    inline void frame_submit_rect(t_frame_context *const context, const zcl::t_rect_f rect, const zcl::gfx::t_color_rgba32f color) {
+    inline void frame_submit_rect(t_frame_context *const context, const zcl::t_rect_f rect, const zcl::t_color_rgba32f color) {
         frame_submit_rect(context, rect, color, color, color, color);
     }
 
-    void frame_submit_rect_rotated(t_frame_context *const context, const zcl::t_v2 pos, const zcl::t_v2 size, const zcl::t_v2 origin, const zcl::t_f32 rot, const zcl::gfx::t_color_rgba32f color_topleft, const zcl::gfx::t_color_rgba32f color_topright, const zcl::gfx::t_color_rgba32f color_bottomright, const zcl::gfx::t_color_rgba32f color_bottomleft);
+    void frame_submit_rect_rotated(t_frame_context *const context, const zcl::t_v2 pos, const zcl::t_v2 size, const zcl::t_v2 origin, const zcl::t_f32 rot, const zcl::t_color_rgba32f color_topleft, const zcl::t_color_rgba32f color_topright, const zcl::t_color_rgba32f color_bottomright, const zcl::t_color_rgba32f color_bottomleft);
 
-    inline void frame_submit_rect_rotated(t_frame_context *const context, const zcl::t_v2 pos, const zcl::t_v2 size, const zcl::t_v2 origin, const zcl::t_f32 rot, const zcl::gfx::t_color_rgba32f color) {
+    inline void frame_submit_rect_rotated(t_frame_context *const context, const zcl::t_v2 pos, const zcl::t_v2 size, const zcl::t_v2 origin, const zcl::t_f32 rot, const zcl::t_color_rgba32f color) {
         frame_submit_rect_rotated(context, pos, size, origin, rot, color, color, color, color);
     }
 
     void frame_submit_texture(t_frame_context *const context, const t_resource *const texture, const zcl::t_v2 pos, const zcl::t_rect_i src_rect = {}, const zcl::t_v2 origin = k_origin_topleft, const zcl::t_f32 rot = 0.0f);
 
-    void frame_submit_str(t_frame_context *const context, const zcl::t_str_rdonly str, const t_font &font, const zcl::t_v2 pos, zcl::t_arena *const temp_arena, const zcl::t_v2 alignment = k_alignment_topleft, const zcl::gfx::t_color_rgba32f blend = zcl::gfx::k_color_white);
+    void frame_submit_str(t_frame_context *const context, const zcl::t_str_rdonly str, const t_font &font, const zcl::t_v2 pos, zcl::t_arena *const temp_arena, const zcl::t_v2 alignment = k_alignment_topleft, const zcl::t_color_rgba32f blend = zcl::k_color_white);
 
     // ========================================
 

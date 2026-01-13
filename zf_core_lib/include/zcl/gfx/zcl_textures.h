@@ -3,7 +3,7 @@
 #include <zcl/zcl_math.h>
 #include <zcl/zcl_strs.h>
 
-namespace zcl::gfx {
+namespace zcl {
     struct t_texture_data_rdonly {
         t_v2_i size_in_pxs;
         t_array_rdonly<t_u8> rgba_px_data;

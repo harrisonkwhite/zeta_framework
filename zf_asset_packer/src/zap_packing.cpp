@@ -208,14 +208,14 @@ zcl::t_b8 pack_assets(const zcl::t_str_rdonly instrs_json_file_path) {
                 const auto file_path = zcl::cstr_to_str(field_vals[ek_texture_field_file_path]->valuestring);
                 const auto out_file_path = zcl::cstr_to_str(field_vals[ek_texture_field_out_file_path]->valuestring);
 
-                zcl::gfx::t_texture_data_mut texture_data;
+                zcl::t_texture_data_mut texture_data;
 
-                if (!zcl::gfx::texture_load_from_raw(file_path, &arena, &arena, &texture_data)) {
+                if (!zcl::texture_load_from_raw(file_path, &arena, &arena, &texture_data)) {
                     zcl::log_error(ZCL_STR_LITERAL("Failed to load texture from file \"%\"!"), file_path);
                     return false;
                 }
 
-                if (!zcl::gfx::texture_pack(out_file_path, texture_data, &arena)) {
+                if (!zcl::texture_pack(out_file_path, texture_data, &arena)) {
                     zcl::log_error(ZCL_STR_LITERAL("Failed to pack texture to file \"%\"!"), out_file_path);
                     return false;
                 }
@@ -247,15 +247,15 @@ zcl::t_b8 pack_assets(const zcl::t_str_rdonly instrs_json_file_path) {
 
                 // @todo: Proper check for invalid height!
 
-                zcl::gfx::t_font_arrangement arrangement;
-                zcl::t_array_mut<zcl::gfx::t_font_atlas_rgba> atlas_rgbas;
+                zcl::t_font_arrangement arrangement;
+                zcl::t_array_mut<zcl::t_font_atlas_rgba> atlas_rgbas;
 
-                if (!zcl::gfx::font_load_from_raw(file_path, height, code_pt_bs, &arena, &arena, &arena, &arrangement, &atlas_rgbas)) {
+                if (!zcl::font_load_from_raw(file_path, height, code_pt_bs, &arena, &arena, &arena, &arrangement, &atlas_rgbas)) {
                     zcl::log_error(ZCL_STR_LITERAL("Failed to load font from file \"%\"!"), file_path);
                     return false;
                 }
 
-                if (!zcl::gfx::font_pack(out_file_path, arrangement, atlas_rgbas, &arena)) {
+                if (!zcl::font_pack(out_file_path, arrangement, atlas_rgbas, &arena)) {
                     zcl::log_error(ZCL_STR_LITERAL("Failed to pack font to file \"%\"!"), out_file_path);
                     return false;
                 }
@@ -287,7 +287,7 @@ zcl::t_b8 pack_assets(const zcl::t_str_rdonly instrs_json_file_path) {
                     return false;
                 }
 
-                if (!zcl::gfx::shader_pack(out_file_path, compiled_bin, &arena)) {
+                if (!zcl::shader_pack(out_file_path, compiled_bin, &arena)) {
                     zcl::log_error(ZCL_STR_LITERAL("Failed to pack shader to file \"%\"!"), out_file_path);
                     return false;
                 }
