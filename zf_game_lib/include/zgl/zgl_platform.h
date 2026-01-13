@@ -9,7 +9,7 @@ namespace zgl {
 
     namespace platform {
         // Note that the window is not shown by default, you have to manually do this.
-        void module_startup(const zcl::math::t_v2_i init_window_size);
+        void module_startup(const zcl::t_v2_i init_window_size);
 
         void module_shutdown();
 
@@ -31,14 +31,14 @@ namespace zgl {
         void window_set_title(const zcl::strs::t_str_rdonly title, zcl::t_arena *const temp_arena);
 
         // Sets the LOGICAL window size. The actual new framebuffer size MIGHT be larger if there is DPI scaling.
-        void window_set_size(const zcl::math::t_v2_i size);
+        void window_set_size(const zcl::t_v2_i size);
 
         // Set the LOGICAL window size limits. If you don't want to limit a particular dimension, leave it as -1.
         void window_set_size_limits(const zcl::t_i32 min_width, const zcl::t_i32 min_height, const zcl::t_i32 max_width, const zcl::t_i32 max_height);
 
         void window_set_resizable(const zcl::t_b8 resizable);
 
-        zcl::math::t_v2_i window_get_framebuffer_size_cache();
+        zcl::t_v2_i window_get_framebuffer_size_cache();
 
         zcl::t_b8 window_check_fullscreen();
 
@@ -49,10 +49,10 @@ namespace zgl {
         }
 
         // Calculates the size in pixels of whichever monitor the window most resides in.
-        zcl::math::t_v2_i monitor_calc_size_pixels();
+        zcl::t_v2_i monitor_calc_size_pixels();
 
         // Calculates the size (accounting for DPI scaling) of whichever monitor the window most resides in.
-        zcl::math::t_v2_i monitor_calc_size_logical();
+        zcl::t_v2_i monitor_calc_size_logical();
 
         void cursor_set_visible(const zcl::t_b8 visible);
     }

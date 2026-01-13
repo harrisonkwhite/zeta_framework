@@ -68,14 +68,14 @@ namespace zcl::io {
     struct t_v2_format {
         using t_format_tag = void;
 
-        math::t_v2 value;
+        t_v2 value;
         t_b8 trim_trailing_zeros;
     };
 
     struct t_v2_i_format {
         using t_format_tag = void;
 
-        math::t_v2_i value;
+        t_v2_i value;
     };
 
     template <typename tp_arr_type>
@@ -172,10 +172,10 @@ namespace zcl::io {
             ZF_ASSERT(str_bytes_stream_write_success);
         }
 
-        const t_i32 dig_cnt = math::calc_digit_cnt(format.value);
+        const t_i32 dig_cnt = calc_digit_cnt(format.value);
 
         for (t_i32 i = 0; i < dig_cnt; i++) {
-            const auto byte = static_cast<t_u8>('0' + math::calc_digit_at(format.value, dig_cnt - 1 - i));
+            const auto byte = static_cast<t_u8>('0' + calc_digit_at(format.value, dig_cnt - 1 - i));
             str_bytes_stream_write_success = stream_write_item(str_bytes_stream, byte);
             ZF_ASSERT(str_bytes_stream_write_success);
         }
@@ -303,11 +303,11 @@ namespace zcl::io {
     }
 
 
-    inline t_v2_format format_v2(const math::t_v2 value, const t_b8 trim_trailing_zeros = false) {
+    inline t_v2_format format_v2(const t_v2 value, const t_b8 trim_trailing_zeros = false) {
         return {.value = value, .trim_trailing_zeros = trim_trailing_zeros};
     }
 
-    inline t_v2_format format_default(const math::t_v2 value) { return format_v2(value); }
+    inline t_v2_format format_default(const t_v2 value) { return format_v2(value); }
 
     inline t_b8 print_type(const t_stream stream, const t_v2_format format) {
         return print(stream, ZF_STR_LITERAL("("))
@@ -318,8 +318,8 @@ namespace zcl::io {
     }
 
 
-    inline t_v2_i_format format_v2(const math::t_v2_i value) { return {.value = value}; }
-    inline t_v2_i_format format_default(const math::t_v2_i value) { return format_v2(value); }
+    inline t_v2_i_format format_v2(const t_v2_i value) { return {.value = value}; }
+    inline t_v2_i_format format_default(const t_v2_i value) { return format_v2(value); }
 
     inline t_b8 print_type(const t_stream stream, const t_v2_i_format format) {
         return print(stream, ZF_STR_LITERAL("("))

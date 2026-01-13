@@ -1,6 +1,6 @@
 #include <zcl/zcl_math.h>
 
-namespace zcl::math {
+namespace zcl {
     t_rect_f rects_calc_span(const t_array_mut<t_rect_f> rects) {
         ZF_ASSERT(rects.len > 0);
 

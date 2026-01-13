@@ -26,7 +26,7 @@ namespace zcl::gfx {
     t_b8 texture_load_from_raw(const strs::t_str_rdonly file_path, t_arena *const texture_data_arena, t_arena *const temp_arena, t_texture_data_mut *const o_texture_data) {
         const strs::t_str_rdonly file_path_terminated = strs::clone_but_add_terminator(file_path, temp_arena);
 
-        math::t_v2_i size_in_pxs;
+        t_v2_i size_in_pxs;
         t_u8 *const stb_px_data = stbi_load(strs::to_cstr(file_path_terminated), &size_in_pxs.x, &size_in_pxs.y, nullptr, 4);
 
         if (!stb_px_data) {
@@ -77,7 +77,7 @@ namespace zcl::gfx {
 
         ZF_DEFER({ file_sys::file_close(&fs); });
 
-        math::t_v2_i size_in_pxs;
+        t_v2_i size_in_pxs;
 
         if (!stream_read_item(fs, &size_in_pxs)) {
             return false;
@@ -149,7 +149,7 @@ namespace zcl::gfx {
         o_arrangement->code_pts_to_glyph_infos = ds::hash_map_create<strs::t_code_pt, t_font_glyph_info>(k_code_pt_hash_func, arrangement_arena, code_pt_cnt);
 
         t_i32 atlas_index = 0;
-        math::t_v2_i atlas_pen = {};
+        t_v2_i atlas_pen = {};
 
         constexpr t_i32 k_glyph_padding = 4;
 
@@ -184,7 +184,7 @@ namespace zcl::gfx {
             }
 
             glyph_info.atlas_index = atlas_index;
-            glyph_info.atlas_rect = math::rect_create_i32(atlas_pen + math::t_v2_i{k_glyph_padding, k_glyph_padding}, glyph_info.size);
+            glyph_info.atlas_rect = rect_create_i32(atlas_pen + t_v2_i{k_glyph_padding, k_glyph_padding}, glyph_info.size);
             atlas_pen.x += glyph_info.size.x + (k_glyph_padding * 2);
 
             ds::hash_map_put(&o_arrangement->code_pts_to_glyph_infos, code_pt, glyph_info);
@@ -260,8 +260,8 @@ namespace zcl::gfx {
 
             ZF_DEFER({ stbtt_FreeBitmap(stb_bitmap, nullptr); });
 
-            for (t_i32 y = math::rect_get_top(atlas_rect); y < math::rect_get_bottom(atlas_rect); y++) {
-                for (t_i32 x = math::rect_get_left(atlas_rect); x < math::rect_get_right(atlas_rect); x++) {
+            for (t_i32 y = rect_get_top(atlas_rect); y < rect_get_bottom(atlas_rect); y++) {
+                for (t_i32 x = rect_get_left(atlas_rect); x < rect_get_right(atlas_rect); x++) {
                     const t_i32 px_index = (y * 4 * k_font_atlas_size.x) + (x * 4);
                     const t_i32 stb_bitmap_index = ((y - atlas_rect.y) * atlas_rect.width) + (x - atlas_rect.x);
                     (*atlas_rgba)[px_index + 3] = stb_bitmap[stb_bitmap_index];

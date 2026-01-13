@@ -1,12 +1,12 @@
 #include <zgl/zgl_gfx.h>
 
 namespace zgl::gfx {
-    void frame_submit_rect_rotated(t_frame_context *const context, const zcl::math::t_v2 pos, const zcl::math::t_v2 size, const zcl::math::t_v2 origin, const zcl::t_f32 rot, const zcl::gfx::t_color_rgba32f color_topleft, const zcl::gfx::t_color_rgba32f color_topright, const zcl::gfx::t_color_rgba32f color_bottomright, const zcl::gfx::t_color_rgba32f color_bottomleft) {
+    void frame_submit_rect_rotated(t_frame_context *const context, const zcl::t_v2 pos, const zcl::t_v2 size, const zcl::t_v2 origin, const zcl::t_f32 rot, const zcl::gfx::t_color_rgba32f color_topleft, const zcl::gfx::t_color_rgba32f color_topright, const zcl::gfx::t_color_rgba32f color_bottomright, const zcl::gfx::t_color_rgba32f color_bottomleft) {
         ZF_ASSERT(origin_check_valid(origin));
 
-        zcl::t_static_array<zcl::math::t_v2, 4> quad_pts;
+        zcl::t_static_array<zcl::t_v2, 4> quad_pts;
         zcl::t_arena quad_pts_arena = zcl::arena_create_wrapping(zcl::to_bytes(&quad_pts));
-        const zcl::math::t_poly_mut quad_poly = zcl::math::poly_create_quad_rotated(pos, size, origin, rot, &quad_pts_arena);
+        const zcl::t_poly_mut quad_poly = zcl::poly_create_quad_rotated(pos, size, origin, rot, &quad_pts_arena);
 
         const zcl::t_static_array<t_triangle, 2> triangles = {{
             {
@@ -28,37 +28,37 @@ namespace zgl::gfx {
         frame_submit_triangles(context, zcl::array_to_nonstatic(&triangles));
     }
 
-    void frame_submit_texture(t_frame_context *const context, const t_resource *const texture, const zcl::math::t_v2 pos, const zcl::math::t_rect_i src_rect, const zcl::math::t_v2 origin, const zcl::t_f32 rot) {
+    void frame_submit_texture(t_frame_context *const context, const t_resource *const texture, const zcl::t_v2 pos, const zcl::t_rect_i src_rect, const zcl::t_v2 origin, const zcl::t_f32 rot) {
         const auto texture_size = texture_get_size(texture);
 
-        zcl::math::t_rect_i src_rect_to_use;
+        zcl::t_rect_i src_rect_to_use;
 
-        if (zcl::math::rects_check_equal(src_rect, {})) {
+        if (zcl::rects_check_equal(src_rect, {})) {
             src_rect_to_use = {0, 0, texture_size.x, texture_size.y};
         } else {
-            ZF_ASSERT(src_rect.x >= 0 && src_rect.y >= 0 && zcl::math::rect_get_right(src_rect) <= texture_size.x && zcl::math::rect_get_bottom(src_rect) <= texture_size.y);
+            ZF_ASSERT(src_rect.x >= 0 && src_rect.y >= 0 && zcl::rect_get_right(src_rect) <= texture_size.x && zcl::rect_get_bottom(src_rect) <= texture_size.y);
             src_rect_to_use = src_rect;
         }
 
-        const zcl::math::t_rect_f uv_rect = zcl::gfx::texture_calc_uv_rect(src_rect_to_use, texture_size);
+        const zcl::t_rect_f uv_rect = zcl::gfx::texture_calc_uv_rect(src_rect_to_use, texture_size);
 
-        zcl::t_static_array<zcl::math::t_v2, 4> quad_pts;
+        zcl::t_static_array<zcl::t_v2, 4> quad_pts;
         zcl::t_arena quad_pts_arena = zcl::arena_create_wrapping(zcl::to_bytes(&quad_pts));
-        const zcl::math::t_poly_mut quad_poly = zcl::math::poly_create_quad_rotated(pos, zcl::math::v2_i_to_f(zcl::math::rect_get_size(src_rect_to_use)), origin, rot, &quad_pts_arena);
+        const zcl::t_poly_mut quad_poly = zcl::poly_create_quad_rotated(pos, zcl::v2_i_to_f(zcl::rect_get_size(src_rect_to_use)), origin, rot, &quad_pts_arena);
 
         const zcl::t_static_array<t_triangle, 2> triangles = {{
             {
                 .verts = {{
-                    {.pos = quad_poly.pts[0], .blend = zcl::gfx::k_color_white, .uv = zcl::math::rect_get_topleft(uv_rect)},
-                    {.pos = quad_poly.pts[1], .blend = zcl::gfx::k_color_white, .uv = zcl::math::rect_get_topright(uv_rect)},
-                    {.pos = quad_poly.pts[3], .blend = zcl::gfx::k_color_white, .uv = zcl::math::rect_get_bottomleft(uv_rect)},
+                    {.pos = quad_poly.pts[0], .blend = zcl::gfx::k_color_white, .uv = zcl::rect_get_topleft(uv_rect)},
+                    {.pos = quad_poly.pts[1], .blend = zcl::gfx::k_color_white, .uv = zcl::rect_get_topright(uv_rect)},
+                    {.pos = quad_poly.pts[3], .blend = zcl::gfx::k_color_white, .uv = zcl::rect_get_bottomleft(uv_rect)},
                 }},
             },
             {
                 .verts = {{
-                    {.pos = quad_poly.pts[3], .blend = zcl::gfx::k_color_white, .uv = zcl::math::rect_get_bottomleft(uv_rect)},
-                    {.pos = quad_poly.pts[1], .blend = zcl::gfx::k_color_white, .uv = zcl::math::rect_get_topright(uv_rect)},
-                    {.pos = quad_poly.pts[2], .blend = zcl::gfx::k_color_white, .uv = zcl::math::rect_get_bottomright(uv_rect)},
+                    {.pos = quad_poly.pts[3], .blend = zcl::gfx::k_color_white, .uv = zcl::rect_get_bottomleft(uv_rect)},
+                    {.pos = quad_poly.pts[1], .blend = zcl::gfx::k_color_white, .uv = zcl::rect_get_topright(uv_rect)},
+                    {.pos = quad_poly.pts[2], .blend = zcl::gfx::k_color_white, .uv = zcl::rect_get_bottomright(uv_rect)},
                 }},
             },
         }};
@@ -106,7 +106,7 @@ namespace zgl::gfx {
         };
     }
 
-    static zcl::t_array_mut<zcl::math::t_v2> calc_str_chr_render_positions(const zcl::strs::t_str_rdonly str, const zcl::gfx::t_font_arrangement &font_arrangement, const zcl::math::t_v2 pos, const zcl::math::t_v2 alignment, zcl::t_arena *const arena) {
+    static zcl::t_array_mut<zcl::t_v2> calc_str_chr_render_positions(const zcl::strs::t_str_rdonly str, const zcl::gfx::t_font_arrangement &font_arrangement, const zcl::t_v2 pos, const zcl::t_v2 alignment, zcl::t_arena *const arena) {
         ZF_ASSERT(zcl::strs::check_valid_utf8(str));
         ZF_ASSERT(alignment_check_valid(alignment));
 
@@ -131,14 +131,14 @@ namespace zgl::gfx {
         }();
 
         // Reserve memory for the character positions.
-        const auto positions = zcl::arena_push_array<zcl::math::t_v2>(arena, str_meta.len);
+        const auto positions = zcl::arena_push_array<zcl::t_v2>(arena, str_meta.len);
 
         // From the line count we can determine the vertical alignment offset to apply.
         const zcl::t_f32 alignment_offs_y = static_cast<zcl::t_f32>(-(str_meta.line_cnt * font_arrangement.line_height)) * alignment.y;
 
         // Calculate the position of each character.
         zcl::t_i32 chr_index = 0;
-        zcl::math::t_v2 chr_pos_pen = {}; // The position of the current character.
+        zcl::t_v2 chr_pos_pen = {}; // The position of the current character.
         zcl::t_i32 line_begin_chr_index = 0;
         zcl::t_i32 line_len = 0;
         zcl::strs::t_code_pt code_pt_last;
@@ -189,7 +189,7 @@ namespace zgl::gfx {
                 }
             }
 
-            positions[chr_index] = pos + chr_pos_pen + zcl::math::v2_i_to_f(glyph_info->offs);
+            positions[chr_index] = pos + chr_pos_pen + zcl::v2_i_to_f(glyph_info->offs);
             positions[chr_index].y += alignment_offs_y;
 
             chr_pos_pen.x += static_cast<zcl::t_f32>(glyph_info->adv);
@@ -202,7 +202,7 @@ namespace zgl::gfx {
         return positions;
     }
 
-    void frame_submit_str(t_frame_context *const context, const zcl::strs::t_str_rdonly str, const t_font &font, const zcl::math::t_v2 pos, zcl::t_arena *const temp_arena, const zcl::math::t_v2 alignment, const zcl::gfx::t_color_rgba32f blend) {
+    void frame_submit_str(t_frame_context *const context, const zcl::strs::t_str_rdonly str, const t_font &font, const zcl::t_v2 pos, zcl::t_arena *const temp_arena, const zcl::t_v2 alignment, const zcl::gfx::t_color_rgba32f blend) {
         ZF_ASSERT(zcl::strs::check_valid_utf8(str));
         ZF_ASSERT(alignment_check_valid(alignment));
 
@@ -210,7 +210,7 @@ namespace zgl::gfx {
             return;
         }
 
-        const zcl::t_array_mut<zcl::math::t_v2> chr_positions = calc_str_chr_render_positions(str, font.arrangement, pos, alignment, temp_arena);
+        const zcl::t_array_mut<zcl::t_v2> chr_positions = calc_str_chr_render_positions(str, font.arrangement, pos, alignment, temp_arena);
 
         zcl::t_i32 chr_index = 0;
 

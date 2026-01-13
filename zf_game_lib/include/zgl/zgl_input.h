@@ -140,11 +140,11 @@ namespace zgl::input {
     zcl::t_b8 mouse_button_check_released(const t_state *const state, const t_mouse_button_code btn_code);
     void mouse_button_update_state(t_state *const state, const t_mouse_button_code code, const zcl::t_b8 is_down);
 
-    zcl::math::t_v2 cursor_get_pos(const t_state *const state);
-    void cursor_update_state(t_state *const state, const zcl::math::t_v2 pos);
+    zcl::t_v2 cursor_get_pos(const t_state *const state);
+    void cursor_update_state(t_state *const state, const zcl::t_v2 pos);
 
-    zcl::math::t_v2 scroll_get_offset(const t_state *const state);
-    void scroll_update_state(t_state *const state, const zcl::math::t_v2 offs_to_apply);
+    zcl::t_v2 scroll_get_offset(const t_state *const state);
+    void scroll_update_state(t_state *const state, const zcl::t_v2 offs_to_apply);
 
     zcl::t_b8 gamepad_check_connected(const t_state *const state, const zcl::t_i32 index);
     zcl::t_b8 gamepad_check_button_down(const t_state *const state, const zcl::t_i32 gamepad_index, const t_gamepad_button_code btn_code);

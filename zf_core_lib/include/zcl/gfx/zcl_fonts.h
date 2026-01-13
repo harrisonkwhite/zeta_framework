@@ -5,17 +5,17 @@
 #include <zcl/zcl_strs.h>
 
 namespace zcl::gfx {
-    constexpr math::t_v2_i k_font_atlas_size = {1024, 1024};
+    constexpr t_v2_i k_font_atlas_size = {1024, 1024};
 
     using t_font_atlas_rgba = t_static_array<t_u8, 4 * k_font_atlas_size.x * k_font_atlas_size.y>;
 
     struct t_font_glyph_info {
-        math::t_v2_i offs;
-        math::t_v2_i size;
+        t_v2_i offs;
+        t_v2_i size;
         t_i32 adv;
 
         t_i32 atlas_index;
-        math::t_rect_i atlas_rect;
+        t_rect_i atlas_rect;
     };
 
     struct t_font_code_pt_pair {

@@ -16,7 +16,7 @@ namespace zgl::gfx {
         t_module_phase phase;
 
         // @todo: Try and drop both of these.
-        zcl::math::t_v2_i resolution_cache;
+        zcl::t_v2_i resolution_cache;
         t_resource_group perm_resource_group; // @todo: Probably not needed as global anymore.
     } g_module_state;
 
@@ -35,7 +35,7 @@ namespace zgl::gfx {
                 zcl::t_b8 is_target;
                 bgfx::TextureHandle nontarget_texture_bgfx_hdl;
                 bgfx::FrameBufferHandle target_fb_bgfx_hdl;
-                zcl::math::t_v2_i size;
+                zcl::t_v2_i size;
             } texture;
 
             struct {
@@ -234,11 +234,11 @@ namespace zgl::gfx {
         return resource;
     }
 
-    static bgfx::FrameBufferHandle bgfx_create_framebuffer(const zcl::math::t_v2_i size) {
+    static bgfx::FrameBufferHandle bgfx_create_framebuffer(const zcl::t_v2_i size) {
         return bgfx::createFrameBuffer(static_cast<uint16_t>(size.x), static_cast<uint16_t>(size.y), bgfx::TextureFormat::RGBA8, BGFX_SAMPLER_MIN_POINT | BGFX_SAMPLER_MAG_POINT | BGFX_SAMPLER_U_CLAMP | BGFX_SAMPLER_V_CLAMP);
     }
 
-    t_resource *texture_create_target(const zcl::math::t_v2_i size, t_resource_group *const group) {
+    t_resource *texture_create_target(const zcl::t_v2_i size, t_resource_group *const group) {
         ZF_ASSERT(g_module_state.phase == ek_module_phase_active_but_not_midframe);
         ZF_ASSERT(size.x > 0 && size.y > 0);
 
@@ -255,7 +255,7 @@ namespace zgl::gfx {
         return resource;
     }
 
-    void texture_resize_target(t_resource *const texture, const zcl::math::t_v2_i size) {
+    void texture_resize_target(t_resource *const texture, const zcl::t_v2_i size) {
         ZF_ASSERT(g_module_state.phase == ek_module_phase_active_but_not_midframe);
         ZF_ASSERT(texture->type == ek_resource_type_texture && texture->type_data.texture.is_target);
         ZF_ASSERT(size.x > 0 && size.y > 0);
@@ -271,7 +271,7 @@ namespace zgl::gfx {
         texture->type_data.texture.size = size;
     }
 
-    zcl::math::t_v2_i texture_get_size(const t_resource *const texture) {
+    zcl::t_v2_i texture_get_size(const t_resource *const texture) {
         ZF_ASSERT(g_module_state.phase != ek_module_phase_inactive);
         ZF_ASSERT(texture->type == ek_resource_type_texture);
 
@@ -397,7 +397,7 @@ namespace zgl::gfx {
         g_module_state.phase = ek_module_phase_active_but_not_midframe;
     }
 
-    static void bgfx_view_configure(const bgfx::ViewId view_id, const zcl::math::t_v2_i size, const zcl::math::t_mat4x4 &view_mat, const zcl::t_b8 clear, const zcl::gfx::t_color_rgba32f clear_col, const bgfx::FrameBufferHandle fb_hdl) {
+    static void bgfx_view_configure(const bgfx::ViewId view_id, const zcl::t_v2_i size, const zcl::t_mat4x4 &view_mat, const zcl::t_b8 clear, const zcl::gfx::t_color_rgba32f clear_col, const bgfx::FrameBufferHandle fb_hdl) {
         ZF_ASSERT(g_module_state.phase == ek_module_phase_active_and_midframe);
         ZF_ASSERT(view_id >= 0 && view_id < BGFX_CONFIG_MAX_VIEWS);
         ZF_ASSERT(size.x > 0 && size.y > 0);
@@ -409,7 +409,7 @@ namespace zgl::gfx {
 
         bgfx::setViewRect(bgfx_view_id, 0, 0, static_cast<uint16_t>(size.x), static_cast<uint16_t>(size.y));
 
-        auto proj_mat = zcl::math::matrix_create_identity();
+        auto proj_mat = zcl::matrix_create_identity();
         proj_mat.elems[0][0] = 1.0f / (static_cast<zcl::t_f32>(size.x) / 2.0f);
         proj_mat.elems[1][1] = -1.0f / (static_cast<zcl::t_f32>(size.y) / 2.0f);
         proj_mat.elems[3][0] = -1.0f;
@@ -426,7 +426,7 @@ namespace zgl::gfx {
         bgfx::touch(bgfx_view_id);
     }
 
-    void frame_pass_begin(t_frame_context *const context, const zcl::math::t_v2_i size, const zcl::math::t_mat4x4 &view_mat, const zcl::t_b8 clear, const zcl::gfx::t_color_rgba32f clear_col) {
+    void frame_pass_begin(t_frame_context *const context, const zcl::t_v2_i size, const zcl::t_mat4x4 &view_mat, const zcl::t_b8 clear, const zcl::gfx::t_color_rgba32f clear_col) {
         ZF_ASSERT(!context->pass_active);
 
         context->pass_active = true;
@@ -435,7 +435,7 @@ namespace zgl::gfx {
         bgfx_view_configure(static_cast<bgfx::ViewId>(context->pass_index), size, view_mat, clear, clear_col, BGFX_INVALID_HANDLE);
     }
 
-    void frame_pass_begin_offscreen(t_frame_context *const context, const t_resource *const texture_target, const zcl::math::t_mat4x4 &view_mat, const zcl::t_b8 clear, const zcl::gfx::t_color_rgba32f clear_col) {
+    void frame_pass_begin_offscreen(t_frame_context *const context, const t_resource *const texture_target, const zcl::t_mat4x4 &view_mat, const zcl::t_b8 clear, const zcl::gfx::t_color_rgba32f clear_col) {
         ZF_ASSERT(!context->pass_active);
         ZF_ASSERT(texture_target->type == ek_resource_type_texture && texture_target->type_data.texture.is_target);
 
@@ -496,11 +496,11 @@ namespace zgl::gfx {
             } sampler;
 
             struct {
-                const zcl::math::t_v4 *ptr;
+                const zcl::t_v4 *ptr;
             } v4;
 
             struct {
-                const zcl::math::t_mat4x4 *ptr;
+                const zcl::t_mat4x4 *ptr;
             } mat4x4;
         } type_data;
     };
@@ -546,7 +546,7 @@ namespace zgl::gfx {
         frame_set_uniform(context, uniform, uniform_data);
     }
 
-    void frame_set_uniform_v4(t_frame_context *const context, const t_resource *const uniform, const zcl::math::t_v4 v4) {
+    void frame_set_uniform_v4(t_frame_context *const context, const t_resource *const uniform, const zcl::t_v4 v4) {
         const t_uniform_data uniform_data = {
             .type = ek_uniform_type_v4,
             .type_data = {.v4 = {.ptr = &v4}},
@@ -555,7 +555,7 @@ namespace zgl::gfx {
         frame_set_uniform(context, uniform, uniform_data);
     }
 
-    void frame_set_uniform_mat4x4(t_frame_context *const context, const t_resource *const uniform, const zcl::math::t_mat4x4 &mat4x4) {
+    void frame_set_uniform_mat4x4(t_frame_context *const context, const t_resource *const uniform, const zcl::t_mat4x4 &mat4x4) {
         const t_uniform_data uniform_data = {
             .type = ek_uniform_type_mat4x4,
             .type_data = {.mat4x4 = {.ptr = &mat4x4}},

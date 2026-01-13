@@ -16,7 +16,7 @@ namespace zgl::input {
 
         zcl::t_static_bitset<ekm_mouse_button_code_cnt> mouse_buttons_down;
 
-        zcl::math::t_v2 cursor_pos;
+        zcl::t_v2 cursor_pos;
 
         zcl::t_static_bitset<k_gamepad_limit> gamepads_connected;
         zcl::t_static_array<t_gamepad, k_gamepad_limit> gamepads;
@@ -29,7 +29,7 @@ namespace zgl::input {
             zcl::t_static_bitset<ekm_mouse_button_code_cnt> mouse_buttons_pressed;
             zcl::t_static_bitset<ekm_mouse_button_code_cnt> mouse_buttons_released;
 
-            zcl::math::t_v2 scroll_offs;
+            zcl::t_v2 scroll_offs;
 
             zcl::t_static_array<t_gamepad_events, k_gamepad_limit> gamepads;
 
@@ -97,19 +97,19 @@ namespace zgl::input {
         }
     }
 
-    zcl::math::t_v2 cursor_get_pos(const t_state *const state) {
+    zcl::t_v2 cursor_get_pos(const t_state *const state) {
         return state->cursor_pos;
     }
 
-    void cursor_update_state(t_state *const state, const zcl::math::t_v2 pos) {
+    void cursor_update_state(t_state *const state, const zcl::t_v2 pos) {
         state->cursor_pos = pos;
     }
 
-    zcl::math::t_v2 scroll_get_offset(const t_state *const state) {
+    zcl::t_v2 scroll_get_offset(const t_state *const state) {
         return state->events.scroll_offs;
     }
 
-    void scroll_update_state(t_state *const state, const zcl::math::t_v2 offs_to_apply) {
+    void scroll_update_state(t_state *const state, const zcl::t_v2 offs_to_apply) {
         state->events.scroll_offs += offs_to_apply;
     }
 

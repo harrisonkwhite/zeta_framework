@@ -11,7 +11,7 @@ namespace zcl::gfx {
         t_f32 b;
         t_f32 a;
 
-        constexpr operator math::t_v4() const { return {r, g, b, a}; }
+        constexpr operator t_v4() const { return {r, g, b, a}; }
     };
 
     struct t_color_rgba8 {
@@ -70,10 +70,10 @@ namespace zcl::gfx {
         ZF_ASSERT(amount >= 0.0f && amount <= 1.0f);
 
         return {
-            math::lerp(a.r, b.r, amount),
-            math::lerp(a.g, b.g, amount),
-            math::lerp(a.b, b.b, amount),
-            math::lerp(a.a, b.a, amount),
+            lerp(a.r, b.r, amount),
+            lerp(a.g, b.g, amount),
+            lerp(a.b, b.b, amount),
+            lerp(a.a, b.a, amount),
         };
     }
 

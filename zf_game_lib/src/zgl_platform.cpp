@@ -21,14 +21,14 @@ namespace zgl::platform {
 
         GLFWwindow *glfw_window;
 
-        zcl::math::t_v2_i framebuffer_size_cache;
+        zcl::t_v2_i framebuffer_size_cache;
 
         zcl::t_b8 fullscreen_active;
-        zcl::math::t_v2_i prefullscreen_pos;
-        zcl::math::t_v2_i prefullscreen_size;
+        zcl::t_v2_i prefullscreen_pos;
+        zcl::t_v2_i prefullscreen_size;
     } g_module_state;
 
-    void module_startup(const zcl::math::t_v2_i init_window_size) {
+    void module_startup(const zcl::t_v2_i init_window_size) {
         ZF_REQUIRE(!g_module_state.active);
         ZF_REQUIRE(init_window_size.x > 0 && init_window_size.y > 0);
 
@@ -290,7 +290,7 @@ namespace zgl::platform {
         glfwSetWindowTitle(g_module_state.glfw_window, zcl::strs::to_cstr(title_terminated));
     }
 
-    void window_set_size(const zcl::math::t_v2_i size) {
+    void window_set_size(const zcl::t_v2_i size) {
         ZF_ASSERT(g_module_state.active);
         ZF_ASSERT(size.x > 0 && size.y > 0);
 
@@ -312,7 +312,7 @@ namespace zgl::platform {
         glfwSetWindowAttrib(g_module_state.glfw_window, GLFW_RESIZABLE, resizable);
     }
 
-    zcl::math::t_v2_i window_get_framebuffer_size_cache() {
+    zcl::t_v2_i window_get_framebuffer_size_cache() {
         ZF_ASSERT(g_module_state.active);
         return g_module_state.framebuffer_size_cache;
     }
@@ -323,13 +323,13 @@ namespace zgl::platform {
     }
 
     static GLFWmonitor *find_glfw_monitor_of_window(GLFWwindow *const window) {
-        zcl::math::t_v2_i window_pos;
+        zcl::t_v2_i window_pos;
         glfwGetWindowPos(window, &window_pos.x, &window_pos.y);
 
-        zcl::math::t_v2_i window_size;
+        zcl::t_v2_i window_size;
         glfwGetWindowSize(window, &window_size.x, &window_size.y);
 
-        const auto window_rect = zcl::math::rect_create_i32(window_pos, window_size);
+        const auto window_rect = zcl::rect_create_i32(window_pos, window_size);
 
         // Get the monitor containing the most amount of the window.
         zcl::t_f32 max_occupancy_perc = 0.0f;
@@ -339,22 +339,22 @@ namespace zgl::platform {
         const auto monitors = glfwGetMonitors(&monitor_cnt);
 
         for (zcl::t_i32 i = 0; i < monitor_cnt; i++) {
-            zcl::math::t_v2_i monitor_pos;
+            zcl::t_v2_i monitor_pos;
             glfwGetMonitorPos(monitors[i], &monitor_pos.x, &monitor_pos.y);
 
-            zcl::math::t_v2 monitor_scale;
+            zcl::t_v2 monitor_scale;
             glfwGetMonitorContentScale(monitors[i], &monitor_scale.x, &monitor_scale.y);
 
             const GLFWvidmode *const mode = glfwGetVideoMode(monitors[i]);
 
-            const zcl::math::t_rect_i monitor_rect = {
+            const zcl::t_rect_i monitor_rect = {
                 monitor_pos.x,
                 monitor_pos.y,
                 static_cast<zcl::t_i32>(static_cast<zcl::t_f32>(mode->width) / monitor_scale.x),
                 static_cast<zcl::t_i32>(static_cast<zcl::t_f32>(mode->height) / monitor_scale.y),
             };
 
-            const zcl::t_f32 occupancy_perc = zcl::math::calc_perc_of_occupance(window_rect, monitor_rect);
+            const zcl::t_f32 occupancy_perc = zcl::calc_perc_of_occupance(window_rect, monitor_rect);
 
             if (occupancy_perc > max_occupancy_perc) {
                 max_occupancy_perc = occupancy_perc;
@@ -395,7 +395,7 @@ namespace zgl::platform {
         g_module_state.fullscreen_active = active;
     }
 
-    zcl::math::t_v2_i monitor_calc_size_pixels() {
+    zcl::t_v2_i monitor_calc_size_pixels() {
         ZF_ASSERT(g_module_state.active);
 
         const auto monitor = find_glfw_monitor_of_window(g_module_state.glfw_window);
@@ -408,7 +408,7 @@ namespace zgl::platform {
         return {mode->width, mode->height};
     }
 
-    zcl::math::t_v2_i monitor_calc_size_logical() {
+    zcl::t_v2_i monitor_calc_size_logical() {
         ZF_ASSERT(g_module_state.active);
 
         const auto monitor = find_glfw_monitor_of_window(g_module_state.glfw_window);
@@ -419,7 +419,7 @@ namespace zgl::platform {
 
         const GLFWvidmode *const mode = glfwGetVideoMode(monitor);
 
-        zcl::math::t_v2 monitor_scale;
+        zcl::t_v2 monitor_scale;
         glfwGetMonitorContentScale(monitor, &monitor_scale.x, &monitor_scale.y);
 
         return {

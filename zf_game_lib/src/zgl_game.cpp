@@ -7,7 +7,7 @@
 
 namespace zgl::game {
     constexpr zcl::t_f64 k_init_tps_target = 60.0;
-    constexpr zcl::math::t_v2_i k_init_window_size = {1280, 720};
+    constexpr zcl::t_v2_i k_init_window_size = {1280, 720};
 
     static struct {
         zcl::t_b8 running;
