@@ -5,7 +5,7 @@
 namespace zgl::audio {
     struct t_sound_type {
         zcl::t_b8 valid;
-        zcl::audio::t_sound_data_rdonly snd_data;
+        zcl::t_sound_data_rdonly snd_data;
         t_sound_type *next;
     };
 
@@ -71,7 +71,7 @@ namespace zgl::audio {
         *group = {};
     }
 
-    static t_sound_type *sound_type_group_add(t_sound_type_group *const group, const zcl::audio::t_sound_data_rdonly snd_data) {
+    static t_sound_type *sound_type_group_add(t_sound_type_group *const group, const zcl::t_sound_data_rdonly snd_data) {
         const auto result = zcl::arena_push_item<t_sound_type>(&group->arena);
         result->valid = true;
         result->snd_data = snd_data;
@@ -90,9 +90,9 @@ namespace zgl::audio {
     t_sound_type *sound_type_create_from_raw(const zcl::strs::t_str_rdonly file_path, t_sound_type_group *const group, zcl::t_arena *const temp_arena) {
         ZF_ASSERT(g_module_state.active);
 
-        zcl::audio::t_sound_data_mut snd_data;
+        zcl::t_sound_data_mut snd_data;
 
-        if (!zcl::audio::sound_load_from_raw(file_path, &group->arena, temp_arena, &snd_data)) {
+        if (!zcl::sound_load_from_raw(file_path, &group->arena, temp_arena, &snd_data)) {
             ZF_FATAL();
         }
 
@@ -102,9 +102,9 @@ namespace zgl::audio {
     t_sound_type *sound_type_create_from_packed(const zcl::strs::t_str_rdonly file_path, t_sound_type_group *const group, zcl::t_arena *const temp_arena) {
         ZF_ASSERT(g_module_state.active);
 
-        zcl::audio::t_sound_data_mut snd_data;
+        zcl::t_sound_data_mut snd_data;
 
-        if (!zcl::audio::sound_unpack(file_path, &group->arena, temp_arena, &snd_data)) {
+        if (!zcl::sound_unpack(file_path, &group->arena, temp_arena, &snd_data)) {
             ZF_FATAL();
         }
 

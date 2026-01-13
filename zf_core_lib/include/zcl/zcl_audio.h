@@ -2,7 +2,7 @@
 
 #include <zcl/zcl_strs.h>
 
-namespace zcl::audio {
+namespace zcl {
     struct t_sound_meta {
         t_i32 sample_rate;
         t_i32 channel_cnt;

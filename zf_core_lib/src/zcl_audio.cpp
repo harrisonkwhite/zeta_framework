@@ -3,7 +3,7 @@
 #include <miniaudio.h>
 #include <zcl/zcl_file_sys.h>
 
-namespace zcl::audio {
+namespace zcl {
     t_b8 sound_load_from_raw(const strs::t_str_rdonly file_path, t_arena *const snd_data_arena, t_arena *const temp_arena, t_sound_data_mut *const o_snd_data) {
         const strs::t_str_rdonly file_path_terminated = strs::clone_but_add_terminator(file_path, temp_arena);
 

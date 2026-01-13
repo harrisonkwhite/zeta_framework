@@ -299,14 +299,14 @@ zcl::t_b8 pack_assets(const zcl::strs::t_str_rdonly instrs_json_file_path) {
                 const auto file_path = zcl::strs::cstr_to_str(field_vals[ek_sound_field_file_path]->valuestring);
                 const auto out_file_path = zcl::strs::cstr_to_str(field_vals[ek_sound_field_out_file_path]->valuestring);
 
-                zcl::audio::t_sound_data_mut snd_data;
+                zcl::t_sound_data_mut snd_data;
 
-                if (!zcl::audio::sound_load_from_raw(file_path, &arena, &arena, &snd_data)) {
+                if (!zcl::sound_load_from_raw(file_path, &arena, &arena, &snd_data)) {
                     zcl::io::log_error(ZF_STR_LITERAL("Failed to load sound from file \"%\"!"), file_path);
                     return false;
                 }
 
-                if (!zcl::audio::sound_pack(out_file_path, snd_data, &arena)) {
+                if (!zcl::sound_pack(out_file_path, snd_data, &arena)) {
                     zcl::io::log_error(ZF_STR_LITERAL("Failed to pack sound to file \"%\"!"), out_file_path);
                     return false;
                 }
