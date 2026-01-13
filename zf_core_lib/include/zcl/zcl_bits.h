@@ -86,66 +86,38 @@ namespace zcl {
         return byte_bitmask_create_range(0, bitset_get_last_byte_bit_cnt(bs));
     }
 
-    [[nodiscard]] inline t_b8 bitset_serialize(const t_stream stream, const t_bitset_rdonly bs) {
-        if (!stream_write_item(stream, bs.bit_cnt)) {
-            return false;
-        }
-
-        if (!stream_write_items_of_array(stream, bitset_get_bytes(bs))) {
-            return false;
-        }
-
-        return true;
-    }
-
-    [[nodiscard]] inline t_b8 bitset_deserialize(const t_stream stream, t_arena *const bs_arena, t_bitset_mut *const o_bs) {
-        t_i32 bit_cnt;
-
-        if (!stream_read_item(stream, &bit_cnt)) {
-            return false;
-        }
-
-        *o_bs = bitset_create(bit_cnt, bs_arena);
-
-        if (!stream_read_items_into_array(stream, bitset_get_bytes(*o_bs), bitset_get_bytes(*o_bs).len)) {
-            return false;
-        }
-
-        return true;
-    }
-
-    constexpr t_b8 check_set(const t_bitset_rdonly bs, const t_i32 index) {
+    constexpr t_b8 bitset_check_set(const t_bitset_rdonly bs, const t_i32 index) {
         ZF_ASSERT(index >= 0 && index < bs.bit_cnt);
         return bitset_get_bytes(bs)[index / 8] & byte_bitmask_create_single(index % 8);
     }
 
-    constexpr void set(const t_bitset_mut bs, const t_i32 index) {
+    constexpr void bitset_set(const t_bitset_mut bs, const t_i32 index) {
         ZF_ASSERT(index >= 0 && index < bs.bit_cnt);
         bitset_get_bytes(bs)[index / 8] |= byte_bitmask_create_single(index % 8);
     }
 
-    constexpr void unset(const t_bitset_mut bs, const t_i32 index) {
+    constexpr void bitset_unset(const t_bitset_mut bs, const t_i32 index) {
         ZF_ASSERT(index >= 0 && index < bs.bit_cnt);
         bitset_get_bytes(bs)[index / 8] &= ~byte_bitmask_create_single(index % 8);
     }
 
-    t_b8 check_any_set(const t_bitset_rdonly bs);
+    t_b8 bitset_check_any_set(const t_bitset_rdonly bs);
 
-    inline t_b8 check_all_unset(const t_bitset_rdonly bs) {
-        return bs.bit_cnt > 0 && !check_any_set(bs);
+    inline t_b8 bitset_check_all_unset(const t_bitset_rdonly bs) {
+        return bs.bit_cnt > 0 && !bitset_check_any_set(bs);
     }
 
-    t_b8 check_all_set(const t_bitset_rdonly bs);
+    t_b8 bitset_check_all_set(const t_bitset_rdonly bs);
 
-    inline t_b8 check_any_unset(const t_bitset_rdonly bs) {
-        return bs.bit_cnt > 0 && !check_all_set(bs);
+    inline t_b8 bitset_check_any_unset(const t_bitset_rdonly bs) {
+        return bs.bit_cnt > 0 && !bitset_check_all_set(bs);
     }
 
-    void set_all(const t_bitset_mut bs);
-    void unset_all(const t_bitset_mut bs);
+    void bitset_set_all(const t_bitset_mut bs);
+    void bitset_unset_all(const t_bitset_mut bs);
 
     // Sets all bits in the range [begin_bit_index, end_bit_index).
-    void set_range(const t_bitset_mut bs, const t_i32 begin_bit_index, const t_i32 end_bit_index);
+    void bitset_set_range(const t_bitset_mut bs, const t_i32 begin_bit_index, const t_i32 end_bit_index);
 
     enum t_bitwise_mask_op : t_i32 {
         ek_bitwise_mask_op_and,
@@ -154,36 +126,39 @@ namespace zcl {
         ek_bitwise_mask_op_andnot
     };
 
-    void apply_mask(const t_bitset_mut bs, const t_bitset_rdonly mask, const t_bitwise_mask_op op);
+    void bitset_apply_mask(const t_bitset_mut bs, const t_bitset_rdonly mask, const t_bitwise_mask_op op);
 
-    void shift_left(const t_bitset_mut bs, const t_i32 amount = 1);
-    void rot_left(const t_bitset_mut bs, const t_i32 amount = 1);
+    void bitset_shift_left(const t_bitset_mut bs, const t_i32 amount = 1);
+    void bitset_rot_left(const t_bitset_mut bs, const t_i32 amount = 1);
 
-    void shift_right(const t_bitset_mut bs, const t_i32 amount = 1);
-    void rot_right(const t_bitset_mut bs, const t_i32 amount = 1);
+    void bitset_shift_right(const t_bitset_mut bs, const t_i32 amount = 1);
+    void bitset_rot_right(const t_bitset_mut bs, const t_i32 amount = 1);
 
     // Returns the index of the found set bit, or -1 if all bits are unset.
-    t_i32 find_first_set_bit(const t_bitset_rdonly bs, const t_i32 from = 0);
+    t_i32 bitset_find_first_set_bit(const t_bitset_rdonly bs, const t_i32 from = 0);
 
     // Returns the index of the found unset bit, or -1 if all bits are unset.
-    t_i32 find_first_unset_bit(const t_bitset_rdonly bs, const t_i32 from = 0);
+    t_i32 bitset_find_first_unset_bit(const t_bitset_rdonly bs, const t_i32 from = 0);
 
-    t_i32 count_set(const t_bitset_rdonly bs);
+    t_i32 bitset_count_set(const t_bitset_rdonly bs);
 
-    inline t_i32 count_unset(const t_bitset_rdonly bs) {
-        return bs.bit_cnt - count_set(bs);
+    inline t_i32 bitset_count_unset(const t_bitset_rdonly bs) {
+        return bs.bit_cnt - bitset_count_set(bs);
     }
 
     // pos is the walker state, initialise it to the bit index you want to start from.
     // o_index is assigned the index of the set bit to process.
     // Returns false iff the walk is complete.
-    t_b8 walk_all_set(const t_bitset_rdonly bs, t_i32 *const pos, t_i32 *const o_index);
+    t_b8 bitset_walk_all_set(const t_bitset_rdonly bs, t_i32 *const pos, t_i32 *const o_index);
 
     // pos is the walker state, initialise it to the bit index you want to start from.
     // o_index is assigned the index of the unset bit to process.
     // Returns false iff the walk is complete.
-    t_b8 walk_all_unset(const t_bitset_rdonly bs, t_i32 *const pos, t_i32 *const o_index);
+    t_b8 bitset_walk_all_unset(const t_bitset_rdonly bs, t_i32 *const pos, t_i32 *const o_index);
 
-#define ZF_WALK_SET_BITS(bs, index) for (zcl::t_i32 ZF_CONCAT(walk_pos_l, __LINE__) = 0, index; zcl::walk_all_set(bs, &ZF_CONCAT(walk_pos_l, __LINE__), &index);)
-#define ZF_WALK_UNSET_BITS(bs, index) for (zcl::t_i32 ZF_CONCAT(walk_pos_l, __LINE__) = 0, index; zcl::walk_all_unset(bs, &ZF_CONCAT(walk_pos_l, __LINE__), &index);)
+#define ZCL_BITSET_WALK_ALL_SET(bs, index) for (zcl::t_i32 ZF_CONCAT(walk_pos_l, __LINE__) = 0, index; zcl::bitset_walk_all_set(bs, &ZF_CONCAT(walk_pos_l, __LINE__), &index);)
+#define ZCL_BITSET_WALK_ALL_UNSET(bs, index) for (zcl::t_i32 ZF_CONCAT(walk_pos_l, __LINE__) = 0, index; zcl::bitset_walk_all_unset(bs, &ZF_CONCAT(walk_pos_l, __LINE__), &index);)
+
+    [[nodiscard]] inline t_b8 bitset_serialize(const t_stream stream, const t_bitset_rdonly bs);
+    [[nodiscard]] inline t_b8 bitset_deserialize(const t_stream stream, t_arena *const bs_arena, t_bitset_mut *const o_bs);
 }

@@ -20,10 +20,10 @@ AllowShortCaseLabelsOnASingleLine: true
 MaxEmptyLinesToKeep: 2
 
 ForEachMacros:
-  - ZF_WALK_SET_BITS
-  - ZF_WALK_UNSET_BITS
-  - ZF_WALK_STR
-  - ZF_WALK_STR_REVERSE
+  - ZCL_BITSET_WALK_ALL_SET
+  - ZCL_BITSET_WALK_ALL_UNSET
+  - ZCL_STR_WALK
+  - ZCL_STR_WALK_REVERSE
 
 SortIncludes:
   Enabled: false

@@ -118,18 +118,18 @@ namespace zcl::gfx {
         }
 
         // Filter out unsupported code points.
-        ZF_WALK_SET_BITS (*code_pts, i) {
+        ZCL_BITSET_WALK_ALL_SET (*code_pts, i) {
             const auto code_pt = static_cast<strs::t_code_pt>(i);
 
             const t_i32 glyph_index = stbtt_FindGlyphIndex(&stb_font_info, static_cast<t_i32>(code_pt));
 
             if (glyph_index == 0) {
-                unset(*code_pts, i);
+                bitset_unset(*code_pts, i);
             }
         }
 
         // Compute number of leftover code points that can actually be supported, return if there are none.
-        const t_i32 code_pt_cnt = count_set(*code_pts);
+        const t_i32 code_pt_cnt = bitset_count_set(*code_pts);
 
         if (code_pt_cnt == 0) {
             return true;
@@ -153,7 +153,7 @@ namespace zcl::gfx {
 
         constexpr t_i32 k_glyph_padding = 4;
 
-        ZF_WALK_SET_BITS (*code_pts, i) {
+        ZCL_BITSET_WALK_ALL_SET (*code_pts, i) {
             const auto code_pt = static_cast<strs::t_code_pt>(i);
 
             const t_i32 glyph_index = stbtt_FindGlyphIndex(&stb_font_info, static_cast<t_i32>(code_pt));
@@ -200,8 +200,8 @@ namespace zcl::gfx {
         o_arrangement->has_kernings = true;
         o_arrangement->code_pt_pairs_to_kernings = ds::hash_map_create<t_font_code_pt_pair, t_i32>(k_code_pt_pair_hash_func, arrangement_arena, ds::k_hash_map_cap_default, k_code_pt_pair_comparator);
 
-        ZF_WALK_SET_BITS (*code_pts, i) {
-            ZF_WALK_SET_BITS (*code_pts, j) {
+        ZCL_BITSET_WALK_ALL_SET (*code_pts, i) {
+            ZCL_BITSET_WALK_ALL_SET (*code_pts, j) {
                 const auto cp_a = static_cast<strs::t_code_pt>(i);
                 const auto cp_b = static_cast<strs::t_code_pt>(j);
 
@@ -235,7 +235,7 @@ namespace zcl::gfx {
         }
 
         // Write pixel data for each individual glyph.
-        ZF_WALK_SET_BITS (*code_pts, i) {
+        ZCL_BITSET_WALK_ALL_SET (*code_pts, i) {
             const auto code_pt = static_cast<strs::t_code_pt>(i);
 
             t_font_glyph_info *glyph_info;

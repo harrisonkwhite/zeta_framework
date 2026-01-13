@@ -125,7 +125,7 @@ namespace zcl::ds {
             kv_store->pair_cnt++;
 
             while (block) {
-                const auto possible_rel_index_to_use = find_first_unset_bit(block->usage);
+                const auto possible_rel_index_to_use = bitset_find_first_unset_bit(block->usage);
 
                 if (possible_rel_index_to_use == -1) {
                     block_previous = block;
@@ -136,7 +136,7 @@ namespace zcl::ds {
 
                 block->keys[possible_rel_index_to_use] = key;
                 block->values[possible_rel_index_to_use] = value;
-                set(block->usage, possible_rel_index_to_use);
+                bitset_set(block->usage, possible_rel_index_to_use);
                 ZF_ASSERT(block->next_indexes[possible_rel_index_to_use] == -1);
 
                 return (block_index * kv_store->block_cap) + possible_rel_index_to_use;
@@ -154,7 +154,7 @@ namespace zcl::ds {
 
             new_block->keys[0] = key;
             new_block->values[0] = value;
-            set(new_block->usage, 0);
+            bitset_set(new_block->usage, 0);
 
             return block_index * kv_store->block_cap;
         }();

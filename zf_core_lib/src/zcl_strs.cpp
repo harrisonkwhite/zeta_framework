@@ -460,8 +460,8 @@ namespace zcl::strs {
     void mark_code_pts(const t_str_rdonly str, t_code_pt_bitset *const code_pts) {
         ZF_ASSERT(check_valid_utf8(str));
 
-        ZF_WALK_STR (str, step) {
-            set(*code_pts, static_cast<t_i32>(step.code_pt));
+        ZF_WALK_STR(str, step) {
+            bitset_set(*code_pts, static_cast<t_i32>(step.code_pt));
         }
     }
 

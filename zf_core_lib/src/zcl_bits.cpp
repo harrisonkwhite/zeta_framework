@@ -1,9 +1,7 @@
 #include <zcl/zcl_bits.h>
 
-#include <cstdlib>
-
 namespace zcl {
-    t_b8 check_any_set(const t_bitset_rdonly bs) {
+    t_b8 bitset_check_any_set(const t_bitset_rdonly bs) {
         if (bs.bit_cnt == 0) {
             return false;
         }
@@ -17,7 +15,7 @@ namespace zcl {
         return (bitset_get_bytes(bs)[bitset_get_bytes(bs).len - 1] & bitset_get_last_byte_mask(bs)) != 0;
     }
 
-    t_b8 check_all_set(const t_bitset_rdonly bs) {
+    t_b8 bitset_check_all_set(const t_bitset_rdonly bs) {
         if (bs.bit_cnt == 0) {
             return false;
         }
@@ -32,7 +30,7 @@ namespace zcl {
         return (bitset_get_bytes(bs)[bitset_get_bytes(bs).len - 1] & last_byte_mask) == last_byte_mask;
     }
 
-    void set_all(const t_bitset_mut bs) {
+    void bitset_set_all(const t_bitset_mut bs) {
         if (bs.bit_cnt == 0) {
             return;
         }
@@ -43,7 +41,7 @@ namespace zcl {
         bitset_get_bytes(bs)[bitset_get_bytes(bs).len - 1] |= bitset_get_last_byte_mask(bs);
     }
 
-    void unset_all(const t_bitset_mut bs) {
+    void bitset_unset_all(const t_bitset_mut bs) {
         if (bs.bit_cnt == 0) {
             return;
         }
@@ -54,7 +52,7 @@ namespace zcl {
         bitset_get_bytes(bs)[bitset_get_bytes(bs).len - 1] &= ~bitset_get_last_byte_mask(bs);
     }
 
-    void set_range(const t_bitset_mut bs, const t_i32 begin_bit_index, const t_i32 end_bit_index) {
+    void bitset_set_range(const t_bitset_mut bs, const t_i32 begin_bit_index, const t_i32 end_bit_index) {
         ZF_ASSERT(begin_bit_index >= 0 && begin_bit_index < bs.bit_cnt);
         ZF_ASSERT(end_bit_index >= begin_bit_index && end_bit_index <= bs.bit_cnt);
 
@@ -73,7 +71,7 @@ namespace zcl {
         }
     }
 
-    void apply_mask(const t_bitset_mut bs, const t_bitset_rdonly mask, const t_bitwise_mask_op op) {
+    void bitset_apply_mask(const t_bitset_mut bs, const t_bitset_rdonly mask, const t_bitwise_mask_op op) {
         ZF_ASSERT(bs.bit_cnt == mask.bit_cnt);
 
         if (bs.bit_cnt == 0) {
@@ -135,7 +133,7 @@ namespace zcl {
         return discard;
     }
 
-    void shift_left(const t_bitset_mut bs, const t_i32 amount) {
+    void bitset_shift_left(const t_bitset_mut bs, const t_i32 amount) {
         ZF_ASSERT(amount >= 0);
 
         // @speed: :(
@@ -145,7 +143,7 @@ namespace zcl {
         }
     }
 
-    void rot_left(const t_bitset_mut bs, const t_i32 amount) {
+    void bitset_rot_left(const t_bitset_mut bs, const t_i32 amount) {
         ZF_ASSERT(amount >= 0);
 
         if (bs.bit_cnt == 0) {
@@ -158,9 +156,9 @@ namespace zcl {
             const auto discard = shift_bits_left(bs);
 
             if (discard) {
-                set(bs, 0);
+                bitset_set(bs, 0);
             } else {
-                unset(bs, 0);
+                bitset_unset(bs, 0);
             }
         }
     }
@@ -190,7 +188,7 @@ namespace zcl {
         return discard;
     }
 
-    void shift_right(const t_bitset_mut bs, const t_i32 amount) {
+    void bitset_shift_right(const t_bitset_mut bs, const t_i32 amount) {
         ZF_ASSERT(amount >= 0);
 
         // @speed: :(
@@ -200,7 +198,7 @@ namespace zcl {
         }
     }
 
-    void rot_right(const t_bitset_mut bs, const t_i32 amount) {
+    void bitset_rot_right(const t_bitset_mut bs, const t_i32 amount) {
         ZF_ASSERT(amount >= 0);
 
         if (bs.bit_cnt == 0) {
@@ -213,9 +211,9 @@ namespace zcl {
             const auto discard = shift_bits_right(bs);
 
             if (discard) {
-                set(bs, bs.bit_cnt - 1);
+                bitset_set(bs, bs.bit_cnt - 1);
             } else {
-                unset(bs, bs.bit_cnt - 1);
+                bitset_unset(bs, bs.bit_cnt - 1);
             }
         }
     }
@@ -508,15 +506,15 @@ namespace zcl {
         return -1;
     }
 
-    t_i32 find_first_set_bit(const t_bitset_rdonly bs, const t_i32 from) {
+    t_i32 bitset_find_first_set_bit(const t_bitset_rdonly bs, const t_i32 from) {
         return get_index_of_first_set_bit_helper(bs, from, 0);
     }
 
-    t_i32 find_first_unset_bit(const t_bitset_rdonly bs, const t_i32 from) {
+    t_i32 bitset_find_first_unset_bit(const t_bitset_rdonly bs, const t_i32 from) {
         return get_index_of_first_set_bit_helper(bs, from, 0xFF);
     }
 
-    t_i32 count_set(const t_bitset_rdonly bs) {
+    t_i32 bitset_count_set(const t_bitset_rdonly bs) {
         // Map of each possible byte to the number of set bits in it.
         constexpr t_static_array<t_i32, 256> k_mappings = {{
             0, // 0000 0000
@@ -790,10 +788,10 @@ namespace zcl {
         return result;
     }
 
-    t_b8 walk_all_set(const t_bitset_rdonly bs, t_i32 *const pos, t_i32 *const o_index) {
+    t_b8 bitset_walk_all_set(const t_bitset_rdonly bs, t_i32 *const pos, t_i32 *const o_index) {
         ZF_ASSERT(*pos >= 0 && *pos <= bs.bit_cnt);
 
-        *o_index = find_first_set_bit(bs, *pos);
+        *o_index = bitset_find_first_set_bit(bs, *pos);
 
         if (*o_index == -1) {
             return false;
@@ -804,16 +802,44 @@ namespace zcl {
         return true;
     }
 
-    t_b8 walk_all_unset(const t_bitset_rdonly bs, t_i32 *const pos, t_i32 *const o_index) {
+    t_b8 bitset_walk_all_unset(const t_bitset_rdonly bs, t_i32 *const pos, t_i32 *const o_index) {
         ZF_ASSERT(*pos >= 0 && *pos <= bs.bit_cnt);
 
-        *o_index = find_first_unset_bit(bs, *pos);
+        *o_index = bitset_find_first_unset_bit(bs, *pos);
 
         if (*o_index == -1) {
             return false;
         }
 
         *pos = *o_index + 1;
+
+        return true;
+    }
+
+    t_b8 bitset_serialize(const t_stream stream, const t_bitset_rdonly bs) {
+        if (!stream_write_item(stream, bs.bit_cnt)) {
+            return false;
+        }
+
+        if (!stream_write_items_of_array(stream, bitset_get_bytes(bs))) {
+            return false;
+        }
+
+        return true;
+    }
+
+    t_b8 bitset_deserialize(const t_stream stream, t_arena *const bs_arena, t_bitset_mut *const o_bs) {
+        t_i32 bit_cnt;
+
+        if (!stream_read_item(stream, &bit_cnt)) {
+            return false;
+        }
+
+        *o_bs = bitset_create(bit_cnt, bs_arena);
+
+        if (!stream_read_items_into_array(stream, bitset_get_bytes(*o_bs), bitset_get_bytes(*o_bs).len)) {
+            return false;
+        }
 
         return true;
     }

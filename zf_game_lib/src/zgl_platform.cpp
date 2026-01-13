@@ -227,9 +227,9 @@ namespace zgl::platform {
 
                 for (zcl::t_i32 j = 0; j <= GLFW_GAMEPAD_BUTTON_LAST; j++) {
                     if (gamepad_state.buttons[j]) {
-                        zcl::set(btns_down, j);
+                        zcl::bitset_set(btns_down, j);
                     } else {
-                        zcl::unset(btns_down, j);
+                        zcl::bitset_unset(btns_down, j);
                     }
                 }
 

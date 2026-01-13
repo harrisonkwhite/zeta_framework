@@ -46,53 +46,53 @@ namespace zgl::input {
     }
 
     zcl::t_b8 key_check_down(const t_state *const state, const t_key_code code) {
-        return zcl::check_set(state->keys_down, code);
+        return zcl::bitset_check_set(state->keys_down, code);
     }
 
     zcl::t_b8 key_check_pressed(const t_state *const state, const t_key_code code) {
-        return zcl::check_set(state->events.keys_pressed, code);
+        return zcl::bitset_check_set(state->events.keys_pressed, code);
     }
 
     zcl::t_b8 key_check_released(const t_state *const state, const t_key_code code) {
-        return zcl::check_set(state->events.keys_released, code);
+        return zcl::bitset_check_set(state->events.keys_released, code);
     }
 
     void key_update_state(t_state *const state, const t_key_code code, const zcl::t_b8 is_down) {
         if (is_down) {
-            if (!zcl::check_set(state->keys_down, code)) {
-                zcl::set(state->keys_down, code);
-                zcl::set(state->events.keys_pressed, code);
+            if (!zcl::bitset_check_set(state->keys_down, code)) {
+                zcl::bitset_set(state->keys_down, code);
+                zcl::bitset_set(state->events.keys_pressed, code);
             }
         } else {
-            if (zcl::check_set(state->keys_down, code)) {
-                zcl::unset(state->keys_down, code);
-                zcl::set(state->events.keys_released, code);
+            if (zcl::bitset_check_set(state->keys_down, code)) {
+                zcl::bitset_unset(state->keys_down, code);
+                zcl::bitset_set(state->events.keys_released, code);
             }
         }
     }
 
     zcl::t_b8 mouse_button_check_down(const t_state *const state, const t_mouse_button_code btn_code) {
-        return zcl::check_set(state->mouse_buttons_down, static_cast<zcl::t_i32>(btn_code));
+        return zcl::bitset_check_set(state->mouse_buttons_down, static_cast<zcl::t_i32>(btn_code));
     }
 
     zcl::t_b8 mouse_button_check_pressed(const t_state *const state, const t_mouse_button_code btn_code) {
-        return zcl::check_set(state->events.mouse_buttons_pressed, static_cast<zcl::t_i32>(btn_code));
+        return zcl::bitset_check_set(state->events.mouse_buttons_pressed, static_cast<zcl::t_i32>(btn_code));
     }
 
     zcl::t_b8 mouse_button_check_released(const t_state *const state, const t_mouse_button_code btn_code) {
-        return zcl::check_set(state->events.mouse_buttons_released, static_cast<zcl::t_i32>(btn_code));
+        return zcl::bitset_check_set(state->events.mouse_buttons_released, static_cast<zcl::t_i32>(btn_code));
     }
 
     void mouse_button_update_state(t_state *const state, const t_mouse_button_code btn_code, const zcl::t_b8 is_down) {
         if (is_down) {
-            if (!zcl::check_set(state->mouse_buttons_down, static_cast<zcl::t_i32>(btn_code))) {
-                zcl::set(state->mouse_buttons_down, static_cast<zcl::t_i32>(btn_code));
-                zcl::set(state->events.mouse_buttons_pressed, static_cast<zcl::t_i32>(btn_code));
+            if (!zcl::bitset_check_set(state->mouse_buttons_down, static_cast<zcl::t_i32>(btn_code))) {
+                zcl::bitset_set(state->mouse_buttons_down, static_cast<zcl::t_i32>(btn_code));
+                zcl::bitset_set(state->events.mouse_buttons_pressed, static_cast<zcl::t_i32>(btn_code));
             }
         } else {
-            if (zcl::check_set(state->mouse_buttons_down, static_cast<zcl::t_i32>(btn_code))) {
-                zcl::unset(state->mouse_buttons_down, static_cast<zcl::t_i32>(btn_code));
-                zcl::set(state->events.mouse_buttons_released, static_cast<zcl::t_i32>(btn_code));
+            if (zcl::bitset_check_set(state->mouse_buttons_down, static_cast<zcl::t_i32>(btn_code))) {
+                zcl::bitset_unset(state->mouse_buttons_down, static_cast<zcl::t_i32>(btn_code));
+                zcl::bitset_set(state->events.mouse_buttons_released, static_cast<zcl::t_i32>(btn_code));
             }
         }
     }
@@ -115,22 +115,22 @@ namespace zgl::input {
 
     zcl::t_b8 gamepad_check_connected(const t_state *const state, const zcl::t_i32 index) {
         ZF_ASSERT(index >= 0 && index < k_gamepad_limit);
-        return zcl::check_set(state->gamepads_connected, index);
+        return zcl::bitset_check_set(state->gamepads_connected, index);
     }
 
     zcl::t_b8 gamepad_check_button_down(const t_state *const state, const zcl::t_i32 gamepad_index, const t_gamepad_button_code btn_code) {
         ZF_ASSERT(gamepad_check_connected(state, gamepad_index));
-        return zcl::check_set(state->gamepads[gamepad_index].buttons_down, btn_code);
+        return zcl::bitset_check_set(state->gamepads[gamepad_index].buttons_down, btn_code);
     }
 
     zcl::t_b8 gamepad_check_button_pressed(const t_state *const state, const zcl::t_i32 gamepad_index, const t_gamepad_button_code btn_code) {
         ZF_ASSERT(gamepad_check_connected(state, gamepad_index));
-        return zcl::check_set(state->events.gamepads[gamepad_index].buttons_pressed, btn_code);
+        return zcl::bitset_check_set(state->events.gamepads[gamepad_index].buttons_pressed, btn_code);
     }
 
     zcl::t_b8 gamepad_check_button_released(const t_state *const state, const zcl::t_i32 gamepad_index, const t_gamepad_button_code btn_code) {
         ZF_ASSERT(gamepad_check_connected(state, gamepad_index));
-        return zcl::check_set(state->events.gamepads[gamepad_index].buttons_released, btn_code);
+        return zcl::bitset_check_set(state->events.gamepads[gamepad_index].buttons_released, btn_code);
     }
 
     zcl::t_f32 gamepad_get_axis_value_raw(const t_state *const state, const zcl::t_i32 gamepad_index, const t_gamepad_axis_code axis_code) {
@@ -155,26 +155,26 @@ namespace zgl::input {
 
     void gamepad_update_state(t_state *const state, const zcl::t_i32 gamepad_index, const zcl::t_b8 connected, const zcl::t_static_bitset<ekm_gamepad_button_code_cnt> &btns_down, const zcl::t_static_array<zcl::t_f32, ekm_gamepad_axis_code_cnt> &axes) {
         if (!connected) {
-            ZF_ASSERT(zcl::check_all_unset(btns_down) && zcl::array_check_all_equal(zcl::array_to_nonstatic(&axes), 0.0f));
+            ZF_ASSERT(zcl::bitset_check_all_unset(btns_down) && zcl::array_check_all_equal(zcl::array_to_nonstatic(&axes), 0.0f));
             return;
         }
 
-        if (!zcl::check_set(state->gamepads_connected, gamepad_index)) {
-            zcl::set(state->gamepads_connected, gamepad_index);
+        if (!zcl::bitset_check_set(state->gamepads_connected, gamepad_index)) {
+            zcl::bitset_set(state->gamepads_connected, gamepad_index);
             state->gamepads[gamepad_index] = {};
             state->events.gamepads[gamepad_index] = {};
         }
 
         for (zcl::t_i32 i = 0; i < ekm_gamepad_button_code_cnt; i++) {
-            if (zcl::check_set(btns_down, i)) {
-                if (!zcl::check_set(state->gamepads[i].buttons_down, i)) {
-                    zcl::set(state->gamepads[i].buttons_down, i);
-                    zcl::set(state->events.gamepads[i].buttons_pressed, i);
+            if (zcl::bitset_check_set(btns_down, i)) {
+                if (!zcl::bitset_check_set(state->gamepads[i].buttons_down, i)) {
+                    zcl::bitset_set(state->gamepads[i].buttons_down, i);
+                    zcl::bitset_set(state->events.gamepads[i].buttons_pressed, i);
                 }
             } else {
-                if (zcl::check_set(state->gamepads[i].buttons_down, i)) {
-                    zcl::unset(state->gamepads[i].buttons_down, i);
-                    zcl::set(state->events.gamepads[i].buttons_released, i);
+                if (zcl::bitset_check_set(state->gamepads[i].buttons_down, i)) {
+                    zcl::bitset_unset(state->gamepads[i].buttons_down, i);
+                    zcl::bitset_set(state->events.gamepads[i].buttons_released, i);
                 }
             }
         }

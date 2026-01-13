@@ -228,9 +228,9 @@ zcl::t_b8 pack_assets(const zcl::strs::t_str_rdonly instrs_json_file_path) {
                 const auto height = field_vals[ek_font_field_height]->valueint;
                 const auto out_file_path = zcl::strs::cstr_to_str(field_vals[ek_font_field_out_file_path]->valuestring);
 
-                const auto code_pt_bv = zcl::arena_push_item<zcl::strs::t_code_pt_bitset>(&arena);
+                const auto code_pt_bs = zcl::arena_push_item<zcl::strs::t_code_pt_bitset>(&arena);
 
-                zcl::set_range(*code_pt_bv, zcl::strs::k_printable_ascii_range_begin, zcl::strs::k_printable_ascii_range_end); // Add the printable ASCII range as a default.
+                zcl::bitset_set_range(*code_pt_bs, zcl::strs::k_printable_ascii_range_begin, zcl::strs::k_printable_ascii_range_end); // Add the printable ASCII range as a default.
 
                 if (field_vals[ek_font_field_extra_chrs_file_path]) {
                     const auto extra_chrs_file_path = zcl::strs::cstr_to_str(field_vals[ek_font_field_extra_chrs_file_path]->valuestring);
@@ -242,7 +242,7 @@ zcl::t_b8 pack_assets(const zcl::strs::t_str_rdonly instrs_json_file_path) {
                         return false;
                     }
 
-                    zcl::strs::mark_code_pts({extra_chrs_file_contents}, code_pt_bv);
+                    zcl::strs::mark_code_pts({extra_chrs_file_contents}, code_pt_bs);
                 }
 
                 // @todo: Proper check for invalid height!
@@ -250,7 +250,7 @@ zcl::t_b8 pack_assets(const zcl::strs::t_str_rdonly instrs_json_file_path) {
                 zcl::gfx::t_font_arrangement arrangement;
                 zcl::t_array_mut<zcl::gfx::t_font_atlas_rgba> atlas_rgbas;
 
-                if (!zcl::gfx::font_load_from_raw(file_path, height, code_pt_bv, &arena, &arena, &arena, &arrangement, &atlas_rgbas)) {
+                if (!zcl::gfx::font_load_from_raw(file_path, height, code_pt_bs, &arena, &arena, &arena, &arrangement, &atlas_rgbas)) {
                     zcl::io::log_error(ZF_STR_LITERAL("Failed to load font from file \"%\"!"), file_path);
                     return false;
                 }

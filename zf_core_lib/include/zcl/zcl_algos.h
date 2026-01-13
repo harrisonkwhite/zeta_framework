@@ -2,7 +2,7 @@
 
 #include <zcl/zcl_basic.h>
 
-namespace zcl::algos {
+namespace zcl {
     // O(n^2) time complexity, but O(1) space complexity.
     // You're usually better off using a hash map and a linear search, or a bitset if values are numeric and the range is small.
     template <c_array tp_arr_type>
