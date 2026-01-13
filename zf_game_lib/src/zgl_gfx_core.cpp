@@ -143,8 +143,8 @@ namespace zgl::gfx {
         frame_basis->shader_prog_default = shader_prog_create({g_vert_shader_default_src_raw, g_vert_shader_default_src_len}, {g_frag_shader_default_src_raw, g_frag_shader_default_src_len}, &g_module_state.perm_resource_group);
         frame_basis->shader_prog_blend = shader_prog_create({g_vert_shader_default_src_raw, g_vert_shader_default_src_len}, {g_frag_shader_blend_src_raw, g_frag_shader_blend_src_len}, &g_module_state.perm_resource_group);
 
-        frame_basis->sampler_uniform = uniform_create(ZF_STR_LITERAL("u_texture"), ek_uniform_type_sampler, &g_module_state.perm_resource_group, temp_arena);
-        frame_basis->blend_uniform = uniform_create(ZF_STR_LITERAL("u_blend"), ek_uniform_type_v4, &g_module_state.perm_resource_group, temp_arena);
+        frame_basis->sampler_uniform = uniform_create(ZCL_STR_LITERAL("u_texture"), ek_uniform_type_sampler, &g_module_state.perm_resource_group, temp_arena);
+        frame_basis->blend_uniform = uniform_create(ZCL_STR_LITERAL("u_blend"), ek_uniform_type_v4, &g_module_state.perm_resource_group, temp_arena);
 
         const zcl::t_static_array<zcl::t_u8, 4> batch_px_texture_rgba = {{255, 255, 255, 255}};
         frame_basis->px_texture = texture_create({{1, 1}, zcl::array_to_nonstatic(&batch_px_texture_rgba)}, &g_module_state.perm_resource_group);
@@ -306,10 +306,10 @@ namespace zgl::gfx {
         return resource;
     }
 
-    t_resource *uniform_create(const zcl::strs::t_str_rdonly name, const t_uniform_type type, t_resource_group *const group, zcl::t_arena *const temp_arena) {
+    t_resource *uniform_create(const zcl::t_str_rdonly name, const t_uniform_type type, t_resource_group *const group, zcl::t_arena *const temp_arena) {
         ZF_ASSERT(g_module_state.phase == ek_module_phase_active_but_not_midframe);
 
-        const zcl::strs::t_str_rdonly name_terminated = zcl::strs::clone_but_add_terminator(name, temp_arena);
+        const zcl::t_str_rdonly name_terminated = zcl::str_clone_but_add_terminator(name, temp_arena);
 
         const auto bgfx_type = [type]() -> bgfx::UniformType::Enum {
             switch (type) {
@@ -321,7 +321,7 @@ namespace zgl::gfx {
             ZF_UNREACHABLE();
         }();
 
-        const bgfx::UniformHandle bgfx_hdl = bgfx::createUniform(zcl::strs::to_cstr(name_terminated), bgfx_type);
+        const bgfx::UniformHandle bgfx_hdl = bgfx::createUniform(zcl::str_to_cstr(name_terminated), bgfx_type);
 
         if (!bgfx::isValid(bgfx_hdl)) {
             ZF_FATAL();

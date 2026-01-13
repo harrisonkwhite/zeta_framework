@@ -76,7 +76,7 @@ namespace zgl::platform {
                     const auto input_state = static_cast<input::t_state *>(glfwGetWindowUserPointer(window));
 
                     if (!input::text_submit_code_point(input_state, code_pt)) {
-                        zcl::io::log_warning(ZF_STR_LITERAL("Tried to submit input code point, but there is insufficient space!"));
+                        zcl::io::log_warning(ZCL_STR_LITERAL("Tried to submit input code point, but there is insufficient space!"));
                     }
                 };
 
@@ -274,7 +274,7 @@ namespace zgl::platform {
 
     void window_request_close() {
         ZF_ASSERT(g_module_state.active);
-        zcl::io::log(ZF_STR_LITERAL("Window close explicitly requested..."));
+        zcl::io::log(ZCL_STR_LITERAL("Window close explicitly requested..."));
         return glfwSetWindowShouldClose(g_module_state.glfw_window, true);
     }
 
@@ -283,11 +283,11 @@ namespace zgl::platform {
         return glfwWindowShouldClose(g_module_state.glfw_window);
     }
 
-    void window_set_title(const zcl::strs::t_str_rdonly title, zcl::t_arena *const temp_arena) {
+    void window_set_title(const zcl::t_str_rdonly title, zcl::t_arena *const temp_arena) {
         ZF_ASSERT(g_module_state.active);
 
-        const zcl::strs::t_str_rdonly title_terminated = zcl::strs::clone_but_add_terminator(title, temp_arena);
-        glfwSetWindowTitle(g_module_state.glfw_window, zcl::strs::to_cstr(title_terminated));
+        const zcl::t_str_rdonly title_terminated = zcl::str_clone_but_add_terminator(title, temp_arena);
+        glfwSetWindowTitle(g_module_state.glfw_window, zcl::str_to_cstr(title_terminated));
     }
 
     void window_set_size(const zcl::t_v2_i size) {

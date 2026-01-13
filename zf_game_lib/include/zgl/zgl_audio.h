@@ -34,8 +34,8 @@ namespace zgl::audio {
 
     void sound_type_group_destroy(t_sound_type_group *const group);
 
-    t_sound_type *sound_type_create_from_raw(const zcl::strs::t_str_rdonly file_path, t_sound_type_group *const group, zcl::t_arena *const temp_arena);
-    t_sound_type *sound_type_create_from_packed(const zcl::strs::t_str_rdonly file_path, t_sound_type_group *const group, zcl::t_arena *const temp_arena);
+    t_sound_type *sound_type_create_from_raw(const zcl::t_str_rdonly file_path, t_sound_type_group *const group, zcl::t_arena *const temp_arena);
+    t_sound_type *sound_type_create_from_packed(const zcl::t_str_rdonly file_path, t_sound_type_group *const group, zcl::t_arena *const temp_arena);
 
     // Returns true iff the play succeeded. Note that some failure cases will trigger a fatal error instead.
     [[nodiscard]] zcl::t_b8 sound_play_and_get_id(const t_sound_type *const type, t_sound_id *const o_id, const zcl::t_f32 vol = 1.0f, const zcl::t_f32 pan = 0.0f, const zcl::t_f32 pitch = 1.0f, const zcl::t_b8 loop = false);

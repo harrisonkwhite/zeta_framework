@@ -1,6 +1,6 @@
 #include <zcl.h>
 
-[[nodiscard]] static zcl::t_b8 output_code(const zcl::strs::t_str_rdonly input_file_path, const zcl::strs::t_str_rdonly output_file_path, const zcl::strs::t_str_rdonly arr_var_subname, const zcl::strs::t_str_rdonly namespace_name) {
+[[nodiscard]] static zcl::t_b8 output_code(const zcl::t_str_rdonly input_file_path, const zcl::t_str_rdonly output_file_path, const zcl::t_str_rdonly arr_var_subname, const zcl::t_str_rdonly namespace_name) {
     zcl::t_arena arena = zcl::arena_create_blockbased();
     ZF_DEFER({ zcl::arena_destroy(&arena); });
 
@@ -20,37 +20,37 @@
 
     ZF_DEFER({ zcl::file_sys::file_close(&output_file_stream); });
 
-    zcl::io::print(output_file_stream, ZF_STR_LITERAL("#include <zcl/zcl_basic.h>\n"));
-    zcl::io::print(output_file_stream, ZF_STR_LITERAL("\n"));
+    zcl::io::print(output_file_stream, ZCL_STR_LITERAL("#include <zcl/zcl_basic.h>\n"));
+    zcl::io::print(output_file_stream, ZCL_STR_LITERAL("\n"));
 
-    zcl::strs::t_str_rdonly indent = {};
+    zcl::t_str_rdonly indent = {};
 
-    if (!zcl::strs::check_empty(namespace_name)) {
-        zcl::io::print_format(output_file_stream, ZF_STR_LITERAL("namespace % {\n"), namespace_name);
-        indent = ZF_STR_LITERAL("    ");
+    if (!zcl::str_check_empty(namespace_name)) {
+        zcl::io::print_format(output_file_stream, ZCL_STR_LITERAL("namespace % {\n"), namespace_name);
+        indent = ZCL_STR_LITERAL("    ");
     }
 
-    zcl::io::print_format(output_file_stream, ZF_STR_LITERAL("%extern const zcl::t_u8 g_%_raw[] = {"), indent, arr_var_subname);
+    zcl::io::print_format(output_file_stream, ZCL_STR_LITERAL("%extern const zcl::t_u8 g_%_raw[] = {"), indent, arr_var_subname);
 
     zcl::t_u8 byte_read;
     zcl::t_i32 byte_read_cnt = 0;
 
     while (zcl::stream_read_item(input_file_stream, &byte_read)) {
         if (byte_read_cnt > 0) {
-            zcl::io::print(output_file_stream, ZF_STR_LITERAL(", "));
+            zcl::io::print(output_file_stream, ZCL_STR_LITERAL(", "));
         }
 
-        zcl::io::print_format(output_file_stream, ZF_STR_LITERAL("%"), zcl::io::format_hex(byte_read));
+        zcl::io::print_format(output_file_stream, ZCL_STR_LITERAL("%"), zcl::io::format_hex(byte_read));
 
         byte_read_cnt++;
     }
 
-    zcl::io::print(output_file_stream, ZF_STR_LITERAL("};\n"));
+    zcl::io::print(output_file_stream, ZCL_STR_LITERAL("};\n"));
 
-    zcl::io::print_format(output_file_stream, ZF_STR_LITERAL("%extern const zcl::t_i32 g_%_len = %;\n"), indent, arr_var_subname, byte_read_cnt);
+    zcl::io::print_format(output_file_stream, ZCL_STR_LITERAL("%extern const zcl::t_i32 g_%_len = %;\n"), indent, arr_var_subname, byte_read_cnt);
 
-    if (!zcl::strs::check_empty(namespace_name)) {
-        zcl::io::print(output_file_stream, ZF_STR_LITERAL("}\n"));
+    if (!zcl::str_check_empty(namespace_name)) {
+        zcl::io::print(output_file_stream, ZCL_STR_LITERAL("}\n"));
     }
 
     return true;
@@ -59,9 +59,9 @@
 int main(const int arg_cnt, const char *const *const args) {
     if (arg_cnt != 5) {
         zcl::file_sys::t_file_stream std_err = zcl::file_sys::get_std_error();
-        zcl::io::print_format(std_err, ZF_STR_LITERAL("Invalid command-line argument count!\nUsage: zf_bin_to_array <input_file_path> <output_file_path> <array_variable_subname> <namespace>\nNote that the given namespace can be empty for no namespace.\n"));
+        zcl::io::print_format(std_err, ZCL_STR_LITERAL("Invalid command-line argument count!\nUsage: zf_bin_to_array <input_file_path> <output_file_path> <array_variable_subname> <namespace>\nNote that the given namespace can be empty for no namespace.\n"));
         return EXIT_FAILURE;
     }
 
-    return output_code(zcl::strs::cstr_to_str(args[1]), zcl::strs::cstr_to_str(args[2]), zcl::strs::cstr_to_str(args[3]), zcl::strs::cstr_to_str(args[4])) ? EXIT_SUCCESS : EXIT_FAILURE;
+    return output_code(zcl::cstr_to_str(args[1]), zcl::cstr_to_str(args[2]), zcl::cstr_to_str(args[3]), zcl::cstr_to_str(args[4])) ? EXIT_SUCCESS : EXIT_FAILURE;
 }

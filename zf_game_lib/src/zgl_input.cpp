@@ -33,7 +33,7 @@ namespace zgl::input {
 
             zcl::t_static_array<t_gamepad_events, k_gamepad_limit> gamepads;
 
-            zcl::ds::t_static_list<zcl::strs::t_code_pt, 32> code_pts;
+            zcl::ds::t_static_list<zcl::t_code_pt, 32> code_pts;
         } events;
     };
 
@@ -182,11 +182,11 @@ namespace zgl::input {
         zcl::array_copy(zcl::array_to_nonstatic(&axes), zcl::array_to_nonstatic(&state->gamepads[gamepad_index].axes));
     }
 
-    zcl::t_array_rdonly<zcl::strs::t_code_pt> text_get_code_pts(const t_state *const state) {
+    zcl::t_array_rdonly<zcl::t_code_pt> text_get_code_pts(const t_state *const state) {
         return zcl::ds::list_to_array(&state->events.code_pts);
     }
 
-    zcl::t_b8 text_submit_code_point(t_state *const state, const zcl::strs::t_code_pt cp) {
+    zcl::t_b8 text_submit_code_point(t_state *const state, const zcl::t_code_pt cp) {
         if (state->events.code_pts.len < zcl::ds::list_get_cap(&state->events.code_pts)) {
             zcl::ds::list_append(&state->events.code_pts, cp);
             return true;

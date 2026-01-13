@@ -1,6 +1,6 @@
 #include <zcl/zcl_strs.h>
 
-namespace zcl::strs {
+namespace zcl {
     enum t_utf8_byte_type : t_i32 {
         ek_utf8_byte_type_ascii,
         ek_utf8_byte_type_2byte_start,
@@ -276,7 +276,7 @@ namespace zcl::strs {
         ek_utf8_byte_type_invalid,
     }};
 
-    t_b8 check_valid_utf8(const t_str_rdonly str) {
+    t_b8 str_check_valid_utf8(const t_str_rdonly str) {
         t_i32 cost = 0;
 
         for (t_i32 i = 0; i < str.bytes.len; i++) {
@@ -312,8 +312,8 @@ namespace zcl::strs {
         return true;
     }
 
-    t_i32 calc_len(const t_str_rdonly str) {
-        ZF_ASSERT(check_valid_utf8(str));
+    t_i32 str_calc_len(const t_str_rdonly str) {
+        ZF_ASSERT(str_check_valid_utf8(str));
 
         t_i32 i = 0;
         t_i32 len = 0;
@@ -380,7 +380,7 @@ namespace zcl::strs {
 
     void code_pt_to_utf8_bytes(const t_code_pt cp, t_static_array<t_u8, 4> *const o_bytes, t_i32 *const o_byte_cnt) {
         *o_bytes = {};
-        *o_byte_cnt = utf8_byte_cnt(cp);
+        *o_byte_cnt = code_pt_get_utf8_byte_cnt(cp);
 
         switch (*o_byte_cnt) {
         case 1:
@@ -437,8 +437,8 @@ namespace zcl::strs {
         }
     }
 
-    t_code_pt find_code_pt_at_byte(const t_str_rdonly str, const t_i32 byte_index) {
-        ZF_ASSERT(check_valid_utf8(str));
+    t_code_pt str_find_code_pt_at_byte(const t_str_rdonly str, const t_i32 byte_index) {
+        ZF_ASSERT(str_check_valid_utf8(str));
         ZF_ASSERT(byte_index >= 0 && byte_index < str.bytes.len);
 
         t_i32 cp_first_byte_index = byte_index;
@@ -457,16 +457,16 @@ namespace zcl::strs {
         } while (true);
     }
 
-    void mark_code_pts(const t_str_rdonly str, t_code_pt_bitset *const code_pts) {
-        ZF_ASSERT(check_valid_utf8(str));
+    void str_mark_code_pts(const t_str_rdonly str, t_code_pt_bitset *const code_pts) {
+        ZF_ASSERT(str_check_valid_utf8(str));
 
-        ZF_WALK_STR(str, step) {
+        ZCL_STR_WALK (str, step) {
             bitset_set(*code_pts, static_cast<t_i32>(step.code_pt));
         }
     }
 
-    t_b8 walk(const t_str_rdonly str, t_i32 *const byte_index, t_str_walk_step *const o_step) {
-        ZF_ASSERT(check_valid_utf8(str));
+    t_b8 str_walk(const t_str_rdonly str, t_i32 *const byte_index, t_str_walk_step *const o_step) {
+        ZF_ASSERT(str_check_valid_utf8(str));
         ZF_ASSERT(*byte_index >= 0 && *byte_index <= str.bytes.len);
 
         if (*byte_index == str.bytes.len) {
@@ -499,8 +499,8 @@ namespace zcl::strs {
         }
     }
 
-    t_b8 walk_reverse(const t_str_rdonly str, t_i32 *const byte_index, t_str_walk_step *const o_step) {
-        ZF_ASSERT(check_valid_utf8(str));
+    t_b8 str_walk_reverse(const t_str_rdonly str, t_i32 *const byte_index, t_str_walk_step *const o_step) {
+        ZF_ASSERT(str_check_valid_utf8(str));
         ZF_ASSERT(*byte_index >= -1 && *byte_index < str.bytes.len);
 
         if (*byte_index == -1) {

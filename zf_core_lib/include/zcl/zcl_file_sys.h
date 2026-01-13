@@ -47,10 +47,10 @@ namespace zcl::file_sys {
         ek_file_access_mode_append
     };
 
-    [[nodiscard]] t_b8 file_open(const strs::t_str_rdonly file_path, const t_file_access_mode mode, t_arena *const temp_arena, t_file_stream *const o_stream);
+    [[nodiscard]] t_b8 file_open(const t_str_rdonly file_path, const t_file_access_mode mode, t_arena *const temp_arena, t_file_stream *const o_stream);
     void file_close(t_file_stream *const stream);
     t_i32 file_calc_size(t_file_stream *const stream);
-    [[nodiscard]] t_b8 file_load_contents(const strs::t_str_rdonly file_path, t_arena *const contents_arena, t_arena *const temp_arena, t_array_mut<t_u8> *const o_contents, const t_b8 add_terminator = false);
+    [[nodiscard]] t_b8 file_load_contents(const t_str_rdonly file_path, t_arena *const contents_arena, t_arena *const temp_arena, t_array_mut<t_u8> *const o_contents, const t_b8 add_terminator = false);
 
     enum t_directory_creation_result : t_i32 {
         ek_directory_creation_result_success,
@@ -60,9 +60,9 @@ namespace zcl::file_sys {
         ek_directory_creation_result_unknown_err
     };
 
-    [[nodiscard]] t_b8 create_directory(const strs::t_str_rdonly path, t_arena *const temp_arena, t_directory_creation_result *const o_creation_res = nullptr);
-    [[nodiscard]] t_b8 create_directory_and_parents(const strs::t_str_rdonly path, t_arena *const temp_arena, t_directory_creation_result *const o_dir_creation_res = nullptr);
-    [[nodiscard]] t_b8 create_file_and_parent_directories(const strs::t_str_rdonly path, t_arena *const temp_arena, t_directory_creation_result *const o_dir_creation_res = nullptr);
+    [[nodiscard]] t_b8 create_directory(const t_str_rdonly path, t_arena *const temp_arena, t_directory_creation_result *const o_creation_res = nullptr);
+    [[nodiscard]] t_b8 create_directory_and_parents(const t_str_rdonly path, t_arena *const temp_arena, t_directory_creation_result *const o_dir_creation_res = nullptr);
+    [[nodiscard]] t_b8 create_file_and_parent_directories(const t_str_rdonly path, t_arena *const temp_arena, t_directory_creation_result *const o_dir_creation_res = nullptr);
 
     enum t_path_type : t_i32 {
         ek_path_type_not_found,
@@ -70,7 +70,7 @@ namespace zcl::file_sys {
         ek_path_type_directory
     };
 
-    t_path_type path_get_type(const strs::t_str_rdonly path, t_arena *const temp_arena);
+    t_path_type path_get_type(const t_str_rdonly path, t_arena *const temp_arena);
 
-    strs::t_str_mut get_executable_directory(t_arena *const arena);
+    t_str_mut get_executable_directory(t_arena *const arena);
 }

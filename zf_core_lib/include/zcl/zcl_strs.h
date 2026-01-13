@@ -3,7 +3,7 @@
 #include <zcl/zcl_basic.h>
 #include <zcl/zcl_bits.h>
 
-namespace zcl::strs {
+namespace zcl {
     // ============================================================
     // @section: Code Points
 
@@ -27,7 +27,7 @@ namespace zcl::strs {
     }
 
     // If the code point is valid, result is guaranteed to be 1, 2, 3, or 4.
-    constexpr t_i32 utf8_byte_cnt(const t_code_pt code_pt) {
+    constexpr t_i32 code_pt_get_utf8_byte_cnt(const t_code_pt code_pt) {
         if (code_pt <= 0x7F) {
             return 1;
         }
@@ -70,7 +70,7 @@ namespace zcl::strs {
             return k_array_comparator_bin<t_array_rdonly<t_u8>>(a.bytes, b.bytes);
         };
 
-    inline t_b8 bytes_check_terminated_anywhere(const t_array_rdonly<t_u8> bytes) {
+    inline t_b8 str_bytes_check_terminated_anywhere(const t_array_rdonly<t_u8> bytes) {
         for (t_i32 i = bytes.len - 1; i >= 0; i--) {
             if (!bytes[i]) {
                 return true;
@@ -80,7 +80,7 @@ namespace zcl::strs {
         return false;
     }
 
-    inline t_b8 bytes_check_terminated_only_at_end(const t_array_rdonly<t_u8> bytes) {
+    inline t_b8 str_bytes_check_terminated_only_at_end(const t_array_rdonly<t_u8> bytes) {
         if (bytes.len == 0 || bytes[bytes.len - 1]) {
             return false;
         }
@@ -94,36 +94,36 @@ namespace zcl::strs {
         return true;
     }
 
-    inline char *to_cstr(const t_str_mut str) {
-        ZF_ASSERT(bytes_check_terminated_anywhere(str.bytes));
+    inline char *str_to_cstr(const t_str_mut str) {
+        ZF_ASSERT(str_bytes_check_terminated_anywhere(str.bytes));
         return reinterpret_cast<char *>(str.bytes.raw);
     }
 
-    inline const char *to_cstr(const t_str_rdonly str) {
-        ZF_ASSERT(bytes_check_terminated_anywhere(str.bytes));
+    inline const char *str_to_cstr(const t_str_rdonly str) {
+        ZF_ASSERT(str_bytes_check_terminated_anywhere(str.bytes));
         return reinterpret_cast<const char *>(str.bytes.raw);
     }
 
     // Allocates a clone of the given string using the memory arena, with a null byte added at the end (even if the string was already terminated).
-    inline t_str_mut clone_but_add_terminator(const t_str_rdonly str, t_arena *const arena) {
+    inline t_str_mut str_clone_but_add_terminator(const t_str_rdonly str, t_arena *const arena) {
         const t_str_mut clone = {arena_push_array<t_u8>(arena, str.bytes.len + 1)};
         array_copy(str.bytes, clone.bytes);
         clone.bytes[clone.bytes.len - 1] = 0;
         return clone;
     }
 
-    inline t_b8 check_empty(const t_str_rdonly str) {
+    inline t_b8 str_check_empty(const t_str_rdonly str) {
         return str.bytes.len == 0;
     }
 
-    inline t_b8 check_equal(const t_str_rdonly a, const t_str_rdonly b) {
+    inline t_b8 strs_check_equal(const t_str_rdonly a, const t_str_rdonly b) {
         return array_compare(a.bytes, b.bytes) == 0;
     }
 
-    t_b8 check_valid_utf8(const t_str_rdonly str);
+    t_b8 str_check_valid_utf8(const t_str_rdonly str);
 
     // Calculates the string length in terms of code point count. Reminder that '\0' is treated just like any other ASCII character and does not terminate.
-    t_i32 calc_len(const t_str_rdonly str);
+    t_i32 str_calc_len(const t_str_rdonly str);
 
     // Given array must be of length 1, 2, 3, or 4.
     t_code_pt utf8_bytes_to_code_pt(const t_array_rdonly<t_u8> bytes);
@@ -131,10 +131,10 @@ namespace zcl::strs {
     // Output byte count will be 1, 2, 3, or 4.
     void code_pt_to_utf8_bytes(const t_code_pt cp, t_static_array<t_u8, 4> *const o_bytes, t_i32 *const o_byte_cnt);
 
-    t_code_pt find_code_pt_at_byte(const t_str_rdonly str, const t_i32 byte_index);
+    t_code_pt str_find_code_pt_at_byte(const t_str_rdonly str, const t_i32 byte_index);
 
     // Sets the bits associated with each unicode code point that appear in the string. No bits get unset.
-    void mark_code_pts(const t_str_rdonly str, t_code_pt_bitset *const code_pts);
+    void str_mark_code_pts(const t_str_rdonly str, t_code_pt_bitset *const code_pts);
 
     struct t_str_walk_step {
         t_code_pt code_pt;
@@ -143,19 +143,19 @@ namespace zcl::strs {
 
     // byte_index should be initialised to the index of ANY byte in the code point to start walking from.
     // Returns false iff the walk has ended.
-    t_b8 walk(const t_str_rdonly str, t_i32 *const byte_index, t_str_walk_step *const o_step);
+    t_b8 str_walk(const t_str_rdonly str, t_i32 *const byte_index, t_str_walk_step *const o_step);
 
     // byte_index should be initialised to the index of ANY byte in the code point to start walking backwards from.
     // Returns false iff the walk has ended.
-    t_b8 walk_reverse(const t_str_rdonly str, t_i32 *const byte_index, t_str_walk_step *const o_step);
+    t_b8 str_walk_reverse(const t_str_rdonly str, t_i32 *const byte_index, t_str_walk_step *const o_step);
 
-#define ZF_WALK_STR(str, step)                                                                                      \
+#define ZCL_STR_WALK(str, step)                                                                                     \
     for (zcl::t_i32 ZF_CONCAT(bi_l, __LINE__) = 0; ZF_CONCAT(bi_l, __LINE__) != -1; ZF_CONCAT(bi_l, __LINE__) = -1) \
-        for (zcl::strs::t_str_walk_step step; zcl::strs::walk(str, &ZF_CONCAT(bi_l, __LINE__), &step);)
+        for (zcl::t_str_walk_step step; zcl::str_walk(str, &ZF_CONCAT(bi_l, __LINE__), &step);)
 
-#define ZF_WALK_STR_REVERSE(str, step)                                                                                                                          \
+#define ZCL_STR_WALK_REVERSE(str, step)                                                                                                                         \
     for (zcl::t_i32 ZF_CONCAT(bi_l, __LINE__) = (str).bytes.len - 1; ZF_CONCAT(bi_l, __LINE__) != (str).bytes.len; ZF_CONCAT(bi_l, __LINE__) = (str).bytes.len) \
-        for (zcl::strs::t_str_walk_step step; zcl::strs::walk_reverse(str, &ZF_CONCAT(bi_l, __LINE__), &step);)
+        for (zcl::t_str_walk_step step; zcl::str_walk_reverse(str, &ZF_CONCAT(bi_l, __LINE__), &step);)
 
     // ============================================================
 
@@ -212,7 +212,7 @@ namespace zcl::strs {
             const t_i32 buf_size;
         };
 
-#define ZF_STR_LITERAL(cstr_lit) zcl::strs::t_str_rdonly(zcl::strs::detail::t_cstr_literal(cstr_lit))
+#define ZCL_STR_LITERAL(cstr_lit) zcl::t_str_rdonly(zcl::detail::t_cstr_literal(cstr_lit))
     }
 
     // ============================================================

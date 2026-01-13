@@ -8,8 +8,8 @@
 #include <zcl/zcl_file_sys.h>
 
 namespace zcl::gfx {
-    constexpr ds::t_hash_func<strs::t_code_pt> k_code_pt_hash_func =
-        [](const strs::t_code_pt &code_pt) {
+    constexpr ds::t_hash_func<t_code_pt> k_code_pt_hash_func =
+        [](const t_code_pt &code_pt) {
             return static_cast<t_i32>(code_pt);
         };
 
@@ -23,11 +23,11 @@ namespace zcl::gfx {
             return pa.a == pb.a && pa.b == pb.b;
         };
 
-    t_b8 texture_load_from_raw(const strs::t_str_rdonly file_path, t_arena *const texture_data_arena, t_arena *const temp_arena, t_texture_data_mut *const o_texture_data) {
-        const strs::t_str_rdonly file_path_terminated = strs::clone_but_add_terminator(file_path, temp_arena);
+    t_b8 texture_load_from_raw(const t_str_rdonly file_path, t_arena *const texture_data_arena, t_arena *const temp_arena, t_texture_data_mut *const o_texture_data) {
+        const t_str_rdonly file_path_terminated = str_clone_but_add_terminator(file_path, temp_arena);
 
         t_v2_i size_in_pxs;
-        t_u8 *const stb_px_data = stbi_load(strs::to_cstr(file_path_terminated), &size_in_pxs.x, &size_in_pxs.y, nullptr, 4);
+        t_u8 *const stb_px_data = stbi_load(str_to_cstr(file_path_terminated), &size_in_pxs.x, &size_in_pxs.y, nullptr, 4);
 
         if (!stb_px_data) {
             return false;
@@ -44,7 +44,7 @@ namespace zcl::gfx {
         return true;
     }
 
-    t_b8 texture_pack(const strs::t_str_rdonly file_path, const t_texture_data_mut texture_data, t_arena *const temp_arena) {
+    t_b8 texture_pack(const t_str_rdonly file_path, const t_texture_data_mut texture_data, t_arena *const temp_arena) {
         if (!file_sys::create_file_and_parent_directories(file_path, temp_arena)) {
             return false;
         }
@@ -68,7 +68,7 @@ namespace zcl::gfx {
         return true;
     }
 
-    t_b8 texture_unpack(const strs::t_str_rdonly file_path, t_arena *const texture_data_arena, t_arena *const temp_arena, t_texture_data_mut *const o_texture_data) {
+    t_b8 texture_unpack(const t_str_rdonly file_path, t_arena *const texture_data_arena, t_arena *const temp_arena, t_texture_data_mut *const o_texture_data) {
         file_sys::t_file_stream fs;
 
         if (!file_sys::file_open(file_path, file_sys::ek_file_access_mode_read, temp_arena, &fs)) {
@@ -94,7 +94,7 @@ namespace zcl::gfx {
         return true;
     }
 
-    t_b8 font_load_from_raw(const strs::t_str_rdonly file_path, const t_i32 height, strs::t_code_pt_bitset *const code_pts, t_arena *const arrangement_arena, t_arena *const atlas_rgbas_arena, t_arena *const temp_arena, t_font_arrangement *const o_arrangement, t_array_mut<t_font_atlas_rgba> *const o_atlas_rgbas) {
+    t_b8 font_load_from_raw(const t_str_rdonly file_path, const t_i32 height, t_code_pt_bitset *const code_pts, t_arena *const arrangement_arena, t_arena *const atlas_rgbas_arena, t_arena *const temp_arena, t_font_arrangement *const o_arrangement, t_array_mut<t_font_atlas_rgba> *const o_atlas_rgbas) {
         ZF_ASSERT(height > 0);
 
         // Get the plain font file data.
@@ -119,7 +119,7 @@ namespace zcl::gfx {
 
         // Filter out unsupported code points.
         ZCL_BITSET_WALK_ALL_SET (*code_pts, i) {
-            const auto code_pt = static_cast<strs::t_code_pt>(i);
+            const auto code_pt = static_cast<t_code_pt>(i);
 
             const t_i32 glyph_index = stbtt_FindGlyphIndex(&stb_font_info, static_cast<t_i32>(code_pt));
 
@@ -146,7 +146,7 @@ namespace zcl::gfx {
         //
         // Glyph Info
         //
-        o_arrangement->code_pts_to_glyph_infos = ds::hash_map_create<strs::t_code_pt, t_font_glyph_info>(k_code_pt_hash_func, arrangement_arena, code_pt_cnt);
+        o_arrangement->code_pts_to_glyph_infos = ds::hash_map_create<t_code_pt, t_font_glyph_info>(k_code_pt_hash_func, arrangement_arena, code_pt_cnt);
 
         t_i32 atlas_index = 0;
         t_v2_i atlas_pen = {};
@@ -154,7 +154,7 @@ namespace zcl::gfx {
         constexpr t_i32 k_glyph_padding = 4;
 
         ZCL_BITSET_WALK_ALL_SET (*code_pts, i) {
-            const auto code_pt = static_cast<strs::t_code_pt>(i);
+            const auto code_pt = static_cast<t_code_pt>(i);
 
             const t_i32 glyph_index = stbtt_FindGlyphIndex(&stb_font_info, static_cast<t_i32>(code_pt));
 
@@ -202,8 +202,8 @@ namespace zcl::gfx {
 
         ZCL_BITSET_WALK_ALL_SET (*code_pts, i) {
             ZCL_BITSET_WALK_ALL_SET (*code_pts, j) {
-                const auto cp_a = static_cast<strs::t_code_pt>(i);
-                const auto cp_b = static_cast<strs::t_code_pt>(j);
+                const auto cp_a = static_cast<t_code_pt>(i);
+                const auto cp_b = static_cast<t_code_pt>(j);
 
                 const auto glyph_a_index = stbtt_FindGlyphIndex(&stb_font_info, static_cast<t_i32>(cp_a));
                 const auto glyph_b_index = stbtt_FindGlyphIndex(&stb_font_info, static_cast<t_i32>(cp_b));
@@ -236,7 +236,7 @@ namespace zcl::gfx {
 
         // Write pixel data for each individual glyph.
         ZCL_BITSET_WALK_ALL_SET (*code_pts, i) {
-            const auto code_pt = static_cast<strs::t_code_pt>(i);
+            const auto code_pt = static_cast<t_code_pt>(i);
 
             t_font_glyph_info *glyph_info;
 
@@ -272,7 +272,7 @@ namespace zcl::gfx {
         return true;
     }
 
-    t_b8 font_pack(const strs::t_str_rdonly file_path, const t_font_arrangement &arrangement, const t_array_rdonly<t_font_atlas_rgba> atlas_rgbas, t_arena *const temp_arena) {
+    t_b8 font_pack(const t_str_rdonly file_path, const t_font_arrangement &arrangement, const t_array_rdonly<t_font_atlas_rgba> atlas_rgbas, t_arena *const temp_arena) {
         if (!file_sys::create_file_and_parent_directories(file_path, temp_arena)) {
             return false;
         }
@@ -304,7 +304,7 @@ namespace zcl::gfx {
         return true;
     }
 
-    t_b8 font_unpack(const strs::t_str_rdonly file_path, t_arena *const arrangement_arena, t_arena *const atlas_rgbas_arena, t_arena *const temp_arena, t_font_arrangement *const o_arrangement, t_array_mut<t_font_atlas_rgba> *const o_atlas_rgbas) {
+    t_b8 font_unpack(const t_str_rdonly file_path, t_arena *const arrangement_arena, t_arena *const atlas_rgbas_arena, t_arena *const temp_arena, t_font_arrangement *const o_arrangement, t_array_mut<t_font_atlas_rgba> *const o_atlas_rgbas) {
         file_sys::t_file_stream fs;
 
         if (!file_sys::file_open(file_path, file_sys::ek_file_access_mode_read, temp_arena, &fs)) {
@@ -332,7 +332,7 @@ namespace zcl::gfx {
         return true;
     }
 
-    t_b8 shader_pack(const strs::t_str_rdonly file_path, const t_array_rdonly<t_u8> compiled_shader_bin, t_arena *const temp_arena) {
+    t_b8 shader_pack(const t_str_rdonly file_path, const t_array_rdonly<t_u8> compiled_shader_bin, t_arena *const temp_arena) {
         if (!file_sys::create_file_and_parent_directories(file_path, temp_arena)) {
             return false;
         }
@@ -352,7 +352,7 @@ namespace zcl::gfx {
         return true;
     }
 
-    t_b8 shader_unpack(const strs::t_str_rdonly file_path, t_arena *const shader_bin_arena, t_arena *const temp_arena, t_array_mut<t_u8> *const o_shader_bin) {
+    t_b8 shader_unpack(const t_str_rdonly file_path, t_arena *const shader_bin_arena, t_arena *const temp_arena, t_array_mut<t_u8> *const o_shader_bin) {
         file_sys::t_file_stream fs;
 
         if (!file_sys::file_open(file_path, file_sys::ek_file_access_mode_read, temp_arena, &fs)) {

@@ -4,13 +4,13 @@
 #include <zcl/zcl_file_sys.h>
 
 namespace zcl {
-    t_b8 sound_load_from_raw(const strs::t_str_rdonly file_path, t_arena *const snd_data_arena, t_arena *const temp_arena, t_sound_data_mut *const o_snd_data) {
-        const strs::t_str_rdonly file_path_terminated = strs::clone_but_add_terminator(file_path, temp_arena);
+    t_b8 sound_load_from_raw(const t_str_rdonly file_path, t_arena *const snd_data_arena, t_arena *const temp_arena, t_sound_data_mut *const o_snd_data) {
+        const t_str_rdonly file_path_terminated = str_clone_but_add_terminator(file_path, temp_arena);
 
         ma_decoder decoder;
         ma_decoder_config decoder_config = ma_decoder_config_init(ma_format_f32, 0, 0);
 
-        if (ma_decoder_init_file(strs::to_cstr(file_path_terminated), &decoder_config, &decoder) != MA_SUCCESS) {
+        if (ma_decoder_init_file(str_to_cstr(file_path_terminated), &decoder_config, &decoder) != MA_SUCCESS) {
             return false;
         }
 
@@ -37,7 +37,7 @@ namespace zcl {
         return true;
     }
 
-    t_b8 sound_pack(const strs::t_str_rdonly file_path, const t_sound_data_rdonly snd_data, t_arena *const temp_arena) {
+    t_b8 sound_pack(const t_str_rdonly file_path, const t_sound_data_rdonly snd_data, t_arena *const temp_arena) {
         if (!file_sys::create_file_and_parent_directories(file_path, temp_arena)) {
             return false;
         }
@@ -53,7 +53,7 @@ namespace zcl {
         return sound_serialize(snd_data, fs);
     }
 
-    t_b8 sound_unpack(const strs::t_str_rdonly file_path, t_arena *const snd_data_arena, t_arena *const temp_arena, t_sound_data_mut *const o_snd_data) {
+    t_b8 sound_unpack(const t_str_rdonly file_path, t_arena *const snd_data_arena, t_arena *const temp_arena, t_sound_data_mut *const o_snd_data) {
         file_sys::t_file_stream fs;
 
         if (!file_sys::file_open(file_path, file_sys::ek_file_access_mode_read, temp_arena, &fs)) {

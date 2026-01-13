@@ -86,7 +86,7 @@ namespace zgl::gfx {
 
     t_resource *texture_create(const zcl::gfx::t_texture_data_rdonly texture_data, t_resource_group *const group);
 
-    inline t_resource *texture_create_from_raw(const zcl::strs::t_str_rdonly file_path, zcl::t_arena *const temp_arena, t_resource_group *const group) {
+    inline t_resource *texture_create_from_raw(const zcl::t_str_rdonly file_path, zcl::t_arena *const temp_arena, t_resource_group *const group) {
         zcl::gfx::t_texture_data_mut texture_data;
 
         if (!zcl::gfx::texture_load_from_raw(file_path, temp_arena, temp_arena, &texture_data)) {
@@ -96,7 +96,7 @@ namespace zgl::gfx {
         return texture_create(texture_data, group);
     }
 
-    inline t_resource *texture_create_from_packed(const zcl::strs::t_str_rdonly file_path, zcl::t_arena *const temp_arena, t_resource_group *const group) {
+    inline t_resource *texture_create_from_packed(const zcl::t_str_rdonly file_path, zcl::t_arena *const temp_arena, t_resource_group *const group) {
         zcl::gfx::t_texture_data_mut texture_data;
 
         if (!zcl::gfx::texture_unpack(file_path, temp_arena, temp_arena, &texture_data)) {
@@ -123,7 +123,7 @@ namespace zgl::gfx {
 
     t_resource *shader_prog_create(const zcl::t_array_rdonly<zcl::t_u8> vert_shader_compiled_bin, const zcl::t_array_rdonly<zcl::t_u8> frag_shader_compiled_bin, t_resource_group *const group);
 
-    inline t_resource *shader_prog_create_from_packed(const zcl::strs::t_str_rdonly vert_shader_file_path, const zcl::strs::t_str_rdonly frag_shader_file_path, zcl::t_arena *const temp_arena, t_resource_group *const arena) {
+    inline t_resource *shader_prog_create_from_packed(const zcl::t_str_rdonly vert_shader_file_path, const zcl::t_str_rdonly frag_shader_file_path, zcl::t_arena *const temp_arena, t_resource_group *const arena) {
         zcl::t_array_mut<zcl::t_u8> vert_shader_compiled_bin;
 
         if (!zcl::gfx::shader_unpack(vert_shader_file_path, temp_arena, temp_arena, &vert_shader_compiled_bin)) {
@@ -140,7 +140,7 @@ namespace zgl::gfx {
     }
 
 
-    t_resource *uniform_create(const zcl::strs::t_str_rdonly name, const t_uniform_type type, t_resource_group *const group, zcl::t_arena *const temp_arena);
+    t_resource *uniform_create(const zcl::t_str_rdonly name, const t_uniform_type type, t_resource_group *const group, zcl::t_arena *const temp_arena);
 
     t_uniform_type uniform_get_type(const t_resource *const uniform);
 
@@ -149,8 +149,8 @@ namespace zgl::gfx {
         zcl::t_array_mut<t_resource *> atlases;
     };
 
-    t_font font_create_from_raw(const zcl::strs::t_str_rdonly file_path, const zcl::t_i32 height, zcl::strs::t_code_pt_bitset *const code_pts, zcl::t_arena *const temp_arena, t_resource_group *const resource_group);
-    t_font font_create_from_packed(const zcl::strs::t_str_rdonly file_path, zcl::t_arena *const temp_arena, t_resource_group *const resource_group);
+    t_font font_create_from_raw(const zcl::t_str_rdonly file_path, const zcl::t_i32 height, zcl::t_code_pt_bitset *const code_pts, zcl::t_arena *const temp_arena, t_resource_group *const resource_group);
+    t_font font_create_from_packed(const zcl::t_str_rdonly file_path, zcl::t_arena *const temp_arena, t_resource_group *const resource_group);
 
     // ========================================
 
@@ -246,7 +246,7 @@ namespace zgl::gfx {
 
     void frame_submit_texture(t_frame_context *const context, const t_resource *const texture, const zcl::t_v2 pos, const zcl::t_rect_i src_rect = {}, const zcl::t_v2 origin = k_origin_topleft, const zcl::t_f32 rot = 0.0f);
 
-    void frame_submit_str(t_frame_context *const context, const zcl::strs::t_str_rdonly str, const t_font &font, const zcl::t_v2 pos, zcl::t_arena *const temp_arena, const zcl::t_v2 alignment = k_alignment_topleft, const zcl::gfx::t_color_rgba32f blend = zcl::gfx::k_color_white);
+    void frame_submit_str(t_frame_context *const context, const zcl::t_str_rdonly str, const t_font &font, const zcl::t_v2 pos, zcl::t_arena *const temp_arena, const zcl::t_v2 alignment = k_alignment_topleft, const zcl::gfx::t_color_rgba32f blend = zcl::gfx::k_color_white);
 
     // ========================================
 

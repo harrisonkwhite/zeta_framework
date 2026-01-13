@@ -11,8 +11,8 @@ namespace zcl::ds {
 
 #if 0
     // This is an FNV-1a implementation.
-    constexpr t_hash_func<strs::t_str_rdonly> k_str_hash_func =
-        [](const strs::t_str_rdonly &key) {
+    constexpr t_hash_func<t_str_rdonly> k_str_hash_func =
+        [](const t_str_rdonly &key) {
             const t_u32 offs_basis = 2166136261u;
             const t_u32 prime = 16777619u;
 

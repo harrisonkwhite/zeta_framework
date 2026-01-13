@@ -21,13 +21,13 @@ namespace zcl::io {
     struct t_str_format {
         using t_format_tag = void;
 
-        strs::t_str_rdonly value;
+        t_str_rdonly value;
     };
 
     struct t_code_pt_format {
         using t_format_tag = void;
 
-        strs::t_code_pt value;
+        t_code_pt value;
     };
 
     template <c_integral tp_type>
@@ -103,8 +103,8 @@ namespace zcl::io {
         t_bitset_format_style style;
     };
 
-    constexpr strs::t_code_pt k_print_format_spec = '%';
-    constexpr strs::t_code_pt k_print_format_esc = '^';
+    constexpr t_code_pt k_print_format_spec = '%';
+    constexpr t_code_pt k_print_format_esc = '^';
 
     // ============================================================
 
@@ -112,14 +112,14 @@ namespace zcl::io {
     // ============================================================
     // @section: Functions
 
-    inline t_b8 print(const t_stream stream, const strs::t_str_rdonly str) {
+    inline t_b8 print(const t_stream stream, const t_str_rdonly str) {
         return stream_write_items_of_array(stream, str.bytes);
     }
 
-    inline t_b8 print_format(const t_stream stream, const strs::t_str_rdonly format);
+    inline t_b8 print_format(const t_stream stream, const t_str_rdonly format);
 
     template <typename tp_arg_type, typename... tp_arg_types_leftover>
-    t_b8 print_format(const t_stream stream, const strs::t_str_rdonly format, const tp_arg_type &arg, const tp_arg_types_leftover &...args_leftover);
+    t_b8 print_format(const t_stream stream, const t_str_rdonly format, const tp_arg_type &arg, const tp_arg_types_leftover &...args_leftover);
 
     inline t_bool_format format_bool(const t_b8 value) {
         return {.value = value};
@@ -132,28 +132,28 @@ namespace zcl::io {
     }
 
     inline t_b8 print_type(const t_stream stream, const t_bool_format format) {
-        const strs::t_str_rdonly true_str = ZF_STR_LITERAL("true");
-        const strs::t_str_rdonly false_str = ZF_STR_LITERAL("false");
+        const t_str_rdonly true_str = ZCL_STR_LITERAL("true");
+        const t_str_rdonly false_str = ZCL_STR_LITERAL("false");
 
         return print(stream, format.value ? true_str : false_str);
     }
 
-    inline t_str_format format_str(const strs::t_str_rdonly value) { return {.value = value}; }
-    inline t_str_format format_default(const strs::t_str_rdonly value) { return format_str(value); }
+    inline t_str_format format_str(const t_str_rdonly value) { return {.value = value}; }
+    inline t_str_format format_default(const t_str_rdonly value) { return format_str(value); }
 
     inline t_b8 print_type(const t_stream stream, const t_str_format format) {
         return print(stream, format.value);
     }
 
-    inline t_code_pt_format format_code_pt(const strs::t_code_pt value) { return {.value = value}; }
-    inline t_code_pt_format format_default(const strs::t_code_pt value) { return format_code_pt(value); }
+    inline t_code_pt_format format_code_pt(const t_code_pt value) { return {.value = value}; }
+    inline t_code_pt_format format_default(const t_code_pt value) { return format_code_pt(value); }
 
     inline t_b8 print_type(const t_stream stream, const t_code_pt_format format) {
         t_static_array<t_u8, 4> code_pt_bytes;
         t_i32 code_pt_byte_cnt;
-        strs::code_pt_to_utf8_bytes(format.value, &code_pt_bytes, &code_pt_byte_cnt);
+        code_pt_to_utf8_bytes(format.value, &code_pt_bytes, &code_pt_byte_cnt);
 
-        const strs::t_str_rdonly code_pt_str = {array_slice(array_to_nonstatic(&code_pt_bytes), 0, code_pt_byte_cnt)};
+        const t_str_rdonly code_pt_str = {array_slice(array_to_nonstatic(&code_pt_bytes), 0, code_pt_byte_cnt)};
 
         return print(stream, code_pt_str);
     }
@@ -310,11 +310,11 @@ namespace zcl::io {
     inline t_v2_format format_default(const t_v2 value) { return format_v2(value); }
 
     inline t_b8 print_type(const t_stream stream, const t_v2_format format) {
-        return print(stream, ZF_STR_LITERAL("("))
+        return print(stream, ZCL_STR_LITERAL("("))
             && print_type(stream, format_float(format.value.x, format.trim_trailing_zeros))
-            && print(stream, ZF_STR_LITERAL(", "))
+            && print(stream, ZCL_STR_LITERAL(", "))
             && print_type(stream, format_float(format.value.y, format.trim_trailing_zeros))
-            && print(stream, ZF_STR_LITERAL(")"));
+            && print(stream, ZCL_STR_LITERAL(")"));
     }
 
 
@@ -322,11 +322,11 @@ namespace zcl::io {
     inline t_v2_i_format format_default(const t_v2_i value) { return format_v2(value); }
 
     inline t_b8 print_type(const t_stream stream, const t_v2_i_format format) {
-        return print(stream, ZF_STR_LITERAL("("))
+        return print(stream, ZCL_STR_LITERAL("("))
             && print_type(stream, format_int(format.value.x))
-            && print(stream, ZF_STR_LITERAL(", "))
+            && print(stream, ZCL_STR_LITERAL(", "))
             && print_type(stream, format_int(format.value.y))
-            && print(stream, ZF_STR_LITERAL(")"));
+            && print(stream, ZCL_STR_LITERAL(")"));
     }
 
     template <c_formattable_array tp_arr_type>
@@ -341,28 +341,28 @@ namespace zcl::io {
     t_b8 print_type(const t_stream stream, const t_array_format<tp_arr_type> format) {
         if (format.one_per_line) {
             for (t_i32 i = 0; i < format.value.len; i++) {
-                if (!print_format(stream, ZF_STR_LITERAL("[%] %%"), i, format.value[i], i < format.value.len - 1 ? ZF_STR_LITERAL("\n") : ZF_STR_LITERAL(""))) {
+                if (!print_format(stream, ZCL_STR_LITERAL("[%] %%"), i, format.value[i], i < format.value.len - 1 ? ZCL_STR_LITERAL("\n") : ZCL_STR_LITERAL(""))) {
                     return false;
                 }
             }
         } else {
-            if (!print(stream, ZF_STR_LITERAL("["))) {
+            if (!print(stream, ZCL_STR_LITERAL("["))) {
                 return false;
             }
 
             for (t_i32 i = 0; i < format.value.len; i++) {
-                if (!print_format(stream, ZF_STR_LITERAL("%"), format.value[i])) {
+                if (!print_format(stream, ZCL_STR_LITERAL("%"), format.value[i])) {
                     return false;
                 }
 
                 if (i < format.value.len - 1) {
-                    if (!print(stream, ZF_STR_LITERAL(", "))) {
+                    if (!print(stream, ZCL_STR_LITERAL(", "))) {
                         return false;
                     }
                 }
             }
 
-            if (!print(stream, ZF_STR_LITERAL("]"))) {
+            if (!print(stream, ZCL_STR_LITERAL("]"))) {
                 return false;
             }
         }
@@ -378,7 +378,7 @@ namespace zcl::io {
 
     inline t_b8 print_type(const t_stream stream, const t_bitset_format format) {
         const auto print_bit = [&](const t_i32 bit_index) {
-            const strs::t_str_rdonly str = bitset_check_set(format.value, bit_index) ? ZF_STR_LITERAL("1") : ZF_STR_LITERAL("0");
+            const t_str_rdonly str = bitset_check_set(format.value, bit_index) ? ZCL_STR_LITERAL("1") : ZCL_STR_LITERAL("0");
             return print(stream, str);
         };
 
@@ -386,7 +386,7 @@ namespace zcl::io {
             const t_i32 bit_cnt = index == bitset_get_bytes(format.value).len - 1 ? bitset_get_last_byte_bit_cnt(format.value) : 8;
 
             for (t_i32 i = 7; i >= bit_cnt; i--) {
-                print(stream, ZF_STR_LITERAL("0"));
+                print(stream, ZCL_STR_LITERAL("0"));
             }
 
             for (t_i32 i = bit_cnt - 1; i >= 0; i--) {
@@ -407,7 +407,7 @@ namespace zcl::io {
         case ek_bitset_format_style_little_endian:
             for (t_i32 i = 0; i < bitset_get_bytes(format.value).len; i++) {
                 if (i > 0) {
-                    print(stream, ZF_STR_LITERAL(" "));
+                    print(stream, ZCL_STR_LITERAL(" "));
                 }
 
                 print_byte(i);
@@ -420,7 +420,7 @@ namespace zcl::io {
                 print_byte(i);
 
                 if (i > 0) {
-                    print(stream, ZF_STR_LITERAL(" "));
+                    print(stream, ZCL_STR_LITERAL(" "));
                 }
             }
 
@@ -430,8 +430,8 @@ namespace zcl::io {
         return true;
     }
 
-    inline t_i32 count_format_specs(const strs::t_str_rdonly str) {
-        static_assert(strs::code_pt_check_ascii(k_print_format_spec) && strs::code_pt_check_ascii(k_print_format_esc)); // Assuming this for this algorithm.
+    inline t_i32 count_format_specs(const t_str_rdonly str) {
+        static_assert(code_pt_check_ascii(k_print_format_spec) && code_pt_check_ascii(k_print_format_esc)); // Assuming this for this algorithm.
 
         t_b8 escaped = false;
         t_i32 cnt = 0;
@@ -451,7 +451,7 @@ namespace zcl::io {
         return cnt;
     }
 
-    inline t_b8 print_format(const t_stream stream, const strs::t_str_rdonly format) {
+    inline t_b8 print_format(const t_stream stream, const t_str_rdonly format) {
         ZF_ASSERT(count_format_specs(format) == 0);
 
         // Just print the rest of the string.
@@ -461,12 +461,12 @@ namespace zcl::io {
     // Use a single '%' as the format specifier. To actually include a '%' in the output, write "^%". To actually include a '^', write "^^".
     // Returns true iff the operation was successful.
     template <typename tp_arg_type, typename... tp_arg_types_leftover>
-    t_b8 print_format(const t_stream stream, const strs::t_str_rdonly format, const tp_arg_type &arg, const tp_arg_types_leftover &...args_leftover) {
+    t_b8 print_format(const t_stream stream, const t_str_rdonly format, const tp_arg_type &arg, const tp_arg_types_leftover &...args_leftover) {
         static_assert(!c_cstr<tp_arg_type>, "C-strings are prohibited for default formatting as a form of error prevention.");
 
         ZF_ASSERT(count_format_specs(format) == 1 + sizeof...(args_leftover));
 
-        static_assert(strs::code_pt_check_ascii(k_print_format_spec) && strs::code_pt_check_ascii(k_print_format_esc)); // Assuming this for this algorithm.
+        static_assert(code_pt_check_ascii(k_print_format_spec) && code_pt_check_ascii(k_print_format_esc)); // Assuming this for this algorithm.
 
         t_b8 escaped = false;
 
@@ -486,7 +486,7 @@ namespace zcl::io {
                         }
                     }
 
-                    const strs::t_str_rdonly format_leftover = {array_slice(format.bytes, i + 1, format.bytes.len)}; // The substring of everything after the format specifier.
+                    const t_str_rdonly format_leftover = {array_slice(format.bytes, i + 1, format.bytes.len)}; // The substring of everything after the format specifier.
                     return print_format(stream, format_leftover, args_leftover...);
                 }
             }
@@ -502,7 +502,7 @@ namespace zcl::io {
     }
 
     template <typename... tp_arg_types>
-    t_b8 log(const strs::t_str_rdonly format, const tp_arg_types &...args) {
+    t_b8 log(const t_str_rdonly format, const tp_arg_types &...args) {
 #if 0
         file_sys::t_file_stream std_err = get_std_out();
 
@@ -510,7 +510,7 @@ namespace zcl::io {
             return false;
         }
 
-        if (!print(&std_err, ZF_STR_LITERAL("\n"))) {
+        if (!print(&std_err, ZCL_STR_LITERAL("\n"))) {
             return false;
         }
 #endif
@@ -519,11 +519,11 @@ namespace zcl::io {
     }
 
     template <typename... tp_arg_types>
-    t_b8 log_error(const strs::t_str_rdonly format, const tp_arg_types &...args) {
+    t_b8 log_error(const t_str_rdonly format, const tp_arg_types &...args) {
 #if 0
         t_stream std_err = get_std_error();
 
-        if (!print(&std_err, ZF_STR_LITERAL("Error: "))) {
+        if (!print(&std_err, ZCL_STR_LITERAL("Error: "))) {
             return false;
         }
 
@@ -531,7 +531,7 @@ namespace zcl::io {
             return false;
         }
 
-        if (!print(&std_err, ZF_STR_LITERAL("\n"))) {
+        if (!print(&std_err, ZCL_STR_LITERAL("\n"))) {
             return false;
         }
 #endif
@@ -540,13 +540,13 @@ namespace zcl::io {
     }
 
     template <typename... tp_arg_types>
-    t_b8 log_error_type(const strs::t_str_rdonly type_name, const strs::t_str_rdonly format, const tp_arg_types &...args) {
+    t_b8 log_error_type(const t_str_rdonly type_name, const t_str_rdonly format, const tp_arg_types &...args) {
 #if 0
-        ZF_ASSERT(!strs::check_empty(type_name));
+        ZF_ASSERT(!check_empty(type_name));
 
         t_stream std_err = get_std_error();
 
-        if (!print_format(&std_err, ZF_STR_LITERAL("% Error: "), type_name)) {
+        if (!print_format(&std_err, ZCL_STR_LITERAL("% Error: "), type_name)) {
             return false;
         }
 
@@ -554,7 +554,7 @@ namespace zcl::io {
             return false;
         }
 
-        if (!print(&std_err, ZF_STR_LITERAL("\n"))) {
+        if (!print(&std_err, ZCL_STR_LITERAL("\n"))) {
             return false;
         }
 #endif
@@ -563,11 +563,11 @@ namespace zcl::io {
     }
 
     template <typename... tp_arg_types>
-    t_b8 log_warning(const strs::t_str_rdonly format, const tp_arg_types &...args) {
+    t_b8 log_warning(const t_str_rdonly format, const tp_arg_types &...args) {
 #if 0
         t_stream std_err = get_std_error();
 
-        if (!print(&std_err, ZF_STR_LITERAL("Warning: "))) {
+        if (!print(&std_err, ZCL_STR_LITERAL("Warning: "))) {
             return false;
         }
 
@@ -575,7 +575,7 @@ namespace zcl::io {
             return false;
         }
 
-        if (!print(&std_err, ZF_STR_LITERAL("\n"))) {
+        if (!print(&std_err, ZCL_STR_LITERAL("\n"))) {
             return false;
         }
 #endif

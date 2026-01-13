@@ -28,7 +28,7 @@ namespace zgl {
         void window_request_close();
         zcl::t_b8 window_check_close_requested();
 
-        void window_set_title(const zcl::strs::t_str_rdonly title, zcl::t_arena *const temp_arena);
+        void window_set_title(const zcl::t_str_rdonly title, zcl::t_arena *const temp_arena);
 
         // Sets the LOGICAL window size. The actual new framebuffer size MIGHT be larger if there is DPI scaling.
         void window_set_size(const zcl::t_v2_i size);

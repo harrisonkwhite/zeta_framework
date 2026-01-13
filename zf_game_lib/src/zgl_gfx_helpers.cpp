@@ -66,7 +66,7 @@ namespace zgl::gfx {
         frame_submit_triangles(context, zcl::array_to_nonstatic(&triangles), texture);
     }
 
-    t_font font_create_from_raw(const zcl::strs::t_str_rdonly file_path, const zcl::t_i32 height, zcl::strs::t_code_pt_bitset *const code_pts, zcl::t_arena *const temp_arena, t_resource_group *const resource_group) {
+    t_font font_create_from_raw(const zcl::t_str_rdonly file_path, const zcl::t_i32 height, zcl::t_code_pt_bitset *const code_pts, zcl::t_arena *const temp_arena, t_resource_group *const resource_group) {
         zcl::gfx::t_font_arrangement arrangement;
         zcl::t_array_mut<zcl::gfx::t_font_atlas_rgba> atlas_rgbas;
 
@@ -86,7 +86,7 @@ namespace zgl::gfx {
         };
     }
 
-    t_font font_create_from_packed(const zcl::strs::t_str_rdonly file_path, zcl::t_arena *const temp_arena, t_resource_group *const resource_group) {
+    t_font font_create_from_packed(const zcl::t_str_rdonly file_path, zcl::t_arena *const temp_arena, t_resource_group *const resource_group) {
         zcl::gfx::t_font_arrangement arrangement;
         zcl::t_array_mut<zcl::gfx::t_font_atlas_rgba> atlas_rgbas;
 
@@ -106,8 +106,8 @@ namespace zgl::gfx {
         };
     }
 
-    static zcl::t_array_mut<zcl::t_v2> calc_str_chr_render_positions(const zcl::strs::t_str_rdonly str, const zcl::gfx::t_font_arrangement &font_arrangement, const zcl::t_v2 pos, const zcl::t_v2 alignment, zcl::t_arena *const arena) {
-        ZF_ASSERT(zcl::strs::check_valid_utf8(str));
+    static zcl::t_array_mut<zcl::t_v2> calc_str_chr_render_positions(const zcl::t_str_rdonly str, const zcl::gfx::t_font_arrangement &font_arrangement, const zcl::t_v2 pos, const zcl::t_v2 alignment, zcl::t_arena *const arena) {
+        ZF_ASSERT(zcl::str_check_valid_utf8(str));
         ZF_ASSERT(alignment_check_valid(alignment));
 
         // Calculate some useful string metadata.
@@ -119,7 +119,7 @@ namespace zgl::gfx {
         const auto str_meta = [str]() {
             t_str_meta meta = {.line_cnt = 1};
 
-            ZF_WALK_STR (str, step) {
+            ZCL_STR_WALK (str, step) {
                 meta.len++;
 
                 if (step.code_pt == '\n') {
@@ -141,7 +141,7 @@ namespace zgl::gfx {
         zcl::t_v2 chr_pos_pen = {}; // The position of the current character.
         zcl::t_i32 line_begin_chr_index = 0;
         zcl::t_i32 line_len = 0;
-        zcl::strs::t_code_pt code_pt_last;
+        zcl::t_code_pt code_pt_last;
 
         const auto apply_hor_alignment_offs = [&]() {
             if (line_len > 0) {
@@ -153,7 +153,7 @@ namespace zgl::gfx {
             }
         };
 
-        ZF_WALK_STR (str, step) {
+        ZCL_STR_WALK (str, step) {
             ZF_DEFER({
                 chr_index++;
                 code_pt_last = step.code_pt;
@@ -202,11 +202,11 @@ namespace zgl::gfx {
         return positions;
     }
 
-    void frame_submit_str(t_frame_context *const context, const zcl::strs::t_str_rdonly str, const t_font &font, const zcl::t_v2 pos, zcl::t_arena *const temp_arena, const zcl::t_v2 alignment, const zcl::gfx::t_color_rgba32f blend) {
-        ZF_ASSERT(zcl::strs::check_valid_utf8(str));
+    void frame_submit_str(t_frame_context *const context, const zcl::t_str_rdonly str, const t_font &font, const zcl::t_v2 pos, zcl::t_arena *const temp_arena, const zcl::t_v2 alignment, const zcl::gfx::t_color_rgba32f blend) {
+        ZF_ASSERT(zcl::str_check_valid_utf8(str));
         ZF_ASSERT(alignment_check_valid(alignment));
 
-        if (zcl::strs::check_empty(str)) {
+        if (zcl::str_check_empty(str)) {
             return;
         }
 
@@ -214,7 +214,7 @@ namespace zgl::gfx {
 
         zcl::t_i32 chr_index = 0;
 
-        ZF_WALK_STR (str, step) {
+        ZCL_STR_WALK (str, step) {
             if (step.code_pt == ' ' || step.code_pt == '\n') {
                 chr_index++;
                 continue;

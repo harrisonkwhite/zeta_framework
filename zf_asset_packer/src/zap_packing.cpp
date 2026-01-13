@@ -92,7 +92,7 @@ constexpr zcl::t_static_array<t_asset_field, ekm_sound_field_cnt> k_sound_fields
     {.name_cstr = "out_file_path", .type = ek_asset_field_type_str},
 }};
 
-zcl::t_b8 pack_assets(const zcl::strs::t_str_rdonly instrs_json_file_path) {
+zcl::t_b8 pack_assets(const zcl::t_str_rdonly instrs_json_file_path) {
     zcl::t_arena arena = zcl::arena_create_blockbased();
     ZF_DEFER({ zcl::arena_destroy(&arena); });
 
@@ -102,14 +102,14 @@ zcl::t_b8 pack_assets(const zcl::strs::t_str_rdonly instrs_json_file_path) {
         zcl::t_array_mut<zcl::t_u8> instrs_json_file_contents; // Not needed beyond this scope.
 
         if (!zcl::file_sys::file_load_contents(instrs_json_file_path, &arena, &arena, &instrs_json_file_contents, true)) {
-            zcl::io::log_error(ZF_STR_LITERAL("Failed to load packing instructions JSON file \"%\"!"), instrs_json_file_path);
+            zcl::io::log_error(ZCL_STR_LITERAL("Failed to load packing instructions JSON file \"%\"!"), instrs_json_file_path);
             return false;
         }
 
-        cj = cJSON_Parse(zcl::strs::to_cstr(zcl::strs::t_str_rdonly{instrs_json_file_contents}));
+        cj = cJSON_Parse(zcl::str_to_cstr(zcl::t_str_rdonly{instrs_json_file_contents}));
 
         if (!cj) {
-            zcl::io::log_error(ZF_STR_LITERAL("Failed to parse packing instructions JSON file!"));
+            zcl::io::log_error(ZCL_STR_LITERAL("Failed to parse packing instructions JSON file!"));
             return false;
         }
     }
@@ -117,7 +117,7 @@ zcl::t_b8 pack_assets(const zcl::strs::t_str_rdonly instrs_json_file_path) {
     ZF_DEFER({ cJSON_Delete(cj); });
 
     if (!cJSON_IsObject(cj)) {
-        zcl::io::log_error(ZF_STR_LITERAL("Packing instructions JSON root is not an object!"));
+        zcl::io::log_error(ZCL_STR_LITERAL("Packing instructions JSON root is not an object!"));
         return false;
     }
 
@@ -132,7 +132,7 @@ zcl::t_b8 pack_assets(const zcl::strs::t_str_rdonly instrs_json_file_path) {
         cJSON *const cj_assets = cJSON_GetObjectItemCaseSensitive(cj, asset_type_arr_name_cstr);
 
         if (!cJSON_IsArray(cj_assets)) {
-            zcl::io::log_error(ZF_STR_LITERAL("Packing instructions JSON \"%\" array does not exist or it is of the wrong type!"), zcl::strs::cstr_to_str(asset_type_arr_name_cstr));
+            zcl::io::log_error(ZCL_STR_LITERAL("Packing instructions JSON \"%\" array does not exist or it is of the wrong type!"), zcl::cstr_to_str(asset_type_arr_name_cstr));
             return false;
         }
 
@@ -177,7 +177,7 @@ zcl::t_b8 pack_assets(const zcl::strs::t_str_rdonly instrs_json_file_path) {
                         continue;
                     }
 
-                    zcl::io::log_error(ZF_STR_LITERAL("A packing instructions JSON \"%\" entry is missing required field \"%\"!"), zcl::strs::cstr_to_str(asset_type_arr_name_cstr), zcl::strs::cstr_to_str(field_name_cstr));
+                    zcl::io::log_error(ZCL_STR_LITERAL("A packing instructions JSON \"%\" entry is missing required field \"%\"!"), zcl::cstr_to_str(asset_type_arr_name_cstr), zcl::cstr_to_str(field_name_cstr));
 
                     return false;
                 }
@@ -198,25 +198,25 @@ zcl::t_b8 pack_assets(const zcl::strs::t_str_rdonly instrs_json_file_path) {
                 }();
 
                 if (!is_valid) {
-                    zcl::io::log_error(ZF_STR_LITERAL("A packing instructions JSON \"%\" entry has field \"%\" as the wrong type! Expected a %."), zcl::strs::cstr_to_str(asset_type_arr_name_cstr), zcl::strs::cstr_to_str(field_name_cstr), zcl::strs::cstr_to_str(k_asset_field_type_name_cstrs[fields[fi].type]));
+                    zcl::io::log_error(ZCL_STR_LITERAL("A packing instructions JSON \"%\" entry has field \"%\" as the wrong type! Expected a %."), zcl::cstr_to_str(asset_type_arr_name_cstr), zcl::cstr_to_str(field_name_cstr), zcl::cstr_to_str(k_asset_field_type_name_cstrs[fields[fi].type]));
                     return false;
                 }
             }
 
             switch (asset_type_index) {
             case ek_asset_type_texture: {
-                const auto file_path = zcl::strs::cstr_to_str(field_vals[ek_texture_field_file_path]->valuestring);
-                const auto out_file_path = zcl::strs::cstr_to_str(field_vals[ek_texture_field_out_file_path]->valuestring);
+                const auto file_path = zcl::cstr_to_str(field_vals[ek_texture_field_file_path]->valuestring);
+                const auto out_file_path = zcl::cstr_to_str(field_vals[ek_texture_field_out_file_path]->valuestring);
 
                 zcl::gfx::t_texture_data_mut texture_data;
 
                 if (!zcl::gfx::texture_load_from_raw(file_path, &arena, &arena, &texture_data)) {
-                    zcl::io::log_error(ZF_STR_LITERAL("Failed to load texture from file \"%\"!"), file_path);
+                    zcl::io::log_error(ZCL_STR_LITERAL("Failed to load texture from file \"%\"!"), file_path);
                     return false;
                 }
 
                 if (!zcl::gfx::texture_pack(out_file_path, texture_data, &arena)) {
-                    zcl::io::log_error(ZF_STR_LITERAL("Failed to pack texture to file \"%\"!"), out_file_path);
+                    zcl::io::log_error(ZCL_STR_LITERAL("Failed to pack texture to file \"%\"!"), out_file_path);
                     return false;
                 }
 
@@ -224,25 +224,25 @@ zcl::t_b8 pack_assets(const zcl::strs::t_str_rdonly instrs_json_file_path) {
             }
 
             case ek_asset_type_font: {
-                const auto file_path = zcl::strs::cstr_to_str(field_vals[ek_font_field_file_path]->valuestring);
+                const auto file_path = zcl::cstr_to_str(field_vals[ek_font_field_file_path]->valuestring);
                 const auto height = field_vals[ek_font_field_height]->valueint;
-                const auto out_file_path = zcl::strs::cstr_to_str(field_vals[ek_font_field_out_file_path]->valuestring);
+                const auto out_file_path = zcl::cstr_to_str(field_vals[ek_font_field_out_file_path]->valuestring);
 
-                const auto code_pt_bs = zcl::arena_push_item<zcl::strs::t_code_pt_bitset>(&arena);
+                const auto code_pt_bs = zcl::arena_push_item<zcl::t_code_pt_bitset>(&arena);
 
-                zcl::bitset_set_range(*code_pt_bs, zcl::strs::k_printable_ascii_range_begin, zcl::strs::k_printable_ascii_range_end); // Add the printable ASCII range as a default.
+                zcl::bitset_set_range(*code_pt_bs, zcl::k_printable_ascii_range_begin, zcl::k_printable_ascii_range_end); // Add the printable ASCII range as a default.
 
                 if (field_vals[ek_font_field_extra_chrs_file_path]) {
-                    const auto extra_chrs_file_path = zcl::strs::cstr_to_str(field_vals[ek_font_field_extra_chrs_file_path]->valuestring);
+                    const auto extra_chrs_file_path = zcl::cstr_to_str(field_vals[ek_font_field_extra_chrs_file_path]->valuestring);
 
                     zcl::t_array_mut<zcl::t_u8> extra_chrs_file_contents;
 
                     if (!zcl::file_sys::file_load_contents(extra_chrs_file_path, &arena, &arena, &extra_chrs_file_contents)) {
-                        zcl::io::log_error(ZF_STR_LITERAL("Failed to load extra characters file \"%\"!"), extra_chrs_file_path);
+                        zcl::io::log_error(ZCL_STR_LITERAL("Failed to load extra characters file \"%\"!"), extra_chrs_file_path);
                         return false;
                     }
 
-                    zcl::strs::mark_code_pts({extra_chrs_file_contents}, code_pt_bs);
+                    zcl::str_mark_code_pts({extra_chrs_file_contents}, code_pt_bs);
                 }
 
                 // @todo: Proper check for invalid height!
@@ -251,12 +251,12 @@ zcl::t_b8 pack_assets(const zcl::strs::t_str_rdonly instrs_json_file_path) {
                 zcl::t_array_mut<zcl::gfx::t_font_atlas_rgba> atlas_rgbas;
 
                 if (!zcl::gfx::font_load_from_raw(file_path, height, code_pt_bs, &arena, &arena, &arena, &arrangement, &atlas_rgbas)) {
-                    zcl::io::log_error(ZF_STR_LITERAL("Failed to load font from file \"%\"!"), file_path);
+                    zcl::io::log_error(ZCL_STR_LITERAL("Failed to load font from file \"%\"!"), file_path);
                     return false;
                 }
 
                 if (!zcl::gfx::font_pack(out_file_path, arrangement, atlas_rgbas, &arena)) {
-                    zcl::io::log_error(ZF_STR_LITERAL("Failed to pack font to file \"%\"!"), out_file_path);
+                    zcl::io::log_error(ZCL_STR_LITERAL("Failed to pack font to file \"%\"!"), out_file_path);
                     return false;
                 }
 
@@ -264,31 +264,31 @@ zcl::t_b8 pack_assets(const zcl::strs::t_str_rdonly instrs_json_file_path) {
             }
 
             case ek_asset_type_shader: {
-                const auto file_path = zcl::strs::cstr_to_str(field_vals[ek_shader_field_file_path]->valuestring);
-                const auto type = zcl::strs::cstr_to_str(field_vals[ek_shader_field_type]->valuestring);
-                const auto varying_def_file_path = zcl::strs::cstr_to_str(field_vals[ek_shader_field_varying_def_file_path]->valuestring);
-                const auto out_file_path = zcl::strs::cstr_to_str(field_vals[ek_shader_field_out_file_path]->valuestring);
+                const auto file_path = zcl::cstr_to_str(field_vals[ek_shader_field_file_path]->valuestring);
+                const auto type = zcl::cstr_to_str(field_vals[ek_shader_field_type]->valuestring);
+                const auto varying_def_file_path = zcl::cstr_to_str(field_vals[ek_shader_field_varying_def_file_path]->valuestring);
+                const auto out_file_path = zcl::cstr_to_str(field_vals[ek_shader_field_out_file_path]->valuestring);
 
                 zcl::t_b8 is_frag;
 
-                if (zcl::strs::check_equal(type, ZF_STR_LITERAL("vertex"))) {
+                if (zcl::strs_check_equal(type, ZCL_STR_LITERAL("vertex"))) {
                     is_frag = false;
-                } else if (zcl::strs::check_equal(type, ZF_STR_LITERAL("fragment"))) {
+                } else if (zcl::strs_check_equal(type, ZCL_STR_LITERAL("fragment"))) {
                     is_frag = true;
                 } else {
-                    zcl::io::log_error(ZF_STR_LITERAL("A packing instructions JSON shader entry has an invalid shader type \"%\"! Expected \"vertex\" or \"fragment\"."), type);
+                    zcl::io::log_error(ZCL_STR_LITERAL("A packing instructions JSON shader entry has an invalid shader type \"%\"! Expected \"vertex\" or \"fragment\"."), type);
                     return false;
                 }
 
                 zcl::t_array_mut<zcl::t_u8> compiled_bin;
 
                 if (!compile_shader(file_path, varying_def_file_path, is_frag, &arena, &arena, &compiled_bin)) {
-                    zcl::io::log_error(ZF_STR_LITERAL("Failed to compile shader from file \"%\"!"), file_path);
+                    zcl::io::log_error(ZCL_STR_LITERAL("Failed to compile shader from file \"%\"!"), file_path);
                     return false;
                 }
 
                 if (!zcl::gfx::shader_pack(out_file_path, compiled_bin, &arena)) {
-                    zcl::io::log_error(ZF_STR_LITERAL("Failed to pack shader to file \"%\"!"), out_file_path);
+                    zcl::io::log_error(ZCL_STR_LITERAL("Failed to pack shader to file \"%\"!"), out_file_path);
                     return false;
                 }
 
@@ -296,18 +296,18 @@ zcl::t_b8 pack_assets(const zcl::strs::t_str_rdonly instrs_json_file_path) {
             }
 
             case ek_asset_type_sound: {
-                const auto file_path = zcl::strs::cstr_to_str(field_vals[ek_sound_field_file_path]->valuestring);
-                const auto out_file_path = zcl::strs::cstr_to_str(field_vals[ek_sound_field_out_file_path]->valuestring);
+                const auto file_path = zcl::cstr_to_str(field_vals[ek_sound_field_file_path]->valuestring);
+                const auto out_file_path = zcl::cstr_to_str(field_vals[ek_sound_field_out_file_path]->valuestring);
 
                 zcl::t_sound_data_mut snd_data;
 
                 if (!zcl::sound_load_from_raw(file_path, &arena, &arena, &snd_data)) {
-                    zcl::io::log_error(ZF_STR_LITERAL("Failed to load sound from file \"%\"!"), file_path);
+                    zcl::io::log_error(ZCL_STR_LITERAL("Failed to load sound from file \"%\"!"), file_path);
                     return false;
                 }
 
                 if (!zcl::sound_pack(out_file_path, snd_data, &arena)) {
-                    zcl::io::log_error(ZF_STR_LITERAL("Failed to pack sound to file \"%\"!"), out_file_path);
+                    zcl::io::log_error(ZCL_STR_LITERAL("Failed to pack sound to file \"%\"!"), out_file_path);
                     return false;
                 }
 
@@ -317,7 +317,7 @@ zcl::t_b8 pack_assets(const zcl::strs::t_str_rdonly instrs_json_file_path) {
         }
     }
 
-    zcl::io::log(ZF_STR_LITERAL("Asset packing completed!"));
+    zcl::io::log(ZCL_STR_LITERAL("Asset packing completed!"));
 
     return true;
 }

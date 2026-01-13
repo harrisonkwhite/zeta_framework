@@ -14,25 +14,25 @@
 #endif
 
 namespace zcl::file_sys {
-    t_b8 file_open(const strs::t_str_rdonly path, const t_file_access_mode mode, t_arena *const temp_arena, t_file_stream *const o_stream) {
-        const strs::t_str_rdonly path_terminated = strs::clone_but_add_terminator(path, temp_arena);
+    t_b8 file_open(const t_str_rdonly path, const t_file_access_mode mode, t_arena *const temp_arena, t_file_stream *const o_stream) {
+        const t_str_rdonly path_terminated = str_clone_but_add_terminator(path, temp_arena);
 
         FILE *file;
         t_stream_mode stream_mode;
 
         switch (mode) {
         case ek_file_access_mode_read:
-            file = fopen(strs::to_cstr(path_terminated), "rb");
+            file = fopen(str_to_cstr(path_terminated), "rb");
             stream_mode = ek_stream_mode_read;
             break;
 
         case ek_file_access_mode_write:
-            file = fopen(strs::to_cstr(path_terminated), "wb");
+            file = fopen(str_to_cstr(path_terminated), "wb");
             stream_mode = ek_stream_mode_write;
             break;
 
         case ek_file_access_mode_append:
-            file = fopen(strs::to_cstr(path_terminated), "ab");
+            file = fopen(str_to_cstr(path_terminated), "ab");
             stream_mode = ek_stream_mode_write;
             break;
 
@@ -62,7 +62,7 @@ namespace zcl::file_sys {
         return static_cast<t_i32>(file_size);
     }
 
-    t_b8 file_load_contents(const strs::t_str_rdonly path, t_arena *const contents_arena, t_arena *const temp_arena, t_array_mut<t_u8> *const o_contents, const t_b8 add_terminator) {
+    t_b8 file_load_contents(const t_str_rdonly path, t_arena *const contents_arena, t_arena *const temp_arena, t_array_mut<t_u8> *const o_contents, const t_b8 add_terminator) {
         t_file_stream stream;
 
         if (!file_open(path, ek_file_access_mode_read, temp_arena, &stream)) {
@@ -87,15 +87,15 @@ namespace zcl::file_sys {
         return true;
     }
 
-    t_b8 create_directory(const strs::t_str_rdonly path, t_arena *const temp_arena, t_directory_creation_result *const o_creation_res) {
+    t_b8 create_directory(const t_str_rdonly path, t_arena *const temp_arena, t_directory_creation_result *const o_creation_res) {
         if (o_creation_res) {
             *o_creation_res = ek_directory_creation_result_success;
         }
 
-        const strs::t_str_rdonly path_terminated = strs::clone_but_add_terminator(path, temp_arena);
+        const t_str_rdonly path_terminated = str_clone_but_add_terminator(path, temp_arena);
 
 #ifdef ZF_PLATFORM_WINDOWS
-        const t_i32 result = _mkdir(strs::to_cstr(path_terminated));
+        const t_i32 result = _mkdir(str_to_cstr(path_terminated));
 #elif defined(ZF_PLATFORM_MACOS)
     #error "Platform-specific implementation not yet done!" // @todo
 #elif defined(ZF_PLATFORM_LINUX)
@@ -130,12 +130,12 @@ namespace zcl::file_sys {
         return false;
     }
 
-    t_b8 create_directory_and_parents(const strs::t_str_rdonly path, t_arena *const temp_arena, t_directory_creation_result *const o_dir_creation_res) {
+    t_b8 create_directory_and_parents(const t_str_rdonly path, t_arena *const temp_arena, t_directory_creation_result *const o_dir_creation_res) {
         if (o_dir_creation_res) {
             *o_dir_creation_res = ek_directory_creation_result_success;
         }
 
-        const auto create_dir_if_nonexistent = [o_dir_creation_res, &temp_arena](const strs::t_str_rdonly path) {
+        const auto create_dir_if_nonexistent = [o_dir_creation_res, &temp_arena](const t_str_rdonly path) {
             if (path_get_type(path, temp_arena) == ek_path_type_not_found) {
                 if (!create_directory(path, temp_arena, o_dir_creation_res)) {
                     return false;
@@ -147,7 +147,7 @@ namespace zcl::file_sys {
 
         t_b8 cur_dir_name_is_empty = true;
 
-        ZF_WALK_STR (path, step) {
+        ZCL_STR_WALK (path, step) {
             if (step.code_pt == '/' || step.code_pt == '\\') {
                 if (!cur_dir_name_is_empty) {
                     if (!create_dir_if_nonexistent({array_slice(path.bytes, 0, step.byte_index)})) {
@@ -170,13 +170,13 @@ namespace zcl::file_sys {
         return true;
     }
 
-    t_b8 create_file_and_parent_directories(const strs::t_str_rdonly path, t_arena *const temp_arena, t_directory_creation_result *const o_dir_creation_res) {
+    t_b8 create_file_and_parent_directories(const t_str_rdonly path, t_arena *const temp_arena, t_directory_creation_result *const o_dir_creation_res) {
         if (o_dir_creation_res) {
             *o_dir_creation_res = ek_directory_creation_result_success;
         }
 
         // Get the substring containing all directories and create them.
-        ZF_WALK_STR_REVERSE (path, step) {
+        ZCL_STR_WALK_REVERSE (path, step) {
             if (step.code_pt == '/' || step.code_pt == '\\') {
                 if (!create_directory_and_parents({array_slice(path.bytes, 0, step.byte_index)}, temp_arena, o_dir_creation_res)) {
                     return false;
@@ -198,12 +198,12 @@ namespace zcl::file_sys {
         return true;
     }
 
-    t_path_type path_get_type(const strs::t_str_rdonly path, t_arena *const temp_arena) {
-        const strs::t_str_rdonly path_terminated = strs::clone_but_add_terminator(path, temp_arena);
+    t_path_type path_get_type(const t_str_rdonly path, t_arena *const temp_arena) {
+        const t_str_rdonly path_terminated = str_clone_but_add_terminator(path, temp_arena);
 
         struct stat info;
 
-        if (stat(strs::to_cstr(path_terminated), &info) != 0) {
+        if (stat(str_to_cstr(path_terminated), &info) != 0) {
             return ek_path_type_not_found;
         }
 
@@ -214,7 +214,7 @@ namespace zcl::file_sys {
         return ek_path_type_file;
     }
 
-    strs::t_str_mut get_executable_directory(t_arena *const arena) {
+    t_str_mut get_executable_directory(t_arena *const arena) {
 #if defined(ZF_PLATFORM_WINDOWS)
         t_static_array<char, MAX_PATH> buf;
 

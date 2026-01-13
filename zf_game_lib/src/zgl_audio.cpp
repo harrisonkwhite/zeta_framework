@@ -38,7 +38,7 @@ namespace zgl::audio {
     void module_shutdown() {
         ZF_REQUIRE(g_module_state.active);
 
-        ZCL_BITSET_WALK_ALL_SET(g_module_state.snd_insts.activity, i) {
+        ZCL_BITSET_WALK_ALL_SET (g_module_state.snd_insts.activity, i) {
             ma_sound_stop(&g_module_state.snd_insts.ma_snds[i]);
             ma_sound_uninit(&g_module_state.snd_insts.ma_snds[i]);
 
@@ -56,7 +56,7 @@ namespace zgl::audio {
         t_sound_type *snd_type = group->head;
 
         while (snd_type) {
-            ZCL_BITSET_WALK_ALL_SET(g_module_state.snd_insts.activity, i) {
+            ZCL_BITSET_WALK_ALL_SET (g_module_state.snd_insts.activity, i) {
                 if (g_module_state.snd_insts.types[i] == snd_type) {
                     sound_stop({i, g_module_state.snd_insts.versions[i]});
                 }
@@ -87,7 +87,7 @@ namespace zgl::audio {
         return result;
     }
 
-    t_sound_type *sound_type_create_from_raw(const zcl::strs::t_str_rdonly file_path, t_sound_type_group *const group, zcl::t_arena *const temp_arena) {
+    t_sound_type *sound_type_create_from_raw(const zcl::t_str_rdonly file_path, t_sound_type_group *const group, zcl::t_arena *const temp_arena) {
         ZF_ASSERT(g_module_state.active);
 
         zcl::t_sound_data_mut snd_data;
@@ -99,7 +99,7 @@ namespace zgl::audio {
         return sound_type_group_add(group, snd_data);
     }
 
-    t_sound_type *sound_type_create_from_packed(const zcl::strs::t_str_rdonly file_path, t_sound_type_group *const group, zcl::t_arena *const temp_arena) {
+    t_sound_type *sound_type_create_from_packed(const zcl::t_str_rdonly file_path, t_sound_type_group *const group, zcl::t_arena *const temp_arena) {
         ZF_ASSERT(g_module_state.active);
 
         zcl::t_sound_data_mut snd_data;
@@ -121,7 +121,7 @@ namespace zgl::audio {
         const zcl::t_i32 index = zcl::bitset_find_first_unset_bit(g_module_state.snd_insts.activity);
 
         if (index == -1) {
-            zcl::io::log_warning(ZF_STR_LITERAL("Trying to play a sound, but the sound instance limit has been reached!"));
+            zcl::io::log_warning(ZCL_STR_LITERAL("Trying to play a sound, but the sound instance limit has been reached!"));
             return false;
         }
 
@@ -182,7 +182,7 @@ namespace zgl::audio {
     void proc_finished_sounds() {
         ZF_ASSERT(g_module_state.active);
 
-        ZCL_BITSET_WALK_ALL_SET(g_module_state.snd_insts.activity, i) {
+        ZCL_BITSET_WALK_ALL_SET (g_module_state.snd_insts.activity, i) {
             ma_sound *const ma_snd = &g_module_state.snd_insts.ma_snds[i];
 
             if (!ma_sound_is_playing(ma_snd)) {
