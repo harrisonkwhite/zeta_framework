@@ -1,6 +1,6 @@
 #include <zcl/zcl_file_sys.h>
 
-#ifdef ZF_PLATFORM_WINDOWS
+#ifdef ZCL_PLATFORM_WINDOWS
     #ifndef WIN32_LEAN_AND_MEAN
         #define WIN32_LEAN_AND_MEAN
     #endif
@@ -37,7 +37,7 @@ namespace zcl {
             break;
 
         default:
-            ZF_UNREACHABLE();
+            ZCL_UNREACHABLE();
         }
 
         if (!file) {
@@ -69,7 +69,7 @@ namespace zcl {
             return false;
         }
 
-        ZF_DEFER({ file_close(&stream); });
+        ZCL_DEFER({ file_close(&stream); });
 
         const t_i32 file_size = file_calc_size(&stream);
 
@@ -94,11 +94,11 @@ namespace zcl {
 
         const t_str_rdonly path_terminated = str_clone_but_add_terminator(path, temp_arena);
 
-#ifdef ZF_PLATFORM_WINDOWS
+#ifdef ZCL_PLATFORM_WINDOWS
         const t_i32 result = _mkdir(str_to_cstr(path_terminated));
-#elif defined(ZF_PLATFORM_MACOS)
+#elif defined(ZCL_PLATFORM_MACOS)
     #error "Platform-specific implementation not yet done!" // @todo
-#elif defined(ZF_PLATFORM_LINUX)
+#elif defined(ZCL_PLATFORM_LINUX)
     #error "Platform-specific implementation not yet done!" // @todo
 #endif
 
@@ -215,11 +215,11 @@ namespace zcl {
     }
 
     t_str_mut get_executable_directory(t_arena *const arena) {
-#if defined(ZF_PLATFORM_WINDOWS)
+#if defined(ZCL_PLATFORM_WINDOWS)
         t_static_array<char, MAX_PATH> buf;
 
         auto len = static_cast<t_i32>(GetModuleFileNameA(nullptr, buf.raw, MAX_PATH));
-        ZF_REQUIRE(len != 0);
+        ZCL_REQUIRE(len != 0);
 
         for (; len > 0; len--) {
             if (buf[len - 1] == '\\') {
@@ -230,9 +230,9 @@ namespace zcl {
         const auto result_bytes = arena_push_array<t_u8>(arena, len);
         array_copy(array_to_byte_array(array_slice(array_to_nonstatic(&buf), 0, len)), result_bytes);
         return {result_bytes};
-#elif defined(ZF_PLATFORM_MACOS)
+#elif defined(ZCL_PLATFORM_MACOS)
     #error "Platform-specific implementation not yet done!" // @todo
-#elif defined(ZF_PLATFORM_LINUX)
+#elif defined(ZCL_PLATFORM_LINUX)
     #error "Platform-specific implementation not yet done!" // @todo
 #endif
     }

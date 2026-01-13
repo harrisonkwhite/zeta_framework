@@ -30,7 +30,7 @@ namespace zcl {
 
     constexpr t_color_rgba32f color_create_rgba32f(const t_f32 r, const t_f32 g, const t_f32 b, const t_f32 a = 1.0f) {
         const t_color_rgba32f result = {r, g, b, a};
-        ZF_ASSERT(color_check_normalized(result));
+        ZCL_ASSERT(color_check_normalized(result));
         return result;
     }
 
@@ -58,7 +58,7 @@ namespace zcl {
     constexpr t_color_rgba32f k_color_brown = color_create_rgba32f(0.6f, 0.3f, 0.0f);
 
     constexpr t_color_rgba8 color_rgba32f_to_rgba8(const t_color_rgba32f col) {
-        ZF_ASSERT(color_check_normalized(col));
+        ZCL_ASSERT(color_check_normalized(col));
         return color_create_rgba8(static_cast<t_u8>(255.0f * col.r), static_cast<t_u8>(255.0f * col.g), static_cast<t_u8>(255.0f * col.b), static_cast<t_u8>(255.0f * col.a));
     }
 
@@ -67,7 +67,7 @@ namespace zcl {
     }
 
     constexpr t_color_rgba32f color_get_mix(const t_color_rgba32f a, const t_color_rgba32f b, const t_f32 amount) {
-        ZF_ASSERT(amount >= 0.0f && amount <= 1.0f);
+        ZCL_ASSERT(amount >= 0.0f && amount <= 1.0f);
 
         return {
             lerp(a.r, b.r, amount),

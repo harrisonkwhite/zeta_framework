@@ -53,8 +53,8 @@ namespace zcl {
     }
 
     void bitset_set_range(const t_bitset_mut bs, const t_i32 begin_bit_index, const t_i32 end_bit_index) {
-        ZF_ASSERT(begin_bit_index >= 0 && begin_bit_index < bs.bit_cnt);
-        ZF_ASSERT(end_bit_index >= begin_bit_index && end_bit_index <= bs.bit_cnt);
+        ZCL_ASSERT(begin_bit_index >= 0 && begin_bit_index < bs.bit_cnt);
+        ZCL_ASSERT(end_bit_index >= begin_bit_index && end_bit_index <= bs.bit_cnt);
 
         const t_i32 begin_elem_index = begin_bit_index / 8;
         const t_i32 end_elem_index = bits_to_bytes(end_bit_index);
@@ -72,7 +72,7 @@ namespace zcl {
     }
 
     void bitset_apply_mask(const t_bitset_mut bs, const t_bitset_rdonly mask, const t_bitwise_mask_op op) {
-        ZF_ASSERT(bs.bit_cnt == mask.bit_cnt);
+        ZCL_ASSERT(bs.bit_cnt == mask.bit_cnt);
 
         if (bs.bit_cnt == 0) {
             return;
@@ -112,7 +112,7 @@ namespace zcl {
     }
 
     static t_u8 shift_bits_left(const t_bitset_mut bs) {
-        ZF_ASSERT(bits_to_bytes(bs.bit_cnt) == bitset_get_bytes(bs).len);
+        ZCL_ASSERT(bits_to_bytes(bs.bit_cnt) == bitset_get_bytes(bs).len);
 
         if (bs.bit_cnt == 0) {
             return 0;
@@ -134,7 +134,7 @@ namespace zcl {
     }
 
     void bitset_shift_left(const t_bitset_mut bs, const t_i32 amount) {
-        ZF_ASSERT(amount >= 0);
+        ZCL_ASSERT(amount >= 0);
 
         // @speed: :(
 
@@ -144,7 +144,7 @@ namespace zcl {
     }
 
     void bitset_rot_left(const t_bitset_mut bs, const t_i32 amount) {
-        ZF_ASSERT(amount >= 0);
+        ZCL_ASSERT(amount >= 0);
 
         if (bs.bit_cnt == 0) {
             return;
@@ -164,7 +164,7 @@ namespace zcl {
     }
 
     static t_u8 shift_bits_right(const t_bitset_mut bs) {
-        ZF_ASSERT(bits_to_bytes(bs.bit_cnt) == bitset_get_bytes(bs).len);
+        ZCL_ASSERT(bits_to_bytes(bs.bit_cnt) == bitset_get_bytes(bs).len);
 
         if (bs.bit_cnt == 0) {
             return 0;
@@ -189,7 +189,7 @@ namespace zcl {
     }
 
     void bitset_shift_right(const t_bitset_mut bs, const t_i32 amount) {
-        ZF_ASSERT(amount >= 0);
+        ZCL_ASSERT(amount >= 0);
 
         // @speed: :(
 
@@ -199,7 +199,7 @@ namespace zcl {
     }
 
     void bitset_rot_right(const t_bitset_mut bs, const t_i32 amount) {
-        ZF_ASSERT(amount >= 0);
+        ZCL_ASSERT(amount >= 0);
 
         if (bs.bit_cnt == 0) {
             return;
@@ -221,7 +221,7 @@ namespace zcl {
     // ============================================================
 
     static t_i32 get_index_of_first_set_bit_helper(const t_bitset_rdonly bs, const t_i32 from, const t_u8 xor_mask) {
-        ZF_ASSERT(from >= 0 && from <= bs.bit_cnt); // Intentionally allowing the upper bound here for the case of iteration.
+        ZCL_ASSERT(from >= 0 && from <= bs.bit_cnt); // Intentionally allowing the upper bound here for the case of iteration.
 
         // Map of each possible byte to the index of the first set bit, or -1 for the first case.
         constexpr t_static_array<t_i32, 256> k_mappings = {{
@@ -789,7 +789,7 @@ namespace zcl {
     }
 
     t_b8 bitset_walk_all_set(const t_bitset_rdonly bs, t_i32 *const pos, t_i32 *const o_index) {
-        ZF_ASSERT(*pos >= 0 && *pos <= bs.bit_cnt);
+        ZCL_ASSERT(*pos >= 0 && *pos <= bs.bit_cnt);
 
         *o_index = bitset_find_first_set_bit(bs, *pos);
 
@@ -803,7 +803,7 @@ namespace zcl {
     }
 
     t_b8 bitset_walk_all_unset(const t_bitset_rdonly bs, t_i32 *const pos, t_i32 *const o_index) {
-        ZF_ASSERT(*pos >= 0 && *pos <= bs.bit_cnt);
+        ZCL_ASSERT(*pos >= 0 && *pos <= bs.bit_cnt);
 
         *o_index = bitset_find_first_unset_bit(bs, *pos);
 

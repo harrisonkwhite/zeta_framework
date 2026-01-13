@@ -2,7 +2,7 @@
 
 namespace zgl::gfx {
     void frame_submit_rect_rotated(t_frame_context *const context, const zcl::t_v2 pos, const zcl::t_v2 size, const zcl::t_v2 origin, const zcl::t_f32 rot, const zcl::t_color_rgba32f color_topleft, const zcl::t_color_rgba32f color_topright, const zcl::t_color_rgba32f color_bottomright, const zcl::t_color_rgba32f color_bottomleft) {
-        ZF_ASSERT(origin_check_valid(origin));
+        ZCL_ASSERT(origin_check_valid(origin));
 
         zcl::t_static_array<zcl::t_v2, 4> quad_pts;
         zcl::t_arena quad_pts_arena = zcl::arena_create_wrapping(zcl::to_bytes(&quad_pts));
@@ -36,7 +36,7 @@ namespace zgl::gfx {
         if (zcl::rects_check_equal(src_rect, {})) {
             src_rect_to_use = {0, 0, texture_size.x, texture_size.y};
         } else {
-            ZF_ASSERT(src_rect.x >= 0 && src_rect.y >= 0 && zcl::rect_get_right(src_rect) <= texture_size.x && zcl::rect_get_bottom(src_rect) <= texture_size.y);
+            ZCL_ASSERT(src_rect.x >= 0 && src_rect.y >= 0 && zcl::rect_get_right(src_rect) <= texture_size.x && zcl::rect_get_bottom(src_rect) <= texture_size.y);
             src_rect_to_use = src_rect;
         }
 
@@ -71,7 +71,7 @@ namespace zgl::gfx {
         zcl::t_array_mut<zcl::t_font_atlas_rgba> atlas_rgbas;
 
         if (!zcl::font_load_from_raw(file_path, height, code_pts, resource_group->arena, temp_arena, temp_arena, &arrangement, &atlas_rgbas)) {
-            ZF_FATAL();
+            ZCL_FATAL();
         }
 
         const zcl::t_array_mut<t_resource *> atlases = zcl::arena_push_array<t_resource *>(resource_group->arena, atlas_rgbas.len);
@@ -91,7 +91,7 @@ namespace zgl::gfx {
         zcl::t_array_mut<zcl::t_font_atlas_rgba> atlas_rgbas;
 
         if (!zcl::font_unpack(file_path, resource_group->arena, temp_arena, temp_arena, &arrangement, &atlas_rgbas)) {
-            ZF_FATAL();
+            ZCL_FATAL();
         }
 
         const auto atlases = zcl::arena_push_array<t_resource *>(resource_group->arena, atlas_rgbas.len);
@@ -107,8 +107,8 @@ namespace zgl::gfx {
     }
 
     static zcl::t_array_mut<zcl::t_v2> calc_str_chr_render_positions(const zcl::t_str_rdonly str, const zcl::t_font_arrangement &font_arrangement, const zcl::t_v2 pos, const zcl::t_v2 alignment, zcl::t_arena *const arena) {
-        ZF_ASSERT(zcl::str_check_valid_utf8(str));
-        ZF_ASSERT(alignment_check_valid(alignment));
+        ZCL_ASSERT(zcl::str_check_valid_utf8(str));
+        ZCL_ASSERT(alignment_check_valid(alignment));
 
         // Calculate some useful string metadata.
         struct t_str_meta {
@@ -154,7 +154,7 @@ namespace zgl::gfx {
         };
 
         ZCL_STR_WALK (str, step) {
-            ZF_DEFER({
+            ZCL_DEFER({
                 chr_index++;
                 code_pt_last = step.code_pt;
             });
@@ -177,7 +177,7 @@ namespace zgl::gfx {
             zcl::t_font_glyph_info *glyph_info;
 
             if (!zcl::hash_map_find(&font_arrangement.code_pts_to_glyph_infos, step.code_pt, &glyph_info)) {
-                ZF_ASSERT(false && "Unsupported code point!");
+                ZCL_ASSERT(false && "Unsupported code point!");
                 continue;
             }
 
@@ -203,8 +203,8 @@ namespace zgl::gfx {
     }
 
     void frame_submit_str(t_frame_context *const context, const zcl::t_str_rdonly str, const t_font &font, const zcl::t_v2 pos, zcl::t_arena *const temp_arena, const zcl::t_v2 alignment, const zcl::t_color_rgba32f blend) {
-        ZF_ASSERT(zcl::str_check_valid_utf8(str));
-        ZF_ASSERT(alignment_check_valid(alignment));
+        ZCL_ASSERT(zcl::str_check_valid_utf8(str));
+        ZCL_ASSERT(alignment_check_valid(alignment));
 
         if (zcl::str_check_empty(str)) {
             return;
@@ -223,7 +223,7 @@ namespace zgl::gfx {
             zcl::t_font_glyph_info *glyph_info;
 
             if (!zcl::hash_map_find(&font.arrangement.code_pts_to_glyph_infos, step.code_pt, &glyph_info)) {
-                ZF_ASSERT(false && "Unsupported code point!");
+                ZCL_ASSERT(false && "Unsupported code point!");
                 continue;
             }
 

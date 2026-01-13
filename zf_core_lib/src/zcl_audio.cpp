@@ -14,7 +14,7 @@ namespace zcl {
             return false;
         }
 
-        ZF_DEFER({ ma_decoder_uninit(&decoder); });
+        ZCL_DEFER({ ma_decoder_uninit(&decoder); });
 
         ma_uint64 frame_cnt;
 
@@ -48,7 +48,7 @@ namespace zcl {
             return false;
         }
 
-        ZF_DEFER({ file_close(&fs); });
+        ZCL_DEFER({ file_close(&fs); });
 
         return sound_serialize(snd_data, fs);
     }
@@ -60,7 +60,7 @@ namespace zcl {
             return false;
         }
 
-        ZF_DEFER({ file_close(&fs); });
+        ZCL_DEFER({ file_close(&fs); });
 
         if (!stream_read_item(fs, &o_snd_data->meta)) {
             return false;

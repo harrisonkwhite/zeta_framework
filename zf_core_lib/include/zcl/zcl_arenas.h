@@ -35,13 +35,13 @@ namespace zcl {
         } type_data;
     };
 
-#ifdef ZF_DEBUG
+#ifdef ZCL_DEBUG
     constexpr t_u8 k_arena_poison = 0xCD; // Memory outside the arena's valid "scope" is set to this for easier debugging.
 #endif
 
     // Does not allocate any arena memory (blocks) upfront.
     inline t_arena arena_create_blockbased(const t_i32 block_min_size = megabytes_to_bytes(1)) {
-        ZF_ASSERT(block_min_size > 0);
+        ZCL_ASSERT(block_min_size > 0);
 
         return {
             .type = ek_arena_type_blockbased,
@@ -69,19 +69,19 @@ namespace zcl {
     // The returned item is guaranteed to be zeroed.
     template <c_simple tp_type>
     tp_type *arena_push_item(t_arena *const arena) {
-        return static_cast<tp_type *>(arena_push(arena, ZF_SIZE_OF(tp_type), ZF_ALIGN_OF(tp_type)));
+        return static_cast<tp_type *>(arena_push(arena, ZCL_SIZE_OF(tp_type), ZCL_ALIGN_OF(tp_type)));
     }
 
     template <c_array_elem tp_elem_type>
     t_array_mut<tp_elem_type> arena_push_array(t_arena *const arena, const t_i32 len) {
-        ZF_ASSERT(len >= 0);
+        ZCL_ASSERT(len >= 0);
 
         if (len == 0) {
             return {};
         }
 
-        const t_i32 size = ZF_SIZE_OF(tp_elem_type) * len;
-        return {static_cast<tp_elem_type *>(arena_push(arena, size, ZF_ALIGN_OF(tp_elem_type))), len};
+        const t_i32 size = ZCL_SIZE_OF(tp_elem_type) * len;
+        return {static_cast<tp_elem_type *>(arena_push(arena, size, ZCL_ALIGN_OF(tp_elem_type))), len};
     }
 
     template <c_array tp_arr_type>

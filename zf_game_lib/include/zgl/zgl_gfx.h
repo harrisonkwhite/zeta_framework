@@ -90,7 +90,7 @@ namespace zgl::gfx {
         zcl::t_texture_data_mut texture_data;
 
         if (!zcl::texture_load_from_raw(file_path, temp_arena, temp_arena, &texture_data)) {
-            ZF_FATAL();
+            ZCL_FATAL();
         }
 
         return texture_create(texture_data, group);
@@ -100,7 +100,7 @@ namespace zgl::gfx {
         zcl::t_texture_data_mut texture_data;
 
         if (!zcl::texture_unpack(file_path, temp_arena, temp_arena, &texture_data)) {
-            ZF_FATAL();
+            ZCL_FATAL();
         }
 
         return texture_create(texture_data, group);
@@ -127,13 +127,13 @@ namespace zgl::gfx {
         zcl::t_array_mut<zcl::t_u8> vert_shader_compiled_bin;
 
         if (!zcl::shader_unpack(vert_shader_file_path, temp_arena, temp_arena, &vert_shader_compiled_bin)) {
-            ZF_FATAL();
+            ZCL_FATAL();
         }
 
         zcl::t_array_mut<zcl::t_u8> frag_shader_compiled_bin;
 
         if (!zcl::shader_unpack(frag_shader_file_path, temp_arena, temp_arena, &frag_shader_compiled_bin)) {
-            ZF_FATAL();
+            ZCL_FATAL();
         }
 
         return shader_prog_create(vert_shader_compiled_bin, frag_shader_compiled_bin, arena);
@@ -212,7 +212,7 @@ namespace zgl::gfx {
     }
 
     inline void frame_submit_rect(t_frame_context *const context, const zcl::t_rect_f rect, const zcl::t_color_rgba32f color_topleft, const zcl::t_color_rgba32f color_topright, const zcl::t_color_rgba32f color_bottomright, const zcl::t_color_rgba32f color_bottomleft) {
-        ZF_ASSERT(rect.width > 0.0f && rect.height > 0.0f);
+        ZCL_ASSERT(rect.width > 0.0f && rect.height > 0.0f);
 
         const zcl::t_static_array<t_triangle, 2> triangles = {{
             {

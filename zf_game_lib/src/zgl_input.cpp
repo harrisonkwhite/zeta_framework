@@ -114,32 +114,32 @@ namespace zgl::input {
     }
 
     zcl::t_b8 gamepad_check_connected(const t_state *const state, const zcl::t_i32 index) {
-        ZF_ASSERT(index >= 0 && index < k_gamepad_limit);
+        ZCL_ASSERT(index >= 0 && index < k_gamepad_limit);
         return zcl::bitset_check_set(state->gamepads_connected, index);
     }
 
     zcl::t_b8 gamepad_check_button_down(const t_state *const state, const zcl::t_i32 gamepad_index, const t_gamepad_button_code btn_code) {
-        ZF_ASSERT(gamepad_check_connected(state, gamepad_index));
+        ZCL_ASSERT(gamepad_check_connected(state, gamepad_index));
         return zcl::bitset_check_set(state->gamepads[gamepad_index].buttons_down, btn_code);
     }
 
     zcl::t_b8 gamepad_check_button_pressed(const t_state *const state, const zcl::t_i32 gamepad_index, const t_gamepad_button_code btn_code) {
-        ZF_ASSERT(gamepad_check_connected(state, gamepad_index));
+        ZCL_ASSERT(gamepad_check_connected(state, gamepad_index));
         return zcl::bitset_check_set(state->events.gamepads[gamepad_index].buttons_pressed, btn_code);
     }
 
     zcl::t_b8 gamepad_check_button_released(const t_state *const state, const zcl::t_i32 gamepad_index, const t_gamepad_button_code btn_code) {
-        ZF_ASSERT(gamepad_check_connected(state, gamepad_index));
+        ZCL_ASSERT(gamepad_check_connected(state, gamepad_index));
         return zcl::bitset_check_set(state->events.gamepads[gamepad_index].buttons_released, btn_code);
     }
 
     zcl::t_f32 gamepad_get_axis_value_raw(const t_state *const state, const zcl::t_i32 gamepad_index, const t_gamepad_axis_code axis_code) {
-        ZF_ASSERT(gamepad_check_connected(state, gamepad_index));
+        ZCL_ASSERT(gamepad_check_connected(state, gamepad_index));
         return state->gamepads[gamepad_index].axes[axis_code];
     }
 
     zcl::t_f32 gamepad_get_axis_value_with_deadzone(const t_state *const state, const zcl::t_i32 gamepad_index, const t_gamepad_axis_code axis_code) {
-        ZF_ASSERT(gamepad_check_connected(state, gamepad_index));
+        ZCL_ASSERT(gamepad_check_connected(state, gamepad_index));
 
         const zcl::t_f32 raw = state->gamepads[gamepad_index].axes[axis_code];
         const zcl::t_f32 raw_abs = abs(raw);
@@ -155,7 +155,7 @@ namespace zgl::input {
 
     void gamepad_update_state(t_state *const state, const zcl::t_i32 gamepad_index, const zcl::t_b8 connected, const zcl::t_static_bitset<ekm_gamepad_button_code_cnt> &btns_down, const zcl::t_static_array<zcl::t_f32, ekm_gamepad_axis_code_cnt> &axes) {
         if (!connected) {
-            ZF_ASSERT(zcl::bitset_check_all_unset(btns_down) && zcl::array_check_all_equal(zcl::array_to_nonstatic(&axes), 0.0f));
+            ZCL_ASSERT(zcl::bitset_check_all_unset(btns_down) && zcl::array_check_all_equal(zcl::array_to_nonstatic(&axes), 0.0f));
             return;
         }
 

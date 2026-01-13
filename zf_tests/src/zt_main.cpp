@@ -34,7 +34,7 @@ constexpr zcl::t_static_array<t_test, 4> k_tests = {{
 
 static void run_tests() {
     zcl::t_arena arena = zcl::arena_create_blockbased();
-    ZF_DEFER({ zcl::arena_destroy(&arena); });
+    ZCL_DEFER({ zcl::arena_destroy(&arena); });
 
     for (zcl::t_i32 i = 0; i < k_tests.k_len; i++) {
         zcl::log(ZCL_STR_LITERAL("Running test \"%\"..."), zcl::cstr_to_str(k_tests[i].title_cstr));

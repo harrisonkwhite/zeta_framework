@@ -2,13 +2,13 @@
 
 #include <GLFW/glfw3.h>
 
-#if defined(ZF_PLATFORM_WINDOWS)
+#if defined(ZCL_PLATFORM_WINDOWS)
     #define GLFW_EXPOSE_NATIVE_WIN32
     #include <GLFW/glfw3native.h>
-#elif defined(ZF_PLATFORM_MACOS)
+#elif defined(ZCL_PLATFORM_MACOS)
     #define GLFW_EXPOSE_NATIVE_COCOA
     #include <GLFW/glfw3native.h>
-#elif defined(ZF_PLATFORM_LINUX)
+#elif defined(ZCL_PLATFORM_LINUX)
     #define GLFW_EXPOSE_NATIVE_X11
     #include <GLFW/glfw3native.h>
 #endif
@@ -29,13 +29,13 @@ namespace zgl::platform {
     } g_module_state;
 
     void module_startup(const zcl::t_v2_i init_window_size) {
-        ZF_REQUIRE(!g_module_state.active);
-        ZF_REQUIRE(init_window_size.x > 0 && init_window_size.y > 0);
+        ZCL_REQUIRE(!g_module_state.active);
+        ZCL_REQUIRE(init_window_size.x > 0 && init_window_size.y > 0);
 
         g_module_state = {.active = true};
 
         if (!glfwInit()) {
-            ZF_FATAL();
+            ZCL_FATAL();
         }
 
         glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
@@ -44,7 +44,7 @@ namespace zgl::platform {
         g_module_state.glfw_window = glfwCreateWindow(init_window_size.x, init_window_size.y, "", nullptr, nullptr);
 
         if (!g_module_state.glfw_window) {
-            ZF_FATAL();
+            ZCL_FATAL();
         }
 
         glfwGetFramebufferSize(g_module_state.glfw_window, &g_module_state.framebuffer_size_cache.x, &g_module_state.framebuffer_size_cache.y);
@@ -85,7 +85,7 @@ namespace zgl::platform {
     }
 
     void module_shutdown() {
-        ZF_REQUIRE(g_module_state.active);
+        ZCL_REQUIRE(g_module_state.active);
 
         glfwDestroyWindow(g_module_state.glfw_window);
         glfwTerminate();
@@ -93,10 +93,10 @@ namespace zgl::platform {
     }
 
     zcl::t_f64 get_time() {
-        ZF_ASSERT(g_module_state.active);
+        ZCL_ASSERT(g_module_state.active);
 
         const zcl::t_f64 result = glfwGetTime();
-        ZF_REQUIRE(result != 0.0);
+        ZCL_REQUIRE(result != 0.0);
 
         return result;
     }
@@ -177,7 +177,7 @@ namespace zgl::platform {
         case input::ekm_key_code_cnt: break;
         }
 
-        ZF_UNREACHABLE();
+        ZCL_UNREACHABLE();
     }
 
     static zcl::t_i32 f_to_glfw_mouse_button(const input::t_mouse_button_code btn_code) {
@@ -189,11 +189,11 @@ namespace zgl::platform {
         case input::ekm_mouse_button_code_cnt: break;
         }
 
-        ZF_UNREACHABLE();
+        ZCL_UNREACHABLE();
     };
 
     void poll_events(input::t_state *const input_state) {
-        ZF_ASSERT(g_module_state.active);
+        ZCL_ASSERT(g_module_state.active);
 
         glfwSetWindowUserPointer(g_module_state.glfw_window, input_state); // Scroll callback needs access to this input state.
 
@@ -244,81 +244,81 @@ namespace zgl::platform {
     }
 
     void *display_get_native_handle() {
-        ZF_ASSERT(g_module_state.active);
+        ZCL_ASSERT(g_module_state.active);
 
-#if defined(ZF_PLATFORM_WINDOWS)
+#if defined(ZCL_PLATFORM_WINDOWS)
         return nullptr;
-#elif defined(ZF_PLATFORM_MACOS)
+#elif defined(ZCL_PLATFORM_MACOS)
         return nullptr;
-#elif defined(ZF_PLATFORM_LINUX)
+#elif defined(ZCL_PLATFORM_LINUX)
         return glfwGetX11Display();
 #endif
     }
 
     void *window_get_native_handle() {
-        ZF_ASSERT(g_module_state.active);
+        ZCL_ASSERT(g_module_state.active);
 
-#if defined(ZF_PLATFORM_WINDOWS)
+#if defined(ZCL_PLATFORM_WINDOWS)
         return reinterpret_cast<void *>(glfwGetWin32Window(g_module_state.glfw_window));
-#elif defined(ZF_PLATFORM_MACOS)
+#elif defined(ZCL_PLATFORM_MACOS)
         return glfwGetCocoaWindow(g_state.glfw_window);
-#elif defined(ZF_PLATFORM_LINUX)
+#elif defined(ZCL_PLATFORM_LINUX)
         return reinterpret_cast<void *>(static_cast<uintptr_t>(glfwGetX11Window(g_state.glfw_window)));
 #endif
     }
 
     void window_show() {
-        ZF_ASSERT(g_module_state.active);
+        ZCL_ASSERT(g_module_state.active);
         glfwShowWindow(g_module_state.glfw_window);
     }
 
     void window_request_close() {
-        ZF_ASSERT(g_module_state.active);
+        ZCL_ASSERT(g_module_state.active);
         zcl::log(ZCL_STR_LITERAL("Window close explicitly requested..."));
         return glfwSetWindowShouldClose(g_module_state.glfw_window, true);
     }
 
     zcl::t_b8 window_check_close_requested() {
-        ZF_ASSERT(g_module_state.active);
+        ZCL_ASSERT(g_module_state.active);
         return glfwWindowShouldClose(g_module_state.glfw_window);
     }
 
     void window_set_title(const zcl::t_str_rdonly title, zcl::t_arena *const temp_arena) {
-        ZF_ASSERT(g_module_state.active);
+        ZCL_ASSERT(g_module_state.active);
 
         const zcl::t_str_rdonly title_terminated = zcl::str_clone_but_add_terminator(title, temp_arena);
         glfwSetWindowTitle(g_module_state.glfw_window, zcl::str_to_cstr(title_terminated));
     }
 
     void window_set_size(const zcl::t_v2_i size) {
-        ZF_ASSERT(g_module_state.active);
-        ZF_ASSERT(size.x > 0 && size.y > 0);
+        ZCL_ASSERT(g_module_state.active);
+        ZCL_ASSERT(size.x > 0 && size.y > 0);
 
         glfwSetWindowSize(g_module_state.glfw_window, size.x, size.y);
     }
 
     void window_set_size_limits(const zcl::t_i32 min_width, const zcl::t_i32 min_height, const zcl::t_i32 max_width, const zcl::t_i32 max_height) {
-        ZF_ASSERT(g_module_state.active);
-        ZF_ASSERT(min_width >= -1 && min_height >= -1);
-        ZF_ASSERT(max_width >= min_width || max_width == -1);
-        ZF_ASSERT(max_height >= min_height || max_height == -1);
+        ZCL_ASSERT(g_module_state.active);
+        ZCL_ASSERT(min_width >= -1 && min_height >= -1);
+        ZCL_ASSERT(max_width >= min_width || max_width == -1);
+        ZCL_ASSERT(max_height >= min_height || max_height == -1);
 
         static_assert(GLFW_DONT_CARE == -1);
         glfwSetWindowSizeLimits(g_module_state.glfw_window, min_width, min_height, max_width, max_height);
     }
 
     void window_set_resizable(const zcl::t_b8 resizable) {
-        ZF_ASSERT(g_module_state.active);
+        ZCL_ASSERT(g_module_state.active);
         glfwSetWindowAttrib(g_module_state.glfw_window, GLFW_RESIZABLE, resizable);
     }
 
     zcl::t_v2_i window_get_framebuffer_size_cache() {
-        ZF_ASSERT(g_module_state.active);
+        ZCL_ASSERT(g_module_state.active);
         return g_module_state.framebuffer_size_cache;
     }
 
     zcl::t_b8 window_check_fullscreen() {
-        ZF_ASSERT(g_module_state.active);
+        ZCL_ASSERT(g_module_state.active);
         return g_module_state.fullscreen_active;
     }
 
@@ -370,7 +370,7 @@ namespace zgl::platform {
     }
 
     void window_set_fullscreen(const zcl::t_b8 active) {
-        ZF_ASSERT(g_module_state.active);
+        ZCL_ASSERT(g_module_state.active);
 
         if (active == g_module_state.fullscreen_active) {
             return;
@@ -396,7 +396,7 @@ namespace zgl::platform {
     }
 
     zcl::t_v2_i monitor_calc_size_pixels() {
-        ZF_ASSERT(g_module_state.active);
+        ZCL_ASSERT(g_module_state.active);
 
         const auto monitor = find_glfw_monitor_of_window(g_module_state.glfw_window);
 
@@ -409,7 +409,7 @@ namespace zgl::platform {
     }
 
     zcl::t_v2_i monitor_calc_size_logical() {
-        ZF_ASSERT(g_module_state.active);
+        ZCL_ASSERT(g_module_state.active);
 
         const auto monitor = find_glfw_monitor_of_window(g_module_state.glfw_window);
 
@@ -429,7 +429,7 @@ namespace zgl::platform {
     }
 
     void cursor_set_visible(const zcl::t_b8 visible) {
-        ZF_ASSERT(g_module_state.active);
+        ZCL_ASSERT(g_module_state.active);
         glfwSetInputMode(g_module_state.glfw_window, GLFW_CURSOR, visible ? GLFW_CURSOR_NORMAL : GLFW_CURSOR_HIDDEN);
     }
 }

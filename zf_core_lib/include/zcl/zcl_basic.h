@@ -9,25 +9,25 @@ namespace zcl {
     // @section: Essential Macros
 
 #ifdef _WIN32
-    #define ZF_PLATFORM_WINDOWS
+    #define ZCL_PLATFORM_WINDOWS
 #endif
 
 #if defined(__APPLE__) && defined(__MACH__)
-    #define ZF_PLATFORM_MACOS
+    #define ZCL_PLATFORM_MACOS
 #endif
 
 #ifdef __linux__
-    #define ZF_PLATFORM_LINUX
+    #define ZCL_PLATFORM_LINUX
 #endif
 
 #ifndef NDEBUG
-    #define ZF_DEBUG
+    #define ZCL_DEBUG
 #endif
 
-#define ZF_IN_CONSTEXPR() std::is_constant_evaluated()
+#define ZCL_IN_CONSTEXPR() std::is_constant_evaluated()
 
-#define ZF_CONCAT_IMPL(a, b) a##b
-#define ZF_CONCAT(a, b) ZF_CONCAT_IMPL(a, b)
+#define ZCL_CONCAT_IMPL(a, b) a##b
+#define ZCL_CONCAT(a, b) ZCL_CONCAT_IMPL(a, b)
 
     namespace detail {
         template <typename tp_type>
@@ -42,7 +42,7 @@ namespace zcl {
         };
     }
 
-#define ZF_DEFER(x) const auto ZF_CONCAT(defer_, ZF_CONCAT(l, __LINE__)) = zcl::detail::t_defer([&]() x)
+#define ZCL_DEFER(x) const auto ZCL_CONCAT(defer_, ZCL_CONCAT(l, __LINE__)) = zcl::detail::t_defer([&]() x)
 
     // ============================================================
 
@@ -183,32 +183,32 @@ namespace zcl {
 
         [[noreturn]] void handle_assert_error(const char *const cond_cstr, const char *const func_name_cstr, const char *const file_name_cstr, const int line);
 
-#ifdef ZF_DEBUG
-    #define ZF_DEBUG_BREAK() detail::try_breaking_into_debugger_if(true)
-    #define ZF_DEBUG_BREAK_IF(cond) detail::try_breaking_into_debugger_if(cond)
+#ifdef ZCL_DEBUG
+    #define ZCL_DEBUG_BREAK() detail::try_breaking_into_debugger_if(true)
+    #define ZCL_DEBUG_BREAK_IF(cond) detail::try_breaking_into_debugger_if(cond)
 
-    #define ZF_ASSERT(cond)                                                                    \
+    #define ZCL_ASSERT(cond)                                                                   \
         do {                                                                                   \
-            if (!ZF_IN_CONSTEXPR()) {                                                          \
+            if (!ZCL_IN_CONSTEXPR()) {                                                         \
                 if (!(cond)) {                                                                 \
                     zcl::detail::handle_assert_error(#cond, __FUNCTION__, __FILE__, __LINE__); \
                 }                                                                              \
             }                                                                                  \
         } while (0)
 #else
-    #define ZF_DEBUG_BREAK() static_cast<void>(0)
-    #define ZF_DEBUG_BREAK_IF(cond) static_cast<void>(0)
-    #define ZF_ASSERT(cond) static_cast<void>(0)
+    #define ZCL_DEBUG_BREAK() static_cast<void>(0)
+    #define ZCL_DEBUG_BREAK_IF(cond) static_cast<void>(0)
+    #define ZCL_ASSERT(cond) static_cast<void>(0)
 #endif
 
         [[noreturn]] void handle_fatal_error(const char *const func_name_cstr, const char *const file_name_cstr, const int line, const char *const cond_cstr = nullptr);
 
-#define ZF_FATAL() zcl::detail::handle_fatal_error(__FUNCTION__, __FILE__, __LINE__)
-#define ZF_UNREACHABLE() ZF_FATAL() // @todo: This should probably have some helper message to differentiate it from normal fatal errors.
+#define ZCL_FATAL() zcl::detail::handle_fatal_error(__FUNCTION__, __FILE__, __LINE__)
+#define ZCL_UNREACHABLE() ZCL_FATAL() // @todo: This should probably have some helper message to differentiate it from normal fatal errors.
 
-#define ZF_REQUIRE(cond)                                                                  \
+#define ZCL_REQUIRE(cond)                                                                 \
     do {                                                                                  \
-        if (!ZF_IN_CONSTEXPR()) {                                                         \
+        if (!ZCL_IN_CONSTEXPR()) {                                                        \
             if (!(cond)) {                                                                \
                 zcl::detail::handle_fatal_error(__FUNCTION__, __FILE__, __LINE__, #cond); \
             }                                                                             \
@@ -246,7 +246,7 @@ namespace zcl {
 
     template <c_numeric tp_type>
     constexpr tp_type clamp(const tp_type n, const tp_type min, const tp_type max) {
-        ZF_ASSERT(min <= max);
+        ZCL_ASSERT(min <= max);
 
         if (n < min) {
             return min;
@@ -286,10 +286,10 @@ namespace zcl {
     // ============================================================
     // @section: Memory
 
-#define ZF_SIZE_OF(x) static_cast<zcl::t_i32>(sizeof(x))
-#define ZF_SIZE_IN_BITS(x) (8 * ZF_SIZE_OF(x))
+#define ZCL_SIZE_OF(x) static_cast<zcl::t_i32>(sizeof(x))
+#define ZCL_SIZE_IN_BITS(x) (8 * ZCL_SIZE_OF(x))
 
-#define ZF_ALIGN_OF(x) static_cast<zcl::t_i32>(alignof(x))
+#define ZCL_ALIGN_OF(x) static_cast<zcl::t_i32>(alignof(x))
 
     constexpr t_i32 kilobytes_to_bytes(const t_i32 n) { return (1 << 10) * n; }
     constexpr t_i32 megabytes_to_bytes(const t_i32 n) { return (1 << 20) * n; }
@@ -304,22 +304,22 @@ namespace zcl {
 
     // Take n up to the next multiple of the alignment.
     constexpr t_i32 align_forward(const t_i32 n, const t_i32 alignment) {
-        ZF_ASSERT(alignment_check_valid(alignment));
+        ZCL_ASSERT(alignment_check_valid(alignment));
         return (n + alignment - 1) & ~(alignment - 1);
     }
 
     inline void zero_clear(void *const buf, const t_i32 buf_size) {
-        ZF_ASSERT(buf_size >= 0);
+        ZCL_ASSERT(buf_size >= 0);
         memset(buf, 0, static_cast<size_t>(buf_size));
     }
 
     template <c_simple tp_type>
     void zero_clear_item(tp_type *const item) {
-        zero_clear(item, ZF_SIZE_OF(tp_type));
+        zero_clear(item, ZCL_SIZE_OF(tp_type));
     }
 
     constexpr t_b8 zero_check(void *const buf, const t_i32 buf_size) {
-        ZF_ASSERT(buf_size >= 0);
+        ZCL_ASSERT(buf_size >= 0);
 
         const auto buf_bytes = static_cast<t_u8 *>(buf);
 
@@ -334,7 +334,7 @@ namespace zcl {
 
     template <c_simple tp_type>
     constexpr t_b8 zero_check_item(tp_type *const item) {
-        return zero_check(item, ZF_SIZE_OF(tp_type));
+        return zero_check(item, ZCL_SIZE_OF(tp_type));
     }
 
     // ============================================================
@@ -354,7 +354,7 @@ namespace zcl {
         t_i32 len;
 
         constexpr const tp_elem_type &operator[](const t_i32 index) const {
-            ZF_REQUIRE(index >= 0 && index < len);
+            ZCL_REQUIRE(index >= 0 && index < len);
             return raw[index];
         }
     };
@@ -367,7 +367,7 @@ namespace zcl {
         t_i32 len;
 
         constexpr tp_elem_type &operator[](const t_i32 index) const {
-            ZF_REQUIRE(index >= 0 && index < len);
+            ZCL_REQUIRE(index >= 0 && index < len);
             return raw[index];
         }
 
@@ -385,12 +385,12 @@ namespace zcl {
         tp_elem_type raw[tp_len];
 
         constexpr tp_elem_type &operator[](const t_i32 index) {
-            ZF_REQUIRE(index >= 0 && index < tp_len);
+            ZCL_REQUIRE(index >= 0 && index < tp_len);
             return raw[index];
         }
 
         constexpr const tp_elem_type &operator[](const t_i32 index) const {
-            ZF_REQUIRE(index >= 0 && index < tp_len);
+            ZCL_REQUIRE(index >= 0 && index < tp_len);
             return raw[index];
         }
 
@@ -440,42 +440,42 @@ namespace zcl {
 
     template <c_array_elem tp_elem_type>
     constexpr t_array_mut<tp_elem_type> array_slice(const t_array_mut<tp_elem_type> arr, const t_i32 beg, const t_i32 end) {
-        ZF_ASSERT(beg >= 0 && beg <= arr.len);
-        ZF_ASSERT(end >= beg && end <= arr.len);
+        ZCL_ASSERT(beg >= 0 && beg <= arr.len);
+        ZCL_ASSERT(end >= beg && end <= arr.len);
 
         return {arr.raw + beg, end - beg};
     }
 
     template <c_array_elem tp_elem_type>
     constexpr t_array_rdonly<tp_elem_type> array_slice(const t_array_rdonly<tp_elem_type> arr, const t_i32 beg, const t_i32 end) {
-        ZF_ASSERT(beg >= 0 && beg <= arr.len);
-        ZF_ASSERT(end >= beg && end <= arr.len);
+        ZCL_ASSERT(beg >= 0 && beg <= arr.len);
+        ZCL_ASSERT(end >= beg && end <= arr.len);
 
         return {arr.raw + beg, end - beg};
     }
 
     template <c_array_elem tp_elem_type>
     constexpr t_array_mut<tp_elem_type> array_slice_from(const t_array_mut<tp_elem_type> arr, const t_i32 beg) {
-        ZF_ASSERT(beg >= 0 && beg <= arr.len);
+        ZCL_ASSERT(beg >= 0 && beg <= arr.len);
         return {arr.raw + beg, arr.len - beg};
     }
 
     template <c_array_elem tp_elem_type>
     constexpr t_array_rdonly<tp_elem_type> array_slice_from(const t_array_rdonly<tp_elem_type> arr, const t_i32 beg) {
-        ZF_ASSERT(beg >= 0 && beg <= arr.len);
+        ZCL_ASSERT(beg >= 0 && beg <= arr.len);
         return {arr.raw + beg, arr.len - beg};
     }
 
     template <c_array tp_arr_type>
     constexpr t_i32 array_get_size_in_bytes(const tp_arr_type arr) {
-        return ZF_SIZE_OF(typename tp_arr_type::t_elem) * arr.len;
+        return ZCL_SIZE_OF(typename tp_arr_type::t_elem) * arr.len;
     }
 
     template <c_array tp_src_arr_type, c_array_mut tp_dest_arr_type>
         requires c_same<typename tp_src_arr_type::t_elem, typename tp_dest_arr_type::t_elem>
     constexpr void array_copy(const tp_src_arr_type src, const tp_dest_arr_type dest, const t_b8 allow_truncation = false) {
         if (!allow_truncation) {
-            ZF_ASSERT(dest.len >= src.len);
+            ZCL_ASSERT(dest.len >= src.len);
 
             for (t_i32 i = 0; i < src.len; i++) {
                 dest[i] = src[i];
@@ -575,11 +575,11 @@ namespace zcl {
 
     template <c_simple tp_type>
     t_array_mut<t_u8> to_bytes(tp_type *const val) {
-        return {reinterpret_cast<t_u8 *>(val), ZF_SIZE_OF(*val)};
+        return {reinterpret_cast<t_u8 *>(val), ZCL_SIZE_OF(*val)};
     }
 
     template <c_simple tp_type>
     t_array_rdonly<t_u8> to_bytes(const tp_type *const val) {
-        return {reinterpret_cast<const t_u8 *>(val), ZF_SIZE_OF(*val)};
+        return {reinterpret_cast<const t_u8 *>(val), ZCL_SIZE_OF(*val)};
     }
 }

@@ -14,7 +14,7 @@ namespace zcl {
         t_i32 len;
 
         constexpr tp_elem_type &operator[](const t_i32 index) const {
-            ZF_ASSERT(index >= 0 && index < len);
+            ZCL_ASSERT(index >= 0 && index < len);
             return backing_arr[index];
         }
     };
@@ -27,12 +27,12 @@ namespace zcl {
         t_i32 len;
 
         constexpr tp_elem_type &operator[](const t_i32 index) {
-            ZF_ASSERT(index >= 0 && index < len);
+            ZCL_ASSERT(index >= 0 && index < len);
             return backing_arr[index];
         }
 
         constexpr const tp_elem_type &operator[](const t_i32 index) const {
-            ZF_ASSERT(index >= 0 && index < len);
+            ZCL_ASSERT(index >= 0 && index < len);
             return backing_arr[index];
         }
     };
@@ -41,7 +41,7 @@ namespace zcl {
 
     constexpr t_list_extension_cap_calculator k_list_extension_cap_calculator_default =
         [](const t_i32 cap_current) {
-            ZF_ASSERT(cap_current >= 0);
+            ZCL_ASSERT(cap_current >= 0);
             return cap_current == 0 ? 1 : cap_current * 2;
         };
 
@@ -68,7 +68,7 @@ namespace zcl {
 
     template <c_list_elem tp_elem_type>
     t_list<tp_elem_type> list_create(const t_i32 cap, t_arena *const arena, const t_i32 len = 0) {
-        ZF_ASSERT(cap > 0 && len >= 0 && len <= cap);
+        ZCL_ASSERT(cap > 0 && len >= 0 && len <= cap);
         return {arena_push_array<tp_elem_type>(arena, cap), len};
     }
 
@@ -99,10 +99,10 @@ namespace zcl {
 
     template <c_list_nonstatic tp_list_type>
     void list_extend(tp_list_type *const list, t_arena *const arena, const t_list_extension_cap_calculator cap_calculator = k_list_extension_cap_calculator_default) {
-        ZF_ASSERT(cap_calculator);
+        ZCL_ASSERT(cap_calculator);
 
         const t_i32 new_cap = cap_calculator(list_get_cap(list));
-        ZF_ASSERT(new_cap > list_get_cap(list));
+        ZCL_ASSERT(new_cap > list_get_cap(list));
 
         const auto new_backing_arr = arena_push_array<tp_list_type>(arena, new_cap);
         array_copy(list->backing_arr, new_backing_arr);
@@ -112,8 +112,8 @@ namespace zcl {
 
     template <c_list_nonstatic tp_list_type>
     void list_extend_to_fit(tp_list_type *const list, const t_i32 min_cap, t_arena *const arena, const t_list_extension_cap_calculator cap_calculator = k_list_extension_cap_calculator_default) {
-        ZF_ASSERT(min_cap > list_get_cap(list));
-        ZF_ASSERT(cap_calculator);
+        ZCL_ASSERT(min_cap > list_get_cap(list));
+        ZCL_ASSERT(cap_calculator);
 
         const t_i32 new_cap = [cap = list_get_cap(list), min_cap, cap_calculator]() {
             t_i32 result = cap;
@@ -121,7 +121,7 @@ namespace zcl {
             do {
                 const auto res_last = result;
                 result = cap_calculator(result);
-                ZF_ASSERT(result > res_last);
+                ZCL_ASSERT(result > res_last);
             } while (result < min_cap);
 
             return result;
@@ -135,7 +135,7 @@ namespace zcl {
 
     template <c_list tp_list_type>
     constexpr typename tp_list_type::t_elem *list_append(tp_list_type *const list, const typename tp_list_type::t_elem &value) {
-        ZF_ASSERT(list->len < list_get_cap(list));
+        ZCL_ASSERT(list->len < list_get_cap(list));
 
         list->len++;
         (*list)[list->len - 1] = value;
@@ -153,7 +153,7 @@ namespace zcl {
 
     template <c_list tp_list_type>
     constexpr t_array_mut<typename tp_list_type::t_elem> list_append_many(tp_list_type *const list, const t_array_rdonly<typename tp_list_type::t_elem> values) {
-        ZF_ASSERT(list->len + values.len <= list_get_cap(list));
+        ZCL_ASSERT(list->len + values.len <= list_get_cap(list));
 
         array_copy(values, array_slice_from(list->backing_arr, list->len));
         list->len += values.len;
@@ -173,8 +173,8 @@ namespace zcl {
 
     template <c_list tp_list_type>
     constexpr typename tp_list_type::t_elem *list_insert_at(tp_list_type *const list, const t_i32 index, const typename tp_list_type::t_elem &value) {
-        ZF_ASSERT(list->len < list_get_cap(list));
-        ZF_ASSERT(index >= 0 && index <= list->len);
+        ZCL_ASSERT(list->len < list_get_cap(list));
+        ZCL_ASSERT(index >= 0 && index <= list->len);
 
         list->len++;
 
@@ -198,8 +198,8 @@ namespace zcl {
 
     template <c_list tp_list_type>
     constexpr void list_remove_at_shift(tp_list_type *const list, const t_i32 index) {
-        ZF_ASSERT(list->len > 0);
-        ZF_ASSERT(index >= 0 && index < list->len);
+        ZCL_ASSERT(list->len > 0);
+        ZCL_ASSERT(index >= 0 && index < list->len);
 
         array_copy(array_slice(list->backing_arr, index + 1, list->len), array_slice(list->backing_arr, index, list->len - 1));
         list->len--;
@@ -207,8 +207,8 @@ namespace zcl {
 
     template <c_list tp_list_type>
     constexpr void list_remove_at_swapback(tp_list_type *const list, const t_i32 index) {
-        ZF_ASSERT(list->len > 0);
-        ZF_ASSERT(index >= 0 && index < list->len);
+        ZCL_ASSERT(list->len > 0);
+        ZCL_ASSERT(index >= 0 && index < list->len);
 
         (*list)[index] = (*list)[list->len - 1];
         list->len--;
@@ -216,7 +216,7 @@ namespace zcl {
 
     template <c_list tp_list_type>
     constexpr void list_remove_end(tp_list_type *const list) {
-        ZF_ASSERT(list->len > 0);
+        ZCL_ASSERT(list->len > 0);
         list->len--;
     }
 }

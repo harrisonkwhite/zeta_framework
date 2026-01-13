@@ -98,7 +98,7 @@ namespace zcl {
 
         if (format.value < 0) {
             str_bytes_stream_write_success = stream_write_item(str_bytes_stream, '-');
-            ZF_ASSERT(str_bytes_stream_write_success);
+            ZCL_ASSERT(str_bytes_stream_write_success);
         }
 
         const t_i32 dig_cnt = calc_digit_cnt(format.value);
@@ -106,7 +106,7 @@ namespace zcl {
         for (t_i32 i = 0; i < dig_cnt; i++) {
             const auto byte = static_cast<t_u8>('0' + calc_digit_at(format.value, dig_cnt - 1 - i));
             str_bytes_stream_write_success = stream_write_item(str_bytes_stream, byte);
-            ZF_ASSERT(str_bytes_stream_write_success);
+            ZCL_ASSERT(str_bytes_stream_write_success);
         }
 
         return print(stream, {mem_stream_get_bytes_written(&str_bytes_stream)});
@@ -141,7 +141,7 @@ namespace zcl {
 
     template <c_floating_point tp_type>
     t_b8 print_type(const t_stream stream, const t_float_format<tp_type> format) {
-        ZF_ASSERT(format.precision > 0);
+        ZCL_ASSERT(format.precision > 0);
 
         t_static_array<t_u8, 400> str_bytes = {}; // Roughly more than how many bytes should ever be needed.
 
@@ -214,12 +214,12 @@ namespace zcl {
     }
 
     inline t_hex_format<t_uintptr> format_default(const void *const ptr) {
-        return format_hex(ptr, {}, 2 * ZF_SIZE_OF(t_uintptr));
+        return format_hex(ptr, {}, 2 * ZCL_SIZE_OF(t_uintptr));
     }
 
     template <c_integral_unsigned tp_type>
     t_b8 print_type(const t_stream stream, const t_hex_format<tp_type> format) {
-        ZF_ASSERT(format.min_digits >= k_hex_format_digit_cnt_min && format.min_digits <= k_hex_format_digit_cnt_max);
+        ZCL_ASSERT(format.min_digits >= k_hex_format_digit_cnt_min && format.min_digits <= k_hex_format_digit_cnt_max);
 
         t_static_array<t_u8, 2 + k_hex_format_digit_cnt_max> str_bytes = {}; // Can facilitate max number of digits plus the "0x" prefix.
         t_mem_stream str_bytes_stream = mem_stream_create(array_to_nonstatic(&str_bytes), ek_stream_mode_write);
@@ -228,10 +228,10 @@ namespace zcl {
 
         if (!(format.flags & ek_hex_format_flags_omit_prefix)) {
             str_bytes_stream_write_success = stream_write_item(str_bytes_stream, '0');
-            ZF_ASSERT(str_bytes_stream_write_success);
+            ZCL_ASSERT(str_bytes_stream_write_success);
 
             str_bytes_stream_write_success = stream_write_item(str_bytes_stream, 'x');
-            ZF_ASSERT(str_bytes_stream_write_success);
+            ZCL_ASSERT(str_bytes_stream_write_success);
         }
 
         const t_i32 str_bytes_digits_begin_pos = str_bytes_stream.byte_pos;
@@ -257,7 +257,7 @@ namespace zcl {
             for (t_i32 i = 0; i < inner_loop_cnt; i++) {
                 const auto byte = dig_to_byte(value_mut % 16);
                 str_bytes_stream_write_success = stream_write_item(str_bytes_stream, byte);
-                ZF_ASSERT(str_bytes_stream_write_success);
+                ZCL_ASSERT(str_bytes_stream_write_success);
 
                 value_mut /= 16;
 
@@ -381,11 +381,11 @@ namespace zcl {
         t_bitset_format_style style;
     };
 
-    inline t_bitset_format format_bitset(const t_bitset_rdonly &value, const t_bitset_format_style style = ek_bitset_format_style_seq) {
+    inline t_bitset_format format_bitset(const t_bitset_rdonly value, const t_bitset_format_style style = ek_bitset_format_style_seq) {
         return {.value = value, .style = style};
     }
 
-    inline t_bitset_format format_default(const t_bitset_rdonly &value) {
+    inline t_bitset_format format_default(const t_bitset_rdonly value) {
         return format_bitset(value, ek_bitset_format_style_seq);
     }
 
@@ -400,7 +400,7 @@ namespace zcl {
     t_i32 count_format_specs(const t_str_rdonly str);
 
     inline t_b8 print_format(const t_stream stream, const t_str_rdonly format) {
-        ZF_ASSERT(count_format_specs(format) == 0);
+        ZCL_ASSERT(count_format_specs(format) == 0);
 
         // Just print the rest of the string.
         return print(stream, format);
@@ -412,7 +412,7 @@ namespace zcl {
     t_b8 print_format(const t_stream stream, const t_str_rdonly format, const tp_arg_type &arg, const tp_arg_types_leftover &...args_leftover) {
         static_assert(!c_cstr<tp_arg_type>, "C-strings are prohibited for default formatting as a form of error prevention.");
 
-        ZF_ASSERT(count_format_specs(format) == 1 + sizeof...(args_leftover));
+        ZCL_ASSERT(count_format_specs(format) == 1 + sizeof...(args_leftover));
 
         static_assert(code_pt_check_ascii(k_print_format_spec) && code_pt_check_ascii(k_print_format_esc)); // Assuming this for this algorithm.
 
@@ -489,7 +489,7 @@ namespace zcl {
 
     template <typename... tp_arg_types>
     t_b8 log_error_type(const t_str_rdonly type_name, const t_str_rdonly format, const tp_arg_types &...args) {
-        ZF_ASSERT(!str_check_empty(type_name));
+        ZCL_ASSERT(!str_check_empty(type_name));
 
         t_file_stream std_err = file_stream_create_std_error();
 

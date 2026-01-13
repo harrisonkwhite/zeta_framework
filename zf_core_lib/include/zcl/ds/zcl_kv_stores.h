@@ -65,7 +65,7 @@ namespace zcl {
     // @todo: Optimise by having this move to a relative block, instead of always from the start.
     template <c_kv_store tp_kv_store_type>
     t_kv_store_block<typename tp_kv_store_type::t_key, typename tp_kv_store_type::t_value> *kv_store_find_block_of_index(const tp_kv_store_type *const kv_store, t_i32 index) {
-        ZF_ASSERT(index >= -1 && index < kv_store->block_cap * kv_store->block_cnt);
+        ZCL_ASSERT(index >= -1 && index < kv_store->block_cap * kv_store->block_cnt);
 
         auto result = kv_store->blocks_head;
 
@@ -79,7 +79,7 @@ namespace zcl {
 
     template <c_kv_store tp_kv_store_type>
     [[nodiscard]] t_b8 kv_store_find_in_chain(const tp_kv_store_type *const kv_store, const t_i32 chain_begin_index, const typename tp_kv_store_type::t_key &key, typename tp_kv_store_type::t_value **const o_val) {
-        ZF_ASSERT(chain_begin_index >= -1 && chain_begin_index < kv_store->block_cap * kv_store->block_cnt);
+        ZCL_ASSERT(chain_begin_index >= -1 && chain_begin_index < kv_store->block_cap * kv_store->block_cnt);
 
         t_i32 index = chain_begin_index;
 
@@ -137,7 +137,7 @@ namespace zcl {
                 block->keys[possible_rel_index_to_use] = key;
                 block->values[possible_rel_index_to_use] = value;
                 bitset_set(block->usage, possible_rel_index_to_use);
-                ZF_ASSERT(block->next_indexes[possible_rel_index_to_use] == -1);
+                ZCL_ASSERT(block->next_indexes[possible_rel_index_to_use] == -1);
 
                 return (block_index * kv_store->block_cap) + possible_rel_index_to_use;
             }
@@ -164,7 +164,7 @@ namespace zcl {
 
     template <c_kv_store tp_kv_store_type>
     t_b8 kv_store_remove_in_chain(tp_kv_store_type *const kv_store, t_i32 *const chain_begin_index, const typename tp_kv_store_type::t_key &key) {
-        ZF_ASSERT(*chain_begin_index >= -1 && *chain_begin_index < kv_store->block_cap * kv_store->block_cnt);
+        ZCL_ASSERT(*chain_begin_index >= -1 && *chain_begin_index < kv_store->block_cap * kv_store->block_cnt);
 
         t_i32 *index = chain_begin_index;
 
@@ -188,7 +188,7 @@ namespace zcl {
     // Loads keys and values of the chain into the given PRE-ALLOCATED arrays.
     template <c_kv_store tp_kv_store_type>
     t_i32 kv_store_load_chain(tp_kv_store_type *const kv_store, const t_i32 begin_index, const t_array_mut<typename tp_kv_store_type::t_key> keys, const t_array_mut<typename tp_kv_store_type::t_value> values) {
-        ZF_ASSERT(begin_index >= -1 && begin_index < kv_store->block_cap * kv_store->block_cnt);
+        ZCL_ASSERT(begin_index >= -1 && begin_index < kv_store->block_cap * kv_store->block_cnt);
 
         t_i32 loaded_cnt = 0;
 

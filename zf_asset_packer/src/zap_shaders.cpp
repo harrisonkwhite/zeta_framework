@@ -8,7 +8,7 @@ zcl::t_b8 compile_shader(const zcl::t_str_rdonly shader_file_path, const zcl::t_
 
     zcl::t_i32 r = 0;
 
-    ZF_DEFER({
+    ZCL_DEFER({
         if (r < 0) {
             const auto err = zcl::cstr_to_str(reproc_strerror(r));
             zcl::log_error(ZCL_STR_LITERAL("%"), err);
@@ -21,20 +21,20 @@ zcl::t_b8 compile_shader(const zcl::t_str_rdonly shader_file_path, const zcl::t_
         return false;
     }
 
-    ZF_DEFER({
+    ZCL_DEFER({
         reproc_destroy(proc);
     });
 
-#if defined(ZF_PLATFORM_WINDOWS)
+#if defined(ZCL_PLATFORM_WINDOWS)
     const zcl::t_str_rdonly shaderc_file_path_rel = ZCL_STR_LITERAL("tools/bgfx/shaderc_windows.exe");
     const char platform_cstr[] = "windows";
     const char profile_cstr[] = "s_5_0";
-#elif defined(ZF_PLATFORM_MACOS)
+#elif defined(ZCL_PLATFORM_MACOS)
     #error "Platform support not complete!" // @todo
     const zcl::t_str_rdonly shaderc_file_path_rel = ZCL_STR_LITERAL("tools/bgfx/shaderc_macos");
     const char platform_cstr[] = "osx";
     const char profile_cstr[] = "metal";
-#elif defined(ZF_PLATFORM_LINUX)
+#elif defined(ZCL_PLATFORM_LINUX)
     #error "Platform support not complete!" // @todo
     const zcl::t_str_rdonly shaderc_file_path_rel = ZCL_STR_LITERAL("tools/bgfx/shaderc_linux");
     const char platform_cstr[] = "linux";
@@ -42,18 +42,18 @@ zcl::t_b8 compile_shader(const zcl::t_str_rdonly shader_file_path, const zcl::t_
 #endif
 
     const zcl::t_str_rdonly exe_dir = zcl::get_executable_directory(temp_arena);
-    ZF_ASSERT(exe_dir.bytes[exe_dir.bytes.len - 1] == '/' || exe_dir.bytes[exe_dir.bytes.len - 1] == '\\'); // Assuming this.
+    ZCL_ASSERT(exe_dir.bytes[exe_dir.bytes.len - 1] == '/' || exe_dir.bytes[exe_dir.bytes.len - 1] == '\\'); // Assuming this.
 
     const zcl::t_str_mut shaderc_file_path_terminated = {zcl::arena_push_array<zcl::t_u8>(temp_arena, exe_dir.bytes.len + shaderc_file_path_rel.bytes.len + 1)};
     zcl::t_mem_stream shaderc_file_path_terminated_byte_stream = zcl::mem_stream_create(shaderc_file_path_terminated.bytes, zcl::ek_stream_mode_write);
     zcl::print_format(shaderc_file_path_terminated_byte_stream, ZCL_STR_LITERAL("%%\0"), exe_dir, shaderc_file_path_rel);
-    ZF_ASSERT(zcl::str_bytes_check_terminated_only_at_end(shaderc_file_path_terminated.bytes));
+    ZCL_ASSERT(zcl::str_bytes_check_terminated_only_at_end(shaderc_file_path_terminated.bytes));
 
     const zcl::t_str_rdonly shaderc_include_dir_rel = ZCL_STR_LITERAL("tools/bgfx/shaderc_include");
     const zcl::t_str_mut shaderc_include_dir_terminated = {zcl::arena_push_array<zcl::t_u8>(temp_arena, exe_dir.bytes.len + shaderc_include_dir_rel.bytes.len + 1)};
     zcl::t_mem_stream shaderc_include_dir_terminated_byte_stream = zcl::mem_stream_create(shaderc_include_dir_terminated.bytes, zcl::ek_stream_mode_write);
     zcl::print_format(shaderc_include_dir_terminated_byte_stream, ZCL_STR_LITERAL("%%\0"), exe_dir, shaderc_include_dir_rel);
-    ZF_ASSERT(zcl::str_bytes_check_terminated_only_at_end(shaderc_include_dir_terminated.bytes));
+    ZCL_ASSERT(zcl::str_bytes_check_terminated_only_at_end(shaderc_include_dir_terminated.bytes));
 
     const zcl::t_static_array<const char *, 15> args = {{
         zcl::str_to_cstr(shaderc_file_path_terminated),
@@ -89,7 +89,7 @@ zcl::t_b8 compile_shader(const zcl::t_str_rdonly shader_file_path, const zcl::t_
 
     while (true) {
         zcl::t_static_array<zcl::t_u8, 4096> buf;
-        r = reproc_read(proc, REPROC_STREAM_OUT, buf.raw, ZF_SIZE_OF(buf));
+        r = reproc_read(proc, REPROC_STREAM_OUT, buf.raw, ZCL_SIZE_OF(buf));
 
         if (r < 0) {
             break;

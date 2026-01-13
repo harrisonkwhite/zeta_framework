@@ -2,7 +2,7 @@
 
 [[nodiscard]] static zcl::t_b8 output_code(const zcl::t_str_rdonly input_file_path, const zcl::t_str_rdonly output_file_path, const zcl::t_str_rdonly arr_var_subname, const zcl::t_str_rdonly namespace_name) {
     zcl::t_arena arena = zcl::arena_create_blockbased();
-    ZF_DEFER({ zcl::arena_destroy(&arena); });
+    ZCL_DEFER({ zcl::arena_destroy(&arena); });
 
     zcl::t_file_stream input_file_stream;
 
@@ -10,7 +10,7 @@
         return false;
     }
 
-    ZF_DEFER({ zcl::file_close(&input_file_stream); });
+    ZCL_DEFER({ zcl::file_close(&input_file_stream); });
 
     zcl::t_file_stream output_file_stream;
 
@@ -18,7 +18,7 @@
         return false;
     }
 
-    ZF_DEFER({ zcl::file_close(&output_file_stream); });
+    ZCL_DEFER({ zcl::file_close(&output_file_stream); });
 
     zcl::print(output_file_stream, ZCL_STR_LITERAL("#include <zcl/zcl_basic.h>\n"));
     zcl::print(output_file_stream, ZCL_STR_LITERAL("\n"));

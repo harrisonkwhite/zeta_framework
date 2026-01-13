@@ -79,12 +79,12 @@ namespace zgl {
         void run(const t_config &config);
 
         inline void config_assert_valid(const t_config &config) {
-            ZF_ASSERT(config.init_func);
-            ZF_ASSERT(config.deinit_func);
-            ZF_ASSERT(config.tick_func);
-            ZF_ASSERT(config.render_func);
+            ZCL_ASSERT(config.init_func);
+            ZCL_ASSERT(config.deinit_func);
+            ZCL_ASSERT(config.tick_func);
+            ZCL_ASSERT(config.render_func);
 
-            ZF_ASSERT((config.user_mem_size == 0 && config.user_mem_alignment == 0) || (config.user_mem_size > 0 && zcl::alignment_check_valid(config.user_mem_alignment)));
+            ZCL_ASSERT((config.user_mem_size == 0 && config.user_mem_alignment == 0) || (config.user_mem_size > 0 && zcl::alignment_check_valid(config.user_mem_alignment)));
         }
 
         void tps_set_target(const zcl::t_f64 tps);

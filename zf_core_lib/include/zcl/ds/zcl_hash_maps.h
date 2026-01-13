@@ -9,24 +9,6 @@ namespace zcl {
     template <c_hash_map_key tp_type>
     using t_hash_func = t_i32 (*)(const tp_type &key);
 
-#if 0
-    // This is an FNV-1a implementation.
-    constexpr t_hash_func<t_str_rdonly> k_str_hash_func =
-        [](const t_str_rdonly &key) {
-            const t_u32 offs_basis = 2166136261u;
-            const t_u32 prime = 16777619u;
-
-            t_u32 hash = offs_basis;
-
-            for (t_i32 i = 0; i < key.bytes.len; i++) {
-                hash ^= static_cast<t_u8>(key.bytes[i]);
-                hash *= prime;
-            }
-
-            return static_cast<t_i32>(hash & 0x7FFFFFFFull);
-        };
-#endif
-
     template <c_hash_map_key tp_key_type, c_hash_map_value tp_value_type>
     struct t_hash_map {
         using t_key = tp_key_type;
@@ -68,10 +50,10 @@ namespace zcl {
 
     template <c_hash_map_key tp_key_type>
     t_i32 hash_map_key_to_hash_index(const tp_key_type &key, const t_hash_func<tp_key_type> hash_func, const t_i32 cap) {
-        ZF_ASSERT(cap > 0);
+        ZCL_ASSERT(cap > 0);
 
         const t_i32 value = hash_func(key);
-        ZF_ASSERT(value >= 0);
+        ZCL_ASSERT(value >= 0);
 
         return value % cap;
     }
@@ -104,7 +86,7 @@ namespace zcl {
     // Loads all key-value pairs into the given PRE-ALLOCATED arrays.
     template <c_hash_map tp_hash_map_type>
     void hash_map_load_entries(const tp_hash_map_type *const hash_map, const t_array_mut<typename tp_hash_map_type::t_key> keys, const t_array_mut<typename tp_hash_map_type::t_value> values) {
-        ZF_ASSERT(keys.len >= hash_map_get_entry_count(hash_map) && values.len >= hash_map_get_entry_count(hash_map));
+        ZCL_ASSERT(keys.len >= hash_map_get_entry_count(hash_map) && values.len >= hash_map_get_entry_count(hash_map));
 
         t_i32 loaded_cnt = 0;
 

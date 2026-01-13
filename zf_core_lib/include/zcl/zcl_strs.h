@@ -2,6 +2,7 @@
 
 #include <zcl/zcl_basic.h>
 #include <zcl/zcl_bits.h>
+#include <zcl/ds/zcl_hash_maps.h>
 
 namespace zcl {
     // ============================================================
@@ -44,14 +45,20 @@ namespace zcl {
             return 4;
         }
 
-        ZF_UNREACHABLE();
+        ZCL_UNREACHABLE();
     }
 
+    // Given array must be of length 1, 2, 3, or 4.
+    t_code_pt utf8_bytes_to_code_pt(const t_array_rdonly<t_u8> bytes);
+
+    // Output byte count will be 1, 2, 3, or 4.
+    void code_pt_to_utf8_bytes(const t_code_pt cp, t_static_array<t_u8, 4> *const o_bytes, t_i32 *const o_byte_cnt);
+
     // ============================================================
 
 
     // ============================================================
-    // @section: Strings
+    // @section: ZF Strings
 
     struct t_str_rdonly {
         t_array_rdonly<t_u8> bytes;
@@ -68,6 +75,22 @@ namespace zcl {
     constexpr t_comparator_bin<t_str_rdonly> k_str_comparator_bin =
         [](const t_str_rdonly &a, const t_str_rdonly &b) {
             return k_array_comparator_bin<t_array_rdonly<t_u8>>(a.bytes, b.bytes);
+        };
+
+    // This is an FNV-1a implementation.
+    constexpr t_hash_func<t_str_rdonly> k_str_hash_func =
+        [](const t_str_rdonly &key) {
+            const t_u32 offs_basis = 2166136261u;
+            const t_u32 prime = 16777619u;
+
+            t_u32 hash = offs_basis;
+
+            for (t_i32 i = 0; i < key.bytes.len; i++) {
+                hash ^= static_cast<t_u8>(key.bytes[i]);
+                hash *= prime;
+            }
+
+            return static_cast<t_i32>(hash & 0x7FFFFFFFull);
         };
 
     inline t_b8 str_bytes_check_terminated_anywhere(const t_array_rdonly<t_u8> bytes) {
@@ -95,12 +118,12 @@ namespace zcl {
     }
 
     inline char *str_to_cstr(const t_str_mut str) {
-        ZF_ASSERT(str_bytes_check_terminated_anywhere(str.bytes));
+        ZCL_ASSERT(str_bytes_check_terminated_anywhere(str.bytes));
         return reinterpret_cast<char *>(str.bytes.raw);
     }
 
     inline const char *str_to_cstr(const t_str_rdonly str) {
-        ZF_ASSERT(str_bytes_check_terminated_anywhere(str.bytes));
+        ZCL_ASSERT(str_bytes_check_terminated_anywhere(str.bytes));
         return reinterpret_cast<const char *>(str.bytes.raw);
     }
 
@@ -125,12 +148,6 @@ namespace zcl {
     // Calculates the string length in terms of code point count. Reminder that '\0' is treated just like any other ASCII character and does not terminate.
     t_i32 str_calc_len(const t_str_rdonly str);
 
-    // Given array must be of length 1, 2, 3, or 4.
-    t_code_pt utf8_bytes_to_code_pt(const t_array_rdonly<t_u8> bytes);
-
-    // Output byte count will be 1, 2, 3, or 4.
-    void code_pt_to_utf8_bytes(const t_code_pt cp, t_static_array<t_u8, 4> *const o_bytes, t_i32 *const o_byte_cnt);
-
     t_code_pt str_find_code_pt_at_byte(const t_str_rdonly str, const t_i32 byte_index);
 
     // Sets the bits associated with each unicode code point that appear in the string. No bits get unset.
@@ -149,13 +166,13 @@ namespace zcl {
     // Returns false iff the walk has ended.
     t_b8 str_walk_reverse(const t_str_rdonly str, t_i32 *const byte_index, t_str_walk_step *const o_step);
 
-#define ZCL_STR_WALK(str, step)                                                                                     \
-    for (zcl::t_i32 ZF_CONCAT(bi_l, __LINE__) = 0; ZF_CONCAT(bi_l, __LINE__) != -1; ZF_CONCAT(bi_l, __LINE__) = -1) \
-        for (zcl::t_str_walk_step step; zcl::str_walk(str, &ZF_CONCAT(bi_l, __LINE__), &step);)
+#define ZCL_STR_WALK(str, step)                                                                                        \
+    for (zcl::t_i32 ZCL_CONCAT(bi_l, __LINE__) = 0; ZCL_CONCAT(bi_l, __LINE__) != -1; ZCL_CONCAT(bi_l, __LINE__) = -1) \
+        for (zcl::t_str_walk_step step; zcl::str_walk(str, &ZCL_CONCAT(bi_l, __LINE__), &step);)
 
-#define ZCL_STR_WALK_REVERSE(str, step)                                                                                                                         \
-    for (zcl::t_i32 ZF_CONCAT(bi_l, __LINE__) = (str).bytes.len - 1; ZF_CONCAT(bi_l, __LINE__) != (str).bytes.len; ZF_CONCAT(bi_l, __LINE__) = (str).bytes.len) \
-        for (zcl::t_str_walk_step step; zcl::str_walk_reverse(str, &ZF_CONCAT(bi_l, __LINE__), &step);)
+#define ZCL_STR_WALK_REVERSE(str, step)                                                                                                                            \
+    for (zcl::t_i32 ZCL_CONCAT(bi_l, __LINE__) = (str).bytes.len - 1; ZCL_CONCAT(bi_l, __LINE__) != (str).bytes.len; ZCL_CONCAT(bi_l, __LINE__) = (str).bytes.len) \
+        for (zcl::t_str_walk_step step; zcl::str_walk_reverse(str, &ZCL_CONCAT(bi_l, __LINE__), &step);)
 
     // ============================================================
 

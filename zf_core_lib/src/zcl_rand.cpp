@@ -1,6 +1,6 @@
 #include <zcl/zcl_rand.h>
 
-#ifdef ZF_PLATFORM_WINDOWS
+#ifdef ZCL_PLATFORM_WINDOWS
     #ifndef WIN32_LEAN_AND_MEAN
         #define WIN32_LEAN_AND_MEAN
     #endif
@@ -37,7 +37,7 @@ namespace zcl {
     // Generates a uniformly distributed U32 strictly less than the bound.
     // The bound must be greater than 0.
     static t_u32 pcg32_calc_next_bounded(t_pcg32 *const pcg32, const t_u32 bound) {
-        ZF_ASSERT(bound > 0);
+        ZCL_ASSERT(bound > 0);
 
         const t_u32 threshold = -bound % bound;
 
@@ -78,12 +78,12 @@ namespace zcl {
     }
 
     t_u32 rand_gen_u32_in_range(t_rng *const rng, const t_u32 min_incl, const t_u32 max_excl) {
-        ZF_ASSERT(min_incl < max_excl);
+        ZCL_ASSERT(min_incl < max_excl);
         return min_incl + pcg32_calc_next_bounded(&rng->pcg32, max_excl - min_incl);
     }
 
     t_i32 rand_gen_i32_in_range(t_rng *const rng, const t_i16 min_incl, const t_i16 max_excl) {
-        ZF_ASSERT(min_incl < max_excl);
+        ZCL_ASSERT(min_incl < max_excl);
 
         const auto diff = static_cast<t_u32>(max_excl - min_incl);
         return min_incl + static_cast<t_i32>(pcg32_calc_next_bounded(&rng->pcg32, diff));
@@ -94,11 +94,11 @@ namespace zcl {
     }
 
     static t_u64 get_os_entropy() {
-#ifdef ZF_PLATFORM_WINDOWS
+#ifdef ZCL_PLATFORM_WINDOWS
         zcl::t_u64 result = 0;
 
-        const NTSTATUS status = BCryptGenRandom(nullptr, reinterpret_cast<UCHAR *>(&result), static_cast<ULONG>(ZF_SIZE_OF(result)), BCRYPT_USE_SYSTEM_PREFERRED_RNG);
-        ZF_REQUIRE(status >= 0);
+        const NTSTATUS status = BCryptGenRandom(nullptr, reinterpret_cast<UCHAR *>(&result), static_cast<ULONG>(ZCL_SIZE_OF(result)), BCRYPT_USE_SYSTEM_PREFERRED_RNG);
+        ZCL_REQUIRE(status >= 0);
 
         return result;
 #else

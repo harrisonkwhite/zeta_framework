@@ -5,11 +5,57 @@
 #include <zcl/zcl_bits.h>
 
 namespace zcl {
-    // ============================================================
-    // @section: Types and Constants
-
     constexpr t_f32 k_pi = 3.14159265358979323846f;
     constexpr t_f32 k_tau = 6.28318530717958647692f;
+
+    constexpr t_f32 degs_to_rads(const t_f32 degs) {
+        return degs * (k_pi / 180.0f);
+    }
+
+    constexpr t_f32 rads_to_degs(const t_f32 rads) {
+        return rads * (180.0f / k_pi);
+    }
+
+    template <c_integral tp_type>
+    constexpr t_i32 calc_digit_cnt(const tp_type n) {
+        if (n < 0) {
+            return calc_digit_cnt(-n);
+        }
+
+        if (n < 10) {
+            return 1;
+        }
+
+        return 1 + calc_digit_cnt(n / 10);
+    }
+
+    template <c_integral tp_type>
+    constexpr tp_type calc_digit_at(const tp_type n, const t_i32 index) {
+        ZCL_ASSERT(index >= 0 && index < calc_digit_cnt(n));
+
+        if (n < 0) {
+            return calc_digit_at(-n, index);
+        }
+
+        if (index == 0) {
+            return n % 10;
+        }
+
+        if (n < 10) {
+            return 0;
+        }
+
+        return calc_digit_at(n / 10, index - 1);
+    }
+
+    constexpr t_b8 check_nearly_equal(const t_f32 val, const t_f32 targ, const t_f32 tol = 1e-5f) {
+        ZCL_ASSERT(tol >= 0);
+        return val >= targ - tol && val <= targ + tol;
+    }
+
+
+    // ============================================================
+    // @section: Vectors
 
     struct t_v2 {
         t_f32 x;
@@ -177,87 +223,6 @@ namespace zcl {
         }
     };
 
-    struct t_rect_f {
-        t_f32 x;
-        t_f32 y;
-        t_f32 width;
-        t_f32 height;
-    };
-
-    struct t_rect_i {
-        t_i32 x;
-        t_i32 y;
-        t_i32 width;
-        t_i32 height;
-    };
-
-    struct t_mat4x4 {
-        t_static_array<t_static_array<t_f32, 4>, 4> elems;
-    };
-
-    struct t_poly_rdonly {
-        t_array_rdonly<t_v2> pts;
-    };
-
-    struct t_poly_mut {
-        t_array_mut<t_v2> pts;
-
-        operator t_poly_rdonly() const {
-            return {.pts = pts};
-        }
-    };
-
-    // ============================================================
-
-
-    // ============================================================
-    // @section: Functions
-
-    constexpr t_f32 degs_to_rads(const t_f32 degs) {
-        return degs * (k_pi / 180.0f);
-    }
-
-    constexpr t_f32 rads_to_degs(const t_f32 rads) {
-        return rads * (180.0f / k_pi);
-    }
-
-    template <c_integral tp_type>
-    constexpr t_i32 calc_digit_cnt(const tp_type n) {
-        if (n < 0) {
-            return calc_digit_cnt(-n);
-        }
-
-        if (n < 10) {
-            return 1;
-        }
-
-        return 1 + calc_digit_cnt(n / 10);
-    }
-
-    template <c_integral tp_type>
-    constexpr tp_type calc_digit_at(const tp_type n, const t_i32 index) {
-        ZF_ASSERT(index >= 0 && index < calc_digit_cnt(n));
-
-        if (n < 0) {
-            return calc_digit_at(-n, index);
-        }
-
-        if (index == 0) {
-            return n % 10;
-        }
-
-        if (n < 10) {
-            return 0;
-        }
-
-        return calc_digit_at(n / 10, index - 1);
-    }
-
-    constexpr t_b8 check_nearly_equal(const t_f32 val, const t_f32 targ, const t_f32 tol = 1e-5f) {
-        ZF_ASSERT(tol >= 0);
-        return val >= targ - tol && val <= targ + tol;
-    }
-
     constexpr t_v2 v2_i_to_f(const t_v2_i v) {
         return {static_cast<t_f32>(v.x), static_cast<t_f32>(v.y)};
     }
@@ -290,23 +255,43 @@ namespace zcl {
         return {v.x / mag, v.y / mag};
     }
 
+    // ============================================================
+
+
+    // ============================================================
+    // @section: Rectangles
+
+    struct t_rect_f {
+        t_f32 x;
+        t_f32 y;
+        t_f32 width;
+        t_f32 height;
+    };
+
+    struct t_rect_i {
+        t_i32 x;
+        t_i32 y;
+        t_i32 width;
+        t_i32 height;
+    };
+
     constexpr t_rect_f rect_create_f32(const t_f32 x, const t_f32 y, const t_f32 width, const t_f32 height) {
-        ZF_ASSERT(width >= 0.0f && height >= 0.0f);
+        ZCL_ASSERT(width >= 0.0f && height >= 0.0f);
         return {x, y, width, height};
     }
 
     constexpr t_rect_f rect_create_f32(const t_v2 pos, const t_v2 size) {
-        ZF_ASSERT(size.x >= 0.0f && size.y >= 0.0f);
+        ZCL_ASSERT(size.x >= 0.0f && size.y >= 0.0f);
         return {pos.x, pos.y, size.x, size.y};
     }
 
     constexpr t_rect_i rect_create_i32(const t_i32 x, const t_i32 y, const t_i32 width, const t_i32 height) {
-        ZF_ASSERT(width >= 0 && height >= 0);
+        ZCL_ASSERT(width >= 0 && height >= 0);
         return {x, y, width, height};
     }
 
     constexpr t_rect_i rect_create_i32(const t_v2_i pos, const t_v2_i size) {
-        ZF_ASSERT(size.x >= 0 && size.y >= 0);
+        ZCL_ASSERT(size.x >= 0 && size.y >= 0);
         return {pos.x, pos.y, size.x, size.y};
     }
 
@@ -367,6 +352,16 @@ namespace zcl {
 
     t_rect_f rects_calc_span(const t_array_mut<t_rect_f> rects);
     t_rect_i rects_calc_span(const t_array_mut<t_rect_i> rects);
+
+    // ============================================================
+
+
+    // ============================================================
+    // @section: Matrices
+
+    struct t_mat4x4 {
+        t_static_array<t_static_array<t_f32, 4>, 4> elems;
+    };
 
     constexpr t_mat4x4 matrix_create_identity() {
         t_mat4x4 result = {};
@@ -442,6 +437,24 @@ namespace zcl {
         return result;
     }
 
+    // ============================================================
+
+
+    // ============================================================
+    // @section: Polygons
+
+    struct t_poly_rdonly {
+        t_array_rdonly<t_v2> pts;
+    };
+
+    struct t_poly_mut {
+        t_array_mut<t_v2> pts;
+
+        operator t_poly_rdonly() const {
+            return {.pts = pts};
+        }
+    };
+
     // Points are guaranteed to be in this order: top-left, top-right, bottom-right, bottom-left.
     t_poly_mut poly_create_quad(const t_v2 pos, const t_v2 size, const t_v2 origin, t_arena *const arena);
 
@@ -452,6 +465,9 @@ namespace zcl {
     t_b8 poly_check_inters_with_rect(const t_poly_rdonly poly, const t_rect_f rect);
 
     t_rect_f poly_calc_span(const t_poly_rdonly poly);
+
+    // ============================================================
+
 
     constexpr t_f32 lerp(const t_f32 a, const t_f32 b, const t_f32 t) { return a + ((b - a) * t); }
     constexpr t_v2 lerp(const t_v2 a, const t_v2 b, const t_f32 t) { return a + ((b - a) * t); }
@@ -508,7 +524,7 @@ namespace zcl {
 
     // Returns a value between 0 and 1 indicating what percentage of the rectangle is within the container.
     constexpr t_f32 calc_perc_of_occupance(const t_rect_f rect, const t_rect_f container) {
-        ZF_ASSERT(container.width > 0 && container.height > 0);
+        ZCL_ASSERT(container.width > 0 && container.height > 0);
 
         const auto subrect = clamp_within_container(rect, container);
         return clamp(rect_get_area(subrect) / rect_get_area(container), 0.0f, 1.0f);
@@ -516,11 +532,9 @@ namespace zcl {
 
     // Returns a value between 0 and 1 indicating what percentage of the rectangle is within the container.
     constexpr t_f32 calc_perc_of_occupance(const t_rect_i rect, const t_rect_i container) {
-        ZF_ASSERT(container.width > 0 && container.height > 0);
+        ZCL_ASSERT(container.width > 0 && container.height > 0);
 
         const auto subrect = clamp_within_container(rect, container);
         return clamp(static_cast<t_f32>(rect_get_area(subrect)) / static_cast<t_f32>(rect_get_area(container)), 0.0f, 1.0f);
     }
-
-    // ============================================================
 }

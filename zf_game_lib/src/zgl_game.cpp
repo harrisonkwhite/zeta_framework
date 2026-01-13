@@ -15,7 +15,7 @@ namespace zgl::game {
     } g_module_state;
 
     void run(const t_config &config) {
-        ZF_REQUIRE(!g_module_state.running);
+        ZCL_REQUIRE(!g_module_state.running);
         config_assert_valid(config);
 
         g_module_state = {
@@ -23,28 +23,28 @@ namespace zgl::game {
             .tps_targ = k_init_tps_target,
         };
 
-        ZF_DEFER({ g_module_state = {}; });
+        ZCL_DEFER({ g_module_state = {}; });
 
         //
         // Initialisation
         //
         zcl::t_arena perm_arena = zcl::arena_create_blockbased();
-        ZF_DEFER({ zcl::arena_destroy(&perm_arena); });
+        ZCL_DEFER({ zcl::arena_destroy(&perm_arena); });
 
         zcl::t_arena temp_arena = zcl::arena_create_blockbased();
-        ZF_DEFER({ zcl::arena_destroy(&temp_arena); });
+        ZCL_DEFER({ zcl::arena_destroy(&temp_arena); });
 
         platform::module_startup(k_init_window_size);
-        ZF_DEFER({ platform::module_shutdown(); });
+        ZCL_DEFER({ platform::module_shutdown(); });
 
         input::t_state *const input_state = input::create_state(&perm_arena);
 
         gfx::t_resource_group *perm_gfx_resource_group;
         gfx::t_frame_basis *const frame_basis = gfx::module_startup(&perm_arena, &temp_arena, &perm_gfx_resource_group);
-        ZF_DEFER({ gfx::module_shutdown(frame_basis); });
+        ZCL_DEFER({ gfx::module_shutdown(frame_basis); });
 
         audio::module_startup();
-        ZF_DEFER({ audio::module_shutdown(); });
+        ZCL_DEFER({ audio::module_shutdown(); });
 
         zcl::t_rng *const rng = zcl::rng_create(zcl::rand_gen_seed(), &perm_arena);
 
@@ -60,7 +60,7 @@ namespace zgl::game {
             .user_mem = user_mem,
         });
 
-        ZF_DEFER({
+        ZCL_DEFER({
             config.deinit_func(user_mem);
         });
 
@@ -151,8 +151,8 @@ namespace zgl::game {
     }
 
     void tps_set_target(const zcl::t_f64 tps) {
-        ZF_ASSERT(g_module_state.running);
-        ZF_ASSERT(tps > 0.0);
+        ZCL_ASSERT(g_module_state.running);
+        ZCL_ASSERT(tps > 0.0);
 
         g_module_state.tps_targ = tps;
     }

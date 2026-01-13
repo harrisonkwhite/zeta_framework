@@ -33,7 +33,7 @@ namespace zcl {
             return false;
         }
 
-        ZF_DEFER({ stbi_image_free(stb_px_data); });
+        ZCL_DEFER({ stbi_image_free(stb_px_data); });
 
         const t_array_rdonly<t_u8> stb_px_data_arr = {stb_px_data, 4 * size_in_pxs.x * size_in_pxs.y};
         const auto px_data = arena_push_array<t_u8>(texture_data_arena, 4 * size_in_pxs.x * size_in_pxs.y);
@@ -55,7 +55,7 @@ namespace zcl {
             return false;
         }
 
-        ZF_DEFER({ file_close(&fs); });
+        ZCL_DEFER({ file_close(&fs); });
 
         if (!stream_write_item(fs, texture_data.size_in_pxs)) {
             return false;
@@ -75,7 +75,7 @@ namespace zcl {
             return false;
         }
 
-        ZF_DEFER({ file_close(&fs); });
+        ZCL_DEFER({ file_close(&fs); });
 
         t_v2_i size_in_pxs;
 
@@ -95,7 +95,7 @@ namespace zcl {
     }
 
     t_b8 font_load_from_raw(const t_str_rdonly file_path, const t_i32 height, t_code_pt_bitset *const code_pts, t_arena *const arrangement_arena, t_arena *const atlas_rgbas_arena, t_arena *const temp_arena, t_font_arrangement *const o_arrangement, t_array_mut<t_font_atlas_rgba> *const o_atlas_rgbas) {
-        ZF_ASSERT(height > 0);
+        ZCL_ASSERT(height > 0);
 
         // Get the plain font file data.
         t_array_mut<t_u8> font_file_data;
@@ -166,7 +166,7 @@ namespace zcl {
             glyph_info.offs = {bm_box_left, bm_box_top + static_cast<t_i32>(static_cast<t_f32>(vm_ascent) * scale)};
             glyph_info.size = {bm_box_right - bm_box_left, bm_box_bottom - bm_box_top};
 
-            ZF_ASSERT(glyph_info.size.x <= k_font_atlas_size.x && glyph_info.size.y <= k_font_atlas_size.y);
+            ZCL_ASSERT(glyph_info.size.x <= k_font_atlas_size.x && glyph_info.size.y <= k_font_atlas_size.y);
 
             t_i32 hm_advance;
             stbtt_GetGlyphHMetrics(&stb_font_info, glyph_index, &hm_advance, nullptr);
@@ -241,7 +241,7 @@ namespace zcl {
             t_font_glyph_info *glyph_info;
 
             if (!hash_map_find(&o_arrangement->code_pts_to_glyph_infos, code_pt, &glyph_info)) {
-                ZF_ASSERT(false);
+                ZCL_ASSERT(false);
             }
 
             const auto atlas_rgba = &(*o_atlas_rgbas)[glyph_info->atlas_index];
@@ -258,7 +258,7 @@ namespace zcl {
                 return false;
             }
 
-            ZF_DEFER({ stbtt_FreeBitmap(stb_bitmap, nullptr); });
+            ZCL_DEFER({ stbtt_FreeBitmap(stb_bitmap, nullptr); });
 
             for (t_i32 y = rect_get_top(atlas_rect); y < rect_get_bottom(atlas_rect); y++) {
                 for (t_i32 x = rect_get_left(atlas_rect); x < rect_get_right(atlas_rect); x++) {
@@ -283,7 +283,7 @@ namespace zcl {
             return false;
         }
 
-        ZF_DEFER({ file_close(&fs); });
+        ZCL_DEFER({ file_close(&fs); });
 
         if (!stream_write_item(fs, arrangement.line_height)) {
             return false;
@@ -311,7 +311,7 @@ namespace zcl {
             return false;
         }
 
-        ZF_DEFER({ file_close(&fs); });
+        ZCL_DEFER({ file_close(&fs); });
 
         if (!stream_read_item(fs, &o_arrangement->line_height)) {
             return false;
@@ -343,7 +343,7 @@ namespace zcl {
             return false;
         }
 
-        ZF_DEFER({ file_close(&fs); });
+        ZCL_DEFER({ file_close(&fs); });
 
         if (!stream_serialize_array(fs, compiled_shader_bin)) {
             return false;
@@ -359,7 +359,7 @@ namespace zcl {
             return false;
         }
 
-        ZF_DEFER({ file_close(&fs); });
+        ZCL_DEFER({ file_close(&fs); });
 
         if (!stream_deserialize_array(fs, shader_bin_arena, o_shader_bin)) {
             return false;

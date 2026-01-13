@@ -276,71 +276,8 @@ namespace zcl {
         ek_utf8_byte_type_invalid,
     }};
 
-    t_b8 str_check_valid_utf8(const t_str_rdonly str) {
-        t_i32 cost = 0;
-
-        for (t_i32 i = 0; i < str.bytes.len; i++) {
-            const auto byte_type = k_utf8_byte_type_table[str.bytes[i]];
-
-            switch (byte_type) {
-            case ek_utf8_byte_type_ascii:
-            case ek_utf8_byte_type_2byte_start:
-            case ek_utf8_byte_type_3byte_start:
-            case ek_utf8_byte_type_4byte_start:
-                if (cost > 0) {
-                    return false;
-                }
-
-                cost = byte_type - ek_utf8_byte_type_ascii + 1;
-
-                break;
-
-            case ek_utf8_byte_type_continuation:
-                if (cost == 0) {
-                    return false;
-                }
-
-                break;
-
-            case ek_utf8_byte_type_invalid:
-                return false;
-            }
-
-            cost--;
-        }
-
-        return true;
-    }
-
-    t_i32 str_calc_len(const t_str_rdonly str) {
-        ZF_ASSERT(str_check_valid_utf8(str));
-
-        t_i32 i = 0;
-        t_i32 len = 0;
-
-        while (i < str.bytes.len) {
-            const auto byte_type = k_utf8_byte_type_table[str.bytes[i]];
-
-            switch (byte_type) {
-            case ek_utf8_byte_type_ascii:
-            case ek_utf8_byte_type_2byte_start:
-            case ek_utf8_byte_type_3byte_start:
-            case ek_utf8_byte_type_4byte_start:
-                i += byte_type - ek_utf8_byte_type_ascii + 1;
-                break;
-
-            default:
-                ZF_UNREACHABLE();
-            }
-
-            len++;
-        }
-
-        return len;
-    }
-
     t_code_pt utf8_bytes_to_code_pt(const t_array_rdonly<t_u8> bytes) {
-        ZF_ASSERT(bytes.len >= 1 && bytes.len <= 4);
+        ZCL_ASSERT(bytes.len >= 1 && bytes.len <= 4);
 
         t_code_pt result = 0;
 
@@ -372,7 +309,7 @@ namespace zcl {
             break;
 
         default:
-            ZF_UNREACHABLE();
+            ZCL_UNREACHABLE();
         }
 
         return result;
@@ -433,13 +370,76 @@ namespace zcl {
             break;
 
         default:
-            ZF_UNREACHABLE();
+            ZCL_UNREACHABLE();
         }
     }
 
+    t_b8 str_check_valid_utf8(const t_str_rdonly str) {
+        t_i32 cost = 0;
+
+        for (t_i32 i = 0; i < str.bytes.len; i++) {
+            const auto byte_type = k_utf8_byte_type_table[str.bytes[i]];
+
+            switch (byte_type) {
+            case ek_utf8_byte_type_ascii:
+            case ek_utf8_byte_type_2byte_start:
+            case ek_utf8_byte_type_3byte_start:
+            case ek_utf8_byte_type_4byte_start:
+                if (cost > 0) {
+                    return false;
+                }
+
+                cost = byte_type - ek_utf8_byte_type_ascii + 1;
+
+                break;
+
+            case ek_utf8_byte_type_continuation:
+                if (cost == 0) {
+                    return false;
+                }
+
+                break;
+
+            case ek_utf8_byte_type_invalid:
+                return false;
+            }
+
+            cost--;
+        }
+
+        return true;
+    }
+
+    t_i32 str_calc_len(const t_str_rdonly str) {
+        ZCL_ASSERT(str_check_valid_utf8(str));
+
+        t_i32 i = 0;
+        t_i32 len = 0;
+
+        while (i < str.bytes.len) {
+            const auto byte_type = k_utf8_byte_type_table[str.bytes[i]];
+
+            switch (byte_type) {
+            case ek_utf8_byte_type_ascii:
+            case ek_utf8_byte_type_2byte_start:
+            case ek_utf8_byte_type_3byte_start:
+            case ek_utf8_byte_type_4byte_start:
+                i += byte_type - ek_utf8_byte_type_ascii + 1;
+                break;
+
+            default:
+                ZCL_UNREACHABLE();
+            }
+
+            len++;
+        }
+
+        return len;
+    }
+
     t_code_pt str_find_code_pt_at_byte(const t_str_rdonly str, const t_i32 byte_index) {
-        ZF_ASSERT(str_check_valid_utf8(str));
-        ZF_ASSERT(byte_index >= 0 && byte_index < str.bytes.len);
+        ZCL_ASSERT(str_check_valid_utf8(str));
+        ZCL_ASSERT(byte_index >= 0 && byte_index < str.bytes.len);
 
         t_i32 cp_first_byte_index = byte_index;
 
@@ -458,7 +458,7 @@ namespace zcl {
     }
 
     void str_mark_code_pts(const t_str_rdonly str, t_code_pt_bitset *const code_pts) {
-        ZF_ASSERT(str_check_valid_utf8(str));
+        ZCL_ASSERT(str_check_valid_utf8(str));
 
         ZCL_STR_WALK (str, step) {
             bitset_set(*code_pts, static_cast<t_i32>(step.code_pt));
@@ -466,8 +466,8 @@ namespace zcl {
     }
 
     t_b8 str_walk(const t_str_rdonly str, t_i32 *const byte_index, t_str_walk_step *const o_step) {
-        ZF_ASSERT(str_check_valid_utf8(str));
-        ZF_ASSERT(*byte_index >= 0 && *byte_index <= str.bytes.len);
+        ZCL_ASSERT(str_check_valid_utf8(str));
+        ZCL_ASSERT(*byte_index >= 0 && *byte_index <= str.bytes.len);
 
         if (*byte_index == str.bytes.len) {
             return false;
@@ -494,14 +494,14 @@ namespace zcl {
                 break;
 
             default:
-                ZF_UNREACHABLE();
+                ZCL_UNREACHABLE();
             }
         }
     }
 
     t_b8 str_walk_reverse(const t_str_rdonly str, t_i32 *const byte_index, t_str_walk_step *const o_step) {
-        ZF_ASSERT(str_check_valid_utf8(str));
-        ZF_ASSERT(*byte_index >= -1 && *byte_index < str.bytes.len);
+        ZCL_ASSERT(str_check_valid_utf8(str));
+        ZCL_ASSERT(*byte_index >= -1 && *byte_index < str.bytes.len);
 
         if (*byte_index == -1) {
             return false;
@@ -528,7 +528,7 @@ namespace zcl {
                 break;
 
             default:
-                ZF_UNREACHABLE();
+                ZCL_UNREACHABLE();
             }
         }
     }

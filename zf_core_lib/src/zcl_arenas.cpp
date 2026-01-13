@@ -2,7 +2,7 @@
 
 namespace zcl {
     void arena_destroy(t_arena *const arena) {
-        ZF_REQUIRE(arena->type == ek_arena_type_blockbased);
+        ZCL_REQUIRE(arena->type == ek_arena_type_blockbased);
 
         const auto f = [](const auto self, t_arena_block *const block) {
             if (!block) {
@@ -21,12 +21,12 @@ namespace zcl {
     }
 
     static t_arena_block *arena_create_block(const t_i32 buf_size) {
-        ZF_REQUIRE(buf_size > 0);
+        ZCL_REQUIRE(buf_size > 0);
 
         const auto block = static_cast<t_arena_block *>(malloc(sizeof(t_arena_block)));
 
         if (!block) {
-            ZF_FATAL();
+            ZCL_FATAL();
         }
 
         zero_clear_item(block);
@@ -34,10 +34,10 @@ namespace zcl {
         block->buf = malloc(static_cast<size_t>(buf_size));
 
         if (!block->buf) {
-            ZF_FATAL();
+            ZCL_FATAL();
         }
 
-#ifdef ZF_DEBUG
+#ifdef ZCL_DEBUG
         memset(block->buf, k_arena_poison, static_cast<size_t>(block->buf_size));
 #elif
         // Explicitly touch the memory to trigger page faults NOW.
@@ -50,7 +50,7 @@ namespace zcl {
     }
 
     void *arena_push(t_arena *const arena, const t_i32 size, const t_i32 alignment) {
-        ZF_ASSERT(size > 0 && alignment_check_valid(alignment));
+        ZCL_ASSERT(size > 0 && alignment_check_valid(alignment));
 
         switch (arena->type) {
         case ek_arena_type_blockbased: {
@@ -91,7 +91,7 @@ namespace zcl {
             const t_i32 offs_next = offs_aligned + size;
 
             if (offs_next > wrapping->buf_size) {
-                ZF_FATAL();
+                ZCL_FATAL();
             }
 
             wrapping->buf_offs = offs_next;
@@ -103,7 +103,7 @@ namespace zcl {
         }
 
         default:
-            ZF_UNREACHABLE();
+            ZCL_UNREACHABLE();
         }
     }
 
@@ -112,7 +112,7 @@ namespace zcl {
         case ek_arena_type_blockbased: {
             const auto blockbased = &arena->type_data.blockbased;
 
-#ifdef ZF_DEBUG
+#ifdef ZCL_DEBUG
             // Poison all memory to be rewinded.
             if (blockbased->block_cur) {
                 const t_arena_block *block = blockbased->blocks_head;
@@ -140,7 +140,7 @@ namespace zcl {
         }
 
         default:
-            ZF_UNREACHABLE();
+            ZCL_UNREACHABLE();
         }
     }
 }

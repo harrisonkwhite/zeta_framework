@@ -13,14 +13,14 @@ namespace zcl {
 
         operator t_stream() {
             const auto read_func = [](const t_stream stream, const t_array_mut<t_u8> dest_bytes) {
-                ZF_ASSERT(stream.mode == ek_stream_mode_read);
+                ZCL_ASSERT(stream.mode == ek_stream_mode_read);
 
                 const auto state = static_cast<t_file_stream *>(stream.data);
                 return static_cast<t_i32>(fread(dest_bytes.raw, 1, static_cast<size_t>(dest_bytes.len), state->file)) == dest_bytes.len;
             };
 
             const auto write_func = [](const t_stream stream, const t_array_rdonly<t_u8> src_bytes) {
-                ZF_ASSERT(stream.mode == ek_stream_mode_write);
+                ZCL_ASSERT(stream.mode == ek_stream_mode_write);
 
                 const auto state = static_cast<t_file_stream *>(stream.data);
                 return static_cast<t_i32>(fwrite(src_bytes.raw, 1, static_cast<size_t>(src_bytes.len), state->file)) == src_bytes.len;

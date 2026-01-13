@@ -94,7 +94,7 @@ constexpr zcl::t_static_array<t_asset_field, ekm_sound_field_cnt> k_sound_fields
 
 zcl::t_b8 pack_assets(const zcl::t_str_rdonly instrs_json_file_path) {
     zcl::t_arena arena = zcl::arena_create_blockbased();
-    ZF_DEFER({ zcl::arena_destroy(&arena); });
+    ZCL_DEFER({ zcl::arena_destroy(&arena); });
 
     cJSON *cj;
 
@@ -114,7 +114,7 @@ zcl::t_b8 pack_assets(const zcl::t_str_rdonly instrs_json_file_path) {
         }
     }
 
-    ZF_DEFER({ cJSON_Delete(cj); });
+    ZCL_DEFER({ cJSON_Delete(cj); });
 
     if (!cJSON_IsObject(cj)) {
         zcl::log_error(ZCL_STR_LITERAL("Packing instructions JSON root is not an object!"));
@@ -191,10 +191,10 @@ zcl::t_b8 pack_assets(const zcl::t_str_rdonly instrs_json_file_path) {
                         return cJSON_IsNumber(field_vals[fi]);
 
                     case ekm_asset_field_type_cnt:
-                        ZF_UNREACHABLE();
+                        ZCL_UNREACHABLE();
                     }
 
-                    ZF_UNREACHABLE();
+                    ZCL_UNREACHABLE();
                 }();
 
                 if (!is_valid) {

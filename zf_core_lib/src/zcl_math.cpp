@@ -2,7 +2,7 @@
 
 namespace zcl {
     t_rect_f rects_calc_span(const t_array_mut<t_rect_f> rects) {
-        ZF_ASSERT(rects.len > 0);
+        ZCL_ASSERT(rects.len > 0);
 
         t_f32 min_left = rect_get_left(rects[0]);
         t_f32 min_top = rect_get_top(rects[0]);
@@ -20,7 +20,7 @@ namespace zcl {
     }
 
     t_rect_i rects_calc_span(const t_array_mut<t_rect_i> rects) {
-        ZF_ASSERT(rects.len > 0);
+        ZCL_ASSERT(rects.len > 0);
 
         t_i32 min_left = rect_get_left(rects[0]);
         t_i32 min_top = rect_get_top(rects[0]);

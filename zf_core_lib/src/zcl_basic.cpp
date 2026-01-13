@@ -2,7 +2,7 @@
 
 #include <cstdio>
 
-#ifdef ZF_PLATFORM_WINDOWS
+#ifdef ZCL_PLATFORM_WINDOWS
     #ifndef WIN32_LEAN_AND_MEAN
         #define WIN32_LEAN_AND_MEAN
     #endif
@@ -23,8 +23,8 @@ namespace zcl {
             return;
         }
 
-#ifdef ZF_DEBUG
-    #ifdef ZF_PLATFORM_WINDOWS
+#ifdef ZCL_DEBUG
+    #ifdef ZCL_PLATFORM_WINDOWS
         if (IsDebuggerPresent()) {
             __debugbreak();
             return;
@@ -34,25 +34,25 @@ namespace zcl {
     }
 
     static void print_stack_trace() {
-#ifdef ZF_PLATFORM_WINDOWS
+#ifdef ZCL_PLATFORM_WINDOWS
         constexpr int k_stack_len = 32;
         void *stack[k_stack_len];
         const int frame_cnt = CaptureStackBackTrace(0, k_stack_len, stack, nullptr);
 
         fprintf(stderr, "Stack Trace:\n");
 
-    #ifdef ZF_DEBUG
+    #ifdef ZCL_DEBUG
         const HANDLE proc = GetCurrentProcess();
         SymInitialize(proc, nullptr, TRUE);
 
         const int func_name_buf_size = 256;
-        char symbol_buf[ZF_SIZE_OF(SYMBOL_INFO) + func_name_buf_size];
+        char symbol_buf[ZCL_SIZE_OF(SYMBOL_INFO) + func_name_buf_size];
         const auto symbol = reinterpret_cast<SYMBOL_INFO *>(symbol_buf);
         symbol->MaxNameLen = func_name_buf_size - 1;
-        symbol->SizeOfStruct = ZF_SIZE_OF(SYMBOL_INFO);
+        symbol->SizeOfStruct = ZCL_SIZE_OF(SYMBOL_INFO);
 
         IMAGEHLP_LINE64 line;
-        line.SizeOfStruct = ZF_SIZE_OF(IMAGEHLP_LINE64);
+        line.SizeOfStruct = ZCL_SIZE_OF(IMAGEHLP_LINE64);
 
         for (int i = 0; i < frame_cnt; i++) {
             const auto addr = static_cast<DWORD64>(reinterpret_cast<uintptr_t>(stack[i]));
@@ -103,7 +103,7 @@ namespace zcl {
     void detail::handle_fatal_error(const char *const func_name_cstr, const char *const file_name_cstr, const int line, const char *const cond_cstr) {
         fprintf(stderr, "==================== FATAL ERROR ====================\n");
 
-#ifdef ZF_DEBUG
+#ifdef ZCL_DEBUG
         if (cond_cstr) {
             fprintf(stderr, "Function:  %s\n", func_name_cstr);
             fprintf(stderr, "File:      %s\n", file_name_cstr);
