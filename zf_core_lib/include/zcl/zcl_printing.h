@@ -4,7 +4,7 @@
 #include <zcl/zcl_file_sys.h>
 #include <zcl/zcl_math.h>
 
-namespace zcl::io {
+namespace zcl {
     // ============================================================
     // @section: Types and Constants
 
@@ -503,82 +503,74 @@ namespace zcl::io {
 
     template <typename... tp_arg_types>
     t_b8 log(const t_str_rdonly format, const tp_arg_types &...args) {
-#if 0
-        t_file_stream std_err = get_std_out();
+        t_file_stream std_err = file_stream_create_std_out();
 
-        if (!print_format(&std_err, format, args...)) {
+        if (!print_format(std_err, format, args...)) {
             return false;
         }
 
-        if (!print(&std_err, ZCL_STR_LITERAL("\n"))) {
+        if (!print(std_err, ZCL_STR_LITERAL("\n"))) {
             return false;
         }
-#endif
 
         return true;
     }
 
     template <typename... tp_arg_types>
     t_b8 log_error(const t_str_rdonly format, const tp_arg_types &...args) {
-#if 0
-        t_stream std_err = get_std_error();
+        t_file_stream std_err = file_stream_create_std_error();
 
-        if (!print(&std_err, ZCL_STR_LITERAL("Error: "))) {
+        if (!print(std_err, ZCL_STR_LITERAL("Error: "))) {
             return false;
         }
 
-        if (!print_format(&std_err, format, args...)) {
+        if (!print_format(std_err, format, args...)) {
             return false;
         }
 
-        if (!print(&std_err, ZCL_STR_LITERAL("\n"))) {
+        if (!print(std_err, ZCL_STR_LITERAL("\n"))) {
             return false;
         }
-#endif
 
         return true;
     }
 
     template <typename... tp_arg_types>
     t_b8 log_error_type(const t_str_rdonly type_name, const t_str_rdonly format, const tp_arg_types &...args) {
-#if 0
-        ZF_ASSERT(!check_empty(type_name));
+        ZF_ASSERT(!str_check_empty(type_name));
 
-        t_stream std_err = get_std_error();
+        t_file_stream std_err = file_stream_create_std_error();
 
-        if (!print_format(&std_err, ZCL_STR_LITERAL("% Error: "), type_name)) {
+        if (!print_format(std_err, ZCL_STR_LITERAL("% Error: "), type_name)) {
             return false;
         }
 
-        if (!print_format(&std_err, format, args...)) {
+        if (!print_format(std_err, format, args...)) {
             return false;
         }
 
-        if (!print(&std_err, ZCL_STR_LITERAL("\n"))) {
+        if (!print(std_err, ZCL_STR_LITERAL("\n"))) {
             return false;
         }
-#endif
 
         return true;
     }
 
     template <typename... tp_arg_types>
     t_b8 log_warning(const t_str_rdonly format, const tp_arg_types &...args) {
-#if 0
-        t_stream std_err = get_std_error();
+        t_file_stream std_err = file_stream_create_std_error();
 
-        if (!print(&std_err, ZCL_STR_LITERAL("Warning: "))) {
+        if (!print(std_err, ZCL_STR_LITERAL("Warning: "))) {
             return false;
         }
 
-        if (!print_format(&std_err, format, args...)) {
+        if (!print_format(std_err, format, args...)) {
             return false;
         }
 
-        if (!print(&std_err, ZCL_STR_LITERAL("\n"))) {
+        if (!print(std_err, ZCL_STR_LITERAL("\n"))) {
             return false;
         }
-#endif
 
         return true;
     }

@@ -37,7 +37,7 @@ static void run_tests() {
     ZF_DEFER({ zcl::arena_destroy(&arena); });
 
     for (zcl::t_i32 i = 0; i < k_tests.k_len; i++) {
-        zcl::io::log(ZCL_STR_LITERAL("Running test \"%\"..."), zcl::cstr_to_str(k_tests[i].title_cstr));
+        zcl::log(ZCL_STR_LITERAL("Running test \"%\"..."), zcl::cstr_to_str(k_tests[i].title_cstr));
         k_tests[i].func(&arena);
     }
 }
