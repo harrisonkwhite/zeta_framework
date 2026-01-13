@@ -11,7 +11,10 @@
 #include <zcl/zcl_strs.h>
 #include <zcl/zcl_file_sys.h>
 #include <zcl/zcl_printing.h>
-#include <zcl/zcl_gfx.h>
+#include <zcl/gfx/zcl_colors.h>
+#include <zcl/gfx/zcl_textures.h>
+#include <zcl/gfx/zcl_fonts.h>
+#include <zcl/gfx/zcl_shaders.h>
 #include <zcl/zcl_audio.h>
 #include <zcl/zcl_algos.h>
 #include <zcl/zcl_rand.h>

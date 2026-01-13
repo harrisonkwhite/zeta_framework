@@ -5,9 +5,6 @@
 #include <zcl/zcl_strs.h>
 
 namespace zcl::gfx {
-    // ============================================================
-    // @section: Colours
-
     struct t_color_rgba32f {
         t_f32 r;
         t_f32 g;
@@ -107,90 +104,4 @@ namespace zcl::gfx {
 
         return {r, g, b, a};
     }
-
-    // ============================================================
-
-
-    // ============================================================
-    // @section: Textures
-
-    struct t_texture_data_rdonly {
-        math::t_v2_i size_in_pxs;
-        t_array_rdonly<t_u8> rgba_px_data;
-    };
-
-    struct t_texture_data_mut {
-        math::t_v2_i size_in_pxs;
-        t_array_mut<t_u8> rgba_px_data;
-
-        operator t_texture_data_rdonly() const {
-            return {.size_in_pxs = size_in_pxs, .rgba_px_data = rgba_px_data};
-        }
-    };
-
-    constexpr math::t_rect_f texture_calc_uv_rect(const math::t_rect_i src_rect, const math::t_v2_i tex_size) {
-        ZF_ASSERT(tex_size.x > 0 && tex_size.y > 0);
-        ZF_ASSERT(src_rect.x >= 0 && src_rect.y >= 0 && src_rect.width > 0 && src_rect.height > 0 && math::rect_get_right(src_rect) <= tex_size.x && math::rect_get_bottom(src_rect) <= tex_size.y);
-
-        return {
-            static_cast<t_f32>(src_rect.x) / static_cast<t_f32>(tex_size.x),
-            static_cast<t_f32>(src_rect.y) / static_cast<t_f32>(tex_size.y),
-            static_cast<t_f32>(src_rect.width) / static_cast<t_f32>(tex_size.x),
-            static_cast<t_f32>(src_rect.height) / static_cast<t_f32>(tex_size.y),
-        };
-    }
-
-    [[nodiscard]] t_b8 texture_load_from_raw(const strs::t_str_rdonly file_path, mem::t_arena *const texture_data_arena, mem::t_arena *const temp_arena, t_texture_data_mut *const o_texture_data);
-
-    [[nodiscard]] t_b8 texture_pack(const strs::t_str_rdonly file_path, const t_texture_data_mut texture_data, mem::t_arena *const temp_arena);
-    [[nodiscard]] t_b8 texture_unpack(const strs::t_str_rdonly file_path, mem::t_arena *const texture_data_arena, mem::t_arena *const temp_arena, t_texture_data_mut *const o_texture_data);
-
-    // ============================================================
-
-
-    // ============================================================
-    // @section: Fonts
-
-    constexpr math::t_v2_i k_font_atlas_size = {1024, 1024};
-
-    using t_font_atlas_rgba = t_static_array<t_u8, 4 * k_font_atlas_size.x * k_font_atlas_size.y>;
-
-    struct t_font_glyph_info {
-        math::t_v2_i offs;
-        math::t_v2_i size;
-        t_i32 adv;
-
-        t_i32 atlas_index;
-        math::t_rect_i atlas_rect;
-    };
-
-    struct t_font_code_pt_pair {
-        strs::t_code_pt a;
-        strs::t_code_pt b;
-    };
-
-    struct t_font_arrangement {
-        t_i32 line_height;
-
-        ds::t_hash_map<strs::t_code_pt, t_font_glyph_info> code_pts_to_glyph_infos;
-
-        t_b8 has_kernings;
-        ds::t_hash_map<t_font_code_pt_pair, t_i32> code_pt_pairs_to_kernings;
-    };
-
-    [[nodiscard]] t_b8 font_load_from_raw(const strs::t_str_rdonly file_path, const t_i32 height, strs::t_code_pt_bitset *const code_pts, mem::t_arena *const arrangement_arena, mem::t_arena *const atlas_rgbas_arena, mem::t_arena *const temp_arena, t_font_arrangement *const o_arrangement, t_array_mut<t_font_atlas_rgba> *const o_atlas_rgbas);
-
-    [[nodiscard]] t_b8 font_pack(const strs::t_str_rdonly file_path, const t_font_arrangement &arrangement, const t_array_rdonly<t_font_atlas_rgba> atlas_rgbas, mem::t_arena *const temp_arena);
-    [[nodiscard]] t_b8 font_unpack(const strs::t_str_rdonly file_path, mem::t_arena *const arrangement_arena, mem::t_arena *const atlas_rgbas_arena, mem::t_arena *const temp_arena, t_font_arrangement *const o_arrangement, t_array_mut<t_font_atlas_rgba> *const o_atlas_rgbas);
-
-    // ============================================================
-
-
-    // ============================================================
-    // @section: Shaders
-
-    [[nodiscard]] t_b8 shader_pack(const strs::t_str_rdonly file_path, const t_array_rdonly<t_u8> compiled_shader_bin, mem::t_arena *const temp_arena);
-    [[nodiscard]] t_b8 shader_unpack(const strs::t_str_rdonly file_path, mem::t_arena *const shader_bin_arena, mem::t_arena *const temp_arena, t_array_mut<t_u8> *const o_shader_bin);
-
-    // ============================================================
 }

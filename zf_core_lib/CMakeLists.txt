@@ -15,7 +15,10 @@ add_library(zf_core_lib STATIC
     include/zcl/zcl_arrays.h
     include/zcl/zcl_streams.h
     include/zcl/zcl_mem.h
-    include/zcl/zcl_gfx.h
+    include/zcl/gfx/zcl_colors.h
+    include/zcl/gfx/zcl_textures.h
+    include/zcl/gfx/zcl_fonts.h
+    include/zcl/gfx/zcl_shaders.h
     include/zcl/zcl_audio.h
     include/zcl/zcl_strs.h
     include/zcl/ds/zcl_lists.h

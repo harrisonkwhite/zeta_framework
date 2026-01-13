@@ -1,4 +1,7 @@
-#include <zcl/zcl_gfx.h>
+#include <zcl/gfx/zcl_colors.h>
+#include <zcl/gfx/zcl_textures.h>
+#include <zcl/gfx/zcl_fonts.h>
+#include <zcl/gfx/zcl_shaders.h>
 
 #include <stb_image.h>
 #include <stb_truetype.h>
