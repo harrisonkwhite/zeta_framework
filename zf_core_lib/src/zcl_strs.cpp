@@ -457,11 +457,11 @@ namespace zcl::strs {
         } while (true);
     }
 
-    void mark_code_points(const t_str_rdonly str, t_code_pt_bitset *const code_pts) {
+    void mark_code_pts(const t_str_rdonly str, t_code_pt_bitset *const code_pts) {
         ZF_ASSERT(check_valid_utf8(str));
 
         ZF_WALK_STR (str, step) {
-            mem::bitset_set(*code_pts, static_cast<t_i32>(step.code_pt));
+            mem::set(*code_pts, static_cast<t_i32>(step.code_pt));
         }
     }
 

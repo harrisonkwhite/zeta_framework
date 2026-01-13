@@ -19,10 +19,10 @@ namespace zcl::gfx {
         }
     };
 
-    [[nodiscard]] t_b8 texture_load_from_raw(const strs::t_str_rdonly file_path, mem::t_arena *const texture_data_arena, mem::t_arena *const temp_arena, t_texture_data_mut *const o_texture_data);
+    [[nodiscard]] t_b8 texture_load_from_raw(const strs::t_str_rdonly file_path, t_arena *const texture_data_arena, t_arena *const temp_arena, t_texture_data_mut *const o_texture_data);
 
-    [[nodiscard]] t_b8 texture_pack(const strs::t_str_rdonly file_path, const t_texture_data_mut texture_data, mem::t_arena *const temp_arena);
-    [[nodiscard]] t_b8 texture_unpack(const strs::t_str_rdonly file_path, mem::t_arena *const texture_data_arena, mem::t_arena *const temp_arena, t_texture_data_mut *const o_texture_data);
+    [[nodiscard]] t_b8 texture_pack(const strs::t_str_rdonly file_path, const t_texture_data_mut texture_data, t_arena *const temp_arena);
+    [[nodiscard]] t_b8 texture_unpack(const strs::t_str_rdonly file_path, t_arena *const texture_data_arena, t_arena *const temp_arena, t_texture_data_mut *const o_texture_data);
 
     constexpr math::t_rect_f texture_calc_uv_rect(const math::t_rect_i src_rect, const math::t_v2_i tex_size) {
         ZF_ASSERT(tex_size.x > 0 && tex_size.y > 0);

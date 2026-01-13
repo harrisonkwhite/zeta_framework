@@ -29,7 +29,7 @@ namespace zgl::gfx {
     struct t_resource;
 
     struct t_resource_group {
-        zcl::mem::t_arena *arena;
+        zcl::t_arena *arena;
         t_resource *head;
         t_resource *tail;
     };
@@ -62,7 +62,7 @@ namespace zgl::gfx {
     // @section: Functions
 
     // This depends on the platform module being initialised beforehand.
-    t_frame_basis *module_startup(zcl::mem::t_arena *const arena, zcl::mem::t_arena *const temp_arena, t_resource_group **const o_perm_resource_group);
+    t_frame_basis *module_startup(zcl::t_arena *const arena, zcl::t_arena *const temp_arena, t_resource_group **const o_perm_resource_group);
 
     void module_shutdown(const t_frame_basis *const frame_basis);
 
@@ -78,7 +78,7 @@ namespace zgl::gfx {
     // ========================================
     // @subsection: Resources
 
-    inline t_resource_group resource_group_create(zcl::mem::t_arena *const arena) {
+    inline t_resource_group resource_group_create(zcl::t_arena *const arena) {
         return {.arena = arena};
     }
 
@@ -86,7 +86,7 @@ namespace zgl::gfx {
 
     t_resource *texture_create(const zcl::gfx::t_texture_data_rdonly texture_data, t_resource_group *const group);
 
-    inline t_resource *texture_create_from_raw(const zcl::strs::t_str_rdonly file_path, zcl::mem::t_arena *const temp_arena, t_resource_group *const group) {
+    inline t_resource *texture_create_from_raw(const zcl::strs::t_str_rdonly file_path, zcl::t_arena *const temp_arena, t_resource_group *const group) {
         zcl::gfx::t_texture_data_mut texture_data;
 
         if (!zcl::gfx::texture_load_from_raw(file_path, temp_arena, temp_arena, &texture_data)) {
@@ -96,7 +96,7 @@ namespace zgl::gfx {
         return texture_create(texture_data, group);
     }
 
-    inline t_resource *texture_create_from_packed(const zcl::strs::t_str_rdonly file_path, zcl::mem::t_arena *const temp_arena, t_resource_group *const group) {
+    inline t_resource *texture_create_from_packed(const zcl::strs::t_str_rdonly file_path, zcl::t_arena *const temp_arena, t_resource_group *const group) {
         zcl::gfx::t_texture_data_mut texture_data;
 
         if (!zcl::gfx::texture_unpack(file_path, temp_arena, temp_arena, &texture_data)) {
@@ -123,7 +123,7 @@ namespace zgl::gfx {
 
     t_resource *shader_prog_create(const zcl::t_array_rdonly<zcl::t_u8> vert_shader_compiled_bin, const zcl::t_array_rdonly<zcl::t_u8> frag_shader_compiled_bin, t_resource_group *const group);
 
-    inline t_resource *shader_prog_create_from_packed(const zcl::strs::t_str_rdonly vert_shader_file_path, const zcl::strs::t_str_rdonly frag_shader_file_path, zcl::mem::t_arena *const temp_arena, t_resource_group *const arena) {
+    inline t_resource *shader_prog_create_from_packed(const zcl::strs::t_str_rdonly vert_shader_file_path, const zcl::strs::t_str_rdonly frag_shader_file_path, zcl::t_arena *const temp_arena, t_resource_group *const arena) {
         zcl::t_array_mut<zcl::t_u8> vert_shader_compiled_bin;
 
         if (!zcl::gfx::shader_unpack(vert_shader_file_path, temp_arena, temp_arena, &vert_shader_compiled_bin)) {
@@ -140,7 +140,7 @@ namespace zgl::gfx {
     }
 
 
-    t_resource *uniform_create(const zcl::strs::t_str_rdonly name, const t_uniform_type type, t_resource_group *const group, zcl::mem::t_arena *const temp_arena);
+    t_resource *uniform_create(const zcl::strs::t_str_rdonly name, const t_uniform_type type, t_resource_group *const group, zcl::t_arena *const temp_arena);
 
     t_uniform_type uniform_get_type(const t_resource *const uniform);
 
@@ -149,8 +149,8 @@ namespace zgl::gfx {
         zcl::t_array_mut<t_resource *> atlases;
     };
 
-    t_font font_create_from_raw(const zcl::strs::t_str_rdonly file_path, const zcl::t_i32 height, zcl::strs::t_code_pt_bitset *const code_pts, zcl::mem::t_arena *const temp_arena, t_resource_group *const resource_group);
-    t_font font_create_from_packed(const zcl::strs::t_str_rdonly file_path, zcl::mem::t_arena *const temp_arena, t_resource_group *const resource_group);
+    t_font font_create_from_raw(const zcl::strs::t_str_rdonly file_path, const zcl::t_i32 height, zcl::strs::t_code_pt_bitset *const code_pts, zcl::t_arena *const temp_arena, t_resource_group *const resource_group);
+    t_font font_create_from_packed(const zcl::strs::t_str_rdonly file_path, zcl::t_arena *const temp_arena, t_resource_group *const resource_group);
 
     // ========================================
 
@@ -169,7 +169,7 @@ namespace zgl::gfx {
             && vertex_check_valid(tri.verts[2]);
     }
 
-    t_frame_context *frame_begin(const t_frame_basis *const basis, zcl::mem::t_arena *const context_arena);
+    t_frame_context *frame_begin(const t_frame_basis *const basis, zcl::t_arena *const context_arena);
     void frame_end(t_frame_context *const context);
 
     void frame_pass_begin(t_frame_context *const context, const zcl::math::t_v2_i size, const zcl::math::t_mat4x4 &view_mat = zcl::math::matrix_create_identity(), const zcl::t_b8 clear = false, const zcl::gfx::t_color_rgba32f clear_col = zcl::gfx::k_color_black);
@@ -246,7 +246,7 @@ namespace zgl::gfx {
 
     void frame_submit_texture(t_frame_context *const context, const t_resource *const texture, const zcl::math::t_v2 pos, const zcl::math::t_rect_i src_rect = {}, const zcl::math::t_v2 origin = k_origin_topleft, const zcl::t_f32 rot = 0.0f);
 
-    void frame_submit_str(t_frame_context *const context, const zcl::strs::t_str_rdonly str, const t_font &font, const zcl::math::t_v2 pos, zcl::mem::t_arena *const temp_arena, const zcl::math::t_v2 alignment = k_alignment_topleft, const zcl::gfx::t_color_rgba32f blend = zcl::gfx::k_color_white);
+    void frame_submit_str(t_frame_context *const context, const zcl::strs::t_str_rdonly str, const t_font &font, const zcl::math::t_v2 pos, zcl::t_arena *const temp_arena, const zcl::math::t_v2 alignment = k_alignment_topleft, const zcl::gfx::t_color_rgba32f blend = zcl::gfx::k_color_white);
 
     // ========================================
 

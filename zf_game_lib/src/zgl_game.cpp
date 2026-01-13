@@ -28,11 +28,11 @@ namespace zgl::game {
         //
         // Initialisation
         //
-        zcl::mem::t_arena perm_arena = zcl::mem::arena_create_blockbased();
-        ZF_DEFER({ zcl::mem::arena_destroy(&perm_arena); });
+        zcl::t_arena perm_arena = zcl::arena_create_blockbased();
+        ZF_DEFER({ zcl::arena_destroy(&perm_arena); });
 
-        zcl::mem::t_arena temp_arena = zcl::mem::arena_create_blockbased();
-        ZF_DEFER({ zcl::mem::arena_destroy(&temp_arena); });
+        zcl::t_arena temp_arena = zcl::arena_create_blockbased();
+        ZF_DEFER({ zcl::arena_destroy(&temp_arena); });
 
         platform::module_startup(k_init_window_size);
         ZF_DEFER({ platform::module_shutdown(); });
@@ -48,9 +48,9 @@ namespace zgl::game {
 
         zcl::rand::t_rng *const rng = zcl::rand::rng_create(zcl::rand::gen_seed(), &perm_arena);
 
-        zcl::mem::arena_rewind(&temp_arena);
+        zcl::arena_rewind(&temp_arena);
 
-        void *const user_mem = config.user_mem_size > 0 ? zcl::mem::arena_push(&perm_arena, config.user_mem_size, config.user_mem_alignment) : nullptr;
+        void *const user_mem = config.user_mem_size > 0 ? zcl::arena_push(&perm_arena, config.user_mem_size, config.user_mem_alignment) : nullptr;
 
         config.init_func({
             .perm_arena = &perm_arena,
@@ -106,7 +106,7 @@ namespace zgl::game {
                 }
 
                 while (tick_interval_accum >= tick_interval_targ) {
-                    zcl::mem::arena_rewind(&temp_arena);
+                    zcl::arena_rewind(&temp_arena);
 
                     audio::proc_finished_sounds();
 
@@ -126,7 +126,7 @@ namespace zgl::game {
                 }
             }
 
-            zcl::mem::arena_rewind(&temp_arena);
+            zcl::arena_rewind(&temp_arena);
 
             gfx::t_frame_context *const frame_context = gfx::frame_begin(frame_basis, &temp_arena);
 

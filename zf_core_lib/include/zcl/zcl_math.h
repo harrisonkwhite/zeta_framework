@@ -443,10 +443,10 @@ namespace zcl::math {
     }
 
     // Points are guaranteed to be in this order: top-left, top-right, bottom-right, bottom-left.
-    t_poly_mut poly_create_quad(const t_v2 pos, const t_v2 size, const t_v2 origin, mem::t_arena *const arena);
+    t_poly_mut poly_create_quad(const t_v2 pos, const t_v2 size, const t_v2 origin, t_arena *const arena);
 
     // Points are guaranteed to be in this order: top-left, top-right, bottom-right, bottom-left.
-    t_poly_mut poly_create_quad_rotated(const t_v2 pos, const t_v2 size, const t_v2 origin, const t_f32 rot, mem::t_arena *const arena);
+    t_poly_mut poly_create_quad_rotated(const t_v2 pos, const t_v2 size, const t_v2 origin, const t_f32 rot, t_arena *const arena);
 
     t_b8 polys_check_inters(const t_poly_rdonly a, const t_poly_rdonly b);
     t_b8 poly_check_inters_with_rect(const t_poly_rdonly poly, const t_rect_f rect);

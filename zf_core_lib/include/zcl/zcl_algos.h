@@ -106,16 +106,16 @@ namespace zcl::algos {
 
     // O(n log n) in both time complexity and space complexity in every case.
     template <typename tp_arr_type>
-    void run_merge_sort(const tp_arr_type arr, mem::t_arena *const temp_arena, const t_comparator_ord<typename tp_arr_type::t_elem> comparator = k_comparator_ord_default<typename tp_arr_type::t_elem>) {
+    void run_merge_sort(const tp_arr_type arr, t_arena *const temp_arena, const t_comparator_ord<typename tp_arr_type::t_elem> comparator = k_comparator_ord_default<typename tp_arr_type::t_elem>) {
         if (arr.len <= 1) {
             return;
         }
 
         // Sort copies of the left and right partitions.
-        const auto arr_left_sorted = mem::arena_push_array_clone(array_slice(arr, 0, arr.len / 2), temp_arena);
+        const auto arr_left_sorted = arena_push_array_clone(array_slice(arr, 0, arr.len / 2), temp_arena);
         run_merge_sort(arr_left_sorted, temp_arena, comparator);
 
-        const auto arr_right_sorted = mem::arena_push_array_clone(array_slice_from(arr, arr.len / 2), temp_arena);
+        const auto arr_right_sorted = arena_push_array_clone(array_slice_from(arr, arr.len / 2), temp_arena);
         run_merge_sort(arr_right_sorted, temp_arena, comparator);
 
         // Update this array.

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <zcl/zcl_arrays.h>
+#include <zcl/zcl_basic.h>
 
 namespace zcl::ds {
     template <typename tp_type>
@@ -67,9 +67,9 @@ namespace zcl::ds {
     concept c_list = c_list_nonstatic<tp_type> || c_list_static<tp_type>;
 
     template <c_list_elem tp_elem_type>
-    t_list<tp_elem_type> list_create(const t_i32 cap, mem::t_arena *const arena, const t_i32 len = 0) {
+    t_list<tp_elem_type> list_create(const t_i32 cap, t_arena *const arena, const t_i32 len = 0) {
         ZF_ASSERT(cap > 0 && len >= 0 && len <= cap);
-        return {mem::arena_push_array<tp_elem_type>(arena, cap), len};
+        return {arena_push_array<tp_elem_type>(arena, cap), len};
     }
 
     template <c_list_nonstatic tp_list_type>
@@ -98,20 +98,20 @@ namespace zcl::ds {
     }
 
     template <c_list_nonstatic tp_list_type>
-    void list_extend(tp_list_type *const list, mem::t_arena *const arena, const t_list_extension_cap_calculator cap_calculator = k_list_extension_cap_calculator_default) {
+    void list_extend(tp_list_type *const list, t_arena *const arena, const t_list_extension_cap_calculator cap_calculator = k_list_extension_cap_calculator_default) {
         ZF_ASSERT(cap_calculator);
 
         const t_i32 new_cap = cap_calculator(list_get_cap(list));
         ZF_ASSERT(new_cap > list_get_cap(list));
 
-        const auto new_backing_arr = mem::arena_push_array<tp_list_type>(arena, new_cap);
+        const auto new_backing_arr = arena_push_array<tp_list_type>(arena, new_cap);
         array_copy(list->backing_arr, new_backing_arr);
 
         *list = {new_backing_arr, list->len};
     }
 
     template <c_list_nonstatic tp_list_type>
-    void list_extend_to_fit(tp_list_type *const list, const t_i32 min_cap, mem::t_arena *const arena, const t_list_extension_cap_calculator cap_calculator = k_list_extension_cap_calculator_default) {
+    void list_extend_to_fit(tp_list_type *const list, const t_i32 min_cap, t_arena *const arena, const t_list_extension_cap_calculator cap_calculator = k_list_extension_cap_calculator_default) {
         ZF_ASSERT(min_cap > list_get_cap(list));
         ZF_ASSERT(cap_calculator);
 
@@ -127,7 +127,7 @@ namespace zcl::ds {
             return result;
         }();
 
-        const auto new_backing_arr = mem::arena_push_array<typename tp_list_type::t_elem>(arena, new_cap);
+        const auto new_backing_arr = arena_push_array<typename tp_list_type::t_elem>(arena, new_cap);
         array_copy(list->backing_arr, new_backing_arr);
 
         *list = {new_backing_arr, list->len};
@@ -143,7 +143,7 @@ namespace zcl::ds {
     }
 
     template <c_list_nonstatic tp_list_type>
-    typename tp_list_type::t_elem *list_append_dynamic(tp_list_type *const list, const typename tp_list_type::t_elem &value, mem::t_arena *const extension_arena, const t_list_extension_cap_calculator extension_cap_calculator = k_list_extension_cap_calculator_default) {
+    typename tp_list_type::t_elem *list_append_dynamic(tp_list_type *const list, const typename tp_list_type::t_elem &value, t_arena *const extension_arena, const t_list_extension_cap_calculator extension_cap_calculator = k_list_extension_cap_calculator_default) {
         if (list->len == list_get_cap(list)) {
             list_extend(list, extension_arena, extension_cap_calculator);
         }
@@ -161,7 +161,7 @@ namespace zcl::ds {
     }
 
     template <c_list_nonstatic tp_list_type>
-    t_array_mut<typename tp_list_type::t_elem> list_append_many_dynamic(tp_list_type *const list, const t_array_rdonly<typename tp_list_type::t_elem> values, mem::t_arena *const extension_arena, const t_list_extension_cap_calculator extension_cap_calculator = k_list_extension_cap_calculator_default) {
+    t_array_mut<typename tp_list_type::t_elem> list_append_many_dynamic(tp_list_type *const list, const t_array_rdonly<typename tp_list_type::t_elem> values, t_arena *const extension_arena, const t_list_extension_cap_calculator extension_cap_calculator = k_list_extension_cap_calculator_default) {
         const auto min_cap_needed = list->len + values.len;
 
         if (min_cap_needed > list_get_cap(list)) {
@@ -188,7 +188,7 @@ namespace zcl::ds {
     }
 
     template <c_list_nonstatic tp_list_type>
-    typename tp_list_type::t_elem *list_insert_at_dynamic(tp_list_type *const list, const t_i32 index, const typename tp_list_type::t_elem &value, mem::t_arena *const extension_arena, const t_list_extension_cap_calculator extension_cap_calculator = k_list_extension_cap_calculator_default) {
+    typename tp_list_type::t_elem *list_insert_at_dynamic(tp_list_type *const list, const t_i32 index, const typename tp_list_type::t_elem &value, t_arena *const extension_arena, const t_list_extension_cap_calculator extension_cap_calculator = k_list_extension_cap_calculator_default) {
         if (list->len == list_get_cap(list)) {
             list_extend(list, extension_arena, extension_cap_calculator);
         }

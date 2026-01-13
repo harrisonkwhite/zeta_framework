@@ -1,8 +1,8 @@
 #include <zcl.h>
 
 [[nodiscard]] static zcl::t_b8 output_code(const zcl::strs::t_str_rdonly input_file_path, const zcl::strs::t_str_rdonly output_file_path, const zcl::strs::t_str_rdonly arr_var_subname, const zcl::strs::t_str_rdonly namespace_name) {
-    zcl::mem::t_arena arena = zcl::mem::arena_create_blockbased();
-    ZF_DEFER({ zcl::mem::arena_destroy(&arena); });
+    zcl::t_arena arena = zcl::arena_create_blockbased();
+    ZF_DEFER({ zcl::arena_destroy(&arena); });
 
     zcl::file_sys::t_file_stream input_file_stream;
 

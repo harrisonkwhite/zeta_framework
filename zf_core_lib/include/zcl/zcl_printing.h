@@ -1,7 +1,6 @@
 #pragma once
 
 #include <zcl/zcl_basic.h>
-#include <zcl/zcl_streams.h>
 #include <zcl/zcl_file_sys.h>
 #include <zcl/zcl_math.h>
 
@@ -379,7 +378,7 @@ namespace zcl::io {
 
     inline t_b8 print_type(const t_stream stream, const t_bitset_format format) {
         const auto print_bit = [&](const t_i32 bit_index) {
-            const strs::t_str_rdonly str = mem::bitset_check_set(format.value, bit_index) ? ZF_STR_LITERAL("1") : ZF_STR_LITERAL("0");
+            const strs::t_str_rdonly str = mem::check_set(format.value, bit_index) ? ZF_STR_LITERAL("1") : ZF_STR_LITERAL("0");
             return print(stream, str);
         };
 

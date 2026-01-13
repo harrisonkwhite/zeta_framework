@@ -93,8 +93,8 @@ constexpr zcl::t_static_array<t_asset_field, ekm_sound_field_cnt> k_sound_fields
 }};
 
 zcl::t_b8 pack_assets(const zcl::strs::t_str_rdonly instrs_json_file_path) {
-    zcl::mem::t_arena arena = zcl::mem::arena_create_blockbased();
-    ZF_DEFER({ zcl::mem::arena_destroy(&arena); });
+    zcl::t_arena arena = zcl::arena_create_blockbased();
+    ZF_DEFER({ zcl::arena_destroy(&arena); });
 
     cJSON *cj;
 
@@ -139,7 +139,7 @@ zcl::t_b8 pack_assets(const zcl::strs::t_str_rdonly instrs_json_file_path) {
         cJSON *cj_asset;
 
         cJSON_ArrayForEach(cj_asset, cj_assets) {
-            zcl::mem::arena_rewind(&arena);
+            zcl::arena_rewind(&arena);
 
             if (!cJSON_IsObject(cj_asset)) {
                 continue;
@@ -228,9 +228,9 @@ zcl::t_b8 pack_assets(const zcl::strs::t_str_rdonly instrs_json_file_path) {
                 const auto height = field_vals[ek_font_field_height]->valueint;
                 const auto out_file_path = zcl::strs::cstr_to_str(field_vals[ek_font_field_out_file_path]->valuestring);
 
-                const auto code_pt_bv = zcl::mem::arena_push_item<zcl::strs::t_code_pt_bitset>(&arena);
+                const auto code_pt_bv = zcl::arena_push_item<zcl::strs::t_code_pt_bitset>(&arena);
 
-                zcl::mem::bitset_set_range(*code_pt_bv, zcl::strs::k_printable_ascii_range_begin, zcl::strs::k_printable_ascii_range_end); // Add the printable ASCII range as a default.
+                zcl::mem::set_range(*code_pt_bv, zcl::strs::k_printable_ascii_range_begin, zcl::strs::k_printable_ascii_range_end); // Add the printable ASCII range as a default.
 
                 if (field_vals[ek_font_field_extra_chrs_file_path]) {
                     const auto extra_chrs_file_path = zcl::strs::cstr_to_str(field_vals[ek_font_field_extra_chrs_file_path]->valuestring);
@@ -242,7 +242,7 @@ zcl::t_b8 pack_assets(const zcl::strs::t_str_rdonly instrs_json_file_path) {
                         return false;
                     }
 
-                    zcl::strs::mark_code_points({extra_chrs_file_contents}, code_pt_bv);
+                    zcl::strs::mark_code_pts({extra_chrs_file_contents}, code_pt_bv);
                 }
 
                 // @todo: Proper check for invalid height!

@@ -2,12 +2,10 @@
 
 #include <zcl/zcl_basic.h>
 #include <zcl/zcl_mem.h>
-#include <zcl/zcl_streams.h>
 #include <zcl/zcl_math.h>
 #include <zcl/ds/zcl_lists.h>
 #include <zcl/ds/zcl_kv_stores.h>
 #include <zcl/ds/zcl_hash_maps.h>
-#include <zcl/zcl_errors.h>
 #include <zcl/zcl_strs.h>
 #include <zcl/zcl_file_sys.h>
 #include <zcl/zcl_printing.h>

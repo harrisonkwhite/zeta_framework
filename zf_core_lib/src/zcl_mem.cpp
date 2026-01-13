@@ -4,150 +4,7 @@
 #include <zcl/zcl_algos.h>
 
 namespace zcl::mem {
-    void arena_destroy(t_arena *const arena) {
-        ZF_REQUIRE(arena->type == ek_arena_type_blockbased);
-
-        const auto f = [](const auto self, t_arena_block *const block) {
-            if (!block) {
-                return;
-            }
-
-            self(self, block->next);
-
-            free(block->buf);
-            free(block);
-        };
-
-        f(f, arena->type_data.blockbased.blocks_head);
-
-        *arena = {};
-    }
-
-    static t_arena_block *arena_create_block(const t_i32 buf_size) {
-        ZF_REQUIRE(buf_size > 0);
-
-        const auto block = static_cast<t_arena_block *>(malloc(sizeof(t_arena_block)));
-
-        if (!block) {
-            ZF_FATAL();
-        }
-
-        zero_clear_item(block);
-
-        block->buf = malloc(static_cast<size_t>(buf_size));
-
-        if (!block->buf) {
-            ZF_FATAL();
-        }
-
-#ifdef ZF_DEBUG
-        memset(block->buf, k_arena_poison, static_cast<size_t>(block->buf_size));
-#elif
-        // Explicitly touch the memory to trigger page faults NOW.
-        zero_clear(block->buf, buf_size);
-#endif
-
-        block->buf_size = buf_size;
-
-        return block;
-    }
-
-    void *arena_push(t_arena *const arena, const t_i32 size, const t_i32 alignment) {
-        ZF_ASSERT(size > 0 && alignment_check_valid(alignment));
-
-        switch (arena->type) {
-        case ek_arena_type_blockbased: {
-            const auto blockbased = &arena->type_data.blockbased;
-
-            if (!blockbased->blocks_head) {
-                blockbased->blocks_head = arena_create_block(calc_max(size, blockbased->block_min_size));
-                blockbased->block_cur = blockbased->blocks_head;
-                return arena_push(arena, size, alignment);
-            }
-
-            const t_i32 offs_aligned = align_forward(blockbased->block_cur_offs, alignment);
-            const t_i32 offs_next = offs_aligned + size;
-
-            if (offs_next > blockbased->block_cur->buf_size) {
-                if (!blockbased->block_cur->next) {
-                    blockbased->block_cur->next = arena_create_block(calc_max(size, blockbased->block_min_size));
-                }
-
-                blockbased->block_cur = blockbased->block_cur->next;
-                blockbased->block_cur_offs = 0;
-
-                return arena_push(arena, size, alignment);
-            }
-
-            blockbased->block_cur_offs = offs_next;
-
-            void *const result = static_cast<t_u8 *>(blockbased->block_cur->buf) + offs_aligned;
-            zero_clear(result, size);
-
-            return result;
-        }
-
-        case ek_arena_type_wrapping: {
-            const auto wrapping = &arena->type_data.wrapping;
-
-            const t_i32 offs_aligned = align_forward(wrapping->buf_offs, alignment);
-            const t_i32 offs_next = offs_aligned + size;
-
-            if (offs_next > wrapping->buf_size) {
-                ZF_FATAL();
-            }
-
-            wrapping->buf_offs = offs_next;
-
-            void *const result = static_cast<t_u8 *>(wrapping->buf) + offs_aligned;
-            zero_clear(result, size);
-
-            return result;
-        }
-
-        default:
-            ZF_UNREACHABLE();
-        }
-    }
-
-    void arena_rewind(t_arena *const arena) {
-        switch (arena->type) {
-        case ek_arena_type_blockbased: {
-            const auto blockbased = &arena->type_data.blockbased;
-
-#ifdef ZF_DEBUG
-            // Poison all memory to be rewinded.
-            if (blockbased->block_cur) {
-                const t_arena_block *block = blockbased->blocks_head;
-
-                while (block != blockbased->block_cur) {
-                    memset(block->buf, k_arena_poison, static_cast<size_t>(block->buf_size));
-                    block = block->next;
-                }
-
-                memset(blockbased->block_cur->buf, k_arena_poison, static_cast<size_t>(blockbased->block_cur_offs));
-            }
-#endif
-
-            blockbased->block_cur = blockbased->blocks_head;
-            blockbased->block_cur_offs = 0;
-
-            break;
-        }
-
-        case ek_arena_type_wrapping: {
-            const auto wrapping = &arena->type_data.wrapping;
-            zero_clear(wrapping->buf, wrapping->buf_offs);
-            wrapping->buf_offs = 0;
-            break;
-        }
-
-        default:
-            ZF_UNREACHABLE();
-        }
-    }
-
-    t_b8 bitset_check_any_set(const t_bitset_rdonly bs) {
+    t_b8 check_any_set(const t_bitset_rdonly bs) {
         if (bs.bit_cnt == 0) {
             return false;
         }
@@ -161,7 +18,7 @@ namespace zcl::mem {
         return (bitset_get_bytes(bs)[bitset_get_bytes(bs).len - 1] & bitset_get_last_byte_mask(bs)) != 0;
     }
 
-    t_b8 bitset_check_all_set(const t_bitset_rdonly bs) {
+    t_b8 check_all_set(const t_bitset_rdonly bs) {
         if (bs.bit_cnt == 0) {
             return false;
         }
@@ -176,7 +33,7 @@ namespace zcl::mem {
         return (bitset_get_bytes(bs)[bitset_get_bytes(bs).len - 1] & last_byte_mask) == last_byte_mask;
     }
 
-    void bitset_set_all(const t_bitset_mut bs) {
+    void set_all(const t_bitset_mut bs) {
         if (bs.bit_cnt == 0) {
             return;
         }
@@ -187,7 +44,7 @@ namespace zcl::mem {
         bitset_get_bytes(bs)[bitset_get_bytes(bs).len - 1] |= bitset_get_last_byte_mask(bs);
     }
 
-    void bitset_unset_all(const t_bitset_mut bs) {
+    void unset_all(const t_bitset_mut bs) {
         if (bs.bit_cnt == 0) {
             return;
         }
@@ -198,7 +55,7 @@ namespace zcl::mem {
         bitset_get_bytes(bs)[bitset_get_bytes(bs).len - 1] &= ~bitset_get_last_byte_mask(bs);
     }
 
-    void bitset_set_range(const t_bitset_mut bs, const t_i32 begin_bit_index, const t_i32 end_bit_index) {
+    void set_range(const t_bitset_mut bs, const t_i32 begin_bit_index, const t_i32 end_bit_index) {
         ZF_ASSERT(begin_bit_index >= 0 && begin_bit_index < bs.bit_cnt);
         ZF_ASSERT(end_bit_index >= begin_bit_index && end_bit_index <= bs.bit_cnt);
 
@@ -217,7 +74,7 @@ namespace zcl::mem {
         }
     }
 
-    void bitset_apply_mask(const t_bitset_mut bs, const t_bitset_rdonly mask, const t_bitwise_mask_op op) {
+    void apply_mask(const t_bitset_mut bs, const t_bitset_rdonly mask, const t_bitwise_mask_op op) {
         ZF_ASSERT(bs.bit_cnt == mask.bit_cnt);
 
         if (bs.bit_cnt == 0) {
@@ -279,7 +136,7 @@ namespace zcl::mem {
         return discard;
     }
 
-    void bitset_shift_left(const t_bitset_mut bs, const t_i32 amount) {
+    void shift_left(const t_bitset_mut bs, const t_i32 amount) {
         ZF_ASSERT(amount >= 0);
 
         // @speed: :(
@@ -289,7 +146,7 @@ namespace zcl::mem {
         }
     }
 
-    void bitset_rot_left(const t_bitset_mut bs, const t_i32 amount) {
+    void rot_left(const t_bitset_mut bs, const t_i32 amount) {
         ZF_ASSERT(amount >= 0);
 
         if (bs.bit_cnt == 0) {
@@ -302,9 +159,9 @@ namespace zcl::mem {
             const auto discard = shift_bits_left(bs);
 
             if (discard) {
-                bitset_set(bs, 0);
+                set(bs, 0);
             } else {
-                bitset_unset(bs, 0);
+                unset(bs, 0);
             }
         }
     }
@@ -334,7 +191,7 @@ namespace zcl::mem {
         return discard;
     }
 
-    void bitset_shift_right(const t_bitset_mut bs, const t_i32 amount) {
+    void shift_right(const t_bitset_mut bs, const t_i32 amount) {
         ZF_ASSERT(amount >= 0);
 
         // @speed: :(
@@ -344,7 +201,7 @@ namespace zcl::mem {
         }
     }
 
-    void bitset_rot_right(const t_bitset_mut bs, const t_i32 amount) {
+    void rot_right(const t_bitset_mut bs, const t_i32 amount) {
         ZF_ASSERT(amount >= 0);
 
         if (bs.bit_cnt == 0) {
@@ -357,9 +214,9 @@ namespace zcl::mem {
             const auto discard = shift_bits_right(bs);
 
             if (discard) {
-                bitset_set(bs, bs.bit_cnt - 1);
+                set(bs, bs.bit_cnt - 1);
             } else {
-                bitset_unset(bs, bs.bit_cnt - 1);
+                unset(bs, bs.bit_cnt - 1);
             }
         }
     }
@@ -652,15 +509,15 @@ namespace zcl::mem {
         return -1;
     }
 
-    t_i32 bitset_find_first_set_bit(const t_bitset_rdonly bs, const t_i32 from) {
+    t_i32 find_first_set_bit(const t_bitset_rdonly bs, const t_i32 from) {
         return get_index_of_first_set_bit_helper(bs, from, 0);
     }
 
-    t_i32 bitset_find_first_unset_bit(const t_bitset_rdonly bs, const t_i32 from) {
+    t_i32 find_first_unset_bit(const t_bitset_rdonly bs, const t_i32 from) {
         return get_index_of_first_set_bit_helper(bs, from, 0xFF);
     }
 
-    t_i32 bitset_count_set(const t_bitset_rdonly bs) {
+    t_i32 count_set(const t_bitset_rdonly bs) {
         // Map of each possible byte to the number of set bits in it.
         constexpr t_static_array<t_i32, 256> k_mappings = {{
             0, // 0000 0000
@@ -934,10 +791,10 @@ namespace zcl::mem {
         return result;
     }
 
-    t_b8 bitset_walk_all_set(const t_bitset_rdonly bs, t_i32 *const pos, t_i32 *const o_index) {
+    t_b8 walk_all_set(const t_bitset_rdonly bs, t_i32 *const pos, t_i32 *const o_index) {
         ZF_ASSERT(*pos >= 0 && *pos <= bs.bit_cnt);
 
-        *o_index = bitset_find_first_set_bit(bs, *pos);
+        *o_index = find_first_set_bit(bs, *pos);
 
         if (*o_index == -1) {
             return false;
@@ -948,10 +805,10 @@ namespace zcl::mem {
         return true;
     }
 
-    t_b8 bitset_walk_all_unset(const t_bitset_rdonly bs, t_i32 *const pos, t_i32 *const o_index) {
+    t_b8 walk_all_unset(const t_bitset_rdonly bs, t_i32 *const pos, t_i32 *const o_index) {
         ZF_ASSERT(*pos >= 0 && *pos <= bs.bit_cnt);
 
-        *o_index = bitset_find_first_unset_bit(bs, *pos);
+        *o_index = find_first_unset_bit(bs, *pos);
 
         if (*o_index == -1) {
             return false;

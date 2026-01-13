@@ -4,19 +4,7 @@
 
 namespace zcl::strs {
     // ============================================================
-    // @section: Types
-
-    struct t_str_rdonly {
-        t_array_rdonly<t_u8> bytes;
-    };
-
-    struct t_str_mut {
-        t_array_mut<t_u8> bytes;
-
-        operator t_str_rdonly() const {
-            return {bytes};
-        }
-    };
+    // @section: Code Points
 
     constexpr t_i32 k_code_pt_cnt = 1114112;
 
@@ -29,12 +17,6 @@ namespace zcl::strs {
     constexpr t_i32 k_printable_ascii_range_begin = 0x20;
     constexpr t_i32 k_printable_ascii_range_end = 0x7F;
 
-    // ============================================================
-
-    // ============================================================
-    // @section: Code Points
-
-
     constexpr t_b8 code_pt_check_ascii(const t_code_pt cp) {
         return cp >= k_ascii_range_begin && cp < k_ascii_range_end;
     }
@@ -43,12 +25,44 @@ namespace zcl::strs {
         return cp >= k_printable_ascii_range_begin && cp < k_printable_ascii_range_end;
     }
 
+    // If the code point is valid, result is guaranteed to be 1, 2, 3, or 4.
+    constexpr t_i32 utf8_byte_cnt(const t_code_pt code_pt) {
+        if (code_pt <= 0x7F) {
+            return 1;
+        }
+
+        if (code_pt <= 0x7FF) {
+            return 2;
+        }
+
+        if (code_pt <= 0xFFFF) {
+            return 3;
+        }
+
+        if (code_pt <= 0x10FFFF) {
+            return 4;
+        }
+
+        ZF_UNREACHABLE();
+    }
+
     // ============================================================
 
 
     // ============================================================
-    // @section: ZF Strings
+    // @section: Strings
 
+    struct t_str_rdonly {
+        t_array_rdonly<t_u8> bytes;
+    };
+
+    struct t_str_mut {
+        t_array_mut<t_u8> bytes;
+
+        operator t_str_rdonly() const {
+            return {bytes};
+        }
+    };
 
     constexpr t_comparator_bin<t_str_rdonly> k_str_comparator_bin =
         [](const t_str_rdonly &a, const t_str_rdonly &b) {
@@ -90,8 +104,8 @@ namespace zcl::strs {
     }
 
     // Allocates a clone of the given string using the memory arena, with a null byte added at the end (even if the string was already terminated).
-    inline t_str_mut clone_but_add_terminator(const t_str_rdonly str, mem::t_arena *const arena) {
-        const t_str_mut clone = {mem::arena_push_array<t_u8>(arena, str.bytes.len + 1)};
+    inline t_str_mut clone_but_add_terminator(const t_str_rdonly str, t_arena *const arena) {
+        const t_str_mut clone = {arena_push_array<t_u8>(arena, str.bytes.len + 1)};
         array_copy(str.bytes, clone.bytes);
         clone.bytes[clone.bytes.len - 1] = 0;
         return clone;
@@ -110,27 +124,6 @@ namespace zcl::strs {
     // Calculates the string length in terms of code point count. Reminder that '\0' is treated just like any other ASCII character and does not terminate.
     t_i32 calc_len(const t_str_rdonly str);
 
-    // If the code point is valid, result is guaranteed to be 1, 2, 3, or 4.
-    constexpr t_i32 utf8_byte_cnt(const t_code_pt code_pt) {
-        if (code_pt <= 0x7F) {
-            return 1;
-        }
-
-        if (code_pt <= 0x7FF) {
-            return 2;
-        }
-
-        if (code_pt <= 0xFFFF) {
-            return 3;
-        }
-
-        if (code_pt <= 0x10FFFF) {
-            return 4;
-        }
-
-        ZF_UNREACHABLE();
-    }
-
     // Given array must be of length 1, 2, 3, or 4.
     t_code_pt utf8_bytes_to_code_pt(const t_array_rdonly<t_u8> bytes);
 
@@ -140,7 +133,7 @@ namespace zcl::strs {
     t_code_pt find_code_pt_at_byte(const t_str_rdonly str, const t_i32 byte_index);
 
     // Sets the bits associated with each unicode code point that appear in the string. No bits get unset.
-    void mark_code_points(const t_str_rdonly str, t_code_pt_bitset *const code_pts);
+    void mark_code_pts(const t_str_rdonly str, t_code_pt_bitset *const code_pts);
 
     struct t_str_walk_step {
         t_code_pt code_pt;

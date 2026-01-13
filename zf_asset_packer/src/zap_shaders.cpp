@@ -2,7 +2,7 @@
 
 #include <reproc/reproc.h>
 
-zcl::t_b8 compile_shader(const zcl::strs::t_str_rdonly shader_file_path, const zcl::strs::t_str_rdonly varying_def_file_path, const zcl::t_b8 is_frag, zcl::mem::t_arena *const bin_arena, zcl::mem::t_arena *const temp_arena, zcl::t_array_mut<zcl::t_u8> *const o_bin) {
+zcl::t_b8 compile_shader(const zcl::strs::t_str_rdonly shader_file_path, const zcl::strs::t_str_rdonly varying_def_file_path, const zcl::t_b8 is_frag, zcl::t_arena *const bin_arena, zcl::t_arena *const temp_arena, zcl::t_array_mut<zcl::t_u8> *const o_bin) {
     const zcl::strs::t_str_rdonly shader_file_path_terminated = zcl::strs::clone_but_add_terminator(shader_file_path, temp_arena);
     const zcl::strs::t_str_rdonly varying_def_file_path_terminated = zcl::strs::clone_but_add_terminator(varying_def_file_path, temp_arena);
 
@@ -44,13 +44,13 @@ zcl::t_b8 compile_shader(const zcl::strs::t_str_rdonly shader_file_path, const z
     const zcl::strs::t_str_rdonly exe_dir = zcl::file_sys::get_executable_directory(temp_arena);
     ZF_ASSERT(exe_dir.bytes[exe_dir.bytes.len - 1] == '/' || exe_dir.bytes[exe_dir.bytes.len - 1] == '\\'); // Assuming this.
 
-    const zcl::strs::t_str_mut shaderc_file_path_terminated = {zcl::mem::arena_push_array<zcl::t_u8>(temp_arena, exe_dir.bytes.len + shaderc_file_path_rel.bytes.len + 1)};
+    const zcl::strs::t_str_mut shaderc_file_path_terminated = {zcl::arena_push_array<zcl::t_u8>(temp_arena, exe_dir.bytes.len + shaderc_file_path_rel.bytes.len + 1)};
     zcl::t_mem_stream shaderc_file_path_terminated_byte_stream = zcl::mem_stream_create(shaderc_file_path_terminated.bytes, zcl::ek_stream_mode_write);
     zcl::io::print_format(shaderc_file_path_terminated_byte_stream, ZF_STR_LITERAL("%%\0"), exe_dir, shaderc_file_path_rel);
     ZF_ASSERT(zcl::strs::bytes_check_terminated_only_at_end(shaderc_file_path_terminated.bytes));
 
     const zcl::strs::t_str_rdonly shaderc_include_dir_rel = ZF_STR_LITERAL("tools/bgfx/shaderc_include");
-    const zcl::strs::t_str_mut shaderc_include_dir_terminated = {zcl::mem::arena_push_array<zcl::t_u8>(temp_arena, exe_dir.bytes.len + shaderc_include_dir_rel.bytes.len + 1)};
+    const zcl::strs::t_str_mut shaderc_include_dir_terminated = {zcl::arena_push_array<zcl::t_u8>(temp_arena, exe_dir.bytes.len + shaderc_include_dir_rel.bytes.len + 1)};
     zcl::t_mem_stream shaderc_include_dir_terminated_byte_stream = zcl::mem_stream_create(shaderc_include_dir_terminated.bytes, zcl::ek_stream_mode_write);
     zcl::io::print_format(shaderc_include_dir_terminated_byte_stream, ZF_STR_LITERAL("%%\0"), exe_dir, shaderc_include_dir_rel);
     ZF_ASSERT(zcl::strs::bytes_check_terminated_only_at_end(shaderc_include_dir_terminated.bytes));

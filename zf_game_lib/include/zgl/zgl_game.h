@@ -17,8 +17,8 @@ namespace zgl {
         // @section: Types and Constants
 
         struct t_init_func_context {
-            zcl::mem::t_arena *perm_arena;
-            zcl::mem::t_arena *temp_arena;
+            zcl::t_arena *perm_arena;
+            zcl::t_arena *temp_arena;
 
             gfx::t_resource_group *perm_gfx_resource_group;
 
@@ -28,8 +28,8 @@ namespace zgl {
         };
 
         struct t_tick_func_context {
-            zcl::mem::t_arena *perm_arena;
-            zcl::mem::t_arena *temp_arena;
+            zcl::t_arena *perm_arena;
+            zcl::t_arena *temp_arena;
 
             const input::t_state *input_state;
 
@@ -43,8 +43,8 @@ namespace zgl {
         };
 
         struct t_render_func_context {
-            zcl::mem::t_arena *perm_arena;
-            zcl::mem::t_arena *temp_arena;
+            zcl::t_arena *perm_arena;
+            zcl::t_arena *temp_arena;
 
             gfx::t_frame_context *frame_context;
 
@@ -84,7 +84,7 @@ namespace zgl {
             ZF_ASSERT(config.tick_func);
             ZF_ASSERT(config.render_func);
 
-            ZF_ASSERT((config.user_mem_size == 0 && config.user_mem_alignment == 0) || (config.user_mem_size > 0 && zcl::mem::alignment_check_valid(config.user_mem_alignment)));
+            ZF_ASSERT((config.user_mem_size == 0 && config.user_mem_alignment == 0) || (config.user_mem_size > 0 && zcl::alignment_check_valid(config.user_mem_alignment)));
         }
 
         void tps_set_target(const zcl::t_f64 tps);

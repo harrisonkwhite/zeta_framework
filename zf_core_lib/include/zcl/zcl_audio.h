@@ -25,11 +25,11 @@ namespace zcl::audio {
         return snd_meta.channel_cnt * snd_meta.frame_cnt;
     }
 
-    [[nodiscard]] t_b8 sound_load_from_raw(const strs::t_str_rdonly file_path, mem::t_arena *const snd_data_arena, mem::t_arena *const temp_arena, t_sound_data_mut *const o_snd_data);
+    [[nodiscard]] t_b8 sound_load_from_raw(const strs::t_str_rdonly file_path, t_arena *const snd_data_arena, t_arena *const temp_arena, t_sound_data_mut *const o_snd_data);
 
-    [[nodiscard]] t_b8 sound_pack(const strs::t_str_rdonly file_path, const t_sound_data_rdonly snd_data, mem::t_arena *const temp_arena);
-    [[nodiscard]] t_b8 sound_unpack(const strs::t_str_rdonly file_path, mem::t_arena *const snd_data_arena, mem::t_arena *const temp_arena, t_sound_data_mut *const o_snd_data);
+    [[nodiscard]] t_b8 sound_pack(const strs::t_str_rdonly file_path, const t_sound_data_rdonly snd_data, t_arena *const temp_arena);
+    [[nodiscard]] t_b8 sound_unpack(const strs::t_str_rdonly file_path, t_arena *const snd_data_arena, t_arena *const temp_arena, t_sound_data_mut *const o_snd_data);
 
     [[nodiscard]] t_b8 sound_serialize(const t_sound_data_rdonly snd_data, const t_stream stream);
-    [[nodiscard]] t_b8 sound_deserialize(const t_stream stream, mem::t_arena *const snd_data_arena, t_sound_data_mut *const o_snd_data);
+    [[nodiscard]] t_b8 sound_deserialize(const t_stream stream, t_arena *const snd_data_arena, t_sound_data_mut *const o_snd_data);
 }

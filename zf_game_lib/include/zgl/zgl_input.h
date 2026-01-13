@@ -126,7 +126,7 @@ namespace zgl::input {
     // ============================================================
     // @section: Functions
 
-    t_state *create_state(zcl::mem::t_arena *const arena);
+    t_state *create_state(zcl::t_arena *const arena);
 
     void clear_events(t_state *const state);
 

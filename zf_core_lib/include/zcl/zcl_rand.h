@@ -5,7 +5,7 @@
 namespace zcl::rand {
     struct t_rng;
 
-    t_rng *rng_create(const t_u64 seed, mem::t_arena *const arena);
+    t_rng *rng_create(const t_u64 seed, t_arena *const arena);
 
     t_u32 gen_u32(t_rng *const rng);
 

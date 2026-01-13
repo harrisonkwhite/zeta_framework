@@ -61,8 +61,8 @@ namespace zcl::rand {
         pcg32_calc_next(pcg32);
     }
 
-    t_rng *rng_create(const t_u64 seed, mem::t_arena *const arena) {
-        const auto rng = mem::arena_push_item<t_rng>(arena);
+    t_rng *rng_create(const t_u64 seed, t_arena *const arena) {
+        const auto rng = arena_push_item<t_rng>(arena);
 
         t_u64 x = seed;
         const t_u64 init_state = scramble(&x);

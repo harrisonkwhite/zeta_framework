@@ -227,9 +227,9 @@ namespace zgl::platform {
 
                 for (zcl::t_i32 j = 0; j <= GLFW_GAMEPAD_BUTTON_LAST; j++) {
                     if (gamepad_state.buttons[j]) {
-                        zcl::mem::bitset_set(btns_down, j);
+                        zcl::mem::set(btns_down, j);
                     } else {
-                        zcl::mem::bitset_unset(btns_down, j);
+                        zcl::mem::unset(btns_down, j);
                     }
                 }
 
@@ -283,7 +283,7 @@ namespace zgl::platform {
         return glfwWindowShouldClose(g_module_state.glfw_window);
     }
 
-    void window_set_title(const zcl::strs::t_str_rdonly title, zcl::mem::t_arena *const temp_arena) {
+    void window_set_title(const zcl::strs::t_str_rdonly title, zcl::t_arena *const temp_arena) {
         ZF_ASSERT(g_module_state.active);
 
         const zcl::strs::t_str_rdonly title_terminated = zcl::strs::clone_but_add_terminator(title, temp_arena);

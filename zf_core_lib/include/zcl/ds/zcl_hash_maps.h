@@ -45,14 +45,14 @@ namespace zcl::ds {
 
     // The provided hash function has to map a key to an integer 0 or higher. The given memory arena will be saved and used for allocating new memory for entries when needed.
     template <c_hash_map_key tp_key_type, c_hash_map_value tp_value_type>
-    t_hash_map<tp_key_type, tp_value_type> hash_map_create(const t_hash_func<tp_key_type> hash_func, mem::t_arena *const arena, const t_i32 cap = k_hash_map_cap_default, const t_comparator_bin<tp_key_type> key_comparator = k_comparator_bin_default<tp_key_type>) {
-        const auto immediate_indexes = mem::arena_push_array<t_i32>(arena, cap);
+    t_hash_map<tp_key_type, tp_value_type> hash_map_create(const t_hash_func<tp_key_type> hash_func, t_arena *const arena, const t_i32 cap = k_hash_map_cap_default, const t_comparator_bin<tp_key_type> key_comparator = k_comparator_bin_default<tp_key_type>) {
+        const auto immediate_indexes = arena_push_array<t_i32>(arena, cap);
         array_set_all_to(immediate_indexes, -1);
 
         return {
             .hash_func = hash_func,
             .immediate_indexes = immediate_indexes,
-            .kv_store = {.key_comparator = key_comparator, .blocks_arena = arena, .block_cap = static_cast<t_i32>(mem::align_forward(cap, 8))},
+            .kv_store = {.key_comparator = key_comparator, .blocks_arena = arena, .block_cap = static_cast<t_i32>(align_forward(cap, 8))},
         };
     }
 
@@ -115,14 +115,14 @@ namespace zcl::ds {
 
     // Allocates the given arrays with the arena and loads key-value pairs into them.
     template <c_hash_map tp_hash_map_type>
-    void hash_map_load_entries(const tp_hash_map_type *const hash_map, mem::t_arena *const arena, t_array_mut<typename tp_hash_map_type::t_key> *const o_keys, t_array_mut<typename tp_hash_map_type::t_value> *const o_values) {
-        *o_keys = mem::arena_push_array<typename tp_hash_map_type::t_key>(arena, hash_map_get_entry_count(hash_map));
-        *o_values = mem::arena_push_array<typename tp_hash_map_type::t_value>(arena, hash_map_get_entry_count(hash_map));
+    void hash_map_load_entries(const tp_hash_map_type *const hash_map, t_arena *const arena, t_array_mut<typename tp_hash_map_type::t_key> *const o_keys, t_array_mut<typename tp_hash_map_type::t_value> *const o_values) {
+        *o_keys = arena_push_array<typename tp_hash_map_type::t_key>(arena, hash_map_get_entry_count(hash_map));
+        *o_values = arena_push_array<typename tp_hash_map_type::t_value>(arena, hash_map_get_entry_count(hash_map));
         return hash_map_load_entries(hash_map, *o_keys, *o_values);
     }
 
     template <c_hash_map tp_hash_map_type>
-    [[nodiscard]] t_b8 hash_map_serialize(const tp_hash_map_type *const hm, const t_stream stream, mem::t_arena *const temp_arena) {
+    [[nodiscard]] t_b8 hash_map_serialize(const tp_hash_map_type *const hm, const t_stream stream, t_arena *const temp_arena) {
         if (!stream_write_item(stream, hash_map_get_cap(hm))) {
             return false;
         }
@@ -147,7 +147,7 @@ namespace zcl::ds {
     }
 
     template <c_hash_map tp_hash_map_type>
-    [[nodiscard]] t_b8 hash_map_deserialize(const t_stream stream, mem::t_arena *const hm_arena, const t_hash_func<typename tp_hash_map_type::t_key> hm_hash_func, mem::t_arena *const temp_arena, tp_hash_map_type *const o_hm, const t_comparator_bin<typename tp_hash_map_type::t_key> hm_key_comparator = k_comparator_bin_default<typename tp_hash_map_type::t_key>) {
+    [[nodiscard]] t_b8 hash_map_deserialize(const t_stream stream, t_arena *const hm_arena, const t_hash_func<typename tp_hash_map_type::t_key> hm_hash_func, t_arena *const temp_arena, tp_hash_map_type *const o_hm, const t_comparator_bin<typename tp_hash_map_type::t_key> hm_key_comparator = k_comparator_bin_default<typename tp_hash_map_type::t_key>) {
         t_i32 cap;
 
         if (!stream_read_item(stream, &cap)) {
@@ -162,13 +162,13 @@ namespace zcl::ds {
 
         *o_hm = hash_map_create<typename tp_hash_map_type::t_key, typename tp_hash_map_type::t_value>(hm_hash_func, hm_arena, cap, hm_key_comparator);
 
-        const auto keys = mem::arena_push_array<typename tp_hash_map_type::t_key>(temp_arena, entry_cnt);
+        const auto keys = arena_push_array<typename tp_hash_map_type::t_key>(temp_arena, entry_cnt);
 
         if (!stream_read_items_into_array(stream, keys, entry_cnt)) {
             return false;
         }
 
-        const auto values = mem::arena_push_array<typename tp_hash_map_type::t_value>(temp_arena, entry_cnt);
+        const auto values = arena_push_array<typename tp_hash_map_type::t_value>(temp_arena, entry_cnt);
 
         if (!stream_read_items_into_array(stream, values, entry_cnt)) {
             return false;

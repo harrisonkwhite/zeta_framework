@@ -14,7 +14,7 @@
 #endif
 
 namespace zcl::file_sys {
-    t_b8 file_open(const strs::t_str_rdonly path, const t_file_access_mode mode, mem::t_arena *const temp_arena, t_file_stream *const o_stream) {
+    t_b8 file_open(const strs::t_str_rdonly path, const t_file_access_mode mode, t_arena *const temp_arena, t_file_stream *const o_stream) {
         const strs::t_str_rdonly path_terminated = strs::clone_but_add_terminator(path, temp_arena);
 
         FILE *file;
@@ -62,7 +62,7 @@ namespace zcl::file_sys {
         return static_cast<t_i32>(file_size);
     }
 
-    t_b8 file_load_contents(const strs::t_str_rdonly path, mem::t_arena *const contents_arena, mem::t_arena *const temp_arena, t_array_mut<t_u8> *const o_contents, const t_b8 add_terminator) {
+    t_b8 file_load_contents(const strs::t_str_rdonly path, t_arena *const contents_arena, t_arena *const temp_arena, t_array_mut<t_u8> *const o_contents, const t_b8 add_terminator) {
         t_file_stream stream;
 
         if (!file_open(path, ek_file_access_mode_read, temp_arena, &stream)) {
@@ -74,10 +74,10 @@ namespace zcl::file_sys {
         const t_i32 file_size = file_calc_size(&stream);
 
         if (add_terminator) {
-            *o_contents = mem::arena_push_array<t_u8>(contents_arena, file_size + 1);
+            *o_contents = arena_push_array<t_u8>(contents_arena, file_size + 1);
             (*o_contents)[file_size] = 0;
         } else {
-            *o_contents = mem::arena_push_array<t_u8>(contents_arena, file_size);
+            *o_contents = arena_push_array<t_u8>(contents_arena, file_size);
         }
 
         if (!stream_read_items_into_array(stream, *o_contents, file_size)) {
@@ -87,7 +87,7 @@ namespace zcl::file_sys {
         return true;
     }
 
-    t_b8 create_directory(const strs::t_str_rdonly path, mem::t_arena *const temp_arena, t_directory_creation_result *const o_creation_res) {
+    t_b8 create_directory(const strs::t_str_rdonly path, t_arena *const temp_arena, t_directory_creation_result *const o_creation_res) {
         if (o_creation_res) {
             *o_creation_res = ek_directory_creation_result_success;
         }
@@ -130,7 +130,7 @@ namespace zcl::file_sys {
         return false;
     }
 
-    t_b8 create_directory_and_parents(const strs::t_str_rdonly path, mem::t_arena *const temp_arena, t_directory_creation_result *const o_dir_creation_res) {
+    t_b8 create_directory_and_parents(const strs::t_str_rdonly path, t_arena *const temp_arena, t_directory_creation_result *const o_dir_creation_res) {
         if (o_dir_creation_res) {
             *o_dir_creation_res = ek_directory_creation_result_success;
         }
@@ -170,7 +170,7 @@ namespace zcl::file_sys {
         return true;
     }
 
-    t_b8 create_file_and_parent_directories(const strs::t_str_rdonly path, mem::t_arena *const temp_arena, t_directory_creation_result *const o_dir_creation_res) {
+    t_b8 create_file_and_parent_directories(const strs::t_str_rdonly path, t_arena *const temp_arena, t_directory_creation_result *const o_dir_creation_res) {
         if (o_dir_creation_res) {
             *o_dir_creation_res = ek_directory_creation_result_success;
         }
@@ -198,7 +198,7 @@ namespace zcl::file_sys {
         return true;
     }
 
-    t_path_type path_get_type(const strs::t_str_rdonly path, mem::t_arena *const temp_arena) {
+    t_path_type path_get_type(const strs::t_str_rdonly path, t_arena *const temp_arena) {
         const strs::t_str_rdonly path_terminated = strs::clone_but_add_terminator(path, temp_arena);
 
         struct stat info;
@@ -214,7 +214,7 @@ namespace zcl::file_sys {
         return ek_path_type_file;
     }
 
-    strs::t_str_mut get_executable_directory(mem::t_arena *const arena) {
+    strs::t_str_mut get_executable_directory(t_arena *const arena) {
 #if defined(ZF_PLATFORM_WINDOWS)
         t_static_array<char, MAX_PATH> buf;
 
@@ -227,7 +227,7 @@ namespace zcl::file_sys {
             }
         }
 
-        const auto result_bytes = mem::arena_push_array<t_u8>(arena, len);
+        const auto result_bytes = arena_push_array<t_u8>(arena, len);
         array_copy(mem::array_to_byte_array(array_slice(array_to_nonstatic(&buf), 0, len)), result_bytes);
         return {result_bytes};
 #elif defined(ZF_PLATFORM_MACOS)

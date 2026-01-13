@@ -1,19 +1,18 @@
 add_library(zf_core_lib STATIC
-    src/zcl_errors.cpp
     src/zcl_mem.cpp
     src/zcl_audio.cpp
     src/zcl_math.cpp
     src/zcl_strs.cpp
     src/zcl_gfx.cpp
     src/zcl_file_sys.cpp
+    src/zcl_basic_errors.cpp
+    src/zcl_basic_arenas.cpp
     src/zcl_rand.cpp
     ../external/stb_image/src/stb_image.c
     ../external/stb_truetype/src/stb_truetype.c
 	../external/miniaudio/src/miniaudio.c
 
     include/zcl.h
-    include/zcl/zcl_arrays.h
-    include/zcl/zcl_streams.h
     include/zcl/zcl_mem.h
     include/zcl/gfx/zcl_colors.h
     include/zcl/gfx/zcl_textures.h
@@ -29,7 +28,6 @@ add_library(zf_core_lib STATIC
     include/zcl/zcl_file_sys.h
     include/zcl/zcl_algos.h
     include/zcl/zcl_basic.h
-    include/zcl/zcl_errors.h
     include/zcl/zcl_rand.h
 )
 

@@ -81,9 +81,9 @@ namespace zcl::math {
         return true;
     }
 
-    t_poly_mut poly_create_quad(const t_v2 pos, const t_v2 size, const t_v2 origin, mem::t_arena *const arena) {
+    t_poly_mut poly_create_quad(const t_v2 pos, const t_v2 size, const t_v2 origin, t_arena *const arena) {
         const t_poly_mut poly = {
-            .pts = mem::arena_push_array<t_v2>(arena, 4),
+            .pts = arena_push_array<t_v2>(arena, 4),
         };
 
         const t_v2 pos_base = pos - v2_calc_compwise_prod(size, origin);
@@ -96,9 +96,9 @@ namespace zcl::math {
         return poly;
     }
 
-    t_poly_mut poly_create_quad_rotated(const t_v2 pos, const t_v2 size, const t_v2 origin, const t_f32 rot, mem::t_arena *const arena) {
+    t_poly_mut poly_create_quad_rotated(const t_v2 pos, const t_v2 size, const t_v2 origin, const t_f32 rot, t_arena *const arena) {
         const t_poly_mut poly = {
-            .pts = mem::arena_push_array<t_v2>(arena, 4),
+            .pts = arena_push_array<t_v2>(arena, 4),
         };
 
         const t_v2 offs_left = calc_lengthdir(size.x * origin.x, rot - k_pi);

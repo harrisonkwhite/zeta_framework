@@ -92,7 +92,7 @@ namespace zgl::gfx {
         } batch_state;
     };
 
-    t_frame_basis *module_startup(zcl::mem::t_arena *const arena, zcl::mem::t_arena *const temp_arena, t_resource_group **const o_perm_resource_group) {
+    t_frame_basis *module_startup(zcl::t_arena *const arena, zcl::t_arena *const temp_arena, t_resource_group **const o_perm_resource_group) {
         ZF_ASSERT(g_module_state.phase == ek_module_phase_inactive);
 
         g_module_state = {.phase = ek_module_phase_active_but_not_midframe};
@@ -127,7 +127,7 @@ namespace zgl::gfx {
         //
         // Frame Basis Setup
         //
-        const auto frame_basis = zcl::mem::arena_push_item<t_frame_basis>(arena);
+        const auto frame_basis = zcl::arena_push_item<t_frame_basis>(arena);
 
         {
             bgfx::VertexLayout vert_layout;
@@ -203,7 +203,7 @@ namespace zgl::gfx {
     static t_resource *resource_group_add(t_resource_group *const group, const t_resource_type type) {
         ZF_ASSERT(g_module_state.phase == ek_module_phase_active_but_not_midframe);
 
-        const auto resource = zcl::mem::arena_push_item<t_resource>(group->arena);
+        const auto resource = zcl::arena_push_item<t_resource>(group->arena);
 
         if (!group->head) {
             group->head = resource;
@@ -306,7 +306,7 @@ namespace zgl::gfx {
         return resource;
     }
 
-    t_resource *uniform_create(const zcl::strs::t_str_rdonly name, const t_uniform_type type, t_resource_group *const group, zcl::mem::t_arena *const temp_arena) {
+    t_resource *uniform_create(const zcl::strs::t_str_rdonly name, const t_uniform_type type, t_resource_group *const group, zcl::t_arena *const temp_arena) {
         ZF_ASSERT(g_module_state.phase == ek_module_phase_active_but_not_midframe);
 
         const zcl::strs::t_str_rdonly name_terminated = zcl::strs::clone_but_add_terminator(name, temp_arena);
@@ -340,7 +340,7 @@ namespace zgl::gfx {
         return uniform->type_data.uniform.type;
     }
 
-    t_frame_context *frame_begin(const t_frame_basis *const basis, zcl::mem::t_arena *const context_arena) {
+    t_frame_context *frame_begin(const t_frame_basis *const basis, zcl::t_arena *const context_arena) {
         ZF_ASSERT(g_module_state.phase == ek_module_phase_active_but_not_midframe);
 
         g_module_state.phase = ek_module_phase_active_and_midframe;
@@ -352,7 +352,7 @@ namespace zgl::gfx {
             g_module_state.resolution_cache = fb_size_cache;
         }
 
-        const auto context = zcl::mem::arena_push_item<t_frame_context>(context_arena);
+        const auto context = zcl::arena_push_item<t_frame_context>(context_arena);
         context->basis = basis;
 
         return context;
@@ -385,7 +385,7 @@ namespace zgl::gfx {
 
         context->frame_vert_cnt += context->batch_state.vert_cnt;
 
-        zcl::mem::zero_clear_item(&context->batch_state);
+        zcl::zero_clear_item(&context->batch_state);
     }
 
     void frame_end(t_frame_context *const context) {

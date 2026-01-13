@@ -5,7 +5,7 @@ namespace zgl::gfx {
         ZF_ASSERT(origin_check_valid(origin));
 
         zcl::t_static_array<zcl::math::t_v2, 4> quad_pts;
-        zcl::mem::t_arena quad_pts_arena = zcl::mem::arena_create_wrapping(zcl::mem::to_bytes(quad_pts));
+        zcl::t_arena quad_pts_arena = zcl::arena_create_wrapping(zcl::mem::to_bytes(quad_pts));
         const zcl::math::t_poly_mut quad_poly = zcl::math::poly_create_quad_rotated(pos, size, origin, rot, &quad_pts_arena);
 
         const zcl::t_static_array<t_triangle, 2> triangles = {{
@@ -43,7 +43,7 @@ namespace zgl::gfx {
         const zcl::math::t_rect_f uv_rect = zcl::gfx::texture_calc_uv_rect(src_rect_to_use, texture_size);
 
         zcl::t_static_array<zcl::math::t_v2, 4> quad_pts;
-        zcl::mem::t_arena quad_pts_arena = zcl::mem::arena_create_wrapping(zcl::mem::to_bytes(quad_pts));
+        zcl::t_arena quad_pts_arena = zcl::arena_create_wrapping(zcl::mem::to_bytes(quad_pts));
         const zcl::math::t_poly_mut quad_poly = zcl::math::poly_create_quad_rotated(pos, zcl::math::v2_i_to_f(zcl::math::rect_get_size(src_rect_to_use)), origin, rot, &quad_pts_arena);
 
         const zcl::t_static_array<t_triangle, 2> triangles = {{
@@ -66,7 +66,7 @@ namespace zgl::gfx {
         frame_submit_triangles(context, zcl::array_to_nonstatic(&triangles), texture);
     }
 
-    t_font font_create_from_raw(const zcl::strs::t_str_rdonly file_path, const zcl::t_i32 height, zcl::strs::t_code_pt_bitset *const code_pts, zcl::mem::t_arena *const temp_arena, t_resource_group *const resource_group) {
+    t_font font_create_from_raw(const zcl::strs::t_str_rdonly file_path, const zcl::t_i32 height, zcl::strs::t_code_pt_bitset *const code_pts, zcl::t_arena *const temp_arena, t_resource_group *const resource_group) {
         zcl::gfx::t_font_arrangement arrangement;
         zcl::t_array_mut<zcl::gfx::t_font_atlas_rgba> atlas_rgbas;
 
@@ -74,7 +74,7 @@ namespace zgl::gfx {
             ZF_FATAL();
         }
 
-        const zcl::t_array_mut<t_resource *> atlases = zcl::mem::arena_push_array<t_resource *>(resource_group->arena, atlas_rgbas.len);
+        const zcl::t_array_mut<t_resource *> atlases = zcl::arena_push_array<t_resource *>(resource_group->arena, atlas_rgbas.len);
 
         for (zcl::t_i32 i = 0; i < atlas_rgbas.len; i++) {
             atlases[i] = texture_create({zcl::gfx::k_font_atlas_size, atlas_rgbas[i]}, resource_group);
@@ -86,7 +86,7 @@ namespace zgl::gfx {
         };
     }
 
-    t_font font_create_from_packed(const zcl::strs::t_str_rdonly file_path, zcl::mem::t_arena *const temp_arena, t_resource_group *const resource_group) {
+    t_font font_create_from_packed(const zcl::strs::t_str_rdonly file_path, zcl::t_arena *const temp_arena, t_resource_group *const resource_group) {
         zcl::gfx::t_font_arrangement arrangement;
         zcl::t_array_mut<zcl::gfx::t_font_atlas_rgba> atlas_rgbas;
 
@@ -94,7 +94,7 @@ namespace zgl::gfx {
             ZF_FATAL();
         }
 
-        const auto atlases = zcl::mem::arena_push_array<t_resource *>(resource_group->arena, atlas_rgbas.len);
+        const auto atlases = zcl::arena_push_array<t_resource *>(resource_group->arena, atlas_rgbas.len);
 
         for (zcl::t_i32 i = 0; i < atlas_rgbas.len; i++) {
             atlases[i] = texture_create({zcl::gfx::k_font_atlas_size, atlas_rgbas[i]}, resource_group);
@@ -106,7 +106,7 @@ namespace zgl::gfx {
         };
     }
 
-    static zcl::t_array_mut<zcl::math::t_v2> calc_str_chr_render_positions(const zcl::strs::t_str_rdonly str, const zcl::gfx::t_font_arrangement &font_arrangement, const zcl::math::t_v2 pos, const zcl::math::t_v2 alignment, zcl::mem::t_arena *const arena) {
+    static zcl::t_array_mut<zcl::math::t_v2> calc_str_chr_render_positions(const zcl::strs::t_str_rdonly str, const zcl::gfx::t_font_arrangement &font_arrangement, const zcl::math::t_v2 pos, const zcl::math::t_v2 alignment, zcl::t_arena *const arena) {
         ZF_ASSERT(zcl::strs::check_valid_utf8(str));
         ZF_ASSERT(alignment_check_valid(alignment));
 
@@ -131,7 +131,7 @@ namespace zgl::gfx {
         }();
 
         // Reserve memory for the character positions.
-        const auto positions = zcl::mem::arena_push_array<zcl::math::t_v2>(arena, str_meta.len);
+        const auto positions = zcl::arena_push_array<zcl::math::t_v2>(arena, str_meta.len);
 
         // From the line count we can determine the vertical alignment offset to apply.
         const zcl::t_f32 alignment_offs_y = static_cast<zcl::t_f32>(-(str_meta.line_cnt * font_arrangement.line_height)) * alignment.y;
@@ -202,7 +202,7 @@ namespace zgl::gfx {
         return positions;
     }
 
-    void frame_submit_str(t_frame_context *const context, const zcl::strs::t_str_rdonly str, const t_font &font, const zcl::math::t_v2 pos, zcl::mem::t_arena *const temp_arena, const zcl::math::t_v2 alignment, const zcl::gfx::t_color_rgba32f blend) {
+    void frame_submit_str(t_frame_context *const context, const zcl::strs::t_str_rdonly str, const t_font &font, const zcl::math::t_v2 pos, zcl::t_arena *const temp_arena, const zcl::math::t_v2 alignment, const zcl::gfx::t_color_rgba32f blend) {
         ZF_ASSERT(zcl::strs::check_valid_utf8(str));
         ZF_ASSERT(alignment_check_valid(alignment));
 
