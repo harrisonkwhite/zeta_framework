@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cmath>
+#include <zcl/zcl_basic.h>
 #include <zcl/zcl_mem.h>
 
 namespace zcl::math {

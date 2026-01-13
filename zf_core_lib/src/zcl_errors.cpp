@@ -1,4 +1,4 @@
-#include <zcl/zcl_basic.h>
+#include <zcl/zcl_errors.h>
 
 #include <cstdio>
 
@@ -33,7 +33,7 @@ namespace zcl {
 #endif
     }
 
-    static void PrintStackTrace() {
+    static void print_stack_trace() {
 #ifdef ZF_PLATFORM_WINDOWS
         constexpr int k_stack_len = 32;
         void *stack[k_stack_len];
@@ -89,7 +89,7 @@ namespace zcl {
         fprintf(stderr, "File:      %s\n", file_name_cstr);
         fprintf(stderr, "Line:      %d\n\n", line);
 
-        PrintStackTrace();
+        print_stack_trace();
 
         fprintf(stderr, "=========================================================\n");
 
@@ -116,7 +116,7 @@ namespace zcl {
         }
 #endif
 
-        PrintStackTrace();
+        print_stack_trace();
 
         fprintf(stderr, "=====================================================\n");
 

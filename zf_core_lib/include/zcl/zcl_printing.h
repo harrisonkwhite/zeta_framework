@@ -1,6 +1,8 @@
 #pragma once
 
-#include <zcl/zcl_io.h>
+#include <zcl/zcl_basic.h>
+#include <zcl/zcl_streams.h>
+#include <zcl/zcl_file_sys.h>
 #include <zcl/zcl_math.h>
 
 namespace zcl::io {

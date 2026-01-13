@@ -1,7 +1,7 @@
 #pragma once
 
 #include <zcl/zcl_math.h>
-#include <zcl/zcl_ds.h>
+#include <zcl/ds/zcl_hash_maps.h>
 #include <zcl/zcl_strs.h>
 
 namespace zcl::gfx {

@@ -4,7 +4,19 @@
 
 namespace zcl::strs {
     // ============================================================
-    // @section: Code Points
+    // @section: Types
+
+    struct t_str_rdonly {
+        t_array_rdonly<t_u8> bytes;
+    };
+
+    struct t_str_mut {
+        t_array_mut<t_u8> bytes;
+
+        operator t_str_rdonly() const {
+            return {bytes};
+        }
+    };
 
     constexpr t_i32 k_code_pt_cnt = 1114112;
 
@@ -16,6 +28,12 @@ namespace zcl::strs {
 
     constexpr t_i32 k_printable_ascii_range_begin = 0x20;
     constexpr t_i32 k_printable_ascii_range_end = 0x7F;
+
+    // ============================================================
+
+    // ============================================================
+    // @section: Code Points
+
 
     constexpr t_b8 code_pt_check_ascii(const t_code_pt cp) {
         return cp >= k_ascii_range_begin && cp < k_ascii_range_end;
@@ -31,17 +49,6 @@ namespace zcl::strs {
     // ============================================================
     // @section: ZF Strings
 
-    struct t_str_rdonly {
-        t_array_rdonly<t_u8> bytes;
-    };
-
-    struct t_str_mut {
-        t_array_mut<t_u8> bytes;
-
-        operator t_str_rdonly() const {
-            return {bytes};
-        }
-    };
 
     constexpr t_comparator_bin<t_str_rdonly> k_str_comparator_bin =
         [](const t_str_rdonly &a, const t_str_rdonly &b) {

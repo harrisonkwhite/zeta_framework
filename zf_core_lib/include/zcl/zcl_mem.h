@@ -1,6 +1,9 @@
 #pragma once
 
 #include <zcl/zcl_basic.h>
+#include <zcl/zcl_arrays.h>
+#include <zcl/zcl_errors.h>
+#include <zcl/zcl_streams.h>
 
 namespace zcl::mem {
     constexpr t_i32 kilobytes_to_bytes(const t_i32 n) { return (1 << 10) * n; }
