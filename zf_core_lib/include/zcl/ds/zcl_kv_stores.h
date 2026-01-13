@@ -1,6 +1,7 @@
 #pragma once
 
-#include <zcl/zcl_mem.h>
+#include <zcl/zcl_basic.h>
+#include <zcl/zcl_bits.h>
 
 namespace zcl::ds {
     template <typename tp_type> concept c_kv_store_key = c_simple<tp_type> && c_same<tp_type, t_cvref_removed<tp_type>>;
@@ -14,7 +15,7 @@ namespace zcl::ds {
         t_array_mut<tp_key_type> keys;
         t_array_mut<tp_value_type> values;
         t_array_mut<t_i32> next_indexes;
-        mem::t_bitset_mut usage;
+        t_bitset_mut usage;
 
         t_kv_store_block *next;
     };
@@ -56,7 +57,7 @@ namespace zcl::ds {
         block->next_indexes = arena_push_array<t_i32>(arena, cap);
         array_set_all_to(block->next_indexes, -1);
 
-        block->usage = mem::bitset_create(cap, arena);
+        block->usage = bitset_create(cap, arena);
 
         return block;
     }
@@ -124,7 +125,7 @@ namespace zcl::ds {
             kv_store->pair_cnt++;
 
             while (block) {
-                const auto possible_rel_index_to_use = mem::find_first_unset_bit(block->usage);
+                const auto possible_rel_index_to_use = find_first_unset_bit(block->usage);
 
                 if (possible_rel_index_to_use == -1) {
                     block_previous = block;
@@ -135,7 +136,7 @@ namespace zcl::ds {
 
                 block->keys[possible_rel_index_to_use] = key;
                 block->values[possible_rel_index_to_use] = value;
-                mem::set(block->usage, possible_rel_index_to_use);
+                set(block->usage, possible_rel_index_to_use);
                 ZF_ASSERT(block->next_indexes[possible_rel_index_to_use] == -1);
 
                 return (block_index * kv_store->block_cap) + possible_rel_index_to_use;
@@ -153,7 +154,7 @@ namespace zcl::ds {
 
             new_block->keys[0] = key;
             new_block->values[0] = value;
-            mem::set(new_block->usage, 0);
+            set(new_block->usage, 0);
 
             return block_index * kv_store->block_cap;
         }();

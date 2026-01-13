@@ -1,7 +1,7 @@
 #pragma once
 
 #include <zcl/zcl_basic.h>
-#include <zcl/zcl_mem.h>
+#include <zcl/zcl_bits.h>
 #include <zcl/zcl_math.h>
 #include <zcl/ds/zcl_lists.h>
 #include <zcl/ds/zcl_kv_stores.h>

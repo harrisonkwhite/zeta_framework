@@ -347,28 +347,28 @@ namespace zcl::strs {
         switch (bytes.len) {
         case 1:
             // 0xxxxxxx
-            result |= bytes[0] & mem::byte_bitmask_create_range(0, 7);
+            result |= bytes[0] & byte_bitmask_create_range(0, 7);
             break;
 
         case 2:
             // 110xxxxx 10xxxxxx
-            result |= static_cast<t_code_pt>((bytes[0] & mem::byte_bitmask_create_range(0, 5)) << 6);
-            result |= bytes[1] & mem::byte_bitmask_create_range(0, 6);
+            result |= static_cast<t_code_pt>((bytes[0] & byte_bitmask_create_range(0, 5)) << 6);
+            result |= bytes[1] & byte_bitmask_create_range(0, 6);
             break;
 
         case 3:
             // 1110xxxx 10xxxxxx 10xxxxxx
-            result |= static_cast<t_code_pt>((bytes[0] & mem::byte_bitmask_create_range(0, 4)) << 12);
-            result |= static_cast<t_code_pt>((bytes[1] & mem::byte_bitmask_create_range(0, 6)) << 6);
-            result |= bytes[2] & mem::byte_bitmask_create_range(0, 6);
+            result |= static_cast<t_code_pt>((bytes[0] & byte_bitmask_create_range(0, 4)) << 12);
+            result |= static_cast<t_code_pt>((bytes[1] & byte_bitmask_create_range(0, 6)) << 6);
+            result |= bytes[2] & byte_bitmask_create_range(0, 6);
             break;
 
         case 4:
             // 11110xxx 10xxxxxx 10xxxxxx 10xxxxxx
-            result |= static_cast<t_code_pt>((bytes[0] & mem::byte_bitmask_create_range(0, 3)) << 18);
-            result |= static_cast<t_code_pt>((bytes[1] & mem::byte_bitmask_create_range(0, 6)) << 12);
-            result |= static_cast<t_code_pt>((bytes[2] & mem::byte_bitmask_create_range(0, 6)) << 6);
-            result |= bytes[3] & mem::byte_bitmask_create_range(0, 6);
+            result |= static_cast<t_code_pt>((bytes[0] & byte_bitmask_create_range(0, 3)) << 18);
+            result |= static_cast<t_code_pt>((bytes[1] & byte_bitmask_create_range(0, 6)) << 12);
+            result |= static_cast<t_code_pt>((bytes[2] & byte_bitmask_create_range(0, 6)) << 6);
+            result |= bytes[3] & byte_bitmask_create_range(0, 6);
             break;
 
         default:
@@ -386,7 +386,7 @@ namespace zcl::strs {
         case 1:
             // 0xxxxxxx
 
-            (*o_bytes)[0] |= cp & mem::byte_bitmask_create_range(0, 7);
+            (*o_bytes)[0] |= cp & byte_bitmask_create_range(0, 7);
 
             break;
 
@@ -394,10 +394,10 @@ namespace zcl::strs {
             // 110xxxxx 10xxxxxx
 
             (*o_bytes)[0] = 0b11000000;
-            (*o_bytes)[0] |= (cp & (mem::byte_bitmask_create_range(0, 5) << 6)) >> 6;
+            (*o_bytes)[0] |= (cp & (byte_bitmask_create_range(0, 5) << 6)) >> 6;
 
             (*o_bytes)[1] = 0b10000000;
-            (*o_bytes)[1] |= cp & mem::byte_bitmask_create_range(0, 6);
+            (*o_bytes)[1] |= cp & byte_bitmask_create_range(0, 6);
 
             break;
 
@@ -405,13 +405,13 @@ namespace zcl::strs {
             // 1110xxxx 10xxxxxx 10xxxxxx
 
             (*o_bytes)[0] = 0b11100000;
-            (*o_bytes)[0] |= (cp & (mem::byte_bitmask_create_range(0, 4) << 12)) >> 12;
+            (*o_bytes)[0] |= (cp & (byte_bitmask_create_range(0, 4) << 12)) >> 12;
 
             (*o_bytes)[1] = 0b10000000;
-            (*o_bytes)[1] |= (cp & (mem::byte_bitmask_create_range(0, 6) << 6)) >> 6;
+            (*o_bytes)[1] |= (cp & (byte_bitmask_create_range(0, 6) << 6)) >> 6;
 
             (*o_bytes)[2] = 0b10000000;
-            (*o_bytes)[2] |= cp & mem::byte_bitmask_create_range(0, 6);
+            (*o_bytes)[2] |= cp & byte_bitmask_create_range(0, 6);
 
             break;
 
@@ -419,16 +419,16 @@ namespace zcl::strs {
             // 11110xxx 10xxxxxx 10xxxxxx 10xxxxxx
 
             (*o_bytes)[0] = 0b11110000;
-            (*o_bytes)[0] |= (cp & (mem::byte_bitmask_create_range(0, 3) << 18)) >> 18;
+            (*o_bytes)[0] |= (cp & (byte_bitmask_create_range(0, 3) << 18)) >> 18;
 
             (*o_bytes)[1] = 0b10000000;
-            (*o_bytes)[1] |= (cp & (mem::byte_bitmask_create_range(0, 6) << 12)) >> 12;
+            (*o_bytes)[1] |= (cp & (byte_bitmask_create_range(0, 6) << 12)) >> 12;
 
             (*o_bytes)[2] = 0b10000000;
-            (*o_bytes)[2] |= (cp & (mem::byte_bitmask_create_range(0, 6) << 6)) >> 6;
+            (*o_bytes)[2] |= (cp & (byte_bitmask_create_range(0, 6) << 6)) >> 6;
 
             (*o_bytes)[3] = 0b10000000;
-            (*o_bytes)[3] |= cp & mem::byte_bitmask_create_range(0, 6);
+            (*o_bytes)[3] |= cp & byte_bitmask_create_range(0, 6);
 
             break;
 
@@ -461,7 +461,7 @@ namespace zcl::strs {
         ZF_ASSERT(check_valid_utf8(str));
 
         ZF_WALK_STR (str, step) {
-            mem::set(*code_pts, static_cast<t_i32>(step.code_pt));
+            set(*code_pts, static_cast<t_i32>(step.code_pt));
         }
     }
 

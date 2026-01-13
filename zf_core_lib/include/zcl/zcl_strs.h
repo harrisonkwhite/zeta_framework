@@ -1,6 +1,7 @@
 #pragma once
 
-#include <zcl/zcl_mem.h>
+#include <zcl/zcl_basic.h>
+#include <zcl/zcl_bits.h>
 
 namespace zcl::strs {
     // ============================================================
@@ -9,7 +10,7 @@ namespace zcl::strs {
     constexpr t_i32 k_code_pt_cnt = 1114112;
 
     using t_code_pt = char32_t;
-    using t_code_pt_bitset = mem::t_static_bitset<k_code_pt_cnt>;
+    using t_code_pt_bitset = t_static_bitset<k_code_pt_cnt>;
 
     constexpr t_i32 k_ascii_range_begin = 0;
     constexpr t_i32 k_ascii_range_end = 0x80;

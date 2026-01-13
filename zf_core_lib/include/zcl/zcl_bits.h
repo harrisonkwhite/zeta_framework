@@ -2,27 +2,7 @@
 
 #include <zcl/zcl_basic.h>
 
-namespace zcl::mem {
-    template <c_simple tp_type>
-    t_array_mut<t_u8> to_bytes(tp_type &val) {
-        return {reinterpret_cast<t_u8 *>(&val), ZF_SIZE_OF(val)};
-    }
-
-    template <c_simple tp_type>
-    t_array_rdonly<t_u8> to_bytes(const tp_type &val) {
-        return {reinterpret_cast<const t_u8 *>(&val), ZF_SIZE_OF(val)};
-    }
-
-    template <c_array_elem tp_elem_type>
-    t_array_mut<t_u8> array_to_byte_array(const t_array_mut<tp_elem_type> arr) {
-        return {reinterpret_cast<t_u8 *>(arr.raw), array_get_size_in_bytes(arr)};
-    }
-
-    template <c_array_elem tp_elem_type>
-    t_array_rdonly<t_u8> array_to_byte_array(const t_array_rdonly<tp_elem_type> arr) {
-        return {reinterpret_cast<const t_u8 *>(arr.raw), array_get_size_in_bytes(arr)};
-    }
-
+namespace zcl {
     // Creates a byte-sized bitmask with only a single bit set.
     constexpr t_u8 byte_bitmask_create_single(const t_i32 bit_index) {
         ZF_ASSERT(bit_index >= 0 && bit_index < 8);
@@ -106,6 +86,34 @@ namespace zcl::mem {
         return byte_bitmask_create_range(0, bitset_get_last_byte_bit_cnt(bs));
     }
 
+    [[nodiscard]] inline t_b8 bitset_serialize(const t_stream stream, const t_bitset_rdonly bs) {
+        if (!stream_write_item(stream, bs.bit_cnt)) {
+            return false;
+        }
+
+        if (!stream_write_items_of_array(stream, bitset_get_bytes(bs))) {
+            return false;
+        }
+
+        return true;
+    }
+
+    [[nodiscard]] inline t_b8 bitset_deserialize(const t_stream stream, t_arena *const bs_arena, t_bitset_mut *const o_bs) {
+        t_i32 bit_cnt;
+
+        if (!stream_read_item(stream, &bit_cnt)) {
+            return false;
+        }
+
+        *o_bs = bitset_create(bit_cnt, bs_arena);
+
+        if (!stream_read_items_into_array(stream, bitset_get_bytes(*o_bs), bitset_get_bytes(*o_bs).len)) {
+            return false;
+        }
+
+        return true;
+    }
+
     constexpr t_b8 check_set(const t_bitset_rdonly bs, const t_i32 index) {
         ZF_ASSERT(index >= 0 && index < bs.bit_cnt);
         return bitset_get_bytes(bs)[index / 8] & byte_bitmask_create_single(index % 8);
@@ -176,37 +184,6 @@ namespace zcl::mem {
     // Returns false iff the walk is complete.
     t_b8 walk_all_unset(const t_bitset_rdonly bs, t_i32 *const pos, t_i32 *const o_index);
 
-#define ZF_WALK_SET_BITS(bs, index) for (zcl::t_i32 ZF_CONCAT(walk_pos_l, __LINE__) = 0, index; zcl::mem::walk_all_set(bs, &ZF_CONCAT(walk_pos_l, __LINE__), &index);)
-#define ZF_WALK_UNSET_BITS(bs, index) for (zcl::t_i32 ZF_CONCAT(walk_pos_l, __LINE__) = 0, index; zcl::mem::walk_all_unset(bs, &ZF_CONCAT(walk_pos_l, __LINE__), &index);)
-}
-
-// @temp
-namespace zcl {
-    [[nodiscard]] inline t_b8 stream_serialize_bitset(const t_stream stream, const mem::t_bitset_rdonly bv) {
-        if (!stream_write_item(stream, bv.bit_cnt)) {
-            return false;
-        }
-
-        if (!stream_write_items_of_array(stream, mem::bitset_get_bytes(bv))) {
-            return false;
-        }
-
-        return true;
-    }
-
-    [[nodiscard]] inline t_b8 stream_deserialize_bitset(const t_stream stream, t_arena *const bv_arena, mem::t_bitset_mut *const o_bv) {
-        t_i32 bit_cnt;
-
-        if (!stream_read_item(stream, &bit_cnt)) {
-            return false;
-        }
-
-        *o_bv = mem::bitset_create(bit_cnt, bv_arena);
-
-        if (!stream_read_items_into_array(stream, mem::bitset_get_bytes(*o_bv), mem::bitset_get_bytes(*o_bv).len)) {
-            return false;
-        }
-
-        return true;
-    }
+#define ZF_WALK_SET_BITS(bs, index) for (zcl::t_i32 ZF_CONCAT(walk_pos_l, __LINE__) = 0, index; zcl::walk_all_set(bs, &ZF_CONCAT(walk_pos_l, __LINE__), &index);)
+#define ZF_WALK_UNSET_BITS(bs, index) for (zcl::t_i32 ZF_CONCAT(walk_pos_l, __LINE__) = 0, index; zcl::walk_all_unset(bs, &ZF_CONCAT(walk_pos_l, __LINE__), &index);)
 }

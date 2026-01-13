@@ -217,7 +217,7 @@ namespace zgl::platform {
 
         for (zcl::t_i32 i = GLFW_JOYSTICK_1; i <= GLFW_JOYSTICK_LAST; i++) {
             zcl::t_b8 connected = false;
-            zcl::mem::t_static_bitset<input::ekm_gamepad_button_code_cnt> btns_down = {};
+            zcl::t_static_bitset<input::ekm_gamepad_button_code_cnt> btns_down = {};
             zcl::t_static_array<zcl::t_f32, input::ekm_gamepad_axis_code_cnt> axes = {};
 
             GLFWgamepadstate gamepad_state;
@@ -227,9 +227,9 @@ namespace zgl::platform {
 
                 for (zcl::t_i32 j = 0; j <= GLFW_GAMEPAD_BUTTON_LAST; j++) {
                     if (gamepad_state.buttons[j]) {
-                        zcl::mem::set(btns_down, j);
+                        zcl::set(btns_down, j);
                     } else {
-                        zcl::mem::unset(btns_down, j);
+                        zcl::unset(btns_down, j);
                     }
                 }
 

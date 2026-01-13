@@ -1,6 +1,6 @@
 #pragma once
 
-#include <zcl/zcl_mem.h>
+#include <zcl/zcl_basic.h>
 
 namespace zcl::rand {
     struct t_rng;

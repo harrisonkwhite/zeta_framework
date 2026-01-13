@@ -20,7 +20,7 @@
 
     ZF_DEFER({ zcl::file_sys::file_close(&output_file_stream); });
 
-    zcl::io::print(output_file_stream, ZF_STR_LITERAL("#include <zcl/zcl_mem.h>\n"));
+    zcl::io::print(output_file_stream, ZF_STR_LITERAL("#include <zcl/zcl_basic.h>\n"));
     zcl::io::print(output_file_stream, ZF_STR_LITERAL("\n"));
 
     zcl::strs::t_str_rdonly indent = {};

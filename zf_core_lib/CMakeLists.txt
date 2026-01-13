@@ -1,5 +1,5 @@
 add_library(zf_core_lib STATIC
-    src/zcl_mem.cpp
+    src/zcl_bits.cpp
     src/zcl_audio.cpp
     src/zcl_math.cpp
     src/zcl_strs.cpp
@@ -13,7 +13,7 @@ add_library(zf_core_lib STATIC
 	../external/miniaudio/src/miniaudio.c
 
     include/zcl.h
-    include/zcl/zcl_mem.h
+    include/zcl/zcl_bits.h
     include/zcl/gfx/zcl_colors.h
     include/zcl/gfx/zcl_textures.h
     include/zcl/gfx/zcl_fonts.h

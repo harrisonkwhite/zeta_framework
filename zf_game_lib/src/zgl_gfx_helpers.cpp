@@ -5,7 +5,7 @@ namespace zgl::gfx {
         ZF_ASSERT(origin_check_valid(origin));
 
         zcl::t_static_array<zcl::math::t_v2, 4> quad_pts;
-        zcl::t_arena quad_pts_arena = zcl::arena_create_wrapping(zcl::mem::to_bytes(quad_pts));
+        zcl::t_arena quad_pts_arena = zcl::arena_create_wrapping(zcl::to_bytes(&quad_pts));
         const zcl::math::t_poly_mut quad_poly = zcl::math::poly_create_quad_rotated(pos, size, origin, rot, &quad_pts_arena);
 
         const zcl::t_static_array<t_triangle, 2> triangles = {{
@@ -43,7 +43,7 @@ namespace zgl::gfx {
         const zcl::math::t_rect_f uv_rect = zcl::gfx::texture_calc_uv_rect(src_rect_to_use, texture_size);
 
         zcl::t_static_array<zcl::math::t_v2, 4> quad_pts;
-        zcl::t_arena quad_pts_arena = zcl::arena_create_wrapping(zcl::mem::to_bytes(quad_pts));
+        zcl::t_arena quad_pts_arena = zcl::arena_create_wrapping(zcl::to_bytes(&quad_pts));
         const zcl::math::t_poly_mut quad_poly = zcl::math::poly_create_quad_rotated(pos, zcl::math::v2_i_to_f(zcl::math::rect_get_size(src_rect_to_use)), origin, rot, &quad_pts_arena);
 
         const zcl::t_static_array<t_triangle, 2> triangles = {{

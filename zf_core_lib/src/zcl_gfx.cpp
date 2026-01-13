@@ -124,12 +124,12 @@ namespace zcl::gfx {
             const t_i32 glyph_index = stbtt_FindGlyphIndex(&stb_font_info, static_cast<t_i32>(code_pt));
 
             if (glyph_index == 0) {
-                mem::unset(*code_pts, i);
+                unset(*code_pts, i);
             }
         }
 
         // Compute number of leftover code points that can actually be supported, return if there are none.
-        const t_i32 code_pt_cnt = mem::count_set(*code_pts);
+        const t_i32 code_pt_cnt = count_set(*code_pts);
 
         if (code_pt_cnt == 0) {
             return true;

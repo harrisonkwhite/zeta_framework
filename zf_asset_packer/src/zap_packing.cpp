@@ -230,7 +230,7 @@ zcl::t_b8 pack_assets(const zcl::strs::t_str_rdonly instrs_json_file_path) {
 
                 const auto code_pt_bv = zcl::arena_push_item<zcl::strs::t_code_pt_bitset>(&arena);
 
-                zcl::mem::set_range(*code_pt_bv, zcl::strs::k_printable_ascii_range_begin, zcl::strs::k_printable_ascii_range_end); // Add the printable ASCII range as a default.
+                zcl::set_range(*code_pt_bv, zcl::strs::k_printable_ascii_range_begin, zcl::strs::k_printable_ascii_range_end); // Add the printable ASCII range as a default.
 
                 if (field_vals[ek_font_field_extra_chrs_file_path]) {
                     const auto extra_chrs_file_path = zcl::strs::cstr_to_str(field_vals[ek_font_field_extra_chrs_file_path]->valuestring);

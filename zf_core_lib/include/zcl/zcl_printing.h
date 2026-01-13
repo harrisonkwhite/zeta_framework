@@ -99,7 +99,7 @@ namespace zcl::io {
     struct t_bitset_format {
         using t_format_tag = void;
 
-        mem::t_bitset_rdonly value;
+        t_bitset_rdonly value;
         t_bitset_format_style style;
     };
 
@@ -370,20 +370,20 @@ namespace zcl::io {
         return true;
     }
 
-    inline t_bitset_format format_bitset(const mem::t_bitset_rdonly &value, const t_bitset_format_style style) {
+    inline t_bitset_format format_bitset(const t_bitset_rdonly &value, const t_bitset_format_style style) {
         return {.value = value, .style = style};
     }
 
-    inline t_bitset_format format_default(const mem::t_bitset_rdonly &value) { return format_bitset(value, ek_bitset_format_style_seq); }
+    inline t_bitset_format format_default(const t_bitset_rdonly &value) { return format_bitset(value, ek_bitset_format_style_seq); }
 
     inline t_b8 print_type(const t_stream stream, const t_bitset_format format) {
         const auto print_bit = [&](const t_i32 bit_index) {
-            const strs::t_str_rdonly str = mem::check_set(format.value, bit_index) ? ZF_STR_LITERAL("1") : ZF_STR_LITERAL("0");
+            const strs::t_str_rdonly str = check_set(format.value, bit_index) ? ZF_STR_LITERAL("1") : ZF_STR_LITERAL("0");
             return print(stream, str);
         };
 
         const auto print_byte = [&](const t_i32 index) {
-            const t_i32 bit_cnt = index == mem::bitset_get_bytes(format.value).len - 1 ? mem::bitset_get_last_byte_bit_cnt(format.value) : 8;
+            const t_i32 bit_cnt = index == bitset_get_bytes(format.value).len - 1 ? bitset_get_last_byte_bit_cnt(format.value) : 8;
 
             for (t_i32 i = 7; i >= bit_cnt; i--) {
                 print(stream, ZF_STR_LITERAL("0"));
@@ -405,7 +405,7 @@ namespace zcl::io {
             break;
 
         case ek_bitset_format_style_little_endian:
-            for (t_i32 i = 0; i < mem::bitset_get_bytes(format.value).len; i++) {
+            for (t_i32 i = 0; i < bitset_get_bytes(format.value).len; i++) {
                 if (i > 0) {
                     print(stream, ZF_STR_LITERAL(" "));
                 }
@@ -416,7 +416,7 @@ namespace zcl::io {
             break;
 
         case ek_bitset_format_style_big_endian:
-            for (t_i32 i = mem::bitset_get_bytes(format.value).len - 1; i >= 0; i--) {
+            for (t_i32 i = bitset_get_bytes(format.value).len - 1; i >= 0; i--) {
                 print_byte(i);
 
                 if (i > 0) {

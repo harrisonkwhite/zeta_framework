@@ -1,6 +1,6 @@
 #pragma once
 
-#include <zcl/zcl_mem.h>
+#include <zcl/zcl_basic.h>
 
 namespace zcl::algos {
     // O(n^2) time complexity, but O(1) space complexity.

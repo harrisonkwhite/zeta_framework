@@ -1,7 +1,6 @@
 #pragma once
 
 #include <zcl/zcl_math.h>
-#include <zcl/zcl_mem.h>
 #include <zcl/zcl_strs.h>
 
 namespace zcl::gfx {

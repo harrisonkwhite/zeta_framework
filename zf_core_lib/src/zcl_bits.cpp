@@ -1,9 +1,8 @@
-#include <zcl/zcl_mem.h>
+#include <zcl/zcl_bits.h>
 
 #include <cstdlib>
-#include <zcl/zcl_algos.h>
 
-namespace zcl::mem {
+namespace zcl {
     t_b8 check_any_set(const t_bitset_rdonly bs) {
         if (bs.bit_cnt == 0) {
             return false;
