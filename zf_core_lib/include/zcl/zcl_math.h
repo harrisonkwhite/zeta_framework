@@ -1,8 +1,7 @@
 #pragma once
 
 #include <cmath>
-#include <zcl/zcl_arenas.h>
-#include <zcl/zcl_bits.h>
+#include <zcl/zcl_basic.h>
 
 namespace zcl {
     constexpr t_f32 k_pi = 3.14159265358979323846f;

@@ -3,13 +3,13 @@
 #include <zcl/zcl_basic.h>
 #include <zcl/zcl_bits.h>
 #include <zcl/zcl_math.h>
-#include <zcl/zcl_arenas.h>
 #include <zcl/ds/zcl_lists.h>
 #include <zcl/ds/zcl_kv_stores.h>
 #include <zcl/ds/zcl_hash_maps.h>
 #include <zcl/zcl_strs.h>
-#include <zcl/zcl_file_sys.h>
-#include <zcl/zcl_printing.h>
+#include <zcl/io/zcl_streams.h>
+#include <zcl/io/zcl_file_sys.h>
+#include <zcl/io/zcl_printing.h>
 #include <zcl/gfx/zcl_colors.h>
 #include <zcl/gfx/zcl_textures.h>
 #include <zcl/gfx/zcl_fonts.h>

@@ -2,8 +2,7 @@
 
 #include <cstdio>
 #include <zcl/zcl_basic.h>
-#include <zcl/zcl_streams.h>
-#include <zcl/zcl_arenas.h>
+#include <zcl/io/zcl_streams.h>
 #include <zcl/zcl_strs.h>
 
 namespace zcl {
@@ -72,7 +71,7 @@ namespace zcl {
         ek_path_type_directory
     };
 
-    t_path_type path_get_type(const t_str_rdonly path, t_arena *const temp_arena);
+    t_path_type get_path_type(const t_str_rdonly path, t_arena *const temp_arena);
 
     t_str_mut get_executable_directory(t_arena *const arena);
 }

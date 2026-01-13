@@ -1,8 +1,6 @@
 #pragma once
 
 #include <zcl/zcl_basic.h>
-#include <zcl/zcl_arenas.h>
-#include <zcl/zcl_streams.h>
 
 namespace zcl {
     // Creates a byte-sized bitmask with only a single bit set.
@@ -160,7 +158,4 @@ namespace zcl {
 
 #define ZCL_BITSET_WALK_ALL_SET(bs, index) for (zcl::t_i32 ZCL_CONCAT(walk_pos_l, __LINE__) = 0, index; zcl::bitset_walk_all_set(bs, &ZCL_CONCAT(walk_pos_l, __LINE__), &index);)
 #define ZCL_BITSET_WALK_ALL_UNSET(bs, index) for (zcl::t_i32 ZCL_CONCAT(walk_pos_l, __LINE__) = 0, index; zcl::bitset_walk_all_unset(bs, &ZCL_CONCAT(walk_pos_l, __LINE__), &index);)
-
-    [[nodiscard]] inline t_b8 bitset_serialize(const t_stream stream, const t_bitset_rdonly bs);
-    [[nodiscard]] inline t_b8 bitset_deserialize(const t_stream stream, t_arena *const bs_arena, t_bitset_mut *const o_bs);
 }

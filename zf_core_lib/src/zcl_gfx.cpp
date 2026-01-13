@@ -5,7 +5,7 @@
 
 #include <stb_image.h>
 #include <stb_truetype.h>
-#include <zcl/zcl_file_sys.h>
+#include <zcl/io/zcl_file_sys.h>
 
 namespace zcl {
     constexpr t_hash_func<t_code_pt> k_code_pt_hash_func =
@@ -297,7 +297,7 @@ namespace zcl {
             return false;
         }
 
-        if (!stream_serialize_array(fs, atlas_rgbas)) {
+        if (!serialize_array(fs, atlas_rgbas)) {
             return false;
         }
 
@@ -325,7 +325,7 @@ namespace zcl {
             return false;
         }
 
-        if (!stream_deserialize_array(fs, atlas_rgbas_arena, o_atlas_rgbas)) {
+        if (!deserialize_array(fs, atlas_rgbas_arena, o_atlas_rgbas)) {
             return false;
         }
 
@@ -345,7 +345,7 @@ namespace zcl {
 
         ZCL_DEFER({ file_close(&fs); });
 
-        if (!stream_serialize_array(fs, compiled_shader_bin)) {
+        if (!serialize_array(fs, compiled_shader_bin)) {
             return false;
         }
 
@@ -361,7 +361,7 @@ namespace zcl {
 
         ZCL_DEFER({ file_close(&fs); });
 
-        if (!stream_deserialize_array(fs, shader_bin_arena, o_shader_bin)) {
+        if (!deserialize_array(fs, shader_bin_arena, o_shader_bin)) {
             return false;
         }
 

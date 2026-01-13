@@ -5,9 +5,6 @@
 #include <concepts>
 
 namespace zcl {
-    // ============================================================
-    // @section: Essential Macros
-
 #ifdef _WIN32
     #define ZCL_PLATFORM_WINDOWS
 #endif
@@ -43,12 +40,6 @@ namespace zcl {
     }
 
 #define ZCL_DEFER(x) const auto ZCL_CONCAT(defer_, ZCL_CONCAT(l, __LINE__)) = zcl::detail::t_defer([&]() x)
-
-    // ============================================================
-
-
-    // ============================================================
-    // @section: Essential Types and Concepts
 
     static_assert(CHAR_BIT == 8);
 
@@ -172,16 +163,14 @@ namespace zcl {
             }
         };
 
-    // ============================================================
-
 
     // ============================================================
     // @section: Errors
 
     namespace detail {
-        void try_breaking_into_debugger_if(const bool cond);
+        void try_breaking_into_debugger_if(const t_b8 cond);
 
-        [[noreturn]] void handle_assert_error(const char *const cond_cstr, const char *const func_name_cstr, const char *const file_name_cstr, const int line);
+        [[noreturn]] void handle_assert_error(const char *const cond_cstr, const char *const func_name_cstr, const char *const file_name_cstr, const t_i32 line);
 
 #ifdef ZCL_DEBUG
     #define ZCL_DEBUG_BREAK() detail::try_breaking_into_debugger_if(true)
@@ -201,7 +190,7 @@ namespace zcl {
     #define ZCL_ASSERT(cond) static_cast<void>(0)
 #endif
 
-        [[noreturn]] void handle_fatal_error(const char *const func_name_cstr, const char *const file_name_cstr, const int line, const char *const cond_cstr = nullptr);
+        [[noreturn]] void handle_fatal_error(const char *const func_name_cstr, const char *const file_name_cstr, const t_i32 line, const char *const cond_cstr = nullptr);
 
 #define ZCL_FATAL() zcl::detail::handle_fatal_error(__FUNCTION__, __FILE__, __LINE__)
 #define ZCL_UNREACHABLE() ZCL_FATAL() // @todo: This should probably have some helper message to differentiate it from normal fatal errors.
@@ -220,7 +209,7 @@ namespace zcl {
 
 
     // ============================================================
-    // @section: General Helpers
+    // @section: Helpers
 
     template <c_simple tp_type>
     constexpr void swap(tp_type *const a, tp_type *const b) {
@@ -279,12 +268,6 @@ namespace zcl {
     constexpr tp_type wrap(const tp_type val, const tp_type min, const tp_type max_excl) {
         return min + wrap(val - min, max_excl - min);
     }
-
-    // ============================================================
-
-
-    // ============================================================
-    // @section: Memory
 
 #define ZCL_SIZE_OF(x) static_cast<zcl::t_i32>(sizeof(x))
 #define ZCL_SIZE_IN_BITS(x) (8 * ZCL_SIZE_OF(x))
@@ -489,80 +472,6 @@ namespace zcl {
         }
     }
 
-    template <c_array tp_arr_a_type, c_array tp_arr_b_type>
-        requires c_same<typename tp_arr_a_type::t_elem, typename tp_arr_b_type::t_elem>
-    t_b8 arrays_check_equal(const tp_arr_a_type a, const tp_arr_b_type b, const t_comparator_bin<typename tp_arr_a_type::t_elem> comparator = k_comparator_ord_default<typename tp_arr_a_type::t_elem>) {
-        if (a.len != b.len) {
-            return false;
-        }
-
-        for (t_i32 i = 0; i < a.len; i++) {
-            if (!comparator(a[i], b[i])) {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    template <c_array tp_arr_a_type, c_array tp_arr_b_type>
-        requires c_same<typename tp_arr_a_type::t_elem, typename tp_arr_b_type::t_elem>
-    t_i32 array_compare(const tp_arr_a_type a, const tp_arr_b_type b, const t_comparator_ord<typename tp_arr_a_type::t_elem> comparator = k_comparator_ord_default<typename tp_arr_a_type::t_elem>) {
-        if (a.len != b.len) {
-            return a.len < b.len ? -1 : 1;
-        }
-
-        for (t_i32 i = 0; i < a.len; i++) {
-            const t_i32 comp = comparator(a[i], b[i]);
-
-            if (comp != 0) {
-                return comp;
-            }
-        }
-
-        return 0;
-    }
-
-    template <c_array tp_arr_type>
-    t_b8 array_check_all_equal(const tp_arr_type arr, const typename tp_arr_type::t_elem &val, const t_comparator_bin<typename tp_arr_type::t_elem> comparator = k_comparator_bin_default<typename tp_arr_type::t_elem>) {
-        if (arr.len == 0) {
-            return false;
-        }
-
-        for (t_i32 i = 0; i < arr.len; i++) {
-            if (!comparator(arr[i], val)) {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    template <c_array tp_arr_type>
-    t_b8 array_check_any_equal(const tp_arr_type arr, const typename tp_arr_type::t_elem &val, const t_comparator_bin<typename tp_arr_type::t_elem> comparator = k_comparator_bin_default<typename tp_arr_type::t_elem>) {
-        for (t_i32 i = 0; i < arr.len; i++) {
-            if (comparator(arr[i], val)) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    template <c_array_mut tp_arr_type>
-    constexpr void array_set_all_to(const tp_arr_type arr, const typename tp_arr_type::t_elem &val) {
-        for (t_i32 i = 0; i < arr.len; i++) {
-            arr[i] = val;
-        }
-    }
-
-    template <c_array_mut tp_arr_type>
-    constexpr void array_reverse(const tp_arr_type arr) {
-        for (t_i32 i = 0; i < arr.len / 2; i++) {
-            swap(&arr[i], &arr[arr.len - 1 - i]);
-        }
-    }
-
     template <c_array_elem tp_elem_type>
     t_array_mut<t_u8> array_to_byte_array(const t_array_mut<tp_elem_type> arr) {
         return {reinterpret_cast<t_u8 *>(arr.raw), array_get_size_in_bytes(arr)};
@@ -582,4 +491,103 @@ namespace zcl {
     t_array_rdonly<t_u8> to_bytes(const tp_type *const val) {
         return {reinterpret_cast<const t_u8 *>(val), ZCL_SIZE_OF(*val)};
     }
+
+    // ============================================================
+
+
+    // ============================================================
+    // @section: Arenas
+
+    struct t_arena_block {
+        void *buf;
+        t_i32 buf_size;
+
+        t_arena_block *next;
+    };
+
+    enum t_arena_type : t_i32 {
+        ek_arena_type_invalid,
+        ek_arena_type_blockbased, // Owns its memory, which is organised as a linked list of dynamically allocated blocks. New blocks are allocated as needed.
+        ek_arena_type_wrapping    // Non-owning and non-reallocating. Useful if you want to leverage a stack-allocated buffer for example. @todo: Probably not a good name.
+    };
+
+    struct t_arena {
+        t_arena_type type;
+
+        union {
+            struct {
+                t_arena_block *blocks_head;
+                t_arena_block *block_cur;
+                t_i32 block_cur_offs;
+                t_i32 block_min_size;
+            } blockbased;
+
+            struct {
+                void *buf;
+                t_i32 buf_size;
+                t_i32 buf_offs;
+            } wrapping;
+        } type_data;
+    };
+
+#ifdef ZCL_DEBUG
+    constexpr t_u8 k_arena_poison = 0xCD; // Memory outside the arena's valid "scope" is set to this for easier debugging.
+#endif
+
+    // Does not allocate any arena memory (blocks) upfront.
+    inline t_arena arena_create_blockbased(const t_i32 block_min_size = megabytes_to_bytes(1)) {
+        ZCL_ASSERT(block_min_size > 0);
+
+        return {
+            .type = ek_arena_type_blockbased,
+            .type_data = {.blockbased = {.block_min_size = block_min_size}},
+        };
+    }
+
+    inline t_arena arena_create_wrapping(const t_array_mut<t_u8> bytes) {
+        zero_clear(bytes.raw, bytes.len);
+
+        return {
+            .type = ek_arena_type_wrapping,
+            .type_data = {.wrapping = {.buf = bytes.raw, .buf_size = bytes.len}},
+        };
+    }
+
+    // Frees all arena memory. Only valid for block-based arenas. This can be called even if no pushing was done.
+    void arena_destroy(t_arena *const arena);
+
+    // Will lazily allocate memory as needed. Allocation failure is treated as fatal and causes an abort - you don't need to check for nullptr.
+    // The returned buffer is guaranteed to be zeroed.
+    void *arena_push(t_arena *const arena, const t_i32 size, const t_i32 alignment);
+
+    // Will lazily allocate memory as needed. Allocation failure is treated as fatal and causes an abort - you don't need to check for nullptr.
+    // The returned item is guaranteed to be zeroed.
+    template <c_simple tp_type>
+    tp_type *arena_push_item(t_arena *const arena) {
+        return static_cast<tp_type *>(arena_push(arena, ZCL_SIZE_OF(tp_type), ZCL_ALIGN_OF(tp_type)));
+    }
+
+    template <c_array_elem tp_elem_type>
+    t_array_mut<tp_elem_type> arena_push_array(t_arena *const arena, const t_i32 len) {
+        ZCL_ASSERT(len >= 0);
+
+        if (len == 0) {
+            return {};
+        }
+
+        const t_i32 size = ZCL_SIZE_OF(tp_elem_type) * len;
+        return {static_cast<tp_elem_type *>(arena_push(arena, size, ZCL_ALIGN_OF(tp_elem_type))), len};
+    }
+
+    template <c_array tp_arr_type>
+    auto arena_push_array_clone(t_arena *const arena, const tp_arr_type arr_to_clone) {
+        const auto arr = arena_push_array<typename tp_arr_type::t_elem>(arena, arr_to_clone.len);
+        array_copy(arr, arr_to_clone);
+        return arr;
+    }
+
+    // Takes the arena offset to the beginning of its memory (if any) to overwrite from there.
+    void arena_rewind(t_arena *const arena);
+
+    // ============================================================
 }

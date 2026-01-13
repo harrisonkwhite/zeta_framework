@@ -1,7 +1,8 @@
 #pragma once
 
 #include <zcl/zcl_basic.h>
-#include <zcl/zcl_arenas.h>
+#include <zcl/zcl_bits.h>
+#include <zcl/ds/zcl_hash_maps.h>
 
 namespace zcl {
     enum t_stream_mode : t_i32 {
@@ -54,7 +55,7 @@ namespace zcl {
     }
 
     template <c_array tp_arr_type>
-    [[nodiscard]] t_b8 stream_serialize_array(const t_stream stream, const tp_arr_type arr) {
+    [[nodiscard]] t_b8 serialize_array(const t_stream stream, const tp_arr_type arr) {
         if (!stream_write_item(stream, arr.len)) {
             return false;
         }
@@ -67,7 +68,7 @@ namespace zcl {
     }
 
     template <c_array_elem tp_elem_type>
-    [[nodiscard]] t_b8 stream_deserialize_array(const t_stream stream, t_arena *const arr_arena, t_array_mut<tp_elem_type> *const o_arr) {
+    [[nodiscard]] t_b8 deserialize_array(const t_stream stream, t_arena *const arr_arena, t_array_mut<tp_elem_type> *const o_arr) {
         t_i32 len;
 
         if (!stream_read_item(stream, &len)) {
@@ -78,6 +79,69 @@ namespace zcl {
 
         if (!stream_read_items_into_array(stream, *o_arr, len)) {
             return false;
+        }
+
+        return true;
+    }
+
+    [[nodiscard]] t_b8 bitset_serialize(const t_stream stream, const t_bitset_rdonly bs);
+    [[nodiscard]] t_b8 bitset_deserialize(const t_stream stream, t_arena *const bs_arena, t_bitset_mut *const o_bs);
+
+    template <c_hash_map tp_hash_map_type>
+    [[nodiscard]] t_b8 hash_map_serialize(const tp_hash_map_type *const hm, const t_stream stream, t_arena *const temp_arena) {
+        if (!stream_write_item(stream, hash_map_get_cap(hm))) {
+            return false;
+        }
+
+        if (!stream_write_item(stream, hash_map_get_entry_count(hm))) {
+            return false;
+        }
+
+        t_array_mut<typename tp_hash_map_type::t_key> keys;
+        t_array_mut<typename tp_hash_map_type::t_value> values;
+        hash_map_load_entries(hm, temp_arena, &keys, &values);
+
+        if (!stream_write_items_of_array(stream, keys)) {
+            return false;
+        }
+
+        if (!stream_write_items_of_array(stream, values)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    template <c_hash_map tp_hash_map_type>
+    [[nodiscard]] t_b8 hash_map_deserialize(const t_stream stream, t_arena *const hm_arena, const t_hash_func<typename tp_hash_map_type::t_key> hm_hash_func, t_arena *const temp_arena, tp_hash_map_type *const o_hm, const t_comparator_bin<typename tp_hash_map_type::t_key> hm_key_comparator = k_comparator_bin_default<typename tp_hash_map_type::t_key>) {
+        t_i32 cap;
+
+        if (!stream_read_item(stream, &cap)) {
+            return false;
+        }
+
+        t_i32 entry_cnt;
+
+        if (!stream_read_item(stream, &entry_cnt)) {
+            return false;
+        }
+
+        *o_hm = hash_map_create<typename tp_hash_map_type::t_key, typename tp_hash_map_type::t_value>(hm_hash_func, hm_arena, cap, hm_key_comparator);
+
+        const auto keys = arena_push_array<typename tp_hash_map_type::t_key>(temp_arena, entry_cnt);
+
+        if (!stream_read_items_into_array(stream, keys, entry_cnt)) {
+            return false;
+        }
+
+        const auto values = arena_push_array<typename tp_hash_map_type::t_value>(temp_arena, entry_cnt);
+
+        if (!stream_read_items_into_array(stream, values, entry_cnt)) {
+            return false;
+        }
+
+        for (t_i32 i = 0; i < entry_cnt; i++) {
+            hash_map_put(o_hm, keys[i], values[i]);
         }
 
         return true;

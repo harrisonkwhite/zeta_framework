@@ -1,4 +1,4 @@
-#include <zcl/zcl_file_sys.h>
+#include <zcl/io/zcl_file_sys.h>
 
 #ifdef ZCL_PLATFORM_WINDOWS
     #ifndef WIN32_LEAN_AND_MEAN
@@ -136,7 +136,7 @@ namespace zcl {
         }
 
         const auto create_dir_if_nonexistent = [o_dir_creation_res, &temp_arena](const t_str_rdonly path) {
-            if (path_get_type(path, temp_arena) == ek_path_type_not_found) {
+            if (get_path_type(path, temp_arena) == ek_path_type_not_found) {
                 if (!create_directory(path, temp_arena, o_dir_creation_res)) {
                     return false;
                 }
@@ -198,7 +198,7 @@ namespace zcl {
         return true;
     }
 
-    t_path_type path_get_type(const t_str_rdonly path, t_arena *const temp_arena) {
+    t_path_type get_path_type(const t_str_rdonly path, t_arena *const temp_arena) {
         const t_str_rdonly path_terminated = str_clone_but_add_terminator(path, temp_arena);
 
         struct stat info;

@@ -1,6 +1,5 @@
 #pragma once
 
-#include <zcl/zcl_basic.h>
 #include <zcl/zcl_bits.h>
 
 namespace zcl {
