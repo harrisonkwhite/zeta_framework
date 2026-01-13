@@ -1,6 +1,12 @@
 #include <zcl/zcl_math.h>
 
+#include <cmath>
+
 namespace zcl {
+    t_f32 v2_calc_mag(const t_v2 v) {
+        return sqrt((v.x * v.x) + (v.y * v.y));
+    }
+
     t_rect_f rects_calc_span(const t_array_mut<t_rect_f> rects) {
         ZCL_ASSERT(rects.len > 0);
 
@@ -35,6 +41,16 @@ namespace zcl {
         }
 
         return {min_left, min_top, max_right - min_left, max_bottom - min_top};
+    }
+
+    t_mat4x4 matrix_create_rotated(const t_f32 rot) {
+        t_mat4x4 result = matrix_create_identity();
+        result.elems[0][0] = cos(rot);
+        result.elems[0][1] = sin(rot);
+        result.elems[1][0] = -sin(rot);
+        result.elems[1][1] = cos(rot);
+
+        return result;
     }
 
     struct t_proj_interval {
@@ -145,5 +161,20 @@ namespace zcl {
         }
 
         return rect_create_f32(min_left, min_top, max_right - min_left, max_bottom - min_top);
+    }
+
+    t_f32 calc_dir_in_rads(const t_v2 a, const t_v2 b) {
+        const t_f32 rise = b.y - a.y;
+        const t_f32 run = b.x - a.x;
+
+        if (rise == 0.0f && run == 0.0f) {
+            return 0.0f;
+        }
+
+        return atan2(rise, run);
+    }
+
+    t_v2 calc_lengthdir(const t_f32 len, const t_f32 dir) {
+        return t_v2{cos(dir), sin(dir)} * len;
     }
 }

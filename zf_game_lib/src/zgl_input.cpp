@@ -142,7 +142,7 @@ namespace zgl::input {
         ZCL_ASSERT(gamepad_check_connected(state, gamepad_index));
 
         const zcl::t_f32 raw = state->gamepads[gamepad_index].axes[axis_code];
-        const zcl::t_f32 raw_abs = abs(raw);
+        const zcl::t_f32 raw_abs = zcl::calc_abs(raw);
 
         const zcl::t_f32 dz = state->gamepad_axis_deadzones[axis_code];
 

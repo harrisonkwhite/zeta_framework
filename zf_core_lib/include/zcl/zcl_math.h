@@ -1,6 +1,5 @@
 #pragma once
 
-#include <cmath>
 #include <zcl/zcl_basic.h>
 
 namespace zcl {
@@ -239,9 +238,7 @@ namespace zcl {
     constexpr t_v2 v2_calc_compwise_prod(const t_v2 a, const t_v2 b) { return {a.x * b.x, a.y * b.y}; }
     constexpr t_v2_i v2_calc_compwise_prod(const t_v2_i a, const t_v2_i b) { return {a.x * b.x, a.y * b.y}; }
 
-    inline t_f32 v2_calc_mag(const t_v2 v) {
-        return sqrt((v.x * v.x) + (v.y * v.y));
-    }
+    t_f32 v2_calc_mag(const t_v2 v);
 
     // Returns {} if a divide by 0 is attempted.
     inline t_v2 v2_calc_normal(const t_v2 v) {
@@ -380,15 +377,7 @@ namespace zcl {
         return result;
     }
 
-    inline t_mat4x4 matrix_create_rotated(const t_f32 rot) {
-        t_mat4x4 result = matrix_create_identity();
-        result.elems[0][0] = cos(rot);
-        result.elems[0][1] = sin(rot);
-        result.elems[1][0] = -sin(rot);
-        result.elems[1][1] = cos(rot);
-
-        return result;
-    }
+    t_mat4x4 matrix_create_rotated(const t_f32 rot);
 
     constexpr t_mat4x4 matrix_create_scaled(const t_v2 scalar) {
         t_mat4x4 result = matrix_create_identity();
@@ -468,8 +457,13 @@ namespace zcl {
     // ============================================================
 
 
-    constexpr t_f32 lerp(const t_f32 a, const t_f32 b, const t_f32 t) { return a + ((b - a) * t); }
-    constexpr t_v2 lerp(const t_v2 a, const t_v2 b, const t_f32 t) { return a + ((b - a) * t); }
+    constexpr t_f32 lerp(const t_f32 a, const t_f32 b, const t_f32 t) {
+        return a + ((b - a) * t);
+    }
+
+    constexpr t_v2 lerp(const t_v2 a, const t_v2 b, const t_f32 t) {
+        return a + ((b - a) * t);
+    }
 
     inline t_f32 calc_dist(const t_v2 a, const t_v2 b) {
         return v2_calc_mag(b - a);
@@ -480,20 +474,9 @@ namespace zcl {
     }
 
     // Returns 0 if the horizontal and vertical differences of the vectors are 0.
-    inline t_f32 calc_dir_in_rads(const t_v2 a, const t_v2 b) {
-        const t_f32 rise = b.y - a.y;
-        const t_f32 run = b.x - a.x;
+    t_f32 calc_dir_in_rads(const t_v2 a, const t_v2 b);
 
-        if (rise == 0.0f && run == 0.0f) {
-            return 0.0f;
-        }
-
-        return atan2(rise, run);
-    }
-
-    inline t_v2 calc_lengthdir(const t_f32 len, const t_f32 dir) {
-        return t_v2{cos(dir), sin(dir)} * len;
-    }
+    t_v2 calc_lengthdir(const t_f32 len, const t_f32 dir);
 
     constexpr t_b8 check_pt_in_rect(const t_v2 pt, const t_rect_f rect) {
         return pt.x > rect_get_left(rect) && pt.y > rect_get_top(rect) && pt.x < rect_get_right(rect) && pt.y < rect_get_bottom(rect);
