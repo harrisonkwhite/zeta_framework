@@ -4,8 +4,8 @@
 #include <stb_truetype.h>
 
 namespace zcl {
-    constexpr t_hash_func<t_code_pt> k_code_pt_hash_func =
-        [](const t_code_pt &code_pt) {
+    constexpr t_hash_func<t_code_point> k_code_pt_hash_func =
+        [](const t_code_point &code_pt) {
             return static_cast<t_i32>(code_pt);
         };
 
@@ -19,7 +19,7 @@ namespace zcl {
             return pa.a == pb.a && pa.b == pb.b;
         };
 
-    t_b8 font_load_from_raw(const t_str_rdonly file_path, const t_i32 height, t_code_pt_bitset *const code_pts, t_arena *const arrangement_arena, t_arena *const atlas_rgbas_arena, t_arena *const temp_arena, t_font_arrangement *const o_arrangement, t_array_mut<t_font_atlas_rgba> *const o_atlas_rgbas) {
+    t_b8 font_load_from_raw(const t_str_rdonly file_path, const t_i32 height, t_code_point_bitset *const code_pts, t_arena *const arrangement_arena, t_arena *const atlas_rgbas_arena, t_arena *const temp_arena, t_font_arrangement *const o_arrangement, t_array_mut<t_font_atlas_rgba> *const o_atlas_rgbas) {
         ZCL_ASSERT(height > 0);
 
         // Get the plain font file data.
@@ -44,7 +44,7 @@ namespace zcl {
 
         // Filter out unsupported code points.
         ZCL_BITSET_WALK_ALL_SET (*code_pts, i) {
-            const auto code_pt = static_cast<t_code_pt>(i);
+            const auto code_pt = static_cast<t_code_point>(i);
 
             const t_i32 glyph_index = stbtt_FindGlyphIndex(&stb_font_info, static_cast<t_i32>(code_pt));
 
@@ -71,7 +71,7 @@ namespace zcl {
         //
         // Glyph Info
         //
-        o_arrangement->code_pts_to_glyph_infos = hash_map_create<t_code_pt, t_font_glyph_info>(k_code_pt_hash_func, arrangement_arena, code_pt_cnt);
+        o_arrangement->code_pts_to_glyph_infos = hash_map_create<t_code_point, t_font_glyph_info>(k_code_pt_hash_func, arrangement_arena, code_pt_cnt);
 
         t_i32 atlas_index = 0;
         t_v2_i atlas_pen = {};
@@ -79,7 +79,7 @@ namespace zcl {
         constexpr t_i32 k_glyph_padding = 4;
 
         ZCL_BITSET_WALK_ALL_SET (*code_pts, i) {
-            const auto code_pt = static_cast<t_code_pt>(i);
+            const auto code_pt = static_cast<t_code_point>(i);
 
             const t_i32 glyph_index = stbtt_FindGlyphIndex(&stb_font_info, static_cast<t_i32>(code_pt));
 
@@ -127,8 +127,8 @@ namespace zcl {
 
         ZCL_BITSET_WALK_ALL_SET (*code_pts, i) {
             ZCL_BITSET_WALK_ALL_SET (*code_pts, j) {
-                const auto cp_a = static_cast<t_code_pt>(i);
-                const auto cp_b = static_cast<t_code_pt>(j);
+                const auto cp_a = static_cast<t_code_point>(i);
+                const auto cp_b = static_cast<t_code_point>(j);
 
                 const auto glyph_a_index = stbtt_FindGlyphIndex(&stb_font_info, static_cast<t_i32>(cp_a));
                 const auto glyph_b_index = stbtt_FindGlyphIndex(&stb_font_info, static_cast<t_i32>(cp_b));
@@ -161,7 +161,7 @@ namespace zcl {
 
         // Write pixel data for each individual glyph.
         ZCL_BITSET_WALK_ALL_SET (*code_pts, i) {
-            const auto code_pt = static_cast<t_code_pt>(i);
+            const auto code_pt = static_cast<t_code_point>(i);
 
             t_font_glyph_info *glyph_info;
 

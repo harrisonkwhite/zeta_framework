@@ -9,10 +9,10 @@ namespace zcl {
     // ============================================================
     // @section: Code Points
 
-    constexpr t_i32 k_code_pt_cnt = 1114112;
+    constexpr t_i32 k_code_point_count = 1114112;
 
-    using t_code_pt = char32_t;
-    using t_code_pt_bitset = t_static_bitset<k_code_pt_cnt>;
+    using t_code_point = char32_t;
+    using t_code_point_bitset = t_static_bitset<k_code_point_count>;
 
     constexpr t_i32 k_ascii_range_begin = 0;
     constexpr t_i32 k_ascii_range_end = 0x80;
@@ -20,16 +20,16 @@ namespace zcl {
     constexpr t_i32 k_printable_ascii_range_begin = 0x20;
     constexpr t_i32 k_printable_ascii_range_end = 0x7F;
 
-    constexpr t_b8 code_pt_check_ascii(const t_code_pt cp) {
+    constexpr t_b8 CodePointCheckASCII(const t_code_point cp) {
         return cp >= k_ascii_range_begin && cp < k_ascii_range_end;
     }
 
-    constexpr t_b8 code_pt_check_printable_ascii(const t_code_pt cp) {
+    constexpr t_b8 CodePointCheckPrintableASCII(const t_code_point cp) {
         return cp >= k_printable_ascii_range_begin && cp < k_printable_ascii_range_end;
     }
 
     // If the code point is valid, result is guaranteed to be 1, 2, 3, or 4.
-    constexpr t_i32 code_pt_get_utf8_byte_cnt(const t_code_pt code_pt) {
+    constexpr t_i32 CodePointGetUTF8ByteCount(const t_code_point code_pt) {
         if (code_pt <= 0x7F) {
             return 1;
         }
@@ -49,11 +49,11 @@ namespace zcl {
         ZCL_UNREACHABLE();
     }
 
-    // Given array must be of length 1, 2, 3, or 4.
-    t_code_pt utf8_bytes_to_code_pt(const t_array_rdonly<t_u8> bytes);
-
     // Output byte count will be 1, 2, 3, or 4.
-    void code_pt_to_utf8_bytes(const t_code_pt cp, t_static_array<t_u8, 4> *const o_bytes, t_i32 *const o_byte_cnt);
+    void CodePointToUTF8Bytes(const t_code_point cp, t_static_array<t_u8, 4> *const o_bytes, t_i32 *const o_byte_cnt);
+
+    // Given array must be of length 1, 2, 3, or 4.
+    t_code_point UTF8BytesToCodePoint(const t_array_rdonly<t_u8> bytes);
 
     // ============================================================
 
@@ -94,7 +94,7 @@ namespace zcl {
             return static_cast<t_i32>(hash & 0x7FFFFFFFull);
         };
 
-    inline t_b8 str_bytes_check_terminated_anywhere(const t_array_rdonly<t_u8> bytes) {
+    inline t_b8 StrBytesCheckTerminatedAnywhere(const t_array_rdonly<t_u8> bytes) {
         for (t_i32 i = bytes.len - 1; i >= 0; i--) {
             if (!bytes[i]) {
                 return true;
@@ -104,7 +104,7 @@ namespace zcl {
         return false;
     }
 
-    inline t_b8 str_bytes_check_terminated_only_at_end(const t_array_rdonly<t_u8> bytes) {
+    inline t_b8 StrBytesCheckTerminatedOnlyAtEnd(const t_array_rdonly<t_u8> bytes) {
         if (bytes.len == 0 || bytes[bytes.len - 1]) {
             return false;
         }
@@ -118,62 +118,62 @@ namespace zcl {
         return true;
     }
 
-    inline char *str_to_cstr(const t_str_mut str) {
-        ZCL_ASSERT(str_bytes_check_terminated_anywhere(str.bytes));
+    inline char *StrToCStr(const t_str_mut str) {
+        ZCL_ASSERT(StrBytesCheckTerminatedAnywhere(str.bytes));
         return reinterpret_cast<char *>(str.bytes.raw);
     }
 
-    inline const char *str_to_cstr(const t_str_rdonly str) {
-        ZCL_ASSERT(str_bytes_check_terminated_anywhere(str.bytes));
+    inline const char *StrToCStr(const t_str_rdonly str) {
+        ZCL_ASSERT(StrBytesCheckTerminatedAnywhere(str.bytes));
         return reinterpret_cast<const char *>(str.bytes.raw);
     }
 
     // Allocates a clone of the given string using the memory arena, with a null byte added at the end (even if the string was already terminated).
-    inline t_str_mut str_clone_but_add_terminator(const t_str_rdonly str, t_arena *const arena) {
+    inline t_str_mut StrCloneButAddTerminator(const t_str_rdonly str, t_arena *const arena) {
         const t_str_mut clone = {arena_push_array<t_u8>(arena, str.bytes.len + 1)};
         array_copy(str.bytes, clone.bytes);
         clone.bytes[clone.bytes.len - 1] = 0;
         return clone;
     }
 
-    inline t_b8 str_check_empty(const t_str_rdonly str) {
+    inline t_b8 StrCheckEmpty(const t_str_rdonly str) {
         return str.bytes.len == 0;
     }
 
-    inline t_b8 strs_check_equal(const t_str_rdonly a, const t_str_rdonly b) {
-        return array_compare(a.bytes, b.bytes) == 0;
-    }
-
-    t_b8 str_check_valid_utf8(const t_str_rdonly str);
+    t_b8 StrCheckValidUTF8(const t_str_rdonly str);
 
     // Calculates the string length in terms of code point count. Reminder that '\0' is treated just like any other ASCII character and does not terminate.
-    t_i32 str_calc_len(const t_str_rdonly str);
+    t_i32 StrCalcLen(const t_str_rdonly str);
 
-    t_code_pt str_find_code_pt_at_byte(const t_str_rdonly str, const t_i32 byte_index);
+    t_code_point StrFindCodePointAtByte(const t_str_rdonly str, const t_i32 byte_index);
 
     // Sets the bits associated with each unicode code point that appear in the string. No bits get unset.
-    void str_mark_code_pts(const t_str_rdonly str, t_code_pt_bitset *const code_pts);
+    void StrMarkCodePoints(const t_str_rdonly str, t_code_point_bitset *const code_pts);
 
     struct t_str_walk_step {
-        t_code_pt code_pt;
+        t_code_point code_pt;
         t_i32 byte_index;
     };
 
     // byte_index should be initialised to the index of ANY byte in the code point to start walking from.
     // Returns false iff the walk has ended.
-    t_b8 str_walk(const t_str_rdonly str, t_i32 *const byte_index, t_str_walk_step *const o_step);
+    t_b8 StrWalk(const t_str_rdonly str, t_i32 *const byte_index, t_str_walk_step *const o_step);
 
     // byte_index should be initialised to the index of ANY byte in the code point to start walking backwards from.
     // Returns false iff the walk has ended.
-    t_b8 str_walk_reverse(const t_str_rdonly str, t_i32 *const byte_index, t_str_walk_step *const o_step);
+    t_b8 StrWalkReverse(const t_str_rdonly str, t_i32 *const byte_index, t_str_walk_step *const o_step);
 
 #define ZCL_STR_WALK(str, step)                                                                                        \
     for (zcl::t_i32 ZCL_CONCAT(bi_l, __LINE__) = 0; ZCL_CONCAT(bi_l, __LINE__) != -1; ZCL_CONCAT(bi_l, __LINE__) = -1) \
-        for (zcl::t_str_walk_step step; zcl::str_walk(str, &ZCL_CONCAT(bi_l, __LINE__), &step);)
+        for (zcl::t_str_walk_step step; zcl::StrWalk(str, &ZCL_CONCAT(bi_l, __LINE__), &step);)
 
 #define ZCL_STR_WALK_REVERSE(str, step)                                                                                                                            \
     for (zcl::t_i32 ZCL_CONCAT(bi_l, __LINE__) = (str).bytes.len - 1; ZCL_CONCAT(bi_l, __LINE__) != (str).bytes.len; ZCL_CONCAT(bi_l, __LINE__) = (str).bytes.len) \
-        for (zcl::t_str_walk_step step; zcl::str_walk_reverse(str, &ZCL_CONCAT(bi_l, __LINE__), &step);)
+        for (zcl::t_str_walk_step step; zcl::StrWalkReverse(str, &ZCL_CONCAT(bi_l, __LINE__), &step);)
+
+    inline t_b8 StrsCheckEqual(const t_str_rdonly a, const t_str_rdonly b) {
+        return array_compare(a.bytes, b.bytes) == 0;
+    }
 
     // ============================================================
 
@@ -181,32 +181,32 @@ namespace zcl {
     // ============================================================
     // @section: C-Strings
 
-    constexpr t_i32 cstr_calc_len(const char *const cstr) {
+    constexpr t_i32 CStrCalcLen(const char *const c_str) {
         t_i32 len = 0;
-        for (; cstr[len]; len++) {}
+        for (; c_str[len]; len++) {}
         return len;
     }
 
     // Creates a NON-TERMINATED string object from the given TERMINATED C-string.
     // Does a conventional string walk to calculate length.
-    inline t_str_mut cstr_to_str(char *const cstr) {
-        return {{reinterpret_cast<t_u8 *>(cstr), cstr_calc_len(cstr)}};
+    inline t_str_mut CStrToStr(char *const c_str) {
+        return {{reinterpret_cast<t_u8 *>(c_str), CStrCalcLen(c_str)}};
     }
 
     // Creates a read-only NON-TERMINATED string object from the given TERMINATED C-string.
     // Does a conventional string walk to calculate length.
-    inline t_str_rdonly cstr_to_str(const char *const cstr) {
-        return {{reinterpret_cast<const t_u8 *>(cstr), cstr_calc_len(cstr)}};
+    inline t_str_rdonly CStrToStr(const char *const c_str) {
+        return {{reinterpret_cast<const t_u8 *>(c_str), CStrCalcLen(c_str)}};
     }
 
     namespace detail {
         // Hidden object that can only be constructed with a valid string literal at compile time.
         // Implicit cast to ZF-style string has to be done at runtime due to reinterpret cast.
-        struct t_cstr_literal {
-            t_cstr_literal() = delete;
+        struct t_c_str_literal {
+            t_c_str_literal() = delete;
 
             template <t_i32 tp_buf_size>
-            consteval t_cstr_literal(const char (&buf)[tp_buf_size]) : buf(buf), buf_size(tp_buf_size) {
+            consteval t_c_str_literal(const char (&buf)[tp_buf_size]) : buf(buf), buf_size(tp_buf_size) {
                 if (buf[tp_buf_size - 1]) {
                     throw "Static char array not terminated at end!";
                 }
@@ -230,7 +230,7 @@ namespace zcl {
             const t_i32 buf_size;
         };
 
-#define ZCL_STR_LITERAL(cstr_lit) zcl::t_str_rdonly(zcl::detail::t_cstr_literal(cstr_lit))
+#define ZCL_STR_LITERAL(c_str_lit) zcl::t_str_rdonly(zcl::detail::t_c_str_literal(c_str_lit))
     }
 
     // ============================================================

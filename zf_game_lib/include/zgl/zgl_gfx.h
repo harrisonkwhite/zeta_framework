@@ -149,7 +149,7 @@ namespace zgl::gfx {
         zcl::t_array_mut<t_resource *> atlases;
     };
 
-    t_font font_create_from_raw(const zcl::t_str_rdonly file_path, const zcl::t_i32 height, zcl::t_code_pt_bitset *const code_pts, zcl::t_arena *const temp_arena, t_resource_group *const resource_group);
+    t_font font_create_from_raw(const zcl::t_str_rdonly file_path, const zcl::t_i32 height, zcl::t_code_point_bitset *const code_pts, zcl::t_arena *const temp_arena, t_resource_group *const resource_group);
     t_font font_create_from_packed(const zcl::t_str_rdonly file_path, zcl::t_arena *const temp_arena, t_resource_group *const resource_group);
 
     // ========================================
@@ -172,8 +172,8 @@ namespace zgl::gfx {
     t_frame_context *frame_begin(const t_frame_basis *const basis, zcl::t_arena *const context_arena);
     void frame_end(t_frame_context *const context);
 
-    void frame_pass_begin(t_frame_context *const context, const zcl::t_v2_i size, const zcl::t_mat4x4 &view_mat = zcl::matrix_create_identity(), const zcl::t_b8 clear = false, const zcl::t_color_rgba32f clear_col = zcl::k_color_black);
-    void frame_pass_begin_offscreen(t_frame_context *const context, const t_resource *const texture_target, const zcl::t_mat4x4 &view_mat = zcl::matrix_create_identity(), const zcl::t_b8 clear = false, const zcl::t_color_rgba32f clear_col = zcl::k_color_black);
+    void frame_pass_begin(t_frame_context *const context, const zcl::t_v2_i size, const zcl::t_mat4x4 &view_mat = zcl::MatrixCreateIdentity(), const zcl::t_b8 clear = false, const zcl::t_color_rgba32f clear_col = zcl::k_color_black);
+    void frame_pass_begin_offscreen(t_frame_context *const context, const t_resource *const texture_target, const zcl::t_mat4x4 &view_mat = zcl::MatrixCreateIdentity(), const zcl::t_b8 clear = false, const zcl::t_color_rgba32f clear_col = zcl::k_color_black);
 
     void frame_pass_end(t_frame_context *const context);
 
@@ -217,16 +217,16 @@ namespace zgl::gfx {
         const zcl::t_static_array<t_triangle, 2> triangles = {{
             {
                 .verts = {{
-                    {.pos = zcl::RectGetTopleft(rect), .blend = color_topleft, .uv = {0.0f, 0.0f}},
-                    {.pos = zcl::RectGetTopright(rect), .blend = color_topright, .uv = {1.0f, 0.0f}},
-                    {.pos = zcl::RectGetBottomleft(rect), .blend = color_bottomleft, .uv = {1.0f, 1.0f}},
+                    {.pos = zcl::RectGetTopLeft(rect), .blend = color_topleft, .uv = {0.0f, 0.0f}},
+                    {.pos = zcl::RectGetTopRight(rect), .blend = color_topright, .uv = {1.0f, 0.0f}},
+                    {.pos = zcl::RectGetBottomLeft(rect), .blend = color_bottomleft, .uv = {1.0f, 1.0f}},
                 }},
             },
             {
                 .verts = {{
-                    {.pos = zcl::RectGetBottomleft(rect), .blend = color_bottomleft, .uv = {1.0f, 1.0f}},
-                    {.pos = zcl::RectGetTopright(rect), .blend = color_topright, .uv = {0.0f, 1.0f}},
-                    {.pos = zcl::RectGetBottomright(rect), .blend = color_bottomright, .uv = {0.0f, 0.0f}},
+                    {.pos = zcl::RectGetBottomLeft(rect), .blend = color_bottomleft, .uv = {1.0f, 1.0f}},
+                    {.pos = zcl::RectGetTopRight(rect), .blend = color_topright, .uv = {0.0f, 1.0f}},
+                    {.pos = zcl::RectGetBottomRight(rect), .blend = color_bottomright, .uv = {0.0f, 0.0f}},
                 }},
             },
         }};

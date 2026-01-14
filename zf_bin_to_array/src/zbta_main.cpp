@@ -25,7 +25,7 @@
 
     zcl::t_str_rdonly indent = {};
 
-    if (!zcl::str_check_empty(namespace_name)) {
+    if (!zcl::StrCheckEmpty(namespace_name)) {
         zcl::PrintFormat(output_file_stream, ZCL_STR_LITERAL("namespace % {\n"), namespace_name);
         indent = ZCL_STR_LITERAL("    ");
     }
@@ -49,7 +49,7 @@
 
     zcl::PrintFormat(output_file_stream, ZCL_STR_LITERAL("%extern const zcl::t_i32 g_%_len = %;\n"), indent, arr_var_subname, byte_read_cnt);
 
-    if (!zcl::str_check_empty(namespace_name)) {
+    if (!zcl::StrCheckEmpty(namespace_name)) {
         zcl::Print(output_file_stream, ZCL_STR_LITERAL("}\n"));
     }
 
@@ -63,5 +63,5 @@ int main(const int arg_cnt, const char *const *const args) {
         return EXIT_FAILURE;
     }
 
-    return output_code(zcl::cstr_to_str(args[1]), zcl::cstr_to_str(args[2]), zcl::cstr_to_str(args[3]), zcl::cstr_to_str(args[4])) ? EXIT_SUCCESS : EXIT_FAILURE;
+    return output_code(zcl::CStrToStr(args[1]), zcl::CStrToStr(args[2]), zcl::CStrToStr(args[3]), zcl::CStrToStr(args[4])) ? EXIT_SUCCESS : EXIT_FAILURE;
 }

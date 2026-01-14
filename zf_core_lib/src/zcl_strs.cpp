@@ -276,48 +276,9 @@ namespace zcl {
         ek_utf8_byte_type_invalid,
     }};
 
-    t_code_pt utf8_bytes_to_code_pt(const t_array_rdonly<t_u8> bytes) {
-        ZCL_ASSERT(bytes.len >= 1 && bytes.len <= 4);
-
-        t_code_pt result = 0;
-
-        switch (bytes.len) {
-        case 1:
-            // 0xxxxxxx
-            result |= bytes[0] & byte_bitmask_create_range(0, 7);
-            break;
-
-        case 2:
-            // 110xxxxx 10xxxxxx
-            result |= static_cast<t_code_pt>((bytes[0] & byte_bitmask_create_range(0, 5)) << 6);
-            result |= bytes[1] & byte_bitmask_create_range(0, 6);
-            break;
-
-        case 3:
-            // 1110xxxx 10xxxxxx 10xxxxxx
-            result |= static_cast<t_code_pt>((bytes[0] & byte_bitmask_create_range(0, 4)) << 12);
-            result |= static_cast<t_code_pt>((bytes[1] & byte_bitmask_create_range(0, 6)) << 6);
-            result |= bytes[2] & byte_bitmask_create_range(0, 6);
-            break;
-
-        case 4:
-            // 11110xxx 10xxxxxx 10xxxxxx 10xxxxxx
-            result |= static_cast<t_code_pt>((bytes[0] & byte_bitmask_create_range(0, 3)) << 18);
-            result |= static_cast<t_code_pt>((bytes[1] & byte_bitmask_create_range(0, 6)) << 12);
-            result |= static_cast<t_code_pt>((bytes[2] & byte_bitmask_create_range(0, 6)) << 6);
-            result |= bytes[3] & byte_bitmask_create_range(0, 6);
-            break;
-
-        default:
-            ZCL_UNREACHABLE();
-        }
-
-        return result;
-    }
-
-    void code_pt_to_utf8_bytes(const t_code_pt cp, t_static_array<t_u8, 4> *const o_bytes, t_i32 *const o_byte_cnt) {
+    void CodePointToUTF8Bytes(const t_code_point cp, t_static_array<t_u8, 4> *const o_bytes, t_i32 *const o_byte_cnt) {
         *o_bytes = {};
-        *o_byte_cnt = code_pt_get_utf8_byte_cnt(cp);
+        *o_byte_cnt = CodePointGetUTF8ByteCount(cp);
 
         switch (*o_byte_cnt) {
         case 1:
@@ -374,7 +335,46 @@ namespace zcl {
         }
     }
 
-    t_b8 str_check_valid_utf8(const t_str_rdonly str) {
+    t_code_point UTF8BytesToCodePoint(const t_array_rdonly<t_u8> bytes) {
+        ZCL_ASSERT(bytes.len >= 1 && bytes.len <= 4);
+
+        t_code_point result = 0;
+
+        switch (bytes.len) {
+        case 1:
+            // 0xxxxxxx
+            result |= bytes[0] & byte_bitmask_create_range(0, 7);
+            break;
+
+        case 2:
+            // 110xxxxx 10xxxxxx
+            result |= static_cast<t_code_point>((bytes[0] & byte_bitmask_create_range(0, 5)) << 6);
+            result |= bytes[1] & byte_bitmask_create_range(0, 6);
+            break;
+
+        case 3:
+            // 1110xxxx 10xxxxxx 10xxxxxx
+            result |= static_cast<t_code_point>((bytes[0] & byte_bitmask_create_range(0, 4)) << 12);
+            result |= static_cast<t_code_point>((bytes[1] & byte_bitmask_create_range(0, 6)) << 6);
+            result |= bytes[2] & byte_bitmask_create_range(0, 6);
+            break;
+
+        case 4:
+            // 11110xxx 10xxxxxx 10xxxxxx 10xxxxxx
+            result |= static_cast<t_code_point>((bytes[0] & byte_bitmask_create_range(0, 3)) << 18);
+            result |= static_cast<t_code_point>((bytes[1] & byte_bitmask_create_range(0, 6)) << 12);
+            result |= static_cast<t_code_point>((bytes[2] & byte_bitmask_create_range(0, 6)) << 6);
+            result |= bytes[3] & byte_bitmask_create_range(0, 6);
+            break;
+
+        default:
+            ZCL_UNREACHABLE();
+        }
+
+        return result;
+    }
+
+    t_b8 StrCheckValidUTF8(const t_str_rdonly str) {
         t_i32 cost = 0;
 
         for (t_i32 i = 0; i < str.bytes.len; i++) {
@@ -410,8 +410,8 @@ namespace zcl {
         return true;
     }
 
-    t_i32 str_calc_len(const t_str_rdonly str) {
-        ZCL_ASSERT(str_check_valid_utf8(str));
+    t_i32 StrCalcLen(const t_str_rdonly str) {
+        ZCL_ASSERT(StrCheckValidUTF8(str));
 
         t_i32 i = 0;
         t_i32 len = 0;
@@ -437,8 +437,8 @@ namespace zcl {
         return len;
     }
 
-    t_code_pt str_find_code_pt_at_byte(const t_str_rdonly str, const t_i32 byte_index) {
-        ZCL_ASSERT(str_check_valid_utf8(str));
+    t_code_point StrFindCodePointAtByte(const t_str_rdonly str, const t_i32 byte_index) {
+        ZCL_ASSERT(StrCheckValidUTF8(str));
         ZCL_ASSERT(byte_index >= 0 && byte_index < str.bytes.len);
 
         t_i32 cp_first_byte_index = byte_index;
@@ -453,20 +453,20 @@ namespace zcl {
 
             const t_i32 cp_byte_cnt = byte_type - ek_utf8_byte_type_ascii + 1;
             const auto cp_bytes = array_slice(str.bytes, byte_index, byte_index + cp_byte_cnt);
-            return utf8_bytes_to_code_pt(cp_bytes);
+            return UTF8BytesToCodePoint(cp_bytes);
         } while (true);
     }
 
-    void str_mark_code_pts(const t_str_rdonly str, t_code_pt_bitset *const code_pts) {
-        ZCL_ASSERT(str_check_valid_utf8(str));
+    void StrMarkCodePoints(const t_str_rdonly str, t_code_point_bitset *const code_pts) {
+        ZCL_ASSERT(StrCheckValidUTF8(str));
 
         ZCL_STR_WALK (str, step) {
             bitset_set(*code_pts, static_cast<t_i32>(step.code_pt));
         }
     }
 
-    t_b8 str_walk(const t_str_rdonly str, t_i32 *const byte_index, t_str_walk_step *const o_step) {
-        ZCL_ASSERT(str_check_valid_utf8(str));
+    t_b8 StrWalk(const t_str_rdonly str, t_i32 *const byte_index, t_str_walk_step *const o_step) {
+        ZCL_ASSERT(StrCheckValidUTF8(str));
         ZCL_ASSERT(*byte_index >= 0 && *byte_index <= str.bytes.len);
 
         if (*byte_index == str.bytes.len) {
@@ -483,7 +483,7 @@ namespace zcl {
             case ek_utf8_byte_type_4byte_start: {
                 const t_i32 cp_byte_cnt = byte_type - ek_utf8_byte_type_ascii + 1;
                 const auto cp_bytes = array_slice(str.bytes, *byte_index, *byte_index + cp_byte_cnt);
-                *o_step = {.code_pt = utf8_bytes_to_code_pt(cp_bytes), .byte_index = *byte_index};
+                *o_step = {.code_pt = UTF8BytesToCodePoint(cp_bytes), .byte_index = *byte_index};
                 *byte_index += cp_byte_cnt;
 
                 return true;
@@ -499,8 +499,8 @@ namespace zcl {
         }
     }
 
-    t_b8 str_walk_reverse(const t_str_rdonly str, t_i32 *const byte_index, t_str_walk_step *const o_step) {
-        ZCL_ASSERT(str_check_valid_utf8(str));
+    t_b8 StrWalkReverse(const t_str_rdonly str, t_i32 *const byte_index, t_str_walk_step *const o_step) {
+        ZCL_ASSERT(StrCheckValidUTF8(str));
         ZCL_ASSERT(*byte_index >= -1 && *byte_index < str.bytes.len);
 
         if (*byte_index == -1) {
@@ -517,7 +517,7 @@ namespace zcl {
             case ek_utf8_byte_type_4byte_start: {
                 const t_i32 cp_byte_cnt = byte_type - ek_utf8_byte_type_ascii + 1;
                 const auto cp_bytes = array_slice(str.bytes, *byte_index, *byte_index + cp_byte_cnt);
-                *o_step = {.code_pt = utf8_bytes_to_code_pt(cp_bytes), .byte_index = *byte_index};
+                *o_step = {.code_pt = UTF8BytesToCodePoint(cp_bytes), .byte_index = *byte_index};
                 (*byte_index)--;
 
                 return true;

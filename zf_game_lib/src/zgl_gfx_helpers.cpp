@@ -49,16 +49,16 @@ namespace zgl::gfx {
         const zcl::t_static_array<t_triangle, 2> triangles = {{
             {
                 .verts = {{
-                    {.pos = quad_poly.pts[0], .blend = zcl::k_color_white, .uv = zcl::RectGetTopleft(uv_rect)},
-                    {.pos = quad_poly.pts[1], .blend = zcl::k_color_white, .uv = zcl::RectGetTopright(uv_rect)},
-                    {.pos = quad_poly.pts[3], .blend = zcl::k_color_white, .uv = zcl::RectGetBottomleft(uv_rect)},
+                    {.pos = quad_poly.pts[0], .blend = zcl::k_color_white, .uv = zcl::RectGetTopLeft(uv_rect)},
+                    {.pos = quad_poly.pts[1], .blend = zcl::k_color_white, .uv = zcl::RectGetTopRight(uv_rect)},
+                    {.pos = quad_poly.pts[3], .blend = zcl::k_color_white, .uv = zcl::RectGetBottomLeft(uv_rect)},
                 }},
             },
             {
                 .verts = {{
-                    {.pos = quad_poly.pts[3], .blend = zcl::k_color_white, .uv = zcl::RectGetBottomleft(uv_rect)},
-                    {.pos = quad_poly.pts[1], .blend = zcl::k_color_white, .uv = zcl::RectGetTopright(uv_rect)},
-                    {.pos = quad_poly.pts[2], .blend = zcl::k_color_white, .uv = zcl::RectGetBottomright(uv_rect)},
+                    {.pos = quad_poly.pts[3], .blend = zcl::k_color_white, .uv = zcl::RectGetBottomLeft(uv_rect)},
+                    {.pos = quad_poly.pts[1], .blend = zcl::k_color_white, .uv = zcl::RectGetTopRight(uv_rect)},
+                    {.pos = quad_poly.pts[2], .blend = zcl::k_color_white, .uv = zcl::RectGetBottomRight(uv_rect)},
                 }},
             },
         }};
@@ -66,7 +66,7 @@ namespace zgl::gfx {
         frame_submit_triangles(context, zcl::array_to_nonstatic(&triangles), texture);
     }
 
-    t_font font_create_from_raw(const zcl::t_str_rdonly file_path, const zcl::t_i32 height, zcl::t_code_pt_bitset *const code_pts, zcl::t_arena *const temp_arena, t_resource_group *const resource_group) {
+    t_font font_create_from_raw(const zcl::t_str_rdonly file_path, const zcl::t_i32 height, zcl::t_code_point_bitset *const code_pts, zcl::t_arena *const temp_arena, t_resource_group *const resource_group) {
         zcl::t_font_arrangement arrangement;
         zcl::t_array_mut<zcl::t_font_atlas_rgba> atlas_rgbas;
 
@@ -107,7 +107,7 @@ namespace zgl::gfx {
     }
 
     static zcl::t_array_mut<zcl::t_v2> calc_str_chr_render_positions(const zcl::t_str_rdonly str, const zcl::t_font_arrangement &font_arrangement, const zcl::t_v2 pos, const zcl::t_v2 alignment, zcl::t_arena *const arena) {
-        ZCL_ASSERT(zcl::str_check_valid_utf8(str));
+        ZCL_ASSERT(zcl::StrCheckValidUTF8(str));
         ZCL_ASSERT(alignment_check_valid(alignment));
 
         // Calculate some useful string metadata.
@@ -141,7 +141,7 @@ namespace zgl::gfx {
         zcl::t_v2 chr_pos_pen = {}; // The position of the current character.
         zcl::t_i32 line_begin_chr_index = 0;
         zcl::t_i32 line_len = 0;
-        zcl::t_code_pt code_pt_last;
+        zcl::t_code_point code_pt_last;
 
         const auto apply_hor_alignment_offs = [&]() {
             if (line_len > 0) {
@@ -203,10 +203,10 @@ namespace zgl::gfx {
     }
 
     void frame_submit_str(t_frame_context *const context, const zcl::t_str_rdonly str, const t_font &font, const zcl::t_v2 pos, zcl::t_arena *const temp_arena, const zcl::t_v2 alignment, const zcl::t_color_rgba32f blend) {
-        ZCL_ASSERT(zcl::str_check_valid_utf8(str));
+        ZCL_ASSERT(zcl::StrCheckValidUTF8(str));
         ZCL_ASSERT(alignment_check_valid(alignment));
 
-        if (zcl::str_check_empty(str)) {
+        if (zcl::StrCheckEmpty(str)) {
             return;
         }
 

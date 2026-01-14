@@ -156,10 +156,10 @@ namespace zgl::input {
 
     // @todo: The function names below are bad.
 
-    zcl::t_array_rdonly<zcl::t_code_pt> text_get_code_pts(const t_state *const state);
+    zcl::t_array_rdonly<zcl::t_code_point> text_get_code_pts(const t_state *const state);
 
     // Returns true iff there is enough room for the code point and it is added.
-    zcl::t_b8 text_submit_code_point(t_state *const state, const zcl::t_code_pt cp);
+    zcl::t_b8 text_submit_code_point(t_state *const state, const zcl::t_code_point cp);
 
     // ============================================================
 }

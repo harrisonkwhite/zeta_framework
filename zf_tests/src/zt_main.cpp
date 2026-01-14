@@ -21,15 +21,15 @@ static zcl::t_b8 test_hash_map(zcl::t_arena *const arena) {
 }
 
 struct t_test {
-    const char *title_cstr;
+    const char *title_c_str;
     zcl::t_b8 (*func)(zcl::t_arena *const arena);
 };
 
 constexpr zcl::t_static_array<t_test, 4> k_tests = {{
-    {.title_cstr = "Bits", .func = test_bits},
-    {.title_cstr = "Sorting", .func = test_sorting},
-    {.title_cstr = "List", .func = test_list},
-    {.title_cstr = "Hash Map", .func = test_hash_map},
+    {.title_c_str = "Bits", .func = test_bits},
+    {.title_c_str = "Sorting", .func = test_sorting},
+    {.title_c_str = "List", .func = test_list},
+    {.title_c_str = "Hash Map", .func = test_hash_map},
 }};
 
 static void run_tests() {
@@ -37,7 +37,7 @@ static void run_tests() {
     ZCL_DEFER({ zcl::arena_destroy(&arena); });
 
     for (zcl::t_i32 i = 0; i < k_tests.k_len; i++) {
-        zcl::Log(ZCL_STR_LITERAL("Running test \"%\"..."), zcl::cstr_to_str(k_tests[i].title_cstr));
+        zcl::Log(ZCL_STR_LITERAL("Running test \"%\"..."), zcl::CStrToStr(k_tests[i].title_c_str));
         k_tests[i].func(&arena);
     }
 }

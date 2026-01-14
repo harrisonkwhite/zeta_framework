@@ -3,14 +3,14 @@
 #include <reproc/reproc.h>
 
 zcl::t_b8 compile_shader(const zcl::t_str_rdonly shader_file_path, const zcl::t_str_rdonly varying_def_file_path, const zcl::t_b8 is_frag, zcl::t_arena *const bin_arena, zcl::t_arena *const temp_arena, zcl::t_array_mut<zcl::t_u8> *const o_bin) {
-    const zcl::t_str_rdonly shader_file_path_terminated = zcl::str_clone_but_add_terminator(shader_file_path, temp_arena);
-    const zcl::t_str_rdonly varying_def_file_path_terminated = zcl::str_clone_but_add_terminator(varying_def_file_path, temp_arena);
+    const zcl::t_str_rdonly shader_file_path_terminated = zcl::StrCloneButAddTerminator(shader_file_path, temp_arena);
+    const zcl::t_str_rdonly varying_def_file_path_terminated = zcl::StrCloneButAddTerminator(varying_def_file_path, temp_arena);
 
     zcl::t_i32 r = 0;
 
     ZCL_DEFER({
         if (r < 0) {
-            const auto err = zcl::cstr_to_str(reproc_strerror(r));
+            const auto err = zcl::CStrToStr(reproc_strerror(r));
             zcl::LogError(ZCL_STR_LITERAL("%"), err);
         }
     });
@@ -27,18 +27,18 @@ zcl::t_b8 compile_shader(const zcl::t_str_rdonly shader_file_path, const zcl::t_
 
 #if defined(ZCL_PLATFORM_WINDOWS)
     const zcl::t_str_rdonly shaderc_file_path_rel = ZCL_STR_LITERAL("tools/bgfx/shaderc_windows.exe");
-    const char platform_cstr[] = "windows";
-    const char profile_cstr[] = "s_5_0";
+    const char platform_c_str[] = "windows";
+    const char profile_c_str[] = "s_5_0";
 #elif defined(ZCL_PLATFORM_MACOS)
     #error "Platform support not complete!" // @todo
     const zcl::t_str_rdonly shaderc_file_path_rel = ZCL_STR_LITERAL("tools/bgfx/shaderc_macos");
-    const char platform_cstr[] = "osx";
-    const char profile_cstr[] = "metal";
+    const char platform_c_str[] = "osx";
+    const char profile_c_str[] = "metal";
 #elif defined(ZCL_PLATFORM_LINUX)
     #error "Platform support not complete!" // @todo
     const zcl::t_str_rdonly shaderc_file_path_rel = ZCL_STR_LITERAL("tools/bgfx/shaderc_linux");
-    const char platform_cstr[] = "linux";
-    const char profile_cstr[] = "glsl";
+    const char platform_c_str[] = "linux";
+    const char profile_c_str[] = "glsl";
 #endif
 
     const zcl::t_str_rdonly exe_dir = zcl::get_executable_directory(temp_arena);
@@ -47,28 +47,28 @@ zcl::t_b8 compile_shader(const zcl::t_str_rdonly shader_file_path, const zcl::t_
     const zcl::t_str_mut shaderc_file_path_terminated = {zcl::arena_push_array<zcl::t_u8>(temp_arena, exe_dir.bytes.len + shaderc_file_path_rel.bytes.len + 1)};
     zcl::t_mem_stream shaderc_file_path_terminated_byte_stream = zcl::mem_stream_create(shaderc_file_path_terminated.bytes, zcl::ek_stream_mode_write);
     zcl::PrintFormat(shaderc_file_path_terminated_byte_stream, ZCL_STR_LITERAL("%%\0"), exe_dir, shaderc_file_path_rel);
-    ZCL_ASSERT(zcl::str_bytes_check_terminated_only_at_end(shaderc_file_path_terminated.bytes));
+    ZCL_ASSERT(zcl::StrBytesCheckTerminatedOnlyAtEnd(shaderc_file_path_terminated.bytes));
 
     const zcl::t_str_rdonly shaderc_include_dir_rel = ZCL_STR_LITERAL("tools/bgfx/shaderc_include");
     const zcl::t_str_mut shaderc_include_dir_terminated = {zcl::arena_push_array<zcl::t_u8>(temp_arena, exe_dir.bytes.len + shaderc_include_dir_rel.bytes.len + 1)};
     zcl::t_mem_stream shaderc_include_dir_terminated_byte_stream = zcl::mem_stream_create(shaderc_include_dir_terminated.bytes, zcl::ek_stream_mode_write);
     zcl::PrintFormat(shaderc_include_dir_terminated_byte_stream, ZCL_STR_LITERAL("%%\0"), exe_dir, shaderc_include_dir_rel);
-    ZCL_ASSERT(zcl::str_bytes_check_terminated_only_at_end(shaderc_include_dir_terminated.bytes));
+    ZCL_ASSERT(zcl::StrBytesCheckTerminatedOnlyAtEnd(shaderc_include_dir_terminated.bytes));
 
     const zcl::t_static_array<const char *, 15> args = {{
-        zcl::str_to_cstr(shaderc_file_path_terminated),
+        zcl::StrToCStr(shaderc_file_path_terminated),
         "-f",
-        zcl::str_to_cstr(shader_file_path_terminated),
+        zcl::StrToCStr(shader_file_path_terminated),
         "--type",
         is_frag ? "fragment" : "vertex",
         "--platform",
-        platform_cstr,
+        platform_c_str,
         "--profile",
-        profile_cstr,
+        profile_c_str,
         "--varyingdef",
-        zcl::str_to_cstr(varying_def_file_path_terminated),
+        zcl::StrToCStr(varying_def_file_path_terminated),
         "-i",
-        zcl::str_to_cstr(shaderc_include_dir_terminated),
+        zcl::StrToCStr(shaderc_include_dir_terminated),
         "--stdout",
         nullptr,
     }};

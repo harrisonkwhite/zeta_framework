@@ -286,8 +286,8 @@ namespace zgl::platform {
     void window_set_title(const zcl::t_str_rdonly title, zcl::t_arena *const temp_arena) {
         ZCL_ASSERT(g_module_state.active);
 
-        const zcl::t_str_rdonly title_terminated = zcl::str_clone_but_add_terminator(title, temp_arena);
-        glfwSetWindowTitle(g_module_state.glfw_window, zcl::str_to_cstr(title_terminated));
+        const zcl::t_str_rdonly title_terminated = zcl::StrCloneButAddTerminator(title, temp_arena);
+        glfwSetWindowTitle(g_module_state.glfw_window, zcl::StrToCStr(title_terminated));
     }
 
     void window_set_size(const zcl::t_v2_i size) {

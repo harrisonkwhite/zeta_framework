@@ -164,20 +164,20 @@ namespace zcl {
     };
 
     struct t_font_code_pt_pair {
-        t_code_pt a;
-        t_code_pt b;
+        t_code_point a;
+        t_code_point b;
     };
 
     struct t_font_arrangement {
         t_i32 line_height;
 
-        t_hash_map<t_code_pt, t_font_glyph_info> code_pts_to_glyph_infos;
+        t_hash_map<t_code_point, t_font_glyph_info> code_pts_to_glyph_infos;
 
         t_b8 has_kernings;
         t_hash_map<t_font_code_pt_pair, t_i32> code_pt_pairs_to_kernings;
     };
 
-    [[nodiscard]] t_b8 font_load_from_raw(const t_str_rdonly file_path, const t_i32 height, t_code_pt_bitset *const code_pts, t_arena *const arrangement_arena, t_arena *const atlas_rgbas_arena, t_arena *const temp_arena, t_font_arrangement *const o_arrangement, t_array_mut<t_font_atlas_rgba> *const o_atlas_rgbas);
+    [[nodiscard]] t_b8 font_load_from_raw(const t_str_rdonly file_path, const t_i32 height, t_code_point_bitset *const code_pts, t_arena *const arrangement_arena, t_arena *const atlas_rgbas_arena, t_arena *const temp_arena, t_font_arrangement *const o_arrangement, t_array_mut<t_font_atlas_rgba> *const o_atlas_rgbas);
 
     [[nodiscard]] t_b8 font_pack(const t_str_rdonly file_path, const t_font_arrangement &arrangement, const t_array_rdonly<t_font_atlas_rgba> atlas_rgbas, t_arena *const temp_arena);
     [[nodiscard]] t_b8 font_unpack(const t_str_rdonly file_path, t_arena *const arrangement_arena, t_arena *const atlas_rgbas_arena, t_arena *const temp_arena, t_font_arrangement *const o_arrangement, t_array_mut<t_font_atlas_rgba> *const o_atlas_rgbas);

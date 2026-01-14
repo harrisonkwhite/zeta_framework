@@ -309,7 +309,7 @@ namespace zgl::gfx {
     t_resource *uniform_create(const zcl::t_str_rdonly name, const t_uniform_type type, t_resource_group *const group, zcl::t_arena *const temp_arena) {
         ZCL_ASSERT(g_module_state.phase == ek_module_phase_active_but_not_midframe);
 
-        const zcl::t_str_rdonly name_terminated = zcl::str_clone_but_add_terminator(name, temp_arena);
+        const zcl::t_str_rdonly name_terminated = zcl::StrCloneButAddTerminator(name, temp_arena);
 
         const auto bgfx_type = [type]() -> bgfx::UniformType::Enum {
             switch (type) {
@@ -321,7 +321,7 @@ namespace zgl::gfx {
             ZCL_UNREACHABLE();
         }();
 
-        const bgfx::UniformHandle bgfx_hdl = bgfx::createUniform(zcl::str_to_cstr(name_terminated), bgfx_type);
+        const bgfx::UniformHandle bgfx_hdl = bgfx::createUniform(zcl::StrToCStr(name_terminated), bgfx_type);
 
         if (!bgfx::isValid(bgfx_hdl)) {
             ZCL_FATAL();
@@ -409,7 +409,7 @@ namespace zgl::gfx {
 
         bgfx::setViewRect(bgfx_view_id, 0, 0, static_cast<uint16_t>(size.x), static_cast<uint16_t>(size.y));
 
-        auto proj_mat = zcl::matrix_create_identity();
+        auto proj_mat = zcl::MatrixCreateIdentity();
         proj_mat.elems[0][0] = 1.0f / (static_cast<zcl::t_f32>(size.x) / 2.0f);
         proj_mat.elems[1][1] = -1.0f / (static_cast<zcl::t_f32>(size.y) / 2.0f);
         proj_mat.elems[3][0] = -1.0f;

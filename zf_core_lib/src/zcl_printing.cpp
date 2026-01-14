@@ -15,7 +15,7 @@ namespace zcl {
     t_b8 PrintType(const t_stream stream, const t_format_code_pt format) {
         t_static_array<t_u8, 4> code_pt_bytes;
         t_i32 code_pt_byte_cnt;
-        code_pt_to_utf8_bytes(format.value, &code_pt_bytes, &code_pt_byte_cnt);
+        CodePointToUTF8Bytes(format.value, &code_pt_bytes, &code_pt_byte_cnt);
 
         const t_str_rdonly code_pt_str = {array_slice(array_to_nonstatic(&code_pt_bytes), 0, code_pt_byte_cnt)};
 
@@ -93,7 +93,7 @@ namespace zcl {
     }
 
     t_i32 PrintFormatCountSpecs(const t_str_rdonly str) {
-        static_assert(code_pt_check_ascii(k_print_format_spec) && code_pt_check_ascii(k_print_format_esc)); // Assuming this for this algorithm.
+        static_assert(CodePointCheckASCII(k_print_format_spec) && CodePointCheckASCII(k_print_format_esc)); // Assuming this for this algorithm.
 
         t_b8 escaped = false;
         t_i32 cnt = 0;

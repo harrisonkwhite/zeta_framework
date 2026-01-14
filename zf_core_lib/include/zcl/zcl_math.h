@@ -289,17 +289,17 @@ namespace zcl {
     constexpr t_f32 RectGetBottom(const t_rect_f rect) { return rect.y + rect.height; }
     constexpr t_i32 RectGetBottom(const t_rect_i rect) { return rect.y + rect.height; }
 
-    constexpr t_v2 RectGetTopleft(const t_rect_f rect) { return {RectGetLeft(rect), RectGetTop(rect)}; }
-    constexpr t_v2_i RectGetTopleft(const t_rect_i rect) { return {RectGetLeft(rect), RectGetTop(rect)}; }
+    constexpr t_v2 RectGetTopLeft(const t_rect_f rect) { return {RectGetLeft(rect), RectGetTop(rect)}; }
+    constexpr t_v2_i RectGetTopLeft(const t_rect_i rect) { return {RectGetLeft(rect), RectGetTop(rect)}; }
 
-    constexpr t_v2 RectGetTopright(const t_rect_f rect) { return {RectGetRight(rect), RectGetTop(rect)}; }
-    constexpr t_v2_i RectGetTopright(const t_rect_i rect) { return {RectGetRight(rect), RectGetTop(rect)}; }
+    constexpr t_v2 RectGetTopRight(const t_rect_f rect) { return {RectGetRight(rect), RectGetTop(rect)}; }
+    constexpr t_v2_i RectGetTopRight(const t_rect_i rect) { return {RectGetRight(rect), RectGetTop(rect)}; }
 
-    constexpr t_v2 RectGetBottomleft(const t_rect_f rect) { return {RectGetLeft(rect), RectGetBottom(rect)}; }
-    constexpr t_v2_i RectGetBottomleft(const t_rect_i rect) { return {RectGetLeft(rect), RectGetBottom(rect)}; }
+    constexpr t_v2 RectGetBottomLeft(const t_rect_f rect) { return {RectGetLeft(rect), RectGetBottom(rect)}; }
+    constexpr t_v2_i RectGetBottomLeft(const t_rect_i rect) { return {RectGetLeft(rect), RectGetBottom(rect)}; }
 
-    constexpr t_v2 RectGetBottomright(const t_rect_f rect) { return {RectGetRight(rect), RectGetBottom(rect)}; }
-    constexpr t_v2_i RectGetBottomright(const t_rect_i rect) { return {RectGetRight(rect), RectGetBottom(rect)}; }
+    constexpr t_v2 RectGetBottomRight(const t_rect_f rect) { return {RectGetRight(rect), RectGetBottom(rect)}; }
+    constexpr t_v2_i RectGetBottomRight(const t_rect_i rect) { return {RectGetRight(rect), RectGetBottom(rect)}; }
 
     constexpr t_f32 RectGetArea(const t_rect_f rect) { return rect.width * rect.height; }
     constexpr t_i32 RectGetArea(const t_rect_i rect) { return rect.width * rect.height; }
@@ -337,7 +337,7 @@ namespace zcl {
         t_static_array<t_static_array<t_f32, 4>, 4> elems;
     };
 
-    constexpr t_mat4x4 matrix_create_identity() {
+    constexpr t_mat4x4 MatrixCreateIdentity() {
         t_mat4x4 result = {};
         result.elems[0][0] = 1.0f;
         result.elems[1][1] = 1.0f;
@@ -347,25 +347,25 @@ namespace zcl {
         return result;
     }
 
-    constexpr t_mat4x4 matrix_create_translated(const t_v2 offs) {
-        t_mat4x4 result = matrix_create_identity();
+    constexpr t_mat4x4 MatrixCreateTranslated(const t_v2 offs) {
+        t_mat4x4 result = MatrixCreateIdentity();
         result.elems[3][0] = offs.x;
         result.elems[3][1] = offs.y;
 
         return result;
     }
 
-    t_mat4x4 matrix_create_rotated(const t_f32 rot);
+    t_mat4x4 MatrixCreateRotated(const t_f32 rot);
 
-    constexpr t_mat4x4 matrix_create_scaled(const t_v2 scalar) {
-        t_mat4x4 result = matrix_create_identity();
+    constexpr t_mat4x4 MatrixCreateScaled(const t_v2 scalar) {
+        t_mat4x4 result = MatrixCreateIdentity();
         result.elems[0][0] *= scalar.x;
         result.elems[1][1] *= scalar.y;
 
         return result;
     }
 
-    constexpr t_mat4x4 matrix_add(const t_mat4x4 &a, const t_mat4x4 &b) {
+    constexpr t_mat4x4 MatrixAdd(const t_mat4x4 &a, const t_mat4x4 &b) {
         t_mat4x4 result;
 
         for (t_i32 i = 0; i < 4; i++) {
@@ -377,7 +377,7 @@ namespace zcl {
         return result;
     }
 
-    constexpr t_mat4x4 matrix_subtract(const t_mat4x4 &a, const t_mat4x4 &b) {
+    constexpr t_mat4x4 MatrixSubtract(const t_mat4x4 &a, const t_mat4x4 &b) {
         t_mat4x4 result;
 
         for (t_i32 i = 0; i < 4; i++) {
@@ -389,7 +389,7 @@ namespace zcl {
         return result;
     }
 
-    constexpr t_mat4x4 matrix_multiply(const t_mat4x4 &a, const t_mat4x4 &b) {
+    constexpr t_mat4x4 MatrixMultiply(const t_mat4x4 &a, const t_mat4x4 &b) {
         t_mat4x4 result = {};
 
         for (t_i32 i = 0; i < 4; i++) {

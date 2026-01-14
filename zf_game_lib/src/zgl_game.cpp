@@ -46,7 +46,7 @@ namespace zgl::game {
         audio::module_startup();
         ZCL_DEFER({ audio::module_shutdown(); });
 
-        zcl::t_rng *const rng = zcl::rng_create(zcl::rand_gen_seed(), &perm_arena);
+        zcl::t_rng *const rng = zcl::RNGCreate(zcl::RandGenSeed(), &perm_arena);
 
         zcl::arena_rewind(&temp_arena);
 

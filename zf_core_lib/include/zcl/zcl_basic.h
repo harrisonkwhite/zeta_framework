@@ -133,7 +133,7 @@ namespace zcl {
     concept c_same = std::same_as<tp_type_a, tp_type_b>;
 
     template <typename tp_type>
-    concept c_cstr = c_same<t_cvref_removed<tp_type>, char *>
+    concept c_c_str = c_same<t_cvref_removed<tp_type>, char *>
         || c_same<t_cvref_removed<tp_type>, const char *>
         || c_same<t_cvref_removed<tp_type>, char[]>;
 
@@ -170,7 +170,7 @@ namespace zcl {
     namespace detail {
         void try_breaking_into_debugger_if(const t_b8 cond);
 
-        [[noreturn]] void handle_assert_error(const char *const cond_cstr, const char *const func_name_cstr, const char *const file_name_cstr, const t_i32 line);
+        [[noreturn]] void handle_assert_error(const char *const cond_c_str, const char *const func_name_c_str, const char *const file_name_c_str, const t_i32 line);
 
 #ifdef ZCL_DEBUG
     #define ZCL_DEBUG_BREAK() detail::try_breaking_into_debugger_if(true)
@@ -190,7 +190,7 @@ namespace zcl {
     #define ZCL_ASSERT(cond) static_cast<void>(0)
 #endif
 
-        [[noreturn]] void handle_fatal_error(const char *const func_name_cstr, const char *const file_name_cstr, const t_i32 line, const char *const cond_cstr = nullptr);
+        [[noreturn]] void handle_fatal_error(const char *const func_name_c_str, const char *const file_name_c_str, const t_i32 line, const char *const cond_c_str = nullptr);
 
 #define ZCL_FATAL() zcl::detail::handle_fatal_error(__FUNCTION__, __FILE__, __LINE__)
 #define ZCL_UNREACHABLE() ZCL_FATAL() // @todo: This should probably have some helper message to differentiate it from normal fatal errors.

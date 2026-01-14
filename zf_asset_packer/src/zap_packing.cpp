@@ -11,7 +11,7 @@ enum t_asset_type : zcl::t_i32 {
     ekm_asset_type_cnt
 };
 
-constexpr zcl::t_static_array<const char *, ekm_asset_type_cnt> k_asset_type_array_name_cstrs = {{
+constexpr zcl::t_static_array<const char *, ekm_asset_type_cnt> k_asset_type_array_name_c_strs = {{
     "textures",
     "fonts",
     "shaders",
@@ -25,13 +25,13 @@ enum t_asset_field_type : zcl::t_i32 {
     ekm_asset_field_type_cnt
 };
 
-constexpr zcl::t_static_array<const char *, ekm_asset_field_type_cnt> k_asset_field_type_name_cstrs = {{
+constexpr zcl::t_static_array<const char *, ekm_asset_field_type_cnt> k_asset_field_type_name_c_strs = {{
     "string",
     "number",
 }};
 
 struct t_asset_field {
-    const char *name_cstr;
+    const char *name_c_str;
     t_asset_field_type type;
     zcl::t_b8 optional;
 };
@@ -44,8 +44,8 @@ enum t_texture_field : zcl::t_i32 {
 };
 
 constexpr zcl::t_static_array<t_asset_field, ekm_texture_field_cnt> k_texture_fields = {{
-    {.name_cstr = "file_path", .type = ek_asset_field_type_str},
-    {.name_cstr = "out_file_path", .type = ek_asset_field_type_str},
+    {.name_c_str = "file_path", .type = ek_asset_field_type_str},
+    {.name_c_str = "out_file_path", .type = ek_asset_field_type_str},
 }};
 
 enum t_font_field : zcl::t_i32 {
@@ -58,10 +58,10 @@ enum t_font_field : zcl::t_i32 {
 };
 
 constexpr zcl::t_static_array<t_asset_field, ekm_font_field_cnt> k_font_fields = {{
-    {.name_cstr = "file_path", .type = ek_asset_field_type_str},
-    {.name_cstr = "height", .type = ek_asset_field_type_num},
-    {.name_cstr = "extra_chrs_file_path", .type = ek_asset_field_type_str, .optional = true},
-    {.name_cstr = "out_file_path", .type = ek_asset_field_type_str},
+    {.name_c_str = "file_path", .type = ek_asset_field_type_str},
+    {.name_c_str = "height", .type = ek_asset_field_type_num},
+    {.name_c_str = "extra_chrs_file_path", .type = ek_asset_field_type_str, .optional = true},
+    {.name_c_str = "out_file_path", .type = ek_asset_field_type_str},
 }};
 
 enum t_shader_field : zcl::t_i32 {
@@ -74,10 +74,10 @@ enum t_shader_field : zcl::t_i32 {
 };
 
 constexpr zcl::t_static_array<t_asset_field, ekm_shader_field_cnt> k_shader_fields = {{
-    {.name_cstr = "file_path", .type = ek_asset_field_type_str},
-    {.name_cstr = "type", .type = ek_asset_field_type_str},
-    {.name_cstr = "varying_def_file_path", .type = ek_asset_field_type_str},
-    {.name_cstr = "out_file_path", .type = ek_asset_field_type_str},
+    {.name_c_str = "file_path", .type = ek_asset_field_type_str},
+    {.name_c_str = "type", .type = ek_asset_field_type_str},
+    {.name_c_str = "varying_def_file_path", .type = ek_asset_field_type_str},
+    {.name_c_str = "out_file_path", .type = ek_asset_field_type_str},
 }};
 
 enum t_sound_field : zcl::t_i32 {
@@ -88,8 +88,8 @@ enum t_sound_field : zcl::t_i32 {
 };
 
 constexpr zcl::t_static_array<t_asset_field, ekm_sound_field_cnt> k_sound_fields = {{
-    {.name_cstr = "file_path", .type = ek_asset_field_type_str},
-    {.name_cstr = "out_file_path", .type = ek_asset_field_type_str},
+    {.name_c_str = "file_path", .type = ek_asset_field_type_str},
+    {.name_c_str = "out_file_path", .type = ek_asset_field_type_str},
 }};
 
 zcl::t_b8 pack_assets(const zcl::t_str_rdonly instrs_json_file_path) {
@@ -106,7 +106,7 @@ zcl::t_b8 pack_assets(const zcl::t_str_rdonly instrs_json_file_path) {
             return false;
         }
 
-        cj = cJSON_Parse(zcl::str_to_cstr(zcl::t_str_rdonly{instrs_json_file_contents}));
+        cj = cJSON_Parse(zcl::StrToCStr(zcl::t_str_rdonly{instrs_json_file_contents}));
 
         if (!cj) {
             zcl::LogError(ZCL_STR_LITERAL("Failed to parse packing instructions JSON file!"));
@@ -127,12 +127,12 @@ zcl::t_b8 pack_assets(const zcl::t_str_rdonly instrs_json_file_path) {
     zcl::t_static_array<cJSON *, ekm_sound_field_cnt> snd_field_cj_ptrs = {};
 
     for (zcl::t_i32 asset_type_index = 0; asset_type_index < ekm_asset_type_cnt; asset_type_index++) {
-        const auto asset_type_arr_name_cstr = k_asset_type_array_name_cstrs[asset_type_index];
+        const auto asset_type_arr_name_c_str = k_asset_type_array_name_c_strs[asset_type_index];
 
-        cJSON *const cj_assets = cJSON_GetObjectItemCaseSensitive(cj, asset_type_arr_name_cstr);
+        cJSON *const cj_assets = cJSON_GetObjectItemCaseSensitive(cj, asset_type_arr_name_c_str);
 
         if (!cJSON_IsArray(cj_assets)) {
-            zcl::LogError(ZCL_STR_LITERAL("Packing instructions JSON \"%\" array does not exist or it is of the wrong type!"), zcl::cstr_to_str(asset_type_arr_name_cstr));
+            zcl::LogError(ZCL_STR_LITERAL("Packing instructions JSON \"%\" array does not exist or it is of the wrong type!"), zcl::CStrToStr(asset_type_arr_name_c_str));
             return false;
         }
 
@@ -168,16 +168,16 @@ zcl::t_b8 pack_assets(const zcl::t_str_rdonly instrs_json_file_path) {
             }();
 
             for (zcl::t_i32 fi = 0; fi < fields.len; fi++) {
-                const auto field_name_cstr = fields[fi].name_cstr;
+                const auto field_name_c_str = fields[fi].name_c_str;
 
-                field_vals[fi] = cJSON_GetObjectItem(cj_asset, field_name_cstr);
+                field_vals[fi] = cJSON_GetObjectItem(cj_asset, field_name_c_str);
 
                 if (!field_vals[fi]) {
                     if (fields[fi].optional) {
                         continue;
                     }
 
-                    zcl::LogError(ZCL_STR_LITERAL("A packing instructions JSON \"%\" entry is missing required field \"%\"!"), zcl::cstr_to_str(asset_type_arr_name_cstr), zcl::cstr_to_str(field_name_cstr));
+                    zcl::LogError(ZCL_STR_LITERAL("A packing instructions JSON \"%\" entry is missing required field \"%\"!"), zcl::CStrToStr(asset_type_arr_name_c_str), zcl::CStrToStr(field_name_c_str));
 
                     return false;
                 }
@@ -198,15 +198,15 @@ zcl::t_b8 pack_assets(const zcl::t_str_rdonly instrs_json_file_path) {
                 }();
 
                 if (!is_valid) {
-                    zcl::LogError(ZCL_STR_LITERAL("A packing instructions JSON \"%\" entry has field \"%\" as the wrong type! Expected a %."), zcl::cstr_to_str(asset_type_arr_name_cstr), zcl::cstr_to_str(field_name_cstr), zcl::cstr_to_str(k_asset_field_type_name_cstrs[fields[fi].type]));
+                    zcl::LogError(ZCL_STR_LITERAL("A packing instructions JSON \"%\" entry has field \"%\" as the wrong type! Expected a %."), zcl::CStrToStr(asset_type_arr_name_c_str), zcl::CStrToStr(field_name_c_str), zcl::CStrToStr(k_asset_field_type_name_c_strs[fields[fi].type]));
                     return false;
                 }
             }
 
             switch (asset_type_index) {
             case ek_asset_type_texture: {
-                const auto file_path = zcl::cstr_to_str(field_vals[ek_texture_field_file_path]->valuestring);
-                const auto out_file_path = zcl::cstr_to_str(field_vals[ek_texture_field_out_file_path]->valuestring);
+                const auto file_path = zcl::CStrToStr(field_vals[ek_texture_field_file_path]->valuestring);
+                const auto out_file_path = zcl::CStrToStr(field_vals[ek_texture_field_out_file_path]->valuestring);
 
                 zcl::t_texture_data_mut texture_data;
 
@@ -224,16 +224,16 @@ zcl::t_b8 pack_assets(const zcl::t_str_rdonly instrs_json_file_path) {
             }
 
             case ek_asset_type_font: {
-                const auto file_path = zcl::cstr_to_str(field_vals[ek_font_field_file_path]->valuestring);
+                const auto file_path = zcl::CStrToStr(field_vals[ek_font_field_file_path]->valuestring);
                 const auto height = field_vals[ek_font_field_height]->valueint;
-                const auto out_file_path = zcl::cstr_to_str(field_vals[ek_font_field_out_file_path]->valuestring);
+                const auto out_file_path = zcl::CStrToStr(field_vals[ek_font_field_out_file_path]->valuestring);
 
-                const auto code_pt_bs = zcl::arena_push_item<zcl::t_code_pt_bitset>(&arena);
+                const auto code_pt_bs = zcl::arena_push_item<zcl::t_code_point_bitset>(&arena);
 
                 zcl::bitset_set_range(*code_pt_bs, zcl::k_printable_ascii_range_begin, zcl::k_printable_ascii_range_end); // Add the printable ASCII range as a default.
 
                 if (field_vals[ek_font_field_extra_chrs_file_path]) {
-                    const auto extra_chrs_file_path = zcl::cstr_to_str(field_vals[ek_font_field_extra_chrs_file_path]->valuestring);
+                    const auto extra_chrs_file_path = zcl::CStrToStr(field_vals[ek_font_field_extra_chrs_file_path]->valuestring);
 
                     zcl::t_array_mut<zcl::t_u8> extra_chrs_file_contents;
 
@@ -242,7 +242,7 @@ zcl::t_b8 pack_assets(const zcl::t_str_rdonly instrs_json_file_path) {
                         return false;
                     }
 
-                    zcl::str_mark_code_pts({extra_chrs_file_contents}, code_pt_bs);
+                    zcl::StrMarkCodePoints({extra_chrs_file_contents}, code_pt_bs);
                 }
 
                 // @todo: Proper check for invalid height!
@@ -264,16 +264,16 @@ zcl::t_b8 pack_assets(const zcl::t_str_rdonly instrs_json_file_path) {
             }
 
             case ek_asset_type_shader: {
-                const auto file_path = zcl::cstr_to_str(field_vals[ek_shader_field_file_path]->valuestring);
-                const auto type = zcl::cstr_to_str(field_vals[ek_shader_field_type]->valuestring);
-                const auto varying_def_file_path = zcl::cstr_to_str(field_vals[ek_shader_field_varying_def_file_path]->valuestring);
-                const auto out_file_path = zcl::cstr_to_str(field_vals[ek_shader_field_out_file_path]->valuestring);
+                const auto file_path = zcl::CStrToStr(field_vals[ek_shader_field_file_path]->valuestring);
+                const auto type = zcl::CStrToStr(field_vals[ek_shader_field_type]->valuestring);
+                const auto varying_def_file_path = zcl::CStrToStr(field_vals[ek_shader_field_varying_def_file_path]->valuestring);
+                const auto out_file_path = zcl::CStrToStr(field_vals[ek_shader_field_out_file_path]->valuestring);
 
                 zcl::t_b8 is_frag;
 
-                if (zcl::strs_check_equal(type, ZCL_STR_LITERAL("vertex"))) {
+                if (zcl::StrsCheckEqual(type, ZCL_STR_LITERAL("vertex"))) {
                     is_frag = false;
-                } else if (zcl::strs_check_equal(type, ZCL_STR_LITERAL("fragment"))) {
+                } else if (zcl::StrsCheckEqual(type, ZCL_STR_LITERAL("fragment"))) {
                     is_frag = true;
                 } else {
                     zcl::LogError(ZCL_STR_LITERAL("A packing instructions JSON shader entry has an invalid shader type \"%\"! Expected \"vertex\" or \"fragment\"."), type);
@@ -296,8 +296,8 @@ zcl::t_b8 pack_assets(const zcl::t_str_rdonly instrs_json_file_path) {
             }
 
             case ek_asset_type_sound: {
-                const auto file_path = zcl::cstr_to_str(field_vals[ek_sound_field_file_path]->valuestring);
-                const auto out_file_path = zcl::cstr_to_str(field_vals[ek_sound_field_out_file_path]->valuestring);
+                const auto file_path = zcl::CStrToStr(field_vals[ek_sound_field_file_path]->valuestring);
+                const auto out_file_path = zcl::CStrToStr(field_vals[ek_sound_field_out_file_path]->valuestring);
 
                 zcl::t_sound_data_mut snd_data;
 

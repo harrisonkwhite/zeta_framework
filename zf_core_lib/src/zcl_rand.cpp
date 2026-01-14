@@ -26,7 +26,7 @@ namespace zcl {
     };
 
     // Generates a uniformly distributed random U32.
-    static t_u32 pcg32_calc_next(t_pcg32 *const pcg32) {
+    static t_u32 PCG32CalcNext(t_pcg32 *const pcg32) {
         const t_u64 oldstate = pcg32->state;
         pcg32->state = (oldstate * 6364136223846793005ull) + pcg32->inc;
         const auto xorshifted = static_cast<t_u32>(((oldstate >> 18u) ^ oldstate) >> 27u);
@@ -36,13 +36,13 @@ namespace zcl {
 
     // Generates a uniformly distributed U32 strictly less than the bound.
     // The bound must be greater than 0.
-    static t_u32 pcg32_calc_next_bounded(t_pcg32 *const pcg32, const t_u32 bound) {
+    static t_u32 PCG32CalcNextBounded(t_pcg32 *const pcg32, const t_u32 bound) {
         ZCL_ASSERT(bound > 0);
 
         const t_u32 threshold = -bound % bound;
 
         while (true) {
-            const t_u32 r = pcg32_calc_next(pcg32);
+            const t_u32 r = PCG32CalcNext(pcg32);
 
             if (r >= threshold) {
                 return r % bound;
@@ -50,50 +50,50 @@ namespace zcl {
         }
     }
 
-    static void pcg32_seed(t_pcg32 *const pcg32, const t_u64 init_state, const t_u64 seq) {
+    static void PCG32Seed(t_pcg32 *const pcg32, const t_u64 init_state, const t_u64 seq) {
         pcg32->state = 0;
         pcg32->inc = (seq << 1u) | 1u;
 
-        pcg32_calc_next(pcg32);
+        PCG32CalcNext(pcg32);
 
         pcg32->state += init_state;
 
-        pcg32_calc_next(pcg32);
+        PCG32CalcNext(pcg32);
     }
 
-    t_rng *rng_create(const t_u64 seed, t_arena *const arena) {
+    t_rng *RNGCreate(const t_u64 seed, t_arena *const arena) {
         const auto rng = arena_push_item<t_rng>(arena);
 
         t_u64 x = seed;
-        const t_u64 init_state = scramble(&x);
-        const t_u64 seq = scramble(&x);
+        const t_u64 init_state = Scramble(&x);
+        const t_u64 seq = Scramble(&x);
 
-        pcg32_seed(&rng->pcg32, init_state, seq);
+        PCG32Seed(&rng->pcg32, init_state, seq);
 
         return rng;
     }
 
-    t_u32 rand_gen_u32(t_rng *const rng) {
-        return pcg32_calc_next(&rng->pcg32);
+    t_u32 RandGenU32(t_rng *const rng) {
+        return PCG32CalcNext(&rng->pcg32);
     }
 
-    t_u32 rand_gen_u32_in_range(t_rng *const rng, const t_u32 min_incl, const t_u32 max_excl) {
+    t_u32 RandGenU32InRange(t_rng *const rng, const t_u32 min_incl, const t_u32 max_excl) {
         ZCL_ASSERT(min_incl < max_excl);
-        return min_incl + pcg32_calc_next_bounded(&rng->pcg32, max_excl - min_incl);
+        return min_incl + PCG32CalcNextBounded(&rng->pcg32, max_excl - min_incl);
     }
 
-    t_i32 rand_gen_i32_in_range(t_rng *const rng, const t_i16 min_incl, const t_i16 max_excl) {
+    t_i32 RandGenI32InRange(t_rng *const rng, const t_i16 min_incl, const t_i16 max_excl) {
         ZCL_ASSERT(min_incl < max_excl);
 
         const auto diff = static_cast<t_u32>(max_excl - min_incl);
-        return min_incl + static_cast<t_i32>(pcg32_calc_next_bounded(&rng->pcg32, diff));
+        return min_incl + static_cast<t_i32>(PCG32CalcNextBounded(&rng->pcg32, diff));
     }
 
-    t_f32 rand_gen_perc(t_rng *const rng) {
-        return static_cast<t_f32>(pcg32_calc_next(&rng->pcg32)) / 4294967296.0f;
+    t_f32 RandGenPerc(t_rng *const rng) {
+        return static_cast<t_f32>(PCG32CalcNext(&rng->pcg32)) / 4294967296.0f;
     }
 
-    static t_u64 get_os_entropy() {
+    static t_u64 GetOSEntropy() {
 #ifdef ZCL_PLATFORM_WINDOWS
         zcl::t_u64 result = 0;
 
@@ -106,18 +106,18 @@ namespace zcl {
 #endif
     }
 
-    t_u64 rand_gen_seed() {
-        return get_os_entropy();
+    t_u64 RandGenSeed() {
+        return GetOSEntropy();
     }
 
-    static t_u64 split_mix_64_next(t_u64 *const x) {
+    static t_u64 SplitMix64Next(t_u64 *const x) {
         t_u64 z = (*x += 0x9E3779B97F4A7C15ull);
         z = (z ^ (z >> 30)) * 0xBF58476D1CE4E5B9ull;
         z = (z ^ (z >> 27)) * 0x94D049BB133111EBull;
         return z ^ (z >> 31);
     }
 
-    t_u64 scramble(t_u64 *const x) {
-        return split_mix_64_next(x);
+    t_u64 Scramble(t_u64 *const x) {
+        return SplitMix64Next(x);
     }
 }

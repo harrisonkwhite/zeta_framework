@@ -15,24 +15,24 @@
 
 namespace zcl {
     t_b8 file_open(const t_str_rdonly path, const t_file_access_mode mode, t_arena *const temp_arena, t_file_stream *const o_stream) {
-        const t_str_rdonly path_terminated = str_clone_but_add_terminator(path, temp_arena);
+        const t_str_rdonly path_terminated = StrCloneButAddTerminator(path, temp_arena);
 
         FILE *file;
         t_stream_mode stream_mode;
 
         switch (mode) {
         case ek_file_access_mode_read:
-            file = fopen(str_to_cstr(path_terminated), "rb");
+            file = fopen(StrToCStr(path_terminated), "rb");
             stream_mode = ek_stream_mode_read;
             break;
 
         case ek_file_access_mode_write:
-            file = fopen(str_to_cstr(path_terminated), "wb");
+            file = fopen(StrToCStr(path_terminated), "wb");
             stream_mode = ek_stream_mode_write;
             break;
 
         case ek_file_access_mode_append:
-            file = fopen(str_to_cstr(path_terminated), "ab");
+            file = fopen(StrToCStr(path_terminated), "ab");
             stream_mode = ek_stream_mode_write;
             break;
 
@@ -92,10 +92,10 @@ namespace zcl {
             *o_creation_res = ek_directory_creation_result_success;
         }
 
-        const t_str_rdonly path_terminated = str_clone_but_add_terminator(path, temp_arena);
+        const t_str_rdonly path_terminated = StrCloneButAddTerminator(path, temp_arena);
 
 #ifdef ZCL_PLATFORM_WINDOWS
-        const t_i32 result = _mkdir(str_to_cstr(path_terminated));
+        const t_i32 result = _mkdir(StrToCStr(path_terminated));
 #elif defined(ZCL_PLATFORM_MACOS)
     #error "Platform-specific implementation not yet done!" // @todo
 #elif defined(ZCL_PLATFORM_LINUX)
@@ -199,11 +199,11 @@ namespace zcl {
     }
 
     t_path_type get_path_type(const t_str_rdonly path, t_arena *const temp_arena) {
-        const t_str_rdonly path_terminated = str_clone_but_add_terminator(path, temp_arena);
+        const t_str_rdonly path_terminated = StrCloneButAddTerminator(path, temp_arena);
 
         struct stat info;
 
-        if (stat(str_to_cstr(path_terminated), &info) != 0) {
+        if (stat(StrToCStr(path_terminated), &info) != 0) {
             return ek_path_type_not_found;
         }
 

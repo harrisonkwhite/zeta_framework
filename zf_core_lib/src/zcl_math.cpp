@@ -43,8 +43,8 @@ namespace zcl {
         return {min_left, min_top, max_right - min_left, max_bottom - min_top};
     }
 
-    t_mat4x4 matrix_create_rotated(const t_f32 rot) {
-        t_mat4x4 result = matrix_create_identity();
+    t_mat4x4 MatrixCreateRotated(const t_f32 rot) {
+        t_mat4x4 result = MatrixCreateIdentity();
         result.elems[0][0] = cos(rot);
         result.elems[0][1] = sin(rot);
         result.elems[1][0] = -sin(rot);

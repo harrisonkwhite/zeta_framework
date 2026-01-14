@@ -82,11 +82,11 @@ namespace zcl {
 #endif
     }
 
-    void detail::handle_assert_error(const char *const cond_cstr, const char *const func_name_cstr, const char *const file_name_cstr, const t_i32 line) {
+    void detail::handle_assert_error(const char *const cond_c_str, const char *const func_name_c_str, const char *const file_name_c_str, const t_i32 line) {
         fprintf(stderr, "==================== ASSERTION ERROR ====================\n");
-        fprintf(stderr, "Condition: %s\n", cond_cstr);
-        fprintf(stderr, "Function:  %s\n", func_name_cstr);
-        fprintf(stderr, "File:      %s\n", file_name_cstr);
+        fprintf(stderr, "Condition: %s\n", cond_c_str);
+        fprintf(stderr, "Function:  %s\n", func_name_c_str);
+        fprintf(stderr, "File:      %s\n", file_name_c_str);
         fprintf(stderr, "Line:      %d\n\n", line);
 
         print_stack_trace();
@@ -100,18 +100,18 @@ namespace zcl {
         abort();
     }
 
-    void detail::handle_fatal_error(const char *const func_name_cstr, const char *const file_name_cstr, const t_i32 line, const char *const cond_cstr) {
+    void detail::handle_fatal_error(const char *const func_name_c_str, const char *const file_name_c_str, const t_i32 line, const char *const cond_c_str) {
         fprintf(stderr, "==================== FATAL ERROR ====================\n");
 
 #ifdef ZCL_DEBUG
-        if (cond_cstr) {
-            fprintf(stderr, "Function:  %s\n", func_name_cstr);
-            fprintf(stderr, "File:      %s\n", file_name_cstr);
+        if (cond_c_str) {
+            fprintf(stderr, "Function:  %s\n", func_name_c_str);
+            fprintf(stderr, "File:      %s\n", file_name_c_str);
             fprintf(stderr, "Line:      %d\n", line);
-            fprintf(stderr, "Condition: %s\n\n", cond_cstr);
+            fprintf(stderr, "Condition: %s\n\n", cond_c_str);
         } else {
-            fprintf(stderr, "Function: %s\n", func_name_cstr);
-            fprintf(stderr, "File:     %s\n", file_name_cstr);
+            fprintf(stderr, "Function: %s\n", func_name_c_str);
+            fprintf(stderr, "File:     %s\n", file_name_c_str);
             fprintf(stderr, "Line:     %d\n\n", line);
         }
 #endif

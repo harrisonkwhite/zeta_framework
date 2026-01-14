@@ -64,11 +64,11 @@ namespace zcl {
     struct t_format_code_pt {
         using t_formatting = void;
 
-        t_code_pt value;
+        t_code_point value;
     };
 
-    inline t_format_code_pt FormatCodePt(const t_code_pt value) { return {.value = value}; }
-    inline t_format_code_pt Format(const t_code_pt value) { return FormatCodePt(value); }
+    inline t_format_code_pt FormatCodePt(const t_code_point value) { return {.value = value}; }
+    inline t_format_code_pt Format(const t_code_point value) { return FormatCodePt(value); }
 
     t_b8 PrintType(const t_stream stream, const t_format_code_pt format);
 
@@ -392,8 +392,8 @@ namespace zcl {
     // ============================================================
 
 
-    constexpr t_code_pt k_print_format_spec = '%';
-    constexpr t_code_pt k_print_format_esc = '^';
+    constexpr t_code_point k_print_format_spec = '%';
+    constexpr t_code_point k_print_format_esc = '^';
 
     t_i32 PrintFormatCountSpecs(const t_str_rdonly str);
 
@@ -408,11 +408,11 @@ namespace zcl {
     // Returns true iff the operation was successful.
     template <typename tp_arg_type, typename... tp_arg_types_leftover>
     t_b8 PrintFormat(const t_stream stream, const t_str_rdonly format, const tp_arg_type &arg, const tp_arg_types_leftover &...args_leftover) {
-        static_assert(!c_cstr<tp_arg_type>, "C-strings are prohibited for default formatting as a form of error prevention.");
+        static_assert(!c_c_str<tp_arg_type>, "C-strings are prohibited for default formatting as a form of error prevention.");
 
         ZCL_ASSERT(PrintFormatCountSpecs(format) == 1 + sizeof...(args_leftover));
 
-        static_assert(code_pt_check_ascii(k_print_format_spec) && code_pt_check_ascii(k_print_format_esc)); // Assuming this for this algorithm.
+        static_assert(CodePointCheckASCII(k_print_format_spec) && CodePointCheckASCII(k_print_format_esc)); // Assuming this for this algorithm.
 
         t_b8 escaped = false;
 
@@ -487,7 +487,7 @@ namespace zcl {
 
     template <typename... tp_arg_types>
     t_b8 LogErrorType(const t_str_rdonly type_name, const t_str_rdonly format, const tp_arg_types &...args) {
-        ZCL_ASSERT(!str_check_empty(type_name));
+        ZCL_ASSERT(!StrCheckEmpty(type_name));
 
         t_file_stream std_err = file_stream_create_std_error();
 
