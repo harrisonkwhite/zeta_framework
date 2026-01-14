@@ -172,7 +172,7 @@ namespace zcl {
         for (zcl::t_str_walk_step step; zcl::StrWalkReverse(str, &ZCL_CONCAT(bi_l, __LINE__), &step);)
 
     inline t_b8 StrsCheckEqual(const t_str_rdonly a, const t_str_rdonly b) {
-        return array_compare(a.bytes, b.bytes) == 0;
+        return CompareAllBin(a.bytes, b.bytes);
     }
 
     // ============================================================

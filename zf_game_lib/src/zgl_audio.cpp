@@ -92,7 +92,7 @@ namespace zgl::audio {
 
         zcl::t_sound_data_mut snd_data;
 
-        if (!zcl::sound_load_from_raw(file_path, &group->arena, temp_arena, &snd_data)) {
+        if (!zcl::SoundLoadFromRaw(file_path, &group->arena, temp_arena, &snd_data)) {
             ZCL_FATAL();
         }
 
@@ -104,7 +104,7 @@ namespace zgl::audio {
 
         zcl::t_sound_data_mut snd_data;
 
-        if (!zcl::sound_unpack(file_path, &group->arena, temp_arena, &snd_data)) {
+        if (!zcl::SoundUnpack(file_path, &group->arena, temp_arena, &snd_data)) {
             ZCL_FATAL();
         }
 
@@ -118,7 +118,7 @@ namespace zgl::audio {
         ZCL_ASSERT(pan >= -1.0f && pan <= 1.0f);
         ZCL_ASSERT(pitch > 0.0f);
 
-        const zcl::t_i32 index = zcl::bitset_find_first_unset_bit(g_module_state.snd_insts.activity);
+        const zcl::t_i32 index = zcl::BitsetFindFirstUnsetBit(g_module_state.snd_insts.activity);
 
         if (index == -1) {
             zcl::LogWarning(ZCL_STR_LITERAL("Trying to play a sound, but the sound instance limit has been reached!"));
@@ -149,7 +149,7 @@ namespace zgl::audio {
             ZCL_FATAL();
         }
 
-        zcl::bitset_set(g_module_state.snd_insts.activity, index);
+        zcl::BitsetSet(g_module_state.snd_insts.activity, index);
         g_module_state.snd_insts.versions[index]++;
 
         *o_id = {index, g_module_state.snd_insts.versions[index]};
@@ -159,20 +159,20 @@ namespace zgl::audio {
 
     void sound_stop(const t_sound_id id) {
         ZCL_ASSERT(g_module_state.active);
-        ZCL_ASSERT(zcl::bitset_check_set(g_module_state.snd_insts.activity, id.index) && g_module_state.snd_insts.versions[id.index] == id.version);
+        ZCL_ASSERT(zcl::BitsetCheckSet(g_module_state.snd_insts.activity, id.index) && g_module_state.snd_insts.versions[id.index] == id.version);
 
         ma_sound_stop(&g_module_state.snd_insts.ma_snds[id.index]);
         ma_sound_uninit(&g_module_state.snd_insts.ma_snds[id.index]);
         ma_audio_buffer_ref_uninit(&g_module_state.snd_insts.ma_buf_refs[id.index]);
 
-        zcl::bitset_unset(g_module_state.snd_insts.activity, id.index);
+        zcl::BitsetUnset(g_module_state.snd_insts.activity, id.index);
     }
 
     zcl::t_b8 sound_check_playing(const t_sound_id id) {
         ZCL_ASSERT(g_module_state.active);
         ZCL_ASSERT(id.version <= g_module_state.snd_insts.versions[id.index]);
 
-        if (!zcl::bitset_check_set(g_module_state.snd_insts.activity, id.index) || id.version != g_module_state.snd_insts.versions[id.index]) {
+        if (!zcl::BitsetCheckSet(g_module_state.snd_insts.activity, id.index) || id.version != g_module_state.snd_insts.versions[id.index]) {
             return false;
         }
 
@@ -189,7 +189,7 @@ namespace zgl::audio {
                 ma_sound_uninit(ma_snd);
                 ma_audio_buffer_ref_uninit(&g_module_state.snd_insts.ma_buf_refs[i]);
 
-                zcl::bitset_unset(g_module_state.snd_insts.activity, i);
+                zcl::BitsetUnset(g_module_state.snd_insts.activity, i);
             }
         }
     }

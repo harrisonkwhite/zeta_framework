@@ -61,16 +61,16 @@ namespace zcl {
     // ============================================================
     // @section: Code Points
 
-    struct t_format_code_pt {
+    struct t_format_code_point {
         using t_formatting = void;
 
         t_code_point value;
     };
 
-    inline t_format_code_pt FormatCodePt(const t_code_point value) { return {.value = value}; }
-    inline t_format_code_pt Format(const t_code_point value) { return FormatCodePt(value); }
+    inline t_format_code_point FormatCodePoint(const t_code_point value) { return {.value = value}; }
+    inline t_format_code_point Format(const t_code_point value) { return FormatCodePoint(value); }
 
-    t_b8 PrintType(const t_stream stream, const t_format_code_pt format);
+    t_b8 PrintType(const t_stream stream, const t_format_code_point format);
 
     // ============================================================
 
@@ -152,7 +152,7 @@ namespace zcl {
         if (format.trim_trailing_zeros) {
             const auto str_bytes_relevant = array_slice(array_to_nonstatic(&str_bytes), 0, str_bytes_used);
 
-            if (array_check_any_equal(str_bytes_relevant, '.')) {
+            if (CheckAnyEqual(str_bytes_relevant, '.')) {
                 for (t_i32 i = str_bytes_used - 1;; i--) {
                     if (str_bytes[i] == '0') {
                         str_bytes_used--;
@@ -264,7 +264,7 @@ namespace zcl {
         } while (value_mut != 0 || cnter < format.min_digits);
 
         const auto str_bytes_digits = array_slice_from(mem_stream_get_bytes_written(&str_bytes_stream), str_bytes_digits_begin_pos);
-        array_reverse(str_bytes_digits);
+        Reverse(str_bytes_digits);
 
         return Print(stream, {mem_stream_get_bytes_written(&str_bytes_stream)});
     }

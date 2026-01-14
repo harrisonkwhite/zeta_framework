@@ -49,12 +49,12 @@ namespace zcl {
             const t_i32 glyph_index = stbtt_FindGlyphIndex(&stb_font_info, static_cast<t_i32>(code_pt));
 
             if (glyph_index == 0) {
-                bitset_unset(*code_pts, i);
+                BitsetUnset(*code_pts, i);
             }
         }
 
         // Compute number of leftover code points that can actually be supported, return if there are none.
-        const t_i32 code_pt_cnt = bitset_count_set(*code_pts);
+        const t_i32 code_pt_cnt = BitsetCountSet(*code_pts);
 
         if (code_pt_cnt == 0) {
             return true;
@@ -71,7 +71,7 @@ namespace zcl {
         //
         // Glyph Info
         //
-        o_arrangement->code_pts_to_glyph_infos = hash_map_create<t_code_point, t_font_glyph_info>(k_code_pt_hash_func, arrangement_arena, code_pt_cnt);
+        o_arrangement->code_pts_to_glyph_infos = HashMapCreate<t_code_point, t_font_glyph_info>(k_code_pt_hash_func, arrangement_arena, code_pt_cnt);
 
         t_i32 atlas_index = 0;
         t_v2_i atlas_pen = {};
@@ -112,7 +112,7 @@ namespace zcl {
             glyph_info.atlas_rect = RectCreateI(atlas_pen + t_v2_i{k_glyph_padding, k_glyph_padding}, glyph_info.size);
             atlas_pen.x += glyph_info.size.x + (k_glyph_padding * 2);
 
-            hash_map_put(&o_arrangement->code_pts_to_glyph_infos, code_pt, glyph_info);
+            HashMapPut(&o_arrangement->code_pts_to_glyph_infos, code_pt, glyph_info);
         }
 
         const t_i32 atlas_cnt = atlas_index + 1;
@@ -123,7 +123,7 @@ namespace zcl {
 
         // If there were any kernings to store, set up the hash map and go through again and store them.
         o_arrangement->has_kernings = true;
-        o_arrangement->code_pt_pairs_to_kernings = hash_map_create<t_font_code_point_pair, t_i32>(k_code_pt_pair_hash_func, arrangement_arena, k_hash_map_cap_default, k_code_pt_pair_comparator);
+        o_arrangement->code_pt_pairs_to_kernings = HashMapCreate<t_font_code_point_pair, t_i32>(k_code_pt_pair_hash_func, arrangement_arena, k_hash_map_cap_default, k_code_pt_pair_comparator);
 
         ZCL_BITSET_WALK_ALL_SET (*code_pts, i) {
             ZCL_BITSET_WALK_ALL_SET (*code_pts, j) {
@@ -136,7 +136,7 @@ namespace zcl {
                 const t_i32 kern = stbtt_GetGlyphKernAdvance(&stb_font_info, glyph_a_index, glyph_b_index);
 
                 if (kern != 0) {
-                    hash_map_put(&o_arrangement->code_pt_pairs_to_kernings, {cp_a, cp_b}, kern);
+                    HashMapPut(&o_arrangement->code_pt_pairs_to_kernings, {cp_a, cp_b}, kern);
                 }
             }
         }
@@ -165,7 +165,7 @@ namespace zcl {
 
             t_font_glyph_info *glyph_info;
 
-            if (!hash_map_find(&o_arrangement->code_pts_to_glyph_infos, code_pt, &glyph_info)) {
+            if (!HashMapFind(&o_arrangement->code_pts_to_glyph_infos, code_pt, &glyph_info)) {
                 ZCL_ASSERT(false);
             }
 

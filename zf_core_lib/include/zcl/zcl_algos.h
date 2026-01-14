@@ -3,9 +3,42 @@
 #include <zcl/zcl_basic.h>
 
 namespace zcl {
+    template <c_array_mut tp_arr_type>
+    constexpr void SetAllTo(const tp_arr_type arr, const typename tp_arr_type::t_elem &val) {
+        for (t_i32 i = 0; i < arr.len; i++) {
+            arr[i] = val;
+        }
+    }
+
+    template <c_array tp_arr_type>
+    t_b8 CheckAllEqual(const tp_arr_type arr, const typename tp_arr_type::t_elem &val, const t_comparator_bin<typename tp_arr_type::t_elem> comparator = k_comparator_bin_default<typename tp_arr_type::t_elem>) {
+        if (arr.len == 0) {
+            return false;
+        }
+
+        for (t_i32 i = 0; i < arr.len; i++) {
+            if (!comparator(arr[i], val)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    template <c_array tp_arr_type>
+    t_b8 CheckAnyEqual(const tp_arr_type arr, const typename tp_arr_type::t_elem &val, const t_comparator_bin<typename tp_arr_type::t_elem> comparator = k_comparator_bin_default<typename tp_arr_type::t_elem>) {
+        for (t_i32 i = 0; i < arr.len; i++) {
+            if (comparator(arr[i], val)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     template <c_array tp_arr_a_type, c_array tp_arr_b_type>
         requires c_same<typename tp_arr_a_type::t_elem, typename tp_arr_b_type::t_elem>
-    t_b8 arrays_check_equal(const tp_arr_a_type a, const tp_arr_b_type b, const t_comparator_bin<typename tp_arr_a_type::t_elem> comparator = k_comparator_ord_default<typename tp_arr_a_type::t_elem>) {
+    t_b8 CompareAllBin(const tp_arr_a_type a, const tp_arr_b_type b, const t_comparator_bin<typename tp_arr_a_type::t_elem> comparator = k_comparator_bin_default<typename tp_arr_a_type::t_elem>) {
         if (a.len != b.len) {
             return false;
         }
@@ -21,7 +54,7 @@ namespace zcl {
 
     template <c_array tp_arr_a_type, c_array tp_arr_b_type>
         requires c_same<typename tp_arr_a_type::t_elem, typename tp_arr_b_type::t_elem>
-    t_i32 array_compare(const tp_arr_a_type a, const tp_arr_b_type b, const t_comparator_ord<typename tp_arr_a_type::t_elem> comparator = k_comparator_ord_default<typename tp_arr_a_type::t_elem>) {
+    t_i32 CompareAllOrd(const tp_arr_a_type a, const tp_arr_b_type b, const t_comparator_ord<typename tp_arr_a_type::t_elem> comparator = k_comparator_ord_default<typename tp_arr_a_type::t_elem>) {
         if (a.len != b.len) {
             return a.len < b.len ? -1 : 1;
         }
@@ -37,41 +70,8 @@ namespace zcl {
         return 0;
     }
 
-    template <c_array tp_arr_type>
-    t_b8 array_check_all_equal(const tp_arr_type arr, const typename tp_arr_type::t_elem &val, const t_comparator_bin<typename tp_arr_type::t_elem> comparator = k_comparator_bin_default<typename tp_arr_type::t_elem>) {
-        if (arr.len == 0) {
-            return false;
-        }
-
-        for (t_i32 i = 0; i < arr.len; i++) {
-            if (!comparator(arr[i], val)) {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    template <c_array tp_arr_type>
-    t_b8 array_check_any_equal(const tp_arr_type arr, const typename tp_arr_type::t_elem &val, const t_comparator_bin<typename tp_arr_type::t_elem> comparator = k_comparator_bin_default<typename tp_arr_type::t_elem>) {
-        for (t_i32 i = 0; i < arr.len; i++) {
-            if (comparator(arr[i], val)) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
     template <c_array_mut tp_arr_type>
-    constexpr void array_set_all_to(const tp_arr_type arr, const typename tp_arr_type::t_elem &val) {
-        for (t_i32 i = 0; i < arr.len; i++) {
-            arr[i] = val;
-        }
-    }
-
-    template <c_array_mut tp_arr_type>
-    constexpr void array_reverse(const tp_arr_type arr) {
+    constexpr void Reverse(const tp_arr_type arr) {
         for (t_i32 i = 0; i < arr.len / 2; i++) {
             swap(&arr[i], &arr[arr.len - 1 - i]);
         }
@@ -80,7 +80,7 @@ namespace zcl {
     // O(n^2) time complexity, but O(1) space complexity.
     // You're usually better off using a hash map and a linear search, or a bitset if values are numeric and the range is small.
     template <c_array tp_arr_type>
-    t_b8 check_duplicates_slow(const tp_arr_type arr, const t_comparator_bin<typename tp_arr_type::t_elem> comparator = k_comparator_bin_default<typename tp_arr_type::t_elem>) {
+    t_b8 CheckDuplicatesSlow(const tp_arr_type arr, const t_comparator_bin<typename tp_arr_type::t_elem> comparator = k_comparator_bin_default<typename tp_arr_type::t_elem>) {
         for (t_i32 i = 0; i < arr.len; i++) {
             for (t_i32 j = 0; j < arr.len; j++) {
                 if (i == j) {
@@ -97,7 +97,7 @@ namespace zcl {
     }
 
     template <c_array tp_arr_type>
-    t_b8 run_binary_search(const tp_arr_type arr, const typename tp_arr_type::t_elem &elem, const t_comparator_ord<typename tp_arr_type::t_elem> comparator = k_comparator_ord_default<typename tp_arr_type::t_elem>) {
+    t_b8 RunBinarySearch(const tp_arr_type arr, const typename tp_arr_type::t_elem &elem, const t_comparator_ord<typename tp_arr_type::t_elem> comparator = k_comparator_ord_default<typename tp_arr_type::t_elem>) {
         if (arr.len == 0) {
             return false;
         }
@@ -108,14 +108,14 @@ namespace zcl {
         if (comp_res == 0) {
             return true;
         } else if (comp_res < 0) {
-            return run_binary_search(array_slice(arr, 0, arr.len / 2), elem);
+            return RunBinarySearch(array_slice(arr, 0, arr.len / 2), elem);
         } else {
-            return run_binary_search(array_slice_from(arr, (arr.len / 2) + 1), elem);
+            return RunBinarySearch(array_slice_from(arr, (arr.len / 2) + 1), elem);
         }
     }
 
     template <c_array tp_arr_type>
-    t_b8 check_sorted(const tp_arr_type arr, const t_comparator_ord<typename tp_arr_type::t_elem> comparator = k_comparator_ord_default<typename tp_arr_type::t_elem>) {
+    t_b8 CheckSorted(const tp_arr_type arr, const t_comparator_ord<typename tp_arr_type::t_elem> comparator = k_comparator_ord_default<typename tp_arr_type::t_elem>) {
         for (t_i32 i = 0; i < arr.len - 1; i++) {
             if (comparator(arr[i], arr[i + 1]) > 0) {
                 return false;
@@ -127,7 +127,7 @@ namespace zcl {
 
     // O(n) best-case if array is already sorted, O(n^2) worst-case.
     template <c_array tp_arr_type>
-    void run_bubble_sort(const tp_arr_type arr, const t_comparator_ord<typename tp_arr_type::t_elem> comparator = k_comparator_ord_default<typename tp_arr_type::t_elem>) {
+    void RunBubbleSort(const tp_arr_type arr, const t_comparator_ord<typename tp_arr_type::t_elem> comparator = k_comparator_ord_default<typename tp_arr_type::t_elem>) {
         t_b8 sorted;
 
         do {
@@ -144,7 +144,7 @@ namespace zcl {
 
     // O(n) best-case if array is already sorted, O(n^2) worst-case.
     template <c_array tp_arr_type>
-    void run_insertion_sort(const tp_arr_type arr, const t_comparator_ord<typename tp_arr_type::t_elem> comparator = k_comparator_ord_default<typename tp_arr_type::t_elem>) {
+    void RunInsertionSort(const tp_arr_type arr, const t_comparator_ord<typename tp_arr_type::t_elem> comparator = k_comparator_ord_default<typename tp_arr_type::t_elem>) {
         for (t_i32 i = 1; i < arr.len; i++) {
             const auto temp = arr[i];
 
@@ -164,7 +164,7 @@ namespace zcl {
 
     // O(n^2) in every case.
     template <c_array tp_arr_type>
-    void run_selection_sort(const tp_arr_type arr, const t_comparator_ord<typename tp_arr_type::t_elem> comparator = k_comparator_ord_default<typename tp_arr_type::t_elem>) {
+    void RunSelectionSort(const tp_arr_type arr, const t_comparator_ord<typename tp_arr_type::t_elem> comparator = k_comparator_ord_default<typename tp_arr_type::t_elem>) {
         for (t_i32 i = 0; i < arr.len - 1; i++) {
             const auto min = &arr[i];
 
@@ -180,17 +180,17 @@ namespace zcl {
 
     // O(n log n) in both time complexity and space complexity in every case.
     template <typename tp_arr_type>
-    void run_merge_sort(const tp_arr_type arr, t_arena *const temp_arena, const t_comparator_ord<typename tp_arr_type::t_elem> comparator = k_comparator_ord_default<typename tp_arr_type::t_elem>) {
+    void RunMergeSort(const tp_arr_type arr, t_arena *const temp_arena, const t_comparator_ord<typename tp_arr_type::t_elem> comparator = k_comparator_ord_default<typename tp_arr_type::t_elem>) {
         if (arr.len <= 1) {
             return;
         }
 
         // Sort copies of the left and right partitions.
         const auto arr_left_sorted = arena_push_array_clone(array_slice(arr, 0, arr.len / 2), temp_arena);
-        run_merge_sort(arr_left_sorted, temp_arena, comparator);
+        RunMergeSort(arr_left_sorted, temp_arena, comparator);
 
         const auto arr_right_sorted = arena_push_array_clone(array_slice_from(arr, arr.len / 2), temp_arena);
-        run_merge_sort(arr_right_sorted, temp_arena, comparator);
+        RunMergeSort(arr_right_sorted, temp_arena, comparator);
 
         // Update this array.
         t_i32 i = 0;
@@ -223,7 +223,7 @@ namespace zcl {
     // Space complexity is O(1) compared to merge sort.
     // In each recurse, the pivot is selected as the median of the first, middle, and last elements.
     template <c_array tp_arr_type>
-    void run_quick_sort(const tp_arr_type arr, const t_comparator_ord<typename tp_arr_type::t_elem> comparator = k_comparator_ord_default<typename tp_arr_type::t_elem>) {
+    void RunQuickSort(const tp_arr_type arr, const t_comparator_ord<typename tp_arr_type::t_elem> comparator = k_comparator_ord_default<typename tp_arr_type::t_elem>) {
         if (arr.len <= 1) {
             return;
         }
@@ -280,7 +280,7 @@ namespace zcl {
         }
 
         // Sort for each subsection.
-        run_quick_sort(array_slice(arr, 0, left_sec_last_index), comparator);
-        run_quick_sort(array_slice_from(arr, left_sec_last_index + 1), comparator);
+        RunQuickSort(array_slice(arr, 0, left_sec_last_index), comparator);
+        RunQuickSort(array_slice_from(arr, left_sec_last_index + 1), comparator);
     }
 }

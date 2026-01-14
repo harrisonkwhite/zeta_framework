@@ -3,58 +3,58 @@
 #include <zcl/zcl_algos.h>
 
 namespace zcl {
-    t_b8 bitset_check_any_set(const t_bitset_rdonly bs) {
+    t_b8 BitsetCheckAnySet(const t_bitset_rdonly bs) {
         if (bs.bit_cnt == 0) {
             return false;
         }
 
-        const auto first_bytes = array_slice(bitset_get_bytes(bs), 0, bitset_get_bytes(bs).len - 1);
+        const auto first_bytes = array_slice(BitsetGetBytes(bs), 0, BitsetGetBytes(bs).len - 1);
 
-        if (!array_check_all_equal(first_bytes, 0)) {
+        if (!CheckAllEqual(first_bytes, 0)) {
             return true;
         }
 
-        return (bitset_get_bytes(bs)[bitset_get_bytes(bs).len - 1] & bitset_get_last_byte_mask(bs)) != 0;
+        return (BitsetGetBytes(bs)[BitsetGetBytes(bs).len - 1] & BitsetGetLastByteMask(bs)) != 0;
     }
 
-    t_b8 bitset_check_all_set(const t_bitset_rdonly bs) {
+    t_b8 BitsetCheckAllSet(const t_bitset_rdonly bs) {
         if (bs.bit_cnt == 0) {
             return false;
         }
 
-        const auto first_bytes = array_slice(bitset_get_bytes(bs), 0, bitset_get_bytes(bs).len - 1);
+        const auto first_bytes = array_slice(BitsetGetBytes(bs), 0, BitsetGetBytes(bs).len - 1);
 
-        if (!array_check_all_equal(first_bytes, 0xFF)) {
+        if (!CheckAllEqual(first_bytes, 0xFF)) {
             return false;
         }
 
-        const auto last_byte_mask = bitset_get_last_byte_mask(bs);
-        return (bitset_get_bytes(bs)[bitset_get_bytes(bs).len - 1] & last_byte_mask) == last_byte_mask;
+        const auto last_byte_mask = BitsetGetLastByteMask(bs);
+        return (BitsetGetBytes(bs)[BitsetGetBytes(bs).len - 1] & last_byte_mask) == last_byte_mask;
     }
 
-    void bitset_set_all(const t_bitset_mut bs) {
+    void BitsetSetAll(const t_bitset_mut bs) {
         if (bs.bit_cnt == 0) {
             return;
         }
 
-        const auto first_bytes = array_slice(bitset_get_bytes(bs), 0, bitset_get_bytes(bs).len - 1);
-        array_set_all_to(first_bytes, 0xFF);
+        const auto first_bytes = array_slice(BitsetGetBytes(bs), 0, BitsetGetBytes(bs).len - 1);
+        SetAllTo(first_bytes, 0xFF);
 
-        bitset_get_bytes(bs)[bitset_get_bytes(bs).len - 1] |= bitset_get_last_byte_mask(bs);
+        BitsetGetBytes(bs)[BitsetGetBytes(bs).len - 1] |= BitsetGetLastByteMask(bs);
     }
 
-    void bitset_unset_all(const t_bitset_mut bs) {
+    void BitsetUnsetAll(const t_bitset_mut bs) {
         if (bs.bit_cnt == 0) {
             return;
         }
 
-        const auto first_bytes = array_slice(bitset_get_bytes(bs), 0, bitset_get_bytes(bs).len - 1);
-        array_set_all_to(first_bytes, 0);
+        const auto first_bytes = array_slice(BitsetGetBytes(bs), 0, BitsetGetBytes(bs).len - 1);
+        SetAllTo(first_bytes, 0);
 
-        bitset_get_bytes(bs)[bitset_get_bytes(bs).len - 1] &= ~bitset_get_last_byte_mask(bs);
+        BitsetGetBytes(bs)[BitsetGetBytes(bs).len - 1] &= ~BitsetGetLastByteMask(bs);
     }
 
-    void bitset_set_range(const t_bitset_mut bs, const t_i32 begin_bit_index, const t_i32 end_bit_index) {
+    void BitsetSetRange(const t_bitset_mut bs, const t_i32 begin_bit_index, const t_i32 end_bit_index) {
         ZCL_ASSERT(begin_bit_index >= 0 && begin_bit_index < bs.bit_cnt);
         ZCL_ASSERT(end_bit_index >= begin_bit_index && end_bit_index <= bs.bit_cnt);
 
@@ -69,11 +69,11 @@ namespace zcl {
             const t_i32 set_range_begin = calc_max(begin_bit_index_rel, 0);
             const t_i32 set_range_end = calc_min(end_bit_index_rel, 8);
 
-            bitset_get_bytes(bs)[i] |= byte_bitmask_create_range(set_range_begin, set_range_end);
+            BitsetGetBytes(bs)[i] |= ByteBitmaskCreateRange(set_range_begin, set_range_end);
         }
     }
 
-    void bitset_apply_mask(const t_bitset_mut bs, const t_bitset_rdonly mask, const t_bitwise_mask_op op) {
+    void BitsetApplyMask(const t_bitset_mut bs, const t_bitset_rdonly mask, const t_bitwise_mask_op op) {
         ZCL_ASSERT(bs.bit_cnt == mask.bit_cnt);
 
         if (bs.bit_cnt == 0) {
@@ -82,39 +82,39 @@ namespace zcl {
 
         switch (op) {
         case ek_bitwise_mask_op_and:
-            for (t_i32 i = 0; i < bitset_get_bytes(bs).len; i++) {
-                bitset_get_bytes(bs)[i] &= bitset_get_bytes(mask)[i];
+            for (t_i32 i = 0; i < BitsetGetBytes(bs).len; i++) {
+                BitsetGetBytes(bs)[i] &= BitsetGetBytes(mask)[i];
             }
 
             break;
 
         case ek_bitwise_mask_op_or:
-            for (t_i32 i = 0; i < bitset_get_bytes(bs).len; i++) {
-                bitset_get_bytes(bs)[i] |= bitset_get_bytes(mask)[i];
+            for (t_i32 i = 0; i < BitsetGetBytes(bs).len; i++) {
+                BitsetGetBytes(bs)[i] |= BitsetGetBytes(mask)[i];
             }
 
             break;
 
         case ek_bitwise_mask_op_xor:
-            for (t_i32 i = 0; i < bitset_get_bytes(bs).len; i++) {
-                bitset_get_bytes(bs)[i] ^= bitset_get_bytes(mask)[i];
+            for (t_i32 i = 0; i < BitsetGetBytes(bs).len; i++) {
+                BitsetGetBytes(bs)[i] ^= BitsetGetBytes(mask)[i];
             }
 
             break;
 
         case ek_bitwise_mask_op_andnot:
-            for (t_i32 i = 0; i < bitset_get_bytes(bs).len; i++) {
-                bitset_get_bytes(bs)[i] &= ~bitset_get_bytes(mask)[i];
+            for (t_i32 i = 0; i < BitsetGetBytes(bs).len; i++) {
+                BitsetGetBytes(bs)[i] &= ~BitsetGetBytes(mask)[i];
             }
 
             break;
         }
 
-        bitset_get_bytes(bs)[bitset_get_bytes(bs).len - 1] &= bitset_get_last_byte_mask(bs);
+        BitsetGetBytes(bs)[BitsetGetBytes(bs).len - 1] &= BitsetGetLastByteMask(bs);
     }
 
-    static t_u8 shift_bits_left(const t_bitset_mut bs) {
-        ZCL_ASSERT(bits_to_bytes(bs.bit_cnt) == bitset_get_bytes(bs).len);
+    static t_u8 BitsetShiftLeftSingle(const t_bitset_mut bs) {
+        ZCL_ASSERT(bits_to_bytes(bs.bit_cnt) == BitsetGetBytes(bs).len);
 
         if (bs.bit_cnt == 0) {
             return 0;
@@ -122,30 +122,30 @@ namespace zcl {
 
         t_u8 discard = 0;
 
-        for (t_i32 i = 0; i < bitset_get_bytes(bs).len; i++) {
-            const t_i32 bits_in_byte = i == bitset_get_bytes(bs).len - 1 ? bitset_get_last_byte_bit_cnt(bs) : 8;
+        for (t_i32 i = 0; i < BitsetGetBytes(bs).len; i++) {
+            const t_i32 bits_in_byte = i == BitsetGetBytes(bs).len - 1 ? BitsetGetLastByteBitCount(bs) : 8;
             const t_u8 discard_last = discard;
-            discard = (bitset_get_bytes(bs)[i] & byte_bitmask_create_single(bits_in_byte - 1)) >> (bits_in_byte - 1);
-            bitset_get_bytes(bs)[i] <<= 1;
-            bitset_get_bytes(bs)[i] |= discard_last;
+            discard = (BitsetGetBytes(bs)[i] & ByteBitmaskCreateSingle(bits_in_byte - 1)) >> (bits_in_byte - 1);
+            BitsetGetBytes(bs)[i] <<= 1;
+            BitsetGetBytes(bs)[i] |= discard_last;
         }
 
-        bitset_get_bytes(bs)[bitset_get_bytes(bs).len - 1] &= bitset_get_last_byte_mask(bs);
+        BitsetGetBytes(bs)[BitsetGetBytes(bs).len - 1] &= BitsetGetLastByteMask(bs);
 
         return discard;
     }
 
-    void bitset_shift_left(const t_bitset_mut bs, const t_i32 amount) {
+    void BitsetShiftLeft(const t_bitset_mut bs, const t_i32 amount) {
         ZCL_ASSERT(amount >= 0);
 
         // @speed: :(
 
         for (t_i32 i = 0; i < amount; i++) {
-            shift_bits_left(bs);
+            BitsetShiftLeftSingle(bs);
         }
     }
 
-    void bitset_rot_left(const t_bitset_mut bs, const t_i32 amount) {
+    void BitsetRotateLeft(const t_bitset_mut bs, const t_i32 amount) {
         ZCL_ASSERT(amount >= 0);
 
         if (bs.bit_cnt == 0) {
@@ -155,52 +155,52 @@ namespace zcl {
         // @speed: :(
 
         for (t_i32 i = 0; i < amount; i++) {
-            const auto discard = shift_bits_left(bs);
+            const auto discard = BitsetShiftLeftSingle(bs);
 
             if (discard) {
-                bitset_set(bs, 0);
+                BitsetSet(bs, 0);
             } else {
-                bitset_unset(bs, 0);
+                BitsetUnset(bs, 0);
             }
         }
     }
 
-    static t_u8 shift_bits_right(const t_bitset_mut bs) {
-        ZCL_ASSERT(bits_to_bytes(bs.bit_cnt) == bitset_get_bytes(bs).len);
+    static t_u8 BitsetShiftRightSingle(const t_bitset_mut bs) {
+        ZCL_ASSERT(bits_to_bytes(bs.bit_cnt) == BitsetGetBytes(bs).len);
 
         if (bs.bit_cnt == 0) {
             return 0;
         }
 
-        bitset_get_bytes(bs)[bitset_get_bytes(bs).len - 1] &= bitset_get_last_byte_mask(bs); // Drop any excess bits so we don't accidentally shift a 1 in.
+        BitsetGetBytes(bs)[BitsetGetBytes(bs).len - 1] &= BitsetGetLastByteMask(bs); // Drop any excess bits so we don't accidentally shift a 1 in.
 
         t_u8 discard = 0;
 
-        for (t_i32 i = bitset_get_bytes(bs).len - 1; i >= 0; i--) {
-            const t_i32 bits_in_byte = i == bitset_get_bytes(bs).len - 1 ? bitset_get_last_byte_bit_cnt(bs) : 8;
+        for (t_i32 i = BitsetGetBytes(bs).len - 1; i >= 0; i--) {
+            const t_i32 bits_in_byte = i == BitsetGetBytes(bs).len - 1 ? BitsetGetLastByteBitCount(bs) : 8;
             const t_u8 discard_last = discard;
-            discard = bitset_get_bytes(bs)[i] & byte_bitmask_create_single(0);
-            bitset_get_bytes(bs)[i] >>= 1;
+            discard = BitsetGetBytes(bs)[i] & ByteBitmaskCreateSingle(0);
+            BitsetGetBytes(bs)[i] >>= 1;
 
             if (discard_last) {
-                bitset_get_bytes(bs)[i] |= byte_bitmask_create_single(bits_in_byte - 1);
+                BitsetGetBytes(bs)[i] |= ByteBitmaskCreateSingle(bits_in_byte - 1);
             }
         }
 
         return discard;
     }
 
-    void bitset_shift_right(const t_bitset_mut bs, const t_i32 amount) {
+    void BitsetShiftRight(const t_bitset_mut bs, const t_i32 amount) {
         ZCL_ASSERT(amount >= 0);
 
         // @speed: :(
 
         for (t_i32 i = 0; i < amount; i++) {
-            shift_bits_right(bs);
+            BitsetShiftRightSingle(bs);
         }
     }
 
-    void bitset_rot_right(const t_bitset_mut bs, const t_i32 amount) {
+    void BitsetRotateRight(const t_bitset_mut bs, const t_i32 amount) {
         ZCL_ASSERT(amount >= 0);
 
         if (bs.bit_cnt == 0) {
@@ -210,19 +210,19 @@ namespace zcl {
         // @speed: :(
 
         for (t_i32 i = 0; i < amount; i++) {
-            const auto discard = shift_bits_right(bs);
+            const auto discard = BitsetShiftRightSingle(bs);
 
             if (discard) {
-                bitset_set(bs, bs.bit_cnt - 1);
+                BitsetSet(bs, bs.bit_cnt - 1);
             } else {
-                bitset_unset(bs, bs.bit_cnt - 1);
+                BitsetUnset(bs, bs.bit_cnt - 1);
             }
         }
     }
 
     // ============================================================
 
-    static t_i32 get_index_of_first_set_bit_helper(const t_bitset_rdonly bs, const t_i32 from, const t_u8 xor_mask) {
+    static t_i32 BitsetFindFirstSetBitHelper(const t_bitset_rdonly bs, const t_i32 from, const t_u8 xor_mask) {
         ZCL_ASSERT(from >= 0 && from <= bs.bit_cnt); // Intentionally allowing the upper bound here for the case of iteration.
 
         // Map of each possible byte to the index of the first set bit, or -1 for the first case.
@@ -487,15 +487,15 @@ namespace zcl {
 
         const t_i32 begin_byte_index = from / 8;
 
-        for (t_i32 i = begin_byte_index; i < bitset_get_bytes(bs).len; i++) {
-            t_u8 byte = bitset_get_bytes(bs)[i] ^ xor_mask;
+        for (t_i32 i = begin_byte_index; i < BitsetGetBytes(bs).len; i++) {
+            t_u8 byte = BitsetGetBytes(bs)[i] ^ xor_mask;
 
             if (i == begin_byte_index) {
-                byte &= byte_bitmask_create_range(from % 8);
+                byte &= ByteBitmaskCreateRange(from % 8);
             }
 
-            if (i == bitset_get_bytes(bs).len - 1) {
-                byte &= bitset_get_last_byte_mask(bs);
+            if (i == BitsetGetBytes(bs).len - 1) {
+                byte &= BitsetGetLastByteMask(bs);
             }
 
             const t_i32 bi = k_mappings[byte];
@@ -508,15 +508,15 @@ namespace zcl {
         return -1;
     }
 
-    t_i32 bitset_find_first_set_bit(const t_bitset_rdonly bs, const t_i32 from) {
-        return get_index_of_first_set_bit_helper(bs, from, 0);
+    t_i32 BitsetFindFirstSetBit(const t_bitset_rdonly bs, const t_i32 from) {
+        return BitsetFindFirstSetBitHelper(bs, from, 0);
     }
 
-    t_i32 bitset_find_first_unset_bit(const t_bitset_rdonly bs, const t_i32 from) {
-        return get_index_of_first_set_bit_helper(bs, from, 0xFF);
+    t_i32 BitsetFindFirstUnsetBit(const t_bitset_rdonly bs, const t_i32 from) {
+        return BitsetFindFirstSetBitHelper(bs, from, 0xFF);
     }
 
-    t_i32 bitset_count_set(const t_bitset_rdonly bs) {
+    t_i32 BitsetCountSet(const t_bitset_rdonly bs) {
         // Map of each possible byte to the number of set bits in it.
         constexpr t_static_array<t_i32, 256> k_mappings = {{
             0, // 0000 0000
@@ -779,21 +779,21 @@ namespace zcl {
 
         t_i32 result = 0;
 
-        if (bitset_get_bytes(bs).len > 0) {
-            for (t_i32 i = 0; i < bitset_get_bytes(bs).len - 1; i++) {
-                result += k_mappings[bitset_get_bytes(bs)[i]];
+        if (BitsetGetBytes(bs).len > 0) {
+            for (t_i32 i = 0; i < BitsetGetBytes(bs).len - 1; i++) {
+                result += k_mappings[BitsetGetBytes(bs)[i]];
             }
 
-            result += k_mappings[bitset_get_bytes(bs)[bitset_get_bytes(bs).len - 1] & bitset_get_last_byte_mask(bs)];
+            result += k_mappings[BitsetGetBytes(bs)[BitsetGetBytes(bs).len - 1] & BitsetGetLastByteMask(bs)];
         }
 
         return result;
     }
 
-    t_b8 bitset_walk_all_set(const t_bitset_rdonly bs, t_i32 *const pos, t_i32 *const o_index) {
+    t_b8 BitsetWalkAllSet(const t_bitset_rdonly bs, t_i32 *const pos, t_i32 *const o_index) {
         ZCL_ASSERT(*pos >= 0 && *pos <= bs.bit_cnt);
 
-        *o_index = bitset_find_first_set_bit(bs, *pos);
+        *o_index = BitsetFindFirstSetBit(bs, *pos);
 
         if (*o_index == -1) {
             return false;
@@ -804,10 +804,10 @@ namespace zcl {
         return true;
     }
 
-    t_b8 bitset_walk_all_unset(const t_bitset_rdonly bs, t_i32 *const pos, t_i32 *const o_index) {
+    t_b8 BitsetWalkAllUnset(const t_bitset_rdonly bs, t_i32 *const pos, t_i32 *const o_index) {
         ZCL_ASSERT(*pos >= 0 && *pos <= bs.bit_cnt);
 
-        *o_index = bitset_find_first_unset_bit(bs, *pos);
+        *o_index = BitsetFindFirstUnsetBit(bs, *pos);
 
         if (*o_index == -1) {
             return false;

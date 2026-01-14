@@ -6,7 +6,7 @@ namespace zcl {
             return false;
         }
 
-        if (!stream_write_items_of_array(stream, bitset_get_bytes(bs))) {
+        if (!stream_write_items_of_array(stream, BitsetGetBytes(bs))) {
             return false;
         }
 
@@ -20,9 +20,9 @@ namespace zcl {
             return false;
         }
 
-        *o_bs = bitset_create(bit_cnt, bs_arena);
+        *o_bs = BitsetCreate(bit_cnt, bs_arena);
 
-        if (!stream_read_items_into_array(stream, bitset_get_bytes(*o_bs), bitset_get_bytes(*o_bs).len)) {
+        if (!stream_read_items_into_array(stream, BitsetGetBytes(*o_bs), BitsetGetBytes(*o_bs).len)) {
             return false;
         }
 

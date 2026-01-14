@@ -89,17 +89,17 @@ namespace zcl {
 
     template <c_hash_map tp_hash_map_type>
     [[nodiscard]] t_b8 hash_map_serialize(const tp_hash_map_type *const hm, const t_stream stream, t_arena *const temp_arena) {
-        if (!stream_write_item(stream, hash_map_get_cap(hm))) {
+        if (!stream_write_item(stream, HashMapGetCap(hm))) {
             return false;
         }
 
-        if (!stream_write_item(stream, hash_map_get_entry_count(hm))) {
+        if (!stream_write_item(stream, HashMapGetEntryCount(hm))) {
             return false;
         }
 
         t_array_mut<typename tp_hash_map_type::t_key> keys;
         t_array_mut<typename tp_hash_map_type::t_value> values;
-        hash_map_load_entries(hm, temp_arena, &keys, &values);
+        HashMapLoadEntries(hm, temp_arena, &keys, &values);
 
         if (!stream_write_items_of_array(stream, keys)) {
             return false;
@@ -126,7 +126,7 @@ namespace zcl {
             return false;
         }
 
-        *o_hm = hash_map_create<typename tp_hash_map_type::t_key, typename tp_hash_map_type::t_value>(hm_hash_func, hm_arena, cap, hm_key_comparator);
+        *o_hm = HashMapCreate<typename tp_hash_map_type::t_key, typename tp_hash_map_type::t_value>(hm_hash_func, hm_arena, cap, hm_key_comparator);
 
         const auto keys = arena_push_array<typename tp_hash_map_type::t_key>(temp_arena, entry_cnt);
 
@@ -141,7 +141,7 @@ namespace zcl {
         }
 
         for (t_i32 i = 0; i < entry_cnt; i++) {
-            hash_map_put(o_hm, keys[i], values[i]);
+            HashMapPut(o_hm, keys[i], values[i]);
         }
 
         return true;

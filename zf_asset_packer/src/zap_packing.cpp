@@ -230,7 +230,7 @@ zcl::t_b8 pack_assets(const zcl::t_str_rdonly instrs_json_file_path) {
 
                 const auto code_pt_bs = zcl::arena_push_item<zcl::t_code_point_bitset>(&arena);
 
-                zcl::bitset_set_range(*code_pt_bs, zcl::k_printable_ascii_range_begin, zcl::k_printable_ascii_range_end); // Add the printable ASCII range as a default.
+                zcl::BitsetSetRange(*code_pt_bs, zcl::k_printable_ascii_range_begin, zcl::k_printable_ascii_range_end); // Add the printable ASCII range as a default.
 
                 if (field_vals[ek_font_field_extra_chrs_file_path]) {
                     const auto extra_chrs_file_path = zcl::CStrToStr(field_vals[ek_font_field_extra_chrs_file_path]->valuestring);
@@ -301,12 +301,12 @@ zcl::t_b8 pack_assets(const zcl::t_str_rdonly instrs_json_file_path) {
 
                 zcl::t_sound_data_mut snd_data;
 
-                if (!zcl::sound_load_from_raw(file_path, &arena, &arena, &snd_data)) {
+                if (!zcl::SoundLoadFromRaw(file_path, &arena, &arena, &snd_data)) {
                     zcl::LogError(ZCL_STR_LITERAL("Failed to load sound from file \"%\"!"), file_path);
                     return false;
                 }
 
-                if (!zcl::sound_pack(out_file_path, snd_data, &arena)) {
+                if (!zcl::SoundPack(out_file_path, snd_data, &arena)) {
                     zcl::LogError(ZCL_STR_LITERAL("Failed to pack sound to file \"%\"!"), out_file_path);
                     return false;
                 }

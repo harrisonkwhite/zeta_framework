@@ -176,7 +176,7 @@ namespace zgl::gfx {
 
             zcl::t_font_glyph_info *glyph_info;
 
-            if (!zcl::hash_map_find(&font_arrangement.code_pts_to_glyph_infos, step.code_pt, &glyph_info)) {
+            if (!zcl::HashMapFind(&font_arrangement.code_pts_to_glyph_infos, step.code_pt, &glyph_info)) {
                 ZCL_ASSERT(false && "Unsupported code point!");
                 continue;
             }
@@ -184,7 +184,7 @@ namespace zgl::gfx {
             if (chr_index > 0 && font_arrangement.has_kernings) {
                 zcl::t_i32 *kerning;
 
-                if (zcl::hash_map_find(&font_arrangement.code_pt_pairs_to_kernings, {code_pt_last, step.code_pt}, &kerning)) {
+                if (zcl::HashMapFind(&font_arrangement.code_pt_pairs_to_kernings, {code_pt_last, step.code_pt}, &kerning)) {
                     chr_pos_pen.x += static_cast<zcl::t_f32>(*kerning);
                 }
             }
@@ -222,7 +222,7 @@ namespace zgl::gfx {
 
             zcl::t_font_glyph_info *glyph_info;
 
-            if (!zcl::hash_map_find(&font.arrangement.code_pts_to_glyph_infos, step.code_pt, &glyph_info)) {
+            if (!zcl::HashMapFind(&font.arrangement.code_pts_to_glyph_infos, step.code_pt, &glyph_info)) {
                 ZCL_ASSERT(false && "Unsupported code point!");
                 continue;
             }

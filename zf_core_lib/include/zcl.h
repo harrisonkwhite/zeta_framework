@@ -4,7 +4,6 @@
 #include <zcl/zcl_bits.h>
 #include <zcl/zcl_math.h>
 #include <zcl/zcl_lists.h>
-#include <zcl/zcl_kv_stores.h>
 #include <zcl/zcl_hash_maps.h>
 #include <zcl/zcl_strs.h>
 #include <zcl/zcl_streams.h>

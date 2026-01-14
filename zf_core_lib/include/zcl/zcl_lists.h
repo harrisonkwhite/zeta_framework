@@ -50,59 +50,59 @@ namespace zcl {
 
     namespace detail {
         template <typename tp_type>
-        struct t_is_list_static {
+        struct t_list_is_static {
             static constexpr t_b8 k_value = false;
         };
 
         template <c_list_elem tp_elem_type, t_i32 tp_cap>
-        struct t_is_list_static<t_static_list<tp_elem_type, tp_cap>> {
+        struct t_list_is_static<t_static_list<tp_elem_type, tp_cap>> {
             static constexpr t_b8 k_value = true;
         };
     }
 
     template <typename tp_type>
-    concept c_list_static = detail::t_is_list_static<t_cvref_removed<tp_type>>::k_value;
+    concept c_list_static = detail::t_list_is_static<t_cvref_removed<tp_type>>::k_value;
 
     template <typename tp_type>
     concept c_list = c_list_nonstatic<tp_type> || c_list_static<tp_type>;
 
     template <c_list_elem tp_elem_type>
-    t_list<tp_elem_type> list_create(const t_i32 cap, t_arena *const arena, const t_i32 len = 0) {
+    t_list<tp_elem_type> ListCreate(const t_i32 cap, t_arena *const arena, const t_i32 len = 0) {
         ZCL_ASSERT(cap > 0 && len >= 0 && len <= cap);
         return {arena_push_array<tp_elem_type>(arena, cap), len};
     }
 
     template <c_list_nonstatic tp_list_type>
-    constexpr t_i32 list_get_cap(const tp_list_type *const list) {
+    constexpr t_i32 ListGetCap(const tp_list_type *const list) {
         return list->backing_arr.len;
     }
 
     template <c_list_static tp_list_type>
-    constexpr t_i32 list_get_cap(const tp_list_type *const list) {
+    constexpr t_i32 ListGetCap(const tp_list_type *const list) {
         return list->backing_arr.k_len;
     }
 
     template <c_list_nonstatic tp_list_type>
-    constexpr t_array_mut<typename tp_list_type::t_elem> list_to_array(const tp_list_type *const list) {
+    constexpr t_array_mut<typename tp_list_type::t_elem> ListToArray(const tp_list_type *const list) {
         return array_slice(list->backing_arr, 0, list->len);
     }
 
     template <c_list_static tp_list_type>
-    constexpr t_array_mut<typename tp_list_type::t_elem> list_to_array(tp_list_type *const list) {
+    constexpr t_array_mut<typename tp_list_type::t_elem> ListToArray(tp_list_type *const list) {
         return array_slice(array_to_nonstatic(&list->backing_arr), 0, list->len);
     }
 
     template <c_list_static tp_list_type>
-    constexpr t_array_rdonly<typename tp_list_type::t_elem> list_to_array(const tp_list_type *const list) {
+    constexpr t_array_rdonly<typename tp_list_type::t_elem> ListToArray(const tp_list_type *const list) {
         return array_slice(array_to_nonstatic(&list->backing_arr), 0, list->len);
     }
 
     template <c_list_nonstatic tp_list_type>
-    void list_extend(tp_list_type *const list, t_arena *const arena, const t_list_extension_cap_calculator cap_calculator = k_list_extension_cap_calculator_default) {
+    void ListExtend(tp_list_type *const list, t_arena *const arena, const t_list_extension_cap_calculator cap_calculator = k_list_extension_cap_calculator_default) {
         ZCL_ASSERT(cap_calculator);
 
-        const t_i32 new_cap = cap_calculator(list_get_cap(list));
-        ZCL_ASSERT(new_cap > list_get_cap(list));
+        const t_i32 new_cap = cap_calculator(ListGetCap(list));
+        ZCL_ASSERT(new_cap > ListGetCap(list));
 
         const auto new_backing_arr = arena_push_array<tp_list_type>(arena, new_cap);
         array_copy(list->backing_arr, new_backing_arr);
@@ -111,11 +111,11 @@ namespace zcl {
     }
 
     template <c_list_nonstatic tp_list_type>
-    void list_extend_to_fit(tp_list_type *const list, const t_i32 min_cap, t_arena *const arena, const t_list_extension_cap_calculator cap_calculator = k_list_extension_cap_calculator_default) {
-        ZCL_ASSERT(min_cap > list_get_cap(list));
+    void ListExtendToFit(tp_list_type *const list, const t_i32 min_cap, t_arena *const arena, const t_list_extension_cap_calculator cap_calculator = k_list_extension_cap_calculator_default) {
+        ZCL_ASSERT(min_cap > ListGetCap(list));
         ZCL_ASSERT(cap_calculator);
 
-        const t_i32 new_cap = [cap = list_get_cap(list), min_cap, cap_calculator]() {
+        const t_i32 new_cap = [cap = ListGetCap(list), min_cap, cap_calculator]() {
             t_i32 result = cap;
 
             do {
@@ -134,8 +134,8 @@ namespace zcl {
     }
 
     template <c_list tp_list_type>
-    constexpr typename tp_list_type::t_elem *list_append(tp_list_type *const list, const typename tp_list_type::t_elem &value) {
-        ZCL_ASSERT(list->len < list_get_cap(list));
+    constexpr typename tp_list_type::t_elem *ListAppend(tp_list_type *const list, const typename tp_list_type::t_elem &value) {
+        ZCL_ASSERT(list->len < ListGetCap(list));
 
         list->len++;
         (*list)[list->len - 1] = value;
@@ -143,17 +143,17 @@ namespace zcl {
     }
 
     template <c_list_nonstatic tp_list_type>
-    typename tp_list_type::t_elem *list_append_dynamic(tp_list_type *const list, const typename tp_list_type::t_elem &value, t_arena *const extension_arena, const t_list_extension_cap_calculator extension_cap_calculator = k_list_extension_cap_calculator_default) {
-        if (list->len == list_get_cap(list)) {
-            list_extend(list, extension_arena, extension_cap_calculator);
+    typename tp_list_type::t_elem *ListAppendDynamic(tp_list_type *const list, const typename tp_list_type::t_elem &value, t_arena *const extension_arena, const t_list_extension_cap_calculator extension_cap_calculator = k_list_extension_cap_calculator_default) {
+        if (list->len == ListGetCap(list)) {
+            ListExtend(list, extension_arena, extension_cap_calculator);
         }
 
-        return list_append(list, value);
+        return ListAppend(list, value);
     }
 
     template <c_list tp_list_type>
-    constexpr t_array_mut<typename tp_list_type::t_elem> list_append_many(tp_list_type *const list, const t_array_rdonly<typename tp_list_type::t_elem> values) {
-        ZCL_ASSERT(list->len + values.len <= list_get_cap(list));
+    constexpr t_array_mut<typename tp_list_type::t_elem> ListAppendMany(tp_list_type *const list, const t_array_rdonly<typename tp_list_type::t_elem> values) {
+        ZCL_ASSERT(list->len + values.len <= ListGetCap(list));
 
         array_copy(values, array_slice_from(list->backing_arr, list->len));
         list->len += values.len;
@@ -161,19 +161,19 @@ namespace zcl {
     }
 
     template <c_list_nonstatic tp_list_type>
-    t_array_mut<typename tp_list_type::t_elem> list_append_many_dynamic(tp_list_type *const list, const t_array_rdonly<typename tp_list_type::t_elem> values, t_arena *const extension_arena, const t_list_extension_cap_calculator extension_cap_calculator = k_list_extension_cap_calculator_default) {
+    t_array_mut<typename tp_list_type::t_elem> ListAppendManyDynamic(tp_list_type *const list, const t_array_rdonly<typename tp_list_type::t_elem> values, t_arena *const extension_arena, const t_list_extension_cap_calculator extension_cap_calculator = k_list_extension_cap_calculator_default) {
         const auto min_cap_needed = list->len + values.len;
 
-        if (min_cap_needed > list_get_cap(list)) {
-            list_extend_to_fit(list, min_cap_needed, extension_arena, extension_cap_calculator);
+        if (min_cap_needed > ListGetCap(list)) {
+            ListExtendToFit(list, min_cap_needed, extension_arena, extension_cap_calculator);
         }
 
-        return list_append_many(list, values);
+        return ListAppendMany(list, values);
     }
 
     template <c_list tp_list_type>
-    constexpr typename tp_list_type::t_elem *list_insert_at(tp_list_type *const list, const t_i32 index, const typename tp_list_type::t_elem &value) {
-        ZCL_ASSERT(list->len < list_get_cap(list));
+    constexpr typename tp_list_type::t_elem *ListInsertAt(tp_list_type *const list, const t_i32 index, const typename tp_list_type::t_elem &value) {
+        ZCL_ASSERT(list->len < ListGetCap(list));
         ZCL_ASSERT(index >= 0 && index <= list->len);
 
         list->len++;
@@ -188,16 +188,16 @@ namespace zcl {
     }
 
     template <c_list_nonstatic tp_list_type>
-    typename tp_list_type::t_elem *list_insert_at_dynamic(tp_list_type *const list, const t_i32 index, const typename tp_list_type::t_elem &value, t_arena *const extension_arena, const t_list_extension_cap_calculator extension_cap_calculator = k_list_extension_cap_calculator_default) {
-        if (list->len == list_get_cap(list)) {
-            list_extend(list, extension_arena, extension_cap_calculator);
+    typename tp_list_type::t_elem *ListInsertAtDynamic(tp_list_type *const list, const t_i32 index, const typename tp_list_type::t_elem &value, t_arena *const extension_arena, const t_list_extension_cap_calculator extension_cap_calculator = k_list_extension_cap_calculator_default) {
+        if (list->len == ListGetCap(list)) {
+            ListExtend(list, extension_arena, extension_cap_calculator);
         }
 
-        return list_insert_at(list, index, value);
+        return ListInsertAt(list, index, value);
     }
 
     template <c_list tp_list_type>
-    constexpr void list_remove_at_shift(tp_list_type *const list, const t_i32 index) {
+    constexpr void ListRemoveAtShift(tp_list_type *const list, const t_i32 index) {
         ZCL_ASSERT(list->len > 0);
         ZCL_ASSERT(index >= 0 && index < list->len);
 
@@ -206,7 +206,7 @@ namespace zcl {
     }
 
     template <c_list tp_list_type>
-    constexpr void list_remove_at_swapback(tp_list_type *const list, const t_i32 index) {
+    constexpr void ListRemoveAtSwapback(tp_list_type *const list, const t_i32 index) {
         ZCL_ASSERT(list->len > 0);
         ZCL_ASSERT(index >= 0 && index < list->len);
 
@@ -215,7 +215,7 @@ namespace zcl {
     }
 
     template <c_list tp_list_type>
-    constexpr void list_remove_end(tp_list_type *const list) {
+    constexpr void ListRemoveEnd(tp_list_type *const list) {
         ZCL_ASSERT(list->len > 0);
         list->len--;
     }
