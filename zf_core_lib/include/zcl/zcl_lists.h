@@ -69,7 +69,7 @@ namespace zcl {
     template <c_list_elem tp_elem_type>
     t_list<tp_elem_type> ListCreate(const t_i32 cap, t_arena *const arena, const t_i32 len = 0) {
         ZCL_ASSERT(cap > 0 && len >= 0 && len <= cap);
-        return {arena_push_array<tp_elem_type>(arena, cap), len};
+        return {ArenaPushArray<tp_elem_type>(arena, cap), len};
     }
 
     template <c_list_nonstatic tp_list_type>
@@ -84,17 +84,17 @@ namespace zcl {
 
     template <c_list_nonstatic tp_list_type>
     constexpr t_array_mut<typename tp_list_type::t_elem> ListToArray(const tp_list_type *const list) {
-        return array_slice(list->backing_arr, 0, list->len);
+        return ArraySlice(list->backing_arr, 0, list->len);
     }
 
     template <c_list_static tp_list_type>
     constexpr t_array_mut<typename tp_list_type::t_elem> ListToArray(tp_list_type *const list) {
-        return array_slice(array_to_nonstatic(&list->backing_arr), 0, list->len);
+        return ArraySlice(ArrayToNonstatic(&list->backing_arr), 0, list->len);
     }
 
     template <c_list_static tp_list_type>
     constexpr t_array_rdonly<typename tp_list_type::t_elem> ListToArray(const tp_list_type *const list) {
-        return array_slice(array_to_nonstatic(&list->backing_arr), 0, list->len);
+        return ArraySlice(ArrayToNonstatic(&list->backing_arr), 0, list->len);
     }
 
     template <c_list_nonstatic tp_list_type>
@@ -104,8 +104,8 @@ namespace zcl {
         const t_i32 new_cap = cap_calculator(ListGetCap(list));
         ZCL_ASSERT(new_cap > ListGetCap(list));
 
-        const auto new_backing_arr = arena_push_array<tp_list_type>(arena, new_cap);
-        array_copy(list->backing_arr, new_backing_arr);
+        const auto new_backing_arr = ArenaPushArray<tp_list_type>(arena, new_cap);
+        ArrayCopy(list->backing_arr, new_backing_arr);
 
         *list = {new_backing_arr, list->len};
     }
@@ -127,8 +127,8 @@ namespace zcl {
             return result;
         }();
 
-        const auto new_backing_arr = arena_push_array<typename tp_list_type::t_elem>(arena, new_cap);
-        array_copy(list->backing_arr, new_backing_arr);
+        const auto new_backing_arr = ArenaPushArray<typename tp_list_type::t_elem>(arena, new_cap);
+        ArrayCopy(list->backing_arr, new_backing_arr);
 
         *list = {new_backing_arr, list->len};
     }
@@ -155,9 +155,9 @@ namespace zcl {
     constexpr t_array_mut<typename tp_list_type::t_elem> ListAppendMany(tp_list_type *const list, const t_array_rdonly<typename tp_list_type::t_elem> values) {
         ZCL_ASSERT(list->len + values.len <= ListGetCap(list));
 
-        array_copy(values, array_slice_from(list->backing_arr, list->len));
+        ArrayCopy(values, ArraySliceFrom(list->backing_arr, list->len));
         list->len += values.len;
-        return array_slice(list->backing_arr, list->len - values.len, list->len);
+        return ArraySlice(list->backing_arr, list->len - values.len, list->len);
     }
 
     template <c_list_nonstatic tp_list_type>
@@ -201,7 +201,7 @@ namespace zcl {
         ZCL_ASSERT(list->len > 0);
         ZCL_ASSERT(index >= 0 && index < list->len);
 
-        array_copy(array_slice(list->backing_arr, index + 1, list->len), array_slice(list->backing_arr, index, list->len - 1));
+        ArrayCopy(ArraySlice(list->backing_arr, index + 1, list->len), ArraySlice(list->backing_arr, index, list->len - 1));
         list->len--;
     }
 

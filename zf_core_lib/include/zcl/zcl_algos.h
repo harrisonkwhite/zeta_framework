@@ -73,7 +73,7 @@ namespace zcl {
     template <c_array_mut tp_arr_type>
     constexpr void Reverse(const tp_arr_type arr) {
         for (t_i32 i = 0; i < arr.len / 2; i++) {
-            swap(&arr[i], &arr[arr.len - 1 - i]);
+            Swap(&arr[i], &arr[arr.len - 1 - i]);
         }
     }
 
@@ -108,9 +108,9 @@ namespace zcl {
         if (comp_res == 0) {
             return true;
         } else if (comp_res < 0) {
-            return RunBinarySearch(array_slice(arr, 0, arr.len / 2), elem);
+            return RunBinarySearch(ArraySlice(arr, 0, arr.len / 2), elem);
         } else {
-            return RunBinarySearch(array_slice_from(arr, (arr.len / 2) + 1), elem);
+            return RunBinarySearch(ArraySliceFrom(arr, (arr.len / 2) + 1), elem);
         }
     }
 
@@ -135,7 +135,7 @@ namespace zcl {
 
             for (t_i32 i = 0; i < arr.len - 1; i++) {
                 if (comparator(arr[i], arr[i + 1]) > 0) {
-                    swap(&arr[i], &arr[i + 1]);
+                    Swap(&arr[i], &arr[i + 1]);
                     sorted = false;
                 }
             }
@@ -174,7 +174,7 @@ namespace zcl {
                 }
             }
 
-            swap(&arr[i], &min);
+            Swap(&arr[i], &min);
         }
     }
 
@@ -186,10 +186,10 @@ namespace zcl {
         }
 
         // Sort copies of the left and right partitions.
-        const auto arr_left_sorted = arena_push_array_clone(array_slice(arr, 0, arr.len / 2), temp_arena);
+        const auto arr_left_sorted = ArenaPushArrayClone(ArraySlice(arr, 0, arr.len / 2), temp_arena);
         RunMergeSort(arr_left_sorted, temp_arena, comparator);
 
-        const auto arr_right_sorted = arena_push_array_clone(array_slice_from(arr, arr.len / 2), temp_arena);
+        const auto arr_right_sorted = ArenaPushArrayClone(ArraySliceFrom(arr, arr.len / 2), temp_arena);
         RunMergeSort(arr_right_sorted, temp_arena, comparator);
 
         // Update this array.
@@ -203,7 +203,7 @@ namespace zcl {
 
                 if (i == arr_left_sorted.len) {
                     // Copy over the remainder of the right array.
-                    f_copy_all(array_slice_from(arr_right_sorted, j), array_slice_from(arr, i + j));
+                    f_copy_all(ArraySliceFrom(arr_right_sorted, j), ArraySliceFrom(arr, i + j));
                     break;
                 }
             } else {
@@ -212,7 +212,7 @@ namespace zcl {
 
                 if (j == arr_right_sorted.len) {
                     // Copy over the remainder of the left array.
-                    f_copy_all(array_slice_from(arr_left_sorted, i), array_slice_from(arr, i + j));
+                    f_copy_all(ArraySliceFrom(arr_left_sorted, i), ArraySliceFrom(arr, i + j));
                     break;
                 }
             }
@@ -230,7 +230,7 @@ namespace zcl {
 
         if (arr.len == 2) {
             if (comparator(arr[0], arr[1]) > 0) {
-                swap(&arr[0], &arr[1]);
+                Swap(&arr[0], &arr[1]);
             }
 
             return;
@@ -266,7 +266,7 @@ namespace zcl {
         }();
 
         // Swap it out to the end to get it out of the way.
-        swap(&arr[pivot_index], &arr[arr.len - 1]);
+        Swap(&arr[pivot_index], &arr[arr.len - 1]);
 
         // Move smaller elements to the left, and decide the final pivot position.
         t_i32 left_sec_last_index = -1;
@@ -275,12 +275,12 @@ namespace zcl {
             if (comparator(arr[i], arr[arr.len - 1]) <= 0) {
                 // This element is not greater than the pivot, so swap it to the left section.
                 left_sec_last_index++;
-                swap(&arr[left_sec_last_index], &arr[i]);
+                Swap(&arr[left_sec_last_index], &arr[i]);
             }
         }
 
         // Sort for each subsection.
-        RunQuickSort(array_slice(arr, 0, left_sec_last_index), comparator);
-        RunQuickSort(array_slice_from(arr, left_sec_last_index + 1), comparator);
+        RunQuickSort(ArraySlice(arr, 0, left_sec_last_index), comparator);
+        RunQuickSort(ArraySliceFrom(arr, left_sec_last_index + 1), comparator);
     }
 }

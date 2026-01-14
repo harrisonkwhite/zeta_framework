@@ -27,13 +27,13 @@ namespace zcl {
     template <c_simple tp_type>
     [[nodiscard]] t_b8 StreamReadItem(const t_stream_view stream_view, tp_type *const o_item) {
         ZCL_ASSERT(stream_view.mode == ek_stream_mode_read);
-        return stream_view.read_func(stream_view, to_bytes(o_item));
+        return stream_view.read_func(stream_view, ToBytes(o_item));
     }
 
     template <c_simple tp_type>
     [[nodiscard]] t_b8 StreamWriteItem(const t_stream_view stream_view, const tp_type &item) {
         ZCL_ASSERT(stream_view.mode == ek_stream_mode_write);
-        return stream_view.write_func(stream_view, to_bytes(&item));
+        return stream_view.write_func(stream_view, ToBytes(&item));
     }
 
     template <c_array_mut tp_arr_type>
@@ -45,7 +45,7 @@ namespace zcl {
             return true;
         }
 
-        return stream_view.read_func(stream_view, array_to_byte_array(array_slice(arr, 0, cnt)));
+        return stream_view.read_func(stream_view, ArrayToByteArray(ArraySlice(arr, 0, cnt)));
     }
 
     template <c_array tp_arr_type>
@@ -56,7 +56,7 @@ namespace zcl {
             return true;
         }
 
-        return stream_view.write_func(stream_view, array_to_byte_array(arr));
+        return stream_view.write_func(stream_view, ArrayToByteArray(arr));
     }
 
     // ============================================================
@@ -81,8 +81,8 @@ namespace zcl {
                     return false;
                 }
 
-                const t_array_rdonly<t_u8> src_bytes = array_slice_from(byte_stream->bytes, byte_stream->byte_pos);
-                array_copy(src_bytes, dest_bytes, true);
+                const t_array_rdonly<t_u8> src_bytes = ArraySliceFrom(byte_stream->bytes, byte_stream->byte_pos);
+                ArrayCopy(src_bytes, dest_bytes, true);
 
                 byte_stream->byte_pos += dest_bytes.len;
 
@@ -98,8 +98,8 @@ namespace zcl {
                     return false;
                 }
 
-                const t_array_mut<t_u8> dest_bytes = array_slice_from(byte_stream->bytes, byte_stream->byte_pos);
-                array_copy(src_bytes, dest_bytes);
+                const t_array_mut<t_u8> dest_bytes = ArraySliceFrom(byte_stream->bytes, byte_stream->byte_pos);
+                ArrayCopy(src_bytes, dest_bytes);
 
                 byte_stream->byte_pos += src_bytes.len;
 
@@ -122,7 +122,7 @@ namespace zcl {
 
     inline t_array_mut<t_u8> ByteStreamGetWritten(const t_byte_stream *const stream) {
         ZCL_ASSERT(stream->mode == ek_stream_mode_write);
-        return array_slice(stream->bytes, 0, stream->byte_pos);
+        return ArraySlice(stream->bytes, 0, stream->byte_pos);
     }
 
     // ============================================================

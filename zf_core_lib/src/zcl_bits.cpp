@@ -8,7 +8,7 @@ namespace zcl {
             return false;
         }
 
-        const auto first_bytes = array_slice(BitsetGetBytes(bs), 0, BitsetGetBytes(bs).len - 1);
+        const auto first_bytes = ArraySlice(BitsetGetBytes(bs), 0, BitsetGetBytes(bs).len - 1);
 
         if (!CheckAllEqual(first_bytes, 0)) {
             return true;
@@ -22,7 +22,7 @@ namespace zcl {
             return false;
         }
 
-        const auto first_bytes = array_slice(BitsetGetBytes(bs), 0, BitsetGetBytes(bs).len - 1);
+        const auto first_bytes = ArraySlice(BitsetGetBytes(bs), 0, BitsetGetBytes(bs).len - 1);
 
         if (!CheckAllEqual(first_bytes, 0xFF)) {
             return false;
@@ -37,7 +37,7 @@ namespace zcl {
             return;
         }
 
-        const auto first_bytes = array_slice(BitsetGetBytes(bs), 0, BitsetGetBytes(bs).len - 1);
+        const auto first_bytes = ArraySlice(BitsetGetBytes(bs), 0, BitsetGetBytes(bs).len - 1);
         SetAllTo(first_bytes, 0xFF);
 
         BitsetGetBytes(bs)[BitsetGetBytes(bs).len - 1] |= BitsetGetLastByteMask(bs);
@@ -48,7 +48,7 @@ namespace zcl {
             return;
         }
 
-        const auto first_bytes = array_slice(BitsetGetBytes(bs), 0, BitsetGetBytes(bs).len - 1);
+        const auto first_bytes = ArraySlice(BitsetGetBytes(bs), 0, BitsetGetBytes(bs).len - 1);
         SetAllTo(first_bytes, 0);
 
         BitsetGetBytes(bs)[BitsetGetBytes(bs).len - 1] &= ~BitsetGetLastByteMask(bs);
@@ -59,15 +59,15 @@ namespace zcl {
         ZCL_ASSERT(end_bit_index >= begin_bit_index && end_bit_index <= bs.bit_cnt);
 
         const t_i32 begin_elem_index = begin_bit_index / 8;
-        const t_i32 end_elem_index = bits_to_bytes(end_bit_index);
+        const t_i32 end_elem_index = BitsToBytes(end_bit_index);
 
         for (t_i32 i = begin_elem_index; i < end_elem_index; i++) {
             const t_i32 bit_offs = i * 8;
             const t_i32 begin_bit_index_rel = begin_bit_index - bit_offs;
             const t_i32 end_bit_index_rel = end_bit_index - bit_offs;
 
-            const t_i32 set_range_begin = calc_max(begin_bit_index_rel, 0);
-            const t_i32 set_range_end = calc_min(end_bit_index_rel, 8);
+            const t_i32 set_range_begin = CalcMax(begin_bit_index_rel, 0);
+            const t_i32 set_range_end = CalcMin(end_bit_index_rel, 8);
 
             BitsetGetBytes(bs)[i] |= ByteBitmaskCreateRange(set_range_begin, set_range_end);
         }
@@ -114,7 +114,7 @@ namespace zcl {
     }
 
     static t_u8 BitsetShiftLeftSingle(const t_bitset_mut bs) {
-        ZCL_ASSERT(bits_to_bytes(bs.bit_cnt) == BitsetGetBytes(bs).len);
+        ZCL_ASSERT(BitsToBytes(bs.bit_cnt) == BitsetGetBytes(bs).len);
 
         if (bs.bit_cnt == 0) {
             return 0;
@@ -166,7 +166,7 @@ namespace zcl {
     }
 
     static t_u8 BitsetShiftRightSingle(const t_bitset_mut bs) {
-        ZCL_ASSERT(bits_to_bytes(bs.bit_cnt) == BitsetGetBytes(bs).len);
+        ZCL_ASSERT(BitsToBytes(bs.bit_cnt) == BitsetGetBytes(bs).len);
 
         if (bs.bit_cnt == 0) {
             return 0;

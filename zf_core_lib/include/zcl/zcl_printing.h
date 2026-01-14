@@ -91,7 +91,7 @@ namespace zcl {
     template <c_integral tp_type>
     t_b8 PrintType(const t_stream_view stream, const t_format_int<tp_type> format) {
         t_static_array<t_u8, 20> str_bytes = {}; // Maximum possible number of ASCII characters needed to represent a 64-bit integer.
-        t_byte_stream str_bytes_stream = ByteStreamCreate(array_to_nonstatic(&str_bytes), ek_stream_mode_write);
+        t_byte_stream str_bytes_stream = ByteStreamCreate(ArrayToNonstatic(&str_bytes), ek_stream_mode_write);
         t_b8 str_bytes_stream_write_success = true;
 
         if (format.value < 0) {
@@ -150,7 +150,7 @@ namespace zcl {
         }
 
         if (format.trim_trailing_zeros) {
-            const auto str_bytes_relevant = array_slice(array_to_nonstatic(&str_bytes), 0, str_bytes_used);
+            const auto str_bytes_relevant = ArraySlice(ArrayToNonstatic(&str_bytes), 0, str_bytes_used);
 
             if (CheckAnyEqual(str_bytes_relevant, '.')) {
                 for (t_i32 i = str_bytes_used - 1;; i--) {
@@ -166,7 +166,7 @@ namespace zcl {
             }
         }
 
-        return Print(stream, {array_slice(array_to_nonstatic(&str_bytes), 0, str_bytes_used)});
+        return Print(stream, {ArraySlice(ArrayToNonstatic(&str_bytes), 0, str_bytes_used)});
     }
 
     // ============================================================
@@ -220,7 +220,7 @@ namespace zcl {
         ZCL_ASSERT(format.min_digits >= k_format_hex_digit_cnt_min && format.min_digits <= k_format_hex_digit_cnt_max);
 
         t_static_array<t_u8, 2 + k_format_hex_digit_cnt_max> str_bytes = {}; // Can facilitate max number of digits plus the "0x" prefix.
-        t_byte_stream str_bytes_stream = ByteStreamCreate(array_to_nonstatic(&str_bytes), ek_stream_mode_write);
+        t_byte_stream str_bytes_stream = ByteStreamCreate(ArrayToNonstatic(&str_bytes), ek_stream_mode_write);
 
         t_b8 str_bytes_stream_write_success = true;
 
@@ -263,7 +263,7 @@ namespace zcl {
             }
         } while (value_mut != 0 || cnter < format.min_digits);
 
-        const auto str_bytes_digits = array_slice_from(ByteStreamGetWritten(&str_bytes_stream), str_bytes_digits_begin_pos);
+        const auto str_bytes_digits = ArraySliceFrom(ByteStreamGetWritten(&str_bytes_stream), str_bytes_digits_begin_pos);
         Reverse(str_bytes_digits);
 
         return Print(stream, {ByteStreamGetWritten(&str_bytes_stream)});
@@ -432,7 +432,7 @@ namespace zcl {
                         }
                     }
 
-                    const t_str_rdonly format_leftover = {array_slice(format.bytes, i + 1, format.bytes.len)}; // The substring of everything after the format specifier.
+                    const t_str_rdonly format_leftover = {ArraySlice(format.bytes, i + 1, format.bytes.len)}; // The substring of everything after the format specifier.
                     return PrintFormat(stream, format_leftover, args_leftover...);
                 }
             }

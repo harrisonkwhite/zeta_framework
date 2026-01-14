@@ -14,9 +14,9 @@ namespace zgl::game {
         zcl::t_f64 tps_targ;
     } g_module_state;
 
-    void run(const t_config &config) {
+    void Run(const t_config &config) {
         ZCL_REQUIRE(!g_module_state.running);
-        config_assert_valid(config);
+        ConfigAssertValid(config);
 
         g_module_state = {
             .running = true,
@@ -28,29 +28,29 @@ namespace zgl::game {
         //
         // Initialization
         //
-        zcl::t_arena perm_arena = zcl::arena_create_blockbased();
-        ZCL_DEFER({ zcl::arena_destroy(&perm_arena); });
+        zcl::t_arena perm_arena = zcl::ArenaCreateBlockBased();
+        ZCL_DEFER({ zcl::ArenaDestroy(&perm_arena); });
 
-        zcl::t_arena temp_arena = zcl::arena_create_blockbased();
-        ZCL_DEFER({ zcl::arena_destroy(&temp_arena); });
+        zcl::t_arena temp_arena = zcl::ArenaCreateBlockBased();
+        ZCL_DEFER({ zcl::ArenaDestroy(&temp_arena); });
 
-        platform::module_startup(k_init_window_size);
-        ZCL_DEFER({ platform::module_shutdown(); });
+        platform::ModuleStartup(k_init_window_size);
+        ZCL_DEFER({ platform::ModuleShutdown(); });
 
-        input::t_state *const input_state = input::create_state(&perm_arena);
+        input::t_state *const input_state = input::CreateState(&perm_arena);
 
         gfx::t_resource_group *perm_gfx_resource_group;
-        gfx::t_frame_basis *const frame_basis = gfx::module_startup(&perm_arena, &temp_arena, &perm_gfx_resource_group);
-        ZCL_DEFER({ gfx::module_shutdown(frame_basis); });
+        gfx::t_frame_basis *const frame_basis = gfx::ModuleStartup(&perm_arena, &temp_arena, &perm_gfx_resource_group);
+        ZCL_DEFER({ gfx::ModuleShutdown(frame_basis); });
 
-        audio::module_startup();
-        ZCL_DEFER({ audio::module_shutdown(); });
+        audio::ModuleStartup();
+        ZCL_DEFER({ audio::ModuleShutdown(); });
 
         zcl::t_rng *const rng = zcl::RNGCreate(zcl::RandGenSeed(), &perm_arena);
 
-        zcl::arena_rewind(&temp_arena);
+        zcl::ArenaRewind(&temp_arena);
 
-        void *const user_mem = config.user_mem_size > 0 ? zcl::arena_push(&perm_arena, config.user_mem_size, config.user_mem_alignment) : nullptr;
+        void *const user_mem = config.user_mem_size > 0 ? zcl::ArenaPush(&perm_arena, config.user_mem_size, config.user_mem_alignment) : nullptr;
 
         config.init_func({
             .perm_arena = &perm_arena,
@@ -77,10 +77,10 @@ namespace zgl::game {
         zcl::t_i32 fps_frame_cnt_accum = 0;
         constexpr zcl::t_f64 k_fps_refresh_time = 1.0;
 
-        while (!platform::window_check_close_requested()) {
-            platform::poll_events(input_state);
+        while (!platform::WindowCheckCloseRequested()) {
+            platform::PollEvents(input_state);
 
-            const zcl::t_f64 frame_time = platform::get_time();
+            const zcl::t_f64 frame_time = platform::GetTime();
 
             const zcl::t_f64 tick_interval_targ = 1.0 / g_module_state.tps_targ;
             const zcl::t_f64 tick_interval_limit = tick_interval_targ * 8.0;
@@ -88,7 +88,7 @@ namespace zgl::game {
             if (!frame_first) {
                 const zcl::t_f64 frame_time_delta_raw = frame_time - frame_time_last;
                 constexpr zcl::t_f64 k_frame_time_delta_limit = 1.0;
-                const zcl::t_f64 frame_time_delta_capped = zcl::calc_min(frame_time_delta_raw, k_frame_time_delta_limit);
+                const zcl::t_f64 frame_time_delta_capped = zcl::CalcMin(frame_time_delta_raw, k_frame_time_delta_limit);
 
                 tick_interval_accum += frame_time_delta_capped;
 
@@ -106,9 +106,9 @@ namespace zgl::game {
                 }
 
                 while (tick_interval_accum >= tick_interval_targ) {
-                    zcl::arena_rewind(&temp_arena);
+                    zcl::ArenaRewind(&temp_arena);
 
-                    audio::proc_finished_sounds();
+                    audio::SoundsProcFinished();
 
                     config.tick_func({
                         .perm_arena = &perm_arena,
@@ -120,15 +120,15 @@ namespace zgl::game {
                         .user_mem = user_mem,
                     });
 
-                    input::clear_events(input_state);
+                    input::ClearEvents(input_state);
 
                     tick_interval_accum -= tick_interval_targ;
                 }
             }
 
-            zcl::arena_rewind(&temp_arena);
+            zcl::ArenaRewind(&temp_arena);
 
-            gfx::t_frame_context *const frame_context = gfx::frame_begin(frame_basis, &temp_arena);
+            gfx::t_frame_context *const frame_context = gfx::FrameBegin(frame_basis, &temp_arena);
 
             config.render_func({
                 .perm_arena = &perm_arena,
@@ -139,10 +139,10 @@ namespace zgl::game {
                 .user_mem = user_mem,
             });
 
-            gfx::frame_end(frame_context);
+            gfx::FrameEnd(frame_context);
 
             if (frame_first) {
-                platform::window_show();
+                platform::WindowShow();
                 frame_first = false;
             }
 
@@ -150,7 +150,7 @@ namespace zgl::game {
         }
     }
 
-    void tps_set_target(const zcl::t_f64 tps) {
+    void SetTargetTPS(const zcl::t_f64 tps) {
         ZCL_ASSERT(g_module_state.running);
         ZCL_ASSERT(tps > 0.0);
 

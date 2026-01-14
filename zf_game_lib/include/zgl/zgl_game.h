@@ -13,9 +13,6 @@ namespace zgl {
     }
 
     namespace game {
-        // ============================================================
-        // @section: Types and Constants
-
         struct t_init_func_context {
             zcl::t_arena *perm_arena;
             zcl::t_arena *temp_arena;
@@ -70,25 +67,17 @@ namespace zgl {
             zcl::t_i32 user_mem_alignment;
         };
 
-        // ============================================================
-
-
-        // ============================================================
-        // @section: Functions
-
-        void run(const t_config &config);
-
-        inline void config_assert_valid(const t_config &config) {
+        inline void ConfigAssertValid(const t_config &config) {
             ZCL_ASSERT(config.init_func);
             ZCL_ASSERT(config.deinit_func);
             ZCL_ASSERT(config.tick_func);
             ZCL_ASSERT(config.render_func);
 
-            ZCL_ASSERT((config.user_mem_size == 0 && config.user_mem_alignment == 0) || (config.user_mem_size > 0 && zcl::alignment_check_valid(config.user_mem_alignment)));
+            ZCL_ASSERT((config.user_mem_size == 0 && config.user_mem_alignment == 0) || (config.user_mem_size > 0 && zcl::AlignmentCheckValid(config.user_mem_alignment)));
         }
 
-        void tps_set_target(const zcl::t_f64 tps);
+        void Run(const t_config &config);
 
-        // ============================================================
+        void SetTargetTPS(const zcl::t_f64 tps);
     }
 }

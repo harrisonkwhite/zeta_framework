@@ -40,41 +40,41 @@ namespace zcl {
     struct t_static_bitset {
         static constexpr t_i32 k_bit_cnt = tp_bit_cnt;
 
-        t_static_array<t_u8, bits_to_bytes(tp_bit_cnt)> bytes;
+        t_static_array<t_u8, BitsToBytes(tp_bit_cnt)> bytes;
 
         constexpr operator t_bitset_mut() { return {bytes.raw, k_bit_cnt}; }
         constexpr operator t_bitset_rdonly() const { return {bytes.raw, k_bit_cnt}; }
     };
 
     constexpr t_bitset_mut BitsetCreate(const t_array_mut<t_u8> bytes) {
-        return {bytes.raw, bytes_to_bits(bytes.len)};
+        return {bytes.raw, BytesToBits(bytes.len)};
     }
 
     constexpr t_bitset_mut BitsetCreate(const t_array_mut<t_u8> bytes, const t_i32 bit_cnt) {
-        ZCL_ASSERT(bit_cnt >= 0 && bit_cnt <= bytes_to_bits(bytes.len));
+        ZCL_ASSERT(bit_cnt >= 0 && bit_cnt <= BytesToBits(bytes.len));
         return {bytes.raw, bit_cnt};
     }
 
     constexpr t_bitset_rdonly BitsetCreate(const t_array_rdonly<t_u8> bytes) {
-        return {bytes.raw, bytes_to_bits(bytes.len)};
+        return {bytes.raw, BytesToBits(bytes.len)};
     }
 
     constexpr t_bitset_rdonly BitsetCreate(const t_array_rdonly<t_u8> bytes, const t_i32 bit_cnt) {
-        ZCL_ASSERT(bit_cnt >= 0 && bit_cnt <= bytes_to_bits(bytes.len));
+        ZCL_ASSERT(bit_cnt >= 0 && bit_cnt <= BytesToBits(bytes.len));
         return {bytes.raw, bit_cnt};
     }
 
     inline t_bitset_mut BitsetCreate(const t_i32 bit_cnt, t_arena *const arena) {
         ZCL_ASSERT(bit_cnt >= 0);
-        return {arena_push_array<t_u8>(arena, bits_to_bytes(bit_cnt)).raw, bit_cnt};
+        return {ArenaPushArray<t_u8>(arena, BitsToBytes(bit_cnt)).raw, bit_cnt};
     }
 
     constexpr t_array_mut<t_u8> BitsetGetBytes(const t_bitset_mut bs) {
-        return {bs.bytes_raw, bits_to_bytes(bs.bit_cnt)};
+        return {bs.bytes_raw, BitsToBytes(bs.bit_cnt)};
     }
 
     constexpr t_array_rdonly<t_u8> BitsetGetBytes(const t_bitset_rdonly bs) {
-        return {bs.bytes_raw, bits_to_bytes(bs.bit_cnt)};
+        return {bs.bytes_raw, BitsToBytes(bs.bit_cnt)};
     }
 
     constexpr t_i32 BitsetGetLastByteBitCount(const t_bitset_rdonly bs) {

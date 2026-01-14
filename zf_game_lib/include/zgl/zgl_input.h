@@ -6,10 +6,14 @@
 // @todo: Also consider bringing back detail subnamespace, it's actually useful.
 
 namespace zgl::input {
-    // ============================================================
-    // @section: Types and Constants
-
     struct t_state;
+
+    t_state *CreateState(zcl::t_arena *const arena);
+    void ClearEvents(t_state *const state);
+
+
+    // ============================================================
+    // @section: Keys
 
     enum t_key_code : zcl::t_i32 {
         ek_key_code_space,
@@ -79,6 +83,17 @@ namespace zgl::input {
         ekm_key_code_cnt
     };
 
+    zcl::t_b8 KeyCheckDown(const t_state *const state, const t_key_code code);
+    zcl::t_b8 KeyCheckPressed(const t_state *const state, const t_key_code code);
+    zcl::t_b8 KeyCheckReleased(const t_state *const state, const t_key_code code);
+    void KeyUpdateState(t_state *const state, const t_key_code code, const zcl::t_b8 is_down);
+
+    // ============================================================
+
+
+    // ============================================================
+    // @section: Mouse
+
     enum t_mouse_button_code : zcl::t_i32 {
         ek_mouse_button_code_left,
         ek_mouse_button_code_right,
@@ -86,6 +101,24 @@ namespace zgl::input {
 
         ekm_mouse_button_code_cnt
     };
+
+    zcl::t_b8 MouseButtonCheckDown(const t_state *const state, const t_mouse_button_code btn_code);
+    zcl::t_b8 MouseButtonCheckPressed(const t_state *const state, const t_mouse_button_code btn_code);
+    zcl::t_b8 MouseButtonCheckReleased(const t_state *const state, const t_mouse_button_code btn_code);
+    void MouseButtonUpdateState(t_state *const state, const t_mouse_button_code code, const zcl::t_b8 is_down);
+
+    // ============================================================
+
+
+    zcl::t_v2 CursorGetPos(const t_state *const state);
+    void CursorUpdateState(t_state *const state, const zcl::t_v2 pos);
+
+    zcl::t_v2 ScrollGetOffset(const t_state *const state);
+    void ScrollUpdateState(t_state *const state, const zcl::t_v2 offs_to_apply);
+
+
+    // ============================================================
+    // @section: Gamepad
 
     constexpr zcl::t_i32 k_gamepad_limit = 16;
 
@@ -120,46 +153,21 @@ namespace zgl::input {
         ekm_gamepad_axis_code_cnt
     };
 
+    zcl::t_b8 GamepadCheckConnected(const t_state *const state, const zcl::t_i32 index);
+    zcl::t_b8 GamepadCheckButtonDown(const t_state *const state, const zcl::t_i32 gamepad_index, const t_gamepad_button_code btn_code);
+    zcl::t_b8 GamepadCheckButtonPressed(const t_state *const state, const zcl::t_i32 gamepad_index, const t_gamepad_button_code btn_code);
+    zcl::t_b8 GamepadCheckButtonReleased(const t_state *const state, const zcl::t_i32 gamepad_index, const t_gamepad_button_code btn_code);
+    zcl::t_f32 GamepadGetAxisValueRaw(const t_state *const state, const zcl::t_i32 gamepad_index, const t_gamepad_axis_code axis_code);
+    zcl::t_f32 GamepadGetAxisValueWithDeadzone(const t_state *const state, const zcl::t_i32 gamepad_index, const t_gamepad_axis_code axis_code);
+    void GamepadUpdateState(t_state *const state, const zcl::t_i32 gamepad_index, const zcl::t_b8 connected, const zcl::t_static_bitset<ekm_gamepad_button_code_cnt> &btns_down, const zcl::t_static_array<zcl::t_f32, ekm_gamepad_axis_code_cnt> &axes);
+
     // ============================================================
 
-
-    // ============================================================
-    // @section: Functions
-
-    t_state *create_state(zcl::t_arena *const arena);
-
-    void clear_events(t_state *const state);
-
-    zcl::t_b8 key_check_down(const t_state *const state, const t_key_code code);
-    zcl::t_b8 key_check_pressed(const t_state *const state, const t_key_code code);
-    zcl::t_b8 key_check_released(const t_state *const state, const t_key_code code);
-    void key_update_state(t_state *const state, const t_key_code code, const zcl::t_b8 is_down);
-
-    zcl::t_b8 mouse_button_check_down(const t_state *const state, const t_mouse_button_code btn_code);
-    zcl::t_b8 mouse_button_check_pressed(const t_state *const state, const t_mouse_button_code btn_code);
-    zcl::t_b8 mouse_button_check_released(const t_state *const state, const t_mouse_button_code btn_code);
-    void mouse_button_update_state(t_state *const state, const t_mouse_button_code code, const zcl::t_b8 is_down);
-
-    zcl::t_v2 cursor_get_pos(const t_state *const state);
-    void cursor_update_state(t_state *const state, const zcl::t_v2 pos);
-
-    zcl::t_v2 scroll_get_offset(const t_state *const state);
-    void scroll_update_state(t_state *const state, const zcl::t_v2 offs_to_apply);
-
-    zcl::t_b8 gamepad_check_connected(const t_state *const state, const zcl::t_i32 index);
-    zcl::t_b8 gamepad_check_button_down(const t_state *const state, const zcl::t_i32 gamepad_index, const t_gamepad_button_code btn_code);
-    zcl::t_b8 gamepad_check_button_pressed(const t_state *const state, const zcl::t_i32 gamepad_index, const t_gamepad_button_code btn_code);
-    zcl::t_b8 gamepad_check_button_released(const t_state *const state, const zcl::t_i32 gamepad_index, const t_gamepad_button_code btn_code);
-    zcl::t_f32 gamepad_get_axis_value_raw(const t_state *const state, const zcl::t_i32 gamepad_index, const t_gamepad_axis_code axis_code);
-    zcl::t_f32 gamepad_get_axis_value_with_deadzone(const t_state *const state, const zcl::t_i32 gamepad_index, const t_gamepad_axis_code axis_code);
-    void gamepad_update_state(t_state *const state, const zcl::t_i32 gamepad_index, const zcl::t_b8 connected, const zcl::t_static_bitset<ekm_gamepad_button_code_cnt> &btns_down, const zcl::t_static_array<zcl::t_f32, ekm_gamepad_axis_code_cnt> &axes);
 
     // @todo: The function names below are bad.
 
-    zcl::t_array_rdonly<zcl::t_code_point> text_get_code_pts(const t_state *const state);
+    zcl::t_array_rdonly<zcl::t_code_point> TextGetCodePoints(const t_state *const state);
 
     // Returns true iff there is enough room for the code point and it is added.
-    zcl::t_b8 text_submit_code_point(t_state *const state, const zcl::t_code_point cp);
-
-    // ============================================================
+    zcl::t_b8 TextSubmitCodePoints(t_state *const state, const zcl::t_code_point cp);
 }

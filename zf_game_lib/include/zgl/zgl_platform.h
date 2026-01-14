@@ -9,51 +9,51 @@ namespace zgl {
 
     namespace platform {
         // Note that the window is not shown by default, you have to manually do this.
-        void module_startup(const zcl::t_v2_i init_window_size);
+        void ModuleStartup(const zcl::t_v2_i init_window_size);
 
-        void module_shutdown();
+        void ModuleShutdown();
 
         // Gives the time in seconds since the platform module was started.
-        zcl::t_f64 get_time();
+        zcl::t_f64 GetTime();
 
         // Also updates the given input state based on events.
-        void poll_events(input::t_state *const input_state);
+        void PollEvents(input::t_state *const input_state);
 
-        void *display_get_native_handle();
+        void *DisplayGetNativeHandle();
 
-        void *window_get_native_handle();
+        void *WindowGetNativeHandle();
 
-        void window_show();
+        void WindowShow();
 
-        void window_request_close();
-        zcl::t_b8 window_check_close_requested();
+        void WindowRequestClose();
+        zcl::t_b8 WindowCheckCloseRequested();
 
-        void window_set_title(const zcl::t_str_rdonly title, zcl::t_arena *const temp_arena);
+        void WindowSetTitle(const zcl::t_str_rdonly title, zcl::t_arena *const temp_arena);
 
         // Sets the LOGICAL window size. The actual new framebuffer size MIGHT be larger if there is DPI scaling.
-        void window_set_size(const zcl::t_v2_i size);
+        void WindowSetSize(const zcl::t_v2_i size);
 
         // Set the LOGICAL window size limits. If you don't want to limit a particular dimension, leave it as -1.
-        void window_set_size_limits(const zcl::t_i32 min_width, const zcl::t_i32 min_height, const zcl::t_i32 max_width, const zcl::t_i32 max_height);
+        void WindowSetSizeLimits(const zcl::t_i32 min_width, const zcl::t_i32 min_height, const zcl::t_i32 max_width, const zcl::t_i32 max_height);
 
-        void window_set_resizable(const zcl::t_b8 resizable);
+        void WindowSetResizable(const zcl::t_b8 resizable);
 
-        zcl::t_v2_i window_get_framebuffer_size_cache();
+        zcl::t_v2_i WindowGetFramebufferSizeCache();
 
-        zcl::t_b8 window_check_fullscreen();
+        zcl::t_b8 WindowCheckFullscreen();
 
-        void window_set_fullscreen(const zcl::t_b8 active);
+        void WindowSetFullscreen(const zcl::t_b8 active);
 
-        inline void window_toggle_fullscreen() {
-            window_set_fullscreen(!window_check_fullscreen());
+        inline void WindowToggleFullscreen() {
+            WindowSetFullscreen(!WindowCheckFullscreen());
         }
 
         // Calculates the size in pixels of whichever monitor the window most resides in.
-        zcl::t_v2_i monitor_calc_size_pixels();
+        zcl::t_v2_i MonitorCalcSizePixels();
 
         // Calculates the size (accounting for DPI scaling) of whichever monitor the window most resides in.
-        zcl::t_v2_i monitor_calc_size_logical();
+        zcl::t_v2_i MonitorCalcSizeLogical();
 
-        void cursor_set_visible(const zcl::t_b8 visible);
+        void CursorSetVisible(const zcl::t_b8 visible);
     }
 }

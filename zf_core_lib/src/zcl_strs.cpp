@@ -452,7 +452,7 @@ namespace zcl {
             }
 
             const t_i32 cp_byte_cnt = byte_type - ek_utf8_byte_type_ascii + 1;
-            const auto cp_bytes = array_slice(str.bytes, byte_index, byte_index + cp_byte_cnt);
+            const auto cp_bytes = ArraySlice(str.bytes, byte_index, byte_index + cp_byte_cnt);
             return UTF8BytesToCodePoint(cp_bytes);
         } while (true);
     }
@@ -482,7 +482,7 @@ namespace zcl {
             case ek_utf8_byte_type_3byte_start:
             case ek_utf8_byte_type_4byte_start: {
                 const t_i32 cp_byte_cnt = byte_type - ek_utf8_byte_type_ascii + 1;
-                const auto cp_bytes = array_slice(str.bytes, *byte_index, *byte_index + cp_byte_cnt);
+                const auto cp_bytes = ArraySlice(str.bytes, *byte_index, *byte_index + cp_byte_cnt);
                 *o_step = {.code_pt = UTF8BytesToCodePoint(cp_bytes), .byte_index = *byte_index};
                 *byte_index += cp_byte_cnt;
 
@@ -516,7 +516,7 @@ namespace zcl {
             case ek_utf8_byte_type_3byte_start:
             case ek_utf8_byte_type_4byte_start: {
                 const t_i32 cp_byte_cnt = byte_type - ek_utf8_byte_type_ascii + 1;
-                const auto cp_bytes = array_slice(str.bytes, *byte_index, *byte_index + cp_byte_cnt);
+                const auto cp_bytes = ArraySlice(str.bytes, *byte_index, *byte_index + cp_byte_cnt);
                 *o_step = {.code_pt = UTF8BytesToCodePoint(cp_bytes), .byte_index = *byte_index};
                 (*byte_index)--;
 

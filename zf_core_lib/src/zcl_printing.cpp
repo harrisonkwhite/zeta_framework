@@ -17,7 +17,7 @@ namespace zcl {
         t_i32 code_pt_byte_cnt;
         CodePointToUTF8Bytes(format.value, &code_pt_bytes, &code_pt_byte_cnt);
 
-        const t_str_rdonly code_pt_str = {array_slice(array_to_nonstatic(&code_pt_bytes), 0, code_pt_byte_cnt)};
+        const t_str_rdonly code_pt_str = {ArraySlice(ArrayToNonstatic(&code_pt_bytes), 0, code_pt_byte_cnt)};
 
         return Print(stream, code_pt_str);
     }

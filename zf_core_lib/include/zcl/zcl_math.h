@@ -488,21 +488,21 @@ namespace zcl {
     }
 
     constexpr t_v2 ClampWithinContainer(const t_v2 pt, const t_rect_f container) {
-        return {clamp(pt.x, RectGetLeft(container), RectGetRight(container)), clamp(pt.y, RectGetTop(container), RectGetBottom(container))};
+        return {Clamp(pt.x, RectGetLeft(container), RectGetRight(container)), Clamp(pt.y, RectGetTop(container), RectGetBottom(container))};
     }
 
     constexpr t_v2_i ClampWithinContainer(const t_v2_i pt, const t_rect_i container) {
-        return {clamp(pt.x, RectGetLeft(container), RectGetRight(container)), clamp(pt.y, RectGetTop(container), RectGetBottom(container))};
+        return {Clamp(pt.x, RectGetLeft(container), RectGetRight(container)), Clamp(pt.y, RectGetTop(container), RectGetBottom(container))};
     }
 
     constexpr t_rect_f ClampWithinContainer(const t_rect_f rect, const t_rect_f container) {
-        const t_v2 tl = {calc_max(rect.x, container.x), calc_max(rect.y, container.y)};
-        return {tl.x, tl.y, calc_max(calc_min(RectGetRight(rect), RectGetRight(container)) - tl.x, 0.0f), calc_max(calc_min(RectGetBottom(rect), RectGetBottom(container)) - tl.y, 0.0f)};
+        const t_v2 tl = {CalcMax(rect.x, container.x), CalcMax(rect.y, container.y)};
+        return {tl.x, tl.y, CalcMax(CalcMin(RectGetRight(rect), RectGetRight(container)) - tl.x, 0.0f), CalcMax(CalcMin(RectGetBottom(rect), RectGetBottom(container)) - tl.y, 0.0f)};
     }
 
     constexpr t_rect_i ClampWithinContainer(const t_rect_i rect, const t_rect_i container) {
-        const t_v2_i tl = {calc_max(rect.x, container.x), calc_max(rect.y, container.y)};
-        return {tl.x, tl.y, calc_max(calc_min(RectGetRight(rect), RectGetRight(container)) - tl.x, 0), calc_max(calc_min(RectGetBottom(rect), RectGetBottom(container)) - tl.y, 0)};
+        const t_v2_i tl = {CalcMax(rect.x, container.x), CalcMax(rect.y, container.y)};
+        return {tl.x, tl.y, CalcMax(CalcMin(RectGetRight(rect), RectGetRight(container)) - tl.x, 0), CalcMax(CalcMin(RectGetBottom(rect), RectGetBottom(container)) - tl.y, 0)};
     }
 
     // Returns a value between 0 and 1 indicating what percentage of the rectangle is within the container.
@@ -510,7 +510,7 @@ namespace zcl {
         ZCL_ASSERT(container.width > 0 && container.height > 0);
 
         const auto subrect = ClampWithinContainer(rect, container);
-        return clamp(RectGetArea(subrect) / RectGetArea(container), 0.0f, 1.0f);
+        return Clamp(RectGetArea(subrect) / RectGetArea(container), 0.0f, 1.0f);
     }
 
     // Returns a value between 0 and 1 indicating what percentage of the rectangle is within the container.
@@ -518,6 +518,6 @@ namespace zcl {
         ZCL_ASSERT(container.width > 0 && container.height > 0);
 
         const auto subrect = ClampWithinContainer(rect, container);
-        return clamp(static_cast<t_f32>(RectGetArea(subrect)) / static_cast<t_f32>(RectGetArea(container)), 0.0f, 1.0f);
+        return Clamp(static_cast<t_f32>(RectGetArea(subrect)) / static_cast<t_f32>(RectGetArea(container)), 0.0f, 1.0f);
     }
 }

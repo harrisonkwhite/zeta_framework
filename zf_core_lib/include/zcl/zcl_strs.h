@@ -130,8 +130,8 @@ namespace zcl {
 
     // Allocates a clone of the given string using the memory arena, with a null byte added at the end (even if the string was already terminated).
     inline t_str_mut StrCloneButAddTerminator(const t_str_rdonly str, t_arena *const arena) {
-        const t_str_mut clone = {arena_push_array<t_u8>(arena, str.bytes.len + 1)};
-        array_copy(str.bytes, clone.bytes);
+        const t_str_mut clone = {ArenaPushArray<t_u8>(arena, str.bytes.len + 1)};
+        ArrayCopy(str.bytes, clone.bytes);
         clone.bytes[clone.bytes.len - 1] = 0;
         return clone;
     }

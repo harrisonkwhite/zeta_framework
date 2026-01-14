@@ -25,7 +25,7 @@ namespace zgl::audio {
         } snd_insts;
     } g_module_state;
 
-    void module_startup() {
+    void ModuleStartup() {
         ZCL_REQUIRE(!g_module_state.active);
 
         g_module_state = {.active = true};
@@ -35,7 +35,7 @@ namespace zgl::audio {
         }
     }
 
-    void module_shutdown() {
+    void ModuleShutdown() {
         ZCL_REQUIRE(g_module_state.active);
 
         ZCL_BITSET_WALK_ALL_SET (g_module_state.snd_insts.activity, i) {
@@ -50,7 +50,7 @@ namespace zgl::audio {
         g_module_state = {};
     }
 
-    void sound_type_group_destroy(t_sound_type_group *const group) {
+    void SoundTypeGroupDestroy(t_sound_type_group *const group) {
         ZCL_ASSERT(g_module_state.active);
 
         t_sound_type *snd_type = group->head;
@@ -58,7 +58,7 @@ namespace zgl::audio {
         while (snd_type) {
             ZCL_BITSET_WALK_ALL_SET (g_module_state.snd_insts.activity, i) {
                 if (g_module_state.snd_insts.types[i] == snd_type) {
-                    sound_stop({i, g_module_state.snd_insts.versions[i]});
+                    SoundStop({i, g_module_state.snd_insts.versions[i]});
                 }
             }
 
@@ -67,12 +67,12 @@ namespace zgl::audio {
             snd_type = snd_type_next;
         }
 
-        zcl::arena_destroy(&group->arena);
+        zcl::ArenaDestroy(&group->arena);
         *group = {};
     }
 
-    static t_sound_type *sound_type_group_add(t_sound_type_group *const group, const zcl::t_sound_data_rdonly snd_data) {
-        const auto result = zcl::arena_push_item<t_sound_type>(&group->arena);
+    static t_sound_type *SoundTypeGroupAdd(t_sound_type_group *const group, const zcl::t_sound_data_rdonly snd_data) {
+        const auto result = zcl::ArenaPushItem<t_sound_type>(&group->arena);
         result->valid = true;
         result->snd_data = snd_data;
 
@@ -87,7 +87,7 @@ namespace zgl::audio {
         return result;
     }
 
-    t_sound_type *sound_type_create_from_raw(const zcl::t_str_rdonly file_path, t_sound_type_group *const group, zcl::t_arena *const temp_arena) {
+    t_sound_type *SoundTypeCreateFromRaw(const zcl::t_str_rdonly file_path, t_sound_type_group *const group, zcl::t_arena *const temp_arena) {
         ZCL_ASSERT(g_module_state.active);
 
         zcl::t_sound_data_mut snd_data;
@@ -96,10 +96,10 @@ namespace zgl::audio {
             ZCL_FATAL();
         }
 
-        return sound_type_group_add(group, snd_data);
+        return SoundTypeGroupAdd(group, snd_data);
     }
 
-    t_sound_type *sound_type_create_from_packed(const zcl::t_str_rdonly file_path, t_sound_type_group *const group, zcl::t_arena *const temp_arena) {
+    t_sound_type *SoundTypeCreateFromPacked(const zcl::t_str_rdonly file_path, t_sound_type_group *const group, zcl::t_arena *const temp_arena) {
         ZCL_ASSERT(g_module_state.active);
 
         zcl::t_file_stream file_stream;
@@ -116,10 +116,10 @@ namespace zgl::audio {
 
         zcl::FileClose(&file_stream);
 
-        return sound_type_group_add(group, snd_data);
+        return SoundTypeGroupAdd(group, snd_data);
     }
 
-    zcl::t_b8 sound_play_and_get_id(const t_sound_type *const type, t_sound_id *const o_id, const zcl::t_f32 vol, const zcl::t_f32 pan, const zcl::t_f32 pitch, const zcl::t_b8 loop) {
+    zcl::t_b8 SoundPlayAndGetID(const t_sound_type *const type, t_sound_id *const o_id, const zcl::t_f32 vol, const zcl::t_f32 pan, const zcl::t_f32 pitch, const zcl::t_b8 loop) {
         ZCL_ASSERT(g_module_state.active);
         ZCL_ASSERT(type->valid);
         ZCL_ASSERT(vol >= 0.0f && vol <= 1.0f);
@@ -165,7 +165,7 @@ namespace zgl::audio {
         return true;
     }
 
-    void sound_stop(const t_sound_id id) {
+    void SoundStop(const t_sound_id id) {
         ZCL_ASSERT(g_module_state.active);
         ZCL_ASSERT(zcl::BitsetCheckSet(g_module_state.snd_insts.activity, id.index) && g_module_state.snd_insts.versions[id.index] == id.version);
 
@@ -176,7 +176,7 @@ namespace zgl::audio {
         zcl::BitsetUnset(g_module_state.snd_insts.activity, id.index);
     }
 
-    zcl::t_b8 sound_check_playing(const t_sound_id id) {
+    zcl::t_b8 SoundCheckPlaying(const t_sound_id id) {
         ZCL_ASSERT(g_module_state.active);
         ZCL_ASSERT(id.version <= g_module_state.snd_insts.versions[id.index]);
 
@@ -187,7 +187,7 @@ namespace zgl::audio {
         return ma_sound_is_playing(&g_module_state.snd_insts.ma_snds[id.index]);
     }
 
-    void proc_finished_sounds() {
+    void SoundsProcFinished() {
         ZCL_ASSERT(g_module_state.active);
 
         ZCL_BITSET_WALK_ALL_SET (g_module_state.snd_insts.activity, i) {

@@ -16,10 +16,10 @@ namespace zcl {
         t_f32 max_bottom = RectGetBottom(rects[0]);
 
         for (t_i32 i = 1; i < rects.len; i++) {
-            min_left = calc_min(RectGetLeft(rects[i]), min_left);
-            min_top = calc_min(RectGetTop(rects[i]), min_top);
-            max_right = calc_max(RectGetRight(rects[i]), max_right);
-            max_bottom = calc_max(RectGetBottom(rects[i]), max_bottom);
+            min_left = CalcMin(RectGetLeft(rects[i]), min_left);
+            min_top = CalcMin(RectGetTop(rects[i]), min_top);
+            max_right = CalcMax(RectGetRight(rects[i]), max_right);
+            max_bottom = CalcMax(RectGetBottom(rects[i]), max_bottom);
         }
 
         return RectCreateF(min_left, min_top, max_right - min_left, max_bottom - min_top);
@@ -34,10 +34,10 @@ namespace zcl {
         t_i32 max_bottom = RectGetBottom(rects[0]);
 
         for (t_i32 i = 1; i < rects.len; i++) {
-            min_left = calc_min(RectGetLeft(rects[i]), min_left);
-            min_top = calc_min(RectGetTop(rects[i]), min_top);
-            max_right = calc_max(RectGetRight(rects[i]), max_right);
-            max_bottom = calc_max(RectGetBottom(rects[i]), max_bottom);
+            min_left = CalcMin(RectGetLeft(rects[i]), min_left);
+            min_top = CalcMin(RectGetTop(rects[i]), min_top);
+            max_right = CalcMax(RectGetRight(rects[i]), max_right);
+            max_bottom = CalcMax(RectGetBottom(rects[i]), max_bottom);
         }
 
         return {min_left, min_top, max_right - min_left, max_bottom - min_top};
@@ -99,7 +99,7 @@ namespace zcl {
 
     t_poly_mut PolyCreateQuad(const t_v2 pos, const t_v2 size, const t_v2 origin, t_arena *const arena) {
         const t_poly_mut poly = {
-            .pts = arena_push_array<t_v2>(arena, 4),
+            .pts = ArenaPushArray<t_v2>(arena, 4),
         };
 
         const t_v2 pos_base = pos - CalcCompwiseProd(size, origin);
@@ -114,7 +114,7 @@ namespace zcl {
 
     t_poly_mut PolyCreateQuadRotated(const t_v2 pos, const t_v2 size, const t_v2 origin, const t_f32 rot, t_arena *const arena) {
         const t_poly_mut poly = {
-            .pts = arena_push_array<t_v2>(arena, 4),
+            .pts = ArenaPushArray<t_v2>(arena, 4),
         };
 
         const t_v2 offs_left = CalcLengthdir(size.x * origin.x, rot - k_pi);
@@ -150,10 +150,10 @@ namespace zcl {
         for (t_i32 i = 0; i < poly.pts.len; i++) {
             const t_v2 pt = poly.pts[i];
 
-            min_left = calc_min(pt.x, min_left);
-            min_top = calc_min(pt.y, min_top);
-            max_right = calc_max(pt.x, max_right);
-            max_bottom = calc_max(pt.y, max_bottom);
+            min_left = CalcMin(pt.x, min_left);
+            min_top = CalcMin(pt.y, min_top);
+            max_right = CalcMax(pt.x, max_right);
+            max_bottom = CalcMax(pt.y, max_bottom);
         }
 
         return RectCreateF(min_left, min_top, max_right - min_left, max_bottom - min_top);

@@ -1,8 +1,8 @@
 #include <zcl/zcl_basic.h>
 
 namespace zcl {
-    void arena_destroy(t_arena *const arena) {
-        ZCL_REQUIRE(arena->type == ek_arena_type_blockbased);
+    void ArenaDestroy(t_arena *const arena) {
+        ZCL_REQUIRE(arena->type == ek_arena_type_block_based);
 
         const auto f = [](const auto self, t_arena_block *const block) {
             if (!block) {
@@ -15,7 +15,7 @@ namespace zcl {
             free(block);
         };
 
-        f(f, arena->type_data.blockbased.blocks_head);
+        f(f, arena->type_data.block_based.blocks_head);
 
         *arena = {};
     }
@@ -29,7 +29,7 @@ namespace zcl {
             ZCL_FATAL();
         }
 
-        zero_clear_item(block);
+        ZeroClearItem(block);
 
         block->buf = malloc(static_cast<size_t>(buf_size));
 
@@ -49,37 +49,37 @@ namespace zcl {
         return block;
     }
 
-    void *arena_push(t_arena *const arena, const t_i32 size, const t_i32 alignment) {
-        ZCL_ASSERT(size > 0 && alignment_check_valid(alignment));
+    void *ArenaPush(t_arena *const arena, const t_i32 size, const t_i32 alignment) {
+        ZCL_ASSERT(size > 0 && AlignmentCheckValid(alignment));
 
         switch (arena->type) {
-        case ek_arena_type_blockbased: {
-            const auto blockbased = &arena->type_data.blockbased;
+        case ek_arena_type_block_based: {
+            const auto block_based = &arena->type_data.block_based;
 
-            if (!blockbased->blocks_head) {
-                blockbased->blocks_head = arena_create_block(calc_max(size, blockbased->block_min_size));
-                blockbased->block_cur = blockbased->blocks_head;
-                return arena_push(arena, size, alignment);
+            if (!block_based->blocks_head) {
+                block_based->blocks_head = arena_create_block(CalcMax(size, block_based->block_min_size));
+                block_based->block_cur = block_based->blocks_head;
+                return ArenaPush(arena, size, alignment);
             }
 
-            const t_i32 offs_aligned = align_forward(blockbased->block_cur_offs, alignment);
+            const t_i32 offs_aligned = AlignForward(block_based->block_cur_offs, alignment);
             const t_i32 offs_next = offs_aligned + size;
 
-            if (offs_next > blockbased->block_cur->buf_size) {
-                if (!blockbased->block_cur->next) {
-                    blockbased->block_cur->next = arena_create_block(calc_max(size, blockbased->block_min_size));
+            if (offs_next > block_based->block_cur->buf_size) {
+                if (!block_based->block_cur->next) {
+                    block_based->block_cur->next = arena_create_block(CalcMax(size, block_based->block_min_size));
                 }
 
-                blockbased->block_cur = blockbased->block_cur->next;
-                blockbased->block_cur_offs = 0;
+                block_based->block_cur = block_based->block_cur->next;
+                block_based->block_cur_offs = 0;
 
-                return arena_push(arena, size, alignment);
+                return ArenaPush(arena, size, alignment);
             }
 
-            blockbased->block_cur_offs = offs_next;
+            block_based->block_cur_offs = offs_next;
 
-            void *const result = static_cast<t_u8 *>(blockbased->block_cur->buf) + offs_aligned;
-            zero_clear(result, size);
+            void *const result = static_cast<t_u8 *>(block_based->block_cur->buf) + offs_aligned;
+            ZeroClear(result, size);
 
             return result;
         }
@@ -87,7 +87,7 @@ namespace zcl {
         case ek_arena_type_wrapping: {
             const auto wrapping = &arena->type_data.wrapping;
 
-            const t_i32 offs_aligned = align_forward(wrapping->buf_offs, alignment);
+            const t_i32 offs_aligned = AlignForward(wrapping->buf_offs, alignment);
             const t_i32 offs_next = offs_aligned + size;
 
             if (offs_next > wrapping->buf_size) {
@@ -97,7 +97,7 @@ namespace zcl {
             wrapping->buf_offs = offs_next;
 
             void *const result = static_cast<t_u8 *>(wrapping->buf) + offs_aligned;
-            zero_clear(result, size);
+            ZeroClear(result, size);
 
             return result;
         }
@@ -107,34 +107,34 @@ namespace zcl {
         }
     }
 
-    void arena_rewind(t_arena *const arena) {
+    void ArenaRewind(t_arena *const arena) {
         switch (arena->type) {
-        case ek_arena_type_blockbased: {
-            const auto blockbased = &arena->type_data.blockbased;
+        case ek_arena_type_block_based: {
+            const auto block_based = &arena->type_data.block_based;
 
 #ifdef ZCL_DEBUG
             // Poison all memory to be rewinded.
-            if (blockbased->block_cur) {
-                const t_arena_block *block = blockbased->blocks_head;
+            if (block_based->block_cur) {
+                const t_arena_block *block = block_based->blocks_head;
 
-                while (block != blockbased->block_cur) {
+                while (block != block_based->block_cur) {
                     memset(block->buf, k_arena_poison, static_cast<size_t>(block->buf_size));
                     block = block->next;
                 }
 
-                memset(blockbased->block_cur->buf, k_arena_poison, static_cast<size_t>(blockbased->block_cur_offs));
+                memset(block_based->block_cur->buf, k_arena_poison, static_cast<size_t>(block_based->block_cur_offs));
             }
 #endif
 
-            blockbased->block_cur = blockbased->blocks_head;
-            blockbased->block_cur_offs = 0;
+            block_based->block_cur = block_based->blocks_head;
+            block_based->block_cur_offs = 0;
 
             break;
         }
 
         case ek_arena_type_wrapping: {
             const auto wrapping = &arena->type_data.wrapping;
-            zero_clear(wrapping->buf, wrapping->buf_offs);
+            ZeroClear(wrapping->buf, wrapping->buf_offs);
             wrapping->buf_offs = 0;
             break;
         }

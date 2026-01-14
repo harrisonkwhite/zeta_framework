@@ -18,8 +18,8 @@ namespace zcl {
         ZCL_DEFER({ stbi_image_free(stb_px_data); });
 
         const t_array_rdonly<t_u8> stb_px_data_arr = {stb_px_data, 4 * size_in_pxs.x * size_in_pxs.y};
-        const auto px_data = arena_push_array<t_u8>(texture_data_arena, 4 * size_in_pxs.x * size_in_pxs.y);
-        array_copy(stb_px_data_arr, px_data);
+        const auto px_data = ArenaPushArray<t_u8>(texture_data_arena, 4 * size_in_pxs.x * size_in_pxs.y);
+        ArrayCopy(stb_px_data_arr, px_data);
 
         *o_texture_data = {size_in_pxs, px_data};
 
@@ -151,7 +151,7 @@ namespace zcl {
         //
         // Texture Atlases
         //
-        *o_atlas_rgbas = arena_push_array<t_font_atlas_rgba>(atlas_rgbas_arena, atlas_cnt);
+        *o_atlas_rgbas = ArenaPushArray<t_font_atlas_rgba>(atlas_rgbas_arena, atlas_cnt);
 
         // Initialize all pixels to transparent white.
         // @todo: Maybe don't use RBGA for this?

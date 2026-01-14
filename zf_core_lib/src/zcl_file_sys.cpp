@@ -93,7 +93,7 @@ namespace zcl {
         ZCL_STR_WALK (path, step) {
             if (step.code_pt == '/' || step.code_pt == '\\') {
                 if (!cur_dir_name_is_empty) {
-                    if (!create_dir_if_nonexistent({array_slice(path.bytes, 0, step.byte_index)})) {
+                    if (!create_dir_if_nonexistent({ArraySlice(path.bytes, 0, step.byte_index)})) {
                         return false;
                     }
 
@@ -126,8 +126,8 @@ namespace zcl {
             }
         }
 
-        const auto result_bytes = arena_push_array<t_u8>(arena, len);
-        array_copy(array_to_byte_array(array_slice(array_to_nonstatic(&buf), 0, len)), result_bytes);
+        const auto result_bytes = ArenaPushArray<t_u8>(arena, len);
+        ArrayCopy(ArrayToByteArray(ArraySlice(ArrayToNonstatic(&buf), 0, len)), result_bytes);
         return {result_bytes};
 #elif defined(ZCL_PLATFORM_MACOS)
     #error "Platform-specific implementation not yet done!" // @todo
@@ -203,7 +203,7 @@ namespace zcl {
         // Get the substring containing all directories and create them.
         ZCL_STR_WALK_REVERSE (path, step) {
             if (step.code_pt == '/' || step.code_pt == '\\') {
-                if (!DirectoryCreateRecursive({array_slice(path.bytes, 0, step.byte_index)}, temp_arena, o_dir_create_res)) {
+                if (!DirectoryCreateRecursive({ArraySlice(path.bytes, 0, step.byte_index)}, temp_arena, o_dir_create_res)) {
                     return false;
                 }
 
@@ -245,10 +245,10 @@ namespace zcl {
         const t_i32 file_size = FileCalcSize(&stream);
 
         if (add_terminator) {
-            *o_contents = arena_push_array<t_u8>(contents_arena, file_size + 1);
+            *o_contents = ArenaPushArray<t_u8>(contents_arena, file_size + 1);
             (*o_contents)[file_size] = 0;
         } else {
-            *o_contents = arena_push_array<t_u8>(contents_arena, file_size);
+            *o_contents = ArenaPushArray<t_u8>(contents_arena, file_size);
         }
 
         if (!StreamReadItemsIntoArray(stream, *o_contents, file_size)) {

@@ -1,8 +1,8 @@
 #include <zcl.h>
 
-[[nodiscard]] static zcl::t_b8 output_code(const zcl::t_str_rdonly input_file_path, const zcl::t_str_rdonly output_file_path, const zcl::t_str_rdonly arr_var_subname, const zcl::t_str_rdonly namespace_name) {
-    zcl::t_arena arena = zcl::arena_create_blockbased();
-    ZCL_DEFER({ zcl::arena_destroy(&arena); });
+[[nodiscard]] static zcl::t_b8 OutputCode(const zcl::t_str_rdonly input_file_path, const zcl::t_str_rdonly output_file_path, const zcl::t_str_rdonly arr_var_subname, const zcl::t_str_rdonly namespace_name) {
+    zcl::t_arena arena = zcl::ArenaCreateBlockBased();
+    ZCL_DEFER({ zcl::ArenaDestroy(&arena); });
 
     zcl::t_file_stream input_file_stream;
 
@@ -63,5 +63,5 @@ int main(const int arg_cnt, const char *const *const args) {
         return EXIT_FAILURE;
     }
 
-    return output_code(zcl::CStrToStr(args[1]), zcl::CStrToStr(args[2]), zcl::CStrToStr(args[3]), zcl::CStrToStr(args[4])) ? EXIT_SUCCESS : EXIT_FAILURE;
+    return OutputCode(zcl::CStrToStr(args[1]), zcl::CStrToStr(args[2]), zcl::CStrToStr(args[3]), zcl::CStrToStr(args[4])) ? EXIT_SUCCESS : EXIT_FAILURE;
 }

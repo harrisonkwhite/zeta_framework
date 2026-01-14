@@ -26,7 +26,7 @@ namespace zcl {
             return false;
         }
 
-        *o_arr = arena_push_array<tp_elem_type>(arr_arena, len);
+        *o_arr = ArenaPushArray<tp_elem_type>(arr_arena, len);
 
         if (!StreamReadItemsIntoArray(stream_view, *o_arr, len)) {
             return false;
@@ -81,13 +81,13 @@ namespace zcl {
 
         *o_hm = HashMapCreate<typename tp_hash_map_type::t_key, typename tp_hash_map_type::t_value>(hm_hash_func, hm_arena, cap, hm_key_comparator);
 
-        const auto keys = arena_push_array<typename tp_hash_map_type::t_key>(temp_arena, entry_cnt);
+        const auto keys = ArenaPushArray<typename tp_hash_map_type::t_key>(temp_arena, entry_cnt);
 
         if (!StreamReadItemsIntoArray(stream_view, keys, entry_cnt)) {
             return false;
         }
 
-        const auto values = arena_push_array<typename tp_hash_map_type::t_value>(temp_arena, entry_cnt);
+        const auto values = ArenaPushArray<typename tp_hash_map_type::t_value>(temp_arena, entry_cnt);
 
         if (!StreamReadItemsIntoArray(stream_view, values, entry_cnt)) {
             return false;

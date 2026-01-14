@@ -48,7 +48,7 @@ namespace zcl {
             return false;
         }
 
-        const auto rgba_px_data = arena_push_array<t_u8>(texture_data_arena, 4 * size_in_pxs.x * size_in_pxs.y);
+        const auto rgba_px_data = ArenaPushArray<t_u8>(texture_data_arena, 4 * size_in_pxs.x * size_in_pxs.y);
 
         if (!StreamReadItemsIntoArray(stream_view, rgba_px_data, rgba_px_data.len)) {
             return false;

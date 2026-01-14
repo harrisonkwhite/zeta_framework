@@ -51,13 +51,13 @@ namespace zcl {
 
     template <c_kv_store_key tp_key_type, c_kv_store_value tp_value_type>
     t_kv_store_block<tp_key_type, tp_value_type> *KVStoreCreateBlock(const t_i32 cap, t_arena *const arena) {
-        const auto block = arena_push_item<t_kv_store_block<tp_key_type, tp_value_type>>(arena);
+        const auto block = ArenaPushItem<t_kv_store_block<tp_key_type, tp_value_type>>(arena);
 
-        block->keys = arena_push_array<tp_key_type>(arena, cap);
+        block->keys = ArenaPushArray<tp_key_type>(arena, cap);
 
-        block->values = arena_push_array<tp_value_type>(arena, cap);
+        block->values = ArenaPushArray<tp_value_type>(arena, cap);
 
-        block->next_indexes = arena_push_array<t_i32>(arena, cap);
+        block->next_indexes = ArenaPushArray<t_i32>(arena, cap);
         SetAllTo(block->next_indexes, -1);
 
         block->usage = BitsetCreate(cap, arena);
@@ -244,13 +244,13 @@ namespace zcl {
     // The provided hash function has to map a key to an integer 0 or higher. The given memory arena will be saved and used for allocating new memory for entries when needed.
     template <c_hash_map_key tp_key_type, c_hash_map_value tp_value_type>
     t_hash_map<tp_key_type, tp_value_type> HashMapCreate(const t_hash_func<tp_key_type> hash_func, t_arena *const arena, const t_i32 cap = k_hash_map_cap_default, const t_comparator_bin<tp_key_type> key_comparator = k_comparator_bin_default<tp_key_type>) {
-        const auto immediate_indexes = arena_push_array<t_i32>(arena, cap);
+        const auto immediate_indexes = ArenaPushArray<t_i32>(arena, cap);
         SetAllTo(immediate_indexes, -1);
 
         return {
             .hash_func = hash_func,
             .immediate_indexes = immediate_indexes,
-            .kv_store = {.key_comparator = key_comparator, .blocks_arena = arena, .block_cap = static_cast<t_i32>(align_forward(cap, 8))},
+            .kv_store = {.key_comparator = key_comparator, .blocks_arena = arena, .block_cap = static_cast<t_i32>(AlignForward(cap, 8))},
         };
     }
 
@@ -307,15 +307,15 @@ namespace zcl {
         t_i32 loaded_cnt = 0;
 
         for (t_i32 i = 0; i < hash_map->immediate_indexes.len; i++) {
-            loaded_cnt += KVStoreLoadChain(&hash_map->kv_store, hash_map->immediate_indexes[i], array_slice_from(keys, loaded_cnt), array_slice_from(values, loaded_cnt));
+            loaded_cnt += KVStoreLoadChain(&hash_map->kv_store, hash_map->immediate_indexes[i], ArraySliceFrom(keys, loaded_cnt), ArraySliceFrom(values, loaded_cnt));
         }
     }
 
     // Allocates the given arrays with the arena and loads key-value pairs into them.
     template <c_hash_map tp_hash_map_type>
     void HashMapLoadEntries(const tp_hash_map_type *const hash_map, t_arena *const arena, t_array_mut<typename tp_hash_map_type::t_key> *const o_keys, t_array_mut<typename tp_hash_map_type::t_value> *const o_values) {
-        *o_keys = arena_push_array<typename tp_hash_map_type::t_key>(arena, HashMapGetEntryCount(hash_map));
-        *o_values = arena_push_array<typename tp_hash_map_type::t_value>(arena, HashMapGetEntryCount(hash_map));
+        *o_keys = ArenaPushArray<typename tp_hash_map_type::t_key>(arena, HashMapGetEntryCount(hash_map));
+        *o_values = ArenaPushArray<typename tp_hash_map_type::t_value>(arena, HashMapGetEntryCount(hash_map));
         return HashMapLoadEntries(hash_map, *o_keys, *o_values);
     }
 

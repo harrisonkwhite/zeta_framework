@@ -118,7 +118,7 @@ constexpr zcl::t_static_array<t_asset_field, ekm_sound_field_cnt> k_sound_fields
 }
 
 [[nodiscard]] static zcl::t_b8 PackFont(const zcl::t_str_rdonly file_path, const zcl::t_i32 height, const zcl::t_str_rdonly extra_chrs_file_path, const zcl::t_str_rdonly out_file_path, zcl::t_arena *const temp_arena) {
-    const auto code_pt_bs = zcl::arena_push_item<zcl::t_code_point_bitset>(temp_arena);
+    const auto code_pt_bs = zcl::ArenaPushItem<zcl::t_code_point_bitset>(temp_arena);
 
     if (height <= 0) {
         zcl::LogError(ZCL_STR_LITERAL("Invalid font height %! Must be greater than 0."), height);
@@ -225,8 +225,8 @@ constexpr zcl::t_static_array<t_asset_field, ekm_sound_field_cnt> k_sound_fields
 }
 
 zcl::t_b8 PackAssets(const zcl::t_str_rdonly instrs_json_file_path) {
-    zcl::t_arena arena = zcl::arena_create_blockbased();
-    ZCL_DEFER({ zcl::arena_destroy(&arena); });
+    zcl::t_arena arena = zcl::ArenaCreateBlockBased();
+    ZCL_DEFER({ zcl::ArenaDestroy(&arena); });
 
     cJSON *cj;
 
@@ -281,7 +281,7 @@ zcl::t_b8 PackAssets(const zcl::t_str_rdonly instrs_json_file_path) {
                 zcl::FileFlush(&std_out);
             }
 
-            zcl::arena_rewind(&arena);
+            zcl::ArenaRewind(&arena);
 
             if (!cJSON_IsObject(cj_asset)) {
                 zcl::LogError(ZCL_STR_LITERAL("JSON entry is of the wrong type! Expected an object."));
@@ -290,10 +290,10 @@ zcl::t_b8 PackAssets(const zcl::t_str_rdonly instrs_json_file_path) {
 
             const auto fields = [asset_type_index]() -> zcl::t_array_rdonly<t_asset_field> {
                 switch (asset_type_index) {
-                case ek_asset_type_texture: return array_to_nonstatic(&k_texture_fields);
-                case ek_asset_type_font: return array_to_nonstatic(&k_font_fields);
-                case ek_asset_type_shader: return array_to_nonstatic(&k_shader_fields);
-                case ek_asset_type_sound: return array_to_nonstatic(&k_sound_fields);
+                case ek_asset_type_texture: return ArrayToNonstatic(&k_texture_fields);
+                case ek_asset_type_font: return ArrayToNonstatic(&k_font_fields);
+                case ek_asset_type_shader: return ArrayToNonstatic(&k_shader_fields);
+                case ek_asset_type_sound: return ArrayToNonstatic(&k_sound_fields);
 
                 default: ZCL_UNREACHABLE();
                 }
@@ -301,10 +301,10 @@ zcl::t_b8 PackAssets(const zcl::t_str_rdonly instrs_json_file_path) {
 
             const auto field_cj_vals = [asset_type_index, &texture_field_cj_vals, &font_field_cj_vals, &shader_field_cj_vals, &snd_field_cj_vals]() -> zcl::t_array_mut<cJSON *> {
                 switch (asset_type_index) {
-                case ek_asset_type_texture: return array_to_nonstatic(&texture_field_cj_vals);
-                case ek_asset_type_font: return array_to_nonstatic(&font_field_cj_vals);
-                case ek_asset_type_shader: return array_to_nonstatic(&shader_field_cj_vals);
-                case ek_asset_type_sound: return array_to_nonstatic(&snd_field_cj_vals);
+                case ek_asset_type_texture: return ArrayToNonstatic(&texture_field_cj_vals);
+                case ek_asset_type_font: return ArrayToNonstatic(&font_field_cj_vals);
+                case ek_asset_type_shader: return ArrayToNonstatic(&shader_field_cj_vals);
+                case ek_asset_type_sound: return ArrayToNonstatic(&snd_field_cj_vals);
 
                 default: ZCL_UNREACHABLE();
                 }
