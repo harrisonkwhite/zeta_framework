@@ -76,7 +76,7 @@ namespace zgl::platform {
                     const auto input_state = static_cast<input::t_state *>(glfwGetWindowUserPointer(window));
 
                     if (!input::text_submit_code_point(input_state, code_pt)) {
-                        zcl::log_warning(ZCL_STR_LITERAL("Tried to submit input code point, but there is insufficient space!"));
+                        zcl::LogWarning(ZCL_STR_LITERAL("Tried to submit input code point, but there is insufficient space!"));
                     }
                 };
 
@@ -274,7 +274,7 @@ namespace zgl::platform {
 
     void window_request_close() {
         ZCL_ASSERT(g_module_state.active);
-        zcl::log(ZCL_STR_LITERAL("Window close explicitly requested..."));
+        zcl::LogError(ZCL_STR_LITERAL("Window close explicitly requested..."));
         return glfwSetWindowShouldClose(g_module_state.glfw_window, true);
     }
 

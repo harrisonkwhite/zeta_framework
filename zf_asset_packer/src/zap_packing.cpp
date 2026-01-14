@@ -102,14 +102,14 @@ zcl::t_b8 pack_assets(const zcl::t_str_rdonly instrs_json_file_path) {
         zcl::t_array_mut<zcl::t_u8> instrs_json_file_contents; // Not needed beyond this scope.
 
         if (!zcl::file_load_contents(instrs_json_file_path, &arena, &arena, &instrs_json_file_contents, true)) {
-            zcl::log_error(ZCL_STR_LITERAL("Failed to load packing instructions JSON file \"%\"!"), instrs_json_file_path);
+            zcl::LogError(ZCL_STR_LITERAL("Failed to load packing instructions JSON file \"%\"!"), instrs_json_file_path);
             return false;
         }
 
         cj = cJSON_Parse(zcl::str_to_cstr(zcl::t_str_rdonly{instrs_json_file_contents}));
 
         if (!cj) {
-            zcl::log_error(ZCL_STR_LITERAL("Failed to parse packing instructions JSON file!"));
+            zcl::LogError(ZCL_STR_LITERAL("Failed to parse packing instructions JSON file!"));
             return false;
         }
     }
@@ -117,7 +117,7 @@ zcl::t_b8 pack_assets(const zcl::t_str_rdonly instrs_json_file_path) {
     ZCL_DEFER({ cJSON_Delete(cj); });
 
     if (!cJSON_IsObject(cj)) {
-        zcl::log_error(ZCL_STR_LITERAL("Packing instructions JSON root is not an object!"));
+        zcl::LogError(ZCL_STR_LITERAL("Packing instructions JSON root is not an object!"));
         return false;
     }
 
@@ -132,7 +132,7 @@ zcl::t_b8 pack_assets(const zcl::t_str_rdonly instrs_json_file_path) {
         cJSON *const cj_assets = cJSON_GetObjectItemCaseSensitive(cj, asset_type_arr_name_cstr);
 
         if (!cJSON_IsArray(cj_assets)) {
-            zcl::log_error(ZCL_STR_LITERAL("Packing instructions JSON \"%\" array does not exist or it is of the wrong type!"), zcl::cstr_to_str(asset_type_arr_name_cstr));
+            zcl::LogError(ZCL_STR_LITERAL("Packing instructions JSON \"%\" array does not exist or it is of the wrong type!"), zcl::cstr_to_str(asset_type_arr_name_cstr));
             return false;
         }
 
@@ -177,7 +177,7 @@ zcl::t_b8 pack_assets(const zcl::t_str_rdonly instrs_json_file_path) {
                         continue;
                     }
 
-                    zcl::log_error(ZCL_STR_LITERAL("A packing instructions JSON \"%\" entry is missing required field \"%\"!"), zcl::cstr_to_str(asset_type_arr_name_cstr), zcl::cstr_to_str(field_name_cstr));
+                    zcl::LogError(ZCL_STR_LITERAL("A packing instructions JSON \"%\" entry is missing required field \"%\"!"), zcl::cstr_to_str(asset_type_arr_name_cstr), zcl::cstr_to_str(field_name_cstr));
 
                     return false;
                 }
@@ -198,7 +198,7 @@ zcl::t_b8 pack_assets(const zcl::t_str_rdonly instrs_json_file_path) {
                 }();
 
                 if (!is_valid) {
-                    zcl::log_error(ZCL_STR_LITERAL("A packing instructions JSON \"%\" entry has field \"%\" as the wrong type! Expected a %."), zcl::cstr_to_str(asset_type_arr_name_cstr), zcl::cstr_to_str(field_name_cstr), zcl::cstr_to_str(k_asset_field_type_name_cstrs[fields[fi].type]));
+                    zcl::LogError(ZCL_STR_LITERAL("A packing instructions JSON \"%\" entry has field \"%\" as the wrong type! Expected a %."), zcl::cstr_to_str(asset_type_arr_name_cstr), zcl::cstr_to_str(field_name_cstr), zcl::cstr_to_str(k_asset_field_type_name_cstrs[fields[fi].type]));
                     return false;
                 }
             }
@@ -211,12 +211,12 @@ zcl::t_b8 pack_assets(const zcl::t_str_rdonly instrs_json_file_path) {
                 zcl::t_texture_data_mut texture_data;
 
                 if (!zcl::texture_load_from_raw(file_path, &arena, &arena, &texture_data)) {
-                    zcl::log_error(ZCL_STR_LITERAL("Failed to load texture from file \"%\"!"), file_path);
+                    zcl::LogError(ZCL_STR_LITERAL("Failed to load texture from file \"%\"!"), file_path);
                     return false;
                 }
 
                 if (!zcl::texture_pack(out_file_path, texture_data, &arena)) {
-                    zcl::log_error(ZCL_STR_LITERAL("Failed to pack texture to file \"%\"!"), out_file_path);
+                    zcl::LogError(ZCL_STR_LITERAL("Failed to pack texture to file \"%\"!"), out_file_path);
                     return false;
                 }
 
@@ -238,7 +238,7 @@ zcl::t_b8 pack_assets(const zcl::t_str_rdonly instrs_json_file_path) {
                     zcl::t_array_mut<zcl::t_u8> extra_chrs_file_contents;
 
                     if (!zcl::file_load_contents(extra_chrs_file_path, &arena, &arena, &extra_chrs_file_contents)) {
-                        zcl::log_error(ZCL_STR_LITERAL("Failed to load extra characters file \"%\"!"), extra_chrs_file_path);
+                        zcl::LogError(ZCL_STR_LITERAL("Failed to load extra characters file \"%\"!"), extra_chrs_file_path);
                         return false;
                     }
 
@@ -251,12 +251,12 @@ zcl::t_b8 pack_assets(const zcl::t_str_rdonly instrs_json_file_path) {
                 zcl::t_array_mut<zcl::t_font_atlas_rgba> atlas_rgbas;
 
                 if (!zcl::font_load_from_raw(file_path, height, code_pt_bs, &arena, &arena, &arena, &arrangement, &atlas_rgbas)) {
-                    zcl::log_error(ZCL_STR_LITERAL("Failed to load font from file \"%\"!"), file_path);
+                    zcl::LogError(ZCL_STR_LITERAL("Failed to load font from file \"%\"!"), file_path);
                     return false;
                 }
 
                 if (!zcl::font_pack(out_file_path, arrangement, atlas_rgbas, &arena)) {
-                    zcl::log_error(ZCL_STR_LITERAL("Failed to pack font to file \"%\"!"), out_file_path);
+                    zcl::LogError(ZCL_STR_LITERAL("Failed to pack font to file \"%\"!"), out_file_path);
                     return false;
                 }
 
@@ -276,19 +276,19 @@ zcl::t_b8 pack_assets(const zcl::t_str_rdonly instrs_json_file_path) {
                 } else if (zcl::strs_check_equal(type, ZCL_STR_LITERAL("fragment"))) {
                     is_frag = true;
                 } else {
-                    zcl::log_error(ZCL_STR_LITERAL("A packing instructions JSON shader entry has an invalid shader type \"%\"! Expected \"vertex\" or \"fragment\"."), type);
+                    zcl::LogError(ZCL_STR_LITERAL("A packing instructions JSON shader entry has an invalid shader type \"%\"! Expected \"vertex\" or \"fragment\"."), type);
                     return false;
                 }
 
                 zcl::t_array_mut<zcl::t_u8> compiled_bin;
 
                 if (!compile_shader(file_path, varying_def_file_path, is_frag, &arena, &arena, &compiled_bin)) {
-                    zcl::log_error(ZCL_STR_LITERAL("Failed to compile shader from file \"%\"!"), file_path);
+                    zcl::LogError(ZCL_STR_LITERAL("Failed to compile shader from file \"%\"!"), file_path);
                     return false;
                 }
 
                 if (!zcl::shader_pack(out_file_path, compiled_bin, &arena)) {
-                    zcl::log_error(ZCL_STR_LITERAL("Failed to pack shader to file \"%\"!"), out_file_path);
+                    zcl::LogError(ZCL_STR_LITERAL("Failed to pack shader to file \"%\"!"), out_file_path);
                     return false;
                 }
 
@@ -302,12 +302,12 @@ zcl::t_b8 pack_assets(const zcl::t_str_rdonly instrs_json_file_path) {
                 zcl::t_sound_data_mut snd_data;
 
                 if (!zcl::sound_load_from_raw(file_path, &arena, &arena, &snd_data)) {
-                    zcl::log_error(ZCL_STR_LITERAL("Failed to load sound from file \"%\"!"), file_path);
+                    zcl::LogError(ZCL_STR_LITERAL("Failed to load sound from file \"%\"!"), file_path);
                     return false;
                 }
 
                 if (!zcl::sound_pack(out_file_path, snd_data, &arena)) {
-                    zcl::log_error(ZCL_STR_LITERAL("Failed to pack sound to file \"%\"!"), out_file_path);
+                    zcl::LogError(ZCL_STR_LITERAL("Failed to pack sound to file \"%\"!"), out_file_path);
                     return false;
                 }
 
@@ -317,7 +317,7 @@ zcl::t_b8 pack_assets(const zcl::t_str_rdonly instrs_json_file_path) {
         }
     }
 
-    zcl::log(ZCL_STR_LITERAL("Asset packing completed!"));
+    zcl::LogError(ZCL_STR_LITERAL("Asset packing completed!"));
 
     return true;
 }

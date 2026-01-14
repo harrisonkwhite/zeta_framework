@@ -121,7 +121,7 @@ namespace zgl::audio {
         const zcl::t_i32 index = zcl::bitset_find_first_unset_bit(g_module_state.snd_insts.activity);
 
         if (index == -1) {
-            zcl::log_warning(ZCL_STR_LITERAL("Trying to play a sound, but the sound instance limit has been reached!"));
+            zcl::LogWarning(ZCL_STR_LITERAL("Trying to play a sound, but the sound instance limit has been reached!"));
             return false;
         }
 
