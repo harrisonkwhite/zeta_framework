@@ -15,7 +15,7 @@ namespace zgl::audio {
 
         zcl::t_b8 stream;
         zcl::t_sound_data_rdonly nonstream_snd_data;
-        zcl::t_str_rdonly stream_snd_file_path;
+        zcl::t_str_rdonly stream_snd_file_path_terminated; // Terminated since it often needs to be converted to C-string.
 
         t_sound_type *next;
     };
@@ -34,8 +34,6 @@ namespace zgl::audio {
             zcl::t_static_bitset<g_sound_inst_limit> activity;
             zcl::t_static_array<zcl::t_i32, g_sound_inst_limit> versions;
         } snd_insts;
-
-        ma_sound ma_snd_music;
     } g_module_state;
 
     void ModuleStartup() {
@@ -55,7 +53,10 @@ namespace zgl::audio {
             ma_sound_stop(&g_module_state.snd_insts.ma_snds[i]);
             ma_sound_uninit(&g_module_state.snd_insts.ma_snds[i]);
 
-            ma_audio_buffer_ref_uninit(&g_module_state.snd_insts.ma_buf_refs[i]);
+            // @cleanup
+            if (!g_module_state.snd_insts.types[i]->stream) {
+                ma_audio_buffer_ref_uninit(&g_module_state.snd_insts.ma_buf_refs[i]);
+            }
         }
 
         ma_engine_uninit(&g_module_state.ma_eng);
@@ -66,7 +67,6 @@ namespace zgl::audio {
     t_sound_type_group *SoundTypeGroupCreate(zcl::t_arena *const arena) {
         const auto result = zcl::ArenaPushItem<t_sound_type_group>(arena);
         result->arena = arena;
-
         return result;
     }
 
@@ -150,7 +150,7 @@ namespace zgl::audio {
 
         t_sound_type *const result = SoundTypeGroupAdd(group);
         result->stream = true;
-        result->stream_snd_file_path = file_path;
+        result->stream_snd_file_path_terminated = zcl::StrCloneButAddTerminator(file_path, temp_arena);
 
         return result;
     }
@@ -186,7 +186,7 @@ namespace zgl::audio {
                 ZCL_FATAL();
             }
         } else {
-            if (ma_sound_init_from_file(&g_module_state.ma_eng, "C:/code/kaozeth/music.mp3", MA_SOUND_FLAG_STREAM, nullptr, nullptr, &g_module_state.ma_snd_music) != MA_SUCCESS) {
+            if (ma_sound_init_from_file(&g_module_state.ma_eng, zcl::StrToCStr(type->stream_snd_file_path_terminated), MA_SOUND_FLAG_STREAM, nullptr, nullptr, ma_snd) != MA_SUCCESS) {
                 ZCL_FATAL();
             }
         }
@@ -214,7 +214,11 @@ namespace zgl::audio {
 
         ma_sound_stop(&g_module_state.snd_insts.ma_snds[id.index]);
         ma_sound_uninit(&g_module_state.snd_insts.ma_snds[id.index]);
-        ma_audio_buffer_ref_uninit(&g_module_state.snd_insts.ma_buf_refs[id.index]);
+
+        // @cleanup
+        if (!g_module_state.snd_insts.types[id.index]->stream) {
+            ma_audio_buffer_ref_uninit(&g_module_state.snd_insts.ma_buf_refs[id.index]);
+        }
 
         zcl::BitsetUnset(g_module_state.snd_insts.activity, id.index);
     }
@@ -238,7 +242,11 @@ namespace zgl::audio {
 
             if (!ma_sound_is_playing(ma_snd)) {
                 ma_sound_uninit(ma_snd);
-                ma_audio_buffer_ref_uninit(&g_module_state.snd_insts.ma_buf_refs[i]);
+
+                // @cleanup
+                if (!g_module_state.snd_insts.types[i]->stream) {
+                    ma_audio_buffer_ref_uninit(&g_module_state.snd_insts.ma_buf_refs[i]);
+                }
 
                 zcl::BitsetUnset(g_module_state.snd_insts.activity, i);
             }
