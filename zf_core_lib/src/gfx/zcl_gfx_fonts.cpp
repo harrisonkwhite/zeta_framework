@@ -25,7 +25,7 @@ namespace zcl {
         // Get the plain font file data.
         t_array_mut<t_u8> font_file_data;
 
-        if (!file_load_contents(file_path, temp_arena, temp_arena, &font_file_data)) {
+        if (!FileLoadContents(file_path, temp_arena, temp_arena, &font_file_data)) {
             return false;
         }
 
@@ -198,17 +198,17 @@ namespace zcl {
     }
 
     t_b8 font_pack(const t_str_rdonly file_path, const t_font_arrangement &arrangement, const t_array_rdonly<t_font_atlas_rgba> atlas_rgbas, t_arena *const temp_arena) {
-        if (!create_file_and_parent_directories(file_path, temp_arena)) {
+        if (!FileCreateRecursive(file_path, temp_arena)) {
             return false;
         }
 
         t_file_stream fs;
 
-        if (!file_open(file_path, ek_file_access_mode_write, temp_arena, &fs)) {
+        if (!FileOpen(file_path, ek_file_access_mode_write, temp_arena, &fs)) {
             return false;
         }
 
-        ZCL_DEFER({ file_close(&fs); });
+        ZCL_DEFER({ FileClose(&fs); });
 
         if (!stream_write_item(fs, arrangement.line_height)) {
             return false;
@@ -232,11 +232,11 @@ namespace zcl {
     t_b8 font_unpack(const t_str_rdonly file_path, t_arena *const arrangement_arena, t_arena *const atlas_rgbas_arena, t_arena *const temp_arena, t_font_arrangement *const o_arrangement, t_array_mut<t_font_atlas_rgba> *const o_atlas_rgbas) {
         t_file_stream fs;
 
-        if (!file_open(file_path, ek_file_access_mode_read, temp_arena, &fs)) {
+        if (!FileOpen(file_path, ek_file_access_mode_read, temp_arena, &fs)) {
             return false;
         }
 
-        ZCL_DEFER({ file_close(&fs); });
+        ZCL_DEFER({ FileClose(&fs); });
 
         if (!stream_read_item(fs, &o_arrangement->line_height)) {
             return false;

@@ -6,19 +6,19 @@
 
     zcl::t_file_stream input_file_stream;
 
-    if (!zcl::file_open(input_file_path, zcl::ek_file_access_mode_read, &arena, &input_file_stream)) {
+    if (!zcl::FileOpen(input_file_path, zcl::ek_file_access_mode_read, &arena, &input_file_stream)) {
         return false;
     }
 
-    ZCL_DEFER({ zcl::file_close(&input_file_stream); });
+    ZCL_DEFER({ zcl::FileClose(&input_file_stream); });
 
     zcl::t_file_stream output_file_stream;
 
-    if (!zcl::file_open(output_file_path, zcl::ek_file_access_mode_write, &arena, &output_file_stream)) {
+    if (!zcl::FileOpen(output_file_path, zcl::ek_file_access_mode_write, &arena, &output_file_stream)) {
         return false;
     }
 
-    ZCL_DEFER({ zcl::file_close(&output_file_stream); });
+    ZCL_DEFER({ zcl::FileClose(&output_file_stream); });
 
     zcl::Print(output_file_stream, ZCL_STR_LITERAL("#include <zcl/zcl_basic.h>\n"));
     zcl::Print(output_file_stream, ZCL_STR_LITERAL("\n"));
@@ -58,7 +58,7 @@
 
 int main(const int arg_cnt, const char *const *const args) {
     if (arg_cnt != 5) {
-        zcl::t_file_stream std_err = zcl::file_stream_create_std_error();
+        zcl::t_file_stream std_err = zcl::FileStreamCreateStdError();
         zcl::PrintFormat(std_err, ZCL_STR_LITERAL("Invalid command-line argument count!\nUsage: zf_bin_to_array <input_file_path> <output_file_path> <array_variable_subname> <namespace>\nNote that the given namespace can be empty for no namespace.\n"));
         return EXIT_FAILURE;
     }

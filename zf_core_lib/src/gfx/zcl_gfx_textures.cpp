@@ -26,17 +26,17 @@ namespace zcl {
     }
 
     t_b8 texture_pack(const t_str_rdonly file_path, const t_texture_data_mut texture_data, t_arena *const temp_arena) {
-        if (!create_file_and_parent_directories(file_path, temp_arena)) {
+        if (!FileCreateRecursive(file_path, temp_arena)) {
             return false;
         }
 
         t_file_stream fs;
 
-        if (!file_open(file_path, ek_file_access_mode_write, temp_arena, &fs)) {
+        if (!FileOpen(file_path, ek_file_access_mode_write, temp_arena, &fs)) {
             return false;
         }
 
-        ZCL_DEFER({ file_close(&fs); });
+        ZCL_DEFER({ FileClose(&fs); });
 
         if (!stream_write_item(fs, texture_data.size_in_pxs)) {
             return false;
@@ -52,11 +52,11 @@ namespace zcl {
     t_b8 texture_unpack(const t_str_rdonly file_path, t_arena *const texture_data_arena, t_arena *const temp_arena, t_texture_data_mut *const o_texture_data) {
         t_file_stream fs;
 
-        if (!file_open(file_path, ek_file_access_mode_read, temp_arena, &fs)) {
+        if (!FileOpen(file_path, ek_file_access_mode_read, temp_arena, &fs)) {
             return false;
         }
 
-        ZCL_DEFER({ file_close(&fs); });
+        ZCL_DEFER({ FileClose(&fs); });
 
         t_v2_i size_in_pxs;
 

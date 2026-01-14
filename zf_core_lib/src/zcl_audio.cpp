@@ -38,17 +38,17 @@ namespace zcl {
     }
 
     t_b8 sound_pack(const t_str_rdonly file_path, const t_sound_data_rdonly snd_data, t_arena *const temp_arena) {
-        if (!create_file_and_parent_directories(file_path, temp_arena)) {
+        if (!FileCreateRecursive(file_path, temp_arena)) {
             return false;
         }
 
         t_file_stream fs;
 
-        if (!file_open(file_path, ek_file_access_mode_write, temp_arena, &fs)) {
+        if (!FileOpen(file_path, ek_file_access_mode_write, temp_arena, &fs)) {
             return false;
         }
 
-        ZCL_DEFER({ file_close(&fs); });
+        ZCL_DEFER({ FileClose(&fs); });
 
         return sound_serialize(snd_data, fs);
     }
@@ -56,11 +56,11 @@ namespace zcl {
     t_b8 sound_unpack(const t_str_rdonly file_path, t_arena *const snd_data_arena, t_arena *const temp_arena, t_sound_data_mut *const o_snd_data) {
         t_file_stream fs;
 
-        if (!file_open(file_path, ek_file_access_mode_read, temp_arena, &fs)) {
+        if (!FileOpen(file_path, ek_file_access_mode_read, temp_arena, &fs)) {
             return false;
         }
 
-        ZCL_DEFER({ file_close(&fs); });
+        ZCL_DEFER({ FileClose(&fs); });
 
         if (!stream_read_item(fs, &o_snd_data->meta)) {
             return false;
