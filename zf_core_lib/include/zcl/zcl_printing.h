@@ -99,10 +99,10 @@ namespace zcl {
             ZCL_ASSERT(str_bytes_stream_write_success);
         }
 
-        const t_i32 dig_cnt = calc_digit_cnt(format.value);
+        const t_i32 dig_cnt = CalcDigitCount(format.value);
 
         for (t_i32 i = 0; i < dig_cnt; i++) {
-            const auto byte = static_cast<t_u8>('0' + calc_digit_at(format.value, dig_cnt - 1 - i));
+            const auto byte = static_cast<t_u8>('0' + CalcDigitAt(format.value, dig_cnt - 1 - i));
             str_bytes_stream_write_success = stream_write_item(str_bytes_stream, byte);
             ZCL_ASSERT(str_bytes_stream_write_success);
         }

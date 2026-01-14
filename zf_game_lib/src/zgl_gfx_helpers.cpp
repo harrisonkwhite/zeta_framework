@@ -6,7 +6,7 @@ namespace zgl::gfx {
 
         zcl::t_static_array<zcl::t_v2, 4> quad_pts;
         zcl::t_arena quad_pts_arena = zcl::arena_create_wrapping(zcl::to_bytes(&quad_pts));
-        const zcl::t_poly_mut quad_poly = zcl::poly_create_quad_rotated(pos, size, origin, rot, &quad_pts_arena);
+        const zcl::t_poly_mut quad_poly = zcl::PolyCreateQuadRotated(pos, size, origin, rot, &quad_pts_arena);
 
         const zcl::t_static_array<t_triangle, 2> triangles = {{
             {
@@ -33,10 +33,10 @@ namespace zgl::gfx {
 
         zcl::t_rect_i src_rect_to_use;
 
-        if (zcl::rects_check_equal(src_rect, {})) {
+        if (zcl::RectsCheckEqual(src_rect, {})) {
             src_rect_to_use = {0, 0, texture_size.x, texture_size.y};
         } else {
-            ZCL_ASSERT(src_rect.x >= 0 && src_rect.y >= 0 && zcl::rect_get_right(src_rect) <= texture_size.x && zcl::rect_get_bottom(src_rect) <= texture_size.y);
+            ZCL_ASSERT(src_rect.x >= 0 && src_rect.y >= 0 && zcl::RectGetRight(src_rect) <= texture_size.x && zcl::RectGetBottom(src_rect) <= texture_size.y);
             src_rect_to_use = src_rect;
         }
 
@@ -44,21 +44,21 @@ namespace zgl::gfx {
 
         zcl::t_static_array<zcl::t_v2, 4> quad_pts;
         zcl::t_arena quad_pts_arena = zcl::arena_create_wrapping(zcl::to_bytes(&quad_pts));
-        const zcl::t_poly_mut quad_poly = zcl::poly_create_quad_rotated(pos, zcl::v2_i_to_f(zcl::rect_get_size(src_rect_to_use)), origin, rot, &quad_pts_arena);
+        const zcl::t_poly_mut quad_poly = zcl::PolyCreateQuadRotated(pos, zcl::V2IToF(zcl::RectGetSize(src_rect_to_use)), origin, rot, &quad_pts_arena);
 
         const zcl::t_static_array<t_triangle, 2> triangles = {{
             {
                 .verts = {{
-                    {.pos = quad_poly.pts[0], .blend = zcl::k_color_white, .uv = zcl::rect_get_topleft(uv_rect)},
-                    {.pos = quad_poly.pts[1], .blend = zcl::k_color_white, .uv = zcl::rect_get_topright(uv_rect)},
-                    {.pos = quad_poly.pts[3], .blend = zcl::k_color_white, .uv = zcl::rect_get_bottomleft(uv_rect)},
+                    {.pos = quad_poly.pts[0], .blend = zcl::k_color_white, .uv = zcl::RectGetTopleft(uv_rect)},
+                    {.pos = quad_poly.pts[1], .blend = zcl::k_color_white, .uv = zcl::RectGetTopright(uv_rect)},
+                    {.pos = quad_poly.pts[3], .blend = zcl::k_color_white, .uv = zcl::RectGetBottomleft(uv_rect)},
                 }},
             },
             {
                 .verts = {{
-                    {.pos = quad_poly.pts[3], .blend = zcl::k_color_white, .uv = zcl::rect_get_bottomleft(uv_rect)},
-                    {.pos = quad_poly.pts[1], .blend = zcl::k_color_white, .uv = zcl::rect_get_topright(uv_rect)},
-                    {.pos = quad_poly.pts[2], .blend = zcl::k_color_white, .uv = zcl::rect_get_bottomright(uv_rect)},
+                    {.pos = quad_poly.pts[3], .blend = zcl::k_color_white, .uv = zcl::RectGetBottomleft(uv_rect)},
+                    {.pos = quad_poly.pts[1], .blend = zcl::k_color_white, .uv = zcl::RectGetTopright(uv_rect)},
+                    {.pos = quad_poly.pts[2], .blend = zcl::k_color_white, .uv = zcl::RectGetBottomright(uv_rect)},
                 }},
             },
         }};
@@ -189,7 +189,7 @@ namespace zgl::gfx {
                 }
             }
 
-            positions[chr_index] = pos + chr_pos_pen + zcl::v2_i_to_f(glyph_info->offs);
+            positions[chr_index] = pos + chr_pos_pen + zcl::V2IToF(glyph_info->offs);
             positions[chr_index].y += alignment_offs_y;
 
             chr_pos_pen.x += static_cast<zcl::t_f32>(glyph_info->adv);

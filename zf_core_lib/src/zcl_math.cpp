@@ -3,41 +3,41 @@
 #include <cmath>
 
 namespace zcl {
-    t_f32 v2_calc_mag(const t_v2 v) {
+    t_f32 CalcMag(const t_v2 v) {
         return sqrt((v.x * v.x) + (v.y * v.y));
     }
 
-    t_rect_f rects_calc_span(const t_array_mut<t_rect_f> rects) {
+    t_rect_f RectsCalcSpan(const t_array_mut<t_rect_f> rects) {
         ZCL_ASSERT(rects.len > 0);
 
-        t_f32 min_left = rect_get_left(rects[0]);
-        t_f32 min_top = rect_get_top(rects[0]);
-        t_f32 max_right = rect_get_right(rects[0]);
-        t_f32 max_bottom = rect_get_bottom(rects[0]);
+        t_f32 min_left = RectGetLeft(rects[0]);
+        t_f32 min_top = RectGetTop(rects[0]);
+        t_f32 max_right = RectGetRight(rects[0]);
+        t_f32 max_bottom = RectGetBottom(rects[0]);
 
         for (t_i32 i = 1; i < rects.len; i++) {
-            min_left = calc_min(rect_get_left(rects[i]), min_left);
-            min_top = calc_min(rect_get_top(rects[i]), min_top);
-            max_right = calc_max(rect_get_right(rects[i]), max_right);
-            max_bottom = calc_max(rect_get_bottom(rects[i]), max_bottom);
+            min_left = calc_min(RectGetLeft(rects[i]), min_left);
+            min_top = calc_min(RectGetTop(rects[i]), min_top);
+            max_right = calc_max(RectGetRight(rects[i]), max_right);
+            max_bottom = calc_max(RectGetBottom(rects[i]), max_bottom);
         }
 
-        return rect_create_f32(min_left, min_top, max_right - min_left, max_bottom - min_top);
+        return RectCreateF(min_left, min_top, max_right - min_left, max_bottom - min_top);
     }
 
-    t_rect_i rects_calc_span(const t_array_mut<t_rect_i> rects) {
+    t_rect_i RectsCalcSpan(const t_array_mut<t_rect_i> rects) {
         ZCL_ASSERT(rects.len > 0);
 
-        t_i32 min_left = rect_get_left(rects[0]);
-        t_i32 min_top = rect_get_top(rects[0]);
-        t_i32 max_right = rect_get_right(rects[0]);
-        t_i32 max_bottom = rect_get_bottom(rects[0]);
+        t_i32 min_left = RectGetLeft(rects[0]);
+        t_i32 min_top = RectGetTop(rects[0]);
+        t_i32 max_right = RectGetRight(rects[0]);
+        t_i32 max_bottom = RectGetBottom(rects[0]);
 
         for (t_i32 i = 1; i < rects.len; i++) {
-            min_left = calc_min(rect_get_left(rects[i]), min_left);
-            min_top = calc_min(rect_get_top(rects[i]), min_top);
-            max_right = calc_max(rect_get_right(rects[i]), max_right);
-            max_bottom = calc_max(rect_get_bottom(rects[i]), max_bottom);
+            min_left = calc_min(RectGetLeft(rects[i]), min_left);
+            min_top = calc_min(RectGetTop(rects[i]), min_top);
+            max_right = calc_max(RectGetRight(rects[i]), max_right);
+            max_bottom = calc_max(RectGetBottom(rects[i]), max_bottom);
         }
 
         return {min_left, min_top, max_right - min_left, max_bottom - min_top};
@@ -58,14 +58,14 @@ namespace zcl {
         t_f32 max;
     };
 
-    static t_proj_interval project_pts(const t_array_rdonly<t_v2> pts, const t_v2 edge) {
+    static t_proj_interval ProjPoints(const t_array_rdonly<t_v2> pts, const t_v2 edge) {
         t_proj_interval interval = {
             .min = k_f32_max,
             .max = -k_f32_max,
         };
 
         for (t_i32 i = 0; i < pts.len; ++i) {
-            const t_f32 dot = v2_calc_dot_prod(pts[i], edge);
+            const t_f32 dot = CalcDotProd(pts[i], edge);
 
             if (dot < interval.min) {
                 interval.min = dot;
@@ -79,15 +79,15 @@ namespace zcl {
         return interval;
     }
 
-    static t_b8 poly_check_separation(const t_poly_rdonly poly, const t_poly_rdonly other) {
+    static t_b8 PolyCheckSep(const t_poly_rdonly poly, const t_poly_rdonly other) {
         for (t_i32 i = 0; i < poly.pts.len; ++i) {
             const t_v2 a = poly.pts[i];
             const t_v2 b = poly.pts[(i + 1) % poly.pts.len];
 
             const t_v2 normal = {b.y - a.y, -(b.x - a.x)};
 
-            const t_proj_interval a_interval = project_pts(poly.pts, normal);
-            const t_proj_interval b_interval = project_pts(other.pts, normal);
+            const t_proj_interval a_interval = ProjPoints(poly.pts, normal);
+            const t_proj_interval b_interval = ProjPoints(other.pts, normal);
 
             if (a_interval.max <= b_interval.min || b_interval.max <= a_interval.min) {
                 return false;
@@ -97,12 +97,12 @@ namespace zcl {
         return true;
     }
 
-    t_poly_mut poly_create_quad(const t_v2 pos, const t_v2 size, const t_v2 origin, t_arena *const arena) {
+    t_poly_mut PolyCreateQuad(const t_v2 pos, const t_v2 size, const t_v2 origin, t_arena *const arena) {
         const t_poly_mut poly = {
             .pts = arena_push_array<t_v2>(arena, 4),
         };
 
-        const t_v2 pos_base = pos - v2_calc_compwise_prod(size, origin);
+        const t_v2 pos_base = pos - CalcCompwiseProd(size, origin);
 
         poly.pts[0] = pos_base;
         poly.pts[1] = pos_base + t_v2{size.x, 0.0f};
@@ -112,15 +112,15 @@ namespace zcl {
         return poly;
     }
 
-    t_poly_mut poly_create_quad_rotated(const t_v2 pos, const t_v2 size, const t_v2 origin, const t_f32 rot, t_arena *const arena) {
+    t_poly_mut PolyCreateQuadRotated(const t_v2 pos, const t_v2 size, const t_v2 origin, const t_f32 rot, t_arena *const arena) {
         const t_poly_mut poly = {
             .pts = arena_push_array<t_v2>(arena, 4),
         };
 
-        const t_v2 offs_left = calc_lengthdir(size.x * origin.x, rot - k_pi);
-        const t_v2 offs_up = calc_lengthdir(size.y * origin.y, rot - (k_pi * 0.5f));
-        const t_v2 offs_right = calc_lengthdir(size.x * (1.0f - origin.x), rot);
-        const t_v2 offs_down = calc_lengthdir(size.y * (1.0f - origin.y), rot + (k_pi * 0.5f));
+        const t_v2 offs_left = CalcLengthdir(size.x * origin.x, rot - k_pi);
+        const t_v2 offs_up = CalcLengthdir(size.y * origin.y, rot - (k_pi * 0.5f));
+        const t_v2 offs_right = CalcLengthdir(size.x * (1.0f - origin.x), rot);
+        const t_v2 offs_down = CalcLengthdir(size.y * (1.0f - origin.y), rot + (k_pi * 0.5f));
 
         poly.pts[0] = pos + offs_left + offs_up;
         poly.pts[1] = pos + offs_right + offs_up;
@@ -130,11 +130,7 @@ namespace zcl {
         return poly;
     }
 
-    t_b8 polys_check_inters(const t_poly_rdonly a, const t_poly_rdonly b) {
-        return poly_check_separation(a, b) && poly_check_separation(b, a);
-    }
-
-    t_b8 poly_check_inters_with_rect(const t_poly_rdonly poly, const t_rect_f rect) {
+    t_b8 PolyCheckIntersWithRect(const t_poly_rdonly poly, const t_rect_f rect) {
         const t_static_array<t_v2, 4> rect_poly_pts = {{
             {rect.x, rect.y},
             {rect.x + rect.width, rect.y},
@@ -142,10 +138,10 @@ namespace zcl {
             {rect.x, rect.y + rect.height},
         }};
 
-        return polys_check_inters(poly, {.pts = rect_poly_pts});
+        return PolysCheckInters(poly, {.pts = rect_poly_pts});
     }
 
-    t_rect_f poly_calc_span(const t_poly_rdonly poly) {
+    t_rect_f PolyCalcSpan(const t_poly_rdonly poly) {
         t_f32 min_left = poly.pts[0].x;
         t_f32 min_top = poly.pts[0].y;
         t_f32 max_right = poly.pts[0].x;
@@ -160,10 +156,14 @@ namespace zcl {
             max_bottom = calc_max(pt.y, max_bottom);
         }
 
-        return rect_create_f32(min_left, min_top, max_right - min_left, max_bottom - min_top);
+        return RectCreateF(min_left, min_top, max_right - min_left, max_bottom - min_top);
     }
 
-    t_f32 calc_dir_in_rads(const t_v2 a, const t_v2 b) {
+    t_b8 PolysCheckInters(const t_poly_rdonly a, const t_poly_rdonly b) {
+        return PolyCheckSep(a, b) && PolyCheckSep(b, a);
+    }
+
+    t_f32 CalcDirRads(const t_v2 a, const t_v2 b) {
         const t_f32 rise = b.y - a.y;
         const t_f32 run = b.x - a.x;
 
@@ -174,7 +174,7 @@ namespace zcl {
         return atan2(rise, run);
     }
 
-    t_v2 calc_lengthdir(const t_f32 len, const t_f32 dir) {
+    t_v2 CalcLengthdir(const t_f32 len, const t_f32 dir) {
         return t_v2{cos(dir), sin(dir)} * len;
     }
 }

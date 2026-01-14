@@ -109,7 +109,7 @@ namespace zcl {
             }
 
             glyph_info.atlas_index = atlas_index;
-            glyph_info.atlas_rect = rect_create_i32(atlas_pen + t_v2_i{k_glyph_padding, k_glyph_padding}, glyph_info.size);
+            glyph_info.atlas_rect = RectCreateI(atlas_pen + t_v2_i{k_glyph_padding, k_glyph_padding}, glyph_info.size);
             atlas_pen.x += glyph_info.size.x + (k_glyph_padding * 2);
 
             hash_map_put(&o_arrangement->code_pts_to_glyph_infos, code_pt, glyph_info);
@@ -185,8 +185,8 @@ namespace zcl {
 
             ZCL_DEFER({ stbtt_FreeBitmap(stb_bitmap, nullptr); });
 
-            for (t_i32 y = rect_get_top(atlas_rect); y < rect_get_bottom(atlas_rect); y++) {
-                for (t_i32 x = rect_get_left(atlas_rect); x < rect_get_right(atlas_rect); x++) {
+            for (t_i32 y = RectGetTop(atlas_rect); y < RectGetBottom(atlas_rect); y++) {
+                for (t_i32 x = RectGetLeft(atlas_rect); x < RectGetRight(atlas_rect); x++) {
                     const t_i32 px_index = (y * 4 * k_font_atlas_size.x) + (x * 4);
                     const t_i32 stb_bitmap_index = ((y - atlas_rect.y) * atlas_rect.width) + (x - atlas_rect.x);
                     (*atlas_rgba)[px_index + 3] = stb_bitmap[stb_bitmap_index];

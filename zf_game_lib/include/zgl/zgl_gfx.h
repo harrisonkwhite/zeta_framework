@@ -217,16 +217,16 @@ namespace zgl::gfx {
         const zcl::t_static_array<t_triangle, 2> triangles = {{
             {
                 .verts = {{
-                    {.pos = zcl::rect_get_topleft(rect), .blend = color_topleft, .uv = {0.0f, 0.0f}},
-                    {.pos = zcl::rect_get_topright(rect), .blend = color_topright, .uv = {1.0f, 0.0f}},
-                    {.pos = zcl::rect_get_bottomleft(rect), .blend = color_bottomleft, .uv = {1.0f, 1.0f}},
+                    {.pos = zcl::RectGetTopleft(rect), .blend = color_topleft, .uv = {0.0f, 0.0f}},
+                    {.pos = zcl::RectGetTopright(rect), .blend = color_topright, .uv = {1.0f, 0.0f}},
+                    {.pos = zcl::RectGetBottomleft(rect), .blend = color_bottomleft, .uv = {1.0f, 1.0f}},
                 }},
             },
             {
                 .verts = {{
-                    {.pos = zcl::rect_get_bottomleft(rect), .blend = color_bottomleft, .uv = {1.0f, 1.0f}},
-                    {.pos = zcl::rect_get_topright(rect), .blend = color_topright, .uv = {0.0f, 1.0f}},
-                    {.pos = zcl::rect_get_bottomright(rect), .blend = color_bottomright, .uv = {0.0f, 0.0f}},
+                    {.pos = zcl::RectGetBottomleft(rect), .blend = color_bottomleft, .uv = {1.0f, 1.0f}},
+                    {.pos = zcl::RectGetTopright(rect), .blend = color_topright, .uv = {0.0f, 1.0f}},
+                    {.pos = zcl::RectGetBottomright(rect), .blend = color_bottomright, .uv = {0.0f, 0.0f}},
                 }},
             },
         }};

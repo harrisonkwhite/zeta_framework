@@ -317,7 +317,7 @@ zcl::t_b8 pack_assets(const zcl::t_str_rdonly instrs_json_file_path) {
         }
     }
 
-    zcl::LogError(ZCL_STR_LITERAL("Asset packing completed!"));
+    zcl::Log(ZCL_STR_LITERAL("Asset packing completed!"));
 
     return true;
 }

@@ -274,7 +274,7 @@ namespace zgl::platform {
 
     void window_request_close() {
         ZCL_ASSERT(g_module_state.active);
-        zcl::LogError(ZCL_STR_LITERAL("Window close explicitly requested..."));
+        zcl::Log(ZCL_STR_LITERAL("Window close explicitly requested..."));
         return glfwSetWindowShouldClose(g_module_state.glfw_window, true);
     }
 
@@ -329,7 +329,7 @@ namespace zgl::platform {
         zcl::t_v2_i window_size;
         glfwGetWindowSize(window, &window_size.x, &window_size.y);
 
-        const auto window_rect = zcl::rect_create_i32(window_pos, window_size);
+        const auto window_rect = zcl::RectCreateI(window_pos, window_size);
 
         // Get the monitor containing the most amount of the window.
         zcl::t_f32 max_occupancy_perc = 0.0f;
@@ -354,7 +354,7 @@ namespace zgl::platform {
                 static_cast<zcl::t_i32>(static_cast<zcl::t_f32>(mode->height) / monitor_scale.y),
             };
 
-            const zcl::t_f32 occupancy_perc = zcl::calc_perc_of_occupance(window_rect, monitor_rect);
+            const zcl::t_f32 occupancy_perc = zcl::CalcPercOfOccupance(window_rect, monitor_rect);
 
             if (occupancy_perc > max_occupancy_perc) {
                 max_occupancy_perc = occupancy_perc;

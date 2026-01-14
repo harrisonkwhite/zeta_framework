@@ -73,10 +73,10 @@ namespace zcl {
         ZCL_ASSERT(amount >= 0.0f && amount <= 1.0f);
 
         return {
-            lerp(a.r, b.r, amount),
-            lerp(a.g, b.g, amount),
-            lerp(a.b, b.b, amount),
-            lerp(a.a, b.a, amount),
+            Lerp(a.r, b.r, amount),
+            Lerp(a.g, b.g, amount),
+            Lerp(a.b, b.b, amount),
+            Lerp(a.a, b.a, amount),
         };
     }
 
@@ -134,7 +134,7 @@ namespace zcl {
 
     constexpr t_rect_f texture_calc_uv_rect(const t_rect_i src_rect, const t_v2_i tex_size) {
         ZCL_ASSERT(tex_size.x > 0 && tex_size.y > 0);
-        ZCL_ASSERT(src_rect.x >= 0 && src_rect.y >= 0 && src_rect.width > 0 && src_rect.height > 0 && rect_get_right(src_rect) <= tex_size.x && rect_get_bottom(src_rect) <= tex_size.y);
+        ZCL_ASSERT(src_rect.x >= 0 && src_rect.y >= 0 && src_rect.width > 0 && src_rect.height > 0 && RectGetRight(src_rect) <= tex_size.x && RectGetBottom(src_rect) <= tex_size.y);
 
         return {
             static_cast<t_f32>(src_rect.x) / static_cast<t_f32>(tex_size.x),
