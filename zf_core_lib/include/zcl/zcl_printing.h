@@ -486,27 +486,6 @@ namespace zcl {
     }
 
     template <typename... tp_arg_types>
-    t_b8 LogErrorType(const t_str_rdonly type_name, const t_str_rdonly format, const tp_arg_types &...args) {
-        ZCL_ASSERT(!StrCheckEmpty(type_name));
-
-        t_file_stream std_err = FileStreamCreateStdError();
-
-        if (!PrintFormat(std_err, ZCL_STR_LITERAL("% Error: "), type_name)) {
-            return false;
-        }
-
-        if (!PrintFormat(std_err, format, args...)) {
-            return false;
-        }
-
-        if (!Print(std_err, ZCL_STR_LITERAL("\n"))) {
-            return false;
-        }
-
-        return true;
-    }
-
-    template <typename... tp_arg_types>
     t_b8 LogWarning(const t_str_rdonly format, const tp_arg_types &...args) {
         t_file_stream std_err = FileStreamCreateStdError();
 

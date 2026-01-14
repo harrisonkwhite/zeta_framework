@@ -114,6 +114,7 @@ namespace zcl {
     };
 
     inline t_byte_stream ByteStreamCreate(const t_array_mut<t_u8> bytes, const t_stream_mode mode, const t_i32 pos = 0) {
+        ZCL_ASSERT(pos >= 0 && pos <= bytes.len);
         return {.bytes = bytes, .byte_pos = pos, .mode = mode};
     }
 

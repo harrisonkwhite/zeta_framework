@@ -234,7 +234,7 @@ namespace zcl {
             *o_contents = arena_push_array<t_u8>(contents_arena, file_size);
         }
 
-        if (!stream_read_items_into_array(stream, *o_contents, file_size)) {
+        if (!StreamReadItemsIntoArray(stream, *o_contents, file_size)) {
             return false;
         }
 

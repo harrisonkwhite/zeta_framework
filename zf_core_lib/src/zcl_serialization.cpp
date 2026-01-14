@@ -115,7 +115,7 @@ namespace zcl {
         return true;
     }
 
-    t_b8 SerializeSound(const t_sound_data_rdonly snd_data, const t_stream_view stream) {
+    t_b8 SerializeSound(const t_stream_view stream, const t_sound_data_rdonly snd_data) {
         if (!StreamWriteItem(stream, snd_data.meta)) {
             return false;
         }

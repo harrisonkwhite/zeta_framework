@@ -2,7 +2,7 @@ Tomorrow:
 - Start on basic music streaming
 
 
-
+- String streams
 - Make sure references are used consistently and correctly.
 - Subnamespaces are kind of annoying for the user and don't add that much value I don't think.
 

@@ -35,7 +35,7 @@
     zcl::t_u8 byte_read;
     zcl::t_i32 byte_read_cnt = 0;
 
-    while (zcl::stream_read_item(input_file_stream, &byte_read)) {
+    while (zcl::StreamReadItem(input_file_stream, &byte_read)) {
         if (byte_read_cnt > 0) {
             zcl::Print(output_file_stream, ZCL_STR_LITERAL(", "));
         }

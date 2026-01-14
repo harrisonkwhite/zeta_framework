@@ -41,6 +41,7 @@ namespace zcl {
         FILE *file;
         t_stream_mode mode;
 
+        // @todo: Implicit cast here is dangerous! Consider the stdin functions.
         operator t_stream_view() {
             const auto read_func = [](const t_stream_view stream, const t_array_mut<t_u8> dest_bytes) {
                 ZCL_ASSERT(stream.mode == ek_stream_mode_read);
