@@ -102,9 +102,7 @@ constexpr zcl::t_static_array<t_asset_field, ekm_sound_field_cnt> k_sound_fields
 
     zcl::t_file_stream file_stream;
 
-    static_assert(false, "open the file recursively");
-
-    if (!zcl::FileOpen(out_file_path, zcl::ek_file_access_mode_write, temp_arena, &file_stream)) {
+    if (!zcl::FileOpenRecursive(out_file_path, zcl::ek_file_access_mode_write, temp_arena, &file_stream, nullptr)) {
         zcl::LogError(ZCL_STR_LITERAL("Failed to open texture output file \"%\" for writing!"), out_file_path);
         return false;
     }
@@ -150,7 +148,7 @@ constexpr zcl::t_static_array<t_asset_field, ekm_sound_field_cnt> k_sound_fields
 
     zcl::t_file_stream file_stream;
 
-    if (!zcl::FileOpen(out_file_path, zcl::ek_file_access_mode_write, temp_arena, &file_stream)) {
+    if (!zcl::FileOpenRecursive(out_file_path, zcl::ek_file_access_mode_write, temp_arena, &file_stream)) {
         zcl::LogError(ZCL_STR_LITERAL("Failed to open font output file \"%\" for writing!"), out_file_path);
         return false;
     }
@@ -186,7 +184,7 @@ constexpr zcl::t_static_array<t_asset_field, ekm_sound_field_cnt> k_sound_fields
 
     zcl::t_file_stream shader_file_stream;
 
-    if (!zcl::FileOpen(out_file_path, zcl::ek_file_access_mode_write, temp_arena, &shader_file_stream)) {
+    if (!zcl::FileOpenRecursive(out_file_path, zcl::ek_file_access_mode_write, temp_arena, &shader_file_stream)) {
         zcl::LogError(ZCL_STR_LITERAL("Failed to open shader output file \"%\" for writing!"), out_file_path);
         return false;
     }
@@ -211,7 +209,7 @@ constexpr zcl::t_static_array<t_asset_field, ekm_sound_field_cnt> k_sound_fields
 
     zcl::t_file_stream file_stream;
 
-    if (!zcl::FileOpen(out_file_path, zcl::ek_file_access_mode_write, temp_arena, &file_stream)) {
+    if (!zcl::FileOpenRecursive(out_file_path, zcl::ek_file_access_mode_write, temp_arena, &file_stream)) {
         zcl::LogError(ZCL_STR_LITERAL("Failed to open sound output file \"%\" for writing!"), out_file_path);
         return false;
     }
@@ -398,7 +396,7 @@ zcl::t_b8 PackAssets(const zcl::t_str_rdonly instrs_json_file_path) {
             }
             }
 
-            zcl::Log(ZCL_STR_LITERAL("Packed successfully!"));
+            zcl::Log(ZCL_STR_LITERAL("Packed successfully!\n"));
 
             {
                 zcl::t_file_stream std_out = zcl::FileStreamCreateStdOut();

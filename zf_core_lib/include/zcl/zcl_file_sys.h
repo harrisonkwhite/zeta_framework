@@ -84,6 +84,7 @@ namespace zcl {
     };
 
     [[nodiscard]] t_b8 FileOpen(const t_str_rdonly file_path, const t_file_access_mode mode, t_arena *const temp_arena, t_file_stream *const o_stream);
+    [[nodiscard]] t_b8 FileOpenRecursive(const t_str_rdonly path, const t_file_access_mode mode, t_arena *const temp_arena, t_file_stream *const o_stream, t_directory_create_result *const o_dir_create_res = nullptr);
 
     void FileClose(t_file_stream *const stream);
 

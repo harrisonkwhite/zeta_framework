@@ -66,7 +66,7 @@ namespace zgl::gfx {
         frame_submit_triangles(context, zcl::array_to_nonstatic(&triangles), texture);
     }
 
-    t_font font_create_from_raw(const zcl::t_str_rdonly file_path, const zcl::t_i32 height, zcl::t_code_point_bitset *const code_pts, zcl::t_arena *const temp_arena, t_resource_group *const resource_group) {
+    t_font font_create_from_raw(const zcl::t_str_rdonly file_path, const zcl::t_i32 height, zcl::t_code_point_bitset *const code_pts, t_resource_group *const resource_group, zcl::t_arena *const temp_arena) {
         zcl::t_font_arrangement arrangement;
         zcl::t_array_mut<zcl::t_font_atlas_rgba> atlas_rgbas;
 
@@ -86,7 +86,7 @@ namespace zgl::gfx {
         };
     }
 
-    t_font font_create_from_packed(const zcl::t_str_rdonly file_path, zcl::t_arena *const temp_arena, t_resource_group *const resource_group) {
+    t_font font_create_from_packed(const zcl::t_str_rdonly file_path, t_resource_group *const resource_group, zcl::t_arena *const temp_arena) {
         zcl::t_font_arrangement arrangement;
         zcl::t_array_mut<zcl::t_font_atlas_rgba> atlas_rgbas;
 
@@ -98,7 +98,7 @@ namespace zgl::gfx {
             }
 
 
-            if (!zcl::DeserializeFont(file_stream, temp_arena, temp_arena, temp_arena, &arrangement, &atlas_rgbas)) {
+            if (!zcl::DeserializeFont(file_stream, resource_group->arena, temp_arena, temp_arena, &arrangement, &atlas_rgbas)) {
                 ZCL_FATAL();
             }
 

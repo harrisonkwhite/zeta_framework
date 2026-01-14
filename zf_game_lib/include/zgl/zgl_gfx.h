@@ -85,8 +85,8 @@ namespace zgl::gfx {
     void resource_group_destroy(t_resource_group *const group);
 
     t_resource *texture_create(const zcl::t_texture_data_rdonly texture_data, t_resource_group *const group);
-    t_resource *texture_create_from_raw(const zcl::t_str_rdonly file_path, zcl::t_arena *const temp_arena, t_resource_group *const group);
-    t_resource *texture_create_from_packed(const zcl::t_str_rdonly file_path, zcl::t_arena *const temp_arena, t_resource_group *const group);
+    t_resource *texture_create_from_raw(const zcl::t_str_rdonly file_path, t_resource_group *const group, zcl::t_arena *const temp_arena);
+    t_resource *texture_create_from_packed(const zcl::t_str_rdonly file_path, t_resource_group *const group, zcl::t_arena *const temp_arena);
 
     t_resource *texture_create_target(const zcl::t_v2_i size, t_resource_group *const group);
 

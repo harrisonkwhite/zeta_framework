@@ -234,7 +234,7 @@ namespace zgl::gfx {
         return resource;
     }
 
-    t_resource *texture_create_from_raw(const zcl::t_str_rdonly file_path, zcl::t_arena *const temp_arena, t_resource_group *const group) {
+    t_resource *texture_create_from_raw(const zcl::t_str_rdonly file_path, t_resource_group *const group, zcl::t_arena *const temp_arena) {
         ZCL_ASSERT(g_module_state.phase == ek_module_phase_active_but_not_midframe);
 
         zcl::t_texture_data_mut texture_data;
@@ -246,7 +246,7 @@ namespace zgl::gfx {
         return texture_create(texture_data, group);
     }
 
-    t_resource *texture_create_from_packed(const zcl::t_str_rdonly file_path, zcl::t_arena *const temp_arena, t_resource_group *const group) {
+    t_resource *texture_create_from_packed(const zcl::t_str_rdonly file_path, t_resource_group *const group, zcl::t_arena *const temp_arena) {
         ZCL_ASSERT(g_module_state.phase == ek_module_phase_active_but_not_midframe);
 
         zcl::t_file_stream file_stream;

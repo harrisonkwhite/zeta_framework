@@ -149,23 +149,15 @@ namespace zcl {
     }
 
     t_b8 FileCreateRecursive(const t_str_rdonly path, t_arena *const temp_arena, t_directory_create_result *const o_dir_create_res) {
-        if (o_dir_create_res) {
-            *o_dir_create_res = ek_directory_create_result_success;
+        t_file_stream stream;
+
+        if (!FileOpenRecursive(path, ek_file_access_mode_write, temp_arena, &stream, o_dir_create_res)) {
+            return false;
         }
 
-        // Get the substring containing all directories and create them.
-        ZCL_STR_WALK_REVERSE (path, step) {
-            if (step.code_pt == '/' || step.code_pt == '\\') {
-                if (!DirectoryCreateRecursive({array_slice(path.bytes, 0, step.byte_index)}, temp_arena, o_dir_create_res)) {
-                    return false;
-                }
+        FileClose(&stream);
 
-                break;
-            }
-        }
-
-        // Now that directories are created, create the file.
-        return FileCreate(path, temp_arena);
+        return true;
     }
 
     t_b8 FileOpen(const t_str_rdonly path, const t_file_access_mode mode, t_arena *const temp_arena, t_file_stream *const o_stream) {
@@ -201,6 +193,26 @@ namespace zcl {
         *o_stream = FileStreamCreate(file, stream_mode);
 
         return true;
+    }
+
+    t_b8 FileOpenRecursive(const t_str_rdonly path, const t_file_access_mode mode, t_arena *const temp_arena, t_file_stream *const o_stream, t_directory_create_result *const o_dir_create_res) {
+        if (o_dir_create_res) {
+            *o_dir_create_res = ek_directory_create_result_success;
+        }
+
+        // Get the substring containing all directories and create them.
+        ZCL_STR_WALK_REVERSE (path, step) {
+            if (step.code_pt == '/' || step.code_pt == '\\') {
+                if (!DirectoryCreateRecursive({array_slice(path.bytes, 0, step.byte_index)}, temp_arena, o_dir_create_res)) {
+                    return false;
+                }
+
+                break;
+            }
+        }
+
+        // Now that directories are created, open the file.
+        return FileOpen(path, mode, temp_arena, o_stream);
     }
 
     void FileClose(t_file_stream *const stream) {
