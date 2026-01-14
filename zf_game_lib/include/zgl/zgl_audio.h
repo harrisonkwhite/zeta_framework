@@ -6,22 +6,18 @@ namespace zgl::audio {
     void ModuleStartup();
     void ModuleShutdown();
 
-    struct t_sound_type;
+    struct t_sound_type_group;
 
-    struct t_sound_type_group {
-        zcl::t_arena arena;
-        t_sound_type *head;
-        t_sound_type *tail;
-    };
-
-    inline t_sound_type_group SoundTypeGroupCreate() {
-        return {.arena = zcl::ArenaCreateBlockBased()};
-    }
-
+    t_sound_type_group *SoundTypeGroupCreate(zcl::t_arena *const arena);
     void SoundTypeGroupDestroy(t_sound_type_group *const group);
+
+    struct t_sound_type;
 
     t_sound_type *SoundTypeCreateFromRaw(const zcl::t_str_rdonly file_path, t_sound_type_group *const group, zcl::t_arena *const temp_arena);
     t_sound_type *SoundTypeCreateFromPacked(const zcl::t_str_rdonly file_path, t_sound_type_group *const group, zcl::t_arena *const temp_arena);
+
+    // @todo
+    t_sound_type *SoundTypeCreateStreamable(const zcl::t_str_rdonly file_path, t_sound_type_group *const group, zcl::t_arena *const temp_arena);
 
     struct t_sound_id {
         zcl::t_i32 index;

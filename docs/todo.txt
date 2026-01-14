@@ -2,6 +2,7 @@ Tomorrow:
 - Start on basic music streaming
 
 
+- Some kind of sound group system like what's in gamemaker, so groups of sounds can share the same volume for instance
 - String streams
 - Make sure references are used consistently and correctly.
 - Subnamespaces are kind of annoying for the user and don't add that much value I don't think.

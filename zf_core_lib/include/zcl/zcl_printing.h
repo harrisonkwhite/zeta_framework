@@ -408,7 +408,7 @@ namespace zcl {
     // Returns true iff the operation was successful.
     template <typename tp_arg_type, typename... tp_arg_types_leftover>
     t_b8 PrintFormat(const t_stream_view stream, const t_str_rdonly format, const tp_arg_type &arg, const tp_arg_types_leftover &...args_leftover) {
-        static_assert(!c_c_str<tp_arg_type>, "C-strings are prohibited for default formatting as a form of error prevention.");
+        static_assert(!c_c_str<tp_arg_type>, "C-strings are prohibited from default formatting for error prevention.");
 
         ZCL_ASSERT(PrintFormatCountSpecs(format) == 1 + sizeof...(args_leftover));
 

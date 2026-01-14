@@ -3,9 +3,20 @@
 #include <miniaudio.h>
 
 namespace zgl::audio {
+    struct t_sound_type_group {
+        zcl::t_arena *arena;
+
+        t_sound_type *head;
+        t_sound_type *tail;
+    };
+
     struct t_sound_type {
         zcl::t_b8 valid;
-        zcl::t_sound_data_rdonly snd_data;
+
+        zcl::t_b8 stream;
+        zcl::t_sound_data_rdonly nonstream_snd_data;
+        zcl::t_str_rdonly stream_snd_file_path;
+
         t_sound_type *next;
     };
 
@@ -23,6 +34,8 @@ namespace zgl::audio {
             zcl::t_static_bitset<g_sound_inst_limit> activity;
             zcl::t_static_array<zcl::t_i32, g_sound_inst_limit> versions;
         } snd_insts;
+
+        ma_sound ma_snd_music;
     } g_module_state;
 
     void ModuleStartup() {
@@ -50,6 +63,13 @@ namespace zgl::audio {
         g_module_state = {};
     }
 
+    t_sound_type_group *SoundTypeGroupCreate(zcl::t_arena *const arena) {
+        const auto result = zcl::ArenaPushItem<t_sound_type_group>(arena);
+        result->arena = arena;
+
+        return result;
+    }
+
     void SoundTypeGroupDestroy(t_sound_type_group *const group) {
         ZCL_ASSERT(g_module_state.active);
 
@@ -67,14 +87,12 @@ namespace zgl::audio {
             snd_type = snd_type_next;
         }
 
-        zcl::ArenaDestroy(&group->arena);
         *group = {};
     }
 
-    static t_sound_type *SoundTypeGroupAdd(t_sound_type_group *const group, const zcl::t_sound_data_rdonly snd_data) {
-        const auto result = zcl::ArenaPushItem<t_sound_type>(&group->arena);
+    static t_sound_type *SoundTypeGroupAdd(t_sound_type_group *const group) {
+        const auto result = zcl::ArenaPushItem<t_sound_type>(group->arena);
         result->valid = true;
-        result->snd_data = snd_data;
 
         if (!group->head) {
             group->head = result;
@@ -92,11 +110,15 @@ namespace zgl::audio {
 
         zcl::t_sound_data_mut snd_data;
 
-        if (!zcl::SoundLoadFromRaw(file_path, &group->arena, temp_arena, &snd_data)) {
+        if (!zcl::SoundLoadFromRaw(file_path, group->arena, temp_arena, &snd_data)) {
             ZCL_FATAL();
         }
 
-        return SoundTypeGroupAdd(group, snd_data);
+        t_sound_type *const result = SoundTypeGroupAdd(group);
+        result->stream = false;
+        result->nonstream_snd_data = snd_data;
+
+        return result;
     }
 
     t_sound_type *SoundTypeCreateFromPacked(const zcl::t_str_rdonly file_path, t_sound_type_group *const group, zcl::t_arena *const temp_arena) {
@@ -110,13 +132,27 @@ namespace zgl::audio {
 
         zcl::t_sound_data_mut snd_data;
 
-        if (!zcl::DeserializeSound(file_stream, &group->arena, &snd_data)) {
+        if (!zcl::DeserializeSound(file_stream, group->arena, &snd_data)) {
             ZCL_FATAL();
         }
 
         zcl::FileClose(&file_stream);
 
-        return SoundTypeGroupAdd(group, snd_data);
+        t_sound_type *const result = SoundTypeGroupAdd(group);
+        result->stream = false;
+        result->nonstream_snd_data = snd_data;
+
+        return result;
+    }
+
+    t_sound_type *SoundTypeCreateStreamable(const zcl::t_str_rdonly file_path, t_sound_type_group *const group, zcl::t_arena *const temp_arena) {
+        ZCL_ASSERT(g_module_state.active);
+
+        t_sound_type *const result = SoundTypeGroupAdd(group);
+        result->stream = true;
+        result->stream_snd_file_path = file_path;
+
+        return result;
     }
 
     zcl::t_b8 SoundPlayAndGetID(const t_sound_type *const type, t_sound_id *const o_id, const zcl::t_f32 vol, const zcl::t_f32 pan, const zcl::t_f32 pitch, const zcl::t_b8 loop) {
@@ -133,19 +169,26 @@ namespace zgl::audio {
             return false;
         }
 
-        ma_sound *const ma_snd = &g_module_state.snd_insts.ma_snds[index];
-        ma_audio_buffer_ref *const ma_buf_ref = &g_module_state.snd_insts.ma_buf_refs[index];
-
         g_module_state.snd_insts.types[index] = type;
 
-        if (ma_audio_buffer_ref_init(ma_format_f32, static_cast<ma_uint32>(type->snd_data.meta.channel_cnt), type->snd_data.pcm.raw, static_cast<ma_uint64>(type->snd_data.meta.frame_cnt), ma_buf_ref) != MA_SUCCESS) {
-            ZCL_FATAL();
-        }
+        ma_sound *const ma_snd = &g_module_state.snd_insts.ma_snds[index];
 
-        ma_buf_ref->sampleRate = static_cast<ma_uint32>(type->snd_data.meta.sample_rate);
+        if (!type->stream) {
+            ma_audio_buffer_ref *const ma_buf_ref = &g_module_state.snd_insts.ma_buf_refs[index];
 
-        if (ma_sound_init_from_data_source(&g_module_state.ma_eng, ma_buf_ref, 0, nullptr, ma_snd) != MA_SUCCESS) {
-            ZCL_FATAL();
+            if (ma_audio_buffer_ref_init(ma_format_f32, static_cast<ma_uint32>(type->nonstream_snd_data.meta.channel_cnt), type->nonstream_snd_data.pcm.raw, static_cast<ma_uint64>(type->nonstream_snd_data.meta.frame_cnt), ma_buf_ref) != MA_SUCCESS) {
+                ZCL_FATAL();
+            }
+
+            ma_buf_ref->sampleRate = static_cast<ma_uint32>(type->nonstream_snd_data.meta.sample_rate);
+
+            if (ma_sound_init_from_data_source(&g_module_state.ma_eng, ma_buf_ref, 0, nullptr, ma_snd) != MA_SUCCESS) {
+                ZCL_FATAL();
+            }
+        } else {
+            if (ma_sound_init_from_file(&g_module_state.ma_eng, "C:/code/kaozeth/music.mp3", MA_SOUND_FLAG_STREAM, nullptr, nullptr, &g_module_state.ma_snd_music) != MA_SUCCESS) {
+                ZCL_FATAL();
+            }
         }
 
         ma_sound_set_volume(ma_snd, vol);
