@@ -129,9 +129,6 @@ namespace zcl {
 
     [[nodiscard]] t_b8 TextureLoadFromRaw(const t_str_rdonly file_path, t_arena *const texture_data_arena, t_arena *const temp_arena, t_texture_data_mut *const o_texture_data);
 
-    [[nodiscard]] t_b8 TexturePack(const t_str_rdonly file_path, const t_texture_data_mut texture_data, t_arena *const temp_arena);
-    [[nodiscard]] t_b8 TextureUnpack(const t_str_rdonly file_path, t_arena *const texture_data_arena, t_arena *const temp_arena, t_texture_data_mut *const o_texture_data);
-
     constexpr t_rect_f TextureCalcUVRect(const t_rect_i src_rect, const t_v2_i texture_size) {
         ZCL_ASSERT(texture_size.x > 0 && texture_size.y > 0);
         ZCL_ASSERT(src_rect.x >= 0 && src_rect.y >= 0 && src_rect.width > 0 && src_rect.height > 0 && RectGetRight(src_rect) <= texture_size.x && RectGetBottom(src_rect) <= texture_size.y);
@@ -177,19 +174,22 @@ namespace zcl {
         t_hash_map<t_font_code_point_pair, t_i32> code_pt_pairs_to_kernings;
     };
 
+    constexpr t_hash_func<t_code_point> k_font_code_point_hash_func =
+        [](const t_code_point &code_pt) {
+            return static_cast<t_i32>(code_pt);
+        };
+
+    constexpr t_hash_func<t_font_code_point_pair> k_font_code_point_pair_hash_func =
+        [](const t_font_code_point_pair &pair) {
+            return 0; // @todo: Proper hash function!
+        };
+
+    constexpr t_comparator_bin<t_font_code_point_pair> k_font_code_point_pair_comparator =
+        [](const t_font_code_point_pair &pa, const t_font_code_point_pair &pb) {
+            return pa.a == pb.a && pa.b == pb.b;
+        };
+
     [[nodiscard]] t_b8 FontLoadFromRaw(const t_str_rdonly file_path, const t_i32 height, t_code_point_bitset *const code_pts, t_arena *const arrangement_arena, t_arena *const atlas_rgbas_arena, t_arena *const temp_arena, t_font_arrangement *const o_arrangement, t_array_mut<t_font_atlas_rgba> *const o_atlas_rgbas);
-
-    [[nodiscard]] t_b8 FontPack(const t_str_rdonly file_path, const t_font_arrangement &arrangement, const t_array_rdonly<t_font_atlas_rgba> atlas_rgbas, t_arena *const temp_arena);
-    [[nodiscard]] t_b8 FontUnpack(const t_str_rdonly file_path, t_arena *const arrangement_arena, t_arena *const atlas_rgbas_arena, t_arena *const temp_arena, t_font_arrangement *const o_arrangement, t_array_mut<t_font_atlas_rgba> *const o_atlas_rgbas);
-
-    // ============================================================
-
-
-    // ============================================================
-    // @section: Shaders
-
-    [[nodiscard]] t_b8 ShaderPack(const t_str_rdonly file_path, const t_array_rdonly<t_u8> compiled_shader_bin, t_arena *const temp_arena);
-    [[nodiscard]] t_b8 ShaderUnpack(const t_str_rdonly file_path, t_arena *const shader_bin_arena, t_arena *const temp_arena, t_array_mut<t_u8> *const o_shader_bin);
 
     // ============================================================
 }

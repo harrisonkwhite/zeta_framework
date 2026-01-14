@@ -1,23 +1,30 @@
 #include <zcl/zcl_gfx.h>
 
 #include <zcl/zcl_file_sys.h>
+#include <stb_image.h>
 #include <stb_truetype.h>
 
 namespace zcl {
-    constexpr t_hash_func<t_code_point> k_code_pt_hash_func =
-        [](const t_code_point &code_pt) {
-            return static_cast<t_i32>(code_pt);
-        };
+    t_b8 TextureLoadFromRaw(const t_str_rdonly file_path, t_arena *const texture_data_arena, t_arena *const temp_arena, t_texture_data_mut *const o_texture_data) {
+        const t_str_rdonly file_path_terminated = StrCloneButAddTerminator(file_path, temp_arena);
 
-    constexpr t_hash_func<t_font_code_point_pair> k_code_pt_pair_hash_func =
-        [](const t_font_code_point_pair &pair) {
-            return 0; // @todo: Proper hash function!
-        };
+        t_v2_i size_in_pxs;
+        t_u8 *const stb_px_data = stbi_load(StrToCStr(file_path_terminated), &size_in_pxs.x, &size_in_pxs.y, nullptr, 4);
 
-    constexpr t_comparator_bin<t_font_code_point_pair> k_code_pt_pair_comparator =
-        [](const t_font_code_point_pair &pa, const t_font_code_point_pair &pb) {
-            return pa.a == pb.a && pa.b == pb.b;
-        };
+        if (!stb_px_data) {
+            return false;
+        }
+
+        ZCL_DEFER({ stbi_image_free(stb_px_data); });
+
+        const t_array_rdonly<t_u8> stb_px_data_arr = {stb_px_data, 4 * size_in_pxs.x * size_in_pxs.y};
+        const auto px_data = arena_push_array<t_u8>(texture_data_arena, 4 * size_in_pxs.x * size_in_pxs.y);
+        array_copy(stb_px_data_arr, px_data);
+
+        *o_texture_data = {size_in_pxs, px_data};
+
+        return true;
+    }
 
     t_b8 FontLoadFromRaw(const t_str_rdonly file_path, const t_i32 height, t_code_point_bitset *const code_pts, t_arena *const arrangement_arena, t_arena *const atlas_rgbas_arena, t_arena *const temp_arena, t_font_arrangement *const o_arrangement, t_array_mut<t_font_atlas_rgba> *const o_atlas_rgbas) {
         ZCL_ASSERT(height > 0);
@@ -71,7 +78,7 @@ namespace zcl {
         //
         // Glyph Info
         //
-        o_arrangement->code_pts_to_glyph_infos = HashMapCreate<t_code_point, t_font_glyph_info>(k_code_pt_hash_func, arrangement_arena, code_pt_cnt);
+        o_arrangement->code_pts_to_glyph_infos = HashMapCreate<t_code_point, t_font_glyph_info>(k_font_code_point_hash_func, arrangement_arena, code_pt_cnt);
 
         t_i32 atlas_index = 0;
         t_v2_i atlas_pen = {};
@@ -123,7 +130,7 @@ namespace zcl {
 
         // If there were any kernings to store, set up the hash map and go through again and store them.
         o_arrangement->has_kernings = true;
-        o_arrangement->code_pt_pairs_to_kernings = HashMapCreate<t_font_code_point_pair, t_i32>(k_code_pt_pair_hash_func, arrangement_arena, k_hash_map_cap_default, k_code_pt_pair_comparator);
+        o_arrangement->code_pt_pairs_to_kernings = HashMapCreate<t_font_code_point_pair, t_i32>(k_font_code_point_pair_hash_func, arrangement_arena, k_hash_map_cap_default, k_font_code_point_pair_comparator);
 
         ZCL_BITSET_WALK_ALL_SET (*code_pts, i) {
             ZCL_BITSET_WALK_ALL_SET (*code_pts, j) {
@@ -192,66 +199,6 @@ namespace zcl {
                     (*atlas_rgba)[px_index + 3] = stb_bitmap[stb_bitmap_index];
                 }
             }
-        }
-
-        return true;
-    }
-
-    t_b8 FontPack(const t_str_rdonly file_path, const t_font_arrangement &arrangement, const t_array_rdonly<t_font_atlas_rgba> atlas_rgbas, t_arena *const temp_arena) {
-        if (!FileCreateRecursive(file_path, temp_arena)) {
-            return false;
-        }
-
-        t_file_stream fs;
-
-        if (!FileOpen(file_path, ek_file_access_mode_write, temp_arena, &fs)) {
-            return false;
-        }
-
-        ZCL_DEFER({ FileClose(&fs); });
-
-        if (!stream_write_item(fs, arrangement.line_height)) {
-            return false;
-        }
-
-        if (!hash_map_serialize(&arrangement.code_pts_to_glyph_infos, fs, temp_arena)) {
-            return false;
-        }
-
-        if (!hash_map_serialize(&arrangement.code_pt_pairs_to_kernings, fs, temp_arena)) {
-            return false;
-        }
-
-        if (!serialize_array(fs, atlas_rgbas)) {
-            return false;
-        }
-
-        return true;
-    }
-
-    t_b8 FontUnpack(const t_str_rdonly file_path, t_arena *const arrangement_arena, t_arena *const atlas_rgbas_arena, t_arena *const temp_arena, t_font_arrangement *const o_arrangement, t_array_mut<t_font_atlas_rgba> *const o_atlas_rgbas) {
-        t_file_stream fs;
-
-        if (!FileOpen(file_path, ek_file_access_mode_read, temp_arena, &fs)) {
-            return false;
-        }
-
-        ZCL_DEFER({ FileClose(&fs); });
-
-        if (!stream_read_item(fs, &o_arrangement->line_height)) {
-            return false;
-        }
-
-        if (!hash_map_deserialize(fs, arrangement_arena, k_code_pt_hash_func, temp_arena, &o_arrangement->code_pts_to_glyph_infos)) {
-            return false;
-        }
-
-        if (!hash_map_deserialize(fs, arrangement_arena, k_code_pt_pair_hash_func, temp_arena, &o_arrangement->code_pt_pairs_to_kernings, k_code_pt_pair_comparator)) {
-            return false;
-        }
-
-        if (!deserialize_array(fs, atlas_rgbas_arena, o_atlas_rgbas)) {
-            return false;
         }
 
         return true;

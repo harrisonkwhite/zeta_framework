@@ -1,18 +1,18 @@
 #include <zcl/zcl_printing.h>
 
 namespace zcl {
-    t_b8 PrintType(const t_stream stream, const t_format_bool format) {
+    t_b8 PrintType(const t_stream_view stream, const t_format_bool format) {
         const t_str_rdonly str_true = ZCL_STR_LITERAL("true");
         const t_str_rdonly str_false = ZCL_STR_LITERAL("false");
 
         return Print(stream, format.value ? str_true : str_false);
     }
 
-    t_b8 PrintType(const t_stream stream, const t_format_str format) {
+    t_b8 PrintType(const t_stream_view stream, const t_format_str format) {
         return Print(stream, format.value);
     }
 
-    t_b8 PrintType(const t_stream stream, const t_format_code_point format) {
+    t_b8 PrintType(const t_stream_view stream, const t_format_code_point format) {
         t_static_array<t_u8, 4> code_pt_bytes;
         t_i32 code_pt_byte_cnt;
         CodePointToUTF8Bytes(format.value, &code_pt_bytes, &code_pt_byte_cnt);
@@ -22,7 +22,7 @@ namespace zcl {
         return Print(stream, code_pt_str);
     }
 
-    t_b8 PrintType(const t_stream stream, const t_format_v2 format) {
+    t_b8 PrintType(const t_stream_view stream, const t_format_v2 format) {
         return Print(stream, ZCL_STR_LITERAL("("))
             && PrintType(stream, FormatFloat(format.value.x, format.trim_trailing_zeros))
             && Print(stream, ZCL_STR_LITERAL(", "))
@@ -30,7 +30,7 @@ namespace zcl {
             && Print(stream, ZCL_STR_LITERAL(")"));
     }
 
-    t_b8 PrintType(const t_stream stream, const t_format_v2_i format) {
+    t_b8 PrintType(const t_stream_view stream, const t_format_v2_i format) {
         return Print(stream, ZCL_STR_LITERAL("("))
             && PrintType(stream, FormatInt(format.value.x))
             && Print(stream, ZCL_STR_LITERAL(", "))
@@ -38,7 +38,7 @@ namespace zcl {
             && Print(stream, ZCL_STR_LITERAL(")"));
     }
 
-    t_b8 PrintType(const t_stream stream, const t_format_bitset format) {
+    t_b8 PrintType(const t_stream_view stream, const t_format_bitset format) {
         const auto print_bit = [&](const t_i32 bit_index) {
             const t_str_rdonly str = BitsetCheckSet(format.value, bit_index) ? ZCL_STR_LITERAL("1") : ZCL_STR_LITERAL("0");
             return Print(stream, str);

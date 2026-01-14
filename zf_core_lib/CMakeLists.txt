@@ -5,12 +5,10 @@ add_library(zf_core_lib STATIC
     src/zcl_audio.cpp
     src/zcl_math.cpp
     src/zcl_strs.cpp
-    src/gfx/zcl_gfx_textures.cpp
-    src/gfx/zcl_gfx_fonts.cpp
-    src/gfx/zcl_gfx_shaders.cpp
+    src/zcl_gfx.cpp
     src/zcl_file_sys.cpp
     src/zcl_printing.cpp
-    src/zcl_streams.cpp
+    src/zcl_serialization.cpp
     src/zcl_rand.cpp
     ../external/stb_image/src/stb_image.c
     ../external/stb_truetype/src/stb_truetype.c
@@ -26,6 +24,7 @@ add_library(zf_core_lib STATIC
     include/zcl/zcl_hash_maps.h
     include/zcl/zcl_math.h
     include/zcl/zcl_streams.h
+    include/zcl/zcl_serialization.h
     include/zcl/zcl_printing.h
     include/zcl/zcl_file_sys.h
     include/zcl/zcl_algos.h

@@ -31,6 +31,6 @@ namespace zcl {
     [[nodiscard]] t_b8 SoundPack(const t_str_rdonly file_path, const t_sound_data_rdonly snd_data, t_arena *const temp_arena);
     [[nodiscard]] t_b8 SoundUnpack(const t_str_rdonly file_path, t_arena *const snd_data_arena, t_arena *const temp_arena, t_sound_data_mut *const o_snd_data);
 
-    [[nodiscard]] t_b8 SoundSerialize(const t_sound_data_rdonly snd_data, const t_stream stream);
-    [[nodiscard]] t_b8 SoundDeserialize(const t_stream stream, t_arena *const snd_data_arena, t_sound_data_mut *const o_snd_data);
+    [[nodiscard]] t_b8 SoundSerialize(const t_sound_data_rdonly snd_data, const t_stream_view stream);
+    [[nodiscard]] t_b8 SoundDeserialize(const t_stream_view stream, t_arena *const snd_data_arena, t_sound_data_mut *const o_snd_data);
 }

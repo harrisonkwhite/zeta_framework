@@ -75,7 +75,7 @@ namespace zcl {
         return true;
     }
 
-    t_b8 SoundSerialize(const t_sound_data_rdonly snd_data, const t_stream stream) {
+    t_b8 SoundSerialize(const t_sound_data_rdonly snd_data, const t_stream_view stream) {
         if (!stream_write_item(stream, snd_data.meta)) {
             return false;
         }
@@ -87,7 +87,7 @@ namespace zcl {
         return true;
     }
 
-    t_b8 SoundDeserialize(const t_stream stream, t_arena *const snd_data_arena, t_sound_data_mut *const o_snd_data) {
+    t_b8 SoundDeserialize(const t_stream_view stream, t_arena *const snd_data_arena, t_sound_data_mut *const o_snd_data) {
         if (!stream_read_item(stream, &o_snd_data->meta)) {
             return false;
         }
