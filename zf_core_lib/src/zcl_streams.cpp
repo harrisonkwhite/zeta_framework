@@ -1,4 +1,4 @@
-#include <zcl/io/zcl_streams.h>
+#include <zcl/zcl_streams.h>
 
 namespace zcl {
     t_b8 bitset_serialize(const t_stream stream, const t_bitset_rdonly bs) {

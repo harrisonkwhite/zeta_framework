@@ -1,7 +1,7 @@
 #pragma once
 
 #include <zcl/zcl_strs.h>
-#include <zcl/io/zcl_streams.h>
+#include <zcl/zcl_streams.h>
 
 namespace zcl {
     struct t_sound_meta {

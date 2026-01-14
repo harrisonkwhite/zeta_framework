@@ -1,10 +1,13 @@
 #pragma once
 
 #include <zcl/zcl_math.h>
-#include <zcl/ds/zcl_hash_maps.h>
+#include <zcl/zcl_hash_maps.h>
 #include <zcl/zcl_strs.h>
 
 namespace zcl {
+    // ============================================================
+    // @section: Colours
+
     struct t_color_rgba32f {
         t_f32 r;
         t_f32 g;
@@ -104,4 +107,89 @@ namespace zcl {
 
         return {r, g, b, a};
     }
+    // ============================================================
+
+
+    // ============================================================
+    // @section: Textures
+
+    struct t_texture_data_rdonly {
+        t_v2_i size_in_pxs;
+        t_array_rdonly<t_u8> rgba_px_data;
+    };
+
+    struct t_texture_data_mut {
+        t_v2_i size_in_pxs;
+        t_array_mut<t_u8> rgba_px_data;
+
+        operator t_texture_data_rdonly() const {
+            return {.size_in_pxs = size_in_pxs, .rgba_px_data = rgba_px_data};
+        }
+    };
+
+    [[nodiscard]] t_b8 texture_load_from_raw(const t_str_rdonly file_path, t_arena *const texture_data_arena, t_arena *const temp_arena, t_texture_data_mut *const o_texture_data);
+
+    [[nodiscard]] t_b8 texture_pack(const t_str_rdonly file_path, const t_texture_data_mut texture_data, t_arena *const temp_arena);
+    [[nodiscard]] t_b8 texture_unpack(const t_str_rdonly file_path, t_arena *const texture_data_arena, t_arena *const temp_arena, t_texture_data_mut *const o_texture_data);
+
+    constexpr t_rect_f texture_calc_uv_rect(const t_rect_i src_rect, const t_v2_i tex_size) {
+        ZCL_ASSERT(tex_size.x > 0 && tex_size.y > 0);
+        ZCL_ASSERT(src_rect.x >= 0 && src_rect.y >= 0 && src_rect.width > 0 && src_rect.height > 0 && rect_get_right(src_rect) <= tex_size.x && rect_get_bottom(src_rect) <= tex_size.y);
+
+        return {
+            static_cast<t_f32>(src_rect.x) / static_cast<t_f32>(tex_size.x),
+            static_cast<t_f32>(src_rect.y) / static_cast<t_f32>(tex_size.y),
+            static_cast<t_f32>(src_rect.width) / static_cast<t_f32>(tex_size.x),
+            static_cast<t_f32>(src_rect.height) / static_cast<t_f32>(tex_size.y),
+        };
+    }
+
+    // ============================================================
+
+
+    // ============================================================
+    // @section: Fonts
+
+    constexpr t_v2_i k_font_atlas_size = {1024, 1024};
+
+    using t_font_atlas_rgba = t_static_array<t_u8, 4 * k_font_atlas_size.x * k_font_atlas_size.y>;
+
+    struct t_font_glyph_info {
+        t_v2_i offs;
+        t_v2_i size;
+        t_i32 adv;
+
+        t_i32 atlas_index;
+        t_rect_i atlas_rect;
+    };
+
+    struct t_font_code_pt_pair {
+        t_code_pt a;
+        t_code_pt b;
+    };
+
+    struct t_font_arrangement {
+        t_i32 line_height;
+
+        t_hash_map<t_code_pt, t_font_glyph_info> code_pts_to_glyph_infos;
+
+        t_b8 has_kernings;
+        t_hash_map<t_font_code_pt_pair, t_i32> code_pt_pairs_to_kernings;
+    };
+
+    [[nodiscard]] t_b8 font_load_from_raw(const t_str_rdonly file_path, const t_i32 height, t_code_pt_bitset *const code_pts, t_arena *const arrangement_arena, t_arena *const atlas_rgbas_arena, t_arena *const temp_arena, t_font_arrangement *const o_arrangement, t_array_mut<t_font_atlas_rgba> *const o_atlas_rgbas);
+
+    [[nodiscard]] t_b8 font_pack(const t_str_rdonly file_path, const t_font_arrangement &arrangement, const t_array_rdonly<t_font_atlas_rgba> atlas_rgbas, t_arena *const temp_arena);
+    [[nodiscard]] t_b8 font_unpack(const t_str_rdonly file_path, t_arena *const arrangement_arena, t_arena *const atlas_rgbas_arena, t_arena *const temp_arena, t_font_arrangement *const o_arrangement, t_array_mut<t_font_atlas_rgba> *const o_atlas_rgbas);
+
+    // ============================================================
+
+
+    // ============================================================
+    // @section: Shaders
+
+    [[nodiscard]] t_b8 shader_pack(const t_str_rdonly file_path, const t_array_rdonly<t_u8> compiled_shader_bin, t_arena *const temp_arena);
+    [[nodiscard]] t_b8 shader_unpack(const t_str_rdonly file_path, t_arena *const shader_bin_arena, t_arena *const temp_arena, t_array_mut<t_u8> *const o_shader_bin);
+
+    // ============================================================
 }

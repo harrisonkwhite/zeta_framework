@@ -1,6 +1,6 @@
 #pragma once
 
-#include <zcl/ds/zcl_kv_stores.h>
+#include <zcl/zcl_kv_stores.h>
 
 namespace zcl {
     template <typename tp_type> concept c_hash_map_key = c_simple<tp_type> && c_same<tp_type, t_cvref_removed<tp_type>>;

@@ -1,7 +1,7 @@
 #include <zcl/zcl_audio.h>
 
 #include <miniaudio.h>
-#include <zcl/io/zcl_file_sys.h>
+#include <zcl/zcl_file_sys.h>
 
 namespace zcl {
     t_b8 sound_load_from_raw(const t_str_rdonly file_path, t_arena *const snd_data_arena, t_arena *const temp_arena, t_sound_data_mut *const o_snd_data) {

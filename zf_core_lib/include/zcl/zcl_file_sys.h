@@ -2,7 +2,7 @@
 
 #include <cstdio>
 #include <zcl/zcl_basic.h>
-#include <zcl/io/zcl_streams.h>
+#include <zcl/zcl_streams.h>
 #include <zcl/zcl_strs.h>
 
 namespace zcl {

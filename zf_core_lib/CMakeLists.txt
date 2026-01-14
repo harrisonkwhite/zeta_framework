@@ -1,11 +1,13 @@
 add_library(zf_core_lib STATIC
-    src/zcl_basic_arenas.cpp
-    src/zcl_basic_errors.cpp
+    src/basic/zcl_basic_arenas.cpp
+    src/basic/zcl_basic_errors.cpp
     src/zcl_bits.cpp
     src/zcl_audio.cpp
     src/zcl_math.cpp
     src/zcl_strs.cpp
-    src/zcl_gfx.cpp
+    src/gfx/zcl_gfx_textures.cpp
+    src/gfx/zcl_gfx_fonts.cpp
+    src/gfx/zcl_gfx_shaders.cpp
     src/zcl_file_sys.cpp
     src/zcl_printing.cpp
     src/zcl_streams.cpp
@@ -17,19 +19,16 @@ add_library(zf_core_lib STATIC
     include/zcl.h
     include/zcl/zcl_basic.h
     include/zcl/zcl_bits.h
-    include/zcl/gfx/zcl_colors.h
-    include/zcl/gfx/zcl_textures.h
-    include/zcl/gfx/zcl_fonts.h
-    include/zcl/gfx/zcl_shaders.h
+    include/zcl/zcl_gfx.h
     include/zcl/zcl_audio.h
     include/zcl/zcl_strs.h
-    include/zcl/ds/zcl_lists.h
-    include/zcl/ds/zcl_kv_stores.h
-    include/zcl/ds/zcl_hash_maps.h
+    include/zcl/zcl_lists.h
+    include/zcl/zcl_kv_stores.h
+    include/zcl/zcl_hash_maps.h
     include/zcl/zcl_math.h
-    include/zcl/io/zcl_streams.h
-    include/zcl/io/zcl_printing.h
-    include/zcl/io/zcl_file_sys.h
+    include/zcl/zcl_streams.h
+    include/zcl/zcl_printing.h
+    include/zcl/zcl_file_sys.h
     include/zcl/zcl_algos.h
     include/zcl/zcl_rand.h
 )

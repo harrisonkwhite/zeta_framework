@@ -1,4 +1,4 @@
-#include <zcl/io/zcl_printing.h>
+#include <zcl/zcl_printing.h>
 
 namespace zcl {
     t_b8 print_type(const t_stream stream, const t_bool_format format) {

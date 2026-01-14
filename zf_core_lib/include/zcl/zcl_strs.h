@@ -3,7 +3,7 @@
 #include <zcl/zcl_basic.h>
 #include <zcl/zcl_bits.h>
 #include <zcl/zcl_algos.h>
-#include <zcl/ds/zcl_hash_maps.h>
+#include <zcl/zcl_hash_maps.h>
 
 namespace zcl {
     // ============================================================
