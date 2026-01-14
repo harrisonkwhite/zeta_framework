@@ -102,11 +102,19 @@ namespace zgl::audio {
     t_sound_type *sound_type_create_from_packed(const zcl::t_str_rdonly file_path, t_sound_type_group *const group, zcl::t_arena *const temp_arena) {
         ZCL_ASSERT(g_module_state.active);
 
-        zcl::t_sound_data_mut snd_data;
+        zcl::t_file_stream file_stream;
 
-        if (!zcl::SoundUnpack(file_path, &group->arena, temp_arena, &snd_data)) {
+        if (!zcl::FileOpen(file_path, zcl::t_file_access_mode::ek_file_access_mode_read, temp_arena, &file_stream)) {
             ZCL_FATAL();
         }
+
+        zcl::t_sound_data_mut snd_data;
+
+        if (!zcl::DeserializeSound(file_stream, &group->arena, &snd_data)) {
+            ZCL_FATAL();
+        }
+
+        zcl::FileClose(&file_stream);
 
         return sound_type_group_add(group, snd_data);
     }

@@ -90,8 +90,19 @@ namespace zgl::gfx {
         zcl::t_font_arrangement arrangement;
         zcl::t_array_mut<zcl::t_font_atlas_rgba> atlas_rgbas;
 
-        if (!zcl::FontUnpack(file_path, resource_group->arena, temp_arena, temp_arena, &arrangement, &atlas_rgbas)) {
-            ZCL_FATAL();
+        {
+            zcl::t_file_stream file_stream;
+
+            if (!zcl::FileOpen(file_path, zcl::t_file_access_mode::ek_file_access_mode_read, temp_arena, &file_stream)) {
+                ZCL_FATAL();
+            }
+
+
+            if (!zcl::DeserializeFont(file_stream, temp_arena, temp_arena, temp_arena, &arrangement, &atlas_rgbas)) {
+                ZCL_FATAL();
+            }
+
+            zcl::FileClose(&file_stream);
         }
 
         const auto atlases = zcl::arena_push_array<t_resource *>(resource_group->arena, atlas_rgbas.len);

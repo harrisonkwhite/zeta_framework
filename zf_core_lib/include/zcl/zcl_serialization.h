@@ -36,7 +36,7 @@ namespace zcl {
     }
 
     [[nodiscard]] t_b8 SerializeBitset(const t_stream_view stream_view, const t_bitset_rdonly bs);
-    [[nodiscard]] t_b8 DeserializeTexture(const t_stream_view stream_view, t_arena *const bs_arena, t_bitset_mut *const o_bs);
+    [[nodiscard]] t_b8 DeserializeBitset(const t_stream_view stream_view, t_arena *const bs_arena, t_bitset_mut *const o_bs);
 
     // @todo: List serialization!
 

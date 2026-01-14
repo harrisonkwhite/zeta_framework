@@ -234,6 +234,38 @@ namespace zgl::gfx {
         return resource;
     }
 
+    t_resource *texture_create_from_raw(const zcl::t_str_rdonly file_path, zcl::t_arena *const temp_arena, t_resource_group *const group) {
+        ZCL_ASSERT(g_module_state.phase == ek_module_phase_active_but_not_midframe);
+
+        zcl::t_texture_data_mut texture_data;
+
+        if (!zcl::TextureLoadFromRaw(file_path, temp_arena, temp_arena, &texture_data)) {
+            ZCL_FATAL();
+        }
+
+        return texture_create(texture_data, group);
+    }
+
+    t_resource *texture_create_from_packed(const zcl::t_str_rdonly file_path, zcl::t_arena *const temp_arena, t_resource_group *const group) {
+        ZCL_ASSERT(g_module_state.phase == ek_module_phase_active_but_not_midframe);
+
+        zcl::t_file_stream file_stream;
+
+        if (!zcl::FileOpen(file_path, zcl::t_file_access_mode::ek_file_access_mode_read, temp_arena, &file_stream)) {
+            ZCL_FATAL();
+        }
+
+        zcl::t_texture_data_mut texture_data;
+
+        if (!zcl::DeserializeTexture(file_stream, temp_arena, &texture_data)) {
+            ZCL_FATAL();
+        }
+
+        zcl::FileClose(&file_stream);
+
+        return texture_create(texture_data, group);
+    }
+
     static bgfx::FrameBufferHandle bgfx_create_framebuffer(const zcl::t_v2_i size) {
         return bgfx::createFrameBuffer(static_cast<uint16_t>(size.x), static_cast<uint16_t>(size.y), bgfx::TextureFormat::RGBA8, BGFX_SAMPLER_MIN_POINT | BGFX_SAMPLER_MAG_POINT | BGFX_SAMPLER_U_CLAMP | BGFX_SAMPLER_V_CLAMP);
     }
@@ -304,6 +336,44 @@ namespace zgl::gfx {
         const auto resource = resource_group_add(group, ek_resource_type_shader_prog);
         resource->type_data.shader_prog.bgfx_hdl = prog_bgfx_hdl;
         return resource;
+    }
+
+    t_resource *shader_prog_create_from_packed(const zcl::t_str_rdonly vert_shader_file_path, const zcl::t_str_rdonly frag_shader_file_path, t_resource_group *const group, zcl::t_arena *const temp_arena) {
+        ZCL_ASSERT(g_module_state.phase == ek_module_phase_active_but_not_midframe);
+
+        zcl::t_array_mut<zcl::t_u8> vert_shader_compiled_bin;
+
+        {
+            zcl::t_file_stream vert_shader_file_stream;
+
+            if (!zcl::FileOpen(vert_shader_file_path, zcl::t_file_access_mode::ek_file_access_mode_read, temp_arena, &vert_shader_file_stream)) {
+                ZCL_FATAL();
+            }
+
+            if (!zcl::DeserializeShader(vert_shader_file_stream, temp_arena, &vert_shader_compiled_bin)) {
+                ZCL_FATAL();
+            }
+
+            zcl::FileClose(&vert_shader_file_stream);
+        }
+
+        zcl::t_array_mut<zcl::t_u8> frag_shader_compiled_bin;
+
+        {
+            zcl::t_file_stream frag_shader_file_stream;
+
+            if (!zcl::FileOpen(frag_shader_file_path, zcl::t_file_access_mode::ek_file_access_mode_read, temp_arena, &frag_shader_file_stream)) {
+                ZCL_FATAL();
+            }
+
+            if (!zcl::DeserializeShader(frag_shader_file_stream, temp_arena, &frag_shader_compiled_bin)) {
+                ZCL_FATAL();
+            }
+
+            zcl::FileClose(&frag_shader_file_stream);
+        }
+
+        return shader_prog_create(vert_shader_compiled_bin, frag_shader_compiled_bin, group);
     }
 
     t_resource *uniform_create(const zcl::t_str_rdonly name, const t_uniform_type type, t_resource_group *const group, zcl::t_arena *const temp_arena) {

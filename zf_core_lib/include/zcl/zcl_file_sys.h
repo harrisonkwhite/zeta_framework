@@ -87,6 +87,8 @@ namespace zcl {
 
     void FileClose(t_file_stream *const stream);
 
+    void FileFlush(t_file_stream *const stream);
+
     t_i32 FileCalcSize(t_file_stream *const stream);
 
     [[nodiscard]] t_b8 FileLoadContents(const t_str_rdonly file_path, t_arena *const contents_arena, t_arena *const temp_arena, t_array_mut<t_u8> *const o_contents, const t_b8 add_terminator = false);

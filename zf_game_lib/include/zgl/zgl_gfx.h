@@ -85,26 +85,8 @@ namespace zgl::gfx {
     void resource_group_destroy(t_resource_group *const group);
 
     t_resource *texture_create(const zcl::t_texture_data_rdonly texture_data, t_resource_group *const group);
-
-    inline t_resource *texture_create_from_raw(const zcl::t_str_rdonly file_path, zcl::t_arena *const temp_arena, t_resource_group *const group) {
-        zcl::t_texture_data_mut texture_data;
-
-        if (!zcl::TextureLoadFromRaw(file_path, temp_arena, temp_arena, &texture_data)) {
-            ZCL_FATAL();
-        }
-
-        return texture_create(texture_data, group);
-    }
-
-    inline t_resource *texture_create_from_packed(const zcl::t_str_rdonly file_path, zcl::t_arena *const temp_arena, t_resource_group *const group) {
-        zcl::t_texture_data_mut texture_data;
-
-        if (!zcl::TextureUnpack(file_path, temp_arena, temp_arena, &texture_data)) {
-            ZCL_FATAL();
-        }
-
-        return texture_create(texture_data, group);
-    }
+    t_resource *texture_create_from_raw(const zcl::t_str_rdonly file_path, zcl::t_arena *const temp_arena, t_resource_group *const group);
+    t_resource *texture_create_from_packed(const zcl::t_str_rdonly file_path, zcl::t_arena *const temp_arena, t_resource_group *const group);
 
     t_resource *texture_create_target(const zcl::t_v2_i size, t_resource_group *const group);
 
@@ -122,35 +104,19 @@ namespace zgl::gfx {
     }
 
     t_resource *shader_prog_create(const zcl::t_array_rdonly<zcl::t_u8> vert_shader_compiled_bin, const zcl::t_array_rdonly<zcl::t_u8> frag_shader_compiled_bin, t_resource_group *const group);
-
-    inline t_resource *shader_prog_create_from_packed(const zcl::t_str_rdonly vert_shader_file_path, const zcl::t_str_rdonly frag_shader_file_path, zcl::t_arena *const temp_arena, t_resource_group *const arena) {
-        zcl::t_array_mut<zcl::t_u8> vert_shader_compiled_bin;
-
-        if (!zcl::ShaderUnpack(vert_shader_file_path, temp_arena, temp_arena, &vert_shader_compiled_bin)) {
-            ZCL_FATAL();
-        }
-
-        zcl::t_array_mut<zcl::t_u8> frag_shader_compiled_bin;
-
-        if (!zcl::ShaderUnpack(frag_shader_file_path, temp_arena, temp_arena, &frag_shader_compiled_bin)) {
-            ZCL_FATAL();
-        }
-
-        return shader_prog_create(vert_shader_compiled_bin, frag_shader_compiled_bin, arena);
-    }
-
+    t_resource *shader_prog_create_from_packed(const zcl::t_str_rdonly vert_shader_file_path, const zcl::t_str_rdonly frag_shader_file_path, t_resource_group *const group, zcl::t_arena *const temp_arena);
 
     t_resource *uniform_create(const zcl::t_str_rdonly name, const t_uniform_type type, t_resource_group *const group, zcl::t_arena *const temp_arena);
-
     t_uniform_type uniform_get_type(const t_resource *const uniform);
 
+    // @todo: This might be better off like every other resource, for API consistency.
     struct t_font {
         zcl::t_font_arrangement arrangement;
         zcl::t_array_mut<t_resource *> atlases;
     };
 
-    t_font font_create_from_raw(const zcl::t_str_rdonly file_path, const zcl::t_i32 height, zcl::t_code_point_bitset *const code_pts, zcl::t_arena *const temp_arena, t_resource_group *const resource_group);
-    t_font font_create_from_packed(const zcl::t_str_rdonly file_path, zcl::t_arena *const temp_arena, t_resource_group *const resource_group);
+    t_font font_create_from_raw(const zcl::t_str_rdonly file_path, const zcl::t_i32 height, zcl::t_code_point_bitset *const code_pts, t_resource_group *const resource_group, zcl::t_arena *const temp_arena);
+    t_font font_create_from_packed(const zcl::t_str_rdonly file_path, t_resource_group *const resource_group, zcl::t_arena *const temp_arena);
 
     // ========================================
 

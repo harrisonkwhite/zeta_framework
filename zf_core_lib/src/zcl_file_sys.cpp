@@ -137,13 +137,13 @@ namespace zcl {
     }
 
     t_b8 FileCreate(const t_str_rdonly path, t_arena *const temp_arena) {
-        t_file_stream fs;
+        t_file_stream stream;
 
-        if (!FileOpen(path, ek_file_access_mode_write, temp_arena, &fs)) {
+        if (!FileOpen(path, ek_file_access_mode_write, temp_arena, &stream)) {
             return false;
         }
 
-        FileClose(&fs);
+        FileClose(&stream);
 
         return true;
     }
@@ -206,6 +206,11 @@ namespace zcl {
     void FileClose(t_file_stream *const stream) {
         fclose(stream->file);
         *stream = {};
+    }
+
+    void FileFlush(t_file_stream *const stream) {
+        ZCL_ASSERT(stream->mode == ek_stream_mode_write);
+        fflush(stream->file);
     }
 
     t_i32 FileCalcSize(t_file_stream *const stream) {

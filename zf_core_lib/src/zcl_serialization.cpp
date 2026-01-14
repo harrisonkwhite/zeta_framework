@@ -13,7 +13,7 @@ namespace zcl {
         return true;
     }
 
-    t_b8 DeserializeTexture(const t_stream_view stream_view, t_arena *const bs_arena, t_bitset_mut *const o_bs) {
+    t_b8 DeserializeBitset(const t_stream_view stream_view, t_arena *const bs_arena, t_bitset_mut *const o_bs) {
         t_i32 bit_cnt;
 
         if (!StreamReadItem(stream_view, &bit_cnt)) {

@@ -102,7 +102,9 @@ constexpr zcl::t_static_array<t_asset_field, ekm_sound_field_cnt> k_sound_fields
 
     zcl::t_file_stream file_stream;
 
-    if (!zcl::FileOpen(file_path, zcl::ek_file_access_mode_write, temp_arena, &file_stream)) {
+    static_assert(false, "open the file recursively");
+
+    if (!zcl::FileOpen(out_file_path, zcl::ek_file_access_mode_write, temp_arena, &file_stream)) {
         zcl::LogError(ZCL_STR_LITERAL("Failed to open texture output file \"%\" for writing!"), out_file_path);
         return false;
     }
@@ -120,6 +122,11 @@ constexpr zcl::t_static_array<t_asset_field, ekm_sound_field_cnt> k_sound_fields
 [[nodiscard]] static zcl::t_b8 PackFont(const zcl::t_str_rdonly file_path, const zcl::t_i32 height, const zcl::t_str_rdonly extra_chrs_file_path, const zcl::t_str_rdonly out_file_path, zcl::t_arena *const temp_arena) {
     const auto code_pt_bs = zcl::arena_push_item<zcl::t_code_point_bitset>(temp_arena);
 
+    if (height <= 0) {
+        zcl::LogError(ZCL_STR_LITERAL("Invalid font height %! Must be greater than 0."), height);
+        return false;
+    }
+
     zcl::BitsetSetRange(*code_pt_bs, zcl::k_printable_ascii_range_begin, zcl::k_printable_ascii_range_end); // Add the printable ASCII range as a default.
 
     if (!zcl::StrCheckEmpty(extra_chrs_file_path)) {
@@ -133,8 +140,6 @@ constexpr zcl::t_static_array<t_asset_field, ekm_sound_field_cnt> k_sound_fields
         zcl::StrMarkCodePoints({extra_chrs_file_contents}, code_pt_bs);
     }
 
-    // @todo: Proper check for invalid height!
-
     zcl::t_font_arrangement arrangement;
     zcl::t_array_mut<zcl::t_font_atlas_rgba> atlas_rgbas;
 
@@ -145,7 +150,7 @@ constexpr zcl::t_static_array<t_asset_field, ekm_sound_field_cnt> k_sound_fields
 
     zcl::t_file_stream file_stream;
 
-    if (!zcl::FileOpen(file_path, zcl::ek_file_access_mode_write, temp_arena, &file_stream)) {
+    if (!zcl::FileOpen(out_file_path, zcl::ek_file_access_mode_write, temp_arena, &file_stream)) {
         zcl::LogError(ZCL_STR_LITERAL("Failed to open font output file \"%\" for writing!"), out_file_path);
         return false;
     }
@@ -271,7 +276,12 @@ zcl::t_b8 PackAssets(const zcl::t_str_rdonly instrs_json_file_path) {
         cJSON_ArrayForEach(cj_asset, cj_assets) {
             ZCL_DEFER({ cj_asset_index++; });
 
-            zcl::Log(ZCL_STR_LITERAL("Packing % asset %..."), zcl::CStrToStr(asset_type_arr_name_c_str), cj_asset_index);
+            zcl::Log(ZCL_STR_LITERAL("Packing \"%\" asset %..."), zcl::CStrToStr(asset_type_arr_name_c_str), cj_asset_index);
+
+            {
+                zcl::t_file_stream std_out = zcl::FileStreamCreateStdOut();
+                zcl::FileFlush(&std_out);
+            }
 
             zcl::arena_rewind(&arena);
 
@@ -389,6 +399,11 @@ zcl::t_b8 PackAssets(const zcl::t_str_rdonly instrs_json_file_path) {
             }
 
             zcl::Log(ZCL_STR_LITERAL("Packed successfully!"));
+
+            {
+                zcl::t_file_stream std_out = zcl::FileStreamCreateStdOut();
+                zcl::FileFlush(&std_out);
+            }
         }
     }
 
