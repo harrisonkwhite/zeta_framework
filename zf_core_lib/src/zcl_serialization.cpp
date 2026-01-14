@@ -64,11 +64,11 @@ namespace zcl {
             return false;
         }
 
-        if (!SerializeHashMap(&arrangement.code_pts_to_glyph_infos, stream_view, temp_arena)) {
+        if (!SerializeHashMap(stream_view, &arrangement.code_pts_to_glyph_infos, temp_arena)) {
             return false;
         }
 
-        if (!SerializeHashMap(&arrangement.code_pt_pairs_to_kernings, stream_view, temp_arena)) {
+        if (!SerializeHashMap(stream_view, &arrangement.code_pt_pairs_to_kernings, temp_arena)) {
             return false;
         }
 
@@ -109,6 +109,30 @@ namespace zcl {
 
     t_b8 DeserializeShader(const t_stream_view stream_view, t_arena *const shader_bin_arena, t_array_mut<t_u8> *const o_shader_bin) {
         if (!DeserializeArray(stream_view, shader_bin_arena, o_shader_bin)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    t_b8 SerializeSound(const t_sound_data_rdonly snd_data, const t_stream_view stream) {
+        if (!stream_write_item(stream, snd_data.meta)) {
+            return false;
+        }
+
+        if (!SerializeArray(stream, snd_data.pcm)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    t_b8 DeserializeSound(const t_stream_view stream, t_arena *const snd_data_arena, t_sound_data_mut *const o_snd_data) {
+        if (!stream_read_item(stream, &o_snd_data->meta)) {
+            return false;
+        }
+
+        if (!DeserializeArray(stream, snd_data_arena, &o_snd_data->pcm)) {
             return false;
         }
 

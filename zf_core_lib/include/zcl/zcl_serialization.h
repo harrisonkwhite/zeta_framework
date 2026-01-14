@@ -38,8 +38,10 @@ namespace zcl {
     [[nodiscard]] t_b8 SerializeBitset(const t_stream_view stream_view, const t_bitset_rdonly bs);
     [[nodiscard]] t_b8 DeserializeTexture(const t_stream_view stream_view, t_arena *const bs_arena, t_bitset_mut *const o_bs);
 
+    // @todo: List serialization!
+
     template <c_hash_map tp_hash_map_type>
-    [[nodiscard]] t_b8 SerializeHashMap(const tp_hash_map_type *const hm, const t_stream_view stream_view, t_arena *const temp_arena) {
+    [[nodiscard]] t_b8 SerializeHashMap(const t_stream_view stream_view, const tp_hash_map_type *const hm, t_arena *const temp_arena) {
         if (!stream_write_item(stream_view, HashMapGetCap(hm))) {
             return false;
         }
@@ -106,4 +108,7 @@ namespace zcl {
 
     [[nodiscard]] t_b8 SerializeShader(const t_stream_view stream_view, const t_array_rdonly<t_u8> compiled_shader_bin);
     [[nodiscard]] t_b8 DeserializeShader(const t_stream_view stream_view, t_arena *const shader_bin_arena, t_array_mut<t_u8> *const o_shader_bin);
+
+    [[nodiscard]] t_b8 SerializeSound(const t_stream_view stream_view, const t_sound_data_rdonly snd_data);
+    [[nodiscard]] t_b8 DeserializeSound(const t_stream_view stream_view, t_arena *const snd_data_arena, t_sound_data_mut *const o_snd_data);
 }
