@@ -146,12 +146,12 @@ namespace zcl {
         return bs.bit_cnt - BitsetCountSet(bs);
     }
 
-    // pos is the walker state, initialise it to the bit index you want to start from.
+    // pos is the walker state, initialize it to the bit index you want to start from.
     // o_index is assigned the index of the set bit to process.
     // Returns false iff the walk is complete.
     t_b8 BitsetWalkAllSet(const t_bitset_rdonly bs, t_i32 *const pos, t_i32 *const o_index);
 
-    // pos is the walker state, initialise it to the bit index you want to start from.
+    // pos is the walker state, initialize it to the bit index you want to start from.
     // o_index is assigned the index of the unset bit to process.
     // Returns false iff the walk is complete.
     t_b8 BitsetWalkAllUnset(const t_bitset_rdonly bs, t_i32 *const pos, t_i32 *const o_index);

@@ -6,7 +6,7 @@
 
 namespace zcl {
     // ============================================================
-    // @section: Colours
+    // @section: Colors
 
     struct t_color_rgba32f {
         t_f32 r;

@@ -10,7 +10,7 @@ namespace zcl {
     concept c_format = requires { typename tp_type::t_formatting; };
 
     inline t_b8 Print(const t_stream_view stream, const t_str_rdonly str) {
-        return stream_write_items_of_array(stream, str.bytes);
+        return StreamWriteItemsOfArray(stream, str.bytes);
     }
 
     inline t_b8 PrintFormat(const t_stream_view stream, const t_str_rdonly format);
@@ -91,11 +91,11 @@ namespace zcl {
     template <c_integral tp_type>
     t_b8 PrintType(const t_stream_view stream, const t_format_int<tp_type> format) {
         t_static_array<t_u8, 20> str_bytes = {}; // Maximum possible number of ASCII characters needed to represent a 64-bit integer.
-        t_mem_stream str_bytes_stream = mem_stream_create(array_to_nonstatic(&str_bytes), ek_stream_mode_write);
+        t_byte_stream str_bytes_stream = ByteStreamCreate(array_to_nonstatic(&str_bytes), ek_stream_mode_write);
         t_b8 str_bytes_stream_write_success = true;
 
         if (format.value < 0) {
-            str_bytes_stream_write_success = stream_write_item(str_bytes_stream, '-');
+            str_bytes_stream_write_success = StreamWriteItem(str_bytes_stream, '-');
             ZCL_ASSERT(str_bytes_stream_write_success);
         }
 
@@ -103,11 +103,11 @@ namespace zcl {
 
         for (t_i32 i = 0; i < dig_cnt; i++) {
             const auto byte = static_cast<t_u8>('0' + CalcDigitAt(format.value, dig_cnt - 1 - i));
-            str_bytes_stream_write_success = stream_write_item(str_bytes_stream, byte);
+            str_bytes_stream_write_success = StreamWriteItem(str_bytes_stream, byte);
             ZCL_ASSERT(str_bytes_stream_write_success);
         }
 
-        return Print(stream, {mem_stream_get_bytes_written(&str_bytes_stream)});
+        return Print(stream, {ByteStreamGetWritten(&str_bytes_stream)});
     }
 
     // ============================================================
@@ -220,15 +220,15 @@ namespace zcl {
         ZCL_ASSERT(format.min_digits >= k_format_hex_digit_cnt_min && format.min_digits <= k_format_hex_digit_cnt_max);
 
         t_static_array<t_u8, 2 + k_format_hex_digit_cnt_max> str_bytes = {}; // Can facilitate max number of digits plus the "0x" prefix.
-        t_mem_stream str_bytes_stream = mem_stream_create(array_to_nonstatic(&str_bytes), ek_stream_mode_write);
+        t_byte_stream str_bytes_stream = ByteStreamCreate(array_to_nonstatic(&str_bytes), ek_stream_mode_write);
 
         t_b8 str_bytes_stream_write_success = true;
 
         if (!(format.flags & ek_format_hex_flags_omit_prefix)) {
-            str_bytes_stream_write_success = stream_write_item(str_bytes_stream, '0');
+            str_bytes_stream_write_success = StreamWriteItem(str_bytes_stream, '0');
             ZCL_ASSERT(str_bytes_stream_write_success);
 
-            str_bytes_stream_write_success = stream_write_item(str_bytes_stream, 'x');
+            str_bytes_stream_write_success = StreamWriteItem(str_bytes_stream, 'x');
             ZCL_ASSERT(str_bytes_stream_write_success);
         }
 
@@ -254,7 +254,7 @@ namespace zcl {
         do {
             for (t_i32 i = 0; i < inner_loop_cnt; i++) {
                 const auto byte = dig_to_byte(value_mut % 16);
-                str_bytes_stream_write_success = stream_write_item(str_bytes_stream, byte);
+                str_bytes_stream_write_success = StreamWriteItem(str_bytes_stream, byte);
                 ZCL_ASSERT(str_bytes_stream_write_success);
 
                 value_mut /= 16;
@@ -263,10 +263,10 @@ namespace zcl {
             }
         } while (value_mut != 0 || cnter < format.min_digits);
 
-        const auto str_bytes_digits = array_slice_from(mem_stream_get_bytes_written(&str_bytes_stream), str_bytes_digits_begin_pos);
+        const auto str_bytes_digits = array_slice_from(ByteStreamGetWritten(&str_bytes_stream), str_bytes_digits_begin_pos);
         Reverse(str_bytes_digits);
 
-        return Print(stream, {mem_stream_get_bytes_written(&str_bytes_stream)});
+        return Print(stream, {ByteStreamGetWritten(&str_bytes_stream)});
     }
 
     // ============================================================
@@ -437,7 +437,7 @@ namespace zcl {
                 }
             }
 
-            if (!stream_write_item(stream, format.bytes[i])) {
+            if (!StreamWriteItem(stream, format.bytes[i])) {
                 return false;
             }
 

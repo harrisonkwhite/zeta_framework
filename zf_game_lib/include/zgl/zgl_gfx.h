@@ -61,7 +61,7 @@ namespace zgl::gfx {
     // ============================================================
     // @section: Functions
 
-    // This depends on the platform module being initialised beforehand.
+    // This depends on the platform module being initialized beforehand.
     t_frame_basis *module_startup(zcl::t_arena *const arena, zcl::t_arena *const temp_arena, t_resource_group **const o_perm_resource_group);
 
     void module_shutdown(const t_frame_basis *const frame_basis);

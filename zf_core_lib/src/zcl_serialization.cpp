@@ -2,11 +2,11 @@
 
 namespace zcl {
     t_b8 SerializeBitset(const t_stream_view stream_view, const t_bitset_rdonly bs) {
-        if (!stream_write_item(stream_view, bs.bit_cnt)) {
+        if (!StreamWriteItem(stream_view, bs.bit_cnt)) {
             return false;
         }
 
-        if (!stream_write_items_of_array(stream_view, BitsetGetBytes(bs))) {
+        if (!StreamWriteItemsOfArray(stream_view, BitsetGetBytes(bs))) {
             return false;
         }
 
@@ -16,13 +16,13 @@ namespace zcl {
     t_b8 DeserializeTexture(const t_stream_view stream_view, t_arena *const bs_arena, t_bitset_mut *const o_bs) {
         t_i32 bit_cnt;
 
-        if (!stream_read_item(stream_view, &bit_cnt)) {
+        if (!StreamReadItem(stream_view, &bit_cnt)) {
             return false;
         }
 
         *o_bs = BitsetCreate(bit_cnt, bs_arena);
 
-        if (!stream_read_items_into_array(stream_view, BitsetGetBytes(*o_bs), BitsetGetBytes(*o_bs).len)) {
+        if (!StreamReadItemsIntoArray(stream_view, BitsetGetBytes(*o_bs), BitsetGetBytes(*o_bs).len)) {
             return false;
         }
 
@@ -30,11 +30,11 @@ namespace zcl {
     }
 
     t_b8 SerializeTexture(const t_stream_view stream_view, const t_texture_data_mut texture_data) {
-        if (!stream_write_item(stream_view, texture_data.size_in_pxs)) {
+        if (!StreamWriteItem(stream_view, texture_data.size_in_pxs)) {
             return false;
         }
 
-        if (!stream_write_items_of_array(stream_view, texture_data.rgba_px_data)) {
+        if (!StreamWriteItemsOfArray(stream_view, texture_data.rgba_px_data)) {
             return false;
         }
 
@@ -44,13 +44,13 @@ namespace zcl {
     t_b8 DeserializeTexture(const t_stream_view stream_view, t_arena *const texture_data_arena, t_texture_data_mut *const o_texture_data) {
         t_v2_i size_in_pxs;
 
-        if (!stream_read_item(stream_view, &size_in_pxs)) {
+        if (!StreamReadItem(stream_view, &size_in_pxs)) {
             return false;
         }
 
         const auto rgba_px_data = arena_push_array<t_u8>(texture_data_arena, 4 * size_in_pxs.x * size_in_pxs.y);
 
-        if (!stream_read_items_into_array(stream_view, rgba_px_data, rgba_px_data.len)) {
+        if (!StreamReadItemsIntoArray(stream_view, rgba_px_data, rgba_px_data.len)) {
             return false;
         }
 
@@ -60,7 +60,7 @@ namespace zcl {
     }
 
     t_b8 SerializeFont(const t_stream_view stream_view, const t_font_arrangement &arrangement, const t_array_rdonly<t_font_atlas_rgba> atlas_rgbas, t_arena *const temp_arena) {
-        if (!stream_write_item(stream_view, arrangement.line_height)) {
+        if (!StreamWriteItem(stream_view, arrangement.line_height)) {
             return false;
         }
 
@@ -80,7 +80,7 @@ namespace zcl {
     }
 
     t_b8 DeserializeFont(const t_stream_view stream_view, t_arena *const arrangement_arena, t_arena *const atlas_rgbas_arena, t_arena *const temp_arena, t_font_arrangement *const o_arrangement, t_array_mut<t_font_atlas_rgba> *const o_atlas_rgbas) {
-        if (!stream_read_item(stream_view, &o_arrangement->line_height)) {
+        if (!StreamReadItem(stream_view, &o_arrangement->line_height)) {
             return false;
         }
 
@@ -116,7 +116,7 @@ namespace zcl {
     }
 
     t_b8 SerializeSound(const t_sound_data_rdonly snd_data, const t_stream_view stream) {
-        if (!stream_write_item(stream, snd_data.meta)) {
+        if (!StreamWriteItem(stream, snd_data.meta)) {
             return false;
         }
 
@@ -128,7 +128,7 @@ namespace zcl {
     }
 
     t_b8 DeserializeSound(const t_stream_view stream, t_arena *const snd_data_arena, t_sound_data_mut *const o_snd_data) {
-        if (!stream_read_item(stream, &o_snd_data->meta)) {
+        if (!StreamReadItem(stream, &o_snd_data->meta)) {
             return false;
         }
 

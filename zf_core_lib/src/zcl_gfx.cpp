@@ -36,7 +36,7 @@ namespace zcl {
             return false;
         }
 
-        // Initialise the font through STB.
+        // Initialize the font through STB.
         stbtt_fontinfo stb_font_info;
 
         const t_i32 offs = stbtt_GetFontOffsetForIndex(font_file_data.raw, 0);
@@ -153,7 +153,7 @@ namespace zcl {
         //
         *o_atlas_rgbas = arena_push_array<t_font_atlas_rgba>(atlas_rgbas_arena, atlas_cnt);
 
-        // Initialise all pixels to transparent white.
+        // Initialize all pixels to transparent white.
         // @todo: Maybe don't use RBGA for this?
         for (t_i32 i = 0; i < o_atlas_rgbas->len; i++) {
             const auto atlas_rgba = &(*o_atlas_rgbas)[i];

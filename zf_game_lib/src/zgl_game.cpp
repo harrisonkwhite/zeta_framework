@@ -26,7 +26,7 @@ namespace zgl::game {
         ZCL_DEFER({ g_module_state = {}; });
 
         //
-        // Initialisation
+        // Initialization
         //
         zcl::t_arena perm_arena = zcl::arena_create_blockbased();
         ZCL_DEFER({ zcl::arena_destroy(&perm_arena); });

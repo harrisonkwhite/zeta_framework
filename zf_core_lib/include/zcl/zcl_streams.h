@@ -6,7 +6,7 @@
 
 namespace zcl {
     // ============================================================
-    // @section: Core
+    // @section: Stream Core
 
     enum t_stream_mode : t_i32 {
         ek_stream_mode_read,
@@ -23,19 +23,19 @@ namespace zcl {
     };
 
     template <c_simple tp_type>
-    [[nodiscard]] t_b8 stream_read_item(const t_stream_view stream_view, tp_type *const o_item) {
+    [[nodiscard]] t_b8 StreamReadItem(const t_stream_view stream_view, tp_type *const o_item) {
         ZCL_ASSERT(stream_view.mode == ek_stream_mode_read);
         return stream_view.read_func(stream_view, to_bytes(o_item));
     }
 
     template <c_simple tp_type>
-    [[nodiscard]] t_b8 stream_write_item(const t_stream_view stream_view, const tp_type &item) {
+    [[nodiscard]] t_b8 StreamWriteItem(const t_stream_view stream_view, const tp_type &item) {
         ZCL_ASSERT(stream_view.mode == ek_stream_mode_write);
         return stream_view.write_func(stream_view, to_bytes(&item));
     }
 
     template <c_array_mut tp_arr_type>
-    [[nodiscard]] t_b8 stream_read_items_into_array(const t_stream_view stream_view, const tp_arr_type arr, const t_i32 cnt) {
+    [[nodiscard]] t_b8 StreamReadItemsIntoArray(const t_stream_view stream_view, const tp_arr_type arr, const t_i32 cnt) {
         ZCL_ASSERT(stream_view.mode == ek_stream_mode_read);
         ZCL_ASSERT(cnt >= 0 && cnt <= arr.len);
 
@@ -47,7 +47,7 @@ namespace zcl {
     }
 
     template <c_array tp_arr_type>
-    [[nodiscard]] t_b8 stream_write_items_of_array(const t_stream_view stream_view, const tp_arr_type arr) {
+    [[nodiscard]] t_b8 StreamWriteItemsOfArray(const t_stream_view stream_view, const tp_arr_type arr) {
         ZCL_ASSERT(stream_view.mode == ek_stream_mode_write);
 
         if (arr.len == 0) {
@@ -61,9 +61,9 @@ namespace zcl {
 
 
     // ============================================================
-    // @section: Memory Stream
+    // @section: Byte Stream
 
-    struct t_mem_stream {
+    struct t_byte_stream {
         t_array_mut<t_u8> bytes;
         t_i32 byte_pos;
 
@@ -73,16 +73,16 @@ namespace zcl {
             const auto read_func = [](const t_stream_view stream_view, const t_array_mut<t_u8> dest_bytes) {
                 ZCL_ASSERT(stream_view.mode == ek_stream_mode_read);
 
-                const auto mem_stream = static_cast<t_mem_stream *>(stream_view.data);
+                const auto byte_stream = static_cast<t_byte_stream *>(stream_view.data);
 
-                if (mem_stream->byte_pos + dest_bytes.len > mem_stream->bytes.len) {
+                if (byte_stream->byte_pos + dest_bytes.len > byte_stream->bytes.len) {
                     return false;
                 }
 
-                const t_array_rdonly<t_u8> src_bytes = array_slice_from(mem_stream->bytes, mem_stream->byte_pos);
+                const t_array_rdonly<t_u8> src_bytes = array_slice_from(byte_stream->bytes, byte_stream->byte_pos);
                 array_copy(src_bytes, dest_bytes, true);
 
-                mem_stream->byte_pos += dest_bytes.len;
+                byte_stream->byte_pos += dest_bytes.len;
 
                 return true;
             };
@@ -90,16 +90,16 @@ namespace zcl {
             const auto write_func = [](const t_stream_view stream_view, const t_array_rdonly<t_u8> src_bytes) {
                 ZCL_ASSERT(stream_view.mode == ek_stream_mode_write);
 
-                const auto mem_stream = static_cast<t_mem_stream *>(stream_view.data);
+                const auto byte_stream = static_cast<t_byte_stream *>(stream_view.data);
 
-                if (mem_stream->byte_pos + src_bytes.len > mem_stream->bytes.len) {
+                if (byte_stream->byte_pos + src_bytes.len > byte_stream->bytes.len) {
                     return false;
                 }
 
-                const t_array_mut<t_u8> dest_bytes = array_slice_from(mem_stream->bytes, mem_stream->byte_pos);
+                const t_array_mut<t_u8> dest_bytes = array_slice_from(byte_stream->bytes, byte_stream->byte_pos);
                 array_copy(src_bytes, dest_bytes);
 
-                mem_stream->byte_pos += src_bytes.len;
+                byte_stream->byte_pos += src_bytes.len;
 
                 return true;
             };
@@ -113,11 +113,11 @@ namespace zcl {
         }
     };
 
-    inline t_mem_stream mem_stream_create(const t_array_mut<t_u8> bytes, const t_stream_mode mode, const t_i32 pos = 0) {
+    inline t_byte_stream ByteStreamCreate(const t_array_mut<t_u8> bytes, const t_stream_mode mode, const t_i32 pos = 0) {
         return {.bytes = bytes, .byte_pos = pos, .mode = mode};
     }
 
-    inline t_array_mut<t_u8> mem_stream_get_bytes_written(const t_mem_stream *const stream) {
+    inline t_array_mut<t_u8> ByteStreamGetWritten(const t_byte_stream *const stream) {
         ZCL_ASSERT(stream->mode == ek_stream_mode_write);
         return array_slice(stream->bytes, 0, stream->byte_pos);
     }

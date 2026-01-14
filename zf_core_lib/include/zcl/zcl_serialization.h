@@ -7,11 +7,11 @@
 namespace zcl {
     template <c_array tp_arr_type>
     [[nodiscard]] t_b8 SerializeArray(const t_stream_view stream_view, const tp_arr_type arr) {
-        if (!stream_write_item(stream_view, arr.len)) {
+        if (!StreamWriteItem(stream_view, arr.len)) {
             return false;
         }
 
-        if (!stream_write_items_of_array(stream_view, arr)) {
+        if (!StreamWriteItemsOfArray(stream_view, arr)) {
             return false;
         }
 
@@ -22,13 +22,13 @@ namespace zcl {
     [[nodiscard]] t_b8 DeserializeArray(const t_stream_view stream_view, t_arena *const arr_arena, t_array_mut<tp_elem_type> *const o_arr) {
         t_i32 len;
 
-        if (!stream_read_item(stream_view, &len)) {
+        if (!StreamReadItem(stream_view, &len)) {
             return false;
         }
 
         *o_arr = arena_push_array<tp_elem_type>(arr_arena, len);
 
-        if (!stream_read_items_into_array(stream_view, *o_arr, len)) {
+        if (!StreamReadItemsIntoArray(stream_view, *o_arr, len)) {
             return false;
         }
 
@@ -42,11 +42,11 @@ namespace zcl {
 
     template <c_hash_map tp_hash_map_type>
     [[nodiscard]] t_b8 SerializeHashMap(const t_stream_view stream_view, const tp_hash_map_type *const hm, t_arena *const temp_arena) {
-        if (!stream_write_item(stream_view, HashMapGetCap(hm))) {
+        if (!StreamWriteItem(stream_view, HashMapGetCap(hm))) {
             return false;
         }
 
-        if (!stream_write_item(stream_view, HashMapGetEntryCount(hm))) {
+        if (!StreamWriteItem(stream_view, HashMapGetEntryCount(hm))) {
             return false;
         }
 
@@ -54,11 +54,11 @@ namespace zcl {
         t_array_mut<typename tp_hash_map_type::t_value> values;
         HashMapLoadEntries(hm, temp_arena, &keys, &values);
 
-        if (!stream_write_items_of_array(stream_view, keys)) {
+        if (!StreamWriteItemsOfArray(stream_view, keys)) {
             return false;
         }
 
-        if (!stream_write_items_of_array(stream_view, values)) {
+        if (!StreamWriteItemsOfArray(stream_view, values)) {
             return false;
         }
 
@@ -69,13 +69,13 @@ namespace zcl {
     [[nodiscard]] t_b8 DeserializeHashMap(const t_stream_view stream_view, t_arena *const hm_arena, const t_hash_func<typename tp_hash_map_type::t_key> hm_hash_func, t_arena *const temp_arena, tp_hash_map_type *const o_hm, const t_comparator_bin<typename tp_hash_map_type::t_key> hm_key_comparator = k_comparator_bin_default<typename tp_hash_map_type::t_key>) {
         t_i32 cap;
 
-        if (!stream_read_item(stream_view, &cap)) {
+        if (!StreamReadItem(stream_view, &cap)) {
             return false;
         }
 
         t_i32 entry_cnt;
 
-        if (!stream_read_item(stream_view, &entry_cnt)) {
+        if (!StreamReadItem(stream_view, &entry_cnt)) {
             return false;
         }
 
@@ -83,13 +83,13 @@ namespace zcl {
 
         const auto keys = arena_push_array<typename tp_hash_map_type::t_key>(temp_arena, entry_cnt);
 
-        if (!stream_read_items_into_array(stream_view, keys, entry_cnt)) {
+        if (!StreamReadItemsIntoArray(stream_view, keys, entry_cnt)) {
             return false;
         }
 
         const auto values = arena_push_array<typename tp_hash_map_type::t_value>(temp_arena, entry_cnt);
 
-        if (!stream_read_items_into_array(stream_view, values, entry_cnt)) {
+        if (!StreamReadItemsIntoArray(stream_view, values, entry_cnt)) {
             return false;
         }
 

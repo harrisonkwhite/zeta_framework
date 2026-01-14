@@ -8,5 +8,5 @@ int main(const int arg_cnt, const char *const *const args_raw) {
         return EXIT_FAILURE;
     }
 
-    return pack_assets(zcl::CStrToStr(args[1])) ? EXIT_SUCCESS : EXIT_FAILURE;
+    return PackAssets(zcl::CStrToStr(args[1])) ? EXIT_SUCCESS : EXIT_FAILURE;
 }

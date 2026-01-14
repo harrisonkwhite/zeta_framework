@@ -7,6 +7,7 @@
 #include <zcl/zcl_hash_maps.h>
 #include <zcl/zcl_strs.h>
 #include <zcl/zcl_streams.h>
+#include <zcl/zcl_serialization.h>
 #include <zcl/zcl_file_sys.h>
 #include <zcl/zcl_printing.h>
 #include <zcl/zcl_gfx.h>

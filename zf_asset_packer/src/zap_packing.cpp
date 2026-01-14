@@ -92,7 +92,136 @@ constexpr zcl::t_static_array<t_asset_field, ekm_sound_field_cnt> k_sound_fields
     {.name_c_str = "out_file_path", .type = ek_asset_field_type_str},
 }};
 
-zcl::t_b8 pack_assets(const zcl::t_str_rdonly instrs_json_file_path) {
+static zcl::t_b8 PackTexture(const zcl::t_str_rdonly file_path, const zcl::t_str_rdonly out_file_path, zcl::t_arena *const temp_arena) {
+    zcl::t_texture_data_mut texture_data;
+
+    if (!zcl::TextureLoadFromRaw(file_path, temp_arena, temp_arena, &texture_data)) {
+        zcl::LogError(ZCL_STR_LITERAL("Failed to load texture from file \"%\"!"), file_path);
+        return false;
+    }
+
+    zcl::t_file_stream file_stream;
+
+    if (!zcl::FileOpen(file_path, zcl::ek_file_access_mode_write, temp_arena, &file_stream)) {
+        zcl::LogError(ZCL_STR_LITERAL("Failed to open texture output file \"%\" for writing!"), out_file_path);
+        return false;
+    }
+
+    ZCL_DEFER({ zcl::FileClose(&file_stream); });
+
+    if (!zcl::SerializeTexture(file_stream, texture_data)) {
+        zcl::LogError(ZCL_STR_LITERAL("Failed to serialize texture to file \"%\"!"), out_file_path);
+        return false;
+    }
+
+    return true;
+}
+
+static zcl::t_b8 PackFont(const zcl::t_str_rdonly file_path, const zcl::t_i32 height, const zcl::t_str_rdonly extra_chrs_file_path, const zcl::t_str_rdonly out_file_path, zcl::t_arena *const temp_arena) {
+    const auto code_pt_bs = zcl::arena_push_item<zcl::t_code_point_bitset>(temp_arena);
+
+    zcl::BitsetSetRange(*code_pt_bs, zcl::k_printable_ascii_range_begin, zcl::k_printable_ascii_range_end); // Add the printable ASCII range as a default.
+
+    if (!zcl::StrCheckEmpty(extra_chrs_file_path)) {
+        zcl::t_array_mut<zcl::t_u8> extra_chrs_file_contents;
+
+        if (!zcl::FileLoadContents(extra_chrs_file_path, temp_arena, temp_arena, &extra_chrs_file_contents)) {
+            zcl::LogError(ZCL_STR_LITERAL("Failed to load extra characters file \"%\"!"), extra_chrs_file_path);
+            return false;
+        }
+
+        zcl::StrMarkCodePoints({extra_chrs_file_contents}, code_pt_bs);
+    }
+
+    // @todo: Proper check for invalid height!
+
+    zcl::t_font_arrangement arrangement;
+    zcl::t_array_mut<zcl::t_font_atlas_rgba> atlas_rgbas;
+
+    if (!zcl::FontLoadFromRaw(file_path, height, code_pt_bs, temp_arena, temp_arena, temp_arena, &arrangement, &atlas_rgbas)) {
+        zcl::LogError(ZCL_STR_LITERAL("Failed to load font from file \"%\"!"), file_path);
+        return false;
+    }
+
+    zcl::t_file_stream file_stream;
+
+    if (!zcl::FileOpen(file_path, zcl::ek_file_access_mode_write, temp_arena, &file_stream)) {
+        zcl::LogError(ZCL_STR_LITERAL("Failed to open font output file \"%\" for writing!"), out_file_path);
+        return false;
+    }
+
+    ZCL_DEFER({ zcl::FileClose(&file_stream); });
+
+    if (!zcl::SerializeFont(file_stream, arrangement, atlas_rgbas, temp_arena)) {
+        zcl::LogError(ZCL_STR_LITERAL("Failed to serialize font to file \"%\"!"), out_file_path);
+        return false;
+    }
+
+    return true;
+}
+
+static zcl::t_b8 PackShader(const zcl::t_str_rdonly file_path, const zcl::t_str_rdonly type, const zcl::t_str_rdonly varying_def_file_path, const zcl::t_str_rdonly out_file_path, zcl::t_arena *const temp_arena) {
+    zcl::t_b8 is_frag;
+
+    if (zcl::StrsCheckEqual(type, ZCL_STR_LITERAL("vertex"))) {
+        is_frag = false;
+    } else if (zcl::StrsCheckEqual(type, ZCL_STR_LITERAL("fragment"))) {
+        is_frag = true;
+    } else {
+        zcl::LogError(ZCL_STR_LITERAL("Invalid shader type \"%\"! Expected \"vertex\" or \"fragment\"."), type);
+        return false;
+    }
+
+    zcl::t_array_mut<zcl::t_u8> compiled_bin;
+
+    if (!CompileShader(file_path, varying_def_file_path, is_frag, temp_arena, temp_arena, &compiled_bin)) {
+        zcl::LogError(ZCL_STR_LITERAL("Failed to compile shader from file \"%\"!"), file_path);
+        return false;
+    }
+
+    zcl::t_file_stream shader_file_stream;
+
+    if (!zcl::FileOpen(out_file_path, zcl::ek_file_access_mode_write, temp_arena, &shader_file_stream)) {
+        zcl::LogError(ZCL_STR_LITERAL("Failed to open shader output file \"%\" for writing!"), out_file_path);
+        return false;
+    }
+
+    ZCL_DEFER({ zcl::FileClose(&shader_file_stream); });
+
+    if (!zcl::SerializeShader(shader_file_stream, compiled_bin)) {
+        zcl::LogError(ZCL_STR_LITERAL("Failed to serialize shader to file \"%\"!"), out_file_path);
+        return false;
+    }
+
+    return true;
+}
+
+static zcl::t_b8 PackSound(const zcl::t_str_rdonly file_path, const zcl::t_str_rdonly out_file_path, zcl::t_arena *const temp_arena, const zcl::t_stream_view err_stream_view) {
+    zcl::t_sound_data_mut snd_data;
+
+    if (!zcl::SoundLoadFromRaw(file_path, temp_arena, temp_arena, &snd_data)) {
+        zcl::PrintFormat(err_stream_view, ZCL_STR_LITERAL("Failed to load sound from file \"%\"!"), file_path);
+        return false;
+    }
+
+    zcl::t_file_stream file_stream;
+
+    if (!zcl::FileOpen(out_file_path, zcl::ek_file_access_mode_write, temp_arena, &file_stream)) {
+        zcl::PrintFormat(err_stream_view, ZCL_STR_LITERAL("Failed to open sound output file \"%\" for writing!"), out_file_path);
+        return false;
+    }
+
+    ZCL_DEFER({ zcl::FileClose(&file_stream); });
+
+    if (!zcl::SerializeSound(file_stream, snd_data)) {
+        zcl::PrintFormat(err_stream_view, ZCL_STR_LITERAL("Failed to serialize sound to file \"%\"!"), out_file_path);
+        return false;
+    }
+
+    return true;
+}
+
+zcl::t_b8 PackAssets(const zcl::t_str_rdonly instrs_json_file_path) {
     zcl::t_arena arena = zcl::arena_create_blockbased();
     ZCL_DEFER({ zcl::arena_destroy(&arena); });
 
@@ -204,115 +333,17 @@ zcl::t_b8 pack_assets(const zcl::t_str_rdonly instrs_json_file_path) {
             }
 
             switch (asset_type_index) {
-            case ek_asset_type_texture: {
-                const auto file_path = zcl::CStrToStr(field_vals[ek_texture_field_file_path]->valuestring);
-                const auto out_file_path = zcl::CStrToStr(field_vals[ek_texture_field_out_file_path]->valuestring);
-
-                zcl::t_texture_data_mut texture_data;
-
-                if (!zcl::TextureLoadFromRaw(file_path, &arena, &arena, &texture_data)) {
-                    zcl::LogError(ZCL_STR_LITERAL("Failed to load texture from file \"%\"!"), file_path);
-                    return false;
-                }
-
-                if (!zcl::TexturePack(out_file_path, texture_data, &arena)) {
-                    zcl::LogError(ZCL_STR_LITERAL("Failed to pack texture to file \"%\"!"), out_file_path);
-                    return false;
-                }
-
+            case ek_asset_type_texture:
                 break;
-            }
 
-            case ek_asset_type_font: {
-                const auto file_path = zcl::CStrToStr(field_vals[ek_font_field_file_path]->valuestring);
-                const auto height = field_vals[ek_font_field_height]->valueint;
-                const auto out_file_path = zcl::CStrToStr(field_vals[ek_font_field_out_file_path]->valuestring);
-
-                const auto code_pt_bs = zcl::arena_push_item<zcl::t_code_point_bitset>(&arena);
-
-                zcl::BitsetSetRange(*code_pt_bs, zcl::k_printable_ascii_range_begin, zcl::k_printable_ascii_range_end); // Add the printable ASCII range as a default.
-
-                if (field_vals[ek_font_field_extra_chrs_file_path]) {
-                    const auto extra_chrs_file_path = zcl::CStrToStr(field_vals[ek_font_field_extra_chrs_file_path]->valuestring);
-
-                    zcl::t_array_mut<zcl::t_u8> extra_chrs_file_contents;
-
-                    if (!zcl::FileLoadContents(extra_chrs_file_path, &arena, &arena, &extra_chrs_file_contents)) {
-                        zcl::LogError(ZCL_STR_LITERAL("Failed to load extra characters file \"%\"!"), extra_chrs_file_path);
-                        return false;
-                    }
-
-                    zcl::StrMarkCodePoints({extra_chrs_file_contents}, code_pt_bs);
-                }
-
-                // @todo: Proper check for invalid height!
-
-                zcl::t_font_arrangement arrangement;
-                zcl::t_array_mut<zcl::t_font_atlas_rgba> atlas_rgbas;
-
-                if (!zcl::FontLoadFromRaw(file_path, height, code_pt_bs, &arena, &arena, &arena, &arrangement, &atlas_rgbas)) {
-                    zcl::LogError(ZCL_STR_LITERAL("Failed to load font from file \"%\"!"), file_path);
-                    return false;
-                }
-
-                if (!zcl::FontPack(out_file_path, arrangement, atlas_rgbas, &arena)) {
-                    zcl::LogError(ZCL_STR_LITERAL("Failed to pack font to file \"%\"!"), out_file_path);
-                    return false;
-                }
-
+            case ek_asset_type_font:
                 break;
-            }
 
-            case ek_asset_type_shader: {
-                const auto file_path = zcl::CStrToStr(field_vals[ek_shader_field_file_path]->valuestring);
-                const auto type = zcl::CStrToStr(field_vals[ek_shader_field_type]->valuestring);
-                const auto varying_def_file_path = zcl::CStrToStr(field_vals[ek_shader_field_varying_def_file_path]->valuestring);
-                const auto out_file_path = zcl::CStrToStr(field_vals[ek_shader_field_out_file_path]->valuestring);
-
-                zcl::t_b8 is_frag;
-
-                if (zcl::StrsCheckEqual(type, ZCL_STR_LITERAL("vertex"))) {
-                    is_frag = false;
-                } else if (zcl::StrsCheckEqual(type, ZCL_STR_LITERAL("fragment"))) {
-                    is_frag = true;
-                } else {
-                    zcl::LogError(ZCL_STR_LITERAL("A packing instructions JSON shader entry has an invalid shader type \"%\"! Expected \"vertex\" or \"fragment\"."), type);
-                    return false;
-                }
-
-                zcl::t_array_mut<zcl::t_u8> compiled_bin;
-
-                if (!compile_shader(file_path, varying_def_file_path, is_frag, &arena, &arena, &compiled_bin)) {
-                    zcl::LogError(ZCL_STR_LITERAL("Failed to compile shader from file \"%\"!"), file_path);
-                    return false;
-                }
-
-                if (!zcl::ShaderPack(out_file_path, compiled_bin, &arena)) {
-                    zcl::LogError(ZCL_STR_LITERAL("Failed to pack shader to file \"%\"!"), out_file_path);
-                    return false;
-                }
-
+            case ek_asset_type_shader:
                 break;
-            }
 
-            case ek_asset_type_sound: {
-                const auto file_path = zcl::CStrToStr(field_vals[ek_sound_field_file_path]->valuestring);
-                const auto out_file_path = zcl::CStrToStr(field_vals[ek_sound_field_out_file_path]->valuestring);
-
-                zcl::t_sound_data_mut snd_data;
-
-                if (!zcl::SoundLoadFromRaw(file_path, &arena, &arena, &snd_data)) {
-                    zcl::LogError(ZCL_STR_LITERAL("Failed to load sound from file \"%\"!"), file_path);
-                    return false;
-                }
-
-                if (!zcl::SoundPack(out_file_path, snd_data, &arena)) {
-                    zcl::LogError(ZCL_STR_LITERAL("Failed to pack sound to file \"%\"!"), out_file_path);
-                    return false;
-                }
-
+            case ek_asset_type_sound:
                 break;
-            }
             }
         }
     }

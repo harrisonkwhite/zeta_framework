@@ -155,11 +155,11 @@ namespace zcl {
         t_i32 byte_index;
     };
 
-    // byte_index should be initialised to the index of ANY byte in the code point to start walking from.
+    // byte_index should be initialized to the index of ANY byte in the code point to start walking from.
     // Returns false iff the walk has ended.
     t_b8 StrWalk(const t_str_rdonly str, t_i32 *const byte_index, t_str_walk_step *const o_step);
 
-    // byte_index should be initialised to the index of ANY byte in the code point to start walking backwards from.
+    // byte_index should be initialized to the index of ANY byte in the code point to start walking backwards from.
     // Returns false iff the walk has ended.
     t_b8 StrWalkReverse(const t_str_rdonly str, t_i32 *const byte_index, t_str_walk_step *const o_step);
 
