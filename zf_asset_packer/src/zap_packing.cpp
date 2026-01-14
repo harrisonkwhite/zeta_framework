@@ -210,12 +210,12 @@ zcl::t_b8 pack_assets(const zcl::t_str_rdonly instrs_json_file_path) {
 
                 zcl::t_texture_data_mut texture_data;
 
-                if (!zcl::texture_load_from_raw(file_path, &arena, &arena, &texture_data)) {
+                if (!zcl::TextureLoadFromRaw(file_path, &arena, &arena, &texture_data)) {
                     zcl::LogError(ZCL_STR_LITERAL("Failed to load texture from file \"%\"!"), file_path);
                     return false;
                 }
 
-                if (!zcl::texture_pack(out_file_path, texture_data, &arena)) {
+                if (!zcl::TexturePack(out_file_path, texture_data, &arena)) {
                     zcl::LogError(ZCL_STR_LITERAL("Failed to pack texture to file \"%\"!"), out_file_path);
                     return false;
                 }
@@ -250,12 +250,12 @@ zcl::t_b8 pack_assets(const zcl::t_str_rdonly instrs_json_file_path) {
                 zcl::t_font_arrangement arrangement;
                 zcl::t_array_mut<zcl::t_font_atlas_rgba> atlas_rgbas;
 
-                if (!zcl::font_load_from_raw(file_path, height, code_pt_bs, &arena, &arena, &arena, &arrangement, &atlas_rgbas)) {
+                if (!zcl::FontLoadFromRaw(file_path, height, code_pt_bs, &arena, &arena, &arena, &arrangement, &atlas_rgbas)) {
                     zcl::LogError(ZCL_STR_LITERAL("Failed to load font from file \"%\"!"), file_path);
                     return false;
                 }
 
-                if (!zcl::font_pack(out_file_path, arrangement, atlas_rgbas, &arena)) {
+                if (!zcl::FontPack(out_file_path, arrangement, atlas_rgbas, &arena)) {
                     zcl::LogError(ZCL_STR_LITERAL("Failed to pack font to file \"%\"!"), out_file_path);
                     return false;
                 }
@@ -287,7 +287,7 @@ zcl::t_b8 pack_assets(const zcl::t_str_rdonly instrs_json_file_path) {
                     return false;
                 }
 
-                if (!zcl::shader_pack(out_file_path, compiled_bin, &arena)) {
+                if (!zcl::ShaderPack(out_file_path, compiled_bin, &arena)) {
                     zcl::LogError(ZCL_STR_LITERAL("Failed to pack shader to file \"%\"!"), out_file_path);
                     return false;
                 }

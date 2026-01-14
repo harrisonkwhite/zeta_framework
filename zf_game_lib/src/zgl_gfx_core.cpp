@@ -401,7 +401,7 @@ namespace zgl::gfx {
         ZCL_ASSERT(g_module_state.phase == ek_module_phase_active_and_midframe);
         ZCL_ASSERT(view_id >= 0 && view_id < BGFX_CONFIG_MAX_VIEWS);
         ZCL_ASSERT(size.x > 0 && size.y > 0);
-        ZCL_ASSERT(!clear || zcl::color_check_normalized(clear_col));
+        ZCL_ASSERT(!clear || zcl::ColorCheckNormalized(clear_col));
 
         const auto bgfx_view_id = static_cast<bgfx::ViewId>(view_id);
 
@@ -418,7 +418,7 @@ namespace zgl::gfx {
         bgfx::setViewTransform(bgfx_view_id, &view_mat, &proj_mat);
 
         if (clear) {
-            bgfx::setViewClear(bgfx_view_id, BGFX_CLEAR_COLOR, zcl::color_rgba8_to_hex(zcl::color_rgba32f_to_rgba8(clear_col)));
+            bgfx::setViewClear(bgfx_view_id, BGFX_CLEAR_COLOR, zcl::ColorRGBA8ToHex(zcl::ColorRGBA32FToRGBA8(clear_col)));
         }
 
         bgfx::setViewFrameBuffer(bgfx_view_id, fb_hdl);

@@ -89,7 +89,7 @@ namespace zgl::gfx {
     inline t_resource *texture_create_from_raw(const zcl::t_str_rdonly file_path, zcl::t_arena *const temp_arena, t_resource_group *const group) {
         zcl::t_texture_data_mut texture_data;
 
-        if (!zcl::texture_load_from_raw(file_path, temp_arena, temp_arena, &texture_data)) {
+        if (!zcl::TextureLoadFromRaw(file_path, temp_arena, temp_arena, &texture_data)) {
             ZCL_FATAL();
         }
 
@@ -99,7 +99,7 @@ namespace zgl::gfx {
     inline t_resource *texture_create_from_packed(const zcl::t_str_rdonly file_path, zcl::t_arena *const temp_arena, t_resource_group *const group) {
         zcl::t_texture_data_mut texture_data;
 
-        if (!zcl::texture_unpack(file_path, temp_arena, temp_arena, &texture_data)) {
+        if (!zcl::TextureUnpack(file_path, temp_arena, temp_arena, &texture_data)) {
             ZCL_FATAL();
         }
 
@@ -126,13 +126,13 @@ namespace zgl::gfx {
     inline t_resource *shader_prog_create_from_packed(const zcl::t_str_rdonly vert_shader_file_path, const zcl::t_str_rdonly frag_shader_file_path, zcl::t_arena *const temp_arena, t_resource_group *const arena) {
         zcl::t_array_mut<zcl::t_u8> vert_shader_compiled_bin;
 
-        if (!zcl::shader_unpack(vert_shader_file_path, temp_arena, temp_arena, &vert_shader_compiled_bin)) {
+        if (!zcl::ShaderUnpack(vert_shader_file_path, temp_arena, temp_arena, &vert_shader_compiled_bin)) {
             ZCL_FATAL();
         }
 
         zcl::t_array_mut<zcl::t_u8> frag_shader_compiled_bin;
 
-        if (!zcl::shader_unpack(frag_shader_file_path, temp_arena, temp_arena, &frag_shader_compiled_bin)) {
+        if (!zcl::ShaderUnpack(frag_shader_file_path, temp_arena, temp_arena, &frag_shader_compiled_bin)) {
             ZCL_FATAL();
         }
 
@@ -159,7 +159,7 @@ namespace zgl::gfx {
     // @subsection: Frame
 
     constexpr zcl::t_b8 vertex_check_valid(const t_vertex vert) {
-        return zcl::color_check_normalized(vert.blend)
+        return zcl::ColorCheckNormalized(vert.blend)
             && vert.uv.x >= 0.0f && vert.uv.y >= 0.0f && vert.uv.x <= 1.0f && vert.uv.y <= 1.0f;
     }
 

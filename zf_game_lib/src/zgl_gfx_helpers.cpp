@@ -40,7 +40,7 @@ namespace zgl::gfx {
             src_rect_to_use = src_rect;
         }
 
-        const zcl::t_rect_f uv_rect = zcl::texture_calc_uv_rect(src_rect_to_use, texture_size);
+        const zcl::t_rect_f uv_rect = zcl::TextureCalcUVRect(src_rect_to_use, texture_size);
 
         zcl::t_static_array<zcl::t_v2, 4> quad_pts;
         zcl::t_arena quad_pts_arena = zcl::arena_create_wrapping(zcl::to_bytes(&quad_pts));
@@ -70,7 +70,7 @@ namespace zgl::gfx {
         zcl::t_font_arrangement arrangement;
         zcl::t_array_mut<zcl::t_font_atlas_rgba> atlas_rgbas;
 
-        if (!zcl::font_load_from_raw(file_path, height, code_pts, resource_group->arena, temp_arena, temp_arena, &arrangement, &atlas_rgbas)) {
+        if (!zcl::FontLoadFromRaw(file_path, height, code_pts, resource_group->arena, temp_arena, temp_arena, &arrangement, &atlas_rgbas)) {
             ZCL_FATAL();
         }
 
@@ -90,7 +90,7 @@ namespace zgl::gfx {
         zcl::t_font_arrangement arrangement;
         zcl::t_array_mut<zcl::t_font_atlas_rgba> atlas_rgbas;
 
-        if (!zcl::font_unpack(file_path, resource_group->arena, temp_arena, temp_arena, &arrangement, &atlas_rgbas)) {
+        if (!zcl::FontUnpack(file_path, resource_group->arena, temp_arena, temp_arena, &arrangement, &atlas_rgbas)) {
             ZCL_FATAL();
         }
 

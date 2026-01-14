@@ -9,17 +9,17 @@ namespace zcl {
             return static_cast<t_i32>(code_pt);
         };
 
-    constexpr t_hash_func<t_font_code_pt_pair> k_code_pt_pair_hash_func =
-        [](const t_font_code_pt_pair &pair) {
+    constexpr t_hash_func<t_font_code_point_pair> k_code_pt_pair_hash_func =
+        [](const t_font_code_point_pair &pair) {
             return 0; // @todo: Proper hash function!
         };
 
-    constexpr t_comparator_bin<t_font_code_pt_pair> k_code_pt_pair_comparator =
-        [](const t_font_code_pt_pair &pa, const t_font_code_pt_pair &pb) {
+    constexpr t_comparator_bin<t_font_code_point_pair> k_code_pt_pair_comparator =
+        [](const t_font_code_point_pair &pa, const t_font_code_point_pair &pb) {
             return pa.a == pb.a && pa.b == pb.b;
         };
 
-    t_b8 font_load_from_raw(const t_str_rdonly file_path, const t_i32 height, t_code_point_bitset *const code_pts, t_arena *const arrangement_arena, t_arena *const atlas_rgbas_arena, t_arena *const temp_arena, t_font_arrangement *const o_arrangement, t_array_mut<t_font_atlas_rgba> *const o_atlas_rgbas) {
+    t_b8 FontLoadFromRaw(const t_str_rdonly file_path, const t_i32 height, t_code_point_bitset *const code_pts, t_arena *const arrangement_arena, t_arena *const atlas_rgbas_arena, t_arena *const temp_arena, t_font_arrangement *const o_arrangement, t_array_mut<t_font_atlas_rgba> *const o_atlas_rgbas) {
         ZCL_ASSERT(height > 0);
 
         // Get the plain font file data.
@@ -123,7 +123,7 @@ namespace zcl {
 
         // If there were any kernings to store, set up the hash map and go through again and store them.
         o_arrangement->has_kernings = true;
-        o_arrangement->code_pt_pairs_to_kernings = hash_map_create<t_font_code_pt_pair, t_i32>(k_code_pt_pair_hash_func, arrangement_arena, k_hash_map_cap_default, k_code_pt_pair_comparator);
+        o_arrangement->code_pt_pairs_to_kernings = hash_map_create<t_font_code_point_pair, t_i32>(k_code_pt_pair_hash_func, arrangement_arena, k_hash_map_cap_default, k_code_pt_pair_comparator);
 
         ZCL_BITSET_WALK_ALL_SET (*code_pts, i) {
             ZCL_BITSET_WALK_ALL_SET (*code_pts, j) {
@@ -197,7 +197,7 @@ namespace zcl {
         return true;
     }
 
-    t_b8 font_pack(const t_str_rdonly file_path, const t_font_arrangement &arrangement, const t_array_rdonly<t_font_atlas_rgba> atlas_rgbas, t_arena *const temp_arena) {
+    t_b8 FontPack(const t_str_rdonly file_path, const t_font_arrangement &arrangement, const t_array_rdonly<t_font_atlas_rgba> atlas_rgbas, t_arena *const temp_arena) {
         if (!FileCreateRecursive(file_path, temp_arena)) {
             return false;
         }
@@ -229,7 +229,7 @@ namespace zcl {
         return true;
     }
 
-    t_b8 font_unpack(const t_str_rdonly file_path, t_arena *const arrangement_arena, t_arena *const atlas_rgbas_arena, t_arena *const temp_arena, t_font_arrangement *const o_arrangement, t_array_mut<t_font_atlas_rgba> *const o_atlas_rgbas) {
+    t_b8 FontUnpack(const t_str_rdonly file_path, t_arena *const arrangement_arena, t_arena *const atlas_rgbas_arena, t_arena *const temp_arena, t_font_arrangement *const o_arrangement, t_array_mut<t_font_atlas_rgba> *const o_atlas_rgbas) {
         t_file_stream fs;
 
         if (!FileOpen(file_path, ek_file_access_mode_read, temp_arena, &fs)) {

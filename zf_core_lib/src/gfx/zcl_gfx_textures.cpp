@@ -4,7 +4,7 @@
 #include <stb_image.h>
 
 namespace zcl {
-    t_b8 texture_load_from_raw(const t_str_rdonly file_path, t_arena *const texture_data_arena, t_arena *const temp_arena, t_texture_data_mut *const o_texture_data) {
+    t_b8 TextureLoadFromRaw(const t_str_rdonly file_path, t_arena *const texture_data_arena, t_arena *const temp_arena, t_texture_data_mut *const o_texture_data) {
         const t_str_rdonly file_path_terminated = StrCloneButAddTerminator(file_path, temp_arena);
 
         t_v2_i size_in_pxs;
@@ -25,7 +25,7 @@ namespace zcl {
         return true;
     }
 
-    t_b8 texture_pack(const t_str_rdonly file_path, const t_texture_data_mut texture_data, t_arena *const temp_arena) {
+    t_b8 TexturePack(const t_str_rdonly file_path, const t_texture_data_mut texture_data, t_arena *const temp_arena) {
         if (!FileCreateRecursive(file_path, temp_arena)) {
             return false;
         }
@@ -49,7 +49,7 @@ namespace zcl {
         return true;
     }
 
-    t_b8 texture_unpack(const t_str_rdonly file_path, t_arena *const texture_data_arena, t_arena *const temp_arena, t_texture_data_mut *const o_texture_data) {
+    t_b8 TextureUnpack(const t_str_rdonly file_path, t_arena *const texture_data_arena, t_arena *const temp_arena, t_texture_data_mut *const o_texture_data) {
         t_file_stream fs;
 
         if (!FileOpen(file_path, ek_file_access_mode_read, temp_arena, &fs)) {
