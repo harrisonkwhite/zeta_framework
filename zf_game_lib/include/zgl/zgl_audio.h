@@ -37,12 +37,12 @@ namespace zgl {
 
     // @todo: Functions for modifying volume, etc.
 
-    zcl::t_b8 SoundCheckPlaying(t_audio_sys *const audio_sys, const t_sound_id id);
+    zcl::t_b8 SoundCheckPlaying(const t_audio_sys *const audio_sys, const t_sound_id id);
 
     namespace detail {
         t_audio_sys *AudioStartup(zcl::t_arena *const arena);
         void AudioShutdown(t_audio_sys *const sys);
 
-        void SoundsProcFinished(t_audio_sys *const audio_sys);
+        void SoundsProcessFinished(t_audio_sys *const audio_sys);
     };
 }

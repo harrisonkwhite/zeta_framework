@@ -1,11 +1,11 @@
 #pragma once
 
 #include <zcl.h>
+#include <zgl/zgl_gfx.h>
 
 namespace zgl {
     struct t_input_state;
     struct t_platform;
-    struct t_gfx;
     struct t_frame_context;
     struct t_audio_sys;
 
@@ -18,7 +18,7 @@ namespace zgl {
 
             t_gfx *gfx;
 
-            zgl::t_audio_sys *audio_sys;
+            t_audio_sys *audio_sys;
 
             zcl::t_rng *rng;
 
@@ -35,7 +35,7 @@ namespace zgl {
 
             t_gfx *gfx;
 
-            zgl::t_audio_sys *audio_sys;
+            t_audio_sys *audio_sys;
 
             zcl::t_rng *rng;
 
@@ -48,7 +48,7 @@ namespace zgl {
             zcl::t_arena *perm_arena;
             zcl::t_arena *temp_arena;
 
-            t_frame_context *frame_context;
+            t_frame_context frame_context;
 
             zcl::t_rng *rng;
 

@@ -5,6 +5,20 @@
 #include <zcl/zcl_strs.h>
 
 namespace zcl {
+    constexpr zcl::t_v2 k_origin_top_left = {0.0f, 0.0f};
+    constexpr zcl::t_v2 k_origin_top_center = {0.5f, 0.0f};
+    constexpr zcl::t_v2 k_origin_top_right = {1.0f, 0.0f};
+    constexpr zcl::t_v2 k_origin_center_left = {0.0f, 0.5f};
+    constexpr zcl::t_v2 k_origin_center = {0.5f, 0.5f};
+    constexpr zcl::t_v2 k_origin_center_right = {1.0f, 0.5f};
+    constexpr zcl::t_v2 k_origin_bottom_left = {0.0f, 1.0f};
+    constexpr zcl::t_v2 k_origin_bottom_center = {0.5f, 1.0f};
+    constexpr zcl::t_v2 k_origin_bottom_right = {1.0f, 1.0f};
+
+    constexpr zcl::t_b8 OriginCheckValid(const zcl::t_v2 origin) {
+        return origin.x >= 0.0f && origin.x <= 1.0f && origin.y >= 0.0f && origin.y <= 1.0f;
+    }
+
     // ============================================================
     // @section: Colors
 

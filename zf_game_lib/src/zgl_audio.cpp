@@ -229,7 +229,7 @@ namespace zgl {
         zcl::BitsetUnset(audio_sys->snd_insts.activity, id.index);
     }
 
-    zcl::t_b8 SoundCheckPlaying(t_audio_sys *const audio_sys, const t_sound_id id) {
+    zcl::t_b8 SoundCheckPlaying(const t_audio_sys *const audio_sys, const t_sound_id id) {
         ZCL_ASSERT(g_module_active);
         ZCL_ASSERT(id.version <= audio_sys->snd_insts.versions[id.index]);
 
@@ -240,7 +240,7 @@ namespace zgl {
         return ma_sound_is_playing(&audio_sys->snd_insts.ma_snds[id.index]);
     }
 
-    void detail::SoundsProcFinished(t_audio_sys *const audio_sys) {
+    void detail::SoundsProcessFinished(t_audio_sys *const audio_sys) {
         ZCL_ASSERT(g_module_active);
 
         ZCL_BITSET_WALK_ALL_SET (audio_sys->snd_insts.activity, i) {

@@ -2,7 +2,6 @@
 
 #include <zgl/zgl_input.h>
 #include <zgl/zgl_platform.h>
-#include <zgl/zgl_gfx.h>
 #include <zgl/zgl_audio.h>
 
 namespace zgl::game {
@@ -109,7 +108,7 @@ namespace zgl::game {
                 while (tick_interval_accum >= tick_interval_targ) {
                     zcl::ArenaRewind(&temp_arena);
 
-                    detail::SoundsProcFinished(audio_sys);
+                    detail::SoundsProcessFinished(audio_sys);
 
                     config.tick_func({
                         .perm_arena = &perm_arena,
@@ -131,7 +130,7 @@ namespace zgl::game {
 
             zcl::ArenaRewind(&temp_arena);
 
-            t_frame_context *const frame_context = FrameBegin(gfx, &temp_arena);
+            const t_frame_context frame_context = FrameBegin(gfx, &temp_arena);
 
             config.render_func({
                 .perm_arena = &perm_arena,
