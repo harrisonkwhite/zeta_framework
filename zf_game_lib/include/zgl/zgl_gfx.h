@@ -5,12 +5,12 @@
 namespace zgl {
     struct t_platform;
 
-    struct t_frame_basis;
+    struct t_gfx;
 
     // @todo: Permanent resource group doesn't need to be exposed. Better to just have user create their own, more explicit and simple.
-    t_frame_basis *ModuleStartup(t_platform *const platform, zcl::t_arena *const arena, zcl::t_arena *const temp_arena);
+    t_gfx *GFXStartup(t_platform *const platform, zcl::t_arena *const arena, zcl::t_arena *const temp_arena);
 
-    void ModuleShutdown(const t_frame_basis *const frame_basis);
+    void GFXShutdown(t_gfx *const gfx);
 
     // ============================================================
     // @section: Resources
@@ -19,7 +19,7 @@ namespace zgl {
 
     zcl::t_arena *GFXResourceGroupGetArena(t_gfx_resource_group *const group); // @temp: Remove once fonts are reworked.
 
-    t_gfx_resource_group *GFXResourceGroupCreate(zcl::t_arena *const arena);
+    t_gfx_resource_group *GFXResourceGroupCreate(t_gfx *const gfx, zcl::t_arena *const arena);
     void GFXResourceGroupDestroy(t_gfx_resource_group *const group);
 
     struct t_gfx_resource;
@@ -123,7 +123,7 @@ namespace zgl {
             && VertexCheckValid(tri.verts[2]);
     }
 
-    t_frame_context *FrameBegin(const t_frame_basis *const basis, zcl::t_arena *const context_arena);
+    t_frame_context *FrameBegin(t_gfx *const gfx, zcl::t_arena *const context_arena);
     void FrameEnd(t_frame_context *const context);
 
     void FramePassBegin(t_frame_context *const context, const zcl::t_v2_i size, const zcl::t_mat4x4 &view_mat = zcl::MatrixCreateIdentity(), const zcl::t_b8 clear = false, const zcl::t_color_rgba32f clear_col = zcl::k_color_black);

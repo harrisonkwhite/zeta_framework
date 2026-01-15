@@ -14,9 +14,9 @@ You can find it being put to use in my in-development game [Kaōzeth](https://gi
 - Input handling for keyboard, mouse, and gamepad
 - 2D batch-based texture and UTF-8 string rendering
 - The ability to render using custom shaders and to assign textures as render targets
-- Sound effect playing
+- Audio playing and streaming
 - An optional asset packing tool
-- A core library with procedural-style utilities for memory arenas, UTF-8 strings, 2D math, data structures, RNG, and more
+- A core library with utilities for memory arenas, UTF-8 strings, 2D math, data structures, RNG, and more
 
 ---
 

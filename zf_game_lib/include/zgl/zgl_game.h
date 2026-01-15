@@ -5,7 +5,7 @@
 namespace zgl {
     struct t_input_state;
     struct t_platform;
-    struct t_gfx_resource_group;
+    struct t_gfx;
     struct t_frame_context;
     struct t_audio_sys;
 
@@ -15,6 +15,8 @@ namespace zgl {
             zcl::t_arena *temp_arena;
 
             t_platform *platform;
+
+            t_gfx *gfx;
 
             zgl::t_audio_sys *audio_sys;
 
@@ -30,6 +32,8 @@ namespace zgl {
             const t_input_state *input_state;
 
             t_platform *platform;
+
+            t_gfx *gfx;
 
             zgl::t_audio_sys *audio_sys;
 
