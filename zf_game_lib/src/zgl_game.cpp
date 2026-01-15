@@ -34,13 +34,13 @@ namespace zgl::game {
         zcl::t_arena temp_arena = zcl::ArenaCreateBlockBased();
         ZCL_DEFER({ zcl::ArenaDestroy(&temp_arena); });
 
-        platform::ModuleStartup(k_init_window_size);
-        ZCL_DEFER({ platform::ModuleShutdown(); });
-
         t_input_state *const input_state = detail::InputCreateState(&perm_arena);
 
+        t_platform *const platform = detail::PlatformStartup(k_init_window_size, input_state, &perm_arena);
+        ZCL_DEFER({ detail::PlatformShutdown(platform); });
+
         gfx::t_resource_group *perm_gfx_resource_group;
-        gfx::t_frame_basis *const frame_basis = gfx::ModuleStartup(&perm_arena, &temp_arena, &perm_gfx_resource_group);
+        gfx::t_frame_basis *const frame_basis = gfx::ModuleStartup(platform, &perm_arena, &temp_arena, &perm_gfx_resource_group);
         ZCL_DEFER({ gfx::ModuleShutdown(frame_basis); });
 
         t_audio_sys *const audio_sys = detail::AudioStartup(&perm_arena);
@@ -55,6 +55,7 @@ namespace zgl::game {
         config.init_func({
             .perm_arena = &perm_arena,
             .temp_arena = &temp_arena,
+            .platform = platform,
             .perm_gfx_resource_group = perm_gfx_resource_group,
             .audio_sys = audio_sys,
             .rng = rng,
@@ -78,10 +79,10 @@ namespace zgl::game {
         zcl::t_i32 fps_frame_cnt_accum = 0;
         constexpr zcl::t_f64 k_fps_refresh_time = 1.0;
 
-        while (!platform::WindowCheckCloseRequested()) {
-            platform::PollEvents(input_state);
+        while (!WindowCheckCloseRequested(platform)) {
+            detail::PollOSEvents(platform);
 
-            const zcl::t_f64 frame_time = platform::GetTime();
+            const zcl::t_f64 frame_time = GetTime(platform);
 
             const zcl::t_f64 tick_interval_targ = 1.0 / g_module_state.tps_targ;
             const zcl::t_f64 tick_interval_limit = tick_interval_targ * 8.0;
@@ -115,6 +116,7 @@ namespace zgl::game {
                         .perm_arena = &perm_arena,
                         .temp_arena = &temp_arena,
                         .input_state = input_state,
+                        .platform = platform,
                         .perm_gfx_resource_group = perm_gfx_resource_group,
                         .audio_sys = audio_sys,
                         .rng = rng,
@@ -144,7 +146,7 @@ namespace zgl::game {
             gfx::FrameEnd(frame_context);
 
             if (frame_first) {
-                platform::WindowShow();
+                detail::WindowShow(platform);
                 frame_first = false;
             }
 

@@ -64,6 +64,8 @@ namespace zgl::gfx {
     const zcl::t_i32 g_frame_vert_limit = 8192; // @todo: This should definitely be modifiable if the user wants.
 
     struct t_frame_basis {
+        t_platform *platform;
+
         bgfx::DynamicVertexBufferHandle vert_buf_bgfx_hdl;
 
         const t_resource *shader_prog_default;
@@ -92,7 +94,7 @@ namespace zgl::gfx {
         } batch_state;
     };
 
-    t_frame_basis *ModuleStartup(zcl::t_arena *const arena, zcl::t_arena *const temp_arena, t_resource_group **const o_perm_resource_group) {
+    t_frame_basis *ModuleStartup(t_platform *const platform, zcl::t_arena *const arena, zcl::t_arena *const temp_arena, t_resource_group **const o_perm_resource_group) {
         ZCL_ASSERT(g_module_state.phase == ek_module_phase_inactive);
 
         g_module_state = {.phase = ek_module_phase_active_but_not_midframe};
@@ -106,15 +108,15 @@ namespace zgl::gfx {
 
         bgfx_init.resolution.reset = BGFX_RESET_VSYNC;
 
-        const auto fb_size_cache = platform::WindowGetFramebufferSizeCache();
+        const auto fb_size_cache = WindowGetFramebufferSizeCache(platform);
 
         bgfx_init.resolution.width = static_cast<uint32_t>(fb_size_cache.x);
         bgfx_init.resolution.height = static_cast<uint32_t>(fb_size_cache.y);
 
         g_module_state.resolution_cache = fb_size_cache;
 
-        bgfx_init.platformData.nwh = platform::WindowGetNativeHandle();
-        bgfx_init.platformData.ndt = platform::DisplayGetNativeHandle();
+        bgfx_init.platformData.nwh = WindowGetNativeHandle(platform);
+        bgfx_init.platformData.ndt = DisplayGetNativeHandle(platform);
         bgfx_init.platformData.type = bgfx::NativeWindowHandleType::Default;
 
         if (!bgfx::init(bgfx_init)) {
@@ -128,6 +130,8 @@ namespace zgl::gfx {
         // Frame Basis Setup
         //
         const auto frame_basis = zcl::ArenaPushItem<t_frame_basis>(arena);
+
+        frame_basis->platform = platform;
 
         {
             bgfx::VertexLayout vert_layout;
@@ -415,7 +419,7 @@ namespace zgl::gfx {
 
         g_module_state.phase = ek_module_phase_active_and_midframe;
 
-        const auto fb_size_cache = platform::WindowGetFramebufferSizeCache();
+        const auto fb_size_cache = WindowGetFramebufferSizeCache(basis->platform);
 
         if (g_module_state.resolution_cache != fb_size_cache) {
             bgfx::reset(static_cast<uint32_t>(fb_size_cache.x), static_cast<uint32_t>(fb_size_cache.y), BGFX_RESET_VSYNC);

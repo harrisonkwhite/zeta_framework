@@ -5,6 +5,8 @@
 namespace zgl {
     struct t_input_state;
 
+    struct t_platform;
+
     namespace gfx {
         struct t_resource_group;
         struct t_frame_context;
@@ -16,6 +18,8 @@ namespace zgl {
         struct t_init_func_context {
             zcl::t_arena *perm_arena;
             zcl::t_arena *temp_arena;
+
+            t_platform *platform;
 
             gfx::t_resource_group *perm_gfx_resource_group;
 
@@ -31,6 +35,8 @@ namespace zgl {
             zcl::t_arena *temp_arena;
 
             const t_input_state *input_state;
+
+            t_platform *platform;
 
             gfx::t_resource_group *perm_gfx_resource_group;
 

@@ -144,6 +144,8 @@ namespace zgl {
         void CursorUpdateState(t_input_state *const input_state, const zcl::t_v2 pos);
         void ScrollUpdateState(t_input_state *const input_state, const zcl::t_v2 offs_to_apply);
         void GamepadUpdateState(t_input_state *const input_state, const zcl::t_i32 gamepad_index, const zcl::t_b8 connected, const zcl::t_static_bitset<ekm_gamepad_button_code_cnt> &btns_down, const zcl::t_static_array<zcl::t_f32, ekm_gamepad_axis_code_cnt> &axes);
-        zcl::t_b8 TextSubmitCodePoints(t_input_state *const input_state, const zcl::t_code_point cp); // Returns true iff there is enough room for the code point and it is added.
+
+        // Returns true iff there is enough room for the code point and it is added.
+        zcl::t_b8 TextSubmitCodePoints(t_input_state *const input_state, const zcl::t_code_point cp);
     }
 }

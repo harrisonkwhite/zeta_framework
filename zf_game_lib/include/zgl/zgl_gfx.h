@@ -2,12 +2,16 @@
 
 #include <zcl.h>
 
+namespace zgl {
+    struct t_platform;
+}
+
 namespace zgl::gfx {
     struct t_frame_basis;
     struct t_resource_group;
 
-    // This depends on the platform module being initialized beforehand.
-    t_frame_basis *ModuleStartup(zcl::t_arena *const arena, zcl::t_arena *const temp_arena, t_resource_group **const o_perm_resource_group);
+    // @todo: Permanent resource group doesn't need to be exposed. Better to just have user create their own, more explicit and simple.
+    t_frame_basis *ModuleStartup(t_platform *const platform, zcl::t_arena *const arena, zcl::t_arena *const temp_arena, t_resource_group **const o_perm_resource_group);
 
     void ModuleShutdown(const t_frame_basis *const frame_basis);
 
