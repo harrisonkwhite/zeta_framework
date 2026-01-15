@@ -37,7 +37,7 @@ namespace zgl::game {
         platform::ModuleStartup(k_init_window_size);
         ZCL_DEFER({ platform::ModuleShutdown(); });
 
-        input::t_state *const input_state = input::CreateState(&perm_arena);
+        t_input_state *const input_state = detail::InputCreateState(&perm_arena);
 
         gfx::t_resource_group *perm_gfx_resource_group;
         gfx::t_frame_basis *const frame_basis = gfx::ModuleStartup(&perm_arena, &temp_arena, &perm_gfx_resource_group);
@@ -122,7 +122,7 @@ namespace zgl::game {
                         .user_mem = user_mem,
                     });
 
-                    input::ClearEvents(input_state);
+                    detail::InputClearEvents(input_state);
 
                     tick_interval_accum -= tick_interval_targ;
                 }

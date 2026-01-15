@@ -3,9 +3,7 @@
 #include <zcl.h>
 
 namespace zgl {
-    namespace input {
-        struct t_state;
-    }
+    struct t_input_state;
 
     namespace gfx {
         struct t_resource_group;
@@ -32,7 +30,7 @@ namespace zgl {
             zcl::t_arena *perm_arena;
             zcl::t_arena *temp_arena;
 
-            const input::t_state *input_state;
+            const t_input_state *input_state;
 
             gfx::t_resource_group *perm_gfx_resource_group;
 

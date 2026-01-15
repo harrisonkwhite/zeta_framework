@@ -3,9 +3,7 @@
 #include <zcl.h>
 
 namespace zgl {
-    namespace input {
-        struct t_state;
-    }
+    struct t_input_state;
 
     namespace platform {
         // Note that the window is not shown by default, you have to manually do this.
@@ -17,7 +15,7 @@ namespace zgl {
         zcl::t_f64 GetTime();
 
         // Also updates the given input state based on events.
-        void PollEvents(input::t_state *const input_state);
+        void PollEvents(t_input_state *const input_state);
 
         void *DisplayGetNativeHandle();
 
