@@ -4,46 +4,38 @@
 
 namespace zgl {
     struct t_platform;
-}
 
-namespace zgl::gfx {
     struct t_frame_basis;
-    struct t_resource_group;
 
     // @todo: Permanent resource group doesn't need to be exposed. Better to just have user create their own, more explicit and simple.
-    t_frame_basis *ModuleStartup(t_platform *const platform, zcl::t_arena *const arena, zcl::t_arena *const temp_arena, t_resource_group **const o_perm_resource_group);
+    t_frame_basis *ModuleStartup(t_platform *const platform, zcl::t_arena *const arena, zcl::t_arena *const temp_arena);
 
     void ModuleShutdown(const t_frame_basis *const frame_basis);
 
     // ============================================================
     // @section: Resources
 
-    struct t_resource;
+    struct t_gfx_resource_group;
 
-    struct t_resource_group {
-        zcl::t_arena *arena;
-        t_resource *head;
-        t_resource *tail;
-    };
+    zcl::t_arena *GFXResourceGroupGetArena(t_gfx_resource_group *const group); // @temp: Remove once fonts are reworked.
 
-    inline t_resource_group ResourceGroupCreate(zcl::t_arena *const arena) {
-        return {.arena = arena};
-    }
+    t_gfx_resource_group *GFXResourceGroupCreate(zcl::t_arena *const arena);
+    void GFXResourceGroupDestroy(t_gfx_resource_group *const group);
 
-    void ResourceGroupDestroy(t_resource_group *const group);
+    struct t_gfx_resource;
 
-    t_resource *TextureCreate(const zcl::t_texture_data_rdonly texture_data, t_resource_group *const group);
-    t_resource *TextureCreateFromExternal(const zcl::t_str_rdonly file_path, t_resource_group *const group, zcl::t_arena *const temp_arena);
-    t_resource *TextureCreateFromPacked(const zcl::t_str_rdonly file_path, t_resource_group *const group, zcl::t_arena *const temp_arena);
+    t_gfx_resource *TextureCreate(const zcl::t_texture_data_rdonly texture_data, t_gfx_resource_group *const group);
+    t_gfx_resource *TextureCreateFromExternal(const zcl::t_str_rdonly file_path, t_gfx_resource_group *const group, zcl::t_arena *const temp_arena);
+    t_gfx_resource *TextureCreateFromPacked(const zcl::t_str_rdonly file_path, t_gfx_resource_group *const group, zcl::t_arena *const temp_arena);
 
-    t_resource *TextureCreateTarget(const zcl::t_v2_i size, t_resource_group *const group);
+    t_gfx_resource *TextureCreateTarget(const zcl::t_v2_i size, t_gfx_resource_group *const group);
 
-    void TextureResizeTarget(t_resource *const texture, const zcl::t_v2_i size);
+    void TextureResizeTarget(t_gfx_resource *const texture, const zcl::t_v2_i size);
 
-    zcl::t_v2_i TextureGetSize(const t_resource *const texture);
+    zcl::t_v2_i TextureGetSize(const t_gfx_resource *const texture);
 
     // Resizes only if the given size is actually different to the current.
-    inline void TextureResizeTargetIfNeeded(t_resource *const texture, const zcl::t_v2_i size) {
+    inline void TextureResizeTargetIfNeeded(t_gfx_resource *const texture, const zcl::t_v2_i size) {
         const zcl::t_v2_i size_cur = TextureGetSize(texture);
 
         if (size != size_cur) {
@@ -51,8 +43,8 @@ namespace zgl::gfx {
         }
     }
 
-    t_resource *ShaderProgCreate(const zcl::t_array_rdonly<zcl::t_u8> vert_shader_compiled_bin, const zcl::t_array_rdonly<zcl::t_u8> frag_shader_compiled_bin, t_resource_group *const group);
-    t_resource *ShaderProgCreateFromPacked(const zcl::t_str_rdonly vert_shader_file_path, const zcl::t_str_rdonly frag_shader_file_path, t_resource_group *const group, zcl::t_arena *const temp_arena);
+    t_gfx_resource *ShaderProgCreate(const zcl::t_array_rdonly<zcl::t_u8> vert_shader_compiled_bin, const zcl::t_array_rdonly<zcl::t_u8> frag_shader_compiled_bin, t_gfx_resource_group *const group);
+    t_gfx_resource *ShaderProgCreateFromPacked(const zcl::t_str_rdonly vert_shader_file_path, const zcl::t_str_rdonly frag_shader_file_path, t_gfx_resource_group *const group, zcl::t_arena *const temp_arena);
 
     enum t_uniform_type {
         ek_uniform_type_sampler,
@@ -60,17 +52,17 @@ namespace zgl::gfx {
         ek_uniform_type_mat4x4
     };
 
-    t_resource *UniformCreate(const zcl::t_str_rdonly name, const t_uniform_type type, t_resource_group *const group, zcl::t_arena *const temp_arena);
-    t_uniform_type UniformGetType(const t_resource *const uniform);
+    t_gfx_resource *UniformCreate(const zcl::t_str_rdonly name, const t_uniform_type type, t_gfx_resource_group *const group, zcl::t_arena *const temp_arena);
+    t_uniform_type UniformGetType(const t_gfx_resource *const uniform);
 
     // @todo: This might be better off like every other resource, for API consistency.
     struct t_font {
         zcl::t_font_arrangement arrangement;
-        zcl::t_array_mut<t_resource *> atlases;
+        zcl::t_array_mut<t_gfx_resource *> atlases;
     };
 
-    t_font FontCreateFromExternal(const zcl::t_str_rdonly file_path, const zcl::t_i32 height, zcl::t_code_point_bitset *const code_pts, t_resource_group *const resource_group, zcl::t_arena *const temp_arena);
-    t_font FontCreateFromPacked(const zcl::t_str_rdonly file_path, t_resource_group *const resource_group, zcl::t_arena *const temp_arena);
+    t_font FontCreateFromExternal(const zcl::t_str_rdonly file_path, const zcl::t_i32 height, zcl::t_code_point_bitset *const code_pts, t_gfx_resource_group *const resource_group, zcl::t_arena *const temp_arena);
+    t_font FontCreateFromPacked(const zcl::t_str_rdonly file_path, t_gfx_resource_group *const resource_group, zcl::t_arena *const temp_arena);
 
     // ============================================================
 
@@ -135,7 +127,7 @@ namespace zgl::gfx {
     void FrameEnd(t_frame_context *const context);
 
     void FramePassBegin(t_frame_context *const context, const zcl::t_v2_i size, const zcl::t_mat4x4 &view_mat = zcl::MatrixCreateIdentity(), const zcl::t_b8 clear = false, const zcl::t_color_rgba32f clear_col = zcl::k_color_black);
-    void FramePassBeginOffscreen(t_frame_context *const context, const t_resource *const texture_target, const zcl::t_mat4x4 &view_mat = zcl::MatrixCreateIdentity(), const zcl::t_b8 clear = false, const zcl::t_color_rgba32f clear_col = zcl::k_color_black);
+    void FramePassBeginOffscreen(t_frame_context *const context, const t_gfx_resource *const texture_target, const zcl::t_mat4x4 &view_mat = zcl::MatrixCreateIdentity(), const zcl::t_b8 clear = false, const zcl::t_color_rgba32f clear_col = zcl::k_color_black);
 
     void FramePassEnd(t_frame_context *const context);
 
@@ -143,19 +135,19 @@ namespace zgl::gfx {
     zcl::t_i32 FramePassGetIndex(const t_frame_context *const context);
 
     // Set prog as nullptr to just assign the default shader program.
-    void FrameSetShaderProg(t_frame_context *const context, const t_resource *const prog);
+    void FrameSetShaderProg(t_frame_context *const context, const t_gfx_resource *const prog);
 
-    const t_resource *FrameGetBuiltinShaderProgDefault(t_frame_context *const context);
-    const t_resource *FrameGetBuiltinShaderProgBlend(t_frame_context *const context);
+    const t_gfx_resource *FrameGetBuiltinShaderProgDefault(t_frame_context *const context);
+    const t_gfx_resource *FrameGetBuiltinShaderProgBlend(t_frame_context *const context);
 
-    const t_resource *FrameGetBuiltinUniformBlend(t_frame_context *const context);
+    const t_gfx_resource *FrameGetBuiltinUniformBlend(t_frame_context *const context);
 
-    void FrameSetUniformSampler(t_frame_context *const context, const t_resource *const uniform, const t_resource *const sampler_texture);
-    void FrameSetUniformV4(t_frame_context *const context, const t_resource *const uniform, const zcl::t_v4 v4);
-    void FrameSetUniformMat4x4(t_frame_context *const context, const t_resource *const uniform, const zcl::t_mat4x4 &mat4x4);
+    void FrameSetUniformSampler(t_frame_context *const context, const t_gfx_resource *const uniform, const t_gfx_resource *const sampler_texture);
+    void FrameSetUniformV4(t_frame_context *const context, const t_gfx_resource *const uniform, const zcl::t_v4 v4);
+    void FrameSetUniformMat4x4(t_frame_context *const context, const t_gfx_resource *const uniform, const zcl::t_mat4x4 &mat4x4);
 
     // Leave texture as nullptr for no texture.
-    void FrameSubmitTriangles(t_frame_context *const context, const zcl::t_array_rdonly<t_triangle> triangles, const t_resource *const texture = nullptr);
+    void FrameSubmitTriangles(t_frame_context *const context, const zcl::t_array_rdonly<t_triangle> triangles, const t_gfx_resource *const texture = nullptr);
 
     inline void FrameSubmitTriangle(t_frame_context *const context, const zcl::t_static_array<zcl::t_v2, 3> &pts, const zcl::t_static_array<zcl::t_color_rgba32f, 3> &pt_colors) {
         const t_triangle triangle = {
@@ -206,7 +198,7 @@ namespace zgl::gfx {
         FrameSubmitRectRotated(context, pos, size, origin, rot, color, color, color, color);
     }
 
-    void FrameSubmitTexture(t_frame_context *const context, const t_resource *const texture, const zcl::t_v2 pos, const zcl::t_rect_i src_rect = {}, const zcl::t_v2 origin = k_origin_top_left, const zcl::t_f32 rot = 0.0f);
+    void FrameSubmitTexture(t_frame_context *const context, const t_gfx_resource *const texture, const zcl::t_v2 pos, const zcl::t_rect_i src_rect = {}, const zcl::t_v2 origin = k_origin_top_left, const zcl::t_f32 rot = 0.0f);
 
     void FrameSubmitStr(t_frame_context *const context, const zcl::t_str_rdonly str, const t_font &font, const zcl::t_v2 pos, zcl::t_arena *const temp_arena, const zcl::t_v2 alignment = k_alignment_top_left, const zcl::t_color_rgba32f blend = zcl::k_color_white);
 

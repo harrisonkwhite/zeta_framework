@@ -4,14 +4,9 @@
 
 namespace zgl {
     struct t_input_state;
-
     struct t_platform;
-
-    namespace gfx {
-        struct t_resource_group;
-        struct t_frame_context;
-    }
-
+    struct t_gfx_resource_group;
+    struct t_frame_context;
     struct t_audio_sys;
 
     namespace game {
@@ -20,8 +15,6 @@ namespace zgl {
             zcl::t_arena *temp_arena;
 
             t_platform *platform;
-
-            gfx::t_resource_group *perm_gfx_resource_group;
 
             zgl::t_audio_sys *audio_sys;
 
@@ -38,8 +31,6 @@ namespace zgl {
 
             t_platform *platform;
 
-            gfx::t_resource_group *perm_gfx_resource_group;
-
             zgl::t_audio_sys *audio_sys;
 
             zcl::t_rng *rng;
@@ -53,7 +44,7 @@ namespace zgl {
             zcl::t_arena *perm_arena;
             zcl::t_arena *temp_arena;
 
-            gfx::t_frame_context *frame_context;
+            t_frame_context *frame_context;
 
             zcl::t_rng *rng;
 

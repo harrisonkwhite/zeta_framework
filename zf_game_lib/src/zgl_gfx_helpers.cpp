@@ -1,6 +1,6 @@
 #include <zgl/zgl_gfx.h>
 
-namespace zgl::gfx {
+namespace zgl {
     void FrameSubmitRectRotated(t_frame_context *const context, const zcl::t_v2 pos, const zcl::t_v2 size, const zcl::t_v2 origin, const zcl::t_f32 rot, const zcl::t_color_rgba32f color_topleft, const zcl::t_color_rgba32f color_topright, const zcl::t_color_rgba32f color_bottomright, const zcl::t_color_rgba32f color_bottomleft) {
         ZCL_ASSERT(OriginCheckValid(origin));
 
@@ -28,7 +28,7 @@ namespace zgl::gfx {
         FrameSubmitTriangles(context, zcl::ArrayToNonstatic(&triangles));
     }
 
-    void FrameSubmitTexture(t_frame_context *const context, const t_resource *const texture, const zcl::t_v2 pos, const zcl::t_rect_i src_rect, const zcl::t_v2 origin, const zcl::t_f32 rot) {
+    void FrameSubmitTexture(t_frame_context *const context, const t_gfx_resource *const texture, const zcl::t_v2 pos, const zcl::t_rect_i src_rect, const zcl::t_v2 origin, const zcl::t_f32 rot) {
         const auto texture_size = TextureGetSize(texture);
 
         zcl::t_rect_i src_rect_to_use;
@@ -66,15 +66,15 @@ namespace zgl::gfx {
         FrameSubmitTriangles(context, zcl::ArrayToNonstatic(&triangles), texture);
     }
 
-    t_font FontCreateFromExternal(const zcl::t_str_rdonly file_path, const zcl::t_i32 height, zcl::t_code_point_bitset *const code_pts, t_resource_group *const resource_group, zcl::t_arena *const temp_arena) {
+    t_font FontCreateFromExternal(const zcl::t_str_rdonly file_path, const zcl::t_i32 height, zcl::t_code_point_bitset *const code_pts, t_gfx_resource_group *const resource_group, zcl::t_arena *const temp_arena) {
         zcl::t_font_arrangement arrangement;
         zcl::t_array_mut<zcl::t_font_atlas_rgba> atlas_rgbas;
 
-        if (!zcl::FontLoadFromExternal(file_path, height, code_pts, resource_group->arena, temp_arena, temp_arena, &arrangement, &atlas_rgbas)) {
+        if (!zcl::FontLoadFromExternal(file_path, height, code_pts, GFXResourceGroupGetArena(resource_group), temp_arena, temp_arena, &arrangement, &atlas_rgbas)) {
             ZCL_FATAL();
         }
 
-        const zcl::t_array_mut<t_resource *> atlases = zcl::ArenaPushArray<t_resource *>(resource_group->arena, atlas_rgbas.len);
+        const zcl::t_array_mut<t_gfx_resource *> atlases = zcl::ArenaPushArray<t_gfx_resource *>(GFXResourceGroupGetArena(resource_group), atlas_rgbas.len);
 
         for (zcl::t_i32 i = 0; i < atlas_rgbas.len; i++) {
             atlases[i] = TextureCreate({zcl::k_font_atlas_size, atlas_rgbas[i]}, resource_group);
@@ -86,7 +86,7 @@ namespace zgl::gfx {
         };
     }
 
-    t_font FontCreateFromPacked(const zcl::t_str_rdonly file_path, t_resource_group *const resource_group, zcl::t_arena *const temp_arena) {
+    t_font FontCreateFromPacked(const zcl::t_str_rdonly file_path, t_gfx_resource_group *const resource_group, zcl::t_arena *const temp_arena) {
         zcl::t_font_arrangement arrangement;
         zcl::t_array_mut<zcl::t_font_atlas_rgba> atlas_rgbas;
 
@@ -98,14 +98,14 @@ namespace zgl::gfx {
             }
 
 
-            if (!zcl::DeserializeFont(file_stream, resource_group->arena, temp_arena, temp_arena, &arrangement, &atlas_rgbas)) {
+            if (!zcl::DeserializeFont(file_stream, GFXResourceGroupGetArena(resource_group), temp_arena, temp_arena, &arrangement, &atlas_rgbas)) {
                 ZCL_FATAL();
             }
 
             zcl::FileClose(&file_stream);
         }
 
-        const auto atlases = zcl::ArenaPushArray<t_resource *>(resource_group->arena, atlas_rgbas.len);
+        const auto atlases = zcl::ArenaPushArray<t_gfx_resource *>(GFXResourceGroupGetArena(resource_group), atlas_rgbas.len);
 
         for (zcl::t_i32 i = 0; i < atlas_rgbas.len; i++) {
             atlases[i] = TextureCreate({zcl::k_font_atlas_size, atlas_rgbas[i]}, resource_group);

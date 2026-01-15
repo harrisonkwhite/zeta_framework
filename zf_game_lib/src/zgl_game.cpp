@@ -39,9 +39,8 @@ namespace zgl::game {
         t_platform *const platform = detail::PlatformStartup(k_init_window_size, input_state, &perm_arena);
         ZCL_DEFER({ detail::PlatformShutdown(platform); });
 
-        gfx::t_resource_group *perm_gfx_resource_group;
-        gfx::t_frame_basis *const frame_basis = gfx::ModuleStartup(platform, &perm_arena, &temp_arena, &perm_gfx_resource_group);
-        ZCL_DEFER({ gfx::ModuleShutdown(frame_basis); });
+        t_frame_basis *const frame_basis = ModuleStartup(platform, &perm_arena, &temp_arena);
+        ZCL_DEFER({ ModuleShutdown(frame_basis); });
 
         t_audio_sys *const audio_sys = detail::AudioStartup(&perm_arena);
         ZCL_DEFER({ detail::AudioShutdown(audio_sys); });
@@ -56,7 +55,6 @@ namespace zgl::game {
             .perm_arena = &perm_arena,
             .temp_arena = &temp_arena,
             .platform = platform,
-            .perm_gfx_resource_group = perm_gfx_resource_group,
             .audio_sys = audio_sys,
             .rng = rng,
             .user_mem = user_mem,
@@ -117,7 +115,6 @@ namespace zgl::game {
                         .temp_arena = &temp_arena,
                         .input_state = input_state,
                         .platform = platform,
-                        .perm_gfx_resource_group = perm_gfx_resource_group,
                         .audio_sys = audio_sys,
                         .rng = rng,
                         .fps = fps,
@@ -132,7 +129,7 @@ namespace zgl::game {
 
             zcl::ArenaRewind(&temp_arena);
 
-            gfx::t_frame_context *const frame_context = gfx::FrameBegin(frame_basis, &temp_arena);
+            t_frame_context *const frame_context = FrameBegin(frame_basis, &temp_arena);
 
             config.render_func({
                 .perm_arena = &perm_arena,
@@ -143,7 +140,7 @@ namespace zgl::game {
                 .user_mem = user_mem,
             });
 
-            gfx::FrameEnd(frame_context);
+            FrameEnd(frame_context);
 
             if (frame_first) {
                 detail::WindowShow(platform);
