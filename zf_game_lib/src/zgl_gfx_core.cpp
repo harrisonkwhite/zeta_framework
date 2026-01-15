@@ -234,12 +234,12 @@ namespace zgl::gfx {
         return resource;
     }
 
-    t_resource *TextureCreateFromRaw(const zcl::t_str_rdonly file_path, t_resource_group *const group, zcl::t_arena *const temp_arena) {
+    t_resource *TextureCreateFromExternal(const zcl::t_str_rdonly file_path, t_resource_group *const group, zcl::t_arena *const temp_arena) {
         ZCL_ASSERT(g_module_state.phase == ek_module_phase_active_but_not_midframe);
 
         zcl::t_texture_data_mut texture_data;
 
-        if (!zcl::TextureLoadFromRaw(file_path, temp_arena, temp_arena, &texture_data)) {
+        if (!zcl::TextureLoadFromExternal(file_path, temp_arena, temp_arena, &texture_data)) {
             ZCL_FATAL();
         }
 

@@ -29,7 +29,7 @@ namespace zgl::gfx {
     void ResourceGroupDestroy(t_resource_group *const group);
 
     t_resource *TextureCreate(const zcl::t_texture_data_rdonly texture_data, t_resource_group *const group);
-    t_resource *TextureCreateFromRaw(const zcl::t_str_rdonly file_path, t_resource_group *const group, zcl::t_arena *const temp_arena);
+    t_resource *TextureCreateFromExternal(const zcl::t_str_rdonly file_path, t_resource_group *const group, zcl::t_arena *const temp_arena);
     t_resource *TextureCreateFromPacked(const zcl::t_str_rdonly file_path, t_resource_group *const group, zcl::t_arena *const temp_arena);
 
     t_resource *TextureCreateTarget(const zcl::t_v2_i size, t_resource_group *const group);
@@ -65,7 +65,7 @@ namespace zgl::gfx {
         zcl::t_array_mut<t_resource *> atlases;
     };
 
-    t_font FontCreateFromRaw(const zcl::t_str_rdonly file_path, const zcl::t_i32 height, zcl::t_code_point_bitset *const code_pts, t_resource_group *const resource_group, zcl::t_arena *const temp_arena);
+    t_font FontCreateFromExternal(const zcl::t_str_rdonly file_path, const zcl::t_i32 height, zcl::t_code_point_bitset *const code_pts, t_resource_group *const resource_group, zcl::t_arena *const temp_arena);
     t_font FontCreateFromPacked(const zcl::t_str_rdonly file_path, t_resource_group *const resource_group, zcl::t_arena *const temp_arena);
 
     // ============================================================

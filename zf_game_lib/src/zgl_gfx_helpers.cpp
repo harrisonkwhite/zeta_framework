@@ -66,11 +66,11 @@ namespace zgl::gfx {
         FrameSubmitTriangles(context, zcl::ArrayToNonstatic(&triangles), texture);
     }
 
-    t_font FontCreateFromRaw(const zcl::t_str_rdonly file_path, const zcl::t_i32 height, zcl::t_code_point_bitset *const code_pts, t_resource_group *const resource_group, zcl::t_arena *const temp_arena) {
+    t_font FontCreateFromExternal(const zcl::t_str_rdonly file_path, const zcl::t_i32 height, zcl::t_code_point_bitset *const code_pts, t_resource_group *const resource_group, zcl::t_arena *const temp_arena) {
         zcl::t_font_arrangement arrangement;
         zcl::t_array_mut<zcl::t_font_atlas_rgba> atlas_rgbas;
 
-        if (!zcl::FontLoadFromRaw(file_path, height, code_pts, resource_group->arena, temp_arena, temp_arena, &arrangement, &atlas_rgbas)) {
+        if (!zcl::FontLoadFromExternal(file_path, height, code_pts, resource_group->arena, temp_arena, temp_arena, &arrangement, &atlas_rgbas)) {
             ZCL_FATAL();
         }
 

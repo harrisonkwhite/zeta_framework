@@ -15,9 +15,12 @@ namespace zgl::audio {
 
     struct t_sound_type;
 
-    t_sound_type *SoundTypeCreateFromRaw(const zcl::t_str_rdonly file_path, t_sound_type_group *const group, zcl::t_arena *const temp_arena);
+    // @todo: Could give a warning or something to use streamable instead if PCM is really huge.
+    t_sound_type *SoundTypeCreateFromExternal(const zcl::t_str_rdonly file_path, t_sound_type_group *const group, zcl::t_arena *const temp_arena);
     t_sound_type *SoundTypeCreateFromPacked(const zcl::t_str_rdonly file_path, t_sound_type_group *const group, zcl::t_arena *const temp_arena);
-    t_sound_type *SoundTypeCreateStreamable(const zcl::t_str_rdonly file_path, t_sound_type_group *const group, zcl::t_arena *const temp_arena);
+
+    // Use this for long audio pieces like music and ambience.
+    t_sound_type *SoundTypeCreateStreamable(const zcl::t_str_rdonly external_file_path, t_sound_type_group *const group, zcl::t_arena *const temp_arena);
 
     struct t_sound_id {
         zcl::t_i32 index;

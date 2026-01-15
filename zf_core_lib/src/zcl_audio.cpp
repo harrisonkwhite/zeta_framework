@@ -3,7 +3,7 @@
 #include <miniaudio.h>
 
 namespace zcl {
-    t_b8 SoundLoadFromRaw(const t_str_rdonly file_path, t_arena *const snd_data_arena, t_arena *const temp_arena, t_sound_data_mut *const o_snd_data) {
+    t_b8 SoundLoadFromExternal(const t_str_rdonly file_path, t_arena *const snd_data_arena, t_arena *const temp_arena, t_sound_data_mut *const o_snd_data) {
         const t_str_rdonly file_path_terminated = StrCloneButAddTerminator(file_path, temp_arena);
 
         ma_decoder decoder;

@@ -95,7 +95,7 @@ constexpr zcl::t_static_array<t_asset_field, ekm_sound_field_cnt> k_sound_fields
 [[nodiscard]] static zcl::t_b8 PackTexture(const zcl::t_str_rdonly file_path, const zcl::t_str_rdonly out_file_path, zcl::t_arena *const temp_arena) {
     zcl::t_texture_data_mut texture_data;
 
-    if (!zcl::TextureLoadFromRaw(file_path, temp_arena, temp_arena, &texture_data)) {
+    if (!zcl::TextureLoadFromExternal(file_path, temp_arena, temp_arena, &texture_data)) {
         zcl::LogError(ZCL_STR_LITERAL("Failed to load texture from file \"%\"!"), file_path);
         return false;
     }
@@ -141,7 +141,7 @@ constexpr zcl::t_static_array<t_asset_field, ekm_sound_field_cnt> k_sound_fields
     zcl::t_font_arrangement arrangement;
     zcl::t_array_mut<zcl::t_font_atlas_rgba> atlas_rgbas;
 
-    if (!zcl::FontLoadFromRaw(file_path, height, code_pt_bs, temp_arena, temp_arena, temp_arena, &arrangement, &atlas_rgbas)) {
+    if (!zcl::FontLoadFromExternal(file_path, height, code_pt_bs, temp_arena, temp_arena, temp_arena, &arrangement, &atlas_rgbas)) {
         zcl::LogError(ZCL_STR_LITERAL("Failed to load font from file \"%\"!"), file_path);
         return false;
     }
@@ -202,7 +202,7 @@ constexpr zcl::t_static_array<t_asset_field, ekm_sound_field_cnt> k_sound_fields
 [[nodiscard]] static zcl::t_b8 PackSound(const zcl::t_str_rdonly file_path, const zcl::t_str_rdonly out_file_path, zcl::t_arena *const temp_arena) {
     zcl::t_sound_data_mut snd_data;
 
-    if (!zcl::SoundLoadFromRaw(file_path, temp_arena, temp_arena, &snd_data)) {
+    if (!zcl::SoundLoadFromExternal(file_path, temp_arena, temp_arena, &snd_data)) {
         zcl::LogError(ZCL_STR_LITERAL("Failed to load sound from file \"%\"!"), file_path);
         return false;
     }

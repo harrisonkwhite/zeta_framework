@@ -15,12 +15,12 @@ namespace zgl::audio {
 
         zcl::t_b8 stream;
         zcl::t_sound_data_rdonly nonstream_snd_data;
-        zcl::t_str_rdonly stream_snd_file_path_terminated; // Terminated since it often needs to be converted to C-string.
+        zcl::t_str_rdonly stream_external_file_path_terminated; // Terminated since it often needs to be converted to C-string.
 
         t_sound_type *next;
     };
 
-    const zcl::t_i32 g_sound_inst_limit = 32;
+    constexpr zcl::t_i32 k_sound_limit = 32;
 
     struct {
         zcl::t_b8 active;
@@ -28,11 +28,11 @@ namespace zgl::audio {
         ma_engine ma_eng;
 
         struct {
-            zcl::t_static_array<ma_sound, g_sound_inst_limit> ma_snds;
-            zcl::t_static_array<ma_audio_buffer_ref, g_sound_inst_limit> ma_buf_refs;
-            zcl::t_static_array<const t_sound_type *, g_sound_inst_limit> types;
-            zcl::t_static_bitset<g_sound_inst_limit> activity;
-            zcl::t_static_array<zcl::t_i32, g_sound_inst_limit> versions;
+            zcl::t_static_array<ma_sound, k_sound_limit> ma_snds;
+            zcl::t_static_array<ma_audio_buffer_ref, k_sound_limit> ma_buf_refs;
+            zcl::t_static_array<const t_sound_type *, k_sound_limit> types;
+            zcl::t_static_bitset<k_sound_limit> activity;
+            zcl::t_static_array<zcl::t_i32, k_sound_limit> versions;
         } snd_insts;
     } g_module_state;
 
@@ -105,12 +105,12 @@ namespace zgl::audio {
         return result;
     }
 
-    t_sound_type *SoundTypeCreateFromRaw(const zcl::t_str_rdonly file_path, t_sound_type_group *const group, zcl::t_arena *const temp_arena) {
+    t_sound_type *SoundTypeCreateFromExternal(const zcl::t_str_rdonly file_path, t_sound_type_group *const group, zcl::t_arena *const temp_arena) {
         ZCL_ASSERT(g_module_state.active);
 
         zcl::t_sound_data_mut snd_data;
 
-        if (!zcl::SoundLoadFromRaw(file_path, group->arena, temp_arena, &snd_data)) {
+        if (!zcl::SoundLoadFromExternal(file_path, group->arena, temp_arena, &snd_data)) {
             ZCL_FATAL();
         }
 
@@ -145,12 +145,12 @@ namespace zgl::audio {
         return result;
     }
 
-    t_sound_type *SoundTypeCreateStreamable(const zcl::t_str_rdonly file_path, t_sound_type_group *const group, zcl::t_arena *const temp_arena) {
+    t_sound_type *SoundTypeCreateStreamable(const zcl::t_str_rdonly external_file_path, t_sound_type_group *const group, zcl::t_arena *const temp_arena) {
         ZCL_ASSERT(g_module_state.active);
 
         t_sound_type *const result = SoundTypeGroupAdd(group);
         result->stream = true;
-        result->stream_snd_file_path_terminated = zcl::StrCloneButAddTerminator(file_path, temp_arena);
+        result->stream_external_file_path_terminated = zcl::StrCloneButAddTerminator(external_file_path, temp_arena);
 
         return result;
     }
@@ -186,7 +186,7 @@ namespace zgl::audio {
                 ZCL_FATAL();
             }
         } else {
-            if (ma_sound_init_from_file(&g_module_state.ma_eng, zcl::StrToCStr(type->stream_snd_file_path_terminated), MA_SOUND_FLAG_STREAM, nullptr, nullptr, ma_snd) != MA_SUCCESS) {
+            if (ma_sound_init_from_file(&g_module_state.ma_eng, zcl::StrToCStr(type->stream_external_file_path_terminated), MA_SOUND_FLAG_STREAM, nullptr, nullptr, ma_snd) != MA_SUCCESS) {
                 ZCL_FATAL();
             }
         }
