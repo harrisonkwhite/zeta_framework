@@ -43,8 +43,8 @@ namespace zgl::game {
         gfx::t_frame_basis *const frame_basis = gfx::ModuleStartup(&perm_arena, &temp_arena, &perm_gfx_resource_group);
         ZCL_DEFER({ gfx::ModuleShutdown(frame_basis); });
 
-        audio::ModuleStartup();
-        ZCL_DEFER({ audio::ModuleShutdown(); });
+        t_audio_sys *const audio_sys = detail::AudioStartup(&perm_arena);
+        ZCL_DEFER({ detail::AudioShutdown(audio_sys); });
 
         zcl::t_rng *const rng = zcl::RNGCreate(zcl::RandGenSeed(), &perm_arena);
 
@@ -56,6 +56,7 @@ namespace zgl::game {
             .perm_arena = &perm_arena,
             .temp_arena = &temp_arena,
             .perm_gfx_resource_group = perm_gfx_resource_group,
+            .audio_sys = audio_sys,
             .rng = rng,
             .user_mem = user_mem,
         });
@@ -108,13 +109,14 @@ namespace zgl::game {
                 while (tick_interval_accum >= tick_interval_targ) {
                     zcl::ArenaRewind(&temp_arena);
 
-                    audio::SoundsProcFinished();
+                    detail::SoundsProcFinished(audio_sys);
 
                     config.tick_func({
                         .perm_arena = &perm_arena,
                         .temp_arena = &temp_arena,
                         .input_state = input_state,
                         .perm_gfx_resource_group = perm_gfx_resource_group,
+                        .audio_sys = audio_sys,
                         .rng = rng,
                         .fps = fps,
                         .user_mem = user_mem,

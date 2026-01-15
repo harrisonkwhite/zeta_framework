@@ -12,12 +12,16 @@ namespace zgl {
         struct t_frame_context;
     }
 
+    struct t_audio_sys;
+
     namespace game {
         struct t_init_func_context {
             zcl::t_arena *perm_arena;
             zcl::t_arena *temp_arena;
 
             gfx::t_resource_group *perm_gfx_resource_group;
+
+            zgl::t_audio_sys *audio_sys;
 
             zcl::t_rng *rng;
 
@@ -31,6 +35,8 @@ namespace zgl {
             const input::t_state *input_state;
 
             gfx::t_resource_group *perm_gfx_resource_group;
+
+            zgl::t_audio_sys *audio_sys;
 
             zcl::t_rng *rng;
 
