@@ -95,6 +95,8 @@ namespace zgl {
             && FrameVertexCheckValid(tri.verts[2]);
     }
 
+    zcl::t_v2_i FrameGetSize(const t_frame_context context);
+
     void FramePassBegin(const t_frame_context context, const zcl::t_v2_i size, const zcl::t_mat4x4 &view_mat = zcl::MatrixCreateIdentity(), const zcl::t_b8 clear = false, const zcl::t_color_rgba32f clear_col = zcl::k_color_black);
     void FramePassBeginOffscreen(const t_frame_context context, const t_gfx_resource *const texture_target, const zcl::t_mat4x4 &view_mat = zcl::MatrixCreateIdentity(), const zcl::t_b8 clear = false, const zcl::t_color_rgba32f clear_col = zcl::k_color_black);
 
@@ -180,7 +182,7 @@ namespace zgl {
         t_gfx *GFXStartup(const t_platform *const platform, zcl::t_arena *const arena, zcl::t_arena *const temp_arena, t_frame_basis **const o_frame_basis);
         void GFXShutdown(t_gfx *const gfx, t_frame_basis *const frame_basis);
 
-        t_frame_context FrameBegin(t_gfx *const gfx, const t_frame_basis *const basis, const t_platform *const platform, zcl::t_arena *const context_arena);
+        t_frame_context FrameBegin(t_gfx *const gfx, t_frame_basis *const basis, const t_platform *const platform, zcl::t_arena *const context_arena);
         void FrameEnd(const t_frame_context context);
     }
 }

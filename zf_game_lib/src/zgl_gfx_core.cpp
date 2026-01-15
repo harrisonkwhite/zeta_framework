@@ -55,6 +55,8 @@ namespace zgl {
         const t_gfx_resource *blend_uniform;
 
         const t_gfx_resource *px_texture;
+
+        zcl::t_v2_i size;
     };
 
     constexpr zcl::t_i32 k_batch_vert_limit = 1024;
@@ -423,19 +425,17 @@ namespace zgl {
         return uniform->type_data.uniform.type;
     }
 
-    t_frame_context detail::FrameBegin(t_gfx *const gfx, const t_frame_basis *const basis, const t_platform *const platform, zcl::t_arena *const context_arena) {
+    t_frame_context detail::FrameBegin(t_gfx *const gfx, t_frame_basis *const basis, const t_platform *const platform, zcl::t_arena *const context_arena) {
         ZCL_ASSERT(g_module_state == ek_module_state_active_but_not_midframe);
 
         g_module_state = ek_module_state_active_and_midframe;
 
-#if 0
         const auto fb_size_cache = WindowGetFramebufferSizeCache(platform);
 
-        if (gfx->resolution_cache != fb_size_cache) {
+        if (basis->size != fb_size_cache) {
             bgfx::reset(static_cast<uint32_t>(fb_size_cache.x), static_cast<uint32_t>(fb_size_cache.y), BGFX_RESET_VSYNC);
-            gfx->resolution_cache = fb_size_cache;
+            basis->size = fb_size_cache;
         }
-#endif
 
         return {
             .gfx = gfx,
@@ -481,6 +481,10 @@ namespace zgl {
         bgfx::frame();
 
         g_module_state = ek_module_state_active_but_not_midframe;
+    }
+
+    zcl::t_v2_i FrameGetSize(const t_frame_context context) {
+        return context.basis->size;
     }
 
     static void BGFXViewConfigure(const bgfx::ViewId view_id, const zcl::t_v2_i size, const zcl::t_mat4x4 &view_mat, const zcl::t_b8 clear, const zcl::t_color_rgba32f clear_col, const bgfx::FrameBufferHandle fb_hdl) {
