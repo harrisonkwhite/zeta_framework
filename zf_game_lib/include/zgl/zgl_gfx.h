@@ -95,7 +95,7 @@ namespace zgl {
             && FrameVertexCheckValid(tri.verts[2]);
     }
 
-    zcl::t_v2_i FrameGetSize(const t_frame_context context);
+    zcl::t_v2_i FrameGetSize(const t_frame_context context); // @todo: Consider removing? Might be better to just have a single source of truth (the window framebuffer size cache).
 
     void FramePassBegin(const t_frame_context context, const zcl::t_v2_i size, const zcl::t_mat4x4 &view_mat = zcl::MatrixCreateIdentity(), const zcl::t_b8 clear = false, const zcl::t_color_rgba32f clear_col = zcl::k_color_black);
     void FramePassBeginOffscreen(const t_frame_context context, const t_gfx_resource *const texture_target, const zcl::t_mat4x4 &view_mat = zcl::MatrixCreateIdentity(), const zcl::t_b8 clear = false, const zcl::t_color_rgba32f clear_col = zcl::k_color_black);

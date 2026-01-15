@@ -4,25 +4,11 @@
 #include <zgl/zgl_platform.h>
 #include <zgl/zgl_audio.h>
 
-namespace zgl::game {
-    constexpr zcl::t_f64 k_init_tps_target = 60.0;
-    constexpr zcl::t_v2_i k_init_window_size = {1280, 720};
+namespace zgl {
+    constexpr zcl::t_v2_i k_window_size_init = {1280, 720};
 
-    static struct {
-        zcl::t_b8 running;
-        zcl::t_f64 tps_targ;
-    } g_module_state;
-
-    void Run(const t_config &config) {
-        ZCL_REQUIRE(!g_module_state.running);
-        ConfigAssertValid(config);
-
-        g_module_state = {
-            .running = true,
-            .tps_targ = k_init_tps_target,
-        };
-
-        ZCL_DEFER({ g_module_state = {}; });
+    void GameRun(const t_game_config &config) {
+        GameConfigAssertValid(config);
 
         //
         // Initialization
@@ -35,7 +21,7 @@ namespace zgl::game {
 
         t_input_state *const input_state = detail::InputCreateState(&perm_arena);
 
-        t_platform *const platform = detail::PlatformStartup(k_init_window_size, input_state, &perm_arena);
+        t_platform *const platform = detail::PlatformStartup(k_window_size_init, input_state, &perm_arena);
         ZCL_DEFER({ detail::PlatformShutdown(platform); });
 
         t_frame_basis *frame_basis;
@@ -91,8 +77,8 @@ namespace zgl::game {
 
             const zcl::t_f64 frame_time = GetTime(platform);
 
-            const zcl::t_f64 tick_interval_targ = 1.0 / g_module_state.tps_targ;
-            const zcl::t_f64 tick_interval_limit = tick_interval_targ * 8.0;
+            const zcl::t_f64 tick_interval_target = 1.0 / config.tps_target;
+            const zcl::t_f64 tick_interval_limit = tick_interval_target * 8.0;
 
             if (!frame_first) {
                 const zcl::t_f64 frame_time_delta_raw = frame_time - frame_time_last;
@@ -114,7 +100,7 @@ namespace zgl::game {
                     fps_frame_cnt_accum = 0;
                 }
 
-                while (tick_interval_accum >= tick_interval_targ) {
+                while (tick_interval_accum >= tick_interval_target) {
                     zcl::ArenaRewind(&temp_arena);
 
                     detail::SoundsProcessFinished(audio_sys);
@@ -133,7 +119,7 @@ namespace zgl::game {
 
                     detail::InputClearEvents(input_state);
 
-                    tick_interval_accum -= tick_interval_targ;
+                    tick_interval_accum -= tick_interval_target;
                 }
             }
 
@@ -160,12 +146,5 @@ namespace zgl::game {
 
             frame_time_last = frame_time;
         }
-    }
-
-    void SetTargetTPS(const zcl::t_f64 tps) {
-        ZCL_ASSERT(g_module_state.running);
-        ZCL_ASSERT(tps > 0.0);
-
-        g_module_state.tps_targ = tps;
     }
 }
