@@ -44,8 +44,6 @@ namespace zgl {
     };
 
     struct t_gfx {
-        t_platform *platform;
-
         zcl::t_v2_i resolution_cache;
 
         t_gfx_resource_group *perm_resource_group;
@@ -96,14 +94,12 @@ namespace zgl {
 
     static t_module_state g_module_state;
 
-    t_gfx *GFXStartup(t_platform *const platform, zcl::t_arena *const arena, zcl::t_arena *const temp_arena) {
+    t_gfx *GFXStartup(const t_platform *const platform, zcl::t_arena *const arena, zcl::t_arena *const temp_arena) {
         ZCL_ASSERT(g_module_state == ek_module_state_inactive);
 
         g_module_state = ek_module_state_active_but_not_midframe;
 
         const auto gfx = zcl::ArenaPushItem<t_gfx>(arena);
-
-        gfx->platform = platform;
 
         //
         // BGFX Setup
@@ -121,8 +117,8 @@ namespace zgl {
 
         gfx->resolution_cache = fb_size_cache;
 
-        bgfx_init.platformData.nwh = WindowGetNativeHandle(platform);
-        bgfx_init.platformData.ndt = DisplayGetNativeHandle(platform);
+        bgfx_init.platformData.nwh = detail::WindowGetNativeHandle(platform);
+        bgfx_init.platformData.ndt = detail::DisplayGetNativeHandle(platform);
         bgfx_init.platformData.type = bgfx::NativeWindowHandleType::Default;
 
         if (!bgfx::init(bgfx_init)) {
@@ -431,12 +427,12 @@ namespace zgl {
         return uniform->type_data.uniform.type;
     }
 
-    t_frame_context FrameBegin(t_gfx *const gfx, zcl::t_arena *const context_arena) {
+    t_frame_context FrameBegin(t_gfx *const gfx, const t_platform *const platform, zcl::t_arena *const context_arena) {
         ZCL_ASSERT(g_module_state == ek_module_state_active_but_not_midframe);
 
         g_module_state = ek_module_state_active_and_midframe;
 
-        const auto fb_size_cache = WindowGetFramebufferSizeCache(gfx->platform);
+        const auto fb_size_cache = WindowGetFramebufferSizeCache(platform);
 
         if (gfx->resolution_cache != fb_size_cache) {
             bgfx::reset(static_cast<uint32_t>(fb_size_cache.x), static_cast<uint32_t>(fb_size_cache.y), BGFX_RESET_VSYNC);

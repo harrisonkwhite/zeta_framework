@@ -48,6 +48,8 @@ namespace zgl {
             zcl::t_arena *perm_arena;
             zcl::t_arena *temp_arena;
 
+            const t_platform *platform;
+
             t_frame_context frame_context;
 
             zcl::t_rng *rng;

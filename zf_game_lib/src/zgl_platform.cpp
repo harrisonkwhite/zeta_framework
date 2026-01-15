@@ -107,7 +107,7 @@ namespace zgl {
         g_module_active = false;
     }
 
-    zcl::t_f64 GetTime(t_platform *const platform) {
+    zcl::t_f64 GetTime(const t_platform *const platform) {
         ZCL_ASSERT(g_module_active);
 
         const zcl::t_f64 result = glfwGetTime();
@@ -256,7 +256,7 @@ namespace zgl {
         }
     }
 
-    void *DisplayGetNativeHandle(t_platform *const platform) {
+    void *detail::DisplayGetNativeHandle(const t_platform *const platform) {
         ZCL_ASSERT(g_module_active);
 
 #if defined(ZCL_PLATFORM_WINDOWS)
@@ -268,7 +268,7 @@ namespace zgl {
 #endif
     }
 
-    void *WindowGetNativeHandle(t_platform *const platform) {
+    void *detail::WindowGetNativeHandle(const t_platform *const platform) {
         ZCL_ASSERT(g_module_active);
 
 #if defined(ZCL_PLATFORM_WINDOWS)
@@ -291,7 +291,7 @@ namespace zgl {
         return glfwSetWindowShouldClose(platform->glfw_window, true);
     }
 
-    zcl::t_b8 WindowCheckCloseRequested(t_platform *const platform) {
+    zcl::t_b8 WindowCheckCloseRequested(const t_platform *const platform) {
         ZCL_ASSERT(g_module_active);
         return glfwWindowShouldClose(platform->glfw_window);
     }
@@ -324,12 +324,12 @@ namespace zgl {
         glfwSetWindowAttrib(platform->glfw_window, GLFW_RESIZABLE, resizable);
     }
 
-    zcl::t_v2_i WindowGetFramebufferSizeCache(t_platform *const platform) {
+    zcl::t_v2_i WindowGetFramebufferSizeCache(const t_platform *const platform) {
         ZCL_ASSERT(g_module_active);
         return platform->framebuffer_size_cache;
     }
 
-    zcl::t_b8 WindowCheckFullscreen(t_platform *const platform) {
+    zcl::t_b8 WindowCheckFullscreen(const t_platform *const platform) {
         ZCL_ASSERT(g_module_active);
         return platform->fullscreen_active;
     }
@@ -407,7 +407,7 @@ namespace zgl {
         platform->fullscreen_active = active;
     }
 
-    zcl::t_v2_i MonitorCalcSizePixels(t_platform *const platform) {
+    zcl::t_v2_i MonitorCalcSizePixels(const t_platform *const platform) {
         ZCL_ASSERT(g_module_active);
 
         const auto monitor = FindGLFWMonitorOfWindow(platform->glfw_window);
@@ -420,7 +420,7 @@ namespace zgl {
         return {mode->width, mode->height};
     }
 
-    zcl::t_v2_i MonitorCalcSizeLogical(t_platform *const platform) {
+    zcl::t_v2_i MonitorCalcSizeLogical(const t_platform *const platform) {
         ZCL_ASSERT(g_module_active);
 
         const auto monitor = FindGLFWMonitorOfWindow(platform->glfw_window);

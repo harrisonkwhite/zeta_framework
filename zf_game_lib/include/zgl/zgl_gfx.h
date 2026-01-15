@@ -8,7 +8,7 @@ namespace zgl {
     struct t_gfx;
 
     // @todo: Permanent resource group doesn't need to be exposed. Better to just have user create their own, more explicit and simple.
-    t_gfx *GFXStartup(t_platform *const platform, zcl::t_arena *const arena, zcl::t_arena *const temp_arena);
+    t_gfx *GFXStartup(const t_platform *const platform, zcl::t_arena *const arena, zcl::t_arena *const temp_arena);
 
     void GFXShutdown(t_gfx *const gfx);
 
@@ -73,7 +73,7 @@ namespace zgl {
     struct t_frame_state;
 
     struct t_frame_context {
-        const t_gfx *gfx;
+        t_gfx *gfx;
         t_frame_state *state;
     };
 
@@ -100,7 +100,7 @@ namespace zgl {
             && FrameVertexCheckValid(tri.verts[2]);
     }
 
-    t_frame_context FrameBegin(t_gfx *const gfx, zcl::t_arena *const context_arena);
+    t_frame_context FrameBegin(t_gfx *const gfx, const t_platform *const platform, zcl::t_arena *const context_arena);
     void FrameEnd(const t_frame_context context);
 
     void FramePassBegin(const t_frame_context context, const zcl::t_v2_i size, const zcl::t_mat4x4 &view_mat = zcl::MatrixCreateIdentity(), const zcl::t_b8 clear = false, const zcl::t_color_rgba32f clear_col = zcl::k_color_black);

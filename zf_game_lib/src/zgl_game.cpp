@@ -130,11 +130,12 @@ namespace zgl::game {
 
             zcl::ArenaRewind(&temp_arena);
 
-            const t_frame_context frame_context = FrameBegin(gfx, &temp_arena);
+            const t_frame_context frame_context = FrameBegin(gfx, platform, &temp_arena);
 
             config.render_func({
                 .perm_arena = &perm_arena,
                 .temp_arena = &temp_arena,
+                .platform = platform,
                 .frame_context = frame_context,
                 .rng = rng,
                 .fps = fps,
