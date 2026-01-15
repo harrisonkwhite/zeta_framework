@@ -43,9 +43,7 @@ namespace zgl {
         t_gfx_resource *next;
     };
 
-    struct t_gfx {
-        zcl::t_v2_i resolution_cache;
-
+    struct t_frame_basis {
         t_gfx_resource_group *perm_resource_group;
 
         bgfx::DynamicVertexBufferHandle vert_buf_bgfx_hdl; // @todo: Consider making an internal resource type for this for consistency.
@@ -94,12 +92,12 @@ namespace zgl {
 
     static t_module_state g_module_state;
 
-    t_gfx *GFXStartup(const t_platform *const platform, zcl::t_arena *const arena, zcl::t_arena *const temp_arena) {
+    t_gfx *detail::GFXStartup(const t_platform *const platform, zcl::t_arena *const arena, zcl::t_arena *const temp_arena, t_frame_basis **const o_frame_basis) {
         ZCL_ASSERT(g_module_state == ek_module_state_inactive);
 
         g_module_state = ek_module_state_active_but_not_midframe;
 
-        const auto gfx = zcl::ArenaPushItem<t_gfx>(arena);
+        t_gfx *gfx = nullptr;
 
         //
         // BGFX Setup
@@ -115,8 +113,6 @@ namespace zgl {
         bgfx_init.resolution.width = static_cast<uint32_t>(fb_size_cache.x);
         bgfx_init.resolution.height = static_cast<uint32_t>(fb_size_cache.y);
 
-        gfx->resolution_cache = fb_size_cache;
-
         bgfx_init.platformData.nwh = detail::WindowGetNativeHandle(platform);
         bgfx_init.platformData.ndt = detail::DisplayGetNativeHandle(platform);
         bgfx_init.platformData.type = bgfx::NativeWindowHandleType::Default;
@@ -125,46 +121,46 @@ namespace zgl {
             ZCL_FATAL();
         }
 
-        gfx->perm_resource_group = GFXResourceGroupCreate(gfx, arena);
-
         //
         // Frame Basis Setup
         //
+        *o_frame_basis = zcl::ArenaPushItem<t_frame_basis>(arena);
+
+        (*o_frame_basis)->perm_resource_group = GFXResourceGroupCreate(gfx, arena);
+
         {
             bgfx::VertexLayout vert_layout;
             vert_layout.begin().add(bgfx::Attrib::Position, 2, bgfx::AttribType::Float).add(bgfx::Attrib::Color0, 4, bgfx::AttribType::Float).add(bgfx::Attrib::TexCoord0, 2, bgfx::AttribType::Float).end();
 
-            gfx->vert_buf_bgfx_hdl = bgfx::createDynamicVertexBuffer(static_cast<uint32_t>(k_frame_vert_limit), vert_layout);
+            (*o_frame_basis)->vert_buf_bgfx_hdl = bgfx::createDynamicVertexBuffer(static_cast<uint32_t>(k_frame_vert_limit), vert_layout);
 
-            if (!bgfx::isValid(gfx->vert_buf_bgfx_hdl)) {
+            if (!bgfx::isValid((*o_frame_basis)->vert_buf_bgfx_hdl)) {
                 ZCL_FATAL();
             }
         }
 
-        // @todo: This half-complete GFX strangeness can be fixed by bringing back the frame basis object and returning that here. Only the game loop needs it.
+        (*o_frame_basis)->shader_prog_default = ShaderProgCreate(gfx, {g_vert_shader_default_src_raw, g_vert_shader_default_src_len}, {g_frag_shader_default_src_raw, g_frag_shader_default_src_len}, (*o_frame_basis)->perm_resource_group);
+        (*o_frame_basis)->shader_prog_blend = ShaderProgCreate(gfx, {g_vert_shader_default_src_raw, g_vert_shader_default_src_len}, {g_frag_shader_blend_src_raw, g_frag_shader_blend_src_len}, (*o_frame_basis)->perm_resource_group);
 
-        gfx->shader_prog_default = ShaderProgCreate(gfx, {g_vert_shader_default_src_raw, g_vert_shader_default_src_len}, {g_frag_shader_default_src_raw, g_frag_shader_default_src_len}, gfx->perm_resource_group);
-        gfx->shader_prog_blend = ShaderProgCreate(gfx, {g_vert_shader_default_src_raw, g_vert_shader_default_src_len}, {g_frag_shader_blend_src_raw, g_frag_shader_blend_src_len}, gfx->perm_resource_group);
-
-        gfx->sampler_uniform = UniformCreate(gfx, ZCL_STR_LITERAL("u_texture"), ek_uniform_type_sampler, gfx->perm_resource_group, temp_arena);
-        gfx->blend_uniform = UniformCreate(gfx, ZCL_STR_LITERAL("u_blend"), ek_uniform_type_v4, gfx->perm_resource_group, temp_arena);
+        (*o_frame_basis)->sampler_uniform = UniformCreate(gfx, ZCL_STR_LITERAL("u_texture"), ek_uniform_type_sampler, (*o_frame_basis)->perm_resource_group, temp_arena);
+        (*o_frame_basis)->blend_uniform = UniformCreate(gfx, ZCL_STR_LITERAL("u_blend"), ek_uniform_type_v4, (*o_frame_basis)->perm_resource_group, temp_arena);
 
         const zcl::t_static_array<zcl::t_u8, 4> batch_px_texture_rgba = {{255, 255, 255, 255}};
-        gfx->px_texture = TextureCreate(gfx, {{1, 1}, zcl::ArrayToNonstatic(&batch_px_texture_rgba)}, gfx->perm_resource_group);
+        (*o_frame_basis)->px_texture = TextureCreate(gfx, {{1, 1}, zcl::ArrayToNonstatic(&batch_px_texture_rgba)}, (*o_frame_basis)->perm_resource_group);
 
         return gfx;
     }
 
-    void GFXShutdown(t_gfx *const gfx) {
+    void detail::GFXShutdown(t_gfx *const gfx, t_frame_basis *const frame_basis) {
         ZCL_ASSERT(g_module_state == ek_module_state_active_but_not_midframe);
 
-        bgfx::destroy(gfx->vert_buf_bgfx_hdl);
+        bgfx::destroy(frame_basis->vert_buf_bgfx_hdl);
 
-        GFXResourceGroupDestroy(gfx, gfx->perm_resource_group);
+        GFXResourceGroupDestroy(gfx, frame_basis->perm_resource_group);
 
         bgfx::shutdown();
 
-        g_module_state = {};
+        g_module_state = ek_module_state_inactive;
     }
 
     // @temp: Remove once fonts are reworked.
@@ -427,20 +423,23 @@ namespace zgl {
         return uniform->type_data.uniform.type;
     }
 
-    t_frame_context FrameBegin(t_gfx *const gfx, const t_platform *const platform, zcl::t_arena *const context_arena) {
+    t_frame_context detail::FrameBegin(t_gfx *const gfx, const t_frame_basis *const basis, const t_platform *const platform, zcl::t_arena *const context_arena) {
         ZCL_ASSERT(g_module_state == ek_module_state_active_but_not_midframe);
 
         g_module_state = ek_module_state_active_and_midframe;
 
+#if 0
         const auto fb_size_cache = WindowGetFramebufferSizeCache(platform);
 
         if (gfx->resolution_cache != fb_size_cache) {
             bgfx::reset(static_cast<uint32_t>(fb_size_cache.x), static_cast<uint32_t>(fb_size_cache.y), BGFX_RESET_VSYNC);
             gfx->resolution_cache = fb_size_cache;
         }
+#endif
 
         return {
             .gfx = gfx,
+            .basis = basis,
             .state = zcl::ArenaPushItem<t_frame_state>(context_arena),
         };
     }
@@ -459,15 +458,15 @@ namespace zgl {
 
         const auto verts = zcl::ArraySlice(ArrayToNonstatic(&context.state->batch_state.verts), 0, context.state->batch_state.vert_cnt);
         const auto verts_bgfx_mem = bgfx::copy(verts.raw, static_cast<uint32_t>(zcl::ArrayGetSizeInBytes(verts)));
-        bgfx::update(context.gfx->vert_buf_bgfx_hdl, static_cast<uint32_t>(context.state->frame_vert_cnt), verts_bgfx_mem);
+        bgfx::update(context.basis->vert_buf_bgfx_hdl, static_cast<uint32_t>(context.state->frame_vert_cnt), verts_bgfx_mem);
 
-        FrameSetUniformSampler(context, context.gfx->sampler_uniform, context.state->batch_state.texture ? context.state->batch_state.texture : context.gfx->px_texture);
+        FrameSetUniformSampler(context, context.basis->sampler_uniform, context.state->batch_state.texture ? context.state->batch_state.texture : context.basis->px_texture);
 
-        bgfx::setVertexBuffer(0, context.gfx->vert_buf_bgfx_hdl, static_cast<uint32_t>(context.state->frame_vert_cnt), static_cast<uint32_t>(context.state->batch_state.vert_cnt));
+        bgfx::setVertexBuffer(0, context.basis->vert_buf_bgfx_hdl, static_cast<uint32_t>(context.state->frame_vert_cnt), static_cast<uint32_t>(context.state->batch_state.vert_cnt));
 
         bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A | BGFX_STATE_BLEND_ALPHA);
 
-        const t_gfx_resource *const prog = context.state->batch_state.shader_prog ? context.state->batch_state.shader_prog : context.gfx->shader_prog_default;
+        const t_gfx_resource *const prog = context.state->batch_state.shader_prog ? context.state->batch_state.shader_prog : context.basis->shader_prog_default;
         bgfx::submit(static_cast<bgfx::ViewId>(context.state->pass_index), prog->type_data.shader_prog.bgfx_hdl);
 
         context.state->frame_vert_cnt += context.state->batch_state.vert_cnt;
@@ -475,7 +474,7 @@ namespace zgl {
         zcl::ZeroClearItem(&context.state->batch_state);
     }
 
-    void FrameEnd(const t_frame_context context) {
+    void detail::FrameEnd(const t_frame_context context) {
         ZCL_ASSERT(g_module_state == ek_module_state_active_and_midframe);
         ZCL_ASSERT(!context.state->pass_active);
 
@@ -561,17 +560,17 @@ namespace zgl {
 
     const t_gfx_resource *FrameGetBuiltinShaderProgDefault(const t_frame_context context) {
         ZCL_ASSERT(g_module_state == ek_module_state_active_and_midframe);
-        return context.gfx->shader_prog_default;
+        return context.basis->shader_prog_default;
     }
 
     const t_gfx_resource *FrameGetBuiltinShaderProgBlend(const t_frame_context context) {
         ZCL_ASSERT(g_module_state == ek_module_state_active_and_midframe);
-        return context.gfx->shader_prog_blend;
+        return context.basis->shader_prog_blend;
     }
 
     const t_gfx_resource *FrameGetBuiltinUniformBlend(const t_frame_context context) {
         ZCL_ASSERT(g_module_state == ek_module_state_active_and_midframe);
-        return context.gfx->blend_uniform;
+        return context.basis->blend_uniform;
     }
 
     struct t_uniform_data {

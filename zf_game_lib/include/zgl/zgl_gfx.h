@@ -3,14 +3,7 @@
 #include <zcl.h>
 
 namespace zgl {
-    struct t_platform;
-
     struct t_gfx;
-
-    // @todo: Permanent resource group doesn't need to be exposed. Better to just have user create their own, more explicit and simple.
-    t_gfx *GFXStartup(const t_platform *const platform, zcl::t_arena *const arena, zcl::t_arena *const temp_arena);
-
-    void GFXShutdown(t_gfx *const gfx);
 
     // ============================================================
     // @section: Resources
@@ -70,10 +63,12 @@ namespace zgl {
     // ============================================================
     // @section: Frame
 
+    struct t_frame_basis;
     struct t_frame_state;
 
     struct t_frame_context {
         t_gfx *gfx;
+        const t_frame_basis *basis;
         t_frame_state *state;
     };
 
@@ -99,9 +94,6 @@ namespace zgl {
             && FrameVertexCheckValid(tri.verts[1])
             && FrameVertexCheckValid(tri.verts[2]);
     }
-
-    t_frame_context FrameBegin(t_gfx *const gfx, const t_platform *const platform, zcl::t_arena *const context_arena);
-    void FrameEnd(const t_frame_context context);
 
     void FramePassBegin(const t_frame_context context, const zcl::t_v2_i size, const zcl::t_mat4x4 &view_mat = zcl::MatrixCreateIdentity(), const zcl::t_b8 clear = false, const zcl::t_color_rgba32f clear_col = zcl::k_color_black);
     void FramePassBeginOffscreen(const t_frame_context context, const t_gfx_resource *const texture_target, const zcl::t_mat4x4 &view_mat = zcl::MatrixCreateIdentity(), const zcl::t_b8 clear = false, const zcl::t_color_rgba32f clear_col = zcl::k_color_black);
@@ -181,4 +173,14 @@ namespace zgl {
     void FrameSubmitStr(const t_frame_context context, const zcl::t_str_rdonly str, const t_font &font, const zcl::t_v2 pos, zcl::t_arena *const temp_arena, const zcl::t_v2 origin = zcl::k_origin_top_left, const zcl::t_color_rgba32f blend = zcl::k_color_white);
 
     // ============================================================
+
+    struct t_platform;
+
+    namespace detail {
+        t_gfx *GFXStartup(const t_platform *const platform, zcl::t_arena *const arena, zcl::t_arena *const temp_arena, t_frame_basis **const o_frame_basis);
+        void GFXShutdown(t_gfx *const gfx, t_frame_basis *const frame_basis);
+
+        t_frame_context FrameBegin(t_gfx *const gfx, const t_frame_basis *const basis, const t_platform *const platform, zcl::t_arena *const context_arena);
+        void FrameEnd(const t_frame_context context);
+    }
 }

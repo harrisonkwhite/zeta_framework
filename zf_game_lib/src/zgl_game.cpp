@@ -38,8 +38,9 @@ namespace zgl::game {
         t_platform *const platform = detail::PlatformStartup(k_init_window_size, input_state, &perm_arena);
         ZCL_DEFER({ detail::PlatformShutdown(platform); });
 
-        t_gfx *const gfx = GFXStartup(platform, &perm_arena, &temp_arena);
-        ZCL_DEFER({ GFXShutdown(gfx); });
+        t_frame_basis *frame_basis;
+        t_gfx *const gfx = detail::GFXStartup(platform, &perm_arena, &temp_arena, &frame_basis);
+        ZCL_DEFER({ detail::GFXShutdown(gfx, frame_basis); });
 
         t_audio_sys *const audio_sys = detail::AudioStartup(&perm_arena);
         ZCL_DEFER({ detail::AudioShutdown(audio_sys); });
@@ -130,7 +131,7 @@ namespace zgl::game {
 
             zcl::ArenaRewind(&temp_arena);
 
-            const t_frame_context frame_context = FrameBegin(gfx, platform, &temp_arena);
+            const t_frame_context frame_context = detail::FrameBegin(gfx, frame_basis, platform, &temp_arena);
 
             config.render_func({
                 .perm_arena = &perm_arena,
@@ -142,7 +143,7 @@ namespace zgl::game {
                 .user_mem = user_mem,
             });
 
-            FrameEnd(frame_context);
+            detail::FrameEnd(frame_context);
 
             if (frame_first) {
                 detail::WindowShow(platform);
