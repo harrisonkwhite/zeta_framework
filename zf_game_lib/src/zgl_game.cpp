@@ -62,7 +62,15 @@ namespace zgl::game {
         });
 
         ZCL_DEFER({
-            config.deinit_func(user_mem);
+            config.deinit_func({
+                .perm_arena = &perm_arena,
+                .temp_arena = &temp_arena,
+                .platform = platform,
+                .gfx = gfx,
+                .audio_sys = audio_sys,
+                .rng = rng,
+                .user_mem = user_mem,
+            });
         });
 
         //

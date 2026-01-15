@@ -25,6 +25,21 @@ namespace zgl {
             void *user_mem;
         };
 
+        struct t_deinit_func_context {
+            zcl::t_arena *perm_arena;
+            zcl::t_arena *temp_arena;
+
+            t_platform *platform;
+
+            t_gfx *gfx;
+
+            t_audio_sys *audio_sys;
+
+            zcl::t_rng *rng;
+
+            void *user_mem;
+        };
+
         struct t_tick_func_context {
             zcl::t_arena *perm_arena;
             zcl::t_arena *temp_arena;
@@ -60,7 +75,7 @@ namespace zgl {
         };
 
         using t_init_func = void (*)(const t_init_func_context &context);
-        using t_deinit_func = void (*)(void *const user_mem);
+        using t_deinit_func = void (*)(const t_deinit_func_context &context);
         using t_tick_func = void (*)(const t_tick_func_context &context);
         using t_render_func = void (*)(const t_render_func_context &context);
 
