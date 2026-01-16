@@ -332,6 +332,11 @@ namespace zgl {
         return glfwWindowShouldClose(platform->glfw_window);
     }
 
+    zcl::t_b8 WindowCheckFocused(const t_platform *const platform) {
+        ZCL_ASSERT(g_module_active);
+        return glfwGetWindowAttrib(platform->glfw_window, GLFW_FOCUSED);
+    }
+
     void WindowSetTitle(t_platform *const platform, const zcl::t_str_rdonly title, zcl::t_arena *const temp_arena) {
         ZCL_ASSERT(g_module_active);
         const zcl::t_str_rdonly title_terminated = zcl::StrCloneButAddTerminator(title, temp_arena);

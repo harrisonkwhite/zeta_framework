@@ -65,12 +65,12 @@ namespace zgl {
         zcl::t_b8 frame_first = true;
         zcl::t_f64 frame_time_last = 0.0;
 
-        zcl::t_f64 tick_interval_accum = 0.0;
-
         zcl::t_f64 fps = 0.0;
         zcl::t_f64 fps_time_accum = 0.0;
         zcl::t_i32 fps_frame_cnt_accum = 0;
         constexpr zcl::t_f64 k_fps_refresh_time = 1.0;
+
+        zcl::t_f64 tick_interval_accum = 0.0;
 
         while (!WindowCheckCloseRequested(platform)) {
             detail::PollOSEvents(platform);
@@ -85,12 +85,6 @@ namespace zgl {
                 constexpr zcl::t_f64 k_frame_time_delta_limit = 1.0;
                 const zcl::t_f64 frame_time_delta_capped = zcl::CalcMin(frame_time_delta_raw, k_frame_time_delta_limit);
 
-                tick_interval_accum += frame_time_delta_capped;
-
-                if (tick_interval_accum > tick_interval_limit) {
-                    tick_interval_accum = tick_interval_limit;
-                }
-
                 fps_time_accum += frame_time_delta_capped;
                 fps_frame_cnt_accum++;
 
@@ -100,26 +94,34 @@ namespace zgl {
                     fps_frame_cnt_accum = 0;
                 }
 
-                while (tick_interval_accum >= tick_interval_target) {
-                    zcl::ArenaRewind(&temp_arena);
+                if (WindowCheckFocused(platform)) {
+                    tick_interval_accum += frame_time_delta_capped;
 
-                    detail::SoundsProcessFinished(audio_sys);
+                    if (tick_interval_accum > tick_interval_limit) {
+                        tick_interval_accum = tick_interval_limit;
+                    }
 
-                    config.tick_func({
-                        .perm_arena = &perm_arena,
-                        .temp_arena = &temp_arena,
-                        .input_state = input_state,
-                        .platform = platform,
-                        .gfx = gfx,
-                        .audio_sys = audio_sys,
-                        .rng = rng,
-                        .fps = fps,
-                        .user_mem = user_mem,
-                    });
+                    while (tick_interval_accum >= tick_interval_target) {
+                        zcl::ArenaRewind(&temp_arena);
 
-                    detail::InputClearEvents(input_state);
+                        detail::SoundsProcessFinished(audio_sys);
 
-                    tick_interval_accum -= tick_interval_target;
+                        config.tick_func({
+                            .perm_arena = &perm_arena,
+                            .temp_arena = &temp_arena,
+                            .input_state = input_state,
+                            .platform = platform,
+                            .gfx = gfx,
+                            .audio_sys = audio_sys,
+                            .rng = rng,
+                            .fps = fps,
+                            .user_mem = user_mem,
+                        });
+
+                        detail::InputClearEvents(input_state);
+
+                        tick_interval_accum -= tick_interval_target;
+                    }
                 }
             }
 

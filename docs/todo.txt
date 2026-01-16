@@ -10,7 +10,6 @@
 - Validation barriers need to be made more clear. Make sure validity for colours, origins, alignment, rectangles, etc. are in place. Only worry about reasonable things.
 - Make sure the licensing is all fine. Check whether BGFX license is needed in game dist.
 - Properly check for correctness in deserialization and unpacking ops.
-- Basic music streaming system at the very least
 - Fill out tests
 
 There are a handful of comments marked with "@todo" throughout the codebase that need to be addressed as well.

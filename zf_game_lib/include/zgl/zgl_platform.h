@@ -15,6 +15,8 @@ namespace zgl {
     // Note that a window close request can also be triggered during OS event polling, not just by you.
     zcl::t_b8 WindowCheckCloseRequested(const t_platform *const platform);
 
+    zcl::t_b8 WindowCheckFocused(const t_platform *const platform);
+
     void WindowSetTitle(t_platform *const platform, const zcl::t_str_rdonly title, zcl::t_arena *const temp_arena);
 
     // Sets the LOGICAL window size. The actual new framebuffer size MIGHT be larger if there is DPI scaling.
