@@ -85,7 +85,7 @@ namespace zgl {
 
     void SoundSetPitch(t_audio_sys *const audio_sys, const t_sound_id id, const zcl::t_f32 pitch);
 
-    void SoundSetLooping(t_audio_sys *const audio_sys, const t_sound_id id, const zcl::t_b8 loop);
+    void SoundSetLooping(t_audio_sys *const audio_sys, const t_sound_id id, const zcl::t_b8 looping);
 
     void SoundSetTrackPosition(t_audio_sys *const audio_sys, const t_sound_id id, const zcl::t_f32 pos_secs);
 
@@ -103,7 +103,7 @@ namespace zgl {
 
         void AudioShutdown(t_audio_sys *const sys);
 
-        void AudioSetMuted(t_audio_sys *const sys, const zcl::t_b8 mute);
+        void AudioSetPaused(t_audio_sys *const sys, const zcl::t_b8 paused);
 
         void SoundsProcessFinished(t_audio_sys *const audio_sys);
     };

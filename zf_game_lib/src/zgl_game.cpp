@@ -77,7 +77,7 @@ namespace zgl {
 
             const zcl::t_b8 window_focused = WindowCheckFocused(platform);
 
-            detail::AudioSetMuted(audio_sys, !window_focused); // @todo: Pausing would be more ideal.
+            detail::AudioSetPaused(audio_sys, !window_focused);
 
             const zcl::t_f64 frame_time = GetTime(platform);
 
