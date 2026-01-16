@@ -1,6 +1,4 @@
-#include <zgl/zgl_audio.h>
-
-#include <miniaudio.h>
+#include <zgl/zgl_audio_internal.h>
 
 namespace zgl {
     struct t_sound_type_group {
@@ -22,56 +20,13 @@ namespace zgl {
         t_sound_type *next;
     };
 
-    constexpr zcl::t_i32 k_sound_limit = 32;
-
-    struct t_audio_sys {
-        zcl::t_b8 paused;
-
-        ma_engine ma_eng;
-
-        struct {
-            zcl::t_static_array<ma_sound, k_sound_limit> ma_snds;
-            zcl::t_static_array<ma_audio_buffer_ref, k_sound_limit> ma_buf_refs;
-            zcl::t_static_array<const t_sound_type *, k_sound_limit> types;
-            zcl::t_static_array<t_sound_state, k_sound_limit> states;
-            zcl::t_static_bitset<k_sound_limit> active;
-            zcl::t_static_array<zcl::t_i32, k_sound_limit> versions;
-        } snd_insts;
-    };
-
-    static zcl::t_b8 g_module_active;
-
     static void SoundIDAssertValid(const t_audio_sys *const audio_sys, const t_sound_id id) {
         ZCL_ASSERT(id.index >= 0 && id.index < k_sound_limit);
         ZCL_ASSERT(id.version > 0 && id.version <= audio_sys->snd_insts.versions[id.index]);
     }
 
-    t_audio_sys *detail::AudioStartup(zcl::t_arena *const arena) {
-        ZCL_ASSERT(!g_module_active);
-
-        g_module_active = true;
-
-        const auto sys = zcl::ArenaPushItem<t_audio_sys>(arena);
-
-        if (ma_engine_init(nullptr, &sys->ma_eng) != MA_SUCCESS) {
-            ZCL_FATAL();
-        }
-
-        return sys;
-    }
-
-    void detail::AudioShutdown(t_audio_sys *const sys) {
-        ZCL_ASSERT(g_module_active);
-
-        SoundsDestroyAll(sys);
-
-        ma_engine_uninit(&sys->ma_eng);
-
-        g_module_active = false;
-    }
-
     void detail::AudioSetPaused(t_audio_sys *const sys, const zcl::t_b8 paused) {
-        ZCL_ASSERT(g_module_active);
+        ZCL_ASSERT(detail::AudioSysCheckValid(sys));
 
         // Do not touch the per-sound "paused" state, we don't want want to lose that.
 
@@ -89,7 +44,7 @@ namespace zgl {
     }
 
     t_sound_type_group *SoundTypeGroupCreate(t_audio_sys *const audio_sys, zcl::t_arena *const arena) {
-        ZCL_ASSERT(g_module_active);
+        ZCL_ASSERT(detail::AudioSysCheckValid(audio_sys));
 
         const auto result = zcl::ArenaPushItem<t_sound_type_group>(arena);
         result->valid = true;
@@ -98,7 +53,7 @@ namespace zgl {
     }
 
     void SoundTypeGroupDestroy(t_audio_sys *const audio_sys, t_sound_type_group *const group) {
-        ZCL_ASSERT(g_module_active);
+        ZCL_ASSERT(detail::AudioSysCheckValid(audio_sys));
         ZCL_ASSERT(group->valid);
 
         // All sound instances of any of the sound types in the group need to be destroyed.
@@ -135,7 +90,7 @@ namespace zgl {
     }
 
     t_sound_type *SoundTypeCreateFromExternal(t_audio_sys *const audio_sys, const zcl::t_str_rdonly file_path, t_sound_type_group *const group, zcl::t_arena *const temp_arena) {
-        ZCL_ASSERT(g_module_active);
+        ZCL_ASSERT(detail::AudioSysCheckValid(audio_sys));
         ZCL_ASSERT(group->valid);
 
         zcl::t_sound_data_mut snd_data;
@@ -152,7 +107,7 @@ namespace zgl {
     }
 
     t_sound_type *SoundTypeCreateFromPacked(t_audio_sys *const audio_sys, const zcl::t_str_rdonly file_path, t_sound_type_group *const group, zcl::t_arena *const temp_arena) {
-        ZCL_ASSERT(g_module_active);
+        ZCL_ASSERT(detail::AudioSysCheckValid(audio_sys));
         ZCL_ASSERT(group->valid);
 
         zcl::t_file_stream file_stream;
@@ -177,7 +132,7 @@ namespace zgl {
     }
 
     t_sound_type *SoundTypeCreateStreamable(t_audio_sys *const audio_sys, const zcl::t_str_rdonly external_file_path, t_sound_type_group *const group, zcl::t_arena *const temp_arena) {
-        ZCL_ASSERT(g_module_active);
+        ZCL_ASSERT(detail::AudioSysCheckValid(audio_sys));
         ZCL_ASSERT(group->valid);
 
         t_sound_type *const result = SoundTypeGroupAdd(group);
@@ -188,14 +143,14 @@ namespace zgl {
     }
 
     zcl::t_b8 SoundTypeCheckStreamable(t_audio_sys *const audio_sys, const t_sound_type *const type) {
-        ZCL_ASSERT(g_module_active);
+        ZCL_ASSERT(detail::AudioSysCheckValid(audio_sys));
         ZCL_ASSERT(type->valid);
 
         return type->streamable;
     }
 
     t_sound_id SoundCreate(t_audio_sys *const audio_sys, const t_sound_type *const snd_type) {
-        ZCL_ASSERT(g_module_active);
+        ZCL_ASSERT(detail::AudioSysCheckValid(audio_sys));
         ZCL_ASSERT(!audio_sys->paused);
         ZCL_ASSERT(snd_type->valid);
 
@@ -240,7 +195,7 @@ namespace zgl {
     }
 
     void SoundDestroy(t_audio_sys *const audio_sys, const t_sound_id id) {
-        ZCL_ASSERT(g_module_active);
+        ZCL_ASSERT(detail::AudioSysCheckValid(audio_sys));
         SoundIDAssertValid(audio_sys, id);
         ZCL_ASSERT(SoundCheckExists(audio_sys, id));
 
@@ -262,7 +217,7 @@ namespace zgl {
     }
 
     void SoundStart(t_audio_sys *const audio_sys, const t_sound_id id) {
-        ZCL_ASSERT(g_module_active);
+        ZCL_ASSERT(detail::AudioSysCheckValid(audio_sys));
         ZCL_ASSERT(!audio_sys->paused);
         SoundIDAssertValid(audio_sys, id);
         ZCL_ASSERT(SoundCheckExists(audio_sys, id));
@@ -276,7 +231,7 @@ namespace zgl {
     }
 
     void SoundPause(t_audio_sys *const audio_sys, const t_sound_id id) {
-        ZCL_ASSERT(g_module_active);
+        ZCL_ASSERT(detail::AudioSysCheckValid(audio_sys));
         ZCL_ASSERT(!audio_sys->paused);
         SoundIDAssertValid(audio_sys, id);
         ZCL_ASSERT(SoundCheckExists(audio_sys, id));
@@ -290,7 +245,7 @@ namespace zgl {
     }
 
     void SoundResume(t_audio_sys *const audio_sys, const t_sound_id id) {
-        ZCL_ASSERT(g_module_active);
+        ZCL_ASSERT(detail::AudioSysCheckValid(audio_sys));
         ZCL_ASSERT(!audio_sys->paused);
         SoundIDAssertValid(audio_sys, id);
         ZCL_ASSERT(SoundCheckExists(audio_sys, id));
@@ -304,7 +259,7 @@ namespace zgl {
     }
 
     zcl::t_b8 SoundCheckExists(const t_audio_sys *const audio_sys, const t_sound_id id) {
-        ZCL_ASSERT(g_module_active);
+        ZCL_ASSERT(detail::AudioSysCheckValid(audio_sys));
         SoundIDAssertValid(audio_sys, id);
 
         return zcl::BitsetCheckSet(audio_sys->snd_insts.active, id.index)
@@ -312,7 +267,7 @@ namespace zgl {
     }
 
     t_sound_state SoundGetState(const t_audio_sys *const audio_sys, const t_sound_id id) {
-        ZCL_ASSERT(g_module_active);
+        ZCL_ASSERT(detail::AudioSysCheckValid(audio_sys));
         SoundIDAssertValid(audio_sys, id);
         ZCL_ASSERT(SoundCheckExists(audio_sys, id));
 
@@ -320,7 +275,7 @@ namespace zgl {
     }
 
     zcl::t_f32 SoundGetVolume(t_audio_sys *const audio_sys, const t_sound_id id) {
-        ZCL_ASSERT(g_module_active);
+        ZCL_ASSERT(detail::AudioSysCheckValid(audio_sys));
         SoundIDAssertValid(audio_sys, id);
         ZCL_ASSERT(SoundCheckExists(audio_sys, id));
 
@@ -328,7 +283,7 @@ namespace zgl {
     }
 
     zcl::t_f32 SoundGetPan(t_audio_sys *const audio_sys, const t_sound_id id) {
-        ZCL_ASSERT(g_module_active);
+        ZCL_ASSERT(detail::AudioSysCheckValid(audio_sys));
         SoundIDAssertValid(audio_sys, id);
         ZCL_ASSERT(SoundCheckExists(audio_sys, id));
 
@@ -336,7 +291,7 @@ namespace zgl {
     }
 
     zcl::t_f32 SoundGetPitch(t_audio_sys *const audio_sys, const t_sound_id id) {
-        ZCL_ASSERT(g_module_active);
+        ZCL_ASSERT(detail::AudioSysCheckValid(audio_sys));
         SoundIDAssertValid(audio_sys, id);
         ZCL_ASSERT(SoundCheckExists(audio_sys, id));
 
@@ -344,7 +299,7 @@ namespace zgl {
     }
 
     zcl::t_b8 SoundCheckLooping(t_audio_sys *const audio_sys, const t_sound_id id) {
-        ZCL_ASSERT(g_module_active);
+        ZCL_ASSERT(detail::AudioSysCheckValid(audio_sys));
         SoundIDAssertValid(audio_sys, id);
         ZCL_ASSERT(SoundCheckExists(audio_sys, id));
 
@@ -352,7 +307,7 @@ namespace zgl {
     }
 
     zcl::t_f32 SoundGetTrackPosition(t_audio_sys *const audio_sys, const t_sound_id id) {
-        ZCL_ASSERT(g_module_active);
+        ZCL_ASSERT(detail::AudioSysCheckValid(audio_sys));
         SoundIDAssertValid(audio_sys, id);
         ZCL_ASSERT(SoundCheckExists(audio_sys, id));
 
@@ -366,7 +321,7 @@ namespace zgl {
     }
 
     zcl::t_f32 SoundGetTrackDuration(t_audio_sys *const audio_sys, const t_sound_id id) {
-        ZCL_ASSERT(g_module_active);
+        ZCL_ASSERT(detail::AudioSysCheckValid(audio_sys));
         SoundIDAssertValid(audio_sys, id);
         ZCL_ASSERT(SoundCheckExists(audio_sys, id));
 
@@ -380,7 +335,7 @@ namespace zgl {
     }
 
     void SoundSetVolume(t_audio_sys *const audio_sys, const t_sound_id id, const zcl::t_f32 vol) {
-        ZCL_ASSERT(g_module_active);
+        ZCL_ASSERT(detail::AudioSysCheckValid(audio_sys));
         ZCL_ASSERT(!audio_sys->paused);
         SoundIDAssertValid(audio_sys, id);
         ZCL_ASSERT(SoundCheckExists(audio_sys, id));
@@ -390,7 +345,7 @@ namespace zgl {
     }
 
     void SoundSetVolumeTransition(t_audio_sys *const audio_sys, const t_sound_id id, const zcl::t_f32 vol_begin, const zcl::t_f32 vol_end, const zcl::t_f32 dur_secs) {
-        ZCL_ASSERT(g_module_active);
+        ZCL_ASSERT(detail::AudioSysCheckValid(audio_sys));
         ZCL_ASSERT(!audio_sys->paused);
         SoundIDAssertValid(audio_sys, id);
         ZCL_ASSERT(SoundCheckExists(audio_sys, id));
@@ -402,7 +357,7 @@ namespace zgl {
     }
 
     void SoundSetPan(t_audio_sys *const audio_sys, const t_sound_id id, const zcl::t_f32 pan) {
-        ZCL_ASSERT(g_module_active);
+        ZCL_ASSERT(detail::AudioSysCheckValid(audio_sys));
         ZCL_ASSERT(!audio_sys->paused);
         SoundIDAssertValid(audio_sys, id);
         ZCL_ASSERT(SoundCheckExists(audio_sys, id));
@@ -412,7 +367,7 @@ namespace zgl {
     }
 
     void SoundSetPitch(t_audio_sys *const audio_sys, const t_sound_id id, const zcl::t_f32 pitch) {
-        ZCL_ASSERT(g_module_active);
+        ZCL_ASSERT(detail::AudioSysCheckValid(audio_sys));
         ZCL_ASSERT(!audio_sys->paused);
         SoundIDAssertValid(audio_sys, id);
         ZCL_ASSERT(SoundCheckExists(audio_sys, id));
@@ -422,7 +377,7 @@ namespace zgl {
     }
 
     void SoundSetLooping(t_audio_sys *const audio_sys, const t_sound_id id, const zcl::t_b8 looping) {
-        ZCL_ASSERT(g_module_active);
+        ZCL_ASSERT(detail::AudioSysCheckValid(audio_sys));
         ZCL_ASSERT(!audio_sys->paused);
         SoundIDAssertValid(audio_sys, id);
         ZCL_ASSERT(SoundCheckExists(audio_sys, id));
@@ -431,7 +386,7 @@ namespace zgl {
     }
 
     void SoundSetTrackPosition(t_audio_sys *const audio_sys, const t_sound_id id, const zcl::t_f32 pos_secs) {
-        ZCL_ASSERT(g_module_active);
+        ZCL_ASSERT(detail::AudioSysCheckValid(audio_sys));
         ZCL_ASSERT(!audio_sys->paused);
         SoundIDAssertValid(audio_sys, id);
         ZCL_ASSERT(SoundCheckExists(audio_sys, id));
@@ -443,7 +398,7 @@ namespace zgl {
     }
 
     void SoundsDestroyAll(t_audio_sys *const audio_sys) {
-        ZCL_ASSERT(g_module_active);
+        ZCL_ASSERT(detail::AudioSysCheckValid(audio_sys));
 
         ZCL_BITSET_WALK_ALL_SET (audio_sys->snd_insts.active, i) {
             SoundDestroy(audio_sys, {i, audio_sys->snd_insts.versions[i]});
@@ -451,7 +406,7 @@ namespace zgl {
     }
 
     void SoundsPauseAll(t_audio_sys *const audio_sys) {
-        ZCL_ASSERT(g_module_active);
+        ZCL_ASSERT(detail::AudioSysCheckValid(audio_sys));
         ZCL_ASSERT(!audio_sys->paused);
 
         ZCL_BITSET_WALK_ALL_SET (audio_sys->snd_insts.active, i) {
@@ -464,7 +419,7 @@ namespace zgl {
     }
 
     void SoundsResumeAll(t_audio_sys *const audio_sys) {
-        ZCL_ASSERT(g_module_active);
+        ZCL_ASSERT(detail::AudioSysCheckValid(audio_sys));
         ZCL_ASSERT(!audio_sys->paused);
 
         ZCL_BITSET_WALK_ALL_SET (audio_sys->snd_insts.active, i) {
@@ -477,7 +432,7 @@ namespace zgl {
     }
 
     void detail::SoundsProcessFinished(t_audio_sys *const audio_sys) {
-        ZCL_ASSERT(g_module_active);
+        ZCL_ASSERT(detail::AudioSysCheckValid(audio_sys));
         ZCL_ASSERT(!audio_sys->paused);
 
         ZCL_BITSET_WALK_ALL_SET (audio_sys->snd_insts.active, i) {

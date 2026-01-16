@@ -1,9 +1,7 @@
 - Set up magic values for module-internal structs. In audio, GFX, etc.
-- Handle window unfocus case. Does the game pause? What happens to input?
 - Some kind of sound group system like what's in gamemaker, so groups of sounds can share the same volume for instance
 - String streams
 - Make sure references are used consistently and correctly.
-- Subnamespaces are kind of annoying for the user and don't add that much value I don't think.
 
 - Maybe be more consistent about how templates are used for t_f32 and t_f64. Also integrals
 - Properly check correctness of packed asset binary files
