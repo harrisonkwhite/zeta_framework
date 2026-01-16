@@ -370,10 +370,20 @@ namespace zgl {
         ma_sound_set_volume(&audio_sys->snd_insts.ma_snds[id.index], vol_snapped);
     }
 
-#if 0
     void SoundSetVolumeTransition(t_audio_sys *const audio_sys, const t_sound_id id, const zcl::t_f32 vol_begin, const zcl::t_f32 vol_end, const zcl::t_f32 dur_secs) {
+        ZCL_ASSERT(g_module_active);
+        SoundIDAssertValid(audio_sys, id);
+        ZCL_ASSERT(SoundCheckExists(audio_sys, id));
+        ZCL_ASSERT(dur_secs >= 0.0f);
+
+        const zcl::t_f32 vol_begin_snapped = zcl::RangeValueSnapToBounds(k_volume_range, vol_begin);
+        ZCL_ASSERT(zcl::RangeValueCheckWithin(k_volume_range, vol_begin_snapped));
+
+        const zcl::t_f32 vol_end_snapped = zcl::RangeValueSnapToBounds(k_volume_range, vol_end);
+        ZCL_ASSERT(zcl::RangeValueCheckWithin(k_volume_range, vol_end_snapped));
+
+        ma_sound_set_fade_in_milliseconds(&audio_sys->snd_insts.ma_snds[id.index], vol_begin, vol_end, static_cast<ma_uint64>(1000.0f * dur_secs));
     }
-#endif
 
     void SoundSetPan(t_audio_sys *const audio_sys, const t_sound_id id, const zcl::t_f32 pan) {
         ZCL_ASSERT(g_module_active);
