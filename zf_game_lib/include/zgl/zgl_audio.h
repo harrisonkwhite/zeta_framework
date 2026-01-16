@@ -45,6 +45,10 @@ namespace zgl {
         zcl::t_i32 version;
     };
 
+    constexpr zcl::t_range k_sound_volume_range = zcl::RangeCreate(0.0f, 1.0f);
+    constexpr zcl::t_range k_sound_pan_range = zcl::RangeCreate(-1.0f, 1.0f);
+    constexpr zcl::t_range k_sound_pitch_range = zcl::RangeCreateExclLower(0.0f, zcl::k_f32_inf_pos);
+
     t_sound_id SoundCreate(t_audio_sys *const audio_sys, const t_sound_type *const type);
 
     void SoundDestroy(t_audio_sys *const audio_sys, const t_sound_id id);

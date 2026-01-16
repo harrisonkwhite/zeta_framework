@@ -37,10 +37,6 @@ namespace zgl {
         } snd_insts;
     };
 
-    constexpr zcl::t_range k_volume_range = zcl::RangeCreate(0.0f, 1.0f);
-    constexpr zcl::t_range k_pan_range = zcl::RangeCreate(-1.0f, 1.0f);
-    constexpr zcl::t_range k_pitch_range = zcl::RangeCreateExclLower(0.0f, zcl::k_f32_inf_pos);
-
     static zcl::t_b8 g_module_active;
 
     static void SoundIDAssertValid(const t_audio_sys *const audio_sys, const t_sound_id id) {
@@ -363,24 +359,18 @@ namespace zgl {
         ZCL_ASSERT(g_module_active);
         SoundIDAssertValid(audio_sys, id);
         ZCL_ASSERT(SoundCheckExists(audio_sys, id));
+        ZCL_ASSERT(zcl::RangeValueCheckWithin(k_sound_volume_range, vol));
 
-        const zcl::t_f32 vol_snapped = zcl::RangeValueSnapToBounds(k_volume_range, vol);
-        ZCL_ASSERT(zcl::RangeValueCheckWithin(k_volume_range, vol_snapped));
-
-        ma_sound_set_volume(&audio_sys->snd_insts.ma_snds[id.index], vol_snapped);
+        ma_sound_set_volume(&audio_sys->snd_insts.ma_snds[id.index], vol);
     }
 
     void SoundSetVolumeTransition(t_audio_sys *const audio_sys, const t_sound_id id, const zcl::t_f32 vol_begin, const zcl::t_f32 vol_end, const zcl::t_f32 dur_secs) {
         ZCL_ASSERT(g_module_active);
         SoundIDAssertValid(audio_sys, id);
         ZCL_ASSERT(SoundCheckExists(audio_sys, id));
+        ZCL_ASSERT(zcl::RangeValueCheckWithin(k_sound_volume_range, vol_begin));
+        ZCL_ASSERT(zcl::RangeValueCheckWithin(k_sound_volume_range, vol_end));
         ZCL_ASSERT(dur_secs >= 0.0f);
-
-        const zcl::t_f32 vol_begin_snapped = zcl::RangeValueSnapToBounds(k_volume_range, vol_begin);
-        ZCL_ASSERT(zcl::RangeValueCheckWithin(k_volume_range, vol_begin_snapped));
-
-        const zcl::t_f32 vol_end_snapped = zcl::RangeValueSnapToBounds(k_volume_range, vol_end);
-        ZCL_ASSERT(zcl::RangeValueCheckWithin(k_volume_range, vol_end_snapped));
 
         ma_sound_set_fade_in_milliseconds(&audio_sys->snd_insts.ma_snds[id.index], vol_begin, vol_end, static_cast<ma_uint64>(1000.0f * dur_secs));
     }
@@ -389,22 +379,18 @@ namespace zgl {
         ZCL_ASSERT(g_module_active);
         SoundIDAssertValid(audio_sys, id);
         ZCL_ASSERT(SoundCheckExists(audio_sys, id));
+        ZCL_ASSERT(zcl::RangeValueCheckWithin(k_sound_pan_range, pan));
 
-        const zcl::t_f32 pan_snapped = zcl::RangeValueSnapToBounds(k_pan_range, pan);
-        ZCL_ASSERT(zcl::RangeValueCheckWithin(k_pan_range, pan_snapped));
-
-        ma_sound_set_pan(&audio_sys->snd_insts.ma_snds[id.index], pan_snapped);
+        ma_sound_set_pan(&audio_sys->snd_insts.ma_snds[id.index], pan);
     }
 
     void SoundSetPitch(t_audio_sys *const audio_sys, const t_sound_id id, const zcl::t_f32 pitch) {
         ZCL_ASSERT(g_module_active);
         SoundIDAssertValid(audio_sys, id);
         ZCL_ASSERT(SoundCheckExists(audio_sys, id));
+        ZCL_ASSERT(zcl::RangeValueCheckWithin(k_sound_pitch_range, pitch));
 
-        const zcl::t_f32 pitch_snapped = zcl::RangeValueSnapToBounds(k_pitch_range, pitch);
-        ZCL_ASSERT(zcl::RangeValueCheckWithin(k_pitch_range, pitch_snapped));
-
-        ma_sound_set_pitch(&audio_sys->snd_insts.ma_snds[id.index], pitch_snapped);
+        ma_sound_set_pitch(&audio_sys->snd_insts.ma_snds[id.index], pitch);
     }
 
     void SoundSetLooping(t_audio_sys *const audio_sys, const t_sound_id id, const zcl::t_b8 loop) {
@@ -421,10 +407,9 @@ namespace zgl {
         ZCL_ASSERT(SoundCheckExists(audio_sys, id));
 
         const zcl::t_range pos_secs_range = zcl::RangeCreate(0.0f, SoundGetTrackDuration(audio_sys, id));
-        const zcl::t_f32 pos_secs_snapped = zcl::RangeValueSnapToBounds(pos_secs_range, pos_secs);
-        ZCL_ASSERT(zcl::RangeValueCheckWithin(pos_secs_range, pos_secs_snapped));
+        ZCL_ASSERT(zcl::RangeValueCheckWithin(pos_secs_range, pos_secs));
 
-        ma_sound_seek_to_second(&audio_sys->snd_insts.ma_snds[id.index], pos_secs_snapped);
+        ma_sound_seek_to_second(&audio_sys->snd_insts.ma_snds[id.index], pos_secs);
     }
 
     void SoundsDestroyAll(t_audio_sys *const audio_sys) {
