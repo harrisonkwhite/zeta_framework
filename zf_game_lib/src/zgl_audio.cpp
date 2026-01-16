@@ -42,6 +42,18 @@ namespace zgl {
         ZCL_ASSERT(id.version > 0 && id.version <= audio_sys->snd_insts.versions[id.index]);
     }
 
+    static zcl::t_b8 VolumeCheckValid(const zcl::t_f32 vol) {
+        return vol >= 0.0f && vol <= 1.0f;
+    }
+
+    static zcl::t_b8 PanCheckValid(const zcl::t_f32 pan) {
+        return pan >= -1.0f && pan <= 1.0f;
+    }
+
+    static zcl::t_b8 PitchCheckValid(const zcl::t_f32 pitch) {
+        return pitch > 0.0f;
+    }
+
     t_audio_sys *detail::AudioStartup(zcl::t_arena *const arena) {
         ZCL_ASSERT(!g_module_active);
 
@@ -171,9 +183,9 @@ namespace zgl {
     zcl::t_b8 SoundPlayAndGetID(t_audio_sys *const audio_sys, const t_sound_type *const type, t_sound_id *const o_id, const zcl::t_f32 vol, const zcl::t_f32 pan, const zcl::t_f32 pitch, const zcl::t_b8 loop) {
         ZCL_ASSERT(g_module_active);
         ZCL_ASSERT(type->valid);
-        ZCL_ASSERT(vol >= 0.0f && vol <= 1.0f);
-        ZCL_ASSERT(pan >= -1.0f && pan <= 1.0f);
-        ZCL_ASSERT(pitch > 0.0f);
+        ZCL_ASSERT(VolumeCheckValid(vol));
+        ZCL_ASSERT(PanCheckValid(pan));
+        ZCL_ASSERT(PitchCheckValid(pitch));
 
         const zcl::t_i32 index = zcl::BitsetFindFirstUnsetBit(audio_sys->snd_insts.active);
 
@@ -278,6 +290,33 @@ namespace zgl {
         SoundIDAssertValid(audio_sys, id);
 
         return SoundCheckActive(audio_sys, id) && zcl::BitsetCheckSet(audio_sys->snd_insts.paused, id.index);
+    }
+
+    void SoundSetVolume(t_audio_sys *const audio_sys, const t_sound_id id, const zcl::t_f32 vol) {
+        ZCL_ASSERT(g_module_active);
+        SoundIDAssertValid(audio_sys, id);
+        ZCL_ASSERT(SoundCheckActive(audio_sys, id));
+        ZCL_ASSERT(VolumeCheckValid(vol));
+
+        ma_sound_set_volume(&audio_sys->snd_insts.ma_snds[id.index], vol);
+    }
+
+    void SoundSetPan(t_audio_sys *const audio_sys, const t_sound_id id, const zcl::t_f32 pan) {
+        ZCL_ASSERT(g_module_active);
+        SoundIDAssertValid(audio_sys, id);
+        ZCL_ASSERT(SoundCheckActive(audio_sys, id));
+        ZCL_ASSERT(PanCheckValid(pan));
+
+        ma_sound_set_pan(&audio_sys->snd_insts.ma_snds[id.index], pan);
+    }
+
+    void SoundSetPitch(t_audio_sys *const audio_sys, const t_sound_id id, const zcl::t_f32 pitch) {
+        ZCL_ASSERT(g_module_active);
+        SoundIDAssertValid(audio_sys, id);
+        ZCL_ASSERT(SoundCheckActive(audio_sys, id));
+        ZCL_ASSERT(PitchCheckValid(pitch));
+
+        ma_sound_set_pitch(&audio_sys->snd_insts.ma_snds[id.index], pitch);
     }
 
     void detail::SoundsProcessFinished(t_audio_sys *const audio_sys) {

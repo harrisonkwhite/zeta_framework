@@ -45,11 +45,16 @@ namespace zgl {
     // Also returns false if the sound is inactive.
     zcl::t_b8 SoundCheckPaused(const t_audio_sys *const audio_sys, const t_sound_id id);
 
-#if 0
+    // This is fine to call when the sound is paused.
     void SoundSetVolume(t_audio_sys *const audio_sys, const t_sound_id id, const zcl::t_f32 vol);
+
+    // This is fine to call when the sound is paused.
     void SoundSetPan(t_audio_sys *const audio_sys, const t_sound_id id, const zcl::t_f32 pan);
+
+    // This is fine to call when the sound is paused.
     void SoundSetPitch(t_audio_sys *const audio_sys, const t_sound_id id, const zcl::t_f32 pitch);
 
+#if 0
     void SoundsStopAll(t_audio_sys *const audio_sys);
     void SoundsPauseAll(t_audio_sys *const audio_sys);
     void SoundsResumeAll(t_audio_sys *const audio_sys);
