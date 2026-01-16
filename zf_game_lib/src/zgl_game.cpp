@@ -72,8 +72,19 @@ namespace zgl {
 
         zcl::t_f64 tick_interval_accum = 0.0;
 
+        // @todo: I don't like this, see if the callback can be leveraged.
+        zcl::t_b8 window_focused_last = true; // Assume we start focused.
+
         while (!WindowCheckCloseRequested(platform)) {
             detail::PollOSEvents(platform);
+
+            const zcl::t_b8 window_focused = WindowCheckFocused(platform);
+
+            if (window_focused && !window_focused_last) {
+                SoundsResumeAll(audio_sys);
+            } else if (!window_focused && window_focused_last) {
+                SoundsPauseAll(audio_sys);
+            }
 
             const zcl::t_f64 frame_time = GetTime(platform);
 
@@ -94,7 +105,8 @@ namespace zgl {
                     fps_frame_cnt_accum = 0;
                 }
 
-                if (WindowCheckFocused(platform)) {
+                // Run ticks only if the window is focused.
+                if (window_focused) {
                     tick_interval_accum += frame_time_delta_capped;
 
                     if (tick_interval_accum > tick_interval_limit) {
@@ -147,6 +159,8 @@ namespace zgl {
             }
 
             frame_time_last = frame_time;
+
+            window_focused_last = window_focused;
         }
     }
 }
