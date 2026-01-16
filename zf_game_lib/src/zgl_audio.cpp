@@ -22,8 +22,6 @@ namespace zgl {
 
     constexpr zcl::t_i32 k_sound_limit = 32;
 
-    constexpr zcl::t_range_f k_volume_range = zcl::RangeCreateF(0.0f, 1.0f);
-
     struct t_audio_sys {
         ma_engine ma_eng;
 
@@ -37,23 +35,15 @@ namespace zgl {
         } snd_insts;
     };
 
+    constexpr zcl::t_range k_volume_range = zcl::RangeCreate(0.0f, 1.0f);
+    constexpr zcl::t_range k_pan_range = zcl::RangeCreate(-1.0f, 1.0f);
+    constexpr zcl::t_range k_pitch_range = zcl::RangeCreateExclLower(0.0f, zcl::k_f32_inf_pos);
+
     static zcl::t_b8 g_module_active;
 
     static void SoundIDAssertValid(const t_audio_sys *const audio_sys, const t_sound_id id) {
         ZCL_ASSERT(id.index >= 0 && id.index < k_sound_limit);
         ZCL_ASSERT(id.version > 0 && id.version <= audio_sys->snd_insts.versions[id.index]);
-    }
-
-    static zcl::t_b8 VolumeCheckValid(const zcl::t_f32 vol) {
-        return vol >= 0.0f && vol <= 1.0f;
-    }
-
-    static zcl::t_b8 PanCheckValid(const zcl::t_f32 pan) {
-        return pan >= -1.0f && pan <= 1.0f;
-    }
-
-    static zcl::t_b8 PitchCheckValid(const zcl::t_f32 pitch) {
-        return pitch > 0.0f;
     }
 
     t_audio_sys *detail::AudioStartup(zcl::t_arena *const arena) {
@@ -185,9 +175,9 @@ namespace zgl {
     zcl::t_b8 SoundPlayAndGetID(t_audio_sys *const audio_sys, const t_sound_type *const type, t_sound_id *const o_id, const zcl::t_f32 vol, const zcl::t_f32 pan, const zcl::t_f32 pitch, const zcl::t_b8 loop) {
         ZCL_ASSERT(g_module_active);
         ZCL_ASSERT(type->valid);
-        ZCL_ASSERT(VolumeCheckValid(vol));
-        ZCL_ASSERT(PanCheckValid(pan));
-        ZCL_ASSERT(PitchCheckValid(pitch));
+        ZCL_ASSERT(zcl::RangeValueCheckWithinSnapped(k_volume_range, vol));
+        ZCL_ASSERT(zcl::RangeValueCheckWithinSnapped(k_pan_range, pan));
+        ZCL_ASSERT(zcl::RangeValueCheckWithinSnapped(k_pitch_range, pitch));
 
         const zcl::t_i32 index = zcl::BitsetFindFirstUnsetBit(audio_sys->snd_insts.active);
 
@@ -322,7 +312,7 @@ namespace zgl {
         ZCL_ASSERT(g_module_active);
         SoundIDAssertValid(audio_sys, id);
         ZCL_ASSERT(SoundCheckActive(audio_sys, id));
-        ZCL_ASSERT(VolumeCheckValid(vol));
+        ZCL_ASSERT(zcl::RangeValueCheckWithinSnapped(k_volume_range, vol));
 
         ma_sound_set_volume(&audio_sys->snd_insts.ma_snds[id.index], vol);
     }
@@ -331,7 +321,7 @@ namespace zgl {
         ZCL_ASSERT(g_module_active);
         SoundIDAssertValid(audio_sys, id);
         ZCL_ASSERT(SoundCheckActive(audio_sys, id));
-        ZCL_ASSERT(PanCheckValid(pan));
+        ZCL_ASSERT(zcl::RangeValueCheckWithinSnapped(k_pan_range, pan));
 
         ma_sound_set_pan(&audio_sys->snd_insts.ma_snds[id.index], pan);
     }
@@ -340,7 +330,7 @@ namespace zgl {
         ZCL_ASSERT(g_module_active);
         SoundIDAssertValid(audio_sys, id);
         ZCL_ASSERT(SoundCheckActive(audio_sys, id));
-        ZCL_ASSERT(PitchCheckValid(pitch));
+        ZCL_ASSERT(zcl::RangeValueCheckWithinSnapped(k_pitch_range, pitch));
 
         ma_sound_set_pitch(&audio_sys->snd_insts.ma_snds[id.index], pitch);
     }

@@ -3,6 +3,13 @@
 #include <zcl/zcl_basic.h>
 
 namespace zcl {
+    constexpr zcl::t_f32 k_tolerance_default = 1e-5f;
+
+    constexpr t_b8 CheckNearlyEqual(const t_f32 val, const t_f32 targ, const t_f32 tol = k_tolerance_default) {
+        ZCL_ASSERT(tol >= 0.0f);
+        return val >= targ - tol && val <= targ + tol;
+    }
+
     constexpr t_f32 k_pi = 3.14159265358979323846f;
     constexpr t_f32 k_tau = 6.28318530717958647692f;
 
@@ -44,11 +51,6 @@ namespace zcl {
         }
 
         return CalcDigitAt(n / 10, index - 1);
-    }
-
-    constexpr t_b8 CheckNearlyEqual(const t_f32 val, const t_f32 targ, const t_f32 tol = 1e-5f) {
-        ZCL_ASSERT(tol >= 0);
-        return val >= targ - tol && val <= targ + tol;
     }
 
 
@@ -111,31 +113,42 @@ namespace zcl {
     constexpr t_b8 RangeCheckEmpty(const t_range_excl_both range) { return CheckNearlyEqual(range.min, range.max); }
 
     constexpr t_b8 RangeValueCheckWithin(const t_range range, const t_f32 val) {
+        ZCL_ASSERT(!CheckNaN(val));
         return val >= range.min && val <= range.max;
     }
 
     constexpr t_b8 RangeValueCheckWithin(const t_range_excl_lower range, const t_f32 val) {
+        ZCL_ASSERT(!CheckNaN(val));
         return val > range.min && val <= range.max;
     }
 
     constexpr t_b8 RangeValueCheckWithin(const t_range_excl_upper range, const t_f32 val) {
+        ZCL_ASSERT(!CheckNaN(val));
         return val >= range.min && val < range.max;
     }
 
     constexpr t_b8 RangeValueCheckWithin(const t_range_excl_both range, const t_f32 val) {
+        ZCL_ASSERT(!CheckNaN(val));
         return val > range.min && val < range.max;
     }
 
-    constexpr t_f32 RangeValueSnapAtBounds(const t_range range, const t_f32 val) {
-        if (val < range.min && CheckNearlyEqual(val, range.min)) {
+    constexpr t_f32 RangeValueSnapToBounds(const t_range range, const t_f32 val, const t_f32 tol = k_tolerance_default) {
+        ZCL_ASSERT(!CheckNaN(val));
+
+        if (val < range.min && CheckNearlyEqual(val, range.min, tol)) {
             return range.min;
         }
 
-        if (val > range.max && CheckNearlyEqual(val, range.max)) {
+        if (val > range.max && CheckNearlyEqual(val, range.max, tol)) {
             return range.max;
         }
 
         return val;
+    }
+
+    // Checks if the value - snapped to the range bounds - is within the range.
+    constexpr t_b8 RangeValueCheckWithinSnapped(const t_range range, const t_f32 val, const t_f32 tol = k_tolerance_default) {
+        return RangeValueCheckWithin(range, RangeValueSnapToBounds(range, val, tol));
     }
 
     // ============================================================
