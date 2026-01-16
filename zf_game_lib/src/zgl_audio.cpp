@@ -15,7 +15,7 @@ namespace zgl {
     struct t_sound_type {
         zcl::t_b8 valid;
 
-        zcl::t_b8 stream;
+        zcl::t_b8 streamable;
         zcl::t_sound_data_rdonly nonstream_snd_data;
         zcl::t_str_rdonly stream_external_file_path_terminated; // Terminated since it often needs to be converted to C-string.
 
@@ -128,7 +128,7 @@ namespace zgl {
         }
 
         t_sound_type *const result = SoundTypeGroupAdd(group);
-        result->stream = false;
+        result->streamable = false;
         result->nonstream_snd_data = snd_data;
 
         return result;
@@ -153,7 +153,7 @@ namespace zgl {
         zcl::FileClose(&file_stream);
 
         t_sound_type *const result = SoundTypeGroupAdd(group);
-        result->stream = false;
+        result->streamable = false;
         result->nonstream_snd_data = snd_data;
 
         return result;
@@ -164,15 +164,22 @@ namespace zgl {
         ZCL_ASSERT(group->valid);
 
         t_sound_type *const result = SoundTypeGroupAdd(group);
-        result->stream = true;
+        result->streamable = true;
         result->stream_external_file_path_terminated = zcl::StrCloneButAddTerminator(external_file_path, temp_arena);
 
         return result;
     }
 
-    zcl::t_b8 SoundPlayAndGetID(t_audio_sys *const audio_sys, const t_sound_type *const type, t_sound_id *const o_id, const zcl::t_f32 vol, const zcl::t_f32 pan, const zcl::t_f32 pitch, const zcl::t_b8 loop) {
+    zcl::t_b8 SoundTypeCheckStreamable(t_audio_sys *const audio_sys, const t_sound_type *const type) {
         ZCL_ASSERT(g_module_active);
         ZCL_ASSERT(type->valid);
+
+        return type->streamable;
+    }
+
+    zcl::t_b8 SoundPlayAndGetID(t_audio_sys *const audio_sys, const t_sound_type *const snd_type, t_sound_id *const o_id, const zcl::t_f32 vol, const zcl::t_f32 pan, const zcl::t_f32 pitch, const zcl::t_b8 loop) {
+        ZCL_ASSERT(g_module_active);
+        ZCL_ASSERT(snd_type->valid);
         ZCL_ASSERT(zcl::RangeValueCheckWithinSnapped(k_volume_range, vol));
         ZCL_ASSERT(zcl::RangeValueCheckWithinSnapped(k_pan_range, pan));
         ZCL_ASSERT(zcl::RangeValueCheckWithinSnapped(k_pitch_range, pitch));
@@ -184,24 +191,24 @@ namespace zgl {
             return false;
         }
 
-        audio_sys->snd_insts.types[index] = type;
+        audio_sys->snd_insts.types[index] = snd_type;
 
         ma_sound *const ma_snd = &audio_sys->snd_insts.ma_snds[index];
 
-        if (!type->stream) {
+        if (!snd_type->streamable) {
             ma_audio_buffer_ref *const ma_buf_ref = &audio_sys->snd_insts.ma_buf_refs[index];
 
-            if (ma_audio_buffer_ref_init(ma_format_f32, static_cast<ma_uint32>(type->nonstream_snd_data.meta.channel_cnt), type->nonstream_snd_data.pcm.raw, static_cast<ma_uint64>(type->nonstream_snd_data.meta.frame_cnt), ma_buf_ref) != MA_SUCCESS) {
+            if (ma_audio_buffer_ref_init(ma_format_f32, static_cast<ma_uint32>(snd_type->nonstream_snd_data.meta.channel_cnt), snd_type->nonstream_snd_data.pcm.raw, static_cast<ma_uint64>(snd_type->nonstream_snd_data.meta.frame_cnt), ma_buf_ref) != MA_SUCCESS) {
                 ZCL_FATAL();
             }
 
-            ma_buf_ref->sampleRate = static_cast<ma_uint32>(type->nonstream_snd_data.meta.sample_rate);
+            ma_buf_ref->sampleRate = static_cast<ma_uint32>(snd_type->nonstream_snd_data.meta.sample_rate);
 
             if (ma_sound_init_from_data_source(&audio_sys->ma_eng, ma_buf_ref, 0, nullptr, ma_snd) != MA_SUCCESS) {
                 ZCL_FATAL();
             }
         } else {
-            if (ma_sound_init_from_file(&audio_sys->ma_eng, zcl::StrToCStr(type->stream_external_file_path_terminated), MA_SOUND_FLAG_STREAM, nullptr, nullptr, ma_snd) != MA_SUCCESS) {
+            if (ma_sound_init_from_file(&audio_sys->ma_eng, zcl::StrToCStr(snd_type->stream_external_file_path_terminated), MA_SOUND_FLAG_STREAM, nullptr, nullptr, ma_snd) != MA_SUCCESS) {
                 ZCL_FATAL();
             }
         }
@@ -236,7 +243,7 @@ namespace zgl {
 
         ma_sound_uninit(ma_snd);
 
-        if (!audio_sys->snd_insts.types[id.index]->stream) {
+        if (!audio_sys->snd_insts.types[id.index]->streamable) {
             ma_audio_buffer_ref_uninit(&audio_sys->snd_insts.ma_buf_refs[id.index]);
         }
 
@@ -305,31 +312,77 @@ namespace zgl {
         return ma_sound_get_pitch(&audio_sys->snd_insts.ma_snds[id.index]);
     }
 
+    zcl::t_f32 SoundGetTrackPosition(t_audio_sys *const audio_sys, const t_sound_id id) {
+        ZCL_ASSERT(g_module_active);
+        SoundIDAssertValid(audio_sys, id);
+        ZCL_ASSERT(SoundCheckActive(audio_sys, id));
+
+        zcl::t_f32 result;
+
+        if (ma_sound_get_cursor_in_seconds(&audio_sys->snd_insts.ma_snds[id.index], &result) != MA_SUCCESS) {
+            ZCL_FATAL();
+        }
+
+        return result;
+    }
+
+    zcl::t_f32 SoundGetTrackDuration(t_audio_sys *const audio_sys, const t_sound_id id) {
+        ZCL_ASSERT(g_module_active);
+        SoundIDAssertValid(audio_sys, id);
+        ZCL_ASSERT(SoundCheckActive(audio_sys, id));
+
+        zcl::t_f32 result;
+
+        if (ma_sound_get_length_in_seconds(&audio_sys->snd_insts.ma_snds[id.index], &result) != MA_SUCCESS) {
+            ZCL_FATAL();
+        }
+
+        return result;
+    }
+
     void SoundSetVolume(t_audio_sys *const audio_sys, const t_sound_id id, const zcl::t_f32 vol) {
         ZCL_ASSERT(g_module_active);
         SoundIDAssertValid(audio_sys, id);
         ZCL_ASSERT(SoundCheckActive(audio_sys, id));
-        ZCL_ASSERT(zcl::RangeValueCheckWithinSnapped(k_volume_range, vol));
 
-        ma_sound_set_volume(&audio_sys->snd_insts.ma_snds[id.index], vol);
+        const zcl::t_f32 vol_snapped = zcl::RangeValueSnapToBounds(k_volume_range, vol);
+        ZCL_ASSERT(zcl::RangeValueCheckWithin(k_volume_range, vol_snapped));
+
+        ma_sound_set_volume(&audio_sys->snd_insts.ma_snds[id.index], vol_snapped);
     }
 
     void SoundSetPan(t_audio_sys *const audio_sys, const t_sound_id id, const zcl::t_f32 pan) {
         ZCL_ASSERT(g_module_active);
         SoundIDAssertValid(audio_sys, id);
         ZCL_ASSERT(SoundCheckActive(audio_sys, id));
-        ZCL_ASSERT(zcl::RangeValueCheckWithinSnapped(k_pan_range, pan));
 
-        ma_sound_set_pan(&audio_sys->snd_insts.ma_snds[id.index], pan);
+        const zcl::t_f32 pan_snapped = zcl::RangeValueSnapToBounds(k_pan_range, pan);
+        ZCL_ASSERT(zcl::RangeValueCheckWithin(k_pan_range, pan_snapped));
+
+        ma_sound_set_pan(&audio_sys->snd_insts.ma_snds[id.index], pan_snapped);
     }
 
     void SoundSetPitch(t_audio_sys *const audio_sys, const t_sound_id id, const zcl::t_f32 pitch) {
         ZCL_ASSERT(g_module_active);
         SoundIDAssertValid(audio_sys, id);
         ZCL_ASSERT(SoundCheckActive(audio_sys, id));
-        ZCL_ASSERT(zcl::RangeValueCheckWithinSnapped(k_pitch_range, pitch));
 
-        ma_sound_set_pitch(&audio_sys->snd_insts.ma_snds[id.index], pitch);
+        const zcl::t_f32 pitch_snapped = zcl::RangeValueSnapToBounds(k_pitch_range, pitch);
+        ZCL_ASSERT(zcl::RangeValueCheckWithin(k_pitch_range, pitch_snapped));
+
+        ma_sound_set_pitch(&audio_sys->snd_insts.ma_snds[id.index], pitch_snapped);
+    }
+
+    zcl::t_f32 SoundSetTrackPosition(t_audio_sys *const audio_sys, const t_sound_id id, const zcl::t_f32 pos_secs) {
+        ZCL_ASSERT(g_module_active);
+        SoundIDAssertValid(audio_sys, id);
+        ZCL_ASSERT(SoundCheckActive(audio_sys, id));
+
+        const zcl::t_range pos_secs_range = zcl::RangeCreate(0.0f, SoundGetTrackDuration(audio_sys, id));
+        const zcl::t_f32 pos_secs_snapped = zcl::RangeValueSnapToBounds(pos_secs_range, pos_secs);
+        ZCL_ASSERT(zcl::RangeValueCheckWithin(pos_secs_range, pos_secs_snapped));
+
+        ma_sound_seek_to_second(&audio_sys->snd_insts.ma_snds[id.index], pos_secs_snapped);
     }
 
     void SoundsStopAll(t_audio_sys *const audio_sys) {
