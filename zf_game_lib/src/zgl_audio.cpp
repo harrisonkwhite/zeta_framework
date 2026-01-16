@@ -32,7 +32,7 @@ namespace zgl {
             zcl::t_static_array<ma_audio_buffer_ref, k_sound_limit> ma_buf_refs;
             zcl::t_static_array<const t_sound_type *, k_sound_limit> types;
             zcl::t_static_bitset<k_sound_limit> active;
-            zcl::t_static_bitset<k_sound_limit> paused;
+            zcl::t_static_bitset<k_sound_limit> playing;
             zcl::t_static_array<zcl::t_i32, k_sound_limit> versions;
         } snd_insts;
     };
@@ -65,7 +65,7 @@ namespace zgl {
     void detail::AudioShutdown(t_audio_sys *const sys) {
         ZCL_ASSERT(g_module_active);
 
-        SoundsStopAll(sys);
+        SoundsDestroyAll(sys);
 
         ma_engine_uninit(&sys->ma_eng);
 
@@ -177,6 +177,123 @@ namespace zgl {
         return type->streamable;
     }
 
+    t_sound_id SoundCreate(t_audio_sys *const audio_sys, const t_sound_type *const snd_type) {
+        ZCL_ASSERT(g_module_active);
+        ZCL_ASSERT(snd_type->valid);
+
+        const zcl::t_i32 index = zcl::BitsetFindFirstUnsetBit(audio_sys->snd_insts.active);
+
+        if (index == -1) {
+            ZCL_FATAL();
+        }
+
+        audio_sys->snd_insts.types[index] = snd_type;
+
+        ma_sound *const ma_snd = &audio_sys->snd_insts.ma_snds[index];
+
+        if (!snd_type->streamable) {
+            ma_audio_buffer_ref *const ma_buf_ref = &audio_sys->snd_insts.ma_buf_refs[index];
+
+            if (ma_audio_buffer_ref_init(ma_format_f32, static_cast<ma_uint32>(snd_type->nonstream_snd_data.meta.channel_cnt), snd_type->nonstream_snd_data.pcm.raw, static_cast<ma_uint64>(snd_type->nonstream_snd_data.meta.frame_cnt), ma_buf_ref) != MA_SUCCESS) {
+                ZCL_FATAL();
+            }
+
+            ma_buf_ref->sampleRate = static_cast<ma_uint32>(snd_type->nonstream_snd_data.meta.sample_rate);
+
+            if (ma_sound_init_from_data_source(&audio_sys->ma_eng, ma_buf_ref, 0, nullptr, ma_snd) != MA_SUCCESS) {
+                ZCL_FATAL();
+            }
+        } else {
+            if (ma_sound_init_from_file(&audio_sys->ma_eng, zcl::StrToCStr(snd_type->stream_external_file_path_terminated), MA_SOUND_FLAG_STREAM, nullptr, nullptr, ma_snd) != MA_SUCCESS) {
+                ZCL_FATAL();
+            }
+        }
+
+        // @todo: Could these be default anyway?
+        ma_sound_set_volume(ma_snd, 1.0f);
+        ma_sound_set_pan(ma_snd, 0.0f);
+        ma_sound_set_pitch(ma_snd, 1.0f);
+        ma_sound_set_looping(ma_snd, false);
+
+        zcl::BitsetSet(audio_sys->snd_insts.active, index);
+        audio_sys->snd_insts.versions[index]++;
+
+        return {index, audio_sys->snd_insts.versions[index]};
+    }
+
+    void SoundDestroy(t_audio_sys *const audio_sys, const t_sound_id id) {
+        ZCL_ASSERT(g_module_active);
+        SoundIDAssertValid(audio_sys, id);
+        ZCL_ASSERT(SoundCheckExists(audio_sys, id));
+
+        ma_sound *const ma_snd = &audio_sys->snd_insts.ma_snds[id.index];
+
+        if (ma_sound_is_playing(ma_snd)) {
+            if (ma_sound_stop(ma_snd) != MA_SUCCESS) {
+                ZCL_FATAL();
+            }
+        }
+
+        ma_sound_uninit(ma_snd);
+
+        if (!audio_sys->snd_insts.types[id.index]->streamable) {
+            ma_audio_buffer_ref_uninit(&audio_sys->snd_insts.ma_buf_refs[id.index]);
+        }
+
+        zcl::BitsetUnset(audio_sys->snd_insts.active, id.index);
+        zcl::BitsetUnset(audio_sys->snd_insts.playing, id.index);
+    }
+
+    zcl::t_b8 SoundCheckExists(const t_audio_sys *const audio_sys, const t_sound_id id) {
+        ZCL_ASSERT(g_module_active);
+        SoundIDAssertValid(audio_sys, id);
+
+        return zcl::BitsetCheckSet(audio_sys->snd_insts.active, id.index)
+            && id.version == audio_sys->snd_insts.versions[id.index];
+    }
+
+    void SoundPlay(t_audio_sys *const audio_sys, const t_sound_id id) {
+        ZCL_ASSERT(g_module_active);
+        SoundIDAssertValid(audio_sys, id);
+        ZCL_ASSERT(SoundCheckExists(audio_sys, id));
+        ZCL_ASSERT(!SoundCheckPlaying(audio_sys, id));
+
+        if (ma_sound_start(&audio_sys->snd_insts.ma_snds[id.index]) != MA_SUCCESS) {
+            ZCL_FATAL();
+        }
+
+        zcl::BitsetSet(audio_sys->snd_insts.playing, id.index);
+    }
+
+    void SoundStop(t_audio_sys *const audio_sys, const t_sound_id id) {
+        ZCL_ASSERT(g_module_active);
+        SoundIDAssertValid(audio_sys, id);
+        ZCL_ASSERT(SoundCheckExists(audio_sys, id));
+        ZCL_ASSERT(SoundCheckPlaying(audio_sys, id));
+
+        if (ma_sound_stop(&audio_sys->snd_insts.ma_snds[id.index]) != MA_SUCCESS) {
+            ZCL_FATAL();
+        }
+
+        zcl::BitsetUnset(audio_sys->snd_insts.playing, id.index);
+    }
+
+    zcl::t_b8 SoundCheckPlaying(const t_audio_sys *const audio_sys, const t_sound_id id) {
+        ZCL_ASSERT(g_module_active);
+        SoundIDAssertValid(audio_sys, id);
+
+        return SoundCheckExists(audio_sys, id) && zcl::BitsetCheckSet(audio_sys->snd_insts.playing, id.index);
+    }
+
+    void SoundsDestroyAll(t_audio_sys *const audio_sys) {
+        ZCL_ASSERT(g_module_active);
+
+        ZCL_BITSET_WALK_ALL_SET (audio_sys->snd_insts.active, i) {
+            SoundDestroy(audio_sys, {i, audio_sys->snd_insts.versions[i]});
+        }
+    }
+
+#if 0
     zcl::t_b8 SoundPlayAndGetID(t_audio_sys *const audio_sys, const t_sound_type *const snd_type, t_sound_id *const o_id, const zcl::t_f32 vol, const zcl::t_f32 pan, const zcl::t_f32 pitch, const zcl::t_b8 loop) {
         ZCL_ASSERT(g_module_active);
         ZCL_ASSERT(snd_type->valid);
@@ -272,15 +389,9 @@ namespace zgl {
 
         zcl::BitsetUnset(audio_sys->snd_insts.paused, id.index);
     }
+#endif
 
-    zcl::t_b8 SoundCheckActive(const t_audio_sys *const audio_sys, const t_sound_id id) {
-        ZCL_ASSERT(g_module_active);
-        SoundIDAssertValid(audio_sys, id);
-
-        return zcl::BitsetCheckSet(audio_sys->snd_insts.active, id.index)
-            && id.version == audio_sys->snd_insts.versions[id.index];
-    }
-
+#if 0
     zcl::t_b8 SoundCheckPaused(const t_audio_sys *const audio_sys, const t_sound_id id) {
         ZCL_ASSERT(g_module_active);
         SoundIDAssertValid(audio_sys, id);
@@ -373,7 +484,7 @@ namespace zgl {
         ma_sound_set_pitch(&audio_sys->snd_insts.ma_snds[id.index], pitch_snapped);
     }
 
-    zcl::t_f32 SoundSetTrackPosition(t_audio_sys *const audio_sys, const t_sound_id id, const zcl::t_f32 pos_secs) {
+    void SoundSetTrackPosition(t_audio_sys *const audio_sys, const t_sound_id id, const zcl::t_f32 pos_secs) {
         ZCL_ASSERT(g_module_active);
         SoundIDAssertValid(audio_sys, id);
         ZCL_ASSERT(SoundCheckActive(audio_sys, id));
@@ -430,4 +541,5 @@ namespace zgl {
             }
         }
     }
+#endif
 }
