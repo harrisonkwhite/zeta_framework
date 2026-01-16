@@ -4,6 +4,8 @@
 
 namespace zgl {
     struct t_sound_type_group {
+        zcl::t_b8 valid;
+
         zcl::t_arena *arena;
 
         t_sound_type *head;
@@ -63,16 +65,7 @@ namespace zgl {
     void detail::AudioShutdown(t_audio_sys *const sys) {
         ZCL_ASSERT(g_module_active);
 
-        // @todo: Can be replaced with SoundsStopAll().
-        ZCL_BITSET_WALK_ALL_SET (sys->snd_insts.active, i) {
-            ma_sound_stop(&sys->snd_insts.ma_snds[i]);
-            ma_sound_uninit(&sys->snd_insts.ma_snds[i]);
-
-            // @cleanup
-            if (!sys->snd_insts.types[i]->stream) {
-                ma_audio_buffer_ref_uninit(&sys->snd_insts.ma_buf_refs[i]);
-            }
-        }
+        SoundsStopAll(sys);
 
         ma_engine_uninit(&sys->ma_eng);
 
@@ -83,12 +76,14 @@ namespace zgl {
         ZCL_ASSERT(g_module_active);
 
         const auto result = zcl::ArenaPushItem<t_sound_type_group>(arena);
+        result->valid = true;
         result->arena = arena;
         return result;
     }
 
     void SoundTypeGroupDestroy(t_audio_sys *const audio_sys, t_sound_type_group *const group) {
         ZCL_ASSERT(g_module_active);
+        ZCL_ASSERT(group->valid);
 
         t_sound_type *snd_type = group->head;
 
@@ -124,6 +119,7 @@ namespace zgl {
 
     t_sound_type *SoundTypeCreateFromExternal(t_audio_sys *const audio_sys, const zcl::t_str_rdonly file_path, t_sound_type_group *const group, zcl::t_arena *const temp_arena) {
         ZCL_ASSERT(g_module_active);
+        ZCL_ASSERT(group->valid);
 
         zcl::t_sound_data_mut snd_data;
 
@@ -140,6 +136,7 @@ namespace zgl {
 
     t_sound_type *SoundTypeCreateFromPacked(t_audio_sys *const audio_sys, const zcl::t_str_rdonly file_path, t_sound_type_group *const group, zcl::t_arena *const temp_arena) {
         ZCL_ASSERT(g_module_active);
+        ZCL_ASSERT(group->valid);
 
         zcl::t_file_stream file_stream;
 
@@ -164,6 +161,7 @@ namespace zgl {
 
     t_sound_type *SoundTypeCreateStreamable(t_audio_sys *const audio_sys, const zcl::t_str_rdonly external_file_path, t_sound_type_group *const group, zcl::t_arena *const temp_arena) {
         ZCL_ASSERT(g_module_active);
+        ZCL_ASSERT(group->valid);
 
         t_sound_type *const result = SoundTypeGroupAdd(group);
         result->stream = true;
@@ -238,7 +236,6 @@ namespace zgl {
 
         ma_sound_uninit(ma_snd);
 
-        // @cleanup
         if (!audio_sys->snd_insts.types[id.index]->stream) {
             ma_audio_buffer_ref_uninit(&audio_sys->snd_insts.ma_buf_refs[id.index]);
         }
@@ -333,6 +330,36 @@ namespace zgl {
         ZCL_ASSERT(zcl::RangeValueCheckWithinSnapped(k_pitch_range, pitch));
 
         ma_sound_set_pitch(&audio_sys->snd_insts.ma_snds[id.index], pitch);
+    }
+
+    void SoundsStopAll(t_audio_sys *const audio_sys) {
+        ZCL_ASSERT(g_module_active);
+
+        ZCL_BITSET_WALK_ALL_SET (audio_sys->snd_insts.active, i) {
+            SoundStop(audio_sys, {i, audio_sys->snd_insts.versions[i]});
+        }
+    }
+
+    void SoundsPauseAll(t_audio_sys *const audio_sys) {
+        ZCL_ASSERT(g_module_active);
+
+        const auto nonpaused = [audio_sys]() {
+            auto result = audio_sys->snd_insts.active;
+            zcl::BitsetApplyMask(result, audio_sys->snd_insts.paused, zcl::ek_bitwise_mask_op_andnot);
+            return result;
+        }();
+
+        ZCL_BITSET_WALK_ALL_SET (nonpaused, i) {
+            SoundPause(audio_sys, {i, audio_sys->snd_insts.versions[i]});
+        }
+    }
+
+    void SoundsResumeAll(t_audio_sys *const audio_sys) {
+        ZCL_ASSERT(g_module_active);
+
+        ZCL_BITSET_WALK_ALL_SET (audio_sys->snd_insts.paused, i) {
+            SoundResume(audio_sys, {i, audio_sys->snd_insts.versions[i]});
+        }
     }
 
     void detail::SoundsProcessFinished(t_audio_sys *const audio_sys) {

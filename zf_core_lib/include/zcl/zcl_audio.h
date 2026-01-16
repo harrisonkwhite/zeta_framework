@@ -28,5 +28,6 @@ namespace zcl {
         return snd_meta.channel_cnt * snd_meta.frame_cnt;
     }
 
+    // Supports WAV, FLAC, and MP3.
     [[nodiscard]] t_b8 SoundLoadFromExternal(const t_str_rdonly file_path, t_arena *const snd_data_arena, t_arena *const temp_arena, t_sound_data_mut *const o_snd_data);
 }

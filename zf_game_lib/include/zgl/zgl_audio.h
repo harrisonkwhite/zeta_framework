@@ -12,10 +12,12 @@ namespace zgl {
 
     void SoundTypeGroupDestroy(t_audio_sys *const audio_sys, t_sound_type_group *const group);
 
-    // @todo: Could give a warning or something to use streamable instead if PCM is really huge.
+    // Supports WAV, FLAC, and MP3.
     t_sound_type *SoundTypeCreateFromExternal(t_audio_sys *const audio_sys, const zcl::t_str_rdonly file_path, t_sound_type_group *const group, zcl::t_arena *const temp_arena);
+
     t_sound_type *SoundTypeCreateFromPacked(t_audio_sys *const audio_sys, const zcl::t_str_rdonly file_path, t_sound_type_group *const group, zcl::t_arena *const temp_arena);
 
+    // Supports WAV, FLAC, and MP3.
     // Prefer this for long audio pieces like music and ambience.
     t_sound_type *SoundTypeCreateStreamable(t_audio_sys *const audio_sys, const zcl::t_str_rdonly external_file_path, t_sound_type_group *const group, zcl::t_arena *const temp_arena);
 
@@ -63,11 +65,9 @@ namespace zgl {
     // This is fine to call when the sound is paused.
     void SoundSetPitch(t_audio_sys *const audio_sys, const t_sound_id id, const zcl::t_f32 pitch);
 
-#if 0
     void SoundsStopAll(t_audio_sys *const audio_sys);
     void SoundsPauseAll(t_audio_sys *const audio_sys);
     void SoundsResumeAll(t_audio_sys *const audio_sys);
-#endif
 
     namespace detail {
         t_audio_sys *AudioStartup(zcl::t_arena *const arena);
