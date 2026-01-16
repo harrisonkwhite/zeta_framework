@@ -119,7 +119,6 @@ namespace zgl {
     static zcl::t_i32 ToGLFWKey(const t_key_code key_code) {
         switch (key_code) {
         case ek_key_code_space: return GLFW_KEY_SPACE;
-
         case ek_key_code_0: return GLFW_KEY_0;
         case ek_key_code_1: return GLFW_KEY_1;
         case ek_key_code_2: return GLFW_KEY_2;
@@ -130,7 +129,6 @@ namespace zgl {
         case ek_key_code_7: return GLFW_KEY_7;
         case ek_key_code_8: return GLFW_KEY_8;
         case ek_key_code_9: return GLFW_KEY_9;
-
         case ek_key_code_a: return GLFW_KEY_A;
         case ek_key_code_b: return GLFW_KEY_B;
         case ek_key_code_c: return GLFW_KEY_C;
@@ -157,17 +155,14 @@ namespace zgl {
         case ek_key_code_x: return GLFW_KEY_X;
         case ek_key_code_y: return GLFW_KEY_Y;
         case ek_key_code_z: return GLFW_KEY_Z;
-
         case ek_key_code_escape: return GLFW_KEY_ESCAPE;
         case ek_key_code_enter: return GLFW_KEY_ENTER;
         case ek_key_code_backspace: return GLFW_KEY_BACKSPACE;
         case ek_key_code_tab: return GLFW_KEY_TAB;
-
         case ek_key_code_right: return GLFW_KEY_RIGHT;
         case ek_key_code_left: return GLFW_KEY_LEFT;
         case ek_key_code_down: return GLFW_KEY_DOWN;
         case ek_key_code_up: return GLFW_KEY_UP;
-
         case ek_key_code_f1: return GLFW_KEY_F1;
         case ek_key_code_f2: return GLFW_KEY_F2;
         case ek_key_code_f3: return GLFW_KEY_F3;
@@ -180,20 +175,61 @@ namespace zgl {
         case ek_key_code_f10: return GLFW_KEY_F10;
         case ek_key_code_f11: return GLFW_KEY_F11;
         case ek_key_code_f12: return GLFW_KEY_F12;
-
         case ek_key_code_left_shift: return GLFW_KEY_LEFT_SHIFT;
         case ek_key_code_left_control: return GLFW_KEY_LEFT_CONTROL;
         case ek_key_code_left_alt: return GLFW_KEY_LEFT_ALT;
-
         case ek_key_code_right_shift: return GLFW_KEY_RIGHT_SHIFT;
         case ek_key_code_right_control: return GLFW_KEY_RIGHT_CONTROL;
         case ek_key_code_right_alt: return GLFW_KEY_RIGHT_ALT;
+        case ek_key_code_grave: return GLFW_KEY_GRAVE_ACCENT;
+        case ek_key_code_minus: return GLFW_KEY_MINUS;
+        case ek_key_code_equals: return GLFW_KEY_EQUAL;
+        case ek_key_code_left_bracket: return GLFW_KEY_LEFT_BRACKET;
+        case ek_key_code_right_bracket: return GLFW_KEY_RIGHT_BRACKET;
+        case ek_key_code_backslash: return GLFW_KEY_BACKSLASH;
+        case ek_key_code_semicolon: return GLFW_KEY_SEMICOLON;
+        case ek_key_code_apostrophe: return GLFW_KEY_APOSTROPHE;
+        case ek_key_code_comma: return GLFW_KEY_COMMA;
+        case ek_key_code_period: return GLFW_KEY_PERIOD;
+        case ek_key_code_slash: return GLFW_KEY_SLASH;
+        case ek_key_code_insert: return GLFW_KEY_INSERT;
+        case ek_key_code_delete: return GLFW_KEY_DELETE;
+        case ek_key_code_home: return GLFW_KEY_HOME;
+        case ek_key_code_end: return GLFW_KEY_END;
+        case ek_key_code_page_up: return GLFW_KEY_PAGE_UP;
+        case ek_key_code_page_down: return GLFW_KEY_PAGE_DOWN;
+        case ek_key_code_caps_lock: return GLFW_KEY_CAPS_LOCK;
+        case ek_key_code_num_lock: return GLFW_KEY_NUM_LOCK;
+        case ek_key_code_scroll_lock: return GLFW_KEY_SCROLL_LOCK;
+        case ek_key_code_print_screen: return GLFW_KEY_PRINT_SCREEN;
+        case ek_key_code_pause: return GLFW_KEY_PAUSE;
+        case ek_key_code_left_super: return GLFW_KEY_LEFT_SUPER;
+        case ek_key_code_right_super: return GLFW_KEY_RIGHT_SUPER;
+        case ek_key_code_menu: return GLFW_KEY_MENU;
+        case ek_key_code_numpad_0: return GLFW_KEY_KP_0;
+        case ek_key_code_numpad_1: return GLFW_KEY_KP_1;
+        case ek_key_code_numpad_2: return GLFW_KEY_KP_2;
+        case ek_key_code_numpad_3: return GLFW_KEY_KP_3;
+        case ek_key_code_numpad_4: return GLFW_KEY_KP_4;
+        case ek_key_code_numpad_5: return GLFW_KEY_KP_5;
+        case ek_key_code_numpad_6: return GLFW_KEY_KP_6;
+        case ek_key_code_numpad_7: return GLFW_KEY_KP_7;
+        case ek_key_code_numpad_8: return GLFW_KEY_KP_8;
+        case ek_key_code_numpad_9: return GLFW_KEY_KP_9;
+        case ek_key_code_numpad_decimal: return GLFW_KEY_KP_DECIMAL;
+        case ek_key_code_numpad_divide: return GLFW_KEY_KP_DIVIDE;
+        case ek_key_code_numpad_multiply: return GLFW_KEY_KP_MULTIPLY;
+        case ek_key_code_numpad_subtract: return GLFW_KEY_KP_SUBTRACT;
+        case ek_key_code_numpad_add: return GLFW_KEY_KP_ADD;
+        case ek_key_code_numpad_enter: return GLFW_KEY_KP_ENTER;
+        case ek_key_code_numpad_equals: return GLFW_KEY_KP_EQUAL;
 
         case ekm_key_code_cnt: break;
         }
 
         ZCL_UNREACHABLE();
     }
+
 
     static zcl::t_i32 ToGLFWMouseButton(const t_mouse_button_code btn_code) {
         switch (btn_code) {
