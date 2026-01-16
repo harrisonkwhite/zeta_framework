@@ -87,11 +87,19 @@ namespace zcl {
     static_assert(sizeof(t_f32) == 4);
     constexpr t_f32 k_f32_min = std::numeric_limits<t_f32>::min();
     constexpr t_f32 k_f32_max = std::numeric_limits<t_f32>::max();
+    constexpr t_f32 k_f32_inf_pos = std::numeric_limits<t_f32>::infinity();
+    constexpr t_f32 k_f32_inf_neg = -std::numeric_limits<t_f32>::infinity();
+    constexpr t_f32 k_f32_nan_quiet = std::numeric_limits<t_f32>::quiet_NaN();
+    constexpr t_f32 k_f32_nan_signalling = std::numeric_limits<t_f32>::signaling_NaN();
 
     using t_f64 = double;
     static_assert(sizeof(t_f64) == 8);
     constexpr t_f64 k_f64_min = std::numeric_limits<t_f64>::min();
     constexpr t_f64 k_f64_max = std::numeric_limits<t_f64>::max();
+    constexpr t_f64 k_f64_inf_pos = std::numeric_limits<t_f64>::infinity();
+    constexpr t_f64 k_f64_inf_neg = -std::numeric_limits<t_f64>::infinity();
+    constexpr t_f64 k_f64_nan_quiet = std::numeric_limits<t_f64>::quiet_NaN();
+    constexpr t_f64 k_f64_nan_signalling = std::numeric_limits<t_f64>::signaling_NaN();
 
     using t_b8 = bool;
     static_assert(sizeof(t_b8) == 1);
@@ -99,10 +107,10 @@ namespace zcl {
     using t_uintptr = uintptr_t;
     static_assert(sizeof(t_uintptr) == 8);
 
-    template <typename tp_type> using t_const_removed = typename std::remove_const<tp_type>::type;
-    template <typename tp_type> using t_volatile_removed = typename std::remove_volatile<tp_type>::type;
-    template <typename tp_type> using t_ref_removed = typename std::remove_reference<tp_type>::type;
-    template <typename tp_type> using t_cvref_removed = typename std::remove_cvref<tp_type>::type;
+    template <typename tp_type> using t_without_const = typename std::remove_const<tp_type>::type;
+    template <typename tp_type> using t_without_volatile = typename std::remove_volatile<tp_type>::type;
+    template <typename tp_type> using t_without_ref = typename std::remove_reference<tp_type>::type;
+    template <typename tp_type> using t_without_cvref = typename std::remove_cvref<tp_type>::type;
 
     // "Simple" meaning that it's safe to use with arenas and C-style memory operations.
     template <typename tp_type>
@@ -133,9 +141,9 @@ namespace zcl {
     concept c_same = std::same_as<tp_type_a, tp_type_b>;
 
     template <typename tp_type>
-    concept c_c_str = c_same<t_cvref_removed<tp_type>, char *>
-        || c_same<t_cvref_removed<tp_type>, const char *>
-        || c_same<t_cvref_removed<tp_type>, char[]>;
+    concept c_c_str = c_same<t_without_cvref<tp_type>, char *>
+        || c_same<t_without_cvref<tp_type>, const char *>
+        || c_same<t_without_cvref<tp_type>, char[]>;
 
     // Should return true iff a and b are equal.
     template <c_simple tp_type>
@@ -327,7 +335,7 @@ namespace zcl {
     // @section: Arrays
 
     template <typename tp_type>
-    concept c_array_elem = c_simple<tp_type> && c_same<tp_type, t_cvref_removed<tp_type>>;
+    concept c_array_elem = c_simple<tp_type> && c_same<tp_type, t_without_cvref<tp_type>>;
 
     template <c_array_elem tp_elem_type>
     struct t_array_rdonly {
@@ -387,10 +395,10 @@ namespace zcl {
     };
 
     template <typename tp_type>
-    concept c_array_mut = requires { typename tp_type::t_elem; } && c_same<t_cvref_removed<tp_type>, t_array_mut<typename tp_type::t_elem>>;
+    concept c_array_mut = requires { typename tp_type::t_elem; } && c_same<t_without_cvref<tp_type>, t_array_mut<typename tp_type::t_elem>>;
 
     template <typename tp_type>
-    concept c_array_rdonly = requires { typename tp_type::t_elem; } && c_same<t_cvref_removed<tp_type>, t_array_rdonly<typename tp_type::t_elem>>;
+    concept c_array_rdonly = requires { typename tp_type::t_elem; } && c_same<t_without_cvref<tp_type>, t_array_rdonly<typename tp_type::t_elem>>;
 
     template <typename tp_type>
     concept c_array = c_array_mut<tp_type> || c_array_rdonly<tp_type>;

@@ -53,6 +53,40 @@ namespace zcl {
 
 
     // ============================================================
+    // @section: Ranges
+
+    struct t_range_f {
+        t_f32 min;
+        t_f32 max;
+
+        // enum here for which things are inclusive vs not?
+    };
+
+    constexpr t_range_f RangeCreateF(const t_f32 min, const t_f32 max) {
+        ZCL_ASSERT(min <= max);
+        return {min, max};
+    }
+
+    constexpr t_b8 RangeValueCheckWithin(const t_range_f range, const t_f32 val) {
+        return val >= range.min && val <= range.max;
+    }
+
+    constexpr t_f32 RangeValueSnapAtBounds(const t_range_f range, const t_f32 val) {
+        if (val < range.min && CheckNearlyEqual(val, range.min)) {
+            return range.min;
+        }
+
+        if (val > range.max && CheckNearlyEqual(val, range.max)) {
+            return range.max;
+        }
+
+        return val;
+    }
+
+    // ============================================================
+
+
+    // ============================================================
     // @section: Vectors
 
     struct t_v2 {

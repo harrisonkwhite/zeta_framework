@@ -31,7 +31,7 @@ namespace zcl {
     inline t_format_bool FormatBool(const t_b8 value) { return {.value = value}; }
 
     template <typename tp_type>
-        requires c_same<t_cvref_removed<tp_type>, t_b8>
+        requires c_same<t_without_cvref<tp_type>, t_b8>
     inline t_format_bool Format(const tp_type value) {
         return FormatBool(value);
     }

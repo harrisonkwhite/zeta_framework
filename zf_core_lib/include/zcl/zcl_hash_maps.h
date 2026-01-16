@@ -7,8 +7,8 @@ namespace zcl {
     // ============================================================
     // @section: Key-Value Stores
 
-    template <typename tp_type> concept c_kv_store_key = c_simple<tp_type> && c_same<tp_type, t_cvref_removed<tp_type>>;
-    template <typename tp_type> concept c_kv_store_value = c_simple<tp_type> && c_same<tp_type, t_cvref_removed<tp_type>>;
+    template <typename tp_type> concept c_kv_store_key = c_simple<tp_type> && c_same<tp_type, t_without_cvref<tp_type>>;
+    template <typename tp_type> concept c_kv_store_value = c_simple<tp_type> && c_same<tp_type, t_without_cvref<tp_type>>;
 
     template <c_kv_store_key tp_key_type, c_kv_store_value tp_value_type>
     struct t_kv_store_block {
@@ -24,7 +24,7 @@ namespace zcl {
     };
 
     template <typename tp_type>
-    concept c_kv_store_block = c_same<t_cvref_removed<tp_type>, t_kv_store_block<typename tp_type::t_key, typename tp_type::t_value>>;
+    concept c_kv_store_block = c_same<t_without_cvref<tp_type>, t_kv_store_block<typename tp_type::t_key, typename tp_type::t_value>>;
 
     template <c_kv_store_key tp_key_type, c_kv_store_value tp_value_type>
     struct t_kv_store {
@@ -42,7 +42,7 @@ namespace zcl {
     };
 
     template <typename tp_type>
-    concept c_kv_store = c_same<t_cvref_removed<tp_type>, t_kv_store<typename tp_type::t_key, typename tp_type::t_value>>;
+    concept c_kv_store = c_same<t_without_cvref<tp_type>, t_kv_store<typename tp_type::t_key, typename tp_type::t_value>>;
 
     enum t_kv_store_put_result : t_i32 {
         ek_kv_store_put_result_updated,
@@ -219,8 +219,8 @@ namespace zcl {
     // ============================================================
     // @section: Hash Maps
 
-    template <typename tp_type> concept c_hash_map_key = c_simple<tp_type> && c_same<tp_type, t_cvref_removed<tp_type>>;
-    template <typename tp_type> concept c_hash_map_value = c_simple<tp_type> && c_same<tp_type, t_cvref_removed<tp_type>>;
+    template <typename tp_type> concept c_hash_map_key = c_simple<tp_type> && c_same<tp_type, t_without_cvref<tp_type>>;
+    template <typename tp_type> concept c_hash_map_value = c_simple<tp_type> && c_same<tp_type, t_without_cvref<tp_type>>;
 
     template <c_hash_map_key tp_type>
     using t_hash_func = t_i32 (*)(const tp_type &key);
@@ -239,7 +239,7 @@ namespace zcl {
     constexpr t_i32 k_hash_map_cap_default = 32;
 
     template <typename tp_type>
-    concept c_hash_map = c_same<t_cvref_removed<tp_type>, t_hash_map<typename tp_type::t_key, typename tp_type::t_value>>;
+    concept c_hash_map = c_same<t_without_cvref<tp_type>, t_hash_map<typename tp_type::t_key, typename tp_type::t_value>>;
 
     // The provided hash function has to map a key to an integer 0 or higher. The given memory arena will be saved and used for allocating new memory for entries when needed.
     template <c_hash_map_key tp_key_type, c_hash_map_value tp_value_type>

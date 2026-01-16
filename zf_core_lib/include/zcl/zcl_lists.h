@@ -4,7 +4,7 @@
 
 namespace zcl {
     template <typename tp_type>
-    concept c_list_elem = c_simple<tp_type> && c_same<tp_type, t_cvref_removed<tp_type>>;
+    concept c_list_elem = c_simple<tp_type> && c_same<tp_type, t_without_cvref<tp_type>>;
 
     template <c_list_elem tp_elem_type>
     struct t_list {
@@ -46,7 +46,7 @@ namespace zcl {
         };
 
     template <typename tp_type>
-    concept c_list_nonstatic = c_same<t_cvref_removed<tp_type>, t_list<typename tp_type::t_elem>>;
+    concept c_list_nonstatic = c_same<t_without_cvref<tp_type>, t_list<typename tp_type::t_elem>>;
 
     namespace detail {
         template <typename tp_type>
@@ -61,7 +61,7 @@ namespace zcl {
     }
 
     template <typename tp_type>
-    concept c_list_static = detail::t_list_is_static<t_cvref_removed<tp_type>>::k_value;
+    concept c_list_static = detail::t_list_is_static<t_without_cvref<tp_type>>::k_value;
 
     template <typename tp_type>
     concept c_list = c_list_nonstatic<tp_type> || c_list_static<tp_type>;
