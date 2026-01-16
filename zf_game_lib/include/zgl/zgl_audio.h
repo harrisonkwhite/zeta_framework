@@ -46,6 +46,15 @@ namespace zgl {
     zcl::t_b8 SoundCheckPaused(const t_audio_sys *const audio_sys, const t_sound_id id);
 
     // This is fine to call when the sound is paused.
+    zcl::t_f32 SoundGetVolume(t_audio_sys *const audio_sys, const t_sound_id id);
+
+    // This is fine to call when the sound is paused.
+    zcl::t_f32 SoundGetPan(t_audio_sys *const audio_sys, const t_sound_id id);
+
+    // This is fine to call when the sound is paused.
+    zcl::t_f32 SoundGetPitch(t_audio_sys *const audio_sys, const t_sound_id id);
+
+    // This is fine to call when the sound is paused.
     void SoundSetVolume(t_audio_sys *const audio_sys, const t_sound_id id, const zcl::t_f32 vol);
 
     // This is fine to call when the sound is paused.

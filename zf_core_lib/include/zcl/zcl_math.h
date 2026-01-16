@@ -55,23 +55,78 @@ namespace zcl {
     // ============================================================
     // @section: Ranges
 
-    struct t_range_f {
+    // This code is for continuous ranges only.
+
+    struct t_range {
         t_f32 min;
         t_f32 max;
-
-        // enum here for which things are inclusive vs not?
     };
 
-    constexpr t_range_f RangeCreateF(const t_f32 min, const t_f32 max) {
+    struct t_range_excl_lower {
+        t_f32 min;
+        t_f32 max;
+    };
+
+    struct t_range_excl_upper {
+        t_f32 min;
+        t_f32 max;
+    };
+
+    struct t_range_excl_both {
+        t_f32 min;
+        t_f32 max;
+    };
+
+    constexpr t_range RangeCreate(const t_f32 min, const t_f32 max) {
+        ZCL_ASSERT(!CheckNaN(min) && !CheckNaN(max));
         ZCL_ASSERT(min <= max);
+
         return {min, max};
     }
 
-    constexpr t_b8 RangeValueCheckWithin(const t_range_f range, const t_f32 val) {
+    constexpr t_range RangeCreateExclLower(const t_f32 min, const t_f32 max) {
+        ZCL_ASSERT(!CheckNaN(min) && !CheckNaN(max));
+        ZCL_ASSERT(min <= max);
+
+        return {min, max};
+    }
+
+    constexpr t_range RangeCreateExclUpper(const t_f32 min, const t_f32 max) {
+        ZCL_ASSERT(!CheckNaN(min) && !CheckNaN(max));
+        ZCL_ASSERT(min <= max);
+
+        return {min, max};
+    }
+
+    constexpr t_range RangeCreateExclBoth(const t_f32 min, const t_f32 max) {
+        ZCL_ASSERT(!CheckNaN(min) && !CheckNaN(max));
+        ZCL_ASSERT(min <= max);
+
+        return {min, max};
+    }
+
+    constexpr t_b8 RangeCheckEmpty(const t_range range) { return false; }
+    constexpr t_b8 RangeCheckEmpty(const t_range_excl_lower range) { return CheckNearlyEqual(range.min, range.max); }
+    constexpr t_b8 RangeCheckEmpty(const t_range_excl_upper range) { return CheckNearlyEqual(range.min, range.max); }
+    constexpr t_b8 RangeCheckEmpty(const t_range_excl_both range) { return CheckNearlyEqual(range.min, range.max); }
+
+    constexpr t_b8 RangeValueCheckWithin(const t_range range, const t_f32 val) {
         return val >= range.min && val <= range.max;
     }
 
-    constexpr t_f32 RangeValueSnapAtBounds(const t_range_f range, const t_f32 val) {
+    constexpr t_b8 RangeValueCheckWithin(const t_range_excl_lower range, const t_f32 val) {
+        return val > range.min && val <= range.max;
+    }
+
+    constexpr t_b8 RangeValueCheckWithin(const t_range_excl_upper range, const t_f32 val) {
+        return val >= range.min && val < range.max;
+    }
+
+    constexpr t_b8 RangeValueCheckWithin(const t_range_excl_both range, const t_f32 val) {
+        return val > range.min && val < range.max;
+    }
+
+    constexpr t_f32 RangeValueSnapAtBounds(const t_range range, const t_f32 val) {
         if (val < range.min && CheckNearlyEqual(val, range.min)) {
             return range.min;
         }
@@ -284,13 +339,14 @@ namespace zcl {
     };
 
     constexpr t_rect_f RectCreateF(const t_f32 x, const t_f32 y, const t_f32 width, const t_f32 height) {
+        ZCL_ASSERT(!CheckNaN(x) && !CheckNaN(y) && !CheckNaN(width) && !CheckNaN(height));
         ZCL_ASSERT(width >= 0.0f && height >= 0.0f);
+
         return {x, y, width, height};
     }
 
     constexpr t_rect_f RectCreateF(const t_v2 pos, const t_v2 size) {
-        ZCL_ASSERT(size.x >= 0.0f && size.y >= 0.0f);
-        return {pos.x, pos.y, size.x, size.y};
+        return RectCreateF(pos.x, pos.y, size.x, size.y);
     }
 
     constexpr t_rect_i RectCreateI(const t_i32 x, const t_i32 y, const t_i32 width, const t_i32 height) {
@@ -299,8 +355,7 @@ namespace zcl {
     }
 
     constexpr t_rect_i RectCreateI(const t_v2_i pos, const t_v2_i size) {
-        ZCL_ASSERT(size.x >= 0 && size.y >= 0);
-        return {pos.x, pos.y, size.x, size.y};
+        return RectCreateI(pos.x, pos.y, size.x, size.y);
     }
 
     constexpr t_v2 RectGetPos(const t_rect_f rect) { return {rect.x, rect.y}; }

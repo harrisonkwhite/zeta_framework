@@ -22,6 +22,8 @@ namespace zgl {
 
     constexpr zcl::t_i32 k_sound_limit = 32;
 
+    constexpr zcl::t_range_f k_volume_range = zcl::RangeCreateF(0.0f, 1.0f);
+
     struct t_audio_sys {
         ma_engine ma_eng;
 
@@ -290,6 +292,30 @@ namespace zgl {
         SoundIDAssertValid(audio_sys, id);
 
         return SoundCheckActive(audio_sys, id) && zcl::BitsetCheckSet(audio_sys->snd_insts.paused, id.index);
+    }
+
+    zcl::t_f32 SoundGetVolume(t_audio_sys *const audio_sys, const t_sound_id id) {
+        ZCL_ASSERT(g_module_active);
+        SoundIDAssertValid(audio_sys, id);
+        ZCL_ASSERT(SoundCheckActive(audio_sys, id));
+
+        return ma_sound_get_volume(&audio_sys->snd_insts.ma_snds[id.index]);
+    }
+
+    zcl::t_f32 SoundGetPan(t_audio_sys *const audio_sys, const t_sound_id id) {
+        ZCL_ASSERT(g_module_active);
+        SoundIDAssertValid(audio_sys, id);
+        ZCL_ASSERT(SoundCheckActive(audio_sys, id));
+
+        return ma_sound_get_pan(&audio_sys->snd_insts.ma_snds[id.index]);
+    }
+
+    zcl::t_f32 SoundGetPitch(t_audio_sys *const audio_sys, const t_sound_id id) {
+        ZCL_ASSERT(g_module_active);
+        SoundIDAssertValid(audio_sys, id);
+        ZCL_ASSERT(SoundCheckActive(audio_sys, id));
+
+        return ma_sound_get_pitch(&audio_sys->snd_insts.ma_snds[id.index]);
     }
 
     void SoundSetVolume(t_audio_sys *const audio_sys, const t_sound_id id, const zcl::t_f32 vol) {

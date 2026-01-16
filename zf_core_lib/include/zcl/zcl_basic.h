@@ -3,6 +3,7 @@
 #include <type_traits>
 #include <limits>
 #include <concepts>
+#include <cmath>
 
 namespace zcl {
 #ifdef _WIN32
@@ -42,6 +43,9 @@ namespace zcl {
 #define ZCL_DEFER(x) const auto ZCL_CONCAT(defer_, ZCL_CONCAT(l, __LINE__)) = zcl::detail::t_defer([&]() x)
 
     static_assert(CHAR_BIT == 8);
+
+    using t_b8 = bool;
+    static_assert(sizeof(t_b8) == 1);
 
     using t_u8 = unsigned char;
     static_assert(sizeof(t_u8) == 1);
@@ -101,8 +105,8 @@ namespace zcl {
     constexpr t_f64 k_f64_nan_quiet = std::numeric_limits<t_f64>::quiet_NaN();
     constexpr t_f64 k_f64_nan_signalling = std::numeric_limits<t_f64>::signaling_NaN();
 
-    using t_b8 = bool;
-    static_assert(sizeof(t_b8) == 1);
+    constexpr t_b8 CheckNaN(const t_f32 val) { return isnan(val); }
+    constexpr t_b8 CheckNaN(const t_f64 val) { return isnan(val); }
 
     using t_uintptr = uintptr_t;
     static_assert(sizeof(t_uintptr) == 8);
