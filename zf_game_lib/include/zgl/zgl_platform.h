@@ -3,7 +3,7 @@
 #include <zcl.h>
 
 namespace zgl {
-    struct t_input_state;
+    struct t_input_state; // Forward declaration.
 
     struct t_platform;
 

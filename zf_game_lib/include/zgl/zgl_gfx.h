@@ -3,6 +3,8 @@
 #include <zcl.h>
 
 namespace zgl {
+    struct t_platform; // Forward declaration.
+
     struct t_gfx;
 
     // ============================================================
@@ -175,8 +177,6 @@ namespace zgl {
     void FrameSubmitStr(const t_frame_context context, const zcl::t_str_rdonly str, const t_font &font, const zcl::t_v2 pos, zcl::t_arena *const temp_arena, const zcl::t_v2 origin = zcl::k_origin_top_left, const zcl::t_color_rgba32f blend = zcl::k_color_white);
 
     // ============================================================
-
-    struct t_platform;
 
     namespace detail {
         t_gfx *GFXStartup(const t_platform *const platform, zcl::t_arena *const arena, zcl::t_arena *const temp_arena, t_frame_basis **const o_frame_basis);

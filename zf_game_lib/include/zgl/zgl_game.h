@@ -4,10 +4,10 @@
 #include <zgl/zgl_gfx.h>
 
 namespace zgl {
-    struct t_input_state;
-    struct t_platform;
-    struct t_frame_context;
-    struct t_audio_sys;
+    struct t_input_state;   // Forward declaration.
+    struct t_platform;      // Forward declaration.
+    struct t_frame_context; // Forward declaration.
+    struct t_audio_sys;     // Forward declaration.
 
     struct t_game_init_func_context {
         zcl::t_arena *perm_arena;

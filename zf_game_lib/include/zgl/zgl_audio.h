@@ -33,11 +33,27 @@ namespace zgl {
         return SoundPlayAndGetID(audio_sys, type, &id_throwaway, vol, pan, pitch, loop);
     }
 
+    // Completely deactivates the sound instance, including if it is paused.
     void SoundStop(t_audio_sys *const audio_sys, const t_sound_id id);
 
-    // @todo: Functions for modifying volume, etc.
+    void SoundPause(t_audio_sys *const audio_sys, const t_sound_id id);
+    void SoundResume(t_audio_sys *const audio_sys, const t_sound_id id);
 
-    zcl::t_b8 SoundCheckPlaying(const t_audio_sys *const audio_sys, const t_sound_id id);
+    // Note that this still returns true if the sound is paused.
+    zcl::t_b8 SoundCheckActive(const t_audio_sys *const audio_sys, const t_sound_id id);
+
+    // Also returns false if the sound is inactive.
+    zcl::t_b8 SoundCheckPaused(const t_audio_sys *const audio_sys, const t_sound_id id);
+
+#if 0
+    void SoundSetVolume(t_audio_sys *const audio_sys, const t_sound_id id, const zcl::t_f32 vol);
+    void SoundSetPan(t_audio_sys *const audio_sys, const t_sound_id id, const zcl::t_f32 pan);
+    void SoundSetPitch(t_audio_sys *const audio_sys, const t_sound_id id, const zcl::t_f32 pitch);
+
+    void SoundsStopAll(t_audio_sys *const audio_sys);
+    void SoundsPauseAll(t_audio_sys *const audio_sys);
+    void SoundsResumeAll(t_audio_sys *const audio_sys);
+#endif
 
     namespace detail {
         t_audio_sys *AudioStartup(zcl::t_arena *const arena);
