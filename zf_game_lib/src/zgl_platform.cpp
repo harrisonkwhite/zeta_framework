@@ -93,8 +93,6 @@ namespace zgl {
             glfwSetCharCallback(platform->glfw_window, chr_callback);
         }
 
-        // @todo: Window Focus Callback
-
         return platform;
     }
 

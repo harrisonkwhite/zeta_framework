@@ -103,6 +103,8 @@ namespace zgl {
 
         void AudioShutdown(t_audio_sys *const sys);
 
+        void AudioSetMuted(t_audio_sys *const sys, const zcl::t_b8 mute);
+
         void SoundsProcessFinished(t_audio_sys *const audio_sys);
     };
 }

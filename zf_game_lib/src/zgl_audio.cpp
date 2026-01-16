@@ -68,6 +68,11 @@ namespace zgl {
         g_module_active = false;
     }
 
+    void detail::AudioSetMuted(t_audio_sys *const sys, const zcl::t_b8 mute) {
+        ZCL_ASSERT(g_module_active);
+        ma_engine_set_volume(&sys->ma_eng, mute ? 0.0f : 1.0f);
+    }
+
     t_sound_type_group *SoundTypeGroupCreate(t_audio_sys *const audio_sys, zcl::t_arena *const arena) {
         ZCL_ASSERT(g_module_active);
 
