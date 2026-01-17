@@ -4,15 +4,6 @@
 #include <zgl/zgl_audio_public.h>
 
 namespace zgl {
-    struct t_sound_type_group {
-        zcl::t_b8 valid;
-
-        zcl::t_arena *arena;
-
-        t_sound_type *head;
-        t_sound_type *tail;
-    };
-
     struct t_sound_type {
         zcl::t_b8 valid;
 
@@ -22,6 +13,4 @@ namespace zgl {
 
         t_sound_type *next;
     };
-
-    constexpr zcl::t_i32 k_sound_limit = 32;
 }

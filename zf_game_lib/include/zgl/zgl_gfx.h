@@ -180,7 +180,7 @@ namespace zgl {
     // ============================================================
 
 
-    namespace detail {
+    namespace internal {
         t_gfx *GFXStartup(const t_platform *const platform, zcl::t_arena *const arena, zcl::t_arena *const temp_arena, t_frame_basis **const o_frame_basis);
         void GFXShutdown(t_gfx *const gfx, t_frame_basis *const frame_basis);
 

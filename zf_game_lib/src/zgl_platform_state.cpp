@@ -28,7 +28,7 @@ namespace zgl {
         zcl::t_v2_i prefullscreen_size;
     } g_state;
 
-    t_platform *detail::PlatformStartup(const zcl::t_v2_i init_window_size, t_input_state *const input_state, zcl::t_arena *const arena) {
+    t_platform *internal::PlatformStartup(const zcl::t_v2_i init_window_size, t_input_state *const input_state, zcl::t_arena *const arena) {
         ZCL_ASSERT(!g_state.active);
         ZCL_ASSERT(init_window_size.x > 0 && init_window_size.y > 0);
 
@@ -64,7 +64,7 @@ namespace zgl {
             const auto scroll_callback =
                 [](GLFWwindow *const window, const zcl::t_f64 offs_x, const zcl::t_f64 offs_y) {
                     const auto input_state = static_cast<t_input_state *>(glfwGetWindowUserPointer(window));
-                    detail::ScrollUpdateState(input_state, {static_cast<zcl::t_f32>(offs_x), static_cast<zcl::t_f32>(offs_y)});
+                    internal::ScrollUpdateState(input_state, {static_cast<zcl::t_f32>(offs_x), static_cast<zcl::t_f32>(offs_y)});
                 };
 
             glfwSetScrollCallback(g_state.glfw_window, scroll_callback);
@@ -75,7 +75,7 @@ namespace zgl {
                 [](GLFWwindow *const window, const zcl::t_u32 code_pt) {
                     const auto input_state = static_cast<t_input_state *>(glfwGetWindowUserPointer(window));
 
-                    if (!detail::TextSubmitCodePoints(input_state, code_pt)) {
+                    if (!internal::TextSubmitCodePoints(input_state, code_pt)) {
                         zcl::LogWarning(ZCL_STR_LITERAL("Tried to submit input text code point, but there is insufficient space!"));
                     }
                 };
@@ -86,7 +86,7 @@ namespace zgl {
         return nullptr; // @temp
     }
 
-    void detail::PlatformShutdown(t_platform *const platform) {
+    void internal::PlatformShutdown(t_platform *const platform) {
         ZCL_ASSERT(g_state.active);
 
         glfwDestroyWindow(g_state.glfw_window);
@@ -104,7 +104,7 @@ namespace zgl {
         return result;
     }
 
-    void detail::PollOSEvents(t_platform *const platform, t_input_state *const input_state) {
+    void internal::PollOSEvents(t_platform *const platform, t_input_state *const input_state) {
         ZCL_ASSERT(g_state.active);
 
         glfwSetWindowUserPointer(g_state.glfw_window, input_state);
@@ -113,18 +113,18 @@ namespace zgl {
 
         for (zcl::t_i32 i = 0; i < ekm_key_code_cnt; i++) {
             const zcl::t_b8 is_down = glfwGetKey(g_state.glfw_window, ToGLFWKey(static_cast<t_key_code>(i))) == GLFW_PRESS;
-            detail::KeyUpdateState(input_state, static_cast<t_key_code>(i), is_down);
+            internal::KeyUpdateState(input_state, static_cast<t_key_code>(i), is_down);
         }
 
         for (zcl::t_i32 i = 0; i < ekm_mouse_button_code_cnt; i++) {
             const zcl::t_b8 is_down = glfwGetMouseButton(g_state.glfw_window, ToGLFWMouseButton(static_cast<t_mouse_button_code>(i))) == GLFW_PRESS;
-            detail::MouseButtonUpdateState(input_state, static_cast<t_mouse_button_code>(i), is_down);
+            internal::MouseButtonUpdateState(input_state, static_cast<t_mouse_button_code>(i), is_down);
         }
 
         {
             zcl::t_f64 cp_x_f64, cp_y_f64;
             glfwGetCursorPos(g_state.glfw_window, &cp_x_f64, &cp_y_f64);
-            detail::CursorUpdateState(input_state, {static_cast<zcl::t_f32>(cp_x_f64), static_cast<zcl::t_f32>(cp_y_f64)});
+            internal::CursorUpdateState(input_state, {static_cast<zcl::t_f32>(cp_x_f64), static_cast<zcl::t_f32>(cp_y_f64)});
         }
 
         for (zcl::t_i32 i = GLFW_JOYSTICK_1; i <= GLFW_JOYSTICK_LAST; i++) {
@@ -151,11 +151,11 @@ namespace zgl {
             }
 
             static_assert(GLFW_JOYSTICK_1 == 0);
-            detail::GamepadUpdateState(input_state, i, connected, btns_down, axes);
+            internal::GamepadUpdateState(input_state, i, connected, btns_down, axes);
         }
     }
 
-    void *detail::DisplayGetNativeHandle(const t_platform *const platform) {
+    void *internal::DisplayGetNativeHandle(const t_platform *const platform) {
         ZCL_ASSERT(g_state.active);
 
 #if defined(ZCL_PLATFORM_WINDOWS)
@@ -167,7 +167,7 @@ namespace zgl {
 #endif
     }
 
-    void *detail::WindowGetNativeHandle(const t_platform *const platform) {
+    void *internal::WindowGetNativeHandle(const t_platform *const platform) {
         ZCL_ASSERT(g_state.active);
 
 #if defined(ZCL_PLATFORM_WINDOWS)
@@ -179,7 +179,7 @@ namespace zgl {
 #endif
     }
 
-    void detail::WindowShow(t_platform *const platform) {
+    void internal::WindowShow(t_platform *const platform) {
         ZCL_ASSERT(g_state.active);
         glfwShowWindow(g_state.glfw_window);
     }

@@ -95,7 +95,7 @@ namespace zgl {
 
     static t_module_state g_module_state;
 
-    t_gfx *detail::GFXStartup(const t_platform *const platform, zcl::t_arena *const arena, zcl::t_arena *const temp_arena, t_frame_basis **const o_frame_basis) {
+    t_gfx *internal::GFXStartup(const t_platform *const platform, zcl::t_arena *const arena, zcl::t_arena *const temp_arena, t_frame_basis **const o_frame_basis) {
         ZCL_ASSERT(g_module_state == ek_module_state_inactive);
 
         g_module_state = ek_module_state_active_but_not_midframe;
@@ -116,8 +116,8 @@ namespace zgl {
         bgfx_init.resolution.width = static_cast<zcl::t_u32>(fb_size_cache.x);
         bgfx_init.resolution.height = static_cast<zcl::t_u32>(fb_size_cache.y);
 
-        bgfx_init.platformData.nwh = detail::WindowGetNativeHandle(platform);
-        bgfx_init.platformData.ndt = detail::DisplayGetNativeHandle(platform);
+        bgfx_init.platformData.nwh = internal::WindowGetNativeHandle(platform);
+        bgfx_init.platformData.ndt = internal::DisplayGetNativeHandle(platform);
         bgfx_init.platformData.type = bgfx::NativeWindowHandleType::Default;
 
         if (!bgfx::init(bgfx_init)) {
@@ -154,7 +154,7 @@ namespace zgl {
         return gfx;
     }
 
-    void detail::GFXShutdown(t_gfx *const gfx, t_frame_basis *const frame_basis) {
+    void internal::GFXShutdown(t_gfx *const gfx, t_frame_basis *const frame_basis) {
         ZCL_ASSERT(g_module_state == ek_module_state_active_but_not_midframe);
 
         bgfx::destroy(frame_basis->vert_buf_bgfx_hdl);
@@ -431,7 +431,7 @@ namespace zgl {
         return uniform->type_data.uniform.type;
     }
 
-    t_frame_context detail::FrameBegin(t_gfx *const gfx, t_frame_basis *const basis, const t_platform *const platform, zcl::t_arena *const context_arena) {
+    t_frame_context internal::FrameBegin(t_gfx *const gfx, t_frame_basis *const basis, const t_platform *const platform, zcl::t_arena *const context_arena) {
         ZCL_ASSERT(g_module_state == ek_module_state_active_but_not_midframe);
 
         g_module_state = ek_module_state_active_and_midframe;
@@ -480,7 +480,7 @@ namespace zgl {
         zcl::ZeroClearItem(&context.state->batch_state);
     }
 
-    void detail::FrameEnd(const t_frame_context context) {
+    void internal::FrameEnd(const t_frame_context context) {
         ZCL_ASSERT(g_module_state == ek_module_state_active_and_midframe);
         ZCL_ASSERT(!context.state->pass_active);
 

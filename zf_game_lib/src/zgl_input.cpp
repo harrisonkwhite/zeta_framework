@@ -37,11 +37,11 @@ namespace zgl {
         } events;
     };
 
-    t_input_state *detail::InputCreateState(zcl::t_arena *const arena) {
+    t_input_state *internal::InputCreateState(zcl::t_arena *const arena) {
         return zcl::ArenaPushItem<t_input_state>(arena);
     }
 
-    void detail::InputClearEvents(t_input_state *const state) {
+    void internal::InputClearEvents(t_input_state *const state) {
         zcl::ZeroClearItem(&state->events);
     }
 
@@ -57,7 +57,7 @@ namespace zgl {
         return zcl::BitsetCheckSet(input_state->events.keys_released, code);
     }
 
-    void detail::KeyUpdateState(t_input_state *const input_state, const t_key_code code, const zcl::t_b8 is_down) {
+    void internal::KeyUpdateState(t_input_state *const input_state, const t_key_code code, const zcl::t_b8 is_down) {
         if (is_down) {
             if (!zcl::BitsetCheckSet(input_state->keys_down, code)) {
                 zcl::BitsetSet(input_state->keys_down, code);
@@ -83,7 +83,7 @@ namespace zgl {
         return zcl::BitsetCheckSet(input_state->events.mouse_buttons_released, static_cast<zcl::t_i32>(btn_code));
     }
 
-    void detail::MouseButtonUpdateState(t_input_state *const input_state, const t_mouse_button_code btn_code, const zcl::t_b8 is_down) {
+    void internal::MouseButtonUpdateState(t_input_state *const input_state, const t_mouse_button_code btn_code, const zcl::t_b8 is_down) {
         if (is_down) {
             if (!zcl::BitsetCheckSet(input_state->mouse_buttons_down, static_cast<zcl::t_i32>(btn_code))) {
                 zcl::BitsetSet(input_state->mouse_buttons_down, static_cast<zcl::t_i32>(btn_code));
@@ -101,7 +101,7 @@ namespace zgl {
         return input_state->cursor_pos;
     }
 
-    void detail::CursorUpdateState(t_input_state *const input_state, const zcl::t_v2 pos) {
+    void internal::CursorUpdateState(t_input_state *const input_state, const zcl::t_v2 pos) {
         input_state->cursor_pos = pos;
     }
 
@@ -109,7 +109,7 @@ namespace zgl {
         return input_state->events.scroll_offs;
     }
 
-    void detail::ScrollUpdateState(t_input_state *const input_state, const zcl::t_v2 offs_to_apply) {
+    void internal::ScrollUpdateState(t_input_state *const input_state, const zcl::t_v2 offs_to_apply) {
         input_state->events.scroll_offs += offs_to_apply;
     }
 
@@ -153,7 +153,7 @@ namespace zgl {
         return static_cast<zcl::t_f32>(zcl::CalcSign(raw)) * ((raw_abs - dz) / (1.0f - dz));
     }
 
-    void detail::GamepadUpdateState(t_input_state *const input_state, const zcl::t_i32 gamepad_index, const zcl::t_b8 connected, const zcl::t_static_bitset<ekm_gamepad_button_code_cnt> &btns_down, const zcl::t_static_array<zcl::t_f32, ekm_gamepad_axis_code_cnt> &axes) {
+    void internal::GamepadUpdateState(t_input_state *const input_state, const zcl::t_i32 gamepad_index, const zcl::t_b8 connected, const zcl::t_static_bitset<ekm_gamepad_button_code_cnt> &btns_down, const zcl::t_static_array<zcl::t_f32, ekm_gamepad_axis_code_cnt> &axes) {
         if (!connected) {
             ZCL_ASSERT(zcl::BitsetCheckAllUnset(btns_down) && zcl::CheckAllEqual(zcl::ArrayToNonstatic(&axes), 0.0f));
             return;
@@ -186,7 +186,7 @@ namespace zgl {
         return zcl::ListToArray(&input_state->events.code_pts);
     }
 
-    zcl::t_b8 detail::TextSubmitCodePoints(t_input_state *const input_state, const zcl::t_code_point cp) {
+    zcl::t_b8 internal::TextSubmitCodePoints(t_input_state *const input_state, const zcl::t_code_point cp) {
         if (input_state->events.code_pts.len < zcl::ListGetCap(&input_state->events.code_pts)) {
             zcl::ListAppend(&input_state->events.code_pts, cp);
             return true;

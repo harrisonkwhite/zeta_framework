@@ -2,10 +2,12 @@
 
 #include <zgl/zgl_input.h>
 #include <zgl/zgl_platform_public.h>
-#include <zgl/zgl_audio.h>
+#include <zgl/zgl_audio_public.h>
 
 namespace zgl {
     constexpr zcl::t_v2_i k_window_size_init = {1280, 720};
+
+    // @todo: Maybe switch to F32 for consistency.
 
     void GameRun(const t_game_config &config) {
         GameConfigAssertValid(config);
@@ -19,17 +21,17 @@ namespace zgl {
         zcl::t_arena temp_arena = zcl::ArenaCreateBlockBased();
         ZCL_DEFER({ zcl::ArenaDestroy(&temp_arena); });
 
-        t_input_state *const input_state = detail::InputCreateState(&perm_arena);
+        t_input_state *const input_state = internal::InputCreateState(&perm_arena);
 
-        t_platform *const platform = detail::PlatformStartup(k_window_size_init, input_state, &perm_arena);
-        ZCL_DEFER({ detail::PlatformShutdown(platform); });
+        t_platform *const platform = internal::PlatformStartup(k_window_size_init, input_state, &perm_arena);
+        ZCL_DEFER({ internal::PlatformShutdown(platform); });
 
         t_frame_basis *frame_basis;
-        t_gfx *const gfx = detail::GFXStartup(platform, &perm_arena, &temp_arena, &frame_basis);
-        ZCL_DEFER({ detail::GFXShutdown(gfx, frame_basis); });
+        t_gfx *const gfx = internal::GFXStartup(platform, &perm_arena, &temp_arena, &frame_basis);
+        ZCL_DEFER({ internal::GFXShutdown(gfx, frame_basis); });
 
-        t_audio_sys *const audio_sys = detail::AudioStartup(&perm_arena);
-        ZCL_DEFER({ detail::AudioShutdown(audio_sys); });
+        t_audio_sys *const audio_sys = internal::AudioStartup(&perm_arena);
+        ZCL_DEFER({ internal::AudioShutdown(audio_sys); });
 
         zcl::t_rng *const rng = zcl::RNGCreate(zcl::RandGenSeed(), &perm_arena);
 
@@ -73,11 +75,11 @@ namespace zgl {
         zcl::t_f64 tick_interval_accum = 0.0;
 
         while (!WindowCheckCloseRequested(platform)) {
-            detail::PollOSEvents(platform, input_state);
+            internal::PollOSEvents(platform, input_state);
 
             const zcl::t_b8 window_focused = WindowCheckFocused(platform);
 
-            detail::AudioSetPaused(audio_sys, !window_focused);
+            internal::AudioSetFrozen(audio_sys, !window_focused);
 
             const zcl::t_f64 frame_time = GetTime(platform);
 
@@ -109,7 +111,7 @@ namespace zgl {
                     while (tick_interval_accum >= tick_interval_target) {
                         zcl::ArenaRewind(&temp_arena);
 
-                        detail::SoundsProcessFinished(audio_sys);
+                        internal::SoundsProcessFinished(audio_sys);
 
                         config.tick_func({
                             .perm_arena = &perm_arena,
@@ -123,7 +125,7 @@ namespace zgl {
                             .user_mem = user_mem,
                         });
 
-                        detail::InputClearEvents(input_state);
+                        internal::InputClearEvents(input_state);
 
                         tick_interval_accum -= tick_interval_target;
                     }
@@ -132,7 +134,7 @@ namespace zgl {
 
             zcl::ArenaRewind(&temp_arena);
 
-            const t_frame_context frame_context = detail::FrameBegin(gfx, frame_basis, platform, &temp_arena);
+            const t_frame_context frame_context = internal::FrameBegin(gfx, frame_basis, platform, &temp_arena);
 
             config.render_func({
                 .perm_arena = &perm_arena,
@@ -144,10 +146,10 @@ namespace zgl {
                 .user_mem = user_mem,
             });
 
-            detail::FrameEnd(frame_context);
+            internal::FrameEnd(frame_context);
 
             if (frame_first) {
-                detail::WindowShow(platform);
+                internal::WindowShow(platform);
                 frame_first = false;
             }
 

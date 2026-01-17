@@ -1,6 +1,15 @@
 #include <zgl/zgl_audio_private.h>
 
 namespace zgl {
+    struct t_sound_type_group {
+        zcl::t_b8 valid;
+
+        zcl::t_arena *arena;
+
+        t_sound_type *head;
+        t_sound_type *tail;
+    };
+
     t_sound_type_group *SoundTypeGroupCreate(t_audio_sys *const audio_sys, zcl::t_arena *const arena) {
         const auto result = zcl::ArenaPushItem<t_sound_type_group>(arena);
         result->valid = true;

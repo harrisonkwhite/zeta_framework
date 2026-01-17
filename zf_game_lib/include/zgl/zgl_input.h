@@ -177,7 +177,7 @@ namespace zgl {
 
     zcl::t_array_rdonly<zcl::t_code_point> TextGetCodePoints(const t_input_state *const input_state);
 
-    namespace detail {
+    namespace internal {
         t_input_state *InputCreateState(zcl::t_arena *const arena);
         void InputClearEvents(t_input_state *const state);
 

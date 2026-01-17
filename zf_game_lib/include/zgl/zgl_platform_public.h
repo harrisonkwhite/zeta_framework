@@ -45,7 +45,7 @@ namespace zgl {
 
     void CursorSetVisible(t_platform *const platform, const zcl::t_b8 visible);
 
-    namespace detail {
+    namespace internal {
         // Note that the window is not shown by default, you have to manually do this.
         t_platform *PlatformStartup(const zcl::t_v2_i init_window_size, t_input_state *const input_state, zcl::t_arena *const arena);
 

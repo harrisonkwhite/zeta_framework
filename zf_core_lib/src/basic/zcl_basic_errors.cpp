@@ -18,7 +18,7 @@
 #include <cstdlib>
 
 namespace zcl {
-    void detail::TryBreakingIntoDebuggerIf(const t_b8 cond) {
+    void internal::TryBreakingIntoDebuggerIf(const t_b8 cond) {
         if (!cond) {
             return;
         }
@@ -82,7 +82,7 @@ namespace zcl {
 #endif
     }
 
-    void detail::HandleAssertError(const char *const cond_c_str, const char *const func_name_c_str, const char *const file_name_c_str, const t_i32 line) {
+    void internal::HandleAssertError(const char *const cond_c_str, const char *const func_name_c_str, const char *const file_name_c_str, const t_i32 line) {
         fprintf(stderr, "==================== ASSERTION ERROR ====================\n");
         fprintf(stderr, "Condition: %s\n", cond_c_str);
         fprintf(stderr, "Function:  %s\n", func_name_c_str);
@@ -100,7 +100,7 @@ namespace zcl {
         abort();
     }
 
-    void detail::HandleFatalError(const char *const func_name_c_str, const char *const file_name_c_str, const t_i32 line, const char *const cond_c_str) {
+    void internal::HandleFatalError(const char *const func_name_c_str, const char *const file_name_c_str, const t_i32 line, const char *const cond_c_str) {
         fprintf(stderr, "==================== FATAL ERROR ====================\n");
 
 #ifdef ZCL_DEBUG

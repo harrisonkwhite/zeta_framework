@@ -104,12 +104,12 @@ namespace zgl {
     // ============================================================
 
 
-    namespace detail {
+    namespace internal {
         t_audio_sys *AudioStartup(zcl::t_arena *const arena);
 
         void AudioShutdown(t_audio_sys *const sys);
 
-        void AudioSetPaused(t_audio_sys *const sys, const zcl::t_b8 paused);
+        void AudioSetFrozen(t_audio_sys *const sys, const zcl::t_b8 paused);
 
         void SoundsProcessFinished(t_audio_sys *const audio_sys);
     };

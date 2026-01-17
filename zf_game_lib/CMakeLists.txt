@@ -64,8 +64,8 @@ add_library(zf_game_lib STATIC
     include/zgl/zgl_platform_private.h
     include/zgl/zgl_input.h
     include/zgl/zgl_gfx.h
-    include/zgl/zgl_audio.h
-    include/zgl/zgl_audio_internal.h
+    include/zgl/zgl_audio_public.h
+    include/zgl/zgl_audio_private.h
 )
 
 target_sources(zf_game_lib PRIVATE

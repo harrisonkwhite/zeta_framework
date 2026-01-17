@@ -199,7 +199,7 @@ namespace zcl {
         return {{reinterpret_cast<const t_u8 *>(c_str), CStrCalcLen(c_str)}};
     }
 
-    namespace detail {
+    namespace internal {
         // Hidden object that can only be constructed with a valid string literal at compile time.
         // Implicit cast to ZF-style string has to be done at runtime due to reinterpret cast.
         struct t_c_str_literal {
@@ -230,7 +230,7 @@ namespace zcl {
             const t_i32 buf_size;
         };
 
-#define ZCL_STR_LITERAL(c_str_lit) zcl::t_str_rdonly(zcl::detail::t_c_str_literal(c_str_lit))
+#define ZCL_STR_LITERAL(c_str_lit) zcl::t_str_rdonly(zcl::internal::t_c_str_literal(c_str_lit))
     }
 
     // ============================================================

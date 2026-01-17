@@ -48,7 +48,7 @@ namespace zcl {
     template <typename tp_type>
     concept c_list_nonstatic = c_same<t_without_cvref<tp_type>, t_list<typename tp_type::t_elem>>;
 
-    namespace detail {
+    namespace internal {
         template <typename tp_type>
         struct t_list_is_static {
             static constexpr t_b8 k_value = false;
@@ -61,7 +61,7 @@ namespace zcl {
     }
 
     template <typename tp_type>
-    concept c_list_static = detail::t_list_is_static<t_without_cvref<tp_type>>::k_value;
+    concept c_list_static = internal::t_list_is_static<t_without_cvref<tp_type>>::k_value;
 
     template <typename tp_type>
     concept c_list = c_list_nonstatic<tp_type> || c_list_static<tp_type>;
