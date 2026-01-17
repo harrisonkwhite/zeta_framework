@@ -16,7 +16,7 @@
 #include <zgl/zgl_input.h>
 
 namespace zgl {
-    struct {
+    static struct {
         zcl::t_b8 active;
 
         GLFWwindow *glfw_window;

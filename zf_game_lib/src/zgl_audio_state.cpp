@@ -11,7 +11,7 @@ namespace zgl {
         ek_phase_frozen // No audio actually plays, though sound properties can be mutated.
     };
 
-    struct {
+    static struct {
         t_phase phase;
 
         ma_engine ma_eng;
