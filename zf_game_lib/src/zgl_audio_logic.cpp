@@ -17,14 +17,14 @@ namespace zgl {
         return result;
     }
 
-    void SoundTypeGroupDestroy(t_audio_sys *const audio_sys, t_sound_type_group *const group) {
+    void SoundTypeGroupDestroy(t_audio_sys *const audio_sys, t_sound_type_group *const group, zcl::t_arena *const temp_arena) {
         ZCL_ASSERT(group->valid);
 
         // All sound instances of any of the sound types in the group need to be destroyed.
         t_sound_type *snd_type = group->head;
 
         while (snd_type) {
-            SoundsDestroyAllOfType(audio_sys, snd_type);
+            SoundsDestroyAllOfType(audio_sys, snd_type, temp_arena);
 
             t_sound_type *const snd_type_next = snd_type->next;
             *snd_type = {};
@@ -102,5 +102,65 @@ namespace zgl {
     zcl::t_b8 SoundTypeCheckStreamable(t_audio_sys *const audio_sys, const t_sound_type *const type) {
         ZCL_ASSERT(type->valid);
         return type->streamable;
+    }
+
+    void SoundsDestroyAll(t_audio_sys *const audio_sys, zcl::t_arena *const temp_arena) {
+        const auto snd_ids = SoundsGetExisting(temp_arena);
+
+        for (zcl::t_i32 i = 0; i < snd_ids.len; i++) {
+            SoundDestroy(audio_sys, snd_ids[i]);
+        }
+    }
+
+    void SoundsDestroyAllOfType(t_audio_sys *const audio_sys, const t_sound_type *const snd_type, zcl::t_arena *const temp_arena) {
+        const auto snd_ids = SoundsGetExisting(temp_arena);
+
+        for (zcl::t_i32 i = 0; i < snd_ids.len; i++) {
+            if (SoundGetType(audio_sys, snd_ids[i]) == snd_type) {
+                SoundDestroy(audio_sys, snd_ids[i]);
+            }
+        }
+    }
+
+    void SoundsPauseAll(t_audio_sys *const audio_sys, zcl::t_arena *const temp_arena) {
+        const auto snd_ids = SoundsGetExisting(temp_arena);
+
+        for (zcl::t_i32 i = 0; i < snd_ids.len; i++) {
+            if (SoundGetState(audio_sys, snd_ids[i]) == ek_sound_state_playing) {
+                SoundPause(audio_sys, snd_ids[i]);
+            }
+        }
+    }
+
+    void SoundsPauseAllOfType(t_audio_sys *const audio_sys, const t_sound_type *const snd_type, zcl::t_arena *const temp_arena) {
+        const auto snd_ids = SoundsGetExisting(temp_arena);
+
+        for (zcl::t_i32 i = 0; i < snd_ids.len; i++) {
+            if (SoundGetType(audio_sys, snd_ids[i]) == snd_type
+                && SoundGetState(audio_sys, snd_ids[i]) == ek_sound_state_playing) {
+                SoundPause(audio_sys, snd_ids[i]);
+            }
+        }
+    }
+
+    void SoundsResumeAll(t_audio_sys *const audio_sys, zcl::t_arena *const temp_arena) {
+        const auto snd_ids = SoundsGetExisting(temp_arena);
+
+        for (zcl::t_i32 i = 0; i < snd_ids.len; i++) {
+            if (SoundGetState(audio_sys, snd_ids[i]) == ek_sound_state_paused) {
+                SoundResume(audio_sys, snd_ids[i]);
+            }
+        }
+    }
+
+    void SoundsResumeAllOfType(t_audio_sys *const audio_sys, const t_sound_type *const snd_type, zcl::t_arena *const temp_arena) {
+        const auto snd_ids = SoundsGetExisting(temp_arena);
+
+        for (zcl::t_i32 i = 0; i < snd_ids.len; i++) {
+            if (SoundGetType(audio_sys, snd_ids[i]) == snd_type
+                && SoundGetState(audio_sys, snd_ids[i]) == ek_sound_state_paused) {
+                SoundResume(audio_sys, snd_ids[i]);
+            }
+        }
     }
 }

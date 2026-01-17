@@ -15,7 +15,7 @@ namespace zgl {
     // The lifetime of the given arena's memory must encompass that of the group.
     t_sound_type_group *SoundTypeGroupCreate(t_audio_sys *const audio_sys, zcl::t_arena *const arena);
 
-    void SoundTypeGroupDestroy(t_audio_sys *const audio_sys, t_sound_type_group *const group);
+    void SoundTypeGroupDestroy(t_audio_sys *const audio_sys, t_sound_type_group *const group, zcl::t_arena *const temp_arena);
 
     // Supports WAV, FLAC, and MP3.
     t_sound_type *SoundTypeCreateFromExternal(t_audio_sys *const audio_sys, const zcl::t_str_rdonly file_path, t_sound_type_group *const group, zcl::t_arena *const temp_arena);
@@ -63,6 +63,8 @@ namespace zgl {
 
     t_sound_state SoundGetState(const t_audio_sys *const audio_sys, const t_sound_id id);
 
+    const t_sound_type *SoundGetType(const t_audio_sys *const audio_sys, const t_sound_id id);
+
     zcl::t_f32 SoundGetVolume(t_audio_sys *const audio_sys, const t_sound_id id);
 
     zcl::t_f32 SoundGetPan(t_audio_sys *const audio_sys, const t_sound_id id);
@@ -89,17 +91,19 @@ namespace zgl {
 
     void SoundSetTrackPosition(t_audio_sys *const audio_sys, const t_sound_id id, const zcl::t_f32 pos_secs);
 
-    void SoundsDestroyAll(t_audio_sys *const audio_sys);
+    zcl::t_array_mut<t_sound_id> SoundsGetExisting(zcl::t_arena *const arena);
 
-    void SoundsDestroyAllOfType(t_audio_sys *const audio_sys, const t_sound_type *const snd_type);
+    void SoundsDestroyAll(t_audio_sys *const audio_sys, zcl::t_arena *const temp_arena);
 
-    void SoundsPauseAll(t_audio_sys *const audio_sys);
+    void SoundsDestroyAllOfType(t_audio_sys *const audio_sys, const t_sound_type *const snd_type, zcl::t_arena *const temp_arena);
 
-    void SoundsPauseAllOfType(t_audio_sys *const audio_sys, const t_sound_type *const snd_type);
+    void SoundsPauseAll(t_audio_sys *const audio_sys, zcl::t_arena *const temp_arena);
 
-    void SoundsResumeAll(t_audio_sys *const audio_sys);
+    void SoundsPauseAllOfType(t_audio_sys *const audio_sys, const t_sound_type *const snd_type, zcl::t_arena *const temp_arena);
 
-    void SoundsResumeAllOfType(t_audio_sys *const audio_sys, const t_sound_type *const snd_type);
+    void SoundsResumeAll(t_audio_sys *const audio_sys, zcl::t_arena *const temp_arena);
+
+    void SoundsResumeAllOfType(t_audio_sys *const audio_sys, const t_sound_type *const snd_type, zcl::t_arena *const temp_arena);
 
     // ============================================================
 
