@@ -91,9 +91,15 @@ namespace zgl {
 
     void SoundsDestroyAll(t_audio_sys *const audio_sys);
 
+    void SoundsDestroyAllOfType(t_audio_sys *const audio_sys, const t_sound_type *const snd_type);
+
     void SoundsPauseAll(t_audio_sys *const audio_sys);
 
+    void SoundsPauseAllOfType(t_audio_sys *const audio_sys, const t_sound_type *const snd_type);
+
     void SoundsResumeAll(t_audio_sys *const audio_sys);
+
+    void SoundsResumeAllOfType(t_audio_sys *const audio_sys, const t_sound_type *const snd_type);
 
     // ============================================================
 
