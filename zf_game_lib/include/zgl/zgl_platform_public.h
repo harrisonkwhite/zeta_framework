@@ -57,6 +57,6 @@ namespace zgl {
 
         void WindowShow(t_platform *const platform);
 
-        void PollOSEvents(t_platform *const platform);
+        void PollOSEvents(t_platform *const platform, t_input_state *const input_state);
     }
 }

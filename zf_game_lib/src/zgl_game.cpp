@@ -1,7 +1,7 @@
 #include <zgl/zgl_game.h>
 
 #include <zgl/zgl_input.h>
-#include <zgl/zgl_platform.h>
+#include <zgl/zgl_platform_public.h>
 #include <zgl/zgl_audio.h>
 
 namespace zgl {
@@ -73,7 +73,7 @@ namespace zgl {
         zcl::t_f64 tick_interval_accum = 0.0;
 
         while (!WindowCheckCloseRequested(platform)) {
-            detail::PollOSEvents(platform);
+            detail::PollOSEvents(platform, input_state);
 
             const zcl::t_b8 window_focused = WindowCheckFocused(platform);
 

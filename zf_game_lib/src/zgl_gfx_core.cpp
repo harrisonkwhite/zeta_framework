@@ -1,7 +1,8 @@
 #include <zgl/zgl_gfx.h>
 
-#include <zgl/zgl_platform.h>
 #include <bgfx/bgfx.h>
+
+#include <zgl/zgl_platform_public.h>
 
 #define BGFX_CONFIG_MAX_VIEWS k_frame_pass_limit
 
@@ -112,8 +113,8 @@ namespace zgl {
 
         const auto fb_size_cache = WindowGetFramebufferSizeCache(platform);
 
-        bgfx_init.resolution.width = static_cast<uint32_t>(fb_size_cache.x);
-        bgfx_init.resolution.height = static_cast<uint32_t>(fb_size_cache.y);
+        bgfx_init.resolution.width = static_cast<zcl::t_u32>(fb_size_cache.x);
+        bgfx_init.resolution.height = static_cast<zcl::t_u32>(fb_size_cache.y);
 
         bgfx_init.platformData.nwh = detail::WindowGetNativeHandle(platform);
         bgfx_init.platformData.ndt = detail::DisplayGetNativeHandle(platform);
@@ -134,7 +135,7 @@ namespace zgl {
             bgfx::VertexLayout vert_layout;
             vert_layout.begin().add(bgfx::Attrib::Position, 2, bgfx::AttribType::Float).add(bgfx::Attrib::Color0, 4, bgfx::AttribType::Float).add(bgfx::Attrib::TexCoord0, 2, bgfx::AttribType::Float).end();
 
-            (*o_frame_basis)->vert_buf_bgfx_hdl = bgfx::createDynamicVertexBuffer(static_cast<uint32_t>(k_frame_vert_limit), vert_layout);
+            (*o_frame_basis)->vert_buf_bgfx_hdl = bgfx::createDynamicVertexBuffer(static_cast<zcl::t_u32>(k_frame_vert_limit), vert_layout);
 
             if (!bgfx::isValid((*o_frame_basis)->vert_buf_bgfx_hdl)) {
                 ZCL_FATAL();
@@ -236,8 +237,8 @@ namespace zgl {
     t_gfx_resource *TextureCreate(t_gfx *const gfx, const zcl::t_texture_data_rdonly texture_data, t_gfx_resource_group *const group) {
         ZCL_ASSERT(g_module_state == ek_module_state_active_but_not_midframe);
 
-        const uint64_t flags = BGFX_SAMPLER_MIN_POINT | BGFX_SAMPLER_MAG_POINT | BGFX_SAMPLER_U_CLAMP | BGFX_SAMPLER_V_CLAMP;
-        const auto texture_bgfx_hdl = bgfx::createTexture2D(static_cast<uint16_t>(texture_data.size_in_pxs.x), static_cast<uint16_t>(texture_data.size_in_pxs.y), false, 1, bgfx::TextureFormat::RGBA8, flags, bgfx::copy(texture_data.rgba_px_data.raw, static_cast<uint32_t>(zcl::ArrayGetSizeInBytes(texture_data.rgba_px_data))));
+        const auto flags = BGFX_SAMPLER_MIN_POINT | BGFX_SAMPLER_MAG_POINT | BGFX_SAMPLER_U_CLAMP | BGFX_SAMPLER_V_CLAMP;
+        const auto texture_bgfx_hdl = bgfx::createTexture2D(static_cast<zcl::t_u16>(texture_data.size_in_pxs.x), static_cast<zcl::t_u16>(texture_data.size_in_pxs.y), false, 1, bgfx::TextureFormat::RGBA8, flags, bgfx::copy(texture_data.rgba_px_data.raw, static_cast<zcl::t_u32>(zcl::ArrayGetSizeInBytes(texture_data.rgba_px_data))));
 
         if (!bgfx::isValid(texture_bgfx_hdl)) {
             ZCL_FATAL();
@@ -246,9 +247,11 @@ namespace zgl {
         const auto resource = GFXResourceGroupAdd(group, ek_gfx_resource_type_texture);
         resource->type_data.texture.nontarget_texture_bgfx_hdl = texture_bgfx_hdl;
         resource->type_data.texture.size = texture_data.size_in_pxs;
+
         return resource;
     }
 
+    // @move
     t_gfx_resource *TextureCreateFromExternal(t_gfx *const gfx, const zcl::t_str_rdonly file_path, t_gfx_resource_group *const group, zcl::t_arena *const temp_arena) {
         ZCL_ASSERT(g_module_state == ek_module_state_active_but_not_midframe);
 
@@ -261,6 +264,7 @@ namespace zgl {
         return TextureCreate(gfx, texture_data, group);
     }
 
+    // @move
     t_gfx_resource *TextureCreateFromPacked(t_gfx *const gfx, const zcl::t_str_rdonly file_path, t_gfx_resource_group *const group, zcl::t_arena *const temp_arena) {
         ZCL_ASSERT(g_module_state == ek_module_state_active_but_not_midframe);
 
@@ -282,7 +286,7 @@ namespace zgl {
     }
 
     static bgfx::FrameBufferHandle BGFXCreateFramebuffer(const zcl::t_v2_i size) {
-        return bgfx::createFrameBuffer(static_cast<uint16_t>(size.x), static_cast<uint16_t>(size.y), bgfx::TextureFormat::RGBA8, BGFX_SAMPLER_MIN_POINT | BGFX_SAMPLER_MAG_POINT | BGFX_SAMPLER_U_CLAMP | BGFX_SAMPLER_V_CLAMP);
+        return bgfx::createFrameBuffer(static_cast<zcl::t_u16>(size.x), static_cast<zcl::t_u16>(size.y), bgfx::TextureFormat::RGBA8, BGFX_SAMPLER_MIN_POINT | BGFX_SAMPLER_MAG_POINT | BGFX_SAMPLER_U_CLAMP | BGFX_SAMPLER_V_CLAMP);
     }
 
     t_gfx_resource *TextureCreateTarget(t_gfx *const gfx, const zcl::t_v2_i size, t_gfx_resource_group *const group) {
@@ -299,6 +303,7 @@ namespace zgl {
         resource->type_data.texture.is_target = true;
         resource->type_data.texture.target_fb_bgfx_hdl = fb_bgfx_hdl;
         resource->type_data.texture.size = size;
+
         return resource;
     }
 
@@ -328,14 +333,14 @@ namespace zgl {
     t_gfx_resource *ShaderProgCreate(t_gfx *const gfx, const zcl::t_array_rdonly<zcl::t_u8> vert_shader_compiled_bin, const zcl::t_array_rdonly<zcl::t_u8> frag_shader_compiled_bin, t_gfx_resource_group *const group) {
         ZCL_ASSERT(g_module_state == ek_module_state_active_but_not_midframe);
 
-        const bgfx::Memory *const vert_shader_bgfx_mem = bgfx::copy(vert_shader_compiled_bin.raw, static_cast<uint32_t>(vert_shader_compiled_bin.len));
+        const bgfx::Memory *const vert_shader_bgfx_mem = bgfx::copy(vert_shader_compiled_bin.raw, static_cast<zcl::t_u32>(vert_shader_compiled_bin.len));
         const bgfx::ShaderHandle vert_shader_bgfx_hdl = bgfx::createShader(vert_shader_bgfx_mem);
 
         if (!bgfx::isValid(vert_shader_bgfx_hdl)) {
             ZCL_FATAL();
         }
 
-        const bgfx::Memory *const frag_shader_bgfx_mem = bgfx::copy(frag_shader_compiled_bin.raw, static_cast<uint32_t>(frag_shader_compiled_bin.len));
+        const bgfx::Memory *const frag_shader_bgfx_mem = bgfx::copy(frag_shader_compiled_bin.raw, static_cast<zcl::t_u32>(frag_shader_compiled_bin.len));
         const bgfx::ShaderHandle frag_shader_bgfx_hdl = bgfx::createShader(frag_shader_bgfx_mem);
 
         if (!bgfx::isValid(frag_shader_bgfx_hdl)) {
@@ -350,6 +355,7 @@ namespace zgl {
 
         const auto resource = GFXResourceGroupAdd(group, ek_gfx_resource_type_shader_prog);
         resource->type_data.shader_prog.bgfx_hdl = prog_bgfx_hdl;
+
         return resource;
     }
 
@@ -433,7 +439,7 @@ namespace zgl {
         const auto fb_size_cache = WindowGetFramebufferSizeCache(platform);
 
         if (basis->size != fb_size_cache) {
-            bgfx::reset(static_cast<uint32_t>(fb_size_cache.x), static_cast<uint32_t>(fb_size_cache.y), BGFX_RESET_VSYNC);
+            bgfx::reset(static_cast<zcl::t_u32>(fb_size_cache.x), static_cast<zcl::t_u32>(fb_size_cache.y), BGFX_RESET_VSYNC);
             basis->size = fb_size_cache;
         }
 
@@ -457,12 +463,12 @@ namespace zgl {
         }
 
         const auto verts = zcl::ArraySlice(ArrayToNonstatic(&context.state->batch_state.verts), 0, context.state->batch_state.vert_cnt);
-        const auto verts_bgfx_mem = bgfx::copy(verts.raw, static_cast<uint32_t>(zcl::ArrayGetSizeInBytes(verts)));
-        bgfx::update(context.basis->vert_buf_bgfx_hdl, static_cast<uint32_t>(context.state->frame_vert_cnt), verts_bgfx_mem);
+        const auto verts_bgfx_mem = bgfx::copy(verts.raw, static_cast<zcl::t_u32>(zcl::ArrayGetSizeInBytes(verts)));
+        bgfx::update(context.basis->vert_buf_bgfx_hdl, static_cast<zcl::t_u32>(context.state->frame_vert_cnt), verts_bgfx_mem);
 
         FrameSetUniformSampler(context, context.basis->sampler_uniform, context.state->batch_state.texture ? context.state->batch_state.texture : context.basis->px_texture);
 
-        bgfx::setVertexBuffer(0, context.basis->vert_buf_bgfx_hdl, static_cast<uint32_t>(context.state->frame_vert_cnt), static_cast<uint32_t>(context.state->batch_state.vert_cnt));
+        bgfx::setVertexBuffer(0, context.basis->vert_buf_bgfx_hdl, static_cast<zcl::t_u32>(context.state->frame_vert_cnt), static_cast<zcl::t_u32>(context.state->batch_state.vert_cnt));
 
         bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A | BGFX_STATE_BLEND_ALPHA);
 
@@ -497,7 +503,7 @@ namespace zgl {
 
         bgfx::setViewMode(bgfx_view_id, bgfx::ViewMode::Sequential);
 
-        bgfx::setViewRect(bgfx_view_id, 0, 0, static_cast<uint16_t>(size.x), static_cast<uint16_t>(size.y));
+        bgfx::setViewRect(bgfx_view_id, 0, 0, static_cast<zcl::t_u16>(size.x), static_cast<zcl::t_u16>(size.y));
 
         auto proj_mat = zcl::MatrixCreateIdentity();
         proj_mat.elems[0][0] = 1.0f / (static_cast<zcl::t_f32>(size.x) / 2.0f);
