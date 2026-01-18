@@ -1,19 +1,18 @@
 #pragma once
 
 #include <zcl.h>
+#include <zgl/zgl_platform_public.h>
 #include <zgl/zgl_gfx.h>
 
 namespace zgl {
-    struct t_input_state;   // Forward declaration.
-    struct t_platform;      // Forward declaration.
-    struct t_frame_context; // Forward declaration.
-    struct t_audio_sys;     // Forward declaration.
+    struct t_input_state; // Forward declaration.
+    struct t_audio_sys;   // Forward declaration.
 
     struct t_game_init_func_context {
         zcl::t_arena *perm_arena;
         zcl::t_arena *temp_arena;
 
-        t_platform *platform;
+        t_platform_ticket_mut platform_ticket;
 
         t_gfx *gfx;
 
@@ -28,7 +27,7 @@ namespace zgl {
         zcl::t_arena *perm_arena;
         zcl::t_arena *temp_arena;
 
-        t_platform *platform;
+        t_platform_ticket_mut platform_ticket;
 
         t_gfx *gfx;
 
@@ -45,7 +44,7 @@ namespace zgl {
 
         const t_input_state *input_state;
 
-        t_platform *platform;
+        t_platform_ticket_mut platform_ticket;
 
         t_gfx *gfx;
 
@@ -62,7 +61,7 @@ namespace zgl {
         zcl::t_arena *perm_arena;
         zcl::t_arena *temp_arena;
 
-        const t_platform *platform;
+        t_platform_ticket_rdonly platform_ticket;
 
         t_frame_context frame_context;
 

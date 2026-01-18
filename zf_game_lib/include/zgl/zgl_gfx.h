@@ -1,10 +1,9 @@
 #pragma once
 
 #include <zcl.h>
+#include <zgl/zgl_platform_public.h>
 
 namespace zgl {
-    struct t_platform; // Forward declaration.
-
     struct t_gfx;
 
 
@@ -181,10 +180,10 @@ namespace zgl {
 
 
     namespace internal {
-        t_gfx *GFXStartup(const t_platform *const platform, zcl::t_arena *const arena, zcl::t_arena *const temp_arena, t_frame_basis **const o_frame_basis);
+        t_gfx *GFXStartup(const t_platform_ticket_rdonly platform_ticket, zcl::t_arena *const arena, zcl::t_arena *const temp_arena, t_frame_basis **const o_frame_basis);
         void GFXShutdown(t_gfx *const gfx, t_frame_basis *const frame_basis);
 
-        t_frame_context FrameBegin(t_gfx *const gfx, t_frame_basis *const basis, const t_platform *const platform, zcl::t_arena *const context_arena);
+        t_frame_context FrameBegin(t_gfx *const gfx, t_frame_basis *const basis, const t_platform_ticket_rdonly platform_ticket, zcl::t_arena *const context_arena);
         void FrameEnd(const t_frame_context context);
     }
 }
