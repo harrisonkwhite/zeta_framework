@@ -26,12 +26,12 @@ namespace zgl {
         } snd_insts;
     } g_state;
 
-    static void SoundIDAssertValid(const t_audio_sys *const audio_sys, const t_sound_id id) {
+    static void SoundIDAssertValid(const t_sound_id id) {
         ZCL_ASSERT(id.index >= 0 && id.index < k_sound_limit);
         ZCL_ASSERT(id.version > 0 && id.version <= g_state.snd_insts.versions[id.index]);
     }
 
-    t_audio_sys *internal::AudioStartup(zcl::t_arena *const arena) {
+    t_audio_ticket_mut internal::AudioStartup(zcl::t_arena *const arena) {
         ZCL_ASSERT(g_state.phase == ek_phase_inactive);
 
         g_state.phase = ek_phase_active;
@@ -40,14 +40,15 @@ namespace zgl {
             ZCL_FATAL();
         }
 
-        return nullptr; // @temp
+        return TicketCreate();
     }
 
-    void internal::AudioShutdown(t_audio_sys *const sys) {
+    void internal::AudioShutdown(const t_audio_ticket_mut ticket) {
         ZCL_ASSERT(g_state.phase != ek_phase_inactive);
+        ZCL_ASSERT(TicketCheckValid(ticket));
 
         ZCL_BITSET_WALK_ALL_SET (g_state.snd_insts.active, i) {
-            SoundDestroy(sys, {i, g_state.snd_insts.versions[i]});
+            SoundDestroy(ticket, {i, g_state.snd_insts.versions[i]});
         }
 
         ma_engine_uninit(&g_state.ma_eng);
@@ -55,8 +56,9 @@ namespace zgl {
         zcl::ZeroClearItem(&g_state);
     }
 
-    void internal::AudioSetFrozen(t_audio_sys *const sys, const zcl::t_b8 frozen) {
+    void internal::AudioSetFrozen(const t_audio_ticket_mut ticket, const zcl::t_b8 frozen) {
         ZCL_ASSERT(g_state.phase != ek_phase_inactive);
+        ZCL_ASSERT(TicketCheckValid(ticket));
 
         // Do not touch the per-sound "paused" state, we don't want want to lose that.
 
@@ -75,8 +77,9 @@ namespace zgl {
         }
     }
 
-    t_sound_id SoundCreate(t_audio_sys *const audio_sys, const t_sound_type *const snd_type) {
+    t_sound_id SoundCreate(const t_audio_ticket_mut audio_ticket, const t_sound_type *const snd_type) {
         ZCL_ASSERT(g_state.phase != ek_phase_inactive);
+        ZCL_ASSERT(TicketCheckValid(audio_ticket));
         ZCL_ASSERT(snd_type->valid);
 
         const zcl::t_i32 index = zcl::BitsetFindFirstUnsetBit(g_state.snd_insts.active);
@@ -118,10 +121,11 @@ namespace zgl {
         return {index, g_state.snd_insts.versions[index]};
     }
 
-    void SoundDestroy(t_audio_sys *const audio_sys, const t_sound_id id) {
+    void SoundDestroy(const t_audio_ticket_mut audio_ticket, const t_sound_id id) {
         ZCL_ASSERT(g_state.phase != ek_phase_inactive);
-        SoundIDAssertValid(audio_sys, id);
-        ZCL_ASSERT(SoundCheckExists(audio_sys, id));
+        ZCL_ASSERT(TicketCheckValid(audio_ticket));
+        SoundIDAssertValid(id);
+        ZCL_ASSERT(SoundCheckExists(audio_ticket, id));
 
         ma_sound *const ma_snd = &g_state.snd_insts.ma_snds[id.index];
 
@@ -140,11 +144,12 @@ namespace zgl {
         zcl::BitsetUnset(g_state.snd_insts.active, id.index);
     }
 
-    void SoundStart(t_audio_sys *const audio_sys, const t_sound_id id) {
+    void SoundStart(const t_audio_ticket_mut audio_ticket, const t_sound_id id) {
         ZCL_ASSERT(g_state.phase != ek_phase_inactive);
-        SoundIDAssertValid(audio_sys, id);
-        ZCL_ASSERT(SoundCheckExists(audio_sys, id));
-        ZCL_ASSERT(SoundGetState(audio_sys, id) == ek_sound_state_not_started);
+        ZCL_ASSERT(TicketCheckValid(audio_ticket));
+        SoundIDAssertValid(id);
+        ZCL_ASSERT(SoundCheckExists(audio_ticket, id));
+        ZCL_ASSERT(SoundGetState(audio_ticket, id) == ek_sound_state_not_started);
 
         g_state.snd_insts.states[id.index] = ek_sound_state_playing;
 
@@ -155,11 +160,12 @@ namespace zgl {
         }
     }
 
-    void SoundPause(t_audio_sys *const audio_sys, const t_sound_id id) {
+    void SoundPause(const t_audio_ticket_mut audio_ticket, const t_sound_id id) {
         ZCL_ASSERT(g_state.phase != ek_phase_inactive);
-        SoundIDAssertValid(audio_sys, id);
-        ZCL_ASSERT(SoundCheckExists(audio_sys, id));
-        ZCL_ASSERT(SoundGetState(audio_sys, id) == ek_sound_state_playing);
+        ZCL_ASSERT(TicketCheckValid(audio_ticket));
+        SoundIDAssertValid(id);
+        ZCL_ASSERT(SoundCheckExists(audio_ticket, id));
+        ZCL_ASSERT(SoundGetState(audio_ticket, id) == ek_sound_state_playing);
 
         g_state.snd_insts.states[id.index] = ek_sound_state_paused;
 
@@ -170,11 +176,12 @@ namespace zgl {
         }
     }
 
-    void SoundResume(t_audio_sys *const audio_sys, const t_sound_id id) {
+    void SoundResume(const t_audio_ticket_mut audio_ticket, const t_sound_id id) {
         ZCL_ASSERT(g_state.phase != ek_phase_inactive);
-        SoundIDAssertValid(audio_sys, id);
-        ZCL_ASSERT(SoundCheckExists(audio_sys, id));
-        ZCL_ASSERT(SoundGetState(audio_sys, id) == ek_sound_state_paused);
+        ZCL_ASSERT(TicketCheckValid(audio_ticket));
+        SoundIDAssertValid(id);
+        ZCL_ASSERT(SoundCheckExists(audio_ticket, id));
+        ZCL_ASSERT(SoundGetState(audio_ticket, id) == ek_sound_state_paused);
 
         g_state.snd_insts.states[id.index] = ek_sound_state_playing;
 
@@ -185,66 +192,74 @@ namespace zgl {
         }
     }
 
-    zcl::t_b8 SoundCheckExists(const t_audio_sys *const audio_sys, const t_sound_id id) {
+    zcl::t_b8 SoundCheckExists(const t_audio_ticket_rdonly audio_ticket, const t_sound_id id) {
         ZCL_ASSERT(g_state.phase != ek_phase_inactive);
-        SoundIDAssertValid(audio_sys, id);
+        ZCL_ASSERT(TicketCheckValid(audio_ticket));
+        SoundIDAssertValid(id);
 
         return zcl::BitsetCheckSet(g_state.snd_insts.active, id.index)
             && id.version == g_state.snd_insts.versions[id.index];
     }
 
-    t_sound_state SoundGetState(const t_audio_sys *const audio_sys, const t_sound_id id) {
+    t_sound_state SoundGetState(const t_audio_ticket_rdonly audio_ticket, const t_sound_id id) {
         ZCL_ASSERT(g_state.phase != ek_phase_inactive);
-        SoundIDAssertValid(audio_sys, id);
-        ZCL_ASSERT(SoundCheckExists(audio_sys, id));
+        ZCL_ASSERT(TicketCheckValid(audio_ticket));
+        SoundIDAssertValid(id);
+        ZCL_ASSERT(SoundCheckExists(audio_ticket, id));
 
         return g_state.snd_insts.states[id.index];
     }
 
-    const t_sound_type *SoundGetType(const t_audio_sys *const audio_sys, const t_sound_id id) {
+    const t_sound_type *SoundGetType(const t_audio_ticket_rdonly audio_ticket, const t_sound_id id) {
         ZCL_ASSERT(g_state.phase != ek_phase_inactive);
-        SoundIDAssertValid(audio_sys, id);
-        ZCL_ASSERT(SoundCheckExists(audio_sys, id));
+        ZCL_ASSERT(TicketCheckValid(audio_ticket));
+        SoundIDAssertValid(id);
+        ZCL_ASSERT(SoundCheckExists(audio_ticket, id));
 
         return g_state.snd_insts.types[id.index];
     }
 
-    zcl::t_f32 SoundGetVolume(t_audio_sys *const audio_sys, const t_sound_id id) {
+    zcl::t_f32 SoundGetVolume(const t_audio_ticket_rdonly audio_ticket, const t_sound_id id) {
         ZCL_ASSERT(g_state.phase != ek_phase_inactive);
-        SoundIDAssertValid(audio_sys, id);
-        ZCL_ASSERT(SoundCheckExists(audio_sys, id));
+        ZCL_ASSERT(TicketCheckValid(audio_ticket));
+        SoundIDAssertValid(id);
+        ZCL_ASSERT(SoundCheckExists(audio_ticket, id));
 
         return ma_sound_get_volume(&g_state.snd_insts.ma_snds[id.index]);
     }
 
-    zcl::t_f32 SoundGetPan(t_audio_sys *const audio_sys, const t_sound_id id) {
+    zcl::t_f32 SoundGetPan(const t_audio_ticket_rdonly audio_ticket, const t_sound_id id) {
         ZCL_ASSERT(g_state.phase != ek_phase_inactive);
-        SoundIDAssertValid(audio_sys, id);
-        ZCL_ASSERT(SoundCheckExists(audio_sys, id));
+        ZCL_ASSERT(TicketCheckValid(audio_ticket));
+        SoundIDAssertValid(id);
+        ZCL_ASSERT(SoundCheckExists(audio_ticket, id));
 
         return ma_sound_get_pan(&g_state.snd_insts.ma_snds[id.index]);
     }
 
-    zcl::t_f32 SoundGetPitch(t_audio_sys *const audio_sys, const t_sound_id id) {
+    zcl::t_f32 SoundGetPitch(const t_audio_ticket_rdonly audio_ticket, const t_sound_id id) {
         ZCL_ASSERT(g_state.phase != ek_phase_inactive);
-        SoundIDAssertValid(audio_sys, id);
-        ZCL_ASSERT(SoundCheckExists(audio_sys, id));
+        ZCL_ASSERT(TicketCheckValid(audio_ticket));
+        SoundIDAssertValid(id);
+        ZCL_ASSERT(SoundCheckExists(audio_ticket, id));
 
         return ma_sound_get_pitch(&g_state.snd_insts.ma_snds[id.index]);
     }
 
-    zcl::t_b8 SoundCheckLooping(t_audio_sys *const audio_sys, const t_sound_id id) {
+    zcl::t_b8 SoundCheckLooping(const t_audio_ticket_rdonly audio_ticket, const t_sound_id id) {
         ZCL_ASSERT(g_state.phase != ek_phase_inactive);
-        SoundIDAssertValid(audio_sys, id);
-        ZCL_ASSERT(SoundCheckExists(audio_sys, id));
+        ZCL_ASSERT(TicketCheckValid(audio_ticket));
+        SoundIDAssertValid(id);
+        ZCL_ASSERT(SoundCheckExists(audio_ticket, id));
 
         return ma_sound_is_looping(&g_state.snd_insts.ma_snds[id.index]);
     }
 
-    zcl::t_f32 SoundGetTrackPosition(t_audio_sys *const audio_sys, const t_sound_id id) {
+    zcl::t_f32 SoundGetTrackPosition(const t_audio_ticket_rdonly audio_ticket, const t_sound_id id) {
         ZCL_ASSERT(g_state.phase != ek_phase_inactive);
-        SoundIDAssertValid(audio_sys, id);
-        ZCL_ASSERT(SoundCheckExists(audio_sys, id));
+        ZCL_ASSERT(TicketCheckValid(audio_ticket));
+        SoundIDAssertValid(id);
+        ZCL_ASSERT(SoundCheckExists(audio_ticket, id));
 
         zcl::t_f32 result;
 
@@ -255,10 +270,11 @@ namespace zgl {
         return result;
     }
 
-    zcl::t_f32 SoundGetTrackDuration(t_audio_sys *const audio_sys, const t_sound_id id) {
+    zcl::t_f32 SoundGetTrackDuration(const t_audio_ticket_rdonly audio_ticket, const t_sound_id id) {
         ZCL_ASSERT(g_state.phase != ek_phase_inactive);
-        SoundIDAssertValid(audio_sys, id);
-        ZCL_ASSERT(SoundCheckExists(audio_sys, id));
+        ZCL_ASSERT(TicketCheckValid(audio_ticket));
+        SoundIDAssertValid(id);
+        ZCL_ASSERT(SoundCheckExists(audio_ticket, id));
 
         zcl::t_f32 result;
 
@@ -269,19 +285,21 @@ namespace zgl {
         return result;
     }
 
-    void SoundSetVolume(t_audio_sys *const audio_sys, const t_sound_id id, const zcl::t_f32 vol) {
+    void SoundSetVolume(const t_audio_ticket_mut audio_ticket, const t_sound_id id, const zcl::t_f32 vol) {
         ZCL_ASSERT(g_state.phase != ek_phase_inactive);
-        SoundIDAssertValid(audio_sys, id);
-        ZCL_ASSERT(SoundCheckExists(audio_sys, id));
+        ZCL_ASSERT(TicketCheckValid(audio_ticket));
+        SoundIDAssertValid(id);
+        ZCL_ASSERT(SoundCheckExists(audio_ticket, id));
         ZCL_ASSERT(zcl::RangeValueCheckWithin(k_sound_volume_range, vol));
 
         ma_sound_set_volume(&g_state.snd_insts.ma_snds[id.index], vol);
     }
 
-    void SoundSetVolumeTransition(t_audio_sys *const audio_sys, const t_sound_id id, const zcl::t_f32 vol_begin, const zcl::t_f32 vol_end, const zcl::t_f32 dur_secs) {
+    void SoundSetVolumeTransition(const t_audio_ticket_mut audio_ticket, const t_sound_id id, const zcl::t_f32 vol_begin, const zcl::t_f32 vol_end, const zcl::t_f32 dur_secs) {
         ZCL_ASSERT(g_state.phase != ek_phase_inactive);
-        SoundIDAssertValid(audio_sys, id);
-        ZCL_ASSERT(SoundCheckExists(audio_sys, id));
+        ZCL_ASSERT(TicketCheckValid(audio_ticket));
+        SoundIDAssertValid(id);
+        ZCL_ASSERT(SoundCheckExists(audio_ticket, id));
         ZCL_ASSERT(zcl::RangeValueCheckWithin(k_sound_volume_range, vol_begin));
         ZCL_ASSERT(zcl::RangeValueCheckWithin(k_sound_volume_range, vol_end));
         ZCL_ASSERT(dur_secs >= 0.0f);
@@ -289,44 +307,51 @@ namespace zgl {
         ma_sound_set_fade_in_milliseconds(&g_state.snd_insts.ma_snds[id.index], vol_begin, vol_end, static_cast<ma_uint64>(1000.0f * dur_secs));
     }
 
-    void SoundSetPan(t_audio_sys *const audio_sys, const t_sound_id id, const zcl::t_f32 pan) {
+    void SoundSetPan(const t_audio_ticket_mut audio_ticket, const t_sound_id id, const zcl::t_f32 pan) {
         ZCL_ASSERT(g_state.phase != ek_phase_inactive);
-        SoundIDAssertValid(audio_sys, id);
-        ZCL_ASSERT(SoundCheckExists(audio_sys, id));
+        ZCL_ASSERT(TicketCheckValid(audio_ticket));
+        SoundIDAssertValid(id);
+        ZCL_ASSERT(SoundCheckExists(audio_ticket, id));
         ZCL_ASSERT(zcl::RangeValueCheckWithin(k_sound_pan_range, pan));
 
         ma_sound_set_pan(&g_state.snd_insts.ma_snds[id.index], pan);
     }
 
-    void SoundSetPitch(t_audio_sys *const audio_sys, const t_sound_id id, const zcl::t_f32 pitch) {
+    void SoundSetPitch(const t_audio_ticket_mut audio_ticket, const t_sound_id id, const zcl::t_f32 pitch) {
         ZCL_ASSERT(g_state.phase != ek_phase_inactive);
-        SoundIDAssertValid(audio_sys, id);
-        ZCL_ASSERT(SoundCheckExists(audio_sys, id));
+        ZCL_ASSERT(TicketCheckValid(audio_ticket));
+        SoundIDAssertValid(id);
+        ZCL_ASSERT(SoundCheckExists(audio_ticket, id));
         ZCL_ASSERT(zcl::RangeValueCheckWithin(k_sound_pitch_range, pitch));
 
         ma_sound_set_pitch(&g_state.snd_insts.ma_snds[id.index], pitch);
     }
 
-    void SoundSetLooping(t_audio_sys *const audio_sys, const t_sound_id id, const zcl::t_b8 looping) {
+    void SoundSetLooping(const t_audio_ticket_mut audio_ticket, const t_sound_id id, const zcl::t_b8 looping) {
         ZCL_ASSERT(g_state.phase != ek_phase_inactive);
-        SoundIDAssertValid(audio_sys, id);
-        ZCL_ASSERT(SoundCheckExists(audio_sys, id));
+        ZCL_ASSERT(TicketCheckValid(audio_ticket));
+        SoundIDAssertValid(id);
+        ZCL_ASSERT(SoundCheckExists(audio_ticket, id));
 
         ma_sound_set_looping(&g_state.snd_insts.ma_snds[id.index], looping);
     }
 
-    void SoundSetTrackPosition(t_audio_sys *const audio_sys, const t_sound_id id, const zcl::t_f32 pos_secs) {
+    void SoundSetTrackPosition(const t_audio_ticket_mut audio_ticket, const t_sound_id id, const zcl::t_f32 pos_secs) {
         ZCL_ASSERT(g_state.phase != ek_phase_inactive);
-        SoundIDAssertValid(audio_sys, id);
-        ZCL_ASSERT(SoundCheckExists(audio_sys, id));
+        ZCL_ASSERT(TicketCheckValid(audio_ticket));
+        SoundIDAssertValid(id);
+        ZCL_ASSERT(SoundCheckExists(audio_ticket, id));
 
-        const zcl::t_range pos_secs_range = zcl::RangeCreate(0.0f, SoundGetTrackDuration(audio_sys, id));
+        const zcl::t_range pos_secs_range = zcl::RangeCreate(0.0f, SoundGetTrackDuration(audio_ticket, id));
         ZCL_ASSERT(zcl::RangeValueCheckWithin(pos_secs_range, pos_secs));
 
         ma_sound_seek_to_second(&g_state.snd_insts.ma_snds[id.index], pos_secs);
     }
 
-    zcl::t_array_mut<t_sound_id> SoundsGetExisting(zcl::t_arena *const arena) {
+    zcl::t_array_mut<t_sound_id> SoundsGetExisting(const t_audio_ticket_rdonly audio_ticket, zcl::t_arena *const arena) {
+        ZCL_ASSERT(g_state.phase != ek_phase_inactive);
+        ZCL_ASSERT(TicketCheckValid(audio_ticket));
+
         const auto ids = zcl::ArenaPushArray<t_sound_id>(arena, zcl::BitsetCountSet(g_state.snd_insts.active));
         zcl::t_i32 ids_index = 0;
 
@@ -338,8 +363,9 @@ namespace zgl {
         return ids;
     }
 
-    void internal::SoundsProcessFinished(t_audio_sys *const audio_sys) {
+    void internal::SoundsProcessFinished(const t_audio_ticket_mut audio_ticket) {
         ZCL_ASSERT(g_state.phase != ek_phase_inactive);
+        ZCL_ASSERT(TicketCheckValid(audio_ticket));
 
         if (g_state.phase == ek_phase_frozen) {
             return;
@@ -353,7 +379,7 @@ namespace zgl {
             ma_sound *const ma_snd = &g_state.snd_insts.ma_snds[i];
 
             if (!ma_sound_is_playing(ma_snd)) {
-                SoundDestroy(audio_sys, {i, g_state.snd_insts.versions[i]});
+                SoundDestroy(audio_ticket, {i, g_state.snd_insts.versions[i]});
             }
         }
     }

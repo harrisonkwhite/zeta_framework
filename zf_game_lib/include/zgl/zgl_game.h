@@ -3,10 +3,10 @@
 #include <zcl.h>
 #include <zgl/zgl_platform_public.h>
 #include <zgl/zgl_gfx.h>
+#include <zgl/zgl_audio_public.h>
 
 namespace zgl {
     struct t_input_state; // Forward declaration.
-    struct t_audio_sys;   // Forward declaration.
 
     struct t_game_init_func_context {
         zcl::t_arena *perm_arena;
@@ -16,7 +16,7 @@ namespace zgl {
 
         t_gfx *gfx;
 
-        t_audio_sys *audio_sys;
+        t_audio_ticket_mut audio_ticket;
 
         zcl::t_rng *rng;
 
@@ -31,7 +31,7 @@ namespace zgl {
 
         t_gfx *gfx;
 
-        t_audio_sys *audio_sys;
+        t_audio_ticket_mut audio_ticket;
 
         zcl::t_rng *rng;
 
@@ -48,7 +48,7 @@ namespace zgl {
 
         t_gfx *gfx;
 
-        t_audio_sys *audio_sys;
+        t_audio_ticket_mut audio_ticket;
 
         zcl::t_rng *rng;
 

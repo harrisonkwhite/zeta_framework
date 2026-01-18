@@ -10,21 +10,25 @@ namespace zgl {
         t_sound_type *tail;
     };
 
-    t_sound_type_group *SoundTypeGroupCreate(t_audio_sys *const audio_sys, zcl::t_arena *const arena) {
+    t_sound_type_group *SoundTypeGroupCreate(const t_audio_ticket_mut audio_ticket, zcl::t_arena *const arena) {
+        ZCL_ASSERT(TicketCheckValid(audio_ticket));
+
         const auto result = zcl::ArenaPushItem<t_sound_type_group>(arena);
         result->valid = true;
         result->arena = arena;
+
         return result;
     }
 
-    void SoundTypeGroupDestroy(t_audio_sys *const audio_sys, t_sound_type_group *const group, zcl::t_arena *const temp_arena) {
+    void SoundTypeGroupDestroy(const t_audio_ticket_mut audio_ticket, t_sound_type_group *const group, zcl::t_arena *const temp_arena) {
+        ZCL_ASSERT(TicketCheckValid(audio_ticket));
         ZCL_ASSERT(group->valid);
 
         // All sound instances of any of the sound types in the group need to be destroyed.
         t_sound_type *snd_type = group->head;
 
         while (snd_type) {
-            SoundsDestroyAllOfType(audio_sys, snd_type, temp_arena);
+            SoundsDestroyAllOfType(audio_ticket, snd_type, temp_arena);
 
             t_sound_type *const snd_type_next = snd_type->next;
             *snd_type = {};
@@ -49,7 +53,8 @@ namespace zgl {
         return result;
     }
 
-    t_sound_type *SoundTypeCreateFromExternal(t_audio_sys *const audio_sys, const zcl::t_str_rdonly file_path, t_sound_type_group *const group, zcl::t_arena *const temp_arena) {
+    t_sound_type *SoundTypeCreateFromExternal(const t_audio_ticket_mut audio_ticket, const zcl::t_str_rdonly file_path, t_sound_type_group *const group, zcl::t_arena *const temp_arena) {
+        ZCL_ASSERT(TicketCheckValid(audio_ticket));
         ZCL_ASSERT(group->valid);
 
         zcl::t_sound_data_mut snd_data;
@@ -65,7 +70,8 @@ namespace zgl {
         return result;
     }
 
-    t_sound_type *SoundTypeCreateFromPacked(t_audio_sys *const audio_sys, const zcl::t_str_rdonly file_path, t_sound_type_group *const group, zcl::t_arena *const temp_arena) {
+    t_sound_type *SoundTypeCreateFromPacked(const t_audio_ticket_mut audio_ticket, const zcl::t_str_rdonly file_path, t_sound_type_group *const group, zcl::t_arena *const temp_arena) {
+        ZCL_ASSERT(TicketCheckValid(audio_ticket));
         ZCL_ASSERT(group->valid);
 
         zcl::t_file_stream file_stream;
@@ -89,7 +95,8 @@ namespace zgl {
         return result;
     }
 
-    t_sound_type *SoundTypeCreateStreamable(t_audio_sys *const audio_sys, const zcl::t_str_rdonly external_file_path, t_sound_type_group *const group, zcl::t_arena *const temp_arena) {
+    t_sound_type *SoundTypeCreateStreamable(const t_audio_ticket_mut audio_ticket, const zcl::t_str_rdonly external_file_path, t_sound_type_group *const group, zcl::t_arena *const temp_arena) {
+        ZCL_ASSERT(TicketCheckValid(audio_ticket));
         ZCL_ASSERT(group->valid);
 
         t_sound_type *const result = SoundTypeGroupAdd(group);
@@ -99,67 +106,81 @@ namespace zgl {
         return result;
     }
 
-    zcl::t_b8 SoundTypeCheckStreamable(t_audio_sys *const audio_sys, const t_sound_type *const type) {
+    zcl::t_b8 SoundTypeCheckStreamable(const t_audio_ticket_rdonly audio_ticket, const t_sound_type *const type) {
+        ZCL_ASSERT(TicketCheckValid(audio_ticket));
         ZCL_ASSERT(type->valid);
+
         return type->streamable;
     }
 
-    void SoundsDestroyAll(t_audio_sys *const audio_sys, zcl::t_arena *const temp_arena) {
-        const auto snd_ids = SoundsGetExisting(temp_arena);
+    void SoundsDestroyAll(const t_audio_ticket_mut audio_ticket, zcl::t_arena *const temp_arena) {
+        ZCL_ASSERT(TicketCheckValid(audio_ticket));
+
+        const auto snd_ids = SoundsGetExisting(audio_ticket, temp_arena);
 
         for (zcl::t_i32 i = 0; i < snd_ids.len; i++) {
-            SoundDestroy(audio_sys, snd_ids[i]);
+            SoundDestroy(audio_ticket, snd_ids[i]);
         }
     }
 
-    void SoundsDestroyAllOfType(t_audio_sys *const audio_sys, const t_sound_type *const snd_type, zcl::t_arena *const temp_arena) {
-        const auto snd_ids = SoundsGetExisting(temp_arena);
+    void SoundsDestroyAllOfType(const t_audio_ticket_mut audio_ticket, const t_sound_type *const snd_type, zcl::t_arena *const temp_arena) {
+        ZCL_ASSERT(TicketCheckValid(audio_ticket));
+
+        const auto snd_ids = SoundsGetExisting(audio_ticket, temp_arena);
 
         for (zcl::t_i32 i = 0; i < snd_ids.len; i++) {
-            if (SoundGetType(audio_sys, snd_ids[i]) == snd_type) {
-                SoundDestroy(audio_sys, snd_ids[i]);
+            if (SoundGetType(audio_ticket, snd_ids[i]) == snd_type) {
+                SoundDestroy(audio_ticket, snd_ids[i]);
             }
         }
     }
 
-    void SoundsPauseAll(t_audio_sys *const audio_sys, zcl::t_arena *const temp_arena) {
-        const auto snd_ids = SoundsGetExisting(temp_arena);
+    void SoundsPauseAll(const t_audio_ticket_mut audio_ticket, zcl::t_arena *const temp_arena) {
+        ZCL_ASSERT(TicketCheckValid(audio_ticket));
+
+        const auto snd_ids = SoundsGetExisting(audio_ticket, temp_arena);
 
         for (zcl::t_i32 i = 0; i < snd_ids.len; i++) {
-            if (SoundGetState(audio_sys, snd_ids[i]) == ek_sound_state_playing) {
-                SoundPause(audio_sys, snd_ids[i]);
+            if (SoundGetState(audio_ticket, snd_ids[i]) == ek_sound_state_playing) {
+                SoundPause(audio_ticket, snd_ids[i]);
             }
         }
     }
 
-    void SoundsPauseAllOfType(t_audio_sys *const audio_sys, const t_sound_type *const snd_type, zcl::t_arena *const temp_arena) {
-        const auto snd_ids = SoundsGetExisting(temp_arena);
+    void SoundsPauseAllOfType(const t_audio_ticket_mut audio_ticket, const t_sound_type *const snd_type, zcl::t_arena *const temp_arena) {
+        ZCL_ASSERT(TicketCheckValid(audio_ticket));
+
+        const auto snd_ids = SoundsGetExisting(audio_ticket, temp_arena);
 
         for (zcl::t_i32 i = 0; i < snd_ids.len; i++) {
-            if (SoundGetType(audio_sys, snd_ids[i]) == snd_type
-                && SoundGetState(audio_sys, snd_ids[i]) == ek_sound_state_playing) {
-                SoundPause(audio_sys, snd_ids[i]);
+            if (SoundGetType(audio_ticket, snd_ids[i]) == snd_type
+                && SoundGetState(audio_ticket, snd_ids[i]) == ek_sound_state_playing) {
+                SoundPause(audio_ticket, snd_ids[i]);
             }
         }
     }
 
-    void SoundsResumeAll(t_audio_sys *const audio_sys, zcl::t_arena *const temp_arena) {
-        const auto snd_ids = SoundsGetExisting(temp_arena);
+    void SoundsResumeAll(const t_audio_ticket_mut audio_ticket, zcl::t_arena *const temp_arena) {
+        ZCL_ASSERT(TicketCheckValid(audio_ticket));
+
+        const auto snd_ids = SoundsGetExisting(audio_ticket, temp_arena);
 
         for (zcl::t_i32 i = 0; i < snd_ids.len; i++) {
-            if (SoundGetState(audio_sys, snd_ids[i]) == ek_sound_state_paused) {
-                SoundResume(audio_sys, snd_ids[i]);
+            if (SoundGetState(audio_ticket, snd_ids[i]) == ek_sound_state_paused) {
+                SoundResume(audio_ticket, snd_ids[i]);
             }
         }
     }
 
-    void SoundsResumeAllOfType(t_audio_sys *const audio_sys, const t_sound_type *const snd_type, zcl::t_arena *const temp_arena) {
-        const auto snd_ids = SoundsGetExisting(temp_arena);
+    void SoundsResumeAllOfType(const t_audio_ticket_mut audio_ticket, const t_sound_type *const snd_type, zcl::t_arena *const temp_arena) {
+        ZCL_ASSERT(TicketCheckValid(audio_ticket));
+
+        const auto snd_ids = SoundsGetExisting(audio_ticket, temp_arena);
 
         for (zcl::t_i32 i = 0; i < snd_ids.len; i++) {
-            if (SoundGetType(audio_sys, snd_ids[i]) == snd_type
-                && SoundGetState(audio_sys, snd_ids[i]) == ek_sound_state_paused) {
-                SoundResume(audio_sys, snd_ids[i]);
+            if (SoundGetType(audio_ticket, snd_ids[i]) == snd_type
+                && SoundGetState(audio_ticket, snd_ids[i]) == ek_sound_state_paused) {
+                SoundResume(audio_ticket, snd_ids[i]);
             }
         }
     }

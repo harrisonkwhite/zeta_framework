@@ -2,8 +2,6 @@
 
 #include <bgfx/bgfx.h>
 
-#include <zgl/zgl_platform_public.h>
-
 #define BGFX_CONFIG_MAX_VIEWS k_frame_pass_limit
 
 namespace zgl {

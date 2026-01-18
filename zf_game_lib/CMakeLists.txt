@@ -57,6 +57,7 @@ add_library(zf_game_lib STATIC
     src/zgl_gfx_helpers.cpp
     src/zgl_audio_state.cpp
     src/zgl_audio_logic.cpp
+    src/zgl_audio_ticket.cpp
 
     include/zgl.h
     include/zgl/zgl_game.h

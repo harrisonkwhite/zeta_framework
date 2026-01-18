@@ -23,15 +23,15 @@ namespace zgl {
 
         t_input_state *const input_state = internal::InputCreateState(&perm_arena);
 
-        t_platform_ticket_mut platform_ticket = internal::PlatformStartup(k_window_size_init, input_state, &perm_arena);
+        const t_platform_ticket_mut platform_ticket = internal::PlatformStartup(k_window_size_init, input_state, &perm_arena);
         ZCL_DEFER({ internal::PlatformShutdown(platform_ticket); });
 
         t_frame_basis *frame_basis;
         t_gfx *const gfx = internal::GFXStartup(platform_ticket, &perm_arena, &temp_arena, &frame_basis);
         ZCL_DEFER({ internal::GFXShutdown(gfx, frame_basis); });
 
-        t_audio_sys *const audio_sys = internal::AudioStartup(&perm_arena);
-        ZCL_DEFER({ internal::AudioShutdown(audio_sys); });
+        const t_audio_ticket_mut audio_ticket = internal::AudioStartup(&perm_arena);
+        ZCL_DEFER({ internal::AudioShutdown(audio_ticket); });
 
         zcl::t_rng *const rng = zcl::RNGCreate(zcl::RandGenSeed(), &perm_arena);
 
@@ -44,7 +44,7 @@ namespace zgl {
             .temp_arena = &temp_arena,
             .platform_ticket = platform_ticket,
             .gfx = gfx,
-            .audio_sys = audio_sys,
+            .audio_ticket = audio_ticket,
             .rng = rng,
             .user_mem = user_mem,
         });
@@ -55,7 +55,7 @@ namespace zgl {
                 .temp_arena = &temp_arena,
                 .platform_ticket = platform_ticket,
                 .gfx = gfx,
-                .audio_sys = audio_sys,
+                .audio_ticket = audio_ticket,
                 .rng = rng,
                 .user_mem = user_mem,
             });
@@ -79,7 +79,7 @@ namespace zgl {
 
             const zcl::t_b8 window_focused = WindowCheckFocused(platform_ticket);
 
-            internal::AudioSetFrozen(audio_sys, !window_focused);
+            internal::AudioSetFrozen(audio_ticket, !window_focused);
 
             const zcl::t_f64 frame_time = GetTime(platform_ticket);
 
@@ -111,7 +111,7 @@ namespace zgl {
                     while (tick_interval_accum >= tick_interval_target) {
                         zcl::ArenaRewind(&temp_arena);
 
-                        internal::SoundsProcessFinished(audio_sys);
+                        internal::SoundsProcessFinished(audio_ticket);
 
                         config.tick_func({
                             .perm_arena = &perm_arena,
@@ -119,7 +119,7 @@ namespace zgl {
                             .input_state = input_state,
                             .platform_ticket = platform_ticket,
                             .gfx = gfx,
-                            .audio_sys = audio_sys,
+                            .audio_ticket = audio_ticket,
                             .rng = rng,
                             .fps = fps,
                             .user_mem = user_mem,
