@@ -16,6 +16,10 @@
 #include <zgl/zgl_input.h>
 
 namespace zgl {
+#ifdef ZCL_DEBUG
+    static zcl::t_u8 g_platform_identity; // Memory address of this is used as the key. The actual value of this variable is redundant.
+#endif
+
     static struct {
         zcl::t_b8 active;
 
@@ -27,6 +31,10 @@ namespace zgl {
         zcl::t_v2_i prefullscreen_pos;
         zcl::t_v2_i prefullscreen_size;
     } g_state;
+
+    static zcl::t_b8 KeyCheckValid(const t_platform *const key) {
+        return key == reinterpret_cast<t_platform *>(&g_platform_identity);
+    }
 
     t_platform *internal::PlatformStartup(const zcl::t_v2_i init_window_size, t_input_state *const input_state, zcl::t_arena *const arena) {
         ZCL_ASSERT(!g_state.active);
@@ -83,11 +91,12 @@ namespace zgl {
             glfwSetCharCallback(g_state.glfw_window, chr_callback);
         }
 
-        return nullptr; // @temp
+        return reinterpret_cast<t_platform *>(&g_platform_identity);
     }
 
     void internal::PlatformShutdown(t_platform *const platform) {
         ZCL_ASSERT(g_state.active);
+        ZCL_ASSERT(KeyCheckValid(platform));
 
         glfwDestroyWindow(g_state.glfw_window);
         glfwTerminate();
@@ -97,6 +106,7 @@ namespace zgl {
 
     zcl::t_f64 GetTime(const t_platform *const platform) {
         ZCL_ASSERT(g_state.active);
+        ZCL_ASSERT(KeyCheckValid(platform));
 
         const zcl::t_f64 result = glfwGetTime();
         ZCL_ASSERT(result != 0.0);
@@ -106,6 +116,7 @@ namespace zgl {
 
     void internal::PollOSEvents(t_platform *const platform, t_input_state *const input_state) {
         ZCL_ASSERT(g_state.active);
+        ZCL_ASSERT(KeyCheckValid(platform));
 
         glfwSetWindowUserPointer(g_state.glfw_window, input_state);
 
@@ -157,6 +168,7 @@ namespace zgl {
 
     void *internal::DisplayGetNativeHandle(const t_platform *const platform) {
         ZCL_ASSERT(g_state.active);
+        ZCL_ASSERT(KeyCheckValid(platform));
 
 #if defined(ZCL_PLATFORM_WINDOWS)
         return nullptr;
@@ -169,6 +181,7 @@ namespace zgl {
 
     void *internal::WindowGetNativeHandle(const t_platform *const platform) {
         ZCL_ASSERT(g_state.active);
+        ZCL_ASSERT(KeyCheckValid(platform));
 
 #if defined(ZCL_PLATFORM_WINDOWS)
         return reinterpret_cast<void *>(glfwGetWin32Window(g_state.glfw_window));
@@ -181,33 +194,44 @@ namespace zgl {
 
     void internal::WindowShow(t_platform *const platform) {
         ZCL_ASSERT(g_state.active);
+        ZCL_ASSERT(KeyCheckValid(platform));
+
         glfwShowWindow(g_state.glfw_window);
     }
 
     void WindowRequestClose(t_platform *const platform) {
         ZCL_ASSERT(g_state.active);
+        ZCL_ASSERT(KeyCheckValid(platform));
+
         zcl::Log(ZCL_STR_LITERAL("Window close explicitly requested..."));
         return glfwSetWindowShouldClose(g_state.glfw_window, true);
     }
 
     zcl::t_b8 WindowCheckCloseRequested(const t_platform *const platform) {
         ZCL_ASSERT(g_state.active);
+        ZCL_ASSERT(KeyCheckValid(platform));
+
         return glfwWindowShouldClose(g_state.glfw_window);
     }
 
     zcl::t_b8 WindowCheckFocused(const t_platform *const platform) {
         ZCL_ASSERT(g_state.active);
+        ZCL_ASSERT(KeyCheckValid(platform));
+
         return glfwGetWindowAttrib(g_state.glfw_window, GLFW_FOCUSED);
     }
 
     void WindowSetTitle(t_platform *const platform, const zcl::t_str_rdonly title, zcl::t_arena *const temp_arena) {
         ZCL_ASSERT(g_state.active);
+        ZCL_ASSERT(KeyCheckValid(platform));
+
         const zcl::t_str_rdonly title_terminated = zcl::StrCloneButAddTerminator(title, temp_arena);
         glfwSetWindowTitle(g_state.glfw_window, zcl::StrToCStr(title_terminated));
     }
 
     void WindowSetSize(t_platform *const platform, const zcl::t_v2_i size) {
         ZCL_ASSERT(g_state.active);
+        ZCL_ASSERT(KeyCheckValid(platform));
         ZCL_ASSERT(size.x > 0 && size.y > 0);
 
         glfwSetWindowSize(g_state.glfw_window, size.x, size.y);
@@ -215,6 +239,7 @@ namespace zgl {
 
     void WindowSetSizeLimits(t_platform *const platform, const zcl::t_i32 min_width, const zcl::t_i32 min_height, const zcl::t_i32 max_width, const zcl::t_i32 max_height) {
         ZCL_ASSERT(g_state.active);
+        ZCL_ASSERT(KeyCheckValid(platform));
         ZCL_ASSERT(min_width >= -1 && min_height >= -1);
         ZCL_ASSERT(max_width >= min_width || max_width == -1);
         ZCL_ASSERT(max_height >= min_height || max_height == -1);
@@ -225,16 +250,22 @@ namespace zgl {
 
     void WindowSetResizable(t_platform *const platform, const zcl::t_b8 resizable) {
         ZCL_ASSERT(g_state.active);
+        ZCL_ASSERT(KeyCheckValid(platform));
+
         glfwSetWindowAttrib(g_state.glfw_window, GLFW_RESIZABLE, resizable);
     }
 
     zcl::t_v2_i WindowGetFramebufferSizeCache(const t_platform *const platform) {
         ZCL_ASSERT(g_state.active);
+        ZCL_ASSERT(KeyCheckValid(platform));
+
         return g_state.framebuffer_size_cache;
     }
 
     zcl::t_b8 WindowCheckFullscreen(const t_platform *const platform) {
         ZCL_ASSERT(g_state.active);
+        ZCL_ASSERT(KeyCheckValid(platform));
+
         return g_state.fullscreen_active;
     }
 
@@ -287,6 +318,7 @@ namespace zgl {
 
     void WindowSetFullscreen(t_platform *const platform, const zcl::t_b8 active) {
         ZCL_ASSERT(g_state.active);
+        ZCL_ASSERT(KeyCheckValid(platform));
 
         if (active == g_state.fullscreen_active) {
             return;
@@ -313,6 +345,7 @@ namespace zgl {
 
     zcl::t_v2_i MonitorCalcSizePixels(const t_platform *const platform) {
         ZCL_ASSERT(g_state.active);
+        ZCL_ASSERT(KeyCheckValid(platform));
 
         const auto monitor = FindGLFWMonitorOfWindow(g_state.glfw_window);
 
@@ -326,6 +359,7 @@ namespace zgl {
 
     zcl::t_v2_i MonitorCalcSizeLogical(const t_platform *const platform) {
         ZCL_ASSERT(g_state.active);
+        ZCL_ASSERT(KeyCheckValid(platform));
 
         const auto monitor = FindGLFWMonitorOfWindow(g_state.glfw_window);
 
@@ -346,6 +380,8 @@ namespace zgl {
 
     void CursorSetVisible(t_platform *const platform, const zcl::t_b8 visible) {
         ZCL_ASSERT(g_state.active);
+        ZCL_ASSERT(KeyCheckValid(platform));
+
         glfwSetInputMode(g_state.glfw_window, GLFW_CURSOR, visible ? GLFW_CURSOR_NORMAL : GLFW_CURSOR_HIDDEN);
     }
 }
