@@ -63,7 +63,7 @@ namespace zgl {
 
         t_platform_ticket_rdonly platform_ticket;
 
-        t_frame_context frame_context;
+        t_gfx *gfx;
 
         zcl::t_rng *rng;
 
