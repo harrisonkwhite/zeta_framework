@@ -3,7 +3,7 @@
 #include <zcl.h>
 
 namespace zgl {
-    struct t_input_state; // Forward declaration.
+    struct t_input_state; // Forward declaration from Input.
 
     struct t_platform_ticket_rdonly {
         zcl::t_u64 val;

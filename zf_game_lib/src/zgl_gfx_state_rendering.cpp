@@ -109,7 +109,7 @@ namespace zgl {
         const auto texture = g_state.frame_state.batch_state.texture ? g_state.frame_state.batch_state.texture : g_state.px_texture;
         const t_gfx_resource *const shader_prog = g_state.frame_state.batch_state.shader_prog ? g_state.frame_state.batch_state.shader_prog : g_state.shader_prog_default;
 
-        PassSubmitVertices(gfx, g_state.frame_state.pass_index, g_state.vert_buf, g_state.frame_state.frame_vert_cnt, g_state.frame_state.frame_vert_cnt + g_state.frame_state.batch_state.vertex_cnt, texture, shader_prog, g_state.sampler_uniform);
+        FrameSubmit(gfx, g_state.frame_state.pass_index, g_state.vert_buf, g_state.frame_state.frame_vert_cnt, g_state.frame_state.frame_vert_cnt + g_state.frame_state.batch_state.vertex_cnt, texture, shader_prog, g_state.sampler_uniform);
 
         g_state.frame_state.frame_vert_cnt += g_state.frame_state.batch_state.vertex_cnt;
 
@@ -120,7 +120,7 @@ namespace zgl {
         ZCL_ASSERT(g_state.phase == ek_phase_active_and_midframe);
         ZCL_ASSERT(!g_state.frame_state.pass_active);
 
-        FrameComplete(gfx);
+        FrameEnd(gfx);
 
         g_state.phase = ek_phase_active_but_not_midframe;
     }
@@ -131,7 +131,7 @@ namespace zgl {
         g_state.frame_state.pass_active = true;
         ZCL_REQUIRE(g_state.frame_state.pass_index < k_frame_pass_limit && "Trying to begin a new frame pass, but the limit has been reached!");
 
-        PassConfigure(gfx, g_state.frame_state.pass_index, size, view_mat, clear, clear_col);
+        FramePassConfigure(gfx, g_state.frame_state.pass_index, size, view_mat, clear, clear_col);
     }
 
     void FramePassBeginOffscreen(t_gfx *const gfx, const t_gfx_resource *const texture_target, const zcl::t_mat4x4 &view_mat, const zcl::t_b8 clear, const zcl::t_color_rgba32f clear_col) {
@@ -140,7 +140,7 @@ namespace zgl {
         g_state.frame_state.pass_active = true;
         ZCL_REQUIRE(g_state.frame_state.pass_index < k_frame_pass_limit && "Trying to begin a new frame pass, but the limit has been reached!");
 
-        PassConfigureOffscreen(gfx, g_state.frame_state.pass_index, texture_target, view_mat, clear, clear_col);
+        FramePassConfigureOffscreen(gfx, g_state.frame_state.pass_index, texture_target, view_mat, clear, clear_col);
     }
 
     void FramePassEnd(t_gfx *const gfx) {

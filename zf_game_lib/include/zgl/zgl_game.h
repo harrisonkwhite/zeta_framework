@@ -6,7 +6,7 @@
 #include <zgl/zgl_audio_public.h>
 
 namespace zgl {
-    struct t_input_state; // Forward declaration.
+    struct t_input_state; // Forward declaration from Input.
 
     struct t_game_init_func_context {
         zcl::t_arena *perm_arena;
