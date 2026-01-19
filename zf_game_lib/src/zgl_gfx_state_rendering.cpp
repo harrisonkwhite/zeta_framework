@@ -1,8 +1,8 @@
 #include <zgl/zgl_gfx_private.h>
 
 namespace zgl {
-    constexpr zcl::t_i32 k_batch_vert_limit = 1024;
     constexpr zcl::t_i32 k_frame_vert_limit = 8192; // @todo: This should definitely be modifiable if the user wants.
+    constexpr zcl::t_i32 k_batch_vert_limit = 1024;
 
     extern const zcl::t_u8 g_vert_shader_default_src_raw[];
     extern const zcl::t_i32 g_vert_shader_default_src_len;
@@ -34,8 +34,6 @@ namespace zgl {
 
         t_gfx_resource *px_texture;
 
-        zcl::t_v2_i frame_size_cache;
-
         struct {
             zcl::t_b8 pass_active;
             zcl::t_i32 pass_index; // Maps directly to BGFX view ID.
@@ -52,7 +50,7 @@ namespace zgl {
         } frame_state;
     } g_state;
 
-    t_gfx *GFXStartup(const t_platform_ticket_rdonly platform_ticket, zcl::t_arena *const arena, zcl::t_arena *const temp_arena) {
+    t_gfx *internal::GFXStartup(const t_platform_ticket_rdonly platform_ticket, zcl::t_arena *const arena, zcl::t_arena *const temp_arena) {
         ZCL_ASSERT(g_state.phase == ek_phase_inactive);
 
         const auto gfx = GFXStartupCore(WindowGetFramebufferSizeCache(platform_ticket), internal::WindowGetNativeHandle(platform_ticket), internal::DisplayGetNativeHandle(platform_ticket));
@@ -75,7 +73,7 @@ namespace zgl {
         return gfx;
     }
 
-    void GFXShutdown(t_gfx *const gfx) {
+    void internal::GFXShutdown(t_gfx *const gfx) {
         ZCL_ASSERT(g_state.phase != ek_phase_inactive);
 
         GFXShutdownCore(gfx);
@@ -88,7 +86,9 @@ namespace zgl {
 
         g_state.phase = ek_phase_active_and_midframe;
 
-        FrameSetSize(gfx, WindowGetFramebufferSizeCache(platform_ticket));
+        zcl::ZeroClearItem(&g_state.frame_state);
+
+        BackbufferResizeIfNeeded(gfx, WindowGetFramebufferSizeCache(platform_ticket));
     }
 
     static void FrameFlush(t_gfx *const gfx) {
@@ -109,7 +109,7 @@ namespace zgl {
         const auto texture = g_state.frame_state.batch_state.texture ? g_state.frame_state.batch_state.texture : g_state.px_texture;
         const t_gfx_resource *const shader_prog = g_state.frame_state.batch_state.shader_prog ? g_state.frame_state.batch_state.shader_prog : g_state.shader_prog_default;
 
-        FrameSubmit(gfx, g_state.frame_state.pass_index, g_state.vert_buf, g_state.frame_state.frame_vert_cnt, g_state.frame_state.frame_vert_cnt + g_state.frame_state.batch_state.vertex_cnt, texture, shader_prog, g_state.sampler_uniform);
+        PassSubmitVertices(gfx, g_state.frame_state.pass_index, g_state.vert_buf, g_state.frame_state.frame_vert_cnt, g_state.frame_state.frame_vert_cnt + g_state.frame_state.batch_state.vertex_cnt, texture, shader_prog, g_state.sampler_uniform);
 
         g_state.frame_state.frame_vert_cnt += g_state.frame_state.batch_state.vertex_cnt;
 
@@ -131,7 +131,7 @@ namespace zgl {
         g_state.frame_state.pass_active = true;
         ZCL_REQUIRE(g_state.frame_state.pass_index < k_frame_pass_limit && "Trying to begin a new frame pass, but the limit has been reached!");
 
-        FramePassConfigure(gfx, g_state.frame_state.pass_index, size, view_mat, clear, clear_col);
+        PassConfigure(gfx, g_state.frame_state.pass_index, size, view_mat, clear, clear_col);
     }
 
     void FramePassBeginOffscreen(t_gfx *const gfx, const t_gfx_resource *const texture_target, const zcl::t_mat4x4 &view_mat, const zcl::t_b8 clear, const zcl::t_color_rgba32f clear_col) {
@@ -140,7 +140,7 @@ namespace zgl {
         g_state.frame_state.pass_active = true;
         ZCL_REQUIRE(g_state.frame_state.pass_index < k_frame_pass_limit && "Trying to begin a new frame pass, but the limit has been reached!");
 
-        FramePassConfigureOffscreen(gfx, g_state.frame_state.pass_index, texture_target, view_mat, clear, clear_col);
+        PassConfigureOffscreen(gfx, g_state.frame_state.pass_index, texture_target, view_mat, clear, clear_col);
     }
 
     void FramePassEnd(t_gfx *const gfx) {
@@ -152,12 +152,8 @@ namespace zgl {
         g_state.frame_state.pass_index++;
     }
 
-    zcl::t_b8 FramePassCheckActive(t_gfx *const gfx) {
+    zcl::t_b8 FramePassCheckActive(const t_gfx *const gfx) {
         return g_state.frame_state.pass_active;
-    }
-
-    zcl::t_i32 FramePassGetIndex(t_gfx *const gfx) {
-        return g_state.frame_state.pass_index;
     }
 
     void FrameSetShaderProg(t_gfx *const gfx, const t_gfx_resource *const prog) {

@@ -25,8 +25,8 @@ namespace zgl {
         const t_platform_ticket_mut platform_ticket = internal::PlatformStartup(k_window_size_init, input_state, &perm_arena);
         ZCL_DEFER({ internal::PlatformShutdown(platform_ticket); });
 
-        t_gfx *const gfx = GFXStartup(platform_ticket, &perm_arena, &temp_arena);
-        ZCL_DEFER({ GFXShutdown(gfx); });
+        t_gfx *const gfx = internal::GFXStartup(platform_ticket, &perm_arena, &temp_arena);
+        ZCL_DEFER({ internal::GFXShutdown(gfx); });
 
         const t_audio_ticket_mut audio_ticket = internal::AudioStartup(&perm_arena);
         ZCL_DEFER({ internal::AudioShutdown(audio_ticket); });

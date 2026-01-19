@@ -53,8 +53,9 @@ add_library(zf_game_lib STATIC
     src/zgl_platform_state.cpp
     src/zgl_platform_logic.cpp
     src/zgl_input.cpp
-    src/zgl_gfx_core.cpp
-    src/zgl_gfx_rendering.cpp
+    src/zgl_gfx_state_core.cpp
+    src/zgl_gfx_state_rendering.cpp
+    src/zgl_gfx_logic.cpp
     src/zgl_audio_state.cpp
     src/zgl_audio_logic.cpp
     src/zgl_audio_ticket.cpp
