@@ -24,15 +24,15 @@ namespace zgl {
 
         t_gfx_resource_group *perm_resource_group;
 
-        const t_gfx_resource *vert_buf;
+        t_gfx_resource *vert_buf;
 
-        const t_gfx_resource *shader_prog_default;
-        const t_gfx_resource *shader_prog_blend;
+        t_gfx_resource *shader_prog_default;
+        t_gfx_resource *shader_prog_blend;
 
-        const t_gfx_resource *sampler_uniform;
-        const t_gfx_resource *blend_uniform;
+        t_gfx_resource *sampler_uniform;
+        t_gfx_resource *blend_uniform;
 
-        const t_gfx_resource *px_texture;
+        t_gfx_resource *px_texture;
 
         zcl::t_v2_i frame_size_cache;
 
@@ -43,7 +43,7 @@ namespace zgl {
             zcl::t_i32 frame_vert_cnt;
 
             struct {
-                zcl::t_static_array<t_frame_vertex, k_batch_vert_limit> verts;
+                zcl::t_static_array<t_vertex, k_batch_vert_limit> verts;
                 zcl::t_i32 vert_cnt;
 
                 const t_gfx_resource *shader_prog;
@@ -53,6 +53,8 @@ namespace zgl {
     } g_state;
 
     void GFXInitRendering(zcl::t_arena *const arena, zcl::t_arena *const temp_arena) {
+        ZCL_ASSERT(g_state.phase == ek_phase_inactive);
+
         g_state.perm_resource_group = GFXResourceGroupCreate(arena);
 
         g_state.vert_buf = VertexBufCreate(k_frame_vert_limit, arena);
@@ -65,6 +67,10 @@ namespace zgl {
 
         const zcl::t_static_array<zcl::t_u8, 4> batch_px_texture_rgba = {{255, 255, 255, 255}};
         g_state.px_texture = TextureCreate({{1, 1}, zcl::ArrayToNonstatic(&batch_px_texture_rgba)}, g_state.perm_resource_group);
+    }
+
+    void GFXShutdownRendering() {
+        ZCL_ASSERT(g_state.phase != ek_phase_inactive);
     }
 
     void FrameBegin(const t_platform_ticket_rdonly platform_ticket) {
@@ -88,7 +94,9 @@ namespace zgl {
         }
 
         const auto verts = zcl::ArraySlice(zcl::ArrayToNonstatic(&g_state.frame_state.batch_state.verts), 0, g_state.frame_state.batch_state.vert_cnt);
-        const auto texture = g_state.frame_state.batch_state.texture ? g_state.frame_state.batch_state.texture : g_state.frame_state.px_texture;
+        VertexBufWrite(g_state.vert_buf, );
+
+        const auto texture = g_state.frame_state.batch_state.texture ? g_state.frame_state.batch_state.texture : g_state.px_texture;
         const t_gfx_resource *const shader_prog = g_state.frame_state.batch_state.shader_prog ? g_state.frame_state.batch_state.shader_prog : g_state.shader_prog_default;
 
         FrameSubmit(g_state.frame_state.pass_index, g_state.vert_buf, g_state.frame_state.frame_vert_cnt, g_state.frame_state.frame_vert_cnt + g_state.frame_state.batch_state.vert_cnt, texture, shader_prog, g_state.sampler_uniform);

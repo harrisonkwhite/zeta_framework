@@ -1,64 +1,6 @@
 #pragma once
 
-#include <zcl.h>
-#include <zgl/zgl_platform_public.h>
-
 namespace zgl {
-    void GFXStartup(const t_platform_ticket_rdonly platform_ticket, zcl::t_arena *const arena, zcl::t_arena *const temp_arena);
-    void GFXShutdown();
-
-
-    // ============================================================
-    // @section: Resources
-
-    struct t_gfx_resource_group;
-
-    t_gfx_resource_group *GFXResourceGroupCreate(zcl::t_arena *const arena);
-    void GFXResourceGroupDestroy(t_gfx_resource_group *const group);
-
-    struct t_gfx_resource;
-
-    t_gfx_resource *TextureCreate(const zcl::t_texture_data_rdonly texture_data, t_gfx_resource_group *const resource_group);
-
-    t_gfx_resource *TextureCreateTarget(const zcl::t_v2_i size, t_gfx_resource_group *const resource_group);
-
-    void TextureResizeTarget(t_gfx_resource *const texture, const zcl::t_v2_i size);
-
-    zcl::t_v2_i TextureGetSize(const t_gfx_resource *const texture);
-
-    // Resizes only if the given size is actually different to the current.
-    inline void TextureResizeTargetIfNeeded(t_gfx_resource *const texture, const zcl::t_v2_i size) {
-        const zcl::t_v2_i size_cur = TextureGetSize(texture);
-
-        if (size != size_cur) {
-            TextureResizeTarget(texture, size);
-        }
-    }
-
-    t_gfx_resource *ShaderProgCreate(const zcl::t_array_rdonly<zcl::t_u8> vertex_shader_compiled_bin, const zcl::t_array_rdonly<zcl::t_u8> frag_shader_compiled_bin, t_gfx_resource_group *const resource_group);
-
-    enum t_uniform_type : zcl::t_i32 {
-        ek_uniform_type_sampler,
-        ek_uniform_type_v4,
-        ek_uniform_type_mat4x4
-    };
-
-    t_gfx_resource *UniformCreate(const zcl::t_str_rdonly name, const t_uniform_type type, t_gfx_resource_group *const resource_group, zcl::t_arena *const temp_arena);
-
-    t_uniform_type UniformGetType(const t_gfx_resource *const uniform);
-
-    void UniformSetSampler(const t_gfx_resource *const uniform, const t_gfx_resource *const sampler_texture);
-
-    void UniformSetV4(const t_gfx_resource *const uniform, const zcl::t_v4 v4);
-
-    void UniformSetMatrix4x4(const t_gfx_resource *const uniform, const zcl::t_mat4x4 &mat4x4);
-
-    // ============================================================
-
-
-    // ============================================================
-    // @section: Frame
-
     struct t_vertex {
         zcl::t_v2 pos;
         zcl::t_color_rgba32f blend;
@@ -71,7 +13,7 @@ namespace zgl {
     }
 
     struct t_frame_triangle {
-        zcl::t_static_array<t_vertex, 3> verts;
+        zcl::t_static_array<t_frame_vertex, 3> verts;
     };
 
     constexpr zcl::t_b8 FrameTriangleCheckValid(const t_frame_triangle tri) {
