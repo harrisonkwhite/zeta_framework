@@ -5,14 +5,6 @@
 #define BGFX_CONFIG_MAX_VIEWS k_frame_pass_limit
 
 namespace zgl {
-    constexpr zcl::t_i16 k_frame_pass_limit = 256;
-
-    enum t_uniform_type {
-        ek_uniform_type_sampler,
-        ek_uniform_type_v4,
-        ek_uniform_type_mat4x4
-    };
-
     enum t_gfx_resource_type : zcl::t_i32 {
         ek_gfx_resource_type_invalid,
         ek_gfx_resource_type_vertex_buf,
@@ -27,6 +19,7 @@ namespace zgl {
         union {
             struct {
                 bgfx::DynamicVertexBufferHandle bgfx_hdl;
+                zcl::t_i32 vertex_cnt;
             } vertex_buf;
 
             struct {
@@ -47,27 +40,18 @@ namespace zgl {
         } type_data;
     };
 
-    enum t_phase : zcl::t_i32 {
-        ek_phase_inactive,
-        ek_phase_active_but_not_midframe,
-        ek_phase_active_and_midframe
-    };
-
     static struct {
-        t_phase phase;
-
+        zcl::t_b8 active;
         zcl::t_v2_i frame_size;
-
-        struct {
-            zcl::t_b8 pass_active;
-            zcl::t_i32 pass_index; // Maps directly to BGFX view ID.
-        } frame_state;
     } g_state;
 
     void Startup(const zcl::t_v2_i frame_size, void *const window_native_hdl, void *const display_native_hdl, zcl::t_arena *const arena, zcl::t_arena *const temp_arena) {
-        ZCL_ASSERT(g_state.phase == ek_phase_inactive);
+        ZCL_ASSERT(!g_state.active);
 
-        g_state.phase = ek_phase_active_but_not_midframe;
+        g_state = {
+            .active = true,
+            .frame_size = frame_size,
+        };
 
         bgfx::Init bgfx_init = {};
 
@@ -87,16 +71,16 @@ namespace zgl {
         }
     }
 
-    void GFXShutdown() {
-        ZCL_ASSERT(g_state.phase == ek_phase_active_but_not_midframe);
+    void Shutdown() {
+        ZCL_ASSERT(!g_state.active);
 
         bgfx::shutdown();
 
-        g_state.phase = ek_phase_inactive;
+        g_state = {};
     }
 
-    void GFXResourceDestroy(t_gfx_resource *const resource) {
-        ZCL_ASSERT(g_state.phase == ek_phase_active_but_not_midframe);
+    void ResourceDestroy(t_gfx_resource *const resource) {
+        ZCL_ASSERT(g_state.active);
 
         switch (resource->type) {
         case ek_gfx_resource_type_vertex_buf:
@@ -128,7 +112,7 @@ namespace zgl {
     }
 
     t_gfx_resource *VertexBufCreate(const zcl::t_i32 vertex_cnt, zcl::t_arena *const arena) {
-        ZCL_ASSERT(g_state.phase == ek_phase_active_but_not_midframe);
+        ZCL_ASSERT(g_state.active);
         ZCL_ASSERT(vertex_cnt > 0);
 
         bgfx::VertexLayout vertex_layout;
@@ -143,22 +127,23 @@ namespace zgl {
         const auto resource = zcl::ArenaPushItem<t_gfx_resource>(arena);
         resource->type = ek_gfx_resource_type_vertex_buf;
         resource->type_data.vertex_buf.bgfx_hdl = vertex_buf_bgfx_hdl;
+        resource->type_data.vertex_buf.vertex_cnt = vertex_cnt;
 
         return resource;
     }
 
     // @todo: Use array of actual vertex struct as source.
-    void VertexBufWrite(t_gfx_resource *const dest_vertex_buf, const zcl::t_i32 dest_vertices_index_begin, const zcl::t_i32 dest_vertices_index_end, const zcl::t_array_rdonly<zcl::t_f32> src_vertices) {
-        ZCL_ASSERT(g_state.phase == ek_phase_active_and_midframe);
+    void VertexBufWrite(t_gfx_resource *const dest_vertex_buf, const zcl::t_i32 dest_vertices_index, const zcl::t_array_rdonly<zcl::t_f32> src_vertices) {
+        ZCL_ASSERT(g_state.active);
         ZCL_ASSERT(dest_vertex_buf->type == ek_gfx_resource_type_vertex_buf);
-        ZCL_ASSERT(g_state.frame_state.pass_active);
+        ZCL_ASSERT(dest_vertices_index >= 0 && dest_vertices_index < dest_vertex_buf->type_data.vertex_buf.vertex_cnt);
 
         const auto src_vertices_bgfx_mem = bgfx::copy(src_vertices.raw, static_cast<zcl::t_u32>(zcl::ArrayGetSizeInBytes(src_vertices)));
-        bgfx::update(dest_vertex_buf->type_data.vertex_buf.bgfx_hdl, static_cast<zcl::t_u32>(dest_vertices_index_end - dest_vertices_index_begin), src_vertices_bgfx_mem);
+        bgfx::update(dest_vertex_buf->type_data.vertex_buf.bgfx_hdl, static_cast<zcl::t_u32>(dest_vertices_index), src_vertices_bgfx_mem);
     }
 
     t_gfx_resource *TextureCreate(const zcl::t_texture_data_rdonly texture_data, zcl::t_arena *const arena) {
-        ZCL_ASSERT(g_state.phase == ek_phase_active_but_not_midframe);
+        ZCL_ASSERT(g_state.active);
 
         const auto flags = BGFX_SAMPLER_MIN_POINT | BGFX_SAMPLER_MAG_POINT | BGFX_SAMPLER_U_CLAMP | BGFX_SAMPLER_V_CLAMP;
         const auto texture_bgfx_hdl = bgfx::createTexture2D(static_cast<zcl::t_u16>(texture_data.size_in_pxs.x), static_cast<zcl::t_u16>(texture_data.size_in_pxs.y), false, 1, bgfx::TextureFormat::RGBA8, flags, bgfx::copy(texture_data.rgba_px_data.raw, static_cast<zcl::t_u32>(zcl::ArrayGetSizeInBytes(texture_data.rgba_px_data))));
@@ -180,7 +165,7 @@ namespace zgl {
     }
 
     t_gfx_resource *TextureCreateTarget(const zcl::t_v2_i size, zcl::t_arena *const arena) {
-        ZCL_ASSERT(g_state.phase == ek_phase_active_but_not_midframe);
+        ZCL_ASSERT(g_state.active);
         ZCL_ASSERT(size.x > 0 && size.y > 0);
 
         const bgfx::FrameBufferHandle fb_bgfx_hdl = BGFXCreateFramebuffer(size);
@@ -199,7 +184,7 @@ namespace zgl {
     }
 
     void TextureResizeTarget(t_gfx_resource *const texture, const zcl::t_v2_i size) {
-        ZCL_ASSERT(g_state.phase == ek_phase_active_but_not_midframe);
+        ZCL_ASSERT(g_state.active);
         ZCL_ASSERT(texture->type == ek_gfx_resource_type_texture && texture->type_data.texture.is_target);
         ZCL_ASSERT(size.x > 0 && size.y > 0);
         ZCL_ASSERT(size != texture->type_data.texture.size);
@@ -215,14 +200,14 @@ namespace zgl {
     }
 
     zcl::t_v2_i TextureGetSize(const t_gfx_resource *const texture) {
-        ZCL_ASSERT(g_state.phase != ek_phase_inactive);
+        ZCL_ASSERT(g_state.active);
         ZCL_ASSERT(texture->type == ek_gfx_resource_type_texture);
 
         return texture->type_data.texture.size;
     }
 
     t_gfx_resource *ShaderProgCreate(const zcl::t_array_rdonly<zcl::t_u8> vertex_shader_compiled_bin, const zcl::t_array_rdonly<zcl::t_u8> frag_shader_compiled_bin, zcl::t_arena *const arena) {
-        ZCL_ASSERT(g_state.phase == ek_phase_active_but_not_midframe);
+        ZCL_ASSERT(g_state.active);
 
         const bgfx::Memory *const vertex_shader_bgfx_mem = bgfx::copy(vertex_shader_compiled_bin.raw, static_cast<zcl::t_u32>(vertex_shader_compiled_bin.len));
         const bgfx::ShaderHandle vertex_shader_bgfx_hdl = bgfx::createShader(vertex_shader_bgfx_mem);
@@ -252,7 +237,7 @@ namespace zgl {
     }
 
     t_gfx_resource *UniformCreate(const zcl::t_str_rdonly name, const t_uniform_type type, zcl::t_arena *const arena, zcl::t_arena *const temp_arena) {
-        ZCL_ASSERT(g_state.phase == ek_phase_active_but_not_midframe);
+        ZCL_ASSERT(g_state.active);
 
         const zcl::t_str_rdonly name_terminated = zcl::StrCloneButAddTerminator(name, temp_arena);
 
@@ -281,96 +266,10 @@ namespace zgl {
     }
 
     t_uniform_type UniformGetType(const t_gfx_resource *const uniform) {
-        ZCL_ASSERT(g_state.phase != ek_phase_inactive);
+        ZCL_ASSERT(g_state.active);
         ZCL_ASSERT(uniform->type == ek_gfx_resource_type_uniform);
 
         return uniform->type_data.uniform.type;
-    }
-
-    void FrameSetSize(const zcl::t_v2_i size) {
-        ZCL_ASSERT(g_state.phase == ek_phase_active_but_not_midframe);
-
-        if (g_state.frame_size != size) {
-            bgfx::reset(static_cast<zcl::t_u32>(size.x), static_cast<zcl::t_u32>(size.y), BGFX_RESET_VSYNC);
-        }
-    }
-
-    void FrameBegin() {
-        ZCL_ASSERT(g_state.phase == ek_phase_active_but_not_midframe);
-
-        g_state.phase = ek_phase_active_and_midframe;
-    }
-
-    void FrameEnd() {
-        ZCL_ASSERT(g_state.phase == ek_phase_active_and_midframe);
-        ZCL_ASSERT(!g_state.frame_state.pass_active);
-
-        bgfx::frame();
-
-        g_state.phase = ek_phase_active_but_not_midframe;
-    }
-
-    static void BGFXViewConfigure(const bgfx::ViewId view_id, const zcl::t_v2_i size, const zcl::t_mat4x4 &view_mat, const zcl::t_b8 clear, const zcl::t_color_rgba32f clear_col, const bgfx::FrameBufferHandle fb_hdl) {
-        ZCL_ASSERT(g_state.phase == ek_phase_active_and_midframe);
-        ZCL_ASSERT(view_id >= 0 && view_id < BGFX_CONFIG_MAX_VIEWS);
-        ZCL_ASSERT(size.x > 0 && size.y > 0);
-        ZCL_ASSERT(!clear || zcl::ColorCheckNormalized(clear_col));
-
-        const auto bgfx_view_id = static_cast<bgfx::ViewId>(view_id);
-
-        bgfx::setViewMode(bgfx_view_id, bgfx::ViewMode::Sequential);
-
-        bgfx::setViewRect(bgfx_view_id, 0, 0, static_cast<zcl::t_u16>(size.x), static_cast<zcl::t_u16>(size.y));
-
-        auto proj_mat = zcl::MatrixCreateIdentity();
-        proj_mat.elems[0][0] = 1.0f / (static_cast<zcl::t_f32>(size.x) / 2.0f);
-        proj_mat.elems[1][1] = -1.0f / (static_cast<zcl::t_f32>(size.y) / 2.0f);
-        proj_mat.elems[3][0] = -1.0f;
-        proj_mat.elems[3][1] = 1.0f;
-
-        bgfx::setViewTransform(bgfx_view_id, &view_mat, &proj_mat);
-
-        if (clear) {
-            bgfx::setViewClear(bgfx_view_id, BGFX_CLEAR_COLOR, zcl::ColorRGBA8ToHex(zcl::ColorRGBA32FToRGBA8(clear_col)));
-        }
-
-        bgfx::setViewFrameBuffer(bgfx_view_id, fb_hdl);
-
-        bgfx::touch(bgfx_view_id);
-    }
-
-    void FramePassBegin(const zcl::t_v2_i size, const zcl::t_mat4x4 &view_mat, const zcl::t_b8 clear, const zcl::t_color_rgba32f clear_col) {
-        ZCL_ASSERT(!g_state.frame_state.pass_active);
-
-        g_state.frame_state.pass_active = true;
-        ZCL_REQUIRE(g_state.frame_state.pass_index < k_frame_pass_limit && "Trying to begin a new frame pass, but the limit has been reached!");
-
-        BGFXViewConfigure(static_cast<bgfx::ViewId>(g_state.frame_state.pass_index), size, view_mat, clear, clear_col, BGFX_INVALID_HANDLE);
-    }
-
-    void FramePassBeginOffscreen(const t_gfx_resource *const texture_target, const zcl::t_mat4x4 &view_mat, const zcl::t_b8 clear, const zcl::t_color_rgba32f clear_col) {
-        ZCL_ASSERT(!g_state.frame_state.pass_active);
-        ZCL_ASSERT(texture_target->type == ek_gfx_resource_type_texture && texture_target->type_data.texture.is_target);
-
-        g_state.frame_state.pass_active = true;
-        ZCL_REQUIRE(g_state.frame_state.pass_index < k_frame_pass_limit && "Trying to begin a new frame pass, but the limit has been reached!");
-
-        BGFXViewConfigure(static_cast<bgfx::ViewId>(g_state.frame_state.pass_index), texture_target->type_data.texture.size, view_mat, clear, clear_col, texture_target->type_data.texture.target_fb_bgfx_hdl);
-    }
-
-    void FramePassEnd() {
-        ZCL_ASSERT(g_state.frame_state.pass_active);
-
-        g_state.frame_state.pass_active = false;
-        g_state.frame_state.pass_index++;
-    }
-
-    zcl::t_b8 FramePassCheckActive() {
-        return g_state.frame_state.pass_active;
-    }
-
-    zcl::t_i32 FramePassGetIndex() {
-        return g_state.frame_state.pass_index;
     }
 
     struct t_uniform_data {
@@ -391,8 +290,8 @@ namespace zgl {
         } type_data;
     };
 
-    static void FrameSetUniform(const t_gfx_resource *const uniform, const t_uniform_data &uniform_data) {
-        ZCL_ASSERT(g_state.phase == ek_phase_active_and_midframe);
+    static void UniformSet(const t_gfx_resource *const uniform, const t_uniform_data &uniform_data) {
+        ZCL_ASSERT(g_state.active);
         ZCL_ASSERT(uniform->type == ek_gfx_resource_type_uniform);
         ZCL_ASSERT(uniform->type_data.uniform.type == uniform_data.type);
 
@@ -423,36 +322,84 @@ namespace zgl {
         }
     }
 
-    void FrameSetUniformSampler(const t_gfx_resource *const uniform, const t_gfx_resource *const sampler_texture) {
+    void UniformSetSampler(const t_gfx_resource *const uniform, const t_gfx_resource *const sampler_texture) {
         const t_uniform_data uniform_data = {
             .type = ek_uniform_type_sampler,
             .type_data = {.sampler = {.texture = sampler_texture}},
         };
 
-        FrameSetUniform(uniform, uniform_data);
+        UniformSet(uniform, uniform_data);
     }
 
-    void FrameSetUniformV4(const t_gfx_resource *const uniform, const zcl::t_v4 v4) {
+    void UniformSetV4(const t_gfx_resource *const uniform, const zcl::t_v4 v4) {
         const t_uniform_data uniform_data = {
             .type = ek_uniform_type_v4,
             .type_data = {.v4 = {.ptr = &v4}},
         };
 
-        FrameSetUniform(uniform, uniform_data);
+        UniformSet(uniform, uniform_data);
     }
 
-    void FrameSetUniformMat4x4(const t_gfx_resource *const uniform, const zcl::t_mat4x4 &mat4x4) {
+    void UniformSetMatrix4x4(const t_gfx_resource *const uniform, const zcl::t_mat4x4 &mat4x4) {
         const t_uniform_data uniform_data = {
             .type = ek_uniform_type_mat4x4,
             .type_data = {.mat4x4 = {.ptr = &mat4x4}},
         };
 
-        FrameSetUniform(uniform, uniform_data);
+        UniformSet(uniform, uniform_data);
+    }
+
+    void FrameSetSize(const zcl::t_v2_i size) {
+        ZCL_ASSERT(g_state.active);
+
+        if (g_state.frame_size != size) {
+            bgfx::reset(static_cast<zcl::t_u32>(size.x), static_cast<zcl::t_u32>(size.y), BGFX_RESET_VSYNC);
+        }
+    }
+
+    static void BGFXViewConfigure(const bgfx::ViewId view_id, const zcl::t_v2_i size, const zcl::t_mat4x4 &view_mat, const zcl::t_b8 clear, const zcl::t_color_rgba32f clear_col, const bgfx::FrameBufferHandle fb_hdl) {
+        ZCL_ASSERT(g_state.active);
+        ZCL_ASSERT(view_id >= 0 && view_id < BGFX_CONFIG_MAX_VIEWS);
+        ZCL_ASSERT(size.x > 0 && size.y > 0);
+        ZCL_ASSERT(!clear || zcl::ColorCheckNormalized(clear_col));
+
+        const auto bgfx_view_id = static_cast<bgfx::ViewId>(view_id);
+
+        bgfx::setViewMode(bgfx_view_id, bgfx::ViewMode::Sequential);
+
+        bgfx::setViewRect(bgfx_view_id, 0, 0, static_cast<zcl::t_u16>(size.x), static_cast<zcl::t_u16>(size.y));
+
+        auto proj_mat = zcl::MatrixCreateIdentity();
+        proj_mat.elems[0][0] = 1.0f / (static_cast<zcl::t_f32>(size.x) / 2.0f);
+        proj_mat.elems[1][1] = -1.0f / (static_cast<zcl::t_f32>(size.y) / 2.0f);
+        proj_mat.elems[3][0] = -1.0f;
+        proj_mat.elems[3][1] = 1.0f;
+
+        bgfx::setViewTransform(bgfx_view_id, &view_mat, &proj_mat);
+
+        if (clear) {
+            bgfx::setViewClear(bgfx_view_id, BGFX_CLEAR_COLOR, zcl::ColorRGBA8ToHex(zcl::ColorRGBA32FToRGBA8(clear_col)));
+        }
+
+        bgfx::setViewFrameBuffer(bgfx_view_id, fb_hdl);
+
+        bgfx::touch(bgfx_view_id);
+    }
+
+    void FramePassConfigure(const zcl::t_i32 pass_index, const zcl::t_v2_i size, const zcl::t_mat4x4 &view_mat, const zcl::t_b8 clear, const zcl::t_color_rgba32f clear_col) {
+        ZCL_ASSERT(pass_index >= 0 && pass_index < k_frame_pass_limit);
+        BGFXViewConfigure(static_cast<bgfx::ViewId>(pass_index), size, view_mat, clear, clear_col, BGFX_INVALID_HANDLE);
+    }
+
+    void FramePassConfigureOffscreen(const zcl::t_i32 pass_index, const t_gfx_resource *const texture_target, const zcl::t_mat4x4 &view_mat, const zcl::t_b8 clear, const zcl::t_color_rgba32f clear_col) {
+        ZCL_ASSERT(pass_index >= 0 && pass_index < k_frame_pass_limit);
+        ZCL_ASSERT(texture_target->type == ek_gfx_resource_type_texture && texture_target->type_data.texture.is_target);
+
+        BGFXViewConfigure(static_cast<bgfx::ViewId>(pass_index), texture_target->type_data.texture.size, view_mat, clear, clear_col, texture_target->type_data.texture.target_fb_bgfx_hdl);
     }
 
     void FrameFlush(const zcl::t_i32 pass_index, const t_gfx_resource *const vertex_buf, const zcl::t_i32 vertices_index_begin, const zcl::t_i32 vertices_index_end, const t_gfx_resource *const shader_prog, const t_gfx_resource *const sampler_uniform, t_gfx_resource *const texture) {
-        ZCL_ASSERT(g_state.phase == ek_phase_active_and_midframe);
-        ZCL_ASSERT(g_state.frame_state.pass_active);
+        ZCL_ASSERT(g_state.active);
         ZCL_ASSERT(pass_index >= 0 && pass_index < k_frame_pass_limit);
         ZCL_ASSERT(vertex_buf->type == ek_gfx_resource_type_vertex_buf);
         ZCL_ASSERT(shader_prog->type == ek_gfx_resource_type_shader_prog);
@@ -460,12 +407,17 @@ namespace zgl {
         ZCL_ASSERT(texture->type == ek_gfx_resource_type_texture);
 
         // ???
-        FrameSetUniformSampler(sampler_uniform, texture);
+        UniformSetSampler(sampler_uniform, texture);
 
         bgfx::setVertexBuffer(0, vertex_buf->type_data.vertex_buf.bgfx_hdl, static_cast<zcl::t_u32>(vertices_index_begin), static_cast<zcl::t_u32>(vertices_index_end - vertices_index_begin));
 
         bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A | BGFX_STATE_BLEND_ALPHA);
 
         bgfx::submit(static_cast<bgfx::ViewId>(pass_index), shader_prog->type_data.shader_prog.bgfx_hdl);
+    }
+
+    void FrameComplete() {
+        ZCL_ASSERT(g_state.active);
+        bgfx::frame();
     }
 }
