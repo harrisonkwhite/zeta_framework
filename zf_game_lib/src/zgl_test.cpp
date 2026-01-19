@@ -147,6 +147,16 @@ namespace zgl {
         return resource;
     }
 
+    // @todo: Use array of actual vertex struct as source.
+    void VertexBufWrite(t_gfx_resource *const dest_vertex_buf, const zcl::t_i32 dest_vertices_index_begin, const zcl::t_i32 dest_vertices_index_end_excl, const zcl::t_array_rdonly<zcl::t_f32> src_vertices) {
+        ZCL_ASSERT(g_state.phase == ek_phase_active_and_midframe);
+        ZCL_ASSERT(dest_vertex_buf->type == ek_gfx_resource_type_vertex_buf);
+        ZCL_ASSERT(g_state.frame_state.pass_active);
+
+        const auto src_vertices_bgfx_mem = bgfx::copy(src_vertices.raw, static_cast<zcl::t_u32>(zcl::ArrayGetSizeInBytes(src_vertices)));
+        bgfx::update(dest_vertex_buf->type_data.vertex_buf.bgfx_hdl, static_cast<zcl::t_u32>(dest_vertices_index_end_excl - dest_vertices_index_begin), src_vertices_bgfx_mem);
+    }
+
     t_gfx_resource *TextureCreate(const zcl::t_texture_data_rdonly texture_data, zcl::t_arena *const arena) {
         ZCL_ASSERT(g_state.phase == ek_phase_active_but_not_midframe);
 
@@ -361,28 +371,6 @@ namespace zgl {
 
     zcl::t_i32 FramePassGetIndex() {
         return g_state.frame_state.pass_index;
-    }
-
-    void FrameWrite() {
-        ZCL_ASSERT(g_state.phase == ek_phase_active_and_midframe);
-        ZCL_ASSERT(g_state.frame_state.pass_active);
-
-        const auto verts = zcl::ArraySlice(ArrayToNonstatic(&context.state->batch_state.verts), 0, context.state->batch_state.vertex_cnt);
-        const auto verts_bgfx_mem = bgfx::copy(verts.raw, static_cast<zcl::t_u32>(zcl::ArrayGetSizeInBytes(verts)));
-        bgfx::update(context.basis->vertex_buf_bgfx_hdl, static_cast<zcl::t_u32>(context.state->frame_vertex_cnt), verts_bgfx_mem);
-
-        FrameSetUniformSampler(context, context.basis->sampler_uniform, context.state->batch_state.texture ? context.state->batch_state.texture : context.basis->px_texture);
-
-        bgfx::setVertexBuffer(0, context.basis->vertex_buf_bgfx_hdl, static_cast<zcl::t_u32>(context.state->frame_vertex_cnt), static_cast<zcl::t_u32>(context.state->batch_state.vertex_cnt));
-
-        bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A | BGFX_STATE_BLEND_ALPHA);
-
-        const t_gfx_resource *const prog = context.state->batch_state.shader_prog ? context.state->batch_state.shader_prog : context.basis->shader_prog_default;
-        bgfx::submit(static_cast<bgfx::ViewId>(context.state->pass_index), prog->type_data.shader_prog.bgfx_hdl);
-
-        context.state->frame_vertex_cnt += context.state->batch_state.vertex_cnt;
-
-        zcl::ZeroClearItem(&context.state->batch_state);
     }
 
     struct t_uniform_data {

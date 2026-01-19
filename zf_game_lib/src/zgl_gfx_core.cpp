@@ -460,7 +460,7 @@ namespace zgl {
             ZCL_FATAL();
         }
 
-        const auto verts = zcl::ArraySlice(ArrayToNonstatic(&context.state->batch_state.verts), 0, context.state->batch_state.vert_cnt);
+        const auto verts = zcl::ArraySlice(zcl::ArrayToNonstatic(&context.state->batch_state.verts), 0, context.state->batch_state.vert_cnt);
         const auto verts_bgfx_mem = bgfx::copy(verts.raw, static_cast<zcl::t_u32>(zcl::ArrayGetSizeInBytes(verts)));
         bgfx::update(context.basis->vert_buf_bgfx_hdl, static_cast<zcl::t_u32>(context.state->frame_vert_cnt), verts_bgfx_mem);
 
