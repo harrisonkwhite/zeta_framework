@@ -85,18 +85,18 @@ namespace zgl {
     extern const zcl::t_u8 g_frag_shader_blend_src_raw[];
     extern const zcl::t_i32 g_frag_shader_blend_src_len;
 
-    enum t_module_state : zcl::t_i32 {
-        ek_module_state_inactive,
-        ek_module_state_active_but_not_midframe,
-        ek_module_state_active_and_midframe
+    enum t_phase : zcl::t_i32 {
+        ek_phase_inactive,
+        ek_phase_active_but_not_midframe,
+        ek_phase_active_and_midframe
     };
 
-    static t_module_state g_module_state;
+    static t_phase g_module_state;
 
     t_gfx *internal::GFXStartup(const t_platform_ticket_rdonly platform_ticket, zcl::t_arena *const arena, zcl::t_arena *const temp_arena, t_frame_basis **const o_frame_basis) {
-        ZCL_ASSERT(g_module_state == ek_module_state_inactive);
+        ZCL_ASSERT(g_module_state == ek_phase_inactive);
 
-        g_module_state = ek_module_state_active_but_not_midframe;
+        g_module_state = ek_phase_active_but_not_midframe;
 
         t_gfx *gfx = nullptr;
 
@@ -153,7 +153,7 @@ namespace zgl {
     }
 
     void internal::GFXShutdown(t_gfx *const gfx, t_frame_basis *const frame_basis) {
-        ZCL_ASSERT(g_module_state == ek_module_state_active_but_not_midframe);
+        ZCL_ASSERT(g_module_state == ek_phase_active_but_not_midframe);
 
         bgfx::destroy(frame_basis->vert_buf_bgfx_hdl);
 
@@ -161,7 +161,7 @@ namespace zgl {
 
         bgfx::shutdown();
 
-        g_module_state = ek_module_state_inactive;
+        g_module_state = ek_phase_inactive;
     }
 
     // @temp: Remove once fonts are reworked.
@@ -170,7 +170,7 @@ namespace zgl {
     }
 
     t_gfx_resource_group *GFXResourceGroupCreate(t_gfx *const gfx, zcl::t_arena *const arena) {
-        ZCL_ASSERT(g_module_state == ek_module_state_active_but_not_midframe);
+        ZCL_ASSERT(g_module_state == ek_phase_active_but_not_midframe);
 
         const auto result = zcl::ArenaPushItem<t_gfx_resource_group>(arena);
         result->arena = arena;
@@ -179,7 +179,7 @@ namespace zgl {
     }
 
     void GFXResourceGroupDestroy(t_gfx *const gfx, t_gfx_resource_group *const group) {
-        ZCL_ASSERT(g_module_state == ek_module_state_active_but_not_midframe);
+        ZCL_ASSERT(g_module_state == ek_phase_active_but_not_midframe);
 
         t_gfx_resource *resource = group->head;
 
@@ -215,7 +215,7 @@ namespace zgl {
     }
 
     static t_gfx_resource *GFXResourceGroupAdd(t_gfx_resource_group *const group, const t_gfx_resource_type type) {
-        ZCL_ASSERT(g_module_state == ek_module_state_active_but_not_midframe);
+        ZCL_ASSERT(g_module_state == ek_phase_active_but_not_midframe);
 
         const auto resource = zcl::ArenaPushItem<t_gfx_resource>(group->arena);
 
@@ -233,7 +233,7 @@ namespace zgl {
     }
 
     t_gfx_resource *TextureCreate(t_gfx *const gfx, const zcl::t_texture_data_rdonly texture_data, t_gfx_resource_group *const group) {
-        ZCL_ASSERT(g_module_state == ek_module_state_active_but_not_midframe);
+        ZCL_ASSERT(g_module_state == ek_phase_active_but_not_midframe);
 
         const auto flags = BGFX_SAMPLER_MIN_POINT | BGFX_SAMPLER_MAG_POINT | BGFX_SAMPLER_U_CLAMP | BGFX_SAMPLER_V_CLAMP;
         const auto texture_bgfx_hdl = bgfx::createTexture2D(static_cast<zcl::t_u16>(texture_data.size_in_pxs.x), static_cast<zcl::t_u16>(texture_data.size_in_pxs.y), false, 1, bgfx::TextureFormat::RGBA8, flags, bgfx::copy(texture_data.rgba_px_data.raw, static_cast<zcl::t_u32>(zcl::ArrayGetSizeInBytes(texture_data.rgba_px_data))));
@@ -251,7 +251,7 @@ namespace zgl {
 
     // @move
     t_gfx_resource *TextureCreateFromExternal(t_gfx *const gfx, const zcl::t_str_rdonly file_path, t_gfx_resource_group *const group, zcl::t_arena *const temp_arena) {
-        ZCL_ASSERT(g_module_state == ek_module_state_active_but_not_midframe);
+        ZCL_ASSERT(g_module_state == ek_phase_active_but_not_midframe);
 
         zcl::t_texture_data_mut texture_data;
 
@@ -264,7 +264,7 @@ namespace zgl {
 
     // @move
     t_gfx_resource *TextureCreateFromPacked(t_gfx *const gfx, const zcl::t_str_rdonly file_path, t_gfx_resource_group *const group, zcl::t_arena *const temp_arena) {
-        ZCL_ASSERT(g_module_state == ek_module_state_active_but_not_midframe);
+        ZCL_ASSERT(g_module_state == ek_phase_active_but_not_midframe);
 
         zcl::t_file_stream file_stream;
 
@@ -288,7 +288,7 @@ namespace zgl {
     }
 
     t_gfx_resource *TextureCreateTarget(t_gfx *const gfx, const zcl::t_v2_i size, t_gfx_resource_group *const group) {
-        ZCL_ASSERT(g_module_state == ek_module_state_active_but_not_midframe);
+        ZCL_ASSERT(g_module_state == ek_phase_active_but_not_midframe);
         ZCL_ASSERT(size.x > 0 && size.y > 0);
 
         const bgfx::FrameBufferHandle fb_bgfx_hdl = BGFXCreateFramebuffer(size);
@@ -306,7 +306,7 @@ namespace zgl {
     }
 
     void TextureResizeTarget(t_gfx *const gfx, t_gfx_resource *const texture, const zcl::t_v2_i size) {
-        ZCL_ASSERT(g_module_state == ek_module_state_active_but_not_midframe);
+        ZCL_ASSERT(g_module_state == ek_phase_active_but_not_midframe);
         ZCL_ASSERT(texture->type == ek_gfx_resource_type_texture && texture->type_data.texture.is_target);
         ZCL_ASSERT(size.x > 0 && size.y > 0);
         ZCL_ASSERT(size != texture->type_data.texture.size);
@@ -322,14 +322,14 @@ namespace zgl {
     }
 
     zcl::t_v2_i TextureGetSize(const t_gfx *const gfx, const t_gfx_resource *const texture) {
-        ZCL_ASSERT(g_module_state != ek_module_state_inactive);
+        ZCL_ASSERT(g_module_state != ek_phase_inactive);
         ZCL_ASSERT(texture->type == ek_gfx_resource_type_texture);
 
         return texture->type_data.texture.size;
     }
 
     t_gfx_resource *ShaderProgCreate(t_gfx *const gfx, const zcl::t_array_rdonly<zcl::t_u8> vert_shader_compiled_bin, const zcl::t_array_rdonly<zcl::t_u8> frag_shader_compiled_bin, t_gfx_resource_group *const group) {
-        ZCL_ASSERT(g_module_state == ek_module_state_active_but_not_midframe);
+        ZCL_ASSERT(g_module_state == ek_phase_active_but_not_midframe);
 
         const bgfx::Memory *const vert_shader_bgfx_mem = bgfx::copy(vert_shader_compiled_bin.raw, static_cast<zcl::t_u32>(vert_shader_compiled_bin.len));
         const bgfx::ShaderHandle vert_shader_bgfx_hdl = bgfx::createShader(vert_shader_bgfx_mem);
@@ -358,7 +358,7 @@ namespace zgl {
     }
 
     t_gfx_resource *ShaderProgCreateFromPacked(t_gfx *const gfx, const zcl::t_str_rdonly vert_shader_file_path, const zcl::t_str_rdonly frag_shader_file_path, t_gfx_resource_group *const group, zcl::t_arena *const temp_arena) {
-        ZCL_ASSERT(g_module_state == ek_module_state_active_but_not_midframe);
+        ZCL_ASSERT(g_module_state == ek_phase_active_but_not_midframe);
 
         zcl::t_array_mut<zcl::t_u8> vert_shader_compiled_bin;
 
@@ -396,7 +396,7 @@ namespace zgl {
     }
 
     t_gfx_resource *UniformCreate(t_gfx *const gfx, const zcl::t_str_rdonly name, const t_uniform_type type, t_gfx_resource_group *const group, zcl::t_arena *const temp_arena) {
-        ZCL_ASSERT(g_module_state == ek_module_state_active_but_not_midframe);
+        ZCL_ASSERT(g_module_state == ek_phase_active_but_not_midframe);
 
         const zcl::t_str_rdonly name_terminated = zcl::StrCloneButAddTerminator(name, temp_arena);
 
@@ -423,16 +423,16 @@ namespace zgl {
     }
 
     t_uniform_type UniformGetType(const t_gfx *const gfx, const t_gfx_resource *const uniform) {
-        ZCL_ASSERT(g_module_state != ek_module_state_inactive);
+        ZCL_ASSERT(g_module_state != ek_phase_inactive);
         ZCL_ASSERT(uniform->type == ek_gfx_resource_type_uniform);
 
         return uniform->type_data.uniform.type;
     }
 
     t_frame_context internal::FrameBegin(t_gfx *const gfx, t_frame_basis *const basis, const t_platform_ticket_rdonly platform_ticket, zcl::t_arena *const context_arena) {
-        ZCL_ASSERT(g_module_state == ek_module_state_active_but_not_midframe);
+        ZCL_ASSERT(g_module_state == ek_phase_active_but_not_midframe);
 
-        g_module_state = ek_module_state_active_and_midframe;
+        g_module_state = ek_phase_active_and_midframe;
 
         const auto fb_size_cache = WindowGetFramebufferSizeCache(platform_ticket);
 
@@ -449,7 +449,7 @@ namespace zgl {
     }
 
     static void FrameFlush(const t_frame_context context) {
-        ZCL_ASSERT(g_module_state == ek_module_state_active_and_midframe);
+        ZCL_ASSERT(g_module_state == ek_phase_active_and_midframe);
         ZCL_ASSERT(context.state->pass_active);
 
         if (context.state->batch_state.vert_cnt == 0) {
@@ -479,12 +479,12 @@ namespace zgl {
     }
 
     void internal::FrameEnd(const t_frame_context context) {
-        ZCL_ASSERT(g_module_state == ek_module_state_active_and_midframe);
+        ZCL_ASSERT(g_module_state == ek_phase_active_and_midframe);
         ZCL_ASSERT(!context.state->pass_active);
 
         bgfx::frame();
 
-        g_module_state = ek_module_state_active_but_not_midframe;
+        g_module_state = ek_phase_active_but_not_midframe;
     }
 
     zcl::t_v2_i FrameGetSize(const t_frame_context context) {
@@ -492,7 +492,7 @@ namespace zgl {
     }
 
     static void BGFXViewConfigure(const bgfx::ViewId view_id, const zcl::t_v2_i size, const zcl::t_mat4x4 &view_mat, const zcl::t_b8 clear, const zcl::t_color_rgba32f clear_col, const bgfx::FrameBufferHandle fb_hdl) {
-        ZCL_ASSERT(g_module_state == ek_module_state_active_and_midframe);
+        ZCL_ASSERT(g_module_state == ek_phase_active_and_midframe);
         ZCL_ASSERT(view_id >= 0 && view_id < BGFX_CONFIG_MAX_VIEWS);
         ZCL_ASSERT(size.x > 0 && size.y > 0);
         ZCL_ASSERT(!clear || zcl::ColorCheckNormalized(clear_col));
@@ -557,7 +557,7 @@ namespace zgl {
     }
 
     void FrameSetShaderProg(const t_frame_context context, const t_gfx_resource *const prog) {
-        ZCL_ASSERT(g_module_state == ek_module_state_active_and_midframe);
+        ZCL_ASSERT(g_module_state == ek_phase_active_and_midframe);
         ZCL_ASSERT(!prog || prog->type == ek_gfx_resource_type_shader_prog);
 
         if (prog != context.state->batch_state.shader_prog) {
@@ -567,17 +567,17 @@ namespace zgl {
     }
 
     const t_gfx_resource *FrameGetBuiltinShaderProgDefault(const t_frame_context context) {
-        ZCL_ASSERT(g_module_state == ek_module_state_active_and_midframe);
+        ZCL_ASSERT(g_module_state == ek_phase_active_and_midframe);
         return context.basis->shader_prog_default;
     }
 
     const t_gfx_resource *FrameGetBuiltinShaderProgBlend(const t_frame_context context) {
-        ZCL_ASSERT(g_module_state == ek_module_state_active_and_midframe);
+        ZCL_ASSERT(g_module_state == ek_phase_active_and_midframe);
         return context.basis->shader_prog_blend;
     }
 
     const t_gfx_resource *FrameGetBuiltinUniformBlend(const t_frame_context context) {
-        ZCL_ASSERT(g_module_state == ek_module_state_active_and_midframe);
+        ZCL_ASSERT(g_module_state == ek_phase_active_and_midframe);
         return context.basis->blend_uniform;
     }
 
@@ -600,7 +600,7 @@ namespace zgl {
     };
 
     static void FrameSetUniform(const t_frame_context context, const t_gfx_resource *const uniform, const t_uniform_data &uniform_data) {
-        ZCL_ASSERT(g_module_state == ek_module_state_active_and_midframe);
+        ZCL_ASSERT(g_module_state == ek_phase_active_and_midframe);
         ZCL_ASSERT(uniform->type == ek_gfx_resource_type_uniform);
         ZCL_ASSERT(uniform->type_data.uniform.type == uniform_data.type);
 
@@ -659,7 +659,7 @@ namespace zgl {
     }
 
     void FrameSubmitTriangles(const t_frame_context context, const zcl::t_array_rdonly<t_frame_triangle> triangles, const t_gfx_resource *const texture) {
-        ZCL_ASSERT(g_module_state == ek_module_state_active_and_midframe);
+        ZCL_ASSERT(g_module_state == ek_phase_active_and_midframe);
         ZCL_ASSERT(context.state->pass_index != -1 && "A pass must be set before submitting primitives!");
         ZCL_ASSERT(triangles.len > 0);
         ZCL_ASSERT(!texture || texture->type == ek_gfx_resource_type_texture);
