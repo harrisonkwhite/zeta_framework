@@ -1,4 +1,4 @@
-#include <zgl/zgl_gfx.h>
+#include <zgl/zgl_gfx_private.h>
 
 #include <bgfx/bgfx.h>
 
@@ -53,15 +53,14 @@ namespace zgl {
         zcl::t_v2_i frame_size;
     } g_state;
 
-    t_gfx *GFXStartup(const t_platform_ticket_rdonly platform_ticket) {
+    t_gfx *GFXStartupCore(const zcl::t_v2_i frame_size, void *const window_native_hdl, void *const display_native_hdl) {
         ZCL_ASSERT(!g_state.active);
+        ZCL_ASSERT(frame_size.x > 0 && frame_size.y > 0);
 
-        const zcl::t_v2_i fb_size_cache = WindowGetFramebufferSizeCache(platform_ticket);
+        const zcl::t_v2_i fb_size_cache = frame_size;
 
-        g_state = {
-            .active = true,
-            .frame_size = fb_size_cache,
-        };
+        g_state.active = true;
+        g_state.frame_size = fb_size_cache;
 
         bgfx::Init bgfx_init = {};
 
@@ -72,8 +71,8 @@ namespace zgl {
         bgfx_init.resolution.width = static_cast<zcl::t_u32>(fb_size_cache.x);
         bgfx_init.resolution.height = static_cast<zcl::t_u32>(fb_size_cache.y);
 
-        bgfx_init.platformData.nwh = internal::WindowGetNativeHandle(platform_ticket);
-        bgfx_init.platformData.ndt = internal::DisplayGetNativeHandle(platform_ticket);
+        bgfx_init.platformData.nwh = window_native_hdl;
+        bgfx_init.platformData.ndt = display_native_hdl;
         bgfx_init.platformData.type = bgfx::NativeWindowHandleType::Default;
 
         if (!bgfx::init(bgfx_init)) {
@@ -83,7 +82,7 @@ namespace zgl {
         return nullptr; // @temp
     }
 
-    void GFXShutdown(t_gfx *const gfx) {
+    void GFXShutdownCore(t_gfx *const gfx) {
         ZCL_ASSERT(g_state.active);
 
         bgfx::shutdown();

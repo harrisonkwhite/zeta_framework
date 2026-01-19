@@ -2,7 +2,7 @@
 
 #include <zcl.h>
 #include <zgl/zgl_platform_public.h>
-#include <zgl/zgl_gfx.h>
+#include <zgl/zgl_gfx_public.h>
 #include <zgl/zgl_audio_public.h>
 
 namespace zgl {

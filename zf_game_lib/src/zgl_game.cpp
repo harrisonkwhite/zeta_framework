@@ -1,7 +1,6 @@
 #include <zgl/zgl_game.h>
 
 #include <zgl/zgl_input.h>
-#include <zgl/zgl_platform_public.h>
 #include <zgl/zgl_audio_public.h>
 
 namespace zgl {
@@ -26,7 +25,7 @@ namespace zgl {
         const t_platform_ticket_mut platform_ticket = internal::PlatformStartup(k_window_size_init, input_state, &perm_arena);
         ZCL_DEFER({ internal::PlatformShutdown(platform_ticket); });
 
-        t_gfx *const gfx = GFXStartup(platform_ticket);
+        t_gfx *const gfx = GFXStartup(platform_ticket, &perm_arena, &temp_arena);
         ZCL_DEFER({ GFXShutdown(gfx); });
 
         const t_audio_ticket_mut audio_ticket = internal::AudioStartup(&perm_arena);
@@ -133,22 +132,19 @@ namespace zgl {
 
             zcl::ArenaRewind(&temp_arena);
 
-#if 0
-            const t_frame_context frame_context = internal::FrameBegin(gfx, frame_basis, platform_ticket, &temp_arena);
+            internal::FrameBegin(gfx, platform_ticket);
 
             config.render_func({
                 .perm_arena = &perm_arena,
                 .temp_arena = &temp_arena,
                 .platform_ticket = platform_ticket,
                 .gfx = gfx,
-                .frame_context = frame_context,
                 .rng = rng,
                 .fps = fps,
                 .user_mem = user_mem,
             });
 
-            internal::FrameEnd(frame_context);
-#endif
+            internal::FrameEnd(gfx);
 
             if (frame_first) {
                 internal::WindowShow(platform_ticket);
