@@ -58,17 +58,16 @@ add_library(zf_game_lib STATIC
     src/zgl_audio_state.cpp
     src/zgl_audio_logic.cpp
     src/zgl_audio_ticket.cpp
-    src/zgl_test.cpp
 
     include/zgl.h
     include/zgl/zgl_game.h
     include/zgl/zgl_platform_public.h
     include/zgl/zgl_platform_private.h
     include/zgl/zgl_input.h
-    include/zgl/zgl_gfx.h
+    include/zgl/zgl_gfx_public.h
+    include/zgl/zgl_gfx_private.h
     include/zgl/zgl_audio_public.h
     include/zgl/zgl_audio_private.h
-    include/zgl/zgl_test.h
 )
 
 target_sources(zf_game_lib PRIVATE

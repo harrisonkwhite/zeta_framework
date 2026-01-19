@@ -1,4 +1,18 @@
-#include <zgl/zgl_gfx.h>
+#include <zgl/zgl_gfx_private.h>
+
+namespace zgl {
+    static struct {
+    } g_state;
+
+    t_gfx *GFXStartup(const t_platform_ticket_rdonly platform_ticket, zcl::t_arena *const arena, zcl::t_arena *const temp_arena) {
+    }
+
+    void GFXShutdown(t_gfx *const gfx) {
+    }
+}
+
+#if 0
+    #include <zgl/zgl_gfx.h>
 
 namespace zgl {
     void FrameSubmitRectRotated(const t_frame_context context, const zcl::t_v2 pos, const zcl::t_v2 size, const zcl::t_v2 origin, const zcl::t_f32 rot, const zcl::t_color_rgba32f color_topleft, const zcl::t_color_rgba32f color_topright, const zcl::t_color_rgba32f color_bottomright, const zcl::t_color_rgba32f color_bottomleft) {
@@ -244,3 +258,4 @@ namespace zgl {
         };
     }
 }
+#endif
