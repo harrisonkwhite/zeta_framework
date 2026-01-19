@@ -398,7 +398,7 @@ namespace zgl {
         BGFXViewConfigure(static_cast<bgfx::ViewId>(pass_index), texture_target->type_data.texture.size, view_mat, clear, clear_col, texture_target->type_data.texture.target_fb_bgfx_hdl);
     }
 
-    void FrameRender(const zcl::t_i32 pass_index, const t_gfx_resource *const vertex_buf, const zcl::t_i32 vertices_index_begin, const zcl::t_i32 vertices_index_end, t_gfx_resource *const texture, const t_gfx_resource *const shader_prog, const t_gfx_resource *const sampler_uniform) {
+    void FrameSubmit(const zcl::t_i32 pass_index, const t_gfx_resource *const vertex_buf, const zcl::t_i32 vertices_index_begin, const zcl::t_i32 vertices_index_end, t_gfx_resource *const texture, const t_gfx_resource *const shader_prog, const t_gfx_resource *const sampler_uniform) {
         ZCL_ASSERT(g_state.active);
         ZCL_ASSERT(pass_index >= 0 && pass_index < k_frame_pass_limit);
         ZCL_ASSERT(vertex_buf->type == ek_gfx_resource_type_vertex_buf);
