@@ -4,17 +4,17 @@
 
 #define BGFX_CONFIG_MAX_VIEWS k_frame_pass_limit
 
-namespace zgl {
-    enum t_gfx_resource_type : zcl::t_i32 {
-        ek_gfx_resource_type_invalid,
-        ek_gfx_resource_type_vertex_buf,
-        ek_gfx_resource_type_texture,
-        ek_gfx_resource_type_shader_prog,
-        ek_gfx_resource_type_uniform
+namespace zgl::test {
+    enum t_resource_type : zcl::t_i32 {
+        ek_resource_type_invalid,
+        ek_resource_type_vertex_buf,
+        ek_resource_type_texture,
+        ek_resource_type_shader_prog,
+        ek_resource_type_uniform
     };
 
-    struct t_gfx_resource {
-        t_gfx_resource_type type;
+    struct t_resource {
+        t_resource_type type;
 
         union {
             struct {
@@ -79,15 +79,15 @@ namespace zgl {
         g_state = {};
     }
 
-    void ResourceDestroy(t_gfx_resource *const resource) {
+    void ResourceDestroy(t_resource *const resource) {
         ZCL_ASSERT(g_state.active);
 
         switch (resource->type) {
-        case ek_gfx_resource_type_vertex_buf:
+        case ek_resource_type_vertex_buf:
             bgfx::destroy(resource->type_data.vertex_buf.bgfx_hdl);
             break;
 
-        case ek_gfx_resource_type_texture:
+        case ek_resource_type_texture:
             if (resource->type_data.texture.is_target) {
                 bgfx::destroy(resource->type_data.texture.target_fb_bgfx_hdl);
             } else {
@@ -96,11 +96,11 @@ namespace zgl {
 
             break;
 
-        case ek_gfx_resource_type_shader_prog:
+        case ek_resource_type_shader_prog:
             bgfx::destroy(resource->type_data.shader_prog.bgfx_hdl);
             break;
 
-        case ek_gfx_resource_type_uniform:
+        case ek_resource_type_uniform:
             bgfx::destroy(resource->type_data.uniform.bgfx_hdl);
             break;
 
@@ -111,7 +111,7 @@ namespace zgl {
         *resource = {};
     }
 
-    t_gfx_resource *VertexBufCreate(const zcl::t_i32 vertex_cnt, zcl::t_arena *const arena) {
+    t_resource *VertexBufCreate(const zcl::t_i32 vertex_cnt, zcl::t_arena *const arena) {
         ZCL_ASSERT(g_state.active);
         ZCL_ASSERT(vertex_cnt > 0);
 
@@ -124,8 +124,8 @@ namespace zgl {
             ZCL_FATAL();
         }
 
-        const auto resource = zcl::ArenaPushItem<t_gfx_resource>(arena);
-        resource->type = ek_gfx_resource_type_vertex_buf;
+        const auto resource = zcl::ArenaPushItem<t_resource>(arena);
+        resource->type = ek_resource_type_vertex_buf;
         resource->type_data.vertex_buf.bgfx_hdl = vertex_buf_bgfx_hdl;
         resource->type_data.vertex_buf.vertex_cnt = vertex_cnt;
 
@@ -133,16 +133,16 @@ namespace zgl {
     }
 
     // @todo: Use array of actual vertex struct as source.
-    void VertexBufWrite(t_gfx_resource *const dest_vertex_buf, const zcl::t_i32 dest_vertices_index, const zcl::t_array_rdonly<zcl::t_f32> src_vertices) {
+    void VertexBufWrite(t_resource *const dest_vertex_buf, const zcl::t_i32 dest_vertices_index, const zcl::t_array_rdonly<zcl::t_f32> src_vertices) {
         ZCL_ASSERT(g_state.active);
-        ZCL_ASSERT(dest_vertex_buf->type == ek_gfx_resource_type_vertex_buf);
+        ZCL_ASSERT(dest_vertex_buf->type == ek_resource_type_vertex_buf);
         ZCL_ASSERT(dest_vertices_index >= 0 && dest_vertices_index < dest_vertex_buf->type_data.vertex_buf.vertex_cnt);
 
         const auto src_vertices_bgfx_mem = bgfx::copy(src_vertices.raw, static_cast<zcl::t_u32>(zcl::ArrayGetSizeInBytes(src_vertices)));
         bgfx::update(dest_vertex_buf->type_data.vertex_buf.bgfx_hdl, static_cast<zcl::t_u32>(dest_vertices_index), src_vertices_bgfx_mem);
     }
 
-    t_gfx_resource *TextureCreate(const zcl::t_texture_data_rdonly texture_data, zcl::t_arena *const arena) {
+    t_resource *TextureCreate(const zcl::t_texture_data_rdonly texture_data, zcl::t_arena *const arena) {
         ZCL_ASSERT(g_state.active);
 
         const auto flags = BGFX_SAMPLER_MIN_POINT | BGFX_SAMPLER_MAG_POINT | BGFX_SAMPLER_U_CLAMP | BGFX_SAMPLER_V_CLAMP;
@@ -152,8 +152,8 @@ namespace zgl {
             ZCL_FATAL();
         }
 
-        const auto resource = zcl::ArenaPushItem<t_gfx_resource>(arena);
-        resource->type = ek_gfx_resource_type_texture;
+        const auto resource = zcl::ArenaPushItem<t_resource>(arena);
+        resource->type = ek_resource_type_texture;
         resource->type_data.texture.nontarget_texture_bgfx_hdl = texture_bgfx_hdl;
         resource->type_data.texture.size = texture_data.size_in_pxs;
 
@@ -164,7 +164,7 @@ namespace zgl {
         return bgfx::createFrameBuffer(static_cast<zcl::t_u16>(size.x), static_cast<zcl::t_u16>(size.y), bgfx::TextureFormat::RGBA8, BGFX_SAMPLER_MIN_POINT | BGFX_SAMPLER_MAG_POINT | BGFX_SAMPLER_U_CLAMP | BGFX_SAMPLER_V_CLAMP);
     }
 
-    t_gfx_resource *TextureCreateTarget(const zcl::t_v2_i size, zcl::t_arena *const arena) {
+    t_resource *TextureCreateTarget(const zcl::t_v2_i size, zcl::t_arena *const arena) {
         ZCL_ASSERT(g_state.active);
         ZCL_ASSERT(size.x > 0 && size.y > 0);
 
@@ -174,8 +174,8 @@ namespace zgl {
             ZCL_FATAL();
         }
 
-        const auto resource = zcl::ArenaPushItem<t_gfx_resource>(arena);
-        resource->type = ek_gfx_resource_type_texture;
+        const auto resource = zcl::ArenaPushItem<t_resource>(arena);
+        resource->type = ek_resource_type_texture;
         resource->type_data.texture.is_target = true;
         resource->type_data.texture.target_fb_bgfx_hdl = fb_bgfx_hdl;
         resource->type_data.texture.size = size;
@@ -183,9 +183,9 @@ namespace zgl {
         return resource;
     }
 
-    void TextureResizeTarget(t_gfx_resource *const texture, const zcl::t_v2_i size) {
+    void TextureResizeTarget(t_resource *const texture, const zcl::t_v2_i size) {
         ZCL_ASSERT(g_state.active);
-        ZCL_ASSERT(texture->type == ek_gfx_resource_type_texture && texture->type_data.texture.is_target);
+        ZCL_ASSERT(texture->type == ek_resource_type_texture && texture->type_data.texture.is_target);
         ZCL_ASSERT(size.x > 0 && size.y > 0);
         ZCL_ASSERT(size != texture->type_data.texture.size);
 
@@ -199,14 +199,14 @@ namespace zgl {
         texture->type_data.texture.size = size;
     }
 
-    zcl::t_v2_i TextureGetSize(const t_gfx_resource *const texture) {
+    zcl::t_v2_i TextureGetSize(const t_resource *const texture) {
         ZCL_ASSERT(g_state.active);
-        ZCL_ASSERT(texture->type == ek_gfx_resource_type_texture);
+        ZCL_ASSERT(texture->type == ek_resource_type_texture);
 
         return texture->type_data.texture.size;
     }
 
-    t_gfx_resource *ShaderProgCreate(const zcl::t_array_rdonly<zcl::t_u8> vertex_shader_compiled_bin, const zcl::t_array_rdonly<zcl::t_u8> frag_shader_compiled_bin, zcl::t_arena *const arena) {
+    t_resource *ShaderProgCreate(const zcl::t_array_rdonly<zcl::t_u8> vertex_shader_compiled_bin, const zcl::t_array_rdonly<zcl::t_u8> frag_shader_compiled_bin, zcl::t_arena *const arena) {
         ZCL_ASSERT(g_state.active);
 
         const bgfx::Memory *const vertex_shader_bgfx_mem = bgfx::copy(vertex_shader_compiled_bin.raw, static_cast<zcl::t_u32>(vertex_shader_compiled_bin.len));
@@ -229,14 +229,14 @@ namespace zgl {
             ZCL_FATAL();
         }
 
-        const auto resource = zcl::ArenaPushItem<t_gfx_resource>(arena);
-        resource->type = ek_gfx_resource_type_shader_prog;
+        const auto resource = zcl::ArenaPushItem<t_resource>(arena);
+        resource->type = ek_resource_type_shader_prog;
         resource->type_data.shader_prog.bgfx_hdl = prog_bgfx_hdl;
 
         return resource;
     }
 
-    t_gfx_resource *UniformCreate(const zcl::t_str_rdonly name, const t_uniform_type type, zcl::t_arena *const arena, zcl::t_arena *const temp_arena) {
+    t_resource *UniformCreate(const zcl::t_str_rdonly name, const t_uniform_type type, zcl::t_arena *const arena, zcl::t_arena *const temp_arena) {
         ZCL_ASSERT(g_state.active);
 
         const zcl::t_str_rdonly name_terminated = zcl::StrCloneButAddTerminator(name, temp_arena);
@@ -257,17 +257,17 @@ namespace zgl {
             ZCL_FATAL();
         }
 
-        const auto resource = zcl::ArenaPushItem<t_gfx_resource>(arena);
-        resource->type = ek_gfx_resource_type_uniform;
+        const auto resource = zcl::ArenaPushItem<t_resource>(arena);
+        resource->type = ek_resource_type_uniform;
         resource->type_data.uniform.bgfx_hdl = bgfx_hdl;
         resource->type_data.uniform.type = type;
 
         return resource;
     }
 
-    t_uniform_type UniformGetType(const t_gfx_resource *const uniform) {
+    t_uniform_type UniformGetType(const t_resource *const uniform) {
         ZCL_ASSERT(g_state.active);
-        ZCL_ASSERT(uniform->type == ek_gfx_resource_type_uniform);
+        ZCL_ASSERT(uniform->type == ek_resource_type_uniform);
 
         return uniform->type_data.uniform.type;
     }
@@ -277,7 +277,7 @@ namespace zgl {
 
         union {
             struct {
-                const t_gfx_resource *texture;
+                const t_resource *texture;
             } sampler;
 
             struct {
@@ -290,17 +290,17 @@ namespace zgl {
         } type_data;
     };
 
-    static void UniformSet(const t_gfx_resource *const uniform, const t_uniform_data &uniform_data) {
+    static void UniformSet(const t_resource *const uniform, const t_uniform_data &uniform_data) {
         ZCL_ASSERT(g_state.active);
-        ZCL_ASSERT(uniform->type == ek_gfx_resource_type_uniform);
+        ZCL_ASSERT(uniform->type == ek_resource_type_uniform);
         ZCL_ASSERT(uniform->type_data.uniform.type == uniform_data.type);
 
         const auto uniform_bgfx_hdl = uniform->type_data.uniform.bgfx_hdl;
 
         switch (uniform->type_data.uniform.type) {
         case ek_uniform_type_sampler: {
-            const t_gfx_resource *const texture = uniform_data.type_data.sampler.texture;
-            ZCL_ASSERT(texture->type == ek_gfx_resource_type_texture);
+            const t_resource *const texture = uniform_data.type_data.sampler.texture;
+            ZCL_ASSERT(texture->type == ek_resource_type_texture);
 
             const auto texture_type_data = &texture->type_data.texture;
             const bgfx::TextureHandle bgfx_texture_hdl = texture_type_data->is_target ? bgfx::getTexture(texture_type_data->target_fb_bgfx_hdl) : texture_type_data->nontarget_texture_bgfx_hdl;
@@ -322,7 +322,7 @@ namespace zgl {
         }
     }
 
-    void UniformSetSampler(const t_gfx_resource *const uniform, const t_gfx_resource *const sampler_texture) {
+    void UniformSetSampler(const t_resource *const uniform, const t_resource *const sampler_texture) {
         const t_uniform_data uniform_data = {
             .type = ek_uniform_type_sampler,
             .type_data = {.sampler = {.texture = sampler_texture}},
@@ -331,7 +331,7 @@ namespace zgl {
         UniformSet(uniform, uniform_data);
     }
 
-    void UniformSetV4(const t_gfx_resource *const uniform, const zcl::t_v4 v4) {
+    void UniformSetV4(const t_resource *const uniform, const zcl::t_v4 v4) {
         const t_uniform_data uniform_data = {
             .type = ek_uniform_type_v4,
             .type_data = {.v4 = {.ptr = &v4}},
@@ -340,7 +340,7 @@ namespace zgl {
         UniformSet(uniform, uniform_data);
     }
 
-    void UniformSetMatrix4x4(const t_gfx_resource *const uniform, const zcl::t_mat4x4 &mat4x4) {
+    void UniformSetMatrix4x4(const t_resource *const uniform, const zcl::t_mat4x4 &mat4x4) {
         const t_uniform_data uniform_data = {
             .type = ek_uniform_type_mat4x4,
             .type_data = {.mat4x4 = {.ptr = &mat4x4}},
@@ -391,22 +391,21 @@ namespace zgl {
         BGFXViewConfigure(static_cast<bgfx::ViewId>(pass_index), size, view_mat, clear, clear_col, BGFX_INVALID_HANDLE);
     }
 
-    void FramePassConfigureOffscreen(const zcl::t_i32 pass_index, const t_gfx_resource *const texture_target, const zcl::t_mat4x4 &view_mat, const zcl::t_b8 clear, const zcl::t_color_rgba32f clear_col) {
+    void FramePassConfigureOffscreen(const zcl::t_i32 pass_index, const t_resource *const texture_target, const zcl::t_mat4x4 &view_mat, const zcl::t_b8 clear, const zcl::t_color_rgba32f clear_col) {
         ZCL_ASSERT(pass_index >= 0 && pass_index < k_frame_pass_limit);
-        ZCL_ASSERT(texture_target->type == ek_gfx_resource_type_texture && texture_target->type_data.texture.is_target);
+        ZCL_ASSERT(texture_target->type == ek_resource_type_texture && texture_target->type_data.texture.is_target);
 
         BGFXViewConfigure(static_cast<bgfx::ViewId>(pass_index), texture_target->type_data.texture.size, view_mat, clear, clear_col, texture_target->type_data.texture.target_fb_bgfx_hdl);
     }
 
-    void FrameFlush(const zcl::t_i32 pass_index, const t_gfx_resource *const vertex_buf, const zcl::t_i32 vertices_index_begin, const zcl::t_i32 vertices_index_end, const t_gfx_resource *const shader_prog, const t_gfx_resource *const sampler_uniform, t_gfx_resource *const texture) {
+    void FrameRender(const zcl::t_i32 pass_index, const t_resource *const vertex_buf, const zcl::t_i32 vertices_index_begin, const zcl::t_i32 vertices_index_end, t_resource *const texture, const t_resource *const shader_prog, const t_resource *const sampler_uniform) {
         ZCL_ASSERT(g_state.active);
         ZCL_ASSERT(pass_index >= 0 && pass_index < k_frame_pass_limit);
-        ZCL_ASSERT(vertex_buf->type == ek_gfx_resource_type_vertex_buf);
-        ZCL_ASSERT(shader_prog->type == ek_gfx_resource_type_shader_prog);
-        ZCL_ASSERT(sampler_uniform->type == ek_gfx_resource_type_uniform && sampler_uniform->type_data.uniform.type == ek_uniform_type_sampler);
-        ZCL_ASSERT(texture->type == ek_gfx_resource_type_texture);
+        ZCL_ASSERT(vertex_buf->type == ek_resource_type_vertex_buf);
+        ZCL_ASSERT(shader_prog->type == ek_resource_type_shader_prog);
+        ZCL_ASSERT(sampler_uniform->type == ek_resource_type_uniform && sampler_uniform->type_data.uniform.type == ek_uniform_type_sampler);
+        ZCL_ASSERT(texture->type == ek_resource_type_texture);
 
-        // ???
         UniformSetSampler(sampler_uniform, texture);
 
         bgfx::setVertexBuffer(0, vertex_buf->type_data.vertex_buf.bgfx_hdl, static_cast<zcl::t_u32>(vertices_index_begin), static_cast<zcl::t_u32>(vertices_index_end - vertices_index_begin));
