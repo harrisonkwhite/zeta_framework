@@ -64,7 +64,7 @@ namespace zgl {
         } frame_state;
     } g_state;
 
-    void GFXStartup(const zcl::t_v2_i frame_size, void *const window_native_hdl, void *const display_native_hdl, zcl::t_arena *const arena, zcl::t_arena *const temp_arena) {
+    void Startup(const zcl::t_v2_i frame_size, void *const window_native_hdl, void *const display_native_hdl, zcl::t_arena *const arena, zcl::t_arena *const temp_arena) {
         ZCL_ASSERT(g_state.phase == ek_phase_inactive);
 
         g_state.phase = ek_phase_active_but_not_midframe;
@@ -148,13 +148,13 @@ namespace zgl {
     }
 
     // @todo: Use array of actual vertex struct as source.
-    void VertexBufWrite(t_gfx_resource *const dest_vertex_buf, const zcl::t_i32 dest_vertices_index_begin, const zcl::t_i32 dest_vertices_index_end_excl, const zcl::t_array_rdonly<zcl::t_f32> src_vertices) {
+    void VertexBufWrite(t_gfx_resource *const dest_vertex_buf, const zcl::t_i32 dest_vertices_index_begin, const zcl::t_i32 dest_vertices_index_end, const zcl::t_array_rdonly<zcl::t_f32> src_vertices) {
         ZCL_ASSERT(g_state.phase == ek_phase_active_and_midframe);
         ZCL_ASSERT(dest_vertex_buf->type == ek_gfx_resource_type_vertex_buf);
         ZCL_ASSERT(g_state.frame_state.pass_active);
 
         const auto src_vertices_bgfx_mem = bgfx::copy(src_vertices.raw, static_cast<zcl::t_u32>(zcl::ArrayGetSizeInBytes(src_vertices)));
-        bgfx::update(dest_vertex_buf->type_data.vertex_buf.bgfx_hdl, static_cast<zcl::t_u32>(dest_vertices_index_end_excl - dest_vertices_index_begin), src_vertices_bgfx_mem);
+        bgfx::update(dest_vertex_buf->type_data.vertex_buf.bgfx_hdl, static_cast<zcl::t_u32>(dest_vertices_index_end - dest_vertices_index_begin), src_vertices_bgfx_mem);
     }
 
     t_gfx_resource *TextureCreate(const zcl::t_texture_data_rdonly texture_data, zcl::t_arena *const arena) {
@@ -448,5 +448,24 @@ namespace zgl {
         };
 
         FrameSetUniform(uniform, uniform_data);
+    }
+
+    void FrameFlush(const zcl::t_i32 pass_index, const t_gfx_resource *const vertex_buf, const zcl::t_i32 vertices_index_begin, const zcl::t_i32 vertices_index_end, const t_gfx_resource *const shader_prog, const t_gfx_resource *const sampler_uniform, t_gfx_resource *const texture) {
+        ZCL_ASSERT(g_state.phase == ek_phase_active_and_midframe);
+        ZCL_ASSERT(g_state.frame_state.pass_active);
+        ZCL_ASSERT(pass_index >= 0 && pass_index < k_frame_pass_limit);
+        ZCL_ASSERT(vertex_buf->type == ek_gfx_resource_type_vertex_buf);
+        ZCL_ASSERT(shader_prog->type == ek_gfx_resource_type_shader_prog);
+        ZCL_ASSERT(sampler_uniform->type == ek_gfx_resource_type_uniform && sampler_uniform->type_data.uniform.type == ek_uniform_type_sampler);
+        ZCL_ASSERT(texture->type == ek_gfx_resource_type_texture);
+
+        // ???
+        FrameSetUniformSampler(sampler_uniform, texture);
+
+        bgfx::setVertexBuffer(0, vertex_buf->type_data.vertex_buf.bgfx_hdl, static_cast<zcl::t_u32>(vertices_index_begin), static_cast<zcl::t_u32>(vertices_index_end - vertices_index_begin));
+
+        bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A | BGFX_STATE_BLEND_ALPHA);
+
+        bgfx::submit(static_cast<bgfx::ViewId>(pass_index), shader_prog->type_data.shader_prog.bgfx_hdl);
     }
 }
