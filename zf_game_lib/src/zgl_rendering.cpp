@@ -42,7 +42,7 @@ namespace zgl {
         } batch_state;
     };
 
-    t_rendering_basis *RenderingBasisCreate(t_gfx *const gfx, zcl::t_arena *const arena, zcl::t_arena *const temp_arena) {
+    t_rendering_basis *internal::RenderingBasisCreate(t_gfx *const gfx, zcl::t_arena *const arena, zcl::t_arena *const temp_arena) {
         const auto basis = zcl::ArenaPushItem<t_rendering_basis>(arena);
 
         basis->perm_resource_group = GFXResourceGroupCreate(gfx, arena);
@@ -61,12 +61,12 @@ namespace zgl {
         return basis;
     }
 
-    void RenderingBasisDestroy(t_rendering_basis *const basis, t_gfx *const gfx) {
+    void internal::RenderingBasisDestroy(t_rendering_basis *const basis, t_gfx *const gfx) {
         GFXResourceGroupDestroy(gfx, basis->perm_resource_group);
         *basis = {};
     }
 
-    t_rendering_context RendererBegin(const t_rendering_basis *const rendering_basis, t_gfx *const gfx, zcl::t_arena *const rendering_state_arena) {
+    t_rendering_context internal::RendererBegin(const t_rendering_basis *const rendering_basis, t_gfx *const gfx, zcl::t_arena *const rendering_state_arena) {
         FrameBegin(gfx);
 
         return {
@@ -88,19 +88,19 @@ namespace zgl {
         }
 
         const auto vertices = zcl::ArraySlice(zcl::ArrayToNonstatic(&rc.state->batch_state.verts), 0, rc.state->batch_state.vertex_cnt);
-        VertexBufWrite(rc.gfx, rc.basis->vert_buf, rc.state->frame_vert_cnt, vertices);
+        internal::VertexBufWrite(rc.gfx, rc.basis->vert_buf, rc.state->frame_vert_cnt, vertices);
 
         const auto texture = rc.state->batch_state.texture ? rc.state->batch_state.texture : rc.basis->px_texture;
         const t_gfx_resource *const shader_prog = rc.state->batch_state.shader_prog ? rc.state->batch_state.shader_prog : rc.basis->shader_prog_default;
 
-        FrameSubmit(rc.gfx, rc.state->pass_index, rc.basis->vert_buf, rc.state->frame_vert_cnt, rc.state->frame_vert_cnt + rc.state->batch_state.vertex_cnt, texture, shader_prog, rc.basis->sampler_uniform);
+        internal::FrameSubmit(rc.gfx, rc.state->pass_index, rc.basis->vert_buf, rc.state->frame_vert_cnt, rc.state->frame_vert_cnt + rc.state->batch_state.vertex_cnt, texture, shader_prog, rc.basis->sampler_uniform);
 
         rc.state->frame_vert_cnt += rc.state->batch_state.vertex_cnt;
 
         zcl::ZeroClearItem(&rc.state->batch_state);
     }
 
-    void RendererEnd(const t_rendering_context rc) {
+    void internal::RendererEnd(const t_rendering_context rc) {
         ZCL_ASSERT(!rc.state->pass_active);
 
         FrameEnd(rc.gfx);
@@ -110,18 +110,18 @@ namespace zgl {
         ZCL_ASSERT(!rc.state->pass_active);
 
         rc.state->pass_active = true;
-        ZCL_REQUIRE(rc.state->pass_index < k_frame_pass_limit && "Trying to begin a new frame pass, but the limit has been reached!");
+        ZCL_REQUIRE(rc.state->pass_index < internal::k_frame_pass_limit && "Trying to begin a new frame pass, but the limit has been reached!");
 
-        FramePassConfigure(rc.gfx, rc.state->pass_index, size, view_mat, clear, clear_col);
+        internal::FramePassConfigure(rc.gfx, rc.state->pass_index, size, view_mat, clear, clear_col);
     }
 
     void RendererPassBeginOffscreen(const t_rendering_context rc, const t_gfx_resource *const texture_target, const zcl::t_mat4x4 &view_mat, const zcl::t_b8 clear, const zcl::t_color_rgba32f clear_col) {
         ZCL_ASSERT(!rc.state->pass_active);
 
         rc.state->pass_active = true;
-        ZCL_REQUIRE(rc.state->pass_index < k_frame_pass_limit && "Trying to begin a new frame pass, but the limit has been reached!");
+        ZCL_REQUIRE(rc.state->pass_index < internal::k_frame_pass_limit && "Trying to begin a new frame pass, but the limit has been reached!");
 
-        FramePassConfigureOffscreen(rc.gfx, rc.state->pass_index, texture_target, view_mat, clear, clear_col);
+        internal::FramePassConfigureOffscreen(rc.gfx, rc.state->pass_index, texture_target, view_mat, clear, clear_col);
     }
 
     void RendererPassEnd(const t_rendering_context rc) {

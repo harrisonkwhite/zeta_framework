@@ -25,8 +25,8 @@ namespace zgl {
         t_gfx *const gfx = internal::GFXStartup(platform_ticket, &perm_arena, &temp_arena);
         ZCL_DEFER({ internal::GFXShutdown(gfx); });
 
-        t_rendering_basis *const rendering_basis = RenderingBasisCreate(gfx, &perm_arena, &temp_arena);
-        ZCL_DEFER({ RenderingBasisDestroy(rendering_basis, gfx); });
+        t_rendering_basis *const rendering_basis = internal::RenderingBasisCreate(gfx, &perm_arena, &temp_arena);
+        ZCL_DEFER({ internal::RenderingBasisDestroy(rendering_basis, gfx); });
 
         const t_audio_ticket_mut audio_ticket = internal::AudioStartup(&perm_arena);
         ZCL_DEFER({ internal::AudioShutdown(audio_ticket); });
@@ -132,7 +132,7 @@ namespace zgl {
 
             zcl::ArenaRewind(&temp_arena);
 
-            const t_rendering_context rendering_context = RendererBegin(rendering_basis, gfx, &temp_arena);
+            const t_rendering_context rendering_context = internal::RendererBegin(rendering_basis, gfx, &temp_arena);
 
             config.render_func({
                 .perm_arena = &perm_arena,
@@ -144,7 +144,7 @@ namespace zgl {
                 .user_mem = user_mem,
             });
 
-            RendererEnd(rendering_context);
+            internal::RendererEnd(rendering_context);
 
             if (frame_first) {
                 internal::WindowShow(platform_ticket);

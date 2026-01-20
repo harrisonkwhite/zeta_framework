@@ -2,7 +2,7 @@
 
 #include <bgfx/bgfx.h>
 
-#define BGFX_CONFIG_MAX_VIEWS k_frame_pass_limit
+#define BGFX_CONFIG_MAX_VIEWS zgl::internal::k_frame_pass_limit
 
 namespace zgl {
     enum t_gfx_resource_type : zcl::t_i32 {
@@ -166,7 +166,7 @@ namespace zgl {
         return group->arena;
     }
 
-    t_gfx_resource *VertexBufCreate(t_gfx *const gfx, const zcl::t_i32 vertex_cnt, t_gfx_resource_group *const resource_group) {
+    t_gfx_resource *internal::VertexBufCreate(t_gfx *const gfx, const zcl::t_i32 vertex_cnt, t_gfx_resource_group *const resource_group) {
         ZCL_ASSERT(g_state.phase == ek_phase_active_but_not_midframe);
         ZCL_ASSERT(vertex_cnt > 0);
 
@@ -187,7 +187,7 @@ namespace zgl {
         return resource;
     }
 
-    void VertexBufWrite(t_gfx *const gfx, t_gfx_resource *const dest_vertex_buf, const zcl::t_i32 dest_vertices_index, const zcl::t_array_rdonly<t_vertex> src_vertices) {
+    void internal::VertexBufWrite(t_gfx *const gfx, t_gfx_resource *const dest_vertex_buf, const zcl::t_i32 dest_vertices_index, const zcl::t_array_rdonly<t_vertex> src_vertices) {
         ZCL_ASSERT(g_state.phase != ek_phase_inactive);
         ZCL_ASSERT(dest_vertex_buf->type == ek_gfx_resource_type_vertex_buf);
         ZCL_ASSERT(dest_vertices_index >= 0 && dest_vertices_index < dest_vertex_buf->type_data.vertex_buf.vertex_cnt);
@@ -416,12 +416,12 @@ namespace zgl {
         }
     }
 
-    void FrameBegin(t_gfx *const gfx) {
+    void internal::FrameBegin(t_gfx *const gfx) {
         ZCL_ASSERT(g_state.phase == ek_phase_active_but_not_midframe);
         g_state.phase = ek_phase_active_and_midframe;
     }
 
-    void FrameEnd(t_gfx *const gfx) {
+    void internal::FrameEnd(t_gfx *const gfx) {
         ZCL_ASSERT(g_state.phase == ek_phase_active_and_midframe);
 
         bgfx::frame();
@@ -457,24 +457,24 @@ namespace zgl {
         bgfx::touch(bgfx_view_id);
     }
 
-    void FramePassConfigure(t_gfx *const gfx, const zcl::t_i32 pass_index, const zcl::t_v2_i size, const zcl::t_mat4x4 &view_mat, const zcl::t_b8 clear, const zcl::t_color_rgba32f clear_col) {
+    void internal::FramePassConfigure(t_gfx *const gfx, const zcl::t_i32 pass_index, const zcl::t_v2_i size, const zcl::t_mat4x4 &view_mat, const zcl::t_b8 clear, const zcl::t_color_rgba32f clear_col) {
         ZCL_ASSERT(g_state.phase == ek_phase_active_and_midframe);
         ZCL_ASSERT(pass_index >= 0 && pass_index < k_frame_pass_limit);
 
         BGFXViewConfigure(static_cast<bgfx::ViewId>(pass_index), size, view_mat, clear, clear_col, BGFX_INVALID_HANDLE);
     }
 
-    void FramePassConfigureOffscreen(t_gfx *const gfx, const zcl::t_i32 pass_index, const t_gfx_resource *const texture_target, const zcl::t_mat4x4 &view_mat, const zcl::t_b8 clear, const zcl::t_color_rgba32f clear_col) {
+    void internal::FramePassConfigureOffscreen(t_gfx *const gfx, const zcl::t_i32 pass_index, const t_gfx_resource *const texture_target, const zcl::t_mat4x4 &view_mat, const zcl::t_b8 clear, const zcl::t_color_rgba32f clear_col) {
         ZCL_ASSERT(g_state.phase == ek_phase_active_and_midframe);
-        ZCL_ASSERT(pass_index >= 0 && pass_index < k_frame_pass_limit);
+        ZCL_ASSERT(pass_index >= 0 && pass_index < internal::k_frame_pass_limit);
         ZCL_ASSERT(texture_target->type == ek_gfx_resource_type_texture && texture_target->type_data.texture.is_target);
 
         BGFXViewConfigure(static_cast<bgfx::ViewId>(pass_index), texture_target->type_data.texture.size, view_mat, clear, clear_col, texture_target->type_data.texture.target_fb_bgfx_hdl);
     }
 
-    void FrameSubmit(t_gfx *const gfx, const zcl::t_i32 pass_index, const t_gfx_resource *const vertex_buf, const zcl::t_i32 vertices_index_begin, const zcl::t_i32 vertices_index_end, const t_gfx_resource *const texture, const t_gfx_resource *const shader_prog, const t_gfx_resource *const sampler_uniform) {
+    void internal::FrameSubmit(t_gfx *const gfx, const zcl::t_i32 pass_index, const t_gfx_resource *const vertex_buf, const zcl::t_i32 vertices_index_begin, const zcl::t_i32 vertices_index_end, const t_gfx_resource *const texture, const t_gfx_resource *const shader_prog, const t_gfx_resource *const sampler_uniform) {
         ZCL_ASSERT(g_state.phase == ek_phase_active_and_midframe);
-        ZCL_ASSERT(pass_index >= 0 && pass_index < k_frame_pass_limit);
+        ZCL_ASSERT(pass_index >= 0 && pass_index < internal::k_frame_pass_limit);
         ZCL_ASSERT(vertex_buf->type == ek_gfx_resource_type_vertex_buf);
         ZCL_ASSERT(shader_prog->type == ek_gfx_resource_type_shader_prog);
         ZCL_ASSERT(sampler_uniform->type == ek_gfx_resource_type_uniform && sampler_uniform->type_data.uniform.type == ek_uniform_type_sampler);

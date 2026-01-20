@@ -5,11 +5,6 @@
 
 namespace zgl {
     struct t_rendering_basis;
-
-    t_rendering_basis *RenderingBasisCreate(t_gfx *const gfx, zcl::t_arena *const arena, zcl::t_arena *const temp_arena);
-
-    void RenderingBasisDestroy(t_rendering_basis *const basis, t_gfx *const gfx);
-
     struct t_rendering_state;
 
     struct t_rendering_context {
@@ -18,10 +13,6 @@ namespace zgl {
 
         t_gfx *gfx;
     };
-
-    t_rendering_context RendererBegin(const t_rendering_basis *const rendering_basis, t_gfx *const gfx, zcl::t_arena *const rendering_state_arena);
-
-    void RendererEnd(const t_rendering_context rc);
 
     void RendererPassBegin(const t_rendering_context rc, const zcl::t_v2_i size, const zcl::t_mat4x4 &view_mat = zcl::MatrixCreateIdentity(), const zcl::t_b8 clear = false, const zcl::t_color_rgba32f clear_col = zcl::k_color_black);
 
@@ -66,4 +57,14 @@ namespace zgl {
     void RendererSubmitTexture(const t_rendering_context rc, const t_gfx_resource *const texture, const zcl::t_v2 pos, const zcl::t_rect_i src_rect = {}, const zcl::t_v2 origin = zcl::k_origin_top_left, const zcl::t_f32 rot = 0.0f);
 
     void RendererSubmitStr(const t_rendering_context rc, const zcl::t_str_rdonly str, const t_font &font, const zcl::t_v2 pos, zcl::t_arena *const temp_arena, const zcl::t_v2 origin = zcl::k_origin_top_left, const zcl::t_color_rgba32f blend = zcl::k_color_white);
+
+    namespace internal {
+        t_rendering_basis *RenderingBasisCreate(t_gfx *const gfx, zcl::t_arena *const arena, zcl::t_arena *const temp_arena);
+
+        void RenderingBasisDestroy(t_rendering_basis *const basis, t_gfx *const gfx);
+
+        t_rendering_context RendererBegin(const t_rendering_basis *const rendering_basis, t_gfx *const gfx, zcl::t_arena *const rendering_state_arena);
+
+        void RendererEnd(const t_rendering_context rc);
+    }
 }
