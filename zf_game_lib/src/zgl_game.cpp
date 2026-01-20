@@ -22,11 +22,11 @@ namespace zgl {
         const t_platform_ticket_mut platform_ticket = internal::PlatformStartup(k_window_size_init, input_state, &perm_arena);
         ZCL_DEFER({ internal::PlatformShutdown(platform_ticket); });
 
-        t_gfx *const gfx = internal::GFXStartup(platform_ticket, &perm_arena, &temp_arena);
-        ZCL_DEFER({ internal::GFXShutdown(gfx); });
+        const t_gfx_ticket_mut gfx_ticket = internal::GFXStartup(platform_ticket, &perm_arena, &temp_arena);
+        ZCL_DEFER({ internal::GFXShutdown(gfx_ticket); });
 
-        t_rendering_basis *const rendering_basis = internal::RenderingBasisCreate(gfx, &perm_arena, &temp_arena);
-        ZCL_DEFER({ internal::RenderingBasisDestroy(rendering_basis, gfx); });
+        t_rendering_basis *const rendering_basis = internal::RenderingBasisCreate(gfx_ticket, &perm_arena, &temp_arena);
+        ZCL_DEFER({ internal::RenderingBasisDestroy(rendering_basis, gfx_ticket); });
 
         const t_audio_ticket_mut audio_ticket = internal::AudioStartup(&perm_arena);
         ZCL_DEFER({ internal::AudioShutdown(audio_ticket); });
@@ -41,7 +41,7 @@ namespace zgl {
             .perm_arena = &perm_arena,
             .temp_arena = &temp_arena,
             .platform_ticket = platform_ticket,
-            .gfx = gfx,
+            .gfx_ticket = gfx_ticket,
             .audio_ticket = audio_ticket,
             .rng = rng,
             .user_mem = user_mem,
@@ -52,7 +52,7 @@ namespace zgl {
                 .perm_arena = &perm_arena,
                 .temp_arena = &temp_arena,
                 .platform_ticket = platform_ticket,
-                .gfx = gfx,
+                .gfx_ticket = gfx_ticket,
                 .audio_ticket = audio_ticket,
                 .rng = rng,
                 .user_mem = user_mem,
@@ -116,7 +116,7 @@ namespace zgl {
                             .temp_arena = &temp_arena,
                             .input_state = input_state,
                             .platform_ticket = platform_ticket,
-                            .gfx = gfx,
+                            .gfx_ticket = gfx_ticket,
                             .audio_ticket = audio_ticket,
                             .rng = rng,
                             .fps = fps,
@@ -132,7 +132,7 @@ namespace zgl {
 
             zcl::ArenaRewind(&temp_arena);
 
-            const t_rendering_context rendering_context = internal::RendererBegin(rendering_basis, gfx, &temp_arena);
+            const t_rendering_context rendering_context = internal::RendererBegin(rendering_basis, gfx_ticket, &temp_arena);
 
             config.render_func({
                 .perm_arena = &perm_arena,

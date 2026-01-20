@@ -16,7 +16,7 @@ namespace zgl {
 
         t_platform_ticket_mut platform_ticket;
 
-        t_gfx *gfx;
+        t_gfx_ticket_mut gfx_ticket;
 
         t_audio_ticket_mut audio_ticket;
 
@@ -31,7 +31,7 @@ namespace zgl {
 
         t_platform_ticket_mut platform_ticket;
 
-        t_gfx *gfx;
+        t_gfx_ticket_mut gfx_ticket;
 
         t_audio_ticket_mut audio_ticket;
 
@@ -48,7 +48,7 @@ namespace zgl {
 
         t_platform_ticket_mut platform_ticket;
 
-        t_gfx *gfx;
+        t_gfx_ticket_mut gfx_ticket;
 
         t_audio_ticket_mut audio_ticket;
 

@@ -42,37 +42,37 @@ namespace zgl {
         } batch_state;
     };
 
-    t_rendering_basis *internal::RenderingBasisCreate(t_gfx *const gfx, zcl::t_arena *const arena, zcl::t_arena *const temp_arena) {
+    t_rendering_basis *internal::RenderingBasisCreate(const t_gfx_ticket_mut gfx_ticket, zcl::t_arena *const arena, zcl::t_arena *const temp_arena) {
         const auto basis = zcl::ArenaPushItem<t_rendering_basis>(arena);
 
-        basis->perm_resource_group = GFXResourceGroupCreate(gfx, arena);
+        basis->perm_resource_group = GFXResourceGroupCreate(gfx_ticket, arena);
 
-        basis->vert_buf = VertexBufCreate(gfx, k_frame_vert_limit, basis->perm_resource_group);
+        basis->vert_buf = VertexBufCreate(gfx_ticket, k_frame_vert_limit, basis->perm_resource_group);
 
-        basis->shader_prog_default = ShaderProgCreate(gfx, {g_vert_shader_default_src_raw, g_vert_shader_default_src_len}, {g_frag_shader_default_src_raw, g_frag_shader_default_src_len}, basis->perm_resource_group);
-        basis->shader_prog_blend = ShaderProgCreate(gfx, {g_vert_shader_default_src_raw, g_vert_shader_default_src_len}, {g_frag_shader_blend_src_raw, g_frag_shader_blend_src_len}, basis->perm_resource_group);
+        basis->shader_prog_default = ShaderProgCreate(gfx_ticket, {g_vert_shader_default_src_raw, g_vert_shader_default_src_len}, {g_frag_shader_default_src_raw, g_frag_shader_default_src_len}, basis->perm_resource_group);
+        basis->shader_prog_blend = ShaderProgCreate(gfx_ticket, {g_vert_shader_default_src_raw, g_vert_shader_default_src_len}, {g_frag_shader_blend_src_raw, g_frag_shader_blend_src_len}, basis->perm_resource_group);
 
-        basis->sampler_uniform = UniformCreate(gfx, ZCL_STR_LITERAL("u_texture"), ek_uniform_type_sampler, basis->perm_resource_group, temp_arena);
-        basis->blend_uniform = UniformCreate(gfx, ZCL_STR_LITERAL("u_blend"), ek_uniform_type_v4, basis->perm_resource_group, temp_arena);
+        basis->sampler_uniform = UniformCreate(gfx_ticket, ZCL_STR_LITERAL("u_texture"), ek_uniform_type_sampler, basis->perm_resource_group, temp_arena);
+        basis->blend_uniform = UniformCreate(gfx_ticket, ZCL_STR_LITERAL("u_blend"), ek_uniform_type_v4, basis->perm_resource_group, temp_arena);
 
         const zcl::t_static_array<zcl::t_u8, 4> batch_px_texture_rgba = {{255, 255, 255, 255}};
-        basis->px_texture = TextureCreate(gfx, {{1, 1}, zcl::ArrayToNonstatic(&batch_px_texture_rgba)}, basis->perm_resource_group);
+        basis->px_texture = TextureCreate(gfx_ticket, {{1, 1}, zcl::ArrayToNonstatic(&batch_px_texture_rgba)}, basis->perm_resource_group);
 
         return basis;
     }
 
-    void internal::RenderingBasisDestroy(t_rendering_basis *const basis, t_gfx *const gfx) {
-        GFXResourceGroupDestroy(gfx, basis->perm_resource_group);
+    void internal::RenderingBasisDestroy(t_rendering_basis *const basis, const t_gfx_ticket_mut gfx_ticket) {
+        GFXResourceGroupDestroy(gfx_ticket, basis->perm_resource_group);
         *basis = {};
     }
 
-    t_rendering_context internal::RendererBegin(const t_rendering_basis *const rendering_basis, t_gfx *const gfx, zcl::t_arena *const rendering_state_arena) {
-        FrameBegin(gfx);
+    t_rendering_context internal::RendererBegin(const t_rendering_basis *const rendering_basis, const t_gfx_ticket_mut gfx_ticket, zcl::t_arena *const rendering_state_arena) {
+        FrameBegin(gfx_ticket);
 
         return {
             .basis = rendering_basis,
             .state = zcl::ArenaPushItem<t_rendering_state>(rendering_state_arena),
-            .gfx = gfx,
+            .gfx_ticket = gfx_ticket,
         };
     }
 
@@ -88,12 +88,12 @@ namespace zgl {
         }
 
         const auto vertices = zcl::ArraySlice(zcl::ArrayToNonstatic(&rc.state->batch_state.verts), 0, rc.state->batch_state.vertex_cnt);
-        internal::VertexBufWrite(rc.gfx, rc.basis->vert_buf, rc.state->frame_vert_cnt, vertices);
+        internal::VertexBufWrite(rc.gfx_ticket, rc.basis->vert_buf, rc.state->frame_vert_cnt, vertices);
 
         const auto texture = rc.state->batch_state.texture ? rc.state->batch_state.texture : rc.basis->px_texture;
         const t_gfx_resource *const shader_prog = rc.state->batch_state.shader_prog ? rc.state->batch_state.shader_prog : rc.basis->shader_prog_default;
 
-        internal::FrameSubmit(rc.gfx, rc.state->pass_index, rc.basis->vert_buf, rc.state->frame_vert_cnt, rc.state->frame_vert_cnt + rc.state->batch_state.vertex_cnt, texture, shader_prog, rc.basis->sampler_uniform);
+        internal::FrameSubmit(rc.gfx_ticket, rc.state->pass_index, rc.basis->vert_buf, rc.state->frame_vert_cnt, rc.state->frame_vert_cnt + rc.state->batch_state.vertex_cnt, texture, shader_prog, rc.basis->sampler_uniform);
 
         rc.state->frame_vert_cnt += rc.state->batch_state.vertex_cnt;
 
@@ -103,7 +103,7 @@ namespace zgl {
     void internal::RendererEnd(const t_rendering_context rc) {
         ZCL_ASSERT(!rc.state->pass_active);
 
-        FrameEnd(rc.gfx);
+        FrameEnd(rc.gfx_ticket);
     }
 
     void RendererPassBegin(const t_rendering_context rc, const zcl::t_v2_i size, const zcl::t_mat4x4 &view_mat, const zcl::t_b8 clear, const zcl::t_color_rgba32f clear_col) {
@@ -112,7 +112,7 @@ namespace zgl {
         rc.state->pass_active = true;
         ZCL_REQUIRE(rc.state->pass_index < internal::k_frame_pass_limit && "Trying to begin a new frame pass, but the limit has been reached!");
 
-        internal::FramePassConfigure(rc.gfx, rc.state->pass_index, size, view_mat, clear, clear_col);
+        internal::FramePassConfigure(rc.gfx_ticket, rc.state->pass_index, size, view_mat, clear, clear_col);
     }
 
     void RendererPassBeginOffscreen(const t_rendering_context rc, const t_gfx_resource *const texture_target, const zcl::t_mat4x4 &view_mat, const zcl::t_b8 clear, const zcl::t_color_rgba32f clear_col) {
@@ -121,7 +121,7 @@ namespace zgl {
         rc.state->pass_active = true;
         ZCL_REQUIRE(rc.state->pass_index < internal::k_frame_pass_limit && "Trying to begin a new frame pass, but the limit has been reached!");
 
-        internal::FramePassConfigureOffscreen(rc.gfx, rc.state->pass_index, texture_target, view_mat, clear, clear_col);
+        internal::FramePassConfigureOffscreen(rc.gfx_ticket, rc.state->pass_index, texture_target, view_mat, clear, clear_col);
     }
 
     void RendererPassEnd(const t_rendering_context rc) {
@@ -222,7 +222,7 @@ namespace zgl {
     }
 
     void RendererSubmitTexture(const t_rendering_context rc, const t_gfx_resource *const texture, const zcl::t_v2 pos, const zcl::t_rect_i src_rect, const zcl::t_v2 origin, const zcl::t_f32 rot) {
-        const auto texture_size = TextureGetSize(rc.gfx, texture);
+        const auto texture_size = TextureGetSize(rc.gfx_ticket, texture);
 
         zcl::t_rect_i src_rect_to_use;
 
