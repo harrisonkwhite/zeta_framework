@@ -446,6 +446,7 @@ namespace zgl {
 
         if (g_state.backbuffer_size_cache != size) {
             bgfx::reset(static_cast<zcl::t_u32>(size.x), static_cast<zcl::t_u32>(size.y), BGFX_RESET_VSYNC);
+            g_state.backbuffer_size_cache = size;
         }
     }
 
