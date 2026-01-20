@@ -26,7 +26,7 @@ namespace zgl {
 
         zcl::t_texture_data_mut texture_data;
 
-        if (!zcl::TextureLoadFromExternal(file_path, temp_arena, temp_arena, &texture_data)) {
+        if (!zcl::TextureLoadFromUnbuilt(file_path, temp_arena, temp_arena, &texture_data)) {
             ZCL_FATAL();
         }
 
@@ -115,7 +115,7 @@ namespace zgl {
         zcl::t_font_arrangement arrangement;
         zcl::t_array_mut<zcl::t_font_atlas_pixels_r8> atlas_pixels_arr;
 
-        if (!zcl::FontLoadFromExternal(file_path, height, code_pts, GFXResourceGroupGetArena(gfx_ticket, resource_group), temp_arena, temp_arena, &arrangement, &atlas_pixels_arr)) {
+        if (!zcl::FontLoadFromUnbuilt(file_path, height, code_pts, GFXResourceGroupGetArena(gfx_ticket, resource_group), temp_arena, temp_arena, &arrangement, &atlas_pixels_arr)) {
             ZCL_FATAL();
         }
 

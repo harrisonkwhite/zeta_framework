@@ -84,7 +84,7 @@ namespace zgl {
 
         zcl::t_sound_data_mut snd_data;
 
-        if (!zcl::SoundLoadFromExternal(file_path, group->arena, temp_arena, &snd_data)) {
+        if (!zcl::SoundLoadFromUnbuilt(file_path, group->arena, temp_arena, &snd_data)) {
             ZCL_FATAL();
         }
 

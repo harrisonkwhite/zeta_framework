@@ -29,5 +29,5 @@ namespace zcl {
     }
 
     // Supports WAV, FLAC, and MP3.
-    [[nodiscard]] t_b8 SoundLoadFromExternal(const t_str_rdonly file_path, t_arena *const snd_data_arena, t_arena *const temp_arena, t_sound_data_mut *const o_snd_data);
+    [[nodiscard]] t_b8 SoundLoadFromUnbuilt(const t_str_rdonly file_path, t_arena *const snd_data_arena, t_arena *const temp_arena, t_sound_data_mut *const o_snd_data);
 }

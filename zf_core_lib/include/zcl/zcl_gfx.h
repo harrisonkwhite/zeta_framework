@@ -173,7 +173,7 @@ namespace zcl {
         }
     };
 
-    [[nodiscard]] t_b8 TextureLoadFromExternal(const t_str_rdonly file_path, t_arena *const texture_data_arena, t_arena *const temp_arena, t_texture_data_mut *const o_texture_data);
+    [[nodiscard]] t_b8 TextureLoadFromUnbuilt(const t_str_rdonly file_path, t_arena *const texture_data_arena, t_arena *const temp_arena, t_texture_data_mut *const o_texture_data);
 
     constexpr t_rect_f TextureCalcUVRect(const t_rect_i src_rect, const t_v2_i texture_size) {
         ZCL_ASSERT(texture_size.x > 0 && texture_size.y > 0);
@@ -235,7 +235,7 @@ namespace zcl {
             return pa.a == pb.a && pa.b == pb.b;
         };
 
-    [[nodiscard]] t_b8 FontLoadFromExternal(const t_str_rdonly file_path, const t_i32 height, t_code_point_bitset *const code_pts, t_arena *const arrangement_arena, t_arena *const atlas_pixels_arr_arena, t_arena *const temp_arena, t_font_arrangement *const o_arrangement, t_array_mut<t_font_atlas_pixels_r8> *const o_atlas_pixels_arr);
+    [[nodiscard]] t_b8 FontLoadFromUnbuilt(const t_str_rdonly file_path, const t_i32 height, t_code_point_bitset *const code_pts, t_arena *const arrangement_arena, t_arena *const atlas_pixels_arr_arena, t_arena *const temp_arena, t_font_arrangement *const o_arrangement, t_array_mut<t_font_atlas_pixels_r8> *const o_atlas_pixels_arr);
 
     // ============================================================
 }

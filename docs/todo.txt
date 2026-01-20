@@ -1,4 +1,7 @@
-- No command window in release build!
+- Have crash log be created by default in release builds
+- Make fatal error handling more customisable
+- Streamable audio needs to be integrated into asset builder
+- Stack frame in release is not very useful
 - Clean up includes all across project
 - Some kind of sound group system like what's in gamemaker, so groups of sounds can share the same volume for instance
 - String streams

@@ -94,3 +94,10 @@ target_link_libraries(zf_game_lib
     PUBLIC zf_core_lib
     PRIVATE glfw bgfx bimg bx
 )
+
+if (WIN32 AND NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
+    target_link_options(zf_game_lib INTERFACE
+        "/SUBSYSTEM:WINDOWS"
+        "/ENTRY:mainCRTStartup"
+    )
+endif()

@@ -5,7 +5,7 @@
 #include <stb_truetype.h>
 
 namespace zcl {
-    t_b8 TextureLoadFromExternal(const t_str_rdonly file_path, t_arena *const texture_data_arena, t_arena *const temp_arena, t_texture_data_mut *const o_texture_data) {
+    t_b8 TextureLoadFromUnbuilt(const t_str_rdonly file_path, t_arena *const texture_data_arena, t_arena *const temp_arena, t_texture_data_mut *const o_texture_data) {
         const t_str_rdonly file_path_terminated = StrCloneButAddTerminator(file_path, temp_arena);
 
         t_v2_i dims;
@@ -26,7 +26,7 @@ namespace zcl {
         return true;
     }
 
-    t_b8 FontLoadFromExternal(const t_str_rdonly file_path, const t_i32 height, t_code_point_bitset *const code_pts, t_arena *const arrangement_arena, t_arena *const atlas_pixels_arr_arena, t_arena *const temp_arena, t_font_arrangement *const o_arrangement, t_array_mut<t_font_atlas_pixels_r8> *const o_atlas_pixels_arr) {
+    t_b8 FontLoadFromUnbuilt(const t_str_rdonly file_path, const t_i32 height, t_code_point_bitset *const code_pts, t_arena *const arrangement_arena, t_arena *const atlas_pixels_arr_arena, t_arena *const temp_arena, t_font_arrangement *const o_arrangement, t_array_mut<t_font_atlas_pixels_r8> *const o_atlas_pixels_arr) {
         ZCL_ASSERT(height > 0);
 
         // Get the plain font file data.

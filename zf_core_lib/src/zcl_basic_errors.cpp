@@ -33,7 +33,8 @@ namespace zcl {
 #endif
     }
 
-    static void print_stack_trace() {
+    // @todo: Not very useful in release.
+    static void PrintStackTrace() {
 #ifdef ZCL_PLATFORM_WINDOWS
         constexpr t_i32 k_stack_len = 32;
         void *stack[k_stack_len];
@@ -89,7 +90,7 @@ namespace zcl {
         fprintf(stderr, "File:      %s\n", file_name_c_str);
         fprintf(stderr, "Line:      %d\n\n", line);
 
-        print_stack_trace();
+        PrintStackTrace();
 
         fprintf(stderr, "=========================================================\n");
 
@@ -116,13 +117,21 @@ namespace zcl {
         }
 #endif
 
-        print_stack_trace();
+        PrintStackTrace();
 
         fprintf(stderr, "=====================================================\n");
 
         fflush(stderr);
 
         TryBreakingIntoDebuggerIf(true);
+
+        // @todo
+
+#ifndef ZCL_DEBUG
+    #ifdef ZCL_PLATFORM_WINDOWS
+        MessageBoxA(nullptr, "A fatal error occurred.\n\nA log file has been written.\n\nThe application will now exit.", "Fatal Error", MB_OK | MB_ICONERROR);
+    #endif
+#endif
 
         abort();
     }
