@@ -116,6 +116,8 @@ namespace zcl {
     // ============================================================
     // @section: Floats
 
+    constexpr t_i32 k_format_float_precision_default = 6;
+
     template <c_floating_point tp_type>
     struct t_format_float {
         using t_formatting = void;
@@ -126,7 +128,7 @@ namespace zcl {
     };
 
     template <c_floating_point tp_type>
-    t_format_float<tp_type> FormatFloat(const tp_type value, const t_i32 precision = 6, const t_b8 trim_trailing_zeros = false) {
+    t_format_float<tp_type> FormatFloat(const tp_type value, const t_i32 precision = k_format_float_precision_default, const t_b8 trim_trailing_zeros = false) {
         return {
             .value = value,
             .precision = precision,
@@ -289,7 +291,7 @@ namespace zcl {
         t_v2_i value;
     };
 
-    inline t_format_v2 FormatV2(const t_v2 value, const t_i32 precision = 6, const t_b8 trim_trailing_zeros = false) {
+    inline t_format_v2 FormatV2(const t_v2 value, const t_i32 precision = k_format_float_precision_default, const t_b8 trim_trailing_zeros = false) {
         return {
             .value = value,
             .precision = precision,

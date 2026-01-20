@@ -33,42 +33,42 @@ namespace zgl {
         return TextureCreate(gfx_ticket, texture_data, group);
     }
 
-    t_gfx_resource *ShaderProgCreateFromPacked(const t_gfx_ticket_mut gfx_ticket, const zcl::t_str_rdonly vert_shader_file_path, const zcl::t_str_rdonly frag_shader_file_path, t_gfx_resource_group *const group, zcl::t_arena *const temp_arena) {
+    t_gfx_resource *ShaderProgCreateFromPacked(const t_gfx_ticket_mut gfx_ticket, const zcl::t_str_rdonly vertex_shader_file_path, const zcl::t_str_rdonly fragment_shader_file_path, t_gfx_resource_group *const group, zcl::t_arena *const temp_arena) {
         ZCL_ASSERT(TicketCheckValid(gfx_ticket));
 
-        zcl::t_array_mut<zcl::t_u8> vert_shader_compiled_bin;
+        zcl::t_array_mut<zcl::t_u8> vertex_shader_compiled_bin;
 
         {
-            zcl::t_file_stream vert_shader_file_stream;
+            zcl::t_file_stream vertex_shader_file_stream;
 
-            if (!zcl::FileOpen(vert_shader_file_path, zcl::t_file_access_mode::ek_file_access_mode_read, temp_arena, &vert_shader_file_stream)) {
+            if (!zcl::FileOpen(vertex_shader_file_path, zcl::t_file_access_mode::ek_file_access_mode_read, temp_arena, &vertex_shader_file_stream)) {
                 ZCL_FATAL();
             }
 
-            if (!zcl::DeserializeShader(vert_shader_file_stream, temp_arena, &vert_shader_compiled_bin)) {
+            if (!zcl::DeserializeShader(vertex_shader_file_stream, temp_arena, &vertex_shader_compiled_bin)) {
                 ZCL_FATAL();
             }
 
-            zcl::FileClose(&vert_shader_file_stream);
+            zcl::FileClose(&vertex_shader_file_stream);
         }
 
-        zcl::t_array_mut<zcl::t_u8> frag_shader_compiled_bin;
+        zcl::t_array_mut<zcl::t_u8> fragment_shader_compiled_bin;
 
         {
-            zcl::t_file_stream frag_shader_file_stream;
+            zcl::t_file_stream fragment_shader_file_stream;
 
-            if (!zcl::FileOpen(frag_shader_file_path, zcl::t_file_access_mode::ek_file_access_mode_read, temp_arena, &frag_shader_file_stream)) {
+            if (!zcl::FileOpen(fragment_shader_file_path, zcl::t_file_access_mode::ek_file_access_mode_read, temp_arena, &fragment_shader_file_stream)) {
                 ZCL_FATAL();
             }
 
-            if (!zcl::DeserializeShader(frag_shader_file_stream, temp_arena, &frag_shader_compiled_bin)) {
+            if (!zcl::DeserializeShader(fragment_shader_file_stream, temp_arena, &fragment_shader_compiled_bin)) {
                 ZCL_FATAL();
             }
 
-            zcl::FileClose(&frag_shader_file_stream);
+            zcl::FileClose(&fragment_shader_file_stream);
         }
 
-        return ShaderProgCreate(gfx_ticket, vert_shader_compiled_bin, frag_shader_compiled_bin, group);
+        return ShaderProgCreate(gfx_ticket, vertex_shader_compiled_bin, fragment_shader_compiled_bin, group);
     }
 
     t_font FontCreateFromExternal(const t_gfx_ticket_mut gfx_ticket, const zcl::t_str_rdonly file_path, const zcl::t_i32 height, zcl::t_code_point_bitset *const code_pts, t_gfx_resource_group *const resource_group, zcl::t_arena *const temp_arena) {
@@ -85,7 +85,7 @@ namespace zgl {
 
         for (zcl::t_i32 i = 0; i < atlas_pixels_arr.len; i++) {
             const zcl::t_texture_data_rdonly atlas_texture_data = {
-                .dims = zcl::k_font_atlas_size,
+                .dims = zcl::k_font_atlas_texture_size,
                 .format = zcl::ek_texture_format_r8,
                 .pixels = {.r8 = atlas_pixels_arr[i]},
             };
@@ -123,7 +123,7 @@ namespace zgl {
 
         for (zcl::t_i32 i = 0; i < atlas_pixels_arr.len; i++) {
             const zcl::t_texture_data_rdonly atlas_texture_data = {
-                .dims = zcl::k_font_atlas_size,
+                .dims = zcl::k_font_atlas_texture_size,
                 .format = zcl::ek_texture_format_r8,
                 .pixels = {.r8 = atlas_pixels_arr[i]},
             };

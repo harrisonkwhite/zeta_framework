@@ -283,7 +283,7 @@ namespace zgl {
         return texture->type_data.texture.size;
     }
 
-    t_gfx_resource *ShaderProgCreate(const t_gfx_ticket_mut gfx_ticket, const zcl::t_array_rdonly<zcl::t_u8> vertex_shader_compiled_bin, const zcl::t_array_rdonly<zcl::t_u8> frag_shader_compiled_bin, t_gfx_resource_group *const resource_group) {
+    t_gfx_resource *ShaderProgCreate(const t_gfx_ticket_mut gfx_ticket, const zcl::t_array_rdonly<zcl::t_u8> vertex_shader_compiled_bin, const zcl::t_array_rdonly<zcl::t_u8> fragment_shader_compiled_bin, t_gfx_resource_group *const resource_group) {
         ZCL_ASSERT(g_state.phase == ek_phase_active_but_not_midframe);
         ZCL_ASSERT(TicketCheckValid(gfx_ticket));
 
@@ -294,14 +294,14 @@ namespace zgl {
             ZCL_FATAL();
         }
 
-        const bgfx::Memory *const frag_shader_bgfx_mem = bgfx::copy(frag_shader_compiled_bin.raw, static_cast<zcl::t_u32>(frag_shader_compiled_bin.len));
-        const bgfx::ShaderHandle frag_shader_bgfx_hdl = bgfx::createShader(frag_shader_bgfx_mem);
+        const bgfx::Memory *const fragment_shader_bgfx_mem = bgfx::copy(fragment_shader_compiled_bin.raw, static_cast<zcl::t_u32>(fragment_shader_compiled_bin.len));
+        const bgfx::ShaderHandle fragment_shader_bgfx_hdl = bgfx::createShader(fragment_shader_bgfx_mem);
 
-        if (!bgfx::isValid(frag_shader_bgfx_hdl)) {
+        if (!bgfx::isValid(fragment_shader_bgfx_hdl)) {
             ZCL_FATAL();
         }
 
-        const bgfx::ProgramHandle prog_bgfx_hdl = bgfx::createProgram(vertex_shader_bgfx_hdl, frag_shader_bgfx_hdl, true);
+        const bgfx::ProgramHandle prog_bgfx_hdl = bgfx::createProgram(vertex_shader_bgfx_hdl, fragment_shader_bgfx_hdl, true);
 
         if (!bgfx::isValid(prog_bgfx_hdl)) {
             ZCL_FATAL();

@@ -193,9 +193,9 @@ namespace zcl {
     // ============================================================
     // @section: Fonts
 
-    constexpr t_v2_i k_font_atlas_size = {1024, 1024};
+    constexpr t_v2_i k_font_atlas_texture_size = {1024, 1024};
 
-    using t_font_atlas_pixels_r8 = t_static_array<t_color_r8, k_font_atlas_size.x * k_font_atlas_size.y>;
+    using t_font_atlas_pixels_r8 = t_static_array<t_color_r8, k_font_atlas_texture_size.x * k_font_atlas_texture_size.y>;
 
     struct t_font_glyph_info {
         t_v2_i offs;

@@ -69,9 +69,9 @@ namespace zgl {
         }
     }
 
-    t_gfx_resource *ShaderProgCreate(const t_gfx_ticket_mut gfx_ticket, const zcl::t_array_rdonly<zcl::t_u8> vertex_shader_compiled_bin, const zcl::t_array_rdonly<zcl::t_u8> frag_shader_compiled_bin, t_gfx_resource_group *const resource_group);
+    t_gfx_resource *ShaderProgCreate(const t_gfx_ticket_mut gfx_ticket, const zcl::t_array_rdonly<zcl::t_u8> vertex_shader_compiled_bin, const zcl::t_array_rdonly<zcl::t_u8> fragment_shader_compiled_bin, t_gfx_resource_group *const resource_group);
 
-    t_gfx_resource *ShaderProgCreateFromPacked(const t_gfx_ticket_mut gfx_ticket, const zcl::t_str_rdonly vert_shader_file_path, const zcl::t_str_rdonly frag_shader_file_path, t_gfx_resource_group *const group, zcl::t_arena *const temp_arena);
+    t_gfx_resource *ShaderProgCreateFromPacked(const t_gfx_ticket_mut gfx_ticket, const zcl::t_str_rdonly vertex_shader_file_path, const zcl::t_str_rdonly fragment_shader_file_path, t_gfx_resource_group *const group, zcl::t_arena *const temp_arena);
 
     enum t_uniform_type : zcl::t_i32 {
         ek_uniform_type_sampler,

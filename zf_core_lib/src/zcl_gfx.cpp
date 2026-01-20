@@ -98,19 +98,19 @@ namespace zcl {
             glyph_info.offs = {bm_box_left, bm_box_top + static_cast<t_i32>(static_cast<t_f32>(vm_ascent) * scale)};
             glyph_info.size = {bm_box_right - bm_box_left, bm_box_bottom - bm_box_top};
 
-            ZCL_ASSERT(glyph_info.size.x <= k_font_atlas_size.x && glyph_info.size.y <= k_font_atlas_size.y);
+            ZCL_ASSERT(glyph_info.size.x <= k_font_atlas_texture_size.x && glyph_info.size.y <= k_font_atlas_texture_size.y);
 
             t_i32 hm_advance;
             stbtt_GetGlyphHMetrics(&stb_font_info, glyph_index, &hm_advance, nullptr);
 
             glyph_info.adv = static_cast<t_i32>(static_cast<t_f32>(hm_advance) * scale);
 
-            if (atlas_pen.x + glyph_info.size.x + (k_glyph_padding * 2) > k_font_atlas_size.x) {
+            if (atlas_pen.x + glyph_info.size.x + (k_glyph_padding * 2) > k_font_atlas_texture_size.x) {
                 atlas_pen.x = 0;
                 atlas_pen.y += o_arrangement->line_height + (k_glyph_padding * 2);
             }
 
-            if (atlas_pen.y + glyph_info.size.y + (k_glyph_padding * 2) > k_font_atlas_size.y) {
+            if (atlas_pen.y + glyph_info.size.y + (k_glyph_padding * 2) > k_font_atlas_texture_size.y) {
                 atlas_pen = {};
                 atlas_index++;
             }
@@ -181,7 +181,7 @@ namespace zcl {
 
             for (t_i32 y = RectGetTop(atlas_rect); y < RectGetBottom(atlas_rect); y++) {
                 for (t_i32 x = RectGetLeft(atlas_rect); x < RectGetRight(atlas_rect); x++) {
-                    const t_i32 px_index = (y * k_font_atlas_size.x) + x;
+                    const t_i32 px_index = (y * k_font_atlas_texture_size.x) + x;
                     const t_i32 stb_bitmap_index = ((y - atlas_rect.y) * atlas_rect.width) + (x - atlas_rect.x);
                     (*atlas_pixels)[px_index] = {stb_bitmap[stb_bitmap_index]};
                 }
