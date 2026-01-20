@@ -1,7 +1,9 @@
-#include <zgl/zgl_gfx.h>
+#include <zgl/zgl_gfx_private.h>
 
 namespace zgl {
     t_gfx_resource *TextureCreateFromExternal(const t_gfx_ticket_mut gfx_ticket, const zcl::t_str_rdonly file_path, t_gfx_resource_group *const group, zcl::t_arena *const temp_arena) {
+        ZCL_ASSERT(TicketCheckValid(gfx_ticket));
+
         zcl::t_texture_data_mut texture_data;
 
         if (!zcl::TextureLoadFromExternal(file_path, temp_arena, temp_arena, &texture_data)) {
@@ -12,6 +14,8 @@ namespace zgl {
     }
 
     t_gfx_resource *TextureCreateFromPacked(const t_gfx_ticket_mut gfx_ticket, const zcl::t_str_rdonly file_path, t_gfx_resource_group *const group, zcl::t_arena *const temp_arena) {
+        ZCL_ASSERT(TicketCheckValid(gfx_ticket));
+
         zcl::t_file_stream file_stream;
 
         if (!zcl::FileOpen(file_path, zcl::t_file_access_mode::ek_file_access_mode_read, temp_arena, &file_stream)) {
@@ -30,6 +34,8 @@ namespace zgl {
     }
 
     t_gfx_resource *ShaderProgCreateFromPacked(const t_gfx_ticket_mut gfx_ticket, const zcl::t_str_rdonly vert_shader_file_path, const zcl::t_str_rdonly frag_shader_file_path, t_gfx_resource_group *const group, zcl::t_arena *const temp_arena) {
+        ZCL_ASSERT(TicketCheckValid(gfx_ticket));
+
         zcl::t_array_mut<zcl::t_u8> vert_shader_compiled_bin;
 
         {
@@ -66,6 +72,8 @@ namespace zgl {
     }
 
     t_font FontCreateFromExternal(const t_gfx_ticket_mut gfx_ticket, const zcl::t_str_rdonly file_path, const zcl::t_i32 height, zcl::t_code_point_bitset *const code_pts, t_gfx_resource_group *const resource_group, zcl::t_arena *const temp_arena) {
+        ZCL_ASSERT(TicketCheckValid(gfx_ticket));
+
         zcl::t_font_arrangement arrangement;
         zcl::t_array_mut<zcl::t_font_atlas_rgba> atlas_rgbas;
 
@@ -86,6 +94,8 @@ namespace zgl {
     }
 
     t_font FontCreateFromPacked(const t_gfx_ticket_mut gfx_ticket, const zcl::t_str_rdonly file_path, t_gfx_resource_group *const resource_group, zcl::t_arena *const temp_arena) {
+        ZCL_ASSERT(TicketCheckValid(gfx_ticket));
+
         zcl::t_font_arrangement arrangement;
         zcl::t_array_mut<zcl::t_font_atlas_rgba> atlas_rgbas;
 

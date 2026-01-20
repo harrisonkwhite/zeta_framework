@@ -1,4 +1,4 @@
-#include <zgl/zgl_gfx.h>
+#include <zgl/zgl_gfx_private.h>
 
 #include <bgfx/bgfx.h>
 
@@ -85,11 +85,12 @@ namespace zgl {
             ZCL_FATAL();
         }
 
-        return {0}; // @temp
+        return TicketCreate();
     }
 
     void internal::GFXShutdown(const t_gfx_ticket_mut gfx_ticket) {
         ZCL_ASSERT(g_state.phase != ek_phase_inactive);
+        ZCL_ASSERT(TicketCheckValid(gfx_ticket));
 
         bgfx::shutdown();
 
@@ -98,6 +99,7 @@ namespace zgl {
 
     t_gfx_resource_group *GFXResourceGroupCreate(const t_gfx_ticket_mut gfx_ticket, zcl::t_arena *const arena) {
         ZCL_ASSERT(g_state.phase == ek_phase_active_but_not_midframe);
+        ZCL_ASSERT(TicketCheckValid(gfx_ticket));
 
         const auto result = zcl::ArenaPushItem<t_gfx_resource_group>(arena);
         result->arena = arena;
@@ -107,6 +109,7 @@ namespace zgl {
 
     void GFXResourceGroupDestroy(const t_gfx_ticket_mut gfx_ticket, t_gfx_resource_group *const group) {
         ZCL_ASSERT(g_state.phase == ek_phase_active_but_not_midframe);
+        ZCL_ASSERT(TicketCheckValid(gfx_ticket));
 
         t_gfx_resource *resource = group->head;
 
@@ -163,11 +166,14 @@ namespace zgl {
 
     zcl::t_arena *GFXResourceGroupGetArena(const t_gfx_ticket_rdonly gfx_ticket, const t_gfx_resource_group *const group) {
         ZCL_ASSERT(g_state.phase != ek_phase_inactive);
+        ZCL_ASSERT(TicketCheckValid(gfx_ticket));
+
         return group->arena;
     }
 
     t_gfx_resource *internal::VertexBufCreate(const t_gfx_ticket_mut gfx_ticket, const zcl::t_i32 vertex_cnt, t_gfx_resource_group *const resource_group) {
         ZCL_ASSERT(g_state.phase == ek_phase_active_but_not_midframe);
+        ZCL_ASSERT(TicketCheckValid(gfx_ticket));
         ZCL_ASSERT(vertex_cnt > 0);
 
         bgfx::VertexLayout vertex_layout;
@@ -189,6 +195,7 @@ namespace zgl {
 
     void internal::VertexBufWrite(const t_gfx_ticket_mut gfx_ticket, t_gfx_resource *const dest_vertex_buf, const zcl::t_i32 dest_vertices_index, const zcl::t_array_rdonly<t_vertex> src_vertices) {
         ZCL_ASSERT(g_state.phase != ek_phase_inactive);
+        ZCL_ASSERT(TicketCheckValid(gfx_ticket));
         ZCL_ASSERT(dest_vertex_buf->type == ek_gfx_resource_type_vertex_buf);
         ZCL_ASSERT(dest_vertices_index >= 0 && dest_vertices_index < dest_vertex_buf->type_data.vertex_buf.vertex_cnt);
 
@@ -198,6 +205,7 @@ namespace zgl {
 
     t_gfx_resource *TextureCreate(const t_gfx_ticket_mut gfx_ticket, const zcl::t_texture_data_rdonly texture_data, t_gfx_resource_group *const resource_group) {
         ZCL_ASSERT(g_state.phase == ek_phase_active_but_not_midframe);
+        ZCL_ASSERT(TicketCheckValid(gfx_ticket));
 
         const auto flags = BGFX_SAMPLER_MIN_POINT | BGFX_SAMPLER_MAG_POINT | BGFX_SAMPLER_U_CLAMP | BGFX_SAMPLER_V_CLAMP;
         const auto texture_bgfx_hdl = bgfx::createTexture2D(static_cast<zcl::t_u16>(texture_data.size_in_pxs.x), static_cast<zcl::t_u16>(texture_data.size_in_pxs.y), false, 1, bgfx::TextureFormat::RGBA8, flags, bgfx::copy(texture_data.rgba_px_data.raw, static_cast<zcl::t_u32>(zcl::ArrayGetSizeInBytes(texture_data.rgba_px_data))));
@@ -220,6 +228,7 @@ namespace zgl {
 
     t_gfx_resource *TextureCreateTarget(const t_gfx_ticket_mut gfx_ticket, const zcl::t_v2_i size, t_gfx_resource_group *const resource_group) {
         ZCL_ASSERT(g_state.phase == ek_phase_active_but_not_midframe);
+        ZCL_ASSERT(TicketCheckValid(gfx_ticket));
         ZCL_ASSERT(size.x > 0 && size.y > 0);
 
         const bgfx::FrameBufferHandle fb_bgfx_hdl = BGFXCreateFramebuffer(size);
@@ -239,6 +248,7 @@ namespace zgl {
 
     void TextureResizeTarget(const t_gfx_ticket_mut gfx_ticket, t_gfx_resource *const texture, const zcl::t_v2_i size) {
         ZCL_ASSERT(g_state.phase == ek_phase_active_but_not_midframe);
+        ZCL_ASSERT(TicketCheckValid(gfx_ticket));
         ZCL_ASSERT(texture->type == ek_gfx_resource_type_texture && texture->type_data.texture.is_target);
         ZCL_ASSERT(size.x > 0 && size.y > 0);
         ZCL_ASSERT(size != texture->type_data.texture.size);
@@ -255,6 +265,7 @@ namespace zgl {
 
     zcl::t_v2_i TextureGetSize(const t_gfx_ticket_rdonly gfx_ticket, const t_gfx_resource *const texture) {
         ZCL_ASSERT(g_state.phase != ek_phase_inactive);
+        ZCL_ASSERT(TicketCheckValid(gfx_ticket));
         ZCL_ASSERT(texture->type == ek_gfx_resource_type_texture);
 
         return texture->type_data.texture.size;
@@ -262,6 +273,7 @@ namespace zgl {
 
     t_gfx_resource *ShaderProgCreate(const t_gfx_ticket_mut gfx_ticket, const zcl::t_array_rdonly<zcl::t_u8> vertex_shader_compiled_bin, const zcl::t_array_rdonly<zcl::t_u8> frag_shader_compiled_bin, t_gfx_resource_group *const resource_group) {
         ZCL_ASSERT(g_state.phase == ek_phase_active_but_not_midframe);
+        ZCL_ASSERT(TicketCheckValid(gfx_ticket));
 
         const bgfx::Memory *const vertex_shader_bgfx_mem = bgfx::copy(vertex_shader_compiled_bin.raw, static_cast<zcl::t_u32>(vertex_shader_compiled_bin.len));
         const bgfx::ShaderHandle vertex_shader_bgfx_hdl = bgfx::createShader(vertex_shader_bgfx_mem);
@@ -292,6 +304,7 @@ namespace zgl {
 
     t_gfx_resource *UniformCreate(const t_gfx_ticket_mut gfx_ticket, const zcl::t_str_rdonly name, const t_uniform_type type, t_gfx_resource_group *const resource_group, zcl::t_arena *const temp_arena) {
         ZCL_ASSERT(g_state.phase == ek_phase_active_but_not_midframe);
+        ZCL_ASSERT(TicketCheckValid(gfx_ticket));
 
         const zcl::t_str_rdonly name_terminated = zcl::StrCloneButAddTerminator(name, temp_arena);
 
@@ -321,6 +334,7 @@ namespace zgl {
 
     t_uniform_type UniformGetType(const t_gfx_ticket_rdonly gfx_ticket, const t_gfx_resource *const uniform) {
         ZCL_ASSERT(g_state.phase != ek_phase_inactive);
+        ZCL_ASSERT(TicketCheckValid(gfx_ticket));
         ZCL_ASSERT(uniform->type == ek_gfx_resource_type_uniform);
 
         return uniform->type_data.uniform.type;
@@ -377,6 +391,8 @@ namespace zgl {
     }
 
     void UniformSetSampler(const t_gfx_ticket_mut gfx_ticket, const t_gfx_resource *const uniform, const t_gfx_resource *const sampler_texture) {
+        ZCL_ASSERT(TicketCheckValid(gfx_ticket));
+
         const t_uniform_data uniform_data = {
             .type = ek_uniform_type_sampler,
             .type_data = {.sampler = {.texture = sampler_texture}},
@@ -386,6 +402,8 @@ namespace zgl {
     }
 
     void UniformSetV4(const t_gfx_ticket_mut gfx_ticket, const t_gfx_resource *const uniform, const zcl::t_v4 v4) {
+        ZCL_ASSERT(TicketCheckValid(gfx_ticket));
+
         const t_uniform_data uniform_data = {
             .type = ek_uniform_type_v4,
             .type_data = {.v4 = {.ptr = &v4}},
@@ -395,6 +413,8 @@ namespace zgl {
     }
 
     void UniformSetMatrix4x4(const t_gfx_ticket_mut gfx_ticket, const t_gfx_resource *const uniform, const zcl::t_mat4x4 &mat4x4) {
+        ZCL_ASSERT(TicketCheckValid(gfx_ticket));
+
         const t_uniform_data uniform_data = {
             .type = ek_uniform_type_mat4x4,
             .type_data = {.mat4x4 = {.ptr = &mat4x4}},
@@ -410,6 +430,7 @@ namespace zgl {
 
     void internal::BackbufferResizeIfNeeded(const t_gfx_ticket_mut gfx_ticket, const zcl::t_v2_i size) {
         ZCL_ASSERT(g_state.phase == ek_phase_active_but_not_midframe);
+        ZCL_ASSERT(TicketCheckValid(gfx_ticket));
 
         if (g_state.backbuffer_size_cache != size) {
             bgfx::reset(static_cast<zcl::t_u32>(size.x), static_cast<zcl::t_u32>(size.y), BGFX_RESET_VSYNC);
@@ -459,6 +480,7 @@ namespace zgl {
 
     void internal::FramePassConfigure(const t_gfx_ticket_mut gfx_ticket, const zcl::t_i32 pass_index, const zcl::t_v2_i size, const zcl::t_mat4x4 &view_mat, const zcl::t_b8 clear, const zcl::t_color_rgba32f clear_col) {
         ZCL_ASSERT(g_state.phase == ek_phase_active_and_midframe);
+        ZCL_ASSERT(TicketCheckValid(gfx_ticket));
         ZCL_ASSERT(pass_index >= 0 && pass_index < k_frame_pass_limit);
 
         BGFXViewConfigure(static_cast<bgfx::ViewId>(pass_index), size, view_mat, clear, clear_col, BGFX_INVALID_HANDLE);
@@ -466,6 +488,7 @@ namespace zgl {
 
     void internal::FramePassConfigureOffscreen(const t_gfx_ticket_mut gfx_ticket, const zcl::t_i32 pass_index, const t_gfx_resource *const texture_target, const zcl::t_mat4x4 &view_mat, const zcl::t_b8 clear, const zcl::t_color_rgba32f clear_col) {
         ZCL_ASSERT(g_state.phase == ek_phase_active_and_midframe);
+        ZCL_ASSERT(TicketCheckValid(gfx_ticket));
         ZCL_ASSERT(pass_index >= 0 && pass_index < internal::k_frame_pass_limit);
         ZCL_ASSERT(texture_target->type == ek_gfx_resource_type_texture && texture_target->type_data.texture.is_target);
 
@@ -474,6 +497,7 @@ namespace zgl {
 
     void internal::FrameSubmit(const t_gfx_ticket_mut gfx_ticket, const zcl::t_i32 pass_index, const t_gfx_resource *const vertex_buf, const zcl::t_i32 vertices_index_begin, const zcl::t_i32 vertices_index_end, const t_gfx_resource *const texture, const t_gfx_resource *const shader_prog, const t_gfx_resource *const sampler_uniform) {
         ZCL_ASSERT(g_state.phase == ek_phase_active_and_midframe);
+        ZCL_ASSERT(TicketCheckValid(gfx_ticket));
         ZCL_ASSERT(pass_index >= 0 && pass_index < internal::k_frame_pass_limit);
         ZCL_ASSERT(vertex_buf->type == ek_gfx_resource_type_vertex_buf);
         ZCL_ASSERT(shader_prog->type == ek_gfx_resource_type_shader_prog);

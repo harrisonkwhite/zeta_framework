@@ -1,7 +1,7 @@
 #pragma once
 
 #include <zcl.h>
-#include <zgl/zgl_gfx.h>
+#include <zgl/zgl_gfx_public.h>
 
 namespace zgl {
     struct t_rendering_basis;
