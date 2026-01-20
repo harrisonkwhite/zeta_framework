@@ -25,9 +25,9 @@ namespace zgl {
         zcl::t_v2 uv;
     };
 
-    constexpr zcl::t_b8 VertexCheckValid(const t_vertex vert) {
-        return zcl::ColorCheckNormalized(vert.blend)
-            && vert.uv.x >= 0.0f && vert.uv.y >= 0.0f && vert.uv.x <= 1.0f && vert.uv.y <= 1.0f;
+    constexpr zcl::t_b8 VertexCheckValid(const t_vertex v) {
+        return zcl::ColorCheckNormalized(v.blend)
+            && v.uv.x >= 0.0f && v.uv.y >= 0.0f && v.uv.x <= 1.0f && v.uv.y <= 1.0f;
     }
 
     struct t_triangle {

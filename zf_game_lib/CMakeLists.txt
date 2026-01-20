@@ -39,11 +39,13 @@ endfunction()
 
 embed_shader(vert_shader_default VERT_SHADER_DEFAULT vertex)
 embed_shader(frag_shader_default FRAG_SHADER_DEFAULT fragment)
+embed_shader(frag_shader_str FRAG_SHADER_STR fragment)
 embed_shader(frag_shader_blend FRAG_SHADER_TINT fragment)
 
 set_source_files_properties(
     ${VERT_SHADER_DEFAULT_CPP}
     ${FRAG_SHADER_DEFAULT_CPP}
+    ${FRAG_SHADER_STR_CPP}
     ${FRAG_SHADER_TINT_CPP}
     PROPERTIES GENERATED TRUE
 )
@@ -77,6 +79,7 @@ add_library(zf_game_lib STATIC
 target_sources(zf_game_lib PRIVATE
     ${VERT_SHADER_DEFAULT_CPP}
     ${FRAG_SHADER_DEFAULT_CPP}
+    ${FRAG_SHADER_STR_CPP}
     ${FRAG_SHADER_TINT_CPP}
 )
 

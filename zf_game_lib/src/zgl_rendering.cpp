@@ -1,7 +1,7 @@
 #include <zgl/zgl_rendering.h>
 
 namespace zgl {
-    constexpr zcl::t_i32 k_frame_vert_limit = 8192; // @todo: This should definitely be modifiable if the user wants.
+    constexpr zcl::t_i32 k_vert_limit = 8192; // @todo: This should definitely be modifiable if the user wants.
     constexpr zcl::t_i32 k_batch_vert_limit = 1024;
 
     extern const zcl::t_u8 g_vert_shader_default_src_raw[];
@@ -9,6 +9,9 @@ namespace zgl {
 
     extern const zcl::t_u8 g_frag_shader_default_src_raw[];
     extern const zcl::t_i32 g_frag_shader_default_src_len;
+
+    extern const zcl::t_u8 g_frag_shader_str_src_raw[];
+    extern const zcl::t_i32 g_frag_shader_str_src_len;
 
     extern const zcl::t_u8 g_frag_shader_blend_src_raw[];
     extern const zcl::t_i32 g_frag_shader_blend_src_len;
@@ -19,6 +22,7 @@ namespace zgl {
         t_gfx_resource *vert_buf;
 
         t_gfx_resource *shader_prog_default;
+        t_gfx_resource *shader_prog_str;
         t_gfx_resource *shader_prog_blend;
 
         t_gfx_resource *sampler_uniform;
@@ -31,15 +35,16 @@ namespace zgl {
         zcl::t_b8 pass_active;
         zcl::t_i32 pass_index;
 
-        zcl::t_i32 frame_vert_cnt;
+        zcl::t_i32 vertex_cnt_flushed;
+
+        const t_gfx_resource *shader_prog;
 
         struct {
-            zcl::t_static_array<t_vertex, k_batch_vert_limit> verts;
+            zcl::t_static_array<t_vertex, k_batch_vert_limit> vertices;
             zcl::t_i32 vertex_cnt;
 
-            const t_gfx_resource *shader_prog;
             const t_gfx_resource *texture;
-        } batch_state;
+        } batch;
     };
 
     t_rendering_basis *internal::RenderingBasisCreate(const t_gfx_ticket_mut gfx_ticket, zcl::t_arena *const arena, zcl::t_arena *const temp_arena) {
@@ -47,9 +52,10 @@ namespace zgl {
 
         basis->perm_resource_group = GFXResourceGroupCreate(gfx_ticket, arena);
 
-        basis->vert_buf = VertexBufCreate(gfx_ticket, k_frame_vert_limit, basis->perm_resource_group);
+        basis->vert_buf = VertexBufCreate(gfx_ticket, k_vert_limit, basis->perm_resource_group);
 
         basis->shader_prog_default = ShaderProgCreate(gfx_ticket, {g_vert_shader_default_src_raw, g_vert_shader_default_src_len}, {g_frag_shader_default_src_raw, g_frag_shader_default_src_len}, basis->perm_resource_group);
+        basis->shader_prog_str = ShaderProgCreate(gfx_ticket, {g_vert_shader_default_src_raw, g_vert_shader_default_src_len}, {g_frag_shader_str_src_raw, g_frag_shader_str_src_len}, basis->perm_resource_group);
         basis->shader_prog_blend = ShaderProgCreate(gfx_ticket, {g_vert_shader_default_src_raw, g_vert_shader_default_src_len}, {g_frag_shader_blend_src_raw, g_frag_shader_blend_src_len}, basis->perm_resource_group);
 
         basis->sampler_uniform = UniformCreate(gfx_ticket, ZCL_STR_LITERAL("u_texture"), ek_uniform_type_sampler, basis->perm_resource_group, temp_arena);
@@ -86,25 +92,25 @@ namespace zgl {
     static void RendererFlush(const t_rendering_context rc) {
         ZCL_ASSERT(rc.state->pass_active);
 
-        if (rc.state->batch_state.vertex_cnt == 0) {
+        if (rc.state->batch.vertex_cnt == 0) {
             return;
         }
 
-        if (rc.state->frame_vert_cnt + rc.state->batch_state.vertex_cnt > k_frame_vert_limit) {
+        if (rc.state->vertex_cnt_flushed + rc.state->batch.vertex_cnt > k_vert_limit) {
             ZCL_FATAL();
         }
 
-        const auto vertices = zcl::ArraySlice(zcl::ArrayToNonstatic(&rc.state->batch_state.verts), 0, rc.state->batch_state.vertex_cnt);
-        internal::VertexBufWrite(rc.gfx_ticket, rc.basis->vert_buf, rc.state->frame_vert_cnt, vertices);
+        const auto vertices = zcl::ArraySlice(zcl::ArrayToNonstatic(&rc.state->batch.vertices), 0, rc.state->batch.vertex_cnt);
+        internal::VertexBufWrite(rc.gfx_ticket, rc.basis->vert_buf, rc.state->vertex_cnt_flushed, vertices);
 
-        const auto texture = rc.state->batch_state.texture ? rc.state->batch_state.texture : rc.basis->px_texture;
-        const t_gfx_resource *const shader_prog = rc.state->batch_state.shader_prog ? rc.state->batch_state.shader_prog : rc.basis->shader_prog_default;
+        const auto texture = rc.state->batch.texture ? rc.state->batch.texture : rc.basis->px_texture;
+        const t_gfx_resource *const shader_prog = rc.state->shader_prog ? rc.state->shader_prog : rc.basis->shader_prog_default;
 
-        internal::FrameSubmit(rc.gfx_ticket, rc.state->pass_index, rc.basis->vert_buf, rc.state->frame_vert_cnt, rc.state->frame_vert_cnt + rc.state->batch_state.vertex_cnt, texture, shader_prog, rc.basis->sampler_uniform);
+        internal::FrameSubmit(rc.gfx_ticket, rc.state->pass_index, rc.basis->vert_buf, rc.state->vertex_cnt_flushed, rc.state->vertex_cnt_flushed + rc.state->batch.vertex_cnt, texture, shader_prog, rc.basis->sampler_uniform);
 
-        rc.state->frame_vert_cnt += rc.state->batch_state.vertex_cnt;
+        rc.state->vertex_cnt_flushed += rc.state->batch.vertex_cnt;
 
-        zcl::ZeroClearItem(&rc.state->batch_state);
+        zcl::ZeroClearItem(&rc.state->batch);
     }
 
     void internal::RendererEnd(const t_rendering_context rc) {
@@ -141,9 +147,9 @@ namespace zgl {
     }
 
     void RendererSetShaderProg(const t_rendering_context rc, const t_gfx_resource *const prog) {
-        if (prog != rc.state->batch_state.shader_prog) {
+        if (prog != rc.state->shader_prog) {
             RendererFlush(rc);
-            rc.state->batch_state.shader_prog = prog;
+            rc.state->shader_prog = prog;
         }
     }
 
@@ -163,19 +169,19 @@ namespace zgl {
         }
 #endif
 
-        if (texture != rc.state->batch_state.texture || rc.state->batch_state.vertex_cnt + num_verts_to_submit > k_batch_vert_limit) {
+        if (texture != rc.state->batch.texture || rc.state->batch.vertex_cnt + num_verts_to_submit > k_batch_vert_limit) {
             RendererFlush(rc);
-            rc.state->batch_state.texture = texture;
+            rc.state->batch.texture = texture;
         }
 
         for (zcl::t_i32 i = 0; i < triangles.len; i++) {
-            const zcl::t_i32 offs = rc.state->batch_state.vertex_cnt;
-            rc.state->batch_state.verts[offs + (3 * i) + 0] = triangles[i].vertices[0];
-            rc.state->batch_state.verts[offs + (3 * i) + 1] = triangles[i].vertices[1];
-            rc.state->batch_state.verts[offs + (3 * i) + 2] = triangles[i].vertices[2];
+            const zcl::t_i32 offs = rc.state->batch.vertex_cnt;
+            rc.state->batch.vertices[offs + (3 * i) + 0] = triangles[i].vertices[0];
+            rc.state->batch.vertices[offs + (3 * i) + 1] = triangles[i].vertices[1];
+            rc.state->batch.vertices[offs + (3 * i) + 2] = triangles[i].vertices[2];
         }
 
-        rc.state->batch_state.vertex_cnt += num_verts_to_submit;
+        rc.state->batch.vertex_cnt += num_verts_to_submit;
     }
 
     void RendererSubmitRect(const t_rendering_context rc, const zcl::t_rect_f rect, const zcl::t_color_rgba32f color_topleft, const zcl::t_color_rgba32f color_topright, const zcl::t_color_rgba32f color_bottomright, const zcl::t_color_rgba32f color_bottomleft) {
@@ -370,6 +376,10 @@ namespace zgl {
             return;
         }
 
+        RendererFlush(rc);
+
+        RendererSetShaderProg(rc, rc.basis->shader_prog_str);
+
         const zcl::t_array_mut<zcl::t_v2> chr_positions = CalcStrChrRenderPositions(str, font.arrangement, pos, origin, temp_arena);
 
         zcl::t_i32 chr_index = 0;
@@ -391,5 +401,7 @@ namespace zgl {
 
             chr_index++;
         };
+
+        RendererSetShaderProg(rc, nullptr);
     }
 }
