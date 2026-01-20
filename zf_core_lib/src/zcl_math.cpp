@@ -7,42 +7,6 @@ namespace zcl {
         return sqrt((v.x * v.x) + (v.y * v.y));
     }
 
-    t_rect_f RectsCalcSpan(const t_array_mut<t_rect_f> rects) {
-        ZCL_ASSERT(rects.len > 0);
-
-        t_f32 min_left = RectGetLeft(rects[0]);
-        t_f32 min_top = RectGetTop(rects[0]);
-        t_f32 max_right = RectGetRight(rects[0]);
-        t_f32 max_bottom = RectGetBottom(rects[0]);
-
-        for (t_i32 i = 1; i < rects.len; i++) {
-            min_left = CalcMin(RectGetLeft(rects[i]), min_left);
-            min_top = CalcMin(RectGetTop(rects[i]), min_top);
-            max_right = CalcMax(RectGetRight(rects[i]), max_right);
-            max_bottom = CalcMax(RectGetBottom(rects[i]), max_bottom);
-        }
-
-        return RectCreateF(min_left, min_top, max_right - min_left, max_bottom - min_top);
-    }
-
-    t_rect_i RectsCalcSpan(const t_array_mut<t_rect_i> rects) {
-        ZCL_ASSERT(rects.len > 0);
-
-        t_i32 min_left = RectGetLeft(rects[0]);
-        t_i32 min_top = RectGetTop(rects[0]);
-        t_i32 max_right = RectGetRight(rects[0]);
-        t_i32 max_bottom = RectGetBottom(rects[0]);
-
-        for (t_i32 i = 1; i < rects.len; i++) {
-            min_left = CalcMin(RectGetLeft(rects[i]), min_left);
-            min_top = CalcMin(RectGetTop(rects[i]), min_top);
-            max_right = CalcMax(RectGetRight(rects[i]), max_right);
-            max_bottom = CalcMax(RectGetBottom(rects[i]), max_bottom);
-        }
-
-        return {min_left, min_top, max_right - min_left, max_bottom - min_top};
-    }
-
     t_mat4x4 MatrixCreateRotated(const t_f32 rot) {
         t_mat4x4 result = MatrixCreateIdentity();
         result.elems[0][0] = cos(rot);
@@ -176,5 +140,77 @@ namespace zcl {
 
     t_v2 CalcLengthdir(const t_f32 len, const t_f32 dir) {
         return t_v2{cos(dir), sin(dir)} * len;
+    }
+
+    t_rect_f CalcSpanningRect(const t_array_mut<t_v2> pts) {
+        ZCL_ASSERT(pts.len > 0);
+
+        t_f32 min_left = pts[0].x;
+        t_f32 min_top = pts[0].y;
+        t_f32 max_right = pts[0].x;
+        t_f32 max_bottom = pts[0].y;
+
+        for (t_i32 i = 1; i < pts.len; i++) {
+            min_left = CalcMin(pts[i].x, min_left);
+            min_top = CalcMin(pts[i].y, min_top);
+            max_right = CalcMax(pts[i].x, max_right);
+            max_bottom = CalcMax(pts[i].y, max_bottom);
+        }
+
+        return RectCreateF(min_left, min_top, max_right - min_left, max_bottom - min_top);
+    }
+
+    t_rect_f CalcSpanningRect(const t_array_mut<t_rect_f> rects) {
+        ZCL_ASSERT(rects.len > 0);
+
+        t_f32 min_left = RectGetLeft(rects[0]);
+        t_f32 min_top = RectGetTop(rects[0]);
+        t_f32 max_right = RectGetRight(rects[0]);
+        t_f32 max_bottom = RectGetBottom(rects[0]);
+
+        for (t_i32 i = 1; i < rects.len; i++) {
+            min_left = CalcMin(RectGetLeft(rects[i]), min_left);
+            min_top = CalcMin(RectGetTop(rects[i]), min_top);
+            max_right = CalcMax(RectGetRight(rects[i]), max_right);
+            max_bottom = CalcMax(RectGetBottom(rects[i]), max_bottom);
+        }
+
+        return RectCreateF(min_left, min_top, max_right - min_left, max_bottom - min_top);
+    }
+
+    t_rect_i CalcSpanningRect(const t_array_mut<t_v2_i> pts) {
+        ZCL_ASSERT(pts.len > 0);
+
+        t_i32 min_left = pts[0].x;
+        t_i32 min_top = pts[0].y;
+        t_i32 max_right = pts[0].x;
+        t_i32 max_bottom = pts[0].y;
+
+        for (t_i32 i = 1; i < pts.len; i++) {
+            min_left = CalcMin(pts[i].x, min_left);
+            min_top = CalcMin(pts[i].y, min_top);
+            max_right = CalcMax(pts[i].x, max_right);
+            max_bottom = CalcMax(pts[i].y, max_bottom);
+        }
+
+        return RectCreateI(min_left, min_top, max_right - min_left, max_bottom - min_top);
+    }
+
+    t_rect_i CalcSpanningRect(const t_array_mut<t_rect_i> rects) {
+        ZCL_ASSERT(rects.len > 0);
+
+        t_i32 min_left = RectGetLeft(rects[0]);
+        t_i32 min_top = RectGetTop(rects[0]);
+        t_i32 max_right = RectGetRight(rects[0]);
+        t_i32 max_bottom = RectGetBottom(rects[0]);
+
+        for (t_i32 i = 1; i < rects.len; i++) {
+            min_left = CalcMin(RectGetLeft(rects[i]), min_left);
+            min_top = CalcMin(RectGetTop(rects[i]), min_top);
+            max_right = CalcMax(RectGetRight(rects[i]), max_right);
+            max_bottom = CalcMax(RectGetBottom(rects[i]), max_bottom);
+        }
+
+        return {min_left, min_top, max_right - min_left, max_bottom - min_top};
     }
 }

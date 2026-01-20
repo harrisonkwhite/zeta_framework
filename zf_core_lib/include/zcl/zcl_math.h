@@ -426,9 +426,6 @@ namespace zcl {
         return RectGetLeft(a) < RectGetRight(b) && RectGetTop(a) < RectGetBottom(b) && RectGetRight(a) > RectGetLeft(b) && RectGetBottom(a) > RectGetTop(b);
     }
 
-    t_rect_f RectsCalcSpan(const t_array_mut<t_rect_f> rects);
-    t_rect_i RectsCalcSpan(const t_array_mut<t_rect_i> rects);
-
     // ============================================================
 
 
@@ -622,4 +619,10 @@ namespace zcl {
         const auto subrect = ClampWithinContainer(rect, container);
         return Clamp(static_cast<t_f32>(RectGetArea(subrect)) / static_cast<t_f32>(RectGetArea(container)), 0.0f, 1.0f);
     }
+
+    t_rect_f CalcSpanningRect(const t_array_mut<t_v2> pts);
+    t_rect_f CalcSpanningRect(const t_array_mut<t_rect_f> rects);
+
+    t_rect_i CalcSpanningRect(const t_array_mut<t_v2_i> pts);
+    t_rect_i CalcSpanningRect(const t_array_mut<t_rect_i> rects);
 }
