@@ -7,19 +7,20 @@ namespace zgl {
     struct t_rendering_basis;
 
     t_rendering_basis *RenderingBasisCreate(t_gfx *const gfx);
+
     void RenderingBasisDestroy(t_rendering_basis *const basis);
 
     struct t_rendering_state;
 
-    t_rendering_state *RendererBegin(t_gfx *const gfx);
-    void RendererEnd();
+    t_rendering_state *RendererBegin(const t_rendering_basis *const rendering_basis, t_gfx *const gfx, zcl::t_arena *const rendering_state_arena);
+
+    void RendererEnd(t_rendering_state *const rs);
 
     void RendererPassBegin(t_rendering_state *const rs, const zcl::t_v2_i size, const zcl::t_mat4x4 &view_mat = zcl::MatrixCreateIdentity(), const zcl::t_b8 clear = false, const zcl::t_color_rgba32f clear_col = zcl::k_color_black);
+
     void RendererPassBeginOffscreen(t_rendering_state *const rs, const t_gfx_resource *const texture_target, const zcl::t_mat4x4 &view_mat = zcl::MatrixCreateIdentity(), const zcl::t_b8 clear = false, const zcl::t_color_rgba32f clear_col = zcl::k_color_black);
 
     void RendererPassEnd(t_rendering_state *const rs);
-
-    zcl::t_b8 RendererPassCheckActive(const t_rendering_state *const rs);
 
     // Set prog as nullptr to just assign the default shader program.
     void RendererSetShaderProg(t_rendering_state *const rs, const t_gfx_resource *const prog);
