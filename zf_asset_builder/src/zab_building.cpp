@@ -1,4 +1,4 @@
-#include "zap.h"
+#include "zab.h"
 
 #include <cJSON.h>
 
@@ -92,7 +92,7 @@ constexpr zcl::t_static_array<t_asset_field, ekm_sound_field_cnt> k_sound_fields
     {.name_c_str = "out_file_path", .type = ek_asset_field_type_str},
 }};
 
-[[nodiscard]] static zcl::t_b8 PackTexture(const zcl::t_str_rdonly file_path, const zcl::t_str_rdonly out_file_path, zcl::t_arena *const temp_arena) {
+[[nodiscard]] static zcl::t_b8 BuildTexture(const zcl::t_str_rdonly file_path, const zcl::t_str_rdonly out_file_path, zcl::t_arena *const temp_arena) {
     zcl::t_texture_data_mut texture_data;
 
     if (!zcl::TextureLoadFromExternal(file_path, temp_arena, temp_arena, &texture_data)) {
@@ -117,7 +117,7 @@ constexpr zcl::t_static_array<t_asset_field, ekm_sound_field_cnt> k_sound_fields
     return true;
 }
 
-[[nodiscard]] static zcl::t_b8 PackFont(const zcl::t_str_rdonly file_path, const zcl::t_i32 height, const zcl::t_str_rdonly extra_chrs_file_path, const zcl::t_str_rdonly out_file_path, zcl::t_arena *const temp_arena) {
+[[nodiscard]] static zcl::t_b8 BuildFont(const zcl::t_str_rdonly file_path, const zcl::t_i32 height, const zcl::t_str_rdonly extra_chrs_file_path, const zcl::t_str_rdonly out_file_path, zcl::t_arena *const temp_arena) {
     const auto code_pt_bs = zcl::ArenaPushItem<zcl::t_code_point_bitset>(temp_arena);
 
     if (height <= 0) {
@@ -163,7 +163,7 @@ constexpr zcl::t_static_array<t_asset_field, ekm_sound_field_cnt> k_sound_fields
     return true;
 }
 
-[[nodiscard]] static zcl::t_b8 PackShader(const zcl::t_str_rdonly file_path, const zcl::t_str_rdonly type, const zcl::t_str_rdonly varying_def_file_path, const zcl::t_str_rdonly out_file_path, zcl::t_arena *const temp_arena) {
+[[nodiscard]] static zcl::t_b8 BuildShader(const zcl::t_str_rdonly file_path, const zcl::t_str_rdonly type, const zcl::t_str_rdonly varying_def_file_path, const zcl::t_str_rdonly out_file_path, zcl::t_arena *const temp_arena) {
     zcl::t_b8 is_frag;
 
     if (zcl::StrsCheckEqual(type, ZCL_STR_LITERAL("vertex"))) {
@@ -199,7 +199,7 @@ constexpr zcl::t_static_array<t_asset_field, ekm_sound_field_cnt> k_sound_fields
     return true;
 }
 
-[[nodiscard]] static zcl::t_b8 PackSound(const zcl::t_str_rdonly file_path, const zcl::t_str_rdonly out_file_path, zcl::t_arena *const temp_arena) {
+[[nodiscard]] static zcl::t_b8 BuildSound(const zcl::t_str_rdonly file_path, const zcl::t_str_rdonly out_file_path, zcl::t_arena *const temp_arena) {
     zcl::t_sound_data_mut snd_data;
 
     if (!zcl::SoundLoadFromExternal(file_path, temp_arena, temp_arena, &snd_data)) {
@@ -224,7 +224,7 @@ constexpr zcl::t_static_array<t_asset_field, ekm_sound_field_cnt> k_sound_fields
     return true;
 }
 
-zcl::t_b8 PackAssets(const zcl::t_str_rdonly instrs_json_file_path) {
+zcl::t_b8 BuildAssets(const zcl::t_str_rdonly instrs_json_file_path) {
     zcl::t_arena arena = zcl::ArenaCreateBlockBased();
     ZCL_DEFER({ zcl::ArenaDestroy(&arena); });
 
@@ -234,14 +234,14 @@ zcl::t_b8 PackAssets(const zcl::t_str_rdonly instrs_json_file_path) {
         zcl::t_array_mut<zcl::t_u8> instrs_json_file_contents; // Not needed beyond this scope.
 
         if (!zcl::FileLoadContents(instrs_json_file_path, &arena, &arena, &instrs_json_file_contents, true)) {
-            zcl::LogError(ZCL_STR_LITERAL("Failed to load packing instructions JSON file \"%\"!"), instrs_json_file_path);
+            zcl::LogError(ZCL_STR_LITERAL("Failed to load build instructions JSON file \"%\"!"), instrs_json_file_path);
             return false;
         }
 
         cj = cJSON_Parse(zcl::StrToCStr(zcl::t_str_rdonly{instrs_json_file_contents}));
 
         if (!cj) {
-            zcl::LogError(ZCL_STR_LITERAL("Failed to parse packing instructions JSON file!"));
+            zcl::LogError(ZCL_STR_LITERAL("Failed to parse build instructions JSON file!"));
             return false;
         }
     }
@@ -249,7 +249,7 @@ zcl::t_b8 PackAssets(const zcl::t_str_rdonly instrs_json_file_path) {
     ZCL_DEFER({ cJSON_Delete(cj); });
 
     if (!cJSON_IsObject(cj)) {
-        zcl::LogError(ZCL_STR_LITERAL("Packing instructions JSON root is not an object!"));
+        zcl::LogError(ZCL_STR_LITERAL("Build instructions JSON root is not an object!"));
         return false;
     }
 
@@ -264,7 +264,7 @@ zcl::t_b8 PackAssets(const zcl::t_str_rdonly instrs_json_file_path) {
         cJSON *const cj_assets = cJSON_GetObjectItemCaseSensitive(cj, asset_type_arr_name_c_str);
 
         if (!cJSON_IsArray(cj_assets)) {
-            zcl::LogError(ZCL_STR_LITERAL("Packing instructions JSON \"%\" array does not exist or it is of the wrong type!"), zcl::CStrToStr(asset_type_arr_name_c_str));
+            zcl::LogError(ZCL_STR_LITERAL("Build instructions JSON \"%\" array does not exist or it is of the wrong type!"), zcl::CStrToStr(asset_type_arr_name_c_str));
             return false;
         }
 
@@ -274,7 +274,7 @@ zcl::t_b8 PackAssets(const zcl::t_str_rdonly instrs_json_file_path) {
         cJSON_ArrayForEach(cj_asset, cj_assets) {
             ZCL_DEFER({ cj_asset_index++; });
 
-            zcl::Log(ZCL_STR_LITERAL("Packing \"%\" asset %..."), zcl::CStrToStr(asset_type_arr_name_c_str), cj_asset_index);
+            zcl::Log(ZCL_STR_LITERAL("Building \"%\" asset %..."), zcl::CStrToStr(asset_type_arr_name_c_str), cj_asset_index);
 
             {
                 zcl::t_file_stream std_out = zcl::FileStreamCreateStdOut();
@@ -346,7 +346,7 @@ zcl::t_b8 PackAssets(const zcl::t_str_rdonly instrs_json_file_path) {
                 const zcl::t_str_rdonly file_path = zcl::CStrToStr(field_cj_vals[ek_texture_field_file_path]->valuestring);
                 const zcl::t_str_rdonly out_file_path = zcl::CStrToStr(field_cj_vals[ek_texture_field_out_file_path]->valuestring);
 
-                if (!PackTexture(file_path, out_file_path, &arena)) {
+                if (!BuildTexture(file_path, out_file_path, &arena)) {
                     return false;
                 }
 
@@ -364,7 +364,7 @@ zcl::t_b8 PackAssets(const zcl::t_str_rdonly instrs_json_file_path) {
 
                 const zcl::t_str_rdonly out_file_path = zcl::CStrToStr(field_cj_vals[ek_font_field_out_file_path]->valuestring);
 
-                if (!PackFont(file_path, height, extra_chrs_file_path, out_file_path, &arena)) {
+                if (!BuildFont(file_path, height, extra_chrs_file_path, out_file_path, &arena)) {
                     return false;
                 }
 
@@ -377,7 +377,7 @@ zcl::t_b8 PackAssets(const zcl::t_str_rdonly instrs_json_file_path) {
                 const zcl::t_str_rdonly varying_def_file_path = zcl::CStrToStr(field_cj_vals[ek_shader_field_varying_def_file_path]->valuestring);
                 const zcl::t_str_rdonly out_file_path = zcl::CStrToStr(field_cj_vals[ek_shader_field_out_file_path]->valuestring);
 
-                if (!PackShader(file_path, type, varying_def_file_path, out_file_path, &arena)) {
+                if (!BuildShader(file_path, type, varying_def_file_path, out_file_path, &arena)) {
                     return false;
                 }
 
@@ -388,7 +388,7 @@ zcl::t_b8 PackAssets(const zcl::t_str_rdonly instrs_json_file_path) {
                 const zcl::t_str_rdonly file_path = zcl::CStrToStr(field_cj_vals[ek_sound_field_file_path]->valuestring);
                 const zcl::t_str_rdonly out_file_path = zcl::CStrToStr(field_cj_vals[ek_sound_field_out_file_path]->valuestring);
 
-                if (!PackSound(file_path, out_file_path, &arena)) {
+                if (!BuildSound(file_path, out_file_path, &arena)) {
                     return false;
                 }
 
@@ -396,7 +396,7 @@ zcl::t_b8 PackAssets(const zcl::t_str_rdonly instrs_json_file_path) {
             }
             }
 
-            zcl::Log(ZCL_STR_LITERAL("Packed successfully!\n"));
+            zcl::Log(ZCL_STR_LITERAL("Built successfully!\n"));
 
             {
                 zcl::t_file_stream std_out = zcl::FileStreamCreateStdOut();
@@ -405,7 +405,7 @@ zcl::t_b8 PackAssets(const zcl::t_str_rdonly instrs_json_file_path) {
         }
     }
 
-    zcl::Log(ZCL_STR_LITERAL("Asset packing completed!"));
+    zcl::Log(ZCL_STR_LITERAL("Asset building completed!"));
 
     return true;
 }

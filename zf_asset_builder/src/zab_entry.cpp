@@ -1,0 +1,12 @@
+#include "zab.h"
+
+int main(const int arg_cnt, const char *const *const args_raw) {
+    const zcl::t_array_rdonly<const char *> args = {args_raw, arg_cnt};
+
+    if (args.len != 2) {
+        zcl::LogError(ZCL_STR_LITERAL("Invalid number of command-line arguments provided! Expected a path to a build instructions JSON file."));
+        return EXIT_FAILURE;
+    }
+
+    return BuildAssets(zcl::CStrToStr(args[1])) ? EXIT_SUCCESS : EXIT_FAILURE;
+}

@@ -50,9 +50,9 @@ namespace zgl {
 
     t_gfx_resource *TextureCreate(const t_gfx_ticket_mut gfx_ticket, const zcl::t_texture_data_rdonly texture_data, t_gfx_resource_group *const resource_group);
 
-    t_gfx_resource *TextureCreateFromExternal(const t_gfx_ticket_mut gfx_ticket, const zcl::t_str_rdonly file_path, t_gfx_resource_group *const group, zcl::t_arena *const temp_arena);
+    t_gfx_resource *TextureCreateFromBuilt(const t_gfx_ticket_mut gfx_ticket, const zcl::t_str_rdonly file_path, t_gfx_resource_group *const group, zcl::t_arena *const temp_arena);
 
-    t_gfx_resource *TextureCreateFromPacked(const t_gfx_ticket_mut gfx_ticket, const zcl::t_str_rdonly file_path, t_gfx_resource_group *const group, zcl::t_arena *const temp_arena);
+    t_gfx_resource *TextureCreateFromUnbuilt(const t_gfx_ticket_mut gfx_ticket, const zcl::t_str_rdonly file_path, t_gfx_resource_group *const group, zcl::t_arena *const temp_arena);
 
     t_gfx_resource *TextureCreateTarget(const t_gfx_ticket_mut gfx_ticket, const zcl::t_v2_i size, t_gfx_resource_group *const resource_group);
 
@@ -71,7 +71,7 @@ namespace zgl {
 
     t_gfx_resource *ShaderProgCreate(const t_gfx_ticket_mut gfx_ticket, const zcl::t_array_rdonly<zcl::t_u8> vertex_shader_compiled_bin, const zcl::t_array_rdonly<zcl::t_u8> fragment_shader_compiled_bin, t_gfx_resource_group *const resource_group);
 
-    t_gfx_resource *ShaderProgCreateFromPacked(const t_gfx_ticket_mut gfx_ticket, const zcl::t_str_rdonly vertex_shader_file_path, const zcl::t_str_rdonly fragment_shader_file_path, t_gfx_resource_group *const group, zcl::t_arena *const temp_arena);
+    t_gfx_resource *ShaderProgCreateFromBuilt(const t_gfx_ticket_mut gfx_ticket, const zcl::t_str_rdonly vertex_shader_file_path, const zcl::t_str_rdonly fragment_shader_file_path, t_gfx_resource_group *const group, zcl::t_arena *const temp_arena);
 
     enum t_uniform_type : zcl::t_i32 {
         ek_uniform_type_sampler,
@@ -94,9 +94,9 @@ namespace zgl {
         zcl::t_array_mut<t_gfx_resource *> atlas_textures;
     };
 
-    t_font FontCreateFromExternal(const t_gfx_ticket_mut gfx_ticket, const zcl::t_str_rdonly file_path, const zcl::t_i32 height, zcl::t_code_point_bitset *const code_pts, t_gfx_resource_group *const resource_group, zcl::t_arena *const temp_arena);
+    t_font FontCreateFromBuilt(const t_gfx_ticket_mut gfx_ticket, const zcl::t_str_rdonly file_path, t_gfx_resource_group *const resource_group, zcl::t_arena *const temp_arena);
 
-    t_font FontCreateFromPacked(const t_gfx_ticket_mut gfx_ticket, const zcl::t_str_rdonly file_path, t_gfx_resource_group *const resource_group, zcl::t_arena *const temp_arena);
+    t_font FontCreateFromUnbuilt(const t_gfx_ticket_mut gfx_ticket, const zcl::t_str_rdonly file_path, const zcl::t_i32 height, zcl::t_code_point_bitset *const code_pts, t_gfx_resource_group *const resource_group, zcl::t_arena *const temp_arena);
 
     namespace internal {
         t_gfx_ticket_mut GFXStartup(const t_platform_ticket_rdonly platform_ticket);

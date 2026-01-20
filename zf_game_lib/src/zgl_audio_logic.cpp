@@ -53,24 +53,7 @@ namespace zgl {
         return result;
     }
 
-    t_sound_type *SoundTypeCreateFromExternal(const t_audio_ticket_mut audio_ticket, const zcl::t_str_rdonly file_path, t_sound_type_group *const group, zcl::t_arena *const temp_arena) {
-        ZCL_ASSERT(TicketCheckValid(audio_ticket));
-        ZCL_ASSERT(group->valid);
-
-        zcl::t_sound_data_mut snd_data;
-
-        if (!zcl::SoundLoadFromExternal(file_path, group->arena, temp_arena, &snd_data)) {
-            ZCL_FATAL();
-        }
-
-        t_sound_type *const result = SoundTypeGroupAdd(group);
-        result->streamable = false;
-        result->nonstream_snd_data = snd_data;
-
-        return result;
-    }
-
-    t_sound_type *SoundTypeCreateFromPacked(const t_audio_ticket_mut audio_ticket, const zcl::t_str_rdonly file_path, t_sound_type_group *const group, zcl::t_arena *const temp_arena) {
+    t_sound_type *SoundTypeCreateFromBuilt(const t_audio_ticket_mut audio_ticket, const zcl::t_str_rdonly file_path, t_sound_type_group *const group, zcl::t_arena *const temp_arena) {
         ZCL_ASSERT(TicketCheckValid(audio_ticket));
         ZCL_ASSERT(group->valid);
 
@@ -87,6 +70,23 @@ namespace zgl {
         }
 
         zcl::FileClose(&file_stream);
+
+        t_sound_type *const result = SoundTypeGroupAdd(group);
+        result->streamable = false;
+        result->nonstream_snd_data = snd_data;
+
+        return result;
+    }
+
+    t_sound_type *SoundTypeCreateFromUnbuilt(const t_audio_ticket_mut audio_ticket, const zcl::t_str_rdonly file_path, t_sound_type_group *const group, zcl::t_arena *const temp_arena) {
+        ZCL_ASSERT(TicketCheckValid(audio_ticket));
+        ZCL_ASSERT(group->valid);
+
+        zcl::t_sound_data_mut snd_data;
+
+        if (!zcl::SoundLoadFromExternal(file_path, group->arena, temp_arena, &snd_data)) {
+            ZCL_FATAL();
+        }
 
         t_sound_type *const result = SoundTypeGroupAdd(group);
         result->streamable = false;

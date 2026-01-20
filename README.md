@@ -15,7 +15,7 @@ You can find it being put to use in my in-development game [Kaōzeth](https://gi
 - 2D batch-based texture and UTF-8 string rendering
 - The ability to render using custom shaders and to assign textures as render targets
 - Audio playing and streaming
-- An optional asset packing tool
+- An optional asset building tool
 - A core library with utilities for memory arenas, UTF-8 strings, 2D math, data structures, RNG, and more
 
 ---
@@ -40,7 +40,7 @@ cmake ..
 
 - [GLFW](https://github.com/glfw/glfw) for cross-platform windowing and input
 - [BGFX](https://github.com/bkaradzic/bgfx) for a cross-platform graphics backend
-- [cJSON](https://github.com/DaveGamble/cJSON) for JSON parsing in the asset packer
+- [cJSON](https://github.com/DaveGamble/cJSON) for JSON parsing in the asset builder
 - [stb](https://github.com/nothings/stb) for image and font file loading
 - [miniaudio](https://github.com/mackron/miniaudio) for audio loading and playing
 - [PCG](https://www.pcg-random.org) for random number generation
