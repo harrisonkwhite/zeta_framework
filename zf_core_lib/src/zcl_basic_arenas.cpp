@@ -39,9 +39,9 @@ namespace zcl {
 
 #ifdef ZCL_DEBUG
         memset(block->buf, k_arena_poison, static_cast<size_t>(block->buf_size));
-#elif
+#else
         // Explicitly touch the memory to trigger page faults NOW.
-        zero_clear(block->buf, buf_size);
+        ZeroClear(block->buf, buf_size);
 #endif
 
         block->buf_size = buf_size;

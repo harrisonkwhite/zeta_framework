@@ -1,6 +1,6 @@
 add_library(zf_core_lib STATIC
-    src/basic/zcl_basic_arenas.cpp
-    src/basic/zcl_basic_errors.cpp
+    src/zcl_basic_arenas.cpp
+    src/zcl_basic_errors.cpp
     src/zcl_bits.cpp
     src/zcl_audio.cpp
     src/zcl_math.cpp
