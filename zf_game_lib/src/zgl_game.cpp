@@ -132,7 +132,7 @@ namespace zgl {
 
             zcl::ArenaRewind(&temp_arena);
 
-            internal::FrameBegin(gfx, platform_ticket);
+            FrameBegin(gfx);
 
             config.render_func({
                 .perm_arena = &perm_arena,
@@ -144,7 +144,7 @@ namespace zgl {
                 .user_mem = user_mem,
             });
 
-            internal::FrameEnd(gfx);
+            FrameEnd(gfx);
 
             if (frame_first) {
                 internal::WindowShow(platform_ticket);

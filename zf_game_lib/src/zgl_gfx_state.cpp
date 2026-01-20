@@ -1,4 +1,4 @@
-#include <zgl/zgl_gfx_private.h>
+#include <zgl/zgl_gfx.h>
 
 #include <bgfx/bgfx.h>
 
@@ -59,12 +59,10 @@ namespace zgl {
         zcl::t_v2_i backbuffer_size_cache;
     } g_state;
 
-    t_gfx *GFXStartupCore(const zcl::t_v2_i backbuffer_size, void *const window_native_hdl, void *const display_native_hdl) {
+    t_gfx *internal::GFXStartup(const t_platform_ticket_rdonly platform_ticket, zcl::t_arena *const arena, zcl::t_arena *const temp_arena) {
         ZCL_ASSERT(g_state.phase == ek_phase_inactive);
-        ZCL_ASSERT(backbuffer_size.x > 0 && backbuffer_size.y > 0);
 
         g_state.phase = ek_phase_active_but_not_midframe;
-        g_state.backbuffer_size_cache = backbuffer_size;
 
         bgfx::Init bgfx_init = {};
 
@@ -72,11 +70,15 @@ namespace zgl {
 
         bgfx_init.resolution.reset = BGFX_RESET_VSYNC;
 
-        bgfx_init.resolution.width = static_cast<zcl::t_u32>(backbuffer_size.x);
-        bgfx_init.resolution.height = static_cast<zcl::t_u32>(backbuffer_size.y);
+        const zcl::t_v2_i fb_size_cache = WindowGetFramebufferSizeCache(platform_ticket);
 
-        bgfx_init.platformData.nwh = window_native_hdl;
-        bgfx_init.platformData.ndt = display_native_hdl;
+        bgfx_init.resolution.width = static_cast<zcl::t_u32>(fb_size_cache.x);
+        bgfx_init.resolution.height = static_cast<zcl::t_u32>(fb_size_cache.y);
+
+        g_state.backbuffer_size_cache = fb_size_cache;
+
+        bgfx_init.platformData.nwh = internal::WindowGetNativeHandle(platform_ticket);
+        bgfx_init.platformData.ndt = internal::DisplayGetNativeHandle(platform_ticket);
         bgfx_init.platformData.type = bgfx::NativeWindowHandleType::Default;
 
         if (!bgfx::init(bgfx_init)) {
@@ -86,7 +88,7 @@ namespace zgl {
         return nullptr; // @temp
     }
 
-    void GFXShutdownCore(t_gfx *const gfx) {
+    void internal::GFXShutdown(t_gfx *const gfx) {
         ZCL_ASSERT(g_state.phase != ek_phase_inactive);
 
         bgfx::shutdown();
