@@ -93,7 +93,7 @@ namespace zgl {
         const auto texture = rc.state->batch_state.texture ? rc.state->batch_state.texture : rc.basis->px_texture;
         const t_gfx_resource *const shader_prog = rc.state->batch_state.shader_prog ? rc.state->batch_state.shader_prog : rc.basis->shader_prog_default;
 
-        RendererSubmit(rc.gfx, rc.state->pass_index, rc.basis->vert_buf, rc.state->frame_vert_cnt, rc.state->frame_vert_cnt + rc.state->batch_state.vertex_cnt, texture, shader_prog, rc.basis->sampler_uniform);
+        FrameSubmit(rc.gfx, rc.state->pass_index, rc.basis->vert_buf, rc.state->frame_vert_cnt, rc.state->frame_vert_cnt + rc.state->batch_state.vertex_cnt, texture, shader_prog, rc.basis->sampler_uniform);
 
         rc.state->frame_vert_cnt += rc.state->batch_state.vertex_cnt;
 
@@ -101,7 +101,8 @@ namespace zgl {
     }
 
     void RendererEnd(const t_rendering_context rc) {
-        RendererFlush(rc);
+        ZCL_ASSERT(!rc.state->pass_active);
+
         FrameEnd(rc.gfx);
     }
 

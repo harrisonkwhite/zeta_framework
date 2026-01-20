@@ -112,6 +112,10 @@ namespace zgl {
 
         while (resource) {
             switch (resource->type) {
+            case ek_gfx_resource_type_vertex_buf:
+                bgfx::destroy(resource->type_data.vertex_buf.bgfx_hdl);
+                break;
+
             case ek_gfx_resource_type_texture:
                 if (resource->type_data.texture.is_target) {
                     bgfx::destroy(resource->type_data.texture.target_fb_bgfx_hdl);
@@ -158,6 +162,7 @@ namespace zgl {
     }
 
     zcl::t_arena *GFXResourceGroupGetArena(const t_gfx *const gfx, const t_gfx_resource_group *const group) {
+        ZCL_ASSERT(g_state.phase != ek_phase_inactive);
         return group->arena;
     }
 
@@ -183,7 +188,7 @@ namespace zgl {
     }
 
     void VertexBufWrite(t_gfx *const gfx, t_gfx_resource *const dest_vertex_buf, const zcl::t_i32 dest_vertices_index, const zcl::t_array_rdonly<t_vertex> src_vertices) {
-        ZCL_ASSERT(g_state.phase == ek_phase_active_but_not_midframe);
+        ZCL_ASSERT(g_state.phase != ek_phase_inactive);
         ZCL_ASSERT(dest_vertex_buf->type == ek_gfx_resource_type_vertex_buf);
         ZCL_ASSERT(dest_vertices_index >= 0 && dest_vertices_index < dest_vertex_buf->type_data.vertex_buf.vertex_cnt);
 
@@ -249,7 +254,7 @@ namespace zgl {
     }
 
     zcl::t_v2_i TextureGetSize(const t_gfx *const gfx, const t_gfx_resource *const texture) {
-        ZCL_ASSERT(g_state.phase == ek_phase_active_but_not_midframe);
+        ZCL_ASSERT(g_state.phase != ek_phase_inactive);
         ZCL_ASSERT(texture->type == ek_gfx_resource_type_texture);
 
         return texture->type_data.texture.size;
@@ -315,7 +320,7 @@ namespace zgl {
     }
 
     t_uniform_type UniformGetType(const t_gfx *const gfx, const t_gfx_resource *const uniform) {
-        ZCL_ASSERT(g_state.phase == ek_phase_active_but_not_midframe);
+        ZCL_ASSERT(g_state.phase != ek_phase_inactive);
         ZCL_ASSERT(uniform->type == ek_gfx_resource_type_uniform);
 
         return uniform->type_data.uniform.type;
@@ -340,7 +345,7 @@ namespace zgl {
     };
 
     static void UniformSet(const t_gfx_resource *const uniform, const t_uniform_data &uniform_data) {
-        ZCL_ASSERT(g_state.phase == ek_phase_active_but_not_midframe);
+        ZCL_ASSERT(g_state.phase != ek_phase_inactive);
         ZCL_ASSERT(uniform->type == ek_gfx_resource_type_uniform);
         ZCL_ASSERT(uniform->type_data.uniform.type == uniform_data.type);
 
@@ -399,7 +404,7 @@ namespace zgl {
     }
 
     zcl::t_v2_i BackbufferGetSize(const t_gfx *const gfx) {
-        ZCL_ASSERT(g_state.phase == ek_phase_active_but_not_midframe);
+        ZCL_ASSERT(g_state.phase != ek_phase_inactive);
         return g_state.backbuffer_size_cache;
     }
 

@@ -6,9 +6,9 @@
 namespace zgl {
     struct t_rendering_basis;
 
-    t_rendering_basis *RenderingBasisCreate(t_gfx *const gfx);
+    t_rendering_basis *RenderingBasisCreate(t_gfx *const gfx, zcl::t_arena *const arena, zcl::t_arena *const temp_arena);
 
-    void RenderingBasisDestroy(t_rendering_basis *const basis);
+    void RenderingBasisDestroy(t_rendering_basis *const basis, t_gfx *const gfx);
 
     struct t_rendering_state;
 
