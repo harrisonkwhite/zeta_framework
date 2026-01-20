@@ -335,6 +335,8 @@ namespace zgl {
         static float rot;
         rot += 0.001f;
 
+        static float scalar = 0.5f;
+
         zcl::t_i32 chr_index = 0;
 
         ZCL_STR_WALK (str, step) {
@@ -352,11 +354,11 @@ namespace zgl {
 
             const zcl::t_rect_f uv_rect = zcl::TextureCalcUVRect(glyph_info->atlas_rect, zcl::k_font_atlas_texture_size);
 
-            const zcl::t_v2 chr_pos = pos + zcl::CalcLengthdir(render_info.chr_offsets[chr_index].x, rot) + zcl::CalcLengthdir(render_info.chr_offsets[chr_index].y, rot + (zcl::k_pi / 2.0f));
+            const zcl::t_v2 chr_pos = pos + zcl::CalcLengthdir((render_info.chr_offsets[chr_index].x - (render_info.size.x * origin.x)) * scalar, rot) + zcl::CalcLengthdir((render_info.chr_offsets[chr_index].y - (render_info.size.y * origin.y)) * scalar, rot + (zcl::k_pi / 2.0f));
 
             zcl::t_static_array<zcl::t_v2, 4> quad_pts;
             zcl::t_arena quad_pts_arena = zcl::ArenaCreateWrapping(zcl::ToBytes(&quad_pts));
-            const zcl::t_poly_mut quad_poly = zcl::PolyCreateQuadRotated(chr_pos, zcl::V2IToF(zcl::RectGetSize(glyph_info->atlas_rect)), {}, rot, &quad_pts_arena);
+            const zcl::t_poly_mut quad_poly = zcl::PolyCreateQuadRotated(chr_pos, zcl::V2IToF(zcl::RectGetSize(glyph_info->atlas_rect)) * scalar, {}, rot, &quad_pts_arena);
 
             const zcl::t_static_array<t_triangle, 2> triangles = {{
                 {
