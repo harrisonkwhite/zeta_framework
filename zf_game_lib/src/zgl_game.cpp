@@ -1,8 +1,5 @@
 #include <zgl/zgl_game.h>
 
-#include <zgl/zgl_input.h>
-#include <zgl/zgl_audio_public.h>
-
 namespace zgl {
     constexpr zcl::t_v2_i k_window_size_init = {1280, 720};
 
@@ -27,6 +24,9 @@ namespace zgl {
 
         t_gfx *const gfx = internal::GFXStartup(platform_ticket, &perm_arena, &temp_arena);
         ZCL_DEFER({ internal::GFXShutdown(gfx); });
+
+        t_rendering_basis *const rendering_basis = RenderingBasisCreate(gfx);
+        ZCL_DEFER({ RenderingBasisDestroy(rendering_basis); });
 
         const t_audio_ticket_mut audio_ticket = internal::AudioStartup(&perm_arena);
         ZCL_DEFER({ internal::AudioShutdown(audio_ticket); });
@@ -132,6 +132,7 @@ namespace zgl {
 
             zcl::ArenaRewind(&temp_arena);
 
+#if 0
             FrameBegin(gfx);
 
             config.render_func({
@@ -145,6 +146,7 @@ namespace zgl {
             });
 
             FrameEnd(gfx);
+#endif
 
             if (frame_first) {
                 internal::WindowShow(platform_ticket);

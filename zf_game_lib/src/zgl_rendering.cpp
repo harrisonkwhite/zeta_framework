@@ -62,11 +62,11 @@ namespace zgl {
     }
 
     void RenderingBasisDestroy(t_rendering_basis *const basis, t_gfx *const gfx) {
-
-        GFXShutdownCore(gfx);
-        g_state = {};
+        GFXResourceGroupDestroy(gfx, basis->perm_resource_group);
+        *basis = {};
     }
 
+#if 0
     void internal::FrameBegin(t_gfx *const gfx, const t_platform_ticket_rdonly platform_ticket) {
         ZCL_ASSERT(g_state.phase == ek_phase_active_but_not_midframe);
 
@@ -162,11 +162,11 @@ namespace zgl {
             ZCL_FATAL();
         }
 
-#ifdef ZCL_DEBUG
+    #ifdef ZCL_DEBUG
         for (zcl::t_i32 i = 0; i < triangles.len; i++) {
             ZCL_ASSERT(TriangleCheckValid(triangles[i]));
         }
-#endif
+    #endif
 
         if (texture != g_state.frame_state.batch_state.texture || g_state.frame_state.batch_state.vertex_cnt + num_verts_to_submit > k_batch_vert_limit) {
             FrameFlush(gfx);
@@ -182,6 +182,7 @@ namespace zgl {
 
         g_state.frame_state.batch_state.vertex_cnt += num_verts_to_submit;
     }
+#endif
 
 #if 0
     constexpr zcl::t_i32 k_frame_vert_limit = 8192; // @todo: This should definitely be modifiable if the user wants.
