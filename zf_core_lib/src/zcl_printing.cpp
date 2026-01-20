@@ -24,9 +24,9 @@ namespace zcl {
 
     t_b8 PrintType(const t_stream_view stream, const t_format_v2 format) {
         return Print(stream, ZCL_STR_LITERAL("("))
-            && PrintType(stream, FormatFloat(format.value.x, format.trim_trailing_zeros))
+            && PrintType(stream, FormatFloat(format.value.x, format.precision, format.trim_trailing_zeros))
             && Print(stream, ZCL_STR_LITERAL(", "))
-            && PrintType(stream, FormatFloat(format.value.y, format.trim_trailing_zeros))
+            && PrintType(stream, FormatFloat(format.value.y, format.precision, format.trim_trailing_zeros))
             && Print(stream, ZCL_STR_LITERAL(")"));
     }
 

@@ -279,6 +279,7 @@ namespace zcl {
         using t_formatting = void;
 
         t_v2 value;
+        t_i32 precision;
         t_b8 trim_trailing_zeros;
     };
 
@@ -288,8 +289,12 @@ namespace zcl {
         t_v2_i value;
     };
 
-    inline t_format_v2 FormatV2(const t_v2 value, const t_b8 trim_trailing_zeros = false) {
-        return {.value = value, .trim_trailing_zeros = trim_trailing_zeros};
+    inline t_format_v2 FormatV2(const t_v2 value, const t_i32 precision = 6, const t_b8 trim_trailing_zeros = false) {
+        return {
+            .value = value,
+            .precision = precision,
+            .trim_trailing_zeros = trim_trailing_zeros,
+        };
     }
 
     inline t_format_v2 Format(const t_v2 value) { return FormatV2(value); }
