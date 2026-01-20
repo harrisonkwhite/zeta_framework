@@ -1,4 +1,4 @@
-- Set up magic values for module-internal structs. In audio, GFX, etc.
+- Clean up includes all across project
 - Some kind of sound group system like what's in gamemaker, so groups of sounds can share the same volume for instance
 - String streams
 - Make sure references are used consistently and correctly.

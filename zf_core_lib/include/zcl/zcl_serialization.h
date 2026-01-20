@@ -3,6 +3,7 @@
 #include <zcl/zcl_streams.h>
 #include <zcl/zcl_gfx.h>
 #include <zcl/zcl_audio.h>
+#include <zcl/zcl_lists.h>
 
 namespace zcl {
     template <c_array tp_arr_type>
@@ -38,7 +39,44 @@ namespace zcl {
     [[nodiscard]] t_b8 SerializeBitset(const t_stream_view stream_view, const t_bitset_rdonly bs);
     [[nodiscard]] t_b8 DeserializeBitset(const t_stream_view stream_view, t_arena *const bs_arena, t_bitset_mut *const o_bs);
 
-    // @todo: List serialization!
+    template <c_list_nonstatic tp_list_type>
+    [[nodiscard]] t_b8 SerializeList(const t_stream_view stream_view, const tp_list_type *const list) {
+        if (!SerializeArray(stream_view, list->backing_arr)) {
+            return false;
+        }
+
+        if (!StreamWriteItem(stream_view, list->len)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    template <c_list_static tp_list_type>
+    [[nodiscard]] t_b8 SerializeList(const t_stream_view stream_view, const tp_list_type *const list) {
+        if (!SerializeArray(stream_view, ArrayToNonstatic(&list->backing_arr))) {
+            return false;
+        }
+
+        if (!StreamWriteItem(stream_view, list->len)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    template <c_list_elem tp_elem_type>
+    [[nodiscard]] t_b8 DeserializeList(const t_stream_view stream_view, t_arena *const list_arena, t_list<tp_elem_type> *const o_list) {
+        if (!DeserializeArray(stream_view, list_arena, &o_list->backing_arr)) {
+            return false;
+        }
+
+        if (!StreamReadItem(stream_view, &o_list->len)) {
+            return false;
+        }
+
+        return true;
+    }
 
     template <c_hash_map tp_hash_map_type>
     [[nodiscard]] t_b8 SerializeHashMap(const t_stream_view stream_view, const tp_hash_map_type *const hm, t_arena *const temp_arena) {
