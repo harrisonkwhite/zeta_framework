@@ -16,10 +16,6 @@
 #include <zgl/zgl_input.h>
 
 namespace zgl {
-#ifdef ZCL_DEBUG
-    static zcl::t_u8 g_ticket_identity;
-#endif
-
     static struct {
         zcl::t_b8 active;
 
@@ -31,10 +27,6 @@ namespace zgl {
         zcl::t_v2_i prefullscreen_pos;
         zcl::t_v2_i prefullscreen_size;
     } g_state;
-
-    static zcl::t_b8 TicketCheckValid(const t_platform_ticket_rdonly ticket) {
-        return ticket.val == reinterpret_cast<zcl::t_uintptr>(&g_ticket_identity);
-    }
 
     t_platform_ticket_mut internal::PlatformStartup(const zcl::t_v2_i init_window_size, t_input_state *const input_state, zcl::t_arena *const arena) {
         ZCL_ASSERT(!g_state.active);
@@ -91,7 +83,7 @@ namespace zgl {
             glfwSetCharCallback(g_state.glfw_window, chr_callback);
         }
 
-        return {reinterpret_cast<zcl::t_uintptr>(&g_ticket_identity)};
+        return TicketCreate();
     }
 
     void internal::PlatformShutdown(const t_platform_ticket_mut platform_ticket) {

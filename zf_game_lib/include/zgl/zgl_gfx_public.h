@@ -109,11 +109,11 @@ namespace zgl {
 
         void BackbufferResizeIfNeeded(const t_gfx_ticket_mut gfx_ticket, const zcl::t_v2_i size);
 
-        constexpr zcl::t_i16 k_frame_pass_limit = 256;
-
         void FrameBegin(const t_gfx_ticket_mut gfx_ticket);
 
         void FrameEnd(const t_gfx_ticket_mut gfx_ticket);
+
+        constexpr zcl::t_i16 k_frame_pass_limit = 256;
 
         void FramePassConfigure(const t_gfx_ticket_mut gfx_ticket, const zcl::t_i32 pass_index, const zcl::t_v2_i size, const zcl::t_mat4x4 &view_mat, const zcl::t_b8 clear, const zcl::t_color_rgba32f clear_col);
 
