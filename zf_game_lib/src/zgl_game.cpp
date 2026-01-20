@@ -132,34 +132,19 @@ namespace zgl {
 
             zcl::ArenaRewind(&temp_arena);
 
-            t_rendering_state *const rendering_state = RendererBegin(rendering_basis, gfx, &temp_arena);
+            const t_rendering_context rendering_context = RendererBegin(rendering_basis, gfx, &temp_arena);
 
             config.render_func({
                 .perm_arena = &perm_arena,
                 .temp_arena = &temp_arena,
                 .platform_ticket = platform_ticket,
-                .rendering_state = rendering_state,
+                .rendering_context = rendering_context,
                 .rng = rng,
                 .fps = fps,
                 .user_mem = user_mem,
             });
 
-            RendererEnd(rendering_state);
-#if 0
-            FrameBegin(gfx);
-
-            config.render_func({
-                .perm_arena = &perm_arena,
-                .temp_arena = &temp_arena,
-                .platform_ticket = platform_ticket,
-                .gfx = gfx,
-                .rng = rng,
-                .fps = fps,
-                .user_mem = user_mem,
-            });
-
-            FrameEnd(gfx);
-#endif
+            RendererEnd(rendering_context);
 
             if (frame_first) {
                 internal::WindowShow(platform_ticket);

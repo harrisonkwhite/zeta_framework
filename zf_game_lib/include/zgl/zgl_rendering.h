@@ -12,23 +12,30 @@ namespace zgl {
 
     struct t_rendering_state;
 
-    t_rendering_state *RendererBegin(const t_rendering_basis *const rendering_basis, t_gfx *const gfx, zcl::t_arena *const rendering_state_arena);
+    struct t_rendering_context {
+        const t_rendering_basis *basis;
+        t_rendering_state *state;
 
-    void RendererEnd(t_rendering_state *const rs);
+        t_gfx *gfx;
+    };
 
-    void RendererPassBegin(t_rendering_state *const rs, const zcl::t_v2_i size, const zcl::t_mat4x4 &view_mat = zcl::MatrixCreateIdentity(), const zcl::t_b8 clear = false, const zcl::t_color_rgba32f clear_col = zcl::k_color_black);
+    t_rendering_context RendererBegin(const t_rendering_basis *const rendering_basis, t_gfx *const gfx, zcl::t_arena *const rendering_state_arena);
 
-    void RendererPassBeginOffscreen(t_rendering_state *const rs, const t_gfx_resource *const texture_target, const zcl::t_mat4x4 &view_mat = zcl::MatrixCreateIdentity(), const zcl::t_b8 clear = false, const zcl::t_color_rgba32f clear_col = zcl::k_color_black);
+    void RendererEnd(const t_rendering_context rc);
 
-    void RendererPassEnd(t_rendering_state *const rs);
+    void RendererPassBegin(const t_rendering_context rc, const zcl::t_v2_i size, const zcl::t_mat4x4 &view_mat = zcl::MatrixCreateIdentity(), const zcl::t_b8 clear = false, const zcl::t_color_rgba32f clear_col = zcl::k_color_black);
+
+    void RendererPassBeginOffscreen(const t_rendering_context rc, const t_gfx_resource *const texture_target, const zcl::t_mat4x4 &view_mat = zcl::MatrixCreateIdentity(), const zcl::t_b8 clear = false, const zcl::t_color_rgba32f clear_col = zcl::k_color_black);
+
+    void RendererPassEnd(const t_rendering_context rc);
 
     // Set prog as nullptr to just assign the default shader program.
-    void RendererSetShaderProg(t_rendering_state *const rs, const t_gfx_resource *const prog);
+    void RendererSetShaderProg(const t_rendering_context rc, const t_gfx_resource *const prog);
 
     // Leave texture as nullptr for no texture.
-    void RendererSubmit(t_rendering_state *const rs, const zcl::t_array_rdonly<t_triangle> triangles, const t_gfx_resource *const texture = nullptr);
+    void RendererSubmit(const t_rendering_context rc, const zcl::t_array_rdonly<t_triangle> triangles, const t_gfx_resource *const texture = nullptr);
 
-    inline void RendererSubmitTriangle(t_rendering_state *const rs, const zcl::t_static_array<zcl::t_v2, 3> &pts, const zcl::t_static_array<zcl::t_color_rgba32f, 3> &pt_colors) {
+    inline void RendererSubmitTriangle(const t_rendering_context rc, const zcl::t_static_array<zcl::t_v2, 3> &pts, const zcl::t_static_array<zcl::t_color_rgba32f, 3> &pt_colors) {
         const t_triangle triangle = {
             .vertices = {{
                 {.pos = pts[0], .blend = pt_colors[0], .uv = {}},
@@ -37,14 +44,14 @@ namespace zgl {
             }},
         };
 
-        RendererSubmit(rs, {&triangle, 1}, nullptr);
+        RendererSubmit(rc, {&triangle, 1}, nullptr);
     }
 
-    inline void RendererSubmitTriangle(t_rendering_state *const rs, const zcl::t_static_array<zcl::t_v2, 3> &pts, const zcl::t_color_rgba32f color) {
-        RendererSubmitTriangle(rs, pts, {{color, color, color}});
+    inline void RendererSubmitTriangle(const t_rendering_context rc, const zcl::t_static_array<zcl::t_v2, 3> &pts, const zcl::t_color_rgba32f color) {
+        RendererSubmitTriangle(rc, pts, {{color, color, color}});
     }
 
-    inline void RendererSubmitRect(t_rendering_state *const rs, const zcl::t_rect_f rect, const zcl::t_color_rgba32f color_topleft, const zcl::t_color_rgba32f color_topright, const zcl::t_color_rgba32f color_bottomright, const zcl::t_color_rgba32f color_bottomleft) {
+    inline void RendererSubmitRect(const t_rendering_context rc, const zcl::t_rect_f rect, const zcl::t_color_rgba32f color_topleft, const zcl::t_color_rgba32f color_topright, const zcl::t_color_rgba32f color_bottomright, const zcl::t_color_rgba32f color_bottomleft) {
         ZCL_ASSERT(rect.width > 0.0f && rect.height > 0.0f);
 
         const zcl::t_static_array<t_triangle, 2> triangles = {{
@@ -64,20 +71,20 @@ namespace zgl {
             },
         }};
 
-        RendererSubmit(rs, zcl::ArrayToNonstatic(&triangles), nullptr);
+        RendererSubmit(rc, zcl::ArrayToNonstatic(&triangles), nullptr);
     }
 
-    inline void RendererSubmitRect(t_rendering_state *const rs, const zcl::t_rect_f rect, const zcl::t_color_rgba32f color) {
-        RendererSubmitRect(rs, rect, color, color, color, color);
+    inline void RendererSubmitRect(const t_rendering_context rc, const zcl::t_rect_f rect, const zcl::t_color_rgba32f color) {
+        RendererSubmitRect(rc, rect, color, color, color, color);
     }
 
-    void RendererSubmitRectRotated(t_rendering_state *const rs, const zcl::t_v2 pos, const zcl::t_v2 size, const zcl::t_v2 origin, const zcl::t_f32 rot, const zcl::t_color_rgba32f color_topleft, const zcl::t_color_rgba32f color_topright, const zcl::t_color_rgba32f color_bottomright, const zcl::t_color_rgba32f color_bottomleft);
+    void RendererSubmitRectRotated(const t_rendering_context rc, const zcl::t_v2 pos, const zcl::t_v2 size, const zcl::t_v2 origin, const zcl::t_f32 rot, const zcl::t_color_rgba32f color_topleft, const zcl::t_color_rgba32f color_topright, const zcl::t_color_rgba32f color_bottomright, const zcl::t_color_rgba32f color_bottomleft);
 
-    inline void RendererSubmitRectRotated(t_rendering_state *const rs, const zcl::t_v2 pos, const zcl::t_v2 size, const zcl::t_v2 origin, const zcl::t_f32 rot, const zcl::t_color_rgba32f color) {
-        RendererSubmitRectRotated(rs, pos, size, origin, rot, color, color, color, color);
+    inline void RendererSubmitRectRotated(const t_rendering_context rc, const zcl::t_v2 pos, const zcl::t_v2 size, const zcl::t_v2 origin, const zcl::t_f32 rot, const zcl::t_color_rgba32f color) {
+        RendererSubmitRectRotated(rc, pos, size, origin, rot, color, color, color, color);
     }
 
-    void RendererSubmitTexture(t_rendering_state *const rs, const t_gfx_resource *const texture, const zcl::t_v2 pos, const zcl::t_rect_i src_rect = {}, const zcl::t_v2 origin = zcl::k_origin_top_left, const zcl::t_f32 rot = 0.0f);
+    void RendererSubmitTexture(const t_rendering_context rc, const t_gfx_resource *const texture, const zcl::t_v2 pos, const zcl::t_rect_i src_rect = {}, const zcl::t_v2 origin = zcl::k_origin_top_left, const zcl::t_f32 rot = 0.0f);
 
-    void RendererSubmitStr(t_rendering_state *const rs, const zcl::t_str_rdonly str, const t_font &font, const zcl::t_v2 pos, zcl::t_arena *const temp_arena, const zcl::t_v2 origin = zcl::k_origin_top_left, const zcl::t_color_rgba32f blend = zcl::k_color_white);
+    void RendererSubmitStr(const t_rendering_context rc, const zcl::t_str_rdonly str, const t_font &font, const zcl::t_v2 pos, zcl::t_arena *const temp_arena, const zcl::t_v2 origin = zcl::k_origin_top_left, const zcl::t_color_rgba32f blend = zcl::k_color_white);
 }
