@@ -61,16 +61,22 @@ namespace zcl {
         PCG32CalcNext(pcg32);
     }
 
-    t_rng *RNGCreate(const t_u64 seed, t_arena *const arena) {
-        const auto rng = ArenaPushItem<t_rng>(arena);
-
+    static void RNGSeed(t_rng *const rng, const t_u64 seed) {
         t_u64 x = seed;
         const t_u64 init_state = Scramble(&x);
         const t_u64 seq = Scramble(&x);
 
         PCG32Seed(&rng->pcg32, init_state, seq);
+    }
 
+    t_rng *RNGCreate(const t_u64 seed, t_arena *const arena) {
+        const auto rng = ArenaPushItem<t_rng>(arena);
+        RNGSeed(rng, seed);
         return rng;
+    }
+
+    void RNGReseed(t_rng *const rng, const t_u64 seed) {
+        RNGSeed(rng, seed);
     }
 
     t_u32 RandGenU32(t_rng *const rng) {

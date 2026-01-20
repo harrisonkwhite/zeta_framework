@@ -6,7 +6,7 @@ namespace zcl {
     struct t_rng;
 
     t_rng *RNGCreate(const t_u64 seed, t_arena *const arena);
-    // @todo: Add reseeding function.
+    void RNGReseed(t_rng *const rng, const t_u64 seed);
 
     t_u32 RandGenU32(t_rng *const rng);
 
