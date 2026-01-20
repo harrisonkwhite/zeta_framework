@@ -8,25 +8,25 @@ namespace zcl {
     t_b8 TextureLoadFromExternal(const t_str_rdonly file_path, t_arena *const texture_data_arena, t_arena *const temp_arena, t_texture_data_mut *const o_texture_data) {
         const t_str_rdonly file_path_terminated = StrCloneButAddTerminator(file_path, temp_arena);
 
-        t_v2_i size_in_pxs;
-        t_u8 *const stb_px_data = stbi_load(StrToCStr(file_path_terminated), &size_in_pxs.x, &size_in_pxs.y, nullptr, 4);
+        t_v2_i dims;
+        const auto stb_pixels_raw = reinterpret_cast<t_color_rgba8 *>(stbi_load(StrToCStr(file_path_terminated), &dims.x, &dims.y, nullptr, 4));
 
-        if (!stb_px_data) {
+        if (!stb_pixels_raw) {
             return false;
         }
 
-        ZCL_DEFER({ stbi_image_free(stb_px_data); });
+        ZCL_DEFER({ stbi_image_free(stb_pixels_raw); });
 
-        const t_array_rdonly<t_u8> stb_px_data_arr = {stb_px_data, 4 * size_in_pxs.x * size_in_pxs.y};
-        const auto px_data = ArenaPushArray<t_u8>(texture_data_arena, 4 * size_in_pxs.x * size_in_pxs.y);
-        ArrayCopy(stb_px_data_arr, px_data);
+        const t_array_rdonly<t_color_rgba8> stb_pixels = {stb_pixels_raw, dims.x * dims.y};
+        const auto pixels = ArenaPushArray<t_color_rgba8>(texture_data_arena, dims.x * dims.y);
+        ArrayCopy(stb_pixels, pixels);
 
-        *o_texture_data = {size_in_pxs, px_data};
+        *o_texture_data = {.dims = dims, .format = ek_texture_format_rgba8, .pixels = {.rgba8 = pixels}};
 
         return true;
     }
 
-    t_b8 FontLoadFromExternal(const t_str_rdonly file_path, const t_i32 height, t_code_point_bitset *const code_pts, t_arena *const arrangement_arena, t_arena *const atlas_rgbas_arena, t_arena *const temp_arena, t_font_arrangement *const o_arrangement, t_array_mut<t_font_atlas_rgba> *const o_atlas_rgbas) {
+    t_b8 FontLoadFromExternal(const t_str_rdonly file_path, const t_i32 height, t_code_point_bitset *const code_pts, t_arena *const arrangement_arena, t_arena *const atlas_pixels_arr_arena, t_arena *const temp_arena, t_font_arrangement *const o_arrangement, t_array_mut<t_font_atlas_pixels_r8> *const o_atlas_pixels_arr) {
         ZCL_ASSERT(height > 0);
 
         // Get the plain font file data.
@@ -149,22 +149,9 @@ namespace zcl {
         }
 
         //
-        // Texture Atlases
+        // Atlases
         //
-        *o_atlas_rgbas = ArenaPushArray<t_font_atlas_rgba>(atlas_rgbas_arena, atlas_cnt);
-
-        // Initialize all pixels to transparent white.
-        // @todo: Maybe don't use RBGA for this?
-        for (t_i32 i = 0; i < o_atlas_rgbas->len; i++) {
-            const auto atlas_rgba = &(*o_atlas_rgbas)[i];
-
-            for (t_i32 j = 0; j < (*o_atlas_rgbas)[i].k_len; j += 4) {
-                (*atlas_rgba)[j + 0] = 255;
-                (*atlas_rgba)[j + 1] = 255;
-                (*atlas_rgba)[j + 2] = 255;
-                (*atlas_rgba)[j + 3] = 0;
-            }
-        }
+        *o_atlas_pixels_arr = ArenaPushArray<t_font_atlas_pixels_r8>(atlas_pixels_arr_arena, atlas_cnt);
 
         // Write pixel data for each individual glyph.
         ZCL_BITSET_WALK_ALL_SET (*code_pts, i) {
@@ -176,7 +163,7 @@ namespace zcl {
                 ZCL_ASSERT(false);
             }
 
-            const auto atlas_rgba = &(*o_atlas_rgbas)[glyph_info->atlas_index];
+            const auto atlas_pixels = &(*o_atlas_pixels_arr)[glyph_info->atlas_index];
             const auto atlas_rect = glyph_info->atlas_rect;
 
             if (atlas_rect.width == 0 || atlas_rect.height == 0) {
@@ -194,9 +181,9 @@ namespace zcl {
 
             for (t_i32 y = RectGetTop(atlas_rect); y < RectGetBottom(atlas_rect); y++) {
                 for (t_i32 x = RectGetLeft(atlas_rect); x < RectGetRight(atlas_rect); x++) {
-                    const t_i32 px_index = (y * 4 * k_font_atlas_size.x) + (x * 4);
+                    const t_i32 px_index = (y * k_font_atlas_size.x) + x;
                     const t_i32 stb_bitmap_index = ((y - atlas_rect.y) * atlas_rect.width) + (x - atlas_rect.x);
-                    (*atlas_rgba)[px_index + 3] = stb_bitmap[stb_bitmap_index];
+                    (*atlas_pixels)[px_index] = {stb_bitmap[stb_bitmap_index]};
                 }
             }
         }

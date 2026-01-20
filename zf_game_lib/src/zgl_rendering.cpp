@@ -55,8 +55,15 @@ namespace zgl {
         basis->sampler_uniform = UniformCreate(gfx_ticket, ZCL_STR_LITERAL("u_texture"), ek_uniform_type_sampler, basis->perm_resource_group, temp_arena);
         basis->blend_uniform = UniformCreate(gfx_ticket, ZCL_STR_LITERAL("u_blend"), ek_uniform_type_v4, basis->perm_resource_group, temp_arena);
 
-        const zcl::t_static_array<zcl::t_u8, 4> batch_px_texture_rgba = {{255, 255, 255, 255}};
-        basis->px_texture = TextureCreate(gfx_ticket, {{1, 1}, zcl::ArrayToNonstatic(&batch_px_texture_rgba)}, basis->perm_resource_group);
+        const zcl::t_static_array<zcl::t_color_rgba8, 1> px_texture_pixels = {{{255, 255, 255, 255}}};
+
+        const zcl::t_texture_data_rdonly px_texture_data = {
+            .dims = {1, 1},
+            .format = zcl::ek_texture_format_rgba8,
+            .pixels = {.rgba8 = zcl::ArrayToNonstatic(&px_texture_pixels)},
+        };
+
+        basis->px_texture = TextureCreate(gfx_ticket, px_texture_data, basis->perm_resource_group);
 
         return basis;
     }
@@ -380,7 +387,7 @@ namespace zgl {
                 continue;
             }
 
-            RendererSubmitTexture(rc, font.atlases[glyph_info->atlas_index], chr_positions[chr_index], glyph_info->atlas_rect);
+            RendererSubmitTexture(rc, font.atlas_textures[glyph_info->atlas_index], chr_positions[chr_index], glyph_info->atlas_rect);
 
             chr_index++;
         };

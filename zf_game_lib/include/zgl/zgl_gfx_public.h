@@ -91,7 +91,7 @@ namespace zgl {
 
     struct t_font {
         zcl::t_font_arrangement arrangement;
-        zcl::t_array_mut<t_gfx_resource *> atlases;
+        zcl::t_array_mut<t_gfx_resource *> atlas_textures;
     };
 
     t_font FontCreateFromExternal(const t_gfx_ticket_mut gfx_ticket, const zcl::t_str_rdonly file_path, const zcl::t_i32 height, zcl::t_code_point_bitset *const code_pts, t_gfx_resource_group *const resource_group, zcl::t_arena *const temp_arena);
@@ -99,7 +99,7 @@ namespace zgl {
     t_font FontCreateFromPacked(const t_gfx_ticket_mut gfx_ticket, const zcl::t_str_rdonly file_path, t_gfx_resource_group *const resource_group, zcl::t_arena *const temp_arena);
 
     namespace internal {
-        t_gfx_ticket_mut GFXStartup(const t_platform_ticket_rdonly platform_ticket, zcl::t_arena *const arena, zcl::t_arena *const temp_arena);
+        t_gfx_ticket_mut GFXStartup(const t_platform_ticket_rdonly platform_ticket);
 
         void GFXShutdown(const t_gfx_ticket_mut gfx_ticket);
 

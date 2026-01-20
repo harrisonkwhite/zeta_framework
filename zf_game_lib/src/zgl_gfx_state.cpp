@@ -59,7 +59,7 @@ namespace zgl {
         zcl::t_v2_i backbuffer_size_cache;
     } g_state;
 
-    t_gfx_ticket_mut internal::GFXStartup(const t_platform_ticket_rdonly platform_ticket, zcl::t_arena *const arena, zcl::t_arena *const temp_arena) {
+    t_gfx_ticket_mut internal::GFXStartup(const t_platform_ticket_rdonly platform_ticket) {
         ZCL_ASSERT(g_state.phase == ek_phase_inactive);
 
         g_state.phase = ek_phase_active_but_not_midframe;
@@ -207,17 +207,29 @@ namespace zgl {
         ZCL_ASSERT(g_state.phase == ek_phase_active_but_not_midframe);
         ZCL_ASSERT(TicketCheckValid(gfx_ticket));
 
-        const auto flags = BGFX_SAMPLER_MIN_POINT | BGFX_SAMPLER_MAG_POINT | BGFX_SAMPLER_U_CLAMP | BGFX_SAMPLER_V_CLAMP;
-        const auto texture_bgfx_hdl = bgfx::createTexture2D(static_cast<zcl::t_u16>(texture_data.size_in_pxs.x), static_cast<zcl::t_u16>(texture_data.size_in_pxs.y), false, 1, bgfx::TextureFormat::RGBA8, flags, bgfx::copy(texture_data.rgba_px_data.raw, static_cast<zcl::t_u32>(zcl::ArrayGetSizeInBytes(texture_data.rgba_px_data))));
+        const auto bgfx_hdl = [texture_data]() {
+            const auto flags = BGFX_SAMPLER_MIN_POINT | BGFX_SAMPLER_MAG_POINT | BGFX_SAMPLER_U_CLAMP | BGFX_SAMPLER_V_CLAMP;
 
-        if (!bgfx::isValid(texture_bgfx_hdl)) {
+            switch (texture_data.format) {
+            case zcl::ek_texture_format_rgba32f:
+                return bgfx::createTexture2D(static_cast<zcl::t_u16>(texture_data.dims.x), static_cast<zcl::t_u16>(texture_data.dims.y), false, 1, bgfx::TextureFormat::RGBA32F, flags, bgfx::copy(texture_data.pixels.rgba32f.raw, static_cast<zcl::t_u32>(zcl::ArrayGetSizeInBytes(texture_data.pixels.rgba32f))));
+
+            case zcl::ek_texture_format_rgba8:
+                return bgfx::createTexture2D(static_cast<zcl::t_u16>(texture_data.dims.x), static_cast<zcl::t_u16>(texture_data.dims.y), false, 1, bgfx::TextureFormat::RGBA8, flags, bgfx::copy(texture_data.pixels.rgba8.raw, static_cast<zcl::t_u32>(zcl::ArrayGetSizeInBytes(texture_data.pixels.rgba8))));
+
+            case zcl::ek_texture_format_r8:
+                return bgfx::createTexture2D(static_cast<zcl::t_u16>(texture_data.dims.x), static_cast<zcl::t_u16>(texture_data.dims.y), false, 1, bgfx::TextureFormat::R8, flags, bgfx::copy(texture_data.pixels.r8.raw, static_cast<zcl::t_u32>(zcl::ArrayGetSizeInBytes(texture_data.pixels.r8))));
+            }
+        }();
+
+        if (!bgfx::isValid(bgfx_hdl)) {
             ZCL_FATAL();
         }
 
         const auto resource = GFXResourceGroupAdd(resource_group);
         resource->type = ek_gfx_resource_type_texture;
-        resource->type_data.texture.nontarget_texture_bgfx_hdl = texture_bgfx_hdl;
-        resource->type_data.texture.size = texture_data.size_in_pxs;
+        resource->type_data.texture.nontarget_texture_bgfx_hdl = bgfx_hdl;
+        resource->type_data.texture.size = texture_data.dims;
 
         return resource;
     }

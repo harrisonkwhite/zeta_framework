@@ -67,6 +67,8 @@ namespace zcl {
 
     template <c_list_elem tp_elem_type>
     [[nodiscard]] t_b8 DeserializeList(const t_stream_view stream_view, t_arena *const list_arena, t_list<tp_elem_type> *const o_list) {
+        *o_list = {};
+
         if (!DeserializeArray(stream_view, list_arena, &o_list->backing_arr)) {
             return false;
         }
@@ -141,8 +143,8 @@ namespace zcl {
     [[nodiscard]] t_b8 SerializeTexture(const t_stream_view stream_view, const t_texture_data_mut texture_data);
     [[nodiscard]] t_b8 DeserializeTexture(const t_stream_view stream_view, t_arena *const texture_data_arena, t_texture_data_mut *const o_texture_data);
 
-    [[nodiscard]] t_b8 SerializeFont(const t_stream_view stream_view, const t_font_arrangement &arrangement, const t_array_rdonly<t_font_atlas_rgba> atlas_rgbas, t_arena *const temp_arena);
-    [[nodiscard]] t_b8 DeserializeFont(const t_stream_view stream_view, t_arena *const arrangement_arena, t_arena *const atlas_rgbas_arena, t_arena *const temp_arena, t_font_arrangement *const o_arrangement, t_array_mut<t_font_atlas_rgba> *const o_atlas_rgbas);
+    [[nodiscard]] t_b8 SerializeFont(const t_stream_view stream_view, const t_font_arrangement &arrangement, const t_array_rdonly<t_font_atlas_pixels_r8> atlas_pixels_arr, t_arena *const temp_arena);
+    [[nodiscard]] t_b8 DeserializeFont(const t_stream_view stream_view, t_arena *const arrangement_arena, t_arena *const atlas_pixels_arr_arena, t_arena *const temp_arena, t_font_arrangement *const o_arrangement, t_array_mut<t_font_atlas_pixels_r8> *const o_atlas_pixels_arr);
 
     [[nodiscard]] t_b8 SerializeShader(const t_stream_view stream_view, const t_array_rdonly<t_u8> compiled_shader_bin);
     [[nodiscard]] t_b8 DeserializeShader(const t_stream_view stream_view, t_arena *const shader_bin_arena, t_array_mut<t_u8> *const o_shader_bin);

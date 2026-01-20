@@ -22,7 +22,7 @@ namespace zgl {
         const t_platform_ticket_mut platform_ticket = internal::PlatformStartup(k_window_size_init, input_state, &perm_arena);
         ZCL_DEFER({ internal::PlatformShutdown(platform_ticket); });
 
-        const t_gfx_ticket_mut gfx_ticket = internal::GFXStartup(platform_ticket, &perm_arena, &temp_arena);
+        const t_gfx_ticket_mut gfx_ticket = internal::GFXStartup(platform_ticket);
         ZCL_DEFER({ internal::GFXShutdown(gfx_ticket); });
 
         t_rendering_basis *const rendering_basis = internal::RenderingBasisCreate(gfx_ticket, &perm_arena, &temp_arena);
@@ -74,6 +74,8 @@ namespace zgl {
 
         while (!WindowCheckCloseRequested(platform_ticket)) {
             internal::PollOSEvents(platform_ticket, input_state);
+
+            internal::BackbufferResizeIfNeeded(gfx_ticket, WindowGetFramebufferSizeCache(platform_ticket));
 
             const zcl::t_b8 window_focused = WindowCheckFocused(platform_ticket);
 

@@ -4,14 +4,15 @@
 
 #if defined(ZCL_PLATFORM_WINDOWS)
     #define GLFW_EXPOSE_NATIVE_WIN32
-    #include <GLFW/glfw3native.h>
 #elif defined(ZCL_PLATFORM_MACOS)
     #define GLFW_EXPOSE_NATIVE_COCOA
-    #include <GLFW/glfw3native.h>
 #elif defined(ZCL_PLATFORM_LINUX)
     #define GLFW_EXPOSE_NATIVE_X11
-    #include <GLFW/glfw3native.h>
+#else
+    #error "Unsupported platform!"
 #endif
+
+#include <GLFW/glfw3native.h>
 
 #include <zgl/zgl_input.h>
 

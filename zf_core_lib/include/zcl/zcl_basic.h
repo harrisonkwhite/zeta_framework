@@ -22,7 +22,7 @@ namespace zcl {
     #define ZCL_DEBUG
 #endif
 
-#define ZCL_IN_CONSTEXPR() std::is_constant_evaluated()
+#define ZCL_CHECK_CONSTEXPR() std::is_constant_evaluated()
 
 #define ZCL_CONCAT_IMPL(a, b) a##b
 #define ZCL_CONCAT(a, b) ZCL_CONCAT_IMPL(a, b)
@@ -190,7 +190,7 @@ namespace zcl {
 
     #define ZCL_ASSERT(cond)                                                                   \
         do {                                                                                   \
-            if (!ZCL_IN_CONSTEXPR()) {                                                         \
+            if (!ZCL_CHECK_CONSTEXPR()) {                                                      \
                 if (!(cond)) {                                                                 \
                     zcl::internal::HandleAssertError(#cond, __FUNCTION__, __FILE__, __LINE__); \
                 }                                                                              \
@@ -209,7 +209,7 @@ namespace zcl {
 
 #define ZCL_REQUIRE(cond)                                                                 \
     do {                                                                                  \
-        if (!ZCL_IN_CONSTEXPR()) {                                                        \
+        if (!ZCL_CHECK_CONSTEXPR()) {                                                     \
             if (!(cond)) {                                                                \
                 zcl::internal::HandleFatalError(__FUNCTION__, __FILE__, __LINE__, #cond); \
             }                                                                             \

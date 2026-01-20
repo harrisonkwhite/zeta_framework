@@ -75,21 +75,27 @@ namespace zgl {
         ZCL_ASSERT(TicketCheckValid(gfx_ticket));
 
         zcl::t_font_arrangement arrangement;
-        zcl::t_array_mut<zcl::t_font_atlas_rgba> atlas_rgbas;
+        zcl::t_array_mut<zcl::t_font_atlas_pixels_r8> atlas_pixels_arr;
 
-        if (!zcl::FontLoadFromExternal(file_path, height, code_pts, GFXResourceGroupGetArena(gfx_ticket, resource_group), temp_arena, temp_arena, &arrangement, &atlas_rgbas)) {
+        if (!zcl::FontLoadFromExternal(file_path, height, code_pts, GFXResourceGroupGetArena(gfx_ticket, resource_group), temp_arena, temp_arena, &arrangement, &atlas_pixels_arr)) {
             ZCL_FATAL();
         }
 
-        const zcl::t_array_mut<t_gfx_resource *> atlases = zcl::ArenaPushArray<t_gfx_resource *>(GFXResourceGroupGetArena(gfx_ticket, resource_group), atlas_rgbas.len);
+        const zcl::t_array_mut<t_gfx_resource *> atlas_textures = zcl::ArenaPushArray<t_gfx_resource *>(GFXResourceGroupGetArena(gfx_ticket, resource_group), atlas_pixels_arr.len);
 
-        for (zcl::t_i32 i = 0; i < atlas_rgbas.len; i++) {
-            atlases[i] = TextureCreate(gfx_ticket, {zcl::k_font_atlas_size, atlas_rgbas[i]}, resource_group);
+        for (zcl::t_i32 i = 0; i < atlas_pixels_arr.len; i++) {
+            const zcl::t_texture_data_rdonly atlas_texture_data = {
+                .dims = zcl::k_font_atlas_size,
+                .format = zcl::ek_texture_format_r8,
+                .pixels = {.r8 = atlas_pixels_arr[i]},
+            };
+
+            atlas_textures[i] = TextureCreate(gfx_ticket, atlas_texture_data, resource_group);
         }
 
         return {
             .arrangement = arrangement,
-            .atlases = atlases,
+            .atlas_textures = atlas_textures,
         };
     }
 
@@ -97,7 +103,7 @@ namespace zgl {
         ZCL_ASSERT(TicketCheckValid(gfx_ticket));
 
         zcl::t_font_arrangement arrangement;
-        zcl::t_array_mut<zcl::t_font_atlas_rgba> atlas_rgbas;
+        zcl::t_array_mut<zcl::t_font_atlas_pixels_r8> atlas_pixels_arr;
 
         {
             zcl::t_file_stream file_stream;
@@ -106,22 +112,28 @@ namespace zgl {
                 ZCL_FATAL();
             }
 
-            if (!zcl::DeserializeFont(file_stream, GFXResourceGroupGetArena(gfx_ticket, resource_group), temp_arena, temp_arena, &arrangement, &atlas_rgbas)) {
+            if (!zcl::DeserializeFont(file_stream, GFXResourceGroupGetArena(gfx_ticket, resource_group), temp_arena, temp_arena, &arrangement, &atlas_pixels_arr)) {
                 ZCL_FATAL();
             }
 
             zcl::FileClose(&file_stream);
         }
 
-        const auto atlases = zcl::ArenaPushArray<t_gfx_resource *>(GFXResourceGroupGetArena(gfx_ticket, resource_group), atlas_rgbas.len);
+        const auto atlas_textures = zcl::ArenaPushArray<t_gfx_resource *>(GFXResourceGroupGetArena(gfx_ticket, resource_group), atlas_pixels_arr.len);
 
-        for (zcl::t_i32 i = 0; i < atlas_rgbas.len; i++) {
-            atlases[i] = TextureCreate(gfx_ticket, {zcl::k_font_atlas_size, atlas_rgbas[i]}, resource_group);
+        for (zcl::t_i32 i = 0; i < atlas_pixels_arr.len; i++) {
+            const zcl::t_texture_data_rdonly atlas_texture_data = {
+                .dims = zcl::k_font_atlas_size,
+                .format = zcl::ek_texture_format_r8,
+                .pixels = {.r8 = atlas_pixels_arr[i]},
+            };
+
+            atlas_textures[i] = TextureCreate(gfx_ticket, atlas_texture_data, resource_group);
         }
 
         return {
             .arrangement = arrangement,
-            .atlases = atlases,
+            .atlas_textures = atlas_textures,
         };
     }
 }

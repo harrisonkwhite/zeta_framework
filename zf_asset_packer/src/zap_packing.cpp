@@ -139,9 +139,9 @@ constexpr zcl::t_static_array<t_asset_field, ekm_sound_field_cnt> k_sound_fields
     }
 
     zcl::t_font_arrangement arrangement;
-    zcl::t_array_mut<zcl::t_font_atlas_rgba> atlas_rgbas;
+    zcl::t_array_mut<zcl::t_font_atlas_pixels_r8> atlas_pixels_arr;
 
-    if (!zcl::FontLoadFromExternal(file_path, height, code_pt_bs, temp_arena, temp_arena, temp_arena, &arrangement, &atlas_rgbas)) {
+    if (!zcl::FontLoadFromExternal(file_path, height, code_pt_bs, temp_arena, temp_arena, temp_arena, &arrangement, &atlas_pixels_arr)) {
         zcl::LogError(ZCL_STR_LITERAL("Failed to load font from file \"%\"!"), file_path);
         return false;
     }
@@ -155,7 +155,7 @@ constexpr zcl::t_static_array<t_asset_field, ekm_sound_field_cnt> k_sound_fields
 
     ZCL_DEFER({ zcl::FileClose(&file_stream); });
 
-    if (!zcl::SerializeFont(file_stream, arrangement, atlas_rgbas, temp_arena)) {
+    if (!zcl::SerializeFont(file_stream, arrangement, atlas_pixels_arr, temp_arena)) {
         zcl::LogError(ZCL_STR_LITERAL("Failed to serialize font to file \"%\"!"), out_file_path);
         return false;
     }

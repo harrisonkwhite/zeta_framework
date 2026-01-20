@@ -38,6 +38,10 @@ namespace zcl {
         t_u8 a;
     };
 
+    struct t_color_r8 {
+        t_u8 r;
+    };
+
     constexpr t_b8 ColorCheckNormalized(const t_color_rgba32f col) {
         return col.r >= 0.0f && col.r <= 1.0f
             && col.g >= 0.0f && col.g <= 1.0f
@@ -53,6 +57,10 @@ namespace zcl {
 
     constexpr t_color_rgba8 ColorCreateRGBA8(const t_u8 r, const t_u8 g, const t_u8 b, const t_u8 a = 255) {
         return {r, g, b, a};
+    }
+
+    constexpr t_color_r8 ColorCreateR8(const t_u8 r) {
+        return {r};
     }
 
     constexpr t_color_rgba32f k_color_transparent_black = ColorCreateRGBA32F(0.0f, 0.0f, 0.0f);
@@ -127,17 +135,41 @@ namespace zcl {
     // ============================================================
     // @section: Textures
 
+    enum t_texture_format : t_i32 {
+        ek_texture_format_rgba32f,
+        ek_texture_format_rgba8,
+        ek_texture_format_r8
+    };
+
     struct t_texture_data_rdonly {
-        t_v2_i size_in_pxs;
-        t_array_rdonly<t_u8> rgba_px_data;
+        t_v2_i dims;
+
+        t_texture_format format;
+
+        union {
+            t_array_rdonly<t_color_rgba32f> rgba32f;
+            t_array_rdonly<t_color_rgba8> rgba8;
+            t_array_rdonly<t_color_r8> r8;
+        } pixels;
     };
 
     struct t_texture_data_mut {
-        t_v2_i size_in_pxs;
-        t_array_mut<t_u8> rgba_px_data;
+        t_v2_i dims;
+
+        t_texture_format format;
+
+        union {
+            t_array_mut<t_color_rgba32f> rgba32f;
+            t_array_mut<t_color_rgba8> rgba8;
+            t_array_mut<t_color_r8> r8;
+        } pixels;
 
         operator t_texture_data_rdonly() const {
-            return {.size_in_pxs = size_in_pxs, .rgba_px_data = rgba_px_data};
+            switch (format) {
+            case ek_texture_format_rgba32f: return {.dims = dims, .format = format, .pixels = {.rgba32f = pixels.rgba32f}};
+            case ek_texture_format_rgba8: return {.dims = dims, .format = format, .pixels = {.rgba8 = pixels.rgba8}};
+            case ek_texture_format_r8: return {.dims = dims, .format = format, .pixels = {.r8 = pixels.r8}};
+            }
         }
     };
 
@@ -163,7 +195,7 @@ namespace zcl {
 
     constexpr t_v2_i k_font_atlas_size = {1024, 1024};
 
-    using t_font_atlas_rgba = t_static_array<t_u8, 4 * k_font_atlas_size.x * k_font_atlas_size.y>;
+    using t_font_atlas_pixels_r8 = t_static_array<t_color_r8, k_font_atlas_size.x * k_font_atlas_size.y>;
 
     struct t_font_glyph_info {
         t_v2_i offs;
@@ -203,7 +235,7 @@ namespace zcl {
             return pa.a == pb.a && pa.b == pb.b;
         };
 
-    [[nodiscard]] t_b8 FontLoadFromExternal(const t_str_rdonly file_path, const t_i32 height, t_code_point_bitset *const code_pts, t_arena *const arrangement_arena, t_arena *const atlas_rgbas_arena, t_arena *const temp_arena, t_font_arrangement *const o_arrangement, t_array_mut<t_font_atlas_rgba> *const o_atlas_rgbas);
+    [[nodiscard]] t_b8 FontLoadFromExternal(const t_str_rdonly file_path, const t_i32 height, t_code_point_bitset *const code_pts, t_arena *const arrangement_arena, t_arena *const atlas_pixels_arr_arena, t_arena *const temp_arena, t_font_arrangement *const o_arrangement, t_array_mut<t_font_atlas_pixels_r8> *const o_atlas_pixels_arr);
 
     // ============================================================
 }
