@@ -52,6 +52,7 @@ set_source_files_properties(
 
 add_library(zf_game_lib STATIC
     src/zgl_game.cpp
+    src/zgl_game_errors.cpp
     src/zgl_platform_state.cpp
     src/zgl_platform_logic.cpp
     src/zgl_platform_tickets.cpp

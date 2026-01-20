@@ -179,22 +179,30 @@ namespace zcl {
     // ============================================================
     // @section: Errors
 
-    namespace internal {
-        void TryBreakingIntoDebuggerIf(const t_b8 cond);
+    void FatalErrorSetCallback(void (*const cb)());
 
-        [[noreturn]] void HandleAssertError(const char *const cond_c_str, const char *const func_name_c_str, const char *const file_name_c_str, const t_i32 line);
+    namespace internal {
+        void TryBreakingIntoDebugger();
+
+        inline void TryBreakingIntoDebuggerIf(const t_b8 cond) {
+            if (cond) {
+                TryBreakingIntoDebugger();
+            }
+        }
+
+        [[noreturn]] void AssertionErrorTrigger(const char *const cond_c_str, const char *const func_name_c_str, const char *const file_name_c_str, const t_i32 line);
 
 #ifdef ZCL_DEBUG
-    #define ZCL_DEBUG_BREAK() internal::TryBreakingIntoDebuggerIf(true)
+    #define ZCL_DEBUG_BREAK() internal::TryBreakingIntoDebugger()
     #define ZCL_DEBUG_BREAK_IF(cond) internal::TryBreakingIntoDebuggerIf(cond)
 
-    #define ZCL_ASSERT(cond)                                                                   \
-        do {                                                                                   \
-            if (!ZCL_CHECK_CONSTEXPR()) {                                                      \
-                if (!(cond)) {                                                                 \
-                    zcl::internal::HandleAssertError(#cond, __FUNCTION__, __FILE__, __LINE__); \
-                }                                                                              \
-            }                                                                                  \
+    #define ZCL_ASSERT(cond)                                                                       \
+        do {                                                                                       \
+            if (!ZCL_CHECK_CONSTEXPR()) {                                                          \
+                if (!(cond)) {                                                                     \
+                    zcl::internal::AssertionErrorTrigger(#cond, __FUNCTION__, __FILE__, __LINE__); \
+                }                                                                                  \
+            }                                                                                      \
         } while (0)
 #else
     #define ZCL_DEBUG_BREAK() static_cast<void>(0)
@@ -202,18 +210,18 @@ namespace zcl {
     #define ZCL_ASSERT(cond) static_cast<void>(0)
 #endif
 
-        [[noreturn]] void HandleFatalError(const char *const func_name_c_str, const char *const file_name_c_str, const t_i32 line, const char *const cond_c_str = nullptr);
+        [[noreturn]] void FatalErrorTrigger(const char *const func_name_c_str, const char *const file_name_c_str, const t_i32 line, const char *const cond_c_str = nullptr);
 
-#define ZCL_FATAL() zcl::internal::HandleFatalError(__FUNCTION__, __FILE__, __LINE__)
+#define ZCL_FATAL() zcl::internal::FatalErrorTrigger(__FUNCTION__, __FILE__, __LINE__)
 #define ZCL_UNREACHABLE() ZCL_FATAL() // @todo: This should probably have some helper message to differentiate it from normal fatal errors.
 
-#define ZCL_REQUIRE(cond)                                                                 \
-    do {                                                                                  \
-        if (!ZCL_CHECK_CONSTEXPR()) {                                                     \
-            if (!(cond)) {                                                                \
-                zcl::internal::HandleFatalError(__FUNCTION__, __FILE__, __LINE__, #cond); \
-            }                                                                             \
-        }                                                                                 \
+#define ZCL_REQUIRE(cond)                                                                  \
+    do {                                                                                   \
+        if (!ZCL_CHECK_CONSTEXPR()) {                                                      \
+            if (!(cond)) {                                                                 \
+                zcl::internal::FatalErrorTrigger(__FUNCTION__, __FILE__, __LINE__, #cond); \
+            }                                                                              \
+        }                                                                                  \
     } while (0)
     }
 

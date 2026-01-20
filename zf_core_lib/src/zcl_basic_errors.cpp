@@ -18,11 +18,7 @@
 #include <cstdlib>
 
 namespace zcl {
-    void internal::TryBreakingIntoDebuggerIf(const t_b8 cond) {
-        if (!cond) {
-            return;
-        }
-
+    void internal::TryBreakingIntoDebugger() {
 #ifdef ZCL_DEBUG
     #ifdef ZCL_PLATFORM_WINDOWS
         if (IsDebuggerPresent()) {
@@ -83,12 +79,15 @@ namespace zcl {
 #endif
     }
 
-    void internal::HandleAssertError(const char *const cond_c_str, const char *const func_name_c_str, const char *const file_name_c_str, const t_i32 line) {
+    void internal::AssertionErrorTrigger(const char *const cond_c_str, const char *const func_name_c_str, const char *const file_name_c_str, const t_i32 line) {
         fprintf(stderr, "==================== ASSERTION ERROR ====================\n");
-        fprintf(stderr, "Condition: %s\n", cond_c_str);
+
+#ifdef ZCL_DEBUG
         fprintf(stderr, "Function:  %s\n", func_name_c_str);
         fprintf(stderr, "File:      %s\n", file_name_c_str);
         fprintf(stderr, "Line:      %d\n\n", line);
+        fprintf(stderr, "Condition: %s\n", cond_c_str);
+#endif
 
         PrintStackTrace();
 
@@ -96,12 +95,20 @@ namespace zcl {
 
         fflush(stderr);
 
-        TryBreakingIntoDebuggerIf(true);
+        TryBreakingIntoDebugger();
 
         abort();
     }
 
-    void internal::HandleFatalError(const char *const func_name_c_str, const char *const file_name_c_str, const t_i32 line, const char *const cond_c_str) {
+    static void (*g_fatal_error_callback)();
+
+    void FatalErrorSetCallback(void (*const cb)()) {
+        g_fatal_error_callback = cb;
+    }
+
+    // @todo: In debug mode, there needs to be an enforced pause or something so the error message can actually be read.
+
+    void internal::FatalErrorTrigger(const char *const func_name_c_str, const char *const file_name_c_str, const t_i32 line, const char *const cond_c_str) {
         fprintf(stderr, "==================== FATAL ERROR ====================\n");
 
 #ifdef ZCL_DEBUG
@@ -123,15 +130,9 @@ namespace zcl {
 
         fflush(stderr);
 
-        TryBreakingIntoDebuggerIf(true);
+        TryBreakingIntoDebugger();
 
-        // @todo
-
-#ifndef ZCL_DEBUG
-    #ifdef ZCL_PLATFORM_WINDOWS
-        MessageBoxA(nullptr, "A fatal error occurred.\n\nA log file has been written.\n\nThe application will now exit.", "Fatal Error", MB_OK | MB_ICONERROR);
-    #endif
-#endif
+        g_fatal_error_callback();
 
         abort();
     }
