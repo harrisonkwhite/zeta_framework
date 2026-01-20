@@ -26,7 +26,7 @@ namespace zgl {
     void RendererSetShaderProg(t_rendering_state *const rs, const t_gfx_resource *const prog);
 
     // Leave texture as nullptr for no texture.
-    void RendererSubmitTriangles(t_rendering_state *const rs, const zcl::t_array_rdonly<t_triangle> triangles, const t_gfx_resource *const texture = nullptr);
+    void RendererSubmit(t_rendering_state *const rs, const zcl::t_array_rdonly<t_triangle> triangles, const t_gfx_resource *const texture = nullptr);
 
     inline void RendererSubmitTriangle(t_rendering_state *const rs, const zcl::t_static_array<zcl::t_v2, 3> &pts, const zcl::t_static_array<zcl::t_color_rgba32f, 3> &pt_colors) {
         const t_triangle triangle = {
@@ -37,7 +37,7 @@ namespace zgl {
             }},
         };
 
-        RendererSubmitTriangles(rs, {&triangle, 1}, nullptr);
+        RendererSubmit(rs, {&triangle, 1}, nullptr);
     }
 
     inline void RendererSubmitTriangle(t_rendering_state *const rs, const zcl::t_static_array<zcl::t_v2, 3> &pts, const zcl::t_color_rgba32f color) {
@@ -64,7 +64,7 @@ namespace zgl {
             },
         }};
 
-        RendererSubmitTriangles(rs, zcl::ArrayToNonstatic(&triangles), nullptr);
+        RendererSubmit(rs, zcl::ArrayToNonstatic(&triangles), nullptr);
     }
 
     inline void RendererSubmitRect(t_rendering_state *const rs, const zcl::t_rect_f rect, const zcl::t_color_rgba32f color) {

@@ -138,6 +138,44 @@ namespace zgl {
         rs->pass_index++;
     }
 
+    void RendererSetShaderProg(t_rendering_state *const rs, const t_gfx_resource *const prog) {
+        if (prog != rs->batch_state.shader_prog) {
+            RendererFlush(rs);
+            rs->batch_state.shader_prog = prog;
+        }
+    }
+
+    void RendererSubmit(t_rendering_state *const rs, const zcl::t_array_rdonly<t_triangle> triangles, const t_gfx_resource *const texture) {
+        ZCL_ASSERT(rs->pass_index != -1 && "A pass must be set before submitting primitives!");
+        ZCL_ASSERT(triangles.len > 0);
+
+        const zcl::t_i32 num_verts_to_submit = 3 * triangles.len;
+
+        if (num_verts_to_submit > k_batch_vert_limit) {
+            ZCL_FATAL();
+        }
+
+#ifdef ZCL_DEBUG
+        for (zcl::t_i32 i = 0; i < triangles.len; i++) {
+            ZCL_ASSERT(TriangleCheckValid(triangles[i]));
+        }
+#endif
+
+        if (texture != rs->batch_state.texture || rs->batch_state.vertex_cnt + num_verts_to_submit > k_batch_vert_limit) {
+            RendererFlush(rs);
+            rs->batch_state.texture = texture;
+        }
+
+        for (zcl::t_i32 i = 0; i < triangles.len; i++) {
+            const zcl::t_i32 offs = rs->batch_state.vertex_cnt;
+            rs->batch_state.verts[offs + (3 * i) + 0] = triangles[i].vertices[0];
+            rs->batch_state.verts[offs + (3 * i) + 1] = triangles[i].vertices[1];
+            rs->batch_state.verts[offs + (3 * i) + 2] = triangles[i].vertices[2];
+        }
+
+        rs->batch_state.vertex_cnt += num_verts_to_submit;
+    }
+
 #if 0
     void internal::FrameBegin(t_gfx *const gfx, const t_platform_ticket_rdonly platform_ticket) {
         ZCL_ASSERT(g_state.phase == ek_phase_active_but_not_midframe);
