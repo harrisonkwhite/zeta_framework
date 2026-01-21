@@ -138,25 +138,24 @@ namespace zcl {
 #endif
 
     void internal::TriggerFatalError(const char *const func_name_c_str, const char *const file_name_c_str, const t_i32 line, const char *const cond_c_str) {
+#ifdef ZCL_DEBUG
         fprintf(stderr, "==================== FATAL ERROR ====================\n");
 
         if (cond_c_str) {
             fprintf(stderr, "Function:  %s\n", func_name_c_str);
             fprintf(stderr, "File:      %s\n", file_name_c_str);
             fprintf(stderr, "Line:      %d\n", line);
-            fprintf(stderr, "Condition: %s\n", cond_c_str);
+            fprintf(stderr, "Condition: %s\n\n", cond_c_str);
         } else {
             fprintf(stderr, "Function: %s\n", func_name_c_str);
             fprintf(stderr, "File:     %s\n", file_name_c_str);
-            fprintf(stderr, "Line:     %d\n", line);
+            fprintf(stderr, "Line:     %d\n\n", line);
         }
 
-#ifdef ZCL_DEBUG
-        fprintf(stderr, "\n");
         PrintStackTrace();
-#endif
 
         fprintf(stderr, "=====================================================\n");
+#endif
 
         fflush(stderr);
 
