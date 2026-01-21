@@ -131,7 +131,7 @@ namespace zgl {
 
         if (ma_sound_is_playing(ma_snd)) {
             if (ma_sound_stop(ma_snd) != MA_SUCCESS) {
-                ZCL_FATAL("Failed to stop miniaudio sound!");
+                ZCL_FATAL();
             }
         }
 
@@ -155,7 +155,7 @@ namespace zgl {
 
         if (g_state.phase != ek_phase_frozen) {
             if (ma_sound_start(&g_state.snd_insts.ma_snds[id.index]) != MA_SUCCESS) {
-                ZCL_FATAL("Failed to start miniaudio sound!");
+                ZCL_FATAL();
             }
         }
     }
