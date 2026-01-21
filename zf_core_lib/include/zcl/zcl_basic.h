@@ -111,9 +111,11 @@ namespace zcl {
     using t_uintptr = uintptr_t;
     static_assert(sizeof(t_uintptr) == 8);
 
+    template <typename tp_type> using t_without_extent = typename std::remove_extent<tp_type>::type;
     template <typename tp_type> using t_without_const = typename std::remove_const<tp_type>::type;
     template <typename tp_type> using t_without_volatile = typename std::remove_volatile<tp_type>::type;
     template <typename tp_type> using t_without_ref = typename std::remove_reference<tp_type>::type;
+    template <typename tp_type> using t_without_cv = typename std::remove_cv<tp_type>::type;
     template <typename tp_type> using t_without_cvref = typename std::remove_cvref<tp_type>::type;
 
     // "Simple" meaning that it's safe to use with arenas and C-style memory operations.
@@ -147,7 +149,7 @@ namespace zcl {
     template <typename tp_type>
     concept c_c_str = c_same<t_without_cvref<tp_type>, char *>
         || c_same<t_without_cvref<tp_type>, const char *>
-        || c_same<t_without_cvref<tp_type>, char[]>;
+        || (c_same<t_without_cv<t_without_extent<t_without_ref<tp_type>>>, char> && !c_same<t_without_cvref<tp_type>, char>);
 
     // Should return true iff a and b are equal.
     template <c_simple tp_type>
