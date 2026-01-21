@@ -1,14 +1,6 @@
 #include <zcl/zcl_file_sys.h>
 
 #ifdef ZCL_PLATFORM_WINDOWS
-    #ifndef WIN32_LEAN_AND_MEAN
-        #define WIN32_LEAN_AND_MEAN
-    #endif
-
-    #ifndef NOMINMAX
-        #define NOMINMAX
-    #endif
-
     #include <windows.h>
     #include <direct.h>
 #endif
@@ -30,9 +22,9 @@ namespace zcl {
         return ek_path_type_file;
     }
 
-    t_b8 DirectoryCreate(const t_str_rdonly path, t_arena *const temp_arena, t_directory_create_result *const o_create_res) {
-        if (o_create_res) {
-            *o_create_res = ek_directory_create_result_success;
+    t_b8 DirectoryCreate(const t_str_rdonly path, t_arena *const temp_arena, t_directory_create_result *const o_create_result) {
+        if (o_create_result) {
+            *o_create_result = ek_directory_create_result_success;
         }
 
         const t_str_rdonly path_terminated = StrCloneButAddTerminator(path, temp_arena);
@@ -51,23 +43,23 @@ namespace zcl {
             return true;
         }
 
-        if (o_create_res) {
+        if (o_create_result) {
             switch (errno) {
             case EEXIST:
-                *o_create_res = ek_directory_create_result_already_exists;
+                *o_create_result = ek_directory_create_result_already_exists;
                 break;
 
             case EACCES:
             case EPERM:
-                *o_create_res = ek_directory_create_result_permission_denied;
+                *o_create_result = ek_directory_create_result_permission_denied;
                 break;
 
             case ENOENT:
-                *o_create_res = ek_directory_create_result_path_not_found;
+                *o_create_result = ek_directory_create_result_path_not_found;
                 break;
 
             default:
-                *o_create_res = ek_directory_create_result_unknown_error;
+                *o_create_result = ek_directory_create_result_unknown_error;
                 break;
             }
         }
@@ -75,14 +67,14 @@ namespace zcl {
         return false;
     }
 
-    t_b8 DirectoryCreateRecursive(const t_str_rdonly path, t_arena *const temp_arena, t_directory_create_result *const o_create_res) {
-        if (o_create_res) {
-            *o_create_res = ek_directory_create_result_success;
+    t_b8 DirectoryCreateRecursive(const t_str_rdonly path, t_arena *const temp_arena, t_directory_create_result *const o_create_result) {
+        if (o_create_result) {
+            *o_create_result = ek_directory_create_result_success;
         }
 
-        const auto create_dir_if_nonexistent = [o_create_res, &temp_arena](const t_str_rdonly path) {
+        const auto create_dir_if_nonexistent = [o_create_result, &temp_arena](const t_str_rdonly path) {
             if (PathGetType(path, temp_arena) == ek_path_type_not_found) {
-                if (!DirectoryCreate(path, temp_arena, o_create_res)) {
+                if (!DirectoryCreate(path, temp_arena, o_create_result)) {
                     return false;
                 }
             }
@@ -152,10 +144,10 @@ namespace zcl {
         return true;
     }
 
-    t_b8 FileCreateRecursive(const t_str_rdonly path, t_arena *const temp_arena, t_directory_create_result *const o_dir_create_res) {
+    t_b8 FileCreateRecursive(const t_str_rdonly path, t_arena *const temp_arena, t_directory_create_result *const o_dir_create_result) {
         t_file_stream stream;
 
-        if (!FileOpenRecursive(path, ek_file_access_mode_write, temp_arena, &stream, o_dir_create_res)) {
+        if (!FileOpenRecursive(path, ek_file_access_mode_write, temp_arena, &stream, o_dir_create_result)) {
             return false;
         }
 
@@ -201,15 +193,15 @@ namespace zcl {
         return true;
     }
 
-    t_b8 FileOpenRecursive(const t_str_rdonly path, const t_file_access_mode mode, t_arena *const temp_arena, t_file_stream *const o_stream, t_directory_create_result *const o_dir_create_res) {
-        if (o_dir_create_res) {
-            *o_dir_create_res = ek_directory_create_result_success;
+    t_b8 FileOpenRecursive(const t_str_rdonly path, const t_file_access_mode mode, t_arena *const temp_arena, t_file_stream *const o_stream, t_directory_create_result *const o_dir_create_result) {
+        if (o_dir_create_result) {
+            *o_dir_create_result = ek_directory_create_result_success;
         }
 
         // Get the substring containing all directories and create them.
         ZCL_STR_WALK_REVERSE (path, step) {
             if (step.code_pt == '/' || step.code_pt == '\\') {
-                if (!DirectoryCreateRecursive({ArraySlice(path.bytes, 0, step.byte_index)}, temp_arena, o_dir_create_res)) {
+                if (!DirectoryCreateRecursive({ArraySlice(path.bytes, 0, step.byte_index)}, temp_arena, o_dir_create_result)) {
                     return false;
                 }
 

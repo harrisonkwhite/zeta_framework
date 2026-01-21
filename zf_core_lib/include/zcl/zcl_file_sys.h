@@ -26,8 +26,8 @@ namespace zcl {
         ek_directory_create_result_unknown_error
     };
 
-    [[nodiscard]] t_b8 DirectoryCreate(const t_str_rdonly path, t_arena *const temp_arena, t_directory_create_result *const o_create_res = nullptr);
-    [[nodiscard]] t_b8 DirectoryCreateRecursive(const t_str_rdonly path, t_arena *const temp_arena, t_directory_create_result *const o_create_res = nullptr);
+    [[nodiscard]] t_b8 DirectoryCreate(const t_str_rdonly path, t_arena *const temp_arena, t_directory_create_result *const o_create_result = nullptr);
+    [[nodiscard]] t_b8 DirectoryCreateRecursive(const t_str_rdonly path, t_arena *const temp_arena, t_directory_create_result *const o_create_result = nullptr);
 
     t_str_mut GetExecutableDirectory(t_arena *const arena);
 
@@ -75,7 +75,7 @@ namespace zcl {
     inline t_file_stream FileStreamCreateStdError() { return FileStreamCreate(stderr, ek_stream_mode_write); }
 
     [[nodiscard]] t_b8 FileCreate(const t_str_rdonly path, t_arena *const temp_arena);
-    [[nodiscard]] t_b8 FileCreateRecursive(const t_str_rdonly path, t_arena *const temp_arena, t_directory_create_result *const o_dir_create_res = nullptr);
+    [[nodiscard]] t_b8 FileCreateRecursive(const t_str_rdonly path, t_arena *const temp_arena, t_directory_create_result *const o_dir_create_result = nullptr);
 
     enum t_file_access_mode : t_i32 {
         ek_file_access_mode_read,
@@ -85,8 +85,8 @@ namespace zcl {
 
     [[nodiscard]] t_b8 FileOpen(const t_str_rdonly path, const t_file_access_mode mode, t_arena *const temp_arena, t_file_stream *const o_stream);
 
-    // Leave o_dir_create_res as nullptr if you don't want it.
-    [[nodiscard]] t_b8 FileOpenRecursive(const t_str_rdonly path, const t_file_access_mode mode, t_arena *const temp_arena, t_file_stream *const o_stream, t_directory_create_result *const o_dir_create_res = nullptr);
+    // Leave o_dir_create_result as nullptr if you don't want it.
+    [[nodiscard]] t_b8 FileOpenRecursive(const t_str_rdonly path, const t_file_access_mode mode, t_arena *const temp_arena, t_file_stream *const o_stream, t_directory_create_result *const o_dir_create_result = nullptr);
 
     // Leave o_stream_new as nullptr if you don't want it.
     // o_stream_new is allowed to be equal to stream_current.

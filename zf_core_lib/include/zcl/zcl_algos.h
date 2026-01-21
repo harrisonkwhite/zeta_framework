@@ -103,11 +103,11 @@ namespace zcl {
         }
 
         const auto &mid = arr[arr.len / 2];
-        const auto comp_res = comparator(elem, mid);
+        const auto comparison_result = comparator(elem, mid);
 
-        if (comp_res == 0) {
+        if (comparison_result == 0) {
             return true;
-        } else if (comp_res < 0) {
+        } else if (comparison_result < 0) {
             return RunBinarySearch(ArraySlice(arr, 0, arr.len / 2), elem);
         } else {
             return RunBinarySearch(ArraySliceFrom(arr, (arr.len / 2) + 1), elem);

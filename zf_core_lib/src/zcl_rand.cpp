@@ -1,18 +1,8 @@
 #include <zcl/zcl_rand.h>
 
 #ifdef ZCL_PLATFORM_WINDOWS
-    #ifndef WIN32_LEAN_AND_MEAN
-        #define WIN32_LEAN_AND_MEAN
-    #endif
-
-    #ifndef NOMINMAX
-        #define NOMINMAX
-    #endif
-
     #include <windows.h>
-
     #include <bcrypt.h>
-    #pragma comment(lib, "bcrypt.lib")
 #endif
 
 namespace zcl {
