@@ -179,17 +179,18 @@ namespace zcl {
     // ============================================================
     // @section: Errors
 
-    // Redirects stderr to an error log file and has an error box appear in the event of a fatal error (including assertion errors).
+    // Redirects stderr to an error log file and updates the message of the fatal error popup.
     void ConfigureErrorLogFile();
 
     namespace internal {
 #ifdef ZCL_DEBUG
-        // Returns true iff the debugger was broken into.
-        t_b8 TryBreakingIntoDebugger();
+        void TryBreakingIntoDebugger();
 
         // Returns true iff the debugger was broken into.
-        inline t_b8 TryBreakingIntoDebuggerIf(const t_b8 cond) {
-            return cond && TryBreakingIntoDebugger();
+        inline void TryBreakingIntoDebuggerIf(const t_b8 cond) {
+            if (cond) {
+                TryBreakingIntoDebugger();
+            }
         }
 
         [[noreturn]] void TriggerAssertionError(const char *const cond_c_str, const char *const func_name_c_str, const char *const file_name_c_str, const t_i32 line);
