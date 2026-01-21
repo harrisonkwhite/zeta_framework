@@ -55,16 +55,15 @@ namespace zcl {
     }
 #endif
 
-    // @todo: Not very useful in release.
+#ifdef ZCL_DEBUG
     static void PrintStackTrace() {
-#if defined(ZCL_PLATFORM_WINDOWS)
+    #if defined(ZCL_PLATFORM_WINDOWS)
         constexpr t_i32 k_stack_len = 32;
         void *stack_raw[k_stack_len];
         const t_i32 frame_cnt = CaptureStackBackTrace(0, k_stack_len, stack_raw, nullptr);
 
         fprintf(stderr, "Stack Trace:\n");
 
-    #ifdef ZCL_DEBUG
         const HANDLE proc = GetCurrentProcess();
         SymInitialize(proc, nullptr, true);
 
@@ -94,19 +93,15 @@ namespace zcl {
         }
 
         SymCleanup(proc);
+    #elif defined(ZCL_PLATFORM_MACOS)
+        static_assert(false); // @todo
+    #elif defined(ZCL_PLATFORM_LINUX)
+        static_assert(false); // @todo
     #else
-        for (t_i32 i = 0; i < frame_cnt; i++) {
-            fprintf(stderr, "- 0x%p\n", stack_raw[i]);
-        }
-    #endif
-#elif defined(ZCL_PLATFORM_MACOS)
-        static_assert(false); // @todo
-#elif defined(ZCL_PLATFORM_LINUX)
-        static_assert(false); // @todo
-#else
         static_assert(false, "Platform not supported!");
-#endif
+    #endif
     }
+#endif
 
     [[noreturn]] static void Terminate() {
 #if defined(ZCL_PLATFORM_WINDOWS)
@@ -125,8 +120,8 @@ namespace zcl {
 
         fprintf(stderr, "Function:  %s\n", func_name_c_str);
         fprintf(stderr, "File:      %s\n", file_name_c_str);
-        fprintf(stderr, "Line:      %d\n\n", line);
-        fprintf(stderr, "Condition: %s\n", cond_c_str);
+        fprintf(stderr, "Line:      %d\n", line);
+        fprintf(stderr, "Condition: %s\n\n", cond_c_str);
 
         PrintStackTrace();
 
@@ -145,20 +140,21 @@ namespace zcl {
     void internal::TriggerFatalError(const char *const func_name_c_str, const char *const file_name_c_str, const t_i32 line, const char *const cond_c_str) {
         fprintf(stderr, "==================== FATAL ERROR ====================\n");
 
-#ifdef ZCL_DEBUG
         if (cond_c_str) {
             fprintf(stderr, "Function:  %s\n", func_name_c_str);
             fprintf(stderr, "File:      %s\n", file_name_c_str);
             fprintf(stderr, "Line:      %d\n", line);
-            fprintf(stderr, "Condition: %s\n\n", cond_c_str);
+            fprintf(stderr, "Condition: %s\n", cond_c_str);
         } else {
             fprintf(stderr, "Function: %s\n", func_name_c_str);
             fprintf(stderr, "File:     %s\n", file_name_c_str);
-            fprintf(stderr, "Line:     %d\n\n", line);
+            fprintf(stderr, "Line:     %d\n", line);
         }
-#endif
 
+#ifdef ZCL_DEBUG
+        fprintf(stderr, "\n");
         PrintStackTrace();
+#endif
 
         fprintf(stderr, "=====================================================\n");
 
