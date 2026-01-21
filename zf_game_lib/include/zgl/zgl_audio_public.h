@@ -60,27 +60,18 @@ namespace zgl {
     constexpr zcl::t_range k_sound_pitch_range = zcl::RangeCreateExclLower(0.0f, zcl::k_f32_inf_pos);
 
     t_sound_id SoundCreate(const t_audio_ticket_mut audio_ticket, const t_sound_type *const type);
-
     void SoundDestroy(const t_audio_ticket_mut audio_ticket, const t_sound_id id);
 
     void SoundStart(const t_audio_ticket_mut audio_ticket, const t_sound_id id);
-
     void SoundPause(const t_audio_ticket_mut audio_ticket, const t_sound_id id);
-
     void SoundResume(const t_audio_ticket_mut audio_ticket, const t_sound_id id);
 
     zcl::t_b8 SoundCheckExists(const t_audio_ticket_rdonly audio_ticket, const t_sound_id id);
-
     t_sound_state SoundGetState(const t_audio_ticket_rdonly audio_ticket, const t_sound_id id);
-
     const t_sound_type *SoundGetType(const t_audio_ticket_rdonly audio_ticket, const t_sound_id id);
-
     zcl::t_f32 SoundGetVolume(const t_audio_ticket_rdonly audio_ticket, const t_sound_id id);
-
     zcl::t_f32 SoundGetPan(const t_audio_ticket_rdonly audio_ticket, const t_sound_id id);
-
     zcl::t_f32 SoundGetPitch(const t_audio_ticket_rdonly audio_ticket, const t_sound_id id);
-
     zcl::t_b8 SoundCheckLooping(const t_audio_ticket_rdonly audio_ticket, const t_sound_id id);
 
     // Gets track position in seconds.
@@ -90,29 +81,21 @@ namespace zgl {
     zcl::t_f32 SoundGetTrackDuration(const t_audio_ticket_rdonly audio_ticket, const t_sound_id id);
 
     void SoundSetVolume(const t_audio_ticket_mut audio_ticket, const t_sound_id id, const zcl::t_f32 vol);
-
     void SoundSetVolumeTransition(const t_audio_ticket_mut audio_ticket, const t_sound_id id, const zcl::t_f32 vol_begin, const zcl::t_f32 vol_end, const zcl::t_f32 dur_secs);
-
     void SoundSetPan(const t_audio_ticket_mut audio_ticket, const t_sound_id id, const zcl::t_f32 pan);
-
     void SoundSetPitch(const t_audio_ticket_mut audio_ticket, const t_sound_id id, const zcl::t_f32 pitch);
-
     void SoundSetLooping(const t_audio_ticket_mut audio_ticket, const t_sound_id id, const zcl::t_b8 looping);
-
     void SoundSetTrackPosition(const t_audio_ticket_mut audio_ticket, const t_sound_id id, const zcl::t_f32 pos_secs);
 
     zcl::t_array_mut<t_sound_id> SoundsGetExisting(const t_audio_ticket_rdonly audio_ticket, zcl::t_arena *const arena);
 
     void SoundsDestroyAll(const t_audio_ticket_mut audio_ticket, zcl::t_arena *const temp_arena);
-
     void SoundsDestroyAllOfType(const t_audio_ticket_mut audio_ticket, const t_sound_type *const snd_type, zcl::t_arena *const temp_arena);
 
     void SoundsPauseAll(const t_audio_ticket_mut audio_ticket, zcl::t_arena *const temp_arena);
-
     void SoundsPauseAllOfType(const t_audio_ticket_mut audio_ticket, const t_sound_type *const snd_type, zcl::t_arena *const temp_arena);
 
     void SoundsResumeAll(const t_audio_ticket_mut audio_ticket, zcl::t_arena *const temp_arena);
-
     void SoundsResumeAllOfType(const t_audio_ticket_mut audio_ticket, const t_sound_type *const snd_type, zcl::t_arena *const temp_arena);
 
     // ============================================================
@@ -120,9 +103,7 @@ namespace zgl {
 
     namespace internal {
         t_audio_ticket_mut AudioStartup(zcl::t_arena *const arena);
-
         void AudioShutdown(const t_audio_ticket_mut ticket);
-
         void AudioSetFrozen(const t_audio_ticket_mut ticket, const zcl::t_b8 paused);
 
         void SoundsProcessFinished(const t_audio_ticket_mut audio_ticket);
