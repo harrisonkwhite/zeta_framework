@@ -20,7 +20,7 @@ namespace zcl {
         *arena = {};
     }
 
-    static t_arena_block *arena_create_block(const t_i32 buf_size) {
+    static t_arena_block *ArenaCreateBlock(const t_i32 buf_size) {
         ZCL_REQUIRE(buf_size > 0);
 
         const auto block = static_cast<t_arena_block *>(malloc(sizeof(t_arena_block)));
@@ -57,7 +57,7 @@ namespace zcl {
             const auto block_based = &arena->type_data.block_based;
 
             if (!block_based->blocks_head) {
-                block_based->blocks_head = arena_create_block(CalcMax(size, block_based->block_min_size));
+                block_based->blocks_head = ArenaCreateBlock(CalcMax(size, block_based->block_min_size));
                 block_based->block_cur = block_based->blocks_head;
                 return ArenaPush(arena, size, alignment);
             }
@@ -67,7 +67,7 @@ namespace zcl {
 
             if (offs_next > block_based->block_cur->buf_size) {
                 if (!block_based->block_cur->next) {
-                    block_based->block_cur->next = arena_create_block(CalcMax(size, block_based->block_min_size));
+                    block_based->block_cur->next = ArenaCreateBlock(CalcMax(size, block_based->block_min_size));
                 }
 
                 block_based->block_cur = block_based->block_cur->next;
