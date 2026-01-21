@@ -179,7 +179,7 @@ namespace zcl {
     // ============================================================
     // @section: Errors
 
-    void ErrorBoxShow();
+    void ErrorBoxShow(const char *const caption_c_str, const char *const msg_c_str);
 
     using t_assertion_error_callback = void (*)(const t_b8 debugger_broken_into);
 

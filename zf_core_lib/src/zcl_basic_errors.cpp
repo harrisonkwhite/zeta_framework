@@ -1,21 +1,9 @@
 #include <zcl/zcl_basic.h>
 
-#include <cstdio>
-
 #ifdef ZCL_PLATFORM_WINDOWS
-    #ifndef WIN32_LEAN_AND_MEAN
-        #define WIN32_LEAN_AND_MEAN
-    #endif
-
-    #ifndef NOMINMAX
-        #define NOMINMAX
-    #endif
-
     #include <windows.h>
     #include <dbghelp.h>
 #endif
-
-#include <cstdlib>
 
 namespace zcl {
     void ErrorBoxShow(const char *const caption_c_str, const char *const msg_c_str) {
