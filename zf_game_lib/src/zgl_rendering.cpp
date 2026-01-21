@@ -160,6 +160,7 @@ namespace zgl {
         const zcl::t_i32 num_verts_to_submit = 3 * triangles.len;
 
         if (num_verts_to_submit > k_batch_vertex_limit) {
+            zcl::LogError(ZCL_STR_LITERAL("%: Attempted to submit more vertices than the batch limit allows!"), zcl::CStrToStr(__FUNCTION__));
             ZCL_FATAL();
         }
 
