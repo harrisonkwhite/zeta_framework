@@ -16,21 +16,26 @@
 #endif
 
 namespace zgl {
-    const zcl::t_str_rdonly g_error_log_file_name = ZCL_STR_LITERAL("error.log");
+    constexpr const char *k_error_log_file_name_c_str = "error.log";
 
-    void internal::ConfigErrorHandling(zcl::t_arena *const temp_arena) {
-#ifdef ZCL_DEBUG
-        zcl::t_file_stream std_err = zcl::FileStreamCreateStdError();
+    void internal::ConfigErrorHandling() {
+#ifndef ZCL_DEBUG
+        // Intentionally using non-ZF functions here to minimize the number of possible ZCL fatal error triggers that could occur before this error handling setup is complete.
 
-        if (!zcl::FileReopen(&std_err, g_error_log_file_name, zcl::ek_file_access_mode_write, temp_arena, nullptr)) {
-            ZCL_FATAL();
+        {
+            FILE *const file = freopen(k_error_log_file_name_c_str, "w", stderr);
+
+            if (!file) {
+                ZCL_FATAL(); // This one will not go to the error log file...
+            }
         }
 
-        // @todo: Embed file name into error message.
-
         const auto callback = []() {
+            char err_msg_buf[256];
+            snprintf(err_msg_buf, sizeof(err_msg_buf), "A fatal error occurred - please check \"%s\" for details.\nThe program will now exit.", k_error_log_file_name_c_str);
+
     #ifdef ZCL_PLATFORM_WINDOWS
-            MessageBoxA(nullptr, "A fatal error occurred - please check \"error.log\" for details.\nThe program will now exit.", "Fatal Error", MB_OK | MB_ICONERROR);
+            MessageBoxA(nullptr, err_msg_buf, "Fatal Error", MB_OK | MB_ICONERROR);
     #endif
         };
 

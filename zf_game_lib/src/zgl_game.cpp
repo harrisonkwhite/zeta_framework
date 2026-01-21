@@ -11,13 +11,13 @@ namespace zgl {
         //
         // Initialization
         //
+        internal::ConfigErrorHandling();
+
         zcl::t_arena perm_arena = zcl::ArenaCreateBlockBased();
         ZCL_DEFER({ zcl::ArenaDestroy(&perm_arena); });
 
         zcl::t_arena temp_arena = zcl::ArenaCreateBlockBased();
         ZCL_DEFER({ zcl::ArenaDestroy(&temp_arena); });
-
-        internal::ConfigErrorHandling(&temp_arena);
 
         t_input_state *const input_state = internal::InputCreateState(&perm_arena);
 
