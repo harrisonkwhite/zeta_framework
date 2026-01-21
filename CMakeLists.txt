@@ -46,3 +46,16 @@ foreach(t glfw uninstall update_mappings)
 endforeach()
 
 set_target_properties(reproc PROPERTIES FOLDER "zeta_framework/external/reproc")
+
+set(_NO_WARNINGS
+  $<$<CXX_COMPILER_ID:MSVC>:/W0>
+  $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-w>
+)
+
+target_compile_options(glfw PRIVATE ${_NO_WARNINGS})
+target_compile_options(bgfx PRIVATE ${_NO_WARNINGS})
+target_compile_options(bx PRIVATE ${_NO_WARNINGS})
+target_compile_options(bimg PRIVATE ${_NO_WARNINGS})
+target_compile_options(bimg_decode PRIVATE ${_NO_WARNINGS})
+target_compile_options(bimg_encode PRIVATE ${_NO_WARNINGS})
+target_compile_options(reproc PRIVATE ${_NO_WARNINGS})
