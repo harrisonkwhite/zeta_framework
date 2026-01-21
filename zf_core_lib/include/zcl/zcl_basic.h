@@ -200,13 +200,13 @@ namespace zcl {
     #define ZCL_DEBUG_BREAK() internal::TryBreakingIntoDebugger()
     #define ZCL_DEBUG_BREAK_IF(cond) internal::TryBreakingIntoDebuggerIf(cond)
 
-    #define ZCL_ASSERT(cond)                                                                            \
-        do {                                                                                            \
-            if (!ZCL_CHECK_CONSTEXPR()) {                                                               \
-                if (!(cond)) {                                                                          \
-                    zcl::internal::TriggerAssertionError(#cond, __FUNCTION__, __FILE_NAME__, __LINE__); \
-                }                                                                                       \
-            }                                                                                           \
+    #define ZCL_ASSERT(cond)                                                                        \
+        do {                                                                                        \
+            if (!ZCL_CHECK_CONSTEXPR()) {                                                           \
+                if (!(cond)) {                                                                      \
+                    zcl::internal::TriggerAssertionError(#cond, __func__, __FILE_NAME__, __LINE__); \
+                }                                                                                   \
+            }                                                                                       \
         } while (0)
 #else
     #define ZCL_DEBUG_BREAK() static_cast<void>(0)
@@ -216,16 +216,16 @@ namespace zcl {
 
         [[noreturn]] void TriggerFatalError(const char *const func_name_c_str, const char *const file_name_c_str, const t_i32 line, const char *const cond_c_str = nullptr);
 
-#define ZCL_FATAL() zcl::internal::TriggerFatalError(__FUNCTION__, __FILE_NAME__, __LINE__)
+#define ZCL_FATAL() zcl::internal::TriggerFatalError(__func__, __FILE_NAME__, __LINE__)
 #define ZCL_UNREACHABLE() ZCL_FATAL()
 
-#define ZCL_REQUIRE(cond)                                                                       \
-    do {                                                                                        \
-        if (!ZCL_CHECK_CONSTEXPR()) {                                                           \
-            if (!(cond)) {                                                                      \
-                zcl::internal::TriggerFatalError(__FUNCTION__, __FILE_NAME__, __LINE__, #cond); \
-            }                                                                                   \
-        }                                                                                       \
+#define ZCL_REQUIRE(cond)                                                                   \
+    do {                                                                                    \
+        if (!ZCL_CHECK_CONSTEXPR()) {                                                       \
+            if (!(cond)) {                                                                  \
+                zcl::internal::TriggerFatalError(__func__, __FILE_NAME__, __LINE__, #cond); \
+            }                                                                               \
+        }                                                                                   \
     } while (0)
     }
 
