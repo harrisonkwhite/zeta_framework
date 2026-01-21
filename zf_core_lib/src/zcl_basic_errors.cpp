@@ -19,8 +19,6 @@
 
 namespace zcl {
     void ErrorBoxShow(const char *const caption_c_str, const char *const msg_c_str) {
-        static_assert(false);
-        // @todo: Generalise this macro style everywhere, be explicit about what platforms are unsupported.
 #if defined(ZCL_PLATFORM_WINDOWS)
         MessageBoxA(nullptr, msg_c_str, caption_c_str, MB_OK | MB_ICONERROR);
 #elif defined(ZCL_PLATFORM_MACOS)
@@ -34,11 +32,17 @@ namespace zcl {
 
     t_b8 internal::TryBreakingIntoDebugger() {
 #ifdef ZCL_DEBUG
-    #ifdef ZCL_PLATFORM_WINDOWS
+    #if defined(ZCL_PLATFORM_WINDOWS)
         if (IsDebuggerPresent()) {
             __debugbreak();
             return true;
         }
+    #elif defined(ZCL_PLATFORM_MACOS)
+        static_assert(false); // @todo
+    #elif defined(ZCL_PLATFORM_LINUX)
+        static_assert(false); // @todo
+    #else
+        static_assert(false, "Platform not supported!");
     #endif
 #endif
 
@@ -47,7 +51,7 @@ namespace zcl {
 
     // @todo: Not very useful in release.
     static void PrintStackTrace() {
-#ifdef ZCL_PLATFORM_WINDOWS
+#if defined(ZCL_PLATFORM_WINDOWS)
         constexpr t_i32 k_stack_len = 32;
         void *stack[k_stack_len];
         const t_i32 frame_cnt = CaptureStackBackTrace(0, k_stack_len, stack, nullptr);
@@ -89,9 +93,12 @@ namespace zcl {
             fprintf(stderr, "- 0x%p\n", stack[i]);
         }
     #endif
-
+#elif defined(ZCL_PLATFORM_MACOS)
+        static_assert(false); // @todo
+#elif defined(ZCL_PLATFORM_LINUX)
+        static_assert(false); // @todo
 #else
-    #error "Platform not supported!" // @todo
+        static_assert(false, "Platform not supported!");
 #endif
     }
 
