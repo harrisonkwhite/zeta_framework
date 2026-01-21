@@ -100,15 +100,19 @@ namespace zcl {
     }
 
     static t_u64 GetOSEntropy() {
-#ifdef ZCL_PLATFORM_WINDOWS
+#if defined(ZCL_PLATFORM_WINDOWS)
         zcl::t_u64 result = 0;
 
         const NTSTATUS status = BCryptGenRandom(nullptr, reinterpret_cast<UCHAR *>(&result), static_cast<ULONG>(ZCL_SIZE_OF(result)), BCRYPT_USE_SYSTEM_PREFERRED_RNG);
         ZCL_REQUIRE(status >= 0);
 
         return result;
+#elif defined(ZCL_PLATFORM_MACOS)
+        static_assert(false); // @todo
+#elif defined(ZCL_PLATFORM_LINUX)
+        static_assert(false); // @todo
 #else
-    #error "Platform support not complete!" // @todo
+        static_assert(false, "Platform not supported!");
 #endif
     }
 
