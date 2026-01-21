@@ -40,9 +40,11 @@ namespace zcl {
 #ifdef ZCL_PLATFORM_WINDOWS
         const t_i32 result = _mkdir(StrToCStr(path_terminated));
 #elif defined(ZCL_PLATFORM_MACOS)
-    #error "Platform-specific implementation not yet done!" // @todo
+        static_assert(false); // @todo
 #elif defined(ZCL_PLATFORM_LINUX)
-    #error "Platform-specific implementation not yet done!" // @todo
+        static_assert(false); // @todo
+#else
+        static_assert(false, "Platform not supported!");
 #endif
 
         if (result == 0) {
@@ -130,9 +132,11 @@ namespace zcl {
         ArrayCopy(ArrayToByteArray(ArraySlice(ArrayToNonstatic(&buf), 0, len)), result_bytes);
         return {result_bytes};
 #elif defined(ZCL_PLATFORM_MACOS)
-    #error "Platform-specific implementation not yet done!" // @todo
+        static_assert(false); // @todo
 #elif defined(ZCL_PLATFORM_LINUX)
-    #error "Platform-specific implementation not yet done!" // @todo
+        static_assert(false); // @todo
+#else
+        static_assert(false, "Platform not supported!");
 #endif
     }
 
