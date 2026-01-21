@@ -109,6 +109,6 @@ namespace zgl {
     void GameRun(const t_game_config &config);
 
     namespace internal {
-        void ConfigErrorHandling();
+        void ConfigErrorHandling(zcl::t_arena *const temp_arena);
     }
 }

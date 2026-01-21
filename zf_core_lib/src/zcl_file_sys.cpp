@@ -160,37 +160,39 @@ namespace zcl {
         return true;
     }
 
+    static t_stream_mode FileAccessModeToStreamMode(const t_file_access_mode access_mode) {
+        switch (access_mode) {
+        case ek_file_access_mode_read: return ek_stream_mode_read;
+        case ek_file_access_mode_write: return ek_stream_mode_write;
+        case ek_file_access_mode_append: return ek_stream_mode_write;
+        }
+
+        ZCL_UNREACHABLE();
+    }
+
     t_b8 FileOpen(const t_str_rdonly path, const t_file_access_mode mode, t_arena *const temp_arena, t_file_stream *const o_stream) {
         const t_str_rdonly path_terminated = StrCloneButAddTerminator(path, temp_arena);
 
-        FILE *file;
-        t_stream_mode stream_mode;
+        const auto file = [mode, path_terminated]() -> FILE * {
+            switch (mode) {
+            case ek_file_access_mode_read:
+                return fopen(StrToCStr(path_terminated), "rb");
 
-        switch (mode) {
-        case ek_file_access_mode_read:
-            file = fopen(StrToCStr(path_terminated), "rb");
-            stream_mode = ek_stream_mode_read;
-            break;
+            case ek_file_access_mode_write:
+                return fopen(StrToCStr(path_terminated), "wb");
 
-        case ek_file_access_mode_write:
-            file = fopen(StrToCStr(path_terminated), "wb");
-            stream_mode = ek_stream_mode_write;
-            break;
+            case ek_file_access_mode_append:
+                return fopen(StrToCStr(path_terminated), "ab");
+            }
 
-        case ek_file_access_mode_append:
-            file = fopen(StrToCStr(path_terminated), "ab");
-            stream_mode = ek_stream_mode_write;
-            break;
-
-        default:
             ZCL_UNREACHABLE();
-        }
+        }();
 
         if (!file) {
             return false;
         }
 
-        *o_stream = FileStreamCreate(file, stream_mode);
+        *o_stream = FileStreamCreate(file, FileAccessModeToStreamMode(mode));
 
         return true;
     }
@@ -213,6 +215,35 @@ namespace zcl {
 
         // Now that directories are created, open the file.
         return FileOpen(path, mode, temp_arena, o_stream);
+    }
+
+    t_b8 FileReopen(t_file_stream *const stream_current, const t_str_rdonly path, const t_file_access_mode mode, t_arena *const temp_arena, t_file_stream *const o_stream_new) {
+        const t_str_rdonly path_terminated = StrCloneButAddTerminator(path, temp_arena);
+
+        const auto file = [mode, path_terminated, stream_current]() -> FILE * {
+            switch (mode) {
+            case ek_file_access_mode_read:
+                return freopen(StrToCStr(path_terminated), "rb", stream_current->file);
+
+            case ek_file_access_mode_write:
+                return freopen(StrToCStr(path_terminated), "wb", stream_current->file);
+
+            case ek_file_access_mode_append:
+                return freopen(StrToCStr(path_terminated), "ab", stream_current->file);
+            }
+
+            ZCL_UNREACHABLE();
+        }();
+
+        if (!file) {
+            return false;
+        }
+
+        if (o_stream_new) {
+            *o_stream_new = FileStreamCreate(file, FileAccessModeToStreamMode(mode));
+        }
+
+        return true;
     }
 
     void FileClose(t_file_stream *const stream) {
