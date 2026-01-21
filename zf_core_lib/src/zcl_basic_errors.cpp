@@ -18,8 +18,8 @@ namespace zcl {
 #endif
     }
 
-    t_b8 internal::TryBreakingIntoDebugger() {
 #ifdef ZCL_DEBUG
+    t_b8 internal::TryBreakingIntoDebugger() {
     #if defined(ZCL_PLATFORM_WINDOWS)
         if (IsDebuggerPresent()) {
             __debugbreak();
@@ -32,10 +32,10 @@ namespace zcl {
     #else
         static_assert(false, "Platform not supported!");
     #endif
-#endif
 
         return false;
     }
+#endif
 
     // @todo: Not very useful in release.
     static void PrintStackTrace() {
@@ -90,6 +90,7 @@ namespace zcl {
 #endif
     }
 
+#ifdef ZCL_DEBUG
     static t_assertion_error_callback g_assertion_error_callback;
 
     void AssertionErrorSetCallback(const t_assertion_error_callback cb) {
@@ -99,12 +100,12 @@ namespace zcl {
     void internal::AssertionErrorTrigger(const char *const cond_c_str, const char *const func_name_c_str, const char *const file_name_c_str, const t_i32 line) {
         fprintf(stderr, "==================== ASSERTION ERROR ====================\n");
 
-#ifdef ZCL_DEBUG
+    #ifdef ZCL_DEBUG
         fprintf(stderr, "Function:  %s\n", func_name_c_str);
         fprintf(stderr, "File:      %s\n", file_name_c_str);
         fprintf(stderr, "Line:      %d\n\n", line);
         fprintf(stderr, "Condition: %s\n", cond_c_str);
-#endif
+    #endif
 
         PrintStackTrace();
 
@@ -120,6 +121,7 @@ namespace zcl {
 
         abort();
     }
+#endif
 
     static t_fatal_error_callback g_fatal_error_callback;
 
@@ -149,11 +151,13 @@ namespace zcl {
 
         fflush(stderr);
 
+#ifdef ZCL_DEBUG
         const t_b8 debugger_broken_into = TryBreakingIntoDebugger();
 
         if (g_fatal_error_callback) {
             g_fatal_error_callback(debugger_broken_into);
         }
+#endif
 
         abort();
     }

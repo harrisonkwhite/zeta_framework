@@ -19,7 +19,7 @@ namespace zcl {
 #endif
 
 #ifndef NDEBUG
-    #define ZCL_DEBUG
+    // #define ZCL_DEBUG
 #endif
 
 #define ZCL_CHECK_CONSTEXPR() std::is_constant_evaluated()
@@ -181,10 +181,12 @@ namespace zcl {
 
     void ErrorBoxShow(const char *const caption_c_str, const char *const msg_c_str);
 
+#ifdef ZCL_DEBUG
     using t_assertion_error_callback = void (*)(const t_b8 debugger_broken_into);
 
     // Callback runs AFTER error message has been flushed and debugger has tried to be broken into, and BEFORE an abort is triggered.
     void AssertionErrorSetCallback(const t_assertion_error_callback cb);
+#endif
 
     using t_fatal_error_callback = void (*)(const t_b8 debugger_broken_into);
 
@@ -192,6 +194,7 @@ namespace zcl {
     void FatalErrorSetCallback(const t_fatal_error_callback cb);
 
     namespace internal {
+#ifdef ZCL_DEBUG
         // Returns true iff the debugger was broken into.
         t_b8 TryBreakingIntoDebugger();
 
@@ -202,7 +205,6 @@ namespace zcl {
 
         [[noreturn]] void AssertionErrorTrigger(const char *const cond_c_str, const char *const func_name_c_str, const char *const file_name_c_str, const t_i32 line);
 
-#ifdef ZCL_DEBUG
     #define ZCL_DEBUG_BREAK() internal::TryBreakingIntoDebugger()
     #define ZCL_DEBUG_BREAK_IF(cond) internal::TryBreakingIntoDebuggerIf(cond)
 

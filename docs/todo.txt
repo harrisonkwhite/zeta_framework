@@ -1,6 +1,5 @@
 - Have crash log be created by default in release builds
 - Make fatal error handling more customisable
-- Streamable audio needs to be integrated into asset builder
 - Stack frame in release is not very useful
 - Clean up includes all across project
 - Some kind of sound group system like what's in gamemaker, so groups of sounds can share the same volume for instance
@@ -18,7 +17,6 @@ There are a handful of comments marked with "@todo" throughout the codebase that
 
 Nice to have:
 - Stack and queue DS
-- Text rotation and scaling
 - A* pathfinding utilities.
 - Helpers for drawing circles and polygons
 - More built-in shaders
