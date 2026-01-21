@@ -85,7 +85,7 @@ namespace zgl {
         const zcl::t_i32 index = zcl::BitsetFindFirstUnsetBit(g_state.snd_insts.active);
 
         if (index == -1) {
-            ZCL_FATAL();
+            ZCL_FATAL(); // @todo: This is quite an easy limit to hit, maybe just give a warning instead?
         }
 
         g_state.snd_insts.types[index] = snd_type;
@@ -105,7 +105,7 @@ namespace zgl {
                 ZCL_FATAL();
             }
         } else {
-            if (ma_sound_init_from_file(&g_state.ma_eng, zcl::StrToCStr(snd_type->stream_external_file_path_terminated), MA_SOUND_FLAG_STREAM, nullptr, nullptr, ma_snd) != MA_SUCCESS) {
+            if (ma_sound_init_from_file(&g_state.ma_eng, zcl::StrToCStr(snd_type->stream_unbuilt_file_path_terminated), MA_SOUND_FLAG_STREAM, nullptr, nullptr, ma_snd) != MA_SUCCESS) {
                 ZCL_FATAL();
             }
         }
@@ -131,7 +131,7 @@ namespace zgl {
 
         if (ma_sound_is_playing(ma_snd)) {
             if (ma_sound_stop(ma_snd) != MA_SUCCESS) {
-                ZCL_FATAL();
+                ZCL_FATAL("Failed to stop miniaudio sound!");
             }
         }
 
@@ -155,7 +155,7 @@ namespace zgl {
 
         if (g_state.phase != ek_phase_frozen) {
             if (ma_sound_start(&g_state.snd_insts.ma_snds[id.index]) != MA_SUCCESS) {
-                ZCL_FATAL();
+                ZCL_FATAL("Failed to start miniaudio sound!");
             }
         }
     }

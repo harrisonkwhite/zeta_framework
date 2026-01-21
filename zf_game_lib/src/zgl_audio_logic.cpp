@@ -101,7 +101,7 @@ namespace zgl {
 
         t_sound_type *const result = SoundTypeGroupAdd(group);
         result->streamable = true;
-        result->stream_external_file_path_terminated = zcl::StrCloneButAddTerminator(external_file_path, temp_arena);
+        result->stream_unbuilt_file_path_terminated = zcl::StrCloneButAddTerminator(external_file_path, temp_arena);
 
         return result;
     }

@@ -82,7 +82,7 @@ namespace zgl {
         bgfx_init.platformData.type = bgfx::NativeWindowHandleType::Default;
 
         if (!bgfx::init(bgfx_init)) {
-            ZCL_FATAL("Failed to initialize BGFX!");
+            ZCL_FATAL();
         }
 
         return TicketCreate();
@@ -182,7 +182,7 @@ namespace zgl {
         const auto vertex_buf_bgfx_hdl = bgfx::createDynamicVertexBuffer(static_cast<zcl::t_u32>(vertex_cnt), vertex_layout);
 
         if (!bgfx::isValid(vertex_buf_bgfx_hdl)) {
-            ZCL_FATAL("Failed to create BGFX vertex buffer!");
+            ZCL_FATAL();
         }
 
         const auto resource = GFXResourceGroupAdd(resource_group);
@@ -223,7 +223,7 @@ namespace zgl {
         }();
 
         if (!bgfx::isValid(bgfx_hdl)) {
-            ZCL_FATAL("Failed to create BGFX texture!");
+            ZCL_FATAL();
         }
 
         const auto resource = GFXResourceGroupAdd(resource_group);
@@ -246,7 +246,7 @@ namespace zgl {
         const bgfx::FrameBufferHandle fb_bgfx_hdl = BGFXCreateFramebuffer(size);
 
         if (!bgfx::isValid(fb_bgfx_hdl)) {
-            ZCL_FATAL("Failed to create BGFX framebuffer for texture target!");
+            ZCL_FATAL();
         }
 
         const auto resource = GFXResourceGroupAdd(resource_group);
@@ -268,7 +268,7 @@ namespace zgl {
         const bgfx::FrameBufferHandle fb_bgfx_hdl = BGFXCreateFramebuffer(size);
 
         if (!bgfx::isValid(fb_bgfx_hdl)) {
-            ZCL_FATAL("Failed to create BGFX framebuffer for resized texture target!");
+            ZCL_FATAL();
         }
 
         texture->type_data.texture.target_fb_bgfx_hdl = fb_bgfx_hdl;
@@ -291,20 +291,20 @@ namespace zgl {
         const bgfx::ShaderHandle vertex_shader_bgfx_hdl = bgfx::createShader(vertex_shader_bgfx_mem);
 
         if (!bgfx::isValid(vertex_shader_bgfx_hdl)) {
-            ZCL_FATAL("Failed to create BGFX vertex shader!");
+            ZCL_FATAL();
         }
 
         const bgfx::Memory *const fragment_shader_bgfx_mem = bgfx::copy(fragment_shader_compiled_bin.raw, static_cast<zcl::t_u32>(fragment_shader_compiled_bin.len));
         const bgfx::ShaderHandle fragment_shader_bgfx_hdl = bgfx::createShader(fragment_shader_bgfx_mem);
 
         if (!bgfx::isValid(fragment_shader_bgfx_hdl)) {
-            ZCL_FATAL("Failed to create BGFX fragment shader!");
+            ZCL_FATAL();
         }
 
         const bgfx::ProgramHandle prog_bgfx_hdl = bgfx::createProgram(vertex_shader_bgfx_hdl, fragment_shader_bgfx_hdl, true);
 
         if (!bgfx::isValid(prog_bgfx_hdl)) {
-            ZCL_FATAL("Failed to create BGFX shader program!");
+            ZCL_FATAL();
         }
 
         const auto resource = GFXResourceGroupAdd(resource_group);
@@ -333,7 +333,7 @@ namespace zgl {
         const bgfx::UniformHandle bgfx_hdl = bgfx::createUniform(zcl::StrToCStr(name_terminated), bgfx_type);
 
         if (!bgfx::isValid(bgfx_hdl)) {
-            ZCL_FATAL("Failed to create BGFX uniform!");
+            ZCL_FATAL();
         }
 
         const auto resource = GFXResourceGroupAdd(resource_group);
