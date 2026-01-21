@@ -83,7 +83,7 @@ namespace zcl {
                 DWORD displacement;
 
                 if (SymGetLineFromAddr64(proc, addr, &displacement, &line)) {
-                    fprintf(stderr, "- %s (%s:%lu)\n", symbol->Name, line.FileName, line.LineNumber);
+                    fprintf(stderr, "- %s (%s:%lu)\n", symbol->Name, internal::FindBaseOfFilenameCStr(line.FileName), line.LineNumber);
                 } else {
                     fprintf(stderr, "- %s\n", symbol->Name);
                 }

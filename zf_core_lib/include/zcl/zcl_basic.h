@@ -43,7 +43,7 @@ namespace zcl {
 #define ZCL_DEFER(x) const auto ZCL_CONCAT(defer_, ZCL_CONCAT(l, ZCL_CURRENT_LINE)) = zcl::internal::t_defer([&]() x)
 
     namespace internal {
-        consteval const char *CurrentFileNameHelper(const char *const c_str) {
+        constexpr const char *FindBaseOfFilenameCStr(const char *const c_str) {
             int pen = 0;
 
             while (c_str[pen]) {
@@ -59,7 +59,7 @@ namespace zcl {
     }
 
 #define ZCL_CURRENT_FILE_PATH __FILE__
-#define ZCL_CURRENT_FILE_NAME zcl::internal::CurrentFileNameHelper(__FILE__)
+#define ZCL_CURRENT_FILE_NAME zcl::internal::FindBaseOfFilenameCStr(__FILE__)
 #define ZCL_CURRENT_LINE __LINE__
 #define ZCL_CURRENT_FUNC __func__
 
