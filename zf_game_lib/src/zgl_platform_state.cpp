@@ -169,6 +169,8 @@ namespace zgl {
         return nullptr;
 #elif defined(ZCL_PLATFORM_LINUX)
         return glfwGetX11Display();
+#else
+        static_assert(false, "Platform not supported!");
 #endif
     }
 
@@ -182,6 +184,8 @@ namespace zgl {
         return glfwGetCocoaWindow(g_state.glfw_window);
 #elif defined(ZCL_PLATFORM_LINUX)
         return reinterpret_cast<void *>(static_cast<uintptr_t>(glfwGetX11Window(g_state.glfw_window)));
+#else
+        static_assert(false, "Platform not supported!");
 #endif
     }
 
