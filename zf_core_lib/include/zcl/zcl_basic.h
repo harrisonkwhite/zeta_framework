@@ -214,10 +214,10 @@ namespace zcl {
     #define ZCL_ASSERT(cond) static_cast<void>(0)
 #endif
 
-        [[noreturn]] void TriggerFatalError(const char *const func_name_c_str, const char *const file_name_c_str, const t_i32 line, const char *const cond_c_str = nullptr);
+        [[noreturn]] void TriggerFatalError(const char *const msg_c_str, const char *const func_name_c_str, const char *const file_name_c_str, const t_i32 line, const char *const cond_c_str = nullptr);
 
-#define ZCL_FATAL() zcl::internal::TriggerFatalError(__FUNCTION__, __FILE__, __LINE__)
-#define ZCL_UNREACHABLE() ZCL_FATAL() // @todo: This should probably have some helper message to differentiate it from normal fatal errors.
+#define ZCL_FATAL(msg_c_str) zcl::internal::TriggerFatalError(msg_c_str, __FUNCTION__, __FILE__, __LINE__)
+#define ZCL_UNREACHABLE() ZCL_FATAL("Arrived at unreachable code!")
 
 #define ZCL_REQUIRE(cond)                                                                  \
     do {                                                                                   \
