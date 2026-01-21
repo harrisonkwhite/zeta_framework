@@ -107,8 +107,4 @@ namespace zgl {
     }
 
     void GameRun(const t_game_config &config);
-
-    namespace internal {
-        void ConfigErrorHandling();
-    }
 }

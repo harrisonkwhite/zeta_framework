@@ -18,15 +18,31 @@
 #include <cstdlib>
 
 namespace zcl {
-    void internal::TryBreakingIntoDebugger() {
+    void ErrorBoxShow(const char *const caption_c_str, const char *const msg_c_str) {
+        static_assert(false);
+        // @todo: Generalise this macro style everywhere, be explicit about what platforms are unsupported.
+#if defined(ZCL_PLATFORM_WINDOWS)
+        MessageBoxA(nullptr, msg_c_str, caption_c_str, MB_OK | MB_ICONERROR);
+#elif defined(ZCL_PLATFORM_MACOS)
+        static_assert(false); // @todo
+#elif defined(ZCL_PLATFORM_LINUX)
+        static_assert(false); // @todo
+#else
+        static_assert(false, "Platform not supported!");
+#endif
+    }
+
+    t_b8 internal::TryBreakingIntoDebugger() {
 #ifdef ZCL_DEBUG
     #ifdef ZCL_PLATFORM_WINDOWS
         if (IsDebuggerPresent()) {
             __debugbreak();
-            return;
+            return true;
         }
     #endif
 #endif
+
+        return false;
     }
 
     // @todo: Not very useful in release.
@@ -75,8 +91,14 @@ namespace zcl {
     #endif
 
 #else
-        fprintf(stderr, "Stack trace printing not yet supported on this platform.\n");
+    #error "Platform not supported!" // @todo
 #endif
+    }
+
+    static t_assertion_error_callback g_assertion_error_callback;
+
+    void AssertionErrorSetCallback(const t_assertion_error_callback cb) {
+        g_assertion_error_callback = cb;
     }
 
     void internal::AssertionErrorTrigger(const char *const cond_c_str, const char *const func_name_c_str, const char *const file_name_c_str, const t_i32 line) {
@@ -95,18 +117,20 @@ namespace zcl {
 
         fflush(stderr);
 
-        TryBreakingIntoDebugger();
+        const t_b8 debugger_broken_into = TryBreakingIntoDebugger();
+
+        if (g_assertion_error_callback) {
+            g_assertion_error_callback(debugger_broken_into);
+        }
 
         abort();
     }
 
-    static void (*g_fatal_error_callback)();
+    static t_fatal_error_callback g_fatal_error_callback;
 
-    void FatalErrorSetCallback(void (*const cb)()) {
+    void FatalErrorSetCallback(const t_fatal_error_callback cb) {
         g_fatal_error_callback = cb;
     }
-
-    // @todo: In debug mode, there needs to be an enforced pause or something so the error message can actually be read.
 
     void internal::FatalErrorTrigger(const char *const func_name_c_str, const char *const file_name_c_str, const t_i32 line, const char *const cond_c_str) {
         fprintf(stderr, "==================== FATAL ERROR ====================\n");
@@ -130,9 +154,11 @@ namespace zcl {
 
         fflush(stderr);
 
-        TryBreakingIntoDebugger();
+        const t_b8 debugger_broken_into = TryBreakingIntoDebugger();
 
-        g_fatal_error_callback();
+        if (g_fatal_error_callback) {
+            g_fatal_error_callback(debugger_broken_into);
+        }
 
         abort();
     }

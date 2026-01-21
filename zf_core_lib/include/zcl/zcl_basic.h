@@ -179,15 +179,25 @@ namespace zcl {
     // ============================================================
     // @section: Errors
 
-    void FatalErrorSetCallback(void (*const cb)());
+    void ErrorBoxShow();
+
+    using t_assertion_error_callback = void (*)(const t_b8 debugger_broken_into);
+
+    // Callback runs AFTER error message has been flushed and debugger has tried to be broken into, and BEFORE an abort is triggered.
+    void AssertionErrorSetCallback(const t_assertion_error_callback cb);
+
+    using t_fatal_error_callback = void (*)(const t_b8 debugger_broken_into);
+
+    // Callback runs AFTER error message has been flushed and debugger has tried to be broken into, and BEFORE an abort is triggered.
+    void FatalErrorSetCallback(const t_fatal_error_callback cb);
 
     namespace internal {
-        void TryBreakingIntoDebugger();
+        // Returns true iff the debugger was broken into.
+        t_b8 TryBreakingIntoDebugger();
 
-        inline void TryBreakingIntoDebuggerIf(const t_b8 cond) {
-            if (cond) {
-                TryBreakingIntoDebugger();
-            }
+        // Returns true iff the debugger was broken into.
+        inline t_b8 TryBreakingIntoDebuggerIf(const t_b8 cond) {
+            return cond && TryBreakingIntoDebugger();
         }
 
         [[noreturn]] void AssertionErrorTrigger(const char *const cond_c_str, const char *const func_name_c_str, const char *const file_name_c_str, const t_i32 line);
