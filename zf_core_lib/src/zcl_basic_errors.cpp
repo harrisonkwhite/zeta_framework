@@ -6,9 +6,9 @@
 #endif
 
 namespace zcl {
-    void ErrorBoxShow(const char *const caption_c_str, const char *const msg_c_str) {
+    static void ShowErrorBox(const char *const msg_c_str) {
 #if defined(ZCL_PLATFORM_WINDOWS)
-        MessageBoxA(nullptr, msg_c_str, caption_c_str, MB_OK | MB_ICONERROR);
+        MessageBoxA(nullptr, msg_c_str, "Fatal Error", MB_OK | MB_ICONERROR);
 #elif defined(ZCL_PLATFORM_MACOS)
         static_assert(false); // @todo
 #elif defined(ZCL_PLATFORM_LINUX)
@@ -16,6 +16,27 @@ namespace zcl {
 #else
         static_assert(false, "Platform not supported!");
 #endif
+    }
+
+    void (*g_error_box_show_func)() = []() {
+        ShowErrorBox("A fatal error occurred. The program will now exit.");
+    };
+
+    void ConfigureErrorLogFile() {
+        constexpr const char *k_error_log_file_name_c_str = "error.log";
+
+        FILE *const file = freopen(k_error_log_file_name_c_str, "w", stderr);
+
+        if (!file) {
+            ZCL_FATAL();
+        }
+
+        g_error_box_show_func = []() {
+            char msg_buf[256];
+            snprintf(msg_buf, sizeof(msg_buf), "A fatal error occurred - please check \"%s\" for details.\nThe program will now exit.", k_error_log_file_name_c_str);
+
+            ShowErrorBox(msg_buf);
+        };
     }
 
 #ifdef ZCL_DEBUG
@@ -90,14 +111,19 @@ namespace zcl {
 #endif
     }
 
-#ifdef ZCL_DEBUG
-    static t_assertion_error_callback g_assertion_error_callback;
-
-    void AssertionErrorSetCallback(const t_assertion_error_callback cb) {
-        g_assertion_error_callback = cb;
+    [[noreturn]] static void Terminate() {
+#if defined(ZCL_PLATFORM_WINDOWS)
+        TerminateProcess(GetCurrentProcess(), 0);
+        __assume(false);
+#elif defined(ZF_PLATFORM_MACOS) || defined(ZF_PLATFORM_LINUX)
+        _Exit(0);
+#else
+        static_assert(false, "Platform not supported!");
+#endif
     }
 
-    void internal::AssertionErrorTrigger(const char *const cond_c_str, const char *const func_name_c_str, const char *const file_name_c_str, const t_i32 line) {
+#ifdef ZCL_DEBUG
+    void internal::TriggerAssertionError(const char *const cond_c_str, const char *const func_name_c_str, const char *const file_name_c_str, const t_i32 line) {
         fprintf(stderr, "==================== ASSERTION ERROR ====================\n");
 
     #ifdef ZCL_DEBUG
@@ -113,23 +139,15 @@ namespace zcl {
 
         fflush(stderr);
 
-        const t_b8 debugger_broken_into = TryBreakingIntoDebugger();
-
-        if (g_assertion_error_callback) {
-            g_assertion_error_callback(debugger_broken_into);
+        if (!TryBreakingIntoDebugger() && g_error_box_show_func) {
+            g_error_box_show_func();
         }
 
-        abort();
+        Terminate();
     }
 #endif
 
-    static t_fatal_error_callback g_fatal_error_callback;
-
-    void FatalErrorSetCallback(const t_fatal_error_callback cb) {
-        g_fatal_error_callback = cb;
-    }
-
-    void internal::FatalErrorTrigger(const char *const func_name_c_str, const char *const file_name_c_str, const t_i32 line, const char *const cond_c_str) {
+    void internal::TriggerFatalError(const char *const func_name_c_str, const char *const file_name_c_str, const t_i32 line, const char *const cond_c_str) {
         fprintf(stderr, "==================== FATAL ERROR ====================\n");
 
 #ifdef ZCL_DEBUG
@@ -152,13 +170,15 @@ namespace zcl {
         fflush(stderr);
 
 #ifdef ZCL_DEBUG
-        const t_b8 debugger_broken_into = TryBreakingIntoDebugger();
-
-        if (g_fatal_error_callback) {
-            g_fatal_error_callback(debugger_broken_into);
+        if (!TryBreakingIntoDebugger() && g_error_box_show_func) {
+            g_error_box_show_func();
+        }
+#else
+        if (g_error_box_show_func) {
+            g_error_box_show_func();
         }
 #endif
 
-        abort();
+        Terminate();
     }
 }

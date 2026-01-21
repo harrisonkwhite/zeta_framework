@@ -19,7 +19,7 @@ namespace zcl {
 #endif
 
 #ifndef NDEBUG
-    // #define ZCL_DEBUG
+    #define ZCL_DEBUG
 #endif
 
 #define ZCL_CHECK_CONSTEXPR() std::is_constant_evaluated()
@@ -179,19 +179,8 @@ namespace zcl {
     // ============================================================
     // @section: Errors
 
-    void ErrorBoxShow(const char *const caption_c_str, const char *const msg_c_str);
-
-#ifdef ZCL_DEBUG
-    using t_assertion_error_callback = void (*)(const t_b8 debugger_broken_into);
-
-    // Callback runs AFTER error message has been flushed and debugger has tried to be broken into, and BEFORE an abort is triggered.
-    void AssertionErrorSetCallback(const t_assertion_error_callback cb);
-#endif
-
-    using t_fatal_error_callback = void (*)(const t_b8 debugger_broken_into);
-
-    // Callback runs AFTER error message has been flushed and debugger has tried to be broken into, and BEFORE an abort is triggered.
-    void FatalErrorSetCallback(const t_fatal_error_callback cb);
+    // Redirects stderr to an error log file and has an error box appear in the event of a fatal error (including assertion errors).
+    void ConfigureErrorLogFile();
 
     namespace internal {
 #ifdef ZCL_DEBUG
@@ -203,7 +192,7 @@ namespace zcl {
             return cond && TryBreakingIntoDebugger();
         }
 
-        [[noreturn]] void AssertionErrorTrigger(const char *const cond_c_str, const char *const func_name_c_str, const char *const file_name_c_str, const t_i32 line);
+        [[noreturn]] void TriggerAssertionError(const char *const cond_c_str, const char *const func_name_c_str, const char *const file_name_c_str, const t_i32 line);
 
     #define ZCL_DEBUG_BREAK() internal::TryBreakingIntoDebugger()
     #define ZCL_DEBUG_BREAK_IF(cond) internal::TryBreakingIntoDebuggerIf(cond)
@@ -212,7 +201,7 @@ namespace zcl {
         do {                                                                                       \
             if (!ZCL_CHECK_CONSTEXPR()) {                                                          \
                 if (!(cond)) {                                                                     \
-                    zcl::internal::AssertionErrorTrigger(#cond, __FUNCTION__, __FILE__, __LINE__); \
+                    zcl::internal::TriggerAssertionError(#cond, __FUNCTION__, __FILE__, __LINE__); \
                 }                                                                                  \
             }                                                                                      \
         } while (0)
@@ -222,16 +211,16 @@ namespace zcl {
     #define ZCL_ASSERT(cond) static_cast<void>(0)
 #endif
 
-        [[noreturn]] void FatalErrorTrigger(const char *const func_name_c_str, const char *const file_name_c_str, const t_i32 line, const char *const cond_c_str = nullptr);
+        [[noreturn]] void TriggerFatalError(const char *const func_name_c_str, const char *const file_name_c_str, const t_i32 line, const char *const cond_c_str = nullptr);
 
-#define ZCL_FATAL() zcl::internal::FatalErrorTrigger(__FUNCTION__, __FILE__, __LINE__)
+#define ZCL_FATAL() zcl::internal::TriggerFatalError(__FUNCTION__, __FILE__, __LINE__)
 #define ZCL_UNREACHABLE() ZCL_FATAL() // @todo: This should probably have some helper message to differentiate it from normal fatal errors.
 
 #define ZCL_REQUIRE(cond)                                                                  \
     do {                                                                                   \
         if (!ZCL_CHECK_CONSTEXPR()) {                                                      \
             if (!(cond)) {                                                                 \
-                zcl::internal::FatalErrorTrigger(__FUNCTION__, __FILE__, __LINE__, #cond); \
+                zcl::internal::TriggerFatalError(__FUNCTION__, __FILE__, __LINE__, #cond); \
             }                                                                              \
         }                                                                                  \
     } while (0)

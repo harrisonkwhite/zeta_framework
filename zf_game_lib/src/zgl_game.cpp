@@ -11,6 +11,10 @@ namespace zgl {
         //
         // Initialization
         //
+#ifndef ZCL_DEBUG
+        zcl::ConfigureErrorLogFile();
+#endif
+
         zcl::t_arena perm_arena = zcl::ArenaCreateBlockBased();
         ZCL_DEFER({ zcl::ArenaDestroy(&perm_arena); });
 
