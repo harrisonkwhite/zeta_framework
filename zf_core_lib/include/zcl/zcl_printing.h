@@ -5,6 +5,8 @@
 #include <zcl/zcl_math.h>
 
 namespace zcl {
+    // @todo: stream views should be referred to as stream_view!
+
     // Type format structs which are to be accepted as format printing arguments need to meet this (i.e. have the tag).
     template <typename tp_type>
     concept c_format = requires { typename tp_type::t_formatting; };
@@ -95,7 +97,7 @@ namespace zcl {
         t_b8 str_bytes_stream_write_success = true;
 
         if (format.value < 0) {
-            str_bytes_stream_write_success = StreamWriteItem(str_bytes_stream, '-');
+            str_bytes_stream_write_success = StreamWriteItem(ByteStreamGetView(&str_bytes_stream), '-');
             ZCL_ASSERT(str_bytes_stream_write_success);
         }
 
@@ -103,7 +105,7 @@ namespace zcl {
 
         for (t_i32 i = 0; i < dig_cnt; i++) {
             const auto byte = static_cast<t_u8>('0' + CalcDigitAt(format.value, dig_cnt - 1 - i));
-            str_bytes_stream_write_success = StreamWriteItem(str_bytes_stream, byte);
+            str_bytes_stream_write_success = StreamWriteItem(ByteStreamGetView(&str_bytes_stream), byte);
             ZCL_ASSERT(str_bytes_stream_write_success);
         }
 
@@ -227,10 +229,10 @@ namespace zcl {
         t_b8 str_bytes_stream_write_success = true;
 
         if (!(format.flags & ek_format_hex_flags_omit_prefix)) {
-            str_bytes_stream_write_success = StreamWriteItem(str_bytes_stream, '0');
+            str_bytes_stream_write_success = StreamWriteItem(ByteStreamGetView(&str_bytes_stream), '0');
             ZCL_ASSERT(str_bytes_stream_write_success);
 
-            str_bytes_stream_write_success = StreamWriteItem(str_bytes_stream, 'x');
+            str_bytes_stream_write_success = StreamWriteItem(ByteStreamGetView(&str_bytes_stream), 'x');
             ZCL_ASSERT(str_bytes_stream_write_success);
         }
 
@@ -256,7 +258,7 @@ namespace zcl {
         do {
             for (t_i32 i = 0; i < inner_loop_cnt; i++) {
                 const auto byte = dig_to_byte(value_mut % 16);
-                str_bytes_stream_write_success = StreamWriteItem(str_bytes_stream, byte);
+                str_bytes_stream_write_success = StreamWriteItem(ByteStreamGetView(&str_bytes_stream), byte);
                 ZCL_ASSERT(str_bytes_stream_write_success);
 
                 value_mut /= 16;

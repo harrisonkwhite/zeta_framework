@@ -70,54 +70,54 @@ namespace zcl {
         t_i32 byte_pos;
 
         t_stream_mode mode;
-
-        operator t_stream_view() {
-            const auto read_func = [](const t_stream_view stream_view, const t_array_mut<t_u8> dest_bytes) {
-                ZCL_ASSERT(stream_view.mode == ek_stream_mode_read);
-
-                const auto byte_stream = static_cast<t_byte_stream *>(stream_view.data);
-
-                if (byte_stream->byte_pos + dest_bytes.len > byte_stream->bytes.len) {
-                    return false;
-                }
-
-                const t_array_rdonly<t_u8> src_bytes = ArraySliceFrom(byte_stream->bytes, byte_stream->byte_pos);
-                ArrayCopy(src_bytes, dest_bytes, true);
-
-                byte_stream->byte_pos += dest_bytes.len;
-
-                return true;
-            };
-
-            const auto write_func = [](const t_stream_view stream_view, const t_array_rdonly<t_u8> src_bytes) {
-                ZCL_ASSERT(stream_view.mode == ek_stream_mode_write);
-
-                const auto byte_stream = static_cast<t_byte_stream *>(stream_view.data);
-
-                if (byte_stream->byte_pos + src_bytes.len > byte_stream->bytes.len) {
-                    return false;
-                }
-
-                const t_array_mut<t_u8> dest_bytes = ArraySliceFrom(byte_stream->bytes, byte_stream->byte_pos);
-                ArrayCopy(src_bytes, dest_bytes);
-
-                byte_stream->byte_pos += src_bytes.len;
-
-                return true;
-            };
-
-            return {
-                .data = this,
-                .read_func = read_func,
-                .write_func = write_func,
-                .mode = mode,
-            };
-        }
     };
 
     inline t_byte_stream ByteStreamCreate(const t_array_mut<t_u8> bytes, const t_stream_mode mode, const t_i32 pos = 0) {
         ZCL_ASSERT(pos >= 0 && pos <= bytes.len);
         return {.bytes = bytes, .byte_pos = pos, .mode = mode};
+    }
+
+    inline t_stream_view ByteStreamGetView(t_byte_stream *const stream) {
+        const auto read_func = [](const t_stream_view stream_view, const t_array_mut<t_u8> dest_bytes) {
+            ZCL_ASSERT(stream_view.mode == ek_stream_mode_read);
+
+            const auto byte_stream = static_cast<t_byte_stream *>(stream_view.data);
+
+            if (byte_stream->byte_pos + dest_bytes.len > byte_stream->bytes.len) {
+                return false;
+            }
+
+            const t_array_rdonly<t_u8> src_bytes = ArraySliceFrom(byte_stream->bytes, byte_stream->byte_pos);
+            ArrayCopy(src_bytes, dest_bytes, true);
+
+            byte_stream->byte_pos += dest_bytes.len;
+
+            return true;
+        };
+
+        const auto write_func = [](const t_stream_view stream_view, const t_array_rdonly<t_u8> src_bytes) {
+            ZCL_ASSERT(stream_view.mode == ek_stream_mode_write);
+
+            const auto byte_stream = static_cast<t_byte_stream *>(stream_view.data);
+
+            if (byte_stream->byte_pos + src_bytes.len > byte_stream->bytes.len) {
+                return false;
+            }
+
+            const t_array_mut<t_u8> dest_bytes = ArraySliceFrom(byte_stream->bytes, byte_stream->byte_pos);
+            ArrayCopy(src_bytes, dest_bytes);
+
+            byte_stream->byte_pos += src_bytes.len;
+
+            return true;
+        };
+
+        return {
+            .data = stream,
+            .read_func = read_func,
+            .write_func = write_func,
+            .mode = stream->mode,
+        };
     }
 
     inline t_array_mut<t_u8> ByteStreamGetWritten(const t_byte_stream *const stream) {

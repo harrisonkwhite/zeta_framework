@@ -46,13 +46,13 @@ zcl::t_b8 CompileShader(const zcl::t_str_rdonly shader_file_path, const zcl::t_s
 
     const zcl::t_str_mut shaderc_file_path_terminated = {zcl::ArenaPushArray<zcl::t_u8>(temp_arena, exe_dir.bytes.len + shaderc_file_path_rel.bytes.len + 1)};
     zcl::t_byte_stream shaderc_file_path_terminated_byte_stream = zcl::ByteStreamCreate(shaderc_file_path_terminated.bytes, zcl::ek_stream_mode_write);
-    zcl::PrintFormat(shaderc_file_path_terminated_byte_stream, ZCL_STR_LITERAL("%%\0"), exe_dir, shaderc_file_path_rel);
+    zcl::PrintFormat(zcl::ByteStreamGetView(&shaderc_file_path_terminated_byte_stream), ZCL_STR_LITERAL("%%\0"), exe_dir, shaderc_file_path_rel);
     ZCL_ASSERT(zcl::StrBytesCheckTerminatedOnlyAtEnd(shaderc_file_path_terminated.bytes));
 
     const zcl::t_str_rdonly shaderc_include_dir_rel = ZCL_STR_LITERAL("tools/bgfx/shaderc_include");
     const zcl::t_str_mut shaderc_include_dir_terminated = {zcl::ArenaPushArray<zcl::t_u8>(temp_arena, exe_dir.bytes.len + shaderc_include_dir_rel.bytes.len + 1)};
     zcl::t_byte_stream shaderc_include_dir_terminated_byte_stream = zcl::ByteStreamCreate(shaderc_include_dir_terminated.bytes, zcl::ek_stream_mode_write);
-    zcl::PrintFormat(shaderc_include_dir_terminated_byte_stream, ZCL_STR_LITERAL("%%\0"), exe_dir, shaderc_include_dir_rel);
+    zcl::PrintFormat(zcl::ByteStreamGetView(&shaderc_include_dir_terminated_byte_stream), ZCL_STR_LITERAL("%%\0"), exe_dir, shaderc_include_dir_rel);
     ZCL_ASSERT(zcl::StrBytesCheckTerminatedOnlyAtEnd(shaderc_include_dir_terminated.bytes));
 
     const zcl::t_static_array<const char *, 15> args = {{
