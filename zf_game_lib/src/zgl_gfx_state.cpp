@@ -203,6 +203,11 @@ namespace zgl {
         bgfx::update(dest_vertex_buf->type_data.vertex_buf.bgfx_hdl, static_cast<zcl::t_u32>(dest_vertices_index), src_vertices_bgfx_mem);
     }
 
+    zcl::t_i32 internal::VertexBufGetVertexCount(const t_gfx_ticket_rdonly gfx_ticket, const t_gfx_resource *const vertex_buf) {
+        ZCL_ASSERT(vertex_buf->type == ek_gfx_resource_type_vertex_buf);
+        return vertex_buf->type_data.vertex_buf.vertex_cnt;
+    }
+
     t_gfx_resource *TextureCreate(const t_gfx_ticket_mut gfx_ticket, const zcl::t_texture_data_rdonly texture_data, t_gfx_resource_group *const resource_group) {
         ZCL_ASSERT(g_state.phase == ek_phase_active_but_not_midframe);
         ZCL_ASSERT(TicketCheckValid(gfx_ticket));

@@ -29,7 +29,7 @@ namespace zgl {
         const t_gfx_ticket_mut gfx_ticket = internal::GFXStartup(platform_ticket);
         ZCL_DEFER({ internal::GFXShutdown(gfx_ticket); });
 
-        t_rendering_basis *const rendering_basis = internal::RenderingBasisCreate(gfx_ticket, &perm_arena, &temp_arena);
+        t_rendering_basis *const rendering_basis = internal::RenderingBasisCreate(config.frame_vertex_limit, gfx_ticket, &perm_arena, &temp_arena);
         ZCL_DEFER({ internal::RenderingBasisDestroy(rendering_basis, gfx_ticket); });
 
         const t_audio_ticket_mut audio_ticket = internal::AudioStartup(&perm_arena);

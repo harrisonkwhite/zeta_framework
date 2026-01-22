@@ -127,6 +127,8 @@ namespace zgl {
         zcl::t_i32 user_mem_alignment;
 
         zcl::t_f64 tps_target;
+
+        zcl::t_i32 frame_vertex_limit;
     };
 
     inline t_game_config GameConfigCreate(const t_game_init_func init_func, const t_game_deinit_func deinit_func, const t_game_tick_func tick_func, const t_game_render_func render_func) {
@@ -142,6 +144,8 @@ namespace zgl {
             .user_mem_alignment = 0,
 
             .tps_target = 60.0,
+
+            .frame_vertex_limit = 8192,
         };
     }
 
@@ -155,6 +159,8 @@ namespace zgl {
             || (config.user_mem_size > 0 && zcl::AlignmentCheckValid(config.user_mem_alignment)));
 
         ZCL_ASSERT(config.tps_target > 0.0);
+
+        ZCL_ASSERT(config.frame_vertex_limit > 0);
     }
 
     void GameRun(const t_game_config &config);

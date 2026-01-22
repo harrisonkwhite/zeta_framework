@@ -1,9 +1,6 @@
 #include <zgl/zgl_rendering.h>
 
 namespace zgl {
-    constexpr zcl::t_i32 k_vertex_limit = 8192; // @todo: This should definitely be modifiable if the user wants.
-    constexpr zcl::t_i32 k_batch_vertex_limit = 1024;
-
     extern const zcl::t_u8 g_vertex_shader_default_src_raw[];
     extern const zcl::t_i32 g_vertex_shader_default_src_len;
 
@@ -28,6 +25,8 @@ namespace zgl {
         t_gfx_resource *px_texture;
     };
 
+    constexpr zcl::t_i32 k_batch_vertex_limit = 1024;
+
     struct t_rendering_state {
         zcl::t_b8 pass_active;
         zcl::t_i32 pass_index;
@@ -44,12 +43,14 @@ namespace zgl {
         } batch;
     };
 
-    t_rendering_basis *internal::RenderingBasisCreate(const t_gfx_ticket_mut gfx_ticket, zcl::t_arena *const arena, zcl::t_arena *const temp_arena) {
+    t_rendering_basis *internal::RenderingBasisCreate(const zcl::t_i32 frame_vertex_limit, const t_gfx_ticket_mut gfx_ticket, zcl::t_arena *const arena, zcl::t_arena *const temp_arena) {
+        ZCL_ASSERT(frame_vertex_limit > 0);
+
         const auto basis = zcl::ArenaPushItem<t_rendering_basis>(arena);
 
         basis->perm_resource_group = GFXResourceGroupCreate(gfx_ticket, arena);
 
-        basis->vertex_buf = VertexBufCreate(gfx_ticket, k_vertex_limit, basis->perm_resource_group);
+        basis->vertex_buf = VertexBufCreate(gfx_ticket, frame_vertex_limit, basis->perm_resource_group);
 
         for (zcl::t_i32 i = 0; i < ekm_renderer_builtin_shader_prog_id_cnt; i++) {
             zcl::t_array_rdonly<zcl::t_u8> vertex_shader_compiled_bin;
@@ -136,7 +137,7 @@ namespace zgl {
             return;
         }
 
-        if (rc.state->vertex_cnt_flushed + rc.state->batch.vertex_cnt > k_vertex_limit) {
+        if (rc.state->vertex_cnt_flushed + rc.state->batch.vertex_cnt > internal::VertexBufGetVertexCount(rc.gfx_ticket, rc.basis->vertex_buf)) {
             ZCL_FATAL();
         }
 
