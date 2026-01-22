@@ -58,20 +58,34 @@ namespace zcl {
 #ifdef ZCL_DEBUG
     static void PrintStackTrace() {
     #if defined(ZCL_PLATFORM_WINDOWS)
+        // The windows API is actual torture.
+
+        //
+        // Get array of instruction pointers representing the call stack.
+        //
         constexpr t_i32 k_stack_len = 32;
         void *stack_raw[k_stack_len];
         const t_i32 frame_cnt = CaptureStackBackTrace(0, k_stack_len, stack_raw, nullptr);
 
+        //
+        // Display the call stack in a readable form.
+        //
         fprintf(stderr, "Stack Trace:\n");
 
         const HANDLE proc = GetCurrentProcess();
+
+        SymSetOptions(SymGetOptions() | SYMOPT_LOAD_LINES | SYMOPT_UNDNAME);
         SymInitialize(proc, nullptr, true);
 
-        const t_i32 func_name_buf_size = 256;
-        char symbol_buf_raw[ZCL_SIZE_OF(SYMBOL_INFO) + func_name_buf_size];
-        const auto symbol = reinterpret_cast<SYMBOL_INFO *>(symbol_buf_raw);
-        symbol->MaxNameLen = func_name_buf_size - 1;
-        symbol->SizeOfStruct = ZCL_SIZE_OF(SYMBOL_INFO);
+        constexpr t_i32 k_symbol_info_func_name_cap = 256;
+        constexpr t_i32 k_symbol_info_buf_size = ZCL_SIZE_OF(SYMBOL_INFO) + (k_symbol_info_func_name_cap * ZCL_SIZE_OF(TCHAR));
+        static_assert(ZCL_ALIGN_OF(SYMBOL_INFO) == 8);
+        static_assert(k_symbol_info_buf_size % 8 == 0);
+        t_u64 symbol_info_buf_raw[k_symbol_info_buf_size / 8]; // Has to be t_u64 for correct alignment.
+
+        const auto symbol_info = reinterpret_cast<SYMBOL_INFO *>(symbol_info_buf_raw);
+        symbol_info->MaxNameLen = k_symbol_info_func_name_cap;
+        symbol_info->SizeOfStruct = ZCL_SIZE_OF(SYMBOL_INFO);
 
         IMAGEHLP_LINE64 line;
         line.SizeOfStruct = ZCL_SIZE_OF(IMAGEHLP_LINE64);
@@ -79,13 +93,13 @@ namespace zcl {
         for (t_i32 i = 0; i < frame_cnt; i++) {
             const auto addr = static_cast<DWORD64>(reinterpret_cast<uintptr_t>(stack_raw[i]));
 
-            if (SymFromAddr(proc, addr, 0, symbol)) {
+            if (SymFromAddr(proc, addr, 0, symbol_info)) {
                 DWORD displacement;
 
-                if (SymGetLineFromAddr64(proc, addr, &displacement, &line)) {
-                    fprintf(stderr, "- %s (%s:%lu)\n", symbol->Name, internal::FindBaseOfFilenameCStr(line.FileName), line.LineNumber);
+                if (SymGetLineFromAddr64(proc, addr ? addr - 1 : addr, &displacement, &line)) {
+                    fprintf(stderr, "- %s (%s:%lu)\n", symbol_info->Name, internal::FindBaseOfFilenameCStr(line.FileName), line.LineNumber);
                 } else {
-                    fprintf(stderr, "- %s\n", symbol->Name);
+                    fprintf(stderr, "- %s\n", symbol_info->Name);
                 }
             } else {
                 fprintf(stderr, "- 0x%p\n", stack_raw[i]);
