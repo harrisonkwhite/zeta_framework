@@ -1,3 +1,4 @@
+- Could be an idea to have a macro e.g. ZCL_UNSAFE that basically has array out-of-bounds checking non-fatal
 - Documentation sucks man
 - Be more consistent about when REQUIRE is used instead of ASSERT
 - Might need to revisit some of the basic error stuff.

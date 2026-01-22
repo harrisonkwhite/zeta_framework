@@ -21,9 +21,7 @@ namespace zgl {
 
         t_gfx_resource *vertex_buf;
 
-        t_gfx_resource *shader_prog_default;
-        t_gfx_resource *shader_prog_str;
-        t_gfx_resource *shader_prog_blend;
+        zcl::t_static_array<t_gfx_resource *, ekm_renderer_builtin_shader_prog_id_cnt> shader_progs;
 
         t_gfx_resource *sampler_uniform;
         t_gfx_resource *blend_uniform;
@@ -54,9 +52,32 @@ namespace zgl {
 
         basis->vertex_buf = VertexBufCreate(gfx_ticket, k_vertex_limit, basis->perm_resource_group);
 
-        basis->shader_prog_default = ShaderProgCreate(gfx_ticket, {g_vertex_shader_default_src_raw, g_vertex_shader_default_src_len}, {g_fragment_shader_default_src_raw, g_fragment_shader_default_src_len}, basis->perm_resource_group);
-        basis->shader_prog_str = ShaderProgCreate(gfx_ticket, {g_vertex_shader_default_src_raw, g_vertex_shader_default_src_len}, {g_fragment_shader_str_src_raw, g_fragment_shader_str_src_len}, basis->perm_resource_group);
-        basis->shader_prog_blend = ShaderProgCreate(gfx_ticket, {g_vertex_shader_default_src_raw, g_vertex_shader_default_src_len}, {g_fragment_shader_blend_src_raw, g_fragment_shader_blend_src_len}, basis->perm_resource_group);
+        for (zcl::t_i32 i = 0; i < ekm_renderer_builtin_shader_prog_id_cnt; i++) {
+            zcl::t_array_rdonly<zcl::t_u8> vertex_shader_compiled_bin;
+            zcl::t_array_rdonly<zcl::t_u8> fragment_shader_compiled_bin;
+
+            switch (static_cast<t_renderer_builtin_shader_prog_id>(i)) {
+            case ek_renderer_builtin_shader_prog_id_default:
+                vertex_shader_compiled_bin = {g_vertex_shader_default_src_raw, g_vertex_shader_default_src_len};
+                fragment_shader_compiled_bin = {g_fragment_shader_default_src_raw, g_fragment_shader_default_src_len};
+                break;
+
+            case ek_renderer_builtin_shader_prog_id_str:
+                vertex_shader_compiled_bin = {g_vertex_shader_default_src_raw, g_vertex_shader_default_src_len};
+                fragment_shader_compiled_bin = {g_fragment_shader_str_src_raw, g_fragment_shader_str_src_len};
+                break;
+
+            case ek_renderer_builtin_shader_prog_id_blend:
+                vertex_shader_compiled_bin = {g_vertex_shader_default_src_raw, g_vertex_shader_default_src_len};
+                fragment_shader_compiled_bin = {g_fragment_shader_blend_src_raw, g_fragment_shader_blend_src_len};
+                break;
+
+            case ekm_renderer_builtin_shader_prog_id_cnt:
+                ZCL_UNREACHABLE();
+            }
+
+            basis->shader_progs[i] = ShaderProgCreate(gfx_ticket, vertex_shader_compiled_bin, fragment_shader_compiled_bin, basis->perm_resource_group);
+        }
 
         basis->sampler_uniform = UniformCreate(gfx_ticket, ZCL_STR_LITERAL("u_texture"), ek_uniform_type_sampler, basis->perm_resource_group, temp_arena);
         basis->blend_uniform = UniformCreate(gfx_ticket, ZCL_STR_LITERAL("u_blend"), ek_uniform_type_v4, basis->perm_resource_group, temp_arena);
@@ -77,6 +98,10 @@ namespace zgl {
     void internal::RenderingBasisDestroy(t_rendering_basis *const basis, const t_gfx_ticket_mut gfx_ticket) {
         GFXResourceGroupDestroy(gfx_ticket, basis->perm_resource_group);
         *basis = {};
+    }
+
+    t_gfx_resource *RendererGetBuiltinShaderProg(const t_rendering_basis *const rb, const t_renderer_builtin_shader_prog_id id) {
+        return rb->shader_progs[id];
     }
 
     t_rendering_context internal::RendererBegin(const t_rendering_basis *const rendering_basis, const t_gfx_ticket_mut gfx_ticket, zcl::t_arena *const rendering_state_arena) {
@@ -104,7 +129,7 @@ namespace zgl {
         internal::VertexBufWrite(rc.gfx_ticket, rc.basis->vertex_buf, rc.state->vertex_cnt_flushed, vertices);
 
         const auto texture = rc.state->batch.texture ? rc.state->batch.texture : rc.basis->px_texture;
-        const t_gfx_resource *const shader_prog = rc.state->shader_prog ? rc.state->shader_prog : rc.basis->shader_prog_default;
+        const t_gfx_resource *const shader_prog = rc.state->shader_prog ? rc.state->shader_prog : rc.basis->shader_progs[ek_renderer_builtin_shader_prog_id_default];
 
         internal::FrameSubmit(rc.gfx_ticket, rc.state->pass_index, rc.basis->vertex_buf, rc.state->vertex_cnt_flushed, rc.state->vertex_cnt_flushed + rc.state->batch.vertex_cnt, texture, shader_prog, rc.basis->sampler_uniform);
 
@@ -373,7 +398,7 @@ namespace zgl {
             return;
         }
 
-        RendererSetShaderProg(rc, rc.basis->shader_prog_str);
+        RendererSetShaderProg(rc, rc.basis->shader_progs[ek_renderer_builtin_shader_prog_id_str]);
 
         const auto chr_offsets = RendererCalcStrChrOffsets(str, font.arrangement, origin, temp_arena);
 

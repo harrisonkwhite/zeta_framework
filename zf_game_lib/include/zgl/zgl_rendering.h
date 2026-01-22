@@ -14,6 +14,16 @@ namespace zgl {
         t_gfx_ticket_mut gfx_ticket;
     };
 
+    enum t_renderer_builtin_shader_prog_id : zcl::t_i32 {
+        ek_renderer_builtin_shader_prog_id_default,
+        ek_renderer_builtin_shader_prog_id_str,
+        ek_renderer_builtin_shader_prog_id_blend,
+
+        ekm_renderer_builtin_shader_prog_id_cnt
+    };
+
+    t_gfx_resource *RendererGetBuiltinShaderProg(const t_rendering_basis *const rb, const t_renderer_builtin_shader_prog_id id);
+
     void RendererPassBegin(const t_rendering_context rc, const zcl::t_v2_i size, const zcl::t_mat4x4 &view_mat = zcl::MatrixCreateIdentity(), const zcl::t_b8 clear = false, const zcl::t_color_rgba32f clear_col = zcl::k_color_black);
     void RendererPassBeginOffscreen(const t_rendering_context rc, const t_gfx_resource *const texture_target, const zcl::t_mat4x4 &view_mat = zcl::MatrixCreateIdentity(), const zcl::t_b8 clear = false, const zcl::t_color_rgba32f clear_col = zcl::k_color_black);
 
