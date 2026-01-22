@@ -6,8 +6,6 @@
 #include <zcl/zcl_strs.h>
 
 namespace zcl {
-    // @todo: Need to be safe in the event that you close a file and subsequently try to use it.
-
     enum t_path_type : t_i32 {
         ek_path_type_not_found,
         ek_path_type_directory,
@@ -52,6 +50,9 @@ namespace zcl {
             .mode = mode,
         };
     }
+
+    // This assumes the given  - there's no way of asserting this as far as I'm aware.
+    t_file_stream FileStreamCreateOpen(FILE *const file_raw, const t_stream_mode mode);
 
     // The file stream must be open to get a view into it.
     t_stream_view FileStreamGetView(t_file_stream *const stream);

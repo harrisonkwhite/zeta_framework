@@ -3,8 +3,6 @@
 namespace zgl {
     constexpr zcl::t_v2_i k_window_size_init = {1280, 720};
 
-    // @todo: Maybe switch to F32 for consistency.
-
     void GameRun(const t_game_config &config) {
         GameConfigAssertValid(config);
 
@@ -66,6 +64,11 @@ namespace zgl {
         //
         // Main Loop
         //
+
+        // @note: So most of the ZF code base uses F32, but I think it's important to use F64 here for the
+        //        times since they're in seconds and games (and this specific code) generally work with much smaller
+        //        units than that, and thus need a lot of precision.
+
         zcl::t_b8 frame_first = true;
         zcl::t_f64 frame_time_last = 0.0;
 
@@ -85,7 +88,7 @@ namespace zgl {
 
             if (BackbufferGetSize(gfx_ticket) != fb_size_cache) {
 #ifdef ZCL_DEBUG
-                zcl::Log(ZCL_STR_LITERAL("Resizing backbuffer from % to %..."), BackbufferGetSize(gfx_ticket), fb_size_cache); // Should this logging be done in GFX module instead? I don't know!
+                zcl::Log(ZCL_STR_LITERAL("Resizing backbuffer from % to %..."), BackbufferGetSize(gfx_ticket), fb_size_cache);
 #endif
 
                 internal::BackbufferResize(gfx_ticket, fb_size_cache);

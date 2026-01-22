@@ -5,8 +5,6 @@
 #include <zcl/zcl_math.h>
 
 namespace zcl {
-    // @todo: stream views should be referred to as stream_view!
-
     // Type format structs which are to be accepted as format printing arguments need to meet this (i.e. have the tag).
     template <typename tp_type>
     concept c_format = requires { typename tp_type::t_formatting; };
