@@ -50,6 +50,5 @@ cmake ..
 
 ## Future Plans
 
-- Music playing
 - Networking features
 - A* pathfinding helpers

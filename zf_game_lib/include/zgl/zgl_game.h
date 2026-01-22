@@ -74,10 +74,30 @@ namespace zgl {
         void *user_mem;
     };
 
+    struct t_game_backbuffer_resize_func_context {
+        zcl::t_arena *perm_arena;
+        zcl::t_arena *temp_arena;
+
+        const t_input_state *input_state;
+
+        t_platform_ticket_mut platform_ticket;
+
+        t_gfx_ticket_mut gfx_ticket;
+
+        t_audio_ticket_mut audio_ticket;
+
+        zcl::t_rng *rng;
+
+        zcl::t_f64 fps;
+
+        void *user_mem;
+    };
+
     using t_game_init_func = void (*)(const t_game_init_func_context &context);
     using t_game_deinit_func = void (*)(const t_game_deinit_func_context &context);
     using t_game_tick_func = void (*)(const t_game_tick_func_context &context);
     using t_game_render_func = void (*)(const t_game_render_func_context &context);
+    using t_game_backbuffer_resize_func = void (*)(const t_game_backbuffer_resize_func_context &context);
 
     // @todo: Would be useful to have a framebuffer resize callback, since texture target resizes are done in ticks but ticks don't run before every frame. You might have frames before the next tick where the thing hasn't resized yet.
     // @todo: Other callbacks could be useful too - maybe window focus?
@@ -87,6 +107,7 @@ namespace zgl {
         t_game_deinit_func deinit_func;
         t_game_tick_func tick_func;
         t_game_render_func render_func;
+        t_game_backbuffer_resize_func backbuffer_resize_func;
 
         zcl::t_i32 user_mem_size;
         zcl::t_i32 user_mem_alignment;

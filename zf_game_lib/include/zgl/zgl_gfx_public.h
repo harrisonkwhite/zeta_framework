@@ -92,7 +92,8 @@ namespace zgl {
         t_gfx_resource *VertexBufCreate(const t_gfx_ticket_mut gfx_ticket, const zcl::t_i32 vertex_cnt, t_gfx_resource_group *const resource_group);
         void VertexBufWrite(const t_gfx_ticket_mut gfx_ticket, t_gfx_resource *const dest_vertex_buf, const zcl::t_i32 dest_vertices_index, const zcl::t_array_rdonly<t_vertex> src_vertices);
 
-        void BackbufferResizeIfNeeded(const t_gfx_ticket_mut gfx_ticket, const zcl::t_v2_i size);
+        // The given size must be different to the current backbuffer size.
+        void BackbufferResize(const t_gfx_ticket_mut gfx_ticket, const zcl::t_v2_i size);
 
         constexpr zcl::t_i16 k_frame_pass_limit = 256;
 

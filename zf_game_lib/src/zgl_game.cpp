@@ -79,7 +79,29 @@ namespace zgl {
         while (!WindowCheckCloseRequested(platform_ticket)) {
             internal::PollOSEvents(platform_ticket, input_state);
 
-            internal::BackbufferResizeIfNeeded(gfx_ticket, WindowGetFramebufferSizeCache(platform_ticket));
+            const zcl::t_v2_i fb_size_cache = WindowGetFramebufferSizeCache(platform_ticket);
+
+            if (BackbufferGetSize(gfx_ticket) != fb_size_cache) {
+#ifdef ZCL_DEBUG
+                zcl::Log(ZCL_STR_LITERAL("Resizing backbuffer from % to %..."), BackbufferGetSize(gfx_ticket), fb_size_cache); // Should this logging be done in GFX module instead? I don't know!
+#endif
+
+                internal::BackbufferResize(gfx_ticket, fb_size_cache);
+
+                if (config.backbuffer_resize_func) {
+                    config.backbuffer_resize_func({
+                        .perm_arena = &perm_arena,
+                        .temp_arena = &temp_arena,
+                        .input_state = input_state,
+                        .platform_ticket = platform_ticket,
+                        .gfx_ticket = gfx_ticket,
+                        .audio_ticket = audio_ticket,
+                        .rng = rng,
+                        .fps = fps,
+                        .user_mem = user_mem,
+                    });
+                }
+            }
 
             const zcl::t_b8 window_focused = WindowCheckFocused(platform_ticket);
 

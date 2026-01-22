@@ -440,14 +440,13 @@ namespace zgl {
         return g_state.backbuffer_size_cache;
     }
 
-    void internal::BackbufferResizeIfNeeded(const t_gfx_ticket_mut gfx_ticket, const zcl::t_v2_i size) {
+    void internal::BackbufferResize(const t_gfx_ticket_mut gfx_ticket, const zcl::t_v2_i size) {
         ZCL_ASSERT(g_state.phase == ek_phase_active_but_not_midframe);
         ZCL_ASSERT(TicketCheckValid(gfx_ticket));
+        ZCL_ASSERT(g_state.backbuffer_size_cache != size);
 
-        if (g_state.backbuffer_size_cache != size) {
-            bgfx::reset(static_cast<zcl::t_u32>(size.x), static_cast<zcl::t_u32>(size.y), BGFX_RESET_VSYNC);
-            g_state.backbuffer_size_cache = size;
-        }
+        bgfx::reset(static_cast<zcl::t_u32>(size.x), static_cast<zcl::t_u32>(size.y), BGFX_RESET_VSYNC);
+        g_state.backbuffer_size_cache = size;
     }
 
     void internal::FrameBegin(const t_gfx_ticket_mut gfx_ticket) {
