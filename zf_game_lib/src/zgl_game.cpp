@@ -99,7 +99,6 @@ namespace zgl {
                         .gfx_ticket = gfx_ticket,
                         .audio_ticket = audio_ticket,
                         .rng = rng,
-                        .fps = fps,
                         .user_mem = user_mem,
                     });
                 }
@@ -107,37 +106,30 @@ namespace zgl {
 
             const zcl::t_b8 window_focused = WindowCheckFocused(platform_ticket);
 
-            if (window_focused && !window_focused_last) {
-                zcl::Log(ZCL_STR_LITERAL("Window entered focus."));
+            {
+                const t_game_window_focus_func_context window_focus_func_context = {
+                    .perm_arena = &perm_arena,
+                    .temp_arena = &temp_arena,
+                    .input_state = input_state,
+                    .platform_ticket = platform_ticket,
+                    .gfx_ticket = gfx_ticket,
+                    .audio_ticket = audio_ticket,
+                    .rng = rng,
+                    .user_mem = user_mem,
+                };
 
-                if (config.window_focus_func) {
-                    config.window_focus_func({
-                        .perm_arena = &perm_arena,
-                        .temp_arena = &temp_arena,
-                        .input_state = input_state,
-                        .platform_ticket = platform_ticket,
-                        .gfx_ticket = gfx_ticket,
-                        .audio_ticket = audio_ticket,
-                        .rng = rng,
-                        .fps = fps,
-                        .user_mem = user_mem,
-                    });
-                }
-            } else if (!window_focused && window_focused_last) {
-                zcl::Log(ZCL_STR_LITERAL("Window left focus."));
+                if (window_focused && !window_focused_last) {
+                    zcl::Log(ZCL_STR_LITERAL("Window entered focus."));
 
-                if (config.window_focus_func) {
-                    config.window_focus_func({
-                        .perm_arena = &perm_arena,
-                        .temp_arena = &temp_arena,
-                        .input_state = input_state,
-                        .platform_ticket = platform_ticket,
-                        .gfx_ticket = gfx_ticket,
-                        .audio_ticket = audio_ticket,
-                        .rng = rng,
-                        .fps = fps,
-                        .user_mem = user_mem,
-                    });
+                    if (config.window_focus_func) {
+                        config.window_focus_func(window_focus_func_context);
+                    }
+                } else if (!window_focused && window_focused_last) {
+                    zcl::Log(ZCL_STR_LITERAL("Window left focus."));
+
+                    if (config.window_focus_func) {
+                        config.window_focus_func(window_focus_func_context);
+                    }
                 }
             }
 

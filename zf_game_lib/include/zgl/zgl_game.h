@@ -88,8 +88,6 @@ namespace zgl {
 
         zcl::t_rng *rng;
 
-        zcl::t_f64 fps;
-
         void *user_mem;
     };
 
@@ -107,8 +105,6 @@ namespace zgl {
 
         zcl::t_rng *rng;
 
-        zcl::t_f64 fps;
-
         void *user_mem;
     };
 
@@ -118,8 +114,6 @@ namespace zgl {
     using t_game_render_func = void (*)(const t_game_render_func_context &context);
     using t_game_window_focus_func = void (*)(const t_game_window_focus_func_context &context);
     using t_game_backbuffer_resize_func = void (*)(const t_game_backbuffer_resize_func_context &context);
-
-    // @todo: Other callbacks could be useful too - maybe window focus?
 
     struct t_game_config {
         t_game_init_func init_func;
