@@ -2,7 +2,7 @@
 
 namespace zcl {
     void ArenaDestroy(t_arena *const arena) {
-        ZCL_REQUIRE(arena->type == ek_arena_type_block_based);
+        ZCL_ASSERT(arena->type == ek_arena_type_block_based);
 
         const auto f = [](const auto self, t_arena_block *const block) {
             if (!block) {
@@ -21,7 +21,7 @@ namespace zcl {
     }
 
     static t_arena_block *ArenaCreateBlock(const t_i32 buf_size) {
-        ZCL_REQUIRE(buf_size > 0);
+        ZCL_ASSERT(buf_size > 0);
 
         const auto block = static_cast<t_arena_block *>(malloc(sizeof(t_arena_block)));
 
