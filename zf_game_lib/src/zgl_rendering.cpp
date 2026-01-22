@@ -23,8 +23,7 @@ namespace zgl {
 
         zcl::t_static_array<t_gfx_resource *, ekm_renderer_builtin_shader_prog_id_cnt> shader_progs;
 
-        t_gfx_resource *sampler_uniform;
-        t_gfx_resource *blend_uniform;
+        zcl::t_static_array<t_gfx_resource *, ekm_renderer_builtin_uniform_id_cnt> uniforms;
 
         t_gfx_resource *px_texture;
     };
@@ -79,8 +78,20 @@ namespace zgl {
             basis->shader_progs[i] = ShaderProgCreate(gfx_ticket, vertex_shader_compiled_bin, fragment_shader_compiled_bin, basis->perm_resource_group);
         }
 
-        basis->sampler_uniform = UniformCreate(gfx_ticket, ZCL_STR_LITERAL("u_texture"), ek_uniform_type_sampler, basis->perm_resource_group, temp_arena);
-        basis->blend_uniform = UniformCreate(gfx_ticket, ZCL_STR_LITERAL("u_blend"), ek_uniform_type_v4, basis->perm_resource_group, temp_arena);
+        for (zcl::t_i32 i = 0; i < ekm_renderer_builtin_uniform_id_cnt; i++) {
+            switch (static_cast<t_renderer_builtin_uniform_id>(i)) {
+            case ek_renderer_builtin_uniform_id_sampler:
+                basis->uniforms[i] = UniformCreate(gfx_ticket, ZCL_STR_LITERAL("u_texture"), ek_uniform_type_sampler, basis->perm_resource_group, temp_arena);
+                break;
+
+            case ek_renderer_builtin_uniform_id_blend:
+                basis->uniforms[i] = UniformCreate(gfx_ticket, ZCL_STR_LITERAL("u_blend"), ek_uniform_type_v4, basis->perm_resource_group, temp_arena);
+                break;
+
+            case ekm_renderer_builtin_uniform_id_cnt:
+                ZCL_UNREACHABLE();
+            }
+        }
 
         const zcl::t_static_array<zcl::t_color_rgba8, 1> px_texture_pixels = {{{255, 255, 255, 255}}};
 
@@ -102,6 +113,10 @@ namespace zgl {
 
     t_gfx_resource *RendererGetBuiltinShaderProg(const t_rendering_basis *const rb, const t_renderer_builtin_shader_prog_id id) {
         return rb->shader_progs[id];
+    }
+
+    t_gfx_resource *RendererGetBuiltinUniform(const t_rendering_basis *const rb, const t_renderer_builtin_uniform_id id) {
+        return rb->uniforms[id];
     }
 
     t_rendering_context internal::RendererBegin(const t_rendering_basis *const rendering_basis, const t_gfx_ticket_mut gfx_ticket, zcl::t_arena *const rendering_state_arena) {
@@ -131,7 +146,7 @@ namespace zgl {
         const auto texture = rc.state->batch.texture ? rc.state->batch.texture : rc.basis->px_texture;
         const t_gfx_resource *const shader_prog = rc.state->shader_prog ? rc.state->shader_prog : rc.basis->shader_progs[ek_renderer_builtin_shader_prog_id_default];
 
-        internal::FrameSubmit(rc.gfx_ticket, rc.state->pass_index, rc.basis->vertex_buf, rc.state->vertex_cnt_flushed, rc.state->vertex_cnt_flushed + rc.state->batch.vertex_cnt, texture, shader_prog, rc.basis->sampler_uniform);
+        internal::FrameSubmit(rc.gfx_ticket, rc.state->pass_index, rc.basis->vertex_buf, rc.state->vertex_cnt_flushed, rc.state->vertex_cnt_flushed + rc.state->batch.vertex_cnt, texture, shader_prog, rc.basis->uniforms[ek_renderer_builtin_uniform_id_sampler]);
 
         rc.state->vertex_cnt_flushed += rc.state->batch.vertex_cnt;
 
