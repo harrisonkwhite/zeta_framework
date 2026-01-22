@@ -465,47 +465,6 @@ namespace zcl {
         }
     }
 
-    t_b8 StrWalkNew(const t_str_rdonly str, t_str_walk_state *const state, t_str_walk_step *const o_step) {
-        ZCL_ASSERT(StrCheckValidUTF8(str));
-        ZCL_ASSERT(state->byte_index >= 0 && state->byte_index <= str.bytes.len);
-
-        if (state->byte_index == str.bytes.len) {
-            return false;
-        }
-
-        while (true) {
-            const auto byte_type = k_utf8_byte_type_table[str.bytes[state->byte_index]];
-
-            switch (byte_type) {
-            case ek_utf8_byte_type_ascii:
-            case ek_utf8_byte_type_2byte_start:
-            case ek_utf8_byte_type_3byte_start:
-            case ek_utf8_byte_type_4byte_start: {
-                const t_i32 cp_byte_cnt = byte_type - ek_utf8_byte_type_ascii + 1;
-                const auto cp_bytes = ArraySlice(str.bytes, state->byte_index, state->byte_index + cp_byte_cnt);
-
-                *o_step = {
-                    .code_pt = UTF8BytesToCodePoint(cp_bytes),
-                    .code_pt_index = state->code_pt_index,
-                    .byte_index = state->byte_index,
-                };
-
-                state->code_pt_index++;
-                state->byte_index += cp_byte_cnt;
-
-                return true;
-            }
-
-            case ek_utf8_byte_type_continuation:
-                state->byte_index--;
-                break;
-
-            default:
-                ZCL_UNREACHABLE();
-            }
-        }
-    }
-
     t_b8 StrWalk(const t_str_rdonly str, t_i32 *const byte_index, t_str_walk_step *const o_step) {
         ZCL_ASSERT(StrCheckValidUTF8(str));
         ZCL_ASSERT(*byte_index >= 0 && *byte_index <= str.bytes.len);
