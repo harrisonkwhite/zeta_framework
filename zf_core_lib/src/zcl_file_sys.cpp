@@ -188,7 +188,7 @@ namespace zcl {
             return false;
         }
 
-        *o_stream = FileStreamCreate(file, FileAccessModeToStreamMode(mode));
+        *o_stream = FileStreamCreateOpen(file, FileAccessModeToStreamMode(mode));
 
         return true;
     }
@@ -219,13 +219,13 @@ namespace zcl {
         const auto file = [mode, path_terminated, stream_current]() -> FILE * {
             switch (mode) {
             case ek_file_access_mode_read:
-                return freopen(StrToCStr(path_terminated), "rb", stream_current->file);
+                return freopen(StrToCStr(path_terminated), "rb", stream_current->file_raw);
 
             case ek_file_access_mode_write:
-                return freopen(StrToCStr(path_terminated), "wb", stream_current->file);
+                return freopen(StrToCStr(path_terminated), "wb", stream_current->file_raw);
 
             case ek_file_access_mode_append:
-                return freopen(StrToCStr(path_terminated), "ab", stream_current->file);
+                return freopen(StrToCStr(path_terminated), "ab", stream_current->file_raw);
             }
 
             ZCL_UNREACHABLE();
@@ -236,27 +236,36 @@ namespace zcl {
         }
 
         if (o_stream_new) {
-            *o_stream_new = FileStreamCreate(file, FileAccessModeToStreamMode(mode));
+            *o_stream_new = FileStreamCreateOpen(file, FileAccessModeToStreamMode(mode));
         }
 
         return true;
     }
 
     void FileClose(t_file_stream *const stream) {
-        fclose(stream->file);
-        *stream = {};
+        ZCL_ASSERT(stream->open);
+
+        fclose(stream->file_raw);
+
+        *stream = {
+            .open = false, // Good to be explicit!
+        };
     }
 
     void FileFlush(t_file_stream *const stream) {
+        ZCL_ASSERT(stream->open);
         ZCL_ASSERT(stream->mode == ek_stream_mode_write);
-        fflush(stream->file);
+
+        fflush(stream->file_raw);
     }
 
     t_i32 FileCalcSize(t_file_stream *const stream) {
-        const auto pos_old = ftell(stream->file);
-        fseek(stream->file, 0, SEEK_END);
-        const auto file_size = ftell(stream->file);
-        fseek(stream->file, pos_old, SEEK_SET);
+        ZCL_ASSERT(stream->open);
+
+        const auto pos_old = ftell(stream->file_raw);
+        fseek(stream->file_raw, 0, SEEK_END);
+        const auto file_size = ftell(stream->file_raw);
+        fseek(stream->file_raw, pos_old, SEEK_SET);
         return static_cast<t_i32>(file_size);
     }
 

@@ -6,6 +6,8 @@
 #include <zcl/zcl_strs.h>
 
 namespace zcl {
+    // @todo: Need to be safe in the event that you close a file and subsequently try to use it.
+
     enum t_path_type : t_i32 {
         ek_path_type_not_found,
         ek_path_type_directory,
@@ -38,27 +40,35 @@ namespace zcl {
     // @section: Files
 
     struct t_file_stream {
-        FILE *file;
+        t_b8 open;
+        FILE *file_raw;
         t_stream_mode mode;
     };
 
-    inline t_file_stream FileStreamCreate(FILE *const file, const t_stream_mode mode) {
-        return {.file = file, .mode = mode};
+    inline t_file_stream FileStreamCreateOpen(FILE *const file_raw, const t_stream_mode mode) {
+        return {
+            .open = true,
+            .file_raw = file_raw,
+            .mode = mode,
+        };
     }
 
+    // The file stream must be open to get a view into it.
     inline t_stream_view FileStreamGetView(t_file_stream *const stream) {
+        ZCL_ASSERT(stream->open);
+
         const auto read_func = [](const t_stream_view stream_view, const t_array_mut<t_u8> dest_bytes) {
             ZCL_ASSERT(stream_view.mode == ek_stream_mode_read);
 
             const auto state = static_cast<t_file_stream *>(stream_view.data);
-            return static_cast<t_i32>(fread(dest_bytes.raw, 1, static_cast<size_t>(dest_bytes.len), state->file)) == dest_bytes.len;
+            return static_cast<t_i32>(fread(dest_bytes.raw, 1, static_cast<size_t>(dest_bytes.len), state->file_raw)) == dest_bytes.len;
         };
 
         const auto write_func = [](const t_stream_view stream_view, const t_array_rdonly<t_u8> src_bytes) {
             ZCL_ASSERT(stream_view.mode == ek_stream_mode_write);
 
             const auto state = static_cast<t_file_stream *>(stream_view.data);
-            return static_cast<t_i32>(fwrite(src_bytes.raw, 1, static_cast<size_t>(src_bytes.len), state->file)) == src_bytes.len;
+            return static_cast<t_i32>(fwrite(src_bytes.raw, 1, static_cast<size_t>(src_bytes.len), state->file_raw)) == src_bytes.len;
         };
 
         return {
@@ -69,9 +79,9 @@ namespace zcl {
         };
     }
 
-    inline t_file_stream FileStreamCreateStdIn() { return FileStreamCreate(stdin, ek_stream_mode_read); }
-    inline t_file_stream FileStreamCreateStdOut() { return FileStreamCreate(stdout, ek_stream_mode_write); }
-    inline t_file_stream FileStreamCreateStdError() { return FileStreamCreate(stderr, ek_stream_mode_write); }
+    inline t_file_stream FileStreamCreateStdIn() { return FileStreamCreateOpen(stdin, ek_stream_mode_read); }
+    inline t_file_stream FileStreamCreateStdOut() { return FileStreamCreateOpen(stdout, ek_stream_mode_write); }
+    inline t_file_stream FileStreamCreateStdError() { return FileStreamCreateOpen(stderr, ek_stream_mode_write); }
 
     [[nodiscard]] t_b8 FileCreate(const t_str_rdonly path, t_arena *const temp_arena);
     [[nodiscard]] t_b8 FileCreateRecursive(const t_str_rdonly path, t_arena *const temp_arena, t_directory_create_result *const o_dir_create_result = nullptr);

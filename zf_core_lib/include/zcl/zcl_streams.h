@@ -8,8 +8,6 @@ namespace zcl {
     // ============================================================
     // @section: Stream Core
 
-    // @todo: Too many safety issues here, like using a file stream after it's closed.
-
     enum t_stream_mode : t_i32 {
         ek_stream_mode_read,
         ek_stream_mode_write
