@@ -129,6 +129,22 @@ namespace zgl {
         zcl::t_f64 tps_target;
     };
 
+    inline t_game_config GameConfigCreate(const t_game_init_func init_func, const t_game_deinit_func deinit_func, const t_game_tick_func tick_func, const t_game_render_func render_func) {
+        return {
+            .init_func = init_func,
+            .deinit_func = deinit_func,
+            .tick_func = tick_func,
+            .render_func = render_func,
+            .window_focus_func = nullptr,
+            .backbuffer_resize_func = nullptr,
+
+            .user_mem_size = 0,
+            .user_mem_alignment = 0,
+
+            .tps_target = 60.0,
+        };
+    }
+
     inline void GameConfigAssertValid(const t_game_config &config) {
         ZCL_ASSERT(config.init_func);
         ZCL_ASSERT(config.deinit_func);
