@@ -12,7 +12,7 @@ namespace zgl {
 
         zcl::t_texture_data_mut texture_data;
 
-        if (!zcl::DeserializeTexture(file_stream, temp_arena, &texture_data)) {
+        if (!zcl::DeserializeTexture(zcl::FileStreamGetView(&file_stream), temp_arena, &texture_data)) {
             ZCL_FATAL();
         }
 
@@ -45,7 +45,7 @@ namespace zgl {
                 ZCL_FATAL();
             }
 
-            if (!zcl::DeserializeShader(vertex_shader_file_stream, temp_arena, &vertex_shader_compiled_bin)) {
+            if (!zcl::DeserializeShader(zcl::FileStreamGetView(&vertex_shader_file_stream), temp_arena, &vertex_shader_compiled_bin)) {
                 ZCL_FATAL();
             }
 
@@ -61,7 +61,7 @@ namespace zgl {
                 ZCL_FATAL();
             }
 
-            if (!zcl::DeserializeShader(fragment_shader_file_stream, temp_arena, &fragment_shader_compiled_bin)) {
+            if (!zcl::DeserializeShader(zcl::FileStreamGetView(&fragment_shader_file_stream), temp_arena, &fragment_shader_compiled_bin)) {
                 ZCL_FATAL();
             }
 
@@ -84,7 +84,7 @@ namespace zgl {
                 ZCL_FATAL();
             }
 
-            if (!zcl::DeserializeFont(file_stream, GFXResourceGroupGetArena(gfx_ticket, resource_group), temp_arena, temp_arena, &arrangement, &atlas_pixels_arr)) {
+            if (!zcl::DeserializeFont(zcl::FileStreamGetView(&file_stream), GFXResourceGroupGetArena(gfx_ticket, resource_group), temp_arena, temp_arena, &arrangement, &atlas_pixels_arr)) {
                 ZCL_FATAL();
             }
 

@@ -462,11 +462,11 @@ namespace zcl {
     t_b8 Log(const t_str_rdonly format, const tp_arg_types &...args) {
         t_file_stream std_err = FileStreamCreateStdOut();
 
-        if (!PrintFormat(std_err, format, args...)) {
+        if (!PrintFormat(FileStreamGetView(&std_err), format, args...)) {
             return false;
         }
 
-        if (!Print(std_err, ZCL_STR_LITERAL("\n"))) {
+        if (!Print(FileStreamGetView(&std_err), ZCL_STR_LITERAL("\n"))) {
             return false;
         }
 
@@ -477,15 +477,15 @@ namespace zcl {
     t_b8 LogError(const t_str_rdonly format, const tp_arg_types &...args) {
         t_file_stream std_err = FileStreamCreateStdError();
 
-        if (!Print(std_err, ZCL_STR_LITERAL("Error: "))) {
+        if (!Print(FileStreamGetView(&std_err), ZCL_STR_LITERAL("Error: "))) {
             return false;
         }
 
-        if (!PrintFormat(std_err, format, args...)) {
+        if (!PrintFormat(FileStreamGetView(&std_err), format, args...)) {
             return false;
         }
 
-        if (!Print(std_err, ZCL_STR_LITERAL("\n"))) {
+        if (!Print(FileStreamGetView(&std_err), ZCL_STR_LITERAL("\n"))) {
             return false;
         }
 
@@ -496,15 +496,15 @@ namespace zcl {
     t_b8 LogWarning(const t_str_rdonly format, const tp_arg_types &...args) {
         t_file_stream std_err = FileStreamCreateStdError();
 
-        if (!Print(std_err, ZCL_STR_LITERAL("Warning: "))) {
+        if (!Print(FileStreamGetView(&std_err), ZCL_STR_LITERAL("Warning: "))) {
             return false;
         }
 
-        if (!PrintFormat(std_err, format, args...)) {
+        if (!PrintFormat(FileStreamGetView(&std_err), format, args...)) {
             return false;
         }
 
-        if (!Print(std_err, ZCL_STR_LITERAL("\n"))) {
+        if (!Print(FileStreamGetView(&std_err), ZCL_STR_LITERAL("\n"))) {
             return false;
         }
 

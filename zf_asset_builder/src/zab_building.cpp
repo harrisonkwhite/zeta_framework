@@ -109,7 +109,7 @@ constexpr zcl::t_static_array<t_asset_field, ekm_sound_field_cnt> k_sound_fields
 
     ZCL_DEFER({ zcl::FileClose(&file_stream); });
 
-    if (!zcl::SerializeTexture(file_stream, texture_data)) {
+    if (!zcl::SerializeTexture(zcl::FileStreamGetView(&file_stream), texture_data)) {
         zcl::LogError(ZCL_STR_LITERAL("Failed to serialize texture to file \"%\"!"), out_file_path);
         return false;
     }
@@ -155,7 +155,7 @@ constexpr zcl::t_static_array<t_asset_field, ekm_sound_field_cnt> k_sound_fields
 
     ZCL_DEFER({ zcl::FileClose(&file_stream); });
 
-    if (!zcl::SerializeFont(file_stream, arrangement, atlas_pixels_arr, temp_arena)) {
+    if (!zcl::SerializeFont(zcl::FileStreamGetView(&file_stream), arrangement, atlas_pixels_arr, temp_arena)) {
         zcl::LogError(ZCL_STR_LITERAL("Failed to serialize font to file \"%\"!"), out_file_path);
         return false;
     }
@@ -191,7 +191,7 @@ constexpr zcl::t_static_array<t_asset_field, ekm_sound_field_cnt> k_sound_fields
 
     ZCL_DEFER({ zcl::FileClose(&shader_file_stream); });
 
-    if (!zcl::SerializeShader(shader_file_stream, compiled_bin)) {
+    if (!zcl::SerializeShader(zcl::FileStreamGetView(&shader_file_stream), compiled_bin)) {
         zcl::LogError(ZCL_STR_LITERAL("Failed to serialize shader to file \"%\"!"), out_file_path);
         return false;
     }
@@ -216,7 +216,7 @@ constexpr zcl::t_static_array<t_asset_field, ekm_sound_field_cnt> k_sound_fields
 
     ZCL_DEFER({ zcl::FileClose(&file_stream); });
 
-    if (!zcl::SerializeSound(file_stream, snd_data)) {
+    if (!zcl::SerializeSound(zcl::FileStreamGetView(&file_stream), snd_data)) {
         zcl::LogError(ZCL_STR_LITERAL("Failed to serialize sound to file \"%\"!"), out_file_path);
         return false;
     }

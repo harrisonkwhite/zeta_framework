@@ -111,7 +111,7 @@ zcl::t_b8 CompileShader(const zcl::t_str_rdonly shader_file_path, const zcl::t_s
     if (r > 0) {
         zcl::t_file_stream std_err = zcl::FileStreamCreateStdError();
         const auto err = zcl::t_str_rdonly{zcl::ListToArray(&bin_list)};
-        zcl::PrintFormat(std_err, ZCL_STR_LITERAL("==================== BGFX SHADERC ERROR ====================\n%============================================================\n"), err);
+        zcl::PrintFormat(zcl::FileStreamGetView(&std_err), ZCL_STR_LITERAL("==================== BGFX SHADERC ERROR ====================\n%============================================================\n"), err);
         return false;
     }
 

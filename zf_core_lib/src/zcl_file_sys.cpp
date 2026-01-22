@@ -278,7 +278,7 @@ namespace zcl {
             *o_contents = ArenaPushArray<t_u8>(contents_arena, file_size);
         }
 
-        if (!StreamReadItemsIntoArray(stream, *o_contents, file_size)) {
+        if (!StreamReadItemsIntoArray(FileStreamGetView(&stream), *o_contents, file_size)) {
             return false;
         }
 

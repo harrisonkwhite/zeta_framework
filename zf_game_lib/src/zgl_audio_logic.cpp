@@ -65,7 +65,7 @@ namespace zgl {
 
         zcl::t_sound_data_mut snd_data;
 
-        if (!zcl::DeserializeSound(file_stream, group->arena, &snd_data)) {
+        if (!zcl::DeserializeSound(zcl::FileStreamGetView(&file_stream), group->arena, &snd_data)) {
             ZCL_FATAL();
         }
 

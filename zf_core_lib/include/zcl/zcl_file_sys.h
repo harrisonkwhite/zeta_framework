@@ -40,34 +40,33 @@ namespace zcl {
     struct t_file_stream {
         FILE *file;
         t_stream_mode mode;
-
-        // @todo: Implicit cast here is dangerous! Consider the stdin functions.
-        operator t_stream_view() {
-            const auto read_func = [](const t_stream_view stream, const t_array_mut<t_u8> dest_bytes) {
-                ZCL_ASSERT(stream.mode == ek_stream_mode_read);
-
-                const auto state = static_cast<t_file_stream *>(stream.data);
-                return static_cast<t_i32>(fread(dest_bytes.raw, 1, static_cast<size_t>(dest_bytes.len), state->file)) == dest_bytes.len;
-            };
-
-            const auto write_func = [](const t_stream_view stream, const t_array_rdonly<t_u8> src_bytes) {
-                ZCL_ASSERT(stream.mode == ek_stream_mode_write);
-
-                const auto state = static_cast<t_file_stream *>(stream.data);
-                return static_cast<t_i32>(fwrite(src_bytes.raw, 1, static_cast<size_t>(src_bytes.len), state->file)) == src_bytes.len;
-            };
-
-            return {
-                .data = this,
-                .read_func = read_func,
-                .write_func = write_func,
-                .mode = mode,
-            };
-        }
     };
 
     inline t_file_stream FileStreamCreate(FILE *const file, const t_stream_mode mode) {
         return {.file = file, .mode = mode};
+    }
+
+    inline t_stream_view FileStreamGetView(t_file_stream *const stream) {
+        const auto read_func = [](const t_stream_view stream, const t_array_mut<t_u8> dest_bytes) {
+            ZCL_ASSERT(stream.mode == ek_stream_mode_read);
+
+            const auto state = static_cast<t_file_stream *>(stream.data);
+            return static_cast<t_i32>(fread(dest_bytes.raw, 1, static_cast<size_t>(dest_bytes.len), state->file)) == dest_bytes.len;
+        };
+
+        const auto write_func = [](const t_stream_view stream, const t_array_rdonly<t_u8> src_bytes) {
+            ZCL_ASSERT(stream.mode == ek_stream_mode_write);
+
+            const auto state = static_cast<t_file_stream *>(stream.data);
+            return static_cast<t_i32>(fwrite(src_bytes.raw, 1, static_cast<size_t>(src_bytes.len), state->file)) == src_bytes.len;
+        };
+
+        return {
+            .data = stream,
+            .read_func = read_func,
+            .write_func = write_func,
+            .mode = stream->mode,
+        };
     }
 
     inline t_file_stream FileStreamCreateStdIn() { return FileStreamCreate(stdin, ek_stream_mode_read); }
@@ -92,7 +91,6 @@ namespace zcl {
     // o_stream_new is allowed to be equal to stream_current.
     [[nodiscard]] t_b8 FileReopen(t_file_stream *const stream_current, const t_str_rdonly path, const t_file_access_mode mode, t_arena *const temp_arena, t_file_stream *const o_stream_new);
 
-    // @todo: Non-pointer should be acceptable here.
     void FileClose(t_file_stream *const stream);
 
     void FileFlush(t_file_stream *const stream);
