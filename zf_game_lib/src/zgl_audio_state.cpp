@@ -77,7 +77,7 @@ namespace zgl {
         }
     }
 
-    t_sound_id SoundCreate(const t_audio_ticket_mut audio_ticket, const t_sound_type *const snd_type) {
+    zcl::t_b8 SoundCreate(const t_audio_ticket_mut audio_ticket, const t_sound_type *const snd_type, t_sound_id *const o_snd_id) {
         ZCL_ASSERT(g_state.phase != ek_phase_inactive);
         ZCL_ASSERT(TicketCheckValid(audio_ticket));
         ZCL_ASSERT(snd_type->valid);
@@ -85,7 +85,9 @@ namespace zgl {
         const zcl::t_i32 index = zcl::BitsetFindFirstUnsetBit(g_state.snd_insts.active);
 
         if (index == -1) {
-            ZCL_FATAL(); // @todo: This is quite an easy limit to hit, maybe just give a warning instead?
+            // Giving a warning for this instead of fatal error because it's quite an easy thing to hit and can be often recovered from.
+            zcl::LogWarning(ZCL_STR_LITERAL("Trying to create a sound, but the limit has been reached!"));
+            return false;
         }
 
         g_state.snd_insts.types[index] = snd_type;
@@ -118,7 +120,9 @@ namespace zgl {
         zcl::BitsetSet(g_state.snd_insts.active, index);
         g_state.snd_insts.versions[index]++;
 
-        return {index, g_state.snd_insts.versions[index]};
+        *o_snd_id = {index, g_state.snd_insts.versions[index]};
+
+        return true;
     }
 
     void SoundDestroy(const t_audio_ticket_mut audio_ticket, const t_sound_id id) {

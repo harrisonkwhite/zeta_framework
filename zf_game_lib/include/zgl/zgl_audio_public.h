@@ -59,8 +59,10 @@ namespace zgl {
     constexpr zcl::t_range k_sound_pan_range = zcl::RangeCreate(-1.0f, 1.0f);
     constexpr zcl::t_range k_sound_pitch_range = zcl::RangeCreateExclLower(0.0f, zcl::k_f32_inf_pos);
 
-    t_sound_id SoundCreate(const t_audio_ticket_mut audio_ticket, const t_sound_type *const type);
+    [[nodiscard]] zcl::t_b8 SoundCreate(const t_audio_ticket_mut audio_ticket, const t_sound_type *const type, t_sound_id *const o_snd_id);
     void SoundDestroy(const t_audio_ticket_mut audio_ticket, const t_sound_id id);
+
+    // @todo: Fire-and-forget helper.
 
     void SoundStart(const t_audio_ticket_mut audio_ticket, const t_sound_id id);
     void SoundPause(const t_audio_ticket_mut audio_ticket, const t_sound_id id);
