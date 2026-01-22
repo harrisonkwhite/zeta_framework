@@ -59,10 +59,8 @@ namespace zgl {
     constexpr zcl::t_range k_sound_pan_range = zcl::RangeCreate(-1.0f, 1.0f);
     constexpr zcl::t_range k_sound_pitch_range = zcl::RangeCreateExclLower(0.0f, zcl::k_f32_inf_pos);
 
-    [[nodiscard]] zcl::t_b8 SoundCreate(const t_audio_ticket_mut audio_ticket, const t_sound_type *const type, t_sound_id *const o_snd_id);
+    [[nodiscard]] zcl::t_b8 SoundCreate(const t_audio_ticket_mut audio_ticket, const t_sound_type *const type, t_sound_id *const o_id);
     void SoundDestroy(const t_audio_ticket_mut audio_ticket, const t_sound_id id);
-
-    // @todo: Fire-and-forget helper.
 
     void SoundStart(const t_audio_ticket_mut audio_ticket, const t_sound_id id);
     void SoundPause(const t_audio_ticket_mut audio_ticket, const t_sound_id id);
@@ -88,6 +86,20 @@ namespace zgl {
     void SoundSetPitch(const t_audio_ticket_mut audio_ticket, const t_sound_id id, const zcl::t_f32 pitch);
     void SoundSetLooping(const t_audio_ticket_mut audio_ticket, const t_sound_id id, const zcl::t_b8 looping);
     void SoundSetTrackPosition(const t_audio_ticket_mut audio_ticket, const t_sound_id id, const zcl::t_f32 pos_secs);
+
+    inline zcl::t_b8 SoundFireAndForget(const t_audio_ticket_mut audio_ticket, const t_sound_type *const type, const zcl::t_f32 vol = 1.0f, const zcl::t_f32 pan = 0.0f, const zcl::t_f32 pitch = 1.0f) {
+        t_sound_id id;
+
+        if (!SoundCreate(audio_ticket, type, &id)) {
+            return false;
+        }
+
+        SoundSetVolume(audio_ticket, id, vol);
+        SoundSetPan(audio_ticket, id, pan);
+        SoundSetPitch(audio_ticket, id, pitch);
+
+        return true;
+    }
 
     zcl::t_array_mut<t_sound_id> SoundsGetExisting(const t_audio_ticket_rdonly audio_ticket, zcl::t_arena *const arena);
 

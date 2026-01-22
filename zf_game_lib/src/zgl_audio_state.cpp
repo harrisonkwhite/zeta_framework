@@ -77,7 +77,7 @@ namespace zgl {
         }
     }
 
-    zcl::t_b8 SoundCreate(const t_audio_ticket_mut audio_ticket, const t_sound_type *const snd_type, t_sound_id *const o_snd_id) {
+    zcl::t_b8 SoundCreate(const t_audio_ticket_mut audio_ticket, const t_sound_type *const snd_type, t_sound_id *const o_id) {
         ZCL_ASSERT(g_state.phase != ek_phase_inactive);
         ZCL_ASSERT(TicketCheckValid(audio_ticket));
         ZCL_ASSERT(snd_type->valid);
@@ -120,7 +120,7 @@ namespace zgl {
         zcl::BitsetSet(g_state.snd_insts.active, index);
         g_state.snd_insts.versions[index]++;
 
-        *o_snd_id = {index, g_state.snd_insts.versions[index]};
+        *o_id = {index, g_state.snd_insts.versions[index]};
 
         return true;
     }
