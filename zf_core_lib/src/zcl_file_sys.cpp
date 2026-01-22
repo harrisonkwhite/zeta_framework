@@ -132,6 +132,31 @@ namespace zcl {
 #endif
     }
 
+    t_stream_view FileStreamGetView(t_file_stream *const stream) {
+        ZCL_ASSERT(stream->open);
+
+        const auto read_func = [](const t_stream_view stream_view, const t_array_mut<t_u8> dest_bytes) {
+            ZCL_ASSERT(stream_view.mode == ek_stream_mode_read);
+
+            const auto state = static_cast<t_file_stream *>(stream_view.data);
+            return static_cast<t_i32>(fread(dest_bytes.raw, 1, static_cast<size_t>(dest_bytes.len), state->file_raw)) == dest_bytes.len;
+        };
+
+        const auto write_func = [](const t_stream_view stream_view, const t_array_rdonly<t_u8> src_bytes) {
+            ZCL_ASSERT(stream_view.mode == ek_stream_mode_write);
+
+            const auto state = static_cast<t_file_stream *>(stream_view.data);
+            return static_cast<t_i32>(fwrite(src_bytes.raw, 1, static_cast<size_t>(src_bytes.len), state->file_raw)) == src_bytes.len;
+        };
+
+        return {
+            .data = stream,
+            .read_func = read_func,
+            .write_func = write_func,
+            .mode = stream->mode,
+        };
+    }
+
     t_b8 FileCreate(const t_str_rdonly path, t_arena *const temp_arena) {
         t_file_stream stream;
 

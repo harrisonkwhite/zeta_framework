@@ -54,30 +54,7 @@ namespace zcl {
     }
 
     // The file stream must be open to get a view into it.
-    inline t_stream_view FileStreamGetView(t_file_stream *const stream) {
-        ZCL_ASSERT(stream->open);
-
-        const auto read_func = [](const t_stream_view stream_view, const t_array_mut<t_u8> dest_bytes) {
-            ZCL_ASSERT(stream_view.mode == ek_stream_mode_read);
-
-            const auto state = static_cast<t_file_stream *>(stream_view.data);
-            return static_cast<t_i32>(fread(dest_bytes.raw, 1, static_cast<size_t>(dest_bytes.len), state->file_raw)) == dest_bytes.len;
-        };
-
-        const auto write_func = [](const t_stream_view stream_view, const t_array_rdonly<t_u8> src_bytes) {
-            ZCL_ASSERT(stream_view.mode == ek_stream_mode_write);
-
-            const auto state = static_cast<t_file_stream *>(stream_view.data);
-            return static_cast<t_i32>(fwrite(src_bytes.raw, 1, static_cast<size_t>(src_bytes.len), state->file_raw)) == src_bytes.len;
-        };
-
-        return {
-            .data = stream,
-            .read_func = read_func,
-            .write_func = write_func,
-            .mode = stream->mode,
-        };
-    }
+    t_stream_view FileStreamGetView(t_file_stream *const stream);
 
     inline t_file_stream FileStreamCreateStdIn() { return FileStreamCreateOpen(stdin, ek_stream_mode_read); }
     inline t_file_stream FileStreamCreateStdOut() { return FileStreamCreateOpen(stdout, ek_stream_mode_write); }
