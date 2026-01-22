@@ -1,3 +1,4 @@
+- Documentation sucks man
 - Be more consistent about when REQUIRE is used instead of ASSERT
 - Might need to revisit some of the basic error stuff.
 - Stack frame in release is not very useful

@@ -234,8 +234,7 @@ namespace zgl {
         RendererSubmit(rc, zcl::ArrayToNonstatic(&triangles));
     }
 
-    // @todo: Add scale? Does sprite flipping work?
-    void RendererSubmitTexture(const t_rendering_context rc, const t_gfx_resource *const texture, const zcl::t_v2 pos, const zcl::t_rect_i src_rect, const zcl::t_v2 origin, const zcl::t_f32 rot) {
+    void RendererSubmitTexture(const t_rendering_context rc, const t_gfx_resource *const texture, const zcl::t_v2 pos, const zcl::t_rect_i src_rect, const zcl::t_v2 origin, const zcl::t_f32 rot, const zcl::t_v2 scale) {
         const auto texture_size = TextureGetSize(rc.gfx_ticket, texture);
 
         zcl::t_rect_i src_rect_to_use;
@@ -251,7 +250,8 @@ namespace zgl {
 
         zcl::t_static_array<zcl::t_v2, 4> quad_pts;
         zcl::t_arena quad_pts_arena = zcl::ArenaCreateWrapping(zcl::ToBytes(&quad_pts));
-        const zcl::t_poly_mut quad_poly = zcl::PolyCreateQuadRotated(pos, zcl::V2IToF(zcl::RectGetSize(src_rect_to_use)), origin, rot, &quad_pts_arena);
+        const zcl::t_v2 quad_size = zcl::CalcCompwiseProd(zcl::V2IToF(zcl::RectGetSize(src_rect_to_use)), scale);
+        const zcl::t_poly_mut quad_poly = zcl::PolyCreateQuadRotated(pos, quad_size, origin, rot, &quad_pts_arena);
 
         const zcl::t_static_array<t_triangle, 2> triangles = {{
             {
