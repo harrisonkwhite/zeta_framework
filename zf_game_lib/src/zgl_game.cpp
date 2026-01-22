@@ -77,6 +77,8 @@ namespace zgl {
         zcl::t_f64 tick_interval_accum = 0.0;
 
         while (!WindowCheckCloseRequested(platform_ticket)) {
+            const zcl::t_b8 window_focused_last = WindowCheckFocused(platform_ticket);
+
             internal::PollOSEvents(platform_ticket, input_state);
 
             const zcl::t_v2_i fb_size_cache = WindowGetFramebufferSizeCache(platform_ticket);
@@ -104,6 +106,40 @@ namespace zgl {
             }
 
             const zcl::t_b8 window_focused = WindowCheckFocused(platform_ticket);
+
+            if (window_focused && !window_focused_last) {
+                zcl::Log(ZCL_STR_LITERAL("Window entered focus."));
+
+                if (config.window_focus_func) {
+                    config.window_focus_func({
+                        .perm_arena = &perm_arena,
+                        .temp_arena = &temp_arena,
+                        .input_state = input_state,
+                        .platform_ticket = platform_ticket,
+                        .gfx_ticket = gfx_ticket,
+                        .audio_ticket = audio_ticket,
+                        .rng = rng,
+                        .fps = fps,
+                        .user_mem = user_mem,
+                    });
+                }
+            } else if (!window_focused && window_focused_last) {
+                zcl::Log(ZCL_STR_LITERAL("Window left focus."));
+
+                if (config.window_focus_func) {
+                    config.window_focus_func({
+                        .perm_arena = &perm_arena,
+                        .temp_arena = &temp_arena,
+                        .input_state = input_state,
+                        .platform_ticket = platform_ticket,
+                        .gfx_ticket = gfx_ticket,
+                        .audio_ticket = audio_ticket,
+                        .rng = rng,
+                        .fps = fps,
+                        .user_mem = user_mem,
+                    });
+                }
+            }
 
             internal::AudioSetFrozen(audio_ticket, !window_focused);
 
