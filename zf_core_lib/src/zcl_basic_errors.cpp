@@ -58,7 +58,7 @@ namespace zcl {
 #ifdef ZCL_DEBUG
     static void PrintStackTrace() {
     #if defined(ZCL_PLATFORM_WINDOWS)
-        // The windows API is actual torture.
+        // The Win32 API is actual torture.
 
         //
         // Get array of instruction pointers representing the call stack.

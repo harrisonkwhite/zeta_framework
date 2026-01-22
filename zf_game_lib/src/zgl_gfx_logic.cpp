@@ -7,14 +7,12 @@ namespace zgl {
         zcl::t_file_stream file_stream;
 
         if (!zcl::FileOpen(file_path, zcl::t_file_access_mode::ek_file_access_mode_read, temp_arena, &file_stream)) {
-            zcl::LogError(ZCL_STR_LITERAL("Failed to open built texture file \"%\" for reading."), file_path);
             ZCL_FATAL();
         }
 
         zcl::t_texture_data_mut texture_data;
 
         if (!zcl::DeserializeTexture(file_stream, temp_arena, &texture_data)) {
-            zcl::LogError(ZCL_STR_LITERAL("Failed to deserialize texture from \"%\"."), file_path);
             ZCL_FATAL();
         }
 
@@ -29,7 +27,6 @@ namespace zgl {
         zcl::t_texture_data_mut texture_data;
 
         if (!zcl::TextureLoadFromUnbuilt(file_path, temp_arena, temp_arena, &texture_data)) {
-            zcl::LogError(ZCL_STR_LITERAL("Failed to load texture from unbuilt file \"%\"."), file_path);
             ZCL_FATAL();
         }
 
@@ -45,12 +42,10 @@ namespace zgl {
             zcl::t_file_stream vertex_shader_file_stream;
 
             if (!zcl::FileOpen(vertex_shader_file_path, zcl::t_file_access_mode::ek_file_access_mode_read, temp_arena, &vertex_shader_file_stream)) {
-                zcl::LogError(ZCL_STR_LITERAL("Failed to open built vertex shader file \"%\" for reading."), vertex_shader_file_path);
                 ZCL_FATAL();
             }
 
             if (!zcl::DeserializeShader(vertex_shader_file_stream, temp_arena, &vertex_shader_compiled_bin)) {
-                zcl::LogError(ZCL_STR_LITERAL("Failed to deserialize vertex shader from \"%\"."), vertex_shader_file_path);
                 ZCL_FATAL();
             }
 
@@ -63,12 +58,10 @@ namespace zgl {
             zcl::t_file_stream fragment_shader_file_stream;
 
             if (!zcl::FileOpen(fragment_shader_file_path, zcl::t_file_access_mode::ek_file_access_mode_read, temp_arena, &fragment_shader_file_stream)) {
-                zcl::LogError(ZCL_STR_LITERAL("Failed to open built fragment shader file \"%\" for reading."), fragment_shader_file_path);
                 ZCL_FATAL();
             }
 
             if (!zcl::DeserializeShader(fragment_shader_file_stream, temp_arena, &fragment_shader_compiled_bin)) {
-                zcl::LogError(ZCL_STR_LITERAL("Failed to deserialize fragment shader from \"%\"."), fragment_shader_file_path);
                 ZCL_FATAL();
             }
 
@@ -88,12 +81,10 @@ namespace zgl {
             zcl::t_file_stream file_stream;
 
             if (!zcl::FileOpen(file_path, zcl::t_file_access_mode::ek_file_access_mode_read, temp_arena, &file_stream)) {
-                zcl::LogError(ZCL_STR_LITERAL("Failed to open \"%\" for reading."), file_path);
                 ZCL_FATAL();
             }
 
             if (!zcl::DeserializeFont(file_stream, GFXResourceGroupGetArena(gfx_ticket, resource_group), temp_arena, temp_arena, &arrangement, &atlas_pixels_arr)) {
-                zcl::LogError(ZCL_STR_LITERAL("Failed to deserialize font from \"%\"."), file_path);
                 ZCL_FATAL();
             }
 
@@ -125,7 +116,6 @@ namespace zgl {
         zcl::t_array_mut<zcl::t_font_atlas_pixels_r8> atlas_pixels_arr;
 
         if (!zcl::FontLoadFromUnbuilt(file_path, height, code_pts, GFXResourceGroupGetArena(gfx_ticket, resource_group), temp_arena, temp_arena, &arrangement, &atlas_pixels_arr)) {
-            zcl::LogError(ZCL_STR_LITERAL("Failed to load font from unbuilt file \"%\"."), file_path);
             ZCL_FATAL();
         }
 
