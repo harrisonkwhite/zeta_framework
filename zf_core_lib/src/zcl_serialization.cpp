@@ -168,26 +168,26 @@ namespace zcl {
         return true;
     }
 
-    t_b8 SerializeSound(const t_stream_view stream, const t_sound_data_rdonly snd_data) {
-        if (!StreamWriteItem(stream, snd_data.meta)) {
+    t_b8 SerializeSound(const t_stream_view stream_view, const t_sound_data_rdonly snd_data) {
+        if (!StreamWriteItem(stream_view, snd_data.meta)) {
             return false;
         }
 
-        if (!SerializeArray(stream, snd_data.pcm)) {
+        if (!SerializeArray(stream_view, snd_data.pcm)) {
             return false;
         }
 
         return true;
     }
 
-    t_b8 DeserializeSound(const t_stream_view stream, t_arena *const snd_data_arena, t_sound_data_mut *const o_snd_data) {
+    t_b8 DeserializeSound(const t_stream_view stream_view, t_arena *const snd_data_arena, t_sound_data_mut *const o_snd_data) {
         *o_snd_data = {};
 
-        if (!StreamReadItem(stream, &o_snd_data->meta)) {
+        if (!StreamReadItem(stream_view, &o_snd_data->meta)) {
             return false;
         }
 
-        if (!DeserializeArray(stream, snd_data_arena, &o_snd_data->pcm)) {
+        if (!DeserializeArray(stream_view, snd_data_arena, &o_snd_data->pcm)) {
             return false;
         }
 

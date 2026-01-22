@@ -18,8 +18,8 @@ namespace zcl {
     struct t_stream_view {
         void *data;
 
-        t_b8 (*read_func)(const t_stream_view stream, const t_array_mut<t_u8> dest_bytes);
-        t_b8 (*write_func)(const t_stream_view stream, const t_array_rdonly<t_u8> src_bytes);
+        t_b8 (*read_func)(const t_stream_view stream_view, const t_array_mut<t_u8> dest_bytes);
+        t_b8 (*write_func)(const t_stream_view stream_view, const t_array_rdonly<t_u8> src_bytes);
 
         t_stream_mode mode;
     };

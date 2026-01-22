@@ -11,14 +11,14 @@ namespace zcl {
     template <typename tp_type>
     concept c_format = requires { typename tp_type::t_formatting; };
 
-    inline t_b8 Print(const t_stream_view stream, const t_str_rdonly str) {
-        return StreamWriteItemsOfArray(stream, str.bytes);
+    inline t_b8 Print(const t_stream_view stream_view, const t_str_rdonly str) {
+        return StreamWriteItemsOfArray(stream_view, str.bytes);
     }
 
-    inline t_b8 PrintFormat(const t_stream_view stream, const t_str_rdonly format);
+    inline t_b8 PrintFormat(const t_stream_view stream_view, const t_str_rdonly format);
 
     template <typename tp_arg_type, typename... tp_arg_types_leftover>
-    t_b8 PrintFormat(const t_stream_view stream, const t_str_rdonly format, const tp_arg_type &arg, const tp_arg_types_leftover &...args_leftover);
+    t_b8 PrintFormat(const t_stream_view stream_view, const t_str_rdonly format, const tp_arg_type &arg, const tp_arg_types_leftover &...args_leftover);
 
 
     // ============================================================
@@ -38,7 +38,7 @@ namespace zcl {
         return FormatBool(value);
     }
 
-    t_b8 PrintType(const t_stream_view stream, const t_format_bool format);
+    t_b8 PrintType(const t_stream_view stream_view, const t_format_bool format);
 
     // ============================================================
 
@@ -55,7 +55,7 @@ namespace zcl {
     inline t_format_str FormatStr(const t_str_rdonly value) { return {.value = value}; }
     inline t_format_str Format(const t_str_rdonly value) { return FormatStr(value); }
 
-    t_b8 PrintType(const t_stream_view stream, const t_format_str format);
+    t_b8 PrintType(const t_stream_view stream_view, const t_format_str format);
 
     // ============================================================
 
@@ -72,7 +72,7 @@ namespace zcl {
     inline t_format_code_point FormatCodePoint(const t_code_point value) { return {.value = value}; }
     inline t_format_code_point Format(const t_code_point value) { return FormatCodePoint(value); }
 
-    t_b8 PrintType(const t_stream_view stream, const t_format_code_point format);
+    t_b8 PrintType(const t_stream_view stream_view, const t_format_code_point format);
 
     // ============================================================
 
@@ -91,7 +91,7 @@ namespace zcl {
     template <c_integral tp_type> t_format_int<tp_type> Format(const tp_type value) { return FormatInt(value); }
 
     template <c_integral tp_type>
-    t_b8 PrintType(const t_stream_view stream, const t_format_int<tp_type> format) {
+    t_b8 PrintType(const t_stream_view stream_view, const t_format_int<tp_type> format) {
         t_static_array<t_u8, 20> str_bytes = {}; // Maximum possible number of ASCII characters needed to represent a 64-bit integer.
         t_byte_stream str_bytes_stream = ByteStreamCreate(ArrayToNonstatic(&str_bytes), ek_stream_mode_write);
         t_b8 str_bytes_stream_write_success = true;
@@ -109,7 +109,7 @@ namespace zcl {
             ZCL_ASSERT(str_bytes_stream_write_success);
         }
 
-        return Print(stream, {ByteStreamGetWritten(&str_bytes_stream)});
+        return Print(stream_view, {ByteStreamGetWritten(&str_bytes_stream)});
     }
 
     // ============================================================
@@ -142,7 +142,7 @@ namespace zcl {
     t_format_float<tp_type> Format(const tp_type value) { return FormatFloat(value); }
 
     template <c_floating_point tp_type>
-    t_b8 PrintType(const t_stream_view stream, const t_format_float<tp_type> format) {
+    t_b8 PrintType(const t_stream_view stream_view, const t_format_float<tp_type> format) {
         ZCL_ASSERT(format.precision > 0);
 
         t_static_array<t_u8, 400> str_bytes = {}; // Roughly more than how many bytes should ever be needed.
@@ -170,7 +170,7 @@ namespace zcl {
             }
         }
 
-        return Print(stream, {ArraySlice(ArrayToNonstatic(&str_bytes), 0, str_bytes_used)});
+        return Print(stream_view, {ArraySlice(ArrayToNonstatic(&str_bytes), 0, str_bytes_used)});
     }
 
     // ============================================================
@@ -220,7 +220,7 @@ namespace zcl {
     }
 
     template <c_integral_unsigned tp_type>
-    t_b8 PrintType(const t_stream_view stream, const t_format_hex<tp_type> format) {
+    t_b8 PrintType(const t_stream_view stream_view, const t_format_hex<tp_type> format) {
         ZCL_ASSERT(format.min_digits >= k_format_hex_digit_cnt_min && format.min_digits <= k_format_hex_digit_cnt_max);
 
         t_static_array<t_u8, 2 + k_format_hex_digit_cnt_max> str_bytes = {}; // Can facilitate max number of digits plus the "0x" prefix.
@@ -270,7 +270,7 @@ namespace zcl {
         const auto str_bytes_digits = ArraySliceFrom(ByteStreamGetWritten(&str_bytes_stream), str_bytes_digits_begin_pos);
         Reverse(str_bytes_digits);
 
-        return Print(stream, {ByteStreamGetWritten(&str_bytes_stream)});
+        return Print(stream_view, {ByteStreamGetWritten(&str_bytes_stream)});
     }
 
     // ============================================================
@@ -303,12 +303,12 @@ namespace zcl {
 
     inline t_format_v2 Format(const t_v2 value) { return FormatV2(value); }
 
-    t_b8 PrintType(const t_stream_view stream, const t_format_v2 format);
+    t_b8 PrintType(const t_stream_view stream_view, const t_format_v2 format);
 
     inline t_format_v2_i FormatV2(const t_v2_i value) { return {.value = value}; }
     inline t_format_v2_i Format(const t_v2_i value) { return FormatV2(value); }
 
-    t_b8 PrintType(const t_stream_view stream, const t_format_v2_i format);
+    t_b8 PrintType(const t_stream_view stream_view, const t_format_v2_i format);
 
     // ============================================================
 
@@ -337,31 +337,31 @@ namespace zcl {
     t_array_format<tp_arr_type> Format(const tp_arr_type value) { return FormatArray(value); }
 
     template <c_formattable_array tp_arr_type>
-    t_b8 PrintType(const t_stream_view stream, const t_array_format<tp_arr_type> format) {
+    t_b8 PrintType(const t_stream_view stream_view, const t_array_format<tp_arr_type> format) {
         if (format.one_per_line) {
             for (t_i32 i = 0; i < format.value.len; i++) {
-                if (!PrintFormat(stream, ZCL_STR_LITERAL("[%] %%"), i, format.value[i], i < format.value.len - 1 ? ZCL_STR_LITERAL("\n") : ZCL_STR_LITERAL(""))) {
+                if (!PrintFormat(stream_view, ZCL_STR_LITERAL("[%] %%"), i, format.value[i], i < format.value.len - 1 ? ZCL_STR_LITERAL("\n") : ZCL_STR_LITERAL(""))) {
                     return false;
                 }
             }
         } else {
-            if (!Print(stream, ZCL_STR_LITERAL("["))) {
+            if (!Print(stream_view, ZCL_STR_LITERAL("["))) {
                 return false;
             }
 
             for (t_i32 i = 0; i < format.value.len; i++) {
-                if (!PrintFormat(stream, ZCL_STR_LITERAL("%"), format.value[i])) {
+                if (!PrintFormat(stream_view, ZCL_STR_LITERAL("%"), format.value[i])) {
                     return false;
                 }
 
                 if (i < format.value.len - 1) {
-                    if (!Print(stream, ZCL_STR_LITERAL(", "))) {
+                    if (!Print(stream_view, ZCL_STR_LITERAL(", "))) {
                         return false;
                     }
                 }
             }
 
-            if (!Print(stream, ZCL_STR_LITERAL("]"))) {
+            if (!Print(stream_view, ZCL_STR_LITERAL("]"))) {
                 return false;
             }
         }
@@ -396,7 +396,7 @@ namespace zcl {
         return FormatBitset(value, ek_bitset_format_style_seq);
     }
 
-    t_b8 PrintType(const t_stream_view stream, const t_format_bitset format);
+    t_b8 PrintType(const t_stream_view stream_view, const t_format_bitset format);
 
     // ============================================================
 
@@ -406,17 +406,17 @@ namespace zcl {
 
     t_i32 PrintFormatCountSpecs(const t_str_rdonly str);
 
-    inline t_b8 PrintFormat(const t_stream_view stream, const t_str_rdonly format) {
+    inline t_b8 PrintFormat(const t_stream_view stream_view, const t_str_rdonly format) {
         ZCL_ASSERT(PrintFormatCountSpecs(format) == 0);
 
         // Just print the rest of the string.
-        return Print(stream, format);
+        return Print(stream_view, format);
     }
 
     // Use a single '%' as the format specifier. To actually include a '%' in the output, write "^%". To actually include a '^', write "^^".
     // Returns true iff the operation was successful.
     template <typename tp_arg_type, typename... tp_arg_types_leftover>
-    t_b8 PrintFormat(const t_stream_view stream, const t_str_rdonly format, const tp_arg_type &arg, const tp_arg_types_leftover &...args_leftover) {
+    t_b8 PrintFormat(const t_stream_view stream_view, const t_str_rdonly format, const tp_arg_type &arg, const tp_arg_types_leftover &...args_leftover) {
         static_assert(!c_c_str<tp_arg_type>, "C-strings are prohibited from default formatting for error prevention.");
 
         ZCL_ASSERT(PrintFormatCountSpecs(format) == 1 + sizeof...(args_leftover));
@@ -432,21 +432,21 @@ namespace zcl {
                     continue;
                 } else if (format.bytes[i] == k_print_format_spec) {
                     if constexpr (c_format<tp_arg_type>) {
-                        if (!PrintType(stream, arg)) {
+                        if (!PrintType(stream_view, arg)) {
                             return false;
                         }
                     } else {
-                        if (!PrintType(stream, Format(arg))) {
+                        if (!PrintType(stream_view, Format(arg))) {
                             return false;
                         }
                     }
 
                     const t_str_rdonly format_leftover = {ArraySlice(format.bytes, i + 1, format.bytes.len)}; // The substring of everything after the format specifier.
-                    return PrintFormat(stream, format_leftover, args_leftover...);
+                    return PrintFormat(stream_view, format_leftover, args_leftover...);
                 }
             }
 
-            if (!StreamWriteItem(stream, format.bytes[i])) {
+            if (!StreamWriteItem(stream_view, format.bytes[i])) {
                 return false;
             }
 
