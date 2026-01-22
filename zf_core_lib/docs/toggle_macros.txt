@@ -1,0 +1,3 @@
+ZCL_ENABLE_NO_BOUNDS_CHECKING_IN_RELEASE:
+By default, in both debug AND release mode the ZCL array indexing operations have bounds checking and will trigger a fatal error on violation.
+If you don't want the performance cost, define this and there'll be no checking at all IN RELEASE MODE. In debug mode, the checking is still done via asserts.

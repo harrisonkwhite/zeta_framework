@@ -382,7 +382,11 @@ namespace zcl {
         t_i32 len;
 
         constexpr const tp_elem_type &operator[](const t_i32 index) const {
+#ifndef ZCL_ENABLE_NO_BOUNDS_CHECKING_IN_RELEASE
             ZCL_REQUIRE(index >= 0 && index < len);
+#else
+            ZCL_ASSERT(index >= 0 && index < len);
+#endif
             return raw[index];
         }
     };
@@ -395,7 +399,11 @@ namespace zcl {
         t_i32 len;
 
         constexpr tp_elem_type &operator[](const t_i32 index) const {
+#ifndef ZCL_ENABLE_NO_BOUNDS_CHECKING_IN_RELEASE
             ZCL_REQUIRE(index >= 0 && index < len);
+#else
+            ZCL_ASSERT(index >= 0 && index < len);
+#endif
             return raw[index];
         }
 
@@ -413,12 +421,20 @@ namespace zcl {
         tp_elem_type raw[tp_len];
 
         constexpr tp_elem_type &operator[](const t_i32 index) {
+#ifndef ZCL_ENABLE_NO_BOUNDS_CHECKING_IN_RELEASE
             ZCL_REQUIRE(index >= 0 && index < tp_len);
+#else
+            ZCL_ASSERT(index >= 0 && index < tp_len);
+#endif
             return raw[index];
         }
 
         constexpr const tp_elem_type &operator[](const t_i32 index) const {
+#ifndef ZCL_ENABLE_NO_BOUNDS_CHECKING_IN_RELEASE
             ZCL_REQUIRE(index >= 0 && index < tp_len);
+#else
+            ZCL_ASSERT(index >= 0 && index < tp_len);
+#endif
             return raw[index];
         }
 
