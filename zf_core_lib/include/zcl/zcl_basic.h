@@ -553,7 +553,7 @@ namespace zcl {
     enum t_arena_type : t_i32 {
         ek_arena_type_invalid,
         ek_arena_type_block_based, // Owns its memory, which is organised as a linked list of dynamically allocated blocks. New blocks are allocated as needed.
-        ek_arena_type_wrapping     // Non-owning and non-reallocating. Useful if you want to leverage a stack-allocated buffer for example. @todo: Probably not a good name.
+        ek_arena_type_wrapping     // Non-owning and non-reallocating. Useful if you want to leverage a stack-allocated buffer for example.
     };
 
     struct t_arena {

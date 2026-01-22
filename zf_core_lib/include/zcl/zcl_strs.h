@@ -150,11 +150,18 @@ namespace zcl {
     // Sets the bits associated with each unicode code point that appear in the string. No bits get unset.
     void StrMarkCodePoints(const t_str_rdonly str, t_code_point_bitset *const code_pts);
 
-    // @todo: Maybe also provide code_pt_index? Idk.
-    struct t_str_walk_step {
-        t_code_point code_pt;
+    struct t_str_walk_state {
+        t_i32 code_pt_index;
         t_i32 byte_index;
     };
+
+    struct t_str_walk_step {
+        t_code_point code_pt;
+        t_i32 code_pt_index;
+        t_i32 byte_index;
+    };
+
+    t_b8 StrWalkNew(const t_str_rdonly str, t_str_walk_state *const state, t_str_walk_step *const o_step);
 
     // byte_index should be initialized to the index of ANY byte in the code point to start walking from.
     // Returns false iff the walk has ended.
