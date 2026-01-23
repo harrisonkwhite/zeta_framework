@@ -4,7 +4,7 @@ This is a data-oriented framework for developing 2D games for Windows, Mac, and 
 
 It was originally written in C, though has been switched to a highly procedural subset of C++ 20 to leverage useful features like templates, operator overloading, function overloading, and more.
 
-You can find it being put to use in my in-development game [Kaōzeth](https://github.com/harrisonkwhite/kaozeth).
+A minimal template for creating a game with this framework can be found [here](https://github.com/harrisonkwhite/zf_game_template).
 
 ---
 
