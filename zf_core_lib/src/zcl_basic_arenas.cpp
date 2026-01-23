@@ -49,7 +49,7 @@ namespace zcl {
         return block;
     }
 
-    void *ArenaPush(t_arena *const arena, const t_i32 size, const t_i32 alignment) {
+    void *ArenaPushRaw(t_arena *const arena, const t_i32 size, const t_i32 alignment) {
         ZCL_ASSERT(size > 0 && AlignmentCheckValid(alignment));
 
         switch (arena->type) {
@@ -59,7 +59,7 @@ namespace zcl {
             if (!block_based->blocks_head) {
                 block_based->blocks_head = ArenaCreateBlock(CalcMax(size, block_based->block_min_size));
                 block_based->block_cur = block_based->blocks_head;
-                return ArenaPush(arena, size, alignment);
+                return ArenaPushRaw(arena, size, alignment);
             }
 
             const t_i32 offs_aligned = AlignForward(block_based->block_cur_offs, alignment);
@@ -73,7 +73,7 @@ namespace zcl {
                 block_based->block_cur = block_based->block_cur->next;
                 block_based->block_cur_offs = 0;
 
-                return ArenaPush(arena, size, alignment);
+                return ArenaPushRaw(arena, size, alignment);
             }
 
             block_based->block_cur_offs = offs_next;

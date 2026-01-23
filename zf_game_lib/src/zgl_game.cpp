@@ -37,7 +37,7 @@ namespace zgl {
 
         zcl::ArenaRewind(&temp_arena);
 
-        void *const user_mem = config.user_mem_size > 0 ? zcl::ArenaPush(&perm_arena, config.user_mem_size, config.user_mem_alignment) : nullptr;
+        void *const user_mem = config.user_mem_size > 0 ? zcl::ArenaPushRaw(&perm_arena, config.user_mem_size, config.user_mem_alignment) : nullptr;
 
         config.init_func({
             .perm_arena = &perm_arena,

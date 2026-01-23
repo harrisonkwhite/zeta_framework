@@ -51,7 +51,7 @@ namespace zcl {
 
     template <c_kv_store_key tp_key_type, c_kv_store_value tp_value_type>
     t_kv_store_block<tp_key_type, tp_value_type> *KVStoreCreateBlock(const t_i32 cap, t_arena *const arena) {
-        const auto block = ArenaPushItem<t_kv_store_block<tp_key_type, tp_value_type>>(arena);
+        const auto block = ArenaPush<t_kv_store_block<tp_key_type, tp_value_type>>(arena);
 
         block->keys = ArenaPushArray<tp_key_type>(arena, cap);
 

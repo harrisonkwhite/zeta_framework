@@ -13,7 +13,7 @@ namespace zgl {
     t_sound_type_group *SoundTypeGroupCreate(const t_audio_ticket_mut audio_ticket, zcl::t_arena *const arena) {
         ZCL_ASSERT(TicketCheckValid(audio_ticket));
 
-        const auto result = zcl::ArenaPushItem<t_sound_type_group>(arena);
+        const auto result = zcl::ArenaPush<t_sound_type_group>(arena);
         result->valid = true;
         result->arena = arena;
 
@@ -39,7 +39,7 @@ namespace zgl {
     }
 
     static t_sound_type *SoundTypeGroupAdd(t_sound_type_group *const group) {
-        const auto result = zcl::ArenaPushItem<t_sound_type>(group->arena);
+        const auto result = zcl::ArenaPush<t_sound_type>(group->arena);
         result->valid = true;
 
         if (!group->head) {

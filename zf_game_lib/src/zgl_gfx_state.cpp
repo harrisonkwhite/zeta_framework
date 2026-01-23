@@ -101,7 +101,7 @@ namespace zgl {
         ZCL_ASSERT(g_state.phase == ek_phase_active_but_not_midframe);
         ZCL_ASSERT(TicketCheckValid(gfx_ticket));
 
-        const auto result = zcl::ArenaPushItem<t_gfx_resource_group>(arena);
+        const auto result = zcl::ArenaPush<t_gfx_resource_group>(arena);
         result->arena = arena;
 
         return result;
@@ -151,7 +151,7 @@ namespace zgl {
     static t_gfx_resource *GFXResourceGroupAdd(t_gfx_resource_group *const group) {
         ZCL_ASSERT(g_state.phase == ek_phase_active_but_not_midframe);
 
-        const auto resource = zcl::ArenaPushItem<t_gfx_resource>(group->arena);
+        const auto resource = zcl::ArenaPush<t_gfx_resource>(group->arena);
 
         if (!group->head) {
             group->head = resource;

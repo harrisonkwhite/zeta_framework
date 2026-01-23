@@ -619,13 +619,13 @@ namespace zcl {
 
     // Will lazily allocate memory as needed. Allocation failure is treated as fatal and causes an abort - you don't need to check for nullptr.
     // The returned buffer is guaranteed to be zeroed.
-    void *ArenaPush(t_arena *const arena, const t_i32 size, const t_i32 alignment);
+    void *ArenaPushRaw(t_arena *const arena, const t_i32 size, const t_i32 alignment);
 
     // Will lazily allocate memory as needed. Allocation failure is treated as fatal and causes an abort - you don't need to check for nullptr.
     // The returned item is guaranteed to be zeroed.
     template <c_simple tp_type>
-    tp_type *ArenaPushItem(t_arena *const arena) {
-        return static_cast<tp_type *>(ArenaPush(arena, ZCL_SIZE_OF(tp_type), ZCL_ALIGN_OF(tp_type)));
+    tp_type *ArenaPush(t_arena *const arena) {
+        return static_cast<tp_type *>(ArenaPushRaw(arena, ZCL_SIZE_OF(tp_type), ZCL_ALIGN_OF(tp_type)));
     }
 
     template <c_array_elem tp_elem_type>
@@ -637,7 +637,7 @@ namespace zcl {
         }
 
         const t_i32 size = ZCL_SIZE_OF(tp_elem_type) * len;
-        return {static_cast<tp_elem_type *>(ArenaPush(arena, size, ZCL_ALIGN_OF(tp_elem_type))), len};
+        return {static_cast<tp_elem_type *>(ArenaPushRaw(arena, size, ZCL_ALIGN_OF(tp_elem_type))), len};
     }
 
     template <c_array tp_arr_type>

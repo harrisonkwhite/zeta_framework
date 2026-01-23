@@ -38,7 +38,7 @@ namespace zgl {
     };
 
     t_input_state *internal::InputCreateState(zcl::t_arena *const arena) {
-        return zcl::ArenaPushItem<t_input_state>(arena);
+        return zcl::ArenaPush<t_input_state>(arena);
     }
 
     void internal::InputClearEvents(t_input_state *const state) {

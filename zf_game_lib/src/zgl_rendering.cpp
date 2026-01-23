@@ -46,7 +46,7 @@ namespace zgl {
     t_rendering_basis *internal::RenderingBasisCreate(const zcl::t_i32 frame_vertex_limit, const t_gfx_ticket_mut gfx_ticket, zcl::t_arena *const arena, zcl::t_arena *const temp_arena) {
         ZCL_ASSERT(frame_vertex_limit > 0);
 
-        const auto basis = zcl::ArenaPushItem<t_rendering_basis>(arena);
+        const auto basis = zcl::ArenaPush<t_rendering_basis>(arena);
 
         basis->perm_resource_group = GFXResourceGroupCreate(gfx_ticket, arena);
 
@@ -125,7 +125,7 @@ namespace zgl {
 
         return {
             .basis = rendering_basis,
-            .state = zcl::ArenaPushItem<t_rendering_state>(rendering_state_arena),
+            .state = zcl::ArenaPush<t_rendering_state>(rendering_state_arena),
             .gfx_ticket = gfx_ticket,
         };
     }

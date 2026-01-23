@@ -118,7 +118,7 @@ constexpr zcl::t_static_array<t_asset_field, ekm_sound_field_cnt> k_sound_fields
 }
 
 [[nodiscard]] static zcl::t_b8 BuildFont(const zcl::t_str_rdonly file_path, const zcl::t_i32 height, const zcl::t_str_rdonly extra_chrs_file_path, const zcl::t_str_rdonly out_file_path, zcl::t_arena *const temp_arena) {
-    const auto code_pt_bs = zcl::ArenaPushItem<zcl::t_code_point_bitset>(temp_arena);
+    const auto code_pt_bs = zcl::ArenaPush<zcl::t_code_point_bitset>(temp_arena);
 
     if (height <= 0) {
         zcl::LogError(ZCL_STR_LITERAL("Invalid font height %! Must be greater than 0."), height);

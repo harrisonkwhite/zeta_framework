@@ -60,7 +60,7 @@ namespace zcl {
     }
 
     t_rng *RNGCreate(const t_u64 seed, t_arena *const arena) {
-        const auto rng = ArenaPushItem<t_rng>(arena);
+        const auto rng = ArenaPush<t_rng>(arena);
         RNGSeed(rng, seed);
         return rng;
     }
