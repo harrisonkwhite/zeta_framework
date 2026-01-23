@@ -18,7 +18,7 @@ add_subdirectory(external/bgfx_cmake)
 
 add_subdirectory(external/reproc)
 
-set(CMAKE_FOLDER "zeta_framework")
+set(CMAKE_FOLDER "${PROJECT_NAME}")
 add_subdirectory(zf_core_lib)
 add_subdirectory(zf_bin_to_array)
 add_subdirectory(zf_asset_builder)
@@ -28,24 +28,24 @@ unset(CMAKE_FOLDER)
 
 foreach(t bgfx bx bimg bimg_decode bimg_encode)
     if (TARGET ${t})
-        set_target_properties(${t} PROPERTIES FOLDER "zeta_framework/external/bgfx")
+        set_target_properties(${t} PROPERTIES FOLDER "${PROJECT_NAME}/external/bgfx")
     endif()
 endforeach()
 
 if (TARGET examples)
     set_target_properties(examples PROPERTIES
-        FOLDER "zeta_framework/external/bgfx"
+        FOLDER "${PROJECT_NAME}/external/bgfx"
         EXCLUDE_FROM_ALL TRUE
     )
 endif()
 
 foreach(t glfw uninstall update_mappings)
     if (TARGET ${t})
-        set_target_properties(${t} PROPERTIES FOLDER "zeta_framework/external/GLFW3")
+        set_target_properties(${t} PROPERTIES FOLDER "${PROJECT_NAME}/external/GLFW3")
     endif()
 endforeach()
 
-set_target_properties(reproc PROPERTIES FOLDER "zeta_framework/external/reproc")
+set_target_properties(reproc PROPERTIES FOLDER "${PROJECT_NAME}/external/reproc")
 
 set(_NO_WARNINGS
   $<$<CXX_COMPILER_ID:MSVC>:/W0>
