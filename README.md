@@ -54,23 +54,32 @@ zf_tests: Depends on ZGL and therefore ZCL. Has standard unit tests for things i
 
 This section exists basically to explain why I created this framework in the first place, and what the rationale was behind particular non-obvious design decisions.
 
-### Introduction
+It is semi-auto-biographical mainly to explain my experiences that shaped how I designed this framework.
+
+### Background
 
 For context, I began programming with GameMaker as a child, and in my mid-teens moved over to C# with MonoGame. In recent years I've moved over to C/C++ and data-oriented styles of programming.
 
 I think MonoGame is a great framework, the only problem I have is that it uses C#. C# enforces object orientation, which at least for game development I think is quite counter-productive (I'll get to why below).
 
-My past experiences have shaped my approach.
+#### Influence of GameMaker: Studio
 
-So when I was developing MANIC.
+MANIC is a game I developed over about 2.5 years using GameMaker, and my experience with that in particular has very much influenced by approach to designing this framework.
+As MANIC grew I increasingly found state management became more complex. Part of this was of course my lack of experience as a programmer, and part of it I would attribute to the intensely global nature of that engine. For context, GameMaker itself is built on an object system. Considering that it is targeted for beginners, I think this very reasonable. Humans think of reality very much in terms of objects, and games are in a sense an abstraction of reality, so when a new person to programming comes along and wants to make a game, their mental model of a game is likely that it's a world comprised of objects.
 
-So GameMaker itself is built on an object system. Considering that it is targeted for beginners, I think this very reasonable. Humans think of reality very much in terms of objects, and games are in a sense an abstraction of reality, so when a new person to programming comes along and wants to make a game, their mental model of a game is likely that it's a world comprised of objects.
+#### Influence of C# with XNA / MonoGame
+
+After that project I wanted to "step up" into a framework that was more sophisticated for me.
+
+A big part of the appeal of MonoGame to me was how much flexibility it gave you.
 
 Personally I think that rather than emphasising objects, games are much better off organised in terms of explicit procedures, and the subset of read-only vs. mutable state that these procedures are exposed to.
 
 The basic designing principle of this framework was "GameMaker for more experienced programmers". So I wanted to at least get close to the same expressive power that GameMaker offers for 2D game development, but structure it for programmers who know how to effectively do memory management and set up systems tailored specifically to the game they are making. Another accurate framing of it would be "MonoGame but in C/C++".
 
-RayLib is close to this, but there are some key differences:
+#### Influence of RayLib
+
+RayLib is not a framework that I have much personal experience in, but as an outsider there are some key differences between ZF and RayLib that I think are worth noting:
 - RayLib both is and is marketed as being beginner-friendly and more built for toy projects. With ZF, I wanted to create a framework that could scale for more serious 2D indie projects.
 - RayLib solely uses OpenGL, which has been deprecated on MacOS. I wanted ZF to truly be cross-platform at the very least on Windows, Mac, and Linux.
 - RayLib is only in C. Although ZF is largely written C-style, I thought it'd be useful to leverage some of the useful features of C++ to make programming less of a hassle (see below).
@@ -180,6 +189,12 @@ Yeah!
 **Tickets**
 
 Wow!
+
+Certain modules/subsystems in ZGL have encapsulated global state by necessity, namely the platform, GFX, and audio modules.
+
+As I learnt from my experience developing a relatively large GameMaker project, untamed global state can very easily destroy the stability of a project.
+
+To fix this, I set up a "ticket" system. Essentially, if a function wants to mutate the global state of one of these subsystems (via their public interfaces), it has
 
 <br>
 
