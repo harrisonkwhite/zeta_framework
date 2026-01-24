@@ -8,7 +8,7 @@ A minimal template for creating a game with this framework can be found [here](h
 
 ---
 
-## Features
+## Key Features
 
 - A well-defined init-tick-render-cleanup structure to work within
 - Input handling for keyboard, mouse, and gamepad
@@ -36,11 +36,23 @@ cmake ..
 
 ---
 
-## Structure
+## High-Level Structure (W.I.P.)
 
-zf_game_lib (ZGL):
+zf_core_lib (ZCL): A generic utilities library with essentials for ZF-style coding, like arenas, UTF-8 strings, etc. It also has some GFX and audio helpers so both ZGL and the asset builder can use them. Has *very* minimal global state.
+
+zf_game_lib (ZGL): Depends on ZCL. More explicitly organised into modules, though not all modules have internal global state.
+
+zf_asset_builder: Depends on ZCL. Builds ZF-specific asset files from raw ones like ".png", ".ttf", ".wav", etc. for use in ZGL. This is totally optional but recommended.
+
+zf_bin_to_array: A simple tool that takes in a filename and spits out a C++ source file containing the binary blob as a constant. The only reason this exists is so that compiled shader files can be accessed in the code as binary blobs. But you might find it useful for something else.
+
+zf_tests: Depends on ZGL and therefore ZCL. Has standard unit tests for things in both.
+
+---
 
 ## Rationale (W.I.P.)
+
+This section exists basically to explain why I created this framework in the first place, and what the rationale was behind particular non-obvious design decisions.
 
 ### Introduction
 
@@ -185,7 +197,7 @@ Kinda needed!
 
 **Misc. Style Choices**
 
-No methods at all aside from operator overloads (including cast operators). This is really just for API consistency.
+There are strictly no methods at all aside from operator overloads (including cast operators), even in cases where there is a very strong correlation between function and data type (e.g. things like HashMapPut()). This is really just to keep the codebase consistent and predictable from a cosmetic standpoint.
 
 <br>
 
