@@ -36,17 +36,17 @@ cmake ..
 
 ---
 
-## High-Level Structure (W.I.P.)
+## High-Level Structure
 
-**zf_core_lib (ZCL):** A generic utilities library with essentials for ZF-style coding, like arenas, UTF-8 strings, etc. It also has some GFX and audio helpers so both ZGL and the asset builder can use them. Has *very* minimal global state.
+**zf_core_lib (ZCL):** A generic utilities library with procedural-style helpers for things like memory arenas, UTF-8 strings, hash maps, and so on. It also has some GFX and audio helpers so both ZGL and the asset builder can use them. Intentionally has *very* minimal explicit global state (the code for handling fatal errors has some).
 
-**zf_game_lib (ZGL):** Depends on ZCL. More explicitly organised into modules, though not all modules have internal global state.
+**zf_game_lib (ZGL):** A library specifically for supporting the game executable, containing the platform layer, rendering system, audio system, and so on. Is more explicitly organised into modules, most of which have encapsulated global state out of necessity.
 
-**zf_asset_builder:** Depends on ZCL. Builds ZF-specific asset files from raw ones like ".png", ".ttf", ".wav", etc. for use in ZGL. This is totally optional but recommended.
+**zf_bin_to_array:** A simple tool that takes in a filename and spits out a C++ source file containing the binary blob as a constant. The only reason this exists is so that compiled shader files can be accessed in ZGL code as binary blobs. But you might find it useful for something else.
 
-**zf_bin_to_array:** A simple tool that takes in a filename and spits out a C++ source file containing the binary blob as a constant. The only reason this exists is so that compiled shader files can be accessed in the code as binary blobs. But you might find it useful for something else.
+**zf_asset_builder:** Builds ZF-specific asset files from raw ones like ".png", ".ttf", ".wav", etc. for use in ZGL. This is totally optional but recommended.
 
-**zf_tests:** Depends on ZGL and therefore ZCL. Has standard unit tests for things in both.
+**zf_tests:** Has simple unit tests for various things in both ZCL and ZGL.
 
 ---
 
@@ -73,8 +73,6 @@ My two main inspirations for choosing MonoGame were:
 1. The livestreams Notch, the creator of Minecraft, did of him creating some Ludum Dare games. He used Java though, but that's still very close to C#.
 2. The indie games already made with it, namely Terraria (which actually used XNA, but close enough) and Stardew Valley.
 
-I was inspired by the livestreams that Notch, the creator of Minecraft, did for his games. He used Java.
-
 Likewise with GameMaker, I made quite a few jam games with C# and MonoGame. But the largest project I worked on, which eventually got cancelled, was a project 
 
 Personally I think that rather than emphasising objects, games are much better off organised in terms of explicit procedures, and the subset of read-only vs. mutable state that these procedures are exposed to.
@@ -85,13 +83,15 @@ I think MonoGame is a great framework, the only problem I have is that it uses C
 
 The basic designing principle of this framework was "GameMaker for more experienced programmers". So I wanted to at least get close to the same expressive power that GameMaker offers for 2D game development, but structure it for programmers who know how to effectively do memory management and set up systems tailored specifically to the game they are making. Another accurate framing of it would be "MonoGame but in C/C++".
 
-#### Influence of RayLib
+#### "Why not just use RayLib?"
 
-RayLib is not a framework that I have much personal experience in, but as an outsider there are some key differences between ZF and RayLib that I think are worth noting:
+RayLib is not a framework that I have much personal experience in, but from outside observations there are some key differences between ZF and RayLib that I think are worth noting:
 - RayLib both is and is marketed as being beginner-friendly and more built for toy projects. With ZF, I wanted to create a framework that could scale for more serious 2D indie projects.
 - RayLib solely uses OpenGL, which has been deprecated on MacOS. I wanted ZF to truly be cross-platform at the very least on Windows, Mac, and Linux.
 - RayLib is only in C. Although ZF is largely written C-style, I thought it'd be useful to leverage some of the useful features of C++ to make programming less of a hassle (see below).
 - RayLib is very loose in its global state. This is a pain point I had when working with GameMaker. This is useful for small projects where you just want to get the job done fast, but for large projects becomes a serious pain. In ZF, certain systems are global by necessity, but there are systems in place (see below) to make it more manageable.
+
+I also wanted to the educational experience of building my own framework.
 
 ### Notable Design Decisions
 
