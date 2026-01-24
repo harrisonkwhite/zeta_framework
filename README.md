@@ -48,13 +48,51 @@ So when I was developing MANIC.
 
 So GameMaker itself is built on an object system. Considering that it is targeted for beginners, I think this very reasonable. Humans think of reality very much in terms of objects, and games are in a sense an abstraction of reality, so when a new person to programming comes along and wants to make a game, their mental model of a game is likely that it's a world comprised of objects.
 
+Personally I think that rather than emphasising objects, games are much better off organised in terms of explicit procedures, and the subset of read-only vs. mutable state that these procedures are exposed to.
+
 The basic designing principle of this framework was "GameMaker for more experienced programmers". So I wanted to at least get close to the same expressive power that GameMaker offers for 2D game development, but structure it for programmers who know how to effectively do memory management and set up systems tailored specifically to the game they are making. Another accurate framing of it would be "MonoGame but in C/C++".
 
 RayLib is close to this, but there are some key differences:
 - RayLib both is and is marketed as being beginner-friendly and more built for toy projects. With ZF, I wanted to create a framework that could scale for more serious 2D indie projects.
-- RayLib solely uses OpenGL, which has been deprecated on MacOS. I wanted ZF to truly be cross-platform at least on Windows, Mac, and Linux.
-- RayLib is only in C. Although ZF is also in a procedural style, I thought it'd be useful to leverage some of the useful features of C++ to make programming less of a hassle.
+- RayLib solely uses OpenGL, which has been deprecated on MacOS. I wanted ZF to truly be cross-platform at the very least on Windows, Mac, and Linux.
+- RayLib is only in C. Although ZF is largely written C-style, I thought it'd be useful to leverage some of the useful features of C++ to make programming less of a hassle (see below).
 - RayLib is very loose in its global state. This is a pain point I had when working with GameMaker. This is useful for small projects where you just want to get the job done fast, but for large projects becomes a serious pain. In ZF, certain systems are global by necessity, but there are systems in place (see below) to make it more manageable.
+
+There are some very important fundamental design decisions in ZF that are worth explaining:
+Memory Arenas:
+- So with games of the scope that I've worked with, I find it extremely simple to organise memory and resource lifetimes.
+- Ownership
+- Downsides (object-level encapsulation usually impossible)
+
+Resource Groups:
+
+Defer:
+- Controversial, wow!
+
+Module-level encapsulation:
+- 
+
+Unique string system (UTF-8 and non-terminated):
+- 
+
+Custom Print Function:
+- 
+
+Tickets:
+- Wow!
+
+Asset Builder:
+-
+
+Template and concept usage:
+- 
+
+Misc. Style Things:
+- No methods at all aside from operator overloads (including cast operators). This is really just for API consistency.
+
+Fatal Errors:
+- Was quite hard for me to do
+- No exceptions
 
 There are some common game engine features intentionally absent from ZF. Most significantly, there is no form of ECS nor any scene system.
 
