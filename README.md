@@ -38,15 +38,15 @@ cmake ..
 
 ## High-Level Structure (W.I.P.)
 
-zf_core_lib (ZCL): A generic utilities library with essentials for ZF-style coding, like arenas, UTF-8 strings, etc. It also has some GFX and audio helpers so both ZGL and the asset builder can use them. Has *very* minimal global state.
+**zf_core_lib (ZCL):** A generic utilities library with essentials for ZF-style coding, like arenas, UTF-8 strings, etc. It also has some GFX and audio helpers so both ZGL and the asset builder can use them. Has *very* minimal global state.
 
-zf_game_lib (ZGL): Depends on ZCL. More explicitly organised into modules, though not all modules have internal global state.
+**zf_game_lib (ZGL):** Depends on ZCL. More explicitly organised into modules, though not all modules have internal global state.
 
-zf_asset_builder: Depends on ZCL. Builds ZF-specific asset files from raw ones like ".png", ".ttf", ".wav", etc. for use in ZGL. This is totally optional but recommended.
+**zf_asset_builder:** Depends on ZCL. Builds ZF-specific asset files from raw ones like ".png", ".ttf", ".wav", etc. for use in ZGL. This is totally optional but recommended.
 
-zf_bin_to_array: A simple tool that takes in a filename and spits out a C++ source file containing the binary blob as a constant. The only reason this exists is so that compiled shader files can be accessed in the code as binary blobs. But you might find it useful for something else.
+**zf_bin_to_array:** A simple tool that takes in a filename and spits out a C++ source file containing the binary blob as a constant. The only reason this exists is so that compiled shader files can be accessed in the code as binary blobs. But you might find it useful for something else.
 
-zf_tests: Depends on ZGL and therefore ZCL. Has standard unit tests for things in both.
+**zf_tests:** Depends on ZGL and therefore ZCL. Has standard unit tests for things in both.
 
 ---
 
@@ -54,26 +54,34 @@ zf_tests: Depends on ZGL and therefore ZCL. Has standard unit tests for things i
 
 This section exists basically to explain why I created this framework in the first place, and what the rationale was behind particular non-obvious design decisions.
 
-It is semi-auto-biographical mainly to explain my experiences that shaped how I designed this framework.
+### Personal Background
 
-### Background
-
-For context, I began programming with GameMaker as a child, and in my mid-teens moved over to C# with MonoGame. In recent years I've moved over to C/C++ and data-oriented styles of programming.
-
-I think MonoGame is a great framework, the only problem I have is that it uses C#. C# enforces object orientation, which at least for game development I think is quite counter-productive (I'll get to why below).
+I think laying out my personal history with programming might provide some context as to how and why I got to making this framework.
 
 #### Influence of GameMaker: Studio
 
-MANIC is a game I developed over about 2.5 years using GameMaker, and my experience with that in particular has very much influenced by approach to designing this framework.
-As MANIC grew I increasingly found state management became more complex. Part of this was of course my lack of experience as a programmer, and part of it I would attribute to the intensely global nature of that engine. For context, GameMaker itself is built on an object system. Considering that it is targeted for beginners, I think this very reasonable. Humans think of reality very much in terms of objects, and games are in a sense an abstraction of reality, so when a new person to programming comes along and wants to make a game, their mental model of a game is likely that it's a world comprised of objects.
+(Note that this is written based on the state of GameMaker: Studio and GameMaker: Studio 2 around the 2014 to 2020 period, I'm not sure what it's like today.)
+
+So my first ever experiences with programming were as a child with the GameMaker: Studio engine. I made many small-to-mid-sized games with it, but the project that had the biggest influence on my programming was MANIC, which I started working on when I was about 14 and it took 2.5 years to complete. As the project progressed I found state management increasingly difficult. Part of this was of course my lack of experience as a programmer, but a lot of it I would attribute to the intensely global nature of that engine. For context, GameMaker itself is built on an object system. Considering that it is targeted for beginners, I think this very reasonable. I think humans see reality very much in terms of objects, and games are in a sense an abstraction of reality, so when a new person to programming comes along and wants to make a game, their mental model of a game is likely that it's a world comprised of objects. But the engine isn't object-oriented the sense that there are mechanisms for encapsulation and object-level public/private state distinction. Instead, any object can freely modify the state of any other object.
 
 #### Influence of C# with XNA / MonoGame
 
-After that project I wanted to "step up" into a framework that was more sophisticated for me.
+After that project I wanted to "step up" into an engine/framework that was more of a challenge for me, which became MonoGame. MonoGame is an open-source continuation of the XNA Framework and uses C#.
 
-A big part of the appeal of MonoGame to me was how much flexibility it gave you.
+My two main inspirations for choosing MonoGame were:
+
+1. The livestreams Notch, the creator of Minecraft, did of him creating some Ludum Dare games. He used Java though, but that's still very close to C#.
+2. The indie games already made with it, namely Terraria (which actually used XNA, but close enough) and Stardew Valley.
+
+I was inspired by the livestreams that Notch, the creator of Minecraft, did for his games. He used Java.
+
+Likewise with GameMaker, I made quite a few jam games with C# and MonoGame. But the largest project I worked on, which eventually got cancelled, was a project 
 
 Personally I think that rather than emphasising objects, games are much better off organised in terms of explicit procedures, and the subset of read-only vs. mutable state that these procedures are exposed to.
+
+I think MonoGame is a great framework, the only problem I have is that it uses C#. C# enforces object orientation, which at least for game development I think is quite counter-productive (I'll get to why below).
+
+#### Conclusion
 
 The basic designing principle of this framework was "GameMaker for more experienced programmers". So I wanted to at least get close to the same expressive power that GameMaker offers for 2D game development, but structure it for programmers who know how to effectively do memory management and set up systems tailored specifically to the game they are making. Another accurate framing of it would be "MonoGame but in C/C++".
 
