@@ -212,6 +212,10 @@ No exceptions!
 
 There are some common game engine features intentionally absent from ZF. Most significantly, there is no form of ECS nor any scene system.
 
+As established, this framework is not designed for beginners. I think that the way you would go about entity systems is very much dependent on the specific game you're making, and in particular cases you don't even need such a system. You might argue that an optional generic ECS could be useful for game jams and prototypes, but I disagree - in such a context you're generally better off not using any kind of entity system and just going with the simplest, dumbest system (e.g. an array of entity structs each containing a discriminated union on the entity type).
+
+There is no "scene" or "room" system for the same reason - the way you set this up is very game specific.
+
 <br>
 
 ---
