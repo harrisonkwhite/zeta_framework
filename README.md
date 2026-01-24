@@ -82,7 +82,25 @@ C++ does indeed have useful quality of life features even if
 
 **Heavy Emphasis on Read-Only vs. Mutable Data**
 
-This is unique to meeeee.
+This is probably the most unusual aspect of the code base. I put "const" on absolutely everything, and I also have mutable vs. readonly variations on quite a few structs (in places where it's useful).
+
+This is a technique that I learnt from reading John Carmack's article on functional programming, and it's honestly one of the best things I've ever adopted into my coding style.
+
+I think his argument that the vast majority of bugs in programming can be attributed to the state not being what you think it is is very reasonable. And so it makes sense that you'd want set up mechanisms to .
+
+I've personally found that the main benefit isn't actually the compile-error level of protection it gives you over state mutation, but more the way it changes how you think.
+
+I conceptualise a function very much as a procedure that is exposed some set of read-only state.
+
+So let's consider a function whose sole purpose is to render something. Let's say it's the root render function of your game.
+
+What you can do is expose to this function a READ-ONLY VIEW of the game state. This makes it very clear that the sole purpose of the function is to, from a snapshot of the game state.
+
+If this wasn't there, you might at some point be tempted to add some hidden little state mutation within a render function. For example, in a PlayerRender() function, you might mutate the player's rotation to point to the cursor... now all of a sudden your tick logic and render logic are dealing with a completely different versions of the player! You can "enforce" these things through documentation, sure, but compile-time checks via things like const are always going to be better in my opinion.
+
+So if you think of a function for example, what you might want to do is expose 
+
+If I was ever to design my own programming language (and I did seriously consider that at one point), this would be hugely emphasised.
 
 <br>
 
