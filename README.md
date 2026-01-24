@@ -137,7 +137,11 @@ More details on how they are implemented can be found in the code.
 
 This is inspired by my brief time working with the language Odin (I think Go might have this as well, though I've never used that language).
 
-For those that work in procedural programming styles, the concept of a "defer" statement is quite controversial.
+In ZF, there is a ZCL_DEFER helper macro that essentially defers running the given function body until the end of the scope (internally it's literally just a struct containing a function pointer that gets called in the destructor).
+
+This is really useful for STANDALONE resource allocations where you want to make sure you don't forget to deallocate, most notably file streams.
+
+It is a bit of a controversial concept however. The main counterargument, which has been posed by Eskil Steenberg, is that they add more obfuscation to the control flow and make it more challenging to mentally map C code to assembly instructions. I agree that this is a downside, however I think the benefit of being more certain that something gets deallocated outweighs it, which I why I like to (sparingly) use it in ZF.
 
 Controversial, wow!
 
