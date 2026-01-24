@@ -36,6 +36,10 @@ cmake ..
 
 ---
 
+## Structure
+
+zf_game_lib (ZGL):
+
 ## Rationale (W.I.P.)
 
 ### Introduction
@@ -94,13 +98,11 @@ I conceptualise a function very much as a procedure that is exposed some set of 
 
 So let's consider a function whose sole purpose is to render something. Let's say it's the root render function of your game.
 
-What you can do is expose to this function a READ-ONLY VIEW of the game state. This makes it very clear that the sole purpose of the function is to, from a snapshot of the game state.
-
-If this wasn't there, you might at some point be tempted to add some hidden little state mutation within a render function. For example, in a PlayerRender() function, you might mutate the player's rotation to point to the cursor... now all of a sudden your tick logic and render logic are dealing with a completely different versions of the player! You can "enforce" these things through documentation, sure, but compile-time checks via things like const are always going to be better in my opinion.
-
-So if you think of a function for example, what you might want to do is expose 
+What you can do is expose to this function a READ-ONLY VIEW of the game state. This makes it very clear that the sole purpose of the function is to, from a snapshot of the game state, produce a frame (which might take the form of a sequence of render instructions). If the game state instead wasn't marked as const, you might at some point be tempted to add some hidden little state mutation within a render function. For example, in a PlayerRender() function, you might mutate the player's rotation to point to the cursor... now all of a sudden your tick logic and render logic are dealing with a completely different versions of the player! You can "enforce" these things through documentation, sure, but compile-time checks via things like const are always going to be better in my opinion.
 
 If I was ever to design my own programming language (and I did seriously consider that at one point), this would be hugely emphasised.
+
+Although I do align with many of the design philosophies underpinning the Odin langauge, from my brief experiments with it, the decision to completely remove const from the language and any form of read-only vs. mutable control really puts me off.
 
 <br>
 
@@ -123,7 +125,11 @@ And for a
 
 **Resource Groups**
 
-Gotta explain!
+So in ZGL, whenever you want to create a GFX resource (e.g. a texture, a shader program, etc.) you need to supply a "GFX resource group". Likewise for sound types, if you want to create one you need to supply a "sound type group".
+
+These "groups" are very similar in nature to memory arenas, in the sense that resources are continuously "pushed" onto them and all resources of the group can be freed at once.
+
+More details on how they are implemented can be found in the code.
 
 <br>
 
