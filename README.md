@@ -38,6 +38,8 @@ cmake ..
 
 ## Rationale (W.I.P.)
 
+### Introduction
+
 For context, I began programming with GameMaker as a child, and in my mid-teens moved over to C# with MonoGame. In recent years I've moved over to C/C++ and data-oriented styles of programming.
 
 I think MonoGame is a great framework, the only problem I have is that it uses C#. C# enforces object orientation, which at least for game development I think is quite counter-productive (I'll get to why below).
@@ -58,12 +60,33 @@ RayLib is close to this, but there are some key differences:
 - RayLib is only in C. Although ZF is largely written C-style, I thought it'd be useful to leverage some of the useful features of C++ to make programming less of a hassle (see below).
 - RayLib is very loose in its global state. This is a pain point I had when working with GameMaker. This is useful for small projects where you just want to get the job done fast, but for large projects becomes a serious pain. In ZF, certain systems are global by necessity, but there are systems in place (see below) to make it more manageable.
 
+### Notable Design Decisions
+
 There are some very important fundamental design decisions in ZF, many of which go against standard practice, that are worth explaining:
 
-Use of an STL "Replacement":
-- The ZF core library is not at all "better" than the C++ STL (that would be a stupidly arrogant thing to say). The reason the STL is very minimally used is because it's written from a completely different design philosophy, one which emphasises RAII, object orientation, etc.
+<br>
 
-Memory Arenas:
+**Use of an STL "Replacement"**
+
+The ZF core library is not at all "better" than the C++ STL (that would be a stupidly arrogant thing to say). The reason the STL is very minimally used is because it's written from a completely different design philosophy, one which emphasises RAII, object orientation, etc. The discrepancies between the design philosophies of the STL and ZF should become much clearer as you read on.
+
+<br>
+
+**"Procedural C++"**
+
+This choice of language style was . The context that ZF actually began in C, not C++, might help to explain.
+
+C++ does indeed have useful quality of life features even if 
+
+<br>
+
+**Heavy Emphasis on Read-Only vs. Mutable Data**
+
+This is unique to meeeee.
+
+<br>
+
+**Memory Arenas**
 
 So with games of the scope that I've worked with, I find it extremely simple to organise memory and resource lifetimes. For example, in an engine you can generally get away with a model of game-long lifetime memory, and frame-long lifetime memory. You'll often also need some kind of scratch space arena for temporary allocations.
 
@@ -71,42 +94,85 @@ Let's say, for example, in a particular function you need some kind of large arr
 
 I really think that with arenas in game development (at least at the scope I'm dealing), the pros of using this approach MASSIVELY outweigh the cons.
 
+The biggest downside in my opinion to arenas is that they violate the notion of memory ownership. This can be really useful for object-level encapsulation.
+
 And for a 
 
 - Ownership
 - Downsides (object-level encapsulation usually impossible)
 
-Resource Groups:
+<br>
 
-Defer:
-- Controversial, wow!
+**Resource Groups**
 
-Module-level encapsulation:
-- 
+Gotta explain!
 
-Unique string system (UTF-8 and non-terminated):
-- 
+<br>
 
-Custom Print Function:
-- 
+**Defer**
 
-Tickets:
-- Wow!
+This is inspired by my brief time working with the language Odin (I think Go might have this as well, though I've never used that language).
 
-Asset Builder:
--
+For those that work in procedural programming styles, the concept of a "defer" statement is quite controversial.
 
-Template and concept usage:
-- 
+Controversial, wow!
 
-Misc. Style Things:
-- No methods at all aside from operator overloads (including cast operators). This is really just for API consistency.
+<br>
 
-Fatal Errors:
-- Was quite hard for me to do
-- No exceptions
+**Module-Level Encapsulation**
+
+Wow!
+
+<br>
+
+**Custom String System (UTF-8 and Non-Terminated)**
+
+Great idea!
+
+<br>
+
+**Custom Print Format Function**
+
+Yeah!
+
+<br>
+
+**Tickets**
+
+Wow!
+
+<br>
+
+**Asset Builder**
+
+Wow!
+
+<br>
+
+**Template and Concept Usage in ZCL**
+
+Kinda needed!
+
+<br>
+
+**Misc. Style Choices**
+
+No methods at all aside from operator overloads (including cast operators). This is really just for API consistency.
+
+<br>
+
+**Fatal Errors**
+
+Was quite hard for me to do!
+No exceptions!
+
+<br>
+
+**ABSENT Features**
 
 There are some common game engine features intentionally absent from ZF. Most significantly, there is no form of ECS nor any scene system.
+
+<br>
 
 ---
 
