@@ -58,9 +58,21 @@ RayLib is close to this, but there are some key differences:
 - RayLib is only in C. Although ZF is largely written C-style, I thought it'd be useful to leverage some of the useful features of C++ to make programming less of a hassle (see below).
 - RayLib is very loose in its global state. This is a pain point I had when working with GameMaker. This is useful for small projects where you just want to get the job done fast, but for large projects becomes a serious pain. In ZF, certain systems are global by necessity, but there are systems in place (see below) to make it more manageable.
 
-There are some very important fundamental design decisions in ZF that are worth explaining:
+There are some very important fundamental design decisions in ZF, many of which go against standard practice, that are worth explaining:
+
+Use of an STL "Replacement":
+- The ZF core library is not at all "better" than the C++ STL (that would be a stupidly arrogant thing to say). The reason the STL is very minimally used is because it's written from a completely different design philosophy, one which emphasises RAII, object orientation, etc.
+
 Memory Arenas:
-- So with games of the scope that I've worked with, I find it extremely simple to organise memory and resource lifetimes.
+
+So with games of the scope that I've worked with, I find it extremely simple to organise memory and resource lifetimes. For example, in an engine you can generally get away with a model of game-long lifetime memory, and frame-long lifetime memory. You'll often also need some kind of scratch space arena for temporary allocations.
+
+Let's say, for example, in a particular function you need some kind of large array of a length dependent on function inputs. Let's also suppose that the maximum possible array length you would need in this case is too large to be stack-allocated. If you were to go the more conventional modern C++ route, you might have something like an std::vector which gets cleaned up implicitly when out of scope. There are 2 main issues I have with this. Firstly, the dynamic allocation is NOT free if the allocator has to work account for fragmentation. Secondly, by depending on a destructor you're adding obfuscation to what your code is actually doing.
+
+I really think that with arenas in game development (at least at the scope I'm dealing), the pros of using this approach MASSIVELY outweigh the cons.
+
+And for a 
+
 - Ownership
 - Downsides (object-level encapsulation usually impossible)
 
@@ -107,6 +119,8 @@ There are some common game engine features intentionally absent from ZF. Most si
 - [miniaudio](https://github.com/mackron/miniaudio) for audio loading and playing
 - [PCG](https://www.pcg-random.org) for random number generation
 - [SplitMix64](https://prng.di.unimi.it/splitmix64.c) for simple U64 scrambling
+
+---
 
 ## Future Plans
 
