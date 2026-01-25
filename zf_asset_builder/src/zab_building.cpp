@@ -358,7 +358,7 @@ zcl::t_b8 BuildAssets(const zcl::t_str_rdonly instrs_json_file_path) {
 
                 const zcl::t_i32 height = field_cj_vals[ek_font_field_height]->valueint;
 
-                const zcl::t_str_rdonly extra_chrs_file_path = field_cj_vals[ek_font_field_extra_chrs_file_path]->valuestring
+                const zcl::t_str_rdonly extra_chrs_file_path = field_cj_vals[ek_font_field_extra_chrs_file_path]
                     ? zcl::CStrToStr(field_cj_vals[ek_font_field_extra_chrs_file_path]->valuestring)
                     : zcl::t_str_rdonly{};
 
