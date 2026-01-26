@@ -1,6 +1,7 @@
 #include <zcl/zcl_math.h>
 
 #include <cmath>
+#include <zcl/zcl_bits.h>
 
 namespace zcl {
     t_f32 CalcMag(const t_v2 v) {
@@ -105,7 +106,63 @@ namespace zcl {
         return PolysCheckInters(poly, {.pts = rect_poly_pts});
     }
 
-    t_rect_f PolyCalcSpan(const t_poly_rdonly poly) {
+    zcl::t_poly_mut PolyCreateSpan(const zcl::t_rect_f a, const zcl::t_rect_f b, zcl::t_arena *const arena) {
+
+        // The result is guaranteed to be a subset of the eight given polygon points. So really we just need to go through various cases and select which ones to omit.
+
+        zcl::t_static_bitset<8> poly_pts_to_omit = {};
+
+
+#if 0
+    // Handle horizontal alignment case.
+    if (a.y == b.y) {
+        zcl::t_rect_f rect_left;
+        zcl::t_rect_f rect_right;
+
+        if (a.x < b.x) {
+            rect_left = a;
+            rect_right = b;
+        } else {
+            rect_left = b;
+            rect_right = a;
+        }
+
+        const auto poly_pts = zcl::ArenaPushArray<zcl::t_v2>(arena, 4);
+        poly_pts[0] = zcl::RectGetTopLeft(rect_left);
+        poly_pts[1] = zcl::RectGetTopRight(rect_right);
+        poly_pts[2] = zcl::RectGetBottomRight(rect_right);
+        poly_pts[3] = zcl::RectGetBottomLeft(rect_left);
+
+        return {poly_pts};
+    }
+
+    // Handle vertical alignment case.
+    if (a.x == b.x) {
+        zcl::t_rect_f rect_top;
+        zcl::t_rect_f rect_bottom;
+
+        if (a.y < b.y) {
+            rect_top = a;
+            rect_bottom = b;
+        } else {
+            rect_top = b;
+            rect_bottom = a;
+        }
+
+        const auto poly_pts = zcl::ArenaPushArray<zcl::t_v2>(arena, 4);
+        poly_pts[0] = zcl::RectGetTopLeft(rect_top);
+        poly_pts[1] = zcl::RectGetTopRight(rect_top);
+        poly_pts[2] = zcl::RectGetBottomRight(rect_bottom);
+        poly_pts[3] = zcl::RectGetBottomLeft(rect_bottom);
+
+        return {poly_pts};
+    }
+
+    // Handle diagonal cases.
+#endif
+    }
+
+    t_rect_f PolyCalcSpanRect(const t_poly_rdonly poly) {
         t_f32 min_left = poly.pts[0].x;
         t_f32 min_top = poly.pts[0].y;
         t_f32 max_right = poly.pts[0].x;

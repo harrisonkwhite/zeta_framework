@@ -528,7 +528,9 @@ namespace zcl {
 
     t_b8 PolyCheckIntersWithRect(const t_poly_rdonly poly, const t_rect_f rect);
 
-    t_rect_f PolyCalcSpan(const t_poly_rdonly poly);
+    zcl::t_poly_mut PolyCalcSpan(const zcl::t_rect_f a, const zcl::t_rect_f b, zcl::t_arena *const arena);
+
+    t_rect_f PolyCalcSpanRect(const t_poly_rdonly poly);
 
     t_b8 PolysCheckInters(const t_poly_rdonly a, const t_poly_rdonly b);
 
