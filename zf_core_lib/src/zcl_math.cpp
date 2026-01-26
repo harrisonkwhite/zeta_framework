@@ -44,7 +44,7 @@ namespace zcl {
         return interval;
     }
 
-    static t_b8 PolyCheckSep(const t_poly_rdonly poly, const t_poly_rdonly other) {
+    static t_b8 PolysCheckSep(const t_poly_rdonly poly, const t_poly_rdonly other) {
         for (t_i32 i = 0; i < poly.pts.len; ++i) {
             const t_v2 a = poly.pts[i];
             const t_v2 b = poly.pts[(i + 1) % poly.pts.len];
@@ -106,7 +106,9 @@ namespace zcl {
         return PolysCheckInters(poly, {.pts = rect_poly_pts});
     }
 
+#if 0
     t_poly_mut PolyCalcSpan(const t_rect_f a, const t_rect_f b, t_arena *const arena) {
+
         // The result is guaranteed to be a subset of the eight given polygon points. So really we just need to go through various cases and select which ones to omit.
 
         enum t_poly_pt_id : zcl::t_i32 {
@@ -148,6 +150,7 @@ namespace zcl {
             }
         }
     }
+#endif
 
     t_rect_f PolyCalcSpanRect(const t_poly_rdonly poly) {
         t_f32 min_left = poly.pts[0].x;
@@ -168,7 +171,7 @@ namespace zcl {
     }
 
     t_b8 PolysCheckInters(const t_poly_rdonly a, const t_poly_rdonly b) {
-        return PolyCheckSep(a, b) && PolyCheckSep(b, a);
+        return PolysCheckSep(a, b) && PolysCheckSep(b, a);
     }
 
     t_f32 CalcDirRads(const t_v2 a, const t_v2 b) {

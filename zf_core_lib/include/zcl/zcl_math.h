@@ -331,6 +331,23 @@ namespace zcl {
         return {static_cast<t_i32>(v.x), static_cast<t_i32>(v.y)};
     }
 
+    constexpr t_b8 CheckNearlyEqual(const t_v2 val, const t_v2 targ, const t_f32 tol = k_tolerance_default) {
+        return CheckNearlyEqual(val.x, targ.x, tol) && CheckNearlyEqual(val.y, targ.y, tol);
+    }
+
+    constexpr t_b8 CheckNearlyEqual(const t_v3 val, const t_v3 targ, const t_f32 tol = k_tolerance_default) {
+        return CheckNearlyEqual(val.x, targ.x, tol)
+            && CheckNearlyEqual(val.y, targ.y, tol)
+            && CheckNearlyEqual(val.z, targ.z, tol);
+    }
+
+    constexpr t_b8 CheckNearlyEqual(const t_v4 val, const t_v4 targ, const t_f32 tol = k_tolerance_default) {
+        return CheckNearlyEqual(val.x, targ.x, tol)
+            && CheckNearlyEqual(val.y, targ.y, tol)
+            && CheckNearlyEqual(val.z, targ.z, tol)
+            && CheckNearlyEqual(val.w, targ.w, tol);
+    }
+
     // ============================================================
 
 
@@ -604,6 +621,59 @@ namespace zcl {
     constexpr t_rect_i ClampWithinContainer(const t_rect_i rect, const t_rect_i container) {
         const t_v2_i tl = {CalcMax(rect.x, container.x), CalcMax(rect.y, container.y)};
         return {tl.x, tl.y, CalcMax(CalcMin(RectGetRight(rect), RectGetRight(container)) - tl.x, 0), CalcMax(CalcMin(RectGetBottom(rect), RectGetBottom(container)) - tl.y, 0)};
+    }
+
+    constexpr t_f32 Orient(const t_v2 a, const t_v2 b, const t_v2 c) {
+        return CalcCrossProd(b - a, c - a);
+    }
+
+    constexpr t_b8 CheckPointOnSegment(const t_v2 seg_begin, const t_v2 seg_end, const t_v2 pt, const t_f32 tol = k_tolerance_default) {
+        if (!CheckNearlyEqual(Orient(seg_begin, seg_end, pt), 0.0f, tol)) {
+            return false;
+        }
+
+        return pt.x >= CalcMin(seg_begin.x, seg_end.x)
+            && pt.x <= CalcMax(seg_begin.x, seg_end.x)
+            && pt.y >= CalcMin(seg_begin.y, seg_end.y)
+            && pt.y <= CalcMax(seg_begin.y, seg_end.y);
+    }
+
+    constexpr t_b8 CheckSegmentsCross(const t_v2 seg_a_begin, const t_v2 seg_a_end, const t_v2 seg_b_begin, const t_v2 seg_b_end) {
+        const t_f32 o1 = Orient(seg_a_begin, seg_a_end, seg_b_begin);
+        const t_f32 o2 = Orient(seg_a_begin, seg_a_end, seg_b_end);
+        const t_f32 o3 = Orient(seg_b_begin, seg_b_end, seg_a_begin);
+        const t_f32 o4 = Orient(seg_b_begin, seg_b_end, seg_a_end);
+
+        return (o1 * o2 < 0.0f) && (o3 * o4 < 0.0f);
+    }
+
+    constexpr t_b8 CheckSegmentsIntersect(const t_v2 seg_a_begin, const t_v2 seg_a_end, const t_v2 seg_b_begin, const t_v2 seg_b_end, const t_f32 tol = k_tolerance_default) {
+        const t_f32 o1 = Orient(seg_a_begin, seg_a_end, seg_b_begin);
+        const t_f32 o2 = Orient(seg_a_begin, seg_a_end, seg_b_end);
+        const t_f32 o3 = Orient(seg_b_begin, seg_b_end, seg_a_begin);
+        const t_f32 o4 = Orient(seg_b_begin, seg_b_end, seg_a_end);
+
+        if ((o1 * o2 < 0.0f) && (o3 * o4 < 0.0f)) {
+            return true;
+        }
+
+        if (CheckPointOnSegment(seg_a_begin, seg_a_end, seg_b_begin, tol)) {
+            return true;
+        }
+
+        if (CheckPointOnSegment(seg_a_begin, seg_a_end, seg_b_end, tol)) {
+            return true;
+        }
+
+        if (CheckPointOnSegment(seg_b_begin, seg_b_end, seg_a_begin, tol)) {
+            return true;
+        }
+
+        if (CheckPointOnSegment(seg_b_begin, seg_b_end, seg_a_end, tol)) {
+            return true;
+        }
+
+        return false;
     }
 
     // Returns a value between 0 and 1 indicating what percentage of the rectangle is within the container.
