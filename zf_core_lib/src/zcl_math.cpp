@@ -106,15 +106,15 @@ namespace zcl {
         return PolysCheckInters(poly, {.pts = rect_poly_pts});
     }
 
-    t_poly_mut PolyCreateSpan(const t_rect_f a, const t_rect_f b, t_arena *const arena) {
+    t_poly_mut PolyCalcSpan(const t_rect_f a, const t_rect_f b, t_arena *const arena) {
         // The result is guaranteed to be a subset of the eight given polygon points. So really we just need to go through various cases and select which ones to omit.
 
         enum t_poly_pt_id : zcl::t_i32 {
             ek_poly_pt_id_rect_a_top_left,
             ek_poly_pt_id_rect_a_top_right,
-            ek_poly_pt_id_rect_a_bottom_right,
+            ek_poly_pt_id_rect_a_bottom_right, //
             ek_poly_pt_id_rect_a_bottom_left,
-            ek_poly_pt_id_rect_b_top_left,
+            ek_poly_pt_id_rect_b_top_left, //
             ek_poly_pt_id_rect_b_top_right,
             ek_poly_pt_id_rect_b_bottom_right,
             ek_poly_pt_id_rect_b_bottom_left,
@@ -136,67 +136,17 @@ namespace zcl {
             }
         }
 
-        if (RectGetBottom(a) <= RectGetBottom(b)) {
-            BitsetSet(poly_pts_to_omit, 2);
+        if (RectGetBottom(b) <= RectGetBottom(a)) {
+            if (RectGetRight(b) <= RectGetRight(a)) {
+                BitsetUnset(poly_pts_to_omit, ek_poly_pt_id_rect_b_bottom_right);
+                BitsetUnset(poly_pts_to_omit, ek_poly_pt_id_rect_a_top_left);
+            }
+
+            if (RectGetLeft(b) >= RectGetLeft(a)) {
+                BitsetUnset(poly_pts_to_omit, ek_poly_pt_id_rect_b_bottom_left);
+                BitsetUnset(poly_pts_to_omit, ek_poly_pt_id_rect_a_top_right);
+            }
         }
-
-        if (CheckNearlyEqual(RectGetTop(a), RectGetTop(b))) {
-            BitsetSet(poly_pts_to_omit, 1);
-            BitsetSet(poly_pts_to_omit, 4);
-        }
-
-        if (CheckNearlyEqual(RectGetBottom(a), RectGetBottom(b))) {
-            BitsetSet(poly_pts_to_omit, 2);
-            BitsetSet(poly_pts_to_omit, 7);
-        }
-
-#if 0
-    // Handle horizontal alignment case.
-    if (a.y == b.y) {
-        zcl::t_rect_f rect_left;
-        zcl::t_rect_f rect_right;
-
-        if (a.x < b.x) {
-            rect_left = a;
-            rect_right = b;
-        } else {
-            rect_left = b;
-            rect_right = a;
-        }
-
-        const auto poly_pts = zcl::ArenaPushArray<zcl::t_v2>(arena, 4);
-        poly_pts[0] = zcl::RectGetTopLeft(rect_left);
-        poly_pts[1] = zcl::RectGetTopRight(rect_right);
-        poly_pts[2] = zcl::RectGetBottomRight(rect_right);
-        poly_pts[3] = zcl::RectGetBottomLeft(rect_left);
-
-        return {poly_pts};
-    }
-
-    // Handle vertical alignment case.
-    if (a.x == b.x) {
-        zcl::t_rect_f rect_top;
-        zcl::t_rect_f rect_bottom;
-
-        if (a.y < b.y) {
-            rect_top = a;
-            rect_bottom = b;
-        } else {
-            rect_top = b;
-            rect_bottom = a;
-        }
-
-        const auto poly_pts = zcl::ArenaPushArray<zcl::t_v2>(arena, 4);
-        poly_pts[0] = zcl::RectGetTopLeft(rect_top);
-        poly_pts[1] = zcl::RectGetTopRight(rect_top);
-        poly_pts[2] = zcl::RectGetBottomRight(rect_bottom);
-        poly_pts[3] = zcl::RectGetBottomLeft(rect_bottom);
-
-        return {poly_pts};
-    }
-
-    // Handle diagonal cases.
-#endif
     }
 
     t_rect_f PolyCalcSpanRect(const t_poly_rdonly poly) {
