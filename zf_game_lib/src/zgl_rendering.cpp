@@ -291,7 +291,7 @@ namespace zgl {
 
         zcl::t_static_array<zcl::t_v2, 4> quad_pts;
         zcl::t_arena quad_pts_arena = zcl::ArenaCreateWrapping(zcl::ToBytes(&quad_pts));
-        const zcl::t_v2 quad_size = zcl::CalcCompwiseProd(zcl::AsV2F(zcl::RectGetSize(src_rect_to_use)), scale);
+        const zcl::t_v2 quad_size = zcl::CalcCompwiseProd(zcl::V2IToF(zcl::RectGetSize(src_rect_to_use)), scale);
         const zcl::t_poly_mut quad_poly = zcl::PolyCreateQuadRotated(pos, quad_size, origin, rot, &quad_pts_arena);
 
         const zcl::t_static_array<t_triangle, 2> triangles = {{
@@ -393,7 +393,7 @@ namespace zgl {
                 }
             }
 
-            positions[chr_index] = chr_offs_pen + zcl::AsV2F(glyph_info->offs);
+            positions[chr_index] = chr_offs_pen + zcl::V2IToF(glyph_info->offs);
             positions[chr_index].y += offs_y;
 
             chr_offs_pen.x += static_cast<zcl::t_f32>(glyph_info->adv);
@@ -439,7 +439,7 @@ namespace zgl {
 
             zcl::t_static_array<zcl::t_v2, 4> quad_pts;
             zcl::t_arena quad_pts_arena = zcl::ArenaCreateWrapping(zcl::ToBytes(&quad_pts));
-            const zcl::t_poly_mut quad_poly = zcl::PolyCreateQuadRotated(chr_pos, zcl::CalcCompwiseProd(zcl::AsV2F(zcl::RectGetSize(glyph_info->atlas_rect)), scale), {}, rot, &quad_pts_arena);
+            const zcl::t_poly_mut quad_poly = zcl::PolyCreateQuadRotated(chr_pos, zcl::CalcCompwiseProd(zcl::V2IToF(zcl::RectGetSize(glyph_info->atlas_rect)), scale), {}, rot, &quad_pts_arena);
 
             const zcl::t_rect_f uv_rect = zcl::TextureCalcUVRect(glyph_info->atlas_rect, zcl::k_font_atlas_texture_size);
 

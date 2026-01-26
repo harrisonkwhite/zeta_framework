@@ -233,22 +233,6 @@ namespace zcl {
     // ============================================================
 
 
-    constexpr t_v2 AsV2F(const t_v2_i v) {
-        return {static_cast<t_f32>(v.x), static_cast<t_f32>(v.y)};
-    }
-
-    constexpr t_v2_i AsV2I(const t_v2 v) {
-        return {static_cast<t_i32>(v.x), static_cast<t_i32>(v.y)};
-    }
-
-    constexpr t_rect_f AsRectF(const t_rect_i rect) {
-        return {static_cast<t_f32>(rect.x), static_cast<t_f32>(rect.y), static_cast<t_f32>(rect.width), static_cast<t_f32>(rect.height)};
-    }
-
-    constexpr t_rect_i AsRectI(const t_rect_f rect) {
-        return {static_cast<t_i32>(rect.x), static_cast<t_i32>(rect.y), static_cast<t_i32>(rect.width), static_cast<t_i32>(rect.height)};
-    }
-
     constexpr t_b8 CheckNearlyEqual(const t_f32 val, const t_f32 targ, const t_f32 tol = k_tolerance_default) {
         ZCL_ASSERT(!CheckNaN(val));
         ZCL_ASSERT(!CheckNaN(targ));
@@ -324,6 +308,14 @@ namespace zcl {
         }
 
         return CalcDigitAt(n / 10, index - 1);
+    }
+
+    constexpr t_v2 V2IToF(const t_v2_i v) {
+        return {static_cast<t_f32>(v.x), static_cast<t_f32>(v.y)};
+    }
+
+    constexpr t_v2_i V2FToI(const t_v2 v) {
+        return {static_cast<t_i32>(v.x), static_cast<t_i32>(v.y)};
     }
 
     constexpr t_range RangeCreate(const t_f32 min, const t_f32 max) {
@@ -452,6 +444,14 @@ namespace zcl {
 
     constexpr t_f32 RectGetArea(const t_rect_f rect) { return rect.width * rect.height; }
     constexpr t_i32 RectGetArea(const t_rect_i rect) { return rect.width * rect.height; }
+
+    constexpr t_rect_f RectIToF(const t_rect_i rect) {
+        return {static_cast<t_f32>(rect.x), static_cast<t_f32>(rect.y), static_cast<t_f32>(rect.width), static_cast<t_f32>(rect.height)};
+    }
+
+    constexpr t_rect_i RectFToI(const t_rect_f rect) {
+        return {static_cast<t_i32>(rect.x), static_cast<t_i32>(rect.y), static_cast<t_i32>(rect.width), static_cast<t_i32>(rect.height)};
+    }
 
     constexpr t_mat4x4 MatrixCreateIdentity() {
         t_mat4x4 result = {};
