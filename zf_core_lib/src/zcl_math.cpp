@@ -106,12 +106,49 @@ namespace zcl {
         return PolysCheckInters(poly, {.pts = rect_poly_pts});
     }
 
-    zcl::t_poly_mut PolyCreateSpan(const zcl::t_rect_f a, const zcl::t_rect_f b, zcl::t_arena *const arena) {
-
+    t_poly_mut PolyCreateSpan(const t_rect_f a, const t_rect_f b, t_arena *const arena) {
         // The result is guaranteed to be a subset of the eight given polygon points. So really we just need to go through various cases and select which ones to omit.
 
-        zcl::t_static_bitset<8> poly_pts_to_omit = {};
+        enum t_poly_pt_id : zcl::t_i32 {
+            ek_poly_pt_id_rect_a_top_left,
+            ek_poly_pt_id_rect_a_top_right,
+            ek_poly_pt_id_rect_a_bottom_right,
+            ek_poly_pt_id_rect_a_bottom_left,
+            ek_poly_pt_id_rect_b_top_left,
+            ek_poly_pt_id_rect_b_top_right,
+            ek_poly_pt_id_rect_b_bottom_right,
+            ek_poly_pt_id_rect_b_bottom_left,
 
+            eks_poly_pt_id_cnt
+        };
+
+        t_static_bitset<eks_poly_pt_id_cnt> poly_pts_to_omit = {};
+
+        if (RectGetBottom(a) <= RectGetBottom(b)) {
+            if (RectGetRight(a) <= RectGetRight(b)) {
+                BitsetUnset(poly_pts_to_omit, ek_poly_pt_id_rect_a_bottom_right);
+                BitsetUnset(poly_pts_to_omit, ek_poly_pt_id_rect_b_top_left);
+            }
+
+            if (RectGetLeft(a) >= RectGetLeft(b)) {
+                BitsetUnset(poly_pts_to_omit, ek_poly_pt_id_rect_a_bottom_left);
+                BitsetUnset(poly_pts_to_omit, ek_poly_pt_id_rect_b_top_right);
+            }
+        }
+
+        if (RectGetBottom(a) <= RectGetBottom(b)) {
+            BitsetSet(poly_pts_to_omit, 2);
+        }
+
+        if (CheckNearlyEqual(RectGetTop(a), RectGetTop(b))) {
+            BitsetSet(poly_pts_to_omit, 1);
+            BitsetSet(poly_pts_to_omit, 4);
+        }
+
+        if (CheckNearlyEqual(RectGetBottom(a), RectGetBottom(b))) {
+            BitsetSet(poly_pts_to_omit, 2);
+            BitsetSet(poly_pts_to_omit, 7);
+        }
 
 #if 0
     // Handle horizontal alignment case.
