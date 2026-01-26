@@ -56,24 +56,24 @@ This section exists basically to explain why I created this framework in the fir
 
 ### Personal Background
 
-I think laying out my personal history with programming might provide some context as to how and why I got to making this framework.
+I thought that laying out my personal history with programming might provide some context as to how and why I got to making this framework.
 
 #### Influence of GameMaker: Studio
 
 (Note that this is written based on the state of GameMaker: Studio and GameMaker: Studio 2 around the 2014 to 2020 period, I'm not sure what it's like today.)
 
-So my first ever experiences with programming were as a child with the GameMaker: Studio engine. I made many small-to-mid-sized games with it, but the project that had the biggest influence on my programming was MANIC, which I started working on when I was about 14 and it took 2.5 years to complete. As the project progressed I found state management increasingly difficult. Part of this was of course my lack of experience as a programmer, but a lot of it I would attribute to the intensely global nature of that engine. For context, GameMaker itself is built on an object system. Considering that it is targeted for beginners, I think this very reasonable. I think humans see reality very much in terms of objects, and games are in a sense an abstraction of reality, so when a new person to programming comes along and wants to make a game, their mental model of a game is likely that it's a world comprised of objects. But the engine isn't object-oriented the sense that there are mechanisms for encapsulation and object-level public/private state distinction. Instead, any object can freely modify the state of any other object.
+So my first ever experiences with programming were as a child with the GameMaker: Studio engine. I made many small-to-mid-sized games with it, but the project that had the biggest influence on my programming was MANIC, which I started working on when I was about 14 and it took 2.5 years to complete. As the project progressed I found gameplay state management increasingly difficult. Part of this was of course my lack of experience as a programmer, but a lot of it I would attribute to the intensely global nature of that engine. For context, GameMaker itself is built on an object system. Considering that it is targeted for beginners, I think this very reasonable. I think humans see reality very much in terms of objects, and games are in a sense an abstraction of reality, so when a new person to programming comes along and wants to make a game, their mental model of a game is likely that it consists of worlds or scenes comprised of objects. But the engine isn't object-oriented the sense that there are mechanisms for encapsulation and object-level public/private state distinction. Instead, any object can freely modify the state of any other object.
 
 #### Influence of C# with XNA / MonoGame
 
-After that project I wanted to "step up" into an engine/framework that was more of a challenge for me, which became MonoGame. MonoGame is an open-source continuation of the XNA Framework and uses C#.
+After that project I wanted to "step up" into an engine/framework that was more of a challenge for me, and for this I chose MonoGame. MonoGame is an open-source continuation of the XNA Framework and uses C#, and provides a simple batch-based rendering system alongside basic helpers for input and audio.
 
 My two main inspirations for choosing MonoGame were:
 
 1. The livestreams Notch, the creator of Minecraft, did of him creating some Ludum Dare games. He used Java though, but that's still very close to C#.
 2. The indie games already made with it, namely Terraria (which actually used XNA, but close enough) and Stardew Valley.
 
-Likewise with GameMaker, I made quite a few jam games with C# and MonoGame. But the largest project I worked on, which eventually got cancelled, was a project 
+Likewise with GameMaker, I made quite a few jam games with C# and MonoGame. But the largest project I worked on, which eventually got cancelled, was tentatively titled "Underwater Game".
 
 Personally I think that rather than emphasising objects, games are much better off organised in terms of explicit procedures, and the subset of read-only vs. mutable state that these procedures are exposed to.
 
