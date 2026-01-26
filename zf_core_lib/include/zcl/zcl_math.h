@@ -3,166 +3,16 @@
 #include <zcl/zcl_basic.h>
 
 namespace zcl {
-    constexpr zcl::t_f32 k_tolerance_default = 1e-5f;
+    // ============================================================
+    // @section: Types and Constants
+    // ============================================================
 
-    constexpr t_b8 CheckNearlyEqual(const t_f32 val, const t_f32 targ, const t_f32 tol = k_tolerance_default) {
-        ZCL_ASSERT(!CheckNaN(val));
-        ZCL_ASSERT(!CheckNaN(targ));
-        ZCL_ASSERT(tol >= 0.0f);
-
-        return val >= targ - tol && val <= targ + tol;
-    }
-
-    constexpr t_f32 Snap(const t_f32 val, const t_f32 targ, const t_f32 tol = k_tolerance_default) {
-        return CheckNearlyEqual(val, targ, tol) ? targ : val;
-    }
+    // Putting all of these types and things up here since the math functions are so interrelated.
 
     constexpr t_f32 k_pi = 3.14159265358979323846f;
     constexpr t_f32 k_tau = 6.28318530717958647692f;
 
-    constexpr t_f32 DegsToRads(const t_f32 degs) {
-        return degs * (k_pi / 180.0f);
-    }
-
-    constexpr t_f32 RadsToDegs(const t_f32 rads) {
-        return rads * (180.0f / k_pi);
-    }
-
-    template <c_integral tp_type>
-    constexpr t_i32 CalcDigitCount(const tp_type n) {
-        if (n < 0) {
-            return CalcDigitCount(-n);
-        }
-
-        if (n < 10) {
-            return 1;
-        }
-
-        return 1 + CalcDigitCount(n / 10);
-    }
-
-    template <c_integral tp_type>
-    constexpr tp_type CalcDigitAt(const tp_type n, const t_i32 index) {
-        ZCL_ASSERT(index >= 0 && index < CalcDigitCount(n));
-
-        if (n < 0) {
-            return CalcDigitAt(-n, index);
-        }
-
-        if (index == 0) {
-            return n % 10;
-        }
-
-        if (n < 10) {
-            return 0;
-        }
-
-        return CalcDigitAt(n / 10, index - 1);
-    }
-
-
-    // ============================================================
-    // @section: Ranges
-
-    // This code is for continuous ranges only.
-
-    struct t_range {
-        t_f32 min;
-        t_f32 max;
-    };
-
-    struct t_range_excl_lower {
-        t_f32 min;
-        t_f32 max;
-    };
-
-    struct t_range_excl_upper {
-        t_f32 min;
-        t_f32 max;
-    };
-
-    struct t_range_excl_both {
-        t_f32 min;
-        t_f32 max;
-    };
-
-    constexpr t_range RangeCreate(const t_f32 min, const t_f32 max) {
-        ZCL_ASSERT(!CheckNaN(min) && !CheckNaN(max));
-        ZCL_ASSERT(min <= max);
-
-        return {min, max};
-    }
-
-    constexpr t_range RangeCreateExclLower(const t_f32 min, const t_f32 max) {
-        ZCL_ASSERT(!CheckNaN(min) && !CheckNaN(max));
-        ZCL_ASSERT(min <= max);
-
-        return {min, max};
-    }
-
-    constexpr t_range RangeCreateExclUpper(const t_f32 min, const t_f32 max) {
-        ZCL_ASSERT(!CheckNaN(min) && !CheckNaN(max));
-        ZCL_ASSERT(min <= max);
-
-        return {min, max};
-    }
-
-    constexpr t_range RangeCreateExclBoth(const t_f32 min, const t_f32 max) {
-        ZCL_ASSERT(!CheckNaN(min) && !CheckNaN(max));
-        ZCL_ASSERT(min <= max);
-
-        return {min, max};
-    }
-
-    constexpr t_b8 RangeCheckEmpty(const t_range range) { return false; }
-    constexpr t_b8 RangeCheckEmpty(const t_range_excl_lower range) { return CheckNearlyEqual(range.min, range.max); }
-    constexpr t_b8 RangeCheckEmpty(const t_range_excl_upper range) { return CheckNearlyEqual(range.min, range.max); }
-    constexpr t_b8 RangeCheckEmpty(const t_range_excl_both range) { return CheckNearlyEqual(range.min, range.max); }
-
-    constexpr t_b8 RangeValueCheckWithin(const t_range range, const t_f32 val) {
-        ZCL_ASSERT(!CheckNaN(val));
-        return val >= range.min && val <= range.max;
-    }
-
-    constexpr t_b8 RangeValueCheckWithin(const t_range_excl_lower range, const t_f32 val) {
-        ZCL_ASSERT(!CheckNaN(val));
-        return val > range.min && val <= range.max;
-    }
-
-    constexpr t_b8 RangeValueCheckWithin(const t_range_excl_upper range, const t_f32 val) {
-        ZCL_ASSERT(!CheckNaN(val));
-        return val >= range.min && val < range.max;
-    }
-
-    constexpr t_b8 RangeValueCheckWithin(const t_range_excl_both range, const t_f32 val) {
-        ZCL_ASSERT(!CheckNaN(val));
-        return val > range.min && val < range.max;
-    }
-
-    constexpr t_f32 RangeValueSnapToBounds(const t_range range, const t_f32 val, const t_f32 tol = k_tolerance_default) {
-        ZCL_ASSERT(!CheckNaN(val));
-
-        if (val < range.min && CheckNearlyEqual(val, range.min, tol)) {
-            return range.min;
-        }
-
-        if (val > range.max && CheckNearlyEqual(val, range.max, tol)) {
-            return range.max;
-        }
-
-        return val;
-    }
-
-    // Checks if the value - snapped to the range bounds - is within the range.
-    constexpr t_b8 RangeValueCheckWithinSnapped(const t_range range, const t_f32 val, const t_f32 tol = k_tolerance_default) {
-        return RangeValueCheckWithin(range, RangeValueSnapToBounds(range, val, tol));
-    }
-
-    // ============================================================
-
-
-    // ============================================================
-    // @section: Vectors
+    constexpr zcl::t_f32 k_tolerance_default = 1e-5f;
 
     struct t_v2 {
         t_f32 x;
@@ -330,12 +180,81 @@ namespace zcl {
         }
     };
 
-    constexpr t_v2 V2IToF(const t_v2_i v) {
+    struct t_range {
+        t_f32 min;
+        t_f32 max;
+    };
+
+    struct t_range_excl_lower {
+        t_f32 min;
+        t_f32 max;
+    };
+
+    struct t_range_excl_upper {
+        t_f32 min;
+        t_f32 max;
+    };
+
+    struct t_range_excl_both {
+        t_f32 min;
+        t_f32 max;
+    };
+
+    struct t_rect_f {
+        t_f32 x;
+        t_f32 y;
+        t_f32 width;
+        t_f32 height;
+    };
+
+    struct t_rect_i {
+        t_i32 x;
+        t_i32 y;
+        t_i32 width;
+        t_i32 height;
+    };
+
+    struct t_mat4x4 {
+        t_static_array<t_static_array<t_f32, 4>, 4> elems;
+    };
+
+    struct t_poly_rdonly {
+        t_array_rdonly<t_v2> pts;
+    };
+
+    struct t_poly_mut {
+        t_array_mut<t_v2> pts;
+
+        operator t_poly_rdonly() const {
+            return {.pts = pts};
+        }
+    };
+
+    // ============================================================
+
+
+    constexpr t_v2 AsV2F(const t_v2_i v) {
         return {static_cast<t_f32>(v.x), static_cast<t_f32>(v.y)};
     }
 
-    constexpr t_v2_i V2FToI(const t_v2 v) {
+    constexpr t_v2_i AsV2I(const t_v2 v) {
         return {static_cast<t_i32>(v.x), static_cast<t_i32>(v.y)};
+    }
+
+    constexpr t_rect_f AsRectF(const t_rect_i rect) {
+        return {static_cast<t_f32>(rect.x), static_cast<t_f32>(rect.y), static_cast<t_f32>(rect.width), static_cast<t_f32>(rect.height)};
+    }
+
+    constexpr t_rect_i AsRectI(const t_rect_f rect) {
+        return {static_cast<t_i32>(rect.x), static_cast<t_i32>(rect.y), static_cast<t_i32>(rect.width), static_cast<t_i32>(rect.height)};
+    }
+
+    constexpr t_b8 CheckNearlyEqual(const t_f32 val, const t_f32 targ, const t_f32 tol = k_tolerance_default) {
+        ZCL_ASSERT(!CheckNaN(val));
+        ZCL_ASSERT(!CheckNaN(targ));
+        ZCL_ASSERT(tol >= 0.0f);
+
+        return val >= targ - tol && val <= targ + tol;
     }
 
     constexpr t_b8 CheckNearlyEqual(const t_v2 val, const t_v2 targ, const t_f32 tol = k_tolerance_default) {
@@ -355,25 +274,129 @@ namespace zcl {
             && CheckNearlyEqual(val.w, targ.w, tol);
     }
 
-    // ============================================================
+    constexpr t_f32 Snap(const t_f32 val, const t_f32 targ, const t_f32 tol = k_tolerance_default) {
+        return CheckNearlyEqual(val, targ, tol) ? targ : val;
+    }
 
+    constexpr t_f32 Lerp(const t_f32 a, const t_f32 b, const t_f32 t) {
+        return a + ((b - a) * t);
+    }
 
-    // ============================================================
-    // @section: Rectangles
+    constexpr t_v2 Lerp(const t_v2 a, const t_v2 b, const t_f32 t) {
+        return a + ((b - a) * t);
+    }
 
-    struct t_rect_f {
-        t_f32 x;
-        t_f32 y;
-        t_f32 width;
-        t_f32 height;
-    };
+    constexpr t_f32 DegsToRads(const t_f32 degs) {
+        return degs * (k_pi / 180.0f);
+    }
 
-    struct t_rect_i {
-        t_i32 x;
-        t_i32 y;
-        t_i32 width;
-        t_i32 height;
-    };
+    constexpr t_f32 RadsToDegs(const t_f32 rads) {
+        return rads * (180.0f / k_pi);
+    }
+
+    template <c_integral tp_type>
+    constexpr t_i32 CalcDigitCount(const tp_type n) {
+        if (n < 0) {
+            return CalcDigitCount(-n);
+        }
+
+        if (n < 10) {
+            return 1;
+        }
+
+        return 1 + CalcDigitCount(n / 10);
+    }
+
+    template <c_integral tp_type>
+    constexpr tp_type CalcDigitAt(const tp_type n, const t_i32 index) {
+        ZCL_ASSERT(index >= 0 && index < CalcDigitCount(n));
+
+        if (n < 0) {
+            return CalcDigitAt(-n, index);
+        }
+
+        if (index == 0) {
+            return n % 10;
+        }
+
+        if (n < 10) {
+            return 0;
+        }
+
+        return CalcDigitAt(n / 10, index - 1);
+    }
+
+    constexpr t_range RangeCreate(const t_f32 min, const t_f32 max) {
+        ZCL_ASSERT(!CheckNaN(min) && !CheckNaN(max));
+        ZCL_ASSERT(min <= max);
+
+        return {min, max};
+    }
+
+    constexpr t_range RangeCreateExclLower(const t_f32 min, const t_f32 max) {
+        ZCL_ASSERT(!CheckNaN(min) && !CheckNaN(max));
+        ZCL_ASSERT(min <= max);
+
+        return {min, max};
+    }
+
+    constexpr t_range RangeCreateExclUpper(const t_f32 min, const t_f32 max) {
+        ZCL_ASSERT(!CheckNaN(min) && !CheckNaN(max));
+        ZCL_ASSERT(min <= max);
+
+        return {min, max};
+    }
+
+    constexpr t_range RangeCreateExclBoth(const t_f32 min, const t_f32 max) {
+        ZCL_ASSERT(!CheckNaN(min) && !CheckNaN(max));
+        ZCL_ASSERT(min <= max);
+
+        return {min, max};
+    }
+
+    constexpr t_b8 RangeCheckEmpty(const t_range range) { return false; }
+    constexpr t_b8 RangeCheckEmpty(const t_range_excl_lower range) { return CheckNearlyEqual(range.min, range.max); }
+    constexpr t_b8 RangeCheckEmpty(const t_range_excl_upper range) { return CheckNearlyEqual(range.min, range.max); }
+    constexpr t_b8 RangeCheckEmpty(const t_range_excl_both range) { return CheckNearlyEqual(range.min, range.max); }
+
+    constexpr t_b8 RangeValueCheckWithin(const t_range range, const t_f32 val) {
+        ZCL_ASSERT(!CheckNaN(val));
+        return val >= range.min && val <= range.max;
+    }
+
+    constexpr t_b8 RangeValueCheckWithin(const t_range_excl_lower range, const t_f32 val) {
+        ZCL_ASSERT(!CheckNaN(val));
+        return val > range.min && val <= range.max;
+    }
+
+    constexpr t_b8 RangeValueCheckWithin(const t_range_excl_upper range, const t_f32 val) {
+        ZCL_ASSERT(!CheckNaN(val));
+        return val >= range.min && val < range.max;
+    }
+
+    constexpr t_b8 RangeValueCheckWithin(const t_range_excl_both range, const t_f32 val) {
+        ZCL_ASSERT(!CheckNaN(val));
+        return val > range.min && val < range.max;
+    }
+
+    constexpr t_f32 RangeValueSnapToBounds(const t_range range, const t_f32 val, const t_f32 tol = k_tolerance_default) {
+        ZCL_ASSERT(!CheckNaN(val));
+
+        if (val < range.min && CheckNearlyEqual(val, range.min, tol)) {
+            return range.min;
+        }
+
+        if (val > range.max && CheckNearlyEqual(val, range.max, tol)) {
+            return range.max;
+        }
+
+        return val;
+    }
+
+    // Checks if the value - snapped to the range bounds - is within the range.
+    constexpr t_b8 RangeValueCheckWithinSnapped(const t_range range, const t_f32 val, const t_f32 tol = k_tolerance_default) {
+        return RangeValueCheckWithin(range, RangeValueSnapToBounds(range, val, tol));
+    }
 
     constexpr t_rect_f RectCreateF(const t_f32 x, const t_f32 y, const t_f32 width, const t_f32 height) {
         ZCL_ASSERT(!CheckNaN(x) && !CheckNaN(y) && !CheckNaN(width) && !CheckNaN(height));
@@ -429,36 +452,6 @@ namespace zcl {
 
     constexpr t_f32 RectGetArea(const t_rect_f rect) { return rect.width * rect.height; }
     constexpr t_i32 RectGetArea(const t_rect_i rect) { return rect.width * rect.height; }
-
-    constexpr t_rect_f RectI32ToF32(const t_rect_i rect) {
-        return {static_cast<t_f32>(rect.x), static_cast<t_f32>(rect.y), static_cast<t_f32>(rect.width), static_cast<t_f32>(rect.height)};
-    }
-
-    constexpr t_rect_i RectF32ToI32(const t_rect_f rect) {
-        return {static_cast<t_i32>(rect.x), static_cast<t_i32>(rect.y), static_cast<t_i32>(rect.width), static_cast<t_i32>(rect.height)};
-    }
-
-    constexpr t_b8 RectsCheckEqual(const t_rect_i a, const t_rect_i b) {
-        return a.x == b.x && a.y == b.y && a.width == b.width && a.height == b.height;
-    }
-
-    constexpr t_b8 RectsCheckInters(const t_rect_f a, const t_rect_f b) {
-        return RectGetLeft(a) < RectGetRight(b) && RectGetTop(a) < RectGetBottom(b) && RectGetRight(a) > RectGetLeft(b) && RectGetBottom(a) > RectGetTop(b);
-    }
-
-    constexpr t_b8 RectsCheckInters(const t_rect_i a, const t_rect_i b) {
-        return RectGetLeft(a) < RectGetRight(b) && RectGetTop(a) < RectGetBottom(b) && RectGetRight(a) > RectGetLeft(b) && RectGetBottom(a) > RectGetTop(b);
-    }
-
-    // ============================================================
-
-
-    // ============================================================
-    // @section: Matrices
-
-    struct t_mat4x4 {
-        t_static_array<t_static_array<t_f32, 4>, 4> elems;
-    };
 
     constexpr t_mat4x4 MatrixCreateIdentity() {
         t_mat4x4 result = {};
@@ -526,48 +519,11 @@ namespace zcl {
         return result;
     }
 
-    // ============================================================
-
-
-    // ============================================================
-    // @section: Polygons
-
-    struct t_poly_rdonly {
-        t_array_rdonly<t_v2> pts;
-    };
-
-    struct t_poly_mut {
-        t_array_mut<t_v2> pts;
-
-        operator t_poly_rdonly() const {
-            return {.pts = pts};
-        }
-    };
-
     // Points are guaranteed to be in this order: top-left, top-right, bottom-right, bottom-left.
     t_poly_mut PolyCreateQuad(const t_v2 pos, const t_v2 size, const t_v2 origin, t_arena *const arena);
 
     // Points are guaranteed to be in this order: top-left, top-right, bottom-right, bottom-left.
     t_poly_mut PolyCreateQuadRotated(const t_v2 pos, const t_v2 size, const t_v2 origin, const t_f32 rot, t_arena *const arena);
-
-    t_b8 PolyCheckIntersWithRect(const t_poly_rdonly poly, const t_rect_f rect);
-
-    zcl::t_poly_mut PolyCalcSpan(const zcl::t_rect_f a, const zcl::t_rect_f b, zcl::t_arena *const arena);
-
-    t_rect_f PolyCalcSpanRect(const t_poly_rdonly poly);
-
-    t_b8 PolysCheckInters(const t_poly_rdonly a, const t_poly_rdonly b);
-
-    // ============================================================
-
-
-    constexpr t_f32 Lerp(const t_f32 a, const t_f32 b, const t_f32 t) {
-        return a + ((b - a) * t);
-    }
-
-    constexpr t_v2 Lerp(const t_v2 a, const t_v2 b, const t_f32 t) {
-        return a + ((b - a) * t);
-    }
 
     constexpr t_f32 CalcDotProd(const t_v2 a, const t_v2 b) { return (a.x * b.x) + (a.y * b.y); }
     constexpr t_i32 CalcDotProd(const t_v2_i a, const t_v2_i b) { return (a.x * b.x) + (a.y * b.y); }
@@ -602,7 +558,7 @@ namespace zcl {
     // Returns 0 if the horizontal and vertical differences of the vectors are 0.
     t_f32 CalcDirRads(const t_v2 a, const t_v2 b);
 
-    t_v2 CalcLengthdir(const t_f32 len, const t_f32 dir);
+    t_v2 CalcLengthDir(const t_f32 len, const t_f32 dir);
 
     constexpr t_b8 CheckPointInRect(const t_v2 pt, const t_rect_f rect) {
         return pt.x > RectGetLeft(rect) && pt.y > RectGetTop(rect) && pt.x < RectGetRight(rect) && pt.y < RectGetBottom(rect);
@@ -646,13 +602,42 @@ namespace zcl {
         return Clamp(static_cast<t_f32>(RectGetArea(subrect)) / static_cast<t_f32>(RectGetArea(container)), 0.0f, 1.0f);
     }
 
-    t_rect_f CalcSpanningRect(const t_array_mut<t_v2> pts);
-    t_rect_f CalcSpanningRect(const t_array_mut<t_rect_f> rects);
+    constexpr t_b8 CheckEqual(const t_rect_i a, const t_rect_i b) {
+        return a.x == b.x && a.y == b.y && a.width == b.width && a.height == b.height;
+    }
 
+    t_rect_f CalcSpanningRect(const t_array_mut<t_v2> pts);
     t_rect_i CalcSpanningRect(const t_array_mut<t_v2_i> pts);
+    t_rect_f CalcSpanningRect(const t_array_mut<t_rect_f> rects);
     t_rect_i CalcSpanningRect(const t_array_mut<t_rect_i> rects);
+    t_rect_f CalcSpanningRect(const t_poly_rdonly poly);
+
+    t_poly_mut CalcSpanningPoly(const t_rect_f a, const t_rect_f b, t_arena *const arena);
+
+    t_b8 CheckInters(const t_poly_rdonly poly_a, const t_poly_rdonly poly_b);
+
+    t_b8 CheckInters(const t_poly_rdonly poly, const t_rect_f rect);
+
+    inline t_b8 CheckInters(const t_rect_f rect, const t_poly_rdonly poly) {
+        return CheckInters(poly, rect);
+    }
+
+    t_b8 CheckInters(const t_poly_rdonly poly, const t_v2 segment_begin, const t_v2 segment_end);
+
+    inline t_b8 CheckInters(const t_v2 segment_begin, const t_v2 segment_end, const t_poly_rdonly poly) {
+        return CheckInters(poly, segment_begin, segment_end);
+    }
+
+    constexpr t_b8 CheckInters(const t_rect_f a, const t_rect_f b) {
+        return RectGetLeft(a) < RectGetRight(b) && RectGetTop(a) < RectGetBottom(b) && RectGetRight(a) > RectGetLeft(b) && RectGetBottom(a) > RectGetTop(b);
+    }
+
+    constexpr t_b8 CheckInters(const t_rect_i a, const t_rect_i b) {
+        return RectGetLeft(a) < RectGetRight(b) && RectGetTop(a) < RectGetBottom(b) && RectGetRight(a) > RectGetLeft(b) && RectGetBottom(a) > RectGetTop(b);
+    }
+
+    t_b8 CheckInters(const t_v2 seg_a_begin, const t_v2 seg_a_end, const t_v2 seg_b_begin, const t_v2 seg_b_end, const t_f32 tol = k_tolerance_default);
 
     t_b8 CheckPointOnSegment(const t_v2 seg_begin, const t_v2 seg_end, const t_v2 pt, const t_f32 tol = k_tolerance_default);
-    t_b8 SegmentsCheckCross(const t_v2 seg_a_begin, const t_v2 seg_a_end, const t_v2 seg_b_begin, const t_v2 seg_b_end, const t_f32 tol = k_tolerance_default);
-    t_b8 SegmentsCheckIntersect(const t_v2 seg_a_begin, const t_v2 seg_a_end, const t_v2 seg_b_begin, const t_v2 seg_b_end, const t_f32 tol = k_tolerance_default);
+    t_b8 CheckCross(const t_v2 seg_a_begin, const t_v2 seg_a_end, const t_v2 seg_b_begin, const t_v2 seg_b_end, const t_f32 tol = k_tolerance_default);
 }
