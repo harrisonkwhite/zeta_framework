@@ -128,7 +128,7 @@ namespace zcl {
             kv_store->pair_cnt++;
 
             while (block) {
-                const auto possible_rel_index_to_use = BitsetFindFirstUnsetBit(block->usage);
+                const auto possible_rel_index_to_use = BitsetFindFirstUnset(block->usage);
 
                 if (possible_rel_index_to_use == -1) {
                     block_previous = block;

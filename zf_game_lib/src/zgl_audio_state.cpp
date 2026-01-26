@@ -82,7 +82,7 @@ namespace zgl {
         ZCL_ASSERT(TicketCheckValid(audio_ticket));
         ZCL_ASSERT(snd_type->valid);
 
-        const zcl::t_i32 index = zcl::BitsetFindFirstUnsetBit(g_state.snd_insts.active);
+        const zcl::t_i32 index = zcl::BitsetFindFirstUnset(g_state.snd_insts.active);
 
         if (index == -1) {
             // Giving a warning for this instead of fatal error because it's quite an easy thing to hit and can be often recovered from.

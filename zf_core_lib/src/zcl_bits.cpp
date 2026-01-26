@@ -508,11 +508,11 @@ namespace zcl {
         return -1;
     }
 
-    t_i32 BitsetFindFirstSetBit(const t_bitset_rdonly bs, const t_i32 from) {
+    t_i32 BitsetFindFirstSet(const t_bitset_rdonly bs, const t_i32 from) {
         return BitsetFindFirstSetBitHelper(bs, from, 0);
     }
 
-    t_i32 BitsetFindFirstUnsetBit(const t_bitset_rdonly bs, const t_i32 from) {
+    t_i32 BitsetFindFirstUnset(const t_bitset_rdonly bs, const t_i32 from) {
         return BitsetFindFirstSetBitHelper(bs, from, 0xFF);
     }
 
@@ -793,7 +793,7 @@ namespace zcl {
     t_b8 BitsetWalkAllSet(const t_bitset_rdonly bs, t_i32 *const pos, t_i32 *const o_index) {
         ZCL_ASSERT(*pos >= 0 && *pos <= bs.bit_cnt);
 
-        *o_index = BitsetFindFirstSetBit(bs, *pos);
+        *o_index = BitsetFindFirstSet(bs, *pos);
 
         if (*o_index == -1) {
             return false;
@@ -807,7 +807,7 @@ namespace zcl {
     t_b8 BitsetWalkAllUnset(const t_bitset_rdonly bs, t_i32 *const pos, t_i32 *const o_index) {
         ZCL_ASSERT(*pos >= 0 && *pos <= bs.bit_cnt);
 
-        *o_index = BitsetFindFirstUnsetBit(bs, *pos);
+        *o_index = BitsetFindFirstUnset(bs, *pos);
 
         if (*o_index == -1) {
             return false;

@@ -135,10 +135,10 @@ namespace zcl {
     void BitsetRotateRight(const t_bitset_mut bs, const t_i32 amount = 1);
 
     // Returns the index of the found set bit, or -1 if all bits are unset.
-    t_i32 BitsetFindFirstSetBit(const t_bitset_rdonly bs, const t_i32 from = 0);
+    t_i32 BitsetFindFirstSet(const t_bitset_rdonly bs, const t_i32 from = 0);
 
     // Returns the index of the found unset bit, or -1 if all bits are unset.
-    t_i32 BitsetFindFirstUnsetBit(const t_bitset_rdonly bs, const t_i32 from = 0);
+    t_i32 BitsetFindFirstUnset(const t_bitset_rdonly bs, const t_i32 from = 0);
 
     t_i32 BitsetCountSet(const t_bitset_rdonly bs);
 

@@ -110,6 +110,36 @@ namespace zcl {
         return t_v2{cos(dir), sin(dir)} * len;
     }
 
+    t_b8 CheckPointInPoly(const t_poly_rdonly poly, const t_v2 pt, const t_f32 tol) {
+        t_b8 inside = false;
+
+        for (t_i32 i = 0; i < poly.pts.len; i++) {
+            const t_v2 a = poly.pts[i];
+            const t_v2 b = poly.pts[(i + 1) % poly.pts.len];
+
+            if (CheckPointOnLineSegment(a, b, pt, tol)) {
+                return true;
+            }
+
+            const t_b8 a_above = a.y > pt.y;
+            const t_b8 b_above = b.y > pt.y;
+
+            if (a_above == b_above) {
+                continue;
+            }
+
+            const t_f32 dy = b.y - a.y;
+            const t_f32 t = (pt.y - a.y) / dy;
+            const t_f32 x_hit = a.x + t * (b.x - a.x);
+
+            if (pt.x < x_hit) {
+                inside = !inside;
+            }
+        }
+
+        return inside;
+    }
+
     t_rect_f CalcSpanningRect(const t_array_mut<t_v2> pts) {
         ZCL_ASSERT(pts.len > 0);
 
@@ -223,38 +253,51 @@ namespace zcl {
         return (a < -tol && b > tol) || (a > tol && b < -tol);
     }
 
-    t_b8 CheckIntersect(const t_v2 seg_a_begin, const t_v2 seg_a_end, const t_v2 seg_b_begin, const t_v2 seg_b_end, const t_f32 tol) {
+    t_b8 CheckInters(const t_v2 line_seg_a_begin, const t_v2 line_seg_a_end, const t_v2 line_seg_b_begin, const t_v2 line_seg_b_end, const t_f32 tol) {
         ZCL_ASSERT(tol >= 0.0f);
 
-        const t_f32 o1 = Orient(seg_a_begin, seg_a_end, seg_b_begin);
-        const t_f32 o2 = Orient(seg_a_begin, seg_a_end, seg_b_end);
-        const t_f32 o3 = Orient(seg_b_begin, seg_b_end, seg_a_begin);
-        const t_f32 o4 = Orient(seg_b_begin, seg_b_end, seg_a_end);
+        const t_f32 o1 = Orient(line_seg_a_begin, line_seg_a_end, line_seg_b_begin);
+        const t_f32 o2 = Orient(line_seg_a_begin, line_seg_a_end, line_seg_b_end);
+        const t_f32 o3 = Orient(line_seg_b_begin, line_seg_b_end, line_seg_a_begin);
+        const t_f32 o4 = Orient(line_seg_b_begin, line_seg_b_end, line_seg_a_end);
 
         if (CheckOppositeSides(o1, o2, tol) && CheckOppositeSides(o3, o4, tol)) {
             return true;
         }
 
-        if (CheckPointOnSegment(seg_a_begin, seg_a_end, seg_b_begin, tol)) {
+        if (CheckPointOnLineSegment(line_seg_a_begin, line_seg_a_end, line_seg_b_begin, tol)) {
             return true;
         }
 
-        if (CheckPointOnSegment(seg_a_begin, seg_a_end, seg_b_end, tol)) {
+        if (CheckPointOnLineSegment(line_seg_a_begin, line_seg_a_end, line_seg_b_end, tol)) {
             return true;
         }
 
-        if (CheckPointOnSegment(seg_b_begin, seg_b_end, seg_a_begin, tol)) {
+        if (CheckPointOnLineSegment(line_seg_b_begin, line_seg_b_end, line_seg_a_begin, tol)) {
             return true;
         }
 
-        if (CheckPointOnSegment(seg_b_begin, seg_b_end, seg_a_end, tol)) {
+        if (CheckPointOnLineSegment(line_seg_b_begin, line_seg_b_end, line_seg_a_end, tol)) {
             return true;
         }
 
         return false;
     }
 
-    t_b8 CheckPointOnSegment(const t_v2 seg_begin, const t_v2 seg_end, const t_v2 pt, const t_f32 tol) {
+    t_b8 CheckInters(const t_poly_rdonly poly, const t_v2 line_seg_begin, const t_v2 line_seg_end, const t_f32 tol) {
+        for (t_i32 i = 0; i < poly.pts.len; i++) {
+            const auto poly_line_seg_begin = poly.pts[i];
+            const auto poly_line_seg_end = poly.pts[(i + 1) % poly.pts.len];
+
+            if (CheckInters(line_seg_begin, line_seg_end, poly_line_seg_begin, poly_line_seg_end)) {
+                return true;
+            }
+        }
+
+        return CheckPointInPoly(poly, line_seg_begin, tol);
+    }
+
+    t_b8 CheckPointOnLineSegment(const t_v2 seg_begin, const t_v2 seg_end, const t_v2 pt, const t_f32 tol) {
         ZCL_ASSERT(tol >= 0.0f);
 
         if (!CheckNearlyEqual(Orient(seg_begin, seg_end, pt), 0.0f, tol)) {
@@ -267,13 +310,13 @@ namespace zcl {
             && pt.y <= CalcMax(seg_begin.y, seg_end.y) + tol;
     }
 
-    t_b8 CheckCross(const t_v2 seg_a_begin, const t_v2 seg_a_end, const t_v2 seg_b_begin, const t_v2 seg_b_end, const t_f32 tol) {
+    t_b8 CheckCross(const t_v2 line_seg_a_begin, const t_v2 line_seg_a_end, const t_v2 line_seg_b_begin, const t_v2 line_seg_b_end, const t_f32 tol) {
         ZCL_ASSERT(tol >= 0.0f);
 
-        const t_f32 o1 = Orient(seg_a_begin, seg_a_end, seg_b_begin);
-        const t_f32 o2 = Orient(seg_a_begin, seg_a_end, seg_b_end);
-        const t_f32 o3 = Orient(seg_b_begin, seg_b_end, seg_a_begin);
-        const t_f32 o4 = Orient(seg_b_begin, seg_b_end, seg_a_end);
+        const t_f32 o1 = Orient(line_seg_a_begin, line_seg_a_end, line_seg_b_begin);
+        const t_f32 o2 = Orient(line_seg_a_begin, line_seg_a_end, line_seg_b_end);
+        const t_f32 o3 = Orient(line_seg_b_begin, line_seg_b_end, line_seg_a_begin);
+        const t_f32 o4 = Orient(line_seg_b_begin, line_seg_b_end, line_seg_a_end);
 
         return CheckOppositeSides(o1, o2, tol) && CheckOppositeSides(o3, o4, tol);
     }

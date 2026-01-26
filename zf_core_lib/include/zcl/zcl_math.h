@@ -568,6 +568,10 @@ namespace zcl {
         return pt.x > RectGetLeft(rect) && pt.y > RectGetTop(rect) && pt.x < RectGetRight(rect) && pt.y < RectGetBottom(rect);
     }
 
+    t_b8 CheckPointInPoly(const t_poly_rdonly poly, const t_v2 pt, const t_f32 tol = k_tolerance_default);
+
+    t_b8 CheckPointOnLineSegment(const t_v2 seg_begin, const t_v2 seg_end, const t_v2 pt, const t_f32 tol = k_tolerance_default);
+
     constexpr t_v2 ClampWithinContainer(const t_v2 pt, const t_rect_f container) {
         return {Clamp(pt.x, RectGetLeft(container), RectGetRight(container)), Clamp(pt.y, RectGetTop(container), RectGetBottom(container))};
     }
@@ -612,8 +616,6 @@ namespace zcl {
     t_rect_i CalcSpanningRect(const t_array_mut<t_rect_i> rects);
     t_rect_f CalcSpanningRect(const t_poly_rdonly poly);
 
-    t_poly_mut CalcSpanningPoly(const t_rect_f a, const t_rect_f b, t_arena *const arena);
-
     t_b8 CheckInters(const t_poly_rdonly poly_a, const t_poly_rdonly poly_b);
 
     t_b8 CheckInters(const t_poly_rdonly poly, const t_rect_f rect);
@@ -622,10 +624,10 @@ namespace zcl {
         return CheckInters(poly, rect);
     }
 
-    t_b8 CheckInters(const t_poly_rdonly poly, const t_v2 segment_begin, const t_v2 segment_end);
+    t_b8 CheckInters(const t_poly_rdonly poly, const t_v2 line_seg_begin, const t_v2 line_seg_end);
 
-    inline t_b8 CheckInters(const t_v2 segment_begin, const t_v2 segment_end, const t_poly_rdonly poly) {
-        return CheckInters(poly, segment_begin, segment_end);
+    inline t_b8 CheckInters(const t_v2 line_seg_begin, const t_v2 line_seg_end, const t_poly_rdonly poly) {
+        return CheckInters(poly, line_seg_begin, line_seg_end);
     }
 
     constexpr t_b8 CheckInters(const t_rect_f a, const t_rect_f b) {
@@ -636,8 +638,7 @@ namespace zcl {
         return RectGetLeft(a) < RectGetRight(b) && RectGetTop(a) < RectGetBottom(b) && RectGetRight(a) > RectGetLeft(b) && RectGetBottom(a) > RectGetTop(b);
     }
 
-    t_b8 CheckInters(const t_v2 seg_a_begin, const t_v2 seg_a_end, const t_v2 seg_b_begin, const t_v2 seg_b_end, const t_f32 tol = k_tolerance_default);
+    t_b8 CheckInters(const t_v2 line_seg_a_begin, const t_v2 line_seg_a_end, const t_v2 line_seg_b_begin, const t_v2 line_seg_b_end, const t_f32 tol = k_tolerance_default);
 
-    t_b8 CheckPointOnSegment(const t_v2 seg_begin, const t_v2 seg_end, const t_v2 pt, const t_f32 tol = k_tolerance_default);
-    t_b8 CheckCross(const t_v2 seg_a_begin, const t_v2 seg_a_end, const t_v2 seg_b_begin, const t_v2 seg_b_end, const t_f32 tol = k_tolerance_default);
+    t_b8 CheckCross(const t_v2 line_seg_a_begin, const t_v2 line_seg_a_end, const t_v2 line_seg_b_begin, const t_v2 line_seg_b_end, const t_f32 tol = k_tolerance_default);
 }
