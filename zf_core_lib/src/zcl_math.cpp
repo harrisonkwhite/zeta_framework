@@ -260,4 +260,67 @@ namespace zcl {
 
         return {min_left, min_top, max_right - min_left, max_bottom - min_top};
     }
+
+    static t_f32 Orient(const t_v2 a, const t_v2 b, const t_v2 c) {
+        return CalcCrossProd(b - a, c - a);
+    }
+
+    static t_b8 CheckOppositeSides(const t_f32 a, const t_f32 b, const t_f32 tol = k_tolerance_default) {
+        return (a < -tol && b > tol) || (a > tol && b < -tol);
+    }
+
+    t_b8 CheckPointOnSegment(const t_v2 seg_begin, const t_v2 seg_end, const t_v2 pt, const t_f32 tol) {
+        ZCL_ASSERT(tol >= 0.0f);
+
+        if (!CheckNearlyEqual(Orient(seg_begin, seg_end, pt), 0.0f, tol)) {
+            return false;
+        }
+
+        return pt.x >= CalcMin(seg_begin.x, seg_end.x) - tol
+            && pt.x <= CalcMax(seg_begin.x, seg_end.x) + tol
+            && pt.y >= CalcMin(seg_begin.y, seg_end.y) - tol
+            && pt.y <= CalcMax(seg_begin.y, seg_end.y) + tol;
+    }
+
+    t_b8 SegmentsCheckCross(const t_v2 seg_a_begin, const t_v2 seg_a_end, const t_v2 seg_b_begin, const t_v2 seg_b_end, const t_f32 tol) {
+        ZCL_ASSERT(tol >= 0.0f);
+
+        const t_f32 o1 = Orient(seg_a_begin, seg_a_end, seg_b_begin);
+        const t_f32 o2 = Orient(seg_a_begin, seg_a_end, seg_b_end);
+        const t_f32 o3 = Orient(seg_b_begin, seg_b_end, seg_a_begin);
+        const t_f32 o4 = Orient(seg_b_begin, seg_b_end, seg_a_end);
+
+        return CheckOppositeSides(o1, o2, tol) && CheckOppositeSides(o3, o4, tol);
+    }
+
+    t_b8 SegmentsCheckIntersect(const t_v2 seg_a_begin, const t_v2 seg_a_end, const t_v2 seg_b_begin, const t_v2 seg_b_end, const t_f32 tol) {
+        ZCL_ASSERT(tol >= 0.0f);
+
+        const t_f32 o1 = Orient(seg_a_begin, seg_a_end, seg_b_begin);
+        const t_f32 o2 = Orient(seg_a_begin, seg_a_end, seg_b_end);
+        const t_f32 o3 = Orient(seg_b_begin, seg_b_end, seg_a_begin);
+        const t_f32 o4 = Orient(seg_b_begin, seg_b_end, seg_a_end);
+
+        if (CheckOppositeSides(o1, o2, tol) && CheckOppositeSides(o3, o4, tol)) {
+            return true;
+        }
+
+        if (CheckPointOnSegment(seg_a_begin, seg_a_end, seg_b_begin, tol)) {
+            return true;
+        }
+
+        if (CheckPointOnSegment(seg_a_begin, seg_a_end, seg_b_end, tol)) {
+            return true;
+        }
+
+        if (CheckPointOnSegment(seg_b_begin, seg_b_end, seg_a_begin, tol)) {
+            return true;
+        }
+
+        if (CheckPointOnSegment(seg_b_begin, seg_b_end, seg_a_end, tol)) {
+            return true;
+        }
+
+        return false;
+    }
 }

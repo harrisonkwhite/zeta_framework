@@ -6,8 +6,15 @@ namespace zcl {
     constexpr zcl::t_f32 k_tolerance_default = 1e-5f;
 
     constexpr t_b8 CheckNearlyEqual(const t_f32 val, const t_f32 targ, const t_f32 tol = k_tolerance_default) {
+        ZCL_ASSERT(!CheckNaN(val));
+        ZCL_ASSERT(!CheckNaN(targ));
         ZCL_ASSERT(tol >= 0.0f);
+
         return val >= targ - tol && val <= targ + tol;
+    }
+
+    constexpr t_f32 Snap(const t_f32 val, const t_f32 targ, const t_f32 tol = k_tolerance_default) {
+        return CheckNearlyEqual(val, targ, tol) ? targ : val;
     }
 
     constexpr t_f32 k_pi = 3.14159265358979323846f;
@@ -623,59 +630,6 @@ namespace zcl {
         return {tl.x, tl.y, CalcMax(CalcMin(RectGetRight(rect), RectGetRight(container)) - tl.x, 0), CalcMax(CalcMin(RectGetBottom(rect), RectGetBottom(container)) - tl.y, 0)};
     }
 
-    constexpr t_f32 Orient(const t_v2 a, const t_v2 b, const t_v2 c) {
-        return CalcCrossProd(b - a, c - a);
-    }
-
-    constexpr t_b8 CheckPointOnSegment(const t_v2 seg_begin, const t_v2 seg_end, const t_v2 pt, const t_f32 tol = k_tolerance_default) {
-        if (!CheckNearlyEqual(Orient(seg_begin, seg_end, pt), 0.0f, tol)) {
-            return false;
-        }
-
-        return pt.x >= CalcMin(seg_begin.x, seg_end.x)
-            && pt.x <= CalcMax(seg_begin.x, seg_end.x)
-            && pt.y >= CalcMin(seg_begin.y, seg_end.y)
-            && pt.y <= CalcMax(seg_begin.y, seg_end.y);
-    }
-
-    constexpr t_b8 CheckSegmentsCross(const t_v2 seg_a_begin, const t_v2 seg_a_end, const t_v2 seg_b_begin, const t_v2 seg_b_end) {
-        const t_f32 o1 = Orient(seg_a_begin, seg_a_end, seg_b_begin);
-        const t_f32 o2 = Orient(seg_a_begin, seg_a_end, seg_b_end);
-        const t_f32 o3 = Orient(seg_b_begin, seg_b_end, seg_a_begin);
-        const t_f32 o4 = Orient(seg_b_begin, seg_b_end, seg_a_end);
-
-        return (o1 * o2 < 0.0f) && (o3 * o4 < 0.0f);
-    }
-
-    constexpr t_b8 CheckSegmentsIntersect(const t_v2 seg_a_begin, const t_v2 seg_a_end, const t_v2 seg_b_begin, const t_v2 seg_b_end, const t_f32 tol = k_tolerance_default) {
-        const t_f32 o1 = Orient(seg_a_begin, seg_a_end, seg_b_begin);
-        const t_f32 o2 = Orient(seg_a_begin, seg_a_end, seg_b_end);
-        const t_f32 o3 = Orient(seg_b_begin, seg_b_end, seg_a_begin);
-        const t_f32 o4 = Orient(seg_b_begin, seg_b_end, seg_a_end);
-
-        if ((o1 * o2 < 0.0f) && (o3 * o4 < 0.0f)) {
-            return true;
-        }
-
-        if (CheckPointOnSegment(seg_a_begin, seg_a_end, seg_b_begin, tol)) {
-            return true;
-        }
-
-        if (CheckPointOnSegment(seg_a_begin, seg_a_end, seg_b_end, tol)) {
-            return true;
-        }
-
-        if (CheckPointOnSegment(seg_b_begin, seg_b_end, seg_a_begin, tol)) {
-            return true;
-        }
-
-        if (CheckPointOnSegment(seg_b_begin, seg_b_end, seg_a_end, tol)) {
-            return true;
-        }
-
-        return false;
-    }
-
     // Returns a value between 0 and 1 indicating what percentage of the rectangle is within the container.
     constexpr t_f32 CalcPercOfOccupance(const t_rect_f rect, const t_rect_f container) {
         ZCL_ASSERT(container.width > 0 && container.height > 0);
@@ -697,4 +651,8 @@ namespace zcl {
 
     t_rect_i CalcSpanningRect(const t_array_mut<t_v2_i> pts);
     t_rect_i CalcSpanningRect(const t_array_mut<t_rect_i> rects);
+
+    t_b8 CheckPointOnSegment(const t_v2 seg_begin, const t_v2 seg_end, const t_v2 pt, const t_f32 tol = k_tolerance_default);
+    t_b8 SegmentsCheckCross(const t_v2 seg_a_begin, const t_v2 seg_a_end, const t_v2 seg_b_begin, const t_v2 seg_b_end, const t_f32 tol = k_tolerance_default);
+    t_b8 SegmentsCheckIntersect(const t_v2 seg_a_begin, const t_v2 seg_a_end, const t_v2 seg_b_begin, const t_v2 seg_b_end, const t_f32 tol = k_tolerance_default);
 }
