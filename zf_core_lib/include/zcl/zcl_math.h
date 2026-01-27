@@ -12,7 +12,7 @@ namespace zcl {
     constexpr t_f32 k_pi = 3.14159265358979323846f;
     constexpr t_f32 k_tau = 6.28318530717958647692f;
 
-    constexpr zcl::t_f32 k_tolerance_default = 1e-5f;
+    constexpr t_f32 k_tolerance_default = 1e-5f;
 
     struct t_v2 {
         t_f32 x;
@@ -408,6 +408,14 @@ namespace zcl {
 
     constexpr t_rect_i RectCreateI(const t_v2_i pos, const t_v2_i size) {
         return RectCreateI(pos.x, pos.y, size.x, size.y);
+    }
+
+    constexpr t_rect_f RectCreateTranslated(const t_rect_f rect, const t_v2 offs) {
+        return RectCreateF(rect.x + offs.x, rect.y + offs.y, rect.width, rect.height);
+    }
+
+    constexpr t_rect_i RectCreateTranslated(const t_rect_i rect, const t_v2_i offs) {
+        return RectCreateI(rect.x + offs.x, rect.y + offs.y, rect.width, rect.height);
     }
 
     constexpr t_v2 RectGetPos(const t_rect_f rect) { return {rect.x, rect.y}; }
