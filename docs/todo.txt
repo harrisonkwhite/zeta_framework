@@ -1,3 +1,6 @@
+- Helpers for polygon drawing
+- Debug services, ability to see how long last frame took not just FPS
+- Would be really good for the global modules to be able to capture a state snapshot in the form of a struct and then reproduce the module state from that struct. Makes testing easier.
 - Be more consistent about when REQUIRE is used instead of ASSERT
 
 - Could be an idea to have a macro e.g. ZCL_UNSAFE that basically has array out-of-bounds checking non-fatal

@@ -275,6 +275,14 @@ namespace zgl {
         RendererSubmit(rc, zcl::ArrayToNonstatic(&triangles));
     }
 
+    void RendererSubmitLineSegment(const t_rendering_context rc, const zcl::t_v2 pos_begin, const zcl::t_v2 pos_end, const zcl::t_color_rgba32f color, const zcl::t_f32 thickness) {
+        ZCL_ASSERT(thickness >= 0.0f);
+
+        const zcl::t_v2 size = {zcl::CalcDist(pos_begin, pos_end), thickness};
+        const zcl::t_f32 rot = zcl::CalcDirRads(pos_begin, pos_end);
+        RendererSubmitRectRotated(rc, pos_begin, size, {0.0f, 0.5f}, rot, color);
+    }
+
     void RendererSubmitTexture(const t_rendering_context rc, const t_gfx_resource *const texture, const zcl::t_v2 pos, const zcl::t_rect_i src_rect, const zcl::t_v2 origin, const zcl::t_f32 rot, const zcl::t_v2 scale) {
         const auto texture_size = TextureGetSize(rc.gfx_ticket, texture);
 
