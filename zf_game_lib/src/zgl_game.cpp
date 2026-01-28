@@ -196,6 +196,7 @@ namespace zgl {
             config.render_func({
                 .perm_arena = &perm_arena,
                 .temp_arena = &temp_arena,
+                .input_state = input_state,
                 .platform_ticket = platform_ticket,
                 .rendering_context = rendering_context,
                 .rng = rng,

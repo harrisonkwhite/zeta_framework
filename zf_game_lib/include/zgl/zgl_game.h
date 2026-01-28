@@ -63,6 +63,8 @@ namespace zgl {
         zcl::t_arena *perm_arena;
         zcl::t_arena *temp_arena;
 
+        const t_input_state *input_state;
+
         t_platform_ticket_rdonly platform_ticket;
 
         t_rendering_context rendering_context;
