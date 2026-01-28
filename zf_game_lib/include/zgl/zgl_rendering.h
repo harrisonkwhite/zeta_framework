@@ -43,10 +43,10 @@ namespace zgl {
     void RendererSetShaderProg(const t_rendering_context rc, const t_gfx_resource *const prog);
 
     // Leave texture as nullptr for no texture.
-    void RendererSubmit(const t_rendering_context rc, const zcl::t_array_rdonly<t_triangle> triangles, const t_gfx_resource *const texture = nullptr);
+    void RendererSubmit(const t_rendering_context rc, const zcl::t_array_rdonly<t_gfx_triangle> triangles, const t_gfx_resource *const texture = nullptr);
 
     inline void RendererSubmitTriangle(const t_rendering_context rc, const zcl::t_static_array<zcl::t_v2, 3> &pts, const zcl::t_static_array<zcl::t_color_rgba32f, 3> &pt_colors) {
-        const t_triangle triangle = {
+        const t_gfx_triangle triangle = {
             .vertices = {{
                 {.pos = pts[0], .blend = pt_colors[0], .uv = {}},
                 {.pos = pts[1], .blend = pt_colors[1], .uv = {}},
@@ -74,6 +74,8 @@ namespace zgl {
     }
 
     void RendererSubmitLineSegment(const t_rendering_context rc, const zcl::t_v2 pos_begin, const zcl::t_v2 pos_end, const zcl::t_color_rgba32f color, const zcl::t_f32 thickness = 1.0f);
+
+    void RendererSubmitPolyOutline(const t_rendering_context rc, const zcl::t_poly_rdonly poly, const zcl::t_color_rgba32f color, const zcl::t_f32 thickness = 1.0f);
 
     void RendererSubmitTexture(const t_rendering_context rc, const t_gfx_resource *const texture, const zcl::t_v2 pos, const zcl::t_rect_i src_rect = {}, const zcl::t_v2 origin = zcl::k_origin_top_left, const zcl::t_f32 rot = 0.0f, const zcl::t_v2 scale = {1.0f, 1.0f});
 

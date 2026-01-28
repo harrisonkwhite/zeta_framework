@@ -193,7 +193,7 @@ namespace zgl {
         return resource;
     }
 
-    void internal::VertexBufWrite(const t_gfx_ticket_mut gfx_ticket, t_gfx_resource *const dest_vertex_buf, const zcl::t_i32 dest_vertices_index, const zcl::t_array_rdonly<t_vertex> src_vertices) {
+    void internal::VertexBufWrite(const t_gfx_ticket_mut gfx_ticket, t_gfx_resource *const dest_vertex_buf, const zcl::t_i32 dest_vertices_index, const zcl::t_array_rdonly<t_gfx_vertex> src_vertices) {
         ZCL_ASSERT(g_state.phase != ek_phase_inactive);
         ZCL_ASSERT(TicketCheckValid(gfx_ticket));
         ZCL_ASSERT(dest_vertex_buf->type == ek_gfx_resource_type_vertex_buf);

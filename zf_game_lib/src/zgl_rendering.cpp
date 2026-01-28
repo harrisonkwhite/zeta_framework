@@ -36,7 +36,7 @@ namespace zgl {
         const t_gfx_resource *shader_prog;
 
         struct {
-            zcl::t_static_array<t_vertex, k_batch_vertex_limit> vertices;
+            zcl::t_static_array<t_gfx_vertex, k_batch_vertex_limit> vertices;
             zcl::t_i32 vertex_cnt;
 
             const t_gfx_resource *texture;
@@ -194,7 +194,7 @@ namespace zgl {
         }
     }
 
-    void RendererSubmit(const t_rendering_context rc, const zcl::t_array_rdonly<t_triangle> triangles, const t_gfx_resource *const texture) {
+    void RendererSubmit(const t_rendering_context rc, const zcl::t_array_rdonly<t_gfx_triangle> triangles, const t_gfx_resource *const texture) {
         ZCL_ASSERT(rc.state->pass_index != -1 && "A pass must be set before submitting primitives!");
         ZCL_ASSERT(triangles.len > 0);
 
@@ -206,7 +206,7 @@ namespace zgl {
 
 #ifdef ZCL_DEBUG
         for (zcl::t_i32 i = 0; i < triangles.len; i++) {
-            ZCL_ASSERT(TriangleCheckValid(triangles[i]));
+            ZCL_ASSERT(GFXTriangleCheckValid(triangles[i]));
         }
 #endif
 
@@ -228,7 +228,7 @@ namespace zgl {
     void RendererSubmitRect(const t_rendering_context rc, const zcl::t_rect_f rect, const zcl::t_color_rgba32f color_topleft, const zcl::t_color_rgba32f color_topright, const zcl::t_color_rgba32f color_bottomright, const zcl::t_color_rgba32f color_bottomleft) {
         ZCL_ASSERT(rect.width > 0.0f && rect.height > 0.0f);
 
-        const zcl::t_static_array<t_triangle, 2> triangles = {{
+        const zcl::t_static_array<t_gfx_triangle, 2> triangles = {{
             {
                 .vertices = {{
                     {.pos = zcl::RectGetTopLeft(rect), .blend = color_topleft, .uv = {0.0f, 0.0f}},
@@ -255,7 +255,7 @@ namespace zgl {
         zcl::t_arena quad_pts_arena = zcl::ArenaCreateWrapping(zcl::ToBytes(&quad_pts));
         const zcl::t_poly_mut quad_poly = zcl::PolyCreateQuadRotated(pos, size, origin, rot, &quad_pts_arena);
 
-        const zcl::t_static_array<t_triangle, 2> triangles = {{
+        const zcl::t_static_array<t_gfx_triangle, 2> triangles = {{
             {
                 .vertices = {{
                     {.pos = quad_poly.pts[0], .blend = color_topleft, .uv = {}},
@@ -281,6 +281,18 @@ namespace zgl {
         const zcl::t_v2 size = {zcl::CalcDist(pos_begin, pos_end), thickness};
         const zcl::t_f32 rot = zcl::CalcDirRads(pos_begin, pos_end);
         RendererSubmitRectRotated(rc, pos_begin, size, {0.0f, 0.5f}, rot, color);
+    }
+
+    void RendererSubmitPolyOutline(const t_rendering_context rc, const zcl::t_poly_rdonly poly, const zcl::t_color_rgba32f color, const zcl::t_f32 thickness) {
+        ZCL_ASSERT(thickness >= 0.0f);
+
+        for (zcl::t_i32 i = 0; i < poly.pts.len; i++) {
+            const zcl::t_v2 a = poly.pts[i];
+            const zcl::t_v2 b = poly.pts[(i + 1) % poly.pts.len];
+
+            // @todo: If you've got alpha in the colour, the lines will awkwardly overlap instead of existing as a single texture...
+            RendererSubmitLineSegment(rc, a, b, color, thickness);
+        }
     }
 
     static zcl::t_rect_f TextureUVRectCalc(const zcl::t_rect_i src_rect, const zcl::t_v2_i texture_size) {
@@ -314,7 +326,7 @@ namespace zgl {
         const zcl::t_v2 quad_size = zcl::CalcCompwiseProd(zcl::V2IToF(zcl::RectGetSize(src_rect_to_use)), scale);
         const zcl::t_poly_mut quad_poly = zcl::PolyCreateQuadRotated(pos, quad_size, origin, rot, &quad_pts_arena);
 
-        const zcl::t_static_array<t_triangle, 2> triangles = {{
+        const zcl::t_static_array<t_gfx_triangle, 2> triangles = {{
             {
                 .vertices = {{
                     {.pos = quad_poly.pts[0], .blend = zcl::k_color_white, .uv = zcl::RectGetTopLeft(uv_rect)},
@@ -463,7 +475,7 @@ namespace zgl {
 
             const zcl::t_rect_f uv_rect = TextureUVRectCalc(glyph_info->atlas_rect, zcl::k_font_atlas_texture_size);
 
-            const zcl::t_static_array<t_triangle, 2> triangles = {{
+            const zcl::t_static_array<t_gfx_triangle, 2> triangles = {{
                 {
                     .vertices = {{
                         {.pos = quad_poly.pts[0], .blend = zcl::k_color_white, .uv = zcl::RectGetTopLeft(uv_rect)},

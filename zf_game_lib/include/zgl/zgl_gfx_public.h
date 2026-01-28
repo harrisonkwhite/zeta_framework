@@ -19,25 +19,25 @@ namespace zgl {
     struct t_gfx_resource_group;
     struct t_gfx_resource;
 
-    struct t_vertex {
+    struct t_gfx_vertex {
         zcl::t_v2 pos;
         zcl::t_color_rgba32f blend;
         zcl::t_v2 uv;
     };
 
-    constexpr zcl::t_b8 VertexCheckValid(const t_vertex v) {
+    constexpr zcl::t_b8 GFXVertexCheckValid(const t_gfx_vertex v) {
         return zcl::ColorCheckNormalized(v.blend)
             && v.uv.x >= 0.0f && v.uv.y >= 0.0f && v.uv.x <= 1.0f && v.uv.y <= 1.0f;
     }
 
-    struct t_triangle {
-        zcl::t_static_array<t_vertex, 3> vertices;
+    struct t_gfx_triangle {
+        zcl::t_static_array<t_gfx_vertex, 3> vertices;
     };
 
-    constexpr zcl::t_b8 TriangleCheckValid(const t_triangle tri) {
-        return VertexCheckValid(tri.vertices[0])
-            && VertexCheckValid(tri.vertices[1])
-            && VertexCheckValid(tri.vertices[2]);
+    constexpr zcl::t_b8 GFXTriangleCheckValid(const t_gfx_triangle tri) {
+        return GFXVertexCheckValid(tri.vertices[0])
+            && GFXVertexCheckValid(tri.vertices[1])
+            && GFXVertexCheckValid(tri.vertices[2]);
     }
 
     zcl::t_v2_i BackbufferGetSize(const t_gfx_ticket_rdonly gfx_ticket);
@@ -90,7 +90,7 @@ namespace zgl {
         void GFXShutdown(const t_gfx_ticket_mut gfx_ticket);
 
         t_gfx_resource *VertexBufCreate(const t_gfx_ticket_mut gfx_ticket, const zcl::t_i32 vertex_cnt, t_gfx_resource_group *const resource_group);
-        void VertexBufWrite(const t_gfx_ticket_mut gfx_ticket, t_gfx_resource *const dest_vertex_buf, const zcl::t_i32 dest_vertices_index, const zcl::t_array_rdonly<t_vertex> src_vertices);
+        void VertexBufWrite(const t_gfx_ticket_mut gfx_ticket, t_gfx_resource *const dest_vertex_buf, const zcl::t_i32 dest_vertices_index, const zcl::t_array_rdonly<t_gfx_vertex> src_vertices);
         zcl::t_i32 VertexBufGetVertexCount(const t_gfx_ticket_rdonly gfx_ticket, const t_gfx_resource *const vertex_buf);
 
         // The given size must be different to the current backbuffer size.
