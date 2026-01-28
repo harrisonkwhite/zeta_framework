@@ -40,13 +40,15 @@ endfunction()
 embed_shader(vertex_shader_default VERTEX_SHADER_DEFAULT vertex)
 embed_shader(fragment_shader_default FRAGMENT_SHADER_DEFAULT fragment)
 embed_shader(fragment_shader_str FRAGMENT_SHADER_STR fragment)
-embed_shader(fragment_shader_blend FRAGMENT_SHADER_TINT fragment)
+embed_shader(fragment_shader_blend FRAGMENT_SHADER_BLEND fragment)
+embed_shader(fragment_shader_alpha FRAGMENT_SHADER_ALPHA fragment)
 
 set_source_files_properties(
     ${VERTEX_SHADER_DEFAULT_CPP}
     ${FRAGMENT_SHADER_DEFAULT_CPP}
     ${FRAGMENT_SHADER_STR_CPP}
-    ${FRAGMENT_SHADER_TINT_CPP}
+    ${FRAGMENT_SHADER_BLEND_CPP}
+    ${FRAGMENT_SHADER_ALPHA_CPP}
     PROPERTIES GENERATED TRUE
 )
 
@@ -80,7 +82,8 @@ target_sources(zf_game_lib PRIVATE
     ${VERTEX_SHADER_DEFAULT_CPP}
     ${FRAGMENT_SHADER_DEFAULT_CPP}
     ${FRAGMENT_SHADER_STR_CPP}
-    ${FRAGMENT_SHADER_TINT_CPP}
+    ${FRAGMENT_SHADER_BLEND_CPP}
+    ${FRAGMENT_SHADER_ALPHA_CPP}
 )
 
 target_compile_features(zf_game_lib PUBLIC cxx_std_20)

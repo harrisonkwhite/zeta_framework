@@ -13,6 +13,9 @@ namespace zgl {
     extern const zcl::t_u8 g_fragment_shader_blend_src_raw[];
     extern const zcl::t_i32 g_fragment_shader_blend_src_len;
 
+    extern const zcl::t_u8 g_fragment_shader_alpha_src_raw[];
+    extern const zcl::t_i32 g_fragment_shader_alpha_src_len;
+
     struct t_rendering_basis {
         t_gfx_resource_group *perm_resource_group;
 
@@ -72,7 +75,12 @@ namespace zgl {
                 fragment_shader_compiled_bin = {g_fragment_shader_blend_src_raw, g_fragment_shader_blend_src_len};
                 break;
 
-            case ekm_renderer_builtin_shader_prog_id_cnt:
+            case ek_renderer_builtin_shader_prog_id_alpha:
+                vertex_shader_compiled_bin = {g_vertex_shader_default_src_raw, g_vertex_shader_default_src_len};
+                fragment_shader_compiled_bin = {g_fragment_shader_alpha_src_raw, g_fragment_shader_alpha_src_len};
+                break;
+
+            default:
                 ZCL_UNREACHABLE();
             }
 
@@ -89,7 +97,11 @@ namespace zgl {
                 basis->uniforms[i] = UniformCreate(gfx_ticket, ZCL_STR_LITERAL("u_blend"), ek_uniform_type_v4, basis->perm_resource_group, temp_arena);
                 break;
 
-            case ekm_renderer_builtin_uniform_id_cnt:
+            case ek_renderer_builtin_uniform_id_alpha:
+                basis->uniforms[i] = UniformCreate(gfx_ticket, ZCL_STR_LITERAL("u_alpha"), ek_uniform_type_v4, basis->perm_resource_group, temp_arena);
+                break;
+
+            default:
                 ZCL_UNREACHABLE();
             }
         }
@@ -286,13 +298,21 @@ namespace zgl {
     void RendererSubmitPolyOutline(const t_rendering_context rc, const zcl::t_poly_rdonly poly, const zcl::t_color_rgba32f color, const zcl::t_f32 thickness) {
         ZCL_ASSERT(thickness >= 0.0f);
 
+        // @todo: There needs to be some way to "lock" implicit flushes, i.e. fatal error when batch is full. This might also mean making flushing public.
+
+        RendererSetShaderProg(rc, rc.basis->shader_progs[ek_renderer_builtin_shader_prog_id_alpha]);
+
+        UniformSetV4(rc.gfx_ticket, rc.basis->uniforms[ek_renderer_builtin_uniform_id_alpha], {color.a, 0.0f, 0.0f, 0.0f});
+
         for (zcl::t_i32 i = 0; i < poly.pts.len; i++) {
             const zcl::t_v2 a = poly.pts[i];
             const zcl::t_v2 b = poly.pts[(i + 1) % poly.pts.len];
 
             // @todo: If you've got alpha in the colour, the lines will awkwardly overlap instead of existing as a single texture...
-            RendererSubmitLineSegment(rc, a, b, color, thickness);
+            RendererSubmitLineSegment(rc, a, b, {color.r, color.g, color.b, 1.0f}, thickness);
         }
+
+        RendererSetShaderProg(rc, nullptr);
     }
 
     static zcl::t_rect_f TextureUVRectCalc(const zcl::t_rect_i src_rect, const zcl::t_v2_i texture_size) {
