@@ -91,7 +91,7 @@ namespace zcl {
 
     static t_u64 GetOSEntropy() {
 #if defined(ZCL_PLATFORM_WINDOWS)
-        zcl::t_u64 result = 0;
+        t_u64 result = 0;
 
         const NTSTATUS status = BCryptGenRandom(nullptr, reinterpret_cast<UCHAR *>(&result), static_cast<ULONG>(ZCL_SIZE_OF(result)), BCRYPT_USE_SYSTEM_PREFERRED_RNG);
         ZCL_REQUIRE(status >= 0);

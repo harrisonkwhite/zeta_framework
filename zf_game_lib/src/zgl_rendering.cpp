@@ -283,6 +283,18 @@ namespace zgl {
         RendererSubmitRectRotated(rc, pos_begin, size, {0.0f, 0.5f}, rot, color);
     }
 
+    static zcl::t_rect_f TextureUVRectCalc(const zcl::t_rect_i src_rect, const zcl::t_v2_i texture_size) {
+        ZCL_ASSERT(texture_size.x > 0 && texture_size.y > 0);
+        ZCL_ASSERT(src_rect.x >= 0 && src_rect.y >= 0 && src_rect.width > 0 && src_rect.height > 0 && zcl::RectGetRight(src_rect) <= texture_size.x && zcl::RectGetBottom(src_rect) <= texture_size.y);
+
+        return {
+            static_cast<zcl::t_f32>(src_rect.x) / static_cast<zcl::t_f32>(texture_size.x),
+            static_cast<zcl::t_f32>(src_rect.y) / static_cast<zcl::t_f32>(texture_size.y),
+            static_cast<zcl::t_f32>(src_rect.width) / static_cast<zcl::t_f32>(texture_size.x),
+            static_cast<zcl::t_f32>(src_rect.height) / static_cast<zcl::t_f32>(texture_size.y),
+        };
+    }
+
     void RendererSubmitTexture(const t_rendering_context rc, const t_gfx_resource *const texture, const zcl::t_v2 pos, const zcl::t_rect_i src_rect, const zcl::t_v2 origin, const zcl::t_f32 rot, const zcl::t_v2 scale) {
         const auto texture_size = TextureGetSize(rc.gfx_ticket, texture);
 
@@ -295,7 +307,7 @@ namespace zgl {
             src_rect_to_use = src_rect;
         }
 
-        const zcl::t_rect_f uv_rect = zcl::TextureCalcUVRect(src_rect_to_use, texture_size);
+        const zcl::t_rect_f uv_rect = TextureUVRectCalc(src_rect_to_use, texture_size);
 
         zcl::t_static_array<zcl::t_v2, 4> quad_pts;
         zcl::t_arena quad_pts_arena = zcl::ArenaCreateWrapping(zcl::ToBytes(&quad_pts));
@@ -449,7 +461,7 @@ namespace zgl {
             zcl::t_arena quad_pts_arena = zcl::ArenaCreateWrapping(zcl::ToBytes(&quad_pts));
             const zcl::t_poly_mut quad_poly = zcl::PolyCreateQuadRotated(chr_pos, zcl::CalcCompwiseProd(zcl::V2IToF(zcl::RectGetSize(glyph_info->atlas_rect)), scale), {}, rot, &quad_pts_arena);
 
-            const zcl::t_rect_f uv_rect = zcl::TextureCalcUVRect(glyph_info->atlas_rect, zcl::k_font_atlas_texture_size);
+            const zcl::t_rect_f uv_rect = TextureUVRectCalc(glyph_info->atlas_rect, zcl::k_font_atlas_texture_size);
 
             const zcl::t_static_array<t_triangle, 2> triangles = {{
                 {

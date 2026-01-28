@@ -5,17 +5,17 @@
 #include <zcl/zcl_strs.h>
 
 namespace zcl {
-    constexpr zcl::t_v2 k_origin_top_left = {0.0f, 0.0f};
-    constexpr zcl::t_v2 k_origin_top_center = {0.5f, 0.0f};
-    constexpr zcl::t_v2 k_origin_top_right = {1.0f, 0.0f};
-    constexpr zcl::t_v2 k_origin_center_left = {0.0f, 0.5f};
-    constexpr zcl::t_v2 k_origin_center = {0.5f, 0.5f};
-    constexpr zcl::t_v2 k_origin_center_right = {1.0f, 0.5f};
-    constexpr zcl::t_v2 k_origin_bottom_left = {0.0f, 1.0f};
-    constexpr zcl::t_v2 k_origin_bottom_center = {0.5f, 1.0f};
-    constexpr zcl::t_v2 k_origin_bottom_right = {1.0f, 1.0f};
+    constexpr t_v2 k_origin_top_left = {0.0f, 0.0f};
+    constexpr t_v2 k_origin_top_center = {0.5f, 0.0f};
+    constexpr t_v2 k_origin_top_right = {1.0f, 0.0f};
+    constexpr t_v2 k_origin_center_left = {0.0f, 0.5f};
+    constexpr t_v2 k_origin_center = {0.5f, 0.5f};
+    constexpr t_v2 k_origin_center_right = {1.0f, 0.5f};
+    constexpr t_v2 k_origin_bottom_left = {0.0f, 1.0f};
+    constexpr t_v2 k_origin_bottom_center = {0.5f, 1.0f};
+    constexpr t_v2 k_origin_bottom_right = {1.0f, 1.0f};
 
-    constexpr zcl::t_b8 OriginCheckValid(const zcl::t_v2 origin) {
+    constexpr t_b8 OriginCheckValid(const t_v2 origin) {
         return origin.x >= 0.0f && origin.x <= 1.0f && origin.y >= 0.0f && origin.y <= 1.0f;
     }
 
@@ -176,18 +176,6 @@ namespace zcl {
     };
 
     [[nodiscard]] t_b8 TextureLoadFromUnbuilt(const t_str_rdonly file_path, t_arena *const texture_data_arena, t_arena *const temp_arena, t_texture_data_mut *const o_texture_data);
-
-    constexpr t_rect_f TextureCalcUVRect(const t_rect_i src_rect, const t_v2_i texture_size) {
-        ZCL_ASSERT(texture_size.x > 0 && texture_size.y > 0);
-        ZCL_ASSERT(src_rect.x >= 0 && src_rect.y >= 0 && src_rect.width > 0 && src_rect.height > 0 && RectGetRight(src_rect) <= texture_size.x && RectGetBottom(src_rect) <= texture_size.y);
-
-        return {
-            static_cast<t_f32>(src_rect.x) / static_cast<t_f32>(texture_size.x),
-            static_cast<t_f32>(src_rect.y) / static_cast<t_f32>(texture_size.y),
-            static_cast<t_f32>(src_rect.width) / static_cast<t_f32>(texture_size.x),
-            static_cast<t_f32>(src_rect.height) / static_cast<t_f32>(texture_size.y),
-        };
-    }
 
     // ============================================================
 
