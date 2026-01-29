@@ -1,3 +1,4 @@
+- Be more consistent about cases where rectangles with negative sizes are valid - they exist
 - There should be a consistent notion of "backbuffer size" or "window size" shared between both rendering context and tick context. It's too much of a mess right now.
 - Helpers for polygon drawing
 - Debug services, ability to see how long last frame took not just FPS

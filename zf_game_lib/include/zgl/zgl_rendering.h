@@ -73,6 +73,8 @@ namespace zgl {
         RendererSubmitRectRotated(rc, pos, size, origin, rot, color, color, color, color);
     }
 
+    void RendererSubmitRectOutline(const t_rendering_context rc, const zcl::t_rect_f rect, const zcl::t_color_rgba32f color, const zcl::t_f32 thickness = 1.0f);
+
     void RendererSubmitLineSegment(const t_rendering_context rc, const zcl::t_v2 pos_begin, const zcl::t_v2 pos_end, const zcl::t_color_rgba32f color, const zcl::t_f32 thickness = 1.0f);
 
     void RendererSubmitPolyOutlineOpaque(const t_rendering_context rc, const zcl::t_poly_rdonly poly, const zcl::t_f32 color_r, const zcl::t_f32 color_g, const zcl::t_f32 color_b, const zcl::t_f32 thickness = 1.0f);
