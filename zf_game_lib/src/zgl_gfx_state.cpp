@@ -488,6 +488,8 @@ namespace zgl {
 
         if (clear) {
             bgfx::setViewClear(bgfx_view_id, BGFX_CLEAR_COLOR, zcl::ColorRGBA8ToHex(zcl::ColorRGBA32FToRGBA8(clear_col)));
+        } else {
+            bgfx::setViewClear(bgfx_view_id, BGFX_CLEAR_NONE);
         }
 
         bgfx::setViewFrameBuffer(bgfx_view_id, fb_hdl);
