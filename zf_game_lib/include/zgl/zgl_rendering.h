@@ -10,7 +10,6 @@ namespace zgl {
         ek_renderer_builtin_shader_prog_id_default,
         ek_renderer_builtin_shader_prog_id_str,
         ek_renderer_builtin_shader_prog_id_blend,
-        ek_renderer_builtin_shader_prog_id_alpha,
 
         ekm_renderer_builtin_shader_prog_id_cnt
     };
@@ -20,7 +19,6 @@ namespace zgl {
     enum t_renderer_builtin_uniform_id : zcl::t_i32 {
         ek_renderer_builtin_uniform_id_sampler,
         ek_renderer_builtin_uniform_id_blend,
-        ek_renderer_builtin_uniform_id_alpha,
 
         ekm_renderer_builtin_uniform_id_cnt
     };
