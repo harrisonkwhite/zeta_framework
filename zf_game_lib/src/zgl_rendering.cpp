@@ -370,7 +370,7 @@ namespace zgl {
             return meta;
         }();
 
-        const auto positions = zcl::ArenaPushArray<zcl::t_v2>(arena, str_meta.len);
+        const auto result = zcl::ArenaPushArray<zcl::t_v2>(arena, str_meta.len);
 
         const zcl::t_f32 offs_y = static_cast<zcl::t_f32>(-(str_meta.line_cnt * font_arrangement.line_height)) * origin.y;
 
@@ -385,7 +385,7 @@ namespace zgl {
                 const auto line_width = chr_offs_pen.x;
 
                 for (zcl::t_i32 i = line_begin_chr_index; i < chr_index; i++) {
-                    positions[i].x -= line_width * origin.x;
+                    result[i].x -= line_width * origin.x;
                 }
             }
         };
@@ -426,8 +426,8 @@ namespace zgl {
                 }
             }
 
-            positions[chr_index] = chr_offs_pen + zcl::V2IToF(glyph_info->offs);
-            positions[chr_index].y += offs_y;
+            result[chr_index] = chr_offs_pen + zcl::V2IToF(glyph_info->offs);
+            result[chr_index].y += offs_y;
 
             chr_offs_pen.x += static_cast<zcl::t_f32>(glyph_info->adv);
 
@@ -436,7 +436,45 @@ namespace zgl {
 
         offs_x_applier();
 
-        return positions;
+        return result;
+    }
+
+    zcl::t_array_mut<zcl::t_poly_mut> RendererCalcStrChrColliders(const zcl::t_str_rdonly str, const t_font &font, const zcl::t_v2 pos, zcl::t_arena *const arena, zcl::t_arena *const temp_arena, const zcl::t_v2 origin, const zcl::t_f32 rot, const zcl::t_v2 scale) {
+        ZCL_ASSERT(zcl::StrCheckValidUTF8(str));
+        ZCL_ASSERT(zcl::OriginCheckValid(origin));
+
+        if (zcl::StrCheckEmpty(str)) {
+            return {}; // @todo: This should probably have the correct position, just no size.
+        }
+
+        const auto chr_offsets = RendererCalcStrChrOffsets(str, font.arrangement, origin, temp_arena);
+
+        const auto result = zcl::ArenaPushArray<zcl::t_poly_mut>(arena, chr_offsets.len);
+
+        zcl::t_i32 chr_index = 0;
+
+        ZCL_STR_WALK (str, step) {
+            ZCL_DEFER({ chr_index++; });
+
+            if (step.code_pt == ' ' || step.code_pt == '\n') {
+                continue;
+            }
+
+            zcl::t_font_glyph_info *glyph_info;
+
+            if (!zcl::HashMapFind(&font.arrangement.code_pts_to_glyph_infos, step.code_pt, &glyph_info)) {
+                ZCL_ASSERT(false && "Unsupported code point!");
+                continue;
+            }
+
+            const zcl::t_v2 chr_pos = pos
+                + zcl::CalcLengthDir(chr_offsets[chr_index].x * scale.x, rot)
+                + zcl::CalcLengthDir(chr_offsets[chr_index].y * scale.y, rot + (zcl::k_pi / 2.0f));
+
+            result[chr_index] = zcl::PolyCreateQuadRotated(chr_pos, zcl::CalcCompwiseProd(zcl::V2IToF(zcl::RectGetSize(glyph_info->atlas_rect)), scale), {}, rot, arena);
+        }
+
+        return result;
     }
 
     void RendererSubmitStr(const t_rendering_context rc, const zcl::t_str_rdonly str, const t_font &font, const zcl::t_v2 pos, zcl::t_arena *const temp_arena, const zcl::t_v2 origin, const zcl::t_f32 rot, const zcl::t_v2 scale, const zcl::t_color_rgba32f blend) {
@@ -454,8 +492,9 @@ namespace zgl {
         zcl::t_i32 chr_index = 0;
 
         ZCL_STR_WALK (str, step) {
+            ZCL_DEFER({ chr_index++; });
+
             if (step.code_pt == ' ' || step.code_pt == '\n') {
-                chr_index++;
                 continue;
             }
 
@@ -494,8 +533,6 @@ namespace zgl {
             }};
 
             RendererSubmit(rc, zcl::ArrayToNonstatic(&triangles), font.atlas_textures[glyph_info->atlas_index]);
-
-            chr_index++;
         }
 
         RendererSetShaderProg(rc, nullptr);

@@ -1,3 +1,4 @@
+- There should be a consistent notion of "backbuffer size" or "window size" shared between both rendering context and tick context. It's too much of a mess right now.
 - Helpers for polygon drawing
 - Debug services, ability to see how long last frame took not just FPS
 - Would be really good for the global modules to be able to capture a state snapshot in the form of a struct and then reproduce the module state from that struct. Makes testing easier.
