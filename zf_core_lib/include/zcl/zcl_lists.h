@@ -97,17 +97,22 @@ namespace zcl {
         return ArraySlice(ArrayToNonstatic(&list->backing_arr), 0, list->len);
     }
 
+    template <c_list tp_list_type>
+    void ListClear(tp_list_type *const list) {
+        list->len = 0;
+    }
+
     template <c_list_nonstatic tp_list_type>
     void ListExtend(tp_list_type *const list, t_arena *const arena, const t_list_extension_cap_calculator cap_calculator = k_list_extension_cap_calculator_default) {
         ZCL_ASSERT(cap_calculator);
 
-        const t_i32 new_cap = cap_calculator(ListGetCap(list));
-        ZCL_ASSERT(new_cap > ListGetCap(list));
+        const t_i32 cap_new = cap_calculator(ListGetCap(list));
+        ZCL_ASSERT(cap_new > ListGetCap(list));
 
-        const auto new_backing_arr = ArenaPushArray<tp_list_type>(arena, new_cap);
-        ArrayCopy(list->backing_arr, new_backing_arr);
+        const auto backing_arr_new = ArenaPushArray<typename tp_list_type::t_elem>(arena, cap_new);
+        ArrayCopy(list->backing_arr, backing_arr_new);
 
-        *list = {new_backing_arr, list->len};
+        *list = {backing_arr_new, list->len};
     }
 
     template <c_list_nonstatic tp_list_type>
@@ -115,7 +120,7 @@ namespace zcl {
         ZCL_ASSERT(min_cap > ListGetCap(list));
         ZCL_ASSERT(cap_calculator);
 
-        const t_i32 new_cap = [cap = ListGetCap(list), min_cap, cap_calculator]() {
+        const t_i32 cap_new = [cap = ListGetCap(list), min_cap, cap_calculator]() {
             t_i32 result = cap;
 
             do {
@@ -127,10 +132,10 @@ namespace zcl {
             return result;
         }();
 
-        const auto new_backing_arr = ArenaPushArray<typename tp_list_type::t_elem>(arena, new_cap);
-        ArrayCopy(list->backing_arr, new_backing_arr);
+        const auto backing_arr_new = ArenaPushArray<typename tp_list_type::t_elem>(arena, cap_new);
+        ArrayCopy(list->backing_arr, backing_arr_new);
 
-        *list = {new_backing_arr, list->len};
+        *list = {backing_arr_new, list->len};
     }
 
     template <c_list tp_list_type>
