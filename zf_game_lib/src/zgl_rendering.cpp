@@ -283,7 +283,8 @@ namespace zgl {
         RendererSubmitRectRotated(rc, pos_begin, size, {0.0f, 0.5f}, rot, color);
     }
 
-    void RendererSubmitPolyOutline(const t_rendering_context rc, const zcl::t_poly_rdonly poly, const zcl::t_color_rgba32f color, const zcl::t_f32 thickness) {
+    void RendererSubmitPolyOutlineOpaque(const t_rendering_context rc, const zcl::t_poly_rdonly poly, const zcl::t_color_rgba32f color_opaque, const zcl::t_f32 thickness) {
+        ZCL_ASSERT(color_opaque.a == 1.0f);
         ZCL_ASSERT(thickness >= 0.0f);
 
         for (zcl::t_i32 i = 0; i < poly.pts.len; i++) {
@@ -291,7 +292,7 @@ namespace zgl {
             const zcl::t_v2 b = poly.pts[(i + 1) % poly.pts.len];
             const zcl::t_v2 offs = zcl::CalcDir(b, a) * thickness * 0.5f;
 
-            RendererSubmitLineSegment(rc, a + offs, b + offs, color, thickness);
+            RendererSubmitLineSegment(rc, a + offs, b + offs, {color_opaque.r, color_opaque.g, color_opaque.b, 1.0f}, thickness);
         }
     }
 

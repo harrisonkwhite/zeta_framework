@@ -75,7 +75,8 @@ namespace zgl {
 
     void RendererSubmitLineSegment(const t_rendering_context rc, const zcl::t_v2 pos_begin, const zcl::t_v2 pos_end, const zcl::t_color_rgba32f color, const zcl::t_f32 thickness = 1.0f);
 
-    void RendererSubmitPolyOutline(const t_rendering_context rc, const zcl::t_poly_rdonly poly, const zcl::t_color_rgba32f color, const zcl::t_f32 thickness = 1.0f);
+    // color_opaque must have alpha exactly 1.0f.
+    void RendererSubmitPolyOutlineOpaque(const t_rendering_context rc, const zcl::t_poly_rdonly poly, const zcl::t_color_rgba32f color_opaque, const zcl::t_f32 thickness = 1.0f);
 
     void RendererSubmitTexture(const t_rendering_context rc, const t_gfx_resource *const texture, const zcl::t_v2 pos, const zcl::t_rect_i src_rect = {}, const zcl::t_v2 origin = zcl::k_origin_top_left, const zcl::t_f32 rot = 0.0f, const zcl::t_v2 scale = {1.0f, 1.0f});
 
