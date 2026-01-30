@@ -147,7 +147,7 @@ namespace zgl {
 
             .tps_target = 60.0,
 
-            .frame_vertex_limit = 8192,
+            .frame_vertex_limit = 524288,
         };
     }
 
