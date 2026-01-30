@@ -73,7 +73,8 @@ namespace zgl {
         RendererSubmitRectRotated(rc, pos, size, origin, rot, color, color, color, color);
     }
 
-    void RendererSubmitRectOutline(const t_rendering_context rc, const zcl::t_rect_f rect, const zcl::t_color_rgba32f color, const zcl::t_f32 thickness = 1.0f);
+    // innerness must be in the range [-1.0f, 1.0f]. 1.0f means the outline is completely outside the given rectangle, 0.0f means it is 50% outside and 50% inside, and -1.0f means completely inside.
+    void RendererSubmitRectOutlineOpaque(const t_rendering_context rc, const zcl::t_rect_f rect, const zcl::t_f32 color_r, const zcl::t_f32 color_g, const zcl::t_f32 color_b, const zcl::t_f32 innerness, const zcl::t_f32 thickness);
 
     void RendererSubmitLineSegment(const t_rendering_context rc, const zcl::t_v2 pos_begin, const zcl::t_v2 pos_end, const zcl::t_color_rgba32f color, const zcl::t_f32 thickness = 1.0f);
 

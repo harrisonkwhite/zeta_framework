@@ -279,14 +279,27 @@ namespace zgl {
         ZCL_ASSERT(thickness >= 0.0f);
         ZCL_ASSERT(innerness >= -1.0f && innerness <= 1.0f);
 
+        const zcl::t_f32 innerness_perc = (innerness + 1.0f) / 2.0f;
+        const zcl::t_f32 innerness_perc_inv = 1.0f - innerness_perc;
+
         const auto color = zcl::ColorCreateRGBA32F(color_r, color_g, color_b, 1.0f);
 
-        // With innerness -1
-        RendererSubmitRect(rc, zcl::RectCreateF(rect.x - thickness, rect.y - thickness, rect.width, thickness), color);
-        RendererSubmitRect(rc, zcl::RectCreateF(rect.x + rect.width - thickness, rect.y, thickness, rect.height - thickness), color);
-        RendererSubmitRect(rc, zcl::RectCreateF(rect.x + thickness, rect.y + rect.height - thickness, rect.width - thickness, thickness), color);
-        RendererSubmitRect(rc, zcl::RectCreateF(rect.x, rect.y + thickness, thickness, rect.height - thickness), color);
+        RendererSubmitRect(rc, zcl::RectCreateF(rect.x - (thickness * innerness_perc_inv), rect.y - (thickness * innerness_perc_inv), rect.width - (thickness * innerness), thickness), color);
 
+        RendererSubmitRect(rc, zcl::RectCreateF(rect.x + rect.width - (thickness * innerness_perc), rect.y - (thickness * innerness_perc_inv), thickness, rect.height + thickness), color);
+
+        RendererSubmitRect(rc, zcl::RectCreateF(rect.x, rect.y + rect.height, rect.width + thickness, thickness), color);
+        RendererSubmitRect(rc, zcl::RectCreateF(rect.x - thickness, rect.y, thickness, rect.height + thickness), color);
+
+        // thickness: -1
+#if 0
+        RendererSubmitRect(rc, zcl::RectCreateF(rect.x - thickness, rect.y - thickness, rect.width + thickness, thickness), color);
+        RendererSubmitRect(rc, zcl::RectCreateF(rect.x + rect.width, rect.y - thickness, thickness, rect.height + thickness), color);
+        RendererSubmitRect(rc, zcl::RectCreateF(rect.x, rect.y + rect.height, rect.width + thickness, thickness), color);
+        RendererSubmitRect(rc, zcl::RectCreateF(rect.x - thickness, rect.y, thickness, rect.height + thickness), color);
+#endif
+
+        // thickness: 1
 #if 0
         RendererSubmitRect(rc, zcl::RectCreateF(rect.x, rect.y, rect.width - thickness, thickness), color);
         RendererSubmitRect(rc, zcl::RectCreateF(rect.x + rect.width - thickness, rect.y, thickness, rect.height - thickness), color);
