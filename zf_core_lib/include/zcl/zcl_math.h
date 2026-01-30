@@ -580,6 +580,14 @@ namespace zcl {
 
     t_b8 CheckPointOnLineSegment(const t_v2 seg_begin, const t_v2 seg_end, const t_v2 pt, const t_f32 tol = k_tolerance_default);
 
+    constexpr t_b8 CheckRectInRect(const t_rect_f rect, const t_rect_f rect_container) {
+        return zcl::RectGetLeft(rect) >= zcl::RectGetLeft(rect_container) && zcl::RectGetTop(rect) >= zcl::RectGetTop(rect_container) && zcl::RectGetRight(rect) <= zcl::RectGetRight(rect_container) && zcl::RectGetRight(rect) <= zcl::RectGetRight(rect_container);
+    }
+
+    constexpr t_b8 CheckRectInRect(const t_rect_i rect, const t_rect_i rect_container) {
+        return zcl::RectGetLeft(rect) >= zcl::RectGetLeft(rect_container) && zcl::RectGetTop(rect) >= zcl::RectGetTop(rect_container) && zcl::RectGetRight(rect) <= zcl::RectGetRight(rect_container) && zcl::RectGetRight(rect) <= zcl::RectGetRight(rect_container);
+    }
+
     constexpr t_v2 ClampWithinContainer(const t_v2 pt, const t_rect_f container) {
         return {Clamp(pt.x, RectGetLeft(container), RectGetRight(container)), Clamp(pt.y, RectGetTop(container), RectGetBottom(container))};
     }
