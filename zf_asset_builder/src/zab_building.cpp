@@ -225,15 +225,15 @@ constexpr zcl::t_static_array<t_asset_field, ekm_sound_field_cnt> k_sound_fields
 }
 
 zcl::t_b8 BuildAssets(const zcl::t_str_rdonly instrs_json_file_path) {
-    zcl::t_arena arena = zcl::ArenaCreateBlockBased();
-    ZCL_DEFER({ zcl::ArenaDestroy(&arena); });
+    zcl::t_arena *const arena = zcl::ArenaCreateBlockBased();
+    ZCL_DEFER({ zcl::ArenaDestroy(arena); });
 
     cJSON *cj;
 
     {
         zcl::t_array_mut<zcl::t_u8> instrs_json_file_contents; // Not needed beyond this scope.
 
-        if (!zcl::FileLoadContents(instrs_json_file_path, &arena, &arena, &instrs_json_file_contents, true)) {
+        if (!zcl::FileLoadContents(instrs_json_file_path, arena, arena, &instrs_json_file_contents, true)) {
             zcl::LogError(ZCL_STR_LITERAL("Failed to load build instructions JSON file \"%\"!"), instrs_json_file_path);
             return false;
         }
@@ -281,7 +281,7 @@ zcl::t_b8 BuildAssets(const zcl::t_str_rdonly instrs_json_file_path) {
                 zcl::FileFlush(&std_out);
             }
 
-            zcl::ArenaRewind(&arena);
+            zcl::ArenaRewind(arena);
 
             if (!cJSON_IsObject(cj_asset)) {
                 zcl::LogError(ZCL_STR_LITERAL("JSON entry is of the wrong type! Expected an object."));
@@ -346,7 +346,7 @@ zcl::t_b8 BuildAssets(const zcl::t_str_rdonly instrs_json_file_path) {
                 const zcl::t_str_rdonly file_path = zcl::CStrToStr(field_cj_vals[ek_texture_field_file_path]->valuestring);
                 const zcl::t_str_rdonly out_file_path = zcl::CStrToStr(field_cj_vals[ek_texture_field_out_file_path]->valuestring);
 
-                if (!BuildTexture(file_path, out_file_path, &arena)) {
+                if (!BuildTexture(file_path, out_file_path, arena)) {
                     return false;
                 }
 
@@ -364,7 +364,7 @@ zcl::t_b8 BuildAssets(const zcl::t_str_rdonly instrs_json_file_path) {
 
                 const zcl::t_str_rdonly out_file_path = zcl::CStrToStr(field_cj_vals[ek_font_field_out_file_path]->valuestring);
 
-                if (!BuildFont(file_path, height, extra_chrs_file_path, out_file_path, &arena)) {
+                if (!BuildFont(file_path, height, extra_chrs_file_path, out_file_path, arena)) {
                     return false;
                 }
 
@@ -377,7 +377,7 @@ zcl::t_b8 BuildAssets(const zcl::t_str_rdonly instrs_json_file_path) {
                 const zcl::t_str_rdonly varying_def_file_path = zcl::CStrToStr(field_cj_vals[ek_shader_field_varying_def_file_path]->valuestring);
                 const zcl::t_str_rdonly out_file_path = zcl::CStrToStr(field_cj_vals[ek_shader_field_out_file_path]->valuestring);
 
-                if (!BuildShader(file_path, type, varying_def_file_path, out_file_path, &arena)) {
+                if (!BuildShader(file_path, type, varying_def_file_path, out_file_path, arena)) {
                     return false;
                 }
 
@@ -388,7 +388,7 @@ zcl::t_b8 BuildAssets(const zcl::t_str_rdonly instrs_json_file_path) {
                 const zcl::t_str_rdonly file_path = zcl::CStrToStr(field_cj_vals[ek_sound_field_file_path]->valuestring);
                 const zcl::t_str_rdonly out_file_path = zcl::CStrToStr(field_cj_vals[ek_sound_field_out_file_path]->valuestring);
 
-                if (!BuildSound(file_path, out_file_path, &arena)) {
+                if (!BuildSound(file_path, out_file_path, arena)) {
                     return false;
                 }
 

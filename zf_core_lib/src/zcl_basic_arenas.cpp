@@ -1,23 +1,87 @@
 #include <zcl/zcl_basic.h>
 
 namespace zcl {
+    struct t_arena_block {
+        void *buf;
+        t_i32 buf_size;
+
+        t_arena_block *next;
+    };
+
+    struct t_arena {
+        t_arena_type type;
+
+        union {
+            struct {
+                t_arena_block *blocks_head;
+                t_arena_block *block_cur;
+                t_i32 block_cur_offs;
+                t_i32 block_min_size;
+            } block_based;
+
+            struct {
+                void *buf;
+                t_i32 buf_size;
+                t_i32 buf_offs;
+            } wrapping;
+        } type_data;
+    };
+
+    t_arena *ArenaCreateBlockBased(const t_i32 block_min_size) {
+        ZCL_ASSERT(block_min_size > 0);
+
+        // @todo: Plain Alloc() and AllocRaw() helpers.
+
+        const auto result = static_cast<t_arena *>(malloc(sizeof(t_arena)));
+
+        if (!result) {
+            ZCL_FATAL();
+        }
+
+        ZeroClearItem(result);
+
+        result->type = ek_arena_type_block_based;
+        result->type_data = {.block_based = {.block_min_size = block_min_size}};
+
+        return result;
+    }
+
+    t_arena *ArenaCreateWrapping(const t_array_mut<t_u8> bytes) {
+        ZeroClear(bytes.raw, bytes.len);
+
+        const auto result = static_cast<t_arena *>(malloc(sizeof(t_arena)));
+
+        if (!result) {
+            ZCL_FATAL();
+        }
+
+        ZeroClearItem(result);
+
+        result->type = ek_arena_type_wrapping;
+        result->type_data = {.wrapping = {.buf = bytes.raw, .buf_size = bytes.len}};
+
+        return result;
+    }
+
     void ArenaDestroy(t_arena *const arena) {
-        ZCL_ASSERT(arena->type == ek_arena_type_block_based);
+        if (arena->type == ek_arena_type_block_based) {
+            const auto f = [](const auto self, t_arena_block *const block) {
+                if (!block) {
+                    return;
+                }
 
-        const auto f = [](const auto self, t_arena_block *const block) {
-            if (!block) {
-                return;
-            }
+                self(self, block->next);
 
-            self(self, block->next);
+                free(block->buf);
+                free(block);
+            };
 
-            free(block->buf);
-            free(block);
-        };
-
-        f(f, arena->type_data.block_based.blocks_head);
+            f(f, arena->type_data.block_based.blocks_head);
+        }
 
         *arena = {};
+
+        free(arena);
     }
 
     static t_arena_block *ArenaCreateBlock(const t_i32 buf_size) {

@@ -1,12 +1,12 @@
 #include <zcl.h>
 
 [[nodiscard]] static zcl::t_b8 OutputCode(const zcl::t_str_rdonly input_file_path, const zcl::t_str_rdonly output_file_path, const zcl::t_str_rdonly arr_var_subname, const zcl::t_str_rdonly namespace_name) {
-    zcl::t_arena arena = zcl::ArenaCreateBlockBased();
-    ZCL_DEFER({ zcl::ArenaDestroy(&arena); });
+    zcl::t_arena *const arena = zcl::ArenaCreateBlockBased();
+    ZCL_DEFER({ zcl::ArenaDestroy(arena); });
 
     zcl::t_file_stream input_file_stream;
 
-    if (!zcl::FileOpen(input_file_path, zcl::ek_file_access_mode_read, &arena, &input_file_stream)) {
+    if (!zcl::FileOpen(input_file_path, zcl::ek_file_access_mode_read, arena, &input_file_stream)) {
         return false;
     }
 
@@ -14,7 +14,7 @@
 
     zcl::t_file_stream output_file_stream;
 
-    if (!zcl::FileOpen(output_file_path, zcl::ek_file_access_mode_write, &arena, &output_file_stream)) {
+    if (!zcl::FileOpen(output_file_path, zcl::ek_file_access_mode_write, arena, &output_file_stream)) {
         return false;
     }
 

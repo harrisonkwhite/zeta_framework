@@ -13,35 +13,35 @@ namespace zgl {
         zcl::ConfigureErrorLogFile();
 #endif
 
-        zcl::t_arena perm_arena = zcl::ArenaCreateBlockBased();
-        ZCL_DEFER({ zcl::ArenaDestroy(&perm_arena); });
+        zcl::t_arena *const perm_arena = zcl::ArenaCreateBlockBased();
+        ZCL_DEFER({ zcl::ArenaDestroy(perm_arena); });
 
-        zcl::t_arena temp_arena = zcl::ArenaCreateBlockBased();
-        ZCL_DEFER({ zcl::ArenaDestroy(&temp_arena); });
+        zcl::t_arena *const temp_arena = zcl::ArenaCreateBlockBased();
+        ZCL_DEFER({ zcl::ArenaDestroy(temp_arena); });
 
-        t_input_state *const input_state = internal::InputCreateState(&perm_arena);
+        t_input_state *const input_state = internal::InputCreateState(perm_arena);
 
-        const t_platform_ticket_mut platform_ticket = internal::PlatformStartup(k_window_size_init, input_state, &perm_arena);
+        const t_platform_ticket_mut platform_ticket = internal::PlatformStartup(k_window_size_init, input_state, perm_arena);
         ZCL_DEFER({ internal::PlatformShutdown(platform_ticket); });
 
         const t_gfx_ticket_mut gfx_ticket = internal::GFXStartup(platform_ticket);
         ZCL_DEFER({ internal::GFXShutdown(gfx_ticket); });
 
-        t_rendering_basis *const rendering_basis = internal::RenderingBasisCreate(config.frame_vertex_limit, gfx_ticket, &perm_arena, &temp_arena);
+        t_rendering_basis *const rendering_basis = internal::RenderingBasisCreate(config.frame_vertex_limit, gfx_ticket, perm_arena, temp_arena);
         ZCL_DEFER({ internal::RenderingBasisDestroy(rendering_basis, gfx_ticket); });
 
-        const t_audio_ticket_mut audio_ticket = internal::AudioStartup(&perm_arena);
+        const t_audio_ticket_mut audio_ticket = internal::AudioStartup(perm_arena);
         ZCL_DEFER({ internal::AudioShutdown(audio_ticket); });
 
-        zcl::t_rng *const rng = zcl::RNGCreate(zcl::RandGenSeed(), &perm_arena);
+        zcl::t_rng *const rng = zcl::RNGCreate(zcl::RandGenSeed(), perm_arena);
 
-        zcl::ArenaRewind(&temp_arena);
+        zcl::ArenaRewind(temp_arena);
 
-        void *const user_mem = config.user_mem_size > 0 ? zcl::ArenaPushRaw(&perm_arena, config.user_mem_size, config.user_mem_alignment) : nullptr;
+        void *const user_mem = config.user_mem_size > 0 ? zcl::ArenaPushRaw(perm_arena, config.user_mem_size, config.user_mem_alignment) : nullptr;
 
         config.init_func({
-            .perm_arena = &perm_arena,
-            .temp_arena = &temp_arena,
+            .perm_arena = perm_arena,
+            .temp_arena = temp_arena,
             .platform_ticket = platform_ticket,
             .gfx_ticket = gfx_ticket,
             .audio_ticket = audio_ticket,
@@ -51,8 +51,8 @@ namespace zgl {
 
         ZCL_DEFER({
             config.deinit_func({
-                .perm_arena = &perm_arena,
-                .temp_arena = &temp_arena,
+                .perm_arena = perm_arena,
+                .temp_arena = temp_arena,
                 .platform_ticket = platform_ticket,
                 .gfx_ticket = gfx_ticket,
                 .audio_ticket = audio_ticket,
@@ -95,8 +95,8 @@ namespace zgl {
 
                 if (config.backbuffer_resize_func) {
                     config.backbuffer_resize_func({
-                        .perm_arena = &perm_arena,
-                        .temp_arena = &temp_arena,
+                        .perm_arena = perm_arena,
+                        .temp_arena = temp_arena,
                         .input_state = input_state,
                         .platform_ticket = platform_ticket,
                         .gfx_ticket = gfx_ticket,
@@ -111,8 +111,8 @@ namespace zgl {
 
             {
                 const t_game_window_focus_func_context window_focus_func_context = {
-                    .perm_arena = &perm_arena,
-                    .temp_arena = &temp_arena,
+                    .perm_arena = perm_arena,
+                    .temp_arena = temp_arena,
                     .input_state = input_state,
                     .platform_ticket = platform_ticket,
                     .gfx_ticket = gfx_ticket,
@@ -166,13 +166,13 @@ namespace zgl {
                     }
 
                     while (tick_interval_accum >= tick_interval_target) {
-                        zcl::ArenaRewind(&temp_arena);
+                        zcl::ArenaRewind(temp_arena);
 
                         internal::SoundsProcessFinished(audio_ticket);
 
                         config.tick_func({
-                            .perm_arena = &perm_arena,
-                            .temp_arena = &temp_arena,
+                            .perm_arena = perm_arena,
+                            .temp_arena = temp_arena,
                             .input_state = input_state,
                             .platform_ticket = platform_ticket,
                             .gfx_ticket = gfx_ticket,
@@ -189,13 +189,13 @@ namespace zgl {
                 }
             }
 
-            zcl::ArenaRewind(&temp_arena);
+            zcl::ArenaRewind(temp_arena);
 
-            const t_rendering_context rendering_context = internal::RendererBegin(rendering_basis, gfx_ticket, &temp_arena);
+            const t_rendering_context rendering_context = internal::RendererBegin(rendering_basis, gfx_ticket, temp_arena);
 
             config.render_func({
-                .perm_arena = &perm_arena,
-                .temp_arena = &temp_arena,
+                .perm_arena = perm_arena,
+                .temp_arena = temp_arena,
                 .input_state = input_state,
                 .platform_ticket = platform_ticket,
                 .rendering_context = rendering_context,

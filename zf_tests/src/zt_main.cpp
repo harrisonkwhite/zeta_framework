@@ -33,12 +33,12 @@ constexpr zcl::t_static_array<t_test, 4> k_tests = {{
 }};
 
 static void RunTests() {
-    zcl::t_arena arena = zcl::ArenaCreateBlockBased();
-    ZCL_DEFER({ zcl::ArenaDestroy(&arena); });
+    zcl::t_arena *const arena = zcl::ArenaCreateBlockBased();
+    ZCL_DEFER({ zcl::ArenaDestroy(arena); });
 
     for (zcl::t_i32 i = 0; i < k_tests.k_len; i++) {
         zcl::Log(ZCL_STR_LITERAL("Running test \"%\"..."), zcl::CStrToStr(k_tests[i].title_c_str));
-        k_tests[i].func(&arena);
+        k_tests[i].func(arena);
     }
 }
 

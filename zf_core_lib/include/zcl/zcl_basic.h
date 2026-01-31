@@ -559,36 +559,13 @@ namespace zcl {
     // ============================================================
     // @section: Arenas
 
-    struct t_arena_block {
-        void *buf;
-        t_i32 buf_size;
+    struct t_arena;
 
-        t_arena_block *next;
-    };
-
+    // @todo: Rename these, they expose too much.
     enum t_arena_type : t_i32 {
         ek_arena_type_invalid,
         ek_arena_type_block_based, // Owns its memory, which is organised as a linked list of dynamically allocated blocks. New blocks are allocated as needed.
         ek_arena_type_wrapping     // Non-owning and non-reallocating. Useful if you want to leverage a stack-allocated buffer for example.
-    };
-
-    struct t_arena {
-        t_arena_type type;
-
-        union {
-            struct {
-                t_arena_block *blocks_head;
-                t_arena_block *block_cur;
-                t_i32 block_cur_offs;
-                t_i32 block_min_size;
-            } block_based;
-
-            struct {
-                void *buf;
-                t_i32 buf_size;
-                t_i32 buf_offs;
-            } wrapping;
-        } type_data;
     };
 
 #ifdef ZCL_DEBUG
@@ -596,25 +573,10 @@ namespace zcl {
 #endif
 
     // Does not allocate any arena memory (blocks) upfront.
-    inline t_arena ArenaCreateBlockBased(const t_i32 block_min_size = MegabytesToBytes(1)) {
-        ZCL_ASSERT(block_min_size > 0);
+    t_arena *ArenaCreateBlockBased(const t_i32 block_min_size = MegabytesToBytes(1));
 
-        return {
-            .type = ek_arena_type_block_based,
-            .type_data = {.block_based = {.block_min_size = block_min_size}},
-        };
-    }
+    t_arena *ArenaCreateWrapping(const t_array_mut<t_u8> bytes);
 
-    inline t_arena ArenaCreateWrapping(const t_array_mut<t_u8> bytes) {
-        ZeroClear(bytes.raw, bytes.len);
-
-        return {
-            .type = ek_arena_type_wrapping,
-            .type_data = {.wrapping = {.buf = bytes.raw, .buf_size = bytes.len}},
-        };
-    }
-
-    // Frees all arena memory. Only valid for block-based arenas. This can be called even if no pushing was done.
     void ArenaDestroy(t_arena *const arena);
 
     // Will lazily allocate memory as needed. Allocation failure is treated as fatal and causes an abort - you don't need to check for nullptr.

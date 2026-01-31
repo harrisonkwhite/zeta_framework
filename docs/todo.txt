@@ -1,3 +1,6 @@
+- The whole Create* system is kinda strange for trivial creations... and easy to forget...
+    - Honestly might just have to drop it and rely on IsValid() checks at deliberate boundaries
+
 - Be more consistent about cases where rectangles with negative sizes are valid - they exist
 - There should be a consistent notion of "backbuffer size" or "window size" shared between both rendering context and tick context. It's too much of a mess right now.
 - Helpers for polygon drawing
