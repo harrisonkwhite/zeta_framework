@@ -37,8 +37,6 @@ namespace zgl {
 
     void WindowSetResizable(const t_platform_ticket_mut platform_ticket, const zcl::t_b8 resizable);
 
-    zcl::t_v2_i WindowGetFramebufferSizeCache(const t_platform_ticket_rdonly platform_ticket);
-
     zcl::t_b8 WindowCheckFullscreen(const t_platform_ticket_rdonly platform_ticket);
     void WindowSetFullscreen(const t_platform_ticket_mut platform_ticket, const zcl::t_b8 active);
 
@@ -63,6 +61,8 @@ namespace zgl {
         void *DisplayGetNativeHandle(const t_platform_ticket_rdonly platform_ticket);
 
         void *WindowGetNativeHandle(const t_platform_ticket_rdonly platform_ticket);
+
+        zcl::t_v2_i WindowGetFramebufferSizeCache(const t_platform_ticket_rdonly platform_ticket);
 
         void WindowShow(const t_platform_ticket_mut platform_ticket);
 

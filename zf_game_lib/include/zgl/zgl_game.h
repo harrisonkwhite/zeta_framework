@@ -21,6 +21,8 @@ namespace zgl {
 
         t_platform_ticket_mut platform_ticket;
 
+        zcl::t_v2_i screen_size;
+
         t_gfx_ticket_mut gfx_ticket;
 
         t_audio_ticket_mut audio_ticket;
@@ -35,6 +37,8 @@ namespace zgl {
         zcl::t_arena *temp_arena;
 
         t_platform_ticket_mut platform_ticket;
+
+        zcl::t_v2_i screen_size;
 
         t_gfx_ticket_mut gfx_ticket;
 
@@ -52,6 +56,8 @@ namespace zgl {
         const t_input_state *input_state;
 
         t_platform_ticket_mut platform_ticket;
+
+        zcl::t_v2_i screen_size;
 
         t_gfx_ticket_mut gfx_ticket;
 
@@ -89,6 +95,8 @@ namespace zgl {
 
         t_platform_ticket_mut platform_ticket;
 
+        zcl::t_v2_i screen_size;
+
         t_gfx_ticket_mut gfx_ticket;
 
         t_audio_ticket_mut audio_ticket;
@@ -98,13 +106,15 @@ namespace zgl {
         void *user_mem;
     };
 
-    struct t_game_backbuffer_resize_func_context {
+    struct t_game_screen_resize_func_context {
         zcl::t_arena *perm_arena;
         zcl::t_arena *temp_arena;
 
         const t_input_state *input_state;
 
         t_platform_ticket_mut platform_ticket;
+
+        zcl::t_v2_i screen_size;
 
         t_gfx_ticket_mut gfx_ticket;
 
@@ -125,7 +135,7 @@ namespace zgl {
 
     using t_game_window_focus_func = void (*)(const t_game_window_focus_func_context &context);
 
-    using t_game_backbuffer_resize_func = void (*)(const t_game_backbuffer_resize_func_context &context);
+    using t_game_screen_resize_func = void (*)(const t_game_screen_resize_func_context &context);
 
     struct t_game_config {
         t_game_init_func init_func;
@@ -133,7 +143,7 @@ namespace zgl {
         t_game_tick_func tick_func;
         t_game_render_func render_func;
         t_game_window_focus_func window_focus_func;
-        t_game_backbuffer_resize_func backbuffer_resize_func;
+        t_game_screen_resize_func screen_resize_func;
 
         zcl::t_i32 user_mem_size;
         zcl::t_i32 user_mem_alignment;
@@ -150,7 +160,7 @@ namespace zgl {
             .tick_func = tick_func,
             .render_func = render_func,
             .window_focus_func = nullptr,
-            .backbuffer_resize_func = nullptr,
+            .screen_resize_func = nullptr,
 
             .user_mem_size = 0,
             .user_mem_alignment = 0,

@@ -186,6 +186,13 @@ namespace zgl {
 #endif
     }
 
+    zcl::t_v2_i internal::WindowGetFramebufferSizeCache(const t_platform_ticket_rdonly platform_ticket) {
+        ZCL_ASSERT(g_state.active);
+        ZCL_ASSERT(TicketCheckValid(platform_ticket));
+
+        return g_state.framebuffer_size_cache;
+    }
+
     void internal::WindowShow(const t_platform_ticket_mut platform_ticket) {
         ZCL_ASSERT(g_state.active);
         ZCL_ASSERT(TicketCheckValid(platform_ticket));
@@ -247,13 +254,6 @@ namespace zgl {
         ZCL_ASSERT(TicketCheckValid(platform_ticket));
 
         glfwSetWindowAttrib(g_state.glfw_window, GLFW_RESIZABLE, resizable);
-    }
-
-    zcl::t_v2_i WindowGetFramebufferSizeCache(const t_platform_ticket_rdonly platform_ticket) {
-        ZCL_ASSERT(g_state.active);
-        ZCL_ASSERT(TicketCheckValid(platform_ticket));
-
-        return g_state.framebuffer_size_cache;
     }
 
     zcl::t_b8 WindowCheckFullscreen(const t_platform_ticket_rdonly platform_ticket) {

@@ -127,13 +127,14 @@ namespace zgl {
         return rb->uniforms[id];
     }
 
-    t_rendering_context internal::RendererBegin(const t_rendering_basis *const rendering_basis, const t_gfx_ticket_mut gfx_ticket, zcl::t_arena *const rendering_state_arena) {
+    t_rendering_context internal::RendererBegin(const t_rendering_basis *const rendering_basis, const t_gfx_ticket_mut gfx_ticket, const zcl::t_v2_i screen_size, zcl::t_arena *const rendering_state_arena) {
         FrameBegin(gfx_ticket);
 
         return {
             .basis = rendering_basis,
             .state = zcl::ArenaPush<t_rendering_state>(rendering_state_arena),
             .gfx_ticket = gfx_ticket,
+            .screen_size = screen_size,
         };
     }
 

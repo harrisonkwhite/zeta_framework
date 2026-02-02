@@ -38,8 +38,6 @@ namespace zgl {
         return GFXVertexCheckValid(tri.vertices[0]) && GFXVertexCheckValid(tri.vertices[1]) && GFXVertexCheckValid(tri.vertices[2]);
     }
 
-    zcl::t_v2_i BackbufferGetSize(const t_gfx_ticket_rdonly gfx_ticket);
-
     t_gfx_resource_group *GFXResourceGroupCreate(const t_gfx_ticket_mut gfx_ticket, zcl::t_arena *const arena);
 
     void GFXResourceGroupDestroy(const t_gfx_ticket_mut gfx_ticket, t_gfx_resource_group *const group);
@@ -106,6 +104,8 @@ namespace zgl {
         void VertexBufWrite(const t_gfx_ticket_mut gfx_ticket, t_gfx_resource *const dest_vertex_buf, const zcl::t_i32 dest_vertices_index, const zcl::t_array_rdonly<t_gfx_vertex> src_vertices);
 
         zcl::t_i32 VertexBufGetVertexCount(const t_gfx_ticket_rdonly gfx_ticket, const t_gfx_resource *const vertex_buf);
+
+        zcl::t_v2_i BackbufferGetSize(const t_gfx_ticket_rdonly gfx_ticket);
 
         // The given size must be different to the current backbuffer size.
         void BackbufferResize(const t_gfx_ticket_mut gfx_ticket, const zcl::t_v2_i size);

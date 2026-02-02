@@ -43,6 +43,7 @@ namespace zgl {
             .perm_arena = perm_arena,
             .temp_arena = temp_arena,
             .platform_ticket = platform_ticket,
+            .screen_size = internal::WindowGetFramebufferSizeCache(platform_ticket),
             .gfx_ticket = gfx_ticket,
             .audio_ticket = audio_ticket,
             .rng = rng,
@@ -79,25 +80,28 @@ namespace zgl {
         zcl::t_f64 tick_interval_accum = 0.0;
 
         while (!WindowCheckCloseRequested(platform_ticket)) {
+            const zcl::t_v2_i screen_size_last = internal::WindowGetFramebufferSizeCache(platform_ticket);
             const zcl::t_b8 window_focused_last = WindowCheckFocused(platform_ticket);
 
             internal::PollOSEvents(platform_ticket, input_state);
 
-            const zcl::t_v2_i fb_size_cache = WindowGetFramebufferSizeCache(platform_ticket);
+            const zcl::t_v2_i screen_size = internal::WindowGetFramebufferSizeCache(platform_ticket);
+            const zcl::t_b8 window_focused = WindowCheckFocused(platform_ticket);
 
-            if (BackbufferGetSize(gfx_ticket) != fb_size_cache) {
+            if (screen_size != screen_size_last) {
 #ifdef ZCL_DEBUG
-                zcl::Log(ZCL_STR_LITERAL("Resizing backbuffer from % to %..."), BackbufferGetSize(gfx_ticket), fb_size_cache);
+                zcl::Log(ZCL_STR_LITERAL("Screen resized from % to %..."), screen_size_last, screen_size);
 #endif
 
-                internal::BackbufferResize(gfx_ticket, fb_size_cache);
+                internal::BackbufferResize(gfx_ticket, screen_size);
 
-                if (config.backbuffer_resize_func) {
-                    config.backbuffer_resize_func({
+                if (config.screen_resize_func) {
+                    config.screen_resize_func({
                         .perm_arena = perm_arena,
                         .temp_arena = temp_arena,
                         .input_state = input_state,
                         .platform_ticket = platform_ticket,
+                        .screen_size = screen_size,
                         .gfx_ticket = gfx_ticket,
                         .audio_ticket = audio_ticket,
                         .rng = rng,
@@ -106,7 +110,7 @@ namespace zgl {
                 }
             }
 
-            const zcl::t_b8 window_focused = WindowCheckFocused(platform_ticket);
+            ZCL_ASSERT(internal::BackbufferGetSize(gfx_ticket) == screen_size); // @temp
 
             {
                 const t_game_window_focus_func_context window_focus_func_context = {
@@ -114,6 +118,7 @@ namespace zgl {
                     .temp_arena = temp_arena,
                     .input_state = input_state,
                     .platform_ticket = platform_ticket,
+                    .screen_size = screen_size,
                     .gfx_ticket = gfx_ticket,
                     .audio_ticket = audio_ticket,
                     .rng = rng,
@@ -174,6 +179,7 @@ namespace zgl {
                             .temp_arena = temp_arena,
                             .input_state = input_state,
                             .platform_ticket = platform_ticket,
+                            .screen_size = screen_size,
                             .gfx_ticket = gfx_ticket,
                             .audio_ticket = audio_ticket,
                             .rng = rng,
@@ -190,7 +196,7 @@ namespace zgl {
 
             zcl::ArenaRewind(temp_arena);
 
-            const t_rendering_context rendering_context = internal::RendererBegin(rendering_basis, gfx_ticket, temp_arena);
+            const t_rendering_context rendering_context = internal::RendererBegin(rendering_basis, gfx_ticket, screen_size, temp_arena);
 
             config.render_func({
                 .perm_arena = perm_arena,

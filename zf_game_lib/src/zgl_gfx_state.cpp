@@ -453,7 +453,7 @@ namespace zgl {
         UniformSet(uniform, uniform_data);
     }
 
-    zcl::t_v2_i BackbufferGetSize(const t_gfx_ticket_rdonly gfx_ticket) {
+    zcl::t_v2_i internal::BackbufferGetSize(const t_gfx_ticket_rdonly gfx_ticket) {
         ZCL_ASSERT(g_state.phase != ek_phase_inactive);
         return g_state.backbuffer_size_cache;
     }
