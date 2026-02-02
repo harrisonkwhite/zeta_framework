@@ -28,12 +28,12 @@ namespace zgl {
     struct t_rendering_state;
 
     struct t_rendering_context {
-        const t_rendering_basis *const basis;
-        t_rendering_state *const state;
+        const t_rendering_basis *basis;
+        t_rendering_state *state;
 
-        const t_gfx_ticket_mut gfx_ticket;
+        t_gfx_ticket_mut gfx_ticket;
 
-        const zcl::t_v2_i screen_size;
+        zcl::t_v2_i screen_size;
     };
 
     void RendererPassBegin(const t_rendering_context rc, const zcl::t_v2_i size, const zcl::t_mat4x4 &view_mat = zcl::MatrixCreateIdentity(), const zcl::t_b8 clear = false, const zcl::t_color_rgba32f clear_col = zcl::k_color_black);

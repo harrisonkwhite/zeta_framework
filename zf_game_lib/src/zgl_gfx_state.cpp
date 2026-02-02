@@ -48,7 +48,7 @@ namespace zgl {
         t_gfx_resource *tail;
     };
 
-    enum t_phase {
+    enum t_phase : zcl::t_i32 {
         ek_phase_inactive,
         ek_phase_active_but_not_midframe,
         ek_phase_active_and_midframe
