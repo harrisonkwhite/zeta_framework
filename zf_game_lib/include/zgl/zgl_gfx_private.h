@@ -5,5 +5,6 @@
 
 namespace zgl {
     t_gfx_ticket_mut TicketCreate();
+
     zcl::t_b8 TicketCheckValid(const t_gfx_ticket_rdonly ticket);
 }

@@ -304,10 +304,7 @@ namespace zcl {
             return false;
         }
 
-        return pt.x >= CalcMin(seg_begin.x, seg_end.x) - tol
-            && pt.x <= CalcMax(seg_begin.x, seg_end.x) + tol
-            && pt.y >= CalcMin(seg_begin.y, seg_end.y) - tol
-            && pt.y <= CalcMax(seg_begin.y, seg_end.y) + tol;
+        return pt.x >= CalcMin(seg_begin.x, seg_end.x) - tol && pt.x <= CalcMax(seg_begin.x, seg_end.x) + tol && pt.y >= CalcMin(seg_begin.y, seg_end.y) - tol && pt.y <= CalcMax(seg_begin.y, seg_end.y) + tol;
     }
 
     t_b8 CheckCross(const t_v2 line_seg_a_begin, const t_v2 line_seg_a_end, const t_v2 line_seg_b_begin, const t_v2 line_seg_b_end, const t_f32 tol) {

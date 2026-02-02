@@ -12,6 +12,7 @@ namespace zcl {
     constexpr t_i32 k_code_point_count = 1114112;
 
     using t_code_point = char32_t;
+
     using t_code_point_bitset = t_static_bitset<k_code_point_count>;
 
     constexpr t_i32 k_ascii_range_begin = 0;
@@ -57,7 +58,6 @@ namespace zcl {
 
     // ============================================================
 
-
     // ============================================================
     // @section: ZF Strings
 
@@ -73,26 +73,24 @@ namespace zcl {
         }
     };
 
-    constexpr t_comparator_bin<t_str_rdonly> k_str_comparator_bin =
-        [](const t_str_rdonly &a, const t_str_rdonly &b) {
-            return k_array_comparator_bin<t_array_rdonly<t_u8>>(a.bytes, b.bytes);
-        };
+    constexpr t_comparator_bin<t_str_rdonly> k_str_comparator_bin = [](const t_str_rdonly &a, const t_str_rdonly &b) {
+        return k_array_comparator_bin<t_array_rdonly<t_u8>>(a.bytes, b.bytes);
+    };
 
     // This is an FNV-1a implementation.
-    constexpr t_hash_func<t_str_rdonly> k_str_hash_func =
-        [](const t_str_rdonly &key) {
-            const t_u32 offs_basis = 2166136261u;
-            const t_u32 prime = 16777619u;
+    constexpr t_hash_func<t_str_rdonly> k_str_hash_func = [](const t_str_rdonly &key) {
+        const t_u32 offs_basis = 2166136261u;
+        const t_u32 prime = 16777619u;
 
-            t_u32 hash = offs_basis;
+        t_u32 hash = offs_basis;
 
-            for (t_i32 i = 0; i < key.bytes.len; i++) {
-                hash ^= static_cast<t_u8>(key.bytes[i]);
-                hash *= prime;
-            }
+        for (t_i32 i = 0; i < key.bytes.len; i++) {
+            hash ^= static_cast<t_u8>(key.bytes[i]);
+            hash *= prime;
+        }
 
-            return static_cast<t_i32>(hash & 0x7FFFFFFFull);
-        };
+        return static_cast<t_i32>(hash & 0x7FFFFFFFull);
+    };
 
     inline t_b8 StrBytesCheckTerminatedAnywhere(const t_array_rdonly<t_u8> bytes) {
         for (t_i32 i = bytes.len - 1; i >= 0; i--) {
@@ -180,7 +178,6 @@ namespace zcl {
 
     // ============================================================
 
-
     // ============================================================
     // @section: C-Strings
 
@@ -228,7 +225,7 @@ namespace zcl {
                 return {{reinterpret_cast<const t_u8 *>(buf), buf_size - 1}};
             }
 
-        private:
+          private:
             const char *const buf;
             const t_i32 buf_size;
         };

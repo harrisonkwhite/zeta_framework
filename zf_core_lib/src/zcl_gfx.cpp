@@ -75,9 +75,9 @@ namespace zcl {
 
         o_arrangement->line_height = static_cast<t_i32>(static_cast<t_f32>(vm_ascent - vm_descent + vm_line_gap) * scale);
 
-        //
+        // ----------------------------------------
         // Glyph Info
-        //
+
         o_arrangement->code_pts_to_glyph_infos = HashMapCreate<t_code_point, t_font_glyph_info>(k_font_code_point_hash_func, arrangement_arena, code_pt_cnt);
 
         t_i32 atlas_index = 0;
@@ -124,9 +124,10 @@ namespace zcl {
 
         const t_i32 atlas_cnt = atlas_index + 1;
 
-        //
+        // ------------------------------
+
+        // ----------------------------------------
         // Kernings
-        //
 
         // If there were any kernings to store, set up the hash map and go through again and store them.
         o_arrangement->has_kernings = true;
@@ -148,9 +149,11 @@ namespace zcl {
             }
         }
 
-        //
+        // ------------------------------
+
+        // ----------------------------------------
         // Atlases
-        //
+
         *o_atlas_pixels_arr = ArenaPushArray<t_font_atlas_pixels_r8>(atlas_pixels_arr_arena, atlas_cnt);
 
         // Write pixel data for each individual glyph.
@@ -187,6 +190,8 @@ namespace zcl {
                 }
             }
         }
+
+        // ------------------------------
 
         return true;
     }

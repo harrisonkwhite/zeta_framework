@@ -32,7 +32,8 @@ namespace zcl {
         struct t_defer {
             tp_type func;
 
-            t_defer(const tp_type f) : func(f) {}
+            t_defer(const tp_type f) : func(f) {
+            }
 
             ~t_defer() {
                 func();
@@ -126,18 +127,34 @@ namespace zcl {
     constexpr t_f64 k_f64_nan_quiet = std::numeric_limits<t_f64>::quiet_NaN();
     constexpr t_f64 k_f64_nan_signalling = std::numeric_limits<t_f64>::signaling_NaN();
 
-    constexpr t_b8 CheckNaN(const t_f32 val) { return isnan(val); }
-    constexpr t_b8 CheckNaN(const t_f64 val) { return isnan(val); }
+    constexpr t_b8 CheckNaN(const t_f32 val) {
+        return isnan(val);
+    }
+
+    constexpr t_b8 CheckNaN(const t_f64 val) {
+        return isnan(val);
+    }
 
     using t_uintptr = uintptr_t;
     static_assert(sizeof(t_uintptr) == 8);
 
-    template <typename tp_type> using t_without_extent = typename std::remove_extent<tp_type>::type;
-    template <typename tp_type> using t_without_const = typename std::remove_const<tp_type>::type;
-    template <typename tp_type> using t_without_volatile = typename std::remove_volatile<tp_type>::type;
-    template <typename tp_type> using t_without_ref = typename std::remove_reference<tp_type>::type;
-    template <typename tp_type> using t_without_cv = typename std::remove_cv<tp_type>::type;
-    template <typename tp_type> using t_without_cvref = typename std::remove_cvref<tp_type>::type;
+    template <typename tp_type>
+    using t_without_extent = typename std::remove_extent<tp_type>::type;
+
+    template <typename tp_type>
+    using t_without_const = typename std::remove_const<tp_type>::type;
+
+    template <typename tp_type>
+    using t_without_volatile = typename std::remove_volatile<tp_type>::type;
+
+    template <typename tp_type>
+    using t_without_ref = typename std::remove_reference<tp_type>::type;
+
+    template <typename tp_type>
+    using t_without_cv = typename std::remove_cv<tp_type>::type;
+
+    template <typename tp_type>
+    using t_without_cvref = typename std::remove_cvref<tp_type>::type;
 
     // "Simple" meaning that it's safe to use with arenas and C-style memory operations.
     template <typename tp_type>
@@ -158,46 +175,50 @@ namespace zcl {
     template <typename tp_type>
     concept c_numeric = c_integral<tp_type> || c_floating_point<tp_type>;
 
-    template <typename tp_type> concept c_ptr = std::is_pointer_v<tp_type>;
-    template <typename tp_type> concept c_const = std::is_const_v<tp_type>;
-    template <typename tp_type> concept c_union = std::is_union_v<tp_type>;
-    template <typename tp_type> concept c_enum = std::is_enum_v<tp_type>;
-    template <typename tp_type> concept c_scalar = std::is_scalar_v<tp_type>;
+    template <typename tp_type>
+    concept c_ptr = std::is_pointer_v<tp_type>;
+
+    template <typename tp_type>
+    concept c_const = std::is_const_v<tp_type>;
+
+    template <typename tp_type>
+    concept c_union = std::is_union_v<tp_type>;
+
+    template <typename tp_type>
+    concept c_enum = std::is_enum_v<tp_type>;
+
+    template <typename tp_type>
+    concept c_scalar = std::is_scalar_v<tp_type>;
 
     template <typename tp_type_a, typename tp_type_b>
     concept c_same = std::same_as<tp_type_a, tp_type_b>;
 
     template <typename tp_type>
-    concept c_c_str = c_same<t_without_cvref<tp_type>, char *>
-        || c_same<t_without_cvref<tp_type>, const char *>
-        || (c_same<t_without_cv<t_without_extent<t_without_ref<tp_type>>>, char> && !c_same<t_without_cvref<tp_type>, char>);
+    concept c_c_str = c_same<t_without_cvref<tp_type>, char *> || c_same<t_without_cvref<tp_type>, const char *> || (c_same<t_without_cv<t_without_extent<t_without_ref<tp_type>>>, char> && !c_same<t_without_cvref<tp_type>, char>);
 
     // Should return true iff a and b are equal.
     template <c_simple tp_type>
     using t_comparator_bin = t_b8 (*)(const tp_type &a, const tp_type &b);
 
     template <c_simple tp_type>
-    constexpr t_comparator_bin<tp_type> k_comparator_bin_default =
-        [](const tp_type &a, const tp_type &b) {
-            return a == b;
-        };
+    constexpr t_comparator_bin<tp_type> k_comparator_bin_default = [](const tp_type &a, const tp_type &b) {
+        return a == b;
+    };
 
     // Should return a negative result if a < b, 0 if a == b, and a positive result if a > b.
     template <c_simple tp_type>
     using t_comparator_ord = t_i32 (*)(const tp_type &a, const tp_type &b);
 
     template <c_simple tp_type>
-    constexpr t_comparator_ord<tp_type> k_comparator_ord_default =
-        [](const tp_type &a, const tp_type &b) {
-            if (a == b) {
-                return 0;
-            } else if (a < b) {
-                return -1;
-            } else {
-                return 1;
-            }
-        };
-
+    constexpr t_comparator_ord<tp_type> k_comparator_ord_default = [](const tp_type &a, const tp_type &b) {
+        if (a == b) {
+            return 0;
+        } else if (a < b) {
+            return -1;
+        } else {
+            return 1;
+        }
+    };
 
     // ============================================================
     // @section: Errors
@@ -250,8 +271,7 @@ namespace zcl {
     } while (0)
     }
 
-    // ============================================================
-
+    // ==================================================
 
     // ============================================================
     // @section: Helpers
@@ -310,8 +330,8 @@ namespace zcl {
     }
 
     template <c_integral tp_type>
-    constexpr tp_type Wrap(const tp_type val, const tp_type min, const tp_type max_excl) {
-        return min + Wrap(val - min, max_excl - min);
+    constexpr tp_type Wrap(const tp_type val, const tp_type min_incl, const tp_type max_excl) {
+        return min_incl + Wrap(val - min_incl, max_excl - min_incl);
     }
 
 #define ZCL_SIZE_OF(x) static_cast<zcl::t_i32>(sizeof(x))
@@ -319,11 +339,25 @@ namespace zcl {
 
 #define ZCL_ALIGN_OF(x) static_cast<zcl::t_i32>(alignof(x))
 
-    constexpr t_i32 KilobytesToBytes(const t_i32 n) { return (1 << 10) * n; }
-    constexpr t_i32 MegabytesToBytes(const t_i32 n) { return (1 << 20) * n; }
-    constexpr t_i32 GigabytesToBytes(const t_i32 n) { return (1 << 30) * n; }
-    constexpr t_i32 BitsToBytes(const t_i32 n) { return (n + 7) / 8; }
-    constexpr t_i32 BytesToBits(const t_i32 n) { return n * 8; }
+    constexpr t_i32 KilobytesToBytes(const t_i32 n) {
+        return (1 << 10) * n;
+    }
+
+    constexpr t_i32 MegabytesToBytes(const t_i32 n) {
+        return (1 << 20) * n;
+    }
+
+    constexpr t_i32 GigabytesToBytes(const t_i32 n) {
+        return (1 << 30) * n;
+    }
+
+    constexpr t_i32 BitsToBytes(const t_i32 n) {
+        return (n + 7) / 8;
+    }
+
+    constexpr t_i32 BytesToBits(const t_i32 n) {
+        return n * 8;
+    }
 
     // Is n a power of 2?
     constexpr t_b8 AlignmentCheckValid(const t_i32 n) {
@@ -365,8 +399,7 @@ namespace zcl {
         return ZeroCheck(item, ZCL_SIZE_OF(tp_type));
     }
 
-    // ============================================================
-
+    // ==================================================
 
     // ============================================================
     // @section: Arrays
@@ -457,20 +490,19 @@ namespace zcl {
     concept c_array = c_array_mut<tp_type> || c_array_rdonly<tp_type>;
 
     template <c_array tp_arr_type>
-    constexpr t_comparator_bin<tp_arr_type> k_array_comparator_bin =
-        [](const tp_arr_type &a, const tp_arr_type &b) {
-            if (a.len != b.len) {
+    constexpr t_comparator_bin<tp_arr_type> k_array_comparator_bin = [](const tp_arr_type &a, const tp_arr_type &b) {
+        if (a.len != b.len) {
+            return false;
+        }
+
+        for (t_i32 i = 0; i < a.len; i++) {
+            if (a[i] != b[i]) {
                 return false;
             }
+        }
 
-            for (t_i32 i = 0; i < a.len; i++) {
-                if (a[i] != b[i]) {
-                    return false;
-                }
-            }
-
-            return true;
-        };
+        return true;
+    };
 
     template <c_array_elem tp_elem_type, t_i32 tp_len>
     constexpr t_array_mut<tp_elem_type> ArrayToNonstatic(t_static_array<tp_elem_type, tp_len> *const arr) {
@@ -553,18 +585,17 @@ namespace zcl {
         return {reinterpret_cast<const t_u8 *>(val), ZCL_SIZE_OF(*val)};
     }
 
-    // ============================================================
-
+    // ==================================================
 
     // ============================================================
     // @section: Arenas
 
     struct t_arena;
 
-    // @todo: Rename these, they expose too much.
+    // @todo: Rename these and update comments, they expose too much.
     enum t_arena_type : t_i32 {
         ek_arena_type_invalid,
-        ek_arena_type_block_based, // Owns its memory, which is organised as a linked list of dynamically allocated blocks. New blocks are allocated as needed.
+        ek_arena_type_block_based, // Owns its memory. New blocks are allocated as needed.
         ek_arena_type_wrapping     // Non-owning and non-reallocating. Useful if you want to leverage a stack-allocated buffer for example.
     };
 
@@ -579,12 +610,10 @@ namespace zcl {
 
     void ArenaDestroy(t_arena *const arena);
 
-    // Will lazily allocate memory as needed. Allocation failure is treated as fatal and causes an abort - you don't need to check for nullptr.
-    // The returned buffer is guaranteed to be zeroed.
+    // Will lazily allocate memory as needed. Allocation failure is treated as fatal and causes an abort - you don't need to check for nullptr. The returned buffer is guaranteed to be zeroed.
     void *ArenaPushRaw(t_arena *const arena, const t_i32 size, const t_i32 alignment);
 
-    // Will lazily allocate memory as needed. Allocation failure is treated as fatal and causes an abort - you don't need to check for nullptr.
-    // The returned item is guaranteed to be zeroed.
+    // Will lazily allocate memory as needed. Allocation failure is treated as fatal and causes an abort - you don't need to check for nullptr. The returned item is guaranteed to be zeroed.
     template <c_simple tp_type>
     tp_type *ArenaPush(t_arena *const arena) {
         return static_cast<tp_type *>(ArenaPushRaw(arena, ZCL_SIZE_OF(tp_type), ZCL_ALIGN_OF(tp_type)));
@@ -612,5 +641,5 @@ namespace zcl {
     // Takes the arena offset to the beginning of its memory (if any) to overwrite from there.
     void ArenaRewind(t_arena *const arena);
 
-    // ============================================================
+    // ==================================================
 }

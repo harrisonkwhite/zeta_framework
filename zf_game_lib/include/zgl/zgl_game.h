@@ -8,7 +8,12 @@
 #include <zgl/zgl_audio_public.h>
 
 namespace zgl {
-    struct t_input_state; // Forward declaration from Input.
+    // ============================================================
+    // @section: External Forward Declarations
+
+    struct t_input_state;
+
+    // ==================================================
 
     struct t_game_init_func_context {
         zcl::t_arena *perm_arena;
@@ -111,10 +116,15 @@ namespace zgl {
     };
 
     using t_game_init_func = void (*)(const t_game_init_func_context &context);
+
     using t_game_deinit_func = void (*)(const t_game_deinit_func_context &context);
+
     using t_game_tick_func = void (*)(const t_game_tick_func_context &context);
+
     using t_game_render_func = void (*)(const t_game_render_func_context &context);
+
     using t_game_window_focus_func = void (*)(const t_game_window_focus_func_context &context);
+
     using t_game_backbuffer_resize_func = void (*)(const t_game_backbuffer_resize_func_context &context);
 
     struct t_game_config {
@@ -157,8 +167,7 @@ namespace zgl {
         ZCL_ASSERT(config.tick_func);
         ZCL_ASSERT(config.render_func);
 
-        ZCL_ASSERT((config.user_mem_size == 0 && config.user_mem_alignment == 0)
-            || (config.user_mem_size > 0 && zcl::AlignmentCheckValid(config.user_mem_alignment)));
+        ZCL_ASSERT((config.user_mem_size == 0 && config.user_mem_alignment == 0) || (config.user_mem_size > 0 && zcl::AlignmentCheckValid(config.user_mem_alignment)));
 
         ZCL_ASSERT(config.tps_target > 0.0);
 

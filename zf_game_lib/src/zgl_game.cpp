@@ -6,9 +6,9 @@ namespace zgl {
     void GameRun(const t_game_config &config) {
         GameConfigAssertValid(config);
 
-        //
+        // ----------------------------------------
         // Initialization
-        //
+
 #ifndef ZCL_DEBUG
         zcl::ConfigureErrorLogFile();
 #endif
@@ -61,13 +61,12 @@ namespace zgl {
             });
         });
 
-        //
-        // Main Loop
-        //
+        // ------------------------------
 
-        // @note: So most of the ZF code base uses F32, but I think it's important to use F64 here for the
-        //        times since they're in seconds and games (and this specific code) generally work with much smaller
-        //        units than that, and thus need a lot of precision.
+        // ----------------------------------------
+        // Main Loop
+
+        // @note: So most of the ZF code base uses F32, but I think it's important to use F64 here for the times since they're in seconds and games (and this specific code) generally work with much smaller units than that, and thus need a lot of precision.
 
         zcl::t_b8 frame_first = true;
         zcl::t_f64 frame_time_last = 0.0;
@@ -213,5 +212,7 @@ namespace zgl {
 
             frame_time_last = frame_time;
         }
+
+        // ------------------------------
     }
 }

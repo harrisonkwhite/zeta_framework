@@ -57,23 +57,27 @@ namespace zgl {
             zcl::t_array_rdonly<zcl::t_u8> fragment_shader_compiled_bin;
 
             switch (static_cast<t_renderer_builtin_shader_prog_id>(i)) {
-            case ek_renderer_builtin_shader_prog_id_default:
-                vertex_shader_compiled_bin = {g_vertex_shader_default_src_raw, g_vertex_shader_default_src_len};
-                fragment_shader_compiled_bin = {g_fragment_shader_default_src_raw, g_fragment_shader_default_src_len};
-                break;
+                case ek_renderer_builtin_shader_prog_id_default: {
+                    vertex_shader_compiled_bin = {g_vertex_shader_default_src_raw, g_vertex_shader_default_src_len};
+                    fragment_shader_compiled_bin = {g_fragment_shader_default_src_raw, g_fragment_shader_default_src_len};
+                    break;
+                }
 
-            case ek_renderer_builtin_shader_prog_id_str:
-                vertex_shader_compiled_bin = {g_vertex_shader_default_src_raw, g_vertex_shader_default_src_len};
-                fragment_shader_compiled_bin = {g_fragment_shader_str_src_raw, g_fragment_shader_str_src_len};
-                break;
+                case ek_renderer_builtin_shader_prog_id_str: {
+                    vertex_shader_compiled_bin = {g_vertex_shader_default_src_raw, g_vertex_shader_default_src_len};
+                    fragment_shader_compiled_bin = {g_fragment_shader_str_src_raw, g_fragment_shader_str_src_len};
+                    break;
+                }
 
-            case ek_renderer_builtin_shader_prog_id_blend:
-                vertex_shader_compiled_bin = {g_vertex_shader_default_src_raw, g_vertex_shader_default_src_len};
-                fragment_shader_compiled_bin = {g_fragment_shader_blend_src_raw, g_fragment_shader_blend_src_len};
-                break;
+                case ek_renderer_builtin_shader_prog_id_blend: {
+                    vertex_shader_compiled_bin = {g_vertex_shader_default_src_raw, g_vertex_shader_default_src_len};
+                    fragment_shader_compiled_bin = {g_fragment_shader_blend_src_raw, g_fragment_shader_blend_src_len};
+                    break;
+                }
 
-            default:
-                ZCL_UNREACHABLE();
+                default: {
+                    ZCL_UNREACHABLE();
+                }
             }
 
             basis->shader_progs[i] = ShaderProgCreate(gfx_ticket, vertex_shader_compiled_bin, fragment_shader_compiled_bin, basis->perm_resource_group);
@@ -81,16 +85,19 @@ namespace zgl {
 
         for (zcl::t_i32 i = 0; i < ekm_renderer_builtin_uniform_id_cnt; i++) {
             switch (static_cast<t_renderer_builtin_uniform_id>(i)) {
-            case ek_renderer_builtin_uniform_id_sampler:
-                basis->uniforms[i] = UniformCreate(gfx_ticket, ZCL_STR_LITERAL("u_texture"), ek_uniform_type_sampler, basis->perm_resource_group, temp_arena);
-                break;
+                case ek_renderer_builtin_uniform_id_sampler: {
+                    basis->uniforms[i] = UniformCreate(gfx_ticket, ZCL_STR_LITERAL("u_texture"), ek_uniform_type_sampler, basis->perm_resource_group, temp_arena);
+                    break;
+                }
 
-            case ek_renderer_builtin_uniform_id_blend:
-                basis->uniforms[i] = UniformCreate(gfx_ticket, ZCL_STR_LITERAL("u_blend"), ek_uniform_type_v4, basis->perm_resource_group, temp_arena);
-                break;
+                case ek_renderer_builtin_uniform_id_blend: {
+                    basis->uniforms[i] = UniformCreate(gfx_ticket, ZCL_STR_LITERAL("u_blend"), ek_uniform_type_v4, basis->perm_resource_group, temp_arena);
+                    break;
+                }
 
-            default:
-                ZCL_UNREACHABLE();
+                default: {
+                    ZCL_UNREACHABLE();
+                }
             }
         }
 
@@ -487,9 +494,7 @@ namespace zgl {
                 continue;
             }
 
-            const zcl::t_v2 chr_pos = pos
-                + zcl::CalcLengthDir(chr_offsets[chr_index].x * scale.x, rot)
-                + zcl::CalcLengthDir(chr_offsets[chr_index].y * scale.y, rot + (zcl::k_pi / 2.0f));
+            const zcl::t_v2 chr_pos = pos + zcl::CalcLengthDir(chr_offsets[chr_index].x * scale.x, rot) + zcl::CalcLengthDir(chr_offsets[chr_index].y * scale.y, rot + (zcl::k_pi / 2.0f));
 
             result[chr_index] = zcl::PolyCreateQuadRotated(chr_pos, zcl::CalcCompwiseProd(zcl::V2IToF(zcl::RectGetSize(glyph_info->atlas_rect)), scale), {}, rot, arena);
         }
@@ -525,9 +530,7 @@ namespace zgl {
                 continue;
             }
 
-            const zcl::t_v2 chr_pos = pos
-                + zcl::CalcLengthDir(chr_offsets[chr_index].x * scale.x, rot)
-                + zcl::CalcLengthDir(chr_offsets[chr_index].y * scale.y, rot + (zcl::k_pi / 2.0f));
+            const zcl::t_v2 chr_pos = pos + zcl::CalcLengthDir(chr_offsets[chr_index].x * scale.x, rot) + zcl::CalcLengthDir(chr_offsets[chr_index].y * scale.y, rot + (zcl::k_pi / 2.0f));
 
             zcl::t_static_array<zcl::t_v2, 4> quad_pts;
 

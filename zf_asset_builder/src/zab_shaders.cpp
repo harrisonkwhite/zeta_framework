@@ -21,9 +21,7 @@ zcl::t_b8 CompileShader(const zcl::t_str_rdonly shader_file_path, const zcl::t_s
         return false;
     }
 
-    ZCL_DEFER({
-        reproc_destroy(proc);
-    });
+    ZCL_DEFER({ reproc_destroy(proc); });
 
 #if defined(ZCL_PLATFORM_WINDOWS)
     const zcl::t_str_rdonly shaderc_file_path_rel = ZCL_STR_LITERAL("tools/bgfx/shaderc_windows.exe");

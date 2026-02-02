@@ -5,7 +5,7 @@
 namespace zgl {
     constexpr zcl::t_i32 k_sound_limit = 32;
 
-    enum t_phase {
+    enum t_phase : zcl::t_i32 {
         ek_phase_inactive,
         ek_phase_active,
         ek_phase_frozen // No audio actually plays, though sound properties can be mutated.
@@ -59,8 +59,6 @@ namespace zgl {
     void internal::AudioSetFrozen(const t_audio_ticket_mut ticket, const zcl::t_b8 frozen) {
         ZCL_ASSERT(g_state.phase != ek_phase_inactive);
         ZCL_ASSERT(TicketCheckValid(ticket));
-
-        // Do not touch the per-sound "paused" state, we don't want want to lose that.
 
         if (frozen && g_state.phase == ek_phase_active) {
             ZCL_BITSET_WALK_ALL_SET (g_state.snd_insts.active, i) {
@@ -201,8 +199,7 @@ namespace zgl {
         ZCL_ASSERT(TicketCheckValid(audio_ticket));
         SoundIDAssertValid(id);
 
-        return zcl::BitsetCheckSet(g_state.snd_insts.active, id.index)
-            && id.version == g_state.snd_insts.versions[id.index];
+        return zcl::BitsetCheckSet(g_state.snd_insts.active, id.index) && id.version == g_state.snd_insts.versions[id.index];
     }
 
     t_sound_state SoundGetState(const t_audio_ticket_rdonly audio_ticket, const t_sound_id id) {

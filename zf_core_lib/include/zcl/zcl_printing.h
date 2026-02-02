@@ -18,7 +18,6 @@ namespace zcl {
     template <typename tp_arg_type, typename... tp_arg_types_leftover>
     t_b8 PrintFormat(const t_stream_view stream_view, const t_str_rdonly format, const tp_arg_type &arg, const tp_arg_types_leftover &...args_leftover);
 
-
     // ============================================================
     // @section: Bools
 
@@ -28,7 +27,9 @@ namespace zcl {
         t_b8 value;
     };
 
-    inline t_format_bool FormatBool(const t_b8 value) { return {.value = value}; }
+    inline t_format_bool FormatBool(const t_b8 value) {
+        return {.value = value};
+    }
 
     template <typename tp_type>
         requires c_same<t_without_cvref<tp_type>, t_b8>
@@ -38,8 +39,7 @@ namespace zcl {
 
     t_b8 PrintType(const t_stream_view stream_view, const t_format_bool format);
 
-    // ============================================================
-
+    // ==================================================
 
     // ============================================================
     // @section: Strings
@@ -50,13 +50,17 @@ namespace zcl {
         t_str_rdonly value;
     };
 
-    inline t_format_str FormatStr(const t_str_rdonly value) { return {.value = value}; }
-    inline t_format_str Format(const t_str_rdonly value) { return FormatStr(value); }
+    inline t_format_str FormatStr(const t_str_rdonly value) {
+        return {.value = value};
+    }
+
+    inline t_format_str Format(const t_str_rdonly value) {
+        return FormatStr(value);
+    }
 
     t_b8 PrintType(const t_stream_view stream_view, const t_format_str format);
 
-    // ============================================================
-
+    // ==================================================
 
     // ============================================================
     // @section: Code Points
@@ -67,13 +71,17 @@ namespace zcl {
         t_code_point value;
     };
 
-    inline t_format_code_point FormatCodePoint(const t_code_point value) { return {.value = value}; }
-    inline t_format_code_point Format(const t_code_point value) { return FormatCodePoint(value); }
+    inline t_format_code_point FormatCodePoint(const t_code_point value) {
+        return {.value = value};
+    }
+
+    inline t_format_code_point Format(const t_code_point value) {
+        return FormatCodePoint(value);
+    }
 
     t_b8 PrintType(const t_stream_view stream_view, const t_format_code_point format);
 
-    // ============================================================
-
+    // ==================================================
 
     // ============================================================
     // @section: Integrals
@@ -85,8 +93,15 @@ namespace zcl {
         tp_type value;
     };
 
-    template <c_integral tp_type> t_format_int<tp_type> FormatInt(const tp_type value) { return {.value = value}; }
-    template <c_integral tp_type> t_format_int<tp_type> Format(const tp_type value) { return FormatInt(value); }
+    template <c_integral tp_type>
+    t_format_int<tp_type> FormatInt(const tp_type value) {
+        return {.value = value};
+    }
+
+    template <c_integral tp_type>
+    t_format_int<tp_type> Format(const tp_type value) {
+        return FormatInt(value);
+    }
 
     template <c_integral tp_type>
     t_b8 PrintType(const t_stream_view stream_view, const t_format_int<tp_type> format) {
@@ -110,8 +125,7 @@ namespace zcl {
         return Print(stream_view, {ByteStreamGetWritten(&str_bytes_stream)});
     }
 
-    // ============================================================
-
+    // ==================================================
 
     // ============================================================
     // @section: Floats
@@ -137,7 +151,9 @@ namespace zcl {
     }
 
     template <c_floating_point tp_type>
-    t_format_float<tp_type> Format(const tp_type value) { return FormatFloat(value); }
+    t_format_float<tp_type> Format(const tp_type value) {
+        return FormatFloat(value);
+    }
 
     template <c_floating_point tp_type>
     t_b8 PrintType(const t_stream_view stream_view, const t_format_float<tp_type> format) {
@@ -171,8 +187,7 @@ namespace zcl {
         return Print(stream_view, {ArraySlice(ArrayToNonstatic(&str_bytes), 0, str_bytes_used)});
     }
 
-    // ============================================================
-
+    // ==================================================
 
     // ============================================================
     // @section: Hexadecimal
@@ -271,8 +286,7 @@ namespace zcl {
         return Print(stream_view, {ByteStreamGetWritten(&str_bytes_stream)});
     }
 
-    // ============================================================
-
+    // ==================================================
 
     // ============================================================
     // @section: V2s
@@ -299,24 +313,31 @@ namespace zcl {
         };
     }
 
-    inline t_format_v2 Format(const t_v2 value) { return FormatV2(value); }
+    inline t_format_v2 Format(const t_v2 value) {
+        return FormatV2(value);
+    }
 
     t_b8 PrintType(const t_stream_view stream_view, const t_format_v2 format);
 
-    inline t_format_v2_i FormatV2(const t_v2_i value) { return {.value = value}; }
-    inline t_format_v2_i Format(const t_v2_i value) { return FormatV2(value); }
+    inline t_format_v2_i FormatV2(const t_v2_i value) {
+        return {.value = value};
+    }
+
+    inline t_format_v2_i Format(const t_v2_i value) {
+        return FormatV2(value);
+    }
 
     t_b8 PrintType(const t_stream_view stream_view, const t_format_v2_i format);
 
-    // ============================================================
-
+    // ==================================================
 
     // ============================================================
     // @section: Arrays
 
     template <typename tp_arr_type>
-    concept c_formattable_array = c_array<tp_arr_type>
-        && requires(const typename tp_arr_type::t_elem &v) { { Format(v) } -> c_format; };
+    concept c_formattable_array = c_array<tp_arr_type> && requires(const typename tp_arr_type::t_elem &v) {
+        { Format(v) } -> c_format;
+    };
 
     template <c_formattable_array tp_arr_type>
     struct t_array_format {
@@ -332,7 +353,9 @@ namespace zcl {
     }
 
     template <c_formattable_array tp_arr_type>
-    t_array_format<tp_arr_type> Format(const tp_arr_type value) { return FormatArray(value); }
+    t_array_format<tp_arr_type> Format(const tp_arr_type value) {
+        return FormatArray(value);
+    }
 
     template <c_formattable_array tp_arr_type>
     t_b8 PrintType(const t_stream_view stream_view, const t_array_format<tp_arr_type> format) {
@@ -367,8 +390,7 @@ namespace zcl {
         return true;
     }
 
-    // ============================================================
-
+    // ==================================================
 
     // ============================================================
     // @section: Bitsets
@@ -396,8 +418,7 @@ namespace zcl {
 
     t_b8 PrintType(const t_stream_view stream_view, const t_format_bitset format);
 
-    // ============================================================
-
+    // ==================================================
 
     constexpr t_code_point k_print_format_spec = '%';
     constexpr t_code_point k_print_format_esc = '^';
@@ -453,7 +474,6 @@ namespace zcl {
 
         return true;
     }
-
 
     // ============================================================
     // @section: Logging Helpers
@@ -511,5 +531,5 @@ namespace zcl {
         return true;
     }
 
-    // ============================================================
+    // ==================================================
 }

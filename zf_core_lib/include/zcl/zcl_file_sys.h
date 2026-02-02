@@ -14,7 +14,6 @@ namespace zcl {
 
     t_path_type PathGetType(const t_str_rdonly path, t_arena *const temp_arena);
 
-
     // ============================================================
     // @section: Directories
 
@@ -27,12 +26,12 @@ namespace zcl {
     };
 
     [[nodiscard]] t_b8 DirectoryCreate(const t_str_rdonly path, t_arena *const temp_arena, t_directory_create_result *const o_create_result = nullptr);
+
     [[nodiscard]] t_b8 DirectoryCreateRecursive(const t_str_rdonly path, t_arena *const temp_arena, t_directory_create_result *const o_create_result = nullptr);
 
     t_str_mut GetExecutableDirectory(t_arena *const arena);
 
-    // ============================================================
-
+    // ==================================================
 
     // ============================================================
     // @section: Files
@@ -57,11 +56,20 @@ namespace zcl {
     // The file stream must be open to get a view into it.
     t_stream_view FileStreamGetView(t_file_stream *const stream);
 
-    inline t_file_stream FileStreamCreateStdIn() { return FileStreamCreateOpen(stdin, ek_stream_mode_read); }
-    inline t_file_stream FileStreamCreateStdOut() { return FileStreamCreateOpen(stdout, ek_stream_mode_write); }
-    inline t_file_stream FileStreamCreateStdError() { return FileStreamCreateOpen(stderr, ek_stream_mode_write); }
+    inline t_file_stream FileStreamCreateStdIn() {
+        return FileStreamCreateOpen(stdin, ek_stream_mode_read);
+    }
+
+    inline t_file_stream FileStreamCreateStdOut() {
+        return FileStreamCreateOpen(stdout, ek_stream_mode_write);
+    }
+
+    inline t_file_stream FileStreamCreateStdError() {
+        return FileStreamCreateOpen(stderr, ek_stream_mode_write);
+    }
 
     [[nodiscard]] t_b8 FileCreate(const t_str_rdonly path, t_arena *const temp_arena);
+
     [[nodiscard]] t_b8 FileCreateRecursive(const t_str_rdonly path, t_arena *const temp_arena, t_directory_create_result *const o_dir_create_result = nullptr);
 
     enum t_file_access_mode : t_i32 {
@@ -87,5 +95,5 @@ namespace zcl {
 
     [[nodiscard]] t_b8 FileLoadContents(const t_str_rdonly path, t_arena *const contents_arena, t_arena *const temp_arena, t_array_mut<t_u8> *const o_contents, const t_b8 add_terminator = false);
 
-    // ============================================================
+    // ==================================================
 }

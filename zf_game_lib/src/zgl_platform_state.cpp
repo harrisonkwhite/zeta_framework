@@ -51,35 +51,32 @@ namespace zgl {
         glfwGetFramebufferSize(g_state.glfw_window, &g_state.framebuffer_size_cache.x, &g_state.framebuffer_size_cache.y);
 
         {
-            const auto fb_size_callback =
-                [](GLFWwindow *const window, const zcl::t_i32 width, const zcl::t_i32 height) {
-                    if (width > 0 && height > 0) {
-                        g_state.framebuffer_size_cache = {width, height};
-                    }
-                };
+            const auto fb_size_callback = [](GLFWwindow *const window, const zcl::t_i32 width, const zcl::t_i32 height) {
+                if (width > 0 && height > 0) {
+                    g_state.framebuffer_size_cache = {width, height};
+                }
+            };
 
             glfwSetFramebufferSizeCallback(g_state.glfw_window, fb_size_callback);
         }
 
         {
-            const auto scroll_callback =
-                [](GLFWwindow *const window, const zcl::t_f64 offs_x, const zcl::t_f64 offs_y) {
-                    const auto input_state = static_cast<t_input_state *>(glfwGetWindowUserPointer(window));
-                    internal::ScrollUpdateState(input_state, {static_cast<zcl::t_f32>(offs_x), static_cast<zcl::t_f32>(offs_y)});
-                };
+            const auto scroll_callback = [](GLFWwindow *const window, const zcl::t_f64 offs_x, const zcl::t_f64 offs_y) {
+                const auto input_state = static_cast<t_input_state *>(glfwGetWindowUserPointer(window));
+                internal::ScrollUpdateState(input_state, {static_cast<zcl::t_f32>(offs_x), static_cast<zcl::t_f32>(offs_y)});
+            };
 
             glfwSetScrollCallback(g_state.glfw_window, scroll_callback);
         }
 
         {
-            const auto chr_callback =
-                [](GLFWwindow *const window, const zcl::t_u32 code_pt) {
-                    const auto input_state = static_cast<t_input_state *>(glfwGetWindowUserPointer(window));
+            const auto chr_callback = [](GLFWwindow *const window, const zcl::t_u32 code_pt) {
+                const auto input_state = static_cast<t_input_state *>(glfwGetWindowUserPointer(window));
 
-                    if (!internal::TextSubmitCodePoints(input_state, code_pt)) {
-                        zcl::LogWarning(ZCL_STR_LITERAL("Tried to submit input text code point, but there is insufficient space!"));
-                    }
-                };
+                if (!internal::TextSubmitCodePoints(input_state, code_pt)) {
+                    zcl::LogWarning(ZCL_STR_LITERAL("Tried to submit input text code point, but there is insufficient space!"));
+                }
+            };
 
             glfwSetCharCallback(g_state.glfw_window, chr_callback);
         }

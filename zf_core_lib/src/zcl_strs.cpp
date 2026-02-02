@@ -281,57 +281,62 @@ namespace zcl {
         *o_byte_cnt = CodePointGetUTF8ByteCount(cp);
 
         switch (*o_byte_cnt) {
-        case 1:
-            // 0xxxxxxx
+            case 1: {
+                // 0xxxxxxx
 
-            (*o_bytes)[0] |= cp & ByteBitmaskCreateRange(0, 7);
+                (*o_bytes)[0] |= cp & ByteBitmaskCreateRange(0, 7);
 
-            break;
+                break;
+            }
 
-        case 2:
-            // 110xxxxx 10xxxxxx
+            case 2: {
+                // 110xxxxx 10xxxxxx
 
-            (*o_bytes)[0] = 0b11000000;
-            (*o_bytes)[0] |= (cp & (ByteBitmaskCreateRange(0, 5) << 6)) >> 6;
+                (*o_bytes)[0] = 0b11000000;
+                (*o_bytes)[0] |= (cp & (ByteBitmaskCreateRange(0, 5) << 6)) >> 6;
 
-            (*o_bytes)[1] = 0b10000000;
-            (*o_bytes)[1] |= cp & ByteBitmaskCreateRange(0, 6);
+                (*o_bytes)[1] = 0b10000000;
+                (*o_bytes)[1] |= cp & ByteBitmaskCreateRange(0, 6);
 
-            break;
+                break;
+            }
 
-        case 3:
-            // 1110xxxx 10xxxxxx 10xxxxxx
+            case 3: {
+                // 1110xxxx 10xxxxxx 10xxxxxx
 
-            (*o_bytes)[0] = 0b11100000;
-            (*o_bytes)[0] |= (cp & (ByteBitmaskCreateRange(0, 4) << 12)) >> 12;
+                (*o_bytes)[0] = 0b11100000;
+                (*o_bytes)[0] |= (cp & (ByteBitmaskCreateRange(0, 4) << 12)) >> 12;
 
-            (*o_bytes)[1] = 0b10000000;
-            (*o_bytes)[1] |= (cp & (ByteBitmaskCreateRange(0, 6) << 6)) >> 6;
+                (*o_bytes)[1] = 0b10000000;
+                (*o_bytes)[1] |= (cp & (ByteBitmaskCreateRange(0, 6) << 6)) >> 6;
 
-            (*o_bytes)[2] = 0b10000000;
-            (*o_bytes)[2] |= cp & ByteBitmaskCreateRange(0, 6);
+                (*o_bytes)[2] = 0b10000000;
+                (*o_bytes)[2] |= cp & ByteBitmaskCreateRange(0, 6);
 
-            break;
+                break;
+            }
 
-        case 4:
-            // 11110xxx 10xxxxxx 10xxxxxx 10xxxxxx
+            case 4: {
+                // 11110xxx 10xxxxxx 10xxxxxx 10xxxxxx
 
-            (*o_bytes)[0] = 0b11110000;
-            (*o_bytes)[0] |= (cp & (ByteBitmaskCreateRange(0, 3) << 18)) >> 18;
+                (*o_bytes)[0] = 0b11110000;
+                (*o_bytes)[0] |= (cp & (ByteBitmaskCreateRange(0, 3) << 18)) >> 18;
 
-            (*o_bytes)[1] = 0b10000000;
-            (*o_bytes)[1] |= (cp & (ByteBitmaskCreateRange(0, 6) << 12)) >> 12;
+                (*o_bytes)[1] = 0b10000000;
+                (*o_bytes)[1] |= (cp & (ByteBitmaskCreateRange(0, 6) << 12)) >> 12;
 
-            (*o_bytes)[2] = 0b10000000;
-            (*o_bytes)[2] |= (cp & (ByteBitmaskCreateRange(0, 6) << 6)) >> 6;
+                (*o_bytes)[2] = 0b10000000;
+                (*o_bytes)[2] |= (cp & (ByteBitmaskCreateRange(0, 6) << 6)) >> 6;
 
-            (*o_bytes)[3] = 0b10000000;
-            (*o_bytes)[3] |= cp & ByteBitmaskCreateRange(0, 6);
+                (*o_bytes)[3] = 0b10000000;
+                (*o_bytes)[3] |= cp & ByteBitmaskCreateRange(0, 6);
 
-            break;
+                break;
+            }
 
-        default:
-            ZCL_UNREACHABLE();
+            default: {
+                ZCL_UNREACHABLE();
+            }
         }
     }
 
@@ -341,34 +346,39 @@ namespace zcl {
         t_code_point result = 0;
 
         switch (bytes.len) {
-        case 1:
-            // 0xxxxxxx
-            result |= bytes[0] & ByteBitmaskCreateRange(0, 7);
-            break;
+            case 1: {
+                // 0xxxxxxx
+                result |= bytes[0] & ByteBitmaskCreateRange(0, 7);
+                break;
+            }
 
-        case 2:
-            // 110xxxxx 10xxxxxx
-            result |= static_cast<t_code_point>((bytes[0] & ByteBitmaskCreateRange(0, 5)) << 6);
-            result |= bytes[1] & ByteBitmaskCreateRange(0, 6);
-            break;
+            case 2: {
+                // 110xxxxx 10xxxxxx
+                result |= static_cast<t_code_point>((bytes[0] & ByteBitmaskCreateRange(0, 5)) << 6);
+                result |= bytes[1] & ByteBitmaskCreateRange(0, 6);
+                break;
+            }
 
-        case 3:
-            // 1110xxxx 10xxxxxx 10xxxxxx
-            result |= static_cast<t_code_point>((bytes[0] & ByteBitmaskCreateRange(0, 4)) << 12);
-            result |= static_cast<t_code_point>((bytes[1] & ByteBitmaskCreateRange(0, 6)) << 6);
-            result |= bytes[2] & ByteBitmaskCreateRange(0, 6);
-            break;
+            case 3: {
+                // 1110xxxx 10xxxxxx 10xxxxxx
+                result |= static_cast<t_code_point>((bytes[0] & ByteBitmaskCreateRange(0, 4)) << 12);
+                result |= static_cast<t_code_point>((bytes[1] & ByteBitmaskCreateRange(0, 6)) << 6);
+                result |= bytes[2] & ByteBitmaskCreateRange(0, 6);
+                break;
+            }
 
-        case 4:
-            // 11110xxx 10xxxxxx 10xxxxxx 10xxxxxx
-            result |= static_cast<t_code_point>((bytes[0] & ByteBitmaskCreateRange(0, 3)) << 18);
-            result |= static_cast<t_code_point>((bytes[1] & ByteBitmaskCreateRange(0, 6)) << 12);
-            result |= static_cast<t_code_point>((bytes[2] & ByteBitmaskCreateRange(0, 6)) << 6);
-            result |= bytes[3] & ByteBitmaskCreateRange(0, 6);
-            break;
+            case 4: {
+                // 11110xxx 10xxxxxx 10xxxxxx 10xxxxxx
+                result |= static_cast<t_code_point>((bytes[0] & ByteBitmaskCreateRange(0, 3)) << 18);
+                result |= static_cast<t_code_point>((bytes[1] & ByteBitmaskCreateRange(0, 6)) << 12);
+                result |= static_cast<t_code_point>((bytes[2] & ByteBitmaskCreateRange(0, 6)) << 6);
+                result |= bytes[3] & ByteBitmaskCreateRange(0, 6);
+                break;
+            }
 
-        default:
-            ZCL_UNREACHABLE();
+            default: {
+                ZCL_UNREACHABLE();
+            }
         }
 
         return result;
@@ -381,27 +391,30 @@ namespace zcl {
             const auto byte_type = k_utf8_byte_type_table[str.bytes[i]];
 
             switch (byte_type) {
-            case ek_utf8_byte_type_ascii:
-            case ek_utf8_byte_type_2byte_start:
-            case ek_utf8_byte_type_3byte_start:
-            case ek_utf8_byte_type_4byte_start:
-                if (cost > 0) {
-                    return false;
+                case ek_utf8_byte_type_ascii:
+                case ek_utf8_byte_type_2byte_start:
+                case ek_utf8_byte_type_3byte_start:
+                case ek_utf8_byte_type_4byte_start: {
+                    if (cost > 0) {
+                        return false;
+                    }
+
+                    cost = byte_type - ek_utf8_byte_type_ascii + 1;
+
+                    break;
                 }
 
-                cost = byte_type - ek_utf8_byte_type_ascii + 1;
+                case ek_utf8_byte_type_continuation: {
+                    if (cost == 0) {
+                        return false;
+                    }
 
-                break;
-
-            case ek_utf8_byte_type_continuation:
-                if (cost == 0) {
-                    return false;
+                    break;
                 }
 
-                break;
-
-            case ek_utf8_byte_type_invalid:
-                return false;
+                case ek_utf8_byte_type_invalid: {
+                    return false;
+                }
             }
 
             cost--;
@@ -420,15 +433,17 @@ namespace zcl {
             const auto byte_type = k_utf8_byte_type_table[str.bytes[i]];
 
             switch (byte_type) {
-            case ek_utf8_byte_type_ascii:
-            case ek_utf8_byte_type_2byte_start:
-            case ek_utf8_byte_type_3byte_start:
-            case ek_utf8_byte_type_4byte_start:
-                i += byte_type - ek_utf8_byte_type_ascii + 1;
-                break;
+                case ek_utf8_byte_type_ascii:
+                case ek_utf8_byte_type_2byte_start:
+                case ek_utf8_byte_type_3byte_start:
+                case ek_utf8_byte_type_4byte_start: {
+                    i += byte_type - ek_utf8_byte_type_ascii + 1;
+                    break;
+                }
 
-            default:
-                ZCL_UNREACHABLE();
+                default: {
+                    ZCL_UNREACHABLE();
+                }
             }
 
             len++;
@@ -477,24 +492,26 @@ namespace zcl {
             const auto byte_type = k_utf8_byte_type_table[str.bytes[*byte_index]];
 
             switch (byte_type) {
-            case ek_utf8_byte_type_ascii:
-            case ek_utf8_byte_type_2byte_start:
-            case ek_utf8_byte_type_3byte_start:
-            case ek_utf8_byte_type_4byte_start: {
-                const t_i32 cp_byte_cnt = byte_type - ek_utf8_byte_type_ascii + 1;
-                const auto cp_bytes = ArraySlice(str.bytes, *byte_index, *byte_index + cp_byte_cnt);
-                *o_step = {.code_pt = UTF8BytesToCodePoint(cp_bytes), .byte_index = *byte_index};
-                *byte_index += cp_byte_cnt;
+                case ek_utf8_byte_type_ascii:
+                case ek_utf8_byte_type_2byte_start:
+                case ek_utf8_byte_type_3byte_start:
+                case ek_utf8_byte_type_4byte_start: {
+                    const t_i32 cp_byte_cnt = byte_type - ek_utf8_byte_type_ascii + 1;
+                    const auto cp_bytes = ArraySlice(str.bytes, *byte_index, *byte_index + cp_byte_cnt);
+                    *o_step = {.code_pt = UTF8BytesToCodePoint(cp_bytes), .byte_index = *byte_index};
+                    *byte_index += cp_byte_cnt;
 
-                return true;
-            }
+                    return true;
+                }
 
-            case ek_utf8_byte_type_continuation:
-                (*byte_index)--;
-                break;
+                case ek_utf8_byte_type_continuation: {
+                    (*byte_index)--;
+                    break;
+                }
 
-            default:
-                ZCL_UNREACHABLE();
+                default: {
+                    ZCL_UNREACHABLE();
+                }
             }
         }
     }
@@ -511,24 +528,26 @@ namespace zcl {
             const auto byte_type = k_utf8_byte_type_table[str.bytes[*byte_index]];
 
             switch (byte_type) {
-            case ek_utf8_byte_type_ascii:
-            case ek_utf8_byte_type_2byte_start:
-            case ek_utf8_byte_type_3byte_start:
-            case ek_utf8_byte_type_4byte_start: {
-                const t_i32 cp_byte_cnt = byte_type - ek_utf8_byte_type_ascii + 1;
-                const auto cp_bytes = ArraySlice(str.bytes, *byte_index, *byte_index + cp_byte_cnt);
-                *o_step = {.code_pt = UTF8BytesToCodePoint(cp_bytes), .byte_index = *byte_index};
-                (*byte_index)--;
+                case ek_utf8_byte_type_ascii:
+                case ek_utf8_byte_type_2byte_start:
+                case ek_utf8_byte_type_3byte_start:
+                case ek_utf8_byte_type_4byte_start: {
+                    const t_i32 cp_byte_cnt = byte_type - ek_utf8_byte_type_ascii + 1;
+                    const auto cp_bytes = ArraySlice(str.bytes, *byte_index, *byte_index + cp_byte_cnt);
+                    *o_step = {.code_pt = UTF8BytesToCodePoint(cp_bytes), .byte_index = *byte_index};
+                    (*byte_index)--;
 
-                return true;
-            }
+                    return true;
+                }
 
-            case ek_utf8_byte_type_continuation:
-                (*byte_index)--;
-                break;
+                case ek_utf8_byte_type_continuation: {
+                    (*byte_index)--;
+                    break;
+                }
 
-            default:
-                ZCL_UNREACHABLE();
+                default: {
+                    ZCL_UNREACHABLE();
+                }
             }
         }
     }

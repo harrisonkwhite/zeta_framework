@@ -42,8 +42,13 @@ namespace zcl {
 
         t_static_array<t_u8, BitsToBytes(tp_bit_cnt)> bytes;
 
-        constexpr operator t_bitset_mut() { return {bytes.raw, k_bit_cnt}; }
-        constexpr operator t_bitset_rdonly() const { return {bytes.raw, k_bit_cnt}; }
+        constexpr operator t_bitset_mut() {
+            return {bytes.raw, k_bit_cnt};
+        }
+
+        constexpr operator t_bitset_rdonly() const {
+            return {bytes.raw, k_bit_cnt};
+        }
     };
 
     constexpr t_bitset_mut BitsetCreate(const t_array_mut<t_u8> bytes) {
@@ -114,6 +119,7 @@ namespace zcl {
     }
 
     void BitsetSetAll(const t_bitset_mut bs);
+
     void BitsetUnsetAll(const t_bitset_mut bs);
 
     // Sets all bits in the range [begin_bit_index, end_bit_index).
@@ -129,9 +135,11 @@ namespace zcl {
     void BitsetApplyMask(const t_bitset_mut bs, const t_bitset_rdonly mask, const t_bitwise_mask_op op);
 
     void BitsetShiftLeft(const t_bitset_mut bs, const t_i32 amount = 1);
+
     void BitsetRotateLeft(const t_bitset_mut bs, const t_i32 amount = 1);
 
     void BitsetShiftRight(const t_bitset_mut bs, const t_i32 amount = 1);
+
     void BitsetRotateRight(const t_bitset_mut bs, const t_i32 amount = 1);
 
     // Returns the index of the found set bit, or -1 if all bits are unset.

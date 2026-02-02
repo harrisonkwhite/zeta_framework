@@ -12,7 +12,12 @@ namespace zgl {
         return ticket.val == reinterpret_cast<zcl::t_uintptr>(&g_platform_ticket_identity);
     }
 #else
-    t_platform_ticket_mut TicketCreate() { return {}; }
-    zcl::t_b8 TicketCheckValid(const t_platform_ticket_rdonly ticket) { return true; }
+    t_platform_ticket_mut TicketCreate() {
+        return {};
+    }
+
+    zcl::t_b8 TicketCheckValid(const t_platform_ticket_rdonly ticket) {
+        return true;
+    }
 #endif
 }

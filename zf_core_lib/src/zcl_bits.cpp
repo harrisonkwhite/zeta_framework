@@ -81,33 +81,37 @@ namespace zcl {
         }
 
         switch (op) {
-        case ek_bitwise_mask_op_and:
-            for (t_i32 i = 0; i < BitsetGetBytes(bs).len; i++) {
-                BitsetGetBytes(bs)[i] &= BitsetGetBytes(mask)[i];
+            case ek_bitwise_mask_op_and: {
+                for (t_i32 i = 0; i < BitsetGetBytes(bs).len; i++) {
+                    BitsetGetBytes(bs)[i] &= BitsetGetBytes(mask)[i];
+                }
+
+                break;
             }
 
-            break;
+            case ek_bitwise_mask_op_or: {
+                for (t_i32 i = 0; i < BitsetGetBytes(bs).len; i++) {
+                    BitsetGetBytes(bs)[i] |= BitsetGetBytes(mask)[i];
+                }
 
-        case ek_bitwise_mask_op_or:
-            for (t_i32 i = 0; i < BitsetGetBytes(bs).len; i++) {
-                BitsetGetBytes(bs)[i] |= BitsetGetBytes(mask)[i];
+                break;
             }
 
-            break;
+            case ek_bitwise_mask_op_xor: {
+                for (t_i32 i = 0; i < BitsetGetBytes(bs).len; i++) {
+                    BitsetGetBytes(bs)[i] ^= BitsetGetBytes(mask)[i];
+                }
 
-        case ek_bitwise_mask_op_xor:
-            for (t_i32 i = 0; i < BitsetGetBytes(bs).len; i++) {
-                BitsetGetBytes(bs)[i] ^= BitsetGetBytes(mask)[i];
+                break;
             }
 
-            break;
+            case ek_bitwise_mask_op_andnot: {
+                for (t_i32 i = 0; i < BitsetGetBytes(bs).len; i++) {
+                    BitsetGetBytes(bs)[i] &= ~BitsetGetBytes(mask)[i];
+                }
 
-        case ek_bitwise_mask_op_andnot:
-            for (t_i32 i = 0; i < BitsetGetBytes(bs).len; i++) {
-                BitsetGetBytes(bs)[i] &= ~BitsetGetBytes(mask)[i];
+                break;
             }
-
-            break;
         }
 
         BitsetGetBytes(bs)[BitsetGetBytes(bs).len - 1] &= BitsetGetLastByteMask(bs);

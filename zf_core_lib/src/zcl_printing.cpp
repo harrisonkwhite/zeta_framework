@@ -23,19 +23,51 @@ namespace zcl {
     }
 
     t_b8 PrintType(const t_stream_view stream_view, const t_format_v2 format) {
-        return Print(stream_view, ZCL_STR_LITERAL("("))
-            && PrintType(stream_view, FormatFloat(format.value.x, format.precision, format.trim_trailing_zeros))
-            && Print(stream_view, ZCL_STR_LITERAL(", "))
-            && PrintType(stream_view, FormatFloat(format.value.y, format.precision, format.trim_trailing_zeros))
-            && Print(stream_view, ZCL_STR_LITERAL(")"));
+        if (!Print(stream_view, ZCL_STR_LITERAL("("))) {
+            return false;
+        }
+
+        if (!PrintType(stream_view, FormatFloat(format.value.x, format.precision, format.trim_trailing_zeros))) {
+            return false;
+        }
+
+        if (!Print(stream_view, ZCL_STR_LITERAL(", "))) {
+            return false;
+        }
+
+        if (!PrintType(stream_view, FormatFloat(format.value.y, format.precision, format.trim_trailing_zeros))) {
+            return false;
+        }
+
+        if (!Print(stream_view, ZCL_STR_LITERAL(")"))) {
+            return false;
+        }
+
+        return true;
     }
 
     t_b8 PrintType(const t_stream_view stream_view, const t_format_v2_i format) {
-        return Print(stream_view, ZCL_STR_LITERAL("("))
-            && PrintType(stream_view, FormatInt(format.value.x))
-            && Print(stream_view, ZCL_STR_LITERAL(", "))
-            && PrintType(stream_view, FormatInt(format.value.y))
-            && Print(stream_view, ZCL_STR_LITERAL(")"));
+        if (!Print(stream_view, ZCL_STR_LITERAL("("))) {
+            return false;
+        }
+
+        if (!PrintType(stream_view, FormatInt(format.value.x))) {
+            return false;
+        }
+
+        if (!Print(stream_view, ZCL_STR_LITERAL(", "))) {
+            return false;
+        }
+
+        if (!PrintType(stream_view, FormatInt(format.value.y))) {
+            return false;
+        }
+
+        if (!Print(stream_view, ZCL_STR_LITERAL(")"))) {
+            return false;
+        }
+
+        return true;
     }
 
     t_b8 PrintType(const t_stream_view stream_view, const t_format_bitset format) {
@@ -57,36 +89,39 @@ namespace zcl {
         };
 
         switch (format.style) {
-        case ek_bitset_format_style_seq:
-            for (t_i32 i = 0; i < format.value.bit_cnt; i++) {
-                if (!print_bit(i)) {
-                    return false;
-                }
-            }
-
-            break;
-
-        case ek_bitset_format_style_little_endian:
-            for (t_i32 i = 0; i < BitsetGetBytes(format.value).len; i++) {
-                if (i > 0) {
-                    Print(stream_view, ZCL_STR_LITERAL(" "));
+            case ek_bitset_format_style_seq: {
+                for (t_i32 i = 0; i < format.value.bit_cnt; i++) {
+                    if (!print_bit(i)) {
+                        return false;
+                    }
                 }
 
-                print_byte(i);
+                break;
             }
 
-            break;
+            case ek_bitset_format_style_little_endian: {
+                for (t_i32 i = 0; i < BitsetGetBytes(format.value).len; i++) {
+                    if (i > 0) {
+                        Print(stream_view, ZCL_STR_LITERAL(" "));
+                    }
 
-        case ek_bitset_format_style_big_endian:
-            for (t_i32 i = BitsetGetBytes(format.value).len - 1; i >= 0; i--) {
-                print_byte(i);
-
-                if (i > 0) {
-                    Print(stream_view, ZCL_STR_LITERAL(" "));
+                    print_byte(i);
                 }
+
+                break;
             }
 
-            break;
+            case ek_bitset_format_style_big_endian: {
+                for (t_i32 i = BitsetGetBytes(format.value).len - 1; i >= 0; i--) {
+                    print_byte(i);
+
+                    if (i > 0) {
+                        Print(stream_view, ZCL_STR_LITERAL(" "));
+                    }
+                }
+
+                break;
+            }
         }
 
         return true;

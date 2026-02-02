@@ -153,8 +153,7 @@ namespace zgl {
         const auto snd_ids = SoundsGetExisting(audio_ticket, temp_arena);
 
         for (zcl::t_i32 i = 0; i < snd_ids.len; i++) {
-            if (SoundGetType(audio_ticket, snd_ids[i]) == snd_type
-                && SoundGetState(audio_ticket, snd_ids[i]) == ek_sound_state_playing) {
+            if (SoundGetType(audio_ticket, snd_ids[i]) == snd_type && SoundGetState(audio_ticket, snd_ids[i]) == ek_sound_state_playing) {
                 SoundPause(audio_ticket, snd_ids[i]);
             }
         }
@@ -178,8 +177,7 @@ namespace zgl {
         const auto snd_ids = SoundsGetExisting(audio_ticket, temp_arena);
 
         for (zcl::t_i32 i = 0; i < snd_ids.len; i++) {
-            if (SoundGetType(audio_ticket, snd_ids[i]) == snd_type
-                && SoundGetState(audio_ticket, snd_ids[i]) == ek_sound_state_paused) {
+            if (SoundGetType(audio_ticket, snd_ids[i]) == snd_type && SoundGetState(audio_ticket, snd_ids[i]) == ek_sound_state_paused) {
                 SoundResume(audio_ticket, snd_ids[i]);
             }
         }

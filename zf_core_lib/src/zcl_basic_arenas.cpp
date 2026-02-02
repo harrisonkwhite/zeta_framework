@@ -117,94 +117,95 @@ namespace zcl {
         ZCL_ASSERT(size > 0 && AlignmentCheckValid(alignment));
 
         switch (arena->type) {
-        case ek_arena_type_block_based: {
-            const auto block_based = &arena->type_data.block_based;
+            case ek_arena_type_block_based: {
+                const auto block_based = &arena->type_data.block_based;
 
-            if (!block_based->blocks_head) {
-                block_based->blocks_head = ArenaCreateBlock(CalcMax(size, block_based->block_min_size));
-                block_based->block_cur = block_based->blocks_head;
-                return ArenaPushRaw(arena, size, alignment);
-            }
-
-            const t_i32 offs_aligned = AlignForward(block_based->block_cur_offs, alignment);
-            const t_i32 offs_next = offs_aligned + size;
-
-            if (offs_next > block_based->block_cur->buf_size) {
-                if (!block_based->block_cur->next) {
-                    block_based->block_cur->next = ArenaCreateBlock(CalcMax(size, block_based->block_min_size));
+                if (!block_based->blocks_head) {
+                    block_based->blocks_head = ArenaCreateBlock(CalcMax(size, block_based->block_min_size));
+                    block_based->block_cur = block_based->blocks_head;
+                    return ArenaPushRaw(arena, size, alignment);
                 }
 
-                block_based->block_cur = block_based->block_cur->next;
-                block_based->block_cur_offs = 0;
+                const t_i32 offs_aligned = AlignForward(block_based->block_cur_offs, alignment);
+                const t_i32 offs_next = offs_aligned + size;
 
-                return ArenaPushRaw(arena, size, alignment);
+                if (offs_next > block_based->block_cur->buf_size) {
+                    if (!block_based->block_cur->next) {
+                        block_based->block_cur->next = ArenaCreateBlock(CalcMax(size, block_based->block_min_size));
+                    }
+
+                    block_based->block_cur = block_based->block_cur->next;
+                    block_based->block_cur_offs = 0;
+
+                    return ArenaPushRaw(arena, size, alignment);
+                }
+
+                block_based->block_cur_offs = offs_next;
+
+                void *const result = static_cast<t_u8 *>(block_based->block_cur->buf) + offs_aligned;
+                ZeroClear(result, size);
+
+                return result;
             }
 
-            block_based->block_cur_offs = offs_next;
+            case ek_arena_type_wrapping: {
+                const auto wrapping = &arena->type_data.wrapping;
 
-            void *const result = static_cast<t_u8 *>(block_based->block_cur->buf) + offs_aligned;
-            ZeroClear(result, size);
+                const t_i32 offs_aligned = AlignForward(wrapping->buf_offs, alignment);
+                const t_i32 offs_next = offs_aligned + size;
 
-            return result;
-        }
+                if (offs_next > wrapping->buf_size) {
+                    ZCL_FATAL();
+                }
 
-        case ek_arena_type_wrapping: {
-            const auto wrapping = &arena->type_data.wrapping;
+                wrapping->buf_offs = offs_next;
 
-            const t_i32 offs_aligned = AlignForward(wrapping->buf_offs, alignment);
-            const t_i32 offs_next = offs_aligned + size;
+                void *const result = static_cast<t_u8 *>(wrapping->buf) + offs_aligned;
+                ZeroClear(result, size);
 
-            if (offs_next > wrapping->buf_size) {
-                ZCL_FATAL();
+                return result;
             }
 
-            wrapping->buf_offs = offs_next;
-
-            void *const result = static_cast<t_u8 *>(wrapping->buf) + offs_aligned;
-            ZeroClear(result, size);
-
-            return result;
-        }
-
-        default:
-            ZCL_UNREACHABLE();
+            default: {
+                ZCL_UNREACHABLE();
+            }
         }
     }
 
     void ArenaRewind(t_arena *const arena) {
         switch (arena->type) {
-        case ek_arena_type_block_based: {
-            const auto block_based = &arena->type_data.block_based;
+            case ek_arena_type_block_based: {
+                const auto block_based = &arena->type_data.block_based;
 
 #ifdef ZCL_DEBUG
-            // Poison all memory to be rewinded.
-            if (block_based->block_cur) {
-                const t_arena_block *block = block_based->blocks_head;
+                // Poison all memory to be rewinded.
+                if (block_based->block_cur) {
+                    const t_arena_block *block = block_based->blocks_head;
 
-                while (block != block_based->block_cur) {
-                    memset(block->buf, k_arena_poison, static_cast<size_t>(block->buf_size));
-                    block = block->next;
+                    while (block != block_based->block_cur) {
+                        memset(block->buf, k_arena_poison, static_cast<size_t>(block->buf_size));
+                        block = block->next;
+                    }
+
+                    memset(block_based->block_cur->buf, k_arena_poison, static_cast<size_t>(block_based->block_cur_offs));
                 }
-
-                memset(block_based->block_cur->buf, k_arena_poison, static_cast<size_t>(block_based->block_cur_offs));
-            }
 #endif
 
-            block_based->block_cur = block_based->blocks_head;
-            block_based->block_cur_offs = 0;
+                block_based->block_cur = block_based->blocks_head;
+                block_based->block_cur_offs = 0;
 
-            break;
-        }
+                break;
+            }
 
-        case ek_arena_type_wrapping: {
-            const auto wrapping = &arena->type_data.wrapping;
-            ZeroClear(wrapping->buf, wrapping->buf_offs);
-            wrapping->buf_offs = 0;
-            break;
-        }
+            case ek_arena_type_wrapping: {
+                const auto wrapping = &arena->type_data.wrapping;
+                ZeroClear(wrapping->buf, wrapping->buf_offs);
+                wrapping->buf_offs = 0;
+                break;
+            }
 
-        default:
-            ZCL_UNREACHABLE();
+            default:
+                ZCL_UNREACHABLE();
         }
     }
 }

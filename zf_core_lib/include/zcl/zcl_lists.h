@@ -39,11 +39,10 @@ namespace zcl {
 
     using t_list_extension_cap_calculator = t_i32 (*)(const t_i32 cap_current);
 
-    constexpr t_list_extension_cap_calculator k_list_extension_cap_calculator_default =
-        [](const t_i32 cap_current) {
-            ZCL_ASSERT(cap_current >= 0);
-            return cap_current == 0 ? 1 : cap_current * 2;
-        };
+    constexpr t_list_extension_cap_calculator k_list_extension_cap_calculator_default = [](const t_i32 cap_current) {
+        ZCL_ASSERT(cap_current >= 0);
+        return cap_current == 0 ? 1 : cap_current * 2;
+    };
 
     template <typename tp_type>
     concept c_list_nonstatic = c_same<t_without_cvref<tp_type>, t_list<typename tp_type::t_elem>>;

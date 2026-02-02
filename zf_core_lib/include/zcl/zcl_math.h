@@ -5,7 +5,6 @@
 namespace zcl {
     // ============================================================
     // @section: Types and Constants
-    // ============================================================
 
     // Putting all of these types and things up here since the math functions are so interrelated.
 
@@ -18,12 +17,25 @@ namespace zcl {
         t_f32 x;
         t_f32 y;
 
-        constexpr t_v2 operator-() const { return {-x, -y}; }
+        constexpr t_v2 operator-() const {
+            return {-x, -y};
+        }
 
-        constexpr t_v2 operator+(const t_v2 &other) const { return {x + other.x, y + other.y}; }
-        constexpr t_v2 operator-(const t_v2 &other) const { return {x - other.x, y - other.y}; }
-        constexpr t_v2 operator*(const t_f32 scalar) const { return {x * scalar, y * scalar}; }
-        constexpr t_v2 operator/(const t_f32 divisor) const { return {x / divisor, y / divisor}; }
+        constexpr t_v2 operator+(const t_v2 &other) const {
+            return {x + other.x, y + other.y};
+        }
+
+        constexpr t_v2 operator-(const t_v2 &other) const {
+            return {x - other.x, y - other.y};
+        }
+
+        constexpr t_v2 operator*(const t_f32 scalar) const {
+            return {x * scalar, y * scalar};
+        }
+
+        constexpr t_v2 operator/(const t_f32 divisor) const {
+            return {x / divisor, y / divisor};
+        }
 
         constexpr t_v2 &operator+=(const t_v2 &other) {
             x += other.x;
@@ -58,15 +70,33 @@ namespace zcl {
         t_i32 x;
         t_i32 y;
 
-        constexpr t_v2_i operator-() const { return {-x, -y}; }
+        constexpr t_v2_i operator-() const {
+            return {-x, -y};
+        }
 
-        constexpr t_b8 operator==(const t_v2_i &other) const { return x == other.x && y == other.y; }
-        constexpr t_b8 operator!=(const t_v2_i &other) const { return !(*this == other); }
+        constexpr t_b8 operator==(const t_v2_i &other) const {
+            return x == other.x && y == other.y;
+        }
 
-        constexpr t_v2_i operator+(const t_v2_i &other) const { return {x + other.x, y + other.y}; }
-        constexpr t_v2_i operator-(const t_v2_i &other) const { return {x - other.x, y - other.y}; }
-        constexpr t_v2_i operator*(const t_i32 scalar) const { return {x * scalar, y * scalar}; }
-        constexpr t_v2_i operator/(const t_i32 divisor) const { return {x / divisor, y / divisor}; }
+        constexpr t_b8 operator!=(const t_v2_i &other) const {
+            return !(*this == other);
+        }
+
+        constexpr t_v2_i operator+(const t_v2_i &other) const {
+            return {x + other.x, y + other.y};
+        }
+
+        constexpr t_v2_i operator-(const t_v2_i &other) const {
+            return {x - other.x, y - other.y};
+        }
+
+        constexpr t_v2_i operator*(const t_i32 scalar) const {
+            return {x * scalar, y * scalar};
+        }
+
+        constexpr t_v2_i operator/(const t_i32 divisor) const {
+            return {x / divisor, y / divisor};
+        }
 
         constexpr t_v2_i &operator+=(const t_v2_i &other) {
             x += other.x;
@@ -98,12 +128,25 @@ namespace zcl {
         t_f32 y;
         t_f32 z;
 
-        constexpr t_v3 operator-() const { return {-x, -y, -z}; }
+        constexpr t_v3 operator-() const {
+            return {-x, -y, -z};
+        }
 
-        constexpr t_v3 operator+(const t_v3 &other) const { return {x + other.x, y + other.y, z + other.z}; }
-        constexpr t_v3 operator-(const t_v3 &other) const { return {x - other.x, y - other.y, z - other.z}; }
-        constexpr t_v3 operator*(const t_f32 scalar) const { return {x * scalar, y * scalar, z * scalar}; }
-        constexpr t_v3 operator/(const t_f32 divisor) const { return {x / divisor, y / divisor, z / divisor}; }
+        constexpr t_v3 operator+(const t_v3 &other) const {
+            return {x + other.x, y + other.y, z + other.z};
+        }
+
+        constexpr t_v3 operator-(const t_v3 &other) const {
+            return {x - other.x, y - other.y, z - other.z};
+        }
+
+        constexpr t_v3 operator*(const t_f32 scalar) const {
+            return {x * scalar, y * scalar, z * scalar};
+        }
+
+        constexpr t_v3 operator/(const t_f32 divisor) const {
+            return {x / divisor, y / divisor, z / divisor};
+        }
 
         constexpr t_v3 &operator+=(const t_v3 &other) {
             x += other.x;
@@ -140,12 +183,25 @@ namespace zcl {
         t_f32 z;
         t_f32 w;
 
-        constexpr t_v4 operator-() const { return {-x, -y, -z, -w}; }
+        constexpr t_v4 operator-() const {
+            return {-x, -y, -z, -w};
+        }
 
-        constexpr t_v4 operator+(const t_v4 &other) const { return {x + other.x, y + other.y, z + other.z, w + other.w}; }
-        constexpr t_v4 operator-(const t_v4 &other) const { return {x - other.x, y - other.y, z - other.z, w - other.w}; }
-        constexpr t_v4 operator*(const t_f32 scalar) const { return {x * scalar, y * scalar, z * scalar, w * scalar}; }
-        constexpr t_v4 operator/(const t_f32 divisor) const { return {x / divisor, y / divisor, z / divisor, w / divisor}; }
+        constexpr t_v4 operator+(const t_v4 &other) const {
+            return {x + other.x, y + other.y, z + other.z, w + other.w};
+        }
+
+        constexpr t_v4 operator-(const t_v4 &other) const {
+            return {x - other.x, y - other.y, z - other.z, w - other.w};
+        }
+
+        constexpr t_v4 operator*(const t_f32 scalar) const {
+            return {x * scalar, y * scalar, z * scalar, w * scalar};
+        }
+
+        constexpr t_v4 operator/(const t_f32 divisor) const {
+            return {x / divisor, y / divisor, z / divisor, w / divisor};
+        }
 
         constexpr t_v4 &operator+=(const t_v4 &other) {
             x += other.x;
@@ -246,8 +302,7 @@ namespace zcl {
         {-1.0f, 0.0f},
     }};
 
-    // ============================================================
-
+    // ==================================================
 
     constexpr t_b8 CheckNearlyEqual(const t_f32 val, const t_f32 targ, const t_f32 tol = k_tolerance_default) {
         ZCL_ASSERT(!CheckNaN(val));
@@ -262,16 +317,11 @@ namespace zcl {
     }
 
     constexpr t_b8 CheckNearlyEqual(const t_v3 val, const t_v3 targ, const t_f32 tol = k_tolerance_default) {
-        return CheckNearlyEqual(val.x, targ.x, tol)
-            && CheckNearlyEqual(val.y, targ.y, tol)
-            && CheckNearlyEqual(val.z, targ.z, tol);
+        return CheckNearlyEqual(val.x, targ.x, tol) && CheckNearlyEqual(val.y, targ.y, tol) && CheckNearlyEqual(val.z, targ.z, tol);
     }
 
     constexpr t_b8 CheckNearlyEqual(const t_v4 val, const t_v4 targ, const t_f32 tol = k_tolerance_default) {
-        return CheckNearlyEqual(val.x, targ.x, tol)
-            && CheckNearlyEqual(val.y, targ.y, tol)
-            && CheckNearlyEqual(val.z, targ.z, tol)
-            && CheckNearlyEqual(val.w, targ.w, tol);
+        return CheckNearlyEqual(val.x, targ.x, tol) && CheckNearlyEqual(val.y, targ.y, tol) && CheckNearlyEqual(val.z, targ.z, tol) && CheckNearlyEqual(val.w, targ.w, tol);
     }
 
     constexpr t_f32 Snap(const t_f32 val, const t_f32 targ, const t_f32 tol = k_tolerance_default) {
@@ -362,10 +412,21 @@ namespace zcl {
         return {min, max};
     }
 
-    constexpr t_b8 RangeCheckEmpty(const t_range range) { return false; }
-    constexpr t_b8 RangeCheckEmpty(const t_range_excl_lower range) { return CheckNearlyEqual(range.min, range.max); }
-    constexpr t_b8 RangeCheckEmpty(const t_range_excl_upper range) { return CheckNearlyEqual(range.min, range.max); }
-    constexpr t_b8 RangeCheckEmpty(const t_range_excl_both range) { return CheckNearlyEqual(range.min, range.max); }
+    constexpr t_b8 RangeCheckEmpty(const t_range range) {
+        return false;
+    }
+
+    constexpr t_b8 RangeCheckEmpty(const t_range_excl_lower range) {
+        return CheckNearlyEqual(range.min, range.max);
+    }
+
+    constexpr t_b8 RangeCheckEmpty(const t_range_excl_upper range) {
+        return CheckNearlyEqual(range.min, range.max);
+    }
+
+    constexpr t_b8 RangeCheckEmpty(const t_range_excl_both range) {
+        return CheckNearlyEqual(range.min, range.max);
+    }
 
     constexpr t_b8 RangeValueCheckWithin(const t_range range, const t_f32 val) {
         ZCL_ASSERT(!CheckNaN(val));
@@ -434,40 +495,97 @@ namespace zcl {
         return RectCreateI(rect.x + offs.x, rect.y + offs.y, rect.width, rect.height);
     }
 
-    constexpr t_v2 RectGetPos(const t_rect_f rect) { return {rect.x, rect.y}; }
-    constexpr t_v2_i RectGetPos(const t_rect_i rect) { return {rect.x, rect.y}; }
+    constexpr t_v2 RectGetPos(const t_rect_f rect) {
+        return {rect.x, rect.y};
+    }
 
-    constexpr t_v2 RectGetSize(const t_rect_f rect) { return {rect.width, rect.height}; }
-    constexpr t_v2_i RectGetSize(const t_rect_i rect) { return {rect.width, rect.height}; }
+    constexpr t_v2_i RectGetPos(const t_rect_i rect) {
+        return {rect.x, rect.y};
+    }
 
-    constexpr t_v2 RectGetCenter(const t_rect_f rect) { return {rect.x + (rect.width / 2.0f), rect.y + (rect.height / 2.0f)}; }
+    constexpr t_v2 RectGetSize(const t_rect_f rect) {
+        return {rect.width, rect.height};
+    }
 
-    constexpr t_f32 RectGetLeft(const t_rect_f rect) { return rect.x; }
-    constexpr t_i32 RectGetLeft(const t_rect_i rect) { return rect.x; }
+    constexpr t_v2_i RectGetSize(const t_rect_i rect) {
+        return {rect.width, rect.height};
+    }
 
-    constexpr t_f32 RectGetTop(const t_rect_f rect) { return rect.y; }
-    constexpr t_i32 RectGetTop(const t_rect_i rect) { return rect.y; }
+    constexpr t_v2 RectGetCenter(const t_rect_f rect) {
+        return {rect.x + (rect.width / 2.0f), rect.y + (rect.height / 2.0f)};
+    }
 
-    constexpr t_f32 RectGetRight(const t_rect_f rect) { return rect.x + rect.width; }
-    constexpr t_i32 RectGetRight(const t_rect_i rect) { return rect.x + rect.width; }
+    constexpr t_f32 RectGetLeft(const t_rect_f rect) {
+        return rect.x;
+    }
 
-    constexpr t_f32 RectGetBottom(const t_rect_f rect) { return rect.y + rect.height; }
-    constexpr t_i32 RectGetBottom(const t_rect_i rect) { return rect.y + rect.height; }
+    constexpr t_i32 RectGetLeft(const t_rect_i rect) {
+        return rect.x;
+    }
 
-    constexpr t_v2 RectGetTopLeft(const t_rect_f rect) { return {RectGetLeft(rect), RectGetTop(rect)}; }
-    constexpr t_v2_i RectGetTopLeft(const t_rect_i rect) { return {RectGetLeft(rect), RectGetTop(rect)}; }
+    constexpr t_f32 RectGetTop(const t_rect_f rect) {
+        return rect.y;
+    }
 
-    constexpr t_v2 RectGetTopRight(const t_rect_f rect) { return {RectGetRight(rect), RectGetTop(rect)}; }
-    constexpr t_v2_i RectGetTopRight(const t_rect_i rect) { return {RectGetRight(rect), RectGetTop(rect)}; }
+    constexpr t_i32 RectGetTop(const t_rect_i rect) {
+        return rect.y;
+    }
 
-    constexpr t_v2 RectGetBottomLeft(const t_rect_f rect) { return {RectGetLeft(rect), RectGetBottom(rect)}; }
-    constexpr t_v2_i RectGetBottomLeft(const t_rect_i rect) { return {RectGetLeft(rect), RectGetBottom(rect)}; }
+    constexpr t_f32 RectGetRight(const t_rect_f rect) {
+        return rect.x + rect.width;
+    }
 
-    constexpr t_v2 RectGetBottomRight(const t_rect_f rect) { return {RectGetRight(rect), RectGetBottom(rect)}; }
-    constexpr t_v2_i RectGetBottomRight(const t_rect_i rect) { return {RectGetRight(rect), RectGetBottom(rect)}; }
+    constexpr t_i32 RectGetRight(const t_rect_i rect) {
+        return rect.x + rect.width;
+    }
 
-    constexpr t_f32 RectGetArea(const t_rect_f rect) { return rect.width * rect.height; }
-    constexpr t_i32 RectGetArea(const t_rect_i rect) { return rect.width * rect.height; }
+    constexpr t_f32 RectGetBottom(const t_rect_f rect) {
+        return rect.y + rect.height;
+    }
+
+    constexpr t_i32 RectGetBottom(const t_rect_i rect) {
+        return rect.y + rect.height;
+    }
+
+    constexpr t_v2 RectGetTopLeft(const t_rect_f rect) {
+        return {RectGetLeft(rect), RectGetTop(rect)};
+    }
+
+    constexpr t_v2_i RectGetTopLeft(const t_rect_i rect) {
+        return {RectGetLeft(rect), RectGetTop(rect)};
+    }
+
+    constexpr t_v2 RectGetTopRight(const t_rect_f rect) {
+        return {RectGetRight(rect), RectGetTop(rect)};
+    }
+
+    constexpr t_v2_i RectGetTopRight(const t_rect_i rect) {
+        return {RectGetRight(rect), RectGetTop(rect)};
+    }
+
+    constexpr t_v2 RectGetBottomLeft(const t_rect_f rect) {
+        return {RectGetLeft(rect), RectGetBottom(rect)};
+    }
+
+    constexpr t_v2_i RectGetBottomLeft(const t_rect_i rect) {
+        return {RectGetLeft(rect), RectGetBottom(rect)};
+    }
+
+    constexpr t_v2 RectGetBottomRight(const t_rect_f rect) {
+        return {RectGetRight(rect), RectGetBottom(rect)};
+    }
+
+    constexpr t_v2_i RectGetBottomRight(const t_rect_i rect) {
+        return {RectGetRight(rect), RectGetBottom(rect)};
+    }
+
+    constexpr t_f32 RectGetArea(const t_rect_f rect) {
+        return rect.width * rect.height;
+    }
+
+    constexpr t_i32 RectGetArea(const t_rect_i rect) {
+        return rect.width * rect.height;
+    }
 
     constexpr t_rect_f RectIToF(const t_rect_i rect) {
         return {static_cast<t_f32>(rect.x), static_cast<t_f32>(rect.y), static_cast<t_f32>(rect.width), static_cast<t_f32>(rect.height)};
@@ -549,14 +667,29 @@ namespace zcl {
     // Points are guaranteed to be in this order: top-left, top-right, bottom-right, bottom-left.
     t_poly_mut PolyCreateQuadRotated(const t_v2 pos, const t_v2 size, const t_v2 origin, const t_f32 rot, t_arena *const arena);
 
-    constexpr t_f32 CalcDotProd(const t_v2 a, const t_v2 b) { return (a.x * b.x) + (a.y * b.y); }
-    constexpr t_i32 CalcDotProd(const t_v2_i a, const t_v2_i b) { return (a.x * b.x) + (a.y * b.y); }
+    constexpr t_f32 CalcDotProd(const t_v2 a, const t_v2 b) {
+        return (a.x * b.x) + (a.y * b.y);
+    }
 
-    constexpr t_f32 CalcCrossProd(const t_v2 a, const t_v2 b) { return (a.x * b.y) - (a.y * b.x); }
-    constexpr t_i32 CalcCrossProd(const t_v2_i a, const t_v2_i b) { return (a.x * b.y) - (a.y * b.x); }
+    constexpr t_i32 CalcDotProd(const t_v2_i a, const t_v2_i b) {
+        return (a.x * b.x) + (a.y * b.y);
+    }
 
-    constexpr t_v2 CalcCompwiseProd(const t_v2 a, const t_v2 b) { return {a.x * b.x, a.y * b.y}; }
-    constexpr t_v2_i CalcCompwiseProd(const t_v2_i a, const t_v2_i b) { return {a.x * b.x, a.y * b.y}; }
+    constexpr t_f32 CalcCrossProd(const t_v2 a, const t_v2 b) {
+        return (a.x * b.y) - (a.y * b.x);
+    }
+
+    constexpr t_i32 CalcCrossProd(const t_v2_i a, const t_v2_i b) {
+        return (a.x * b.y) - (a.y * b.x);
+    }
+
+    constexpr t_v2 CalcCompwiseProd(const t_v2 a, const t_v2 b) {
+        return {a.x * b.x, a.y * b.y};
+    }
+
+    constexpr t_v2_i CalcCompwiseProd(const t_v2_i a, const t_v2_i b) {
+        return {a.x * b.x, a.y * b.y};
+    }
 
     t_f32 CalcMag(const t_v2 v);
 
@@ -643,9 +776,13 @@ namespace zcl {
     }
 
     t_rect_f CalcSpanningRect(const t_array_mut<t_v2> pts);
+
     t_rect_i CalcSpanningRect(const t_array_mut<t_v2_i> pts);
+
     t_rect_f CalcSpanningRect(const t_array_mut<t_rect_f> rects);
+
     t_rect_i CalcSpanningRect(const t_array_mut<t_rect_i> rects);
+
     t_rect_f CalcSpanningRect(const t_poly_rdonly poly);
 
     t_b8 CheckInters(const t_poly_rdonly poly_a, const t_poly_rdonly poly_b);

@@ -1,6 +1,7 @@
-- The whole Create* system is kinda strange for trivial creations... and easy to forget...
-    - Honestly might just have to drop it and rely on IsValid() checks at deliberate boundaries
-
+- Try to minimise the STL includes in basic, or consider a PCH. Also cmath ideally shouldnt be included
+- Could a static string type be useful?
+- The asset packer seems to fail randomly on certain assets sometimes??
+- Activity array could be useful considering how often I need it perosnally
 - Be more consistent about cases where rectangles with negative sizes are valid - they exist
 - There should be a consistent notion of "backbuffer size" or "window size" shared between both rendering context and tick context. It's too much of a mess right now.
 - Helpers for polygon drawing
@@ -13,7 +14,6 @@
 - Might need to revisit some of the basic error stuff.
 - Clean up includes all across project
 - Some kind of sound group system like what's in gamemaker, so groups of sounds can share the same volume for instance
-- String streams
 - Make sure references are used consistently and correctly.
 
 - Maybe be more consistent about how templates are used for t_f32 and t_f64. Also integrals

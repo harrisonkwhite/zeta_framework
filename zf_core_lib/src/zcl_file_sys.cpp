@@ -45,22 +45,26 @@ namespace zcl {
 
         if (o_create_result) {
             switch (errno) {
-            case EEXIST:
-                *o_create_result = ek_directory_create_result_already_exists;
-                break;
+                case EEXIST: {
+                    *o_create_result = ek_directory_create_result_already_exists;
+                    break;
+                }
 
-            case EACCES:
-            case EPERM:
-                *o_create_result = ek_directory_create_result_permission_denied;
-                break;
+                case EACCES:
+                case EPERM: {
+                    *o_create_result = ek_directory_create_result_permission_denied;
+                    break;
+                }
 
-            case ENOENT:
-                *o_create_result = ek_directory_create_result_path_not_found;
-                break;
+                case ENOENT: {
+                    *o_create_result = ek_directory_create_result_path_not_found;
+                    break;
+                }
 
-            default:
-                *o_create_result = ek_directory_create_result_unknown_error;
-                break;
+                default: {
+                    *o_create_result = ek_directory_create_result_unknown_error;
+                    break;
+                }
             }
         }
 
@@ -183,9 +187,17 @@ namespace zcl {
 
     static t_stream_mode FileAccessModeToStreamMode(const t_file_access_mode access_mode) {
         switch (access_mode) {
-        case ek_file_access_mode_read: return ek_stream_mode_read;
-        case ek_file_access_mode_write: return ek_stream_mode_write;
-        case ek_file_access_mode_append: return ek_stream_mode_write;
+            case ek_file_access_mode_read: {
+                return ek_stream_mode_read;
+            }
+
+            case ek_file_access_mode_write: {
+                return ek_stream_mode_write;
+            }
+
+            case ek_file_access_mode_append: {
+                return ek_stream_mode_write;
+            }
         }
 
         ZCL_UNREACHABLE();
@@ -196,14 +208,17 @@ namespace zcl {
 
         const auto file = [mode, path_terminated]() -> FILE * {
             switch (mode) {
-            case ek_file_access_mode_read:
-                return fopen(StrToCStr(path_terminated), "rb");
+                case ek_file_access_mode_read: {
+                    return fopen(StrToCStr(path_terminated), "rb");
+                }
 
-            case ek_file_access_mode_write:
-                return fopen(StrToCStr(path_terminated), "wb");
+                case ek_file_access_mode_write: {
+                    return fopen(StrToCStr(path_terminated), "wb");
+                }
 
-            case ek_file_access_mode_append:
-                return fopen(StrToCStr(path_terminated), "ab");
+                case ek_file_access_mode_append: {
+                    return fopen(StrToCStr(path_terminated), "ab");
+                }
             }
 
             ZCL_UNREACHABLE();
@@ -243,14 +258,17 @@ namespace zcl {
 
         const auto file = [mode, path_terminated, stream_current]() -> FILE * {
             switch (mode) {
-            case ek_file_access_mode_read:
-                return freopen(StrToCStr(path_terminated), "rb", stream_current->file_raw);
+                case ek_file_access_mode_read: {
+                    return freopen(StrToCStr(path_terminated), "rb", stream_current->file_raw);
+                }
 
-            case ek_file_access_mode_write:
-                return freopen(StrToCStr(path_terminated), "wb", stream_current->file_raw);
+                case ek_file_access_mode_write: {
+                    return freopen(StrToCStr(path_terminated), "wb", stream_current->file_raw);
+                }
 
-            case ek_file_access_mode_append:
-                return freopen(StrToCStr(path_terminated), "ab", stream_current->file_raw);
+                case ek_file_access_mode_append: {
+                    return freopen(StrToCStr(path_terminated), "ab", stream_current->file_raw);
+                }
             }
 
             ZCL_UNREACHABLE();

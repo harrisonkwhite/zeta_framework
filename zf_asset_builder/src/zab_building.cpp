@@ -290,23 +290,49 @@ zcl::t_b8 BuildAssets(const zcl::t_str_rdonly instrs_json_file_path) {
 
             const auto fields = [asset_type_index]() -> zcl::t_array_rdonly<t_asset_field> {
                 switch (asset_type_index) {
-                case ek_asset_type_texture: return ArrayToNonstatic(&k_texture_fields);
-                case ek_asset_type_font: return ArrayToNonstatic(&k_font_fields);
-                case ek_asset_type_shader: return ArrayToNonstatic(&k_shader_fields);
-                case ek_asset_type_sound: return ArrayToNonstatic(&k_sound_fields);
+                    case ek_asset_type_texture: {
+                        return ArrayToNonstatic(&k_texture_fields);
+                    }
 
-                default: ZCL_UNREACHABLE();
+                    case ek_asset_type_font: {
+                        return ArrayToNonstatic(&k_font_fields);
+                    }
+
+                    case ek_asset_type_shader: {
+                        return ArrayToNonstatic(&k_shader_fields);
+                    }
+
+                    case ek_asset_type_sound: {
+                        return ArrayToNonstatic(&k_sound_fields);
+                    }
+
+                    default: {
+                        ZCL_UNREACHABLE();
+                    }
                 }
             }();
 
             const auto field_cj_vals = [asset_type_index, &texture_field_cj_vals, &font_field_cj_vals, &shader_field_cj_vals, &snd_field_cj_vals]() -> zcl::t_array_mut<cJSON *> {
                 switch (asset_type_index) {
-                case ek_asset_type_texture: return ArrayToNonstatic(&texture_field_cj_vals);
-                case ek_asset_type_font: return ArrayToNonstatic(&font_field_cj_vals);
-                case ek_asset_type_shader: return ArrayToNonstatic(&shader_field_cj_vals);
-                case ek_asset_type_sound: return ArrayToNonstatic(&snd_field_cj_vals);
+                    case ek_asset_type_texture: {
+                        return ArrayToNonstatic(&texture_field_cj_vals);
+                    }
 
-                default: ZCL_UNREACHABLE();
+                    case ek_asset_type_font: {
+                        return ArrayToNonstatic(&font_field_cj_vals);
+                    }
+
+                    case ek_asset_type_shader: {
+                        return ArrayToNonstatic(&shader_field_cj_vals);
+                    }
+
+                    case ek_asset_type_sound: {
+                        return ArrayToNonstatic(&snd_field_cj_vals);
+                    }
+
+                    default: {
+                        ZCL_UNREACHABLE();
+                    }
                 }
             }();
 
@@ -327,10 +353,17 @@ zcl::t_b8 BuildAssets(const zcl::t_str_rdonly instrs_json_file_path) {
 
                 const auto is_valid = [fi, fields, field_cj_vals]() -> zcl::t_b8 {
                     switch (fields[fi].type) {
-                    case ek_asset_field_type_str: return cJSON_IsString(field_cj_vals[fi]);
-                    case ek_asset_field_type_num: return cJSON_IsNumber(field_cj_vals[fi]);
+                        case ek_asset_field_type_str: {
+                            return cJSON_IsString(field_cj_vals[fi]);
+                        }
 
-                    default: ZCL_UNREACHABLE();
+                        case ek_asset_field_type_num: {
+                            return cJSON_IsNumber(field_cj_vals[fi]);
+                        }
+
+                        default: {
+                            ZCL_UNREACHABLE();
+                        }
                     }
                 }();
 
@@ -342,58 +375,53 @@ zcl::t_b8 BuildAssets(const zcl::t_str_rdonly instrs_json_file_path) {
             }
 
             switch (asset_type_index) {
-            case ek_asset_type_texture: {
-                const zcl::t_str_rdonly file_path = zcl::CStrToStr(field_cj_vals[ek_texture_field_file_path]->valuestring);
-                const zcl::t_str_rdonly out_file_path = zcl::CStrToStr(field_cj_vals[ek_texture_field_out_file_path]->valuestring);
+                case ek_asset_type_texture: {
+                    const zcl::t_str_rdonly file_path = zcl::CStrToStr(field_cj_vals[ek_texture_field_file_path]->valuestring);
+                    const zcl::t_str_rdonly out_file_path = zcl::CStrToStr(field_cj_vals[ek_texture_field_out_file_path]->valuestring);
 
-                if (!BuildTexture(file_path, out_file_path, arena)) {
-                    return false;
+                    if (!BuildTexture(file_path, out_file_path, arena)) {
+                        return false;
+                    }
+
+                    break;
                 }
 
-                break;
-            }
+                case ek_asset_type_font: {
+                    const zcl::t_str_rdonly file_path = zcl::CStrToStr(field_cj_vals[ek_font_field_file_path]->valuestring);
+                    const zcl::t_i32 height = field_cj_vals[ek_font_field_height]->valueint;
+                    const zcl::t_str_rdonly extra_chrs_file_path = field_cj_vals[ek_font_field_extra_chrs_file_path] ? zcl::CStrToStr(field_cj_vals[ek_font_field_extra_chrs_file_path]->valuestring) : zcl::t_str_rdonly{};
+                    const zcl::t_str_rdonly out_file_path = zcl::CStrToStr(field_cj_vals[ek_font_field_out_file_path]->valuestring);
 
-            case ek_asset_type_font: {
-                const zcl::t_str_rdonly file_path = zcl::CStrToStr(field_cj_vals[ek_font_field_file_path]->valuestring);
+                    if (!BuildFont(file_path, height, extra_chrs_file_path, out_file_path, arena)) {
+                        return false;
+                    }
 
-                const zcl::t_i32 height = field_cj_vals[ek_font_field_height]->valueint;
-
-                const zcl::t_str_rdonly extra_chrs_file_path = field_cj_vals[ek_font_field_extra_chrs_file_path]
-                    ? zcl::CStrToStr(field_cj_vals[ek_font_field_extra_chrs_file_path]->valuestring)
-                    : zcl::t_str_rdonly{};
-
-                const zcl::t_str_rdonly out_file_path = zcl::CStrToStr(field_cj_vals[ek_font_field_out_file_path]->valuestring);
-
-                if (!BuildFont(file_path, height, extra_chrs_file_path, out_file_path, arena)) {
-                    return false;
+                    break;
                 }
 
-                break;
-            }
+                case ek_asset_type_shader: {
+                    const zcl::t_str_rdonly file_path = zcl::CStrToStr(field_cj_vals[ek_shader_field_file_path]->valuestring);
+                    const zcl::t_str_rdonly type = zcl::CStrToStr(field_cj_vals[ek_shader_field_type]->valuestring);
+                    const zcl::t_str_rdonly varying_def_file_path = zcl::CStrToStr(field_cj_vals[ek_shader_field_varying_def_file_path]->valuestring);
+                    const zcl::t_str_rdonly out_file_path = zcl::CStrToStr(field_cj_vals[ek_shader_field_out_file_path]->valuestring);
 
-            case ek_asset_type_shader: {
-                const zcl::t_str_rdonly file_path = zcl::CStrToStr(field_cj_vals[ek_shader_field_file_path]->valuestring);
-                const zcl::t_str_rdonly type = zcl::CStrToStr(field_cj_vals[ek_shader_field_type]->valuestring);
-                const zcl::t_str_rdonly varying_def_file_path = zcl::CStrToStr(field_cj_vals[ek_shader_field_varying_def_file_path]->valuestring);
-                const zcl::t_str_rdonly out_file_path = zcl::CStrToStr(field_cj_vals[ek_shader_field_out_file_path]->valuestring);
+                    if (!BuildShader(file_path, type, varying_def_file_path, out_file_path, arena)) {
+                        return false;
+                    }
 
-                if (!BuildShader(file_path, type, varying_def_file_path, out_file_path, arena)) {
-                    return false;
+                    break;
                 }
 
-                break;
-            }
+                case ek_asset_type_sound: {
+                    const zcl::t_str_rdonly file_path = zcl::CStrToStr(field_cj_vals[ek_sound_field_file_path]->valuestring);
+                    const zcl::t_str_rdonly out_file_path = zcl::CStrToStr(field_cj_vals[ek_sound_field_out_file_path]->valuestring);
 
-            case ek_asset_type_sound: {
-                const zcl::t_str_rdonly file_path = zcl::CStrToStr(field_cj_vals[ek_sound_field_file_path]->valuestring);
-                const zcl::t_str_rdonly out_file_path = zcl::CStrToStr(field_cj_vals[ek_sound_field_out_file_path]->valuestring);
+                    if (!BuildSound(file_path, out_file_path, arena)) {
+                        return false;
+                    }
 
-                if (!BuildSound(file_path, out_file_path, arena)) {
-                    return false;
+                    break;
                 }
-
-                break;
-            }
             }
 
             zcl::Log(ZCL_STR_LITERAL("Built successfully!\n"));

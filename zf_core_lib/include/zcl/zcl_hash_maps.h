@@ -7,8 +7,11 @@ namespace zcl {
     // ============================================================
     // @section: Key-Value Stores
 
-    template <typename tp_type> concept c_kv_store_key = c_simple<tp_type> && c_same<tp_type, t_without_cvref<tp_type>>;
-    template <typename tp_type> concept c_kv_store_value = c_simple<tp_type> && c_same<tp_type, t_without_cvref<tp_type>>;
+    template <typename tp_type>
+    concept c_kv_store_key = c_simple<tp_type> && c_same<tp_type, t_without_cvref<tp_type>>;
+
+    template <typename tp_type>
+    concept c_kv_store_value = c_simple<tp_type> && c_same<tp_type, t_without_cvref<tp_type>>;
 
     template <c_kv_store_key tp_key_type, c_kv_store_value tp_value_type>
     struct t_kv_store_block {
@@ -213,14 +216,16 @@ namespace zcl {
         return loaded_cnt;
     }
 
-    // ============================================================
-
+    // ==================================================
 
     // ============================================================
     // @section: Hash Maps
 
-    template <typename tp_type> concept c_hash_map_key = c_simple<tp_type> && c_same<tp_type, t_without_cvref<tp_type>>;
-    template <typename tp_type> concept c_hash_map_value = c_simple<tp_type> && c_same<tp_type, t_without_cvref<tp_type>>;
+    template <typename tp_type>
+    concept c_hash_map_key = c_simple<tp_type> && c_same<tp_type, t_without_cvref<tp_type>>;
+
+    template <typename tp_type>
+    concept c_hash_map_value = c_simple<tp_type> && c_same<tp_type, t_without_cvref<tp_type>>;
 
     template <c_hash_map_key tp_type>
     using t_hash_func = t_i32 (*)(const tp_type &key);
@@ -319,5 +324,5 @@ namespace zcl {
         return HashMapLoadEntries(hash_map, *o_keys, *o_values);
     }
 
-    // ============================================================
+    // ==================================================
 }

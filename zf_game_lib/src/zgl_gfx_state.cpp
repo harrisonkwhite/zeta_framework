@@ -115,29 +115,34 @@ namespace zgl {
 
         while (resource) {
             switch (resource->type) {
-            case ek_gfx_resource_type_vertex_buf:
-                bgfx::destroy(resource->type_data.vertex_buf.bgfx_hdl);
-                break;
-
-            case ek_gfx_resource_type_texture:
-                if (resource->type_data.texture.is_target) {
-                    bgfx::destroy(resource->type_data.texture.target_fb_bgfx_hdl);
-                } else {
-                    bgfx::destroy(resource->type_data.texture.nontarget_texture_bgfx_hdl);
+                case ek_gfx_resource_type_vertex_buf: {
+                    bgfx::destroy(resource->type_data.vertex_buf.bgfx_hdl);
+                    break;
                 }
 
-                break;
+                case ek_gfx_resource_type_texture: {
+                    if (resource->type_data.texture.is_target) {
+                        bgfx::destroy(resource->type_data.texture.target_fb_bgfx_hdl);
+                    } else {
+                        bgfx::destroy(resource->type_data.texture.nontarget_texture_bgfx_hdl);
+                    }
 
-            case ek_gfx_resource_type_shader_prog:
-                bgfx::destroy(resource->type_data.shader_prog.bgfx_hdl);
-                break;
+                    break;
+                }
 
-            case ek_gfx_resource_type_uniform:
-                bgfx::destroy(resource->type_data.uniform.bgfx_hdl);
-                break;
+                case ek_gfx_resource_type_shader_prog: {
+                    bgfx::destroy(resource->type_data.shader_prog.bgfx_hdl);
+                    break;
+                }
 
-            default:
-                ZCL_UNREACHABLE();
+                case ek_gfx_resource_type_uniform: {
+                    bgfx::destroy(resource->type_data.uniform.bgfx_hdl);
+                    break;
+                }
+
+                default: {
+                    ZCL_UNREACHABLE();
+                }
             }
 
             t_gfx_resource *const resource_next = resource->next;
@@ -216,14 +221,14 @@ namespace zgl {
             const auto flags = BGFX_SAMPLER_MIN_POINT | BGFX_SAMPLER_MAG_POINT | BGFX_SAMPLER_U_CLAMP | BGFX_SAMPLER_V_CLAMP;
 
             switch (texture_data.format) {
-            case zcl::ek_texture_format_rgba32f:
-                return bgfx::createTexture2D(static_cast<zcl::t_u16>(texture_data.dims.x), static_cast<zcl::t_u16>(texture_data.dims.y), false, 1, bgfx::TextureFormat::RGBA32F, flags, bgfx::copy(texture_data.pixels.rgba32f.raw, static_cast<zcl::t_u32>(zcl::ArrayGetSizeInBytes(texture_data.pixels.rgba32f))));
+                case zcl::ek_texture_format_rgba32f:
+                    return bgfx::createTexture2D(static_cast<zcl::t_u16>(texture_data.dims.x), static_cast<zcl::t_u16>(texture_data.dims.y), false, 1, bgfx::TextureFormat::RGBA32F, flags, bgfx::copy(texture_data.pixels.rgba32f.raw, static_cast<zcl::t_u32>(zcl::ArrayGetSizeInBytes(texture_data.pixels.rgba32f))));
 
-            case zcl::ek_texture_format_rgba8:
-                return bgfx::createTexture2D(static_cast<zcl::t_u16>(texture_data.dims.x), static_cast<zcl::t_u16>(texture_data.dims.y), false, 1, bgfx::TextureFormat::RGBA8, flags, bgfx::copy(texture_data.pixels.rgba8.raw, static_cast<zcl::t_u32>(zcl::ArrayGetSizeInBytes(texture_data.pixels.rgba8))));
+                case zcl::ek_texture_format_rgba8:
+                    return bgfx::createTexture2D(static_cast<zcl::t_u16>(texture_data.dims.x), static_cast<zcl::t_u16>(texture_data.dims.y), false, 1, bgfx::TextureFormat::RGBA8, flags, bgfx::copy(texture_data.pixels.rgba8.raw, static_cast<zcl::t_u32>(zcl::ArrayGetSizeInBytes(texture_data.pixels.rgba8))));
 
-            case zcl::ek_texture_format_r8:
-                return bgfx::createTexture2D(static_cast<zcl::t_u16>(texture_data.dims.x), static_cast<zcl::t_u16>(texture_data.dims.y), false, 1, bgfx::TextureFormat::R8, flags, bgfx::copy(texture_data.pixels.r8.raw, static_cast<zcl::t_u32>(zcl::ArrayGetSizeInBytes(texture_data.pixels.r8))));
+                case zcl::ek_texture_format_r8:
+                    return bgfx::createTexture2D(static_cast<zcl::t_u16>(texture_data.dims.x), static_cast<zcl::t_u16>(texture_data.dims.y), false, 1, bgfx::TextureFormat::R8, flags, bgfx::copy(texture_data.pixels.r8.raw, static_cast<zcl::t_u32>(zcl::ArrayGetSizeInBytes(texture_data.pixels.r8))));
             }
         }();
 
@@ -327,9 +332,17 @@ namespace zgl {
 
         const auto bgfx_type = [type]() -> bgfx::UniformType::Enum {
             switch (type) {
-            case ek_uniform_type_sampler: return bgfx::UniformType::Sampler;
-            case ek_uniform_type_v4: return bgfx::UniformType::Vec4;
-            case ek_uniform_type_mat4x4: return bgfx::UniformType::Mat4;
+                case ek_uniform_type_sampler: {
+                    return bgfx::UniformType::Sampler;
+                }
+
+                case ek_uniform_type_v4: {
+                    return bgfx::UniformType::Vec4;
+                }
+
+                case ek_uniform_type_mat4x4: {
+                    return bgfx::UniformType::Mat4;
+                }
             }
 
             ZCL_UNREACHABLE();
@@ -383,27 +396,27 @@ namespace zgl {
         const auto uniform_bgfx_hdl = uniform->type_data.uniform.bgfx_hdl;
 
         switch (uniform->type_data.uniform.type) {
-        case ek_uniform_type_sampler: {
-            const t_gfx_resource *const texture = uniform_data.type_data.sampler.texture;
-            ZCL_ASSERT(texture->type == ek_gfx_resource_type_texture);
+            case ek_uniform_type_sampler: {
+                const t_gfx_resource *const texture = uniform_data.type_data.sampler.texture;
+                ZCL_ASSERT(texture->type == ek_gfx_resource_type_texture);
 
-            const auto texture_type_data = &texture->type_data.texture;
-            const bgfx::TextureHandle bgfx_texture_hdl = texture_type_data->is_target ? bgfx::getTexture(texture_type_data->target_fb_bgfx_hdl) : texture_type_data->nontarget_texture_bgfx_hdl;
+                const auto texture_type_data = &texture->type_data.texture;
+                const bgfx::TextureHandle bgfx_texture_hdl = texture_type_data->is_target ? bgfx::getTexture(texture_type_data->target_fb_bgfx_hdl) : texture_type_data->nontarget_texture_bgfx_hdl;
 
-            bgfx::setTexture(0, uniform_bgfx_hdl, bgfx_texture_hdl);
+                bgfx::setTexture(0, uniform_bgfx_hdl, bgfx_texture_hdl);
 
-            break;
-        }
+                break;
+            }
 
-        case ek_uniform_type_v4: {
-            bgfx::setUniform(uniform_bgfx_hdl, uniform_data.type_data.v4.ptr);
-            break;
-        }
+            case ek_uniform_type_v4: {
+                bgfx::setUniform(uniform_bgfx_hdl, uniform_data.type_data.v4.ptr);
+                break;
+            }
 
-        case ek_uniform_type_mat4x4: {
-            bgfx::setUniform(uniform_bgfx_hdl, uniform_data.type_data.mat4x4.ptr);
-            break;
-        }
+            case ek_uniform_type_mat4x4: {
+                bgfx::setUniform(uniform_bgfx_hdl, uniform_data.type_data.mat4x4.ptr);
+                break;
+            }
         }
     }
 

@@ -157,11 +157,15 @@ namespace zgl {
     constexpr zcl::t_i32 k_gamepad_limit = 16;
 
     zcl::t_b8 KeyCheckDown(const t_input_state *const input_state, const t_key_code code);
+
     zcl::t_b8 KeyCheckPressed(const t_input_state *const input_state, const t_key_code code);
+
     zcl::t_b8 KeyCheckReleased(const t_input_state *const input_state, const t_key_code code);
 
     zcl::t_b8 MouseButtonCheckDown(const t_input_state *const input_state, const t_mouse_button_code btn_code);
+
     zcl::t_b8 MouseButtonCheckPressed(const t_input_state *const input_state, const t_mouse_button_code btn_code);
+
     zcl::t_b8 MouseButtonCheckReleased(const t_input_state *const input_state, const t_mouse_button_code btn_code);
 
     zcl::t_v2 CursorGetPos(const t_input_state *const input_state);
@@ -169,22 +173,32 @@ namespace zgl {
     zcl::t_v2 ScrollGetOffset(const t_input_state *const input_state);
 
     zcl::t_b8 GamepadCheckConnected(const t_input_state *const input_state, const zcl::t_i32 index);
+
     zcl::t_b8 GamepadCheckButtonDown(const t_input_state *const input_state, const zcl::t_i32 gamepad_index, const t_gamepad_button_code btn_code);
+
     zcl::t_b8 GamepadCheckButtonPressed(const t_input_state *const input_state, const zcl::t_i32 gamepad_index, const t_gamepad_button_code btn_code);
+
     zcl::t_b8 GamepadCheckButtonReleased(const t_input_state *const input_state, const zcl::t_i32 gamepad_index, const t_gamepad_button_code btn_code);
+
     zcl::t_f32 GamepadGetAxisValueRaw(const t_input_state *const input_state, const zcl::t_i32 gamepad_index, const t_gamepad_axis_code axis_code);
+
     zcl::t_f32 GamepadGetAxisValueWithDeadzone(const t_input_state *const input_state, const zcl::t_i32 gamepad_index, const t_gamepad_axis_code axis_code);
 
     zcl::t_array_rdonly<zcl::t_code_point> TextGetCodePoints(const t_input_state *const input_state);
 
     namespace internal {
         t_input_state *InputCreateState(zcl::t_arena *const arena);
+
         void InputClearEvents(t_input_state *const state);
 
         void KeyUpdateState(t_input_state *const input_state, const t_key_code code, const zcl::t_b8 is_down);
+
         void MouseButtonUpdateState(t_input_state *const input_state, const t_mouse_button_code code, const zcl::t_b8 is_down);
+
         void CursorUpdateState(t_input_state *const input_state, const zcl::t_v2 pos);
+
         void ScrollUpdateState(t_input_state *const input_state, const zcl::t_v2 offs_to_apply);
+
         void GamepadUpdateState(t_input_state *const input_state, const zcl::t_i32 gamepad_index, const zcl::t_b8 connected, const zcl::t_static_bitset<ekm_gamepad_button_code_cnt> &btns_down, const zcl::t_static_array<zcl::t_f32, ekm_gamepad_axis_code_cnt> &axes);
 
         // Returns true iff there is enough room for the code point and it is added.

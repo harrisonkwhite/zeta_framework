@@ -39,26 +39,29 @@ namespace zcl {
         }
 
         switch (texture_data.format) {
-        case ek_texture_format_rgba32f:
-            if (!StreamWriteItemsOfArray(stream_view, texture_data.pixels.rgba32f)) {
-                return false;
+            case ek_texture_format_rgba32f: {
+                if (!StreamWriteItemsOfArray(stream_view, texture_data.pixels.rgba32f)) {
+                    return false;
+                }
+
+                break;
             }
 
-            break;
+            case ek_texture_format_rgba8: {
+                if (!StreamWriteItemsOfArray(stream_view, texture_data.pixels.rgba8)) {
+                    return false;
+                }
 
-        case ek_texture_format_rgba8:
-            if (!StreamWriteItemsOfArray(stream_view, texture_data.pixels.rgba8)) {
-                return false;
+                break;
             }
 
-            break;
+            case ek_texture_format_r8: {
+                if (!StreamWriteItemsOfArray(stream_view, texture_data.pixels.r8)) {
+                    return false;
+                }
 
-        case ek_texture_format_r8:
-            if (!StreamWriteItemsOfArray(stream_view, texture_data.pixels.r8)) {
-                return false;
+                break;
             }
-
-            break;
         }
 
         return true;
@@ -76,35 +79,35 @@ namespace zcl {
         }
 
         switch (o_texture_data->format) {
-        case ek_texture_format_rgba32f: {
-            o_texture_data->pixels.rgba32f = ArenaPushArray<t_color_rgba32f>(texture_data_arena, o_texture_data->dims.x * o_texture_data->dims.y);
+            case ek_texture_format_rgba32f: {
+                o_texture_data->pixels.rgba32f = ArenaPushArray<t_color_rgba32f>(texture_data_arena, o_texture_data->dims.x * o_texture_data->dims.y);
 
-            if (!StreamReadItemsIntoArray(stream_view, o_texture_data->pixels.rgba32f, o_texture_data->pixels.rgba32f.len)) {
-                return false;
+                if (!StreamReadItemsIntoArray(stream_view, o_texture_data->pixels.rgba32f, o_texture_data->pixels.rgba32f.len)) {
+                    return false;
+                }
+
+                break;
             }
 
-            break;
-        }
+            case ek_texture_format_rgba8: {
+                o_texture_data->pixels.rgba8 = ArenaPushArray<t_color_rgba8>(texture_data_arena, o_texture_data->dims.x * o_texture_data->dims.y);
 
-        case ek_texture_format_rgba8: {
-            o_texture_data->pixels.rgba8 = ArenaPushArray<t_color_rgba8>(texture_data_arena, o_texture_data->dims.x * o_texture_data->dims.y);
+                if (!StreamReadItemsIntoArray(stream_view, o_texture_data->pixels.rgba8, o_texture_data->pixels.rgba8.len)) {
+                    return false;
+                }
 
-            if (!StreamReadItemsIntoArray(stream_view, o_texture_data->pixels.rgba8, o_texture_data->pixels.rgba8.len)) {
-                return false;
+                break;
             }
 
-            break;
-        }
+            case ek_texture_format_r8: {
+                o_texture_data->pixels.r8 = ArenaPushArray<t_color_r8>(texture_data_arena, o_texture_data->dims.x * o_texture_data->dims.y);
 
-        case ek_texture_format_r8: {
-            o_texture_data->pixels.r8 = ArenaPushArray<t_color_r8>(texture_data_arena, o_texture_data->dims.x * o_texture_data->dims.y);
+                if (!StreamReadItemsIntoArray(stream_view, o_texture_data->pixels.r8, o_texture_data->pixels.r8.len)) {
+                    return false;
+                }
 
-            if (!StreamReadItemsIntoArray(stream_view, o_texture_data->pixels.r8, o_texture_data->pixels.r8.len)) {
-                return false;
+                break;
             }
-
-            break;
-        }
         }
 
         return true;

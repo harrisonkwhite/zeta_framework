@@ -19,7 +19,6 @@ namespace zcl {
         return origin.x >= 0.0f && origin.x <= 1.0f && origin.y >= 0.0f && origin.y <= 1.0f;
     }
 
-
     // ============================================================
     // @section: Colors
 
@@ -29,7 +28,9 @@ namespace zcl {
         t_f32 b;
         t_f32 a;
 
-        constexpr operator t_v4() const { return {r, g, b, a}; }
+        constexpr operator t_v4() const {
+            return {r, g, b, a};
+        }
     };
 
     struct t_color_rgba8 {
@@ -44,10 +45,23 @@ namespace zcl {
     };
 
     constexpr t_b8 ColorCheckNormalized(const t_color_rgba32f col) {
-        return col.r >= 0.0f && col.r <= 1.0f
-            && col.g >= 0.0f && col.g <= 1.0f
-            && col.b >= 0.0f && col.b <= 1.0f
-            && col.a >= 0.0f && col.a <= 1.0f;
+        if (col.r < 0.0f || col.r > 1.0f) {
+            return false;
+        }
+
+        if (col.g < 0.0f || col.g > 1.0f) {
+            return false;
+        }
+
+        if (col.b < 0.0f || col.b > 1.0f) {
+            return false;
+        }
+
+        if (col.a < 0.0f || col.a > 1.0f) {
+            return false;
+        }
+
+        return true;
     }
 
     constexpr t_color_rgba32f ColorCreateRGBA32F(const t_f32 r, const t_f32 g, const t_f32 b, const t_f32 a = 1.0f) {
@@ -131,8 +145,7 @@ namespace zcl {
         return {r, g, b, a};
     }
 
-    // ============================================================
-
+    // ==================================================
 
     // ============================================================
     // @section: Textures
@@ -168,17 +181,36 @@ namespace zcl {
 
         operator t_texture_data_rdonly() const {
             switch (format) {
-            case ek_texture_format_rgba32f: return {.dims = dims, .format = format, .pixels = {.rgba32f = pixels.rgba32f}};
-            case ek_texture_format_rgba8: return {.dims = dims, .format = format, .pixels = {.rgba8 = pixels.rgba8}};
-            case ek_texture_format_r8: return {.dims = dims, .format = format, .pixels = {.r8 = pixels.r8}};
+                case ek_texture_format_rgba32f: {
+                    return {
+                        .dims = dims,
+                        .format = format,
+                        .pixels = {.rgba32f = pixels.rgba32f},
+                    };
+                }
+
+                case ek_texture_format_rgba8: {
+                    return {
+                        .dims = dims,
+                        .format = format,
+                        .pixels = {.rgba8 = pixels.rgba8},
+                    };
+                }
+
+                case ek_texture_format_r8: {
+                    return {
+                        .dims = dims,
+                        .format = format,
+                        .pixels = {.r8 = pixels.r8},
+                    };
+                }
             }
         }
     };
 
     [[nodiscard]] t_b8 TextureLoadFromUnbuilt(const t_str_rdonly file_path, t_arena *const texture_data_arena, t_arena *const temp_arena, t_texture_data_mut *const o_texture_data);
 
-    // ============================================================
-
+    // ==================================================
 
     // ============================================================
     // @section: Fonts
@@ -210,22 +242,19 @@ namespace zcl {
         t_hash_map<t_font_code_point_pair, t_i32> code_pt_pairs_to_kernings;
     };
 
-    constexpr t_hash_func<t_code_point> k_font_code_point_hash_func =
-        [](const t_code_point &code_pt) {
-            return static_cast<t_i32>(code_pt);
-        };
+    constexpr t_hash_func<t_code_point> k_font_code_point_hash_func = [](const t_code_point &code_pt) {
+        return static_cast<t_i32>(code_pt);
+    };
 
-    constexpr t_hash_func<t_font_code_point_pair> k_font_code_point_pair_hash_func =
-        [](const t_font_code_point_pair &pair) {
-            return 0; // @todo: Proper hash function!
-        };
+    constexpr t_hash_func<t_font_code_point_pair> k_font_code_point_pair_hash_func = [](const t_font_code_point_pair &pair) {
+        return 0; // @todo: Proper hash function!
+    };
 
-    constexpr t_comparator_bin<t_font_code_point_pair> k_font_code_point_pair_comparator =
-        [](const t_font_code_point_pair &pa, const t_font_code_point_pair &pb) {
-            return pa.a == pb.a && pa.b == pb.b;
-        };
+    constexpr t_comparator_bin<t_font_code_point_pair> k_font_code_point_pair_comparator = [](const t_font_code_point_pair &pa, const t_font_code_point_pair &pb) {
+        return pa.a == pb.a && pa.b == pb.b;
+    };
 
     [[nodiscard]] t_b8 FontLoadFromUnbuilt(const t_str_rdonly file_path, const t_i32 height, t_code_point_bitset *const code_pts, t_arena *const arrangement_arena, t_arena *const atlas_pixels_arr_arena, t_arena *const temp_arena, t_font_arrangement *const o_arrangement, t_array_mut<t_font_atlas_pixels_r8> *const o_atlas_pixels_arr);
 
-    // ============================================================
+    // ==================================================
 }
