@@ -116,7 +116,6 @@ namespace zgl {
         ma_sound_set_looping(ma_snd, false);
 
         zcl::BitsetSet(g_state.snd_insts.active, index);
-        g_state.snd_insts.versions[index]++;
 
         *o_id = {index, g_state.snd_insts.versions[index]};
 
@@ -144,6 +143,7 @@ namespace zgl {
         }
 
         zcl::BitsetUnset(g_state.snd_insts.active, id.index);
+        g_state.snd_insts.versions[id.index]++;
     }
 
     void SoundStart(const t_audio_ticket_mut audio_ticket, const t_sound_id id) {

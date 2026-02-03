@@ -1,3 +1,4 @@
+generally speaking, need some ability static assert on static array length! This is a VERY USEFUL feature!
 - Try to minimise the STL includes in basic, or consider a PCH. Also cmath ideally shouldnt be included
 - Could a static string type be useful?
 - The asset packer seems to fail randomly on certain assets sometimes??
