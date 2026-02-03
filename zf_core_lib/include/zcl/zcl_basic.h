@@ -634,7 +634,7 @@ namespace zcl {
     template <c_array tp_arr_type>
     auto ArenaPushArrayClone(t_arena *const arena, const tp_arr_type arr_to_clone) {
         const auto arr = ArenaPushArray<typename tp_arr_type::t_elem>(arena, arr_to_clone.len);
-        ArrayCopy(arr, arr_to_clone);
+        ArrayCopy(arr_to_clone, arr);
         return arr;
     }
 

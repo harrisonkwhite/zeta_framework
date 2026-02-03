@@ -126,6 +126,10 @@ namespace zcl {
         return reinterpret_cast<const char *>(str.bytes.raw);
     }
 
+    inline t_str_mut StrClone(const t_str_rdonly str, t_arena *const arena) {
+        return {ArenaPushArrayClone(arena, str.bytes)};
+    }
+
     // Allocates a clone of the given string using the memory arena, with a null byte added at the end (even if the string was already terminated).
     inline t_str_mut StrCloneButAddTerminator(const t_str_rdonly str, t_arena *const arena) {
         const t_str_mut clone = {ArenaPushArray<t_u8>(arena, str.bytes.len + 1)};
