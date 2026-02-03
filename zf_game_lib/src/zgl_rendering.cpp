@@ -234,7 +234,7 @@ namespace zgl {
     }
 
     void RendererSubmitRect(const t_rendering_context rc, const zcl::t_rect_f rect, const zcl::t_color_rgba32f color_topleft, const zcl::t_color_rgba32f color_topright, const zcl::t_color_rgba32f color_bottomright, const zcl::t_color_rgba32f color_bottomleft) {
-        ZCL_ASSERT(rect.width > 0.0f && rect.height > 0.0f);
+        ZCL_ASSERT(rect.width >= 0.0f && rect.height >= 0.0f);
 
         const zcl::t_static_array<t_gfx_triangle, 2> triangles = {{
             {
