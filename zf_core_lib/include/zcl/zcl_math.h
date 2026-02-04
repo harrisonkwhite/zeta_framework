@@ -295,6 +295,13 @@ namespace zcl {
         ekm_cardinal_direction_cnt
     };
 
+    constexpr t_static_array<t_f32, ekm_cardinal_direction_cnt> k_cardinal_direction_rads = {{
+        -k_pi / 2.0f,
+        0.0f,
+        k_pi / 2.0f,
+        k_pi,
+    }};
+
     constexpr t_static_array<t_v2, ekm_cardinal_direction_cnt> k_cardinal_direction_normals = {{
         {0.0f, -1.0f},
         {1.0f, 0.0f},

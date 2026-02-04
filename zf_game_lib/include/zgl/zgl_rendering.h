@@ -16,6 +16,8 @@ namespace zgl {
 
     t_gfx_resource *RendererGetBuiltinShaderProg(const t_rendering_basis *const rb, const t_renderer_builtin_shader_prog_id id);
 
+    // @todo: In the public API how are you supposed to know which uniform types these are?
+
     enum t_renderer_builtin_uniform_id : zcl::t_i32 {
         ek_renderer_builtin_uniform_id_sampler,
         ek_renderer_builtin_uniform_id_blend,
