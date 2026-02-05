@@ -375,9 +375,10 @@ namespace zgl {
         RendererSubmit(rc, zcl::ArrayToNonstatic(&triangles), texture);
     }
 
-    static zcl::t_array_mut<zcl::t_v2> CalcStrLineChrOffsets(const zcl::t_str_rdonly str, const zcl::t_font_arrangement &font_arrangement, zcl::t_arena *const arena) {
+    static zcl::t_array_mut<zcl::t_v2> CalcStrLineChrOffsets(const zcl::t_str_rdonly str, const zcl::t_font_arrangement &font_arrangement, const zcl::t_v2 origin, zcl::t_arena *const arena) {
         ZCL_ASSERT(zcl::StrCheckValidUTF8(str));
         ZCL_ASSERT(!zcl::CheckAnyEqual(str.bytes, '\n'));
+        ZCL_ASSERT(zcl::OriginCheckValid(origin));
 
         if (zcl::StrCheckEmpty(str)) {
             return {};
@@ -391,7 +392,10 @@ namespace zgl {
         zcl::t_v2 chr_offs_pen = {}; // The position of the current character.
         zcl::t_code_point code_pt_last;
 
-        zcl::t_v2 offs_top_left = {zcl::k_f32_inf_pos, zcl::k_f32_inf_pos};
+        zcl::t_f32 left = zcl::k_f32_inf_pos;
+        zcl::t_f32 top = zcl::k_f32_inf_pos;
+        zcl::t_f32 right = zcl::k_f32_inf_neg;
+        zcl::t_f32 bottom = zcl::k_f32_inf_neg;
 
         ZCL_STR_WALK (str, step) {
             zcl::t_font_glyph_info *glyph_info;
@@ -410,8 +414,11 @@ namespace zgl {
 
             result[chr_index] = chr_offs_pen + zcl::V2IToF(glyph_info->offs);
 
-            offs_top_left.x = zcl::CalcMin(chr_offs_pen.x + static_cast<zcl::t_f32>(glyph_info->offs.x), offs_top_left.x);
-            offs_top_left.y = zcl::CalcMin(chr_offs_pen.y + static_cast<zcl::t_f32>(glyph_info->offs.y), offs_top_left.y);
+            // @speed: This is really dumb!
+            left = zcl::CalcMin(result[chr_index].x, left);
+            top = zcl::CalcMin(result[chr_index].y, top);
+            right = zcl::CalcMax(result[chr_index].x + static_cast<zcl::t_f32>(glyph_info->atlas_rect.width), right);
+            bottom = zcl::CalcMax(result[chr_index].y + static_cast<zcl::t_f32>(glyph_info->atlas_rect.height), bottom);
 
             chr_offs_pen.x += static_cast<zcl::t_f32>(glyph_info->adv);
 
@@ -419,26 +426,27 @@ namespace zgl {
             code_pt_last = step.code_pt;
         }
 
+        const zcl::t_f32 width = right - left;
+        const zcl::t_f32 height = bottom - top;
+
+        chr_index = 0;
+
         ZCL_STR_WALK (str, step) {
-            result[chr_index] -= offs_top_left;
+            result[chr_index] -= zcl::t_v2{left, top};
+            result[chr_index] -= zcl::CalcCompwiseProd({width, height}, origin);
             chr_index++;
         }
 
         return result;
     }
 
-#if 0
     zcl::t_array_mut<zcl::t_poly_mut> CalcStrLineChrRenderColliders(const zcl::t_str_rdonly str, const t_font &font, const zcl::t_v2 pos, zcl::t_arena *const arena, zcl::t_arena *const temp_arena, const zcl::t_v2 origin, const zcl::t_f32 rot, const zcl::t_v2 scale) {
-        ZCL_ASSERT(zcl::StrCheckValidUTF8(str));
+        ZCL_ASSERT(!zcl::StrCheckEmpty(str) && zcl::StrCheckValidUTF8(str));
         ZCL_ASSERT(zcl::OriginCheckValid(origin));
 
-        if (zcl::StrCheckEmpty(str)) {
-            return {}; // @todo: This should probably have the correct position, just no size.
-        }
+        const zcl::t_array_rdonly<zcl::t_v2> chr_offsets = CalcStrLineChrOffsets(str, font.arrangement, origin, temp_arena);
 
-        const t_str_chr_render_info_rdonly chr_render_info = CalcStrLineRenderInfo(str, font.arrangement, origin, temp_arena);
-
-        const auto result = zcl::ArenaPushArray<zcl::t_poly_mut>(arena, chr_render_info.chr_offsets.len);
+        const auto result = zcl::ArenaPushArray<zcl::t_poly_mut>(arena, chr_offsets.len);
 
         zcl::t_i32 chr_index = 0;
 
@@ -456,26 +464,21 @@ namespace zgl {
                 continue;
             }
 
-            const zcl::t_v2 chr_pos = pos + chr_render_info.offs_min + zcl::CalcLengthDir(chr_render_info.chr_offsets[chr_index].x * scale.x, rot) + zcl::CalcLengthDir(chr_render_info.chr_offsets[chr_index].y * scale.y, rot + (zcl::k_pi / 2.0f));
+            const zcl::t_v2 chr_pos = pos + zcl::CalcLengthDir(chr_offsets[chr_index].x * scale.x, rot) + zcl::CalcLengthDir(chr_offsets[chr_index].y * scale.y, rot + (zcl::k_pi / 2.0f));
 
             result[chr_index] = zcl::PolyCreateQuadRotated(chr_pos, zcl::CalcCompwiseProd(zcl::V2IToF(zcl::RectGetSize(glyph_info->atlas_rect)), scale), {}, rot, arena);
         }
 
         return result;
     }
-#endif
 
     void RendererSubmitStrLine(const t_rendering_context rc, const zcl::t_str_rdonly str, const t_font &font, const zcl::t_v2 pos, const zcl::t_color_rgba32f color, zcl::t_arena *const temp_arena, const zcl::t_v2 origin, const zcl::t_f32 rot, const zcl::t_v2 scale) {
-        ZCL_ASSERT(zcl::StrCheckValidUTF8(str));
+        ZCL_ASSERT(!zcl::StrCheckEmpty(str) && zcl::StrCheckValidUTF8(str));
         ZCL_ASSERT(zcl::OriginCheckValid(origin));
-
-        if (zcl::StrCheckEmpty(str)) {
-            return;
-        }
 
         RendererSetShaderProg(rc, rc.basis->shader_progs[ek_renderer_builtin_shader_prog_id_str]);
 
-        const zcl::t_array_rdonly<zcl::t_v2> chr_offsets = CalcStrLineChrOffsets(str, font.arrangement, temp_arena);
+        const zcl::t_array_rdonly<zcl::t_v2> chr_offsets = CalcStrLineChrOffsets(str, font.arrangement, origin, temp_arena);
 
         zcl::t_i32 chr_index = 0;
 
@@ -524,69 +527,5 @@ namespace zgl {
         }
 
         RendererSetShaderProg(rc, nullptr);
-
-        RendererSubmitRect(rc, {pos.x - 4.0f, pos.y - 4.0f, 8.0f, 8.0f}, zcl::k_color_red);
-
-#if 0
-        ZCL_ASSERT(zcl::StrCheckValidUTF8(str));
-        ZCL_ASSERT(zcl::OriginCheckValid(origin));
-
-        if (zcl::StrCheckEmpty(str)) {
-            return;
-        }
-
-        RendererSetShaderProg(rc, rc.basis->shader_progs[ek_renderer_builtin_shader_prog_id_str]);
-
-        const auto chr_offsets = RendererCalcStrChrOffsets(str, font.arrangement, origin, temp_arena);
-
-        zcl::t_i32 chr_index = 0;
-
-        ZCL_STR_WALK (str, step) {
-            ZCL_DEFER({ chr_index++; });
-
-            if (step.code_pt == ' ' || step.code_pt == '\n') {
-                continue;
-            }
-
-            zcl::t_font_glyph_info *glyph_info;
-
-            if (!zcl::HashMapFind(&font.arrangement.code_pts_to_glyph_infos, step.code_pt, &glyph_info)) {
-                ZCL_ASSERT(false && "Unsupported code point!");
-                continue;
-            }
-
-            const zcl::t_v2 chr_pos = pos + zcl::CalcLengthDir(chr_offsets[chr_index].x * scale.x, rot) + zcl::CalcLengthDir(chr_offsets[chr_index].y * scale.y, rot + (zcl::k_pi / 2.0f));
-
-            zcl::t_static_array<zcl::t_v2, 4> quad_pts;
-
-            zcl::t_arena *const quad_pts_arena = zcl::ArenaCreateWrapping(zcl::ToBytes(&quad_pts));
-            ZCL_DEFER({ zcl::ArenaDestroy(quad_pts_arena); });
-
-            const zcl::t_poly_mut quad_poly = zcl::PolyCreateQuadRotated(chr_pos, zcl::CalcCompwiseProd(zcl::V2IToF(zcl::RectGetSize(glyph_info->atlas_rect)), scale), {}, rot, quad_pts_arena);
-
-            const zcl::t_rect_f uv_rect = TextureUVRectCalc(glyph_info->atlas_rect, zcl::k_font_atlas_texture_size);
-
-            const zcl::t_static_array<t_gfx_triangle, 2> triangles = {{
-                {
-                    .vertices = {{
-                        {.pos = quad_poly.pts[0], .blend = color, .uv = zcl::RectGetTopLeft(uv_rect)},
-                        {.pos = quad_poly.pts[1], .blend = color, .uv = zcl::RectGetTopRight(uv_rect)},
-                        {.pos = quad_poly.pts[3], .blend = color, .uv = zcl::RectGetBottomLeft(uv_rect)},
-                    }},
-                },
-                {
-                    .vertices = {{
-                        {.pos = quad_poly.pts[3], .blend = color, .uv = zcl::RectGetBottomLeft(uv_rect)},
-                        {.pos = quad_poly.pts[1], .blend = color, .uv = zcl::RectGetTopRight(uv_rect)},
-                        {.pos = quad_poly.pts[2], .blend = color, .uv = zcl::RectGetBottomRight(uv_rect)},
-                    }},
-                },
-            }};
-
-            RendererSubmit(rc, zcl::ArrayToNonstatic(&triangles), font.atlas_textures[glyph_info->atlas_index]);
-        }
-
-        RendererSetShaderProg(rc, nullptr);
-#endif
     }
 }
