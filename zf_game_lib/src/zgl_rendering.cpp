@@ -388,52 +388,58 @@ namespace zgl {
 
         const auto result = zcl::ArenaPushArray<zcl::t_v2>(arena, str_len);
 
-        zcl::t_i32 chr_index = 0;
-        zcl::t_v2 chr_offs_pen = {}; // The position of the current character.
-        zcl::t_code_point code_pt_last;
-
-        zcl::t_f32 left = zcl::k_f32_inf_pos;
+        zcl::t_f32 left = 0;
+        zcl::t_f32 right = 0;
         zcl::t_f32 top = zcl::k_f32_inf_pos;
-        zcl::t_f32 right = zcl::k_f32_inf_neg;
         zcl::t_f32 bottom = zcl::k_f32_inf_neg;
 
-        ZCL_STR_WALK (str, step) {
-            zcl::t_font_glyph_info *glyph_info;
+        {
+            zcl::t_i32 chr_index = 0;
+            zcl::t_v2 chr_offs_pen = {}; // The position of the current character.
+            zcl::t_code_point code_pt_last = {};
 
-            if (!zcl::HashMapFind(&font_arrangement.code_pts_to_glyph_infos, step.code_pt, &glyph_info)) {
-                ZCL_FATAL();
-            }
+            ZCL_STR_WALK (str, step) {
+                zcl::t_font_glyph_info *glyph_info;
 
-            if (chr_index > 0 && font_arrangement.has_kernings) {
-                zcl::t_i32 *kerning;
-
-                if (zcl::HashMapFind(&font_arrangement.code_pt_pairs_to_kernings, {code_pt_last, step.code_pt}, &kerning)) {
-                    chr_offs_pen.x += static_cast<zcl::t_f32>(*kerning);
+                if (!zcl::HashMapFind(&font_arrangement.code_pts_to_glyph_infos, step.code_pt, &glyph_info)) {
+                    ZCL_FATAL();
                 }
+
+                if (chr_index > 0 && font_arrangement.has_kernings) {
+                    zcl::t_i32 *kerning;
+
+                    if (zcl::HashMapFind(&font_arrangement.code_pt_pairs_to_kernings, {code_pt_last, step.code_pt}, &kerning)) {
+                        chr_offs_pen.x += static_cast<zcl::t_f32>(*kerning);
+                    }
+                }
+
+                result[chr_index] = chr_offs_pen + zcl::V2IToF(glyph_info->offs);
+
+                if (chr_index == 0) {
+                    left = result[chr_index].x;
+                }
+
+                if (chr_index == str_len - 1) {
+                    right = result[chr_index].x + static_cast<zcl::t_f32>(glyph_info->atlas_rect.width);
+                }
+
+                top = zcl::CalcMin(result[chr_index].y, top);
+                bottom = zcl::CalcMax(result[chr_index].y + static_cast<zcl::t_f32>(glyph_info->atlas_rect.height), bottom);
+
+                chr_offs_pen.x += static_cast<zcl::t_f32>(glyph_info->adv);
+
+                chr_index++;
+                code_pt_last = step.code_pt;
             }
-
-            result[chr_index] = chr_offs_pen + zcl::V2IToF(glyph_info->offs);
-
-            // @speed: This is really dumb!
-            left = zcl::CalcMin(result[chr_index].x, left);
-            top = zcl::CalcMin(result[chr_index].y, top);
-            right = zcl::CalcMax(result[chr_index].x + static_cast<zcl::t_f32>(glyph_info->atlas_rect.width), right);
-            bottom = zcl::CalcMax(result[chr_index].y + static_cast<zcl::t_f32>(glyph_info->atlas_rect.height), bottom);
-
-            chr_offs_pen.x += static_cast<zcl::t_f32>(glyph_info->adv);
-
-            chr_index++;
-            code_pt_last = step.code_pt;
         }
 
-        const zcl::t_f32 width = right - left;
-        const zcl::t_f32 height = bottom - top;
+        const zcl::t_v2 size = {right - left, bottom - top};
 
-        chr_index = 0;
+        zcl::t_i32 chr_index = 0;
 
         ZCL_STR_WALK (str, step) {
-            result[chr_index] -= zcl::t_v2{left, top};
-            result[chr_index] -= zcl::CalcCompwiseProd({width, height}, origin);
+            result[chr_index] -= {left, top};
+            result[chr_index] -= zcl::CalcCompwiseProd(size, origin);
             chr_index++;
         }
 
