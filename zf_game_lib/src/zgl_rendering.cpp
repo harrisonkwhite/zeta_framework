@@ -450,19 +450,60 @@ namespace zgl {
     }
 
     void CalcStrRenderInfo(const zcl::t_str_rdonly str, const zcl::t_font_arrangement &font_arrangement, const zcl::t_v2 origin, zcl::t_arena *const temp_arena) {
+        if (zcl::StrCheckEmpty(str)) {
+            return;
+        }
+
+        // ----------------------------------------
+        // Getting Per-Line Metadata
+
         struct t_str_line_meta {
             t_str_line_render_info_rdonly render_info;
-            zcl::t_i32 byte_begin_index;
-            zcl::t_i32 byte_end_index_excl;
+            zcl::t_i32 byte_index_begin;
+            zcl::t_i32 byte_index_end_excl;
         };
 
-        zcl::t_list<t_str_line_render_info_rdonly> str_line_metas = {};
+        zcl::t_list<t_str_line_meta> str_line_metas = {};
 
-        ZCL_STR_WALK (str, step) {
-            const t_str_line_render_info_rdonly render_info = CalcStrLineRenderInfo(str, font_arrangement, origin, temp_arena);
+        {
+            zcl::t_b8 str_line_started = false;
+            zcl::t_i32 str_line_byte_index_begin;
+            zcl::t_i32 str_line_byte_index_end_excl;
 
-            // zcl::ListAppendDynamic(&str_line_metas, );
+            const auto ihm = [str_line_metas, str, font_arrangement, origin, temp_arena](const zcl::t_i32 line_byte_index_begin, const zcl::t_i32 line_byte_index_end_excl) {
+                const zcl::t_str_rdonly line = {zcl::ArraySlice(str.bytes, line_byte_index_begin, line_byte_index_end_excl)};
+                const t_str_line_render_info_rdonly render_info = CalcStrLineRenderInfo(line, font_arrangement, origin, temp_arena);
+
+                const t_str_line_meta meta = {
+                    .render_info = render_info,
+                    .byte_index_begin = line_byte_index_begin,
+                    .byte_index_end_excl = line_byte_index_end_excl,
+                };
+
+                zcl::ListAppendDynamic(&str_line_metas, meta, temp_arena);
+            };
+
+            ZCL_STR_WALK (str, step) {
+                if (!str_line_started) {
+                    str_line_byte_index_begin = step.byte_index;
+                    str_line_started = true;
+                }
+
+                if (step.code_pt == '\n') {
+                    str_line_byte_index_end_excl = step.byte_index;
+
+                    ihm(str_line_byte_index_begin, str_line_byte_index_end_excl);
+
+                    str_line_started = false;
+                }
+            }
+
+            if (str_line_started) {
+                ihm(str_line_byte_index_begin, str.bytes.len);
+            }
         }
+
+        // ------------------------------
 
 #if 0
         const zcl::t_i32 str_line_cnt = 1 + zcl::CountAllEqual(str.bytes, '\n');

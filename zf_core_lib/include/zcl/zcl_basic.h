@@ -515,31 +515,31 @@ namespace zcl {
     }
 
     template <c_array_elem tp_elem_type>
-    constexpr t_array_mut<tp_elem_type> ArraySlice(const t_array_mut<tp_elem_type> arr, const t_i32 beg, const t_i32 end) {
-        ZCL_ASSERT(beg >= 0 && beg <= arr.len);
-        ZCL_ASSERT(end >= beg && end <= arr.len);
+    constexpr t_array_mut<tp_elem_type> ArraySlice(const t_array_mut<tp_elem_type> arr, const t_i32 begin, const t_i32 end_excl) {
+        ZCL_ASSERT(begin >= 0 && begin <= arr.len);
+        ZCL_ASSERT(end_excl >= begin && end_excl <= arr.len);
 
-        return {arr.raw + beg, end - beg};
+        return {arr.raw + begin, end_excl - begin};
     }
 
     template <c_array_elem tp_elem_type>
-    constexpr t_array_rdonly<tp_elem_type> ArraySlice(const t_array_rdonly<tp_elem_type> arr, const t_i32 beg, const t_i32 end) {
-        ZCL_ASSERT(beg >= 0 && beg <= arr.len);
-        ZCL_ASSERT(end >= beg && end <= arr.len);
+    constexpr t_array_rdonly<tp_elem_type> ArraySlice(const t_array_rdonly<tp_elem_type> arr, const t_i32 begin, const t_i32 end_excl) {
+        ZCL_ASSERT(begin >= 0 && begin <= arr.len);
+        ZCL_ASSERT(end_excl >= begin && end_excl <= arr.len);
 
-        return {arr.raw + beg, end - beg};
+        return {arr.raw + begin, end_excl - begin};
     }
 
     template <c_array_elem tp_elem_type>
-    constexpr t_array_mut<tp_elem_type> ArraySliceFrom(const t_array_mut<tp_elem_type> arr, const t_i32 beg) {
-        ZCL_ASSERT(beg >= 0 && beg <= arr.len);
-        return {arr.raw + beg, arr.len - beg};
+    constexpr t_array_mut<tp_elem_type> ArraySliceFrom(const t_array_mut<tp_elem_type> arr, const t_i32 begin) {
+        ZCL_ASSERT(begin >= 0 && begin <= arr.len);
+        return {arr.raw + begin, arr.len - begin};
     }
 
     template <c_array_elem tp_elem_type>
-    constexpr t_array_rdonly<tp_elem_type> ArraySliceFrom(const t_array_rdonly<tp_elem_type> arr, const t_i32 beg) {
-        ZCL_ASSERT(beg >= 0 && beg <= arr.len);
-        return {arr.raw + beg, arr.len - beg};
+    constexpr t_array_rdonly<tp_elem_type> ArraySliceFrom(const t_array_rdonly<tp_elem_type> arr, const t_i32 begin) {
+        ZCL_ASSERT(begin >= 0 && begin <= arr.len);
+        return {arr.raw + begin, arr.len - begin};
     }
 
     template <c_array tp_arr_type>
