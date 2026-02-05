@@ -467,7 +467,7 @@ namespace zgl {
         };
     }
 
-    void CalcStrRenderInfo(const zcl::t_str_rdonly str, const zcl::t_font_arrangement &font_arrangement, const zcl::t_v2 origin, zcl::t_arena *const temp_arena) {
+    void CalcStrRenderInfo(const zcl::t_str_rdonly str, const zcl::t_font_arrangement &font_arrangement, const zcl::t_v2 origin, zcl::t_arena *const arena, zcl::t_arena *const temp_arena) {
         if (zcl::StrCheckEmpty(str)) {
             return;
         }
@@ -497,14 +497,10 @@ namespace zgl {
 
             zcl::t_i32 str_line_index = 0;
             zcl::t_i32 str_line_len_in_chrs = 0;
-            zcl::t_i32 str_line_byte_index_begin;
+            zcl::t_i32 str_line_byte_index_begin = 0;
             zcl::t_i32 str_line_byte_index_end_excl;
 
             ZCL_STR_WALK (str, step) {
-                if (str_line_len_in_chrs == 0) {
-                    str_line_byte_index_begin = step.byte_index;
-                }
-
                 if (step.code_pt != '\n') {
                     str_line_len_in_chrs++;
                 } else {
@@ -514,6 +510,7 @@ namespace zgl {
 
                     str_line_index++;
                     str_line_len_in_chrs = 0;
+                    str_line_byte_index_begin = step.byte_index + 1;
                 }
             }
 
@@ -524,6 +521,12 @@ namespace zgl {
 
         // ----------------------------------------
         // Rendering
+
+        for (zcl::t_i32 i = 0; i < str_line_metas.len; i++) {
+            ZCL_STR_WALK (str, step) {
+                str_line_metas[i].line
+            }
+        }
 
         // ------------------------------
 

@@ -472,6 +472,30 @@ namespace zcl {
         } while (true);
     }
 
+    t_i32 StrCountCodePoint(const t_str_rdonly str, const t_code_point code_pt) {
+        t_i32 result = 0;
+
+        ZCL_STR_WALK (str, step) {
+            if (step.code_pt == code_pt) {
+                result++;
+            }
+        }
+
+        return result;
+    }
+
+    t_array_mut<t_str_rdonly> StrSplit(const t_str_rdonly str, const t_code_point delimiter, t_arena *const arena) {
+        const t_i32 split_cnt = 1 + StrCountCodePoint(str, delimiter);
+
+        t_i32 split_byte_index_begin;
+        t_i32 split_byte_index_end;
+
+        ZCL_STR_WALK (str, step) {
+            if (step.code_pt == delimiter) {
+            }
+        }
+    }
+
     void StrMarkCodePoints(const t_str_rdonly str, t_code_point_bitset *const code_pts) {
         ZCL_ASSERT(StrCheckValidUTF8(str));
 
