@@ -375,7 +375,7 @@ namespace zgl {
         RendererSubmit(rc, zcl::ArrayToNonstatic(&triangles), texture);
     }
 
-    static zcl::t_array_mut<zcl::t_v2> CalcStrLineChrOffsets(const zcl::t_str_rdonly str, const zcl::t_font_arrangement &font_arrangement, const zcl::t_v2 origin, zcl::t_arena *const arena) {
+    t_str_line_render_info_mut CalcStrLineRenderInfo(const zcl::t_str_rdonly str, const zcl::t_font_arrangement &font_arrangement, const zcl::t_v2 origin, zcl::t_arena *const arena) {
         ZCL_ASSERT(zcl::StrCheckValidUTF8(str));
         ZCL_ASSERT(!zcl::CheckAnyEqual(str.bytes, '\n'));
         ZCL_ASSERT(zcl::OriginCheckValid(origin));
@@ -386,7 +386,7 @@ namespace zgl {
 
         const zcl::t_i32 str_len = zcl::StrCalcLen(str);
 
-        const auto result = zcl::ArenaPushArray<zcl::t_v2>(arena, str_len);
+        const auto chr_offsets = zcl::ArenaPushArray<zcl::t_v2>(arena, str_len);
 
         zcl::t_f32 left = 0;
         zcl::t_f32 right = 0;
@@ -413,18 +413,18 @@ namespace zgl {
                     }
                 }
 
-                result[chr_index] = chr_offs_pen + zcl::V2IToF(glyph_info->offs);
+                chr_offsets[chr_index] = chr_offs_pen + zcl::V2IToF(glyph_info->offs);
 
                 if (chr_index == 0) {
-                    left = result[chr_index].x;
+                    left = chr_offsets[chr_index].x;
                 }
 
                 if (chr_index == str_len - 1) {
-                    right = result[chr_index].x + static_cast<zcl::t_f32>(glyph_info->atlas_rect.width);
+                    right = chr_offsets[chr_index].x + static_cast<zcl::t_f32>(glyph_info->atlas_rect.width);
                 }
 
-                top = zcl::CalcMin(result[chr_index].y, top);
-                bottom = zcl::CalcMax(result[chr_index].y + static_cast<zcl::t_f32>(glyph_info->atlas_rect.height), bottom);
+                top = zcl::CalcMin(chr_offsets[chr_index].y, top);
+                bottom = zcl::CalcMax(chr_offsets[chr_index].y + static_cast<zcl::t_f32>(glyph_info->atlas_rect.height), bottom);
 
                 chr_offs_pen.x += static_cast<zcl::t_f32>(glyph_info->adv);
 
@@ -438,21 +438,24 @@ namespace zgl {
         zcl::t_i32 chr_index = 0;
 
         ZCL_STR_WALK (str, step) {
-            result[chr_index] -= {left, top};
-            result[chr_index] -= zcl::CalcCompwiseProd(size, origin);
+            chr_offsets[chr_index] -= {left, top};
+            chr_offsets[chr_index] -= zcl::CalcCompwiseProd(size, origin);
             chr_index++;
         }
 
-        return result;
+        return {
+            .chr_offsets = chr_offsets,
+            .size = size,
+        };
     }
 
     zcl::t_array_mut<zcl::t_poly_mut> CalcStrLineChrRenderColliders(const zcl::t_str_rdonly str, const t_font &font, const zcl::t_v2 pos, zcl::t_arena *const arena, zcl::t_arena *const temp_arena, const zcl::t_v2 origin, const zcl::t_f32 rot, const zcl::t_v2 scale) {
         ZCL_ASSERT(!zcl::StrCheckEmpty(str) && zcl::StrCheckValidUTF8(str));
         ZCL_ASSERT(zcl::OriginCheckValid(origin));
 
-        const zcl::t_array_rdonly<zcl::t_v2> chr_offsets = CalcStrLineChrOffsets(str, font.arrangement, origin, temp_arena);
+        const t_str_line_render_info_rdonly render_info = CalcStrLineRenderInfo(str, font.arrangement, origin, temp_arena);
 
-        const auto result = zcl::ArenaPushArray<zcl::t_poly_mut>(arena, chr_offsets.len);
+        const auto result = zcl::ArenaPushArray<zcl::t_poly_mut>(arena, render_info.chr_offsets.len);
 
         zcl::t_i32 chr_index = 0;
 
@@ -470,7 +473,7 @@ namespace zgl {
                 continue;
             }
 
-            const zcl::t_v2 chr_pos = pos + zcl::CalcLengthDir(chr_offsets[chr_index].x * scale.x, rot) + zcl::CalcLengthDir(chr_offsets[chr_index].y * scale.y, rot + (zcl::k_pi / 2.0f));
+            const zcl::t_v2 chr_pos = pos + zcl::CalcLengthDir(render_info.chr_offsets[chr_index].x * scale.x, rot) + zcl::CalcLengthDir(render_info.chr_offsets[chr_index].y * scale.y, rot + (zcl::k_pi / 2.0f));
 
             result[chr_index] = zcl::PolyCreateQuadRotated(chr_pos, zcl::CalcCompwiseProd(zcl::V2IToF(zcl::RectGetSize(glyph_info->atlas_rect)), scale), {}, rot, arena);
         }
@@ -484,7 +487,7 @@ namespace zgl {
 
         RendererSetShaderProg(rc, rc.basis->shader_progs[ek_renderer_builtin_shader_prog_id_str]);
 
-        const zcl::t_array_rdonly<zcl::t_v2> chr_offsets = CalcStrLineChrOffsets(str, font.arrangement, origin, temp_arena);
+        const t_str_line_render_info_rdonly render_info = CalcStrLineRenderInfo(str, font.arrangement, origin, temp_arena);
 
         zcl::t_i32 chr_index = 0;
 
@@ -501,7 +504,7 @@ namespace zgl {
                 ZCL_FATAL();
             }
 
-            const zcl::t_v2 chr_pos = pos + zcl::CalcLengthDir(chr_offsets[chr_index].x * scale.x, rot) + zcl::CalcLengthDir(chr_offsets[chr_index].y * scale.y, rot + (zcl::k_pi / 2.0f));
+            const zcl::t_v2 chr_pos = pos + zcl::CalcLengthDir(render_info.chr_offsets[chr_index].x * scale.x, rot) + zcl::CalcLengthDir(render_info.chr_offsets[chr_index].y * scale.y, rot + (zcl::k_pi / 2.0f));
 
             zcl::t_static_array<zcl::t_v2, 4> quad_pts;
 
