@@ -449,6 +449,36 @@ namespace zgl {
         };
     }
 
+    void CalcStrRenderInfo(const zcl::t_str_rdonly str, const zcl::t_font_arrangement &font_arrangement, const zcl::t_v2 origin, zcl::t_arena *const temp_arena) {
+        struct t_str_line_meta {
+            t_str_line_render_info_rdonly render_info;
+            zcl::t_i32 byte_begin_index;
+            zcl::t_i32 byte_end_index_excl;
+        };
+
+        zcl::t_list<t_str_line_render_info_rdonly> str_line_metas = {};
+
+        ZCL_STR_WALK (str, step) {
+            const t_str_line_render_info_rdonly render_info = CalcStrLineRenderInfo(str, font_arrangement, origin, temp_arena);
+
+            // zcl::ListAppendDynamic(&str_line_metas, );
+        }
+
+#if 0
+        const zcl::t_i32 str_line_cnt = 1 + zcl::CountAllEqual(str.bytes, '\n');
+
+        const auto str_line_render_infos = zcl::ArenaPushArray<t_str_line_render_info_rdonly>(temp_arena, str_line_cnt);
+
+        for (zcl::t_i32 i = 0; i < str_line_cnt; i++) {
+        }
+
+        zcl::CalcStrLineRenderInfo(str, font_arrangement, origin, temp_arena);
+
+        if () {
+        }
+#endif
+    }
+
     zcl::t_array_mut<zcl::t_poly_mut> CalcStrLineChrRenderColliders(const zcl::t_str_rdonly str, const t_font &font, const zcl::t_v2 pos, zcl::t_arena *const arena, zcl::t_arena *const temp_arena, const zcl::t_v2 origin, const zcl::t_f32 rot, const zcl::t_v2 scale) {
         ZCL_ASSERT(!zcl::StrCheckEmpty(str) && zcl::StrCheckValidUTF8(str));
         ZCL_ASSERT(zcl::OriginCheckValid(origin));

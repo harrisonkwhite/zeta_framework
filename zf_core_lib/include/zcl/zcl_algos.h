@@ -70,6 +70,19 @@ namespace zcl {
         return 0;
     }
 
+    template <c_array tp_arr_type>
+    t_i32 CountAllEqual(const tp_arr_type arr, const typename tp_arr_type::t_elem &val, const t_comparator_bin<typename tp_arr_type::t_elem> comparator = k_comparator_bin_default<typename tp_arr_type::t_elem>) {
+        t_i32 result = 0;
+
+        for (t_i32 i = 0; i < arr.len; i++) {
+            if (comparator(arr[i], val)) {
+                result++;
+            }
+        }
+
+        return result;
+    }
+
     template <c_array_mut tp_arr_type>
     constexpr void Reverse(const tp_arr_type arr) {
         for (t_i32 i = 0; i < arr.len / 2; i++) {

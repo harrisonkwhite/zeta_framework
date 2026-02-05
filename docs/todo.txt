@@ -1,6 +1,6 @@
 - There are surely cases where ZCL_FATAL can be preceded with a custom case-specific error log
     - Can probably remove ZCL_REQUIRE while at it, more complexity than needed
-- String scaling is awkward even if mathematically correct, use only what's visible
+- Need to be able to render multiple string lines
 - Blend is overloaded term in rendering code
 generally speaking, need some ability static assert on static array length! This is a VERY USEFUL feature!
 - Try to minimise the STL includes in basic, or consider a PCH. Also cmath ideally shouldnt be included
