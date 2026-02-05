@@ -142,6 +142,10 @@ namespace zcl {
         return str.bytes.len == 0;
     }
 
+    inline t_i32 StrCountLines(const t_str_rdonly str) {
+        return 1 + CountAllEqual(str.bytes, '\n');
+    }
+
     t_b8 StrCheckValidUTF8(const t_str_rdonly str);
 
     // Calculates the string length in terms of code point count. Reminder that '\0' is treated just like any other ASCII character and does not terminate.

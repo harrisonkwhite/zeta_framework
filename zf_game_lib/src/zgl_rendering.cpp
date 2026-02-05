@@ -375,6 +375,174 @@ namespace zgl {
         RendererSubmit(rc, zcl::ArrayToNonstatic(&triangles), texture);
     }
 
+    struct t_str_line_render_info_rdonly {
+        zcl::t_array_rdonly<zcl::t_v2> chr_offsets;
+        zcl::t_v2 size;
+    };
+
+    struct t_str_line_render_info_mut {
+        zcl::t_array_mut<zcl::t_v2> chr_offsets;
+        zcl::t_v2 size;
+
+        operator t_str_line_render_info_rdonly() const {
+            return {
+                .chr_offsets = chr_offsets,
+                .size = size,
+            };
+        }
+    };
+
+    static t_str_line_render_info_mut CalcStrLineRenderInfo(const zcl::t_str_rdonly str, const zcl::t_font_arrangement &font_arrangement, const zcl::t_v2 origin, zcl::t_arena *const arena) {
+        ZCL_ASSERT(zcl::StrCheckValidUTF8(str));
+        ZCL_ASSERT(zcl::OriginCheckValid(origin));
+
+        if (zcl::StrCheckEmpty(str)) {
+            return {};
+        }
+
+        ZCL_ASSERT(zcl::StrCountLines(str) == 1);
+
+        const zcl::t_i32 str_len = zcl::StrCalcLen(str);
+
+        const auto chr_offsets = zcl::ArenaPushArray<zcl::t_v2>(arena, str_len);
+
+        zcl::t_f32 left = 0;
+        zcl::t_f32 right = 0;
+        zcl::t_f32 top = zcl::k_f32_inf_pos;
+        zcl::t_f32 bottom = zcl::k_f32_inf_neg;
+
+        {
+            zcl::t_i32 chr_index = 0;
+            zcl::t_v2 chr_offs_pen = {}; // The position of the current character.
+            zcl::t_code_point code_pt_last = {};
+
+            ZCL_STR_WALK (str, step) {
+                zcl::t_font_glyph_info *glyph_info;
+
+                if (!zcl::HashMapFind(&font_arrangement.code_pts_to_glyph_infos, step.code_pt, &glyph_info)) {
+                    ZCL_FATAL();
+                }
+
+                if (chr_index > 0 && font_arrangement.has_kernings) {
+                    zcl::t_i32 *kerning;
+
+                    if (zcl::HashMapFind(&font_arrangement.code_pt_pairs_to_kernings, {code_pt_last, step.code_pt}, &kerning)) {
+                        chr_offs_pen.x += static_cast<zcl::t_f32>(*kerning);
+                    }
+                }
+
+                chr_offsets[chr_index] = chr_offs_pen + zcl::V2IToF(glyph_info->offs);
+
+                if (chr_index == 0) {
+                    left = chr_offsets[chr_index].x;
+                }
+
+                if (chr_index == str_len - 1) {
+                    right = chr_offsets[chr_index].x + static_cast<zcl::t_f32>(glyph_info->atlas_rect.width);
+                }
+
+                top = zcl::CalcMin(chr_offsets[chr_index].y, top);
+                bottom = zcl::CalcMax(chr_offsets[chr_index].y + static_cast<zcl::t_f32>(glyph_info->atlas_rect.height), bottom);
+
+                chr_offs_pen.x += static_cast<zcl::t_f32>(glyph_info->adv);
+
+                chr_index++;
+                code_pt_last = step.code_pt;
+            }
+        }
+
+        const zcl::t_v2 size = {right - left, bottom - top};
+
+        zcl::t_i32 chr_index = 0;
+
+        ZCL_STR_WALK (str, step) {
+            chr_offsets[chr_index] -= {left, top};
+            chr_offsets[chr_index] -= zcl::CalcCompwiseProd(size, origin);
+            chr_index++;
+        }
+
+        return {
+            .chr_offsets = chr_offsets,
+            .size = size,
+        };
+    }
+
+    void CalcStrRenderInfo(const zcl::t_str_rdonly str, const zcl::t_font_arrangement &font_arrangement, const zcl::t_v2 origin, zcl::t_arena *const temp_arena) {
+        if (zcl::StrCheckEmpty(str)) {
+            return;
+        }
+
+        // ----------------------------------------
+        // Getting Per-Line Metadata
+
+        struct t_str_line_meta {
+            zcl::t_str_rdonly line;
+            t_str_line_render_info_rdonly render_info;
+        };
+
+        zcl::t_list<t_str_line_meta> str_line_metas = {};
+
+        {
+            const auto str_line_meta_append = [str_line_metas, str, font_arrangement, origin, temp_arena](const zcl::t_i32 line_byte_index_begin, const zcl::t_i32 line_byte_index_end_excl) {
+                const zcl::t_str_rdonly line = {zcl::ArraySlice(str.bytes, line_byte_index_begin, line_byte_index_end_excl)};
+                const t_str_line_render_info_rdonly render_info = CalcStrLineRenderInfo(line, font_arrangement, origin, temp_arena);
+
+                const t_str_line_meta meta = {
+                    .line = line,
+                    .render_info = render_info,
+                };
+
+                zcl::ListAppendDynamic(&str_line_metas, meta, temp_arena);
+            };
+
+            zcl::t_i32 str_line_index = 0;
+            zcl::t_i32 str_line_len_in_chrs = 0;
+            zcl::t_i32 str_line_byte_index_begin;
+            zcl::t_i32 str_line_byte_index_end_excl;
+
+            ZCL_STR_WALK (str, step) {
+                if (str_line_len_in_chrs == 0) {
+                    str_line_byte_index_begin = step.byte_index;
+                }
+
+                if (step.code_pt != '\n') {
+                    str_line_len_in_chrs++;
+                } else {
+                    str_line_byte_index_end_excl = step.byte_index;
+
+                    str_line_meta_append(str_line_byte_index_begin, str_line_byte_index_end_excl);
+
+                    str_line_index++;
+                    str_line_len_in_chrs = 0;
+                }
+            }
+
+            str_line_meta_append(str_line_byte_index_begin, str.bytes.len);
+        }
+
+        // ------------------------------
+
+        // ----------------------------------------
+        // Rendering
+
+        // ------------------------------
+
+#if 0
+        const zcl::t_i32 str_line_cnt = 1 + zcl::CountAllEqual(str.bytes, '\n');
+
+        const auto str_line_render_infos = zcl::ArenaPushArray<t_str_line_render_info_rdonly>(temp_arena, str_line_cnt);
+
+        for (zcl::t_i32 i = 0; i < str_line_cnt; i++) {
+        }
+
+        zcl::CalcStrLineRenderInfo(str, font_arrangement, origin, temp_arena);
+
+        if () {
+        }
+#endif
+    }
+
+#if 0
     t_str_line_render_info_mut CalcStrLineRenderInfo(const zcl::t_str_rdonly str, const zcl::t_font_arrangement &font_arrangement, const zcl::t_v2 origin, zcl::t_arena *const arena) {
         ZCL_ASSERT(zcl::StrCheckValidUTF8(str));
         ZCL_ASSERT(!zcl::CheckAnyEqual(str.bytes, '\n'));
@@ -458,35 +626,33 @@ namespace zgl {
         // Getting Per-Line Metadata
 
         struct t_str_line_meta {
+            zcl::t_str_rdonly line;
             t_str_line_render_info_rdonly render_info;
-            zcl::t_i32 byte_index_begin;
-            zcl::t_i32 byte_index_end_excl;
         };
 
         zcl::t_list<t_str_line_meta> str_line_metas = {};
 
         {
-            zcl::t_b8 str_line_started = false;
-            zcl::t_i32 str_line_byte_index_begin;
-            zcl::t_i32 str_line_byte_index_end_excl;
-
             const auto ihm = [str_line_metas, str, font_arrangement, origin, temp_arena](const zcl::t_i32 line_byte_index_begin, const zcl::t_i32 line_byte_index_end_excl) {
                 const zcl::t_str_rdonly line = {zcl::ArraySlice(str.bytes, line_byte_index_begin, line_byte_index_end_excl)};
                 const t_str_line_render_info_rdonly render_info = CalcStrLineRenderInfo(line, font_arrangement, origin, temp_arena);
 
                 const t_str_line_meta meta = {
+                    .line = line,
                     .render_info = render_info,
-                    .byte_index_begin = line_byte_index_begin,
-                    .byte_index_end_excl = line_byte_index_end_excl,
                 };
 
                 zcl::ListAppendDynamic(&str_line_metas, meta, temp_arena);
             };
 
+            zcl::t_i32 str_line_index = 0;
+            zcl::t_i32 str_line_len_in_chrs = 0;
+            zcl::t_i32 str_line_byte_index_begin;
+            zcl::t_i32 str_line_byte_index_end_excl;
+
             ZCL_STR_WALK (str, step) {
-                if (!str_line_started) {
+                if (str_line_len_in_chrs == 0) {
                     str_line_byte_index_begin = step.byte_index;
-                    str_line_started = true;
                 }
 
                 if (step.code_pt == '\n') {
@@ -494,6 +660,9 @@ namespace zgl {
 
                     ihm(str_line_byte_index_begin, str_line_byte_index_end_excl);
 
+                    for (zcl::t_i32 i = 0; i <)
+
+                        str_line_index++;
                     str_line_started = false;
                 }
             }
@@ -505,7 +674,12 @@ namespace zgl {
 
         // ------------------------------
 
-#if 0
+        // ----------------------------------------
+        // Rendering
+
+        // ------------------------------
+
+    #if 0
         const zcl::t_i32 str_line_cnt = 1 + zcl::CountAllEqual(str.bytes, '\n');
 
         const auto str_line_render_infos = zcl::ArenaPushArray<t_str_line_render_info_rdonly>(temp_arena, str_line_cnt);
@@ -517,12 +691,16 @@ namespace zgl {
 
         if () {
         }
-#endif
+    #endif
     }
 
     zcl::t_array_mut<zcl::t_poly_mut> CalcStrLineChrRenderColliders(const zcl::t_str_rdonly str, const t_font &font, const zcl::t_v2 pos, zcl::t_arena *const arena, zcl::t_arena *const temp_arena, const zcl::t_v2 origin, const zcl::t_f32 rot, const zcl::t_v2 scale) {
-        ZCL_ASSERT(!zcl::StrCheckEmpty(str) && zcl::StrCheckValidUTF8(str));
+        ZCL_ASSERT(zcl::StrCheckValidUTF8(str));
         ZCL_ASSERT(zcl::OriginCheckValid(origin));
+
+        if (zcl::StrCheckEmpty(str)) {
+            return {};
+        }
 
         const t_str_line_render_info_rdonly render_info = CalcStrLineRenderInfo(str, font.arrangement, origin, temp_arena);
 
@@ -553,7 +731,7 @@ namespace zgl {
     }
 
     void RendererSubmitStrLine(const t_rendering_context rc, const zcl::t_str_rdonly str, const t_font &font, const zcl::t_v2 pos, const zcl::t_color_rgba32f color, zcl::t_arena *const temp_arena, const zcl::t_v2 origin, const zcl::t_f32 rot, const zcl::t_v2 scale) {
-        ZCL_ASSERT(!zcl::StrCheckEmpty(str) && zcl::StrCheckValidUTF8(str));
+        ZCL_ASSERT(zcl::StrCheckSingleLine(str) && zcl::StrCheckValidUTF8(str));
         ZCL_ASSERT(zcl::OriginCheckValid(origin));
 
         RendererSetShaderProg(rc, rc.basis->shader_progs[ek_renderer_builtin_shader_prog_id_str]);
@@ -608,4 +786,5 @@ namespace zgl {
 
         RendererSetShaderProg(rc, nullptr);
     }
+#endif
 }
