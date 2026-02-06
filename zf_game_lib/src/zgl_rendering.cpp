@@ -421,8 +421,9 @@ namespace zgl {
 
         const auto chr_offsets = zcl::ArenaPushArray<zcl::t_v2>(arena, str_meta.len);
 
+        zcl::t_f32 top_pen = zcl::k_f32_inf_pos;
         zcl::t_f32 width_pen = 0.0f;
-        zcl::t_f32 height_pen = 0.0f;
+        zcl::t_f32 bottom_pen = 0.0f;
 
         {
             zcl::t_i32 chr_index = 0;
@@ -474,8 +475,9 @@ namespace zgl {
                 line_width_pen = zcl::CalcMax(line_width_pen, chr_offsets[chr_index].x + static_cast<zcl::t_f32>(glyph_info->atlas_rect.width));
 
                 // @speed
-                width_pen = zcl::CalcMax(width_pen, line_width_pen);
-                height_pen = zcl::CalcMax(height_pen, chr_offsets[chr_index].y + static_cast<zcl::t_f32>(glyph_info->atlas_rect.height));
+                top_pen = zcl::CalcMin(top_pen, chr_offsets[chr_index].y);
+                width_pen = zcl::CalcMax(width_pen, line_width_pen); // @todo: Need to drop excess horizontal padding too.
+                bottom_pen = zcl::CalcMax(bottom_pen, chr_offsets[chr_index].y + static_cast<zcl::t_f32>(glyph_info->atlas_rect.height));
             }
 
             for (zcl::t_i32 i = line_begin_chr_index; i < str_meta.len; i++) {
@@ -483,13 +485,14 @@ namespace zgl {
             }
 
             for (zcl::t_i32 i = 0; i < str_meta.len; i++) {
-                chr_offsets[i].y -= height_pen * origin.y;
+                chr_offsets[i].y -= top_pen;
+                chr_offsets[i].y -= (bottom_pen - top_pen) * origin.y;
             }
         }
 
         return {
             .chr_offsets = chr_offsets,
-            .size = {width_pen, height_pen},
+            .size = {width_pen, bottom_pen - top_pen},
         };
     }
 
@@ -514,9 +517,11 @@ namespace zgl {
             return;
         }
 
-        RendererSetShaderProg(rc, rc.basis->shader_progs[ek_renderer_builtin_shader_prog_id_str]);
-
         const t_str_render_info_rdonly render_info = CalcStrRenderInfo(str, font.arrangement, origin, temp_arena);
+
+        RendererSubmitRectRotated(rc, pos, render_info.size, origin, rot, zcl::k_color_red);
+
+        RendererSetShaderProg(rc, rc.basis->shader_progs[ek_renderer_builtin_shader_prog_id_str]);
 
         zcl::t_i32 chr_index = 0;
 
