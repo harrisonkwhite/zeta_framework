@@ -276,15 +276,15 @@ namespace zcl {
         ek_utf8_byte_type_invalid,
     }};
 
-    void CodePointToUTF8Bytes(const t_code_point cp, t_static_array<t_u8, 4> *const o_bytes, t_i32 *const o_byte_cnt) {
+    void CodePointToUTF8Bytes(const t_code_point code_pt, t_static_array<t_u8, 4> *const o_bytes, t_i32 *const o_byte_cnt) {
         *o_bytes = {};
-        *o_byte_cnt = CodePointGetUTF8ByteCount(cp);
+        *o_byte_cnt = CodePointGetUTF8ByteCount(code_pt);
 
         switch (*o_byte_cnt) {
             case 1: {
                 // 0xxxxxxx
 
-                (*o_bytes)[0] |= cp & ByteBitmaskCreateRange(0, 7);
+                (*o_bytes)[0] |= code_pt & ByteBitmaskCreateRange(0, 7);
 
                 break;
             }
@@ -293,10 +293,10 @@ namespace zcl {
                 // 110xxxxx 10xxxxxx
 
                 (*o_bytes)[0] = 0b11000000;
-                (*o_bytes)[0] |= (cp & (ByteBitmaskCreateRange(0, 5) << 6)) >> 6;
+                (*o_bytes)[0] |= (code_pt & (ByteBitmaskCreateRange(0, 5) << 6)) >> 6;
 
                 (*o_bytes)[1] = 0b10000000;
-                (*o_bytes)[1] |= cp & ByteBitmaskCreateRange(0, 6);
+                (*o_bytes)[1] |= code_pt & ByteBitmaskCreateRange(0, 6);
 
                 break;
             }
@@ -305,13 +305,13 @@ namespace zcl {
                 // 1110xxxx 10xxxxxx 10xxxxxx
 
                 (*o_bytes)[0] = 0b11100000;
-                (*o_bytes)[0] |= (cp & (ByteBitmaskCreateRange(0, 4) << 12)) >> 12;
+                (*o_bytes)[0] |= (code_pt & (ByteBitmaskCreateRange(0, 4) << 12)) >> 12;
 
                 (*o_bytes)[1] = 0b10000000;
-                (*o_bytes)[1] |= (cp & (ByteBitmaskCreateRange(0, 6) << 6)) >> 6;
+                (*o_bytes)[1] |= (code_pt & (ByteBitmaskCreateRange(0, 6) << 6)) >> 6;
 
                 (*o_bytes)[2] = 0b10000000;
-                (*o_bytes)[2] |= cp & ByteBitmaskCreateRange(0, 6);
+                (*o_bytes)[2] |= code_pt & ByteBitmaskCreateRange(0, 6);
 
                 break;
             }
@@ -320,16 +320,16 @@ namespace zcl {
                 // 11110xxx 10xxxxxx 10xxxxxx 10xxxxxx
 
                 (*o_bytes)[0] = 0b11110000;
-                (*o_bytes)[0] |= (cp & (ByteBitmaskCreateRange(0, 3) << 18)) >> 18;
+                (*o_bytes)[0] |= (code_pt & (ByteBitmaskCreateRange(0, 3) << 18)) >> 18;
 
                 (*o_bytes)[1] = 0b10000000;
-                (*o_bytes)[1] |= (cp & (ByteBitmaskCreateRange(0, 6) << 12)) >> 12;
+                (*o_bytes)[1] |= (code_pt & (ByteBitmaskCreateRange(0, 6) << 12)) >> 12;
 
                 (*o_bytes)[2] = 0b10000000;
-                (*o_bytes)[2] |= (cp & (ByteBitmaskCreateRange(0, 6) << 6)) >> 6;
+                (*o_bytes)[2] |= (code_pt & (ByteBitmaskCreateRange(0, 6) << 6)) >> 6;
 
                 (*o_bytes)[3] = 0b10000000;
-                (*o_bytes)[3] |= cp & ByteBitmaskCreateRange(0, 6);
+                (*o_bytes)[3] |= code_pt & ByteBitmaskCreateRange(0, 6);
 
                 break;
             }
@@ -485,15 +485,40 @@ namespace zcl {
     }
 
     t_array_mut<t_str_rdonly> StrSplit(const t_str_rdonly str, const t_code_point delimiter, t_arena *const arena) {
+        ZCL_ASSERT(StrCheckValidUTF8(str));
+
+        if (StrCheckEmpty(str)) {
+            return {};
+        }
+
+        const t_i32 delimiter_utf8_byte_cnt = CodePointGetUTF8ByteCount(delimiter);
+
         const t_i32 split_cnt = 1 + StrCountCodePoint(str, delimiter);
 
-        t_i32 split_byte_index_begin;
-        t_i32 split_byte_index_end;
+        const auto result = ArenaPushArray<t_str_rdonly>(arena, split_cnt);
+
+        t_i32 split_index = 0;
+        t_i32 split_byte_index_begin = 0;
+        t_i32 split_byte_index_end_excl;
 
         ZCL_STR_WALK (str, step) {
             if (step.code_pt == delimiter) {
+                split_byte_index_end_excl = step.byte_index;
+
+                result[split_index] = {
+                    ArraySlice(str.bytes, split_byte_index_begin, split_byte_index_end_excl),
+                };
+
+                split_index++;
+                split_byte_index_begin = step.byte_index + delimiter_utf8_byte_cnt;
             }
         }
+
+        result[split_index] = {
+            ArraySlice(str.bytes, split_byte_index_begin, str.bytes.len),
+        };
+
+        return result;
     }
 
     void StrMarkCodePoints(const t_str_rdonly str, t_code_point_bitset *const code_pts) {
