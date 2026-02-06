@@ -467,6 +467,124 @@ namespace zgl {
         };
     }
 
+    void RendererSubmitStr(const t_rendering_context rc, const zcl::t_str_rdonly str, const t_font &font, const zcl::t_v2 pos, const zcl::t_color_rgba32f color, zcl::t_arena *const temp_arena, const zcl::t_v2 origin, const zcl::t_f32 rot, const zcl::t_v2 scale) {
+        ZCL_ASSERT(zcl::StrCheckValidUTF8(str));
+        ZCL_ASSERT(zcl::OriginCheckValid(origin));
+
+        if (zcl::StrCheckEmpty(str)) {
+            return;
+        }
+
+        RendererSetShaderProg(rc, rc.basis->shader_progs[ek_renderer_builtin_shader_prog_id_str]);
+
+        const auto str_lines = zcl::StrSplitLines(str, temp_arena);
+
+        for (zcl::t_i32 i = 0; i < str_lines.len; i++) {
+            const t_str_line_render_info_rdonly line_render_info = CalcStrLineRenderInfo(str_lines[i], font.arrangement, zcl::k_origin_center, temp_arena);
+
+            const zcl::t_f32 line_offs_y = static_cast<zcl::t_f32>(font.arrangement.line_height) * i;
+
+            zcl::t_i32 chr_index = 0;
+
+            ZCL_STR_WALK (str_lines[i], step) {
+                ZCL_DEFER({ chr_index++; });
+
+                if (step.code_pt == ' ') {
+                    continue;
+                }
+
+                zcl::t_font_glyph_info *glyph_info;
+
+                if (!zcl::HashMapFind(&font.arrangement.code_pts_to_glyph_infos, step.code_pt, &glyph_info)) {
+                    ZCL_FATAL();
+                }
+
+                const zcl::t_v2 chr_pos = pos + zcl::t_v2{0.0f, line_offs_y} + zcl::CalcLengthDir(line_render_info.chr_offsets[chr_index].x * scale.x, rot) + zcl::CalcLengthDir(line_render_info.chr_offsets[chr_index].y * scale.y, rot + (zcl::k_pi / 2.0f));
+
+                zcl::t_static_array<zcl::t_v2, 4> quad_pts;
+
+                zcl::t_arena *const quad_pts_arena = zcl::ArenaCreateWrapping(zcl::ToBytes(&quad_pts));
+                ZCL_DEFER({ zcl::ArenaDestroy(quad_pts_arena); });
+
+                const zcl::t_poly_mut quad_poly = zcl::PolyCreateQuadRotated(chr_pos, zcl::CalcCompwiseProd(zcl::V2IToF(zcl::RectGetSize(glyph_info->atlas_rect)), scale), {}, rot, quad_pts_arena);
+
+                const zcl::t_rect_f uv_rect = TextureUVRectCalc(glyph_info->atlas_rect, zcl::k_font_atlas_texture_size);
+
+                const zcl::t_static_array<t_gfx_triangle, 2> triangles = {{
+                    {
+                        .vertices = {{
+                            {.pos = quad_poly.pts[0], .blend = color, .uv = zcl::RectGetTopLeft(uv_rect)},
+                            {.pos = quad_poly.pts[1], .blend = color, .uv = zcl::RectGetTopRight(uv_rect)},
+                            {.pos = quad_poly.pts[3], .blend = color, .uv = zcl::RectGetBottomLeft(uv_rect)},
+                        }},
+                    },
+                    {
+                        .vertices = {{
+                            {.pos = quad_poly.pts[3], .blend = color, .uv = zcl::RectGetBottomLeft(uv_rect)},
+                            {.pos = quad_poly.pts[1], .blend = color, .uv = zcl::RectGetTopRight(uv_rect)},
+                            {.pos = quad_poly.pts[2], .blend = color, .uv = zcl::RectGetBottomRight(uv_rect)},
+                        }},
+                    },
+                }};
+
+                RendererSubmit(rc, zcl::ArrayToNonstatic(&triangles), font.atlas_textures[glyph_info->atlas_index]);
+            }
+        }
+
+#if 0
+        const t_str_line_render_info_rdonly render_info = CalcStrLineRenderInfo(str, font.arrangement, origin, temp_arena);
+
+        zcl::t_i32 chr_index = 0;
+
+        ZCL_STR_WALK (str, step) {
+            ZCL_DEFER({ chr_index++; });
+
+            if (step.code_pt == ' ' || step.code_pt == '\n') {
+                continue;
+            }
+
+            zcl::t_font_glyph_info *glyph_info;
+
+            if (!zcl::HashMapFind(&font.arrangement.code_pts_to_glyph_infos, step.code_pt, &glyph_info)) {
+                ZCL_FATAL();
+            }
+
+            const zcl::t_v2 chr_pos = pos + zcl::CalcLengthDir(render_info.chr_offsets[chr_index].x * scale.x, rot) + zcl::CalcLengthDir(render_info.chr_offsets[chr_index].y * scale.y, rot + (zcl::k_pi / 2.0f));
+
+            zcl::t_static_array<zcl::t_v2, 4> quad_pts;
+
+            zcl::t_arena *const quad_pts_arena = zcl::ArenaCreateWrapping(zcl::ToBytes(&quad_pts));
+            ZCL_DEFER({ zcl::ArenaDestroy(quad_pts_arena); });
+
+            const zcl::t_poly_mut quad_poly = zcl::PolyCreateQuadRotated(chr_pos, zcl::CalcCompwiseProd(zcl::V2IToF(zcl::RectGetSize(glyph_info->atlas_rect)), scale), {}, rot, quad_pts_arena);
+
+            const zcl::t_rect_f uv_rect = TextureUVRectCalc(glyph_info->atlas_rect, zcl::k_font_atlas_texture_size);
+
+            const zcl::t_static_array<t_gfx_triangle, 2> triangles = {{
+                {
+                    .vertices = {{
+                        {.pos = quad_poly.pts[0], .blend = color, .uv = zcl::RectGetTopLeft(uv_rect)},
+                        {.pos = quad_poly.pts[1], .blend = color, .uv = zcl::RectGetTopRight(uv_rect)},
+                        {.pos = quad_poly.pts[3], .blend = color, .uv = zcl::RectGetBottomLeft(uv_rect)},
+                    }},
+                },
+                {
+                    .vertices = {{
+                        {.pos = quad_poly.pts[3], .blend = color, .uv = zcl::RectGetBottomLeft(uv_rect)},
+                        {.pos = quad_poly.pts[1], .blend = color, .uv = zcl::RectGetTopRight(uv_rect)},
+                        {.pos = quad_poly.pts[2], .blend = color, .uv = zcl::RectGetBottomRight(uv_rect)},
+                    }},
+                },
+            }};
+
+            RendererSubmit(rc, zcl::ArrayToNonstatic(&triangles), font.atlas_textures[glyph_info->atlas_index]);
+        }
+#endif
+
+        RendererSetShaderProg(rc, nullptr);
+    }
+
+#if 0
     void CalcStrRenderInfo(const zcl::t_str_rdonly str, const zcl::t_font_arrangement &font_arrangement, const zcl::t_v2 origin, zcl::t_arena *const arena, zcl::t_arena *const temp_arena) {
         if (zcl::StrCheckEmpty(str)) {
             return;
@@ -530,7 +648,7 @@ namespace zgl {
 
         // ------------------------------
 
-#if 0
+    #if 0
         const zcl::t_i32 str_line_cnt = 1 + zcl::CountAllEqual(str.bytes, '\n');
 
         const auto str_line_render_infos = zcl::ArenaPushArray<t_str_line_render_info_rdonly>(temp_arena, str_line_cnt);
@@ -542,8 +660,9 @@ namespace zgl {
 
         if () {
         }
-#endif
+    #endif
     }
+#endif
 
 #if 0
     t_str_line_render_info_mut CalcStrLineRenderInfo(const zcl::t_str_rdonly str, const zcl::t_font_arrangement &font_arrangement, const zcl::t_v2 origin, zcl::t_arena *const arena) {

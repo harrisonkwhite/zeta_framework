@@ -142,10 +142,6 @@ namespace zcl {
         return str.bytes.len == 0;
     }
 
-    inline t_i32 StrCountLines(const t_str_rdonly str) {
-        return 1 + CountAllEqual(str.bytes, '\n');
-    }
-
     t_b8 StrCheckValidUTF8(const t_str_rdonly str);
 
     // Calculates the string length in terms of code point count. Reminder that '\0' is treated just like any other ASCII character and does not terminate.
@@ -155,8 +151,17 @@ namespace zcl {
 
     t_i32 StrCountCodePoint(const t_str_rdonly str, const t_code_point code_pt);
 
+    inline t_i32 StrCountLines(const t_str_rdonly str) {
+        return 1 + StrCountCodePoint(str, '\n');
+    }
+
     // The output are all CLONES of the input string data, and they DO NOT include the delimiter.
     t_array_mut<t_str_mut> StrSplit(const t_str_rdonly str, const t_code_point delimiter, t_arena *const arena);
+
+    // The output are all CLONES of the input string data, and they DO NOT include the delimiter.
+    inline t_array_mut<t_str_mut> StrSplitLines(const t_str_rdonly str, t_arena *const arena) {
+        return StrSplit(str, '\n', arena);
+    }
 
     // Sets the bits associated with each unicode code point that appear in the string. No bits get unset.
     void StrMarkCodePoints(const t_str_rdonly str, t_code_point_bitset *const code_pts);
