@@ -484,7 +484,7 @@ namespace zcl {
         return result;
     }
 
-    t_array_mut<t_str_rdonly> StrSplit(const t_str_rdonly str, const t_code_point delimiter, t_arena *const arena) {
+    t_array_mut<t_str_mut> StrSplit(const t_str_rdonly str, const t_code_point delimiter, t_arena *const arena) {
         ZCL_ASSERT(StrCheckValidUTF8(str));
 
         if (StrCheckEmpty(str)) {
@@ -495,7 +495,7 @@ namespace zcl {
 
         const t_i32 split_cnt = 1 + StrCountCodePoint(str, delimiter);
 
-        const auto result = ArenaPushArray<t_str_rdonly>(arena, split_cnt);
+        const auto result = ArenaPushArray<t_str_mut>(arena, split_cnt);
 
         t_i32 split_index = 0;
         t_i32 split_byte_index_begin = 0;
@@ -505,18 +505,16 @@ namespace zcl {
             if (step.code_pt == delimiter) {
                 split_byte_index_end_excl = step.byte_index;
 
-                result[split_index] = {
-                    ArraySlice(str.bytes, split_byte_index_begin, split_byte_index_end_excl),
-                };
+                const t_str_rdonly split_view = {ArraySlice(str.bytes, split_byte_index_begin, split_byte_index_end_excl)};
+                result[split_index] = StrClone(split_view, arena);
 
                 split_index++;
                 split_byte_index_begin = step.byte_index + delimiter_utf8_byte_cnt;
             }
         }
 
-        result[split_index] = {
-            ArraySlice(str.bytes, split_byte_index_begin, str.bytes.len),
-        };
+        const t_str_rdonly split_view = {ArraySlice(str.bytes, split_byte_index_begin, str.bytes.len)};
+        result[split_index] = StrClone(split_view, arena);
 
         return result;
     }
