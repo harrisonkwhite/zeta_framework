@@ -394,32 +394,58 @@ namespace zgl {
 
     static t_str_render_info_mut CalcStrRenderInfo(const zcl::t_str_rdonly str, const zcl::t_font_arrangement &font_arrangement, const zcl::t_v2 origin, zcl::t_arena *const arena) {
         ZCL_ASSERT(zcl::StrCheckValidUTF8(str));
+        ZCL_ASSERT(zcl::OriginCheckValid(origin));
 
         if (zcl::StrCheckEmpty(str)) {
             return {};
         }
 
-        const zcl::t_i32 str_len = zcl::StrCalcLen(str);
+        struct t_str_meta {
+            zcl::t_i32 len;
+            zcl::t_i32 line_cnt;
+        };
 
-        const auto chr_offsets = zcl::ArenaPushArray<zcl::t_v2>(arena, str_len);
+        const t_str_meta str_meta = [str]() {
+            t_str_meta result = {.line_cnt = 1};
 
-        zcl::t_f32 left = zcl::k_f32_inf_pos;
-        zcl::t_f32 top = zcl::k_f32_inf_pos;
-        zcl::t_f32 right = zcl::k_f32_inf_neg;
-        zcl::t_f32 bottom = zcl::k_f32_inf_neg;
+            ZCL_STR_WALK (str, step) {
+                result.len++;
+
+                if (step.code_pt == '\n') {
+                    result.line_cnt++;
+                }
+            }
+
+            return result;
+        }();
+
+        const auto chr_offsets = zcl::ArenaPushArray<zcl::t_v2>(arena, str_meta.len);
 
         {
             zcl::t_i32 chr_index = 0;
-            zcl::t_v2 chr_offs_pen = {}; // The position of the current character.
-            zcl::t_code_point code_pt_last = {};
+            zcl::t_v2 chr_offs_pen = {};
+            zcl::t_f32 line_width_pen = 0.0f;
+            zcl::t_i32 line_begin_chr_index = 0;
+            zcl::t_f32 height_pen = 0.0f;
+
+            zcl::t_code_point code_pt_last;
 
             ZCL_STR_WALK (str, step) {
+                ZCL_DEFER({
+                    chr_index++;
+                    code_pt_last = step.code_pt;
+                });
+
                 if (step.code_pt == '\n') {
                     chr_offs_pen.x = 0;
                     chr_offs_pen.y += static_cast<zcl::t_f32>(font_arrangement.line_height);
 
-                    chr_index++;
-                    code_pt_last = step.code_pt;
+                    for (zcl::t_i32 i = line_begin_chr_index; i < chr_index; i++) {
+                        chr_offsets[i].x -= line_width_pen * origin.x;
+                    }
+
+                    line_width_pen = 0.0f;
+                    line_begin_chr_index = chr_index + 1;
 
                     continue;
                 }
@@ -440,10 +466,107 @@ namespace zgl {
 
                 chr_offsets[chr_index] = chr_offs_pen + zcl::V2IToF(glyph_info->offs);
 
+                chr_offs_pen.x += static_cast<zcl::t_f32>(glyph_info->adv);
+
+                // @speed
+                line_width_pen = zcl::CalcMax(line_width_pen, chr_offsets[chr_index].x + static_cast<zcl::t_f32>(glyph_info->atlas_rect.width));
+                height_pen = zcl::CalcMax(height_pen, chr_offsets[chr_index].y + static_cast<zcl::t_f32>(glyph_info->atlas_rect.height));
+            }
+
+            for (zcl::t_i32 i = line_begin_chr_index; i < str_meta.len; i++) {
+                chr_offsets[i].x -= line_width_pen * origin.x;
+            }
+
+            for (zcl::t_i32 i = 0; i < str_meta.len; i++) {
+                chr_offsets[i].y -= height_pen * origin.y;
+            }
+        }
+
+        return {
+            .chr_offsets = chr_offsets,
+            .size = {},
+        };
+    }
+
+#if 0
+    static t_str_render_info_mut CalcStrRenderInfo(const zcl::t_str_rdonly str, const zcl::t_font_arrangement &font_arrangement, const zcl::t_v2 origin, zcl::t_arena *const arena) {
+        ZCL_ASSERT(zcl::StrCheckValidUTF8(str));
+
+        if (zcl::StrCheckEmpty(str)) {
+            return {};
+        }
+
+        struct t_str_meta {
+            zcl::t_i32 len;
+            zcl::t_i32 line_cnt;
+        };
+
+        const t_str_meta str_meta = [str]() {
+            t_str_meta result = {.line_cnt = 1};
+
+            ZCL_STR_WALK (str, step) {
+                result.len++;
+
+                if (step.code_pt == '\n') {
+                    result.line_cnt++;
+                }
+            }
+
+            return result;
+        }();
+
+        const auto chr_offsets = zcl::ArenaPushArray<zcl::t_v2>(arena, str_meta.len);
+
+        const auto line_widths = zcl::ArenaPushArray<zcl::t_f32>(arena, str_meta.line_cnt);
+
+    #if 0
+        zcl::t_f32 left = zcl::k_f32_inf_pos;
+        zcl::t_f32 top = zcl::k_f32_inf_pos;
+        zcl::t_f32 right = zcl::k_f32_inf_neg;
+        zcl::t_f32 bottom = zcl::k_f32_inf_neg;
+    #endif
+
+        {
+            zcl::t_i32 chr_index = 0;
+            zcl::t_v2 chr_offs_pen = {}; // The position of the current character.
+            zcl::t_i32 line_index = 0;
+            zcl::t_code_point code_pt_last = {};
+
+            ZCL_STR_WALK (str, step) {
+                if (step.code_pt == '\n') {
+                    chr_offs_pen.x = 0;
+                    chr_offs_pen.y += static_cast<zcl::t_f32>(font_arrangement.line_height);
+
+                    chr_index++;
+                    code_pt_last = step.code_pt;
+
+                    line_index++;
+
+                    continue;
+                }
+
+                zcl::t_font_glyph_info *glyph_info;
+
+                if (!zcl::HashMapFind(&font_arrangement.code_pts_to_glyph_infos, step.code_pt, &glyph_info)) {
+                    ZCL_FATAL();
+                }
+
+                if (chr_index > 0 && font_arrangement.has_kernings) {
+                    zcl::t_i32 *kerning;
+
+                    if (zcl::HashMapFind(&font_arrangement.code_pt_pairs_to_kernings, {code_pt_last, step.code_pt}, &kerning)) {
+                        chr_offs_pen.x += static_cast<zcl::t_f32>(*kerning);
+                    }
+                }
+
+                chr_offsets[chr_index] = chr_offs_pen + zcl::V2IToF(glyph_info->offs);
+    #if 0
+                // @speed: More work than needed but it keeps things simple. Optimize if needed.
                 left = zcl::CalcMin(left, chr_offsets[chr_index].x);
                 top = zcl::CalcMin(top, chr_offsets[chr_index].y);
                 right = zcl::CalcMax(right, chr_offsets[chr_index].x + static_cast<zcl::t_f32>(glyph_info->atlas_rect.width));
                 bottom = zcl::CalcMax(bottom, chr_offsets[chr_index].y + static_cast<zcl::t_f32>(glyph_info->atlas_rect.height));
+    #endif
 
                 chr_offs_pen.x += static_cast<zcl::t_f32>(glyph_info->adv);
 
@@ -452,23 +575,38 @@ namespace zgl {
             }
         }
 
+        {
+            zcl::t_i32 chr_index = 0;
+
+            ZCL_STR_WALK (str, step) {
+    #if 0
+                chr_offsets_no_origin[chr_index] -= {left, top};
+                chr_offsets_no_origin[chr_index] -= zcl::CalcCompwiseProd(size, origin);
+                chr_index++;
+    #endif
+            }
+        }
+
+    #if 0
         const zcl::t_v2 size = {right - left, bottom - top};
 
         {
             zcl::t_i32 chr_index = 0;
 
             ZCL_STR_WALK (str, step) {
-                chr_offsets[chr_index] -= {left, top};
-                chr_offsets[chr_index] -= zcl::CalcCompwiseProd(size, origin);
+                chr_offsets_no_origin[chr_index] -= {left, top};
+                chr_offsets_no_origin[chr_index] -= zcl::CalcCompwiseProd(size, origin);
                 chr_index++;
             }
         }
+    #endif
 
         return {
             .chr_offsets = chr_offsets,
             .size = size,
         };
     }
+#endif
 
     void RendererSubmitStr(const t_rendering_context rc, const zcl::t_str_rdonly str, const t_font &font, const zcl::t_v2 pos, const zcl::t_color_rgba32f color, zcl::t_arena *const temp_arena, const zcl::t_v2 origin, const zcl::t_f32 rot, const zcl::t_v2 scale) {
         ZCL_ASSERT(zcl::StrCheckValidUTF8(str));

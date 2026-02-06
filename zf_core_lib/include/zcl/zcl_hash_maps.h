@@ -68,7 +68,7 @@ namespace zcl {
         return block;
     }
 
-    // @speed: Optimise by having this move to a relative block, instead of always from the start.
+    // @speed: Optimize by having this move to a relative block, instead of always from the start.
     template <c_kv_store tp_kv_store_type>
     t_kv_store_block<typename tp_kv_store_type::t_key, typename tp_kv_store_type::t_value> *KVStoreFindBlockOfIndex(const tp_kv_store_type *const kv_store, t_i32 index) {
         ZCL_ASSERT(index >= -1 && index < kv_store->block_cap * kv_store->block_cnt);
