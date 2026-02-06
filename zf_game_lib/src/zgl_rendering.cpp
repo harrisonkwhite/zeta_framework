@@ -421,14 +421,16 @@ namespace zgl {
 
         const auto chr_offsets = zcl::ArenaPushArray<zcl::t_v2>(arena, str_meta.len);
 
+        zcl::t_f32 left_pen = zcl::k_f32_inf_pos;
         zcl::t_f32 top_pen = zcl::k_f32_inf_pos;
-        zcl::t_f32 width_pen = 0.0f;
-        zcl::t_f32 bottom_pen = 0.0f;
+        zcl::t_f32 right_pen = zcl::k_f32_inf_neg;
+        zcl::t_f32 bottom_pen = zcl::k_f32_inf_neg;
 
         {
             zcl::t_i32 chr_index = 0;
             zcl::t_v2 chr_offs_pen = {};
-            zcl::t_f32 line_width_pen = 0.0f;
+            zcl::t_f32 line_left_pen = zcl::k_f32_inf_pos;
+            zcl::t_f32 line_right_pen = zcl::k_f32_inf_neg;
             zcl::t_i32 line_begin_chr_index = 0;
 
             zcl::t_code_point code_pt_last;
@@ -444,10 +446,12 @@ namespace zgl {
                     chr_offs_pen.y += static_cast<zcl::t_f32>(font_arrangement.line_height);
 
                     for (zcl::t_i32 i = line_begin_chr_index; i < chr_index; i++) {
-                        chr_offsets[i].x -= line_width_pen * origin.x;
+                        chr_offsets[i].x -= line_left_pen;
+                        chr_offsets[i].x -= (line_right_pen - line_left_pen) * origin.x;
                     }
 
-                    line_width_pen = 0.0f;
+                    line_left_pen = zcl::k_f32_inf_pos;
+                    line_right_pen = zcl::k_f32_inf_neg;
                     line_begin_chr_index = chr_index + 1;
 
                     continue;
@@ -472,16 +476,18 @@ namespace zgl {
                 chr_offs_pen.x += static_cast<zcl::t_f32>(glyph_info->adv);
 
                 // @speed
-                line_width_pen = zcl::CalcMax(line_width_pen, chr_offsets[chr_index].x + static_cast<zcl::t_f32>(glyph_info->atlas_rect.width));
+                line_left_pen = zcl::CalcMin(line_left_pen, chr_offsets[chr_index].x);
+                line_right_pen = zcl::CalcMax(line_right_pen, chr_offsets[chr_index].x + static_cast<zcl::t_f32>(glyph_info->atlas_rect.width));
 
-                // @speed
                 top_pen = zcl::CalcMin(top_pen, chr_offsets[chr_index].y);
-                width_pen = zcl::CalcMax(width_pen, line_width_pen); // @todo: Need to drop excess horizontal padding too.
+                left_pen = zcl::CalcMin(left_pen, line_left_pen);
+                right_pen = zcl::CalcMax(right_pen, line_right_pen);
                 bottom_pen = zcl::CalcMax(bottom_pen, chr_offsets[chr_index].y + static_cast<zcl::t_f32>(glyph_info->atlas_rect.height));
             }
 
             for (zcl::t_i32 i = line_begin_chr_index; i < str_meta.len; i++) {
-                chr_offsets[i].x -= line_width_pen * origin.x;
+                chr_offsets[i].x -= line_left_pen;
+                chr_offsets[i].x -= (line_right_pen - line_left_pen) * origin.x;
             }
 
             for (zcl::t_i32 i = 0; i < str_meta.len; i++) {
@@ -492,7 +498,7 @@ namespace zgl {
 
         return {
             .chr_offsets = chr_offsets,
-            .size = {width_pen, bottom_pen - top_pen},
+            .size = {right_pen, bottom_pen - top_pen},
         };
     }
 
@@ -519,7 +525,7 @@ namespace zgl {
 
         const t_str_render_info_rdonly render_info = CalcStrRenderInfo(str, font.arrangement, origin, temp_arena);
 
-        RendererSubmitRectRotated(rc, pos, render_info.size, origin, rot, zcl::k_color_red);
+        RendererSubmitRect(rc, zcl::RectCreateF(pos - zcl::CalcCompwiseProd(render_info.size, origin), render_info.size), zcl::k_color_red);
 
         RendererSetShaderProg(rc, rc.basis->shader_progs[ek_renderer_builtin_shader_prog_id_str]);
 
