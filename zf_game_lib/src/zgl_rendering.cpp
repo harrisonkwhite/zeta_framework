@@ -375,24 +375,7 @@ namespace zgl {
         RendererSubmit(rc, zcl::ArrayToNonstatic(&triangles), texture);
     }
 
-    struct t_str_render_info_rdonly {
-        zcl::t_array_rdonly<zcl::t_v2> chr_offsets;
-        zcl::t_v2 size;
-    };
-
-    struct t_str_render_info_mut {
-        zcl::t_array_mut<zcl::t_v2> chr_offsets;
-        zcl::t_v2 size;
-
-        operator t_str_render_info_rdonly() const {
-            return {
-                .chr_offsets = chr_offsets,
-                .size = size,
-            };
-        }
-    };
-
-    static t_str_render_info_mut CalcStrRenderInfo(const zcl::t_str_rdonly str, const zcl::t_font_arrangement &font_arrangement, const zcl::t_v2 origin, zcl::t_arena *const arena) {
+    t_str_render_info_mut CalcStrRenderInfo(const zcl::t_str_rdonly str, const zcl::t_font_arrangement &font_arrangement, const zcl::t_v2 origin, zcl::t_arena *const arena) {
         ZCL_ASSERT(zcl::StrCheckValidUTF8(str));
         ZCL_ASSERT(zcl::OriginCheckValid(origin));
 
@@ -445,9 +428,11 @@ namespace zgl {
                     chr_offs_pen.x = 0;
                     chr_offs_pen.y += static_cast<zcl::t_f32>(font_arrangement.line_height);
 
+                    const zcl::t_f32 line_width = line_right_pen - line_left_pen;
+
                     for (zcl::t_i32 i = line_begin_chr_index; i < chr_index; i++) {
                         chr_offsets[i].x -= line_left_pen;
-                        chr_offsets[i].x -= (line_right_pen - line_left_pen) * origin.x;
+                        chr_offsets[i].x -= line_width * origin.x;
                     }
 
                     line_left_pen = zcl::k_f32_inf_pos;
@@ -475,34 +460,41 @@ namespace zgl {
 
                 chr_offs_pen.x += static_cast<zcl::t_f32>(glyph_info->adv);
 
-                // @speed
+                // @speed: More work being done in every iteration than needed!
+
                 line_left_pen = zcl::CalcMin(line_left_pen, chr_offsets[chr_index].x);
                 line_right_pen = zcl::CalcMax(line_right_pen, chr_offsets[chr_index].x + static_cast<zcl::t_f32>(glyph_info->atlas_rect.width));
 
-                top_pen = zcl::CalcMin(top_pen, chr_offsets[chr_index].y);
                 left_pen = zcl::CalcMin(left_pen, line_left_pen);
+                top_pen = zcl::CalcMin(top_pen, chr_offsets[chr_index].y);
                 right_pen = zcl::CalcMax(right_pen, line_right_pen);
                 bottom_pen = zcl::CalcMax(bottom_pen, chr_offsets[chr_index].y + static_cast<zcl::t_f32>(glyph_info->atlas_rect.height));
             }
 
-            for (zcl::t_i32 i = line_begin_chr_index; i < str_meta.len; i++) {
-                chr_offsets[i].x -= line_left_pen;
-                chr_offsets[i].x -= (line_right_pen - line_left_pen) * origin.x;
-            }
+            {
+                const zcl::t_f32 line_width = line_right_pen - line_left_pen;
 
-            for (zcl::t_i32 i = 0; i < str_meta.len; i++) {
-                chr_offsets[i].y -= top_pen;
-                chr_offsets[i].y -= (bottom_pen - top_pen) * origin.y;
+                for (zcl::t_i32 i = line_begin_chr_index; i < str_meta.len; i++) {
+                    chr_offsets[i].x -= line_left_pen;
+                    chr_offsets[i].x -= line_width * origin.x;
+                }
             }
+        }
+
+        const zcl::t_f32 height = bottom_pen - top_pen;
+
+        for (zcl::t_i32 i = 0; i < str_meta.len; i++) {
+            chr_offsets[i].y -= top_pen;
+            chr_offsets[i].y -= height * origin.y;
         }
 
         return {
             .chr_offsets = chr_offsets,
-            .size = {right_pen, bottom_pen - top_pen},
+            .size = {right_pen, height},
         };
     }
 
-    zcl::t_poly_mut CalcStrRenderCollider(const zcl::t_str_rdonly str, const t_font &font, const zcl::t_v2 pos, zcl::t_arena *const arena, zcl::t_arena *const temp_arena, const zcl::t_v2 origin, const zcl::t_f32 rot, const zcl::t_v2 scale) {
+    zcl::t_poly_mut CalcStrRenderCollider(const zcl::t_str_rdonly str, const t_str_render_info_rdonly render_info, const t_font &font, const zcl::t_v2 pos, zcl::t_arena *const arena, const zcl::t_v2 origin, const zcl::t_f32 rot, const zcl::t_v2 scale) {
         ZCL_ASSERT(zcl::StrCheckValidUTF8(str));
         ZCL_ASSERT(zcl::OriginCheckValid(origin));
 
@@ -510,20 +502,16 @@ namespace zgl {
             return {};
         }
 
-        const t_str_render_info_rdonly render_info = CalcStrRenderInfo(str, font.arrangement, origin, temp_arena);
-
         return zcl::PolyCreateQuadRotated(pos, render_info.size, origin, rot, arena);
     }
 
-    void RendererSubmitStr(const t_rendering_context rc, const zcl::t_str_rdonly str, const t_font &font, const zcl::t_v2 pos, const zcl::t_color_rgba32f color, zcl::t_arena *const temp_arena, const zcl::t_v2 origin, const zcl::t_f32 rot, const zcl::t_v2 scale) {
+    void RendererSubmitStr(const t_rendering_context rc, const zcl::t_str_rdonly str, const t_str_render_info_rdonly render_info, const t_font &font, const zcl::t_v2 pos, const zcl::t_color_rgba32f color, const zcl::t_v2 origin, const zcl::t_f32 rot, const zcl::t_v2 scale) {
         ZCL_ASSERT(zcl::StrCheckValidUTF8(str));
         ZCL_ASSERT(zcl::OriginCheckValid(origin));
 
         if (zcl::StrCheckEmpty(str)) {
             return;
         }
-
-        const t_str_render_info_rdonly render_info = CalcStrRenderInfo(str, font.arrangement, origin, temp_arena);
 
         RendererSubmitRect(rc, zcl::RectCreateF(pos - zcl::CalcCompwiseProd(render_info.size, origin), render_info.size), zcl::k_color_red);
 

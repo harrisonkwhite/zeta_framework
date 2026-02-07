@@ -87,9 +87,38 @@ namespace zgl {
 
     void RendererSubmitTexture(const t_rendering_context rc, const t_gfx_resource *const texture, const zcl::t_v2 pos, const zcl::t_rect_i src_rect = {}, const zcl::t_v2 origin = zcl::k_origin_top_left, const zcl::t_f32 rot = 0.0f, const zcl::t_v2 scale = {1.0f, 1.0f}, const zcl::t_color_rgba32f blend = zcl::k_color_white);
 
-    zcl::t_poly_mut CalcStrRenderCollider(const zcl::t_str_rdonly str, const t_font &font, const zcl::t_v2 pos, zcl::t_arena *const arena, zcl::t_arena *const temp_arena, const zcl::t_v2 origin = zcl::k_origin_top_left, const zcl::t_f32 rot = 0.0f, const zcl::t_v2 scale = {1.0f, 1.0f});
+    struct t_str_render_info_rdonly {
+        zcl::t_array_rdonly<zcl::t_v2> chr_offsets;
+        zcl::t_v2 size;
+    };
 
-    void RendererSubmitStr(const t_rendering_context rc, const zcl::t_str_rdonly str, const t_font &font, const zcl::t_v2 pos, const zcl::t_color_rgba32f color, zcl::t_arena *const temp_arena, const zcl::t_v2 origin = zcl::k_origin_top_left, const zcl::t_f32 rot = 0.0f, const zcl::t_v2 scale = {1.0f, 1.0f});
+    struct t_str_render_info_mut {
+        zcl::t_array_mut<zcl::t_v2> chr_offsets;
+        zcl::t_v2 size;
+
+        operator t_str_render_info_rdonly() const {
+            return {
+                .chr_offsets = chr_offsets,
+                .size = size,
+            };
+        }
+    };
+
+    t_str_render_info_mut CalcStrRenderInfo(const zcl::t_str_rdonly str, const zcl::t_font_arrangement &font_arrangement, const zcl::t_v2 origin, zcl::t_arena *const arena);
+
+    zcl::t_poly_mut CalcStrRenderCollider(const zcl::t_str_rdonly str, const t_str_render_info_rdonly render_info, const t_font &font, const zcl::t_v2 pos, zcl::t_arena *const arena, const zcl::t_v2 origin = zcl::k_origin_top_left, const zcl::t_f32 rot = 0.0f, const zcl::t_v2 scale = {1.0f, 1.0f});
+
+    inline zcl::t_poly_mut CalcStrRenderCollider(const zcl::t_str_rdonly str, const t_font &font, const zcl::t_v2 pos, zcl::t_arena *const arena, zcl::t_arena *const temp_arena, const zcl::t_v2 origin = zcl::k_origin_top_left, const zcl::t_f32 rot = 0.0f, const zcl::t_v2 scale = {1.0f, 1.0f}) {
+        const t_str_render_info_rdonly render_info = CalcStrRenderInfo(str, font.arrangement, origin, temp_arena);
+        return CalcStrRenderCollider(str, render_info, font, pos, arena, origin, rot, scale);
+    }
+
+    void RendererSubmitStr(const t_rendering_context rc, const zcl::t_str_rdonly str, const t_str_render_info_rdonly render_info, const t_font &font, const zcl::t_v2 pos, const zcl::t_color_rgba32f color, const zcl::t_v2 origin = zcl::k_origin_top_left, const zcl::t_f32 rot = 0.0f, const zcl::t_v2 scale = {1.0f, 1.0f});
+
+    inline void RendererSubmitStr(const t_rendering_context rc, const zcl::t_str_rdonly str, const t_font &font, const zcl::t_v2 pos, const zcl::t_color_rgba32f color, zcl::t_arena *const temp_arena, const zcl::t_v2 origin = zcl::k_origin_top_left, const zcl::t_f32 rot = 0.0f, const zcl::t_v2 scale = {1.0f, 1.0f}) {
+        const t_str_render_info_rdonly render_info = CalcStrRenderInfo(str, font.arrangement, origin, temp_arena);
+        RendererSubmitStr(rc, str, render_info, font, pos, color, origin, rot, scale);
+    }
 
     namespace internal {
         t_rendering_basis *RenderingBasisCreate(const zcl::t_i32 frame_vertex_limit, const t_gfx_ticket_mut gfx_ticket, zcl::t_arena *const arena, zcl::t_arena *const temp_arena);
