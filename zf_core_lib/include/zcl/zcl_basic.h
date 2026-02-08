@@ -3,7 +3,6 @@
 #include <type_traits>
 #include <limits>
 #include <concepts>
-#include <cmath>
 
 namespace zcl {
 #ifdef _WIN32
@@ -126,14 +125,6 @@ namespace zcl {
     constexpr t_f64 k_f64_inf_neg = -std::numeric_limits<t_f64>::infinity();
     constexpr t_f64 k_f64_nan_quiet = std::numeric_limits<t_f64>::quiet_NaN();
     constexpr t_f64 k_f64_nan_signalling = std::numeric_limits<t_f64>::signaling_NaN();
-
-    inline t_b8 CheckNaN(const t_f32 val) {
-        return isnan(val);
-    }
-
-    inline t_b8 CheckNaN(const t_f64 val) {
-        return isnan(val);
-    }
 
     using t_uintptr = uintptr_t;
     static_assert(sizeof(t_uintptr) == 8);

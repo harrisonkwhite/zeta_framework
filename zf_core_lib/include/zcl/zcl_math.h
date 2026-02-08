@@ -311,6 +311,10 @@ namespace zcl {
 
     // ==================================================
 
+    t_b8 CheckNaN(const t_f32 val);
+
+    t_b8 CheckNaN(const t_f64 val);
+
     constexpr t_b8 CheckNearlyEqual(const t_f32 val, const t_f32 targ, const t_f32 tol = k_tolerance_default) {
         ZCL_ASSERT(!CheckNaN(val));
         ZCL_ASSERT(!CheckNaN(targ));

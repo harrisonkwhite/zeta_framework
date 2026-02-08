@@ -4,6 +4,14 @@
 #include <zcl/zcl_bits.h>
 
 namespace zcl {
+    t_b8 CheckNaN(const t_f32 val) {
+        return isnan(val);
+    }
+
+    t_b8 CheckNaN(const t_f64 val) {
+        return isnan(val);
+    }
+
     t_f32 CalcMag(const t_v2 v) {
         return sqrt((v.x * v.x) + (v.y * v.y));
     }
