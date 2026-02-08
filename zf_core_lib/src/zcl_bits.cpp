@@ -8,13 +8,15 @@ namespace zcl {
             return false;
         }
 
-        const auto first_bytes = ArraySlice(BitsetGetBytes(bs), 0, BitsetGetBytes(bs).len - 1);
+        const auto bs_bytes = BitsetGetBytes(bs);
+
+        const auto first_bytes = ArraySlice(bs_bytes, 0, bs_bytes.len - 1);
 
         if (!CheckAllEqual(first_bytes, 0)) {
             return true;
         }
 
-        return (BitsetGetBytes(bs)[BitsetGetBytes(bs).len - 1] & BitsetGetLastByteMask(bs)) != 0;
+        return (bs_bytes[bs_bytes.len - 1] & BitsetGetLastByteMask(bs)) != 0;
     }
 
     t_b8 BitsetCheckAllSet(const t_bitset_rdonly bs) {
@@ -22,14 +24,16 @@ namespace zcl {
             return false;
         }
 
-        const auto first_bytes = ArraySlice(BitsetGetBytes(bs), 0, BitsetGetBytes(bs).len - 1);
+        const auto bs_bytes = BitsetGetBytes(bs);
+
+        const auto first_bytes = ArraySlice(bs_bytes, 0, bs_bytes.len - 1);
 
         if (!CheckAllEqual(first_bytes, 0xFF)) {
             return false;
         }
 
         const auto last_byte_mask = BitsetGetLastByteMask(bs);
-        return (BitsetGetBytes(bs)[BitsetGetBytes(bs).len - 1] & last_byte_mask) == last_byte_mask;
+        return (bs_bytes[bs_bytes.len - 1] & last_byte_mask) == last_byte_mask;
     }
 
     void BitsetSetAll(const t_bitset_mut bs) {
@@ -37,10 +41,12 @@ namespace zcl {
             return;
         }
 
-        const auto first_bytes = ArraySlice(BitsetGetBytes(bs), 0, BitsetGetBytes(bs).len - 1);
+        const auto bs_bytes = BitsetGetBytes(bs);
+
+        const auto first_bytes = ArraySlice(bs_bytes, 0, bs_bytes.len - 1);
         SetAllTo(first_bytes, 0xFF);
 
-        BitsetGetBytes(bs)[BitsetGetBytes(bs).len - 1] |= BitsetGetLastByteMask(bs);
+        bs_bytes[bs_bytes.len - 1] |= BitsetGetLastByteMask(bs);
     }
 
     void BitsetUnsetAll(const t_bitset_mut bs) {
@@ -48,15 +54,19 @@ namespace zcl {
             return;
         }
 
-        const auto first_bytes = ArraySlice(BitsetGetBytes(bs), 0, BitsetGetBytes(bs).len - 1);
+        const auto bs_bytes = BitsetGetBytes(bs);
+
+        const auto first_bytes = ArraySlice(bs_bytes, 0, bs_bytes.len - 1);
         SetAllTo(first_bytes, 0);
 
-        BitsetGetBytes(bs)[BitsetGetBytes(bs).len - 1] &= ~BitsetGetLastByteMask(bs);
+        bs_bytes[bs_bytes.len - 1] &= ~BitsetGetLastByteMask(bs);
     }
 
     void BitsetSetRange(const t_bitset_mut bs, const t_i32 begin_bit_index, const t_i32 end_bit_index) {
         ZCL_ASSERT(begin_bit_index >= 0 && begin_bit_index < bs.bit_cnt);
         ZCL_ASSERT(end_bit_index >= begin_bit_index && end_bit_index <= bs.bit_cnt);
+
+        const auto bs_bytes = BitsetGetBytes(bs);
 
         const t_i32 begin_elem_index = begin_bit_index / 8;
         const t_i32 end_elem_index = BitsToBytes(end_bit_index);
@@ -69,7 +79,7 @@ namespace zcl {
             const t_i32 set_range_begin = CalcMax(begin_bit_index_rel, 0);
             const t_i32 set_range_end = CalcMin(end_bit_index_rel, 8);
 
-            BitsetGetBytes(bs)[i] |= ByteBitmaskCreateRange(set_range_begin, set_range_end);
+            bs_bytes[i] |= ByteBitmaskCreateRange(set_range_begin, set_range_end);
         }
     }
 
@@ -80,61 +90,63 @@ namespace zcl {
             return;
         }
 
+        const auto bs_bytes = BitsetGetBytes(bs);
+
         switch (op) {
             case ek_bitwise_mask_op_and: {
-                for (t_i32 i = 0; i < BitsetGetBytes(bs).len; i++) {
-                    BitsetGetBytes(bs)[i] &= BitsetGetBytes(mask)[i];
+                for (t_i32 i = 0; i < bs_bytes.len; i++) {
+                    bs_bytes[i] &= BitsetGetBytes(mask)[i];
                 }
 
                 break;
             }
 
             case ek_bitwise_mask_op_or: {
-                for (t_i32 i = 0; i < BitsetGetBytes(bs).len; i++) {
-                    BitsetGetBytes(bs)[i] |= BitsetGetBytes(mask)[i];
+                for (t_i32 i = 0; i < bs_bytes.len; i++) {
+                    bs_bytes[i] |= BitsetGetBytes(mask)[i];
                 }
 
                 break;
             }
 
             case ek_bitwise_mask_op_xor: {
-                for (t_i32 i = 0; i < BitsetGetBytes(bs).len; i++) {
-                    BitsetGetBytes(bs)[i] ^= BitsetGetBytes(mask)[i];
+                for (t_i32 i = 0; i < bs_bytes.len; i++) {
+                    bs_bytes[i] ^= BitsetGetBytes(mask)[i];
                 }
 
                 break;
             }
 
             case ek_bitwise_mask_op_andnot: {
-                for (t_i32 i = 0; i < BitsetGetBytes(bs).len; i++) {
-                    BitsetGetBytes(bs)[i] &= ~BitsetGetBytes(mask)[i];
+                for (t_i32 i = 0; i < bs_bytes.len; i++) {
+                    bs_bytes[i] &= ~BitsetGetBytes(mask)[i];
                 }
 
                 break;
             }
         }
 
-        BitsetGetBytes(bs)[BitsetGetBytes(bs).len - 1] &= BitsetGetLastByteMask(bs);
+        bs_bytes[bs_bytes.len - 1] &= BitsetGetLastByteMask(bs);
     }
 
     static t_u8 BitsetShiftLeftSingle(const t_bitset_mut bs) {
-        ZCL_ASSERT(BitsToBytes(bs.bit_cnt) == BitsetGetBytes(bs).len);
-
         if (bs.bit_cnt == 0) {
             return 0;
         }
 
+        const auto bs_bytes = BitsetGetBytes(bs);
+
         t_u8 discard = 0;
 
-        for (t_i32 i = 0; i < BitsetGetBytes(bs).len; i++) {
-            const t_i32 bits_in_byte = i == BitsetGetBytes(bs).len - 1 ? BitsetGetLastByteBitCount(bs) : 8;
+        for (t_i32 i = 0; i < bs_bytes.len; i++) {
+            const t_i32 bits_in_byte = i == bs_bytes.len - 1 ? BitsetGetLastByteBitCount(bs) : 8;
             const t_u8 discard_last = discard;
-            discard = (BitsetGetBytes(bs)[i] & k_byte_bitmasks_single[bits_in_byte - 1]) >> (bits_in_byte - 1);
-            BitsetGetBytes(bs)[i] <<= 1;
-            BitsetGetBytes(bs)[i] |= discard_last;
+            discard = (bs_bytes[i] & k_byte_bitmasks_single[bits_in_byte - 1]) >> (bits_in_byte - 1);
+            bs_bytes[i] <<= 1;
+            bs_bytes[i] |= discard_last;
         }
 
-        BitsetGetBytes(bs)[BitsetGetBytes(bs).len - 1] &= BitsetGetLastByteMask(bs);
+        bs_bytes[bs_bytes.len - 1] &= BitsetGetLastByteMask(bs);
 
         return discard;
     }
@@ -170,24 +182,24 @@ namespace zcl {
     }
 
     static t_u8 BitsetShiftRightSingle(const t_bitset_mut bs) {
-        ZCL_ASSERT(BitsToBytes(bs.bit_cnt) == BitsetGetBytes(bs).len);
-
         if (bs.bit_cnt == 0) {
             return 0;
         }
 
-        BitsetGetBytes(bs)[BitsetGetBytes(bs).len - 1] &= BitsetGetLastByteMask(bs); // Drop any excess bits so we don't accidentally shift a 1 in.
+        const auto bs_bytes = BitsetGetBytes(bs);
+
+        bs_bytes[bs_bytes.len - 1] &= BitsetGetLastByteMask(bs); // Drop any excess bits so we don't accidentally shift a 1 in.
 
         t_u8 discard = 0;
 
-        for (t_i32 i = BitsetGetBytes(bs).len - 1; i >= 0; i--) {
-            const t_i32 bits_in_byte = i == BitsetGetBytes(bs).len - 1 ? BitsetGetLastByteBitCount(bs) : 8;
+        for (t_i32 i = bs_bytes.len - 1; i >= 0; i--) {
+            const t_i32 bits_in_byte = i == bs_bytes.len - 1 ? BitsetGetLastByteBitCount(bs) : 8;
             const t_u8 discard_last = discard;
-            discard = BitsetGetBytes(bs)[i] & k_byte_bitmasks_single[0];
-            BitsetGetBytes(bs)[i] >>= 1;
+            discard = bs_bytes[i] & k_byte_bitmasks_single[0];
+            bs_bytes[i] >>= 1;
 
             if (discard_last) {
-                BitsetGetBytes(bs)[i] |= k_byte_bitmasks_single[bits_in_byte - 1];
+                bs_bytes[i] |= k_byte_bitmasks_single[bits_in_byte - 1];
             }
         }
 
@@ -489,16 +501,18 @@ namespace zcl {
             0,  // 1111 1111
         }};
 
+        const auto bs_bytes = BitsetGetBytes(bs);
+
         const t_i32 begin_byte_index = from / 8;
 
-        for (t_i32 i = begin_byte_index; i < BitsetGetBytes(bs).len; i++) {
-            t_u8 byte = BitsetGetBytes(bs)[i] ^ xor_mask;
+        for (t_i32 i = begin_byte_index; i < bs_bytes.len; i++) {
+            t_u8 byte = bs_bytes[i] ^ xor_mask;
 
             if (i == begin_byte_index) {
                 byte &= ByteBitmaskCreateRange(from % 8);
             }
 
-            if (i == BitsetGetBytes(bs).len - 1) {
+            if (i == bs_bytes.len - 1) {
                 byte &= BitsetGetLastByteMask(bs);
             }
 
@@ -783,12 +797,14 @@ namespace zcl {
 
         t_i32 result = 0;
 
-        if (BitsetGetBytes(bs).len > 0) {
-            for (t_i32 i = 0; i < BitsetGetBytes(bs).len - 1; i++) {
-                result += k_mappings[BitsetGetBytes(bs)[i]];
+        if (bs.bit_cnt > 0) {
+            const auto bs_bytes = BitsetGetBytes(bs);
+
+            for (t_i32 i = 0; i < bs_bytes.len - 1; i++) {
+                result += k_mappings[bs_bytes[i]];
             }
 
-            result += k_mappings[BitsetGetBytes(bs)[BitsetGetBytes(bs).len - 1] & BitsetGetLastByteMask(bs)];
+            result += k_mappings[bs_bytes[bs_bytes.len - 1] & BitsetGetLastByteMask(bs)];
         }
 
         return result;
