@@ -800,7 +800,7 @@ namespace zcl {
         return CheckInters(poly, rect);
     }
 
-    t_b8 CheckInters(const t_poly_rdonly poly, const t_v2 line_seg_begin, const t_v2 line_seg_end);
+    t_b8 CheckInters(const t_poly_rdonly poly, const t_v2 line_seg_begin, const t_v2 line_seg_end, const t_f32 tol = k_tolerance_default);
 
     inline t_b8 CheckInters(const t_v2 line_seg_begin, const t_v2 line_seg_end, const t_poly_rdonly poly) {
         return CheckInters(poly, line_seg_begin, line_seg_end);

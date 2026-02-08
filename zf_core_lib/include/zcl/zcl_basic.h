@@ -127,11 +127,11 @@ namespace zcl {
     constexpr t_f64 k_f64_nan_quiet = std::numeric_limits<t_f64>::quiet_NaN();
     constexpr t_f64 k_f64_nan_signalling = std::numeric_limits<t_f64>::signaling_NaN();
 
-    constexpr t_b8 CheckNaN(const t_f32 val) {
+    inline t_b8 CheckNaN(const t_f32 val) {
         return isnan(val);
     }
 
-    constexpr t_b8 CheckNaN(const t_f64 val) {
+    inline t_b8 CheckNaN(const t_f64 val) {
         return isnan(val);
     }
 
@@ -201,7 +201,7 @@ namespace zcl {
     using t_comparator_bin = t_b8 (*)(const tp_type &a, const tp_type &b);
 
     template <c_simple tp_type>
-    constexpr t_comparator_bin<tp_type> k_comparator_bin_default = [](const tp_type &a, const tp_type &b) {
+    constexpr t_comparator_bin<tp_type> k_comparator_bin_default = [](const tp_type &a, const tp_type &b) -> t_b8 {
         return a == b;
     };
 
@@ -210,7 +210,7 @@ namespace zcl {
     using t_comparator_ord = t_i32 (*)(const tp_type &a, const tp_type &b);
 
     template <c_simple tp_type>
-    constexpr t_comparator_ord<tp_type> k_comparator_ord_default = [](const tp_type &a, const tp_type &b) {
+    constexpr t_comparator_ord<tp_type> k_comparator_ord_default = [](const tp_type &a, const tp_type &b) -> t_i32 {
         if (a == b) {
             return 0;
         } else if (a < b) {

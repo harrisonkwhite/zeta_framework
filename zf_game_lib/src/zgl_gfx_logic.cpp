@@ -94,11 +94,12 @@ namespace zgl {
         const auto atlas_textures = zcl::ArenaPushArray<t_gfx_resource *>(GFXResourceGroupGetArena(gfx_ticket, resource_group), atlas_pixels_arr.len);
 
         for (zcl::t_i32 i = 0; i < atlas_pixels_arr.len; i++) {
-            const zcl::t_texture_data_rdonly atlas_texture_data = {
+            zcl::t_texture_data_rdonly atlas_texture_data = {
                 .dims = zcl::k_font_atlas_texture_size,
                 .format = zcl::ek_texture_format_r8,
-                .pixels = {.r8 = atlas_pixels_arr[i]},
             };
+
+            atlas_texture_data.pixels.r8 = atlas_pixels_arr[i];
 
             atlas_textures[i] = TextureCreate(gfx_ticket, atlas_texture_data, resource_group);
         }
@@ -122,11 +123,12 @@ namespace zgl {
         const zcl::t_array_mut<t_gfx_resource *> atlas_textures = zcl::ArenaPushArray<t_gfx_resource *>(GFXResourceGroupGetArena(gfx_ticket, resource_group), atlas_pixels_arr.len);
 
         for (zcl::t_i32 i = 0; i < atlas_pixels_arr.len; i++) {
-            const zcl::t_texture_data_rdonly atlas_texture_data = {
+            zcl::t_texture_data_rdonly atlas_texture_data = {
                 .dims = zcl::k_font_atlas_texture_size,
                 .format = zcl::ek_texture_format_r8,
-                .pixels = {.r8 = atlas_pixels_arr[i]},
             };
+
+            atlas_texture_data.pixels.r8 = atlas_pixels_arr[i];
 
             atlas_textures[i] = TextureCreate(gfx_ticket, atlas_texture_data, resource_group);
         }

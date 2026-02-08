@@ -107,7 +107,7 @@ namespace zcl {
     }
 
     template <c_hash_map tp_hash_map_type>
-    [[nodiscard]] t_b8 DeserializeHashMap(const t_stream_view stream_view, t_arena *const hm_arena, const t_hash_func<typename tp_hash_map_type::t_key> hm_hash_func, t_arena *const temp_arena, tp_hash_map_type *const o_hm, const t_comparator_bin<typename tp_hash_map_type::t_key> hm_key_comparator = k_comparator_bin_default<typename tp_hash_map_type::t_key>) {
+    [[nodiscard]] t_b8 DeserializeHashMap(const t_stream_view stream_view, t_arena *const hm_arena, const t_hash_func<typename tp_hash_map_type::t_key> hm_hash_func, t_arena *const temp_arena, tp_hash_map_type *const o_hm, const t_comparator_bin<typename tp_hash_map_type::t_key> hm_key_comparator) {
         t_i32 cap;
 
         if (!StreamReadItem(stream_view, &cap)) {
@@ -120,7 +120,7 @@ namespace zcl {
             return false;
         }
 
-        *o_hm = HashMapCreate<typename tp_hash_map_type::t_key, typename tp_hash_map_type::t_value>(hm_hash_func, hm_arena, cap, hm_key_comparator);
+        *o_hm = HashMapCreate<typename tp_hash_map_type::t_key, typename tp_hash_map_type::t_value>(hm_hash_func, hm_arena, hm_key_comparator, cap);
 
         const auto keys = ArenaPushArray<typename tp_hash_map_type::t_key>(temp_arena, entry_cnt);
 

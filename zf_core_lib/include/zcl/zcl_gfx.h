@@ -182,27 +182,36 @@ namespace zcl {
         operator t_texture_data_rdonly() const {
             switch (format) {
                 case ek_texture_format_rgba32f: {
-                    return {
+                    t_texture_data_rdonly result = {
                         .dims = dims,
-                        .format = format,
-                        .pixels = {.rgba32f = pixels.rgba32f},
+                        .format = format, // @todo: So bizarre that MSVC doesn't let nested aggregate init. Surely there's a better way around it?
                     };
+
+                    result.pixels.rgba32f = pixels.rgba32f;
+
+                    return result;
                 }
 
                 case ek_texture_format_rgba8: {
-                    return {
+                    t_texture_data_rdonly result = {
                         .dims = dims,
                         .format = format,
-                        .pixels = {.rgba8 = pixels.rgba8},
                     };
+
+                    result.pixels.rgba8 = pixels.rgba8;
+
+                    return result;
                 }
 
                 case ek_texture_format_r8: {
-                    return {
+                    t_texture_data_rdonly result = {
                         .dims = dims,
                         .format = format,
-                        .pixels = {.r8 = pixels.r8},
                     };
+
+                    result.pixels.r8 = pixels.r8;
+
+                    return result;
                 }
             }
         }

@@ -1,6 +1,7 @@
+- ZCL_UNREACHABLE could probably be removed in place of ZCL_FATAL.
+
+- The location of the same piece of text changes depending on the characters - this is very problematic!
 - There are surely cases where ZCL_FATAL can be preceded with a custom case-specific error log
-    - Can probably remove ZCL_REQUIRE while at it, more complexity than needed
-- Need to be able to render multiple string lines
 - Blend is overloaded term in rendering code
 generally speaking, need some ability static assert on static array length! This is a VERY USEFUL feature!
 - Try to minimise the STL includes in basic, or consider a PCH. Also cmath ideally shouldnt be included
@@ -8,7 +9,6 @@ generally speaking, need some ability static assert on static array length! This
 - The asset packer seems to fail randomly on certain assets sometimes??
 - Activity array could be useful considering how often I need it perosnally
 - Be more consistent about cases where rectangles with negative sizes are valid - they exist
-- There should be a consistent notion of "backbuffer size" or "window size" shared between both rendering context and tick context. It's too much of a mess right now.
 - Helpers for polygon drawing
 - Debug services, ability to see how long last frame took not just FPS
 - Would be really good for the global modules to be able to capture a state snapshot in the form of a struct and then reproduce the module state from that struct. Makes testing easier.

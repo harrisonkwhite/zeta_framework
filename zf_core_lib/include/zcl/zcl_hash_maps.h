@@ -2,6 +2,7 @@
 
 #include <zcl/zcl_basic.h>
 #include <zcl/zcl_bits.h>
+#include <zcl/zcl_algos.h>
 
 namespace zcl {
     // ============================================================
@@ -248,7 +249,7 @@ namespace zcl {
 
     // The provided hash function has to map a key to an integer 0 or higher. The given memory arena will be saved and used for allocating new memory for entries when needed.
     template <c_hash_map_key tp_key_type, c_hash_map_value tp_value_type>
-    t_hash_map<tp_key_type, tp_value_type> HashMapCreate(const t_hash_func<tp_key_type> hash_func, t_arena *const arena, const t_i32 cap = k_hash_map_cap_default, const t_comparator_bin<tp_key_type> key_comparator = k_comparator_bin_default<tp_key_type>) {
+    t_hash_map<tp_key_type, tp_value_type> HashMapCreate(const t_hash_func<tp_key_type> hash_func, t_arena *const arena, const t_comparator_bin<tp_key_type> key_comparator, const t_i32 cap = k_hash_map_cap_default) {
         const auto immediate_indexes = ArenaPushArray<t_i32>(arena, cap);
         SetAllTo(immediate_indexes, -1);
 

@@ -513,8 +513,6 @@ namespace zgl {
             return;
         }
 
-        RendererSubmitRect(rc, zcl::RectCreateF(pos - zcl::CalcCompwiseProd(render_info.size, origin), render_info.size), zcl::k_color_red);
-
         RendererSetShaderProg(rc, rc.basis->shader_progs[ek_renderer_builtin_shader_prog_id_str]);
 
         zcl::t_i32 chr_index = 0;

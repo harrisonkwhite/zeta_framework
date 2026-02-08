@@ -140,7 +140,7 @@ namespace zcl {
             return false;
         }
 
-        if (!DeserializeHashMap(stream_view, arrangement_arena, k_font_code_point_hash_func, temp_arena, &o_arrangement->code_pts_to_glyph_infos)) {
+        if (!DeserializeHashMap(stream_view, arrangement_arena, k_font_code_point_hash_func, temp_arena, &o_arrangement->code_pts_to_glyph_infos, k_comparator_bin_default<t_code_point>)) {
             return false;
         }
 

@@ -221,15 +221,21 @@ namespace zgl {
             const auto flags = BGFX_SAMPLER_MIN_POINT | BGFX_SAMPLER_MAG_POINT | BGFX_SAMPLER_U_CLAMP | BGFX_SAMPLER_V_CLAMP;
 
             switch (texture_data.format) {
-                case zcl::ek_texture_format_rgba32f:
+                case zcl::ek_texture_format_rgba32f: {
                     return bgfx::createTexture2D(static_cast<zcl::t_u16>(texture_data.dims.x), static_cast<zcl::t_u16>(texture_data.dims.y), false, 1, bgfx::TextureFormat::RGBA32F, flags, bgfx::copy(texture_data.pixels.rgba32f.raw, static_cast<zcl::t_u32>(zcl::ArrayGetSizeInBytes(texture_data.pixels.rgba32f))));
+                }
 
-                case zcl::ek_texture_format_rgba8:
+                case zcl::ek_texture_format_rgba8: {
                     return bgfx::createTexture2D(static_cast<zcl::t_u16>(texture_data.dims.x), static_cast<zcl::t_u16>(texture_data.dims.y), false, 1, bgfx::TextureFormat::RGBA8, flags, bgfx::copy(texture_data.pixels.rgba8.raw, static_cast<zcl::t_u32>(zcl::ArrayGetSizeInBytes(texture_data.pixels.rgba8))));
+                }
 
                 case zcl::ek_texture_format_r8:
+                {
                     return bgfx::createTexture2D(static_cast<zcl::t_u16>(texture_data.dims.x), static_cast<zcl::t_u16>(texture_data.dims.y), false, 1, bgfx::TextureFormat::R8, flags, bgfx::copy(texture_data.pixels.r8.raw, static_cast<zcl::t_u32>(zcl::ArrayGetSizeInBytes(texture_data.pixels.r8))));
+                }
             }
+
+            ZCL_UNREACHABLE();
         }();
 
         if (!bgfx::isValid(bgfx_hdl)) {
