@@ -60,8 +60,8 @@ int main(const int arg_cnt, const char *const *const args) {
     if (arg_cnt != 5) {
         zcl::t_file_stream std_err = zcl::FileStreamCreateStdError();
         zcl::PrintFormat(zcl::FileStreamGetView(&std_err), ZCL_STR_LITERAL("Invalid command-line argument count!\nUsage: zf_bin_to_array <input_file_path> <output_file_path> <array_variable_subname> <namespace>\nNote that the given namespace can be empty for no namespace.\n"));
-        return EXIT_FAILURE;
+        return 1;
     }
 
-    return OutputCode(zcl::CStrToStr(args[1]), zcl::CStrToStr(args[2]), zcl::CStrToStr(args[3]), zcl::CStrToStr(args[4])) ? EXIT_SUCCESS : EXIT_FAILURE;
+    return OutputCode(zcl::CStrToStr(args[1]), zcl::CStrToStr(args[2]), zcl::CStrToStr(args[3]), zcl::CStrToStr(args[4])) ? 0 : 1;
 }
