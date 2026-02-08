@@ -154,6 +154,9 @@ namespace zcl {
         return bs.bit_cnt - BitsetCountSet(bs);
     }
 
+    // Returned indexes are guaranteed to be in ascending order.
+    t_array_mut<t_i32> BitsetLoadIndexesOfSet(const t_bitset_rdonly bs, t_arena *const arena);
+
     // pos is the walker state, initialize it to the bit index you want to start from.
     // o_index is assigned the index of the set bit to process.
     // Returns false iff the walk is complete.

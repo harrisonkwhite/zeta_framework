@@ -794,6 +794,21 @@ namespace zcl {
         return result;
     }
 
+    t_array_mut<t_i32> BitsetLoadIndexesOfSet(const t_bitset_rdonly bs, t_arena *const arena) {
+        const t_i32 bits_set_cnt = BitsetCountSet(bs);
+
+        const auto result = ArenaPushArray<t_i32>(arena, bits_set_cnt);
+
+        for (t_i32 i = 0, result_index = 0; i < bs.bit_cnt; i++) {
+            if (BitsetCheckSet(bs, i)) {
+                result[result_index] = i;
+                result_index++;
+            }
+        }
+
+        return result;
+    }
+
     t_b8 BitsetWalkAllSet(const t_bitset_rdonly bs, t_i32 *const pos, t_i32 *const o_index) {
         ZCL_ASSERT(*pos >= 0 && *pos <= bs.bit_cnt);
 
