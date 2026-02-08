@@ -211,6 +211,8 @@ namespace zcl {
                     return result;
                 }
             }
+
+            ZCL_UNREACHABLE();
         }
     };
 

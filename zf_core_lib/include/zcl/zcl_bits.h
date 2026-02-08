@@ -3,11 +3,17 @@
 #include <zcl/zcl_basic.h>
 
 namespace zcl {
-    // Creates a byte-sized bitmask with only a single bit set.
-    constexpr t_u8 ByteBitmaskCreateSingle(const t_i32 bit_index) {
-        ZCL_ASSERT(bit_index >= 0 && bit_index < 8);
-        return static_cast<t_u8>(1 << bit_index);
-    }
+    // Array index corresponds to the bit that is set.
+    constexpr t_static_array<t_u8, 8> k_byte_bitmasks_single = {{
+        0b00000001,
+        0b00000010,
+        0b00000100,
+        0b00001000,
+        0b00010000,
+        0b00100000,
+        0b01000000,
+        0b10000000,
+    }};
 
     // Creates a byte-sized bitmask with only bits in the range [begin_bit_index, end_bit_index) set.
     constexpr t_u8 ByteBitmaskCreateRange(const t_i32 begin_bit_index, const t_i32 end_bit_index = 8) {
@@ -93,17 +99,17 @@ namespace zcl {
 
     constexpr t_b8 BitsetCheckSet(const t_bitset_rdonly bs, const t_i32 index) {
         ZCL_ASSERT(index >= 0 && index < bs.bit_cnt);
-        return BitsetGetBytes(bs)[index / 8] & ByteBitmaskCreateSingle(index % 8);
+        return BitsetGetBytes(bs)[index / 8] & k_byte_bitmasks_single[index % 8];
     }
 
     constexpr void BitsetSet(const t_bitset_mut bs, const t_i32 index) {
         ZCL_ASSERT(index >= 0 && index < bs.bit_cnt);
-        BitsetGetBytes(bs)[index / 8] |= ByteBitmaskCreateSingle(index % 8);
+        BitsetGetBytes(bs)[index / 8] |= k_byte_bitmasks_single[index % 8];
     }
 
     constexpr void BitsetUnset(const t_bitset_mut bs, const t_i32 index) {
         ZCL_ASSERT(index >= 0 && index < bs.bit_cnt);
-        BitsetGetBytes(bs)[index / 8] &= ~ByteBitmaskCreateSingle(index % 8);
+        BitsetGetBytes(bs)[index / 8] &= ~k_byte_bitmasks_single[index % 8];
     }
 
     t_b8 BitsetCheckAnySet(const t_bitset_rdonly bs);
@@ -155,7 +161,7 @@ namespace zcl {
     }
 
     // Returned indexes are guaranteed to be in ascending order.
-    t_array_mut<t_i32> BitsetLoadIndexesOfSet(const t_bitset_rdonly bs, t_arena *const arena);
+    t_array_mut<t_i32> BitsetLoadIndexesOfSet(const t_bitset_rdonly bs, t_arena *const arena); // @todo: Unset counterpart.
 
     // pos is the walker state, initialize it to the bit index you want to start from.
     // o_index is assigned the index of the set bit to process.

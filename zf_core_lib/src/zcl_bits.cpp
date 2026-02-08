@@ -129,7 +129,7 @@ namespace zcl {
         for (t_i32 i = 0; i < BitsetGetBytes(bs).len; i++) {
             const t_i32 bits_in_byte = i == BitsetGetBytes(bs).len - 1 ? BitsetGetLastByteBitCount(bs) : 8;
             const t_u8 discard_last = discard;
-            discard = (BitsetGetBytes(bs)[i] & ByteBitmaskCreateSingle(bits_in_byte - 1)) >> (bits_in_byte - 1);
+            discard = (BitsetGetBytes(bs)[i] & k_byte_bitmasks_single[bits_in_byte - 1]) >> (bits_in_byte - 1);
             BitsetGetBytes(bs)[i] <<= 1;
             BitsetGetBytes(bs)[i] |= discard_last;
         }
@@ -183,11 +183,11 @@ namespace zcl {
         for (t_i32 i = BitsetGetBytes(bs).len - 1; i >= 0; i--) {
             const t_i32 bits_in_byte = i == BitsetGetBytes(bs).len - 1 ? BitsetGetLastByteBitCount(bs) : 8;
             const t_u8 discard_last = discard;
-            discard = BitsetGetBytes(bs)[i] & ByteBitmaskCreateSingle(0);
+            discard = BitsetGetBytes(bs)[i] & k_byte_bitmasks_single[0];
             BitsetGetBytes(bs)[i] >>= 1;
 
             if (discard_last) {
-                BitsetGetBytes(bs)[i] |= ByteBitmaskCreateSingle(bits_in_byte - 1);
+                BitsetGetBytes(bs)[i] |= k_byte_bitmasks_single[bits_in_byte - 1];
             }
         }
 
