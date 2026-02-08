@@ -315,6 +315,30 @@ namespace zcl {
 
     t_b8 CheckNaN(const t_f64 val);
 
+    t_f32 Round(const t_f32 val);
+
+    t_f64 Round(const t_f64 val);
+
+    t_f32 Floor(const t_f32 val);
+
+    t_f64 Floor(const t_f64 val);
+
+    t_f32 Ceil(const t_f32 val);
+
+    t_f64 Ceil(const t_f64 val);
+
+    t_f32 Cos(const t_f32 x);
+
+    t_f64 Cos(const t_f64 x);
+
+    t_f32 Sin(const t_f32 x);
+
+    t_f64 Sin(const t_f64 x);
+
+    t_f32 Tan(const t_f32 x);
+
+    t_f64 Tan(const t_f64 x);
+
     constexpr t_b8 CheckNearlyEqual(const t_f32 val, const t_f32 targ, const t_f32 tol = k_tolerance_default) {
         ZCL_ASSERT(!CheckNaN(val));
         ZCL_ASSERT(!CheckNaN(targ));

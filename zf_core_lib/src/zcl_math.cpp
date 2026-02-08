@@ -12,6 +12,54 @@ namespace zcl {
         return isnan(val);
     }
 
+    t_f32 Round(const t_f32 val) {
+        return round(val);
+    }
+
+    t_f64 Round(const t_f64 val) {
+        return round(val);
+    }
+
+    t_f32 Floor(const t_f32 val) {
+        return floor(val);
+    }
+
+    t_f64 Floor(const t_f64 val) {
+        return floor(val);
+    }
+
+    t_f32 Ceil(const t_f32 val) {
+        return ceil(val);
+    }
+
+    t_f64 Ceil(const t_f64 val) {
+        return ceil(val);
+    }
+
+    t_f32 Cos(const t_f32 x) {
+        return cos(x);
+    }
+
+    t_f64 Cos(const t_f64 x) {
+        return cos(x);
+    }
+
+    t_f32 Sin(const t_f32 x) {
+        return sin(x);
+    }
+
+    t_f64 Sin(const t_f64 x) {
+        return sin(x);
+    }
+
+    t_f32 Tan(const t_f32 x) {
+        return tan(x);
+    }
+
+    t_f64 Tan(const t_f64 x) {
+        return tan(x);
+    }
+
     t_f32 CalcMag(const t_v2 v) {
         return sqrt((v.x * v.x) + (v.y * v.y));
     }
