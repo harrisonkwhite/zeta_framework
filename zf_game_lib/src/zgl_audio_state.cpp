@@ -43,12 +43,15 @@ namespace zgl {
         return TicketCreate();
     }
 
-    void internal::AudioShutdown(const t_audio_ticket_mut ticket) {
+    void internal::AudioShutdown(const t_audio_ticket_mut ticket, zcl::t_arena *const temp_arena) {
         ZCL_ASSERT(g_state.phase != ek_phase_inactive);
         ZCL_ASSERT(TicketCheckValid(ticket));
 
-        ZCL_BITSET_WALK_ALL_SET (g_state.snd_insts.active, i) {
-            SoundDestroy(ticket, {i, g_state.snd_insts.versions[i]});
+        const auto snd_insts_active_indexes = zcl::BitsetLoadIndexesOfSet(g_state.snd_insts.active, temp_arena);
+
+        for (zcl::t_i32 i = 0; i < snd_insts_active_indexes.len; i++) {
+            const zcl::t_i32 inst_index = snd_insts_active_indexes[i];
+            SoundDestroy(ticket, {inst_index, g_state.snd_insts.versions[inst_index]});
         }
 
         ma_engine_uninit(&g_state.ma_eng);
@@ -56,19 +59,23 @@ namespace zgl {
         zcl::ZeroClearItem(&g_state);
     }
 
-    void internal::AudioSetFrozen(const t_audio_ticket_mut ticket, const zcl::t_b8 frozen) {
+    void internal::AudioSetFrozen(const t_audio_ticket_mut ticket, const zcl::t_b8 frozen, zcl::t_arena *const temp_arena) {
         ZCL_ASSERT(g_state.phase != ek_phase_inactive);
         ZCL_ASSERT(TicketCheckValid(ticket));
 
         if (frozen && g_state.phase == ek_phase_active) {
-            ZCL_BITSET_WALK_ALL_SET (g_state.snd_insts.active, i) {
-                ma_sound_stop(&g_state.snd_insts.ma_snds[i]);
+            const auto snd_insts_active_indexes = zcl::BitsetLoadIndexesOfSet(g_state.snd_insts.active, temp_arena);
+
+            for (zcl::t_i32 i = 0; i < snd_insts_active_indexes.len; i++) {
+                ma_sound_stop(&g_state.snd_insts.ma_snds[snd_insts_active_indexes[i]]);
             }
 
             g_state.phase = ek_phase_frozen;
         } else if (!frozen && g_state.phase == ek_phase_frozen) {
-            ZCL_BITSET_WALK_ALL_SET (g_state.snd_insts.active, i) {
-                ma_sound_start(&g_state.snd_insts.ma_snds[i]);
+            const auto snd_insts_active_indexes = zcl::BitsetLoadIndexesOfSet(g_state.snd_insts.active, temp_arena);
+
+            for (zcl::t_i32 i = 0; i < snd_insts_active_indexes.len; i++) {
+                ma_sound_start(&g_state.snd_insts.ma_snds[snd_insts_active_indexes[i]]);
             }
 
             g_state.phase = ek_phase_active;
@@ -349,16 +356,19 @@ namespace zgl {
         ma_sound_seek_to_second(&g_state.snd_insts.ma_snds[id.index], pos_secs);
     }
 
-    zcl::t_array_mut<t_sound_id> SoundsGetExisting(const t_audio_ticket_rdonly audio_ticket, zcl::t_arena *const arena) {
+    zcl::t_array_mut<t_sound_id> SoundsGetExisting(const t_audio_ticket_rdonly audio_ticket, zcl::t_arena *const arena, zcl::t_arena *const temp_arena) {
         ZCL_ASSERT(g_state.phase != ek_phase_inactive);
         ZCL_ASSERT(TicketCheckValid(audio_ticket));
 
-        const auto ids = zcl::ArenaPushArray<t_sound_id>(arena, zcl::BitsetCountSet(g_state.snd_insts.active));
-        zcl::t_i32 ids_index = 0;
+        const auto snd_insts_active_indexes = zcl::BitsetLoadIndexesOfSet(g_state.snd_insts.active, temp_arena);
 
-        ZCL_BITSET_WALK_ALL_SET (g_state.snd_insts.active, i) {
-            ids[ids_index] = {i, g_state.snd_insts.versions[i]};
-            ids_index++;
+        const auto ids = zcl::ArenaPushArray<t_sound_id>(arena, snd_insts_active_indexes.len);
+
+        ZCL_ASSERT(snd_insts_active_indexes.len == ids.len);
+
+        for (zcl::t_i32 i = 0; i < snd_insts_active_indexes.len; i++) {
+            const zcl::t_i32 snd_inst_index = snd_insts_active_indexes[i];
+            ids[i] = {snd_inst_index, g_state.snd_insts.versions[snd_inst_index]};
         }
 
         return ids;

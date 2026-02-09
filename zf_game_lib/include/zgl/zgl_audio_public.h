@@ -132,9 +132,9 @@ namespace zgl {
     namespace internal {
         t_audio_ticket_mut AudioStartup(zcl::t_arena *const arena);
 
-        void AudioShutdown(const t_audio_ticket_mut ticket);
+        void AudioShutdown(const t_audio_ticket_mut ticket, zcl::t_arena *const temp_arena);
 
-        void AudioSetFrozen(const t_audio_ticket_mut ticket, const zcl::t_b8 paused);
+        void AudioSetFrozen(const t_audio_ticket_mut ticket, const zcl::t_b8 frozen, zcl::t_arena *const temp_arena);
 
         void SoundsProcessFinished(const t_audio_ticket_mut audio_ticket);
     };
