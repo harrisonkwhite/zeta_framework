@@ -31,7 +31,7 @@ namespace zgl {
         ZCL_DEFER({ internal::RenderingBasisDestroy(rendering_basis, gfx_ticket); });
 
         const t_audio_ticket_mut audio_ticket = internal::AudioStartup(perm_arena);
-        ZCL_DEFER({ internal::AudioShutdown(audio_ticket); });
+        ZCL_DEFER({ internal::AudioShutdown(audio_ticket, temp_arena); });
 
         zcl::t_rng *const rng = zcl::RNGCreate(zcl::RandGenSeed(), perm_arena);
 
@@ -140,7 +140,7 @@ namespace zgl {
                 }
             }
 
-            internal::AudioSetFrozen(audio_ticket, !window_focused);
+            internal::AudioSetFrozen(audio_ticket, !window_focused, temp_arena);
 
             const zcl::t_f64 frame_time = GetTime(platform_ticket);
 
@@ -172,7 +172,7 @@ namespace zgl {
                     while (tick_interval_accum >= tick_interval_target) {
                         zcl::ArenaRewind(temp_arena);
 
-                        internal::SoundsProcessFinished(audio_ticket);
+                        internal::SoundsProcessFinished(audio_ticket, temp_arena);
 
                         config.tick_func({
                             .perm_arena = perm_arena,

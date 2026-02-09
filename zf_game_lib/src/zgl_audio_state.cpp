@@ -374,7 +374,7 @@ namespace zgl {
         return ids;
     }
 
-    void internal::SoundsProcessFinished(const t_audio_ticket_mut audio_ticket) {
+    void internal::SoundsProcessFinished(const t_audio_ticket_mut audio_ticket, zcl::t_arena *const temp_arena) {
         ZCL_ASSERT(g_state.phase != ek_phase_inactive);
         ZCL_ASSERT(TicketCheckValid(audio_ticket));
 
@@ -382,15 +382,19 @@ namespace zgl {
             return;
         }
 
-        ZCL_BITSET_WALK_ALL_SET (g_state.snd_insts.active, i) {
-            if (g_state.snd_insts.states[i] != ek_sound_state_playing) {
+        const auto snd_insts_active_indexes = zcl::BitsetLoadIndexesOfSet(g_state.snd_insts.active, temp_arena);
+
+        for (zcl::t_i32 k = 0; k < snd_insts_active_indexes.len; k++) {
+            const zcl::t_i32 inst_index = snd_insts_active_indexes[k];
+
+            if (g_state.snd_insts.states[inst_index] != ek_sound_state_playing) {
                 continue;
             }
 
-            ma_sound *const ma_snd = &g_state.snd_insts.ma_snds[i];
+            ma_sound *const ma_snd = &g_state.snd_insts.ma_snds[inst_index];
 
             if (!ma_sound_is_playing(ma_snd)) {
-                SoundDestroy(audio_ticket, {i, g_state.snd_insts.versions[i]});
+                SoundDestroy(audio_ticket, {inst_index, g_state.snd_insts.versions[inst_index]});
             }
         }
     }

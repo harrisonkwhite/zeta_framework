@@ -136,6 +136,6 @@ namespace zgl {
 
         void AudioSetFrozen(const t_audio_ticket_mut ticket, const zcl::t_b8 frozen, zcl::t_arena *const temp_arena);
 
-        void SoundsProcessFinished(const t_audio_ticket_mut audio_ticket);
+        void SoundsProcessFinished(const t_audio_ticket_mut audio_ticket, zcl::t_arena *const temp_arena);
     };
 }
