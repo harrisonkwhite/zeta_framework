@@ -165,17 +165,4 @@ namespace zcl {
 
     // Returned indexes are guaranteed to be in ascending order.
     t_array_mut<t_i32> BitsetLoadIndexesOfUnset(const t_bitset_rdonly bs, t_arena *const arena);
-
-    // pos is the walker state, initialize it to the bit index you want to start from.
-    // o_index is assigned the index of the set bit to process.
-    // Returns false iff the walk is complete.
-    t_b8 BitsetWalkAllSet(const t_bitset_rdonly bs, t_i32 *const pos, t_i32 *const o_index);
-
-    // pos is the walker state, initialize it to the bit index you want to start from.
-    // o_index is assigned the index of the unset bit to process.
-    // Returns false iff the walk is complete.
-    t_b8 BitsetWalkAllUnset(const t_bitset_rdonly bs, t_i32 *const pos, t_i32 *const o_index);
-
-#define ZCL_BITSET_WALK_ALL_SET(bs, index) for (zcl::t_i32 ZCL_CONCAT(walk_pos_l, __LINE__) = 0, index; zcl::BitsetWalkAllSet(bs, &ZCL_CONCAT(walk_pos_l, __LINE__), &index);)
-#define ZCL_BITSET_WALK_ALL_UNSET(bs, index) for (zcl::t_i32 ZCL_CONCAT(walk_pos_l, __LINE__) = 0, index; zcl::BitsetWalkAllUnset(bs, &ZCL_CONCAT(walk_pos_l, __LINE__), &index);)
 }
