@@ -160,9 +160,11 @@ namespace zcl {
         return bs.bit_cnt - BitsetCountSet(bs);
     }
 
+#if 0
     // Returned indexes are guaranteed to be in ascending order.
     t_array_mut<t_i32> BitsetLoadIndexesOfSet(const t_bitset_rdonly bs, t_arena *const arena);
 
     // Returned indexes are guaranteed to be in ascending order.
     t_array_mut<t_i32> BitsetLoadIndexesOfUnset(const t_bitset_rdonly bs, t_arena *const arena);
+#endif
 }
