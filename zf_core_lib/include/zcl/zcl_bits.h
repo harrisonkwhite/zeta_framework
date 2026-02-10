@@ -3,17 +3,21 @@
 #include <zcl/zcl_basic.h>
 
 namespace zcl {
-    // Array index corresponds to the bit that is set.
-    constexpr t_static_array<t_u8, 8> k_byte_bitmasks_single = {{
-        0b00000001,
-        0b00000010,
-        0b00000100,
-        0b00001000,
-        0b00010000,
-        0b00100000,
-        0b01000000,
-        0b10000000,
-    }};
+    // Creates a byte-sized bitmask with only the bit of the given index set.
+    constexpr t_u8 ByteBitmaskCreateSingle(const t_i32 bit_index) {
+        constexpr t_static_array<t_u8, 8> k_bitmasks = {{
+            0b00000001,
+            0b00000010,
+            0b00000100,
+            0b00001000,
+            0b00010000,
+            0b00100000,
+            0b01000000,
+            0b10000000,
+        }};
+
+        return k_bitmasks[bit_index];
+    }
 
     // Creates a byte-sized bitmask with only bits in the range [begin_bit_index, end_bit_index) set.
     constexpr t_u8 ByteBitmaskCreateRange(const t_i32 begin_bit_index, const t_i32 end_bit_index = 8) {
@@ -88,28 +92,29 @@ namespace zcl {
         return {bs.bytes_raw, BitsToBytes(bs.bit_cnt)};
     }
 
-    constexpr t_i32 BitsetGetLastByteBitCount(const t_bitset_rdonly bs) {
-        return ((bs.bit_cnt - 1) % 8) + 1;
+    constexpr t_i32 BitsetGetLastByteBitCount(const t_i32 bit_cnt) {
+        ZCL_ASSERT(bit_cnt >= 0);
+        return ((bit_cnt - 1) % 8) + 1;
     }
 
     // Gives a mask of the last byte in which only excess bits are unset.
-    constexpr t_u8 BitsetGetLastByteMask(const t_bitset_rdonly bs) {
-        return ByteBitmaskCreateRange(0, BitsetGetLastByteBitCount(bs));
+    constexpr t_u8 BitsetGetLastByteMask(const t_i32 bit_cnt) {
+        return ByteBitmaskCreateRange(0, BitsetGetLastByteBitCount(bit_cnt));
     }
 
     constexpr t_b8 BitsetCheckSet(const t_bitset_rdonly bs, const t_i32 index) {
         ZCL_ASSERT(index >= 0 && index < bs.bit_cnt);
-        return BitsetGetBytes(bs)[index / 8] & k_byte_bitmasks_single[index % 8];
+        return BitsetGetBytes(bs)[index / 8] & ByteBitmaskCreateSingle(index % 8);
     }
 
     constexpr void BitsetSet(const t_bitset_mut bs, const t_i32 index) {
         ZCL_ASSERT(index >= 0 && index < bs.bit_cnt);
-        BitsetGetBytes(bs)[index / 8] |= k_byte_bitmasks_single[index % 8];
+        BitsetGetBytes(bs)[index / 8] |= ByteBitmaskCreateSingle(index % 8);
     }
 
     constexpr void BitsetUnset(const t_bitset_mut bs, const t_i32 index) {
         ZCL_ASSERT(index >= 0 && index < bs.bit_cnt);
-        BitsetGetBytes(bs)[index / 8] &= ~k_byte_bitmasks_single[index % 8];
+        BitsetGetBytes(bs)[index / 8] &= ~ByteBitmaskCreateSingle(index % 8);
     }
 
     t_b8 BitsetCheckAnySet(const t_bitset_rdonly bs);
@@ -160,11 +165,6 @@ namespace zcl {
         return bs.bit_cnt - BitsetCountSet(bs);
     }
 
-#if 0
     // Returned indexes are guaranteed to be in ascending order.
     t_array_mut<t_i32> BitsetLoadIndexesOfSet(const t_bitset_rdonly bs, t_arena *const arena);
-
-    // Returned indexes are guaranteed to be in ascending order.
-    t_array_mut<t_i32> BitsetLoadIndexesOfUnset(const t_bitset_rdonly bs, t_arena *const arena);
-#endif
 }

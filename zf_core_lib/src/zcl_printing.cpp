@@ -77,7 +77,7 @@ namespace zcl {
         };
 
         const auto print_byte = [&](const t_i32 index) {
-            const t_i32 bit_cnt = index == BitsetGetBytes(format.value).len - 1 ? BitsetGetLastByteBitCount(format.value) : 8;
+            const t_i32 bit_cnt = index == BitsetGetBytes(format.value).len - 1 ? BitsetGetLastByteBitCount(format.value.bit_cnt) : 8;
 
             for (t_i32 i = 7; i >= bit_cnt; i--) {
                 Print(stream_view, ZCL_STR_LITERAL("0"));
