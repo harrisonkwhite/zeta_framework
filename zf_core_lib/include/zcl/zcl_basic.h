@@ -368,6 +368,7 @@ namespace zcl {
 
     template <c_simple tp_type>
     void ZeroClearItem(tp_type *const item) {
+        static_assert(!c_ptr<tp_type>, "Error prevention - why would you be zeroing out a pointer?");
         ZeroClear(item, ZCL_SIZE_OF(tp_type));
     }
 
@@ -387,6 +388,7 @@ namespace zcl {
 
     template <c_simple tp_type>
     constexpr t_b8 ZeroCheckItem(tp_type *const item) {
+        static_assert(!c_ptr<tp_type>, "Error prevention - why would you need to do this on a pointer?");
         return ZeroCheck(item, ZCL_SIZE_OF(tp_type));
     }
 
