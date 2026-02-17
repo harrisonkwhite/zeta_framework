@@ -1,3 +1,4 @@
+- 2D and 3D array helpers would be really useful
 - ZCL_UNREACHABLE could probably be removed in place of ZCL_FATAL.
 
 - The location of the same piece of text changes depending on the characters - this is very problematic!

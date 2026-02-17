@@ -50,24 +50,23 @@ namespace zcl {
         }
 
         // Filter out unsupported code points.
-        for (zcl::t_i32 i = 0; i < k_code_point_count; i++) {
-            if (!zcl::BitsetCheckSet(*code_pts, i)) {
-                continue;
-            }
+        {
+            const auto code_pts_indexes = zcl::BitsetLoadIndexesOfSet(*code_pts, temp_arena);
 
-            const auto code_pt = static_cast<t_code_point>(i);
+            for (zcl::t_i32 i = 0; i < code_pts_indexes.len; i++) {
+                const auto code_pt = static_cast<t_code_point>(code_pts_indexes[i]);
 
-            const t_i32 glyph_index = stbtt_FindGlyphIndex(&stb_font_info, static_cast<t_i32>(code_pt));
+                const t_i32 glyph_index = stbtt_FindGlyphIndex(&stb_font_info, static_cast<t_i32>(code_pt));
 
-            if (glyph_index == 0) {
-                BitsetUnset(*code_pts, i);
+                if (glyph_index == 0) {
+                    BitsetUnset(*code_pts, i);
+                }
             }
         }
 
-        // Compute number of leftover code points that can actually be supported, return if there are none.
-        const t_i32 code_pt_cnt = BitsetCountSet(*code_pts);
+        const auto code_pts_indexes_of_interest = zcl::BitsetLoadIndexesOfSet(*code_pts, temp_arena);
 
-        if (code_pt_cnt == 0) {
+        if (code_pts_indexes_of_interest.len == 0) {
             return true;
         }
 
@@ -82,19 +81,15 @@ namespace zcl {
         // ----------------------------------------
         // Glyph Info
 
-        o_arrangement->code_pts_to_glyph_infos = HashMapCreate<t_code_point, t_font_glyph_info>(k_font_code_point_hash_func, arrangement_arena, k_comparator_bin_default<t_code_point>, code_pt_cnt);
+        o_arrangement->code_pts_to_glyph_infos = HashMapCreate<t_code_point, t_font_glyph_info>(k_font_code_point_hash_func, arrangement_arena, k_comparator_bin_default<t_code_point>, code_pts_indexes_of_interest.len);
 
         t_i32 atlas_index = 0;
         t_v2_i atlas_pen = {};
 
         constexpr t_i32 k_glyph_padding = 4;
 
-        for (zcl::t_i32 i = 0; i < k_code_point_count; i++) {
-            if (!zcl::BitsetCheckSet(*code_pts, i)) {
-                continue;
-            }
-
-            const auto code_pt = static_cast<t_code_point>(i);
+        for (zcl::t_i32 i = 0; i < code_pts_indexes_of_interest.len; i++) {
+            const auto code_pt = static_cast<t_code_point>(code_pts_indexes_of_interest[i]);
 
             const t_i32 glyph_index = stbtt_FindGlyphIndex(&stb_font_info, static_cast<t_i32>(code_pt));
 
@@ -141,18 +136,10 @@ namespace zcl {
         o_arrangement->has_kernings = true;
         o_arrangement->code_pt_pairs_to_kernings = HashMapCreate<t_font_code_point_pair, t_i32>(k_font_code_point_pair_hash_func, arrangement_arena, k_font_code_point_pair_comparator);
 
-        for (zcl::t_i32 i = 0; i < k_code_point_count; i++) {
-            if (!zcl::BitsetCheckSet(*code_pts, i)) {
-                continue;
-            }
-
-            for (zcl::t_i32 j = 0; j < k_code_point_count; j++) {
-                if (!zcl::BitsetCheckSet(*code_pts, j)) {
-                    continue;
-                }
-
-                const auto cp_a = static_cast<t_code_point>(i);
-                const auto cp_b = static_cast<t_code_point>(j);
+        for (zcl::t_i32 i = 0; i < code_pts_indexes_of_interest.len; i++) {
+            for (zcl::t_i32 j = 0; j < code_pts_indexes_of_interest.len; j++) {
+                const auto cp_a = static_cast<t_code_point>(code_pts_indexes_of_interest[i]);
+                const auto cp_b = static_cast<t_code_point>(code_pts_indexes_of_interest[j]);
 
                 const auto glyph_a_index = stbtt_FindGlyphIndex(&stb_font_info, static_cast<t_i32>(cp_a));
                 const auto glyph_b_index = stbtt_FindGlyphIndex(&stb_font_info, static_cast<t_i32>(cp_b));
@@ -173,12 +160,8 @@ namespace zcl {
         *o_atlas_pixels_arr = ArenaPushArray<t_font_atlas_pixels_r8>(atlas_pixels_arr_arena, atlas_cnt);
 
         // Write pixel data for each individual glyph.
-        for (zcl::t_i32 i = 0; i < k_code_point_count; i++) {
-            if (!zcl::BitsetCheckSet(*code_pts, i)) {
-                continue;
-            }
-
-            const auto code_pt = static_cast<t_code_point>(i);
+        for (zcl::t_i32 i = 0; i < code_pts_indexes_of_interest.len; i++) {
+            const auto code_pt = static_cast<t_code_point>(code_pts_indexes_of_interest[i]);
 
             t_font_glyph_info *glyph_info;
 
