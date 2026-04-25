@@ -764,11 +764,11 @@ namespace zcl {
 
     t_b8 CheckPointOnLineSegment(const t_v2 seg_begin, const t_v2 seg_end, const t_v2 pt, const t_f32 tol = k_tolerance_default);
 
-    constexpr t_b8 CheckRectInRect(const t_rect_f rect, const t_rect_f rect_container) {
+    constexpr t_b8 CheckRectEntirelyInRect(const t_rect_f rect, const t_rect_f rect_container) {
         return RectGetLeft(rect) >= RectGetLeft(rect_container) && RectGetTop(rect) >= RectGetTop(rect_container) && RectGetRight(rect) <= RectGetRight(rect_container) && RectGetRight(rect) <= RectGetRight(rect_container);
     }
 
-    constexpr t_b8 CheckRectInRect(const t_rect_i rect, const t_rect_i rect_container) {
+    constexpr t_b8 CheckRectEntirelyInRect(const t_rect_i rect, const t_rect_i rect_container) {
         return RectGetLeft(rect) >= RectGetLeft(rect_container) && RectGetTop(rect) >= RectGetTop(rect_container) && RectGetRight(rect) <= RectGetRight(rect_container) && RectGetRight(rect) <= RectGetRight(rect_container);
     }
 
