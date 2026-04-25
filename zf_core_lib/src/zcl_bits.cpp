@@ -1082,7 +1082,7 @@ namespace zcl {
                     const auto set_bit_cnt = k_byte_set_bit_counts[bs_bytes[i]];
 
                     for (t_i32 j = 0; j < set_bit_cnt; j++) {
-                        result[result_index] = k_byte_set_bit_indexes[bs_bytes[i]][j];
+                        result[result_index] = (8 * i) + k_byte_set_bit_indexes[bs_bytes[i]][j];
                         result_index++;
                     }
                 }
@@ -1093,7 +1093,7 @@ namespace zcl {
                     const auto byte_last_set_bit_cnt = k_byte_set_bit_counts[byte_last];
 
                     for (t_i32 j = 0; j < byte_last_set_bit_cnt; j++) {
-                        result[result_index] = k_byte_set_bit_indexes[byte_last][j];
+                        result[result_index] = (8 * (bs_bytes.len - 1)) + k_byte_set_bit_indexes[byte_last][j];
                         result_index++;
                     }
                 }
