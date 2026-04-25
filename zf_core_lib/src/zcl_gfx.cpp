@@ -54,12 +54,13 @@ namespace zcl {
             const auto code_pts_indexes = zcl::BitsetLoadIndexesOfSet(*code_pts, temp_arena);
 
             for (zcl::t_i32 i = 0; i < code_pts_indexes.len; i++) {
-                const auto code_pt = static_cast<t_code_point>(code_pts_indexes[i]);
+                const zcl::t_i32 code_pt_index = code_pts_indexes[i];
+                const auto code_pt = static_cast<t_code_point>(code_pt_index);
 
                 const t_i32 glyph_index = stbtt_FindGlyphIndex(&stb_font_info, static_cast<t_i32>(code_pt));
 
                 if (glyph_index == 0) {
-                    BitsetUnset(*code_pts, i);
+                    BitsetUnset(*code_pts, code_pt_index);
                 }
             }
         }
