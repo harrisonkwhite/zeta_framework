@@ -540,22 +540,27 @@ namespace zcl {
         return ZCL_SIZE_OF(typename tp_arr_type::t_elem) * arr.len;
     }
 
+    // Returns the number of elements copied.
     template <c_array tp_src_arr_type, c_array_mut tp_dest_arr_type>
         requires c_same<typename tp_src_arr_type::t_elem, typename tp_dest_arr_type::t_elem>
-    constexpr void ArrayCopy(const tp_src_arr_type src, const tp_dest_arr_type dest, const t_b8 allow_truncation = false) {
+    constexpr zcl::t_i32 ArrayCopy(const tp_src_arr_type src, const tp_dest_arr_type dest, const t_b8 allow_truncation = false) {
         if (!allow_truncation) {
             ZCL_ASSERT(dest.len >= src.len);
 
             for (t_i32 i = 0; i < src.len; i++) {
                 dest[i] = src[i];
             }
-        } else {
-            const auto min_len = CalcMin(src.len, dest.len);
 
-            for (t_i32 i = 0; i < min_len; i++) {
-                dest[i] = src[i];
-            }
+            return src.len;
         }
+
+        const auto min_len = CalcMin(src.len, dest.len);
+
+        for (t_i32 i = 0; i < min_len; i++) {
+            dest[i] = src[i];
+        }
+
+        return min_len;
     }
 
     template <c_array_elem tp_elem_type>
