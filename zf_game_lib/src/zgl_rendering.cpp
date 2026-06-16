@@ -404,16 +404,13 @@ namespace zgl {
 
         const auto chr_offsets = zcl::ArenaPushArray<zcl::t_v2>(arena, str_meta.len);
 
-        zcl::t_f32 left_pen = zcl::k_f32_inf_pos;
-        zcl::t_f32 top_pen = zcl::k_f32_inf_pos;
-        zcl::t_f32 right_pen = zcl::k_f32_inf_neg;
-        zcl::t_f32 bottom_pen = zcl::k_f32_inf_neg;
+        zcl::t_f32 width = zcl::k_f32_inf_neg;
+        zcl::t_f32 height = zcl::k_f32_inf_neg;
 
         {
             zcl::t_i32 chr_index = 0;
             zcl::t_v2 chr_offs_pen = {};
-            zcl::t_f32 line_left_pen = zcl::k_f32_inf_pos;
-            zcl::t_f32 line_right_pen = zcl::k_f32_inf_neg;
+
             zcl::t_i32 line_begin_chr_index = 0;
 
             zcl::t_code_point code_pt_last;
@@ -425,18 +422,17 @@ namespace zgl {
                 });
 
                 if (step.code_pt == '\n') {
+                    ZCL_ASSERT(chr_index > 0);
+
+                    const zcl::t_f32 line_width = chr_offs_pen.x;
+
                     chr_offs_pen.x = 0;
                     chr_offs_pen.y += static_cast<zcl::t_f32>(font_arrangement.line_height);
 
-                    const zcl::t_f32 line_width = line_right_pen - line_left_pen;
-
                     for (zcl::t_i32 i = line_begin_chr_index; i < chr_index; i++) {
-                        chr_offsets[i].x -= line_left_pen;
                         chr_offsets[i].x -= line_width * origin.x;
                     }
 
-                    line_left_pen = zcl::k_f32_inf_pos;
-                    line_right_pen = zcl::k_f32_inf_neg;
                     line_begin_chr_index = chr_index + 1;
 
                     continue;
@@ -459,38 +455,27 @@ namespace zgl {
                 chr_offsets[chr_index] = chr_offs_pen + zcl::V2IToF(glyph_info->offs);
 
                 chr_offs_pen.x += static_cast<zcl::t_f32>(glyph_info->adv);
-
-                // @speed: More work being done in every iteration than needed!
-
-                line_left_pen = zcl::CalcMin(line_left_pen, chr_offsets[chr_index].x);
-                line_right_pen = zcl::CalcMax(line_right_pen, chr_offsets[chr_index].x + static_cast<zcl::t_f32>(glyph_info->atlas_rect.width));
-
-                left_pen = zcl::CalcMin(left_pen, line_left_pen);
-                top_pen = zcl::CalcMin(top_pen, chr_offsets[chr_index].y);
-                right_pen = zcl::CalcMax(right_pen, line_right_pen);
-                bottom_pen = zcl::CalcMax(bottom_pen, chr_offsets[chr_index].y + static_cast<zcl::t_f32>(glyph_info->atlas_rect.height));
+                width = zcl::CalcMax(width, chr_offs_pen.x);
             }
 
             {
-                const zcl::t_f32 line_width = line_right_pen - line_left_pen;
+                const zcl::t_f32 line_width = chr_offs_pen.x;
 
                 for (zcl::t_i32 i = line_begin_chr_index; i < str_meta.len; i++) {
-                    chr_offsets[i].x -= line_left_pen;
                     chr_offsets[i].x -= line_width * origin.x;
                 }
             }
+
+            height = chr_offs_pen.y + static_cast<zcl::t_f32>(font_arrangement.line_height);
         }
 
-        const zcl::t_f32 height = bottom_pen - top_pen;
-
         for (zcl::t_i32 i = 0; i < str_meta.len; i++) {
-            chr_offsets[i].y -= top_pen;
             chr_offsets[i].y -= height * origin.y;
         }
 
         return {
             .chr_offsets = chr_offsets,
-            .size = {right_pen, height},
+            .size = {width, height},
         };
     }
 
