@@ -505,9 +505,8 @@ namespace zgl {
         return zcl::PolyCreateQuadRotated(pos, render_info.size, origin, rot, arena);
     }
 
-    void RendererSubmitStr(const t_rendering_context rc, const zcl::t_str_rdonly str, const t_str_render_info_rdonly render_info, const t_font &font, const zcl::t_v2 pos, const zcl::t_color_rgba32f color, const zcl::t_v2 origin, const zcl::t_f32 rot, const zcl::t_v2 scale) {
+    void RendererSubmitStr(const t_rendering_context rc, const zcl::t_str_rdonly str, const t_str_render_info_rdonly render_info, const t_font &font, const zcl::t_v2 pos, const zcl::t_color_rgba32f color, const zcl::t_f32 rot, const zcl::t_v2 scale) {
         ZCL_ASSERT(zcl::StrCheckValidUTF8(str));
-        ZCL_ASSERT(zcl::OriginCheckValid(origin));
 
         if (zcl::StrCheckEmpty(str)) {
             return;
