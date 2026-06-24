@@ -358,16 +358,16 @@ namespace zgl {
         const zcl::t_static_array<t_gfx_triangle, 2> triangles = {{
             {
                 .vertices = {{
-                    {.pos = quad_poly.pts[0], .blend = zcl::k_color_white, .uv = zcl::RectGetTopLeft(uv_rect)},
-                    {.pos = quad_poly.pts[1], .blend = zcl::k_color_white, .uv = zcl::RectGetTopRight(uv_rect)},
-                    {.pos = quad_poly.pts[3], .blend = zcl::k_color_white, .uv = zcl::RectGetBottomLeft(uv_rect)},
+                    {.pos = quad_poly.pts[0], .blend = blend, .uv = zcl::RectGetTopLeft(uv_rect)},
+                    {.pos = quad_poly.pts[1], .blend = blend, .uv = zcl::RectGetTopRight(uv_rect)},
+                    {.pos = quad_poly.pts[3], .blend = blend, .uv = zcl::RectGetBottomLeft(uv_rect)},
                 }},
             },
             {
                 .vertices = {{
-                    {.pos = quad_poly.pts[3], .blend = zcl::k_color_white, .uv = zcl::RectGetBottomLeft(uv_rect)},
-                    {.pos = quad_poly.pts[1], .blend = zcl::k_color_white, .uv = zcl::RectGetTopRight(uv_rect)},
-                    {.pos = quad_poly.pts[2], .blend = zcl::k_color_white, .uv = zcl::RectGetBottomRight(uv_rect)},
+                    {.pos = quad_poly.pts[3], .blend = blend, .uv = zcl::RectGetBottomLeft(uv_rect)},
+                    {.pos = quad_poly.pts[1], .blend = blend, .uv = zcl::RectGetTopRight(uv_rect)},
+                    {.pos = quad_poly.pts[2], .blend = blend, .uv = zcl::RectGetBottomRight(uv_rect)},
                 }},
             },
         }};
