@@ -44,6 +44,7 @@ namespace zgl {
 
     zcl::t_arena *GFXResourceGroupGetArena(const t_gfx_ticket_rdonly gfx_ticket, const t_gfx_resource_group *const group);
 
+    // The provided texture data, including pixel data, is copied, meaning that it does not have to persist for the lifetime of the texture resource.
     t_gfx_resource *TextureCreate(const t_gfx_ticket_mut gfx_ticket, const zcl::t_texture_data_rdonly texture_data, t_gfx_resource_group *const resource_group);
 
     t_gfx_resource *TextureCreateFromBuilt(const t_gfx_ticket_mut gfx_ticket, const zcl::t_str_rdonly file_path, t_gfx_resource_group *const group, zcl::t_arena *const temp_arena);
