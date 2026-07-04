@@ -110,6 +110,8 @@ namespace zgl {
         SoundSetPan(audio_ticket, id, pan);
         SoundSetPitch(audio_ticket, id, pitch);
 
+        SoundStart(audio_ticket, id);
+
         return true;
     }
 
