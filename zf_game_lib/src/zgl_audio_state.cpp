@@ -129,7 +129,7 @@ namespace zgl {
 
         zcl::BitsetSet(g_state.snd_insts.activity, index);
 
-        g_state.snd_insts.versions[index]++;
+        g_state.snd_insts.versions[index]++; // @todo: Could be worth handling overflow...
         *o_id = {index, g_state.snd_insts.versions[index]};
 
         return true;
@@ -156,6 +156,8 @@ namespace zgl {
         }
 
         zcl::BitsetUnset(g_state.snd_insts.activity, id.index);
+
+        g_state.snd_insts.states[id.index] = ek_sound_state_not_started;
     }
 
     void SoundStart(const t_audio_ticket_mut audio_ticket, const t_sound_id id) {
