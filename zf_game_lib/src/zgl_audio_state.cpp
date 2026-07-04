@@ -129,7 +129,13 @@ namespace zgl {
 
         zcl::BitsetSet(g_state.snd_insts.activity, index);
 
-        g_state.snd_insts.versions[index]++; // @todo: Could be worth handling overflow...
+        g_state.snd_insts.versions[index]++;
+
+        if (g_state.snd_insts.versions[index] < 0) {
+            // Handle overflow case.
+            g_state.snd_insts.versions[index] = 1;
+        }
+
         *o_id = {index, g_state.snd_insts.versions[index]};
 
         return true;
