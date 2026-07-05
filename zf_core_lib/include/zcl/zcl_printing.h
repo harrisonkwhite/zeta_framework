@@ -428,8 +428,25 @@ namespace zcl {
     inline t_b8 PrintFormat(const t_stream_view stream_view, const t_str_rdonly format) {
         ZCL_ASSERT(PrintFormatCountSpecs(format) == 0);
 
-        // Just print the rest of the string.
-        return Print(stream_view, format);
+        // Just print the rest of the string, but still accounting for escape characters.
+        t_b8 escaped = false;
+
+        for (t_i32 i = 0; i < format.bytes.len; i++) {
+            if (!escaped) {
+                if (format.bytes[i] == k_print_format_esc) {
+                    escaped = true;
+                    continue;
+                }
+            }
+
+            if (!StreamWriteItem(stream_view, format.bytes[i])) {
+                return false;
+            }
+
+            escaped = false;
+        }
+
+        return true;
     }
 
     // Use a single '%' as the format specifier. To actually include a '%' in the output, write "^%". To actually include a '^', write "^^".
