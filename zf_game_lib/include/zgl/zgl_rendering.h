@@ -113,6 +113,13 @@ namespace zgl {
         return CalcStrRenderCollider(str, render_info, font, pos, arena, origin, rot, scale);
     }
 
+    zcl::t_rect_f CalcStrRenderColliderWithoutRotation(const zcl::t_str_rdonly str, const t_str_render_info_rdonly render_info, const t_font &font, const zcl::t_v2 pos, zcl::t_arena *const arena, const zcl::t_v2 origin = zcl::k_origin_top_left, const zcl::t_v2 scale = {1.0f, 1.0f});
+
+    inline zcl::t_rect_f CalcStrRenderColliderWithoutRotation(const zcl::t_str_rdonly str, const t_font &font, const zcl::t_v2 pos, zcl::t_arena *const arena, zcl::t_arena *const temp_arena, const zcl::t_v2 origin = zcl::k_origin_top_left, const zcl::t_v2 scale = {1.0f, 1.0f}) {
+        const t_str_render_info_rdonly render_info = CalcStrRenderInfo(str, font.arrangement, origin, temp_arena);
+        return CalcStrRenderColliderWithoutRotation(str, render_info, font, pos, arena, origin, scale);
+    }
+
     void RendererSubmitStr(const t_rendering_context rc, const zcl::t_str_rdonly str, const t_str_render_info_rdonly render_info, const t_font &font, const zcl::t_v2 pos, const zcl::t_color_rgba32f color, const zcl::t_f32 rot = 0.0f, const zcl::t_v2 scale = {1.0f, 1.0f});
 
     inline void RendererSubmitStr(const t_rendering_context rc, const zcl::t_str_rdonly str, const t_font &font, const zcl::t_v2 pos, const zcl::t_color_rgba32f color, zcl::t_arena *const temp_arena, const zcl::t_v2 origin = zcl::k_origin_top_left, const zcl::t_f32 rot = 0.0f, const zcl::t_v2 scale = {1.0f, 1.0f}) {
