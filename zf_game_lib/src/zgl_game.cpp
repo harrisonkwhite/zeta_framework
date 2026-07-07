@@ -79,38 +79,41 @@ namespace zgl {
 
         zcl::t_f64 tick_interval_accum = 0.0;
 
-        while (!WindowCheckCloseRequested(platform_ticket)) {
-            const zcl::t_v2_i screen_size_last = internal::WindowGetFramebufferSizeCache(platform_ticket);
-            const zcl::t_b8 window_focused_last = WindowCheckFocused(platform_ticket);
+        zcl::t_b8 window_focused = WindowCheckFocused(platform_ticket);
 
+        while (!WindowCheckCloseRequested(platform_ticket)) {
             internal::PollOSEvents(platform_ticket, input_state);
 
             const zcl::t_v2_i screen_size = internal::WindowGetFramebufferSizeCache(platform_ticket);
-            const zcl::t_b8 window_focused = WindowCheckFocused(platform_ticket);
 
-            if (screen_size != screen_size_last) {
+            const zcl::t_b8 window_focused_last = window_focused;
+            window_focused = WindowCheckFocused(platform_ticket);
+
+            {
+                const zcl::t_v2_i backbuffer_size = internal::BackbufferGetSize(gfx_ticket);
+
+                if (backbuffer_size != screen_size) {
 #ifdef ZCL_DEBUG
-                zcl::Log(ZCL_STR_LITERAL("Screen resized from % to %..."), screen_size_last, screen_size);
+                    zcl::Log(ZCL_STR_LITERAL("Resizing backbuffer from % to %..."), backbuffer_size, screen_size);
 #endif
 
-                internal::BackbufferResize(gfx_ticket, screen_size);
+                    internal::BackbufferResize(gfx_ticket, screen_size);
 
-                if (config.screen_resize_func) {
-                    config.screen_resize_func({
-                        .perm_arena = perm_arena,
-                        .temp_arena = temp_arena,
-                        .input_state = input_state,
-                        .platform_ticket = platform_ticket,
-                        .screen_size = screen_size,
-                        .gfx_ticket = gfx_ticket,
-                        .audio_ticket = audio_ticket,
-                        .rng = rng,
-                        .user_mem = user_mem,
-                    });
+                    if (config.screen_resize_func) {
+                        config.screen_resize_func({
+                            .perm_arena = perm_arena,
+                            .temp_arena = temp_arena,
+                            .input_state = input_state,
+                            .platform_ticket = platform_ticket,
+                            .screen_size = screen_size,
+                            .gfx_ticket = gfx_ticket,
+                            .audio_ticket = audio_ticket,
+                            .rng = rng,
+                            .user_mem = user_mem,
+                        });
+                    }
                 }
             }
-
-            ZCL_ASSERT(internal::BackbufferGetSize(gfx_ticket) == screen_size); // @temp
 
             {
                 const t_game_window_focus_func_context window_focus_func_context = {

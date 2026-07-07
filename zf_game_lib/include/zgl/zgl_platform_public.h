@@ -38,6 +38,7 @@ namespace zgl {
     void WindowSetResizable(const t_platform_ticket_mut platform_ticket, const zcl::t_b8 resizable);
 
     zcl::t_b8 WindowCheckFullscreen(const t_platform_ticket_rdonly platform_ticket);
+
     void WindowSetFullscreen(const t_platform_ticket_mut platform_ticket, const zcl::t_b8 active);
 
     inline void WindowToggleFullscreen(const t_platform_ticket_mut platform_ticket) {
