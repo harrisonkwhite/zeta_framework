@@ -64,6 +64,7 @@ namespace zgl {
         ZCL_ASSERT(g_state.phase != ek_phase_inactive);
         ZCL_ASSERT(TicketCheckValid(ticket));
 
+#if 0
         if (frozen && g_state.phase == ek_phase_active) {
             for (zcl::t_i32 i = 0; i < k_sound_instance_limit; i++) {
                 if (!zcl::BitsetCheckSet(g_state.snd_insts.activity, i)) {
@@ -85,6 +86,7 @@ namespace zgl {
 
             g_state.phase = ek_phase_active;
         }
+#endif
     }
 
     zcl::t_b8 SoundCreate(const t_audio_ticket_mut audio_ticket, const t_sound_type *const snd_type, t_sound_id *const o_id) {
@@ -121,14 +123,6 @@ namespace zgl {
                 ZCL_FATAL();
             }
         }
-
-#if 0
-        ZCL_ASSERT(g_state.snd_insts.states[index] == ek_sound_state_not_started);
-
-        if (ma_sound_stop(ma_snd) != MA_SUCCESS) {
-            ZCL_FATAL();
-        }
-#endif
 
         ma_sound_set_volume(ma_snd, 1.0f);
         ma_sound_set_pan(ma_snd, 0.0f);
