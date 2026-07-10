@@ -122,6 +122,14 @@ namespace zgl {
             }
         }
 
+#if 0
+        ZCL_ASSERT(g_state.snd_insts.states[index] == ek_sound_state_not_started);
+
+        if (ma_sound_stop(ma_snd) != MA_SUCCESS) {
+            ZCL_FATAL();
+        }
+#endif
+
         ma_sound_set_volume(ma_snd, 1.0f);
         ma_sound_set_pan(ma_snd, 0.0f);
         ma_sound_set_pitch(ma_snd, 1.0f);

@@ -34,7 +34,7 @@ namespace zgl {
 
     // Supports WAV, FLAC, and MP3.
     // Prefer this for long audio pieces like music and ambience.
-    t_sound_type *SoundTypeCreateStreamable(const t_audio_ticket_mut audio_ticket, const zcl::t_str_rdonly unbuilt_file_path, t_sound_type_group *const group, zcl::t_arena *const temp_arena);
+    t_sound_type *SoundTypeCreateStreamable(const t_audio_ticket_mut audio_ticket, const zcl::t_str_rdonly unbuilt_file_path, t_sound_type_group *const group);
 
     zcl::t_b8 SoundTypeCheckStreamable(const t_audio_ticket_rdonly audio_ticket, const t_sound_type *const type);
 

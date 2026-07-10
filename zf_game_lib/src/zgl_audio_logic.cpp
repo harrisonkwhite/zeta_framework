@@ -95,13 +95,13 @@ namespace zgl {
         return result;
     }
 
-    t_sound_type *SoundTypeCreateStreamable(const t_audio_ticket_mut audio_ticket, const zcl::t_str_rdonly external_file_path, t_sound_type_group *const group, zcl::t_arena *const temp_arena) {
+    t_sound_type *SoundTypeCreateStreamable(const t_audio_ticket_mut audio_ticket, const zcl::t_str_rdonly external_file_path, t_sound_type_group *const group) {
         ZCL_ASSERT(TicketCheckValid(audio_ticket));
         ZCL_ASSERT(group->valid);
 
         t_sound_type *const result = SoundTypeGroupAdd(group);
         result->streamable = true;
-        result->stream_unbuilt_file_path_terminated = zcl::StrCloneButAddTerminator(external_file_path, temp_arena);
+        result->stream_unbuilt_file_path_terminated = zcl::StrCloneButAddTerminator(external_file_path, group->arena);
 
         return result;
     }
