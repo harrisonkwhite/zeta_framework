@@ -374,13 +374,15 @@ namespace zgl {
         ZCL_ASSERT(TicketCheckValid(audio_ticket));
 
         const auto ids = zcl::ArenaPushArray<t_sound_id>(arena, zcl::BitsetCountSet(g_state.snd_insts.activity));
+        zcl::t_i32 id_index = 0;
 
         for (zcl::t_i32 i = 0; i < k_sound_instance_limit; i++) {
             if (!zcl::BitsetCheckSet(g_state.snd_insts.activity, i)) {
                 continue;
             }
 
-            ids[i] = {i, g_state.snd_insts.versions[i]};
+            ids[id_index] = {i, g_state.snd_insts.versions[i]};
+            id_index++;
         }
 
         return ids;
