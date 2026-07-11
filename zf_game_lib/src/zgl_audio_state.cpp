@@ -249,6 +249,15 @@ namespace zgl {
         return ma_sound_get_volume(&g_state.snd_insts.ma_snds[id.index]);
     }
 
+    zcl::t_f32 SoundGetFadeVolume(const t_audio_ticket_rdonly audio_ticket, const t_sound_id id) {
+        ZCL_ASSERT(g_state.phase != ek_phase_inactive);
+        ZCL_ASSERT(TicketCheckValid(audio_ticket));
+        SoundIDAssertValid(id);
+        ZCL_ASSERT(SoundCheckExists(audio_ticket, id));
+
+        return ma_sound_get_current_fade_volume(&g_state.snd_insts.ma_snds[id.index]);
+    }
+
     zcl::t_f32 SoundGetPan(const t_audio_ticket_rdonly audio_ticket, const t_sound_id id) {
         ZCL_ASSERT(g_state.phase != ek_phase_inactive);
         ZCL_ASSERT(TicketCheckValid(audio_ticket));
@@ -316,7 +325,7 @@ namespace zgl {
         ma_sound_set_volume(&g_state.snd_insts.ma_snds[id.index], vol);
     }
 
-    void SoundSetVolumeTransition(const t_audio_ticket_mut audio_ticket, const t_sound_id id, const zcl::t_f32 vol_begin, const zcl::t_f32 vol_end, const zcl::t_f32 dur_secs) {
+    void SoundSetVolumeFade(const t_audio_ticket_mut audio_ticket, const t_sound_id id, const zcl::t_f32 vol_begin, const zcl::t_f32 vol_end, const zcl::t_f32 dur_secs) {
         ZCL_ASSERT(g_state.phase != ek_phase_inactive);
         ZCL_ASSERT(TicketCheckValid(audio_ticket));
         SoundIDAssertValid(id);

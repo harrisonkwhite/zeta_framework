@@ -75,6 +75,8 @@ namespace zgl {
 
     zcl::t_f32 SoundGetVolume(const t_audio_ticket_rdonly audio_ticket, const t_sound_id id);
 
+    zcl::t_f32 SoundGetFadeVolume(const t_audio_ticket_rdonly audio_ticket, const t_sound_id id);
+
     zcl::t_f32 SoundGetPan(const t_audio_ticket_rdonly audio_ticket, const t_sound_id id);
 
     zcl::t_f32 SoundGetPitch(const t_audio_ticket_rdonly audio_ticket, const t_sound_id id);
@@ -89,7 +91,7 @@ namespace zgl {
 
     void SoundSetVolume(const t_audio_ticket_mut audio_ticket, const t_sound_id id, const zcl::t_f32 vol);
 
-    void SoundSetVolumeTransition(const t_audio_ticket_mut audio_ticket, const t_sound_id id, const zcl::t_f32 vol_begin, const zcl::t_f32 vol_end, const zcl::t_f32 dur_secs);
+    void SoundSetVolumeFade(const t_audio_ticket_mut audio_ticket, const t_sound_id id, const zcl::t_f32 vol_begin, const zcl::t_f32 vol_end, const zcl::t_f32 dur_secs);
 
     void SoundSetPan(const t_audio_ticket_mut audio_ticket, const t_sound_id id, const zcl::t_f32 pan);
 
