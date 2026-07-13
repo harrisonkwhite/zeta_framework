@@ -286,19 +286,20 @@ namespace zgl {
         RendererSubmit(rc, zcl::ArrayToNonstatic(&triangles));
     }
 
-    void RendererSubmitRectOutlineOpaque(const t_rendering_context rc, const zcl::t_rect_f rect, const zcl::t_f32 color_r, const zcl::t_f32 color_g, const zcl::t_f32 color_b, const zcl::t_f32 innerness, const zcl::t_f32 thickness) {
-        ZCL_ASSERT(thickness >= 0.0f);
-        ZCL_ASSERT(innerness >= -1.0f && innerness <= 1.0f);
+    void RendererSubmitRectOutline(const t_rendering_context rc, const zcl::t_rect_f rect, const zcl::t_color_rgba32f color, const zcl::t_f32 thickness) {
+        ZCL_ASSERT(thickness > 0.0f);
 
-        const zcl::t_f32 innerness_perc = (innerness + 1.0f) / 2.0f;
-        const zcl::t_f32 innerness_perc_inv = 1.0f - innerness_perc;
+        // Top
+        RendererSubmitRect(rc, zcl::RectCreateF(rect.x, rect.y, rect.width - thickness, thickness), color);
 
-        const auto color = zcl::ColorCreateRGBA32F(color_r, color_g, color_b, 1.0f);
+        // Right
+        RendererSubmitRect(rc, zcl::RectCreateF(rect.x + rect.width - thickness, rect.y, thickness, rect.height - thickness), color);
 
-        RendererSubmitRect(rc, zcl::RectCreateF(rect.x - (thickness * innerness_perc_inv), rect.y - (thickness * innerness_perc_inv), rect.width - (thickness * innerness), thickness), color);
-        RendererSubmitRect(rc, zcl::RectCreateF(rect.x + rect.width - (thickness * innerness_perc), rect.y - (thickness * innerness_perc_inv), thickness, rect.height + (thickness * -innerness)), color);
-        RendererSubmitRect(rc, zcl::RectCreateF(rect.x + (thickness * innerness_perc), rect.y + rect.height - (thickness * innerness_perc), rect.width + (thickness * -innerness), thickness), color);
-        RendererSubmitRect(rc, zcl::RectCreateF(rect.x - (thickness * innerness_perc_inv), rect.y + (thickness * innerness_perc), thickness, rect.height + (thickness * -innerness)), color);
+        // Bottom
+        RendererSubmitRect(rc, zcl::RectCreateF(rect.x + thickness, rect.y + rect.height - thickness, rect.width - thickness, thickness), color);
+
+        // Left
+        RendererSubmitRect(rc, zcl::RectCreateF(rect.x, rect.y + thickness, thickness, rect.height - thickness), color);
     }
 
     void RendererSubmitLineSegment(const t_rendering_context rc, const zcl::t_v2 pos_begin, const zcl::t_v2 pos_end, const zcl::t_color_rgba32f color, const zcl::t_f32 thickness) {
