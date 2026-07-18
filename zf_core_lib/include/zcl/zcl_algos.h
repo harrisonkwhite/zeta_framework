@@ -216,7 +216,7 @@ namespace zcl {
 
                 if (i == arr_left_sorted.len) {
                     // Copy over the remainder of the right array.
-                    f_copy_all(ArraySliceFrom(arr_right_sorted, j), ArraySliceFrom(arr, i + j));
+                    ArrayCopy(ArraySliceFrom(arr_right_sorted, j), ArraySliceFrom(arr, i + j));
                     break;
                 }
             } else {
@@ -225,7 +225,7 @@ namespace zcl {
 
                 if (j == arr_right_sorted.len) {
                     // Copy over the remainder of the left array.
-                    f_copy_all(ArraySliceFrom(arr_left_sorted, i), ArraySliceFrom(arr, i + j));
+                    ArrayCopy(ArraySliceFrom(arr_left_sorted, i), ArraySliceFrom(arr, i + j));
                     break;
                 }
             }
