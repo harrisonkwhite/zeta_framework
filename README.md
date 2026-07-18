@@ -52,7 +52,17 @@ cmake ..
 
 ## Noteworthy Design Decisions (W.I.P. Section)
 
-There are a number of significant (and often unconventional) design decisions made with this framework that I think are worth explaining my rationale for. They have been made out of a very deliberate cost-benefit analysis done in relation to the goals of Zeta Framework.
+There are a number of significant design decisions made with this framework that I think are worth explaining my rationale for, because many of them are contrary to standard practice. But they have all been made out of a very deliberate cost-benefit analysis done in relation to the specific goals of Zeta Framework.
+
+### Module Tickets
+
+Out of necessity, many of the modules comprising ZGL are global in nature. For example, both GLFW (used in the platform layer) and bgfx (used for graphics) are implemented as singletons, and as such anything wrapping them should authentically mirror this.
+
+This global state, even if it's technically necessary, damages functional purity and can make state management harder to track and reason about. For example, there is no way to tell from the outside whether some seemingly trivial helper function is actually manipulating some piece of a ZGL module's global state, and this can be a real source of bugs.
+
+To get around this, I came up with a "ticket" system. Essentially, if a function wants to either read from or mutate the state of a particular global module, it needs the corresponding ticket struct. To ensure that you aren't just passing in any randomly created instance of the struct, the correct ticket struct has a "value" variable that is assigned to the address of some module-exclusive global variable, and the key's validity is checked against this. This ticket is returned from whatever function starts up the global module.
+
+Now, if a function is either possibly reading or mutating some part of the GFX module's global state for example, you can easily tell because it will be provided with a ticket.
 
 ### Emphasis on "const" and Mutable vs. Read-Only Data
 
