@@ -50,6 +50,20 @@ cmake ..
 
 ---
 
+## Noteworthy Design Decisions (W.I.P. Section)
+
+There are a number of significant (and often unconventional) design decisions made with this framework that I think are worth explaining my rationale for. They have been made out of a very deliberate cost-benefit analysis done in relation to the goals of Zeta Framework.
+
+### Emphasis on "const" and Mutable vs. Read-Only Data
+
+This is something I learnt from reading an article [John Carmack's article on functional programming](http://sevangelatos.com/john-carmack-on/), and which I have adopted very heavily into my C/C++ programming style (at least if I'm working procedurally).
+
+The "const" keyword is used in my code as much as possible, and for any struct that containing some form of pointer, I will often have both a mutable and read-only version of it.
+
+The rationale behind this is that if I'm providing some form of pointer to a function for example, I find it very useful to know whether that thing being pointed to is potentially going to be mutated, versus if it's just going to be read from. Also, when writing or debugging a function, I find that it helps to know which variables can change and which are fixed in place. It overall makes statement management far easier to reason about, and also discourages me from writing hacky overcomplicated code with excessive state transformations.
+
+---
+
 ## Third-Party Projects
 
 - [GLFW](https://github.com/glfw/glfw) for cross-platform windowing and input
