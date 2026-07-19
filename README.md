@@ -60,6 +60,8 @@ Rather than appealing to the standard approach of RAII, this framework is very h
 
 I *very strongly* believe this is the superior approach for what Zeta Framework is trying to do. With independent game development it is generally very easy to group resource lifetimes; for example, you might have certain resources existing for the full duration of the game, some for the duration of a particular level, some only for the duration of a frame, and so on. And each of these lifetimes can have its own arena with a very clearly defined life cycle in the scheme of the overall control flow. This keeps memory management very simple, and also keeps allocations very efficient which is important for the high-performance needs of games.
 
+This philosophy of grouping lifetimes is used as often as possible in the framework, beyond just the provided memory arena structure. For example, in the GFX module of ZGL, GFX resources (e.g. textures or shader programs) are required to be allocated in the context of a given GFX resource group, which internally are set up as linked lists of GFX resources that are all to be freed at once.
+
 ### Custom String System
 
 Zeta Framework provides its own string system, in which strings are NOT null-terminated, and are instead arrays of bytes (with an associated length) that are treated as representing UTF-8 text (and therefore simply getting the array length is insufficient for getting string length).
