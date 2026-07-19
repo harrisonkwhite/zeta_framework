@@ -50,17 +50,23 @@ cmake ..
 
 ---
 
-## Noteworthy Design Decisions (W.I.P. Section)
+## Noteworthy Design Decisions
 
 There are a number of significant design decisions made with this framework that I think are worth explaining my rationale for, because many of them are contrary to standard practice. But they have all been made out of a very deliberate cost-benefit analysis done in relation to the specific goals of Zeta Framework.
 
-### Strings
+### Approach to Memory Management
+
+Rather than appealing to the standard approach of RAII, this framework is very heavily based around the use of memory arenas. Memory arenas can effectively be seen as a way of grouping lifetimes together. You effectively have a single big block of memory that is allocated all at once, or perhaps multiple big blocks of memory that are allocated only on occassion and then strung together as a linked list. An arena allocation, or a "push", is generally nothing more than incrementing an offset - *far* cheaper than a call to malloc() for example. Everything allocated within the same arena has the same lifetime, meaning that when the arena's memory is freed everything that was allocated within it is freed too.
+
+I *very strongly* believe this is the superior approach for what Zeta Framework is trying to do. With independent game development it is generally very easy to group resource lifetimes; for example, you might have certain resources existing for the full duration of the game, some for the duration of a particular level, some only for the duration of a frame, and so on. And each of these lifetimes can have its own arena with a very clearly defined life cycle in the scheme of the overall control flow. This keeps memory management very simple, and also keeps allocations very efficient which is important for the high-performance needs of games.
+
+### Custom String System
 
 Zeta Framework provides its own string system, in which strings are NOT null-terminated, and are instead arrays of bytes (with an associated length) that are treated as representing UTF-8 text (and therefore simply getting the array length is insufficient for getting string length).
 
-The motivation for this setup was to have a simple UTF-8 string system compatible with the data-oriented procedural style of the rest of the framework. The decision not to use null termination also helps get by safety issues and makes operations like string slicing far simpler and cheaper.
+The motivation for this setup was to have a simple UTF-8 string system compatible with the data-oriented procedural style of the rest of the framework. The decision to not use null termination also helps get past some safety issues, and also makes operations like string slicing far simpler and cheaper.
 
-There are definitely instances, however, where standard C-style null-terminated strings need to be used. This is often the case when interacting with C-based APIs for example. There are helpers provided for converting a ZF-style string into a C-style string, and they involve pushing the necessary amount of bytes to an arena and copying the bytes of the string, leaving a null terminator add the end. The performance cost associated with this is the biggest downside to this string approach, but my reasoning is that it is not too significant of a problem assuming that these conversions are unlikely to be done on a frequent or per-frame basis.
+There are definitely instances, however, where standard C-style null-terminated strings need to be used. This is often the case when interacting with C-based APIs for example. There are helpers provided for converting a ZF-style string into a C-style string, and they involve pushing the necessary amount of bytes to an arena and copying the bytes of the string, leaving a null terminator add the end. The performance cost associated with this is the biggest downside to this string approach, but my reasoning is that it is not too significant of a problem as my assumption is that these conversions are unlikely to be done on a frequent or per-frame basis.
 
 ### Module Tickets
 
