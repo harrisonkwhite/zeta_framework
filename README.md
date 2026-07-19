@@ -54,9 +54,17 @@ cmake ..
 
 There are a number of significant design decisions made with this framework that I think are worth explaining my rationale for, because many of them are contrary to standard practice. But they have all been made out of a very deliberate cost-benefit analysis done in relation to the specific goals of Zeta Framework.
 
+### Strings
+
+Zeta Framework provides its own string system, in which strings are NOT null-terminated, and are instead arrays of bytes (with an associated length) that are treated as representing UTF-8 text (and therefore simply getting the array length is insufficient for getting string length).
+
+The motivation for this setup was to have a simple UTF-8 string system compatible with the data-oriented procedural style of the rest of the framework. The decision not to use null termination also helps get by safety issues and makes operations like string slicing far simpler and cheaper.
+
+There are definitely instances, however, where standard C-style null-terminated strings need to be used. This is often the case when interacting with C-based APIs for example. There are helpers provided for converting a ZF-style string into a C-style string, and they involve pushing the necessary amount of bytes to an arena and copying the bytes of the string, leaving a null terminator add the end. The performance cost associated with this is the biggest downside to this string approach, but my reasoning is that it is not too significant of a problem assuming that these conversions are unlikely to be done on a frequent or per-frame basis.
+
 ### Module Tickets
 
-Out of necessity, many of the modules comprising ZGL are global in nature. For example, both GLFW (used in the platform layer) and bgfx (used for graphics) are implemented as singletons, and as such anything wrapping them should authentically mirror this.
+Out of necessity, many of the modules comprising ZGL are global in nature. For example, both GLFW (used in the platform layer) and bgfx (used for graphics) work as singletons, and as such anything wrapping them should authentically mirror this.
 
 This global state, even if it's technically necessary, damages functional purity and can make state management harder to track and reason about. For example, there is no way to tell from the outside whether some seemingly trivial helper function is actually manipulating some piece of a ZGL module's global state, and this can be a real source of bugs.
 
