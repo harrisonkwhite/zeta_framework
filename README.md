@@ -2,7 +2,7 @@
 
 This is a data-oriented framework for developing 2D games for Windows, Mac, and Linux.
 
-It was originally written in C, though has been switched to a highly procedural subset of C++ 20 to leverage useful features like templates, operator overloading, function overloading, and so on.
+It was originally written in C11, though has been switched to a highly procedural subset of C++20 to leverage useful features like templates, operator overloading, function overloading, and so on.
 
 ### [Click here to see the framework being used to make a clone of Terraria.](https://github.com/harrisonkwhite/zf_terraria_clone)
 
@@ -54,13 +54,21 @@ cmake ..
 
 There are a number of significant design decisions made with this framework that I think are worth explaining my rationale for, because many of them are contrary to standard practice. But they have all been made out of a very deliberate cost-benefit analysis done in relation to the specific goals of Zeta Framework.
 
+### Use of a Procedural Style
+
+For context, this framework *did* begin life written in C11. But even with the transition into C++20, I still strongly think that a procedural style is most ideal.
+
+My philosophy is that both game engine and gameplay code are far easier to reason about and debug when they are laid out as an explicit sequence of instructions, rather than having operations implicitly occur in things like destructors as you might with OOP. The lack of OOP-style encapsulation is for sure a downside, but within the framework (and especially throughout ZGL) there is heavy use of opaque handles as a kind of substitute (i.e. structs that are only defined in the source file). Assertions are also heavily used as a way of validating state at particular points in the control flow during debug mode, especially at the beginning of functions. There is also *heavy* use of the "const" keyword (elaborated on later) as another way of helping manage state despite the absence of OOP encapsulation.
+
+It is with this that the decision to use very little of the C++ standard library should be obvious, since it is written from an entirely different design philosophy (e.g. heavy use of OOP).
+
 ### Approach to Memory Management
 
-Rather than appealing to the standard approach of RAII, this framework is very heavily based around the use of memory arenas. Memory arenas can effectively be seen as a way of grouping lifetimes together. You effectively have a single big block of memory that is allocated all at once, or perhaps multiple big blocks of memory that are allocated only on occassion and then strung together as a linked list. An arena allocation, or a "push", is generally nothing more than incrementing an offset - *far* cheaper than a call to malloc() for example. Everything allocated within the same arena has the same lifetime, meaning that when the arena's memory is freed everything that was allocated within it is freed too.
+Rather than appealing to the conventional approach of RAII, this framework is very heavily based around the use of memory arenas. Memory arenas can effectively be seen as a way of grouping lifetimes together. You effectively have a single big block of memory that is allocated all at once, or perhaps multiple big blocks of memory that are allocated only on occassion and then strung together as a linked list. An arena allocation, or a "push", is generally nothing more than incrementing an offset - *far* cheaper than any call to malloc() or use of "new" for example. Everything allocated within the same arena has the same lifetime, meaning that when the arena's memory is freed everything that was allocated within it is freed too.
 
 I *very strongly* believe this is the superior approach for what Zeta Framework is trying to do. With independent game development it is generally very easy to group resource lifetimes; for example, you might have certain resources existing for the full duration of the game, some for the duration of a particular level, some only for the duration of a frame, and so on. And each of these lifetimes can have its own arena with a very clearly defined life cycle in the scheme of the overall control flow. This keeps memory management very simple, and also keeps allocations very efficient which is important for the high-performance needs of games.
 
-This philosophy of grouping lifetimes is used as often as possible in the framework, beyond just the provided memory arena structure. For example, in the GFX module of ZGL, GFX resources (e.g. textures or shader programs) are required to be allocated in the context of a given GFX resource group, which internally are set up as linked lists of GFX resources that are all to be freed at once.
+This philosophy of grouping lifetimes is used as often as possible in the framework, beyond just the provided memory arena structure. For example, in the GFX module of ZGL, GFX resources (e.g. textures or shader programs) are required to be allocated in the context of a given GFX resource group, which internally is set up as a linked list of GFX resources that are all to be freed at once, and are also associated with the same memory arena structure.
 
 ### Custom String System
 
