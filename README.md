@@ -96,6 +96,12 @@ The "const" keyword is used in my code as much as possible, and for any struct t
 
 The rationale behind this is that if I'm providing some form of pointer to a function for example, I find it very useful to know whether that thing being pointed to is potentially going to be mutated, versus if it's just going to be read from. Also, when writing or debugging a function, I find that it helps to know which variables can change and which are fixed in place. It overall makes statement management far easier to reason about, and also discourages me from writing hacky overcomplicated code with excessive state transformations.
 
+### "Logic" vs. "State" Source Files in ZGL
+
+This is partly inspired by [this video I saw by Brian Will](https://www.youtube.com/watch?v=0iyB0_qPvWk).
+
+As mentioned, ZGL modules have global state out of necessity, because the systems being encapsulated are inherently global in nature. But the actual public interface for each module has a mixture of functions that need to work with this global state, versus functions that only need to operate on the data that's explicitly passed to them. Thus, to help keep the source code implementing these modules clean and manageable, I have put the definition of the functions that interact with the global state (alongside the global state itself) in their own source file (suffixed with "_state.cpp"), and the definition of functions that don't (suffixed with "_logic.cpp") in another. I have tried to keep the "state" source files as minimal as possible, so as to minimise the amount of code manipulating global state.
+
 ---
 
 ## Third-Party Projects
