@@ -179,15 +179,15 @@ namespace zcl {
     template <c_array tp_arr_type>
     void RunSelectionSort(const tp_arr_type arr, const t_comparator_ord<typename tp_arr_type::t_elem> comparator = k_comparator_ord_default<typename tp_arr_type::t_elem>) {
         for (t_i32 i = 0; i < arr.len - 1; i++) {
-            const auto min = &arr[i];
+            auto min = &arr[i];
 
             for (t_i32 j = i + 1; j < arr.len; j++) {
                 if (comparator(arr[j], *min) < 0) {
-                    *min = arr[j];
+                    min = &arr[j];
                 }
             }
 
-            Swap(&arr[i], &min);
+            Swap(&arr[i], min);
         }
     }
 
@@ -199,10 +199,10 @@ namespace zcl {
         }
 
         // Sort copies of the left and right partitions.
-        const auto arr_left_sorted = ArenaPushArrayClone(ArraySlice(arr, 0, arr.len / 2), temp_arena);
+        const auto arr_left_sorted = ArenaPushArrayClone(temp_arena, ArraySlice(arr, 0, arr.len / 2));
         RunMergeSort(arr_left_sorted, temp_arena, comparator);
 
-        const auto arr_right_sorted = ArenaPushArrayClone(ArraySliceFrom(arr, arr.len / 2), temp_arena);
+        const auto arr_right_sorted = ArenaPushArrayClone(temp_arena, ArraySliceFrom(arr, arr.len / 2));
         RunMergeSort(arr_right_sorted, temp_arena, comparator);
 
         // Update this array.
